@@ -14,11 +14,11 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {# Admin → Data loads → Inbox (docs/architecture/DATALOAD_INBOX.md section 10, mock-up A, the status board). The board is _inbox_body.html,
-   drawn here and redrawn by admin-inbox.js from /admin/loads/inbox?partial=1 (every 5 s while a run loads, 30 s when quiet); the answers of
+   drawn here and redrawn by drishti_admin-inbox.js from /admin/loads/inbox?partial=1 (every 5 s while a run loads, 30 s when quiet); the answers of
    Load now and Retry stay in the line above the board. #}
 {% extends "base.html" %}
 {% block title %}Data inbox · Data loads · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -49,4 +49,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-inbox.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-inbox.js?v={{ ASSET_V }}"></script>{% endblock %}

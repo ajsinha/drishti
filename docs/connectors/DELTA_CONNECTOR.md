@@ -722,7 +722,7 @@ when it was; a document search says `"partial": true` with a smaller `scanned`.
 | an old picked date falls back to the samples | the date is more than `lookback-days` past the newest partition on or before it | load that date, or raise `lookback-days` |
 | *known at* shows the latest data | the lake was copied without keeping file times (Delta resolves instants against `_delta_log` modification times) | copy with `cp -p` / `rsync -t`; for S3, times are upload times |
 | S3: `DOWN: cannot reach s3a://…` | credentials, region or endpoint | try `aws s3 ls s3://<bucket>/<path>/` with the same credentials |
-| `DRS-1004 timed out` on a single read | the read deadline (`drishti.sources.fetch-timeout`, 5 s) passed: very large row groups, or object storage far away | smaller row groups; check `p99Ms` in Health; `drishti.sources.fetch-timeout` |
+| `DRS-1004 timed out` on a single read | the read deadline (`drishti.sources.fetch-timeout`, 10 s) passed: very large row groups, or object storage far away | smaller row groups; check `p99Ms` in Health; `drishti.sources.fetch-timeout` |
 | the log directory grows by megabytes a day | statistics include the document | `maintain.py` sets `delta.dataSkippingStatsColumns`; or set it yourself |
 | Health: `DEGRADED: cannot read trade 2026-09-30: …` | the last read of that table and date failed: pages in a codec the engine does not decompress (BROTLI, LZO), a page that does not decode, a truncated or missing Parquet file, or (`trade log`) a log missing a commit | the reason says which; codecs: [section 16](#16-engines-native-and-hadoop); a damaged file: restore it or rewrite the date. Health turns `UP` once a read of the date succeeds or the table gets a new version |
 | a view fails with `DRS-1003 … failed reading` while other dates open | that date's files cannot be read (see the row above); the view does not fall back to another store's data | as above |
@@ -801,6 +801,27 @@ Tested in `S3StorageProxyTest` (native S3 reader against a fake proxy and a stan
 no-proxy, site default, `proxy: none`) and `HadoopLakeProxyTest` (the `fs.s3a.proxy.*` mapping).
 
 ## As a connector file
+
+### The lake file: where the root and the layout live
+
+The lake itself (its root, storage, each table's folder, partitions, promoted columns and vectors) is described once, in its lake file
+`config/lakes/<lake>.yaml`, and the connector names it ([LAKE_GUIDE.md](../guides/LAKE_GUIDE.md)). The connector file then keeps only
+reading concerns:
+
+```yaml
+# config/connectors/trade-endur.yaml
+plugin: delta
+kinds: [trade]
+settings:
+  lake: demo                          # config/lakes/demo.yaml: root, table folder, promoted columns, vectors
+  lake-tables: trading.trade_endur    # the entry, where a kind has several tables (ENDUR, CALYPSO, MUREX)
+  union: "true"
+  refresh-seconds: 10
+```
+
+A connector that names a lake and also sets `root`, `domain`, `table.<kind>`, `layout.<kind>.columns` or `layout.<kind>.vectors` fails,
+naming both. The form below, with those keys in the connector file, is the older one: it is read for one more release with one warning,
+and `drishti.py lake migrate-config` moves it into a lake file ([LAKE_GUIDE.md section 8](../guides/LAKE_GUIDE.md#8-migrating-an-older-installation)).
 
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 

@@ -81,6 +81,80 @@ def retention_floor(name: str, conf: dict, retain: dict | None = None) -> tuple[
     return out, notes
 
 
+def hours_of(text) -> int | None:
+    """A lake file's age (``168h``, ``7d``, ``7y``, or a number of hours) in hours; None when not given."""
+    if text is None or str(text).strip() == "":
+        return None
+    t = str(text).strip().lower()
+    unit = t[-1] if t[-1] in "hdy" else "h"
+    n = float(t[:-1] if t[-1] in "hdy" else t)
+    return int(n if unit == "h" else n * 24 if unit == "d" else retain_days(int(n)) * 24)
+
+
+def from_lake_entry(entry: dict) -> tuple[dict, list[str]]:
+    """The maintenance settings a lake file's table entry gives (docs/guides/LAKE_GUIDE.md section 1: ``retention``, ``maintenance``,
+    ``time-travel``), in this module's keys, and notes for what it cannot act on. ``retention``: ``260`` or ``260d`` business dates,
+    ``7y`` years; ``maintenance``: ``compaction`` (true/false), ``target-file-mb``, ``vacuum`` or ``expire-snapshots`` (an age: 168h, 7d),
+    ``vacuum-hours``, ``orphan-hours``, ``checkpoint`` (true/false), ``checkpoint-interval`` (the writers' table property; here a
+    checkpoint each run); ``time-travel``: old versions kept readable at least this long (vacuum and expire-snapshots never go below)."""
+    out: dict = {}
+    notes: list[str] = []
+    r = entry.get("retention")
+    if r not in (None, ""):
+        t = str(r).strip().lower()
+        out["keep-business-days"] = int(float(t[:-1])) * BUSINESS_DAYS_A_YEAR if t.endswith("y") else int(float(t.rstrip("d")))
+    m = entry.get("maintenance") or {}
+    truthy = lambda v: str(v).strip().lower() in ("true", "yes", "on", "1")   # noqa: E731
+    if "compaction" in m:
+        out["compact"] = truthy(m["compaction"])
+    for k in ("target-file-mb", "vacuum-hours", "orphan-hours"):
+        if m.get(k) not in (None, ""):
+            out[k] = int(float(m[k]))
+    for k in ("vacuum", "expire-snapshots"):
+        if m.get(k) not in (None, ""):
+            out["vacuum-hours"] = hours_of(m[k])
+    if "checkpoint" in m:
+        out["checkpoint"] = truthy(m["checkpoint"])
+    if m.get("checkpoint-interval") not in (None, ""):
+        out["checkpoint"] = True
+        notes.append(f"checkpoint-interval {m['checkpoint-interval']}: the writers set it as the table's delta.checkpointInterval; maintenance "
+                     "checkpoints each run")
+    unknown = sorted(set(m) - {"compaction", "target-file-mb", "vacuum-hours", "orphan-hours", "vacuum", "expire-snapshots", "checkpoint",
+                               "checkpoint-interval", "statistics"})
+    if unknown:
+        notes.append(f"maintenance keys not acted on: {unknown}")
+    tt = hours_of(entry.get("time-travel"))
+    if tt is not None:
+        out["time-travel-hours"] = tt
+    return out, notes
+
+
+def with_time_travel(conf: dict) -> dict:
+    """vacuum-hours raised to the lake file's time-travel (old versions readable that long): vacuum or expire-snapshots never go below."""
+    tt = conf.pop("time-travel-hours", None)
+    if tt is not None and conf.get("vacuum-hours") is not None and int(conf["vacuum-hours"]) < tt:
+        conf["vacuum-hours"] = tt
+    return conf
+
+
+def lake_file_settings(root: str, lakes: list[dict] | None = None) -> dict[str, dict]:
+    """``<domain>/<table>`` -> the lake file's entry, for the lake whose root is ``root`` (the lake files read by the one reader,
+    tools/lake/lakeconfig.py; ``lakes`` is its dump, given by a caller that read it once). {} when no lake file describes the root or
+    there is no reader (maintenance then goes by this file alone)."""
+    if lakes is None:
+        try:
+            import lakeconfig
+            lakes = lakeconfig.dump().get("lakes") or []
+        except Exception:  # noqa: BLE001 - no Java reader: maintenance by the maintenance file alone
+            return {}
+    out: dict[str, dict] = {}
+    for lake in lakes:
+        if lake.get("root") and same_root(str(lake["root"]), root):
+            for t in lake.get("tables") or []:
+                out[t["path"]] = t
+    return out
+
+
 def floor_days(name: str, retain: dict | None = None) -> int:
     """The calendar days the table's domain keeps whatever its settings say (risk, risk-results: 2,557), or 0: what an Iceberg table's
     maintenance is given as --floor-days, so the Java side never drops a date or expires a snapshot inside it either."""

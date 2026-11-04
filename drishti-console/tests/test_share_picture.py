@@ -69,7 +69,7 @@ def test_the_dialog_has_the_picture_option_hidden_until_the_server_allows_it():
     c, _ = _app()
     html = c.get("/v/trade/IRS-48213").text
     assert "data-shr-picture-row hidden" in html and "Include a picture" in html and "data-shr-preview-img" in html
-    js = (JS / "share.js").read_text()
+    js = (JS / "drishti_share.js").read_text()
     assert "picRow.hidden = !(conf && conf.snapshots)" in js                       # shown only when the server says so for this kind
     assert "picture: !!(picBox.checked && conf && conf.snapshots)" in js          # and sent only when ticked and allowed
     assert "'?kind=' + encodeURIComponent" in js                                  # the server is asked about this view's kind

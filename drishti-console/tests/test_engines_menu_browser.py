@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Engines menu in a real browser (2.9.11.a, mock-up engines-menu/A; config/menus.yaml, terminal/_topbar.html, static/js/engines-menu.js),
+"""The Engines menu in a real browser (2.9.11.a, mock-up engines-menu/A; config/menus.yaml, terminal/_topbar.html, static/js/drishti_engines-menu.js),
 dark and light, over a console of its own whose menus.yaml shows the search box from three engines (search-over: 2):
 - on a desktop the menu sits after Views, opens a panel with a column per running engine (VaR, Exposure, FRTB-SA, SIMM), each with its
   command word, inside the screen, with Admin -> Engines; nothing scrolls sideways;

@@ -49,9 +49,9 @@ def test_the_workspace_has_three_tabs_and_the_runs_panel(bi):
         assert hook in r.text, hook
     for name in ("state", "source", "who", "since", "q"):
         assert f'name="{name}"' in r.text, name
-    scripts = re.findall(r"/static/js/([a-z-]+)\.js", r.text)
+    scripts = re.findall(r"/static/js/drishti_([a-z-]+)\.js", r.text)
     assert scripts.index("bi-lib") < scripts.index("bi-runs") < scripts.index("bi-runs-tab")
-    assert "bi-runs.css" in r.text
+    assert "drishti_bi-runs.css" in r.text
 
 
 def test_the_rail_links_to_my_runs_with_a_count_and_g_r_is_listed(bi):
@@ -165,7 +165,7 @@ def test_a_run_notice_in_the_inbox_says_run_and_links_to_it(bi):
 def test_admin_runs_is_for_bi_admins_and_its_api_passes_on():
     client, _ = make()
     page = client.get("/admin/bi/runs")
-    assert page.status_code == 200 and "data-bi-runs-admin" in page.text and "bi-runs-admin.js" in page.text
+    assert page.status_code == 200 and "data-bi-runs-admin" in page.text and "drishti_bi-runs-admin.js" in page.text
     d = client.get("/bi/api/admin/runs").json()
     assert d["now"]["slots"]["background"] == {"used": 2, "cap": 2} and d["storage"]["results"] == 1904
     viewer, _ = make(("bi",))
@@ -185,7 +185,7 @@ def test_the_settings_page_links_to_runs(bi):
 
 
 def test_every_runs_script_has_the_licence_and_no_markup_strings():
-    for name in ("bi-runs.js", "bi-runs-tab.js", "bi-runs-admin.js"):
+    for name in ("drishti_bi-runs.js", "drishti_bi-runs-tab.js", "drishti_bi-runs-admin.js"):
         text = (CONSOLE / "web/static/js" / name).read_text(encoding="utf-8")
         assert "PROPRIETARY AND CONFIDENTIAL" in text[:600], name
         assert "innerHTML" not in text and "insertAdjacentHTML" not in text, name            # text only, never markup (the strict policy)
@@ -247,13 +247,13 @@ def test_suggestions_are_accepted_or_dismissed_through_the_console():
 
 
 def test_the_query_panel_asks_sql_with_the_inline_wait_when_runs_are_on_the_page():
-    text = (CONSOLE / "web/static/js/bi-query-panel.js").read_text(encoding="utf-8")
+    text = (CONSOLE / "web/static/js/drishti_bi-query-panel.js").read_text(encoding="utf-8")
     assert "B.ask('/sql', body, 2)" in text and "B.runs.settle(" in text
     page = (CONSOLE / "web/templates/bi/design.html").read_text(encoding="utf-8")
-    scripts = re.findall(r"/static/js/([a-z-]+)\.js", page)
-    assert scripts.index("bi-lib") < scripts.index("bi-runs") < scripts.index("bi-query-panel") and "bi-runs.css" in page
+    scripts = re.findall(r"/static/js/drishti_([a-z-]+)\.js", page)
+    assert scripts.index("bi-lib") < scripts.index("bi-runs") < scripts.index("bi-query-panel") and "drishti_bi-runs.css" in page
 
 
 def test_the_model_designer_links_to_open_rollup_suggestions():
-    text = (CONSOLE / "web/static/js/bi-model-designer.js").read_text(encoding="utf-8")
+    text = (CONSOLE / "web/static/js/drishti_bi-model-designer.js").read_text(encoding="utf-8")
     assert "function rollupNotice(model)" in text and "'/admin/bi/runs?model=' + encodeURIComponent(model) + '#suggestions'" in text and "data-md-suggest" in text

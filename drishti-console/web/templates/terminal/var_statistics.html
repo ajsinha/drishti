@@ -15,12 +15,12 @@
 #}
 {# Period statistics, VAR <scope> STATS <period> (VAR_GUIDE.md section 18.10; the statistics row of the approved mock-up report-signoff A):
    period end, average, high, low, the 60-day average and the 12-week stressed VaR average of a node over a fiscal year or quarter, from
-   the official records; the records missing in the period named. A shell: var-reports.js fills it from /api/var/statistics. #}
+   the official records; the records missing in the period named. A shell: drishti_var-reports.js fills it from /api/var/statistics. #}
 {% extends "base.html" %}
 {% block title %}Period statistics · {{ scope }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}var-statistics{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/var-regulatory.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="rg" data-statistics data-scope="{{ scope }}" data-period="{{ period }}" data-measure="{{ measure }}">
@@ -41,4 +41,4 @@
   <p class="rg-note" data-st-missing></p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/var-reports.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-reports.js?v={{ ASSET_V }}"></script>{% endblock %}

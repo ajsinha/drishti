@@ -49,7 +49,8 @@ public final class TokenScopes {
 
     /** Whether a scope name is one an administrator has defined, or {@code read}. */
     public boolean known(String scope) {
-        return READ.equals(scope) || props.tokenScopes().containsKey(scope);
+        return READ.equals(scope) || props.tokenScopes().containsKey(scope)
+                || scope != null && scope.matches("data:read:([a-z0-9][a-z0-9._-]*|\\*)");   // Arrow Flight, one domain (FLIGHT_GUIDE.md)
     }
 
     /** Whether the endpoint is declared: a read, in {@code token-never}, or opened by some scope. Used by the guard test. */

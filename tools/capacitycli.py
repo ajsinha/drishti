@@ -15,7 +15,7 @@
 
 """`drishti.py admin capacity`: Admin -> Capacity from the command line (docs/architecture/RESOURCES_AND_SCALE.md 9.7; the API:
 /api/v1/admin/capacity, administrators). The planner the server serves (capacity/planner.yaml) is evaluated here, by the same evaluator
-as tools/sizing_planner.py's workbook and the page's capacity.js: the heap to set, RAM, disk and cores, the warnings, the YAML block of
+as tools/sizing_planner.py's workbook and the page's drishti_capacity.js: the heap to set, RAM, disk and cores, the warnings, the YAML block of
 the settings and the whole JVM command line. --live puts this server's measured figures into the inputs (positions, trades, dates in
 memory, users, requests a second, Java) and prints them; --set Name=value changes any input; --xlsx FILE downloads the formula workbook
 (--inputs plan, live or both), audited on the server as capacity-workbook-downloaded. Exit codes: 0, 1 (the server said no), 2 (usage)."""

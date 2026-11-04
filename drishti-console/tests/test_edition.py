@@ -221,7 +221,7 @@ def test_logo_and_icons_come_from_configuration(backend, monkeypatch, key):
     else:
         assert '<link rel="icon" href="/static/img/acme.svg">' in page
     m = c.get("/manifest.webmanifest").json()
-    assert m["name"] == "Acme Risk" and m["icons"][0]["src"] in ("/static/img/acme.svg", "/static/img/icons/icon-192.png")
+    assert m["name"] == "Acme Risk" and m["icons"][0]["src"] in ("/static/img/acme.svg", "/static/img/icons/drishti_icon-192.png")
 
 
 # ---- Drishti World (2.9.7): the second edition, its landings, and two lenses side by side --------------------------------------------
@@ -274,7 +274,7 @@ def test_world_home_offers_its_three_landings_and_remembers_the_choice(backend, 
     c = _client(app)
     home = c.get("/").text
     assert 'data-world-landing="desk"' in home and "data-risk-landing" not in home        # A, the default
-    assert "/static/js/world-landing.js" in home and "/static/css/world-landing.css" in home
+    assert "/static/js/drishti_world-landing.js" in home and "/static/css/drishti_world-landing.css" in home
     assert 'data-home-card="ECON CAN"' in home and 'data-home-card="FUND SPY"' in home
     assert ">World desk<" in home and ">Explorer<" in home and ">World map<" in home
     assert 'href="/home/landing/explorer"' in home and 'href="/home/landing/map"' in home
@@ -400,7 +400,7 @@ def test_market_home_offers_desk_explorer_and_quality_and_remembers_the_choice(m
     c = _client(app)
     home = c.get("/").text
     assert 'data-market-landing="desk"' in home and "data-world-landing" not in home and "data-risk-landing" not in home
-    assert "/static/js/market-landing.js" in home and "/static/css/market-landing.css" in home
+    assert "/static/js/drishti_market-landing.js" in home and "/static/css/drishti_market-landing.css" in home
     for card in ("CRV CRV-USD-OIS", "FXV FXV-EURUSD", "IRV IRV-USD", "FIX FIX-SOFR"):
         assert f'data-home-card="{card}"' in home, card
     assert ">Market desk<" in home and ">Explorer<" in home and ">Quality<" in home
@@ -575,7 +575,7 @@ def test_trading_home_offers_trader_desk_and_explorer_and_remembers_the_choice(t
     c = _client(app)
     home = c.get("/").text
     assert 'data-trading-landing="trader"' in home and "data-market-landing" not in home and "data-risk-landing" not in home
-    assert "/static/js/trading-landing.js" in home and "/static/css/trading-landing.css" in home
+    assert "/static/js/drishti_trading-landing.js" in home and "/static/css/drishti_trading-landing.css" in home
     assert ">Trader desk<" in home and ">Desk head<" in home and ">Explorer<" in home
     assert 'data-tl-tile="pnl"' in home and 'data-tl-check' in home and 'data-home-card="VAR BOOK BOOK-RATES-1"' in home
     assert c.post("/home/landing/desk", follow_redirects=False).status_code == 303

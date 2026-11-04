@@ -1,0 +1,95 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/lakes.examples/iceberg/iceberg.yaml: an example lake file (docs/guides/LAKE_GUIDE.md), the lake the connector files of
+# config/connectors.examples/iceberg/ name. Copy it to config/lakes/iceberg.yaml. Secrets only as ${ENV} or file:/path references.
+lake: iceberg
+format: iceberg
+root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
+catalog: {type: '${DRISHTI_ICEBERG_CATALOG:hadoop}', uri: '${DRISHTI_ICEBERG_URI:}', warehouse: '${DRISHTI_ICEBERG_WAREHOUSE:}', credential: '${DRISHTI_ICEBERG_CREDENTIAL:}'}
+tables:
+  collateral.collateral-balance: null
+  collateral.margin-call: null
+  collateral.simm: null
+  credit.netting-set: null
+  credit.credit-limit: null
+  credit.cva: null
+  credit.sa-ccr: null
+  market.ir-curve: null
+  market.repo-curve: null
+  market.fx-spot: null
+  market.fx-forward-curve: null
+  market.fx-vol-surface: null
+  market.ir-vol-cube: null
+  market.cap-vol-surface: null
+  market.equity: null
+  market.equity-index: null
+  market.dividend-curve: null
+  market.equity-vol-surface: null
+  market.credit-curve: null
+  market.inflation-index: null
+  market.inflation-curve: null
+  market.commodity: null
+  market.commodity-curve: null
+  market.commodity-vol-surface: null
+  market.rate-fixing: null
+  market.bond: null
+  market.correlation-matrix: null
+  reference.counterparty: null
+  reference.counterparty-group: null
+  reference.issuer: null
+  reference.agreement: null
+  reference.ccp: null
+  reference.legal-entity: null
+  reference.book: null
+  reference.desk: null
+  reference.trader: null
+  reference.calendar: null
+  reference.csa: null
+  reference.clearing-account: null
+  risk.stress-scenario: null
+  risk.stress-result: null
+  risk.frtb-sensitivity: null
+  risk.pnl-explain: null
+  risk.trade-valuation:
+    promote: [VALUATION_ID, TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_GROUP, PORTFOLIO, DESK, COUNTERPARTY, NETTING_SET, TRADER_ID, BUY_SELL_CODE,
+      TRADE_STATUS, CURRENCY, NOTIONAL, MTM, MTM_CURRENCY, PNL_1D, DV01, TRADE_DATE, MATURITY_DATE, VALUATION_DATE]
+  risk.portfolio:
+    promote: [PORTFOLIO_ID, NAME, TYPE, OWNER, LIMIT_VAR]
+  risk.pnl-vector:
+    promote: [VALUE_TYPE, GRAIN, TRADE_ID, POSITION_ID, CURRENCY, SOURCE_SYSTEM, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK,
+      LIMIT_LETTER, PORTFOLIO, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE, COUNTERPARTY, DIRECTION, QUANTITY, PV, TAGS, TRADE_STATUS, MATURITY_DATE,
+      STATUS, REPORTING_CCY, SCENARIO_SET_ID, BATCH_ID, RUN_KIND, COMPUTED_AT, TRADE_IDS, TRADE_CURRENCY]
+    vectors: [PNL]
+  risk.scenario-pv:
+    promote: [VALUE_TYPE, GRAIN, TRADE_ID, POSITION_ID, CURRENCY, SOURCE_SYSTEM, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK,
+      LIMIT_LETTER, PORTFOLIO, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE, COUNTERPARTY, DIRECTION, QUANTITY, BASE_PV, VALUATION_DATE, BASE_VALUATION_DATE,
+      TAGS, TRADE_STATUS, MATURITY_DATE, STATUS, SCENARIO_SET_ID, BATCH_ID, RUN_KIND, COMPUTED_AT, TRADE_IDS]
+    vectors: [SCENARIO_PV]
+  risk.fx-scenario:
+    promote: [CURRENCY, RATE, SCENARIO_SET_ID]
+  risk.scenario-set: null
+  risk.risk-hierarchy:
+    promote: [NODE_ID, HIERARCHY, LEVEL, PARENT_ID, NAME, LIMIT_VAR]
+  risk.var-limit:
+    promote: [LIMIT_ID, HIERARCHY, NODE_ID, LIMIT_VAR, CURRENCY]
+  risk.pnl-history:
+    promote: [HIERARCHY, NODE_ID, LEVEL, CURRENCY, FIRST_DAY, LAST_DAY, DAY_COUNT]
+    vectors: [PNL]
+  trading.trade:
+    promote: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY,
+      TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID]
+    sort-by: [id]
+    file-rows: 250000
+    row-group-rows: 1000

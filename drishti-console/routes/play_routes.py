@@ -15,7 +15,7 @@
 """The VaR Playground (docs/architecture/VAR_PLAYGROUND.md, docs/guides/VAR_GUIDE.md section 3.10): ``PLAY VAR <scope|ids> <GO>`` opens
 ``/play?scope=...`` (or ``/play?ids=...``), every VaR figure of the scope worked out in a spreadsheet-like grid (positions across,
 scenarios down, at most 500 positions, the rest in one Rest of scope column) with a tall explanation beside it, and exported as an .xlsx of
-real formulas that recalculates in Excel, LibreOffice and Google Sheets. The page is a shell: web/static/js/var-playground.js fills it
+real formulas that recalculates in Excel, LibreOffice and Google Sheets. The page is a shell: web/static/js/drishti_var-playground.js fills it
 from ``/api/play/grid``, which asks the server's VaR engine (``/api/v1/var/playground``) as the person, so their nodes, roles and masks
 apply. ``/api/play/export.xlsx`` streams the workbook (100, 500, 1,000, 10,000 or all positions), ``/api/play/estimate`` says what each
 choice is before it is made, ``/api/play/template.xlsx`` is the empty workbook.
@@ -94,12 +94,17 @@ def link(scope: str, **lens) -> str:
 
 @router.get("/play")
 async def page(request: Request, scope: str = "", ids: str = "", ccy: str = "", h: str = "", m: str = "", q: str = "", esq: str = "",
-               set: str = ""):  # noqa: A002 (the link's word)
-    """The playground's shell; the grid, the explanation and the export load in place (web/static/js/var-playground.js)."""
+               set: str = "", measure: str = ""):  # noqa: A002 (the link's word)
+    """The playground's shell; the grid, the explanation and the export load in place (web/static/js/drishti_var-playground.js)."""
     lens = var_routes.lens_of(request, h, m, q, esq, set)
     target = scope.strip() or ids.strip()
+    # the page's tabs (PARAMETRIC_VAR.md section 10): the grid (VaR), and Parametric (measure=parametric): the same link otherwise
+    plain = request.url.remove_query_params("measure")
+    tabs = {"var": plain.path + ("?" + plain.query if plain.query else ""),
+            "parametric": plain.path + "?" + plain.include_query_params(measure="parametric").query}
     return render(request, "terminal/play.html", scope=scope.strip(), ids=ids.strip(), target=target, screen="play",
                   ccy=ccy.upper() if var_routes.CCY.match(ccy or "") else "", lens=lens,
+                  measure="parametric" if measure == "parametric" else "", tabs=tabs,
                   command_text=f"{WORD} VAR {target}".strip() if target else f"{WORD} VAR")
 
 
@@ -107,7 +112,7 @@ def _params(request: Request) -> dict:
     """The engine's parameters from the page's: the scope or ids, the currency, the lens, the view, the count and the date."""
     qp = request.query_params
     p = {}
-    for k in ("scope", "ids", "ccy", "view", "count", "asOf"):
+    for k in ("scope", "ids", "ccy", "view", "count", "asOf", "measure"):
         if qp.get(k):
             p[k] = qp.get(k)
     for short, name in LENS.items():

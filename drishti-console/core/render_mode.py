@@ -55,7 +55,7 @@ def client(request, page: str) -> bool:
 
 
 def view_boot(request, vm: dict, panels: list, grid: dict | None, embed: bool, design_on: bool) -> dict:
-    """What a client-drawn view page embeds for view-render.js: the ViewModel as this page arranges it (the reader's layout and saved
+    """What a client-drawn view page embeds for drishti_view-render.js: the ViewModel as this page arranges it (the reader's layout and saved
     pivots applied to ``panels``; the grid with the reader's own arrangement), the business date shown, and the console's options."""
     asof = getattr(request.state, "asof", "live")
     return {"vm": {**vm, "panels": panels}, "grid": grid, "asOf": asof,

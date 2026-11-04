@@ -19,7 +19,7 @@ import com.ash.drishti.server.bi.board.Board;
 import java.util.List;
 
 /**
- * The colour a board tile takes, as a number: {@code 0} none, {@code 1} warn (amber), {@code 2} crit (red). The rule is the viewer's (bi-live.js, {@code level}):
+ * The colour a board tile takes, as a number: {@code 0} none, {@code 1} warn (amber), {@code 2} crit (red). The rule is the viewer's (drishti_bi-live.js, {@code level}):
  * {@code crit} is tried first, then {@code warn}, and a visual with many rows takes the worst of them. Kept in step with the browser by a test that reads both.
  */
 public final class TileLevel {

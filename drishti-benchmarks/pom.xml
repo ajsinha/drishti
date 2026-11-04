@@ -21,12 +21,12 @@
   <parent>
     <groupId>com.ash.drishti</groupId>
     <artifactId>drishti-parent</artifactId>
-    <version>2.9.11.a</version>
+    <version>2.9.11.b</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>drishti-benchmarks</artifactId>
   <name>drishti-benchmarks</name>
-  <description>JMH benchmarks for the hot paths: fingerprint, Rachana-EL, formats; HistoryBench for history queries</description>
+  <description>JMH benchmarks for the hot paths: fingerprint, Rachana-EL, formats; HistoryBench for history queries; ManyScopeBenchmark for many VaR scopes at once (BLAS)</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-inference</artifactId></dependency>
     <!-- HistoryBench: a Delta table written with Drishti's writer, read through the engine's history service -->
@@ -34,6 +34,8 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId></dependency>
+    <!-- ManyScopeBenchmark: VaR scope sums, one set at a time against MultiSums on Java and on OpenBLAS -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute</artifactId></dependency>
     <dependency><groupId>org.openjdk.jmh</groupId><artifactId>jmh-core</artifactId><version>${jmh.version}</version></dependency>
     <dependency><groupId>org.openjdk.jmh</groupId><artifactId>jmh-generator-annprocess</artifactId><version>${jmh.version}</version><scope>provided</scope></dependency>
   </dependencies>

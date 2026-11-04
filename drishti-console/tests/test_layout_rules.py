@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Layout mode's rules (QA 2026-10-01 UX-14): a minimum width, the last visible panel stays, and the announced height is
-the kept one. The rules are plain JavaScript (layout-rules.js), run here in Node."""
+the kept one. The rules are plain JavaScript (drishti_layout-rules.js), run here in Node."""
 import json
 import shutil
 import subprocess
@@ -27,7 +27,7 @@ pytestmark = pytest.mark.skipif(NODE is None, reason="needs node")
 
 
 def run(expr: str):
-    code = f"const R=require({json.dumps(str(JS / 'layout-rules.js'))});console.log(JSON.stringify({expr}))"
+    code = f"const R=require({json.dumps(str(JS / 'drishti_layout-rules.js'))});console.log(JSON.stringify({expr}))"
     return json.loads(subprocess.run([NODE, "-e", code], capture_output=True, text=True, check=True, timeout=30).stdout)
 
 
@@ -52,10 +52,10 @@ def test_a_measured_height_is_not_short_by_a_row():
 
 
 def test_layout_mode_uses_the_rules_and_the_page_loads_them():
-    js = (JS / "layout.js").read_text()
+    js = (JS / "drishti_layout.js").read_text()
     assert "toggleHidden" in js and "R.clampSpan" in js and "R.sizeText" in js
 
 
 def test_the_view_carries_the_minimum_width_and_loads_the_rules(client):
     page = client.get("/v/trade/IRS-48213").text
-    assert 'data-min-span="3"' in page and "layout-rules.js" in page
+    assert 'data-min-span="3"' in page and "drishti_layout-rules.js" in page

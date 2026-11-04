@@ -407,7 +407,7 @@ def test_admin_packs_takes_a_bundle_hand_off_whose_job_id_names_its_worker():
     once stopped at the dot, and the deploy step waited for a bundle that never came)."""
     import re
     from pathlib import Path
-    js = (Path(__file__).resolve().parent.parent / "web" / "static" / "js" / "admin-packs.js").read_text(encoding="utf-8")
+    js = (Path(__file__).resolve().parent.parent / "web" / "static" / "js" / "drishti_admin-packs.js").read_text(encoding="utf-8")
     pattern = re.search(r"var handed = /(.+?)/\.exec", js).group(1).replace("\\/", "/")
     got = re.search(pattern, "?bundle=Ab3_x-Yz9Qw1.40123#deploy")
     assert got and got.group(1) == "Ab3_x-Yz9Qw1.40123"

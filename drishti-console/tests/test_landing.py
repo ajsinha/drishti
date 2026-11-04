@@ -26,7 +26,7 @@ def test_landing_renders(client):
     for theme in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"):
         assert f'data-theme-choice="{theme}"' in html
     for shot in ("irs", "fx-swap", "commodity-future", "netting-set"):
-        assert f"shot-{shot}.png" in html
+        assert f"drishti_shot-{shot}.png" in html
 
 
 def test_security_headers(client):
@@ -36,7 +36,7 @@ def test_security_headers(client):
 
 
 def test_static_assets_served(client):
-    for path in ("/static/js/landing.js", "/static/css/tokens.css", "/static/vendor/bootstrap/css/bootstrap.min.css"):
+    for path in ("/static/js/drishti_landing.js", "/static/css/drishti_tokens.css", "/static/vendor/bootstrap/css/bootstrap.min.css"):
         assert client.get(path).status_code == 200
 
 

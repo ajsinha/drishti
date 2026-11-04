@@ -219,12 +219,35 @@ final class IcebergTarget implements TableTarget {
         for (byte[] b : plan.loadIds) {
             ids.add(new String(b, java.nio.charset.StandardCharsets.UTF_8));
         }
-        Map<String, String> summary = Map.of("drishti.business-dates", date.toString(), "drishti.loader", "parallel", "drishti.load-ids",
-                String.join(",", ids));                         // an undo finds the commit of a load (and whether it replaced the date)
-        Snapshot s = (cfg.target().appends() ? Operations.append(table, add, summary)
-                : Operations.replacePartitions(table, f -> date.equals(dateOf(f)), add, summary))
-                .orElseThrow(() -> new IllegalStateException("the commit of " + date + " made no snapshot"));
+        Map<String, String> summary = new LinkedHashMap<>(Map.of("drishti.business-dates", date.toString(), "drishti.loader", "parallel",
+                "drishti.load-ids", String.join(",", ids)));    // an undo finds the commit of a load (and whether it replaced the date)
+        Snapshot s;
+        if (cfg.target().appends()) {                     // append: the date's earlier files stay; the batch (when named) in the snapshot
+            if (cfg.target().batchId() != null) {
+                summary.put(BATCH, batchKey(date));
+            }
+            s = Operations.append(table, add, summary).orElseThrow(() -> new IllegalStateException("the commit of " + date + " made no snapshot"));
+        } else {
+            s = Operations.replacePartitions(table, f -> date.equals(dateOf(f)), add, summary)
+                    .orElseThrow(() -> new IllegalStateException("the commit of " + date + " made no snapshot"));
+        }
         return s.snapshotId();
+    }
+
+    /** The snapshot summary key that names an append's batch and date. */
+    static final String BATCH = "drishti.batch";
+
+    @Override
+    public boolean appended(LocalDate date) {
+        if (!cfg.target().appends() || cfg.target().batchId() == null || table == null) {
+            return false;                                  // no batch named: an append is not guarded (its rows carry their _load_id)
+        }
+        String key = batchKey(date);
+        return table.metadata().snapshots().stream().anyMatch(x -> x.summary() != null && key.equals(x.summary().get(BATCH)));
+    }
+
+    private String batchKey(LocalDate date) {
+        return cfg.target().batchId() + ":" + date;
     }
 
     @Override

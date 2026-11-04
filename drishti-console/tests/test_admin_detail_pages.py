@@ -84,7 +84,7 @@ def test_the_connector_page_shows_state_tls_packs_settings_file_and_history(clie
     page = client.get("/admin/connectors/trading-lake").text
     for text in ("trading-lake", "delta", "running", "UP", "next retry in", "(attempt 3)", "Retry now", "connection refused", "CN=drishti", "expires 2026-10-20 (12 days)",
                  'href="/admin/packs/trading"', "***", "plugin: delta", "Test connection", "Disable trading-lake", "Reset trading-lake to the default of pack trading",
-                 "Compare or restore", "20261006T080000000", "/help/connector-files", "admin-connectors.js", "data-edit-dialog", 'aria-current="page"'):
+                 "Compare or restore", "20261006T080000000", "/help/connector-files", "drishti_admin-connectors.js", "data-edit-dialog", 'aria-current="page"'):
         assert text in page, text
     assert "Delete trading-lake" not in page                                           # a pack's connector is reset or disabled, never deleted
 

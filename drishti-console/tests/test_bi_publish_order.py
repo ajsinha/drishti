@@ -17,7 +17,7 @@
 After Save the designer reads the item again (refreshItem). A Publish clicked at once was answered first, set the state to Published, and then the read
 asked before it, answered after it, put the draft back: the page said "Saved draft" although the server had published (test_bi_wave_b_browser.py and
 test_bi_languages_browser.py saw it whenever the read took longer than the publish). The item's answers now go through drishtiBi.itemAnswers: a read
-answered after a later write's answer is dropped. Here the race is played in Node with the real bi-lib.js, and the designer is checked to route every
+answered after a later write's answer is dropped. Here the race is played in Node with the real drishti_bi-lib.js, and the designer is checked to route every
 write and the refresh through it, so a new write path cannot bring the race back."""
 import json
 import re
@@ -29,12 +29,12 @@ import pytest
 
 JS = Path(__file__).resolve().parent.parent / "web" / "static" / "js"
 node = shutil.which("node")
-needs_node = pytest.mark.skipif(node is None, reason="needs Node to run bi-lib.js")
+needs_node = pytest.mark.skipif(node is None, reason="needs Node to run drishti_bi-lib.js")
 
 
 def play(script: str):
     prelude = ("global.window = {location: {search: ''}, setTimeout, clearTimeout, addEventListener() {}}; global.document = {addEventListener() {}, querySelector() { return null; }, querySelectorAll() { return []; }}; require(%s); const B = window.drishtiBi;\n"
-               "const later = (v, ms) => new Promise((r) => setTimeout(() => r(v), ms));\n" % json.dumps(str(JS / "bi-lib.js")))
+               "const later = (v, ms) => new Promise((r) => setTimeout(() => r(v), ms));\n" % json.dumps(str(JS / "drishti_bi-lib.js")))
     out = subprocess.run([node, "-e", prelude + script], capture_output=True, text=True, timeout=30)
     assert out.returncode == 0, out.stderr
     return json.loads(out.stdout)
@@ -62,7 +62,7 @@ def test_a_read_answered_with_no_write_since_is_applied():
 
 
 def test_the_model_designer_routes_every_item_write_and_the_refresh_through_the_answers():
-    src = (JS / "bi-model-designer.js").read_text(encoding="utf-8")
+    src = (JS / "drishti_bi-model-designer.js").read_text(encoding="utf-8")
     assert "const answers = B.itemAnswers();" in src
     writes = [line for line in src.splitlines() if re.search(r"\bM\.item = (?!fresh\b)", line)]
     assert len(writes) >= 4, writes                                       # save, autosave, publish, move (the page's first read sets it once at open)

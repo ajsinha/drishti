@@ -42,7 +42,7 @@ def test_the_page_has_the_about_tab_with_its_editor_card_and_script(app_client):
     assert 'role="tab" id="wbTabAbout" data-tab="about"' in html and 'id="wbPaneAbout"' in html
     for hook in ("data-about-src", "data-about-card", "data-about-lint", "data-about-starter", "data-about-status"):
         assert hook in html
-    assert re.search(r'/static/js/build/about\.js\?v=', html) and html.index("build/problems.js") < html.index("build/about.js")
+    assert re.search(r'/static/js/build/drishti_about\.js\?v=', html) and html.index("build/drishti_problems.js") < html.index("build/drishti_about.js")
     assert "#the-about-tab" in html                      # the link to the guide section
 
 
@@ -83,7 +83,7 @@ def test_another_users_design_is_not_found(app_client):
 
 
 def test_the_scripts_wire_the_tab_into_the_store_and_the_problems_pane():
-    about, ops, problems, wb = [(JS / f).read_text() for f in ("about.js", "ops.js", "problems.js", "workbench.js")]
+    about, ops, problems, wb = [(JS / f).read_text() for f in ("drishti_about.js", "drishti_ops.js", "drishti_problems.js", "drishti_workbench.js")]
     assert "/about/preview" in about and "'PUT'" in about and "store.exclusive" in about
     assert "adoptAbout" in ops and "about: st.about" in ops and "exclusive" in ops
     assert "'aboutlint'" in about and "'aboutlint'" in problems and "gotoAbout" in problems and "gotoAbout" in wb

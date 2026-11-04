@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The browser's live hub (live-hub.js, UX-01): every tab of a browser subscribes through one hub that holds ONE channel
+"""The browser's live hub (drishti_live-hub.js, UX-01): every tab of a browser subscribes through one hub that holds ONE channel
 to the console. These run the hub in Node with a stand-in EventSource, fetch and clock, and check the protocol: keys
 shared by tabs are subscribed once, later tabs get what a fresh stream starts with, changes go over the open channel,
 pages of another session get nothing, and dropped connections, quiet tabs and ended channels are handled."""
@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-HUB_JS = Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "live-hub.js"
+HUB_JS = Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "drishti_live-hub.js"
 
 HARNESS = r"""
 const Hub = require(process.argv[2]);
@@ -215,7 +215,7 @@ const out = {};
 @pytest.fixture(scope="module")
 def hub(tmp_path_factory):
     if shutil.which("node") is None:
-        pytest.skip("needs Node.js to run live-hub.js")
+        pytest.skip("needs Node.js to run drishti_live-hub.js")
     harness = tmp_path_factory.mktemp("hub") / "harness.js"
     harness.write_text(HARNESS)
     run = subprocess.run(["node", str(harness), str(HUB_JS)], capture_output=True, text=True, timeout=60)
@@ -259,7 +259,7 @@ def test_a_channel_of_another_session_than_the_pages_feeds_none_of_them(hub):
 def test_a_dropped_connection_is_reported_retried_and_repaints(hub):
     r = hub["reconnect"]
     assert r["errorsA"] == 1
-    assert r["bViews"] == ["view:view:trade/T-1", "view:view:trade/T-1"]   # the new stream's view: live.js repaints
+    assert r["bViews"] == ["view:view:trade/T-1", "view:view:trade/T-1"]   # the new stream's view: drishti_live.js repaints
     assert r["after"] == r["before"] + 1              # refused: opened again after a pause
 
 
@@ -286,7 +286,7 @@ def test_a_channel_that_does_not_open_is_reported_not_waited_on(hub):
     assert hub["slow"]["got"] == ["hi", "error"]
 
 
-# -- a tab's side (channel.js): which hub, hidden tabs -----------------------------------------------------------------
+# -- a tab's side (drishti_channel.js): which hub, hidden tabs -----------------------------------------------------------------
 
 TAB_HARNESS = r"""
 const path = require('path');
@@ -308,7 +308,7 @@ class FakeES {
 }
 FakeES.all = [];
 const docListeners = {}, winListeners = {};
-global.document = { hidden: false, currentScript: { src: 'http://c/static/js/channel.js?v=1' },
+global.document = { hidden: false, currentScript: { src: 'http://c/static/js/drishti_channel.js?v=1' },
   querySelector: s => s === 'meta[name="drishti-live"]' ? { getAttribute: () => 'WHO1' } : null,
   addEventListener: (t, fn) => { (docListeners[t] = docListeners[t] || []).push(fn); } };
 global.navigator = {};
@@ -321,15 +321,15 @@ global.window = { EventSource: FakeES, fetch: (u, i) => { posts.push({ u, b: i &
   } };
 window.parent = window;
 global.self = window;
-require(process.argv[2]);                                   // live-hub.js
-require(process.argv[3]);                                   // channel.js
+require(process.argv[2]);                                   // drishti_live-hub.js
+require(process.argv[3]);                                   // drishti_channel.js
 const out = {};
 (async () => {
   const got = [];
-  const off = window.DrishtiChannel.subscribe('view:trade/T-1', { view: d => got.push('view'), frame: d => got.push('frame'),
+  const off = window.Drishti.Channel.subscribe('view:trade/T-1', { view: d => got.push('view'), frame: d => got.push('frame'),
     paused: () => got.push('paused'), error: () => got.push('error') });
   await advance(200);
-  out.transport = window.DrishtiChannel.transport();       // no EventSource in the worker, no Web Locks: a hub in this tab
+  out.transport = window.Drishti.Channel.transport();       // no EventSource in the worker, no Web Locks: a hub in this tab
   out.workerClosed = !!window.workerPort.closed;
   const es = FakeES.all[0];
   out.url = es && es.url;
@@ -358,18 +358,18 @@ const out = {};
 """
 
 
-@pytest.mark.skipif(shutil.which("node") is None, reason="needs Node.js to run channel.js")
+@pytest.mark.skipif(shutil.which("node") is None, reason="needs Node.js to run drishti_channel.js")
 def test_a_tab_falls_back_gives_its_subscriptions_back_while_hidden_and_takes_them_again(tmp_path):
     harness = tmp_path / "tab.js"
     harness.write_text(TAB_HARNESS)
-    run = subprocess.run(["node", str(harness), str(HUB_JS), str(HUB_JS.parent / "channel.js")], capture_output=True, text=True, timeout=60)
+    run = subprocess.run(["node", str(harness), str(HUB_JS), str(HUB_JS.parent / "drishti_channel.js")], capture_output=True, text=True, timeout=60)
     assert run.returncode == 0, run.stderr
     out = json.loads(run.stdout.strip().splitlines()[-1])
     assert out["transport"] == "tab" and out["workerClosed"]
     assert out["url"] == "/api/channel?s=view%3Atrade%2FT-1"
     assert out["beforeGrace"] == ["view", "frame"]           # hidden less than ten seconds: nothing changes
     assert out["afterGrace"] == ["view", "frame", "paused"] and out["closedWhileHidden"]
-    assert out["reopened"] and out["afterShow"] == ["view", "frame", "paused", "view"]   # live.js repaints from fresh data
+    assert out["reopened"] and out["afterShow"] == ["view", "frame", "paused", "view"]   # drishti_live.js repaints from fresh data
     assert out["closedWhenNoneLeft"]
 
 

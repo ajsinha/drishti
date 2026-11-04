@@ -48,7 +48,7 @@ def test_the_workspace_page_has_the_bulk_delete_controls(client):
 
 
 def test_the_workspace_script_deletes_one_by_one_with_the_existing_rule_and_names_the_refusals():
-    js = read(JS / "bi.js")
+    js = read(JS / "drishti_bi.js")
     assert "it.can && it.can.delete" in js
     assert "api('DELETE', '/items/' + encodeURIComponent(it.id))" in js
     assert "Skipped" in js and "Deleted" in js and "data-row-delete" in js and "data-pick" in js
@@ -56,41 +56,41 @@ def test_the_workspace_script_deletes_one_by_one_with_the_existing_rule_and_name
 
 
 def test_a_new_report_has_a_distinct_default_title_not_my_report():
-    js = read(JS / "bi-design.js")
+    js = read(JS / "drishti_bi-design.js")
     assert "My report" not in js and "function defaultTitle" in js
     assert "required" not in re.search(r"<input[^>]*data-new-title[^>]*>", read(TPL / "designer.html")).group(0)
 
 
 def test_the_new_item_form_asks_a_report_for_its_dataset_and_opens_the_designer():
-    js = read(JS / "bi.js")
+    js = read(JS / "drishti_bi.js")
     assert "'/bi/design/'" in js and "layout: board" in js and "'/bi/datasets/new-layer?workspace='" in js and "'/bi/explore'" in js
     assert "sourceLine(f.elements.dataset.value)" in js
 
 
 def test_a_report_without_a_dataset_gets_a_picker_in_the_designer():
-    js = read(JS / "bi-design.js")
+    js = read(JS / "drishti_bi-design.js")
     assert "function ensureDataset" in js and "data-choose-dataset" in js and "'dataset: ' + sel.value" in js
 
 
 def test_the_designer_preview_leaves_incomplete_visuals_out_and_names_a_visual_in_the_banner():
-    js = read(JS / "bi-design-canvas.js")
+    js = read(JS / "drishti_bi-design-canvas.js")
     assert "function previewQuery" in js and "function incomplete" in js
     assert "report: D.model," not in js                                                 # the whole draft is no longer sent as it is
-    assert "' on page ' + " in read(JS / "bi-design.js")
+    assert "' on page ' + " in read(JS / "drishti_bi-design.js")
 
 
 def test_a_drop_says_where_it_fell_and_a_field_already_there_is_not_a_misfit():
-    js = read(JS / "bi-design-canvas.js")
+    js = read(JS / "drishti_bi-design-canvas.js")
     assert "does not fit ' + where" in js and "is already in ' + where" in js
     assert "try another visual or well" not in js
 
 
 def test_the_designer_loads_the_several_datasets_module_and_its_markup(client):
     html = client.get("/bi/design/bi-1").text
-    assert "bi-design-datasets.js" in html and html.index("bi-design-panes.js") < html.index("bi-design-datasets.js")
+    assert "drishti_bi-design-datasets.js" in html and html.index("drishti_bi-design-panes.js") < html.index("drishti_bi-design-datasets.js")
     for marker in ("data-add-dataset", "data-dataset-picker", "data-links-panel"):
         assert marker in html, marker
-    js = read(JS / "bi-design-datasets.js")
+    js = read(JS / "drishti_bi-design-datasets.js")
     for marker in ("Refused: this visual reads", "fields in another visual, or make a composed dataset", "data-make-composed", "data-link-tick", "data-links-current", "same name and type", "same meaning"):
         assert marker in js, marker
     assert "/workspaces/me/items" in js and "Create the draft and review it" in js        # a composed draft is created only on a click
@@ -98,7 +98,7 @@ def test_the_designer_loads_the_several_datasets_module_and_its_markup(client):
 
 
 def test_the_canvas_tags_a_visual_that_reads_another_dataset_and_fields_carry_their_dataset():
-    canvas, panes = read(JS / "bi-design-canvas.js"), read(JS / "bi-design-panes.js")
+    canvas, panes = read(JS / "drishti_bi-design-canvas.js"), read(JS / "drishti_bi-design-panes.js")
     assert "data-dataset-tag" in canvas and "dataset: p.dataset || ''" in canvas
     assert "JSON.stringify({ name, kind, dataset: ref || '' })" in panes and "data-dataset-tree" in panes and "data-remove-dataset" in panes
 
@@ -106,4 +106,4 @@ def test_the_canvas_tags_a_visual_that_reads_another_dataset_and_fields_carry_th
 def test_the_dataset_page_offers_a_new_report_on_it_and_the_designer_start_preselects_it(client):
     assert "data-new-report" in client.get("/bi/d/file:dataset:x").text
     assert "data-no-datasets" in client.get("/bi/designer").text
-    assert "URLSearchParams(window.location.search).get('dataset')" in read(JS / "bi-design.js")
+    assert "URLSearchParams(window.location.search).get('dataset')" in read(JS / "drishti_bi-design.js")

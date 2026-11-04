@@ -31,7 +31,7 @@ def test_the_inspector_edits_options_the_title_and_lists_and_completes_expressio
     settle(page, rev)
     assert "Bond terms, edited" in page.locator('[data-preview] [data-panel="terms"]').inner_text()
     # a list option: reorder the first two columns, then remove one
-    labels = lambda: page.evaluate("window.DrishtiWB.model(window.drishtiWorkbench.store.state.yaml).panels.filter(p => p.id === 'terms')[0].values.columns.map(c => c.label)")
+    labels = lambda: page.evaluate("window.Drishti.WB.model(window.Drishti.workbench.store.state.yaml).panels.filter(p => p.id === 'terms')[0].values.columns.map(c => c.label)")
     first = labels()
     rev = state(page, "rev")
     page.get_by_role("button", name="Move down: columns 1").click()
@@ -98,7 +98,7 @@ def test_the_problems_tab_warns_about_a_field_the_samples_rarely_have(live_conso
     page.locator(".wb-problem-b", has_text="$.rare").first.wait_for(timeout=15000)
     assert "33%" in page.locator("[data-problems]").inner_text()
     page.locator(".wb-problem-b", has_text="$.rare").first.click()
-    assert page.evaluate("window.drishtiWorkbench.canvas.selected().id") == "facts"
+    assert page.evaluate("window.Drishti.workbench.canvas.selected().id") == "facts"
 
 
 def test_a_field_dropped_on_a_panel_that_cannot_take_it_says_why(live_console, page):
@@ -143,7 +143,7 @@ def test_clicking_the_canvas_shows_the_inspector_but_a_matrix_cell_does_not_leav
     page.locator(".wb-matrix").wait_for(timeout=BROWSER_WAIT_MS)
     page.locator('.wb-matrix tbody tr:nth-child(2) button').first.click()
     assert page.get_by_role("tab", name="Tests").get_attribute("aria-selected") == "true"
-    assert page.evaluate("window.drishtiWorkbench.canvas.selected().id") == "ops"
+    assert page.evaluate("window.Drishti.workbench.canvas.selected().id") == "ops"
 
 
 def test_auto_design_is_a_revision_and_undo_brings_the_old_sutra_back(live_console, page):

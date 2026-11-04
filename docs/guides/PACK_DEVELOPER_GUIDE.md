@@ -147,7 +147,7 @@ ports of their own, so that nothing of yours is touched: the seven shipped packs
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 DRISHTI_PORT=18996 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,helpdesk \
-  java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+  java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
@@ -553,7 +553,7 @@ nonEmpty: [history]       # these panels must render with data on every sample
 ```
 
 ```bash
-java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
+java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
 ```
 
 ```text
@@ -2601,7 +2601,7 @@ Four layers, from the cheapest. The first three need no server.
 | The pack's tests in the build | `./mvnw verify` | the manifest loads, every `config/packs/*/sutras/` validates, every Sutra survives imperfect data, `sutra test` runs over every pack that has tests, every shipped example loads |
 | A scratch server | the [checklist](#verifying-a-pack) | links resolve, connectors are up, commands open, the guide renders |
 
-`sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar sutra …`);
+`sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar sutra …`);
 `pack check` finds the jar itself (`--jar`, `DRISHTI_JAR`). Both read the overlay of the checkout they run in (`<data>/packs/added.yaml`), so
 run them where that overlay names only packs that exist (or set `DRISHTI_DATA_DIR` to an empty folder).
 
@@ -3677,7 +3677,7 @@ server in), then in the folders of `drishti.packs.extra-dirs` (`DRISHTI_PACKS_EX
 
    ```bash
    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
    ```
 
    (or, from the IDE, the run configuration **Drishti server** with `DRISHTI_PACKS` changed; [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)).
@@ -4456,7 +4456,7 @@ directory):
 ```bash
 ./mvnw -q package -DskipTests -pl drishti-server -am
 DRISHTI_DEMO_ENABLED=false DRISHTI_STUDIO_SAVE=true \
-  java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+  java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 Server settings follow the same precedence as the console: `drishti-server/src/main/resources/application.yaml`, then
@@ -4843,10 +4843,10 @@ default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; f
 connect-src 'self'; frame-src 'self'; worker-src 'self'; frame-ancestors 'self'
 ```
 
-Two files have their own, narrower policy. Calc's worker, `/static/js/calc-worker.js`, is served with
+Two files have their own, narrower policy. Calc's worker, `/static/js/drishti_calc-worker.js`, is served with
 `default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src <host>/static/ <host>/pyodide/`, so it alone may compile
 WebAssembly (Pyodide) and it can fetch nothing but static files and the runtime (never an `/api` route, which would carry the user's
-session). Calc's Graphic Walker page, `/static/calc/walker.html`, needs `unsafe-eval` and inline styles for the library, so it is a
+session). Calc's Graphic Walker page, `/static/calc/drishti_walker.html`, needs `unsafe-eval` and inline styles for the library, so it is a
 sandboxed frame (`sandbox allow-scripts`, no same-origin) with `connect-src 'none'`: the rows it is given by message cannot leave it.
 For Pyodide, `tools/fetch-pyodide.sh` downloads a pinned release, checks its SHA-256 and unpacks what Calc needs into
 `drishti-console/web/static/vendor/pyodide/` (git-ignored); the console serves it at `/pyodide/<version>/`
@@ -4855,7 +4855,7 @@ For Pyodide, `tools/fetch-pyodide.sh` downloads a pinned release, checks its SHA
 So templates may not contain inline `<script>` blocks, `on…=` handlers or `style=` attributes, and nothing may load from another origin.
 `drishti-console/tests/test_assets_policy.py` checks all of this. Behaviour goes in a file under `web/static/js/`, wired by `data-*`
 attributes; widths and colours come from classes and `data-*` values that a script applies (bars and gauges use `data-w`, see
-`view.js`).
+`drishti_view.js`).
 
 #### 3.7 Git
 
@@ -4874,7 +4874,7 @@ and its live push.
 
 | Step | Where | What happens |
 |---|---|---|
-| 1 | `drishti-console/web/templates/terminal/_topbar.html`, `web/static/js/command.js` | The command line is a plain form (`action="/go"`). `command.js` adds the dropdown: it calls the console's `GET /api/suggest`, which calls the server's `GET /api/v1/command/suggest` (`CommandController.suggest` → `SuggestionService`), filtered by `Entitlements.filter`. With a union of trade connectors, the hits of all three are merged. |
+| 1 | `drishti-console/web/templates/terminal/_topbar.html`, `web/static/js/drishti_command.js` | The command line is a plain form (`action="/go"`). `drishti_command.js` adds the dropdown: it calls the console's `GET /api/suggest`, which calls the server's `GET /api/v1/command/suggest` (`CommandController.suggest` → `SuggestionService`), filtered by `Entitlements.filter`. With a union of trade connectors, the hits of all three are merged. |
 | 2 | `drishti-console/routes/terminal_routes.py` `go()` | Text that looks like a search (`<MN> where …`, `order by`, `limit`) is redirected to `/s`. Otherwise `BackendClient.command()` posts `{"text": "TRD MX-20000001"}` to `POST /api/v1/command`. |
 | 3 | `drishti-console/core/backend.py` `BackendClient._send` | Every call carries the caller (`X-Drishti-User`, and `Authorization: Bearer …` when sign-in is on) and the business date (`X-Drishti-As-Of`, from `core/asof.py`, which `AuthGate` in `core/app.py` sets from the `drishti_asof` cookie). An unreachable server becomes `BackendError(503, "DRS-5003", …)`. |
 | 4 | `server.security.PathGuard`, `server.security.TokenFilter` | `PathGuard` first refuses a request line under `/api` or `/actuator` that does not spell its path plainly (`;`, a needless `%`-escape, a dot or empty segment: `400 DRS-5001`); filters decide on `RequestPaths.routed`, the decoded path that is served, never the raw URI. For every `/api/v1/**` request: with security off, the caller is `Principal.anonymous(X-Drishti-User)` with every role; with it on, the bearer token is verified (`TokenVerifier`: a session token signed with `DRISHTI_TOKEN_SECRET`, or a personal API token `drk_…`) or the answer is `401 DRS-5010`. The principal is a request attribute (`Principal.ATTRIBUTE`). |
@@ -4884,14 +4884,14 @@ and its live push.
 | 8 | `terminal_routes.view()` | `BackendClient.view()` calls `GET /api/v1/views/trade/MX-20000001`. |
 | 9 | `server.api.ViewController.view` | `requireOpen` again, then `ViewPipeline.view(ref, asOf)` (timed as the `drishti.view` metric), then `Entitlements.restrict` (disables links the caller may not follow), then `RecentEntities.touch` (feeds "recent" in the dropdown). |
 | 10 | `engine.ViewPipeline` | The pipeline (below) returns a `ViewModel`. |
-| 11 | `terminal_routes.view()` | Splits the panels into `main` and `right` by `area`, renders `terminal/view.html`. Each panel is drawn by the `panel(p)` macro in `web/templates/_macros/panels.html`; `web/static/js/view.js` adds charts (vendored ECharts), tabs, F-keys and the raw-JSON drawer. |
+| 11 | `terminal_routes.view()` | Splits the panels into `main` and `right` by `area`, renders `terminal/view.html`. Each panel is drawn by the `panel(p)` macro in `web/templates/_macros/panels.html`; `web/static/js/drishti_view.js` adds charts (vendored ECharts), tabs, F-keys and the raw-JSON drawer. |
 
 #### 4.2 Inside `ViewPipeline`
 
 `ViewPipeline` (`drishti-engine`) documents itself as "command → fetch → classify → fingerprint → layout → link → bind". In code:
 
 1. **Fetch.** `SourceRouter.fetch(ref, asOf)` picks the plugins that serve the kind (the kind's route, the union it belongs to, named
-   connectors, `default-route`), tries dated sources first for a picked date, and gives up after `drishti.sources.fetch-timeout` (5s).
+   connectors, `default-route`), tries dated sources first for a picked date, and gives up after `drishti.sources.fetch-timeout` (10s).
    No source holding it is `404 DRS-1001`.
 2. **Match a Sutra.** `SutraMatcher.match(kind, data)` asks `SutraRegistry` for the highest-priority Sutra of the kind whose
    `match.where` expression holds for this document (for a trade: `SOURCE_SYSTEM` and `PRODUCT_TYPE`; `MX-20000001` matches the MUREX
@@ -4916,13 +4916,13 @@ and its live push.
 
 | Step | Where | What happens |
 |---|---|---|
-| 1 | `terminal/view.html` | `live.js` is loaded only when `vm.provenance.live` is true. A picked business date is a static snapshot: no stream. A Delta lake is not live (its documents change by day); live entities come from a stream (Kafka, ActiveMQ, RabbitMQ, Redis) or the demo source. |
-| 2 | `web/static/js/live.js`, `web/static/js/channel.js`, `web/static/js/live-hub.js` | `live.js` subscribes `view:trade/MX-20000001` on `window.DrishtiChannel`. `channel.js` hands every tab's subscriptions to one hub per browser (`live-hub.js`, in a SharedWorker, or in a tab elected with a Web Lock that relays over a BroadcastChannel), which keeps **one** `EventSource` for the whole browser, to the console's `GET /api/channel?s=…`, and adds or removes subscriptions with `POST /api/channel/{cid}` instead of reconnecting. Workspace panes (iframes) share their parent's subscriptions. Tests: `tests/test_live_hub.py` (the protocol, in Node), `tests/test_live_tabs_browser.py` (Chromium). |
+| 1 | `terminal/view.html` | `drishti_live.js` is loaded only when `vm.provenance.live` is true. A picked business date is a static snapshot: no stream. A Delta lake is not live (its documents change by day); live entities come from a stream (Kafka, ActiveMQ, RabbitMQ, Redis) or the demo source. |
+| 2 | `web/static/js/drishti_live.js`, `web/static/js/drishti_channel.js`, `web/static/js/drishti_live-hub.js` | `drishti_live.js` subscribes `view:trade/MX-20000001` on `window.Drishti.Channel`. `drishti_channel.js` hands every tab's subscriptions to one hub per browser (`drishti_live-hub.js`, in a SharedWorker, or in a tab elected with a Web Lock that relays over a BroadcastChannel), which keeps **one** `EventSource` for the whole browser, to the console's `GET /api/channel?s=…`, and adds or removes subscriptions with `POST /api/channel/{cid}` instead of reconnecting. Workspace panes (iframes) share their parent's subscriptions. Tests: `tests/test_live_hub.py` (the protocol, in Node), `tests/test_live_tabs_browser.py` (Chromium). |
 | 3 | `drishti-console/routes/api_routes.py` `channel()` | For each subscription it opens an upstream stream (`BackendClient.stream` → `GET /api/v1/views/{kind}/{id}/stream`; `alerts`, `monitor:<name>` and `mq:<id>` go to their own server streams), in **detached** tasks, and multiplexes everything into one SSE response as `{"ch": "<subscription>", "d": …}`. Frames are rewritten by `_view_event`: each patched panel is rendered to HTML with the same `panels.html` macro as first paint (charts stay data). A watchdog ends a channel nobody has read for five seconds; a comment every ~15s keeps proxies from closing it. |
 | 4 | `server.api.StreamController.stream` | Takes a slot from `LiveStreamSlots` (cap `drishti.live.max-streams`), builds the initial view, and creates a `ViewStream`. A writer on a virtual thread sends a `view` event, then a `frame` event per frame, or a heartbeat comment (`drishti.live.heartbeat`, 15s). Each client has its own latest-wins `FrameMailbox`, so a slow client never slows others. |
 | 5 | `engine.live.TopicHub` | One topic per live entity, shared by every view of it, holding a single source subscription (`SourceRouter.subscribe` → the plugin's `subscribe`). Ticks land in a latest-wins slot and are delivered at most once per frame (`drishti.live.frame`, 50ms). The subscription closes with the last listener. |
 | 6 | `engine.live.ViewStream`, `PatchDiffer` | On a tick, the view is rebuilt (`ViewPipeline.build`) and `PatchDiffer.diff(before, after)` produces `Patch`es; they travel as a `Frame`. A deletion (`EntityDocument.deleted()`) is sent as one `deleted` patch instead, and nothing is rebuilt until the entity comes back (`restored`). |
-| 7 | `live.js` | Applies the patches in place: strip cells get new text and tone, panels are swapped for the server-rendered HTML, charts move to new data, and changed values flash. A `deleted` patch greys the view under a "deleted at" banner. |
+| 7 | `drishti_live.js` | Applies the patches in place: strip cells get new text and tone, panels are swapped for the server-rendered HTML, charts move to new data, and changed values flash. A `deleted` patch greys the view under a "deleted at" banner. |
 
 [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#1-live-updates) has the details: frames, coalescing, reconnects and the latency metrics.
 
@@ -4938,7 +4938,7 @@ plan. Nothing is computed in the browser.
 
 | Step | Where | What happens |
 |---|---|---|
-| 1 | `web/static/js/bi-consume.js` (a report, a board, Analyse) | A visual becomes one model query; the browser posts it to the console's `/bi/api/mq` (or `/bi/api/models/{id}/query`), which passes it to the server as the signed-in user. |
+| 1 | `web/static/js/drishti_bi-consume.js` (a report, a board, Analyse) | A visual becomes one model query; the browser posts it to the console's `/bi/api/mq` (or `/bi/api/models/{id}/query`), which passes it to the server as the signed-in user. |
 | 2 | `server.bi.mq.MqController` (`POST /api/v1/bi/mq`), `bi.sql.SqlController` (`POST /api/v1/bi/sql`) | Read on the model is checked (`BiAccess`), then `MqParser` (or `DsqlParser` for SQL) reads the question. |
 | 3 | `bi.mq.MqService`, `MqValidator`, `MqCompiler` | Validates the question against the model (names, types, additivity, the currency guard, `DRS-91xx` problems with the field to fix), and compiles it to the engine's `QueryRequest`s: relative windows from the as-of date and the calendar, `top` as its own grouped request, totals per level for measures that do not add up. |
 | 4 | `bi.plan.Planner`, `SecurityRewriter`, `Guards`, `Optimiser`, `TierPlanner` | The logical plan: each measure aggregated at its own grain, facts met on shared fields, the reader's row rules and masks applied **before** any aggregation or join (stage 4), guards (a join that would repeat rows is refused), then each node placed on a tier: the source (a SQL store that can aggregate), the console backend (Python nodes) or the Java tier. |
@@ -4953,7 +4953,7 @@ plan. Nothing is computed in the browser.
 
 | Step | Where | What happens |
 |---|---|---|
-| 1 | `bi-consume.js` `follow()` | A live visual posts its model query to `/bi/api/mq/subscribe` (`POST /api/v1/bi/mq/subscribe`, `{query, throttle, deliver}`) and gets its first answer and a subscription id, then subscribes `mq:<id>` on the browser's one channel (section 4.3). A closed tab ends its standing queries (`DELETE …/mq/subscribe/{id}`, sent with `keepalive`); an unread one is dropped after `drishti.bi.mq.idle-close` (60 s). |
+| 1 | `drishti_bi-consume.js` `follow()` | A live visual posts its model query to `/bi/api/mq/subscribe` (`POST /api/v1/bi/mq/subscribe`, `{query, throttle, deliver}`) and gets its first answer and a subscription id, then subscribes `mq:<id>` on the browser's one channel (section 4.3). A closed tab ends its standing queries (`DELETE …/mq/subscribe/{id}`, sent with `keepalive`); an unread one is dropped after `drishti.bi.mq.idle-close` (60 s). |
 | 2 | `bi.engine.LiveTables` | For a dataset whose time mode is `live`, one in-memory table per live table, started on first use: it reads the kind once and subscribes to its entities through the connectors that push (a stream, the demo source); nothing in it is per reader. |
 | 3 | `bi.engine.GenerationBus` | Every change of the data a model reads is published once, in order: a live batch with its change set, a data load or refresh for a business date (`backdated` when the date is past), a history sample. |
 | 4 | `bi.mq.StandingQueries`, `StandingQueryRegistry`, `Maintainer` | Only the subscriptions on the model whose data moved are evaluated, grouped by (plan hash, security signature): one evaluation per group however many viewers share it, each delivered to its own throttled, latest-wins mailbox. A group is kept current by difference (sums and counts), by re-asking the touched groups, or on a tick when past the model's maintenance budget. |
@@ -5518,7 +5518,7 @@ workspace templates are good models):
   </table></div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/sources.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/sources.js?v={{ ASSET_V }}"></script>{% endblock %}
 ```
 
 Jinja autoescapes, so values from the server are safe to print. `ASSET_V` is the asset version plus a fingerprint of `static/js` and
@@ -5581,20 +5581,20 @@ style, or an external URL.
 ##### Regenerating the favicon and app icons
 
 The browser-tab icon, the home-screen icons and the app manifest's icons are all the logo mark (the amber braces and eye of
-`web/static/img/drishti-mark.svg`), filling a navy tile with the eye's outline in white, so they read on light and dark tab bars. They
+`web/static/img/drishti_mark.svg`), filling a navy tile with the eye's outline in white, so they read on light and dark tab bars. They
 are generated, never drawn by hand, into `drishti-console/web/static/img/icons/`:
 
 | File | Size | Used by |
 |---|---|---|
-| `favicon.ico` | 16, 32 and 48 px in one file | `/favicon.ico` (browsers ask for it on their own) and `<link rel="icon">` |
-| `favicon.svg` | scalable | `<link rel="icon" type="image/svg+xml">` in `base.html`; modern browsers prefer it |
-| `favicon-16.png`, `favicon-32.png`, `favicon-48.png` | as named | the `.ico`; 16 and 32 px use heavier strokes so the mark survives at tab size |
-| `apple-touch-icon.png` | 180 px, square corners | iOS "Add to Home Screen" (iOS rounds the corners) |
-| `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` | as named | `manifest.webmanifest`; the maskable one keeps the mark inside the 80 % safe zone |
+| `drishti_favicon.ico` | 16, 32 and 48 px in one file | `/favicon.ico` (browsers ask for it on their own) and `<link rel="icon">` |
+| `drishti_favicon.svg` | scalable | `<link rel="icon" type="image/svg+xml">` in `base.html`; modern browsers prefer it |
+| `drishti_favicon-16.png`, `drishti_favicon-32.png`, `drishti_favicon-48.png` | as named | the `.ico`; 16 and 32 px use heavier strokes so the mark survives at tab size |
+| `drishti_apple-touch-icon.png` | 180 px, square corners | iOS "Add to Home Screen" (iOS rounds the corners) |
+| `drishti_icon-192.png`, `drishti_icon-512.png`, `drishti_icon-maskable-512.png` | as named | `drishti_manifest.webmanifest`; the maskable one keeps the mark inside the 80 % safe zone |
 
 ```bash
 python3 tools/make_icons.py            # writes every file above (needs Inkscape and ImageMagick)
-python3 tools/make_icons.py --check    # exit 1 when an icon is missing or favicon.svg is not what the script makes
+python3 tools/make_icons.py --check    # exit 1 when an icon is missing or drishti_favicon.svg is not what the script makes
 ```
 
 Change the colours, the fill or the stroke weights in the script, never in the files. `tests/test_icons.py` checks that the files
@@ -5607,7 +5607,7 @@ console's own: `drishti-console/web/elements/drishti-view.css` and `drishti-view
 terminal, layout and gradients sheets with `:root`, `html` and `body` rewritten to `:host`, no `@font-face` (the element registers the
 icon font with the document's `FontFace` API), and of Bootstrap Icons only the glyphs that `templates/_macros/panels.html`,
 `templates/_macros/view.html` and the scripts that run inside the element name. Regenerate it after changing any of those sheets, a
-macro, `bi.css` or the report styles, or an icon in such a script:
+macro, `drishti_bi.css` or the report styles, or an icon in such a script:
 
 ```bash
 python3 tools/elements_sheet.py            # write the sheet and its manifest; prints size and glyph count
@@ -5633,12 +5633,12 @@ live in `ELEMENT_ADDENDUM` in `core/element_sheet.py`. `test_element_sheet.py` f
 
 #### 5.8a The shared multi-select dropdown
 
-`static/js/multiselect.js` (vendored with the console, no library) is the one multi-select the console draws: a `<details>` whose
+`static/js/drishti_multiselect.js` (vendored with the console, no library) is the one multi-select the console draws: a `<details>` whose
 `<summary>` shows "All", the value, or "3 selected: ABS, REPO, +1", and whose pop-up holds a search box, *Select all* / *Clear* and a
 labelled group of **real checkboxes** (so form submission, keyboard and screen readers are the browser's own; 44 px rows on touch; theme
-tokens in `css/controls.css`). Two callers: the query-by-form renderer marks every enum field with more than 3 values `data-ms`
+tokens in `css/drishti_controls.css`). Two callers: the query-by-form renderer marks every enum field with more than 3 values `data-ms`
 (`terminal/form.html`; up to 3 stay a checkbox row, so the renderer decides by option count and no pack is hard-coded) and
-`multiselect.js` wraps it on load, keeping the checkboxes' names and so the criteria encoding; and `controls.js` builds the
+`drishti_multiselect.js` wraps it on load, keeping the checkboxes' names and so the criteria encoding; and `drishti_controls.js` builds the
 `multi-select` control from `window.drishtiModules.multiselect.decorate(details, {label, boxes, onChange})`. Inside `<drishti-view>` it is
 one of the allow-listed enhancer scripts (`routes/embed_routes.py` `ENHANCERS`, `web/embed/assets.js`), loaded before `controls`.
 Tests: `test_form_browser.py` (dropdown, search, keyboard, URL, phone), `test_controls_browser.py`.
@@ -5766,7 +5766,7 @@ while it was stopped (`The lake was rebuilt while the server was stopped …`), 
 level for Drishti's packages with Spring's usual environment form:
 
 ```bash
-LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). The run configuration **Drishti server
@@ -5786,9 +5786,9 @@ The console runs Uvicorn with access logs off (`access_log=False` in `run_drisht
    ```
 
 4. There should be exactly one `/api/channel?s=…` request for the whole browser, staying open: in the network panel of the SharedWorker
-   (`chrome://inspect/#workers`), or of the leader tab when there is no SharedWorker. `DrishtiChannel.transport()` in a tab's console
+   (`chrome://inspect/#workers`), or of the leader tab when there is no SharedWorker. `Drishti.Channel.transport()` in a tab's console
    says which (`shared-worker`, `leader`, `follower`).
-5. If ticks arrive but the page does not change, check the browser console for errors in `live.js`.
+5. If ticks arrive but the page does not change, check the browser console for errors in `drishti_live.js`.
 
 For a live BI visual: its chip says **Live**, **Listening** (following, nothing has changed: a daily lake) or why it was refused; the
 server's `GET /api/v1/bi/mq/stream` sends `answer` and `status` events (section 4.5).

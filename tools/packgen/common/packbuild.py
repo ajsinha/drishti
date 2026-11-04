@@ -36,6 +36,13 @@ EXAMPLES = ROOT / "examples" / "packs"              # the retired example packs 
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "banking"))
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+import packlake  # noqa: E402  (tools/packlake.py: the templates' tables as the pack's lake: entries, docs/guides/LAKE_GUIDE.md)
+
+
+def _lake_form(m: dict) -> dict:
+    return packlake.lake_form(m)
+
+
 import make_docs as MD  # noqa: E402  (the banking guides' shared sections)
 import guide_data as GD  # noqa: E402  (a pack's Data contracts and Data retrieval sections, when it has contracts)
 import make_sutras as MS  # noqa: E402  (the Rachana writer the banking packs use)
@@ -208,7 +215,7 @@ def files(spec: PackSpec, docs: dict, known_fields: dict) -> dict[Path, str]:
     base = pack_dir(spec)
     out: dict[Path, str] = {}
     out[base / "pack.yaml"] = (f"{YAML_HEADER}\n\n# {_generated(spec, 'file')}\n# {spec.title} pack for Drishti.\n"
-                               + yaml.safe_dump(manifest(spec, known_fields), sort_keys=False, allow_unicode=True, width=140))
+                               + yaml.safe_dump(_lake_form(manifest(spec, known_fields)), sort_keys=False, allow_unicode=True, width=140))
     for k in spec.kinds:
         if k.kind not in spec.hand_written:
             out[base / "sutras" / MS.slug(k.group) / f"{k.kind}.v1.sutra.yaml"] = sutra(spec, k, min(docs.get(k.kind) or [None], key=lambda x: x or ""))

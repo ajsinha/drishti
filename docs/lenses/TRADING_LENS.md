@@ -192,7 +192,7 @@ operations (COLL, MC) …").
 
 ## 4. The landings
 
-One template, `home/trading_landing.html`, with `trading-landing.js` and `trading-landing.css`, a **green accent**; figures worked out by
+One template, `home/trading_landing.html`, with `drishti_trading-landing.js` and `drishti_trading-landing.css`, a **green accent**; figures worked out by
 `drishti-console/core/trading_landing.py` and served read-only by `drishti-console/routes/trading_routes.py`
 (`/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}` and `POST /api/home/trading/check`; `404 DRS-4023` unless the
 person's edition or lens shows `TRD`), cached two minutes per person, date and scope ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)).
@@ -592,7 +592,7 @@ row. The scenario matrix (`SMAT`, on in Trading too) and the VaR horizon picker 
 heads (`trading.landing-by-role: {desk-head: desk, trader: trader}`, below the person's own choice), C behind the landing switch
 ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)). A green accent on the terminal look.
 **Code:** [`trading_landing.html`](../../drishti-console/web/templates/home/trading_landing.html),
-[`trading-landing.js`](../../drishti-console/web/static/js/trading-landing.js), [`trading-landing.css`](../../drishti-console/web/static/css/trading-landing.css),
+[`drishti_trading-landing.js`](../../drishti-console/web/static/js/drishti_trading-landing.js), [`drishti_trading-landing.css`](../../drishti-console/web/static/css/drishti_trading-landing.css),
 [`trading_landing.py`](../../drishti-console/core/trading_landing.py), [`trading_routes.py`](../../drishti-console/routes/trading_routes.py)
 (`/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}`, `POST /api/home/trading/check`), [`trading.yaml`](../../config/editions/trading.yaml).
 The mock-up's names, desks, books and counterparties are the demo's; its figures are illustrative.
@@ -605,7 +605,7 @@ above every landing. **States.** *Loading:* `…` in every figure. *Error:* `Not
 tile. *Empty or not given by the data*, each said in place: "no valuations on <date>: no change to show", "MtM is masked for your role",
 "no book above its limit", "No trade's MtM moved", "Nothing yet: type a command above"; the DV01 tile hidden when no trade holds a DV01; a
 scope above `trading.max-rows` says **partial** ([section 4.5](#45-what-the-data-does-not-give-as-the-builder-reported)). **Phone**
-(600 px and below): one column ([`trading-landing.css`](../../drishti-console/web/static/css/trading-landing.css)); the mock-up drew no
+(600 px and below): one column ([`drishti_trading-landing.css`](../../drishti-console/web/static/css/drishti_trading-landing.css)); the mock-up drew no
 phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md section 8](../architecture/MOBILE_DISPLAY.md#8-beyond-sutra-pages)): the command line, the tiles and the first card in full, the other tables at a glance (five rows, *Show all*), charts, maps and the quick links under *More on this page*.
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
@@ -660,7 +660,7 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 | X3 | Positions menu | Books `BOOK`; Desks `DESK`; Traders `TRDR`; Positions `POS` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X4 | Risk menu | My VaR `VAR`; VaR limits `VLIM`; Trade valuations `TVAL`; P&L vectors `PNLV` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X5 | Counterparties menu | Counterparties `CPTY`; Netting sets `NSET`; Credit limits `LIM`; Pre-deal check `XWIF`; Exposure `EXP` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
-| X6 | Phone form | below 640 px the subject menus fold into one **Trading** menu, a column per subject (option C) | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; the bar's template and [`phone.js`](../../drishti-console/web/static/js/phone.js) put it in below 640 px | tap the lens menu, then an item | **Built** |
+| X6 | Phone form | below 640 px the subject menus fold into one **Trading** menu, a column per subject (option C) | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; the bar's template and [`drishti_phone.js`](../../drishti-console/web/static/js/drishti_phone.js) put it in below 640 px | tap the lens menu, then an item | **Built** |
 
 On a phone (below 640 px) the subject menus fold into one menu named after the lens, first in the bar (option C's form, [menus/C](mockups/menus/C.html)): a column per subject, each item 44 px high with its command beside it; a wider screen keeps the subject menus in the bar, and the folded menu is not drawn there. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
 

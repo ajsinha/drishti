@@ -58,7 +58,7 @@ def _context(browser, width, theme):
 
 
 def _open(page, url):
-    """Opens a page as a first visit does: phone.js learns the screen and, on an entity page drawn for another class, draws it once more."""
+    """Opens a page as a first visit does: drishti_phone.js learns the screen and, on an entity page drawn for another class, draws it once more."""
     page.goto(url, wait_until="load")
     page.wait_for_timeout(400)
     page.wait_for_load_state("load")

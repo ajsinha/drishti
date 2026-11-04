@@ -33,11 +33,11 @@ def say(page):
 def test_unknown_example_design_and_sutra_addresses_say_so(live_console, page):
     page.goto(live_console + "/studio?example=nope")
     page.locator("[data-start-go]").click()
-    wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+    wait(page, "window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     wait(page, "document.querySelector('[data-say]').textContent.indexOf(\"no example 'nope'\") >= 0")
     page.goto(live_console + "/studio?design=zzzz")
     page.locator("[data-start-go]").click()
-    wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+    wait(page, "window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     wait(page, "document.querySelector('[data-say]').textContent.indexOf(\"design you asked for is not one of yours\") >= 0")
     page.goto(live_console + "/studio?sutra=nope@9")
     page.locator("[data-start-go]").click()
@@ -56,7 +56,7 @@ def test_a_file_that_is_not_json_is_named_when_it_is_chosen(live_console, page):
 def test_yaml_syntax_text_is_short_and_a_number_field_refuses_a_fraction(live_console, page):
     open_design(page, live_console, "nits", sutra=SUTRA, files={"s.json": SHIP}, kind="shipment")
     raw = "while parsing a flow sequence\n in 'reader', line 1, column 8:\n    title: [unclosed\n           ^\nexpected ',' or ']', but got <stream end>\n in 'reader', line 1, column 8:\n"
-    out = page.evaluate("(r) => window.DrishtiWB.problemText({message: r})", raw)
+    out = page.evaluate("(r) => window.Drishti.WB.problemText({message: r})", raw)
     assert out.startswith("The YAML does not read at line 1, column 8") and "reader" not in out and out.count("line 1") == 1
     page.locator('[data-preview] [data-panel="facts"] .pnl-h').click()
     span = page.get_by_label("span", exact=True)
@@ -98,7 +98,7 @@ def test_first_guesses_say_when_they_are_placeholders(live_console, page):
 
 def test_an_old_complaint_does_not_stay_on_the_status_line(live_console, page):
     open_design(page, live_console, "stale", sutra=SUTRA, files={"s.json": SHIP}, kind="shipment")
-    page.evaluate("window.drishtiWorkbench.staleMs = 400; window.drishtiWorkbench.store.emit('say', 'note.txt is not valid JSON', true)")
+    page.evaluate("window.Drishti.workbench.staleMs = 400; window.Drishti.workbench.store.emit('say', 'note.txt is not valid JSON', true)")
     assert "note.txt" in say(page)
     page.wait_for_timeout(900)
     assert say(page) == ""
@@ -139,5 +139,5 @@ def test_a_check_of_many_samples_answers_quickly(live_console, page):
 
 
 def test_the_stored_entity_message_uses_the_pages_words_not_api_field_names():
-    js = (CONSOLE / "web" / "static" / "js" / "build-new.js").read_text()
+    js = (CONSOLE / "web" / "static" / "js" / "drishti_build-new.js").read_text()
     assert "the kind of the stored entity is required" in js

@@ -633,8 +633,8 @@ under the edition exactly as on the full product (the `*RiskEditionTest` classes
    `pack:<name>`, `cmd:<WORD>` (a command the edition shows), `route:<path>` (the server has that page); the placeholder
    `ui.placeholder` / `menus.placeholder`. The lens menus: an edition's `menus.top` orders the top menus; a subject menu
    (`subject: true`) is drawn only when named there; its items carry `cmd:` (the command run through `/go` and shown beside the
-   label) or `fill:` (words put in the command line to finish, `/t?cmd=`, `web/static/js/command.js`); with more than six menus the
-   labels fold to icons below 1750 px (`nav.css`, `.tbar-menus[data-many]`).
+   label) or `fill:` (words put in the command line to finish, `/t?cmd=`, `web/static/js/drishti_command.js`); with more than six menus the
+   labels fold to icons below 1750 px (`drishti_nav.css`, `.tbar-menus[data-many]`).
 5. **BI.** `server/edition/EditionBi.java`, applied in `BiService.catalogueItems` and `BiService.itemOf`: datasets, models, reports, boards,
    Python visuals and notebooks follow `bi.datasets` and `bi.models`; the Analytics and BI, and Build, help sections follow `help.categories`.
 6. **Feature flags.** `config/editions/features.yaml`; console `features.*`; `studio.enabled` wired (`/studio`).
@@ -670,7 +670,7 @@ a limit-use heat map, a "Today" feed of intraday batches, official records and b
 
 - **Built how.** Each edition names its landings, the template that draws them and their titles (`home.landings`, `home.template`,
   `home.titles`; a file that names no template keeps Drishti Risk's, and only a `home/<name>_landing.html` template is taken). Drishti
-  Risk's: one template, `home/risk_landing.html`, and `static/js/risk-landing.js` / `static/css/risk-landing.css`; every figure is the
+  Risk's: one template, `home/risk_landing.html`, and `static/js/drishti_risk-landing.js` / `static/css/drishti_risk-landing.css`; every figure is the
   engines' own answer through the console's `/api/var/...` and `/api/exposure/...` (`scope`, `scope/history`, `tree`, `intraday/streams`,
   `official`, `baskets`). They are not Sutras: a Sutra lays out one entity's view, and these pages span the engines with no entity; a new
   "home" Sutra kind would be needed, which the product owner may ask for later. No new panel kind was added (the heat map is a CSS grid
@@ -766,8 +766,8 @@ edition outside it still needs a decision.
 #### Its Home: three landings
 
 The product owner approved all three mock-ups (2026-10-29), drawn in the terminal look with a **teal accent** (a deeper teal on the light
-themes) so World reads apart from Risk at a glance. One template, `home/world_landing.html`, with `static/js/world-landing.js` and
-`static/css/world-landing.css`; `home.titles` names them.
+themes) so World reads apart from Risk at a glance. One template, `home/world_landing.html`, with `static/js/drishti_world-landing.js` and
+`static/css/drishti_world-landing.css`; `home.titles` names them.
 
 - **A "desk", World desk** (the default): tiles (World GDP growth from the World country group, GDP-weighted; quotes up and down in the
   market snapshot; the biggest mover; new SEC filings on the feed's latest day; funds and ETFs with the largest); **Economies that moved**
@@ -822,7 +822,7 @@ helper (`core/market_landing.py`); nothing in the engines changed.
 #### Its Home: three landings
 
 Drawn in the terminal look with a **violet accent** (`#a78bfa` on the dark themes, `#6d28d9` on the light ones). One template,
-`home/market_landing.html`, with `static/js/market-landing.js` and `static/css/market-landing.css`. The figures are worked out in the
+`home/market_landing.html`, with `static/js/drishti_market-landing.js` and `static/css/drishti_market-landing.css`. The figures are worked out in the
 console by `core/market_landing.py` from the pack's own answers (search, raw documents, the business date and one field's history,
 `/api/v1/history/{kind}/{id}/series`), with the person's identity, lens and date box, read-only and cached for two minutes per person, and
 served by `/api/home/market/desk`, `/api/home/market/moves` and `/api/home/market/quality` (`404 DRS-4023` unless the person's edition or
@@ -922,7 +922,7 @@ Desk head's figures by trader say so instead of guessing (tested: `test_scoping_
 #### Its Home: three landings
 
 Drawn in the terminal look with a **green accent** (`#4fd18b` on the dark themes, `#1a7f4b` on the light ones). One template,
-`home/trading_landing.html`, with `static/js/trading-landing.js` and `static/css/trading-landing.css`. The figures are worked out by
+`home/trading_landing.html`, with `static/js/drishti_trading-landing.js` and `static/css/drishti_trading-landing.css`. The figures are worked out by
 `core/trading_landing.py` and served read-only by `/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}` and
 `POST /api/home/trading/check` (`404 DRS-4023` unless the person's edition or lens shows `TRD`; the check also the word `VAR` and `XWIF`), cached
 two minutes per person, date and scope; two panels needing the same valuations wait for one read.

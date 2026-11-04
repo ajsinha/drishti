@@ -49,7 +49,7 @@ def test_the_page_lists_connectors_with_origin_status_and_users(client, backend,
     with_connectors(backend, monkeypatch, [])
     page = client.get("/admin/connectors").text
     for text in ("Connectors", "trading-lake", "Trading lake", "running", "failed", "disabled", "data-new", "data-edit", "Reset to pack default",
-                 "application", "legacy", "Upper.yaml", "WATCHING", "admin-connectors.js", "admin-connectors.css", "/help/connector-files",
+                 "application", "legacy", "Upper.yaml", "WATCHING", "drishti_admin-connectors.js", "drishti_admin-connectors.css", "/help/connector-files",
                  'data-kinds="trade,item"', "/srv/drishti/config/connectors", "deprecated", 'role="tablist"', 'role="tab"', 'aria-selected="true"', 'aria-labelledby="connTitle"',
                  "Filter by name", "Any status", "Disable trading-lake", "Enable off-one", "Uninstall off-one"):
         assert text in page, text
@@ -139,7 +139,7 @@ def test_the_badge_uses_the_servers_words_so_a_down_connector_is_never_running(c
     assert "down, retrying" in page and "running, with a warning" in page and "disabled" in page
     assert "DOWN: no directory /lake" in page and "0 rows served for 2026-10-12" in page          # the hint is text on the row, not a tooltip
     assert 'data-level="down"' in page and 'data-level="warn"' in page
-    assert "admin-watch.js" in page and 'data-watch="/admin/connectors/api/stamp"' in page
+    assert "drishti_admin-watch.js" in page and 'data-watch="/admin/connectors/api/stamp"' in page
 
 
 def test_the_stamp_is_a_short_digest_that_moves_when_a_connector_changes_but_not_for_a_health_sentence(client, backend, monkeypatch):

@@ -141,7 +141,7 @@ def test_help_files_serves_pictures_from_docs_and_nothing_else(client):
     assert client.get("/help/files/guides/RACHANA_REFERENCE.md").status_code == 404                     # not a picture
     assert client.get("/help/files/guides/img/designer/nope.png").status_code == 404
     assert client.get("/help/files/../README.md").status_code == 404
-    assert client.get("/help/files/guides/img/%2e%2e/%2e%2e/%2e%2e/drishti-console/web/static/img/guide/layout-mode.png").status_code == 404
+    assert client.get("/help/files/guides/img/%2e%2e/%2e%2e/%2e%2e/drishti-console/web/static/img/guide/drishti_layout-mode.png").status_code == 404
 
 
 def test_f1_on_every_build_page_opens_the_guide(client):

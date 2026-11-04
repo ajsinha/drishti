@@ -59,7 +59,7 @@ Drishti has two programs and each has its own configuration:
 | Program | Bundled file | Local override (git-ignored) | Env-var form | Argument form |
 |---|---|---|---|---|
 | Server (Java, port 18480) | `drishti-server/src/main/resources/application.yaml` (inside the jar) | `./application.local.yaml` in the server's **working directory** | `DRISHTI_SOURCES_FETCHTIMEOUT=3s` | `--drishti.sources.fetch-timeout=3s` |
-| Console (Python, port 17480) | `drishti-console/config/application.yaml` | `drishti-console/config/application.local.yaml` | `DRISHTI_CONSOLE__BACKEND__TIMEOUT_SECONDS=10` | `--backend.timeout_seconds=10` |
+| Console (Python, port 17480) | `drishti-console/config/application.yaml` | `drishti-console/config/application.local.yaml` | `DRISHTI_CONSOLE__BACKEND__TIMEOUT_SECONDS=30` | `--backend.timeout_seconds=30` |
 
 Secrets never go in a tracked file. Put them in environment variables (or in the git-ignored local file on a
 developer machine).
@@ -84,10 +84,10 @@ pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  envi
 
 ### Worked example: four layers, one key
 
-The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in the bundled file (2s before 2026-10-18: the first read of a date on a large table loads its id index first).
+The longest a source read may take is `drishti.sources.fetch-timeout`, `10s` in the bundled file: the first read of a date on a large table loads its id index first, and a panel's own source (another pack's data) is read within the same limit.
 
 1. Create `application.local.yaml` in the directory you start the server from (the repository root when
-   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar`):
+   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar`):
 
    ```yaml
    drishti:
@@ -100,7 +100,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in t
 2. Start the server with an environment variable as well:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
    ```
 
    The effective value is `4s`: the environment beats the local file.
@@ -108,7 +108,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in t
 3. Add an argument:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar \
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar \
        --drishti.sources.fetch-timeout=5s
    ```
 
@@ -264,7 +264,7 @@ Setting `java.io.tmpdir` inside a running JVM does not move `Files.createTempFil
 
 ```bash
 mkdir -p data/tmp/server        # once: the server makes it too, but the JVM warns on a first start when it does not exist yet
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 or, where editing the command is awkward (a service manager, a container, a wrapper script), through the environment: `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/opt/drishti/data/tmp/server` (Java prints `Picked up JAVA_TOOL_OPTIONS` once). With another data folder or `DRISHTI_TMP_DIR`, use that base: `<data dir>/tmp/server`. Everything Drishti ships passes it already: `tools/windows/start-server.ps1`, the IntelliJ run configurations, `deploy/docker/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`), the `run-server.sh`/`.ps1` that `tools/packmake.py` writes, the loaders `tools/load-*.sh`, and every java the tests and tools start (`tools/javacmd.py`; a guard test fails on one that does not). `./mvnw` gives Maven's own JVM `<repository>/data/tmp/maven` (`DRISHTI_MAVEN_TMP` names another), and the test JVMs get `<module>/target/tmp`, which `mvn clean` removes.
@@ -749,7 +749,7 @@ and [AI.md](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy).
 ### Change the port
 
 ```bash
-DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 You should see `Tomcat started on port 18490` in the log. Point the console at it with
@@ -758,7 +758,7 @@ You should see `Tomcat started on port 18490` in the log. Point the console at i
 ### Load more packs
 
 ```bash
-DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 Packs a listed pack `extends:` (or the older `requires:`) are loaded too, dependencies first. Then
@@ -771,7 +771,7 @@ set `DRISHTI_PACKS_DIR` to an absolute path so both programs find the same folde
 export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET="$(openssl rand -base64 48)"   # at least 32 bytes; give the console the same value
 export DRISHTI_SEED_ADMIN=false
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 The console needs `DRISHTI_AUTH_ENABLED=true`, the same `DRISHTI_TOKEN_SECRET`, and its own
@@ -815,7 +815,7 @@ Admin → Connectors. Defining the connector under `drishti.sources.connectors` 
 ### Use a different holiday calendar
 
 ```bash
-DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/business-date` then shows `"calendar":"USNY+GBLO"`.
@@ -832,7 +832,7 @@ and what it does. "From packs" means the bundled file leaves it empty and the en
 ```yaml
 drishti:
   sources:
-    fetch-timeout: 5s
+    fetch-timeout: 10s
     plugin-dir: /opt/drishti/plugins
     default-route: demo
     routes: { trade: trade-endur }
@@ -849,7 +849,7 @@ drishti:
 
 | Key | Default | Meaning |
 |---|---|---|
-| `fetch-timeout` | `5s` | The longest a single source read may take (`DRS-1004`). Slower reads show the entity as unavailable instead of holding the view. |
+| `fetch-timeout` | `10s` | The longest a single source read may take (`DRS-1004`). Slower reads show the entity as unavailable instead of holding the view; a panel's own `source:` read past it, or failing, shows the panel's failed state (connector and why), never its empty text. Keep the console's `backend.timeout_seconds` (15) longer. |
 | `plugin-dir` | empty (`DRISHTI_PLUGIN_DIR`) | A directory of extra plugin jars. Each jar gets its own class loader. Plugins on the class path are always found. |
 | `default-route` | `demo` | The plugin or connector tried first for a kind that has no route. |
 | `routes.<kind>` | `{}` plus from packs | Which plugin or connector serves a kind. Packs route their kinds to their connectors (`trade: trade-endur`). |
@@ -2444,7 +2444,7 @@ Example: the trading pack with its live Kafka stream.
 
 ```bash
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=kafka:9092 \
-  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/sources` should then list `trading-stream`.
@@ -2470,7 +2470,7 @@ the lake. The packs still decide kinds, routes and modes.
 
 ```bash
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti \
-  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 ---
@@ -2522,7 +2522,7 @@ You should see uvicorn report `Uvicorn running on http://127.0.0.1:17481`.
 | `server.workers` | `4` (`DRISHTI_CONSOLE_WORKERS`) | Worker processes on that port (`run_drishti_web.py`). Each keeps short-lived copies of what the server says about a user (settings, packs, view layouts, saved pivots, BI powers, the session check); a change made through one worker writes the user's stamp under the console's data folder (`<console data>/user-stamps`, one small file per user) and every worker reads its copy again at its next page, in every browser of the user. A change to a role (its BI powers in Admin, BI settings; anything in Admin, Roles; a role deleted) writes the stamp for everyone, so every holder's copies are read again at once. Consoles behind one address that share no data folder see each other's changes within `ui.user_cache_seconds` (10 s), sessions within `auth.recheck_seconds`. |
 | `server.shutdown_seconds` | `5` (`DRISHTI_CONSOLE_SHUTDOWN_SECONDS`) | On a stop, the longest an open stream keeps a worker; then it is closed and the worker ends. |
 | `backend.url` | `http://127.0.0.1:18480` (`DRISHTI_BACKEND_URL`) | The Drishti server. |
-| `backend.timeout_seconds` | `5` | Per call to the server. |
+| `backend.timeout_seconds` | `15` | Per call to the server. Longer than the server's own read limit (`drishti.sources.fetch-timeout`, 10 s), so the server's answer, including a timed-out read's `DRS-1004`, comes through. |
 | `backend.name` | the product name (`ui.product`) | The name of the single server when `servers` is not set; the picker and the top bar show it. |
 | `backend.check_seconds` | `5` (`DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS`) | How often the console's background watch asks each server (the default and every one of `servers`) whether it is reachable, with a 2 s timeout. It keeps reachable / since / last error / version, logs each change once, and answers `GET /healthz/backend`, which every page's banner polls. Shown on Admin > Health (Console watch). `0` turns the watch off. |
 | `backend.urls` | empty (`DRISHTI_BACKEND_URLS`) | Several servers of one Drishti*net cluster ([The console and several servers](#the-console-and-several-servers-drishtinet)). |
@@ -2645,7 +2645,7 @@ read by both programs, so one set of variables configures both halves.
 | `builder.max_file_mb` | `5` | Largest single file; a larger one is left out and reported, the rest are shaped. |
 | `builder.max_total_mb` | `25` | All files together; over it the upload is refused. |
 | `builder.studio_kind` | `sample` | The kind a new Design and the workbench preview a brought document as (a pasted document has no kind of its own). |
-| `builder.pack_sample_docs` | `200` | **Build → New pack** (`/build/pack/new`, [Schema to pack](../guides/SCHEMA_TO_PACK_GUIDE.md)): documents the browser keeps per data file and sends to the console. A sample, never the file. |
+| `builder.pack_sample_docs` | `200` | **Build → New pack** (`/build/pack/new`, [Schema to pack](../guides/DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema)): documents the browser keeps per data file and sends to the console. A sample, never the file. |
 | `builder.pack_read_max_rows` | `500000` | The most rows per file the page may be told to read (the page streams the file and keeps a sample; memory holds only the sample). |
 | `builder.pack_read_max_mb` | `1024` | The most MB per file the page may be told to read before it stops the file and says so. |
 | `builder.pack_max_files` | `200` | Schema and data files in one plan. Over it: `413 DRS-5005`. |
@@ -2741,16 +2741,16 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 
 ## Every setting
 
-Every key of every kind: 2,120 settings in 18 areas, and 326 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,171 settings in 18 areas, and 342 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
 | Area | Settings |
 |---|---|
-| [The server: `application.yaml`](#the-server-applicationyaml) | 537 |
-| [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 305 |
+| [The server: `application.yaml`](#the-server-applicationyaml) | 544 |
+| [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 329 |
 | [The console: `application.yaml`](#the-console-applicationyaml) | 210 |
 | [The console's other files](#the-consoles-other-files) | 93 |
-| [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 517 |
-| [Packs: `pack.yaml`](#packs-packyaml) | 135 |
+| [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 535 |
+| [Packs: `pack.yaml`](#packs-packyaml) | 137 |
 | [Editions: `config/editions/`](#editions-configeditions) | 71 |
 | [The content store: `config/store/store.yaml`](#the-content-store-configstorestoreyaml) | 14 |
 | [BI runs: `config/runs/runs.yaml`](#bi-runs-configrunsrunsyaml) | 48 |
@@ -2763,7 +2763,7 @@ Every key of every kind: 2,120 settings in 18 areas, and 326 environment variabl
 | [The data inbox's routing rules: `config/dataload.yaml`](#the-data-inboxs-routing-rules-configdataloadyaml) | 2 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 326 |
+| [Environment variable index](#environment-variable-index) | 342 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -2889,6 +2889,18 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.disk.max-dumps` | integer | `2` |  | server | heap dumps kept in the -XX:HeapDumpPath folder; the oldest beyond go at start | restart |  |
 | `drishti.disk.dumps-dir` | string | `./data/dumps` |  | server | the dump folder when -XX:HeapDumpPath does not name one | restart |  |
 
+#### `drishti.native`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.native.cache-dir` | string | `./data/native-cache` | `DRISHTI_NATIVE_CACHE_DIR` | server | where the bundled native libraries are unpacked (JavaCPP's cache), under the data folder | restart |  |
+| `drishti.native.max-bytes-mb` | integer | `1024` |  | server | the most off-heap memory JavaCPP may allocate itself (org.bytedeco.javacpp.maxBytes); BLAS calls take Java arrays | restart |  |
+| `drishti.native.blas.mode` | string | `auto` | `DRISHTI_NATIVE_BLAS_MODE` | server | auto: the bundled OpenBLAS (Linux and Windows x86-64), else the Java kernels with a warning, an alert and Health DEGRADED; java: the Java kernels, chosen (no warning) | restart |  |
+| `drishti.native.blas.max-call-mb` | integer | `256` |  | server | a BLAS call whose operands pass this many MB runs on Java (bounds what one native call copies) | restart |  |
+| `drishti.native.blas.canary-interval` | duration | `6h` |  | server | the self-test against Java is run again this often (0: only at start); a failure switches OpenBLAS off for the run | restart |  |
+| `drishti.native.blas.gemm-min-sets` | integer | `32` |  | server | a 1,024-row tile of many-scope sums is one dgemm when at least this many sets share it (tuned on one machine: BENCHMARK.md section 17) | restart |  |
+| `drishti.native.blas.gemm-min-density` | number | `0.25` |  | server | ...and at least this share of its (set, row) pairs are members; sparser tiles are added in Java | restart |  |
+
 #### `drishti.engines`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
@@ -2967,7 +2979,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.sources.fetch-timeout` | duration | `5s` |  | server | Longest a single source read may take before the view shows the entity as unavailable (DRS-1004). 5 s: the first read of a business date on a large table loads that date's id index first (300K trades: a few seconds). | restart |  |
+| `drishti.sources.fetch-timeout` | duration | `10s` |  | server | Longest a single source read may take before the view shows the entity as unavailable (DRS-1004), and a panel's own source (another pack's data, for example) before the panel shows that it failed. 10 s: the first read of a business date on a large table loads that date's id index first (300K trades: a few seconds), and a slow source is not reported as missing. | restart |  |
 | `drishti.sources.plugin-dir` | string | empty | `DRISHTI_PLUGIN_DIR` | server | Optional directory of extra plugin jars; each gets its own class loader. | restart |  |
 | `drishti.sources.default-route` | string | `demo` |  | server | kind -&gt; plugin. Kinds without a route try default-route first, then any plugin that serves them. | restart |  |
 | `drishti.sources.routes` | map | `{}` |  | server | kind -&gt; plugin or connector that serves it (packs add theirs: trade: trade-endur) | restart |  |
@@ -3817,6 +3829,18 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.var.explain.cache-mb` | integer | `32` |  | server (each node its own) | most memory the kept answers take (weighed in bytes) | restart |  |
 | `drishti.var.explain.matrix-max` | integer | `60` |  | server (each node its own) | most child nodes the Matrix view explains | restart |  |
 
+#### `drishti.var.parametric`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.var.parametric.enabled` | boolean | `true` | `DRISHTI_VAR_PARAMETRIC_ENABLED` | server (each node its own) | the parametric block on the VaR answers, the PVAR alias, the playground's Parametric tab and pvar(); off: none of them (asked: refused in words) | restart |  |
+| `drishti.var.parametric.weighting` | string | `equal` |  | server (each node its own) | equal (1/N, sigma with N - 1) or ewma (RiskMetrics, lambda below) | restart |  |
+| `drishti.var.parametric.lambda` | number | `0.94` |  | server (each node its own) | EWMA's decay, in (0.5, 1); read only with ewma | restart |  |
+| `drishti.var.parametric.horizon-rule` | string | `lens` |  | server (each node its own) | lens (the lens's own vector: sqrt10 scales mu and sigma by root 10, sum reads the 10-day windows) or square-root-of-time (mu x h, sigma x root h from the 1-day vector) | restart |  |
+| `drishti.var.parametric.curve-points` | integer | `121` |  | server (each node its own) | points of the normal curve the P&amp;L path answer carries (21 to 1001) | restart |  |
+| `drishti.var.parametric.matrix-max-parts` | integer | `60` |  | server (each node its own) | most parts of a correlation matrix (the largest by component VaR beyond, said truncated) | restart |  |
+| `drishti.var.parametric.show-curve` | boolean | `true` |  | server (each node its own) | the Normal curve toggle starts on (each person's choice is then remembered) | restart |  |
+
 #### `drishti.var.intraday`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
@@ -4071,7 +4095,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.lake.memory.stores` | map | `{}` |  | server (each node its own) | memory stores by name (none by default): &lt;name&gt;: { max-mb (the hard cap), chunk-kb (1024), contract, owner (true), format (delta), idle-trim-minutes (10) }; their caps add to -XX:MaxDirectMemorySize | restart |  |
+| `drishti.lake.memory.stores` | map | `{}` |  | server (each node its own) | the old place of the memory stores, read for one more release with a warning: a store is now a lake, config/lakes/&lt;store&gt;.yaml with root: mem://&lt;store&gt; and memory: { max-mb (the hard cap), chunk-kb (1024), contract, owner (true), idle-trim-minutes (10) } (docs/guides/LAKE\_GUIDE.md section 6); the caps add to -XX:MaxDirectMemorySize | restart |  |
 | `drishti.lake.memory.tables` | list | `[]` |  | server (each node its own) | the tables and their replenish jobs: name, store, folder, source { connector, kind, file, url, headers, ids, ids-from }, mode (replace, append, merge), key, sort-by, business-date, columns, every or cron, signal, warm-up, pin, keep-versions (2), codec (zstd) | restart |  |
 | `drishti.lake.memory.history-keep` | integer | `50` |  | server (each node its own) | the runs kept per table for Admin -&gt; Lakes and drishti.py lake memory jobs (in memory) | restart |  |
 | `drishti.lake.memory.job-threads` | integer | `2` |  | server (each node its own) | replenish jobs that may run at once (one per table at most) | restart |  |
@@ -4106,7 +4130,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.dataload.reject-max-percent` | integer | `0` |  | server (each node its own) | the share of rows a load may reject and still commit (exit 2, rejects in the report); over it nothing is committed and the file goes to failed/ | restart |  |
 | `drishti.dataload.reload-duplicates` | boolean | `false` |  | server (each node its own) | false: a file whose SHA-256 was loaded before is not loaded again (to the outbox, "already loaded"); true: loaded again | restart |  |
 | `drishti.dataload.keep-outbox-days` | integer | `30` |  | server (each node its own) | outbox/ and failed/ day folders older than this are deleted (0: kept for ever); the ledger is kept | restart |  |
-| `drishti.dataload.lake` | string | `./data/delta` | `DRISHTI_DELTA_ROOT` | server (each node its own) | the lake root the tables are written under (a rule's lake: wins for its files) | restart |  |
+| `drishti.dataload.lake` | string | `demo` | `DRISHTI_DATALOAD_LAKE` | server (each node its own) | the lake (config/lakes/&lt;lake&gt;.yaml, docs/guides/LAKE\_GUIDE.md) the tables are written to; a kind the lake file lacks gets its pack's recommended entry copied there first (a rule's lake: wins for its files; a folder is the old form, read with one warning) | restart |  |
 | `drishti.dataload.rules-file` | string | `./config/dataload.yaml` | `DRISHTI_DATALOAD_RULES` | server (each node its own) | the routing rules: a file-name pattern to a pack and kind, read again every cycle | restart |  |
 | `drishti.dataload.nice` | boolean | `true` |  | server (each node its own) | run the loader at a lower priority (nice 10) where the system has nice; never on Windows | restart |  |
 | `drishti.dataload.default-mode` | string | `append` |  | server (each node its own) | a file's load mode when its .ready file says none: append (the rows are added) or replace (each business date of the file replaced) | restart |  |
@@ -4182,6 +4206,33 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.pivot.cluster.deadline-seconds` | integer | `300` |  | server (each node its own) | a share with no answer by then refuses the view in words (DRS-5720), never a partial figure | restart |  |
 | `drishti.pivot.cluster.min-rows` | integer | `5000000` |  | server (each node its own) | views estimated under this many rows stay on this node | restart |  |
 
+#### `drishti.engines.flight`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.engines.flight.enabled` | boolean | `false` | `DRISHTI_FLIGHT_ENABLED` | server (each node its own) | answer Arrow Flight on this node; off as shipped: turning it on needs a restart (the port opens at start) | restart |  |
+| `drishti.engines.flight.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  |
+| `drishti.engines.flight.bind` | string | `0.0.0.0` | `DRISHTI_FLIGHT_BIND` | server (each node its own) | the address the port opens on (0.0.0.0: every interface) | restart |  |
+| `drishti.engines.flight.port` | integer | `18815` | `DRISHTI_FLIGHT_PORT` | server (each node its own) | the Flight port (gRPC over HTTP/2); open it in firewalls, TCP pass-through in load balancers | restart |  |
+| `drishti.engines.flight.advertise` | string | empty | `DRISHTI_FLIGHT_ADVERTISE` | server (each node its own) | the address clients are given in GetFlightInfo; empty: the node's real address (never localhost or 0.0.0.0) | restart |  |
+| `drishti.engines.flight.tls.certificate` | string | `./config/tls/server.pem` | `DRISHTI_FLIGHT_TLS_CERT` | server (each node its own) | the certificate chain the port presents | restart |  |
+| `drishti.engines.flight.tls.private-key` | string | `./config/tls/server.key` | `DRISHTI_FLIGHT_TLS_KEY` | server (each node its own) | its private key, PKCS#8 PEM (secret) | restart |  |
+| `drishti.engines.flight.tls.client-ca` | string | empty | `DRISHTI_FLIGHT_TLS_CLIENT_CA` | server (each node its own) | a CA bundle: set it and every client must present a certificate it signed (mutual TLS) | restart |  |
+| `drishti.engines.flight.memory.total-mb` | integer | `4096` | `DRISHTI_FLIGHT_MEMORY_MB` | server (each node its own) | every Flight read of this node together; the launchers add it to the direct-memory limit (tools/lake/memory\_caps.py) | restart |  |
+| `drishti.engines.flight.memory.request-mb` | integer | `1024` |  | server (each node its own) | one read at most (a role's limit may be lower) | restart |  |
+| `drishti.engines.flight.batch-rows` | integer | `65536` |  | server (each node its own) | rows in one record batch sent | restart |  |
+| `drishti.engines.flight.session-minutes` | integer | `60` |  | server (each node its own) | how long the session given at the handshake lasts before the token is checked again | restart |  |
+| `drishti.engines.flight.readers-hours` | integer | `24` |  | server (each node its own) | how long finished reads are listed on Admin -&gt; Data out (the audit keeps them for good) | restart |  |
+| `drishti.engines.flight.limits.default` | map | `{ rows: 50000000, gb: 8, minutes: 10, memory-mb: 512 }` |  | server (each node its own) | a person whose roles name no limits: 50 million rows, 8 GB, 10 minutes, 512 MB of Arrow memory per read | restart |  |
+| `drishti.engines.flight.limits.roles` | map | `{}` |  | server (each node its own) | e.g. risk-manager: { rows: 200000000, gb: 32, minutes: 30, memory-mb: 1024 } | restart |  |
+
+#### `drishti.engines.openblas`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.engines.openblas.enabled` | boolean | `true` | `DRISHTI_OPENBLAS_ENABLED` | server (each node its own) | linear algebra on the bundled OpenBLAS on this node (live, no restart); off: the pure-Java kernels, the same figures, slower many-scope sums | live |  |
+| `drishti.engines.openblas.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  |
+
 #### Old names (still accepted)
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
@@ -4215,7 +4266,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `backend.url` | string | `http://127.0.0.1:18480` | `DRISHTI_BACKEND_URL` | console | where the server is (one server; backend.urls for several) | restart |  |
-| `backend.timeout_seconds` | integer | `5` |  | console | per call to the server | restart |  |
+| `backend.timeout_seconds` | integer | `15` |  | console | per call to the server; longer than the server's own read limit (drishti.sources.fetch-timeout, 10 s), so its answer comes through | restart |  |
 | `backend.pool_size` | integer | `64` |  | console | pooled HTTP connections to the server (per server, when there are several) | restart |  |
 | `backend.check_seconds` | integer | `5` | `DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS` | console | how often the console asks each server if it is there (0 = never); pages show a banner and recover when it returns | restart |  |
 | `backend.urls` | string | empty | `DRISHTI_BACKEND_URLS` | console | Several servers of one Drishti\*net cluster (docs/admin/OPERATIONS.md, "The console and several servers"): one is enough, the console learns the rest. Empty: backend.url, as before. Each session keeps to one server while it answers and falls over to the next when it does not. e.g. https://drishti-a:8480,https://drishti-b:8480 | restart |  |
@@ -4294,8 +4345,8 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `ui.desk` | string | `Rates desk` |  | console | the acting user's desk when auth.enabled is false | restart |  |
 | `ui.clock_tz` | string | `America/New_York` |  | console | the top-bar clock's time zone | restart |  |
 | `ui.clock_label` | string | `NY` |  | console | the top-bar clock's label | restart |  |
-| `ui.landing_examples` | integer | `4` |  | console | The public landing page. Its example commands (the hero animation, "Keyboard first") are the example commands of the packs switched on (each pack's console.examples), so they only name entities that exist; landing\_examples caps them. The showcase is the four screenshots under web/static/img/shot-&lt;slug&gt;.png; a caption names its command only when that command is one of the packs' examples (the pictured pack is installed). | restart |  |
-| `ui.showcase` | list | empty |  | console | the landing page's pictures, {slug, title, cmd, sutra} each: web/static/img/shot-&lt;slug&gt;.png, its caption naming cmd only when that command is one of the packs' examples | restart |  |
+| `ui.landing_examples` | integer | `4` |  | console | The public landing page. Its example commands (the hero animation, "Keyboard first") are the example commands of the packs switched on (each pack's console.examples), so they only name entities that exist; landing\_examples caps them. The showcase is the four screenshots under web/static/img/drishti\_shot-&lt;slug&gt;.png; a caption names its command only when that command is one of the packs' examples (the pictured pack is installed). | restart |  |
+| `ui.showcase` | list | empty |  | console | the landing page's pictures, {slug, title, cmd, sutra} each: web/static/img/drishti\_shot-&lt;slug&gt;.png, its caption naming cmd only when that command is one of the packs' examples | restart |  |
 | `ui.placeholder` | string | `""` |  | console | the command line's placeholder; blank: config/menus.yaml's (an edition's menus.placeholder presets it) | restart |  |
 | `ui.logo` | string | `""` |  | console | a logo image (a URL under /static/, or a data: URL) instead of the eye mark, in the top bar and on public pages; blank: the eye | restart |  |
 | `ui.favicon` | string | `""` |  | console | the browser icon (a URL); blank: /favicon.ico (the eye) | restart |  |
@@ -4841,6 +4892,8 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
+| `lake` | string | none |  | `delta` connectors | The lake this connector reads (config/lakes/&lt;lake&gt;.yaml, docs/guides/LAKE\_GUIDE.md): root, storage, catalog, table folders, promoted columns and vectors come from its file; with lake set, root, domain, table.&lt;kind&gt; and layout.&lt;kind&gt;.\* are refused here. Not set: the older form (those keys in this file, one warning) | live (the connector restarts) |  |
+| `lake-tables` | list | none |  | `delta` connectors | With lake: the lake file's entries this connector reads (trading.trade\_endur), where a kind has several tables; not set: the one table of each kind | live (the connector restarts) |  |
 | `root` | path | `<data dir>/delta` |  | `delta` connectors | Lake root (folder, or s3://bucket/prefix); default: the delta folder of the data directory | live (the connector restarts) |  |
 | `domain` | string | none |  | `delta` connectors | The data-domain folder under the root; may not contain `..` or start with `/` | live (the connector restarts) |  |
 | `kinds` | list | none |  | `delta` connectors | Kinds to serve (comma list); not set: every table found under the domain | live (the connector restarts) |  |
@@ -4967,6 +5020,8 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
+| `lake` | string | none |  | `iceberg` connectors | The lake this connector reads (config/lakes/&lt;lake&gt;.yaml, docs/guides/LAKE\_GUIDE.md): root, storage, catalog, table folders, promoted columns and vectors come from its file; with lake set, root, domain, table.&lt;kind&gt; and layout.&lt;kind&gt;.\* are refused here. Not set: the older form (those keys in this file, one warning) | live (the connector restarts) |  |
+| `lake-tables` | list | none |  | `iceberg` connectors | With lake: the lake file's entries this connector reads (trading.trade\_endur), where a kind has several tables; not set: the one table of each kind | live (the connector restarts) |  |
 | `layout.*` | string | none |  | `iceberg` connectors | Per-kind layout: layout.&lt;kind&gt;.columns (promoted document paths), layout.&lt;kind&gt;.vectors (list&lt;double&gt; columns such as a P&amp;L vector, read in bulk and put back into documents) | live (the connector restarts) |  |
 | `doc-disk-cache.enabled` | boolean | `true` |  | `iceberg` connectors | Documents already read also kept on disk (RocksDB, one per connector), keyed by the date's files: answered without reading a data file, also after a restart | live (the connector restarts) |  |
 | `doc-disk-cache.dir` | path | `<data dir>/cache/<connector>/docs` |  | `iceberg` connectors | Its folder | live (the connector restarts) |  |
@@ -5337,6 +5392,25 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `settings` | map | `{}` |  | the connector | The plugin's settings, as the tables above (every plugin, the shared tls.\* and proxy.\*, the plugin's own) | live (the connector restarts) |  |
 | `settings.*` | map | none |  | the connector | One setting of the plugin | live (the connector restarts) |  |
 
+#### A lake file: `config/lakes/<lake>.yaml` (docs/guides/LAKE_GUIDE.md)
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `lake` | string | none |  | every writer and reader of the lake | The lake's name: the file's name; connectors (lake:), loads (target.lake) and lake build (--lake) refer to it | live for connectors (read again when a file changes); the next load for writers |  |
+| `description` | string | empty |  | every writer and reader of the lake | A line about the lake | live for connectors (read again when a file changes); the next load for writers |  |
+| `format` | string | `delta` |  | every writer and reader of the lake | delta or iceberg; a table may say otherwise | live for connectors (read again when a file changes); the next load for writers |  |
+| `root` | string | none |  | every writer and reader of the lake | Where the lake is: a local folder, s3://bucket/prefix, or mem://&lt;store&gt; for an in-memory store | live for connectors (read again when a file changes); the next load for writers |  |
+| `storage` | map | `{}` |  | every writer and reader of the lake | How to reach the root (region, endpoint, path-style ...): the platform's role or ${ENV} references, never a secret | live for connectors (read again when a file changes); the next load for writers |  |
+| `storage.*` | string | none |  | every writer and reader of the lake | One storage setting (given to a Delta connector as s3.&lt;key&gt;) | live for connectors (read again when a file changes); the next load for writers |  |
+| `catalog` | map | `none` |  | every writer and reader of the lake | Iceberg's catalog: type none (path tables), rest, glue or s3tables, with its settings (uri, warehouse, token as ${ENV}) | live for connectors (read again when a file changes); the next load for writers |  |
+| `catalog.*` | string | none |  | every writer and reader of the lake | One catalog setting | live for connectors (read again when a file changes); the next load for writers |  |
+| `memory` | map | `none` |  | every writer and reader of the lake | An in-memory store's (root: mem://&lt;store&gt;) max-mb (the hard cap), chunk-kb, contract, owner, idle-trim-minutes | live for connectors (read again when a file changes); the next load for writers |  |
+| `memory.*` | string | none |  | every writer and reader of the lake | One memory setting of the store | live for connectors (read again when a file changes); the next load for writers |  |
+| `defaults` | map | `{}` |  | every writer and reader of the lake | Table keys that apply to every table unless it says otherwise | live for connectors (read again when a file changes); the next load for writers |  |
+| `defaults.*` | string | none |  | every writer and reader of the lake | One table key's default | live for connectors (read again when a file changes); the next load for writers |  |
+| `tables` | map | `{}` |  | every writer and reader of the lake | The tables by &lt;domain&gt;.&lt;kind&gt; (or &lt;domain&gt;.&lt;table&gt; with kind: when a kind has several tables) | live for connectors (read again when a file changes); the next load for writers |  |
+| `tables.*` | map | none |  | every writer and reader of the lake | One table's entry: kind, path, format, partition-by (after business\_date, which is always first; at most four), promote, vectors, flatten, id, date, latest-by, load-mode (replace or append), sort-by, file-rows, row-group-rows, file-size-mb, row-group-mb, compression, vector-compression, retention, maintenance, time-travel, properties | live for connectors (read again when a file changes); the next load for writers |  |
+
 ### Packs: `pack.yaml`
 
 `config/packs/<pack>/pack.yaml`, read by the server's pack loader (`PackLoader`) and the console. A changed pack is reloaded while the server runs ([Live reload](../guides/PACK_DEVELOPER_GUIDE.md#live-reload-the-packs-folder-is-watched)). Guide: [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#packyaml-key-by-key).
@@ -5439,6 +5513,8 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `routes` | map | `{}` |  | the pack | kind -&gt; the connector that answers it (drishti.sources.routes) | live |  |
 | `routes.<name>` | string | none |  | the pack | One kind's connector | live |  |
 | `ingest` | map | `{}` |  | the pack | For the tools only (drishti.py data ingest --pack, lake build --pack, pack check): each kind's id and business-date fields; ignored by the server | live |  |
+| `lake` | map | `none` |  | the pack | The tables the pack recommends (docs/guides/LAKE\_GUIDE.md section 7): lake.tables, the shape of a lake file's tables:, copied into a lake file the first time a writer meets the kind; its Delta and Iceberg templates name lake: and lake-tables: | live |  |
+| `lake.*` | map | none |  | the pack | lake.tables.&lt;domain&gt;.&lt;table&gt;: one recommended entry (kind, path, partition-by, promote, vectors, sort-by, file-rows, row-group-rows, flatten, ...) | live |  |
 | `ingest.<name>` | map | none |  | the pack | One kind | live |  |
 | `ingest.<name>.key` | string | none |  | the pack | Its id field | live |  |
 | `ingest.<name>.date` | string | `BUSINESS_DATE` |  | the pack | Its business-date field | live |  |
@@ -5506,7 +5582,7 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `menus.placeholder` | string | `"VAR BANK, VAR DESK RATES, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES …  then <GO>"` |  | an edition (server and console) | the command line's placeholder text | restart |  |
 | `home.landing` | string | `desk` |  | an edition (server and console) | the default landing: desk (A, Market desk), explorer (B, Explorer), quality (C, Quality); today: the product's Home | restart |  |
 | `home.landings` | list | `[desk, explorer, quality]` |  | an edition (server and console) | the landings a person may pick on Home (their choice is kept in their settings) | restart |  |
-| `home.template` | string | `home/market_landing.html` |  | an edition (server and console) | the page that draws them (it names its script and style: market-landing.js, market-landing.css) | restart |  |
+| `home.template` | string | `home/market_landing.html` |  | an edition (server and console) | the page that draws them (it names its script and style: drishti\_market-landing.js, drishti\_market-landing.css) | restart |  |
 | `home.titles` | map | `{ desk: Risk desk, command: Command first, map: Risk map }` |  | an edition (server and console) | the landings' names, by landing | restart |  |
 | `home.landing-by-role` | map | `{}` |  | an edition (server and console) | {role: landing}: read, wins over the person's choice when set; wired to role-based access later | restart |  |
 | `home.chips` | list | `[CRV CRV-USD-OIS, CRV CRV-CAD-GOVT, FXF FXF-EURUSD, FXV FXV-USDJPY, IRV IRV-U...` |  | an edition (server and console) | B's chips | restart |  |
@@ -6071,6 +6147,8 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_ARCHIVE_MAX_MB` | the loaders' archives (lake build, lake load, load\_rows.py, convert; the Java loader's source.archive.max-mb) | `102400` | tools | The most an archive (.zip, .tar.gz, .tgz, .tar) may expand to, in MB: its entries' declared sizes, and what it expands to as it is read (DATA\_GUIDE.md section 2.7) |
 | `DRISHTI_ARCHIVE_MAX_MEMBERS` | the loaders' archives (source.archive.max-members) | `100000` | tools | The most entries an archive may hold |
 | `DRISHTI_ARCHIVE_MAX_RATIO` | the loaders' archives (source.archive.max-ratio) | `200` | tools | The most an archive may expand to, as a multiple of its own size (at least 1 MB is always allowed): the zip-bomb guard |
+| `DRISHTI_ARROW_EXCHANGE_MB` | the launchers' -XX:MaxDirectMemorySize and -Ddrishti.arrow.max-bytes | `512` | tools | Arrow's budget in MB beyond Arrow Flight: the compute workers' exchange and BI answers sent as Arrow (the official Arrow library's buffers are direct memory); added to the direct-memory limit with Flight's memory.total-mb when its engine is on (tools/lake/memory\_caps.py) |
+| `DRISHTI_ARROW_MB` | the Windows and ECS launchers' -XX:MaxDirectMemorySize and -Ddrishti.arrow.max-bytes | `512` | tools | Arrow's whole budget in MB, used as it is (an ECS task has no Python: set it to what tools/lake/memory\_caps.py --arrow-only prints); unset, the Windows launcher asks memory\_caps.py and the ECS entrypoint uses 512 |
 | `DRISHTI_ARTIFACTS_CONSOLE_PORT` | screenshot tools | none | tools | The console port of the artifacts screenshots |
 | `DRISHTI_ARTIFACTS_SERVER_PORT` | screenshot tools | none | tools | The server port of the artifacts screenshots |
 | `DRISHTI_ASK_ENABLED` | `drishti.explain.ask.enabled` | `false` | server | turn on Ask about this page (also list packs in drishti.explain.ask.packs) |
@@ -6136,13 +6214,14 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_CONSOLE_WORKERS` | `server.workers` | `4` | console | processes serving pages (one Python process uses one core: ~40 pages/s measured); 1 = one process |
 | `DRISHTI_DATALOAD_DIR` | `drishti.dataload.dir` (engine) | `./data/dataload` | engine | the inbox's folder: inbox/, inprocess/, outbox/, failed/, ledger/ and inbox.lock, all on one file system |
 | `DRISHTI_DATALOAD_ENABLED` | `drishti.engines.dataload.enabled` (engine) | `false` | engine | run the data inbox on this node: files dropped in &lt;dir&gt;/inbox with a .ready marker are loaded into the lake every interval; off as shipped |
+| `DRISHTI_DATALOAD_LAKE` | `drishti.dataload.lake` (engine), drishti.dataload.lake | `demo` | engine, server | the lake (config/lakes/&lt;lake&gt;.yaml, docs/guides/LAKE\_GUIDE.md) the tables are written to; a kind the lake file lacks gets its pack's recommended entry copied there first (a rule's lake: wins for its files; a folder is the old form, read with one warning) |
 | `DRISHTI_DATALOAD_LOADER_HEAP` | `drishti.dataload.loader-heap` (engine) | `4g` | engine | the loader's own heap (the child Java process's -Xmx): a load never uses the server's heap |
 | `DRISHTI_DATALOAD_OWNER` | `drishti.dataload.owner` (engine) | `true` | engine | this node runs the inbox's cycles; in a cluster set it true on one node only (the folder lock also keeps a second runner out) |
 | `DRISHTI_DATALOAD_RULES` | `drishti.dataload.rules-file` (engine) | `./config/dataload.yaml` | engine | the routing rules: a file-name pattern to a pack and kind, read again every cycle |
 | `DRISHTI_DATA_DIR` | `drishti.data.dir`, `lakes.data_dir` | `./data` | console, server | The umbrella folder every runtime path below defaults under (identity database, caches, loads, collab, designs, reports, the pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default. |
 | `DRISHTI_DEFAULT_PACKS` | `drishti.packs.default-for-users` | empty | server | Packs new users get until an admin says otherwise (empty: every installed pack). |
 | `DRISHTI_DELTA_ENGINE` | `engine` (connector), delta engine | `native` | connector, packs | Reader engine: native (Delta Kernel without Hadoop; Windows), hadoop (also abfs://, gs://) or auto (native on Windows); not set: DRISHTI\_DELTA\_ENGINE, else native |
-| `DRISHTI_DELTA_ROOT` | `drishti.var.official.root` (engine), `drishti.ccr.exposure.official.root` (engine), `drishti.dataload.lake` (engine), every pack's delta connectors' root | `./data/delta` | engine, packs | a folder or s3://bucket/prefix |
+| `DRISHTI_DELTA_ROOT` | `drishti.var.official.root` (engine), `drishti.ccr.exposure.official.root` (engine), every pack's delta connectors' root | `./data/delta` | engine, packs | a folder or s3://bucket/prefix |
 | `DRISHTI_DEMO_ENABLED` | `drishti.sources.plugins.demo.enabled` | `true` | server | run the demo source (the packs' sample data) |
 | `DRISHTI_DOCTOR_PORTS` | drishti.py doctor | none | tools | The ports doctor checks |
 | `DRISHTI_DRAIN_TOKEN` | rolling.py, deploy/bin/drishti-node.sh | none | tools | An administrator's personal API token with the node:drain scope: the stop hooks and the rolling upgrade runner drain a server with it (secret; else DRISHTI\_DRAIN\_TOKEN\_FILE, else DRISHTI\_TOKEN) |
@@ -6178,6 +6257,14 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_FEED_US_TREASURY` | us-treasury-feed enabled | `false` | packs | The US Treasury yield curve feed on |
 | `DRISHTI_FILES_ROOT` | files profile | `./data/files` | profile | The files profile's root (&lt;root&gt;/&lt;domain&gt;/&lt;date&gt;/&lt;kind&gt;.jsonl) |
 | `DRISHTI_FISCAL_YEAR_END` | `drishti.var.fiscal-year-end` (engine), `drishti.regulatory.fiscal-year-end` (engine), `drishti.ccr.exposure.fiscal-year-end` (engine) | empty | engine | the bank's fiscal year-end, MM-DD (for example 10-31); blank: none (the fiscal-year-end pin is off) |
+| `DRISHTI_FLIGHT_ADVERTISE` | `drishti.engines.flight.advertise` (engine) | empty | engine | the address clients are given in GetFlightInfo; empty: the node's real address (never localhost or 0.0.0.0) |
+| `DRISHTI_FLIGHT_BIND` | `drishti.engines.flight.bind` (engine) | `0.0.0.0` | engine | the address the port opens on (0.0.0.0: every interface) |
+| `DRISHTI_FLIGHT_ENABLED` | `drishti.engines.flight.enabled` (engine) | `false` | engine | answer Arrow Flight on this node; off as shipped: turning it on needs a restart (the port opens at start) |
+| `DRISHTI_FLIGHT_MEMORY_MB` | `drishti.engines.flight.memory.total-mb` (engine) | `4096` | engine | every Flight read of this node together; the launchers add it to the direct-memory limit (tools/lake/memory\_caps.py) |
+| `DRISHTI_FLIGHT_PORT` | `drishti.engines.flight.port` (engine) | `18815` | engine | the Flight port (gRPC over HTTP/2); open it in firewalls, TCP pass-through in load balancers |
+| `DRISHTI_FLIGHT_TLS_CERT` | `drishti.engines.flight.tls.certificate` (engine) | `./config/tls/server.pem` | engine | the certificate chain the port presents |
+| `DRISHTI_FLIGHT_TLS_CLIENT_CA` | `drishti.engines.flight.tls.client-ca` (engine) | empty | engine | a CA bundle: set it and every client must present a certificate it signed (mutual TLS) |
+| `DRISHTI_FLIGHT_TLS_KEY` | `drishti.engines.flight.tls.private-key` (engine) | `./config/tls/server.key` | engine | its private key, PKCS#8 PEM |
 | `DRISHTI_FORCE_PW_CHANGE_ON_CREATE` | `drishti.identity.force-password-change-on-create` | `false` | server | Nobody is forced to change a password unless configured here (an admin can still tick it per user). |
 | `DRISHTI_FORCE_PW_CHANGE_ON_RESET` | `drishti.identity.force-password-change-on-reset` | `false` | server | after an administrator resets a password, the user must change it at the next sign-in |
 | `DRISHTI_FRED_SERIES` | fred-feed series | `DGS10,DFF` | packs | The FRED series read |
@@ -6209,6 +6296,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_JDBC_URL` | `drishti.sources.plugins.jdbc.settings.url` | empty | server | the JDBC URL of that instance |
 | `DRISHTI_JDBC_USER` | `drishti.sources.plugins.jdbc.settings.user` | empty | server | its database user |
 | `DRISHTI_KAFKA_BOOTSTRAP` | Kafka brokers | `localhost:9092` | packs | The brokers of the trading stream and the VaR PV topic |
+| `DRISHTI_LAKES_DIR` | drishti.lakes.dir | `./config/lakes` | server | The lake folder: one config/lakes/&lt;lake&gt;.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/LAKE\_GUIDE.md) |
 | `DRISHTI_LAKE_CLASSPATH` | lake load | none | tools | The class path of the Java lake loader |
 | `DRISHTI_LAKE_ENABLED` | the packs' data connectors | `true` | packs | false switches every pack's data connector off (the demo samples still answer) |
 | `DRISHTI_LAKE_HEAP` | lake build | none | tools | The Java lake writer's heap |
@@ -6239,6 +6327,8 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_MONGODB_URI` | mongodb profile | `mongodb://localhost:27017` | profile | The mongodb profile's server |
 | `DRISHTI_MR_CUBE_ENABLED` | `drishti.engines.mr-cube.enabled` (engine) | `true` | engine | run the MR cube on this node: MCUBE, /api/v1/pivot/mr, the VaR source's hierarchy levels and MR measures; needs var and pivot |
 | `DRISHTI_MR_DERIVED_ENABLED` | market-risk's derived connector | `true` | packs | The market-risk pack's derived kinds on or off |
+| `DRISHTI_NATIVE_BLAS_MODE` | `drishti.native.blas.mode` | `auto` | server | auto: the bundled OpenBLAS (Linux and Windows x86-64), else the Java kernels with a warning, an alert and Health DEGRADED; java: the Java kernels, chosen (no warning) |
+| `DRISHTI_NATIVE_CACHE_DIR` | `drishti.native.cache-dir` | `./data/native-cache` | server | where the bundled native libraries are unpacked (JavaCPP's cache), under the data folder |
 | `DRISHTI_NET_DIR` | `drishti.net.dir` | `./config/net` | server | created on first write; ready-made files in config/net.examples/ |
 | `DRISHTI_NET_SECRET` | `secret` (net) | none | net | the cluster key: an environment reference only, at least 32 bytes, the same on every node |
 | `DRISHTI_NET_WATCH` | `drishti.net.watch` | `auto` | server | auto (file events, polling as a fallback) \| poll \| off |
@@ -6252,6 +6342,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_OIDC_ISSUER` | `drishti.security.oidc.issuer`, `auth.oidc.issuer` | empty | console, server | the OIDC issuer URL |
 | `DRISHTI_OIDC_REDIRECT_URI` | `auth.oidc.redirect_uri` | empty | console | default: &lt;console&gt;/auth/oidc/callback |
 | `DRISHTI_OPENAPI_URL` | `help.openapi_url` | empty | console | the address of the server's OpenAPI UI as a browser reaches it (blank: the page names /api/docs/ui on the server) |
+| `DRISHTI_OPENBLAS_ENABLED` | `drishti.engines.openblas.enabled` (engine) | `true` | engine | linear algebra on the bundled OpenBLAS on this node (live, no restart); off: the pure-Java kernels, the same figures, slower many-scope sums |
 | `DRISHTI_PACKS` | `drishti.packs.enabled`, `packs.enabled` | `default` | console, server | default: the edition's packs (drishti.edition), else config/editions/default-packs.yaml |
 | `DRISHTI_PACKS_DEPLOY_HISTORY` | `drishti.packs.deploy.history-file` | `./data/packs/deploy-history.jsonl` | server | the history of archive deployments and rollbacks |
 | `DRISHTI_PACKS_DIR` | `drishti.packs.dir`, `packs.dir` | `./config/packs` | console, server | Domain packs (config/packs/&lt;name&gt;/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples. Site settings below always override what a pack contributes. |
@@ -6357,6 +6448,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_VAR_OFFICIAL` | `drishti.var.official.enabled` (engine) | `true` | engine | capture every node of every hierarchy when a date's inputs are complete (after the data-load signal) |
 | `DRISHTI_VAR_OFFICIAL_FORMAT` | `drishti.var.official.format` (engine) | `delta` | engine | delta or iceberg; BI's var-results connector follows it (generated as plugin iceberg) |
 | `DRISHTI_VAR_OPEN_HEAP_MB` | `drishti.var.open-heap-mb` (engine) | `0` | engine | the byte safety net over every open book's heap (0: automatic, 0.4 x heap - 512 MB - load-threads x 1.6 GB, at least a tenth of the heap); over it the least recently used dates' currency, then stress books, then whole dates leave |
+| `DRISHTI_VAR_PARAMETRIC_ENABLED` | `drishti.var.parametric.enabled` (engine) | `true` | engine | the parametric block on the VaR answers, the PVAR alias, the playground's Parametric tab and pvar(); off: none of them (asked: refused in words) |
 | `DRISHTI_VAR_PLAYGROUND_ENABLED` | `drishti.var.playground.enabled` (engine) | `true` | engine | the screen, the command and the export |
 | `DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS` | `drishti.var.playground.export-max-cells` (engine) | `20000000` | engine | the most cells one export may hold (about 19,000 positions at 509 scenarios, some 160 MB of server memory while it is written); larger is refused in words |
 | `DRISHTI_VAR_PV_STREAM` | pv-updates enabled | `false` | packs | Turn on the market-risk pack's pv-updates connector: the pricing systems' PV topic, windowed into intraday batches |

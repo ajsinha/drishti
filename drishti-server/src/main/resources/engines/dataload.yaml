@@ -32,7 +32,7 @@ drishti:
     reject-max-percent: 0            # the share of rows a load may reject and still commit (exit 2, rejects in the report); over it nothing is committed and the file goes to failed/
     reload-duplicates: false         # false: a file whose SHA-256 was loaded before is not loaded again (to the outbox, "already loaded"); true: loaded again
     keep-outbox-days: 30             # outbox/ and failed/ day folders older than this are deleted (0: kept for ever); the ledger is kept
-    lake: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # the lake root the tables are written under (a rule's lake: wins for its files)
+    lake: ${DRISHTI_DATALOAD_LAKE:demo}   # the lake (config/lakes/<lake>.yaml, docs/guides/LAKE_GUIDE.md) the tables are written to; a kind the lake file lacks gets its pack's recommended entry copied there first (a rule's lake: wins for its files; a folder is the old form, read with one warning)
     rules-file: ${DRISHTI_DATALOAD_RULES:./config/dataload.yaml}   # the routing rules: a file-name pattern to a pack and kind, read again every cycle
     nice: true                       # run the loader at a lower priority (nice 10) where the system has nice; never on Windows
     default-mode: append             # a file's load mode when its .ready file says none: append (the rows are added) or replace (each business date of the file replaced)

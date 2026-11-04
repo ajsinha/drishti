@@ -797,6 +797,7 @@ it reaches the browser too, for the answers it was measured to win on, and nowhe
 | BI answers to the console's Python, Explore and Perspective-era clients | `?format=arrow` on `POST /bi/reports/{id}/query` and `POST /bi/mq`: the raw rows | 2.1 |
 | **Any JSON answer of the two endpoints below, to any client that asks** | `Accept: application/vnd.apache.arrow.stream`: the JSON answer itself, its table as the record batch, the rest in the schema's metadata | built |
 | **The VaR explorer's contribution tables by position and by trade, in the browser** | read with Arrow JS (vendored) into typed columns | built |
+| **Any program: Python, Java, JDBC tools, any Arrow Flight client** | Arrow Flight on its own port: kinds, models, pivot views, VaR vectors, the in-memory lake, streams ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md)) | built |
 
 **Where it deliberately is not.** The **VaR hot files** stay Drishti's own layout (float32 position rows in hierarchy order, memory-mapped,
 float64 node totals): summing vectors runs near the machine's memory bandwidth, which Arrow's framing would not improve. **The lake** stays
@@ -804,8 +805,8 @@ Parquet (Delta or Iceberg), Arrow's partner on disk. **Shard partials** between 
 small answers** stay JSON. And the measurements below kept three browser payloads on JSON: **the BI grid**, **the VaR P&L path** and **the
 search page**.
 
-**How it works.** The server's `ArrowAnswers` (Java, beside `ArrowIpcWriter`, which writes the stream from Arrow's own message definitions)
-and the console's `core/arrow_answer.py` (pyarrow) write the same stream from a JSON answer:
+**How it works.** The server's `ArrowAnswers` writes the stream from a JSON answer with the official Apache Arrow Java library
+(`ArrowIpcWriter`, the same library as the compute workers' exchange and Arrow Flight):
 
 - the answer's table is the record batch: `rows` named by `columns` (`{"shape": "rows"}`), or a list of objects (`{"shape": "records"}`,
   with `absent` naming the keys some objects leave out, so the rebuilt object leaves them out too);
@@ -816,8 +817,9 @@ and the console's `core/arrow_answer.py` (pyarrow) write the same stream from a 
 - an answer holding anything else (an object or a list in a cell, a column mixing text and numbers, a NaN, a key both null and left out)
   is sent as JSON, with `200`: the caller reads the `Content-Type`.
 
-The console passes the server's Arrow through unchanged; when the server answered JSON (an answer given in time by a BI run, an older
-server) it writes the Arrow itself. In the browser, **`drishtiFetchTable(url, opts)`** (`/static/js/drishti-table.js`) asks with
+The console passes the server's Arrow through unchanged and writes no Arrow of its own: when the server answers JSON (an answer given in
+time by a BI run, a table Arrow is not written with) the browser gets that JSON, which `Drishti.fetchTable` reads as well. A Python
+program reads Drishti's data through Arrow Flight ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md)). In the browser, **`Drishti.fetchTable(url, opts)`** (`/static/js/drishti_table.js`) asks with
 `Accept: application/vnd.apache.arrow.stream, application/json;q=0.9` when the page loaded Arrow JS and `application/json` otherwise,
 and returns one column-oriented table whichever format came back: `names`, `length`, `column(name)` (a `Float64Array` for numbers, NaN
 for a null; an array for text), `value(name, i)` (the cell as JSON has it), `answer()` (the whole JSON answer, equal cell for cell). Types:
@@ -1019,6 +1021,13 @@ Your lake is already there: Databricks writes Delta tables, or Spark, Trino, Sno
 says how Drishti reads them, which plugin to choose, and what to do when a table does not fit. The details are in the connector guides,
 linked at each step: [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md), [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md)
 and [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-b-drishti-on-aws-ecs-efs-and-s3).
+
+### 0. Describe the lake once
+
+Each lake is one file, `config/lakes/<lake>.yaml`: where it is (a folder, `s3://`, `mem://`), how to reach it, and every table in it
+(path, partitions after `business_date`, promoted columns, vectors, id, date, replace or append). The loader, the data inbox, `lake
+build`, the demo lakes and the Delta and Iceberg connectors all refer to it by name, so a table is described in one place:
+[LAKE_GUIDE.md](LAKE_GUIDE.md).
 
 ### 1. No code, only configuration
 

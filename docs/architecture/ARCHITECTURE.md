@@ -131,7 +131,7 @@ immutable inputs, so they are safe to run concurrently and their results cache w
         │
  ① Command    CommandParser + Mnemonics → EntityRef(kind=trade, id=MX-20000001)               ~µs
  ② Fetch      SourceRouter → EntityDocument (DataNode + Provenance)                       I/O, virtual thread,
-                                                                                          drishti.sources.fetch-timeout (5s)
+                                                                                          drishti.sources.fetch-timeout (10s)
  ③ Match      SutraMatcher → highest-priority Sutra of the kind whose `where` holds (or none)   ~µs
  ④ Shape      ShapeFingerprinter → Fingerprint, cached per (entity, generation, date)     ~µs–ms
  ⑤ Layout     LayoutMerger: cache[(Sutra version, kind, fingerprint)] else Sutra ⊕ inference   cold ms, warm µs
@@ -170,7 +170,7 @@ Notes on each stage, checked against the code:
 This follows a single command from the keyboard to the screen and then through one live tick. The outputs are
 real, captured from a running server with the `trading` pack enabled (security off, so no token is needed).
 
-**1. The user types `TRD MX-20000001` and presses Enter.** While typing, `command.js` asks the console for
+**1. The user types `TRD MX-20000001` and presses Enter.** While typing, `drishti_command.js` asks the console for
 suggestions (debounced 60 ms, stale requests cancelled); the console forwards to the server:
 
 ```bash
@@ -229,8 +229,8 @@ Sutra did not say ("+ inference"); the counterparty, netting set, book and trade
 badges from the pack's `badges:` expressions. The console renders the panels with the Jinja macros in
 `web/templates/_macros/panels.html`, main-area panels on the left and `area: right` panels on the right.
 
-**4. The page goes live.** The page does not open its own stream. `live.js` subscribes `view:trade/MX-20000001` on the
-browser's single channel (`channel.js` → the hub in `live-hub.js`, a SharedWorker shared by every tab → console
+**4. The page goes live.** The page does not open its own stream. `drishti_live.js` subscribes `view:trade/MX-20000001` on the
+browser's single channel (`drishti_channel.js` → the hub in `drishti_live-hub.js`, a SharedWorker shared by every tab → console
 `GET /api/channel?s=view:trade/MX-20000001&s=alerts`). The console opens
 the server stream for that subscription and relays its events, each wrapped with its subscription
 (`{"ch": "view:trade/MX-20000001", "d": …}`). Directly against the server:
@@ -259,7 +259,7 @@ one-slot `FrameMailbox`. The client's writer thread sends it as the `frame` abov
 and the provenance panel changed, so only they travel.
 
 **6. The browser applies it.** The console turns non-chart panel patches into ready HTML (same macro as first
-paint) before relaying them; `live.js` replaces the strip cell's text and tone, swaps the panel, moves chart data in
+paint) before relaying them; `drishti_live.js` replaces the strip cell's text and tone, swaps the panel, moves chart data in
 place, and flashes what changed. The top bar's `Live, p99 N ms` comes from `GET /api/v1/health/live`:
 
 ```bash
@@ -287,14 +287,14 @@ Each row names what to change for a common need and the document that explains i
 | Add a link between kinds | `graph.fields` in `pack.yaml` and `link(...)` in the Sutra | PACK_DEVELOPER_GUIDE.md |
 | Change the sentence the About drawer says about a kind | `kinds.<kind>.about` in the pack's `config/about.yaml` (a `${...}` template over the document); for a generated pack, the about source in `tools/packgen/` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#about-text-and-glossary) |
 | Explain a field (term, meaning, unit, sign) | `glossary.<field path>` in `about.yaml`, or a shared `vocabulary.<name>` entry in the lowest pack that owns the concept (the glossary layer and field hints are step 4 of [RACHANA_REFERENCE.md › About this page: the design of context help](../guides/RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help); section 3.9 says what is in today) | PACK_DEVELOPER_GUIDE.md |
-| Change how the drawer looks or behaves | `drishti-console/web/templates/_macros/about.html` and `terminal/_about.html`, `static/js/about.js`, `static/css/about.css` | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help) |
+| Change how the drawer looks or behaves | `drishti-console/web/templates/_macros/about.html` and `terminal/_about.html`, `static/js/drishti_about.js`, `static/css/drishti_about.css` | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help) |
 | Change what the explanation says about the layout and the data | `ExplainService`, `PageContext`, `EmptinessReason` (`drishti-engine`, package `explain`), `MatchTrace` (`SutraMatcher.explain`); the endpoint is `ExplainController`; limits under `drishti.explain.*` | [API_GUIDE.md](../guides/API_GUIDE.md), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
 | Decide who may share, comment or be mentioned | the role power `roles.<role>.collaborate` (on unless removed); `drishti.collab.packs.<pack>.share-enabled`; `mentionable-roles`, `directory.scope`, `share.max-recipients`, `limits.*` under `drishti.collab` | [CONFIGURATION.md](../admin/CONFIGURATION.md), [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) |
 | Change what a note or comment may contain, or what is masked in it | `drishti.security.redact` (the fields), `drishti.collab.text.on-masked-copy` and `deny-patterns`; the logic is `NoteText`, `Entitlements.maskedValues`, `CommentRenderer` | CONFIGURATION.md, §3.10 |
 | Switch on email, or change what it says | `spring.mail.*`, `drishti.collab.console-url`, `email.enabled`; per pack `packs.<pack>.email.content` (`comment`, `title`, `link-only`); templates in `drishti.collab.email.templates-dir`; the code is `EmailNotifier`, `OutboxDispatcher`, `MailRenderer` | [OPERATIONS.md](../admin/OPERATIONS.md#9a-2-collaboration-email-and-the-outbox) |
 | Add another channel (a chat bridge) | one more `Notifier` bean: `ShareService` and `ThreadService` hand every bean the audience, so neither service changes | [COLLABORATION.md](../architecture/COLLABORATION.md) (phase 2) |
 | Keep, hold or export what people wrote | `drishti.collab.retention.*` and `packs.<pack>.retention-days`; legal holds and the export through `/api/v1/admin/collab` (`CollabPurge`, `HoldService`, `ExportService`, `ChainVerifier`) | [OPERATIONS.md](../admin/OPERATIONS.md#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) |
-| Change how the Share dialog, the inbox or the Discussion tab look or behave | `drishti-console/web/templates/terminal/_share.html`, `inbox.html`, `_discussion.html`; `static/js/share.js`, `inbox.js`, `alerts.js`, `discussion*.js`; `static/css/collab.css` | [COLLABORATION.md](../architecture/COLLABORATION.md) (console design) |
+| Change how the Share dialog, the inbox or the Discussion tab look or behave | `drishti-console/web/templates/terminal/_share.html`, `inbox.html`, `_discussion.html`; `static/js/drishti_share.js`, `drishti_inbox.js`, `drishti_alerts.js`, `discussion*.js`; `static/css/drishti_collab.css` | [COLLABORATION.md](../architecture/COLLABORATION.md) (console design) |
 | Let people search a kind by filling in a form | the `form:` section of `pack.yaml` (fields, types, operators), or a Design's Form tab; people open it with `FORM <pack>` | [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#form-the-search-form-of-a-kind), [USER_GUIDE.md](../guides/USER_GUIDE.md) |
 | Let people choose what a panel shows | `controls:` in the Sutra (dropdowns, sliders, date ranges), read by panels as `ctl.<id>` | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#controls) |
 | Tell Drishti a batch of data landed (refresh, verify, tell people, flag late data) | `POST /api/v1/packs/{pack}/loads` from your ETL; what a pack expects is its `loads:` section | [DATA_GUIDE.md](../guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed) |
@@ -359,7 +359,7 @@ panels:
 **Panel kinds** (the `PanelKind` enum, twenty-two): `kv`, `table`, `tabs`, `line`, `area`, `hbar`, `ladder`, `links`,
 `status`, `provenance`, `markdown`, `gauge`, `surface`, `waterfall`, `histogram`, `scatter`, `candlestick`, `graph`, `timeline`, `pivot`,
 `metric`, `map`. The chart and aggregate kinds are bound
-by `ChartBinder` under the `drishti.panels` limits and drawn by `static/js/charts.js`; [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one)
+by `ChartBinder` under the `drishti.panels` limits and drawn by `static/js/drishti_charts.js`; [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one)
 describes every kind in depth. The full grammar is in
 [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md). A new kind is added to the enum (with its required and allowed
 options) and to the binder on the Java side, plus a Jinja macro in `_macros/panels.html` and its client-side
@@ -424,8 +424,8 @@ or per mnemonic.
                                        │
    console   terminal/view.html ─ _macros/view.html (title, strip) ─ _macros/panels.html (one macro per panel kind)
                                        │
-   browser   view.js (tabs, keys, line, area, surface) · charts.js (waterfall … graph, donut, map) · tables.js,
-             tree-rows.js, pivot.js · live.js (frames from the live channel, same macros server-side)
+   browser   drishti_view.js (tabs, keys, line, area, surface) · drishti_charts.js (waterfall … graph, donut, map) · drishti_tables.js,
+             drishti_tree-rows.js, drishti_pivot.js · drishti_live.js (frames from the live channel, same macros server-side)
 ```
 
 What is code and what is configuration:
@@ -434,7 +434,7 @@ What is code and what is configuration:
 |---|---|---|
 | Server | `SutraBuilder`, `SutraMatcher`, `InferenceEngine`, `LayoutMerger`, `Binder`, `ChartBinder`, `PatchDiffer` | nothing |
 | Console | `terminal/view.html`, `_macros/view.html`, `_macros/panels.html`, `api_routes._panel_html` (live patches) | nothing |
-| Browser | `view.js`, `charts.js`, `geomap.js`, `tables.js`, `tree-rows.js`, `pivot.js`, `live.js` | nothing |
+| Browser | `drishti_view.js`, `drishti_charts.js`, `drishti_geomap.js`, `drishti_tables.js`, `drishti_tree-rows.js`, `drishti_pivot.js`, `drishti_live.js` | nothing |
 | Pack | — | YAML only: Sutras (or none), fragments, `form:`, `columns:`, `pivot:`, `semantics:`, formats |
 
 The default packs hold 219 Sutras (`config/packs/*/sutras/`) and the UI kit and packs 36 fragments; all of them are
@@ -525,7 +525,7 @@ draws the frame (`<section>`, header, code, key, download and help) and dispatch
 
 A field with a `link` becomes an anchor to `/v/{kind}/{id}`; `data-path` is what the About drawer, the live flash
 and the export read. When a tick changes the panel, the console renders it again with the same `panel` macro
-(`routes/api_routes.py`, `_panel_html`) and `live.js` swaps it in (section 10).
+(`routes/api_routes.py`, `_panel_html`) and `drishti_live.js` swaps it in (section 10).
 
 **Panel kind → macro → browser script.** One to one, for all twenty-two kinds of the `PanelKind` enum:
 
@@ -533,16 +533,16 @@ and the export read. When a tick changes the panel, the console renders it again
 |---|---|---|
 | `kv`, `status` | `fields` | none (plain HTML) |
 | `provenance`, `markdown`, `metric`, `gauge` | inline in `pbody` | none |
-| `table`, `ladder` | `table` (through `pivotable`; `drill` when the Sutra has `levels:`) | `tables.js`, `colfilter.js`, `tree-rows.js`, `pivot.js` (the Pivot tab) |
-| `tabs` | `tabs` (each tab's body is again `pbody`) | `view.js` |
-| `line`, `area` | `chart` (`data-chart` JSON) | `view.js` (ECharts) |
-| `hbar` | `bars`, or `donut` with `shape: donut` | none; `charts.js` for the donut |
-| `surface` | `surface` (`data-surface` JSON) | `view.js` (heatmap or 3D) |
+| `table`, `ladder` | `table` (through `pivotable`; `drill` when the Sutra has `levels:`) | `drishti_tables.js`, `drishti_colfilter.js`, `drishti_tree-rows.js`, `drishti_pivot.js` (the Pivot tab) |
+| `tabs` | `tabs` (each tab's body is again `pbody`) | `drishti_view.js` |
+| `line`, `area` | `chart` (`data-chart` JSON) | `drishti_view.js` (ECharts) |
+| `hbar` | `bars`, or `donut` with `shape: donut` | none; `drishti_charts.js` for the donut |
+| `surface` | `surface` (`data-surface` JSON) | `drishti_view.js` (heatmap or 3D) |
 | `links` | `links` | none |
-| `waterfall`, `histogram`, `scatter`, `candlestick`, `graph` | the macro of the same name (`xchart`, `data-xchart` JSON) | `charts.js` |
+| `waterfall`, `histogram`, `scatter`, `candlestick`, `graph` | the macro of the same name (`xchart`, `data-xchart` JSON) | `drishti_charts.js` |
 | `timeline` | `timeline` | none |
-| `map` | `geomap` | `geomap.js`, `charts.js` |
-| `pivot` | `pivot`, `pivot_table` | `tree-rows.js`, `pivot-grid.js` |
+| `map` | `geomap` | `drishti_geomap.js`, `drishti_charts.js` |
+| `pivot` | `pivot`, `pivot_table` | `drishti_tree-rows.js`, `drishti_pivot-grid.js` |
 
 ### Example 2: a kind with no Sutra
 
@@ -706,7 +706,7 @@ Abbreviated:
 **The results page.** `/s` (`routes/terminal_routes.py`, `search`) renders `web/templates/terminal/search.html`
 for every kind: `21 of 765 trades match`, a table whose columns come from the pack's `columns:` for the kind (each
 row links to `/v/{kind}/{id}`), a chart of the rows, and, because the trading pack declares `pivot:` for `trade`, a
-**Table | Pivot** switch drawn by `pivot.js` from the `pivot` block above. A kind without `columns:` gets columns
+**Table | Pivot** switch drawn by `drishti_pivot.js` from the `pivot` block above. A kind without `columns:` gets columns
 from the condition and the documents; a kind without `pivot:` gets the table alone. The grammar is in
 [USER_GUIDE.md, Search by value](../guides/USER_GUIDE.md#search-by-value) and
 [Asking in plain words](../guides/USER_GUIDE.md#asking-in-plain-words).
@@ -718,7 +718,7 @@ platform a new capability, and then it serves every pack:
 
 | Need | Code to write | Where |
 |---|---|---|
-| A new panel kind | the enum entry with its required and allowed options; its binding; its macro; its client script if it draws anything; its help entry | `PanelKind` (`drishti-rachana`), `Binder` or `ChartBinder` (`drishti-engine`, package `bind`), `drishti-console/web/templates/_macros/panels.html` (`pbody` and a macro), `drishti-console/web/static/js/view.js` or `charts.js`; [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one), [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide) |
+| A new panel kind | the enum entry with its required and allowed options; its binding; its macro; its client script if it draws anything; its help entry | `PanelKind` (`drishti-rachana`), `Binder` or `ChartBinder` (`drishti-engine`, package `bind`), `drishti-console/web/templates/_macros/panels.html` (`pbody` and a macro), `drishti-console/web/static/js/drishti_view.js` or `drishti_charts.js`; [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one), [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide) |
 | A new kind of store (a source plugin) | a `SourcePlugin` (`fetch`, optionally `subscribe`, `search`, `reverse`) in a plugin module; after that each store is a connector file | `SourcePlugin` (`drishti-api`), a module under `plugins/` such as `drishti-plugin-file`; [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md#the-sourceplugin-spi) |
 | A new computed measure | the computation: a Java engine (as VaR and exposure in `drishti-compute`, packages `var` and `ccr`) or a Python engine behind a `reactive` connector; its result is then an ordinary kind, drawn by the generic view | [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md), [VAR_GUIDE.md, Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) |
 
@@ -729,12 +729,12 @@ APIs, entitlements and masks as the generic view; none is a screen for one produ
 
 | Page | Routes | Templates | Why it is its own page |
 |---|---|---|---|
-| VaR explorer | `/var` (`VAR <scope> <GO>`) | `terminal/var.html`, `static/js/var-explorer.js`, `var-charts.js` | Any scope (hierarchy node, book, basket, trade) computed on demand by the VaR engine (`/api/v1/var`), with drill-down, captures and compare; the computed kinds stay ordinary kinds on `/v/…` too. [VAR_GUIDE.md](../guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen) |
-| Exposure explorer | `/exposure` (`EXP <scope> <GO>`) | `terminal/exposure.html`, `static/js/exposure-explorer.js`, `exposure-charts.js` | The same for counterparty exposure (`/api/v1/exposure`); `exposure-result` is still a kind. [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md#3-the-explorer-screen-by-screen) |
+| VaR explorer | `/var` (`VAR <scope> <GO>`) | `terminal/var.html`, `static/js/drishti_var-explorer.js`, `drishti_var-charts.js` | Any scope (hierarchy node, book, basket, trade) computed on demand by the VaR engine (`/api/v1/var`), with drill-down, captures and compare; the computed kinds stay ordinary kinds on `/v/…` too. [VAR_GUIDE.md](../guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen) |
+| Exposure explorer | `/exposure` (`EXP <scope> <GO>`) | `terminal/exposure.html`, `static/js/drishti_exposure-explorer.js`, `drishti_exposure-charts.js` | The same for counterparty exposure (`/api/v1/exposure`); `exposure-result` is still a kind. [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md#3-the-explorer-screen-by-screen) |
 | BI Studio, report viewer and the BI pages | `/bi/…` | `templates/bi/` | Reports and models over datasets (DuckDB on the server), a different job from one entity's view. [BI_GUIDE.md](../guides/BI_GUIDE.md) |
 | Admin | `/admin/…` | `templates/admin/` | Running the system: users, packs, connectors, lakes, Drishti\*net |
 | Sutra designer and Build | `/designer`, `/build/…`, `/studio` | `templates/designer/`, `templates/build/`, `templates/studio/` | Tools that write Sutras; their previews are the generic view's macros. [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
-| Data map | `/datamap` (`DATAMAP <GO>`) | `terminal/datamap.html`, `static/js/datamap.js` | The packs' kinds and joins, checked against the data (`/api/v1/datamap`). [USER_GUIDE.md](../guides/USER_GUIDE.md#the-data-map) |
+| Data map | `/datamap` (`DATAMAP <GO>`) | `terminal/datamap.html`, `static/js/drishti_datamap.js` | The packs' kinds and joins, checked against the data (`/api/v1/datamap`). [USER_GUIDE.md](../guides/USER_GUIDE.md#the-data-map) |
 | Landing and Home | `/`, `/t` | `landing.html`, `terminal/home.html` | Entry pages: the command line, recent entities, the watch list |
 | Workspaces and Monitors | `/w/…`, `/m/…`, `/alerts` | `templates/workspace/`, `templates/monitor/` | Arrangements of generic views and searches, saved per user; a workspace pane is a `/v/…` view. [USER_GUIDE.md](../guides/USER_GUIDE.md#workspaces) |
 | Help centre | `/help/…`, `/what` | `templates/help/` | Renders the repository's guides and the packs' Knowledge pages |
@@ -749,7 +749,7 @@ APIs, entitlements and masks as the generic view; none is a screen for one produ
   `nettingSet → netting-set`.
 - The `Linked entities` panel shows label, target, a **badge** computed from the target by a Rachana-EL expression
   (`drishti.graph.badges`, e.g. `PFE 46.0m`), and a status (`resolved`, `pending`, or denied with the reason).
-- Navigation keeps a **breadcrumb trail per browser tab** (`view.js`); `Alt+←` goes back. Reverse links (netting
+- Navigation keeps a **breadcrumb trail per browser tab** (`drishti_view.js`); `Alt+←` goes back. Reverse links (netting
   set → member trades) and **F8 Impact** (`/api/v1/impact/{kind}/{id}`) are answered by plugins that implement
   `SourcePlugin.reverse`, rolled up along `drishti.graph.impact.follow`.
 
@@ -776,7 +776,7 @@ As in the Bloomberg terminal, the command line suggests while the user types, in
   are dropped. Each plugin answers from an in-memory `HitIndex` (`drishti-api`), so most queries take microseconds.
 - **API:** `GET /api/v1/command/suggest?q=TRD%20T-1000&limit=10` →
   `[{type, mnemonic, kind, id, title, subtitle, complete}]` (see section 5 for a real answer).
-- **Console:** `command.js` debounces by 60 ms and cancels stale requests with `AbortController`. ↑/↓ move, `Tab`
+- **Console:** `drishti_command.js` debounces by 60 ms and cancels stale requests with `AbortController`. ↑/↓ move, `Tab`
   completes, `Enter` (`<GO>`) opens, `Esc` closes; matched characters are highlighted; ARIA `combobox`/`listbox`.
 
 ### 9.1 Several business days
@@ -859,7 +859,7 @@ the heap and 0.04 ms from a segment file read with positional reads (548 KB on d
                            SSE writer (virtual thread): `view` once, then `frame` events, `: hb` every 15 s
                                 │
                                 ▼
-                           console channel (ONE per browser tab) ──► live.js applies patches
+                           console channel (ONE per browser tab) ──► drishti_live.js applies patches
 ```
 
 - **Rebuild and diff.** Each rebuild uses the cached layout and is diffed against what the client holds; only
@@ -874,7 +874,7 @@ the heap and 0.04 ms from a segment file read with positional reads (548 KB on d
 - **One channel per browser.** Browsers allow six connections per site over HTTP/1.1, shared by all its tabs, so the
   number of live connections must not grow with tabs or panes (a channel per tab froze a seventh tab, UX-01). No page
   opens its own `EventSource`: views, the alerts bell, monitors and every workspace pane subscribe through
-  `channel.js` to one hub per browser (`live-hub.js`, in a SharedWorker; without one, in a tab elected with a Web Lock
+  `drishti_channel.js` to one hub per browser (`drishti_live-hub.js`, in a SharedWorker; without one, in a tab elected with a Web Lock
   that relays over a BroadcastChannel), which holds the browser's single channel
   (`/api/channel?s=view:trade/MX-20000001&s=alerts&s=monitor:<name>`, at most `live.max_subscriptions`, 32). A key
   held by several tabs is subscribed once; later subscriptions are added to the open channel with
@@ -1181,7 +1181,7 @@ Python 3.12, FastAPI + Jinja2: `core/` (app, settings, auth, backend client, bus
 Python console; vanilla JS, no build step); no CDN, no inline script
 (strict CSP); static assets are fingerprinted.
 
-**Themes** — tokens only in `web/static/css/tokens.css` (gradient chrome in `gradients.css`); ten themes selected by
+**Themes** — tokens only in `web/static/css/drishti_tokens.css` (gradient chrome in `drishti_gradients.css`); ten themes selected by
 `data-theme` on `<html>`: `terminal` (default, the navy/amber of the mockups), `light` (parchment), `wallstreet`
 (Bloomberg Terminal colours: black ground, amber data, yellow commands, green/red ticks, blue highlight — colours
 only, not fonts), `blue`, `green`, `crimson`, `crimson-dark`, and `terminal-green`, `terminal-crimson` and `terminal-blue` (the Terminal
@@ -1238,13 +1238,13 @@ column and the strip shows two figures per row; tables scroll inside their panel
 tap targets; inputs are 16 px so iOS does not zoom on focus; safe-area insets respect the notch; a web-app manifest
 lets people add Drishti to the home screen.
 
-**Hero animation** (`web/static/js/landing.js`, canvas 2D, no library): raw JSON fragments drift in, are drawn into
+**Hero animation** (`web/static/js/drishti_landing.js`, canvas 2D, no library): raw JSON fragments drift in, are drawn into
 the `{ ◉ }` eye, and emerge as assembled terminal panels that then tick. Colours come from CSS tokens at runtime;
 it plays once on view, has a Replay button, shows a static final frame under `prefers-reduced-motion`, and pauses
 when hidden.
 
 **Renderer contract** — each panel kind has a Jinja macro (`_macros/panels.html`) for first paint. Live patches
-reuse it: the console renders a changed non-chart panel with the same macro and sends the HTML; `live.js` swaps that
+reuse it: the console renders a changed non-chart panel with the same macro and sends the HTML; `drishti_live.js` swaps that
 one panel, updates strip cells in place, and hands chart panels new data — so a tick never re-renders the whole view. The kind-to-macro table and worked examples are in
 [section 7a](#7a-how-a-screen-is-made-generic-not-bespoke).
 

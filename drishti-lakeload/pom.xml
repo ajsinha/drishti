@@ -21,7 +21,7 @@
   <parent>
     <groupId>com.ash.drishti</groupId>
     <artifactId>drishti-parent</artifactId>
-    <version>2.9.11.a</version>
+    <version>2.9.11.b</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>drishti-lakeload</artifactId>
@@ -34,6 +34,7 @@
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeconfig</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId></dependency>
     <!-- Delta: Delta Kernel's transaction (the commit), as drishti.py lake build's Java writer (LakeWriter) -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId></dependency>

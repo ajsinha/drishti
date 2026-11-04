@@ -1974,7 +1974,7 @@ and whether the token is accepted, with the exact id, scopes and expiry of the t
 ```
 $ python3 tools/drishti.py doctor --server http://localhost:18971
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.9.11.a-exec.jar (version 2.5.0)
+GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.9.11.b-exec.jar (version 2.5.0)
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
@@ -2212,7 +2212,17 @@ drishti.py var show BANK --confidence 95                           VaR at 95% (o
 drishti.py var parts DESK:RATES --horizon 10d --method sum         parts, path, history, tree and capture take the same lens
 drishti.py var show BANK --stressed                                stressed VaR: the date's stress scenario set, in USD (213,637,794 on the demo)
 drishti.py var show NODE:MGMT~BANK --stressed --horizon 10d --method sum   the same at 10 days; a node's 12-week average printed too
+drishti.py var show DESK:DESK-RATES                                prints the parametric line under the historical one (PVAR's cross-check, never official)
+drishti.py var show BANK --no-parametric                           leaves it out (parametric=false)
+drishti.py var parts DESK:DESK-RATES --matrix                      the parametric components (they add up to the parametric VaR) and the parts' correlations
+drishti.py var parts DESK:DESK-RATES --no-parametric               the historical columns only
+drishti.py var playground DESK:DESK-RATES --measure parametric     the Parametric tab: the parametric steps; with --xlsx FILE the workbook gains its Parametric tab
 ```
+
+While parametric VaR is on (`drishti.var.parametric.enabled`), `show` prints `parametric VaR 58,409,229 USD = z·σ − μ = 2.3263 ×
+24,792,909 − (-732,297)   ES 58,693,229   fat-tail gap +16,224,451 (+27.8%)   a cross-check, not official` for `DESK:DESK-RATES` on the
+demo data; `parts` adds the *Param. component* and *ρ* columns and, with `--matrix`, the correlation matrix and the engine that computed
+it (`openblas` or `java`); `--json` carries the API's `parametric` block ([tutorial 43](../tutorials/43-parametric-var-beside-historical.md)).
 
 `--horizon`, `--method`, `--confidence` and `--es-confidence` read any answer through a lens: the headline then says
 `horizon    10-day (sum)` and `VaR 99%   274,544,283 USD   (the 5th worst of 500 overlapping windows)` on the demo data; limit use is
@@ -3262,7 +3272,7 @@ The Java `sutra` commands keep their own 0/1/2 and pass them through.
 
 | You see | Why | Do |
 |---|---|---|
-| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-2.9.11.a-exec.jar` |
+| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-2.9.11.b-exec.jar` |
 | `drishti: jar not found: ...` | `--jar` / `DRISHTI_JAR` names a missing file | fix the path |
 | `drishti: cannot run java: ...; pass --java or set JAVA_HOME` | no JDK found | set `JAVA_HOME` to a JDK 21+ |
 | `drishti: PyYAML is not installed: run with uv run --with pyyaml ...` | the system Python has no PyYAML | use `uv run --with pyyaml`, or a venv |
@@ -3316,7 +3326,7 @@ empty PyCharm to a run configuration for each common task.
 | **Script path** (not *Module name*; switch the toggle on the left of the field) | `<repo>/tools/drishti.py` |
 | **Python interpreter** | the `drishti-console/.venv` interpreter from 14.1 |
 | **Working directory** | **the repository root**: relative paths in *Parameters* resolve from here |
-| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.9.11.a-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
+| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.9.11.b-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 
 Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` and
 `DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `drishti-server/target/*-exec.jar` itself.

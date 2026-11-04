@@ -30,6 +30,15 @@
     heap {{ h.server.heapUsedMb }}/{{ h.server.heapMaxMb }} MB · {{ h.server.threads }} threads · Java {{ h.server.java }}</span>
 </div>
 
+{% with blas = (h.native or {}).get('blas') %}{% include "admin/_native_banner.html" %}{% endwith %}
+{% set nb = (h.native or {}).get('blas') %}
+{% if nb %}
+<div class="hl-sum" data-native-libs aria-label="Native libraries">
+  <span><b>Native libraries</b></span>
+  <span class="mono {{ 't-warn' if nb.status == 'DEGRADED' }}" data-native-blas title="drishti.native.blas.mode (auto or java); the bundled OpenBLAS on Linux and Windows x86-64, else the Java kernels">{{ nb.line }}</span>
+  {% for node, w in (nb.members or {}).items() %}<span class="mono {{ 't-warn' if w.startswith('java-fallback') }}" data-native-member="{{ node }}">{{ node }}: {{ w }}</span>{% endfor %}
+</div>
+{% endif %}
 <div class="hl-sum" data-external-lib aria-label="External libraries">
   <span><b>External libraries</b></span>
   {% set xl = h.externalLib or {} %}

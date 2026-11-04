@@ -21,7 +21,7 @@ from pathlib import Path
 from core import export
 from routes.api_routes import _view_event
 
-CSS = (Path(__file__).resolve().parents[1] / "web" / "static" / "css" / "terminal.css").read_text(encoding="utf-8")
+CSS = (Path(__file__).resolve().parents[1] / "web" / "static" / "css" / "drishti_terminal.css").read_text(encoding="utf-8")
 
 PANEL = {"id": "mtm", "kind": "metric", "title": "MTM", "area": "right", "empty": False, "error": None,
          "data": {"value": {"label": "Net MTM", "text": "−1,250", "tone": "neg", "emphasis": True, "path": "mtm"},

@@ -284,9 +284,10 @@ settings:
 A document read this way is cached only if the index still points at the same offset when it is stored; a newer
 message or a tombstone applied meanwhile drops it, so a stale or deleted document never sticks in the cache.
 
-The engine's whole read is bounded by `drishti.sources.fetch-timeout` (5 s), the same as the reader's 5 s wait, so a cold
-read while the broker is away ends with `DRS-1004` rather than falling through to the next store. Raising
-`fetch-timeout` above 5 s (`7s`) turns such a read into "not held", and the next store (the lake) answers.
+The engine's whole read is bounded by `drishti.sources.fetch-timeout` (10 s), longer than the reader's 5 s wait, so a
+cold read while the broker is away answers "not held" after 5 s and the next store (the lake) answers. A read that
+first waited for the lock as well (up to 5 s more, behind other cold reads) can reach the 10 s bound and end with
+`DRS-1004`. Setting `fetch-timeout` at or below 5 s makes every such read end with `DRS-1004` instead of falling through.
 
 ### 6.2 Type-ahead
 
@@ -402,7 +403,7 @@ from starting: it is listed under `failedToStart` with the client's message, and
 mode. A broker that is merely down does not stop the start.
 
 While the broker is away: documents in the memory or disk cache still answer; other reads go to Kafka and miss after
-the 5 s reader wait (`DRS-1004` at the default 5 s `fetch-timeout`); open views stop ticking and resume with the
+the 5 s reader wait, and the next store (the lake) answers them (with the default 10 s `fetch-timeout`); open views stop ticking and resume with the
 next message after the broker returns.
 
 **Offsets out of range after an outage.** If retention removed messages while the connector was disconnected, the
@@ -891,7 +892,7 @@ Everything not about security (offsets, topics that do not exist, slow catch-up)
 | a delete does not delete | envelope tombstone keyed by a bare id, or an empty value instead of null | key envelopes `<kind>/<id>`; send a real null |
 | an entity disappears after a bad message | a mapped message whose value is not JSON became its latest | fix the producer; publish a good message for the key |
 | cold reads are slow under load | they queue behind the one reader | `disk-cache.enabled: true`; raise `cache-mb` |
-| `DRS-1004` while the broker is down | a cold read waits up to 5 s for Kafka | expected until the broker returns; or raise `fetch-timeout` above 5 s to fall through to the lake |
+| `DRS-1004` while the broker is down | a cold read waited for Kafka (5 s) and for the reader lock behind other cold reads, past `fetch-timeout`; or `fetch-timeout` is set at or below 5 s | keep `fetch-timeout` at its default 10 s so reads fall through to the lake; `disk-cache.enabled: true` so fewer reads go to Kafka |
 | messages skipped after a long outage | resume offset removed by retention, `auto.offset.reset` is `latest` | `client.auto.offset.reset: earliest`, or restart the server to replay |
 
 ## Outbound proxy

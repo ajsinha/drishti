@@ -51,11 +51,10 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [path-book, path-strip]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: compute-demo
+      lake: demo                    # config/lakes/demo.yaml: the tables, their promoted columns (the pack's lake: entries below)
+      lake-tables: compute-demo.path-book,compute-demo.path-strip
       layout:
-        path-book: { columns: [BOOK_ID, NAME, DESK, STRIP_COUNT], type-ahead: [NAME] }
-        path-strip: { columns: [STRIP_ID, BOOK_ID, INSTRUMENT, DAYS] }
+        path-book: { type-ahead: [NAME] }
   path-sum-python:                  # the sample Python engine in the compute pool "sample" (config/compute/compute.yaml)
     plugin: reactive
     mode: reactive
@@ -113,3 +112,20 @@ routes:
   path-strip: compute-demo-store
   path-sum: path-sum-python
   path-sum-java: path-sum-java
+
+# The tables this pack recommends (docs/guides/LAKE_GUIDE.md section 7): copied into a lake file the first time a writer meets
+# the kind; config/lakes/demo.yaml holds them for the demo lake. Its connectors above name the lake and these entries.
+lake:
+  tables:
+    compute-demo.path-book:
+      promote:
+      - BOOK_ID
+      - NAME
+      - DESK
+      - STRIP_COUNT
+    compute-demo.path-strip:
+      promote:
+      - STRIP_ID
+      - BOOK_ID
+      - INSTRUMENT
+      - DAYS

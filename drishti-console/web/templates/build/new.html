@@ -17,7 +17,7 @@
 {% block title %}New screen · {{ PRODUCT }}{% endblock %}
 {% block screen %}build{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/build.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_build.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 <div class="adm bs" data-new data-max-samples="{{ limits.maxSamples }}" data-max-file-mb="{{ limits.maxFileMb }}" data-max-total-mb="{{ limits.maxTotalMb }}">
@@ -135,7 +135,7 @@
 </div>
 {% endblock %}
 {% block scripts %}
-<script src="/static/js/build-files.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/build-new.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/build-import.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_build-files.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_build-new.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_build-import.js?v={{ ASSET_V }}"></script>
 {% endblock %}

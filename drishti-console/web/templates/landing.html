@@ -133,7 +133,7 @@
     <div class="lp-shots">
       {% for s in showcase %}
       <figure class="lp-shot">
-        <img src="/static/img/shot-{{ s.slug }}.png" alt="{{ s.title }} view" loading="lazy">
+        <img src="/static/img/drishti_shot-{{ s.slug }}.png" alt="{{ s.title }} view" loading="lazy">
         <figcaption class="meta">{% if s.cmd %}<span class="cmd">{{ s.cmd }} &lt;GO&gt;</span>{% endif %}<span class="text-muted-d">{{ s.title }} · Sutra {{ s.sutra }}</span></figcaption>
       </figure>
       {% endfor %}
@@ -148,6 +148,6 @@
   </div>
 </section>{% endif %}
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/dyk.css?v={{ ASSET_V }}">{% endblock %}
-{% block scripts %}<script src="/static/js/landing.js?v={{ ASSET_V }}"></script>{% if facts_on %}
-<script src="/static/js/dyk.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_dyk.css?v={{ ASSET_V }}">{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_landing.js?v={{ ASSET_V }}"></script>{% if facts_on %}
+<script src="/static/js/drishti_dyk.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}

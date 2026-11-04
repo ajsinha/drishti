@@ -61,7 +61,7 @@ def test_the_vega_libraries_are_vendored_with_their_licences():
 
 def test_the_page_script_draws_with_the_interpreter_and_a_loader_that_refuses_urls():
     """The strict policy holds because the expression syntax tree is built by vega-embed and walked by the interpreter, and because nothing may be loaded."""
-    js = (CONSOLE / "web/static/js/bi-vega.js").read_text(encoding="utf-8")
+    js = (CONSOLE / "web/static/js/drishti_bi-vega.js").read_text(encoding="utf-8")
     assert "ast: true" in js and "expr: window.vegaInterpreter" in js
     assert "loader.load = refuse" in js and "loader.sanitize = refuse" in js and "actions: false" in js
     assert not re.search(r"\beval\(|new Function", js)
@@ -70,5 +70,5 @@ def test_the_page_script_draws_with_the_interpreter_and_a_loader_that_refuses_ur
 def test_the_report_and_designer_pages_load_the_vega_script_but_not_the_libraries():
     for page in ("report", "design"):                    # a board is a report layout (2.4.0): it opens in report.html
         html = (CONSOLE / f"web/templates/bi/{page}.html").read_text(encoding="utf-8")
-        assert "/static/js/bi-vega.js" in html, page
+        assert "/static/js/drishti_bi-vega.js" in html, page
         assert "vendor/vega/" not in html, page      # the libraries load the first time a vega-lite visual is drawn

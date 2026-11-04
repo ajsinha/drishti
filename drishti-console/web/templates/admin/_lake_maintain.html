@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Admin -> Lakes: the tables, and Maintain over them (core/lake_maint.py, admin-lake-maintain.js). #}
+{# Admin -> Lakes: the tables, and Maintain over them (core/lake_maint.py, drishti_admin-lake-maintain.js). #}
 {% macro settings_text(s) -%}
 {{ "keep all dates" if s["keep-business-days"] is none else ("{:,}".format(s["keep-business-days"]) ~ " business days") }} · {{ s["target-file-mb"] }} MB files · {{ "checkpoint" if s.checkpoint else "no checkpoint" }} · {{ "no vacuum" if s["vacuum-hours"] is none else ("vacuum " ~ s["vacuum-hours"] ~ " h") }}
 {%- endmacro %}

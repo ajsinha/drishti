@@ -53,14 +53,19 @@ def test_switching_a_system_writes_its_connector_file_and_keeps_the_old_text(tmp
     doc = yaml.safe_load((folder / "trade-calypso.yaml").read_text(encoding="utf-8"))
     assert doc["plugin"] == "iceberg" and doc["kinds"] == ["trade"]
     s = doc["settings"]
-    assert s["engine"] == "native" and s["table"] == {"trade": "trade_calypso"} and s["union"] is True and s["source-name"] == "trade-calypso"
-    assert s["root"] == stores.ICEBERG_DEFAULT                     # the default data folder: the portable form the server resolves
-    assert "TRADE_ID" in s["layout"]["trade"]["columns"]
+    # the lake form (docs/guides/LAKE_GUIDE.md): the connector names the lake demo-iceberg; its file, beside the connector folder, holds
+    # the table (the pack's entry, the partition field kept as a promoted column) and the root
+    assert s["engine"] == "native" and s["lake"] == stores.ICEBERG_LAKE and s["lake-tables"] == "trading.trade_calypso"
+    assert s["union"] is True and s["source-name"] == "trade-calypso" and "root" not in s and "layout" not in s
+    lf = yaml.safe_load((tmp_path / "lakes" / "demo-iceberg.yaml").read_text(encoding="utf-8"))
+    assert lf["format"] == "iceberg" and lf["root"] == stores.ICEBERG_DEFAULT  # the default data folder: the portable form the server resolves
+    entry = lf["tables"]["trading.trade_calypso"]
+    assert entry["kind"] == "trade" and "partition-by" not in entry and "PRODUCT_TYPE" in entry["promote"] and "TRADE_ID" in entry["promote"]
     assert stores.current(folder)["calypso"] == "iceberg" and stores.current(folder)["endur"] == "delta"
 
     assert "now reads delta, was iceberg" in stores.switch(folder, "calypso", "delta", lake, ice, data, dry=False)
     doc = yaml.safe_load((folder / "trade-calypso.yaml").read_text(encoding="utf-8"))
-    assert doc["plugin"] == "delta" and doc["settings"]["root"] == stores.DELTA_DEFAULT and "engine" not in doc["settings"]
+    assert doc["plugin"] == "delta" and doc["settings"]["lake"] == "demo" and "engine" not in doc["settings"]   # the pack's template
     kept = list((data / "connectors" / "history").glob("trade-calypso.*.yaml"))
     assert len(kept) == 1 and "plugin: iceberg" in kept[0].read_text(encoding="utf-8")
 
@@ -82,11 +87,13 @@ def test_the_risk_domain_switches_its_connector_file_and_back(tmp_path, monkeypa
     assert stores.current_domain(folder, "risk") == "delta"
     assert "now reads iceberg, was delta" in stores.switch_domain(folder, "risk", "iceberg", lake, ice, data, dry=False)
     doc = yaml.safe_load((folder / "risk-store.yaml").read_text(encoding="utf-8"))
-    assert doc["plugin"] == "iceberg" and doc["settings"]["engine"] == "native" and doc["settings"]["domain"] == "risk"
-    assert doc["settings"]["root"] == stores.ICEBERG_DEFAULT and "pnl-vector" in doc["kinds"]
-    assert doc["settings"]["layout"]["pnl-vector"]["vectors"]          # the vector columns go with the layout
+    assert doc["plugin"] == "iceberg" and doc["settings"]["engine"] == "native" and doc["settings"]["lake"] == stores.ICEBERG_LAKE
+    assert "pnl-vector" in doc["kinds"] and "risk.pnl-vector" in doc["settings"]["lake-tables"]
+    lf = yaml.safe_load((tmp_path / "lakes" / "demo-iceberg.yaml").read_text(encoding="utf-8"))
+    assert lf["tables"]["risk.pnl-vector"]["vectors"]                  # the vector columns go with the lake entry
     ex = yaml.safe_load((folder / "exposure-store.yaml").read_text(encoding="utf-8"))   # the CCR paths of the domain switch with it
-    assert ex["plugin"] == "iceberg" and "exposure-path" in ex["kinds"] and ex["settings"]["layout"]["exposure-path"]["vectors"]
+    assert ex["plugin"] == "iceberg" and "exposure-path" in ex["kinds"] and lf["tables"] is not None
+    assert yaml.safe_load((tmp_path / "lakes" / "demo-iceberg.yaml").read_text(encoding="utf-8"))["tables"]["risk.exposure-path"]["vectors"]
     assert "reads iceberg already" in stores.switch_domain(folder, "risk", "iceberg", lake, ice, data, dry=False)
     assert "now reads delta, was iceberg" in stores.switch_domain(folder, "risk", "delta", lake, ice, data, dry=False)
     assert not (folder / "risk-store.yaml").exists()                     # the pack's own Delta connector serves again

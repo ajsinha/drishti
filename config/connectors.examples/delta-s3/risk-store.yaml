@@ -16,6 +16,8 @@
 # DRISHTI_DELTA_S3_BUCKET and DRISHTI_DELTA_S3_PREFIX (deploy/aws/delta-s3/delta-s3.sh create makes them) and AWS_REGION. No key is
 # written here: credentials come from the AWS default chain (the ECS task role, a profile, AWS_ACCESS_KEY_ID); an S3-compatible
 # store adds s3.endpoint and keys as ${ENV} references (other/customer-lake.yaml). Guide: DELTA_CONNECTOR.md section 17.
+# The lake (delta, its root or catalog, storage and tables) is config/lakes.examples/delta-s3/s3.yaml: copy it to
+# config/lakes/s3.yaml beside this file (docs/guides/LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: delta
 kinds:
 - stress-scenario
@@ -34,22 +36,6 @@ kinds:
 - pnl-history
 description: risk-store read from Delta Lake on AWS S3 (the market-risk pack's risk domain with its P&L vectors, scenario PVs, hierarchy and limits)
 settings:
-  root: s3://${DRISHTI_DELTA_S3_BUCKET:drishti-lake}/${DRISHTI_DELTA_S3_PREFIX:delta}
-  domain: risk
+  lake: s3
+  lake-tables: risk.stress-scenario,risk.stress-result,risk.frtb-sensitivity,risk.pnl-explain,risk.trade-valuation,risk.portfolio,risk.pnl-vector,risk.scenario-pv,risk.fx-scenario,risk.scenario-set,risk.risk-hierarchy,risk.var-limit,risk.desk-pnl,risk.pnl-history
   engine: native
-  s3.region: ${AWS_REGION:us-east-1}
-  layout.trade-valuation.columns: VALUATION_ID,TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,PRODUCT_GROUP,PORTFOLIO,DESK,COUNTERPARTY,NETTING_SET,TRADER_ID,BUY_SELL_CODE,TRADE_STATUS,CURRENCY,NOTIONAL,MTM,MTM_CURRENCY,PNL_1D,DV01,TRADE_DATE,MATURITY_DATE,VALUATION_DATE
-  layout.trade-valuation.sort-by: id
-  layout.trade-valuation.file-rows: 250000
-  layout.trade-valuation.row-group-rows: 1000
-  layout.pnl-vector.columns: VALUE_TYPE,GRAIN,TRADE_ID,POSITION_ID,CURRENCY,SOURCE_SYSTEM,SECURITY_ID,INSTRUMENT,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,LIMIT_LETTER,PORTFOLIO,STRATEGY,PRODUCT_GROUP,PRODUCT_TYPE,COUNTERPARTY,DIRECTION,QUANTITY,PV,TAGS,TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT,TRADE_IDS,TRADE_CURRENCY
-  layout.pnl-vector.vectors: PNL
-  layout.scenario-pv.columns: VALUE_TYPE,GRAIN,TRADE_ID,POSITION_ID,CURRENCY,SOURCE_SYSTEM,SECURITY_ID,INSTRUMENT,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,LIMIT_LETTER,PORTFOLIO,STRATEGY,PRODUCT_GROUP,PRODUCT_TYPE,COUNTERPARTY,DIRECTION,QUANTITY,BASE_PV,VALUATION_DATE,BASE_VALUATION_DATE,TAGS,TRADE_STATUS,MATURITY_DATE,STATUS,SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT,TRADE_IDS
-  layout.scenario-pv.vectors: SCENARIO_PV
-  layout.fx-scenario.columns: CURRENCY,RATE,SCENARIO_SET_ID
-  layout.risk-hierarchy.columns: NODE_ID,HIERARCHY,LEVEL,PARENT_ID,NAME
-  layout.var-limit.columns: LIMIT_ID,HIERARCHY,NODE_ID,LIMIT_VAR,CURRENCY
-  layout.desk-pnl.columns: DESK_PNL_ID,DESK_ID,LEGAL_ENTITY,ACTUAL_PNL,HYPOTHETICAL_PNL,FEES_AND_COMMISSIONS,CURRENCY,SOURCE,AS_OF
-  layout.pnl-history.columns: HIERARCHY,NODE_ID,LEVEL,CURRENCY,FIRST_DAY,LAST_DAY,DAY_COUNT
-  layout.pnl-history.vectors: PNL
-  layout.portfolio.columns: PORTFOLIO_ID,NAME,TYPE,OWNER

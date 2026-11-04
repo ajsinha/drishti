@@ -43,7 +43,7 @@ def test_an_old_studio_address_lands_on_the_split_view_of_a_new_design(live_cons
     page.locator("[data-start-go]").click()                  # opening the address only asks; the button starts the design
     page.locator("[data-workbench]").wait_for()
     assert re.search(r"/build/d/\w+\?tab=split", page.url)
-    wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.tabs.centre.current() === 'design' && document.querySelector('#wbPaneYaml .CodeMirror').offsetParent !== null")
+    wait(page, "window.Drishti.workbench && window.Drishti.workbench.tabs.centre.current() === 'design' && document.querySelector('#wbPaneYaml .CodeMirror').offsetParent !== null")
     assert "sutra: all-panels-showcase" in state(page, "yaml")
     assert page.locator("#wbPaneYaml").is_visible() and page.locator("#wbPaneDesign").is_visible()          # side by side: the canvas is in sight
     assert page.locator("#wbPaneYaml .CodeMirror").is_visible()
@@ -67,26 +67,26 @@ def test_the_command_palette_works_by_keyboard_and_is_labelled(live_console, pag
     assert page.evaluate("document.activeElement.hasAttribute('data-panel') || !!document.activeElement.closest('[data-preview]')")   # focus is back
 
     # add a panel: filter, Enter
-    before = len(page.evaluate("window.DrishtiWB.model(window.drishtiWorkbench.store.state.yaml).panels"))
+    before = len(page.evaluate("window.Drishti.WB.model(window.Drishti.workbench.store.state.yaml).panels"))
     rev = state(page, "rev")
     palette(page, "add panel: markdown")
     page.keyboard.press("Enter")
     settle(page, rev)
-    assert len(page.evaluate("window.DrishtiWB.model(window.drishtiWorkbench.store.state.yaml).panels")) == before + 1
+    assert len(page.evaluate("window.Drishti.WB.model(window.Drishti.workbench.store.state.yaml).panels")) == before + 1
 
     # undo and redo from the palette
     ops_at = state(page, "opsAt")
     palette(page, "undo")
     page.keyboard.press("Enter")
-    wait(page, f"window.drishtiWorkbench.store.state.opsAt < {ops_at}")
+    wait(page, f"window.Drishti.workbench.store.state.opsAt < {ops_at}")
     palette(page, "redo")
     page.keyboard.press("Enter")
-    wait(page, f"window.drishtiWorkbench.store.state.opsAt === {ops_at}")
+    wait(page, f"window.Drishti.workbench.store.state.opsAt === {ops_at}")
 
     # go to a panel, switch a tab, next and previous sample, run the check
     palette(page, "go to panel: terms")
     page.keyboard.press("Enter")
-    wait(page, "window.drishtiWorkbench.canvas.selected() && window.drishtiWorkbench.canvas.selected().id === 'terms'")
+    wait(page, "window.Drishti.workbench.canvas.selected() && window.Drishti.workbench.canvas.selected().id === 'terms'")
     palette(page, "switch to versions")
     page.keyboard.press("Enter")
     assert page.locator("#wbTabVer").get_attribute("aria-selected") == "true"
@@ -146,27 +146,29 @@ def test_versions_tab_diffs_against_the_base_and_an_earlier_version_and_restores
     assert made["http"] == 201
     post(page, f"{live_console}/build/designs/{made['id']}/files", {"files": [{"name": "s.json", "text": "{}"}]})
     page.goto(f"{live_console}/build/d/{made['id']}?tab=yaml")
-    wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+    wait(page, "window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     page.locator("#wbTabVer").click()
     wait(page, "document.querySelector('[data-versions] .wb-sum').textContent.includes('same as')")
     assert sutra in page.locator("#wbCompareWith option").first.inner_text()
     # two edits, then the diff against the base shows them and against version 1 only the second
     rev = state(page, "rev")
-    page.evaluate("window.drishtiWorkbench.store.send([{op: 'text', yaml: window.drishtiWorkbench.store.state.yaml + '\\n# first edit\\n'}])")
+    page.evaluate("window.Drishti.workbench.store.send([{op: 'text', yaml: window.Drishti.workbench.store.state.yaml + '\\n# first edit\\n'}])")
     settle(page, rev)
     rev = state(page, "rev")
-    page.evaluate("window.drishtiWorkbench.store.send([{op: 'text', yaml: window.drishtiWorkbench.store.state.yaml + '# second edit\\n'}])")
+    page.evaluate("window.Drishti.workbench.store.send([{op: 'text', yaml: window.Drishti.workbench.store.state.yaml + '# second edit\\n'}])")
     settle(page, rev)
-    wait(page, "document.querySelectorAll('#wbCompareWith option').length >= 3")
-    wait(page, "document.querySelector('[data-versions] .wb-diff').textContent.includes('first edit')")
+    # the list after the second save (base, version 0, version 1) and the comparison that list asked for has landed: until then the
+    # diff on screen may be the one asked for after the first save (marked aria-busy while the newer one loads)
+    wait(page, "document.querySelectorAll('#wbCompareWith option').length >= 3 && !document.querySelector('[data-versions] .wb-diff').hasAttribute('aria-busy') && document.querySelector('[data-versions] .wb-sum').textContent.includes('against')")
+    assert "first edit" in page.locator("[data-versions] .wb-diff").inner_text()
     diff = page.locator("[data-versions] .wb-diff")
     assert "second edit" in diff.inner_text() and diff.locator(".d-add").count() >= 2
     page.evaluate("(() => { const s = document.getElementById('wbCompareWith'); s.value = '1'; s.dispatchEvent(new Event('change')); })()")
     wait(page, "document.querySelector('[data-versions] .wb-diff').textContent.includes('second edit') && !document.querySelector('[data-versions] .wb-diff').textContent.includes('+# first edit')")
     # restore version 1 (as an operation: undo brings the second edit back)
     page.get_by_role("button", name=re.compile("Restore version 1")).click()
-    wait(page, "!window.drishtiWorkbench.store.state.yaml.includes('second edit')")
+    wait(page, "!window.Drishti.workbench.store.state.yaml.includes('second edit')")
     assert "first edit" in state(page, "yaml")
     page.keyboard.press("Control+z")
-    wait(page, "window.drishtiWorkbench.store.state.yaml.includes('second edit')")
+    wait(page, "window.Drishti.workbench.store.state.yaml.includes('second edit')")
     assert not page.errors

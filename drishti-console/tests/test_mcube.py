@@ -60,7 +60,7 @@ def test_the_page_is_the_pivot_screen_with_the_mr_lens_and_the_api_is_read_as_th
     assert r.status_code == 303 and r.headers["location"] == "/mcube?text=DESK%3ARATES+BY+MGMT.BOOK"
     page = c.get("/mcube").text
     assert "data-pivot-screen" in page and 'data-source="var"' in page and 'data-lens="mr"' in page
-    assert "pivot.js" in page and "mr-lens.js" in page and "mr-lens.css" in page and "cube-core.js" not in page
+    assert "drishti_pivot.js" in page and "drishti_mr-lens.js" in page and "drishti_mr-lens.css" in page and "cube-core.js" not in page
     for marker in ("data-mr-tiles", "data-mr-seg=\"horizon\"", "data-mr-slider", 'data-mr-tab="tail"', 'data-mr-tab="sensitivities"',
                    "data-mr-tail", "data-mr-explain", "data-mr-comp", "data-mr-waterfall", "data-mr-heat", "data-mr-ladder", "data-mr-whatif",
                    "data-pv-grid", "data-pv-fields"):
@@ -69,7 +69,7 @@ def test_the_page_is_the_pivot_screen_with_the_mr_lens_and_the_api_is_read_as_th
     assert "data-preset=" in typed and "DESK:RATES" in typed
     assert 'data-view-id="asha/morning"' in c.get("/mcube?view=asha/morning").text
     plain = c.get("/pivot", params={"source": "var"}).text
-    assert "mr-lens.js" not in plain and 'data-lens="mr"' not in plain
+    assert "drishti_mr-lens.js" not in plain and 'data-lens="mr"' not in plain
     view = {"source": "var", "rows": ["MGMT.DESK"], "values": [{"measure": "var()"}]}
     h = c.post("/api/pivot/mr/headline", json={"view": view})
     assert h.status_code == 200 and sent[-1][:4] == ("POST", "/mr/headline", "alice", {"view": view})

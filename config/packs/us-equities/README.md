@@ -48,7 +48,6 @@ depends-on:
   - derived
   - yfinance
   settings:
-  - DRISHTI_DELTA_ROOT
   - DRISHTI_LAKE_ENABLED
   - DRISHTI_US_EQUITIES_BENCHMARK
   - DRISHTI_US_EQUITIES_PRICES_ENABLED
@@ -403,7 +402,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `us-equities-prices` | `yfinance` | `price-history` | `${DRISHTI_US_EQUITIES_PRICES_ENABLED:false}` |
 | `us-equities-groupings` | `derived` | `sic-sector` | `${DRISHTI_LAKE_ENABLED:true}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_US_EQUITIES_BENCHMARK`, `DRISHTI_US_EQUITIES_PRICES_ENABLED`, `DRISHTI_YFINANCE_URL`.
+Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`, `DRISHTI_US_EQUITIES_BENCHMARK`, `DRISHTI_US_EQUITIES_PRICES_ENABLED`, `DRISHTI_YFINANCE_URL`.
 
 ## Refreshing the data
 

@@ -91,10 +91,10 @@ final class PublicPackLakes {
                 continue;                                  // the sixty-day synthetic datasets are not needed here
             }
             String kind = ds.path("kind").asText();
-            JsonNode connector = YAML.readTree(PACKS.resolve(pack).resolve("pack.yaml").toFile()).path("connectors").path(ds.path("connector").asText());
-            JsonNode settings = connector.path("settings");
-            List<String> promoted = new ArrayList<>();
-            settings.path("layout").path(kind).path("columns").forEach(c -> promoted.add(c.asText()));
+            // the pack's entry for the kind, from its lake: block (its templates name lake: demo) or an older template's layout
+            com.ash.drishti.lakeconfig.PackEntry entry = com.ash.drishti.lakeconfig.PackEntry.read(PACKS.resolve(pack), kind,
+                    ds.path("connector").asText(null));
+            List<String> promoted = new ArrayList<>(entry.promote());
             TreeMap<String, JsonNode> docs = new TreeMap<>();
             if (ds.has("snapshot")) {                      // its dated file, or a large kind's tar of parts (the funds pack's holdings)
                 List<FeedFiles.Part> parts = FeedFiles.parts(TESTDATA.resolve(ds.path("folder").asText()));
@@ -107,7 +107,8 @@ final class PublicPackLakes {
             } else {
                 docs = samples(Path.of("..").resolve(ds.path("samples").asText()), kind);
             }
-            table(lake.resolve(settings.path("domain").asText(pack)).resolve(kind), stage.resolve(pack + "-" + kind + ".rows"), docs, promoted);
+            table(lake.resolve(entry.domain() == null || entry.domain().isBlank() ? pack : entry.domain())
+                    .resolve(entry.table() == null ? kind : entry.table()), stage.resolve(pack + "-" + kind + ".rows"), docs, promoted);
         }
         try (var walk = Files.walk(stage)) {
             walk.sorted(java.util.Comparator.reverseOrder()).forEach(p -> p.toFile().delete());

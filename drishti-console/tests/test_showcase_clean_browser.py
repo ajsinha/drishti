@@ -46,10 +46,10 @@ def test_an_example_opens_as_a_copy_with_no_problems(browser, live_console, exam
         made = post(page, f"{live_console}/build/examples/{example}/open", {})
         assert made["http"] in (200, 201), made
         page.goto(live_console + made["url"])
-        page.wait_for_function("() => window.drishtiWorkbench && window.drishtiWorkbench.store.state.id", timeout=max(BROWSER_WAIT_MS, 120_000))   # a cold server under load: as long as the preview may take
+        page.wait_for_function("() => window.Drishti.workbench && window.Drishti.workbench.store.state.id", timeout=max(BROWSER_WAIT_MS, 120_000))   # a cold server under load: as long as the preview may take
         page.locator("[data-preview] [data-panel]").first.wait_for(timeout=max(BROWSER_WAIT_MS, 120_000))   # the first example on a worker meets a cold server under the drill's load
         # the check runs on idle; run it now and wait for its answer (the matrix, or why it could not run) instead of a fixed time
-        page.evaluate("() => window.drishtiWorkbench.tests.run()")
+        page.evaluate("() => window.Drishti.workbench.tests.run()")
         expect(page.locator("[data-result]")).not_to_have_text("… checking", timeout=max(BROWSER_WAIT_MS, 60_000))
         items = page.evaluate("[...document.querySelectorAll('[data-problems] .wb-problem-b')].map(b => b.textContent)")
         if example != SHOWCASE:                              # the others match kinds of the banking packs and link to their entities: not on this plain server

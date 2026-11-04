@@ -142,13 +142,24 @@ def config(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, e
         target_mode = "append" if mode == "append" else "replace-date"
     else:
         target_mode = None
-    target = {"format": "iceberg" if iceberg else "delta", "lake": lake, "domain": p["domain"], "kind": p["kind"]}
-    if target_mode:
-        target["mode"] = target_mode
+    path = lake.rstrip("/") + "/" + p["domain"] + "/" + (p.get("table") or p["kind"])
+    named = bool(p.get("lake_name") and not getattr(a, "lake_root", None))
+    if named:
+        # a lake of config/lakes/ (lake build --lake NAME): the loader reads the same lake file, by name; the layout and the load mode
+        # are the file's (the one source of a table's settings); the load rules give the table and the business date
+        target = {"lake": p["lake_name"], "kind": p["kind"]}
+        for k in ("promote", "vectors", "flatten", "partition-by", "latest-by", "id"):
+            src.pop(k, None)
+    else:                                          # a folder (--lake DIR, or --lake-root): the table's path, its layout given here
+        target = {"format": "iceberg" if iceberg else "delta", "path": path, "domain": p["domain"], "kind": p["kind"]}
+        if target_mode:
+            target["mode"] = target_mode
     if p.get("table"):
         target["table"] = p["table"]
+    if getattr(a, "batch_id", None):              # an append's batch: each date's commit records it, never appended twice
+        target["batch-id"] = a.batch_id
     if not iceberg:
-        props = writers.retention_properties(lake.rstrip("/") + "/" + p["domain"] + "/" + (p.get("table") or p["kind"]))
+        props = writers.retention_properties(path)
         if props:
             target["properties"] = props
     ice = {}

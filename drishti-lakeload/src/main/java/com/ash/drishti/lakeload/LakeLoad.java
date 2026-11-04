@@ -63,7 +63,7 @@ public final class LakeLoad {
     /** Runs a load as the command line would; returns the exit code. */
     /** The lake domain of a pack's tables (its first Delta or Iceberg connector's {@code domain}, else the pack's name). */
     public static String packDomain(java.nio.file.Path pack) throws java.io.IOException {
-        return PackLayout.domainOf(pack);
+        return com.ash.drishti.lakeconfig.PackEntry.read(pack, "_", null).domain();   // no table of the kind: the pack's first Delta or Iceberg connector's domain, else its name
     }
 
     /**

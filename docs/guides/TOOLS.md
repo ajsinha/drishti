@@ -64,6 +64,7 @@ repository root. Scratch output (`lake`, `lake2`, `build/...`) goes into the clo
 | Keep a lake small and fast | | `drishti.py lake maintain` (on a timer) |
 | Load the demo data into Postgres, DuckDB, MongoDB, Redis, Aerospike, Cassandra, Iceberg, files or Delta | | `tools/load-*.sh`, `drishti.py data load` |
 | Check a machine before a demo | Admin → **Health** | `drishti.py doctor`, `drishti.py server smoke` |
+| Run VaR's many-scope sums on the bundled OpenBLAS or on the pure-Java path, live | Admin → **Engines** → Linear algebra: OpenBLAS | `drishti.py server blas status`, `server blas java --reason ...`, `server blas native --reason ...` (also as `admin blas`; [OPERATIONS.md section 2.1](../admin/OPERATIONS.md#21-server-requirements-native-libraries-blas)) |
 | Make, check or remove the AWS side of the S3 Tables or Delta Lake on S3 connector (bucket, namespace or prefix, IAM policy) | | `deploy/aws/s3-tables/s3-tables.sh`, `deploy/aws/delta-s3/delta-s3.sh` (`.ps1` on Windows; section 4.14) |
 | See or check the shape of a command's data (its data contract), or draft the contract of a new kind | | `drishti.py contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` |
 
@@ -145,6 +146,21 @@ the Delta connector reads:
   document (DOUBLE when every value is a number, else STRING);
 * at `<lake>/<domain>/<kind>/`, the folder a Delta connector with `root: <lake>` and `domain: <domain>` reads for that kind.
 
+**With a lake file** (`--lake NAME`, a lake of `config/lakes/`: [LAKE_GUIDE.md](LAKE_GUIDE.md)) the table's place, partitions, promoted
+columns, vectors, id, date, latest-by and load mode come from the file, read by the one lake reader (`tools/lake/lakeconfig.py` runs
+drishti-lakeconfig's `LakesCli`). A pack's own recommended entries (its `pack.yaml` `lake:` block) and its templates' `lake: demo` and `lake-tables:` are read and written by `tools/packlake.py`, the one module the pack generators and every tool that reads a template's layout share. A `--partition-by`, `--promote`, `--vector` or `--key` that says otherwise is refused, naming both; a kind
+the file has no entry for is refused. `--lake-root DIR` writes the same layout under another folder (a scratch or test lake). `--lake DIR`
+alone is the older form: the options and the pack decide. A table whose lake file says `load-mode: append` is written by the parallel
+loader only (`--engine java --batch-id ID`: the batch recorded in each date's commit, never appended twice); the Python path refuses it.
+
+```bash
+python3 tools/drishti.py lake build --from drop/endur-2026-10-28.jsonl.gz --as-of 2026-10-28 --pack config/packs/trading \
+    --connector trade-endur --lake demo                  # partitioned by business_date and PRODUCT_TYPE, as config/lakes/demo.yaml says
+python3 tools/drishti.py lake show                       # every lake and table as the server reads them
+python3 tools/drishti.py lake check                      # connectors name known lakes; lake files match the tables on disk
+python3 tools/drishti.py lake migrate-config [--write]   # lake files from connector files that still describe their lake
+```
+
 Memory stays flat: documents are decoded one at a time, staged on disk per business date and partition, and written in batches
 bounded by rows (`--batch-rows`, 50,000) and bytes (`--batch-mb`, 128). The staged rows, and the Java writer's own temporary
 files, go in a folder beside the lake (never the system temp folder), removed when the run ends. Section 12 has the numbers.
@@ -185,7 +201,7 @@ The walk-through below uses `--as-of` for another day, 2026-09-22.
 $ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
     --kind trade --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY \
     --lake lake --domain trading
-engine: drishti (Drishti's Java writer in drishti-server-2.9.11.a-exec.jar)
+engine: drishti (Drishti's Java writer in drishti-server-2.9.11.b-exec.jar)
 business date  PRODUCT_TYPE           rows
 2026-09-22     CallNot                  50
 2026-09-22     Cash                    723
@@ -213,7 +229,7 @@ The next file of the book holds the day's changes (159 trades). Two bad lines ad
 $ (zcat data/testdata/trades/endur/trade_endur.2026-09-23.jsonl.gz; echo '{"PRODUCT_TYPE": "Cash"}'; echo 'not json') | gzip > day2.jsonl.gz
 $ drishti-console/.venv/bin/python tools/drishti.py lake build --from day2.jsonl.gz --kind trade --key TRADE_ID --as-of 2026-09-23 --partition-by PRODUCT_TYPE \
     --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake --domain trading
-engine: drishti (Drishti's Java writer in drishti-server-2.9.11.a-exec.jar)
+engine: drishti (Drishti's Java writer in drishti-server-2.9.11.b-exec.jar)
 business date  PRODUCT_TYPE           rows
 2026-09-23     Cash                     27
 2026-09-23     ComFut                   29
@@ -418,7 +434,7 @@ removed by the next run, which holds the lock. A summary (the run of 4.3, two of
  "sampleId": "1000029", "sampleDate": "2026-09-23",
  "timings": {"readSeconds": 0.035, "writeSeconds": 2.159, "totalSeconds": 2.201},
  "engine": "drishti",
- "engineWhy": "Drishti's Java writer in drishti-server-2.9.11.a-exec.jar",
+ "engineWhy": "Drishti's Java writer in drishti-server-2.9.11.b-exec.jar",
  "batchRows": 10565, "averageDocumentBytes": 12703,
  "commit": {"commits": 1, "version": 1, "files": 4},
  "columns": {"partition": ["PRODUCT_TYPE"], "promoted": {"COUNTERPARTY": "string", "PORTFOLIO": "string", "QUANTITY": "double"}},
@@ -699,6 +715,13 @@ python3 tools/drishti.py lake build --engine java --from /data/pv/2026-10-28/ --
 `overwrite-dates` (smaller loads, JSON arrays and the other modes go the Python way). `--loader-set KEY=VALUE` (repeatable)
 sets any key below; `DRISHTI_LAKE_LOADER_HEAP` is the JVM's heap (default `4g`); `--from s3://…` and a Delta `--lake s3://…` need
 `--engine java`.
+
+**Through a lake file**: `target.lake: <name>` and `target.kind` (and `target.table` where a kind has several tables) take the table's
+location, partitions, promoted columns, vectors, id, date, latest-by, file layout and load mode from `config/lakes/<name>.yaml` (the
+folder: `-Ddrishti.lakes.dir` or `DRISHTI_LAKES_DIR`); a key of the load file that says otherwise is refused with both named.
+`load-mode: append` in the lake file (or `target.mode: append`) adds the rows instead of replacing the dates, and needs
+`target.batch-id`: the batch is recorded in each date's commit and a batch already committed for a date is skipped, never appended twice
+([LAKE_GUIDE.md section 4](LAKE_GUIDE.md#4-replace-and-append)). A `target.lake` that is a folder is the older form (one warning).
 
 **On its own** (a scheduler, a container, a machine without the console's Python):
 
@@ -1044,7 +1067,7 @@ and `server smoke` (opens sample views of every kind on two dates; exit `1` on a
 ```
 $ drishti-console/.venv/bin/python tools/drishti.py doctor --server http://127.0.0.1:19590 --token-file ~/.drishti-token
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              <repo>/drishti-server/target/drishti-server-2.9.11.a-exec.jar (version 2.5.0)
+GREEN  server jar              <repo>/drishti-server/target/drishti-server-2.9.11.b-exec.jar (version 2.5.0)
 GREEN  python                  <repo>/drishti-console/.venv/bin/python: Python 3.13.15
 GREEN  python pyyaml           installed
 GREEN  python deltalake        installed
@@ -1643,7 +1666,7 @@ of Parquet.
 | `tools/sizing_planner.py` | reads the planner's one file, `drishti-server/src/main/resources/capacity/planner.yaml`, and writes the single-node sizing planner workbook `docs/architecture/Drishti-Sizing-Planner.xlsx` (inputs, results with the settings and JVM arguments, coefficients, explanation: [RESOURCES_AND_SCALE.md section 9.7](../architecture/RESOURCES_AND_SCALE.md#97-sizing-a-single-node-the-planner-workbook)), the server's workbook template (`drishti-server/src/main/resources/capacity/template/`, for Admin → Capacity's download) and the shared test vectors (`drishti-server/src/test/resources/capacity/test-vectors.json`); `--check` exits 1 when any of them is not a fresh build; PyYAML |
 | `tools/capacitycli.py` | `drishti.py admin capacity`: Admin → Capacity from a terminal, the server's planner evaluated with `sizing_planner.py`'s evaluator (`--live`, `--set Name=value`, `--all`, `--xlsx FILE --inputs plan\|live\|both`): [CLI_GUIDE.md](CLI_GUIDE.md) |
 | `tools/license_headers.py` | checks (exit `1` naming the files) or, with `--fix`, inserts the copyright header in every source file |
-| `tools/elements_sheet.py` | builds the `<drishti-view>` and report stylesheets from the console's CSS (run it when `bi.css` or the report CSS changes) |
+| `tools/elements_sheet.py` | builds the `<drishti-view>` and report stylesheets from the console's CSS (run it when `drishti_bi.css` or the report CSS changes) |
 | `tools/render_sheet.py` | builds the client-side renderer's sheet (`static/render/<version>/drishti-render.css`) from the console's CSS and writes its `integrity.json`; `--check` says whether either is stale (CLIENT_RENDERER.md section 13). A released version's folder never changes: a change means a new version folder |
 | `tools/elements_package.py` | builds the npm package of Drishti Elements |
 | `tools/make_icons.py` | the console's favicon and app icons from the logo mark |

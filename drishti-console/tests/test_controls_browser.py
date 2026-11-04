@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Controls of a Sutra (static/js/controls.js, BI_DESIGN.md 8.1) in a real browser (Chromium): every control kind, cascading, the address round
+"""Controls of a Sutra (static/js/drishti_controls.js, BI_DESIGN.md 8.1) in a real browser (Chromium): every control kind, cascading, the address round
 trip, only the panels that read a control re-requested, a live tick keeping the filter (also after a change), a click or Enter on a row or
 bar setting a control (cross-filtering), keyboard only, a phone (390 px, touch) and both themes. The console runs in-process against a stand-in
 server that evaluates the controls as the real one does (the same rows, the same `where`); skipped when Playwright's Chromium is missing."""
@@ -185,9 +185,9 @@ def rows(page, panel="schedule"):
 
 def done(page, action):
     """Runs `action` and waits for the panels it asked for to be swapped in."""
-    n = page.evaluate("(window.__drishtiControls || []).length")
+    n = page.evaluate("(window.Drishti.__controls || []).length")
     action()
-    page.wait_for_function("(n) => (window.__drishtiControls || []).length > n", arg=n, timeout=10000)
+    page.wait_for_function("(n) => (window.Drishti.__controls || []).length > n", arg=n, timeout=10000)
 
 
 def query(page):
@@ -254,7 +254,7 @@ def test_cascading_toggle_segmented_and_date_move_the_other_panel_only(page, bac
     assert page.locator("#p-other h3").inner_text() == "Other APAC JP Net A"
     # only `other` was asked for and swapped in by the change (the live stream redraws `schedule` on its own ticks, so a mark on its element
     # would not tell the two apart)
-    assert backend.asked[-1][1] == ["other"] and page.evaluate("window.__drishtiControls.at(-1).panels") == ["other"]
+    assert backend.asked[-1][1] == ["other"] and page.evaluate("window.Drishti.__controls.at(-1).panels") == ["other"]
     done(page, lambda: page.locator("[data-ctl='country'] select").select_option("SG"))
     assert "SG" in page.locator("#p-other h3").inner_text()
     done(page, lambda: page.locator("button[role=switch]").click())
@@ -369,9 +369,9 @@ def test_on_a_phone_the_controls_are_finger_sized_and_the_page_does_not_scroll_s
     assert small == []
     assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
     pg.locator("[data-ctl='legs'] summary").tap()
-    n = pg.evaluate("(window.__drishtiControls || []).length")
+    n = pg.evaluate("(window.Drishti.__controls || []).length")
     pg.locator("[data-ctl='legs'] input[value='2']").tap()
-    pg.wait_for_function("(n) => (window.__drishtiControls || []).length > n", arg=n, timeout=10000)
+    pg.wait_for_function("(n) => (window.Drishti.__controls || []).length > n", arg=n, timeout=10000)
     assert len(rows(pg)) == 3
     ctx.close()
 
@@ -396,7 +396,7 @@ def test_a_control_that_remembers_restores_the_last_choice_in_this_browser(brows
     assert pg.evaluate("Object.keys(localStorage).filter(k => k.startsWith('drishti.ctl.'))")       # kept for this browser and sign-in
     again = ctx.new_page()
     again.goto(url + VIEW, wait_until="load")
-    again.wait_for_function("(window.__drishtiControls || []).length > 0", timeout=10000)       # one request puts the choice back
+    again.wait_for_function("(window.Drishti.__controls || []).length > 0", timeout=10000)       # one request puts the choice back
     assert {r.split("|")[0] for r in rows(again)} == {"2"} and "ctl.legs=2" in query(again)
     other = browser.new_context(viewport={"width": 1280, "height": 900}, bypass_csp=True)
     fresh = other.new_page()

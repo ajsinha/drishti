@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The slider control (static/js/controls.js, RACHANA_REFERENCE.md "Controls") in a real browser (Chromium): one handle and two, the ARIA
+"""The slider control (static/js/drishti_controls.js, RACHANA_REFERENCE.md "Controls") in a real browser (Chromium): one handle and two, the ARIA
 values (aria-valuemin / -max / -now), every key (arrows, PageUp, PageDown, Home, End), a click on the track and a drag, the two handles that
 cannot cross, the value in the address and restored from it, only the panel that reads the control re-requested, and a 44 px thumb on a
 phone. The console runs in-process against a stand-in server that evaluates the controls as the real one does; skipped when Playwright's
@@ -149,9 +149,9 @@ def thumb(page, ctl, i=0):
 
 
 def done(page, action):
-    n = page.evaluate("(window.__drishtiControls || []).length")
+    n = page.evaluate("(window.Drishti.__controls || []).length")
     action()
-    page.wait_for_function("(n) => (window.__drishtiControls || []).length > n", arg=n, timeout=10000)
+    page.wait_for_function("(n) => (window.Drishti.__controls || []).length > n", arg=n, timeout=10000)
 
 
 def now(page, ctl, i=0):
@@ -217,11 +217,11 @@ def test_a_click_on_the_track_moves_the_nearest_handle_and_a_drag_follows_the_po
     assert now(page, "floor") == "300"
     t = thumb(page, "floor").bounding_box()
     page.mouse.move(t["x"] + t["width"] / 2, t["y"] + t["height"] / 2)
-    n = page.evaluate("(window.__drishtiControls || []).length")
+    n = page.evaluate("(window.Drishti.__controls || []).length")
     page.mouse.down()
     page.mouse.move(box["x"] + box["width"] * 0.84, box["y"] + box["height"] / 2, steps=6)
     page.mouse.up()
-    page.wait_for_function("(n) => (window.__drishtiControls || []).length > n", arg=n, timeout=10000)
+    page.wait_for_function("(n) => (window.Drishti.__controls || []).length > n", arg=n, timeout=10000)
     assert now(page, "floor") == "500"
     assert amounts(page) == ["500", "600"]
 

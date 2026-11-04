@@ -701,6 +701,25 @@ Tested in `IcebergProxyTest` (the S3 file IO through a fake proxy, plain and `CO
 
 ## As a connector file
 
+### The lake file: where the root and the layout live
+
+The lake itself (its root, storage, catalog and its settings, each table's folder, promoted columns and vectors; an Iceberg table of the layout is partitioned by business date alone) is described once, in its lake file
+`config/lakes/<lake>.yaml`, and the connector names it ([LAKE_GUIDE.md](../guides/LAKE_GUIDE.md)). The connector file then keeps only
+reading concerns:
+
+```yaml
+# config/connectors/market-store.yaml
+plugin: iceberg
+kinds: [ir-curve, fx-spot]
+settings:
+  lake: iceberg-main                  # config/lakes/iceberg-main.yaml: root, catalog (rest, glue, s3tables), tables, promoted columns
+  refresh-seconds: 10
+```
+
+A connector that names a lake and also sets `root`, `domain`, `table.<kind>`, `layout.<kind>.*`, `uri` or `warehouse` fails,
+naming both. The form below, with those keys in the connector file, is the older one: it is read for one more release with one warning,
+and `drishti.py lake migrate-config` moves it into a lake file ([LAKE_GUIDE.md section 8](../guides/LAKE_GUIDE.md#8-migrating-an-older-installation)).
+
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 
 ```yaml

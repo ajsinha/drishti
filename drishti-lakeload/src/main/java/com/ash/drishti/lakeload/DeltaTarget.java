@@ -263,6 +263,9 @@ final class DeltaTarget implements TableTarget {
         } else {
             tb = table.createTransactionBuilder(engine, ENGINE_INFO, Operation.WRITE);
         }
+        if (cfg.target().appends() && cfg.target().batchId() != null) {   // the batch's id in the commit: Delta's guard against a second commit
+            tb = tb.withTransactionId(engine, appId(date), 1);
+        }
         txn = tb.build(engine);
         state = txn.getTransactionState(engine);
         synchronized (contexts) {
@@ -305,7 +308,7 @@ final class DeltaTarget implements TableTarget {
     @Override
     public long commit(LocalDate date, List<WrittenFile> files) throws IOException {
         List<Row> actions = new ArrayList<>();
-        if (before != null && !cfg.target().appends()) {           // replace-date: the date's files out, in the same commit
+        if (before != null && !cfg.target().appends()) {   // replace: the date's earlier files go in the same commit; append keeps them
             String day = date.toString();
             actions.addAll(LakeWriter.removals(engine, before, pv -> day.equals(pv.get("business_date"))));
         }
@@ -331,6 +334,17 @@ final class DeltaTarget implements TableTarget {
         }
         before = snapshot();
         return result.getVersion();
+    }
+
+    @Override
+    public boolean appended(LocalDate date) {
+        return cfg.target().appends() && cfg.target().batchId() != null && before != null
+                && before.getLatestTransactionVersion(engine, appId(date)).isPresent();
+    }
+
+    /** The application id of a batch's append of a date ({@code drishti-batch:<batch>:<date>}), version 1 once committed. */
+    private String appId(LocalDate date) {
+        return "drishti-batch:" + cfg.target().batchId() + ":" + date;
     }
 
     /** A written file as Kernel takes it: path, size, and statistics (row count, null counts, minimum and maximum of the scalar columns). */

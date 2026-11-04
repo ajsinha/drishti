@@ -49,14 +49,14 @@ def _deny(client, backend):
 def test_a_view_of_a_kind_whose_pack_enables_calc_has_the_panel_and_its_key(client, calc_on):
     html = client.get("/v/trade/IRS-48213").text
     assert 'id="calcDrawer"' in html and "data-calc-open" in html and "<b>Alt+C</b> Calc" in html
-    assert "/static/vendor/codemirror/mode/python/python.js" in html and "/static/js/calc.js" in html
-    assert 'data-worker="/static/js/calc-worker.js' in html and 'data-module="/static/calc/drishti.py' in html
+    assert "/static/vendor/codemirror/mode/python/python.js" in html and "/static/js/drishti_calc.js" in html
+    assert 'data-worker="/static/js/drishti_calc-worker.js' in html and 'data-module="/static/calc/drishti.py' in html
 
 
 def test_without_a_role_with_calc_the_key_is_shown_disabled_with_the_reason(client, backend, calc_on):
     _deny(client, backend)
     html = client.get("/v/trade/IRS-48213").text
-    assert 'id="calcDrawer"' not in html and "/static/js/calc.js" not in html
+    assert 'id="calcDrawer"' not in html and "/static/js/drishti_calc.js" not in html
     assert "data-calc-open disabled" in html and "Calc needs a role with calc" in html
 
 
@@ -158,18 +158,18 @@ def test_a_view_says_when_the_runtime_is_missing(client, calc_on, tmp_path):
 def test_only_the_calc_worker_may_compile_webassembly(client):
     page = client.get("/t").headers["content-security-policy"]
     assert "worker-src 'self'" in page and "wasm" not in page and "unsafe-eval" not in page
-    worker = client.get("/static/js/calc-worker.js").headers["content-security-policy"]
+    worker = client.get("/static/js/drishti_calc-worker.js").headers["content-security-policy"]
     assert worker == "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src testserver/static/ testserver/pyodide/"
     assert "'unsafe-eval'" not in worker
 
 
 def test_the_calc_worker_cannot_fetch_a_console_route(client):
     """SEC-17: its requests carry the session cookie, so it may reach only static files and the runtime, never /api."""
-    worker = client.get("/static/js/calc-worker.js").headers["content-security-policy"]
+    worker = client.get("/static/js/drishti_calc-worker.js").headers["content-security-policy"]
     connect = worker.split("connect-src ", 1)[1]
     assert "'self'" not in connect and "/api" not in connect
     assert connect.split() == ["testserver/static/", "testserver/pyodide/"]
-    odd = client.get("/static/js/calc-worker.js", headers={"host": "evil.example; script-src *"}).headers["content-security-policy"]
+    odd = client.get("/static/js/drishti_calc-worker.js", headers={"host": "evil.example; script-src *"}).headers["content-security-policy"]
     assert "connect-src 'none'" in odd and "script-src *" not in odd
 
 

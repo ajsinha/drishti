@@ -34,7 +34,7 @@ import render_cases as cases  # noqa: E402
 from conftest import FIXTURES  # noqa: E402
 from table_chart_backend import ChartBackend, serve  # noqa: E402
 from test_render_parity_browser import INTENTIONAL, explain, normalised, pack_views  # noqa: E402,F401 - pack_views: the fixture
-from wb_live import BROWSER_WAIT_MS, live_console  # noqa: E402,F401 - live_console: the fixture pack_views needs
+from wb_live import BROWSER_WAIT_MS, live_console, should_reload  # noqa: E402,F401 - live_console: the fixture pack_views needs
 import render_harness as H  # noqa: E402
 
 WIDTHS = (390, 1280)
@@ -97,18 +97,36 @@ CSP = "window.__csp = []; document.addEventListener('securitypolicyviolation', (
 
 
 def open_page(browser, url, width=1280):
+    """The page drawn and settled. Chromium cancels the requests in flight when the machine's network interfaces change (the drill's Java
+    tests start and stop Docker containers beside this suite): a page that lost a script that way is drawn without it, or not at all. Such a
+    page is loaded once more (wb_live.should_reload: once, and only for net::ERR_NETWORK_CHANGED); any other failure is the page's own."""
     ctx = browser.new_context(viewport={"width": width, "height": 900})
-    page = ctx.new_page()
-    errors, reqs = [], []
-    page.on("pageerror", lambda e: errors.append(str(e)))
-    page.on("request", lambda r: reqs.append(r.url))
-    page.add_init_script(CSP)
-    page.goto(url, wait_until="load")
-    page.wait_for_selector(".view .pnl", state="attached", timeout=BROWSER_WAIT_MS)
-    settle(page)
-    page.__errors = errors
-    page.__reqs = reqs
-    return ctx, page
+    try:
+        page = ctx.new_page()
+        errors, reqs, network = [], [], []
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.on("request", lambda r: reqs.append(r.url))
+        page.on("requestfailed", lambda r: network.append(f"request failed: {r.url} ({r.failure})"))
+        page.add_init_script(CSP)
+        page.goto(url, wait_until="load")
+        try:
+            page.wait_for_selector(".view .pnl", state="attached", timeout=BROWSER_WAIT_MS)
+            settle(page)
+        except Exception:
+            if not should_reload(network, False):
+                raise
+        if should_reload(network, False):          # timed out, or drawn without what the changed network cancelled
+            del errors[:], reqs[:], network[:]
+            ctx.clear_cookies(name="drishti-device")   # drawn as the first load was: drishti_phone.js has since named the device (a phone page)
+            page.reload(wait_until="load")
+            page.wait_for_selector(".view .pnl", state="attached", timeout=BROWSER_WAIT_MS)
+            settle(page)
+        page.__errors = errors
+        page.__reqs = reqs
+        return ctx, page
+    except BaseException:
+        ctx.close()                                # a page that failed to open does not stay open beside the next one
+        raise
 
 
 def settle(page):
@@ -117,9 +135,9 @@ def settle(page):
     network is never idle. Each wait is a deadline (the suite's BROWSER_WAIT_MS: the drill runs this file beside the other workers), never a pause: it ends when the page is ready."""
     page.wait_for_function("() => !document.querySelector('.chart:not(.pnl-empty), .xchart:not(.pnl-empty)') || [...document.querySelectorAll('.chart, .xchart')].every((el) => el.classList.contains('pnl-empty') || (window.echarts && window.echarts.getInstanceByDom(el)))", timeout=BROWSER_WAIT_MS)
     page.wait_for_function("() => document.readyState === 'complete' && !document.querySelector('.view[aria-busy=\"true\"], .view [aria-busy=\"true\"], [data-render-host][aria-busy=\"true\"]')", timeout=BROWSER_WAIT_MS)
-    # the Discussion's answer applied (discussion.js asks /api/collab, then badges every panel or hides itself): the first page of a fresh
+    # the Discussion's answer applied (drishti_discussion.js asks /api/collab, then badges every panel or hides itself): the first page of a fresh
     # console answers it late, after the pause below, and was read without its badges
-    page.wait_for_function("() => { const open = document.querySelector('[data-discussion-open]'); if (!window.drishtiDiscussion || !open || open.hidden || document.querySelector('[data-view][data-embed]')) { return true; } return [...document.querySelectorAll('.pnl[data-panel] .pnl-code')].every((c) => c.querySelector('.disc-badge')); }", timeout=BROWSER_WAIT_MS)
+    page.wait_for_function("() => { const open = document.querySelector('[data-discussion-open]'); if (!window.Drishti.discussion || !open || open.hidden || document.querySelector('[data-view][data-embed]')) { return true; } return [...document.querySelectorAll('.pnl[data-panel] .pnl-code')].every((c) => c.querySelector('.disc-badge')); }", timeout=BROWSER_WAIT_MS)
     page.wait_for_timeout(400)
     page.evaluate("() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))")
 
@@ -324,9 +342,9 @@ def test_a_live_tick_and_a_control_move_the_same_panels_either_way(browser, cont
         assert page.locator("#p-schedule [data-ctl='legs']").count() == 1, f"{mode}: the header's control stays through a tick"
         page.evaluate("document.querySelector('#p-other').setAttribute('data-mark', 'kept')")
         page.locator("[data-ctl='legs'] summary").click()
-        n = page.evaluate("(window.__drishtiControls || []).length")
+        n = page.evaluate("(window.Drishti.__controls || []).length")
         page.locator("[data-ctl='legs'] input[value='2']").uncheck()
-        page.wait_for_function("(n) => (window.__drishtiControls || []).length > n", arg=n, timeout=10000)
+        page.wait_for_function("(n) => (window.Drishti.__controls || []).length > n", arg=n, timeout=10000)
         page.wait_for_timeout(600)
         legs = page.evaluate("() => [...document.querySelectorAll('#p-schedule tbody tr')].map((r) => r.cells[0].textContent.trim())")
         kept = page.evaluate("document.querySelector('#p-other').getAttribute('data-mark')")

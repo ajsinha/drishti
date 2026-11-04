@@ -36,7 +36,6 @@ depends-on:
   plugins:
   - delta
   settings:
-  - DRISHTI_DELTA_ROOT
   - DRISHTI_LAKE_ENABLED
 sources:
 - name: SEC Form N-PORT data sets
@@ -310,7 +309,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 |---|---|---|---|
 | `funds-store` | `delta` | `fund`, `fund-holder`, `index-funds` | `${DRISHTI_LAKE_ENABLED:true}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`.
+Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 

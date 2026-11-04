@@ -60,7 +60,7 @@ def test_the_page_and_the_api_are_read_as_the_person(backend, monkeypatch):
     r = c.get("/go", params={"q": "PIVOT trade <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/pivot?source=trade"
     page = c.get("/pivot?source=trade").text
-    assert "data-pivot-screen" in page and "pivot-grid.js" in page and "/static/js/pivot.js" in page and "echarts.min.js" in page
+    assert "data-pivot-screen" in page and "drishti_pivot-grid.js" in page and "/static/js/drishti_pivot.js" in page and "echarts.min.js" in page
     for marker in ("data-pv-fields", 'data-pv-zone="rows"', 'data-pv-zone="columns"', 'data-pv-zone="values"', 'data-pv-zone="filters"',
                    "data-pv-grid", "data-pv-estimate", "data-pv-pop", "data-pv-chartcard", 'data-pv-export="xlsx"', "data-pv-compare"):
         assert marker in page, marker
@@ -113,12 +113,12 @@ def test_the_switches_live_pivots_and_cell_comments_are_passed_through_as_the_pe
     app, c = _app(backend, monkeypatch, RISK_ABOUT)
     page = c.get("/pivot?source=trade").text
     for marker in ('name="pvExact"', 'value="approximate"', "data-pv-progressive", "data-pv-rollups", "data-pv-live", "data-pv-computed",
-                   "/static/js/pivot-switches.js"):
+                   "/static/js/drishti_pivot-switches.js"):
         assert marker in page, marker
     body = {"view": {"source": "trade"}, "exact": True, "rollups": False}
     r = c.post("/api/pivot/live", json=body)
     assert r.status_code == 200 and r.json()["id"] == "lp-1" and sent[-1][:3] == ("POST", "/live", body)
-    # the stream rides the browser's one channel (channel.js, core/channel.py): pivotlive:<id>@<node>, the node that holds it
+    # the stream rides the browser's one channel (drishti_channel.js, core/channel.py): pivotlive:<id>@<node>, the node that holds it
     from core.channel import ChannelSession
 
     async def read(sub):

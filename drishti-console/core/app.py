@@ -40,12 +40,12 @@ _PAGE_KINDS = ("", "share", "datamap", "data", "form", "functions", "pack")     
 
 
 def _render_modules() -> list[str]:
-    """The current renderer's modules a console page imports (view-render.js -> drishti-render.js -> m/*.js), Elements' own left out."""
+    """The current renderer's modules a console page imports (drishti_view-render.js -> drishti-render.js -> m/*.js), Elements' own left out."""
     from core import render_dist as rd
 
     skip = {"drishti-elements.js", "m/elements.js"}
     return [f"/static/render/{rd.VERSION}/{rel}" for rel in rd.files() if rel.endswith(".js") and rel not in skip]
-ASSET_VERSION = "2.9.11.a"
+ASSET_VERSION = "2.9.11.b"
 
 
 def _bounded(value, low: int, high: int, default: int) -> int:
@@ -95,12 +95,12 @@ CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src '
 # would reach as the user (QA 2026-10-01 SEC-17). Its reads go by message to the page, which fetches an allow-listed few.
 WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src {connect}"
 _HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
-WORKER = "/static/js/calc-worker.js"
+WORKER = "/static/js/drishti_calc-worker.js"
 PYODIDE = "/pyodide/"
 # Calc's Graphic Walker frame (drishti_bi.walk, docs/guides/USER_GUIDE.md): a third-party UI that needs eval (Vega compiles chart expressions) and writes its own styles
 # (styled-components, a shadow root). So the one page that holds it, and only it, has this narrow policy, and it is a sandboxed frame: `sandbox allow-scripts` (no same-origin, so
 # no cookie and no console API), `connect-src 'none'` and no navigation or forms, so the rows it is given by message cannot leave it. Calc's own page keeps the strict policy.
-WALKER_PAGE = "/static/calc/walker.html"
+WALKER_PAGE = "/static/calc/drishti_walker.html"
 WALKER_CSP = ("default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src data: blob:; font-src data:; worker-src blob:; connect-src 'none'; "
               "base-uri 'none'; form-action 'none'; frame-ancestors 'self'; sandbox allow-scripts")
 # Wave B (BI_DESIGN.md P3): no BI page loads WebAssembly any more (Perspective and DuckDB-Wasm are gone); only Calc's worker above may compile it.
@@ -306,6 +306,7 @@ def create_app(settings: Settings) -> FastAPI:
                         ai_routes)
 
     from routes import edition_routes, trading_routes
+    from routes import data_out_routes
     from routes import render_routes
     from routes import admin_commands_routes, admin_engines_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes, play_routes, frtb_routes, simm_routes, smat_routes, var_regulatory_routes, var_routes
 
@@ -321,7 +322,7 @@ def create_app(settings: Settings) -> FastAPI:
     async def lifespan(app: FastAPI):
         pool = getattr(app.state, "cluster", None)
         if getattr(app.state, "backend", None) is None:      # one pooled client per server (tests bring their own)
-            app.state.backend = Switch({s.id: BackendClient(s.url, float(settings.get("backend.timeout_seconds", 5)),
+            app.state.backend = Switch({s.id: BackendClient(s.url, float(settings.get("backend.timeout_seconds", 15)),
                                                             int(settings.get("backend.pool_size", 64)),
                                                             servers=pool if s.id == catalogue.default else None) for s in catalogue.all()},
                                        catalogue.default)
@@ -495,6 +496,8 @@ def create_app(settings: Settings) -> FastAPI:
     templates.env.globals["lens_links"] = _menus.lens_links
     templates.env.globals["lens_menu"] = _menus.lens_menu          # the subject menus folded into one on a phone (LX1 option C)
     templates.env.globals["engines_panel"] = _menus.engines_panel  # the Engines menu's panel: search, Admin -> Engines, engines not running
+    from core import engines as _engines_state
+    templates.env.globals["engine_available"] = _engines_state.engine_available   # an engine running here or on a peer (Admin -> Data out: flight)
     from core import phone as _phone
     templates.env.globals["phone_parts"] = _phone.page_parts         # the phone display on the VaR, exposure and landing pages (MOBILE_DISPLAY.md 8)
     templates.env.globals["phone_everything"] = _phone.everything
@@ -647,6 +650,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(data_routes.router)              # the Data view: DATA, every dataset and a day as .jsonl.gz (DATA_GUIDE.md)
     app.include_router(compute_admin_routes.router)     # Admin -> Compute (docs/admin/OPERATIONS.md)
     app.include_router(admin_engines_routes.router)     # Admin -> Engines: compute engines on or off per server (COMPUTE_ENGINES.md)
+    app.include_router(data_out_routes.router)          # Admin -> Data out: Arrow Flight, the page and the map (FLIGHT_GUIDE.md)
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)
     app.include_router(lake_routes.router)

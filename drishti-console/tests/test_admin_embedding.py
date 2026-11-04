@@ -62,7 +62,7 @@ def test_the_page_lists_applications_usage_and_marks_config_apps(client, backend
     page = client.get("/admin/embedding").text
     for text in ("Embedding", "Client CRM", "client-crm", "https://crm.bank.example", "client secret", "public key", "3,456", "12</span> tokens", "DRS-8002: 2",
                  "from config", "read-only", "disabled", "enabled", "embed:view", "every kind and report the user may open", "New application", "data-new-dialog",
-                 "data-secret-dialog", "data-delete-dialog", "admin-embedding.js", "admin-embedding.css", "/help/user-management#embedding-host-applications",
+                 "data-secret-dialog", "data-delete-dialog", "drishti_admin-embedding.js", "drishti_admin-embedding.css", "/help/user-management#embedding-host-applications",
                  "3 requests named no registered application", "DRS-8003: 3"):
         assert text in page, text
     assert 'aria-labelledby="embNewTitle"' in page and '<caption class="visually-hidden">' in page and 'scope="col"' in page

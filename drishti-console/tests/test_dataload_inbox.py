@@ -120,7 +120,7 @@ def test_the_quiet_board_shows_the_three_columns_rules_and_settings_in_the_serve
                  "rule 1 → trading / trade · trade-endur · 2026-11-03 from the name", "no rule matches this name", "Nothing loading: inprocess/ is empty",
                  "1,284,551 rows", "trading/trade v416", "nothing ready", "No failed files in the last 30 days", "Routing rules in effect", "read-only",
                  "trades-endur-*.jsonl.gz", "anything else: unmatched: fail", "reload-duplicates false", "ledger/ledger-2026-11.jsonl",
-                 "admin-inbox.js", "admin-inbox.css", 'data-running="0"', 'aria-current="page">Inbox'):
+                 "drishti_admin-inbox.js", "drishti_admin-inbox.css", 'data-running="0"', 'aria-current="page">Inbox'):
         assert text in page, text
     assert 'style="' not in page.split("data-inbox-body", 1)[1]                 # CSP: no inline styles on the board
     assert 'scope="col"' in page and "<caption" in page

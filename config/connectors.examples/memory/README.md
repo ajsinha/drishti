@@ -92,3 +92,6 @@ python3 tools/drishti.py lake memory refill news
 
 - [The in-memory lake guide](../../../docs/guides/IN_MEMORY_LAKE_GUIDE.md) and [its design](../../../docs/architecture/IN_MEMORY_LAKE.md).
 - [The delta connector README](../../../plugins/drishti-plugin-delta/README.md) and [Connector files](../../../docs/connectors/CONNECTOR_FILES.md).
+
+The Delta and Iceberg files here name a lake (`lake:`, `lake-tables:`); the lake itself, its root or catalog, storage and tables, is the matching
+file in [config/lakes.examples/memory/](../../lakes.examples/memory/): copy both (docs/guides/LAKE_GUIDE.md).

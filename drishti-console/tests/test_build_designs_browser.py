@@ -78,7 +78,7 @@ def test_new_examples_showcase_opens_a_design_page_with_all_21_panels(console_ur
     page.wait_for_url("**/build/d/*")
     page.locator("[data-preview] [data-panel]").first.wait_for()
     assert page.locator("[data-preview] [data-panel]").count() == 23
-    assert "sutra: all-panels-showcase" in page.evaluate("window.drishtiWorkbench.store.state.yaml")
+    assert "sutra: all-panels-showcase" in page.evaluate("window.Drishti.workbench.store.state.yaml")
     assert page.locator("[data-sample]").count() == 1 and "all-panels-showcase.json" in page.locator("[data-samples]").inner_text()
     assert "(copy)" in page.locator("h1").inner_text()
     page.close()
@@ -100,7 +100,7 @@ def test_new_folder_of_examples_then_auto_design(console_url, browser):
     page.get_by_role("button", name="Create design").click()                                  # auto-design is the default
     page.wait_for_url("**/build/d/*")
     assert page.locator("[data-sample]").count() >= 10
-    assert "sutra: sample-auto" in page.evaluate("window.drishtiWorkbench.store.state.yaml")
+    assert "sutra: sample-auto" in page.evaluate("window.Drishti.workbench.store.state.yaml")
     page.locator("[data-tree] [role=treeitem]").first.wait_for()
     page.locator("[data-preview] .studio-view").wait_for()
     page.locator("[data-next]").click()                                                       # the status bar's sample switcher
@@ -192,5 +192,5 @@ def test_the_help_centres_open_in_the_workbench_link_opens_the_example_as_a_copy
     page.goto(console_url + "/build/new?example=pnl-explain")
     page.wait_for_url("**/build/d/*")
     page.locator("[data-preview] [data-panel]").first.wait_for()
-    assert "(copy)" in page.locator("h1").inner_text() and "sutra: pnl-explain" in page.evaluate("window.drishtiWorkbench.store.state.yaml")
+    assert "(copy)" in page.locator("h1").inner_text() and "sutra: pnl-explain" in page.evaluate("window.Drishti.workbench.store.state.yaml")
     page.close()

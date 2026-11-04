@@ -1,0 +1,16 @@
+{
+  "name": "Drishti",
+  "short_name": "Drishti",
+  "description": "Any data. Any domain. One grammar. Copyright (c) 2026 Ashutosh Sinha. All rights reserved.",
+  "start_url": "/t",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0e1628",
+  "theme_color": "#0e1628",
+  "icons": [
+    { "src": "/static/img/icons/drishti_icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/static/img/icons/drishti_icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/static/img/icons/drishti_icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/static/img/icons/drishti_favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

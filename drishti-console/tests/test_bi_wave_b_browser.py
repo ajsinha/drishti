@@ -131,7 +131,7 @@ def made(browser, stack):
     expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
     page.click("[data-publish]")
     expect(page.locator("[data-state]")).to_have_text("Published", timeout=30000)
-    doc = page.evaluate("window.drishtiModel.doc")
+    doc = page.evaluate("window.Drishti.model.doc")
     assert doc["measures"]["MTM share"] == {"expr": "share_of(measure('Sum of MTM'), over=ALL)", "format": "share"}
     assert doc["measures"]["MTM shocked"]["expr"] == "measure('Sum of MTM') * (1 + param.shock)" and doc["parameters"]["shock"]["kind"] == "number"
     name = doc["model"]

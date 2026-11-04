@@ -17,18 +17,14 @@
 # written here: credentials come from the AWS default chain (the ECS task role, a profile, AWS_ACCESS_KEY_ID); an S3-compatible
 # store adds s3.endpoint and keys as ${ENV} references (other/customer-lake.yaml). Guide: DELTA_CONNECTOR.md section 17.
 # The trading pack routes kind trade to trade-endur, trade-calypso and trade-murex as a union: this file replaces the first.
+# The lake (delta, its root or catalog, storage and tables) is config/lakes.examples/delta-s3/s3.yaml: copy it to
+# config/lakes/s3.yaml beside this file (docs/guides/LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: delta
 kinds:
 - trade
 description: trades (Endur) read from Delta Lake on AWS S3
 settings:
-  root: s3://${DRISHTI_DELTA_S3_BUCKET:drishti-lake}/${DRISHTI_DELTA_S3_PREFIX:delta}
-  domain: trading
+  lake: s3
+  lake-tables: trading.trade_endur
   engine: native
-  s3.region: ${AWS_REGION:us-east-1}
-  table.trade: trade_endur
   source-name: trade-endur
-  layout.trade.columns: TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,PRODUCT_SUB_TYPE,PRODUCT_GROUP,TRADE_STATUS,TRADE_VERSION,BUY_SELL_CODE,CURRENCY,QUANTITY,TRADE_DATE,MATURITY_DATE,COUNTERPARTY,LEGAL_ENTITY,PORTFOLIO,TRADER_ID,NOTIONAL,INDEX_NAME
-  layout.trade.sort-by: id
-  layout.trade.file-rows: 250000
-  layout.trade.row-group-rows: 1000

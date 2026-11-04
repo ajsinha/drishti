@@ -28,7 +28,7 @@ from test_embed import HOST, make_client
 CONSOLE = Path(__file__).resolve().parents[1]
 MAPS = CONSOLE / "web" / "static" / "vendor" / "echarts" / "maps"
 REGIONS = MAPS / "regions"
-CSS = (CONSOLE / "web" / "static" / "css" / "terminal.css").read_text(encoding="utf-8")
+CSS = (CONSOLE / "web" / "static" / "css" / "drishti_terminal.css").read_text(encoding="utf-8")
 ISO_3166_2 = re.compile(r"^[A-Z]{2}-[A-Z0-9]{1,4}$")
 
 
@@ -82,8 +82,8 @@ def test_the_readme_records_the_source_the_licence_and_the_sizes():
 
 
 def test_the_shapes_are_all_local_and_the_script_loads_nothing_from_outside():
-    js = (CONSOLE / "web" / "static" / "js" / "geomap.js").read_text(encoding="utf-8")
-    assert not re.search(r"https?://", js) and "/static/vendor/echarts/maps/" in js, "geomap.js loads local files only"
+    js = (CONSOLE / "web" / "static" / "js" / "drishti_geomap.js").read_text(encoding="utf-8")
+    assert not re.search(r"https?://", js) and "/static/vendor/echarts/maps/" in js, "drishti_geomap.js loads local files only"
     assert not re.search(r"https?://", (MAPS / "world-points.json").read_text(encoding="utf-8"))
 
 
@@ -154,8 +154,8 @@ def test_the_stylesheet_sizes_the_map_with_a_phone_rule_and_theme_colours_only()
 
 
 def test_the_workbench_offers_the_map_and_seeds_it_from_the_field_that_names_a_country():
-    palette = (CONSOLE / "web" / "static" / "js" / "build" / "palette.js").read_text(encoding="utf-8")
-    actions = (CONSOLE / "web" / "static" / "js" / "build" / "actions.js").read_text(encoding="utf-8")
+    palette = (CONSOLE / "web" / "static" / "js" / "build" / "drishti_palette.js").read_text(encoding="utf-8")
+    actions = (CONSOLE / "web" / "static" / "js" / "build" / "drishti_actions.js").read_text(encoding="utf-8")
     assert "['map', 'globe2'," in palette and "kind === 'map'" in actions and "out.highlight = place.path" in actions
 
 
@@ -166,13 +166,13 @@ def test_the_bi_map_has_level_and_drill_in_the_format_pane_and_the_scripts_load_
     assert "map" in schema["x-types"]
     assert props["level"]["x-hook"] == "format-level" and props["level"]["type"] == "string" and props["level"]["x-types"] == ["map"]
     assert props["drill"]["x-hook"] == "format-drill" and props["drill"]["type"] == "boolean" and props["drill"]["x-types"] == ["map"]
-    pane = (CONSOLE / "web" / "static" / "js" / "bi-format-pane.js").read_text(encoding="utf-8")
+    pane = (CONSOLE / "web" / "static" / "js" / "drishti_bi-format-pane.js").read_text(encoding="utf-8")
     assert "'data-' + prop['x-hook']" in pane, "the pane gives each control the data attribute its x-hook names"
     for page in ("bi/report.html", "bi/design.html"):           # a board is a report page since 2.4.0 (no bi/board.html)
         text = (CONSOLE / "web" / "templates" / page).read_text(encoding="utf-8")
-        assert text.index("geomap.js") < text.index("bi-visuals.js"), page
+        assert text.index("drishti_geomap.js") < text.index("drishti_bi-visuals.js"), page
     for page in ("terminal/view.html", "build/design.html", "build/shared.html"):
         text = (CONSOLE / "web" / "templates" / page).read_text(encoding="utf-8")
-        assert text.index("geomap.js") < text.index("charts.js"), page
+        assert text.index("drishti_geomap.js") < text.index("drishti_charts.js"), page
     embed = (CONSOLE / "web" / "embed" / "assets.js").read_text(encoding="utf-8")
     assert "'geomap', 'charts'" in embed and "['geomap'].concat(" in embed

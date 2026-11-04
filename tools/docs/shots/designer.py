@@ -100,7 +100,7 @@ def add_chooser(c: Ctx):
 @shot("06d-remove-panel.jpg")
 def remove_panel(c: Ctx):
     c.example("pnl-explain")
-    ids = c.page.evaluate("window.drishtiWorkbench.canvas.ids()")
+    ids = c.page.evaluate("window.Drishti.workbench.canvas.ids()")
     c.page.locator(f'[data-preview] [data-panel="{ids[-1]}"]').hover()
     c.page.get_by_role("button", name=re.compile("^Remove panel")).first.click()
     c.page.locator("[data-toast]").wait_for()
@@ -326,7 +326,7 @@ def versions(c: Ctx):
     c.page.wait_for_timeout(2500)
     for note in ("a first change", "a second change"):
         rev = c.rev()
-        c.page.evaluate("(note) => window.drishtiWorkbench.store.send([{op: 'text', yaml: window.drishtiWorkbench.store.state.yaml + '# ' + note + '\\n'}])", note)
+        c.page.evaluate("(note) => window.Drishti.workbench.store.send([{op: 'text', yaml: window.Drishti.workbench.store.state.yaml + '# ' + note + '\\n'}])", note)
         c.settle(rev)
     c.page.locator("#wbTabVer").click()
     c.page.wait_for_timeout(1200)
@@ -363,7 +363,7 @@ FAMILIES = [("30-family-facts.jpg", "all-panels-showcase", "ops", "key figures, 
 def family(file, example, select):
     def run(c: Ctx):
         c.example(example)
-        first = select or c.page.evaluate("window.drishtiWorkbench.canvas.ids()[0]")
+        first = select or c.page.evaluate("window.Drishti.workbench.canvas.ids()[0]")
         c.panel(first).locator(".pnl-h").click()
         c.page.wait_for_timeout(500)
         c.save(file)
@@ -518,7 +518,7 @@ def sutra_describe(c: Ctx):
 @shot("form-beside.jpg")
 def form_beside(c: Ctx):
     c.page.goto(c.base + "/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk")
-    c.until("window.drishtiForms && document.querySelector('#p-trades tbody tr[data-frow]')")
+    c.until("window.Drishti.forms && document.querySelector('#p-trades tbody tr[data-frow]')")
     c.page.locator("#p-trades tbody tr[data-frow='1'] td").nth(1).click()
     c.page.fill("[data-fm-side] [data-field='notional']", "40,000,000")
     c.page.fill("[data-fm-side] [data-field='comment']", "Client hedge for the Q4 roll")
@@ -532,7 +532,7 @@ def form_beside(c: Ctx):
 @shot("form-cells.jpg")
 def form_cells(c: Ctx):
     c.page.goto(c.base + "/v/credit-limit/LIM-ALDERSHOT")
-    c.until("window.drishtiForms && document.querySelector('#p-buckets td.fm-editable')")
+    c.until("window.Drishti.forms && document.querySelector('#p-buckets td.fm-editable')")
     for row, value in (("0", "100"), ("1", "400m")):
         c.page.locator(f"#p-buckets tr[data-frow='{row}'] td[data-fcell='limit']").click()
         c.page.keyboard.press("Control+A")
@@ -545,7 +545,7 @@ def form_cells(c: Ctx):
 @shot("form-drawer.jpg")
 def form_drawer(c: Ctx):
     c.page.goto(c.base + "/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk")
-    c.until("window.drishtiForms && document.querySelector('[data-fm-new]')")
+    c.until("window.Drishti.forms && document.querySelector('[data-fm-new]')")
     c.page.locator("[data-fm-new]").click()
     c.page.select_option("[data-fm-drawer] [data-field='counterparty']", index=1)
     c.page.locator("[data-fm-drawer] .fm-next").click()
@@ -619,7 +619,7 @@ def customize_linked(c: Ctx):
 @shot("refresh-controls.jpg", also=("freshness.jpg",))
 def refresh_controls(c: Ctx):
     c.page.goto(c.base + "/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk")
-    c.until("window.drishtiRefresh && document.querySelector('[data-fresh] [data-refresh-toggle]')")
+    c.until("window.Drishti.refresh && document.querySelector('[data-fresh] [data-refresh-toggle]')")
     c.page.locator("[data-fresh] [data-refresh-toggle]").first.click()
     c.page.locator(".fresh-bar [data-refresh-all]").click()
     c.page.wait_for_timeout(800)

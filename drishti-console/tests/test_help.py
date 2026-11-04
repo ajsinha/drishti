@@ -114,9 +114,9 @@ def test_one_competitive_analysis(client):
 def test_mobile_ready(client):
     html = client.get("/v/trade/IRS-48213").text
     assert "viewport-fit=cover" in html and 'rel="manifest"' in html and "apple-touch-icon" in html
-    m = client.get("/static/manifest.webmanifest")
+    m = client.get("/static/drishti_manifest.webmanifest")
     assert m.status_code == 200 and '"start_url": "/t"' in m.text
-    css = client.get("/static/css/terminal.css").text
+    css = client.get("/static/css/drishti_terminal.css").text
     assert "@media (max-width: 640px)" in css and "safe-area-inset-bottom" in css and "font-size: 16px" in css
 
 
@@ -174,12 +174,12 @@ def test_the_build_menu_learn_links_point_at_the_new_guides(client):
 
 
 def test_guide_screenshots_fit_their_column_and_open_full_size(client):
-    """UX-03: a guide's screenshots are wrapped in a link to the image itself, and help.css fits them to the column."""
+    """UX-03: a guide's screenshots are wrapped in a link to the image itself, and drishti_help.css fits them to the column."""
     import re
     page = client.get("/help/sutra-developer-guide").text
     imgs = re.findall(r'(<a [^>]*>)?\s*<img [^>]*src="(/help/files/guides/img/sutras/[^"]+)"', page)
     assert len(imgs) >= 5
-    css = client.get("/static/css/help.css").text
+    css = client.get("/static/css/drishti_help.css").text
     assert re.search(r"\.help-article img \{[^}]*max-width: 100%;[^}]*height: auto;", css)
 
 
@@ -221,7 +221,10 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     # 63: plus the eighth Knowledge page, Companies, funds and ETFs (2.9.3).
     # 64: plus Using Drishti with Databricks Delta Lake or Apache Iceberg (docs/guides/DATA_GUIDE.md, 2.9.5), the product owner's
     # request of 2026-10-28: one page, under Data beside the connector guides.
-    assert 30 <= total <= 70, total
+    # 66: plus the lake configuration's two (the lake guide and tutorial 34) and Data out's two (the Arrow Flight guide and tutorial 35),
+    # 2.9.11.c, the same rule (a feature's guide and tutorial, two entries); Flight's reference and client pages are reached from its guide.
+    # 2.9.11.b's data inbox, custom functions and MR cube tutorials raised the ceiling to 70; 2.9.11.c's lake and Flight pages to 72.
+    assert 30 <= total <= 72, total
 
 
 def test_every_old_help_address_still_opens_something(client):
@@ -249,7 +252,7 @@ def test_the_tutorials_page_renders_the_tutorials_index_and_each_tutorial_opens_
     page = client.get("/help/tutorials")
     assert page.status_code == 200 and "Your first 15 minutes" in page.text and "Run it in production" in page.text
     links = sorted(set(re.findall(r'href="(/help/docs-tutorials-[0-9a-z-]+)"', page.text)))
-    assert len(links) == 36, links                     # 36: plus tutorials 36 (the data inbox), 37 (custom functions) and 38 (the MR cube), 2.9.11.b
+    assert len(links) == 39, links                     # 39: plus tutorials 36 (the data inbox), 37 (custom functions) and 38 (the MR cube), 2.9.11.b; 34 (one file per lake), 35 (Data out with Arrow Flight) and 43 (parametric VaR), 2.9.11.c
     shots = 0
     for href in links:
         t = client.get(href)

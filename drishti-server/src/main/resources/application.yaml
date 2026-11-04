@@ -63,6 +63,10 @@ spring:
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/memory-lake.yaml
       - classpath:engines/dataload.yaml
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/dataload.yaml
+      - classpath:engines/flight.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/flight.yaml
+      - classpath:engines/openblas.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/openblas.yaml
       - optional:file:./application.local.yaml
       # packs an administrator loaded from Admin → Packs (drishti.packs.added); written by the server, not by hand
       - optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}
@@ -189,6 +193,15 @@ drishti:
     check-interval: 60s              # every folder measured and brought under its cap this often
     max-dumps: 2                     # heap dumps kept in the -XX:HeapDumpPath folder; the oldest beyond go at start
     dumps-dir: ${drishti.data.dir:./data}/dumps   # the dump folder when -XX:HeapDumpPath does not name one
+  native:                            # native libraries (docs/admin/OPERATIONS.md section 2.1; HIGH_PERFORMANCE_NATIVE.md section 6): nothing here can stop the server
+    cache-dir: ${DRISHTI_NATIVE_CACHE_DIR:${drishti.data.dir:./data}/native-cache}  # where the bundled native libraries are unpacked (JavaCPP's cache), under the data folder
+    max-bytes-mb: 1024               # the most off-heap memory JavaCPP may allocate itself (org.bytedeco.javacpp.maxBytes); BLAS calls take Java arrays
+    blas:
+      mode: ${DRISHTI_NATIVE_BLAS_MODE:auto}  # auto: the bundled OpenBLAS (Linux and Windows x86-64), else the Java kernels with a warning, an alert and Health DEGRADED; java: the Java kernels, chosen (no warning)
+      max-call-mb: 256               # a BLAS call whose operands pass this many MB runs on Java (bounds what one native call copies)
+      canary-interval: 6h            # the self-test against Java is run again this often (0: only at start); a failure switches OpenBLAS off for the run
+      gemm-min-sets: 32              # a 1,024-row tile of many-scope sums is one dgemm when at least this many sets share it (tuned on one machine: BENCHMARK.md section 17)
+      gemm-min-density: 0.25         # ...and at least this share of its (set, row) pairs are members; sparser tiles are added in Java
   engines:                           # compute engines on or off per node, each with its own file (docs/architecture/COMPUTE_ENGINES.md; Admin -> Engines)
     dir: ${DRISHTI_ENGINES_DIR:./config/engines}   # the folder of the engines' files Admin -> Engines writes (the imports above name the same folder)
     drain: 30s                       # an engine turned off live: requests in flight finish within this, then are cancelled
@@ -247,9 +260,10 @@ drishti:
     drain:                           # the drain before a stop: POST /api/v1/admin/node/drain, Admin -> Net "Drain for a stop", the stop hooks
       settle-seconds: 5              # after the drain, how long until no peer forwards work here (the flag reaches every peer by gossip)
   sources:
-    # Longest a single source read may take before the view shows the entity as unavailable (DRS-1004). 5 s: the first read
-    # of a business date on a large table loads that date's id index first (300K trades: a few seconds).
-    fetch-timeout: 5s
+    # Longest a single source read may take before the view shows the entity as unavailable (DRS-1004), and a panel's own source
+    # (another pack's data, for example) before the panel shows that it failed. 10 s: the first read of a business date on a large
+    # table loads that date's id index first (300K trades: a few seconds), and a slow source is not reported as missing.
+    fetch-timeout: 10s
     # Optional directory of extra plugin jars; each gets its own class loader.
     plugin-dir: ${DRISHTI_PLUGIN_DIR:}
     # kind -> plugin. Kinds without a route try default-route first, then any plugin that serves them.
@@ -412,6 +426,9 @@ drishti:
           - DELETE /api/v1/compute/sandboxes/*
           - POST /api/v1/compute/sandboxes/*/copy
           - DELETE /api/v1/compute/requests/*
+      "[data:read]":
+        description: "Read data through Arrow Flight (FLIGHT_GUIDE.md): kinds, BI models, pivot views, VaR vectors and the in-memory lake, as your roles, masks and row rules allow, every read audited. It opens no HTTP call. data:read:<domain> (a pack such as trading, bi, var, a lake) opens one domain only."
+        allow: []
       "[edit]":
         description: "Submit changes through write-back (WRITE_BACK.md: forms, the CLI's change propose), approve or reject other people's, withdraw your own. No token has it unless chosen; it never exceeds your roles: the edit power, the field's roles, masks and four eyes all apply, and editing must be on."
         allow:
@@ -596,6 +613,7 @@ drishti:
       - "* /api/v1/admin/commands/**"
       - "* /api/v1/admin/engines"             # Admin -> Engines: compute engines on or off on a node, written to its file, audited with a reason; never a token
       - "* /api/v1/admin/engines/**"
+      - "POST /api/v1/admin/data-out/streams/*/stop"   # Admin -> Data out: stop a live Flight stream (DRS-5610 to its reader); an administrator from the console, never a token
       - "* /api/v1/admin/collab/**"
       - "* /api/v1/admin/reports/**"
       - "* /api/v1/admin/subscriptions/**"

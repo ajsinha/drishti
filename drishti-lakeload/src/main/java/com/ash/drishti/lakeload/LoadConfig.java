@@ -15,6 +15,10 @@
  */
 package com.ash.drishti.lakeload;
 
+import com.ash.drishti.lakeconfig.Lake;
+import com.ash.drishti.lakeconfig.LakeTable;
+import com.ash.drishti.lakeconfig.Lakes;
+import com.ash.drishti.lakeconfig.PackEntry;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -39,7 +43,11 @@ import java.util.regex.Pattern;
  * is (the same words as {@code lake build} and a pack's connector: {@code id} is {@code --key} and the ingest key, {@code date},
  * {@code promote} is {@code layout.<kind>.columns}, {@code vectors} is {@code layout.<kind>.vectors}, {@code flatten},
  * {@code partition-by}), where the table is ({@code lake}, {@code domain}, {@code kind}, {@code table}, or {@code path}), how it is laid
- * out and how many threads do the work. {@code --set key.path=value} overrides any key. A value may name an environment variable
+ * out and how many threads do the work. When {@code target.lake} names a lake file ({@code config/lakes/<lake>.yaml},
+ * docs/guides/LAKE_GUIDE.md) the table is the lake file's entry for {@code target.kind}: its location, format, partitioning, promoted
+ * columns, vectors, id, date, latest-by, sort, file layout and load mode all come from there, and a key of this file that says
+ * otherwise is refused with both values named. A lake that has no entry for the kind is refused: a writer never creates a table its lake
+ * file does not describe. {@code --set key.path=value} overrides any key. A value may name an environment variable
  * ({@code ${MINIO_ENDPOINT}}); keys and secrets are never taken from the file: S3 credentials come from the AWS default chain.
  */
 record LoadConfig(Source source, Target target, Parallel parallel, Memory memory, Rejects rejects, Report report, boolean lock, Archive archive,
@@ -59,15 +67,15 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
 
     /** The table and its layout. */
     record Target(String format, String path, String lake, String domain, String kind, String table, Map<String, String> storage,
-            Map<String, String> properties, Map<String, String> iceberg, Layout layout, String mode) {
+            Map<String, String> properties, Map<String, String> iceberg, Layout layout, String loadMode, String batchId) {
 
         boolean isIceberg() {
             return format.equals("iceberg");
         }
 
-        /** {@code mode: append}: each date's rows are added; else ({@code replace-date}) each date of the input is replaced. */
+        /** Whether the load adds its rows (load-mode append, each batch committed once) rather than replacing its dates. */
         boolean appends() {
-            return "append".equals(mode);
+            return LakeTable.APPEND.equals(loadMode);
         }
     }
 
@@ -105,7 +113,8 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
             "source", Set.of("files", "recursive", "storage-options", "format", "id", "date", "as-of", "date-from", "promote", "vectors", "vector", "flatten",
                     "partition-by", "pack", "connector", "latest-by", "dataset", "archive"),
             "source.archive", Set.of("max-mb", "max-ratio", "max-members", "validate"),
-            "target", Set.of("format", "path", "lake", "domain", "kind", "table", "storage-options", "mode", "properties", "iceberg", "layout"),
+            "target", Set.of("format", "path", "lake", "domain", "kind", "table", "storage-options", "mode", "properties", "iceberg", "layout",
+                    "batch-id"),
             "target.layout", Set.of("sort-by", "file-size-mb", "row-group-mb", "compression", "vector-compression", "byte-stream-split",
                     "shard-aligned"),
             "parallel", Set.of("readers", "parsers", "writers", "queue-mb", "split-mb"),
@@ -301,14 +310,14 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         }
         // a pack (as lake build --pack): its connector's domain, table, layout columns, vectors and flattened fields, its ingest key and date
         String packDir = r.text(s, "pack", null);
-        PackLayout pack = null;
+        PackEntry pack = null;
         if (packDir != null) {
             String kind = r.text(t, "kind", null);
             if (kind == null) {
                 throw new IllegalArgumentException("source.pack needs target.kind (the kind whose layout the pack gives)");
             }
             try {
-                pack = PackLayout.read(Path.of(packDir), kind, r.text(s, "connector", null));
+                pack = PackEntry.read(Path.of(packDir), kind, r.text(s, "connector", null));
             } catch (IOException e) {
                 throw new IllegalArgumentException("source.pack " + packDir + ": " + e.getMessage());
             }
@@ -316,34 +325,80 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
                 date = pack.date();                 // a row's own date field: only counted when it differs from its file's date
             }
         }
-
+        // a lake file's entry (target.lake naming config/lakes/<lake>.yaml): everything of the table from there, nothing contradicted here
+        String lakeRef = r.text(t, "lake", null);
+        Lake lake = null;
+        LakeTable entry = null;
+        if (lakeRef != null && isLakeName(lakeRef)) {
+            lake = Lakes.read(Lakes.dir(), env).get(lakeRef);
+            String kind = r.text(t, "kind", null);
+            if (kind == null) {
+                throw new IllegalArgumentException("target.kind: name the kind whose table of lake " + lakeRef + " this load writes");
+            }
+            entry = lake.require(r.text(t, "domain", null), kind, r.text(t, "table", null));
+            date = agree(entry, "date", date, entry.date());
+            if (s.has("partition-by")) {
+                agree(entry, "partition-by", r.list(s, "partition-by"), entry.partitionBy());
+            }
+        } else if (lakeRef != null && !lakeRef.isBlank()) {
+            warnOnce("target.lake " + lakeRef + " is a folder: name a lake of config/lakes/ instead (drishti.py lake migrate-config; "
+                    + "docs/guides/LAKE_GUIDE.md); a folder is read this way for one more release");
+        }
         List<String> vectors = new ArrayList<>(r.list(s, "vectors"));
         vectors.addAll(r.list(s, "vector"));
         List<String> promote = r.list(s, "promote");
         Map<String, String> flatten = new java.util.LinkedHashMap<>();
         String id = r.text(s, "id", null);
         String latestBy = r.text(s, "latest-by", null);
-        if (pack != null) {
+        if (entry != null) {
+            promote = s.has("promote") ? agree(entry, "promote", promote, entry.promote()) : entry.promote();
+            vectors = s.has("vectors") || s.has("vector") ? agree(entry, "vectors", vectors, entry.vectors()) : entry.vectors();
+            flatten.putAll(entry.flatten());
+            if (flatten.isEmpty() && pack != null) {             // a lake entry without flatten: the pack's (its ingest block), as lake build
+                flatten.putAll(pack.flatten());
+            }
+            id = id != null ? agree(entry, "id", id, entry.id() == null ? id : entry.id()) : entry.id();
+            latestBy = latestBy != null ? agree(entry, "latest-by", latestBy, entry.latestBy() == null ? latestBy : entry.latestBy()) : entry.latestBy();
+        } else if (pack != null) {
             promote = s.has("promote") ? promote : pack.promote();
             vectors = s.has("vectors") || s.has("vector") ? vectors : pack.vectors();
             flatten.putAll(s.has("flatten") ? Map.of() : pack.flatten());
             id = id != null ? id : pack.key();
             latestBy = latestBy != null ? latestBy : pack.latestBy();
         }
-        flatten.putAll(r.map(s.path("flatten"), "source.flatten"));
+        if (entry == null) {
+            flatten.putAll(r.map(s.path("flatten"), "source.flatten"));
+        } else if (s.has("flatten")) {
+            agree(entry, "flatten", r.map(s.path("flatten"), "source.flatten"), entry.flatten());
+        }
         Map<String, String> sourceStorage = storage(r, s.path("storage-options"), "source.storage-options");
         Source src = new Source(files, r.bool(s, "recursive", false), sourceStorage, id == null ? "id" : id, date, asOf, promote, vectors, flatten,
-                r.list(s, "partition-by"), latestBy == null ? DEFAULT_LATEST_BY : latestBy.strip(), dateFrom);
+                entry != null ? entry.partitionBy() : r.list(s, "partition-by"), latestBy == null ? DEFAULT_LATEST_BY : latestBy.strip(), dateFrom);
 
-        String tf = r.text(t, "format", "delta").toLowerCase(Locale.ROOT);
+        String tf = r.text(t, "format", entry != null ? entry.format() : "delta").toLowerCase(Locale.ROOT);
+        if (entry != null) {
+            agree(entry, "format", tf, entry.format());
+        }
         if (!tf.equals("delta") && !tf.equals("iceberg")) {
             throw new IllegalArgumentException("target.format " + tf + ": delta or iceberg");
         }
-        String mode = r.text(t, "mode", "append").toLowerCase(Locale.ROOT);
+        // the load mode: the lake file's entry when the table has one (the one source of a table's settings), else append, the load
+        // rules' default (docs/architecture/DATA_LOAD_RULES.md section 6); replace (overwrite-dates) replaces each business date
+        String mode = r.text(t, "mode", entry != null ? (entry.appends() ? "append" : "replace-date") : "append").toLowerCase(Locale.ROOT);
         mode = mode.equals("overwrite-dates") || mode.equals("replace") ? "replace-date" : mode;
         if (!mode.equals("replace-date") && !mode.equals("append")) {
             throw new IllegalArgumentException("target.mode " + mode + ": append (the default: each business date's rows are added, one commit "
                     + "per date) or replace-date (each business date of the input replaced by one commit; also replace, overwrite-dates)");
+        }
+        String loadMode = mode.equals("append") ? LakeTable.APPEND : LakeTable.REPLACE;
+        if (entry != null) {
+            agree(entry, "load-mode", loadMode, entry.loadMode());
+        }
+        // target.batch-id names the batch: an append of it is committed once (a retried load of the same batch is skipped); the data
+        // inbox names every file's. Without one an append is not guarded against a second run (each run's rows carry their _load_id)
+        String batchId = r.text(t, "batch-id", null);
+        if (batchId != null && batchId.isBlank()) {
+            batchId = null;
         }
         if (tf.equals("iceberg") && !src.partitionBy().isEmpty()) {
             throw new IllegalArgumentException("source.partition-by is Delta's: an Iceberg table of the layout is partitioned by business date alone "
@@ -354,13 +409,56 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         iceberg.keySet().stream().filter(k -> SECRETS.contains(k) && !isReference(t.path("iceberg").path(k).asText())).findFirst().ifPresent(k -> {
             throw new IllegalArgumentException("target.iceberg." + k + ": a secret is never written in the file; give ${AN_ENVIRONMENT_VARIABLE}");
         });
+        if (entry != null) {                                // the lake file's layout where this file gives none; a different value is refused
+            ObjectNode lo = l instanceof ObjectNode o ? o : t instanceof ObjectNode to ? to.putObject("layout") : JsonNodeFactory.instance.objectNode();
+            if (l.has("sort-by")) {
+                agree(entry, "sort-by", r.list(l, "sort-by"), entry.sortBy());
+            } else if (!entry.sortBy().isEmpty()) {
+                entry.sortBy().forEach(x -> lo.withArray("sort-by").add(x));
+            }
+            for (String k : List.of("file-size-mb", "row-group-mb", "compression", "vector-compression")) {
+                String mine = entry.layout().get(k);
+                if (mine != null && l.has(k)) {
+                    agree(entry, k, r.text(l, k, null), mine);
+                } else if (mine != null) {
+                    lo.put(k, mine);
+                }
+            }
+            l = lo;
+        }
         List<String> sortBy = l.has("sort-by") || pack == null ? r.list(l, "sort-by") : pack.sortBy();      // the pack's layout.<kind>.sort-by when not set
         Layout layout = new Layout(sortBy, mb(r, l, "file-size-mb", 256), l.has("row-group-mb") && !r.text(l, "row-group-mb", "auto").equals("auto")
                 ? mb(r, l, "row-group-mb", 1) : 0, r.text(l, "compression", "auto").toLowerCase(Locale.ROOT),
                 r.text(l, "vector-compression", "zstd").toLowerCase(Locale.ROOT), r.bool(l, "byte-stream-split", true), r.bool(l, "shard-aligned", true));
-        String domain = r.text(t, "domain", pack == null ? null : pack.domain());
-        String table = r.text(t, "table", pack == null ? null : pack.table());
-        Target tgt = new Target(tf, r.text(t, "path", null), r.text(t, "lake", null), domain, r.text(t, "kind", null), table, targetStorage, r.map(t.path("properties"), "target.properties"), iceberg, layout, mode);
+        String domain = r.text(t, "domain", entry != null ? entry.domain() : pack == null ? null : pack.domain());
+        String table = r.text(t, "table", entry != null ? entry.folder() : pack == null ? null : pack.table());
+        String path = r.text(t, "path", null);
+        Map<String, String> props = r.map(t.path("properties"), "target.properties");
+        if (entry != null) {
+            if (path != null) {
+                agree(entry, "path", path, lake.location(entry));
+            }
+            path = lake.location(entry);
+            Map<String, String> lakeStorage = new LinkedHashMap<>();
+            lake.storage().forEach((k, v) -> lakeStorage.put(k.startsWith("s3.") || k.startsWith("tls.") || k.startsWith("proxy.") ? k : "s3." + k, v));
+            if (!t.has("storage-options")) {
+                targetStorage = lakeStorage;
+            }
+            Map<String, String> merged = new LinkedHashMap<>(entry.properties());
+            String interval = entry.maintenance().get("checkpoint-interval");       // the lake file's maintenance: a Delta table's property
+            if (interval != null && !interval.isBlank() && entry.format().equals("delta")) {
+                merged.putIfAbsent("delta.checkpointInterval", interval.trim());
+            }
+            merged.putAll(props);
+            props = merged;
+            if (tf.equals("iceberg") && !lake.catalog().isEmpty()) {
+                Map<String, String> cat = new LinkedHashMap<>(lake.catalog());
+                cat.putAll(iceberg);
+                iceberg = cat;
+            }
+        }
+        Target tgt = new Target(tf, path, r.text(t, "lake", null), domain, r.text(t, "kind", null), table, targetStorage, props, iceberg, layout,
+                loadMode, batchId);
         if (tgt.path() == null && (tgt.lake() == null || tgt.domain() == null || tgt.kind() == null && tgt.table() == null)) {
             throw new IllegalArgumentException("target: give path (the table) or lake, domain and kind (the table <lake>/<domain>/<kind>)");
         }
@@ -372,6 +470,32 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         Report rep = new Report(r.text(rp, "summary", null), r.text(rp, "manifest", null), r.text(rp, "progress", null), r.bool(rp, "run-log", true),
                 r.bool(rp, "dry-run", false));
         return new LoadConfig(src, tgt, par, memory, rej, rep, tree.path("lock").asBoolean(true), archive(r, s), Map.of(), null);
+    }
+
+    /** Whether {@code target.lake} names a lake of config/lakes/ (a plain name) rather than a folder or a URL (the old form). */
+    static boolean isLakeName(String ref) {
+        if (!ref.matches("[a-z0-9][a-z0-9_-]*")) {
+            return false;                                   // ./data/delta, /lake, s3://bucket/delta: a folder, the old form
+        }
+        return Lakes.dir().resolve(ref + ".yaml").toFile().isFile() || !new java.io.File(ref).isDirectory();
+    }
+
+    /** A value of the load file that the lake file also gives: they must be the same, else the load is refused naming both. */
+    static <T> T agree(LakeTable entry, String key, T mine, T lakes) {
+        if (mine != null && lakes != null && !mine.equals(lakes)) {
+            throw new IllegalArgumentException(key + " " + mine + " differs from " + lakes + ", the " + key + " of table " + entry.name()
+                    + " in its lake file: the lake file decides (docs/guides/LAKE_GUIDE.md); remove " + key + " from the load or correct the lake file");
+        }
+        return mine != null ? mine : lakes;
+    }
+
+    private static final Set<String> WARNED = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+    /** One warning per message and process: an old form still read (decision L4). */
+    static void warnOnce(String message) {
+        if (WARNED.add(message)) {
+            org.slf4j.LoggerFactory.getLogger(LoadConfig.class).warn(message);
+        }
     }
 
     /** {@code source.dataset} and {@code source.archive.*}: the caps' defaults from DRISHTI_ARCHIVE_MAX_MB, _MAX_RATIO, _MAX_MEMBERS. */
@@ -429,7 +553,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
 
     /** The lake root (for the run log and the lock): {@code lake}, else the table's grandparent. */
     String lakeRoot() {
-        if (target.lake() != null) {
+        if (target.lake() != null && target.path() == null) {           // a lake by name has its table's path: its grandparent below
             return trim(target.lake());
         }
         String p = tablePath();

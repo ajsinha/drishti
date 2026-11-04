@@ -125,11 +125,11 @@ class Ctx:
         raise TimeoutError("still false: " + js)
 
     def rev(self):
-        return self.page.evaluate("window.drishtiWorkbench.store.state.rev")
+        return self.page.evaluate("window.Drishti.workbench.store.state.rev")
 
     def settle(self, rev):
         for _ in range(150):
-            if self.page.evaluate("window.drishtiWorkbench.store.state.rev") > rev:
+            if self.page.evaluate("window.Drishti.workbench.store.state.rev") > rev:
                 break
             self.page.wait_for_timeout(100)
         self.page.wait_for_timeout(500)

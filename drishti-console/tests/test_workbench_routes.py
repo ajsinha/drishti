@@ -104,15 +104,15 @@ def test_other_peoples_designs_and_missing_ones_answer_404(app_client):
 
 def test_the_workbench_scripts_are_small_and_all_served(app_client):
     names = sorted(p.name for p in JS.glob("*.js"))
-    assert {"grid-keys.js", "canvas.js", "inspector.js", "actions.js", "workbench.js", "tests.js", "problems.js", "yamltab.js", "data.js", "palette.js"} <= set(names)
+    assert {"drishti_grid-keys.js", "drishti_canvas.js", "drishti_inspector.js", "drishti_actions.js", "drishti_workbench.js", "drishti_tests.js", "drishti_problems.js", "drishti_yamltab.js", "drishti_data.js", "drishti_palette.js"} <= set(names)
     for p in JS.glob("*.js"):
         assert len(p.read_text().splitlines()) <= 420, f"{p.name} is over the module size the design allows"
         assert app_client.get(f"/static/js/build/{p.name}").status_code == 200
     page = app_client.get(f"/build/d/{_design(app_client)[0]}").text
     for n in names:
-        if n not in ("wb_live.py", "shared.js"):                 # shared.js belongs to the read-only share page (test_ship.py)
+        if n not in ("wb_live.py", "drishti_shared.js"):                 # drishti_shared.js belongs to the read-only share page (test_ship.py)
             assert f"/static/js/build/{n}" in page, f"{n} is not loaded by the page"
-    assert Path(CONSOLE / "web/static/css/build-workbench.css").exists()
+    assert Path(CONSOLE / "web/static/css/drishti_build-workbench.css").exists()
 
 
 def test_the_page_vendors_everything_no_cdn(app_client):

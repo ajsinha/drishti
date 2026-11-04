@@ -18,7 +18,7 @@ as its second tab); ``SIMM <netting set>`` opens it on that netting set, ``SIMM 
 <netting set>`` opens the SIMM Playground (the Choices panel with the parameter version, the concentration and HVR switches and the side,
 a switch compared side by side with the difference explained, the grid of weighted sensitivities with its formula bar and the
 explanation, Save recipe and Export to Excel); ``PLAY SIMM RUN <id>`` replays a recipe. Every figure is the server's (``/api/v1/simm/...``,
-as the person); the pages are shells that web/static/js/simm.js fills."""
+as the person); the pages are shells that web/static/js/drishti_simm.js fills."""
 from __future__ import annotations
 
 import re

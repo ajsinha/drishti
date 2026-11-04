@@ -88,8 +88,8 @@ def test_a_view_is_drawn_with_the_users_layout(client, backend, layouts_on):
     assert re.search(r'class="pnl c-span-8 c-h-10" id="p-cashflows"', html)
     assert re.search(r'class="pnl pnl-off" id="p-curve"', html)
     assert 'data-fkey="F4" data-action="panel" aria-label="F4 USD-SOFR curve" disabled title="USD-SOFR curve: hidden in your layout' in html      # its key is greyed
-    assert "data-layout-open" in html and "<b>Alt+L</b> Layout" in html and "/static/js/layout.js" in html
-    assert html.index("/static/js/layout-rules.js") < html.index("/static/js/build/grid-keys.js") < html.index("/static/js/layout.js")       # the shared keys load first
+    assert "data-layout-open" in html and "<b>Alt+L</b> Layout" in html and "/static/js/drishti_layout.js" in html
+    assert html.index("/static/js/drishti_layout-rules.js") < html.index("/static/js/build/drishti_grid-keys.js") < html.index("/static/js/drishti_layout.js")       # the shared keys load first
     assert 'data-sutra="irs-vanilla"' in html and "data-layout-mine" in html and 'id="layoutPromote"' in html
     main, right = html.split('<div class="vmain">')[1].split('<aside class="vright"')
     assert 'id="p-refs"' in main and 'id="p-refs"' not in right
@@ -99,7 +99,7 @@ def test_the_key_is_greyed_with_the_reason(client, backend, layouts_on):
     backend.layout_allowed = False
     html = client.get("/v/trade/IRS-48213").text
     assert "data-layout-open disabled" in html and "customising layouts needs a role with layout" in html
-    assert "/static/js/layout.js" not in html and "data-layout-bar" not in html
+    assert "/static/js/drishti_layout.js" not in html and "data-layout-bar" not in html
     backend.layout_allowed = True
     client.app.state.layouts._kept.clear()
     html = client.get("/v/trade/IRS-47102").text                               # inference only: no Sutra to arrange
@@ -116,7 +116,7 @@ def test_workspace_panes_follow_the_layout_without_offering_layout_mode(client, 
     backend.layouts_kept[("irs-vanilla", "trade")] = {"panels": [{"id": "dv01", "area": "main", "span": 6}]}
     html = client.get("/v/trade/IRS-48213?embed=1").text
     assert _order(html)[0] == "dv01" and "c-span-6" in html
-    assert "data-layout-open" not in html and "/static/js/layout.js" not in html
+    assert "data-layout-open" not in html and "/static/js/drishti_layout.js" not in html
 
 
 def test_a_view_from_a_server_without_layouts_is_unchanged(client, backend, layouts_on, monkeypatch):
@@ -163,7 +163,7 @@ def test_promotion_shows_the_diff_and_proposes_through_review(client, backend, l
     assert [x for x in d["edits"] if x[0] in ("add", "del")] == [["del", "-version: 3"], ["add", "+version: 4"],
                                                                 ["del", "-  - { id: refs, kind: links, area: right }"],
                                                                 ["add", "+  - { id: refs, kind: links, span: 6 }"]]
-    js = client.get("/static/js/layout.js").text
+    js = client.get("/static/js/drishti_layout.js").text
     assert "data-promote-moves" in js and "data-promote-full-diff" in js and "res.b.edits" in js
     r = client.post("/api/layout/irs-vanilla/trade/promotion", json={"note": "cashflows first", "dropHidden": True}).json()
     assert r["proposal"]["id"] == "P-000042" and r["href"] == "/build/reviews/P-000042"
@@ -200,4 +200,4 @@ def test_workspaces_keep_where_their_dividers_were_dragged(client, backend):
     assert backend.saved_workspaces["Sized"]["sizes"] == {"cols": [1.5, 0.5]}
     html = client.get("/w/Sized").text
     assert "&#34;sizes&#34;: {&#34;cols&#34;: [1.5, 0.5]}" in html or '"sizes": {"cols": [1.5, 0.5]}' in html.replace("&#34;", '"')
-    assert "/static/js/workspace.js" in html
+    assert "/static/js/drishti_workspace.js" in html

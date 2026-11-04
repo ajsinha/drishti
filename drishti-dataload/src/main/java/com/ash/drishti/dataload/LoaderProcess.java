@@ -78,9 +78,16 @@ public final class LoaderProcess implements LoadRunner {
         }
     }
 
-    /** The load file for {@code files} going where {@code route} says; written to {@code config}. */
+    /**
+     * The load file for {@code files} going where {@code route} says; written to {@code config}. When the route names a lake of
+     * {@code config/lakes/} (docs/guides/LAKE_GUIDE.md) and that lake has no entry for the kind yet, the pack's recommended entry is copied
+     * into the lake file first and said so (decision L2): the table is then created exactly as the lake file says, and from then on the
+     * lake file is the truth. The load's batch id (the files' names and sizes) is always written: a table whose lake entry says
+     * {@code load-mode: append} records it in the commit, so a repeated or retried file is never appended twice.
+     */
     public static void writeConfig(Path config, Routes.Route r, List<Path> files, Path summary, Path rejects, double rejectMaxPercent, Path spill)
             throws IOException {
+        lakeEntry(r);
         ObjectNode root = JsonNodeFactory.instance.objectNode();
         ObjectNode s = root.putObject("source");
         ArrayNode list = s.putArray("files");
@@ -101,8 +108,14 @@ public final class LoaderProcess implements LoadRunner {
         if (r.newDomain() != null) {
             t.put("domain", r.newDomain());                     // a new table: the pack's domain, the generic layout
         }
-        t.put("mode", "append".equals(r.mode()) ? "append" : "replace-date");
-        put(t, "table", r.table());
+        // the table: the route's, else the pack connector's (trade-endur: trade_endur), which picks among several tables of one kind
+        boolean named = r.lake() != null && r.lake().matches("[a-z0-9][a-z0-9_-]*");      // a lake of config/lakes/ (else a folder: the old form)
+        put(t, "table", r.table() != null || !named || r.connector() == null || r.newDomain() != null ? r.table()
+                : com.ash.drishti.lakeconfig.PackEntry.read(r.packDir(), r.kind(), r.connector()).table());
+        if (!named) {
+            t.put("mode", "append".equals(r.mode()) ? "append" : "replace-date");   // a lake file's table: its load-mode (the one source)
+        }
+        t.put("batch-id", batchId(files));
         ObjectNode rj = root.putObject("rejects");
         rj.put("max-pct", rejectMaxPercent);
         rj.put("file", rejects.toAbsolutePath().toString());
@@ -111,6 +124,42 @@ public final class LoaderProcess implements LoadRunner {
             root.putObject("memory").put("spill-dir", spill.toAbsolutePath().toString());
         }
         Files.writeString(config, new YAMLMapper().writeValueAsString(root));
+    }
+
+    /** A lake named by the route that lacks the kind gets the pack's entry, once. */
+    static void lakeEntry(Routes.Route r) throws IOException {
+        if (r.lake() == null || !r.lake().matches("[a-z0-9][a-z0-9_-]*")) {
+            return;                                         // a folder (the old form): the loader reads it with its one warning
+        }
+        Path file = com.ash.drishti.lakeconfig.Lakes.dir().resolve(r.lake() + ".yaml");
+        if (!Files.isRegularFile(file)) {
+            return;                                         // the loader refuses the unknown lake, naming the lakes there are
+        }
+        com.ash.drishti.lakeconfig.Lake lake = com.ash.drishti.lakeconfig.Lakes.readFile(file, System::getenv);
+        if (lake.tables().values().stream().anyMatch(x -> x.kind().equals(r.kind()))) {
+            return;
+        }
+        com.ash.drishti.lakeconfig.LakeTable entry = com.ash.drishti.lakeconfig.PackEntry.read(r.packDir(), r.kind(), r.connector()).toTable(r.kind());
+        if (com.ash.drishti.lakeconfig.LakeFiles.addTable(file, entry)) {
+            LOG.info("lake {} had no table for {}: the pack {}'s recommended entry {} was copied into {}; edit it there from now on", r.lake(),
+                    r.kind(), r.pack(), entry.name(), file);
+        }
+    }
+
+    /** The batch id of a load: its files' names and sizes, so the same file dropped again is the same batch. */
+    static String batchId(List<Path> files) throws IOException {
+        java.security.MessageDigest md;
+        try {
+            md = java.security.MessageDigest.getInstance("SHA-256");
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
+        List<Path> sorted = new ArrayList<>(files);
+        sorted.sort(Comparator.comparing(f -> f.getFileName().toString()));
+        for (Path f : sorted) {
+            md.update((f.getFileName() + ":" + Files.size(f) + "\n").getBytes(StandardCharsets.UTF_8));
+        }
+        return "inbox-" + java.util.HexFormat.of().formatHex(md.digest()).substring(0, 16);
     }
 
     private static void put(ObjectNode n, String key, String value) {
@@ -134,11 +183,15 @@ public final class LoaderProcess implements LoadRunner {
             cmd.add("-Xmx" + settings.loaderHeap());
             cmd.add("-Djava.io.tmpdir=" + tmp.toAbsolutePath());
             cmd.add("-Ddrishti.tmp-dir=" + tmp.toAbsolutePath());
+            cmd.add("-D" + com.ash.drishti.lakeconfig.Lakes.PROPERTY + "=" + com.ash.drishti.lakeconfig.Lakes.dir().toAbsolutePath());
             cmd.addAll(launch);
             cmd.add("--config");
             cmd.add(config.toAbsolutePath().toString());
             cmd.addAll(extra);
             ProcessBuilder pb = new ProcessBuilder(cmd).redirectErrorStream(true).redirectOutput(ProcessBuilder.Redirect.appendTo(log.toFile()));
+            // the settings the lake files refer to, as this server resolves them (a DRISHTI_DELTA_ROOT given as a --setting included):
+            // the loader reads the same lake files through the same reader and lands where this server's connectors read
+            pb.environment().putAll(com.ash.drishti.lakeconfig.Lakes.environment());
             Process p = pb.start();
             running = p;
             boolean done = p.waitFor(settings.loadTimeout().toMillis(), TimeUnit.MILLISECONDS);

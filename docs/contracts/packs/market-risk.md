@@ -38,7 +38,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [PNLH](#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) | `pnl-history` | input | active | 16 | 0 |
 | [SENS](#sens-position-sensitivities-position-sensitivity) | `position-sensitivity` | input | active | 28 | 1 |
 | [RFAC](#rfac-risk-factor-dictionary-risk-factor) | `risk-factor` | fundamental | active | 27 | 1 |
-| [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 29 | 0 |
+| [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 44 | 0 |
 | [VOFF](#voff-var-official-results-published-var-official) | `var-official` | computed | active | 31 | 0 |
 | [SSPNL](#sspnl-stress-pl-of-a-scenario-across-desks-derived-from-the-stress-results-stress-scenario-pnl) | `stress-scenario-pnl` | computed | active | 11 | 0 |
 
@@ -1278,7 +1278,7 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 
 |  |  |
 |---|---|
-| Contract | [var-result.contract.yaml](../../../config/packs/market-risk/contracts/var-result.contract.yaml) · version 1.2 |
+| Contract | [var-result.contract.yaml](../../../config/packs/market-risk/contracts/var-result.contract.yaml) · version 1.3 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.server.var.VarResultEngine) |
@@ -1321,6 +1321,21 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | `CHILDREN_NOTE` | text | optional |  | When CHILDREN is limited: "5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567". |  |  |
 | `WORST` | record list | required |  | The 25 worst scenarios (RANK, INDEX, DATE, PNL). |  |  |
 | `PNL` | vector | required | CURRENCY | The scope's P&L under each scenario day, oldest first (unrounded). |  |  |
+| `PARAMETRIC_VAR` | amount | optional | CURRENCY | Parametric VaR, a cross-check beside historical (PARAMETRIC_VAR.md): z·σ − μ at CONFIDENCE, positive for a loss; never official, never a limit's measure. |  |  |
+| `PARAMETRIC_ES` | amount | optional | CURRENCY | Parametric ES: σ·φ(z_ES)/(1 − ES_CONFIDENCE) − μ. |  |  |
+| `PARAMETRIC_MU` | amount | optional | CURRENCY | μ of the lens's vector (the normal's mean). |  |  |
+| `PARAMETRIC_SIGMA` | amount | optional | CURRENCY | σ of the lens's vector (sample, N − 1, or EWMA-weighted). |  |  |
+| `PARAMETRIC_Z` | amount | optional |  | Φ⁻¹(CONFIDENCE). |  |  |
+| `PARAMETRIC_N` | integer | optional |  | Scenarios (or 10-day windows) the fit used. |  |  |
+| `PARAMETRIC_WEIGHTING` | text | optional |  | equal or ewma. |  |  |
+| `PARAMETRIC_LAMBDA` | amount | optional |  | EWMA's decay; null with equal weights. |  |  |
+| `PARAMETRIC_HORIZON_RULE` | text | optional |  | lens or square-root-of-time. |  |  |
+| `PARAMETRIC_SKEW` | amount | optional |  | The vector's skewness (a normal: 0). |  |  |
+| `PARAMETRIC_EXCESS_KURTOSIS` | amount | optional |  | The vector's excess kurtosis (a normal: 0). |  |  |
+| `FAT_TAIL_GAP` | amount | optional | CURRENCY | VAR minus PARAMETRIC_VAR: positive when the scenario tail is heavier than the normal's. |  |  |
+| `FAT_TAIL_GAP_PCT` | rate | optional |  | FAT_TAIL_GAP over PARAMETRIC_VAR. |  |  |
+| `FAT_TAIL_ES_GAP` | amount | optional | CURRENCY | ES minus PARAMETRIC_ES. |  |  |
+| `PARAMETRIC_OFFICIAL` | boolean | optional |  | Always false: parametric VaR is a cross-check, never official. |  |  |
 | `PROVENANCE` | record | required |  | The headline's provenance in UPPER_SNAKE (VAR_GUIDE.md section 11.2), with TIER saying where the vector came from. |  |  |
 
 **Validation**

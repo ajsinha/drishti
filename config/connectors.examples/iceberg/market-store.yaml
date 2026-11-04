@@ -13,6 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: copy to config/connectors/market-store.yaml to read the market-store data from iceberg. It replaces the
 # connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
+# The lake (iceberg, its root or catalog, storage and tables) is config/lakes.examples/iceberg/iceberg.yaml: copy it to
+# config/lakes/iceberg.yaml beside this file (docs/guides/LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: iceberg
 kinds:
 - ir-curve
@@ -37,9 +39,5 @@ kinds:
 - correlation-matrix
 description: market-store read from iceberg (the former application-iceberg.yaml profile)
 settings:
-  root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
-  domain: market
-  catalog: ${DRISHTI_ICEBERG_CATALOG:hadoop}
-  uri: ${DRISHTI_ICEBERG_URI:}
-  warehouse: ${DRISHTI_ICEBERG_WAREHOUSE:}
-  credential: ${DRISHTI_ICEBERG_CREDENTIAL:}
+  lake: iceberg
+  lake-tables: market.ir-curve,market.repo-curve,market.fx-spot,market.fx-forward-curve,market.fx-vol-surface,market.ir-vol-cube,market.cap-vol-surface,market.equity,market.equity-index,market.dividend-curve,market.equity-vol-surface,market.credit-curve,market.inflation-index,market.inflation-curve,market.commodity,market.commodity-curve,market.commodity-vol-surface,market.rate-fixing,market.bond,market.correlation-matrix

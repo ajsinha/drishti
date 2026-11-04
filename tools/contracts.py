@@ -81,11 +81,18 @@ def _yaml(path: Path):
     return _parsed(str(path.resolve()), path.stat().st_mtime_ns) if path.is_file() else None
 
 
+def _packlake():
+    import importlib
+    if str(Path(__file__).resolve().parent) not in sys.path:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+    return importlib.import_module("packlake")
+
+
 def manifests(packs_dir: Path = PACKS) -> "OrderedDict[str, dict]":
     """Pack name to its manifest (pack.yaml), sorted by name."""
     out = OrderedDict()
     for d in sorted(p for p in Path(packs_dir).iterdir() if (p / "pack.yaml").is_file()):
-        out[d.name] = _yaml(d / "pack.yaml") or {}
+        out[d.name] = _packlake().view(_yaml(d / "pack.yaml") or {})   # a template in the lake form read with its pack's lake: entries
     return out
 
 

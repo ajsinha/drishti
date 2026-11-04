@@ -18,17 +18,14 @@
 # read from the S3 Tables tables of the same names with underscores (pnl-vector is pnl_vector). No key is written here:
 # credentials come from the AWS default chain (the ECS task role, a profile, AWS_ACCESS_KEY_ID). Guide: ICEBERG_CONNECTOR.md section 20.
 # The trading pack routes kind trade to trade-endur, trade-calypso and trade-murex as a union: this file replaces the first.
+# The lake (iceberg, its root or catalog, storage and tables) is config/lakes.examples/s3tables/s3tables.yaml: copy it to
+# config/lakes/s3tables.yaml beside this file (docs/guides/LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: iceberg
 kinds:
 - trade
 description: trades (Endur) read from AWS S3 Tables
 settings:
-  catalog: s3tables
-  table-bucket-arn: ${DRISHTI_S3TABLES_ARN:}
-  domain: trading
+  lake: s3tables
+  lake-tables: trading.trade
   engine: native
   source-name: trade-endur
-  layout.trade.columns: TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,PRODUCT_SUB_TYPE,PRODUCT_GROUP,TRADE_STATUS,TRADE_VERSION,BUY_SELL_CODE,CURRENCY,QUANTITY,TRADE_DATE,MATURITY_DATE,COUNTERPARTY,LEGAL_ENTITY,PORTFOLIO,TRADER_ID,NOTIONAL,INDEX_NAME
-  layout.trade.sort-by: id
-  layout.trade.file-rows: 250000
-  layout.trade.row-group-rows: 1000

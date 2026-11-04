@@ -16,12 +16,12 @@
 {# The stress window selection, SWIN <scope> (VAR_GUIDE.md section 18.9; the approved mock-up stress-window/A): the long history of
    today's portfolio valued window by window, the worst and the current window marked, the alert, the top candidates, each node's own
    worst window, the current window against the proposed one, and Freeze and propose with the proposals awaiting a second person.
-   A shell: stress-window.js fills it from /api/var/stress-window. #}
+   A shell: drishti_stress-window.js fills it from /api/var/stress-window. #}
 {% extends "base.html" %}
 {% block title %}Stress window selection · {{ scope }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}var-stress-window{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/stress-window.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_stress-window.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="sw-page" data-swin data-scope="{{ scope }}" data-hierarchy="{{ hierarchy }}" data-length="{{ length or '' }}" data-user="{{ user }}">
@@ -78,4 +78,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/stress-window.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_stress-window.js?v={{ ASSET_V }}"></script>{% endblock %}

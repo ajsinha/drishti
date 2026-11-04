@@ -104,7 +104,7 @@ def test_the_page_grid_and_export_are_read_as_the_person(backend, monkeypatch):
     r = c.get("/go", params={"q": "PLAY VAR DESK RATES 10D SUM <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/play?scope=DESK%3ARATES&h=10d&m=sum"
     page = c.get("/play?scope=DESK:RATES&h=10d&m=sum").text
-    assert 'data-play data-scope="DESK:RATES"' in page and 'data-h="10d" data-m="sum"' in page and "var-playground.js" in page
+    assert 'data-play data-scope="DESK:RATES"' in page and 'data-h="10d" data-m="sum"' in page and "drishti_var-playground.js" in page
     assert "Export to Excel" in page and "data-pg-count" in page and "data-pg-formula" in page and "data-pg-explain" in page
     j = c.get("/api/play/grid", params={"scope": "DESK:RATES", "h": "10d", "m": "sum", "q": "0.95", "ccy": "EUR", "view": "pv"})
     assert j.status_code == 200 and j.json()["canonical"] == "NODE:MGMT~DESK-RATES"
@@ -131,12 +131,12 @@ def test_the_var_page_link_func_and_the_type_ahead(backend, monkeypatch):
     _, viewer = _app(backend, monkeypatch, RISK_ABOUT, roles=("viewer",))                  # a role that does not open VaR (2.9.11.a)
     assert not [x for x in viewer.get("/api/suggest", params={"q": "PLAY VAR DESK RATES"}).json() if x.get("mnemonic") == "PLAY"]
     app, c = _app(backend, monkeypatch, RISK_ABOUT, roles=("market-risk",))               # a market-risk role opens VaR: offered
-    assert "play-link.js" in c.get("/var?scope=DESK:RATES").text
+    assert "drishti_play-link.js" in c.get("/var?scope=DESK:RATES").text
     s = [x for x in c.get("/api/suggest", params={"q": "PLAY VAR DESK RATES"}).json() if x.get("mnemonic") == "PLAY"]
     assert s and s[0]["href"] == "/play?scope=DESK%3ARATES"
     assert 'data-command="PLAY"' in c.get("/func").text
     app.state.editions.instance.spec["commands"]["words"]["PLAY"] = False
-    assert "play-link.js" not in c.get("/var?scope=DESK:RATES").text
+    assert "drishti_play-link.js" not in c.get("/var?scope=DESK:RATES").text
     assert c.get("/play?scope=BANK").status_code == 404
 
 
@@ -152,6 +152,6 @@ def test_market_has_no_playground(backend, monkeypatch):
 
 def test_the_var_page_link_carries_the_pages_date_and_settings():
     """The VaR page's Playground link opens the same view: the page's date (asOf), currency, horizon, measure, confidences and set."""
-    js = (CONSOLE / "web" / "static" / "js" / "play-link.js").read_text(encoding="utf-8")
+    js = (CONSOLE / "web" / "static" / "js" / "drishti_play-link.js").read_text(encoding="utf-8")
     for k in ("asOf", "ccy", "h", "m", "q", "esq", "set"):
         assert f'"{k}"' in js, k

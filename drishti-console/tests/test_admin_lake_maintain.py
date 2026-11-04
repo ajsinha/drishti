@@ -85,7 +85,7 @@ def wait(client, rid):
 def test_the_page_lists_tables_with_owner_and_a_foreign_table_read_only(client, lake):
     root, _, _ = lake
     page = client.get("/admin/lakes").text
-    for text in ("data-mt-dry", "Maintain now", "Maintained by its publisher", "admin-lake-maintain.js", "Schedules", "Maintenance history",
+    for text in ("data-mt-dry", "Maintain now", "Maintained by its publisher", "drishti_admin-lake-maintain.js", "Schedules", "Maintenance history",
                  "lake maintain --config"):
         assert text in page, text
     o = client.get("/admin/api/lakes/maintain").json()

@@ -16,12 +16,12 @@
 {# FRTB-SA (docs/guides/FRTB_SA_GUIDE.md sections 7 and 8). mode "capital", FRSA <scope>: the decided mock-up B (the capital stack, the
    class × measure grid, the bucket drill on the right) with A's three scenarios and the contributions as tabs. mode "play", PLAY FRTB
    <scope> or PLAY FRTB RUN <id>: the playground on the VaR Playground's frame (the grid with its formula bar, the explanation beside it),
-   the Choices panel with every switch and a comparison explained by step, Save recipe and Export to Excel. A shell: frtb-sa.js fills it. #}
+   the Choices panel with every switch and a comparison explained by step, Save recipe and Export to Excel. A shell: drishti_frtb-sa.js fills it. #}
 {% extends "base.html" %}
 {% block title %}{{ 'FRTB-SA Playground' if mode == 'play' else 'FRTB-SA capital' }} · {{ scope or recipe or 'FRTB' }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}{{ screen }}{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/var-playground.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/frtb-sa.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-playground.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_frtb-sa.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="pg fr" data-frtb data-mode="{{ mode }}" data-scope="{{ scope }}" data-recipe="{{ recipe or '' }}">
@@ -78,5 +78,5 @@
   {% endif %}
   {% endif %}
 </div>
-<script src="/static/js/frtb-sa.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_frtb-sa.js?v={{ ASSET_V }}"></script>
 {% endblock %}
