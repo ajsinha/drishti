@@ -122,6 +122,10 @@ Nothing is written before step 4.
      and count as the oldest load, so a newer load's copy of an id wins. An undo reads only the `_load_id` column of files without
      statistics for it; for a file written before the column, that read touches only the footer.
    - An archive commits its tables and dates in a fixed order (table, then date).
+   - A table of a lake file (`config/lakes/<lake>.yaml`, LAKE_GUIDE.md) takes its partitions, its load mode and its table settings
+     from its entry there, the one source of them: `--mode` or a `.ready` file's `mode:` must agree with the entry's `load-mode`, and
+     a table of a lake folder (the older form) or one without an entry appends by default. These rules give the table and the business
+     date either way. `target.batch-id` (the data inbox gives every file's) makes an append's commit happen once per batch.
    - A store loader's retention (`--keep-days`, `--keep-months`, `--ttl-days`) counts back from the newest business date of the
      load: a plain file's date, or a tar's newest folder. It never counts from the business today or from the newest date the store
      holds. `--as-of` means only the business date of a plain file.

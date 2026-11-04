@@ -47,6 +47,11 @@
   loader, `data ingest`, the store loaders and `var` all refuse it.
 - **Store-loader retention counts back from the load's newest business date** (a plain file's date, a tar's newest folder), not
   from the business today; `--as-of` means only a plain file's business date (LoadGuard).
+- **The load rules on the lake-file path.** A table of a lake file (`config/lakes/`) keeps its entry as the one source of its
+  partitions, load mode and settings: `lake build --lake NAME`, the parallel loader and the data inbox pass no mode for it (a `--mode` or
+  `.ready` `mode:` that disagrees is refused); a lake folder or a table without an entry appends by default. `target.batch-id` is
+  optional: when given (the inbox always gives one), an append of the batch is committed once; without it each run's rows carry their
+  `_load_id`. The new-table route reads the pack's domain from `PackEntry` (drishti-lakeconfig).
 - **Schema to pack has its own guide**, `docs/guides/SCHEMA_TO_PACK_GUIDE.md` (help page *Schema to pack*), from DATA_GUIDE.md.
 - **Our own data follows the load rules (DATA_LOAD_RULES.md section 10; data/testdata/README.md; VAR_GUIDE.md section 30; the Windows
   QA guide).** Every committed test-data file is named `<table>.<YYYY-MM-DD>.jsonl.gz` after the table it feeds (`trade_endur`,

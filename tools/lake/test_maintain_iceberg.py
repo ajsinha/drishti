@@ -131,6 +131,8 @@ class RunTest(unittest.TestCase):
             seen = []
 
             def fake_run(cmd, **kw):
+                if any("LakesCli" in str(c) for c in cmd):      # the lake files read (config/lakes/): none here
+                    return subprocess.CompletedProcess(cmd, 0, "{}\n", "")
                 seen.append(cmd)
                 line = {"table": "risk/pnl-vector", "dryRun": "--dry-run" in cmd, "before": {"files": 2, "mb": 1.0, "dates": 2},
                         "after": {"files": 2, "mb": 1.0, "dates": 2, "latestDate": "2026-10-16", "latestRows": 20},
@@ -147,7 +149,7 @@ class RunTest(unittest.TestCase):
             t = by["risk/pnl-vector"]
             self.assertEqual(t["format"], "iceberg")
             self.assertTrue(any("raised to 1827" in n for n in t["retention-floor"]))         # 7 years of business dates
-            self.assertEqual(len(seen), 1)
+            self.assertEqual(len(seen), 1, seen)
             text = " ".join(seen[0])
             self.assertIn("--keep-days 1827", text)
             self.assertIn("--floor-days 2557", text)

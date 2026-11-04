@@ -72,7 +72,7 @@ def test_a_tar_of_date_folders_is_one_load_and_gives_its_newest_date(tmp_path):
 
 def test_files_only_keeps_the_lakes_and_loads_one_system(tmp_path):
     out = run("--source-dir", str(files(tmp_path, "calypso")), "--system", "calypso", "--files-only", "--lake", str(tmp_path / "lake")).stdout
-    assert "lake demo" not in out and "kept as they are" in out
+    assert "drishti.py lake demo" not in out and "kept as they are" in out
     assert "--connector trade-calypso" in out and "trade_calypso" in out and out.count("lake build --from") == 2
 
 
@@ -220,7 +220,7 @@ def test_store_all_and_wrong_values(tmp_path):
 def test_store_with_files_only_loads_the_files_into_iceberg_through_a_staging_lake(tmp_path):
     out = run("--source-dir", str(files(tmp_path, "murex")), "--system", "murex", "--files-only", "--store", "murex=iceberg",
               "--lake", str(tmp_path / "data" / "delta"), "--connectors-dir", str(tmp_path / "connectors")).stdout
-    assert "lake demo" not in out and out.count("lake build --from") == 2
+    assert "drishti.py lake demo" not in out and out.count("lake build --from") == 2
     assert str(tmp_path / "data" / "build" / "iceberg-stage") in out and "MUREX into Iceberg" in out
     assert "trade-murex: would be written to read iceberg" in out
     # a system the run does not rebuild is not moved by --files-only: it says how
