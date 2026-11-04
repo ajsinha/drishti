@@ -84,7 +84,6 @@ depends-on:
   - feed
   - reactive
   settings:
-  - DRISHTI_DELTA_ROOT
   - DRISHTI_FEED_ECB_ESTR
   - DRISHTI_FEED_ECB_FX
   - DRISHTI_FEED_FRED
@@ -791,7 +790,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `correlation-engine` | `reactive` | `correlation-result` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `equity-analytics` | `reactive` | `equity-beta` | `${DRISHTI_LAKE_ENABLED:true}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_FEED_ECB_ESTR`, `DRISHTI_FEED_ECB_FX`, `DRISHTI_FEED_FRED`, `DRISHTI_FEED_NYFED_SOFR`, `DRISHTI_FEED_US_TREASURY`, `DRISHTI_FRED_SERIES`, `DRISHTI_LAKE_ENABLED`, `FRED_API_KEY`.
+Settings (environment variables) its connectors read: `DRISHTI_FEED_ECB_ESTR`, `DRISHTI_FEED_ECB_FX`, `DRISHTI_FEED_FRED`, `DRISHTI_FEED_NYFED_SOFR`, `DRISHTI_FEED_US_TREASURY`, `DRISHTI_FRED_SERIES`, `DRISHTI_LAKE_ENABLED`, `FRED_API_KEY`.
 
 ## Refreshing the data
 

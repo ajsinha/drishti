@@ -145,7 +145,7 @@ the Delta connector reads:
 
 **With a lake file** (`--lake NAME`, a lake of `config/lakes/`: [LAKE_GUIDE.md](LAKE_GUIDE.md)) the table's place, partitions, promoted
 columns, vectors, id, date, latest-by and load mode come from the file, read by the one lake reader (`tools/lake/lakeconfig.py` runs
-drishti-lakeconfig's `LakesCli`). A `--partition-by`, `--promote`, `--vector` or `--key` that says otherwise is refused, naming both; a kind
+drishti-lakeconfig's `LakesCli`). A pack's own recommended entries (its `pack.yaml` `lake:` block) and its templates' `lake: demo` and `lake-tables:` are read and written by `tools/packlake.py`, the one module the pack generators and every tool that reads a template's layout share. A `--partition-by`, `--promote`, `--vector` or `--key` that says otherwise is refused, naming both; a kind
 the file has no entry for is refused. `--lake-root DIR` writes the same layout under another folder (a scratch or test lake). `--lake DIR`
 alone is the older form: the options and the pack decide. A table whose lake file says `load-mode: append` is written by the parallel
 loader only (`--engine java --batch-id ID`: the batch recorded in each date's commit, never appended twice); the Python path refuses it.
