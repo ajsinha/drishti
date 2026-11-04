@@ -84,6 +84,42 @@ def test_biggest_moves_in_sigma_of_their_own_history():
     assert all(i["cmd"].startswith(("CRV ", "CDS ")) for i in m["items"])
 
 
+def test_the_median_its_move_and_each_sigma_are_the_servers_engines():
+    """The CDS median, its move over the day and every move's sigma are the pivot engine's cells (POST /api/v1/pivot/inline; the engine's
+    median and population deviation are proved by ConsoleFiguresTest), the figures the landing showed before 2.9.11.b."""
+    b = MarketBackend()
+    run(ml.desk(b, None))
+    measures = [m["measure"] for a in b.inline for m in a["view"]["values"]]
+    assert measures == ["median(S)", "median(TO) - median(FROM)"]
+    assert sorted(r[0] for r in b.inline[0]["rows"]) == [60.0, 70.0, 300.0]               # the three names' spreads, sent as read
+    assert sorted(b.inline[1]["rows"]) == [[58.0, 60.0], [69.0, 70.0], [296.0, 300.0]]
+    ml.forget()
+    b = MarketBackend()
+    m = run(ml.moves(b, None))
+    ask = b.inline[-1]
+    assert ask["view"]["rows"] == ["ITEM"] and "abs(sum(LAST)) / stddev_pop(H)" in [v["measure"] for v in ask["view"]["values"]]
+    top = m["items"][0]
+    hist = [r[1] for r in ask["rows"] if r[0] == f"{top['kind']}/{top['id']}" and r[1] is not None]
+    last = next(r[2] for r in ask["rows"] if r[0] == f"{top['kind']}/{top['id']}" and r[2] is not None)
+    import statistics
+    assert top["sigma"] == round(abs(last) / statistics.pstdev(hist), 2)                # what the console computed before, now sent
+
+
+def test_with_the_engine_refusing_the_median_and_sigma_are_not_made_up(monkeypatch):
+    from core.backend import BackendError
+
+    async def off(method, path, ident, body=None, raw=False, **params):
+        raise BackendError(503, "DRS-7801", "the pivot engine is switched off on this server")
+    b = MarketBackend()
+    monkeypatch.setattr(b, "pivot", off)
+    d = run(ml.desk(b, None))
+    cds = {t["id"]: t for t in d["tiles"]}["cds"]
+    assert cds["value"] is None and cds["change"] is None and any("switched off" in p for p in d["problems"])
+    ml.forget()
+    m = run(ml.moves(b, None))
+    assert m["mode"] == "absolute" and all(i["sigma"] is None for i in m["items"])
+
+
 def test_biggest_moves_are_none_without_history():
     m = run(ml.moves(MarketBackend(history=False), None))
     assert m["mode"] == "none" and m["items"] == []

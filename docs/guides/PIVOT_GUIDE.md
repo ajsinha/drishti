@@ -366,7 +366,9 @@ version, filters, statements run, cache hits, time) is kept for the last `drisht
 
 A **cell reference** names a cell of a saved view by its coordinates, not its position: `pivot://asha/desk-risk@4/Notional[DESK=RATES-NY,
 CCY=USD]`. It survives re-sorting, new columns and a new date; a coordinate that is gone says "not in the view", never 0. Copy it from the
-popover; resolve it with `GET /api/v1/pivot/cells?ref=...`.
+popover; resolve it with `GET /api/v1/pivot/cells?ref=...`. In a Sutra, Rachana reads the same cell: `cell('asha/desk-risk', 'DESK',
+'RATES-NY', 'CCY', 'USD')`, and a compute engine's measure for one scope: `measure('VAR', 'DESK:RATES-NY')`, both answered by this
+engine for the person viewing ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#functions)).
 
 ## 8. The scan estimate, budgets and busy protection
 
@@ -382,7 +384,9 @@ Before a view runs, the screen shows what it will read. Over `drishti.pivot.esti
 
 Select cells (click, Shift+click or Shift+arrows) and press `G`. With nothing selected the chart shows the top level. A measure that adds up
 (sum, count) is drawn as bars that sum to the total. **A measure that does not add up is never stacked**: VaR by desk is drawn as the desks'
-bars beside the bank's, with the diversification as its own bar, and the chart says so in words. A bar's click opens that member in the
+bars beside the bank's, with the diversification as its own bar, and the chart says so in words. The diversification is the engine's
+own gap of the charted column (each open row's `diversificationByColumn` in the answer, Σ parts − total; drawn as total − Σ parts): the
+browser adds up nothing. A bar's click opens that member in the
 grid. ECharts is vendored; nothing comes from a CDN.
 
 ## 10. Export
@@ -538,6 +542,12 @@ same states by the functions' own `add`), partial states merged in a fixed order
 partial-state cache, the split-and-merge harness and the exports. The server wires it: the Data view's tables as sources, the VaR provider,
 REST, busy protection, saved views and audit. The console only draws: `pivot-engine.js` asks the engine and lays its answer out,
 `pivot-grid.js` is the one grid (the Pivot screen and the nested `pivot` panel), and nothing in the browser adds up a figure.
+
+The engine is also Rachana's only source of aggregates ([ONE_GRAMMAR.md](../architecture/ONE_GRAMMAR.md)): it registers every built-in
+into Rachana's function table (`sum`, `count`, `avg`, `min`, `max`, `median`, `percentile`, `distinct`, `wavg`, `variance`, `stddev`,
+the `_once` forms), the grouping behind `group(...)`, and `measure(...)` and `cell(...)`, so a sum in a Sutra and a sum in a pivot cell
+are the same `AggFunction`. A Sutra's `pivot` panel writes its groupings as Rachana paths and its value as one of these
+(`by: "@.BOOK"`, `across: "@.CURRENCY"`, `value: sum(@.MTM)`). Every function, once, is listed in [FUNCTIONS.md](FUNCTIONS.md).
 
 ## 19. Custom functions
 

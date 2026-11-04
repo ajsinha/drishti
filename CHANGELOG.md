@@ -15,7 +15,7 @@
 -->
 # Changelog
 
-## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale (unreleased)
+## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (unreleased)
 
 - **The MR cube on the pivot engine (2.9.11.b, moved from 2.9.11.a by the product owner on 2026-11-03; MR_CUBE_GUIDE.md, tutorial 38).** One pivot engine, no second cube core: the pivot
   engine's VaR source becomes the market-risk cube when engine `mr-cube` runs (`config/engines/mr-cube.yaml`, installed and on; needs
@@ -98,6 +98,53 @@
   starts a live pivot with any scope; restoring a saved view's version is console-only.
 - **`tools/bicompute-unit.sh`**: a light javac and JUnit check of `drishti-bicompute` (and `--server`, the server's pivot package) against
   the installed release's jars, for when a drill holds the machine.
+- **One grammar, one engine: parts 1 to 3 and 5 (2.9.11.b; ONE_GRAMMAR.md section 8, RACHANA_REFERENCE.md › Functions, FUNCTIONS.md).**
+  Rachana's function table is open to providers found once by ServiceLoader (`rachana.el.FunctionProvider`), and the pivot engine
+  registers every aggregate into it: `sum`, `count`, `avg`, `min` and `max` over a list, `median`, `percentile`, `distinct`, `wavg`,
+  `variance`, `stddev`, `variance_pop`, `stddev_pop`, `sum_once`, `count_once`, `avg_once`, run by the same `AggFunction` a pivot cell
+  runs. Rachana's own list aggregates are deleted; `sum`, `min`, `max` and `group` keep their names and results, shown by a test over every
+  aggregate call in every shipped Sutra on every test case (39 calls, 153,888 comparisons, no figure different; a fractional total is now
+  compensated, so it may differ in the last binary digit only). Where the engine is not on the class path an aggregate is refused with the
+  reason. `group(list, key, aggregate)` also takes expressions over `@` with any engine aggregate (`group($.LEGS, @.CURRENCY,
+  percentile(@.NOTIONAL, 0.95))`); `measure('VAR', 'DESK:DESK-COMM')` reads a compute engine's measure for one scope exactly, and
+  `cell('ann/desk-pnl', 'DESK', 'DESK-COMM')` a saved pivot view's cell, both answered by the server's pivot engine for the person viewing
+  (`FigureSource`, `RachanaFigures`). The Sutra `pivot` panel takes Rachana paths and an engine aggregate (`by: "@.BOOK"`, `value:
+  sum(@.MTM)`; the `desk` Sutra's MTM grid). Guards: ArchUnit rules (only the engine implements an aggregate or adds functions to
+  Rachana; Rachana never depends on the engine; only Rachana parses expressions, DEL and its kin listed until 2.9.11.e) and a console
+  check that lists every aggregation in console code with its reason (layout, the console's own data, or a debt to move to the server).
+  The function catalogue page is generated from the registries (Help → Functions) and checked against FUNCTION_CATALOGUE.md.
+- **The browser computes nothing (plan row SC; ONE_GRAMMAR.md section 5).** Every figure the console
+  used to add up itself is now the server's pivot engine's: the console sends the rows it read, as the person, to `POST
+  /api/v1/pivot/inline` (`drishti-console/core/engine_figures.py`) and shows the engine's cells. Drishti Trading's landings: MtM, P&L
+  today, DV01 and its trades, by book, by trader and the largest counterparty's share of positive MtM (the engine's top 1 shown as a
+  percent of the grand total). Drishti Market's landing: the CDS 5Y median, its move over the day (`median(TO) - median(FROM)`), each
+  biggest move's sigma (`abs(sum(LAST)) / stddev_pop(H)` per item, one ask for all) and the Explorer's group totals. Home's facts:
+  `sum` and fund `overlap` are asked of the engine (in a `let` step only; a condition, template or comprehension that calls them is
+  refused when the file is checked). A column filter's "above / below average" compares with the engine's `avg` of the column (no row is
+  hidden while it is asked). The pivot chart's diversification bar is the engine's gap, now sent for every column
+  (`diversificationByColumn` beside `diversification` on each open row; `PivotAnswer`). With the pivot engine switched off a figure is
+  not made up: it is left empty and the reason is said. No new endpoint and no second aggregation in Java: `ConsoleFiguresTest`
+  (drishti-bicompute) runs the endpoint's own path on the console tests' fixtures and gets the figures the console showed before (MtM 0,
+  P&L 480,000, DV01 −48,000, the counterparty share 16/24, the median 70 and its move 1, the average 1,309,750, the overlap 2). The
+  console check is strict: a reason is layout or the console's own data, never a debt; it reads code only (a measure's text sent to the
+  engine is not a sum). Two entries became the console's own data: a pack draft's sample documents for a related page (the pack maker's
+  fixtures) and the stand-in pricer a person's own Python cell calls (QLRisk replaces it).
+- **Rachana's tier-1 functions (FUNCTION_CATALOGUE.md sections 1, 2, 3 and 6; RACHANA_REFERENCE.md "Functions").** Math:
+  `round_up`, `round_down`, `mround`, `ceiling`, `floor`, `mod`, `power`, `sqrt`, `exp`, `ln`, `log10`, `sign`, `clamp`, `least`,
+  `greatest`, worked in decimal (`round_up(2.671, 2)` is `2.68`, `power(1.1, 2)` is `1.21`). Logic: `if`, `ifs`, `switch`, `iferror`,
+  `let(name = expr, ..., result)`, evaluating only the branch taken. Text: `concat`, `left`, `right`, `mid`, `replace`, `split`, `trim`,
+  `pad`, `regex_extract`, `ends_with`. Dates: `days_between`, `eomonth`, `edate`, `yearfrac` (`ACT/360`, `ACT/365F`, `30/360`,
+  `30E/360`, `ACT/ACT` ISDA; tested against Excel's YEARFRAC and ISDA's examples), `intck`, `is_business_day`, on the platform's own
+  `BusinessCalendar` (`USNY` by default). Lists: `sort`, `unique`, `take`, `drop`, `sequence`, `map`, `reduce` (with `@acc`; a sum
+  written with `+` is refused in favour of `sum`). One name each: `starts_with`, `days_between`, `matches_case`, `one_of`, `least`,
+  `greatest`; the old spellings `startsWith`, `days`, `matchesCase`, `oneOf` and `min`/`max` with several arguments are read with the
+  results they always gave. The new functions raise `DRS-2102` naming the function and the value for a value of the wrong type
+  (`round_up: 'abc' is not a number`); a bad basis, interval, calendar, pattern or fill written in the expression is a `DRS-2101` at
+  load. `Functions` is now the one table the families (`LogicFunctions`, `MathFunctions`, `TextFunctions`, `DateFunctions`,
+  `ListFunctions`) register into; `EvalContext` carries the names `let` and `reduce` bind. `SafeRegex` (drishti-common) gains
+  `extract(text, group)` and `groups()`: capture groups and lazy repeats in the same linear-time engine, which `regex_extract` uses.
+  The editor schema (`x-rachana-functions`) marks an old spelling `oldSpellingOf`; the Sutra editor checks it but offers only the one
+  names, with help for the new functions.
 
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 

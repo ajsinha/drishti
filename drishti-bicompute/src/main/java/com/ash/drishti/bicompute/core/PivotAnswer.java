@@ -378,7 +378,11 @@ final class PivotAnswer {
         return (double) r;
     }
 
-    /** Σ children − node for every holistic measure of every open row node, at the column total (the gap a holistic total shows). */
+    /**
+     * Σ children − node for every holistic measure of every open row node (the gap a holistic total shows): at the column total as
+     * {@code diversification}, and at every column as {@code diversificationByColumn} (column key to the same figures), so a chart of any
+     * column draws the engine's own gap and the browser never adds up the parts.
+     */
     @SuppressWarnings("unchecked")
     private static void diversification(PivotCore.Computation c, List<Map<String, Object>> rows, Map<String, Map<String, Object>> cells,
             List<Map<String, Object>> cols) {
@@ -394,29 +398,45 @@ final class PivotAnswer {
             if (node == null || node.children.isEmpty()) {
                 continue;
             }
-            Map<String, Object> d = new LinkedHashMap<>();
-            for (FunctionCall f : c.functions) {
-                if (f.fn().kind() != Kind.HOLISTIC || f.fn().plainSum()) {
-                    continue;
-                }
-                Double total = v(cells, node.key() + "|" + grandCol, f.label());
-                double sum = 0;
-                boolean any = false;
-                for (Axis.Node ch : node.children) {
-                    Double x = v(cells, ch.key() + "|" + grandCol, f.label());
-                    if (x != null) {
-                        sum += x;
-                        any = true;
-                    }
-                }
-                if (total != null && any) {
-                    d.put(f.label(), sum - total);
+            Map<String, Object> byColumn = new LinkedHashMap<>();
+            for (Map<String, Object> col : cols) {
+                String colKey = String.valueOf(col.get("key"));
+                Map<String, Object> d = gap(c, node, colKey, cells);
+                if (!d.isEmpty()) {
+                    byColumn.put(colKey, d);
                 }
             }
-            if (!d.isEmpty()) {
-                r.put("diversification", d);
+            if (byColumn.get(grandCol) != null) {
+                r.put("diversification", byColumn.get(grandCol));
+            }
+            if (!byColumn.isEmpty()) {
+                r.put("diversificationByColumn", byColumn);
             }
         }
+    }
+
+    /** Σ children − node at one column, for every holistic measure that has both (empty when none has). */
+    private static Map<String, Object> gap(PivotCore.Computation c, Axis.Node node, String colKey, Map<String, Map<String, Object>> cells) {
+        Map<String, Object> d = new LinkedHashMap<>();
+        for (FunctionCall f : c.functions) {
+            if (f.fn().kind() != Kind.HOLISTIC || f.fn().plainSum()) {
+                continue;
+            }
+            Double total = v(cells, node.key() + "|" + colKey, f.label());
+            double sum = 0;
+            boolean any = false;
+            for (Axis.Node ch : node.children) {
+                Double x = v(cells, ch.key() + "|" + colKey, f.label());
+                if (x != null) {
+                    sum += x;
+                    any = true;
+                }
+            }
+            if (total != null && any) {
+                d.put(f.label(), sum - total);
+            }
+        }
+        return d;
     }
 
     private static Axis.Node find(Axis.Node root, List<List<String>> path) {

@@ -53,6 +53,10 @@ final class Parser {
     private final Map<Expr, Integer> depths = new IdentityHashMap<>();
     private int p;
     private int nesting;
+    /** The names {@code let} has bound around the part being parsed, innermost first. */
+    private final java.util.ArrayDeque<String> letNames = new java.util.ArrayDeque<>();
+    /** Above zero inside {@code reduce}'s expression, where {@code @acc} is the value so far. */
+    private int accDepth;
 
     private Parser(List<Token> tokens, ElLimits limits) {
         this.tokens = tokens;
@@ -266,6 +270,9 @@ final class Parser {
             case AT:
                 return new Expr.Row();
             case EVENT:
+                if ("acc".equals(t.text()) && accDepth > 0) {
+                    return new Expr.Local(ListFunctions.ACC);           // @acc inside reduce: the value so far, never a panel's events
+                }
                 return new Expr.Event(t.text());
             case SRC:
                 return new Expr.Src();
@@ -302,26 +309,135 @@ final class Parser {
             return new Expr.Ctl(next().text());
         }
         if (peek().type() != Type.LPAREN) {
+            if (letNames.contains(t.text())) {
+                return new Expr.Local(t.text());                   // a name let(...) bound: it hides a field of the same name
+            }
             return new Expr.Field(new Expr.RowOrRoot(), t.text(), null);
         }
         next();
-        ElFunction fn = Functions.get(t.text());
-        if (fn == null) {
-            throw new ElException("unknown function '" + t.text() + "'; known: " + String.join(", ", new java.util.TreeSet<>(Functions.ARITY.keySet())),
+        String name = t.text();
+        int[] arity = Functions.ARITY.get(name);
+        if (arity == null) {
+            throw new ElException("unknown function '" + name + "'; known: " + String.join(", ", new java.util.TreeSet<>(Functions.ARITY.keySet())),
                     t.pos());
+        }
+        if ("let".equals(name)) {
+            return let(t, arity);
         }
         List<Expr> args = new ArrayList<>();
         if (peek().type() != Type.RPAREN) {
             do {
-                args.add(expr());
+                boolean accumulator = "reduce".equals(name) && args.size() == 2;
+                accDepth += accumulator ? 1 : 0;
+                try {
+                    args.add(expr());
+                } finally {
+                    accDepth -= accumulator ? 1 : 0;
+                }
             } while (peek().type() == Type.COMMA && next() != null);
         }
         expect(Type.RPAREN, "')'");
-        int[] arity = Functions.ARITY.get(t.text());
         if (args.size() < arity[0] || args.size() > arity[1]) {
-            throw new ElException(t.text() + " takes " + arity[0] + (arity[0] == arity[1] ? "" : "-" + arity[1])
+            throw new ElException(name + " takes " + arity[0] + (arity[0] == arity[1] ? "" : "-" + arity[1])
                     + " argument(s), got " + args.size(), t.pos());
         }
-        return node(new Expr.Call(t.text(), fn, List.copyOf(args)), args.toArray(Expr[]::new));
+        String problem = Functions.check(name, args);
+        if (problem != null) {
+            throw new ElException(name + ": " + problem, t.pos());
+        }
+        Expr[] parts = args.toArray(Expr[]::new);
+        switch (name) {
+            case "if":
+                return node(new Expr.Ternary(args.get(0), args.get(1), args.size() > 2 ? args.get(2) : new Expr.Lit(null)), parts);
+            case "ifs":
+                return ifs(args);
+            case "reduce":
+                if (addsUp(args.get(2))) {
+                    throw new ElException("reduce does not add up a list: use sum(...) for a total (aggregates run in the pivot engine), "
+                            + "concat(...) to join text", t.pos());
+                }
+                break;
+            default:
+                break;
+        }
+        ElForm form = Functions.form(name);
+        if (form != null) {
+            return node(new Expr.Form(name, form, List.copyOf(args)), parts);
+        }
+        return node(new Expr.Call(name, Functions.get(name), List.copyOf(args)), parts);
+    }
+
+    /** {@code ifs(c1, a1, c2, a2, ..., [else])}: the conditional {@code c1 ? a1 : c2 ? a2 : ... : else} (else empty). */
+    private Expr ifs(List<Expr> args) {
+        int pairs = args.size() / 2;
+        Expr out = args.size() % 2 == 1 ? args.get(args.size() - 1) : new Expr.Lit(null);
+        for (int i = pairs - 1; i >= 0; i--) {
+            Expr c = args.get(2 * i);
+            Expr a = args.get(2 * i + 1);
+            out = node(new Expr.Ternary(c, a, out), c, a, out);
+        }
+        return out;
+    }
+
+    /** True when {@code e} adds or subtracts {@code @acc} (directly, or in a branch of a conditional): a sum written by hand. */
+    private static boolean addsUp(Expr e) {
+        if (e instanceof Expr.Binary b && ("+".equals(b.op()) || "-".equals(b.op()))) {
+            return isAcc(b.l()) || isAcc(b.r()) || addsUp(b.l()) || addsUp(b.r());
+        }
+        if (e instanceof Expr.Ternary t) {
+            return addsUp(t.then()) || addsUp(t.otherwise());
+        }
+        return false;
+    }
+
+    private static boolean isAcc(Expr e) {
+        return e instanceof Expr.Local l && ListFunctions.ACC.equals(l.name());
+    }
+
+    private static final java.util.Set<String> RESERVED = java.util.Set.of("true", "false", "null", "ctl");
+
+    /**
+     * {@code let(name = expr, ..., result)}: each {@code name = expr} binds a name the later values and the result read as a
+     * bare word (hiding a field of that name); the last argument is the result.
+     */
+    private Expr let(Token t, int[] arity) {
+        List<String> names = new ArrayList<>();
+        List<Expr> values = new ArrayList<>();
+        int bound = 0;
+        try {
+            while (peek().type() == Type.IDENT && tokens.get(p + 1).is(Type.OP, "=")) {
+                Token n = next();
+                next();
+                if (RESERVED.contains(n.text())) {
+                    throw new ElException("let: '" + n.text() + "' cannot be a name", n.pos());
+                }
+                if (names.contains(n.text())) {
+                    throw new ElException("let: '" + n.text() + "' is named twice", n.pos());
+                }
+                if (names.size() + 1 >= arity[1]) {
+                    throw new ElException("let takes at most " + (arity[1] - 1) + " names", n.pos());
+                }
+                values.add(expr());
+                names.add(n.text());
+                letNames.push(n.text());
+                bound++;
+                expect(Type.COMMA, "',' and then the result");
+            }
+            if (names.isEmpty()) {
+                throw new ElException("let needs a name = value before its result, as in let(q = $.QUANTITY, q * 2)", t.pos());
+            }
+            Expr body = expr();
+            if (peek().type() == Type.COMMA) {
+                throw new ElException("let: only the last argument is the result; each before it is written name = value", peek().pos());
+            }
+            expect(Type.RPAREN, "')'");
+            List<Expr> parts = new ArrayList<>(values);
+            parts.add(body);
+            return node(new Expr.Let(List.copyOf(names), List.copyOf(values), body), parts.toArray(Expr[]::new));
+        } finally {
+            for (int i = 0; i < bound; i++) {
+                letNames.pop();
+            }
+        }
     }
 }

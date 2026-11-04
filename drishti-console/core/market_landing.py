@@ -16,7 +16,9 @@
 Quality landing's checks, worked out here from the market-data pack's own answers (the server's search, raw documents, business date and
 one field's history), read-only, with the person's identity, lens and date box. Nothing is invented: a figure the data does not hold is
 None, a day-over-day change is given only when both business days hold real data (a history point whose data date is its date), and the
-biggest moves say how they were measured (``sigma``, ``absolute``) or that the lake has no history (``none``).
+biggest moves say how they were measured (``sigma``, ``absolute``) or that the lake has no history (``none``). The CDS median, its move
+over the day and each move's sigma are the server's pivot engine's (``POST /api/v1/pivot/inline``, core/engine_figures.py): the console
+sends the values it read and shows the engine's figures; with the engine refusing, the figure is None and the reason is in ``problems``.
 
 The checks are the ones the data supports today: stale (data older than the business date by more than ``quality.stale-days`` business
 days), gaps (a curve missing a tenor every other curve of its type has), broken discount factors and negative forwards, and the vol
@@ -27,11 +29,11 @@ from __future__ import annotations
 import asyncio
 import math
 import re
-import statistics
 import time
 from datetime import date, timedelta
 from typing import Any
 
+from core import engine_figures as engine
 from core.backend import BackendError
 
 #: the market-data pack's kinds and their commands (config/packs/market-data/pack.yaml)
@@ -229,13 +231,14 @@ async def desk(backend, me, key: tuple = ()) -> dict:
     tiles.append(_tile("fxvol", "EUR/USD 1M ATM vol", _num(f.get("ATM_1M")), "%", "FXV FXV-EURUSD", "FXV FXV-EURUSD",
                        day_change(fxv_atm, holidays)))
     rows = (cds or {}).get("rows") or []
-    spreads = sorted(s for s in (_num((x.get("values") or {}).get("$.SPREAD_5Y")) for x in rows) if s is not None)
-    median, change = (statistics.median(spreads) if spreads else None), None
+    spreads = [s for s in (_num((x.get("values") or {}).get("$.SPREAD_5Y")) for x in rows) if s is not None]
+    median, change = await cds_median(r, spreads), None
     if spreads:
         ids = [str((x.get("ref") or {}).get("id")) for x in rows][:60]
         moves = [day_change(s, holidays) for s in await asyncio.gather(*(r.series("credit-curve", i, "$.SPREAD_5Y", 4) for i in ids))]
         if moves and all(m is not None for m in moves) and len({m["since"] for m in moves}) == 1:
-            change = {"delta": statistics.median([m["to"] for m in moves]) - statistics.median([m["from"] for m in moves]), "since": moves[0]["since"]}
+            delta = await median_move(r, moves)
+            change = {"delta": delta, "since": moves[0]["since"]} if delta is not None else None
     tiles.append(_tile("cds", "CDS 5Y, median", median, "bp", "CDS where SPREAD_5Y > 0 order by SPREAD_5Y desc",
                        f"CDS · {len(spreads)} names" if spreads else "CDS", change))
     today = _curve_points(ois)
@@ -244,6 +247,44 @@ async def desk(backend, me, key: tuple = ()) -> dict:
            "curve": {"ois": today, "projection": _curve_points(proj), "weekAgo": _week_ago(ois_pts, data_day, holidays) if today else None},
            "problems": r.problems}
     return _keep(("desk",) + key, out)
+
+
+async def _figures(reader: Reader, what: str, *args, **kw):
+    """The server's engine's figures (core/engine_figures.py) of rows the landing read; a refusal is None and noted with the others."""
+    try:
+        return await engine.ask(reader.backend, reader.me, *args, **kw)
+    except (BackendError, ValueError) as e:
+        if len(reader.problems) < 20:
+            reader.problems.append(f"{what}: " + (f"{e.code or e.status} {e.detail}" if isinstance(e, BackendError) else str(e)))
+        return None
+
+
+async def cds_median(reader: Reader, spreads: list) -> float | None:
+    """The CDS 5Y spreads' median, the engine's (``median(S)``)."""
+    if not spreads:
+        return None
+    f = await _figures(reader, "the CDS median", [("S", "number")], [[s] for s in spreads], [{"measure": "median(S)", "as": "median"}])
+    return f.get("median") if f is not None else None
+
+
+async def median_move(reader: Reader, moves: list) -> float | None:
+    """How far the median moved over the day: the engine's ``median(TO) - median(FROM)`` over each name's two days."""
+    f = await _figures(reader, "the CDS median's move", [("FROM", "number"), ("TO", "number")], [[m["from"], m["to"]] for m in moves],
+                       [{"measure": "median(TO) - median(FROM)", "as": "delta"}])
+    return f.get("delta") if f is not None else None
+
+
+async def sigmas(reader: Reader, items: list[tuple[str, float, list]]) -> dict:
+    """Each item's move in standard deviations of its own daily changes, the engine's: one view by item over its history's changes
+    (``H``) and the day's move (``LAST``), ``abs(sum(LAST)) / stddev_pop(H)`` with the deviation and the days counted beside it.
+    ``{item: (sigma, sd, days)}``; an item the engine gives nothing for is left out."""
+    rows = [[key, h, None] for key, _move, hist in items for h in hist] + [[key, None, move] for key, move, _hist in items]
+    f = await _figures(reader, "the moves' sigma", [("ITEM", "string"), ("H", "number"), ("LAST", "number")], rows,
+                       [{"measure": "stddev_pop(H)", "as": "sd"}, {"measure": "count(H)", "as": "days"},
+                        {"measure": "abs(sum(LAST)) / stddev_pop(H)", "as": "sigma"}], by="ITEM")
+    if f is None:
+        return {}
+    return {key: (f.get("sigma", key), f.get("sd", key), f.get("days", key)) for key, _m, _h in items}
 
 
 def _move_value(kind_unit: str, d0: float, d1: float) -> tuple[float, str]:
@@ -270,7 +311,7 @@ async def moves(backend, me, key: tuple = (), days: int = 21, top: int = 6) -> d
         for i in (await r.ids(kind, 200))[:60]:
             plan.append((kind, i, field, unit))
     answers = await asyncio.gather(*(r.series(k, i, f"$.{f}", days) for k, i, f, _u in plan))
-    items = []
+    items, histories = [], []
     for (kind, i, field, unit), s in zip(plan, answers):
         pts = [(d, _num(v)) for d, v in real_points(s)]
         pts = [(d, v) for d, v in pts if v is not None]
@@ -280,10 +321,16 @@ async def moves(backend, me, key: tuple = (), days: int = 21, top: int = 6) -> d
         day, v0, v1 = diffs[-1]
         move, shown = _move_value(unit, v0, v1)
         hist = [_move_value(unit, a, b)[0] for _d, a, b in diffs[:-1]]
-        sd = statistics.pstdev(hist) if len(hist) >= SIGMA_MIN_DAYS else 0.0
+        if len(hist) >= SIGMA_MIN_DAYS:
+            histories.append((f"{kind}/{i}", move, hist))
         items.append({"kind": kind, "id": i, "cmd": f"{COMMANDS[kind]} {i}", "field": field, "date": day.isoformat(),
                       "since": previous_business_day(day, holidays).isoformat(), "move": round(move, 4), "unit": shown,
-                      "sigma": round(abs(move) / sd, 2) if sd > 1e-12 else None, "days": len(hist)})
+                      "sigma": None, "days": len(hist)})
+    measured = await sigmas(r, histories) if histories else {}
+    for x in items:
+        z, sd, _days = measured.get(f"{x['kind']}/{x['id']}", (None, None, None))
+        if z is not None and sd is not None and sd > 1e-12:
+            x["sigma"] = round(z, 2)
     sized = [x for x in items if x["sigma"] is not None]
     if len(sized) >= 3:
         mode, ranked = "sigma", sorted(sized, key=lambda x: -x["sigma"])

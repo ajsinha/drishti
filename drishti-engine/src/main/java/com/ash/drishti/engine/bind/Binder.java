@@ -153,6 +153,11 @@ public final class Binder {
         return el.compile(expr).eval(ctx);
     }
 
+    /** The expression compiled by Rachana (cached): the one parser every caller uses. */
+    com.ash.drishti.rachana.el.Expr compile(String expr) {
+        return el.compile(expr);
+    }
+
     /** A formatted, toned cell for {@code value}; links become navigable. */
     public Cell cell(String label, Object value, String fmt, String tone, boolean emphasis, String path) {
         Object v = Values.simplify(value);

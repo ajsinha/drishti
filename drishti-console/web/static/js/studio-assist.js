@@ -27,15 +27,24 @@
   var PANEL_BASE = ['id', 'kind', 'title', 'description', 'key', 'code', 'area', 'span', 'height', 'infer', 'columns', 'body'];
   var FN_ARGS = {
     abs: ['number'], coalesce: ['a', 'b', '…'], contains: ['textOrList', 'value'], first: ['list'], fmt: ['value', "'format'"],
-    last: ['list'], link: ['id', "'kind'", 'label'], lower: ['text'], max: ['a', '…'], min: ['a', '…'], size: ['listOrText'],
-    startsWith: ['text', "'prefix'"], sum: ['list', "'field'"], upper: ['text']
+    last: ['list'], link: ['id', "'kind'", 'label'], lower: ['text'], max: ['list'], min: ['list'], size: ['listOrText'],
+    starts_with: ['text', "'prefix'"], ends_with: ['text', "'suffix'"], sum: ['list', "'field'"], upper: ['text'],
+    least: ['a', 'b', '…'], greatest: ['a', 'b', '…'], round_up: ['number', 'places'], round_down: ['number', 'places'],
+    'if': ['condition', 'then', 'else'], iferror: ['value', 'fallback'], left: ['text', 'n'], right: ['text', 'n'],
+    concat: ['a', 'b', '…'], days_between: ['from', 'to'], yearfrac: ['from', 'to', "'basis'"], map: ['list', 'expr over @'],
+    sort: ['list', 'key over @', 'desc'], reduce: ['list', 'init', 'expr over @ and @acc']
   };
   var FN_HELP = {
     abs: 'the absolute value', coalesce: 'the first argument that is not null', contains: 'true when the text or list holds the value',
     first: 'the first element of a list', fmt: 'the value formatted with a format (amount0, pct4, date, …)', last: 'the last element of a list',
     link: 'a link that opens the entity id (of a kind; with a label)', lower: 'lower-case text', max: 'the largest value', min: 'the smallest value',
-    size: 'the number of elements (or characters)', startsWith: 'true when the text starts with the prefix', sum: 'the sum of a list (or of a field of its rows)',
-    upper: 'upper-case text'
+    size: 'the number of elements (or characters)', starts_with: 'true when the text starts with the prefix', sum: 'the sum of a list (or of a field of its rows)',
+    upper: 'upper-case text', ends_with: 'true when the text ends with the suffix', least: 'the smallest argument (numbers, or dates)',
+    greatest: 'the largest argument (numbers, or dates)', round_up: 'rounded away from zero', round_down: 'rounded towards zero',
+    'if': 'then when the condition holds, else else', iferror: 'the value, or the fallback when it fails', left: 'the first n characters',
+    right: 'the last n characters', concat: 'the texts joined', days_between: 'calendar days from one date to another',
+    yearfrac: 'the year fraction on a basis: ACT/360, ACT/365F, 30/360, 30E/360, ACT/ACT', map: 'each element transformed',
+    sort: 'the elements ordered by a key', reduce: 'the list folded into one value'
   };
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -260,7 +269,9 @@
       var w = tail.match(/(^|[^\w$@.])([A-Za-z_]\w*)$/);
       var word = w ? w[2] : '';
       if (!word && !explicit && tail.trim()) { return Promise.resolve(null); }
-      var items = Object.keys(schema.fns).filter(function (f) { return f.toLowerCase().indexOf(word.toLowerCase()) === 0; })
+      var items = Object.keys(schema.fns).filter(function (f) {        // an old spelling (startsWith …) still checks, but is never offered
+        return !schema.fns[f].oldSpellingOf && f.toLowerCase().indexOf(word.toLowerCase()) === 0;
+      })
         .map(function (f) { return { text: f + '(', label: schema.signature(f), detail: FN_HELP[f] || '', kind: 'fn', name: f }; });
       if (!word) {
         items.unshift({ text: '@.', label: '@.', detail: 'the current row', kind: 'field', retrigger: true },

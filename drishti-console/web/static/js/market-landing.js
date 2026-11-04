@@ -181,21 +181,39 @@
   }
 
   // ---- B · Explorer ---------------------------------------------------------------------------------------------------------------
+  /** A group's records in all: the server's pivot engine adds up the counts the searches gave (POST /api/pivot/inline, one ask for every
+      group: rows [group, count], sum by group); the page shows the engine's figure, never a total of its own. */
+  function groupTotals(rows) {
+    var view = { rows: ["G"], columns: [], values: [{ measure: "sum(N)", as: "n" }], expandTo: { rows: 1, columns: 1 } };
+    return fetch("/api/pivot/inline", { method: "POST", credentials: "same-origin", headers: { Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({ fields: [{ name: "G", type: "string" }, { name: "N", type: "number" }], rows: rows, view: view }) }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (a) {
+        if (!r.ok || !a.cells) throw new Error((a && a.detail) || "the pivot engine did not answer");
+        var out = {};
+        (a.rows || []).forEach(function (h) { var c = h.kind === "node" ? a.cells[h.key + "|*"] : null; if (c && c.values) out[h.value] = c.values.n; });
+        return out;
+      });
+    });
+  }
+
   function explorer() {
-    var sums = {};
-    $$("[data-ml-group]").forEach(function (ul) {
-      var gid = ul.getAttribute("data-ml-group"), jobs = [];
-      Array.prototype.slice.call(ul.querySelectorAll("[data-ml-count]")).forEach(function (b) {
+    var groups = $$("[data-ml-group]").map(function (ul) {
+      var gid = ul.getAttribute("data-ml-group");
+      return Promise.all(Array.prototype.slice.call(ul.querySelectorAll("[data-ml-count]")).map(function (b) {
         var code = b.getAttribute("data-ml-count");
-        jobs.push(get("/api/home/search?q=" + encodeURIComponent(code + " limit 1")).then(function (a) {
+        return get("/api/home/search?q=" + encodeURIComponent(code + " limit 1")).then(function (a) {
           b.textContent = count(a.matched);
-          return num(a.matched) || 0;
-        }).catch(function () { b.textContent = "—"; return 0; }));
+          return [gid, num(a.matched)];
+        }).catch(function () { b.textContent = "—"; return [gid, null]; });
+      }));
+    });
+    Promise.all(groups).then(function (per) {
+      var rows = [].concat.apply([], per);
+      return groupTotals(rows).then(function (n) {
+        Object.keys(n).forEach(function (gid) { text("[data-ml-group-count='" + gid + "']", count(n[gid])); });
       });
-      Promise.all(jobs).then(function (ns) {
-        sums[gid] = ns.reduce(function (a, b) { return a + b; }, 0);
-        text("[data-ml-group-count='" + gid + "']", count(sums[gid]));
-      });
+    }).catch(function (e) {
+      $$("[data-ml-group-count]").forEach(function (x) { x.textContent = "—"; x.title = String((e && e.message) || e); });
     });
   }
 

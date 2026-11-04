@@ -25,6 +25,7 @@ import pytest
 
 from core import trading_landing as tl
 from core.auth import Identity
+from core.backend import BackendError
 from core.edition import Edition
 from trading_fake import TradingBackend
 
@@ -221,6 +222,34 @@ def test_by_trader_needs_a_role_that_sees_trader_ids():
     t = asyncio.run(tl.traders(b, me, d, {}))
     assert t["traderMasked"] and "masked" in t["note"] and t["varNote"] is None
     assert all(r["pnl"] is None and r["var"] is None for r in t["rows"]) and {r["recordTrades"] for r in t["rows"]} == {8, 4}
+
+
+def test_every_total_is_the_servers_engines_and_the_console_only_sends_rows():
+    """The figures the landing showed before 2.9.11.b (MtM, P&L, DV01 and its trades, by book, the largest counterparty's share) are now
+    the pivot engine's cells (POST /api/v1/pivot/inline, ConsoleFiguresTest proves the engine's figures on these rows): equal here."""
+    b, me, s = _scope()
+    v = asyncio.run(tl.valuations(b, me, s, {}))
+    # A. Shah's books: trades 0, 3, 6, 9 (BOOK-RATES-1) and 1, 4, 7, 10 (BOOK-RATES-2), MtM 1m × (i + 1) × (−1)^i
+    assert v["mtm"] == 0 and v["pnl"] == 480_000 and v["dv01"] == -48_000 and v["dv01Trades"] == 8 and v["figuresProblem"] is None
+    assert {x["book"]: x["mtm"] for x in v["byBook"]} == {"BOOK-RATES-1": -6_000_000, "BOOK-RATES-2": 6_000_000}
+    assert v["largestCounterparty"] == {"counterparty": "CP-NORTHPLAINS", "share": pytest.approx(16 / 24), "positiveMtm": 16_000_000,
+                                        "totalPositiveMtm": 24_000_000}
+    asks = b.inline
+    assert len(asks) == 2 and {m["measure"] for a in asks for m in a["view"]["values"]} == {"sum(MTM)", "sum(CHANGE)", "sum(DV01)",
+                                                                                          "count(DV01)", "sum(POS)"}
+    assert all(len(a["rows"]) == 8 for a in asks)                                      # the eight valuations read, one row each
+
+
+def test_with_the_engine_refusing_no_total_is_made_up_and_the_reason_is_said(monkeypatch):
+    b, me, s = _scope()
+
+    async def off(method, path, ident, body=None, raw=False, **params):
+        raise BackendError(503, "DRS-7801", "the pivot engine is switched off on this server")
+    monkeypatch.setattr(b, "pivot", off)
+    v = asyncio.run(tl.valuations(b, me, s, {}))
+    assert v["mtm"] is None and v["pnl"] is None and v["dv01"] is None and v["largestCounterparty"] is None
+    assert all(x["mtm"] is None and x["pnl"] is None for x in v["byBook"]) and "switched off" in v["figuresProblem"]
+    assert v["liveTrades"] == 8 and v["movers"]                                          # counts and the rows themselves still stand
 
 
 def test_a_traders_desk_head_landing_reads_their_desk():

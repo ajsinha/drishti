@@ -193,7 +193,7 @@ KINDS = [
          [("Name", "$.name", None, None, False), ("Head", "$.head", None, None, False), ("Books", "size($.books)", None, None, False), ("VaR 99% 1D (engine)", "$.varEngine.var", "compact", None, True), ("MTM", "$.mtm", "signed0", "sign", False)],
          [P("table", "books", "Books", "$.books", [("Book", "@.id", None, None, False), ("Trades", "@.trades", "amount0", None, True), ("MTM", "@.mtm", "signed0", "sign", True)], key="F2"),
           P("pivot", "mtmGrid", "MTM grid (by book and currency, USD)", "$.positions", fmt="compact", tone="sign", key="F3", code="PIV",
-            opts={"by": "book", "across": "currency", "value": "mtm", "agg": "sum", "heat": True}),
+            opts={"by": "@.book", "across": "@.currency", "value": "sum(@.mtm)", "heat": True}),  # Rachana paths, the engine aggregates
           P("pivot", "tradeCount", "Trades by book and product family", "$.positions",
             opts={"by": "book", "across": "family", "agg": "count"}),
           P("table", "positions", "Trades by book", "$.positions",

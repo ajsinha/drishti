@@ -56,10 +56,9 @@ panels:
     rows: $.POSITIONS
     fmt: compact
     tone: sign
-    by: BOOK
-    across: CURRENCY
-    value: MTM
-    agg: sum
+    by: "@.BOOK"                           # Rachana paths over the row (ONE_GRAMMAR.md part 3); the engine aggregates
+    across: "@.CURRENCY"
+    value: sum(@.MTM)
     heat: true
   - id: tradeCount
     kind: pivot

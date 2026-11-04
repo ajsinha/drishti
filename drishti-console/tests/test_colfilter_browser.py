@@ -213,10 +213,15 @@ def test_value_types_are_detected_from_the_cells(page):
 
 
 def test_number_conditions(page):
-    r = page.evaluate("""() => { const c = window.drishtiModules.colFilter, col = ['1,000', '250k', '5m', '−12,000', '', '•••', 'n/a'];
+    r = page.evaluate("""async () => { const c = window.drishtiModules.colFilter, col = ['1,000', '250k', '5m', '−12,000', '', '•••', 'n/a'];
         const ok = (op, a, b) => { const cond = {op, a, b}, x = c.context(cond, col); return col.map(t => c.test('number', cond, t, x)); };
+        // the average is the server's: asked of the pivot engine (POST /api/pivot/inline); while it is asked nothing is hidden
+        const avg = async (op) => { const cond = {op}; let x = c.context(cond, col); const waiting = col.map(t => c.test('number', cond, t, x));
+            if (x.ready) { await x.ready; } x = c.context(cond, col); return { waiting, done: col.map(t => c.test('number', cond, t, x)), avg: x.avg }; };
+        const avga = await avg('avga'), avgb = await avg('avgb');
         return { eq: ok('eq', '250000'), ne: ok('ne', '250k'), gt: ok('gt', '1000'), ge: ok('ge', '1000'), lt: ok('lt', '0'), le: ok('le', '1000'),
-                 bt: ok('bt', '0', '300k'), top: ok('top', '2'), bot: ok('bot', '1'), avga: ok('avga'), avgb: ok('avgb') }; }""")
+                 bt: ok('bt', '0', '300k'), top: ok('top', '2'), bot: ok('bot', '1'), avga: avga.done, avgb: avgb.done, avgaWaiting: avga.waiting,
+                 avg: avga.avg }; }""")
     assert r["eq"] == [False, True, False, False, False, False, False]
     assert r["ne"] == [True, False, True, True, True, False, True]                  # a blank or a word is "not equal", as in Excel; a masked value never matches
     assert r["gt"] == [False, True, True, False, False, False, False]
@@ -228,6 +233,8 @@ def test_number_conditions(page):
     assert r["bot"] == [False, False, False, True, False, False, False]
     assert r["avga"][2] and not r["avga"][3]                                         # the average of 1000, 250000, 5m, -12000 is 1.31m
     assert r["avgb"][0] and not r["avgb"][2]
+    assert r["avg"] == 1_309_750                                                     # the engine's avg(V) of the four numbers, as before
+    assert r["avgaWaiting"][:4] == [True, True, True, True]                          # asked, not answered yet: no row hidden
 
 
 def test_top_n_takes_the_n_largest_and_bottom_n_the_n_smallest(page):
