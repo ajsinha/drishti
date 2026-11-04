@@ -326,10 +326,10 @@ public final class LakeUndo {
         List<String> partitions = s.getPartitionColumnNames();
         if (rows.isEmpty()) {
             List<Row> removes = LakeWriter.removals(engine, s, pv -> date.equals(pv.get("business_date")));
-            var txn = Table.forPath(engine, table).createTransactionBuilder(engine, "Drishti lake undo", Operation.WRITE).build(engine);
+            var txn = Table.forPath(engine, table).createTransactionBuilder(engine, DeltaTarget.ENGINE_INFO, Operation.WRITE).build(engine);
             return txn.commit(engine, CloseableIterable.inMemoryIterable(toIterator(removes))).getVersion();
         }
-        Path dir = Files.createTempDirectory("drishti-undo-");
+        Path dir = com.ash.drishti.common.TempFiles.createDir("drishti-undo-");
         try {
             Map<Map<String, String>, BufferedWriter> files = new LinkedHashMap<>();
             Map<Map<String, String>, Path> paths = new LinkedHashMap<>();
