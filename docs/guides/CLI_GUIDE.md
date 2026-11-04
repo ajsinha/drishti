@@ -1439,9 +1439,12 @@ candidate; exit 0, or 2 when nothing could be read.
 ### `data ingest`: your JSON Lines into a lake or files
 
 `data ingest` (`tools/ingest_jsonl.py`) writes JSON Lines documents into the dated store a pack reads. Inputs are folders of
-`*.jsonl` or single files, repeatable with `--from`. With `--pack` the domain, the columns promoted in the lake and the key and
-date fields come from the pack's `pack.yaml` (including the `ingest:` block); without it give `--domain`, `--date` and
-`--columns`.
+`*.jsonl` or single files, repeatable with `--from`. With `--pack` the domain, the columns promoted in the lake and the key field come
+from the pack's `pack.yaml` (including the `ingest:` block); without it give `--domain` (and `--key`, `--columns`). Each file goes under
+its business date by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): `--as-of`, else its `.ready` file's
+`business-date:`, else the date in its name (`trade.2026-11-03.jsonl`, kind `trade`), else the business today; the run says which, in
+`lake build`'s words (*trade.2026-11-03.jsonl: business date 2026-11-03 from the file name*). `--date FIELD` (or the pack's ingest
+`date`) is optional: it names the field the documents carry their own date in, and rows that say another date are only counted.
 
 **`drishti.py data ingest --help`**
 
@@ -1466,7 +1469,10 @@ options:
   --kind KIND           kind for every document (default: file stem or
                         envelope kind)
   --key KEY             id field: FIELD or kind=FIELD,... (default id)
-  --date DATE           business-date field: FIELD or kind=FIELD,...
+  --date DATE           optional: the field the documents carry their own date
+                        in (FIELD or kind=FIELD,...); only counted when it
+                        differs from the file's business date, never the date
+                        they are stored under
   --columns COLUMNS     promoted columns without --pack: a,b,c
   --lake LAKE           the Delta root (DRISHTI_DELTA_ROOT) for --store delta
   --store {delta,files}
@@ -1559,11 +1565,11 @@ The default mode of a watcher is `append` (each file is a new batch); use `--mod
 days, so a corrected file replaces its dates instead of adding to them. Real output:
 
 ```bash
-python3 tools/drishti.py data ingest --watch drop --once --domain demo --key id --date bd --store files --root files --done-dir done
+python3 tools/drishti.py data ingest --watch drop --once --domain demo --key id --store files --root files --done-dir done
 2026-10-05T16:44:48 INFO  watching drop for *.jsonl (mode append, state files/.drishti-ingest-state.json)
-2026-10-05T16:44:48 INFO  new file trade.jsonl (72 bytes): ingesting
-2026-10-05T16:44:48 INFO  trade.jsonl: 2 row(s) ingested
-2026-10-05T16:44:48 INFO  trade.jsonl: moved to done/trade.jsonl
+2026-10-05T16:44:48 INFO  new file trade.2026-10-05.jsonl (72 bytes): ingesting
+2026-10-05T16:44:48 INFO  trade.2026-10-05.jsonl: 2 row(s) ingested
+2026-10-05T16:44:48 INFO  trade.2026-10-05.jsonl: moved to done/trade.2026-10-05.jsonl
 2026-10-05T16:44:48 INFO  pass finished: 1 file(s) ingested, 0 with problems
 ```
 

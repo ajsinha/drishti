@@ -59,6 +59,10 @@
   longer lists the load's own `_load_id` and `_source_file`); `lake scan` reports the rows' date field as counted only; the tests,
   examples, run configuration and `official_market_data.py` (one `<kind>.<AS_OF>.jsonl` a date) load by the name or `--as-of`.
   DEMO_DATA.md says the test data's snapshot-plus-changes files are a generator format that `lake demo` replays, not feed files.
+  `data ingest` the same: a kind loads with no date field (each file under `--as-of`, its `.ready` file's date, its name's, or the
+  business today; the run says which, in `lake build`'s words), `--date`/the pack's ingest date only names the field whose differing
+  rows are counted; `pack_from_jsonl --lake` no longer needs `--date` (every kind in the dated store); a file's kind is its name's table
+  (`trade.2026-11-03.jsonl` is `trade`) in `sutra gen`, `pack make` and `data ingest` alike.
 
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (unreleased)
 

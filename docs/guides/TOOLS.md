@@ -996,14 +996,14 @@ first as above (`lake scan` reads `.gz` directly).
 `data ingest` writes JSON Lines into a Delta lake (the pack's layout, `business_date` partitions only) or the File connector's
 folders (`--store files`); `--watch DIR` turns a drop folder into a feed. Use `lake build` instead for JSON arrays, gzip, large
 files, classifier partitions or a lock and a summary; use `data ingest --store files` for the File connector. A dry run on the
-300 trades, under a business date given from outside (`--date` names the field the rows carry their own date in: it is only
+300 trades, under a business date given from outside (`--date`, optional, names the field the rows carry their own date in: it is only
 counted, never the date they are stored under):
 
 ```
 $ drishti-console/.venv/bin/python tools/drishti.py data ingest --from build/tools-walk --domain trading --key TRADE_ID --date START_DATE --as-of 2026-09-22 --store files --root build/tools-walk/files --dry-run | tail -n 4
 trade               2026-09-22            300
 total rows: 300
-business date 2026-09-22 from the name of trade.jsonl
+trade.jsonl: business date 2026-09-22 from the command line
 300 rows of trade.jsonl carried another date in START_DATE; loaded under 2026-09-22
 ```
 

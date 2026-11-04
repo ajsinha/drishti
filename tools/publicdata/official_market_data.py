@@ -247,7 +247,7 @@ class Estr(MarketSource):
 SOURCES = [EcbFx(), UsTreasury(), Sofr(), Estr()]
 KEYS = {"fx-spot": "PAIR", "ir-curve": "CURVE_ID", "rate-fixing": "INDEX_ID"}
 LOAD = ("uv run --with deltalake --with pyarrow --with pyyaml python tools/ingest_jsonl.py --from {out} --domain market "
-        "--key fx-spot=PAIR,ir-curve=CURVE_ID,rate-fixing=INDEX_ID --date AS_OF --lake {lake}")
+        "--key fx-spot=PAIR,ir-curve=CURVE_ID,rate-fixing=INDEX_ID --lake {lake}")      # each file under its name's date
 
 
 def write(out: Path, sources: list[MarketSource]) -> list[Path]:

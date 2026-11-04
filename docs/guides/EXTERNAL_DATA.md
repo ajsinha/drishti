@@ -720,11 +720,10 @@ the two fixings are of different days). A rerun of one source keeps the other so
 
 ```bash
 uv run --with deltalake --with pyarrow --with pyyaml python tools/ingest_jsonl.py --from data/publicdata/market-data \
-    --domain market --key fx-spot=PAIR,ir-curve=CURVE_ID,rate-fixing=INDEX_ID --date AS_OF --lake data/delta
+    --domain market --key fx-spot=PAIR,ir-curve=CURVE_ID,rate-fixing=INDEX_ID --lake data/delta
 ```
 
-Each file goes under the date in its name; `--date AS_OF` names the field the documents carry their own date in (`data ingest` loads a
-kind only when it has one), and is only counted: it never chooses the date.
+Each file goes under the date in its name (the load rules); no date field is needed.
 
 **Check it:** the script checks every document it wrote; after loading, `FIX FIX-SOFR <GO>` shows the fixing history. **Offline:**
 `refresh --offline` rebuilds the files from the cache.

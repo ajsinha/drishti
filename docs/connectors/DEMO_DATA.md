@@ -274,12 +274,14 @@ instead (streamed, flat memory).
 drishti-console/.venv/bin/python tools/drishti.py data ingest --from data/trade.jsonl --pack config/packs/my-bank --lake /tmp/lake
 DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=/tmp/lake java -jar drishti-server/target/drishti-server-*-exec.jar
 # JSON-lines files (stdlib + PyYAML only): <root>/<domain>/<date>/<kind>.jsonl; serve with DRISHTI_FILES_ROOT
-drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder/ --domain my-bank --key trade=TRADE_ID --date trade=BUSINESS_DATE \
+drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder/ --domain my-bank --key trade=TRADE_ID \
     --store files --root /tmp/files --dry-run
 ```
 
 `--mode overwrite-dates` (default) replaces only the business dates present, so a re-run is idempotent; `append`; `replace`. Without
-`--pack`, give `--domain`, `--key`, `--date` per kind. Documents without the date are reported and skipped. See
+`--pack`, give `--domain` and `--key` per kind. Each file goes under the date in its name (`trade.2026-11-03.jsonl`), or `--as-of`, else
+the business today ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)); `--date FIELD` only names a field whose differing rows are
+counted. See
 [Generating a pack from JSON Lines](../guides/PACK_DEVELOPER_GUIDE.md#generating-a-pack-from-json-lines) and
 [CLI_GUIDE.md](../guides/CLI_GUIDE.md).
 
