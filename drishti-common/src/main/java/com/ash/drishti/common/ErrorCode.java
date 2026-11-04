@@ -610,7 +610,29 @@ public enum ErrorCode {
     /** Busy protection: a bulk load of a pack's data did not start. */
     BUSY_BULK_LOAD("DRS-9505", 503),
     /** Busy protection: a large pivot view (more cells than {@code drishti.pivot.busy-cells}) did not start (PIVOT_GUIDE.md). */
-    BUSY_PIVOT_VIEW("DRS-9507", 503);
+    BUSY_PIVOT_VIEW("DRS-9507", 503),
+    /** Busy protection: an Arrow Flight read did not start (Arrow memory of the process near its cap, or the server very busy); retry later. */
+    BUSY_FLIGHT("DRS-9506", 503),
+    /** Arrow Flight (docs/guides/FLIGHT_GUIDE.md): no token, an unknown, expired or revoked token, or a browser session (never accepted). */
+    FLIGHT_UNAUTHENTICATED("DRS-5601", 401),
+    /** Arrow Flight: the token lacks the {@code data:read} scope for the domain asked, or the person it acts for may not read it. */
+    FLIGHT_SCOPE("DRS-5602", 403),
+    /** Arrow Flight: the ticket or descriptor is not a request Drishti reads (bad JSON, an unknown form, a kind or model that is not there). */
+    FLIGHT_BAD_TICKET("DRS-5603", 400),
+    /** Arrow Flight: the request passed the rows limit of the token's role; the stream stops after the last whole batch. */
+    FLIGHT_ROWS_LIMIT("DRS-5604", 429),
+    /** Arrow Flight: the request passed the bytes limit of the token's role. */
+    FLIGHT_BYTES_LIMIT("DRS-5605", 429),
+    /** Arrow Flight: the request ran past the time limit of the token's role. */
+    FLIGHT_TIME_LIMIT("DRS-5606", 504),
+    /** Arrow Flight: the request's Arrow memory passed its cap (per request); ask for fewer columns or a narrower scope. */
+    FLIGHT_MEMORY("DRS-5607", 503),
+    /** Arrow Flight: this node does not hold the part named by the ticket; read the endpoints of GetFlightInfo again. */
+    FLIGHT_NOT_HERE("DRS-5608", 421),
+    /** Arrow Flight: a stream's resume sequence is older than the node keeps; read a snapshot, then subscribe again. */
+    FLIGHT_RESUME_GONE("DRS-5609", 410),
+    /** Arrow Flight: an administrator stopped the stream (Admin → Data out). */
+    FLIGHT_STOPPED("DRS-5610", 409);
 
     private final String code;
     private final int httpStatus;

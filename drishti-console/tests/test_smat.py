@@ -91,11 +91,15 @@ def _app(backend, monkeypatch, about=None, roles=("*",)):
 
 
 def _var(backend, monkeypatch, sent: list):
-    """The stand-in server's VaR engine: the matrix above, as JSON (the console writes Arrow itself when the server answers JSON)."""
+    """The stand-in server's VaR engine: the matrix above, as JSON, or as the server's Arrow stream when asked for it (the console passes
+    the server's bytes through and writes no Arrow of its own)."""
     async def var(method, path, ident, body=None, raw=False, accept="", **params):
         sent.append((method, path, getattr(ident, "user", None), accept, dict(params)))
         if path != "/matrix":
             return {}
+        if raw and arrow_answer.MEDIA in (accept or ""):
+            from arrow_server_stream import server_stream
+            return server_stream(ANSWER, "records", "rows"), {"content-type": arrow_answer.MEDIA}
         if raw:
             import json
             return json.dumps(ANSWER).encode(), {"content-type": "application/json"}

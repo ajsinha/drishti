@@ -221,7 +221,10 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     # 63: plus the eighth Knowledge page, Companies, funds and ETFs (2.9.3).
     # 64: plus Using Drishti with Databricks Delta Lake or Apache Iceberg (docs/guides/DATA_GUIDE.md, 2.9.5), the product owner's
     # request of 2026-10-28: one page, under Data beside the connector guides.
-    assert 30 <= total <= 70, total
+    # 66: plus the lake configuration's two (the lake guide and tutorial 34) and Data out's two (the Arrow Flight guide and tutorial 35),
+    # 2.9.11.c, the same rule (a feature's guide and tutorial, two entries); Flight's reference and client pages are reached from its guide.
+    # 2.9.11.b's data inbox, custom functions and MR cube tutorials raised the ceiling to 70; 2.9.11.c's lake and Flight pages to 72.
+    assert 30 <= total <= 72, total
 
 
 def test_every_old_help_address_still_opens_something(client):
@@ -249,7 +252,7 @@ def test_the_tutorials_page_renders_the_tutorials_index_and_each_tutorial_opens_
     page = client.get("/help/tutorials")
     assert page.status_code == 200 and "Your first 15 minutes" in page.text and "Run it in production" in page.text
     links = sorted(set(re.findall(r'href="(/help/docs-tutorials-[0-9a-z-]+)"', page.text)))
-    assert len(links) == 36, links                     # 36: plus tutorials 36 (the data inbox), 37 (custom functions) and 38 (the MR cube), 2.9.11.b
+    assert len(links) == 38, links                     # 38: plus tutorials 36 (the data inbox), 37 (custom functions) and 38 (the MR cube), 2.9.11.b; 34 (one file per lake) and 35 (Data out with Arrow Flight), 2.9.11.c
     shots = 0
     for href in links:
         t = client.get(href)

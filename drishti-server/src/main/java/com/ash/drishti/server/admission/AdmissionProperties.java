@@ -67,6 +67,7 @@ public record AdmissionProperties(Boolean enabled, Double memoryWarn, Double mem
                 case BI_RUN -> biRun;
                 case BULK_LOAD -> bulkLoad;
                 case PIVOT_VIEW -> pivotView;
+                case FLIGHT -> download;
             };
         }
     }

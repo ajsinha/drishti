@@ -129,6 +129,10 @@ sections:
         guides:
           - { slug: in-memory-lake-guide, engine: memory-lake, pair: docs-tutorials-31-news-in-memory-only, doc: guides/IN_MEMORY_LAKE_GUIDE.md, title: "In-memory lake: data that never touches a disk", icon: memory, summary: "Feeds that may not, by contract, be saved on a disk, held as Delta tables in the server's memory (mem://) under a hard cap: setting one up, the replenish jobs (URL, file, connector or the news connector by ids; replace, append, merge; schedule, signal, warm-up, refill), the eviction ladder, automated compaction, what the guard refuses (DRS-5219) and allows (downloads), the direct-memory limit and host checks, the owner node in a cluster, Admin -> Lakes and Health, every setting, measured memory." }
           - { slug: docs-tutorials-31-news-in-memory-only, engine: memory-lake, doc: tutorials/31-news-in-memory-only.md, title: "In-memory lake tutorial: news held in memory only", icon: mortarboard, kind: tutorial, summary: "Eight hands-on steps, each in the UI, on the command line and in YAML: point the news connector at mem://news, define the store and its four tables, watch the warm-up, read the pages and download as before, a scheduled report refused, refill on demand and after a restart, the cap, eviction and Health, and back to the disk lake." }
+      - title: "Data out (Arrow Flight)"
+        guides:
+          - { slug: flight-guide, engine: flight, pair: docs-tutorials-35-data-out-with-arrow-flight, doc: guides/FLIGHT_GUIDE.md, title: "Data out: Drishti's data to any client with Arrow Flight", icon: box-arrow-right, summary: "Kinds, BI models, pivot views, VaR's scenario P&L vectors and the in-memory lake read by any Arrow Flight client (Python, Java, JDBC tools) as Arrow record batches, as the person a token belongs to: when to use it rather than the REST API, turning it on (the engine file, the port, TLS), tokens with data:read and on behalf of a person, every request form, the request path, the cluster's endpoints and a node down, live streams and resuming, limits and refusals, audit and Admin -> Data out, operations, the ten most likely errors; the reference and a page per client." }
+          - { slug: docs-tutorials-35-data-out-with-arrow-flight, engine: flight, doc: tutorials/35-data-out-with-arrow-flight.md, title: "Data out tutorial: from a token to pandas", icon: mortarboard, kind: tutorial, summary: "Eight hands-on steps, each in the UI, on the command line and in code: Flight on, a token with data:read, whoami, a desk's VaR scenario P&L in pandas and its positions' vectors, the same in Java and through JDBC, a live intraday stream resumed, Admin -> Data out with Stop." }
   - id: build
     name: Build
     icon: braces
@@ -459,6 +463,7 @@ contextual:
   account: user-management
   help: user-guide
   pivot: docs-guides-pivot-guide   # the pivot screen, PIVOT (F1 and its ?): the pivot guide
+  data-out: flight-guide   # Admin -> Data out (F1): the Arrow Flight guide
   workspace: user-guide#workspaces
   monitor: user-guide#monitors
   alerts: user-guide#alerts

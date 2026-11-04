@@ -1524,6 +1524,15 @@ The server's temporary files (DuckDB spill, native libraries, atomic-save scratc
 
 ### 12.1a Direct memory, and the diagnostics of a long run
 
+**Arrow's buffers.** The official Arrow library (the compute workers' exchange, BI answers sent as Arrow, Arrow Flight) keeps its
+buffers in direct memory too, under its own cap (`-Ddrishti.arrow.max-bytes`). The launchers (the stack, `start-server.ps1`, the ECS
+entrypoint, the IDE run configurations) raise `-XX:MaxDirectMemorySize` by Arrow's budget and pass the same figure as that cap, from the
+one place that sizes direct memory, `tools/lake/memory_caps.py` (`--arrow-only`): 512 MB for the exchange (`DRISHTI_ARROW_EXCHANGE_MB`)
+plus Arrow Flight's `memory.total-mb` (`DRISHTI_FLIGHT_MEMORY_MB`, 4,096) when its engine is on. The limit is then 256 MB plus the
+in-memory lake's stores plus Arrow's budget. An ECS task has no Python: set `DRISHTI_ARROW_MB` (and `DRISHTI_LAKE_MEMORY_MB`) to what
+`memory_caps.py --arrow-only` (`--stores-only`) prints; the entrypoint uses 512 when it is unset. A unit file of your own adds both flags
+itself. ([FLIGHT_GUIDE.md](../guides/FLIGHT_GUIDE.md#10-operations), section 10.)
+
 **Direct memory.** `-XX:MaxDirectMemorySize=256m` caps the server's direct (off-heap) buffers. On Java 21, every read of a file
 through a channel into an ordinary heap array makes the JDK copy through a temporary direct buffer as large as the read, and keep it
 cached on that thread for good (`jdk.nio.maxCachedBufferSize` is unlimited by default). A reader of column chunks
