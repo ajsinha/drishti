@@ -965,7 +965,7 @@ gap with its reading. Every number comes from the answer (the browser computes n
 
 **The Normal curve toggle** (key **N**) hides the curve, the parametric marker, its tail and the gap bracket; the choice is remembered
 for you and in the link (`nc=0`). **PLAY PVAR** (the bar's button) opens the playground with the parametric measure
-([section 3.10](#310-the-var-playground-play-var)); the MR cube and the pivot offer `pvar()` beside `var()` and `comp_var()`.
+([section 3.10](#310-the-var-playground-play-var)); the MR cube and the pivot offer `pvar()` beside `var()` and `comp_var()`. [Tutorial 43](../tutorials/43-parametric-var-beside-historical.md) walks through it on the demo data.
 
 ## 4. Positions: derived, never delivered
 

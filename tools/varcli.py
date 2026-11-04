@@ -585,8 +585,8 @@ def register(groups, srv, ctx: dict) -> None:
                 _, body = api.request("GET", "/api/v1/var/playground.xlsx?" + enc(lensed(a, dated(a, q))))
                 with open(a.xlsx, "wb") as f:
                     f.write(body)
-                print(f"wrote {a.xlsx} ({len(body):,} bytes): the VaR Playground workbook, every figure a formula (Main, Config, Data, FX, PnL, "
-                      "Explain, Provenance)")
+                tabs = "Main, Config, Data, FX, PnL, " + ("Parametric, " if getattr(a, "measure", None) == "parametric" else "") + "Explain, Provenance"
+                print(f"wrote {a.xlsx} ({len(body):,} bytes): the VaR Playground workbook, every figure a formula ({tabs})")
             else:
                 res = api.json("GET", "/api/v1/var/playground?" + enc(lensed(a, dated(a, q))))
                 say_json(res) if a.json else render_playground(res, print)
@@ -772,7 +772,7 @@ def register(groups, srv, ctx: dict) -> None:
     pg = scoped("playground", "the VaR Playground (PLAY VAR, VAR_GUIDE.md section 3.10): a scope's VaR worked out position by position; "
                 "--xlsx writes the workbook of real formulas")
     pg.add_argument("--ids", metavar="ID,ID", help="positions or trades instead of the scope (at most drishti.var.playground.max-ids, 50)")
-    pg.add_argument("--xlsx", metavar="FILE", help="write the workbook (Main, Config, Data, FX, PnL, Explain, Provenance) to FILE")
+    pg.add_argument("--xlsx", metavar="FILE", help="write the workbook (Main, Config, Data, FX, PnL, Explain, Provenance; with --measure parametric also Parametric) to FILE")
     pg.add_argument("--count", default="500", help="positions in the workbook: 100, 500 (default), 1000, 10000 or all; the rest in Rest of scope")
     pg.add_argument("--estimate", action="store_true", help="each export size's estimated file size, recalculation time and the applications that open it")
     pg.add_argument("--measure", choices=["historical", "parametric"], default="historical",

@@ -959,6 +959,7 @@ and 500 positions, is tested on every build.
 
 ## Next steps
 
+- Read the same vectors through a normal distribution: [tutorial 43](43-parametric-var-beside-historical.md), parametric VaR beside historical and the fat-tail gap.
 - Read [VAR_GUIDE.md](../guides/VAR_GUIDE.md): the measures by hand on ten scenarios, the data flow and restatements, the scope grammar in full, the
   data contract (Part II), sizing for a bank of a million trades and the benchmark (Part III), troubleshooting.
 - Load your own batch: the columns are in [VAR_GUIDE.md section 15](../guides/VAR_GUIDE.md#15-inputs-from-upstream-engines); send the data-load

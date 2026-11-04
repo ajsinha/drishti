@@ -402,7 +402,7 @@ three tiles (parametric VaR, parametric ES, fat-tail gap), the curve on the P&L 
 tab (section 14).
 
 **Command line:** `drishti.py var show BANK` prints the parametric line under the historical one while enabled (`--no-parametric` to
-leave it out); `drishti.py var contributions BANK --matrix` prints the components and the correlation matrix; `--json` carries the
+leave it out); `drishti.py var parts BANK --matrix` prints the components and the correlation matrix; `--json` carries the
 block.
 
 ## 12. Where it runs, cost and precision
@@ -429,7 +429,7 @@ The two-docs rule (one complete guide incl. the contract + one tutorial; two hel
 | Document | What changes |
 |---|---|
 | VAR_GUIDE.md | **18.15 Parametric VaR and ES (a cross-check)**: sections 2–3 of this design as built; **3.12 Parametric beside historical** (the screen, the curve, the tooltip, pictures); 11 (the fields), 12 (the settings), 10 (CLI), Part II (VRES 1.3 fields) |
-| docs/tutorials/39-parametric-var-beside-historical.md | **new tutorial**: the bank's gap, a desk's tooltip read line by line, the curve and the toggle, the components adding up, the correlation heat map, `PLAY PVAR` and its workbook's checks; every step UI + CLI + YAML, with pictures |
+| docs/tutorials/43-parametric-var-beside-historical.md | **new tutorial**: the bank's gap, a desk's tooltip read line by line, the curve and the toggle, the components adding up, the correlation heat map, `PLAY PVAR` and its workbook's checks; every step UI + CLI + YAML, with pictures |
 | Help | two entries: *Parametric VaR* (the guide section) and *Tutorial: parametric VaR beside historical* |
 | API_GUIDE.md, CLI_GUIDE.md | the `parametric` block, `parametric=false`, `matrix=true`, `measure=parametric`; `--no-parametric`, `--matrix`, `--measure` |
 | CONFIGURATION.md (generated, checked) | the `drishti.var.parametric.*` settings |

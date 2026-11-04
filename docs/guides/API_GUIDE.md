@@ -3116,6 +3116,25 @@ the list without a lens) stays the comparison (`override`). For example
 `POST /api/v1/compute/var-engine/var-result` with `"params": {"horizon": "10d", "method": "sum", "confidence": 0.95}` (`HORIZON`,
 `METHOD` in the record).
 
+**Parametric VaR (a cross-check, never official).** While `drishti.var.parametric.enabled` is on (the default), the answers that carry
+historical figures carry a **`parametric` block** beside them, computed from the same vector in the same request; the historical fields
+are unchanged ([VAR_GUIDE.md section 18.15](VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check), [PARAMETRIC_VAR.md](../architecture/PARAMETRIC_VAR.md)).
+`parametric=false` on any of them leaves the block out; `parametric=true` while the measure is off answers `403 DRS-5002` in words.
+
+| Answer | Its `parametric` |
+|---|---|
+| `GET /scope`, `/scopes/{scope}` | `var`, `es` (positive for a loss, the answer's currency), `confidence`, `esConfidence`, `mu`, `sigma`, `n`, `z`, `zEs`, `esFactor`, `zSigma`, `weighting`, `lambda`, `horizonRule`, `skew`, `excessKurtosis`, `gap` (historical − parametric), `gapPct`, `esGap`, `beyond` (scenario days below −`var`), `expectedBeyond` (n·(1 − c)), `official` (always `false`), `notes`, `describe` (the **?**'s lines, built in the server) |
+| `GET /tree` | per node `var`, `es`, `gap`, `gapPct` |
+| `GET /scope/path` | the headline's figures plus `curve {x, y}` (`curve-points` points; y in expected days per bin), `expected` (the normal's days per histogram bin), `markers {historical, parametric}`, `binWidth`, `curveDescribe`, `showCurve` |
+| `GET /scope/contributions` | per row `pComponentVar`, `pComponentEs`, `pStandaloneVar`, `pIncrementalVar`, `pPct`, `pMarginalPer1m`, `pMarginalPer1pct`, `rho`, `sigma`, `mu`, `zCovOverSigma`; totals `pSumComponent`, `pSumStandalone`, `pDiversification`, `addsUp`; with `matrix=true` also `matrix {keys, labels, correlation, covariance, truncated, sigmaCheck, engine}` (at most `matrix-max-parts` parts, the largest by component; `engine` `openblas` or `java`). `matrix=true` with `parametric=false` is `400` |
+| `GET /status` | `parametric {enabled, weighting, lambda, horizonRule, curvePoints, matrixMaxParts, showCurve, official}` |
+| `GET /playground`, `/playground.xlsx` | `measure=parametric` (PLAY PVAR): the Parametric panel's figures and `steps`; the workbook gains its Parametric tab |
+
+For example `GET /api/v1/var/scope?scope=DESK:DESK-RATES&asOf=2026-09-30` answers historical `var` 74,633,680 and `parametric.var`
+58,409,229 (`mu` −732,297, `sigma` 24,792,909, `gap` 16,224,451, `beyond` 12 of an expected 5.09) on the demo data; the computed kind
+`VRES` carries the same as `PARAMETRIC_*` and `FAT_TAIL_GAP*` fields (`"params": {"parametric": false}` leaves them out).
+[Tutorial 43](../tutorials/43-parametric-var-beside-historical.md) walks through them.
+
 | Method and path | What it does |
 |---|---|
 | `GET /api/v1/var/scope?scope=` | the headline: VaR, ES, diversification, limit, backtest and provenance |
