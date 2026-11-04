@@ -332,8 +332,11 @@
 - **The pivot reads virtual tables.** Source `table:<domain>.<name>` (PIVOT_GUIDE.md section 3): listed with the kinds a person may open,
   its columns as fields (masked ones left out), staged in the pivot engine's executor. `StagedRows` is the one staging of rows in hand
   (moved out of `PanelSources`, which uses it too).
-- **Screens: mock-ups first.** `docs/lenses/mockups/virtual-tables/` A (catalogue and form), B (document, columns, rows; recommended),
-  C (the definition as text), each with the offer for new data; VIRTUAL_TABLES.md section 11. Not built until one is picked.
+- **Screens: decided (VIRTUAL_TABLES.md section 11).** Of the table editor's mock-ups A, B and C (`docs/lenses/mockups/virtual-tables/`),
+  the product owner chose B and C with a switch (`BC.html`): Visual (B: the document, the columns, the rows) by default, YAML (C: the
+  definition as text with checks) for experts, both editing the one draft; unsaved text that does not parse cannot switch back until
+  fixed; each person's last choice remembered. The model editor's mock-ups `model-A.html` (lists), `model-B.html` (diagram, measures,
+  answer; recommended) and `model-C.html` (measures first) follow the same Visual-and-YAML idea. Not built yet.
 - **Build fixes on the branch.** Error Prone's `ReturnValueIgnored` (`lang.Compiler`) and `JavaTimeDefaultTimeZone` (`lang.SqlLowering`,
   the preview's evaluator) and `NullTernary` (`ModelAnswersTest`), which stopped `drishti-bicompute` and `drishti-tables` compiling.
 - **Tests.** `TableReadsTest` (shared reads, rules, masks, hidden columns, conditions, a table over a table, dates, the limit),

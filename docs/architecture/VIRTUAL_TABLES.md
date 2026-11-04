@@ -158,16 +158,24 @@ Flight reading it, the checks and preview, docs (a tables guide with real exampl
 The deeper design and the questions Q1 to Q30 it settled (2026-11-03) are in
 [BI_FOUNDATION_2911E.md section 8](BI_FOUNDATION_2911E.md#8-decisions-product-owner-2026-11-03-every-recommendation-accepted-q1-decided-as-rachanas-rule).
 
-## 11. Screens: mock-ups first
+## 11. Screens: decided (product owner, 2026-11-04)
 
-The editors move from BI (the dataset editor, the Model view) to the layer, reachable from Admin and from BI. Nothing is built until the
-product owner picks one of the three mock-ups of the table editor (each also shows the offer for a table a data load created, V8):
+The editors move from BI (the dataset editor, the Model view) to the layer, reachable from Admin and from BI. Of the three table-editor
+mock-ups ([A](../lenses/mockups/virtual-tables/A.html), [B](../lenses/mockups/virtual-tables/B.html),
+[C](../lenses/mockups/virtual-tables/C.html)), the product owner chose **B and C with a switch**:
+[virtual-tables/BC.html](../lenses/mockups/virtual-tables/BC.html).
 
-| Option | Mock-up | In one line |
-|---|---|---|
-| A | [virtual-tables/A.html](../lenses/mockups/virtual-tables/A.html) | a catalogue by domain and the table as a form: every key visible, paths typed with completion |
-| B (recommended) | [virtual-tables/B.html](../lenses/mockups/virtual-tables/B.html) | a sample document as a tree (click a field to add a column, a list to set the grain), the columns, and the rows as a chosen role reads them, side by side |
-| C | [virtual-tables/C.html](../lenses/mockups/virtual-tables/C.html) | the definition as YAML with Rachana completion and checks as you type, preview, checks, lineage, versions and the diff as tabs |
+| Point | Decided |
+|---|---|
+| Default | **Visual (B)**: a sample document as a tree (click a field to add a column, a list to set the grain), the columns, and the rows as a chosen role reads them, side by side; for everyday users |
+| Expert | **YAML (C)**: the definition as text with Rachana completion and checks as you type; preview, checks, lineage, versions and the diff as tabs |
+| One definition | one switch on the same table flips between them; both edit the one draft, so an edit in either shows in the other |
+| Text that does not parse | unsaved YAML that does not parse cannot switch back to Visual until it is fixed; the error is shown and the text is kept as typed |
+| Memory | the switch remembers each person's last choice |
+| New data | the offer for a table a data load created (V8) opens the same editor, prefilled |
 
-The screenshots (`A.png`, `B.png`, `C.png`) are taken in the next heavy run. The model editor (tables, relationships and measures) gets
-its own mock-ups once the table editor is chosen, so both read alike.
+**The model editor** follows the same idea: a visual editor by default and the same YAML switch. Its three mock-ups, for the product
+owner to choose from: [model-A](../lenses/mockups/virtual-tables/model-A.html) (tables, relationships and measures as lists),
+[model-B](../lenses/mockups/virtual-tables/model-B.html) (the tables as a diagram with their relationships, the measures, and an answer
+read as a chosen role; recommended) and [model-C](../lenses/mockups/virtual-tables/model-C.html) (measures first, as a sheet by a chosen
+field). Nothing is built until the backend steps are done; the screenshots are taken in the next heavy run.

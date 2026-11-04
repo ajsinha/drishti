@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (virtual-tables/BC.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Not built yet (docs/architecture/VIRTUAL_TABLES.md section 11).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Virtual tables editor, B and C: Visual (B) by default, YAML (C) one switch away</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --emph:rgba(232,163,58,.28); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --emph:rgba(184,110,12,.16); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px}
+.cmd{flex:1 1 300px;max-width:640px;white-space:nowrap;overflow:hidden;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
+.head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.crumb{font-family:var(--mono);color:var(--link)}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel)}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.dis{opacity:.45}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:150px}
+.kpi .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-family:var(--mono);font-size:20px;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi.edge-a{border-left:3px solid var(--warn)} .kpi.edge-r{border-left:3px solid var(--bad)} .kpi.edge-g{border-left:3px solid var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+.mono{font-family:var(--mono)}
+
+
+.grid3{display:grid;grid-template-columns:300px 1fr 1fr;gap:12px}
+.grid2{display:grid;grid-template-columns:320px 1fr;gap:12px}
+.tree{font-family:var(--mono);font-size:12.5px;line-height:1.75}
+.tree .d1{padding-left:16px}.tree .d2{padding-left:32px}
+.tree .t{color:var(--muted);font-family:var(--sans);font-size:11.5px;margin-left:6px}
+.tree .add{color:var(--ok);margin-right:6px}
+.tree .lst{color:var(--amber)}
+.tree .on{background:var(--hl);border-radius:4px}
+.in{display:block;width:100%;font-family:var(--mono);font-size:12.5px;padding:5px 8px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);color:var(--ink)}
+.lab{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:8px 0 3px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.banner{border:1px solid var(--ok);background:var(--ok-t);border-radius:8px;padding:8px 12px;font-size:13px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.list .it{padding:6px 8px;border-radius:6px;font-size:13px;display:flex;justify-content:space-between;gap:8px}
+.list .it.on{background:var(--panel2);box-shadow:inset 3px 0 0 var(--amber)}
+.list .g{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:8px 8px 2px}
+.code{font-family:var(--mono);font-size:12.5px;white-space:pre;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:10px;line-height:1.6;min-height:420px}
+.code .k{color:var(--link)} .code .s{color:var(--ok)} .code .c{color:var(--muted)} .code .e{text-decoration:underline wavy var(--warn)}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.tabs span{padding:6px 12px;font-size:13px;color:var(--muted)} .tabs span.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--amber)}
+
+.toggle{display:inline-flex;border:1px solid var(--amber);border-radius:16px;overflow:hidden;font-size:12.5px}
+.toggle span{padding:4px 14px;color:var(--muted)} .toggle span.on{background:var(--amber);color:var(--onacc);font-weight:600}
+.state{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:6px 0 -4px}
+.err{border:1px solid var(--bad);background:var(--bad-t);border-radius:6px;padding:6px 10px;font-size:12.5px;color:var(--bad)}
+.box{border:1px solid var(--line);border-radius:8px;background:var(--panel2);padding:6px 10px;font-size:12.5px;min-width:170px}
+.box b{display:block;font-size:13px;margin-bottom:4px} .box .c{font-family:var(--mono);color:var(--muted);font-size:12px;line-height:1.6}
+.box.f{border-color:var(--amber)}
+
+</style>
+</head>
+<body>
+<div class="page">
+<div class="intro"><h1>Virtual tables editor, B and C: Visual (B) by default, YAML (C) one switch away <span class="rec">decided</span></h1>
+<p>The product owner's choice (2026-11-04): B for everyday users, C for experts, one switch on the same table. Both edit the one definition: an edit in either shows in the other. Unsaved text that does not parse cannot switch back to Visual until it is fixed, with the error shown. The switch remembers each person's last choice. Shown below in its three states.</p></div>
+<div class="bar"><span class="brand">DRISHTI<i>Admin</i></span><span class="cmd">TABLES trading.trade_legs</span>
+<span class="menus"><span>Data</span><span class="on">Tables</span><span>BI</span><span>Engines</span><span>Help</span></span></div>
+<div class="banner"><span class="pill g">New data</span><span>The load of <b class="mono">2026-09-30</b> created the lake table <b class="mono">bank.accounts</b> (2,140 rows). Offer it as a virtual table?</span>
+<span class="btn p">Make a table (suggested columns)</span><span class="btn">Not now</span><span class="note">Nothing is defined until you accept (V8).</span></div>
+<div class="state">1. Visual (the default for everyone)</div><div class="row"><span class="toggle"><span class="on">Visual</span><span>YAML</span></span><span class="pick"><b>Table</b>trading.trade_legs</span><span class="pick"><b>From</b>kind trade</span><span class="pick"><b>Grain</b>$.LEGS[*]</span><span class="pick"><b>Date</b>2026-09-30 (latest)</span><span style="margin-left:auto" class="btn">Discard</span><span class="btn p">Save draft</span><span class="btn">Publish</span></div><div class="grid3"><div class="card"><h3>Source document <span>T-10021 · 1 of 1,000 sampled</span></h3><div class="tree">
+<div>$ <span class="t">trade</span></div>
+<div class="d1"><span class="add">+</span>TRADE_ID <span class="t">string · 100%</span></div>
+<div class="d1"><span class="add">+</span>TRADE_STATUS <span class="t">string · 100%</span></div>
+<div class="d1"><span class="add">+</span>BOOK <span class="t">string · 100%</span></div>
+<div class="d1"><span class="add">+</span>COUNTERPARTY <span class="t">string · masked for analysts</span></div>
+<div class="d1 on"><span class="lst">[*]</span>LEGS <span class="t">list · 1.6 per trade · grain</span></div>
+<div class="d2"><span class="ok">&#10003;</span>LEG_ID <span class="t">string · 100%</span></div>
+<div class="d2"><span class="ok">&#10003;</span>CURRENCY <span class="t">string · 100%</span></div>
+<div class="d2"><span class="ok">&#10003;</span>NOTIONAL <span class="t">decimal · 100%</span></div>
+<div class="d2"><span class="add">+</span>FIXED_RATE <span class="t">decimal · 59%</span></div>
+<div class="d2"><span class="ok">&#10003;</span>INDEX.NAME <span class="t">string · 41%</span></div>
+<div class="d2"><span class="lst">[*]</span>CASH_FLOWS <span class="t">list · 8.2 per leg · grain</span></div>
+<div class="d1"><span class="lst">[*]</span>EVENTS <span class="t">list · 2.1 per trade · grain</span></div>
+</div><div class="note" style="margin-top:8px">Other tables over kind trade: trading.trade_summary, trading.trade_cash_flows (one read of trade serves them all).</div></div>
+<div class="card"><h3>Columns <span>6 · keys TRADE_ID, LEG_ID</span></h3><table><tr><th class="l">Name</th><th class="l">From</th><th class="l">Type</th><th class="l"></th></tr>
+<tr><td class="l">TRADE_ID</td><td class="l">$.TRADE_ID</td><td class="l">string</td><td class="l"><span class="pill n">key</span></td></tr>
+<tr><td class="l">LEG_ID</td><td class="l">@.LEG_ID</td><td class="l">string</td><td class="l"><span class="pill n">key</span></td></tr>
+<tr><td class="l">CURRENCY</td><td class="l">@.CURRENCY</td><td class="l">string</td><td class="l"></td></tr>
+<tr><td class="l">NOTIONAL</td><td class="l">@.NOTIONAL</td><td class="l">decimal</td><td class="l"><span class="pill a">hidden: intern</span></td></tr>
+<tr><td class="l">NOTIONAL_USD</td><td class="l">= @.NOTIONAL * fx(@.CURRENCY, 'USD')</td><td class="l">decimal</td><td class="l"></td></tr>
+<tr><td class="l">FLOAT_INDEX</td><td class="l">@.INDEX.NAME</td><td class="l">string</td><td class="l"></td></tr></table>
+<div class="row" style="margin-top:8px"><span class="btn">+ Expression</span><span class="note">Drag to reorder; a column built from a masked path is masked.</span></div>
+<div class="lab" style="margin-top:14px">Checks</div><div class="note"><span class="ok">&#10003;</span> 6 columns check in their scopes &nbsp; <span class="ok">&#10003;</span> keys [TRADE_ID, LEG_ID] unique on 2026-09-30<br>
+<span class="warn">&#9888;</span> FLOAT_INDEX empty in 41% of rows (fixed legs) &nbsp; <span class="ok">&#10003;</span> name free (no stored table trading.trade_legs)<br>
+<span class="muted">Used by: model trading.positions-and-legs (as legs), pivot view "Legs by currency", Flight token risk-batch</span></div></div>
+<div class="card"><h3>Rows <span>as you read them · 4 of 18,240</span></h3><table><tr><th class="l">id</th><th class="l">business_date</th><th>index</th><th class="l">TRADE_ID</th><th class="l">LEG_ID</th><th class="l">CURRENCY</th><th>NOTIONAL</th><th class="l">FLOAT_INDEX</th></tr>
+<tr><td class="l">T-10021</td><td class="l">2026-09-30</td><td>0</td><td class="l">T-10021</td><td class="l">L1</td><td class="l">USD</td><td>25,000,000</td><td class="l">SOFR</td></tr>
+<tr><td class="l">T-10021</td><td class="l">2026-09-30</td><td>1</td><td class="l">T-10021</td><td class="l">L2</td><td class="l">USD</td><td>25,000,000</td><td class="l muted">(empty)</td></tr>
+<tr><td class="l">T-10022</td><td class="l">2026-09-30</td><td>0</td><td class="l">T-10022</td><td class="l">L1</td><td class="l">EUR</td><td>12,500,000</td><td class="l">ESTR</td></tr>
+<tr><td class="l">T-10023</td><td class="l">2026-09-30</td><td>0</td><td class="l">T-10023</td><td class="l">L1</td><td class="l">JPY</td><td>3,000,000,000</td><td class="l">TONA</td></tr></table>
+<div class="note" style="margin-top:8px">Read as: <span class="seg"><span class="on">me (risk)</span><span>desk-head D2</span><span>analyst</span></span> &nbsp; see what a role sees before publishing.</div></div></div><div class="state">2. YAML (for experts): the same draft, one switch away</div><div class="row"><span class="toggle"><span>Visual</span><span class="on">YAML</span></span><span class="pick"><b>Table</b>trading.trade_legs</span><span class="pick"><b>From</b>kind trade</span><span class="pick"><b>Grain</b>$.LEGS[*]</span><span class="pick"><b>Date</b>2026-09-30 (latest)</span><span style="margin-left:auto" class="btn">Discard</span><span class="btn p">Save draft</span><span class="btn">Publish</span></div><div class="grid2" style="grid-template-columns:1fr 1fr"><div class="card"><h3>config/tables/trading/trade_legs.table.yaml <span>the one definition: edits here show in Visual, and the other way round</span></h3><div class="code"><span class="k">rachana</span>: 3
+<span class="k">table</span>: trading.trade_legs
+<span class="k">from</span>: { <span class="k">kind</span>: trade }
+<span class="k">grain</span>: $.LEGS[*]
+<span class="k">filter</span>: <span class="s">"$.TRADE_STATUS != 'CANCELLED'"</span>
+<span class="k">keys</span>: [TRADE_ID, LEG_ID]
+<span class="k">columns</span>:
+  <span class="k">TRADE_ID</span>:     $.TRADE_ID
+  <span class="k">LEG_ID</span>:       <span class="s">"@.LEG_ID"</span>
+  <span class="k">CURRENCY</span>:     <span class="s">"@.CURRENCY"</span>
+  <span class="k">NOTIONAL</span>:     { <span class="k">path</span>: <span class="s">"@.NOTIONAL"</span>, <span class="k">type</span>: decimal, <span class="k">hidden-for</span>: [intern] }
+  <span class="k">NOTIONAL_USD</span>: { <span class="k">expr</span>: <span class="s">"@.NOTIONAL * fx(@.CURRENCY, 'USD')"</span>, <span class="k">type</span>: decimal }
+  <span class="k">FLOAT_INDEX</span>:  <span class="s e">"@.INDX.NAME"</span>   <span class="c"># DRS-9613: empty in every sampled row; did you mean @.INDEX.NAME?</span>
+<span class="k">rules</span>:
+  - { <span class="k">role</span>: desk-head, <span class="k">where</span>: <span class="s">"$.BOOK in user.desks"</span> }
+  - { <span class="k">role</span>: [risk, analyst], <span class="k">where</span>: <span class="s">"true"</span> }
+<span class="k">materialize</span>: none
+</div></div><div class="card"><div class="tabs"><span class="on">Preview</span><span>Checks (1)</span><span>Lineage</span><span>Versions</span><span>Diff</span></div>
+<div class="row" style="margin-bottom:8px"><span class="pick"><b>Date</b>2026-09-30 (latest)</span><span class="pick"><b>Read as</b>me (risk)</span></div><table><tr><th class="l">id</th><th class="l">business_date</th><th>index</th><th class="l">TRADE_ID</th><th class="l">LEG_ID</th><th class="l">CURRENCY</th><th>NOTIONAL</th><th class="l">FLOAT_INDEX</th></tr>
+<tr><td class="l">T-10021</td><td class="l">2026-09-30</td><td>0</td><td class="l">T-10021</td><td class="l">L1</td><td class="l">USD</td><td>25,000,000</td><td class="l">SOFR</td></tr>
+<tr><td class="l">T-10021</td><td class="l">2026-09-30</td><td>1</td><td class="l">T-10021</td><td class="l">L2</td><td class="l">USD</td><td>25,000,000</td><td class="l muted">(empty)</td></tr>
+<tr><td class="l">T-10022</td><td class="l">2026-09-30</td><td>0</td><td class="l">T-10022</td><td class="l">L1</td><td class="l">EUR</td><td>12,500,000</td><td class="l">ESTR</td></tr>
+<tr><td class="l">T-10023</td><td class="l">2026-09-30</td><td>0</td><td class="l">T-10023</td><td class="l">L1</td><td class="l">JPY</td><td>3,000,000,000</td><td class="l">TONA</td></tr></table>
+<div class="lab" style="margin-top:14px">Checks</div><div class="note"><span class="ok">&#10003;</span> 6 columns check in their scopes &nbsp; <span class="ok">&#10003;</span> keys [TRADE_ID, LEG_ID] unique on 2026-09-30<br>
+<span class="warn">&#9888;</span> FLOAT_INDEX empty in 41% of rows (fixed legs) &nbsp; <span class="ok">&#10003;</span> name free (no stored table trading.trade_legs)<br>
+<span class="muted">Used by: model trading.positions-and-legs (as legs), pivot view "Legs by currency", Flight token risk-batch</span></div></div></div><div class="state">3. Text that does not parse: Visual waits until it is fixed</div><div class="err">Line 13: a mapping value is not allowed here (an unclosed quote after <span class="mono">"@.INDEX.NAME</span>). Fix the text to switch back to Visual; your text is kept as typed.</div><div class="row"><span class="toggle"><span style="opacity:.45">Visual</span><span class="on">YAML</span></span><span class="note">The switch remembers your last choice (per person, on every table).</span></div>
+<footer>Mock-up for discussion: figures are illustrative. Who edits: administrators and BI authors; reading is always as the source (row rules and masks), then the table's own rules. Every save is checked
+(<span class="mono">tables check</span>), versioned and audited like a BI item. DuckDB is not called by this screen: preview reads the source through the layer.</footer>
+</div>
+</body>
+</html>
