@@ -135,6 +135,7 @@ final class InboxStatus {
                             "taken once unchanged for " + settings.stableSeconds() + " s (stable-seconds)");
                     case Inbox.NEXT_CYCLE -> file(x.name(), x.size(), x.modified(), now, "next-cycle", "ready, next run",
                             "this run took its most files or bytes (max-files, max-gb)", "taken at the cycle after");
+                    case Inbox.HELD -> file(x.name(), x.size(), x.modified(), now, "held", "held", x.why(), "taken once its .ready file no longer says hold");
                     default -> file(x.name(), x.size(), x.modified(), now, "no-marker", "no marker", "since " + time(x.modified()),
                             x.why().startsWith("no ") ? "never taken without " + x.name() + Inbox.READY + " or ready.all" : x.why());
                 };
