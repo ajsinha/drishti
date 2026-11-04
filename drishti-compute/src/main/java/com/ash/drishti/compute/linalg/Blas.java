@@ -183,6 +183,27 @@ public final class Blas {
 
     private Blas() {}
 
+    private static volatile String clusterJava;
+
+    /**
+     * The linear algebra for sums whose results members of a cluster combine or compare (MultiSums: a cube's cells, many scopes): this
+     * process's binding, unless the cluster agreed on Java ({@link #clusterOnJava}) because a member runs on Java; then Java everywhere, so
+     * every member gives the same bits (HIGH_PERFORMANCE_NATIVE.md section 6.6).
+     */
+    public static LinearAlgebra forClusterSums() {
+        return clusterJava != null ? JavaBlas.INSTANCE : get();
+    }
+
+    /** The cluster's agreement: a reason (a member on Java) makes {@link #forClusterSums} Java on this member; null lifts it. */
+    public static void clusterOnJava(String reason) {
+        clusterJava = reason;
+    }
+
+    /** Why the cluster sums on Java, or null. */
+    public static String clusterJava() {
+        return clusterJava;
+    }
+
     /** The bound implementation (binding from the system properties if nothing bound yet). */
     public static LinearAlgebra get() {
         Binding b = bound;

@@ -91,6 +91,8 @@ public class NativeLibraries {
             }
         });
         Blas.scheduleCanary(canary);
+        com.ash.drishti.compute.vector.MultiSums.configure(env.getProperty("drishti.native.blas.gemm-min-sets", Integer.class, 32),
+                env.getProperty("drishti.native.blas.gemm-min-density", Double.class, 0.25));
         MeterRegistry r = registry.getIfAvailable();
         if (r != null) {
             path = MultiGauge.builder("drishti.native.blas").description("1 for the BLAS path in use (path native or java, and why java)").register(r);
@@ -139,8 +141,48 @@ public class NativeLibraries {
         e.getApplicationContext().getBeanProvider(DigestService.class).ifAvailable(d -> {
             digests = d;
             d.service(SERVICE, () -> wire(Blas.status()));
+            d.onChange(() -> agree(members()));                     // a member joined, left or changed its path: agree again
             d.announce();
         });
+    }
+
+    /** Each other member's binding as its digest says it (an older server, with no BLAS: {@code unknown}). */
+    private Map<String, String> members() {
+        Map<String, String> members = new LinkedHashMap<>();
+        DigestService d = digests;
+        if (d != null) {
+            d.peers().forEach((node, digest) -> {
+                String w = digest.services().get(SERVICE);
+                members.put(node, w == null ? "unknown (an older server: Java)" : w);
+            });
+        }
+        return members;
+    }
+
+    /**
+     * The cluster agrees on one path for the sums members combine or compare (HIGH_PERFORMANCE_NATIVE.md section 6.6): when any member runs
+     * on Java (or is an older server, which sums in Java), every member sums them on Java, so all give the same bits; never a refusal. Said
+     * loudly in the log, naming the members, each time the agreement changes.
+     *
+     * @return the reason the cluster sums on Java, or null (OpenBLAS everywhere)
+     */
+    static String agree(Map<String, String> members) {
+        List<String> onJava = members.entrySet().stream().filter(m -> m.getValue() == null || !m.getValue().startsWith("native"))
+                .map(m -> m.getKey() + " (" + m.getValue() + ")").toList();
+        String reason = onJava.isEmpty() ? null : "member" + (onJava.size() == 1 ? " " : "s ") + String.join(", ", onJava)
+                + " run" + (onJava.size() == 1 ? "s" : "") + " BLAS on Java: every member sums on Java so the cluster's figures agree";
+        String before = Blas.clusterJava();
+        Blas.clusterOnJava(reason);
+        if (reason != null && !reason.equals(before) && Blas.status().isNative()) {
+            LOG.warn("************************************************************************************************");
+            LOG.warn("CLUSTER BLAS ON JAVA: {}", reason);
+            LOG.warn("This member keeps OpenBLAS loaded but sums many scopes on the pure-Java path (results identical, slower).");
+            LOG.warn("Fix the member(s) named (Admin -> Health, Native libraries), or run every member with drishti.native.blas.mode: java.");
+            LOG.warn("************************************************************************************************");
+        } else if (reason == null && before != null) {
+            LOG.info("BLAS: every member runs OpenBLAS again; many-scope sums use it");
+        }
+        return reason;
     }
 
     /** {@code status} ({@code OK}, {@code DEGRADED}), this node's binding, the settings read, and each other member's binding. */
@@ -150,15 +192,9 @@ public class NativeLibraries {
         m.put("banner", s.banner());
         m.put("unknownMode", unknownMode);
         m.put("canaryInterval", canary.toString());
-        Map<String, String> members = new LinkedHashMap<>();
-        DigestService d = digests;
-        if (d != null) {
-            d.peers().forEach((node, digest) -> {
-                String w = digest.services().get(SERVICE);
-                members.put(node, w == null ? "unknown (an older server)" : w);
-            });
-        }
+        Map<String, String> members = members();
         m.put("members", members);
+        m.put("clusterPath", Blas.clusterJava() == null ? (s.isNative() ? "native" : "java") : "java: " + Blas.clusterJava());
         return m;
     }
 

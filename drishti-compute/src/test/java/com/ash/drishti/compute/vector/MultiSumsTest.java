@@ -210,6 +210,23 @@ class MultiSumsTest {
     }
 
     @Test
+    void aClusterAgreedOnJavaSumsInJavaWhateverThisMemberBound() {
+        Random r = new Random(6);
+        VectorStore s = heap(rows(r, N));
+        List<OrdinalSet> sets = sets(r, N);
+        try (ParallelSums pool = new ParallelSums(4, 64)) {
+            Blas.clusterOnJava("member node-c runs BLAS on Java");
+            assertThat(Blas.forClusterSums()).isSameAs(JavaBlas.INSTANCE);
+            List<double[]> got = MultiSums.sums(s, sets, pool);
+            for (int i = 0; i < sets.size(); i++) {
+                assertThat(got.get(i)).containsExactly(pool.sum(s, sets.get(i)));
+            }
+        } finally {
+            Blas.clusterOnJava(null);
+        }
+    }
+
+    @Test
     void otherStoresAreSummedSetBySet() {
         Vectors odd = new Vectors() {
             final VectorStore s = heap(MultiSumsTest.rows(new Random(5), 3_000));

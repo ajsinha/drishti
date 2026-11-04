@@ -68,4 +68,21 @@ class NativeLibrariesTest {
         assertThat(fell.health()).isEqualTo("DEGRADED");
         assertThat(chose.health()).isEqualTo("OK");
     }
+
+    @Test
+    void theClusterAgreesOnJavaWhenAnyMemberIsOnJava() {
+        try {
+            String r = NativeLibraries.agree(Map.of("node-b", "native 0.3.26", "node-c", "java-fallback no bundled OpenBLAS for linux-aarch64"));
+            assertThat(r).contains("node-c (java-fallback no bundled OpenBLAS for linux-aarch64)").contains("every member sums on Java");
+            assertThat(Blas.clusterJava()).isEqualTo(r);
+            assertThat(Blas.forClusterSums()).isSameAs(com.ash.drishti.compute.linalg.JavaBlas.INSTANCE);
+            assertThat(NativeLibraries.agree(Map.of("node-d", "unknown (an older server: Java)"))).contains("node-d");
+            assertThat(NativeLibraries.agree(Map.of("node-b", "native 0.3.26"))).isNull();   // every member native: the agreement lifts
+            assertThat(Blas.clusterJava()).isNull();
+            assertThat(Blas.forClusterSums()).isSameAs(Blas.get());
+            assertThat(NativeLibraries.agree(Map.of())).isNull();                             // alone: its own binding
+        } finally {
+            Blas.clusterOnJava(null);
+        }
+    }
 }

@@ -1607,6 +1607,16 @@ single pass, not from BLAS. At K = 1,000 cube cells every set is under 1,024 row
 OpenBLAS is used for a 1,024-row tile only when at least 32 sets share it at a density of at least a quarter (below that the conversion
 of the rows to float64 costs more than it saves: dense K = 10 was 3x slower on `dgemm` in the first measurement).
 
+The `dgemm` thresholds were **tuned on this one machine** and are settings (`drishti.native.blas.gemm-min-sets`, 32;
+`drishti.native.blas.gemm-min-density`, 0.25): measure again on the bank's hardware before changing them.
+
+**The VaR regression check of a release** runs the release twice against the previous release's figures on the same inputs:
+
+| Run | Must hold |
+|---|---|
+| `drishti.native.blas.mode=java` | **bit-exact** against the previous release: every VaR, ES, component and vector figure equal to the bit (the Java path keeps the sums' fixed order, and near ties are ordered as before) |
+| `drishti.native.blas.mode=auto` (OpenBLAS loaded) | every figure within a **relative 1e-12** of the Java run, and the **same VaR scenario date** for every scope (the near-tie rule) |
+
 Measured and **not kept** (slower than the Java loops, so they stay on Java): the FRTB bucket sum as `dgemv` (1,000 factors 1.9 ms loop
 against 8.2 ms; 3,000 factors 20.6 ms against 48.0 ms) and exposure's means and set additions (200 dates x 10,000 paths: means 1.2 ms
 loop against 1.3 ms; ten sets added 6.5 ms loop against 48.7 ms with `daxpy`, the native call copying its arrays).

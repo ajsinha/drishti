@@ -57,6 +57,18 @@ public final class MultiSums {
 
     private MultiSums() {}
 
+    private static volatile double minDensity = DEFAULT_MIN_DENSITY;
+    private static volatile int minSets = MIN_GEMM_SETS;
+
+    /**
+     * The {@code dgemm} thresholds ({@code drishti.native.blas.gemm-min-sets}, {@code drishti.native.blas.gemm-min-density}): tuned on one
+     * machine (BENCHMARK.md section 17), so settings; out-of-range values keep the defaults.
+     */
+    public static void configure(int sets, double density) {
+        minSets = sets >= 2 ? sets : MIN_GEMM_SETS;
+        minDensity = density > 0 && density <= 1 ? density : DEFAULT_MIN_DENSITY;
+    }
+
     /** Each pool thread's tile of rows for {@code dgemm} (4 MB at 509 scenarios), kept between calls. */
     private static final ThreadLocal<double[]> ROWS = new ThreadLocal<>();
 
@@ -69,9 +81,12 @@ public final class MultiSums {
         return b;
     }
 
-    /** {@link #sums(Vectors, List, ParallelSums, LinearAlgebra, double)} with the process's binding and the default density. */
+    /**
+     * {@link #sums(Vectors, List, ParallelSums, LinearAlgebra, double)} with the binding the cluster agreed on ({@link Blas#forClusterSums})
+     * and the configured thresholds ({@link #configure}).
+     */
     public static List<double[]> sums(Vectors store, List<OrdinalSet> sets, ParallelSums pool) {
-        return sums(store, sets, pool, Blas.get(), DEFAULT_MIN_DENSITY);
+        return sums(store, sets, pool, Blas.forClusterSums(), minDensity);
     }
 
     /**
@@ -140,7 +155,7 @@ public final class MultiSums {
             this.pool = pool;
             this.la = la;
             this.minDensity = minDensity;
-            this.minGemmSets = minDensity <= 0 ? 2 : MIN_GEMM_SETS;    // a density of 0 asks for dgemm wherever two sets share a tile (tests)
+            this.minGemmSets = minDensity <= 0 ? 2 : MultiSums.minSets;  // a density of 0 asks for dgemm wherever two sets share a tile (tests)
             this.width = store.width();
             int n = large.size();
             this.sets = new OrdinalSet[n];

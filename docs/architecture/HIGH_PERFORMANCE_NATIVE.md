@@ -439,7 +439,7 @@ checked against the rows (VAR_GUIDE section 26).
 |---|---|
 | Baseline (today's code) | unchanged and bit-exact run to run |
 | Vector API (SIMD) | **bit-exact** against its scalar twin: the twin uses the same tile and lane order, so both give identical bits; the baseline itself moves to that order once, measured and recorded |
-| BLAS | each scenario total within a **relative 1e-12** of the baseline's (twelve significant digits; on a total of 100 million, a ten-thousandth of a cent), with tiles combined by compensated summation in Java; the **selected scenario** (the k-th worst, hence VaR's date and every component VaR) **identical**, a near tie (within the tolerance) broken by the lower scenario index on both paths; ES, VaR and components within the same relative bound |
+| BLAS | each scenario total within a **relative 1e-12** of the baseline's (twelve significant digits; on a total of 100 million, a ten-thousandth of a cent), tiles folded in a fixed order; the **selected scenario** (the k-th worst, hence VaR's date and every component VaR) **identical**: built as the **near-tie rule** of `VarMath.order` (`NEAR_TIE` = 1e-12): scenario P&Ls within 1e-12 of the vector's largest absolute P&L of each other (chained) are ordered by scenario date, the older first (the lower index: the scenario set's dates ascend), on every path; ES, VaR and components within the same relative bound (`NearTieTest`: the exact order flips between the two paths, the selected scenario does not) |
 | Any breach | the start-up canary or the parity suite drops the path back to the baseline, logs it and shows it in Admin → Health → Native |
 
 The selected scenario matters more than the digits: VaR as a value moves by at most the difference of the totals, but if two scenarios
@@ -484,7 +484,8 @@ hot-file rows, memory-mapped, 509 scenarios, 8 threads, best of 2. At **1M posit
 
 Parity: the Java path equals one set at a time **to the bit** (checked in the benchmark and in `MultiSumsTest`, `ManyScopeVectorsTest`
 on heap, mapped float32 and grouped rows); OpenBLAS differs by at most 4.5e-16 relative to a vector's largest figure (bound 1e-12), with
-the same VaR scenario.
+the same VaR scenario. The `dgemm` thresholds (32 sets a tile, density a quarter) were **tuned on one machine** and are settings:
+`drishti.native.blas.gemm-min-sets` and `drishti.native.blas.gemm-min-density`.
 
 **Not kept** (measured, slower than the Java loops): the FRTB bucket sum K_b as a matrix-vector product (a bucket of 1,000 to 3,000
 factors: 2 to 4 times slower, because building the scenario's correlation matrix costs what the fused loop costs), and exposure's means
@@ -509,6 +510,15 @@ The native library never runs unguarded (`GuardedBlas`, what `Blas.get()` hands 
 
 A fault inside the native code itself (a crash, not an exception) cannot be caught by any JVM; the argument checks are there so that
 Drishti never hands OpenBLAS an argument that could cause one.
+
+### 6.6 One path for the cluster (as built)
+
+Members never refuse each other over BLAS. Each publishes its path in its capability digest (service `native-blas`: `native 0.3.26`,
+`java-fallback <reason>`, `java <reason>`). When **any** member runs on Java (or is an older server without the service, which sums in
+Java), every member sums many scopes (`MultiSums`, through `Blas.forClusterSums()`) on Java, so the figures members combine or compare
+are the same bits; the log says it in a WARN banner naming the members, Admin → Health shows each member's path and the cluster's
+(`clusterPath`), and the agreement lifts by itself when every member is native again. Shard sums (`VAR_SHARDING.md`) never use BLAS:
+they are `ParallelSums`' fixed-order Java sums on every member.
 
 ---
 

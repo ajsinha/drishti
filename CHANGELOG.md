@@ -33,6 +33,12 @@
   `dgemm`. At 1M positions x 509 scenarios: 100 overlapping portfolios 3.1x faster, 100 cube cells 2.4x, 100 desks 3.2x
   ([BENCHMARK.md section 17](docs/admin/BENCHMARK.md#17-many-var-scopes-at-once-blas)). FRTB's bucket sums and exposure's means were
   measured on BLAS and stay on Java (faster there).
+- **The near-tie rule**: scenario P&Ls within a relative 1e-12 of the vector's largest are ordered by scenario date (the older first), so
+  the VaR scenario, its date and every component VaR are the same on the Java and the OpenBLAS paths; VaR and ES agree within 1e-12.
+- **One path for the cluster**: each member publishes its BLAS path in its digest; when any member runs on Java, every member sums many
+  scopes on Java (a WARN banner names the member), never a refusal. The `dgemm` thresholds are settings
+  (`drishti.native.blas.gemm-min-sets`, `gemm-min-density`), tuned on one machine. The release's VaR regression check runs `java`
+  (bit-exact against the previous release) and `auto` (within 1e-12, the same VaR dates): BENCHMARK.md section 17.
 - Docs: [OPERATIONS.md section 2.1](docs/admin/OPERATIONS.md#21-server-requirements-native-libraries-blas) (server requirements, platforms,
   verification, the fallback and the warning), [HIGH_PERFORMANCE_NATIVE.md section 6](docs/architecture/HIGH_PERFORMANCE_NATIVE.md#6-blas)
   as built, TROUBLESHOOTING, CONFIGURATION.md regenerated, THIRD-PARTY-NOTICES.

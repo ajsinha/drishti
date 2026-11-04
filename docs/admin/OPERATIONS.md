@@ -161,9 +161,15 @@ same (within a relative 1e-12; many-scope sums are exact on Java), only the many
 | `drishti.native.max-bytes-mb` | 1024 | the off-heap memory the native layer may allocate itself |
 | `drishti.native.blas.max-call-mb` | 256 | a call whose operands pass this runs on Java |
 | `drishti.native.blas.canary-interval` | `6h` | the self-test against Java, run again this often (0: at start only) |
+| `drishti.native.blas.gemm-min-sets`, `gemm-min-density` | 32, 0.25 | when a tile of many-scope sums is one `dgemm` (tuned on one machine: [BENCHMARK.md section 17](BENCHMARK.md#17-many-var-scopes-at-once-blas)) |
 
 OpenBLAS runs **one thread per call** (Drishti sets it when it loads; its own pools share the cores), so no `OPENBLAS_NUM_THREADS` is
-needed.
+needed. **One artifact everywhere**: the server ships both the Linux and the Windows builds (the Windows jar adds about 29 MB to a Linux
+installation; accepted, so one build runs on both).
+
+**A cluster agrees on one path**: members never refuse each other over BLAS. If any member runs on Java, every member sums many scopes on
+Java (a WARN banner names the member; Admin → Health shows each member's path), so the figures they combine are the same bits; it lifts
+by itself when every member is native again.
 
 **How to verify**
 
