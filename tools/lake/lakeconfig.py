@@ -74,18 +74,25 @@ def _maven_classpath() -> str | None:
 
 def command(jar: str | None = None, java: str | None = None) -> list[str]:
     import writers
+    if str(pathlib.Path(__file__).resolve().parents[1]) not in sys.path:
+        sys.path.append(str(pathlib.Path(__file__).resolve().parents[1]))
+    from javacmd import java_cmd as _java_cmd         # every java we start names its temp folder (tools/javacmd.py)
+    import tempfile
+
+    def java_cmd(java_bin, args):                     # a short reader of YAML: the command line's temp folder, never the site's data folder
+        return _java_cmd(java_bin, args, tmp=os.environ.get("DRISHTI_TMP_DIR") or tempfile.gettempdir())
     java_bin = writers.find_java(java)
     if not java_bin:
         raise LakeConfigError("no java found to read the lake files (JAVA_HOME, or java on the PATH)")
     cp = os.environ.get("DRISHTI_LAKE_CLASSPATH")
     if cp and not jar:
-        return [java_bin, "-cp", cp, MAIN]
+        return java_cmd(java_bin, ["-cp", cp, MAIN])
     j = writers.find_jar(jar)
     if j:
-        return [java_bin, f"-Dloader.main={MAIN}", "-jar", j]
+        return java_cmd(java_bin, [f"-Dloader.main={MAIN}", "-jar", j])
     cp = _maven_classpath()
     if cp:
-        return [java_bin, "-cp", cp, MAIN]
+        return java_cmd(java_bin, ["-cp", cp, MAIN])
     raise LakeConfigError("cannot read the lake files: no server exec jar (DRISHTI_JAR, drishti-server/target) and no compiled "
                           "drishti-lakeconfig (mvn -pl drishti-lakeconfig compile); DRISHTI_LAKE_CLASSPATH names one")
 

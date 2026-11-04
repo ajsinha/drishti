@@ -86,8 +86,8 @@ def test_direct_lake_notebook_is_labelled():
 
 def test_index_lists_every_example():
     index = (EXAMPLES / "README.md").read_text(encoding="utf-8")
-    for p in NOTEBOOKS + [EXAMPLES / "java" / "ReadKindAndVarPnl.java", EXAMPLES / "java" / "JdbcFlightSql.java",
-                          EXAMPLES / "excel" / "flight_to_excel.py"]:
+    for p in NOTEBOOKS + [EXAMPLES.joinpath("java", "ReadKindAndVarPnl.java"), EXAMPLES.joinpath("java", "JdbcFlightSql.java"),
+                          EXAMPLES.joinpath("excel", "flight_to_excel.py")]:
         assert p.relative_to(EXAMPLES).as_posix() in index, p
     assert "C#/.NET, R and Go" in index.split("## Later", 1)[1]
 
@@ -167,7 +167,9 @@ def test_java_example(server):
     cp = os.environ.get("DRISHTI_EXAMPLES_JAVA_CP")
     if not cp or not shutil.which("java"):
         pytest.skip("set DRISHTI_EXAMPLES_JAVA_CP to the example's jars (examples/clients/java/README.md)")
-    r = subprocess.run(["java", "--add-opens=java.base/java.nio=ALL-UNNAMED", "-cp", cp, "ReadKindAndVarPnl.java"],
+    sys.path.insert(0, str(REPO / "tools"))
+    from javacmd import java_cmd                          # every java a test starts names its temp folder
+    r = subprocess.run(java_cmd("java", ["--add-opens=java.base/java.nio=ALL-UNNAMED", "-cp", cp, "ReadKindAndVarPnl.java"]),
                        cwd=EXAMPLES / "java", capture_output=True, text=True, timeout=300)
     assert r.returncode == 0, r.stderr
     assert "trades" in r.stdout and "scenarios" in r.stdout, r.stdout
