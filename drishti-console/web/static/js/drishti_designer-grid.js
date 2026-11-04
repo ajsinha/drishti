@@ -270,14 +270,14 @@
     var url = '/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id) + '?design=' + encodeURIComponent(draft) + '&embed=1';
     return fetch(url, { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'text/html' } }).then(function (r) { return r.text(); }).then(function (html) {
       // a preview the client-side renderer draws (ui.render: client) embeds its ViewModel: the frame's library draws its body in the frame
-      var fresh = (w && w.drishtiFreshGrid && w.drishtiFreshGrid(html)) || new DOMParser().parseFromString(html, 'text/html').querySelector('[data-view] .vgrid'), old = d && d.querySelector('[data-view] .vgrid');
-      var needsGrid = fresh && fresh.hasAttribute('data-sgrid') && !(w && w.drishtiScreenGrid);
-      var needsWire = fresh && fresh.querySelector('section.pnl[data-wire]') && !(w && w.drishtiWire);
+      var fresh = (w && (w.Drishti || {}).freshGrid && (w.Drishti || {}).freshGrid(html)) || new DOMParser().parseFromString(html, 'text/html').querySelector('[data-view] .vgrid'), old = d && d.querySelector('[data-view] .vgrid');
+      var needsGrid = fresh && fresh.hasAttribute('data-sgrid') && !(w && (w.Drishti || {}).screenGrid);
+      var needsWire = fresh && fresh.querySelector('section.pnl[data-wire]') && !(w && (w.Drishti || {}).wire);
       if (!fresh || !old || needsGrid || needsWire) { frame.setAttribute('src', url); return; }
       var next = fresh.ownerDocument === d ? fresh : d.importNode(fresh, true);
       old.replaceWith(next);
-      if (w.drishtiScreenGrid && next.hasAttribute('data-sgrid')) { w.drishtiScreenGrid.init(next); }
-      if (w.drishti && w.drishti.enhance) { w.drishti.enhance(next); }
+      if ((w.Drishti || {}).screenGrid && next.hasAttribute('data-sgrid')) { (w.Drishti || {}).screenGrid.init(next); }
+      if ((w.Drishti || {}).view && (w.Drishti || {}).view.enhance) { (w.Drishti || {}).view.enhance(next); }
       frame.setAttribute('data-gd-rev', String(rev));
     });
   }
