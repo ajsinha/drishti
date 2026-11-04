@@ -126,7 +126,8 @@ final class InboxStatus {
                 waiting.add(w);
             }
             for (Inbox.Waiting x : f.waiting()) {
-                Path marker = inbox.resolve(x.name() + Inbox.READY);
+                String mn = Inbox.markerOf(x.name(), names(inbox), new String[1]);
+                Path marker = mn == null ? inbox.resolve(x.name() + Inbox.READY) : inbox.resolve(mn);
                 boolean marked = Files.isRegularFile(marker, LinkOption.NOFOLLOW_LINKS);
                 Map<String, Object> w = switch (x.code()) {
                     case Inbox.NOT_STABLE -> file(x.name(), x.size(), x.modified(), now, "not-stable", "not yet stable",
@@ -135,7 +136,7 @@ final class InboxStatus {
                     case Inbox.NEXT_CYCLE -> file(x.name(), x.size(), x.modified(), now, "next-cycle", "ready, next run",
                             "this run took its most files or bytes (max-files, max-gb)", "taken at the cycle after");
                     default -> file(x.name(), x.size(), x.modified(), now, "no-marker", "no marker", "since " + time(x.modified()),
-                            "never taken without " + x.name() + Inbox.READY + " or ready.all");
+                            x.why().startsWith("no ") ? "never taken without " + x.name() + Inbox.READY + " or ready.all" : x.why());
                 };
                 w.put("rule", preview(routes, x.name(), marked ? marker : null));
                 waiting.add(w);
@@ -176,6 +177,17 @@ final class InboxStatus {
         w.put("detail", detail);
         w.put("next", next);
         return w;
+    }
+
+    /** The names in the inbox folder (to pair a file with its marker, {@link Inbox#markerOf}). */
+    private static Set<String> names(Path inbox) {
+        Set<String> out = new java.util.HashSet<>();
+        try (var s = Files.list(inbox)) {
+            s.forEach(p -> out.add(p.getFileName().toString()));
+        } catch (IOException e) {
+            // no folder: no names
+        }
+        return out;
     }
 
     private static String markerText(Path marker) {

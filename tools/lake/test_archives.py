@@ -100,24 +100,42 @@ def test_lake_builds_reader_reads_an_archive_in_name_order(tmp_path):
     assert [m.label for m in files] == ["trade.zip!/a.jsonl", "trade.zip!/b.jsonl.gz", "trade.zip!/c.ndjson"]
     docs = [d for d, _ in jsonstream.documents([FIX / "trade.zip"])]
     assert [d["id"] for d in docs] == ["TRADE-1", "TRADE-2", "TRADE-3", "TRADE-4", "TRADE-5", "TRADE-6"]
-    where = [w for _, w in jsonstream.documents([FIX / "trade.tar.gz"])]
-    assert where[0] == "trade.tar.gz!/a.jsonl:1" and where[1] == "trade.tar.gz!/a.jsonl:3"          # the blank line still counts
+    feed = tmp_path / "feed.tar.gz"
+    feed_tar(feed, {"trade/2026-10-01/a.jsonl": '{"id": "1"}\n\n{"id": "2"}\n'})
+    where = [w for _, w in jsonstream.documents([feed])]
+    assert where[0] == "feed.tar.gz!/trade/2026-10-01/a.jsonl:1" and where[1] == "feed.tar.gz!/trade/2026-10-01/a.jsonl:3"   # a blank line counts
 
 
-def test_lake_builds_reader_takes_the_folder_of_its_table_only(tmp_path):
-    one = tmp_path / "day.zip"
-    with zipfile.ZipFile(FIX / "bundle.zip") as src, zipfile.ZipFile(one, "w") as z:
-        z.writestr("trade/t1.jsonl", src.read("trade/t1.jsonl"))
-    assert [m.label for m in jsonstream.input_files([one], table="trade")] == ["day.zip!/trade/t1.jsonl"]
-    with pytest.raises(A.ArchiveError, match="position"):
-        jsonstream.input_files([FIX / "bundle.zip"], table="trade")           # the other folder: refused, not silently left out
-    with pytest.raises(A.ArchiveError, match="one table"):
+def feed_tar(path, members: dict) -> None:
+    import io
+    with tarfile.open(path, "w:gz") as t:
+        for name, text in members.items():
+            data = text.encode()
+            info = tarfile.TarInfo(name)
+            info.size = len(data)
+            t.addfile(info, io.BytesIO(data))
+
+
+def test_a_feed_zip_is_one_table_and_a_feed_tar_names_its_tables_and_dates(tmp_path):
+    """A loader's feed (docs/architecture/DATA_LOAD_RULES.md): a zip holds loose files only; a tar holds <table>/<YYYY-MM-DD>/ folders."""
+    with pytest.raises(A.ArchiveError, match="a .zip is one table and one business date"):
+        jsonstream.input_files([FIX / "bundle.zip"], table="trade")
+    with pytest.raises(A.ArchiveError, match="refused, nothing was loaded"):
         jsonstream.input_files([FIX / "bundle.tar.gz"])
+    feed = tmp_path / "eod.tar.gz"
+    feed_tar(feed, {"trade/2026-10-01/t1.jsonl": '{"id": "1"}\n', "position/2026-10-01/p.jsonl": '{"id": "P"}\n'})
+    got = jsonstream.input_files([feed], tar_table="trade")
+    assert [(m.label, str(m.date)) for m in got] == [("eod.tar.gz!/trade/2026-10-01/t1.jsonl", "2026-10-01")]
+    with pytest.raises(A.ArchiveError, match="position"):
+        jsonstream.input_files([feed], table="trade")                        # the other table: refused, not silently left out
+    plan = A.plan(feed, layout="feed")
+    assert sorted(plan.datasets) == ["position", "trade"]
+    assert A.plan(FIX / "bundle.tar.gz").folders                              # load_rows' rule (layout rows) is unchanged
 
 
 def test_a_folder_of_archives_is_read_with_its_plain_files(tmp_path):
     (tmp_path / "x.jsonl").write_text('{"id": "X"}\n', encoding="utf-8")
-    (tmp_path / "trade.tgz").write_bytes((FIX / "trade.tgz").read_bytes())
+    (tmp_path / "trade.zip").write_bytes((FIX / "trade.zip").read_bytes())
     docs = [d["id"] for d, _ in jsonstream.documents([tmp_path])]
     assert docs == ["TRADE-1", "TRADE-2", "TRADE-3", "TRADE-4", "TRADE-5", "TRADE-6", "X"]
 
@@ -188,8 +206,8 @@ def test_lake_build_loads_an_archive_and_refuses_a_folder_of_another_table(tmp_p
     import subprocess
     cli = [sys.executable, str(HERE.parent / "drishti.py"), "lake", "build", "--domain", "fixture", "--kind", "trade", "--key", "id",
            "--date", "date", "--lake", str(tmp_path / "lake")]
-    ok = subprocess.run(cli + ["--from", str(FIX / "trade.tgz")], capture_output=True, text=True, timeout=300)
+    ok = subprocess.run(cli + ["--from", str(FIX / "trade.zip")], capture_output=True, text=True, timeout=300)
     assert ok.returncode == 0, ok.stdout + ok.stderr
     assert "rows written: 6" in ok.stdout
     refused = subprocess.run(cli + ["--from", str(FIX / "bundle.zip")], capture_output=True, text=True, timeout=300)
-    assert refused.returncode == 1 and "folder position matches no configured dataset (trade)" in refused.stdout + refused.stderr
+    assert refused.returncode == 1 and "a .zip is one table and one business date" in refused.stdout + refused.stderr

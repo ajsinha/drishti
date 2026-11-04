@@ -61,11 +61,14 @@ def _key(f) -> str:
     return f"{f.archive.absolute()}!/{f.name}" if isinstance(f, archives.Member) else str(f.absolute())
 
 
-def input_files(inputs, recursive: bool = False, table: str | None = None, limits: archives.Limits | None = None) -> list:
+def input_files(inputs, recursive: bool = False, table: str | None = None, limits: archives.Limits | None = None,
+                tar_table: str | None = None, known=None) -> list:
     """The files named by ``inputs`` (files or folders), in one deterministic order: sorted by absolute path (as text), whatever the
     order of the inputs, so "the last one read" means the same in the Python path and the Java loader (TOOLS.md section 4.13). An
     archive gives its JSON Lines members (``archives.Member``, its members after the archive's path, in name order); every archive is
-    checked before any is read. ``table``: the one table being loaded, the only folder name an archive may hold."""
+    checked before any is read, as a loader's feed (DATA_GUIDE.md section 2.8): a zip is one table, loose files; a tar holds
+    <table>/<YYYY-MM-DD>/ folders (``known``: its tables must be among them) and gives the members of ``tar_table`` only (none given: a
+    tar holding a table other than ``table`` is refused)."""
     out: list = []
     for i in inputs if isinstance(inputs, (list, tuple)) else [inputs]:
         p = pathlib.Path(i)
@@ -81,12 +84,15 @@ def input_files(inputs, recursive: bool = False, table: str | None = None, limit
         if not archives.is_archive(f.name):
             expanded.append(f)
             continue
-        plan = archives.plan(f, limits=limits)
-        if plan.folders:
-            if not table:
-                raise archives.ArchiveError(f"{f.name}: its folders ({', '.join(plan.datasets)}) are datasets, and this load writes one table: "
-                                            "load it with load_rows.py or the Java loader's datasets:, or an archive without folders")
-            plan.require([table])
+        plan = archives.plan(f, limits=limits, layout="feed", configured=known)
+        if plan.kind != "zip":
+            if tar_table is None:
+                if table:
+                    plan.require([table])
+                expanded += plan.members()
+            else:
+                expanded += plan.datasets.get(tar_table, [])
+            continue
         expanded += plan.members()
     return sorted(expanded, key=_key)
 

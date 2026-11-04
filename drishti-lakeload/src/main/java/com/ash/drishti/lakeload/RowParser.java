@@ -112,7 +112,7 @@ final class RowParser {
         this.plan = plan;
         Map<String, Integer> slots = new HashMap<>();
         keySlot = slot(slots, plan.key, false);
-        dateSlot = plan.date == null || plan.asOf != null ? -1 : slot(slots, plan.date, false);
+        dateSlot = plan.date == null ? -1 : slot(slots, plan.date, false);
         latestSlot = plan.latestBy == null ? -1 : slot(slots, plan.latestBy, false);
         promotedSlots = new int[plan.promoted.size()];
         for (int i = 0; i < promotedSlots.length; i++) {
@@ -452,14 +452,14 @@ final class RowParser {
             default -> k.text;
         };
         otherDate = false;
-        if (plan.asOf != null) {
-            epochDay = (int) plan.asOf.toEpochDay();
-        } else if (fileDay != NO_FILE_DAY) {               // the date in the file's name, enforced: the row's own date is only compared
+        if (fileDay != NO_FILE_DAY) {                      // the file's business date (FileDates.decide): the row's own date is only counted
             epochDay = fileDay;
             LocalDate own = dateSlot < 0 ? null : day(caps[dateSlot]);
             otherDate = own != null && own.toEpochDay() != fileDay;
+        } else if (plan.asOf != null) {
+            epochDay = (int) plan.asOf.toEpochDay();
         } else if (dateSlot < 0) {
-            return "no business date (no date field, and the file name carries no date)";
+            return "no business date";
         } else {
             Cap d = caps[dateSlot];
             LocalDate day = day(d);

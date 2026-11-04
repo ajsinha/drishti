@@ -78,10 +78,12 @@ final class LoadReport {
     static final int KEEP_DUPLICATE_EXAMPLES = 10;
     private final Map<Integer, java.util.Set<Long>> dropped = new TreeMap<>();
     final List<ObjectNode> files = new ArrayList<>();
-    /** The files whose names gave their rows' date, in input order: file, date, rows that carried another date in the date field. */
+    /** Each file's business date, in input order: file, date, source, in words, rows that carried another date in the date field. */
     final List<ObjectNode> fileDates = new ArrayList<>();
     long otherDateRows;
     final List<String> dateNotes = new ArrayList<>();
+    /** Files with no document: ignored, nothing written for them. */
+    final List<String> emptyFiles = new ArrayList<>();
     final Map<String, ObjectNode> commits = new TreeMap<>();
     final Map<String, List<WrittenFile>> written = new TreeMap<>();
     Map<String, String> columnTypes = Map.of();
@@ -352,17 +354,25 @@ final class LoadReport {
     private void fileDates(List<ParseWorker> workers, List<Split> splits) {
         Map<String, long[]> all = new LinkedHashMap<>();
         for (ParseWorker w : workers) {
-            w.fileDates.forEach((f, v) -> all.merge(f, v.clone(), (a, b) -> new long[] {a[0], a[1] + b[1]}));
+            w.fileDates.forEach((f, v) -> all.merge(f, v.clone(), (a, b) -> new long[] {a[0], a[1] + b[1], a[2], a[3] + b[3]}));
         }
         java.util.Set<String> done = new java.util.HashSet<>();
+        Map<String, Long> rowsByFile = new java.util.HashMap<>();
         for (Split sp : splits) {
             String f = sp.file().name();
+            if (!done.add(f)) {
+                continue;
+            }
             long[] v = all.get(f);
-            if (v == null || !done.add(f)) {
+            if (v == null || v[3] == 0) {
+                emptyFiles.add(f);
                 continue;
             }
             LocalDate day = LocalDate.ofEpochDay(v[0]);
-            fileDates.add(JSON.createObjectNode().put("file", f).put("date", day.toString()).put("otherDateRows", v[1]));
+            String source = ParseWorker.SOURCES[(int) v[2]];
+            fileDates.add(JSON.createObjectNode().put("file", f).put("date", day.toString()).put("source", source)
+                    .put("dateText", FileDates.words(new FileDates.Decided(day, source, null), "the command line")).put("rows", rowsByFile.getOrDefault(f, v[3]))
+                    .put("otherDateRows", v[1]));
             otherDateRows += v[1];
             if (v[1] > 0) {
                 dateNotes.add(FileDates.otherDateNote(v[1], f, plan.date, day));
@@ -375,7 +385,7 @@ final class LoadReport {
         ObjectNode s = JSON.createObjectNode();
         String[] dt = cfg.domainAndTable();
         s.put("run", run).put("startedAt", startedAt).put("finishedAt", now()).put("status", status).put("exitCode", exitCode())
-                .put("dryRun", cfg.report().dryRun()).put("mode", "overwrite-dates").put("format", cfg.target().format())
+                .put("dryRun", cfg.report().dryRun()).put("mode", cfg.target().appends() ? "append" : "overwrite-dates").put("format", cfg.target().format())
                 .put("engine", "java-loader").put("engineWhy", "the parallel lake loader (drishti-lakeload)").put("table", cfg.tablePath())
                 .put("domain", dt[0]).put("kind", cfg.target().kind() != null ? cfg.target().kind() : dt[1]).put("key", plan.key);
         s.put("date", plan.asOf != null ? null : plan.date).put("asOf", plan.asOf == null ? null : plan.asOf.toString());
@@ -402,6 +412,7 @@ final class LoadReport {
         s.set("fileDates", JSON.valueToTree(fileDates));
         s.put("otherDateRows", otherDateRows);
         s.set("dateNotes", JSON.valueToTree(dateNotes));
+        s.set("emptyFiles", JSON.valueToTree(emptyFiles));
         s.put("sampleId", sampleId).put("sampleDate", sampleDate);
         ObjectNode timings = s.putObject("timings");
         timings.put("readSeconds", Meter.round(readSeconds)).put("writeSeconds", Meter.round(writeSeconds)).put("totalSeconds", Meter.round(totalSeconds));

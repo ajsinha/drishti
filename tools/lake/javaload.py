@@ -101,7 +101,7 @@ def wanted(a, files: list[pathlib.Path], jar: str | None, java: str | None) -> t
     size = sum(f.stat().st_size for f in files)
     if size < threshold:
         return False, f"{size / 1048576:.0f} MB of input is under --java-above-mb"
-    if a.mode != "overwrite-dates":
+    if a.mode not in (None, "overwrite-dates", "append"):
         return False, f"--mode {a.mode} is the Python path's"
     if not all(is_jsonl(f) for f in files):
         return False, "an input is not JSON Lines"
@@ -126,12 +126,25 @@ def config(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, e
         src["pack"] = str(pathlib.Path(a.pack).resolve())
         if p.get("connector"):
             src["connector"] = p["connector"]
+    marked = {m.get("business-date") for m in (getattr(a, "_markers", None) or {}).values() if m.get("business-date")}
+    if not as_of and len(marked) > 1:
+        raise LoaderError("the files' .ready markers give different business dates: load them one at a time")
+    as_of = as_of or (marked.pop() if marked else None)
     if as_of:
         src["as-of"] = as_of.isoformat()
-    elif p["date"]:
-        src["date"] = p["date"]
-    src["date-from"] = p.get("date_from") or "auto"      # a date in a file's name: every row of the file under it (FileDates)
+    if p["date"]:
+        src["date"] = p["date"]                         # each row's own date field: only counted when it differs (FileDates)
+    src["date-from"] = p.get("date_from") or "auto"
+    if getattr(a, "_tar_table", None):
+        src["dataset"] = a._tar_table                   # the one table of the tar this run loads
+    mode = getattr(a, "mode", None)
+    if mode:
+        target_mode = "append" if mode == "append" else "replace-date"
+    else:
+        target_mode = None
     target = {"format": "iceberg" if iceberg else "delta", "lake": lake, "domain": p["domain"], "kind": p["kind"]}
+    if target_mode:
+        target["mode"] = target_mode
     if p.get("table"):
         target["table"] = p["table"]
     if not iceberg:

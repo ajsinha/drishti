@@ -55,20 +55,19 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
 
     /** The input files and what a row is. */
     record Source(List<String> files, boolean recursive, Map<String, String> storage, String id, String date, LocalDate asOf,
-            List<String> promote, List<String> vectors, Map<String, String> flatten, List<String> partitionBy, String latestBy, String dateFrom) {
-
-        /** {@code date-from: auto} (the default) and no {@code as-of}: a date in a file's name ({@link FileDates}) is its rows' business date. */
-        boolean datesFromNames() {
-            return asOf == null && "auto".equals(dateFrom);
-        }
-    }
+            List<String> promote, List<String> vectors, Map<String, String> flatten, List<String> partitionBy, String latestBy, String dateFrom) {}
 
     /** The table and its layout. */
     record Target(String format, String path, String lake, String domain, String kind, String table, Map<String, String> storage,
-            Map<String, String> properties, Map<String, String> iceberg, Layout layout) {
+            Map<String, String> properties, Map<String, String> iceberg, Layout layout, String mode) {
 
         boolean isIceberg() {
             return format.equals("iceberg");
+        }
+
+        /** {@code mode: append}: each date's rows are added; else ({@code replace-date}) each date of the input is replaced. */
+        boolean appends() {
+            return "append".equals(mode);
         }
     }
 
@@ -296,9 +295,9 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         }
         String date = r.text(s, "date", null);
         String dateFrom = r.text(s, "date-from", "auto").toLowerCase(Locale.ROOT);
-        if (!dateFrom.equals("auto") && !dateFrom.equals("field")) {
-            throw new IllegalArgumentException("source.date-from " + dateFrom + ": auto (a date at the end of a file's name is the business date of "
-                    + "every row of that file; the default) or field (each row's source.date field)");
+        if (!dateFrom.equals("auto") && !dateFrom.equals("name")) {
+            throw new IllegalArgumentException("source.date-from " + dateFrom + ": auto (a file's business date: source.as-of, else the date in "
+                    + "its name, <table>.<YYYY-MM-DD>.jsonl, else the business today; the default) or name (a name without a date is refused)");
         }
         // a pack (as lake build --pack): its connector's domain, table, layout columns, vectors and flattened fields, its ingest key and date
         String packDir = r.text(s, "pack", null);
@@ -317,9 +316,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
                 date = pack.date();
             }
         }
-        if (asOf == null && date == null && dateFrom.equals("field")) {
-            throw new IllegalArgumentException("source.date: name the business-date field (or give source.as-of YYYY-MM-DD for every row)");
-        }
+
         List<String> vectors = new ArrayList<>(r.list(s, "vectors"));
         vectors.addAll(r.list(s, "vector"));
         List<String> promote = r.list(s, "promote");
@@ -342,10 +339,11 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         if (!tf.equals("delta") && !tf.equals("iceberg")) {
             throw new IllegalArgumentException("target.format " + tf + ": delta or iceberg");
         }
-        String mode = r.text(t, "mode", "replace-date");
-        if (!mode.equals("replace-date") && !mode.equals("overwrite-dates")) {
-            throw new IllegalArgumentException("target.mode " + mode + ": replace-date (each business date of the input replaced by one commit; "
-                    + "overwrite-dates is the same) is the loader's only mode; lake build's Python path has overwrite-partitions and append");
+        String mode = r.text(t, "mode", "append").toLowerCase(Locale.ROOT);
+        mode = mode.equals("overwrite-dates") || mode.equals("replace") ? "replace-date" : mode;
+        if (!mode.equals("replace-date") && !mode.equals("append")) {
+            throw new IllegalArgumentException("target.mode " + mode + ": append (the default: each business date's rows are added, one commit "
+                    + "per date) or replace-date (each business date of the input replaced by one commit; also replace, overwrite-dates)");
         }
         if (tf.equals("iceberg") && !src.partitionBy().isEmpty()) {
             throw new IllegalArgumentException("source.partition-by is Delta's: an Iceberg table of the layout is partitioned by business date alone "
@@ -362,7 +360,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
                 r.text(l, "vector-compression", "zstd").toLowerCase(Locale.ROOT), r.bool(l, "byte-stream-split", true), r.bool(l, "shard-aligned", true));
         String domain = r.text(t, "domain", pack == null ? null : pack.domain());
         String table = r.text(t, "table", pack == null ? null : pack.table());
-        Target tgt = new Target(tf, r.text(t, "path", null), r.text(t, "lake", null), domain, r.text(t, "kind", null), table, targetStorage, r.map(t.path("properties"), "target.properties"), iceberg, layout);
+        Target tgt = new Target(tf, r.text(t, "path", null), r.text(t, "lake", null), domain, r.text(t, "kind", null), table, targetStorage, r.map(t.path("properties"), "target.properties"), iceberg, layout, mode);
         if (tgt.path() == null && (tgt.lake() == null || tgt.domain() == null || tgt.kind() == null && tgt.table() == null)) {
             throw new IllegalArgumentException("target: give path (the table) or lake, domain and kind (the table <lake>/<domain>/<kind>)");
         }

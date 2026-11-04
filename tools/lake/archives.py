@@ -31,6 +31,11 @@ drishti-lakeload's ``Archives``). Both test suites run the same fixtures (``tool
   allowed); and while reading, the bytes the archive expands to and, apart, the JSON Lines text of its compressed members, each held to
   the same two caps: reading stops the moment one is passed.
 
+**The loaders' feeds** (``plan(..., layout="feed")``: ``lake build``, the parallel loader, the data inbox; DATA_GUIDE.md section 2.8)
+are stricter: a tar (``.tar``, ``.tgz``, ``.tar.gz``, ``.tar.zip``) holds ``<table>/<YYYY-MM-DD>/<file>.jsonl`` and nothing else
+(``filedate.tar_layout``: every problem listed, the whole archive refused), each member dated by its folder; a ``.zip`` is one table and
+one date, loose JSON Lines files only (folders refused). The rule above (``layout="rows"``) stays for ``load_rows.py``.
+
 Every check that needs no reading is made by ``plan`` before a row is read. ``DRISHTI_ARCHIVE_MAX_MB``, ``DRISHTI_ARCHIVE_MAX_RATIO``
 and ``DRISHTI_ARCHIVE_MAX_MEMBERS`` change the caps' defaults."""
 from __future__ import annotations
@@ -47,7 +52,7 @@ import zipfile
 from dataclasses import dataclass, field
 from typing import Iterable, Iterator
 
-ARCHIVE_SUFFIXES = (".tar.gz", ".tgz", ".tar", ".zip")
+ARCHIVE_SUFFIXES = (".tar.gz", ".tar.zip", ".tgz", ".tar", ".zip")
 JSONL_SUFFIXES = (".jsonl", ".ndjson", ".json")
 MEMBER_COMPRESSION = ("", ".gz", ".zst")
 NESTED_SUFFIXES = (".zip", ".tar", ".tgz", ".tar.gz", ".tar.zst", ".tar.bz2", ".tar.xz", ".7z", ".rar")
@@ -134,6 +139,7 @@ class Member:
     size: int
     raw: str = ""
     tally: tuple = field(default=None, repr=False, compare=False)   # (expanded, text): the archive's counts, shared by its members
+    date: object = None                                             # a tar feed's member: the business date of its folder
 
     def __str__(self) -> str:
         return f"{self.archive}!/{self.name}"
@@ -173,11 +179,33 @@ class Plan:
 
 def _kind(path: pathlib.Path) -> str:
     low = path.name.lower()
+    if low.endswith(".tar.zip"):
+        return "tarzip"
     if low.endswith(".zip"):
         return "zip"
     if low.endswith((".tar.gz", ".tgz")):
         return "tgz"
     return "tar"
+
+
+def _tar_in_zip(z: zipfile.ZipFile, name: str) -> zipfile.ZipInfo:
+    """The one .tar member of a .tar.zip."""
+    tars = [i for i in z.infolist() if not i.is_dir() and i.filename.lower().endswith(".tar")]
+    if len(tars) != 1 or len([i for i in z.infolist() if not i.is_dir()]) != 1:
+        raise ArchiveError(f"{name}: a .tar.zip holds exactly one .tar file")
+    return tars[0]
+
+
+def _open_tar(path: pathlib.Path, kind: str):
+    """(the tar, the zip holding it or None)."""
+    if kind == "tarzip":
+        z = zipfile.ZipFile(path)
+        try:
+            return tarfile.open(fileobj=z.open(_tar_in_zip(z, path.name)), mode="r:"), z
+        except BaseException:
+            z.close()
+            raise
+    return tarfile.open(path, "r:gz" if kind == "tgz" else "r:"), None
 
 
 def _entries(path: pathlib.Path, kind: str, limits: Limits) -> list[tuple[str, int, str]]:
@@ -200,7 +228,8 @@ def _entries(path: pathlib.Path, kind: str, limits: Limits) -> list[tuple[str, i
                     t = "file"
                 out.append((i.filename, i.file_size, t))
         return out
-    with tarfile.open(path, "r:gz" if kind == "tgz" else "r:") as t:
+    t, z = _open_tar(path, kind)
+    try:
         n = 0
         for i in t:
             n += 1
@@ -208,12 +237,18 @@ def _entries(path: pathlib.Path, kind: str, limits: Limits) -> list[tuple[str, i
                 raise ArchiveError(f"{path.name}: more than the cap of {limits.max_members:,} entries (max-members)")
             kind_ = "dir" if i.isdir() else "file" if i.isreg() else "a link" if (i.issym() or i.islnk()) else "a device or special file"
             out.append((i.name, i.size if i.isreg() else 0, kind_))
+    finally:
+        t.close()
+        if z:
+            z.close()
     return out
 
 
-def plan(path, dataset: str | None = None, configured: Iterable[str] | None = None, limits: Limits | None = None) -> Plan:
+def plan(path, dataset: str | None = None, configured: Iterable[str] | None = None, limits: Limits | None = None, layout: str = "rows",
+         today=None) -> Plan:
     """The archive's datasets by the rule (module doc), every check that needs no reading made. ``dataset`` names the dataset of an
-    archive without folders (refused for one with folders); ``configured`` (when given) are the datasets the loader knows."""
+    archive without folders (refused for one with folders); ``configured`` (when given) are the datasets the loader knows. ``layout``:
+    ``rows`` (the rule above) or ``feed`` (a loader's feed: a tar of <table>/<YYYY-MM-DD>/, a zip of one table and one date)."""
     path = pathlib.Path(path)
     limits = limits or Limits.from_env()
     if not is_archive(path.name):
@@ -230,6 +265,8 @@ def plan(path, dataset: str | None = None, configured: Iterable[str] | None = No
         why = (f"more than max-mb {limits.max_mb:g}" if declared > limits.max_mb * 1048576
                else f"more than max-ratio {limits.max_ratio:g} times the archive's {size:,} bytes")
         raise ArchiveError(f"{path.name}: its entries expand to {declared:,} bytes, {why} (a zip bomb?); nothing was read")
+    if layout == "feed" and kind != "zip":
+        return _tar_feed(path, kind, entries, size, configured, today)
     notes: list[str] = []
     loose: list[Member] = []
     foldered: dict[str, list[Member]] = {}
@@ -264,6 +301,9 @@ def plan(path, dataset: str | None = None, configured: Iterable[str] | None = No
         raise ArchiveError(f"{path.name}: no JSON Lines member (*.jsonl, *.ndjson, *.json, plain or .gz/.zst)")
     for f in sorted(other_folders - set(foldered)):
         notes.append(f"{f}/: holds no JSON Lines member, not a dataset")
+    if foldered and layout == "feed":
+        raise ArchiveError(f"{path.name}: a .zip is one table and one business date, its JSON Lines files loose; this one has folders "
+                           f"({', '.join(sorted(foldered))}): several tables or dates go in a .tar of <table>/<YYYY-MM-DD>/ folders")
     if foldered:
         if dataset:
             raise ArchiveError(f"{path.name}: --dataset names the one dataset of an archive without folders; this one has folders "
@@ -284,6 +324,33 @@ def plan(path, dataset: str | None = None, configured: Iterable[str] | None = No
     if configured is not None:
         p.require(configured)
     return p
+
+
+def _tar_feed(path: pathlib.Path, kind: str, entries, size: int, configured, today) -> Plan:
+    """A tar feed's plan: one dataset per table, each member dated by its folder (filedate.tar_layout); any problem refuses the archive."""
+    import filedate
+    for raw, _sz, t in entries:                       # the guards first: an unsafe member refuses the archive before anything else
+        safe_parts(raw)
+    lay = filedate.tar_layout([(raw, t) for raw, _sz, t in entries], today, None if configured is None else list(configured))
+    if lay.errors:
+        raise ArchiveError(f"{path.name}: refused, nothing was loaded ({len(lay.errors)} problem{'s' if len(lay.errors) > 1 else ''}): "
+                           + "; ".join(lay.errors))
+    by_name = {"/".join(safe_parts(raw)): (raw, sz) for raw, sz, t in entries if t == "file"}
+    datasets: dict[str, list[Member]] = {}
+    for table, days in sorted(lay.tables.items()):
+        ms = []
+        for day, names in sorted(days.items()):
+            for n in names:
+                raw, sz = by_name[n]
+                if is_nested(n):
+                    raise ArchiveError(f"{path.name}: member {raw!r} is an archive inside the archive; archives are read one level deep")
+                ms.append(Member(path, n, table, sz, raw, date=day))
+        datasets[table] = ms
+    tally = ([0], [0])
+    for ms in datasets.values():
+        for m in ms:
+            m.tally = tally
+    return Plan(path, datasets, True, [f"{r}: skipped (litter)" for r in lay.ignored], size, kind)
 
 
 class _Capped(io.RawIOBase):
@@ -321,17 +388,19 @@ class Archive:
         self.plan, self.limits = plan_, limits or Limits.from_env()
         self.cap = self.limits.cap(plan_.size)
         self.expanded, self.text = [0], [0]
-        self._z = self._t = None
+        self._z = self._t = self._outer = None
 
     def __enter__(self):
         if self.plan.kind == "zip":
             self._z = zipfile.ZipFile(self.plan.archive)
         else:
-            self._t = tarfile.open(self.plan.archive, "r:gz" if self.plan.kind == "tgz" else "r:")
+            self._t, self._outer = _open_tar(self.plan.archive, self.plan.kind)
         return self
 
     def __exit__(self, *exc):
         (self._z or self._t).close()
+        if self._outer:
+            self._outer.close()
 
     def open(self, m: Member):
         """The member's bytes as JSON Lines (decompressed when it is .gz or .zst), held to the caps."""

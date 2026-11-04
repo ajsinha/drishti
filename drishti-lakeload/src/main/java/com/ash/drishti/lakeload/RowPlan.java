@@ -53,8 +53,8 @@ final class RowPlan {
     final boolean keyTop;
     final String date;
     final java.time.LocalDate asOf;
-    /** No {@code as-of} and {@code date-from: auto}: a date in a file's name is the business date of its rows ({@link FileDates}). */
-    final boolean datesFromNames;
+    /** {@code auto} or {@code name}: how a file without {@code as-of} gets its business date ({@link FileDates#decide}). */
+    final String dateFrom;
     /** The timestamp field that decides which duplicate is kept ({@link Latest}); null: the last read. */
     final String latestBy;
     final List<Promoted> promoted = new ArrayList<>();
@@ -71,7 +71,7 @@ final class RowPlan {
         this.keyTop = !key.contains(".");
         this.date = s.date();
         this.asOf = s.asOf();
-        this.datesFromNames = s.datesFromNames();
+        this.dateFrom = s.dateFrom();
         this.latestBy = s.latestBy() == null || s.latestBy().isBlank() ? null : s.latestBy();
         this.flatten = new LinkedHashMap<>(s.flatten());
         List<String> promote = new ArrayList<>(s.promote());

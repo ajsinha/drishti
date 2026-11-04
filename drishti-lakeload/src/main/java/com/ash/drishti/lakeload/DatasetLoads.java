@@ -80,10 +80,21 @@ final class DatasetLoads {
                 }
                 plans.add(p);
             }
+            for (Archives.Plan p : plans) {
+                if (p.kind() != Archives.Kind.ZIP && cfg.source().asOf() != null) {
+                    throw new Archives.ArchiveException(p.archiveName() + ": a .tar archive names its own tables and dates (its <table>/<YYYY-MM-DD>/ "
+                            + "folders): source.as-of is refused for it");
+                }
+            }
             if (cfg.datasets().isEmpty()) {
                 String table = cfg.domainAndTable()[1];
                 List<InputFile> files = new ArrayList<>(plain);
+                String only = cfg.archive().dataset();
                 for (Archives.Plan p : plans) {
+                    if (p.folders() && only != null && !only.isBlank()) {        // a tar's one table this load is for (the others: other loads)
+                        p.datasets().getOrDefault(only, List.of()).forEach(m -> files.add(InputFile.of(p, m)));
+                        continue;
+                    }
                     if (p.folders()) {
                         p.require(Set.of(table));
                     }

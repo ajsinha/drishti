@@ -95,6 +95,7 @@ public final class LoaderProcess implements LoadRunner {
         t.put("format", r.format());
         t.put("lake", r.lake());
         t.put("kind", r.kind());
+        t.put("mode", "append".equals(r.mode()) ? "append" : "replace-date");
         put(t, "table", r.table());
         ObjectNode rj = root.putObject("rejects");
         rj.put("max-pct", rejectMaxPercent);

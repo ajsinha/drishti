@@ -65,6 +65,8 @@ from datetime import date, datetime, timezone
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+import archives  # noqa: E402
+import feedroute  # noqa: E402
 import filedate  # noqa: E402
 import jsonstream  # noqa: E402
 import stage  # noqa: E402
@@ -73,6 +75,7 @@ import writers  # noqa: E402
 EXIT_OK, EXIT_FAILED, EXIT_PARTIAL, EXIT_LOCKED = 0, 1, 2, 3
 MODES = ("overwrite-dates", "overwrite-partitions", "append")
 STATE = "_drishti-lake"
+PACKS_ROOT = pathlib.Path(os.environ.get("DRISHTI_PACKS_DIR") or HERE.parents[1] / "config" / "packs")
 RESERVED = {"id", "doc", "business_date"}
 
 
@@ -209,6 +212,128 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
     return out
 
 
+def _top_files(a) -> list[pathlib.Path]:
+    """The files --from names (a folder's, its subfolders' with -r), markers left out."""
+    out = []
+    for i in a.src or []:
+        p = pathlib.Path(i)
+        if p.is_dir():
+            out += sorted(f for f in p.glob("**/*" if a.recursive else "*") if f.is_file() and f.name.lower().endswith(jsonstream.SUFFIXES))
+        elif p.is_file():
+            out.append(p)
+    return out
+
+
+def _feed(a) -> str:
+    """The run's feed (DATA_GUIDE.md section 2.8): ``tar`` when its inputs are tar archives (loaded table by table, ``_run_tars``), else
+    ``files``. Fills in from the files' ``.ready`` markers (feedroute) what the command line leaves out (pack, kind, table, mode; a
+    marker's business-date is its file's), and the pack and kind from the file names when neither names them."""
+    files = _top_files(a)
+    tars = [f for f in files if filedate.is_tar(f.name)]
+    a._markers = {str(f): feedroute.read_marker(f) for f in files}
+    marked = [m for m in a._markers.values() if m]
+    if tars and not getattr(a, "_tar_table", None):
+        if len(tars) != len(files):
+            raise BuildError("a .tar archive is loaded on its own, not with plain files: " + ", ".join(f.name for f in tars))
+        if a.as_of or a.table or any(m.get("business-date") or m.get("table") for m in marked):
+            raise BuildError("a .tar archive names its own tables and dates (its <table>/<YYYY-MM-DD>/ folders): --as-of, --table and a "
+                             ".ready file's business-date: and table: are refused for it")
+        return "tar"
+    for key, attr in (("pack", "pack"), ("kind", "kind"), ("connector", "connector"), ("table", "table"), ("mode", "mode")):
+        vals = {str(m[key]) for m in marked if m.get(key)}
+        if len(vals) > 1:
+            raise BuildError(f"the files' .ready markers name different {key}s ({', '.join(sorted(vals))}): load them one at a time")
+        if vals and not getattr(a, attr, None):
+            setattr(a, attr, vals.pop() if key != "pack" else str(_pack_dir(vals.pop())))
+    if not a.mode:
+        a.mode = "overwrite-dates" if getattr(a, "format", "delta") == "iceberg" else "append"
+    if a.kind or (a.pack and pack_defaults(pathlib.Path(a.pack), None).get("kind")) or getattr(a, "_tar_table", None):
+        return "files"
+    names = {filedate.parse(f.name) for f in files}
+    bad = [n.error for n in names if n.error]
+    if bad:
+        raise BuildError("; ".join(bad))
+    tables = sorted({n.table for n in names}, key=str.lower)
+    if len(tables) != 1:
+        raise BuildError(f"the files name {len(tables)} tables ({', '.join(tables)}): load one table at a time, or give --kind")
+    try:
+        t = feedroute.resolve(tables[0], PACKS_ROOT, a.pack)
+    except feedroute.RouteError as e:
+        if getattr(a, "new_table", False) and a.domain and "no pack" in str(e):
+            a.kind = tables[0]                             # a new table, asked for: the generic layout under --domain
+            return "files"
+        raise
+    a.pack, a.kind = str(t.pack), t.kind
+    a.connector = a.connector or t.connector
+    return "files"
+
+
+def _plan_only(a, p, summary, started, say) -> tuple[int, dict]:
+    """--plan: what the load would do, file by file (table, pack, business date and mode, with where each came from); nothing read or written."""
+    rows = []
+    for f in _top_files(a):
+        m = a._markers.get(str(f)) or {}
+        d = filedate.decide(date.fromisoformat(a.as_of) if a.as_of else m.get("business-date"), filedate.of(f.name), p["date_from"], None, f.name)
+        src = "ready" if not a.as_of and m.get("business-date") else d.source
+        rows.append({"file": f.name, "table": p["table"] or p["kind"], "pack": p["pack"], "kind": p["kind"],
+                     "date": d.date.isoformat() if d.date else None, "dateText": d.error or filedate.words(filedate.Decided(d.date, src)),
+                     "mode": a.mode, "ready": m.get("_marker")})
+    summary.update(status="plan", plan=rows)
+    for r in rows:
+        say(f"  {r['file']}: table {r['table']} of pack {r['pack']}, business date {r['dateText']}, mode {r['mode']}"
+            + (f" ({r['ready']})" if r["ready"] else ""))
+    return _finish(a, None, summary, EXIT_OK, started, say, write_files=False)
+
+
+def _pack_dir(name: str) -> pathlib.Path:
+    p = pathlib.Path(name)
+    return p if (p / "pack.yaml").is_file() else PACKS_ROOT / name
+
+
+def _run_tars(a, say, summary, started, lake) -> tuple[int, dict]:
+    """Tar archives: every table of every archive loaded in turn (table name order), each table a ``lake build`` of its members, every
+    member under its folder's date. A table must be a pack's (feedroute: --pack, a marker's folders:, else by name). The archives are
+    checked first, every problem listed; a failure stops the run and the summary says which tables were committed."""
+    import copy
+    tars = _top_files(a)
+    folders = {}
+    for m in a._markers.values():
+        folders.update({str(k): str(v) for k, v in (m.get("folders") or {}).items()})
+    plans = [archives.plan(t, layout="feed") for t in tars]
+    tables = sorted({d for pl in plans for d in pl.datasets}, key=str.lower)
+    routes = {}
+    problems = []
+    for t in tables:
+        try:
+            pack = _pack_dir(folders[t]) if t in folders else (pathlib.Path(a.pack) if a.pack else None)
+            routes[t] = feedroute.resolve(t, PACKS_ROOT, pack, a.kind if a.kind and len(tables) == 1 else None)
+        except feedroute.RouteError as e:
+            problems.append(str(e))
+    if problems:
+        raise BuildError("; ".join(problems) + " (nothing was loaded)")
+    summary.update(status="ok", feed="tar", archives=[t.name for t in tars], tables={})
+    if not tables:
+        summary["status"] = "empty"
+        return _finish(a, lake, summary, EXIT_OK, started, say, write_files=False)
+    worst = EXIT_OK
+    for t in tables:
+        sub = copy.copy(a)
+        r = routes[t]
+        sub.pack, sub.kind, sub.connector, sub.table, sub._tar_table = str(r.pack), r.kind, r.connector, None, t
+        sub.domain = None
+        sub.summary = None
+        code, s = run(sub, lambda *_x, **_k: None)
+        summary["tables"][t] = {k: s.get(k) for k in ("status", "table", "rows", "fileDates", "dateNotes", "otherDateRows", "error")}
+        worst = max(worst, code)
+        if code in (EXIT_FAILED, EXIT_LOCKED):
+            summary.update(status="failed", error=f"table {t}: {s.get('error')}; committed before it: "
+                           + (", ".join(x for x in summary["tables"] if x != t) or "none"))
+            break
+    else:
+        summary["status"] = "partial" if worst == EXIT_PARTIAL else "ok"
+    return _finish(a, lake, summary, worst, started, say, write_files=False)
+
+
 def plan(a) -> dict:
     """The run's settings: the options, filled from --pack where they are missing."""
     p = {"pack": a.pack_name, "domain": a.domain, "kind": a.kind, "key": a.key, "date": a.date, "promote": split(a.promote),
@@ -234,10 +359,12 @@ def plan(a) -> dict:
         raise BuildError("give --domain (or --pack)")
     date_from = getattr(a, "date_from", None) or "auto"
     if date_from not in filedate.DATE_FROM:
-        raise BuildError(f"--date-from {date_from}: auto (a date in a file's name is every row's business date) or field (the rows' own)")
+        raise BuildError(f"--date-from {date_from}: auto (the name's date, else the business today) or name (a name without a date is refused)")
     p["date_from"] = date_from
-    if not a.as_of and not p["date"] and date_from == "field":
-        raise BuildError("give --date FIELD (the business date of each document) or --as-of YYYY-MM-DD (one date for all)")
+    if a.table and a.pack:                             # a table given must be one the pack knows (never one made from a typo)
+        known = feedroute.pack_tables(pathlib.Path(a.pack))
+        if not any(n.lower() == str(a.table).lower() for n, _k, _c in known):
+            raise BuildError(f"--table {a.table}: not a table of the pack (known: {', '.join(sorted({n for n, _k, _c in known}, key=str.lower))})")
     for col in p["partition_by"] + p["promote"]:
         if stage.column_name(col) in RESERVED:
             raise BuildError(f"'{col}' is a column the lake keeps itself (id, doc, business_date): choose another name")
@@ -291,9 +418,14 @@ def run(a, say=print) -> tuple[int, dict]:
             raise BuildError("give --from (a file or a folder)")
         if remote and getattr(a, "format", "delta") != "iceberg" and getattr(a, "engine", "auto") != "java":
             raise BuildError("--lake s3://... is for --format iceberg: a Delta table in object storage is built locally and published with lake publish")
-        if not lake and not remote and not a.dry_run:
+        if not lake and not remote and not a.dry_run and not getattr(a, "plan", False):
             raise BuildError("give --lake DIR (the Delta root the connector reads)")
+        if _feed(a) == "tar":
+            return _run_tars(a, say, summary, started, lake)
+        summary["mode"] = a.mode
         p = plan(a)
+        if getattr(a, "plan", False):
+            return _plan_only(a, p, summary, started, say)
         as_of = date.fromisoformat(a.as_of) if a.as_of else None
         summary.update({k: p[k] for k in ("pack", "domain", "kind", "key", "promote")}, partitionBy=p["partition_by"],
                        date=None if as_of else p["date"], asOf=as_of.isoformat() if as_of else None)
@@ -339,10 +471,11 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
             return _go_java(a, p, as_of, lake, table, summary, prog, started, say, staging, remote_root, iceberg, why)
     st = stage.Stager(staging, p["key"], p["date"], as_of, p["partition_by"], p["promote"], p.get("flatten"), p.get("vectors"),
                       p.get("latest_by"))
+    st.date_from = p["date_from"]
     try:
         if table and not iceberg:                                          # a table of another partitioning fails before anything is read
             writers.check_layout(writers.Table(table, [stage.column_name(c) for c in p["partition_by"]], {}, a.mode, a.batch_rows, []))
-        files = jsonstream.input_files(a.src, a.recursive, table=p["table"] or p["kind"])
+        files = jsonstream.input_files(a.src, a.recursive, table=p["table"] or p["kind"], tar_table=getattr(a, "_tar_table", None))
         if not files:
             raise BuildError("no *.json, *.jsonl, *.ndjson, *.gz or archive (.zip, .tar.gz, .tgz, .tar) files in " + ", ".join(map(str, a.src)))
         total_bytes = sum(f.stat().st_size for f in files)
@@ -350,7 +483,8 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
         t0 = time.monotonic()
         for f in files:
             r = jsonstream.Reader(f)
-            st.file(r.label, filedate.of_input(f) if p["date_from"] == "auto" and not as_of else None)
+            given = (getattr(a, "_markers", {}).get(str(getattr(f, "archive", f))) or {}).get("business-date")
+            st.file(r.label, filedate.of_input(f), getattr(f, "date", None), given)
             for doc, where in r:
                 st.add(doc, where)
                 if st.stats.read % 2000 == 0:
@@ -358,6 +492,9 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
                                 documents=st.stats.read, rejected=st.stats.rejected)
             done_bytes += r.size
             st.stats.files.append({"file": str(f), "bytes": r.size})
+        refused = st.refused_files()
+        if refused:
+            raise BuildError("; ".join(refused) + " (nothing was loaded)")
         st.resolve()                                       # one copy of an id per date: the latest, else the last read
         prog.update(force=True, phase="read",bytesRead=total_bytes, bytesTotal=total_bytes, documents=st.stats.read, rejected=st.stats.rejected)
         read_s = time.monotonic() - t0
@@ -369,7 +506,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
         summary.update(documents=st.stats.read, accepted=st.stats.accepted, rejected=st.stats.rejected,
                        rejects={"byReason": dict(st.stats.rejects.most_common()), "first": st.stats.reject_samples},
                        duplicates=dict(sorted(st.stats.duplicates.items())), duplicateExamples=st.stats.duplicate_examples,
-                       latestBy=p.get("latest_by"), files=st.stats.files, dateFrom=p["date_from"], **st.stats.date_report(p["date"]),
+                       latestBy=p.get("latest_by"), files=st.stats.files, dateFrom=p["date_from"], **st.date_report(),
                        sampleId=st.stats.sample[0] if st.stats.sample else None, sampleDate=st.stats.sample[1] if st.stats.sample else None)
         timings = {"readSeconds": round(read_s, 3)}
         summary["timings"] = timings
@@ -378,6 +515,10 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
             summary["engine"] = None
             code = EXIT_PARTIAL if st.stats.rejected else EXIT_OK
             return _finish(a, None, summary, code, started, say, write_files=False)
+        if not by_day and st.stats.read == 0:            # empty files are ignored: nothing written, no business date touched
+            summary["status"] = "empty"
+            summary["engine"] = None
+            return _finish(a, lake, summary, EXIT_OK, started, say)
         if not by_day:
             raise BuildError("no document could be loaded (every one was rejected: see rejects)")
         engine, why = ("iceberg-native", "--format iceberg: Drishti's Iceberg loader in the server's exec jar") if iceberg \
@@ -602,11 +743,16 @@ def report(s: dict, say) -> None:
     for x in (s.get("duplicateExamples") or [])[:5]:
         say(f"    e.g. {x['date']}: kept {x['kept']}, dropped {x['dropped']}")
     for x in (s.get("fileDates") or [])[:10]:
-        say(f"  business date {x['date']} from the name of {x['file']}")
+        say(f"  business date {x['dateText']}: {x['file']}")
     if len(s.get("fileDates") or []) > 10:
-        say(f"  ... and {len(s['fileDates']) - 10} more files dated by their names")
+        say(f"  ... and {len(s['fileDates']) - 10} more files")
     for note in s.get("dateNotes") or []:
         say(f"  {note}")
+    for f in s.get("emptyFiles") or []:
+        say(f"  empty, ignored: {f}")
+    for t, x in (s.get("tables") or {}).items():
+        say(f"  table {t}: {x.get('status')}" + "".join(f", {d} {n} rows" for d, n in (x.get("rows") or {}).items())
+            + (f" ({x['error']})" if x.get("error") else ""))
     for x in s.get("signal") or []:
         say(f"  signal {x.get('date', '')}: " + ("sent" + (f", {x['verified']}" if x.get("verified") else "") if x.get("ok") else f"FAILED {x.get('status', '')} {x.get('error', '')}"))
     if s.get("summaryFile"):
@@ -624,10 +770,10 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     g.add_argument("--key", help="the id field, a dotted path (default: the pack's ingest key, else id)")
     g.add_argument("--date", help="the business-date field, a dotted path (ISO date or date-time, or yyyymmdd)")
     g.add_argument("--as-of", metavar="YYYY-MM-DD", help="one business date for every document (a snapshot) instead of --date")
-    g.add_argument("--date-from", choices=("auto", "field"), default="auto",
-                   help="auto (default): a file whose name ends in a date (abc 20261103.jsonl, abc_2026-11-03.jsonl.gz; an archive member's "
-                        "own name first) loads every row under that date, its rows' own dates only counted; --as-of wins over it. "
-                        "field: ignore names, each row's --date field (DATA_GUIDE.md section 2.8)")
+    g.add_argument("--date-from", choices=filedate.DATE_FROM, default="auto",
+                   help="the business date of a file without --as-of (DATA_GUIDE.md section 2.8): auto (default), its name's date "
+                        "(<table>.<YYYY-MM-DD>.jsonl.gz), else the business today; name: a name without a date is refused. A .ready file's "
+                        "business-date: beside the file counts as --as-of; a row's own --date field never decides (rows that differ are counted)")
     g.add_argument("--latest-by", metavar="FIELD",
                    help="when an id appears more than once on one business date, keep the copy with the latest FIELD (an ISO timestamp); "
                         "default: the pack's ingest latest-by, else COMPUTED_AT; give '' for the last one read (TOOLS.md section 4.13)")
@@ -657,12 +803,17 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     g.add_argument("--loader-set", action="append", metavar="KEY=VALUE",
                    help="--engine java: a setting of the parallel loader (memory.budget-mb=4096, memory.spill-dir=/mnt/ebs, parallel.writers=16, "
                         "target.layout.sort-by=[LEGAL_ENTITY,DESK,id]; docs/guides/TOOLS.md section 4.13); repeatable")
-    g.add_argument("--mode", choices=MODES, default="overwrite-dates", help="overwrite-dates (default), overwrite-partitions or append")
+    g.add_argument("--mode", choices=MODES, default=None,
+                   help="append (the default: the rows are added), overwrite-dates (each business date of the input replaced) or "
+                        "overwrite-partitions; a .ready file's mode: when not given (--format iceberg: overwrite-dates, its only mode)")
     g.add_argument("--batch-rows", type=int, default=50_000, help="most rows per batch written (default 50,000; also the most rows sorted at once)")
     g.add_argument("--batch-mb", type=int, default=128, help="most MB of documents per batch (default 128): large documents make smaller batches, so memory stays flat")
     g.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then drishti-server/target)")
     g.add_argument("--java", help="the java binary (default: JAVA_HOME, then java on the PATH)")
     g.add_argument("--dry-run", action="store_true", help="read and count, write nothing")
+    g.add_argument("--plan", action="store_true", help="say what the load would do, file by file (table, pack, business date, mode and where "
+                                                          "each comes from), and stop: nothing is read or written")
+    g.add_argument("--new-table", action="store_true", help="allow a table the packs do not know (with --domain): the generic layout")
     g.add_argument("--no-stamp", action="store_true", help="without --signal, leave no <bi-store>/lake-rebuilt.json for the server's next start")
     g.add_argument("--keep-staging", action="store_true", help="keep the staged rows under <lake>/_drishti-lake/staging (to debug)")
     g = p.add_argument_group("afterwards")

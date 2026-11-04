@@ -408,7 +408,7 @@ public final class Cycle {
         ObjectNode n = JSON.createObjectNode().put("pack", r.pack()).put("kind", r.kind()).put("lake", r.lake()).put("format", r.format()).put("by", r.by())
                 .put("batch", batch);
         n.put("connector", r.connector()).put("table", r.table()).put("dateField", r.dateField()).put("asOf", r.asOf() == null ? null : r.asOf().toString())
-                .put("dateFrom", r.dateFrom()).put("dateBy", r.dateBy());
+                .put("dateFrom", r.dateFrom()).put("dateBy", r.dateBy()).put("mode", r.mode());
         return n;
     }
 

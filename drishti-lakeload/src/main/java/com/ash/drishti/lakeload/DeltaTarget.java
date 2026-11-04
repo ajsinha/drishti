@@ -248,7 +248,7 @@ final class DeltaTarget implements TableTarget {
     @Override
     public long commit(LocalDate date, List<WrittenFile> files) throws IOException {
         List<Row> actions = new ArrayList<>();
-        if (before != null) {
+        if (before != null && !cfg.target().appends()) {           // replace-date: the date's files out, in the same commit
             String day = date.toString();
             actions.addAll(LakeWriter.removals(engine, before, pv -> day.equals(pv.get("business_date"))));
         }

@@ -94,9 +94,12 @@ final class ParseWorker implements Callable<Void> {
     private final int keep;
 
     final Map<Integer, DateRows> dates = new TreeMap<>();
-    /** Per file whose name gave its rows' date (its label): {the date (epoch day), rows whose own date field said another}. */
+    /** Per file (its label): {its business date (epoch day), rows whose own date field said another, its source (0 folder, 1 given, 2 name,
+     *  3 today), documents}. */
     final Map<String, long[]> fileDates = new HashMap<>();
-    private final boolean datesFromNames;
+    static final String[] SOURCES = {"folder", "given", "name", "today", "ready"};
+    private final RowPlan plan;
+    private final java.time.LocalDate today = java.time.LocalDate.now();
     private Inputs.InputFile lastFile;
     private long[] lastFileDate;
     final Map<String, Long> rejectsByReason = new LinkedHashMap<>();
@@ -115,7 +118,7 @@ final class ParseWorker implements Callable<Void> {
             Meter spill, LineCounts lines, AtomicLong documentsSeen, AtomicLong rejectedSeen, int keep) {
         this.number = number;
         this.parser = new RowParser(plan);
-        this.datesFromNames = plan.datesFromNames;
+        this.plan = plan;
         this.view = new RowView(plan);
         this.queue = queue;
         this.budgetKb = budgetKb;
@@ -161,16 +164,29 @@ final class ParseWorker implements Callable<Void> {
         return null;
     }
 
-    /** The date the chunk's file name carries ({@link FileDates}: an archive member's own name first, else its archive's), for every row. */
-    private void fileDay(Chunk c) {
-        if (!datesFromNames) {
-            return;
+    /**
+     * A file's business date (DATA_GUIDE.md section 2.8): a tar member's folder date; else {@link FileDates#decide}: {@code as-of}, the
+     * date in the file's (a zip member: its archive's) name, the business today ({@code date-from: name} refuses a name without one,
+     * checked before the read).
+     */
+    static FileDates.Decided decide(RowPlan plan, Inputs.InputFile f, java.time.LocalDate today) {
+        if (f.member() != null && f.member().date() != null) {
+            return new FileDates.Decided(f.member().date(), "folder", null);
         }
+        java.time.LocalDate named = FileDates.of(f.member() != null ? f.member().archiveName() : f.name());
+        java.time.LocalDate given = plan.asOf != null ? plan.asOf : FileDates.readyDate(f.member() != null ? f.member().archive() : f.path());
+        FileDates.Decided d = FileDates.decide(given, named, plan.dateFrom, today, f.name());
+        return plan.asOf == null && given != null ? new FileDates.Decided(d.date(), "ready", null) : d;
+    }
+
+    /** Every row of the chunk's file goes under the file's business date. */
+    private void fileDay(Chunk c) {
         Inputs.InputFile f = c.split().file();
         if (f != lastFile) {                               // a file's chunks mostly come one after another
             lastFile = f;
-            java.time.LocalDate d = f.member() != null ? FileDates.of(f.member().archiveName(), f.member().name()) : FileDates.of(f.name());
-            lastFileDate = d == null ? null : fileDates.computeIfAbsent(f.name(), k -> new long[] {d.toEpochDay(), 0});
+            FileDates.Decided d = decide(plan, f, today);
+            lastFileDate = d.date() == null ? null : fileDates.computeIfAbsent(f.name(), k -> new long[] {d.date().toEpochDay(), 0,
+                    java.util.Arrays.asList(SOURCES).indexOf(d.source()), 0});
         }
         parser.fileDay = lastFileDate == null ? RowParser.NO_FILE_DAY : (int) lastFileDate[0];
     }
@@ -202,6 +218,9 @@ final class ParseWorker implements Callable<Void> {
             if (e > s) {
                 docs++;
                 String reason = parser.parse(a, s, e - s);
+                if (lastFileDate != null) {
+                    lastFileDate[3]++;
+                }
                 if (reason == null) {
                     rows++;
                     if (parser.otherDate) {

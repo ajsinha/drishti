@@ -101,7 +101,17 @@ final class Fixture {
     }
 
     Routes.Packs packs() {
-        return name -> name.equals("demo-pack") ? new Routes.PackInfo(pack, List.of("trade", "position")) : null;
+        return new Routes.Packs() {
+            @Override
+            public Routes.PackInfo find(String name) {
+                return name.equals("demo-pack") ? new Routes.PackInfo(pack, List.of("trade", "position")) : null;
+            }
+
+            @Override
+            public List<String> names() {
+                return List.of("demo-pack");
+            }
+        };
     }
 
     /** A data file in the inbox, old enough to be stable, with its marker ({@code marker} null: none; "" an empty one). */

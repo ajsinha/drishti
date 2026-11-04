@@ -73,18 +73,18 @@ class DataInboxLoaderTest {
                       key: id
                       date-field: date
                 """);
-        f.drop("trades-a.jsonl", Fixture.rows("2026-11-02", "A1", "A2"), "");
-        Path gz = f.inbox().resolve("trades-b.jsonl.gz");
+        f.drop("trades-a.2026-11-02.jsonl", Fixture.rows("2026-11-02", "A1", "A2"), "");
+        Path gz = f.inbox().resolve("trades-b.2026-11-02.jsonl.gz");
         try (OutputStream out = new GZIPOutputStream(Files.newOutputStream(gz))) {
             out.write(Fixture.rows("2026-11-02", "B1").getBytes(StandardCharsets.UTF_8));
         }
-        Path zst = f.inbox().resolve("trades-c.jsonl.zst");
+        Path zst = f.inbox().resolve("trades-c.2026-11-03.jsonl.zst");
         try (OutputStream out = new com.github.luben.zstd.ZstdOutputStream(Files.newOutputStream(zst))) {
             out.write(Fixture.rows("2026-11-03", "C1", "C2", "C3").getBytes(StandardCharsets.UTF_8));
         }
-        Files.writeString(f.inbox().resolve("trades-b.jsonl.gz.ready"), "");
-        Files.writeString(f.inbox().resolve("trades-c.jsonl.zst.ready"), "");
-        f.age(gz, zst, f.inbox().resolve("trades-b.jsonl.gz.ready"), f.inbox().resolve("trades-c.jsonl.zst.ready"));
+        Files.writeString(f.inbox().resolve("trades-b.2026-11-02.jsonl.gz.ready"), "");
+        Files.writeString(f.inbox().resolve("trades-c.2026-11-03.ready"), "");
+        f.age(gz, zst, f.inbox().resolve("trades-b.2026-11-02.jsonl.gz.ready"), f.inbox().resolve("trades-c.2026-11-03.ready"));
         DataInbox inbox = new DataInbox(f.settings, "node-a", f.clock, Fixture.ZONE, f.packs(), new LoaderProcess(f.settings), f.signal(), null);
 
         Cycle.Report first = inbox.cycle("test");
@@ -95,31 +95,31 @@ class DataInboxLoaderTest {
         assertThat(first.files().get(0).rows()).isEqualTo(6);
         assertThat(f.signals).extracting(Signal.Landed::date, Signal.Landed::rows).containsExactly(
                 org.assertj.core.groups.Tuple.tuple(LocalDate.parse("2026-11-02"), 3L), org.assertj.core.groups.Tuple.tuple(LocalDate.parse("2026-11-03"), 3L));
-        assertThat(f.tree("outbox")).contains("outbox/2026-11-03/RUN/trades-c.jsonl.zst", "outbox/2026-11-03/RUN/trades-c.jsonl.zst.ready",
-                "outbox/2026-11-03/RUN/trades-c.jsonl.zst.loaded.json", "outbox/2026-11-03/RUN/loads/load-1.log",
+        assertThat(f.tree("outbox")).contains("outbox/2026-11-03/RUN/trades-c.2026-11-03.jsonl.zst", "outbox/2026-11-03/RUN/trades-c.2026-11-03.ready",
+                "outbox/2026-11-03/RUN/trades-c.2026-11-03.jsonl.zst.loaded.json", "outbox/2026-11-03/RUN/loads/load-1.log",
                 "outbox/2026-11-03/RUN/loads/load-1.summary.json");
 
-        for (String archive : List.of("trade.zip", "trade.tar.gz")) {
-            Files.copy(ARCHIVES.resolve(archive), f.inbox().resolve(archive), StandardCopyOption.REPLACE_EXISTING);
-            Files.writeString(f.inbox().resolve(archive + Inbox.READY), "");
-            f.age(f.inbox().resolve(archive), f.inbox().resolve(archive + Inbox.READY));
-            Cycle.Report r = inbox.cycle("test");
-            assertThat(r.files()).as(r.toString()).singleElement().satisfies(o -> {
-                assertThat(o.outcome()).isEqualTo("loaded");
-                assertThat(o.rows()).isEqualTo(6);
-                assertThat(o.versions()).containsOnlyKeys("2026-10-01", "2026-10-02");
-            });
-        }
-        assertThat(log(f.lake.resolve("demo/trade_archive"))).as("each archive: one commit per date").hasSize(4);
+        String archive = "trade.2026-10-01.zip";                        // a zip: one table and one date, from its name
+        Files.copy(ARCHIVES.resolve("trade.zip"), f.inbox().resolve(archive), StandardCopyOption.REPLACE_EXISTING);
+        Files.writeString(f.inbox().resolve(archive + Inbox.READY), "");
+        f.age(f.inbox().resolve(archive), f.inbox().resolve(archive + Inbox.READY));
+        Cycle.Report z = inbox.cycle("test");
+        assertThat(z.files()).as(z.toString()).singleElement().satisfies(o -> {
+            assertThat(o.outcome()).isEqualTo("loaded");
+            assertThat(o.rows()).isEqualTo(6);
+            assertThat(o.versions()).containsOnlyKeys("2026-10-01");
+        });
+        assertThat(log(f.lake.resolve("demo/trade_archive"))).as("one commit for its one date").hasSize(1);
 
-        f.drop("trades-a.jsonl", Fixture.rows("2026-11-02", "A1", "A2"), "");
-        f.drop("trades-bad.jsonl", "this is not JSON\n" + Fixture.rows("2026-11-02", "X1"), "");
+        f.drop("trades-a.2026-11-02.jsonl", Fixture.rows("2026-11-02", "A1", "A2"), "");
+        f.drop("trades-bad.2026-11-02.jsonl", "this is not JSON\n" + Fixture.rows("2026-11-02", "X1"), "");
         Cycle.Report last = inbox.cycle("test");
         assertThat(last.files()).extracting(Cycle.FileOutcome::file, Cycle.FileOutcome::outcome).containsExactlyInAnyOrder(
-                org.assertj.core.groups.Tuple.tuple("trades-a.jsonl", "duplicate"), org.assertj.core.groups.Tuple.tuple("trades-bad.jsonl", "failed"));
+                org.assertj.core.groups.Tuple.tuple("trades-a.2026-11-02.jsonl", "duplicate"),
+                org.assertj.core.groups.Tuple.tuple("trades-bad.2026-11-02.jsonl", "failed"));
         assertThat(log(table)).as("nothing committed by the failed load").hasSize(2);
         JsonNode failed = Fixture.JSON.readTree(f.root.resolve("failed/2026-11-03").toFile().listFiles()[0].toPath()
-                .resolve("trades-bad.jsonl.failed.json").toFile());
+                .resolve("trades-bad.2026-11-02.jsonl.failed.json").toFile());
         assertThat(failed.path("reason").asText()).as(failed.toPrettyString()).isNotBlank();
         assertThat(failed.path("load").path("rejected").asLong()).isEqualTo(1);
         assertThat(f.tree("inbox")).isEmpty();
@@ -128,48 +128,34 @@ class DataInboxLoaderTest {
     }
 
     /**
-     * The business date from outside (DATALOAD_INBOX.md section 5.1): a file whose name ends in a date loads every row under it, the rows
-     * that said another date counted in the outcome, the report and the board; a .ready business-date wins over the name; a rule's
-     * {@code date-from: field} keeps each row's own date. Three loader runs (one per way of dating).
+     * The business date from outside (docs/architecture/DATA_LOAD_RULES.md): the name's date for every row of the file, the rows whose own
+     * date differs only counted (the outcome, the report, the board); a .ready business-date over the name; a name without a date under the
+     * business today; the table from the name when no rule matches. Two loader runs (one per route).
      */
     @Test
-    void aDateInTheNameIsEnforcedTheReadyFileWinsAndFieldKeepsTheRows() throws IOException {
+    void theNamesDateTheReadyFilesDateOrTodayDatesEveryRowOfAFile() throws IOException {
         Fixture f = new Fixture(tmp);
-        Files.writeString(f.rules, """
-                dataload:
-                  rules:
-                    - match: "trades-*"
-                      pack: demo-pack
-                      kind: trade
-                    - match: "rows-*"
-                      pack: demo-pack
-                      kind: trade
-                      date-from: field
-                """);
-        f.drop("trades-d 20261104.jsonl", Fixture.rows("2026-11-02", "D1", "D2") + Fixture.rows("2026-11-04", "D3"), "");
-        f.drop("trades-e 20261104.jsonl", Fixture.rows("2026-11-02", "E1"), "business-date: 2026-11-05\n");
-        f.drop("rows-f 20261104.jsonl", Fixture.rows("2026-11-01", "F1"), "");
+        f.drop("trades-d.2026-11-02.jsonl", Fixture.rows("2026-11-01", "D1", "D2") + Fixture.rows("2026-11-02", "D3"), "");
+        f.drop("trades-e.2026-11-02.jsonl", Fixture.rows("2026-11-02", "E1"), "business-date: 2026-10-30\n");
+        f.drop("trade.jsonl", Fixture.rows("2026-11-01", "F1"), "");
         DataInbox inbox = new DataInbox(f.settings, "node-a", f.clock, Fixture.ZONE, f.packs(), new LoaderProcess(f.settings), f.signal(), null);
 
         Cycle.Report r = inbox.cycle("test");
         assertThat(r.files()).as(r.toString()).hasSize(3).allMatch(o -> o.outcome().equals("loaded"));
         Cycle.FileOutcome d = r.files().stream().filter(o -> o.file().startsWith("trades-d")).findFirst().orElseThrow();
-        assertThat(d.versions()).containsOnlyKeys("2026-11-04");
-        assertThat(d.dateNote()).isEqualTo("2 rows of trades-d 20261104.jsonl carried another date in BUSINESS_DATE; loaded under 2026-11-04 from the file name");
+        assertThat(d.versions()).containsKey("2026-11-02");
+        assertThat(d.dateNote()).isEqualTo("2 rows of trades-d.2026-11-02.jsonl carried another date in BUSINESS_DATE; loaded under 2026-11-02");
         Cycle.FileOutcome e = r.files().stream().filter(o -> o.file().startsWith("trades-e")).findFirst().orElseThrow();
-        assertThat(e.versions()).containsOnlyKeys("2026-11-05");
-        assertThat(e.dateNote()).isNull();
-        Cycle.FileOutcome rows = r.files().stream().filter(o -> o.file().startsWith("rows-f")).findFirst().orElseThrow();
-        assertThat(rows.versions()).containsOnlyKeys("2026-11-01");
-        assertThat(f.signals).extracting(Signal.Landed::date).containsExactlyInAnyOrder(LocalDate.parse("2026-11-01"), LocalDate.parse("2026-11-04"),
-                LocalDate.parse("2026-11-05"));
+        assertThat(e.versions()).containsOnlyKeys("2026-10-30");
+        assertThat(e.dateNote()).isNotNull();
+        String today = com.ash.drishti.lakeload.FileDates.businessToday().toString();
+        assertThat(f.signals).extracting(Signal.Landed::date).contains(LocalDate.parse("2026-11-02"), LocalDate.parse("2026-10-30"), LocalDate.parse(today));
 
         JsonNode report = Fixture.JSON.readTree(f.root.resolve("outbox/2026-11-03").toFile().listFiles()[0].toPath()
-                .resolve("trades-d 20261104.jsonl.loaded.json").toFile());
-        assertThat(report.path("load").path("otherDateRows").asLong()).isEqualTo(2);
-        assertThat(report.path("load").path("fileDates").get(0).path("date").asText()).isEqualTo("2026-11-04");
-        assertThat(report.path("route").path("dateBy").asText()).isEqualTo("2026-11-04 from the name");
-        assertThat(inbox.status().toString()).contains("2 rows of trades-d 20261104.jsonl carried another date in BUSINESS_DATE");
+                .resolve("trades-d.2026-11-02.jsonl.loaded.json").toFile());
+        assertThat(report.path("load").path("dateNotes").toString()).contains("2 rows of trades-d.2026-11-02.jsonl");
+        assertThat(report.path("route").path("dateBy").asText()).isEqualTo("2026-11-02 from the name");
+        assertThat(inbox.status().toString()).contains("2 rows of trades-d.2026-11-02.jsonl carried another date in BUSINESS_DATE");
     }
 
     @Test

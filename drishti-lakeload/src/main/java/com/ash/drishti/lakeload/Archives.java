@@ -103,14 +103,18 @@ final class Archives {
         }
     }
 
-    enum Kind { ZIP, TGZ, TAR }
+    enum Kind { ZIP, TGZ, TAR, TARZIP }
 
     /**
      * One JSON Lines member: its archive (path, file name), its name in the archive (normalised), the dataset, its declared size; for a
      * zip, where its local header is, its method and compressed size.
      */
     record Member(String archive, String archiveName, String name, String dataset, long size, String raw, long offset, int method,
-            long compressedSize) {
+            long compressedSize, java.time.LocalDate date) {
+
+        Member(String archive, String archiveName, String name, String dataset, long size, String raw, long offset, int method, long compressedSize) {
+            this(archive, archiveName, name, dataset, size, raw, offset, method, compressedSize, null);
+        }
 
         /** How a reject names it: {@code trade.zip!/trade/a.jsonl}. */
         String label() {
@@ -118,7 +122,7 @@ final class Archives {
         }
 
         Member in(String ds) {
-            return new Member(archive, archiveName, name, ds, size, raw, offset, method, compressedSize);
+            return new Member(archive, archiveName, name, ds, size, raw, offset, method, compressedSize, date);
         }
     }
 
@@ -201,7 +205,7 @@ final class Archives {
 
     static Kind kind(String name) {
         String n = name.toLowerCase(Locale.ROOT);
-        return n.endsWith(".zip") ? Kind.ZIP : n.endsWith(".tar.gz") || n.endsWith(".tgz") ? Kind.TGZ : Kind.TAR;
+        return n.endsWith(".tar.zip") ? Kind.TARZIP : n.endsWith(".zip") ? Kind.ZIP : n.endsWith(".tar.gz") || n.endsWith(".tgz") ? Kind.TGZ : Kind.TAR;
     }
 
     /** One entry of the listing: its name as written, declared size, type ("file", "dir" or why it is refused), and for a zip where it is. */
@@ -225,6 +229,9 @@ final class Archives {
                     : "more than max-ratio " + fmt(limits.maxRatio()) + " times the archive's " + String.format(Locale.ROOT, "%,d", size) + " bytes";
             throw new ArchiveException(name + ": its entries expand to " + String.format(Locale.ROOT, "%,d", declared) + " bytes, " + why
                     + " (a zip bomb?); nothing was read");
+        }
+        if (kind != Kind.ZIP) {
+            return tarFeed(path, name, kind, size, entries);
         }
         List<String> notes = new ArrayList<>();
         List<Member> loose = new ArrayList<>();
@@ -280,6 +287,10 @@ final class Archives {
         }
         Map<String, List<Member>> datasets = new TreeMap<>(BY_NAME);
         if (!foldered.isEmpty()) {
+            throw new ArchiveException(name + ": a .zip is one table and one business date, its JSON Lines files loose; this one has folders ("
+                    + String.join(", ", foldered.keySet()) + "): several tables or dates go in a .tar of <table>/<YYYY-MM-DD>/ folders");
+        }
+        if (!foldered.isEmpty()) {
             if (dataset != null && !dataset.isBlank()) {
                 throw new ArchiveException(name + ": --dataset names the one dataset of an archive without folders; this one has folders ("
                         + String.join(", ", foldered.keySet()) + "), each a dataset");
@@ -295,6 +306,45 @@ final class Archives {
             datasets.put(ds, sorted(loose.stream().map(m -> m.in(ds)).toList()));
         }
         return new Plan(path, name, kind, size, !foldered.isEmpty(), datasets, notes);
+    }
+
+    /**
+     * A tar feed (DATA_GUIDE.md section 2.8): every member {@code <table>/<YYYY-MM-DD>/<file>.jsonl}, checked by {@link FileDates#tarLayout}
+     * (every problem listed, the archive refused whole); one dataset per table, each member dated by its folder.
+     */
+    private static Plan tarFeed(String path, String name, Kind kind, long size, List<Entry> entries) throws IOException {
+        Map<String, Entry> byName = new java.util.HashMap<>();
+        List<String[]> listed = new ArrayList<>();
+        for (Entry e : entries) {
+            List<String> parts = safeParts(e.raw());
+            listed.add(new String[] {e.raw(), e.type()});
+            if (e.type().equals("file")) {
+                byName.put(String.join("/", parts), e);
+            }
+        }
+        FileDates.Layout lay = FileDates.tarLayout(listed, java.time.LocalDate.now(), null);
+        if (!lay.errors().isEmpty()) {
+            throw new ArchiveException(name + ": refused, nothing was loaded (" + lay.errors().size() + " problem" + (lay.errors().size() > 1 ? "s" : "")
+                    + "): " + String.join("; ", lay.errors()));
+        }
+        Map<String, List<Member>> datasets = new TreeMap<>(BY_NAME);
+        lay.tables().forEach((table, days) -> {
+            List<Member> ms = new ArrayList<>();
+            days.forEach((day, names) -> names.forEach(n -> {
+                Entry e = byName.get(n);
+                ms.add(new Member(path, name, n, table, e.size(), e.raw(), e.offset(), e.method(), e.compressed(), day));
+            }));
+            datasets.put(table, ms);
+        });
+        for (List<Member> ms : datasets.values()) {
+            for (Member m : ms) {
+                if (isNested(m.name())) {
+                    throw new ArchiveException(name + ": member '" + m.raw() + "' is an archive inside the archive; archives are read one level deep");
+                }
+            }
+        }
+        List<String> notes = new ArrayList<>(lay.ignored().stream().map(r -> r + ": skipped (litter)").toList());
+        return new Plan(path, name, kind, size, true, datasets, notes);
     }
 
     private static List<Member> sorted(List<Member> ms) {
@@ -314,10 +364,33 @@ final class Archives {
 
     // ---------------------------------------------------------------------------------------------------------------- tar
 
+    /** The tar's bytes as a stream: a .tar as it is, a .tgz decompressed, a .tar.zip's one .tar member inflated. */
+    private static InputStream tarBytes(RangeReader r, String name, Kind kind, Limits limits, Meter meter, int blockBytes) throws IOException {
+        if (kind == Kind.TARZIP) {
+            List<Entry> files = zipEntries(r, name, limits).stream().filter(e -> e.type().equals("file")).toList();
+            if (files.size() != 1 || !files.get(0).raw().toLowerCase(Locale.ROOT).endsWith(".tar")) {
+                throw new ArchiveException(name + ": a .tar.zip holds exactly one .tar file");
+            }
+            Entry e = files.get(0);
+            ByteBuffer h = read(r, e.offset(), 30);
+            if (h.getInt(0) != 0x04034b50) {
+                throw new ArchiveException(name + ": a broken local header");
+            }
+            long data = e.offset() + 30 + (h.getShort(26) & 0xffff) + (h.getShort(28) & 0xffff);
+            InputStream raw = new SourceReader.RangeStream(r, data, data + e.compressed(), meter);
+            return switch (e.method()) {
+                case 0 -> raw;
+                case 8 -> inflate(raw, blockBytes);
+                default -> throw new ArchiveException(name + ": zip compression method " + e.method() + " (only stored and deflate are read)");
+            };
+        }
+        InputStream raw = new SourceReader.RangeStream(r, 0, r.length(), meter);
+        return kind == Kind.TGZ ? new GzipMembers(raw, blockBytes) : raw;
+    }
+
     private static List<Entry> tarEntries(RangeReader r, String name, Kind kind, Limits limits, long size) throws IOException {
         List<Entry> out = new ArrayList<>();
-        InputStream raw = new SourceReader.RangeStream(r, 0, r.length(), new Meter("list", 1));
-        InputStream in = kind == Kind.TGZ ? new GzipMembers(raw, 1 << 16) : raw;
+        InputStream in = tarBytes(r, name, kind, limits, new Meter("list", 1), 1 << 16);
         TarStream t = new TarStream(in);
         long declared = 0;
         long cap = limits.cap(size);
@@ -484,8 +557,7 @@ final class Archives {
             }
             Map<String, Member> wanted = new java.util.HashMap<>();
             members.forEach(m -> wanted.put(m.raw(), m));
-            InputStream raw = new SourceReader.RangeStream(r, 0, r.length(), meter);
-            InputStream tar = new Capped(plan.kind() == Kind.TGZ ? new GzipMembers(raw, blockBytes) : raw, expanded, cap, plan.archiveName());
+            InputStream tar = new Capped(tarBytes(r, plan.archiveName(), plan.kind(), limits, meter, blockBytes), expanded, cap, plan.archiveName());
             TarStream t = new TarStream(tar);
             int left = wanted.size();
             for (TarStream.Entry e = t.next(); e != null && left > 0; e = t.next()) {

@@ -78,11 +78,22 @@ public final class LakeLoad {
                     case "--no-run-log" -> sets.add("report.run-log=false");
                     case "--dry-run" -> sets.add("report.dry-run=true");
                     case "--dataset" -> sets.add("source.dataset=" + next(args, ++i, a));
+                    // the options of every loader (docs/architecture/DATA_LOAD_RULES.md section 8), over the configuration file
+                    case "--as-of" -> sets.add("source.as-of=" + next(args, ++i, a));
+                    case "--table" -> sets.add("target.table=" + next(args, ++i, a).toLowerCase(java.util.Locale.ROOT));
+                    case "--pack" -> sets.add("source.pack=" + next(args, ++i, a));
+                    case "--kind" -> sets.add("target.kind=" + next(args, ++i, a));
+                    case "--mode" -> sets.add("target.mode=" + next(args, ++i, a));
+                    case "--key" -> sets.add("source.id=" + next(args, ++i, a));
+                    case "--date-from" -> sets.add("source.date-from=" + next(args, ++i, a));
+                    case "--plan" -> sets.add("report.dry-run=true");
                     case "--json" -> json = true;
                     case "-q", "--quiet" -> quiet = true;
                     case "-h", "--help" -> {
-                        out.println("usage: LakeLoad --config FILE [--set key.path=value ...] [--summary FILE] [--progress FILE] [--no-lock] "
-                                + "[--no-run-log] [--dry-run] [--dataset NAME] [--json] [-q]   (docs/guides/TOOLS.md section 4.13)");
+                        out.println("usage: LakeLoad --config FILE [--set key.path=value ...] [--as-of YYYY-MM-DD] [--table T] [--pack DIR] "
+                                + "[--kind K] [--mode append|replace] [--key FIELD] [--date-from auto|name] [--plan] [--summary FILE] [--progress FILE] "
+                                + "[--no-lock] [--no-run-log] [--dry-run] [--dataset NAME] [--json] [-q]   (docs/guides/TOOLS.md section 4.13, "
+                                + "docs/architecture/DATA_LOAD_RULES.md)");
                         return OK;
                     }
                     default -> throw new IllegalArgumentException("unknown argument " + a + " (--help)");

@@ -50,7 +50,7 @@ def test_the_options_become_the_loaders_configuration(tmp_path):
     assert c["memory"]["spill-dir"] == str(tmp_path / "spill")
 
     d = javaload.config(args(src=["x.jsonl"]), {**p, "table": "pv_endur"}, date(2026, 10, 28), "/lake", False, tmp_path, {})
-    assert d["source"]["as-of"] == "2026-10-28" and "date" not in d["source"]
+    assert d["source"]["as-of"] == "2026-10-28" and d["source"]["date"] == "BUSINESS_DATE"     # a row's own date: only counted
     assert javaload.config(args(src=["x.jsonl"]), {**p, "date_from": "field"}, None, "/lake", False, tmp_path, {})["source"]["date-from"] == "field"
     assert d["source"]["partition-by"] == ["LEGAL_ENTITY"] and d["target"]["table"] == "pv_endur"
 
@@ -70,8 +70,9 @@ def test_auto_picks_the_loader_only_for_large_json_lines(tmp_path, monkeypatch):
     assert use
     use, why = javaload.wanted(args(java_above_mb=0), [small, arr], None, None)
     assert not use and "not JSON Lines" in why
-    use, why = javaload.wanted(args(java_above_mb=0, mode="append"), [small], None, None)
-    assert not use and "append" in why
+    use, why = javaload.wanted(args(java_above_mb=0, mode="overwrite-partitions"), [small], None, None)
+    assert not use and "overwrite-partitions" in why
+    assert javaload.wanted(args(java_above_mb=0, mode="append"), [small], None, None)[0]
     assert javaload.is_jsonl(small) and not javaload.is_jsonl(arr)
 
 

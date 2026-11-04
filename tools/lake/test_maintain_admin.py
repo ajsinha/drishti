@@ -129,8 +129,8 @@ class LakeTest(unittest.TestCase):
     """Tiny lakes made with lake build itself (deltalake), so the build record is the real one."""
 
     def build(self, root: Path, kind: str, n: int = 40, days=("2026-10-13", "2026-10-14", "2026-10-15", "2026-10-16")) -> str:
-        src = root.parent / f"{kind}.jsonl"
-        for k, d in enumerate(days):                                     # one build per day: several small files
+        for k, d in enumerate(days):                                     # one build per day: several small files, dated by name
+            src = root.parent / f"{kind}.{d}.jsonl"
             src.write_text("\n".join(json.dumps({"TRADE_ID": f"{kind}-{d}-{i}", "TRADE_DATE": d, "QUANTITY": i}) for i in range(n)))
             code = quiet(build.main, ["--from", str(src), "--lake", str(root), "--domain", "trading", "--kind", kind, "--key", "TRADE_ID",
                                       "--date", "TRADE_DATE", "--engine", "deltalake", "--pack-name", "trading", "--mode", "append", "-q"])

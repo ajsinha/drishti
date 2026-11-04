@@ -211,8 +211,10 @@ final class IcebergTarget implements TableTarget {
     public long commit(LocalDate date, List<WrittenFile> files) {
         List<DataFile> add = new ArrayList<>();
         files.forEach(f -> add.add((DataFile) f.handle()));
-        Snapshot s = Operations.replacePartitions(table, f -> date.equals(dateOf(f)), add, Map.of("drishti.business-dates", date.toString(),
-                "drishti.loader", "parallel")).orElseThrow(() -> new IllegalStateException("the commit of " + date + " made no snapshot"));
+        Map<String, String> summary = Map.of("drishti.business-dates", date.toString(), "drishti.loader", "parallel");
+        Snapshot s = (cfg.target().appends() ? Operations.append(table, add, summary)
+                : Operations.replacePartitions(table, f -> date.equals(dateOf(f)), add, summary))
+                .orElseThrow(() -> new IllegalStateException("the commit of " + date + " made no snapshot"));
         return s.snapshotId();
     }
 

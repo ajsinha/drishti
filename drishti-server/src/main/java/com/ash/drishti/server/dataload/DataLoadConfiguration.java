@@ -99,17 +99,26 @@ public class DataLoadConfiguration {
 
     /** The loaded packs by name: the folder whose pack.yaml the loader reads, and the kinds. */
     static Routes.Packs packs(ObjectProvider<LoadService> loads) {
-        return name -> {
-            LoadService s = loads.getIfAvailable();
-            if (s == null) {
+        return new Routes.Packs() {
+            @Override
+            public Routes.PackInfo find(String name) {
+                LoadService s = loads.getIfAvailable();
+                if (s == null) {
+                    return null;
+                }
+                for (Pack p : s.loadedPacks()) {
+                    if (p.name().equals(name)) {
+                        return p.dir() == null ? null : new Routes.PackInfo(p.dir(), p.kinds());
+                    }
+                }
                 return null;
             }
-            for (Pack p : s.loadedPacks()) {
-                if (p.name().equals(name)) {
-                    return p.dir() == null ? null : new Routes.PackInfo(p.dir(), p.kinds());
-                }
+
+            @Override
+            public java.util.List<String> names() {
+                LoadService s = loads.getIfAvailable();
+                return s == null ? java.util.List.of() : s.loadedPacks().stream().filter(p -> p.dir() != null).map(Pack::name).toList();
             }
-            return null;
         };
     }
 

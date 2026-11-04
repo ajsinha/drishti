@@ -60,8 +60,14 @@ class PublishTest(unittest.TestCase):
 
     def scratch(self, run: str, days: dict, promote: str = "NOTIONAL") -> Path:
         """lake build into a fresh scratch lake (the deltalake engine: no server jar needed), as load-day.sh does."""
-        src = self.root / f"in-{run}.jsonl"
-        src.write_text("".join(json.dumps(d) + "\n" for docs in days.values() for d in docs), encoding="utf-8")
+        src = self.root / f"in-{run}"                                    # one file a business date, dated by its name
+        src.mkdir()
+        by_day: dict = {}
+        for docs in days.values():
+            for d in docs:
+                by_day.setdefault(d["TRADE_DATE"], []).append(d)
+        for day, docs in by_day.items():
+            (src / f"trade.{day}.jsonl").write_text("".join(json.dumps(d) + "\n" for d in docs), encoding="utf-8")
         a = build.build_parser().parse_args(["--from", str(src), "--kind", "trade", "--key", "TRADE_ID", "--date", "TRADE_DATE",
                                              "--partition-by", "PRODUCT_TYPE", "--promote", promote, "--lake", str(self.root / f"build-{run}"),
                                              "--domain", "trading", "--table", "trade_endur", "--engine", "deltalake", "--no-stamp", "-q"])
