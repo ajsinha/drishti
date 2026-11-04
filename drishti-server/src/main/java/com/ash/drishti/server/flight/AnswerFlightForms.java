@@ -89,10 +89,28 @@ final class AnswerFlightForms {
         private final MqService mq;
         private final BiService bi;
 
-        Model(ModelCatalog catalog, MqService mq, BiService bi) {
+        private final com.ash.drishti.server.bi.sql.SqlService sql;
+
+        Model(ModelCatalog catalog, MqService mq, BiService bi, com.ash.drishti.server.bi.sql.SqlService sql) {
             this.catalog = catalog;
             this.mq = mq;
             this.bi = bi;
+            this.sql = sql;
+        }
+
+        /**
+         * A DSQL statement over the model ({@code {"model": …, "sql": …}}, what Flight SQL sends): the server's own SQL path
+         * ({@link com.ash.drishti.server.bi.sql.SqlService#answer}: parse, bind as the reader, one model query or a composite over model
+         * queries), never a second SQL engine.
+         */
+        private Answer statement(Principal p, String model, String text) {
+            if (sql == null || !sql.properties().enabled()) {
+                throw new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, com.ash.drishti.common.Branding.sqlName()
+                        + " is switched off on this server (drishti.bi.sql.enabled)");
+            }
+            com.ash.drishti.server.bi.engine.QueryService.Result res = sql.answer(catalog.bind(p, model), model, text, null);
+            return new Answer(FlightTables.of(res.columns(), res.rows()), FlightTables.meta("drishti.model", model, "drishti.masked",
+                    res.meta() == null ? "" : String.join(",", res.meta().masked())), model);
         }
 
         @Override
@@ -110,6 +128,12 @@ final class AnswerFlightForms {
             JsonNode q = r.request();
             try {
                 bi.requirePower(p, BiAccess.BI);
+                if (q.isObject() && q.path("sql").isTextual()) {
+                    if (!q.path("model").isTextual()) {
+                        throw new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, "a statement names its model: {\"model\": …, \"sql\": …}");
+                    }
+                    return statement(p, q.get("model").asText(), q.get("sql").asText());
+                }
                 ModelQuery mqy;
                 if (q.isTextual()) {
                     mqy = MqParser.parse(q.asText());

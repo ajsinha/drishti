@@ -92,8 +92,9 @@ The program of the [Java page](../guides/flight/JAVA.md) with the request
 
 ## Step 6 · Through JDBC (DBeaver)
 
-Flight SQL is the second step of this release; when it is served, the [JDBC page](../guides/flight/JDBC.md)'s connection and
-`SELECT` over a model go here.
+In DBeaver: Database → New connection → Arrow Flight SQL (or a generic JDBC connection with the Flight SQL JDBC jar), the URL of the
+[JDBC page](../guides/flight/JDBC.md) with your token and `model=` a BI model you may read; browse its tables (the model's aliases) and
+run `SELECT trades.DESK, MEASURE('Notional') FROM trades GROUP BY trades.DESK`.
 
 (output from the demo lake: to be filled in the heavy run)
 

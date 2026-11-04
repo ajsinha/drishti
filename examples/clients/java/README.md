@@ -21,7 +21,7 @@ Two single-file programs, run with Java's source launcher (no project, no build)
 | File | Shows |
 |---|---|
 | `ReadKindAndVarPnl.java` | connect with a token, read the `trade` kind (five paths of the latest date), then a desk's VaR scenario P&L (`var.scenarios`) with the engine's VaR and ES from the schema's metadata; each part read from the first of its nodes that answers |
-| `JdbcFlightSql.java` | **when Flight SQL ships**: SQL over a BI model through the Flight SQL JDBC driver; until then it stops at the service's refusal |
+| `JdbcFlightSql.java` | SQL over a BI model through the Flight SQL JDBC driver: without arguments the models the token may read and their tables, with a model and a statement its rows |
 
 ## The jars
 
@@ -49,11 +49,16 @@ jars only.
 
 (output from the demo lake: to be filled in the heavy run)
 
-## JDBC through Flight SQL (when it ships)
+## JDBC through Flight SQL
 
 ```bash
 export DRISHTI_FLIGHT_TRUSTSTORE=ca.jks DRISHTI_FLIGHT_TRUSTSTORE_PASSWORD=…
-java -cp "lib/*" JdbcFlightSql.java 'SELECT DESK, SUM(MTM) AS MTM FROM "trades-basic" GROUP BY DESK'
+java --add-opens=java.base/java.nio=ALL-UNNAMED -cp "lib/*" JdbcFlightSql.java                 # the models and their tables
+java --add-opens=java.base/java.nio=ALL-UNNAMED -cp "lib/*" JdbcFlightSql.java trading-risk@1 \
+     "SELECT trades.DESK, COUNT(*) AS n FROM trades GROUP BY trades.DESK"                      # a statement in DSQL over that model
 ```
+
+The model goes in the connection's `model` property (sent as the header `model`); a statement may name its own on a first line
+`-- model: <model>` instead.
 
 A JDBC tool (DBeaver, DataGrip) takes the same driver jar and URL: [docs/guides/flight/JDBC.md](../../../docs/guides/flight/JDBC.md).

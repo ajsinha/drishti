@@ -43,11 +43,18 @@ public final class FlightService implements AutoCloseable {
     private final Clock clock;
     private final FlightActivity activity;
     private final TokenAuthenticator auth;
+    private final FlightSqlCatalog sqlCatalog;
     private BufferAllocator allocator;
     private ExecutorService executor;
     private FlightServer server;
 
     public FlightService(FlightSettings settings, FlightBackend backend, Clock clock) {
+        this(settings, backend, clock, null);
+    }
+
+    /** With Flight SQL on the same port: {@code sqlCatalog} lists the models as schemas (null: no Flight SQL). */
+    public FlightService(FlightSettings settings, FlightBackend backend, Clock clock, FlightSqlCatalog sqlCatalog) {
+        this.sqlCatalog = sqlCatalog;
         this.settings = Objects.requireNonNull(settings, "settings");
         this.backend = Objects.requireNonNull(backend, "backend");
         this.clock = clock == null ? Clock.systemUTC() : clock;
@@ -68,9 +75,13 @@ public final class FlightService implements AutoCloseable {
         allocator = ArrowMemory.child("flight", settings.totalMemory());
         executor = Executors.newVirtualThreadPerTaskExecutor();
         DrishtiFlightProducer producer = new DrishtiFlightProducer(backend, settings, auth, activity, allocator, clock);
+        if (sqlCatalog != null) {
+            producer.sql(new DrishtiSqlProducer(producer, backend, sqlCatalog, allocator));
+        }
         FlightServer.Builder b = FlightServer.builder(allocator, Location.forGrpcTls(settings.bindHost(), settings.port()), producer)
                 .useTls(settings.certChain().toFile(), settings.privateKey().toFile())
                 .headerAuthenticator(auth)
+                .middleware(CallHeadersMiddleware.KEY, new CallHeadersMiddleware.Factory())
                 .executor(executor);
         if (settings.clientCa() != null) {
             b.useMTlsClientVerification(settings.clientCa().toFile());

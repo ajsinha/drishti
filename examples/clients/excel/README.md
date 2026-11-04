@@ -52,8 +52,8 @@ with connect() as f:
 xw.books.active.sheets.add("P&L").range("A1").options(index=False).value = df
 ```
 
-## Power Query through ODBC (when Flight SQL ships)
+## Power Query through ODBC
 
-Excel's Data → Get Data → From ODBC will read BI models once the service answers Flight SQL, through an Arrow Flight SQL ODBC driver.
-That driver is an **installer**, so it is not for machines where no program may be installed (the Windows QA machine among them); the
-Python route above needs none. What the driver will need: [docs/guides/flight/ODBC.md](../../../docs/guides/flight/ODBC.md).
+Excel's Data → Get Data → From ODBC reads BI models through Flight SQL with an Arrow Flight SQL ODBC driver (a schema per model, a table
+per alias). That driver is an **installer**, so it is not for machines where no program may be installed (the Windows QA machine among
+them); the Python route above needs none. The DSN and the model: [docs/guides/flight/ODBC.md](../../../docs/guides/flight/ODBC.md).

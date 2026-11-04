@@ -776,7 +776,7 @@ access (no entitlements or masks, no in-memory tables, no computed figures). Eac
 **Built** ([examples/clients](../../examples/clients/README.md)): nine Python notebooks (connect and catalogue, a kind into pandas and
 polars, a BI model, a pivot over trade legs, VaR scenario P&L with the VaR scenario and ES tail, a live stream with resume, a DuckDB join,
 an in-memory lake table, a direct lake read through `config/lakes/demo.yaml`); Java (a kind and VaR P&L, one file; JDBC through Flight
-SQL, ready for when it ships); Excel through Python (openpyxl, no add-in; Power Query through ODBC when Flight SQL ships, an installer);
+SQL, built in 2.9.11.c); Excel through Python (openpyxl, no add-in; Power Query through ODBC over Flight SQL, an installer);
 `test_client_examples.py` (the form always, the runs against a Flight server in the heavy run). **Later** (product owner, 2026-11-03):
 C#/.NET, R and Go examples.
 

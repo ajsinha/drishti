@@ -80,7 +80,7 @@ Single-file programs run with Java's source launcher, no project: [java/README.m
 | File | Shows |
 |---|---|
 | [ReadKindAndVarPnl.java](java/ReadKindAndVarPnl.java) | a token at the handshake, the `trade` kind, a desk's VaR scenario P&L with the engine's VaR and ES; each part from the first node that answers |
-| [JdbcFlightSql.java](java/JdbcFlightSql.java) | **when Flight SQL ships:** SQL over a BI model through the Flight SQL JDBC driver (one jar, no installer) |
+| [JdbcFlightSql.java](java/JdbcFlightSql.java) | SQL over a BI model through the Flight SQL JDBC driver (one jar, no installer): the models and their tables, then a statement's rows |
 
 ## Excel (`excel/`)
 

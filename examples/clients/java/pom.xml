@@ -44,7 +44,7 @@
       <artifactId>slf4j-simple</artifactId>
       <version>2.0.16</version>
     </dependency>
-    <!-- When Flight SQL ships: the JDBC driver for JdbcFlightSql.java (one jar, no installer). -->
+    <!-- The Flight SQL JDBC driver for JdbcFlightSql.java (one jar, no installer). -->
     <dependency>
       <groupId>org.apache.arrow</groupId>
       <artifactId>flight-sql-jdbc-driver</artifactId>

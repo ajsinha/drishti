@@ -40,7 +40,8 @@ in-memory lake; Java; Excel through Python) are in [examples/clients](../../exam
 9. [Audit and Admin → Data out](#9-audit-and-admin--data-out)
 10. [Operations](#10-operations)
 11. [Troubleshooting: the ten most likely errors](#11-troubleshooting-the-ten-most-likely-errors)
-12. [Testing](#12-testing)
+12. [Flight SQL: SQL over the BI models from JDBC and ODBC tools](#12-flight-sql-sql-over-the-bi-models-from-jdbc-and-odbc-tools)
+13. [Testing](#13-testing)
 
 ## 1. When to use Flight
 
@@ -261,9 +262,45 @@ action `health` answers a node's state to a probe holding a token.
 | `DRS-5608` no node answered | every address of a part is down or unreachable | check the port in the firewall; ask GetFlightInfo again |
 | a TLS error (`certificate verify failed`) | the client does not trust the server's CA | give the CA file (`ca=` in Python, `trustedCertificates` in Java) |
 
-## 12. Testing
+## 12. Flight SQL: SQL over the BI models from JDBC and ODBC tools
+
+**Flight SQL** is the SQL dialect of Arrow Flight that the JDBC and ODBC drivers speak. Drishti answers it on the same port, read only, as
+SQL over the **BI models**: a statement is written in the server's own SQL (DSQL, [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md))
+and answered by the same path as `POST /api/v1/bi/sql`, never by a second SQL engine. Each statement becomes a `form: model` read
+(`{"model": …, "sql": …}`), so the token, its `data:read` scope (or `data:read:bi`), the BI power, the model's row rules and masks, busy
+protection, the limits, Admin → Data out and the audit apply exactly as for any other read.
+
+**Naming the model.** A DSQL statement reads one model, its `FROM` naming the model's aliases (`FROM trades`). Say which model in one of
+two ways:
+
+- a first line of the statement: `-- model: risk-summary@1` (or `/* model: risk-summary@1 */`), which works in any tool;
+- the connection: the JDBC URL's `model=risk-summary@1` (the driver sends a property it does not know as the header `model`).
+
+```sql
+-- model: trading-risk@1
+SELECT trades.DESK AS desk, MEASURE('Notional') AS notional, COUNT(*) AS n
+FROM trades
+GROUP BY trades.DESK
+```
+
+(output from the demo lake: to be filled in the heavy run)
+
+**What a tool browses.** One catalog (the product's name), a **schema per model** the person may read (`trading-risk@1`), a **table per
+alias** of the model (`trades`, `counterparties`) with the columns the model describes for that person (hidden fields left out). Table
+type: `TABLE`. A tool's browse never fails on a model the person may not read: it is not listed.
+
+**What it refuses.** Anything but a query: updates, inserts, DDL, bulk ingestion, transactions, Substrait plans and statement parameters
+(`UNIMPLEMENTED`, read only); `EXPLAIN` (the BI SQL console answers it); a statement that names no model (`DRS-5603`, with how to name
+one). Prepared statements are read only and stateless: preparing returns the result's schema, executing reads it.
+
+Clients: the [JDBC page](flight/JDBC.md) (DBeaver, DataGrip, any JDBC program; the driver is one jar) and the [ODBC page](flight/ODBC.md)
+(an installer, so not on machines where nothing may be installed). The statements and the catalog calls are in the
+[reference](FLIGHT_REFERENCE.md#6-flight-sql), section 6.
+
+## 13. Testing
 
 `drishti-flight`'s `FlightServiceTest` runs the service over TLS with a stand-in backend (the handshake, a plan, batches, the limits, a
 stream with resume, Stop); the server's `FlightServerTest` runs it inside the server with real tokens, entitlements and the audit; the
-console's `test_flight_client.py` runs the Python client against a stand-in service over TLS. The end to end on a three-node cluster
+`FlightSqlServiceTest` runs Flight SQL in process (statements, the model by comment and header, the catalog, prepared statements,
+an update refused); the console's `test_flight_client.py` runs the Python client against a stand-in service over TLS. The end to end on a three-node cluster
 (endpoints on every node, a node stopped mid-read, a VaR stream through an intraday batch) is part of the release's heavy run.

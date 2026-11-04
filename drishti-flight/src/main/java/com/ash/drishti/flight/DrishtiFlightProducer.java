@@ -68,6 +68,7 @@ public final class DrishtiFlightProducer extends NoOpFlightProducer {
     private final FlightActivity activity;
     private final BufferAllocator allocator;
     private final Clock clock;
+    private volatile DrishtiSqlProducer sql;
 
     public DrishtiFlightProducer(FlightBackend backend, FlightSettings settings, TokenAuthenticator auth, FlightActivity activity,
             BufferAllocator allocator, Clock clock) {
@@ -79,19 +80,49 @@ public final class DrishtiFlightProducer extends NoOpFlightProducer {
         this.clock = clock;
     }
 
+    /** Flight SQL on the same port (docs/guides/FLIGHT_GUIDE.md, Flight SQL): its commands and actions go to {@code sql}. */
+    public DrishtiFlightProducer sql(DrishtiSqlProducer s) {
+        this.sql = s;
+        return this;
+    }
+
+    /** True when the bytes are a Flight SQL command or ticket (a protobuf {@code Any} of arrow.flight.protocol.sql), not Drishti's JSON. */
+    static boolean flightSql(byte[] bytes) {
+        if (bytes == null || bytes.length < 2 || bytes[0] != 0x0A) {
+            return false;                                                   // JSON starts with '{'; an Any with its type URL (field 1)
+        }
+        try {
+            return com.google.protobuf.Any.parseFrom(bytes).getTypeUrl().startsWith("type.googleapis.com/arrow.flight.protocol.sql.");
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            return false;
+        }
+    }
+
     // ------------------------------------------------------------------------------------------------------------ plans
 
     @Override
     public FlightInfo getFlightInfo(CallContext context, FlightDescriptor descriptor) {
+        DrishtiSqlProducer s = sql;
+        if (s != null && descriptor.isCommand() && flightSql(descriptor.getCommand())) {
+            caller(context);                                                 // the token first, whatever the command
+            return s.getFlightInfo(context, descriptor);
+        }
+        return info(context, request(descriptor), descriptor, java.util.function.UnaryOperator.identity());
+    }
+
+    /**
+     * The plan of a request as Flight answers it: one endpoint per part with its nodes; {@code ticket} wraps each part's request (Flight
+     * SQL puts it in a statement ticket). Refusals are audited.
+     */
+    FlightInfo info(CallContext context, FlightRequest request, FlightDescriptor descriptor, java.util.function.UnaryOperator<byte[]> ticket) {
         FlightBackend.Caller caller = caller(context);
-        FlightRequest request = request(descriptor);
         try {
             FlightBackend.Plan plan = backend.plan(caller, request);
             List<FlightEndpoint> endpoints = new ArrayList<>(plan.parts().size());
             for (int p = 0; p < plan.parts().size(); p++) {
                 FlightBackend.Part part = plan.parts().get(p);
                 Location[] at = part.nodes().stream().map(n -> Location.forGrpcTls(n.host(), n.port())).toArray(Location[]::new);
-                endpoints.add(new FlightEndpoint(new Ticket(request.forPart(p).toBytes()), at));
+                endpoints.add(new FlightEndpoint(new Ticket(ticket.apply(request.forPart(p).toBytes())), at));
             }
             return new FlightInfo(plan.schema(), descriptor, endpoints, plan.bytes(), plan.rows());
         } catch (FlightRefusal r) {
@@ -103,6 +134,10 @@ public final class DrishtiFlightProducer extends NoOpFlightProducer {
     @Override
     public SchemaResult getSchema(CallContext context, FlightDescriptor descriptor) {
         FlightBackend.Caller caller = caller(context);
+        DrishtiSqlProducer s = sql;
+        if (s != null && descriptor.isCommand() && flightSql(descriptor.getCommand())) {
+            return s.getSchema(context, descriptor);
+        }
         try {
             return new SchemaResult(backend.plan(caller, request(descriptor)).schema());
         } catch (FlightRefusal r) {
@@ -126,6 +161,12 @@ public final class DrishtiFlightProducer extends NoOpFlightProducer {
 
     @Override
     public void listActions(CallContext context, StreamListener<ActionType> listener) {
+        if (sql != null) {
+            org.apache.arrow.flight.sql.FlightSqlUtils.FLIGHT_SQL_ACTIONS.stream()
+                    .filter(a -> a.getType().equals(org.apache.arrow.flight.sql.FlightSqlUtils.FLIGHT_SQL_CREATE_PREPARED_STATEMENT.getType())
+                            || a.getType().equals(org.apache.arrow.flight.sql.FlightSqlUtils.FLIGHT_SQL_CLOSE_PREPARED_STATEMENT.getType()))
+                    .forEach(listener::onNext);
+        }
         listener.onNext(new ActionType("health", "the service's state on this node: up, Arrow memory in use and its cap, live reads"));
         listener.onNext(new ActionType("whoami", "the person, the person acted for, the token id, the roles, scopes and limits"));
         listener.onCompleted();
@@ -134,6 +175,11 @@ public final class DrishtiFlightProducer extends NoOpFlightProducer {
     @Override
     public void doAction(CallContext context, Action action, StreamListener<Result> listener) {
         FlightBackend.Caller caller = caller(context);
+        DrishtiSqlProducer s = sql;
+        if (s != null && org.apache.arrow.flight.sql.FlightSqlUtils.FLIGHT_SQL_ACTIONS.stream().anyMatch(a -> a.getType().equals(action.getType()))) {
+            s.doAction(context, action, listener);
+            return;
+        }
         String body = switch (action.getType()) {
             case "health" -> "{\"node\":" + quote(backend.nodeId()) + ",\"arrowBytes\":" + allocator.getAllocatedMemory()
                     + ",\"arrowCap\":" + allocator.getLimit() + ",\"live\":" + activity.live().size() + "}";
@@ -159,14 +205,32 @@ public final class DrishtiFlightProducer extends NoOpFlightProducer {
 
     @Override
     public void getStream(CallContext context, Ticket ticket, ServerStreamListener listener) {
-        FlightBackend.Caller caller;
+        DrishtiSqlProducer s = sql;
+        if (s != null && flightSql(ticket.getBytes())) {
+            try {
+                caller(context);
+            } catch (FlightRuntimeException e) {
+                listener.error(e);
+                return;
+            }
+            s.getStream(context, ticket, listener);
+            return;
+        }
         FlightRequest request;
         try {
-            caller = caller(context);
             request = FlightRequest.parse(ticket.getBytes());
         } catch (FlightRefusal r) {
             listener.error(r.toFlight());
             return;
+        }
+        read(context, request, listener);
+    }
+
+    /** One read of a request (a Drishti ticket, or a Flight SQL statement's): admitted, limited, shown on Data out, audited. */
+    void read(CallContext context, FlightRequest request, ServerStreamListener listener) {
+        FlightBackend.Caller caller;
+        try {
+            caller = caller(context);
         } catch (FlightRuntimeException e) {
             listener.error(e);
             return;
@@ -297,7 +361,7 @@ public final class DrishtiFlightProducer extends NoOpFlightProducer {
 
     // ------------------------------------------------------------------------------------------------------------ helpers
 
-    private FlightBackend.Caller caller(CallContext context) {
+    FlightBackend.Caller caller(CallContext context) {
         try {
             return auth.caller(context.peerIdentity());
         } catch (FlightRefusal r) {
