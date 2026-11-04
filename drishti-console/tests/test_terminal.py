@@ -364,16 +364,19 @@ def test_pages_never_open_their_own_event_streams():
 def test_a_channel_takes_new_subscriptions_without_reconnecting(client):
     from routes import api_routes
     calls = []
-    api_routes.CHANNELS["c1"] = {"user": "ash", "add": lambda s: calls.append(("add", s)), "remove": lambda s: calls.append(("remove", s))}
+    channels = api_routes.channels(client.app)
+    channels["c1"] = {"server": "default", "user": "ash", "add": lambda s: calls.append(("add", s)), "remove": lambda s: calls.append(("remove", s))}
     try:
         r = client.post("/api/channel/c1", json={"add": ["view:trade/T-2"], "remove": ["view:trade/T-1"]})
         assert r.status_code == 200 and calls == [("remove", "view:trade/T-1"), ("add", "view:trade/T-2")]
-        api_routes.CHANNELS["c2"] = {"user": "someone-else", "add": calls.append, "remove": calls.append}
+        channels["c2"] = {"server": "default", "user": "someone-else", "add": calls.append, "remove": calls.append}
         assert client.post("/api/channel/c2", json={"add": ["alerts"]}).status_code == 404       # not yours
+        channels["c3"] = {"server": "desk", "user": "ash", "add": calls.append, "remove": calls.append}
+        assert client.post("/api/channel/c3", json={"add": ["alerts"]}).status_code == 404       # the same name on another server
         assert client.post("/api/channel/nope", json={"add": ["alerts"]}).status_code == 404    # gone: the page opens a new one
     finally:
-        api_routes.CHANNELS.pop("c1", None)
-        api_routes.CHANNELS.pop("c2", None)
+        for k in ("c1", "c2", "c3"):
+            channels.pop(k, None)
 
 
 def test_a_command_naming_several_entities_shows_a_pick_list(client, backend, monkeypatch):

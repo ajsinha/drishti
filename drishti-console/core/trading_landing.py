@@ -337,7 +337,7 @@ async def on_date(day: date, make):
     async def run():
         asof.set_current(day.isoformat())
         return await make()
-    return await asyncio.create_task(run())
+    return await asyncio.create_task(run())                 # a copy of the request's context (its server, lens): only the date differs
 
 
 # -- the trade valuations of a scope on one date --------------------------------------------------------------------------------------

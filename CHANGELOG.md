@@ -161,6 +161,35 @@
   `ownerText`, and the run's files and tables under `running`), from the run's plan `inprocess/<run>/load-plan.json` that each cycle now
   writes (kept in `outbox/<day>/<run>/loads/`); new `GET /api/v1/admin/dataload/report?path=` serves a report under `outbox/` or `failed/`.
   The status reads the ledger's newest lines without opening (indexing) the whole ledger on every call.
+- **Each console app reads its own server's engines (fixes the Drill A flake of `test_dataload_inbox_browser.py`).** What runs where
+  (`core/engines.py`) was a module global that every console app of a process wrote: in the browser lane the session's live console,
+  whose server runs the data inbox off as shipped, re-learned it every 5 s through its backend watch and hid Admin → Data loads → Inbox
+  in another file's stand-in console mid-file (7 of 8 tests failed after a file on the live console; alone they passed). Now each app's
+  editions hold their own `engines.State`, a pure ASGI middleware (`AppEngines`, outermost) makes every request, websocket and the
+  lifespan's tasks read their own app's, and code outside a request reads the newest app's (one app per process in production: as
+  before). `tests/test_engines_per_app.py` keeps it so; reproduced and passing in that order (`test_workbench_metric_browser.py` then the
+  inbox file) and alone.
+
+### Fixes
+
+- **Security: a console with several servers opened live streams on its first server (release blocker; ADR-016 › As built).** A live
+  channel ran each subscription in a fresh context holding only the business date, so the server switch read its default: a person
+  signed in on server `desk` had their alerts, views, BI live tables, live pivots and computed panels opened on the console's first
+  server, with `desk`'s token, and saw that server's data under `desk`'s roles. Relayed calls lost the same scope (they ran in the relay
+  listener's context: a pack job's preview and design went to the first server), and so did the lens (`X-Drishti-Lens`), the share id
+  and a pool session's pin (every channel shared one pin). Now `core/request_context.py` captures every request-scoped context variable
+  (server, pool pin, lens, share, business date, "known at", the app's engines) and `run_in` starts a task in it; a live channel takes
+  it when it opens and pins its server's backend client, a pack job's task runs in it, and a relayed call carries it and is handled in
+  it (a relayed call naming no known server is refused). Ownership is (server, user) everywhere a person owns something in the console:
+  live channels (console and embed), relayed changes, pack jobs, lake uploads and builds, AI call limits. A test lists every
+  `ContextVar` in `core/` and fails when one is not carried.
+- **A console live channel re-checks its session.** It captured the identity once and served (and took new subscriptions) for as long
+  as it was open. Now the embed stream's guard watches it with the session as its check, every `auth.recheck_seconds`: a signed-out,
+  disabled or deleted user's channel ends with `gone` `DRS-5010`, a valid one carries on with the identity re-minted (current roles, a
+  fresh token); signing out ends that session's channels on this console at once.
+- **Console state per app, not per process.** The open channels, the worker relay (its port, replay cache and counters: a second app
+  in one process used to get the first's), the AI "Test connection" pacing and the explorer's SQL slots now belong to each app
+  (`app.state`), as the engines do. `tests/test_console_context.py` fails on the old code (9 of 9) and passes.
 
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 

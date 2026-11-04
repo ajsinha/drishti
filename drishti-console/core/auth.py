@@ -169,7 +169,7 @@ class Auth:
             return hit[1]
         pending = self._inflight.get(session)
         if pending is None:                              # one server call per session, however many requests wait
-            pending = asyncio.ensure_future(self._ask(session, backend))
+            pending = asyncio.ensure_future(self._ask(session, backend))   # the service identity; this Auth's server (copied context)
             self._inflight[session] = pending
             pending.add_done_callback(lambda _f: self._inflight.pop(session, None))
         return await asyncio.shield(pending)

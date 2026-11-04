@@ -21,6 +21,7 @@ the screen is the engine catalogue (config/engines.yaml, the server's engines/ca
 from __future__ import annotations
 
 import logging
+from contextvars import ContextVar
 from pathlib import Path
 
 import yaml
@@ -29,8 +30,45 @@ LOG = logging.getLogger("drishti.console.engines")
 CATALOGUE = Path(__file__).resolve().parent.parent / "config" / "engines.yaml"
 
 _entries: list[dict] | None = None
-_available: dict[str, bool] | None = None          # id -> runs somewhere in the cluster; None: not learned, nothing hidden
-_here: dict[str, bool] = {}
+
+
+class State:
+    """What one console app has learned from its server: each engine's id -> runs somewhere in the cluster (``available``; None: not
+    learned, nothing hidden) and -> runs on this server (``here``). One per app (its :class:`core.edition.Editions`), never shared: a
+    process that holds several apps (the browser tests: a real stack's console beside stand-in ones) keeps each app's own answer."""
+
+    __slots__ = ("available", "here")
+
+    def __init__(self) -> None:
+        self.available: dict[str, bool] | None = None
+        self.here: dict[str, bool] = {}
+
+
+_default = State()                                  # the newest app's: what code outside a request reads (one app per process in production)
+_current: ContextVar[State | None] = ContextVar("drishti_console_engines", default=None)   # the app serving this request (core/app.py)
+
+
+def new_state() -> State:
+    """A new app's state; it becomes the process default (the newest app, as the edition is), a request reads its own app's."""
+    global _default
+    _default = State()
+    return _default
+
+
+def use(state: State | None):
+    """Requests of the app whose state this is read it (set by core/app.py around every request); returns the token to reset."""
+    return _current.set(state)
+
+
+def reset_use(token) -> None:
+    """Undoes :func:`use` at the end of the request."""
+    _current.reset(token)
+
+
+def state() -> State:
+    """The state this code reads: the app serving the current request, else the newest app's."""
+    s = _current.get()
+    return s if s is not None else _default
 
 
 def entries() -> list[dict]:
@@ -49,38 +87,40 @@ def entry(engine_id: str) -> dict | None:
     return next((e for e in entries() if e.get("id") == engine_id), None)
 
 
-def reset() -> None:
+def reset(into: State | None = None) -> None:
     """Forget what the server said (a new console process, a test's new app): nothing hidden until it says again."""
-    global _available, _here
-    _available = None
-    _here = {}
+    s = into if into is not None else state()
+    s.available = None
+    s.here = {}
 
 
-def learn(engines) -> bool:
-    """The about answer's ``engines``; True when what is available changed. ``None`` (an older server): nothing is hidden."""
-    global _available, _here
+def learn(engines, into: State | None = None) -> bool:
+    """The about answer's ``engines`` into an app's state (``into``: the app's own; else the current one); True when what is available
+    changed. ``None`` (an older server): nothing is hidden."""
+    s = into if into is not None else state()
     if engines is None:
-        changed = _available is not None
-        reset()
+        changed = s.available is not None
+        reset(s)
         return changed
     avail = {str(e.get("id")): bool(e.get("cluster", e.get("here"))) for e in engines if isinstance(e, dict) and e.get("id")}
     here = {str(e.get("id")): bool(e.get("here")) for e in engines if isinstance(e, dict) and e.get("id")}
-    changed = avail != _available
-    if changed and _available is not None:
+    changed = avail != s.available
+    if changed and s.available is not None:
         LOG.warning("engines: now available %s; not available %s", sorted(k for k, v in avail.items() if v), sorted(k for k, v in avail.items() if not v))
-    _available, _here = avail, here
+    s.available, s.here = avail, here
     return changed
 
 
 def engine_available(engine_id: str) -> bool:
     """Whether the engine runs on this server or on any server of the cluster (True until the server has said)."""
-    if _available is None:
+    s = state()
+    if s.available is None:
         return True
-    return _available.get(engine_id, True)
+    return s.available.get(engine_id, True)
 
 
 def engine_here(engine_id: str) -> bool:
-    return _here.get(engine_id, engine_available(engine_id))
+    return state().here.get(engine_id, engine_available(engine_id))
 
 
 def off() -> list[dict]:

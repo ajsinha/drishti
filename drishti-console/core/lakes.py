@@ -295,7 +295,9 @@ class Lakes:
         """Starts the build as its own process; a thread waits for it. Binding and announcing happen on the next poll
         (:meth:`after`), as the administrator who polls, so no request has to stay open for the build."""
         self._expire()
-        owner = getattr(me, "user", None) or "admin"
+        from core.servers import scoped
+
+        owner = scoped(getattr(me, "user", None) or "admin")      # (server, user), as the routes check it
         u = self.upload(str(p.get("upload") or ""), owner)
         self.check(p)
         if sum(1 for j in self.jobs.values() if j.state in ("running", "built")) >= self.cfg.jobs:

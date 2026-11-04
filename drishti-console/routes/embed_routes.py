@@ -33,7 +33,7 @@ from fastapi.responses import JSONResponse, RedirectResponse, Response, Streamin
 from core.backend import BackendError
 from core import element_dist as dist
 from core import element_sheet as es
-from core import channel_relay
+from core import channel_relay, servers
 from core.channel import ChannelSession
 from core.element_sheet import shadow_css  # noqa: F401 - kept importable from here
 from core.csrf import BodyError, json_body
@@ -380,7 +380,8 @@ async def channel(request: Request, s: list[str] = Query(default=[])):
     limit = min(api_routes.max_subscriptions(request), room)
     asked = list(dict.fromkeys(x for x in s if x.startswith(LIVE_KEYS)))[:limit * 2]
     session = ChannelSession(request.app.state.backend, me, lambda event, data: api_routes._view_event(request, event, data, embed=True),
-                             limit=limit, app=claims["azp"], registry=api_routes.CHANNELS)
+                             limit=limit, app=claims["azp"], registry=api_routes.channels(request.app),
+                             cid_suffix=channel_relay.suffix(request.app))
     guard = StreamGuard(session, claims, grace=float(hosts.settings.get("token_grace_seconds", 30)),
                         recheck=float(hosts.settings.get("recheck_seconds", 60)))
     hosts.guards[session.cid] = guard
@@ -398,9 +399,14 @@ async def channel(request: Request, s: list[str] = Query(default=[])):
                                            headers={"Cache-Control": "no-store", "X-Accel-Buffering": "no"}))
 
 
+def _owner_is(ch: dict | None, user: str, app: str) -> bool:
+    """The channel's user and host application, on the current request's server (the same name on two servers is two people)."""
+    return ch is not None and ch.get("user") == user and ch.get("app", "") == app and ch.get("server", servers.DEFAULT) == servers.current()
+
+
 def _owned(request: Request, cid: str, me, claims):
-    ch = api_routes.CHANNELS.get(cid)
-    return ch if ch is not None and ch["user"] == me.user and ch.get("app", "") == claims["azp"] else None
+    ch = api_routes.channels(request.app).get(cid)
+    return ch if _owner_is(ch, me.user, claims["azp"]) else None
 
 
 @router.post("/channel/{cid}")
@@ -411,7 +417,7 @@ async def channel_change(request: Request, cid: str):
     except EmbedError as e:
         return await refuse(request, e.status, e.code, e.detail, e.retry_after)
     ch = _owned(request, cid, me, claims)
-    remote = api_routes.CHANNELS.get(cid) is None and channel_relay.owner_port(cid) is not None    # held by another worker of this console
+    remote = api_routes.channels(request.app).get(cid) is None and channel_relay.owner_port(cid) is not None    # held by another worker of this console
     if ch is None and not remote:
         return await refuse(request, 404, "DRS-5001", "no such channel: open a new one")
     try:
@@ -420,7 +426,7 @@ async def channel_change(request: Request, cid: str):
         return await refuse(request, 400, "DRS-5001", "a JSON body {add, remove}")
     limit = api_routes.max_subscriptions(request)
     if remote:
-        got = await channel_relay.forward(cid, "embed-change", {"user": me.user, "app": claims["azp"], "add": body.get("add") or [],
+        got = await channel_relay.forward(request.app, cid, "embed-change", {"user": me.user, "app": claims["azp"], "add": body.get("add") or [],
                                                                 "remove": body.get("remove") or [], "limit": limit})
         if not got or not got.get("ok"):
             return await refuse(request, 404, "DRS-5001", "no such channel: open a new one")
@@ -438,14 +444,15 @@ def _change(hosts, ch: dict, body: dict, limit: int) -> None:
         ch["add"](str(sub))
 
 
-def _relayed_owner(cid: str, payload: dict):
-    ch = api_routes.CHANNELS.get(cid)
-    return ch if ch is not None and ch["user"] == str(payload.get("user", "")) and ch.get("app", "") == str(payload.get("app", "")) else None
+def _relayed_owner(app, cid: str, payload: dict):
+    """The channel when the relayed caller owns it; the call runs in the caller's scope (its server, core/channel_relay.py)."""
+    ch = api_routes.channels(app).get(cid)
+    return ch if _owner_is(ch, str(payload.get("user", "")), str(payload.get("app", ""))) else None
 
 
 def _relayed_change(app, cid: str, payload: dict) -> dict:
     """A change another worker received, and checked the caller of, for a channel this worker holds (core/channel_relay.py)."""
-    ch = _relayed_owner(cid, payload)
+    ch = _relayed_owner(app, cid, payload)
     if ch is None:
         return {"ok": False}
     _change(app.state.embed, ch, payload, int(payload.get("limit") or api_routes.MAX_CHANNEL_SUBSCRIPTIONS))
@@ -456,7 +463,7 @@ def _relayed_token(app, cid: str, payload: dict) -> dict:
     """A fresh token another worker verified, for a stream this worker holds."""
     claims = payload.get("claims") or {}
     guard = app.state.embed.guards.get(cid)
-    if guard is None or _relayed_owner(cid, {"user": claims.get("sub", ""), "app": claims.get("azp", "")}) is None:
+    if guard is None or _relayed_owner(app, cid, {"user": claims.get("sub", ""), "app": claims.get("azp", "")}) is None:
         return {"ok": False, "status": 404, "code": "DRS-5001", "detail": "no such channel: open a new one"}
     who = dict(payload.get("identity") or {})
     who["roles"] = tuple(who.get("roles") or ("viewer",))
@@ -478,8 +485,8 @@ async def channel_token(request: Request, cid: str):
     try:
         me, claims = await identity(request)
         guard = hosts.guards.get(cid)
-        if guard is None and api_routes.CHANNELS.get(cid) is None and channel_relay.owner_port(cid) is not None:     # another worker's stream
-            got = await channel_relay.forward(cid, "embed-token", {"identity": dataclasses.asdict(me), "claims": claims}) or {}
+        if guard is None and api_routes.channels(request.app).get(cid) is None and channel_relay.owner_port(cid) is not None:   # another worker's
+            got = await channel_relay.forward(request.app, cid, "embed-token", {"identity": dataclasses.asdict(me), "claims": claims}) or {}
             if not got.get("ok"):
                 raise EmbedError(int(got.get("status") or 404), str(got.get("code") or "DRS-5001"), str(got.get("detail") or "no such channel: open a new one"))
         else:

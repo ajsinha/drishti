@@ -26,6 +26,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from core.ai.types import CallContext, ChatMessage, ChatRequest, LlmError
+from core import servers as console_servers
 from core.backend import BackendError
 from core.csrf import json_body
 from routes.common import ident, render
@@ -78,7 +79,7 @@ async def page(request: Request, tools: str = "", where: str = "console"):
             if where == "server":
                 tool_list = await request.app.state.backend.admin("GET", f"/mcp/{tools}/tools", me)
             else:
-                ctx = CallContext(me.user, frozenset(me.roles), "admin", me)
+                ctx = CallContext(me.user, frozenset(me.roles), "admin", me, console_servers.current())
                 tool_list = [{"name": t.name, "description": t.description} for t in await ai.mcp_gateway.tools(ctx, tools)]
         except (BackendError, LlmError) as e:
             tool_error = getattr(e, "detail", None) or getattr(e, "message", str(e))
@@ -111,7 +112,14 @@ async def retry_now(request: Request, area: str):
 
 _TEST_TIMEOUT_SECONDS = 15.0
 _TEST_GAP_SECONDS = 2.0
-_TESTED: dict = {}
+
+
+def _tested(app) -> dict:
+    """When each provider was last tested (Admin -> AI "Test connection"), per app: provider -> monotonic time."""
+    st = app.state
+    if getattr(st, "ai_tested", None) is None:
+        st.ai_tested = {}
+    return st.ai_tested
 
 
 @router.post("/admin/ai/api/test/{name}")
@@ -128,10 +136,11 @@ async def test_connection(request: Request, name: str):
     if entry is None:
         return JSONResponse({"code": "DRS-4016", "kind": "not_found", "detail": f"no provider named '{name}'"}, status_code=404)
     now = time.monotonic()
-    last = _TESTED.get(name, -1e9)
+    tested = _tested(request.app)
+    last = tested.get(name, -1e9)
     if now - last < _TEST_GAP_SECONDS:
         return JSONResponse({"code": "DRS-4016", "kind": "rate_limited", "detail": f"tested a moment ago; wait {int(_TEST_GAP_SECONDS - (now - last)) + 1} s"}, status_code=429)
-    _TESTED[name] = now
+    tested[name] = now
     if not entry.usable:
         ai._audit({"user": me.user, "feature": "test-connection", "provider": name, "outcome": "not-usable", "detail": entry.error or "enabled: false"})
         return {"name": name, "ok": False, "network": False, "detail": entry.error or "enabled: false in the provider file", "models": []}
@@ -197,7 +206,7 @@ async def chat(request: Request):
                       timeout=float(min(120, max(1, int(body.get("timeoutSeconds") or 30)))))
     feature = "console:" + str(body.get("feature") or "other")
     try:
-        r = await ai.gateway.chat(CallContext(me.user, frozenset(me.roles), feature, me), req)
+        r = await ai.gateway.chat(CallContext(me.user, frozenset(me.roles), feature, me, console_servers.current()), req)
     except LlmError as e:
         return _problem(e)
     return {"text": r.text, "model": r.model, "finishReason": r.finish_reason,

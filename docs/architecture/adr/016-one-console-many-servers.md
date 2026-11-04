@@ -80,4 +80,17 @@ each server decides who gets in.
   methods, and nothing about data, packs or users. The picker (`/servers`) reads it from every server concurrently.
 - In the console, `app.state.backend` and `app.state.auth` are switches resolved per request from a context
   variable, and the per-user caches key by (server, user); routes did not change.
+- Work that outlives a request acts for that request, never for the console's first server. The middleware's
+  request scope (the server, the session's pin in a pool of servers, the lens, the share a view was opened
+  through, the business date and "known at") is captured by `core/request_context.py`, and every task started for
+  the person runs in it: each subscription of a live channel (views, alerts, BI live tables, live pivots, computed
+  panels) and a pack job. A live channel also pins its server's backend client when it opens. A call relayed to
+  another worker of the console carries the scope, and the worker that holds the channel or job acts in it; a
+  relayed call naming no known server is refused. Everything a person owns in the console (a live channel, a pack
+  job, a lake upload or build, AI call limits) is owned by (server, user): the same name on two servers is two
+  people. Open channels, the relay and the console's other state belong to one app, never to the process.
+- A console live channel re-checks its session every `auth.recheck_seconds` (the embed stream's guard, with the
+  session as its check): a signed-out, disabled or deleted user's channel ends with `gone` `DRS-5010`; a valid one
+  carries on with the identity re-minted (current roles, a fresh token). Signing out ends that session's channels
+  on this console at once.
 

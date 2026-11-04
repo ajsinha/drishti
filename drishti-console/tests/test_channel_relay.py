@@ -31,12 +31,13 @@ def test_one_process_has_no_relay(monkeypatch):
     monkeypatch.delenv(channel_relay.KEY_ENV, raising=False)
 
     async def go():
-        await channel_relay.start(None)
+        app = SimpleNamespace(state=SimpleNamespace())
+        await channel_relay.start(app)
         try:
-            cid = ChannelSession(None, SimpleNamespace(user="ann"), lambda e, d: d, limit=4).cid
-            return channel_relay.suffix(), cid, await channel_relay.forward(cid + ".1234", "console-change", {})
+            cid = ChannelSession(None, SimpleNamespace(user="ann"), lambda e, d: d, limit=4, cid_suffix=channel_relay.suffix(app)).cid
+            return channel_relay.suffix(app), cid, await channel_relay.forward(app, cid + ".1234", "console-change", {})
         finally:
-            await channel_relay.stop()
+            await channel_relay.stop(app)
 
     suffix, cid, got = run(go())
     assert suffix == "" and "." not in cid and got is None
@@ -45,38 +46,39 @@ def test_one_process_has_no_relay(monkeypatch):
 def test_a_call_reaches_the_worker_named_in_the_id_and_a_stranger_is_refused(monkeypatch):
     monkeypatch.setenv(channel_relay.KEY_ENV, "relay-test-key")
     seen = []
+    the_app = SimpleNamespace(state=SimpleNamespace())
     monkeypatch.setitem(channel_relay.HANDLERS, "echo", lambda app, cid, payload: seen.append((app, cid, payload)) or {"ok": True, "n": payload["n"]})
 
     async def go():
-        await channel_relay.start("the-app")
-        port = channel_relay._state["port"]
+        await channel_relay.start(the_app)
+        port = channel_relay.of(the_app).port
         try:
-            cid = ChannelSession(None, SimpleNamespace(user="ann"), lambda e, d: d, limit=4).cid
-            own = await channel_relay.forward(cid, "echo", {"n": 1})           # this worker's own channel: nothing to pass on
-            channel_relay._state["port"] = 0                                  # now the caller is "another worker"
-            other = await channel_relay.forward(cid, "echo", {"n": 2})
-            unknown = await channel_relay.forward(cid, "no-such-op", {})
+            cid = ChannelSession(None, SimpleNamespace(user="ann"), lambda e, d: d, limit=4, cid_suffix=channel_relay.suffix(the_app)).cid
+            own = await channel_relay.forward(the_app, cid, "echo", {"n": 1})          # this worker's own channel: nothing to pass on
+            caller = SimpleNamespace(state=SimpleNamespace())                         # another worker
+            other = await channel_relay.forward(caller, cid, "echo", {"n": 2})
+            unknown = await channel_relay.forward(caller, cid, "no-such-op", {})
             reader, writer = await asyncio.open_connection("127.0.0.1", port)
             writer.write((json.dumps({"key": "wrong", "op": "echo", "cid": cid, "payload": {"n": 3}}) + "\n").encode())
             await writer.drain()
             stranger = json.loads(await reader.readline())
             writer.close()
-            channel_relay._state["port"] = port
             return cid, port, own, other, unknown, stranger
         finally:
-            await channel_relay.stop()
+            await channel_relay.stop(the_app)
 
     cid, port, own, other, unknown, stranger = run(go())
     assert cid.endswith(f".{port}") and channel_relay.owner_port(cid) == port
     assert own is None and other == {"ok": True, "n": 2} and unknown == {"ok": False} and stranger == {"ok": False}
-    assert seen == [("the-app", cid, {"n": 2})]                                  # the stranger's message never reached the handler
+    assert seen == [(the_app, cid, {"n": 2})]                                  # the stranger's message never reached the handler
 
 
 def test_a_relayed_change_applies_only_to_its_owners_channel(monkeypatch):
     calls = []
     entry = {"user": "ann", "app": "", "add": lambda s: calls.append(("add", s)), "remove": lambda s: calls.append(("remove", s))}
-    monkeypatch.setitem(api_routes.CHANNELS, "c1.4000", entry)
-    assert api_routes._relayed_change(None, "c1.4000", {"user": "bob", "add": ["view:trade/1"]}) == {"ok": False}
-    assert api_routes._relayed_change(None, "c1.4001", {"user": "ann", "add": ["view:trade/1"]}) == {"ok": False}
-    assert api_routes._relayed_change(None, "c1.4000", {"user": "ann", "add": ["view:a/1"], "remove": ["view:b/2"], "limit": 4}) == {"ok": True}
+    app = SimpleNamespace(state=SimpleNamespace())
+    api_routes.channels(app)["c1.4000"] = entry
+    assert api_routes._relayed_change(app, "c1.4000", {"user": "bob", "add": ["view:trade/1"]}) == {"ok": False}
+    assert api_routes._relayed_change(app, "c1.4001", {"user": "ann", "add": ["view:trade/1"]}) == {"ok": False}
+    assert api_routes._relayed_change(app, "c1.4000", {"user": "ann", "add": ["view:a/1"], "remove": ["view:b/2"], "limit": 4}) == {"ok": True}
     assert calls == [("remove", "view:b/2"), ("add", "view:a/1")]

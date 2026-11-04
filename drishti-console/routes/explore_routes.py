@@ -42,7 +42,15 @@ from routes.common import ident
 
 router = APIRouter(include_in_schema=False)
 CONSOLE = Path(__file__).resolve().parent.parent
-_SQL_SLOTS = asyncio.Semaphore(4)
+SQL_SLOTS = 4                       # SQL statements of this app at once (each runs in a thread)
+
+
+def _sql_slots(app) -> asyncio.Semaphore:
+    """The app's own SQL slots (a process-wide semaphore was shared by every app and bound to the first event loop that waited on it)."""
+    st = app.state
+    if getattr(st, "explore_sql_slots", None) is None:
+        st.explore_sql_slots = asyncio.Semaphore(SQL_SLOTS)
+    return st.explore_sql_slots
 
 
 def _limits(request: Request) -> Limits:
@@ -140,7 +148,7 @@ async def sql(request: Request):
     try:
         extras = await extras_for(request, body.get("extracts"))
         ex = await primary_for(request, body.get("extract"), extras)
-        async with _SQL_SLOTS:
+        async with _sql_slots(request.app):
             out = await asyncio.to_thread(run_sql, ex, str(body.get("sql", "")), limits, {s["name"]: e for s, e in extras})
     except (BackendError, ExploreError) as e:
         return _fail(e)

@@ -465,6 +465,8 @@ class FactsService:
             return hit[1]
         task = self._running.get(key)
         if task is None:
+            # copies the request's context (core/request_context.py: its server, lens, date); shared only by asks of the same
+            # (server, user, date, packs) key
             task = asyncio.ensure_future(self._compute_all(facts, fetcher, as_of))
             self._running[key] = task
             task.add_done_callback(lambda t, k=key: self._finish(k, t))
