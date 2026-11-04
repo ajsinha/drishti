@@ -232,10 +232,14 @@ class FlightSqlServiceTest {
         List<CallOption> auth = new ArrayList<>();
         try (FlightSqlClient c = connect(auth)) {
             CallOption o = auth.get(0);
-            try (FlightSqlClient.PreparedStatement ps = c.prepare("/* model: risk-summary@1 */ SELECT trades.DESK FROM trades", o)) {
+            // closed with the token too: every call carries it (a JDBC driver sends it on each), try-with-resources would send none
+            FlightSqlClient.PreparedStatement ps = c.prepare("/* model: risk-summary@1 */ SELECT trades.DESK FROM trades", o);
+            try {
                 assertThat(ps.getResultSetSchema().getFields()).extracting(Field::getName).containsExactly("DESK", "PNL");
                 FlightInfo info = ps.execute(o);
                 assertThat(rows(c, info, o)).hasSize(2);
+            } finally {
+                ps.close(o);
             }
             assertThatThrownBy(() -> c.executeUpdate("-- model: risk-summary@1\nDELETE FROM trades", o)).isInstanceOf(FlightRuntimeException.class);
         }
