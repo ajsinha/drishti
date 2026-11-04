@@ -88,6 +88,14 @@ drishti:
       cache-minutes: 10              # answers kept this long, never stored
       cache-mb: 32                   # most memory the kept answers take (weighed in bytes)
       matrix-max: 60                 # most child nodes the Matrix view explains
+    parametric:                      # parametric VaR and ES, a cross-check beside historical (PVAR, VAR_GUIDE.md section 18.15): the normal fitted to the scope's own scenario P&L vector; never official
+      enabled: ${DRISHTI_VAR_PARAMETRIC_ENABLED:true}   # the parametric block on the VaR answers, PVAR, PLAY PVAR and pvar(); off: none of them (asked: refused in words)
+      weighting: equal               # equal (1/N, sigma with N - 1) or ewma (RiskMetrics, lambda below)
+      lambda: 0.94                   # EWMA's decay, in (0.5, 1); read only with ewma
+      horizon-rule: lens             # lens (the lens's own vector: sqrt10 scales mu and sigma by root 10, sum reads the 10-day windows) or square-root-of-time (mu x h, sigma x root h from the 1-day vector)
+      curve-points: 121              # points of the normal curve the P&L path answer carries (21 to 1001)
+      matrix-max-parts: 60           # most parts of a correlation matrix (the largest by component VaR beyond, said truncated)
+      show-curve: true               # the Normal curve toggle starts on (each person's choice is then remembered)
     currencies: ${DRISHTI_VAR_CURRENCIES:USD,EUR,CAD,JPY,GBP}   # reporting currencies built ahead after the USD book (background, own hot files; USD always); others on first ask
     currency-retention-dates: ${DRISHTI_VAR_CURRENCY_RETENTION_DATES:5}   # newest business dates whose listed currencies are built ahead and kept on disk
     intraday:
