@@ -730,7 +730,7 @@ Choose the same `deals.json` and press **Load the file**. It is streamed from th
 up to `drishti.loads.upload-max-mb`), written into `book-store` under the business date (a snapshot: today's, or the day you choose; a day
 loaded again is replaced), and **every row is checked** against the pack's Sutras: *types with no Sutra* (a product the pack was not built
 with) and *fields no Sutra shows* are listed with their counts. Then the load is announced like any other data load
-([Data loads](#1-telling-drishti-new-data-has-landed)): caches are dropped (the pages per value are rebuilt from the new deals), the day is verified, alerts and
+([Data loads](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)): caches are dropped (the pages per value are rebuilt from the new deals), the day is verified, alerts and
 subscriptions run. 5,000 deals take about a second.
 
 The same from a script, or offline:
