@@ -68,7 +68,8 @@ import org.duckdb.DuckDBConnection;
  *       file is attached read-only, which a running server allows) and then each staged (kind, business date), sorted
  *       by id. A day in the stream replaces that day whole; a row given twice keeps the last. {@code --recreate} drops
  *       the old rows of each domain the stream reaches; {@code --keep-days N} drops the days more than N calendar days
- *       before {@code --as-of} (today), never counted from the newest date loaded, and refuses to drop more than
+ *       before the newest business date of the load (a plain file's date, a tar's newest folder), never from the
+ *       newest date the store holds, and refuses to drop more than
  *       {@code --max-drop-share} (0.5) of a domain's rows without {@code --force-drop} ({@link LoadGuard}). The dates
  *       table records each day, its rows and when it was loaded.</li>
  *   <li>{@code DATABASE.loading} is checkpointed, closed and renamed over {@code DATABASE} in one atomic step; a running
@@ -358,7 +359,7 @@ public final class DuckDbLoader {
             // each kind's days and where they come from: the stream replaces a day the old file has
             Map<String, NavigableSet<LocalDate>> oldDays = oldTable ? DuckDbLayout.dates(c, "drishti_old", schema) : new TreeMap<>();
             Map<String, NavigableSet<LocalDate>> newDays = s == null ? Map.of() : s.days;
-            // retention counts back from --as-of (today), never from the newest date of the file or the load
+            // retention counts back from the newest business date of the load (LoadGuard.asOf), never from the store's
             LocalDate keepFrom = keepDays > 0 ? guard.keepFromDays(keepDays) : LocalDate.MIN;
             if (oldTable && keepDays > 0) {
                 try (Statement st = c.createStatement();

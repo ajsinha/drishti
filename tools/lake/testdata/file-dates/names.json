@@ -45,7 +45,12 @@
     {"given": null, "name": null, "dateFrom": "auto", "date": "2026-11-04", "source": "today", "words": "2026-11-04 (today: no date in the name)"},
     {"given": null, "name": "2026-11-03", "dateFrom": "name", "date": "2026-11-03", "source": "name", "words": "2026-11-03 from the file name"},
     {"given": "2026-11-01", "name": null, "dateFrom": "name", "date": "2026-11-01", "source": "given", "words": "2026-11-01 from the command line"},
-    {"given": null, "name": null, "dateFrom": "name", "error": "date-from name, but the name carries no date"}
+    {"given": null, "name": null, "dateFrom": "name", "error": "date-from name, but the name carries no date"},
+    {"given": null, "name": null, "file": "trades.2026-13-03.jsonl", "dateFrom": "auto", "error": "trades.2026-13-03.jsonl: 2026-13-03 is not a calendar date"},
+    {"given": null, "name": null, "file": "trades.2026-11-05.jsonl.gz", "dateFrom": "auto", "error": "trades.2026-11-05.jsonl.gz: 2026-11-05 is in the future"},
+    {"given": "2026-11-01", "name": null, "file": "trades.20261199.jsonl", "dateFrom": "auto", "error": "20261199 is not a calendar date"},
+    {"given": null, "name": null, "file": "x.zip!/trades.2026-11-05.jsonl", "dateFrom": "auto", "error": "2026-11-05 is in the future"},
+    {"given": null, "name": null, "file": "eod.tar.gz", "dateFrom": "auto", "date": "2026-11-04", "source": "today", "words": "2026-11-04 (today: no date in the name)"}
   ],
   "businessToday": [
     {"today": "2026-11-04", "business": "2026-11-04"},

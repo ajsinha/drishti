@@ -68,7 +68,8 @@ import org.bson.conversions.Bson;
  * and the load ends with an error naming it ({@link LoadGuard}).
  *
  * <p>{@code --keep-days N} then deletes, in every domain collection of the database, each kind's business days older
- * than its N newest on or before {@code --as-of} (today; a day after it is neither counted nor deleted), and refuses
+ * than its N newest on or before the newest business date of the load (a plain file's date, a tar's newest folder; a
+ * day after it is neither counted nor deleted), and refuses
  * to delete more than {@code --max-drop-share} (0.5) of a kind's days without {@code --force-drop}. {@code --ttl-days
  * N} stamps each document with {@code expireAt} (its business date plus N days) and adds the TTL index, so MongoDB
  * deletes old days by itself. {@code tools/load-mongodb.sh} runs it.
@@ -246,7 +247,7 @@ public final class MongoLoader {
 
     /**
      * Retention by deletion: for each kind of each domain's collection, every business day older than its {@code keep}
-     * newest on or before {@code --as-of} is deleted (a range of the {@code day_ids} index), in both collections.
+     * newest on or before the load's newest business date ({@link LoadGuard#asOf()}) is deleted (a range of the {@code day_ids} index), in both collections.
      * Every kind is checked first: when one would lose more than {@code --max-drop-share} of its days, nothing is
      * deleted (unless {@code --force-drop}). Returns the documents deleted.
      */

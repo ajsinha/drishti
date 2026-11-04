@@ -63,7 +63,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * refuses to load into tables that lack them. The keyspace is the administrator's; {@code --create-keyspace RF} makes one
  * with SimpleStrategy for a development node. {@code --ttl-days N} writes with a TTL (and {@code --create} gives new tables
  * one-day time windows); {@code --keep-days N} then drops each loaded kind's days older than its newest N on or before
- * {@code --as-of}, refusing to drop more than half of them without {@code --force-drop} ({@link LoadGuard}).
+ * the newest business date of the load, refusing to drop more than half of them without {@code --force-drop} ({@link LoadGuard}).
  */
 public final class CassandraLoader implements AutoCloseable {
 

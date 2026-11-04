@@ -321,8 +321,8 @@ netting set `NS-SUMMIT-NY` **33–59 ms**.
 Two ways, both set at load time; the connector has no retention setting.
 
 **`--keep-days N`**: after loading, for every kind of every domain collection in the database, the loader finds the
-kind's dates (a distinct scan) and deletes the days older than its N newest on or before `--as-of` (default: today in
-the business zone; a day after it is neither counted nor deleted) from both collections. Every kind is checked first:
+kind's dates (a distinct scan) and deletes the days older than its N newest on or before the newest business date of the load (a plain file's date, a tar's newest folder; a day after
+it is neither counted nor deleted) from both collections. Every kind is checked first:
 when one would lose more than `--max-drop-share` (0.5) of its days, nothing is deleted and the load fails, unless
 `--force-drop`. The delete is
 `deleteMany({kind, date: {$lt: cutoff}})`, a range of the `day_ids` index. Measured: 21,787 documents (one trade day and
@@ -638,7 +638,7 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 Every setting of `mongodb`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-mongodb/README.md, Settings](../../plugins/drishti-plugin-mongodb/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
 
 Loader options (`tools/load-mongodb.sh` and `MongoLoader`): `--keep-days N`, `--ttl-days N`, `--doc-format string|bson`
-(`string`), `--batch N` (1000), `--in-flight N` (16), `--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar; retention counts back from it, else today in the business zone), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--trades N --days D` (the script only).
+(`string`), `--batch N` (1000), `--in-flight N` (16), `--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar; nothing else), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--trades N --days D` (the script only).
 
 ## 13. Checklist for production
 

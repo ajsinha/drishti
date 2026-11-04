@@ -35,9 +35,10 @@ import java.util.concurrent.atomic.AtomicLong;
  *       business zone ({@code --zone}, else {@code DRISHTI_BUSINESS_ZONE}, else {@code America/New_York}) is quarantined:
  *       it is not written, the first few are named on standard error, and the load ends with an error once the rows
  *       that are good are in ({@link #finish()}).</li>
- *   <li><b>Retention counts back from today.</b> A retention cut-off ({@code --keep-days}, {@code --keep-months},
- *       {@code --ttl-days}) is computed from {@code --as-of} (default: today in the business zone), never from the
- *       newest date of the load or of the store.</li>
+ *   <li><b>Retention counts back from the newest business date of the load.</b> A retention cut-off ({@code --keep-days},
+ *       {@code --keep-months}, {@code --ttl-days}) is computed from the newest business date the load wrote (a plain
+ *       file's date, a tar's newest folder: DATA_LOAD_RULES.md), never from the newest date the store holds; a run that
+ *       writes no row counts from today in the business zone (a maintenance run: its own {@code --as-of}).</li>
  *   <li><b>No mass drop by accident.</b> A run that would drop more than {@code --max-drop-share} (0.5) of a table's
  *       data refuses to drop anything unless {@code --force-drop} is given ({@link #checkDrop}).</li>
  * </ul>
@@ -58,13 +59,16 @@ public final class LoadGuard {
     private final double maxDropShare;
     private final boolean forceDrop;
     private final AtomicLong quarantined = new AtomicLong();
+    /** The newest business date this load accepted a row of; retention counts back from it ({@link #asOf()}). */
+    private final java.util.concurrent.atomic.AtomicReference<LocalDate> newest = new java.util.concurrent.atomic.AtomicReference<>();
 
     /**
      * A guard.
      *
      * @param zone the business zone whose calendar date is today
      * @param clock the clock (the system clock outside tests)
-     * @param asOf the date retention counts back from (null: today)
+     * @param asOf the date retention counts back from when the run loads no row (a maintenance run; null: today); a load
+     *     counts back from the newest business date it wrote
      * @param futureDays how many days after today a business date may be (1: tomorrow)
      * @param maxDropShare the largest share of a table's data one run may drop without {@code forceDrop}
      * @param forceDrop drop even more than that
@@ -114,9 +118,13 @@ public final class LoadGuard {
         return today;
     }
 
-    /** The date retention counts back from: {@code --as-of}, else today. */
+    /**
+     * The date retention counts back from: the newest business date this load accepted a row of (a plain file's date, a
+     * tar's newest folder), else (no row: a maintenance run) {@code --as-of}, else today.
+     */
     public LocalDate asOf() {
-        return asOf;
+        LocalDate n = newest.get();
+        return n != null ? n : asOf;
     }
 
     /** The latest business date a row may carry: today plus {@code --future-days}. */
@@ -130,6 +138,7 @@ public final class LoadGuard {
      */
     public boolean accept(LocalDate businessDate, String what) {
         if (!businessDate.isAfter(latestAllowed())) {
+            newest.accumulateAndGet(businessDate, (a, b) -> a == null || b.isAfter(a) ? b : a);
             return true;
         }
         long n = quarantined.incrementAndGet();
@@ -157,12 +166,12 @@ public final class LoadGuard {
 
     /** The first day kept by a retention of {@code keepDays} calendar days counted back from {@link #asOf()}. */
     public LocalDate keepFromDays(int keepDays) {
-        return asOf.minusDays(Math.max(1, keepDays) - 1L);
+        return asOf().minusDays(Math.max(1, keepDays) - 1L);
     }
 
     /** The first day kept by a retention of {@code keepMonths} calendar months (the month of {@link #asOf()} is the newest). */
     public LocalDate keepFromMonths(int keepMonths) {
-        return asOf.withDayOfMonth(1).minusMonths(Math.max(1, keepMonths) - 1L);
+        return asOf().withDayOfMonth(1).minusMonths(Math.max(1, keepMonths) - 1L);
     }
 
     /**
@@ -171,8 +180,9 @@ public final class LoadGuard {
      */
     public Optional<LocalDate> keepFromNewest(Collection<LocalDate> days, int keep) {
         TreeSet<LocalDate> past = new TreeSet<>();
+        LocalDate from = asOf();
         for (LocalDate d : days) {
-            if (!d.isAfter(asOf)) {
+            if (!d.isAfter(from)) {
                 past.add(d);
             }
         }
@@ -194,6 +204,6 @@ public final class LoadGuard {
         }
         throw new IllegalStateException(String.format(java.util.Locale.ROOT,
                 "%s: retention would drop %,d of %,d %s (more than --max-drop-share %.2f), counting back from %s; nothing was dropped. "
-                        + "Check the dates, or pass --force-drop.", what, dropping, total, unit, maxDropShare, asOf));
+                        + "Check the dates, or pass --force-drop.", what, dropping, total, unit, maxDropShare, asOf()));
     }
 }

@@ -73,7 +73,8 @@ class FileDatesTest {
             }
         }
         for (JsonNode n : c.path("decide")) {
-            FileDates.Decided r = FileDates.decide(d(n.get("given")), d(n.get("name")), n.path("dateFrom").asText(), today, "f.jsonl");
+            FileDates.Decided r = FileDates.decide(d(n.get("given")), d(n.get("name")), n.path("dateFrom").asText(), today,
+                    n.path("file").asText("f.jsonl"));
             if (n.hasNonNull("error")) {
                 assertThat(r.error()).as(n.toString()).contains(n.path("error").asText());
             } else {
@@ -199,6 +200,27 @@ class FileDatesTest {
         JsonNode named = load(drop, "lake-name", "date-from: name");
         assertThat(named.path("exit").asInt()).isEqualTo(1);
         assertThat(named.path("said").asText() + named.path("error").asText()).contains("deal.jsonl: date-from name, but the name carries no date");
+    }
+
+    /** A wrong date in a plain name (not a calendar date, in the future) refuses the file, also under as-of: never today, never another date. */
+    @Test
+    void aWrongDateInANameIsRefusedNeverFiledUnderAnotherDate() throws Exception {
+        for (String[] c : List.of(new String[] {"deal.2026-13-03.jsonl", "2026-13-03 is not a calendar date"},
+                new String[] {"deal.2999-01-04.jsonl", "2999-01-04 is in the future"})) {
+            Path drop = Files.createDirectories(tmp.resolve("bad-" + c[0]));
+            Files.write(drop.resolve(c[0]), lines(0, 2, i -> null));
+            for (String extra : new String[] {null, "as-of: 2026-10-01"}) {
+                JsonNode s = extra == null ? load(drop, "lake-bad") : load(drop, "lake-bad", extra);
+                assertThat(s.path("exit").asInt()).as(c[0] + " " + extra).isEqualTo(1);
+                assertThat(s.path("said").asText() + s.path("error").asText()).as(c[0] + " " + extra).contains(c[1]).contains("nothing was loaded");
+            }
+        }
+        if (Files.exists(tmp.resolve("lake-bad"))) {
+            try (var all = Files.walk(tmp.resolve("lake-bad"))) {
+                assertThat(all.filter(Files::isRegularFile).filter(f -> !f.toString().contains("_drishti-lake")).toList())
+                        .as("no table written (the run records and locks only)").isEmpty();
+            }
+        }
     }
 
     @Test

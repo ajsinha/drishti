@@ -239,14 +239,15 @@ class Stager:
         if folder:
             folder.mkdir(parents=True, exist_ok=True)
 
-    def file(self, label: str, name_date: date | None, folder_date: date | None = None, given: date | None = None, top: str | None = None) -> None:
+    def file(self, label: str, name_date: date | None, folder_date: date | None = None, given: date | None = None, top: str | None = None,
+             dated: str | None = None) -> None:
         """The next documents come from the file ``label``: its tar folder's date, else filedate.decide (--as-of, else ``given``, its
         .ready file's business-date; its name's date; the business today; ``date_from`` name: a name without a date refuses the file)."""
         import filedate
         if folder_date is not None:
             s = FileState(label, folder_date, "folder")
         else:
-            d = filedate.decide(self.as_of or given, name_date, self.date_from, self.today, label)
+            d = filedate.decide(self.as_of or given, name_date, self.date_from, self.today, dated or label)   # dated: the name the date is read from
             s = FileState(label, d.date, "ready" if given and not self.as_of else d.source, error=d.error)
         key = top or label                              # one load id per data file: an archive's members share their archive's
         s.load_id = self._load_ids.setdefault(key, f"{self.run}.{len(self._load_ids) + 1}")

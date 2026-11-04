@@ -37,6 +37,12 @@
 - **The data inbox loads tar archives table by table, all or nothing,** routes a table from a file's name, may create a table when asked
   (`new-table: true`, `drishti.dataload.new-tables`), holds a file whose `.ready` says `hold: true`, pairs a short `.ready` name
   (`trades.2026-11-03.ready`), and appends by default (`drishti.dataload.default-mode`).
+- **A wrong date in a file name is refused, never replaced.** A plain name whose date part is not a calendar date or is in the
+  future (`trades.2026-13-03.jsonl`, `trades.2999-01-04.jsonl`) is refused with the reason, also when the table is given (`--kind`) and
+  under `--as-of`: one check in `FileDates.decide` (Java, drishti-common) and `filedate.decide` (Python), so `lake build`, the parallel
+  loader, `data ingest`, the store loaders and `var` all refuse it.
+- **Store-loader retention counts back from the load's newest business date** (a plain file's date, a tar's newest folder), not
+  from the business today; `--as-of` means only a plain file's business date (LoadGuard).
 - **Schema to pack has its own guide**, `docs/guides/SCHEMA_TO_PACK_GUIDE.md` (help page *Schema to pack*), from DATA_GUIDE.md.
 - **Our own data follows the load rules (DATA_LOAD_RULES.md section 10; data/testdata/README.md; VAR_GUIDE.md section 30; the Windows
   QA guide).** Every committed test-data file is named `<table>.<YYYY-MM-DD>.jsonl.gz` after the table it feeds (`trade_endur`,

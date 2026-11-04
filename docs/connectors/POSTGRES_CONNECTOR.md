@@ -326,7 +326,7 @@ reads day by day through the site's `query.<kind>`.
 ## 6. Retention: dropping months
 
 `--keep-months N` on the loader drops every monthly partition older than the N newest months, counted back from
-`--as-of` (default: today in the business zone) and never from the newest date in the load, and removes their dates
+the newest business date of the load (a plain file's date, a tar's newest folder) and never from the newest date the database holds, and removes their dates
 from `entity_dates`, in one transaction:
 
 ```
@@ -634,7 +634,7 @@ Every setting of `jdbc`, with its type, default and meaning, is in the plugin's 
 
 Loader options (`PostgresLoader`, through `tools/load-postgres.sh`): `--user`, `--password` (default
 `DRISHTI_PG_USER`/`DRISHTI_PG_PASSWORD`, else `drishti`), `--writers` (8), `--batch` (2,000), `--recreate`,
-`--keep-months N`, `--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar; retention counts back from it, else today), `--future-days N` (1), `--zone Z`, `--max-drop-share F` (0.5),
+`--keep-months N`, `--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar; nothing else), `--future-days N` (1), `--zone Z`, `--max-drop-share F` (0.5),
 `--force-drop`.
 
 ## 13. Checklist for production

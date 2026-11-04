@@ -408,7 +408,7 @@ connector of the kind (Delta behind it) for the dates Redis does not cover.
 
 Load with `--ttl-days N` and every key the loader writes expires N days after it is written: the documents with `SET …
 EX`, the entity's days and the day's column hash with `EXPIRE`. The entity's days also lose days more than N days
-before `--as-of` (default: today in the business zone; never the newest date loaded) (`ZREMRANGEBYSCORE`), and so do
+before the newest business date of the load (a plain file's date, a tar's newest folder), never the newest date the store holds (`ZREMRANGEBYSCORE`), and so do
 the days of each kind loaded (with their generations), once every day is written. When that would take more than `--max-drop-share` (0.5) of a
 kind's days, nothing is taken from the kind's days and the load fails, unless `--force-drop`. An entity no longer
 loaded disappears N days after its last write. No job runs; Redis expires keys by itself.
@@ -757,11 +757,11 @@ Every setting of `redis`, with its type, default and meaning, is in the plugin's
 | Option | Default | Meaning |
 |---|---|---|
 | `--cluster` | off | Redis Cluster |
-| `--ttl-days N` | none (no expiry) | every key expires N days after it is written; the kinds' days keep N days back from `--as-of` |
+| `--ttl-days N` | none (no expiry) | every key expires N days after it is written; the kinds' days keep N days back from the newest business date of the load |
 | `--replace` | on (the default) | each day loaded holds exactly the stream's entities, switched atomically |
 | `--merge` | off | add to each day instead: keep the entities the stream does not carry, write in place (before this release, the default) |
 | `--keep-replaced-seconds N` | `120` | how long a replaced day's generation stays readable (0: deleted at once) |
-| `--as-of yyyy-MM-dd` | the file's name, else the business today | a plain file's business date (refused for a tar); the date retention counts back from |
+| `--as-of yyyy-MM-dd` | the file's name, else the business today | a plain file's business date (refused for a tar); nothing else |
 | `--future-days N` | `1` | how many days after today a business date may be |
 | `--zone Z` | `DRISHTI_BUSINESS_ZONE`, else `America/New_York` | the business zone |
 | `--max-drop-share F` | `0.5` | the largest share of a kind's days one run may drop, and of a day's entities a replacement may drop |

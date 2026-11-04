@@ -122,6 +122,9 @@ Nothing is written before step 4.
      and count as the oldest load, so a newer load's copy of an id wins. An undo reads only the `_load_id` column of files without
      statistics for it; for a file written before the column, that read touches only the footer.
    - An archive commits its tables and dates in a fixed order (table, then date).
+   - A store loader's retention (`--keep-days`, `--keep-months`, `--ttl-days`) counts back from the newest business date of the
+     load: a plain file's date, or a tar's newest folder. It never counts from the business today or from the newest date the store
+     holds. `--as-of` means only the business date of a plain file.
 5. **Roll back on failure.** If a commit of an archive fails, the commits already made by that load are undone (section 6.3), so an
    archive loads completely or not at all. The report says what failed and what was rolled back.
 6. **Tell and move.** The server gets one data-load signal per pack, table and date. The data file, its `.ready` file and the

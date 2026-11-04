@@ -363,8 +363,8 @@ Desk P&L and impact work from the column set as on Delta Lake and PostgreSQL: de
 
 ## 6. Retention: dropping days
 
-`--keep-days N` on the loader drops every business date more than N calendar days before `--as-of` (a plain file's
-business date; default: today in the business zone), never counted from the newest date in the file or the load, and their dates, while it builds the
+`--keep-days N` on the loader drops every business date more than N calendar days before the newest business date of the load (a plain file's date, a tar's newest folder), never
+counted from the newest date the database holds, and their dates, while it builds the
 new file:
 
 ```
@@ -566,7 +566,7 @@ The `duckdb` profile reads `DRISHTI_DUCKDB_PATH` (default `data/duckdb/drishti.d
 (default `1GB`).
 
 Loader options (`DuckDbLoader FILE|- DATABASE`, through `tools/load-duckdb.sh [database]`): `--recreate`,
-`--keep-days N` (0: keep everything), `--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar; retention counts back from it, else from today in the business zone), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--parsers N` (8, or the cores if fewer), `--memory-limit` (`2GB`),
+`--keep-days N` (0: keep everything), `--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar; nothing else), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--parsers N` (8, or the cores if fewer), `--memory-limit` (`2GB`),
 `--threads N` (every core). The script also takes `--trades N --days D` for a generated book.
 
 ## 13. Checklist for production

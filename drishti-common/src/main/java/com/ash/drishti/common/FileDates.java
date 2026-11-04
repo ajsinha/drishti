@@ -187,8 +187,34 @@ public final class FileDates {
         return n.error() != null || n.tar() ? null : n.date();
     }
 
-    /** The business date of one plain file (class doc). */
+    /**
+     * Why the date part of a plain file's {@code name} is refused (not a calendar date, before 1900, in the future), null when it has
+     * none or a good one: such a name is refused, never filed under another date (DATA_LOAD_RULES.md section 2.1).
+     */
+    public static String dateError(String name, LocalDate today) {
+        String base = baseName(name);
+        if (isTar(base)) {
+            return null;
+        }
+        String[] tokens = base.split("\\.", -1);
+        if (tokens.length > 1 && DATEISH.matcher(tokens[1]).matches()) {
+            Object[] d = date(tokens[1], today == null ? today() : today);
+            if (d[1] != null) {
+                return base + ": " + d[1];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * The business date of one plain file (class doc). {@code name}: the name the date was read from; a bad date part in it refuses the
+     * file whatever else is given (a wrong date is never replaced by {@code as-of}, the {@code .ready} file or today).
+     */
     public static Decided decide(LocalDate given, LocalDate nameDate, String dateFrom, LocalDate today, String name) {
+        String why = name == null ? null : dateError(name, today);
+        if (why != null) {
+            return new Decided(null, "name", why);
+        }
         if (given != null) {
             return new Decided(given, "given", null);
         }

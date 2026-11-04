@@ -150,8 +150,26 @@ class Decided:
     error: str | None = None
 
 
+def date_error(name, today: date | None = None) -> str | None:
+    """Why the date part of a plain file's ``name`` is refused (not a calendar date, before 1900, in the future), None when it has none
+    or a good one: such a name is refused, never filed under another date (DATA_LOAD_RULES.md section 2.1)."""
+    base = base_name(name)
+    if is_tar(base):
+        return None
+    tokens = base.split(".")
+    if len(tokens) > 1 and _DATEISH.match(tokens[1]):
+        _day, why = _date(tokens[1], today)
+        if why:
+            return f"{base}: {why}"
+    return None
+
+
 def decide(given: date | None, name_date: date | None, date_from: str = "auto", today: date | None = None, name: str = "") -> Decided:
-    """The business date of one plain file (module doc)."""
+    """The business date of one plain file (module doc). ``name``: the name the date was read from; a bad date part in it refuses the
+    file whatever else is given (a wrong date is never replaced by --as-of, the .ready file or today)."""
+    why = date_error(name, today) if name else None
+    if why:
+        return Decided(None, "name", why)
     if given is not None:
         return Decided(given, "given")
     if name_date is not None:

@@ -59,7 +59,7 @@ class SharedCasesTest(unittest.TestCase):
     def test_decide(self):
         for c in CASES["decide"]:
             with self.subTest(case=c):
-                r = filedate.decide(d(c["given"]), d(c["name"]), c["dateFrom"], TODAY, "f.jsonl")
+                r = filedate.decide(d(c["given"]), d(c["name"]), c["dateFrom"], TODAY, c.get("file", "f.jsonl"))
                 if c.get("error"):
                     self.assertIn(c["error"], r.error)
                 else:
@@ -271,6 +271,22 @@ class LakeBuildTest(unittest.TestCase):
         code, s, _ = self.run_build(src=self.src, pack=str(self.packs / "book"), kind="deal", date_from="name")
         self.assertEqual(code, self.build.EXIT_FAILED)
         self.assertIn("deal.jsonl: date-from name, but the name carries no date", s["error"])
+
+    def test_a_wrong_date_in_a_name_is_refused_never_today(self):
+        """A plain name whose date part is not a calendar date, or is in the future, is refused with the reason, also when the table is
+        given (--kind) and when --as-of is: never filed under the business today or another date (DATA_LOAD_RULES.md section 2.1)."""
+        bad = self.root / "bad"
+        bad.mkdir()
+        for name, why in (("deal.2026-13-03.jsonl", "2026-13-03 is not a calendar date"), ("deal.2999-01-04.jsonl", "2999-01-04 is in the future")):
+            for f in bad.iterdir():
+                f.unlink()
+            (bad / name).write_bytes(lines([deal(1, None)]))
+            for kw in ({}, {"pack": str(self.packs / "book"), "kind": "deal"}, {"pack": str(self.packs / "book"), "kind": "deal", "as_of": "2026-11-02"}):
+                with self.subTest(name=name, kw=kw):
+                    code, s, _ = self.run_build(src=bad, **kw)
+                    self.assertEqual(code, self.build.EXIT_FAILED, s)
+                    self.assertIn(why, s["error"])
+        self.assertFalse((self.lake / "trading" / "deal").exists(), "nothing written")
 
     def test_plan_says_what_would_happen_and_writes_nothing(self):
         (self.src / "deal.2026-11-03.jsonl").write_bytes(lines([deal(1, None)]))

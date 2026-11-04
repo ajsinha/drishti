@@ -81,7 +81,8 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * <p>A row dated after tomorrow in the business zone is not loaded, and the load ends with an error naming it
  * ({@link LoadGuard}). {@code --ttl-days N} expires every key N days after it is written, and drops from each kind's
- * days those more than N days before {@code --as-of} (today), never counted from the newest date loaded; dropping
+ * days those more than N days before the newest business date of the load (a plain file's date, a tar's newest folder),
+ * never from the newest date the store holds; dropping
  * more than {@code --max-drop-share} (0.5) of a kind's days needs {@code --force-drop}. {@code --publish} announces
  * each written entity on {@code <domain>:changes}, for open views to refresh (meant for intraday updates, not bulk
  * loads).
@@ -598,7 +599,7 @@ public final class RedisLoader {
     }
 
     /**
-     * {@code --ttl-days N}: each kind loaded forgets the days more than N days before {@code --as-of} (today); refused
+     * {@code --ttl-days N}: each kind loaded forgets the days more than N days before the load's newest business date; refused
      * when that is more than {@code --max-drop-share} of the kind's days.
      */
     private void retain() throws Exception {

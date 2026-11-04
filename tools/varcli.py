@@ -441,6 +441,8 @@ def load_intraday(path: str, lake: str, day: str | None, signal: str | None, tok
     import sys as _sys
     _sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent / "lake"))
     import filedate
+    if why := filedate.date_error(src.name):
+        raise ValueError(f"{why}: a file with a wrong date in its name is refused (rename it)")
     named = filedate.of(src.name)
     day = day or (named.isoformat() if named else filedate.business_today().isoformat())
     other = sum(1 for r in rows if str(r.get("BUSINESS_DATE") or "")[:10] not in ("", day))

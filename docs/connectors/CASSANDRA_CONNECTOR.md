@@ -217,7 +217,7 @@ kept, so `versions` is 1 and `knownAt` is refused (`DRS-1007`).
 | Way | How | When |
 |---|---|---|
 | **TTL** | `--ttl-days N`: every row, `entity_days` and `kind_days` row is written `USING TTL`; with `--create`, new tables get `TimeWindowCompactionStrategy` with one-day windows, so whole SSTables expire together | a fixed retention; nothing to run |
-| **Dropped days** | `--keep-days N`: after the load, each loaded kind keeps its newest N days on or before `--as-of` (today); older days' partitions and `kind_days` rows are deleted | a retention that changes; Amazon Keyspaces (its own TTL instead of a compaction choice) |
+| **Dropped days** | `--keep-days N`: after the load, each loaded kind keeps its newest N days on or before the newest business date of the load (a plain file's date, a tar's newest folder); older days' partitions and `kind_days` rows are deleted | a retention that changes; Amazon Keyspaces (its own TTL instead of a compaction choice) |
 
 Dropping more than half of a kind's days needs `--force-drop` (`--max-drop-share`), as for every loader. `entity_days` rows may outlive
 their day's data; such a day is not in the catalogue, so a read passes over it. Only whole partitions (and catalogue rows) are ever
@@ -305,7 +305,7 @@ Connectors → the connector → Pool its connections.
 | a new day does not appear | the catalogue is re-read every `refresh-seconds`; or the load failed before `kind_days` was written | wait, or Admin → Caches → purge; check the loader's last line |
 | searches say `partial: true` | a field the query reads is not a promoted column | add it to `layout.<kind>.columns` and reload with `--create` |
 | loader: `… does not exist: run the CQL above` | no `--create` | have an administrator run the printed CQL, or pass `--create` |
-| loader: `retention would drop …` | `--keep-days` would drop more than half of the days | check `--as-of` and the dates, or pass `--force-drop` |
+| loader: `retention would drop …` | `--keep-days` would drop more than half of the days | check the dates of the load, or pass `--force-drop` |
 | loader warning `a partition holds about … MB` | `buckets` too low for the book | load with the `--buckets KIND=N` it names |
 
 ## Security: TLS, log-ins and connections
