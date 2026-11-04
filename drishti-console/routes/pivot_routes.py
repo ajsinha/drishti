@@ -207,12 +207,6 @@ async def live_list(request: Request):
     return await _call(request, "GET", "/live")
 
 
-@router.get("/api/pivot/live/{lid}/events")
-async def live_events(request: Request, lid: str, node: str = ""):
-    """A live pivot's stream (answer, then patch, reshape, status), opened on the node that holds it."""
-    return _relay(request, request.app.state.backend.sse(f"/pivot/live/{quote(lid, safe='')}/events", ident(request), node=node or None))
-
-
 @router.delete("/api/pivot/live/{lid}")
 async def live_end(request: Request, lid: str):
     try:

@@ -53,6 +53,12 @@ def raw_view(event: str, data: str) -> str:
     return data
 
 
+async def _renamed(stream, names: dict[str, str]):
+    """An upstream stream with some of its event names changed."""
+    async for event, data in stream:
+        yield names.get(event, event), data
+
+
 def holder(ids: str) -> str | None:
     """The cluster node that holds a standing query, from its id (``sq-<node>-<16 hex>``, as a BI run's ``r-<node>-...``); None for an id
     that names none (one server, or a server older than 2.6.7)."""
@@ -130,7 +136,11 @@ class ChannelSession:
             return self.backend.sse("/bi/runs/events", self.me, opened=responses), False
         if sub.startswith("monitor:"):
             return self.backend.sse(f"/me/monitors/{quote(sub[8:])}/stream", self.me, opened=responses), False
-        if sub.startswith("compute:") and len(sub) > 8:         # a computed panel's request (DATA_ARCHITECTURE.md): progress, state, done,
+        if sub.startswith("pivotlive:") and len(sub) > 10:     # a live pivot (PIVOT_GUIDE.md 25): answer, patch, reshape, status, ended, on
+            lid, _, node = sub[10:].partition("@")              # the node that holds it (pivotlive:<id>@<node>)
+            stream = self.backend.sse(f"/pivot/live/{quote(lid, safe='')}/events", self.me, opened=responses, **({"node": node} if node else {}))
+            return _renamed(stream, {"error": "failed"}), False       # an EventSource's own "error" is its connection's: the stream's is "failed"
+        if sub.startswith("compute:") and len(sub) > 8:        # a computed panel's request (DATA_ARCHITECTURE.md): progress, state, done,
             return self.backend.sse(f"/compute/requests/{quote(sub[8:], safe='')}/stream", self.me, opened=responses), False   # failed, updated
         return None, False
 

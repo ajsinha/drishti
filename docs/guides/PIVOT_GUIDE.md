@@ -857,7 +857,7 @@ streams ends after `drishti.pivot.live.idle-seconds` (60). A live view is its pe
 ```
 POST /api/v1/pivot/live            {"view": "asha/desk-risk", "exact": true}
   → {"id": "lp-3f2a…", "node": "10.0.4.17:18480", "answer": {…}, "options": {"exact": true, "progressive": false, "rollups": true}}
-GET  /api/v1/pivot/live/lp-3f2a…/events           (on that node; the console opens it there)
+GET  /api/v1/pivot/live/lp-3f2a…/events           (on that node; the console follows it on the browser's one live channel, `pivotlive:<id>@<node>`)
 DELETE /api/v1/pivot/live/lp-3f2a…
 ```
 

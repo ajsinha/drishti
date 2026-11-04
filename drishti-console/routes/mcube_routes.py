@@ -27,6 +27,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.backend import BackendError
+from core.csrf import json_body
 from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
@@ -125,10 +126,8 @@ async def _call(request: Request, method: str, path: str, body=None, **params):
 
 
 async def _body(request: Request) -> dict:
-    try:
-        b = await request.json()
-    except ValueError:
-        b = {}
+    """The request's JSON object through the console's one reader (400 for bad JSON, 415 when not sent as JSON)."""
+    b = await json_body(request)
     return b if isinstance(b, dict) else {}
 
 

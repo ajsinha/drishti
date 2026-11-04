@@ -19,6 +19,8 @@ download, the server's refusals passed on in words. The figures themselves are t
 FunctionsTest, PivotExportTest, PivotApiTest, VarPivotApiTest)."""
 from __future__ import annotations
 
+import asyncio
+
 import pytest
 
 from core.backend import BackendError
@@ -116,11 +118,17 @@ def test_the_switches_live_pivots_and_cell_comments_are_passed_through_as_the_pe
     body = {"view": {"source": "trade"}, "exact": True, "rollups": False}
     r = c.post("/api/pivot/live", json=body)
     assert r.status_code == 200 and r.json()["id"] == "lp-1" and sent[-1][:3] == ("POST", "/live", body)
-    s = c.get("/api/pivot/live/lp-1/events", params={"node": "n1"})
-    assert s.headers["content-type"].startswith("text/event-stream")
-    assert s.text.index("event: answer") < s.text.index("event: patch") and ("SSE", "/pivot/live/lp-1/events", "n1") in sent
-    gone = c.get("/api/pivot/live/lp-gone/events")
-    assert "event: error" in gone.text and "DRS-5704" in gone.text
+    # the stream rides the browser's one channel (channel.js, core/channel.py): pivotlive:<id>@<node>, the node that holds it
+    from core.channel import ChannelSession
+
+    async def read(sub):
+        up, is_view = ChannelSession(backend, None, lambda e, d: d, limit=4)._open(sub, [])
+        return is_view, [e async for e, _ in up]
+
+    assert asyncio.run(read("pivotlive:lp-1@n1")) == (False, ["answer", "patch"]) and ("SSE", "/pivot/live/lp-1/events", "n1") in sent
+    with pytest.raises(BackendError):
+        asyncio.run(read("pivotlive:lp-gone"))
+    assert c.get("/api/pivot/live/lp-1/events").status_code in (404, 405)          # no stream of its own: one channel per browser
     assert c.delete("/api/pivot/live/lp-1").status_code == 204 and sent[-1][:2] == ("DELETE", "/live/lp-1")
     p = c.post("/api/pivot/query/progressive", json={"view": {"source": "trade"}, "exact": "auto", "progressive": True})
     assert p.text.index("event: approximate") < p.text.index("event: exact")

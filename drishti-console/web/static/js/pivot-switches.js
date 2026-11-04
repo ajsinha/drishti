@@ -90,7 +90,7 @@
 
   // ---- live pivots ---------------------------------------------------------------------------------------------------------------
   function stopLive() {
-    if (live.es) { live.es.close(); }
+    if (live.off) { live.off(); }
     if (live.id) { screen().call("DELETE", "/live/" + encodeURIComponent(live.id)).catch(function () { /* already ended */ }); }
     live = {id: null, node: "", source: null, checked: null};
   }
@@ -124,24 +124,25 @@
     return screen().call("POST", "/live", body).then(function (s) {
       live = {id: s.id, node: s.node || "", source: body.view && body.view.source, checked: null};
       screen().show(s.answer, {live: true});
-      var es = new EventSource("/api/pivot/live/" + encodeURIComponent(s.id) + "/events" + (s.node ? "?node=" + encodeURIComponent(s.node) : ""));
-      live.es = es;
-      es.addEventListener("patch", function (e) { patched(JSON.parse(e.data)); });
-      es.addEventListener("reshape", function (e) { screen().show(JSON.parse(e.data).answer, {live: true}); });
-      es.addEventListener("status", function () {
-        live.checked = new Date().toLocaleTimeString();
-        computedLine(screen().answer(), {});
-      });
-      es.addEventListener("error", function (e) {
-        if (e.data) { var d = JSON.parse(e.data); screen().notice((d.code ? d.code + ": " : "") + (d.error || "the live pivot stopped")); }
-      });
-      es.addEventListener("ended", function (e) {
-        var d = JSON.parse(e.data || "{}");
-        screen().notice("live pivot ended: " + (d.why || "stopped"));
-        es.close();
-        live = {id: null, node: "", source: null, checked: null};
-        $("[data-pv-live]").checked = false;
-        computedLine(screen().answer(), {});
+      if (!window.DrishtiChannel) { screen().notice("the console's live channel did not load"); return; }
+      // on the browser's one live channel (channel.js): pivotlive:<id>@<node>, the node that holds it
+      live.off = window.DrishtiChannel.subscribe("pivotlive:" + s.id + (s.node ? "@" + s.node : ""), {
+        patch: function (d) { patched(d || {}); },
+        reshape: function (d) { screen().show((d || {}).answer, {live: true}); },
+        status: function () {
+          live.checked = new Date().toLocaleTimeString();
+          computedLine(screen().answer(), {});
+        },
+        failed: function (d) { d = d || {}; screen().notice((d.code ? d.code + ": " : "") + (d.error || "the live pivot stopped")); },
+        gone: function (d) { d = d || {}; screen().notice((d.code ? d.code + ": " : "") + (d.detail || "the live pivot's stream ended")); },
+        ended: function (d) {
+          d = d || {};
+          screen().notice("live pivot ended: " + (d.why || "stopped"));
+          if (live.off) { live.off(); }
+          live = {id: null, node: "", source: null, checked: null};
+          $("[data-pv-live]").checked = false;
+          computedLine(screen().answer(), {});
+        }
       });
     }).catch(function (e) {
       $("[data-pv-live]").checked = false;
@@ -254,7 +255,7 @@
       if (t) { e.preventDefault(); t.focus(); }
     }
   });
-  window.addEventListener("pagehide", function () { if (live.es) { live.es.close(); } });   // the server ends it after idle-seconds
+  window.addEventListener("pagehide", function () { if (live.off) { live.off(); } });   // the server ends it after idle-seconds
 
   window.PivotSwitches = {
     options: options,
