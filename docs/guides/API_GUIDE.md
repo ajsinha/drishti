@@ -3376,6 +3376,32 @@ curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localh
 
 Refusals: `DRS-5710` to `DRS-5716` ([the error code table](#error-code-table)).
 
+### The MR cube: `/api/v1/pivot/mr`
+
+The market-risk cube ([MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md)) is the pivot engine on `source: var` with engine `mr-cube` running: the
+source then offers the hierarchy levels (`MGMT.DESK`), `RISK_CLASS`, `POSITION`, `TRADE`, the measures `comp_var()`, `comp_es()`,
+`incr_var()`, `limit()`, `limit_use()`, `svar()`, `dv01()`, `cs01()`, `sbm()`, and the view's `options` (`scope`, `horizon`, `method`,
+`confidence`, `esConfidence`, `set`, `ccy`). Its lens adds, as the caller (a `view` is the view or a saved view's id):
+
+| Call | Does |
+|---|---|
+| `POST /api/v1/pivot/mr/headline` | `{view}`: the view's scope's `var`, `es`, `k`, `esCount`, `lens`, `limit`, `limitUse`, `stressedVar`, `dataVersion`, `batches`, `trades`, `positions`, `provenance` |
+| `POST /api/v1/pivot/mr/detail` | `{view, coords}`: one cell's tail: `edges`, `counts`, `var`, `es`, `k`, `varDate`, `tail`, `trades`, `positions`, `scope` |
+| `POST /api/v1/pivot/mr/history` | `{view}`: the sparklines: `dates`, `series` by cell key of the first measure |
+| `GET /api/v1/pivot/mr/versions` | the time-travel slider's stops: dates and their batches |
+| `GET /api/v1/pivot/mr/explain?scope=&from=&to=&confidence=` | why a scope's VaR moved: the engine's exact steps |
+| `GET /api/v1/pivot/mr/sensitivities?scope=&grid=&by=&class=&measure=&ccy=&asOf=` | the DV01 ladder by a grid, or the heat map by two factor parts |
+| `POST /api/v1/pivot/mr/what-if` | `{view, items: [{copyOf, factor}]}`: each row of the view's first row dimension and the total, before, after, incremental |
+
+```bash
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/query \
+  -d '{"source":"var","rows":["MGMT.DESK"],"columns":["RISK_CLASS"],"values":[{"measure":"var()"},{"measure":"comp_var()"}],"options":{"horizon":"10d"}}'
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/mr/detail \
+  -d '{"view":{"source":"var","rows":["MGMT.DESK"],"values":["var()"]},"coords":{"MGMT.DESK":"DESK-RATES"}}'
+```
+
+Off, every `/api/v1/pivot/mr` call answers `404 DRS-1020`, and an MR measure, level or option on `source: var` is refused (`DRS-5701`).
+
 ## Embedding views in another web application
 
 For `<drishti-view>` ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)): a host application shows live Drishti views in its own pages, and Drishti decides who may see what. Off by default; switch it on with `drishti.embed.enabled` (needs `drishti.security.enabled`; settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)).

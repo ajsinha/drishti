@@ -76,6 +76,7 @@ menus:
           - { id: backtesting, cmd: VAR BANK BACKTEST, icon: activity, label: Backtesting, desc: "VaR against the P&L, with the traffic light", match: /var/backtesting, requires: [word:VAR, route:/var/backtesting] }
           - { id: stress-window, cmd: SWIN BANK, icon: calendar-range, label: Stress window, desc: "The most stressful year of history for stressed VaR", match: /var/stress-window, requires: [word:VAR] }
           - { id: var-results, cmd: VRES, icon: table, label: VaR results, desc: "The stored results of every hierarchy node", requires: [cmd:VRES] }
+          - { id: mcube, cmd: MCUBE, href: /mcube, icon: grid-3x3-gap, label: MR cube, desc: "Market risk on the pivot engine: desks by risk class with the right totals, the tail, why it moved, the DV01 ladder and a what-if · also MCUBE <GO>", match: /mcube, requires: [word:VAR, word:PIVOT, word:MCUBE, route:/mcube] }
           - { id: var-official, cmd: VOFF, icon: patch-check, label: Official records, desc: "The signed-off VaR of each business date", requires: [cmd:VOFF] }
           - { id: hier, cmd: HIER, icon: diagram-3, label: Hierarchies and limit letters, desc: "The VaR hierarchies, their nodes and limits", requires: [cmd:HIER] }
       - engine: exposure

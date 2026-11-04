@@ -264,6 +264,7 @@
     drawZones();
     drawFields();
     drawSlicers();
+    root.dispatchEvent(new CustomEvent("pivot:answer", {detail: {answer: a, view: viewBody()}}));
   }
 
   // ---- slicers: a field's members as buttons, each a filter of the view (the members are the engine's, as the person may see them) ------
@@ -335,6 +336,8 @@
   }
 
   function provenance(key, m, td) {
+    var entry = state.answer && state.answer.cells ? state.answer.cells[key] : null;
+    root.dispatchEvent(new CustomEvent("pivot:cell", {detail: {key: key, measure: m, cell: entry, coords: coordsOf(key)}}));
     var pop = $("[data-pv-pop]");
     call("GET", "/provenance/" + encodeURIComponent(state.answer.provenance) + "?cell=" + encodeURIComponent(key)).then(function (p) {
       var cell = p.cell || {};
@@ -485,6 +488,18 @@
       var ds = $("[data-pv-date]");
       ds.innerHTML = (c.dates || []).slice().reverse().map(function (d) { return '<option' + (d === c.date ? " selected" : "") + '>' + esc(d) + '</option>'; }).join("") || '<option value="">current</option>';
       $("[data-pv-compare]").innerHTML = '<option value="">off</option>' + (c.dates || []).slice().reverse().filter(function (d) { return d !== c.date; }).map(function (d) { return "<option>" + esc(d) + "</option>"; }).join("");
+      var preset = presetView();
+      if (!view && (c.defaultView || preset)) {
+        view = JSON.parse(JSON.stringify(c.defaultView || {source: source, rows: [], columns: [], values: [{measure: "var()", as: "VaR"}]}));
+        if (preset) {
+          var opts = Object.assign({}, view.options || {}, preset.options || {});
+          Object.keys(preset).forEach(function (k) { if (preset[k] != null && k !== "options") { view[k] = preset[k]; } });
+          view.options = opts;
+        }
+        view.date = view.date || c.date;
+        view.filters = view.filters || {};
+        view.expanded = view.expanded || [];
+      }
       if (view) {
         state.view = view;
       } else {
@@ -498,6 +513,26 @@
       run();
     });
   }
+
+  /** A partial view the page was opened with (MCUBE <scope> BY ... : its rows, columns, values and options), laid over the landing view. */
+  function presetView() {
+    var t = root.getAttribute("data-preset");
+    if (!t) { return null; }
+    root.removeAttribute("data-preset");
+    try { return JSON.parse(t); } catch (e) { return null; }
+  }
+
+  /* A lens of the screen (the MR cube, mr-lens.js) reads the view and the answer and changes the view's options; it never computes. */
+  window.PivotScreen = {
+    root: root,
+    view: function () { return state.view ? viewBody() : null; },
+    answer: function () { return state.answer; },
+    catalogue: function () { return state.catalogue; },
+    call: call,
+    notice: notice,
+    run: function (change) { if (state.view) { if (change) { change(state.view); } run(); } },
+    reopen: function (date) { if (state.view) { state.view.date = date; open(state.view.source, date, state.view); } }
+  };
 
   function boot() {
     call("GET", "/sources").then(function (s) {

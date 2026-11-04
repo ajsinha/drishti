@@ -409,7 +409,7 @@ public final class PivotCore {
 
         AggregationPlan plan(List<CellSet> sets) {
             return new AggregationPlan(view.source(), catalogue.date(), view.asOf(), view.filters(), dims, functions, sets, null,
-                    Math.max(1_000, settings.maxCells()) * 50, money);
+                    Math.max(1_000, settings.maxCells()) * 50, money, view.options());
         }
 
         int expandTo(Axis a) {
@@ -604,7 +604,7 @@ public final class PivotCore {
             }
             String prefix = provider.id() + "|" + provider.version(viewer, view.source(), catalogue.date()) + "|" + view.source() + "|"
                     + catalogue.date() + "|" + view.asOf() + "|" + plan(List.of()).filterSignature() + "|" + (view.currency() == null ? ""
-                            : view.currency().toString()) + "|";
+                            : view.currency().toString()) + "|" + view.optionSignature() + "|";
             Map<List<Integer>, List<CellSet>> byMissing = new LinkedHashMap<>();
             for (CellSet s : sets) {
                 work.setsAsked++;

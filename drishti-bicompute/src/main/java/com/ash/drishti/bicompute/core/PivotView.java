@@ -54,10 +54,21 @@ import java.util.Set;
  * @param sort per dimension: by a measure's label or by {@code label}, ascending or descending
  * @param top per dimension: its top N by a measure, the rest in one Others member
  * @param subtotals {@code below} or {@code above} each group
+ * @param options the provider's own settings of the view, by name (PIVOT_ENGINE.md section 6.3: the VaR provider's {@code scope},
+ *     {@code horizon}, {@code confidence}, {@code esConfidence}, {@code method}, {@code set} and {@code ccy}); part of every cache key; the
+ *     VaR provider refuses a name it does not know, a provider without options ignores them
  */
 public record PivotView(String source, String date, String asOf, List<Dim> rows, List<Dim> columns, List<Value> values,
         Map<String, AggregationPlan.Filter> filters, List<Expansion> expanded, int expandRows, int expandColumns, Map<String, Sort> sort,
-        Map<String, Top> top, String subtotals, Currency currency, List<String> slicers, Map<String, Format> formats) {
+        Map<String, Top> top, String subtotals, Currency currency, List<String> slicers, Map<String, Format> formats, Map<String, String> options) {
+
+    /** A view without provider options. */
+    public PivotView(String source, String date, String asOf, List<Dim> rows, List<Dim> columns, List<Value> values,
+            Map<String, AggregationPlan.Filter> filters, List<Expansion> expanded, int expandRows, int expandColumns, Map<String, Sort> sort,
+            Map<String, Top> top, String subtotals, Currency currency, List<String> slicers, Map<String, Format> formats) {
+        this(source, date, asOf, rows, columns, values, filters, expanded, expandRows, expandColumns, sort, top, subtotals, currency, slicers,
+                formats, Map.of());
+    }
 
     /**
      * A conditional format of a measure (PIVOT_ENGINE.md section 14.1): drawn by the screen from the finished figures (a colour scale or
@@ -147,6 +158,7 @@ public record PivotView(String source, String date, String asOf, List<Dim> rows,
         top = Map.copyOf(top);
         slicers = slicers == null ? List.of() : List.copyOf(slicers);
         formats = formats == null ? Map.of() : Map.copyOf(formats);
+        options = java.util.Collections.unmodifiableMap(new java.util.TreeMap<>(options == null ? Map.of() : options));
         subtotals = "above".equals(subtotals) ? "above" : "below";
         expandRows = Math.max(1, expandRows);
         expandColumns = Math.max(1, expandColumns);
@@ -267,8 +279,16 @@ public record PivotView(String source, String date, String asOf, List<Dim> rows,
         if (m.get("formats") instanceof Map<?, ?> fm) {
             fm.forEach((k, v) -> formats.put(String.valueOf(k), new Format(v instanceof Map<?, ?> x ? str(x.get("style")) : str(v))));
         }
+        Map<String, String> options = new LinkedHashMap<>();
+        if (m.get("options") instanceof Map<?, ?> om) {
+            om.forEach((k, v) -> {
+                if (str(v) != null) {
+                    options.put(String.valueOf(k).strip(), str(v));
+                }
+            });
+        }
         return new PivotView(str(m.get("source")), str(m.get("date")), str(m.get("asOf")), rows, cols, values, filters, exp, er, ec, sort, top,
-                str(m.get("subtotals")), ccy, slicers, formats);
+                str(m.get("subtotals")), ccy, slicers, formats, options);
     }
 
     /** The view as its JSON map (what a saved view stores). */
@@ -353,18 +373,39 @@ public record PivotView(String source, String date, String asOf, List<Dim> rows,
             c.put("source", currency.source());
             m.put("currency", c);
         }
+        if (!options.isEmpty()) {
+            m.put("options", options);
+        }
         return m;
+    }
+
+    /** The canonical text of the options (part of every cache key; empty without options). */
+    public String optionSignature() {
+        return options.isEmpty() ? "" : options.toString();
     }
 
     /** The same view on another date (compare, time travel). */
     public PivotView on(String otherDate) {
         return new PivotView(source, otherDate, asOf, rows, columns, values, filters, expanded, expandRows, expandColumns, sort, top, subtotals,
-                currency, slicers, formats);
+                currency, slicers, formats, options);
     }
 
     /** The same view with other nodes open. */
     public PivotView withExpanded(List<Expansion> e, int er, int ec) {
-        return new PivotView(source, date, asOf, rows, columns, values, filters, e, er, ec, sort, top, subtotals, currency, slicers, formats);
+        return new PivotView(source, date, asOf, rows, columns, values, filters, e, er, ec, sort, top, subtotals, currency, slicers, formats,
+                options);
+    }
+
+    /** The same view with other provider options (the MR lens's scope and lens). */
+    public PivotView withOptions(Map<String, String> o) {
+        return new PivotView(source, date, asOf, rows, columns, values, filters, expanded, expandRows, expandColumns, sort, top, subtotals, currency,
+                slicers, formats, o);
+    }
+
+    /** The same view with other rows, columns and values (the MR lens's history and what-if read a view's rows). */
+    public PivotView reshaped(List<Dim> r, List<Dim> c, List<Value> v) {
+        return new PivotView(source, date, asOf, r, c, v, filters, List.of(), 1, Math.max(1, c.size()), Map.of(), Map.of(), subtotals, currency,
+                List.of(), Map.of(), options);
     }
 
     private static List<Dim> dims(Object o) {

@@ -867,6 +867,96 @@ public final class VarBook {
         final OrdinalSet.Builder minus = new OrdinalSet.Builder();
     }
 
+    /**
+     * A set's sum on a sharded date as the planner makes it, the owners not yet asked: the aggregates added ({@code acc}), the rows to add
+     * ({@code plus}) and to take away ({@code minus}); {@code direct}: no plan helps, the set is summed as it is ({@code plus} is the set).
+     */
+    private record ShardPlan(double[] acc, OrdinalSet plus, OrdinalSet minus, boolean direct) {
+
+        /** The vector, given the owners' sums of {@code plus} and of {@code minus} (null when empty), added as {@link #plannedVector} adds them. */
+        double[] finish(double[] plusSum, double[] minusSum) {
+            if (direct) {
+                return plusSum;
+            }
+            VarMath.addInto(acc, plusSum);
+            if (minusSum != null) {
+                for (int j = 0; j < acc.length; j++) {
+                    acc[j] -= minusSum[j];
+                }
+            }
+            return acc;
+        }
+    }
+
+    /** {@link #plannedVector} on a sharded date up to the owners' sums: the same plan, so the same bits once they are added. */
+    private ShardPlan shardPlan(OrdinalSet set, ParallelSums sums) {
+        double[] acc = new double[store.width()];
+        Node root = primaryRoot();
+        if (root == null || set.isEmpty()) {
+            return new ShardPlan(acc, set, OrdinalSet.empty(), true);
+        }
+        Map<String, Integer> covered = new HashMap<>();
+        boolean anyWhole = false;
+        for (Map.Entry<String, int[]> e : bookRange.entrySet()) {
+            int c = set.countIn(e.getValue()[0], e.getValue()[1]);
+            covered.put(e.getKey(), c);
+            anyWhole |= c > 0 && c == e.getValue()[1] - e.getValue()[0];
+        }
+        if (!anyWhole) {
+            return new ShardPlan(acc, set, OrdinalSet.empty(), true);
+        }
+        Deferred d = new Deferred();
+        plan(root, set, acc, covered, sums, d);
+        return new ShardPlan(acc, d.plus.build().or(set.andNot(root.members())), d.minus.build(), false);
+    }
+
+    /**
+     * The vectors of many sets, each the one {@link #vector} gives (to the bit): on a sharded date every set is planned first and the rows
+     * the plans add and take away are asked of each remote shard's owner in <b>one</b> batch for all the sets (MR_CUBE_LENS.md section 4.11,
+     * a cube view's cells and totals) instead of one round trip per set; elsewhere each set is summed as {@link #vector} sums it.
+     */
+    public List<double[]> vectors(List<OrdinalSet> sets, ParallelSums sums) {
+        if (!(store instanceof com.ash.drishti.compute.vector.ShardedVectors sv) || sets.size() < 2) {
+            List<double[]> out = new ArrayList<>(sets.size());
+            for (OrdinalSet s : sets) {
+                out.add(vector(s, sums));
+            }
+            return out;
+        }
+        ShardPlan[] plans = new ShardPlan[sets.size()];
+        List<OrdinalSet> ask = new ArrayList<>();
+        int[][] at = new int[sets.size()][];
+        for (int i = 0; i < sets.size(); i++) {
+            OrdinalSet s = sets.get(i);
+            if (layer != null && layer.added() > 0 && s.intersects(layer.addedOrdinals())) {
+                continue;                                              // the day's added trades: summed on their own, below
+            }
+            plans[i] = shardPlan(s, sums);
+            int p = -1;
+            int m = -1;
+            if (!plans[i].plus().isEmpty()) {
+                p = ask.size();
+                ask.add(plans[i].plus());
+            }
+            if (!plans[i].direct() && !plans[i].minus().isEmpty()) {
+                m = ask.size();
+                ask.add(plans[i].minus());
+            }
+            at[i] = new int[] {p, m};
+        }
+        List<double[]> got = ask.isEmpty() ? List.of() : sv.sumSets(ask, sums);
+        List<double[]> out = new ArrayList<>(sets.size());
+        for (int i = 0; i < sets.size(); i++) {
+            if (plans[i] == null) {
+                out.add(vector(sets.get(i), sums));
+                continue;
+            }
+            double[] plus = at[i][0] >= 0 ? got.get(at[i][0]) : new double[store.width()];
+            out.add(plans[i].finish(plus, at[i][1] >= 0 ? got.get(at[i][1]) : null));
+        }
+        return out;
+    }
+
     /** True when this date's rows are sharded across Drishti*net members (VAR_SHARDING.md): a set is summed by the shards' owners. */
     public boolean sharded() {
         return store instanceof com.ash.drishti.compute.vector.SetSums s && s.sumsSets();

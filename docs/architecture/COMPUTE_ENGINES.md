@@ -95,7 +95,7 @@ settings.
 | `sa-ccr` | SA-CCR exposure at default, its playground | `sa-ccr.yaml` | `drishti.ccr.saccr.*` | `SACCR`, `PLAY SACCR`; the SA-CCR page; BI `counterparty-saccr-*` | none | |
 | `fva` | funding cost and benefit (the xVA engine; CVA and DVA join later), its playground | `fva.yaml` | `drishti.ccr.fva.*` | `FVA`, `PLAY FVA`; FVA on the netting set and counterparty pages | `exposure` | |
 | `pivot` | the pivot engine: any table or VaR as a pivot, nested rows opened lazily, totals from their own members, exports ([PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md)) | `pivot.yaml` | `drishti.pivot.*` (its old switch name `drishti.pivot.enabled` still works and still hides the Pivot tab) | `PIVOT`, Views → Pivot, Pivot on a Data view table, `drishti.py pivot` | none | `var` (the `var` source) |
-| `mr-cube` | the market-risk cube (pivot, ladders, heat map, explain the move) | `mr-cube.yaml` | `drishti.cube.mr.*` (new) | the MR Cube lens, `/mcube`, its landing and chips | `var`, `pivot` | `sensitivities` (ladders, heat map), `frtb-sa` (the capital measure chip) |
+| `mr-cube` | the market-risk cube on the pivot engine (the VaR source's hierarchy levels and MR measures, ladders, heat map, explain the move; MR_CUBE_GUIDE.md) | `mr-cube.yaml` | `drishti.cube.mr.*` | `MCUBE` (the pivot screen with the MR lens), `/mcube`, `/api/v1/pivot/mr` | `var`, `pivot` | `sensitivities` (ladders, heat map), `frtb-sa` (the capital measure chip) |
 | `ccr-cube` | the counterparty cube (limit board, allocation, group roll-up, pre-deal overlay) | `ccr-cube.yaml` | `drishti.cube.ccr.*` (new) | the CCR Cube lens, `/ccube`, its landing and chips | `exposure` | `sa-ccr` (the EAD chip, incremental EAD tile), `fva` (the FVA chip and tile) |
 | `memory-lake` | Delta tables held in memory only, with their replenish jobs | `memory-lake.yaml` | `drishti.lake.memory.*` | Admin → Lakes' Memory tab, `drishti.py lake memory`, `mem://` stores | none | |
 
@@ -308,7 +308,7 @@ Two kinds of link, both in the catalogue:
 
 | Link | Meaning | Example |
 |---|---|---|
-| **needs** | cannot run without the other **on the same node** (it calls it in process) | `frtb-sa` needs `var` (its scopes, hierarchies and limit letters are VaR's scope resolution) and `sensitivities`; `simm` needs `sensitivities`; `fva` needs `exposure` (the EE and ENE profile); `mr-cube` needs `var`; `ccr-cube` needs `exposure` (the per-set path matrices) |
+| **needs** | cannot run without the other **on the same node** (it calls it in process) | `frtb-sa` needs `var` (its scopes, hierarchies and limit letters are VaR's scope resolution) and `sensitivities`; `simm` needs `sensitivities`; `fva` needs `exposure` (the EE and ENE profile); `mr-cube` needs `var` and `pivot`; `ccr-cube` needs `exposure` (the per-set path matrices) |
 | **uses** | works without the other, with the parts that read it hidden | `ccr-cube` uses `sa-ccr` (EAD chip, incremental EAD tile) and `fva` (FVA chip, tile); `mr-cube` uses `sensitivities` and `frtb-sa`; `simm` uses `exposure` |
 
 **Enforced, with words:**

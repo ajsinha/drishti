@@ -320,7 +320,7 @@ final class DocView {
             filters.put(GRAIN, new AggregationPlan.Filter(List.of(), List.of("\u0000" + grain)));
         }
         return new PivotView(v.source(), v.date(), v.asOf(), rows, cols, once, filters, exp, v.expandRows(), v.expandColumns(), sort, top,
-                v.subtotals(), v.currency(), slicers, v.formats());
+                v.subtotals(), v.currency(), slicers, v.formats(), v.options());
     }
 
     private static List<String> prepend(String a, List<String> rest) {

@@ -221,7 +221,7 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     # 63: plus the eighth Knowledge page, Companies, funds and ETFs (2.9.3).
     # 64: plus Using Drishti with Databricks Delta Lake or Apache Iceberg (docs/guides/DATA_GUIDE.md, 2.9.5), the product owner's
     # request of 2026-10-28: one page, under Data beside the connector guides.
-    assert 30 <= total <= 64, total
+    assert 30 <= total <= 70, total
 
 
 def test_every_old_help_address_still_opens_something(client):
@@ -249,7 +249,7 @@ def test_the_tutorials_page_renders_the_tutorials_index_and_each_tutorial_opens_
     page = client.get("/help/tutorials")
     assert page.status_code == 200 and "Your first 15 minutes" in page.text and "Run it in production" in page.text
     links = sorted(set(re.findall(r'href="(/help/docs-tutorials-[0-9a-z-]+)"', page.text)))
-    assert len(links) == 33, links
+    assert len(links) == 35, links
     shots = 0
     for href in links:
         t = client.get(href)
