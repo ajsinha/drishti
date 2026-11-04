@@ -318,7 +318,7 @@ async def help_guide(request: Request, slug: str):
     page = lib.render(slug)
     if uc.help_marked(slug):
         page = {**page, "html": Markup('<p class="drishti_uc-banner">') + under_construction.CHIP
-                + Markup(" What this page describes depends on work not built yet; its figures are not shown in the console.</p>") + page["html"]}
+                + Markup(" What this page describes depends on work not built yet; its figures are not shown in the console.</p>") + Markup(page["html"])}
     return render(request, "help/guide.html", guide=g, page=page, category=_siblings(request, lib, g), screen="help")
 
 
