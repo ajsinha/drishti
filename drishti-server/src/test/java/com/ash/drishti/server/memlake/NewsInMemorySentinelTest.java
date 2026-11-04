@@ -126,8 +126,8 @@ class NewsInMemorySentinelTest {
     private static HttpServer feed() {
         try {
             Map<String, byte[]> bodies = Map.of(
-                    "news", marked(gz(REPO.resolve("data/testdata/news-and-markets/news/snapshot-2026-10-18.jsonl.gz")), "news"),
-                    "quote", marked(gz(REPO.resolve("data/testdata/news-and-markets/quote/snapshot-2026-10-18.jsonl.gz")), "quote"),
+                    "news", marked(gz(REPO.resolve("data/testdata/news-and-markets/news/news.2026-10-18.jsonl.gz")), "news"),
+                    "quote", marked(gz(REPO.resolve("data/testdata/news-and-markets/quote/quote.2026-10-18.jsonl.gz")), "quote"),
                     "news-topic", marked(Files.readAllBytes(REPO.resolve("config/packs/news-and-markets/samples/news-topic.jsonl")), "news-topic"),
                     "listed-company", marked(Files.readAllBytes(REPO.resolve("config/packs/news-and-markets/samples/listed-company.jsonl")), "listed-company"));
             HttpServer s = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);

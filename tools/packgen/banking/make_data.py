@@ -21,7 +21,7 @@
     python3 tools/packgen/banking/make_data.py --check         verify the data is consistent and the files are current
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta [--days 10] [--rows DIR] [--no-load]
                                                                 write the business-day history as JSONL rows (DIR, default <lake>/../build/lake-rows:
-                                                                banking-history.jsonl and banking-restated.jsonl), then load them with
+                                                                banking-history.tar and banking-restated.tar), then load them with
                                                                 tools/samplegen/load_rows.py into data/delta/<domain>/<kind>/, each kind in the
                                                                 layout its pack declares (the trade table's); --no-load stops after the JSONL
     python3 tools/packgen/banking/make_data.py --jsonl data/banking.jsonl   rows for tools/load-postgres.sh and load-aerospike.sh

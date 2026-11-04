@@ -30,7 +30,7 @@ def lines(*docs):
 
 
 def args(src, **kw):
-    a = IJ.build_parser().parse_args(["--from", str(src), "--domain", "dom", "--key", "id", "--date", "bd"])
+    a = IJ.build_parser().parse_args(["--from", str(src), "--domain", "dom", "--key", "id"])     # no date field: the files' names date them
     for k, v in kw.items():
         setattr(a, k, v)
     return a
@@ -87,19 +87,27 @@ class IngestTest(unittest.TestCase):
         drop.mkdir()
         (drop / "trade.2026-11-03.jsonl").write_text(lines({"id": "A", "bd": "2026-11-03"}, {"id": "B", "bd": "20261102"}, {"id": "C"}))
         said = []
-        r = IJ.ingest(args(drop, store="files", root=self.root), said.append)
+        r = IJ.ingest(args(drop, store="files", root=self.root, date="bd"), said.append)     # a date field: only counted
         self.assertEqual(self.ids("2026-11-03"), ["A", "B", "C"])
         self.assertEqual(r.other_dates, {str(drop / "trade.2026-11-03.jsonl"): 1})
         self.assertIn("1 row of trade.2026-11-03.jsonl carried another date in bd; loaded under 2026-11-03", said)
-        IJ.ingest(args(drop, store="files", root=self.root, as_of="2026-10-01"), QUIET)
-        self.assertEqual(self.ids("2026-10-01"), ["A", "B", "C"])
+        self.assertIn("trade.2026-11-03.jsonl: business date 2026-11-03 from the file name", said)
+        said = []
+        r = IJ.ingest(args(drop, store="files", root=self.root, as_of="2026-10-01"), said.append)   # no date field: nothing counted
+        self.assertEqual((self.ids("2026-10-01"), r.other_dates), (["A", "B", "C"], {}))
+        self.assertIn("trade.2026-11-03.jsonl: business date 2026-10-01 from the command line", said)
         (drop / "trade.2026-11-03.jsonl.ready").write_text("business-date: 2026-10-02\n")
-        IJ.ingest(args(drop, store="files", root=self.root), QUIET)
+        said = []
+        IJ.ingest(args(drop, store="files", root=self.root), said.append)
         self.assertEqual(self.ids("2026-10-02"), ["A", "B", "C"])
+        self.assertIn("trade.2026-11-03.jsonl: business date 2026-10-02 from the .ready file", said)
         (drop / "trade.2026-11-03.jsonl.ready").unlink()
         (drop / "trade.2026-11-03.jsonl").rename(drop / "trade.jsonl")
-        IJ.ingest(args(drop, store="files", root=self.root), QUIET)
-        self.assertEqual(self.ids(IJ.business_today().isoformat()), ["A", "B", "C"])
+        said = []
+        IJ.ingest(args(drop, store="files", root=self.root), said.append)
+        today = IJ.business_today().isoformat()
+        self.assertEqual(self.ids(today), ["A", "B", "C"])
+        self.assertIn(f"trade.jsonl: business date {today} (today: no date in the name)", said)
         with self.assertRaises(SystemExit) as e:
             IJ.ingest(args(drop, store="files", root=self.root, date_from="name"), QUIET)
         self.assertIn("date-from name, but the name carries no date", str(e.exception))

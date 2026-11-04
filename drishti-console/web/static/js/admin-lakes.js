@@ -23,7 +23,6 @@
   var $ = function (sel) { return root.querySelector(sel); };
   var msg = $('[data-msg]');
   var state = { upload: null, scan: null, targets: null, job: null };
-  var ASOF = '@as-of';
 
   function say(text, bad) { msg.textContent = text || ''; msg.classList.toggle('t-bad', !!bad); }
   function el(tag, attrs, text) {
@@ -89,15 +88,13 @@
     var s = scan.suggest || {};
     $('[data-scan-note]').textContent = 'Read ' + fmt(scan.documents) + ' documents' + (scan.limited ? ' (the first ones; the build reads them all)' : '') +
       (scan.rejected ? ', ' + fmt(scan.rejected) + ' not usable' : '') + '. Suggested choices are selected; change any of them.';
-    var key = $('[data-key]'), date = $('[data-date]');
-    key.textContent = ''; date.textContent = '';
+    var key = $('[data-key]');
+    key.textContent = '';
     var scalar = scan.fields.filter(function (f) { return !f.types.array && !f.types.object; });
     scalar.forEach(function (f) {
       option(key, f.path, f.path + (f.many || f.distinct === f.present ? '' : ' (repeats)'), f.path === (s.key || [])[0]);
-      if (f.dateLike) { option(date, f.path, f.path, f.path === (s.date || [])[0]); }
     });
-    option(date, ASOF, 'None: one date for the whole file', !(s.date || []).length);
-    syncAsOf();
+    businessDate();
     var body = $('[data-fields] tbody');
     body.textContent = '';
     var classes = s.partitionBy || [];
@@ -122,12 +119,15 @@
     });
     show('fields');
   }
-  function syncAsOf() {
-    var on = $('[data-date]').value === ASOF;
-    $('[data-asof-wrap]').hidden = !on;
-    if (on && !$('[data-asof]').value) { $('[data-asof]').value = new Date().toISOString().slice(0, 10); }
+  // The business date by the load rules (docs/architecture/DATA_LOAD_RULES.md): a date given here, else the file name's, else the
+  // business today; never a field of the rows.
+  function businessDate() {
+    var u = state.upload || {}, given = $('[data-lake-asof]').value;
+    $('[data-date-said]').textContent = given ? given + ', the date given here'
+      : u.nameDate ? u.nameDate + ', from the file name (' + u.name + ')'
+      : (u.businessToday || 'today') + ', the business today: the file name carries no date (name it <table>.YYYY-MM-DD.jsonl, or give one)';
   }
-  $('[data-date]').addEventListener('change', syncAsOf);
+  $('[data-lake-asof]').addEventListener('input', businessDate);
   function picked(kind) {
     return Array.prototype.map.call(root.querySelectorAll('[data-pick="' + kind + '"]:checked'), function (b) { return b.value; });
   }
@@ -166,9 +166,8 @@
   // 4. run -------------------------------------------------------------------------------------------------------------
   $('[data-run]').addEventListener('click', function () {
     var chosen = $('[data-pack]').value ? JSON.parse($('[data-pack]').value) : {};
-    var asOf = $('[data-date]').value === ASOF;
     var body = { upload: state.upload && state.upload.id, root: $('[data-root]').value, domain: $('[data-domain]').value.trim(), kind: $('[data-kind]').value.trim(),
-      key: $('[data-key]').value, date: asOf ? null : $('[data-date]').value, asOf: asOf ? $('[data-asof]').value : null, partitionBy: picked('classifier'),
+      key: $('[data-key]').value, asOf: $('[data-lake-asof]').value || null, partitionBy: picked('classifier'),
       promote: picked('promote'), mode: $('[data-mode]').value, pack: chosen.pack || null, connector: chosen.connector || null,
       bind: !!chosen.connector && $('[data-bind]').checked, signal: !!chosen.pack && $('[data-signal]').checked };
     say('');

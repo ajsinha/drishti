@@ -23,7 +23,7 @@ One SEC filing: its company, form, dates, 8-K items and its links on EDGAR (meta
 
 |  |  |
 |---|---|
-| Path | `data/testdata/us-equities/filing/` + `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/us-equities/filing/` + `filing.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `ACCESSION` |
 | Date field | none in the record: a snapshot of public data, its file named by the capture date; the demo lake serves the same records on every business date (partition `business_date`) |

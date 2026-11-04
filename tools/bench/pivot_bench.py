@@ -205,7 +205,7 @@ def load_day(jsonl_gz: Path, lake: Path, python: str) -> None:
     with gzip.open(jsonl_gz, "rb") as src, open(plain, "wb") as dst:
         shutil.copyfileobj(src, dst, 1 << 20)
     cmd = [python, str(ROOT / "tools" / "ingest_jsonl.py"), "--from", str(plain), "--domain", DOMAIN, "--kind", SOURCE, "--key", "TRADE_ID",
-           "--date", "BUSINESS_DATE", "--columns", ",".join(c for c in COLUMNS if c not in ("TRADE_ID",)), "--lake", str(lake),
+           "--columns", ",".join(c for c in COLUMNS if c not in ("TRADE_ID",)), "--lake", str(lake),
            "--mode", "overwrite-dates", "--batch-rows", "500000"]
     try:
         subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL)
@@ -239,7 +239,7 @@ def generate(data_dir: Path, gb: float, seed: int = 20261102, years: int = 5, cp
             break
         if shutil.disk_usage(data_dir).free / 1e9 < 20:
             raise SystemExit("pivot_bench: stopped: under 20 GB free while generating; the lake so far is kept for clean")
-        f = tmp / f"{SOURCE}-{day.isoformat()}.jsonl.gz"
+        f = tmp / f"{SOURCE}.{day.isoformat()}.jsonl.gz"       # <table>.<YYYY-MM-DD>: the load rules' name, its date the file's
         made += write_day(f, day, start, per_day, seed, cpties)
         start += per_day
         load_day(f, lake, python)

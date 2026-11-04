@@ -62,6 +62,14 @@ the data-load signal for each table and date, or, when none is reachable, finds 
 and clears its stored BI columns and rollups; a running server also sees each rebuilt Delta date by itself. The test data itself is
 regenerated with `python3 tools/testdata/make_testdata.py` (deterministic, the same bytes on every Python version: `tools/testdata/test_testdata.py` and `test_deterministic.py` guard it).
 
+**The test data's files are a generator's format, not feed files.** Each sixty-day dataset is one file a business date named by the
+load rules (`trade_endur.2026-07-09.jsonl.gz`, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md) section 10), but only the first
+day's holds the whole table (the snapshot, `kind: snapshot` in `testdata.yaml`); each later day's holds only the documents new or
+changed that day. `lake demo` replays them, the snapshot with every change up to the day applied by key, and loads each day's whole
+table under its dated name. Loaded on its own (`lake build --from` one of them, or a folder of them), a later day's file is only that
+day's changes, not the day's table: build the demo tables with `lake demo` (`--only <folder>` for one dataset). The VaR, exposure and
+public-data folders are whole tables, a date each, and load as they are.
+
 ## Mixed Delta and Iceberg storage
 
 (decided by the product owner on 2026-10-20) each source system's trades can be stored in **Delta Lake or Apache Iceberg**,
@@ -145,9 +153,9 @@ tools/load-delta.sh /tmp/lake --trades 20000     # somewhere else
 ```
 
 It generates, then loads, in separate steps ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)): `make_data.py --lake --no-load` writes the
-history as JSON Lines rows (`<data>/build/lake-rows/banking-history.jsonl` and `banking-restated.jsonl`), `tools/samplegen/load_rows.py`
+history as JSON Lines rows (`<data>/build/lake-rows/banking-history.tar` and `banking-restated.tar`), `tools/samplegen/load_rows.py`
 loads them (rewriting the whole lake the packs read, in the layout each declares; the restatement as a second commit); then
-`tools/samplegen/bulk_trades.py` writes the book as one JSONL file a day (`<data>/build/bulk/murex/trades-<date>.jsonl.gz`) and loads each
+`tools/samplegen/bulk_trades.py` writes the book as one JSONL file a day (`<data>/build/bulk/murex/trade_murex.<date>.jsonl.gz`, the load rules' name) and loads each
 with `lake build`, replacing **one source system's** trade table (`trade_murex`, or `--system CALYPSO`) and leaving every other table as
 it is (`--no-lake` stops after the JSONL). Neither step rewrites the packs' samples, the Sutra tests or the feed. The server reads `data/delta` (or `DRISHTI_DELTA_ROOT`) and
 picks a new load up within a minute; no restart is needed. The layout: [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md).
@@ -266,12 +274,14 @@ instead (streamed, flat memory).
 drishti-console/.venv/bin/python tools/drishti.py data ingest --from data/trade.jsonl --pack config/packs/my-bank --lake /tmp/lake
 DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=/tmp/lake java -jar drishti-server/target/drishti-server-*-exec.jar
 # JSON-lines files (stdlib + PyYAML only): <root>/<domain>/<date>/<kind>.jsonl; serve with DRISHTI_FILES_ROOT
-drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder/ --domain my-bank --key trade=TRADE_ID --date trade=BUSINESS_DATE \
+drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder/ --domain my-bank --key trade=TRADE_ID \
     --store files --root /tmp/files --dry-run
 ```
 
 `--mode overwrite-dates` (default) replaces only the business dates present, so a re-run is idempotent; `append`; `replace`. Without
-`--pack`, give `--domain`, `--key`, `--date` per kind. Documents without the date are reported and skipped. See
+`--pack`, give `--domain` and `--key` per kind. Each file goes under the date in its name (`trade.2026-11-03.jsonl`), or `--as-of`, else
+the business today ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)); `--date FIELD` only names a field whose differing rows are
+counted. See
 [Generating a pack from JSON Lines](../guides/PACK_DEVELOPER_GUIDE.md#generating-a-pack-from-json-lines) and
 [CLI_GUIDE.md](../guides/CLI_GUIDE.md).
 

@@ -22,7 +22,7 @@ demo: within minutes, on a laptop.
 ```
 data/testdata/
   testdata.yaml                 the manifest: business dates, and per dataset its pack, kind, connector, key, partitions, files and counts
-  trades/endur/                 5,000 ENDUR trades: snapshot-2026-07-08.jsonl.gz, changes-2026-07-09.jsonl.gz ... changes-2026-09-30.jsonl.gz
+  trades/endur/                 5,000 ENDUR trades: trade_endur.2026-07-08.jsonl.gz (the snapshot), trade_endur.2026-07-09.jsonl.gz ... (the changes)
   trades/calypso/               5,000 CALYPSO trades
   trades/murex/                 5,000 MUREX trades
   core/<kind>/                  counterparties, groups, legal entities, books, desks, traders, calendars, issuers, CCPs, clearing accounts
@@ -40,6 +40,13 @@ Written by `tools/testdata/make_testdata.py` (deterministic; `--check` says whet
 `news-and-markets/` is the exception: real data, captured with internet by `tools/testdata/capture_market.py`
 ([below](#the-market-snapshot-news-and-markets-offline)), kept as it is by `make_testdata.py`; so are the us-equities and gleif
 packs' public data ([below](#public-data-us-equities-and-gleif)), written by their own generators.
+
+**File names.** Every file follows the load rules ([DATA_LOAD_RULES.md](../../docs/architecture/DATA_LOAD_RULES.md), section 10):
+`<table>.<YYYY-MM-DD>.jsonl.gz`, the table the dataset's connector reads (`trade_endur`, `counterparty`, `pnl-vector` ...) and the
+business date, so `drishti.py lake build --from <file>` loads it with no date given; or a plain tar of `<table>/<YYYY-MM-DD>/` folders
+where a date is several files or one run writes many dates (the P&L vectors and scenario PVs one tar a date, the exposure paths, the
+funds' holdings, the scenario sets and scenario FX with the stress set's files, the desks' 260-day P&L). `tools/lake/feedfiles.py`
+writes and reads them.
 
 **Data samples.** One page per data type here, with a real record as folded JSON and every field explained from its data contract, for
 whoever writes the production query that must emit the same JSON Lines: [docs/contracts/samples/README.md](../../docs/contracts/samples/README.md)
@@ -211,23 +218,25 @@ forward curve to its pair's `MID`. Credit curves, vol surfaces and cubes, divide
 day's values. `tools/testdata/test_market_quotes.py` checks every committed day: no `MID` outside `BID`/`ASK`, no bond price and yield
 up together, no headline that is not its own series' point, no curve apart from its underlier.
 
-**Files.** One document a line, gzip, sorted by key: `snapshot-<first day>.jsonl.gz`, then `changes-<day>.jsonl.gz` for each later day
-(the documents new or different that day, whole; an empty file when nothing changed). A file that would pass 9 MB is split into
-`.part-001`, `.part-002` … (`--part-mb`). A day's state is the snapshot with every change up to that day applied by key.
+**Files.** One document a line, gzip, sorted by key, one file a business day named by its table: `<table>.<first day>.jsonl.gz` holds
+the snapshot, `<table>.<day>.jsonl.gz` of each later day the changes (the documents new or different that day, whole; an empty file when
+nothing changed: a loader ignores it). `testdata.yaml` says which day is the snapshot (`kind: snapshot`). A day's state is the snapshot
+with every change up to that day applied by key: `lake demo` writes that state, each day staged under its dated name and loaded by the
+rules (mode replace).
 
-## The VaR engine's data (market-risk, dated by its documents)
+## The VaR engine's data (market-risk, dated by its files)
 
 Nine more market-risk folders feed the VaR engine ([VAR.md](../../docs/contracts/VAR.md),
 [VAR_EXPLORER.md](../../docs/guides/VAR_EXPLORER.md)). They are written by `tools/packgen/var/make_var_data.py` (which
-`make_testdata.py` runs) from the trades and desks above, and are **dated by their documents** (`dated-by: BUSINESS_DATE` in
-`testdata.yaml`): no snapshot and changes, `lake demo` loads each folder in one run, every document on its own `BUSINESS_DATE`, moved
-with the other business dates.
+`make_testdata.py` runs) from the trades and desks above, and are **dated by their files** (`dated-by: BUSINESS_DATE` in
+`testdata.yaml`: each document's `BUSINESS_DATE` is its file's date): no snapshot and changes, `lake demo` loads each folder in one run,
+every date under its file's (or tar folder's) date, moved with the other business dates.
 
-**Three business dates** (2.9.10.a): the last three days, 2026-09-28, 2026-09-29 and 2026-09-30, each in files of its own
-(`cob-<date>…`), so the VaR page's *Why it moved* compares real dates: each date's positions come from that date's trades (31 trades
+**Three business dates**: the last three days, 2026-09-28, 2026-09-29 and 2026-09-30, each in files of its own
+(`<kind>.<date>.jsonl.gz`; the P&L vectors and scenario PVs `<kind>-<date>.tar`, a date's parts `<kind>/<date>/cob.part-NNN.jsonl.gz`), so the VaR page's *Why it moved* compares real dates: each date's positions come from that date's trades (31 trades
 leave between the first two dates, 37 between the last two), its 509-day scenario window is a day further on (a day keeps its move on
 every date that holds it), and book `BOOK-FI-3` sits under the credit desk on 2026-09-28 and under the fixed income desk from
-2026-09-29. The VaR limits are the newest date's on every date. The stress set (`stress-cob-2026-09-30…`, 250 synthetic 2008-like
+2026-09-29. The VaR limits are the newest date's on every date. The stress set (its own files `stress-cob…` in the 2026-09-30 folders, 250 synthetic 2008-like
 days), the desks' P&L history (`desk-pnl`) and the long P&L history (`pnl-history`) are the newest date's only. About 16.3 MB a date,
 58 MB in all with the stress set.
 
@@ -256,10 +265,10 @@ a date (7,984 on the last day, 8,015 and 8,041 on the two before). The stored `v
 the engine computes them. `python3 tools/packgen/var/make_var_data.py --check` says whether the folders match the trades;
 `--budget <n> --out <a folder outside the repository>` values a sample of `n` trades a book (a smaller set for a quick local run).
 
-## The exposure engine's data (counterparty-risk, dated by its documents)
+## The exposure engine's data (counterparty-risk, dated by its files)
 
 Two counterparty-risk folders feed the exposure engine ([EXPOSURE_GUIDE.md](../../docs/guides/EXPOSURE_GUIDE.md)). They are written by
-`tools/packgen/ccr/make_ccr_data.py` (which `make_testdata.py` runs) from the netting sets above, and are **dated by their documents**,
+`tools/packgen/ccr/make_ccr_data.py` (which `make_testdata.py` runs) from the netting sets above, and are **dated by their files** (`simulation-run.<date>.jsonl.gz`, `exposure-path.tar` of `exposure-path/<date>/` parts),
 as the VaR folders are: `lake demo` loads each in one run into the risk lake's domain (`risk/`), moving the run id, the grid dates and the
 rows' ids with the business dates. 6.0 MB in all (2.9.2).
 
@@ -281,8 +290,8 @@ those same connectors, which the pack serves from the demo lake when the live co
 
 | File | Documents | What |
 |---|---|---|
-| `news-and-markets/quote/snapshot-<date>.jsonl.gz` | `QUOTE-<ticker>` of the twenty companies (`QUOTE_ID`) | the quote (price, change, ranges, volume, market cap) and a year of daily bars (`HISTORY`) |
-| `news-and-markets/news/snapshot-<date>.jsonl.gz` | `NEWS-<name>` and `NEWS-<name>~all` of the twenty companies and fifteen topics, and the pack's example `NEWS-Bitcoin` (`NEWS_ID`) | the headlines, the count by source and the steps that chose them |
+| `news-and-markets/quote/quote.<date>.jsonl.gz` | `QUOTE-<ticker>` of the twenty companies (`QUOTE_ID`) | the quote (price, change, ranges, volume, market cap) and a year of daily bars (`HISTORY`) |
+| `news-and-markets/news/news.<date>.jsonl.gz` | `NEWS-<name>` and `NEWS-<name>~all` of the twenty companies and fifteen topics, and the pack's example `NEWS-Bitcoin` (`NEWS_ID`) | the headlines, the count by source and the steps that chose them |
 
 - **Source and date.** Captured from **Yahoo Finance** (its public chart endpoint) and **Google News** (RSS search) on the UTC date
   in the file name; every document carries `SNAPSHOT` ("Snapshot captured <date> <time> UTC from …"), `SNAPSHOT_CAPTURED_AT` and
@@ -319,8 +328,8 @@ Guarded by `tools/testdata/test_capture_market.py` (a stub server, never the int
 ## Public data: us-equities and gleif
 
 The us-equities and gleif packs carry published public data, not generated documents. It follows the same pattern as everything
-here: one gzipped JSON Lines snapshot per kind, `us-equities/<kind>/snapshot-<date>.jsonl.gz` (us-company, index-membership,
-filing-feed, filing, financial-fact) and `gleif/<kind>/snapshot-<date>.jsonl.gz` (lei-entity, lei-relationship, lei-mapping), about
+here: one gzipped JSON Lines snapshot per kind, `us-equities/<kind>/<kind>.<date>.jsonl.gz` (us-company, index-membership,
+filing-feed, filing, financial-fact) and `gleif/<kind>/<kind>.<date>.jsonl.gz` (lei-entity, lei-relationship, lei-mapping), about
 3.8 MB in all (the SIC sectors, ownership groups and LEI countries are computed from them since 2.9.2, never stored), each listed in `testdata.yaml` with its key, capture date, source, documents and size.
 
 - **In the lake.** `lake demo` writes each kind into `us-equities/<kind>` and `gleif/<kind>` (the same snapshot on every day, never
@@ -340,14 +349,15 @@ filing-feed, filing, financial-fact) and `gleif/<kind>/snapshot-<date>.jsonl.gz`
 manifest names the pack, kind, connector, key and partitions of each dataset); the first day's state is its snapshot:
 
 ```bash
-# the first day of the ENDUR trades, into the table the trade-endur connector reads (trading/trade_endur)
-drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz \
-    --pack config/packs/trading --kind trade --connector trade-endur --key TRADE_ID --as-of 2026-09-22 \
-    --partition-by PRODUCT_TYPE --lake data/delta
+# the first day of the ENDUR trades, into the table the trade-endur connector reads (trading/trade_endur): the table and the business
+# date (2026-07-08) come from the file's name; mode replace, so running it again replaces that day
+drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
+    --partition-by PRODUCT_TYPE --mode overwrite-dates --lake data/delta
 
-# a kind of another pack (core/counterparty: connector reference-store, domain reference)
-drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/core/counterparty/snapshot-2026-07-08.jsonl.gz \
-    --pack config/packs/core --kind counterparty --key COUNTERPARTY_ID --as-of 2026-09-22 --lake data/delta
+# a kind of another pack (core/counterparty: the table counterparty of the core pack, connector reference-store, domain reference),
+# under another business date: --as-of wins over the name's
+drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/core/counterparty/counterparty.2026-07-08.jsonl.gz \
+    --as-of 2026-09-22 --mode overwrite-dates --lake data/delta
 ```
 
 A change file holds only that day's new and changed documents, so it is not a day's state on its own: later days are the snapshot with

@@ -23,10 +23,10 @@ General-collateral or specials repo rates by term. One row per repo curve per bu
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-data/repo-curve/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-data/repo-curve/` + `repo-curve.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `CURVE_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -41,16 +41,16 @@ A real record, the most complete of the 420 (the one with the most non-empty fie
   "CURVE_ID": "REPO-AUD",
   "CURRENCY": "AUD",
   "COLLATERAL": "General collateral (government)",
-  "OVERNIGHT": 0.032109,
-  "AS_OF": "2026-07-09",
+  "OVERNIGHT": 0.031915,
+  "AS_OF": "2026-07-08",
   "POINTS": [
     {
       "TENOR": "ON",
-      "RATE": 3.213
+      "RATE": 3.1936
     },
     {
       "TENOR": "1W",
-      "RATE": 3.2164
+      "RATE": 3.197
     },
     "… 4 more elements of the same shape"
   ]
@@ -66,11 +66,11 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `CURVE_ID` | string | required | The record's id (the business key) | pattern `^REPO-` | `"REPO-AUD"` |
 | `CURRENCY` | string | required | The currency of the repo rates, ISO 4217. | one of `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` | `"AUD"` |
 | `COLLATERAL` | string | required | The collateral the rates are for (General collateral (government)). | — | `"General collateral (government)"` |
-| `OVERNIGHT` | number | required | The overnight repo rate, as a fraction (0.0352 is 3.52%). | unit: fraction | `0.032109` |
-| `AS_OF` | date (YYYY-MM-DD) | required | The date the curve was built for (the business date). | — | `"2026-07-09"` |
+| `OVERNIGHT` | number | required | The overnight repo rate, as a fraction (0.0352 is 3.52%). | unit: fraction | `0.031915` |
+| `AS_OF` | date (YYYY-MM-DD) | required | The date the curve was built for (the business date). | — | `"2026-07-08"` |
 | `POINTS` | array of objects | required | The repo term structure: one object per term, shortest first (ON to 1Y). | — | [6 objects] |
 | `POINTS[].TENOR` | string | required | The repo term (ON, 1W, 1M, 3M, 6M, 1Y). | one of `1M`, `1W`, `1Y`, `3M`, `6M`, `ON` | `"ON"` |
-| `POINTS[].RATE` | number | required | The repo rate for TENOR, in percent (3.5221 is 3.5221%; note: OVERNIGHT is a fraction). | unit: percent | `3.213` |
+| `POINTS[].RATE` | number | required | The repo rate for TENOR, in percent (3.5221 is 3.5221%; note: OVERNIGHT is a fraction). | unit: percent | `3.1936` |
 
 ## Fields in other rows
 

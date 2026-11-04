@@ -71,7 +71,9 @@ class PythonPathEqualityTest {
         String said = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
         assertThat(p.waitFor(10, TimeUnit.MINUTES)).isTrue();
         assertThat(p.exitValue()).as(String.join(" ", args) + "\n" + said).isIn(0, 2);
-        return LakeLoadTest.JSON.readTree(summary.toFile());
+        JsonNode s = LakeLoadTest.JSON.readTree(summary.toFile());
+        JsonNode tables = s.path("tables");                               // a tar: its one table's own summary
+        return tables.isObject() && tables.size() == 1 ? tables.elements().next() : s;
     }
 
     private static boolean python() {
@@ -89,8 +91,8 @@ class PythonPathEqualityTest {
         List<String> lines = new ArrayList<>(PvData.lines(1500, 80, 2, 11));
         lines.add(17, "{\"BUSINESS_DATE\":\"2026-10-27\"}");                     // a reject: no id
         Path in = PvData.byDate(tmp.resolve("in"), lines);                       // one file a date, dated by its name
-        List<String> common = List.of("--from", in.toString(), "--domain", "risk", "--kind", "scenario-pv", "--key", "POSITION_ID", "--date",
-                "BUSINESS_DATE", "--promote", "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY", "--vector", "SCENARIO_PV");
+        List<String> common = List.of("--from", in.toString(), "--domain", "risk", "--kind", "scenario-pv", "--key", "POSITION_ID",
+                "--promote", "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY", "--vector", "SCENARIO_PV");
         compare(common, "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY", "SCENARIO_PV", "P-1000003",
                 LocalDate.parse("2026-10-28"));
     }
@@ -98,14 +100,11 @@ class PythonPathEqualityTest {
     @Test
     void theMarketRiskPacksScenarioPvsGiveTheSameTables() throws Exception {
         assumeTrue(python(), "python3 with PyYAML is not available");
-        Path data = REPO.resolve("data/testdata/market-risk/scenario-pv");
-        assumeTrue(Files.isDirectory(data), "no market-risk scenario PVs in data/testdata");
-        List<String> common = new ArrayList<>();
-        try (var files = Files.list(data)) {                                    // the last date's files, dated from outside (--as-of)
-            files.filter(f -> f.getFileName().toString().contains("2026-09-30")).sorted().forEach(f -> common.addAll(List.of("--from", f.toString())));
-        }
-        common.addAll(List.of("--as-of", "2026-09-30", "--pack", REPO.resolve("config/packs/market-risk").toString(), "--kind",
-                "scenario-pv", "--key", "SCENARIO_PV_ID", "--date", "BUSINESS_DATE"));
+        // the last date's tar (scenario-pv/2026-09-30/: the normal set's files and the stress set's), dated by its folder
+        Path data = REPO.resolve("data/testdata/market-risk/scenario-pv/scenario-pv-2026-09-30.tar");
+        assumeTrue(Files.isRegularFile(data), "no market-risk scenario PVs in data/testdata");
+        List<String> common = new ArrayList<>(List.of("--from", data.toString(), "--pack", REPO.resolve("config/packs/market-risk").toString(),
+                "--kind", "scenario-pv", "--key", "SCENARIO_PV_ID"));
         compare(common, null, "SCENARIO_PV", null, LocalDate.parse("2026-09-30"));
     }
 
@@ -135,8 +134,8 @@ class PythonPathEqualityTest {
             Path in = tmp.resolve("dups-" + stamped);
             PvData.gzip(in.resolve("pv.jsonl.gz"), gz, 2);
             PvData.write(in.resolve("pv.jsonl"), plain);
-            List<String> common = List.of("--from", in.toString(), "--domain", "risk", "--kind", "scenario-pv", "--key", "POSITION_ID", "--date",
-                    "BUSINESS_DATE", "--promote", "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY", "--vector", "SCENARIO_PV");
+            List<String> common = List.of("--from", in.toString(), "--domain", "risk", "--kind", "scenario-pv", "--key", "POSITION_ID",
+                    "--promote", "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY", "--vector", "SCENARIO_PV");
             JsonNode s = compare("dups-" + stamped + "-", common, "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY",
                     "SCENARIO_PV", "P-1000030", FileDates.businessToday());           // names without a date: the business today
             long dropped = 0;

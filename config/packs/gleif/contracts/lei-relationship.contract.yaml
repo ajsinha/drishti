@@ -214,7 +214,7 @@ notes: []
 notes:
 - '1.1: END, the relationship''s end date, is in the contract; PERIODS[].START is optional (GLEIF leaves it out of a few periods).'
 review:
-- 'required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/gleif/lei-relationship/snapshot-2026-10-25.jsonl.gz)):
+- 'required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/gleif/lei-relationship/lei-relationship.2026-10-25.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'a snapshot refreshed when tools/publicdata/gleif.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: LEVEL, REGISTRATION_STATUS, ACCOUNTING_STANDARD, PERIODS[].TYPE: confirm they are

@@ -30,8 +30,10 @@ Politely: at least --delay seconds (default 2) between calls; a call that fails 
 after 5, 10, 20, 40 s. Each document is stamped as a snapshot (SNAPSHOT, SNAPSHOT_CAPTURED_AT, PROVENANCE.SNAPSHOT, and the quote's
 AS_OF or the headlines' FETCHED_AT end in "(snapshot ...)"), then written, sorted by id, to
 
-    data/testdata/news-and-markets/quote/snapshot-<UTC date>.jsonl.gz
-    data/testdata/news-and-markets/news/snapshot-<UTC date>.jsonl.gz
+    data/testdata/news-and-markets/quote/quote.<UTC date>.jsonl.gz
+    data/testdata/news-and-markets/news/news.<UTC date>.jsonl.gz
+
+(named by the load rules, <table>.<YYYY-MM-DD>: docs/architecture/DATA_LOAD_RULES.md)
 
 (an older snapshot in those folders is replaced) and data/testdata/testdata.yaml lists them, so `drishti.py lake demo` builds the
 news/quote and news/news tables the pack's news-store connector serves when the live connectors are off or the server runs with
@@ -257,13 +259,13 @@ class Fetcher:
 # ---- writing -------------------------------------------------------------------------------------------------------------------------------
 
 def write_snapshot(testdata: pathlib.Path, kind: str, docs: list[dict], captured: datetime) -> pathlib.Path:
-    """<testdata>/news-and-markets/<kind>/snapshot-<date>.jsonl.gz, one document a line sorted by id; older snapshots there are removed."""
+    """<testdata>/news-and-markets/<kind>/<kind>.<date>.jsonl.gz, one document a line sorted by id; older snapshots there are removed."""
     folder = testdata / PACK / kind
     folder.mkdir(parents=True, exist_ok=True)
-    for old in folder.glob("snapshot-*.jsonl.gz"):
+    for old in folder.glob("*.jsonl.gz"):
         old.unlink()
     key = KINDS[kind][0]
-    path = folder / f"snapshot-{captured:%Y-%m-%d}.jsonl.gz"
+    path = folder / f"{kind}.{captured:%Y-%m-%d}.jsonl.gz"
     lines = [json.dumps(d, ensure_ascii=False, separators=(",", ":"), sort_keys=False) for d in sorted(docs, key=lambda d: str(d.get(key)))]
     with open(path, "wb") as raw, gzip.GzipFile(fileobj=raw, mode="wb", compresslevel=9, mtime=0, filename="") as gz:
         gz.write(("\n".join(lines) + "\n").encode("utf-8"))
@@ -274,15 +276,15 @@ def captured_datasets(testdata: pathlib.Path) -> list[dict]:
     """The manifest entries of the captured snapshots in <testdata>/news-and-markets/{quote,news} (newest snapshot of each)."""
     out = []
     for kind, (key, source) in KINDS.items():
-        files = sorted((testdata / PACK / kind).glob("snapshot-*.jsonl.gz"))
+        files = sorted((testdata / PACK / kind).glob(f"{kind}.*.jsonl.gz"))
         if not files:
             continue
         f = files[-1]
         with gzip.open(f, "rt", encoding="utf-8") as fh:
             docs = [json.loads(line) for line in fh if line.strip()]
         when = next((d.get("SNAPSHOT_CAPTURED_AT") for d in docs if d.get("SNAPSHOT_CAPTURED_AT")), "")
-        out.append({"folder": f"{PACK}/{kind}", "pack": PACK, "kind": kind, "connector": CONNECTOR, "key": key, "snapshot": f.name,
-                    "captured": when, "source": source, "documents": len(docs), "bytes": f.stat().st_size})
+        out.append({"folder": f"{PACK}/{kind}", "pack": PACK, "kind": kind, "connector": CONNECTOR, "key": key, "snapshot": True,
+                    "captured": when, "source": source, "documents": len(docs), "files": [f.name], "bytes": f.stat().st_size})
     return out
 
 

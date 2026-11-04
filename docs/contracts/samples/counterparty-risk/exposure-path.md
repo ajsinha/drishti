@@ -23,7 +23,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 
 |  |  |
 |---|---|
-| Path | `data/testdata/counterparty-risk/exposure-path/` + `cob-YYYY-MM-DD.part-NNN.jsonl.gz` |
+| Path | `data/testdata/counterparty-risk/exposure-path/` + `exposure-path.tar!/exposure-path/YYYY-MM-DD/cob.part-NNN.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `PATH_ROW_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |

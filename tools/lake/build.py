@@ -323,7 +323,8 @@ def _run_tars(a, say, summary, started, lake) -> tuple[int, dict]:
         sub.domain = None
         sub.summary = None
         code, s = run(sub, lambda *_x, **_k: None)
-        summary["tables"][t] = {k: s.get(k) for k in ("status", "table", "rows", "fileDates", "dateNotes", "otherDateRows", "error")}
+        summary["tables"][t] = {k: s.get(k) for k in ("status", "table", "rows", "fileDates", "dateNotes", "otherDateRows", "error", "engine",
+                                                      "accepted", "rejected", "rejects", "duplicates", "duplicateExamples", "sampleId")}
         worst = max(worst, code)
         if code in (EXIT_FAILED, EXIT_LOCKED):
             summary.update(status="failed", error=f"table {t}: {s.get('error')}; committed before it: "

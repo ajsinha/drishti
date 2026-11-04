@@ -17,13 +17,13 @@
 
 # Desk P&L: actual and hypothetical (daily): desk-pnl (DPNL)
 
-The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md section 15.16): the actual P&L from finance (clean: fees, commissions, reserves, net interest income and intraday trading left out) and the hypothetical P&L from front office (yesterday's positions revalued on today's market), in USD. Never an input of the VaR engine: the backtest compares the official VaR of the day before with them. Drishti's own risk-theoretical P&L (the official record's hypoPnl) is not this kind. One row per desk (and its legal entity) per BUSINESS_DATE, keyed by DESK_PNL_ID (DPNL-<DESK_ID>-<BUSINESS_DATE>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/desk-pnl/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2025-09-17 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (2,600 records on 2026-09-30), never a change on the day before.
+The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md section 15.16): the actual P&L from finance (clean: fees, commissions, reserves, net interest income and intraday trading left out) and the hypothetical P&L from front office (yesterday's positions revalued on today's market), in USD. Never an input of the VaR engine: the backtest compares the official VaR of the day before with them. Drishti's own risk-theoretical P&L (the official record's hypoPnl) is not this kind. One row per desk (and its legal entity) per BUSINESS_DATE, keyed by DESK_PNL_ID (DPNL-<DESK_ID>-<BUSINESS_DATE>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/desk-pnl/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2025-09-17 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (10 records on 2026-09-30), never a change on the day before.
 
 ## File layout
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-risk/desk-pnl/` + `history-YYYY-MM-DD-to-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-risk/desk-pnl/` + `desk-pnl.tar!/desk-pnl/YYYY-MM-DD/cob.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `DESK_PNL_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |
@@ -34,20 +34,20 @@ The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md secti
 
 ## One sample record
 
-A real record, the most complete of the 2,600 (the one with the most non-empty fields), pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data.
+A real record, the most complete of the 10 (the one with the most non-empty fields), pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data.
 
 ```json
 {
-  "DESK_PNL_ID": "DPNL-DESK-COMM-2025-09-17",
-  "BUSINESS_DATE": "2025-09-17",
+  "DESK_PNL_ID": "DPNL-DESK-COMM-2026-09-30",
+  "BUSINESS_DATE": "2026-09-30",
   "DESK_ID": "DESK-COMM",
   "LEGAL_ENTITY": "LE-NY",
-  "ACTUAL_PNL": -351052,
-  "HYPOTHETICAL_PNL": -2307182,
-  "FEES_AND_COMMISSIONS": 837316,
+  "ACTUAL_PNL": 199665,
+  "HYPOTHETICAL_PNL": -479876,
+  "FEES_AND_COMMISSIONS": 298323,
   "CURRENCY": "USD",
   "SOURCE": "demo-finance",
-  "AS_OF": "2025-09-17T22:00:00Z"
+  "AS_OF": "2026-09-30T22:00:00Z"
 }
 ```
 
@@ -57,20 +57,20 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `DESK_PNL_ID` | string | required | The record's id, DPNL-<DESK_ID>-<BUSINESS_DATE> (the business key) | pattern `^DPNL-` | `"DPNL-DESK-COMM-2025-09-17"` |
-| `BUSINESS_DATE` | date (YYYY-MM-DD) | required | The business date the P&L is of (YYYY-MM-DD): the day the market moved, tested against the official VaR of the business day before. | — | `"2025-09-17"` |
+| `DESK_PNL_ID` | string | required | The record's id, DPNL-<DESK_ID>-<BUSINESS_DATE> (the business key) | pattern `^DPNL-` | `"DPNL-DESK-COMM-2026-09-30"` |
+| `BUSINESS_DATE` | date (YYYY-MM-DD) | required | The business date the P&L is of (YYYY-MM-DD): the day the market moved, tested against the official VaR of the business day before. | — | `"2026-09-30"` |
 | `DESK_ID` | string | required | The desk: the id of a desk node of the hierarchies (DESK-RATES is the node MGMT~DESK-RATES). A node's P&L is the sum of its desks' rows; the bank's, of every row. | pattern `^DESK-` | `"DESK-COMM"` |
 | `LEGAL_ENTITY` | string | optional (filled in every row) | The legal entity the desk's P&L is booked in: the LEGAL hierarchy's nodes sum the rows of their entity. | pattern `^LE-`; links to `legal-entity` | `"LE-NY"` |
-| `ACTUAL_PNL` | integer | required | Finance's clean actual P&L of the day: fees, commissions, reserves, net interest income and intraday trading left out (US 12 CFR 217.204(b); OSFI CAR chapter 9). Negative is a loss. | unit: USD | `-351052` |
-| `HYPOTHETICAL_PNL` | integer | required | Front office's hypothetical P&L of the day: the end of the day before's positions revalued on the day's market, nothing traded. Negative is a loss. | unit: USD | `-2307182` |
-| `FEES_AND_COMMISSIONS` | integer | optional (filled in every row) | What finance left out of ACTUAL_PNL (fees, commissions, reserves), for the record: never part of a backtest. | unit: USD | `837316` |
+| `ACTUAL_PNL` | integer | required | Finance's clean actual P&L of the day: fees, commissions, reserves, net interest income and intraday trading left out (US 12 CFR 217.204(b); OSFI CAR chapter 9). Negative is a loss. | unit: USD | `199665` |
+| `HYPOTHETICAL_PNL` | integer | required | Front office's hypothetical P&L of the day: the end of the day before's positions revalued on the day's market, nothing traded. Negative is a loss. | unit: USD | `-479876` |
+| `FEES_AND_COMMISSIONS` | integer | optional (filled in every row) | What finance left out of ACTUAL_PNL (fees, commissions, reserves), for the record: never part of a backtest. | unit: USD | `298323` |
 | `CURRENCY` | string | required | The currency of the amounts, ISO 4217: USD. | one of `USD` | `"USD"` |
 | `SOURCE` | string | required | The system the row came from (the finance ledger or the front-office P&L system); demo-finance on the test data. | — | `"demo-finance"` |
-| `AS_OF` | timestamp (ISO-8601) | required | When the source produced the figures (UTC). A restated day is sent again with a later AS_OF; the lake's newest row wins. | — | `"2025-09-17T22:00:00Z"` |
+| `AS_OF` | timestamp (ISO-8601) | required | When the source produced the figures (UTC). A restated day is sent again with a later AS_OF; the lake's newest row wins. | — | `"2026-09-30T22:00:00Z"` |
 
 ## Fields in other rows
 
-None: all 2,600 rows were read, and every field any of them has is in the record above.
+None: all 10 rows were read, and every field any of them has is in the record above.
 
 ## For the production query
 

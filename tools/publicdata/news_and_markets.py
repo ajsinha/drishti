@@ -83,7 +83,7 @@ def snapshot_counts(testdata: Path) -> dict:
     """kind -> (file, documents, problems): the written snapshot read back; ids unique and sorted, every document stamped."""
     out = {}
     for kind, (key, _src) in CM.KINDS.items():
-        files = sorted((testdata / PACK / kind).glob("snapshot-*.jsonl.gz"))
+        files = sorted(f for f in (testdata / PACK / kind).glob(f"{kind}.*.jsonl.gz"))     # <kind>.<YYYY-MM-DD>.jsonl.gz
         if not files:
             continue
         with gzip.open(files[-1], "rt", encoding="utf-8") as fh:

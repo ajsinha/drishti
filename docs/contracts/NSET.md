@@ -546,7 +546,7 @@ Memory: about 80 MB per date at a large bank (§7.1), shared by every counterpar
 | Netting sets | today's rule kept: one set per (counterparty, booking legal entity), `NS-<counterparty>-<LE short>`: 76 sets, 24 counterparties |
 | Membership | only products a master agreement nets (derivatives in `DERIVATIVES` sets; repo and lending in separate `SFT` sets `NS-<cp>-<le>-SFT`); cash, bonds, loans and deposits are not members (today they are) |
 | CSAs | numeric terms (§3.5); thresholds 0 for banks and hedge funds (as today), 10m otherwise; a few with IA, rounding 10,000, one CSA with a weekly frequency, one with disputes |
-| Folders | `data/testdata/counterparty-risk/{agreement,csa,netting-set,netting-set-member}/cob-2026-09-30.jsonl.gz` (moved into the risk lake's domain by `lake demo`) |
+| Folders | `data/testdata/counterparty-risk/{agreement,csa,netting-set,netting-set-member}/<kind>.2026-09-30.jsonl.gz` (moved into the risk lake's domain by `lake demo`) |
 | Tests | `tools/packgen/ccr/test_ccr_data.py`: every member is live, in one set, same counterparty and legal entity; sums reconcile; the CSA terms parse |
 
 ## 14. Retiring the stored version

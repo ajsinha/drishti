@@ -14,8 +14,9 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """lake scan: what a large export holds, read as a stream: every field (dotted paths, up to depth 3; arrays are counted, not
-entered), how often it is present, its types, its most frequent values, and suggestions for ``lake build``: the id (--key), the
-business date (--date) and classifiers (--partition-by: text fields with few distinct values).
+entered), how often it is present, its types, its most frequent values, and suggestions for ``lake build``: the id (--key) and
+classifiers (--partition-by: text fields with few distinct values), and the field the rows carry their date in (counted only: the business
+date comes from the file's name or --as-of, docs/architecture/DATA_LOAD_RULES.md).
 
     python3 tools/drishti.py lake scan exports/book.json --limit 5000
 
@@ -151,8 +152,8 @@ def run(a) -> int:
         top = ", ".join(f"{v}({c})" for v, c in f["top"][:4]) if not f["many"] and f["distinct"] and f["distinct"] <= 40 else ""
         print(f"{f['path'][:33]:<34}{f['present']:>8}{('many' if f['many'] else str(f['distinct'])):>10}  {types}  {top}"[:160])
     s = r["suggest"]
-    print(f"suggested --key {s['key'][0] if s['key'] else '?'}   --date {s['date'][0] if s['date'] else '? (or --as-of)'}   "
-          f"--partition-by: {', '.join(s['partitionBy'][:3]) or '(none)'}")
+    print(f"suggested --key {s['key'][0] if s['key'] else '?'}   --partition-by: {', '.join(s['partitionBy'][:3]) or '(none)'}   "
+          f"the rows' date field: {s['date'][0] if s['date'] else '(none)'} (counted only: the business date is the file name's or --as-of)")
     return 0
 
 

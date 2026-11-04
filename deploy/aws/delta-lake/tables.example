@@ -18,7 +18,8 @@
 #   pack       the pack folder (relative to the repository or the loader image): layout, promoted columns, id field
 #   connector  the pack's Delta connector the table is for (one per source system)
 #   landing    the dump prefix in s3://LANDING_BUCKET/, {date} replaced by the business date (YYYY-MM-DD)
-#   date       the business-date field of each document, or - for "the day being loaded" (lake build --as-of)
+#   date       the field the documents carry their business date in, or -: for the record only; every load is dated by the day
+#              being loaded (lake build --as-of, docs/architecture/DATA_LOAD_RULES.md), never by a row
 #   partition  partition columns after business_date (lake build --partition-by), or - for none
 #
 # table                  kind    pack                   connector       landing                 date   partition

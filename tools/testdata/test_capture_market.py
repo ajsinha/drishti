@@ -123,7 +123,8 @@ class CaptureMarketTest(unittest.TestCase):
         self.assertEqual(Stub.calls.count("quote QUOTE-BBB"), 2)
         self.assertEqual(Stub.calls.count("news NEWS-Bbb~all"), 1, "a 404 is not retried")
         # files: the old snapshot replaced, one document a line sorted by id, every document stamped
-        quote_files = sorted((self.td / CM.PACK / "quote").glob("snapshot-*.jsonl.gz"))
+        quote_files = sorted((self.td / CM.PACK / "quote").glob("*.jsonl.gz"))
+        self.assertTrue(quote_files and quote_files[0].name.startswith("quote."), quote_files)     # <table>.<YYYY-MM-DD>.jsonl.gz
         self.assertEqual(len(quote_files), 1)
         self.assertNotIn("2026-01-01", quote_files[0].name)
         quotes = [json.loads(x) for x in gzip.decompress(quote_files[0].read_bytes()).decode().splitlines()]
@@ -135,7 +136,7 @@ class CaptureMarketTest(unittest.TestCase):
         self.assertTrue(q["AS_OF"].startswith("2026-10-16 16:00"))
         self.assertIn("not live", q["PROVENANCE"]["SNAPSHOT"])
         self.assertEqual(q["PROVENANCE"]["FEED"], "Yahoo Finance public chart endpoint (unofficial)")
-        news = [json.loads(x) for x in gzip.decompress(next((self.td / CM.PACK / "news").glob("snapshot-*.jsonl.gz")).read_bytes()).decode().splitlines()]
+        news = [json.loads(x) for x in gzip.decompress(next((self.td / CM.PACK / "news").glob("news.*.jsonl.gz")).read_bytes()).decode().splitlines()]
         self.assertEqual([n["NEWS_ID"] for n in news], sorted(["NEWS-Aaa", "NEWS-Aaa~all", "NEWS-Bbb", "NEWS-X@de-DE", "NEWS-X@de-DE~all", "NEWS-Extra"]))
         self.assertTrue(all("(snapshot captured " in n["FETCHED_AT"] and "Google News" in n["SNAPSHOT"] for n in news))
         # the manifest: the header kept, the sample dataset kept, the old quote entry replaced by the two captured datasets
@@ -146,7 +147,7 @@ class CaptureMarketTest(unittest.TestCase):
         self.assertEqual([d["kind"] for d in ds], ["news-topic", "quote", "news"])
         quote = ds[1]
         self.assertEqual((quote["folder"], quote["connector"], quote["key"], quote["documents"]), ("news-and-markets/quote", "news-store", "QUOTE_ID", 2))
-        self.assertEqual(quote["snapshot"], quote_files[0].name)
+        self.assertEqual(quote["files"], [quote_files[0].name])
         self.assertTrue(quote["captured"].endswith("Z") and "Yahoo Finance" in quote["source"])
 
     def test_a_dry_run_fetches_nothing(self):

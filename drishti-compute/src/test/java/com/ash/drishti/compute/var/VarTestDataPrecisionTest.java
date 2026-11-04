@@ -19,13 +19,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.compute.vector.OrdinalSet;
 import com.ash.drishti.compute.vector.ParallelSums;
+import com.ash.drishti.testkit.FeedFiles;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -33,8 +31,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
-import java.util.zip.GZIPInputStream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -82,25 +78,13 @@ class VarTestDataPrecisionTest {
 
     /**
      * The business date these tests read: the newest of the committed VaR dates (data/testdata holds three, 2026-09-28 to 2026-09-30, each
-     * date in files of its own, cob-&lt;date&gt;...; a kind written for the newest only, as the desk P&amp;L's history, names it too).
+     * date in files of its own: a dated file, or the date folder of a tar; drishti-testkit FeedFiles reads both).
      */
     static final String DATE = "2026-09-30";
 
     static void lines(Path folder, boolean stress, Consumer<JsonNode> each) throws IOException {
-        List<Path> files;
-        try (Stream<Path> s = Files.list(folder)) {
-            files = s.filter(f -> f.getFileName().toString().endsWith(".jsonl.gz") && f.getFileName().toString().startsWith("stress-") == stress
-                            && f.getFileName().toString().contains(DATE))
-                    .sorted().toList();
-        }
-        for (Path f : files) {
-            try (BufferedReader r = new BufferedReader(new InputStreamReader(new GZIPInputStream(Files.newInputStream(f)), StandardCharsets.UTF_8))) {
-                for (String line = r.readLine(); line != null; line = r.readLine()) {
-                    if (!line.isBlank()) {
-                        each.accept(JSON.readTree(line));
-                    }
-                }
-            }
+        for (String line : FeedFiles.lines(folder, p -> p.date().equals(DATE) && p.name().startsWith("stress-") == stress)) {
+            each.accept(JSON.readTree(line));
         }
     }
 

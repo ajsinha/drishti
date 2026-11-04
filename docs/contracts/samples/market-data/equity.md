@@ -23,10 +23,10 @@ A listed stock: price, dividends, sector and identifiers. One row per equity per
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-data/equity/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-data/equity/` + `equity.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `TICKER` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -40,24 +40,32 @@ A real record, the most complete of the 600 (the one with the most non-empty fie
 {
   "TICKER": "EQ-GRNT",
   "NAME": "Granite Building Materials plc",
-  "PRICE": 7.15,
-  "CHANGE_1D": -0.00832,
-  "MARKET_CAP": 23189509200,
+  "PRICE": 7.21,
+  "CHANGE_1D": -0.01503,
+  "MARKET_CAP": 23384106480,
   "SECTOR": "Materials",
   "EXCHANGE": "LSE",
   "CURRENCY": "GBP",
   "HISTORY": [
     {
-      "DATE": "2026-05-27",
-      "CLOSE": 7.66
+      "DATE": "2026-05-26",
+      "CLOSE": 7.51
     },
     {
-      "DATE": "2026-05-28",
-      "CLOSE": 7.67
+      "DATE": "2026-05-27",
+      "CLOSE": 7.66
     },
     "… 28 more elements of the same shape"
   ],
   "OHLC": [
+    {
+      "DATE": "2026-04-13",
+      "OPEN": 8.3,
+      "HIGH": 8.32,
+      "LOW": 8.0,
+      "CLOSE": 8.08,
+      "VOLUME": 10910608
+    },
     {
       "DATE": "2026-04-14",
       "OPEN": 8.09,
@@ -65,14 +73,6 @@ A real record, the most complete of the 600 (the one with the most non-empty fie
       "LOW": 7.68,
       "CLOSE": 7.84,
       "VOLUME": 12618341
-    },
-    {
-      "DATE": "2026-04-15",
-      "OPEN": 7.84,
-      "HIGH": 7.97,
-      "LOW": 7.7,
-      "CLOSE": 7.75,
-      "VOLUME": 19372451
     },
     "… 58 more elements of the same shape"
   ],
@@ -97,22 +97,22 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 |---|---|---|---|---|---|
 | `TICKER` | string | required | The record's id (the business key) | pattern `^EQ-` | `"EQ-GRNT"` |
 | `NAME` | string | required | The issuing company's name. | — | `"Granite Building Materials plc"` |
-| `PRICE` | number | required | The share price (the last OHLC close), in CURRENCY per share. | unit: CURRENCY | `7.15` |
-| `CHANGE_1D` | number | required | The day's move of PRICE, as a fraction (0.03852 is +3.852%). | unit: fraction | `-0.00832` |
-| `MARKET_CAP` | integer | required | The market capitalisation (price times shares outstanding), converted to USD. | unit: USD | `23189509200` |
+| `PRICE` | number | required | The share price (the last OHLC close), in CURRENCY per share. | unit: CURRENCY | `7.21` |
+| `CHANGE_1D` | number | required | The day's move of PRICE, as a fraction (0.03852 is +3.852%). | unit: fraction | `-0.01503` |
+| `MARKET_CAP` | integer | required | The market capitalisation (price times shares outstanding), converted to USD. | unit: USD | `23384106480` |
 | `SECTOR` | string | required | The company's sector (Airlines, Technology …). | — | `"Materials"` |
 | `EXCHANGE` | string | required | The listing exchange (NYSE, NASDAQ, LSE, TSX …). | one of `Euronext Paris`, `LSE`, `NASDAQ`, `NYSE`, `SIX`, `TSE`, `TSX`, `Xetra` | `"LSE"` |
 | `CURRENCY` | string | required | The currency the share is quoted in, ISO 4217. | one of `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` | `"GBP"` |
 | `HISTORY` | array of objects | required | The daily closes, oldest first: one object per business day (the last 30 of OHLC). | — | [30 objects] |
-| `HISTORY[].DATE` | date (YYYY-MM-DD) | required | A business day of the close history, oldest first, ending at the record's date. | — | `"2026-05-27"` |
-| `HISTORY[].CLOSE` | number | required | The share's closing price that day, in the equity's currency. | unit: equity currency | `7.66` |
+| `HISTORY[].DATE` | date (YYYY-MM-DD) | required | A business day of the close history, oldest first, ending at the record's date. | — | `"2026-05-26"` |
+| `HISTORY[].CLOSE` | number | required | The share's closing price that day, in the equity's currency. | unit: equity currency | `7.51` |
 | `OHLC` | array of objects | required | The daily bars, oldest first: one object per business day (open, high, low, close in CURRENCY, volume in shares). | — | [60 objects] |
-| `OHLC[].DATE` | date (YYYY-MM-DD) | required | A business day of the daily bars, oldest first, ending at the record's date. | — | `"2026-04-14"` |
-| `OHLC[].OPEN` | number | required | The day's opening price, in the equity's currency. | unit: equity currency | `8.09` |
-| `OHLC[].HIGH` | number | required | The day's high price. | unit: equity currency | `8.13` |
-| `OHLC[].LOW` | number | required | The day's low price. | unit: equity currency | `7.68` |
-| `OHLC[].CLOSE` | number | required | The day's closing price. | unit: equity currency | `7.84` |
-| `OHLC[].VOLUME` | integer | required | The number of shares traded that day. | unit: shares | `12618341` |
+| `OHLC[].DATE` | date (YYYY-MM-DD) | required | A business day of the daily bars, oldest first, ending at the record's date. | — | `"2026-04-13"` |
+| `OHLC[].OPEN` | number | required | The day's opening price, in the equity's currency. | unit: equity currency | `8.3` |
+| `OHLC[].HIGH` | number | required | The day's high price. | unit: equity currency | `8.32` |
+| `OHLC[].LOW` | number | required | The day's low price. | unit: equity currency | `8.0` |
+| `OHLC[].CLOSE` | number | required | The day's closing price. | unit: equity currency | `8.08` |
+| `OHLC[].VOLUME` | integer | required | The number of shares traded that day. | unit: shares | `10910608` |
 | `IDENTIFIERS` | object | required | The share's other identifiers: ISIN, Bloomberg ticker, RIC and FIGI. | — | {…} |
 | `IDENTIFIERS.ISIN` | string | required | The share's ISIN (synthetic in the test data). | — | `"GB0GRNT00017"` |
 | `IDENTIFIERS.BLOOMBERG` | string | required | The Bloomberg ticker (ticker, exchange code, Equity). | — | `"GRNT LS Equity"` |

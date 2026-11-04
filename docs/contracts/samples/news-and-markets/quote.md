@@ -23,7 +23,7 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 
 |  |  |
 |---|---|
-| Path | `data/testdata/news-and-markets/quote/` + `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/news-and-markets/quote/` + `quote.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `QUOTE_ID` |
 | Date field | none in the record: a snapshot of public data, its file named by the capture date; the demo lake serves the same records on every business date (partition `business_date`) |

@@ -131,8 +131,8 @@ notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
 review:
-- 'required inferred from 100% coverage in 8 documents (4 samples and 4 test-data documents (data/testdata/market-data/inflation-index/snapshot-2026-07-08.jsonl.gz,
-  data/testdata/market-data/inflation-index/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
+- 'required inferred from 100% coverage in 8 documents (4 samples and 4 test-data documents (data/testdata/market-data/inflation-index/inflation-index.2026-07-08.jsonl.gz,
+  data/testdata/market-data/inflation-index/inflation-index.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional
   one may be empty.'
 - 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'

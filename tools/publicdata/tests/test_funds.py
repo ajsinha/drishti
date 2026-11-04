@@ -33,6 +33,8 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent))
 import funds as FU  # noqa: E402
 import pdbase as B  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "lake"))
+import feedfiles as FF  # noqa: E402
 
 FX = HERE / "fixtures" / "funds"
 
@@ -83,9 +85,9 @@ def test_the_build_chooses_by_net_assets_and_links_holdings_to_companies(cache):
 def test_an_offline_widened_refresh_writes_a_pack_in_the_data_folder(cache, data_dir, capsys):
     rc = FU.refresh(ns(cache, scope="FUNDS:2,HOLDINGS:20"))
     assert rc == 0, capsys.readouterr().out
-    parts = sorted((data_dir / "publicdata" / "funds" / "testdata" / "funds" / "fund").glob("snapshot-*.jsonl.gz"))
-    assert parts, "the widened build's snapshot"
-    docs = [json.loads(x) for p in parts for x in gzip.open(p, "rt", encoding="utf-8") if x.strip()]
+    folder = data_dir / "publicdata" / "funds" / "testdata" / "funds" / "fund"
+    assert folder.is_dir() and any(folder.iterdir()), "the widened build's snapshot"
+    docs = [json.loads(x) for _d, x in FF.lines(folder)]                 # fund.<date>.jsonl.gz, or a tar of its parts
     assert [d["TICKER"] for d in docs] == ["VOO", "QQQ"] and all(len(d["HOLDINGS"]) <= 20 for d in docs)
     assert (data_dir / "publicdata" / "funds" / "packs" / "funds" / "pack.yaml").is_file()
     man = json.loads((data_dir / "publicdata" / "funds" / "manifest.json").read_text(encoding="utf-8"))

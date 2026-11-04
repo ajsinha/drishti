@@ -281,8 +281,8 @@ notes:
 - 'BETA is not kept on the record: the computed kind equity-beta (EQB) works it out from the equity''s and its index''s price histories (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md,
   section 17).'
 review:
-- 'required inferred from 100% coverage in 30 documents (10 samples and 20 test-data documents (data/testdata/market-data/equity/snapshot-2026-07-08.jsonl.gz,
-  data/testdata/market-data/equity/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may
+- 'required inferred from 100% coverage in 30 documents (10 samples and 20 test-data documents (data/testdata/market-data/equity/equity.2026-07-08.jsonl.gz,
+  data/testdata/market-data/equity/equity.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may
   be empty.'
 - 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'

@@ -197,11 +197,11 @@ class Watch(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def put(self, name, *docs):
+    def put(self, name, *docs):                                        # named by its business date (the load rules)
         (self.drop / name).write_text("".join(json.dumps(d) + "\n" for d in docs))
 
     def watch(self, *extra):
-        argv = ["data", "ingest", "--watch", str(self.drop), "--once", "--stable-seconds", "0", "--domain", "dom", "--key", "id", "--date", "bd",
+        argv = ["data", "ingest", "--watch", str(self.drop), "--once", "--stable-seconds", "0", "--domain", "dom", "--key", "id",
                 "--store", "files", "--root", str(self.root), *extra]
         return run(*argv)
 
@@ -241,8 +241,8 @@ class Watch(unittest.TestCase):
         self.assertEqual(2, len(list(self.done.glob("*.jsonl"))))
 
     def test_failure_is_not_recorded_and_exits_1(self):
-        self.put("trade.jsonl", {"id": "A", "bd": "2026-09-01"})
-        (self.drop / "trade.jsonl").write_text('{"id": "A", "bd": "2026-09-01"}\nnot json\n')
+        self.put("trade.2026-09-01.jsonl", {"id": "A", "bd": "2026-09-01"})
+        (self.drop / "trade.2026-09-01.jsonl").write_text('{"id": "A", "bd": "2026-09-01"}\nnot json\n')
         code, out, _ = self.watch()
         self.assertEqual(1, code)                                         # a bad line is reported
         self.assertIn("bad line", out)

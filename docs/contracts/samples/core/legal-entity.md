@@ -23,10 +23,10 @@ The bank's own booking entity. One row per bank legal entity per business date, 
 
 |  |  |
 |---|---|
-| Path | `data/testdata/core/legal-entity/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/core/legal-entity/` + `legal-entity.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `ENTITY_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -54,21 +54,21 @@ A real record, the most complete of the 240 (the one with the most non-empty fie
       "BOOK": "BOOK-SFT-1",
       "DESK": "Repo and securities lending",
       "PNL": -11770547,
-      "MTM": 341315435,
+      "MTM": 337967490,
       "TRADES": 243
     },
     {
       "BOOK": "BOOK-SFT-2",
       "DESK": "Repo and securities lending",
       "PNL": 2468694,
-      "MTM": -301980861,
+      "MTM": -301676943,
       "TRADES": 206
     },
     {
       "BOOK": "BOOK-SFT-3",
       "DESK": "Repo and securities lending",
       "PNL": -3629859,
-      "MTM": -40614519,
+      "MTM": -41266285,
       "TRADES": 162
     }
   ]
@@ -93,7 +93,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `BOOKS[].BOOK` | string | required | The book: a BOOK_ID of the core pack's book kind (BOOK-…). | pattern `^BOOK-`; links to `book` | `"BOOK-SFT-1"` |
 | `BOOKS[].DESK` | string | required | The NAME of the book's desk (a name such as Repo and securities lending, not a DESK_ID, although the contract links it to desk). | links to `desk` | `"Repo and securities lending"` |
 | `BOOKS[].PNL` | integer | required | The book's one-day P&L: the sum of its trades' PNL_1D, gain positive. | unit: USD | `-11770547` |
-| `BOOKS[].MTM` | integer | required | The book's mark to market: the sum of its trades' MTM, from the bank's side (positive is owed to the bank). | unit: USD | `341315435` |
+| `BOOKS[].MTM` | integer | required | The book's mark to market: the sum of its trades' MTM, from the bank's side (positive is owed to the bank). | unit: USD | `337967490` |
 | `BOOKS[].TRADES` | integer | required | The number of trades in the book. | — | `243` |
 
 ## Fields in other rows

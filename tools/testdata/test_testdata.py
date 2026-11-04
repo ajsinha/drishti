@@ -22,7 +22,6 @@ PyYAML only.
 """
 from __future__ import annotations
 
-import gzip
 import json
 import re
 import sys
@@ -33,7 +32,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 TD = ROOT / "data" / "testdata"
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "trades"))
+sys.path.insert(0, str(ROOT / "tools" / "lake"))
 import schema as TS  # noqa: E402
+import feedfiles as FF  # noqa: E402  (our dated files and tars: DATA_LOAD_RULES.md section 10)
+import filedate  # noqa: E402
 
 UPPER = re.compile(r"^[A-Z][A-Z0-9_]*$")
 REAL = [Path.home() / "Downloads" / "endur.json", Path.home() / "Downloads" / "ComSwap.json"]
@@ -45,19 +47,23 @@ def manifest() -> dict:
     return yaml.safe_load((TD / "testdata.yaml").read_text(encoding="utf-8"))
 
 
-def lines(path: Path):
-    with gzip.open(path, "rt", encoding="utf-8") as fh:
-        for line in fh:
-            if line.strip():
-                yield json.loads(line)
+def lines(path):
+    """The documents of a file, a folder of feed files (every date), or a feedfiles.Part."""
+    if hasattr(path, "lines"):
+        for line in path.lines():
+            yield json.loads(line)
+        return
+    for _day, line in FF.lines(path):
+        yield json.loads(line)
 
 
 def rebuild(folder: str, key: str, dates: list[str], upto: int | None = None) -> list[dict]:
-    """The dataset's documents on day ``upto`` (default the last): the snapshot, then each day's changes by key."""
+    """The dataset's documents on day ``upto`` (default the last): the first day's snapshot, then each day's changes by key."""
     state: dict[str, dict] = {}
-    for i, day in enumerate(dates[: (len(dates) - 1 if upto is None else upto) + 1]):
-        for f in sorted((TD / folder).glob(f"{'snapshot' if i == 0 else 'changes'}-{day}*.jsonl.gz")):
-            for d in lines(f):
+    parts = FF.read_table(TD / folder)
+    for day in dates[: (len(dates) - 1 if upto is None else upto) + 1]:
+        for p in parts.get(day, []):
+            for d in lines(p):
                 state[str(d[key])] = d
     return list(state.values())
 
@@ -83,11 +89,12 @@ class TestData(unittest.TestCase):
         cls.dates = cls.m["business-dates"]
 
     def test_files_are_small_and_the_whole_within_budget(self):
-        files = list(TD.rglob("*.jsonl.gz"))
-        big = [f"{f.relative_to(TD)} {f.stat().st_size / 1e6:.1f} MB" for f in files if f.stat().st_size > 10 * 1024 * 1024]
-        self.assertEqual(big, [], "a file above 10 MB: lower --part-mb")
+        files = [f for f in TD.rglob("*") if f.is_file() and f.name.endswith((".jsonl.gz", ".tar"))]
+        big = [f"{f.relative_to(TD)} {f.stat().st_size / 1e6:.1f} MB" for f in files
+               if f.stat().st_size > (25 if f.name.endswith(".tar") else 10) * 1024 * 1024]
+        self.assertEqual(big, [], "a file above 10 MB (a tar of one date above 25 MB)")
         total = sum(f.stat().st_size for f in files)
-        # sixty days and the VaR data's three business dates, about 181 MB; GitHub refuses files over 100 MB, none is over 10
+        # sixty days and the VaR data's three business dates, about 182 MB; GitHub refuses files over 100 MB, none is over 25
         self.assertLess(total, 190e6, f"{total / 1e6:.1f} MB committed")
         self.assertEqual(sorted(p.name for p in TD.iterdir() if p.is_file()), ["README.md", "testdata.yaml"])
 
@@ -116,21 +123,25 @@ class TestData(unittest.TestCase):
             if "samples" in ds:
                 self.assertTrue((ROOT / ds["samples"]).is_dir(), ds)
                 continue
+            folder = TD / ds["folder"]
+            # every file named by the load rules: <table>.<YYYY-MM-DD>.jsonl.gz, or a tar of <table>/<YYYY-MM-DD>/ folders
+            for f in FF.files(folder):
+                n = filedate.parse(f.name)
+                self.assertIsNone(n.error, f"{ds['folder']}/{f.name}: {n.error}")
+                self.assertTrue(n.tar or n.date is not None, f"{ds['folder']}/{f.name}: no date in its name")
+            days = FF.read_table(folder)
             if "snapshot" in ds:
-                self.assertTrue((TD / ds["folder"] / ds["snapshot"]).is_file(), ds)
-                for part in ds.get("parts") or []:          # a large snapshot in parts: every part there, the first one named
-                    self.assertTrue((TD / ds["folder"] / part).is_file(), part)
-                if ds.get("parts"):
-                    self.assertEqual(ds["parts"][0], ds["snapshot"], ds["folder"])
+                self.assertEqual(sorted(f.name for f in FF.files(folder)), sorted(ds["files"]), ds["folder"])
+                self.assertEqual(max(days), ds["captured"][:10], ds["folder"])
                 continue
-            if ds.get("dated-by"):                          # the VaR data: dated by its documents, within the test data's days or before
-                self.assertEqual(sorted(f.name for f in (TD / ds["folder"]).glob("*.jsonl.gz")), sorted(ds["files"]), ds["folder"])
+            if ds.get("dated-by"):                          # the VaR data: dated by its files, within the test data's days or before
+                self.assertEqual(sorted(f.name for f in FF.files(folder)), sorted(ds["files"]), ds["folder"])
+                self.assertEqual((min(days), max(days)), (ds["first-date"], ds["last-date"]), ds["folder"])
                 self.assertLessEqual(ds["last-date"], self.dates[-1], ds["folder"])
                 continue
-            folder = TD / ds["folder"]
-            self.assertTrue(list(folder.glob(f"snapshot-{self.dates[0]}*.jsonl.gz")), ds["folder"])
-            for day in self.dates[1:]:
-                self.assertTrue(list(folder.glob(f"changes-{day}*.jsonl.gz")), f"{ds['folder']} {day}")
+            self.assertEqual(list(days), self.dates, ds["folder"])            # one file a day (a day without a change: an empty one)
+            self.assertEqual(sorted(f.name for f in FF.files(folder)), sorted(f for d in ds["days"] for f in d["files"]), ds["folder"])
+            self.assertTrue(days.get(self.dates[0]), ds["folder"])
         self.assertEqual({ds["pack"] for ds in self.m["datasets"]},
                          {"core", "market-data", "trading", "counterparty-risk", "market-risk", "world-economy", "news-and-markets",
                           "us-equities", "gleif", "funds", "compute-demo"})
@@ -165,13 +176,22 @@ class TestData(unittest.TestCase):
                 self.assertAlmostEqual(today["CHANGE_1D"], today[price] / before[price] - 1, places=4, msg=f"{folder} {some} day {i}")
 
     def test_every_committed_data_file_is_gzipped_and_small(self):
-        """Git hosts and a Windows checkout stay comfortable: every data file under data/testdata is gzipped (only the manifest and
-        the README are not) and none is over 5 MB; a large kind is cut into parts (tools/testdata/publicsnap.py PART_BYTES)."""
+        """Git hosts and a Windows checkout stay comfortable: every data file under data/testdata is gzipped JSON Lines, alone or in a
+        plain tar (only the manifest and the README are not), and no file of rows is over 5 MB; a large kind is cut into parts
+        (tools/testdata/publicsnap.py PART_BYTES), a date's parts one tar."""
         plain, big = [], []
         for f in sorted(TD.rglob("*")):
             if not f.is_file() or f.parent == TD and f.name in ("README.md", "testdata.yaml"):
                 continue
-            if not f.name.endswith(".gz"):
+            if f.name.endswith(".tar"):
+                import tarfile
+                with tarfile.open(f) as t:
+                    for m in t.getmembers():
+                        if not m.name.endswith(".gz"):
+                            plain.append(f"{f.relative_to(TD)}!/{m.name}")
+                        elif m.size > 5 * 1024 * 1024:
+                            big.append(f"{f.relative_to(TD)}!/{m.name} ({m.size / 1e6:.1f} MB)")
+            elif not f.name.endswith(".gz"):
                 plain.append(str(f.relative_to(TD)))
             elif f.stat().st_size > 5 * 1024 * 1024:
                 big.append(f"{f.relative_to(TD)} ({f.stat().st_size / 1e6:.1f} MB)")
@@ -182,8 +202,8 @@ class TestData(unittest.TestCase):
         for ds in self.m["datasets"]:
             if "folder" not in ds:
                 continue
-            f = TD / ds["folder"] / ds["snapshot"] if "snapshot" in ds else TD / ds["folder"] / ds["files"][0] if ds.get("dated-by") \
-                else sorted((TD / ds["folder"]).glob(f"snapshot-{self.dates[0]}*.jsonl.gz"))[0]
+            got = FF.read_table(TD / ds["folder"])
+            f = got[min(got)][0]                                # the first date's first file
             for n, d in enumerate(lines(f)):
                 bad = sorted({k for k in names(d) if not UPPER.match(k)})
                 self.assertEqual(bad, [], f"{ds['folder']}: {bad[:5]}")
@@ -257,16 +277,17 @@ class TestData(unittest.TestCase):
         want = CM.targets(ROOT / "config" / "packs" / "news-and-markets")
         for kind, ds in snaps.items():
             self.assertEqual((ds["pack"], ds["connector"]), ("news-and-markets", "news-store"))
-            docs = {d[ds["key"]]: d for d in lines(TD / ds["folder"] / ds["snapshot"])}
+            docs = {d[ds["key"]]: d for d in lines(TD / ds["folder"])}
             self.assertEqual(len(docs), ds["documents"])
-            self.assertTrue(re.fullmatch(r"snapshot-\d{4}-\d{2}-\d{2}\.jsonl\.gz", ds["snapshot"]), ds["snapshot"])
+            self.assertEqual(len(ds["files"]), 1, ds["files"])
+            self.assertTrue(re.fullmatch(kind + r"\.\d{4}-\d{2}-\d{2}\.jsonl\.gz", ds["files"][0]), ds["files"])
             self.assertLess(ds["bytes"], 3 * 1024 * 1024, "keep the snapshot small")
             gone = [i for i in want[kind] if i not in docs]
             self.assertLessEqual(len(gone), len(want[kind]) // 10, f"{kind}: not captured {gone}")
             for d in docs.values():
                 self.assertTrue(d["SNAPSHOT"].startswith("Snapshot captured ") and d["SNAPSHOT_CAPTURED_AT"].endswith("Z"), d[ds["key"]])
                 self.assertIn("SNAPSHOT", d["PROVENANCE"])
-        quotes = [d for d in lines(TD / snaps["quote"]["folder"] / snaps["quote"]["snapshot"])]
+        quotes = [d for d in lines(TD / snaps["quote"]["folder"])]
         self.assertTrue(all(len(q["HISTORY"]) >= 200 for q in quotes), "about a year of daily bars per company")
 
     def test_no_real_data_in_the_test_data(self):
@@ -286,13 +307,13 @@ class TestData(unittest.TestCase):
                 for f in ("COUNTERPARTY", "ORIGINAL_COUNTERPARTY"):
                     if t.get(f):
                         parties.add(str(t[f]))
-        ours = {str(t["TRADE_ID"]) for s in ("endur", "calypso", "murex") for f in (TD / "trades" / s).glob("*.jsonl.gz") for t in lines(f)}
+        ours = {str(t["TRADE_ID"]) for s in ("endur", "calypso", "murex") for t in lines(TD / "trades" / s)}
         self.assertEqual(sorted(ids & ours), [], "a real trade id is in data/testdata")
         needles = [json.dumps(p).encode() for p in parties]
-        for f in TD.rglob("*.jsonl.gz"):
-            body = gzip.decompress(f.read_bytes())
-            hits = [n for n in needles if n in body]
-            self.assertEqual(hits, [], f"{f.relative_to(TD)} names a real counterparty")
+        for folder in sorted({f.parent for f in TD.rglob("*") if f.is_file() and f.name.endswith((".jsonl.gz", ".tar"))}):
+            for label, body in FF.contents(folder).items():
+                hits = [n for n in needles if n in body]
+                self.assertEqual(hits, [], f"{folder.relative_to(TD)}/{label} names a real counterparty")
 
 
 if __name__ == "__main__":

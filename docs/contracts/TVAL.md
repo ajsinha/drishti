@@ -427,7 +427,7 @@ Measured numbers will be recorded in this section after the build (a `TvalScaleB
 
 | Item | Plan |
 |---|---|
-| Folder | `data/testdata/market-risk/valuation/cob-<date>.jsonl.gz`, one file per business date, listed in `data/testdata/testdata.yaml` |
+| Folder | `data/testdata/market-risk/valuation/valuation.<date>.jsonl.gz`, one file per business date, listed in `data/testdata/testdata.yaml` |
 | Dates | the last **5** business dates (2026-09-24 to 2026-09-30) for the day-over-day change and P&L explain; open question 7 |
 | Trades | the full live set the VaR generator uses (about 9,572 on 2026-09-30; at most 10,000 trades in any local test data, as [VAR_GUIDE.md section 22.1](../guides/VAR_GUIDE.md#221-what-the-repository-ships-verified-2026-10-25-version-13)) |
 | Generator | a new `tools/packgen/risk/valuations.py` (proposed), run by `tools/testdata/make_testdata.py`; deterministic (Python `Random` seeded by text, as `tools/packgen/var/factors.py`) |

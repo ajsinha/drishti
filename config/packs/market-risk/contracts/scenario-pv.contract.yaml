@@ -467,8 +467,8 @@ notes:
   date (DRS-5202).'
 - '1.1: SCENARIO_PV is required on every row except an intraday cancel (TRADE_STATUS CANCELLED) or a failed row (STATUS failed), where it is null; TRADE_STATUS may be CANCELLED.'
 review:
-- 'required inferred from 100% coverage in 1340 documents (1 samples and 1339 test-data documents (data/testdata/market-risk/scenario-pv/cob-2026-09-30.part-001.jsonl.gz,
-  data/testdata/market-risk/scenario-pv/cob-2026-09-30.part-002.jsonl.gz, data/testdata/market-risk/scenario-pv/cob-2026-09-30.part-003.jsonl.gz)):
+- 'required inferred from 100% coverage in 1340 documents (1 samples and 1339 test-data documents (data/testdata/market-risk/scenario-pv/scenario-pv-2026-09-30.tar,
+  data/testdata/market-risk/scenario-pv/scenario-pv-2026-09-30.tar, data/testdata/market-risk/scenario-pv/scenario-pv-2026-09-30.tar)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'source is the pack''s first listed source (its README): confirm.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'

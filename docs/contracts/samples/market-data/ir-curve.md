@@ -23,10 +23,10 @@ Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a c
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-data/ir-curve/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-data/ir-curve/` + `ir-curve.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `CURVE_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -53,24 +53,24 @@ The example is from the **Cross-currency basis** record.
 | `CURRENCY` | string | required | The curve's currency, ISO 4217. | one of `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` | `"AUD"` |
 | `CURVE_TYPE` | string | required | What the curve is for: Discount (OIS), Projection, Government or Cross-currency basis. | one of `Cross-currency basis`, `Discount (OIS)`, `Government`, `Projection` | `"Cross-currency basis"` |
 | `INDEX` | string | required | The overnight rate the currency's curves are built on (SOFR, ESTR, SONIA, TONA, SARON, AONIA, CORRA). | one of `AONIA`, `CORRA`, `ESTR`, `SARON`, `SOFR`, `SONIA`, `TONA` | `"AONIA"` |
-| `TEN_Y` | number | required | The 10-year zero rate, as a fraction (0.0422 is 4.22%). | unit: fraction | `0.038594` |
-| `SLOPE_2S_10S` | number | required | The 10-year zero rate minus the 2-year, in basis points. | unit: bp | `46.0` |
-| `AS_OF` | date (YYYY-MM-DD) | required | The date the curve was built for (the business date). | — | `"2026-07-09"` |
+| `TEN_Y` | number | required | The 10-year zero rate, as a fraction (0.0422 is 4.22%). | unit: fraction | `0.038427` |
+| `SLOPE_2S_10S` | number | required | The 10-year zero rate minus the 2-year, in basis points. | unit: bp | `46.3` |
+| `AS_OF` | date (YYYY-MM-DD) | required | The date the curve was built for (the business date). | — | `"2026-07-08"` |
 | `POINTS` | array of objects | required | The curve's pillars, shortest tenor first: one object per tenor (1M to 30Y). | — | [12 objects] |
 | `POINTS[].TENOR` | string | required | The pillar's tenor (1M.. 30Y). | — | `"1M"` |
-| `POINTS[].MATURITY` | date (YYYY-MM-DD) | required | The pillar's maturity date: the record's date plus the tenor. | — | `"2026-08-07"` |
+| `POINTS[].MATURITY` | date (YYYY-MM-DD) | required | The pillar's maturity date: the record's date plus the tenor. | — | `"2026-08-06"` |
 | `POINTS[].INSTRUMENT` | string | required | The instrument quoted at the pillar (e.g. SOFR OIS, Deposit / future, Gilt benchmark, Basis swap). | — | `"Deposit / future"` |
-| `POINTS[].QUOTE` | number | required | The pillar instrument's par rate, as a fraction a year (0.0328 is 3.28%). | unit: fraction | `0.033016` |
-| `POINTS[].ZERO_RATE` | number | required | The continuously compounded zero rate to the pillar, in percent (3.2869 is 3.2869%). | unit: percent | `3.307` |
-| `POINTS[].DF` | number | required | The discount factor to the pillar's maturity (exp of minus zero rate times years). | unit: factor | `0.997248` |
+| `POINTS[].QUOTE` | number | required | The pillar instrument's par rate, as a fraction a year (0.0328 is 3.28%). | unit: fraction | `0.032815` |
+| `POINTS[].ZERO_RATE` | number | required | The continuously compounded zero rate to the pillar, in percent (3.2869 is 3.2869%). | unit: percent | `3.2869` |
+| `POINTS[].DF` | number | required | The discount factor to the pillar's maturity (exp of minus zero rate times years). | unit: factor | `0.997264` |
 | `FORWARDS` | array of objects | required | One-year forward rates starting at each tenor (1Y to 20Y): one object per start tenor. | — | [8 objects] |
 | `FORWARDS[].TENOR` | string | required | The start of the 1-year forward period, from the record's date (1Y.. 20Y). | one of `10Y`, `15Y`, `1Y`, `20Y`, `2Y`, `3Y`, `5Y`, `7Y` | `"1Y"` |
-| `FORWARDS[].RATE` | number | required | The 1-year forward rate starting at the tenor, in percent. | unit: percent | `3.4582` |
+| `FORWARDS[].RATE` | number | required | The 1-year forward rate starting at the tenor, in percent. | unit: percent | `3.4391` |
 | `INTERPOLATION` | string | required | How the curve interpolates between pillars (e.g. Log-linear on discount factors). | — | `"Log-linear on discount factors"` |
 | `DAY_COUNT` | string | required | The day-count convention of the zero rates (e.g. ACT/365F). | — | `"ACT/365F"` |
 | `CALENDAR` | string | required | The curve's holiday calendar: a CALENDAR_ID of the core pack's calendar kind (CAL-…). | pattern `^CAL-`; links to `calendar` | `"CAL-GBLO"` |
 | `FIXING_INDEX` | string | required | The overnight index's fixings: an INDEX_ID of the market-data pack's rate-fixing kind (FIX-…). | pattern `^FIX-`; links to `rate-fixing` | `"FIX-AONIA"` |
-| `BUILT_AT` | timestamp (ISO-8601) | required | When the curve was built, ISO-8601 UTC. | — | `"2026-07-09T18:02:41Z"` |
+| `BUILT_AT` | timestamp (ISO-8601) | required | When the curve was built, ISO-8601 UTC. | — | `"2026-07-08T18:02:41Z"` |
 | `SOURCES` | array of strings | required | The quote sources the curve was built from. | — | [2 values] |
 
 ## One record of each sub-type
@@ -87,36 +87,36 @@ Each record is real, the most complete of its sub-type, pretty-printed with two-
   "CURRENCY": "AUD",
   "CURVE_TYPE": "Cross-currency basis",
   "INDEX": "AONIA",
-  "TEN_Y": 0.038594,
-  "SLOPE_2S_10S": 46.0,
-  "AS_OF": "2026-07-09",
+  "TEN_Y": 0.038427,
+  "SLOPE_2S_10S": 46.3,
+  "AS_OF": "2026-07-08",
   "POINTS": [
     {
       "TENOR": "1M",
-      "MATURITY": "2026-08-07",
+      "MATURITY": "2026-08-06",
       "INSTRUMENT": "Deposit / future",
-      "QUOTE": 0.033016,
-      "ZERO_RATE": 3.307,
-      "DF": 0.997248
+      "QUOTE": 0.032815,
+      "ZERO_RATE": 3.2869,
+      "DF": 0.997264
     },
     {
       "TENOR": "3M",
-      "MATURITY": "2026-10-05",
+      "MATURITY": "2026-10-02",
       "INSTRUMENT": "Deposit / future",
-      "QUOTE": 0.033067,
-      "ZERO_RATE": 3.323,
-      "DF": 0.991727
+      "QUOTE": 0.032867,
+      "ZERO_RATE": 3.303,
+      "DF": 0.991777
     },
     "… 10 more elements of the same shape"
   ],
   "FORWARDS": [
     {
       "TENOR": "1Y",
-      "RATE": 3.4582
+      "RATE": 3.4391
     },
     {
       "TENOR": "2Y",
-      "RATE": 3.668
+      "RATE": 3.6496
     },
     "… 6 more elements of the same shape"
   ],
@@ -124,7 +124,7 @@ Each record is real, the most complete of its sub-type, pretty-printed with two-
   "DAY_COUNT": "ACT/365F",
   "CALENDAR": "CAL-GBLO",
   "FIXING_INDEX": "FIX-AONIA",
-  "BUILT_AT": "2026-07-09T18:02:41Z",
+  "BUILT_AT": "2026-07-08T18:02:41Z",
   "SOURCES": [
     "Broker composite",
     "Exchange settlements"
@@ -144,24 +144,24 @@ No fields beyond the shared table.
   "CURRENCY": "AUD",
   "CURVE_TYPE": "Discount (OIS)",
   "INDEX": "AONIA",
-  "TEN_Y": 0.038394,
-  "SLOPE_2S_10S": 46.0,
-  "AS_OF": "2026-07-09",
+  "TEN_Y": 0.038227,
+  "SLOPE_2S_10S": 46.3,
+  "AS_OF": "2026-07-08",
   "POINTS": [
     {
       "TENOR": "1M",
-      "MATURITY": "2026-08-07",
+      "MATURITY": "2026-08-06",
       "INSTRUMENT": "Deposit / future",
-      "QUOTE": 0.032817,
-      "ZERO_RATE": 3.287,
-      "DF": 0.997265
+      "QUOTE": 0.032616,
+      "ZERO_RATE": 3.2669,
+      "DF": 0.997281
     },
     "… 11 more elements of the same shape"
   ],
   "FORWARDS": [
     {
       "TENOR": "1Y",
-      "RATE": 3.4377
+      "RATE": 3.4186
     },
     "… 7 more elements of the same shape"
   ],
@@ -169,7 +169,7 @@ No fields beyond the shared table.
   "DAY_COUNT": "ACT/365F",
   "CALENDAR": "CAL-GBLO",
   "FIXING_INDEX": "FIX-AONIA",
-  "BUILT_AT": "2026-07-09T18:02:41Z",
+  "BUILT_AT": "2026-07-08T18:02:41Z",
   "SOURCES": [
     "Broker composite",
     "Exchange settlements"
@@ -189,24 +189,24 @@ No fields beyond the shared table.
   "CURRENCY": "AUD",
   "CURVE_TYPE": "Government",
   "INDEX": "AONIA",
-  "TEN_Y": 0.037194,
-  "SLOPE_2S_10S": 46.0,
-  "AS_OF": "2026-07-09",
+  "TEN_Y": 0.037027,
+  "SLOPE_2S_10S": 46.3,
+  "AS_OF": "2026-07-08",
   "POINTS": [
     {
       "TENOR": "1M",
-      "MATURITY": "2026-08-07",
+      "MATURITY": "2026-08-06",
       "INSTRUMENT": "Deposit / future",
-      "QUOTE": 0.03162,
-      "ZERO_RATE": 3.167,
-      "DF": 0.997365
+      "QUOTE": 0.031419,
+      "ZERO_RATE": 3.1469,
+      "DF": 0.997381
     },
     "… 11 more elements of the same shape"
   ],
   "FORWARDS": [
     {
       "TENOR": "1Y",
-      "RATE": 3.3149
+      "RATE": 3.2958
     },
     "… 7 more elements of the same shape"
   ],
@@ -214,7 +214,7 @@ No fields beyond the shared table.
   "DAY_COUNT": "ACT/365F",
   "CALENDAR": "CAL-GBLO",
   "FIXING_INDEX": "FIX-AONIA",
-  "BUILT_AT": "2026-07-09T18:02:41Z",
+  "BUILT_AT": "2026-07-08T18:02:41Z",
   "SOURCES": [
     "Broker composite",
     "Exchange settlements"
@@ -234,24 +234,24 @@ No fields beyond the shared table.
   "CURRENCY": "AUD",
   "CURVE_TYPE": "Projection",
   "INDEX": "AONIA",
-  "TEN_Y": 0.038994,
-  "SLOPE_2S_10S": 46.0,
-  "AS_OF": "2026-07-09",
+  "TEN_Y": 0.038827,
+  "SLOPE_2S_10S": 46.3,
+  "AS_OF": "2026-07-08",
   "POINTS": [
     {
       "TENOR": "1M",
-      "MATURITY": "2026-08-07",
+      "MATURITY": "2026-08-06",
       "INSTRUMENT": "Deposit / future",
-      "QUOTE": 0.033415,
-      "ZERO_RATE": 3.347,
-      "DF": 0.997215
+      "QUOTE": 0.033214,
+      "ZERO_RATE": 3.3269,
+      "DF": 0.997231
     },
     "… 11 more elements of the same shape"
   ],
   "FORWARDS": [
     {
       "TENOR": "1Y",
-      "RATE": 3.4992
+      "RATE": 3.4801
     },
     "… 7 more elements of the same shape"
   ],
@@ -259,7 +259,7 @@ No fields beyond the shared table.
   "DAY_COUNT": "ACT/365F",
   "CALENDAR": "CAL-GBLO",
   "FIXING_INDEX": "FIX-AONIA",
-  "BUILT_AT": "2026-07-09T18:02:41Z",
+  "BUILT_AT": "2026-07-08T18:02:41Z",
   "SOURCES": [
     "Broker composite",
     "Exchange settlements"

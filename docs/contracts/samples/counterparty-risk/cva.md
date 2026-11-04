@@ -23,10 +23,10 @@ Credit, debit and funding valuation adjustments with sensitivities. One row per 
 
 |  |  |
 |---|---|
-| Path | `data/testdata/counterparty-risk/cva/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/counterparty-risk/cva/` + `cva.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `RESULT_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -39,7 +39,7 @@ A real record, the most complete of the 4,373 (the one with the most non-empty f
 ```json
 {
   "RESULT_ID": "CVA-CASCADIA-FRA",
-  "CVA": -44366,
+  "CVA": -44037,
   "DVA": 1363,
   "FVA": -14293,
   "KVA": -41215,
@@ -80,7 +80,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
 | `RESULT_ID` | string | required | The record's id (the business key) | pattern `^CVA-` | `"CVA-CASCADIA-FRA"` |
-| `CVA` | integer | required | The expected loss from the counterparty defaulting, valued at market spreads and taken off the value of the trades. | unit: USD | `-44366` |
+| `CVA` | integer | required | The expected loss from the counterparty defaulting, valued at market spreads and taken off the value of the trades. | unit: USD | `-44037` |
 | `DVA` | integer | required | The mirror image of CVA: the gain from the bank's own possible default, which reduces what it would owe. | unit: USD | `1363` |
 | `FVA` | integer | required | The cost, or benefit, of funding the collateral and the hedges of uncollateralised trades. | unit: USD | `-14293` |
 | `KVA` | integer | required | The cost of holding regulatory capital against the trades over their life. | unit: USD | `-41215` |

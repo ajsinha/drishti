@@ -68,7 +68,7 @@ class PublishTest(unittest.TestCase):
                 by_day.setdefault(d["TRADE_DATE"], []).append(d)
         for day, docs in by_day.items():
             (src / f"trade.{day}.jsonl").write_text("".join(json.dumps(d) + "\n" for d in docs), encoding="utf-8")
-        a = build.build_parser().parse_args(["--from", str(src), "--kind", "trade", "--key", "TRADE_ID", "--date", "TRADE_DATE",
+        a = build.build_parser().parse_args(["--from", str(src), "--kind", "trade", "--key", "TRADE_ID", "--mode", "overwrite-dates",
                                              "--partition-by", "PRODUCT_TYPE", "--promote", promote, "--lake", str(self.root / f"build-{run}"),
                                              "--domain", "trading", "--table", "trade_endur", "--engine", "deltalake", "--no-stamp", "-q"])
         code, s = build.run(a, quiet)

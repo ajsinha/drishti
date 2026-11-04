@@ -700,7 +700,7 @@ page says what that means for data coming in, data going out, and the files Dris
   A document may be as deep as it likes, as long as it stays on its line.
 - **UTF-8**, with or without gzip (`.jsonl.gz`).
 - **Generating and loading are separate steps.** A generator writes JSONL; a loader puts it into a store. `tools/packgen/trades/make_trades.py`
-  is the model: it writes `trades-<date>.jsonl.gz`, then `lake build` loads them. Running a loader never rewrites a pack's samples,
+  is the model: it writes `trade_<system>.<date>.jsonl.gz` (the load rules' name), then `lake build` loads them, each under its name's date. Running a loader never rewrites a pack's samples,
   its Sutra tests or the sample feed.
 
 ### 2. The row forms
@@ -709,22 +709,22 @@ page says what that means for data coming in, data going out, and the files Dris
 |---|---|---|---|
 | **Document** | one entity, as its source holds it: `{"TRADE_ID": "1000015", "LEGS": [...], ...}` | `make_trades.py`, `bulk_trades.py`, `comswap_synth.py`, `note_synth.py`, every pack's `samples/<kind>.jsonl` | `lake build`, `build_demo_lakes.py`, `ingest_jsonl.py`, the file connector, the demo connector |
 | **Loader row** | `{"domain", "kind", "id", "date", "doc", "columns"}`: a document (`doc`, as JSON text) of a kind on a business date, with the fields its pack promotes | `make_data.py --jsonl`, `bulk_trades.py --jsonl` | the Java loaders (PostgreSQL, Cassandra, Iceberg, DuckDB, Redis, MongoDB, Aerospike, the file connector's `JsonlLoader`) |
-| **Lake row** | `{"domain", "kind", "table", "id", "date", "doc"}`: the same, naming the Delta table (`trade_endur`) | `make_data.py --lake`, `samplegen/lake.py`, the pack generators' `--lake` | `tools/samplegen/load_rows.py` |
+| **Lake row** | `{"domain", "kind", "table", "id", "date", "doc"}`: the same, naming the Delta table (`trade_endur`); kept as it is, but stored under the business date of its file by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)), never its own `date` (a row whose `date` differs is counted) | `make_data.py --lake`, `samplegen/lake.py`, the pack generators' `--lake`: tars of `<table>/<YYYY-MM-DD>/rows.jsonl` | `tools/samplegen/load_rows.py` |
 | **Sutra test case** | `{"case": "<name>", "document": {...}}` | every generator of Sutra tests (`tests/<sutra>/cases.jsonl`, beside `expect.yaml`) | `sutra test`; the older one-`.json`-a-case folders still read, with a warning |
 | **Catalogue entry** | `{"kind", "id", "title", "subtitle"}` | every pack generator (`samples/catalog.jsonl`; the `catalog.json` array of earlier releases is still read) | the demo connector, the pack tools |
 | **Staged lake row** | `{"id", "doc", "columns"}` | `lake build`'s staging (`<lake>/_drishti-lake/staging`), the official results' publishers | Drishti's Java lake writer (`LakeWriter`; the earlier `[id, doc, columns]` array a line still read) |
 | **Seal** | `{"key", "count", "hash"}` | the collaboration file store (`<collab dir>/seals.jsonl`) | the same store (the tab-separated `seals.log` of earlier releases still read, never rewritten) |
 
-A **restatement** is a second file of lake rows (`<name>-restated.jsonl`): its rows replace the rows of the same id on their date, as a
+A **restatement** is a second file of lake rows (`<name>-restated.tar`): its rows replace the rows of the same id on their date, as a
 second commit, so *known at* shows the correction.
 
 Where the generators put their output:
 
 | Generator | Output |
 |---|---|
-| `tools/packgen/banking/make_data.py` | `config/packs/<pack>/samples/<kind>.jsonl`; `--lake ROOT`: `<ROOT>/../build/lake-rows/banking-history.jsonl` and `banking-restated.jsonl`, then loaded (`--no-load` stops there); `--jsonl FILE`: loader rows |
-| `tools/samplegen/bulk_trades.py` | `<data>/build/bulk/<system>/trades-<date>.jsonl.gz`, then `lake build` (`--no-lake` stops there) |
-| `tools/packgen/trades/make_trades.py` | `<data>/build/trades/<system>/trades-<date>.jsonl.gz`, then `lake build` with `--lake` |
+| `tools/packgen/banking/make_data.py` | `config/packs/<pack>/samples/<kind>.jsonl`; `--lake ROOT`: `<ROOT>/../build/lake-rows/banking-history.tar` and `banking-restated.tar`, then loaded (`--no-load` stops there); `--jsonl FILE`: loader rows |
+| `tools/samplegen/bulk_trades.py` | `<data>/build/bulk/<system>/trade_<system>.<date>.jsonl.gz`, then `lake build` (`--no-lake` stops there) |
+| `tools/packgen/trades/make_trades.py` | `<data>/build/trades/<system>/trade_<system>.<date>.jsonl.gz`, then `lake build` with `--lake` |
 | `tools/realdata/normalise.py` | `tools/realdata/dataset/*.jsonl` (a country, group, series or Factbook profile a line) and the `meta.json` manifest |
 | the sample feed | `<data>/feeds/fixing.jsonl` (one fixing series a line: `FIX SOFR-HISTORY`) |
 
@@ -878,12 +878,12 @@ folder, or matched by a glob (`/landing/2026-10-28/*.zip`) beside plain `.jsonl`
 | Loader | What an archive becomes |
 |---|---|
 | `drishti.py lake build` (both engines), the parallel lake loader (`LakeLoad`, [TOOLS.md section 4.13](TOOLS.md#413-the-parallel-lake-loader)), the data inbox | a feed ([section 2.8](#8-feeds-the-table-and-business-date-of-a-file)): a `.zip` is one table and one date, its JSON Lines files loose; a tar holds `<table>/<YYYY-MM-DD>/` folders, each table loaded with each folder's date |
-| `tools/samplegen/load_rows.py` | lake rows; each folder is a table and its rows must name it |
-| `tools/build_demo_lakes.py --endur-dir` / `--source-dir` | one archive per business date, `YYYY-MM-DD.zip` (or `.tar.gz`, `.tgz`, `.tar`), without folders |
+| `tools/samplegen/load_rows.py` | a feed of lake rows: a tar's `<table>/<YYYY-MM-DD>/` folders are each row's table (its rows must name it) and business date; a `.zip` or plain file is one table and one date |
+| `tools/build_demo_lakes.py --endur-dir` / `--source-dir` | a feed, as `lake build`: `trade_endur.YYYY-MM-DD.jsonl.zip` (one date's files), or a tar of `trade_endur/YYYY-MM-DD/` folders |
 | `drishti.py convert` | one `.jsonl` file, or one per folder ([CLI_GUIDE.md](CLI_GUIDE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)) |
 
 **One rule for every loader.** The Python loaders (`tools/lake/archives.py`) and the Java loader (`Archives` in `drishti-lakeload`)
-read members and apply the guards below the same way; the datasets rule below is `load_rows.py`'s and `convert`'s (a loader's feed
+read members and apply the guards below the same way; the datasets rule below is `convert`'s (a loader's feed
 follows [section 2.8](#8-feeds-the-table-and-business-date-of-a-file)), and both test suites run the same cases on the same archives (`tools/lake/testdata/archives`, with their
 expected outcomes in `expected.json`; `make_fixtures.py` beside them writes them).
 
@@ -914,7 +914,7 @@ A loose file that is not JSON Lines beside the folders (a `readme.txt`) is only 
 
 Which datasets are configured depends on the loader: a loader that writes one table (`lake build`, the parallel loader without
 `datasets:`) takes an archive without folders whatever its name, and an archive with folders only when its one folder is that table's
-name; the parallel loader with `datasets:` takes the datasets it lists; `load_rows.py` takes each folder as the table its rows name.
+name; the parallel loader with `datasets:` takes the datasets it lists.
 
 **Checked before anything is committed, then a commit per dataset.** Every archive of the run is listed and checked against the rule
 and the guards below before a row is read. With several datasets, every dataset is then read and checked (its rows parsed, its rejects
@@ -952,12 +952,12 @@ and `max-members` in its load file.
 **Examples.**
 
 ```bash
-# a day's trades as one archive, into the one table lake build writes
+# a day's trades as one archive (trade_endur/2026-10-28/*.jsonl), into the table its folder names
 drishti-console/.venv/bin/python tools/drishti.py lake build --from /landing/2026-10-28/trades.tar.gz \
-    --pack config/packs/trading --connector trade-endur --key TRADE_ID --as-of 2026-10-28 --lake data/delta
+    --pack config/packs/trading --connector trade-endur --key TRADE_ID --lake data/delta
 
-# an archive of lake rows, a folder per table
-drishti-console/.venv/bin/python tools/samplegen/load_rows.py --rows /landing/bank-history.zip --root data/delta
+# an archive of lake rows, a <table>/<YYYY-MM-DD>/ folder per table and date
+drishti-console/.venv/bin/python tools/samplegen/load_rows.py --rows /landing/bank-history.tar.gz --root data/delta
 
 # what is inside, as JSON Lines: bundle/trade.jsonl and bundle/position.jsonl
 drishti-console/.venv/bin/python tools/drishti.py convert bundle.zip

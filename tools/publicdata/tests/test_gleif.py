@@ -61,7 +61,7 @@ def ns(cache, **kw):
 
 
 def snap(pack: Path, kind: str) -> list[dict]:
-    """A build's documents of a kind: its snapshot beside the pack folder (<out>/testdata/<pack>/<kind>/snapshot-<date>.jsonl.gz)."""
+    """A build's documents of a kind: its snapshot beside the pack folder (<out>/testdata/<pack>/<kind>/<kind>.<date>.jsonl.gz)."""
     return SNAP.kind_docs(pack.name, kind, pack.parent.parent / "testdata")
 
 

@@ -23,10 +23,10 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 
 |  |  |
 |---|---|
-| Path | `data/testdata/core/counterparty/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/core/counterparty/` + `counterparty.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `COUNTERPARTY_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -49,19 +49,19 @@ A real record, the most complete of the 1,440 (the one with the most non-empty f
   "UEN": "UEN0100148",
   "ECONOMY": "ECON-CAN",
   "NEWS_ID": "NEWS-Cascadia_Airlines_Inc.",
-  "NET_MTM": 393523816.094113,
+  "NET_MTM": 400541282.366474,
   "NETTING_SETS": [
     {
       "ID": "NS-CASCADIA-FRA",
       "AGREEMENT": "AGR-CASCADIA-ISDA",
       "TRADES": 29,
-      "NET_MTM": 12230849.818414
+      "NET_MTM": 12205330.366592
     },
     {
       "ID": "NS-CASCADIA-LDN",
       "AGREEMENT": "AGR-CASCADIA-ISDA",
       "TRADES": 134,
-      "NET_MTM": -146933912.53847
+      "NET_MTM": -140383398.643051
     },
     "… 2 more elements of the same shape"
   ],
@@ -124,12 +124,12 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `UEN` | string | required | The counterparty's unique entity number in the bank's client master (UEN and seven digits); trades carry it as COUNTERPARTY_UEN. | — | `"UEN0100148"` |
 | `ECONOMY` | string | required | The economy of its country: an ECONOMY_ID of the world-economy pack's economy kind (ECON- and the ISO 3166-1 alpha-3 code). | pattern `^ECON-`; links to `economy` | `"ECON-CAN"` |
 | `NEWS_ID` | string | required | Its headlines: a NEWS_ID of the news-and-markets pack's news kind (NEWS- and the name with underscores). | pattern `^NEWS-`; links to `news` | `"NEWS-Cascadia_Airlines_Inc."` |
-| `NET_MTM` | number | required | The sum of the NET_MTM of its netting sets, in the bank's reporting currency (USD in the demo); positive when the counterparty owes the bank. | unit: USD | `393523816.094113` |
+| `NET_MTM` | number | required | The sum of the NET_MTM of its netting sets, in the bank's reporting currency (USD in the demo); positive when the counterparty owes the bank. | unit: USD | `400541282.366474` |
 | `NETTING_SETS` | array of objects | required | The counterparty's netting sets: one object per netting set. | links to `netting-set` | [4 objects] |
 | `NETTING_SETS[].ID` | string | required | The netting set: a NETTING_SET_ID of the counterparty-risk pack's netting-set kind (NS-…). | — | `"NS-CASCADIA-FRA"` |
 | `NETTING_SETS[].AGREEMENT` | string | required | The master agreement governing it: an AGREEMENT_ID of the counterparty-risk pack's agreement kind (AGR-…). | pattern `^AGR-`; links to `agreement` | `"AGR-CASCADIA-ISDA"` |
 | `NETTING_SETS[].TRADES` | integer | required | How many trades the netting set holds. | — | `29` |
-| `NETTING_SETS[].NET_MTM` | number | required | The netting set's net MTM, in the bank's reporting currency (USD in the demo); positive when the counterparty owes the bank. | unit: USD | `12230849.818414` |
+| `NETTING_SETS[].NET_MTM` | number | required | The netting set's net MTM, in the bank's reporting currency (USD in the demo); positive when the counterparty owes the bank. | unit: USD | `12205330.366592` |
 | `KYC` | object | required | The counterparty's know-your-customer record: one object. | — | {…} |
 | `KYC.STATUS` | string | required | The KYC review's outcome (Approved …). | — | `"Approved"` |
 | `KYC.RISK_RATING` | string | required | The KYC risk rating: Standard for a counterparty rated A or better, Enhanced otherwise. | one of `Enhanced`, `Standard` | `"Enhanced"` |

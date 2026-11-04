@@ -27,7 +27,6 @@ and nothing more (docs/guides/VAR_GUIDE.md):
 
     python3 -m pytest tools/packgen/var/test_var_data.py -q          (pyyaml and pytest)
 """
-import gzip
 import json
 import sys
 import unittest
@@ -41,6 +40,8 @@ import positions as P  # noqa: E402
 import rules as R  # noqa: E402
 import scenario_fx as SFX  # noqa: E402
 import varmath as VM  # noqa: E402
+import make_var_data as MV  # noqa: E402
+sys.path.insert(0, str(ROOT / "tools" / "lake"))
 
 TD = ROOT / "data" / "testdata" / "market-risk"
 #: what only the VaR engine produces: never on an input (the guard of docs/contracts/README.md section 14)
@@ -54,13 +55,18 @@ NEWEST = "2026-09-30"
 
 def docs(kind: str, stress: bool = False, day: str | None = NEWEST) -> list[dict]:
     """A kind's documents of the normal scenario set, or (``stress``) of the stress set (its files start with ``stress-``), of the date
-    ``day`` (the newest; None: every date; a kind written for the newest date only names it in its files too)."""
+    ``day`` (the newest; None: every date; a kind written for the newest date only, as the desks' 260-day P&L, whole). The files are
+    dated names or tars of date folders (tools/lake/feedfiles.py)."""
+    import feedfiles
     out = []
-    for f in sorted((TD / kind).glob("*.jsonl.gz")):
-        if f.name.startswith("stress-") != stress or (day is not None and day not in f.name):
+    whole = kind in MV.NEWEST_ONLY
+    for d, parts in feedfiles.read_table(TD / kind).items():
+        if day is not None and not whole and d != day:
             continue
-        with gzip.open(f, "rt", encoding="utf-8") as fh:
-            out += [json.loads(line) for line in fh if line.strip()]
+        for p in parts:
+            if p.label.rsplit("/", 1)[-1].startswith("stress-") != stress:
+                continue
+            out += [json.loads(line) for line in p.lines()]
     return out
 
 

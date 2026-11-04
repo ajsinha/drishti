@@ -19,7 +19,8 @@
     python3 tools/testdata/sample_docs.py audit        every contract against ALL its committed test data: fields missing from the
                                                        contract, contract fields no row has, required fields absent, types that differ
 
-Each page is generated from two sources only: the committed test data (data/testdata/<domain>/<kind>/*.jsonl.gz, every row of every file,
+Each page is generated from two sources only: the committed test data (data/testdata/<domain>/<kind>/: its dated files and tars
+(tools/lake/feedfiles.py), every row of every file,
 read and never written; the pack's samples for the kinds without test data) and the kind's data contract
 (config/packs/<pack>/contracts/<kind>.contract.yaml: every field's meaning, unit, presence and values). A meaning missing on a page is
 fixed in the contract, never here. The page shows the most complete real record (the one with the most non-empty fields) pretty-printed,
@@ -46,6 +47,8 @@ PACKS = ROOT / "config" / "packs"
 OUT = ROOT / "docs" / "contracts" / "samples"
 DOCS = ROOT / "docs"
 GENERATOR = "tools/testdata/sample_docs.py"
+sys.path.insert(0, str(ROOT / "tools" / "lake"))
+import feedfiles as FF  # noqa: E402  (tools/lake/feedfiles.py: our dated feed files and tars)
 
 _spec = importlib.util.spec_from_file_location("drishti_contracts_for_samples", ROOT / "tools" / "contracts.py")
 C = importlib.util.module_from_spec(_spec)
@@ -93,7 +96,7 @@ SUBTYPES = {
 EXTRA_SOURCES = {
     "market-risk/pnl-vector": ["config/packs/market-risk/samples/pnl-vector.jsonl"],
     "market-risk/scenario-pv": ["config/packs/market-risk/samples/scenario-pv.jsonl",
-                                "config/packs/market-risk/samples/intraday/I-2026-09-30-001.scenario-pv.jsonl"],
+                                "config/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl"],
 }
 
 #: what a folded array holds, by field name
@@ -340,12 +343,28 @@ class Scan:
                         self._walk(x, p + "[]", seen)
 
 
-def _lines(f: Path):
+def _lines(f):
+    """The documents of a file (a Path) or of a feed file's part (feedfiles.Part: a dated file, or a tar's member)."""
+    if hasattr(f, "lines"):
+        for line in f.lines():
+            yield json.loads(line)
+        return
     op = gzip.open if f.suffix == ".gz" else open
     with op(f, "rt", encoding="utf-8") as fh:
         for line in fh:
             if line.strip():
                 yield json.loads(line)
+
+
+def _label(f) -> str:
+    """A file's name for the pages: its path under the repository (a tar's member after !/)."""
+    p = getattr(f, "path", f)
+    rel = str(p.relative_to(ROOT)) if p.is_relative_to(ROOT) else str(p)
+    return rel + (f"!/{f.member}" if getattr(f, "member", None) else "")
+
+
+def _size(f) -> int:
+    return getattr(f, "path", f).stat().st_size
 
 
 def manifest() -> dict:
@@ -365,9 +384,10 @@ def pages() -> list[dict]:
         if not d.get("folder"):
             continue
         folder = TESTDATA / d["folder"]
-        files = sorted(folder.glob("*.jsonl.gz"))
+        got = FF.read_table(folder) if folder.is_dir() else {}
+        files = [p for parts in got.values() for p in parts]
         if d.get("dated-by") and d.get("last-date"):        # a dated dataset of several dates (the VaR data's three): its newest date's
-            files = [f for f in files if str(d["last-date"]) in f.name] or files
+            files = got.get(str(d["last-date"])) or files
         out.append({"name": d["folder"], "pack": d["pack"], "kind": d["kind"], "dataset": d, "files": files,
                     "extra": [ROOT / x for x in EXTRA_SOURCES.get(d["folder"], [])]})
         have.add((d["pack"], d["kind"]))
@@ -406,7 +426,7 @@ def scan(page: dict) -> Scan:
     s = Scan(SUBTYPES.get(page["name"], (None, None))[1], {p: x["pattern"] for p, x in cf.items() if x.get("pattern")})
     for f in page["files"]:
         for doc in _lines(f):
-            s.add(doc, str(f.relative_to(ROOT)))
+            s.add(doc, _label(f))
     for f in page["extra"]:
         for doc in _lines(f):
             s.add(doc, str(f.relative_to(ROOT)))
@@ -423,7 +443,7 @@ def scan_all(all_pages: list[dict], workers: int = 4) -> dict[str, Scan]:
     """Every page's scan, the largest first, in a few worker processes (the test data is 150 MB of gzip)."""
     import concurrent.futures as cf
     import multiprocessing as mp
-    order = sorted(all_pages, key=lambda p: -sum(f.stat().st_size for f in p["files"] + p["extra"]))
+    order = sorted(all_pages, key=lambda p: -sum(_size(f) for f in p["files"] + p["extra"]))
     with cf.ProcessPoolExecutor(max_workers=workers, mp_context=mp.get_context("fork")) as ex:
         futs = {p["name"]: ex.submit(_scan_named, p["name"]) for p in order}
         return {name: f.result() for name, f in futs.items()}
@@ -695,8 +715,10 @@ def field_table(s: Scan, paths: list[str], cf: dict, doc: dict) -> list[str]:
                    for p in paths])
 
 
-def _pattern(files: list[Path]) -> str:
-    names = sorted({re.sub(r"\.part-\d+", ".part-NNN", re.sub(r"\d{4}-\d{2}-\d{2}", "YYYY-MM-DD", f.name)) for f in files})
+def _pattern(files: list) -> str:
+    def name(f) -> str:
+        return f"{f.path.name}!/{f.member}" if getattr(f, "member", None) else getattr(f, "path", f).name
+    names = sorted({re.sub(r"\.part-\d+", ".part-NNN", re.sub(r"\d{4}-\d{2}-\d{2}", "YYYY-MM-DD", name(f))) for f in files})
     return ", ".join(f"`{n}`" for n in names)
 
 
@@ -739,7 +761,7 @@ def _cadence(page: dict, s: Scan) -> str:
                  f"`INTRADAY`); the forms the test data lacks come from the pack's samples ({', '.join(f'`{f.relative_to(ROOT)}`' for f in page['extra'])})."
                  if page["extra"] else "")
         several = ds.get("first-date") != ds.get("last-date")
-        newest = sum(1 for f in page["files"] for line in gzip.open(f, "rt", encoding="utf-8") if line.strip()) if several else 0
+        newest = sum(1 for f in page["files"] for _ in _lines(f)) if several else 0
         count = f"{newest:,} records on {ds.get('last-date')}" if several else f"{ds.get('documents', s.rows):,} records"
         return (f"Delivered **per close of business**: one file per business date (`{ds['dated-by']}` {ds.get('first-date')}"
                 f"{'' if ds.get('first-date') == ds.get('last-date') else ' to ' + str(ds.get('last-date'))} in the test data), split into "
@@ -754,7 +776,7 @@ def _date_field(c: dict, s: Scan, ds: dict) -> str:
     if d and d in s.keys:
         return f"`{d}` (in every record: the business date it belongs to; the lake's partition `business_date`)"
     if ds.get("days"):
-        return ("none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the "
+        return ("none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the "
                 "lake's partition `business_date`")
     if ds:
         return ("none in the record: a snapshot of public data, its file named by the capture date; the demo lake serves the same "

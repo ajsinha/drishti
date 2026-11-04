@@ -179,7 +179,7 @@ validation:
   kind: us-company
 notes: []
 review:
-- 'required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/us-equities/filing-feed/snapshot-2026-10-24.jsonl.gz)):
+- 'required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/us-equities/filing-feed/filing-feed.2026-10-24.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: ROWS[].FORM, ROWS[].DESCRIPTION: confirm they are closed lists.'

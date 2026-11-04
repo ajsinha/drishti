@@ -22,6 +22,9 @@ that process. Afterwards, as the administrator who started it, the console binds
 (the connector API: validated, written atomically, audited, the old text kept) and announces the load (``POST
 /api/v1/packs/{pack}/loads``), so the server refreshes and people are told. No token is handed to the build process.
 
+The business date of the rows is the load rules' (docs/architecture/DATA_LOAD_RULES.md): the date the administrator gives (as of),
+else the date in the file's name (``trades.2026-11-03.jsonl``), else the business today; never a field of the rows.
+
 Only lake roots listed in ``lakes.roots`` can be written: a lake is a folder under one of them (``<root>/<domain>/<kind>``).
 """
 from __future__ import annotations
@@ -31,6 +34,7 @@ import json
 import os
 import re
 import secrets
+import shutil
 import subprocess
 import sys
 import threading
@@ -46,6 +50,8 @@ from core import tmpdir
 NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
 PATH = re.compile(r"^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$")
 MODES = ("overwrite-dates", "overwrite-partitions", "append")
+#: the columns every load writes of itself (its id, its file): the lake's own, never a pack's layout column
+LOAD_COLUMNS = ("_load_id", "_source_file")
 
 
 class LakeError(Exception):
@@ -109,9 +115,12 @@ class Upload:
     size: int = 0
     created: float = field(default_factory=time.time)
     scan: dict | None = None
+    date: str | None = None                      # the business date the file's name carries (DATA_LOAD_RULES.md), None: none
+    today: str | None = None                     # the business today, the date of a name without one
 
     def view(self) -> dict:
-        return {"id": self.id, "name": self.name, "size": self.size, "scanned": self.scan is not None}
+        return {"id": self.id, "name": self.name, "size": self.size, "scanned": self.scan is not None, "nameDate": self.date,
+                "businessToday": self.today}
 
 
 @dataclass
@@ -157,7 +166,7 @@ class Lakes:
         cut = time.time() - self.cfg.keep_min * 60
         for k, u in list(self.uploads.items()):
             if u.created < cut and not any(j.state in ("running", "built") and j.params.get("upload") == k for j in self.jobs.values()):
-                u.path.unlink(missing_ok=True)
+                shutil.rmtree(u.path.parent, ignore_errors=True)     # the upload's own folder
                 del self.uploads[k]
         for k, j in list(self.jobs.items()):
             if j.state in ("done", "failed") and j.started < cut:
@@ -179,9 +188,10 @@ class Lakes:
         safe = re.sub(r"[^A-Za-z0-9_.-]", "_", Path(name or "upload.json").name)[:80] or "upload.json"
         if not safe.lower().endswith((".json", ".jsonl", ".ndjson", ".gz")):
             raise LakeError(415, "send a .json (array), .jsonl, .ndjson or .gz file")
-        folder = tmpdir.sub_dir("lake-uploads")
         uid = secrets.token_hex(8)
-        path = folder / f"{uid}-{safe}"
+        folder = tmpdir.sub_dir("lake-uploads") / uid             # the file keeps its own name: the load rules read its date from it
+        folder.mkdir(parents=True, exist_ok=True)
+        path = folder / safe
         size = 0
         try:
             with open(path, "wb") as fh:
@@ -191,12 +201,18 @@ class Lakes:
                         raise LakeError(413, f"the file is over {self.cfg.max_upload_mb} MB (lakes.max_upload_mb)", "DRS-5005")
                     fh.write(c)
         except BaseException:
-            path.unlink(missing_ok=True)
+            shutil.rmtree(folder, ignore_errors=True)
             raise
         if size == 0:
-            path.unlink(missing_ok=True)
+            shutil.rmtree(folder, ignore_errors=True)
             raise LakeError(400, "the file is empty")
         u = self.uploads[uid] = Upload(uid, safe, path, owner, size)
+        try:
+            fd = _tool(self.cfg.tools_dir, "filedate")
+            named = fd.of(safe)
+            u.date, u.today = (named.isoformat() if named else None), fd.business_today().isoformat()
+        except LakeError:
+            pass
         return u
 
     async def scan(self, u: Upload) -> dict:
@@ -222,7 +238,7 @@ class Lakes:
                     have = None
                 parts, types = have if have else ([], {})
                 out.append({"root": str(root), "domain": t.parent.name, "kind": t.name, "partitionBy": [p for p in parts if p != "business_date"],
-                            "promoted": [c for c in types if c not in ("id", "doc", "business_date") and c not in parts]})
+                            "promoted": [c for c in types if c not in ("id", "doc", "business_date", *LOAD_COLUMNS) and c not in parts]})
         return out
 
     def figures(self) -> list[dict]:
@@ -258,8 +274,9 @@ class Lakes:
                 raise LakeError(400, f"'{k}' must be a short name (letters, digits, - _ .)")
         if not PATH.match(str(p.get("key") or "")):
             raise LakeError(400, "choose the id field (key)")
-        if not p.get("asOf") and not PATH.match(str(p.get("date") or "")):
-            raise LakeError(400, "choose the business-date field, or one date for the whole file (as of)")
+        if p.get("date"):
+            raise LakeError(400, "a business date comes from outside the rows (DATA_LOAD_RULES.md): the file's name, or a date you give "
+                                 "(as of); never a field of the rows")
         if p.get("asOf") and not re.match(r"^\d{4}-\d{2}-\d{2}$", str(p["asOf"])):
             raise LakeError(400, "as of is a date, yyyy-MM-dd")
         for k in ("partitionBy", "promote"):
@@ -281,7 +298,8 @@ class Lakes:
         a = [py, str(self.cfg.tools_dir / "lake" / "build.py"), "--from", str(u.path), "--lake", str(p["root"]), "--domain", p["domain"],
              "--kind", p["kind"], "--key", p["key"], "--mode", p.get("mode") or "overwrite-dates", "--engine", self.cfg.engine,
              "--progress", str(folder / "progress.json"), "--summary", str(folder / "summary.json"), "--quiet"]
-        a += ["--as-of", p["asOf"]] if p.get("asOf") else ["--date", p["date"]]
+        if p.get("asOf"):                                     # the date the person gives; else the file's name's, else the business today
+            a += ["--as-of", p["asOf"]]
         if p.get("partitionBy"):
             a += ["--partition-by", ",".join(p["partitionBy"])]
         a += ["--promote", ",".join(p.get("promote") or [])]
@@ -364,7 +382,7 @@ def connector_text(current: str | None, root: Path, domain: str, kind: str, colu
     st = doc.get("settings") if isinstance(doc.get("settings"), dict) else {}
     st["root"] = str(root)
     st["domain"] = domain
-    promoted = list((columns or {}).get("promoted") or {})
+    promoted = [c for c in (columns or {}).get("promoted") or {} if c not in LOAD_COLUMNS]
     if promoted:
         lay = st.get("layout") if isinstance(st.get("layout"), dict) else {}
         k = lay.get(kind) if isinstance(lay.get(kind), dict) else {}

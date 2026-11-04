@@ -160,8 +160,8 @@ class BulkTrades(unittest.TestCase):
             out = pathlib.Path(tmp) / "build"
             self.assertEqual(bulk_trades.main(["--trades", "3000", "--days", "2", "--root", tmp, "--out", str(out), "--workers", "2",
                                                "--engine", "deltalake"]), 0)
-            files = sorted((out / "murex").glob("trades-*.jsonl.gz"))         # the generator's output: one JSONL file a day
-            self.assertEqual([f.name for f in files], ["trades-2026-09-29.jsonl.gz", "trades-2026-09-30.jsonl.gz"])
+            files = sorted((out / "murex").glob("trade_murex.*.jsonl.gz"))    # the generator's output: one JSONL file a day, by the load rules
+            self.assertEqual([f.name for f in files], ["trade_murex.2026-09-29.jsonl.gz", "trade_murex.2026-09-30.jsonl.gz"])
             with gzip.open(files[-1], "rt", encoding="utf-8") as f:
                 docs = [json.loads(line) for line in f]
             self.assertEqual(len(docs), 3000)
@@ -186,7 +186,7 @@ class BulkTrades(unittest.TestCase):
             out = pathlib.Path(tmp) / "build"
             self.assertEqual(bulk_trades.main(["--trades", "100", "--days", "1", "--root", str(pathlib.Path(tmp) / "lake"), "--out", str(out),
                                                "--workers", "1", "--no-lake"]), 0)
-            self.assertEqual([f.name for f in (out / "murex").iterdir()], ["trades-2026-09-30.jsonl.gz"])
+            self.assertEqual([f.name for f in (out / "murex").iterdir()], ["trade_murex.2026-09-30.jsonl.gz"])
             self.assertFalse((pathlib.Path(tmp) / "lake").exists())
 
     def test_workers_are_spawned_not_forked_from_a_threaded_process(self):

@@ -70,7 +70,7 @@ class VectorBuildTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
         os.environ["DRISHTI_BI_STORE"] = str(self.root / "bi-store")
-        self.src = self.root / "v.jsonl"
+        self.src = self.root / "pnl-vector.2026-10-23.jsonl"          # its business date in its name (the load rules)
         self.docs = [vector_doc(i) for i in range(25)]
         self.src.write_text("\n".join(json.dumps(d) for d in self.docs) + "\n", encoding="utf-8")
 
@@ -80,7 +80,7 @@ class VectorBuildTest(unittest.TestCase):
 
     def test_round_trip_to_the_bit(self):
         a = build.build_parser().parse_args(["--from", str(self.src), "--lake", str(self.root / "lake"), "--domain", "risk", "--kind", "pnl-vector",
-                                             "--key", "VECTOR_ID", "--date", "BUSINESS_DATE", "--promote", "DESK,TT_BOOK", "--vector", "PNL",
+                                             "--key", "VECTOR_ID", "--promote", "DESK,TT_BOOK", "--vector", "PNL",
                                              "--engine", "deltalake", "-q", "--no-stamp"])
         code, summary = build.run(a, say=lambda *x, **k: None)
         self.assertEqual(code, 0, summary)
@@ -106,7 +106,7 @@ class IcebergFormatTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
         os.environ["DRISHTI_BI_STORE"] = str(self.root / "bi-store")
-        self.src = self.root / "v.jsonl"
+        self.src = self.root / "pnl-vector.2026-10-23.jsonl"          # its business date in its name (the load rules)
         self.docs = [vector_doc(i) for i in range(12)]
         self.docs[3]["PNL"][7] = None                                      # a missing value stays missing
         self.src.write_text("\n".join(json.dumps(d) for d in self.docs) + "\n", encoding="utf-8")
@@ -117,7 +117,7 @@ class IcebergFormatTest(unittest.TestCase):
 
     def args(self, *extra):
         return build.build_parser().parse_args(["--from", str(self.src), "--lake", str(self.root / "ice"), "--domain", "risk", "--kind",
-                                                "pnl-vector", "--key", "VECTOR_ID", "--date", "BUSINESS_DATE", "--promote", "DESK,TT_BOOK",
+                                                "pnl-vector", "--key", "VECTOR_ID", "--promote", "DESK,TT_BOOK",
                                                 "--vector", "PNL", "--format", "iceberg", "-q", "--no-stamp", *extra])
 
     def test_only_overwrite_dates(self):
@@ -127,7 +127,7 @@ class IcebergFormatTest(unittest.TestCase):
 
     def test_an_object_storage_lake_is_for_iceberg_only(self):
         a = build.build_parser().parse_args(["--from", str(self.src), "--lake", "s3://bucket/lake", "--domain", "risk", "--kind", "pnl-vector",
-                                             "--key", "VECTOR_ID", "--date", "BUSINESS_DATE", "-q"])
+                                             "--key", "VECTOR_ID", "-q"])
         code, summary = build.run(a, say=lambda *x, **k: None)
         self.assertEqual(code, build.EXIT_FAILED)
         self.assertIn("is for --format iceberg", summary["error"])

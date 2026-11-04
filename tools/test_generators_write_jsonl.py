@@ -114,6 +114,18 @@ class RunTheGenerators(unittest.TestCase):
         files = data_files(folder)
         self.assertGreaterEqual(len(files), at_least, f"nothing written under {folder}")
         for f in files:
+            if f.name.endswith(".tar"):                      # a tar of <table>/<YYYY-MM-DD>/ JSON Lines (DATA_LOAD_RULES.md): its members
+                import io
+                import tarfile
+                with tarfile.open(f) as t:
+                    for m in t.getmembers():
+                        self.assertTrue(m.name.endswith((".jsonl", ".jsonl.gz")) and m.name.count("/") == 2, f"{f.name}!/{m.name}")
+                        data = t.extractfile(m).read()
+                        text = gzip.decompress(data) if m.name.endswith(".gz") else data
+                        for line in io.BytesIO(text).read().decode("utf-8").splitlines():
+                            if line.strip():
+                                self.assertIsInstance(json.loads(line), dict, f"{f.name}!/{m.name} is not JSON Lines")
+                continue
             self.assertTrue(f.name.endswith((".jsonl", ".jsonl.gz")), f"{f.relative_to(folder)} is not JSON Lines")
             opener = gzip.open if f.name.endswith(".gz") else open
             with opener(f, "rt", encoding="utf-8") as fh:

@@ -77,7 +77,7 @@ class LakeDemo(unittest.TestCase):
             shutil.copytree(ROOT / "data" / "testdata" / "core" / "legal-entity", td / "core" / "legal-entity")
             shutil.copytree(ROOT / "data" / "testdata" / "market-risk" / "risk-hierarchy", td / "market-risk" / "risk-hierarchy")
             shutil.copy(ROOT / "data" / "testdata" / "testdata.yaml", td / "testdata.yaml")
-            snap = td / "core" / "legal-entity" / "snapshot-2026-07-08.jsonl.gz"     # a branch, as an extract may name one
+            snap = td / "core" / "legal-entity" / "legal-entity.2026-07-08.jsonl.gz"     # a branch, as an extract may name one
             with gzip.open(snap, "rt", encoding="utf-8") as f:
                 lines = [x for x in f.read().splitlines() if x.strip()]
             branch = dict(json.loads(lines[0]), ENTITY_ID="LE-SGP", NAME="Drishti Bank plc, Singapore Branch")
@@ -108,7 +108,7 @@ class LakeDemo(unittest.TestCase):
             self.assertEqual(les["LE-NY"]["NAME"], "Example Securities Inc.")
             self.assertEqual(les["LE-FRA"]["NAME"], "Drishti Bank Europe AG")              # not configured: kept
             self.assertEqual(les["LE-SGP"]["NAME"], "Example Bank plc, Singapore Branch")   # the branch keeps its suffix
-            before = {json.loads(x)["ENTITY_ID"]: json.loads(x) for x in gzip.open(ROOT / "data/testdata/core/legal-entity/snapshot-2026-07-08.jsonl.gz",
+            before = {json.loads(x)["ENTITY_ID"]: json.loads(x) for x in gzip.open(ROOT / "data/testdata/core/legal-entity/legal-entity.2026-07-08.jsonl.gz",
                                                                                     "rt", encoding="utf-8") if x.strip()}
             self.assertEqual(les["LE-LDN"].get("LEI"), before["LE-LDN"].get("LEI"))       # identifiers stay
             hier = [d for t in lake.rglob("risk-hierarchy") if (t / "_delta_log").is_dir() for d in self.docs(t)]

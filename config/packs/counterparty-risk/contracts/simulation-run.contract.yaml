@@ -221,7 +221,7 @@ notes:
 - 'An upstream exposure simulation''s record (EXPOSURE_GUIDE.md section 15.2): the grid, the paths, the model; one per run and business date. Drishti reads
   it; nothing in it is computed by Drishti.'
 review:
-- 'required inferred from 100% coverage in 2 documents (1 samples and 1 test-data documents (data/testdata/counterparty-risk/simulation-run/cob-2026-09-30.jsonl.gz)):
+- 'required inferred from 100% coverage in 2 documents (1 samples and 1 test-data documents (data/testdata/counterparty-risk/simulation-run/simulation-run.2026-09-30.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'source is the pack''s first listed source (its README): confirm.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'

@@ -200,7 +200,7 @@ class DeployAwsTest(unittest.TestCase):
         lines = [ln for ln in r.stderr.splitlines() if ln.startswith("+ ")]
         build = next(ln for ln in lines if " lake build " in ln)
         for part in ("--format iceberg", "--lake s3://acme-drishti-test-lake/iceberg", "--domain risk", "--table pnl-vector",
-                     "--date BUSINESS_DATE", "--iceberg-set s3.region=eu-west-2", "--connector risk-store"):
+                     "--as-of 2026-10-20", "--iceberg-set s3.region=eu-west-2", "--connector risk-store"):
             self.assertIn(part, build)
         self.assertFalse(any(" lake publish " in ln for ln in lines), "Iceberg commits itself: no publish step")
         self.assertNotIn("glue", r.stderr)                                       # ICEBERG_CATALOG=hadoop: path-based tables

@@ -16,7 +16,7 @@
 the default; Apache Iceberg with `build --format iceberg`, and `maintain` for a lake whose `format: iceberg`).
 
     build      stream a JSON array, JSON Lines or .gz export into <lake>/<domain>/<kind> (tools/lake/build.py; --format delta|iceberg)
-    scan       the fields of an export with their values, and the suggested --key, --date and --partition-by (tools/lake/scan.py)
+    scan       the fields of an export with their values, and the suggested --key and --partition-by (tools/lake/scan.py)
     publish    commit a table lake build wrote (a scratch lake) into a Delta table in S3, one commit (tools/lake/publish.py)
     status     whether the lake's lock is held (lake maintain, or a load), and the last runs (from <lake>/_drishti-lake)
     demo       the demo lakes of the seven packs from the committed test data, data/testdata (tools/lake/demo.py)
@@ -101,7 +101,7 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
                           description=__doc__.split("\n\n")[0], formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = g.add_subparsers(dest="cmd", metavar="COMMAND", required=True)
     b = add(sub, "build", cmd_build, "lake build: stream a JSON array / JSON Lines / .gz export into a Delta table, partitioned, with promoted columns",
-            [], "examples:\n  drishti.py lake build --from exports/book.json --kind deal --key TRADE_ID --date TRADE_DATE --partition-by PRODUCT_TYPE "
+            [], "examples:\n  drishti.py lake build --from exports/deal.2026-10-01.json --kind deal --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates "
                 "--lake data/delta --domain trading\n  drishti.py lake build --from drop/ --pack config/packs/my-book --lake data/delta --as-of 2026-10-01 "
                 "--signal http://localhost:18480\nexit: 0 ok, 2 written with rejects (or the signal failed), 1 failure, 3 another run holds the table's (or the lake's) lock. "
                 "Guide: docs/guides/TOOLS.md")

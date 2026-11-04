@@ -2700,7 +2700,7 @@ JSON object per line, UTF-8, a file `.jsonl` (or `.jsonl.gz`), each line exactly
 
 The files go under `<data folder>/pvgen/` by default (`morning-<date>/`, `intraday-<date>/`). The morning run of the test data's date is
 the engine's to the unit (`check.py` on it: VaR 112,041,646, ES 160,143,809; with `--all-vectors` 112,035,906 and 160,132,107).
-The committed intraday sample (`config/packs/market-risk/samples/intraday/I-2026-09-30-001.scenario-pv.jsonl`: three amended Endur trades,
+The committed intraday sample (`config/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`: three amended Endur trades,
 one new, one cancelled) loads with `drishti.py var intraday --load <file> --date <the lake's date>`. `make_var_data.py` takes the same
 `--pv-systems`, `--pnl-systems` and `--all-vectors`: the P&L-vector generation is whole, for any system.
 
@@ -3250,7 +3250,7 @@ its size and factor loadings, under 2008-like moves of the same forty factors as
 at 2.2 times the normal set's volatility, correlations raised, an acute episode from 2008-09-15 to 2008-11-28 at 1.5 times that, and six
 crash days on which everything falls (2008-09-15, 2008-09-29, 2008-10-09, 2008-10-15, 2008-12-01, 2009-01-20). The moves are **not market
 history**: the set says so (`SYNTHETIC: true`, its description) and so does every stressed answer. Its rows are in their own files beside
-the normal set's (`data/testdata/market-risk/<kind>/stress-cob-2026-09-30…`).
+the normal set's, under the same table and date (`stress-cob…` in the 2026-09-30 folder of `data/testdata/market-risk/<kind>/`).
 
 **Worked figures on the demo data** (the bank, 2026-09-30, USD; `VarComputeFirstTest`):
 
@@ -3811,11 +3811,11 @@ stress-scenario page shows it in two panels, **Bank P&L under this scenario** an
 ### 22.1 What the repository ships (verified 2026-10-25, version 1.3)
 
 `tools/packgen/var/make_var_data.py` (run by `tools/testdata/make_testdata.py`) writes `data/testdata/market-risk/<kind>/` and the
-pack's reference samples and Sutra tests. Counts from the files and `data/testdata/testdata.yaml` (`dated-by: BUSINESS_DATE`: `lake demo`
-loads each folder in one run, every date moved with the business dates).
+pack's reference samples and Sutra tests. Counts from the files and `data/testdata/testdata.yaml` (`dated-by: BUSINESS_DATE`: every row's date
+is its file's; `lake demo` loads each folder in one run by the load rules, every date moved with the business dates).
 
 **Three business dates.** The VaR inputs are written for the last three business dates of the test data, **2026-09-28, 2026-09-29 and
-2026-09-30**, each in files of its own (`cob-<date>…`), so *Why it moved* ([section 3.11](#311-why-it-moved-the-var-change-explained))
+2026-09-30**, each in files of its own (`<kind>.<date>.jsonl.gz`, or a tar's `<kind>/<date>/` folder), so *Why it moved* ([section 3.11](#311-why-it-moved-the-var-change-explained))
 and the scenario matrix have real dates to compare. Each date is built as a bank's batch of that date would be: its positions from that
 date's trades (the 60 days of trades replayed to it: the trades that matured or were cancelled since the date before are gone, the
 amended ones carry their new terms), its scenario window a day further on (the oldest day leaves, the date before's move enters; a day's
@@ -3837,13 +3837,13 @@ The kinds, on the newest date (each of the other two dates has the same files):
 
 | Kind | Folder files | Dated | Documents on 2026-09-30 | Bytes (gzip), 2026-09-30 |
 |---|---|---|---|---|
-| `pnl-vector` | `cob-<date>.part-001.jsonl.gz` … `part-010` | 2026-09-28 to 2026-09-30 | **8,233** trades (CALYPSO 4,155, MUREX 4,078; all `ok`), every vector 509 values (the Endur trades moved to `scenario-pv`) | 13,451,636 |
-| `scenario-pv` | `cob-<date>.part-001.jsonl.gz` … `part-003` | 2026-09-28 to 2026-09-30 | **1,339** Endur trades (USD 1,089, EUR 246, CAD 4), 509 scenario PVs and a base PV each, in cents of the trade's currency ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) | 2,770,923 |
-| `fx-scenario` | `cob-<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | 6 currencies (AUD, CAD, CHF, EUR, GBP, JPY): today's `fx-spot` mid and 509 scenario rates moved by the factor model's FX factors | 16,315 |
-| `scenario-set` | `cob-<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | 1 (`HS-509`, 2024-09-17 to 2026-09-29) | 1,399 |
-| `risk-hierarchy` | `cob-<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **88** nodes | 1,921 |
-| `portfolio` | `cob-<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **28** definitions | 1,643 |
-| `var-limit` | `cob-<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **157** limits | 1,858 |
+| `pnl-vector` | `pnl-vector-<date>.tar`: `pnl-vector/<date>/cob.part-001.jsonl.gz` … `part-010` | 2026-09-28 to 2026-09-30 | **8,233** trades (CALYPSO 4,155, MUREX 4,078; all `ok`), every vector 509 values (the Endur trades moved to `scenario-pv`) | 13,451,636 |
+| `scenario-pv` | `scenario-pv-<date>.tar`: `scenario-pv/<date>/cob.part-001.jsonl.gz` … `part-003` | 2026-09-28 to 2026-09-30 | **1,339** Endur trades (USD 1,089, EUR 246, CAD 4), 509 scenario PVs and a base PV each, in cents of the trade's currency ([section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) | 2,770,923 |
+| `fx-scenario` | `fx-scenario.tar`: `fx-scenario/<date>/cob.jsonl.gz` | 2026-09-28 to 2026-09-30 | 6 currencies (AUD, CAD, CHF, EUR, GBP, JPY): today's `fx-spot` mid and 509 scenario rates moved by the factor model's FX factors | 16,315 |
+| `scenario-set` | `scenario-set.tar`: `scenario-set/<date>/cob.jsonl.gz` | 2026-09-28 to 2026-09-30 | 1 (`HS-509`, 2024-09-17 to 2026-09-29) | 1,399 |
+| `risk-hierarchy` | `risk-hierarchy.<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **88** nodes | 1,921 |
+| `portfolio` | `portfolio.<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **28** definitions | 1,643 |
+| `var-limit` | `var-limit.<date>.jsonl.gz` | 2026-09-28 to 2026-09-30 | **157** limits | 1,858 |
 
 The data's 30 books hold every live trade of the date (9,572; open question 1), over 10 desks and 4 legal entities (`LE-FRA`, `LE-LDN`,
 `LE-NY`, `LE-TKY`). The rules derive 7,984 positions. The 28 portfolios: one HIERARCHY portfolio per desk (`PF-<DESK>-DESK`, 10)

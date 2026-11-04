@@ -25,7 +25,7 @@ of a 12-month stress window, as a bank's pricing system would send them, beside 
   or, for the scenario-PV systems, its scenario PVs in its own currency (``scenario-pv``, ``SPV-<trade>-HS-STRESS-2008``) with the stress
   set's scenario FX (``fx-scenario``, ``FXS-<ccy>-HS-STRESS-2008``); the trade's terms, run and batch are the normal row's. Each trade
   keeps its exposure (the same factor loadings and size as in the normal set); only the market moves differ.
-- **Kept apart.** The rows are written to their own files (``stress-cob-<date>…``) in the same folders, so a reader of the normal set
+- **Kept apart.** The rows are written to their own files (``stress-cob…``, beside the normal set's under the same date), so a reader of the normal set
   can tell them apart by file as the engine does by ``SCENARIO_SET_ID``.
 
 Deterministic: the same trades give the same files, byte for byte (Python's own Random, seeded by text)."""

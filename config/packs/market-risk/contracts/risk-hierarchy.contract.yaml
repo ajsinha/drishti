@@ -150,7 +150,7 @@ validation:
   - legal-entity
 notes: []
 review:
-- 'required inferred from 100% coverage in 90 documents (2 samples and 88 test-data documents (data/testdata/market-risk/risk-hierarchy/cob-2026-09-30.jsonl.gz)):
+- 'required inferred from 100% coverage in 90 documents (2 samples and 88 test-data documents (data/testdata/market-risk/risk-hierarchy/risk-hierarchy.2026-09-30.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'source is the pack''s first listed source (its README): confirm.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'

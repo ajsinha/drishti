@@ -20,7 +20,7 @@ of some "match" fields (for example one per productType), each with its own samp
 
 Input: one or more folders (every *.jsonl in them; -r for subfolders) and/or single .jsonl files. A line is one plain JSON document, or the loader
 envelope {"kind": ..., "id": ..., "doc": {...} | "<json text>"} whose doc is unwrapped (and whose kind wins over the
-file name). The kind of a document is the file stem (trade.jsonl -> trade) unless --kind is given.
+file name). The kind of a document is the file's table (trade.jsonl and trade.2026-11-03.jsonl -> trade) unless --kind is given.
 
 Per-kind options: --key, --date and --match take either one value for every kind (--key tradeId) or kind=value pairs
 (--key trade=tradeId,counterparty=counterpartyId; --match trade=productType,assetClass;counterparty=type, where
@@ -143,6 +143,19 @@ def array_elements(path: pathlib.Path, chunk: int = 1 << 20):
                 buf.append(block[max(start, 0):])
 
 
+def file_kind(f: pathlib.Path) -> str:
+    """The kind a file's name gives: its table by the load rules (``trade.2026-11-03.jsonl.gz`` -> ``trade``,
+    docs/architecture/DATA_LOAD_RULES.md), else its stem (``x.jsonl.gz`` -> ``x``)."""
+    lake = str(pathlib.Path(__file__).resolve().parent / "lake")
+    if lake not in sys.path:
+        sys.path.insert(0, lake)
+    import filedate
+    n = filedate.parse(f.name)
+    if n.error is None and not n.tar and n.table:
+        return f.name.split(".")[0]
+    return pathlib.Path(f.stem).stem if f.suffix.lower() == ".gz" else f.stem
+
+
 def read_records(files, say_bad=None):
     """Yields (kind, document, where) for every line (or element of a .json array); bad lines go to say_bad(text) (default: stderr)."""
     say_bad = say_bad or (lambda t: print("  skipped " + t, file=sys.stderr))
@@ -151,7 +164,7 @@ def read_records(files, say_bad=None):
             try:
                 for text, n in array_elements(f):
                     try:
-                        k, doc = unwrap(json.loads(text), f.stem)
+                        k, doc = unwrap(json.loads(text), file_kind(f))
                     except ValueError as e:
                         say_bad(f"{f}[{n}]: not JSON ({e})")
                         continue
@@ -163,7 +176,7 @@ def read_records(files, say_bad=None):
                 say_bad(str(e))
             continue
         gz = f.suffix.lower() == ".gz"                         # JSON Lines compressed (data/testdata's .jsonl.gz)
-        stem = pathlib.Path(f.stem).stem if gz else f.stem      # x.jsonl.gz -> x
+        stem = file_kind(f)                                     # trade.2026-11-03.jsonl.gz -> trade; x.jsonl.gz -> x
         with (__import__("gzip").open(f, "rt", encoding="utf-8") if gz else open(f, encoding="utf-8")) as fh:
             for n, line in enumerate(fh, 1):
                 if not line.strip():

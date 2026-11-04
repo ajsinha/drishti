@@ -19,7 +19,7 @@
     python3 tools/samplegen/bulk_trades.py --trades 10000 --no-lake                                    # the JSONL only
 
 Generating and loading are separate steps (docs/guides/DATA_GUIDE.md). The generator writes one file per business day,
-<out>/<system>/trades-<date>.jsonl.gz (--out, default <data>/build/bulk): one trade document a line, in id order. The loader is
+<out>/<system>/trade_<system>.<date>.jsonl.gz (the load rules' name; --out, default <data>/build/bulk): one trade document a line, in id order. The loader is
 `drishti.py lake build` (tools/lake/build.py), run here on each file unless --no-lake: it replaces one source system's trade table
 of the lake (--root, default data/delta: trading/trade_murex, or with --system CALYPSO trade_calypso), partitioned by business date
 and PRODUCT_TYPE with the columns the trading pack promotes, as tools/packgen/trades/make_trades.py --lake does, and leaves every
@@ -206,7 +206,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--jsonl", default=None, help="write loader rows to this file (- for standard output) instead, for tools/load-aerospike.sh "
                                                   "and the other stores' loaders: the documents with the fields the trading pack promotes")
     ap.add_argument("--out", default=os.environ.get("DRISHTI_DATA_DIR", "data") + "/build/bulk",
-                    help="where the JSONL files go: <out>/<system>/trades-<date>.jsonl.gz (default <data>/build/bulk)")
+                    help="where the JSONL files go: <out>/<system>/trade_<system>.<date>.jsonl.gz (default <data>/build/bulk)")
     ap.add_argument("--no-lake", action="store_true", help="write the JSONL files only; load them later with drishti.py lake build")
     ap.add_argument("--engine", default="auto", choices=("auto", "drishti", "deltalake"), help="the lake writer lake build uses (default auto)")
     a = ap.parse_args(argv)
@@ -241,7 +241,7 @@ def main(argv: list[str]) -> int:
     files, written = [], 0
     with POOL_CONTEXT.Pool(a.workers, initializer=_init, initargs=(templates, lay, types)) as pool:
         for n, d in enumerate(days):
-            f = folder / f"trades-{d.isoformat()}.jsonl.gz"
+            f = folder / f"trade_{a.system.lower()}.{d.isoformat()}.jsonl.gz"      # <table>.<YYYY-MM-DD>: the load rules' name
             jobs = [(order[s:s + 5_000], d, len(days) - 1 - n) for s in range(0, a.trades, 5_000)]
             with gzip.open(f, "wt", encoding="utf-8", compresslevel=1) as out:
                 for lines in pool.imap(_docs, jobs):                              # in order: the file stays sorted by id
@@ -269,7 +269,7 @@ def load(files: list[Path], days: list[date], root: Path, system: str, engine: s
     worst, t0 = 0, time.time()
     for f, d in zip(files, days):
         args = LB.build_parser().parse_args(["--from", str(f), "--pack", str(ROOT / "config" / "packs" / "trading"), "--kind", "trade",
-                                             "--connector", f"trade-{system.lower()}", "--key", "TRADE_ID", "--as-of", d.isoformat(),
+                                             "--connector", f"trade-{system.lower()}", "--key", "TRADE_ID", "--mode", "overwrite-dates",
                                              "--partition-by", "PRODUCT_TYPE", "--lake", str(root), "--engine", engine, "-q"])
         code, summary = LB.run(args, say=lambda *x, **k: None)
         print(f"  {system} {d}: {summary.get('status')} {summary.get('rows', summary.get('documents', ''))} -> {summary.get('table')}"

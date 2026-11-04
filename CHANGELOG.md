@@ -38,6 +38,37 @@
   (`new-table: true`, `drishti.dataload.new-tables`), holds a file whose `.ready` says `hold: true`, pairs a short `.ready` name
   (`trades.2026-11-03.ready`), and appends by default (`drishti.dataload.default-mode`).
 - **Schema to pack has its own guide**, `docs/guides/SCHEMA_TO_PACK_GUIDE.md` (help page *Schema to pack*), from DATA_GUIDE.md.
+- **Our own data follows the load rules (DATA_LOAD_RULES.md section 10; data/testdata/README.md; VAR_GUIDE.md section 30; the Windows
+  QA guide).** Every committed test-data file is named `<table>.<YYYY-MM-DD>.jsonl.gz` after the table it feeds (`trade_endur`,
+  `counterparty`, `risk-hierarchy` ...; 2,845 files renamed, their bytes unchanged), or is a plain tar of `<table>/<YYYY-MM-DD>/`
+  folders where a date is several files or one run writes many dates (the P&L vectors and scenario PVs one tar a date, the exposure
+  paths, the funds' holdings, the scenario sets and scenario FX with the stress set's files, the desks' 260-day P&L): 2,914 files
+  become 2,858, 181.8 MB become 182.1 MB. The generators write them (`tools/lake/feedfiles.py`: deterministic gzip and tar;
+  `make_testdata.py`, `make_var_data.py`, `make_ccr_data.py`, `make_sensitivity_data.py`, `capture_market.py`, the public-data packs'
+  `publicsnap.py`, `make_trades.py`, `bulk_trades.py`, `pvgen` morning and intraday, `vargen.py`), the public snapshots were rewritten
+  by their own writers from the committed documents. `lake demo` and `build_demo_lakes.py` load every day under its dated name by the
+  rules (no `--date` field, mode replace said); `--endur-dir`/`--source-dir` take `trade_<system>.<date>.jsonl[.gz|.zip]` or tars of
+  `trade_<system>/<date>/` folders and refuse the older `YYYY-MM-DD.jsonl` with the name to give; `var intraday --load`, `var_bench`,
+  `pivot_bench` and the AWS `load-day.sh` date their loads from outside (the name or `--as-of`). Checked: the same 983,924 rows in the
+  same 1,762 (table, business date) pairs, by count and checksum of every row, before and after; the demo lake built from the old
+  inputs by develop's tools and from the new ones the same (89 tables, 4,846 table and date pairs, 4,835,519 rows, every row's checksum
+  equal); the VaR tree of two servers on the two lakes the same (MGMT, LEGAL and LL, three dates, 1-day and 10-day: 786 nodes, VaR, ES
+  and trades, no difference); look-alike ENDUR files through `--endur-dir` the same table either way. The Java tests read the files
+  through drishti-testkit `FeedFiles`. No caller dates rows from a field any more: Admin → Data loads → Lakes says the business date
+  (the file name's, else the business today) and takes an optional other date (`--as-of`), never a field (a bound connector's layout no
+  longer lists the load's own `_load_id` and `_source_file`); `lake scan` reports the rows' date field as counted only; the tests,
+  examples, run configuration and `official_market_data.py` (one `<kind>.<AS_OF>.jsonl` a date) load by the name or `--as-of`.
+  DEMO_DATA.md says the test data's snapshot-plus-changes files are a generator format that `lake demo` replays, not feed files.
+  `data ingest` the same: a kind loads with no date field (each file under `--as-of`, its `.ready` file's date, its name's, or the
+  business today; the run says which, in `lake build`'s words), `--date`/the pack's ingest date only names the field whose differing
+  rows are counted; `pack_from_jsonl --lake` no longer needs `--date` (every kind in the dated store); a file's kind is its name's table
+  (`trade.2026-11-03.jsonl` is `trade`) in `sutra gen`, `pack make` and `data ingest` alike.
+  Lake rows the same (product owner, 2026-11-04): `load_rows.py` keeps each row as it is but stores it under its file's business date
+  by the rules (a tar's `<table>/<YYYY-MM-DD>/` folder; a plain file's `--as-of`, `.ready` date, name's or the business today), never
+  the row's `date`, which is counted when it differs; a plain file of several tables is refused (send a tar). The generators
+  (`make_data.py --lake`, `samplegen/lake.py`, the pack generators' `--lake`) write `<name>-history.tar` and `<name>-restated.tar`;
+  checked against develop's: the same 25,477 rows in the same 517 table-and-date groups, the same ten partition dates (2026-09-17 to
+  2026-09-30), and the two lakes the same (47 tables, 470 table-and-date pairs, 25,430 rows, every row equal).
 
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (unreleased)
 

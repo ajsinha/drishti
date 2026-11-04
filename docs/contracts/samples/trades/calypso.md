@@ -23,10 +23,10 @@ A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the
 
 |  |  |
 |---|---|
-| Path | `data/testdata/trades/calypso/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/trades/calypso/` + `trade_calypso.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `TRADE_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_SUB_TYPE`, `PRODUCT_GROUP`, `TRADE_STATUS`, `TRADE_VERSION`, `BUY_SELL_CODE`, `CURRENCY`, `QUANTITY`, `TRADE_DATE`, `MATURITY_DATE`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID`, `NOTIONAL`, `INDEX_NAME` |
 | Vector fields | none |
 | Partitioned by | `business_date`, `PRODUCT_TYPE` |
@@ -484,40 +484,40 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "CALYPSO",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:13:00Z",
-  "TRADE_DATE": "2025-10-24",
-  "INPUT_DATE": "2025-10-24",
-  "TRADE_ID": "CLY-3000093",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2024-11-19",
+  "INPUT_DATE": "2024-11-19",
+  "TRADE_ID": "CLY-3000091",
   "TRADE_STATUS": "AMENDED",
   "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "3",
-  "TRANSACTION_ID": "3000093003",
+  "TRADE_VERSION": "2",
+  "TRANSACTION_ID": "3000091002",
   "PACKAGE_ID": "",
-  "QUANTITY": 61000000.0,
+  "QUANTITY": 55000000.0,
   "PRICE": null,
-  "BUY_SELL_CODE": "B",
+  "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "CDS_INDEX",
   "PRODUCT_SUB_TYPE": "CDS index (CDX / iTraxx)",
   "PRODUCT_GROUP": "Credit",
   "PRODUCT_SUB_GROUP": "cds",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-LUMEN",
-  "COUNTERPARTY_UEN": "UEN0100333",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "CH",
+  "COUNTERPARTY": "CP-HARBORPT",
+  "COUNTERPARTY_UEN": "UEN0100259",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "US",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-CREDIT-2",
-  "TRADER_ID": "TRDR-CDUBOIS",
-  "TRADER_FIRST_NAME": "C.",
-  "TRADER_LAST_NAME": "Dubois",
-  "START_DATE": "2025-10-27",
-  "MATURITY_DATE": "2028-01-24",
+  "PORTFOLIO": "BOOK-CREDIT-1",
+  "TRADER_ID": "TRDR-DWHITFIELD",
+  "TRADER_FIRST_NAME": "D.",
+  "TRADER_LAST_NAME": "Whitfield",
+  "START_DATE": "2024-11-21",
+  "MATURITY_DATE": "2032-02-17",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "JPY",
+  "CURRENCY": "USD",
   "DELIVERY_VERSUS_PAYMENT": "NO",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -525,20 +525,20 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-CREDIT",
-  "TT_BOOK": "BOOK-CREDIT-2",
+  "TT_BOOK": "BOOK-CREDIT-1",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2025-10-27",
+  "SETTLEMENT_DATE": "2024-11-21",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FLOAT",
-      "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "JPY",
+      "LEG_ECONOMIC_TYPE": "Receive",
+      "CURRENCY": "USD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 61000000.0,
-      "DISCOUNT_INDEX": "CRV-JPY-OIS",
+      "NOTIONAL": 55000000.0,
+      "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
@@ -551,48 +551,48 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "3",
+      "NUM_PROFILE_REC": "8",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "CDX.NA.IG S47",
+        "NAME": "iTraxx Europe S46",
         "GROUP": "Credit",
         "SUB_GROUP": ""
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "3000093001",
+          "FLOW_ID": "3000091001",
           "FLOW_TYPE": "Premium",
-          "NOTIONAL": 61000000.0,
+          "NOTIONAL": 55000000.0,
           "RATE": 0.01,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2025-10-27",
-          "END_DATE": "2026-10-27",
-          "PAYMENT_DATE": "2026-10-27",
+          "START_DATE": "2024-11-21",
+          "END_DATE": "2025-11-21",
+          "PAYMENT_DATE": "2025-11-21",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 2 more elements of the same shape"
+        "… 7 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "3000093001",
+      "EVENT_ID": "3000091001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2025-10-24",
+      "EVENT_DATE": "2024-11-19",
       "AMOUNT": "",
-      "CURRENCY": "JPY",
+      "CURRENCY": "USD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 8 more elements of the same shape"
+    "… 13 more elements of the same shape"
   ]
 }
 ```
@@ -601,9 +601,9 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 42% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-CAD-OIS`, `CRV-GBP-OIS`, `CRV-EUR-OIS`, `CRV-AUD-OIS`, `CRV-CHF-OIS` | `"CRV-JPY-OIS"` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 42% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-CAD-OIS`, `CRV-GBP-OIS`, `CRV-EUR-OIS`, `CRV-AUD-OIS`, `CRV-CHF-OIS` | `"CRV-USD-OIS"` |
 | `LEGS[].RESET_FIXING_SHIFT` | string | optional (filled in 16% of `LEGS[]` entries) | Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg. | one of `-2`, `0`; unit: business days | `"-2"` |
-| `LEGS[].INDEX.NAME` | string | optional (filled in 16% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"CDX.NA.IG S47"` |
+| `LEGS[].INDEX.NAME` | string | optional (filled in 16% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"iTraxx Europe S46"` |
 | `LEGS[].INDEX.GROUP` | string | optional (filled in 16% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Credit"` |
 | `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 59% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | seen: `Pending`, `Premium`, `Coupon paid`, `Principal`, `Bermudan call`, `Float`, `First call` | `"Premium"` |
 | `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 44% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.01` |
@@ -870,27 +870,27 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "CALYPSO",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:42:00Z",
-  "TRADE_DATE": "2026-01-30",
-  "INPUT_DATE": "2026-01-30",
-  "TRADE_ID": "CLY-4000087",
-  "TRADE_STATUS": "CANCELLED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "4000087002",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2025-05-30",
+  "INPUT_DATE": "2025-05-30",
+  "TRADE_ID": "CLY-3000085",
+  "TRADE_STATUS": "VALIDATED",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "3000085001",
   "PACKAGE_ID": "",
-  "QUANTITY": 25977000.0,
+  "QUANTITY": 39000000.0,
   "PRICE": null,
-  "BUY_SELL_CODE": "S",
+  "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "CDS_SINGLE",
   "PRODUCT_SUB_TYPE": "Single-name CDS",
   "PRODUCT_GROUP": "Credit",
   "PRODUCT_SUB_GROUP": "cds",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-ALDERSHOT",
-  "COUNTERPARTY_UEN": "UEN0100037",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "GB",
+  "COUNTERPARTY": "CP-VERDANT",
+  "COUNTERPARTY_UEN": "UEN0100666",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "BR",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
@@ -900,10 +900,10 @@ Its fields beyond the shared table:
   "TRADER_ID": "TRDR-DWHITFIELD",
   "TRADER_FIRST_NAME": "D.",
   "TRADER_LAST_NAME": "Whitfield",
-  "START_DATE": "2026-02-02",
-  "MATURITY_DATE": "2028-07-10",
+  "START_DATE": "2025-06-02",
+  "MATURITY_DATE": "2028-08-15",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "USD",
+  "CURRENCY": "CAD",
   "DELIVERY_VERSUS_PAYMENT": "NO",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -913,18 +913,18 @@ Its fields beyond the shared table:
   "TT_GROUP": "DESK-CREDIT",
   "TT_BOOK": "BOOK-CREDIT-3",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2026-02-02",
+  "SETTLEMENT_DATE": "2025-06-02",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FIXED",
-      "LEG_ECONOMIC_TYPE": "Receive",
-      "CURRENCY": "USD",
+      "LEG_ECONOMIC_TYPE": "Pay",
+      "CURRENCY": "CAD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 25977000.0,
-      "DISCOUNT_INDEX": "CRV-USD-OIS",
+      "NOTIONAL": 39000000.0,
+      "DISCOUNT_INDEX": "CRV-CAD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
@@ -937,7 +937,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "3",
+      "NUM_PROFILE_REC": "4",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -946,39 +946,39 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "4000087001",
+          "FLOW_ID": "3000085001",
           "FLOW_TYPE": "Premium",
-          "NOTIONAL": 25977000.0,
+          "NOTIONAL": 39000000.0,
           "RATE": 0.01,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-02-02",
-          "END_DATE": "2027-02-02",
-          "PAYMENT_DATE": "2027-02-02",
+          "START_DATE": "2025-06-02",
+          "END_DATE": "2026-06-02",
+          "PAYMENT_DATE": "2026-06-02",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 2 more elements of the same shape"
+        "… 3 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "4000087001",
+      "EVENT_ID": "3000085001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2026-01-30",
+      "EVENT_DATE": "2025-05-30",
       "AMOUNT": "",
-      "CURRENCY": "USD",
+      "CURRENCY": "CAD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 6 more elements of the same shape"
+    "… 8 more elements of the same shape"
   ]
 }
 ```
@@ -987,7 +987,7 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 42% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-CAD-OIS`, `CRV-GBP-OIS`, `CRV-EUR-OIS`, `CRV-AUD-OIS`, `CRV-CHF-OIS` | `"CRV-USD-OIS"` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 42% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-CAD-OIS`, `CRV-GBP-OIS`, `CRV-EUR-OIS`, `CRV-AUD-OIS`, `CRV-CHF-OIS` | `"CRV-CAD-OIS"` |
 | `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 59% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | seen: `Pending`, `Premium`, `Coupon paid`, `Principal`, `Bermudan call`, `Float`, `First call` | `"Premium"` |
 | `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 44% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.01` |
 
@@ -998,18 +998,18 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "CALYPSO",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:08:00Z",
-  "TRADE_DATE": "2024-08-02",
-  "INPUT_DATE": "2024-08-02",
-  "TRADE_ID": "CLY-4001423",
-  "TRADE_STATUS": "CANCELLED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "4001423002",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2025-11-13",
+  "INPUT_DATE": "2025-11-13",
+  "TRADE_ID": "CLY-3000199",
+  "TRADE_STATUS": "VALIDATED",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "3000199001",
   "PACKAGE_ID": "",
-  "QUANTITY": 313775267.89,
-  "PRICE": 100.208,
-  "BUY_SELL_CODE": "B",
+  "QUANTITY": 37501095.0,
+  "PRICE": 85.699,
+  "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "COVERED_BOND",
   "PRODUCT_SUB_TYPE": "Covered bond",
   "PRODUCT_GROUP": "Fixed income",
@@ -1025,11 +1025,11 @@ Its fields beyond the shared table:
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
   "PORTFOLIO": "BOOK-FI-2",
-  "TRADER_ID": "TRDR-BADEYEMI",
-  "TRADER_FIRST_NAME": "B.",
-  "TRADER_LAST_NAME": "Adeyemi",
-  "START_DATE": "2024-08-05",
-  "MATURITY_DATE": "2033-12-12",
+  "TRADER_ID": "TRDR-RCASTILLO",
+  "TRADER_FIRST_NAME": "R.",
+  "TRADER_LAST_NAME": "Castillo",
+  "START_DATE": "2025-11-17",
+  "MATURITY_DATE": "2034-04-26",
   "REGISTRY_DELIVERY_DATE": "",
   "CURRENCY": "EUR",
   "DELIVERY_VERSUS_PAYMENT": "YES",
@@ -1041,17 +1041,17 @@ Its fields beyond the shared table:
   "TT_GROUP": "DESK-FI",
   "TT_BOOK": "BOOK-FI-2",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2024-08-05",
+  "SETTLEMENT_DATE": "2025-11-17",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FIXED",
-      "LEG_ECONOMIC_TYPE": "Pay",
+      "LEG_ECONOMIC_TYPE": "Receive",
       "CURRENCY": "EUR",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 180462000.0,
+      "NOTIONAL": 84000000.0,
       "DISCOUNT_INDEX": "",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -1065,7 +1065,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "19",
+      "NUM_PROFILE_REC": "17",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -1074,39 +1074,39 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "4001423001",
+          "FLOW_ID": "3000199001",
           "FLOW_TYPE": "",
-          "NOTIONAL": 180462000.0,
-          "RATE": 0.032816,
+          "NOTIONAL": 84000000.0,
+          "RATE": 0.027398,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2024-08-05",
-          "END_DATE": "2025-02-05",
-          "PAYMENT_DATE": "2025-02-05",
+          "START_DATE": "2025-11-17",
+          "END_DATE": "2026-05-17",
+          "PAYMENT_DATE": "2026-05-17",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 18 more elements of the same shape"
+        "… 16 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "4001423001",
+      "EVENT_ID": "3000199001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2024-08-02",
+      "EVENT_DATE": "2025-11-13",
       "AMOUNT": "",
       "CURRENCY": "EUR",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 24 more elements of the same shape"
+    "… 22 more elements of the same shape"
   ]
 }
 ```
@@ -1115,8 +1115,8 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 54% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `100.208` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 44% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.032816` |
+| `PRICE` | number | optional (filled in 54% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `85.699` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 44% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.027398` |
 
 ### FX_ACCUMULATOR
 
@@ -1274,16 +1274,16 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "CALYPSO",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:13:00Z",
-  "TRADE_DATE": "2026-02-19",
-  "INPUT_DATE": "2026-02-19",
-  "TRADE_ID": "CLY-4000710",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2025-12-31",
+  "INPUT_DATE": "2025-12-31",
+  "TRADE_ID": "CLY-3000097",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "4000710002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "3000097001",
   "PACKAGE_ID": "",
-  "QUANTITY": 26510000.0,
+  "QUANTITY": 242000000.0,
   "PRICE": null,
   "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "CDS_TRANCHE",
@@ -1292,20 +1292,20 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "cds",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-KESTREL",
-  "COUNTERPARTY_UEN": "UEN0100296",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "KY",
+  "COUNTERPARTY": "CP-MERIDIAN-RE",
+  "COUNTERPARTY_UEN": "UEN0100407",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "BM",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-CREDIT-2",
-  "TRADER_ID": "TRDR-CDUBOIS",
-  "TRADER_FIRST_NAME": "C.",
-  "TRADER_LAST_NAME": "Dubois",
-  "START_DATE": "2026-02-23",
-  "MATURITY_DATE": "2035-10-10",
+  "PORTFOLIO": "BOOK-CREDIT-3",
+  "TRADER_ID": "TRDR-DWHITFIELD",
+  "TRADER_FIRST_NAME": "D.",
+  "TRADER_LAST_NAME": "Whitfield",
+  "START_DATE": "2026-01-02",
+  "MATURITY_DATE": "2034-02-14",
   "REGISTRY_DELIVERY_DATE": "",
   "CURRENCY": "CAD",
   "DELIVERY_VERSUS_PAYMENT": "NO",
@@ -1315,9 +1315,9 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-CREDIT",
-  "TT_BOOK": "BOOK-CREDIT-2",
+  "TT_BOOK": "BOOK-CREDIT-3",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2026-02-23",
+  "SETTLEMENT_DATE": "2026-01-02",
   "LEGS": [
     {
       "LEG_ID": "1",
@@ -1327,7 +1327,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 26510000.0,
+      "NOTIONAL": 242000000.0,
       "DISCOUNT_INDEX": "CRV-CAD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -1341,7 +1341,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "10",
+      "NUM_PROFILE_REC": "9",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "CDX.NA.IG S47",
@@ -1350,39 +1350,39 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "4000710001",
+          "FLOW_ID": "3000097001",
           "FLOW_TYPE": "Premium",
-          "NOTIONAL": 26510000.0,
+          "NOTIONAL": 242000000.0,
           "RATE": 0.01,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-02-23",
-          "END_DATE": "2027-02-23",
-          "PAYMENT_DATE": "2027-02-23",
+          "START_DATE": "2026-01-02",
+          "END_DATE": "2027-01-02",
+          "PAYMENT_DATE": "2027-01-02",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 9 more elements of the same shape"
+        "… 8 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "4000710001",
+      "EVENT_ID": "3000097001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2026-02-19",
+      "EVENT_DATE": "2025-12-31",
       "AMOUNT": "",
       "CURRENCY": "CAD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 14 more elements of the same shape"
+    "… 12 more elements of the same shape"
   ]
 }
 ```
@@ -1405,16 +1405,16 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "CALYPSO",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:07:00Z",
-  "TRADE_DATE": "2026-03-06",
-  "INPUT_DATE": "2026-03-06",
-  "TRADE_ID": "CLY-4000328",
-  "TRADE_STATUS": "CANCELLED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "4000328002",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2025-03-14",
+  "INPUT_DATE": "2025-03-14",
+  "TRADE_ID": "CLY-3000021",
+  "TRADE_STATUS": "VALIDATED",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "3000021001",
   "PACKAGE_ID": "",
-  "QUANTITY": 421330000.0,
+  "QUANTITY": 127000000.0,
   "PRICE": null,
   "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "FX_SWAP",
@@ -1423,20 +1423,20 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-NORTHBRIDGE",
-  "COUNTERPARTY_UEN": "UEN0100444",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "GB",
+  "COUNTERPARTY": "CP-PINNACLE",
+  "COUNTERPARTY_UEN": "UEN0100481",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "US",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00214",
   "LEGAL_ENTITY": "LE-LDN",
-  "PORTFOLIO": "BOOK-FX-2",
+  "PORTFOLIO": "BOOK-FX-1",
   "TRADER_ID": "TRDR-ENOVAK",
   "TRADER_FIRST_NAME": "E.",
   "TRADER_LAST_NAME": "Novak",
-  "START_DATE": "2026-03-09",
-  "MATURITY_DATE": "2035-07-06",
+  "START_DATE": "2025-03-17",
+  "MATURITY_DATE": "2035-11-13",
   "REGISTRY_DELIVERY_DATE": "",
   "CURRENCY": "USD",
   "DELIVERY_VERSUS_PAYMENT": "NO",
@@ -1446,9 +1446,9 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-FX",
-  "TT_BOOK": "BOOK-FX-2",
+  "TT_BOOK": "BOOK-FX-1",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2026-03-09",
+  "SETTLEMENT_DATE": "2025-03-17",
   "LEGS": [
     {
       "LEG_ID": "1",
@@ -1458,7 +1458,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 421330000.0,
+      "NOTIONAL": 127000000.0,
       "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -1472,7 +1472,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "10",
+      "NUM_PROFILE_REC": "11",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "USCPI",
@@ -1481,21 +1481,21 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "4000328001",
+          "FLOW_ID": "3000021001",
           "FLOW_TYPE": "Premium",
-          "NOTIONAL": 421330000.0,
+          "NOTIONAL": 127000000.0,
           "RATE": 0.01,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-03-09",
-          "END_DATE": "2027-03-09",
-          "PAYMENT_DATE": "2027-03-09",
+          "START_DATE": "2025-03-17",
+          "END_DATE": "2026-03-17",
+          "PAYMENT_DATE": "2026-03-17",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 9 more elements of the same shape"
+        "… 10 more elements of the same shape"
       ]
     },
     {
@@ -1506,7 +1506,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 421330000.0,
+      "NOTIONAL": 127000000.0,
       "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -1529,14 +1529,14 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "4000328011",
+          "FLOW_ID": "3000021012",
           "FLOW_TYPE": "Float",
-          "NOTIONAL": 421330000.0,
+          "NOTIONAL": 127000000.0,
           "RATE": 0.036215,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-03-09",
-          "END_DATE": "2035-07-06",
-          "PAYMENT_DATE": "2035-07-06",
+          "START_DATE": "2025-03-17",
+          "END_DATE": "2035-11-13",
+          "PAYMENT_DATE": "2035-11-13",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
@@ -1549,18 +1549,18 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "4000328001",
+      "EVENT_ID": "3000021001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2026-03-06",
+      "EVENT_DATE": "2025-03-14",
       "AMOUNT": "",
       "CURRENCY": "USD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 13 more elements of the same shape"
+    "… 15 more elements of the same shape"
   ]
 }
 ```
@@ -2801,17 +2801,17 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "CALYPSO",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:08:00Z",
-  "TRADE_DATE": "2026-02-02",
-  "INPUT_DATE": "2026-02-02",
-  "TRADE_ID": "CLY-4000477",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2024-07-18",
+  "INPUT_DATE": "2024-07-18",
+  "TRADE_ID": "CLY-3000169",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "4000477002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "3000169001",
   "PACKAGE_ID": "",
-  "QUANTITY": 89356016.53,
-  "PRICE": 98.708,
+  "QUANTITY": 33518483.0,
+  "PRICE": 100.694,
   "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "FRN",
   "PRODUCT_SUB_TYPE": "Floating rate note",
@@ -2831,10 +2831,10 @@ Its fields beyond the shared table:
   "TRADER_ID": "TRDR-BADEYEMI",
   "TRADER_FIRST_NAME": "B.",
   "TRADER_LAST_NAME": "Adeyemi",
-  "START_DATE": "2026-02-04",
-  "MATURITY_DATE": "2030-04-11",
+  "START_DATE": "2024-07-22",
+  "MATURITY_DATE": "2028-06-08",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "EUR",
+  "CURRENCY": "CAD",
   "DELIVERY_VERSUS_PAYMENT": "YES",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -2844,17 +2844,17 @@ Its fields beyond the shared table:
   "TT_GROUP": "DESK-FI",
   "TT_BOOK": "BOOK-FI-2",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2026-02-04",
+  "SETTLEMENT_DATE": "2024-07-22",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FIXED",
       "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "EUR",
+      "CURRENCY": "CAD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 49476000.0,
+      "NOTIONAL": 88000000.0,
       "DISCOUNT_INDEX": "",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -2868,7 +2868,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "9",
+      "NUM_PROFILE_REC": "8",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -2877,39 +2877,39 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "4000477001",
+          "FLOW_ID": "3000169001",
           "FLOW_TYPE": "",
-          "NOTIONAL": 49476000.0,
-          "RATE": 0.020113,
+          "NOTIONAL": 88000000.0,
+          "RATE": 0.057593,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-02-04",
-          "END_DATE": "2026-08-04",
-          "PAYMENT_DATE": "2026-08-04",
+          "START_DATE": "2024-07-22",
+          "END_DATE": "2025-01-22",
+          "PAYMENT_DATE": "2025-01-22",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 8 more elements of the same shape"
+        "… 7 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "4000477001",
+      "EVENT_ID": "3000169001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2026-02-02",
+      "EVENT_DATE": "2024-07-18",
       "AMOUNT": "",
-      "CURRENCY": "EUR",
+      "CURRENCY": "CAD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 14 more elements of the same shape"
+    "… 13 more elements of the same shape"
   ]
 }
 ```
@@ -2918,8 +2918,8 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 54% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `98.708` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 44% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.020113` |
+| `PRICE` | number | optional (filled in 54% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `100.694` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 44% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.057593` |
 
 ### CALLABLE_BOND
 
@@ -3312,38 +3312,38 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "CALYPSO",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:35:00Z",
-  "TRADE_DATE": "2024-10-28",
-  "INPUT_DATE": "2024-10-28",
-  "TRADE_ID": "CLY-4000121",
-  "TRADE_STATUS": "VALIDATED",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2024-04-24",
+  "INPUT_DATE": "2024-04-24",
+  "TRADE_ID": "CLY-3000121",
+  "TRADE_STATUS": "AMENDED",
   "TRADE_ACTION": "AMEND",
   "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "4000121002",
+  "TRANSACTION_ID": "3000121002",
   "PACKAGE_ID": "",
-  "QUANTITY": 145605000.0,
+  "QUANTITY": 60000000.0,
   "PRICE": null,
-  "BUY_SELL_CODE": "B",
+  "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "TRS_LOAN_INDEX",
   "PRODUCT_SUB_TYPE": "Total return swap on a loan index",
   "PRODUCT_GROUP": "Credit",
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-AURORA",
-  "COUNTERPARTY_UEN": "UEN0100074",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "NO",
+  "COUNTERPARTY": "CP-MERIDIAN-RE",
+  "COUNTERPARTY_UEN": "UEN0100407",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "BM",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-CREDIT-2",
-  "TRADER_ID": "TRDR-CDUBOIS",
-  "TRADER_FIRST_NAME": "C.",
-  "TRADER_LAST_NAME": "Dubois",
-  "START_DATE": "2024-10-30",
-  "MATURITY_DATE": "2032-08-31",
+  "PORTFOLIO": "BOOK-CREDIT-3",
+  "TRADER_ID": "TRDR-DWHITFIELD",
+  "TRADER_FIRST_NAME": "D.",
+  "TRADER_LAST_NAME": "Whitfield",
+  "START_DATE": "2024-04-26",
+  "MATURITY_DATE": "2028-02-01",
   "REGISTRY_DELIVERY_DATE": "",
   "CURRENCY": "GBP",
   "DELIVERY_VERSUS_PAYMENT": "NO",
@@ -3353,19 +3353,19 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-CREDIT",
-  "TT_BOOK": "BOOK-CREDIT-2",
+  "TT_BOOK": "BOOK-CREDIT-3",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2024-10-30",
+  "SETTLEMENT_DATE": "2024-04-26",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FLOAT",
-      "LEG_ECONOMIC_TYPE": "Pay",
+      "LEG_ECONOMIC_TYPE": "Receive",
       "CURRENCY": "GBP",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 145605000.0,
+      "NOTIONAL": 60000000.0,
       "DISCOUNT_INDEX": "CRV-GBP-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -3379,7 +3379,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "8",
+      "NUM_PROFILE_REC": "4",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "USCPI",
@@ -3388,32 +3388,32 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "4000121001",
+          "FLOW_ID": "3000121001",
           "FLOW_TYPE": "Premium",
-          "NOTIONAL": 145605000.0,
+          "NOTIONAL": 60000000.0,
           "RATE": 0.01,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2024-10-30",
-          "END_DATE": "2025-10-30",
-          "PAYMENT_DATE": "2025-10-30",
+          "START_DATE": "2024-04-26",
+          "END_DATE": "2025-04-26",
+          "PAYMENT_DATE": "2025-04-26",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 7 more elements of the same shape"
+        "… 3 more elements of the same shape"
       ]
     },
     {
       "LEG_ID": "2",
       "LEG_TYPE": "FLOAT",
-      "LEG_ECONOMIC_TYPE": "Receive",
+      "LEG_ECONOMIC_TYPE": "Pay",
       "CURRENCY": "GBP",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 145605000.0,
+      "NOTIONAL": 60000000.0,
       "DISCOUNT_INDEX": "CRV-GBP-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -3436,14 +3436,14 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "4000121009",
+          "FLOW_ID": "3000121005",
           "FLOW_TYPE": "Float",
-          "NOTIONAL": 145605000.0,
+          "NOTIONAL": 60000000.0,
           "RATE": 0.037956,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2024-10-30",
-          "END_DATE": "2032-08-31",
-          "PAYMENT_DATE": "2032-08-31",
+          "START_DATE": "2024-04-26",
+          "END_DATE": "2028-02-01",
+          "PAYMENT_DATE": "2028-02-01",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
@@ -3456,18 +3456,18 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "4000121001",
+      "EVENT_ID": "3000121001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2024-10-28",
+      "EVENT_DATE": "2024-04-24",
       "AMOUNT": "",
       "CURRENCY": "GBP",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 13 more elements of the same shape"
+    "… 9 more elements of the same shape"
   ]
 }
 ```
@@ -4169,17 +4169,17 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "CALYPSO",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:13:00Z",
-  "TRADE_DATE": "2025-02-14",
-  "INPUT_DATE": "2025-02-14",
-  "TRADE_ID": "CLY-4000128",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2024-11-06",
+  "INPUT_DATE": "2024-11-06",
+  "TRADE_ID": "CLY-3000127",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "4000128002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "3000127001",
   "PACKAGE_ID": "",
-  "QUANTITY": 454658600.0,
-  "PRICE": 0.104873,
+  "QUANTITY": 153000000.0,
+  "PRICE": 0.066451,
   "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "CLN",
   "PRODUCT_SUB_TYPE": "Credit-linked note",
@@ -4195,14 +4195,14 @@ Its fields beyond the shared table:
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-CREDIT-2",
-  "TRADER_ID": "TRDR-DWHITFIELD",
-  "TRADER_FIRST_NAME": "D.",
-  "TRADER_LAST_NAME": "Whitfield",
-  "START_DATE": "2025-02-17",
-  "MATURITY_DATE": "2031-12-03",
+  "PORTFOLIO": "BOOK-CREDIT-3",
+  "TRADER_ID": "TRDR-CDUBOIS",
+  "TRADER_FIRST_NAME": "C.",
+  "TRADER_LAST_NAME": "Dubois",
+  "START_DATE": "2024-11-08",
+  "MATURITY_DATE": "2033-02-25",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "AUD",
+  "CURRENCY": "JPY",
   "DELIVERY_VERSUS_PAYMENT": "NO",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -4210,20 +4210,20 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-CREDIT",
-  "TT_BOOK": "BOOK-CREDIT-2",
+  "TT_BOOK": "BOOK-CREDIT-3",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2025-02-17",
+  "SETTLEMENT_DATE": "2024-11-08",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FIXED",
       "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "AUD",
+      "CURRENCY": "JPY",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 454658600.0,
-      "DISCOUNT_INDEX": "CRV-AUD-OIS",
+      "NOTIONAL": 153000000.0,
+      "DISCOUNT_INDEX": "CRV-JPY-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
@@ -4236,7 +4236,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "14",
+      "NUM_PROFILE_REC": "17",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -4245,39 +4245,39 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "4000128001",
+          "FLOW_ID": "3000127001",
           "FLOW_TYPE": "",
-          "NOTIONAL": 454658600.0,
-          "RATE": 0.050567,
+          "NOTIONAL": 153000000.0,
+          "RATE": 0.053397,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2025-02-17",
-          "END_DATE": "2025-08-17",
-          "PAYMENT_DATE": "2025-08-17",
+          "START_DATE": "2024-11-08",
+          "END_DATE": "2025-05-08",
+          "PAYMENT_DATE": "2025-05-08",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 13 more elements of the same shape"
+        "… 16 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "4000128001",
+      "EVENT_ID": "3000127001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2025-02-14",
+      "EVENT_DATE": "2024-11-06",
       "AMOUNT": "",
-      "CURRENCY": "AUD",
+      "CURRENCY": "JPY",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 18 more elements of the same shape"
+    "… 22 more elements of the same shape"
   ]
 }
 ```
@@ -4286,9 +4286,9 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 54% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.104873` |
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 42% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-CAD-OIS`, `CRV-GBP-OIS`, `CRV-EUR-OIS`, `CRV-AUD-OIS`, `CRV-CHF-OIS` | `"CRV-AUD-OIS"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 44% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.050567` |
+| `PRICE` | number | optional (filled in 54% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.066451` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 42% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-CAD-OIS`, `CRV-GBP-OIS`, `CRV-EUR-OIS`, `CRV-AUD-OIS`, `CRV-CHF-OIS` | `"CRV-JPY-OIS"` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 44% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.053397` |
 
 ### CORP_BOND
 
@@ -4297,18 +4297,18 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "CALYPSO",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:23:00Z",
-  "TRADE_DATE": "2025-12-31",
-  "INPUT_DATE": "2025-12-31",
-  "TRADE_ID": "CLY-3000166",
-  "TRADE_STATUS": "AMENDED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "3",
-  "TRANSACTION_ID": "3000166003",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2024-12-06",
+  "INPUT_DATE": "2024-12-06",
+  "TRADE_ID": "CLY-3000163",
+  "TRADE_STATUS": "VALIDATED",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "3000163001",
   "PACKAGE_ID": "",
-  "QUANTITY": 33240454.5,
-  "PRICE": 106.508,
-  "BUY_SELL_CODE": "B",
+  "QUANTITY": 63191940.0,
+  "PRICE": 86.697,
+  "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "CORP_BOND",
   "PRODUCT_SUB_TYPE": "Corporate bond",
   "PRODUCT_GROUP": "Fixed income",
@@ -4323,12 +4323,12 @@ Its fields beyond the shared table:
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-FI-2",
-  "TRADER_ID": "TRDR-BADEYEMI",
-  "TRADER_FIRST_NAME": "B.",
-  "TRADER_LAST_NAME": "Adeyemi",
-  "START_DATE": "2026-01-02",
-  "MATURITY_DATE": "2031-12-22",
+  "PORTFOLIO": "BOOK-FI-1",
+  "TRADER_ID": "TRDR-RCASTILLO",
+  "TRADER_FIRST_NAME": "R.",
+  "TRADER_LAST_NAME": "Castillo",
+  "START_DATE": "2024-12-09",
+  "MATURITY_DATE": "2030-01-15",
   "REGISTRY_DELIVERY_DATE": "",
   "CURRENCY": "USD",
   "DELIVERY_VERSUS_PAYMENT": "YES",
@@ -4338,19 +4338,19 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-FI",
-  "TT_BOOK": "BOOK-FI-2",
+  "TT_BOOK": "BOOK-FI-1",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2026-01-02",
+  "SETTLEMENT_DATE": "2024-12-09",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FIXED",
-      "LEG_ECONOMIC_TYPE": "Pay",
+      "LEG_ECONOMIC_TYPE": "Receive",
       "CURRENCY": "USD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 237600000.0,
+      "NOTIONAL": 44000000.0,
       "DISCOUNT_INDEX": "",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -4364,7 +4364,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "12",
+      "NUM_PROFILE_REC": "11",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -4373,39 +4373,39 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "3000166001",
+          "FLOW_ID": "3000163001",
           "FLOW_TYPE": "",
-          "NOTIONAL": 237600000.0,
-          "RATE": 0.042971,
+          "NOTIONAL": 44000000.0,
+          "RATE": 0.041339,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-01-02",
-          "END_DATE": "2026-07-02",
-          "PAYMENT_DATE": "2026-07-02",
+          "START_DATE": "2024-12-09",
+          "END_DATE": "2025-06-09",
+          "PAYMENT_DATE": "2025-06-09",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 11 more elements of the same shape"
+        "… 10 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "3000166001",
+      "EVENT_ID": "3000163001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2025-12-31",
+      "EVENT_DATE": "2024-12-06",
       "AMOUNT": "",
       "CURRENCY": "USD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 18 more elements of the same shape"
+    "… 16 more elements of the same shape"
   ]
 }
 ```
@@ -4414,8 +4414,8 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 54% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `106.508` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 44% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.042971` |
+| `PRICE` | number | optional (filled in 54% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `86.697` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 44% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.041339` |
 
 ### FIRST_TO_DEFAULT
 
@@ -4931,18 +4931,18 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "CALYPSO",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:31:00Z",
-  "TRADE_DATE": "2024-09-12",
-  "INPUT_DATE": "2024-09-12",
-  "TRADE_ID": "CLY-3000208",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2025-09-22",
+  "INPUT_DATE": "2025-09-22",
+  "TRADE_ID": "CLY-3000205",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "3000208002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "3000205001",
   "PACKAGE_ID": "",
-  "QUANTITY": 74890725.0,
-  "PRICE": 100.522,
-  "BUY_SELL_CODE": "B",
+  "QUANTITY": 34279780.0,
+  "PRICE": 90.301,
+  "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "MUNI_BOND",
   "PRODUCT_SUB_TYPE": "Municipal bond",
   "PRODUCT_GROUP": "Fixed income",
@@ -4957,14 +4957,14 @@ Its fields beyond the shared table:
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-FI-2",
-  "TRADER_ID": "TRDR-BADEYEMI",
-  "TRADER_FIRST_NAME": "B.",
-  "TRADER_LAST_NAME": "Adeyemi",
-  "START_DATE": "2024-09-16",
-  "MATURITY_DATE": "2027-06-22",
+  "PORTFOLIO": "BOOK-FI-1",
+  "TRADER_ID": "TRDR-RCASTILLO",
+  "TRADER_FIRST_NAME": "R.",
+  "TRADER_LAST_NAME": "Castillo",
+  "START_DATE": "2025-09-24",
+  "MATURITY_DATE": "2028-03-06",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "GBP",
+  "CURRENCY": "CAD",
   "DELIVERY_VERSUS_PAYMENT": "YES",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -4972,19 +4972,19 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-FI",
-  "TT_BOOK": "BOOK-FI-2",
+  "TT_BOOK": "BOOK-FI-1",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2024-09-16",
+  "SETTLEMENT_DATE": "2025-09-24",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FIXED",
-      "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "GBP",
+      "LEG_ECONOMIC_TYPE": "Receive",
+      "CURRENCY": "CAD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 207000000.0,
+      "NOTIONAL": 34000000.0,
       "DISCOUNT_INDEX": "",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -4998,7 +4998,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "6",
+      "NUM_PROFILE_REC": "5",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -5007,39 +5007,39 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "3000208001",
+          "FLOW_ID": "3000205001",
           "FLOW_TYPE": "",
-          "NOTIONAL": 207000000.0,
-          "RATE": 0.057339,
+          "NOTIONAL": 34000000.0,
+          "RATE": 0.026536,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2024-09-16",
-          "END_DATE": "2025-03-16",
-          "PAYMENT_DATE": "2025-03-16",
+          "START_DATE": "2025-09-24",
+          "END_DATE": "2026-03-24",
+          "PAYMENT_DATE": "2026-03-24",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 5 more elements of the same shape"
+        "… 4 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "3000208001",
+      "EVENT_ID": "3000205001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2024-09-12",
+      "EVENT_DATE": "2025-09-22",
       "AMOUNT": "",
-      "CURRENCY": "GBP",
+      "CURRENCY": "CAD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 12 more elements of the same shape"
+    "… 10 more elements of the same shape"
   ]
 }
 ```
@@ -5048,8 +5048,8 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 54% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `100.522` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 44% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.057339` |
+| `PRICE` | number | optional (filled in 54% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `90.301` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 44% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.026536` |
 
 ### AMORT_BOND
 
@@ -5185,40 +5185,40 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "CALYPSO",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:22:00Z",
-  "TRADE_DATE": "2025-12-02",
-  "INPUT_DATE": "2025-12-02",
-  "TRADE_ID": "CLY-4001037",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2025-02-28",
+  "INPUT_DATE": "2025-02-28",
+  "TRADE_ID": "CLY-3000116",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "4001037002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "3000116001",
   "PACKAGE_ID": "",
-  "QUANTITY": 98280000.0,
+  "QUANTITY": 104000000.0,
   "PRICE": null,
-  "BUY_SELL_CODE": "B",
+  "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "TRS_BOND",
   "PRODUCT_SUB_TYPE": "Total return swap on a bond",
   "PRODUCT_GROUP": "Credit",
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-HALCYON",
-  "COUNTERPARTY_UEN": "UEN0100222",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "GR",
+  "COUNTERPARTY": "CP-HARBORPT",
+  "COUNTERPARTY_UEN": "UEN0100259",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "US",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-CREDIT-3",
-  "TRADER_ID": "TRDR-DWHITFIELD",
-  "TRADER_FIRST_NAME": "D.",
-  "TRADER_LAST_NAME": "Whitfield",
-  "START_DATE": "2025-12-04",
-  "MATURITY_DATE": "2030-08-07",
+  "PORTFOLIO": "BOOK-CREDIT-2",
+  "TRADER_ID": "TRDR-CDUBOIS",
+  "TRADER_FIRST_NAME": "C.",
+  "TRADER_LAST_NAME": "Dubois",
+  "START_DATE": "2025-03-03",
+  "MATURITY_DATE": "2028-06-09",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "EUR",
+  "CURRENCY": "USD",
   "DELIVERY_VERSUS_PAYMENT": "NO",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -5226,20 +5226,20 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-CREDIT",
-  "TT_BOOK": "BOOK-CREDIT-3",
+  "TT_BOOK": "BOOK-CREDIT-2",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2025-12-04",
+  "SETTLEMENT_DATE": "2025-03-03",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FLOAT",
-      "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "EUR",
+      "LEG_ECONOMIC_TYPE": "Receive",
+      "CURRENCY": "USD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 109200000.0,
-      "DISCOUNT_INDEX": "CRV-EUR-OIS",
+      "NOTIONAL": 104000000.0,
+      "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
@@ -5252,7 +5252,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "5",
+      "NUM_PROFILE_REC": "4",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "USCPI",
@@ -5261,33 +5261,33 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "4001037001",
+          "FLOW_ID": "3000116001",
           "FLOW_TYPE": "Premium",
-          "NOTIONAL": 109200000.0,
+          "NOTIONAL": 104000000.0,
           "RATE": 0.01,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2025-12-04",
-          "END_DATE": "2026-12-04",
-          "PAYMENT_DATE": "2026-12-04",
+          "START_DATE": "2025-03-03",
+          "END_DATE": "2026-03-03",
+          "PAYMENT_DATE": "2026-03-03",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 4 more elements of the same shape"
+        "… 3 more elements of the same shape"
       ]
     },
     {
       "LEG_ID": "2",
       "LEG_TYPE": "FLOAT",
-      "LEG_ECONOMIC_TYPE": "Receive",
-      "CURRENCY": "EUR",
+      "LEG_ECONOMIC_TYPE": "Pay",
+      "CURRENCY": "USD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 98280000.0,
-      "DISCOUNT_INDEX": "CRV-EUR-OIS",
+      "NOTIONAL": 104000000.0,
+      "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
@@ -5303,20 +5303,20 @@ Its fields beyond the shared table:
       "NUM_PROFILE_REC": "1",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "ESTR",
+        "NAME": "SOFR",
         "GROUP": "Credit",
         "SUB_GROUP": ""
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "4001037006",
+          "FLOW_ID": "3000116005",
           "FLOW_TYPE": "Float",
-          "NOTIONAL": 98280000.0,
-          "RATE": 0.019824,
+          "NOTIONAL": 104000000.0,
+          "RATE": 0.036215,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2025-12-04",
-          "END_DATE": "2030-08-07",
-          "PAYMENT_DATE": "2030-08-07",
+          "START_DATE": "2025-03-03",
+          "END_DATE": "2028-06-09",
+          "PAYMENT_DATE": "2028-06-09",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
@@ -5329,13 +5329,13 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "4001037001",
+      "EVENT_ID": "3000116001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2025-12-02",
+      "EVENT_DATE": "2025-02-28",
       "AMOUNT": "",
-      "CURRENCY": "EUR",
+      "CURRENCY": "USD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
@@ -5349,7 +5349,7 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 42% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-CAD-OIS`, `CRV-GBP-OIS`, `CRV-EUR-OIS`, `CRV-AUD-OIS`, `CRV-CHF-OIS` | `"CRV-EUR-OIS"` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 42% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-CAD-OIS`, `CRV-GBP-OIS`, `CRV-EUR-OIS`, `CRV-AUD-OIS`, `CRV-CHF-OIS` | `"CRV-USD-OIS"` |
 | `LEGS[].RESET_FIXING_SHIFT` | string | optional (filled in 16% of `LEGS[]` entries) | Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg. | one of `-2`, `0`; unit: business days | `"-2"` |
 | `LEGS[].RESET_CONVENTION` | string | optional (filled in 12% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Quarterly"` |
 | `LEGS[].INDEX.NAME` | string | optional (filled in 16% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"USCPI"` |
@@ -5364,16 +5364,16 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "CALYPSO",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:46:00Z",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
   "TRADE_DATE": "2026-05-22",
   "INPUT_DATE": "2026-05-22",
-  "TRADE_ID": "CLY-4000770",
+  "TRADE_ID": "CLY-3000159",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "4000770002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "3000159001",
   "PACKAGE_ID": "",
-  "QUANTITY": 369685022.27,
+  "QUANTITY": 91984330.0,
   "PRICE": 109.848,
   "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "GOVT_BOND",
@@ -5417,7 +5417,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 421995000.0,
+      "NOTIONAL": 105000000.0,
       "DISCOUNT_INDEX": "",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -5440,9 +5440,9 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "4000770001",
+          "FLOW_ID": "3000159001",
           "FLOW_TYPE": "",
-          "NOTIONAL": 421995000.0,
+          "NOTIONAL": 105000000.0,
           "RATE": 0.032418,
           "FLOAT_SPREAD": "",
           "START_DATE": "2026-05-25",
@@ -5461,7 +5461,7 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "4000770001",
+      "EVENT_ID": "3000159001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
@@ -5472,7 +5472,7 @@ Its fields beyond the shared table:
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 22 more elements of the same shape"
+    "… 21 more elements of the same shape"
   ]
 }
 ```

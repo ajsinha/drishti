@@ -143,7 +143,7 @@ A legal entity the bank trades with: identifiers (LEI, UEN), rating, sector, cou
 
 **To review (7)**
 
-- required inferred from 100% coverage in 66 documents (18 samples and 48 test-data documents (data/testdata/core/counterparty/snapshot-2026-07-08.jsonl.gz, data/testdata/core/counterparty/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 66 documents (18 samples and 48 test-data documents (data/testdata/core/counterparty/counterparty.2026-07-08.jsonl.gz, data/testdata/core/counterparty/counterparty.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'counterparty-master' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: KYC.RISK_RATING, KYC.EMIR_CLASSIFICATION, HIERARCHY.NODES[].TYPE, HIERARCHY.EDGES[].LABEL: confirm they are closed lists.
@@ -200,7 +200,7 @@ Economic group of related counterparties (obligor group).
 
 **To review (6)**
 
-- required inferred from 100% coverage in 62 documents (17 samples and 45 test-data documents (data/testdata/core/counterparty-group/snapshot-2026-07-08.jsonl.gz, data/testdata/core/counterparty-group/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 62 documents (17 samples and 45 test-data documents (data/testdata/core/counterparty-group/counterparty-group.2026-07-08.jsonl.gz, data/testdata/core/counterparty-group/counterparty-group.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'counterparty-master' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - UTILISATION is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
@@ -264,7 +264,7 @@ Issuer of bonds and reference entity for CDS.
 
 **To review (4)**
 
-- required inferred from 100% coverage in 32 documents (16 samples and 16 test-data documents (data/testdata/core/issuer/snapshot-2026-07-08.jsonl.gz, data/testdata/core/issuer/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 32 documents (16 samples and 16 test-data documents (data/testdata/core/issuer/issuer.2026-07-08.jsonl.gz, data/testdata/core/issuer/issuer.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'counterparty-master' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - number types decided by the field's name: BONDS[].COUPON rate: confirm amount, rate or integer.
@@ -318,7 +318,7 @@ A clearing house with its default fund and margin model.
 
 **To review (5)**
 
-- required inferred from 100% coverage in 10 documents (5 samples and 5 test-data documents (data/testdata/core/ccp/snapshot-2026-07-08.jsonl.gz, data/testdata/core/ccp/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 10 documents (5 samples and 5 test-data documents (data/testdata/core/ccp/ccp.2026-07-08.jsonl.gz, data/testdata/core/ccp/ccp.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'clearing-system' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - number types decided by the field's name: IM_POSTED amount, ACCOUNTS[].IM amount: confirm amount, rate or integer.
@@ -393,7 +393,7 @@ The bank's own booking entity.
 
 **To review (6)**
 
-- required inferred from 100% coverage in 12 documents (4 samples and 8 test-data documents (data/testdata/core/legal-entity/snapshot-2026-07-08.jsonl.gz, data/testdata/core/legal-entity/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 12 documents (4 samples and 8 test-data documents (data/testdata/core/legal-entity/legal-entity.2026-07-08.jsonl.gz, data/testdata/core/legal-entity/legal-entity.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'entity-master' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: NAME, LEI, REGULATOR: confirm they are closed lists.
@@ -471,7 +471,7 @@ A trading book: owner desk, trades and risk.
 
 **To review (6)**
 
-- required inferred from 100% coverage in 90 documents (30 samples and 60 test-data documents (data/testdata/core/book/snapshot-2026-07-08.jsonl.gz, data/testdata/core/book/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 90 documents (30 samples and 60 test-data documents (data/testdata/core/book/book.2026-07-08.jsonl.gz, data/testdata/core/book/book.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'org-master' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: TOP_TRADES[].STATUS, TOP_TRADES[].CURRENCY, TOP_TRADES[].MATURITY_BUCKET: confirm they are closed lists.
@@ -547,7 +547,7 @@ A trading desk: books, limits and risk results.
 
 **To review (6)**
 
-- required inferred from 100% coverage in 30 documents (10 samples and 20 test-data documents (data/testdata/core/desk/snapshot-2026-07-08.jsonl.gz, data/testdata/core/desk/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 30 documents (10 samples and 20 test-data documents (data/testdata/core/desk/desk.2026-07-08.jsonl.gz, data/testdata/core/desk/desk.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'org-master' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: POSITIONS[].CURRENCY: confirm they are closed lists.
@@ -607,7 +607,7 @@ A trader and their books.
 
 **To review (3)**
 
-- required inferred from 100% coverage in 40 documents (20 samples and 20 test-data documents (data/testdata/core/trader/snapshot-2026-07-08.jsonl.gz, data/testdata/core/trader/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 40 documents (20 samples and 20 test-data documents (data/testdata/core/trader/trader.2026-07-08.jsonl.gz, data/testdata/core/trader/trader.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'org-master' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 
@@ -666,7 +666,7 @@ Business-day calendar (USNY, TARGET, GBLO, JPTO…).
 
 **To review (4)**
 
-- required inferred from 100% coverage in 8 documents (4 samples and 4 test-data documents (data/testdata/core/calendar/snapshot-2026-07-08.jsonl.gz, data/testdata/core/calendar/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 8 documents (4 samples and 4 test-data documents (data/testdata/core/calendar/calendar.2026-07-08.jsonl.gz, data/testdata/core/calendar/calendar.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'reference-master' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: HOLIDAYS[].WEEKDAY: confirm they are closed lists.
@@ -738,7 +738,7 @@ An account at a CCP holding cleared trades and margin.
 
 **To review (6)**
 
-- required inferred from 100% coverage in 12 documents (5 samples and 7 test-data documents (data/testdata/core/clearing-account/snapshot-2026-07-08.jsonl.gz, data/testdata/core/clearing-account/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 12 documents (5 samples and 7 test-data documents (data/testdata/core/clearing-account/clearing-account.2026-07-08.jsonl.gz, data/testdata/core/clearing-account/clearing-account.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'clearing-system' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: CCP_NAME, TRADES[].ASSET_CLASS, TRADES[].CURRENCY, TRADES[].MATURITY_BUCKET: confirm they are closed lists.

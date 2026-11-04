@@ -23,10 +23,10 @@ A listed bond: terms, price, yield, spreads and analytics. One row per bond (sec
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-data/bond/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-data/bond/` + `bond.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `ISIN` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -43,9 +43,9 @@ A real record, the most complete of the 1,920 (the one with the most non-empty f
   "ISSUER_NAME": "United States Treasury",
   "COUPON": 0.0382,
   "MATURITY": "2031-02-15",
-  "PRICE": 97.578,
-  "YIELD": 0.043768,
-  "Z_SPREAD": 17.1,
+  "PRICE": 97.691,
+  "YIELD": 0.043508,
+  "Z_SPREAD": 16.8,
   "MOD_DURATION": 4.5,
   "RATING": "AA+",
   "TERMS": {
@@ -71,12 +71,12 @@ A real record, the most complete of the 1,920 (the one with the most non-empty f
   ],
   "HISTORY": [
     {
-      "DATE": "2026-05-27",
-      "PRICE": 98.968
+      "DATE": "2026-05-26",
+      "PRICE": 99.103
     },
     {
-      "DATE": "2026-05-28",
-      "PRICE": 99.094
+      "DATE": "2026-05-27",
+      "PRICE": 98.968
     },
     "… 28 more elements of the same shape"
   ],
@@ -96,9 +96,9 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `ISSUER_NAME` | string | required | The issuer's legal name. | — | `"United States Treasury"` |
 | `COUPON` | number | required | The annual coupon rate, as a fraction (0.0579 is 5.79%). | unit: fraction | `0.0382` |
 | `MATURITY` | date (YYYY-MM-DD) | required | The bond's maturity date. | — | `"2031-02-15"` |
-| `PRICE` | number | required | The bond's price per 100 of face value, in the bond's currency (TERMS.CURRENCY). | unit: per 100 face | `97.578` |
-| `YIELD` | number | required | The yield to maturity, as a fraction (0.071 is 7.1%). | unit: fraction | `0.043768` |
-| `Z_SPREAD` | number | required | The zero-volatility spread over the benchmark curve, in basis points. | unit: bp | `17.1` |
+| `PRICE` | number | required | The bond's price per 100 of face value, in the bond's currency (TERMS.CURRENCY). | unit: per 100 face | `97.691` |
+| `YIELD` | number | required | The yield to maturity, as a fraction (0.071 is 7.1%). | unit: fraction | `0.043508` |
+| `Z_SPREAD` | number | required | The zero-volatility spread over the benchmark curve, in basis points. | unit: bp | `16.8` |
 | `MOD_DURATION` | number | required | The modified duration, in years. | unit: years | `4.5` |
 | `RATING` | string | required | The bond's credit rating, S&P-style (BB-, A+ …). | — | `"AA+"` |
 | `TERMS` | object | required | The bond's static terms: currency, coupon frequency, day count, issue date, amount issued, seniority, callable, CUSIP. | — | {…} |
@@ -114,8 +114,8 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `COUPONS[].DATE` | date (YYYY-MM-DD) | required | The coupon's payment date. | — | `"2027-02-15"` |
 | `COUPONS[].AMOUNT` | number | required | The coupon paid on that date per 100 of face value (the annual coupon divided by the payments a year). | unit: per 100 face | `1.91` |
 | `HISTORY` | array of objects | required | The bond's daily price history, oldest first: one object per business day. | — | [30 objects] |
-| `HISTORY[].DATE` | date (YYYY-MM-DD) | required | A business day of the price history, oldest first, ending at the record's date. | — | `"2026-05-27"` |
-| `HISTORY[].PRICE` | number | required | The bond's clean price that day, per 100 of face. | unit: per 100 face | `98.968` |
+| `HISTORY[].DATE` | date (YYYY-MM-DD) | required | A business day of the price history, oldest first, ending at the record's date. | — | `"2026-05-26"` |
+| `HISTORY[].PRICE` | number | required | The bond's clean price that day, per 100 of face. | unit: per 100 face | `99.103` |
 | `ISSUER` | string | required | The issuer: an ISSUER_ID of the core pack's issuer kind (ISS-…). | pattern `^ISS-`; links to `issuer` | `"ISS-UST"` |
 | `BENCHMARK_CURVE` | string | required | The government curve the bond is spread over: a CURVE_ID of the market-data pack's ir-curve kind (CRV-<ccy>-GOVT). | pattern `^CRV-`; links to `ir-curve` | `"CRV-USD-GOVT"` |
 

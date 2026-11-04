@@ -39,14 +39,15 @@ granted under. The demo's twelve letters each hold a few books across desks, and
 vector's id is ``PNL-<trade or position>-<SCENARIO_SET_ID>`` (``PV-`` before 2.9.5)."""
 from __future__ import annotations
 
-import gzip
 import hashlib
 import json
+import sys
 from collections import defaultdict
 from pathlib import Path
 
-import factors as F
-import scenario_fx as SFX
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "lake"))     # tools/lake: feedfiles (our dated feed files)
+import factors as F  # noqa: E402
+import scenario_fx as SFX  # noqa: E402
 
 LIVE = ("NEW", "VALIDATED", "AMENDED")
 DIVISIONS = {"DESK-MM": "DIV-TREASURY", "DESK-SFT": "DIV-TREASURY"}       # every other desk is in DIV-MARKETS
@@ -58,15 +59,16 @@ PER_SECURITY = 6
 
 
 def replay(folder: Path, key: str, dates: list[str]) -> dict[str, dict]:
-    """A dataset's documents on its last day: the first day's snapshot, then each later day's changes by key."""
+    """A dataset's documents on its last day: the first day's snapshot, then each later day's changes by key (its dated files,
+    <table>.<YYYY-MM-DD>.jsonl.gz: tools/lake/feedfiles.py)."""
+    import feedfiles
     state: dict[str, dict] = {}
-    for i, day in enumerate(dates):
-        for f in sorted(folder.glob(f"{'snapshot' if i == 0 else 'changes'}-{day}*.jsonl.gz")):
-            with gzip.open(f, "rt", encoding="utf-8") as fh:
-                for line in fh:
-                    if line.strip():
-                        d = json.loads(line)
-                        state[str(d[key])] = d
+    parts = feedfiles.read_table(folder)
+    for day in dates:
+        for part in parts.get(day, []):
+            for line in part.lines():
+                d = json.loads(line)
+                state[str(d[key])] = d
     return state
 
 

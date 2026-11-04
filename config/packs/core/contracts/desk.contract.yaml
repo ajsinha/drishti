@@ -187,8 +187,8 @@ notes:
   field of their own.'
 - The desk's VaR is the engine's (DESK:<id>), computed as the page opens (VAR_ENGINE); VAR_99 and VAR_RESULT are not kept on the record.
 review:
-- 'required inferred from 100% coverage in 30 documents (10 samples and 20 test-data documents (data/testdata/core/desk/snapshot-2026-07-08.jsonl.gz,
-  data/testdata/core/desk/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.'
+- 'required inferred from 100% coverage in 30 documents (10 samples and 20 test-data documents (data/testdata/core/desk/desk.2026-07-08.jsonl.gz,
+  data/testdata/core/desk/desk.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'source ''org-master'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'
 - 'enum values inferred from the data, not from a glossary: POSITIONS[].CURRENCY: confirm they are closed lists.'
