@@ -15,7 +15,7 @@
 -->
 # Changelog
 
-## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (unreleased)
+## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (2026-11-04)
 
 - **The VaR screen's layout (2.9.11.b, the product owner's approved mock-up A, `docs/lenses/mockups/var-layout/A.html` and
   `A-drawer.html`; VAR_GUIDE.md sections 3.2, 3.5, 3.6; tutorial 25 steps 5, 7, 9).** Two changes, everything else as it was. The
