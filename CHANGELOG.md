@@ -302,6 +302,33 @@
   The pivot's show-as is `core.ShowAs` alone (develop's copy inside `PivotAnswer` is gone). Help → Functions lists the engine's
   measure-level functions (`ratio`, `share_of`, `calc` …) under their own heading.
 
+### Part C: virtual tables for every consumer (decided 2026-11-04)
+
+- **The decisions (VIRTUAL_TABLES.md section 10, status decided).** V1 to V5 as recommended, V6 (built with the DEL fold: one migration,
+  one parity proof, two drills), and V7 to V15: many tables over one source with reads shared per request, new tables offered never made,
+  editors and reading as the source, models across connectors with the scan warning, dates as the source has them, names unique across
+  virtual and stored tables, Sutras reading tables, DuckDB the one SQL engine reached only through the existing executors, one grammar.
+- **Reading a table (TABLES_GUIDE.md section 7a).** `tables.read.TableReads`: a table resolved to its root source (a table over a table
+  reads its base's source with the base's grain and filter, its own added), the source's documents read once per business date and
+  known-at time for every table over it within one request, the rows computed by the preview's one computation
+  (`Preview.rows(table, doc, ...)`, now shared), the reader's access applied; a reader's condition in Rachana over the table's columns
+  (a masked column cannot filter); dates: none is the latest, a date not held is refused, an undated source is today's rows, known-at
+  refused where the source keeps no history; more than `drishti.tables.read-max-rows` (2,000,000) refused, never cut short. It is the
+  layer's `ModelAnswers.Rows` too, so a model's answer reads the same rows.
+- **One access rule.** `answer.TableAccess`: a table's rules for the reader's roles, the table and its columns hidden from a role, the masks
+  for a reader without the raw power; `ModelAnswers` now asks it (moved out of `ModelAnswers`, not copied).
+- **Names and joins.** `Catalogue.clashes` refuses a virtual table named like a stored table (`DRS-9616`); `tables check --stored`.
+  `read.ScanEstimate` warns of a large unfiltered side of a model's join across connectors.
+- **New tables offered.** `read.TableOffer` and `drishti.py tables offer NAME --sample FILE (--kind K | --lake L --table T) [--grain]
+  [--write]`: one typed column per scalar field of a sample, the id key when unique, the lists of objects as grains to choose; `--write`
+  accepts it as a new file, refused when the name is taken.
+- **Codes.** `DRS-9615` (a read refused) and `DRS-9616` (a name clash), in TABLES_GUIDE.md and API_GUIDE.md.
+- **Build fixes on the branch.** Error Prone's `ReturnValueIgnored` (`lang.Compiler`) and `JavaTimeDefaultTimeZone` (`lang.SqlLowering`,
+  the preview's evaluator) and `NullTernary` (`ModelAnswersTest`), which stopped `drishti-bicompute` and `drishti-tables` compiling.
+- **Tests.** `TableReadsTest` (shared reads, rules, masks, hidden columns, conditions, a table over a table, dates, the limit),
+  `TableOfferTest` (the offer and its grain pass the checks and preview; name clashes; the scan warning), `TablesCliTest` (offer, `--stored`),
+  `tools/test_tablescli.py`.
+
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 
 ### The data inbox

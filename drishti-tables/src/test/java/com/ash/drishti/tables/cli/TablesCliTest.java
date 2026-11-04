@@ -62,7 +62,7 @@ class TablesCliTest {
     void usageAndUnknownCommands() {
         assertThat(run()).isEqualTo(TablesCli.USAGE);
         assertThat(run("--help")).isEqualTo(TablesCli.OK);
-        assertThat(out()).contains("tables list|check|preview|lineage|migrate");
+        assertThat(out()).contains("tables list|check|preview|lineage|offer|migrate");
         assertThat(run("nope")).isEqualTo(TablesCli.USAGE);
         assertThat(run("check", "--bogus")).isEqualTo(TablesCli.USAGE);
         assertThat(run("migrate", "--dry-run", "--check")).isEqualTo(TablesCli.USAGE);
@@ -99,5 +99,22 @@ class TablesCliTest {
         assertThat(Files.readString(cwd.resolve("audit.jsonl"))).contains("\"who\":\"ajsinha\"");
         assertThat(run("migrate", "--check")).isEqualTo(TablesCli.OK);
         assertThat(out()).contains("nothing to migrate");
+    }
+
+    @Test
+    void offerPrintsWritesOnceAndRefusesAStoredName() throws Exception {
+        tables();
+        Files.writeString(cwd.resolve("new.jsonl"), "{\"ACCOUNT_ID\":\"A1\",\"LIMIT\":5,\"MOVES\":[{\"AMOUNT\":1}]}\n");
+        assertThat(run("offer", "bank.accounts", "--sample", "new.jsonl", "--kind", "account")).isEqualTo(TablesCli.OK);
+        assertThat(out()).contains("table: bank.accounts").contains("ACCOUNT_ID").contains("$.MOVES[*]");
+        assertThat(Files.exists(cwd.resolve("config/tables/bank/accounts.table.yaml"))).isFalse();
+        assertThat(run("offer", "bank.moves", "--sample", "new.jsonl", "--lake", "demo", "--table", "bank.accounts", "--grain", "$.MOVES[*]",
+                "--write")).isEqualTo(TablesCli.OK);
+        assertThat(Files.readString(cwd.resolve("config/tables/bank/moves.table.yaml"))).contains("$.MOVES[*]").contains("@.AMOUNT");
+        assertThat(run("offer", "bank.moves", "--sample", "new.jsonl", "--kind", "account", "--write")).isEqualTo(TablesCli.PROBLEMS);
+        assertThat(run("offer", "bank.cards", "--sample", "new.jsonl", "--kind", "account", "--stored", "bank.cards", "--write"))
+                .isEqualTo(TablesCli.PROBLEMS);
+        assertThat(run("check", "--stored", "trading.trades,trade")).isEqualTo(TablesCli.PROBLEMS);
+        assertThat(out()).contains("DRS-9616");
     }
 }

@@ -52,7 +52,7 @@ public interface RowEvaluator {
             LateBound.Bound b = bound.computeIfAbsent(expr, x -> LateBound.bind(Trees.parse(x), false));
             EvalContext c = context(f.entity(), f.elements(), formats);
             if (!b.none()) {
-                Map<String, DataNode> late = LateBound.values(b, c, date == null ? LocalDate.now() : date, fx, lookup);
+                Map<String, DataNode> late = LateBound.values(b, c, date == null ? LocalDate.now(java.time.ZoneOffset.UTC) : date, fx, lookup);
                 List<DataNode> elements = new ArrayList<>(f.elements());
                 DataNode entity = f.entity();
                 if (elements.isEmpty()) {

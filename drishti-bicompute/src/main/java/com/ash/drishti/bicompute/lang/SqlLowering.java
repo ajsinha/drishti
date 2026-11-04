@@ -283,7 +283,7 @@ public final class SqlLowering {
     private String businessDays(String from, String to, BusinessCalendar cal) {
         String days = "(" + weekdays(to) + " - " + weekdays(from) + ")";
         List<String> hs = new ArrayList<>();
-        int year = (options.asOf() == null ? LocalDate.now() : options.asOf()).getYear();
+        int year = (options.asOf() == null ? LocalDate.now(java.time.ZoneOffset.UTC) : options.asOf()).getYear();
         // the weekdays the calendar closes (observed holidays included), exactly the days Rachana's isBusinessDay refuses
         LocalDate end = LocalDate.of(year + HOLIDAY_YEARS, 12, 31);
         for (LocalDate h = LocalDate.of(year - HOLIDAY_YEARS, 1, 1); !h.isAfter(end); h = h.plusDays(1)) {

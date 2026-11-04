@@ -234,6 +234,36 @@ public final class Catalogue {
         return out;
     }
 
+    /**
+     * Names are unique across virtual tables and stored tables (VIRTUAL_TABLES.md section 10, V12): each table whose name or {@code was:}
+     * name is a stored table's ({@code stored}: the lakes' tables as {@code <domain>.<name>} and the kinds) is refused, compared without
+     * case. The server passes what its lakes and packs hold; {@code tables check --stored} a list.
+     */
+    public List<Problem> clashes(Collection<String> stored) {
+        Set<String> names = new HashSet<>();
+        stored.forEach(s -> names.add(s.toLowerCase(java.util.Locale.ROOT)));
+        List<Problem> out = new ArrayList<>();
+        for (Entry e : tables.values()) {
+            if (e.table() == null) {
+                continue;
+            }
+            for (String n : java.util.Arrays.asList(e.table().name(), e.table().was())) {
+                if (n != null && names.contains(n.toLowerCase(java.util.Locale.ROOT))) {
+                    out.add(Problem.error(TableCodes.NAME_CLASH, n.equals(e.table().name()) ? "table" : "was", "'" + n + "' is a stored table's name: "
+                            + "a virtual table's name is unique across virtual and stored tables (choose another <domain>.<name>)").in(e.source()));
+                }
+            }
+        }
+        return out;
+    }
+
+    /** True when {@code name} is free for a new virtual table: neither a table, a {@code was:} name nor a stored table's. */
+    public boolean free(String name, Collection<String> stored) {
+        String n = name.toLowerCase(java.util.Locale.ROOT);
+        return tables.keySet().stream().noneMatch(k -> k.equalsIgnoreCase(n)) && was.keySet().stream().noneMatch(k -> k.equalsIgnoreCase(n))
+                && stored.stream().noneMatch(s -> s.equalsIgnoreCase(n));
+    }
+
     private void references(TableDef t, String source, List<Problem> out) {
         if (t.from() != null && t.from().form() == TableDef.Source.Form.TABLE && table(t.from().table()).isEmpty()) {
             out.add(Problem.error(TableCodes.REFERENCE, "from.table", "no table '" + t.from().table() + "' in the catalogue").in(source));

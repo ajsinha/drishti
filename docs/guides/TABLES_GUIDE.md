@@ -34,6 +34,7 @@ the commands around them are the real ones.
 5. [A model, key by key](#5-a-model-key-by-key)
 6. [Materialisation](#6-materialisation)
 7. [Who sees what](#7-who-sees-what)
+7a. [Reading a table: dates and shared reads](#7a-reading-a-table-dates-and-shared-reads)
 8. [Checks, preview and lineage](#8-checks-preview-and-lineage)
 9. [The migration: tables migrate](#9-the-migration-tables-migrate)
 10. [Problem codes](#10-problem-codes)
@@ -62,6 +63,10 @@ Every file starts with `rachana: 3`, the language version of the layer's files: 
 | model | BI's model name, kept (reports, boards and bookmarks bind it by name and major) | `trading-risk@1` |
 | a table's old name | `was: trading-risk-trades`: resolves for one release, with a warning wherever it is used | |
 | reference with a version | `@^1` (or `@1`): the major asked for | `trading.trade@^1` |
+
+A table's name is unique across virtual tables and stored tables: a virtual table named like a lake table or a kind is refused when it is
+defined (`DRS-9616`; `tables check --stored NAME,...` checks against a list, the server against its lakes and packs). Many tables may read
+one source, each with its own columns, grain and filter (`trading.trade_summary` and `trading.trade_legs`, both `from: { kind: trade }`).
 
 ## 3. A table, key by key
 
@@ -196,6 +201,25 @@ states per date. The store's folder is a setting of the layer (planned: `drishti
 
 `$.DESK in user.desks` is strict: a desk-head with no desks sees no trades.
 
+Before the table's own rules, a read is a read of the source as the reader: their row rules and masks on the source kind apply to every
+document. A table hidden from a role (`hidden-for`) gives that role no rows; a column hidden from a role is left out of what they read.
+Administrators and BI authors (the power to edit BI datasets) define tables and models; definitions are audited and versioned like BI's
+items.
+
+## 7a. Reading a table: dates and shared reads
+
+| Point | Rule |
+|---|---|
+| business date | every read names one; none means the source's latest; a date the source does not hold is refused (`DRS-9615`) |
+| undated source | gives its current rows, dated today |
+| known-at time | passed to a source that keeps history; refused by one that does not (`DRS-9615`) |
+| shared reads | within one request (a pivot view, a model query, a Flight read, a Sutra page) a source is read once per business date, and every table over it is computed from that read |
+| a table over a table | reads its base's source with the base's grain and filter, its own filter added, the base's columns and its own |
+| a condition | a reader's condition (a Sutra's `where:`, Flight's `filter`) is Rachana over the table's columns, bare or as `@.X`; a masked column cannot filter (`DRS-9615`) |
+| size | a read of more rows than `drishti.tables.read-max-rows` (2,000,000) is refused in words, never cut short |
+| sources read here | a kind and a lake table; a SQL, Python or model source is computed by its runner |
+| models across connectors | a model may relate tables from different connectors; the engine joins them, and the scan estimate warns when a side is large and unfiltered |
+
 ## 8. Checks, preview and lineage
 
 The command line reads definitions and sample files only; it starts no server. Run it from the repository (or installation) folder:
@@ -230,6 +254,20 @@ $ drishti.py tables lineage bi.trading_risk_trades
 
 Lineage lists who uses a table: models that read it (and as which alias), tables over it, columns that look it up; BI's reports, alerts
 and Flight add theirs once BI reads the layer. Every command takes `--json`.
+
+### Offering a table for new data
+
+A table a data load creates (a new lake table, DATA_LOAD_RULES.md section 7) is offered a flat virtual table; nothing is defined until
+someone accepts it. `tables offer` reads a sample of the new documents and suggests one column per scalar field (a nested object's
+fields one level down, `$.OWNER.NAME` as `OWNER_NAME`), each typed from its values (`integer`, `decimal`, `boolean`, `date`,
+`timestamp`, else `string`), the id field (`id` or a name ending `_ID`) as the key when it is unique in the sample, and names each list
+of objects as a grain to choose instead (`--grain '$.MOVES[*]'`: one row per element, its fields as `@` paths). `--write` accepts it: a
+new file under `config/tables/<domain>/`, refused when the name is taken (a table, a `was:` name, or `--stored`).
+
+```text
+$ drishti.py tables offer bank.accounts --sample accounts.jsonl --kind account
+(filled in the heavy run)
+```
 
 ## 9. The migration: tables migrate
 
@@ -301,5 +339,7 @@ The report:
 | `DRS-9611` | tables over tables in a circle |
 | `DRS-9613` | a sample check |
 | `DRS-9614` | BI's old form where the layer reads |
+| `DRS-9615` | a read refused: a date the source does not hold, known-at on a source without history, too many rows, a source its runner computes, a condition on a masked column, a reader no rule names |
+| `DRS-9616` | a virtual table named like a stored table |
 | `DRS-9127`, `DRS-9129`, `DRS-9152`, `DRS-9122` | the language's (checked mode): a type or scope, not yet, an unknown name; a relationship's ends |
 | `DRS-9195` | the migration refused an item or an expression |

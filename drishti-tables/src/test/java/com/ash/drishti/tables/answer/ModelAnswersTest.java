@@ -103,7 +103,7 @@ class ModelAnswersTest {
             "core.desks", List.of(row("id", "D1", "NAME", "Rates", "REGION", "EMEA"), row("id", "D2", "NAME", "FX", "REGION", "APAC")));
 
     final ModelAnswers answers = new ModelAnswers(Catalogue.of(List.of(TRADES, DESKS), List.of(MODEL)), (t, d) -> DATA.get(t.name()),
-            (from, to, at) -> from.equals(to) ? 1.0 : "EUR".equals(from) && "USD".equals(to) ? 1.5 : null);
+            (from, to, at) -> from.equals(to) ? Double.valueOf(1.0) : "EUR".equals(from) && "USD".equals(to) ? Double.valueOf(1.5) : null);
 
     static ModelAnswers.Reader risk() {
         return new ModelAnswers.Reader(Set.of("risk"), Map.of(), true);

@@ -215,14 +215,6 @@ public final class ModelAnswers {
 
     /** The table's rows the reader may see (null: none, no rule names the reader's roles), masks applied, the model's own rules too. */
     private List<DataNode> readable(String alias, TableDef t, ModelDef m, LocalDate date, Reader who, Set<String> maskedOut) {
-        List<Expr> rules = new ArrayList<>();
-        boolean named = t.rules().isEmpty();
-        for (TableDef.Rule r : t.rules()) {
-            if (!Collections.disjoint(r.roles(), who.roles())) {
-                named = true;
-                rules.add(onColumns(Trees.parse(r.where()), t));
-            }
-        }
         List<Expr> modelRules = new ArrayList<>();
         boolean modelNamed = !m.security().rows().containsKey(alias) || m.security().rows().get(alias).isEmpty();
         for (TableDef.Rule r : m.security().rows().getOrDefault(alias, List.of())) {
@@ -232,26 +224,25 @@ public final class ModelAnswers {
             }
         }
         boolean maySeeAll = m.security().maySeeAll().getOrDefault(alias, List.of()).stream().anyMatch(who.roles()::contains);
-        if (!named && !maySeeAll || !modelNamed) {
+        TableAccess access = TableAccess.of(t, who, maySeeAll);
+        if (access.none() || !modelNamed) {
             return null;
         }
-        Set<String> masks = new HashSet<>();
+        Set<String> masks = new HashSet<>(access.masks());
         if (!who.raw()) {
-            t.columns().values().stream().filter(ColumnDef::masked).forEach(c -> masks.add(c.name()));
             m.security().masked().stream().filter(x -> x.startsWith(alias + ".")).forEach(x -> masks.add(x.substring(alias.length() + 1)));
         }
         masks.forEach(c -> maskedOut.add(alias + "." + c));
-        DataNode user = DataNode.of(new LinkedHashMap<>(who.attributes()));
+        DataNode user = access.user();
         List<DataNode> out = new ArrayList<>();
         for (DataNode row : source.rows(t, date)) {
-            Map<String, DataNode> fields = new LinkedHashMap<>(((DataNode.Obj) row).fields());
-            fields.put("user", user);
-            DataNode withUser = new DataNode.Obj(fields);
-            if (!maySeeAll && !rules.isEmpty() && rules.stream().noneMatch(r -> Values.truthy(r.eval(EvalContext.of(withUser, null))))) {
+            if (!access.allows(row)) {
                 continue;
             }
+            Map<String, DataNode> fields = new LinkedHashMap<>(((DataNode.Obj) row).fields());
+            fields.put("user", user);
             Map<String, DataNode> doc = new LinkedHashMap<>();
-            doc.put(alias, withUser);
+            doc.put(alias, new DataNode.Obj(fields));
             doc.put("user", user);
             if (!modelRules.isEmpty() && modelRules.stream().noneMatch(r -> Values.truthy(r.eval(EvalContext.of(new DataNode.Obj(doc), null))))) {
                 continue;
@@ -261,19 +252,6 @@ public final class ModelAnswers {
             out.add(new DataNode.Obj(kept));
         }
         return out;
-    }
-
-    /** A table rule written over the source's paths, read over the table's rows: each path that a column reads becomes that column. */
-    private static Expr onColumns(Expr rule, TableDef t) {
-        Map<String, String> byPath = new LinkedHashMap<>();
-        t.columns().values().stream().filter(c -> c.path() != null).forEach(c -> byPath.putIfAbsent(c.path(), c.name()));
-        return Trees.map(rule, n -> {
-            String name = Trees.name(n);
-            if (name != null && byPath.containsKey(name)) {
-                return new Expr.Field(new Expr.RowOrRoot(), byPath.get(name), null);
-            }
-            return n;
-        });
     }
 
     /** The fact's rows, each joined many-to-one to every alias the active relationships reach from it: {@code {fact: row, dim: row, ...}}. */

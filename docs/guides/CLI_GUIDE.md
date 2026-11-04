@@ -2789,9 +2789,11 @@ the folder you run them in (`--root` for another catalogue folder). Every comman
 
 ```
 drishti.py tables list                                              every table and model: source, grain, columns, materialisation
-drishti.py tables check [--sample TABLE=FILE.jsonl]...              every definition and the catalogue; exit 1 on an error
+drishti.py tables check [--sample TABLE=FILE.jsonl]... [--stored NAME,...]   every definition and the catalogue; exit 1 on an error
 drishti.py tables preview TABLE --sample FILE.jsonl [--limit N]     the table's first rows over sample documents (JSONL, .gz too)
 drishti.py tables lineage NAME                                      who uses a table or a model
+drishti.py tables offer NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE) [--grain '$.LIST[*]'] [--write]
+                                                                    the flat virtual table offered for a new table, columns from a sample
 drishti.py tables migrate [--bi DIR] [--dry-run | --check] [--report FILE] [--audit FILE] [--who NAME] [--moved-to DIR]
 ```
 

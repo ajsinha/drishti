@@ -88,42 +88,61 @@ public final class Preview {
 
     /** The table's rows over {@code docs}, at most {@code limit}, with what could not be computed. */
     public static Rows rows(TableDef t, List<Doc> docs, int limit, RowEvaluator eval) {
-        List<String> cols = new ArrayList<>(List.of("id", "business_date"));
-        if (t.depth() > 0) {
-            cols.add("index");
-        }
-        cols.addAll(t.columns().keySet());
+        List<String> cols = columns(t);
         List<List<Object>> rows = new ArrayList<>();
         Map<String, Problem> problems = new LinkedHashMap<>();
         int max = Math.min(limit, MAX_ROWS);
         for (Doc d : docs) {
-            for (Frame f : frames(t, d)) {
+            for (List<Object> row : rows(t, d, eval, problems)) {
                 if (rows.size() >= max) {
                     return new Rows(cols, rows, List.copyOf(problems.values()), docs.size());
-                }
-                if (t.filter() != null && !Boolean.TRUE.equals(evaluate(eval, t.filter(), f, "filter", problems))) {
-                    continue;
-                }
-                List<Object> row = new ArrayList<>();
-                row.add(d.id());
-                row.add(d.businessDate());
-                if (t.depth() > 0) {
-                    row.add(f.index());
-                }
-                for (ColumnDef c : t.columns().values()) {
-                    if (c.path() != null) {
-                        row.add(evaluate(eval, c.path(), f, "columns." + c.name() + ".path", problems));
-                    } else if (c.expr() != null) {
-                        row.add(evaluate(eval, c.expr(), f, "columns." + c.name() + ".expr", problems));
-                    } else {
-                        row.add(null);
-                        problems.putIfAbsent(c.name(), Problem.info(TableCodes.SAMPLE, "columns." + c.name(), "a Python column is computed by its runner, not in a preview"));
-                    }
                 }
                 rows.add(row);
             }
         }
         return new Rows(cols, rows, List.copyOf(problems.values()), docs.size());
+    }
+
+    /** A table's columns as its rows carry them: {@code id}, {@code business_date}, {@code index} under a grain, then the table's own. */
+    public static List<String> columns(TableDef t) {
+        List<String> cols = new ArrayList<>(List.of("id", "business_date"));
+        if (t.depth() > 0) {
+            cols.add("index");
+        }
+        cols.addAll(t.columns().keySet());
+        return cols;
+    }
+
+    /**
+     * The rows one document gives under the table's grain and filter, in the order of {@link #columns}: the one computation of a table's
+     * rows, shared by the preview and every read ({@code tables.read.TableReads}). What cannot be computed is kept in {@code problems} by
+     * place (the first of each) and its value is empty.
+     */
+    public static List<List<Object>> rows(TableDef t, Doc d, RowEvaluator eval, Map<String, Problem> problems) {
+        List<List<Object>> out = new ArrayList<>();
+        for (Frame f : frames(t, d)) {
+            if (t.filter() != null && !Boolean.TRUE.equals(evaluate(eval, t.filter(), f, "filter", problems))) {
+                continue;
+            }
+            List<Object> row = new ArrayList<>();
+            row.add(d.id());
+            row.add(d.businessDate());
+            if (t.depth() > 0) {
+                row.add(f.index());
+            }
+            for (ColumnDef c : t.columns().values()) {
+                if (c.path() != null) {
+                    row.add(evaluate(eval, c.path(), f, "columns." + c.name() + ".path", problems));
+                } else if (c.expr() != null) {
+                    row.add(evaluate(eval, c.expr(), f, "columns." + c.name() + ".expr", problems));
+                } else {
+                    row.add(null);
+                    problems.putIfAbsent(c.name(), Problem.info(TableCodes.SAMPLE, "columns." + c.name(), "a Python column is computed by its runner, not in a preview"));
+                }
+            }
+            out.add(row);
+        }
+        return out;
     }
 
     /** The rows as objects, column name to value (what a materialisation keeps and the layer's answers read). */

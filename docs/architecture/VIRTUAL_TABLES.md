@@ -18,9 +18,9 @@
 *Product owner, 2026-11-03: "virtual tables: logically defined tables which get data from a table in Delta. The actual table may be
 complex JSON, but a configuration applies Rachana grammar to change the data layout so it starts looking like a traditional table, and
 using Arrow we should be able to serve it." Then: "BI models and datasets are actually virtual tables. I want to generalise the concept and
-centralise it so BI and other consumers can use it." Status: **design for discussion with the product owner** ("don't code: write the design first and let us discuss"); nothing is
-built and nothing is decided yet. The product owner's points so far: virtual tables sit on top of connectors, not just the lake, and
-Arrow Flight serves them. Section 10 lists the questions with a recommendation each. (planned)*
+centralise it so BI and other consumers can use it." The product owner's first points: virtual tables sit on top of connectors, not just the lake, and
+Arrow Flight serves them. Status: **decided** (product owner, 2026-11-04): section 10 records every decision; built in
+2.9.11.e with the DEL fold.*
 
 **The deeper design for 2.9.11.e** (DEL into Rachana, every dataset and model key mapped, the migration tool, the parity proof, Flight's
 `table` and `model` forms, and questions Q1 to Q30, some of which refine V1 to V5 below): [BI_FOUNDATION_2911E.md](BI_FOUNDATION_2911E.md),
@@ -125,9 +125,9 @@ administrator or a dataset author with the power BI grants today, reviewed and a
 
 ## 8. Checks and tools
 
-`drishti.py tables check` (planned) compiles every virtual table and model against its sources' contracts and a sample: unknown paths,
-types that do not cast, keys that are not unique, a grain crossing two lists, a relationship whose key types differ. `drishti.py tables (planned)
-preview trading.trade_legs --date …` (planned) prints the first rows. Admin and BI list them with their sources, grains, columns,
+`drishti.py tables check` compiles every virtual table and model against its sources' contracts and a sample: unknown paths,
+types that do not cast, keys that are not unique, a grain crossing two lists, a relationship whose key types differ. `drishti.py tables
+preview trading.trade_legs --sample …` prints the first rows. Admin and BI list them with their sources, grains, columns,
 relationships, measures, materialisation and who uses them (lineage).
 
 ## 9. Size and order
@@ -135,13 +135,25 @@ relationships, measures, materialisation and who uses them (lineage).
 L: the module and its catalogue, BI's datasets, models and layers moved under it with a migration tool and the parity test, the pivot and
 Flight reading it, the checks and preview, docs (a tables guide with real examples on the demo lake; the BI, pivot and Flight guides).
 
-## 10. Questions for the discussion, with recommendations
+## 10. Decided (product owner, 2026-11-04)
 
-| # | Question | Recommendation |
-|---|---|---|
-| V1 | A central layer of its own (a module, `config/tables/` (planned)), not inside BI and not in the lake file | **Yes**: its sources are any kind, not only the lake |
-| V2 | BI's datasets become flat virtual tables and BI's models become the layer's models; BI keeps reports, visuals and boards | **Yes**: one definition, migrated by a tool, proved by the BI parity test |
-| V3 | Flat tables' columns are scalar Rachana paths or expressions; aggregates are model measures | **Yes** |
-| V4 | Materialisation reuses BI's cached and rollup layers (moved, not copied) | **Yes** |
-| V5 | Everything reads it: BI, pivot, Sutras, Flight, Flight SQL, the PostgreSQL protocol, the Data view, alerts, the AI | **Yes** |
-| V6 | Release | **2.9.11.e, together with the DEL fold** (agreed by the product owner, 2026-11-03: BI moved onto virtual tables, one migration and one parity proof); earlier draft: its own release right after 2.9.11.c (the lake configuration and Flight land first; Flight then gains virtual tables and models as a ticket form). It is large and moves BI's core, so it gets two drills of its own, after the DEL fold is designed so measures are written in Rachana from the start |
+| # | Decided |
+|---|---|
+| V1 | **A central layer of its own** (the module `drishti-tables`, definitions under `config/tables/<domain>/`), not inside BI and not in the lake file: its sources are any kind any connector serves |
+| V2 | **BI's datasets become flat virtual tables and BI's models the layer's models**, migrated by one tool (`drishti.py tables migrate`, dry run and report) and proved by the BI parity test; BI keeps reports, visuals and boards |
+| V3 | **A flat table's columns are scalar** Rachana paths or row expressions; aggregates exist only as a model's measures |
+| V4 | **Materialisation is BI's cached and rollup layers moved, not copied**: one mechanism, the old code deleted at the switch |
+| V5 | **Every consumer reads the layer**: BI, the pivot, Sutras, Arrow Flight, Flight SQL, the PostgreSQL protocol, the Data view, alerts, the AI |
+| V6 | **Built in 2.9.11.e together with the DEL fold**: one migration tool, one parity proof, two drills |
+| V7 | **Many tables over one source.** Any number of virtual tables may be rooted in one connector and kind, each with its own columns, grain and filter (`trading.trade_summary` and `trading.trade_legs` both `from: { kind: trade }`). Within one request (a pivot view, a model query, a Flight read, a Sutra page), the reads of one source for one business date are shared: the source is read once and every table over it is computed from that one read |
+| V8 | **New tables from data loads are offered, never made automatically.** A table a data load creates (DATA_LOAD_RULES.md section 7) is offered a flat virtual table in one click, its columns suggested from a sample of the new rows (`drishti.py tables offer`); nothing is defined until someone accepts |
+| V9 | **Who edits, who reads.** Administrators and BI authors (today's power to edit BI datasets) define tables and models. Reading is always as the source: the reader's row rules and masks on the source kind apply, then the table's own rules and masks; nothing adds rights. Definitions are audited and versioned like BI items |
+| V10 | **Models across connectors.** A model may relate tables from different connectors (a lake kind and a PostgreSQL table); the engine joins them. The scan estimate warns when a side of such a join is large and unfiltered |
+| V11 | **Dates as the source has them.** Every read names a business date (none: the source's latest). Known-at time travel where the source supports it. An undated source gives its current rows, dated today |
+| V12 | **Names.** `<domain>.<name>`, unique across virtual tables and stored tables: a virtual table named like a stored table (a lake table, a kind) is refused when it is defined |
+| V13 | **Sutras read tables.** A panel may name a virtual table as its source: `source: { table: trading.trade_legs, where: "<Rachana condition>" }`; the rows are `$src`, read as the person may see them |
+| V14 | **One SQL engine.** DuckDB is the one SQL engine, required, with no fallback; it moves behind `drishti-native`'s `SqlEngine` in 2.9.12. The layer adds no new place that calls DuckDB: it reads through the pivot engine's executor and BI's engine as they are |
+| V15 | **One grammar, no dual machinery.** Rachana is the only expression language of the layer; whatever moves into it is moved, never copied |
+
+The deeper design and the questions Q1 to Q30 it settled (2026-11-03) are in
+[BI_FOUNDATION_2911E.md section 8](BI_FOUNDATION_2911E.md#8-decisions-product-owner-2026-11-03-every-recommendation-accepted-q1-decided-as-rachanas-rule).

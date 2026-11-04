@@ -1496,6 +1496,9 @@ starting a server and read definitions and sample files only, from the folder yo
 - `tables check [--sample TABLE=FILE.jsonl]...`: every definition and the catalogue; exit 1 on an error.
 - `tables preview TABLE --sample FILE.jsonl [--limit N]`: the table's first rows over sample documents (JSONL, `.gz` too).
 - `tables lineage NAME`: who uses a table or a model.
+- `tables offer NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE) [--grain '$.LIST[*]'] [--write]`: the flat virtual
+  table offered for a new table, one typed column per scalar field of the sample; `--write` accepts it as a new file.
+- `tables check --stored NAME,...`: also refuses a virtual table named like a stored table (`DRS-9616`).
 - `tables migrate [--dry-run | --check] [--report FILE] [--audit FILE] [--moved-to DIR]`: BI's datasets and models into tables and
   models (the unified diff and the report with `--dry-run`; exit 1 with `--check` when anything is left to migrate). A second run
   changes nothing.

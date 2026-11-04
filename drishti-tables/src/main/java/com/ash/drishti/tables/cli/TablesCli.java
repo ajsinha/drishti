@@ -60,11 +60,14 @@ public final class TablesCli {
     public static final int USAGE = 2;
 
     private static final String HELP = """
-            usage: tables list|check|preview|lineage|migrate [options]
+            usage: tables list|check|preview|lineage|offer|migrate [options]
               list     [--root DIR] [--json]                                every table and model, with its source and materialisation
-              check    [--root DIR] [--sample TABLE=FILE.jsonl]... [--json] every definition and the catalogue checked; --sample adds the sample checks
+              check    [--root DIR] [--sample TABLE=FILE.jsonl]... [--stored NAME,...]... [--json]
+                       every definition and the catalogue checked; --sample adds the sample checks; --stored refuses a stored table's name
               preview  TABLE --sample FILE.jsonl [--limit N] [--json]        the table's first rows over sample documents (JSONL, .gz too)
               lineage  NAME [--json]                                         who uses a table or a model
+              offer    NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE) [--grain '$.LIST[*]'] [--stored NAME,...] [--write]
+                       the flat virtual table offered for a new table, columns from the sample; --write accepts it (a new file only)
               migrate  [--bi DIR] [--dry-run|--check] [--report FILE] [--audit FILE] [--who NAME] [--moved-to DIR] [--json]
                        BI's datasets and models into tables and models of the layer, DEL into Rachana (dry run: the diff, nothing written)""";
 
@@ -104,6 +107,7 @@ public final class TablesCli {
                 case "check" -> check(a);
                 case "preview" -> preview(a);
                 case "lineage" -> lineage(a);
+                case "offer" -> offer(a);
                 case "migrate" -> migrate(a);
                 default -> {
                     err.println("tables: unknown command '" + a.command + "'");
@@ -162,6 +166,7 @@ public final class TablesCli {
     private int check(Args a) throws IOException {
         Catalogue c = Catalogue.load(root(a), ItemStore.NONE);
         List<Problem> problems = new ArrayList<>(c.check());
+        problems.addAll(c.clashes(stored(a)));
         for (String s : a.values("--sample")) {
             int eq = s.indexOf('=');
             if (eq < 0) {
@@ -288,6 +293,63 @@ public final class TablesCli {
         return f == null ? MigrationAudit.NONE : MigrationAudit.jsonl(cwd.resolve(f), Clock.systemUTC());
     }
 
+    private static List<String> stored(Args a) {
+        List<String> out = new ArrayList<>();
+        a.values("--stored").forEach(v -> java.util.Arrays.stream(v.split(",")).map(String::strip).filter(x -> !x.isEmpty()).forEach(out::add));
+        return out;
+    }
+
+    /** The flat virtual table offered for a new table (VIRTUAL_TABLES.md section 10, V8): printed, or written with --write. */
+    private int offer(Args a) throws IOException {
+        if (a.positional.isEmpty() || a.value("--sample", null) == null || a.value("--kind", null) == null && a.value("--table", null) == null) {
+            err.println("tables offer: NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE)");
+            return USAGE;
+        }
+        String name = a.positional.get(0);
+        if (!com.ash.drishti.tables.def.TableName.isTable(name)) {
+            err.println("tables offer: '" + name + "' is not <domain>.<name> (lower case, underscores)");
+            return USAGE;
+        }
+        TableDef.Source from = a.value("--kind", null) != null ? TableDef.Source.ofKind(a.value("--kind", null))
+                : new TableDef.Source(null, null, null, a.value("--lake", null), a.value("--table", null), null, null, null, null, null, null);
+        List<Preview.Doc> docs = Preview.read(cwd.resolve(a.value("--sample", null)), 1_000);
+        com.ash.drishti.tables.read.TableOffer.Offer o = com.ash.drishti.tables.read.TableOffer.suggest(name, from, docs);
+        String grain = a.value("--grain", null);
+        if (grain != null) {
+            if (!o.grains().containsKey(grain)) {
+                err.println("tables offer: the sample has no list of objects " + grain + "; it has " + o.grains().keySet());
+                return USAGE;
+            }
+            o = com.ash.drishti.tables.read.TableOffer.atGrain(o, grain, docs);
+        }
+        Catalogue c = Catalogue.load(root(a), ItemStore.NONE);
+        String yaml = com.ash.drishti.tables.yaml.TableYaml.write(o.table(), List.of());
+        if (a.flag("--json")) {
+            json(Map.of("name", name, "documents", o.documents(), "grains", o.grains(), "yaml", yaml, "free", c.free(name, stored(a))));
+        } else {
+            out.print(yaml);
+            out.println("# offered from " + o.documents() + " document(s); grains you may choose instead: "
+                    + (o.grains().isEmpty() ? "none" : o.grains().keySet()));
+        }
+        if (!a.flag("--write")) {
+            return OK;
+        }
+        if (!c.free(name, stored(a))) {
+            err.println("tables offer: " + name + " is taken (a virtual table, a was: name or a stored table): choose another name");
+            return PROBLEMS;
+        }
+        Path file = root(a).resolve(com.ash.drishti.tables.def.TableName.domain(name)).resolve(name.substring(name.indexOf('.') + 1) + ".table.yaml");
+        if (java.nio.file.Files.exists(file)) {
+            err.println("tables offer: " + file + " exists; nothing written");
+            return PROBLEMS;
+        }
+        java.nio.file.Files.createDirectories(file.getParent());
+        java.nio.file.Files.writeString(file, yaml);
+        out.println("written " + file);
+        return OK;
+    }
+
+
     private void json(Object o) throws IOException {
         out.println(new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT).writeValueAsString(o));
     }
@@ -298,8 +360,9 @@ public final class TablesCli {
         final List<String> positional = new ArrayList<>();
         final Map<String, List<String>> options = new LinkedHashMap<>();
 
-        private static final java.util.Set<String> FLAGS = java.util.Set.of("--json", "--dry-run", "--check");
-        private static final java.util.Set<String> OPTIONS = java.util.Set.of("--root", "--bi", "--sample", "--limit", "--report", "--audit", "--who", "--moved-to");
+        private static final java.util.Set<String> FLAGS = java.util.Set.of("--json", "--dry-run", "--check", "--write");
+        private static final java.util.Set<String> OPTIONS = java.util.Set.of("--root", "--bi", "--sample", "--limit", "--report", "--audit", "--who", "--moved-to",
+                "--stored", "--kind", "--lake", "--table", "--grain");
 
         static Args parse(List<String> args) {
             Args a = new Args();

@@ -50,6 +50,14 @@ public final class TableCodes {
     public static final String SAMPLE = "DRS-9613";
     /** A file in BI's old form found where the layer reads ({@code rachana: 2} under {@code config/tables}). */
     public static final String OLD_FORM = "DRS-9614";
+    /**
+     * A read refused (VIRTUAL_TABLES.md section 10): a business date the source does not hold, a known-at time the source cannot travel to,
+     * more rows than a read may stage, a source form read only by its runner, a condition over a masked column, a table the reader may not
+     * see.
+     */
+    public static final String READ = "DRS-9615";
+    /** A virtual table named like a stored table (a lake table or a kind): names are unique across both (V12). */
+    public static final String NAME_CLASH = "DRS-9616";
 
     /** The language's: an aggregate in row or rule scope, or a scope rule broken. */
     public static final String SCOPE = "DRS-9127";

@@ -144,7 +144,7 @@ public final class Compiler {
             }
         }
         Expr where = c.arg("where");
-        Functions.builtIn(fn, inputs.isEmpty() ? List.of() : List.of("x"), numbers)
+        var unused = Functions.builtIn(fn, inputs.isEmpty() ? List.of() : List.of("x"), numbers)
                 .orElseThrow(() -> new IllegalArgumentException(fn + "() is not an aggregate of the engine"));
         return new Lowered.Aggregate(fn, inputs, where == null ? null : rows.row(where), numbers);
     }

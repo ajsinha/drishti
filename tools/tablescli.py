@@ -12,12 +12,16 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 """The table layer on the command line (docs/guides/TABLES_GUIDE.md, docs/guides/CLI_GUIDE.md "tables"): virtual tables and models
-under config/tables, checked, previewed over sample documents, traced (lineage), and BI's datasets and models migrated into them.
+under config/tables, checked, previewed over sample documents, traced (lineage), offered for new tables, and BI's datasets and models
+migrated into them.
 
   tables list    [--root DIR] [--json]                                 every table and model, its source and materialisation
-  tables check   [--root DIR] [--sample TABLE=FILE.jsonl]... [--json]  every definition and the catalogue; exit 1 on an error
+  tables check   [--root DIR] [--sample TABLE=FILE.jsonl]... [--stored NAME,...]... [--json]
+                                                                      every definition and the catalogue; exit 1 on an error
   tables preview TABLE --sample FILE.jsonl [--limit N] [--json]       the table's first rows over sample documents (JSONL, .gz too)
   tables lineage NAME [--json]                                        who uses a table or a model
+  tables offer   NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE) [--grain '$.LIST[*]'] [--stored NAME,...] [--write]
+                                                                      the flat virtual table offered for a new table (columns from a sample)
   tables migrate [--bi DIR] [--dry-run | --check] [--report FILE] [--audit FILE] [--who NAME] [--moved-to DIR] [--json]
 
 The commands run in Java from the server's exec jar (java -jar drishti-server-*-exec.jar tables ...), without starting a server: they
@@ -33,7 +37,7 @@ from javacmd import cli_tmp, java_cmd
 
 def register(groups, ctx: dict) -> None:
     """Adds the `tables` group; ctx holds find_java, find_jar and CliError of drishti.py."""
-    t = groups.add_parser("tables", help="Virtual tables and models: list, check, preview, lineage, migrate (BI's datasets and models)",
+    t = groups.add_parser("tables", help="Virtual tables and models: list, check, preview, lineage, offer, migrate (BI's datasets and models)",
                           description=__doc__.split("\n\n")[0], epilog=__doc__.split("\n\n", 1)[1], formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = t.add_subparsers(dest="cmd", metavar="COMMAND", required=True)
 
@@ -41,13 +45,15 @@ def register(groups, ctx: dict) -> None:
         args = [a.cmd]
         if getattr(a, "name", None):
             args.append(a.name)
-        for flag in ("root", "bi", "limit", "report", "audit", "who", "moved_to"):
+        for flag in ("root", "bi", "limit", "report", "audit", "who", "moved_to", "kind", "lake", "table", "grain"):
             v = getattr(a, flag, None)
             if v is not None:
                 args += ["--" + flag.replace("_", "-"), str(v)]
         for s in getattr(a, "sample", None) or []:
             args += ["--sample", s]
-        for flag in ("json", "dry_run", "check"):
+        for s in getattr(a, "stored", None) or []:
+            args += ["--stored", s]
+        for flag in ("json", "dry_run", "check", "write"):
             if getattr(a, flag, False):
                 args.append("--" + flag.replace("_", "-"))
         java, jar = ctx["find_java"](getattr(a, "java", None)), ctx["find_jar"](getattr(a, "jar", None))
@@ -71,6 +77,7 @@ def register(groups, ctx: dict) -> None:
     p = add("check", "check every table and model, and the catalogue (names, references, cycles); --sample adds the checks a sample allows",
             "examples:\n  drishti.py tables check\n  drishti.py tables check --sample bi.trading_risk_trades=data/samples/trades.jsonl")
     p.add_argument("--sample", action="append", metavar="TABLE=FILE.jsonl", help="sample documents for a table (repeatable)")
+    p.add_argument("--stored", action="append", metavar="NAME,...", help="stored tables' names (lake tables, kinds): a virtual table named like one is refused")
     p = add("preview", "a table's first rows over sample documents (JSON Lines, one entity a line)",
             "examples:\n  drishti.py tables preview bi.trading_cashflows_cashflows --sample trades.jsonl --limit 10")
     p.add_argument("name", metavar="TABLE", help="the table (or its was: name)")
@@ -79,6 +86,19 @@ def register(groups, ctx: dict) -> None:
     p = add("lineage", "who uses a table or a model: models, tables over it, look-ups",
             "examples:\n  drishti.py tables lineage bi.trading_risk_trades\n  drishti.py tables lineage trading-risk")
     p.add_argument("name", metavar="NAME", help="a table or a model")
+    p = add("offer", "the flat virtual table offered for a table a data load created: one column per scalar field of the sample, typed; "
+            "the lists of objects as grains to choose instead; --write accepts it (a new file under config/tables/<domain>/)",
+            "examples:\n  drishti.py tables offer bank.accounts --sample accounts.jsonl --kind account\n"
+            "  drishti.py tables offer bank.moves --sample accounts.jsonl --lake demo --table bank.accounts --grain '$.MOVES[*]' --write")
+    p.add_argument("name", metavar="NAME", help="the new virtual table, <domain>.<name>")
+    p.add_argument("--sample", action="append", required=True, metavar="FILE.jsonl", help="a sample of the new table's documents")
+    src = p.add_mutually_exclusive_group(required=True)
+    src.add_argument("--kind", help="the kind the table reads (a pack serves it)")
+    src.add_argument("--table", help="the lake table it reads (with --lake)")
+    p.add_argument("--lake", help="the lake of --table")
+    p.add_argument("--grain", help="one row per element of this list instead ($.LEGS[*]); the offer names the lists the sample holds")
+    p.add_argument("--stored", action="append", metavar="NAME,...", help="stored tables' names the new name must not take")
+    p.add_argument("--write", action="store_true", help="accept: write the offer to a new file (refused when the name is taken)")
     p = add("migrate", "BI's datasets and models into tables and models of the layer, DEL into Rachana (--dry-run: the diff, nothing written)",
             "examples:\n  drishti.py tables migrate --dry-run\n  drishti.py tables migrate --check        # CI: exit 1 when something would change\n"
             "  drishti.py tables migrate --report migration.txt --audit data/audit/tables-migrate.jsonl")
