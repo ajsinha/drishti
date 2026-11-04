@@ -27,6 +27,21 @@
   default mode (the parallel loader appends to Delta and Iceberg; replace on request). Empty files are ignored. One rule per language,
   `tools/lake/filedate.py` and `FileDates`, both tested against `tools/lake/testdata/file-dates/names.json`; the command line's and the
   `.ready` file's routing in `tools/lake/feedroute.py` and drishti-dataload `Routes`/`ReadyNote`. `lake build --plan` shows the plan.
+- **Our own data follows the load rules (DATA_LOAD_RULES.md section 10; data/testdata/README.md; VAR_GUIDE.md section 30; the Windows
+  QA guide).** Every committed test-data file is named `<table>.<YYYY-MM-DD>.jsonl.gz` after the table it feeds (`trade_endur`,
+  `counterparty`, `risk-hierarchy` ...; 2,845 files renamed, their bytes unchanged), or is a plain tar of `<table>/<YYYY-MM-DD>/`
+  folders where a date is several files or one run writes many dates (the P&L vectors and scenario PVs one tar a date, the exposure
+  paths, the funds' holdings, the scenario sets and scenario FX with the stress set's files, the desks' 260-day P&L): 2,914 files
+  become 2,858, 181.8 MB become 182.1 MB. The generators write them (`tools/lake/feedfiles.py`: deterministic gzip and tar;
+  `make_testdata.py`, `make_var_data.py`, `make_ccr_data.py`, `make_sensitivity_data.py`, `capture_market.py`, the public-data packs'
+  `publicsnap.py`, `make_trades.py`, `bulk_trades.py`, `pvgen` morning and intraday, `vargen.py`), the public snapshots were rewritten
+  by their own writers from the committed documents. `lake demo` and `build_demo_lakes.py` load every day under its dated name by the
+  rules (no `--date` field, mode replace said); `--endur-dir`/`--source-dir` take `trade_<system>.<date>.jsonl[.gz|.zip]` or tars of
+  `trade_<system>/<date>/` folders and refuse the older `YYYY-MM-DD.jsonl` with the name to give; `var intraday --load`, `var_bench`,
+  `pivot_bench` and the AWS `load-day.sh` date their loads from outside (the name or `--as-of`). Checked: the same 983,924 rows in the
+  same 1,762 (table, business date) pairs, by count and checksum of every row, before and after; the demo lake built from the old
+  inputs by develop's tools and from the new ones the same, table by table and date by date; the VaR tree the same (below). The Java
+  tests read the files through drishti-testkit `FeedFiles`.
 
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (unreleased)
 
