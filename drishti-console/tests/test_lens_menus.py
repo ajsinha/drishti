@@ -101,7 +101,7 @@ def test_a_lens_draws_its_own_subject_menus_for_that_person_only(backend, monkey
     page = alice.get("/t").text
     assert _commands(_panel(page, "Curves")) == ["CRV", "REPO", "FIX", "INF"]
     assert _commands(_panel(page, "Volatility")) == ["IRV", "CPV", "FXV", "EQV", "CMDV"]
-    assert _commands(_panel(page, "FX")) == ["FX", "FXF", "FXV"] and _commands(_panel(page, "Credit")) == ["CDS", "BND"]
+    assert _commands(_panel(page, "FX")) == ["FX", "FXF"] and _commands(_panel(page, "Credit")) == ["CDS", "BND"]
     alice.post("/lens/world")
     page = alice.get("/t").text
     assert _commands(_panel(page, "Economies")) == ["ECON …", "MACRO", "FCST", "REGE"]

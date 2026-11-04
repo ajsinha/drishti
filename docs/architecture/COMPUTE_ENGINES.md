@@ -164,9 +164,8 @@ drishti:
 ```
 
 Each engine's switch keeps the environment variable it has today where it has one (`DRISHTI_VAR_ENABLED`, `DRISHTI_EXPOSURE_ENABLED`,
-`DRISHTI_FRTB_ENABLED`) and gains one named `DRISHTI_<ID>_ENABLED` where it has none (`DRISHTI_SACCR_ENABLED`, `DRISHTI_FVA_ENABLED`,
-`DRISHTI_SIMM_ENABLED`, `DRISHTI_SENSITIVITIES_ENABLED`, `DRISHTI_MR_CUBE_ENABLED`, `DRISHTI_CCR_CUBE_ENABLED`,
-`DRISHTI_MEMORY_LAKE_ENABLED`). Shipped defaults: every engine on except `memory-lake` (off: it needs stores configured) and the engines
+`DRISHTI_FRTB_ENABLED`) and gains one named `DRISHTI_<ID>_ENABLED` where it has none (`DRISHTI_SIMM_ENABLED`, `DRISHTI_SENSITIVITIES_ENABLED`,
+`DRISHTI_MR_CUBE_ENABLED`, `DRISHTI_MEMORY_LAKE_ENABLED`; an engine still to be built, such as SA-CCR or FVA, gets its own when it is). Shipped defaults: every engine on except `memory-lake` (off: it needs stores configured) and the engines
 not yet built (shipped off until their release).
 
 ### 3.3 How application.yaml names them
