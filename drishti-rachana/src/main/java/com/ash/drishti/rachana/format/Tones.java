@@ -40,6 +40,7 @@ public final class Tones {
             }
             case "status" -> status(Values.text(value));
             case "pos", "neg", "link", "accent", "ok", "warn", "bad" -> tone;
+            case "uc" -> tone;                      // "Under construction" (the under-construction registry): drawn as a chip
             default -> null;
         };
     }

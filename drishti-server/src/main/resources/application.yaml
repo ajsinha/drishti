@@ -49,14 +49,8 @@ spring:
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/frtb-sa.yaml
       - classpath:engines/simm.yaml
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/simm.yaml
-      - classpath:engines/sa-ccr.yaml
-      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/sa-ccr.yaml
-      - classpath:engines/fva.yaml
-      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/fva.yaml
       - classpath:engines/mr-cube.yaml
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/mr-cube.yaml
-      - classpath:engines/ccr-cube.yaml
-      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/ccr-cube.yaml
       - classpath:engines/pivot.yaml
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/pivot.yaml
       - classpath:engines/memory-lake.yaml
@@ -620,7 +614,6 @@ drishti:
       - "* /api/v1/shares/**"
       - "* /api/v1/threads/**"
       - "* /api/v1/comments/**"
-      - "* /api/v1/notes/**"
       - "* /api/v1/workspaces/**"
       - "* /api/v1/views/**"
       - "* /api/v1/command/aliases"
@@ -927,12 +920,7 @@ drishti:
     cache-ttl: 60s                   # how long an answer is served before it is derived again
     ask:                             # Ask about this page (RACHANA_REFERENCE.md): OFF by default; while off no call to any model is ever made
       enabled: ${DRISHTI_ASK_ENABLED:false}  # turn on Ask about this page (also list packs in drishti.explain.ask.packs)
-      # DEPRECATED endpoint/api/api-key: Ask runs on the AI layer (docs/admin/AI.md). Prefer a provider file in
-      # drishti.ai.dir and set model below to its logical model (provider/model). Old settings keep working as provider "ask".
-      endpoint: ${DRISHTI_ASK_ENDPOINT:}   # an OpenAI-compatible chat completions URL, or an Anthropic Messages URL (see api)
-      api: openai                    # openai | anthropic: the request and response shape
-      model: ${DRISHTI_ASK_MODEL:}  # the model Ask uses: a logical model of the AI layer (provider/model)
-      api-key: ${DRISHTI_ASK_KEY:}   # from the environment only; never logged
+      model: ${DRISHTI_ASK_MODEL:}  # the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/admin/AI.md)
       packs: []                      # packs where the Ask box is on; empty = none (per-pack opt-in)
       values: labels-only            # labels-only | shown: whether the page's rendered text (values) goes into the prompt; masked values never do
       max-question-chars: 500  # longer questions are refused (400)
@@ -1084,6 +1072,8 @@ drishti:
     lookback-days: 3              # business days before today still checked for missing data
     default-notify-roles: [admin] # told when a pack names no roles or users
     smoke-max: 20                 # most sample entities a pack may ask to be opened
+  under-construction:                # the under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): what depends on unbuilt work and how it shows
+    file: ${DRISHTI_UNDER_CONSTRUCTION_FILE:./config/under-construction.yaml}   # absent: under-construction.yaml beside the packs folder, else nothing registered; none: nothing
   packs:
     # Domain packs (config/packs/<name>/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples.
     # Site settings below always override what a pack contributes.

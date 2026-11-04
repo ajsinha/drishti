@@ -166,62 +166,6 @@ engines:
     kinds: []
     inputs: [simm-addon, crif-external]
     ai-tools: []
-  - id: sa-ccr
-    title: SA-CCR
-    about: "SA-CCR exposure at default and its playground"
-    file: sa-ccr.yaml
-    switch: drishti.engines.sa-ccr.enabled
-    env: DRISHTI_SACCR_ENABLED
-    aliases: []
-    shipped: false
-    installed: false
-    live-on: true
-    prefixes: [drishti.ccr.saccr]
-    needs: []
-    uses: []
-    api: [/api/v1/saccr]
-    console: [/saccr, /play/saccr, /api/saccr/]
-    words: [SACCR, "PLAY SACCR"]
-    menus: [saccr, play-saccr]
-    help: []
-    landings: []
-    tiles: []
-    lenses: []
-    bi: [counterparty-saccr-]
-    cli: [saccr]
-    playgrounds: [saccr]
-    connectors: []
-    kinds: [saccr-result]
-    inputs: [saccr-trade]
-    ai-tools: []
-  - id: fva
-    title: FVA
-    about: "Funding cost and benefit (the xVA engine; CVA and DVA join later) and its playground"
-    file: fva.yaml
-    switch: drishti.engines.fva.enabled
-    env: DRISHTI_FVA_ENABLED
-    aliases: []
-    shipped: false
-    installed: false
-    live-on: true
-    prefixes: [drishti.ccr.fva]
-    needs: [exposure]
-    uses: []
-    api: [/api/v1/fva]
-    console: [/fva, /play/fva, /api/fva/]
-    words: [FVA, "PLAY FVA"]
-    menus: [fva, play-fva]
-    help: []
-    landings: []
-    tiles: []
-    lenses: []
-    bi: []
-    cli: [fva]
-    playgrounds: [fva]
-    connectors: []
-    kinds: [fva-result]
-    inputs: []
-    ai-tools: []
   - id: mr-cube
     title: MR cube
     about: "The market-risk cube on the pivot engine: VaR by hierarchy and risk class, components, ladders, heat map, what-if, explain the move"
@@ -245,34 +189,6 @@ engines:
     lenses: [mr-cube]
     bi: []
     cli: [pivot mr]
-    playgrounds: []
-    connectors: []
-    kinds: []
-    inputs: []
-    ai-tools: []
-  - id: ccr-cube
-    title: CCR cube
-    about: "The counterparty cube: limit board, allocation, group roll-up, pre-deal overlay"
-    file: ccr-cube.yaml
-    switch: drishti.engines.ccr-cube.enabled
-    env: DRISHTI_CCR_CUBE_ENABLED
-    aliases: []
-    shipped: false
-    installed: false
-    live-on: true
-    prefixes: [drishti.cube.ccr]
-    needs: [exposure]
-    uses: [sa-ccr, fva]
-    api: [/api/v1/cube/ccr]
-    console: [/ccube, /api/ccube/]
-    words: [CCUBE]
-    menus: [ccube]
-    help: []
-    landings: [ccr-cube]
-    tiles: []
-    lenses: [ccr-cube]
-    bi: []
-    cli: [cube ccr]
     playgrounds: []
     connectors: []
     kinds: []

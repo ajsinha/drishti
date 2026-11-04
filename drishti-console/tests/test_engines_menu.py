@@ -66,6 +66,18 @@ def test_the_menus_file_has_one_engines_menu_and_no_var_or_exposure_menu():
     assert not {"var", "exposure"} & {it["id"] for c in views["columns"] for it in c["items"]}   # one place each: the Engines menu
 
 
+def test_the_pre_deal_check_and_fx_volatility_have_one_menu_item_each():
+    """Lean (2.9.11.c): Pre-deal check (XWIF) only under Counterparties, FX volatility (FXV) only under Volatility."""
+    spec = yaml.safe_load((CONSOLE / "config" / "menus.yaml").read_text(encoding="utf-8"))
+    where: dict[str, list[str]] = {}
+    for m in spec["menus"]:
+        for col in m.get("columns") or []:
+            for it in col.get("items") or []:
+                if it.get("cmd"):
+                    where.setdefault(it["cmd"], []).append(m["id"])
+    assert where["XWIF"] == ["counterparties"] and where["FXV"] == ["volatility"]
+
+
 def test_an_administrator_sees_every_running_engine_with_its_word_and_admin_engines(backend, monkeypatch):
     engines.reset()
     app = _app(backend, monkeypatch)

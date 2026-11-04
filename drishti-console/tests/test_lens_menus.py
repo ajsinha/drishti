@@ -69,7 +69,8 @@ def test_the_risk_edition_draws_one_engines_menu_in_place_of_var_and_exposure(ba
     for c in ("VAR BANK", "VRES", "VOFF", "SMAT", "HIER", "SWIN BANK", "EXP"):
         assert c in cmds, c
     assert 'href="/go?q=SWIN%20BANK%20%3CGO%3E"' in eng and 'href="/smat"' in eng and 'href="/var"' in eng
-    assert 'data-fill="EXP CPTY"' in eng and 'href="/t?cmd=EXP%20CPTY"' in eng and "XWIF" in cmds
+    assert 'data-fill="EXP CPTY"' in eng and 'href="/t?cmd=EXP%20CPTY"' in eng
+    assert "XWIF" not in cmds                                     # one place: Counterparties → Pre-deal check (2.9.11.c)
 
 
 def test_an_item_for_a_page_this_build_lacks_is_not_drawn(backend, monkeypatch):
@@ -100,7 +101,7 @@ def test_a_lens_draws_its_own_subject_menus_for_that_person_only(backend, monkey
     page = alice.get("/t").text
     assert _commands(_panel(page, "Curves")) == ["CRV", "REPO", "FIX", "INF"]
     assert _commands(_panel(page, "Volatility")) == ["IRV", "CPV", "FXV", "EQV", "CMDV"]
-    assert _commands(_panel(page, "FX")) == ["FX", "FXF", "FXV"] and _commands(_panel(page, "Credit")) == ["CDS", "BND"]
+    assert _commands(_panel(page, "FX")) == ["FX", "FXF"] and _commands(_panel(page, "Credit")) == ["CDS", "BND"]
     alice.post("/lens/world")
     page = alice.get("/t").text
     assert _commands(_panel(page, "Economies")) == ["ECON …", "MACRO", "FCST", "REGE"]

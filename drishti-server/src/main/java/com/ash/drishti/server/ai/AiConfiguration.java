@@ -32,7 +32,6 @@ import com.ash.drishti.ai.ProviderFactories;
 import com.ash.drishti.ai.ProviderFactory;
 import com.ash.drishti.identity.AccessLog;
 import com.ash.drishti.server.connectors.DirectoryWatcher;
-import com.ash.drishti.server.explain.AskProperties;
 import com.ash.drishti.server.security.SecurityProperties;
 import java.nio.file.Path;
 import java.time.Clock;
@@ -43,8 +42,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -60,32 +57,16 @@ import org.springframework.core.env.Environment;
 @EnableConfigurationProperties({AiProperties.class, McpProperties.class})
 public class AiConfiguration {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AiConfiguration.class);
-
     /** Provider types supplied as Spring beans join those listed in META-INF/services. */
     @Bean(destroyMethod = "close")
-    LlmRegistry llmRegistry(AiProperties ai, AskProperties ask, Environment env, ObjectProvider<ProviderFactory> beans) {
-        boolean legacy = LegacyAsk.configured(ask);
-        if (legacy) {
-            LOG.warn("drishti.explain.ask.endpoint/api/model/api-key are deprecated: write a provider file in {} and set drishti.explain.ask.model "
-                    + "to its logical model (docs/admin/AI.md). The old settings still work as provider 'ask'.", ai.dir());
-        }
+    LlmRegistry llmRegistry(AiProperties ai, Environment env, ObjectProvider<ProviderFactory> beans) {
         LlmRegistry registry = new LlmRegistry(ProviderFactories.discover(beans.orderedStream().toList()), () -> {
             List<ProviderConfig> all = new ArrayList<>();
             Map<String, String> errors = new HashMap<>();
             if (ai.enabled()) {
                 ProviderConfigLoader.Loaded l = ProviderConfigLoader.load(Path.of(ai.dir()), env::getProperty);
                 errors.putAll(l.errors());
-                for (ProviderConfig c : l.providers()) {
-                    if (legacy && LegacyAsk.PROVIDER.equals(c.name())) {
-                        errors.put(c.name() + ".yaml", "name 'ask' is taken by Ask's deprecated endpoint settings");
-                    } else {
-                        all.add(c);
-                    }
-                }
-            }
-            if (legacy) {
-                all.add(LegacyAsk.provider(ask));
+                all.addAll(l.providers());
             }
             return new ProviderConfigLoader.Loaded(all, errors);
         }, ai.defaultModel(), com.ash.drishti.common.RetryPolicy.of(env::getProperty, "ai"));

@@ -2325,6 +2325,29 @@ surfaces, options, bonds, credit, VaR and its backtest, stress, FRTB, exposure, 
 Their generator writes them from `tools/packgen/banking/snippets/<pack>/*.py` (read by `calc_snippets.py`). They share the pricing maths
 of `drishti.quant`. Every one, with the sample entity it runs on, is in [USER_GUIDE.md › Snippet catalogue](USER_GUIDE.md#18-snippet-catalogue).
 
+### Unbuilt work: the under-construction registry
+
+**Rule:** a figure, panel, menu item, help page, contract or decision that depends on work not built yet (a figure stored rather than
+computed by its engine, a decision still to come) is registered in `config/under-construction.yaml` in the same change that adds it, with
+the release that builds it and its treatment: `under-construction` (shown, the words *Under construction* in place of its value) or
+`hidden`. Never a number that looks computed and is not. Register a Sutra's figure by its kind and `bind` (strip items, kv and table
+columns) or a whole panel by its `id`; a menu item by its id; a help page by its slug. Then run `python3 tools/under_construction.py` (it
+writes [UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md); `--check` fails when a place it names does not exist). Nothing else is
+needed: the server rewrites the Sutra when it is matched, the console hides or marks the menu items and help pages, and the data stays in
+the lake. When the engine is built, remove the item in the change that ships it.
+
+```yaml
+  - id: sa-ccr-figures
+    what: field
+    about: "SA-CCR EAD, RC, add-ons and RWA: stored, not computed by an SA-CCR engine"
+    release: 2.9.11.k
+    treatment: under-construction
+    sutras:
+      - kind: sa-ccr
+        binds: [$.EAD, $.RWA]
+        panels: [hedging]
+```
+
 ## Part III. Around the pack: inheritance, tests, versions, the registry
 
 Around a pack once it is written.

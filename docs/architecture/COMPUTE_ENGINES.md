@@ -165,9 +165,8 @@ drishti:
 ```
 
 Each engine's switch keeps the environment variable it has today where it has one (`DRISHTI_VAR_ENABLED`, `DRISHTI_EXPOSURE_ENABLED`,
-`DRISHTI_FRTB_ENABLED`) and gains one named `DRISHTI_<ID>_ENABLED` where it has none (`DRISHTI_SACCR_ENABLED`, `DRISHTI_FVA_ENABLED`,
-`DRISHTI_SIMM_ENABLED`, `DRISHTI_SENSITIVITIES_ENABLED`, `DRISHTI_MR_CUBE_ENABLED`, `DRISHTI_CCR_CUBE_ENABLED`,
-`DRISHTI_MEMORY_LAKE_ENABLED`). Shipped defaults: every engine on except `memory-lake` (off: it needs stores configured) and the engines
+`DRISHTI_FRTB_ENABLED`) and gains one named `DRISHTI_<ID>_ENABLED` where it has none (`DRISHTI_SIMM_ENABLED`, `DRISHTI_SENSITIVITIES_ENABLED`,
+`DRISHTI_MR_CUBE_ENABLED`, `DRISHTI_MEMORY_LAKE_ENABLED`; an engine still to be built, such as SA-CCR or FVA, gets its own when it is). Shipped defaults: every engine on except `memory-lake` (off: it needs stores configured) and the engines
 not yet built (shipped off until their release).
 
 ### 3.3 How application.yaml names them
@@ -514,7 +513,7 @@ The mock-up is picked by the product owner before the build.
 
 | Part | Where | Notes |
 |---|---|---|
-| The catalogue | `drishti-server/src/main/resources/engines/catalogue.yaml`; the console's copy `drishti-console/config/engines.yaml` (same bytes, `EngineCatalogueTest`) | ten entries; `installed: false` for SA-CCR, FVA and the two cubes, whose build adds a `ComputeEngine` bean and flips the flag; the console's paths per engine are its `console:` list (`=/play` is that path only); the longest API prefix wins (`/api/v1/sensitivities` is the sensitivities', not FRTB-SA's) |
+| The catalogue | `drishti-server/src/main/resources/engines/catalogue.yaml`; the console's copy `drishti-console/config/engines.yaml` (same bytes, `EngineCatalogueTest`) | one entry per built engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, the MR cube, the in-memory lake, data loads, the pivot engine, Flight); SA-CCR, FVA and the CCR cube of this design are not listed and have no file until their engines are built (each then adds its entry, its files and a `ComputeEngine` bean); `installed: false` stays for an engine listed ahead of its build; the console's paths per engine are its `console:` list (`=/play` is that path only); the longest API prefix wins (`/api/v1/sensitivities` is the sensitivities', not FRTB-SA's) |
 | The files | `config/engines/*.yaml` and `drishti-server/src/main/resources/engines/*.yaml`, imported by `application.yaml` (jar copy, then the site's) | `drishti.engines.{dir, drain, watch-seconds}` stay in `application.yaml`; `drishti.frtb.sensitivity-kind`, `factor-kind`, `cache-minutes` read `drishti.sensitivities.*` through a lowest-precedence alias layer (`EngineKeyAliases`) |
 | Switch and source | `EngineSwitches` | reads Spring's own sources in order; an old name set above the shipped files decides (DRS-1024 logged once); the in-memory lake on when its stores are in the old place; an edition's presets sit above the engine files (`EditionEnvironmentPostProcessor`) |
 | Lifecycle | `ComputeEngine`, `BasicEngine`, `EngineRegistry` | each engine's configuration makes one `BasicEngine` bean (VaR, exposure, sensitivities, FRTB-SA, SIMM, the in-memory lake); the registry finds every `ComputeEngine` bean, so an engine still to come registers by itself. The services keep their beans; their open dates, caches and answers are created on first use and released by `stop` (the Admin, Caches purge of the engine); each service asks the registry before any work and refuses with `EngineOffException` (404 DRS-1020). The in-memory lake off at start is built with no store |

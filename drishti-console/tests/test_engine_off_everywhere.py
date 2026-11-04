@@ -103,9 +103,9 @@ def test_nothing_is_hidden_until_the_server_has_said(monkeypatch):
 
 def test_a_lens_or_a_tile_of_an_engine_running_nowhere_is_not_offered(monkeypatch):
     engines.reset()
-    engines.learn([{"id": "ccr-cube", "cluster": False}, {"id": "sa-ccr", "cluster": False}, {"id": "var", "cluster": False}])
-    assert engines.lens_hidden("ccr-cube") and engines.tile_hidden("VaR of the bank") and not engines.lens_hidden("risk")
-    assert engines.menu_hidden("saccr") and not engines.menu_hidden("exp-explorer")
+    engines.learn([{"id": "mr-cube", "cluster": False}, {"id": "frtb-sa", "cluster": False}, {"id": "var", "cluster": False}])
+    assert engines.lens_hidden("mr-cube") and engines.tile_hidden("VaR of the bank") and not engines.lens_hidden("risk")
+    assert engines.menu_hidden("frsa") and not engines.menu_hidden("exp-explorer")
     engines.reset()
 
 

@@ -142,7 +142,6 @@ class EngineRegistryTest {
         assertThat(r.state("var")).isEqualTo(EngineRegistry.State.RUNNING);
         assertThat(r.state("exposure")).isEqualTo(EngineRegistry.State.OFF);
         assertThat(r.state("memory-lake")).as("off as shipped").isEqualTo(EngineRegistry.State.OFF);
-        assertThat(r.state("sa-ccr")).isEqualTo(EngineRegistry.State.NOT_INSTALLED);
         assertThat(f[1].starts).isZero();
         assertThat(ComputeEngine.threadsNamed(f[1].threadPrefixes())).isZero();
         assertThat(f[1].memoryBytes()).isZero();
@@ -176,8 +175,6 @@ class EngineRegistryTest {
         assertThat(r.history().newestFirst(50)).anyMatch(c -> "refused".equals(c.outcome()) && c.detail().contains("needed by"));
         assertThat(audited).anyMatch(a -> a.startsWith("engine-refused engine/var"));
         assertThat(audited).anyMatch(a -> a.startsWith("engine-disabled engine/sensitivities ann"));
-        assertThatThrownBy(() -> r.apply(List.of(new EngineRegistry.Change("fva", true)), "x", "ann", false, false, null))
-                .hasMessageContaining("not installed");
         assertThatThrownBy(() -> r.apply(List.of(new EngineRegistry.Change("var", true)), " ", "ann", false, false, null))
                 .hasMessageContaining("give a reason");
     }

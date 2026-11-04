@@ -16,11 +16,7 @@
 package com.ash.drishti.server.collab;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.ash.drishti.identity.AuditLog;
@@ -32,15 +28,12 @@ import com.ash.drishti.identity.collab.HashChain;
 import com.ash.drishti.identity.collab.NoteImport;
 import com.ash.drishti.identity.collab.ThreadStore;
 import com.ash.drishti.server.security.TokenVerifier;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
@@ -89,47 +82,6 @@ class NoteImportTest {
         assertThat(c.pin().knownAt()).isEqualTo(field.createdAt().truncatedTo(java.time.temporal.ChronoUnit.MILLIS));
         assertThat(HashChain.verify(onField.id(), threads.chain(onField.id()))).isNull();
         assertThat(threads.commentOfNote(whole.id())).isPresent();
-
-        // the facade: the old shape, the old numbers
-        JsonNode list = json.readTree(mvc.perform(get("/api/v1/notes/trade/" + entity).header("Authorization", as("ravi", "trader")))
-                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
-        assertThat(list).hasSize(3);
-        assertThat(list.get(0).get("id").asLong()).isEqualTo(whole.id());
-        assertThat(list.get(1).get("id").asLong()).isEqualTo(field.id());
-        assertThat(list.get(1).get("path").asText()).isEqualTo("$.mtm");
-        assertThat(list.get(1).get("author").asText()).isEqualTo("ravi");
-        assertThat(list.get(1).get("body").asText()).isEqualTo("MTM includes the CVA adjustment");
-        assertThat(list.get(1).has("createdAt")).isTrue();
-        assertThat(list.get(1).has("updatedAt")).isTrue();
-    }
-
-    @Test
-    void theFacadeWritesThroughThreadsAndDeleteRetractsOrHides() throws Exception {
-        String entity = "IRS-48213";
-        String created = mvc.perform(post("/api/v1/notes/trade/" + entity).header("Authorization", as("tess", "trader")).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"body\": \"facade note\", \"path\": \"$.mtm\"}")).andExpect(status().isCreated()).andExpect(jsonPath("$.author").value("tess"))
-                .andExpect(jsonPath("$.path").value("$.mtm")).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        long id = json.readTree(created).get("id").asLong();
-        assertThat(threads.commentOfNote(id)).as("a note made through the facade is a comment").isPresent();
-        mvc.perform(put("/api/v1/notes/" + id).header("Authorization", as("tess", "trader")).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"body\": \"facade note, edited\"}")).andExpect(status().isOk()).andExpect(jsonPath("$.body").value("facade note, edited"));
-        mvc.perform(put("/api/v1/notes/" + id).header("Authorization", as("ravi", "trader")).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"body\": \"mine now\"}")).andExpect(status().isForbidden());
-        mvc.perform(delete("/api/v1/notes/" + id).header("Authorization", as("ravi", "trader"))).andExpect(status().isForbidden());
-        mvc.perform(get("/api/v1/notes/netting-set/NS-NORTH-01").header("Authorization", as("tess", "trader"))).andExpect(status().isForbidden());
-        Thread.sleep(2300);
-        mvc.perform(put("/api/v1/notes/" + id).header("Authorization", as("tess", "trader")).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"body\": \"too late\"}")).andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-7008"));
-        mvc.perform(delete("/api/v1/notes/" + id).header("Authorization", as("ada", "admin"))).andExpect(status().isNoContent());
-        mvc.perform(get("/api/v1/notes/trade/" + entity).header("Authorization", as("ravi", "trader"))).andExpect(jsonPath("$[?(@.id==" + id + ")]").isEmpty());
-        assertThat(threads.comment(threads.commentOfNote(id).orElseThrow()).orElseThrow().state()).isEqualTo("hidden");
-
-        String second = mvc.perform(post("/api/v1/notes/trade/" + entity).header("Authorization", as("tess", "trader")).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"body\": \"another\"}")).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
-        long id2 = json.readTree(second).get("id").asLong();
-        assertThat(id2).isGreaterThan(id);
-        mvc.perform(delete("/api/v1/notes/" + id2).header("Authorization", as("tess", "trader"))).andExpect(status().isNoContent());
-        assertThat(threads.comment(threads.commentOfNote(id2).orElseThrow()).orElseThrow().state()).isEqualTo("retracted");
     }
 
     @Test

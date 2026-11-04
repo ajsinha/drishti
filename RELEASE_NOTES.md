@@ -22,6 +22,18 @@
 - **Security:** a column a BI dataset declares masked is now masked for every reader without the raw power, also in an installation
   whose `drishti.security.redact` is empty (before, it then showed); with the shipped settings nothing changes.
 
+## Upgrade
+
+- **`/api/v1/notes` is removed** (deprecated in 2.9.10, a facade over comment threads): call `/api/v1/threads`. Notes made before are
+  threads already.
+- **Ask's old model settings are removed** (`drishti.explain.ask.endpoint`, `api`, `api-key`; `DRISHTI_ASK_ENDPOINT`, `DRISHTI_ASK_KEY`): a
+  server that still sets them must move to a provider file (`config/ai/<name>.yaml` with `type`, `base-url` and `api-key: ${ENV}`), set
+  `drishti.ai.enabled: true` and `drishti.explain.ask.model: <name>/<model>` (docs/admin/AI.md). Without it Ask answers that no model is
+  configured; the rest of the page explanation works.
+- **Engine switches removed:** `DRISHTI_SACCR_ENABLED`, `DRISHTI_FVA_ENABLED`, `DRISHTI_CCR_CUBE_ENABLED` and a site's
+  `config/engines/sa-ccr.yaml`, `fva.yaml`, `ccr-cube.yaml` are no longer read (those engines are not built yet).
+- **`studio.enabled` and an edition's `studio:` feature are no longer read:** `/studio` follows Build (`features.build`).
+
 # Drishti 2.9.11.b — release notes
 
 *Released 2026-11-04.* **The MR cube and BI on the pivot engine; live pivots and pivots at scale; one grammar, one engine; the VaR

@@ -839,7 +839,7 @@ commands:
   allow: [CIO, FSLA, FSTS, FDEP, DQR, PMET, USEV, ENTL, SECI, INCD, CHGR, BCBS]   # the proposed kinds' commands
   words: { BI: on, FUNC: off, WHAT: on, DATAMAP: on, VAR: off, EXP: off, SMAT: off, MCUBE: off, CCUBE: off, FORM: off, RUPAKA: off }
 features: { bi: edition, reports: on, alerts: on, monitors: on, workspaces: on, collaboration: on, ai: site,
-            build: off, studio: off, designer: off, forms: off, calc: off, pyconsole: off, python: off, embed: on }
+            build: off, designer: off, forms: off, calc: off, pyconsole: off, python: off, embed: on }
 menus:
   views: [terminal, search, cio-status, cio-brief, cio-detail, reports, monitors, alerts]
   placeholder: "CIO, CIO BRIEF, CIO BCBS, CIO ASOF:2026-06-30 … then <GO>"

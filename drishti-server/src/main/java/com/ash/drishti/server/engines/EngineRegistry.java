@@ -405,8 +405,6 @@ public final class EngineRegistry implements AutoCloseable {
     private static String because(String id) {
         return switch (id) {
             case "frtb-sa" -> ": its scopes (desks, books, limit letters) are VaR's and its inputs are the position sensitivities";
-            case "fva" -> ": it reads the EE and ENE profile";
-            case "ccr-cube" -> ": it reads the netting sets' path matrices";
             case "simm" -> ": it reads the position sensitivities and the factor dictionary";
             default -> "";
         };

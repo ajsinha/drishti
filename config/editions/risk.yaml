@@ -46,7 +46,6 @@ features:                                # presets of existing switches (config/
   pyconsole: off
   python: off
   designer: off
-  studio: off
   build: off
   forms: off
   datamap: on

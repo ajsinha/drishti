@@ -87,7 +87,6 @@ menus:
           - { id: exp-explorer, href: /exposure, cmd: EXP, icon: graph-up, label: Exposure explorer, desc: "EE, PFE and EPE of the bank, then any counterparty", match: /exposure, requires: [word:EXP] }
           - { id: exp-cpty, fill: EXP CPTY, icon: building, label: A counterparty, desc: "Type the counterparty's id after the words", requires: [word:EXP] }
           - { id: exp-nset, fill: EXP NSET, icon: diagram-2, label: A netting set, desc: "Type the netting set's id after the words", requires: [word:EXP] }
-          - { id: xwif, cmd: XWIF, icon: sliders, label: Pre-deal check, desc: "A new trade's exposure against the limit before it is done", requires: [cmd:XWIF] }
       - engine: frtb-sa
         title: FRTB-SA
         word: FRSA
@@ -181,7 +180,6 @@ menus:
         items:
           - { id: fx-spot, cmd: FX, icon: currency-exchange, label: Spot, desc: "FX spot rates by pair", requires: [cmd:FX] }
           - { id: fxf, cmd: FXF, icon: calendar-event, label: Forwards, desc: "FX forward points by pair and tenor", requires: [cmd:FXF] }
-          - { id: fx-vol, cmd: FXV, icon: activity, label: Volatility, desc: "FX volatility surfaces by pair", requires: [cmd:FXV] }
   - id: credit
     label: Credit
     icon: bank
