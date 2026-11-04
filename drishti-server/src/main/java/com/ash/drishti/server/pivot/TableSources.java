@@ -19,7 +19,8 @@ import com.ash.drishti.bicompute.spi.PivotProvider;
 import com.ash.drishti.bicompute.spi.Viewer;
 import com.ash.drishti.bicompute.sql.DuckDbExecutor;
 import com.ash.drishti.bicompute.sql.TabularSource;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.engine.ViewerContext;
+import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.tables.TablesService;
 import com.ash.drishti.tables.def.ColumnDef;
 import com.ash.drishti.tables.read.TableReads;
@@ -42,12 +43,14 @@ public final class TableSources implements TabularSource.Resolver {
     public static final String PREFIX = "table:";
 
     private final TablesService tables;
+    private final Entitlements entitlements;
     private final StagedRows staged;
     /** What an open found, by the read's version ({@link TablesService#version}): a view opened again on unchanged data reads nothing. */
     private final Map<String, Opened> opened;
 
-    public TableSources(TablesService tables, int keep) {
+    public TableSources(TablesService tables, Entitlements entitlements, int keep) {
         this.tables = tables;
+        this.entitlements = entitlements;
         this.staged = new StagedRows(keep);
         int most = Math.max(16, keep * 4);
         this.opened = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true) {
@@ -62,7 +65,7 @@ public final class TableSources implements TabularSource.Resolver {
 
     @Override
     public Map<String, String> sources(Viewer v) {
-        Principal p = KindSources.principal(v);
+        ViewerContext p = entitlements.viewer(KindSources.principal(v));
         Map<String, String> out = new LinkedHashMap<>();
         tables.visible(p).forEach((name, title) -> out.put(PREFIX + name, title));
         return out;
@@ -82,7 +85,7 @@ public final class TableSources implements TabularSource.Resolver {
 
     @Override
     public TabularSource open(Viewer v, String source, String date) {
-        Principal p = KindSources.principal(v);
+        ViewerContext p = entitlements.viewer(KindSources.principal(v));
         String name = source.substring(PREFIX.length());
         String known = tables.version(p, name, date);
         Opened o = known == null ? null : opened.get(known);

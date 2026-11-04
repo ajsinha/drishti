@@ -99,6 +99,7 @@ class PivotTablesApiTest {
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
     @Autowired TablesService tables;
+    @Autowired com.ash.drishti.server.security.Entitlements entitlements;
     final ObjectMapper json = new ObjectMapper();
 
     private JsonNode ok(String role, MockHttpServletRequestBuilder r, Object body) throws Exception {
@@ -138,7 +139,7 @@ class PivotTablesApiTest {
 
     @Test
     void twoTablesOverOneKindInOneRequestReadItOnce() {
-        Principal p = new Principal("u-risk", List.of("trades-only"));
+        com.ash.drishti.engine.ViewerContext p = entitlements.viewer(new Principal("u-risk", List.of("trades-only")));
         TableReads reads = tables.reads(p);
         TableReads.Read a = tables.read(reads, p, "trading.trade_summary", null, null, null);
         TableReads.Read b = tables.read(reads, p, "trading.trade_products", null, null, "PRODUCT != null");
@@ -151,7 +152,7 @@ class PivotTablesApiTest {
 
     @Test
     void aViewOpenedAgainOnUnchangedDataReadsNothingWhenTheSourceHasADataVersion() throws Exception {
-        Principal p = new Principal("u-trades-only", List.of("trades-only"));
+        com.ash.drishti.engine.ViewerContext p = entitlements.viewer(new Principal("u-trades-only", List.of("trades-only")));
         String version = tables.version(p, "trading.trade_summary", null);
         Map<String, Object> view = Map.of("source", "table:trading.trade_summary", "rows", List.of("PRODUCT"),
                 "values", List.of(Map.of("measure", "count()", "as", "N")));

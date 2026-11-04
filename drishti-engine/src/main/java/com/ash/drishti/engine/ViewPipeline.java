@@ -158,6 +158,11 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         registry.onChange(changed -> layouts.invalidateAll());
     }
 
+    /** The table layer's reads for panels whose source is a virtual table (VIRTUAL_TABLES.md V13); the server sets it once at start. */
+    public void tables(com.ash.drishti.engine.wire.TableRows rows) {
+        wire.tables(rows);
+    }
+
     /** A view built with an unsaved Sutra (Sutra Studio). Bypasses the layout cache. */
     public ViewModel preview(Sutra sutra, EntityRef ref) {
         return preview(sutra, ref, AsOf.LATEST);

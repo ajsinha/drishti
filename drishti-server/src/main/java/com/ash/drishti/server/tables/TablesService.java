@@ -21,8 +21,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.data.DataSelection;
 import com.ash.drishti.server.data.DataViewService;
 import com.ash.drishti.server.edition.EditionCommands;
-import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.security.Principal;
+import com.ash.drishti.engine.ViewerContext;
 import com.ash.drishti.tables.Problem;
 import com.ash.drishti.tables.TableCodes;
 import com.ash.drishti.tables.answer.ModelAnswers;
@@ -60,20 +59,11 @@ public final class TablesService {
 
     private static final Logger LOG = LoggerFactory.getLogger(TablesService.class);
 
-    /** Who reads: the person and what a row rule may know of them. */
-    public interface Readers {
-        ModelAnswers.Reader reader(Principal p);
-
-        /** False while security is off: the tables' rules do not apply (as BI's dataset rules do not). */
-        boolean enforce();
-    }
-
     private final Path root;
     private final DataViewService data;
     private final com.ash.drishti.engine.source.SourceRouter router;
-    private final Entitlements entitlements;
     private final EditionCommands edition;
-    private final Readers readers;
+    private final java.util.function.BooleanSupplier enforce;
     private final long maxRows;
     private final long scanWarnRows;
     private final Clock clock;
@@ -82,14 +72,13 @@ public final class TablesService {
     /** The catalogue as last read, with the stamp of the files it was read from and the names refused. */
     private record Loaded(String stamp, Catalogue catalogue, List<Problem> problems, Set<String> refused) {}
 
-    public TablesService(Path root, DataViewService data, com.ash.drishti.engine.source.SourceRouter router, Entitlements entitlements,
-            EditionCommands edition, Readers readers, long maxRows, long scanWarnRows, Clock clock) {
+    public TablesService(Path root, DataViewService data, com.ash.drishti.engine.source.SourceRouter router,
+            EditionCommands edition, java.util.function.BooleanSupplier enforce, long maxRows, long scanWarnRows, Clock clock) {
         this.root = root;
         this.data = data;
         this.router = router;
-        this.entitlements = entitlements;
         this.edition = edition;
-        this.readers = readers;
+        this.enforce = enforce;
         this.maxRows = maxRows;
         this.scanWarnRows = scanWarnRows;
         this.clock = clock == null ? Clock.systemUTC() : clock;
@@ -123,7 +112,7 @@ public final class TablesService {
     }
 
     /** The tables {@code p} may read: their names and titles, in the catalogue's order (a table whose source they may not open is left out). */
-    public Map<String, String> visible(Principal p) {
+    public Map<String, String> visible(ViewerContext who) {
         Map<String, String> out = new java.util.LinkedHashMap<>();
         Loaded l = current();
         for (TableDef t : l.catalogue().tables()) {
@@ -131,7 +120,7 @@ public final class TablesService {
                 continue;
             }
             String kind = rootKind(l.catalogue(), t);
-            if (kind != null && entitlements.mayOpen(p, kind) && edition.kindShown(kind)) {
+            if (kind != null && who.mayOpen().test(kind) && edition.kindShown(kind)) {
                 Object title = t.about().get("title");
                 out.put(t.name(), title == null ? t.name() : String.valueOf(title));
             }
@@ -140,10 +129,10 @@ public final class TablesService {
     }
 
     /** The reads of one request for {@code p}: one per pivot view, Sutra page or Flight call, so a source is read once per date (V7). */
-    public TableReads reads(Principal p) {
+    public TableReads reads(ViewerContext who) {
         Loaded l = current();
-        TableReads r = new TableReads(l.catalogue(), new KindRows(p), null, maxRows, clock);
-        return readers.enforce() ? r : r.rulesOff();
+        TableReads r = new TableReads(l.catalogue(), new KindRows(who), null, maxRows, clock);
+        return enforce.getAsBoolean() ? r : r.rulesOff();
     }
 
     /**
@@ -152,7 +141,7 @@ public final class TablesService {
      * cannot be known without reading (a source that keeps no data version, a source that is not a kind): the caller then reads. Two reads
      * with one version give the same rows, so a consumer may keep what it staged (the pivot's per-view cache).
      */
-    public String version(Principal p, String table, String date) {
+    public String version(ViewerContext who, String table, String date) {
         Loaded l = current();
         String name = l.catalogue().renamed(table) != null ? l.catalogue().renamed(table) : table;
         TableDef t = l.catalogue().table(name).orElse(null);
@@ -162,7 +151,7 @@ public final class TablesService {
         }
         LocalDate day;
         try {
-            day = reads(p).day(name, date);
+            day = reads(who).day(name, date);
         } catch (ModelAnswers.Refused e) {
             return null;
         }
@@ -175,13 +164,15 @@ public final class TablesService {
         if (dv.isEmpty()) {
             return null;
         }
-        ModelAnswers.Reader who = readers.reader(p);
-        return l.stamp() + "|" + name + "|" + day + "|" + dv.get() + "|" + p.user() + "|" + new java.util.TreeSet<>(who.roles()) + "|"
-                + who.attributes() + "|" + who.raw() + "|" + readers.enforce();
+        if (!who.named()) {
+            return null;
+        }
+        return l.stamp() + "|" + name + "|" + day + "|" + dv.get() + "|" + who.user() + "|" + new java.util.TreeSet<>(who.roles()) + "|"
+                + who.attributes() + "|" + who.raw() + "|" + enforce.getAsBoolean();
     }
 
     /** Reads {@code table} for {@code p} through {@code reads}; the layer's refusals become the server's codes. */
-    public TableReads.Read read(TableReads reads, Principal p, String table, String date, Instant knownAt, String where) {
+    public TableReads.Read read(TableReads reads, ViewerContext who, String table, String date, Instant knownAt, String where) {
         Loaded l = current();
         String name = l.catalogue().renamed(table) != null ? l.catalogue().renamed(table) : table;
         if (l.refused().contains(name)) {
@@ -189,10 +180,18 @@ public final class TablesService {
                     + " <domain>.<name>)");
         }
         try {
-            return reads.read(name, date, knownAt, readers.reader(p), where);
+            if (!who.named()) {
+                throw new DrishtiException(ErrorCode.TABLE_READ, name + " is read only for a signed-in person: its rules are theirs");
+            }
+            return reads.read(name, date, knownAt, reader(who), where);
         } catch (ModelAnswers.Refused e) {
             throw refused(e);
         }
+    }
+
+    /** What a table's row rules know of the viewer. */
+    static ModelAnswers.Reader reader(ViewerContext who) {
+        return new ModelAnswers.Reader(who.roles(), who.attributes(), who.raw());
     }
 
     /** A refusal of the layer as the server's error: its code kept. */
@@ -275,17 +274,19 @@ public final class TablesService {
 
     /** A kind read through its connector for one person (their entitlement, the edition's kinds, their masks on every document). */
     final class KindRows implements SourceRows {
-        private final Principal p;
+        private final ViewerContext who;
 
-        KindRows(Principal p) {
-            this.p = p;
+        KindRows(ViewerContext who) {
+            this.who = who;
         }
 
         private DataViewService.Dataset dataset(TableDef.Source s) {
             if (s.form() != TableDef.Source.Form.KIND) {
                 throw new ModelAnswers.Refused(TableCodes.READ, "a lake table is read through the kind its pack serves here: write from: { kind: ... }");
             }
-            entitlements.requireOpen(p, s.kind());
+            if (!who.mayOpen().test(s.kind())) {
+                throw new ModelAnswers.Refused(TableCodes.READ, "no access to " + s.kind());
+            }
             edition.requireKind(s.kind());
             return data.dataset(s.kind());
         }
@@ -304,7 +305,7 @@ public final class TablesService {
                 out.add(d.key());
             }
             out.add(DataViewService.DOCUMENT);
-            java.util.function.UnaryOperator<DataNode> redactor = entitlements.masks(p) ? entitlements.redactor(p) : null;
+            java.util.function.UnaryOperator<DataNode> redactor = who.raw() ? null : who.redact();
             String day = date == null ? null : date.toString();
             try {
                 data.walk(d, date, DataSelection.parse(List.of(), List.of()), out, redactor, false, 0, row -> {

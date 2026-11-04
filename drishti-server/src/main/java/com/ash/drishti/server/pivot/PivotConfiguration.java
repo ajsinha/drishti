@@ -114,8 +114,8 @@ public class PivotConfiguration {
 
     /** Virtual tables as sources ({@code table:<domain>.<name>}, TABLES_GUIDE.md section 7a). */
     @Bean
-    public TableSources pivotTableSources(com.ash.drishti.server.tables.TablesService tables, PivotProperties props) {
-        return new TableSources(tables, props.stageKeep());
+    public TableSources pivotTableSources(com.ash.drishti.server.tables.TablesService tables, Entitlements entitlements, PivotProperties props) {
+        return new TableSources(tables, entitlements, props.stageKeep());
     }
 
     /** The Data view's tables, the virtual tables and the panels' rows, one resolver for the tabular provider. */

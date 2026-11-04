@@ -143,6 +143,8 @@ public final class ScreenWire {
     private final ElCompiler el;
     private final Duration budget;
     private final BiFunction<EntityDocument, AsOf, EntityDocument> augment;
+    /** The table layer's reads for {@code source: { table }} (the server sets it once; none: every table source says so). */
+    private volatile TableRows tables = TableRows.NONE;
 
     public ScreenWire(SourceRouter router, Binder binder, ElCompiler el, Duration budget) {
         this(router, binder, el, budget, (d, at) -> d);
@@ -158,6 +160,11 @@ public final class ScreenWire {
         this.el = el;
         this.budget = budget;
         this.augment = augment == null ? (d, at) -> d : augment;
+    }
+
+    /** The table layer's reads for panels whose source is a virtual table (VIRTUAL_TABLES.md V13). */
+    public void tables(TableRows rows) {
+        this.tables = rows == null ? TableRows.NONE : rows;
     }
 
     /** Whether a screen panel goes through this class: it is wired, or reads an event or {@code $src}. */
@@ -373,7 +380,7 @@ public final class ScreenWire {
             return new Ctx(s.ctx().withEval(seenEval), rawEval, got.denied());
         }
         return new Ctx(s.ctx().withEval(seenEval.withScope(seenScope.withSrc(got.seen()))), rawEval.withScope(rawScope.withSrc(got.raw())), null,
-                provenance(router, src.kind(), got.from()), computeOf(got.raw()));   // the panel's own freshness (RACHANA_REFERENCE.md 9) and computed state
+                src.isTable() ? null : provenance(router, src.kind(), got.from()), computeOf(got.raw()));   // the panel's own freshness (RACHANA_REFERENCE.md 9) and computed state
     }
 
     /** What a panel says when its source follows a value masked for the reader (RACHANA_REFERENCE.md 15: a followed masked id shows nothing). */
@@ -417,6 +424,9 @@ public final class ScreenWire {
      * id, or the entities of a kind a condition keeps (each read as the viewer sees it, so a hidden field never selects one), or a search.
      */
     private Pair read(Screen s, Wiring.Source src, EvalContext lookup) {
+        if (src.isTable()) {
+            return readTable(s, src, lookup);
+        }
         if (!s.mayOpen().test(src.kind())) {
             return new Pair(null, null, "no access to " + src.kind());
         }
@@ -493,6 +503,49 @@ public final class ScreenWire {
                 raw.add(d.data());
             }
             return new Pair(new DataNode.Arr(seen), new DataNode.Arr(raw), null);
+        });
+    }
+
+    /**
+     * A virtual table's rows (VIRTUAL_TABLES.md V13) read for the screen's viewer on the screen's (or the source's {@code as-of}) business
+     * date: the table layer applies the source's masks and rules, then the table's; {@code where} keeps rows ({@code @} each row, evaluated
+     * with the screen's events), at most {@code limit}. What the viewer sees is also what a click follows: a table row carries no raw values.
+     */
+    private Pair readTable(Screen s, Wiring.Source src, EvalContext lookup) {
+        java.time.LocalDate day = s.asOf().businessDate();
+        if (src.asOf() != null) {
+            String d = Values.text(soft(() -> el.compile(src.asOf()).eval(lookup)));
+            try {
+                day = d == null || d.isBlank() ? day : java.time.LocalDate.parse(d.substring(0, Math.min(10, d.length())));
+            } catch (java.time.format.DateTimeParseException e) {
+                return new Pair(new DataNode.Arr(List.of()), new DataNode.Arr(List.of()), null);
+            }
+        }
+        java.time.LocalDate at = day;
+        String key = "table|" + src.table() + "|" + src.where() + "|" + src.limit() + "|" + at + "|" + lookup.scope().events();
+        return s.cache().computeIfAbsent(key, k -> {
+            List<DataNode> rows;
+            try {
+                rows = tables.rows(s.viewer(), src.table(), at);
+            } catch (TableRows.Refused e) {
+                return new Pair(null, null, e.getMessage());
+            }
+            var cond = src.where() == null ? null : el.compile(src.where());
+            List<DataNode> kept = new ArrayList<>();
+            for (DataNode row : rows) {
+                if (kept.size() >= src.limit()) {
+                    break;
+                }
+                if (cond != null) {
+                    int i = kept.size();
+                    if (!Values.truthy(soft(() -> cond.eval(lookup.withRow(row, i))))) {
+                        continue;
+                    }
+                }
+                kept.add(row);
+            }
+            DataNode arr = new DataNode.Arr(kept);
+            return new Pair(arr, arr, null);
         });
     }
 
@@ -573,7 +626,12 @@ public final class ScreenWire {
         Map<String, String> source = null;
         if (src != null) {
             source = new LinkedHashMap<>();
-            source.put("kind", src.kind());
+            if (src.kind() != null) {
+                source.put("kind", src.kind());
+            }
+            if (src.isTable()) {
+                source.put("table", src.table());
+            }
             if (src.pack() != null) {
                 source.put("pack", src.pack());
             }
