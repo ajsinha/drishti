@@ -109,12 +109,16 @@ public final class IcebergMirror {
             }
         }
         Path work = Files.createDirectories(root.resolve("_work"));
-        Path file = Files.createTempFile(work, kind + "-", ".jsonl");
+        Path feed = Files.createTempDirectory(work, kind + "-");
         try {
-            Files.write(file, lines, StandardCharsets.UTF_8);
+            // the producer of the feed: one tar of <kind>/<YYYY-MM-DD>/ folders (or one dated file), so each row lands under its own
+            // business date by the load rules (DATA_LOAD_RULES.md), never under the business today of an undated name
+            Path file = com.ash.drishti.testkit.LoaderRows.write(feed, lines);
             IcebergLoader.run(new String[] {file.toString(), root.toString(), "--engine", "native", "--spill-dir", work.toString(), "--buffer-mb", "64"});
         } finally {
-            Files.deleteIfExists(file);
+            try (var all = Files.walk(feed)) {
+                all.sorted(java.util.Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
+            }
         }
     }
 }
