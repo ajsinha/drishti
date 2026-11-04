@@ -79,6 +79,14 @@ public class HealthController {
         this.disk = d;
     }
 
+    /** The native libraries (BLAS): Health, Native; absent in a test that makes the controller itself. */
+    private com.ash.drishti.server.nativelib.NativeLibraries nativeLibraries;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void nativeLibraries(com.ash.drishti.server.nativelib.NativeLibraries n) {
+        this.nativeLibraries = n;
+    }
+
     /** Busy protection (OPERATIONS.md, "Busy protection"): its card on Health; absent in a test that makes the controller itself. */
     private com.ash.drishti.server.admission.AdmissionGate busy;
 
@@ -220,6 +228,13 @@ public class HealthController {
         }
         if (alerts != null) {
             out.put("alerts", alerts.summary());                        // the platform alerts open on this member, and whether the rules were read
+        }
+        if (nativeLibraries != null) {
+            Map<String, Object> blas = nativeLibraries.describe();       // auto fell back to Java: DEGRADED (same results, slower), never down
+            out.put("native", Map.of("blas", blas));
+            if ("DEGRADED".equals(blas.get("status")) && "OK".equals(out.get("status"))) {
+                out.put("status", "DEGRADED");
+            }
         }
         out.put("tmp", com.ash.drishti.common.TempFiles.info());
         out.put("externalLib", com.ash.drishti.common.ExternalLib.info());

@@ -62,6 +62,10 @@ groups:
         expr: drishti_mapped_deleted_files > 100
         labels: {severity: warning}
         annotations: {summary: "{{ $value }} deleted files still mapped on {{ $labels.instance }}"}
+      - alert: DrishtiNativeBlasFallback
+        expr: drishti_native_blas_fallback > 0.5
+        labels: {severity: warning}
+        annotations: {summary: "BLAS on {{ $labels.instance }} runs on the pure-Java path ({{ $labels.reason }}): results identical, slower"}
       - alert: DrishtiSourceDown
         expr: drishti_source_up == 0
         for: 5m
