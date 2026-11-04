@@ -54,7 +54,7 @@ class IcebergLoaderFailureTest {
             port = s.getLocalPort();                                          // nothing listens once it is closed
         }
         Path dir = Files.createTempDirectory("drishti-iceberg-loader-failure");
-        Path lines = dir.resolve("rows.jsonl");
+        Path lines = dir.resolve("book.2026-09-30.jsonl");                  // one kind on one date (the load rules)
         Files.writeString(lines, "{\"domain\":\"credit\",\"kind\":\"book\",\"id\":\"B-1\",\"date\":\"2026-09-30\",\"doc\":\"{}\",\"columns\":{}}\n");
         String java = Path.of(System.getProperty("java.home"), "bin", "java").toString();
         Process p = new ProcessBuilder(List.of(java, "-cp", System.getProperty("java.class.path"), IcebergLoader.class.getName(), lines.toString(),
@@ -63,7 +63,7 @@ class IcebergLoaderFailureTest {
         String err = new String(p.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
         assertThat(p.waitFor(120, TimeUnit.SECONDS)).isTrue();
         assertThat(p.exitValue()).isEqualTo(1);
-        List<String> said = err.lines().filter(l -> l.startsWith("iceberg: ") && !l.contains("rows read")).toList();
+        List<String> said = err.lines().filter(l -> l.startsWith("iceberg: ") && !l.contains("rows read") && !l.contains(": business date")).toList();
         assertThat(said).as(err).hasSize(1);
         assertThat(said.get(0)).startsWith("iceberg: ").contains("127.0.0.1:" + port);
         assertThat(said.get(0)).as("the reason in words, never ': null' (QA4-07)").doesNotContain(": null").doesNotContain("(null");

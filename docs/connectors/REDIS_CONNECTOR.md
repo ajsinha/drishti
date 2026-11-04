@@ -236,10 +236,10 @@ replaces the trade days it covers.
 
 How the loader works:
 
-- **Its input is JSON lines**, one per entity per day: `{"domain", "kind", "id", "date", "doc", "columns": {path:
-  value}}`. `make_data.py --jsonl` writes the samples; `bulk_trades.py --jsonl -` writes a generated book to standard
-  output, piped straight into the loader (`RedisLoader -` reads standard input), so a million-trade book never sits in a
-  file of gigabytes.
+- **Its input is loader rows**, one JSON line per entity per day: `{"domain", "kind", "id", "date", "doc", "columns": {path:
+  value}}`. `make_data.py --jsonl FILE.tar` writes the samples and `bulk_trades.py --jsonl FILE.tar` a generated book, each a tar
+  of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders read member by member (`RedisLoader -` reads standard input: one kind on one date).
+- **Each row is filed under a business date from outside it** (the load rules, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md), the same as `lake build`'s): a tar of `<kind>/<YYYY-MM-DD>/` folders files each row under its folder's date, and a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input) is one kind on one date: `--as-of`, else its `.ready` file's `business-date:`, else the date in its name, else the business today. The row's own `date` stays in the row as data; rows whose date differs are loaded under the file's date and counted (*N rows of trade.jsonl carried another date in date; loaded under 2026-09-30*). A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar (its folders name the dates). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it, in name order. Retention (`--keep-days`, `--ttl-days`, `--keep-months`) counts back from `--as-of`, else the business today.
 - **Documents stream.** The main thread reads lines; worker threads (`--threads`, the cores less two) parse and compress
   each and send its commands without waiting: `SADD` of the id to the day's journal, then, once Redis has it, `SET` of
   the document (with `EX` when `--ttl-days` is given) and `ZADD` of the day to the entity's days (with `EXPIRE` and
@@ -761,7 +761,7 @@ Every setting of `redis`, with its type, default and meaning, is in the plugin's
 | `--replace` | on (the default) | each day loaded holds exactly the stream's entities, switched atomically |
 | `--merge` | off | add to each day instead: keep the entities the stream does not carry, write in place (before this release, the default) |
 | `--keep-replaced-seconds N` | `120` | how long a replaced day's generation stays readable (0: deleted at once) |
-| `--as-of yyyy-MM-dd` | today in the business zone | the date retention counts back from |
+| `--as-of yyyy-MM-dd` | the file's name, else the business today | a plain file's business date (refused for a tar); the date retention counts back from |
 | `--future-days N` | `1` | how many days after today a business date may be |
 | `--zone Z` | `DRISHTI_BUSINESS_ZONE`, else `America/New_York` | the business zone |
 | `--max-drop-share F` | `0.5` | the largest share of a kind's days one run may drop, and of a day's entities a replacement may drop |

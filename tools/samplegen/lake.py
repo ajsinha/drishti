@@ -150,26 +150,9 @@ def write_rows(out: pathlib.Path, name: str, tables, end: date, days: int, cal: 
         fixes.setdefault(table, {}).setdefault(end.isoformat(), []).append(
             json.dumps({"domain": domain, "kind": kind, "table": table, "id": first, "date": end.isoformat(), "doc": fixed}, ensure_ascii=False))
     history, restated = out / feedfiles.tar_name(f"{name}-history"), out / feedfiles.tar_name(f"{name}-restated")
-    for path, by_table in ((history, hist), (restated, fixes)):
-        members = []
-        for table, days_ in by_table.items():
-            for day, lines in days_.items():
-                members.append((f"{table}/{day}/rows.jsonl", ("\n".join(lines) + "\n").encode("utf-8")))
-        path.write_bytes(_tar(members))
+    feedfiles.rows_tar(history, hist)
+    feedfiles.rows_tar(restated, fixes)
     return history, restated, n
-
-
-def _tar(members: list[tuple[str, bytes]]) -> bytes:
-    """A deterministic tar of these (name, bytes) files, in name order (feedfiles.tar_bytes's form, any number of tables)."""
-    import io
-    import tarfile
-    buf = io.BytesIO()
-    with tarfile.open(fileobj=buf, mode="w", format=tarfile.USTAR_FORMAT) as t:
-        for name, data in sorted(members):
-            info = tarfile.TarInfo(name)
-            info.size, info.mtime, info.mode, info.uid, info.gid, info.uname, info.gname = len(data), 0, 0o644, 0, 0, "", ""
-            t.addfile(info, io.BytesIO(data))
-    return buf.getvalue()
 
 
 def rows_dir(root: pathlib.Path) -> pathlib.Path:

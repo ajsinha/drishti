@@ -17,6 +17,7 @@ package com.ash.drishti.dataload;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ash.drishti.common.FileDates;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -149,7 +150,7 @@ class DataInboxLoaderTest {
         Cycle.FileOutcome e = r.files().stream().filter(o -> o.file().startsWith("trades-e")).findFirst().orElseThrow();
         assertThat(e.versions()).containsOnlyKeys("2026-10-30");
         assertThat(e.dateNote()).isNotNull();
-        String today = com.ash.drishti.lakeload.FileDates.businessToday().toString();
+        String today = FileDates.businessToday().toString();
         assertThat(f.signals).extracting(Signal.Landed::date).contains(LocalDate.parse("2026-11-02"), LocalDate.parse("2026-10-30"), LocalDate.parse(today));
 
         JsonNode report = Fixture.JSON.readTree(f.root.resolve("outbox/2026-11-03").toFile().listFiles()[0].toPath()

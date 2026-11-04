@@ -15,7 +15,7 @@
  */
 package com.ash.drishti.dataload;
 
-import com.ash.drishti.lakeload.FileDates;
+import com.ash.drishti.common.FileDates;
 import com.ash.drishti.lakeload.LakeLoad;
 import com.ash.drishti.lakeload.LakeUndo;
 import com.fasterxml.jackson.databind.JsonNode;

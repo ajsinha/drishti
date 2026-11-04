@@ -169,10 +169,11 @@ aerospike: loaded 3,000,000 rows into namespace test in 147 s
 
 How the loader works:
 
-- **Its input is JSON lines**, one per entity per day: `{"domain", "kind", "id", "date", "doc", "columns": {path:
-  value}}`. `make_data.py --jsonl` writes the samples; `bulk_trades.py --jsonl -` writes a generated book to standard
-  output, piped straight into the loader (`AerospikeLoader -` reads standard input), so a million-trade book never sits
-  in a file of tens of gigabytes. The `columns` are the fields the pack promotes, taken from the same document.
+- **Its input is loader rows**, one JSON line per entity per day: `{"domain", "kind", "id", "date", "doc", "columns": {path:
+  value}}`. `make_data.py --jsonl FILE.tar` writes the samples and `bulk_trades.py --jsonl FILE.tar` a generated book, each a tar
+  of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders read member by member (`AerospikeLoader -` reads standard input: one kind on one
+  date). The `columns` are the fields the pack promotes, taken from the same document.
+- **Each row is filed under a business date from outside it** (the load rules, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md), the same as `lake build`'s): a tar of `<kind>/<YYYY-MM-DD>/` folders files each row under its folder's date, and a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input) is one kind on one date: `--as-of`, else its `.ready` file's `business-date:`, else the date in its name, else the business today. The row's own `date` stays in the row as data; rows whose date differs are loaded under the file's date and counted (*N rows of trade.jsonl carried another date in date; loaded under 2026-09-30*). A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar (its folders name the dates). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it, in name order. Retention (`--keep-days`, `--ttl-days`, `--keep-months`) counts back from `--as-of`, else the business today.
 - **Each line becomes two writes**: the day's record (a put of all its bins) and the entity's index record (an
   operation that sets `kind` and `id` and appends the date to `dates`, sorted and unique). Each kind's dates record is
   written once at the end.

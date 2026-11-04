@@ -68,14 +68,14 @@ function Invoke-Tool([string[]]$toolArgs) {
     }
 }
 
-# the loader's input: the samples, then the book, one JSON line per entity per day
-$jsonl = Join-Path $data 'cassandra.jsonl'
-Invoke-Tool @('tools/packgen/banking/make_data.py', '--jsonl', $jsonl)
+# the loader's input: a folder of the samples' tar and the book's, <kind>/<YYYY-MM-DD>/ folders (the load rules,
+# docs/architecture/DATA_LOAD_RULES.md: each row under its folder's date), read in one load
+$jsonl = Join-Path $data 'build\loader-rows'
+if (Test-Path $jsonl) { Remove-Item $jsonl -Recurse -Force }
+New-Item -ItemType Directory -Force -Path $jsonl | Out-Null
+Invoke-Tool @('tools/packgen/banking/make_data.py', '--jsonl', (Join-Path $jsonl 'banking.tar'))
 if ($Trades -gt 0) {
-    $book = Join-Path $data 'cassandra-book.jsonl'
-    Invoke-Tool @('tools/samplegen/bulk_trades.py', '--trades', "$Trades", '--days', "$Days", '--jsonl', $book)
-    Get-Content $book | Add-Content $jsonl
-    Remove-Item $book
+    Invoke-Tool @('tools/samplegen/bulk_trades.py', '--trades', "$Trades", '--days', "$Days", '--jsonl', (Join-Path $jsonl 'bulk-trades.tar'))
 }
 
 & .\mvnw.cmd -q -o install -DskipTests -pl plugins/drishti-plugin-cassandra -am
@@ -92,4 +92,4 @@ if ($CreateKeyspace -gt 0) { $loaderArgs += @('--create-keyspace', "$CreateKeysp
 $loaderArgs += $LoaderArgs
 & $java "-Djava.io.tmpdir=$tmpDir" "-Djdk.nio.maxCachedBufferSize=262144" -cp $cp com.ash.drishti.plugin.cassandra.CassandraLoader @loaderArgs
 if ($LASTEXITCODE -ne 0) { throw "the load failed (exit $LASTEXITCODE)" }
-Remove-Item $jsonl
+Remove-Item $jsonl -Recurse

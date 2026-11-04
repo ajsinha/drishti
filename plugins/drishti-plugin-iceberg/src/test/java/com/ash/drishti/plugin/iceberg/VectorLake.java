@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.deltalake.write.LakeCli;
@@ -110,7 +111,7 @@ final class VectorLake {
     static void loadLines(Path tmp, Path root, String engine, List<String> lines) throws Exception {
         Path file = Files.createTempFile(tmp, "rows", ".jsonl");
         Files.write(file, lines, StandardCharsets.UTF_8);
-        IcebergLoader.load(new String[] {file.toString(), root.toString(), "--engine", engine, "--spill-dir", tmp.toString(), "--file-rows", "7"});
+        IcebergLoader.load(new String[] {LoaderRows.rewrite(file).toString(), root.toString(), "--engine", engine, "--spill-dir", tmp.toString(), "--file-rows", "7"});
     }
 
     /** The same positions into a Delta table at {@code table} with Drishti's Delta writer (one overwrite of each date). */

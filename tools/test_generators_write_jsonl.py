@@ -34,6 +34,7 @@ import json
 import os
 import re
 import subprocess
+import tarfile
 import sys
 import tempfile
 import unittest
@@ -165,6 +166,28 @@ class RunTheGenerators(unittest.TestCase):
         self.run_tool("tools/samplegen/lake.py", "--samples", "examples/packs/finance/samples", "--root", self.d / "delta2", "--domain", "finance",
                       "--days", "1", "--as-of", "2026-09-30", "--no-load", "--rows", self.d / "rows2")
         self.assert_jsonl(self.d / "rows2", 2)
+
+    def test_the_store_loaders_rows_are_tars_of_kind_and_date_folders(self):
+        """The load rules (docs/architecture/DATA_LOAD_RULES.md): rows of several kinds or days go in a tar of <kind>/<YYYY-MM-DD>/
+        folders, each row in its own date's folder; a plain file is one kind and one day."""
+        (self.d / "store").mkdir()
+        self.run_tool("tools/packgen/banking/make_data.py", "--jsonl", self.d / "store" / "banking.tar")
+        self.run_tool("tools/samplegen/bulk_trades.py", "--trades", "20", "--days", "2", "--workers", "1", "--jsonl", self.d / "store" / "bulk.tar")
+        self.assert_jsonl(self.d / "store", 2)
+        for tar in ("banking.tar", "bulk.tar"):
+            with tarfile.open(self.d / "store" / tar) as t:
+                for m in t.getmembers():
+                    kind, day, _ = m.name.split("/")
+                    for line in t.extractfile(m).read().decode().splitlines():
+                        row = json.loads(line)
+                        self.assertEqual((row["kind"], row["date"][:10]), (kind, day), f"{tar}!/{m.name}")
+        r = subprocess.run([PY, "tools/samplegen/bulk_trades.py", "--trades", "5", "--days", "2", "--jsonl", str(self.d / "two.jsonl")],
+                           cwd=ROOT, capture_output=True, text=True, timeout=300)
+        self.assertNotEqual(r.returncode, 0)
+        self.assertIn("tar", r.stderr)
+        r = subprocess.run([PY, "tools/packgen/banking/make_data.py", "--jsonl", str(self.d / "banking.jsonl")],
+                           cwd=ROOT, capture_output=True, text=True, timeout=300)
+        self.assertNotEqual(r.returncode, 0, "several kinds and days in one plain file")
 
     def test_a_pack_generator_writes_jsonl_samples_and_sutra_cases(self):
         self.run_tool("tools/packgen/genomics/make.py", env={"DRISHTI_PACKS_OUT": str(self.d / "packs")})

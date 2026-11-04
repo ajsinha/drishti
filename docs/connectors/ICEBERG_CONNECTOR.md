@@ -284,8 +284,11 @@ iceberg: loaded 30,000 rows into 1 tables in 5 s
 
 How the loader works:
 
-- **Input**: JSON lines `{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`, from a file or standard input
-  (`-`): `make_data.py --jsonl` writes the samples, `bulk_trades.py --jsonl -` streams a generated book straight into it.
+- **Input**: loader rows, JSON lines `{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`: `make_data.py --jsonl
+  FILE.tar` writes the samples and `bulk_trades.py --jsonl FILE.tar` a generated book, each a tar of `<kind>/<YYYY-MM-DD>/rows.jsonl`
+  folders; `tools/load-iceberg.sh` gives the loader the folder holding both, so each business day is written once. `-` reads
+  standard input: one kind on one date.
+- **Each row is filed under a business date from outside it** (the load rules, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md), the same as `lake build`'s): a tar of `<kind>/<YYYY-MM-DD>/` folders files each row under its folder's date, and a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input) is one kind on one date: `--as-of`, else its `.ready` file's `business-date:`, else the date in its name, else the business today. The row's own `date` stays in the row as data; rows whose date differs are loaded under the file's date and counted (*N rows of trade.jsonl carried another date in date; loaded under 2026-09-30*). A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar (its folders name the dates). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it, in name order. Retention (`--keep-days`, `--ttl-days`, `--keep-months`) counts back from `--as-of`, else the business today.
 - **An external sort per day.** The generator's stream interleaves days and ids (it is not sorted: workers emit slices
   of trade numbers as they finish). Each business day of each kind gets a sorter (`SortedRuns`). At most `--buffer-mb`
   (1024) of rows are held; beyond it the largest day's buffer is sorted and written to a run file in `--spill-dir`, on a
@@ -794,8 +797,8 @@ manifests (`drishti.iceberg.manifest-cache-entries`, 2,000,000 entries) and dele
 (`drishti.iceberg.delete-cache-rows`, 5,000,000 rows); a purge of the connector's caches empties all three.
 
 **Speed.** The same 10,000 trades a day over three days (`tools/samplegen/bulk_trades.py --trades 10000 --days 3
---jsonl`, documents of about 18 KB), loaded by each engine's loader into its own lake and read by the connector on that
-engine in one JVM (`IcebergEnginesBenchTest`, `-Ddrishti.iceberg.bench=<jsonl>`; 2026-10-20, a 24-core workstation, heap 6 GB):
+--jsonl FILE.tar`, documents of about 18 KB), loaded by each engine's loader into its own lake and read by the connector on that
+engine in one JVM (`IcebergEnginesBenchTest`, `-Ddrishti.iceberg.bench=<the tar>`; 2026-10-20, a 24-core workstation, heap 6 GB):
 
 | | native | library |
 |---|---|---|

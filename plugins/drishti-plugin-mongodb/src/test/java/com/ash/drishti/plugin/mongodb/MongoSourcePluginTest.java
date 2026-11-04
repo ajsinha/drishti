@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.plugin.mongodb;
 
+import com.ash.drishti.common.RowFeed;
+import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -127,9 +129,8 @@ class MongoSourcePluginTest extends DatedSourceContract {
 
     /** Runs the loader's command line over these lines, into database {@code database}. */
     private static void loadMain(String database, String lines, String... options) throws Exception {
-        java.nio.file.Path f = java.nio.file.Files.createTempFile("rows", ".jsonl");
+        java.nio.file.Path f = LoaderRows.write(List.of(lines.split("\n")));   // the load rules: a tar of <kind>/<date>/ folders, or one dated file
         try {
-            java.nio.file.Files.writeString(f, lines);
             List<String> args = new java.util.ArrayList<>(List.of(f.toString(), uri(), database, "--batch", "2", "--in-flight", "2"));
             args.addAll(List.of(options));
             MongoLoader.main(args.toArray(new String[0]));
@@ -139,17 +140,20 @@ class MongoSourcePluginTest extends DatedSourceContract {
     }
 
     @Test
-    void aFutureDatedRowIsNotLoadedAndCannotMoveTheRetentionCutOff() throws Exception {
+    void aFileOfAFutureBusinessDateIsNotLoadedAndRetentionLeavesFutureDaysAlone() throws Exception {
         String lines = """
                 {"domain":"dated","kind":"trade","id":"MX-1","date":"2026-09-28","doc":"{}"}
                 {"domain":"dated","kind":"trade","id":"MX-1","date":"2026-09-29","doc":"{}"}
                 {"domain":"dated","kind":"trade","id":"MX-1","date":"2026-09-30","doc":"{}"}
-                {"domain":"dated","kind":"trade","id":"MX-TYPO","date":"2099-03-01","doc":"{}"}
                 """;
-        assertThatThrownBy(() -> loadMain("dated", lines, "--keep-days", "3", "--as-of", "2026-09-30")).hasMessageContaining("1 rows not loaded");
+        loadMain("dated", lines);                                                 // a tar of trade/<date>/ folders
+        assertThatThrownBy(() -> loadMain("dated", """
+                {"domain":"dated","kind":"trade","id":"MX-TYPO","date":"2099-03-01","doc":"{}"}
+                {"domain":"dated","kind":"trade","id":"MX-2","date":"2026-09-30","doc":"{}"}
+                """)).hasMessageContaining("in the future");                         // a tar with trade/2099-03-01/: refused whole
         try (MongoClient c = MongoClients.create(uri())) {
             var dated = c.getDatabase("dated").getCollection("dated");
-            assertThat(dated.distinct("date", Integer.class).into(new java.util.ArrayList<>())).as("three days kept back from 2026-09-30, no typo")
+            assertThat(dated.distinct("date", Integer.class).into(new java.util.ArrayList<>())).as("the three days, not the future one")
                     .containsExactlyInAnyOrder(20260928, 20260929, 20260930);
             // a future day already in the store (an older loader wrote it) is neither counted nor deleted
             dated.insertOne(new Document("_id", "trade/MX-OLD/20990302").append("kind", "trade").append("id", "MX-OLD").append("date", 20990302));
@@ -161,15 +165,17 @@ class MongoSourcePluginTest extends DatedSourceContract {
 
     @Test
     void retentionThatWouldDropMostOfAKindsDaysNeedsForceDrop() throws Exception {
-        String lines = """
+        loadMain("share", """
                 {"domain":"share","kind":"trade","id":"MX-1","date":"2026-09-28","doc":"{}"}
                 {"domain":"share","kind":"trade","id":"MX-1","date":"2026-09-29","doc":"{}"}
+                """);                                                                 // a tar of two days
+        String lines = """
                 {"domain":"share","kind":"trade","id":"MX-1","date":"2026-09-30","doc":"{}"}
-                """;
+                """;                                                                  // the day's file, under --as-of
         assertThatThrownBy(() -> loadMain("share", lines, "--keep-days", "1", "--as-of", "2026-09-30")).hasMessageContaining("would drop 2 of 3 business days");
         try (MongoClient c = MongoClients.create(uri())) {
             var share = c.getDatabase("share").getCollection("share");
-            assertThat(share.countDocuments()).isEqualTo(3);
+            assertThat(share.countDocuments()).isEqualTo(2);
             loadMain("share", lines, "--keep-days", "1", "--as-of", "2026-09-30", "--force-drop");
             assertThat(share.countDocuments()).isEqualTo(1);
         }
@@ -185,7 +191,7 @@ class MongoSourcePluginTest extends DatedSourceContract {
         }
         try (MongoClient c = MongoClients.create(uri())) {
             MongoDatabase db = c.getDatabase("halves");
-            new MongoLoader(db, MongoLayout.DocFormat.STRING, 0, 2, 2).load(new BufferedReader(new StringReader(day1.toString())));
+            new MongoLoader(db, MongoLayout.DocFormat.STRING, 0, 2, 2).load(LoaderRows.feed(day1.toString()));
             // a load of the next day that dies after ten documents: its stream breaks
             String[] lines = day2.toString().split("\n");
             java.io.Reader broken = new java.io.Reader() {
@@ -205,7 +211,7 @@ class MongoSourcePluginTest extends DatedSourceContract {
                     first.close();
                 }
             };
-            assertThatThrownBy(() -> new MongoLoader(db, MongoLayout.DocFormat.STRING, 0, 2, 2).load(new BufferedReader(broken))).hasMessageContaining("broke");
+            assertThatThrownBy(() -> new MongoLoader(db, MongoLayout.DocFormat.STRING, 0, 2, 2).load(RowFeed.stream(broken, LocalDate.of(2026, 9, 30)))).hasMessageContaining("broke");
             assertThat(db.getCollection("halves").countDocuments(Filters.eq("date", 20260930))).as("the dead load wrote part of the day").isEqualTo(10);
             MongoSourcePlugin p = new MongoSourcePlugin();
             p.start(context(Map.of("uri", uri(), "database", "halves", "collection", "halves", "layout.trade.columns", "mtm", "refresh-seconds", "3600")));
@@ -213,7 +219,7 @@ class MongoSourcePluginTest extends DatedSourceContract {
                 ColumnSet latest = p.columns("trade", List.of("mtm"), AsOf.LATEST).orElseThrow();
                 assertThat(latest.businessDate()).as("the half-written day is not shown").isEqualTo(LocalDate.of(2026, 9, 29));
                 assertThat(latest.size()).isEqualTo(20);
-                new MongoLoader(db, MongoLayout.DocFormat.STRING, 0, 2, 2).load(new BufferedReader(new StringReader(day2.toString())));
+                new MongoLoader(db, MongoLayout.DocFormat.STRING, 0, 2, 2).load(LoaderRows.feed(day2.toString()));
                 p.refresh();
                 ColumnSet now = p.columns("trade", List.of("mtm"), AsOf.LATEST).orElseThrow();
                 assertThat(now.businessDate()).isEqualTo(LocalDate.of(2026, 9, 30));
@@ -236,7 +242,7 @@ class MongoSourcePluginTest extends DatedSourceContract {
             MongoDatabase db = c.getDatabase("loader");
             for (int run = 0; run < 2; run++) {
                 MongoLoader loader = new MongoLoader(db, MongoLayout.DocFormat.STRING, 0, 2, 2);
-                assertThat(loader.load(new BufferedReader(new StringReader(lines)))).isEqualTo(4);
+                assertThat(loader.load(LoaderRows.feed(lines))).isEqualTo(4);
             }
             var books = db.getCollection("books");
             assertThat(books.countDocuments()).isEqualTo(4);

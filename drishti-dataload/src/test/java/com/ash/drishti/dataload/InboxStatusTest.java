@@ -18,7 +18,7 @@ package com.ash.drishti.dataload;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.lakeload.FileDates;
+import com.ash.drishti.common.FileDates;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.nio.file.Files;

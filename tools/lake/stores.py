@@ -144,6 +144,9 @@ def rows(delta: pathlib.Path, table_name: str, newest: list, domain: str = DOMAI
 def copy(delta: pathlib.Path, root: pathlib.Path, table_name: str, data: pathlib.Path, say=print, domain: str = DOMAIN) -> dict:
     """Copies one Delta table into ``<root>/trading/<table_name>`` with IcebergLoader (each business day committed as one overwrite of
     that day); {rows, newest}."""
+    if str(HERE) not in sys.path:
+        sys.path.insert(0, str(HERE))
+    import feedfiles  # noqa: E402  (tools/lake/feedfiles.py: the rows as a tar of <table>/<YYYY-MM-DD>/ folders)
     spill = data / "tmp" / "iceberg"
     spill.mkdir(parents=True, exist_ok=True)
     cmd = loader_command(data) + ["-", str(root), "--engine", "native", "--spill-dir", str(spill), "--buffer-mb", "512"]
@@ -160,11 +163,15 @@ def copy(delta: pathlib.Path, root: pathlib.Path, table_name: str, data: pathlib
         reader = threading.Thread(target=echo, daemon=True)
         reader.start()
         try:
+            # the load rules (DATA_LOAD_RULES.md): rows of several dates go as a tar of <table>/<YYYY-MM-DD>/ folders, each row
+            # in its Delta business date's folder
+            out = feedfiles.RowsTarStream(proc.stdin.buffer)
             for line in rows(delta, table_name, newest, domain):
-                proc.stdin.write(line)
+                out.add(table_name, json.loads(line)["date"], line)
                 n += 1
                 if n % 100_000 == 0:
                     say(f"    {domain}/{table_name}: {n:,} rows sent to Iceberg", flush=True)
+            out.close()
             proc.stdin.close()
         except BrokenPipeError:
             pass

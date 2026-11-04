@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.cassandra;
 
+import com.ash.drishti.testkit.LoaderRows;
 import com.ash.drishti.api.LoadGuard;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.datastax.oss.driver.api.core.CqlSession;
@@ -136,7 +137,7 @@ final class CassandraNode {
     /** Loads JSON lines as {@code tools/load-cassandra.sh} would. */
     static CassandraLoader.Result load(String[] args, List<String> lines) throws Exception {
         try (CassandraLoader loader = new CassandraLoader(CassandraLoader.parse(args), LoadGuard.fromArgs(args))) {
-            return loader.load(new BufferedReader(new StringReader(String.join("\n", lines))));
+            return loader.load(LoaderRows.feed(lines));
         }
     }
 

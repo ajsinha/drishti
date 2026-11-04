@@ -1719,19 +1719,22 @@ python3 tools/drishti.py data load --store files data/demo-files --trades 1000 -
 bash tools/load-files.sh data/demo-files --trades 1000 --days 2
 ```
 
-A real small run (200 trades, one day) into a scratch folder; these scripts also refresh the shipped packs' sample files and the
-data folder (`DRISHTI_DATA_DIR`, else the repository's `data/`, which is not tracked). Each loader's heap is `DRISHTI_LOADER_HEAP`
-(default `4g`); its input file (`banking.jsonl`) is written under the data folder and removed after the load:
+A real small run (200 trades, one day) into a scratch folder; the scripts write under the data folder (`DRISHTI_DATA_DIR`, else
+the repository's `data/`, which is not tracked) and never rewrite the shipped packs' samples. Each loader's heap is
+`DRISHTI_LOADER_HEAP` (default `4g`). Its input is loader rows by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)):
+`make_data.py` and `bulk_trades.py` write tars of `<kind>/<YYYY-MM-DD>/` folders under `data/build/loader-rows/`, removed after the
+load, and the loader files each row under its folder's date and says so:
 
 ```text
-wrote 1791 documents into 5 packs' samples
 feeds: data/feeds/fixing.jsonl
-jsonl: 17910 rows in data/banking.jsonl (tools/load-postgres.sh and tools/load-aerospike.sh load them)
-files: wrote 17,910 rows into 460 files under data/demo-files in 0 s
+jsonl: 25430 rows in data/build/loader-rows/banking.tar (<kind>/<YYYY-MM-DD>/rows.jsonl; tools/load-postgres.sh, load-aerospike.sh and the other store loaders load it)
+files: banking.tar: business dates 2026-09-17 to 2026-09-30 (10 dates) from the archive's folders
+files: wrote 25,430 rows into 450 files under data/demo-files in 1 s
 
-200 of 200 trade-days written (1 s)
-200 trade-days as JSON lines in 1 s
-files: wrote 200 rows into 1 files under data/demo-files in 1 s
+200 of 200 trade-days written (3 s)
+200 trade-days as JSON lines in 3 s
+files: bulk-trades.tar: business date 2026-09-30 from the archive's folders
+files: wrote 200 rows into 1 files under data/demo-files in 0 s
 ```
 
 **The demo lakes with a source system in Iceberg.** `tools/build_demo_lakes.py` (the demo lakes from start to finish) takes

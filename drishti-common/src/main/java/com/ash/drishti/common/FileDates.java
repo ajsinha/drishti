@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.lakeload;
+package com.ash.drishti.common;
 
 import java.time.DateTimeException;
 import java.time.DayOfWeek;
@@ -95,9 +95,16 @@ public final class FileDates {
         return TAR_SUFFIXES.stream().anyMatch(low::endsWith);
     }
 
+    /** The archives the loaders read members of. */
+    public static final List<String> ARCHIVE_SUFFIXES = List.of(".tar.gz", ".tgz", ".tar", ".zip");
+
+    /** Names compare as Python's do: character (code point) by character. */
+    public static final java.util.Comparator<String> BY_NAME = (a, b) -> java.util.Arrays.compare(a.codePoints().toArray(), b.codePoints().toArray());
+
     /** Whether {@code name} is an archive the loaders read members of (.zip, .tar, .tar.gz, .tgz, .tar.zip). */
     public static boolean isArchive(String name) {
-        return Archives.isArchive(name);
+        String n = baseName(name).toLowerCase(Locale.ROOT);
+        return ARCHIVE_SUFFIXES.stream().anyMatch(n::endsWith);
     }
 
     /** {@code text} as a date, or why it is none (the second element). */
@@ -330,7 +337,7 @@ public final class FileDates {
             k.sort(String.CASE_INSENSITIVE_ORDER);
             errors.add(t + "/: no such table (known: " + (k.isEmpty() ? "none" : String.join(", ", k)) + ")");
         }
-        tables.values().forEach(ds -> ds.values().forEach(fs -> fs.sort(Archives.BY_NAME)));
+        tables.values().forEach(ds -> ds.values().forEach(fs -> fs.sort(BY_NAME)));
         return new Layout(tables, errors, ignored);
     }
 }

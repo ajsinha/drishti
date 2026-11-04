@@ -179,10 +179,11 @@ postgres: loaded 3,000,000 rows in 172 s
 
 How the loader works:
 
-- **Its input is JSON lines**, one per entity per day: `{"domain", "kind", "id", "date", "doc", "columns": {path:
-  value}}`, the same as the Aerospike loader's. `make_data.py --jsonl` writes the samples; `bulk_trades.py --jsonl -`
-  streams a generated book to standard output, piped into the loader (`PostgresLoader -` reads standard input), so a
-  million-trade book never sits in a file of tens of gigabytes.
+- **Its input is loader rows**, one JSON line per entity per day: `{"domain", "kind", "id", "date", "doc", "columns": {path:
+  value}}`, the same as the Aerospike loader's. `make_data.py --jsonl FILE.tar` writes the samples and `bulk_trades.py --jsonl
+  FILE.tar` a generated book, each a tar of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders read member by member (`PostgresLoader -`
+  reads standard input: one kind on one date).
+- **Each row is filed under a business date from outside it** (the load rules, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md), the same as `lake build`'s): a tar of `<kind>/<YYYY-MM-DD>/` folders files each row under its folder's date, and a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input) is one kind on one date: `--as-of`, else its `.ready` file's `business-date:`, else the date in its name, else the business today. The row's own `date` stays in the row as data; rows whose date differs are loaded under the file's date and counted (*N rows of trade.jsonl carried another date in date; loaded under 2026-09-30*). A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar (its folders name the dates). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it, in name order. Retention (`--keep-days`, `--ttl-days`, `--keep-months`) counts back from `--as-of`, else the business today.
 - **`COPY`, in parallel, into a stage.** Rows are sent with PostgreSQL's `COPY` in batches of `--batch` (2,000) on
   `--writers` connections at once (8), into a stage table nobody reads (`<schema>.entities_load_<token>`, unlogged,
   without indexes). With a million trades the generator, not the database, sets the pace: 3,000,000 rows took 172 s,
@@ -633,7 +634,7 @@ Every setting of `jdbc`, with its type, default and meaning, is in the plugin's 
 
 Loader options (`PostgresLoader`, through `tools/load-postgres.sh`): `--user`, `--password` (default
 `DRISHTI_PG_USER`/`DRISHTI_PG_PASSWORD`, else `drishti`), `--writers` (8), `--batch` (2,000), `--recreate`,
-`--keep-months N`, `--as-of yyyy-MM-dd` (today), `--future-days N` (1), `--zone Z`, `--max-drop-share F` (0.5),
+`--keep-months N`, `--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar; retention counts back from it, else today), `--future-days N` (1), `--zone Z`, `--max-drop-share F` (0.5),
 `--force-drop`.
 
 ## 13. Checklist for production

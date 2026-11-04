@@ -27,7 +27,8 @@ other table as it is; a running server picks the new trades up within a minute. 
 with the day's amendments, use make_trades.py instead. To go back to the sample trades over 10 days:
 python3 tools/packgen/banking/make_data.py --lake data/delta (with uv run --with deltalake --with pyarrow --with pyyaml).
 
---jsonl FILE|- writes loader rows instead ({"domain", "kind", "id", "date", "doc", "columns"}: the document and the fields the trading
+--jsonl FILE.tar (a tar of trade/<YYYY-MM-DD>/ folders, any --days) or FILE|- (one day: --days 1; the load rules, docs/architecture/DATA_LOAD_RULES.md)
+writes loader rows instead ({"domain", "kind", "id", "date", "doc", "columns"}: the document and the fields the trading
 pack promotes, by path), for tools/load-aerospike.sh and the other stores' loaders.
 
 The trades are the system's sample trades (config/packs/trading/samples/trade.jsonl, written by make_data.py, in the common
@@ -203,7 +204,8 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
     ap.add_argument("--system", default="MUREX", choices=("MUREX", "CALYPSO"), help="the source system whose trades are cloned and whose table "
                                                                                         "(trading/trade_<system>) is replaced (default MUREX)")
-    ap.add_argument("--jsonl", default=None, help="write loader rows to this file (- for standard output) instead, for tools/load-aerospike.sh "
+    ap.add_argument("--jsonl", default=None, help="write loader rows instead: FILE.tar (trade/<YYYY-MM-DD>/ folders, any --days), or a plain "
+                                                  "file or - (standard output) of one day (--days 1), for tools/load-aerospike.sh "
                                                   "and the other stores' loaders: the documents with the fields the trading pack promotes")
     ap.add_argument("--out", default=os.environ.get("DRISHTI_DATA_DIR", "data") + "/build/bulk",
                     help="where the JSONL files go: <out>/<system>/trade_<system>.<date>.jsonl.gz (default <data>/build/bulk)")
@@ -221,16 +223,42 @@ def main(argv: list[str]) -> int:
     root = Path(a.root)
     days = business_days(date.fromisoformat(a.as_of), a.days, Calendar.of("USNY"))
     t0 = time.time()
-    if a.jsonl:                                       # a stream for Aerospike (or anything that reads JSON lines)
-        out = sys.stdout if a.jsonl == "-" else open(a.jsonl, "w", encoding="utf-8")
+    if a.jsonl:                                       # loader rows for the store loaders (RowFeed): by the load rules
+        tar = a.jsonl.endswith(".tar")
+        if not tar and len(days) > 1:
+            ap.error(f"--jsonl {a.jsonl}: {len(days)} business days of trades: a stream or plain file is one table and one date "
+                     "(docs/architecture/DATA_LOAD_RULES.md): write a .tar of trade/<YYYY-MM-DD>/ folders, or --days 1")
         jobs = [(list(range(s, min(s + 5_000, a.trades))), d, len(days) - 1 - n) for n, d in enumerate(days) for s in range(0, a.trades, 5_000)]
         written = 0
+        if tar:                                       # each day into its own file beside the tar, then packed (no day held in memory)
+            work = Path(a.jsonl).with_suffix(".parts")
+            work.mkdir(parents=True, exist_ok=True)
+            outs = {d.isoformat(): open(work / f"{d.isoformat()}.jsonl", "w", encoding="utf-8") for d in days}
+        else:
+            out = sys.stdout if a.jsonl == "-" else open(a.jsonl, "w", encoding="utf-8")
         with POOL_CONTEXT.Pool(a.workers, initializer=_init, initargs=(templates, lay, types)) as pool:
             for lines in pool.imap_unordered(_lines, jobs):
-                out.write("\n".join(lines) + "\n")
+                if tar:
+                    outs[json.loads(lines[0])["date"]].write("\n".join(lines) + "\n") if lines else None
+                else:
+                    out.write("\n".join(lines) + "\n")
                 written += len(lines)
                 print(f"\r{written:,} of {a.trades * len(days):,} trade-days written ({time.time() - t0:,.0f} s)", end="", flush=True, file=sys.stderr)
-        if out is not sys.stdout:
+        if tar:
+            sys.path.insert(0, str(ROOT / "tools" / "lake"))
+            import feedfiles
+            for f in outs.values():
+                f.close()
+            parts = {}
+            for d in outs:                            # the tar's members: trade/<YYYY-MM-DD>/rows.jsonl
+                (work / d).mkdir(exist_ok=True)
+                (work / f"{d}.jsonl").rename(work / d / "rows.jsonl")
+                parts[d] = [work / d / "rows.jsonl"]
+            feedfiles.pack_tar(Path(a.jsonl), "trade", parts)
+            for d in outs:
+                (work / d).rmdir()
+            work.rmdir()
+        elif out is not sys.stdout:
             out.close()
         print(f"\n{written:,} trade-days as JSON lines in {time.time() - t0:,.0f} s", file=sys.stderr)
         return 0

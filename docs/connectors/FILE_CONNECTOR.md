@@ -83,7 +83,9 @@ fast because it never reads a whole day to answer one question ([section 6](#6-h
 
 A line is one JSON object. Two forms are read, and a file may mix them:
 
-**The loaders' row** (what `make_data.py --jsonl`, `bulk_trades.py --jsonl` and every Drishti loader read and write):
+**The loaders' row** (what `make_data.py --jsonl`, `bulk_trades.py --jsonl` and every Drishti loader read and write; the generators
+write them as tars of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders, and `JsonlLoader` files each row under its folder's date or a plain
+file's date, never the row's own, by the load rules of [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)):
 
 ```json
 {"domain": "trading", "kind": "trade", "id": "MX-20000001", "date": "2026-09-17",

@@ -36,8 +36,8 @@ import org.junit.jupiter.api.Test;
 
 /**
  * The engines' speed table (DATA_ARCHITECTURE.md › drishti-iceberg: Drishti's own Apache Iceberg engine, section 12; ICEBERG_CONNECTOR.md, engines): the same JSON lines (a trade
- * book from {@code tools/samplegen/bulk_trades.py --jsonl}) loaded by each engine's loader into its own lake, then read
- * by the connector on that engine in this JVM. Opt-in, not part of a build: {@code -Ddrishti.iceberg.bench=<jsonl>}
+ * book from {@code tools/samplegen/bulk_trades.py --jsonl FILE.tar}, trade/<YYYY-MM-DD>/ folders) loaded by each engine's loader into its own lake, then read
+ * by the connector on that engine in this JVM. Opt-in, not part of a build: {@code -Ddrishti.iceberg.bench=<the tar>}
  * (and {@code -Ddrishti.iceberg.bench.dir=<folder for the lakes>}); prints a table and checks the engines agree.
  */
 class IcebergEnginesBenchTest {
@@ -105,7 +105,7 @@ class IcebergEnginesBenchTest {
     @Test
     void theEnginesSideBySide() throws Exception {
         String file = System.getProperty("drishti.iceberg.bench");
-        assumeTrue(file != null && Files.exists(Path.of(file)), "set -Ddrishti.iceberg.bench=<trades.jsonl> to measure");
+        assumeTrue(file != null && Files.exists(Path.of(file)), "set -Ddrishti.iceberg.bench=<trades.tar> to measure");
         Path dir = Path.of(System.getProperty("drishti.iceberg.bench.dir", Path.of(file).getParent().resolve("lakes").toString()));
         Map<String, Result> out = new LinkedHashMap<>();
         for (String engine : List.of("library", "native")) {
