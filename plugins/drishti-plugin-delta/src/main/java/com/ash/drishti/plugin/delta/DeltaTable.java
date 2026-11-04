@@ -148,12 +148,7 @@ final class DeltaTable {
      * Per layout version and date: the ids that more than one load wrote, each with the index of the file whose copy wins (the newest
      * load: the largest {@code _load_id}, then the latest commit); empty when no id was written twice. Kept for a few dates.
      */
-    private final Map<String, Map<String, Integer>> shadows = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<String, Map<String, Integer>> e) {
-            return size() > 64;
-        }
-    });
+    private final Map<String, Map<String, Integer>> shadows = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true));   // at most 64, the least used first out
 
     DeltaTable(Engine engine, String path, String idColumn, String docColumn, String dateColumn) {
         this.engine = engine;
@@ -485,7 +480,14 @@ final class DeltaTable {
             sortedIds.add(id);
             sortedFiles.add(fileOf.get(order[i]));
         }
-        shadows.put(layout.version() + "|" + date, shadow.isEmpty() ? Map.of() : shadow);
+        synchronized (shadows) {                              // a plain map (no subclass: nothing here is Serializable), trimmed by hand
+            shadows.put(layout.version() + "|" + date, shadow.isEmpty() ? Map.of() : shadow);
+            var eldest = shadows.keySet().iterator();
+            while (shadows.size() > 64 && eldest.hasNext()) {
+                eldest.next();
+                eldest.remove();
+            }
+        }
         return new HeapIdMap(sortedIds.toArray(new String[0]), sortedFiles.stream().mapToInt(Integer::intValue).toArray());
     }
 

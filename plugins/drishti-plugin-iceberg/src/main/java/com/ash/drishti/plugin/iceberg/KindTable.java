@@ -217,12 +217,7 @@ abstract class KindTable {
      * Per snapshot and day: the ids more than one load wrote, each with the index of the file whose copy readers see (the newest load:
      * the largest {@code _load_id}, then the later file); empty when none. Kept for a few days.
      */
-    private final Map<String, Map<String, Integer>> shadows = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<String, Map<String, Integer>> e) {
-            return size() > 64;
-        }
-    });
+    private final Map<String, Map<String, Integer>> shadows = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true));   // at most 64, the least used first out
 
     /** The day's shadowed ids ({@link #shadows}), computed by {@link #ids} when the table has {@code _load_id}. */
     Map<String, Integer> shadow(Layout l, Day day) {
@@ -333,7 +328,14 @@ abstract class KindTable {
             outIds.add(ids.get(i));
             outFiles.add(fileOf.get(i));
         }
-        shadows.put(l.snapshotId() + "|" + day.date(), shadow.isEmpty() ? Map.of() : shadow);
+        synchronized (shadows) {                              // a plain map (no subclass: nothing here is Serializable), trimmed by hand
+            shadows.put(l.snapshotId() + "|" + day.date(), shadow.isEmpty() ? Map.of() : shadow);
+            var eldest = shadows.keySet().iterator();
+            while (shadows.size() > 64 && eldest.hasNext()) {
+                eldest.next();
+                eldest.remove();
+            }
+        }
         return new Sorted(outIds.toArray(new String[0]), outFiles.stream().mapToInt(Integer::intValue).toArray());
     }
 
