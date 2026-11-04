@@ -112,9 +112,8 @@ public final class LoaderProcess implements LoadRunner {
         boolean named = r.lake() != null && r.lake().matches("[a-z0-9][a-z0-9_-]*");      // a lake of config/lakes/ (else a folder: the old form)
         put(t, "table", r.table() != null || !named || r.connector() == null || r.newDomain() != null ? r.table()
                 : com.ash.drishti.lakeconfig.PackEntry.read(r.packDir(), r.kind(), r.connector()).table());
-        if (!named) {
-            t.put("mode", "append".equals(r.mode()) ? "append" : "replace-date");   // a lake file's table: its load-mode (the one source)
-        }
+        // the mode (DATA_LOAD_RULES.md section 3): the .ready file's, else the lake file's entry for the table, else the inbox's default
+        t.put(r.modeGiven() ? "mode" : "default-mode", "append".equals(r.mode()) ? "append" : "replace-date");
         t.put("batch-id", batchId(files));
         ObjectNode rj = root.putObject("rejects");
         rj.put("max-pct", rejectMaxPercent);

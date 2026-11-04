@@ -60,14 +60,16 @@ public final class Routes {
      * table format; {@code by} says which rule (or the {@code .ready} file) decided. {@code dateFrom} is the loader's {@code source.date-from}:
      * {@code auto}, a date at the end of a file's name (an archive member's own first: {@code FileDates}) is every row's business date, or
      * {@code field}, the rows' own; {@code nameDate} the date the file's name carries (what the Admin screen shows), {@code dateBy} where the
-     * date comes from in words.
+     * date comes from in words. {@code mode} is the load mode, {@code modeGiven} whether the {@code .ready} file gave it (else it is the
+     * inbox's default-mode, which a lake file's entry for the table overrides: DATA_LOAD_RULES.md section 3).
      */
     public record Route(String pack, String kind, String connector, String table, String dateField, LocalDate asOf, String key, String lake,
-            String format, String by, Path packDir, String dateFrom, LocalDate nameDate, String dateBy, String mode, String dataset, String newDomain) {
+            String format, String by, Path packDir, String dateFrom, LocalDate nameDate, String dateBy, String mode, String dataset, String newDomain,
+            boolean modeGiven) {
 
         Route(String pack, String kind, String connector, String table, String dateField, LocalDate asOf, String key, String lake, String format,
                 String by, Path packDir, String dateFrom, LocalDate nameDate, String dateBy, String mode, String dataset) {
-            this(pack, kind, connector, table, dateField, asOf, key, lake, format, by, packDir, dateFrom, nameDate, dateBy, mode, dataset, null);
+            this(pack, kind, connector, table, dateField, asOf, key, lake, format, by, packDir, dateFrom, nameDate, dateBy, mode, dataset, null, false);
         }
 
         /** The files of one table and one way of reading them go to one load. */
@@ -79,7 +81,7 @@ public final class Routes {
         /** The same route for one table folder of a tar ({@code source.dataset}). */
         Route forFolder(String folder, String pack2, String kind2, Path dir2, String by2) {
             return new Route(pack2, kind2, null, null, dateField, null, key, lake, format, by2, dir2, dateFrom, null,
-                    "each table and date from the archive's folders", mode, folder);
+                    "each table and date from the archive's folders", mode, folder, null, modeGiven);
         }
     }
 
@@ -341,7 +343,7 @@ public final class Routes {
         return new Route(pack, kind, n.connector() != null ? n.connector() : rule == null ? null : rule.connector(),
                 rule == null ? null : rule.table(), rule == null ? null : rule.dateField(), asOf,
                 n.key() != null ? n.key() : rule == null ? null : rule.key(), rule == null || rule.lake() == null ? defaultLake : rule.lake(),
-                rule == null ? "delta" : rule.format(), by, info.dir(), dateFrom, nameDate, dateBy, mode, null);
+                rule == null ? "delta" : rule.format(), by, info.dir(), dateFrom, nameDate, dateBy, mode, null, null, n.mode() != null);
     }
 
     /**
@@ -373,7 +375,7 @@ public final class Routes {
                 : FileDates.businessToday() + " (today: no date in the name)";
         return new Route(pack, table, null, table, null, asOf, n.key() != null ? n.key() : "id", rule == null || rule.lake() == null ? defaultLake : rule.lake(),
                 rule == null ? "delta" : rule.format(), "a new table " + table + " (new-table: true)", info.dir(), "auto", nameDate, dateBy,
-                n.mode() != null ? n.mode() : defaultMode, null, domain);
+                n.mode() != null ? n.mode() : defaultMode, null, domain, n.mode() != null);
     }
 
     /**

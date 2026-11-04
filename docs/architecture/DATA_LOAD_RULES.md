@@ -78,14 +78,16 @@ First match wins.
 | **Business date** | command line `--as-of` | `.ready` `business-date:` | | the name's date | business today |
 | **Table** | `--table` | `.ready` `table:` | an inbox rule's `table:` | the name's table | (no table: refused) |
 | **Pack** (its lake, domain and layout) | `--pack` | `.ready` `pack:` | an inbox rule's `pack:` and `kind:` | the pack that already has a table of that name | a pack of that name with a single table |
-| **Mode** | `--mode` | `.ready` `mode:` | | the inbox's `default-mode` | **append** |
+| **Mode** | `--mode` | `.ready` `mode:` | the table's entry in its lake file (`load-mode:`, the table's default) | the inbox's `default-mode` | **append** |
 
 An inbox rule (`config/dataload.yaml`: a glob on the file name to a pack, kind and table) applies when no `.ready` or command-line
 value is given, before the name's table is looked up.
 
 - A table found in **two** packs is refused unless the pack is given; the refusal lists the candidates.
 - An **unknown** table is refused, listing the known ones, unless creating it is allowed (section 7).
-- The load report says where each value came from: *date 2026-11-03 from the name; pack core from the .ready file*.
+- The load report says where each value came from: *date 2026-11-03 from the name; pack core from the .ready file*; the mode's
+  source is the summary's `modeFrom` (*given (--mode or the .ready file)*, *the lake file's entry*, *the inbox's default-mode*, *the load
+  rules' default*).
 
 ### 3.1 Tar archives
 
@@ -122,10 +124,10 @@ Nothing is written before step 4.
      and count as the oldest load, so a newer load's copy of an id wins. An undo reads only the `_load_id` column of files without
      statistics for it; for a file written before the column, that read touches only the footer.
    - An archive commits its tables and dates in a fixed order (table, then date).
-   - A table of a lake file (`config/lakes/<lake>.yaml`, LAKE_GUIDE.md) takes its partitions, its load mode and its table settings
-     from its entry there, the one source of them: `--mode` or a `.ready` file's `mode:` must agree with the entry's `load-mode`, and
-     a table of a lake folder (the older form) or one without an entry appends by default. These rules give the table and the business
-     date either way. `target.batch-id` (the data inbox gives every file's) makes an append's commit happen once per batch.
+   - A table of a lake file (`config/lakes/<lake>.yaml`, LAKE_GUIDE.md) takes its partitions and its table settings from its entry
+     there, and its entry's `load-mode` is the table's default mode: `--mode` or a `.ready` file's `mode:` still wins (section 3), and
+     the entry wins over the inbox's `default-mode`. These rules give the table and the business date either way. `target.batch-id`
+     (the data inbox gives every file's) makes an append's commit happen once per batch.
    - A store loader's retention (`--keep-days`, `--keep-months`, `--ttl-days`) counts back from the newest business date of the
      load: a plain file's date, or a tar's newest folder. It never counts from the business today or from the newest date the store
      holds. `--as-of` means only the business date of a plain file.

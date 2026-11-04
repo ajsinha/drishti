@@ -67,7 +67,17 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
 
     /** The table and its layout. */
     record Target(String format, String path, String lake, String domain, String kind, String table, Map<String, String> storage,
-            Map<String, String> properties, Map<String, String> iceberg, Layout layout, String loadMode, String batchId) {
+            Map<String, String> properties, Map<String, String> iceberg, Layout layout, String loadMode, String batchId, String modeFrom) {
+
+        /** Where the load mode came from, in words (the report's {@code modeFrom}). */
+        String modeWords() {
+            return switch (modeFrom == null ? "rules" : modeFrom) {
+                case "given" -> "given (--mode or the .ready file)";
+                case "lake" -> "the lake file's entry";
+                case "default" -> "the inbox's default-mode";
+                default -> "the load rules' default";
+            };
+        }
 
         boolean isIceberg() {
             return format.equals("iceberg");
@@ -114,7 +124,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
                     "partition-by", "pack", "connector", "latest-by", "dataset", "archive"),
             "source.archive", Set.of("max-mb", "max-ratio", "max-members", "validate"),
             "target", Set.of("format", "path", "lake", "domain", "kind", "table", "storage-options", "mode", "properties", "iceberg", "layout",
-                    "batch-id"),
+                    "batch-id", "default-mode"),
             "target.layout", Set.of("sort-by", "file-size-mb", "row-group-mb", "compression", "vector-compression", "byte-stream-split",
                     "shard-aligned"),
             "parallel", Set.of("readers", "parsers", "writers", "queue-mb", "split-mb"),
@@ -382,18 +392,20 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         if (!tf.equals("delta") && !tf.equals("iceberg")) {
             throw new IllegalArgumentException("target.format " + tf + ": delta or iceberg");
         }
-        // the load mode: the lake file's entry when the table has one (the one source of a table's settings), else append, the load
-        // rules' default (docs/architecture/DATA_LOAD_RULES.md section 6); replace (overwrite-dates) replaces each business date
-        String mode = r.text(t, "mode", entry != null ? (entry.appends() ? "append" : "replace-date") : "append").toLowerCase(Locale.ROOT);
+        // the load mode (docs/architecture/DATA_LOAD_RULES.md section 3): target.mode (--mode, a .ready file's mode:), else the lake file's
+        // entry (the table's default), else target.default-mode (the data inbox's default-mode), else append; replace (overwrite-dates)
+        // replaces each business date
+        String given = r.text(t, "mode", null);
+        String fallback = r.text(t, "default-mode", null);
+        String modeFrom = given != null ? "given" : entry != null ? "lake" : fallback != null ? "default" : "rules";
+        String mode = (given != null ? given : entry != null ? (entry.appends() ? "append" : "replace-date") : fallback != null ? fallback : "append")
+                .toLowerCase(Locale.ROOT);
         mode = mode.equals("overwrite-dates") || mode.equals("replace") ? "replace-date" : mode;
         if (!mode.equals("replace-date") && !mode.equals("append")) {
             throw new IllegalArgumentException("target.mode " + mode + ": append (the default: each business date's rows are added, one commit "
                     + "per date) or replace-date (each business date of the input replaced by one commit; also replace, overwrite-dates)");
         }
         String loadMode = mode.equals("append") ? LakeTable.APPEND : LakeTable.REPLACE;
-        if (entry != null) {
-            agree(entry, "load-mode", loadMode, entry.loadMode());
-        }
         // target.batch-id names the batch: an append of it is committed once (a retried load of the same batch is skipped); the data
         // inbox names every file's. Without one an append is not guarded against a second run (each run's rows carry their _load_id)
         String batchId = r.text(t, "batch-id", null);
@@ -458,7 +470,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
             }
         }
         Target tgt = new Target(tf, path, r.text(t, "lake", null), domain, r.text(t, "kind", null), table, targetStorage, props, iceberg, layout,
-                loadMode, batchId);
+                loadMode, batchId, modeFrom);
         if (tgt.path() == null && (tgt.lake() == null || tgt.domain() == null || tgt.kind() == null && tgt.table() == null)) {
             throw new IllegalArgumentException("target: give path (the table) or lake, domain and kind (the table <lake>/<domain>/<kind>)");
         }

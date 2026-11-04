@@ -148,6 +148,8 @@ def config(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, e
         # a lake of config/lakes/ (lake build --lake NAME): the loader reads the same lake file, by name; the layout and the load mode
         # are the file's (the one source of a table's settings); the load rules give the table and the business date
         target = {"lake": p["lake_name"], "kind": p["kind"]}
+        if getattr(a, "_mode_given", False) and target_mode:
+            target["mode"] = target_mode                    # --mode or a .ready file's mode:, over the entry's (the table's default)
         for k in ("promote", "vectors", "flatten", "partition-by", "latest-by", "id"):
             src.pop(k, None)
     else:                                          # a folder (--lake DIR, or --lake-root): the table's path, its layout given here

@@ -247,7 +247,8 @@ def _feed(a) -> str:
             raise BuildError(f"the files' .ready markers name different {key}s ({', '.join(sorted(vals))}): load them one at a time")
         if vals and not getattr(a, attr, None):
             setattr(a, attr, vals.pop() if key != "pack" else str(_pack_dir(vals.pop())))
-    a._mode_given = bool(a.mode)                         # --mode, or a .ready file's mode: (a lake file's table must agree with it)
+    a._mode_given = bool(a.mode)                         # --mode, or a .ready file's mode: (over a lake file's entry, its table's default)
+    a._mode_from = "given (--mode or the .ready file)" if a.mode else "the load rules' default"
     if not a.mode:
         a.mode = "overwrite-dates" if getattr(a, "format", "delta") == "iceberg" else "append"
     if a.kind or (a.pack and pack_defaults(pathlib.Path(a.pack), None).get("kind")) or getattr(a, "_tar_table", None):
@@ -412,22 +413,11 @@ def lake_layout(a, p: dict) -> None:
         root = root + "/" + parent.rpartition("/")[0]
     a.lake = str(getattr(a, "lake_root", None) or root)
     a.format = t["format"]
-    if t.get("load-mode") == "append":
-        # an append records its batch in the commit so it is never appended twice; one implementation of that rule, the parallel
-        # loader's (LAKE_GUIDE.md section 4): the Python path refuses rather than append without it
-        if getattr(a, "engine", "auto") != "java":
-            raise BuildError(f"table {t['name']} of lake {name} appends (load-mode: append): each batch is recorded in the commit so it is "
-                             "never appended twice, which the parallel loader does: add --engine java --batch-id ID (the file's name, a run id)")
-        if not getattr(a, "batch_id", None):
-            raise BuildError(f"table {t['name']} of lake {name} appends (load-mode: append): give --batch-id ID (the file's name, a run id), "
-                             "so a repeated or retried load is never appended twice")
-        a.mode = "append"
-    else:                                               # the lake file is the table's one source of its load mode
-        if getattr(a, "_mode_given", False) and a.mode == "append":
-            raise BuildError(f"--mode append: table {t['name']} of lake {name} replaces its business dates (load-mode: replace); the lake file "
-                             "is the table's one source of its load mode")
-        if a.mode == "append":
-            a.mode = "overwrite-dates"
+    # the mode (DATA_LOAD_RULES.md section 3): --mode or a .ready file's mode:, else the table's entry here (its default), else append;
+    # an append's batch (--batch-id, with --engine java) is committed once
+    if not getattr(a, "_mode_given", False):
+        a.mode = "append" if t.get("load-mode") == "append" else "overwrite-dates"
+        a._mode_from = "the lake file's entry"
     p["lake_entry"], p["lake_name"] = t["name"], name
 
 
@@ -478,8 +468,8 @@ def run(a, say=print) -> tuple[int, dict]:
             raise BuildError("give --lake DIR (the Delta root the connector reads)")
         if _feed(a) == "tar":
             return _run_tars(a, say, summary, started, lake)
-        summary["mode"] = a.mode
         p = plan(a)
+        summary["mode"], summary["modeFrom"] = a.mode, getattr(a, "_mode_from", "the load rules' default")
         if p.get("lake_entry"):                            # --lake NAME: the root the lake file (or --lake-root) gave
             remote = "://" in str(a.lake) and not str(a.lake).startswith("file:")
             lake = pathlib.Path(a.lake) if not remote else None

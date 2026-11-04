@@ -66,7 +66,7 @@ class RoutesTest {
         Routes.Route r = routes(f).route("named-latest.jsonl", dated);
         assertThat(List.of(String.valueOf(r.asOf()), r.dateBy())).containsExactly("2026-10-29", "2026-10-29 from the .ready file");
         Path load = tmp.resolve("load.yaml");
-        LoaderProcess.writeConfig(load, r, List.of(tmp.resolve("x.jsonl")), tmp.resolve("s.json"), tmp.resolve("r.jsonl"), 0, tmp.resolve("spill"));
+        LoaderProcess.writeConfig(load, r, List.of(Files.writeString(tmp.resolve("x.jsonl"), "{}\n")), tmp.resolve("s.json"), tmp.resolve("r.jsonl"), 0, tmp.resolve("spill"));
         assertThat(Files.readString(load)).containsPattern("as-of: \"?2026-10-29\"?").containsPattern("mode: \"?append\"?");
         assertThatThrownBy(() -> Routes.read(writeRule(f, "date-from: field"), "lake", f.packs())).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("auto (the .ready file's business-date");
@@ -108,7 +108,7 @@ class RoutesTest {
                 new ReadyNote(null, null, null, null, null, null, null, null, true, null, java.util.Map.of(), false)))
                 .hasMessageContaining("a new table needs its pack");
         Path load = tmp.resolve("new.yaml");
-        LoaderProcess.writeConfig(load, r, List.of(tmp.resolve("x.jsonl")), tmp.resolve("s.json"), tmp.resolve("r.jsonl"), 0, tmp.resolve("spill"));
+        LoaderProcess.writeConfig(load, r, List.of(Files.writeString(tmp.resolve("x.jsonl"), "{}\n")), tmp.resolve("s.json"), tmp.resolve("r.jsonl"), 0, tmp.resolve("spill"));
         assertThat(Files.readString(load)).doesNotContain("pack:").containsPattern("domain: \"?demo\"?").containsPattern("table: \"?deals\"?");
     }
 
