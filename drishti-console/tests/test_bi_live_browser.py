@@ -58,8 +58,23 @@ def browser(stack):
         b.close()
 
 
+#: the contexts this file's tests opened: each is closed when its test ends (below)
+_CONTEXTS: list = []
+
+
+@pytest.fixture(autouse=True)
+def _close_contexts():
+    """A live report left open keeps its stream and its redraw rounds going (a round of queries every 250 ms while the source ticks): four tests
+    used to leave theirs open, so each later test opened its report beside three or four live ones and timed out under the drill's load
+    (opening the report, the first round, the pause). Every test's contexts are closed when it ends, passed or failed."""
+    yield
+    while _CONTEXTS:
+        _CONTEXTS.pop().close()
+
+
 def sign_in(browser, user="rita", **ctx):
     context = browser.new_context(**{"viewport": {"width": 1400, "height": 900}, **ctx})
+    _CONTEXTS.append(context)
     context.add_init_script(VIOLATIONS)
     page = context.new_page()
     page.errors = []
