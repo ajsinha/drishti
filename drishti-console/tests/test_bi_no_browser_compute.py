@@ -35,6 +35,7 @@ def scripts_of(template: str) -> list[str]:
     return re.findall(r'src="/static/js/([A-Za-z0-9_.-]+\.js)', text)
 
 
+@pytest.mark.static
 def test_no_bi_template_names_a_compute_engine_or_a_wasm_policy():
     for t in sorted(TEMPLATES.glob("*.html")):
         text = t.read_text(encoding="utf-8")
@@ -46,6 +47,7 @@ def test_no_bi_template_names_a_compute_engine_or_a_wasm_policy():
             assert not COMPUTE.search(code), f"{t.name} loads {name}, which starts a compute engine in the browser"
 
 
+@pytest.mark.static
 def test_the_removed_engines_are_gone():
     for gone in ("web/static/js/bi-explore-duck.js", "web/static/js/bi-perspective.js", "web/static/calc/bi_driver.py", "core/perspective_csp.py",
                  "web/static/vendor/perspective", "web/static/vendor/duckdb-wasm"):

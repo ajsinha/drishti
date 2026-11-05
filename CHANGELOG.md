@@ -19,6 +19,34 @@
 
 - Decks refreshed for 2.9.11–2.9.11.c
 
+### Tests and the drill
+
+- **The browser-test harness ([TEST_HARNESS.md](docs/architecture/TEST_HARNESS.md), ARCHITECTURE.md section 22, BENCHMARK.md
+  section 18).** The drill's browser lane is handed out by test (`--dist loadgroup`): a file that keeps a server or state is one group
+  on one worker, a small independent test marked `spread` is a unit of its own. Each worker starts one Chromium (contexts reused per
+  width and reset between tests), one stand-in console and a pool that keeps at most one idle real server; the pack ViewModels are
+  bound once per run for every worker. The two render suites are split into one spread test per pack Sutra, their pages drawn four at
+  a time and served over HTTP on the worker's port. Pages wait on a settled signal (`Drishti.settled`: charts drawn, nothing
+  aria-busy, no request unanswered, the page quiet; inert for people) instead of fixed pauses. Scratch ports come in blocks of 1,250
+  per worker (up to 12 workers). The lane's workers come from the memory available (`drill_plan.py workers`), its memory is sampled
+  (`drill_monitor.py`), and every browser file over 300 s is flagged (`drill_plan.py budget`, `tools/drill-budgets.txt`).
+  `test_browser_rules.py` checks the rules for browser tests on the source. The console parses a pack's YAML once while its files
+  are unchanged (a cold page spent about a second of the event loop on it, for every user).
+- **The quick file checks run in the gate.** Every test that only reads files is marked `static` (the Java launch guard, the asset
+  names, the branding guard, the under-construction registry, the front-end policy, the browser-test rules, the scratch ports, the
+  contrast of the themes, no shared user state, the console does not aggregate, the engines' help pages, the settings catalogue, the
+  command catalog; in the tools the READMEs, the pack guides, the IDE run configurations, the exports' JSON Lines and the Knowledge
+  pages). The gate's new `gate-checks` job runs them (`drill_plan.py static`), in about half a minute; the console lanes run
+  `-m "not static"` and the tools' lanes leave them out. Before, the Java launch guard ran in the browser lane, because its text names
+  Chromium, and failed a drill an hour in. A static test starts nothing: `test_browser_rules.py` checks it (TEST_HARNESS.md rule 11).
+- **`tools/drill.sh --gate`** runs the gate alone, on any branch, and stops (a check of a few minutes before a drill). Measured: the
+  whole gate 145 s, its quick file checks 32 s.
+- **The browser lane measured three times with the harness** (TEST_HARNESS.md section 5, BENCHMARK.md section 18): 1,515 s,
+  1,735 s and 1,554 s on 9 workers, against 3,654 to 3,768 s for develop's lane on 3 workers in the last drill; about 36 GB at its
+  peak, at least 10.8 GB left available. **Fixed:** the refresh test read the freshness label after a fixed 1.1 s pause and, on a
+  loaded lane, read "stale"; it now waits for the label. The docs-rot check counts a variable the console tests' helper modules read
+  (the harness's `DRISHTI_BROWSER_PROFILE`, `DRISHTI_BROWSER_PAGES_AT_ONCE`) as read.
+
 ### Docs
 
 - **The tutorials in tracks, merged and corrected** (product owner, 2026-11-04: "go through all tutorials ... reorganise, combine or even

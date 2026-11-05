@@ -14,15 +14,22 @@
 
 """The guard on the scratch ports of the browser tests (tests/scratch_ports.py): under ``pytest -n 4 --dist loadfile`` two files run at once on two
 workers, so a port written as a bare number, or one base number written in two files, lets one file stop the stack the other is using. Every
-port assignment in a test file or a stack module goes through the worker offset, and no two files write the same base number."""
+port assignment in a test file or a stack module goes through the worker offset, no two files write the same base number, and every base
+lies in the one window (scratch_ports.LOW to HIGH) that keeps the workers' blocks apart."""
 from __future__ import annotations
 
 import ast
 from collections import defaultdict
 from pathlib import Path
 
+import pytest
+
 TESTS = Path(__file__).resolve().parent
-LOW, HIGH = 17000, 19999
+import scratch_ports
+
+pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
+
+LOW, HIGH = 17000, 19999               # what counts as a port number in the source (the window itself is scratch_ports.LOW..HIGH)
 
 
 def _numbers(node) -> list:
@@ -81,6 +88,21 @@ def test_no_two_files_write_the_same_base_port():
             files[n].add(name)
     shared = {port: sorted(names) for port, names in files.items() if len(names) > 1}
     assert not shared, f"one base port in two files (two pytest workers would share one stack): {shared}"
+
+
+def test_every_base_lies_in_the_window_so_workers_never_meet():
+    outside = sorted({f"{name}:{line} {n}" for name, line, nums, _o in _scan() for n in nums
+                      if not scratch_ports.LOW <= n <= scratch_ports.HIGH})
+    assert not outside, (f"base ports outside {scratch_ports.LOW}..{scratch_ports.HIGH} (worker blocks of {scratch_ports.STRIDE} would overlap): "
+                         + "; ".join(outside))
+    used: dict[int, int] = {}
+    bases = sorted({n for *_x, nums, _o in _scan() for n in nums})
+    for b in bases:
+        for w in range(scratch_ports.MAX_WORKERS):
+            p = b + scratch_ports.STRIDE * w
+            assert p not in used, f"base {b} on gw{w} meets base {used[p]}: port {p}"
+            assert p < 32768, f"base {b} on gw{w} is port {p}, in the ephemeral range"
+            used[p] = b
 
 
 def test_the_guard_sees_the_known_stacks():

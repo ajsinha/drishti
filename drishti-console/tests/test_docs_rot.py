@@ -455,7 +455,10 @@ def setting_exists(key: str) -> bool:
 
 @functools.lru_cache(maxsize=None)
 def env_in_code() -> frozenset[str]:
-    return frozenset(_ENV.findall(code_text()))
+    """The variables the code reads, and those the console tests' helper modules read (the test harness's switches, such as
+    DRISHTI_BROWSER_PROFILE in browser_harness.py; TEST_HARNESS.md documents them): a test file itself is not code."""
+    helpers = [p for p in (ROOT / "drishti-console" / "tests").glob("*.py") if not p.name.startswith(("test_", "conftest"))]
+    return frozenset(_ENV.findall(code_text() + "\n".join(p.read_text(encoding="utf-8", errors="ignore") for p in helpers)))
 
 
 def env_exists(name: str, doc: str) -> bool:

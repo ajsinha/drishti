@@ -16,6 +16,10 @@
 import re
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
+
 WEB = Path(__file__).resolve().parent.parent / "web"
 CONSOLE = WEB.parent
 EXTERNAL = re.compile(r"""(src|href)\s*=\s*["']\s*(https?:)?//|@import\s+url\(\s*["']?(https?:)?//|url\(\s*["']?https?://""", re.I)

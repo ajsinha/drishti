@@ -26,6 +26,10 @@ import importlib.util
 import re
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
+
 TESTS = Path(__file__).resolve().parent
 ROOT = TESTS.parents[1]
 SKIP = {".venv", "venv", "node_modules", "__pycache__", "vendor", "vendor-js", "static", "fixtures"}

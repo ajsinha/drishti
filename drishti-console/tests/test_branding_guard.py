@@ -19,6 +19,7 @@ the scripts' namespace (``window.Drishti.Channel``), ``drishti-`` ids, ``DRISHTI
 import re
 from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 
 from conftest import CONSOLE
@@ -53,16 +54,19 @@ def _literals(root: Path, pattern: str) -> list[str]:
     return out
 
 
+@pytest.mark.static
 def test_no_template_writes_the_product_name():
     found = _literals(WEB / "templates", "*.html")
     assert not found, "write {{ PRODUCT }} (ui.product), not the name:\n" + "\n".join(found)
 
 
+@pytest.mark.static
 def test_no_script_writes_the_product_name():
     found = _literals(WEB / "static" / "js", "*.js") + _literals(WEB / "embed", "*.js")
     assert not found, "read the name from document.body.dataset.product (ui.product), not a literal:\n" + "\n".join(found)
 
 
+@pytest.mark.static
 def test_the_guard_sees_a_literal_and_lets_identifiers_through(tmp_path):
     (tmp_path / "a.html").write_text('{# Project Drishti · header #}\n<p>Drishti SQL</p>\n<i data-drishti-x class="drishti-y">{{ PRODUCT }}*net</i>\n')
     (tmp_path / "b.js").write_text("/* Drishti */\nwindow.DrishtiChannel = 1; // Drishti\nh('X-Drishti-User'); g.Drishti = g.Drishti || {}; window.Drishti.Busy.render(); say('DRISHTI_PACKS');\nsay('Drishti*net');\n")
@@ -81,11 +85,13 @@ def test_a_rebranded_console_names_the_product_and_owner_from_configuration(back
     assert not NAME.search(re.sub(r"<[^>]+>", " ", shown)), "a page of a rebranded console still names Drishti"
 
 
+@pytest.mark.static
 def test_the_wordmark_font_is_not_named_after_the_product():
     css = (WEB / "static" / "css" / "drishti_theme.css").read_text(encoding="utf-8")
     assert '"Product Wordmark"' in css and "Drishti Wordmark" not in css and "Drishti Tagline" not in css
 
 
+@pytest.mark.static
 def test_the_menus_and_the_edition_pages_never_write_the_product_name():
     """The menus and footer as data (config/menus.yaml) say {product}; the edition's landing, its script and the lens links take the
     product from configuration (EDITIONS.md › The design as built, section 5.10)."""

@@ -18,6 +18,7 @@ operations; the real one is what makes "the YAML changes and the comments stay" 
 Not collected as tests (the name does not start with ``test_``); ``test_workbench_browser.py`` imports the fixtures. The server is
 the repackaged jar under ``drishti-server/target`` run on a free port (or DRISHTI_WB_SERVER_PORT / DRISHTI_WB_CONSOLE_PORT) in a scratch directory; when the jar or a JDK is missing the
 tests that need it are skipped, never failed."""
+import atexit
 import json
 import os
 import re
@@ -115,7 +116,58 @@ def live_auth_console(tmp_path_factory):
     yield from _stack(tmp_path_factory, {"DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": TOKEN_SECRET}, auth=True)
 
 
-def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"):
+class StackPool:
+    """This worker's real servers (docs/architecture/TEST_HARNESS.md, "The server pool"). Every server a browser test starts through
+    ``_stack`` passes here: the pool counts and times the starts (DRISHTI_BROWSER_PROFILE), and keeps at most one idle server, so servers
+    never pile up on a worker. A stack asked for with ``shared=True`` is kept when its file is done and handed to the next file on this
+    worker that asks for the same settings (same environment, sign-in, heap); any other start stops the idle one first."""
+
+    def __init__(self):
+        self.idle: dict[tuple, tuple] = {}
+        self.starts = 0
+
+    def stop_idle(self) -> None:
+        for key in list(self.idle):
+            gen, _st = self.idle.pop(key)
+            next(gen, None)                    # the stack's own teardown: console stopped, server terminated
+
+
+POOL = StackPool()
+
+
+def _stop_pool():
+    POOL.stop_idle()
+
+
+atexit.register(_stop_pool)
+
+
+def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m", shared=False):
+    """A real server and a console in front of it, from this worker's pool (StackPool): yields the Stack, stops it (or keeps it idle for the
+    next file asking the same, when ``shared``) when the caller's fixture ends."""
+    key = (tuple(sorted(extra_env.items())), auth, heap)
+    if shared and work is None and key in POOL.idle:
+        gen, st = POOL.idle.pop(key)
+    else:
+        POOL.stop_idle()
+        from browser_harness import Phases
+        ph = Phases("server-start")
+        gen = _start_stack(tmp_path_factory, extra_env, work, auth, heap)
+        st = next(gen)
+        ph.mark("ready")
+        ph.done()
+        POOL.starts += 1
+    keep = shared and work is None
+    try:
+        yield st
+    finally:
+        if keep:
+            POOL.idle[key] = (gen, st)
+        else:
+            next(gen, None)
+
+
+def _start_stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"):
     if jar() is None or not JAVA.exists():
         pytest.skip("needs the built server jar (./mvnw -o package -DskipTests -pl drishti-server -am) and JDK 25")
     import uvicorn
@@ -149,7 +201,7 @@ def _stack(tmp_path_factory, extra_env, work=None, auth=False, heap="768m"):
             except urllib.error.HTTPError:           # sign-in on: a 401 is the server answering
                 break
             except OSError:
-                time.sleep(0.5)
+                time.sleep(0.5)   # wait-ok: polling a server that is still starting
         else:
             pytest.fail("the server did not answer within 10 minutes: " + (work / "server.log").read_text()[-400:])
         data = load_settings(CONSOLE / "config").as_dict()
