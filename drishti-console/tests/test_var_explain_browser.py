@@ -31,7 +31,7 @@ import pytest
 
 from test_var_explorer_browser import open_var, shot
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
-from var_stack import var_data, var_lake, var_server
+from var_stack import VAR_TRADES, var_data, var_lake, var_server
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
@@ -40,7 +40,7 @@ def stack(tmp_path_factory):
     if keep and (Path(keep) / "delta" / "risk" / "pnl-vector").is_dir():
         lake = Path(keep) / "delta"
     else:
-        lake = var_lake(tmp_path_factory, var_data("trades/murex"))   # the committed three dates, ending today (the last weekday)
+        lake = var_lake(tmp_path_factory, var_data(*VAR_TRADES))   # the committed three dates, ending today (the last weekday)
     yield from var_server(tmp_path_factory, lake)
 
 

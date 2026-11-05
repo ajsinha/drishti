@@ -33,11 +33,11 @@ import pytest
 
 from test_var_explorer_browser import open_var, painted, shot
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
-from var_stack import var_data, var_lake, var_server
+from var_stack import VAR_TRADES, var_data, var_lake, var_server
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
-    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data("trades/murex", "trades/endur", limits=False)))
+    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data(*VAR_TRADES)))
 
 
 def requests_to(pg, part):
