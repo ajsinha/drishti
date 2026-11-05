@@ -27,8 +27,7 @@ About 30 minutes.
 ## Before you start
 
 - [Tutorial 10](10-first-bi-report.md) done (you know the report viewer). The shipped samples used here, the dataset **Live trading desk**, the reports **Live trading desk** and **Live exposure** and the boards **Desk wall** and **Python wall**, are in every server's `config/bi/`.
-- **Live and the model layer (2.2).** The two live samples are still **version 1 datasets** (`rachana: 1`): they move to the model layer in wave W3, and
-  their reports keep reading them meanwhile. The converter has already made a **model** of each (`live-trading@1`, `live-exposure@1`) over the same live
+- **Live and the model layer.** The two live samples are **version 1 datasets** (`rachana: 1`) that their reports read directly. The converter has made a **model** of each (`live-trading@1`, `live-exposure@1`) over the same live
   table, so a model query, Analyse and an alert on a measure of a model read the live rows too (step 2).
 - The personal API token of [tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line) in `DRISHTI_TOKEN`, and
   `DRISHTI_SERVER` (default `http://localhost:18480`).
@@ -413,8 +412,8 @@ $ curl -s -X POST -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: ap
          ["2026-10-17 23:10:50.0",-3.10440227E8,-1.792199831E9]],"rowCount":12,"meta":{"layer":"live","tables":["history"],...}}
 ```
 
-The history is a table of the version 1 dataset. The model the converter made carries the history measures but not the `history` table yet, so the
-last-hour line stays on the dataset until wave W3 moves the live samples.
+The history is a table of the version 1 dataset. The model the converter made carries the history measures but not the `history` table, so the
+last-hour line reads the dataset.
 
 ## Step 8 · Lay out your own board
 

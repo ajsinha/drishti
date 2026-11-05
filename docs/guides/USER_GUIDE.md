@@ -1335,7 +1335,7 @@ Newer screens (every pack screen is built from the same parts) can do more than 
 - **Your page.** With the Sutra designer on, **Customize** in a page's header changes the page for you alone (move, hide, columns,
   what a click opens, refresh, letting people edit); the header then says *Your page*, whose link opens the pack's page.
   [RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid) and
-  [tutorial 22](../tutorials/22-build-a-screen-with-the-designer.md).
+  [tutorial 6, part B](../tutorials/06-design-a-screen.md#part-b--on-a-live-page-the-sutra-designer).
 
 ## Zoom a panel
 

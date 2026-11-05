@@ -1222,7 +1222,7 @@ panels:
 
 Every key is in [RACHANA_REFERENCE: Events, sources and children](RACHANA_REFERENCE.md#events-sources-and-children-sutra-next).
 You rarely need to write these by hand: the **Sutra designer** (section 16) writes them from plain choices, and
-[tutorial 22](../tutorials/22-build-a-screen-with-the-designer.md) builds such a screen step by step.
+[tutorial 6, part B](../tutorials/06-design-a-screen.md#part-b--on-a-live-page-the-sutra-designer) builds such a screen step by step.
 
 ## 12. Expandable row groups: pivot `by` lists and tree tables
 
@@ -1393,7 +1393,7 @@ guided build of complete screens, follow the [Build workbench tutorial](../tutor
 | You are doing | In the workbench | Section |
 |---|---|---|
 | starting from data, a schema, an example or an existing Sutra | **Build → New screen** | [§1](RACHANA_REFERENCE.md#1-start-bring-data) |
-| changing a live page in plain words (move, hide, columns, what a click opens, refresh, let people edit), or a screen from one line | the **Sutra designer** (`ui.designer: true`): **Customize** on the page, **Describe**, **Outline**, **Grid** | [§31](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid), [tutorial 22](../tutorials/22-build-a-screen-with-the-designer.md) |
+| changing a live page in plain words (move, hide, columns, what a click opens, refresh, let people edit), or a screen from one line | the **Sutra designer** (`ui.designer: true`): **Customize** on the page, **Describe**, **Outline**, **Grid** | [§31](RACHANA_REFERENCE.md#31-the-sutra-designer-customize-describe-outline-and-grid), [tutorial 6, part B](../tutorials/06-design-a-screen.md#part-b--on-a-live-page-the-sutra-designer) |
 | writing the YAML by hand, with completion and a check as you type | the **YAML** tab (or **Split**, with the screen beside it) | [§9](RACHANA_REFERENCE.md#9-the-yaml-tab-the-split-view-and-the-summary) |
 | seeing what is wrong, with the code and the line | the **Problems** tab | [§10](RACHANA_REFERENCE.md#10-problems) |
 | checking every panel against every sample | the **Tests** tab: ok / empty / error / no access | [§11](RACHANA_REFERENCE.md#11-tests-as-you-type) |

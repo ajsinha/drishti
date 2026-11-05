@@ -498,5 +498,12 @@ env:
   - { name: DRISHTI_SHOTS_LAKE_END, by: tools, default: ~, sets: "screenshot tools", meaning: "The last business date of the lake they build" }
   - { name: DRISHTI_SHOTS_INDEX, by: tools, default: ~, sets: "screenshot tools", meaning: "Which shots of a tutorial to take" }
   - { name: DRISHTI_SHOTS_DELTA_ROOT, by: tools, default: ~, sets: "screenshot tools", meaning: "The lake they read" }
+  - { name: DRISHTI_T35_USER, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 35's pictures: the reader who signs in (default the administrator)" }
+  - { name: DRISHTI_T35_PASSWORD, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 35's pictures: that reader's password" }
+  - { name: DRISHTI_T35_TOKEN_FILE, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 35's pictures: a scratch file that keeps the token made, never printed" }
+  - { name: DRISHTI_T36_WORK, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 36's pictures: the server's working folder (its data inbox)" }
+  - { name: DRISHTI_T37_USER, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 37's pictures: the function's author who signs in" }
+  - { name: DRISHTI_T37_PASSWORD, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 37's pictures: the author's password" }
+  - { name: DRISHTI_T37_FN, by: tools, default: "fn:you/wret@1", sets: "screenshot tools", meaning: "Tutorial 37's pictures: the approved function used in a view" }
   - { name: DRISHTI_ARTIFACTS_SERVER_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The server port of the artifacts screenshots" }
   - { name: DRISHTI_ARTIFACTS_CONSOLE_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The console port of the artifacts screenshots" }

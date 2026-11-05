@@ -18,6 +18,9 @@
 Install Drishti, build the demo lakes, start it, sign in, open a trade, search, try the search form and look at business intelligence. At the end you
 will also have a token that lets the command line talk to your server, which tutorials 4, 5, 6 and 7 use.
 
+**Someone already runs a demo server for you?** Skip steps 1 and 2: ask for its address, start at [Step 3](#step-3--sign-in) and use
+[Step 9](#step-9--make-a-token-for-the-command-line) for your token. Steps 1 and 2 are the install, done once per machine.
+
 ## Time to complete
 
 About 15 minutes, plus the first build (a few minutes, once) and the demo lakes (about 15 minutes for the sixty business days, once).
@@ -87,7 +90,7 @@ Connector files:
 ```
 
 You should see a line for each of the 89 tables, then `Demo lake ready` with sixty business dates ending on *your* today's business date (the summary above is from a
-sixty-day run that kept the test data's own dates, 2026-07-08 to 2026-09-30; the table lines' row counts, captured on seven-day lakes, are left out).
+sixty-day run that kept the test data's own dates, 2026-07-08 to 2026-09-30; the table lines' row counts, captured on seven-day lakes, are left out). This output is to be re-run: it predates the test data's conversion to dated files, so the lines `lake demo` prints now may read differently.
 It takes about 15 minutes and about 3.4 GB of disk. The other outputs in these tutorials were captured on Saturday 17 October 2026 on seven-day lakes
 (Friday **2026-10-16** back to **2026-10-07**): on the sixty-day lakes the ids are the same, but a captured count or value may differ.
 
@@ -108,6 +111,8 @@ GREEN  port 18480              free
 GREEN  port 17480              free
 doctor: all clear
 ```
+
+(This output is to be re-run: the jar name in it is newer than the run that printed the versions.)
 
 You should see no red line (the exit is 0). The two `port` lines say what is on the ports: with nothing started they say *free*; once the server and the console run they say
 *in use by Drishti*.
@@ -169,7 +174,7 @@ under **My account** before you ever put real data in; tutorials here leave it s
 ![The home page: the command line, the date box, the menus and a list of commands to try](img/t01/02-home.jpg)
 
 You should see, from left to right in the top bar: the **command line** (the rounded box, `> TRD MX-20000001, CPTY ...` is its hint), the **business date** box, the menu icons
-(**Views**, then BI, Build, Admin, Help), the bell for your inbox, the packs icon with a count, the theme button, the round **Live** button and your name.
+(**Views**, then Engines, BI, Build, Admin, Help; **Engines** lists the compute engines your roles open, VaR, exposure, FRTB-SA and SIMM among them, and is not in this picture, which is to be re-run), the bell for your inbox, the packs icon with a count, the theme button, the round **Live** button and your name.
 Below it is a list of commands you can click.
 
 The command line is the heart of Drishti. A command is a **mnemonic** (a short code for a kind of thing: `TRD` is a trade) and an **identifier**:

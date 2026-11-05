@@ -198,7 +198,9 @@ connector-duckdb connector-postgres jdbc-queries connector-mongodb connector-red
 connector-news connector-yfinance connector-kafka connector-activemq connector-rabbitmq packs pack-developer-guide operationalising cli-guide data-loads
 real-data user-management operations configuration troubleshooting runbook-source-down runbook-sutra-broken runbook-live-latency runbook-sign-in clients
 developer-guide api how-it-fits elements-guide elements ai-providers mcp-client rupaka about-this-page-design collaboration architecture quant-service
-decisions plan release-notes changelog notices sutra-guide rachana-guide plugins build-a-pack sutra-studio""".split()
+decisions plan release-notes changelog notices sutra-guide rachana-guide plugins build-a-pack sutra-studio""".split() + [
+    "docs-tutorials-22-build-a-screen-with-the-designer",     # tutorial 22, merged into tutorial 6 as its part B (the tutorial tracks, 2026-11-04)
+]
 
 
 def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages():
@@ -253,7 +255,8 @@ def test_the_tutorials_page_renders_the_tutorials_index_and_each_tutorial_opens_
     page = client.get("/help/tutorials")
     assert page.status_code == 200 and "Your first 15 minutes" in page.text and "Run it in production" in page.text
     links = sorted(set(re.findall(r'href="(/help/docs-tutorials-[0-9a-z-]+)"', page.text)))
-    assert len(links) == 39, links                     # 39: plus tutorials 36 (the data inbox), 37 (custom functions) and 38 (the MR cube), 2.9.11.b; 34 (one file per lake), 35 (Data out with Arrow Flight) and 43 (parametric VaR), 2.9.11.c
+    written = sorted((CONSOLE.parent / "docs" / "tutorials").glob("[0-9][0-9]-*.md"))
+    assert len(links) == len(written), links          # every written tutorial, counted from the files (tutorial 22 merged into 6, 2026-11-04)
     shots = 0
     for href in links:
         t = client.get(href)
