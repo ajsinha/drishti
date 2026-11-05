@@ -100,7 +100,7 @@ the pre-deal limit decision, among others.
   ([PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md), [SCHEMA_TO_PACK_GUIDE.md](docs/guides/SCHEMA_TO_PACK_GUIDE.md),
   [tutorial 5](docs/tutorials/05-build-a-pack.md)).
 - **The Build workbench and the Sutra designer**: drag panels onto a live screen; a save is a proposal an approver reviews
-  ([tutorial 22](docs/tutorials/22-build-a-screen-with-the-designer.md)).
+  ([tutorial 6, part B](docs/tutorials/06-design-a-screen.md#part-b--on-a-live-page-the-sutra-designer)).
 
 ### Data in
 

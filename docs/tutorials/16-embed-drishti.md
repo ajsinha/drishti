@@ -160,7 +160,7 @@ Open `http://127.0.0.1:17944/report` (signed in as `viewer`).
 
 ![The host's report page: a card "The desk report" holding the Live trading desk report with its live indicator, Pause button, page tabs, five cards, bars, a rolling line and tables](img/t16/06-host-report.jpg)
 
-You should see the **Live trading desk** report from tutorial 12 (a live report: in 2.2 it stays on its 2.1 dataset until the live tables join the model layer) in a card of the host's page: the live indicator and **Pause**, the page tabs *Desk*, *Every trade*, *Pivot*, the cards, the bars, the rolling line and the tables; the `TRADER_ID` column reads `•••` (masked). It is one element:
+You should see the **Live trading desk** report from tutorial 12 (a live report, which reads its live dataset directly) in a card of the host's page: the live indicator and **Pause**, the page tabs *Desk*, *Every trade*, *Pivot*, the cards, the bars, the rolling line and the tables; the `TRADER_ID` column reads `•••` (masked). It is one element:
 
 ```html
 <drishti-report id="rep" report="file:report:live-trading-desk" theme="light"></drishti-report>
@@ -177,7 +177,7 @@ On a phone the report is drawn with the report's **own phone layout** (the desig
 
 ![The host's report page at 390 px: one column, Net MTM first](img/t16/08-host-phone.jpg)
 
-**A report on a model.** Every other sample report reads a **model** (2.2): **Trades overview** says `model: trades-basic@1`. Nothing changes for the
+**A report on a model.** Every other sample report reads a **model**: **Trades overview** says `model: trades-basic@1`. Nothing changes for the
 host: the element names the report, and the server answers each visual from the model, as the reader, masked. The sample host takes the report and the
 single visual from its address, so open `http://127.0.0.1:17944/report?report=file:report:trades-overview&visual=by-desk`:
 

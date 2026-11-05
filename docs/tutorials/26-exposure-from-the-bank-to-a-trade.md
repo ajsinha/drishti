@@ -165,7 +165,7 @@ Solaris Energy Corp.         41,436,951         7.4   29,674,485
 
 **What it means.** London's peak PFE (558.8 million at 2M) is far below the sum of its counterparties' own peaks: their bad paths are
 not the same paths and their peaks fall on different dates. The contributions are the paths around London's 95% quantile at its peak
-date, scaled to add up to it. The limit column reads the pack's stored `credit-limit` rows as stored: they were sized on stored
+date, scaled to add up to it. The limit column reads the pack's stored `credit-limit` rows as stored: they were sized on
 stored profiles, so the use is low (5.0% for Aldershot).
 
 **You should see** LE-LDN at 558,766,819 with 17 netting sets and 2,403 trades (`drishti.py exposure show LE:LE-LDN`), Bramble the
