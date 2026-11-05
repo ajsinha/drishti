@@ -45,12 +45,18 @@ def anchors(path: Path) -> set:
     return {slug(h) for h in HEADING.findall(text)}
 
 
-def test_there_are_thirty_three_written_tutorials_and_the_index_names_every_one():
-    numbers = list(range(1, 39)) + [43]            # 1 to 38 and 43 (34, 35 and 43 came with 2.9.11.c; 39 to 42 not written yet)
+TRACKS = ["Start", "Risk engines", "BI and analysis", "Data in and out", "Build", "Operate"]
+
+
+def test_the_written_tutorials_are_the_ones_kept_and_the_index_names_every_one_once_in_a_track():
+    # A tutorial's number is its name: 22 was merged into 6 (part B) and 39 to 42 were never written (the tutorial tracks, 2026-11-04).
+    numbers = [n for n in range(1, 39) if n != 22] + [43]
     assert [p.name[:2] for p in WRITTEN] == [f"{i:02d}" for i in numbers]
     index = (TUTORIALS / "README.md").read_text()
     rows = re.findall(r"^\|\s*(\d{1,2})\s*\|", index, re.M)
-    assert [int(r) for r in rows] == numbers
+    assert sorted(int(r) for r in rows) == numbers and len(rows) == len(set(rows)), rows      # each once
+    assert re.findall(r"^### (.+)$", index.split("## The tutorials")[1].split("## What you need once")[0], re.M)[:len(TRACKS)] == TRACKS
+    assert not re.search(r"\b(thirty|forty|\d\d) (hands-on )?tutorials\b", index, re.I)   # counts are computed, never typed
     assert "coming" not in index.split("## What you need once")[0].split("## The tutorials")[1]
     for p in WRITTEN:
         assert p.name in index, p.name
@@ -138,5 +144,5 @@ def test_the_sample_data_the_tutorials_use_is_in_the_repository():
     for name in ("slicer-kinds.report.yaml", "trades-daily.dataset.yaml", "smtp-catcher.py", "rates-trades.dataset.yaml", "trades-model.model.yaml", "trades-report.report.yaml", "notional-by-desk.python.yaml",
                  "desk-python.report.yaml", "cp-risk.model.yaml", "cp-risk-view.report.yaml", "cp-risk-extracts.notebook.yaml", "cp-table.python.yaml",
                  "cp-table.dataset.yaml", "ai/mock.yaml", "ai/local-model.yaml", "pools.py", "trades-daily.model.yaml", "desk-check.report.yaml",
-                 "live-desk.mq.yaml", "night-desk.report.yaml", "world-economics-21.dataset.yaml"):
+                 "live-desk.mq.yaml", "night-desk.report.yaml"):
         assert (data / name).is_file(), name

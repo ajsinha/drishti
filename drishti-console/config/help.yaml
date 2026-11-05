@@ -291,6 +291,7 @@ moved:
   using-the-terminal: user-guide
   bi-tutorial: docs-tutorials-10-first-bi-report
   build-workbench-tutorial: docs-tutorials-06-design-a-screen
+  docs-tutorials-22-build-a-screen-with-the-designer: docs-tutorials-06-design-a-screen#part-b--on-a-live-page-the-sutra-designer   # tutorial 22 merged into tutorial 6 as its part B (2026-11-04)
   screen-builder: rachana-reference#screen-designer-and-the-build-workbench
   panel-kinds: rachana-reference#panels-the-twenty-two-kinds-and-developing-a-new-one
   panel-developer-guide: rachana-reference#developing-a-panel-kind

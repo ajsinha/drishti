@@ -19,6 +19,20 @@
 
 - Decks refreshed for 2.9.11–2.9.11.c
 
+### Docs
+
+- **The tutorials in tracks, merged and corrected** (product owner, 2026-11-04: "go through all tutorials ... reorganise, combine or even
+  retire"). Every tutorial inventoried against today's code (the CLI's commands, the command words, the menus, the removed features):
+  [TUTORIAL_INVENTORY.md](docs/architecture/TUTORIAL_INVENTORY.md) gives each one's verdict and reason, and every output to be re-run.
+  The index ([docs/tutorials/README.md](docs/tutorials/README.md)) lists them in six tracks (Start, Risk engines, BI and analysis, Data in and
+  out, Build, Operate) and a *Trader: your first 10 minutes* path through steps of existing tutorials; numbers stay as names, so links and
+  pictures keep working. Tutorial 22 (the Sutra designer) is merged into tutorial 6 as its part B (*Design a screen: in the workbench and
+  on a live page*); its old help address redirects there. Tutorial 17's one-off "Upgrading to 2.2" section is retired with its picture,
+  sample file and picture script (version history is not customer documentation); the BI tutorials' version and wave notes (10, 12, 13,
+  16) say what is, not when. Tutorial 1 names the Engines menu and lets a reader with a running server skip the install; its `lake demo`
+  and `doctor` outputs, and tutorial 17's, are marked to be re-run (the jar name was edited into older captures). The counts of tutorials
+  in docs/README.md are no longer typed; the tutorial tests count from the files and check each tutorial is in exactly one track.
+
 ## 2.9.11.c (2026-11-05)
 
 - **Fixed before release:** with OpenBLAS off, Help hid the whole Operations guide (the engine's catalogue entry listed it as its own page); an engine now lists only pages about itself, and a test refuses a shared guide. The Admin → Engines browser test starts from OpenBLAS off.
@@ -3485,7 +3499,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   click in an opened panel opens is its own cell, `A2a1` (then `A2a2`...), drawn one step further in under `A2a`, its formula ending
   in `opens from A2a` (optional when typing; another parent is refused with that part in red); `@A2a1.` names it, Up and Down walk
   parent, child, grandchild, and an empty formula removes it. A third level is kept (*keeps children*) and edited in Outline or Customize.
-- **Docs refresh after Sutra Next and the designer**: new [tutorial 22](docs/tutorials/22-build-a-screen-with-the-designer.md),
+- **Docs refresh after Sutra Next and the designer**: new [tutorial 22](docs/tutorials/06-design-a-screen.md#part-b--on-a-live-page-the-sutra-designer) (since merged into tutorial 6 as its part B),
   *Build a screen with the designer* (tutorial 6 points to it); SUTRA_DEVELOPER_GUIDE section 11a (fragments, events, children,
   refresh, forms); USER_GUIDE *Screens that respond*; `DRS-2059` in TROUBLESHOOTING and RACHANA_REFERENCE; `/me/arrange` and the
   `designerMode`/`refresh` settings in API_GUIDE; `sutra lint config/packs` in CLI_GUIDE; the content store in the backups

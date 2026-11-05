@@ -19,7 +19,7 @@ When other people rely on a model or a report, changing it needs care. Drishti k
 **second person to review** before something is published, lets a **steward certify** what has been checked, shows **where a model comes from and who
 reads it**, tells you **which change needs a new major version and which reports it touches**, refuses a dataset change that would break the models
 reading it, and moves content between servers as a **bundle** you can try out with a **dry run** first. This tutorial does all of it with three people,
-on a **model** of the model layer (2.2) and the dataset it reads.
+on a **model** of the model layer and the dataset it reads.
 
 Every step shows it **in the UI**, **on the command line** (`python3 tools/drishti.py`, or `curl` where the tool has no command) and **as YAML**, or says
 why one of the three does not apply.
