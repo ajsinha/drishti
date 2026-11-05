@@ -190,12 +190,15 @@
     const known = byId[id];
     if (known) { drawDrawer(known); }
     window.setTimeout(() => { const f = drawer.querySelector('[data-run-drawer-close]'); if (f) { f.focus(); } }, 0);
-    if (known && known.atOnce) { return; }                            // answered at once: the server has no row to ask for
+    if (known && known.atOnce) { drawer.removeAttribute('aria-busy'); return; }   // answered at once: the server has no row to ask for
+    drawer.setAttribute('aria-busy', 'true');                        // its record is being asked: the drawer is drawn again when it comes
     B.api('GET', '/runs/' + encodeURIComponent(id)).then((r) => { if (openId === id) { byId[id] = r; drawDrawer(r); } })
-      .catch((e) => { if (openId === id && !known) { q('[data-run-drawer-title]').textContent = 'Run'; B.clear(dBody).appendChild(h('p', { class: 'bi-run-bad', role: 'alert', text: R.words(e.code, e.detail) })); } });
+      .catch((e) => { if (openId === id && !known) { q('[data-run-drawer-title]').textContent = 'Run'; B.clear(dBody).appendChild(h('p', { class: 'bi-run-bad', role: 'alert', text: R.words(e.code, e.detail) })); } })
+      .finally(() => { if (openId === id) { drawer.removeAttribute('aria-busy'); } });
   }
   function closeDrawer() {
     drawer.hidden = true;
+    drawer.removeAttribute('aria-busy');
     drawer.classList.remove('bi-run-drawer-open');
     openId = null;
     const u = new URL(window.location.href);
@@ -226,11 +229,16 @@
   // "Run again" (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.3): a labelled choice of how, and the button that does it. Changing the choice does nothing on its own. While the new
   // run goes, the drawer shows that run with the button busy (a spinner and "Running…"); when it ends the button is itself again.
   let rerunning = null;
+  // the "Run again as" choice per run: the drawer is drawn again whenever its run's record or an event arrives, and a choice made just before
+  // (With the latest data) must survive that, or Run again would quietly ask the other way
+  const againAs = {};
   function runAgain(r, busy) {
     const enc = encodeURIComponent(r.id), id = 'runAgainAs-' + String(r.id).replace(/[^A-Za-z0-9_-]/g, '');
     const asof = R.asOfShort(r);
     const sel = h('select', { class: 'studio-select', id, 'data-run-again-as': '' },
       h('option', { value: 'same', text: 'Same as before' + (asof ? ' (as of ' + asof + ')' : '') }), h('option', { value: 'latest', text: 'With the latest data' }));
+    if (againAs[r.id]) { sel.value = againAs[r.id]; }
+    sel.addEventListener('change', () => { againAs[r.id] = sel.value; });
     const go = h('button', { type: 'button', class: 'btn-pill btn-accent bi-run-again-go', 'data-run-act': 'rerun' });
     const label = (on) => {
       B.clear(go);

@@ -62,7 +62,9 @@ def open_drawer(browser, stack, rid, **ctx):
     page.goto(stack[0] + "/bi/w/me?tab=runs", wait_until="load")
     page.wait_for_selector(f'[data-run-row="{rid}"]', timeout=15000)
     page.click(f'[data-run-open="{rid}"]')
-    page.wait_for_selector(f"[data-run-drawer]:not([hidden]) [data-run-again]")
+    # the drawer is drawn at once from the list's row, then again when the run's own record comes (aria-busy until then): read it after that,
+    # never the first drawing, whose controls the second replaces
+    page.wait_for_selector(f"[data-run-drawer]:not([hidden]):not([aria-busy]) [data-run-again]")
     return c, page
 
 
