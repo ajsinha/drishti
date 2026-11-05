@@ -29,11 +29,15 @@ from urllib.parse import urlparse
 from jinja2 import Environment, FileSystemLoader
 
 from core.app import CSP
+from scratch_ports import worker_port
 from core import render_dist, screen_grid
 
 CONSOLE = Path(__file__).resolve().parent.parent
 WEB = CONSOLE / "web"
 ORIGIN = "http://render.test"
+# the made-up origin as a real HTTP server on this worker's scratch port (SiteServer): the per-worker browser maps render.test to it
+# (browser_harness.Browsers), so its pages load without a round trip to Python per request and with the browser's cache
+SITE_PORT = worker_port(17760)
 AFFORDANCES = re.compile(r'<details class="pnl-dl" data-export-menu.*?</details>', re.S)
 THEMES = ["", "light", "terminal", "blue", "green", "crimson", "crimson-dark", "wallstreet", "terminal-blue", "terminal-green", "terminal-crimson"]
 CONSOLE_SHEETS = ["vendor/bootstrap/css/bootstrap.min.css", "vendor/bootstrap-icons/bootstrap-icons.css"] + [s for s in render_dist.SHEETS]
@@ -126,32 +130,117 @@ class Site:
     def add_console(self, name: str, html: str):
         self.pages[f"/render-test/console/{name}.html"] = html
 
-    def handle(self, route):
-        url = route.request.url
-        self.requests.append(url)
+    def answer(self, url: str, method: str = "GET", post_json=None):
+        """What the made-up origin answers: None for a request off it (aborted), else (status, body, headers)."""
         u = urlparse(url)
         if f"{u.scheme}://{u.netloc}" != ORIGIN:
-            return route.abort()
+            return None
         path = u.path
         headers = {"Content-Security-Policy": CSP, "X-Content-Type-Options": "nosniff"}
-        if path == "/api/pivot/inline" and route.request.method == "POST":     # the pivot engine, stood in (Chart any table on the shown rows)
+        if path == "/api/pivot/inline" and method == "POST":     # the pivot engine, stood in (Chart any table on the shown rows)
             from engine_standin import inline_answer
-            return route.fulfill(status=200, body=json.dumps(inline_answer(route.request.post_data_json or {})),
-                                 headers={**headers, "Content-Type": "application/json; charset=utf-8"})
+            return 200, json.dumps(inline_answer(post_json or {})), {**headers, "Content-Type": "application/json; charset=utf-8"}
         if path in self.pages or (path + "?" + u.query) in self.pages:
             path = path if path in self.pages else path + "?" + u.query
             body = self.pages[path]
             ctype = ("text/event-stream" if path.startswith(("/render-test/sse/", "/api/stream/")) else "text/html" if path.endswith(".html") else "application/json" if (path.endswith(".json") or path.startswith("/api/"))
                      else "text/css" if path.endswith(".css") else "text/javascript")
-            return route.fulfill(status=200, body=body, headers={**headers, "Content-Type": ctype + "; charset=utf-8"})
+            return 200, body, {**headers, "Content-Type": ctype + "; charset=utf-8"}
         if path.startswith("/static/"):
-            f = (WEB / "static" / path[len("/static/"):]).resolve()
-            if not f.is_file() and f.parent.name in ("js", "css") and not f.name.startswith("drishti_"):
-                f = f.with_name("drishti_" + (f.name[len("drishti-"):] if f.name.startswith("drishti-") else f.name))   # an old name, as CompressedStatic answers it
-            if f.is_file() and (WEB / "static") in f.parents:
-                ctype = {".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".woff2": "font/woff2"}.get(f.suffix) or mimetypes.guess_type(f.name)[0] or "application/octet-stream"
-                return route.fulfill(status=200, body=f.read_bytes(), headers={**headers, "Content-Type": ctype})
-        return route.fulfill(status=404, body="not found", headers=headers)
+            got = _static(path)
+            if got:
+                return 200, got[0], {**headers, "Content-Type": got[1]}
+        return 404, "not found", headers
+
+    def handle(self, route):
+        url = route.request.url
+        self.requests.append(url)
+        got = self.answer(url, route.request.method, route.request.post_data_json if route.request.method == "POST" else None)
+        if got is None:
+            return route.abort()
+        return route.fulfill(status=got[0], body=got[1], headers=got[2])
+
+    def async_handler(self, seen: list):
+        """A request handler for Playwright's async API that records the page's own requests in ``seen`` (pages drawn at once each
+        keep their own list)."""
+        async def handle(route):
+            url = route.request.url
+            seen.append(url)
+            got = self.answer(url, route.request.method, route.request.post_data_json if route.request.method == "POST" else None)
+            if got is None:
+                return await route.abort()
+            return await route.fulfill(status=got[0], body=got[1], headers=got[2])
+        return handle
+
+
+class SiteServer:
+    """``site`` served over HTTP on 127.0.0.1:``port`` (threads; the answers of Site.answer, static files cacheable for an hour)."""
+
+    def __init__(self, site: "Site", port: int = SITE_PORT):
+        import threading
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
+        class Handler(BaseHTTPRequestHandler):
+            protocol_version = "HTTP/1.1"
+
+            def _answer(self, method):
+                post = None
+                if method == "POST":
+                    n = int(self.headers.get("Content-Length") or 0)
+                    try:
+                        post = json.loads(self.rfile.read(n) or b"null")
+                    except ValueError:
+                        post = None
+                site.requests.append(ORIGIN + self.path)
+                status, body, headers = site.answer(ORIGIN + self.path, method, post) or (404, "not found", {})
+                data = body if isinstance(body, bytes) else str(body).encode()
+                self.send_response(status)
+                for k, v in headers.items():
+                    self.send_header(k, v)
+                if self.path.startswith("/static/") and status == 200:
+                    self.send_header("Cache-Control", "max-age=3600")
+                else:
+                    self.send_header("Cache-Control", "no-store")
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+
+            def do_GET(self):  # noqa: N802 - the http.server name
+                self._answer("GET")
+
+            def do_POST(self):  # noqa: N802
+                self._answer("POST")
+
+            def log_message(self, *a):
+                pass
+
+        ThreadingHTTPServer.allow_reuse_address = True
+        self.httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler)
+        self.httpd.daemon_threads = True
+        self.thread = threading.Thread(target=self.httpd.serve_forever, name="render-site", daemon=True)
+        self.thread.start()
+
+    def close(self) -> None:
+        self.httpd.shutdown()
+        self.httpd.server_close()
+
+
+_STATIC: dict = {}
+
+
+def _static(path: str):
+    """(bytes, content type) of a file under web/static, read once per run (the files do not change under a test run)."""
+    if path in _STATIC:
+        return _STATIC[path]
+    f = (WEB / "static" / path[len("/static/"):]).resolve()
+    if not f.is_file() and f.parent.name in ("js", "css") and not f.name.startswith("drishti_"):
+        f = f.with_name("drishti_" + (f.name[len("drishti-"):] if f.name.startswith("drishti-") else f.name))   # an old name, as CompressedStatic answers it
+    got = None
+    if f.is_file() and (WEB / "static") in f.parents:
+        ctype = {".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".woff2": "font/woff2"}.get(f.suffix) or mimetypes.guess_type(f.name)[0] or "application/octet-stream"
+        got = (f.read_bytes(), ctype)
+    _STATIC[path] = got
+    return got
 
 
 READ_JS = """
@@ -185,10 +274,11 @@ async () => {
 
 
 def settle(page, timeout=15000):
-    """Waits until the charts and the map shapes have been drawn (network idle, then two frames)."""
+    """Waits until the charts and the map shapes have been drawn (network idle, then two frames). The library's own tests use it; the
+    parity suites wait on the page's settled signal instead (browser_harness.settled)."""
     page.wait_for_load_state("networkidle", timeout=timeout)
     page.evaluate("() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))")
-    page.wait_for_timeout(150)
+    page.wait_for_timeout(150)   # wait-ok: the library tests' settle, kept as it was (TEST_HARNESS.md rule 3 names the signal for new tests)
 
 
 def read(page) -> dict:
@@ -196,4 +286,13 @@ def read(page) -> dict:
     host = page.locator("#host")
     view = host.locator(".view") if host.count() else page.locator("body > .view")
     out["aria"] = view.first.aria_snapshot()
+    return out
+
+
+async def read_async(page) -> dict:
+    """read(), on Playwright's async API (the per-worker browser of browser_harness.py)."""
+    out = await page.evaluate(READ_JS)
+    host = page.locator("#host")
+    view = host.locator(".view") if await host.count() else page.locator("body > .view")
+    out["aria"] = await view.first.aria_snapshot()
     return out

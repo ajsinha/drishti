@@ -67,6 +67,7 @@
   <script src="/static/js/drishti_tables.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_phone.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_engines-menu.js?v={{ ASSET_V }}"></script>
+  <script src="/static/js/drishti_settled.js?v={{ ASSET_V }}"></script>{# Drishti.settled(): the page-settled signal browser tests wait on; inert until asked #}
   {% if me %}<script src="/static/js/drishti_alerts.js?v={{ ASSET_V }}"></script>{% endif %}
   {% block scripts %}{% endblock %}
   {% if screen is defined and screen == 'var' and smat_on is defined and smat_on() %}<script src="/static/js/drishti_smat-link.js?v={{ ASSET_V }}"></script>{% endif %}{# the VaR page's "Scenario matrix" link (SMAT, VAR_GUIDE.md section 3.9) #}
