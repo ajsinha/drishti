@@ -212,6 +212,17 @@ What is marked today: in the console, `test_java_launch_guard.py`, `test_browser
 (`test_docs_*.py`, `test_help*.py`, `test_tools_guide.py`) were already in the gate's docs job, and the licence headers and the
 generated documents in its static job.
 
+### 3.12 Shared lakes
+
+A file over the per-file budget is first looked at for what its time is. The VaR browser files (`test_var_currency_browser.py`,
+`test_var_lens_browser.py`, `test_var_explain_browser.py`, `test_var_parts_shown_browser.py`, `test_arrow_browser.py`) each ran in
+2 to 3 minutes alone, of which their tests took under 15 s: the rest was the VaR demo lake each built for itself (about 80 s alone,
+three to four times that with several built at once in the lane) and its server's start and stop. Splitting such a file would build the
+lake once more per part. Instead `var_stack.py` builds each lake **once per test run** for every worker
+(`browser_harness.shared_once`, keyed by the tables and the business date asked; the first worker builds, the others wait for it and
+read the same folder) and starts a server per file over it, with its own VaR hot folder (`var_lake`, `var_server`). The servers only read
+the lake. A file split later asks the same lake and pays only its server's start again.
+
 ## 4. Numbers to hold
 
 | What | Number |
@@ -300,6 +311,9 @@ old pauses and starts in the test's `BASELINE`, which may only go down.
 - `test_page_widths_browser.py`: one test per page and width instead of a sweep per width (it is listed in `tools/drill-budgets.txt`).
 - `test_embed_elements_browser.py` and `test_mr_cube_browser.py`: their stack is built once per file; a session stack per worker
   through the pool would let their tests spread.
+- The other files that build a VaR demo lake (`test_var_explorer_browser.py`, `test_var_regulatory_browser.py`,
+  `test_stress_window_browser.py`, `test_mr_cube_browser.py`) could ask it through `var_stack.py` (section 3.12) once each is shown to
+  leave the lake as it found it.
 - The files that start the same signed-in server (`DRISHTI_SECURITY_ENABLED`, the test token secret) could ask with `shared=True` once
   each is shown to leave the server as it found it.
 

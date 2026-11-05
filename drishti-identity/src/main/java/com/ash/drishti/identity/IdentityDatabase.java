@@ -226,7 +226,10 @@ public class IdentityDatabase {
                 "hibernate.hbm2ddl.auto", props.sqlite() ? "none" : "validate",
                 "hibernate.dialect", props.sqlite() ? "org.hibernate.community.dialect.SQLiteDialect" : "org.hibernate.dialect.PostgreSQLDialect",
                 "hibernate.jdbc.time_zone", "UTC",
-                "hibernate.type.preferred_instant_jdbc_type", "TIMESTAMP_UTC",
+                // SQLite: TIMESTAMP with the UTC zone above (a calendar of its own per read). TIMESTAMP_UTC reads through one static
+                // calendar for the whole JVM and the SQLite driver sets each row's time on it, so two reads at once in two databases
+                // (the nodes of an in-JVM cluster) could swap their times. Both store the same epoch milliseconds.
+                "hibernate.type.preferred_instant_jdbc_type", props.sqlite() ? "TIMESTAMP" : "TIMESTAMP_UTC",
                 "hibernate.boot.allow_jdbc_metadata_access", "false",
                 "hibernate.hbm2ddl.jdbc_metadata_extraction_strategy", "individually"));
         return f;

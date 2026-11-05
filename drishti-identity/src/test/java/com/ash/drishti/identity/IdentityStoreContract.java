@@ -60,8 +60,13 @@ abstract class IdentityStoreContract {
     }
 
     private ConfigurableApplicationContext open() {
+        return open(database());
+    }
+
+    /** An identity context on {@code database} (another database than the class's, when a test needs two). */
+    ConfigurableApplicationContext open(java.util.Map<String, Object> database) {
         AnnotationConfigApplicationContext c = new AnnotationConfigApplicationContext();
-        java.util.Map<String, Object> props = new java.util.HashMap<>(database());
+        java.util.Map<String, Object> props = new java.util.HashMap<>(database);
         props.put("drishti.identity.iterations", "1000");
         props.put("drishti.identity.seed-admin", "true");
         props.put("drishti.alerts.keep", "60");
@@ -83,7 +88,7 @@ abstract class IdentityStoreContract {
         ctx.close();
     }
 
-    private <T> T bean(Class<T> type) {
+    <T> T bean(Class<T> type) {
         return ctx.getBean(type);
     }
 
