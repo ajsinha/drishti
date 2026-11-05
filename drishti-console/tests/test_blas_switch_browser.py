@@ -35,31 +35,38 @@ def stack(tmp_path_factory):
     yield from _stack(tmp_path_factory, {"DRISHTI_OFFLINE": "true", "DRISHTI_ENGINES_DIR": str(engines)})
 
 
-def test_linear_algebra_off_and_on_live(browser, stack):
+def test_linear_algebra_on_and_off_live(browser, stack):
     pg = open_page(browser, stack)
     assert "Linear algebra: OpenBLAS" in row(pg, "openblas").inner_text()
 
-    pg.click("[data-eng-switch='openblas']")
-    assert "Live, no restart" in pg.inner_text("[data-eng-effect]")
-    apply(pg, "benchmark on the Java path")
-    assert "off: live" in pg.inner_text("[data-eng-done]")
-    first = pg.locator("[data-eng-history] tbody tr").first.inner_text()
-    assert "benchmark on the Java path" in first
-
+    # off as shipped: the Java kernels, chosen (a notice, not the fallback warning)
     for page in ("/admin/engines", "/admin/health"):
         pg.goto(stack + page)
         wait(pg, "!!document.querySelector('[data-native-chosen]')")
         assert "as chosen" in pg.inner_text("[data-native-chosen]")
-        assert pg.locator("[data-native-banner]").count() == 0          # a choice, not the fallback warning
+        assert pg.locator("[data-native-banner]").count() == 0
 
     pg.goto(stack + "/admin/engines")
     wait(pg, "document.querySelectorAll('[data-eng-table] tbody tr').length >= 10")
     pg.click("[data-eng-switch='openblas']")
-    apply(pg, "back to OpenBLAS")
+    assert "Live, no restart" in pg.inner_text("[data-eng-effect]")
+    apply(pg, "measure OpenBLAS on this node")
     text = row(pg, "openblas").inner_text()
-    if "running" in text:                                                # the self-test passed: OpenBLAS again
+    if "running" in text:                                                # the self-test passed: OpenBLAS serves
+        assert "on: live" in pg.inner_text("[data-eng-done]")
+        assert "measure OpenBLAS on this node" in pg.locator("[data-eng-history] tbody tr").first.inner_text()
         pg.goto(stack + "/admin/health")
         assert pg.locator("[data-native-chosen]").count() == 0
+
+        pg.goto(stack + "/admin/engines")
+        wait(pg, "document.querySelectorAll('[data-eng-table] tbody tr').length >= 10")
+        pg.click("[data-eng-switch='openblas']")
+        apply(pg, "back to the Java path")
+        assert "off: live" in pg.inner_text("[data-eng-done]")
+        assert "back to the Java path" in pg.locator("[data-eng-history] tbody tr").first.inner_text()
+        pg.goto(stack + "/admin/health")
+        wait(pg, "!!document.querySelector('[data-native-chosen]')")
+        assert "as chosen" in pg.inner_text("[data-native-chosen]")
     else:                                                                # no OpenBLAS here: refused in words, Java stays
         assert "self-test" in text or "cannot be used here" in text
     assert not pg.errors, pg.errors

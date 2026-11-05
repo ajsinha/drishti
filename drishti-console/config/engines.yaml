@@ -323,7 +323,7 @@ engines:
     console: []
     words: []
     menus: []
-    help: [operations]
+    help: []                      # its docs are a section of Operations (2.1), which is never hidden with it
     landings: []
     tiles: []
     lenses: []
