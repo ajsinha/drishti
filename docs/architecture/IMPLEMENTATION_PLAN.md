@@ -91,7 +91,7 @@ Drill A and Drill B).
 | 9 | **The decks are enhanced with each release** (Design-and-Evidence, VaR-Engine, Drishti-on-AWS): the release's capabilities, new screenshots, measured figures with footnotes, the roadmap from these themed releases; no release numbers on the slides |
 | 10 | **Docs ship with every change:** every builder brief lists its documents; the CHANGELOG in the same push |
 
-## The roadmap from 2.9.11.c (product owner, 2026-11-04; supersedes every later release table in this file)
+## The roadmap from 2.9.11.c (product owner, 2026-11-04, revised 2026-11-05; supersedes every later release table in this file)
 
 *Decided after a six-seat product review (product manager, BI, market risk, trader, counterparty credit risk, architect): the engines
 are strong; what a bank needs first is a coherent product. The motto is **lean & streamlined**: one way per job, the old way deleted in
@@ -100,19 +100,19 @@ the same release, nothing unbuilt shown as if it works.*
 | Release | Theme | Contents |
 |---|---|---|
 | **2.9.11.c** | Performance and data | OpenBLAS with a Java fallback; parametric VaR as a toggle, a column and a curve in the VaR explorer and a tab in the VaR Playground; the data load rules ([DATA_LOAD_RULES.md](DATA_LOAD_RULES.md)) with the demo and test data converted; Arrow Flight and Flight SQL; the lake configuration; the client examples; the `drishti_` asset names; the function catalogue; the BI declared-mask fix; lean removals and the under-construction registry |
-| **2.9.11.d** | BI foundation, one Python | DEL and the other parsers folded into Rachana; virtual tables as BI's only data layer (migration, parity proof, switch, the old code deleted); the table and model editors (Visual with a live YAML panel); Sutras on virtual tables; one Python runtime (a worker over Arrow Flight); one analysis path, Pivot → Report; the BI report designer rework; Python-driven virtual tables; one page renderer |
-| **2.9.11.e** | One Build home, one search | one authoring home and one Admin configuration editor; one sitemap; one Approvals queue; one search; the remaining Python compute in Java; one Explain drawer, alert engine and keymap; one pre-deal service; the counterparty data plumbing; a ticking trader home; one playground framework |
-| **2.9.11.f** | Trust, RBAC, security and controls; the lean platform | security and RBAC (designed with the product owner first); number honesty; run sign-off; one breach and escalation queue; computed credit-limit usage; the PLA test; the pilot kit; `drishti-native` ([DRISHTI_NATIVE.md](DRISHTI_NATIVE.md)); a thin jar with a plugins folder; one supported storage profile; versioned database migrations |
-| **2.9.11.g** | Documentation and onboarding | four role doors; the long guides split into task guides and references; tutorial tracks; documentation truth checks; the decks |
-| **2.9.11.h** | Counterparty engines I | SA-CCR with incremental EAD in the pre-deal answer; the CCR cube as a Pivot preset; the exposure playground |
-| **2.9.11.i** | Market-risk filing and stress | finance P&L reconciliation; US capital totals and forms; a stress-testing engine |
+| **2.9.11.d** | BI foundation, one analysis path | the formula parsers folded into Rachana with one row-rule system; virtual tables as BI's only data layer (migration, parity proof, switch, old code deleted) with the new table and model editors ([EDITORS.md](EDITORS.md)); one Python runtime on the server with Python-driven tables and models; one analysis path, Pivot → Report (cubes as Pivot presets, one report designer, one page renderer); resizable panels and columns on every screen (one shared component); the BI tutorials consolidated; a mid-way independent critique ([PRODUCT_CRITIQUE_BRIEF.md](PRODUCT_CRITIQUE_BRIEF.md)) |
+| **2.9.11.e** | One Build home, one search | one authoring home and one Admin configuration editor (settings in three tiers); one sitemap; one Approvals queue; one search; Python compute moved to Java; one Explain drawer; one alert engine; one keymap; the pre-deal service in Java; the trader home |
+| **2.9.11.f** | Trust, RBAC, security and controls | designed with the product owner first: security on by default, server-minted tokens, one entitlement service, People & access and API keys ([EDITORS.md](EDITORS.md) sections 5 and 6); number honesty ("Official" means signed off); VaR and exposure run status and sign-off; one breach and escalation queue; computed credit-limit usage; the PLA test; the pilot kit |
+| **2.9.11.g** | Lean platform and performance | `drishti-native` ([DRISHTI_NATIVE.md](DRISHTI_NATIVE.md)): every native library behind an interface with a Java fallback; a thin jar with a plugins folder; one storage profile and versioned migrations; the native-access flag; OpenBLAS profiled; BLAS, LAPACK and the Vector API; the 1M-position benchmark; Java 25; ONNX Runtime and OR-Tools |
+| **2.9.11.h** | Documentation and onboarding | four role doors; the long guides split into task guides and references; tutorial tracks completed; documentation truth checked in the gate; the decks |
+| **2.9.11.i** | Risk engines II | SA-CCR with incremental EAD in the pre-deal answer; the CCR cube as a Pivot preset with a limit board; the exposure playground; a stress-testing engine. Finance P&L reconciliation, US capital totals and forms, and delta-gamma-vega VaR only when their inputs exist (else under construction) |
 | **2.9.11.j** | Collateral and margin | collateral valuation and eligibility; margin calls and disputes; stressed exposure; wrong-way risk flags |
-| **2.9.11.k** | Performance II | native speed on the `drishti-native` seam; ONNX Runtime and OR-Tools ([DRISHTI_NATIVE.md](DRISHTI_NATIVE.md) section 13) |
-| **2.9.11.l** | CVA | BA-CVA from SA-CCR exposure; FVA |
+| **2.9.11.k** | CVA | BA-CVA from SA-CCR exposure; FVA |
 
 **Not scheduled:** QuantLib (a release of its own: the `quantlib_for_maven` binding in single-threaded worker processes); the
 PostgreSQL wire protocol (when a pilot asks); FRTB internal models, SA-CVA and full xVA; new domains (IFRS 9, financial crime, other
-industries) are frozen until no more than five jobs have more than one way and a first reference client exists.
+industries) are frozen until no more than five jobs have more than one way and a first reference client exists. At the end, an
+independent critique of the whole product ([PRODUCT_CRITIQUE_BRIEF.md](PRODUCT_CRITIQUE_BRIEF.md)).
 
 **Every release:** two drills, the VaR check, the README rewritten, the decks updated, a code survey and A/B/C mock-ups before a new
 screen, and anything unbuilt hidden or marked "Under construction" through the one registry
