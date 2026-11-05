@@ -2021,7 +2021,7 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | `drishti.var.confidences` | `[0.95, 0.975, 0.99, 0.995]` | the same | the VaR confidences a page, a command or the API may choose; `confidence` is always in and is the default ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)) |
 | `drishti.var.es-confidences` | `[0.95, 0.975, 0.99]` | the same | ES's; `es-confidence` always in |
 | `drishti.var.ten-day-method` | `${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}` | `sqrt10` | what a 10-day answer without a method means: `sqrt10` (the 1-day × √10, the conservative common practice) or `sum` (10 consecutive days, overlapping windows); refused at start otherwise |
-| `drishti.var.scenario-window` | `${DRISHTI_VAR_SCENARIO_WINDOW:all}` | all | `all` (the scenario set's length, 509 in the demo) or N ≥ 20, the newest N scenarios of each date's set (250: one year); backtesting keeps `history-days` ([section 18.5](#185-the-scenario-window-and-the-confidences)) |
+| `drishti.var.scenario-window` | `${DRISHTI_VAR_SCENARIO_WINDOW:250}` | 250 | N ≥ 20, the newest N scenarios of each date's set (250: one year, the Basel minimum), or `all` (the whole set, 509 in the demo); backtesting keeps `history-days` ([section 18.5](#185-the-scenario-window-and-the-confidences)) |
 | `drishti.var.explain.*` | `explain:` block | enabled, the default order, `two` window lines, amendments split, top 10, 2,000 drivers, 10 minutes, 32 MB, 60 children | why VaR moved ([section 3.11](#311-why-it-moved-the-var-change-explained)): `order` (the causes in sequence; a bad order refuses the start), `window-lines`, `split-amendments`, `top`, `drivers-max`, `cache-minutes`, `cache-mb`, `matrix-max`; off: the tab, the command and the API answer 403 in words |
 | `drishti.var.rank-rule` | `kth-worst` | `kth-worst`; any value starting `interp` is `interpolated` | k = ceil(N (1 − a)): the 6th worst of 509; or `interpolated` ([section 18.1](#181-var)) |
 | `drishti.var.component-window` | `5` | 5 (below 1) | the scenarios around the VaR rank component VaR averages over |
@@ -3030,8 +3030,8 @@ Not built: ES backtests (the design's Acerbi–Székely tests), and the cross-ch
 
 ### 18.5 The scenario window and the confidences
 
-**The window.** `drishti.var.scenario-window` (`${DRISHTI_VAR_SCENARIO_WINDOW:all}`) is `all`, the whole scenario set of each date (its
-length, 509 in the demo), or a number N: the **newest N scenarios** of the date's set (its `SCENARIO_DATES` are strictly increasing, so
+**The window.** `drishti.var.scenario-window` (`${DRISHTI_VAR_SCENARIO_WINDOW:250}`) is a number N, **250 as shipped** (one year, the
+Basel minimum): the **newest N scenarios** of the date's set, or `all`, the whole scenario set of each date (its length, 509 in the demo) (its `SCENARIO_DATES` are strictly increasing, so
 the last N). Every row is cut to the same N at load: P&L vectors and scenario PVs alike, and the scenario FX supplied or derived; the
 rank, the ES count and the component window follow N: k = ceil(N·(1 − α)), the 3rd worst of 250 at 99%, ES the mean of the 7 worst at
 97.5%. A set shorter than N is used whole, with a warning in the provenance; N below 20 is refused at start. The provenance says

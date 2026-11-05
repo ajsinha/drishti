@@ -53,7 +53,7 @@ import org.springframework.test.web.servlet.ResultActions;
  * and lineage, signed by maker, checker and approver (one person one step), its files released after the last approval; a failed check
  * blocks sign-off; a restated record leaves a frozen run as it was.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
+@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.var.scenario-window=all", "drishti.packs.enabled=finance",
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.risk-lake.plugin=delta",
         "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",

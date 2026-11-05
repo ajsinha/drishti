@@ -66,7 +66,8 @@ def stack(tmp_path_factory):
     if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
         pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
-                                        "DRISHTI_COMPUTE_ENABLED": "false"}):    # the what-if needs no compute workers
+                                        "DRISHTI_COMPUTE_ENABLED": "false",    # the what-if needs no compute workers
+                                        "DRISHTI_VAR_SCENARIO_WINDOW": "all"}):   # the full 509-scenario set the figures below are written for
         _engine_ready(str(st))
         yield st
 

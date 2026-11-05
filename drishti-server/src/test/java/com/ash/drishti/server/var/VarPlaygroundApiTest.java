@@ -54,7 +54,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
  * VaR engine's own answer, the export recalculated by headless LibreOffice against it to the cent, the ids, the limits and the refusals,
  * the estimate and the empty template.
  */
-@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
+@SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.var.scenario-window=all", "drishti.packs.enabled=finance",
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.risk-lake.plugin=delta",
         "drishti.sources.connectors.risk-lake.kinds[0]=pnl-vector", "drishti.sources.connectors.risk-lake.kinds[1]=scenario-set",
