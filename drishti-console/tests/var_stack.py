@@ -31,6 +31,10 @@ ROOT = Path(__file__).resolve().parents[2]
 RISK = ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio")
 
 
+#: the trades every VaR browser file's lake holds, so one lake is built per run and shared by all of them
+VAR_TRADES = ("trades/murex", "trades/endur")
+
+
 def var_data(*more: str, limits: bool = True) -> str:
     """The ``--only`` list: the market-risk VaR tables (and the limits, when ``limits``), then ``more`` (trades/murex, trades/endur ...)."""
     return ",".join([f"market-risk/{k}" for k in RISK + (("var-limit",) if limits else ())] + list(more))

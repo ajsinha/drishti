@@ -30,7 +30,7 @@ import pytest
 
 from test_var_explorer_browser import painted
 from test_workbench_browser import browser  # noqa: F401
-from var_stack import var_data, var_lake, var_server
+from var_stack import VAR_TRADES, var_data, var_lake, var_server
 
 DESK = "NODE:MGMT~DESK-RATES"
 WATCH = """window.__csp = []; document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI));"""
@@ -50,7 +50,7 @@ WIDE = """() => document.documentElement.scrollWidth > document.documentElement.
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
     """The VaR explorer's stack (test_var_explorer_browser.py): its data, the compute workers off."""
-    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data("trades/murex")), DRISHTI_COMPUTE_ENABLED="false")
+    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data(*VAR_TRADES)), DRISHTI_COMPUTE_ENABLED="false")
 
 
 def open_page(browser, base, query, block_arrow=False, size=None):  # noqa: F811
