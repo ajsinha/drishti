@@ -25,6 +25,11 @@
   drill_plan.py budget --timings FILE [--budget SECONDS] [--exceptions FILE] [--out FILE]
       The files of one run over the per-file time budget (a file's tests' seconds together), each flagged; exit 0 (a report).
       A file whose tests are spread one by one (marked ``spread``) has no file budget: the workers share its tests.
+  drill_plan.py static [--kind console|tools]
+      The quick file checks (tests marked ``static``: they read files and start no server, console or browser), which the drill's
+      gate runs so that they fail in its first minutes (docs/architecture/TEST_HARNESS.md, "Quick file checks"). console: every
+      console test file with such a test (the gate runs them with -m static, the lanes with -m "not static"); tools: every tools
+      test file marked static as a whole (the gate runs each in its own process, the tools' lanes leave them out).
   drill_plan.py merge  --durations FILE TIMINGS...
       Folds one run's per-file seconds (tools/drillkit/drill_timings.py) into the recorded durations.
   drill_plan.py rerun  --report FILE... --durations FILE --known FILE --logs DIR --python PY [--parallel N] [--label NAME]
@@ -60,6 +65,8 @@ COLLECT_ERROR = re.compile(r"^ERROR ([^ :]+\.py)(?: - .*)?$")
 FAILED_LINE = re.compile(r"^(?:FAILED|ERROR) ([^ ]+::[^ ]+(?: [^-][^ ]*)*)(?: - .*)?$")
 BROWSER_WORDS = re.compile(r"playwright|chromium", re.IGNORECASE)
 PORT_WORDS = re.compile(r"worker_ports?\(|PYTEST_XDIST_WORKER")
+STATIC_ANY = re.compile(r"^\s*(?:@pytest\.mark\.static\b|pytestmark\s*=.*\bpytest\.mark\.static\b)", re.MULTILINE)
+STATIC_MODULE = re.compile(r"^pytestmark\s*=.*\bpytest\.mark\.static\b", re.MULTILINE)
 SPREAD_WORDS = re.compile(r"^(?:@pytest\.mark\.spread\b|pytestmark\s*=.*\bpytest\.mark\.spread\b)", re.MULTILINE)
 # one browser worker's memory at its peak (its Chromium, its stand-in console, its real server's JVM and that of the file it runs),
 # measured on the release machine (TEST_HARNESS.md, "Measurements"); the drill's Java verify and other lane are reserved beside it
@@ -139,6 +146,27 @@ def classify(tests: Path) -> dict[str, bool]:
     return {p.name: (p.stem in heavy or p.name.endswith("_browser.py")) for p in sorted(tests.glob("test_*.py"))}
 
 
+def _text(p: Path) -> str:
+    return p.read_text(encoding="utf-8", errors="replace")
+
+
+def static_files(kind: str, tests: Path | None = None) -> list[str]:
+    """The quick file checks, repository-relative and sorted: for "console" every console test file with a test marked static
+    (per test or for the whole file); for "tools" every test file under tools/ marked static as a whole."""
+    if kind == "console":
+        files = sorted((tests or ROOT / "drishti-console" / "tests").glob("test_*.py"))
+        return [os.path.relpath(p, ROOT) for p in files if STATIC_ANY.search(_text(p))]
+    skip = {".venv", "cache", "node_modules", "tests"}
+    files = sorted(p for p in (ROOT / "tools").rglob("test_*.py") if not skip & set(p.relative_to(ROOT / "tools").parts[:-1]))
+    return [os.path.relpath(p, ROOT) for p in files if STATIC_MODULE.search(_text(p))]
+
+
+def cmd_static(a) -> int:
+    files = static_files(a.kind, Path(a.tests) if a.tests else None)
+    sys.stdout.write("".join(f + "\n" for f in files))
+    return 0 if files else 1                       # none found is a mistake (a mark misspelt, a path moved), never a silent pass
+
+
 def lpt_makespan(seconds: list[float], workers: int) -> float:
     """The wall time of these files on this many workers, longest first, each to the worker that frees first."""
     loads = [0.0] * max(1, workers)
@@ -153,7 +181,7 @@ def plan_lanes(tests: Path, durations: dict[str, float], exclude: set[str]) -> d
     lanes: dict[str, list[tuple[str, float]]] = {"browser": [], "other": []}
     for name, browser in classify(tests).items():
         rel = os.path.relpath(tests / name, ROOT)
-        if rel in exclude or name in exclude:
+        if rel in exclude or name in exclude or STATIC_MODULE.search(_text(tests / name)):   # a file of quick checks: the gate's
             continue
         secs = durations.get(rel, DEFAULT_BROWSER_SECONDS if browser else DEFAULT_OTHER_SECONDS)
         lanes["browser" if browser else "other"].append((rel, secs))
@@ -423,6 +451,10 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--exceptions")
     s.add_argument("--out")
     s.set_defaults(run=cmd_budget)
+    s = sub.add_parser("static", help="the quick file checks the gate runs (tests marked static)")
+    s.add_argument("--kind", choices=("console", "tools"), default="console")
+    s.add_argument("--tests", help="the console tests folder (default drishti-console/tests)")
+    s.set_defaults(run=cmd_static)
     s = sub.add_parser("merge", help="fold one run's per-file seconds into the recorded durations")
     s.add_argument("--durations", required=True)
     s.add_argument("timings", nargs="*")

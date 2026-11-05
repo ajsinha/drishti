@@ -188,6 +188,30 @@ after the lane flags every file over the per-file budget (section 4) in `<data>/
 summary (`drill_plan.py budget`). A file listed in `tools/drill-budgets.txt` is reported with its reason; a spread file has no file
 budget. The re-run of failed tests is unchanged (once, file by file).
 
+### 3.11 Quick file checks
+
+A check that only reads the repository's files (a guard, a lint, a registry or a generated document that must be current) needs no
+server, console or browser, and takes seconds. It is marked **`static`** (`pytestmark = pytest.mark.static` for a whole file,
+`@pytest.mark.static` for one test; the marker is registered in the root `pytest.ini`) and runs in the drill's **gate**, beside the
+static scripts and the Java build, so a mistake it finds stops the drill in the first minutes instead of failing a lane an hour later.
+A guard that sat in the browser lane because its text names Chromium (the Java launch guard) failed one drill that late.
+
+- `tools/drillkit/drill_plan.py static` lists the console test files with a static test; `--kind tools` the tools test files marked
+  static as a whole. Finding none fails the gate (a mark misspelt or a folder moved is never a silent pass).
+- The gate's `gate-checks` job runs the console ones in one pytest session, `-m static`, on four workers (`console-checks.txt`),
+  and each tools file in a process of its own (`checks-<file>.txt`).
+- The console lanes run `-m "not static"`, and a console file whose tests are all static is in neither lane; the tools' lanes leave
+  the static tools files out. A file with both kinds (the branding guard: its scans are static, its rebranded console is not) has its
+  static tests in the gate and the rest in its lane.
+
+What is marked today: in the console, `test_java_launch_guard.py`, `test_browser_rules.py`, `test_scratch_ports.py`,
+`test_assets_policy.py`, `test_contrast.py`, `test_command_catalog.py`, `test_console_does_not_aggregate.py`,
+`test_no_shared_user_state.py`, `test_engine_help_pages.py`, `test_settings_catalogue.py`, and the file scans of `test_asset_names.py`,
+`test_branding_guard.py`, `test_under_construction.py` and `test_bi_no_browser_compute.py`; in the tools, `test_readmes.py`,
+`test_pack_guides.py`, `test_run_configs.py`, `test_exports_offer_jsonl.py` and `test_knowledge_pages.py`. The docs checks
+(`test_docs_*.py`, `test_help*.py`, `test_tools_guide.py`) were already in the gate's docs job, and the licence headers and the
+generated documents in its static job.
+
 ## 4. Numbers to hold
 
 | What | Number |
@@ -218,7 +242,7 @@ The three full lane runs and their comparison with develop's lane are to be meas
 
 ## 6. Rules for browser tests
 
-`drishti-console/tests/test_browser_rules.py` checks rules 2 to 4 on the source; a file written before the rules carries its count of
+`drishti-console/tests/test_browser_rules.py` checks rules 2 to 4 and 11 on the source; a file written before the rules carries its count of
 old pauses and starts in the test's `BASELINE`, which may only go down.
 
 1. **Small and independent.** One behaviour per test. A test that needs nothing but per-worker fixtures and can run alone on any
@@ -242,6 +266,10 @@ old pauses and starts in the test's `BASELINE`, which may only go down.
 9. **Read what the user reads.** Charts are compared by their ECharts option, never pixels; such a test passes
    `animations=False` to the settled wait. A screenshot test waits for the animations (the default).
 10. **Start clean.** A test never relies on cookies or storage an earlier test left: the per-worker contexts are reset between tests.
+11. **A quick file check is marked `static`** and starts nothing (section 3.11): it asks only for pytest's own fixtures (`tmp_path`,
+    `monkeypatch`, ...) and fixtures of its file that do the same, calls no `TestClient`, `create_app`, `_stack` or Playwright, and its
+    file imports no browser, stack or `subprocess` helper. The gate runs it before the server jar exists. `test_browser_rules.py`
+    checks this on every test marked `static`, the console's and the tools'.
 
 ## 7. Measuring a run
 

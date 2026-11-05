@@ -80,6 +80,29 @@ class LaneEstimate(unittest.TestCase):
         self.assertIn("drishti-console/tests/test_render_parity_browser.py", spread)
 
 
+class QuickChecks(unittest.TestCase):
+    """The quick file checks (tests marked static) run in the gate; the lanes leave the files that are only that out."""
+
+    def test_the_gate_finds_the_guards(self):
+        console = P.static_files("console")
+        for name in ("test_java_launch_guard.py", "test_asset_names.py", "test_branding_guard.py", "test_under_construction.py",
+                     "test_browser_rules.py", "test_scratch_ports.py"):
+            self.assertIn(f"drishti-console/tests/{name}", console)
+        self.assertIn("tools/test_readmes.py", P.static_files("tools"))
+
+    def test_a_file_of_quick_checks_is_in_no_lane_and_a_mixed_file_stays(self):
+        with tempfile.TemporaryDirectory() as d:
+            t = Path(d)
+            (t / "test_scan.py").write_text("import pytest\n\npytestmark = pytest.mark.static\n\ndef test_a():\n    pass\n", encoding="utf-8")
+            (t / "test_mixed.py").write_text("import pytest\n\n@pytest.mark.static\ndef test_a():\n    pass\n\ndef test_b(client):\n    pass\n",
+                                             encoding="utf-8")
+            (t / "test_plain.py").write_text("def test_a():\n    pass\n", encoding="utf-8")
+            lanes = P.plan_lanes(t, {}, set())
+            names = sorted(Path(p).name for p, _ in lanes["other"] + lanes["browser"])
+            self.assertEqual(names, ["test_mixed.py", "test_plain.py"])
+            self.assertEqual(sorted(Path(p).name for p in P.static_files("console", t)), ["test_mixed.py", "test_scan.py"])
+
+
 class Monitor(unittest.TestCase):
     def test_kinds(self):
         self.assertEqual(M.classify("/usr/lib/jvm/java-21/bin/java -Xmx768m -jar drishti-server/target/drishti-server-2.9.11-exec.jar"), "server_jvm")

@@ -1342,8 +1342,9 @@ The full records are in [`docs/architecture/adr/`](adr/).
 | Tool tests | the `unittest` and pytest suites of `tools/` | `tools/` |
 
 **The drill** (`tools/drill.sh`, [PACK_DEVELOPER_GUIDE.md section 2.6](../guides/PACK_DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh))
-is how work reaches `main`. Stage 1, the gate: the static checks, the docs and help console tests and one Java 21 build that runs only
-the rule tests, stopping at the first failure. Stage 2, at once: the console's browser lane and other lane, the tool tests, and the
+is how work reaches `main`. Stage 1, the gate: the static checks, the docs and help console tests, the quick file checks (every test
+marked `static`: it reads files and starts nothing, so it runs here and never in a lane) and one Java 21 build that runs only the rule
+tests, stopping at the first failure. Stage 2, at once: the console's browser lane and other lane, the tool tests, and the
 Java 21 and Java 25 verifies each in a copy of the committed tree. A failed console test runs once more, file by file; one that passes
 then is logged as a flake. Nothing is pushed unless everything passes.
 

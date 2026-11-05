@@ -4511,7 +4511,8 @@ tools/drill.sh
 
 Options: `--docs` (the light drill, below), `--full` (the full drill even when only docs changed), `--no-push` (verify only: no push,
 no merge, and it may run on any branch), `--keep-going` (run every job to its end after one has failed, to see every failure at
-once; by default the first failure stops the rest). `DRILL_MVN_ARGS="..."` adds Maven arguments to every Maven run (for example
+once; by default the first failure stops the rest), `--gate` (the gate only, stage 1 below, then stop: no lanes and no push, on any
+branch; a check of a few minutes before a drill). `DRILL_MVN_ARGS="..."` adds Maven arguments to every Maven run (for example
 `-Ddrishti.test.forks=1` to run the test classes serially). `DRILL_BROWSER_WORKERS` and `DRILL_OTHER_WORKERS` set the console
 lanes' workers (the browser lane's default comes from the memory available), `DRILL_BROWSER_RERUNS` the browser-lane files re-run at a time (default 1), `DRILL_LANE_LIMIT` a console lane's
 time limit in seconds (default three hours), `DRILL_GATE_THREADS` the gate build's Maven threads (default `1C`, one per CPU). The
@@ -4533,12 +4534,22 @@ long runs start; the first failure stops the other gate jobs and the drill print
   header); `tools/settings_catalogue.py --check` (CONFIGURATION.md is current and every key has a meaning); `tools/contracts.py check`
   and `tools/contracts.py docs --check` (every command has a data contract that matches its pack and data, and the contracts' pages
   are current); `tools/testdata/sample_docs.py --check` (the data samples' pages are current); `tools/api_docs.py check-python`
-  (every public Python function, class and method of the API references has a docstring and type hints);
-  `tools/test_no_hidden_names.py`; and every pack generator that supports `--check` (the generated pack content is what the
-  generator writes now).
+  (every public Python function, class and method of the API references has a docstring and type hints); and every pack generator
+  that supports `--check` (the generated pack content is what the generator writes now).
 - **The docs and help console tests** (`gate-docs.log`, output in `console-gate.txt`): `test_docs_*.py`, `test_help.py`,
   `test_help_links.py`, `test_help_configuration.py`, `test_help_developer.py` and `test_tools_guide.py`, on four pytest-xdist
   workers. The console lanes leave these files out.
+- **The quick file checks** (`gate-checks.log`, output in `console-checks.txt` and `checks-<file>.txt`): every test marked `static`,
+  a check that reads files and starts no server, console or browser. `tools/drillkit/drill_plan.py static` finds them: the console
+  files with such a test run in one pytest session with `-m static` on four workers (about ten seconds), and each tools file marked
+  `static` as a whole runs in a process of its own. Among them: the Java launch guard (`test_java_launch_guard.py`), the asset names
+  (`test_asset_names.py`), the branding guard, the under-construction registry, the front-end policy (`test_assets_policy.py`), the
+  browser-test rules (`test_browser_rules.py`) and the scratch ports, the contrast of every theme, no shared user state, the console
+  does not aggregate, the engines' help pages, the settings catalogue and the command catalog, the READMEs, the pack guides, the IDE
+  run configurations, the exports' JSON Lines and the Knowledge pages. The console lanes run with `-m "not static"` and the tools'
+  lanes leave these tools files out, so each check runs once, in the gate's first minutes. A static test asks only for pytest's own
+  fixtures and imports no browser or stack helper (`test_browser_rules.py` checks it; [TEST_HARNESS.md](../architecture/TEST_HARNESS.md),
+  "Quick file checks").
 - **One Java 21 build of the working tree** (`gate-java.log`; `JAVA21_HOME`, default `/usr/lib/jvm/java-21-openjdk-amd64`):
   `./mvnw -q -o clean package spotless:check -P api-docs -T 1C`, offline, every module compiled once with Error Prone, Javadoc with
   doclint on the documented modules, Spotless and the enforcer's Java 21 bytecode rule, Maven building independent modules side by

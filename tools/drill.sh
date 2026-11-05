@@ -22,6 +22,7 @@
 #   tools/drill.sh --full       the full drill even when only docs changed
 #   tools/drill.sh --no-push    verify only: no push, no merge (the timing of each stage is printed either way)
 #   tools/drill.sh --keep-going run every job to its end even after one has failed (the default stops the rest at the first failure)
+#   tools/drill.sh --gate       the gate only (stage 1), then stop: no lanes, no push; on any branch (a quick check before a drill)
 #   DRILL_MVN_ARGS="..."        extra Maven arguments for every Maven run (e.g. -Ddrishti.test.forks=1 to run the test classes serially)
 #   DRILL_BROWSER_WORKERS, DRILL_OTHER_WORKERS   the console lanes' pytest workers (default from the CPUs and the memory; the browser
 #                               lane's from the memory available: tools/drillkit/drill_plan.py workers)
@@ -32,7 +33,8 @@
 # 1. The gate, a few minutes, every job at once; the first failure stops the drill with the list:
 #    licence headers; the generated documents and data that must be current (settings catalogue, data contracts and their pages,
 #    data samples, the packs' generated content, the Python API reference); the docs and help console tests; the repository rules
-#    (no hidden names); and one Java 21 build of the working tree (-P api-docs: Javadoc with doclint; Spotless) that runs only the
+#    (no hidden names); the quick file checks (every test marked static: they read files and start no server, console or browser,
+#    such as the Java launch guard, the asset names, the branding guard, the browser-test rules); and one Java 21 build of the working tree (-P api-docs: Javadoc with doclint; Spotless) that runs only the
 #    rule tests: every drishti-it test (architecture, file size, caches, locks, branding, licence, connections, schemas), the
 #    token-scope guard and the Arrow answer sample the console reads. That build makes the server jar every later stage uses.
 # 2. Everything else at once, each job with its own log under <data>/drill/:
@@ -57,14 +59,15 @@ export JAVA_HOME="${JAVA_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"   # producti
 # would fill: ./mvnw starts Maven with -Djava.io.tmpdir=<repo>/data/tmp/maven (in a copy, the copy's own), the test forks get
 # <module>/target/tmp (the parent pom's argLine), and the console and tool tests start java through tools/javacmd.py.
 
-MODE=auto; PUSH=1; KEEP_GOING=0
+MODE=auto; PUSH=1; KEEP_GOING=0; GATE_ONLY=0
 for a in "$@"; do
   case "$a" in
+    --gate) GATE_ONLY=1; PUSH=0 ;;
     --docs) MODE=docs ;;
     --full) MODE=full ;;
     --no-push) PUSH=0 ;;
     --keep-going) KEEP_GOING=1 ;;
-    *) echo "drill: unknown option $a (use --docs, --full, --no-push, --keep-going)" >&2; exit 2 ;;
+    *) echo "drill: unknown option $a (use --docs, --full, --no-push, --keep-going, --gate)" >&2; exit 2 ;;
   esac
 done
 
@@ -82,7 +85,7 @@ elif [[ "$MODE" == docs && -n "$non_docs" ]]; then
   echo "drill: --docs refused: these changes since origin/develop are not documentation:" >&2; printf '%s\n' "$non_docs" | head -20 >&2
   exit 1
 fi
-echo "drill: mode = $MODE$([[ $PUSH == 0 ]] && echo ' (no push)')$([[ $KEEP_GOING == 1 ]] && echo ' (keep going)')"
+echo "drill: mode = $MODE$([[ $GATE_ONLY == 1 ]] && echo ' (gate only)')$([[ $PUSH == 0 ]] && echo ' (no push)')$([[ $KEEP_GOING == 1 ]] && echo ' (keep going)')"
 
 PY=drishti-console/.venv/bin/python
 # a new worktree has no console environment of its own: stop at once with the remedy, not after the gate
@@ -204,6 +207,23 @@ gate_static() {
   all_of "${checks[@]}"
 }
 
+# The quick file checks (TEST_HARNESS.md, "Quick file checks"): every test marked static reads files and starts no server, console or
+# browser, so it runs here and fails in the gate's first minutes, not hours later in a lane (the console lanes run -m "not static",
+# the tools' lanes leave the static tools files out). The console's in one pytest session, each tools file in a process of its own.
+gate_checks() {
+  local console=() tools=() f out rc=0
+  mapfile -t console < <(python3 "$PLAN" static --kind console)
+  mapfile -t tools < <(python3 "$PLAN" static --kind tools)
+  (( ${#console[@]} > 10 && ${#tools[@]} > 3 )) || { echo "drill: only ${#console[@]} console and ${#tools[@]} tools files of quick checks found" >&2; return 1; }
+  console_files checks 4 2 -m static "${console[@]}" || rc=1
+  for f in "${tools[@]}"; do
+    out="$LOGS/checks-$(basename "$f" .py).txt"
+    timeout --kill-after=30 600 "$PY" -m pytest -q -p no:cacheprovider -m static "$f" > "$out" 2>&1 \
+      || { echo "drill: FAILED: $f (output in $out)" >&2; tail -n 30 "$out" >&2; rc=1; }
+  done
+  return $rc
+}
+
 # the console tests of the gate, and in the light drill the docs ones; a test that fails runs once more (tools/drillkit/drill_plan.py)
 console_files() {   # name, workers, failed files re-run at a time, then the files: pytest-xdist workers, one file per worker at a time
   local name=$1 workers=$2 reruns=$3; shift 3
@@ -247,7 +267,9 @@ gate_java() {
 tool_test_files() {   # lane (a or b): its test files and folders
   local f all=()
   mapfile -t all < <(find tools \( -name .venv -o -name cache -o -name node_modules \) -prune -o -name 'test_*.py' -print | grep -v '/tests/' | sort)
+  local gate; gate=" $(python3 "$PLAN" static --kind tools | tr '\n' ' ') "   # the quick file checks: the gate ran them
   for f in "${all[@]}"; do
+    [[ $gate == *" $f "* ]] && continue
     case "$f" in
       tools/test_schemapack.py|tools/test_sample_docs.py|tools/test_generators_write_jsonl.py) [[ $1 == b ]] && echo "$f" ;;   # balancing the lanes
       tools/test_*.py) [[ $1 == a ]] && echo "$f" ;;
@@ -300,6 +322,7 @@ tools_lane_b() {
 console_lane() {   # name, workers, re-runs at a time
   local name=$1 mon="" rc=0; mapfile -t files < "$LOGS/lane-$1.txt"
   (( ${#files[@]} )) || { echo "drill: console $name: no files"; return 0; }
+  files=(-m "not static" "${files[@]}")        # the quick file checks ran in the gate
   if [[ $name == browser ]]; then   # the lane's processes and memory, sampled every 5 s (tools/drillkit/drill_monitor.py)
     python3 tools/drillkit/drill_monitor.py watch --out "$LOGS/monitor-browser.csv" --under $BASHPID & mon=$!
   fi
@@ -441,13 +464,18 @@ fi
 t=$SECONDS
 start_job gate-static gate_static
 start_job gate-docs console_files gate 4 2 "${GATE_CONSOLE[@]}"
-gate_jobs=(gate-static gate-docs)
+start_job gate-checks gate_checks
+gate_jobs=(gate-static gate-docs gate-checks)
 if [[ "$MODE" != docs ]]; then start_job gate-java gate_java; gate_jobs+=(gate-java); fi
 if ! watch_jobs "${gate_jobs[@]}"; then
   stop_jobs
   echo "drill: FAILED at the gate after $(( SECONDS - t ))s (logs in $LOGS/: ${gate_jobs[*]/%/.log})" >&2; exit 1
 fi
 stage_done "gate ($(IFS=,; echo "${gate_jobs[*]}"))" $t
+if (( GATE_ONLY )); then
+  echo "drill: stages (gate only):"; printf '  %s\n' "${STAGES[@]}"; echo "  total $(( SECONDS - T0 ))s"
+  echo "drill: the gate passed: $(git log --oneline -1)"; exit 0
+fi
 
 t=$SECONDS
 if [[ "$MODE" == docs ]]; then

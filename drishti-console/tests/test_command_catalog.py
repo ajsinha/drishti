@@ -18,7 +18,10 @@ tools/command_catalog.py writes from the packs, their contracts and tools/comman
 import importlib.util
 from pathlib import Path
 
+import pytest
 import yaml
+
+pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
 ROOT = Path(__file__).resolve().parents[2]
 spec = importlib.util.spec_from_file_location("command_catalog", ROOT / "tools" / "command_catalog.py")

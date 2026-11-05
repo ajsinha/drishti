@@ -21,6 +21,10 @@
    session-scoped, and goes through wb_live's pool (``_stack``) or a ``*_stack`` module; nothing calls the pool's ``_start_stack``.
 3. A test marked ``spread`` asks only for per-worker (session) fixtures and its own function fixtures: a module fixture would start
    again on every worker the spread tests land on.
+4. A test marked ``static`` (a quick file check, which the drill's gate runs) starts nothing: it asks only for pytest's own fixtures
+   (``tmp_path``, ``monkeypatch``, ...) and fixtures of its file that do the same, calls no server, console or browser
+   (``TestClient``, ``create_app``, ``_stack``, Playwright, ``subprocess``) and its file imports no browser or stack
+   helper. The gate runs before the server jar exists and beside the Java build.
 
 The files written before these rules carry their count of old pauses and starts in ``BASELINE`` below: a file may only go down
 (lower its number when you remove one); a new file starts at zero."""
@@ -29,6 +33,10 @@ from __future__ import annotations
 import ast
 import re
 from pathlib import Path
+
+import pytest
+
+pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
 TESTS = Path(__file__).resolve().parent
 LIMIT_MS = 100
@@ -160,6 +168,82 @@ def module_fixtures_of_spread_tests(path: Path) -> list[str]:
     return out
 
 
+# ---- rule 4: the quick file checks start nothing --------------------------------------------------------------------------------
+STATIC_FIXTURES = {"tmp_path", "tmp_path_factory", "monkeypatch", "capsys", "capfd", "request", "subtests"}
+STATIC_NO_CALLS = {"TestClient", "create_app", "_stack", "sync_playwright", "async_playwright", "Popen", "run_server", "serve"}
+STATIC_NO_IMPORTS = {"playwright", "wb_live", "browser_harness", "worker_fixtures", "subprocess", "uvicorn", "table_chart_backend"}
+
+
+def _marked_static(node, file_static: bool) -> bool:
+    return file_static or any("mark.static" in ast.unparse(d) for d in node.decorator_list)
+
+
+def static_violations(path: Path) -> list[str]:
+    """What a file's static tests do that a quick file check may not (rule 4)."""
+    tree = ast.parse(path.read_text(encoding="utf-8"), str(path))
+    file_static = any(isinstance(n, ast.Assign) and "mark.static" in ast.unparse(n.value) and any(getattr(t, "id", "") == "pytestmark" for t in n.targets)
+                      for n in tree.body)
+    funcs = {n.name: n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
+    tests = [n for n in ast.walk(tree) if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name.startswith("test")
+             and _marked_static(n, file_static)]
+    if not tests:
+        return []
+    out = []
+    for n in tree.body:                                       # the file's imports: a static file has no browser or stack helper
+        names = [a.name for a in n.names] if isinstance(n, ast.Import) else [n.module or ""] if isinstance(n, ast.ImportFrom) else []
+        bad = [m for m in names if m.split(".")[0] in STATIC_NO_IMPORTS or m.split(".")[0].endswith("_stack")]
+        if bad:
+            out.append(f"{path.name}:{n.lineno} imports {bad}")
+
+    def calls(fn, seen):                                      # the names a function calls, through the file's own helpers
+        found = set()
+        for c in ast.walk(fn):
+            if isinstance(c, ast.Call):
+                name = c.func.id if isinstance(c.func, ast.Name) else c.func.attr if isinstance(c.func, ast.Attribute) else ""
+                found.add(name)
+                if name in funcs and name not in seen:
+                    seen.add(name)
+                    found |= calls(funcs[name], seen)
+        return found
+
+    def fixtures_ok(fn, seen) -> list[str]:
+        bad = []
+        params = {a.strip() for d in fn.decorator_list if "parametrize" in ast.unparse(d) and isinstance(d, ast.Call) and d.args
+                  and isinstance(d.args[0], ast.Constant) for a in str(d.args[0].value).split(",")}
+        for a in (x.arg for x in fn.args.args):
+            if a in STATIC_FIXTURES or a in params or a == "self" or a in seen:
+                continue
+            if a in funcs:                                    # a fixture of this file: the same rule for it
+                seen.add(a)
+                bad += fixtures_ok(funcs[a], seen)
+                bad += [f"{a} calls {sorted(calls(funcs[a], set()) & STATIC_NO_CALLS)}"] if calls(funcs[a], set()) & STATIC_NO_CALLS else []
+            else:
+                bad.append(f"asks for {a}")
+        return bad
+
+    for t in tests:
+        problems = fixtures_ok(t, set())
+        called = calls(t, {t.name}) & STATIC_NO_CALLS
+        if called:
+            problems.append(f"calls {sorted(called)}")
+        if problems:
+            out.append(f"{path.name}:{t.lineno} {t.name}: " + "; ".join(problems))
+    return out
+
+
+def static_files() -> list[Path]:
+    root = TESTS.parents[1]
+    tools = [p for p in (root / "tools").rglob("test_*.py") if not {".venv", "cache", "node_modules"} & set(p.parts)]
+    return sorted(TESTS.glob("test_*.py")) + sorted(tools)
+
+
+def test_static_tests_start_nothing():
+    found = [x for p in static_files() for x in static_violations(p)]
+    assert not found, ("a test marked static runs in the drill's gate, before the server jar exists: it reads files and starts no "
+                       "server, console or browser (unmark it, or move what it starts into a test of the lanes; TEST_HARNESS.md, "
+                       "rule 11):\n" + "\n".join(found))
+
+
 def test_no_fixed_pause_over_100_ms_without_its_reason():
     over = []
     for p in browser_files():
@@ -216,3 +300,16 @@ def test_the_rules_catch_what_they_name(tmp_path):
     assert [ln for ln, _ in pauses(f)] == [3]
     assert per_test_starts(f) == [9]
     assert len(module_fixtures_of_spread_tests(f)) == 1
+    g = tmp_path / "test_y.py"
+    g.write_text("import pytest\nfrom fastapi.testclient import TestClient\n"
+                 "@pytest.fixture\ndef app():\n    return create_app(1)\n"
+                 "@pytest.mark.static\ndef test_a(tmp_path):\n    pass\n"
+                 "@pytest.mark.static\ndef test_b(client):\n    pass\n"
+                 "@pytest.mark.static\ndef test_c(app):\n    pass\n"
+                 "def _helper():\n    return TestClient(1)\n"
+                 "@pytest.mark.static\ndef test_d():\n    _helper()\n"
+                 "def test_e(client):\n    pass\n")
+    assert [v.split(":")[1].split()[1] for v in static_violations(g)] == ["test_b", "test_c", "test_d"], static_violations(g)
+    h = tmp_path / "test_z.py"
+    h.write_text("import pytest\nimport wb_live\npytestmark = pytest.mark.static\ndef test_a():\n    pass\n")
+    assert len(static_violations(h)) == 1 and "imports" in static_violations(h)[0]

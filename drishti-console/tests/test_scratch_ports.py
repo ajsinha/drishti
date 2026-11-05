@@ -22,8 +22,13 @@ import ast
 from collections import defaultdict
 from pathlib import Path
 
+import pytest
+
 TESTS = Path(__file__).resolve().parent
 import scratch_ports
+
+pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
+
 LOW, HIGH = 17000, 19999               # what counts as a port number in the source (the window itself is scratch_ports.LOW..HIGH)
 
 
