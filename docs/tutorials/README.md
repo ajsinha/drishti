@@ -61,6 +61,7 @@ Reports and models, the pivot engine, Python, AI, and the computed analytics of 
 
 | # | Tutorial | You will | Time | Status |
 |---|---|---|---|---|
+| 44 | [Virtual tables and models](44-virtual-tables-and-models.md) | make trade legs a virtual table, put a model over it, and see BI's samples migrated to the table layer | 30 min | written (outputs and pictures in the heavy run) |
 | 10 | [Your first BI report](10-first-bi-report.md) | in BI Studio, build a report on a dataset (cards, a map you drill from world to country to region, a bar, a slicer), cross-filter it, publish it; filter like Power BI; the Counterparty risk sample; a relative-date slicer, the entity view, a tablet layout | 45 min | written |
 | 11 | [BI that runs itself](11-bi-that-runs-itself.md) | a dataset that refreshes itself, a subscription (and what Run now says with no mail server, and how to set mail up), an alert on a number, export to PDF, PNG, Excel and CSV; expected values; charts in the workbook, a narrative summary, a webhook and a text | 40 min | written |
 | 12 | [Live BI and boards](12-live-bi-and-boards.md) | live data that moves together, a live table, a report that follows it (pause and resume), the Desk wall in kiosk mode; the history of a live table, your own board in the report designer (BI Studio), a chart of the desk by currency (the server groups, the browser draws) and a wall of Python | 30 min | written |

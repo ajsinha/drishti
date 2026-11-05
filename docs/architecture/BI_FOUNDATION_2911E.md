@@ -764,7 +764,7 @@ lowerings, `DocPath` on the one compiler.
 Part B (sections 3, 4 and 5) is built on `wip/bi-foundation-tables`, on part A (merged: Rachana's tree, printer and checked mode, the one
 compiler). BI does not read the layer yet: the switch (section 7.3, step 5) flips it in one change once the parity proof passes. The
 reference for every key, check and command is [TABLES_GUIDE.md](../guides/TABLES_GUIDE.md); the walk-through is the
-[virtual tables tutorial](../tutorials/virtual-tables-and-models.md).
+[virtual tables tutorial](../tutorials/44-virtual-tables-and-models.md).
 
 | Part | Built | Where |
 |---|---|---|
