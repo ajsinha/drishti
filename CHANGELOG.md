@@ -19,6 +19,16 @@
 
 ### Fixes
 
+- **Docs: the heavy run of tutorials 34, 36, 37, 38 and 43.** Every step run against a built server on the demo lake (writes to scratch
+  lakes only): real command output and light-theme screenshots in tutorials 34 (lake files), 36 (the data inbox), 38 (the MR cube) and
+  43 (parametric VaR, every figure the engine's), and step 1 of tutorial 37; new picture scripts `tools/docs/shots/t34.py`, `t36.py`,
+  `t37.py`, `t38.py`, `t43.py` (and `light()` in `_tut.py`). Text corrected to the product: three shipped lake files, not one; the endur
+  test file's real name; a repeated append batch reports its rows but commits nothing (the run summary says *batch appended already*);
+  Admin → Lakes lists the lake files but does not run the check; the inbox's folders are made by its first cycle; `stable-seconds` is
+  read at start; `date-from: name` needs `<name>.<YYYY-MM-DD>.jsonl.gz`; an unmatched file fails as *no pack, kind or table of that
+  name*; tutorial 37's fields are the trade source's own (`PRODUCT_TYPE`, `NOTIONAL`, `COUNTERPARTY`) and its members the demo's. The
+  six under-construction pictures retaken with their chips (computed 02, 03, 06, 07; t02/07; qa-windows/09).
+
 - **The client example "read the lake directly" (notebook 09) resolves a nested default** in the lake file's root (`${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`) innermost first, as the server does; it built a folder named after the placeholder.
 
 - **Docs: FRTB-SA and SIMM are built.** REGULATORY_VAR_REPORTING.md (sections 1 and 8: the FRTB standardised approach built, its reports'

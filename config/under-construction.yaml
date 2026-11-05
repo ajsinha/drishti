@@ -49,7 +49,6 @@ items:
         binds: [$.CVA]
     help: [docs-contracts-cva]
     contracts: [docs/contracts/CVA.md]
-    screenshots: [docs/guides/img/computed/02-netting-set-page.jpg, docs/tutorials/img/t02/07-netting-set.jpg]
 
   - id: credit-limit-usage
     what: field
@@ -61,7 +60,6 @@ items:
         binds: [$.USED, $.UTILISATION, "@.USED", "@.UTILISATION", "$.LIMIT - $.USED", "$.LIMIT > 0 ? $.USED / $.LIMIT : null",
                 "$.LIMIT > 0 ? $.USED / $.LIMIT - $.UTILISATION : null"]
         panels: [util]
-    screenshots: [docs/guides/img/computed/06-credit-limit-checks.jpg]
 
   - id: counterparty-stored-net-mtm
     what: field
@@ -71,8 +69,6 @@ items:
     sutras:
       - kind: counterparty
         binds: [$.NET_MTM, "@.NET_MTM", "$src.NET_MTM - $.NET_MTM"]
-    screenshots: [docs/guides/img/computed/03-counterparty-computed.jpg, docs/guides/img/computed/07-counterparty-sets.jpg,
-                  docs/qa/img/qa-windows/09-counterparty.png]
 
   - id: pre-deal-limit-decision
     what: decision

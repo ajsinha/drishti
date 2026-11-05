@@ -54,7 +54,7 @@ About 25 minutes.
 on; `&pm=1` in the link). Beside the historical tiles come three more: **Parametric VaR**, **Parametric ES** and the **Fat-tail gap**;
 the tree gains the **Parametric** and **Gap** columns. Untick it and the explorer is historical only again.
 
-*(screenshot filled in the heavy run: VAR BANK with Parametric on: the historical and parametric tiles, the tree's Parametric and Gap columns)*
+![VAR BANK with Parametric on: the historical and parametric tiles, the tree's Parametric and Gap columns](img/t43/01-bank-parametric.jpg)
 
 **The command line.**
 
@@ -93,7 +93,7 @@ kurtosis is 23.66: one very bad day stretches σ, and the normal spreads it over
 **The UI.** Open `PVAR DESK DESK-RATES` (or click **Rates · Swaps and options** in the tree) and press the **?** beside the Parametric VaR
 tile. It opens the server's own lines (a bottom sheet on a phone); the console places the text and computes nothing.
 
-*(screenshot filled in the heavy run: PVAR DESK DESK-RATES with the ? open on the Parametric VaR tile)*
+![PVAR DESK DESK-RATES with the ? open on the Parametric VaR tile](img/t43/02-rates-describe.jpg)
 
 **The JSON.** The same lines are the headline's `parametric.describe`
 (`GET /api/v1/var/scope?scope=DESK:DESK-RATES&asOf=2026-09-30`):
@@ -128,7 +128,7 @@ days lie beyond the parametric VaR where the normal expects 5.09: the tail is fa
 formula. Press **N** (the *Normal curve* toggle) to hide the curve, the parametric marker, its tail and the bracket; the choice is
 remembered for you and in the link (`&nc=0`).
 
-*(screenshot filled in the heavy run: the rates desk's P&L histogram with the normal curve, both markers and the gap bracket)*
+![The rates desk's P&L histogram with the normal curve, both markers and the gap bracket](img/t43/03-rates-normal-curve.jpg)
 
 **The JSON.** `GET /api/v1/var/scope/path?scope=DESK:DESK-RATES&asOf=2026-09-30` → `parametric`: the server sends every point, the
 browser draws them.
@@ -203,13 +203,13 @@ the linear-algebra seam (`openblas` here; `java` when that engine is off: the sa
 **The UI.** `MCUBE <GO>`, then add the measure **Parametric VaR** (`pvar()`) beside `var()` in the values; or in any pivot of the VaR
 source. Each cell is z·σ − μ of the cell's own summed vector, so, like VaR, a total is never the sum of its rows.
 
-*(screenshot filled in the heavy run: the MR cube with var() and pvar() by desk)*
+![The MR cube with var() and pvar() by desk](img/t43/04-mr-cube-pvar.jpg)
 
 **The command line.**
 
 ```text
 $ drishti.py pivot run --source var --rows MGMT.DESK --values "var()" --values "pvar()" --date 2026-09-30
-VaR · MR cube · 2026-09-30 · 11 cells · 2 sets, 0 from the cache · 1 queries · 52 ms · exact
+VaR · MR cube · 2026-09-30 · 11 cells · 2 sets, 0 from the cache · 1 queries · 2 ms · exact
 MGMT.DESK                                              var()                    pvar()
 + DESK-COMM                                       17,514,512                41,831,180
 + DESK-CREDIT                                    130,670,864               126,006,967
@@ -222,6 +222,7 @@ MGMT.DESK                                              var()                    
 + DESK-SFT                                         1,536,322                 1,483,558
 + DESK-STRUCT                                      9,987,431                18,801,995
 Grand total                                      112,041,646               122,130,910
+computed as: exact
 ```
 
 **The JSON.** A view's values: `{"values": ["var()", "pvar()"]}` (`POST /api/v1/pivot/query`, source `var`).
@@ -237,7 +238,7 @@ component, each scenario's weight, deviation and square. **Export** writes the
 workbook; its **Parametric** tab holds the named cells and checks in formulas (`NORM.S.INV`), recalculated by Excel or LibreOffice equal
 to the engine to the cent.
 
-*(screenshot filled in the heavy run: the VaR Playground's Parametric tab on the rates desk: the figures and their steps)*
+![The VaR Playground's Parametric tab on the rates desk: the figures and their steps](img/t43/05-playground-parametric.jpg)
 
 **The command line.**
 
@@ -254,7 +255,7 @@ $ drishti.py var playground DESK:DESK-RATES --date 2026-09-30 --measure parametr
 Rates · Swaps and options on 2026-09-30 in USD: 500 of 1358 positions, 509 scenarios
 ...
 $ drishti.py var playground DESK:DESK-RATES --date 2026-09-30 --measure parametric --count 100 --xlsx rates.xlsx
-wrote rates.xlsx (2,702,678 bytes): the VaR Playground workbook, every figure a formula (Main, Config, Data, FX, PnL, Parametric, Explain, Provenance)
+wrote rates.xlsx (2,702,682 bytes): the VaR Playground workbook, every figure a formula (Main, Config, Data, FX, PnL, Parametric, Explain, Provenance)
 ```
 
 **The JSON.** `GET /api/v1/var/playground?scope=DESK:DESK-RATES&asOf=2026-09-30&measure=parametric` carries the panel's figures and

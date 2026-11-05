@@ -45,25 +45,25 @@ About 25 minutes.
 
 ## Step 1 · A formula in a view
 
-**UI.** `PIVOT trade <GO>`, `productType` on Rows. In Values, edit a value's text to `sum(notional, where=notional > 1000000) / sum(notional)`
-(the share of notional in large trades). Every row and the grand total show the ratio; the grand total is the ratio over all the trades, not
+**UI.** `PIVOT trade <GO>`, `PRODUCT_TYPE` on Rows. In Values, edit a value's text to `sum(NOTIONAL, where=NOTIONAL > 100000000) / sum(NOTIONAL)`
+(the share of notional in trades over 100 million). Every row and the grand total show the ratio; the grand total is the ratio over all the trades, not
 an average of the rows' ratios.
 
 **CLI.**
 
 ```
-drishti.py pivot run --source trade --rows productType --values "sum(notional, where=notional > 1000000) / sum(notional)"
+drishti.py pivot run --source trade --rows PRODUCT_TYPE --values "sum(NOTIONAL, where=NOTIONAL > 100000000) / sum(NOTIONAL)"
 ```
 
 **JSON.**
 
 ```json
-{"source": "trade", "rows": ["productType"], "values": [{"measure": "sum(notional, where=notional > 1000000) / sum(notional)", "as": "Large share"}]}
+{"source": "trade", "rows": ["PRODUCT_TYPE"], "values": [{"measure": "sum(NOTIONAL, where=NOTIONAL > 100000000) / sum(NOTIONAL)", "as": "Large share"}]}
 ```
 
-*(screenshot filled in the heavy run: the trades by product type with the large-notional share as a value)*
+![The trades by product type with the large-notional share as a value](img/t37/01-large-share.jpg)
 
-**You should see** one ratio per product type and a grand total that equals the sum of the large trades' notional divided by the sum of all notional (`DATA trade`, filter and sum).
+**You should see** one ratio per product type and a grand total that equals the sum of the notional of trades over 100 million divided by the sum of all notional (`DATA trade`, filter and sum).
 
 ## Step 2 · The playground: a function and its harness
 
@@ -116,18 +116,18 @@ each cell's figure is computed by DuckDB from its own rows) and the harness runs
 
 **UI.** Back to `wret` (formula), **Save version**: `fn:you/wret@1`, private. As the second user, open **Functions**, find
 `fn:you/wret@1` and press **Approve**, giving the reason "reviewed: a weighted mean". As yourself, in Values add
-`fn:you/wret@1(PNL_FIELD, notional)` (your trades' P&L field and the notional): the column header says `fn:you/wret@1 ... by you`.
+`fn:you/wret@1(PRICE, NOTIONAL)` (the trades' price and notional): the column header says `fn:you/wret@1 ... by you`.
 
 **CLI.**
 
 ```
 drishti.py pivot functions save wret.yaml --sample rows.csv
 drishti.py pivot functions approve you/wret@1 --reason "reviewed: a weighted mean"      # as the approver
-drishti.py pivot run --source trade --rows productType --values "fn:you/wret@1(mtm, notional)"
+drishti.py pivot run --source trade --rows PRODUCT_TYPE --values "fn:you/wret@1(PRICE, NOTIONAL)"
 ```
 
 **JSON.** `POST /api/v1/pivot/functions/you/wret@1/approve` with `{"scope": "everyone", "reason": "reviewed: a weighted mean"}`; the view's
-value is `{"measure": "fn:you/wret@1(mtm, notional)"}`.
+value is `{"measure": "fn:you/wret@1(PRICE, NOTIONAL)"}`.
 
 *(screenshot filled in the heavy run: the view with the column `fn:you/wret@1 ... by you`)*
 
@@ -145,23 +145,32 @@ by … on …: reason", with no figure; the other values answer as before.
 
 ## Step 6 · Why did it move?
 
-**UI.** In the `productType` pivot with `sum(notional)`, select two product rows (click one, Shift-click the other) and press `W`. **Split
-by** `counterparty`, **Explain**. The words say how much the second differs from the first and the largest steps; the waterfall has one bar
-per counterparty (new, gone or changed) and the steps add up to the difference. Change the value to `avg(notional)` and explain again: each
+**UI.** In the `PRODUCT_TYPE` pivot with `sum(NOTIONAL)`, select two product rows (click one, Shift-click the other) and press `W`. **Split
+by** `COUNTERPARTY`, **Explain**. The words say how much the second differs from the first and the largest steps; the waterfall has one bar
+per counterparty (new, gone or changed) and the steps add up to the difference. Change the value to `avg(NOTIONAL)` and explain again: each
 step is now that counterparty's effect on the average given the steps before it, the order is shown (switch **Order** to "largest first"
 and the same difference splits differently), and they still add up.
 
 **CLI.**
 
 ```
-drishti.py pivot explain --source trade --rows productType --values "sum(notional)" --cell productType=IRS --other-cell productType=FXFWD --by counterparty
+drishti.py pivot explain --source trade --rows PRODUCT_TYPE --values "sum(NOTIONAL)" --cell PRODUCT_TYPE=FX_SWAP --other-cell PRODUCT_TYPE=FX_FORWARD --by COUNTERPARTY
+```
+
+```text
+sum(NOTIONAL) moved from 35,644,171,130 to 25,679,859,409 (-9,964,311,721); the largest steps: CP-MERIDIAN-RE -2,196,462,950, CP-BRAMBLE -2,126,815,900, CP-VERDANT -2,055,678,300.
+  each member's own change (the measure adds up)
+  CP-ALDERSHOT                 changed     710,057,225.0000   cumulative 710,057,225.0000
+  CP-AURORA                    changed   -1,669,308,280.0000   cumulative -959,251,055.0000
+  CP-BRAMBLE                   changed   -2,126,815,900.0000   cumulative -3,086,066,955.0000
+  ...
 ```
 
 **JSON** (`POST /api/v1/pivot/explain`):
 
 ```json
-{"view": {"source": "trade", "rows": ["productType"], "values": ["sum(notional)"]},
- "from": {"productType": "IRS"}, "to": {"productType": "FXFWD"}, "by": "counterparty"}
+{"view": {"source": "trade", "rows": ["PRODUCT_TYPE"], "values": ["sum(NOTIONAL)"]},
+ "from": {"PRODUCT_TYPE": "FX_SWAP"}, "to": {"PRODUCT_TYPE": "FX_FORWARD"}, "by": "COUNTERPARTY"}
 ```
 
 *(screenshot filled in the heavy run: the waterfall of two product types split by counterparty)*
@@ -171,25 +180,33 @@ drishti.py pivot explain --source trade --rows productType --values "sum(notiona
 
 ## Step 7 · What-if
 
-**UI.** Press `I`. **Leave out** `productType=FXFWD`, **Change** `notional*1.1 where counterparty=CP-001`, **Run the what-if**. The list
+**UI.** Press `I`. **Leave out** `PRODUCT_TYPE=FX_FORWARD`, **Change** `NOTIONAL*1.1 where COUNTERPARTY=CP-ALDERSHOT`, **Run the what-if**. The list
 shows each cell that changes and by how much (what-if minus original); nothing was written anywhere.
 
 **CLI.**
 
 ```
-drishti.py pivot whatif --source trade --rows productType --values "sum(notional)" --exclude productType=FXFWD --scale notional=1.1@counterparty=CP-001
+drishti.py pivot whatif --source trade --rows PRODUCT_TYPE --values "sum(NOTIONAL)" --exclude PRODUCT_TYPE=FX_FORWARD --scale NOTIONAL=1.1@COUNTERPARTY=CP-ALDERSHOT
+```
+
+```text
+108 cell(s) change; differences are what-if minus original
+  PRODUCT_TYPE=ABS|*                       sum(NOTIONAL) +138,863,064.00
+  PRODUCT_TYPE=ACCRETING_SWAP|*            sum(NOTIONAL) +101,499,900.00
+  PRODUCT_TYPE=AMORT_SWAP|*                sum(NOTIONAL) +155,982,800.00
+  ...
 ```
 
 **JSON** (`POST /api/v1/pivot/whatif`):
 
 ```json
-{"view": {"source": "trade", "rows": ["productType"], "values": ["sum(notional)"]},
- "whatIf": {"exclude": {"productType": ["FXFWD"]}, "changes": [{"field": "notional", "scale": 1.1, "where": {"counterparty": ["CP-001"]}}]}}
+{"view": {"source": "trade", "rows": ["PRODUCT_TYPE"], "values": ["sum(NOTIONAL)"]},
+ "whatIf": {"exclude": {"PRODUCT_TYPE": ["FX_FORWARD"]}, "changes": [{"field": "NOTIONAL", "scale": 1.1, "where": {"COUNTERPARTY": ["CP-ALDERSHOT"]}}]}}
 ```
 
 *(screenshot filled in the heavy run: the what-if beside the original, the changed cells listed)*
 
-**You should see** the what-if beside the original: FXFWD is gone from the what-if side, and the grand total moved by 10 % of CP-001's notional less FXFWD's.
+**You should see** the what-if beside the original: FX_FORWARD is gone from the what-if side, and the grand total moved by 10 % of CP-ALDERSHOT's notional less FX_FORWARD's.
 
 ## Step 8 · Python (an administrator turns it on)
 

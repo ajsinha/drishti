@@ -21,9 +21,6 @@ it, watch a load that contradicts it being refused, add an append table and load
 tables on disk, and migrate an older connector file. Each step shows the UI, the command line and the YAML behind it. The guide is
 [LAKE_GUIDE.md](../guides/LAKE_GUIDE.md).
 
-> Outputs marked *(filled in the heavy run)* are written when the steps are run against a built server; until then they show what to
-> expect in words.
-
 ## Time to complete
 
 About 20 minutes.
@@ -73,15 +70,30 @@ python3 tools/drishti.py lake show
 ```
 
 ```text
-(filled in the heavy run: "lakes in .../config/lakes: 1", then "demo: delta at .../data/delta, 89 tables" and one line per table with
-its path, its partition columns, the number of promoted columns and its vectors)
+lakes in .../config/lakes: 3
+  ccr-official: delta at .../data/delta, 1 tables
+    risk-results.exposure-official-cpty      risk-results/exposure-official-cpty      partitioned by business_date; 26 promoted
+  demo: delta at .../data/delta, 89 tables
+    compute-demo.path-book                   compute-demo/path-book                   partitioned by business_date; 4 promoted
+    ...
+    risk.pnl-vector                          risk/pnl-vector                          partitioned by business_date; 32 promoted, vectors PNL
+    risk.scenario-pv                         risk/scenario-pv                         partitioned by business_date; 32 promoted, vectors SCENARIO_PV
+    ...
+    trading.trade_endur                      trading/trade_endur                      partitioned by business_date, PRODUCT_TYPE; 18 promoted
+    trading.trade_calypso                    trading/trade_calypso                    partitioned by business_date, PRODUCT_TYPE; 18 promoted
+    trading.trade_murex                      trading/trade_murex                      partitioned by business_date, PRODUCT_TYPE; 18 promoted
+    ...
+  var-official: delta at .../data/delta, 1 tables
+    risk-results.var-official                risk-results/var-official                partitioned by business_date; 17 promoted
 ```
 
-**The UI.** Admin → Lakes → **The lakes**: the demo lake, open, with its tables (kind, path, partitioned by, promoted, vectors, id, loads).
+**The UI.** Admin → Lakes → **The lakes**: one line per lake file; open **demo** for its tables (kind, path, partitioned by, promoted,
+vectors, id, loads).
 
-*(screenshot filled in the heavy run: Admin → Lakes → The lakes: the demo lake and its tables, partitioned by business_date first)*
+![Admin → Lakes → The lakes: the demo lake and its tables, partitioned by business_date first](img/t34/01-lakes.jpg)
 
-**You should see** every table partitioned by `business_date` first; the three trade tables also by `PRODUCT_TYPE`.
+**You should see** three lake files (the demo lake and the two official-results lakes, `ccr-official` and `var-official`, on the same root),
+every table partitioned by `business_date` first; the three trade tables also by `PRODUCT_TYPE`.
 
 ## Step 2 · A connector names the lake
 
@@ -103,7 +115,7 @@ The pack recommends the entry in its own `lake:` block; it is copied into a lake
 
 **The UI.** Admin → Connectors → `trade-endur`: the file as above, health green.
 
-*(screenshot filled in the heavy run: Admin → Connectors → trade-endur: lake: demo and lake-tables, health green)*
+![Admin → Connectors filtered to trade-endur: the connector running](img/t34/02-connector.jpg)
 
 **You should see** `TRADE ENDUR` trades open as before: the connector's root, table folder and promoted columns now come from the lake file.
 
@@ -116,45 +128,62 @@ python3 tools/drishti.py lake check
 ```
 
 ```text
-(filled in the heavy run: every connector names a known lake, each local table matches its lake file; "lake check: 1 lakes, 0 errors")
+  note  demo/risk.position-sensitivity: no table yet at .../data/delta/risk/position-sensitivity (a writer creates it as the lake file says)
+  note  demo/risk.risk-factor: no table yet at .../data/delta/risk/risk-factor (a writer creates it as the lake file says)
+lake check: 3 lakes, 0 errors
 ```
 
-**The UI.** Admin → Lakes → The lakes; the same comparison is `GET /api/v1/admin/lakes/files?check=true`.
+**The UI.** Admin → Lakes → The lakes lists the lake files the check compares; the screen does not run the check itself. The same
+comparison as JSON is `GET /api/v1/admin/lakes/files?check=true`.
 
-*(screenshot filled in the heavy run: Admin → Lakes with the check: every table matches its lake file, no error)*
+![Admin → Lakes → The lakes: the lake files the check compares](img/t34/03-check.jpg)
 
-**You should see** no error: the tables `lake demo` built are partitioned as the file says.
+**You should see** no error: the tables `lake demo` built are partitioned as the file says. A *note* names a table the lake file
+describes that no writer has made yet; it is not an error.
 
 ## Step 4 · Load a day through the lake file, and see a contradiction refused
 
 **The command line.** Into the scratch folder, with the demo lake's layout:
 
 ```bash
-python3 tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --as-of 2026-07-08 \
+python3 tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --as-of 2026-07-08 \
     --pack config/packs/trading --connector trade-endur --lake demo --lake-root $SCRATCH/lake
 ```
 
 ```text
-(filled in the heavy run: the one log line, the table $SCRATCH/lake/trading/trade_endur, its rows)
+engine: drishti (Drishti's Java writer in drishti-server-2.9.11.b-exec.jar)
+business date  PRODUCT_TYPE           rows
+2026-07-08     CallNot                  50
+2026-07-08     Cash                    723
+2026-07-08     ComFut                  883
+2026-07-08     ComSwap                1994
+2026-07-08     Commodity               757
+documents read: 4407, rows written: 4407, rejected: 0
+  business date 2026-07-08 from the command line: trade_endur.2026-07-08.jsonl.gz
+summary: $SCRATCH/lake/_drishti-lake/runs/20261104T191809.840-257432.json
+2026-11-04T19:18:13-05:00 lake-build ok exit=0 run=20261104T191809.840-257432 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4407 rejected=0 dates=1 partitions=5 seconds=4.114
 ```
 
 Now ask for another partition:
 
 ```bash
-python3 tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --as-of 2026-07-08 \
+python3 tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --as-of 2026-07-08 \
     --pack config/packs/trading --connector trade-endur --lake demo --lake-root $SCRATCH/lake --partition-by DESK
 ```
 
 ```text
-(filled in the heavy run: refused, "--partition-by ['DESK'] differs from ['PRODUCT_TYPE'], the --partition-by of table trading.trade_endur
-in lake demo (config/lakes/demo.yaml): the lake file decides")
+lake build: --partition-by ['DESK'] differs from ['PRODUCT_TYPE'], the --partition-by of table trading.trade_endur in lake demo (config/lakes/demo.yaml): the lake file decides; drop --partition-by or correct the lake file
+...
+2026-11-04T19:18:24-05:00 lake-build failed exit=1 run=20261104T191823.542-258032 seconds=0.617 error="--partition-by ['DESK'] differs from ['PRODUCT_TYPE'], ..."
+(exit code 1)
 ```
 
 **The UI.** Admin → Lakes → The lakes: `trading.trade_endur` partitioned by `business_date`, `PRODUCT_TYPE`, the layout the load followed (the scratch copy under `$SCRATCH` is not one of the server's lakes, so it is not listed).
 
-*(screenshot filled in the heavy run: Admin → Lakes: trading.trade_endur and its partitioning)*
+![Admin → Lakes: trading.trade_endur and its partitioning](img/t34/04-trade-endur.jpg)
 
-**You should see** the first load written partitioned by `business_date` and `PRODUCT_TYPE`, and the second refused with both values named.
+**You should see** the first load written partitioned by `business_date` and `PRODUCT_TYPE` (five partitions of 2026-07-08, one per
+product type), and the second refused with both values named and nothing written.
 
 ## Step 5 · An append table: each batch once
 
@@ -186,12 +215,24 @@ python3 tools/drishti.py lake build --engine java --from data/testdata/market-ri
 ```
 
 ```text
-(filled in the heavy run: the first run commits one append per business date; the second skips every date, "batch intraday-0915 was
-appended already", and the table's row count is unchanged)
+  table scenario-pv: ok, 2026-09-28 1349 rows, 2026-09-29 1342 rows, 2026-09-30 2678 rows
+2026-11-04T19:18:45-05:00 lake-build ok exit=0 run=20261104T191842.533-259227 seconds=3.083
+  table scenario-pv: ok, 2026-09-28 1349 rows, 2026-09-29 1342 rows, 2026-09-30 2678 rows
+2026-11-04T19:18:52-05:00 lake-build ok exit=0 run=20261104T191849.989-259751 seconds=2.198
 ```
+The two runs print the same line: the rows each date's batch holds. What differs is the table: the first run made three commits (one
+append per business date, each recorded as `drishti-batch:intraday-0915:<date>` in the Delta log); the second made none. Its summary
+(`$SCRATCH/intraday/_drishti-lake/runs/<run>.json`) says so for each date:
+
+```json
+"dates": {
+  "2026-09-28": {"skipped": "batch appended already", "files": 0, "rows": 0, "bytes": 0},
+  ...
+```
+
 **The UI.** Admin → Lakes lists the lake files the server reads (`config/lakes/`, or the server's own `DRISHTI_LAKES_DIR`); a table whose file says `load-mode: append` shows it in its row. The scratch lake of this step is read by the command line only.
 
-*(screenshot filled in the heavy run: Admin → Lakes: a table's load mode in its row)*
+![Admin → Lakes: a table's load mode in its row (a server whose DRISHTI_LAKES_DIR is $SCRATCH/lakes)](img/t34/05-append-table.jpg)
 
 
 **You should see** the same batch never appended twice; a new `--batch-id` adds its rows, the earlier ones kept.
@@ -220,12 +261,38 @@ python3 tools/drishti.py lake migrate-config --connectors-dir $SCRATCH/connector
 ```
 
 ```text
-(filled in the heavy run: the lake file $SCRATCH/lakes/lake.yaml with root $SCRATCH/lake and the table risk.pnl-vector, and the
-connector rewritten to "lake: lake")
+  old-store.yaml: now lake: lake (1 tables)
+
+--- $SCRATCH/lakes/lake.yaml (would be written)
+# lake.yaml: written by drishti.py lake migrate-config from the connector files (docs/guides/LAKE_GUIDE.md); edit here from now on
+lake: lake
+format: delta
+root: $SCRATCH/lake
+tables:
+  risk.pnl-vector:
+    promote:
+    - VALUE_TYPE
+    - TRADE_ID
+    vectors:
+    - PNL
+
+
+--- $SCRATCH/connectors/old-store.yaml (would be written)
+plugin: delta
+kinds:
+- pnl-vector
+settings:
+  lake: lake
+
+
+lake migrate-config: a dry run; nothing written (add --write)
+
+  old-store.yaml: now lake: lake (1 tables)
+lake migrate-config: wrote 1 lake files and rewrote 1 connector files; restart the server (or let it reload the connectors) and run drishti.py lake check
 ```
 **The UI.** Admin → Lakes shows the same lake once the server reads the written lake file (`config/lakes/`); on a real installation the dry run is the place to read what `--write` will do.
 
-*(screenshot filled in the heavy run: Admin → Lakes: a lake written by the migration)*
+![Admin → Lakes: a lake written by the migration (a server whose DRISHTI_LAKES_DIR is $SCRATCH/lakes)](img/t34/06-migrated-lake.jpg)
 
 
 **You should see** the connector file keep only `lake:` (and its own reading settings); nothing in the lake's folder changed.
