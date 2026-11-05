@@ -400,8 +400,11 @@ drill_cleanup() {
   local tmp="${TMPDIR:-/tmp}"
   # || true: a folder already gone (or none made) is not a failure; under set -e it would turn a green drill's exit into 1
   find "$tmp" -maxdepth 1 -name 'drishti-*' ! -name 'drishti-console-static' -newer "$DRILL_MARK" -exec rm -rf {} + 2>/dev/null || true
+  chmod -R u+w "$tmp/pytest-of-$(id -un)" 2>/dev/null || true
   find "$tmp/pytest-of-$(id -un)" -mindepth 1 -maxdepth 1 -newer "$DRILL_MARK" -exec rm -rf {} + 2>/dev/null || true
   rm -f "$DRILL_MARK"
+  # the tests' compute SDK copies are read-only: give the owner write rights first, or rm -rf leaves them behind
+  chmod -R u+w "$DRILL_TMP" "$tmp/pytest-of-$(id -un)" 2>/dev/null || true
   find "$DRILL_TMP" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true
   rm -rf "$COPY_BASE"/*."$$".* 2>/dev/null; rmdir "$COPY_BASE" 2>/dev/null || true   # a copy whose job was stopped
 }
