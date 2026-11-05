@@ -91,11 +91,12 @@ Drill A and Drill B).
 | 9 | **The decks are enhanced with each release** (Design-and-Evidence, VaR-Engine, Drishti-on-AWS): the release's capabilities, new screenshots, measured figures with footnotes, the roadmap from these themed releases; no release numbers on the slides |
 | 10 | **Docs ship with every change:** every builder brief lists its documents; the CHANGELOG in the same push |
 
-## The roadmap from 2.9.11.c (product owner, 2026-11-04, revised 2026-11-05; supersedes every later release table in this file)
+## The roadmap from 2.9.11.c (product owner, 2026-11-04; supersedes every later release table in this file)
 
 *Decided after a six-seat product review (product manager, BI, market risk, trader, counterparty credit risk, architect): the engines
 are strong; what a bank needs first is a coherent product. The motto is **lean & streamlined**: one way per job, the old way deleted in
-the same release, nothing unbuilt shown as if it works.*
+the same release, nothing unbuilt shown as if it works. Revised 2026-11-05: security and controls and the platform are two releases,
+and the counterparty engines and stress are one.*
 
 | Release | Theme | Contents |
 |---|---|---|
