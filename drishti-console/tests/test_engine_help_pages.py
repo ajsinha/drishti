@@ -17,7 +17,10 @@ subjects share. The OpenBLAS switch once listed the whole Operations guide, so s
 
 from pathlib import Path
 
+import pytest
 import yaml
+
+pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
 CONSOLE = Path(__file__).resolve().parents[1]
 HELP = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text(encoding="utf-8"))

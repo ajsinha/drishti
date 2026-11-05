@@ -81,20 +81,41 @@ def fetched(pg, pid):
     return pg.evaluate("id => Drishti.refresh.state()[id].fetched", pid)
 
 
+def said_by_its_age(pg, pid):
+    """The panel's freshness line says what its age calls for (drishti_refresh.js): "updated N s ago" up to twice its interval, "stale ·
+    updated N s ago" past it. Its text and its age are read at one moment. Asserting "updated" alone failed whenever a refresh round took
+    over a second on a loaded machine (2 s interval, a 1 s tick): the page then rightly said stale. The line is painted once a second, so
+    an age within a second of the bound may read either way."""
+    text, age, every = pg.evaluate("""id => { const p = Drishti.refresh.state()[id];
+      return [document.querySelector('[data-fresh="' + id + '"] [data-fresh-text]').textContent, Date.now() - p.fetched, Math.max(p.floor, p.chosen || p.floor)]; }""", pid)
+    bound = 2 * every * 1000
+    assert text.endswith(" ago"), text
+    if age <= bound - 1000:
+        assert text.startswith("updated "), (text, age, bound)
+    elif age > bound + 1000:
+        assert text.startswith("stale · updated "), (text, age, bound)
+    else:
+        assert text.startswith(("updated ", "stale · updated ")), (text, age, bound)
+
+
 def test_panels_refresh_on_their_interval_without_a_reload_and_the_freshness_ticks(stack, browser):
     pg = screen(browser, stack)
     ids = refreshing(pg)
     assert "trades" in ids and pg.evaluate("Drishti.refresh.min") == 2
     assert pg.locator(".fresh-bar [data-refresh-all]").is_visible()
     t0 = fetched(pg, "trades")
-    text0 = pg.locator("[data-fresh='trades'] [data-fresh-text]").inner_text()
-    assert text0.startswith("updated ") and text0.endswith(" ago")
+    said_by_its_age(pg, "trades")
     wait(pg, "Drishti.refresh.state().trades.fetched > %d" % t0)
     assert pg.evaluate("window.__doc") == 1                   # the same document: no reload
     assert any("/panels?" in u and "trades" in u for u in pg.fetches)
     assert pg.evaluate("document.querySelectorAll('#p-trades').length") == 1
-    pg.wait_for_timeout(1100)
-    assert pg.locator("[data-fresh='trades'] [data-fresh-text]").inner_text().startswith("updated ")
+    # the refetched answer lands and the label says so (waited on, not read after a fixed pause: under a loaded lane the panel's
+    # answer can take seconds, and the label read too early said "stale · updated 6 s ago")
+    wait(pg, "((document.querySelector(\"[data-fresh='trades'] [data-fresh-text]\") || {}).innerText || '').startsWith('updated ')")
+    # the line ticks by itself: a second later it says another age, and still the one its age calls for
+    before = pg.locator("[data-fresh='trades'] [data-fresh-text]").inner_text()
+    wait(pg, "document.querySelector(\"[data-fresh='trades'] [data-fresh-text]\").textContent !== %s" % json.dumps(before))
+    said_by_its_age(pg, "trades")
     first = pg.evaluate("Drishti.refresh.state().trades.fetched")
     wait(pg, "Drishti.refresh.state().trades.fetched > %d" % first)
     pg.close()

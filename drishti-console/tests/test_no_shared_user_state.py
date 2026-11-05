@@ -21,7 +21,11 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
+import pytest
+
 from conftest import CONSOLE
+
+pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
 DIRS = ("core", "routes")
 MUTABLE_CALLS = {"dict", "list", "set", "defaultdict", "OrderedDict", "deque", "Counter", "WeakValueDictionary", "WeakKeyDictionary", "LRU"}

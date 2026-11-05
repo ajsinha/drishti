@@ -280,6 +280,7 @@ public final class IdentitySync implements StateSync.Part, AutoCloseable {
                 if (born(here) < born(u)) {
                     return false;                          // two users of one name made apart: the older stands (a new node's seeded admin never
                 }                                          // replaces the cluster's); a user deleted and made again has a tombstone, applied first
+                LOG.info("net: user '{}' made at {} here is replaced by node {}'s, made earlier at {}", name, here.createdAt(), c.origin(), u.createdAt());
             } else if (c.catchUp() ? version(here) >= version(u) : !newest(c)) {
                 return false;
             }

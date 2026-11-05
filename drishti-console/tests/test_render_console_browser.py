@@ -22,6 +22,7 @@ sideways scroll. Then each behaviour the console adds to a view is used in both 
 (and their address), Chart any table, the drill-down's address and Back, Customize, the download menu, About this page (drawn by the
 library from JSON on a client page), the Pivot tab's grid, the nested-pivot grid, a control, and a live tick. Skipped when Playwright or
 its Chromium is missing."""
+import asyncio
 import copy
 import json
 import re
@@ -33,8 +34,10 @@ sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (
 import render_cases as cases  # noqa: E402
 from conftest import FIXTURES  # noqa: E402
 from table_chart_backend import ChartBackend, serve  # noqa: E402
-from test_render_parity_browser import INTENTIONAL, explain, normalised, pack_views  # noqa: E402,F401 - pack_views: the fixture
-from wb_live import BROWSER_WAIT_MS, live_console, should_reload  # noqa: E402,F401 - live_console: the fixture pack_views needs
+from test_render_parity_browser import INTENTIONAL, explain, normalised  # noqa: E402,F401
+from wb_live import BROWSER_WAIT_MS, should_reload  # noqa: E402
+from browser_harness import open_settled  # noqa: E402
+import pack_views as P  # noqa: E402
 import render_harness as H  # noqa: E402
 
 WIDTHS = (390, 1280)
@@ -77,6 +80,15 @@ class RenderBackend(ChartBackend):
 
 @pytest.fixture(scope="module")
 def console():
+    """The stand-in console of the behaviour tests below (one file group: they run in order on one worker)."""
+    url, backend, stop = serve(RenderBackend())
+    yield url
+    stop()
+
+
+@pytest.fixture(scope="session")
+def render_console():
+    """The stand-in console of the parity tests, one per worker for every parity test it runs (TEST_HARNESS.md, "Per-worker fixtures")."""
     url, backend, stop = serve(RenderBackend())
     yield url
     stop()
@@ -130,16 +142,9 @@ def open_page(browser, url, width=1280):
 
 
 def settle(page):
-    """The page's charts and map shapes drawn, no part of the page still busy (a control's query, a panel being fetched or swapped in: the
-    library and the page's scripts mark it aria-busy) and the Discussion's badges placed. A console page keeps its live channel open, so the
-    network is never idle. Each wait is a deadline (the suite's BROWSER_WAIT_MS: the drill runs this file beside the other workers), never a pause: it ends when the page is ready."""
-    page.wait_for_function("() => !document.querySelector('.chart:not(.pnl-empty), .xchart:not(.pnl-empty)') || [...document.querySelectorAll('.chart, .xchart')].every((el) => el.classList.contains('pnl-empty') || (window.echarts && window.echarts.getInstanceByDom(el)))", timeout=BROWSER_WAIT_MS)
-    page.wait_for_function("() => document.readyState === 'complete' && !document.querySelector('.view[aria-busy=\"true\"], .view [aria-busy=\"true\"], [data-render-host][aria-busy=\"true\"]')", timeout=BROWSER_WAIT_MS)
-    # the Discussion's answer applied (drishti_discussion.js asks /api/collab, then badges every panel or hides itself): the first page of a fresh
-    # console answers it late, after the pause below, and was read without its badges
-    page.wait_for_function("() => { const open = document.querySelector('[data-discussion-open]'); if (!window.Drishti.discussion || !open || open.hidden || document.querySelector('[data-view][data-embed]')) { return true; } return [...document.querySelectorAll('.pnl[data-panel] .pnl-code')].every((c) => c.querySelector('.disc-badge')); }", timeout=BROWSER_WAIT_MS)
-    page.wait_for_timeout(400)
-    page.evaluate("() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))")
+    """The page settled: its own signal (Drishti.settled, static/js/drishti_settled.js): charts and map shapes drawn, nothing aria-busy, the
+    Discussion's badges placed, no request unanswered, the page quiet for a moment. A deadline (BROWSER_WAIT_MS), never a pause."""
+    page.evaluate("(o) => window.Drishti.settled(o)", {"quiet": 50, "timeout": BROWSER_WAIT_MS})
 
 
 def read(page) -> dict:
@@ -152,57 +157,66 @@ def addr(url, mode, extra=""):
     return url + ("&" if "?" in url else "?") + "render=" + mode + (("&" + extra) if extra else "")
 
 
-def both(browser, url, width=1280):
-    """{mode: read} for one view drawn both ways."""
-    got = {}
-    for mode in MODES:
-        ctx, page = open_page(browser, addr(url, mode), width)
-        try:
-            assert page.locator("[data-render-host]").count() == (1 if mode == "client" else 0), f"{mode}: the wrong renderer drew {url}"
-            got[mode] = read(page)
-            got[mode]["errors"] = page.__errors
-        finally:
-            ctx.close()
-    return got
+async def _view(browsers, url, mode, width):
+    """One view drawn one way and read, on the worker's browser (a reused context of this width, reset)."""
+    async with browsers.page(width) as page:
+        await open_settled(page, addr(url, mode), ready=".view .pnl", animations=False)   # the read takes each chart's option
+        assert await page.locator("[data-render-host]").count() == (1 if mode == "client" else 0), f"{mode}: the wrong renderer drew {url}"
+        out = await page.evaluate(H.READ_JS)
+        out["aria"] = await page.locator(".view[data-view]").first.aria_snapshot()
+        out["errors"] = list(page.errors)
+        return out
+
+
+def both_widths(browsers, url) -> dict:
+    """{width: {mode: read}} for one view drawn both ways at both widths: the four pages at once."""
+    async def go():
+        got = await asyncio.gather(*(_view(browsers, url, m, w) for w in WIDTHS for m in MODES))
+        return {w: {m: got[i * len(MODES) + j] for j, m in enumerate(MODES)} for i, w in enumerate(WIDTHS)}
+    return browsers.run(go())
+
+
+def problems_of(name, width, got, strict_server_overflow=False) -> list[str]:
+    a, b = same(got["server"]), same(got["client"])
+    diffs = {k: (a[k], b[k]) for k in a if a[k] != b[k]}
+    problems = [str(x) for x in (got["client"]["errors"], got["client"]["csp"]) if x]
+    if got["client"]["overflow"] > max(1, got["server"]["overflow"]) or (strict_server_overflow and got["server"]["overflow"] > 1):
+        problems.append(f"sideways scroll: server {got['server']['overflow']} px, client {got['client']['overflow']} px")
+    if diffs or problems:
+        return [f"{name} at {width}px: {problems} {sorted(diffs)}\n{explain(diffs)}"]
+    return []
 
 
 VIEWS = ["trade/IRS-48213", "trade/FXS-20931", "trade/CFT-77120", "trade/IRS-47102", "netting-set/NS-NORTH-01", "trade/CHART-1"] + [f"case/{k}" for k in EDGES]
 
 
-@pytest.mark.parametrize("width", WIDTHS)
+@pytest.mark.spread
 @pytest.mark.parametrize("view", VIEWS)
-def test_the_page_is_the_same_drawn_by_the_server_or_the_library(browser, console, view, width):
-    got = both(browser, f"{console}/v/{view}", width)
-    a, b = same(got["server"]), same(got["client"])
-    diffs = {k: (a[k], b[k]) for k in a if a[k] != b[k]}
-    assert not got["client"]["errors"], got["client"]["errors"]
-    assert not got["client"]["csp"], got["client"]["csp"]
-    assert got["client"]["overflow"] <= max(1, got["server"]["overflow"]), f"the client page scrolls sideways by {got['client']['overflow']} px"
-    assert not diffs, f"{view} at {width}px differs:\n" + explain(diffs)
+def test_the_page_is_the_same_drawn_by_the_server_or_the_library(browsers, render_console, view):
+    failures = []
+    for width, got in both_widths(browsers, f"{render_console}/v/{view}").items():
+        failures += problems_of(view, width, got)
+    assert not failures, "\n\n".join(failures)
 
 
-def test_every_pack_sutra_on_its_sample_is_the_same_page_either_way(browser, console, pack_views):
-    """Every Sutra of every shipped pack, bound on its own sample by a real server (the phase 1 suite's pack_views), on the console's own
-    page drawn by the server and by the library, at both widths."""
-    views = pack_views["views"]
-    assert len(views) >= 100, f"too few pack views bound: {len(views)}"
-    names = sorted(views)
-    RenderBackend.packs.update({f"P{i}": views[n] for i, n in enumerate(names)})
-    failures, pages = [], 0
-    for i, name in enumerate(names):
-        for width in WIDTHS:
-            got = both(browser, f"{console}/v/pack/P{i}", width)
-            pages += 2
-            a, b = same(got["server"]), same(got["client"])
-            diffs = {k: (a[k], b[k]) for k in a if a[k] != b[k]}
-            problems = [x for x in (got["client"]["errors"], got["client"]["csp"]) if x]
-            if got["client"]["overflow"] > max(1, got["server"]["overflow"]) or got["server"]["overflow"] > 1:
-                problems.append(f"sideways scroll: server {got['server']['overflow']} px, client {got['client']['overflow']} px")
-            if diffs or problems:
-                failures.append(f"{name} at {width}px: {problems} {sorted(diffs)}\n{explain(diffs)}")
-                print(f"DIFF {name} at {width}px: {problems} {sorted(diffs)}\n{explain(diffs)}")
-    print(f"\nconsole pack parity: {len(names)} views x {len(WIDTHS)} widths x 2 modes = {pages} pages; differing: {len(failures)}")
-    assert not failures, f"{len(failures)} of {len(names) * len(WIDTHS)} differ:\n" + "\n\n".join(failures[:6])
+def _pack_key(sutra: str) -> str:
+    return "P-" + re.sub(r"[^A-Za-z0-9_.-]", "_", P.test_id(sutra))
+
+
+@pytest.mark.spread
+@pytest.mark.parametrize("sutra", P.drawable(), ids=P.test_id)
+def test_every_pack_sutra_on_its_sample_is_the_same_page_either_way(browsers, render_console, pack_views, sutra):
+    """Every Sutra of every shipped pack, bound on its own sample by a real server (pack_views.py), on the console's own page drawn by
+    the server and by the library, at both widths."""
+    vm = pack_views["views"].get(sutra)
+    if vm is None:
+        pytest.skip(f"not bound by the server's preview: {[s for s in pack_views['skipped'] if s.startswith(sutra)]}")
+    key = _pack_key(sutra)
+    RenderBackend.packs[key] = vm
+    failures = []
+    for width, got in both_widths(browsers, f"{render_console}/v/pack/{key}").items():
+        failures += problems_of(sutra, width, got, strict_server_overflow=True)
+    assert not failures, "\n\n".join(failures)
 
 
 # ---- the behaviours: each used in both modes, the same outcome -----------------------------------------------------------------------
@@ -225,7 +239,7 @@ def test_the_column_funnels_filter_the_same_rows_and_keep_the_address(browser, c
         menu.locator("label", has_text="Select all").locator("input").uncheck()
         menu.locator("label", has_text="EUR").locator("input").check()
         menu.locator("button", has_text="OK").click()
-        page.wait_for_timeout(200)
+        settle(page)
         rows = page.locator("#p-flows tbody tr:visible")
         seen[mode] = (rows.count(), sorted(set(page.locator("#p-flows tbody tr:visible td:nth-child(2)").all_inner_texts())), "f.flows." in page.url)
     assert seen["server"] == seen["client"] and seen["client"][1] == ["EUR"] and seen["client"][2], seen
@@ -268,7 +282,7 @@ def test_about_this_page_says_the_same_and_is_drawn_from_json_on_a_client_page(b
     for mode, page in each_mode(browser, f"{console}/v/trade/IRS-48213"):
         page.locator("[data-about-open]").first.click()
         page.wait_for_selector("#aboutDrawer .about-card", timeout=10000)
-        page.wait_for_timeout(200)
+        settle(page)
         seen[mode] = [re.sub(r"\s+", " ", x).strip() for x in page.locator("#aboutDrawer [data-about-body]").inner_text().split("\n") if x.strip()]
         asked[mode] = [u for u in page.__reqs if "/about" in u]
     assert seen["server"] == seen["client"], "\n".join(f"{x!r} | {y!r}" for x, y in zip(seen["server"], seen["client"]) if x != y)
@@ -345,7 +359,7 @@ def test_a_live_tick_and_a_control_move_the_same_panels_either_way(browser, cont
         n = page.evaluate("(window.Drishti.__controls || []).length")
         page.locator("[data-ctl='legs'] input[value='2']").uncheck()
         page.wait_for_function("(n) => (window.Drishti.__controls || []).length > n", arg=n, timeout=10000)
-        page.wait_for_timeout(600)
+        settle(page)
         legs = page.evaluate("() => [...document.querySelectorAll('#p-schedule tbody tr')].map((r) => r.cells[0].textContent.trim())")
         kept = page.evaluate("document.querySelector('#p-other').getAttribute('data-mark')")
         drawn = page.evaluate("() => !!document.querySelector('#p-schedule').__drishti")       # drawn by the library from its JSON

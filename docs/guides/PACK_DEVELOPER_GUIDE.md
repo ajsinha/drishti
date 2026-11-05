@@ -4511,9 +4511,10 @@ tools/drill.sh
 
 Options: `--docs` (the light drill, below), `--full` (the full drill even when only docs changed), `--no-push` (verify only: no push,
 no merge, and it may run on any branch), `--keep-going` (run every job to its end after one has failed, to see every failure at
-once; by default the first failure stops the rest). `DRILL_MVN_ARGS="..."` adds Maven arguments to every Maven run (for example
+once; by default the first failure stops the rest), `--gate` (the gate only, stage 1 below, then stop: no lanes and no push, on any
+branch; a check of a few minutes before a drill). `DRILL_MVN_ARGS="..."` adds Maven arguments to every Maven run (for example
 `-Ddrishti.test.forks=1` to run the test classes serially). `DRILL_BROWSER_WORKERS` and `DRILL_OTHER_WORKERS` set the console
-lanes' workers, `DRILL_BROWSER_RERUNS` the browser-lane files re-run at a time (default 1), `DRILL_LANE_LIMIT` a console lane's
+lanes' workers (the browser lane's default comes from the memory available), `DRILL_BROWSER_RERUNS` the browser-lane files re-run at a time (default 1), `DRILL_LANE_LIMIT` a console lane's
 time limit in seconds (default three hours), `DRILL_GATE_THREADS` the gate build's Maven threads (default `1C`, one per CPU). The
 script prints
 `drill: mode = full` or `drill: mode = docs`, the machine's CPUs and memory with the workers it chose, each job's time, then a
@@ -4533,12 +4534,22 @@ long runs start; the first failure stops the other gate jobs and the drill print
   header); `tools/settings_catalogue.py --check` (CONFIGURATION.md is current and every key has a meaning); `tools/contracts.py check`
   and `tools/contracts.py docs --check` (every command has a data contract that matches its pack and data, and the contracts' pages
   are current); `tools/testdata/sample_docs.py --check` (the data samples' pages are current); `tools/api_docs.py check-python`
-  (every public Python function, class and method of the API references has a docstring and type hints);
-  `tools/test_no_hidden_names.py`; and every pack generator that supports `--check` (the generated pack content is what the
-  generator writes now).
+  (every public Python function, class and method of the API references has a docstring and type hints); and every pack generator
+  that supports `--check` (the generated pack content is what the generator writes now).
 - **The docs and help console tests** (`gate-docs.log`, output in `console-gate.txt`): `test_docs_*.py`, `test_help.py`,
   `test_help_links.py`, `test_help_configuration.py`, `test_help_developer.py` and `test_tools_guide.py`, on four pytest-xdist
   workers. The console lanes leave these files out.
+- **The quick file checks** (`gate-checks.log`, output in `console-checks.txt` and `checks-<file>.txt`): every test marked `static`,
+  a check that reads files and starts no server, console or browser. `tools/drillkit/drill_plan.py static` finds them: the console
+  files with such a test run in one pytest session with `-m static` on four workers (about ten seconds), and each tools file marked
+  `static` as a whole runs in a process of its own. Among them: the Java launch guard (`test_java_launch_guard.py`), the asset names
+  (`test_asset_names.py`), the branding guard, the under-construction registry, the front-end policy (`test_assets_policy.py`), the
+  browser-test rules (`test_browser_rules.py`) and the scratch ports, the contrast of every theme, no shared user state, the console
+  does not aggregate, the engines' help pages, the settings catalogue and the command catalog, the READMEs, the pack guides, the IDE
+  run configurations, the exports' JSON Lines and the Knowledge pages. The console lanes run with `-m "not static"` and the tools'
+  lanes leave these tools files out, so each check runs once, in the gate's first minutes. A static test asks only for pytest's own
+  fixtures and imports no browser or stack helper (`test_browser_rules.py` checks it; [TEST_HARNESS.md](../architecture/TEST_HARNESS.md),
+  "Quick file checks").
 - **One Java 21 build of the working tree** (`gate-java.log`; `JAVA21_HOME`, default `/usr/lib/jvm/java-21-openjdk-amd64`):
   `./mvnw -q -o clean package spotless:check -P api-docs -T 1C`, offline, every module compiled once with Error Prone, Javadoc with
   doclint on the documented modules, Spotless and the enforcer's Java 21 bytecode rule, Maven building independent modules side by
@@ -4557,15 +4568,22 @@ failure that no re-run can change the drill stops the rest, unless `--keep-going
   browser (Playwright, Chromium) or starts a live stack on the scratch ports (`scratch_ports.worker_port`, or a helper module that
   reads `PYTEST_XDIST_WORKER`, at any import depth); the **other lane** holds the rest, which run in-process against the fake
   backend. Two pytest sessions number their workers alike (`gw0`, `gw1`, ...), so every file that adds the worker's port offset runs
-  in the one browser session and the two lanes never share a port. The browser lane gets few workers (one per six CPUs, at most
-  four) at normal priority, because a page under a busy CPU misses its ticks; the other lane gets more (one per three CPUs, at most
-  eight) at lower priority (`nice 5`); each worker is budgeted memory (about 3 GB for a browser worker, 1 GB for another) and the
-  counts come down on a smaller machine. Each lane gives its files to pytest-xdist longest first (`--dist loadfile
-  --no-loadscope-reorder`: a worker takes a whole file, so a browser file keeps its server and browser fixtures), the order taken
-  from the seconds each file took in the last runs (`<data dir>/drill/durations.json`, written by the pytest plugin
-  `tools/drillkit/drill_timings.py` at the end of every run, passed or failed); a file never measured counts as two minutes in the
-  browser lane and fifteen seconds in the other, and the two slowest browser files start first from the first run on. Every live
-  server and console in the tests starts on ports offset by the worker, in the worker's own scratch directory. A lane that runs three
+  in the one browser session and the two lanes never share a port. The **browser lane** gets as many workers as the memory available
+  holds (`drill_plan.py workers`: the memory available less the Java verify's 20 GB, 1 GB per other-lane worker and 4 GB to spare,
+  divided by 2.5 GB per browser worker; at most the CPU threads less two and at most 12, the scratch ports' limit) at normal priority,
+  and its work is handed out **by test** (`--dist loadgroup --no-loadscope-reorder`): the tests of a file that keeps a server or state
+  between them are one group that one worker runs in order, and a small independent test marked `spread` is a unit of its own that any
+  worker takes; the groups go first, longest first, the spread tests fill the workers at the end
+  ([TEST_HARNESS.md](../architecture/TEST_HARNESS.md)). Each browser worker starts one Chromium, one stand-in console and, when a test
+  needs it, one real server, and reuses them for every test it runs. The **other lane** gets one worker per three CPUs, at most eight,
+  at lower priority (`nice 5`), a whole file per worker (`--dist loadfile`). Each lane's order comes from the seconds each file took in
+  the last runs (`<data dir>/drill/durations.json`, written by the pytest plugin `tools/drillkit/drill_timings.py` at the end of every
+  run, passed or failed); a file never measured counts as two minutes in the browser lane and fifteen seconds in the other. Every live
+  server and console in the tests starts on ports in the worker's own block (`scratch_ports.worker_port`), in the worker's own scratch
+  directory. While the browser lane runs, its processes and memory are sampled every five seconds (`monitor-browser.csv`; the peaks
+  are printed when the lane ends: `tools/drillkit/drill_monitor.py`), and afterwards every browser file whose tests took more than 300 s
+  together is flagged in `budget-browser.txt` and in the drill's summary (`drill_plan.py budget`; a file listed in
+  `tools/drill-budgets.txt` is reported with its reason; a spread file has no file budget). A lane that runs three
   hours is stopped and fails the drill (`DRILL_LANE_LIMIT`, seconds).
 - **Re-runs.** When a lane fails, `drill_plan.py rerun` reads the failed tests from the lane's own `FAILED`/`ERROR` summary
   (`pytest.ini` turns the pytest cache off) and runs each once more, file by file, without xdist: one file at a time in the browser

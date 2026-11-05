@@ -16,6 +16,10 @@
 import re
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
+
 TOKENS = (Path(__file__).resolve().parent.parent / "web" / "static" / "css" / "drishti_tokens.css").read_text()
 
 

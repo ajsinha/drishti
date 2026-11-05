@@ -77,3 +77,30 @@ def test_a_pack_installed_by_the_server_brings_its_guide_examples_and_workspaces
     assert p["contextual"] == {"terminal": "helpdesk-pack"} and p["examples"]
     default = Packs({"packs.dir": settings["packs.dir"], "lakes.data_dir": str(tmp_path)}, console)
     assert default.installed == installed.resolve() and default._load("helpdesk")["dir"] == (installed / "helpdesk").resolve()
+
+
+def test_a_pack_s_files_are_parsed_once_while_unchanged_and_again_when_one_changes(tmp_path):
+    """The console parsed every enabled pack's YAML on each page whose per-user cache was cold (about a second of its event loop):
+    it keeps what it made of a pack while its pack.yaml and the console files it names are unchanged, and reads them again when one
+    changes. Each caller gets its own copy."""
+    import os
+    import shutil
+    from pathlib import Path
+    from unittest import mock
+    from core import packs as P
+    console = Path(__file__).resolve().parent.parent
+    shutil.copytree(console.parent / "docs" / "guides" / "examples" / "pack" / "helpdesk", tmp_path / "packs" / "helpdesk")
+    packs = P.Packs({"packs.dir": str(tmp_path / "packs"), "lakes.data_dir": str(tmp_path)}, console)
+    with mock.patch.object(P.yaml, "safe_load", wraps=P.yaml.safe_load) as parse:
+        first = packs._load("helpdesk")
+        n = parse.call_count
+        first["examples"].append("changed by a caller")
+        second = packs._load("helpdesk")
+        assert parse.call_count == n, "unchanged files are not parsed again"
+        assert "changed by a caller" not in second["examples"], "each caller its own copy"
+        help_file = next((tmp_path / "packs" / "helpdesk").rglob("help.yaml"))
+        st = help_file.stat()
+        help_file.write_text(help_file.read_text() + "\n# touched\n")
+        os.utime(help_file, ns=(st.st_atime_ns, st.st_mtime_ns + 10**9))
+        packs._load("helpdesk")
+        assert parse.call_count > n, "a changed help file reads the pack again"

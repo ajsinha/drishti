@@ -21,6 +21,10 @@ import re
 import unittest
 from pathlib import Path
 
+import pytest
+
+pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
+
 SPEC = importlib.util.spec_from_file_location("knowledge", Path(__file__).resolve().parent / "knowledge.py")
 K = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(K)

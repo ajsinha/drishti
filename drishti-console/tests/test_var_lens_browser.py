@@ -101,7 +101,8 @@ def test_each_horizon_and_confidence_redraws_every_panel_and_round_trips(stack, 
     assert pg.evaluate(TILE % (4, ".s")) == "limit is for 1-day 99%: not comparable" and pg.evaluate(TILE % (4, ".v")) == "—"
     assert "backtesting is 1-day" in pg.evaluate(TILE % (5, ".s"))
     assert "√10" in pg.locator("[data-vx-method]").inner_text()
-    wait(pg, "!!document.querySelector('.vx-tree .vx-row[data-scope=\"NODE:MGMT~BANK\"]')", 60)
+    # the tree drawn for this lens: asked again on the lens change, aria-busy until its answer is drawn (its rows before that are the old lens's)
+    wait(pg, "!!document.querySelector('[data-vx-tree]:not([aria-busy]) .vx-row[data-scope=\"NODE:MGMT~BANK\"]')", 60)
     tree_bank = pg.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~BANK"] .num').first.inner_text()
     assert abs(money(tree_bank) - sq) <= 0.006 * sq, (tree_bank, sq)
     shot(pg, "lens-10d-sqrt")

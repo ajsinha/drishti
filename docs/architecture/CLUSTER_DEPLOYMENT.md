@@ -2342,7 +2342,9 @@ a thread-local flag, so the stores' listeners do not send it back. Rules:
 
 - One user (same creation time): the newer change wins (a catch-up: the record with the later times: updated, signed in, password changed).
 - Two users of one name made apart (different creation times): the older stands, so a new node's seeded administrator (made at its first start)
-  never replaces the cluster's administrator and its default password.
+  never replaces the cluster's administrator and its default password. A node seeds its first administrator only while its user store is
+  still empty at the moment of the write (`UserStore.putIfEmpty`): users received from the cluster while it starts are never replaced by a seed.
+  A node that takes a peer's older record over its own logs it (`net: user '…' made at … here is replaced by node …'s, made earlier at …`).
 - A deletion at T is a tombstone (`<data dir>/net/identity-deleted.json`, kept 90 days, sent first in a catch-up): every record of that name
   created at or before T is refused everywhere (a node that had not heard of it may send one, even with a later sign-in), a user created after T
   is a new user. Applying a user's deletion forgets their pack cache, settings, tokens, sessions, designs, alerts and inbox, as a deletion on the

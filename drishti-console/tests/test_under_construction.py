@@ -21,6 +21,8 @@ from __future__ import annotations
 import importlib.util
 import re
 
+import pytest
+
 from conftest import CONSOLE
 from core import under_construction
 from test_edition import _app, _client
@@ -35,6 +37,7 @@ def _tool():
     return mod
 
 
+@pytest.mark.static
 def test_every_registered_place_exists_and_the_document_is_current():
     tool = _tool()
     items = tool.load()
@@ -68,6 +71,7 @@ def test_menu_items_and_help_pages_honour_their_treatment(backend, monkeypatch):
     assert _client(app).get("/help/docs-contracts-wwr").status_code == 404           # a hidden help page is not reached by its address
 
 
+@pytest.mark.static
 def test_a_figure_under_construction_is_drawn_as_the_chip():
     css = (CONSOLE / "web" / "static" / "css" / "drishti_under-construction.css").read_text(encoding="utf-8")
     assert ".t-uc" in css and ".drishti_uc-chip" in css and "var(--d-warn)" in css      # theme tokens only

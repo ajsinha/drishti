@@ -18,6 +18,7 @@ and what each contributes to the console: example commands, workspace starters a
 change (core/user_stamps.py); falls back to ``packs.enabled`` when the server is unreachable."""
 from __future__ import annotations
 
+import copy
 import logging
 import time
 from pathlib import Path
@@ -57,6 +58,9 @@ class Packs:
         self.installed = i if i.is_absolute() else (console_dir / i).resolve()
         wanted = str(settings.get("packs.enabled", "default"))
         self.fallback = [p.strip() for p in (default_enabled(console_dir) if wanted.strip() == "default" else wanted).split(",") if p.strip()]
+        # a pack's files parsed once while they are unchanged: pack name -> (the files' signature, what _read made of them). Parsing
+        # every enabled pack's YAML took about a second of the event loop per page whenever the per-user cache was cold
+        self._parsed: dict[str, tuple[tuple, dict]] = {}
         self._cache: dict[str, tuple[float, list, list, float]] = {}    # user -> (monotonic time, packs, switcher, wall time read)
         # every worker of the console sees a change at once (core/user_stamps.py); other consoles within ``ttl`` (QA3A-02)
         self.stamps = stamps
@@ -122,6 +126,29 @@ class Packs:
                 break
         else:
             return None
+        hit = self._parsed.get(name)
+        if hit is None or hit[0] != self._signature(pdir, hit[1]):
+            value = self._read(name, pdir, manifest)
+            console = value.pop("_files")
+            hit = (self._signature(pdir, console), console, value)
+            self._parsed[name] = hit
+        return copy.deepcopy(hit[2])                     # each caller its own copy, as when every call parsed the files
+
+    @staticmethod
+    def _signature(pdir: Path, files: list[str]) -> tuple:
+        """The pack folder and the modification time and size of its pack.yaml and of the console files it names (workspaces, help):
+        a changed file reads the pack again."""
+        out = [str(pdir)]
+        for rel in ["pack.yaml", *files]:
+            try:
+                st = (pdir / rel).stat()
+                out.append((rel, st.st_mtime_ns, st.st_size))
+            except OSError:
+                out.append((rel, None))
+        return tuple(out)
+
+    @staticmethod
+    def _read(name: str, pdir: Path, manifest: Path) -> dict:
         m = yaml.safe_load(manifest.read_text(encoding="utf-8")) or {}
         console = m.get("console", {}) or {}
         out = {"name": name, "title": m.get("title", name), "version": m.get("version", ""), "description": m.get("description", ""),
@@ -136,6 +163,7 @@ class Packs:
             h = yaml.safe_load((pdir / console["help"]).read_text()) or {}
             out["guides"] = [{**g, "path": pdir / g["file"], "pack": name} for g in h.get("guides", [])]
             out["contextual"] = h.get("contextual", {}) or {}
+        out["_files"] = [str(console[k]) for k in ("workspaces", "help") if console.get(k)]
         return out
 
 

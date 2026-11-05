@@ -25,6 +25,10 @@ import pathlib
 import unittest
 import xml.etree.ElementTree as ET
 
+import pytest
+
+pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 JAVA = sorted((ROOT / "run-configs").glob("*.run.xml"))
 PYTHON = sorted((ROOT / "drishti-console" / "run-configs").glob("*.run.xml"))

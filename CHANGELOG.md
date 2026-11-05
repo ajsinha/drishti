@@ -17,7 +17,42 @@
 
 ## 2.9.11.d (unreleased)
 
+- Drill: the container tests no longer run beside the browser lane (their network changes made Chromium cancel requests): Java 21 runs with Docker hidden, and the Testcontainers classes run on their own (`java21-docker`) after the browser lane.
+
+- Drill: each run keeps the previous runs' logs and failure lists in `<data>/drill/runs/<when>/` (the last 20); the browser workers are sized at 4 GB each, as measured (TEST_HARNESS.md).
+
+- **VaR → Backtest** (product owner, 2026-11-05): the VaR explorer's toolbar has a **Backtest ›** link that opens the regulatory backtest of the scope and date in view (VAR_GUIDE section 3, tutorial 25 step 8); a click test.
+- Tests: the Help card's tutorial count is checked against the files, never a typed number.
+
 - Decks refreshed for 2.9.11–2.9.11.c
+
+### Tests and the drill
+
+- **The browser-test harness ([TEST_HARNESS.md](docs/architecture/TEST_HARNESS.md), ARCHITECTURE.md section 22, BENCHMARK.md
+  section 18).** The drill's browser lane is handed out by test (`--dist loadgroup`): a file that keeps a server or state is one group
+  on one worker, a small independent test marked `spread` is a unit of its own. Each worker starts one Chromium (contexts reused per
+  width and reset between tests), one stand-in console and a pool that keeps at most one idle real server; the pack ViewModels are
+  bound once per run for every worker. The two render suites are split into one spread test per pack Sutra, their pages drawn four at
+  a time and served over HTTP on the worker's port. Pages wait on a settled signal (`Drishti.settled`: charts drawn, nothing
+  aria-busy, no request unanswered, the page quiet; inert for people) instead of fixed pauses. Scratch ports come in blocks of 1,250
+  per worker (up to 12 workers). The lane's workers come from the memory available (`drill_plan.py workers`), its memory is sampled
+  (`drill_monitor.py`), and every browser file over 300 s is flagged (`drill_plan.py budget`, `tools/drill-budgets.txt`).
+  `test_browser_rules.py` checks the rules for browser tests on the source. The console parses a pack's YAML once while its files
+  are unchanged (a cold page spent about a second of the event loop on it, for every user).
+- **The quick file checks run in the gate.** Every test that only reads files is marked `static` (the Java launch guard, the asset
+  names, the branding guard, the under-construction registry, the front-end policy, the browser-test rules, the scratch ports, the
+  contrast of the themes, no shared user state, the console does not aggregate, the engines' help pages, the settings catalogue, the
+  command catalog; in the tools the READMEs, the pack guides, the IDE run configurations, the exports' JSON Lines and the Knowledge
+  pages). The gate's new `gate-checks` job runs them (`drill_plan.py static`), in about half a minute; the console lanes run
+  `-m "not static"` and the tools' lanes leave them out. Before, the Java launch guard ran in the browser lane, because its text names
+  Chromium, and failed a drill an hour in. A static test starts nothing: `test_browser_rules.py` checks it (TEST_HARNESS.md rule 11).
+- **`tools/drill.sh --gate`** runs the gate alone, on any branch, and stops (a check of a few minutes before a drill). Measured: the
+  whole gate 145 s, its quick file checks 32 s.
+- **The browser lane measured three times with the harness** (TEST_HARNESS.md section 5, BENCHMARK.md section 18): 1,515 s,
+  1,735 s and 1,554 s on 9 workers, against 3,654 to 3,768 s for develop's lane on 3 workers in the last drill; about 36 GB at its
+  peak, at least 10.8 GB left available. **Fixed:** the refresh test read the freshness label after a fixed 1.1 s pause and, on a
+  loaded lane, read "stale"; it now waits for the label. The docs-rot check counts a variable the console tests' helper modules read
+  (the harness's `DRISHTI_BROWSER_PROFILE`, `DRISHTI_BROWSER_PAGES_AT_ONCE`) as read.
 
 ### Docs
 
@@ -32,6 +67,60 @@
   16) say what is, not when. Tutorial 1 names the Engines menu and lets a reader with a running server skip the install; its `lake demo`
   and `doctor` outputs, and tutorial 17's, are marked to be re-run (the jar name was edited into older captures). The counts of tutorials
   in docs/README.md are no longer typed; the tutorial tests count from the files and check each tutorial is in exactly one track.
+
+### Fixes (flaky tests fixed at their cause)
+
+- **BI → Runs: "Run again as" keeps your choice when the drawer is drawn again.** The drawer is drawn from the list's row at once and again
+  when the run's own record comes (and on each event of the run); a choice made in between (*With the latest data*) was replaced by the
+  default, so **Run again** quietly ran *Same as before*. The choice is kept per run across redraws, and the drawer is `aria-busy` while
+  the run's record is being fetched (test_bi_runs_again_browser `[latest]` and its phone test, which read the first drawing's controls).
+- **BI → Runs: closing a run's drawer puts the focus back on its row even when the list was drawn again meanwhile** (a run's event, a
+  reload of the list): the row it was opened from was gone and a keyboard user was left on the bare page (the Runs keyboard test).
+- **A node of a cluster no longer writes its seed over users it has just received.** The first administrator was seeded when the user store
+  looked empty, after hashing the password (slow on purpose); a user received from the cluster meanwhile was overwritten. The seed is now
+  written only while the store is still empty, in one step with that look (`UserStore.putIfEmpty`; CLUSTER_DEPLOYMENT.md section 11).
+- **A user read while the same user was written is no longer kept stale.** The identity store keeps each read user for 5 s; a read that
+  began before a write and ended after it put the old record back over the write's forgetting, for 5 s. A read is now kept only if no write
+  was made since it began. A node that takes a peer's older record over its own now logs it.
+- **A custom function's cost is the fastest of up to five warm runs.** One timed run also timed whatever else the machine did meanwhile
+  (a collection, another busy thread), and a function within its limit was refused on a busy server (CustomFunctionsTest: "2819 ns a row
+  (limit 2000)" on a function that costs a fraction of that; PIVOT_GUIDE.md).
+- **The VaR screen's tree shows the lens you chose.** A new horizon, confidence, currency or hierarchy asks the tree again while an earlier
+  ask may still be out; the earlier answer landing last drew the old lens's figures under the new lens's tiles. Only the newest answer is
+  drawn, and the tree is `aria-busy` until it is (test_var_lens_browser: the 10-day √10 tree read the 1-day bank figure under load).
+- **Tests, the causes and their fixes** (no retries, sleeps or quarantine added):
+  - *test_admin_net_stack_browser* (stopping a moves the console): the open page's live stream reconnects when its console moves, and a
+    page that reconnects is repainted by a reload, as designed; the tick count was read across that reload ("Execution context was
+    destroyed") and restarted with it. The ticks are now summed over the page's documents, a read during the reload waiting for the new one.
+  - *test_write_back_browser*: the other browser's page is drawn again by a reload when the edit reaches it (a source that does not
+    stream); the test polled the old page across that reload and failed whenever a poll landed mid-navigation ("Execution context was
+    destroyed"). It now waits for that navigation, then reads the new page.
+  - *test_sessions* (the check cached for its time): pytest-xdist starts its workers after the controller has read conftest.py, so every
+    worker used the controller's console data folder; one worker's stamp for everyone (an admin test switching a pack) made another
+    worker's cached session check stale. Each worker now makes its own folder (shown with two workers, one touching the stamp: 1 failed
+    before, passed after).
+  - *test_gram_inputs* `[2030-01-01]`: the session's test client kept one cookie jar for every test; the previous test's
+    `drishti_asof=2026-09-26` stayed beside the one this test set, both were sent, and which the console read depended on the order the
+    jar had first seen their domains, that is on the files run earlier on the worker. The jar is emptied after each test (reproduced on
+    demand by one earlier test that sets any cookie; passes after).
+  - *test_bi_live_browser*: four tests left their live report open; each kept its stream and a round of queries every 250 ms, so later
+    tests opened their report beside three or four live ones and timed out under load (open, first round, pause, the masked grid). Every
+    test's browser contexts are closed when it ends.
+  - *test_bi_runs_browser* (lists, reuses and cancels): the run to cancel took the module's 3 s and could finish before Cancel was
+    pressed on a loaded machine; it now runs until cancelled (the stand-in's per-run `_seconds`), and the drawer is read once drawn from
+    its own record.
+  - *test_designer_grid_browser* (a formula changes the preview in place): the preview is redrawn in place only once its own scripts
+    are up, and reloaded before that, as designed; the test waited for the panel in the document, not for those scripts.
+  - *test_refresh_browser*: the freshness line says "stale" past twice the interval, which a 2 s panel reaches when a round takes over
+    a second; the test asserted "updated" whatever the age. It now checks the line against the age read at the same moment.
+  - *RunSharingTest*: a run was given 300 polls of 20 ms (6 s at best); now 90 s of wall time, a failed or cancelled run still failing
+    at once.
+  - *FundsPackTest*, *UsEquitiesPackTest* type-ahead: type-ahead answers with what its sources returned within
+    `drishti.commands.suggest-budget` (30 ms); a cold lake read beside the drill's other JVM lanes took longer and the answer was empty.
+    The server tests set a 10 s budget (no test is about the budget).
+  - *test_embed_elements_browser*: when the host page's first load fails ("signed in as nobody", no element state: the console's
+    `drishti-elements.js` never ran), the page is loaded once more only if Chromium cancelled requests because the network changed
+    (TEST_HARNESS rule 7); any other failure now names the failed requests and the page's console.
 
 ## 2.9.11.c (2026-11-05)
 

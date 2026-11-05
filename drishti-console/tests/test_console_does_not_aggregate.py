@@ -27,7 +27,11 @@ import io
 import re
 import tokenize
 
+import pytest
+
 from conftest import CONSOLE
+
+pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
 PY_DIRS = ("core", "routes")
 JS_DIR = "web/static/js"

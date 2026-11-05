@@ -42,6 +42,7 @@ def tree():
     return files, ap.load_map()
 
 
+@pytest.mark.static
 def test_every_static_file_we_wrote_is_named_drishti(tree):
     files, _ = tree
     left = sc.file_map(files)
@@ -50,6 +51,7 @@ def test_every_static_file_we_wrote_is_named_drishti(tree):
     assert names and all(n.startswith("drishti_") or n.split(".")[0] == "drishti" for n in names)
 
 
+@pytest.mark.static
 def test_our_scripts_put_one_name_on_window(tree):
     files, m = tree
     keep = {n for n, v in m["globals"].items() if v.get("status") == "keep"} | CONTRACT
@@ -63,6 +65,7 @@ def test_our_scripts_put_one_name_on_window(tree):
     assert keep <= CONTRACT | {n for n, v in m["globals"].items() if v.get("status") == "keep"}
 
 
+@pytest.mark.static
 def test_scripts_that_use_the_namespace_create_it_first(tree):
     files, _ = tree
     bad = [f for f in files if f.startswith(sc.OWN_JS) and f.endswith(".js") and "window.Drishti." in sc.read(ROOT, f)
@@ -70,6 +73,7 @@ def test_scripts_that_use_the_namespace_create_it_first(tree):
     assert not bad, f"these use window.Drishti without the bootstrap line: {bad}: {FIX}"
 
 
+@pytest.mark.static
 def test_custom_events_storage_keys_and_elements_are_prefixed(tree):
     files, m = tree
     events = sc.events_map(ROOT, files)
@@ -80,6 +84,7 @@ def test_custom_events_storage_keys_and_elements_are_prefixed(tree):
     assert els and all(v == "ok" for v in els.values()), f"custom elements must be drishti-<name>: {els}"
 
 
+@pytest.mark.static
 def test_no_new_generic_css_class_or_third_party_data_attribute(tree):
     files, m = tree
     known = set(m["classes"])
@@ -89,6 +94,7 @@ def test_no_new_generic_css_class_or_third_party_data_attribute(tree):
     assert datas <= set(m["data_attrs"]), f"new data- attributes other libraries use (name them data-drishti-<name>): {sorted(datas - set(m['data_attrs']))}"
 
 
+@pytest.mark.static
 def test_the_mapping_says_why_a_name_is_kept(tree):
     _, m = tree
     for section in ("globals", "events", "classes", "data_attrs"):

@@ -97,6 +97,17 @@ abstract class IdentityStoreContract {
         }
     }
 
+    /** The seed's write: only into a store with no user at all (the seeded administrator is there already, so nothing is written). */
+    @Test
+    void putIfEmptyWritesNothingIntoAStoreThatHoldsAUser() {
+        JpaUserStore store = bean(JpaUserStore.class);
+        Instant now = Instant.parse("2026-09-30T10:15:30Z");
+        assertThat(store.find("drishti-dev-admin")).isPresent();
+        assertThat(store.putIfEmpty(new User("u-second-seed", "Second", "", "", Set.of("admin"), true, false, "h", 0, null, now, now, null, null, null)))
+                .isFalse();
+        assertThat(store.find("u-second-seed")).isEmpty();
+    }
+
     @Test
     void usersKeepRolesAndTellNoPacksFromDefaultPacks() {
         JpaUserStore store = bean(JpaUserStore.class);

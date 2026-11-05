@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
-from wb_live import _stack
+from wb_live import BROWSER_WAIT_MS, _stack
 from docshots import docs_img
 
 IMG = docs_img("tutorials/img/t24")                 # docs/tutorials/img/t24 only when DRISHTI_SHOTS is set (docshots.py)
@@ -89,8 +89,12 @@ def test_a_correction_is_submitted_approved_applied_and_seen_by_another_browser(
 
     other = open_desk(browser, stack)                               # another person watching the book (its source does not stream)
     wait(other, "!!document.querySelector('[data-bell][data-alerts-live]')")   # its live feed has said hello: the edit will reach it
-    assert approve_as(stack, change, "kim")["state"] in ("queued", "applied")
-    wait(pg, f"(document.querySelector('[data-wb-id=\"{change}\"] [data-wb-state]') || {{}}).textContent.startsWith('Applied')")
+    # a page whose source does not stream is drawn again by a reload when the edit reaches it (drishti_alerts.js onEdit): wait for that
+    # load, then read the new page. Polling the old page across the reload failed whenever an evaluate landed while the page navigated
+    # ("Execution context was destroyed"), which is most of the time under the drill's load
+    with other.expect_navigation(wait_until="load", timeout=BROWSER_WAIT_MS):
+        assert approve_as(stack, change, "kim")["state"] in ("queued", "applied")
+        wait(pg, f"(document.querySelector('[data-wb-id=\"{change}\"] [data-wb-state]') || {{}}).textContent.startsWith('Applied')")
     pg.screenshot(path=str(IMG / "applied.jpg"), type="jpeg", quality=84)
     shown = f"{wanted:,}"
     wait(other, f"(document.querySelector('#p-trades') || {{innerText: ''}}).innerText.includes('{shown}') && !!document.querySelector('[data-edit-mark]')")

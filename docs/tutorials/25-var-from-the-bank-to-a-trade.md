@@ -391,7 +391,8 @@ A capture never changes: restate the batch and it still reopens with these numbe
 ## Step 8 · History and the backtest
 
 **In the UI.** The **VaR / ES history** tab of `VAR DESK DESK-FX`: VaR and ES over 250 days, the P&L, exceptions in red, the traffic
-light with Kupiec's and Christoffersen's tests.
+light with Kupiec's and Christoffersen's tests. That history is in-sample; for the **regulatory backtest** of the same desk, click
+**Backtest ›** in the toolbar: it opens `/var/backtesting` for the scope and date in view (the same page as `VAR DESK DESK-FX BACKTEST`).
 
 ![The FX desk's history and backtest](img/t25/08-history.jpg)
 

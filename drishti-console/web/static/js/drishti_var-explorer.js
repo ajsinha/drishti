@@ -977,11 +977,17 @@
   });
 
   // ---------------------------------------------------------------------------------------------------------------- the tree
+  // A new lens, currency or hierarchy asks the tree again while an earlier ask may still be out: only the newest answer is drawn (an
+  // earlier one landing last drew the old lens's figures under the new lens's tiles), and the tree is aria-busy until it is drawn.
   function loadTree() {
+    var seq = S.treeSeq = (S.treeSeq || 0) + 1, box = $("[data-vx-tree]");
     fresh("tree", "loading…", "computing");
     S.treeLoading = true;
+    box.setAttribute("aria-busy", "true");
     return api("tree", { hierarchy: S.hierarchy }).then(function (d) {
+      if (seq !== S.treeSeq) return;
       S.treeLoading = false;
+      box.removeAttribute("aria-busy");
       S.tree = d;
       fillHierarchies(d);
       var byId = {};
@@ -991,7 +997,9 @@
       renderAdhoc();
       fresh("tree", d.businessDate);
     }).catch(function (e) {
+      if (seq !== S.treeSeq) return;
       S.treeLoading = false;
+      box.removeAttribute("aria-busy");
       if (e.status === 404 && S.hierarchy !== "MGMT") {             // a hierarchy the date has not: the management tree, said
         var n = $("[data-vx-notice]");
         n.hidden = false;
@@ -1342,6 +1350,13 @@
   } else {
     select(S.scope, { noPush: true });
   }
+  // the Backtest link follows the scope and date in view (VAR <scope> BACKTEST, /var/backtesting)
+  var bt = document.querySelector("[data-vx-backtest]");
+  if (bt) bt.addEventListener("click", function (ev) {
+    ev.preventDefault();
+    location.href = "/var/backtesting?scope=" + encodeURIComponent(S.scope || "BANK") + (S.asOf ? "&asOf=" + encodeURIComponent(S.asOf) : "");
+  });
+
   window.Drishti.VarExplorer = { select: select, switchTab: switchTab, setCcy: setCcy, setLens: setLens, state: S, api: api, words: words,
     lensWords: lensWords, renderTree: function () { if (S.tree) renderTree(); },
     redrawPath: function () { if (S.path && S.path.series && S.path.series.some(function (v) { return v !== 0; })) drawPath(S.path); } };

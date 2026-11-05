@@ -53,7 +53,9 @@ def test_the_tutorials_card_counts_the_tutorials_it_finds(tmp_path):
         (tmp_path / "tutorials" / f"{n:02d}-x.md").write_text("# x")
     (tmp_path / "tutorials" / "README.md").write_text("# index")
     assert tutorial_count_word(tmp_path) == "Three"
-    assert tutorial_count_word(CONSOLE.parent / "docs") == "Thirty-nine"        # 1 to 38 and 43
+    from core.guides import _word
+    real = len(list((CONSOLE.parent / "docs" / "tutorials").glob("[0-9][0-9]-*.md")))   # counted from the files, never typed
+    assert real > 0 and tutorial_count_word(CONSOLE.parent / "docs") == _word(real).capitalize()
 
 
 @pytest.mark.skipif(not shutil.which("node"), reason="needs node")

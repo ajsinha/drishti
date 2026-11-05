@@ -1,0 +1,21 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Browser test files allowed over the per-file time budget of the release drill (300 s of a file's tests together; tools/drill.sh,
+# tools/drillkit/drill_plan.py budget; docs/architecture/TEST_HARNESS.md, "Per-file budgets"). One file per line, then # and its reason.
+# A file not listed here that runs over the budget is flagged in the drill's summary: split it into small spread tests, or list it
+# here with why it cannot be split yet. A file whose tests are spread one by one has no file budget.
+drishti-console/tests/test_mr_cube_browser.py  # four tests on one server over a VaR demo lake built for the file (about 3 minutes to build)
+drishti-console/tests/test_embed_elements_browser.py  # 35 tests on one host, console and server, run once per browser engine (module params)
+drishti-console/tests/test_page_widths_browser.py  # a sweep of every page at two widths in one test per width; to be split per page

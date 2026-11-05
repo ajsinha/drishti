@@ -33,14 +33,14 @@ from pathlib import Path
 
 from bi_stack import FORBIDDEN, call, listening, wait  # noqa: F401  (call is re-created below for this stack's port)
 from java_launch import java_cmd
+from scratch_ports import worker_port
 
 ROOT = Path(__file__).resolve().parents[2]
 CONSOLE = ROOT / "drishti-console"
 # Each pytest-xdist worker collects every test file first, so the first file's setdefault of the ports wins on every worker:
 # without an offset two workers would start (or reuse) one server on the same ports. gw0 keeps the ports, gw1 adds 100, …
-_WORKER = int((os.environ.get("PYTEST_XDIST_WORKER") or "gw0")[2:] or 0)
-SERVER_PORT = int(os.environ.get("DRISHTI_BI_DATA_SERVER_PORT", 18989)) + 100 * _WORKER
-CONSOLE_PORT = int(os.environ.get("DRISHTI_BI_DATA_CONSOLE_PORT", 17989)) + 100 * _WORKER
+SERVER_PORT = worker_port(int(os.environ.get("DRISHTI_BI_DATA_SERVER_PORT", 18989)))
+CONSOLE_PORT = worker_port(int(os.environ.get("DRISHTI_BI_DATA_CONSOLE_PORT", 17989)))
 SERVER = f"http://127.0.0.1:{SERVER_PORT}"
 CONSOLE_URL = f"http://127.0.0.1:{CONSOLE_PORT}"
 SECRET = "bi-data-scratch-secret-0123456789abcdef"

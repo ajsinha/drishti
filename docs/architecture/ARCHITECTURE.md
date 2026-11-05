@@ -1328,6 +1328,42 @@ one panel, updates strip cells in place, and hands chart panels new data — so 
 
 The full records are in [`docs/architecture/adr/`](adr/).
 
+## 22. Testing architecture
+
+**The pyramid, from the bottom.**
+
+| Layer | What | Where |
+|---|---|---|
+| Unit and module suites | JUnit 5 in every Maven module (about 900 test classes): the grammar, inference, the engines, the stores, the connectors' contract tests from `drishti-testkit`, golden ViewModels of the reference entities (`ViewPipelineTest`, `ReferenceSutrasTest`); container suites (Testcontainers) for the JDBC, MongoDB, Redis, Cassandra and Aerospike plugins | `*/src/test/java` |
+| Rule tests | ArchUnit (`ArchitectureRulesTest`, `OneGrammarRulesTest`) and the repository rules of `drishti-it`: file size, licence headers, branding literals, caches weighed in bytes, no blocking under `synchronized`, connection discipline, schema parity; `TokenScopeGuardTest` | `drishti-it`, `drishti-server` |
+| Parity and regression checks | the BI parity recorder and `BiParityTest` (BI's figures against recorded ones), the render parity suites (the console's macros against the client renderer, every pack Sutra), the VaR regression check of a release (bit-exact on the Java path against the previous release, within 1e-12 on OpenBLAS; [BENCHMARK.md section 17](../admin/BENCHMARK.md#17-many-var-scopes-at-once-blas)) | `drishti-server`, `drishti-console/tests` |
+| Console, other lane | about 220 pytest files run in-process against a stand-in server (`conftest.py`'s `FakeBackend`): routes, templates, the help centre, the docs checks | `drishti-console/tests` |
+| Console, browser lane | about 160 pytest files that drive Chromium through Playwright, against a stand-in console, a real server (`wb_live`) or a stack of their own (`*_stack.py`) | `drishti-console/tests/*_browser.py` |
+| Tool tests | the `unittest` and pytest suites of `tools/` | `tools/` |
+
+**The drill** (`tools/drill.sh`, [PACK_DEVELOPER_GUIDE.md section 2.6](../guides/PACK_DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh))
+is how work reaches `main`. Stage 1, the gate: the static checks, the docs and help console tests, the quick file checks (every test
+marked `static`: it reads files and starts nothing, so it runs here and never in a lane) and one Java 21 build that runs only the rule
+tests, stopping at the first failure. Stage 2, at once: the console's browser lane and other lane, the tool tests, and the
+Java 21 and Java 25 verifies each in a copy of the committed tree. A failed console test runs once more, file by file; one that passes
+then is logged as a flake. Nothing is pushed unless everything passes.
+
+**How the tests share the machine.** The other lane runs on up to eight pytest-xdist workers, a file per worker. The browser lane
+runs on as many workers as the memory available holds (2.5 GB each, after the Java verify's share; at most the CPU threads less two
+and at most twelve), handed out **by test**: a file that keeps a server or state between its tests is one group on one worker, and a
+small independent test marked `spread` is a unit of its own that any worker takes. Each worker starts its expensive things once and
+reuses them: one Chromium (its contexts reused per width, reset between tests), one stand-in console, a pool that keeps at most one
+idle real server, and the pack ViewModels bound once per run for every worker. Each worker's scratch ports are a block of their own.
+The lane's memory is sampled through the run.
+
+**Rules for writing tests.** Small and independent (a test that can run alone on any worker is marked `spread`); no fixed pause over
+100 ms in a browser test: wait on the page's settled signal (`Drishti.settled`: charts drawn, nothing aria-busy, no request
+unanswered, the page quiet) or on the condition itself; real servers only through the pool, never one per test; 300 s per browser
+file, or it is split or listed with its reason (the drill flags any other); a page is reloaded once, and only when Chromium cancelled
+its requests because the network changed (`net::ERR_NETWORK_CHANGED`); browser tests never run beside the Docker-based suites, whose
+containers change the network under Chrome. `test_browser_rules.py` checks the rules on the source. The full design, its
+measurements and the numbered rules: [TEST_HARNESS.md](TEST_HARNESS.md).
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
