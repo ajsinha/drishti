@@ -308,12 +308,12 @@ engines:
     ai-tools: []
   - id: openblas
     title: "Linear algebra: OpenBLAS"
-    about: "The bundled OpenBLAS (native) for many-scope VaR sums; off: the pure-Java kernels, the same figures (OPERATIONS.md section 2.1)"
+    about: "The bundled OpenBLAS (native) for many-scope VaR sums, off as shipped; off: the pure-Java kernels, the same figures (OPERATIONS.md section 2.1)"
     file: openblas.yaml
     switch: drishti.engines.openblas.enabled
     env: DRISHTI_OPENBLAS_ENABLED
     aliases: []
-    shipped: true
+    shipped: false
     installed: true
     live-on: true
     prefixes: [drishti.native]

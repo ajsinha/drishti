@@ -146,8 +146,8 @@ same (within a relative 1e-12; many-scope sums are exact on Java), only the many
 
 | Platform | BLAS |
 |---|---|
-| Linux x86-64, 64-bit Java 21 | **native** (bundled OpenBLAS) |
-| Windows x86-64, 64-bit Java 21 | **native** (bundled OpenBLAS; Java unpacks its DLLs into the native cache, allowed on the QA machine) |
+| Linux x86-64, 64-bit Java 21 | **native** when the `openblas` engine is on (bundled OpenBLAS) |
+| Windows x86-64, 64-bit Java 21 | **native** when the `openblas` engine is on (bundled OpenBLAS; Java unpacks its DLLs into the native cache, allowed on the QA machine) |
 | macOS (Apple silicon or Intel), Linux or Windows on ARM, any other system | Java (no bundled build; a `macosx-arm64` build can be added later) |
 | a 32-bit Java on any system | Java (Drishti needs a **64-bit Java 21**) |
 | Linux with musl (Alpine images) | Java (the bundled build needs glibc; the shipped images, `eclipse-temurin:21-jre`, have it) |
@@ -192,6 +192,11 @@ self-test disagreed with Java, or a native call failed during the run):
 
 To fix it: run a 64-bit Java on Linux or Windows x86-64, make `drishti.native.cache-dir` writable, and keep the `openblas` and `javacpp`
 jars in the server's library folder. To run on Java deliberately (and silence the warning): `drishti.native.blas.mode: java`.
+
+**Off as shipped.** The engine `openblas` is **off** in the shipped configuration (`drishti.engines.openblas.enabled: false`): a
+server runs the pure-Java kernels, with the same figures, and does not load OpenBLAS. Turn it on per node in Admin → Engines (or
+`DRISHTI_OPENBLAS_ENABLED=true`) after measuring it on your own hardware: the gain depends on how many overlapping scopes are summed at
+once ([BENCHMARK.md section 17](BENCHMARK.md#17-many-var-scopes-at-once-blas)).
 
 **Switching live (Admin → Engines).** The row **Linear algebra: OpenBLAS** (engine `openblas`, file `config/engines/openblas.yaml`) is an
 engine switch like the others: an administrator turns it off or on with a reason, live, no restart; the change is written to the engine's

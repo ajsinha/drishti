@@ -71,7 +71,7 @@ public class NativeLibraries {
         this.canary = durationOr(env.getProperty("drishti.native.blas.canary-interval", "6h"), Duration.ofHours(6));
         Blas.Settings settings = new Blas.Settings(Blas.Mode.of(mode), cache.isBlank() ? Path.of(dataDir, "native-cache") : Path.of(cache),
                 env.getProperty("drishti.native.blas.max-call-mb", Long.class, 256L) << 20, env.getProperty("drishti.native.max-bytes-mb", Long.class, 1024L) << 20);
-        if (!env.getProperty("drishti.engines.openblas.enabled", Boolean.class, true)) {   // Admin -> Engines left it off: not even loaded
+        if (!env.getProperty("drishti.engines.openblas.enabled", Boolean.class, false)) {   // Admin -> Engines left it off: not even loaded
             String by = env.getProperty("drishti.engines.openblas.changed.by", "");
             String at = env.getProperty("drishti.engines.openblas.changed.at", "");
             Blas.switchToJava("switched off in Admin -> Engines" + (by.isBlank() ? "" : " by " + by) + (at.isBlank() ? "" : " at " + at)

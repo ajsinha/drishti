@@ -17,6 +17,8 @@
 
 ## 2.9.11.c (unreleased)
 
+- **OpenBLAS is off as shipped** (`drishti.engines.openblas.enabled: false`; the product owner, 2026-11-04): a 250,000-position run gave the same VaR to the dollar with it on and off but no clear end-to-end gain; it is turned on per node in Admin → Engines after measuring on the bank's hardware, and profiled further with the native work of a later release.
+
 ### Fixes
 
 - **Docs: the heavy run of tutorials 34, 36, 37, 38 and 43.** Every step run against a built server on the demo lake (writes to scratch
