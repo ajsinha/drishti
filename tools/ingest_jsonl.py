@@ -24,9 +24,14 @@ Input: --from is a folder (its *.jsonl; -r for subfolders) or one .jsonl file, r
 
 What is written where: <lake>/<domain>/<kind>/ with columns id, doc, business_date and the promoted columns of the layout.
 With --pack the domain, the layout (settings.layout.<kind>.columns/sort-by/file-rows/row-group-rows) come from the pack's
-Delta connector, and the id and date fields from its `ingest:` block ({kind: {key: FIELD, date: FIELD}}, written by
-tools/packgen/pack_from_jsonl.py). Without --pack give --domain and per-kind --key / --date (FIELD or kind=FIELD,...; dotted
-paths); the layout is then the bare id, doc, business_date columns plus --columns.
+Delta connector, and the id field from its `ingest:` block ({kind: {key: FIELD, date: FIELD}}, written by
+tools/packgen/pack_from_jsonl.py). Without --pack give --domain and per-kind --key (FIELD or kind=FIELD,...; dotted paths); the layout
+is then the bare id, doc, business_date columns plus --columns.
+
+The business date of a file, by the load rules (docs/architecture/DATA_LOAD_RULES.md): --as-of, else its .ready file's business-date,
+else the date in its name (trade.2026-11-03.jsonl), else the business today. Every row of the file goes under it. A date field
+(--date FIELD or kind=FIELD,..., or the pack's ingest date) is optional: it only names the field whose rows that say another date are
+counted, as lake build does; it never chooses the date.
 
 --store files --root DIR writes the File connector's layout instead (no Delta dependencies): <DIR>/<domain>/<date>/<kind>.jsonl,
 one loader row per line ({"domain","kind","id","date","doc"}); overwrite-dates rewrites only the date files present, replace
@@ -35,7 +40,7 @@ deletes the kind's dated files first, append adds lines. Serve it with DRISHTI_F
 --mode overwrite-dates (default) replaces only the business dates present in the input, so a re-run is idempotent and other
 dates are kept; append adds the rows (a re-run duplicates them); replace rewrites the whole table. --dry-run prints the
 counts and writes nothing. --batch-rows N writes at most N rows of a date per commit.
-Documents without the date (or id) and lines that are not JSON are counted and reported (file:line), never written.
+Documents without an id and lines that are not JSON are counted and reported (file:line), never written.
 """
 from __future__ import annotations
 
@@ -49,6 +54,9 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE / "samplegen"))
 import sutragen as SG  # noqa: E402  (reading, dotted paths, scalar option parsing)
+sys.path.insert(0, str(HERE / "lake"))
+import feedroute  # noqa: E402  (a file's .ready file)
+import filedate  # noqa: E402  (the table and business date in a file's name, the Java loader's FileDates)
 
 MODES = ("overwrite-dates", "append", "replace")
 
@@ -72,24 +80,56 @@ class Report:
         self.no_date: dict[str, int] = {}
         self.no_key: dict[str, int] = {}
         self.bad: list[str] = []
-        self.untracked: dict[str, int] = {}             # kinds without a date field
+        self.file_dates: dict[str, date] = {}           # file -> its business date (every row of it loaded under it)
+        self.date_sources: dict[str, object] = {}       # file -> filedate.Decided: where that date came from
+        self.other_dates: dict[str, int] = {}           # file -> rows whose own date field said another date
+        self.date_fields: dict[str, str] = {}           # file -> the date field those rows carried
 
 
 def read_lines(inputs, recursive: bool, kind: str | None, report: Report):
-    """Yields (kind, doc) from the JSONL files; bad lines go to the report with file:line."""
-    for k, doc, _ in SG.read_records(SG.input_files(inputs, recursive), report.bad.append):
-        yield kind or k, doc
+    """Yields (kind, doc, file) from the JSONL files; bad lines go to the report with file:line. A kind taken from a file's name is its
+    table, the name's first segment (``trade.2026-11-03.jsonl`` is kind ``trade``)."""
+    for k, doc, where in SG.read_records(SG.input_files(inputs, recursive), report.bad.append):
+        f = _file_of(where)
+        if not kind and k == _stem(f):
+            n = filedate.parse(f)
+            k = n.table if n.error is None and not n.tar else k
+        yield kind or k, doc, f
+
+
+def _day(text) -> date | None:
+    """A row's own date as this loader reads it (an ISO date, or YYYYMMDD), None when it is none."""
+    if not text:
+        return None
+    s = str(text).strip()
+    try:
+        return date(int(s[:4]), int(s[4:6]), int(s[6:8])) if len(s) == 8 and s.isdigit() else date.fromisoformat(s[:10])
+    except ValueError:
+        return None
+
+
+def _file_of(where: str) -> str:
+    """The file of a ``file:line`` or ``file[n]`` place."""
+    if where.endswith("]") and "[" in where:
+        return where[: where.rindex("[")]
+    return where.rsplit(":", 1)[0]
+
+
+def _stem(f: str) -> str:
+    p = pathlib.Path(f)
+    return pathlib.Path(p.stem).stem if p.suffix.lower() == ".gz" else p.stem
 
 
 def pack_settings(pack: pathlib.Path) -> tuple[str, dict, dict, dict]:
     """(domain, {kind: Layout}, {kind: key}, {kind: date}) from a pack folder's pack.yaml."""
     import yaml
     L = _layout()  # delta only
-    m = yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
+    import packlake                                   # tools/packlake.py: a lake-form template read with the pack's lake: entries
+    m = packlake.view(yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {})
     defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else (m.get("connector-templates") or {})   # a pack names its connectors and suggests them as templates
     conns = [c for c in defs.values() if c.get("plugin") in ("delta", "file")]
     if not conns:
-        raise SystemExit(f"ingest_jsonl: {pack}/pack.yaml declares no delta or file connector (generate the pack with --date)")
+        raise SystemExit(f"ingest_jsonl: {pack}/pack.yaml declares no delta or file connector (generate the pack with --lake or --files-root)")
     c = conns[0]
     st = c.get("settings") or {}
     layouts = {k: lay for k in (c.get("kinds") or []) if c.get("plugin") == "delta" and (lay := L.Layout.from_settings(st, k)) is not None}
@@ -100,32 +140,41 @@ def pack_settings(pack: pathlib.Path) -> tuple[str, dict, dict, dict]:
     return st.get("domain") or m["pack"], layouts, keys, dates
 
 
-SNAPSHOT = "@snapshot"     # a kind with no business-date field: every document goes under the day of the load (--as-of, default today)
+SNAPSHOT = "@snapshot"     # a kind whose documents carry no date field: nothing to count (the date is the file's, as for every kind)
 
 
 def business_today() -> date:
-    """Today, or the Friday before on a weekend: the business date a snapshot loaded now is for (the server rolls back the same way)."""
-    d = date.today()
-    return d - timedelta(days=max(0, d.weekday() - 4))
+    """Today, or the Friday before on a weekend (filedate.business_today: the one function, Python and Java)."""
+    return filedate.business_today()
 
 
 def collect(args, keys, dates, report: Report) -> dict[str, dict[date, list]]:
-    """kind -> business date -> [(id, doc json, doc)] for the kinds that have a date field."""
+    """kind -> business date -> [(id, doc json, doc)] for the kinds the pack knows. Each file's business date (DATA_LOAD_RULES.md): --as-of,
+    else its .ready file's business-date, else its name's date, else the business today; a row's own date field never decides (rows
+    that say another date are counted)."""
     out: dict[str, dict[date, list]] = {}
-    for kind, doc in read_lines(args.src, args.recursive, args.kind, report):
-        dfield = dates.get(kind)
-        if not dfield:
-            report.untracked[kind] = report.untracked.get(kind, 0) + 1
-            continue
+    as_of = date.fromisoformat(args.as_of) if getattr(args, "as_of", None) else None
+    date_from = getattr(args, "date_from", None) or "auto"
+    decided: dict[str, filedate.Decided] = {}
+    for kind, doc, f in read_lines(args.src, args.recursive, args.kind, report):
+        dfield = dates.get(kind)                         # optional: only the field whose differing rows are counted
+        d = decided.get(f)
+        if d is None:
+            ready = None if as_of else feedroute.read_marker(f).get("business-date")
+            d = filedate.decide(as_of or ready, filedate.of(f), date_from, None, f)
+            if d.error:
+                raise SystemExit(f"ingest_jsonl: {d.error} (nothing was loaded)")
+            if ready is not None:
+                d = filedate.Decided(d.date, "ready")
+            decided[f] = d
+            report.file_dates[f] = d.date
+            report.date_sources[f] = d
+        day = d.date
+        own = _day(SG.doc_date(doc, dfield)) if dfield and dfield != SNAPSHOT else None
+        if own is not None and own != day:
+            report.other_dates[f] = report.other_dates.get(f, 0) + 1
+            report.date_fields[f] = dfield
         kv = SG.get(doc, keys.get(kind, "id"))
-        ds = (getattr(args, "as_of", None) or business_today().isoformat()) if dfield == SNAPSHOT else SG.doc_date(doc, dfield)
-        try:
-            day = date.fromisoformat(ds) if ds else None
-        except ValueError:
-            day = None
-        if day is None:
-            report.no_date[kind] = report.no_date.get(kind, 0) + 1
-            continue
         if kv is SG.MISSING or kv is None:
             report.no_key[kind] = report.no_key.get(kind, 0) + 1
             continue
@@ -187,10 +236,13 @@ def summary(report: Report, dry: bool, say=print) -> None:
     for (k, d), n in sorted(report.rows.items()):
         say(f"{k:<20}{d:<16}{n:>9}")
     say(f"total rows: {sum(report.rows.values())}")
-    for label, d in (("without a business date (skipped)", report.no_date), ("without an id (skipped)", report.no_key),
-                     ("of a kind with no date field (not loaded)", report.untracked)):
+    for label, d in (("without a business date (skipped)", report.no_date), ("without an id (skipped)", report.no_key)):
         if d:
             say(f"{sum(d.values())} document(s) {label}: " + ", ".join(f"{k}={n}" for k, n in sorted(d.items())))
+    for f, d in sorted(report.date_sources.items()):                  # the same words as lake build's
+        say(f"{pathlib.Path(f).name}: business date {filedate.words(d)}")
+    for f, n in sorted(report.other_dates.items()):
+        say(filedate.other_date_note(n, pathlib.Path(f).name, report.date_fields.get(f), report.file_dates[f]))
     for b in report.bad[:20]:
         say("bad line " + b)
     if len(report.bad) > 20:
@@ -204,13 +256,13 @@ def ingest(args, say=print) -> Report:
     if not args.src:
         raise SystemExit("ingest_jsonl: give --from (a folder or .jsonl file) or --watch DIR")
     if args.mode is None:
-        args.mode = "overwrite-dates"
+        args.mode = "append"
     if args.pack:
         domain, layouts, keys, dates = pack_settings(args.pack)
     else:
         L = _layout()
         if not args.domain:
-            raise SystemExit("ingest_jsonl: give --pack, or --domain with --date")
+            raise SystemExit("ingest_jsonl: give --pack, or --domain")
         domain = args.domain
         kd, kk = SG.parse_scalar(args.key)
         dd, dk = SG.parse_scalar(args.date)
@@ -253,13 +305,19 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p.add_argument("--domain", help="lake domain (without --pack)")
     p.add_argument("--kind", help="kind for every document (default: file stem or envelope kind)")
     p.add_argument("--key", help="id field: FIELD or kind=FIELD,... (default id)")
-    p.add_argument("--date", help="business-date field: FIELD or kind=FIELD,...")
+    p.add_argument("--date", help="optional: the field the documents carry their own date in (FIELD or kind=FIELD,...); only counted when "
+                                  "it differs from the file's business date, never the date they are stored under")
     p.add_argument("--columns", help="promoted columns without --pack: a,b,c")
     p.add_argument("--lake", type=pathlib.Path, help="the Delta root (DRISHTI_DELTA_ROOT) for --store delta")
     p.add_argument("--store", choices=("delta", "files"), default="delta", help="delta (default) or the File connector's layout")
     p.add_argument("--root", type=pathlib.Path, help="the files root (DRISHTI_FILES_ROOT) for --store files")
-    p.add_argument("--mode", choices=MODES, help="overwrite-dates (default), append or replace; a --watch run defaults to append")
-    p.add_argument("--as-of", help="YYYY-MM-DD: the business date of a snapshot kind (pack.yaml ingest: {snapshot: true}); default today")
+    p.add_argument("--mode", choices=MODES, help="append (the default: the documents are added), overwrite-dates (each business date of the "
+                                                 "input replaced) or replace (the whole kind rewritten)")
+    p.add_argument("--as-of", help="YYYY-MM-DD: the business date of every document (over a file's .ready business-date and its name's date; "
+                                   "without any, the business today); a document's own date field never decides (docs/architecture/DATA_LOAD_RULES.md)")
+    p.add_argument("--date-from", choices=filedate.DATE_FROM, default="auto",
+                   help="auto (default): --as-of, else the file's .ready business-date, else its name's date (trade.2026-11-03.jsonl: kind trade), "
+                        "else the business today; name: a file whose name carries no date is refused")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--batch-rows", type=int, default=250_000)
     w = p.add_argument_group("watch a drop folder (see tools/ingest_watch.py)")

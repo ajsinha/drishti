@@ -706,21 +706,6 @@ class BackendClient:
     async def admin_delete_measure_alert(self, owner: str, name: str, ident) -> None:
         return await self._send("DELETE", f"/admin/measure-alerts/{quote(owner)}/{quote(name)}", ident)
 
-    # -- notes ------------------------------------------------------------------------------------
-    async def notes(self, kind: str, id_: str, ident) -> list:
-        where, q = entity_path(kind, id_)
-        return await self._get(f"/notes/{where}", ident, **q)
-
-    async def add_note(self, kind: str, id_: str, body: str, path: str | None, ident) -> dict:
-        where, q = entity_path(kind, id_)
-        return await self._send("POST", f"/notes/{where}", ident, params=q, json={"body": body, "path": path})
-
-    async def edit_note(self, note_id: int, body: str, ident) -> dict:
-        return await self._send("PUT", f"/notes/{int(note_id)}", ident, json={"body": body})
-
-    async def delete_note(self, note_id: int, ident) -> None:
-        return await self._send("DELETE", f"/notes/{int(note_id)}", ident)
-
     # -- monitors and alerts ----------------------------------------------------------------------
     async def mine(self, method: str, path: str, ident, body=None, **params):
         """Calls under /me (monitors, alerts) for the signed-in user."""

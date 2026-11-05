@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.redis;
 
+import com.ash.drishti.common.RowFeed;
 import com.ash.drishti.api.ColumnSet;
 import com.ash.drishti.api.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -25,11 +26,7 @@ import io.lettuce.core.RedisFuture;
 import io.lettuce.core.ScriptOutputType;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.cluster.api.async.RedisClusterAsyncCommands;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -84,7 +81,8 @@ import java.util.concurrent.locks.ReentrantLock;
  *
  * <p>A row dated after tomorrow in the business zone is not loaded, and the load ends with an error naming it
  * ({@link LoadGuard}). {@code --ttl-days N} expires every key N days after it is written, and drops from each kind's
- * days those more than N days before {@code --as-of} (today), never counted from the newest date loaded; dropping
+ * days those more than N days before the newest business date of the load (a plain file's date, a tar's newest folder),
+ * never from the newest date the store holds; dropping
  * more than {@code --max-drop-share} (0.5) of a kind's days needs {@code --force-drop}. {@code --publish} announces
  * each written entity on {@code <domain>:changes}, for open views to refresh (meant for intraday updates, not bulk
  * loads).
@@ -183,8 +181,7 @@ public final class RedisLoader {
         }
         Options o = Options.parse(args);
         try (RedisConnection c = RedisConnection.open(o.uri(), o.cluster(), o.user(), o.password(), Duration.ofSeconds(60));
-             BufferedReader in = args[0].equals("-") ? new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8), 1 << 20)
-                     : Files.newBufferedReader(Path.of(args[0]), StandardCharsets.UTF_8)) {
+             RowFeed in = RowFeed.open(args[0], RowFeed.asOf(args))) {    // the load rules: each row's business date (RowFeed)
             RedisLoader loader = new RedisLoader(o, c);
             loader.load(in);
             loader.report(System.out);
@@ -195,7 +192,7 @@ public final class RedisLoader {
      * Streams every line in, then writes each day's columns and applies the retention; a load that fails clears the
      * documents it wrote that no day's columns list.
      */
-    void load(BufferedReader in) throws Exception {
+    void load(RowFeed in) throws Exception {
         try (journal) {
             try {
                 stream(in);
@@ -210,17 +207,20 @@ public final class RedisLoader {
         options.guard().finish();
     }
 
-    private void stream(BufferedReader in) throws Exception {
+    private void stream(RowFeed in) throws Exception {
         ThreadPoolExecutor workers = new ThreadPoolExecutor(options.threads(), options.threads(), 0, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<>(options.threads() * 64), new ThreadPoolExecutor.CallerRunsPolicy());
         try {
             String line;
-            while ((line = in.readLine()) != null && failed.get() == null) {
+            while ((line = in.next()) != null && failed.get() == null) {
                 if (!line.isBlank()) {
                     String l = line;
+                    RowFeed.Tag tag = in.tag();
                     workers.execute(() -> {
                         try {
-                            accept(parse(l));
+                            Row read = parse(l);
+                            accept(new Row(read.domain(), read.kind(), read.id(), in.place(tag, read.domain() + "/" + read.kind(), read.date()),
+                                    read.doc(), read.columns()));
                         } catch (Throwable e) {
                             failed.compareAndSet(null, e);
                         }
@@ -232,6 +232,7 @@ public final class RedisLoader {
             workers.awaitTermination(1, TimeUnit.DAYS);
         }
         rethrow();
+        in.notes().forEach(note -> System.err.println("redis: " + note));
         for (Map.Entry<String, KindState> e : kinds.entrySet()) {   // kinds with fewer documents than the samples
             List<Row> held = release(e.getKey(), e.getValue(), true);
             for (Row r : held) {
@@ -598,7 +599,7 @@ public final class RedisLoader {
     }
 
     /**
-     * {@code --ttl-days N}: each kind loaded forgets the days more than N days before {@code --as-of} (today); refused
+     * {@code --ttl-days N}: each kind loaded forgets the days more than N days before the load's newest business date; refused
      * when that is more than {@code --max-drop-share} of the kind's days.
      */
     private void retain() throws Exception {
@@ -665,9 +666,9 @@ public final class RedisLoader {
                 }
             }
         }
-        if (domain == null || kind == null || id == null || date == null || doc == null) {
-            throw new IllegalArgumentException("a line without domain, kind, id, date or doc: " + line.substring(0, Math.min(200, line.length())));
+        if (domain == null || kind == null || id == null || doc == null) {
+            throw new IllegalArgumentException("a line without domain, kind, id or doc: " + line.substring(0, Math.min(200, line.length())));
         }
-        return new Row(domain, kind, id, LocalDate.parse(date), doc, columns);
+        return new Row(domain, kind, id, date == null ? null : LocalDate.parse(date), doc, columns);
     }
 }

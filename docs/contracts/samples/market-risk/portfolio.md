@@ -23,7 +23,7 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-risk/portfolio/` + `cob-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-risk/portfolio/` + `portfolio.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `PORTFOLIO_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |

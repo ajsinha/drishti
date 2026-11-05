@@ -118,7 +118,6 @@ class RecentStoreApiTest {
                 .andExpect(status().isOk());
         mvc.perform(get("/api/v1/impact/trade/~").param("id", "sl/ash-6").header("X-Drishti-As-Of", "2026-09-29"))
                 .andExpect(status().isOk());
-        mvc.perform(get("/api/v1/notes/trade/~").param("id", "sl/ash-6")).andExpect(status().isOk());
         mvc.perform(get("/api/v1/entities/trade/MX-30000001/raw").param("id", "sl/ash-6").header("X-Drishti-As-Of", "2026-09-29"))
                 .andExpect(jsonPath("$.ref.id").value("MX-30000001"));                // only "~" takes the id from the query
         mvc.perform(get(java.net.URI.create("/api/v1/entities/trade/sl%2Fash-6/raw")).header("X-Drishti-As-Of", "2026-09-29"))

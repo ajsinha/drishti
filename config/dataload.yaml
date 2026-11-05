@@ -26,7 +26,7 @@ dataload:
 #     pack: trading
 #     kind: trade
 #     connector: trade-endur                 # the table that connector reads (trading/trade_endur)
-#     date-from: name                        # the business date is the YYYY-MM-DD in the name (trades-endur-2026-11-03.jsonl.gz)
+#     date-from: name                        # the name must carry the business date (trades-endur.2026-11-03.jsonl.gz)
 #   - match: "trades-calypso-*.jsonl.gz"
 #     pack: trading
 #     kind: trade
@@ -35,7 +35,7 @@ dataload:
 #   - match: "scenario-pv-*.jsonl.gz"        # the market-risk pack's scenario PVs (its risk-store connector)
 #     pack: market-risk
 #     kind: scenario-pv
-#     date-field: BUSINESS_DATE              # date-from: field (the default): the pack's ingest date field, or this field of each row
+#     date-field: BUSINESS_DATE              # the rows' own date field: only counted when it differs from the file's date
 #   - match: "*.zip"                         # an archive: one dataset named after it, or a folder per table (DATA_GUIDE.md section 2.7)
 #     pack: trading
 #     kind: trade
@@ -48,8 +48,10 @@ dataload:
 #   kind        one of the pack's kinds
 #   connector   the pack's Delta or Iceberg connector whose table is written (default: the first that serves the kind)
 #   table       the table's folder, over the connector's (rare)
-#   date-from   field (default): each row's date field (date-field, else the pack's ingest.<kind>.date); name: YYYY-MM-DD in the file's name
-#   date-field  the field that holds each row's business date
+#   date-from   the business date of a file (docs/architecture/DATA_LOAD_RULES.md; a .ready file's business-date: wins):
+#               auto (default): the name's date (<table>.<YYYY-MM-DD>.jsonl.gz), else the business today; name: a name without a
+#               date is refused into failed/. A row's own date never decides.
+#   date-field  the rows' own date field (only counted when it differs from the file's date)
 #   key         the field that holds each row's id (default: the pack's ingest.<kind>.key)
 #   lake        the lake root, over drishti.dataload.lake
 #   format      delta (default) or iceberg

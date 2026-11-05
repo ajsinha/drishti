@@ -249,6 +249,24 @@ def build_lake(stack: dict, name: str) -> None:
 SERVER_MEMORY_FLAGS = ["-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000", "-Djdk.nio.maxCachedBufferSize=262144",
                        "-XX:NativeMemoryTracking=summary"]
 DUMPS = RUN / "dumps"
+MB = 1 << 20
+
+
+def direct_memory_flags(cwd: Path, env: dict) -> list[str]:
+    """What the node's direct memory needs beyond the 256 MB of SERVER_MEMORY_FLAGS (a later flag wins): the in-memory lake's stores and
+    Arrow's budget (the compute exchange, BI answers as Arrow, Arrow Flight when its engine is on), from tools/lake/memory_caps.py, the
+    one place they are sized; and Arrow's own cap (-Ddrishti.arrow.max-bytes) at the same figure. Nothing when it cannot say."""
+    caps = ROOT / "tools" / "lake" / "memory_caps.py"
+
+    def ask(flag: str) -> int:
+        try:
+            out = subprocess.run([python(), str(caps), flag], cwd=cwd, env=env, capture_output=True, text=True, timeout=60)
+            return int(out.stdout.strip() or 0)
+        except (OSError, ValueError, subprocess.SubprocessError):
+            return 0
+    extra, arrow = ask("--extra-only"), ask("--arrow-only")
+    flags = [f"-XX:MaxDirectMemorySize={256 + extra}m"] if extra > 0 else []
+    return flags + ([f"-Ddrishti.arrow.max-bytes={arrow * MB}"] if arrow > 0 else [])
 
 
 def diagnostic_flags(name: str) -> list[str]:
@@ -279,6 +297,9 @@ def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
     (home / "data").mkdir(parents=True, exist_ok=True)
     (home / "connectors").mkdir(parents=True, exist_ok=True)
     env.update(DRISHTI_DATA_DIR=str(home / "data"), DRISHTI_CONNECTORS_DIR=str(home / "connectors"), DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"))
+    # the node's demo lake is the repository's lake file, config/lakes/demo.yaml (docs/guides/LAKE_GUIDE.md): the same tables, partitions
+    # and promoted columns as every node; its root, ${DRISHTI_DELTA_ROOT:...}, is the node's synthetic lake (stack.yaml lakes)
+    env["DRISHTI_LAKES_DIR"] = str(ROOT / "config" / "lakes")
     if node.get("lake"):
         env["DRISHTI_DELTA_ROOT"] = str(lake_dir(node["lake"]))
     return env, home
@@ -295,7 +316,8 @@ def start_node(stack: dict, node: dict, keys: dict, jar: Path, pids: dict) -> bo
     if node.get("lake"):
         build_lake(stack, node["lake"])
     env, cwd = node_env(stack, node, keys)
-    args = [f"-Xmx{node.get('heap', '1536m')}", *SERVER_MEMORY_FLAGS, *diagnostic_flags(name), *node.get("jvm", []), "-jar", str(jar), f"--server.port={port}"]
+    args = [f"-Xmx{node.get('heap', '1536m')}", *SERVER_MEMORY_FLAGS, *direct_memory_flags(cwd, env), *diagnostic_flags(name), *node.get("jvm", []),
+            "-jar", str(jar), f"--server.port={port}"]
     args += [f"--drishti.sources.connectors.{c}.enabled=false" for c in node.get("off", [])]
     # 2.9.7 (RESOURCES_AND_SCALE.md 6.4): the server writes run/logs/<node>.log itself, rotated (100 MB a file, 1 GB in all); standard
     # output (the JVM's own lines, a crash) goes to run/logs/<node>.out, which stays small

@@ -456,7 +456,7 @@ Sections 3 to 9 build the artifacts one command at a time. When you start from J
 them in a single folder, so that what you carry to a server is that folder:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz \
+drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
     --kind trade --match PRODUCT_TYPE --name my-bank
 ```
 
@@ -473,7 +473,7 @@ When what you have is **JSON Schema** (and perhaps JSON Lines), `pack make --sch
 `MANIFEST.json`, `README.txt`), and **Build → New pack** makes the same bundle in the browser, with a preview of every Sutra, then hands it to
 **Admin → Packs → Deploy archive** (section 17.1): checked, previewed, confirmed, rolled back there. The bundle is byte-for-byte the format of `pack bundle`, so every step of
 sections 4 to 10 applies unchanged. Schemas alone give a pack that serves its samples (no connector, no data); with real documents the folder also has the dated store. A generated pack
-names its sources by logical connector name only. Rules and pictures: [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema).
+names its sources by logical connector name only. Rules and pictures: [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md).
 
 <a id="17-deploy-from-admin--packs-change-a-data-source-history-and-roll-back"></a>
 ## 17. Deploy from Admin → Packs, connectors, history and roll back

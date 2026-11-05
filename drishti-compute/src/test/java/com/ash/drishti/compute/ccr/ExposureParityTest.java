@@ -19,12 +19,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
 import com.ash.drishti.compute.vector.OrdinalSet;
+import com.ash.drishti.testkit.FeedFiles;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -33,8 +31,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
-import java.util.zip.GZIPInputStream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -69,18 +65,8 @@ class ExposureParityTest {
     }
 
     static void lines(Path folder, Consumer<JsonNode> each) throws IOException {
-        List<Path> files;
-        try (Stream<Path> s = Files.list(folder)) {
-            files = s.filter(f -> f.getFileName().toString().endsWith(".jsonl.gz")).sorted().toList();
-        }
-        for (Path f : files) {
-            try (BufferedReader r = new BufferedReader(new InputStreamReader(new GZIPInputStream(Files.newInputStream(f)), StandardCharsets.UTF_8))) {
-                for (String line = r.readLine(); line != null; line = r.readLine()) {
-                    if (!line.isBlank()) {
-                        each.accept(JSON.readTree(line));
-                    }
-                }
-            }
+        for (String line : FeedFiles.lines(folder, p -> true)) {      // its dated files and tars (DATA_LOAD_RULES.md section 10)
+            each.accept(JSON.readTree(line));
         }
     }
 

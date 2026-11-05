@@ -194,7 +194,7 @@ class KindPlan:
     derived: dict = field(default_factory=dict)         # this kind IS a page per value: {from, path, expr, members, label}
     counts: dict = field(default_factory=dict)          # {field: {value: rows}} over EVERY row of the data files ("" = no value)
     match_counts: dict = field(default_factory=dict)    # the counts of the split column(s): what each type's Sutra covers
-    profile: dict = field(default_factory=dict)         # {path: stats} over many rows (pack-read.js), beyond the kept samples
+    profile: dict = field(default_factory=dict)         # {path: stats} over many rows (drishti_pack-read.js), beyond the kept samples
 
     @property
     def real(self) -> bool:
@@ -764,7 +764,7 @@ def load_docs(schemas: list) -> tuple[list[SchemaDoc], list[str]]:
 
 
 def apply_profile(kp: KindPlan, prof: dict) -> None:
-    """What the samples say about each field, corrected by the profile of many more rows (pack-read.js): the share of rows with a value
+    """What the samples say about each field, corrected by the profile of many more rows (drishti_pack-read.js): the share of rows with a value
     (a field blank in the kept samples but filled elsewhere is shown; one blank everywhere is hidden) and how many items each array holds.
     ``prof``: {rows, objects: {prefix: n}, paths: {path: {n, blank}}, arrays: {path: {min, max, sum, count, absent, empty}}}."""
     paths, objects, arrs = prof.get("paths") or {}, prof.get("objects") or {}, prof.get("arrays") or {}
@@ -802,7 +802,7 @@ def _array_node(n: Node, path: str) -> Node | None:
 def make_plan(schemas: list, samples: dict | None = None, overrides: dict | None = None, settings: dict | None = None,
               existing_mnemonics: set | None = None, pack_name: str = "", counts: dict | None = None, profiles: dict | None = None) -> Plan:
     """``counts`` {kind: {field: {value: rows}}} and ``profiles`` {kind: profile} come from reading EVERY row of the data files
-    (the browser's pack-read.js, or the command line): the split shows every type, rare ones too, and the fields are judged on many rows."""
+    (the browser's drishti_pack-read.js, or the command line): the split shows every type, rare ones too, and the fields are judged on many rows."""
     cfg = {**DEFAULTS, **(settings or {})}
     samples = {k: v for k, v in (samples or {}).items() if v}
     overrides = overrides or {}

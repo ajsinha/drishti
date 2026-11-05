@@ -126,7 +126,7 @@ notes:
 - 'A rate that is not a positive number, or RATES of another length than the scenario set''s, leaves the currency out of the date (the
   engine says so: a trade priced in it is rejected, DRS-5207; the currency cannot be asked as a reporting currency).'
 review:
-- 'required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/market-risk/fx-scenario/cob-2026-09-30.jsonl.gz)):
+- 'required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/market-risk/fx-scenario/fx-scenario.tar)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'source is the pack''s first listed source (its README): confirm.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'

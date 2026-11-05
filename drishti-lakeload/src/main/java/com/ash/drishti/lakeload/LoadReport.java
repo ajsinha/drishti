@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.lakeload;
 
+import com.ash.drishti.common.FileDates;
 import com.ash.drishti.lakeload.Inputs.InputFile;
 import com.ash.drishti.lakeload.Inputs.Split;
 import com.ash.drishti.lakeload.TableTarget.WrittenFile;
@@ -32,7 +33,6 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,7 +55,7 @@ final class LoadReport {
 
     private final LoadConfig cfg;
     private final RowPlan plan;
-    final String run = OffsetDateTime.now(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss")) + "-" + ProcessHandle.current().pid();
+    final String run = LakeLoad.runId();
     final String startedAt = now();
     String status = "failed";
     long documents;
@@ -78,6 +78,14 @@ final class LoadReport {
     static final int KEEP_DUPLICATE_EXAMPLES = 10;
     private final Map<Integer, java.util.Set<Long>> dropped = new TreeMap<>();
     final List<ObjectNode> files = new ArrayList<>();
+    /** Each file's business date, in input order: file, date, source, in words, rows that carried another date in the date field. */
+    final List<ObjectNode> fileDates = new ArrayList<>();
+    long otherDateRows;
+    final List<String> dateNotes = new ArrayList<>();
+    /** Each load id of the run and its data file (the {@code _load_id} of every row the file gave; undo removes a load's rows by it). */
+    final Map<String, String> loads = new LinkedHashMap<>();
+    /** Files with no document: ignored, nothing written for them. */
+    final List<String> emptyFiles = new ArrayList<>();
     final Map<String, ObjectNode> commits = new TreeMap<>();
     final Map<String, List<WrittenFile>> written = new TreeMap<>();
     Map<String, String> columnTypes = Map.of();
@@ -159,6 +167,7 @@ final class LoadReport {
         for (ParseWorker.Reject r : first.subList(0, Math.min(cfg.rejects().keep(), first.size()))) {
             firstRejects.add(JSON.createObjectNode().put("where", where(r.where(), splits, lines)).put("reason", r.reason()));
         }
+        fileDates(workers, splits);
         resolveDuplicates(hashes, byDay, parts, splits, lines);
         for (List<ParseWorker.DateRows> ds : byDay.values()) {
             for (ParseWorker.DateRows d : ds) {
@@ -327,6 +336,11 @@ final class LoadReport {
         written.put(date.toString(), f);
     }
 
+    /** A date this load's batch had appended already (load-mode append): skipped, nothing written. */
+    synchronized void skippedBatch(LocalDate date) {
+        commits.put(date.toString(), JSON.createObjectNode().put("skipped", "batch appended already").put("files", 0).put("rows", 0).put("bytes", 0));
+    }
+
     void meters(Map<String, Meter> m) {
         meters = m;
     }
@@ -340,15 +354,48 @@ final class LoadReport {
         };
     }
 
+    /**
+     * The dates taken from file names (lake build's {@code Stats.date_report}, the same keys and words): each file whose name gave its rows'
+     * date, with how many rows carried another date in their own date field, and those rows in words.
+     */
+    private void fileDates(List<ParseWorker> workers, List<Split> splits) {
+        Map<String, long[]> all = new LinkedHashMap<>();
+        for (ParseWorker w : workers) {
+            w.fileDates.forEach((f, v) -> all.merge(f, v.clone(), (a, b) -> new long[] {a[0], a[1] + b[1], a[2], a[3] + b[3]}));
+        }
+        java.util.Set<String> done = new java.util.HashSet<>();
+        Map<String, Long> rowsByFile = new java.util.HashMap<>();
+        for (Split sp : splits) {
+            String f = sp.file().name();
+            if (!done.add(f)) {
+                continue;
+            }
+            long[] v = all.get(f);
+            if (v == null || v[3] == 0) {
+                emptyFiles.add(f);
+                continue;
+            }
+            LocalDate day = LocalDate.ofEpochDay(v[0]);
+            String source = ParseWorker.SOURCES[(int) v[2]];
+            fileDates.add(JSON.createObjectNode().put("file", f).put("date", day.toString()).put("source", source)
+                    .put("dateText", FileDates.words(new FileDates.Decided(day, source, null), "the command line")).put("rows", rowsByFile.getOrDefault(f, v[3]))
+                    .put("otherDateRows", v[1]));
+            otherDateRows += v[1];
+            if (v[1] > 0) {
+                dateNotes.add(FileDates.otherDateNote(v[1], f, plan.date, day));
+            }
+        }
+    }
+
     /** The summary: lake build's keys, and {@code throughput} per stage. */
     ObjectNode summary(String error, double totalSeconds) {
         ObjectNode s = JSON.createObjectNode();
         String[] dt = cfg.domainAndTable();
         s.put("run", run).put("startedAt", startedAt).put("finishedAt", now()).put("status", status).put("exitCode", exitCode())
-                .put("dryRun", cfg.report().dryRun()).put("mode", "overwrite-dates").put("format", cfg.target().format())
+                .put("dryRun", cfg.report().dryRun()).put("mode", cfg.target().appends() ? "append" : "overwrite-dates").put("modeFrom", cfg.target().modeWords()).put("format", cfg.target().format())
                 .put("engine", "java-loader").put("engineWhy", "the parallel lake loader (drishti-lakeload)").put("table", cfg.tablePath())
                 .put("domain", dt[0]).put("kind", cfg.target().kind() != null ? cfg.target().kind() : dt[1]).put("key", plan.key);
-        s.put("date", plan.asOf != null ? null : plan.date).put("asOf", plan.asOf == null ? null : plan.asOf.toString());
+        s.put("date", plan.date).put("asOf", plan.asOf == null ? null : plan.asOf.toString());
         ArrayNode promote = s.putArray("promote");
         plan.promoted.forEach(p -> promote.add(p.path()));
         ArrayNode pb = s.putArray("partitionBy");
@@ -368,6 +415,12 @@ final class LoadReport {
         s.set("duplicateExamples", JSON.valueToTree(duplicateExamples));
         s.put("latestBy", plan.latestBy);
         s.set("files", JSON.valueToTree(files));
+        s.put("dateFrom", cfg.source().dateFrom());
+        s.set("fileDates", JSON.valueToTree(fileDates));
+        s.put("otherDateRows", otherDateRows);
+        s.set("dateNotes", JSON.valueToTree(dateNotes));
+        s.set("emptyFiles", JSON.valueToTree(emptyFiles));
+        s.set("loads", JSON.valueToTree(loads));
         s.put("sampleId", sampleId).put("sampleDate", sampleDate);
         ObjectNode timings = s.putObject("timings");
         timings.put("readSeconds", Meter.round(readSeconds)).put("writeSeconds", Meter.round(writeSeconds)).put("totalSeconds", Meter.round(totalSeconds));

@@ -94,14 +94,17 @@ def book(n=300):
 
 def test_a_file_becomes_a_lake_bound_and_announced(browser, lakes_console, tmp_path):
     url, backend, root = lakes_console
-    src = tmp_path / "book.json"
+    src = tmp_path / "book.2026-10-16.json"                       # its business date in its name (the load rules)
     src.write_text(json.dumps(book(), indent=2), encoding="utf-8")
     page = browser.new_page()
     page.goto(url + "/admin/lakes")
     page.locator("[data-file]").set_input_files(str(src))
     page.locator("[data-step=fields]").wait_for(state="visible", timeout=30000)
     assert page.locator("[data-key]").input_value() == "TRADE_ID"
-    assert page.locator("[data-date]").input_value() == "TRADE_DATE"
+    assert "2026-10-16, from the file name" in page.locator("[data-date-said]").inner_text()
+    page.locator("[data-lake-asof]").fill("2026-10-15")                                         # another date, given: said, then put back
+    assert "2026-10-15, the date given here" in page.locator("[data-date-said]").inner_text()
+    page.locator("[data-lake-asof]").fill("")
     assert page.locator("[data-pick=classifier][value=PRODUCT_TYPE]").is_checked()
     assert "Read 300 documents" in page.locator("[data-scan-note]").inner_text()
     page.locator("[data-pick=promote][value=QUANTITY]").check()

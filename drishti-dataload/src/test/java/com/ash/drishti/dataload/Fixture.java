@@ -68,7 +68,7 @@ final class Fixture {
                 connectors:
                   trade-lake:
                     plugin: delta
-                    kinds: [trade]
+                    kinds: [trade, position]
                     settings:
                       domain: demo
                       layout:
@@ -78,6 +78,8 @@ final class Fixture {
                   trade:
                     key: TRADE_ID
                     date: BUSINESS_DATE
+                  position:
+                    key: POSITION_ID
                 """);
         Files.createDirectories(rules.getParent());
         Files.writeString(rules, """
@@ -93,7 +95,7 @@ final class Fixture {
                   unmatched: fail
                 """);
         settings = new DataLoadSettings(true, root.toString(), Duration.ofMinutes(10), 30, null, null, "256m", Duration.ofMinutes(5), 0.0, false, 30,
-                lake.toString(), rules.toString(), false);
+                lake.toString(), rules.toString(), false, null, null);
     }
 
     Path inbox() {
@@ -101,7 +103,17 @@ final class Fixture {
     }
 
     Routes.Packs packs() {
-        return name -> name.equals("demo-pack") ? new Routes.PackInfo(pack, List.of("trade", "position")) : null;
+        return new Routes.Packs() {
+            @Override
+            public Routes.PackInfo find(String name) {
+                return name.equals("demo-pack") ? new Routes.PackInfo(pack, List.of("trade", "position")) : null;
+            }
+
+            @Override
+            public List<String> names() {
+                return List.of("demo-pack");
+            }
+        };
     }
 
     /** A data file in the inbox, old enough to be stable, with its marker ({@code marker} null: none; "" an empty one). */

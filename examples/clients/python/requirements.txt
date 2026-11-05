@@ -1,0 +1,10 @@
+# The client examples' Python packages (examples/clients/README.md). Install them in a virtual environment of your own.
+pyarrow>=16
+pandas>=2.0
+polars>=1.0
+duckdb>=1.0
+matplotlib>=3.8
+pyyaml>=6.0
+openpyxl>=3.1
+deltalake>=0.20
+pyiceberg>=0.8

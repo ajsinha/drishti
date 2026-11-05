@@ -254,7 +254,7 @@ class VarMrCubeApiTest {
         String rita = as("rita", "risk");
         JsonNode cat = call(rita, get("/api/v1/pivot/catalogue").param("source", "var"), null, 200);
         assertThat(cat.path("fields").findValuesAsText("name")).contains("MGMT.DESK", "MGMT.BOOK", "RISK_CLASS", "POSITION", "TRADE", "CURRENCY");
-        assertThat(cat.path("measures").findValuesAsText("name")).contains("var", "comp_var", "incr_var", "limit_use", "svar");
+        assertThat(cat.path("measures").findValuesAsText("name")).contains("var", "pvar", "comp_var", "incr_var", "limit_use", "svar");
         assertThat(cat.at("/defaultView/rows/0").asText()).isEqualTo("MGMT.DESK");
         assertThat(cat.at("/defaultView/columns/0").asText()).isEqualTo("RISK_CLASS");
         JsonNode a = query(rita, view(List.of("MGMT.BOOK"), List.of("RISK_CLASS"), Map.of("var()", "VaR"), Map.of()), 200);

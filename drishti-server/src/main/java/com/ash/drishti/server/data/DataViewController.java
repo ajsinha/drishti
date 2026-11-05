@@ -202,6 +202,52 @@ public class DataViewController {
         }
     }
 
+    // ---- Arrow Flight (docs/guides/FLIGHT_GUIDE.md): the same checks as a download, the rows to the caller's sink ---------------------
+
+    /** What a Flight read of a kind will send: the dataset, the day, the selection and the columns chosen for this person. */
+    public record FlightSelection(DataViewService.Dataset dataset, LocalDate day, DataSelection selection, List<String> columns) {}
+
+    /** The selection of a Flight read, checked as a download is (the dataset open to the person, internal only, the columns, the masks). */
+    public FlightSelection flightSelection(Principal p, String kind, String date, List<String> columns, List<String> where) {
+        DataViewService.Dataset d = open(p, kind, true);
+        DataSelection sel = DataSelection.parse(columns, where);
+        return new FlightSelection(d, day(d, date), sel, chosen(p, d, sel));
+    }
+
+    /**
+     * A Flight read of a kind: busy protection as a download, the memory-only retention rule (a person's read is the way out, as a
+     * download), the rows to {@code sink}, the audit line {@code data.flight}. The node and the token are in the Flight audit as well.
+     */
+    public DataViewService.Walk flightRead(Principal p, FlightSelection s, DataViewService.RowSink sink) throws IOException {
+        String kind = s.dataset().kind();
+        boolean memoryOnly = com.ash.drishti.memlake.Retention.current().memoryOnly(kind);
+        com.ash.drishti.memlake.Retention.current().require(com.ash.drishti.memlake.Retention.Sink.DOWNLOAD, List.of(kind), "This Flight read");
+        long[] sent = {0};
+        String outcome = "incomplete";
+        try {
+            DataViewService.Walk w = data.walk(s.dataset(), s.day(), s.selection(), s.columns(), entitlements.masks(p) ? entitlements.redactor(p) : null,
+                    true, 0, row -> {
+                        sent[0]++;
+                        return sink.row(row);
+                    });
+            outcome = w.stopped() ? "stopped" : "complete";
+            return w;
+        } finally {
+            audit.record(p.user(), "data.flight", kind, "date=" + (s.day() == null ? "current" : s.day()) + "; columns=" + String.join(",", s.columns())
+                    + "; where=" + (memoryOnly ? s.selection().lines().size() + " condition(s)"
+                            : String.join(" AND ", s.selection().lines().stream().map(DataSelection.Line::text).toList()))
+                    + "; rows=" + sent[0] + "; " + outcome + (memoryOnly ? "; memory-only data" : ""));
+        }
+    }
+
+    /** The kinds this person may read (for Flight's ListFlights). */
+    public List<DataViewService.Dataset> flightKinds(Principal p) {
+        if (!enabled) {
+            return List.of();
+        }
+        return data.datasets().stream().filter(d -> visible(p, d.kind())).toList();
+    }
+
     // ---- checks --------------------------------------------------------------------------------------------------------------------
 
     private void requireOn() {

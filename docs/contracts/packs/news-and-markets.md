@@ -175,7 +175,7 @@ The headlines for one name, as the news connector computed them: newest first, f
 
 **To review (3)**
 
-- required inferred from 100% coverage in 71 documents (0 samples and 71 test-data documents (data/testdata/news-and-markets/news/snapshot-2026-10-18.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 71 documents (0 samples and 71 test-data documents (data/testdata/news-and-markets/news/news.2026-10-18.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - read live through the news connector when it is on: confirm the cadence (intraday, on demand).
 - enum values inferred from the data, not from a glossary: EDITION, RELEVANCE_FILTER, FETCHED_AT, PIPELINE[].STEP, PROVENANCE.FETCHED: confirm they are closed lists.
 
@@ -324,7 +324,7 @@ A quote and recent price history for a ticker, as the yfinance connector compute
 
 **To review (5)**
 
-- required inferred from 100% coverage in 20 documents (0 samples and 20 test-data documents (data/testdata/news-and-markets/quote/snapshot-2026-10-18.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 20 documents (0 samples and 20 test-data documents (data/testdata/news-and-markets/quote/quote.2026-10-18.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - read live through the yfinance connector when it is on: confirm the cadence (intraday, on demand).
 - enum values inferred from the data, not from a glossary: EXCHANGE: confirm they are closed lists.
 - number types decided by the field's name: PRICE amount, CHANGE_PCT rate: confirm amount, rate or integer.

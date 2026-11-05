@@ -147,7 +147,7 @@ public final class Claims {
         Files.createDirectories(to);
         Path marker = null;
         if (r.marker() != null) {
-            marker = move(r.marker(), to.resolve(r.marker().getFileName()));
+            marker = move(r.marker(), to.resolve(r.file().getFileName() + Inbox.READY));     // a short marker takes its file's full name
         }
         Path file = move(r.file(), to.resolve(r.file().getFileName()));
         return new Path[] {file, marker};

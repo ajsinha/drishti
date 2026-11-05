@@ -14,8 +14,8 @@
 
 """Branding from configuration only (docs/admin/CONFIGURATION.md, ``ui``): no template or script writes the product's name; it comes from
 ``ui.product`` ({{ PRODUCT }} in a template, ``<body data-product>`` in a script), and its features follow it ("<product> SQL",
-"<product> Elements", "<product>*net"). Allowed: the licence header, comments, code identifiers (``window.DrishtiChannel``,
-``drishti-`` ids, ``DRISHTI_`` variables, ``data-drishti`` attributes), header names (``X-Drishti-…``) and paths."""
+"<product> Elements", "<product>*net"). Allowed: the licence header, comments, code identifiers (``window.Drishti.Channel``,
+the scripts' namespace (``window.Drishti.Channel``), ``drishti-`` ids, ``DRISHTI_`` variables, ``data-drishti`` attributes), header names (``X-Drishti-…``) and paths."""
 import re
 from pathlib import Path
 
@@ -26,8 +26,9 @@ from core.app import create_app
 from core.config import load_settings
 
 WEB = CONSOLE / "web"
-NAME = re.compile(r"(?<![\w-])(Drishti|DRISHTI)(?![\w-])")     # the word on its own: not DrishtiChannel, X-Drishti-User or DRISHTI_PACKS
-ALLOWED = ("Project Drishti",)                                 # the licence header's first line (build/notes.js strips it from a pasted file)
+# the word on its own: not Drishti.Channel, X-Drishti-User, DRISHTI_PACKS or the scripts' one namespace (window.Drishti.Channel)
+NAME = re.compile(r"(?<![\w.-])(Drishti|DRISHTI)(?![\w-]|\.[A-Za-z_$])")
+ALLOWED = ("Project Drishti",)                                 # the licence header's first line (build/drishti_notes.js strips it from a pasted file)
 
 
 def _visible(path: Path) -> str:
@@ -64,7 +65,7 @@ def test_no_script_writes_the_product_name():
 
 def test_the_guard_sees_a_literal_and_lets_identifiers_through(tmp_path):
     (tmp_path / "a.html").write_text('{# Project Drishti · header #}\n<p>Drishti SQL</p>\n<i data-drishti-x class="drishti-y">{{ PRODUCT }}*net</i>\n')
-    (tmp_path / "b.js").write_text("/* Drishti */\nwindow.DrishtiChannel = 1; // Drishti\nh('X-Drishti-User'); say('DRISHTI_PACKS');\nsay('Drishti*net');\n")
+    (tmp_path / "b.js").write_text("/* Drishti */\nwindow.DrishtiChannel = 1; // Drishti\nh('X-Drishti-User'); g.Drishti = g.Drishti || {}; window.Drishti.Busy.render(); say('DRISHTI_PACKS');\nsay('Drishti*net');\n")
     found = _literals(tmp_path, "*.*")
     assert [f.split(":")[1] for f in found] == ["2", "4"], found
 
@@ -81,7 +82,7 @@ def test_a_rebranded_console_names_the_product_and_owner_from_configuration(back
 
 
 def test_the_wordmark_font_is_not_named_after_the_product():
-    css = (WEB / "static" / "css" / "theme.css").read_text(encoding="utf-8")
+    css = (WEB / "static" / "css" / "drishti_theme.css").read_text(encoding="utf-8")
     assert '"Product Wordmark"' in css and "Drishti Wordmark" not in css and "Drishti Tagline" not in css
 
 

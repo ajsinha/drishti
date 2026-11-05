@@ -61,7 +61,7 @@ def test_the_page_renders_the_whole_document_with_every_anchor(client, server_se
     page = client.get("/help/configuration")
     assert page.status_code == 200
     text = page.text
-    assert 'data-cfg-page' in text and "/static/js/configuration.js" in text and "help-config.css" in text
+    assert 'data-cfg-page' in text and "/static/js/drishti_configuration.js" in text and "drishti_help-config.css" in text
     for anchor in ("how-configuration-works", "every-setting", "the-server-applicationyaml", "the-console-applicationyaml",
                    "packs-packyaml", "environment-variable-index", "delta--delta-lake", "connectors-every-plugins-settings"):
         assert f'id="{anchor}"' in text, anchor

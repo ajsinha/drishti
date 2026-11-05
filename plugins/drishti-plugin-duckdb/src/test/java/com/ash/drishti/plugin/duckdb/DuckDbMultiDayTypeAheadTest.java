@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.duckdb;
 
+import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -24,8 +25,6 @@ import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.common.JsonCodec;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -57,8 +56,7 @@ class DuckDbMultiDayTypeAheadTest {
             }
             lines.add(line("T-ALWAYS", D0.plusDays(d)));
         }
-        Path f = dir.resolve("rows.jsonl");
-        Files.write(f, lines, StandardCharsets.UTF_8);
+        Path f = LoaderRows.write(dir.resolve("rows"), lines);   // the load rules: a tar of <kind>/<date>/ folders
         DuckDbLoader.main(new String[] {f.toString(), db.toString(), "--parsers", "2", "--memory-limit", "256MB"});
         return db;
     }

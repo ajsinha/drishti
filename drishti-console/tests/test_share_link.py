@@ -82,7 +82,7 @@ def test_a_pinned_link_never_sets_the_readers_date(client):
     assert 'data-share="http://testserver/v/trade/IRS-48213?asOf=2026-09-29&amp;knownAt=2026-09-29T14%3A30%3A00Z&amp;gen=1742"' in page.text
     assert "drishti_asof" not in client.cookies and "drishti_knownat" not in client.cookies
     assert "pin-banner" not in client.get("/v/trade/IRS-48213").text                      # the next page is the reader's own: live
-    assert "/static/js/live.js" in client.get("/v/trade/IRS-48213").text
+    assert "/static/js/drishti_live.js" in client.get("/v/trade/IRS-48213").text
 
 
 def test_a_pin_overrides_but_does_not_replace_the_readers_cookie(client):

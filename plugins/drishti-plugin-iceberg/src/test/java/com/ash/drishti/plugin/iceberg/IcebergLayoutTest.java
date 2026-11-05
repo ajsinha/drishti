@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -112,7 +113,7 @@ class IcebergLayoutTest {
     void load(List<String> lines, String... options) throws Exception {
         Path f = Files.createTempFile(root, "rows", ".jsonl");
         Files.write(f, lines);
-        List<String> args = new ArrayList<>(List.of(f.toString(), root.toString(), "--file-rows", "15", "--row-group-mb", "0.0001", "--buffer-mb", "0",
+        List<String> args = new ArrayList<>(List.of(LoaderRows.rewrite(f).toString(), root.toString(), "--file-rows", "15", "--row-group-mb", "0.0001", "--buffer-mb", "0",
             "--threads", "3", "--spill-dir", root.resolve("spill").toString()));
         args.addAll(List.of(options));
         args.addAll(List.of("--engine", writeEngine()));
@@ -330,16 +331,16 @@ class IcebergLayoutTest {
     }
 
     @Test
-    void aFutureDatedRowIsNotLoadedAndCannotMoveTheRetentionCutOff() throws Exception {
+    void aFutureBusinessDateIsNotLoaded() throws Exception {
         LocalDate typo = LocalDate.of(2099, 3, 1);
         List<String> lines = new ArrayList<>(List.of(line(1, typo, doc(1, typo))));
         for (int i = 1; i <= 40; i++) {
             lines.add(line(i, D2, doc(i, D2)));                              // the newest day again, and one row dated by mistake
         }
-        assertThatThrownBy(() -> load(lines, "--keep-days", "2", "--as-of", "2026-09-30")).hasMessageContaining("1 rows not loaded");
+        assertThatThrownBy(() -> load(lines)).hasMessageContaining("in the future");      // a tar with trade/2099-03-01/: refused whole
         Table t = table();
         try (var pool = IcebergTable.virtualPool()) {
-            assertThat(new IcebergTable(t, pool).layout(t.currentSnapshot().snapshotId(), false).days().keySet()).as("two days back from 2026-09-30")
+            assertThat(new IcebergTable(t, pool).layout(t.currentSnapshot().snapshotId(), false).days().keySet()).as("the days loaded, not the future one")
                     .containsExactly(D1, D2);
         }
         assertThat(rows(t)).isEqualTo(80);

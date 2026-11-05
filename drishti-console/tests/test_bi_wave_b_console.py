@@ -43,15 +43,15 @@ def app_with(backend):
 # ---- task 3: the calculation UI ---------------------------------------------------------------------------------------------
 def test_the_model_designer_has_the_calculations_tab_and_its_script():
     page = (CONSOLE / "web/templates/bi/model_designer.html").read_text(encoding="utf-8")
-    assert 'data-tab="calc"' in page and "data-calc-pane" in page and "/static/js/bi-model-calc.js" in page
-    calc = (JS / "bi-model-calc.js").read_text(encoding="utf-8")
+    assert 'data-tab="calc"' in page and "data-calc-pane" in page and "/static/js/drishti_bi-model-calc.js" in page
+    calc = (JS / "drishti_bi-model-calc.js").read_text(encoding="utf-8")
     for fn in ("share_of(", "calc(", "closing(", "opening(", "avg_over(", "fiscal_ytd(", "as_of(", "param."):
         assert fn in calc, fn
     for key in ("'calc-groups'", "doc.parameters", "doc.calendars", "doc.fx", "'fiscal-year-start'", "SELECTED"):
         assert key in calc, key
-    tabs = (JS / "bi-model-tabs.js").read_text(encoding="utf-8")
+    tabs = (JS / "drishti_bi-model-tabs.js").read_text(encoding="utf-8")
     assert "data-m-via" in tabs and "doc.measures[name].via" in tabs and "M.quickMeasure" in tabs
-    editor = (JS / "bi-expr-editor.js").read_text(encoding="utf-8")
+    editor = (JS / "drishti_bi-expr-editor.js").read_text(encoding="utf-8")
     assert "opts.names" in editor and "opts.keywordValues" in editor and "'ALL'" in editor
 
 
@@ -109,7 +109,7 @@ def test_a_standing_querys_pushed_answers_reach_the_browser_over_the_one_channel
     events = [(c.split("\n")[0], json.loads(c.split("\n")[1][6:])) for c in out[1:]]
     assert [e[0] for e in events] == ["event: answer", "event: status"] and events[0][1]["ch"] == "mq:sq_1"
     assert backend.paths == ["/bi/mq/stream?ids=sq_1"]
-    assert "'answer'" in (JS / "live-hub.js").read_text(encoding="utf-8")
+    assert "'answer'" in (JS / "drishti_live-hub.js").read_text(encoding="utf-8")
 
 
 def test_every_consumer_has_the_time_picker_the_chip_and_follows_pushed_answers():
@@ -118,21 +118,21 @@ def test_every_consumer_has_the_time_picker_the_chip_and_follows_pushed_answers(
     board = c.get("/bi/b/b1").text
     explore = c.get("/bi/explore").text
     for page in (report, board, explore):
-        assert "data-time-mode" in page and 'value="asof"' in page and 'value="window"' in page and "/static/js/bi-consume.js" in page
+        assert "data-time-mode" in page and 'value="asof"' in page and 'value="window"' in page and "/static/js/drishti_bi-consume.js" in page
     assert "data-param-bar" in report
-    consume = (JS / "bi-consume.js").read_text(encoding="utf-8")
+    consume = (JS / "drishti_bi-consume.js").read_text(encoding="utf-8")
     assert "'/mq/subscribe'" in consume and "'mq:' + sq" in consume and "EventSource" not in consume and "innerHTML" not in consume
     for word in ("Live", "Throttled", "Stale", "Every few seconds"):
         assert word in consume, word
-    for name in ("bi-report.js", "bi-report-board.js", "alerts-live.js"):
+    for name in ("drishti_bi-report.js", "drishti_bi-report-board.js", "drishti_alerts-live.js"):
         assert "B.consume.follow(" in (JS / name).read_text(encoding="utf-8"), name
 
 
 # ---- task 5: explain and usage ----------------------------------------------------------------------------------------------
 def test_each_visual_has_the_explain_panel():
-    report = (JS / "bi-report.js").read_text(encoding="utf-8")
+    report = (JS / "drishti_bi-report.js").read_text(encoding="utf-8")
     assert "explain-plan" in report and "B.consume.explain(" in report
-    consume = (JS / "bi-consume.js").read_text(encoding="utf-8")
+    consume = (JS / "drishti_bi-consume.js").read_text(encoding="utf-8")
     assert "explain: true" in consume and "m.tiers" in consume and "m.explainText" in consume and "m.timings" in consume
 
 

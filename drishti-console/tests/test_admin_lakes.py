@@ -32,9 +32,11 @@ needs_deltalake = pytest.mark.skipif(importlib.util.find_spec("deltalake") is No
 OCTET = {"Content-Type": "application/octet-stream"}
 
 
-def book(n=60):
-    return [{"TRADE_ID": 500 + i, "TRADE_DATE": ["2026-10-01", "2026-10-02"][i % 2], "PRODUCT_TYPE": ["Swap", "Future", "Option"][(i // 2) % 3],
+def book(n=60, day=None):
+    """Deals of two trade dates (or, with ``day``, only that one's): the file of a business date is named by it (the load rules)."""
+    rows = [{"TRADE_ID": 500 + i, "TRADE_DATE": ["2026-10-01", "2026-10-02"][i % 2], "PRODUCT_TYPE": ["Swap", "Future", "Option"][(i // 2) % 3],
              "NOTIONAL": 10.0 * i, "LEGS": [{"LEG_ID": 1, "CASH_FLOWS": [{"AMOUNT": i}]}]} for i in range(n)]
+    return [r for r in rows if day is None or r["TRADE_DATE"] == day]
 
 
 @pytest.fixture
@@ -74,7 +76,7 @@ def upload(client, docs, name="book.json"):
 def test_the_page_and_the_data_loads_link(client, backend, monkeypatch, lakes):
     fake(backend, monkeypatch, [])
     page = client.get("/admin/lakes").text
-    for text in ("Load a file into a lake", "admin-lakes.js", "admin-lakes.css", "data-file", "Id field", "Business date", "Classifier", "Promote",
+    for text in ("Load a file into a lake", "drishti_admin-lakes.js", "drishti_admin-lakes.css", "data-file", "Id field", "Business date", "Classifier", "Promote",
                  "Replace those dates", "Bind the lake to the pack", "Recent builds", 'aria-live="polite"', str(lakes.cfg.roots[0])):
         assert text in page, text
     assert 'href="/admin/lakes"' in client.get("/admin/loads").text
@@ -83,7 +85,8 @@ def test_the_page_and_the_data_loads_link(client, backend, monkeypatch, lakes):
 def test_upload_scan_and_targets(client, backend, monkeypatch, lakes):
     fake(backend, monkeypatch, [])
     u = upload(client, book())
-    assert u["size"] > 0 and u["name"] == "book.json"
+    assert u["size"] > 0 and u["name"] == "book.json" and u["nameDate"] is None and u["businessToday"]   # no date in the name: today
+    assert upload(client, book(4), "book.2026-10-01.json")["nameDate"] == "2026-10-01"
     s = client.post(f"/admin/api/lakes/uploads/{u['id']}/scan").json()
     assert s["documents"] == 60
     assert s["suggest"]["key"][0] == "TRADE_ID" and s["suggest"]["date"][0] == "TRADE_DATE" and "PRODUCT_TYPE" in s["suggest"]["partitionBy"]
@@ -101,8 +104,9 @@ def test_refusals(client, backend, monkeypatch, lakes):
     assert client.post("/admin/api/lakes/upload?name=a.json", content=b"[{}]", headers=OCTET).status_code == 413
     lakes.cfg.max_upload_mb = 10
     u = upload(client, book(4))
-    base = {"upload": u["id"], "root": str(lakes.cfg.roots[0]), "domain": "book", "kind": "deal", "key": "TRADE_ID", "date": "TRADE_DATE"}
-    for bad, why in (({"root": "/etc"}, "lake roots"), ({"domain": "../x"}, "short name"), ({"date": None}, "business-date"),
+    base = {"upload": u["id"], "root": str(lakes.cfg.roots[0]), "domain": "book", "kind": "deal", "key": "TRADE_ID"}
+    for bad, why in (({"root": "/etc"}, "lake roots"), ({"domain": "../x"}, "short name"), ({"date": "TRADE_DATE"}, "never a field"),
+                     ({"asOf": "01/10/2026"}, "yyyy-MM-dd"),
                      ({"partitionBy": ["a", "b", "c", "d", "e"]}, "at most 4"), ({"bind": True}, "pack"), ({"upload": "nope"}, "no such upload")):
         r = client.post("/admin/api/lakes/jobs", json={**base, **bad})
         assert r.status_code in (400, 404) and why in r.json()["detail"], (bad, r.text)
@@ -120,8 +124,8 @@ def test_connector_text_binds_the_lake_and_keeps_the_rest():
 def test_a_build_binds_the_connector_and_announces_each_date(client, backend, monkeypatch, lakes):
     calls = []
     fake(backend, monkeypatch, calls)
-    u = upload(client, book() + [{"TRADE_DATE": "2026-10-01"}])
-    body = {"upload": u["id"], "root": str(lakes.cfg.roots[0]), "domain": "book", "kind": "deal", "key": "TRADE_ID", "date": "TRADE_DATE",
+    u = upload(client, book(day="2026-10-01") + [{"TRADE_DATE": "2026-10-01"}], "book.2026-10-01.json")    # the date from the name
+    body = {"upload": u["id"], "root": str(lakes.cfg.roots[0]), "domain": "book", "kind": "deal", "key": "TRADE_ID",
             "partitionBy": ["PRODUCT_TYPE"], "promote": ["NOTIONAL"], "mode": "overwrite-dates", "pack": "synth-book", "connector": "book-store",
             "bind": True, "signal": True}
     r = client.post("/admin/api/lakes/jobs", json=body)
@@ -135,8 +139,8 @@ def test_a_build_binds_the_connector_and_announces_each_date(client, backend, mo
         time.sleep(0.3)
     assert j["state"] == "done", j
     s = j["summary"]
-    assert (s["status"], s["accepted"], s["rejected"], s["engine"]) == ("partial", 60, 1, "deltalake")
-    assert s["rows"] == {"2026-10-01": 30, "2026-10-02": 30} and s["sampleId"] and s["kind"] == "deal"
+    assert (s["status"], s["accepted"], s["rejected"], s["engine"]) == ("partial", 30, 1, "deltalake")
+    assert s["rows"] == {"2026-10-01": 30} and s["sampleId"] and s["kind"] == "deal"
     assert (lakes.cfg.roots[0] / "book" / "deal" / "business_date=2026-10-01" / "PRODUCT_TYPE=Swap").is_dir()
     put = [c for c in calls if c[0] == "PUT" and c[1] == "/connectors/book-store"]
     assert len(put) == 1 and put[0][4] == {"confirm": "true"}
@@ -145,7 +149,15 @@ def test_a_build_binds_the_connector_and_announces_each_date(client, backend, mo
     assert bound["settings"]["layout"] == {"deal": {"columns": ["NOTIONAL"]}}
     assert j["bind"]["ok"] and j["bind"]["created"]
     sent = sorted(c[2]["businessDate"] for c in calls if c[0] == "ANNOUNCE")
-    assert sent == ["2026-10-01", "2026-10-02"] and all(x["ok"] for x in j["signal"])
+    assert sent == ["2026-10-01"] and all(x["ok"] for x in j["signal"])
+    # another file, its date given (as of): the name's date is overridden
+    u2 = upload(client, book(day="2026-10-02"), "book.2026-09-30.json")
+    r = client.post("/admin/api/lakes/jobs", json={**body, "upload": u2["id"], "asOf": "2026-10-02", "bind": False, "signal": False})
+    assert r.status_code == 202, r.text
+    jid, deadline = r.json()["id"], time.time() + 120
+    while (j := client.get(f"/admin/api/lakes/jobs/{jid}").json())["state"] == "running" and time.time() < deadline:
+        time.sleep(0.3)
+    assert j["summary"]["rows"] == {"2026-10-02": 30}, j
     assert "lake-build partial" in client.get("/admin/lakes").text          # the run log is listed
     t = client.get("/admin/api/lakes/targets").json()
     assert t["tables"] == [{"root": str(lakes.cfg.roots[0]), "domain": "book", "kind": "deal", "partitionBy": ["PRODUCT_TYPE"], "promoted": ["NOTIONAL"]}]
@@ -155,11 +167,13 @@ def test_a_table_opens_its_own_page_with_dates_columns_commits_loads_and_readers
     import json as _json
     import subprocess
     import sys as _sys
-    src = tmp_path / "deals.jsonl"
-    src.write_text("\n".join(_json.dumps(d) for d in book()), encoding="utf-8")
+    src = tmp_path / "deals"                                  # one file a business date, named by it (the load rules)
+    src.mkdir()
+    for day in ("2026-10-01", "2026-10-02"):
+        (src / f"deal.{day}.jsonl").write_text("\n".join(_json.dumps(d) for d in book(day=day)), encoding="utf-8")
     root = lakes.cfg.roots[0]
     r = subprocess.run([_sys.executable, str(REPO / "tools" / "drishti.py"), "lake", "build", "--from", str(src), "--lake", str(root),
-                        "--domain", "book", "--kind", "deal", "--key", "TRADE_ID", "--date", "TRADE_DATE", "--partition-by", "PRODUCT_TYPE",
+                        "--domain", "book", "--kind", "deal", "--key", "TRADE_ID", "--mode", "overwrite-dates", "--partition-by", "PRODUCT_TYPE",
                         "--promote", "NOTIONAL", "--engine", "deltalake", "-q"], capture_output=True, text=True)
     assert r.returncode == 0, r.stdout + r.stderr
     calls = []

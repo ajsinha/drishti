@@ -62,13 +62,14 @@ public class ThreadConfiguration {
                 Clock.systemUTC());
     }
 
-    /** Imports the notes of earlier releases once (every start imports only what is new), then serves {@code /notes} over threads. */
+    /** Imports the notes of earlier releases into comment threads once at start (every start imports only what is new). */
     @Bean
-    public NoteFacade noteFacade(ThreadService threads, Entitlements entitlements, NoteStore notes, ThreadStore store, CollabTx tx, AuditLog audit,
+    public org.springframework.beans.factory.SmartInitializingSingleton noteImport(NoteStore notes, ThreadStore store, CollabTx tx, AuditLog audit,
             CollabProperties props) {
-        if (props.enabled()) {
-            NoteImport.run(notes, store, tx, audit);
-        }
-        return new NoteFacade(threads, entitlements);
+        return () -> {
+            if (props.enabled()) {
+                NoteImport.run(notes, store, tx, audit);
+            }
+        };
     }
 }

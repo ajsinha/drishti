@@ -37,7 +37,7 @@ def _index(backend, monkeypatch, calls, refuse=None):
 def test_the_connector_page_has_the_index_section_and_its_script(client, backend, monkeypatch):
     serve(backend, monkeypatch)
     page = client.get("/admin/connectors/trading-lake").text
-    for text in ("data-index-panel", "Reload all", "data-index-table", "admin-index.js", "data-index-auto"):
+    for text in ("data-index-panel", "Reload all", "data-index-table", "drishti_admin-index.js", "data-index-auto"):
         assert text in page, text
 
 

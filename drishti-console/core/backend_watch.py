@@ -16,7 +16,7 @@
 
 A background task asks each server of the catalogue ``/public/about`` every ``backend.check_seconds`` (short timeout),
 keeps ``reachable`` / ``since`` / ``lastError`` / ``version`` per server and logs each change once. The state backs
-``GET /healthz/backend`` (which the browser's server-watch.js polls) and Admin → Health. Nothing here holds a secret.
+``GET /healthz/backend`` (which the browser's drishti_server-watch.js polls) and Admin → Health. Nothing here holds a secret.
 """
 from __future__ import annotations
 

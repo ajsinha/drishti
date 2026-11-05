@@ -35,21 +35,20 @@ POINTS="localhost:9042"; DC="datacenter1"; OPTS=(); TRADES=""; DAYS="3"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --create|--force-drop) OPTS+=("$1"); shift ;;
-    --create-keyspace|--keyspace|--ttl-days|--keep-days|--buckets|--in-flight|--batch-rows|--consistency|--username|--password|--setting|--future-days|--zone|--as-of|--max-drop-share)
+    --create-keyspace|--keyspace|--ttl-days|--keep-days|--buckets|--in-flight|--batch-rows|--consistency|--username|--password|--setting|--future-days|--zone|--max-drop-share)
       OPTS+=("$1" "$2"); shift 2 ;;
     --trades) TRADES="$2"; shift 2 ;;
     --days) DAYS="$2"; shift 2 ;;
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
-uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$DATA/banking.jsonl"
+# loader rows by the load rules (docs/architecture/DATA_LOAD_RULES.md): tars of <kind>/<YYYY-MM-DD>/ folders, each row under its folder's date
+ROWS="$DATA/build/loader-rows"; rm -rf "$ROWS"; mkdir -p "$ROWS"
+uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$ROWS/banking.tar"
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-cassandra -am
 CP="plugins/drishti-plugin-cassandra/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-cassandra -Dmdep.outputFile=/dev/stdout)"
-{
-  cat "$DATA/banking.jsonl"
-  if [[ -n "$TRADES" ]]; then
-    # the bulk book straight from the generator: no file of gigabytes in between
-    uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl -
-  fi
-} | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.cassandra.CassandraLoader - "$POINTS" "$DC" "${OPTS[@]}"
-rm -f "$DATA/banking.jsonl"
+if [[ -n "$TRADES" ]]; then
+  uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl "$ROWS/bulk-trades.tar"            # the bulk book: a tar of trade/<YYYY-MM-DD>/ folders
+fi
+"$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.cassandra.CassandraLoader "$ROWS" "$POINTS" "$DC" "${OPTS[@]}"
+rm -rf "$ROWS"

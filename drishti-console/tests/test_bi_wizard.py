@@ -29,7 +29,7 @@ def test_the_wizard_page_is_a_shell_with_its_steps_script():
     r = client.get("/bi/datasets/new", params={"edit": "file:dataset:trades-basic", "workspace": "u-1"})
     assert r.status_code == 200
     assert 'data-edit="file:dataset:trades-basic"' in r.text and 'data-workspace-id="u-1"' in r.text
-    assert "bi-wizard.js" in r.text and "bi-wizard-steps.js" in r.text and "bi-wizard.css" in r.text and "data-wiz-body" in r.text
+    assert "drishti_bi-wizard.js" in r.text and "drishti_bi-wizard-steps.js" in r.text and "drishti_bi-wizard.css" in r.text and "data-wiz-body" in r.text
 
 
 def test_the_wizard_page_needs_the_bi_power():
@@ -43,7 +43,7 @@ def test_the_entry_points_lead_to_the_wizard():
     assert "/bi/datasets/new-layer" in client.get("/bi/designer").text
     assert "data-guided" not in client.get("/bi/datasets/new-layer").text                        # no pointer to the version 1 tables builder (wave A QA)
     assert "data-edit-wizard" in client.get("/bi/d/file:dataset:trades-basic").text and "data-set-schedule" in client.get("/bi/d/file:dataset:trades-basic").text
-    assert "/bi/datasets/new-layer?workspace=" in (WEB / "static/js/bi.js").read_text() and "data-new-dataset-wizard" in (WEB / "templates/bi/workspace.html").read_text()
+    assert "/bi/datasets/new-layer?workspace=" in (WEB / "static/js/drishti_bi.js").read_text() and "data-new-dataset-wizard" in (WEB / "templates/bi/workspace.html").read_text()
 
 
 def test_a_document_is_written_as_yaml_in_the_order_given():
@@ -84,7 +84,7 @@ def test_the_designer_start_lets_the_author_choose_where_drafts_go_and_lists_sam
     page = client.get("/bi/designer").text
     for hook in ("data-new-workspace", "data-new-board-workspace", "data-samples", "data-no-samples"):
         assert hook in page
-    script = (WEB / "static/js/bi-design.js").read_text()
+    script = (WEB / "static/js/drishti_bi-design.js").read_text()
     assert "data-sample-copy" in script and "askWorkspace" in script           # Copy and design, and Save a copy ask for the workspace
     assert "B.fillWorkspaces(bws)" in script                                     # a board (a report with board pages, 2.4.0) is made here too
 
@@ -92,8 +92,8 @@ def test_the_designer_start_lets_the_author_choose_where_drafts_go_and_lists_sam
 def test_the_workspace_page_offers_a_python_starter_and_known_people():
     client, _ = make()
     page = client.get("/bi/w/me").text
-    assert "data-python-row" in page and "pyinterface" in page and "data-member-user" in page and "people.js" in page and "bi-extras.js" in page
-    assert "bi-extras.js" in client.get("/bi/i/bi-1").text
+    assert "data-python-row" in page and "pyinterface" in page and "data-member-user" in page and "drishti_people.js" in page and "drishti_bi-extras.js" in page
+    assert "drishti_bi-extras.js" in client.get("/bi/i/bi-1").text
 
 
 def test_the_distribution_status_is_passed_on_for_the_report_bar():

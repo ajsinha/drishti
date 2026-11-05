@@ -40,18 +40,34 @@ About 15 minutes.
 
 ## Step 1 · Point the news connector at memory
 
-**The YAML.** Copy the example connector over the pack's own:
+**The YAML.** The store is a lake of its own (docs/guides/LAKE_GUIDE.md section 6): copy its lake file, and the example connector over
+the pack's own:
 
 ```bash
+cp config/lakes.examples/memory/news.yaml config/lakes/news.yaml
 cp config/connectors.examples/memory/news-store.yaml config/connectors/news-store.yaml
 ```
 
 ```yaml
+# config/lakes/news.yaml
+lake: news
+format: delta
+root: mem://news
+memory: {max-mb: '${DRISHTI_NEWS_MEMORY_MB:256}', chunk-kb: 64, contract: '${DRISHTI_NEWS_CONTRACT:NEWS-MEMORY-ONLY}'}
+tables:
+  news.news-topic: {path: news-topic}      # the tables sit at mem://news/<kind>
+  news.listed-company: {path: listed-company}
+  news.news: {path: news}
+  news.quote: {path: quote}
+```
+
+```yaml
+# config/connectors/news-store.yaml
 plugin: delta
 kinds: [news-topic, listed-company, news, quote]
 settings:
-  root: mem://news
-  domain: ""          # the tables sit at mem://news/<kind>: without it the pack's template adds domain: news
+  lake: news
+  lake-tables: news.news-topic,news.listed-company,news.news,news.quote
 ```
 
 **The UI.** Admin → Connectors → `news-store` shows the same text and its origin *your file*. Until the store exists the connector's health
@@ -61,9 +77,10 @@ reads *mem://news is held in memory only and is empty now*.
 
 ![Admin → Connectors: news-store reading mem://news](img/t31/01-connector.jpg)
 
-## Step 2 · Define the store and its four tables
+## Step 2 · Define the four tables' replenish jobs
 
-**The YAML.** Append the example block to `application.local.yaml` in the server's working folder (the repository, for the scripts):
+**The YAML.** The store's cap and contract are in its lake file (step 1). Append the jobs that fill its tables to `application.local.yaml`
+in the server's working folder (the repository, for the scripts):
 
 ```bash
 cat config/examples/in-memory-lake.yaml >> application.local.yaml
@@ -73,11 +90,9 @@ cat config/examples/in-memory-lake.yaml >> application.local.yaml
 drishti:
   lake:
     memory:
-      stores:
-        news: { max-mb: 256, chunk-kb: 64, contract: NEWS-MEMORY-ONLY }
-      tables:
-        - { name: news,  store: news, source: { file: data/testdata/news-and-markets/news/snapshot-2026-10-18.jsonl.gz },  key: [NEWS_ID],  every: 15m, warm-up: 1, pin: true }
-        - { name: quote, store: news, source: { file: data/testdata/news-and-markets/quote/snapshot-2026-10-18.jsonl.gz }, key: [QUOTE_ID], every: 15m, warm-up: 2 }
+      tables:                     # the store news: config/lakes/news.yaml
+        - { name: news,  store: news, source: { file: data/testdata/news-and-markets/news/news.2026-10-18.jsonl.gz },  key: [NEWS_ID],  every: 15m, warm-up: 1, pin: true }
+        - { name: quote, store: news, source: { file: data/testdata/news-and-markets/quote/quote.2026-10-18.jsonl.gz }, key: [QUOTE_ID], every: 15m, warm-up: 2 }
         - { name: news-topic,     store: news, source: { file: config/packs/news-and-markets/samples/news-topic.jsonl },     key: [TOPIC_ID],   warm-up: 3 }
         - { name: listed-company, store: news, source: { file: config/packs/news-and-markets/samples/listed-company.jsonl }, key: [COMPANY_ID], warm-up: 4 }
 ```
@@ -113,7 +128,7 @@ MEMORY STORES (1)
 
 TABLES (4)
   news                 ready          0.4 MB  rows        71  v0  ratio 4.2x   pinned evictions 0  refusals 0  compactions 0
-    mem://news/news  ←  file data/testdata/news-and-markets/news/snapshot-2026-10-18.jsonl.gz  (replace)  last 2026-11-02T14:42:42Z  next 2026-11-02T14:57:42Z
+    mem://news/news  ←  file data/testdata/news-and-markets/news/news.2026-10-18.jsonl.gz  (replace)  last 2026-11-02T14:42:42Z  next 2026-11-02T14:57:42Z
   quote                ready          0.4 MB  rows        20  v0  ratio 5.2x   evictions 0  refusals 0  compactions 0
   …
 HEALTH  green

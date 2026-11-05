@@ -97,7 +97,7 @@ maps, ladders, a time-travel slider, provenance on every cell) that a vendor cub
 | **Market risk manager near the desks** | morning VaR by desk × risk class, the tail scenarios, sensitivity ladders against limits, what changed | Drishti Risk ([RISK_LENS.md](RISK_LENS.md)) |
 | **Second-line oversight** | bank-wide pivots, limit utilisation of every kind, why VaR moved, data trust | the proposed Oversight lens ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md)) |
 | **Desk head and trader** | my books by product and currency, my VaR contribution, "what does this trade do" | Drishti Trading ([TRADING_LENS.md](TRADING_LENS.md)) |
-| **Regulatory capital team** | FRTB SA by risk class and correlation scenario, IMA ES by liquidity horizon, PLA and backtesting by desk | none today; the reporting chain, FRTB SA and then IMA are planned in that order |
+| **Regulatory capital team** | FRTB SA by risk class and correlation scenario, IMA ES by liquidity horizon, PLA and backtesting by desk | FRTB SA is built ([FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md): the FRSA screen, PLAY FRTB); the reporting chain and then IMA are planned in that order |
 | **Product control** | hypothetical and actual P&L against the risk-theoretical P&L, restatements, corrections | none today |
 | **Model validation** | the scenario set, proxies, NMRF, PLA statistics, the provenance of every number | none today |
 
@@ -292,8 +292,8 @@ corrections, streaming, export, embedding, permissions, scatter-gather and cachi
 | Pivot over any fields with server totals (BI "Slice", matrix visual) | **Built for BI datasets**, additive measures only | [BI_GUIDE.md](../guides/BI_GUIDE.md) |
 | Pivot with non-additive VaR totals over the engine | **Not built** | MC2 |
 | Stressed VaR (a stress scenario set, 1-day and 10-day, `SVAR`) | **Planned**; the what-if already reports a "stressed window" figure | [VAR_GUIDE section 8.2](../guides/VAR_GUIDE.md#82-the-what-if-the-java-engine) |
-| Sensitivities per position and factor | **Not built**: book-grain `frtb-sensitivity` only, demo data; `DV01` per trade on `trade-valuation` | [OVERSIGHT_LENS.md section 7.1](OVERSIGHT_LENS.md#71-what-the-lake-holds-today) |
-| FRTB SA computed | **Not built** (stored book-grain charges, retiring) | [COMPUTED_ATTRIBUTES.md section 4.9](../architecture/COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb); [FRTB.md](../contracts/FRTB.md) |
+| Sensitivities per position and factor | **Built**: position sensitivities per factor, the input of FRTB-SA and SIMM ([FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md) section 3) | [OVERSIGHT_LENS.md section 7.1](OVERSIGHT_LENS.md#71-what-the-lake-holds-today) |
+| FRTB SA computed | **Built**: computed from position sensitivities, any scope ([FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md)) | [COMPUTED_ATTRIBUTES.md section 4.9](../architecture/COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb); [FRTB.md](../contracts/FRTB.md) |
 | FRTB IMA | **Not built**, not planned | MC8 to MC10 |
 | Stress P&L by desk and scenario; the bank's P&L per scenario | **Built** stored and derived | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived) |
 | Actual and hypothetical P&L feed; backtesting engine with the multiplier | **Planned** | [REGULATORY_VAR_REPORTING.md section 8](../guides/REGULATORY_VAR_REPORTING.md#82-the-order-to-build-in) |
@@ -1080,7 +1080,7 @@ commands:
   allow: [MCUBE, CCUBE, TRD, BOOK, DESK, POS, VRES, VOFF, VLIM, PNLV, SPV, HIER, PORT, SENS, RFAC, CPTY, NSET, CRV, FX, CDS, EQ]
   words: { MCUBE: on, CCUBE: on, VAR: on, EXP: on, SMAT: on, BI: on, FUNC: on, WHAT: on, FORM: off, DATAMAP: off, RUPAKA: off }
 features: { cube: on, var: on, exposure: on, bi: edition, embed: on, layouts: on, workspaces: on, alerts: on,
-            calc: off, pyconsole: off, python: off, designer: off, studio: off, build: off, forms: off, datamap: off, ai: off }
+            calc: off, pyconsole: off, python: off, designer: off, build: off, forms: off, datamap: off, ai: off }
 menus:
   views: [terminal, search, functions, mcube, ccube, var, exposure, reports, workspaces]
   placeholder: "MCUBE BANK BY DESK,RISK_CLASS, MCUBE DESK:RATES LADDER DV01, VAR BANK, SMAT BANK …  then <GO>"

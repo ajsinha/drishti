@@ -33,6 +33,12 @@ import io.delta.kernel.Transaction;
 import io.delta.kernel.TransactionBuilder;
 import io.delta.kernel.TransactionCommitResult;
 import io.delta.kernel.data.Row;
+import io.delta.kernel.internal.SnapshotImpl;
+import io.delta.kernel.internal.actions.Metadata;
+import io.delta.kernel.internal.actions.SingleAction;
+import io.delta.kernel.internal.util.ColumnMapping;
+import io.delta.kernel.internal.util.FileNames;
+import io.delta.kernel.internal.util.Utils;
 import io.delta.kernel.engine.Engine;
 import io.delta.kernel.exceptions.TableNotFoundException;
 import io.delta.kernel.expressions.Column;
@@ -70,10 +76,13 @@ import java.util.Optional;
  * Hadoop) into the folders Delta Kernel names, and each date is committed through Kernel as ONE version that adds its files and removes
  * the date's earlier ones, as {@link LakeWriter} does. A new table is created by its first date's commit, with {@code target.properties}.
  * An existing table keeps its schema and partitioning: a load column it lacks is left out (and reported), a column the load lacks is null.
+ * The two load columns ({@code _load_id}, {@code _source_file}) are the exception: a table made before them gains them, as two nullable
+ * columns added at the end in one metadata commit ({@link #withLoadColumns}); its files are not rewritten, their rows read them as null
+ * (the oldest load).
  */
 final class DeltaTarget implements TableTarget {
 
-    private static final String ENGINE_INFO = "Drishti parallel loader";
+    static final String ENGINE_INFO = "Drishti parallel loader";   // the commits' engineInfo (lake undo's too)
     /** The writer's row groups and pages: as {@link LakeWriter} (DRISHTI_LAKE_ROW_GROUP_KB, 256; DRISHTI_LAKE_PAGE_KB, 64). */
     private static final long ROW_GROUP = System.getenv("DRISHTI_LAKE_ROW_GROUP_MB") != null
             ? Long.parseLong(System.getenv("DRISHTI_LAKE_ROW_GROUP_MB")) * 1024 * 1024
@@ -126,6 +135,9 @@ final class DeltaTarget implements TableTarget {
         for (RowPlan.Vector v : plan.vectors) {
             wanted = wanted.add(v.column(), new ArrayType(DoubleType.DOUBLE, true), true);
         }
+        if (RowPlan.loadColumns) {
+            wanted = wanted.add(RowPlan.LOAD_ID, StringType.STRING, true).add(RowPlan.SOURCE_FILE, StringType.STRING, true);
+        }
         if (before == null) {
             schema = wanted;
             partitionColumns = parts;
@@ -133,6 +145,9 @@ final class DeltaTarget implements TableTarget {
             if (!before.getPartitionColumnNames().equals(parts)) {
                 throw new IllegalStateException(path + " is partitioned by " + before.getPartitionColumnNames() + ", this load by " + parts
                         + " (give the table's partition-by, or write a new table)");
+            }
+            if (RowPlan.loadColumns) {
+                before = withLoadColumns(before);
             }
             schema = before.getSchema();
             partitionColumns = before.getPartitionColumnNames();
@@ -163,6 +178,48 @@ final class DeltaTarget implements TableTarget {
         base.put("write.metadata.metrics.default", "full");             // Delta statistics: exact minimum and maximum
         base.put("write.metadata.metrics.column.doc", "none");
         options = TableTarget.writerOptions(base, cfg.target().layout(), "snappy", vectors);
+    }
+
+    /**
+     * A table made before the load columns, with {@code _load_id} and {@code _source_file} added: one commit of a {@code metaData} action
+     * whose schema is the table's with the two nullable string columns at the end (what Delta's merge-schema writes; Kernel itself evolves
+     * a schema only under column mapping). No file is rewritten. Written with put-if-absent through the engine; when another writer took
+     * the version, read again. A table under column mapping or in-commit timestamps keeps its schema (the columns left out, reported).
+     */
+    private Snapshot withLoadColumns(Snapshot snap) throws IOException {
+        for (int attempt = 0; ; attempt++) {
+            StructType s = snap.getSchema();
+            List<String> add = new ArrayList<>();
+            for (String c : List.of(RowPlan.LOAD_ID, RowPlan.SOURCE_FILE)) {
+                if (s.indexOf(c) < 0) {
+                    add.add(c);
+                }
+            }
+            if (add.isEmpty()) {
+                return snap;
+            }
+            SnapshotImpl si = (SnapshotImpl) snap;
+            Metadata meta = si.getMetadata();
+            Map<String, String> conf = meta.getConfiguration();
+            if (ColumnMapping.isColumnMappingModeEnabled(ColumnMapping.getColumnMappingMode(conf))
+                    || "true".equalsIgnoreCase(conf.get("delta.enableInCommitTimestamps"))) {
+                return snap;                                            // left out by open(): the report lists them
+            }
+            StructType grown = s;
+            for (String c : add) {
+                grown = grown.add(c, StringType.STRING, true);
+            }
+            Row action = SingleAction.createMetadataSingleAction(meta.withNewSchema(grown).toRow());
+            String file = FileNames.deltaFile(si.getLogPath(), si.getVersion() + 1);
+            try {
+                engine.getJsonHandler().writeJsonFileAtomically(file, Utils.singletonCloseableIterator(action), false);
+            } catch (java.nio.file.FileAlreadyExistsException e) {
+                if (attempt >= 10) {
+                    throw new IOException(path + ": the load columns could not be added (the table changed ten times meanwhile)", e);
+                }
+            }
+            snap = table.getLatestSnapshot(engine);
+        }
     }
 
     private static Type icebergType(StructField f, int elementId) {
@@ -206,6 +263,9 @@ final class DeltaTarget implements TableTarget {
         } else {
             tb = table.createTransactionBuilder(engine, ENGINE_INFO, Operation.WRITE);
         }
+        if (cfg.target().appends() && cfg.target().batchId() != null) {   // the batch's id in the commit: Delta's guard against a second commit
+            tb = tb.withTransactionId(engine, appId(date), 1);
+        }
         txn = tb.build(engine);
         state = txn.getTransactionState(engine);
         synchronized (contexts) {
@@ -248,7 +308,7 @@ final class DeltaTarget implements TableTarget {
     @Override
     public long commit(LocalDate date, List<WrittenFile> files) throws IOException {
         List<Row> actions = new ArrayList<>();
-        if (before != null) {
+        if (before != null && !cfg.target().appends()) {   // replace: the date's earlier files go in the same commit; append keeps them
             String day = date.toString();
             actions.addAll(LakeWriter.removals(engine, before, pv -> day.equals(pv.get("business_date"))));
         }
@@ -274,6 +334,17 @@ final class DeltaTarget implements TableTarget {
         }
         before = snapshot();
         return result.getVersion();
+    }
+
+    @Override
+    public boolean appended(LocalDate date) {
+        return cfg.target().appends() && cfg.target().batchId() != null && before != null
+                && before.getLatestTransactionVersion(engine, appId(date)).isPresent();
+    }
+
+    /** The application id of a batch's append of a date ({@code drishti-batch:<batch>:<date>}), version 1 once committed. */
+    private String appId(LocalDate date) {
+        return "drishti-batch:" + cfg.target().batchId() + ":" + date;
     }
 
     /** A written file as Kernel takes it: path, size, and statistics (row count, null counts, minimum and maximum of the scalar columns). */

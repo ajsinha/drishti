@@ -18,6 +18,7 @@ package com.ash.drishti.lakeload;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
+import com.ash.drishti.common.FileDates;
 import com.ash.drishti.testkit.s3.S3Endpoint;
 import com.ash.drishti.testkit.s3.S3MockServer;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -116,7 +117,7 @@ class S3LoadTest {
             for (int i = 0; i < n; i++) {
                 byte[] data = Files.readAllBytes(dir.resolve("pv-" + i + ".jsonl.gz"));
                 byte[] h = new byte[512];
-                put(h, 0, "pv-" + i + ".jsonl.gz");
+                put(h, 0, "scenario-pv/" + FileDates.businessToday() + "/pv-" + i + ".jsonl.gz");   // a feed tar: <table>/<date>/
                 put(h, 100, "0000644");
                 put(h, 108, "0000000");
                 put(h, 116, "0000000");

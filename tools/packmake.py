@@ -15,7 +15,7 @@
 
 """`drishti.py pack make`: JSON Lines in, ONE folder out that you take and deploy.
 
-    drishti.py pack make data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank
+    drishti.py pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank
 
 Writes <out>/ with README.txt, pack/<name>/ (Sutras, samples, tests, about), data/delta (or data/files), bundle/, config/, run-server.sh,
 run-server.ps1 and MANIFEST.json. It reuses packgen/pack_from_jsonl.py (which uses sutragen.py and ingest_jsonl.py) and packbundle.py
@@ -327,7 +327,7 @@ def add_arguments(p: argparse.ArgumentParser) -> None:
     p.add_argument("--title", help="pack title (default: the name)")
     p.add_argument("--version", default="1.0.0", help="pack version (default 1.0.0)")
     p.add_argument("--store", choices=("delta", "files"), default="delta", help="the dated store: delta (default) or the File connector's files")
-    p.add_argument("--out", type=pathlib.Path, help="the folder to create (default <data>/build/<name>-<version>; <data> is DRISHTI_DATA_DIR or ./data)")
+    p.add_argument("--out", type=pathlib.Path, help="the folder to create (default <data>/build/<name>-<version>; <data> is DRISHTI_DATA_DIR, else the repository's data folder)")
     p.add_argument("--fallback", dest="fallback", action="store_true", default=True, help="also write <kind>-default for documents matching no group (default)")
     p.add_argument("--no-fallback", dest="fallback", action="store_false", help="no catch-all Sutra")
     p.add_argument("--force", action="store_true", help="replace --out when it exists")
@@ -357,7 +357,7 @@ def make(a, cli) -> int:
         raise MakeError("without --schema, give the JSON Lines folder, --kind and --match (or give --schema)")
     if not re.fullmatch(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?", a.version):
         raise MakeError("--version must be X.Y.Z, such as 1.0.0 or 2.0.0-rc.1")
-    out = (a.out or pathlib.Path(__import__("os").environ.get("DRISHTI_DATA_DIR") or "data") / "build" / f"{a.name}-{a.version}").resolve()
+    out = (a.out or pathlib.Path(__import__("os").environ.get("DRISHTI_DATA_DIR") or pathlib.Path(__file__).resolve().parents[1] / "data") / "build" / f"{a.name}-{a.version}").resolve()
     SG = cli.sutragen()
     kinds = SG.load_folder(a.inputs, a.recursive, a.kind)
     docs = kinds.get(a.kind, [])

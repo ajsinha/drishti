@@ -24,7 +24,7 @@ from urllib.parse import quote
 
 import yaml
 
-from core import engines
+from core import engines, under_construction
 from core.edition import Edition
 from core.edition_gate import feature_on
 
@@ -231,8 +231,11 @@ def _items(request, edition: Edition, mid: str, col: dict, ctx: dict, fill: dict
             continue
         if not edition.menu_shown(mid, str(it.get("id") or "")) or engines.menu_hidden(str(it.get("id") or "")):
             continue
-        items.append((_href(it), it.get("icon"), _text(it.get("label"), fill), _text(it.get("desc"), fill), it.get("match"),
-                      str(it.get("cmd") or it.get("fill") or "")))
+        uc = under_construction.of(request)                        # docs/admin/UNDER_CONSTRUCTION.md: hidden, or with the chip
+        if uc.menu_hidden(str(it.get("id") or "")):
+            continue
+        items.append((_href(it), it.get("icon"), uc.menu_label(str(it.get("id") or ""), _text(it.get("label"), fill)), _text(it.get("desc"), fill),
+                      it.get("match"), str(it.get("cmd") or it.get("fill") or "")))
     return items
 
 
@@ -295,7 +298,7 @@ def top_bar(request, ctx: dict) -> list:
 def lens_menu(request, menus: list, product: str = "") -> dict | None:
     """The lens menus' phone form (LX1 option C, docs/lenses/README.md): on a phone the edition's (or lens's) subject menus fold into one
     menu named after the lens, a column per subject, so the bar keeps a few finger-sized buttons; on a wider screen the subject menus
-    stand in the bar as before (static/css/phone.css switches them at 640 px). ``menus`` is :func:`top_bar`'s answer; None without
+    stand in the bar as before (static/css/drishti_phone.css switches them at 640 px). ``menus`` is :func:`top_bar`'s answer; None without
     subject menus. ``{"label", "subjects": [labels], "columns": [(title, items)]}``."""
     edition = _edition(request)
     if not edition.active or edition.menu("top") is None:

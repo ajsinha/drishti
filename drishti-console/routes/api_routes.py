@@ -202,41 +202,6 @@ async def revoke_token(request: Request, id_: str):
     return {"ok": True}
 
 
-@router.get("/notes/{kind}/{id_:path}")
-async def notes(request: Request, kind: str, id_: str):
-    try:
-        return await request.app.state.backend.notes(kind, id_, ident(request))
-    except BackendError as e:
-        return _problem(e)
-
-
-@router.post("/notes/{kind}/{id_:path}")
-async def add_note(request: Request, kind: str, id_: str):
-    body = await json_body(request)
-    try:
-        return await request.app.state.backend.add_note(kind, id_, str(body.get("body") or ""), body.get("path") or None, ident(request))
-    except BackendError as e:
-        return _problem(e)
-
-
-@router.put("/notes/{note_id}")
-async def edit_note(request: Request, note_id: int):
-    body = await json_body(request)
-    try:
-        return await request.app.state.backend.edit_note(note_id, str(body.get("body") or ""), ident(request))
-    except BackendError as e:
-        return _problem(e)
-
-
-@router.delete("/notes/{note_id}")
-async def delete_note(request: Request, note_id: int):
-    try:
-        await request.app.state.backend.delete_note(note_id, ident(request))
-        return {"ok": True}
-    except BackendError as e:
-        return _problem(e)
-
-
 @router.get("/series/{kind}/{id_:path}")
 async def series(request: Request, kind: str, id_: str, path: str, days: int = 30):
     """A field's history for the chart that opens when a value is clicked."""
@@ -452,7 +417,7 @@ async def channel(request: Request, s: list[str] = Query(default=[])):
     """Everything live a BROWSER needs, on ONE connection: the views of all its tabs (a workspace's panes included), the
     alerts bell and monitors (s=view:trade/T-1, s=alerts, s=monitor:<name>). Browsers allow only six connections to a
     site over HTTP/1.1; a stream per view, and later a channel per tab, used them up, and every other page of the site
-    then waited forever (UX-01). The browser's tabs share this channel through live-hub.js. Each event carries its
+    then waited forever (UX-01). The browser's tabs share this channel through drishti_live-hub.js. Each event carries its
     subscription: {"ch": "view:trade/T-1", "d": …}; the first, ``channel``, says whose session it runs as (``who``).
     Every frame is built for the signed-in user of the request that opened it. Upstream streams are closed within
     seconds of the browser going away, even when they are quiet."""

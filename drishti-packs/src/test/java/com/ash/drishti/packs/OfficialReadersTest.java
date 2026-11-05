@@ -104,4 +104,21 @@ class OfficialReadersTest {
         assertThat(ice.apply(notReader)).isSameAs(notReader);
         assertThat(server(Map.of("drishti.var.official.format", "delta")).apply(reader)).isSameAs(reader);
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void aReaderInTheLakeFormBecomesIcebergAndKeepsItsLake() {
+        // the lake form (docs/guides/LAKE_GUIDE.md): config/lakes/var-official.yaml takes its root, format and storage from the
+        // publisher's settings, so the reader only changes plugin; nothing of the root is written into it
+        Map<String, Object> reader = new java.util.LinkedHashMap<>(Map.of("plugin", "delta", "kinds", List.of("var-official"),
+                "settings", Map.of("lake", "var-official", "lake-tables", "risk-results.var-official")));
+        Map<String, Object> iceberg = server(Map.of("drishti.var.official.format", "iceberg")).apply(reader);
+        assertThat(iceberg.get("plugin")).isEqualTo("iceberg");
+        assertThat((Map<String, Object>) iceberg.get("settings")).containsEntry("lake", "var-official").containsEntry("engine", "native")
+                .doesNotContainKey("root").doesNotContainKey("domain");
+        assertThat(server(Map.of("drishti.var.official.format", "delta")).apply(reader)).isSameAs(reader);
+        Map<String, Object> exposure = new java.util.LinkedHashMap<>(Map.of("plugin", "delta", "kinds", List.of("exposure-official-cpty"),
+                "settings", Map.of("lake", "ccr-official")));
+        assertThat(server(Map.of("drishti.ccr.exposure.official.format", "iceberg")).apply(exposure).get("plugin")).isEqualTo("iceberg");
+    }
 }

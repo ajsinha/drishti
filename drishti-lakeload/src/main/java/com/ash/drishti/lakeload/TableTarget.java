@@ -48,8 +48,18 @@ interface TableTarget extends AutoCloseable {
     /** A new data file for rows of {@code date} with the given partition values (Delta partitions; none for Iceberg). */
     FileOut newFile(LocalDate date, String[] partitionValues, String name) throws IOException;
 
-    /** Commits the date: its files replace the date's earlier files in one commit; returns the table's version (or snapshot id). */
+    /**
+     * Commits the date in one commit: with load-mode replace (the default) its files replace the date's earlier files; with append they
+     * are added, and the load's batch id is recorded in the commit (Delta: a transaction id per batch and date; Iceberg: the snapshot's
+     * summary). Returns the table's version (or snapshot id).
+     */
     long commit(LocalDate date, List<WrittenFile> files) throws IOException;
+
+    /**
+     * Whether an append of this load's batch was committed for {@code date} already (a repeated file, a crash and retry): the loader
+     * then skips the date, so a batch is never appended twice. Always false for a replace load, which is repeatable as it is.
+     */
+    boolean appended(LocalDate date) throws IOException;
 
     /** The table's columns as written ({@code name: string|double|date|vector}). */
     Map<String, String> columnTypes();
@@ -98,8 +108,14 @@ interface TableTarget extends AutoCloseable {
             }
             case 'v' -> r.vector(src.index());
             case 'c' -> promoted(r, src.index(), src.type(), icebergRules);
+            case 'l' -> at(r.plan().loadIds, r.split());
+            case 's' -> at(r.plan().sourceFiles, r.split());
             default -> null;
         };
+    }
+
+    private static byte[] at(byte[][] values, int split) {
+        return split >= 0 && split < values.length ? values[split] : null;
     }
 
     private static Object promoted(RowView r, int i, Type type, boolean icebergRules) {
@@ -229,6 +245,10 @@ interface TableTarget extends AutoCloseable {
                 return new Source('d', 0, type);
             case "business_date":
                 return new Source('t', 0, type);
+            case RowPlan.LOAD_ID:
+                return new Source('l', 0, type);
+            case RowPlan.SOURCE_FILE:
+                return new Source('s', 0, type);
             default:
                 break;
         }

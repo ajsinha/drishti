@@ -160,6 +160,12 @@ public final class Hll {
     }
 
     /** True when no value was added. */
+    /** The state as the playground shows it: the distinct estimate and the precision. */
+    @Override
+    public String toString() {
+        return "hll p=" + p + " ≈" + Math.round(estimate()) + " distinct";
+    }
+
     public boolean empty() {
         for (byte r : reg) {
             if (r != 0) {

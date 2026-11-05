@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.lakeload;
 
+import com.ash.drishti.common.FileDates;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,6 +54,24 @@ final class RowPlan {
     final boolean keyTop;
     final String date;
     final java.time.LocalDate asOf;
+    /** {@code auto} or {@code name}: how a file without {@code as-of} gets its business date ({@link FileDates#decide}). */
+    final String dateFrom;
+    /**
+     * Per split: the load id of its data file ({@code _load_id}: one per data file of the input, an archive's members sharing its id) and
+     * the file's label ({@code _source_file}), as UTF-8; set by the loader once the input is split (DATA_LOAD_RULES.md section 4).
+     */
+    volatile byte[][] loadIds = new byte[0][];
+    volatile byte[][] sourceFiles = new byte[0][];
+
+    /** The load column names every row carries. */
+    static final String LOAD_ID = "_load_id";
+
+    /**
+     * Whether the targets write the load columns ({@code _load_id}, {@code _source_file}). Always true in use; a test sets it false to
+     * make a table as the loader made it before them (AppendNewestLoadTest: an append into such a table adds the columns).
+     */
+    static volatile boolean loadColumns = true;
+    static final String SOURCE_FILE = "_source_file";
     /** The timestamp field that decides which duplicate is kept ({@link Latest}); null: the last read. */
     final String latestBy;
     final List<Promoted> promoted = new ArrayList<>();
@@ -69,6 +88,7 @@ final class RowPlan {
         this.keyTop = !key.contains(".");
         this.date = s.date();
         this.asOf = s.asOf();
+        this.dateFrom = s.dateFrom();
         this.latestBy = s.latestBy() == null || s.latestBy().isBlank() ? null : s.latestBy();
         this.flatten = new LinkedHashMap<>(s.flatten());
         List<String> promote = new ArrayList<>(s.promote());

@@ -103,7 +103,7 @@ class MorningTest(unittest.TestCase):
             rc, said = run(morning.main, "--out", t, "--all-vectors", "--gzip")
             self.assertEqual(rc, 0)
             folder = Path(t) / "morning-2026-09-30"
-            self.assertEqual(sorted(f.name for f in folder.iterdir()), ["fx-scenario.jsonl.gz", "pnl-vector.jsonl.gz"])
+            self.assertEqual(sorted(f.name for f in folder.iterdir()), ["fx-scenario.2026-09-30.jsonl.gz", "pnl-vector.2026-09-30.jsonl.gz"])
             rows = check.load_morning(folder)
             self.assertEqual(len(rows["pnl-vector"]), 9572)
             var, es = C.measures(C.expected(rows, [], "2026-09-30")["BANK"])
@@ -167,7 +167,7 @@ class IntradayTest(unittest.TestCase):
         cls.tmp.cleanup()
 
     def files(self, d: Path) -> dict[str, str]:
-        return {f.name: f.read_text(encoding="utf-8") for f in sorted(d.rglob("*.jsonl"))}
+        return {str(f.relative_to(d)): f.read_text(encoding="utf-8") for f in sorted(d.rglob("*.jsonl"))}
 
     def test_the_same_seed_makes_the_same_batches_and_another_does_not(self):
         self.assertTrue(self.files(self.a))
@@ -213,7 +213,7 @@ class IntradayTest(unittest.TestCase):
             self.assertFalse(Path(t, "none").exists())
 
     def test_the_committed_sample_is_a_batch_of_the_contract(self):
-        f = C.ROOT / "config" / "packs" / "market-risk" / "samples" / "intraday" / "I-2026-09-30-001.scenario-pv.jsonl"
+        f = C.ROOT / "config" / "packs" / "market-risk" / "samples" / "intraday" / "scenario-pv.2026-09-30.jsonl"     # batch I-2026-09-30-001
         rows = C.read_jsonl(f)
         self.assertEqual([r["TRADE_STATUS"] for r in rows].count("CANCELLED"), 1)
         self.assertEqual([r["TRADE_STATUS"] for r in rows].count("NEW"), 1)
@@ -223,7 +223,7 @@ class IntradayTest(unittest.TestCase):
             rc, _ = run(intraday.main, "--batches", "1", "--trades-per-batch", "5", "--systems", "ENDUR",
                         "--plan", "amend,amend,amend,new,cancel", "--out", t)
             self.assertEqual(rc, 0)
-            self.assertEqual(Path(t, "intraday-2026-09-30", f.name).read_bytes(), f.read_bytes())
+            self.assertEqual(Path(t, "intraday-2026-09-30", "I-2026-09-30-001", f.name).read_bytes(), f.read_bytes())
 
 
 class PublisherAndCheckerTest(unittest.TestCase):

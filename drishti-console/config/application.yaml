@@ -135,10 +135,10 @@ ui:
   clock_label: NY  # the top-bar clock's label
   # The public landing page. Its example commands (the hero animation, "Keyboard first") are the example commands of the
   # packs switched on (each pack's console.examples), so they only name entities that exist; landing_examples caps them.
-  # The showcase is the four screenshots under web/static/img/shot-<slug>.png; a caption names its command only when that
+  # The showcase is the four screenshots under web/static/img/drishti_shot-<slug>.png; a caption names its command only when that
   # command is one of the packs' examples (the pictured pack is installed).
   landing_examples: 4
-  # the landing page's pictures, {slug, title, cmd, sutra} each: web/static/img/shot-<slug>.png, its caption naming cmd only when that command
+  # the landing page's pictures, {slug, title, cmd, sutra} each: web/static/img/drishti_shot-<slug>.png, its caption naming cmd only when that command
   # is one of the packs' examples
   showcase:
     - { slug: irs, title: Interest rate swap, cmd: TRD IRS-48213, sutra: irs-vanilla v3 }
@@ -227,8 +227,8 @@ live:                        # live updates (docs/architecture/DATA_ARCHITECTURE
     port: ${DRISHTI_CONSOLE_RELAY_PORT:17490}  # across hosts, worker n listens on port + n (port .. port + server.workers - 1): open these between the consoles; 0 = any free port
     timeout_seconds: 3  # how long a worker waits for the holder of a channel to answer
     window_seconds: 30  # a relay message is accepted this long after it was signed (allow for the hosts' clock difference); each only once
-studio:
-  enabled: true              # false: no /studio page (Rachana Studio); an edition's features.studio presets it
+under_construction:          # the under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): menu items and help pages that depend on unbuilt work
+  file: ${DRISHTI_UNDER_CONSTRUCTION_FILE:../config/under-construction.yaml}   # the same file the server reads; absent: nothing registered
 editions:                    # editions and lenses (docs/admin/EDITIONS.md): the console learns the server's from its about answer
   dir: ${DRISHTI_EDITIONS_DIR:../config/editions}   # the same folder the server reads (config/editions/<name>.yaml, features.yaml)
 lens:                        # the lens (EDITIONS.md › The design as built, section 8): "Open Drishti Risk" for one person on a full instance (the server's drishti.lenses)

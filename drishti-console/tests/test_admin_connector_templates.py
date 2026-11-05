@@ -44,7 +44,7 @@ def test_the_page_lists_each_drift_side_by_side_with_its_buttons(client, backend
     page = client.get("/admin/connectors/template-updates").text
     for text in ("Template updates", "macro-store", "world-economy", "region-economy, country-group", "layout.region-economy", "central-bank-decision",
                  "/lake/edited", "Pack template", "Add missing kinds", "Regenerate from template", "Remove obsolete kinds", "Fix all additive (1)",
-                 'data-etag="e1"', "civic-store", "office-holder", "admin-connector-templates.js", "data-drift-badge", "notify"):
+                 'data-etag="e1"', "civic-store", "office-holder", "drishti_admin-connector-templates.js", "data-drift-badge", "notify"):
         assert text in page, text
 
 

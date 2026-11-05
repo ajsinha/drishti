@@ -41,15 +41,15 @@ engines:
     uses: []
     api: [/api/v1/var]
     console: [/var, /api/var/, /smat, /api/smat/, "=/play", /api/play/, /admin/scopes]
-    words: [VAR, "VAR EXPLAIN", SMAT, "PLAY VAR", SWIN]
-    menus: [var-explorer, smat, play-var, backtesting, stress-window]
-    help: [docs-guides-var-guide, docs-tutorials-25-var-from-the-bank-to-a-trade, docs-guides-regulatory-var-reporting]
+    words: [VAR, "VAR EXPLAIN", PVAR, SMAT, "PLAY VAR", SWIN]
+    menus: [var-explorer, var-parametric, smat, play-var, play-pvar, backtesting, stress-window]
+    help: [docs-guides-var-guide, docs-tutorials-25-var-from-the-bank-to-a-trade, docs-tutorials-43-parametric-var-beside-historical, docs-guides-regulatory-var-reporting]
     landings: []
     tiles: [VaR of the bank, VaR of the rates desk]
     lenses: []
     bi: [market-risk-var-]
     cli: [var, play var]
-    playgrounds: [var]
+    playgrounds: [var, pvar]
     connectors: [var-engine, var-positions, var-pv-stream]
     kinds: [var-result]
     inputs: [pnl-vector, scenario-pv]
@@ -166,62 +166,6 @@ engines:
     kinds: []
     inputs: [simm-addon, crif-external]
     ai-tools: []
-  - id: sa-ccr
-    title: SA-CCR
-    about: "SA-CCR exposure at default and its playground"
-    file: sa-ccr.yaml
-    switch: drishti.engines.sa-ccr.enabled
-    env: DRISHTI_SACCR_ENABLED
-    aliases: []
-    shipped: false
-    installed: false
-    live-on: true
-    prefixes: [drishti.ccr.saccr]
-    needs: []
-    uses: []
-    api: [/api/v1/saccr]
-    console: [/saccr, /play/saccr, /api/saccr/]
-    words: [SACCR, "PLAY SACCR"]
-    menus: [saccr, play-saccr]
-    help: []
-    landings: []
-    tiles: []
-    lenses: []
-    bi: [counterparty-saccr-]
-    cli: [saccr]
-    playgrounds: [saccr]
-    connectors: []
-    kinds: [saccr-result]
-    inputs: [saccr-trade]
-    ai-tools: []
-  - id: fva
-    title: FVA
-    about: "Funding cost and benefit (the xVA engine; CVA and DVA join later) and its playground"
-    file: fva.yaml
-    switch: drishti.engines.fva.enabled
-    env: DRISHTI_FVA_ENABLED
-    aliases: []
-    shipped: false
-    installed: false
-    live-on: true
-    prefixes: [drishti.ccr.fva]
-    needs: [exposure]
-    uses: []
-    api: [/api/v1/fva]
-    console: [/fva, /play/fva, /api/fva/]
-    words: [FVA, "PLAY FVA"]
-    menus: [fva, play-fva]
-    help: []
-    landings: []
-    tiles: []
-    lenses: []
-    bi: []
-    cli: [fva]
-    playgrounds: [fva]
-    connectors: []
-    kinds: [fva-result]
-    inputs: []
-    ai-tools: []
   - id: mr-cube
     title: MR cube
     about: "The market-risk cube on the pivot engine: VaR by hierarchy and risk class, components, ladders, heat map, what-if, explain the move"
@@ -245,34 +189,6 @@ engines:
     lenses: [mr-cube]
     bi: []
     cli: [pivot mr]
-    playgrounds: []
-    connectors: []
-    kinds: []
-    inputs: []
-    ai-tools: []
-  - id: ccr-cube
-    title: CCR cube
-    about: "The counterparty cube: limit board, allocation, group roll-up, pre-deal overlay"
-    file: ccr-cube.yaml
-    switch: drishti.engines.ccr-cube.enabled
-    env: DRISHTI_CCR_CUBE_ENABLED
-    aliases: []
-    shipped: false
-    installed: false
-    live-on: true
-    prefixes: [drishti.cube.ccr]
-    needs: [exposure]
-    uses: [sa-ccr, fva]
-    api: [/api/v1/cube/ccr]
-    console: [/ccube, /api/ccube/]
-    words: [CCUBE]
-    menus: [ccube]
-    help: []
-    landings: [ccr-cube]
-    tiles: []
-    lenses: [ccr-cube]
-    bi: []
-    cli: [cube ccr]
     playgrounds: []
     connectors: []
     kinds: []
@@ -357,6 +273,62 @@ engines:
     lenses: []
     bi: []
     cli: [pivot]
+    playgrounds: []
+    connectors: []
+    kinds: []
+    inputs: []
+    ai-tools: []
+  - id: flight
+    title: Arrow Flight
+    about: "Drishti's data to any client as Arrow record batches: kinds, BI models, measures, the in-memory lake (TLS, tokens with data:read)"
+    file: flight.yaml
+    switch: drishti.engines.flight.enabled
+    env: DRISHTI_FLIGHT_ENABLED
+    aliases: []
+    shipped: false
+    installed: true
+    live-on: false
+    prefixes: [drishti.engines.flight]
+    needs: []
+    uses: []
+    api: [/api/v1/admin/data-out]
+    console: [/admin/data-out, /admin/api/data-out]
+    words: []
+    menus: []
+    help: [flight-guide]
+    landings: []
+    tiles: []
+    lenses: []
+    bi: []
+    cli: []
+    playgrounds: []
+    connectors: []
+    kinds: []
+    inputs: []
+    ai-tools: []
+  - id: openblas
+    title: "Linear algebra: OpenBLAS"
+    about: "The bundled OpenBLAS (native) for many-scope VaR sums, off as shipped; off: the pure-Java kernels, the same figures (OPERATIONS.md section 2.1)"
+    file: openblas.yaml
+    switch: drishti.engines.openblas.enabled
+    env: DRISHTI_OPENBLAS_ENABLED
+    aliases: []
+    shipped: false
+    installed: true
+    live-on: true
+    prefixes: [drishti.native]
+    needs: []
+    uses: []
+    api: []
+    console: []
+    words: []
+    menus: []
+    help: []                      # its docs are a section of Operations (2.1), which is never hidden with it
+    landings: []
+    tiles: []
+    lenses: []
+    bi: []
+    cli: [server blas]
     playgrounds: []
     connectors: []
     kinds: []

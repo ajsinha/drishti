@@ -15,7 +15,7 @@
 """The scenario matrix (2.9.7, docs/guides/VAR_GUIDE.md section 3.9; the approved mock-up scenario-matrix-B): ``SMAT <id> [N] <GO>``
 opens ``/smat?id=<id>&days=N``, one trade, position or VaR node's scenario P&L (rows, by historical day) across its last N business
 dates (columns, 20 when N is not given; at most ``drishti.var.smat.max-days`` on the server, 60). The page is a shell:
-web/static/js/scenario-matrix.js fills it from ``/api/smat/matrix``, which asks the server's VaR engine (``/api/v1/var/matrix``) as the
+web/static/js/drishti_scenario-matrix.js fills it from ``/api/smat/matrix``, which asks the server's VaR engine (``/api/v1/var/matrix``) as the
 person, so their nodes, roles and masks apply; the rows travel as Arrow when the page has Arrow JS (509 rows by up to 60 dates), JSON
 otherwise. ``/api/smat/matrix.csv``, its twin ``/api/smat/matrix.jsonl`` and ``/api/smat/matrix.arrow`` are the page's exports.
 
@@ -98,7 +98,7 @@ def link(target: str, days: int | None = None) -> str:
 
 @router.get("/smat")
 async def page(request: Request, id: str = "", days: int = 0, ccy: str = ""):
-    """The matrix's shell; its table, chart and details load in place (web/static/js/scenario-matrix.js)."""
+    """The matrix's shell; its table, chart and details load in place (web/static/js/drishti_scenario-matrix.js)."""
     n = days if days > 0 else DEFAULT_DAYS
     return render(request, "terminal/smat.html", target=id.strip(), days=n, ccy=ccy.upper() if CCY.match(ccy or "") else "", screen="smat",
                   command_text=f"{WORD} {id.strip()} {n}".strip() if id.strip() else WORD)
@@ -205,12 +205,12 @@ async def matrix_arrow(request: Request):
     """The matrix as an Arrow IPC stream file (the rows the record batch, the rest in its metadata, as the page reads it)."""
     p = _params(request)
     try:
-        answer = await request.app.state.backend.var("GET", "/matrix", ident(request), **p)
+        content, headers = await request.app.state.backend.var("GET", "/matrix", ident(request), raw=True, accept=arrow_answer.MEDIA, **p)
     except BackendError as e:
         return _problem(e)
-    content = arrow_answer.encode(answer, "records", "rows")
-    if content is None:
-        return JSONResponse({"code": "DRS-5001", "detail": "this matrix cannot be written as Arrow here (pyarrow is missing)"}, status_code=501)
+    if arrow_answer.MEDIA not in (headers.get("content-type") or "").lower():   # the server sends JSON for a matrix Arrow is not written with
+        return JSONResponse({"code": "DRS-5001", "detail": "this matrix cannot be sent as Arrow: download it as CSV or JSON Lines"}, status_code=422)
+    answer = arrow_answer.decode(content)                                        # only its name for the file
     return Response(content, media_type=arrow_answer.MEDIA,
                     headers={"Content-Disposition": f'attachment; filename="{_filename(answer, "arrow")}"', "Cache-Control": "no-store"})
 

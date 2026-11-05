@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
 
 /**
  * The column filters of a shared view applied on the server, so a picture shows the rows the sender had left after filtering (the console
- * applies the same filters in the browser; {@code static/js/colfilter.js} is the reference for the grammar and the meaning of each
+ * applies the same filters in the browser; {@code static/js/drishti_colfilter.js} is the reference for the grammar and the meaning of each
  * condition). A column is found by its heading, a filter by its address form ({@code in:a,b}, {@code gt:1m}, {@code bt:1~9}, {@code today}).
  * A value filter is a checked list; a condition tests the cell by the column's detected type (number, date or text). A masked cell
  * never matches a condition. A filter on a column that does not exist is ignored; nothing here can fail a render.

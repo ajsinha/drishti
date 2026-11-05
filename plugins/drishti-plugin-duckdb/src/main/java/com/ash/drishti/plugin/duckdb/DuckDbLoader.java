@@ -15,16 +15,14 @@
  */
 package com.ash.drishti.plugin.duckdb;
 
+import com.ash.drishti.common.RowFeed;
 import com.ash.drishti.api.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -70,7 +68,8 @@ import org.duckdb.DuckDBConnection;
  *       file is attached read-only, which a running server allows) and then each staged (kind, business date), sorted
  *       by id. A day in the stream replaces that day whole; a row given twice keeps the last. {@code --recreate} drops
  *       the old rows of each domain the stream reaches; {@code --keep-days N} drops the days more than N calendar days
- *       before {@code --as-of} (today), never counted from the newest date loaded, and refuses to drop more than
+ *       before the newest business date of the load (a plain file's date, a tar's newest folder), never from the
+ *       newest date the store holds, and refuses to drop more than
  *       {@code --max-drop-share} (0.5) of a domain's rows without {@code --force-drop} ({@link LoadGuard}). The dates
  *       table records each day, its rows and when it was loaded.</li>
  *   <li>{@code DATABASE.loading} is checkpointed, closed and renamed over {@code DATABASE} in one atomic step; a running
@@ -93,6 +92,12 @@ public final class DuckDbLoader {
     static final String STORAGE_VERSION = "v1.5.0";
 
     private record Row(String schema, String kind, String id, LocalDate date, String doc, Map<String, Object> columns) {}
+
+    /** A batch of lines being parsed, with where each belongs ({@link RowFeed.Tag}: its file and the business date it is filed under). */
+    private record Parsed(Future<List<Row>> rows, List<RowFeed.Tag> tags) {}
+
+    /** The business date given for a plain input ({@code --as-of}; {@link RowFeed}), null: its name's, or today. */
+    private LocalDate asOf;
 
     /** A domain's stage table: its promoted columns (number or not, in table order) and the days the stream reached. */
     private static final class Stage {
@@ -131,9 +136,11 @@ public final class DuckDbLoader {
             System.exit(2);
         }
         List<String> a = List.of(args);
-        new DuckDbLoader(Path.of(args[1]), a.contains("--recreate"), Integer.parseInt(option(args, "--keep-days", "0")), LoadGuard.fromArgs(args),
-                Integer.parseInt(option(args, "--parsers", String.valueOf(Math.min(8, Runtime.getRuntime().availableProcessors())))),
-                option(args, "--memory-limit", "2GB"), Integer.parseInt(option(args, "--threads", "0"))).load(args[0]);
+        DuckDbLoader loader = new DuckDbLoader(Path.of(args[1]), a.contains("--recreate"), Integer.parseInt(option(args, "--keep-days", "0")),
+                LoadGuard.fromArgs(args), Integer.parseInt(option(args, "--parsers", String.valueOf(Math.min(8, Runtime.getRuntime().availableProcessors())))),
+                option(args, "--memory-limit", "2GB"), Integer.parseInt(option(args, "--threads", "0")));
+        loader.asOf = RowFeed.asOf(args);
+        loader.load(args[0]);
     }
 
     private static String option(String[] args, String name, String fallback) {
@@ -200,34 +207,37 @@ public final class DuckDbLoader {
 
     /** Parses the stream on {@code parsers} threads, in order, and appends every row to its domain's stage table. */
     private long stageAll(DuckDBConnection c, String input) throws Exception {
-        BlockingQueue<Future<List<Row>>> parsed = new ArrayBlockingQueue<>(parsers * 2);   // bounded: the reader waits
+        BlockingQueue<Parsed> parsed = new ArrayBlockingQueue<>(parsers * 2);   // bounded: the reader waits
         List<Row> end = List.of();
-        CompletableFuture<List<Row>> poison = CompletableFuture.completedFuture(end);
+        Parsed poison = new Parsed(CompletableFuture.completedFuture(end), List.of());
         ExecutorService pool = Executors.newFixedThreadPool(parsers);
+        RowFeed feed = RowFeed.open(input, asOf);                          // the load rules: each line's file and business date
         Thread reader = Thread.ofPlatform().name("duckdb-loader-reader").start(() -> {
             JsonFactory json = new JsonFactory();
-            try (BufferedReader in = input.equals("-") ? new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8), 1 << 20)
-                    : Files.newBufferedReader(Path.of(input), StandardCharsets.UTF_8)) {
+            try (RowFeed in = feed) {
                 List<String> batch = new ArrayList<>(BATCH);
+                List<RowFeed.Tag> tags = new ArrayList<>(BATCH);
                 String line;
-                while ((line = in.readLine()) != null) {
+                while ((line = in.next()) != null) {
                     if (!line.isBlank()) {
                         batch.add(line);
+                        tags.add(in.tag());
                     }
                     if (batch.size() == BATCH) {
                         List<String> b = batch;
-                        parsed.put(pool.submit(() -> parse(json, b)));
+                        parsed.put(new Parsed(pool.submit(() -> parse(json, b)), tags));
                         batch = new ArrayList<>(BATCH);
+                        tags = new ArrayList<>(BATCH);
                     }
                 }
                 if (!batch.isEmpty()) {
                     List<String> b = batch;
-                    parsed.put(pool.submit(() -> parse(json, b)));
+                    parsed.put(new Parsed(pool.submit(() -> parse(json, b)), tags));
                 }
                 parsed.put(poison);
             } catch (Exception e) {
                 try {
-                    parsed.put(CompletableFuture.failedFuture(e));
+                    parsed.put(new Parsed(CompletableFuture.failedFuture(e), List.of()));
                 } catch (InterruptedException ie) {
                     Thread.currentThread().interrupt();
                 }
@@ -236,11 +246,15 @@ public final class DuckDbLoader {
         long rows = 0;
         try {
             while (true) {
-                List<Row> batch = parsed.take().get();
+                Parsed next = parsed.take();
+                List<Row> batch = next.rows().get();
                 if (batch == end) {
                     break;
                 }
-                for (Row r : batch) {
+                for (int i = 0; i < batch.size(); i++) {
+                    Row read = batch.get(i);
+                    Row r = new Row(read.schema(), read.kind(), read.id(), feed.place(next.tags().get(i), read.schema() + "/" + read.kind(), read.date()),
+                            read.doc(), read.columns());
                     if (!guard.accept(r.date(), r.schema() + " " + r.kind() + " " + r.id())) {
                         continue;
                     }
@@ -259,6 +273,7 @@ public final class DuckDbLoader {
                 }
             }
         }
+        feed.notes().forEach(n -> System.err.println("duckdb: " + n));
         return rows;
     }
 
@@ -344,7 +359,7 @@ public final class DuckDbLoader {
             // each kind's days and where they come from: the stream replaces a day the old file has
             Map<String, NavigableSet<LocalDate>> oldDays = oldTable ? DuckDbLayout.dates(c, "drishti_old", schema) : new TreeMap<>();
             Map<String, NavigableSet<LocalDate>> newDays = s == null ? Map.of() : s.days;
-            // retention counts back from --as-of (today), never from the newest date of the file or the load
+            // retention counts back from the newest business date of the load (LoadGuard.asOf), never from the store's
             LocalDate keepFrom = keepDays > 0 ? guard.keepFromDays(keepDays) : LocalDate.MIN;
             if (oldTable && keepDays > 0) {
                 try (Statement st = c.createStatement();
@@ -437,10 +452,10 @@ public final class DuckDbLoader {
                 }
             }
         }
-        if (domain == null || kind == null || id == null || date == null || doc == null) {
-            throw new IOException("a row needs domain, kind, id, date and doc: " + (line.length() > 200 ? line.substring(0, 200) + "…" : line));
+        if (domain == null || kind == null || id == null || doc == null) {
+            throw new IOException("a row needs domain, kind, id and doc: " + (line.length() > 200 ? line.substring(0, 200) + "…" : line));
         }
-        return new Row(DuckDbLayout.schema(domain), kind, id, LocalDate.parse(date), doc, columns);
+        return new Row(DuckDbLayout.schema(domain), kind, id, date == null ? null : LocalDate.parse(date), doc, columns);
     }
 
     private static Object skip(JsonParser p) throws IOException {

@@ -91,11 +91,15 @@ def _app(backend, monkeypatch, about=None, roles=("*",)):
 
 
 def _var(backend, monkeypatch, sent: list):
-    """The stand-in server's VaR engine: the matrix above, as JSON (the console writes Arrow itself when the server answers JSON)."""
+    """The stand-in server's VaR engine: the matrix above, as JSON, or as the server's Arrow stream when asked for it (the console passes
+    the server's bytes through and writes no Arrow of its own)."""
     async def var(method, path, ident, body=None, raw=False, accept="", **params):
         sent.append((method, path, getattr(ident, "user", None), accept, dict(params)))
         if path != "/matrix":
             return {}
+        if raw and arrow_answer.MEDIA in (accept or ""):
+            from arrow_server_stream import server_stream
+            return server_stream(ANSWER, "records", "rows"), {"content-type": arrow_answer.MEDIA}
         if raw:
             import json
             return json.dumps(ANSWER).encode(), {"content-type": "application/json"}
@@ -111,7 +115,7 @@ def test_the_page_and_its_answers_are_read_as_the_person(backend, monkeypatch):
     r = c.get("/go", params={"q": "SMAT T1 3 <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/smat?id=T1&days=3"
     page = c.get("/smat?id=T1&days=3").text
-    assert 'data-smat data-target="T1" data-days="3"' in page and "scenario-matrix.js" in page and "Arrow.es2015.min.js" in page
+    assert 'data-smat data-target="T1" data-days="3"' in page and "drishti_scenario-matrix.js" in page and "Arrow.es2015.min.js" in page
     assert "Only tail scenarios" in page and "Change vs day before" in page and 'data-sm-csv' in page
     j = c.get("/api/smat/matrix", params={"id": "T1", "days": "3", "confidence": "0.95"})
     assert j.status_code == 200 and j.json()["scope"] == "TRD:T1"
@@ -159,13 +163,13 @@ def test_the_links_follow_the_edition_and_the_lens(backend, monkeypatch):
     app, c = _app(backend, monkeypatch, RISK_ABOUT)
     view = c.get("/v/trade/IRS-48213").text
     assert 'data-smat-link href="/smat?id=IRS-48213"' in view
-    assert "smat-link.js" in c.get("/var?scope=DESK:RATES").text                      # the VaR page's link, added to its header strip
+    assert "drishti_smat-link.js" in c.get("/var?scope=DESK:RATES").text                      # the VaR page's link, added to its header strip
     s = [x for x in c.get("/api/suggest", params={"q": "SMAT DESK RATES 20"}).json() if x.get("mnemonic") == "SMAT"]
     assert s and s[0]["href"] == "/smat?id=DESK%3ARATES&days=20"
     # the same instance with the word switched off (a site's edition.commands.words.SMAT: off): no link, no script, the word refused
     app.state.editions.instance.spec["commands"]["words"]["SMAT"] = False
     assert "data-smat-link" not in c.get("/v/trade/IRS-48213").text
-    assert "smat-link.js" not in c.get("/var?scope=DESK:RATES").text
+    assert "drishti_smat-link.js" not in c.get("/var?scope=DESK:RATES").text
     assert c.get("/smat?id=T1").status_code == 404
 
 

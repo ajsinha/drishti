@@ -18,7 +18,7 @@
 
   <groupId>com.ash.drishti</groupId>
   <artifactId>drishti-parent</artifactId>
-  <version>2.9.11.b</version>
+  <version>2.9.11.c</version>
   <packaging>pom</packaging>
   <name>Drishti</name>
   <description>Any data. Any domain. One grammar.</description>
@@ -48,6 +48,7 @@
     <module>drishti-testkit</module>
     <module>drishti-diskcache</module>
     <module>drishti-messaging</module>
+    <module>drishti-lakeconfig</module>
     <module>drishti-lakeio</module>
     <module>drishti-deltalake</module>
     <module>drishti-iceberg</module>
@@ -57,6 +58,7 @@
     <module>drishti-net</module>
     <module>drishti-compute</module>
     <module>drishti-bicompute</module>
+    <module>drishti-flight</module>
     <module>plugins/drishti-plugin-demo</module>
     <module>plugins/drishti-plugin-file</module>
     <module>plugins/drishti-plugin-rest</module>
@@ -120,8 +122,14 @@
     <!-- LZ4 Parquet pages (delta-rs and Arrow write them): the maintained lz4-java fork, safe pure-Java and JNI decoders -->
     <lz4-java.version>1.10.2</lz4-java.version>
     <duckdb.version>1.5.6.0</duckdb.version>
-    <!-- Rupaka proof of concept: the Arrow IPC message definitions (Apache-2.0, with flatbuffers-java); the Arrow memory/vector libraries are not used -->
-    <arrow-format.version>19.0.0</arrow-format.version>
+    <!-- Apache Arrow Java, one version for every Arrow artifact (format, vector, memory, Flight, Flight SQL): the official IPC writers and
+         readers (no hand-written Arrow), and Arrow Flight (drishti-flight). Arrow Java 19 runs on Java 11+, so on Java 21; it needs
+         add-opens java.base/java.nio for its memory module (see drishti-flight and the server launch flags) -->
+    <arrow.version>19.0.0</arrow.version>
+    <!-- BLAS (HIGH_PERFORMANCE_NATIVE.md section 6): JavaCPP's OpenBLAS preset, the library bundled per platform; only the linux-x86_64 and
+         windows-x86_64 classifiers (never openblas-platform, which brings every platform); only compute.linalg.NativeBlas names it -->
+    <javacpp.version>1.5.10</javacpp.version>
+    <openblas.version>0.3.26-${javacpp.version}</openblas.version>
     <!-- test classes run in this many parallel JVM forks per module (each fork reused for many classes); -Ddrishti.test.forks=1
          runs them serially. Fixed scratch paths in a module's surefire configuration carry ${surefire.forkNumber} -->
     <drishti.test.forks>4</drishti.test.forks>
@@ -164,12 +172,24 @@
       <!-- Redis: Lettuce on Netty 4.1 (the line Spring Boot 3.5 manages); zstd for compressed documents and columns -->
       <dependency><groupId>io.lettuce</groupId><artifactId>lettuce-core</artifactId><version>${lettuce.version}</version></dependency>
       <dependency><groupId>com.github.luben</groupId><artifactId>zstd-jni</artifactId><version>${zstd-jni.version}</version></dependency>
+      <dependency><groupId>org.bytedeco</groupId><artifactId>javacpp</artifactId><version>${javacpp.version}</version></dependency>
+      <dependency><groupId>org.bytedeco</groupId><artifactId>javacpp</artifactId><version>${javacpp.version}</version><classifier>linux-x86_64</classifier></dependency>
+      <dependency><groupId>org.bytedeco</groupId><artifactId>javacpp</artifactId><version>${javacpp.version}</version><classifier>windows-x86_64</classifier></dependency>
+      <dependency><groupId>org.bytedeco</groupId><artifactId>openblas</artifactId><version>${openblas.version}</version></dependency>
+      <dependency><groupId>org.bytedeco</groupId><artifactId>openblas</artifactId><version>${openblas.version}</version><classifier>linux-x86_64</classifier></dependency>
+      <dependency><groupId>org.bytedeco</groupId><artifactId>openblas</artifactId><version>${openblas.version}</version><classifier>windows-x86_64</classifier></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-mongodb</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg-external</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-duckdb</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>org.duckdb</groupId><artifactId>duckdb_jdbc</artifactId><version>${duckdb.version}</version></dependency>
-      <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-format</artifactId><version>${arrow-format.version}</version></dependency>
+      <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-format</artifactId><version>${arrow.version}</version></dependency>
+      <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-vector</artifactId><version>${arrow.version}</version></dependency>
+      <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-memory-core</artifactId><version>${arrow.version}</version></dependency>
+      <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-memory-netty</artifactId><version>${arrow.version}</version></dependency>
+      <dependency><groupId>org.apache.arrow</groupId><artifactId>flight-core</artifactId><version>${arrow.version}</version></dependency>
+      <dependency><groupId>org.apache.arrow</groupId><artifactId>flight-sql</artifactId><version>${arrow.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-flight</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-feeds</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-news</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-yfinance</artifactId><version>${project.version}</version></dependency>
@@ -181,6 +201,7 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-messaging</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeconfig</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-iceberg</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-memlake</artifactId><version>${project.version}</version></dependency>

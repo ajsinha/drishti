@@ -220,6 +220,68 @@ public final class SafeRegex {
         if (group < 0 || group > groups) {
             throw refused("the pattern '" + source + "' has " + groups + " group(s); group " + group + " was asked for");
         }
+        int[] matched = match(text, 0);
+        if (matched == null || matched[2 * group] < 0 || matched[2 * group + 1] < 0) {
+            return null;
+        }
+        return text.subSequence(matched[2 * group], matched[2 * group + 1]).toString();
+    }
+
+    /**
+     * Every match of the pattern replaced, left to right and not overlapping, by {@code replacement}, in which {@code $0} is the whole match
+     * and {@code $1} … {@code $9} a group's text (a group that took no part: nothing; {@code $$} a dollar sign). Linear time per match, as
+     * {@link #extract}; an empty match moves on by one character.
+     */
+    public String replaceAll(CharSequence text, String replacement) {
+        int n = Math.min(text.length(), limits.maxInput());
+        StringBuilder out = new StringBuilder();
+        int from = 0;
+        while (from <= n) {
+            int[] m = match(text, from);
+            if (m == null) {
+                break;
+            }
+            out.append(text, from, m[0]);
+            for (int i = 0; i < replacement.length(); i++) {
+                char c = replacement.charAt(i);
+                if (c == '$' && i + 1 < replacement.length()) {
+                    char d = replacement.charAt(i + 1);
+                    if (d == '$') {
+                        out.append('$');
+                        i++;
+                        continue;
+                    }
+                    if (d >= '0' && d <= '9') {
+                        int g = d - '0';
+                        if (g > groups) {
+                            throw refused("the replacement refers to group " + g + "; the pattern '" + source + "' has " + groups);
+                        }
+                        if (m[2 * g] >= 0 && m[2 * g + 1] >= 0) {
+                            out.append(text, m[2 * g], m[2 * g + 1]);
+                        }
+                        i++;
+                        continue;
+                    }
+                }
+                out.append(c);
+            }
+            if (m[1] == m[0]) {
+                if (m[0] < n) {
+                    out.append(text.charAt(m[0]));
+                }
+                from = m[0] + 1;
+            } else {
+                from = m[1];
+            }
+        }
+        if (from < text.length()) {
+            out.append(text, from, text.length());
+        }
+        return out.toString();
+    }
+
+    /** The leftmost match at or after {@code from}: the capture positions (start and end of the match, then of each group), or null. */
+    private int[] match(CharSequence text, int from) {
         int n = Math.min(text.length(), limits.maxInput());
         int m = op.length;
         int slots = 2 * (groups + 1);
@@ -234,7 +296,7 @@ public final class SafeRegex {
         int curN = 0;
         int[] matched = null;
         long deadline = System.nanoTime() + limits.timeoutNanos();
-        for (int i = 0; i <= n; i++) {
+        for (int i = from; i <= n; i++) {
             if ((i & 255) == 0 && System.nanoTime() > deadline) {
                 throw new DrishtiException(ErrorCode.REGEX_TIMEOUT, "the pattern '" + source + "' took longer than "
                         + limits.timeoutNanos() / 1_000_000 + " ms on a value");
@@ -269,10 +331,7 @@ public final class SafeRegex {
             nextCaps = tc;
             curN = nextN;
         }
-        if (matched == null || matched[2 * group] < 0 || matched[2 * group + 1] < 0) {
-            return null;
-        }
-        return text.subSequence(matched[2 * group], matched[2 * group + 1]).toString();
+        return matched;
     }
 
     /** {@link #add}, with each thread carrying its capture positions (a {@code SAVE} step gives the thread its own copy). */

@@ -325,8 +325,14 @@ every open node's total as **Σ−total**, the diversification. A function has o
 its sketch is how it is computed when ≈ is accepted, with a stated error, never a second name, and never for VaR
 ([section 23](#23-scale-sketches-rollups-progressive-answers-and-the-cluster)); custom functions are in [section 19](#19-custom-functions).
 
-Show values as: a value may carry `showAs` (`pct-grand`, `pct-row`, `pct-column`, `pct-parent-row`, `rank`); it is computed from the
-finished figures, so a total is never broken.
+Show values as: a value may carry `showAs` (`pct-grand`, `pct-row`, `pct-column`, `pct-parent-row`, `rank`, `ntile:<n>`,
+`diff:<n>:<dimension>`, `pct-change:<n>:<dimension>`); it is computed from the finished figures, so a total is never broken. The same
+is written as a function around the aggregate, which is how the catalogue names it: `pct_of_total(sum(NOTIONAL))`,
+`pct_of_row(...)`, `pct_of_column(...)`, `pct_of_parent(...)` (the level above on the rows), `ntile(sum(NOTIONAL), 4)` (the bucket
+among the siblings), `diff(sum(PNL), 1, TRADE_DATE:month)` and `pct_change(sum(PNL), 1, TRADE_DATE:month)` (along a dimension on the
+rows or the columns). The column header is the text as written; the raw figure stays in the answer beside the shown one. The statistics
+(`skewness`, `kurtosis`, `corr`, `slope`, `iqr`, `trimmean`, `mode`, `string_agg` …) are ordinary values:
+[FUNCTIONS.md](FUNCTIONS.md).
 
 ## 5. Nested rows, opened lazily
 
@@ -540,8 +546,8 @@ SPI (`PivotProvider`: catalogue, estimate, evaluate a plan of declarative cell s
 the `GROUP BY GROUPING SETS` compiler and the DuckDB tabular provider, the in-memory provider (`RowsProvider`: rows held in memory, the
 same states by the functions' own `add`), partial states merged in a fixed order (`OrderedMerge`), the
 partial-state cache, the split-and-merge harness and the exports. The server wires it: the Data view's tables as sources, the VaR provider,
-REST, busy protection, saved views and audit. The console only draws: `pivot-engine.js` asks the engine and lays its answer out,
-`pivot-grid.js` is the one grid (the Pivot screen and the nested `pivot` panel), and nothing in the browser adds up a figure.
+REST, busy protection, saved views and audit. The console only draws: `drishti_pivot-engine.js` asks the engine and lays its answer out,
+`drishti_pivot-grid.js` is the one grid (the Pivot screen and the nested `pivot` panel), and nothing in the browser adds up a figure.
 
 The engine is also Rachana's only source of aggregates ([ONE_GRAMMAR.md](../architecture/ONE_GRAMMAR.md)): it registers every built-in
 into Rachana's function table (`sum`, `count`, `avg`, `min`, `max`, `median`, `percentile`, `distinct`, `wavg`, `variance`, `stddev`,

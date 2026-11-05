@@ -23,7 +23,7 @@ One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the bo
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-risk/risk-hierarchy/` + `cob-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-risk/risk-hierarchy/` + `risk-hierarchy.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `NODE_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |

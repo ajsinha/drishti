@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * The view state a share carries: parsed and bounded ({@link ViewState}), and the column filters applied to a table on the server with
- * the console's meaning (the grammar of static/js/colfilter.js), so a picture shows the rows the sender had left.
+ * the console's meaning (the grammar of static/js/drishti_colfilter.js), so a picture shows the rows the sender had left.
  */
 class ColumnFiltersTest {
 

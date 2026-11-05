@@ -77,5 +77,5 @@ def test_the_theme_menu_saves_to_the_account(client, backend, monkeypatch):
     patched = _settings(backend, monkeypatch)
     r = client.patch("/api/settings", json={"theme": "blue"})
     assert r.status_code == 200 and patched[-1] == {"theme": "blue"}
-    assert "data-signed-in" in client.get("/static/js/app.js").text
+    assert "data-signed-in" in client.get("/static/js/drishti_app.js").text
     client.app.state.user_settings.forget("ash")

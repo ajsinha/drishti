@@ -54,6 +54,18 @@ class CompressedStatic(StaticFiles):
         self._guard = threading.Lock()
         self.compressed = 0             # files compressed since start (for tests and Health)
 
+    def lookup_path(self, path: str):
+        """The file, else (for the published renderer versions, 1.0.0-1.2.0, which load the console's behaviour scripts by their
+        names before every asset we wrote was named ``drishti_<name>``) the prefixed file of the same name in js/ or css/."""
+        full, st = super().lookup_path(path)
+        if st is None:
+            folder, _, name = path.replace("\\", "/").rpartition("/")
+            if folder in ("js", "css") and name and not name.startswith("drishti_"):
+                full2, st2 = super().lookup_path(f"{folder}/drishti_{name[len('drishti-'):] if name.startswith('drishti-') else name}")
+                if st2 is not None:
+                    return full2, st2
+        return full, st
+
     def _encoding(self, scope) -> str | None:
         accept = ""
         for k, v in scope.get("headers", []):

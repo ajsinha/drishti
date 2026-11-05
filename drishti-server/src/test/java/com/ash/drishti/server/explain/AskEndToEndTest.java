@@ -52,7 +52,7 @@ import org.springframework.test.web.servlet.ResultActions;
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true",
         "drishti.explain.ask.enabled=true", "drishti.explain.ask.packs[0]=market-risk", "drishti.explain.ask.values=shown",
-        "drishti.explain.ask.model=fake-model", "drishti.explain.ask.api-key=test-key-123", "drishti.explain.ask.timeout=1s",
+        "drishti.explain.ask.model=fake/fake-model", "drishti.ai.enabled=true", "drishti.explain.ask.timeout=1s",
         "drishti.explain.ask.per-user-per-minute=3", "drishti.explain.ask.max-answer-chars=60",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/ask-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
@@ -60,9 +60,13 @@ class AskEndToEndTest {
 
     static final FakeModel MODEL = new FakeModel();
 
+    /** Ask's model: a provider file of the AI layer (docs/admin/AI.md) pointing at the fake endpoint. */
     @DynamicPropertySource
-    static void endpoint(DynamicPropertyRegistry r) {
-        r.add("drishti.explain.ask.endpoint", () -> MODEL.url("/v1/chat/completions"));
+    static void provider(DynamicPropertyRegistry r) throws java.io.IOException {
+        java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("ask-ai");
+        java.nio.file.Files.writeString(dir.resolve("fake.yaml"), "type: openai\nbase-url: " + MODEL.url("") + "\ncompletions-path: /v1/chat/completions\n"
+                + "api-key: ${ASK_TEST_KEY:-test-key-123}\ntimeout: 1s\nmodels:\n  - name: fake-model\n    id: fake-model\n");
+        r.add("drishti.ai.dir", dir::toString);
     }
 
     @AfterAll
@@ -180,10 +184,11 @@ class AskEndToEndTest {
 
     @Test
     void theAnthropicShapeIsSpokenToo() throws Exception {
-        AskProperties c = new AskProperties(true, MODEL.url("/v1/messages"), "anthropic", "fake-claude", "k-9", List.of("p"), null, null, null, null, null, null,
-                Duration.ofSeconds(5), null, null, null, null, null);
+        var anthropic = new com.ash.drishti.ai.ProviderConfig("ask", "anthropic", true, MODEL.url(""), "k-9", Duration.ofSeconds(5), 0, "ask",
+                Map.of("messages-path", "/v1/messages", "anthropic-version", "2023-06-01"),
+                List.of(new com.ash.drishti.ai.ProviderConfig.ModelConfig("ask", "fake-claude", "chat", null, null, java.util.Set.of(), 0, 0)));
         var reg = new com.ash.drishti.ai.LlmRegistry(com.ash.drishti.ai.ProviderFactories.discover(List.of()),
-                () -> new com.ash.drishti.ai.ProviderConfigLoader.Loaded(List.of(com.ash.drishti.server.ai.LegacyAsk.provider(c)), java.util.Map.of()), "");
+                () -> new com.ash.drishti.ai.ProviderConfigLoader.Loaded(List.of(anthropic), java.util.Map.of()), "");
         reg.reload();
         String text = new com.ash.drishti.ai.LlmGateway(reg, com.ash.drishti.ai.LlmPolicy.none()).chat(
                 new com.ash.drishti.ai.CallContext("u", java.util.Set.of(), "ask"),

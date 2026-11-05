@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}BI settings · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-artifacts.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-artifacts.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
@@ -55,4 +55,4 @@
   <p class="text-muted-d">Built-in roles come from configuration (<span class="mono">drishti.security.roles.&lt;role&gt;.bi</span>) and are read-only here; roles you define in Admin, Roles are editable.</p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script>{% if bi_files is not none %}<script src="/static/js/artifact-uninstall.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script>{% if bi_files is not none %}<script src="/static/js/drishti_artifact-uninstall.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}

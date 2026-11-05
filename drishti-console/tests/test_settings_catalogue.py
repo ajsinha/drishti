@@ -163,7 +163,7 @@ def test_the_engines_area_lists_every_engine_file_key_and_the_old_names(tmp_path
     site.mkdir()
     for f in (ROOT / "config" / "engines").glob("*.yaml"):
         (site / f.name).write_bytes(f.read_bytes())
-    (site / "fva.yaml").write_text((site / "fva.yaml").read_text() + "# edited\n")
+    (site / "mr-cube.yaml").write_text((site / "mr-cube.yaml").read_text() + "# edited\n")
     monkeypatch.setattr(cat, "ENGINES_DIR", site)
     _, problems = cat.engine_rows()
-    assert any("fva.yaml differs from its jar copy" in p for p in problems), problems
+    assert any("mr-cube.yaml differs from its jar copy" in p for p in problems), problems

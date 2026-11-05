@@ -61,8 +61,8 @@ columns `id`, `doc`, `business_date` and the promoted fields a table's `columns`
 
 | Table | Key | Filled from (the example) |
 |---|---|---|
-| `news` | `NEWS_ID` | `data/testdata/news-and-markets/news/snapshot-2026-10-18.jsonl.gz` |
-| `quote` | `QUOTE_ID` | `data/testdata/news-and-markets/quote/snapshot-2026-10-18.jsonl.gz` |
+| `news` | `NEWS_ID` | `data/testdata/news-and-markets/news/news.2026-10-18.jsonl.gz` |
+| `quote` | `QUOTE_ID` | `data/testdata/news-and-markets/quote/quote.2026-10-18.jsonl.gz` |
 | `news-topic` | `TOPIC_ID` | `config/packs/news-and-markets/samples/news-topic.jsonl` |
 | `listed-company` | `COMPANY_ID` | `config/packs/news-and-markets/samples/listed-company.jsonl` |
 
@@ -92,3 +92,6 @@ python3 tools/drishti.py lake memory refill news
 
 - [The in-memory lake guide](../../../docs/guides/IN_MEMORY_LAKE_GUIDE.md) and [its design](../../../docs/architecture/IN_MEMORY_LAKE.md).
 - [The delta connector README](../../../plugins/drishti-plugin-delta/README.md) and [Connector files](../../../docs/connectors/CONNECTOR_FILES.md).
+
+The Delta and Iceberg files here name a lake (`lake:`, `lake-tables:`); the lake itself, its root or catalog, storage and tables, is the matching
+file in [config/lakes.examples/memory/](../../lakes.examples/memory/): copy both (docs/guides/LAKE_GUIDE.md).

@@ -18,12 +18,14 @@
     python3 tools/drishti.py lake demo --lake /tmp/demo-lake            somewhere else (connector files then point there)
     python3 tools/drishti.py lake demo --with-real ~/Downloads/endur.json,~/Downloads/ComSwap.json      LOCAL ONLY (below)
 
-For every dataset of data/testdata/testdata.yaml (written by tools/testdata/make_testdata.py) it rebuilds the seven daily snapshots
-(the first day's snapshot, then each later day's changes applied by key) and writes each day with `lake build` (tools/lake/build.py)
-into the table the dataset's Delta connector reads: <lake>/<domain>/<kind>/, the trades into trading/trade_endur, trade_calypso and
-trade_murex, partitioned by business date (and PRODUCT_TYPE for trades). Each table is written afresh (its folder is removed first). A dataset ``dated-by`` a field (the market-risk pack's VaR data,
-tools/packgen/var/make_var_data.py: the trades' P&L vectors of the last three business dates, the desks' 260-day P&L history) is loaded in one
-run, each document on its own date, its dates moved with the business dates like every other dataset's.
+For every dataset of data/testdata/testdata.yaml (written by tools/testdata/make_testdata.py) it rebuilds the daily snapshots (the
+first day's file, then each later day's changes applied by key; one file a day, <table>.<YYYY-MM-DD>.jsonl.gz) and loads each day with
+`lake build` (tools/lake/build.py) by the load rules (docs/architecture/DATA_LOAD_RULES.md): the day staged as <table>.<YYYY-MM-DD>.jsonl,
+its business date from that name, mode replace, into the table the dataset's Delta connector reads: <lake>/<domain>/<kind>/, the trades
+into trading/trade_endur, trade_calypso and trade_murex, partitioned by business date (and PRODUCT_TYPE for trades). Each table is
+written afresh (its folder is removed first). A dataset ``dated-by`` its BUSINESS_DATE (the market-risk pack's VaR data, tools/packgen/var/make_var_data.py:
+the trades' P&L vectors of the last three business dates, the desks' 260-day P&L history; the exposure run) carries its dates in its
+files (dated names, or tars of <table>/<YYYY-MM-DD>/ folders): each date staged under its moved date's name, every date in one run.
 The exposure engine's paths are the exception: by default (`--exposure demo`) they are generated from the committed netting sets
 and CSAs for every netting set of 23 of the 24 counterparties (8,022 live trades on the data's date, about a minute; the committed run of eight sets
 is a subset with the same figures), `--exposure committed` loads the committed run alone.
@@ -58,7 +60,6 @@ from __future__ import annotations
 
 import argparse
 import contextlib
-import gzip
 import json
 import os
 import pathlib
@@ -77,6 +78,7 @@ DEFAULT_ROOT = "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
 DEFAULT_SERVER = "http://localhost:18480"
 SIGNAL_TIMEOUT = 30.0                        # seconds a data-load signal waits for its answer
 REBUILT_STAMP = "lake-rebuilt.json"          # read by the server at start (Layers.REBUILT_STAMP)
+REPLACE = "overwrite-dates"                  # the load rules' mode replace (lake build --mode): each date the demo writes replaced
 REDATE = re.compile(r'("(?:AS_OF|VALUATION_DATE|RUN_DATE|SOURCE_UPDATE_TIME|BUILT_AT)":")(\d{4}-\d{2}-\d{2})')
 # A document's embedded market series (a list of {DATE, CLOSE ...}): moved with the business dates too, so a price history has no phantom
 # missing days between its series and the stored days (QA1-10). Holidays and coupon schedules are real dates and stay.
@@ -124,7 +126,9 @@ class Packs:
     def __init__(self, packs_dir: pathlib.Path):
         import yaml
         self.dir = packs_dir
-        self.specs = {p.name: yaml.safe_load((p / "pack.yaml").read_text(encoding="utf-8"))
+        sys.path.insert(0, str(ROOT / "tools"))
+        import packlake                               # a lake-form template read with the pack's lake: entries
+        self.specs = {p.name: packlake.view(yaml.safe_load((p / "pack.yaml").read_text(encoding="utf-8")))
                       for p in sorted(packs_dir.iterdir()) if (p / "pack.yaml").is_file()}
 
     def connector(self, pack: str, name: str) -> dict:
@@ -212,6 +216,7 @@ class DemoLake:
         self.a = a
         self.testdata = pathlib.Path(a.testdata)
         self.lake = pathlib.Path(a.lake).resolve()
+        self.lake_name = getattr(a, "lake_name", None) or "demo"      # the lake file whose layout the demo tables take (config/lakes/demo.yaml)
         self.data = demo_data_dir(a, self.lake)
         self.staging = self.data / "build" / "lake-demo"
         self.packs = Packs(pathlib.Path(a.packs))
@@ -392,13 +397,13 @@ class DemoLake:
 
     # ---- one dataset -------------------------------------------------------------------------------------------------------------------
     def states(self, ds: dict):
+        import feedfiles
         if "snapshot" in ds:                                  # a captured snapshot (real, dated): the same documents every day
             state = {}
-            for part in ds.get("parts") or [ds["snapshot"]]:       # a large snapshot comes in parts (the funds pack's holdings)
-                with gzip.open(self.testdata / ds["folder"] / part, "rt", encoding="utf-8") as fh:
-                    for line in fh:
-                        if line.strip():
-                            state[_key(json.loads(line), ds["key"])] = line.rstrip("\n")
+            got = feedfiles.read_table(self.testdata / ds["folder"])
+            for part in got[max(got)] if got else []:          # the newest snapshot's files (a large one a tar of parts: the funds' holdings)
+                for line in part.lines():
+                    state[_key(json.loads(line), ds["key"])] = line
             for _ in self.manifest.dates:
                 yield state
             return
@@ -416,12 +421,11 @@ class DemoLake:
         folder, key = self.testdata / ds["folder"], ds["key"]
         state: dict[str, str] = {}
         extra = self.extras.get(ds["folder"], {})
-        for i, day in enumerate(self.manifest.dates):
-            for f in sorted(folder.glob(f"{'snapshot' if i == 0 else 'changes'}-{day}*.jsonl.gz")):
-                with gzip.open(f, "rt", encoding="utf-8") as fh:
-                    for line in fh:
-                        if line.strip():
-                            state[_key(json.loads(line), key)] = line.rstrip("\n")
+        parts = feedfiles.read_table(folder)                  # <table>.<YYYY-MM-DD>.jsonl.gz: the first day's snapshot, then each day's changes
+        for day in self.manifest.dates:
+            for part in parts.get(day, []):
+                for line in part.lines():
+                    state[_key(json.loads(line), key)] = line
             if extra:
                 clash = [k for k in extra if k in state and k not in self.left_out]
                 self.left_out += clash
@@ -470,7 +474,7 @@ class DemoLake:
         if self.a.exposure != "demo" or ds["folder"] not in self.EXPOSURE_FOLDERS:
             return self.testdata / ds["folder"]
         out = self.staging / "exposure-demo"
-        if not (out / ds["folder"]).is_dir():
+        if not (out / ds["folder"]).is_dir() or not any((out / ds["folder"]).iterdir()):
             sys.path.insert(0, str(ROOT / "tools" / "packgen" / "ccr"))
             import make_ccr_data
             started = time.monotonic()
@@ -481,30 +485,40 @@ class DemoLake:
         return out / ds["folder"]
 
     def dated_dataset(self, ds: dict, path: pathlib.Path, domain: str, table: str) -> int:
-        """A dataset whose documents carry their own business date (testdata.yaml ``dated-by``: the VaR engine's vectors of the last
-        business date, the nodes' 250-day history): every file loaded in one run, each document on its own date (``lake build --date``)."""
-        stage = self.staging / f"{domain}-{table}.jsonl"
-        rows = 0
-        with stage.open("w", encoding="utf-8") as fh:
-            for f in sorted(self.dated_source(ds).glob("*.jsonl.gz")):
-                with gzip.open(f, "rt", encoding="utf-8") as src:
-                    for line in src:
-                        if line.strip():
-                            doc = self.names.rewrite(self.redate_dated(json.loads(line)))
-                            fh.write(json.dumps(doc, separators=(",", ":"), ensure_ascii=False) + "\n")
-                            rows += 1
-        argv = ["--from", str(stage), "--pack", str(self.packs.dir / ds["pack"]), "--kind", ds["kind"], "--connector", ds["connector"],
-                "--key", ds["key"], "--date", ds["dated-by"], "--lake", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
+        """A dataset whose files carry their business dates (testdata.yaml ``dated-by``: the VaR engine's vectors of the last business
+        dates, the desks' 260-day P&L, the exposure run): each date's files (a dated file, or a tar's date folder; feedfiles.py) staged as
+        one file named by its moved date, <table>.<YYYY-MM-DD>.jsonl, every date loaded in one run by the load rules (the date from the
+        name, mode replace). A row's own dates move with it (redate_dated), so its BUSINESS_DATE stays its file's."""
+        import feedfiles
+        folder = self.staging / f"{domain}-{table}"
+        shutil.rmtree(folder, ignore_errors=True)
+        folder.mkdir(parents=True)
+        rows, other = 0, 0
+        for day, parts in feedfiles.read_table(self.dated_source(ds)).items():
+            moved = self.move_day(day) if self.shift else day
+            with (folder / f"{table}.{moved}.jsonl").open("w", encoding="utf-8") as fh:
+                for part in parts:
+                    for line in part.lines():
+                        doc = self.names.rewrite(self.redate_dated(json.loads(line)))
+                        if doc.get("BUSINESS_DATE") not in (None, moved):
+                            other += 1                        # counted only: the file's date is the row's (the rules, section 1)
+                        fh.write(json.dumps(doc, separators=(",", ":"), ensure_ascii=False) + "\n")
+                        rows += 1
+        argv = ["--from", str(folder), "--pack", str(self.packs.dir / ds["pack"]), "--kind", ds["kind"], "--connector", ds["connector"],
+                "--key", ds["key"], "--mode", REPLACE, "--lake", self.lake_name, "--lake-root", str(self.lake), "--engine", self.a.engine,
+                "-q", "--no-stamp"]
         code, summary = self.lb.run(self.lb.build_parser().parse_args(argv), say=lambda *x, **k: None)
         if code:
             print(f"  {domain}/{table}: {summary.get('status')} {summary.get('error', '')}", file=sys.stderr)
-        stage.unlink(missing_ok=True)
+        if other:
+            print(f"  {domain}/{table}: {other:,} rows whose BUSINESS_DATE is not their file's date (loaded under the file's)", file=sys.stderr)
+        shutil.rmtree(folder, ignore_errors=True)
         self.checkpoint(path)
         self.tables.append(f"{domain}/{table}")
         self.written.append((ds["pack"], ds["kind"], f"{domain}/{table}"))
         if not self.a.quiet:
             days = len(summary.get("rows") or {})
-            print(f"  {domain}/{table}: {rows:,} rows over {days} day{'s' if days != 1 else ''} (dated by {ds['dated-by']})"
+            print(f"  {domain}/{table}: {rows:,} rows over {days} day{'s' if days != 1 else ''} (dated by their files)"
                   + (" (failed)" if code == 1 else ""))
         return code
 
@@ -518,26 +532,24 @@ class DemoLake:
             return self.dated_dataset(ds, path, domain, table)
         key = ds.get("key")
         worst, rows = 0, 0
-        stage = self.staging / f"{domain}-{table}.jsonl"
         n_days = len(self.dates)
         for i, (day, state) in enumerate(zip(self.dates, self.states(ds)), 1):
+            stage = self.staging / f"{table}.{day}.jsonl"   # the day staged under its name: the load takes its date from it
             if key is None:
                 key = next((k for k in json.loads(next(iter(state.values()))) if k.endswith("_ID")), "id") if state else "id"
             with stage.open("w", encoding="utf-8") as fh:
                 for line in state.values():
                     fh.write(self.names.rewrite_line(line if "snapshot" in ds else self.redate(line)) + "\n")   # the configured names
             argv = ["--from", str(stage), "--pack", str(self.packs.dir / pack), "--kind", kind, "--connector", connector, "--key", key,
-                    "--as-of", day, "--lake", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
-            for p in ds.get("partition-by") or []:
-                argv += ["--partition-by", p]
+                    "--mode", REPLACE, "--lake", self.lake_name, "--lake-root", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
             code, summary = self.lb.run(self.lb.build_parser().parse_args(argv), say=lambda *x, **k: None)
             if code:
                 print(f"  {domain}/{table} {day}: {summary.get('status')} {summary.get('error', '')}", file=sys.stderr)
             worst = max(worst, code)
             rows += len(state)
+            stage.unlink(missing_ok=True)
             if not self.a.quiet and n_days > 10 and (i % 10 == 0 or i == n_days):
                 print(f"    {domain}/{table}: committed {i}/{n_days} days, {rows:,} rows so far (through {day})", flush=True)
-        stage.unlink(missing_ok=True)
         self.checkpoint(path)
         self.tables.append(f"{domain}/{table}")
         self.written.append((pack, kind, f"{domain}/{table}"))
@@ -671,6 +683,7 @@ class DemoLake:
 
 def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--testdata", default=str(ROOT / "data" / "testdata"), help="the committed test data (default data/testdata)")
+    p.add_argument("--lake-name", default="demo", help="the lake file (config/lakes/<name>.yaml) that gives every demo table its layout (default demo)")
     p.add_argument("--lake", default=str(data_dir() / "delta"), help="the Delta root to build (default <data>/delta, what the packs read)")
     p.add_argument("--data-dir", help="the data folder the feeds and the staging go to (default DRISHTI_DATA_DIR, else the folder holding "
                    "--lake when it is a delta/ folder, else data/): the server's own data folder")

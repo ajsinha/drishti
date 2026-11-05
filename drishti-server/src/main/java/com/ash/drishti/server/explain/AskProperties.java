@@ -21,14 +21,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * {@code drishti.explain.ask.*}: Ask about this page (docs/guides/RACHANA_REFERENCE.md, Optional: Ask). Off by default; when
- * off no network call is ever attempted. The key comes from the environment only ({@code ${DRISHTI_ASK_KEY:}} in
- * {@code application.yaml}); it is never logged or echoed.
+ * off no network call is ever attempted. Ask runs on the AI layer: its model is a provider file's logical model (docs/admin/AI.md).
  *
  * @param enabled the global switch
- * @param endpoint the model's HTTP endpoint (an OpenAI-compatible chat completions URL, or an Anthropic Messages URL)
- * @param api {@code openai} or {@code anthropic}: the request and response shape
- * @param model the model name sent to the endpoint
- * @param apiKey the credential, sent as a bearer token ({@code openai}) or {@code x-api-key} ({@code anthropic}); blank sends none
+ * @param model the logical model Ask uses: a provider/model of the AI layer (docs/admin/AI.md)
  * @param packs the packs where Ask is on; empty means none
  * @param values {@code labels-only} (default) or {@code shown}: whether rendered values go into the prompt
  * @param maxQuestionChars longest question accepted
@@ -41,19 +37,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param perUserPerDay questions one user may ask in a day
  * @param logQuestions whether the question text goes to the access log (the audit row is always written; answers are not stored)
  * @param logAnswers whether the answer text is also written to the server log (off by default)
- * @param anthropicVersion the {@code anthropic-version} header for {@code api: anthropic}
  */
 @ConfigurationProperties("drishti.explain.ask")
-public record AskProperties(Boolean enabled, String endpoint, String api, String model, String apiKey, List<String> packs, String values,
+public record AskProperties(Boolean enabled, String model, List<String> packs, String values,
         Integer maxQuestionChars, Integer maxPromptKb, Integer maxGuideChars, Integer maxAnswerTokens, Integer maxAnswerChars, Duration timeout,
-        Integer perUserPerMinute, Integer perUserPerDay, Boolean logQuestions, Boolean logAnswers, String anthropicVersion) {
+        Integer perUserPerMinute, Integer perUserPerDay, Boolean logQuestions, Boolean logAnswers) {
 
     public AskProperties {
         enabled = enabled != null && enabled;
-        endpoint = endpoint == null ? "" : endpoint.strip();
-        api = api == null || api.isBlank() ? "openai" : api.strip().toLowerCase();
         model = model == null ? "" : model.strip();
-        apiKey = apiKey == null ? "" : apiKey.strip();
         packs = packs == null ? List.of() : packs.stream().filter(p -> p != null && !p.isBlank()).map(String::strip).toList();
         values = "shown".equalsIgnoreCase(values == null ? "" : values.strip()) ? "shown" : "labels-only";
         maxQuestionChars = pos(maxQuestionChars, 500);
@@ -66,7 +58,6 @@ public record AskProperties(Boolean enabled, String endpoint, String api, String
         perUserPerDay = pos(perUserPerDay, 100);
         logQuestions = logQuestions == null || logQuestions;
         logAnswers = logAnswers != null && logAnswers;
-        anthropicVersion = anthropicVersion == null || anthropicVersion.isBlank() ? "2023-06-01" : anthropicVersion.strip();
     }
 
     private static int pos(Integer v, int dflt) {

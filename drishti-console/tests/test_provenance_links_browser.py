@@ -31,9 +31,9 @@ TRADE = "1000001"                                   # the first shipped sample t
 
 def designer_state(page):
     """(the open Design's id, its YAML) once the workbench has drawn it."""
-    page.wait_for_function("() => window.drishtiWorkbench && window.drishtiWorkbench.store.state.id", timeout=BROWSER_WAIT_MS)
-    page.wait_for_function("() => (window.drishtiWorkbench.store.state.yaml || '').length > 0", timeout=BROWSER_WAIT_MS)
-    return page.evaluate("() => [window.drishtiWorkbench.store.state.id, window.drishtiWorkbench.store.state.yaml]")
+    page.wait_for_function("() => window.Drishti.workbench && window.Drishti.workbench.store.state.id", timeout=BROWSER_WAIT_MS)
+    page.wait_for_function("() => (window.Drishti.workbench.store.state.yaml || '').length > 0", timeout=BROWSER_WAIT_MS)
+    return page.evaluate("() => [window.Drishti.workbench.store.state.id, window.Drishti.workbench.store.state.yaml]")
 
 
 def asked(href):

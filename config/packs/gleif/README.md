@@ -42,7 +42,6 @@ depends-on:
   - delta
   - derived
   settings:
-  - DRISHTI_DELTA_ROOT
   - DRISHTI_LAKE_ENABLED
 sources:
 - name: GLEIF golden copy, level 2 (relationship records, reporting exceptions)
@@ -304,7 +303,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `gleif-store` | `delta` | `lei-entity`, `lei-relationship`, `lei-mapping` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `gleif-groupings` | `derived` | `lei-group`, `lei-country` | `${DRISHTI_LAKE_ENABLED:true}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`.
+Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 

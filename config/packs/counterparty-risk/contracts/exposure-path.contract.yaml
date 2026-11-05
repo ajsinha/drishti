@@ -293,8 +293,8 @@ notes:
   plus 10 business days). DESK, TT_BOOK, ASSET_CLASS, PRODUCT, NOTIONAL and MATURITY_DATE are denormalised for the scopes and checks.
 - '1.1: SOURCE_SYSTEM and ASSET_CLASS list every value of the test data (ENDUR trades have paths too).'
 review:
-- 'required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/counterparty-risk/exposure-path/cob-2026-09-30.part-001.jsonl.gz,
-  data/testdata/counterparty-risk/exposure-path/cob-2026-09-30.part-002.jsonl.gz)): confirm each required field is mandatory upstream, and each
+- 'required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/counterparty-risk/exposure-path/exposure-path.tar,
+  data/testdata/counterparty-risk/exposure-path/exposure-path.tar)): confirm each required field is mandatory upstream, and each
   optional one may be empty.'
 - 'source is the pack''s first listed source (its README): confirm.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'

@@ -33,23 +33,25 @@ URI="mongodb://localhost:27017"; DB="drishti"; OPTS=(); TRADES=""; DAYS="3"
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --keep-days|--ttl-days|--doc-format|--batch|--in-flight) OPTS+=("$1" "$2"); shift 2 ;;
-    --as-of|--future-days|--zone|--max-drop-share) OPTS+=("$1" "$2"); shift 2 ;;
+    --future-days|--zone|--max-drop-share) OPTS+=("$1" "$2"); shift 2 ;;
     --force-drop) OPTS+=("$1"); shift ;;
     --trades) TRADES="$2"; shift 2 ;;
     --days) DAYS="$2"; shift 2 ;;
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
-uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$DATA/banking.jsonl"
+# loader rows by the load rules (docs/architecture/DATA_LOAD_RULES.md): tars of <kind>/<YYYY-MM-DD>/ folders, each row under its folder's date
+ROWS="$DATA/build/loader-rows"; rm -rf "$ROWS"; mkdir -p "$ROWS"
+uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$ROWS/banking.tar"
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-mongodb -am
 CP="plugins/drishti-plugin-mongodb/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-mongodb -Dmdep.outputFile=/dev/stdout)"
 LOADER=("$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.mongodb.MongoLoader)
 if [[ -n "$TRADES" ]]; then
-  "${LOADER[@]}" "$DATA/banking.jsonl" "$URI" "$DB" ${OPTS[@]+"${OPTS[@]}"}
-  # the bulk book straight from the generator into the loader: no file of gigabytes in between
-  uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl - \
-    | "${LOADER[@]}" - "$URI" "$DB" ${OPTS[@]+"${OPTS[@]}"}
+  "${LOADER[@]}" "$ROWS/banking.tar" "$URI" "$DB" ${OPTS[@]+"${OPTS[@]}"}
+  # the bulk book: a tar of trade/<YYYY-MM-DD>/ folders (the load rules), then the loader on it
+  uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl "$ROWS/bulk-trades.tar"
+  "${LOADER[@]}" "$ROWS/bulk-trades.tar" "$URI" "$DB" ${OPTS[@]+"${OPTS[@]}"}
 else
-  "${LOADER[@]}" "$DATA/banking.jsonl" "$URI" "$DB" ${OPTS[@]+"${OPTS[@]}"}
+  "${LOADER[@]}" "$ROWS/banking.tar" "$URI" "$DB" ${OPTS[@]+"${OPTS[@]}"}
 fi
-rm -f "$DATA/banking.jsonl"
+rm -rf "$ROWS"

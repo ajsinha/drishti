@@ -53,12 +53,12 @@ def test_the_tutorials_card_counts_the_tutorials_it_finds(tmp_path):
         (tmp_path / "tutorials" / f"{n:02d}-x.md").write_text("# x")
     (tmp_path / "tutorials" / "README.md").write_text("# index")
     assert tutorial_count_word(tmp_path) == "Three"
-    assert tutorial_count_word(CONSOLE.parent / "docs") == "Thirty-six"         # 1 to 33, 36 to 38 (34 and 35 come with 2.9.11.c)
+    assert tutorial_count_word(CONSOLE.parent / "docs") == "Thirty-nine"        # 1 to 38 and 43
 
 
 @pytest.mark.skipif(not shutil.which("node"), reason="needs node")
 def test_a_value_that_rounds_to_zero_is_never_signed():
     script = ("const e=require(process.argv[1]);"
               "console.log(JSON.stringify([e.format(-0.001,'signed2'),e.format(-0.004,null),e.format(-1.5,'signed2'),e.format(0.001,'signed2'),e.format(-3,'amount0')]))")
-    out = subprocess.run(["node", "-e", script, str(CONSOLE / "web/static/js/pivot-engine.js")], capture_output=True, text=True, check=True).stdout
+    out = subprocess.run(["node", "-e", script, str(CONSOLE / "web/static/js/drishti_pivot-engine.js")], capture_output=True, text=True, check=True).stdout
     assert json.loads(out) == ["0.00", "0.00", "−1.50", "0.00", "−3"]

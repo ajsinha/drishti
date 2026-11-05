@@ -18,12 +18,12 @@
    limit use, breaches, books near their limit, the largest counterparty; limit use by book over the last business dates; by trader; P&L
    against VaR; overnight movers) and C "explorer" (a big command line, chips, the commands by group, recents). A shell: whose figures they
    are ("my" scope) and every figure come from /api/home/trading/* (core/trading_landing.py, the servers' answers read as the person), drawn
-   by trading-landing.js; a figure the data cannot give is left out or says why. The terminal look with a green accent. #}
+   by drishti_trading-landing.js; a figure the data cannot give is left out or says why. The terminal look with a green accent. #}
 {% extends "base.html" %}
 {% block title %}{{ PRODUCT }}{% endblock %}
 {% block screen %}home{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/trading-landing.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_trading-landing.css?v={{ ASSET_V }}">{% endblock %}
 {% macro go(cmd) %}/go?q={{ (cmd ~ ' <GO>') | urlencode }}{% endmacro %}
 {% set groups = [
   ("Blotter", "blotter", [("TRD", "Trades"), ("CTRD", "A counterparty's trades"), ("PTRD", "A portfolio's trades"), ("LTRD", "A legal entity's trades"), ("ITRD", "An index's trades")]),
@@ -158,4 +158,4 @@
   {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/trading-landing.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_trading-landing.js?v={{ ASSET_V }}"></script>{% endblock %}

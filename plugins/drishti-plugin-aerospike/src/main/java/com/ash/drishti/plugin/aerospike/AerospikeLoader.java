@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.aerospike;
 
+import com.ash.drishti.common.RowFeed;
 import com.aerospike.client.AerospikeClient;
 import com.aerospike.client.Host;
 import com.aerospike.client.policy.ClientPolicy;
@@ -23,11 +24,6 @@ import com.ash.drishti.api.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -80,15 +76,15 @@ public final class AerospikeLoader {
         ClientPolicy client = new ClientPolicy();
         client.maxConnsPerNode = poolSize;                                  // never fewer than the writes in flight
         try (AerospikeClient c = new AerospikeClient(client, Host.parseHosts(hosts, 3000));
-             BufferedReader in = file.equals("-") ? new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8), 1 << 20)
-                     : Files.newBufferedReader(Path.of(file), StandardCharsets.UTF_8);
+             RowFeed in = RowFeed.open(file, RowFeed.asOf(args));          // the load rules: each row's business date (RowFeed)
              ExecutorService writers = Executors.newVirtualThreadPerTaskExecutor()) {
             String line;
-            while ((line = in.readLine()) != null && failed.get() == null) {
+            while ((line = in.next()) != null && failed.get() == null) {
                 if (line.isBlank()) {
                     continue;
                 }
-                Row row = parse(json, line);
+                Row read = parse(json, line);
+                Row row = new Row(read.domain(), read.kind(), read.id(), in.place(read.domain() + "/" + read.kind(), read.date()), read.doc(), read.columns());
                 if (!guard.accept(row.date(), row.domain() + " " + row.kind() + " " + row.id())) {
                     continue;
                 }
@@ -112,6 +108,7 @@ public final class AerospikeLoader {
             if (failed.get() != null) {
                 throw failed.get();
             }
+            in.notes().forEach(note -> System.err.println("aerospike: " + note));
             dates.forEach((k, ds) -> {
                 String[] dk = k.split("\u001f", 2);
                 AerospikeLayout.addDates(c, policy, namespace, dk[0], dk[1], ds);
@@ -155,7 +152,7 @@ public final class AerospikeLoader {
                 }
             }
         }
-        return new Row(domain, kind, id, LocalDate.parse(date), doc, columns);
+        return new Row(domain, kind, id, date == null ? null : LocalDate.parse(date), doc, columns);
     }
 
     private static String option(String[] args, String name, String fallback) {

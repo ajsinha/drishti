@@ -23,7 +23,7 @@ A US listed company: key facts, ten years of annual financials, recent SEC filin
 
 |  |  |
 |---|---|
-| Path | `data/testdata/us-equities/us-company/` + `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/us-equities/us-company/` + `us-company.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `TICKER` |
 | Date field | none in the record: a snapshot of public data, its file named by the capture date; the demo lake serves the same records on every business date (partition `business_date`) |

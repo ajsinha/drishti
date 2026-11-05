@@ -14,7 +14,7 @@
 
 """Many tabs on live views in one browser (UX-01): browsers open at most six connections to a site over HTTP/1.1, and a
 live connection per tab used them all up, so a seventh page never loaded. The browser now holds ONE live connection to
-the console however many tabs and workspace panes are open (live-hub.js), so the next page loads at once and every tab
+the console however many tabs and workspace panes are open (drishti_live-hub.js), so the next page loads at once and every tab
 and pane keeps ticking.
 
 Runs Chromium through Playwright; skipped when Playwright or its Chromium is not installed (`pip install playwright` and
@@ -227,7 +227,7 @@ def test_many_live_tabs_and_a_live_workspace_leave_the_browser_free_and_all_keep
         # over one live connection for the whole browser
         every = tabs + [desk] + panes
         want = {"shared-worker"} if hub == "shared-worker" else {"leader", "follower"}
-        kinds = _eventually(lambda: (k := {t.evaluate("() => window.DrishtiChannel.transport()") for t in every}) == want and k, extra,
+        kinds = _eventually(lambda: (k := {t.evaluate("() => window.Drishti.Channel.transport()") for t in every}) == want and k, extra,
                             f"the transports to settle as {sorted(want)}")
         assert kinds == want
         if channels_before is not None:
@@ -235,13 +235,13 @@ def test_many_live_tabs_and_a_live_workspace_leave_the_browser_free_and_all_keep
 
         if hub == "leader":
             # the tab holding the connection closes: another takes over, and the others keep ticking
-            leader = next(t for t in tabs if t.evaluate("() => window.DrishtiChannel.transport()") == "leader")
+            leader = next(t for t in tabs if t.evaluate("() => window.Drishti.Channel.transport()") == "leader")
             tabs.remove(leader)
             leader.close()
             targets = [(n, t) for n, t in targets if t is not leader]
             stale = _all_tick(targets, extra)
             assert stale == [], f"no live updates after the leader closed: {stale}"
-            _eventually(lambda: "leader" in {t.evaluate("() => window.DrishtiChannel.transport()") for t in tabs + [desk, extra]}, extra,
+            _eventually(lambda: "leader" in {t.evaluate("() => window.Drishti.Channel.transport()") for t in tabs + [desk, extra]}, extra,
                         "another tab to take over as leader")
         desk.evaluate("() => fetch('/w/api/live-tabs-test/delete', {method: 'POST'})")
     finally:

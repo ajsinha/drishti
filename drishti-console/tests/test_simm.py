@@ -69,7 +69,7 @@ def test_the_pages_and_the_api_are_read_as_the_person(backend, monkeypatch):
     r = c.get("/go", params={"q": "PLAY SIMM RUN SM-AB12CD34-1 <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/play/simm?recipe=SM-AB12CD34-1"
     page = c.get("/simm?nettingSet=NS-ALDERSHOT-LDN").text
-    assert 'data-simm data-mode="screen" data-ns="NS-ALDERSHOT-LDN"' in page and "simm.js" in page and "Against the counterparty" in page
+    assert 'data-simm data-mode="screen" data-ns="NS-ALDERSHOT-LDN"' in page and "drishti_simm.js" in page and "Against the counterparty" in page
     page = c.get("/play/simm?nettingSet=EXAMPLE").text
     assert 'data-mode="play"' in page and "data-sm-choices" in page and "Save recipe" in page and "Export to Excel" in page and "data-sm-side" in page
     j = c.get("/api/simm/playground", params={"nettingSet": "EXAMPLE", "concentration": "off", "side": "post", "compare": "hvr=off",

@@ -60,7 +60,7 @@ def test_the_page_shows_history_steps_expectations_and_the_settings(client, back
     page = client.get("/admin/packs/trading/loads").text
     for text in ("Data loads", "trade for 2026-10-06 loaded: 48,213 rows, 12 rejected; 3 alerts fired", "48,213", "eod-1", "etl-eod", "verified", "attempt 2",
                  "FAILED: disk full", "3 steps", "16 trade entities on 2026-10-06", "Expectations", "19:00 America/New_York", "late", "on-time", "Expectations settings",
-                 'data-config-dialog', 'aria-labelledby="cfgTitle"', "admin-loads.js", "admin-loads.css", "Telling Drishti new data has landed"):
+                 'data-config-dialog', 'aria-labelledby="cfgTitle"', "drishti_admin-loads.js", "drishti_admin-loads.css", "Telling Drishti new data has landed"):
         assert text in page, text
     assert 'role="search"' in page and '<caption class="visually-hidden">' in page and 'scope="col"' in page      # named filter, captions and headers for readers
 

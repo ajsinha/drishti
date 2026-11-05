@@ -70,7 +70,7 @@ def console_html(vm: dict, theme: str = "", design_on: bool = True) -> str:
     view = (f'<div class="view" data-view data-kind="{ref.get("kind", "")}" data-id="{ref.get("id", "")}">'
             + str(parts.provenance_banners(vm, "live", {}, False, "")) + str(parts.vhead(vm)) + body + "</div>")
     links = "".join(f'<link rel="stylesheet" href="/static/{s.removeprefix("static/")}">' for s in CONSOLE_SHEETS)
-    scripts = "".join(f'<script src="{s}"></script>' for s in ("/render-test/csp.js", "/static/vendor/echarts/echarts.min.js", "/static/js/geomap.js", "/static/js/charts.js", "/static/js/view.js"))
+    scripts = "".join(f'<script src="{s}"></script>' for s in ("/render-test/csp.js", "/static/vendor/echarts/echarts.min.js", "/static/js/drishti_geomap.js", "/static/js/drishti_charts.js", "/static/js/drishti_view.js"))
     t = f' data-theme="{theme}"' if theme else ""
     return f'<!DOCTYPE html><html lang="en"{t}><head><meta charset="utf-8"><title>console</title>{links}</head><body class="terminal">{view}{scripts}</body></html>'
 
@@ -146,6 +146,8 @@ class Site:
             return route.fulfill(status=200, body=body, headers={**headers, "Content-Type": ctype + "; charset=utf-8"})
         if path.startswith("/static/"):
             f = (WEB / "static" / path[len("/static/"):]).resolve()
+            if not f.is_file() and f.parent.name in ("js", "css") and not f.name.startswith("drishti_"):
+                f = f.with_name("drishti_" + (f.name[len("drishti-"):] if f.name.startswith("drishti-") else f.name))   # an old name, as CompressedStatic answers it
             if f.is_file() and (WEB / "static") in f.parents:
                 ctype = {".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".woff2": "font/woff2"}.get(f.suffix) or mimetypes.guess_type(f.name)[0] or "application/octet-stream"
                 return route.fulfill(status=200, body=f.read_bytes(), headers={**headers, "Content-Type": ctype})

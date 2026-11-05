@@ -97,21 +97,22 @@ def evolve(doc: dict, i: int, k: int, day: str) -> dict:
 
 
 def snapshot_of(system: str) -> Path:
-    """The committed test data's first-day snapshot of a system's trades (data/testdata/trades/<system>/snapshot-<date>.jsonl.gz),
+    """The committed test data's first-day snapshot of a system's trades (data/testdata/trades/<system>/trade_<system>.<date>.jsonl.gz, its first date),
     whatever its date: the test data's days move when it is regenerated (make_testdata.py --days)."""
-    found = sorted((ROOT / "data" / "testdata" / "trades" / system).glob("snapshot-*.jsonl.gz"))
+    found = sorted((ROOT / "data" / "testdata" / "trades" / system).glob(f"trade_{system}.*.jsonl.gz"))
     if not found:
-        raise SystemExit(f"no snapshot-*.jsonl.gz in data/testdata/trades/{system}: run tools/testdata/make_testdata.py")
+        raise SystemExit(f"no trade_{system}.<date>.jsonl.gz in data/testdata/trades/{system}: run tools/testdata/make_testdata.py")
     return found[0]
 
 
 days_of: list[str] = []
 
 
-def build(a, src: Path, day: str, pack: str, connector: str, kind: str | None = None, partition: bool = True, key: str | None = None) -> None:
+def build(a, src: Path, day: str, pack: str, connector: str, kind: str | None = None, key: str | None = None) -> None:
+    # the layout (partitions, promoted columns) from the demo lake's file, config/lakes/demo.yaml; written under --lake as its root
     argv = [sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "build", "--from", str(src), "--as-of", day,
-            "--pack", str(ROOT / "config" / "packs" / pack), "--connector", connector, "--mode", "overwrite-dates", "--lake", a.lake, "-q"]
-    argv += ["--partition-by", "PRODUCT_TYPE"] if partition else []
+            "--pack", str(ROOT / "config" / "packs" / pack), "--connector", connector, "--mode", "overwrite-dates",
+            "--lake", "demo", "--lake-root", a.lake, "-q"]
     argv += ["--kind", kind] if kind else []
     argv += ["--key", key] if key else []                    # trades: the pack's ingest.trade.key
     log = Path(a.tmp) / f"{connector}-{day}.log"
@@ -210,8 +211,8 @@ def main(argv=None) -> int:
                     ids = members.get(f"NS-{c:05d}-{le[3:]}", [])
                     out.write(json.dumps({"NETTING_SET_ID": f"NS-{c:05d}-{le[3:]}", "COUNTERPARTY": f"CP-{c:05d}", "LEGAL_ENTITY": le,
                                           "TRADE_COUNT": len(ids), "TRADE_IDS": ids}, separators=(",", ":")) + "\n")
-        build(a, cps, d, "core", "reference-store", "counterparty", partition=False, key="COUNTERPARTY_ID")
-        build(a, nss, d, "counterparty-risk", "credit-store", "netting-set", partition=False, key="NETTING_SET_ID")
+        build(a, cps, d, "core", "reference-store", "counterparty", key="COUNTERPARTY_ID")
+        build(a, nss, d, "counterparty-risk", "credit-store", "netting-set", key="NETTING_SET_ID")
         finish()                                              # a day at a time: at most one day's files on disk
     return 0
 

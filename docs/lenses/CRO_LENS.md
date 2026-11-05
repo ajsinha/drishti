@@ -750,7 +750,7 @@ commands:
   words: { BI: on, FUNC: on, WHAT: on, DATAMAP: off, VAR: on, EXP: on, SMAT: on, MCUBE: on, CCUBE: on, FORM: off, RUPAKA: off }
 features: { bi: edition, var: on, exposure: on, reports: on, alerts: on, monitors: on, workspaces: on, layouts: on,
             collaboration: on, governance: on, ai: site,          # Ask only when the site has a provider (decision 7)
-            build: off, studio: off, designer: off, forms: off, calc: off, pyconsole: off, python: off, embed: on }
+            build: off, designer: off, forms: off, calc: off, pyconsole: off, python: off, embed: on }
 bi:
   datasets: [market-risk-var-official, counterparty-exposure-counterparties, and the proposed appetite-status, limit-breach, limit-request]
 menus:

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.duckdb;
 
+import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -83,10 +84,9 @@ class DuckDbSourcePluginTest extends DatedSourceContract {
     private static void load(Path database, List<String> lines, String... options) throws Exception {
         Path f = Files.createTempFile(DIR, "rows", ".jsonl");
         Files.write(f, lines, StandardCharsets.UTF_8);
-        List<String> args = new ArrayList<>(List.of(f.toString(), database.toString(), "--parsers", "2", "--memory-limit", "256MB"));
+        List<String> args = new ArrayList<>(List.of(LoaderRows.rewrite(f).toString(), database.toString(), "--parsers", "2", "--memory-limit", "256MB"));
         args.addAll(List.of(options));
         DuckDbLoader.main(args.toArray(new String[0]));
-        Files.delete(f);
     }
 
     private static Map<String, String> settings(Path database, String... more) {
@@ -269,14 +269,14 @@ class DuckDbSourcePluginTest extends DatedSourceContract {
     }
 
     @Test
-    void aFutureDatedRowIsNotLoadedAndCannotMoveTheRetentionCutOff() throws Exception {
+    void aFileOfAFutureBusinessDateIsNotLoaded() throws Exception {
         Path db = DIR.resolve("future.duckdb");
         String row = "{\"domain\":\"future\",\"kind\":\"trade\",\"id\":\"%s\",\"date\":\"%s\",\"doc\":\"{}\"}";
         load(db, List.of(row.formatted("T-1", "2026-09-03"), row.formatted("T-1", "2026-09-30")));
-        assertThatThrownBy(() -> load(db, List.of(row.formatted("T-TYPO", "2099-03-01")), "--keep-days", "30", "--as-of", "2026-09-30"))
-                .hasMessageContaining("1 rows not loaded").hasMessageContaining("business date is after");
+        assertThatThrownBy(() -> load(db, List.of(row.formatted("T-TYPO", "2099-03-01"), row.formatted("T-2", "2026-09-30"))))   // a tar
+                .hasMessageContaining("in the future");                                                // the load rules: refused whole
         assertThat(query(db, "SELECT string_agg(CAST(business_date AS VARCHAR), ',' ORDER BY business_date) FROM future.entities"))
-                .as("history stays: thirty days back from 2026-09-30, the typo not loaded").isEqualTo("2026-09-03,2026-09-30");
+                .as("history stays, the future day not loaded").isEqualTo("2026-09-03,2026-09-30");
     }
 
     @Test

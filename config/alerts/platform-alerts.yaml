@@ -85,6 +85,11 @@ rules:
     above: 100                     # mappings
     severity: warn                 # warn
     summary: "{value} deleted files are still mapped: their disk space is not given back"  # the line
+  native-blas-fallback:            # HIGH_PERFORMANCE_NATIVE 6.5: auto mode and the bundled OpenBLAS is not in use (not loaded, self-test failed, switched off)
+    metric: drishti.native.blas.fallback  # 1 while the Java path serves in auto mode (0 on OpenBLAS, and when java is chosen)
+    above: 0.5                     # on the Java path
+    severity: warn                 # warn: the same results, slower
+    summary: "BLAS runs on the pure-Java path ({reason}): results identical, many-scope sums slower; see Admin -> Health, Native"  # the line
   source-down:                     # a connector down for 5 minutes
     metric: drishti.source.up      # 1 serving, 0 down
     below: 1                       # down

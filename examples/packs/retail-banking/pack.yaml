@@ -106,8 +106,8 @@ connectors:
     - collections-case
     - retail-portfolio
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: retail
+      lake: demo
+      lake-tables: retail.customer,retail.deposit-account,retail.mortgage,retail.card-account,retail.personal-loan,retail.branch,retail.collections-case,retail.retail-portfolio
 routes:
   customer: retail-store
   deposit-account: retail-store
@@ -334,3 +334,13 @@ roles:
     - retail-portfolio
     - legal-entity
     raw: true
+lake:
+  tables:
+    retail.customer: null
+    retail.deposit-account: null
+    retail.mortgage: null
+    retail.card-account: null
+    retail.personal-loan: null
+    retail.branch: null
+    retail.collections-case: null
+    retail.retail-portfolio: null

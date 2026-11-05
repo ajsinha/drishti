@@ -18,6 +18,7 @@ package com.ash.drishti.dataload;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.ash.drishti.common.FileDates;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -62,16 +63,26 @@ class InboxStatusTest {
         Fixture f = new Fixture(tmp);
         f.drop("trades-a.jsonl", Fixture.rows("2026-11-02", "1"), "");
         f.drop("positions-2026-11-03.jsonl", Fixture.rows("2026-11-03", "2"), null);
-        f.drop("named-2026-11-03.jsonl", Fixture.rows("2026-11-03", "3"), "");
+        f.drop("named-x.2026-11-03.jsonl", Fixture.rows("2026-11-03", "3"), "");
         Path fresh = f.drop("trades-fresh.jsonl", Fixture.rows("2026-11-03", "4"), "");
         Files.setLastModifiedTime(fresh, FileTime.from(f.clock.instant().minusSeconds(5)));
         f.drop("mystery.jsonl", Fixture.rows("2026-11-03", "5"), "");
         f.drop("notes.txt", "x", "");
+        f.drop("trades-b.2026-11-02.jsonl", Fixture.rows("2026-11-02", "6"), "");
+        f.drop("trades-c.2026-11-01.zip", "x", "");
+        f.drop("trades-d.2026-11-02.jsonl", Fixture.rows("2026-11-02", "7"), "business-date: 2026-11-01\n");
 
         Map<String, Object> st = inbox(f, f.fakeLoader()).status();
         Map<String, Object> board = map(st.get("board"));
         List<Map<String, Object>> waiting = list(board.get("waiting"));
-        assertThat(board.get("waitingCount")).isEqualTo(waiting.size()).isEqualTo(6);
+        assertThat(board.get("waitingCount")).isEqualTo(waiting.size()).isEqualTo(9);
+        // the business date each file will load under, and where it comes from (DATALOAD_INBOX.md section 5.1)
+        assertThat(map(byFile(waiting, "trades-b.2026-11-02.jsonl").get("rule"))).containsEntry("date", "2026-11-02 from the name")
+                .containsEntry("nameDate", "2026-11-02");
+        assertThat((String) map(byFile(waiting, "trades-b.2026-11-02.jsonl").get("rule")).get("text")).endsWith("· 2026-11-02 from the name");
+        assertThat(map(byFile(waiting, "trades-c.2026-11-01.zip").get("rule"))).containsEntry("date", "2026-11-01 from the name");
+        assertThat(map(byFile(waiting, "trades-d.2026-11-02.jsonl").get("rule"))).containsEntry("date", "2026-11-01 from the .ready file");
+        assertThat(map(byFile(waiting, "trades-a.jsonl").get("rule"))).containsEntry("date", FileDates.businessToday() + " (today: no date in the name)");
 
         Map<String, Object> a = byFile(waiting, "trades-a.jsonl");
         assertThat(a).containsEntry("code", "ready").containsEntry("label", "ready");
@@ -80,12 +91,13 @@ class InboxStatusTest {
         assertThat(map(a.get("rule"))).containsEntry("n", 1).containsEntry("pack", "demo-pack").containsEntry("kind", "trade");
         assertThat((String) map(a.get("rule")).get("text")).startsWith("rule 1 → demo-pack / trade");
 
-        Map<String, Object> named = byFile(waiting, "named-2026-11-03.jsonl");
+        Map<String, Object> named = byFile(waiting, "named-x.2026-11-03.jsonl");
         assertThat((String) map(named.get("rule")).get("date")).isEqualTo("2026-11-03 from the name");
 
         assertThat(byFile(waiting, "positions-2026-11-03.jsonl")).containsEntry("code", "no-marker").containsEntry("label", "no marker");
         assertThat((String) byFile(waiting, "positions-2026-11-03.jsonl").get("next")).contains("positions-2026-11-03.jsonl.ready or ready.all");
-        assertThat((String) map(byFile(waiting, "positions-2026-11-03.jsonl").get("rule")).get("text")).startsWith("no rule matches this name");
+        assertThat((String) map(byFile(waiting, "positions-2026-11-03.jsonl").get("rule")).get("text"))
+                .startsWith("it would go to failed/: positions-2026-11-03: no pack, kind or table of that name");
 
         Map<String, Object> notStable = byFile(waiting, "trades-fresh.jsonl");
         assertThat(notStable).containsEntry("code", "not-stable").containsEntry("label", "not yet stable");
@@ -206,8 +218,8 @@ class InboxStatusTest {
         Map<String, Object> st = inbox(f, f.fakeLoader()).status();
         Map<String, Object> rules = map(st.get("rules"));
         assertThat(list(rules.get("rules"))).extracting(m -> m.get("match"), m -> m.get("date")).containsExactly(
-                org.assertj.core.groups.Tuple.tuple("trades-*", "each row's date field (the pack's)"),
-                org.assertj.core.groups.Tuple.tuple("named-*", "from the name"));
+                org.assertj.core.groups.Tuple.tuple("trades-*", "from the .ready file, else the name, else today"),
+                org.assertj.core.groups.Tuple.tuple("named-*", "from the name (required)"));
         assertThat(rules).containsEntry("unmatched", "fail");
         assertThat((String) map(st.get("settings")).get("text")).isEqualTo("interval 10m · stable-seconds 30 · loader-heap 256m · load-timeout 5m · "
                 + "reject-max-percent 0 · max-files off · max-gb off · reload-duplicates false · keep-outbox-days 30");

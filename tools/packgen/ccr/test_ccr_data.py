@@ -25,7 +25,6 @@ are what an upstream exposure simulator delivers and nothing more (docs/guides/E
 
     python3 -m pytest tools/packgen/ccr/test_ccr_data.py -q          (pyyaml and pytest)
 """
-import gzip
 import json
 import math
 import sys
@@ -47,9 +46,8 @@ ENGINE_FIGURES = {"EE", "ENE", "EPE", "EEPE", "PFE", "PFE_95", "PFE_99", "PFE_PE
 
 def docs(kind: str) -> list[dict]:
     out = []
-    for f in sorted((TD / kind).glob("*.jsonl.gz")):
-        with gzip.open(f, "rt", encoding="utf-8") as fh:
-            out += [json.loads(line) for line in fh if line.strip()]
+    for _day, line in X.FF.lines(TD / kind):                # its dated files and tars (tools/lake/feedfiles.py)
+        out.append(json.loads(line))
     return out
 
 

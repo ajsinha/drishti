@@ -48,7 +48,6 @@ features:                                # presets of existing switches (config/
   pyconsole: off
   python: off
   designer: off
-  studio: off
   build: off
   forms: off                             # as Drishti Risk: the blotter and the command line, no query by form
   datamap: off
@@ -78,7 +77,7 @@ menus:                                   # by id, per menu; a menu not named sho
 home:
   landing: trader                        # the default landing: trader (A, Trader desk), desk (B, Desk head), explorer (C, Explorer)
   landings: [trader, desk, explorer]     # the landings a person may pick on Home (their choice is kept in their settings)
-  template: home/trading_landing.html    # the page that draws them (it names its script and style: trading-landing.js, trading-landing.css)
+  template: home/trading_landing.html    # the page that draws them (it names its script and style: drishti_trading-landing.js, drishti_trading-landing.css)
   titles: { trader: Trader desk, desk: Desk head, explorer: Explorer }
   landing-by-role: {}                    # {access role: landing}: wins over the person's choice when set (the RBAC hook, as the others)
   chips: [TRD 1000001, BOOK BOOK-RATES-1, CTRD CP-ALDERSHOT, POS BOOK-RATES-1, VAR DESK DESK-RATES, XWIF, CRV CRV-USD-OIS]   # C's chips

@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.plugin.jdbc;
 
+import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -49,9 +49,8 @@ class PostgresLoaderRowsTest {
     }
 
     private static void load(List<String> lines, String... options) throws Exception {
-        Path f = Files.createTempFile("rows", ".jsonl");
+        Path f = LoaderRows.write(lines);                       // the load rules: a tar of <kind>/<date>/ folders, or one dated file
         try {
-            Files.write(f, lines, StandardCharsets.UTF_8);
             List<String> args = new ArrayList<>(List.of(f.toString(), POSTGRES.getJdbcUrl(), "--user", POSTGRES.getUsername(), "--password",
                     POSTGRES.getPassword(), "--writers", "2", "--batch", "2"));
             args.addAll(List.of(options));

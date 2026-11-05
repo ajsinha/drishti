@@ -14,7 +14,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {# Admin -> Ad-hoc scopes: every person's saved VaR baskets, filtered by owner, each with Delete (a confirm dialog with an optional reason:
-   /static/js/scope-delete.js). The server allows an administrator to delete anyone's; each delete is audited (var-basket-delete). #}
+   /static/js/drishti_scope-delete.js). The server allows an administrator to delete anyone's; each delete is audited (var-basket-delete). #}
 {% extends "base.html" %}
 {% block title %}Ad-hoc scopes · {{ PRODUCT }}{% endblock %}
 {% block screen %}admin{% endblock %}
@@ -49,4 +49,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/view.js?v={{ ASSET_V }}"></script><script src="/static/js/scope-delete.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-scopes.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_view.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_scope-delete.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-scopes.js?v={{ ASSET_V }}"></script>{% endblock %}

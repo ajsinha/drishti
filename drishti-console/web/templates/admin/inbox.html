@@ -14,11 +14,11 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {# Admin → Data loads → Inbox (docs/architecture/DATALOAD_INBOX.md section 10, mock-up A, the status board). The board is _inbox_body.html,
-   drawn here and redrawn by admin-inbox.js from /admin/loads/inbox?partial=1 (every 5 s while a run loads, 30 s when quiet); the answers of
+   drawn here and redrawn by drishti_admin-inbox.js from /admin/loads/inbox?partial=1 (every 5 s while a run loads, 30 s when quiet); the answers of
    Load now and Retry stay in the line above the board. #}
 {% extends "base.html" %}
 {% block title %}Data inbox · Data loads · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -33,7 +33,20 @@
     See the <a href="/help/data-guide#7-the-data-inbox-drop-files-and-they-load">Data guide</a>.</p>
   <p class="ib-said" data-inbox-said role="status" aria-live="polite"></p>
   <div data-inbox-body>{% include "admin/_inbox_body.html" %}</div>
+  <section class="ib-sec" data-undo aria-labelledby="ib-undo-h">
+    <h2 class="ib-h2" id="ib-undo-h">Undo a load</h2>
+    <p class="text-muted-d">Every row a load wrote carries its load id (a load report's <span class="mono">loads</span>, or a row's
+      <span class="mono">_load_id</span>). Undoing it removes exactly those rows from every table of the lake, one commit per table and date; a
+      load that replaced a date gets the date back as it was. Check first: nothing changes until you confirm with the load id.</p>
+    <div class="ib-actions">
+      <label class="visually-hidden" for="ib-undo-id">Load id</label>
+      <input id="ib-undo-id" class="studio-in mono" data-undo-id placeholder="20261104T093000.123-4242.1" autocomplete="off" spellcheck="false">
+      <button type="button" class="btn-pill ib-btn" data-undo-check><i class="bi bi-search" aria-hidden="true"></i> Check</button>
+      <button type="button" class="btn-pill ib-btn" data-undo-go disabled><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Undo…</button>
+    </div>
+    <ul class="ib-undo-lines mono" data-undo-lines></ul>
+  </section>
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-inbox.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-inbox.js?v={{ ASSET_V }}"></script>{% endblock %}

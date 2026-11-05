@@ -78,19 +78,51 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [fund, fund-holder, index-funds]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: funds
+      lake: demo
+      lake-tables: funds.fund,funds.fund-holder,funds.index-funds
       layout:
         fund:
-          columns: [TICKER, NAME, TYPE, TICKERS, ADVISER, INDEX_ID, NET_ASSETS, EXPENSE_RATIO, HOLDING_COUNT, REPORT_DATE, RANK]
-          type-ahead: [NAME, TICKERS]
+          type-ahead:
+          - NAME
+          - TICKERS
         fund-holder:
-          columns: [TICKER, NAME, FUNDS, TOTAL_VALUE, PCT_OF_SHARES]
-          type-ahead: [NAME]
+          type-ahead:
+          - NAME
         index-funds:
-          columns: [INDEX, NAME, FUNDS, TOTAL_NET_ASSETS]
-          type-ahead: [NAME]
+          type-ahead:
+          - NAME
 routes:
   fund: funds-store
   fund-holder: funds-store
   index-funds: funds-store
+
+# The tables this pack recommends (docs/guides/LAKE_GUIDE.md section 7): copied into a lake file the first time a writer meets
+# the kind; config/lakes/demo.yaml holds them for the demo lake. Its connectors above name the lake and these entries.
+lake:
+  tables:
+    funds.fund:
+      promote:
+      - TICKER
+      - NAME
+      - TYPE
+      - TICKERS
+      - ADVISER
+      - INDEX_ID
+      - NET_ASSETS
+      - EXPENSE_RATIO
+      - HOLDING_COUNT
+      - REPORT_DATE
+      - RANK
+    funds.fund-holder:
+      promote:
+      - TICKER
+      - NAME
+      - FUNDS
+      - TOTAL_VALUE
+      - PCT_OF_SHARES
+    funds.index-funds:
+      promote:
+      - INDEX
+      - NAME
+      - FUNDS
+      - TOTAL_NET_ASSETS

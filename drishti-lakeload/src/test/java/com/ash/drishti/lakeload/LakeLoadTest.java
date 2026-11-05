@@ -73,7 +73,7 @@ class LakeLoadTest {
     @Test
     void eachDateIsOneCommitAndARerunReplacesTheDate() throws Exception {
         List<String> lines = PvData.lines(400, 40, 2, 1);
-        Path in = PvData.write(tmp.resolve("in/pv.jsonl"), lines);
+        Path in = PvData.byDate(tmp.resolve("in"), lines);
         for (String format : List.of("delta", "iceberg")) {
             Path lake = lake("lake-" + format);
             JsonNode s = load(tmp, PvData.config(in.toString(), lake.toString(), format));
@@ -88,8 +88,8 @@ class LakeLoadTest {
 
             // the second date again with other values: only that date changes, in one more commit
             List<String> again = PvData.lines(400, 40, 2, 99).stream().filter(l -> l.contains("2026-10-28")).toList();
-            Path in2 = PvData.write(tmp.resolve("in2-" + format + "/pv.jsonl"), again);
-            JsonNode s2 = load(tmp, PvData.config(in2.toString(), lake.toString(), format));
+            Path in2 = PvData.byDate(tmp.resolve("in2-" + format), again);
+            JsonNode s2 = load(tmp, PvData.config(in2.toString(), lake.toString(), format), "target.mode=replace-date");
             assertThat(s2.path("exit").asInt()).as(s2.path("error").asText()).isZero();
             assertThat(s2.path("commit").path("commits").asInt()).isEqualTo(1);
             Map<String, Map<String, Object>> second = dump(format, lake);
@@ -134,22 +134,21 @@ class LakeLoadTest {
         lines.add(9, "{not json");
         lines.add(11, "[1,2]");
         lines.add(13, "   ");
-        Path in = PvData.write(tmp.resolve("in/pv.jsonl"), lines);
+        Path in = PvData.write(tmp.resolve("in/scenario-pv.2026-10-27.jsonl"), lines);
         Path rejects = tmp.resolve("out/rejects.jsonl");
         JsonNode s = load(tmp, PvData.config(in.toString(), lake("lake").toString(), "delta"), "rejects.file=" + rejects);
         assertThat(s.path("exit").asInt()).isEqualTo(2);
         assertThat(s.path("status").asText()).isEqualTo("partial");
         assertThat(s.path("documents").asLong()).isEqualTo(55);
-        assertThat(s.path("rejected").asLong()).isEqualTo(5);
+        assertThat(s.path("rejected").asLong()).as("a row's own date never rejects it: the file's date is its date").isEqualTo(4);
         JsonNode by = s.path("rejects").path("byReason");
-        assertThat(by.path("no business date (field 'BUSINESS_DATE' is not a date)").asInt()).isEqualTo(1);
         assertThat(by.path("no id (field 'POSITION_ID' is missing or empty)").asInt()).isEqualTo(1);
         assertThat(by.path("the vector field 'SCENARIO_PV' is not a list of numbers").asInt()).isEqualTo(1);
         assertThat(by.path("not a JSON object").asInt()).isEqualTo(1);
-        assertThat(s.path("rejects").path("first").get(0).path("where").asText()).isEqualTo("pv.jsonl:4");
-        assertThat(s.path("rejects").path("first").get(3).path("where").asText()).isEqualTo("pv.jsonl:10");
-        assertThat(Files.readAllLines(rejects)).hasSize(5).anyMatch(l -> l.contains("{not json"));
-        assertThat(dump("delta", lake("lake"))).hasSize(50);
+        assertThat(s.path("rejects").path("first").get(0).path("where").asText()).isEqualTo("scenario-pv.2026-10-27.jsonl:6");
+        assertThat(s.path("rejects").path("first").get(3).path("where").asText()).isEqualTo("scenario-pv.2026-10-27.jsonl:12");
+        assertThat(Files.readAllLines(rejects)).hasSize(4).anyMatch(l -> l.contains("{not json"));
+        assertThat(dump("delta", lake("lake"))).hasSize(51);
 
         JsonNode stop = load(tmp, PvData.config(in.toString(), lake("lake2").toString(), "delta"), "rejects.max-pct=1");
         assertThat(stop.path("exit").asInt()).isEqualTo(1);
@@ -202,7 +201,7 @@ class LakeLoadTest {
     @Test
     void theDocumentKeepsAVectorMarkerAndTheVectorItsNulls() throws Exception {
         List<String> lines = PvData.lines(30, 220, 1, 9);
-        Path in = PvData.write(tmp.resolve("in/pv.jsonl"), lines);
+        Path in = PvData.write(tmp.resolve("in/scenario-pv.2026-10-27.jsonl"), lines);
         Path lake = lake("lake");
         assertThat(load(tmp, PvData.config(in.toString(), lake.toString(), "delta")).path("exit").asInt()).isZero();
         Map<String, Object> row = dump("delta", lake).get("2026-10-27|P-1000000");

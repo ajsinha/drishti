@@ -27,7 +27,6 @@ import com.ash.drishti.ai.ChatRequest;
 import com.ash.drishti.ai.ChatResponse;
 import com.ash.drishti.ai.LlmException;
 import com.ash.drishti.ai.LlmGateway;
-import com.ash.drishti.server.ai.LegacyAsk;
 import java.security.SecureRandom;
 import java.util.Set;
 import java.time.Instant;
@@ -112,16 +111,16 @@ public final class AskService {
         } catch (LlmException f) {
             audit(caller.user(), ref, q, f.timeout() ? "timeout" : "failed", ms(t0));
             LOG.warn("ask failed for {}: {}", caller.user(), f.getMessage());
-            String why = f.kind() == LlmException.Kind.NOT_FOUND ? "Ask has no model configured (drishti.explain.ask.model, or the deprecated endpoint)"
+            String why = f.kind() == LlmException.Kind.NOT_FOUND ? "Ask has no model configured (drishti.explain.ask.model)"
                     : f.getMessage();
             throw new DrishtiException(f.timeout() ? ErrorCode.ASK_TIMEOUT : ErrorCode.ASK_FAILED,
                     "Ask is unavailable (" + why + "); the page explanation is complete without it");
         }
     }
 
-    /** The logical model Ask asks for: its own deprecated endpoint when one is set, else {@code drishti.explain.ask.model}. */
+    /** The logical model Ask asks for: {@code drishti.explain.ask.model} (a provider/model of the AI layer). */
     private String modelRef() {
-        return LegacyAsk.configured(cfg) ? LegacyAsk.PROVIDER + "/" + LegacyAsk.MODEL : cfg.model().isEmpty() ? null : cfg.model();
+        return cfg.model().isEmpty() ? null : cfg.model();
     }
 
     private String cap(String text) {

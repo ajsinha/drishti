@@ -16,7 +16,7 @@
 (tests/bi_report_stack.py on scratch ports, a scratch folder): a lake of DRISHTI_ARROW_BENCH_ROWS trades a day (default 50,000), and two
 reports of one table visual each: the trade-level grid at the 5,000 rows an answer in JSON holds by default, and the same at 50,000 (the
 server started with json-max-rows raised so JSON can carry it, for the comparison). For each: payload bytes raw and gzip, the browser's parse
-time (Arrow JS and drishti-table.js added to the page for the measurement: the report page does not load them, as Arrow did not pay
+time (Arrow JS and drishti_table.js added to the page for the measurement: the report page does not load them, as Arrow did not pay
 here), and the page's click-to-painted as it is (JSON). The Arrow click-to-painted figures in the docs were taken once with the report
 page wired to Arrow on trial (B.ask asking Arrow, the grid sorting typed columns), a wiring removed after it measured no better.
 Opt-in: DRISHTI_ARROW_BENCH=1 (it is heavy; one at a time, never beside another stack)."""
@@ -124,7 +124,7 @@ def test_a_trade_grid_both_ways(stack, browser, n):
     page.goto(f"{CONSOLE_URL}/bi/r/{rid}")
     painted(page, n)
     page.add_script_tag(url="/static/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js")
-    page.add_script_tag(url="/static/js/drishti-table.js")
+    page.add_script_tag(url="/static/js/drishti_table.js")
     result = arrow_bench.measure(page, f"/bi/api/reports/{rid.replace(':', '%3A')}/query", "POST", {"page": "grid", "visual": "rows", "state": {}})
     assert result["arrowIsArrow"], result
     times = []

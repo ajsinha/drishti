@@ -14,12 +14,12 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {# The BI page shell (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 5): the shared top bar and sign-in, then its own layout: a left rail and a wide canvas. No F-key footer.
-   Pages fill `bi_main`; everything dynamic is drawn by static/js/bi.js from the same-origin JSON (/bi/api/...). #}
+   Pages fill `bi_main`; everything dynamic is drawn by static/js/drishti_bi.js from the same-origin JSON (/bi/api/...). #}
 {% extends "base.html" %}
 {% block title %}{% block bi_title %}BI{% endblock %} · {{ PRODUCT }}{% endblock %}
 {% block body_class %}terminal bi-page{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}">{% endblock %}
 {% block footer %}{% endblock %}
 {# F1 opens the guide of the page: the designers, Analyse, Transforms and the Python console have their own (config/help.yaml, contextual). #}
 {% block screen %}{% if bi_page in ('designer', 'theme-designer', 'explore', 'transform', 'pyconsole') %}bi-{{ bi_page }}{% else %}{{ screen | default('bi') }}{% endif %}{% endblock %}
@@ -66,4 +66,4 @@
   <form method="dialog"><button class="btn-pill btn-accent" autofocus>Close</button></form>
 </dialog>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script>{% endblock %}

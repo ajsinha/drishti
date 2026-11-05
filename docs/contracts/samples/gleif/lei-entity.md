@@ -23,7 +23,7 @@ A legal entity from its LEI record: key facts, addresses, registration and renew
 
 |  |  |
 |---|---|
-| Path | `data/testdata/gleif/lei-entity/` + `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/gleif/lei-entity/` + `lei-entity.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `LEI` |
 | Date field | none in the record: a snapshot of public data, its file named by the capture date; the demo lake serves the same records on every business date (partition `business_date`) |

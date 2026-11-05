@@ -70,35 +70,9 @@ connectors:
     kinds:
     - trade
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: trading
-      layout:
-        trade:
-          columns:
-          - TRADE_ID
-          - SOURCE_SYSTEM
-          - PRODUCT_TYPE
-          - PRODUCT_SUB_TYPE
-          - PRODUCT_GROUP
-          - TRADE_STATUS
-          - TRADE_VERSION
-          - BUY_SELL_CODE
-          - CURRENCY
-          - QUANTITY
-          - TRADE_DATE
-          - MATURITY_DATE
-          - COUNTERPARTY
-          - LEGAL_ENTITY
-          - PORTFOLIO
-          - TRADER_ID
-          - NOTIONAL
-          - INDEX_NAME
-          sort-by: id
-          file-rows: 250000
-          row-group-rows: 1000
+      lake: demo
+      lake-tables: trading.trade_endur
       union: true
-      table:
-        trade: trade_endur
       source-name: trade-endur
   trade-calypso:
     plugin: delta
@@ -106,35 +80,9 @@ connectors:
     kinds:
     - trade
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: trading
-      layout:
-        trade:
-          columns:
-          - TRADE_ID
-          - SOURCE_SYSTEM
-          - PRODUCT_TYPE
-          - PRODUCT_SUB_TYPE
-          - PRODUCT_GROUP
-          - TRADE_STATUS
-          - TRADE_VERSION
-          - BUY_SELL_CODE
-          - CURRENCY
-          - QUANTITY
-          - TRADE_DATE
-          - MATURITY_DATE
-          - COUNTERPARTY
-          - LEGAL_ENTITY
-          - PORTFOLIO
-          - TRADER_ID
-          - NOTIONAL
-          - INDEX_NAME
-          sort-by: id
-          file-rows: 250000
-          row-group-rows: 1000
+      lake: demo
+      lake-tables: trading.trade_calypso
       union: true
-      table:
-        trade: trade_calypso
       source-name: trade-calypso
   trade-murex:
     plugin: delta
@@ -142,35 +90,9 @@ connectors:
     kinds:
     - trade
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: trading
-      layout:
-        trade:
-          columns:
-          - TRADE_ID
-          - SOURCE_SYSTEM
-          - PRODUCT_TYPE
-          - PRODUCT_SUB_TYPE
-          - PRODUCT_GROUP
-          - TRADE_STATUS
-          - TRADE_VERSION
-          - BUY_SELL_CODE
-          - CURRENCY
-          - QUANTITY
-          - TRADE_DATE
-          - MATURITY_DATE
-          - COUNTERPARTY
-          - LEGAL_ENTITY
-          - PORTFOLIO
-          - TRADER_ID
-          - NOTIONAL
-          - INDEX_NAME
-          sort-by: id
-          file-rows: 250000
-          row-group-rows: 1000
+      lake: demo
+      lake-tables: trading.trade_murex
       union: true
-      table:
-        trade: trade_murex
       source-name: trade-murex
   trading-stream:
     plugin: kafka
@@ -588,6 +510,89 @@ roles:
     - clearing-account
     - desk-pnl
     calc: true
+lake:
+  tables:
+    trading.trade_endur:
+      kind: trade
+      partition-by:
+      - PRODUCT_TYPE
+      promote:
+      - TRADE_ID
+      - SOURCE_SYSTEM
+      - PRODUCT_TYPE
+      - PRODUCT_SUB_TYPE
+      - PRODUCT_GROUP
+      - TRADE_STATUS
+      - TRADE_VERSION
+      - BUY_SELL_CODE
+      - CURRENCY
+      - QUANTITY
+      - TRADE_DATE
+      - MATURITY_DATE
+      - COUNTERPARTY
+      - LEGAL_ENTITY
+      - PORTFOLIO
+      - TRADER_ID
+      - NOTIONAL
+      - INDEX_NAME
+      sort-by:
+      - id
+      file-rows: 250000
+      row-group-rows: 1000
+    trading.trade_calypso:
+      kind: trade
+      partition-by:
+      - PRODUCT_TYPE
+      promote:
+      - TRADE_ID
+      - SOURCE_SYSTEM
+      - PRODUCT_TYPE
+      - PRODUCT_SUB_TYPE
+      - PRODUCT_GROUP
+      - TRADE_STATUS
+      - TRADE_VERSION
+      - BUY_SELL_CODE
+      - CURRENCY
+      - QUANTITY
+      - TRADE_DATE
+      - MATURITY_DATE
+      - COUNTERPARTY
+      - LEGAL_ENTITY
+      - PORTFOLIO
+      - TRADER_ID
+      - NOTIONAL
+      - INDEX_NAME
+      sort-by:
+      - id
+      file-rows: 250000
+      row-group-rows: 1000
+    trading.trade_murex:
+      kind: trade
+      partition-by:
+      - PRODUCT_TYPE
+      promote:
+      - TRADE_ID
+      - SOURCE_SYSTEM
+      - PRODUCT_TYPE
+      - PRODUCT_SUB_TYPE
+      - PRODUCT_GROUP
+      - TRADE_STATUS
+      - TRADE_VERSION
+      - BUY_SELL_CODE
+      - CURRENCY
+      - QUANTITY
+      - TRADE_DATE
+      - MATURITY_DATE
+      - COUNTERPARTY
+      - LEGAL_ENTITY
+      - PORTFOLIO
+      - TRADER_ID
+      - NOTIONAL
+      - INDEX_NAME
+      sort-by:
+      - id
+      file-rows: 250000
+      row-group-rows: 1000
 
 # Read by drishti.py lake build (ignored by the server): each trade's key, and values inside its legs written as plain fields and
 # columns at load, so searches, totals and BI need no document (docs/architecture/CLUSTER_DEPLOYMENT.md › Appendix D. Scale strategy: millions of trades, fast, in a bounded heap, phase 3)

@@ -23,10 +23,10 @@ Published overnight and term rate fixings (SOFR, €STR, SONIA…). One row per 
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-data/rate-fixing/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-data/rate-fixing/` + `rate-fixing.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `INDEX_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -40,22 +40,22 @@ A real record, the most complete of the 418 (the one with the most non-empty fie
 {
   "INDEX_ID": "FIX-AONIA",
   "NAME": "AUD Overnight Index Average",
-  "LATEST": 0.037922,
+  "LATEST": 0.037906,
   "ADMINISTRATOR": "RBA",
   "TENOR": "Overnight",
   "CURRENCY": "AUD",
   "FIXINGS": [
     {
-      "DATE": "2026-07-09",
-      "RATE": 0.037922,
-      "RATE_PCT": 3.7922,
-      "VOLUME_BN": 700.3
-    },
-    {
       "DATE": "2026-07-08",
       "RATE": 0.037906,
       "RATE_PCT": 3.7906,
       "VOLUME_BN": 555.5
+    },
+    {
+      "DATE": "2026-07-07",
+      "RATE": 0.037899,
+      "RATE_PCT": 3.7899,
+      "VOLUME_BN": 1029.2
     },
     "… 18 more elements of the same shape"
   ]
@@ -70,15 +70,15 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 |---|---|---|---|---|---|
 | `INDEX_ID` | string | required | The record's id (the business key) | pattern `^FIX-` | `"FIX-AONIA"` |
 | `NAME` | string | required | The rate index's full name (Secured Overnight Financing Rate …). | one of `AUD Overnight Index Average`, `Canadian Overnight Repo Rate Average`, `Euro short-term rate`, `Secured Overnight Financing Rate`, `Sterling Overnight Index Average`, `Swiss Average Rate Overnight`, `Tokyo Overnight Average Rate` | `"AUD Overnight Index Average"` |
-| `LATEST` | number | required | The latest fixing (FIXINGS[0].RATE), as a fraction (0.03806 is 3.806%). | unit: fraction | `0.037922` |
+| `LATEST` | number | required | The latest fixing (FIXINGS[0].RATE), as a fraction (0.03806 is 3.806%). | unit: fraction | `0.037906` |
 | `ADMINISTRATOR` | string | required | The index administrator (FRBNY, ECB, Bank of England, Bank of Japan, SIX, RBA, Bank of Canada). | one of `Bank of Canada`, `Bank of England`, `Bank of Japan`, `ECB`, `FRBNY`, `RBA`, `SIX` | `"RBA"` |
 | `TENOR` | string | required | The index tenor (Overnight). | — | `"Overnight"` |
 | `CURRENCY` | string | required | The currency of the overnight rate, ISO 4217. | one of `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` | `"AUD"` |
 | `FIXINGS` | array of objects | required | The daily fixings, latest first: one object per publication day. | — | [20 objects] |
-| `FIXINGS[].DATE` | date (YYYY-MM-DD) | required | The publication date of the fixing. | — | `"2026-07-09"` |
-| `FIXINGS[].RATE` | number | required | The fixed rate, as a fraction (RATE_PCT is the same in percent). | unit: fraction | `0.037922` |
-| `FIXINGS[].RATE_PCT` | number | required | The same fixing as RATE, in percent (RATE times 100). | unit: percent | `3.7922` |
-| `FIXINGS[].VOLUME_BN` | number | required | The volume of transactions underlying the fixing, in billions of CURRENCY. | unit: billions of CURRENCY | `700.3` |
+| `FIXINGS[].DATE` | date (YYYY-MM-DD) | required | The publication date of the fixing. | — | `"2026-07-08"` |
+| `FIXINGS[].RATE` | number | required | The fixed rate, as a fraction (RATE_PCT is the same in percent). | unit: fraction | `0.037906` |
+| `FIXINGS[].RATE_PCT` | number | required | The same fixing as RATE, in percent (RATE times 100). | unit: percent | `3.7906` |
+| `FIXINGS[].VOLUME_BN` | number | required | The volume of transactions underlying the fixing, in billions of CURRENCY. | unit: billions of CURRENCY | `555.5` |
 
 ## Fields in other rows
 

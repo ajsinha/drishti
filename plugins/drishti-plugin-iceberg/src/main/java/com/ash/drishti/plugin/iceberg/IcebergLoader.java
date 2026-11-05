@@ -15,15 +15,13 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.common.RowFeed;
 import com.ash.drishti.api.LoadGuard;
 import com.ash.drishti.plugin.iceberg.IcebergLayout.Row;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -64,7 +62,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * --warehouse W --credential C --token T} for a REST catalog (the domain is
  * the namespace), {@code --set key=value} for any connector setting ({@code s3.endpoint}, {@code hadoop.…}),
  * {@code --keep-days N} to remove each loaded table's business days older than its newest N on or before
- * {@code --as-of} (today) afterwards and expire the snapshots that referenced them ({@link IcebergMaintenance}; more
+ * the newest business date of the load (a plain file's date, a tar's newest folder; DATA_LOAD_RULES.md) afterwards and expire the snapshots that referenced them ({@link IcebergMaintenance}; more
  * than {@code --max-drop-share} of a table's rows needs {@code --force-drop}). A row dated after tomorrow in the
  * business zone ({@code --future-days}, {@code --zone}) is not loaded, and the load ends with an error naming it
  * ({@link LoadGuard}). {@code tools/load-iceberg.sh} runs it.
@@ -206,8 +204,10 @@ public final class IcebergLoader {
             }
             i++;
         }
-        new IcebergLoader.Run(settings, fileRows, rowGroupBytes, budget, threads, spill.resolve("drishti-iceberg-" + ProcessHandle.current().pid()),
-                LoadGuard.fromArgs(args)).load(file, keepDays);
+        IcebergLoader.Run run = new IcebergLoader.Run(settings, fileRows, rowGroupBytes, budget, threads,
+                spill.resolve("drishti-iceberg-" + ProcessHandle.current().pid()), LoadGuard.fromArgs(args));
+        run.asOf = RowFeed.asOf(args);
+        run.load(file, keepDays);
     }
 
     /** One load: the read and sort phase, then the write phase. */
@@ -229,6 +229,8 @@ public final class IcebergLoader {
         private final Map<String, ReentrantLock> commitLocks = new ConcurrentHashMap<>();
         /** Per table, its days of fewer than {@link #SMALL_DAY} rows, committed together once all are written. */
         private final Map<String, Map<LocalDate, List<?>>> smallDays = new ConcurrentHashMap<>();
+        /** The business date given for a plain input ({@code --as-of}; {@link RowFeed}), null: its name's, or today. */
+        LocalDate asOf;
 
         Run(Map<String, String> settings, int fileRows, long rowGroupBytes, long budget, int threads, Path spillDir, LoadGuard guard) {
             this.settings = settings;
@@ -267,16 +269,16 @@ public final class IcebergLoader {
             long n = 0;
             long buffered = 0;
             Semaphore spilling = new Semaphore(2);                   // spills in flight, each about a third of the budget
-            try (BufferedReader in = file.equals("-") ? new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8), 1 << 20)
-                    : Files.newBufferedReader(Path.of(file), StandardCharsets.UTF_8);
+            try (RowFeed in = RowFeed.open(file, asOf);                    // the load rules: each row's business date (RowFeed)
                  ExecutorService spills = Executors.newVirtualThreadPerTaskExecutor()) {
                 List<Future<?>> written = new ArrayList<>();
                 String text;
-                while ((text = in.readLine()) != null) {
+                while ((text = in.next()) != null) {
                     if (text.isBlank()) {
                         continue;
                     }
-                    Line line = parse(json, text);
+                    Line read = parse(json, text);
+                    Line line = new Line(read.domain(), read.kind(), in.place(read.domain() + "/" + read.kind(), read.date()), read.row(), read.reject());
                     if (line.reject() != null) {
                         if (rejected++ < 3) {
                             rejects.add(line.domain() + " " + line.kind() + " " + line.row().id() + " " + line.date() + ": " + line.reject());
@@ -311,6 +313,7 @@ public final class IcebergLoader {
                 for (Future<?> f : written) {
                     f.get();                                         // every run on disk, or the failure
                 }
+                in.notes().forEach(note -> System.err.println("iceberg: " + note));
             }
             System.err.printf("iceberg: %,d rows read in %,.0f s; %d business days of %d tables to write%n", n, (System.nanoTime() - t0) / 1e9,
                     buckets.size(), seen.size());
@@ -436,10 +439,10 @@ public final class IcebergLoader {
                 }
             }
         }
-        if (kind == null || id == null || date == null) {
-            throw new IOException("a line needs kind, id and date: " + line.substring(0, Math.min(120, line.length())));
+        if (kind == null || id == null) {
+            throw new IOException("a line needs kind and id: " + line.substring(0, Math.min(120, line.length())));
         }
-        return new Line(domain, kind, LocalDate.parse(date), new Row(id, doc, columns), reject);
+        return new Line(domain, kind, date == null ? null : LocalDate.parse(date), new Row(id, doc, columns), reject);
     }
 
     /** A list of numbers (nulls kept: a missing value is never 0), or {@link #NOT_NUMBERS}; the parser is left after the list. */

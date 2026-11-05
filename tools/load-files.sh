@@ -37,13 +37,15 @@ while [[ $# -gt 0 ]]; do
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
-uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$DATA/banking.jsonl"
+# loader rows by the load rules (docs/architecture/DATA_LOAD_RULES.md): tars of <kind>/<YYYY-MM-DD>/ folders, each row under its folder's date
+ROWS="$DATA/build/loader-rows"; rm -rf "$ROWS"; mkdir -p "$ROWS"
+uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$ROWS/banking.tar"
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-file -am
 CP="plugins/drishti-plugin-file/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-file -Dmdep.outputFile=/dev/stdout)"
-"$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.file.JsonlLoader "$DATA/banking.jsonl" "$ROOT" "${OPTS[@]}"
+"$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.file.JsonlLoader "$ROWS/banking.tar" "$ROOT" "${OPTS[@]}"
 if [[ -n "$TRADES" ]]; then
   # the bulk book straight from the generator into the loader: no intermediate file
-  uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl - \
-    | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.file.JsonlLoader - "$ROOT" "${OPTS[@]}"
+  uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl "$ROWS/bulk-trades.tar"
+  "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.file.JsonlLoader "$ROWS/bulk-trades.tar" "$ROOT" "${OPTS[@]}"
 fi
-rm -f "$DATA/banking.jsonl"
+rm -rf "$ROWS"

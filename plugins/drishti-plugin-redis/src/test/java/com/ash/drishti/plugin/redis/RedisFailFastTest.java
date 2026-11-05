@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.redis;
 
+import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -22,8 +23,6 @@ import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.UnreadableData;
 import com.ash.drishti.testkit.DatedSourceContract;
-import java.io.BufferedReader;
-import java.io.StringReader;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
@@ -59,7 +58,7 @@ class RedisFailFastTest {
                 + "\"columns\":{\"mtm\":5}}";
         RedisLoader.Options o = RedisLoader.Options.parse(new String[] {"-", uri(redis), "--codec", "zstd"});
         try (RedisConnection c = RedisConnection.open(o.uri(), false, null, null, Duration.ofSeconds(10))) {
-            new RedisLoader(o, c).load(new BufferedReader(new StringReader(line + "\n")));
+            new RedisLoader(o, c).load(LoaderRows.feed(List.of(line)));
         }
         RedisSourcePlugin p = new RedisSourcePlugin();
         p.start(DatedSourceContract.context(Map.of("uri", uri(redis), "domain", "ff", "layout.trade.columns", "mtm", "refresh-seconds", "3600",

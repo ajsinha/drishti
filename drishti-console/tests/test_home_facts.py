@@ -215,7 +215,7 @@ def test_one_computation_per_key_and_it_is_kept():
 def test_home_draws_the_skeleton_tile_and_the_quick_cards_of_the_packs_on(client, with_packs):
     with_packs("market-risk", "funds")
     html = client.get("/").text
-    assert "data-dyk" in html and "lp-home has-dyk" in html and "/static/js/dyk.js" in html
+    assert "data-dyk" in html and "lp-home has-dyk" in html and "/static/js/drishti_dyk.js" in html
     assert "See what your data" in html                                   # the headline stays, beside the tile
     assert 'data-home-card="VAR BANK"' in html and 'data-home-card="FUND SPY"' in html and 'data-home-card="DATAMAP"' in html
     assert 'data-home-card="EXP BANK"' not in html                        # counterparty-risk is off
@@ -232,7 +232,7 @@ def test_no_fact_holds_the_answer_is_empty_and_the_tile_hides(client, backend, w
     r = client.get("/api/home/facts")
     assert r.status_code == 200 and r.json() == {"date": "2026-09-30", "facts": []}
     assert r.headers["cache-control"] == "no-store"
-    js = (Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "dyk.js").read_text()
+    js = (Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "drishti_dyk.js").read_text()
     assert "if (!facts.length) { hide(); return; }" in js and ".catch(hide)" in js
 
 

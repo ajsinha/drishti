@@ -49,20 +49,18 @@ spring:
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/frtb-sa.yaml
       - classpath:engines/simm.yaml
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/simm.yaml
-      - classpath:engines/sa-ccr.yaml
-      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/sa-ccr.yaml
-      - classpath:engines/fva.yaml
-      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/fva.yaml
       - classpath:engines/mr-cube.yaml
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/mr-cube.yaml
-      - classpath:engines/ccr-cube.yaml
-      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/ccr-cube.yaml
       - classpath:engines/pivot.yaml
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/pivot.yaml
       - classpath:engines/memory-lake.yaml
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/memory-lake.yaml
       - classpath:engines/dataload.yaml
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/dataload.yaml
+      - classpath:engines/flight.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/flight.yaml
+      - classpath:engines/openblas.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/openblas.yaml
       - optional:file:./application.local.yaml
       # packs an administrator loaded from Admin → Packs (drishti.packs.added); written by the server, not by hand
       - optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}
@@ -189,6 +187,15 @@ drishti:
     check-interval: 60s              # every folder measured and brought under its cap this often
     max-dumps: 2                     # heap dumps kept in the -XX:HeapDumpPath folder; the oldest beyond go at start
     dumps-dir: ${drishti.data.dir:./data}/dumps   # the dump folder when -XX:HeapDumpPath does not name one
+  native:                            # native libraries (docs/admin/OPERATIONS.md section 2.1; HIGH_PERFORMANCE_NATIVE.md section 6): nothing here can stop the server
+    cache-dir: ${DRISHTI_NATIVE_CACHE_DIR:${drishti.data.dir:./data}/native-cache}  # where the bundled native libraries are unpacked (JavaCPP's cache), under the data folder
+    max-bytes-mb: 1024               # the most off-heap memory JavaCPP may allocate itself (org.bytedeco.javacpp.maxBytes); BLAS calls take Java arrays
+    blas:
+      mode: ${DRISHTI_NATIVE_BLAS_MODE:auto}  # auto: the bundled OpenBLAS (Linux and Windows x86-64), else the Java kernels with a warning, an alert and Health DEGRADED; java: the Java kernels, chosen (no warning)
+      max-call-mb: 256               # a BLAS call whose operands pass this many MB runs on Java (bounds what one native call copies)
+      canary-interval: 6h            # the self-test against Java is run again this often (0: only at start); a failure switches OpenBLAS off for the run
+      gemm-min-sets: 32              # a 1,024-row tile of many-scope sums is one dgemm when at least this many sets share it (tuned on one machine: BENCHMARK.md section 17)
+      gemm-min-density: 0.25         # ...and at least this share of its (set, row) pairs are members; sparser tiles are added in Java
   engines:                           # compute engines on or off per node, each with its own file (docs/architecture/COMPUTE_ENGINES.md; Admin -> Engines)
     dir: ${DRISHTI_ENGINES_DIR:./config/engines}   # the folder of the engines' files Admin -> Engines writes (the imports above name the same folder)
     drain: 30s                       # an engine turned off live: requests in flight finish within this, then are cancelled
@@ -413,6 +420,9 @@ drishti:
           - DELETE /api/v1/compute/sandboxes/*
           - POST /api/v1/compute/sandboxes/*/copy
           - DELETE /api/v1/compute/requests/*
+      "[data:read]":
+        description: "Read data through Arrow Flight (FLIGHT_GUIDE.md): kinds, BI models, pivot views, VaR vectors and the in-memory lake, as your roles, masks and row rules allow, every read audited. It opens no HTTP call. data:read:<domain> (a pack such as trading, bi, var, a lake) opens one domain only."
+        allow: []
       "[edit]":
         description: "Submit changes through write-back (WRITE_BACK.md: forms, the CLI's change propose), approve or reject other people's, withdraw your own. No token has it unless chosen; it never exceeds your roles: the edit power, the field's roles, masks and four eyes all apply, and editing must be on."
         allow:
@@ -526,6 +536,7 @@ drishti:
           - POST /api/v1/admin/connectors/**
           - POST /api/v1/admin/registry/**
           - POST /api/v1/admin/retry/*
+          - POST /api/v1/admin/dataload/undo    # undo a load by its load id (drishti.py lake undo, Admin -> Data loads -> Undo a load; an administrator)
       "[loads:write]":
         description: "Announce that a batch of data has landed (or failed) for a pack: Drishti then refreshes, verifies, checks alerts and tells the people the pack names. Only for packs your roles reach; needs no admin role."
         allow:
@@ -596,6 +607,7 @@ drishti:
       - "* /api/v1/admin/commands/**"
       - "* /api/v1/admin/engines"             # Admin -> Engines: compute engines on or off on a node, written to its file, audited with a reason; never a token
       - "* /api/v1/admin/engines/**"
+      - "POST /api/v1/admin/data-out/streams/*/stop"   # Admin -> Data out: stop a live Flight stream (DRS-5610 to its reader); an administrator from the console, never a token
       - "* /api/v1/admin/collab/**"
       - "* /api/v1/admin/reports/**"
       - "* /api/v1/admin/subscriptions/**"
@@ -603,7 +615,6 @@ drishti:
       - "* /api/v1/shares/**"
       - "* /api/v1/threads/**"
       - "* /api/v1/comments/**"
-      - "* /api/v1/notes/**"
       - "* /api/v1/workspaces/**"
       - "* /api/v1/views/**"
       - "* /api/v1/command/aliases"
@@ -614,6 +625,7 @@ drishti:
       viewer:  { kinds: ["*"], layout: false, bi: [bi] }   # packs add domain roles (trading: trader; market-risk, counterparty-risk); layout: may arrange views (default true)
       author:  { kinds: ["*"], raw: true, author: true, calc: true, bi: [bi, bi-author] }   # calc: may use Calc, Python in the browser (USER_GUIDE.md)
       approver: { kinds: ["*"], raw: true, author: true, approve: true, calc: true, bi: [bi, bi-author] }   # reviews proposed Sutras (admins may too)
+      pivot-approver: { kinds: ["*"], bi: [bi] }   # approves custom pivot functions someone else wrote (four eyes; drishti.pivot.functions.approver-role)
       admin:   { kinds: ["*"], raw: true, author: true, admin: true, calc: true, edit: true }   # edit: may submit write-back changes (WRITE_BACK.md; editing itself is off until config/edit/edit.yaml turns it on)
     oidc:                              # single sign-on: the console runs the flow, the server verifies the ID token
       enabled: ${DRISHTI_OIDC_ENABLED:false}  # verify single-sign-on ID tokens
@@ -910,12 +922,7 @@ drishti:
     cache-ttl: 60s                   # how long an answer is served before it is derived again
     ask:                             # Ask about this page (RACHANA_REFERENCE.md): OFF by default; while off no call to any model is ever made
       enabled: ${DRISHTI_ASK_ENABLED:false}  # turn on Ask about this page (also list packs in drishti.explain.ask.packs)
-      # DEPRECATED endpoint/api/api-key: Ask runs on the AI layer (docs/admin/AI.md). Prefer a provider file in
-      # drishti.ai.dir and set model below to its logical model (provider/model). Old settings keep working as provider "ask".
-      endpoint: ${DRISHTI_ASK_ENDPOINT:}   # an OpenAI-compatible chat completions URL, or an Anthropic Messages URL (see api)
-      api: openai                    # openai | anthropic: the request and response shape
-      model: ${DRISHTI_ASK_MODEL:}  # the model Ask uses: a logical model of the AI layer (provider/model)
-      api-key: ${DRISHTI_ASK_KEY:}   # from the environment only; never logged
+      model: ${DRISHTI_ASK_MODEL:}  # the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/admin/AI.md)
       packs: []                      # packs where the Ask box is on; empty = none (per-pack opt-in)
       values: labels-only            # labels-only | shown: whether the page's rendered text (values) goes into the prompt; masked values never do
       max-question-chars: 500  # longer questions are refused (400)
@@ -1067,6 +1074,8 @@ drishti:
     lookback-days: 3              # business days before today still checked for missing data
     default-notify-roles: [admin] # told when a pack names no roles or users
     smoke-max: 20                 # most sample entities a pack may ask to be opened
+  under-construction:                # the under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): what depends on unbuilt work and how it shows
+    file: ${DRISHTI_UNDER_CONSTRUCTION_FILE:./config/under-construction.yaml}   # absent: under-construction.yaml beside the packs folder, else nothing registered; none: nothing
   packs:
     # Domain packs (config/packs/<name>/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples.
     # Site settings below always override what a pack contributes.

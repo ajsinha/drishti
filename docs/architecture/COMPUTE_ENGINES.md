@@ -97,6 +97,7 @@ settings.
 | `pivot` | the pivot engine: any table or VaR as a pivot, nested rows opened lazily, totals from their own members, exports ([PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md)) | `pivot.yaml` | `drishti.pivot.*` (its old switch name `drishti.pivot.enabled` still works and still hides the Pivot tab) | `PIVOT`, Views → Pivot, Pivot on a Data view table, `drishti.py pivot` | none | `var` (the `var` source) |
 | `mr-cube` | the market-risk cube on the pivot engine (the VaR source's hierarchy levels and MR measures, ladders, heat map, explain the move; MR_CUBE_GUIDE.md) | `mr-cube.yaml` | `drishti.cube.mr.*` | `MCUBE` (the pivot screen with the MR lens), `/mcube`, `/api/v1/pivot/mr` | `var`, `pivot` | `sensitivities` (ladders, heat map), `frtb-sa` (the capital measure chip) |
 | `ccr-cube` | the counterparty cube (limit board, allocation, group roll-up, pre-deal overlay) | `ccr-cube.yaml` | `drishti.cube.ccr.*` (new) | the CCR Cube lens, `/ccube`, its landing and chips | `exposure` | `sa-ccr` (the EAD chip, incremental EAD tile), `fva` (the FVA chip and tile) |
+| `openblas` | linear algebra on the bundled OpenBLAS, **off as shipped**; off: the pure-Java kernels, the same figures, chosen (OPERATIONS.md section 2.1) | `openblas.yaml` | `drishti.native.*` | nothing hidden: off switches the many-scope sums to Java, live; on runs the self-test first; `drishti.py server blas` | none | |
 | `memory-lake` | Delta tables held in memory only, with their replenish jobs | `memory-lake.yaml` | `drishti.lake.memory.*` | Admin → Lakes' Memory tab, `drishti.py lake memory`, `mem://` stores | none | |
 
 Not engines, and not in this design: the compute workers (they already have their own file, `config/compute/compute.yaml`, and switch,
@@ -164,9 +165,8 @@ drishti:
 ```
 
 Each engine's switch keeps the environment variable it has today where it has one (`DRISHTI_VAR_ENABLED`, `DRISHTI_EXPOSURE_ENABLED`,
-`DRISHTI_FRTB_ENABLED`) and gains one named `DRISHTI_<ID>_ENABLED` where it has none (`DRISHTI_SACCR_ENABLED`, `DRISHTI_FVA_ENABLED`,
-`DRISHTI_SIMM_ENABLED`, `DRISHTI_SENSITIVITIES_ENABLED`, `DRISHTI_MR_CUBE_ENABLED`, `DRISHTI_CCR_CUBE_ENABLED`,
-`DRISHTI_MEMORY_LAKE_ENABLED`). Shipped defaults: every engine on except `memory-lake` (off: it needs stores configured) and the engines
+`DRISHTI_FRTB_ENABLED`) and gains one named `DRISHTI_<ID>_ENABLED` where it has none (`DRISHTI_SIMM_ENABLED`, `DRISHTI_SENSITIVITIES_ENABLED`,
+`DRISHTI_MR_CUBE_ENABLED`, `DRISHTI_MEMORY_LAKE_ENABLED`; an engine still to be built, such as SA-CCR or FVA, gets its own when it is). Shipped defaults: every engine on except `memory-lake` (off: it needs stores configured) and the engines
 not yet built (shipped off until their release).
 
 ### 3.3 How application.yaml names them
@@ -513,7 +513,7 @@ The mock-up is picked by the product owner before the build.
 
 | Part | Where | Notes |
 |---|---|---|
-| The catalogue | `drishti-server/src/main/resources/engines/catalogue.yaml`; the console's copy `drishti-console/config/engines.yaml` (same bytes, `EngineCatalogueTest`) | ten entries; `installed: false` for SA-CCR, FVA and the two cubes, whose build adds a `ComputeEngine` bean and flips the flag; the console's paths per engine are its `console:` list (`=/play` is that path only); the longest API prefix wins (`/api/v1/sensitivities` is the sensitivities', not FRTB-SA's) |
+| The catalogue | `drishti-server/src/main/resources/engines/catalogue.yaml`; the console's copy `drishti-console/config/engines.yaml` (same bytes, `EngineCatalogueTest`) | one entry per built engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, the MR cube, the in-memory lake, data loads, the pivot engine, Flight); SA-CCR, FVA and the CCR cube of this design are not listed and have no file until their engines are built (each then adds its entry, its files and a `ComputeEngine` bean); `installed: false` stays for an engine listed ahead of its build; the console's paths per engine are its `console:` list (`=/play` is that path only); the longest API prefix wins (`/api/v1/sensitivities` is the sensitivities', not FRTB-SA's) |
 | The files | `config/engines/*.yaml` and `drishti-server/src/main/resources/engines/*.yaml`, imported by `application.yaml` (jar copy, then the site's) | `drishti.engines.{dir, drain, watch-seconds}` stay in `application.yaml`; `drishti.frtb.sensitivity-kind`, `factor-kind`, `cache-minutes` read `drishti.sensitivities.*` through a lowest-precedence alias layer (`EngineKeyAliases`) |
 | Switch and source | `EngineSwitches` | reads Spring's own sources in order; an old name set above the shipped files decides (DRS-1024 logged once); the in-memory lake on when its stores are in the old place; an edition's presets sit above the engine files (`EditionEnvironmentPostProcessor`) |
 | Lifecycle | `ComputeEngine`, `BasicEngine`, `EngineRegistry` | each engine's configuration makes one `BasicEngine` bean (VaR, exposure, sensitivities, FRTB-SA, SIMM, the in-memory lake); the registry finds every `ComputeEngine` bean, so an engine still to come registers by itself. The services keep their beans; their open dates, caches and answers are created on first use and released by `stop` (the Admin, Caches purge of the engine); each service asks the registry before any work and refuses with `EngineOffException` (404 DRS-1020). The in-memory lake off at start is built with no store |
@@ -522,7 +522,7 @@ The mock-up is picked by the product owner before the build.
 | About | `/public/about` (what the console polls) and `/api/v1/about` both carry `engines: [{id, title, here, cluster}]` | the console learns it with the edition (`core/engines.py`, `Editions.learn`), and again at once after a change made on Admin → Engines |
 | The console | `core/engines.py`: `engine_available`, `word_hidden`, `typed_engine`, `path_engine`, `menu_hidden`, `help_hidden`, `tile_hidden`, `lens_hidden`; what runs is each app's own (`engines.State` on its editions, read per request through `AppEngines` in `core/app.py`), never shared between apps of one process | wired into `Edition.word_on`, `command_shown` and `typed_shown` (so FUNC, type-ahead, Home cards and chips follow), the route gate (`core/edition_gate.py`), the menus (`requires: engine:<id>` and the catalogue's `menus:`), Help (`help.yaml engine:` and the catalogue's `help:`), the lens links and `/go` (DRS-1020 in the server's words) |
 | BI | `EditionBi.engines(...)` | a dataset or model whose name starts with an engine's `bi:` prefix, and every item on it, is not offered while the engine runs nowhere |
-| Admin → Engines | `routes/admin_engines_routes.py`, `templates/admin/engines.html`, `static/js/admin-engines.js`, `static/css/admin-engines.css` | mock-up A; the Cluster tab is C's matrix; History below the table and as a tab |
+| Admin → Engines | `routes/admin_engines_routes.py`, `templates/admin/engines.html`, `static/js/drishti_admin-engines.js`, `static/css/drishti_admin-engines.css` | mock-up A; the Cluster tab is C's matrix; History below the table and as a tab |
 | The command line | `tools/enginescli.py` | `server engines` and `admin engines`; `problem_error` maps DRS-1020 to exit 3 for every command |
 | Not built here | | the admission check on an engine coming on (DRS-9502) and AI tools per engine wait for their consumers; "saved things that read its kinds" on the impact answer lists the engines that need or use it and the nodes that still run it, not yet the saved BI reports and monitors |
 

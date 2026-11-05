@@ -104,7 +104,7 @@ def tab(pg, name):
 
 
 def head(pg, field):
-    return pg.evaluate("window.ExposureExplorer.state.head[%r]" % field)
+    return pg.evaluate("window.Drishti.ExposureExplorer.state.head[%r]" % field)
 
 
 def test_from_the_bank_to_a_trade_in_place_and_back(stack, browser):
@@ -179,23 +179,23 @@ def test_by_tenor_and_the_switches_change_the_figures(stack, browser):
     p95 = head(pg, "peakPfe")
 
     pg.locator('[data-xx-q="0.99"]').click()
-    wait(pg, "window.ExposureExplorer.state.head && window.ExposureExplorer.state.head.confidence === 0.99"
+    wait(pg, "window.Drishti.ExposureExplorer.state.head && window.Drishti.ExposureExplorer.state.head.confidence === 0.99"
              " && document.querySelector('[data-exposure]').dataset.painted === %r" % SET, PAINT_S)
     assert head(pg, "peakPfe") > p95
     assert pg.locator('.xx-tile[data-tile="0"] .k').text_content().startswith("Peak PFE 99%")
     assert "q=0.99" in pg.url
     pg.locator('[data-xx-q="0.95"]').click()
-    wait(pg, "window.ExposureExplorer.state.head.confidence === 0.95 && document.querySelector('[data-exposure]').dataset.painted === %r" % SET, PAINT_S)
+    wait(pg, "window.Drishti.ExposureExplorer.state.head.confidence === 0.95 && document.querySelector('[data-exposure]').dataset.painted === %r" % SET, PAINT_S)
     epe = head(pg, "epe")
 
     pg.locator('[data-xx-coll="none"]').click()
-    wait(pg, "window.ExposureExplorer.state.collateral === 'none' && document.querySelector('[data-exposure]').dataset.painted === %r"
-             " && window.ExposureExplorer.state.head.collateralModel !== 'lagged'" % SET, PAINT_S)
+    wait(pg, "window.Drishti.ExposureExplorer.state.collateral === 'none' && document.querySelector('[data-exposure]').dataset.painted === %r"
+             " && window.Drishti.ExposureExplorer.state.head.collateralModel !== 'lagged'" % SET, PAINT_S)
     assert head(pg, "epe") != epe
     assert pg.get_attribute('[data-xx-coll="none"]', "aria-pressed") == "true"
     pg.locator('[data-xx-coll="lagged"]').click()
-    wait(pg, "window.ExposureExplorer.state.collateral === 'lagged' && document.querySelector('[data-exposure]').dataset.painted === %r"
-             " && window.ExposureExplorer.state.head.epe === %r" % (SET, epe), PAINT_S)
+    wait(pg, "window.Drishti.ExposureExplorer.state.collateral === 'lagged' && document.querySelector('[data-exposure]').dataset.painted === %r"
+             " && window.Drishti.ExposureExplorer.state.head.epe === %r" % (SET, epe), PAINT_S)
     pg.close()
 
 

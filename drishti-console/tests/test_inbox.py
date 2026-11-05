@@ -109,15 +109,15 @@ def test_the_bell_opens_the_inbox_and_alt_i_is_bound():
     c, _ = _app()
     html = c.get("/t").text
     assert 'class="tool bell" href="/inbox"' in html and "data-bell-count" in html
-    js = (JS / "alerts.js").read_text()
+    js = (JS / "drishti_alerts.js").read_text()
     assert "notice: onNotice" in js and "/api/inbox/count" in js and "KeyI" in js
-    assert "'notice'" in (JS / "live-hub.js").read_text()                        # the live connection passes notices on, beside alerts
+    assert "'notice'" in (JS / "drishti_live-hub.js").read_text()                        # the live connection passes notices on, beside alerts
 
 
 def test_the_inbox_page_has_the_phone_and_accessibility_hooks():
     c, _ = _app()
     html = c.get("/inbox").text
     assert 'aria-label="Notices"' in html and 'role="status"' in html and "Unread only" in html and "Mark all read" in html
-    css = (CONSOLE / "web" / "static" / "css" / "collab.css").read_text()
+    css = (CONSOLE / "web" / "static" / "css" / "drishti_collab.css").read_text()
     assert "max-width: 640px" in css and "prefers-reduced-motion" in css
-    assert not re.search(r"#[0-9a-fA-F]{3,6}\b", re.sub(r"rgba\([^)]*\)", "", css))   # colours only from tokens.css: every theme works
+    assert not re.search(r"#[0-9a-fA-F]{3,6}\b", re.sub(r"rgba\([^)]*\)", "", css))   # colours only from drishti_tokens.css: every theme works

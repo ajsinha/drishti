@@ -30,7 +30,7 @@ needs_node = pytest.mark.skipif(node is None, reason="needs Node to run the shar
 
 def line(meta, asked=""):
     prelude = ("global.window = { drishtiBi: { h: () => ({}), visuals: {}, fmt: (v) => String(v), compact: (v) => String(v), label: (x) => x, clear: (x) => x, column: () => null } };"
-               "require(%s); const V = window.drishtiBi.visuals;" % json.dumps(str(STATIC / "js" / "bi-visuals.js")))
+               "require(%s); const V = window.drishtiBi.visuals;" % json.dumps(str(STATIC / "js" / "drishti_bi-visuals.js")))
     out = subprocess.run([node, "-e", prelude + "console.log(JSON.stringify(V.asOfLine(%s, %s)))" % (json.dumps(meta), json.dumps(asked))],
                          capture_output=True, text=True, timeout=30)
     assert out.returncode == 0, out.stderr
@@ -59,18 +59,18 @@ def test_an_answer_without_table_dates_reads_its_last_date_and_nothing_dated_say
 
 
 def test_the_report_and_its_visuals_show_the_line():
-    report = (STATIC / "js" / "bi-report.js").read_text(encoding="utf-8")
-    frame = (STATIC / "js" / "bi-frame.js").read_text(encoding="utf-8")
-    consume = (STATIC / "js" / "bi-consume.js").read_text(encoding="utf-8")
+    report = (STATIC / "js" / "drishti_bi-report.js").read_text(encoding="utf-8")
+    frame = (STATIC / "js" / "drishti_bi-frame.js").read_text(encoding="utf-8")
+    consume = (STATIC / "js" / "drishti_bi-consume.js").read_text(encoding="utf-8")
     assert "B.visuals.asOfLine(" in report and "data-asof-aligned" in report
     assert "bi-asof-foot" in frame and "dataAsOf.aligned === false" in frame, "a report visual and a board tile (both drawn in a frame) say mixed dates"
-    assert "C.pinned" in consume and "B.consume.pinned(" in (STATIC / "js" / "bi-report-board.js").read_text(encoding="utf-8"), \
+    assert "C.pinned" in consume and "B.consume.pinned(" in (STATIC / "js" / "drishti_bi-report-board.js").read_text(encoding="utf-8"), \
         "a visual pinned to a past date by its report's as-of rule is asked once, not followed"
 
 
 def test_the_line_uses_the_themes_warning_colour_in_every_theme():
-    css = (STATIC / "css" / "bi-report.css").read_text(encoding="utf-8")
+    css = (STATIC / "css" / "drishti_bi-report.css").read_text(encoding="utf-8")
     assert re.search(r"\.bi-asof-foot\s*\{[^}]*var\(--d-warn", css)
     assert re.search(r'\[data-asof-note\]\[data-asof-aligned="false"\]\s*\{[^}]*var\(--d-warn', css)
-    tokens = (STATIC / "css" / "tokens.css").read_text(encoding="utf-8")
+    tokens = (STATIC / "css" / "drishti_tokens.css").read_text(encoding="utf-8")
     assert len(re.findall(r"--d-warn:\s*#[0-9a-fA-F]{6}", tokens)) >= 3, "terminal, light and contrast each define the warning colour"

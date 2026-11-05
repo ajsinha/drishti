@@ -29,8 +29,9 @@ controls (report definitions, checks, frozen runs, sign-off), the data the bank 
 | **Not built (designed)** | the design and, where it needs one, the data contract are here; nothing computes it yet |
 
 **Read with:** [VAR_GUIDE.md](VAR_GUIDE.md) (the VaR engine: positions, scopes, official records, settings, API, CLI),
-[the market-risk contracts](../contracts/packs/market-risk.md) (every input's contract, the planned ones at the end), and the proposed
-contracts [FRTB.md](../contracts/FRTB.md) (the standardised approach) and [PNL.md](../contracts/PNL.md) (P&L explain).
+[the market-risk contracts](../contracts/packs/market-risk.md) (every input's contract, the planned ones at the end),
+[FRTB_SA_GUIDE.md](FRTB_SA_GUIDE.md) (the FRTB standardised approach, built: the sensitivities-based method, the DRC and the RRAO, with its own input contract),
+and the proposed contracts [FRTB.md](../contracts/FRTB.md) (the internal-models inputs) and [PNL.md](../contracts/PNL.md) (P&L explain).
 
 **Not legal advice.** Which reports apply to which entity, and how a figure is defined for a filing, is for the bank's regulatory
 reporting and legal teams to decide. Drishti computes the figures, lays them out, checks and freezes them; the bank files.
@@ -61,7 +62,8 @@ reporting and legal teams to decide. Drishti computes the figures, lays them out
 | Market risk capital (VaR term + stressed VaR term + add-ons) and its RWA | US subpart F, FFIEC 102, FR Y-9C | **Not built (designed)**: needs the planned capital inputs | [4.7](#47-capital) |
 | FFIEC 102 and §217.212 report definitions | US filers | **Not built (designed)**: every figure but the add-ons is built | [3.8](#38-ffiec-102-market-risk-regulatory-report-us), [3.9](#39-217212-market-risk-disclosures-us) |
 | Volcker: VaR per desk, VaR limits and usage | US, significant trading | **Built**; the other three metrics **Not built (designed)** | [3.11](#311-volcker-metrics-us) |
-| FRTB: ES with liquidity horizons, SES, DRC, PLA test, standardised approach | OSFI CAR chapter 9; the US re-proposal | **Not built (designed)** | [2.5](#25-frtb-in-outline), [3.4](#34-osfi-internal-model-tests-car-chapter-9) to [3.6](#36-bcar-schedule-90010-market-risk-canada) |
+| FRTB standardised approach: the sensitivities-based method (delta, vega, curvature), the DRC, the RRAO | OSFI CAR chapter 9.5; the US re-proposal | **Built — needs the bank's data** (the position sensitivities): [FRTB_SA_GUIDE.md](FRTB_SA_GUIDE.md), the FRSA screen and PLAY FRTB | [3.5](#35-pillar-3-mr2-and-mr1-canada), [3.6](#36-bcar-schedule-90010-market-risk-canada) |
+| FRTB internal models: ES with liquidity horizons, SES, IMA DRC, PLA test | OSFI CAR chapter 9; the US re-proposal | **Not built (designed)** | [2.5](#25-frtb-in-outline), [3.4](#34-osfi-internal-model-tests-car-chapter-9) to [3.6](#36-bcar-schedule-90010-market-risk-canada) |
 | Controls: definitions, checks, frozen runs with lineage, maker-checker-approver, files | every report | **Built** | [6](#6-controls-definitions-checks-frozen-runs-and-sign-off) |
 
 **What every report gets from Drishti:** the figures computed from trade-grain inputs for any node, legal entity or desk; the official
@@ -255,7 +257,7 @@ quarterly reporting (date to confirm against OSFI's Pillar 3 guideline). **Drish
 | Unconstrained ES, ES per regulatory risk class, constrained ES, IMCC | MR2 rows (to confirm against the current template) | [2.5](#25-frtb-in-outline); each the most recent figure and the 60-day average, high and low, current and previous quarter | liquidity-horizon P&L vectors (no contract yet) | **Not built (designed)** |
 | SES; DRC; the PLA-amber surcharge; the standardised comparison | MR2 rows (to confirm) | most recent and 12-week average, high, low | as above; DRC from the planned capital inputs ([CAPI](../contracts/packs/market-risk.md#capi-market-risk-capital-inputs-per-filer-and-date-capital-input)) | **Not built (designed)** |
 | Number of backtesting exceptions against VaR at 99% | MR2 row (to confirm) | the count of [3.3](#33-backtesting-chart-and-exceptions-both-countries) | `desk-pnl` | **Built — needs the bank's data** |
-| MR1: delta, vega, curvature by risk class, DRC, RRAO | MR1 rows (to confirm) | the standardised approach ([FRTB.md](../contracts/FRTB.md)) | `frtb-sensitivity` and curvature shocks | **Not built (designed)** |
+| MR1: delta, vega, curvature by risk class, DRC, RRAO | MR1 rows (to confirm) | the standardised approach ([FRTB_SA_GUIDE.md](FRTB_SA_GUIDE.md)) | the position sensitivities | figures **Built — needs the bank's data**; the MR1 report definition **Not built (designed)** |
 
 ### 3.6 BCAR schedule 90.010 Market Risk (Canada)
 
@@ -265,7 +267,7 @@ fiscal quarter end. **Status: Not built (designed).** Section A is the only one 
 | Section | Contents | Inputs | Status |
 |---|---|---|---|
 | A, internal model requirements | ES 97.5% with full diversification and per risk class, reporting date and 60-day average; IMCC; SES per NMRF (reporting date, 12-week average) in three categories with ρ = 0.6; multipliers 1.5 (ES) and 1 (SES) unless OSFI sets more | liquidity-horizon vectors; NMRF scenarios; planned capital inputs (multiplier override) | **Not built (designed)** |
-| B, C (standardised): sensitivities-based method, DRC, RRAO | every institution | `frtb-sensitivity`, curvature shocks, issuer default data | **Not built (designed)** ([FRTB.md](../contracts/FRTB.md)) |
+| B, C (standardised): sensitivities-based method, DRC, RRAO | every institution | the position sensitivities, issuer default data | figures **Built — needs the bank's data** ([FRTB_SA_GUIDE.md](FRTB_SA_GUIDE.md)); the schedule's report definition **Not built (designed)** |
 | D to G | hedges of valuation-adjustment carve-outs; total charge; valuation adjustments for less liquid positions; switch between books | the bank's own figures | out of Drishti's scope |
 | 10.020 / 10.030 | market-risk RWA = capital × 12.5 into the RWA summary (the IMA is not allowed in the capital floor) | the total of 90.010 | **Not built (designed)** |
 
@@ -727,7 +729,7 @@ No contract is written for these yet: each waits for its report's design to be c
 | Per-risk-class P&L vectors | per trade, date, risk class | exact VaR by risk type |
 | A limit catalogue (every limit with id, type, upper and lower) | per desk | Volcker metric 1 (the proposed `risk-limit` of STR.md) |
 | P&L explain (risk factors, new trades, fees, unexplained) | per desk, date | Volcker metric 3 ([PNL.md](../contracts/PNL.md)) |
-| Sensitivities and curvature shocks | per trade, date, FRTB risk factor | the standardised approach (today's `frtb-sensitivity` kind is the start) |
+| Sensitivities and curvature shocks | per position, date, FRTB risk factor | the standardised approach (built: its input contract is in [FRTB_SA_GUIDE.md](FRTB_SA_GUIDE.md)) |
 | Liquidity-horizon mapping and five vectors per trade | per risk factor; per trade, date | ES with liquidity horizons |
 | Real-price observations | per risk factor, daily | RFET, NMRF, SES |
 | Issuer default data (PD, LGD, seniority) | per issuer | DRC (standardised and IMA) |
@@ -743,7 +745,7 @@ No contract is written for these yet: each waits for its report's design to be c
 | Backtesting chart and exceptions | **Built — needs the bank's data** | the bank's desk P&L through `desk-pnl` |
 | OSFI internal-model tests | backtesting **Built — needs the bank's data**; PLA, RFET **Not built (designed)** | regulatory desks; real-price observations |
 | Pillar 3 MR2 | exception count **Built — needs the bank's data**; ES items **Not built (designed)** | FRTB internal models (G10 to G14) |
-| Pillar 3 MR1, BCAR 90.010 B and C | **Not built (designed)** | the FRTB standardised approach (G9) |
+| Pillar 3 MR1, BCAR 90.010 B and C | the figures **Built — needs the bank's data** (the FRTB standardised approach, G9); the report definitions **Not built (designed)** | the bank's position sensitivities; the forms' definitions (G7) |
 | BCAR 90.010 A | **Not built (designed)** | FRTB internal models |
 | US subpart F figures | **Built** | — |
 | US capital, FFIEC 102, FR Y-9C item 27 | **Not built (designed)** | capital inputs; the FFIEC 102 definitions (G7) |
@@ -762,7 +764,7 @@ The gap identifiers G1 to G15, used by the other design documents, are kept:
 | G6 | VaR by risk type | by hierarchy **Built — needs the bank's data**; mapping and risk-class vectors **Not built (designed)** |
 | G7 | Report packs per form (FFIEC 102, §217.212, Pillar 3, Volcker files) | the framework and the pilot **Built**; the forms **Not built (designed)** |
 | G8 | Volcker metrics | VaR and VaR limits **Built**; the rest **Not built (designed)** |
-| G9 | FRTB standardised approach | **Not built (designed)** |
+| G9 | FRTB standardised approach | **Built — needs the bank's data** ([FRTB_SA_GUIDE.md](FRTB_SA_GUIDE.md)) |
 | G10 | ES with liquidity horizons | **Not built (designed)** |
 | G11 | Stressed ES calibration | **Not built (designed)** |
 | G12 | PLA test | **Not built (designed)** |
@@ -781,12 +783,14 @@ Ordered by value to a bank and by dependency; each step names the data it waits 
 3. **Reconciliation and risk types**: the finance P&L check, the risk-type mapping (or risk-class vectors), the regulatory desks.
 4. **Hypothetical P&L from base PVs** with the trade cash flows, for banks whose front office does not send HPL.
 5. **Volcker**: the trade attributes, a limit catalogue, P&L explain, the electronic files.
-6. **FRTB standardised approach** (BCAR 90.010 B and C, Pillar 3 MR1): every Canadian bank computes it, and the US re-proposal makes it
+6. **FRTB standardised approach reports** (BCAR 90.010 B and C, Pillar 3 MR1): the engine is built ([FRTB_SA_GUIDE.md](FRTB_SA_GUIDE.md)); what remains is
+   the bank's position sensitivities and the forms' report definitions. Every Canadian bank reports it, and the US re-proposal makes it
    the fallback.
 7. **FRTB internal models** (ES with liquidity horizons, stressed calibration, PLA, RFET and SES, DRC; BCAR 90.010 A, MR2), only for a
    bank seeking approval.
 
-The standardised approach comes before internal models because every Canadian bank reports it, and an IMA bank must compute it too.
+The standardised approach (built) comes before internal models because every Canadian bank reports it, and an IMA bank must compute it
+too.
 
 ## 9. Questions for the bank
 

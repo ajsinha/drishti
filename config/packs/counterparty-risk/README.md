@@ -73,7 +73,6 @@ depends-on:
   - reactive
   settings:
   - DRISHTI_CCR_DERIVED_ENABLED
-  - DRISHTI_DELTA_ROOT
   - DRISHTI_EXPOSURE_ENABLED
   - DRISHTI_LAKE_ENABLED
 sources:
@@ -621,7 +620,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `exposure-engine` | `reactive` | `exposure-result` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
 | `exposure-whatif` | `reactive` | `exposure-whatif` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_CCR_DERIVED_ENABLED`, `DRISHTI_DELTA_ROOT`, `DRISHTI_EXPOSURE_ENABLED`, `DRISHTI_LAKE_ENABLED`.
+Settings (environment variables) its connectors read: `DRISHTI_CCR_DERIVED_ENABLED`, `DRISHTI_EXPOSURE_ENABLED`, `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 

@@ -23,7 +23,7 @@ The historical scenario days of a business date, oldest first: index i of every 
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-risk/scenario-set/` + `cob-YYYY-MM-DD.jsonl.gz`, `stress-cob-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-risk/scenario-set/` + `scenario-set.tar!/scenario-set/YYYY-MM-DD/cob.jsonl.gz`, `scenario-set.tar!/scenario-set/YYYY-MM-DD/stress-cob.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `SCENARIO_SET_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |

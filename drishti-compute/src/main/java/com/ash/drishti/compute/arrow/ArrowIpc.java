@@ -15,51 +15,84 @@
  */
 package com.ash.drishti.compute.arrow;
 
-import com.google.flatbuffers.FlatBufferBuilder;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
-import org.apache.arrow.flatbuf.Bool;
-import org.apache.arrow.flatbuf.Buffer;
-import org.apache.arrow.flatbuf.Endianness;
-import org.apache.arrow.flatbuf.Field;
-import org.apache.arrow.flatbuf.FieldNode;
-import org.apache.arrow.flatbuf.FixedSizeList;
-import org.apache.arrow.flatbuf.FloatingPoint;
-import org.apache.arrow.flatbuf.Int;
-import org.apache.arrow.flatbuf.Message;
-import org.apache.arrow.flatbuf.MessageHeader;
-import org.apache.arrow.flatbuf.MetadataVersion;
-import org.apache.arrow.flatbuf.Precision;
-import org.apache.arrow.flatbuf.RecordBatch;
-import org.apache.arrow.flatbuf.Schema;
-import org.apache.arrow.flatbuf.Type;
-import org.apache.arrow.flatbuf.Utf8;
+import java.util.Map;
+import org.apache.arrow.memory.BufferAllocator;
+import org.apache.arrow.vector.BaseIntVector;
+import org.apache.arrow.vector.BigIntVector;
+import org.apache.arrow.vector.BitVector;
+import org.apache.arrow.vector.FieldVector;
+import org.apache.arrow.vector.Float4Vector;
+import org.apache.arrow.vector.Float8Vector;
+import org.apache.arrow.vector.LargeVarCharVector;
+import org.apache.arrow.vector.ValueVector;
+import org.apache.arrow.vector.VarCharVector;
+import org.apache.arrow.vector.VectorSchemaRoot;
+import org.apache.arrow.vector.complex.FixedSizeListVector;
+import org.apache.arrow.vector.dictionary.Dictionary;
+import org.apache.arrow.vector.dictionary.DictionaryEncoder;
+import org.apache.arrow.vector.dictionary.DictionaryProvider;
+import org.apache.arrow.vector.ipc.ArrowStreamReader;
+import org.apache.arrow.vector.ipc.ArrowStreamWriter;
+import org.apache.arrow.vector.types.FloatingPointPrecision;
+import org.apache.arrow.vector.types.pojo.ArrowType;
+import org.apache.arrow.vector.types.pojo.Field;
+import org.apache.arrow.vector.types.pojo.FieldType;
+import org.apache.arrow.vector.types.pojo.Schema;
 
 /**
  * Reads and writes the Apache Arrow IPC <em>stream</em> format (a schema, record batches, end of stream) for the column types of
- * {@link ArrowTable}, from the format's message definitions alone ({@code arrow-format} with flatbuffers; Arrow's memory libraries, which
- * need JVM {@code --add-opens} flags and bring Netty, are not used). The Python side reads the same bytes with the SDK's pure-Python codec
- * or with pyarrow. A large table is written as several record batches so no batch body passes {@link #BATCH_BYTES}; reading joins them.
- * Files are memory-mapped when read. Compressed bodies and dictionary batches are refused with the reason.
+ * {@link ArrowTable}, with the official Apache Arrow Java library ({@code arrow-vector}): the Python workers read the same bytes with
+ * pyarrow or the SDK's codec. A large table is written as several record batches so no batch passes {@link #BATCH_BYTES}; reading joins
+ * them. Dictionary-encoded text is decoded to text when read; compressed bodies are refused with the reason. Every buffer comes from a
+ * short-lived child of {@link ArrowMemory}, so busy protection sees it.
  */
 public final class ArrowIpc {
 
     /** The largest body one record batch gets when writing; a bigger table is split into batches. */
     public static final long BATCH_BYTES = 64L << 20;
 
-    private static final int CONTINUATION = 0xFFFFFFFF;
+    private static final FieldType DOUBLE = FieldType.nullable(new ArrowType.FloatingPoint(FloatingPointPrecision.DOUBLE));
 
     private ArrowIpc() {}
+
+    // ------------------------------------------------------------------------------------------------------------ the schema
+
+    /** The Arrow schema of a table, the same one the stream carries. */
+    public static Schema schema(ArrowTable t) {
+        return schema(t, Map.of());
+    }
+
+    /** As above with the schema's custom metadata. */
+    public static Schema schema(ArrowTable t, Map<String, String> metadata) {
+        List<Field> fields = new ArrayList<>(t.columns().size());
+        for (ArrowTable.Column c : t.columns()) {
+            fields.add(field(c));
+        }
+        return new Schema(fields, metadata.isEmpty() ? null : metadata);
+    }
+
+    private static Field field(ArrowTable.Column c) {
+        return switch (c.type()) {
+            case INT64 -> new Field(c.name(), FieldType.nullable(new ArrowType.Int(64, true)), null);
+            case FLOAT64 -> new Field(c.name(), DOUBLE, null);
+            case BOOL -> new Field(c.name(), FieldType.nullable(ArrowType.Bool.INSTANCE), null);
+            case UTF8 -> new Field(c.name(), FieldType.nullable(ArrowType.Utf8.INSTANCE), null);
+            case FLOAT64_VECTOR -> new Field(c.name(), FieldType.nullable(new ArrowType.FixedSizeList(c.width())),
+                    List.of(new Field("item", DOUBLE, null)));
+        };
+    }
 
     // ------------------------------------------------------------------------------------------------------------ writing
 
@@ -83,213 +116,125 @@ public final class ArrowIpc {
     }
 
     public static void write(ArrowTable t, OutputStream out) throws IOException {
-        message(out, schema(t), List.of());
-        int rowBytes = 1;
+        write(t, Map.of(), out);
+    }
+
+    /** Writes the table with the schema's custom metadata, in batches of at most {@link #BATCH_BYTES}. */
+    public static void write(ArrowTable t, Map<String, String> metadata, OutputStream out) throws IOException {
+        try (BufferAllocator alloc = ArrowMemory.child("ipc-write", 0);
+                VectorSchemaRoot root = VectorSchemaRoot.create(schema(t, metadata), alloc);
+                ArrowStreamWriter writer = new ArrowStreamWriter(root, null, Channels.newChannel(out))) {
+            writer.start();
+            int step = batchRows(t);
+            if (t.rows() == 0) {
+                fill(root, t, 0, 0);
+                writer.writeBatch();
+            }
+            for (int from = 0; from < t.rows(); from += step) {
+                int to = Math.min(t.rows(), from + step);
+                fill(root, t, from, to);
+                writer.writeBatch();
+            }
+            writer.end();
+        }
+    }
+
+    /** How many rows one batch holds so its body stays under {@link #BATCH_BYTES}. */
+    public static int batchRows(ArrowTable t) {
+        long rowBytes = 1;
         for (ArrowTable.Column c : t.columns()) {
             rowBytes += switch (c.type()) {
                 case UTF8 -> 32;
                 case BOOL -> 1;
-                default -> 8 * c.width();
+                default -> 8L * c.width();
             };
         }
-        int step = (int) Math.max(1, Math.min(Integer.MAX_VALUE, BATCH_BYTES / rowBytes));
-        if (t.rows() == 0) {
-            batch(out, t);
-        }
-        for (int from = 0; from < t.rows(); from += step) {
-            int to = Math.min(t.rows(), from + step);
-            batch(out, from == 0 && to == t.rows() ? t : t.slice(from, to));
-        }
-        out.write(new byte[] {-1, -1, -1, -1, 0, 0, 0, 0});
+        return (int) Math.max(1, Math.min(Integer.MAX_VALUE, BATCH_BYTES / rowBytes));
     }
 
-    private static byte[] schema(ArrowTable t) {
-        FlatBufferBuilder fb = new FlatBufferBuilder(512);
-        int[] fields = new int[t.columns().size()];
-        for (int i = 0; i < fields.length; i++) {
-            ArrowTable.Column c = t.columns().get(i);
-            if (c.type() == ArrowTable.Type.FLOAT64_VECTOR) {
-                int item = field(fb, "item", Type.FloatingPoint, FloatingPoint.createFloatingPoint(fb, Precision.DOUBLE), new int[0]);
-                fields[i] = field(fb, c.name(), Type.FixedSizeList, FixedSizeList.createFixedSizeList(fb, c.width()), new int[] {item});
-                continue;
-            }
-            int type;
-            byte typeType;
-            switch (c.type()) {
+    /**
+     * Fills the root's vectors with the rows {@code [from, to)} of the table (the root's schema is {@link #schema} of the table). Arrow
+     * Flight streams a table this way, one batch at a time.
+     */
+    public static void fill(VectorSchemaRoot root, ArrowTable t, int from, int to) {
+        int rows = to - from;
+        for (int c = 0; c < t.columns().size(); c++) {
+            ArrowTable.Column col = t.columns().get(c);
+            FieldVector v = root.getVector(c);
+            v.reset();
+            switch (col.type()) {
                 case INT64 -> {
-                    type = Int.createInt(fb, 64, true);
-                    typeType = Type.Int;
-                }
-                case FLOAT64 -> {
-                    type = FloatingPoint.createFloatingPoint(fb, Precision.DOUBLE);
-                    typeType = Type.FloatingPoint;
-                }
-                case BOOL -> {
-                    Bool.startBool(fb);
-                    type = Bool.endBool(fb);
-                    typeType = Type.Bool;
-                }
-                default -> {
-                    Utf8.startUtf8(fb);
-                    type = Utf8.endUtf8(fb);
-                    typeType = Type.Utf8;
-                }
-            }
-            fields[i] = field(fb, c.name(), typeType, type, new int[0]);
-        }
-        int vector = Schema.createFieldsVector(fb, fields);
-        Schema.startSchema(fb);
-        Schema.addEndianness(fb, Endianness.Little);
-        Schema.addFields(fb, vector);
-        return finish(fb, MessageHeader.Schema, Schema.endSchema(fb), 0);
-    }
-
-    private static int field(FlatBufferBuilder fb, String name, byte typeType, int type, int[] children) {
-        int n = fb.createString(name);
-        int ch = Field.createChildrenVector(fb, children);
-        Field.startField(fb);
-        Field.addName(fb, n);
-        Field.addNullable(fb, true);
-        Field.addTypeType(fb, typeType);
-        Field.addType(fb, type);
-        Field.addChildren(fb, ch);
-        return Field.endField(fb);
-    }
-
-    private static void batch(OutputStream out, ArrowTable t) throws IOException {
-        int rows = t.rows();
-        List<ByteBuffer> buffers = new ArrayList<>();
-        List<long[]> nodes = new ArrayList<>();
-        for (ArrowTable.Column c : t.columns()) {
-            nodes.add(new long[] {rows, c.nullCount()});
-            buffers.add(validity(c.nulls(), rows));
-            switch (c.type()) {
-                case INT64 -> {
-                    ByteBuffer b = le(rows * 8L);
-                    b.asLongBuffer().put((long[]) c.data());
-                    buffers.add(b);
-                }
-                case FLOAT64 -> {
-                    ByteBuffer b = le(rows * 8L);
-                    b.asDoubleBuffer().put((double[]) c.data());
-                    buffers.add(b);
-                }
-                case BOOL -> {
-                    boolean[] v = (boolean[]) c.data();
-                    ByteBuffer b = le((rows + 7) / 8);
+                    BigIntVector bv = (BigIntVector) v;
+                    long[] d = (long[]) col.data();
+                    bv.allocateNew(rows);
                     for (int i = 0; i < rows; i++) {
-                        if (v[i]) {
-                            b.put(i >> 3, (byte) (b.get(i >> 3) | (1 << (i & 7))));
+                        if (col.isNull(from + i)) {
+                            bv.setNull(i);
+                        } else {
+                            bv.set(i, d[from + i]);
                         }
                     }
-                    buffers.add(b);
+                }
+                case FLOAT64 -> {
+                    Float8Vector fv = (Float8Vector) v;
+                    double[] d = (double[]) col.data();
+                    fv.allocateNew(rows);
+                    for (int i = 0; i < rows; i++) {
+                        if (col.isNull(from + i)) {
+                            fv.setNull(i);
+                        } else {
+                            fv.set(i, d[from + i]);
+                        }
+                    }
+                }
+                case BOOL -> {
+                    BitVector bv = (BitVector) v;
+                    boolean[] d = (boolean[]) col.data();
+                    bv.allocateNew(rows);
+                    for (int i = 0; i < rows; i++) {
+                        if (col.isNull(from + i)) {
+                            bv.setNull(i);
+                        } else {
+                            bv.set(i, d[from + i] ? 1 : 0);
+                        }
+                    }
                 }
                 case UTF8 -> {
-                    String[] v = (String[]) c.data();
-                    ByteBuffer offsets = le((rows + 1) * 4L);
-                    byte[][] bytes = new byte[rows][];
-                    long size = 0;
+                    VarCharVector sv = (VarCharVector) v;
+                    String[] d = (String[]) col.data();
+                    sv.allocateNew(rows);
                     for (int i = 0; i < rows; i++) {
-                        bytes[i] = v[i] == null ? new byte[0] : v[i].getBytes(StandardCharsets.UTF_8);
-                        size += bytes[i].length;
+                        if (col.isNull(from + i)) {
+                            sv.setNull(i);
+                        } else {
+                            String s = d[from + i];
+                            sv.setSafe(i, s == null ? new byte[0] : s.getBytes(StandardCharsets.UTF_8));
+                        }
                     }
-                    if (size > Integer.MAX_VALUE) {
-                        throw new IOException("column " + c.name() + " holds more than 2 GB of text in one batch");
-                    }
-                    ByteBuffer data = le(size);
-                    offsets.putInt(0, 0);
-                    int at = 0;
-                    for (int i = 0; i < rows; i++) {
-                        data.put(at, bytes[i]);
-                        at += bytes[i].length;
-                        offsets.putInt((i + 1) * 4, at);
-                    }
-                    buffers.add(offsets);
-                    buffers.add(data);
                 }
                 case FLOAT64_VECTOR -> {
-                    double[] v = (double[]) c.data();
-                    nodes.add(new long[] {(long) rows * c.width(), 0});
-                    buffers.add(le(0));                                     // the child's validity: no nulls inside a vector
-                    ByteBuffer b = le(v.length * 8L);
-                    b.asDoubleBuffer().put(v);
-                    buffers.add(b);
+                    FixedSizeListVector lv = (FixedSizeListVector) v;
+                    int w = col.width();
+                    double[] d = (double[]) col.data();
+                    lv.setInitialCapacity(Math.max(1, rows));
+                    lv.allocateNew();
+                    Float8Vector items = (Float8Vector) lv.getDataVector();
+                    for (int i = 0; i < rows; i++) {
+                        if (col.isNull(from + i)) {
+                            lv.setNull(i);
+                        } else {
+                            lv.setNotNull(i);
+                        }
+                    }
+                    for (int k = 0; k < rows * w; k++) {
+                        items.set(k, d[from * w + k]);
+                    }
+                    items.setValueCount(rows * w);
                 }
             }
+            v.setValueCount(rows);
         }
-        long[] offsets = new long[buffers.size()];
-        long[] lengths = new long[buffers.size()];
-        long body = 0;
-        for (int i = 0; i < buffers.size(); i++) {
-            offsets[i] = body;
-            lengths[i] = buffers.get(i).capacity();
-            body += lengths[i] + pad(lengths[i]);
-        }
-        FlatBufferBuilder fb = new FlatBufferBuilder(512);
-        RecordBatch.startNodesVector(fb, nodes.size());
-        for (int i = nodes.size() - 1; i >= 0; i--) {
-            FieldNode.createFieldNode(fb, nodes.get(i)[0], nodes.get(i)[1]);
-        }
-        int nodesAt = fb.endVector();
-        RecordBatch.startBuffersVector(fb, offsets.length);
-        for (int i = offsets.length - 1; i >= 0; i--) {
-            Buffer.createBuffer(fb, offsets[i], lengths[i]);
-        }
-        int buffersAt = fb.endVector();
-        RecordBatch.startRecordBatch(fb);
-        RecordBatch.addLength(fb, rows);
-        RecordBatch.addNodes(fb, nodesAt);
-        RecordBatch.addBuffers(fb, buffersAt);
-        int rb = RecordBatch.endRecordBatch(fb);
-        message(out, finish(fb, MessageHeader.RecordBatch, rb, body), buffers);
-    }
-
-    private static ByteBuffer validity(BitSet nulls, int rows) {
-        if (nulls == null || nulls.isEmpty()) {
-            return le(0);
-        }
-        ByteBuffer b = le((rows + 7) / 8);
-        for (int i = 0; i < rows; i++) {
-            if (!nulls.get(i)) {
-                b.put(i >> 3, (byte) (b.get(i >> 3) | (1 << (i & 7))));
-            }
-        }
-        return b;
-    }
-
-    private static ByteBuffer le(long size) {
-        if (size > Integer.MAX_VALUE) {
-            throw new IllegalArgumentException("a buffer of " + size + " bytes is over 2 GB");
-        }
-        return ByteBuffer.allocate((int) size).order(ByteOrder.LITTLE_ENDIAN);
-    }
-
-    private static byte[] finish(FlatBufferBuilder fb, byte header, int offset, long bodyLength) {
-        Message.startMessage(fb);
-        Message.addVersion(fb, MetadataVersion.V5);
-        Message.addHeaderType(fb, header);
-        Message.addHeader(fb, offset);
-        Message.addBodyLength(fb, bodyLength);
-        fb.finish(Message.endMessage(fb));
-        return fb.sizedByteArray();
-    }
-
-    /** Continuation marker, the metadata length (padded so the body starts on 8 bytes), the metadata, then the body's buffers, each padded. */
-    private static void message(OutputStream out, byte[] metadata, List<ByteBuffer> body) throws IOException {
-        int padded = metadata.length + (int) pad(metadata.length + 8L);
-        ByteBuffer head = ByteBuffer.allocate(8).order(ByteOrder.LITTLE_ENDIAN);
-        head.putInt(CONTINUATION).putInt(padded);
-        out.write(head.array());
-        out.write(metadata);
-        out.write(new byte[padded - metadata.length]);
-        for (ByteBuffer b : body) {
-            out.write(b.array(), 0, b.capacity());
-            out.write(new byte[(int) pad(b.capacity())]);
-        }
-    }
-
-    private static long pad(long length) {
-        return (8 - (length & 7)) & 7;
+        root.setRowCount(rows);
     }
 
     // ------------------------------------------------------------------------------------------------------------ reading
@@ -299,225 +244,129 @@ public final class ArrowIpc {
      * collected, and the request's scratch folder must be gone when the request ends.
      */
     public static ArrowTable read(Path file) throws IOException {
-        long size = Files.size(file);
-        if (size > Integer.MAX_VALUE - 64) {
-            throw new IOException(file.getFileName() + " is over 2 GB: split the result into several tables");
+        try (InputStream in = new java.io.BufferedInputStream(java.nio.file.Files.newInputStream(file), 1 << 20)) {
+            return read(in);
         }
-        ByteBuffer b = ByteBuffer.allocate((int) size);
-        try (FileChannel ch = FileChannel.open(file, StandardOpenOption.READ)) {
-            while (b.hasRemaining() && com.ash.drishti.api.ChannelIo.read(ch, b) >= 0) {
-                // read it whole
-            }
-        }
-        b.flip();
-        return read(b);
     }
 
     public static ArrowTable read(byte[] bytes) throws IOException {
-        return read(ByteBuffer.wrap(bytes));
+        return read(new ByteArrayInputStream(bytes));
     }
 
-    private record FieldInfo(String name, byte type, int bitWidth, boolean signed, short precision, int listSize, byte childType,
-            short childPrecision) {}
-
-    private static ArrowTable read(ByteBuffer raw) throws IOException {
-        ByteBuffer in = raw.order(ByteOrder.LITTLE_ENDIAN);
-        List<FieldInfo> fields = null;
-        List<ArrowTable> batches = new ArrayList<>();
-        while (in.remaining() >= 4) {
-            int size = in.getInt();
-            if (size == CONTINUATION) {
-                if (in.remaining() < 4) {
-                    break;
-                }
-                size = in.getInt();
+    /** Reads a whole stream into one table (its batches joined). */
+    public static ArrowTable read(InputStream in) throws IOException {
+        try (BufferAllocator alloc = ArrowMemory.child("ipc-read", 0);
+                ArrowStreamReader reader = new ArrowStreamReader(in, alloc)) {
+            VectorSchemaRoot root;
+            try {
+                root = reader.getVectorSchemaRoot();
+            } catch (IOException | RuntimeException e) {
+                throw new IOException("not an Arrow IPC stream: " + e.getMessage(), e);
             }
-            if (size == 0) {
-                break;                                                      // end of stream
+            List<ArrowTable> batches = new ArrayList<>();
+            while (reader.loadNextBatch()) {
+                batches.add(table(root, reader));
             }
-            if (size < 0 || size > in.remaining()) {
-                throw new IOException("not an Arrow IPC stream: a message of " + size + " bytes at " + in.position());
+            if (batches.isEmpty()) {
+                return table(root, reader);
             }
-            ByteBuffer meta = in.slice().order(ByteOrder.LITTLE_ENDIAN).limit(size);
-            in.position(in.position() + size);
-            Message m = Message.getRootAsMessage(meta);
-            long bodyLength = m.bodyLength();
-            if (bodyLength > in.remaining()) {
-                throw new IOException("the Arrow stream is cut short: a body of " + bodyLength + " bytes, " + in.remaining() + " left");
-            }
-            ByteBuffer body = in.slice().order(ByteOrder.LITTLE_ENDIAN).limit((int) bodyLength);
-            in.position(in.position() + (int) bodyLength);
-            switch (m.headerType()) {
-                case MessageHeader.Schema -> fields = fields((Schema) m.header(new Schema()));
-                case MessageHeader.RecordBatch -> {
-                    if (fields == null) {
-                        throw new IOException("a record batch before the schema");
-                    }
-                    batches.add(batch((RecordBatch) m.header(new RecordBatch()), body, fields));
-                }
-                case MessageHeader.DictionaryBatch -> throw new IOException("dictionary-encoded columns are not supported: cast them to text");
-                default -> throw new IOException("unexpected Arrow message type " + m.headerType());
-            }
+            return batches.size() == 1 ? batches.get(0) : ArrowTable.concat(batches);
+        } catch (IllegalArgumentException | UnsupportedOperationException e) {
+            throw new IOException("the Arrow stream cannot be read: " + e.getMessage(), e);
         }
-        if (fields == null) {
-            throw new IOException("not an Arrow IPC stream: no schema");
-        }
-        if (batches.isEmpty()) {
-            List<ArrowTable.Column> cols = new ArrayList<>();
-            for (FieldInfo f : fields) {
-                cols.add(empty(f));
-            }
-            return new ArrowTable(cols);
-        }
-        return batches.size() == 1 ? batches.get(0) : ArrowTable.concat(batches);
     }
 
-    private static List<FieldInfo> fields(Schema s) throws IOException {
-        List<FieldInfo> out = new ArrayList<>();
-        for (int i = 0; i < s.fieldsLength(); i++) {
-            Field f = s.fields(i);
-            if (f.dictionary() != null) {
-                throw new IOException("column " + f.name() + " is dictionary-encoded: cast it to text");
-            }
-            byte t = f.typeType();
-            switch (t) {
-                case Type.Int -> {
-                    Int it = (Int) f.type(new Int());
-                    out.add(new FieldInfo(f.name(), t, it.bitWidth(), it.isSigned(), (short) 0, 0, (byte) 0, (short) 0));
-                }
-                case Type.FloatingPoint -> {
-                    FloatingPoint fp = (FloatingPoint) f.type(new FloatingPoint());
-                    if (fp.precision() == Precision.HALF) {
-                        throw new IOException("column " + f.name() + " is a half-precision float: cast it to float64");
-                    }
-                    out.add(new FieldInfo(f.name(), t, 0, true, fp.precision(), 0, (byte) 0, (short) 0));
-                }
-                case Type.Bool, Type.Utf8, Type.LargeUtf8 -> out.add(new FieldInfo(f.name(), t, 0, true, (short) 0, 0, (byte) 0, (short) 0));
-                case Type.FixedSizeList -> {
-                    FixedSizeList fl = (FixedSizeList) f.type(new FixedSizeList());
-                    Field child = f.children(0);
-                    if (child == null || child.typeType() != Type.FloatingPoint) {
-                        throw new IOException("column " + f.name() + " is a fixed-size list of something other than floats");
-                    }
-                    FloatingPoint fp = (FloatingPoint) child.type(new FloatingPoint());
-                    out.add(new FieldInfo(f.name(), t, 0, true, (short) 0, fl.listSize(), child.typeType(), fp.precision()));
-                }
-                default -> throw new IOException("column " + f.name() + " has Arrow type " + Type.name(t)
-                        + ": the compute transport carries int, float, bool, utf8 and fixed-size lists of floats");
-            }
-        }
-        return out;
-    }
-
-    private static ArrowTable.Column empty(FieldInfo f) {
-        return switch (f.type()) {
-            case Type.Int -> new ArrowTable.Column(f.name(), ArrowTable.Type.INT64, 1, new long[0], null);
-            case Type.FloatingPoint -> new ArrowTable.Column(f.name(), ArrowTable.Type.FLOAT64, 1, new double[0], null);
-            case Type.Bool -> new ArrowTable.Column(f.name(), ArrowTable.Type.BOOL, 1, new boolean[0], null);
-            case Type.FixedSizeList -> new ArrowTable.Column(f.name(), ArrowTable.Type.FLOAT64_VECTOR, f.listSize(), new double[0], null);
-            default -> new ArrowTable.Column(f.name(), ArrowTable.Type.UTF8, 1, new String[0], null);
-        };
-    }
-
-    private static ArrowTable batch(RecordBatch rb, ByteBuffer body, List<FieldInfo> fields) throws IOException {
-        if (rb.compression() != null) {
-            throw new IOException("compressed Arrow bodies are not supported: write without compression");
-        }
-        int rows = Math.toIntExact(rb.length());
-        int[] node = {0};
-        int[] buf = {0};
+    /** The rows a root holds now as a table (dictionary columns decoded to text). */
+    public static ArrowTable table(VectorSchemaRoot root, DictionaryProvider dictionaries) throws IOException {
+        int rows = root.getRowCount();
         List<ArrowTable.Column> cols = new ArrayList<>();
-        for (FieldInfo f : fields) {
-            FieldNode n = rb.nodes(node[0]++);
-            BitSet nulls = n.nullCount() == 0 ? null : nulls(body, rb.buffers(buf[0]), rows);
-            buf[0]++;
-            switch (f.type()) {
-                case Type.Int -> {
-                    ByteBuffer d = slice(body, rb.buffers(buf[0]++));
-                    long[] v = new long[rows];
-                    for (int i = 0; i < rows; i++) {
-                        v[i] = switch (f.bitWidth()) {
-                            case 8 -> f.signed() ? d.get(i) : d.get(i) & 0xFFL;
-                            case 16 -> f.signed() ? d.getShort(i * 2) : d.getShort(i * 2) & 0xFFFFL;
-                            case 32 -> f.signed() ? d.getInt(i * 4) : d.getInt(i * 4) & 0xFFFFFFFFL;
-                            default -> d.getLong(i * 8);
-                        };
-                    }
-                    cols.add(new ArrowTable.Column(f.name(), ArrowTable.Type.INT64, 1, v, nulls));
+        for (FieldVector v : root.getFieldVectors()) {
+            String name = v.getField().getName();
+            ValueVector vector = v;
+            if (v.getField().getDictionary() != null) {
+                Dictionary d = dictionaries == null ? null : dictionaries.lookup(v.getField().getDictionary().getId());
+                if (d == null) {
+                    throw new IOException("column " + name + " is dictionary-encoded and its dictionary is missing");
                 }
-                case Type.FloatingPoint -> {
-                    ByteBuffer d = slice(body, rb.buffers(buf[0]++));
-                    cols.add(new ArrowTable.Column(f.name(), ArrowTable.Type.FLOAT64, 1, floats(d, rows, f.precision()), nulls));
+                vector = DictionaryEncoder.decode(v, d);
+            }
+            try {
+                cols.add(column(name, vector, rows));
+            } finally {
+                if (vector != v) {
+                    vector.close();
                 }
-                case Type.Bool -> {
-                    ByteBuffer d = slice(body, rb.buffers(buf[0]++));
-                    boolean[] v = new boolean[rows];
-                    for (int i = 0; i < rows; i++) {
-                        v[i] = (d.get(i >> 3) >> (i & 7) & 1) == 1;
-                    }
-                    cols.add(new ArrowTable.Column(f.name(), ArrowTable.Type.BOOL, 1, v, nulls));
-                }
-                case Type.Utf8, Type.LargeUtf8 -> {
-                    ByteBuffer off = slice(body, rb.buffers(buf[0]++));
-                    ByteBuffer data = slice(body, rb.buffers(buf[0]++));
-                    boolean large = f.type() == Type.LargeUtf8;
-                    String[] v = new String[rows];
-                    for (int i = 0; i < rows; i++) {
-                        if (nulls != null && nulls.get(i)) {
-                            continue;
-                        }
-                        int from = large ? (int) off.getLong(i * 8) : off.getInt(i * 4);
-                        int to = large ? (int) off.getLong(i * 8 + 8) : off.getInt(i * 4 + 4);
-                        byte[] b = new byte[to - from];
-                        data.get(from, b);
-                        v[i] = new String(b, StandardCharsets.UTF_8);
-                    }
-                    cols.add(new ArrowTable.Column(f.name(), ArrowTable.Type.UTF8, 1, v, nulls));
-                }
-                case Type.FixedSizeList -> {
-                    FieldNode child = rb.nodes(node[0]++);
-                    if (child.nullCount() != 0) {
-                        throw new IOException("column " + f.name() + " has nulls inside its vectors");
-                    }
-                    buf[0]++;                                               // the child's validity
-                    ByteBuffer d = slice(body, rb.buffers(buf[0]++));
-                    cols.add(new ArrowTable.Column(f.name(), ArrowTable.Type.FLOAT64_VECTOR, f.listSize(),
-                            floats(d, rows * f.listSize(), f.childPrecision()), nulls));
-                }
-                default -> throw new IOException("column " + f.name() + ": unsupported type");
             }
         }
         return new ArrowTable(cols);
     }
 
-    private static double[] floats(ByteBuffer d, int count, short precision) {
-        double[] v = new double[count];
-        if (precision == Precision.DOUBLE) {
-            d.asDoubleBuffer().get(v, 0, count);
-        } else {
-            for (int i = 0; i < count; i++) {
-                v[i] = d.getFloat(i * 4);
-            }
-        }
-        return v;
-    }
-
-    private static ByteBuffer slice(ByteBuffer body, Buffer b) throws IOException {
-        long end = b.offset() + b.length();
-        if (b.offset() < 0 || end > body.limit()) {
-            throw new IOException("an Arrow buffer points outside its body");
-        }
-        return body.slice((int) b.offset(), (int) b.length()).order(ByteOrder.LITTLE_ENDIAN);
-    }
-
-    private static BitSet nulls(ByteBuffer body, Buffer validity, int rows) throws IOException {
-        ByteBuffer v = slice(body, validity);
-        BitSet nulls = new BitSet(rows);
+    private static ArrowTable.Column column(String name, ValueVector v, int rows) throws IOException {
+        BitSet nulls = null;
         for (int i = 0; i < rows; i++) {
-            if ((v.get(i >> 3) >> (i & 7) & 1) == 0) {
+            if (v.isNull(i)) {
+                if (nulls == null) {
+                    nulls = new BitSet(rows);
+                }
                 nulls.set(i);
             }
         }
-        return nulls;
+        if (v instanceof BaseIntVector iv) {
+            long[] d = new long[rows];
+            for (int i = 0; i < rows; i++) {
+                d[i] = v.isNull(i) ? 0 : iv.getValueAsLong(i);
+            }
+            return new ArrowTable.Column(name, ArrowTable.Type.INT64, 1, d, nulls);
+        }
+        if (v instanceof Float8Vector || v instanceof Float4Vector) {
+            return new ArrowTable.Column(name, ArrowTable.Type.FLOAT64, 1, floats(v, 0, rows), nulls);
+        }
+        if (v instanceof BitVector bv) {
+            boolean[] d = new boolean[rows];
+            for (int i = 0; i < rows; i++) {
+                d[i] = !bv.isNull(i) && bv.get(i) == 1;
+            }
+            return new ArrowTable.Column(name, ArrowTable.Type.BOOL, 1, d, nulls);
+        }
+        if (v instanceof VarCharVector || v instanceof LargeVarCharVector) {
+            String[] d = new String[rows];
+            for (int i = 0; i < rows; i++) {
+                if (!v.isNull(i)) {
+                    byte[] b = v instanceof VarCharVector s ? s.get(i) : ((LargeVarCharVector) v).get(i);
+                    d[i] = new String(b, StandardCharsets.UTF_8);
+                }
+            }
+            return new ArrowTable.Column(name, ArrowTable.Type.UTF8, 1, d, nulls);
+        }
+        if (v instanceof FixedSizeListVector lv) {
+            ValueVector items = lv.getDataVector();
+            if (!(items instanceof Float8Vector || items instanceof Float4Vector)) {
+                throw new IOException("column " + name + " is a fixed-size list of something other than floats");
+            }
+            int w = lv.getListSize();
+            for (int k = 0; k < rows * w; k++) {
+                if (items.isNull(k)) {
+                    throw new IOException("column " + name + " has nulls inside its vectors");
+                }
+            }
+            return new ArrowTable.Column(name, ArrowTable.Type.FLOAT64_VECTOR, w, floats(items, 0, rows * w), nulls);
+        }
+        throw new IOException("column " + name + " has Arrow type " + v.getField().getType()
+                + ": the compute transport carries int, float, bool, utf8 and fixed-size lists of floats");
+    }
+
+    private static double[] floats(ValueVector v, int from, int count) {
+        double[] d = new double[count];
+        if (v instanceof Float8Vector f) {
+            for (int i = 0; i < count; i++) {
+                d[i] = f.isNull(from + i) ? 0.0 : f.get(from + i);
+            }
+        } else {
+            Float4Vector f = (Float4Vector) v;
+            for (int i = 0; i < count; i++) {
+                d[i] = f.isNull(from + i) ? 0.0 : f.get(from + i);
+            }
+        }
+        return d;
     }
 }

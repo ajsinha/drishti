@@ -104,6 +104,28 @@ class PivotBackend(ChartBackend):
         if path.startswith("/live/") and method == "DELETE":
             self.ended.append(path)
             return {}
+        # ---- the Why, What-if and Functions cards (drishti_pivot-functions.js), answered as the engine words them ----
+        if path == "/explain" and method == "POST":
+            self.asked.append(("explain", body))
+            return {"words": "Rates minus FX is 30", "method": "by DESK, member by member",
+                    "steps": [{"member": "IRS", "cause": "member", "step": 40, "cumulative": 40},
+                              {"member": "CDS", "cause": "member", "step": -10, "cumulative": 30}],
+                    "residual": {"name": "none", "value": 0}, "difference": 30}
+        if path == "/whatif" and method == "POST":
+            self.asked.append(("whatif", body))
+            return {"diff": {"DESK=Rates|*": {"delta": {"count()": -25}}, "DESK=FX|*": {"delta": {"count()": 0}}, "*|*": {"delta": {"count()": -25}}}}
+        if path == "/functions/test" and method == "POST":
+            self.asked.append(("functions/test", body))
+            return {"harness": {"passed": True, "kind": "mergeable", "onePass": 0.007, "rows": 4, "nsPerRow": 2245.0, "stateBytes": 56,
+                                "checks": [{"check": "one pass", "passed": True, "detail": "the figure is 0.007"}]},
+                    "playground": {"steps": [{"what": "part 1 (rows 1 to 2)", "state": "[Σ=0.036 n=2, Σ=4.0 n=2]", "bytes": 56, "value": 0.008},
+                                             {"what": "part 2 (rows 3 to 4)", "state": "[Σ=0.045 n=2, Σ=7.0 n=2]", "bytes": 56,
+                                              "value": 0.0064285714285714285}],
+                                   "final": 0.007, "onePass": 0.007, "same": True}}
+        if path == "/functions" and method == "GET":
+            return {"languages": {"formula": True, "sql": True, "python": False, "java": False}, "requireApproval": True,
+                    "functions": [{"id": "u/wret", "version": 1, "ref": "u.wret", "language": "formula", "kind": "mergeable", "status": "private",
+                                   "inputs": [{"name": "r"}, {"name": "w"}]}]}
         if path == "/views/u/desk" and method == "GET":
             return {"id": "u/desk", "version": 2, "owner": "u", "view": {"source": "trade", "rows": ["DESK"], "columns": [],
                     "values": [{"measure": "count()", "as": "count()"}]}}

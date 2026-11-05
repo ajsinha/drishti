@@ -75,8 +75,8 @@ def test_healthz_backend_reports_the_watch(client, monkeypatch):
 
 def test_every_page_carries_the_watch_script(client):
     html = client.get("/").text
-    assert "/static/js/server-watch.js" in html and "/static/css/server-watch.css" in html
-    assert client.get("/static/js/server-watch.js").status_code == 200
+    assert "/static/js/drishti_server-watch.js" in html and "/static/css/drishti_server-watch.css" in html
+    assert client.get("/static/js/drishti_server-watch.js").status_code == 200
     assert "data-watch-probe" in client.get("/login").text
 
 

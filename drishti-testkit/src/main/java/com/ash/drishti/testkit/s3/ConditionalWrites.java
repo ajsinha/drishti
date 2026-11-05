@@ -55,7 +55,9 @@ public record ConditionalWrites(String simulator, boolean createOnly, boolean up
                 delete = !refused(() -> c.deleteObject(d -> d.bucket(bucket).key(key).ifMatch(v2)));
             }
             c.deleteObject(d -> d.bucket(bucket).key(key));
-            boolean atomic = create;
+            // S3Mock checks a condition and then writes, so racing writers can both win; a sample of rounds can pass by luck (it did, in a
+            // drill), so it is never counted as atomic. The others are sampled; FakeS3 and MinIO cover the race.
+            boolean atomic = create && !e.simulator().equals(S3MockServer.NAME);
             for (int round = 0; atomic && round < 5; round++) {
                 atomic = race(c, bucket, key + "-race-" + round) == 1;
             }

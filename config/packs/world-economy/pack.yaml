@@ -177,32 +177,8 @@ connectors:
     - fiscal-position
     - region-economy
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: macro
-      layout:
-        economy:
-          columns:
-          - NAME
-          - ISO3
-          - REGION_NAME
-          - INCOME_NAME
-          - GDP_USD_BN
-          - GDP_PER_CAPITA
-          - GROWTH
-          - INFLATION
-          - UNEMPLOYMENT
-          - POPULATION_M
-        region-economy:
-          columns:
-          - ISO3
-          - COUNTRY_NAME
-          - REGION_CODE
-          - NAME
-          - POPULATION
-          - GDP_USD_BN
-          - GDP_PER_CAPITA
-          - YEAR
-          - SOURCE
+      lake: demo
+      lake-tables: macro.economy,macro.macro-indicator,macro.economic-forecast,macro.labour-market,macro.fiscal-position,macro.region-economy
   civic-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
@@ -214,8 +190,8 @@ connectors:
     - region
     - social-indicator
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: civic
+      lake: demo
+      lake-tables: civic.jurisdiction,civic.party,civic.office-holder,civic.election,civic.region,civic.social-indicator
   macro-groupings:
     plugin: derived
     enabled: ${DRISHTI_LAKE_ENABLED:true}
@@ -707,3 +683,38 @@ roles:
     - region
     - social-indicator
     raw: true
+lake:
+  tables:
+    macro.economy:
+      promote:
+      - NAME
+      - ISO3
+      - REGION_NAME
+      - INCOME_NAME
+      - GDP_USD_BN
+      - GDP_PER_CAPITA
+      - GROWTH
+      - INFLATION
+      - UNEMPLOYMENT
+      - POPULATION_M
+    macro.macro-indicator: null
+    macro.economic-forecast: null
+    macro.labour-market: null
+    macro.fiscal-position: null
+    macro.region-economy:
+      promote:
+      - ISO3
+      - COUNTRY_NAME
+      - REGION_CODE
+      - NAME
+      - POPULATION
+      - GDP_USD_BN
+      - GDP_PER_CAPITA
+      - YEAR
+      - SOURCE
+    civic.jurisdiction: null
+    civic.party: null
+    civic.office-holder: null
+    civic.election: null
+    civic.region: null
+    civic.social-indicator: null

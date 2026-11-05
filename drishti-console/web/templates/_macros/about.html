@@ -90,7 +90,7 @@
 {% endmacro %}
 
 {# Ask about this page: drawn only when the server says it is on for the page's pack (ex.ask.enabled; off by default). The answer is
-   written as text by about-ask.js, never as HTML; the layers above never depend on it. #}
+   written as text by drishti_about-ask.js, never as HTML; the layers above never depend on it. #}
 {% macro layer_ask(ex) %}{% if ex.ask and ex.ask.enabled %}
 <section class="about-ask" data-about-ask data-ask-url="/v/{{ ex.ref.kind | urlencode }}/{{ ex.ref.id | urlencode }}/ask" aria-labelledby="about-ask-h">
   <h3 id="about-ask-h">Ask about this page</h3>

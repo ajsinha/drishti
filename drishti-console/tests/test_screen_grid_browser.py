@@ -201,7 +201,7 @@ def test_outline_reorder_nest_unnest_and_add_a_section(browser, stack):
     assert "opens below the table" in pg.locator('[data-ol-child="pay7"] .ol-desc').inner_text()
     # the live preview: a click on a trade opens it below the table
     fr = pg.frame_locator("[data-ol-preview]")
-    wait(pg, "!!(document.querySelector('[data-ol-preview]').contentWindow.drishtiWire && document.querySelector('[data-ol-preview]').contentDocument.querySelector('#p-trades tbody tr[data-ev]'))")
+    wait(pg, "!!(document.querySelector('[data-ol-preview]').contentWindow.Drishti && document.querySelector('[data-ol-preview]').contentWindow.Drishti.wire && document.querySelector('[data-ol-preview]').contentDocument.querySelector('#p-trades tbody tr[data-ev]'))")
     fr.locator("#p-trades tbody tr[data-ev] td:nth-child(3)").first.click()
     wait(pg, "[...document.querySelector('[data-ol-preview]').contentDocument.querySelectorAll('[data-panel=\"pay7\"]')].some(e => e.offsetParent)")
     pg.evaluate("window.scrollTo(0, 0)")

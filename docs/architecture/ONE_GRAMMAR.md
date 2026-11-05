@@ -179,8 +179,8 @@ has the reference BLAS and LAPACK, not OpenBLAS: the system package `libopenblas
 
 | Tier | Size | Release |
 |---|---|---|
-| 1 | M to L | **2.9.11.e**, with DEL folded into Rachana: DEL's 59 functions move once, and the new ones are added in the same move, never twice |
-| 2 | M | the release after, coordinated with the QLRisk boundary |
+| 1 | M to L | **2.9.11.e**, with DEL folded into Rachana: DEL's 59 functions move once, and the new ones are added in the same move, never twice. Front-loaded and built in the engine: the statistics of FUNCTION_CATALOGUE.md section 4 and the pivot's shares, `ntile`, `diff` and `pct_change` (section 5, and section 8 below); DEL's own functions still move in 2.9.11.e |
+| 2 | M | **front-loaded into 2.9.11.e** (finance on given flows and the distributions, FUNCTION_CATALOGUE.md sections 8 and 9; `discount_factor` and `forward_rate` wait for a curve reader agreed with QLRisk) |
 | 3 | per function | candidates |
 | matrix functions (7.3a) | M | with the Java 25 activation (2.9.13 or later), after the BLAS benchmark's go |
 
@@ -235,3 +235,20 @@ pivot chart's diversification bar is the engine's gap of the charted column (`di
 function catalogue page is generated from the registries
 (`FunctionCataloguePage`, [FUNCTIONS.md](../guides/FUNCTIONS.md)) and checked against [FUNCTION_CATALOGUE.md](FUNCTION_CATALOGUE.md)'s
 names (`FunctionCataloguePageTest`).
+
+**Tier 1 in the engine, front-loaded.** The statistics of [FUNCTION_CATALOGUE.md](FUNCTION_CATALOGUE.md) section 4 (`nmiss`, `range`,
+`stderr`, `cv`, `skewness`, `kurtosis`, `geomean`, `harmean`, `corr`, `covar`, `slope`, `intercept`, `rsq`, `mode`, `iqr`, `trimmean`,
+`kth_largest`, `kth_smallest`, `string_agg`) are `AggFunction`s in `drishti-bicompute` (`functions.Moments`, `Comoments`, `Holistics`)
+registered into Rachana by `EngineFunctions`: one implementation for a pivot cell and a Rachana list. A function may answer text
+(`AggFunction.result`: `mode` of names, `string_agg`). The shares, `ntile`, `diff` and `pct_change` of section 5 are pivot values written
+around an aggregate (`functions.Windows` reads them; `core.ShowAs` computes them from the answer's finished cells, beside Top N and
+Others), not Rachana list functions. DEL's `share_of`, `parent_of`, `rank` and windows keep their place until DEL folds into Rachana
+(2.9.11.e).
+
+**Excel, SAS and MATLAB coverage, front-loaded (2.9.11.e).** The scalars, distributions and finance on given flows are Rachana's
+families (`NumberFunctions`, `InfoFunctions`, `TextParts`, `DateParts`, `ListMore`, `Distributions` on `SpecialFunctions`,
+`FinanceFunctions` on `RootFinder`); every new aggregate is the engine's (`functions.MoreAggregates`, and `Moments` and `Comoments` for
+`devsq`, `skewness_pop`, `covar_pop`, `steyx`), and so is every MATLAB list function that rests on an aggregate (`rachana.ListAnalytics`:
+`cumsum`, the moving windows, `zscore`, `isoutlier`, `polyfit` …, registered into Rachana with the form `list`, computed with the very
+`AggFunction`s a pivot cell runs). Rachana still computes no aggregate itself; the list functions it keeps (`fillmissing`, `interp1`,
+`polyval`, `trapz`, the sets) aggregate nothing. The coverage table, with what is not added and why, is FUNCTION_CATALOGUE.md section 12.

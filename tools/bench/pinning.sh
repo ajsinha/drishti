@@ -41,21 +41,22 @@ cmd_data() {
     # generate JSONL rows, then load them (docs/guides/DATA_GUIDE.md)
     uv run -q --with pyyaml python tools/packgen/banking/make_data.py --lake "$D/lake" --rows "$D/build/lake-rows" --no-load
     uv run -q "${WITH[@]}" python tools/samplegen/load_rows.py --root "$D/lake" \
-      --rows "$D/build/lake-rows/banking-history.jsonl" --restated "$D/build/lake-rows/banking-restated.jsonl"
+      --rows "$D/build/lake-rows/banking-history.tar" --restated "$D/build/lake-rows/banking-restated.tar"
     uv run -q "${WITH[@]}" python tools/samplegen/bulk_trades.py --root "$D/lake" --out "$D/build/bulk" --trades "$TRADES" --days 3
   }
-  uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$D/banking.jsonl"
+  # loader rows by the load rules (docs/architecture/DATA_LOAD_RULES.md): tars of <kind>/<YYYY-MM-DD>/ folders
+  uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$D/build/banking.tar"
+  uv run -q "${WITH[@]}" python tools/samplegen/bulk_trades.py --trades "$TRADES" --days 3 --jsonl "$D/build/bulk-trades.tar"
   local fcp dcp
   fcp="plugins/drishti-plugin-file/target/classes:$(classpath plugins/drishti-plugin-file)"
   dcp="plugins/drishti-plugin-duckdb/target/classes:$(classpath plugins/drishti-plugin-duckdb)"
   rm -rf "$D/files" "$D/drishti.duckdb"
   mkdir -p "$D/tmp"                                  # the loaders' JVM temp folder: DuckDB unpacks its native library there, not in /tmp
-  "$JDK25/bin/java" -Djava.io.tmpdir="$D/tmp" -cp "$fcp" com.ash.drishti.plugin.file.JsonlLoader "$D/banking.jsonl" "$D/files"
-  uv run -q "${WITH[@]}" python tools/samplegen/bulk_trades.py --trades "$TRADES" --days 3 --jsonl - \
-    | "$JDK25/bin/java" -Djava.io.tmpdir="$D/tmp" -cp "$fcp" com.ash.drishti.plugin.file.JsonlLoader - "$D/files"
-  "$JDK25/bin/java" -Djava.io.tmpdir="$D/tmp" -cp "$dcp" com.ash.drishti.plugin.duckdb.DuckDbLoader "$D/banking.jsonl" "$D/drishti.duckdb" --recreate
-  uv run -q "${WITH[@]}" python tools/samplegen/bulk_trades.py --trades "$TRADES" --days 3 --jsonl - \
-    | "$JDK25/bin/java" -Djava.io.tmpdir="$D/tmp" -cp "$dcp" com.ash.drishti.plugin.duckdb.DuckDbLoader - "$D/drishti.duckdb"
+  "$JDK25/bin/java" -Djava.io.tmpdir="$D/tmp" -cp "$fcp" com.ash.drishti.plugin.file.JsonlLoader "$D/build/banking.tar" "$D/files"
+  "$JDK25/bin/java" -Djava.io.tmpdir="$D/tmp" -cp "$fcp" com.ash.drishti.plugin.file.JsonlLoader "$D/build/bulk-trades.tar" "$D/files"
+  "$JDK25/bin/java" -Djava.io.tmpdir="$D/tmp" -cp "$dcp" com.ash.drishti.plugin.duckdb.DuckDbLoader "$D/build/banking.tar" "$D/drishti.duckdb" --recreate
+  "$JDK25/bin/java" -Djava.io.tmpdir="$D/tmp" -cp "$dcp" com.ash.drishti.plugin.duckdb.DuckDbLoader "$D/build/bulk-trades.tar" "$D/drishti.duckdb"
+  rm -f "$D/build/banking.tar" "$D/build/bulk-trades.tar"
   du -sh "$D"/lake "$D"/files "$D"/drishti.duckdb
 }
 

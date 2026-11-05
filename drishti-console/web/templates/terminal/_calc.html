@@ -14,12 +14,12 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {# Calc: Python in the browser (docs/guides/USER_GUIDE.md). A slide-in drawer like F9's, opened with Alt+C. The code
-   runs in Pyodide inside a Web Worker (calc-worker.js); reads go through this page with the user's session. #}
+   runs in Pyodide inside a Web Worker (drishti_calc-worker.js); reads go through this page with the user's session. #}
 <aside class="raw calc-drawer" id="calcDrawer" aria-label="Calc: Python" hidden
        data-calc data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-label="{{ vm.title.id }}"
        data-runtime="{{ calc.runtime.base if calc.runtime.installed else '' }}"
        data-runtime-version="{{ calc.runtime.version or '' }}"
-       data-worker="/static/js/calc-worker.js?v={{ ASSET_V }}"
+       data-worker="/static/js/drishti_calc-worker.js?v={{ ASSET_V }}"
        data-module="/static/calc/drishti.py?v={{ ASSET_V }}"
        data-max-rows="{{ calc.maxColumnRows or '' }}">
   <header><strong>Calc</strong> <span class="mono">Python · {{ vm.title.id }}</span>

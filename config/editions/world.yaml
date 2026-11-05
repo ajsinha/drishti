@@ -47,7 +47,6 @@ features:                                # presets of existing switches (config/
   pyconsole: off
   python: off
   designer: off
-  studio: off
   build: off
   forms: on                              # query by form: companies, funds and economies by their fields
   datamap: on
@@ -76,7 +75,7 @@ menus:                                   # by id, per menu; a menu not named sho
 home:
   landing: desk                          # the default landing: desk (A, World desk), explorer (B, Explorer), map (C, World map); today: the product's Home
   landings: [desk, explorer, map]        # the landings a person may pick on Home (their choice is kept in their settings)
-  template: home/world_landing.html      # the page that draws them (it names its script and style: world-landing.js, world-landing.css)
+  template: home/world_landing.html      # the page that draws them (it names its script and style: drishti_world-landing.js, drishti_world-landing.css)
   titles: { desk: World desk, explorer: Explorer, map: World map }
   landing-by-role: {}                    # {role: landing}: read, wins over the person's choice when set; wired to role-based access later
   chips: [ECON USA, ECG ECG-WLD, REGE REGE-US-NY, USEQ MSFT, SIC 3674, IDX SP500, LEIC US, FUND QQQ, TOPIC RATES, NEWS rates, DATAMAP]   # B's chips

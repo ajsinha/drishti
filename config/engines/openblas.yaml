@@ -1,0 +1,23 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/engines/openblas.yaml: linear algebra on the bundled OpenBLAS (docs/admin/OPERATIONS.md section 2.1). Read at start, imported by
+# application.yaml after the jar's copy of this file, so a key here wins over the shipped one and application.local.yaml and the environment
+# win over both (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only; every other key is
+# edited here. Off: the pure-Java path, chosen (no warning); on: OpenBLAS after its self-test, else the switch is refused in words.
+drishti:
+  engines:
+    openblas:
+      enabled: ${DRISHTI_OPENBLAS_ENABLED:false}  # off as shipped (the Java kernels, the same figures); on: linear algebra on the bundled OpenBLAS on this node (live, no restart) for faster many-scope sums
+      changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)

@@ -230,6 +230,28 @@ schemas:
       - { key: kinds, type: list, default: "what the plugin reports", meaning: "The kinds it serves" }
       - { key: settings, type: map, default: "{}", meaning: "The plugin's settings, as the tables above (every plugin, the shared tls.* and proxy.*, the plugin's own)" }
       - { key: "settings.*", type: map, meaning: "One setting of the plugin" }
+  lake-file:
+    area: connectors
+    title: "A lake file: `config/lakes/<lake>.yaml` (docs/guides/LAKE_GUIDE.md)"
+    file: "config/lakes/*.yaml"
+    files: ["config/lakes/*.yaml", "config/lakes.examples/*/*.yaml"]
+    applies: every writer and reader of the lake
+    change: "live for connectors (read again when a file changes); the next load for writers"
+    keys:
+      - { key: lake, type: string, meaning: "The lake's name: the file's name; connectors (lake:), loads (target.lake) and lake build (--lake) refer to it" }
+      - { key: description, type: string, default: "", meaning: "A line about the lake" }
+      - { key: format, type: string, default: delta, meaning: "delta or iceberg; a table may say otherwise" }
+      - { key: root, type: string, meaning: "Where the lake is: a local folder, s3://bucket/prefix, or mem://<store> for an in-memory store" }
+      - { key: storage, type: map, default: "{}", meaning: "How to reach the root (region, endpoint, path-style ...): the platform's role or ${ENV} references, never a secret" }
+      - { key: "storage.*", type: string, meaning: "One storage setting (given to a Delta connector as s3.<key>)" }
+      - { key: catalog, type: map, default: none, meaning: "Iceberg's catalog: type none (path tables), rest, glue or s3tables, with its settings (uri, warehouse, token as ${ENV})" }
+      - { key: "catalog.*", type: string, meaning: "One catalog setting" }
+      - { key: memory, type: map, default: none, meaning: "An in-memory store's (root: mem://<store>) max-mb (the hard cap), chunk-kb, contract, owner, idle-trim-minutes" }
+      - { key: "memory.*", type: string, meaning: "One memory setting of the store" }
+      - { key: defaults, type: map, default: "{}", meaning: "Table keys that apply to every table unless it says otherwise" }
+      - { key: "defaults.*", type: string, meaning: "One table key's default" }
+      - { key: tables, type: map, default: "{}", meaning: "The tables by <domain>.<kind> (or <domain>.<table> with kind: when a kind has several tables)" }
+      - { key: "tables.*", type: map, meaning: "One table's entry: kind, path, format, partition-by (after business_date, which is always first; at most four), promote, vectors, flatten, id, date, latest-by, load-mode (replace or append), sort-by, file-rows, row-group-rows, file-size-mb, row-group-mb, compression, vector-compression, retention, maintenance, time-travel, properties" }
   pack:
     area: packs
     title: "`pack.yaml`"
@@ -334,6 +356,8 @@ schemas:
       - { key: routes, type: map, default: "{}", meaning: "kind -> the connector that answers it (drishti.sources.routes)" }
       - { key: "routes.<name>", type: string, meaning: "One kind's connector" }
       - { key: ingest, type: map, default: "{}", meaning: "For the tools only (drishti.py data ingest --pack, lake build --pack, pack check): each kind's id and business-date fields; ignored by the server" }
+      - { key: lake, type: map, default: none, meaning: "The tables the pack recommends (docs/guides/LAKE_GUIDE.md section 7): lake.tables, the shape of a lake file's tables:, copied into a lake file the first time a writer meets the kind; its Delta and Iceberg templates name lake: and lake-tables:" }
+      - { key: "lake.*", type: map, meaning: "lake.tables.<domain>.<table>: one recommended entry (kind, path, partition-by, promote, vectors, sort-by, file-rows, row-group-rows, flatten, ...)" }
       - { key: "ingest.<name>", type: map, meaning: "One kind" }
       - { key: "ingest.<name>.key", type: string, meaning: "Its id field" }
       - { key: "ingest.<name>.date", type: string, default: BUSINESS_DATE, meaning: "Its business-date field" }
@@ -381,6 +405,8 @@ schemas:
 env:
   # the packs' connectors (config/packs/<pack>/pack.yaml)
   - { name: DRISHTI_DELTA_ROOT, by: packs, default: "./data/delta", sets: "every pack's delta connectors' root", meaning: "Root of every pack's Delta Lake connector" }
+  - { name: DRISHTI_LAKES_DIR, by: server, default: "./config/lakes", sets: "drishti.lakes.dir", meaning: "The lake folder: one config/lakes/<lake>.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/LAKE_GUIDE.md)" }
+  - { name: DRISHTI_DATALOAD_LAKE, by: server, default: demo, sets: "drishti.dataload.lake", meaning: "The lake (config/lakes/<lake>.yaml) the data inbox writes to; a folder is the older form" }
   - { name: DRISHTI_DELTA_ENGINE, by: packs, default: native, sets: "delta engine", meaning: "native, hadoop or auto, for every Delta connector without its own engine" }
   - { name: DRISHTI_LAKE_ENABLED, by: packs, default: "true", sets: "the packs' data connectors", meaning: "false switches every pack's data connector off (the demo samples still answer)" }
   - { name: DRISHTI_CONSOLE_RELAY_KEY, by: console, default: ~, sets: "the live-channel relay key", meaning: "Signs the relay messages between the console's workers and, with live.relay.across_hosts, between consoles: the same secret on every console (the launcher makes one for its own workers when it is not set; CLUSTER_DEPLOYMENT.md section 9.4)" }
@@ -439,6 +465,8 @@ env:
   - { name: DRISHTI_TOKEN, by: tools, default: ~, sets: "drishti.py", meaning: "A personal API token for the command line and tools (secret)" }
   - { name: DRISHTI_WAIT_BUSY, by: tools, default: "false", sets: "drishti.py", meaning: "1: every command waits when the server is busy (503 DRS-9501 to DRS-9505, busy protection) for its Retry-After and tries again, three times at most (data get --wait does the same for one download)" }
   - { name: DRISHTI_LAKE_MEMORY_MB, by: tools, default: "", sets: "the launchers' -XX:MaxDirectMemorySize", meaning: "The in-memory lake stores' caps in MB, summed; when set, the launchers raise the JVM's direct-memory limit by it instead of reading the stores from the configuration (tools/lake/memory_caps.py)" }
+  - { name: DRISHTI_ARROW_EXCHANGE_MB, by: tools, default: "512", sets: "the launchers' -XX:MaxDirectMemorySize and -Ddrishti.arrow.max-bytes", meaning: "Arrow's budget in MB beyond Arrow Flight: the compute workers' exchange and BI answers sent as Arrow (the official Arrow library's buffers are direct memory); added to the direct-memory limit with Flight's memory.total-mb when its engine is on (tools/lake/memory_caps.py)" }
+  - { name: DRISHTI_ARROW_MB, by: tools, default: "512", sets: "the Windows and ECS launchers' -XX:MaxDirectMemorySize and -Ddrishti.arrow.max-bytes", meaning: "Arrow's whole budget in MB, used as it is (an ECS task has no Python: set it to what tools/lake/memory_caps.py --arrow-only prints); unset, the Windows launcher asks memory_caps.py and the ECS entrypoint uses 512" }
   - { name: DRISHTI_LAKE_MEMORY_, by: tools, default: "", sets: "one store's cap for the launchers", meaning: "Prefix: DRISHTI_LAKE_MEMORY_<STORE>_MAX_MB overrides one in-memory lake store's max-mb when the launchers compute the direct-memory limit (tools/lake/memory_caps.py)" }
   - { name: DRISHTI_DRAIN_TOKEN, by: tools, default: ~, sets: "rolling.py, deploy/bin/drishti-node.sh", meaning: "An administrator's personal API token with the node:drain scope: the stop hooks and the rolling upgrade runner drain a server with it (secret; else DRISHTI_DRAIN_TOKEN_FILE, else DRISHTI_TOKEN)" }
   - { name: DRISHTI_DRAIN_WAIT, by: tools, default: "90", sets: "deploy/bin/drishti-node.sh", meaning: "Seconds the stop hook waits for safeToStop after the drain (ECS on Fargate: at most 120 s for the whole stop)" }
@@ -470,5 +498,12 @@ env:
   - { name: DRISHTI_SHOTS_LAKE_END, by: tools, default: ~, sets: "screenshot tools", meaning: "The last business date of the lake they build" }
   - { name: DRISHTI_SHOTS_INDEX, by: tools, default: ~, sets: "screenshot tools", meaning: "Which shots of a tutorial to take" }
   - { name: DRISHTI_SHOTS_DELTA_ROOT, by: tools, default: ~, sets: "screenshot tools", meaning: "The lake they read" }
+  - { name: DRISHTI_T35_USER, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 35's shots: the reader who signs in (default the administrator)" }
+  - { name: DRISHTI_T35_PASSWORD, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 35's shots: that reader's password" }
+  - { name: DRISHTI_T35_TOKEN_FILE, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 35's shots: a scratch file the new token is kept in for the later steps" }
+  - { name: DRISHTI_T36_WORK, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 36's shots: the working folder of the data inbox run" }
+  - { name: DRISHTI_T37_USER, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 37's shots: the function's author who signs in" }
+  - { name: DRISHTI_T37_PASSWORD, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 37's shots: that author's password" }
+  - { name: DRISHTI_T37_FN, by: tools, default: "fn:you/wret@1", sets: "screenshot tools", meaning: "Tutorial 37's shots: the saved function shown" }
   - { name: DRISHTI_ARTIFACTS_SERVER_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The server port of the artifacts screenshots" }
   - { name: DRISHTI_ARTIFACTS_CONSOLE_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The console port of the artifacts screenshots" }

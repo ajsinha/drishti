@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.cassandra;
 
+import com.ash.drishti.common.RowFeed;
 import com.ash.drishti.api.LoadGuard;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.datastax.oss.driver.api.core.cql.BatchStatement;
@@ -25,12 +26,7 @@ import com.datastax.oss.driver.api.core.cql.Statement;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -67,7 +63,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * refuses to load into tables that lack them. The keyspace is the administrator's; {@code --create-keyspace RF} makes one
  * with SimpleStrategy for a development node. {@code --ttl-days N} writes with a TTL (and {@code --create} gives new tables
  * one-day time windows); {@code --keep-days N} then drops each loaded kind's days older than its newest N on or before
- * {@code --as-of}, refusing to drop more than half of them without {@code --force-drop} ({@link LoadGuard}).
+ * the newest business date of the load, refusing to drop more than half of them without {@code --force-drop} ({@link LoadGuard}).
  */
 public final class CassandraLoader implements AutoCloseable {
 
@@ -171,8 +167,7 @@ public final class CassandraLoader implements AutoCloseable {
         long t0 = System.nanoTime();
         Result r;
         try (CassandraLoader loader = new CassandraLoader(o, guard);
-             BufferedReader in = args[0].equals("-") ? new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8), 1 << 20)
-                     : Files.newBufferedReader(Path.of(args[0]), StandardCharsets.UTF_8)) {
+             RowFeed in = RowFeed.open(args[0], RowFeed.asOf(args))) {
             r = loader.load(in);
         }
         double s = (System.nanoTime() - t0) / 1e9;
@@ -228,18 +223,20 @@ public final class CassandraLoader implements AutoCloseable {
 
     // ---- loading -------------------------------------------------------------------------------------------------------------
 
-    /** Loads every line, then makes each day's new generation current and drops the old ones (and, with {@code --keep-days}, old days). */
-    public Result load(BufferedReader in) throws IOException {
+    /** Loads every line, each row under the business date the load rules give it ({@link RowFeed}), then makes each day's new generation
+     *  current and drops the old ones (and, with {@code --keep-days}, old days). */
+    public Result load(RowFeed in) throws IOException {
         JsonFactory json = new JsonFactory();
         CqlSession session = store.session();
         long n = 0;
         long t0 = System.nanoTime();
         String line;
-        while ((line = in.readLine()) != null && failed.get() == null) {
+        while ((line = in.next()) != null && failed.get() == null) {
             if (line.isBlank()) {
                 continue;
             }
-            Row row = parse(json, line);
+            Row read = parse(json, line);
+            Row row = new Row(read.domain(), read.kind(), read.id(), in.place(read.domain() + "/" + read.kind(), read.date()), read.doc(), read.columns());
             if (!guard.accept(row.date(), row.domain() + " " + row.kind() + " " + row.id())) {
                 continue;
             }
@@ -249,6 +246,7 @@ public final class CassandraLoader implements AutoCloseable {
             }
         }
         new ArrayList<>(buffers.keySet()).forEach(k -> flush(session, k));
+        in.notes().forEach(note -> System.err.println("cassandra: " + note));
         inFlight.acquireUninterruptibly(permits);                            // every write has finished
         inFlight.release(permits);
         if (failed.get() != null) {
@@ -546,10 +544,10 @@ public final class CassandraLoader implements AutoCloseable {
                 }
             }
         }
-        if (kind == null || id == null || date == null || doc == null) {
-            throw new IOException("a line without kind, id, date or doc: " + (line.length() > 200 ? line.substring(0, 200) + "…" : line));
+        if (kind == null || id == null || doc == null) {
+            throw new IOException("a line without kind, id or doc: " + (line.length() > 200 ? line.substring(0, 200) + "…" : line));
         }
-        return new Row(domain == null ? "drishti" : domain, kind, id, LocalDate.parse(date), doc, columns);
+        return new Row(domain == null ? "drishti" : domain, kind, id, date == null ? null : LocalDate.parse(date), doc, columns);
     }
 
     /** Closes the session. */

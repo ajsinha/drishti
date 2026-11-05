@@ -100,7 +100,7 @@ ISDA, GMRA or GMSLA master agreement with its key elections.
 
 **To review (4)**
 
-- required inferred from 100% coverage in 42 documents (18 samples and 24 test-data documents (data/testdata/counterparty-risk/agreement/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/agreement/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 42 documents (18 samples and 24 test-data documents (data/testdata/counterparty-risk/agreement/agreement.2026-07-08.jsonl.gz, data/testdata/counterparty-risk/agreement/agreement.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'legal-docs' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: GOVERNING_LAW: confirm they are closed lists.
@@ -175,7 +175,7 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 
 **To review (5)**
 
-- required inferred from 100% coverage in 42 documents (18 samples and 24 test-data documents (data/testdata/counterparty-risk/csa/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/csa/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 42 documents (18 samples and 24 test-data documents (data/testdata/counterparty-risk/csa/csa.2026-07-08.jsonl.gz, data/testdata/counterparty-risk/csa/csa.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'legal-docs' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: MARGIN_TYPE, ELIGIBLE[].ASSET: confirm they are closed lists.
@@ -275,7 +275,7 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 
 **To review (9)**
 
-- required inferred from 100% coverage in 218 documents (66 samples and 152 test-data documents (data/testdata/counterparty-risk/netting-set/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/netting-set/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 218 documents (66 samples and 152 test-data documents (data/testdata/counterparty-risk/netting-set/netting-set.2026-07-08.jsonl.gz, data/testdata/counterparty-risk/netting-set/netting-set.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'xva-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - NET_MTM is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
@@ -346,7 +346,7 @@ PFE limit by tenor bucket for a counterparty, with utilisation.
 
 **To review (5)**
 
-- required inferred from 100% coverage in 66 documents (18 samples and 48 test-data documents (data/testdata/counterparty-risk/credit-limit/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/credit-limit/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 66 documents (18 samples and 48 test-data documents (data/testdata/counterparty-risk/credit-limit/credit-limit.2026-07-08.jsonl.gz, data/testdata/counterparty-risk/credit-limit/credit-limit.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'limits-system' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: STATUS, BUCKETS[].BUCKET: confirm they are closed lists.
@@ -420,7 +420,7 @@ Credit, debit and funding valuation adjustments with sensitivities.
 
 **To review (6)**
 
-- required inferred from 100% coverage in 215 documents (66 samples and 149 test-data documents (data/testdata/counterparty-risk/cva/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/cva/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 215 documents (66 samples and 149 test-data documents (data/testdata/counterparty-risk/cva/cva.2026-07-08.jsonl.gz, data/testdata/counterparty-risk/cva/cva.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'xva-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: COMPONENTS[].NAME, SENSITIVITIES[].FACTOR, SENSITIVITIES[].BUMP: confirm they are closed lists.
@@ -495,7 +495,7 @@ Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
 
 **To review (8)**
 
-- required inferred from 100% coverage in 142 documents (66 samples and 76 test-data documents (data/testdata/counterparty-risk/sa-ccr/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/sa-ccr/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 142 documents (66 samples and 76 test-data documents (data/testdata/counterparty-risk/sa-ccr/sa-ccr.2026-07-08.jsonl.gz, data/testdata/counterparty-risk/sa-ccr/sa-ccr.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'capital-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - EAD is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
@@ -563,7 +563,7 @@ Collateral held and posted under a CSA, by asset, after haircuts.
 
 **To review (5)**
 
-- required inferred from 100% coverage in 218 documents (66 samples and 152 test-data documents (data/testdata/counterparty-risk/collateral-balance/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/collateral-balance/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 218 documents (66 samples and 152 test-data documents (data/testdata/counterparty-risk/collateral-balance/collateral-balance.2026-07-08.jsonl.gz, data/testdata/counterparty-risk/collateral-balance/collateral-balance.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'collateral-system' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - POSITIONS[].DIRECTION: the data holds Held, which the glossary's values (Posted, Received) do not describe: correct the data or the glossary.
@@ -635,7 +635,7 @@ A variation or initial margin call and its settlement status.
 
 **To review (6)**
 
-- required inferred from 100% coverage in 284 documents (132 samples and 152 test-data documents (data/testdata/counterparty-risk/margin-call/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/margin-call/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 284 documents (132 samples and 152 test-data documents (data/testdata/counterparty-risk/margin-call/margin-call.2026-07-08.jsonl.gz, data/testdata/counterparty-risk/margin-call/margin-call.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'collateral-system' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: STATUS, EVENTS[].AT, EVENTS[].EVENT, EVENTS[].BY: confirm they are closed lists.
@@ -698,7 +698,7 @@ Initial margin by risk class and product class.
 
 **To review (4)**
 
-- required inferred from 100% coverage in 42 documents (18 samples and 24 test-data documents (data/testdata/counterparty-risk/simm/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/simm/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 42 documents (18 samples and 24 test-data documents (data/testdata/counterparty-risk/simm/simm.2026-07-08.jsonl.gz, data/testdata/counterparty-risk/simm/simm.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'margin-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: RISK_CLASSES[].RISK_CLASS: confirm they are closed lists.
@@ -769,7 +769,7 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 
 **To review (3)**
 
-- required inferred from 100% coverage in 2 documents (1 samples and 1 test-data documents (data/testdata/counterparty-risk/simulation-run/cob-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 2 documents (1 samples and 1 test-data documents (data/testdata/counterparty-risk/simulation-run/simulation-run.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 
@@ -845,7 +845,7 @@ One trade's mark to market on every path of a simulation run at one grid date, i
 
 **To review (6)**
 
-- required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/counterparty-risk/exposure-path/cob-2026-09-30.part-001.jsonl.gz, data/testdata/counterparty-risk/exposure-path/cob-2026-09-30.part-002.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/counterparty-risk/exposure-path/exposure-path.tar, data/testdata/counterparty-risk/exposure-path/exposure-path.tar)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, ASSET_CLASS: confirm they are closed lists.

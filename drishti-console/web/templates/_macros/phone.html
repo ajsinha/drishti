@@ -45,5 +45,5 @@
 {%- endmacro %}
 
 {% macro back(request) -%}
-<span hidden data-phone-aware></span>{# phone.js: this page is drawn per device #}{% if phone_everything(request) %}<p class="ph-back"><button type="button" class="ph-btn" data-phone-back><i class="bi bi-phone" aria-hidden="true"></i> Phone view</button> <span>You are seeing all of this page.</span></p>{% endif %}
+<span hidden data-phone-aware></span>{# drishti_phone.js: this page is drawn per device #}{% if phone_everything(request) %}<p class="ph-back"><button type="button" class="ph-btn" data-phone-back><i class="bi bi-phone" aria-hidden="true"></i> Phone view</button> <span>You are seeing all of this page.</span></p>{% endif %}
 {%- endmacro %}

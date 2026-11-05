@@ -15,14 +15,13 @@
  */
 package com.ash.drishti.plugin.file;
 
+import com.ash.drishti.common.RowFeed;
 import com.ash.drishti.api.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,14 +57,14 @@ public final class JsonlLoader {
         Map<Path, BufferedWriter> open = new LinkedHashMap<>(OPEN, 0.75f, true);   // least recently written first
         long n = 0;
         long t0 = System.nanoTime();
-        try (BufferedReader in = file.equals("-") ? new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8), 1 << 20)
-                : Files.newBufferedReader(Path.of(file), StandardCharsets.UTF_8)) {
+        try (RowFeed in = RowFeed.open(file, RowFeed.asOf(args))) {        // the load rules: each row's business date (RowFeed)
             String line;
-            while ((line = in.readLine()) != null) {
+            while ((line = in.next()) != null) {
                 if (line.isBlank()) {
                     continue;
                 }
                 String[] where = envelope(json, line);
+                where[2] = in.place(where[0] + "/" + where[1], where[2] == null ? null : java.time.LocalDate.parse(where[2])).toString();
                 if (!guard.accept(java.time.LocalDate.parse(where[2]), where[0] + "/" + where[2] + "/" + where[1])) {
                     continue;
                 }
@@ -93,6 +92,7 @@ public final class JsonlLoader {
                     System.err.printf("files: %,d rows%n", n);
                 }
             }
+            in.notes().forEach(note -> System.err.println("files: " + note));
         }
         for (BufferedWriter w : open.values()) {
             w.close();
@@ -105,7 +105,7 @@ public final class JsonlLoader {
         guard.finish();
     }
 
-    /** {domain, kind, date} of a row, read without the document. */
+    /** {domain, kind, date} of a row (its own date, null without one), read without the document. */
     private static String[] envelope(JsonFactory json, String line) throws IOException {
         String[] out = new String[3];
         try (JsonParser p = json.createParser(line)) {
@@ -121,8 +121,8 @@ public final class JsonlLoader {
                 }
             }
         }
-        if (out[0] == null || out[1] == null || out[2] == null || !out[2].matches("\\d{4}-\\d{2}-\\d{2}")) {
-            throw new IOException("a row needs domain, kind and an ISO date: " + line.substring(0, Math.min(120, line.length())));
+        if (out[0] == null || out[1] == null || out[2] != null && !out[2].matches("\\d{4}-\\d{2}-\\d{2}")) {
+            throw new IOException("a row needs domain and kind (and its own date, when it has one, ISO): " + line.substring(0, Math.min(120, line.length())));
         }
         return out;
     }

@@ -91,6 +91,13 @@ final class RowParser {
     private final Bytes key = new Bytes(256);
     /** After an accepted line: its business date (days since the epoch), its id and the id's hash. */
     int epochDay;
+    /**
+     * The date the current file's name carries (days since the epoch; {@link #NO_FILE_DAY}: none), set per chunk by the parser thread:
+     * it is the business date of every row of the file; {@link #otherDate} says the row's own date field held another date.
+     */
+    int fileDay = NO_FILE_DAY;
+    static final int NO_FILE_DAY = Integer.MIN_VALUE;
+    boolean otherDate;
     String id;
     long idHash;
     /** A second, independent hash of the id: two ids are one record's copies only when both hashes agree. */
@@ -105,7 +112,7 @@ final class RowParser {
         this.plan = plan;
         Map<String, Integer> slots = new HashMap<>();
         keySlot = slot(slots, plan.key, false);
-        dateSlot = plan.date == null || plan.asOf != null ? -1 : slot(slots, plan.date, false);
+        dateSlot = plan.date == null ? -1 : slot(slots, plan.date, false);
         latestSlot = plan.latestBy == null ? -1 : slot(slots, plan.latestBy, false);
         promotedSlots = new int[plan.promoted.size()];
         for (int i = 0; i < promotedSlots.length; i++) {
@@ -444,8 +451,15 @@ final class RowParser {
             case Cap.FLOAT -> PyJson.idOfFloat(k.num);
             default -> k.text;
         };
-        if (plan.asOf != null) {
+        otherDate = false;
+        if (fileDay != NO_FILE_DAY) {                      // the file's business date (FileDates.decide): the row's own date is only counted
+            epochDay = fileDay;
+            LocalDate own = dateSlot < 0 ? null : day(caps[dateSlot]);
+            otherDate = own != null && own.toEpochDay() != fileDay;
+        } else if (plan.asOf != null) {
             epochDay = (int) plan.asOf.toEpochDay();
+        } else if (dateSlot < 0) {
+            return "no business date";
         } else {
             Cap d = caps[dateSlot];
             LocalDate day = day(d);
@@ -456,6 +470,7 @@ final class RowParser {
             epochDay = (int) day.toEpochDay();
         }
         if (badVector != null) {
+            otherDate = false;
             return "the vector field '" + badVector + "' is not a list of numbers";
         }
         byte[] idBytes = id.getBytes(StandardCharsets.UTF_8);

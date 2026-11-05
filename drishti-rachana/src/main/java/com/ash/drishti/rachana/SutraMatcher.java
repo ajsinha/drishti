@@ -34,11 +34,18 @@ public final class SutraMatcher {
     private final SutraRegistry registry;
     private final ElCompiler compiler;
     private final Formats formats;
+    private final UnderConstruction underConstruction;
 
     public SutraMatcher(SutraRegistry registry, ElCompiler compiler, Formats formats) {
+        this(registry, compiler, formats, UnderConstruction.none());
+    }
+
+    /** A matcher whose Sutras show the registry's items as it says ({@link UnderConstruction}: hidden, or "Under construction"). */
+    public SutraMatcher(SutraRegistry registry, ElCompiler compiler, Formats formats, UnderConstruction underConstruction) {
         this.registry = registry;
         this.compiler = compiler;
         this.formats = formats;
+        this.underConstruction = underConstruction == null ? UnderConstruction.none() : underConstruction;
     }
 
     public Optional<Sutra> match(String kind, DataNode doc) {
@@ -46,10 +53,15 @@ public final class SutraMatcher {
         for (Sutra s : registry.forKind(kind)) {
             String where = s.match().where();
             if (where == null || Values.truthy(compiler.compile(where).eval(ctx))) {
-                return Optional.of(s);
+                return Optional.of(underConstruction.apply(s));
             }
         }
         return Optional.empty();
+    }
+
+    /** The under-construction registry this matcher applies. */
+    public UnderConstruction underConstruction() {
+        return underConstruction;
     }
 
     /**

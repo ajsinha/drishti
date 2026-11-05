@@ -49,7 +49,7 @@ Sutras, the data in a Delta lake partitioned by business date, a checksummed bun
 `README.txt` with your real values filled in.
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz \
+drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
     --kind trade --match PRODUCT_TYPE --name my-bank
 ```
 
@@ -527,8 +527,8 @@ drishti-console/.venv/bin/python tools/drishti.py sutra gen data/testdata/trades
 Two things decide whether it does what you expect:
 
 1. **The kind comes from the file name** unless you say otherwise. `trade.jsonl` is kind `trade`; the test data's
-   `snapshot-2026-07-08.jsonl.gz` would be kind `snapshot-2026-07-08`, and the per-kind form `--key trade=TRADE_ID` would not
-   apply to it. When every line is a trade, pass **`--kind trade`**; then the plain forms `--key TRADE_ID` and
+   `trade_endur.2026-07-08.jsonl.gz` is kind `trade_endur` (the name's first part, the load rules' table), and the per-kind form
+   `--key trade=TRADE_ID` would not apply to it. When every line is a trade, pass **`--kind trade`**; then the plain forms `--key TRADE_ID` and
    `--match PRODUCT_TYPE` are enough. (Loader envelope lines carry their own `kind` and need no `--kind`.)
 2. **Use the field name exactly as it is in the data** (`PRODUCT_TYPE`, `product_type` and `productType` are three different fields). A
    misspelt match field puts every trade in one group without the field, so you would get a single Sutra; add
@@ -636,7 +636,7 @@ splits JSON Lines files into groups by the values of the `--match` fields, write
 `tests/<sutra>/cases.jsonl` (cases `sample-1` ...), and runs `sutra lint`. On 400 Endur trades of the committed test data:
 
 ```bash
-mkdir -p /tmp/gen && zcat data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz | head -400 > /tmp/gen/trade.jsonl
+mkdir -p /tmp/gen && zcat data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz | head -400 > /tmp/gen/trade.jsonl
 drishti-console/.venv/bin/python tools/drishti.py sutra gen /tmp/gen --kind trade --key TRADE_ID \
     --match SOURCE_SYSTEM,PRODUCT_TYPE --date TRADE_DATE --fallback --out /tmp/genout
 ```
@@ -686,11 +686,11 @@ guard.
 
 ### `sutra design --schema` and `pack make --schema`
 
-Both take **JSON Schema** (draft 2020-12 or 07, JSON or YAML) and run the rules of [Schema to pack](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema): kind, key, links, labels, formats, match column, strip, About text,
+Both take **JSON Schema** (draft 2020-12 or 07, JSON or YAML) and run the rules of [Schema to pack](SCHEMA_TO_PACK_GUIDE.md): kind, key, links, labels, formats, match column, strip, About text,
 tests. `sutra design --schema FILE... [--kind K] [--out DIR]` prints the Sutras (or writes `<out>/<kind>/<name>.v1.sutra.yaml` and `<out>/tests/`); `pack make --schema FILE|DIR... [DATA] --name N`
 writes the same folder as `pack make` below, for many kinds, with synthetic samples (named `sample-synthetic-N.json`) where no real documents are given. A JSON Lines file or folder after `--schema` is data.
 Flags: `--key`, `--date`, `--match` (as `kind=FIELD`; `--match none`), `--mnemonic`, `--strip N`, `--count N` (design) / `--samples N` (make), `--code`, `--description`, `--connector`, `--yes` (never ask which
-field is the key). The example schemas are in `docs/guides/examples/schemas/`; real output is in [Schema to pack](DATA_GUIDE.md#the-command-line).
+field is the key). The example schemas are in `docs/guides/examples/schemas/`; real output is in [Schema to pack](SCHEMA_TO_PACK_GUIDE.md#the-command-line).
 
 ### `pack make`: everything in one folder
 
@@ -700,7 +700,7 @@ those tools (`tools/packmake.py` only chooses the key and the date, lays the fol
 `config/drishti-site.yaml`, `run-server.sh`, `run-server.ps1` and `MANIFEST.json`).
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank
+$ drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank
 read 4407 trade document(s)
 key:   TRADE_ID  (named <kind>_id, present and unique in all 4407 documents)
 date:  START_DATE  (the date-valued field with the fewest distinct dates (24); pass --date to choose another)
@@ -830,7 +830,7 @@ On the MUREX snapshot of the test data (it has no business-date field, so no `--
 is written), with `--out` outside `config/packs` so nothing of the server's changes:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/trades/murex/snapshot-2026-07-08.jsonl.gz --name murex-book \
+drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/trades/murex/trade_murex.2026-07-08.jsonl.gz --name murex-book \
     --title "MUREX book" --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/murex-book
 ```
 
@@ -1086,12 +1086,12 @@ A worked run on the test data: a pack made from the ENDUR snapshot (five product
 priority set to 15, the About sentence of the kind written), then the data grows: the CALYPSO snapshot joins it.
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --name mb \
+$ drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --name mb \
     --kind trade --match PRODUCT_TYPE --key TRADE_ID --out data/build/mb
 4407 documents, 1 kind(s), 5 group(s)
 ...
-$ drishti-console/.venv/bin/python tools/drishti.py pack regenerate data/build/mb data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz \
-    data/testdata/trades/calypso/snapshot-2026-07-08.jsonl.gz --dry-run
+$ drishti-console/.venv/bin/python tools/drishti.py pack regenerate data/build/mb data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
+    data/testdata/trades/calypso/trade_calypso.2026-07-08.jsonl.gz --dry-run
 pack regenerate --dry-run: data/build/mb
   add         sutras/trade/trade-abs.v1.sutra.yaml
   add         sutras/trade/trade-amort-bond.v1.sutra.yaml
@@ -1115,8 +1115,8 @@ The priority edit is kept, the About edit is merged with the regenerated skeleto
 conflict, here the generator now writes `priority: 20` on the line you changed to 15:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack regenerate data/build/mb data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz \
-    data/testdata/trades/calypso/snapshot-2026-07-08.jsonl.gz --priority 20
+$ drishti-console/.venv/bin/python tools/drishti.py pack regenerate data/build/mb data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
+    data/testdata/trades/calypso/trade_calypso.2026-07-08.jsonl.gz --priority 20
 pack regenerate: data/build/mb
   add         sutras/trade/trade-abs.v1.sutra.yaml
   ...
@@ -1389,7 +1389,7 @@ needs. Memory is bounded: `--max-distinct` (default 10,000) values are tracked p
 `>=10000` and the field cannot be a key or a match column.
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py data profile data/testdata/trades/murex/snapshot-2026-07-08.jsonl.gz --kind trade
+$ drishti-console/.venv/bin/python tools/drishti.py data profile data/testdata/trades/murex/trade_murex.2026-07-08.jsonl.gz --kind trade
 data profile: 1 file(s), 4198 document(s), 1 kind(s)
 
 == trade: 4198 document(s), 107 field(s)
@@ -1421,7 +1421,7 @@ data profile: 1 file(s), 4198 document(s), 1 kind(s)
     PORTFOLIO                    0.963  coverage 100%, 15 values over 4198 documents (average 279.9 per value, evenness 0.93; largest group BOOK-RATES-3 = 526)
     TT_BOOK                      0.963  coverage 100%, 15 values over 4198 documents (average 279.9 per value, evenness 0.93; largest group BOOK-RATES-3 = 526)
   suggested:
-    python3 tools/drishti.py pack make data/testdata/trades/murex/snapshot-2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --key TRADE_ID --date SOURCE_UPDATE_TIME --name trade-pack
+    python3 tools/drishti.py pack make data/testdata/trades/murex/trade_murex.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --key TRADE_ID --date SOURCE_UPDATE_TIME --name trade-pack
 ```
 
 Here `SOURCE_UPDATE_TIME` (the extract's time stamp: one date in the file, the snapshot's business day) is the right business date, and
@@ -1439,9 +1439,12 @@ candidate; exit 0, or 2 when nothing could be read.
 ### `data ingest`: your JSON Lines into a lake or files
 
 `data ingest` (`tools/ingest_jsonl.py`) writes JSON Lines documents into the dated store a pack reads. Inputs are folders of
-`*.jsonl` or single files, repeatable with `--from`. With `--pack` the domain, the columns promoted in the lake and the key and
-date fields come from the pack's `pack.yaml` (including the `ingest:` block); without it give `--domain`, `--date` and
-`--columns`.
+`*.jsonl` or single files, repeatable with `--from`. With `--pack` the domain, the columns promoted in the lake and the key field come
+from the pack's `pack.yaml` (including the `ingest:` block); without it give `--domain` (and `--key`, `--columns`). Each file goes under
+its business date by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): `--as-of`, else its `.ready` file's
+`business-date:`, else the date in its name (`trade.2026-11-03.jsonl`, kind `trade`), else the business today; the run says which, in
+`lake build`'s words (*trade.2026-11-03.jsonl: business date 2026-11-03 from the file name*). `--date FIELD` (or the pack's ingest
+`date`) is optional: it names the field the documents carry their own date in, and rows that say another date are only counted.
 
 **`drishti.py data ingest --help`**
 
@@ -1451,6 +1454,7 @@ usage: drishti.py data ingest [-h] --from SRC [-r] [--pack PACK]
                               [--date DATE] [--columns COLUMNS] [--lake LAKE]
                               [--store {delta,files}] [--root ROOT]
                               [--mode {overwrite-dates,append,replace}]
+                              [--as-of AS_OF] [--date-from {auto,name}]
                               [--dry-run] [--batch-rows BATCH_ROWS]
 
 data ingest: write JSON Lines documents into a Delta lake or the File connector's layout (tools/ingest_jsonl.py)
@@ -1465,13 +1469,25 @@ options:
   --kind KIND           kind for every document (default: file stem or
                         envelope kind)
   --key KEY             id field: FIELD or kind=FIELD,... (default id)
-  --date DATE           business-date field: FIELD or kind=FIELD,...
+  --date DATE           optional: the field the documents carry their own date
+                        in (FIELD or kind=FIELD,...); only counted when it
+                        differs from the file's business date, never the date
+                        they are stored under
   --columns COLUMNS     promoted columns without --pack: a,b,c
   --lake LAKE           the Delta root (DRISHTI_DELTA_ROOT) for --store delta
   --store {delta,files}
                         delta (default) or the File connector's layout
   --root ROOT           the files root (DRISHTI_FILES_ROOT) for --store files
   --mode {overwrite-dates,append,replace}
+  --as-of AS_OF         YYYY-MM-DD: the business date of every document (over
+                        a file's .ready business-date and its name's date;
+                        without any, the business today)
+  --date-from {auto,name}
+                        auto (default): --as-of, else the file's .ready
+                        business-date, else its name's date
+                        (trade.2026-11-03.jsonl: kind trade), else the
+                        business today; name: a file whose name carries no
+                        date is refused
   --dry-run
   --batch-rows BATCH_ROWS
 
@@ -1482,6 +1498,12 @@ examples:
 
 `--mode overwrite-dates` (the default) replaces only the dates in your input, so re-running a day is safe; `append` adds;
 `replace` rebuilds the kind. Documents without a date or id are counted and left out, never silently dropped.
+
+**The business date from outside.** Each file is one kind and one business date: `--as-of`, else its `.ready` file's `business-date:`,
+else its name's date (`trade.2026-11-03.jsonl`: kind `trade`, 2026-11-03), else the business today. A document's own date field never
+decides; documents whose own date differs are loaded and counted (*1 row of trade.2026-11-03.jsonl carried another date in AS_OF; loaded
+under 2026-11-03*). `--date-from name` refuses a file whose name carries no date. `--mode` defaults to `append`. `lake build` and the data
+inbox follow the same rules ([DATA_GUIDE.md section 2.8](DATA_GUIDE.md#8-feeds-the-table-and-business-date-of-a-file)).
 
 The curves of the test data into the files store of the `curves-demo` pack made [above](#pack-new-a-complete-pack-from-json-lines)
 (its `ingest:` block gives the key `CURVE_ID` and the date `AS_OF`; `--kind` because the file names are not kinds):
@@ -1543,11 +1565,11 @@ The default mode of a watcher is `append` (each file is a new batch); use `--mod
 days, so a corrected file replaces its dates instead of adding to them. Real output:
 
 ```bash
-python3 tools/drishti.py data ingest --watch drop --once --domain demo --key id --date bd --store files --root files --done-dir done
+python3 tools/drishti.py data ingest --watch drop --once --domain demo --key id --store files --root files --done-dir done
 2026-10-05T16:44:48 INFO  watching drop for *.jsonl (mode append, state files/.drishti-ingest-state.json)
-2026-10-05T16:44:48 INFO  new file trade.jsonl (72 bytes): ingesting
-2026-10-05T16:44:48 INFO  trade.jsonl: 2 row(s) ingested
-2026-10-05T16:44:48 INFO  trade.jsonl: moved to done/trade.jsonl
+2026-10-05T16:44:48 INFO  new file trade.2026-10-05.jsonl (72 bytes): ingesting
+2026-10-05T16:44:48 INFO  trade.2026-10-05.jsonl: 2 row(s) ingested
+2026-10-05T16:44:48 INFO  trade.2026-10-05.jsonl: moved to done/trade.2026-10-05.jsonl
 2026-10-05T16:44:48 INFO  pass finished: 1 file(s) ingested, 0 with problems
 ```
 
@@ -1636,7 +1658,7 @@ Exit `0`, `1` when the server refuses (an internal-only dataset where it is refu
 On a machine with internet, captures the news-and-markets pack's real quotes (the twenty companies, a year of daily bars) and
 headlines (the companies and the fifteen topics) through Drishti's own `yfinance` and `news` connectors, on a scratch server it starts
 from the built jar (`--server URL` uses yours), two seconds apart with backoff on 429, into
-`data/testdata/news-and-markets/{quote,news}/snapshot-<date>.jsonl.gz`; `lake demo` then builds them into the tables `news-store`
+`data/testdata/news-and-markets/{quote,news}/<kind>.<date>.jsonl.gz` (`quote.2026-10-18.jsonl.gz`); `lake demo` then builds them into the tables `news-store`
 serves offline (`DRISHTI_OFFLINE=true`). `--dry-run` lists the 91 ids without fetching. Everything else:
 [data/testdata/README.md](../../data/testdata/README.md#the-market-snapshot-news-and-markets-offline).
 
@@ -1697,19 +1719,22 @@ python3 tools/drishti.py data load --store files data/demo-files --trades 1000 -
 bash tools/load-files.sh data/demo-files --trades 1000 --days 2
 ```
 
-A real small run (200 trades, one day) into a scratch folder; these scripts also refresh the shipped packs' sample files and the
-data folder (`DRISHTI_DATA_DIR`, else the repository's `data/`, which is not tracked). Each loader's heap is `DRISHTI_LOADER_HEAP`
-(default `4g`); its input file (`banking.jsonl`) is written under the data folder and removed after the load:
+A real small run (200 trades, one day) into a scratch folder; the scripts write under the data folder (`DRISHTI_DATA_DIR`, else
+the repository's `data/`, which is not tracked) and never rewrite the shipped packs' samples. Each loader's heap is
+`DRISHTI_LOADER_HEAP` (default `4g`). Its input is loader rows by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)):
+`make_data.py` and `bulk_trades.py` write tars of `<kind>/<YYYY-MM-DD>/` folders under `data/build/loader-rows/`, removed after the
+load, and the loader files each row under its folder's date and says so:
 
 ```text
-wrote 1791 documents into 5 packs' samples
 feeds: data/feeds/fixing.jsonl
-jsonl: 17910 rows in data/banking.jsonl (tools/load-postgres.sh and tools/load-aerospike.sh load them)
-files: wrote 17,910 rows into 460 files under data/demo-files in 0 s
+jsonl: 25430 rows in data/build/loader-rows/banking.tar (<kind>/<YYYY-MM-DD>/rows.jsonl; tools/load-postgres.sh, load-aerospike.sh and the other store loaders load it)
+files: banking.tar: business dates 2026-09-17 to 2026-09-30 (10 dates) from the archive's folders
+files: wrote 25,430 rows into 450 files under data/demo-files in 1 s
 
-200 of 200 trade-days written (1 s)
-200 trade-days as JSON lines in 1 s
-files: wrote 200 rows into 1 files under data/demo-files in 1 s
+200 of 200 trade-days written (3 s)
+200 trade-days as JSON lines in 3 s
+files: bulk-trades.tar: business date 2026-09-30 from the archive's folders
+files: wrote 200 rows into 1 files under data/demo-files in 0 s
 ```
 
 **The demo lakes with a source system in Iceberg.** `tools/build_demo_lakes.py` (the demo lakes from start to finish) takes
@@ -1949,7 +1974,7 @@ and whether the token is accepted, with the exact id, scopes and expiry of the t
 ```
 $ python3 tools/drishti.py doctor --server http://localhost:18971
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.9.11.b-exec.jar (version 2.5.0)
+GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.9.11.c-exec.jar (version 2.5.0)
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
@@ -2187,7 +2212,17 @@ drishti.py var show BANK --confidence 95                           VaR at 95% (o
 drishti.py var parts DESK:RATES --horizon 10d --method sum         parts, path, history, tree and capture take the same lens
 drishti.py var show BANK --stressed                                stressed VaR: the date's stress scenario set, in USD (213,637,794 on the demo)
 drishti.py var show NODE:MGMT~BANK --stressed --horizon 10d --method sum   the same at 10 days; a node's 12-week average printed too
+drishti.py var show DESK:DESK-RATES                                prints the parametric line under the historical one (PVAR's cross-check, never official)
+drishti.py var show BANK --no-parametric                           leaves it out (parametric=false)
+drishti.py var parts DESK:DESK-RATES --matrix                      the parametric components (they add up to the parametric VaR) and the parts' correlations
+drishti.py var parts DESK:DESK-RATES --no-parametric               the historical columns only
+drishti.py var playground DESK:DESK-RATES --measure parametric     the Parametric tab: the parametric steps; with --xlsx FILE the workbook gains its Parametric tab
 ```
+
+While parametric VaR is on (`drishti.var.parametric.enabled`), `show` prints `parametric VaR 58,409,229 USD = z·σ − μ = 2.3263 ×
+24,792,909 − (-732,297)   ES 58,693,229   fat-tail gap +16,224,451 (+27.8%)   a cross-check, not official` for `DESK:DESK-RATES` on the
+demo data; `parts` adds the *Param. component* and *ρ* columns and, with `--matrix`, the correlation matrix and the engine that computed
+it (`openblas` or `java`); `--json` carries the API's `parametric` block ([tutorial 43](../tutorials/43-parametric-var-beside-historical.md)).
 
 `--horizon`, `--method`, `--confidence` and `--es-confidence` read any answer through a lens: the headline then says
 `horizon    10-day (sum)` and `VaR 99%   274,544,283 USD   (the 5th worst of 500 overlapping windows)` on the demo data; limit use is
@@ -3237,7 +3272,7 @@ The Java `sutra` commands keep their own 0/1/2 and pass them through.
 
 | You see | Why | Do |
 |---|---|---|
-| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-2.9.11.b-exec.jar` |
+| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-2.9.11.c-exec.jar` |
 | `drishti: jar not found: ...` | `--jar` / `DRISHTI_JAR` names a missing file | fix the path |
 | `drishti: cannot run java: ...; pass --java or set JAVA_HOME` | no JDK found | set `JAVA_HOME` to a JDK 21+ |
 | `drishti: PyYAML is not installed: run with uv run --with pyyaml ...` | the system Python has no PyYAML | use `uv run --with pyyaml`, or a venv |
@@ -3291,17 +3326,17 @@ empty PyCharm to a run configuration for each common task.
 | **Script path** (not *Module name*; switch the toggle on the left of the field) | `<repo>/tools/drishti.py` |
 | **Python interpreter** | the `drishti-console/.venv` interpreter from 14.1 |
 | **Working directory** | **the repository root**: relative paths in *Parameters* resolve from here |
-| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.9.11.b-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
+| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.9.11.c-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 
 Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` and
 `DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `drishti-server/target/*-exec.jar` itself.
 
 | Name | **Parameters** |
 |---|---|
-| `drishti pack make` | `pack make data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force` |
-| `drishti data profile` | `data profile data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz` |
-| `drishti pack regenerate` | `pack regenerate data/build/my-bank/pack/my-bank data/testdata/trades/endur/changes-2026-09-23.jsonl.gz --dry-run` |
-| `drishti sutra gen` | `sutra gen data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --out data/build/sutras` |
+| `drishti pack make` | `pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force` |
+| `drishti data profile` | `data profile data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz` |
+| `drishti pack regenerate` | `pack regenerate data/build/my-bank/pack/my-bank data/testdata/trades/endur/trade_endur.2026-09-23.jsonl.gz --dry-run` |
+| `drishti sutra gen` | `sutra gen data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --out data/build/sutras` |
 | `drishti data ingest` | `data ingest --from your-new-days/ --pack data/build/my-bank/pack/my-bank --lake data/build/my-bank/data/delta --dry-run` (remove `--dry-run` to write) |
 | `drishti pack check` | `pack check data/build/my-bank/pack/my-bank --strict --junit data/build/reports` |
 | `drishti server packs load` | `server packs load my-bank --server http://localhost:18480` with `DRISHTI_TOKEN` set |
@@ -3351,7 +3386,7 @@ The format is one `<configuration>` element in a `ProjectRunConfigurationManager
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
-    <option name="PARAMETERS" value="pack make data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force" />
+    <option name="PARAMETERS" value="pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force" />
     <method v="2" />
   </configuration>
 </component>

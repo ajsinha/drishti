@@ -23,7 +23,7 @@ The filings browser: the latest SEC filings of the covered companies, of every f
 
 |  |  |
 |---|---|
-| Path | `data/testdata/us-equities/filing-feed/` + `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/us-equities/filing-feed/` + `filing-feed.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `FEED` |
 | Date field | none in the record: a snapshot of public data, its file named by the capture date; the demo lake serves the same records on every business date (partition `business_date`) |

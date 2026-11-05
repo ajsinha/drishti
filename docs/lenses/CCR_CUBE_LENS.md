@@ -882,7 +882,7 @@ commands:
   allow: [CCUBE, MCUBE, EXP, XWIF, XRUN, XOFC, CPTY, GRP, NSET, NSMTM, CPMTM, LIM, CSA, COLL, MC, AGR, TRD, CTRD, LEI, CDS]
   words: { CCUBE: on, MCUBE: on, EXP: on, VAR: on, SMAT: off, BI: on, FUNC: on, WHAT: on, FORM: off, DATAMAP: off, RUPAKA: off }
 features: { cube: on, exposure: on, var: on, bi: edition, embed: on, layouts: on, workspaces: on, alerts: on,
-            calc: off, pyconsole: off, python: off, designer: off, studio: off, build: off, forms: off, datamap: off, ai: off }
+            calc: off, pyconsole: off, python: off, designer: off, build: off, forms: off, datamap: off, ai: off }
 menus:
   views: [terminal, search, functions, ccube, mcube, exposure, var, reports, workspaces]
   placeholder: "CCUBE BANK, CCUBE GROUP:GRP-ALDERSHOT, CCUBE NSET:NS-ALDERSHOT-LDN, EXP CPTY:CP-ALDERSHOT …  then <GO>"

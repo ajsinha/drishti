@@ -30,7 +30,6 @@ from __future__ import annotations
 
 import argparse
 import functools
-import gzip
 import importlib.util
 import json
 import re
@@ -82,11 +81,18 @@ def _yaml(path: Path):
     return _parsed(str(path.resolve()), path.stat().st_mtime_ns) if path.is_file() else None
 
 
+def _packlake():
+    import importlib
+    if str(Path(__file__).resolve().parent) not in sys.path:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+    return importlib.import_module("packlake")
+
+
 def manifests(packs_dir: Path = PACKS) -> "OrderedDict[str, dict]":
     """Pack name to its manifest (pack.yaml), sorted by name."""
     out = OrderedDict()
     for d in sorted(p for p in Path(packs_dir).iterdir() if (p / "pack.yaml").is_file()):
-        out[d.name] = _yaml(d / "pack.yaml") or {}
+        out[d.name] = _packlake().view(_yaml(d / "pack.yaml") or {})   # a template in the lake form read with its pack's lake: entries
     return out
 
 
@@ -165,21 +171,22 @@ def testdata_sets(pack: str, kind: str, testdata: Path = TESTDATA) -> list[dict]
     return [d for d in y.get("datasets") or [] if d.get("pack") == pack and d.get("kind") == kind]
 
 
-def _dataset_files(d: dict, testdata: Path) -> list[Path]:
-    """A dataset's files to read: the first day's and the last day's (snapshot then changes), or its parts, or its snapshot."""
+def _dataset_files(d: dict, testdata: Path) -> list:
+    """A dataset's files to read (tools/lake/feedfiles.py parts: a dated file, or a tar's member): the first day's and the last day's
+    (snapshot then changes), or a dated dataset's newest date first (the data as it is today), or a snapshot's newest date."""
+    sys.path.insert(0, str(ROOT / "tools" / "lake"))
+    import feedfiles
     folder = Path(testdata) / d["folder"]
+    got = feedfiles.read_table(folder) if folder.is_dir() else {}
+    if not got:
+        return []
     if d.get("days"):
-        days = d["days"] if len(d["days"]) < 2 else [d["days"][0], d["days"][-1]]
-        return [folder / f for day in days for f in day.get("files") or []]
-    if d.get("files"):
-        # a dated dataset of several business dates (the VaR data's three): the newest date's files first, the data as it is today
-        last = str(d.get("last-date") or "")
-        return [folder / f for f in sorted(d["files"], key=lambda f: last not in f)] if last else [folder / f for f in d["files"]]
-    if d.get("parts"):
-        return [folder / f for f in d["parts"]]
+        days = [x["day"] for x in (d["days"] if len(d["days"]) < 2 else [d["days"][0], d["days"][-1]])]
+        return [p for day in days for p in got.get(day, [])]
+    newest = max(got)
     if d.get("snapshot"):
-        return [folder / d["snapshot"]]
-    return []
+        return got[newest]
+    return [p for day in [newest] + [x for x in got if x != newest] for p in got[day]]
 
 
 def read_documents(pack_dir: Path, kind: str, testdata: Path = TESTDATA) -> tuple[list[dict], list[dict], list[str]]:
@@ -194,17 +201,16 @@ def read_documents(pack_dir: Path, kind: str, testdata: Path = TESTDATA) -> tupl
     for d in sets:
         budget = MAX_TESTDATA // len(sets)
         got = 0
-        for f in _dataset_files(d, testdata):
-            if got >= budget or not f.is_file():
+        for part in _dataset_files(d, testdata):
+            if got >= budget:
                 continue
-            read.append(str(f.relative_to(ROOT)) if f.is_relative_to(ROOT) else str(f))
-            with gzip.open(f, "rt", encoding="utf-8") as fh:
-                for line in fh:
-                    if got >= budget:
-                        break
-                    if line.strip():
-                        docs.append(json.loads(line))
-                        got += 1
+            f = part.path
+            read.append((str(f.relative_to(ROOT)) if f.is_relative_to(ROOT) else str(f)) + (f"!/{part.member}" if part.member else ""))
+            for line in part.lines():
+                if got >= budget:
+                    break
+                docs.append(json.loads(line))
+                got += 1
     return samples, docs, read
 
 

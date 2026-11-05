@@ -170,7 +170,7 @@ licensing shapes what they may show (section 6).
 
 ## 4. The landings
 
-One template, `home/market_landing.html`, with `market-landing.js` and `market-landing.css`, a **violet accent**. The figures are worked out
+One template, `home/market_landing.html`, with `drishti_market-landing.js` and `drishti_market-landing.css`, a **violet accent**. The figures are worked out
 by `drishti-console/core/market_landing.py` from the pack's own answers (search, raw documents, the business date, one field's history
 through `/api/v1/history/{kind}/{id}/series`), read as the person, cached two minutes per person, and served by `/api/home/market/desk`,
 `/api/home/market/moves` and `/api/home/market/quality` (`404 DRS-4023` unless the edition or lens shows `CRV`)
@@ -635,7 +635,7 @@ row.
 [Open the mock-up](mockups/market/market-landing.html). **Chosen:** the footer's proposal, adopted: A the default, B and C behind links;
 C built with the quality checks the data supports (its *PROPOSED* badge on the mock-up) ([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market)).
 A violet accent on the terminal look. **Code:** [`market_landing.html`](../../drishti-console/web/templates/home/market_landing.html),
-[`market-landing.js`](../../drishti-console/web/static/js/market-landing.js), [`market-landing.css`](../../drishti-console/web/static/css/market-landing.css),
+[`drishti_market-landing.js`](../../drishti-console/web/static/js/drishti_market-landing.js), [`drishti_market-landing.css`](../../drishti-console/web/static/css/drishti_market-landing.css),
 [`market_landing.py`](../../drishti-console/core/market_landing.py) (`/api/home/market/desk`, `/api/home/market/moves`,
 `/api/home/market/quality`), [`market.yaml`](../../config/editions/market.yaml). Curve names and shapes are the demo's; other figures
 illustrative.
@@ -645,7 +645,7 @@ chips and quick cards run their commands; hovering a move shows its dates and th
 and the lens links sit above every landing. **States.** *Loading:* `…`. *Error:* `Not available: <reason>` in the panel. *Not given by
 the data*, said in place: a change only when both days hold real data; fewer than ten moves ranks by the day's move (the σ column then
 reads *since*); no history: says so and ranks nothing; on the demo every quality check is clean ("no exceptions"). **Phone** (600 px and
-below): one column ([`market-landing.css`](../../drishti-console/web/static/css/market-landing.css)); the mock-up drew no phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md section 8](../architecture/MOBILE_DISPLAY.md#8-beyond-sutra-pages)): the command line, the tiles and the first card in full, the other tables at a glance (five rows, *Show all*), charts, maps and the quick links under *More on this page*.
+below): one column ([`drishti_market-landing.css`](../../drishti-console/web/static/css/drishti_market-landing.css)); the mock-up drew no phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md section 8](../architecture/MOBILE_DISPLAY.md#8-beyond-sutra-pages)): the command line, the tiles and the first card in full, the other tables at a glance (five rows, *Show all*), charts, maps and the quick links under *More on this page*.
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|
@@ -694,9 +694,9 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 | X1 | Bar | `DRISHTI Market`; the command line; menus **Views · Curves · Volatility · FX · Credit · BI · Help** | the edition's top menus by id, in order (`menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | **Built**: `menus.top` in [`market.yaml`](../../config/editions/market.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens) (replaces the menus part of M1) |
 | X2 | Curves menu | Curves `CRV`; Repo `REPO`; Fixings `FIX`; Inflation `INF` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X3 | Volatility menu | Swaption volatility `IRV`; Cap volatility `CPV`; FX volatility `FXV`; Equity volatility `EQV`; Commodity volatility `CMDV` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
-| X4 | FX menu | Spot `FX`; Forwards `FXF`; Volatility `FXV` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
+| X4 | FX menu | Spot `FX`; Forwards `FXF` (FX volatility `FXV`: the Volatility menu) | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X5 | Credit menu | CDS curves `CDS`; Bonds `BND` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
-| X6 | Phone form | below 640 px the subject menus fold into one **Market** menu, a column per subject (option C) | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; the bar's template and [`phone.js`](../../drishti-console/web/static/js/phone.js) put it in below 640 px | tap the lens menu, then an item | **Built** |
+| X6 | Phone form | below 640 px the subject menus fold into one **Market** menu, a column per subject (option C) | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; the bar's template and [`drishti_phone.js`](../../drishti-console/web/static/js/drishti_phone.js) put it in below 640 px | tap the lens menu, then an item | **Built** |
 
 On a phone (below 640 px) the subject menus fold into one menu named after the lens, first in the bar (option C's form, [menus/C](mockups/menus/C.html)): a column per subject, each item 44 px high with its command beside it; a wider screen keeps the subject menus in the bar, and the folded menu is not drawn there. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
 

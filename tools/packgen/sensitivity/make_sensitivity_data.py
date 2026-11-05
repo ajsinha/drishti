@@ -51,6 +51,8 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "var"))
+sys.path.insert(0, str(ROOT / "tools" / "lake"))
+import feedfiles as FF  # noqa: E402  (tools/lake/feedfiles.py: our dated feed files)
 import factor_dictionary as D  # noqa: E402
 import factors as F  # noqa: E402
 import positions as P  # noqa: E402
@@ -81,22 +83,23 @@ def read_terms(testdata: Path, cob: str) -> list[dict]:
     """The live trades of the business date with their terms, from the committed VaR inputs (vectors left out)."""
     rows = []
     for kind in ("pnl-vector", "scenario-pv"):
-        for f in sorted((testdata / PACK / kind).glob(f"cob-{cob}*.jsonl.gz")):
-            with gzip.open(f, "rt", encoding="utf-8") as fh:
-                for line in fh:
-                    if line.strip():
-                        d = json.loads(line)
-                        d.pop("PNL", None)
-                        d.pop("SCENARIO_PV", None)
-                        rows.append(d)
+        for part in FF.read_table(testdata / PACK / kind).get(cob, []):
+            if part.label.rsplit("/", 1)[-1].startswith("stress-"):     # the stress set's files: not the date's positions
+                continue
+            for line in part.lines():
+                d = json.loads(line)
+                d.pop("PNL", None)
+                d.pop("SCENARIO_PV", None)
+                rows.append(d)
     return sorted(rows, key=lambda d: str(d["TRADE_ID"]))
 
 
 def cob_of(testdata: Path) -> str:
-    files = sorted((testdata / PACK / "scenario-set").glob("cob-*.jsonl.gz"))
-    if not files:
-        raise SystemExit(f"no scenario set under {testdata / PACK / 'scenario-set'}: run tools/packgen/var/make_var_data.py first")
-    return files[-1].name[4:14]
+    folder = testdata / PACK / "scenario-set"
+    days = FF.days(folder) if folder.is_dir() else []
+    if not days:
+        raise SystemExit(f"no scenario set under {folder}: run tools/packgen/var/make_var_data.py first")
+    return days[-1]
 
 
 def years_between(a: str, b: str | None) -> float:
@@ -327,8 +330,8 @@ def gz_bytes(rows: list[dict]) -> bytes:
 def files(testdata: Path) -> dict[Path, bytes]:
     """The files to write, relative to the test-data folder."""
     cob = cob_of(testdata)
-    return {Path(PACK) / "position-sensitivity" / f"cob-{cob}.jsonl.gz": gz_bytes(records(read_terms(testdata, cob), cob)),
-            Path(PACK) / "risk-factor" / f"cob-{cob}.jsonl.gz": gz_bytes(dictionary_rows(cob))}
+    return {Path(PACK) / "position-sensitivity" / FF.plain_name("position-sensitivity", cob): gz_bytes(records(read_terms(testdata, cob), cob)),
+            Path(PACK) / "risk-factor" / FF.plain_name("risk-factor", cob): gz_bytes(dictionary_rows(cob))}
 
 
 def write(out: Path, testdata: Path | None = None) -> list[Path]:
@@ -337,7 +340,7 @@ def write(out: Path, testdata: Path | None = None) -> list[Path]:
     for rel, data in files(testdata or out).items():
         folder = (out / rel).parent
         folder.mkdir(parents=True, exist_ok=True)
-        for old in folder.glob("*.jsonl.gz"):
+        for old in FF.files(folder):
             old.unlink()
         (out / rel).write_bytes(data)
         written.append(out / rel)
@@ -353,7 +356,7 @@ def datasets(out: Path, written: list[Path]) -> list[dict]:
     entries = []
     for f in sorted(written, key=lambda x: x.parent.name):
         kind = f.parent.name
-        cob = f.name[4:14]
+        cob = FF.days(f)[0]
         with gzip.open(f, "rt", encoding="utf-8") as fh:
             documents = sum(1 for _ in fh)
         entries.append({"folder": f"{PACK}/{kind}", "pack": PACK, "kind": kind, "connector": "risk-store", "key": KEYS[kind],

@@ -23,10 +23,10 @@ A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the
 
 |  |  |
 |---|---|
-| Path | `data/testdata/trades/endur/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/trades/endur/` + `trade_endur.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `TRADE_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_SUB_TYPE`, `PRODUCT_GROUP`, `TRADE_STATUS`, `TRADE_VERSION`, `BUY_SELL_CODE`, `CURRENCY`, `QUANTITY`, `TRADE_DATE`, `MATURITY_DATE`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID`, `NOTIONAL`, `INDEX_NAME` |
 | Vector fields | none |
 | Partitioned by | `business_date`, `PRODUCT_TYPE` |
@@ -51,11 +51,9 @@ The example is from the **ComSwap** record.
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
 | `SOURCE_SYSTEM` | string | required | The booking system the trade comes from: ENDUR, CALYPSO or MUREX (upper case). | one of `CALYPSO`, `ENDUR`, `MUREX` | `"ENDUR"` |
-| `SOURCE_UPDATE_TIME` | timestamp (ISO-8601) | optional (filled in 60% of rows) | When the booking system last changed the trade, ISO-8601 UTC; moves with every amendment (empty on an ENDUR trade never amended). | — | `"2026-07-20T17:13:00Z"` |
 | `TRADE_DATE` | date (YYYY-MM-DD) | required | The date the trade was agreed. | — | `"2025-09-01"` |
 | `TRADE_ID` | string | required | The record's id (the business key) | links to `trade` | `"1005000"` |
 | `TRADE_STATUS` | string | required | Life-cycle status: NEW, VALIDATED, AMENDED, MATURED or CANCELLED. A cancellation is a new version with CANCELLED, never a deleted row; VaR counts only live statuses. | one of `AMENDED`, `CANCELLED`, `MATURED`, `NEW`, `VALIDATED` | `"VALIDATED"` |
-| `TRADE_ACTION` | string | optional (filled in 60% of rows) | The last action on the trade: NEW or AMEND (empty on ENDUR when none). | one of `AMEND`, `NEW` | `"AMEND"` |
 | `TRADE_VERSION` | string | optional (filled in 88% of rows) | The booking system's version of the trade, as text; it goes up by one with every amendment (empty when the system gives none). | — | `"3"` |
 | `TRANSACTION_ID` | string | required | The booking system's number of this version of the trade: it changes with every amendment while TRADE_ID stays. Text. | — | `"700059841"` |
 | `QUANTITY` | number | required | The trade's quantity: units of the commodity in the leg's PRICE_UNIT for a commodity trade, else the notional or face amount in CURRENCY. Unsigned: the side is BUY_SELL_CODE. | unit: PRICE_UNIT or CURRENCY | `5400.0` |
@@ -373,6 +371,8 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
+| `SOURCE_UPDATE_TIME` | timestamp (ISO-8601) | optional (filled in 60% of rows) | When the booking system last changed the trade, ISO-8601 UTC; moves with every amendment (empty on an ENDUR trade never amended). | — | `"2026-07-20T17:13:00Z"` |
+| `TRADE_ACTION` | string | optional (filled in 60% of rows) | The last action on the trade: NEW or AMEND (empty on ENDUR when none). | one of `AMEND`, `NEW` | `"AMEND"` |
 | `LEGS[].LEG_ECONOMIC_TYPE` | string | optional (filled in 40% of `LEGS[]` entries) | CALYPSO and MUREX: Pay or Receive (whether the bank pays or receives the leg's flows); ENDUR: what the leg is (Fixed price, Floating price, Basis, Fee), empty when not given. | one of `Basis`, `Fee`, `Fixed price`, `Floating price`, `Pay`, `Receive` | `"Fixed price"` |
 | `LEGS[].LEASE_CURRENCY` | string | optional (filled in 90% of `LEGS[]` entries) | ENDUR: the currency a metal lease or the leg's financing is in; empty otherwise. | seen: `USD`, `EUR`, `CAD` | `"EUR"` |
 | `LEGS[].PRICE_UNIT` | string | optional (filled in 89% of `LEGS[]` entries) | The unit the leg's quantities and prices are in (ENDUR BBL, MT, MMBTU, MWH, OZ, BU; MUREX USD/bbl, USD/oz,...); empty for money. | seen: `MT`, `BBL`, `MWH`, `OZ`, `MMBTU`, `BU` | `"MWH"` |
@@ -530,6 +530,8 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
+| `SOURCE_UPDATE_TIME` | timestamp (ISO-8601) | optional (filled in 60% of rows) | When the booking system last changed the trade, ISO-8601 UTC; moves with every amendment (empty on an ENDUR trade never amended). | — | `"2026-07-15T17:52:00Z"` |
+| `TRADE_ACTION` | string | optional (filled in 60% of rows) | The last action on the trade: NEW or AMEND (empty on ENDUR when none). | one of `AMEND`, `NEW` | `"AMEND"` |
 | `PACKAGE_ID` | string | optional (filled in 17% of rows) | The package the trade was dealt in with others (ENDUR PKG-nnnn); empty when none. | — | `"PKG-0235"` |
 | `LEGS[].LEASE_CURRENCY` | string | optional (filled in 90% of `LEGS[]` entries) | ENDUR: the currency a metal lease or the leg's financing is in; empty otherwise. | seen: `USD`, `EUR`, `CAD` | `"EUR"` |
 | `LEGS[].PRICE_UNIT` | string | optional (filled in 89% of `LEGS[]` entries) | The unit the leg's quantities and prices are in (ENDUR BBL, MT, MMBTU, MWH, OZ, BU; MUREX USD/bbl, USD/oz,...); empty for money. | seen: `MT`, `BBL`, `MWH`, `OZ`, `MMBTU`, `BU` | `"MWH"` |
@@ -543,17 +545,17 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "ENDUR",
-  "SOURCE_UPDATE_TIME": "2026-07-10T17:03:00Z",
-  "TRADE_DATE": "2025-05-05",
+  "SOURCE_UPDATE_TIME": "",
+  "TRADE_DATE": "2025-01-15",
   "INPUT_DATE": "",
-  "TRADE_ID": "1001420",
-  "TRADE_STATUS": "NEW",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "4",
-  "TRANSACTION_ID": "700024041",
-  "PACKAGE_ID": "",
-  "QUANTITY": 200000.0,
-  "PRICE": 4.0078,
+  "TRADE_ID": "1000640",
+  "TRADE_STATUS": "MATURED",
+  "TRADE_ACTION": "",
+  "TRADE_VERSION": "3",
+  "TRANSACTION_ID": "700016240",
+  "PACKAGE_ID": "PKG-0041",
+  "QUANTITY": 50000.0,
+  "PRICE": 77.6956,
   "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "Commodity",
   "PRODUCT_SUB_TYPE": "COMM-WARRANTS-INV",
@@ -561,31 +563,31 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-LUMEN",
-  "COUNTERPARTY_UEN": "UEN0100333",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "CH",
-  "ORIGINAL_COUNTERPARTY": "CP-CASCADIA",
-  "ORIGINAL_COUNTERPARTY_UEN": "UEN0100148",
+  "COUNTERPARTY": "CP-VAULTGUARD",
+  "COUNTERPARTY_UEN": "UEN0100703",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "US",
+  "ORIGINAL_COUNTERPARTY": "CP-TOKAI",
+  "ORIGINAL_COUNTERPARTY_UEN": "UEN0100629",
   "INTERNAL_EXTERNAL_CODE": "Portfolio",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-COMM-2",
-  "TRADER_ID": "TRDR-TBRENNAN",
-  "TRADER_FIRST_NAME": "T.",
-  "TRADER_LAST_NAME": "Brennan",
-  "START_DATE": "2025-07-01",
-  "MATURITY_DATE": "2026-04-30",
-  "REGISTRY_DELIVERY_DATE": "2025-07-01",
+  "PORTFOLIO": "BOOK-COMM-3",
+  "TRADER_ID": "TRDR-FROSSI",
+  "TRADER_FIRST_NAME": "F.",
+  "TRADER_LAST_NAME": "Rossi",
+  "START_DATE": "2025-03-01",
+  "MATURITY_DATE": "2025-12-31",
+  "REGISTRY_DELIVERY_DATE": "2025-03-01",
   "CURRENCY": "USD",
   "DELIVERY_VERSUS_PAYMENT": "YES",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
   "NY_CURVE_FLAG": "",
-  "VAULT_LOCATION_ALLOCATION": "Vault London B",
-  "PRECIOUS_METAL_FLAG": "",
+  "VAULT_LOCATION_ALLOCATION": "Vault Toronto A",
+  "PRECIOUS_METAL_FLAG": "Y",
   "TT_GROUP": "",
   "TT_BOOK": "",
-  "LEASE_PERPETUITY_FLAG": "Y",
+  "LEASE_PERPETUITY_FLAG": "N",
   "SETTLEMENT_DATE": "",
   "LEGS": [
     {
@@ -595,8 +597,8 @@ Its fields beyond the shared table:
       "CURRENCY": "USD",
       "LEASE_CURRENCY": "USD",
       "FLOAT_SPREAD": "",
-      "PRICE_UNIT": "BU",
-      "NOTIONAL": 801560.0,
+      "PRICE_UNIT": "BBL",
+      "NOTIONAL": 3884780.0,
       "DISCOUNT_INDEX": "",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -611,32 +613,32 @@ Its fields beyond the shared table:
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
       "NUM_PROFILE_REC": "",
-      "DAILY_VOLUME": "20000",
+      "DAILY_VOLUME": "5000",
       "INDEX": {
-        "NAME": "IDX-CORN-M1",
+        "NAME": "IDX-BRENT-M1",
         "GROUP": "",
         "SUB_GROUP": ""
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "5036133",
+          "FLOW_ID": "5015500",
           "FLOW_TYPE": "",
-          "NOTIONAL": 80156.0,
-          "RATE": "4.0078",
+          "NOTIONAL": 388478.0,
+          "RATE": "77.6956",
           "FLOAT_SPREAD": "",
-          "START_DATE": "2025-07-01",
-          "END_DATE": "2025-07-31",
-          "PAYMENT_DATE": "2025-08-02",
-          "RATE_DETERMINATION_DATE": "2025-07-31",
-          "FIRST_RESET_DATE": "2025-07-01",
+          "START_DATE": "2025-03-01",
+          "END_DATE": "2025-03-31",
+          "PAYMENT_DATE": "2025-04-02",
+          "RATE_DETERMINATION_DATE": "2025-03-31",
+          "FIRST_RESET_DATE": "2025-03-01",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
               "RESET_ID": "",
               "ACCRUAL": "",
-              "START_DATE": "2025-07-01",
-              "END_DATE": "2025-07-31",
+              "START_DATE": "2025-03-01",
+              "END_DATE": "2025-03-31",
               "RESET_DATE": "",
               "ACCRUAL_START_DATE": "",
               "ACCRUAL_END_DATE": "",
@@ -654,8 +656,8 @@ Its fields beyond the shared table:
       "CURRENCY": "USD",
       "LEASE_CURRENCY": "USD",
       "FLOAT_SPREAD": "",
-      "PRICE_UNIT": "BU",
-      "NOTIONAL": 801560.0,
+      "PRICE_UNIT": "BBL",
+      "NOTIONAL": 3884780.0,
       "DISCOUNT_INDEX": "",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -670,7 +672,7 @@ Its fields beyond the shared table:
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
       "NUM_PROFILE_REC": "",
-      "DAILY_VOLUME": "25000",
+      "DAILY_VOLUME": "6250",
       "INDEX": {
         "NAME": "",
         "GROUP": "",
@@ -678,24 +680,24 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "5036143",
+          "FLOW_ID": "5015510",
           "FLOW_TYPE": "",
-          "NOTIONAL": 100195.0,
-          "RATE": "4.0078",
+          "NOTIONAL": 485597.5,
+          "RATE": "77.6956",
           "FLOAT_SPREAD": "",
-          "START_DATE": "2025-07-01",
-          "END_DATE": "2025-07-31",
-          "PAYMENT_DATE": "2025-08-02",
-          "RATE_DETERMINATION_DATE": "2025-07-31",
-          "FIRST_RESET_DATE": "2025-07-01",
+          "START_DATE": "2025-03-01",
+          "END_DATE": "2025-03-31",
+          "PAYMENT_DATE": "2025-04-02",
+          "RATE_DETERMINATION_DATE": "2025-03-31",
+          "FIRST_RESET_DATE": "2025-03-01",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
               "RESET_ID": "",
               "ACCRUAL": "",
-              "START_DATE": "2025-07-01",
-              "END_DATE": "2025-07-31",
+              "START_DATE": "2025-03-01",
+              "END_DATE": "2025-03-31",
               "RESET_DATE": "",
               "ACCRUAL_START_DATE": "",
               "ACCRUAL_END_DATE": "",
@@ -710,18 +712,18 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "2",
-      "EVENT_ID": "9010660",
+      "EVENT_ID": "9004733",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "CASH_SETTLEMENT",
       "PAYMENT_TYPE": "Commodity payment",
-      "EVENT_DATE": "2025-08-02",
-      "AMOUNT": 100195.0,
+      "EVENT_DATE": "2025-04-02",
+      "AMOUNT": 485597.5,
       "CURRENCY": "USD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 8 more elements of the same shape"
+    "… 7 more elements of the same shape"
   ]
 }
 ```
@@ -730,13 +732,15 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `REGISTRY_DELIVERY_DATE` | date (YYYY-MM-DD) | optional (filled in 6% of rows) | The day a registered instrument is delivered (ENDUR warehouse warrants and emissions); empty otherwise. | — | `"2025-07-01"` |
-| `VAULT_LOCATION_ALLOCATION` | string | optional (filled in 6% of rows) | The vault a physical metal or warehouse warrant is allocated to (ENDUR Commodity COMM-WARRANTS-INV); empty otherwise. | one of `COMEX New York`, `LME Rotterdam`, `LME Singapore`, `Vault London B`, `Vault Toronto A` | `"Vault London B"` |
-| `LEASE_PERPETUITY_FLAG` | string | optional (filled in 6% of rows) | Y when a metal lease runs until called, N when not (ENDUR warehouse warrants); empty otherwise. | one of `N`, `Y` | `"Y"` |
+| `PACKAGE_ID` | string | optional (filled in 17% of rows) | The package the trade was dealt in with others (ENDUR PKG-nnnn); empty when none. | — | `"PKG-0041"` |
+| `REGISTRY_DELIVERY_DATE` | date (YYYY-MM-DD) | optional (filled in 6% of rows) | The day a registered instrument is delivered (ENDUR warehouse warrants and emissions); empty otherwise. | — | `"2025-03-01"` |
+| `VAULT_LOCATION_ALLOCATION` | string | optional (filled in 6% of rows) | The vault a physical metal or warehouse warrant is allocated to (ENDUR Commodity COMM-WARRANTS-INV); empty otherwise. | one of `COMEX New York`, `LME Rotterdam`, `LME Singapore`, `Vault London B`, `Vault Toronto A` | `"Vault Toronto A"` |
+| `PRECIOUS_METAL_FLAG` | string | optional (filled in 9% of rows) | Y for a precious-metals trade (gold, silver); empty otherwise. | — | `"Y"` |
+| `LEASE_PERPETUITY_FLAG` | string | optional (filled in 6% of rows) | Y when a metal lease runs until called, N when not (ENDUR warehouse warrants); empty otherwise. | one of `N`, `Y` | `"N"` |
 | `LEGS[].LEASE_CURRENCY` | string | optional (filled in 90% of `LEGS[]` entries) | ENDUR: the currency a metal lease or the leg's financing is in; empty otherwise. | seen: `USD`, `EUR`, `CAD` | `"USD"` |
-| `LEGS[].PRICE_UNIT` | string | optional (filled in 89% of `LEGS[]` entries) | The unit the leg's quantities and prices are in (ENDUR BBL, MT, MMBTU, MWH, OZ, BU; MUREX USD/bbl, USD/oz,...); empty for money. | seen: `MT`, `BBL`, `MWH`, `OZ`, `MMBTU`, `BU` | `"BU"` |
-| `LEGS[].INDEX.NAME` | string | optional (filled in 53% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"IDX-CORN-M1"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number written as text | optional (filled in 37% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `"4.0078"` |
+| `LEGS[].PRICE_UNIT` | string | optional (filled in 89% of `LEGS[]` entries) | The unit the leg's quantities and prices are in (ENDUR BBL, MT, MMBTU, MWH, OZ, BU; MUREX USD/bbl, USD/oz,...); empty for money. | seen: `MT`, `BBL`, `MWH`, `OZ`, `MMBTU`, `BU` | `"BBL"` |
+| `LEGS[].INDEX.NAME` | string | optional (filled in 53% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"IDX-BRENT-M1"` |
+| `LEGS[].CASH_FLOWS[].RATE` | number written as text | optional (filled in 37% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `"77.6956"` |
 
 ### Cash
 
@@ -871,6 +875,8 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
+| `SOURCE_UPDATE_TIME` | timestamp (ISO-8601) | optional (filled in 60% of rows) | When the booking system last changed the trade, ISO-8601 UTC; moves with every amendment (empty on an ENDUR trade never amended). | — | `"2026-08-13T17:51:00Z"` |
+| `TRADE_ACTION` | string | optional (filled in 60% of rows) | The last action on the trade: NEW or AMEND (empty on ENDUR when none). | one of `AMEND`, `NEW` | `"AMEND"` |
 | `PACKAGE_ID` | string | optional (filled in 17% of rows) | The package the trade was dealt in with others (ENDUR PKG-nnnn); empty when none. | — | `"PKG-0011"` |
 | `LEGS[].CASH_FLOWS[].FLOAT_SPREAD` | number written as text | optional (filled in 26% of `LEGS[].CASH_FLOWS[]` entries) | The spread over the index for this flow (rate fraction or price differential); text or number; empty when none. | — | `"0.1000"` |
 
@@ -1020,6 +1026,8 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
+| `SOURCE_UPDATE_TIME` | timestamp (ISO-8601) | optional (filled in 60% of rows) | When the booking system last changed the trade, ISO-8601 UTC; moves with every amendment (empty on an ENDUR trade never amended). | — | `"2026-07-17T17:28:00Z"` |
+| `TRADE_ACTION` | string | optional (filled in 60% of rows) | The last action on the trade: NEW or AMEND (empty on ENDUR when none). | one of `AMEND`, `NEW` | `"AMEND"` |
 | `PACKAGE_ID` | string | optional (filled in 17% of rows) | The package the trade was dealt in with others (ENDUR PKG-nnnn); empty when none. | — | `"PKG-0214"` |
 | `LEGS[].LEASE_CURRENCY` | string | optional (filled in 90% of `LEGS[]` entries) | ENDUR: the currency a metal lease or the leg's financing is in; empty otherwise. | seen: `USD`, `EUR`, `CAD` | `"CAD"` |
 | `LEGS[].CASH_FLOWS[].RATE` | number written as text | optional (filled in 37% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `"4.2822"` |
@@ -1038,7 +1046,6 @@ Fields no record above has, found by reading all 12,477 rows, with how many rows
 | `STRATEGY` | string (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | The trading strategy the trade belongs to; null or empty when none (always empty in the test data). | — |
 | `INTERNAL_TRADING_STRATEGY` | string (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | The bank's internal strategy code; empty when none (always empty in the test data). Carried through; not read by Drishti. | — |
 | `NY_CURVE_FLAG` | string (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | The booking system's flag for valuing on the New York close curves; empty when not set (always empty in the test data). Carried through; not read by Drishti. | — |
-| `PRECIOUS_METAL_FLAG` | string | 1,121 of 12,477 | Y for a precious-metals trade (gold, silver); empty otherwise. | `"Y"` |
 | `TT_GROUP` | string (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | CALYPSO and MUREX: the desk of the trade, a DESK_ID of the core pack's desk kind (DESK-…); empty on ENDUR. Carried through; not read by Drishti. | — |
 | `TT_BOOK` | string (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | CALYPSO and MUREX: the trade's book, a BOOK_ID of the core pack's book kind (BOOK-…), the same as PORTFOLIO; empty on ENDUR. | — |
 | `SETTLEMENT_DATE` | date (YYYY-MM-DD) (the contract's type; always empty in the test data) | always empty (12,477 rows hold the key) | The day the trade settles (CALYPSO and MUREX: the start date; empty on ENDUR). | — |

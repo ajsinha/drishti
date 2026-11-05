@@ -57,6 +57,25 @@ class LoadGuardTest {
         guard().finish();                                             // nothing quarantined: no error
     }
 
+    /**
+     * A load counts retention back from the newest business date it wrote (a plain file's date, a tar's newest folder), not from
+     * today: loading 2026-06-12 and 2026-06-15 keeps 30 days from 2026-05-17; a quarantined (future) row does not count.
+     */
+    @Test
+    void aLoadsRetentionCountsBackFromTheNewestBusinessDateItWrote() {
+        LoadGuard g = guard();
+        assertThat(g.asOf()).as("no row yet: today").isEqualTo(LocalDate.of(2026, 9, 30));
+        g.accept(LocalDate.of(2026, 6, 12), "a");
+        g.accept(LocalDate.of(2026, 6, 15), "b");
+        g.accept(LocalDate.of(2026, 6, 1), "c");
+        g.accept(LocalDate.of(2027, 3, 1), "future, quarantined");
+        assertThat(g.asOf()).isEqualTo(LocalDate.of(2026, 6, 15));
+        assertThat(g.keepFromDays(30)).isEqualTo(LocalDate.of(2026, 5, 17));
+        assertThat(g.keepFromMonths(1)).isEqualTo(LocalDate.of(2026, 6, 1));
+        List<LocalDate> days = List.of(LocalDate.of(2026, 6, 12), LocalDate.of(2026, 6, 15), LocalDate.of(2026, 9, 29));
+        assertThat(g.keepFromNewest(days, 1)).as("a later day of the store is neither counted nor dropped").contains(LocalDate.of(2026, 6, 15));
+    }
+
     @Test
     void retentionCountsBackFromTodayOrTheAsOfDateNeverFromTheData() {
         LoadGuard g = guard();

@@ -101,7 +101,7 @@ def wanted(a, files: list[pathlib.Path], jar: str | None, java: str | None) -> t
     size = sum(f.stat().st_size for f in files)
     if size < threshold:
         return False, f"{size / 1048576:.0f} MB of input is under --java-above-mb"
-    if a.mode != "overwrite-dates":
+    if a.mode not in (None, "overwrite-dates", "append"):
         return False, f"--mode {a.mode} is the Python path's"
     if not all(is_jsonl(f) for f in files):
         return False, "an input is not JSON Lines"
@@ -126,15 +126,42 @@ def config(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, e
         src["pack"] = str(pathlib.Path(a.pack).resolve())
         if p.get("connector"):
             src["connector"] = p["connector"]
+    marked = {m.get("business-date") for m in (getattr(a, "_markers", None) or {}).values() if m.get("business-date")}
+    if not as_of and len(marked) > 1:
+        raise LoaderError("the files' .ready markers give different business dates: load them one at a time")
+    as_of = as_of or (marked.pop() if marked else None)
     if as_of:
         src["as-of"] = as_of.isoformat()
+    if p["date"]:
+        src["date"] = p["date"]                         # each row's own date field: only counted when it differs (FileDates)
+    src["date-from"] = p.get("date_from") or "auto"
+    if getattr(a, "_tar_table", None):
+        src["dataset"] = a._tar_table                   # the one table of the tar this run loads
+    mode = getattr(a, "mode", None)
+    if mode:
+        target_mode = "append" if mode == "append" else "replace-date"
     else:
-        src["date"] = p["date"]
-    target = {"format": "iceberg" if iceberg else "delta", "lake": lake, "domain": p["domain"], "kind": p["kind"]}
+        target_mode = None
+    path = lake.rstrip("/") + "/" + p["domain"] + "/" + (p.get("table") or p["kind"])
+    named = bool(p.get("lake_name") and not getattr(a, "lake_root", None))
+    if named:
+        # a lake of config/lakes/ (lake build --lake NAME): the loader reads the same lake file, by name; the layout and the load mode
+        # are the file's (the one source of a table's settings); the load rules give the table and the business date
+        target = {"lake": p["lake_name"], "kind": p["kind"]}
+        if getattr(a, "_mode_given", False) and target_mode:
+            target["mode"] = target_mode                    # --mode or a .ready file's mode:, over the entry's (the table's default)
+        for k in ("promote", "vectors", "flatten", "partition-by", "latest-by", "id"):
+            src.pop(k, None)
+    else:                                          # a folder (--lake DIR, or --lake-root): the table's path, its layout given here
+        target = {"format": "iceberg" if iceberg else "delta", "path": path, "domain": p["domain"], "kind": p["kind"]}
+        if target_mode:
+            target["mode"] = target_mode
     if p.get("table"):
         target["table"] = p["table"]
+    if getattr(a, "batch_id", None):              # an append's batch: each date's commit records it, never appended twice
+        target["batch-id"] = a.batch_id
     if not iceberg:
-        props = writers.retention_properties(lake.rstrip("/") + "/" + p["domain"] + "/" + (p.get("table") or p["kind"]))
+        props = writers.retention_properties(path)
         if props:
             target["properties"] = props
     ice = {}
@@ -185,7 +212,7 @@ def run(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, prog
 
 
 MERGED = ("rows", "partitions", "documents", "accepted", "rejected", "rejects", "duplicates", "duplicateExamples", "latestBy", "files", "sampleId", "sampleDate",
-          "commit", "columns", "throughput", "memory", "sortBy", "manifestFile", "peakMemoryMb")
+          "dateFrom", "fileDates", "otherDateRows", "dateNotes", "emptyFiles", "loads", "commit", "columns", "throughput", "memory", "sortBy", "manifestFile", "peakMemoryMb")
 
 
 def merge(summary: dict, loaded: dict) -> None:

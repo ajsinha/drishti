@@ -42,7 +42,6 @@ depends-on:
   - news
   - yfinance
   settings:
-  - DRISHTI_DELTA_ROOT
   - DRISHTI_LAKE_ENABLED
   - DRISHTI_NEWS_ENABLED
   - DRISHTI_NEWS_URL
@@ -221,7 +220,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `yfinance` | `yfinance` | `quote` | `${DRISHTI_YFINANCE_ENABLED:false}` |
 | `news-store` | `delta` | `news-topic`, `listed-company`, `news`, `quote` | `${DRISHTI_LAKE_ENABLED:true}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_NEWS_ENABLED`, `DRISHTI_NEWS_URL`, `DRISHTI_YFINANCE_ENABLED`, `DRISHTI_YFINANCE_URL`.
+Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`, `DRISHTI_NEWS_ENABLED`, `DRISHTI_NEWS_URL`, `DRISHTI_YFINANCE_ENABLED`, `DRISHTI_YFINANCE_URL`.
 
 ## Refreshing the data
 

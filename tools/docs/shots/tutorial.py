@@ -109,7 +109,7 @@ def project1(c: Ctx):
     c.page.wait_for_timeout(300)
 
     # swap a panel for its runner-up: remove it (Undo is one click away) and drop its field again to choose another kind
-    yaml = c.page.evaluate("window.drishtiWorkbench.store.state.yaml")
+    yaml = c.page.evaluate("window.Drishti.workbench.store.state.yaml")
     sens = re.search(r'id: sensitivities.*?rows: "\$\.(\w+)', yaml, re.S).group(1)
     c.panel("sensitivities").hover()
     c.panel("sensitivities").get_by_role("button", name=re.compile("^Remove panel")).first.click()
@@ -174,7 +174,7 @@ def project1(c: Ctx):
     c.page.wait_for_timeout(600)
     rev = c.rev()
     c.page.evaluate("(() => { const cm = document.querySelector('.CodeMirror').CodeMirror; cm.replaceRange('sutra: rates-trade', {line: 1, ch: 0}, {line: 1, ch: 40}); })()")
-    c.until("window.drishtiWorkbench.store.state.yaml.indexOf('sutra: rates-trade') >= 0")
+    c.until("window.Drishti.workbench.store.state.yaml.indexOf('sutra: rates-trade') >= 0")
     c.page.wait_for_timeout(1500)
     c.save("p1-13-rename.jpg")
     c.page.get_by_role("tab", name="Design").click()
@@ -195,7 +195,7 @@ def project1(c: Ctx):
     prio.fill("500")
     prio.blur()
     c.settle(rev)
-    assert "priority: 500" in c.page.evaluate("window.drishtiWorkbench.store.state.yaml"), "the match was not changed"
+    assert "priority: 500" in c.page.evaluate("window.Drishti.workbench.store.state.yaml"), "the match was not changed"
     c.save("p1-14-applies-to.jpg", ".wb-right")
 
     # propose
@@ -205,7 +205,7 @@ def project1(c: Ctx):
         c.until("document.querySelector('[data-say]').textContent.indexOf('Submitted for review as P-') >= 0", 20)
     except TimeoutError:
         c.page.screenshot(path="/tmp/claude-1000/-home-ashutosh-IdeaProjects-drishti/efa68c11-fb98-4f9a-8faa-96a952090c0e/scratchpad/dbg.png")
-        raise RuntimeError("not submitted: " + c.page.locator("[data-say]").inner_text() + str(c.page.evaluate("window.drishtiWorkbench.store.state.status")))
+        raise RuntimeError("not submitted: " + c.page.locator("[data-say]").inner_text() + str(c.page.evaluate("window.Drishti.workbench.store.state.status")))
     pid = re.search(r"P-\d+", c.page.locator("[data-say]").inner_text()).group(0)
     c.page.wait_for_timeout(600)
     c.save("p1-15-proposed.jpg", clip={"x": 0, "y": 60, "width": 1440, "height": 190})
@@ -280,9 +280,9 @@ def add_panel(c: Ctx, kind: str):
 
 def new_panel(c: Ctx, kind: str) -> str:
     """Adds a panel of `kind` through the chooser and returns its id (the one that was not there before)."""
-    known = c.page.evaluate("window.drishtiWorkbench.canvas.ids()")
+    known = c.page.evaluate("window.Drishti.workbench.canvas.ids()")
     add_panel(c, kind)
-    return next(i for i in c.page.evaluate("window.drishtiWorkbench.canvas.ids()") if i not in known)
+    return next(i for i in c.page.evaluate("window.Drishti.workbench.canvas.ids()") if i not in known)
 
 
 def field(c: Ctx, label: str, value: str):
@@ -308,7 +308,7 @@ def project2(c: Ctx):
     c.save("p2-00-start-empty.jpg")
     c.page.locator("[data-create]").click()
     c.page.wait_for_url("**/build/d/*")
-    c.until("window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+    c.until("window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     c.made.append(c.page.url.rsplit("/", 1)[1])
     c.page.wait_for_timeout(1500)
     c.save("p2-01-empty.jpg")
@@ -337,7 +337,7 @@ def project2(c: Ctx):
     c.save("p2-05-metric-done.jpg")
     # two more tiles: duplicate (right click), then change what differs
     for n in (1, 2):
-        c.panel(c.page.evaluate("window.drishtiWorkbench.canvas.ids()[0]")).click(button="right", position={"x": 40, "y": 14})
+        c.panel(c.page.evaluate("window.Drishti.workbench.canvas.ids()[0]")).click(button="right", position={"x": 40, "y": 14})
         c.page.get_by_role("option", name=re.compile("Duplicate")).click()
         c.page.wait_for_timeout(1500)
     c.save("p2-06-duplicated.jpg")
@@ -384,10 +384,10 @@ def project2(c: Ctx):
         c.page.wait_for_timeout(400)
         if n == 1:
             c.save("p2-10-suggest-pivot.jpg")
-        known = c.page.evaluate("window.drishtiWorkbench.canvas.ids()")
+        known = c.page.evaluate("window.Drishti.workbench.canvas.ids()")
         c.page.get_by_role("option").filter(has_text=re.compile(rf"^\s*{kind}")).first.click()
         c.settle(rev)
-        last = next(i for i in c.page.evaluate("window.drishtiWorkbench.canvas.ids()") if i not in known)
+        last = next(i for i in c.page.evaluate("window.Drishti.workbench.canvas.ids()") if i not in known)
     c.page.locator("[data-filter]").fill("")
     c.page.wait_for_timeout(500)
     c.save("p2-11-panels.jpg")
@@ -429,7 +429,7 @@ def project2(c: Ctx):
     c.page.wait_for_timeout(600)
     rev = c.rev()
     c.page.evaluate(STRIP_JS)
-    c.until("window.drishtiWorkbench.store.state.yaml.indexOf('sutra: desk-report') >= 0 && window.drishtiWorkbench.store.state.yaml.indexOf('strip:') >= 0")
+    c.until("window.Drishti.workbench.store.state.yaml.indexOf('sutra: desk-report') >= 0 && window.Drishti.workbench.store.state.yaml.indexOf('strip:') >= 0")
     c.page.wait_for_timeout(1500)
     c.page.evaluate("document.querySelector('.CodeMirror').CodeMirror.scrollTo(0, 0)")
     c.save("p2-14-strip-yaml.jpg")
@@ -485,7 +485,7 @@ def project2(c: Ctx):
     c.page.wait_for_timeout(1500)
     login(c, "asha")
     c.page.goto(f"{c.base}/build/d/{design}")
-    c.until("window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+    c.until("window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     c.page.wait_for_timeout(2500)
     c.save("p2-21-live.jpg", clip={"x": 0, "y": 60, "width": 1440, "height": 190})
 
@@ -504,11 +504,11 @@ def open_registry(c: Ctx, sutra: str, name: str, samples: list):
     c.page.fill("#bsDesignKind", "trade")
     c.page.locator("[data-create]").click()
     c.page.wait_for_url("**/build/d/*")
-    c.until("window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+    c.until("window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     c.made.append(c.page.url.rsplit("/", 1)[1])
     if samples:
         c.page.locator("[data-add-files]").set_input_files([str(f) for f in samples])
-        c.until("window.drishtiWorkbench.store.state.samples.length >= %d" % len(samples))
+        c.until("window.Drishti.workbench.store.state.samples.length >= %d" % len(samples))
         c.page.locator("[data-preview] [data-panel]").first.wait_for(timeout=30000)
     c.page.wait_for_timeout(2500)
 
@@ -546,18 +546,18 @@ def project3(c: Ctx):
     c.page.locator("[data-create]").click()
     c.page.wait_for_timeout(3000)
     c.page.wait_for_url("**/build/d/*")
-    c.until("window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+    c.until("window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     c.made.append(c.page.url.rsplit("/", 1)[1])
     mine = c.page.url
     c.page.locator("[data-add-files]").set_input_files([str(f) for f in TRADES[:3]])
-    c.until("window.drishtiWorkbench.store.state.samples.length >= 3")
+    c.until("window.Drishti.workbench.store.state.samples.length >= 3")
     c.page.locator("[data-preview] [data-panel]").first.wait_for(timeout=30000)
     c.page.wait_for_timeout(2500)
     c.save("p3-02-opened.jpg")
 
     # the change: a headline tile at the top
     rev = c.rev()
-    c.page.evaluate("window.drishtiWorkbench.store.send([{op: 'addPanel', kind: 'metric', at: {before: 'details', span: 12}, options: {value: '$.mtm', title: 'Mark to market', fmt: 'signed0', tone: 'sign', unit: 'USD'}}])")
+    c.page.evaluate("window.Drishti.workbench.store.send([{op: 'addPanel', kind: 'metric', at: {before: 'details', span: 12}, options: {value: '$.mtm', title: 'Mark to market', fmt: 'signed0', tone: 'sign', unit: 'USD'}}])")
     c.settle(rev)
     c.page.wait_for_timeout(1200)
     c.save("p3-03-changed.jpg")
@@ -572,7 +572,7 @@ def project3(c: Ctx):
     login(c, "ravi")
     open_registry(c, "rates-trade", "Rates trade, clearer name", TRADES[:2])
     rev = c.rev()
-    c.page.evaluate("window.drishtiWorkbench.store.send([{op: 'setOption', panel: 'details', option: 'title', value: 'Trade details'}])")
+    c.page.evaluate("window.Drishti.workbench.store.send([{op: 'setOption', panel: 'details', option: 'title', value: 'Trade details'}])")
     c.settle(rev)
     pid = submit_and_id(c, "Calls the details panel Trade details")
     approve(c, "drishti-dev-admin", pid, "drishti-dev-admin123")
@@ -580,7 +580,7 @@ def project3(c: Ctx):
     # back in my design: the base has moved
     login(c, "asha")
     c.page.goto(mine)
-    c.until("window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+    c.until("window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     c.page.locator("[data-preview] [data-panel]").first.wait_for(timeout=30000)
     c.page.wait_for_timeout(2500)
     c.page.get_by_role("tab", name="Problems").click()
@@ -602,7 +602,7 @@ def project3(c: Ctx):
     approve(c, "ravi", pid)
     login(c, "asha")
     c.page.goto(mine)
-    c.until("window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+    c.until("window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     c.page.wait_for_timeout(2500)
     c.save("p3-10-live-v3.jpg", clip={"x": 0, "y": 60, "width": 1440, "height": 190})
 
@@ -642,7 +642,7 @@ def project4(c: Ctx):
     id_ = c.design("Keyboard only", files={"desk-rates.json": DESK_FILES[0].read_text(), "desk-credit.json": DESK_FILES[1].read_text()}, kind="desk-report")
     c.made.append(id_)
     c.page.goto(f"{c.base}/build/d/{id_}")
-    c.until("window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+    c.until("window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     c.page.wait_for_timeout(2500)
     c.page.evaluate("document.activeElement && document.activeElement.blur(); window.scrollTo(0, 0)")
     # the very first Tab stop of the workbench is the skip link
@@ -720,7 +720,7 @@ def project4(c: Ctx):
 def project5(c: Ctx):
     login(c, "asha")
     c.page.goto(f"{c.base}/build/d/{_state['p1']['design']}")
-    c.until("window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+    c.until("window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     c.page.locator("[data-preview] [data-panel]").first.wait_for(timeout=30000)
     c.page.wait_for_timeout(2000)
     c.page.locator("[data-ship-menu]").click()

@@ -22,22 +22,32 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
-import java.util.Set;
+import java.util.Map;
 
 /**
- * What a {@code <file>.ready} marker may say (DATALOAD_INBOX.md section 3.5; all optional, an empty marker is fine): the routing of this
- * one file over the rules ({@code pack}, {@code kind}, {@code connector}, {@code table}, {@code business-date}, {@code date-field}),
- * {@code mode} ({@code replace}, the loader's only mode) and the checks made before loading ({@code sha256}, {@code rows}).
+ * What a {@code .ready} file may say (docs/architecture/DATA_LOAD_RULES.md section 5; all optional, an empty file is fine): the overrides of
+ * the name ({@code business-date}, {@code table}; refused for a tar), the pack ({@code pack}, {@code kind}, {@code connector}; a tar's
+ * {@code folders}: folder → pack), {@code mode} ({@code append}, the default, or {@code replace}), {@code new-table}, {@code key}, the checks
+ * made before loading ({@code sha256}, {@code rows}) and {@code hold}. An unknown key is refused.
  */
-public record ReadyNote(String pack, String kind, String connector, String table, LocalDate businessDate, String dateField, String mode, String sha256,
-        Long rows) {
+public record ReadyNote(String pack, String kind, String connector, String table, LocalDate businessDate, String mode, String sha256, Long rows,
+        boolean newTable, String key, Map<String, String> folders, boolean hold) {
 
     private static final java.util.regex.Pattern SHA = java.util.regex.Pattern.compile("(?m)^\\s*[\"']?sha256[\"']?\\s*:\\s*[\"']?([0-9A-Fa-f]{64})[\"']?\\s*,?\\s*$");
-    private static final Set<String> KEYS = Set.of("pack", "kind", "connector", "table", "business-date", "date-field", "mode", "sha256", "rows");
+    /** The keys, in the order the documentation lists them. */
+    public static final List<String> KEYS = List.of("business-date", "table", "pack", "kind", "connector", "mode", "new-table", "key", "folders",
+            "sha256", "rows", "hold");
 
     /** An empty marker. */
-    public static final ReadyNote EMPTY = new ReadyNote(null, null, null, null, null, null, null, null, null);
+    public static final ReadyNote EMPTY = new ReadyNote(null, null, null, null, null, null, null, null, false, null, Map.of(), false);
+
+    /** A marker naming only the routing keys (pack, kind, connector, table) and a business date. */
+    public static ReadyNote of(String pack, String kind, String connector, String table, LocalDate businessDate) {
+        return new ReadyNote(pack, kind, connector, table, businessDate, null, null, null, false, null, Map.of(), false);
+    }
 
     /** The marker's contents (YAML or JSON); an absent or empty file is {@link #EMPTY}; a key it does not know is refused. */
     public static ReadyNote read(Path marker) throws IOException {
@@ -58,11 +68,11 @@ public record ReadyNote(String pack, String kind, String connector, String table
             return EMPTY;
         }
         if (!n.isObject()) {
-            throw new IllegalArgumentException("the .ready file holds keys (pack:, kind:, business-date:, ...) or nothing");
+            throw new IllegalArgumentException("the .ready file holds keys (" + String.join(", ", KEYS) + ") or nothing");
         }
         n.fieldNames().forEachRemaining(k -> {
             if (!KEYS.contains(k)) {
-                throw new IllegalArgumentException("the .ready file's key " + k + " is not one of " + KEYS.stream().sorted().toList());
+                throw new IllegalArgumentException("the .ready file's key " + k + " is not one of " + KEYS);
             }
         });
         LocalDate date = null;
@@ -77,9 +87,9 @@ public record ReadyNote(String pack, String kind, String connector, String table
         String mode = text(n, "mode");
         if (mode != null) {
             mode = mode.toLowerCase(Locale.ROOT);
-            if (!mode.equals("replace")) {
-                throw new IllegalArgumentException("the .ready file's mode " + mode + ": the loader replaces each business date the file holds "
-                        + "(mode: replace); appending is not offered");
+            if (!mode.equals("replace") && !mode.equals("append")) {
+                throw new IllegalArgumentException("the .ready file's mode " + mode + ": append (the default: the rows are added) or replace (each "
+                        + "business date of the file replaced)");
             }
         }
         // the checksum as written: a YAML reader takes 64 digits for a number, so it is read from the text itself
@@ -95,8 +105,28 @@ public record ReadyNote(String pack, String kind, String connector, String table
             }
             rows = n.get("rows").asLong();
         }
-        return new ReadyNote(text(n, "pack"), text(n, "kind"), text(n, "connector"), text(n, "table"), date, text(n, "date-field"), mode,
-                sha == null ? null : sha.toLowerCase(Locale.ROOT), rows);
+        Map<String, String> folders = new LinkedHashMap<>();
+        JsonNode f = n.get("folders");
+        if (f != null && !f.isNull()) {
+            if (!f.isObject()) {
+                throw new IllegalArgumentException("the .ready file's folders: a mapping of a tar's folder to a pack ({trades: core})");
+            }
+            f.fields().forEachRemaining(e -> folders.put(e.getKey().toLowerCase(Locale.ROOT), e.getValue().asText()));
+        }
+        String table = text(n, "table");
+        return new ReadyNote(text(n, "pack"), text(n, "kind"), text(n, "connector"), table == null ? null : table.toLowerCase(Locale.ROOT), date, mode,
+                sha == null ? null : sha.toLowerCase(Locale.ROOT), rows, bool(n, "new-table"), text(n, "key"), Map.copyOf(folders), bool(n, "hold"));
+    }
+
+    private static boolean bool(JsonNode n, String key) {
+        JsonNode v = n.get(key);
+        if (v == null || v.isNull()) {
+            return false;
+        }
+        if (!v.isBoolean()) {
+            throw new IllegalArgumentException("the .ready file's " + key + " is true or false");
+        }
+        return v.asBoolean();
     }
 
     private static String text(JsonNode n, String key) {

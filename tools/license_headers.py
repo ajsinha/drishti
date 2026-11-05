@@ -26,12 +26,15 @@ def block(style):
         return "<!--\n" + "".join(f"  {l}".rstrip() + "\n" for l in TEXT) + "-->\n"
     if style == "jinja":
         return "{#\n" + "".join(f"  {l}".rstrip() + "\n" for l in TEXT) + "#}\n"
+    if style == "ipynb":
+        return "\n".join(TEXT)
     raise ValueError(style)
 
 
 STYLES = {".java": "java", ".js": "java", ".css": "java", ".py": "hash", ".yaml": "hash", ".yml": "hash",
           ".properties": "hash", ".sh": "hash", ".ps1": "hash", ".xml": "xml", ".md": "xml", ".svg": None, ".html": "jinja",
-          ".json": None, ".txt": None}
+          ".json": None, ".txt": None,
+          ".ipynb": "ipynb"}   # the client examples' notebooks (examples/clients/python): the notice as the first markdown cell
 
 
 def ignored():
@@ -63,7 +66,13 @@ def fix(p):
     s = p.read_text(encoding="utf-8")
     style = STYLES[p.suffix]
     hdr = block(style)
-    if style == "xml" and s.startswith("<?xml"):
+    if style == "ipynb":                      # a notebook: the notice as its first markdown cell
+        import json
+        nb = json.loads(s)
+        nb["cells"].insert(0, {"cell_type": "markdown", "id": "copyright", "metadata": {},
+                               "source": [l + "\n" for l in hdr.split("\n")[:-1]] + [hdr.split("\n")[-1]]})
+        p.write_text(json.dumps({"cells": nb.pop("cells"), **nb}, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+    elif style == "xml" and s.startswith("<?xml"):
         first, rest = s.split("\n", 1)
         p.write_text(first + "\n" + hdr + rest, encoding="utf-8")
     elif style == "hash" and s.startswith("#!"):

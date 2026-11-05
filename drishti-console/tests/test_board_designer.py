@@ -51,8 +51,8 @@ def test_a_two_three_board_address_opens_the_report_viewer_and_the_report_design
 def test_the_report_viewer_draws_board_pages_with_a_kiosk(client):
     page = client.get("/bi/r/file:report:desk-wall")
     assert page.status_code == 200 and page.headers["content-security-policy"] == CSP
-    assert "data-kiosk" in page.text and "data-rotate-note" in page.text and "/static/js/bi-report-board.js" in page.text and "/static/js/bi-tooltips.js" in page.text
-    viewer = (STATIC / "js" / "bi-report.js").read_text(encoding="utf-8")
+    assert "data-kiosk" in page.text and "data-rotate-note" in page.text and "/static/js/drishti_bi-report-board.js" in page.text and "/static/js/drishti_bi-tooltips.js" in page.text
+    viewer = (STATIC / "js" / "drishti_bi-report.js").read_text(encoding="utf-8")
     assert "B.reportBoard(" in viewer and "board.load(" in viewer and "bindKiosk" in viewer
 
 
@@ -60,7 +60,7 @@ def test_the_start_page_makes_a_board_as_a_report_with_a_board_page(client):
     page = client.get("/bi/designer")
     assert page.status_code == 200
     assert "data-board-start" in page.text and "data-new-board" in page.text and "data-board-drafts" in page.text and "/bi/design/theme/new" in page.text
-    js = (STATIC / "js" / "bi-design.js").read_text(encoding="utf-8")
+    js = (STATIC / "js" / "drishti_bi-design.js").read_text(encoding="utf-8")
     assert "layout: board" in js and "data-new-board" in js and "i.board" in js
 
 
@@ -69,16 +69,16 @@ def test_the_report_designer_is_in_the_studio_and_edits_tiles(client):
     assert page.status_code == 200 and page.headers["content-security-policy"] == CSP
     for marker in ("data-studio", "data-studio-rail", "data-studio-tabs", "data-studio-dock", 'data-dock-tab="problems"', 'data-dock-tab="query"'):
         assert marker in page.text, marker
-    for script in ("bi-studio.js", "bi-format-pane.js", "bi-format-rules.js", "bi-design-v2.js", "bi-matrix.js", "bi-multiples.js", "bi-visuals-format.js"):
+    for script in ("drishti_bi-studio.js", "drishti_bi-format-pane.js", "drishti_bi-format-rules.js", "drishti_bi-design-v2.js", "drishti_bi-matrix.js", "drishti_bi-multiples.js", "drishti_bi-visuals-format.js"):
         assert "/static/js/" + script in page.text, script
-    v2 = (STATIC / "js" / "bi-design-v2.js").read_text(encoding="utf-8")
+    v2 = (STATIC / "js" / "drishti_bi-design-v2.js").read_text(encoding="utf-8")
     for hook in ("data-tile-report", "data-tile-visual", "'data-tile-' + name + '-op'", "data-page-layout", "data-page-tooltip", "data-interaction", "data-report-theme", "data-board-rotate"):
         assert hook in v2, hook
 
 
 def test_the_new_scripts_have_no_cdn_inline_code_or_markup_string():
-    for name in ("bi-studio.js", "bi-format-pane.js", "bi-format-rules.js", "bi-design-v2.js", "bi-matrix.js", "bi-multiples.js", "bi-visuals-format.js", "bi-tooltips.js",
-                 "bi-report-board.js", "bi-theme-designer.js"):
+    for name in ("drishti_bi-studio.js", "drishti_bi-format-pane.js", "drishti_bi-format-rules.js", "drishti_bi-design-v2.js", "drishti_bi-matrix.js", "drishti_bi-multiples.js", "drishti_bi-visuals-format.js", "drishti_bi-tooltips.js",
+                 "drishti_bi-report-board.js", "drishti_bi-theme-designer.js"):
         text = (STATIC / "js" / name).read_text(encoding="utf-8")
         assert "http://" not in text and "https://" not in text and "innerHTML" not in text and "insertAdjacentHTML" not in text and "eval(" not in text, name
         assert not re.search(r"\bon[a-z]+\s*=\s*['\"]", text), name
@@ -87,5 +87,5 @@ def test_the_new_scripts_have_no_cdn_inline_code_or_markup_string():
     for tmpl in ("design.html", "designer.html", "design_theme.html", "_studio.html", "report.html"):
         html = (TEMPLATES / tmpl).read_text(encoding="utf-8")
         assert "<script>" not in html and " style=" not in html and not re.search(r"\sonclick=", html), tmpl
-    css = (STATIC / "css" / "bi-studio.css").read_text(encoding="utf-8")
+    css = (STATIC / "css" / "drishti_bi-studio.css").read_text(encoding="utf-8")
     assert "min-height: 44px" in css and "@media" in css and "http" not in css

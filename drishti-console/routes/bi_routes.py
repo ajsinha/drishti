@@ -14,7 +14,7 @@
 
 """Rupaka phase 1 (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 5): the BI pages (home, catalogue, workspaces, an item) and the same-origin JSON the page script uses.
 
-The pages are a shell: they carry no data. The script (``static/js/bi.js``) asks ``/bi/api/...``, which passes each call on to the server's ``/api/v1/bi/...``
+The pages are a shell: they carry no data. The script (``static/js/drishti_bi.js``) asks ``/bi/api/...``, which passes each call on to the server's ``/api/v1/bi/...``
 with the signed-in user's identity; the server decides what that person may see and do and answers with its problem code when not. The console decides
 nothing about access except what to show (the BI menu needs the ``bi`` power)."""
 from __future__ import annotations
@@ -111,7 +111,7 @@ async def item(request: Request, item: str):
 
 @router.get("/bi/environments")
 async def environments(request: Request):
-    """Environments: export a workspace as a bundle, import one (dry run first). Drawn by ``bi-env.js`` (phase 4)."""
+    """Environments: export a workspace as a bundle, import one (dry run first). Drawn by ``drishti_bi-env.js`` (phase 4)."""
     return _page(request, "bi/environments.html", "environments")
 
 
@@ -122,7 +122,7 @@ async def datasets(request: Request):
 
 @router.get("/bi/d/{item:path}")
 async def dataset(request: Request, item: str):
-    """One 2.1 dataset (a live sample until wave W3): its model (tables, relationships, measures, row rules) and a query preview, drawn by ``bi-dataset.js``.
+    """One 2.1 dataset (a live sample until wave W3): its model (tables, relationships, measures, row rules) and a query preview, drawn by ``drishti_bi-dataset.js``.
     A ``rachana: 2`` dataset has its own page since 2.2 (grain, keys, columns with meanings, time mode, security): an old link is sent there."""
     import re
     from fastapi.responses import RedirectResponse
@@ -140,7 +140,7 @@ async def dataset(request: Request, item: str):
 @router.get("/bi/r/{item}")
 @router.get("/bi/r/{item}/{page}")
 async def report(request: Request, item: str, page: str = ""):
-    """A report, drawn by ``bi-report.js``: its pages are tabs, its visuals ask the server for their data one query at a time (phase 3). Every report page has
+    """A report, drawn by ``drishti_bi-report.js``: its pages are tabs, its visuals ask the server for their data one query at a time (phase 3). Every report page has
     the strict policy: no WebAssembly (wave B, BI_DESIGN.md P3: the servers compute, the browser draws)."""
     return _page(request, "bi/report.html", "report", item=item, report_page=page)
 
@@ -281,7 +281,7 @@ async def open_run(request: Request, run_id: str):
 @router.get("/admin/bi/runs")
 async def runs_admin(request: Request):
     """Admin → BI → Runs (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 17.2): the gate now, what runs and waits, the result store, how honest the estimates are, how often the inline wait
-    was enough. Drawn by ``bi-runs-admin.js`` from ``GET /api/v1/bi/admin/runs``; bi-admin only. State, sizes and nodes, never a value."""
+    was enough. Drawn by ``drishti_bi-runs-admin.js`` from ``GET /api/v1/bi/admin/runs``; bi-admin only. State, sizes and nodes, never a value."""
     me = getattr(request.state, "bi_me", None) or {}
     if "bi-admin" not in (me.get("powers") or []):
         return render(request, "admin/forbidden.html", status_code=403)
@@ -354,10 +354,7 @@ async def proxy(request: Request, path: str):
             status, answer = await request.app.state.backend.bi_async("POST", "/" + path, ident(request), body, asked[0], wait=asked[1], **params)
         except BackendError as e:
             return _problem(e)
-        if arrow and status == 200:
-            sent = arrow_answer.respond_bi(answer)
-            if sent is not None:
-                return sent
+        # an answer given by a run comes as JSON and goes as JSON: the console writes no Arrow of its own (ARROW_FLIGHT.md decided 5)
         return Response(status_code=204) if answer is None else JSONResponse(answer, status_code=status, headers={"Cache-Control": "no-store"})
     if arrow:
         try:

@@ -120,11 +120,25 @@ class BuildTest(unittest.TestCase):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
         self.lake = self.root / "lake"
-        self.src = self.root / "book.json"
-        self.src.write_text(json.dumps(book(300), indent=1), encoding="utf-8")
+        self.src = self.root / "book"
+        self.put(book(300), indent=1)
 
     def tearDown(self):
         self.tmp.cleanup()
+
+    def put(self, docs, indent=None):
+        """The documents as one file a business date (docs/architecture/DATA_LOAD_RULES.md: the date is the file's, never a row's):
+        deal.<date>.json, a document without a date in deal.json (the business today)."""
+        import re
+        import shutil
+        shutil.rmtree(self.src, ignore_errors=True)
+        self.src.mkdir()
+        days: dict = {}
+        for x in docs:
+            d = x.get("TRADE_DATE") if isinstance(x, dict) else None
+            days.setdefault(d if isinstance(d, str) and re.match(r"^\d{4}-\d{2}-\d{2}$", d) else None, []).append(x)
+        for d, xs in days.items():
+            (self.src / (f"deal.{d}.json" if d else "deal.json")).write_text(json.dumps(xs, indent=indent), encoding="utf-8")
 
     def base(self, **kw):
         os.environ["DRISHTI_DELTA_ROOT"] = str(self.lake)          # the server reads this lake: a build leaves the stamp
@@ -139,15 +153,14 @@ class BuildTest(unittest.TestCase):
 
     def test_dry_run_counts_partitions_and_rejects(self):
         docs = book(30) + [{"TRADE_ID": 9, "TRADE_DATE": "soon"}, {"TRADE_DATE": DATES[0]}, {"TRADE_ID": 7}]
-        self.src.write_text(json.dumps(docs), encoding="utf-8")
+        self.put(docs)
         code, s = build.run(self.base(dry_run=True), quiet)
         self.assertEqual(code, build.EXIT_PARTIAL)
-        self.assertEqual((s["documents"], s["accepted"], s["rejected"]), (33, 30, 3))
-        self.assertEqual(s["rows"], {"2026-10-01": 10, "2026-10-02": 10, "2026-10-05": 10})
-        self.assertEqual(len(s["partitions"]), 9)
-        self.assertEqual(set(s["rejects"]["byReason"]), {"no business date (field 'TRADE_DATE' is not a date)",
-                                                         "no id (field 'TRADE_ID' is missing or empty)",
-                                                         "no business date (field 'TRADE_DATE' is missing or empty)"})
+        self.assertEqual((s["documents"], s["accepted"], s["rejected"]), (33, 32, 1))
+        today = build.filedate.business_today().isoformat()
+        self.assertEqual(s["rows"], {"2026-10-01": 10, "2026-10-02": 10, "2026-10-05": 10, today: 2})
+        self.assertEqual(len(s["partitions"]), 10)
+        self.assertEqual(set(s["rejects"]["byReason"]), {"no id (field 'TRADE_ID' is missing or empty)"})
         self.assertFalse(self.lake.exists())               # a dry run writes nothing
 
     def test_write_partitions_promoted_columns_and_hive_folders(self):
@@ -172,8 +185,8 @@ class BuildTest(unittest.TestCase):
     def test_rerun_replaces_only_that_day_and_append_adds(self):
         self.assertEqual(build.run(self.base(), quiet)[0], 0)
         day2 = [dict(deal(i, "2026-10-02"), NOTIONAL=1.0) for i in range(7)]
-        self.src.write_text(json.dumps(day2), encoding="utf-8")
-        self.assertEqual(build.run(self.base(), quiet)[0], 0)
+        self.put(day2)
+        self.assertEqual(build.run(self.base(mode="overwrite-dates"), quiet)[0], 0)
         by_day = {}
         for r in self.table().to_pyarrow_table().to_pylist():
             by_day.setdefault(str(r["business_date"]), []).append(r)
@@ -185,7 +198,7 @@ class BuildTest(unittest.TestCase):
     def test_overwrite_partitions_keeps_the_days_other_partitions(self):
         self.assertEqual(build.run(self.base(), quiet)[0], 0)
         swaps = [dict(deal(i, "2026-10-01"), PRODUCT_TYPE="Swap") for i in range(3)]
-        self.src.write_text(json.dumps(swaps), encoding="utf-8")
+        self.put(swaps)
         self.assertEqual(build.run(self.base(mode="overwrite-partitions"), quiet)[0], 0)
         rows = [r for r in self.table().to_pyarrow_table().to_pylist() if str(r["business_date"]) == "2026-10-01"]
         counts = {}
@@ -195,23 +208,25 @@ class BuildTest(unittest.TestCase):
         self.assertGreater(counts["Future"], 0)
 
     def duplicates(self, stamped: bool):
-        """Two JSON Lines files (b sorted after a): deal 100001 twice in a.jsonl and once in b.jsonl on 2026-10-01, deal 100002 in both,
+        """Two folders of JSON Lines files (b sorted after a): deal 100001 twice in a/ and once in b/ on 2026-10-01, deal 100002 in both,
         deal 100003 on two dates (not a duplicate); with ``stamped`` each copy carries a COMPUTED_AT, the latest not the last read."""
         folder = self.root / "drop"
-        folder.mkdir()
+        (folder / "a").mkdir(parents=True)
+        (folder / "b").mkdir()
 
         def d(i, day, tag, at=None):
             x = dict(deal(i, day), TAG=tag)
             if stamped and at:
                 x["COMPUTED_AT"] = at
             return json.dumps(x)
-        (folder / "b.jsonl").write_text("\n".join([d(1, DATES[0], "b1", "2026-10-01T09:00:00Z"),
-                                                   d(2, DATES[0], "b2", "2026-10-01T12:00:00+02:00")]) + "\n", encoding="utf-8")
-        (folder / "a.jsonl").write_text("\n".join([d(1, DATES[0], "a1", "2026-10-01T10:00:00Z"),
-                                                   d(2, DATES[0], "a2", "2026-10-01T10:30:00Z"),
-                                                   d(1, DATES[0], "a3", "2026-10-01T08:00:00Z"),
-                                                   d(3, DATES[0], "a4"), d(3, DATES[1], "a5")]) + "\n", encoding="utf-8")
-        code, s = build.run(self.base(src=[str(folder)], partition_by=None), quiet)
+        (folder / "b" / "deal.2026-10-01.jsonl").write_text("\n".join([d(1, DATES[0], "b1", "2026-10-01T09:00:00Z"),
+                                                                   d(2, DATES[0], "b2", "2026-10-01T12:00:00+02:00")]) + "\n", encoding="utf-8")
+        (folder / "a" / "deal.2026-10-01.jsonl").write_text("\n".join([d(1, DATES[0], "a1", "2026-10-01T10:00:00Z"),
+                                                                   d(2, DATES[0], "a2", "2026-10-01T10:30:00Z"),
+                                                                   d(1, DATES[0], "a3", "2026-10-01T08:00:00Z"),
+                                                                   d(3, DATES[0], "a4")]) + "\n", encoding="utf-8")
+        (folder / "a" / "deal.2026-10-02.jsonl").write_text(d(3, DATES[1], "a5") + "\n", encoding="utf-8")
+        code, s = build.run(self.base(src=[str(folder)], recursive=True, partition_by=None), quiet)
         self.assertEqual(code, build.EXIT_OK, s.get("error"))       # duplicates never fail a load
         rows = {(str(r["business_date"]), r["id"]): json.loads(r["doc"])["TAG"] for r in self.table().to_pyarrow_table().to_pylist()}
         return s, rows
@@ -223,9 +238,10 @@ class BuildTest(unittest.TestCase):
         self.assertEqual(s["duplicates"], {"2026-10-01": 3})
         self.assertEqual(s["accepted"], 7)
         self.assertEqual(s["rows"], {"2026-10-01": 3, "2026-10-02": 1})
-        self.assertEqual(s["duplicateExamples"], [{"date": "2026-10-01", "kept": "b.jsonl:1", "dropped": "a.jsonl:1"},
-                                                  {"date": "2026-10-01", "kept": "b.jsonl:2", "dropped": "a.jsonl:2"},
-                                                  {"date": "2026-10-01", "kept": "b.jsonl:1", "dropped": "a.jsonl:3"}])
+        f = "deal.2026-10-01.jsonl"
+        self.assertEqual(s["duplicateExamples"], [{"date": "2026-10-01", "kept": f"{f}:1", "dropped": f"{f}:1"},
+                                                  {"date": "2026-10-01", "kept": f"{f}:2", "dropped": f"{f}:2"},
+                                                  {"date": "2026-10-01", "kept": f"{f}:1", "dropped": f"{f}:3"}])
 
     def test_duplicates_keep_the_latest_computed_at(self):
         s, rows = self.duplicates(stamped=True)
@@ -234,7 +250,7 @@ class BuildTest(unittest.TestCase):
         self.assertEqual(rows[("2026-10-01", "100002")], "a2")
         self.assertEqual(s["duplicates"], {"2026-10-01": 3})
         self.assertEqual(s["latestBy"], "COMPUTED_AT")
-        self.assertEqual(s["duplicateExamples"][0], {"date": "2026-10-01", "kept": "a.jsonl:1", "dropped": "a.jsonl:3"})
+        self.assertEqual(s["duplicateExamples"][0], {"date": "2026-10-01", "kept": "deal.2026-10-01.jsonl:1", "dropped": "deal.2026-10-01.jsonl:3"})
 
     def test_the_timestamp_rule(self):
         import stage
@@ -279,7 +295,6 @@ class BuildTest(unittest.TestCase):
                 build.LakeLock(self.lake).__enter__()
 
     def test_usage_failures(self):
-        self.assertEqual(build.run(self.base(date=None), quiet)[0], build.EXIT_FAILED)
         self.assertEqual(build.run(self.base(partition_by=["id"]), quiet)[0], build.EXIT_FAILED)
         code, s = build.run(self.base(src=[str(self.root / "missing.json")]), quiet)
         self.assertEqual(code, build.EXIT_FAILED)
@@ -398,7 +413,7 @@ class CommandLineTest(unittest.TestCase):
             src.write_text("\n".join(json.dumps(d) for d in book(12)) + "\n{}\n", encoding="utf-8")
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
-                code = drishti.main(["lake", "build", "--from", str(src), "--kind", "deal", "--key", "TRADE_ID", "--date", "TRADE_DATE",
+                code = drishti.main(["lake", "build", "--from", str(src), "--kind", "deal", "--key", "TRADE_ID", "--as-of", "2026-10-01",
                                      "--domain", "trading", "--lake", str(lake), "--engine", "deltalake", "--partition-by", "DESK"])
             self.assertEqual(code, 2, out.getvalue())                          # written, one reject
             self.assertIn("rejected 1: no id (field 'TRADE_ID' is missing or empty)", out.getvalue())
@@ -411,7 +426,8 @@ class CommandLineTest(unittest.TestCase):
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
                 self.assertEqual(drishti.main(["lake", "scan", str(src)]), 0)
-            self.assertIn("suggested --key TRADE_ID   --date TRADE_DATE", out.getvalue())
+            self.assertIn("suggested --key TRADE_ID", out.getvalue())
+            self.assertIn("the rows' date field: TRADE_DATE (counted only", out.getvalue())
 
 
 class ScanTest(unittest.TestCase):

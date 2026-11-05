@@ -1,0 +1,109 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The under-construction registry (docs/admin/UNDER_CONSTRUCTION.md, generated from this file by tools/under_construction.py): every
+# figure, panel, menu item, help page, contract or decision that depends on work not built yet, and how a person meets it.
+#   treatment: under-construction   shown, with the words "Under construction" (a chip) in place of its value
+#   treatment: hidden               left out
+# The data stays in the lake; only what is displayed changes. The server rewrites a kind's Sutra when it is matched (strip items and kv or
+# table columns by their bind, panels by their id); the console hides or marks the menu items and help pages named here. A new item that
+# depends on unbuilt work is registered here in the same change (PACK_DEVELOPER_GUIDE.md, "Unbuilt work: the under-construction registry").
+#
+# Each item: id, what (field | panel | menu item | help page | contract | decision | engine | test), about, release (the release that builds it),
+# treatment, and where it appears: sutras (kind, binds, panels), menus (menu item ids), help (help page slugs), contracts (contract
+# documents and their sections, for the record); screenshots: the shipped pictures that still show the item's old value (to retake).
+items:
+  - id: sa-ccr-figures
+    what: field
+    about: "SA-CCR exposure at default, replacement cost, add-ons, multiplier and RWA: stored figures of the sa-ccr kind, not computed by an SA-CCR engine"
+    release: 2.9.11.k
+    treatment: under-construction
+    sutras:
+      - kind: sa-ccr
+        binds: [$.REPLACEMENT_COST, $.ADD_ON, $.MULTIPLIER, $.EAD, $.RWA]
+        panels: [addons, hedging, checks]
+    help: [docs-contracts-saccr]
+    contracts: [docs/contracts/SACCR.md]
+
+  - id: cva-figures
+    what: field
+    about: "CVA, DVA, FVA, KVA and CS01 with their components and sensitivities: stored figures of the cva kind, not computed by an xVA engine"
+    release: "the xVA engine (planned)"
+    treatment: under-construction
+    sutras:
+      - kind: cva
+        binds: [$.CVA, $.DVA, $.FVA, $.KVA, $.CS01]
+        panels: [components, sens]
+      - kind: netting-set
+        binds: [$.CVA]
+    help: [docs-contracts-cva]
+    contracts: [docs/contracts/CVA.md]
+
+  - id: credit-limit-usage
+    what: field
+    about: "A credit limit's used amount and utilisation as stored, not measured against the exposure engine's figure"
+    release: 2.9.11.h
+    treatment: under-construction
+    sutras:
+      - kind: credit-limit
+        binds: [$.USED, $.UTILISATION, "@.USED", "@.UTILISATION", "$.LIMIT - $.USED", "$.LIMIT > 0 ? $.USED / $.LIMIT : null",
+                "$.LIMIT > 0 ? $.USED / $.LIMIT - $.UTILISATION : null"]
+        panels: [util]
+
+  - id: counterparty-stored-net-mtm
+    what: field
+    about: "The counterparty master's stored net MTM: the computed one, from the trade valuations, is shown beside it and stays"
+    release: "decided by the product owner (computed, or lifted from stored data)"
+    treatment: under-construction
+    sutras:
+      - kind: counterparty
+        binds: [$.NET_MTM, "@.NET_MTM", "$src.NET_MTM - $.NET_MTM"]
+
+  - id: pre-deal-limit-decision
+    what: decision
+    about: "The pre-deal limit decision: approve, refer or decline a candidate trade against every limit it touches (the exposure what-if itself is built)"
+    release: 2.9.11.h
+    treatment: under-construction
+    contracts: ["docs/contracts/LIM.md#64-pre-deal-check"]
+
+  - id: wwr-contract
+    what: contract
+    about: "Wrong-way risk: the contract of its inputs and results, planned"
+    release: "the wrong-way risk engine (planned)"
+    treatment: under-construction
+    help: [docs-contracts-wwr]
+    contracts: [docs/contracts/WWR.md]
+
+  - id: collateral-contract
+    what: contract
+    about: "Collateral: the planned contract of the computed collateral figures"
+    release: "the collateral engine (planned)"
+    treatment: under-construction
+    help: [docs-contracts-coll]
+    contracts: [docs/contracts/COLL.md]
+
+  - id: margin-call-contract
+    what: contract
+    about: "Margin calls: the planned contract of the computed margin call"
+    release: "the collateral engine (planned)"
+    treatment: under-construction
+    help: [docs-contracts-mc]
+    contracts: [docs/contracts/MC.md]
+
+  - id: flight-cluster-end-to-end
+    what: test
+    about: "Arrow Flight on a three-node cluster, end to end (endpoints on every node, a node stopped mid-read, a VaR stream through an intraday batch): not measured yet; the single-node reads, the stream, Stop and resume are run (tutorial 35)"
+    release: "a later heavy run (needs a three-node scratch cluster)"
+    treatment: under-construction
+    contracts: ["docs/guides/FLIGHT_GUIDE.md#13-testing"]

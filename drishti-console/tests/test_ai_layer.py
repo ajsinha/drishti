@@ -358,7 +358,7 @@ def test_admin_ai_test_connection_probes_one_provider_and_audits_it(client, tmp_
         client.app.state.ai = AiRuntime(Settings({"ai": {"enabled": True, "dir": str(tmp_path), "default_model": "mock/m"}}))
         ai_routes._tested(client.app).clear()
         page = client.get("/admin/ai").text
-        assert 'data-ai-test="mock"' in page and 'data-ai-test="local"' in page and "admin-ai-test.js" in page
+        assert 'data-ai-test="mock"' in page and 'data-ai-test="local"' in page and "drishti_admin-ai-test.js" in page
 
         r = client.post("/admin/ai/api/test/mock", json={})
         assert r.status_code == 200 and r.json()["ok"] is True and r.json()["models"] == [] and "no live call" in r.json()["detail"]

@@ -42,7 +42,7 @@ _CODE = re.compile(r'<pre><code(?: class="language-([\w+-]+)")?>(.*?)</code></pr
 _BOX = {"tip": "tip", "warning": "warn", "danger": "warn", "note": "concept", "info": "concept", "example": "concept"}
 _TAG = re.compile(r"<[^>]+>")
 _MARKUP = re.compile(r"</?(?:code|em|strong|b|i|a|span|kbd|del|sub|sup)\b[^>]*>")   # inline markup only: "<kind>" in a heading is text
-# A screenshot in a guide: fitted to its column by help.css and wrapped in a link that opens it full size (UX-03).
+# A screenshot in a guide: fitted to its column by drishti_help.css and wrapped in a link that opens it full size (UX-03).
 _RELATIVE_SRC = re.compile(r'(<img\b[^>]*?\b)src="((?![a-z][a-z0-9+.-]*:|/|#|data:)[^"]+)"', re.I)
 _IMG = re.compile(r'(<a\b[^>]*>\s*)?(<img\b[^>]*?\bsrc="([^"]+)"[^>]*>)')
 # A link written in a guide: relative links are resolved against the guide's file (DOC-18).

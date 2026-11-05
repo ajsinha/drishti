@@ -18,7 +18,7 @@ the JSON the workbench still asks of this prefix: preview, test, summary, schema
 test entities Studio kept (read once, when a Design starts from a Sutra)."""
 from __future__ import annotations
 
-from urllib.parse import parse_qs, quote, urlencode
+from urllib.parse import parse_qs, urlencode
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse
@@ -183,28 +183,6 @@ async def example(request: Request, name: str):
     if ex is None:
         return JSONResponse({"code": "NOT_FOUND", "detail": "no such example"}, status_code=404)
     return {"name": ex.name, "title": ex.title, "kind": ex.kind, "yaml": ex.yaml, "json": ex.json}
-
-
-def _moved(request: Request, path: str, status: int = 302) -> RedirectResponse:
-    q = request.url.query
-    return RedirectResponse(f"/build/reviews{path}" + (f"?{q}" if q else ""), status_code=status)
-
-
-@router.get("/reviews")
-async def reviews(request: Request):
-    """The review pages live in the workbench's Govern menu now (``/build/reviews``)."""
-    return _moved(request, "")
-
-
-@router.get("/reviews/{id_}")
-async def review(request: Request, id_: str):
-    return _moved(request, f"/{quote(id_, safe='')}")
-
-
-@router.post("/reviews/{id_}/{action}")
-async def decide(request: Request, id_: str, action: str):
-    """A decision posted to the old address is sent on with its form (307 keeps the method and the body)."""
-    return _moved(request, f"/{quote(id_, safe='')}/{quote(action, safe='')}", status=307)
 
 
 @router.get("/source/{name}/{version}")

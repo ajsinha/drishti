@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""What the inspector reads of a Sutra (build/yamlmodel.js, on Studio's forgiving reader), run in Node: every panel of every example,
+"""What the inspector reads of a Sutra (build/drishti_yamlmodel.js, on Studio's forgiving reader), run in Node: every panel of every example,
 including panels written as a flow mapping over several lines, and the options of a panel as values."""
 import json
 from pathlib import Path
@@ -30,8 +30,8 @@ pytestmark = pytest.mark.skipif(NODE is None, reason="needs node")
 
 def model(text: str) -> dict:
     code = ("global.window=global;const fs=require('fs');eval(fs.readFileSync(process.argv[1],'utf8'));eval(fs.readFileSync(process.argv[2],'utf8'));"
-            "console.log(JSON.stringify(window.DrishtiWB.model(process.argv[3])))")
-    out = subprocess.run([NODE, "-e", code, str(JS / "studio-yaml.js"), str(JS / "build" / "yamlmodel.js"), text], capture_output=True, text=True, check=True, timeout=30)
+            "console.log(JSON.stringify(window.Drishti.WB.model(process.argv[3])))")
+    out = subprocess.run([NODE, "-e", code, str(JS / "drishti_studio-yaml.js"), str(JS / "build" / "drishti_yamlmodel.js"), text], capture_output=True, text=True, check=True, timeout=30)
     return json.loads(out.stdout)
 
 

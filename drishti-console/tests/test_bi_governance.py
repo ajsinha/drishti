@@ -41,7 +41,7 @@ def test_the_item_page_has_the_governance_sections_and_script(bi):
     page = client.get("/bi/i/bi-1").text
     for marker in ("data-sec-history", "data-sec-review", "data-sec-impact", "data-sec-lineage", "data-diff-form", "data-force", "data-warnings", 'name="message"'):
         assert marker in page
-    assert "/static/js/bi-govern.js" in page and "/static/js/bi-lib.js" in page
+    assert "/static/js/drishti_bi-govern.js" in page and "/static/js/drishti_bi-lib.js" in page
     assert "<script>" not in page.replace("<script src", "") and " onclick=" not in page
 
 
@@ -49,7 +49,7 @@ def test_environments_page_is_in_the_rail_and_has_the_export_and_import_forms(bi
     client, _ = bi
     r = client.get("/bi/environments")
     assert r.status_code == 200 and 'data-bi-page="environments"' in r.text
-    assert "data-export" in r.text and "data-import" in r.text and "Dry run" in r.text and "/static/js/bi-env.js" in r.text
+    assert "data-export" in r.text and "data-import" in r.text and "Dry run" in r.text and "/static/js/drishti_bi-env.js" in r.text
     assert 'href="/bi/environments"' in client.get("/bi").text
     none, _ = make(powers=())
     assert none.get("/bi/environments").status_code == 403

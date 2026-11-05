@@ -13,9 +13,64 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.c — release notes
+
+*Released 2026-11-05.* **Data in by clear rules, data out through Arrow Flight; parametric VaR as a cross-check; lean & streamlined.**
+
+## What changes for VaR users
+
+- **Parametric VaR beside historical, in the same screen.** The VaR explorer gains a **Parametric** toggle: the normal-model VaR and ES
+  beside the historical figures, the tree's Parametric and Gap columns, the normal curve over the P&L histogram (key N) and a ? on every
+  figure that shows how it was calculated; the VaR Playground gains a Parametric tab with each step as a formula. `PVAR` opens the
+  explorer with the toggle on. `pvar()` works in the pivot and the MR cube (tutorial 43, VAR_GUIDE sections 3.12 and 18.15).
+- **VaR figures are unchanged**: the release was checked against the previous release (2.9.11.b) on the same data: VaR and ES of every node of
+  the three hierarchies (131 nodes) on all three business dates, 1-day and 10-day, and the 28 stored portfolios: 2,526 figures, every one
+  equal. The same figures with OpenBLAS switched on were equal too.
+- **OpenBLAS is bundled and off as shipped.** VaR is computed by the Java kernels, as before. Turning the `openblas` engine on in
+  Admin → Engines gives the same figures (proved to the dollar on 250,000 positions) and faster sums when many overlapping scopes are
+  asked at once; measure on your own hardware first (BENCHMARK.md section 17).
+
+## New
+
+- **Data load rules** (DATA_LOAD_RULES.md, DATA_GUIDE): a file's table and business date come from its name
+  (`<table>.<YYYY-MM-DD>.jsonl.gz`), from its `.ready` control file or from the command line, never from a row; a tar of
+  `<table>/<date>/` folders carries several tables and dates and loads all or nothing; loads **append** by default, every row carries
+  its load id, and `drishti.py lake undo` removes a load. The same rules in the Python and Java loaders, the data inbox and every store
+  loader. The demo and test data follow them (the same rows, the same lake, the same VaR).
+- **Arrow Flight and Flight SQL** (FLIGHT_GUIDE, tutorial 35): Drishti's data, VaR vectors and models to any Arrow Flight client, and
+  a read-only SQL door for JDBC and ODBC tools; client examples for Python, Java and Excel.
+- **One file per lake** (LAKE_GUIDE, tutorial 34): `config/lakes/<lake>.yaml` names each table's partitions, load mode, retention and
+  maintenance; `drishti.py lake check` proves every connector and table agrees with it.
+- **The function catalogue** (FUNCTIONS.md): statistics, finance and Excel/SAS/MATLAB equivalents in Rachana and the pivot engine.
+- **Under construction, said plainly:** anything not built yet is hidden or marked "Under construction" from one registry
+  (docs/admin/UNDER_CONSTRUCTION.md), for example the stored SA-CCR and CVA figures and the stored credit-limit usage.
+
+## Fixed
+
+- **Security:** a column a BI dataset declares masked is now masked for every reader without the raw power, also in an installation
+  whose `drishti.security.redact` is empty (before, it then showed); with the shipped settings nothing changes.
+
+## Upgrade
+
+- **Loading data:** name daily files `<table>.<YYYY-MM-DD>.jsonl.gz` (or give the date in the `.ready` file or with `--as-of`); a file
+  without a date is loaded under today's business date. A plain file holds one table and one date; several go in a tar. Loads append by
+  default: use `mode: replace` (the `.ready` file, `--mode` or the lake file) to replace a date. Existing Delta tables gain the two load
+  columns on their first load, without rewriting old files.
+- **Static files are named `drishti_<name>`**: a page or embed that linked our JavaScript or CSS by the old names still gets the file.
+- **OpenBLAS is off**: a server that relied on it turns the `openblas` engine on in Admin → Engines (or `DRISHTI_OPENBLAS_ENABLED=true`).
+- **`/api/v1/notes` is removed** (deprecated in 2.9.10, a facade over comment threads): call `/api/v1/threads`. Notes made before are
+  threads already.
+- **Ask's old model settings are removed** (`drishti.explain.ask.endpoint`, `api`, `api-key`; `DRISHTI_ASK_ENDPOINT`, `DRISHTI_ASK_KEY`): a
+  server that still sets them must move to a provider file (`config/ai/<name>.yaml` with `type`, `base-url` and `api-key: ${ENV}`), set
+  `drishti.ai.enabled: true` and `drishti.explain.ask.model: <name>/<model>` (docs/admin/AI.md). Without it Ask answers that no model is
+  configured; the rest of the page explanation works.
+- **Engine switches removed:** `DRISHTI_SACCR_ENABLED`, `DRISHTI_FVA_ENABLED`, `DRISHTI_CCR_CUBE_ENABLED` and a site's
+  `config/engines/sa-ccr.yaml`, `fva.yaml`, `ccr-cube.yaml` are no longer read (those engines are not built yet).
+- **`studio.enabled` and an edition's `studio:` feature are no longer read:** `/studio` follows Build (`features.build`).
+
 # Drishti 2.9.11.b — release notes
 
-*Released 2026-11-04.* **The MR cube and BI on the pivot engine; live pivots and pivots at scale; one grammar, one engine; the VaR
+*Released 2026-11-05.* **The MR cube and BI on the pivot engine; live pivots and pivots at scale; one grammar, one engine; the VaR
 screen's baskets in two searchable lists; a console that keeps every person's session to themselves.**
 
 ## What changes for VaR users

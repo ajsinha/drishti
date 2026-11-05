@@ -17,13 +17,12 @@ package com.ash.drishti.server;
 
 import com.ash.drishti.deltalake.write.LakeManifest;
 import com.ash.drishti.deltalake.write.LakeWriter;
+import com.ash.drishti.testkit.FeedFiles;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -35,7 +34,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.zip.GZIPInputStream;
 
 /**
  * The demo lakes of some packs, built in-test from the committed test data exactly as {@code drishti.py lake demo} builds them: each
@@ -93,24 +91,24 @@ final class PublicPackLakes {
                 continue;                                  // the sixty-day synthetic datasets are not needed here
             }
             String kind = ds.path("kind").asText();
-            JsonNode connector = YAML.readTree(PACKS.resolve(pack).resolve("pack.yaml").toFile()).path("connectors").path(ds.path("connector").asText());
-            JsonNode settings = connector.path("settings");
-            List<String> promoted = new ArrayList<>();
-            settings.path("layout").path(kind).path("columns").forEach(c -> promoted.add(c.asText()));
+            // the pack's entry for the kind, from its lake: block (its templates name lake: demo) or an older template's layout
+            com.ash.drishti.lakeconfig.PackEntry entry = com.ash.drishti.lakeconfig.PackEntry.read(PACKS.resolve(pack), kind,
+                    ds.path("connector").asText(null));
+            List<String> promoted = new ArrayList<>(entry.promote());
             TreeMap<String, JsonNode> docs = new TreeMap<>();
-            if (ds.has("snapshot")) {                      // one file, or a large kind's parts (the funds pack's holdings)
-                List<String> files = new ArrayList<>();
-                ds.path("parts").forEach(p -> files.add(p.asText()));
-                if (files.isEmpty()) {
-                    files.add(ds.path("snapshot").asText());
-                }
-                for (String f : files) {
-                    docs.putAll(snapshot(TESTDATA.resolve(ds.path("folder").asText()).resolve(f), ds.path("key").asText()));
+            if (ds.has("snapshot")) {                      // its dated file, or a large kind's tar of parts (the funds pack's holdings)
+                List<FeedFiles.Part> parts = FeedFiles.parts(TESTDATA.resolve(ds.path("folder").asText()));
+                String newest = parts.isEmpty() ? "" : parts.get(parts.size() - 1).date();
+                for (FeedFiles.Part f : parts) {
+                    if (f.date().equals(newest)) {
+                        docs.putAll(snapshot(f.lines(), ds.path("key").asText()));
+                    }
                 }
             } else {
                 docs = samples(Path.of("..").resolve(ds.path("samples").asText()), kind);
             }
-            table(lake.resolve(settings.path("domain").asText(pack)).resolve(kind), stage.resolve(pack + "-" + kind + ".rows"), docs, promoted);
+            table(lake.resolve(entry.domain() == null || entry.domain().isBlank() ? pack : entry.domain())
+                    .resolve(entry.table() == null ? kind : entry.table()), stage.resolve(pack + "-" + kind + ".rows"), docs, promoted);
         }
         try (var walk = Files.walk(stage)) {
             walk.sorted(java.util.Comparator.reverseOrder()).forEach(p -> p.toFile().delete());
@@ -119,17 +117,12 @@ final class PublicPackLakes {
     }
 
     /** A snapshot's documents by id (its key field, as text). */
-    private static TreeMap<String, JsonNode> snapshot(Path snapshot, String key) throws IOException {
+    private static TreeMap<String, JsonNode> snapshot(List<String> lines, String key) throws IOException {
         TreeMap<String, JsonNode> docs = new TreeMap<>();
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(new GZIPInputStream(Files.newInputStream(snapshot)), StandardCharsets.UTF_8))) {
-            String line;
-            while ((line = in.readLine()) != null) {
-                if (!line.isBlank()) {
-                    JsonNode d = JSON.readTree(line);
-                    JsonNode id = d.path(key);
-                    docs.put(id.isNumber() && id.canConvertToLong() ? String.valueOf(id.asLong()) : id.asText(), d);
-                }
-            }
+        for (String line : lines) {
+            JsonNode d = JSON.readTree(line);
+            JsonNode id = d.path(key);
+            docs.put(id.isNumber() && id.canConvertToLong() ? String.valueOf(id.asLong()) : id.asText(), d);
         }
         return docs;
     }

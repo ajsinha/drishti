@@ -157,7 +157,12 @@ Configuration ships with these:
 | `viewer` | everything | masked | — | — | — | — | — (`layout: false`) |
 | `author` | everything | yes | yes | — | — | yes | yes |
 | `approver` | everything | yes | yes | yes | — | yes | yes |
+| `pivot-approver` | everything | masked | — | — | — | — | yes |
 | `admin` | everything | yes | yes | — | yes (and admins may approve) | yes | yes |
+
+`pivot-approver` approves custom pivot functions someone else wrote (four eyes: never one's own; administrators may too); it is the
+role `drishti.pivot.functions.approver-role` names as shipped ([PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md)). Its `approve` is not the
+Sutra review's: a pivot approver does not make Sutras live.
 
 Packs add their own. The seven shipped packs add `trader` (trading), `market-risk` (market-risk), `credit-risk` (counterparty-risk),
 `economist` and `analyst` (world-economy), `news-analyst` and `market-analyst` (news-and-markets); core and market-data add none. The roles
@@ -617,7 +622,7 @@ The console keeps a few answers for a moment so pages draw quickly. Nothing it k
 - **Responses**: every page and answer is sent `Cache-Control: private, no-store` (the static files excepted), so neither a shared proxy nor
   the browser's back button shows a person's page after they sign out.
 - **The browser**: what pages keep in this browser (the VaR basket, Calc's drafts and history, column filters, table sizes, the capacity
-  plan, BI Studio's tabs and drafts, the controls' choices) is named per person (`window.drishtiKey`), and **Sign out** clears it
+  plan, BI Studio's tabs and drafts, the controls' choices) is named per person (`window.Drishti.key`), and **Sign out** clears it
   (`Clear-Site-Data: "storage"`).
 - **Links that change something** (open or leave a lens, choose Home's landing) are posted; opening their address shows a form, so a
   crawler, a prefetch or another site's link changes nothing.

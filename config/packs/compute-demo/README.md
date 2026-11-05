@@ -41,7 +41,6 @@ depends-on:
   - delta
   - reactive
   settings:
-  - DRISHTI_DELTA_ROOT
   - DRISHTI_LAKE_ENABLED
 sources:
 - name: Synthetic P&L strips (a seeded random walk, config/packs/compute-demo/tools/make_samples.py)
@@ -172,7 +171,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `path-sum-python` | `reactive` | `path-sum` | on |
 | `path-sum-java` | `reactive` | `path-sum-java` | on |
 
-Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`.
+Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 

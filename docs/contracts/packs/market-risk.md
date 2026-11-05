@@ -38,7 +38,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [PNLH](#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) | `pnl-history` | input | active | 16 | 0 |
 | [SENS](#sens-position-sensitivities-position-sensitivity) | `position-sensitivity` | input | active | 28 | 1 |
 | [RFAC](#rfac-risk-factor-dictionary-risk-factor) | `risk-factor` | fundamental | active | 27 | 1 |
-| [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 29 | 0 |
+| [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 44 | 0 |
 | [VOFF](#voff-var-official-results-published-var-official) | `var-official` | computed | active | 31 | 0 |
 | [SSPNL](#sspnl-stress-pl-of-a-scenario-across-desks-derived-from-the-stress-results-stress-scenario-pnl) | `stress-scenario-pnl` | computed | active | 11 | 0 |
 
@@ -93,7 +93,7 @@ A named historical or hypothetical shock set.
 
 **To review (4)**
 
-- required inferred from 100% coverage in 16 documents (8 samples and 8 test-data documents (data/testdata/market-risk/stress-scenario/snapshot-2026-07-08.jsonl.gz, data/testdata/market-risk/stress-scenario/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 16 documents (8 samples and 8 test-data documents (data/testdata/market-risk/stress-scenario/stress-scenario.2026-07-08.jsonl.gz, data/testdata/market-risk/stress-scenario/stress-scenario.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'stress-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - no unit stated for the amounts SHOCKS[].SHOCK (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
@@ -154,7 +154,7 @@ P&L of a desk under a scenario, by book.
 
 **To review (4)**
 
-- required inferred from 100% coverage in 160 documents (80 samples and 80 test-data documents (data/testdata/market-risk/stress-result/snapshot-2026-07-08.jsonl.gz, data/testdata/market-risk/stress-result/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 160 documents (80 samples and 80 test-data documents (data/testdata/market-risk/stress-result/stress-result.2026-07-08.jsonl.gz, data/testdata/market-risk/stress-result/stress-result.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'stress-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: SCENARIO_NAME: confirm they are closed lists.
@@ -227,7 +227,7 @@ Delta, vega and curvature by risk class and bucket (SBM).
 
 **To review (5)**
 
-- required inferred from 100% coverage in 60 documents (30 samples and 30 test-data documents (data/testdata/market-risk/frtb-sensitivity/snapshot-2026-07-08.jsonl.gz, data/testdata/market-risk/frtb-sensitivity/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 60 documents (30 samples and 30 test-data documents (data/testdata/market-risk/frtb-sensitivity/frtb-sensitivity.2026-07-08.jsonl.gz, data/testdata/market-risk/frtb-sensitivity/frtb-sensitivity.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'frtb-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: SENSITIVITIES[].RISK_CLASS, SENSITIVITIES[].BUCKET, BY_CLASS[].RISK_CLASS: confirm they are closed lists.
@@ -295,7 +295,7 @@ Daily P&L attributed to risk factors, new trades and residual.
 
 **To review (5)**
 
-- required inferred from 100% coverage in 60 documents (30 samples and 30 test-data documents (data/testdata/market-risk/pnl-explain/snapshot-2026-07-08.jsonl.gz, data/testdata/market-risk/pnl-explain/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 60 documents (30 samples and 30 test-data documents (data/testdata/market-risk/pnl-explain/pnl-explain.2026-07-08.jsonl.gz, data/testdata/market-risk/pnl-explain/pnl-explain.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'pnl-explain' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: ATTRIBUTION[].FACTOR: confirm they are closed lists.
@@ -372,7 +372,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 
 **To review (6)**
 
-- required inferred from 100% coverage in 2765 documents (765 samples and 2000 test-data documents (data/testdata/market-risk/trade-valuation/snapshot-2026-07-08.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 2765 documents (765 samples and 2000 test-data documents (data/testdata/market-risk/trade-valuation/trade-valuation.2026-07-08.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'risk-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, BUY_SELL_CODE, TRADE_STATUS, CURRENCY: confirm they are closed lists.
@@ -546,7 +546,7 @@ A portfolio in terms of the positions inside it: longs and shorts, market value,
 
 **To review (4)**
 
-- required inferred from 100% coverage in 31 documents (3 samples and 28 test-data documents (data/testdata/market-risk/portfolio/cob-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 31 documents (3 samples and 28 test-data documents (data/testdata/market-risk/portfolio/portfolio.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: TYPE: confirm they are closed lists.
@@ -651,7 +651,7 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 
 **To review (5)**
 
-- required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-001.jsonl.gz, data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-002.jsonl.gz, data/testdata/market-risk/pnl-vector/cob-2026-09-30.part-003.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/market-risk/pnl-vector/pnl-vector-2026-09-30.tar, data/testdata/market-risk/pnl-vector/pnl-vector-2026-09-30.tar, data/testdata/market-risk/pnl-vector/pnl-vector-2026-09-30.tar)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: SOURCE_SYSTEM, TRADE_STATUS, PRODUCT_GROUP, CURRENCY, DIRECTION: confirm they are closed lists.
@@ -763,7 +763,7 @@ A trade's present value under each historical scenario and its base PV of the sa
 
 **To review (5)**
 
-- required inferred from 100% coverage in 1340 documents (1 samples and 1339 test-data documents (data/testdata/market-risk/scenario-pv/cob-2026-09-30.part-001.jsonl.gz, data/testdata/market-risk/scenario-pv/cob-2026-09-30.part-002.jsonl.gz, data/testdata/market-risk/scenario-pv/cob-2026-09-30.part-003.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 1340 documents (1 samples and 1339 test-data documents (data/testdata/market-risk/scenario-pv/scenario-pv-2026-09-30.tar, data/testdata/market-risk/scenario-pv/scenario-pv-2026-09-30.tar, data/testdata/market-risk/scenario-pv/scenario-pv-2026-09-30.tar)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: TRADE_STATUS, PRODUCT_TYPE, CURRENCY, DIRECTION: confirm they are closed lists.
@@ -819,7 +819,7 @@ A currency's rate against USD today and under each historical scenario, as the r
 
 **To review (3)**
 
-- required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/market-risk/fx-scenario/cob-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/market-risk/fx-scenario/fx-scenario.tar)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 
@@ -870,7 +870,7 @@ The historical scenario days of a business date, oldest first: index i of every 
 
 **To review (3)**
 
-- required inferred from 100% coverage in 2 documents (1 samples and 1 test-data documents (data/testdata/market-risk/scenario-set/cob-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 2 documents (1 samples and 1 test-data documents (data/testdata/market-risk/scenario-set/scenario-set.tar)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 
@@ -929,7 +929,7 @@ One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the bo
 
 **To review (4)**
 
-- required inferred from 100% coverage in 90 documents (2 samples and 88 test-data documents (data/testdata/market-risk/risk-hierarchy/cob-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 90 documents (2 samples and 88 test-data documents (data/testdata/market-risk/risk-hierarchy/risk-hierarchy.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source is the pack's first listed source (its README): confirm.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: REF.KIND: confirm it is a closed list (HIERARCHY and LEVEL are open).
@@ -1278,7 +1278,7 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 
 |  |  |
 |---|---|
-| Contract | [var-result.contract.yaml](../../../config/packs/market-risk/contracts/var-result.contract.yaml) · version 1.2 |
+| Contract | [var-result.contract.yaml](../../../config/packs/market-risk/contracts/var-result.contract.yaml) · version 1.3 |
 | Class | computed |
 | Status | active |
 | Source | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.server.var.VarResultEngine) |
@@ -1321,6 +1321,21 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | `CHILDREN_NOTE` | text | optional |  | When CHILDREN is limited: "5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567". |  |  |
 | `WORST` | record list | required |  | The 25 worst scenarios (RANK, INDEX, DATE, PNL). |  |  |
 | `PNL` | vector | required | CURRENCY | The scope's P&L under each scenario day, oldest first (unrounded). |  |  |
+| `PARAMETRIC_VAR` | amount | optional | CURRENCY | Parametric VaR, a cross-check beside historical (PARAMETRIC_VAR.md): z·σ − μ at CONFIDENCE, positive for a loss; never official, never a limit's measure. |  |  |
+| `PARAMETRIC_ES` | amount | optional | CURRENCY | Parametric ES: σ·φ(z_ES)/(1 − ES_CONFIDENCE) − μ. |  |  |
+| `PARAMETRIC_MU` | amount | optional | CURRENCY | μ of the lens's vector (the normal's mean). |  |  |
+| `PARAMETRIC_SIGMA` | amount | optional | CURRENCY | σ of the lens's vector (sample, N − 1, or EWMA-weighted). |  |  |
+| `PARAMETRIC_Z` | amount | optional |  | Φ⁻¹(CONFIDENCE). |  |  |
+| `PARAMETRIC_N` | integer | optional |  | Scenarios (or 10-day windows) the fit used. |  |  |
+| `PARAMETRIC_WEIGHTING` | text | optional |  | equal or ewma. |  |  |
+| `PARAMETRIC_LAMBDA` | amount | optional |  | EWMA's decay; null with equal weights. |  |  |
+| `PARAMETRIC_HORIZON_RULE` | text | optional |  | lens or square-root-of-time. |  |  |
+| `PARAMETRIC_SKEW` | amount | optional |  | The vector's skewness (a normal: 0). |  |  |
+| `PARAMETRIC_EXCESS_KURTOSIS` | amount | optional |  | The vector's excess kurtosis (a normal: 0). |  |  |
+| `FAT_TAIL_GAP` | amount | optional | CURRENCY | VAR minus PARAMETRIC_VAR: positive when the scenario tail is heavier than the normal's. |  |  |
+| `FAT_TAIL_GAP_PCT` | rate | optional |  | FAT_TAIL_GAP over PARAMETRIC_VAR. |  |  |
+| `FAT_TAIL_ES_GAP` | amount | optional | CURRENCY | ES minus PARAMETRIC_ES. |  |  |
+| `PARAMETRIC_OFFICIAL` | boolean | optional |  | Always false: parametric VaR is a cross-check, never official. |  |  |
 | `PROVENANCE` | record | required |  | The headline's provenance in UPPER_SNAKE (VAR_GUIDE.md section 11.2), with TIER saying where the vector came from. |  |  |
 
 **Validation**

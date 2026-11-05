@@ -15,6 +15,469 @@
 -->
 # Changelog
 
+## 2.9.11.c (2026-11-05)
+
+- **Fixed before release:** with OpenBLAS off, Help hid the whole Operations guide (the engine's catalogue entry listed it as its own page); an engine now lists only pages about itself, and a test refuses a shared guide. The Admin → Engines browser test starts from OpenBLAS off.
+
+- Tests: the in-process S3 simulator (S3Mock) is never counted as handling racing conditional writes: the probe's five rounds passed by luck in Drill 2 and the race test then saw 7 winners; FakeS3 and MinIO cover the race.
+
+- **OpenBLAS is off as shipped** (`drishti.engines.openblas.enabled: false`; the product owner, 2026-11-04): a 250,000-position run gave the same VaR to the dollar with it on and off but no clear end-to-end gain; it is turned on per node in Admin → Engines after measuring on the bank's hardware, and profiled further with the native work of a later release.
+
+### Fixes
+
+- **Docs: the Flight client pages run for real.** PYTHON.md, JAVA.md, JDBC.md's Java snippet and ODBC.md carry real output from a Flight
+  server on the test data of 2026-09-30 (ODBC through the JDBC driver: its driver is an installer, not run here); PYTHON.md's examples
+  use a product of that data (`BASIS_SWAP`) and `count()`; FLIGHT_GUIDE section 10 gives the measured Arrow memory (the caps, a stream,
+  the bank's `var.parts` peaking at 17.8 MB). The three-node end to end is not measured yet: FLIGHT_GUIDE section 13 says so and it is
+  registered in `config/under-construction.yaml` (`flight-cluster-end-to-end`).
+- **The pivot playground shows each function state as its values** (`[Σ=0.036 n=2, Σ=4.0 n=2]`), never a Java object name, and its figures below 1 to four significant digits (0.007, not 0.01).
+
+- **The pivot Why card splits by any field of the source** (the field picker's catalogue), not only the view's rows and columns.
+
+- **The client examples read the trade kind's real fields**: the Java example and notebooks 02 and 07 ask for `QUANTITY` (the trade's notional or face amount), not `NOTIONAL`, which the trade contract does not have (DRS-5603); a test checks every example's paths against the kind's data contract.
+
+- **Flight model queries in the docs, the examples and the Python client use the model query's keys** (`select` with `fields` and `measures`, `where`, `sort`, `limit`), not the old report-visual body the server refuses (DRS-9150 unknown key 'fields'); a test checks them against the server's key list.
+
+- **The `pivot-approver` role is built in**, so the four-eyes approval of custom pivot functions works out of the box (a user given it was refused with DRS-6007 unknown role).
+
+- **Docs: the heavy run of tutorials 34, 36, 37, 38 and 43.** Every step run against a built server on the demo lake (writes to scratch
+  lakes only): real command output and light-theme screenshots in tutorials 34 (lake files), 36 (the data inbox), 38 (the MR cube) and
+  43 (parametric VaR, every figure the engine's), and 37 (custom functions, why and what-if: two signed-in people, the author's own approval refused; Split by offers the view's own rows and columns, the steps are a list, the function's column header is its call); new picture scripts `tools/docs/shots/t34.py`, `t36.py`,
+  `t37.py`, `t38.py`, `t43.py` (and `light()` in `_tut.py`). Text corrected to the product: three shipped lake files, not one; the endur
+  test file's real name; a repeated append batch reports its rows but commits nothing (the run summary says *batch appended already*);
+  Admin → Lakes lists the lake files but does not run the check; the inbox's folders are made by its first cycle; `stable-seconds` is
+  read at start; `date-from: name` needs `<name>.<YYYY-MM-DD>.jsonl.gz`; an unmatched file fails as *no pack, kind or table of that
+  name*; tutorial 37's fields are the trade source's own (`PRODUCT_TYPE`, `NOTIONAL`, `COUNTERPARTY`) and its members the demo's. The
+  six under-construction pictures retaken with their chips (computed 02, 03, 06, 07; t02/07; qa-windows/09).
+
+- **Docs: tutorial 35 (Arrow Flight) run for real.** Flight turned on from Admin → Engines over a test PKI, a reader's `data:read` token,
+  whoami and the catalogue, a desk's VaR scenario P&L in pandas (the 6th worst of 509 is the VaR; the VaR and ES travel in the Arrow
+  schema's metadata, not in pandas' attrs), the positions' float32 vectors summing to the desk's exactly, the Java page's program, a JDBC
+  client's answer through the Flight SQL driver (in place of a DBeaver picture), a live stream across an intraday batch, Stop
+  (`DRS-5610`) and resume; pictures by `tools/docs/shots/t35.py`. Text corrected: a token cannot make tokens (`DRS-5002`), the VaR is the
+  6th worst, Java 17 to 21 for Arrow 19. The JDBC example (`JdbcFlightSql.java`) and JDBC.md: a trust store is read only with
+  `useSystemTrustStore=false`.
+
+- **The pivot screen's Why, What-if and Functions buttons (keys W, I, U) work again**: their script looked for the screen's old root attribute (`data-pivot`, renamed `data-pivot-screen` when the old Pivot tab retired) and quietly did nothing; a browser test now opens each card and checks its content.
+
+- **A refused `lake build --lake NAME` no longer writes `./NAME/_drishti-lake/` in the current directory**: its summary goes to the lake's own folder (or `<data>/lakes/<name>/` when that is not known); the run summaries committed by mistake under `demo/` are removed; a guard test.
+
+- **The lake-file reader's development classpath uses one Jackson version** (databind, core and YAML of the same release), not the newest of each from the local Maven repository, which failed with NoSuchMethodError.
+
+- **`pack make`, `schema pack`, the pack catalogue and the lake-maintenance settings default to the repository's data folder** (or DRISHTI_DATA_DIR), never `./data` of wherever the command was started.
+
+- **The client example "read the lake directly" (notebook 09) resolves a nested default** in the lake file's root (`${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`) innermost first, as the server does; it built a folder named after the placeholder.
+
+- **Docs: FRTB-SA and SIMM are built.** REGULATORY_VAR_REPORTING.md (sections 1 and 8: the FRTB standardised approach built, its reports'
+  definitions not yet; internal models still designed), COMPETITIVE_ANALYSIS.md (the gaps and the comparison table: FRTB-SA and SIMM
+  built, uncertified), MR_CUBE_LENS.md and COMPUTED_ATTRIBUTES.md no longer say they are planned. The generated READMEs of the
+  compute-demo and news-and-markets packs and of the delta and iceberg plugins regenerated (they were stale).
+
+- **Client examples (examples/clients/README.md), read only, through Arrow Flight.** Nine Python notebooks, each cell explained and no
+  outputs stored: connect with a token and list what it may read; a kind into pandas and polars; a BI model query (`trades-basic`); a
+  pivot view with Rachana paths over trade legs (`sum($.LEGS[*].NOTIONAL)` by desk, a desk-by-year grid, trades with a JPY leg); a desk's
+  VaR scenario P&L plotted over its 509 historical days with the VaR scenario and the ES tail marked from the engine's own figures, and
+  one vector per position; a live intraday stream with resume; Drishti's data joined with your own in DuckDB; an in-memory lake table
+  (the plan pointing at its owner node, nothing written to disk); and a direct read of a table found through `config/lakes/demo.yaml`
+  with `deltalake` or `pyiceberg`, labelled for users who already hold lake access (no entitlements or masks, no in-memory tables, no
+  computed figures). A Java example in one file (a kind and a desk's VaR P&L, each part from the first node that answers) and a JDBC
+  example through Flight SQL (the models and their tables, then a statement); Excel through Python (`openpyxl`, no add-in), with the ODBC route through Flight SQL noted
+  (its driver is an installer). Tokens only from `DRISHTI_TOKEN` or `DRISHTI_TOKEN_FILE`. `test_client_examples.py`
+  checks every notebook's form on every run and runs every notebook, the Excel script and the Java example against a Flight server when
+  one is set. Linked from the Flight guide, the Python, Java, JDBC and ODBC pages and tutorial 35. C#/.NET, R and Go examples come later.
+- `tools/license_headers.py` checks notebooks: the notice is a notebook's first markdown cell.
+
+- **Arrow Flight: Drishti's data to any client (FLIGHT_GUIDE.md, FLIGHT_REFERENCE.md, tutorial 35, pages for Python, Java, JDBC and ODBC (C#/.NET, R and Go later); ARROW_FLIGHT.md).**
+  A new engine `flight` (`config/engines/flight.yaml`, off as shipped, a restart to turn on) answers Arrow Flight on its own port (18815),
+  TLS always (the server's certificate; mutual TLS with `tls.client-ca`). Requests are Rachana requests in five forms: `kind` (a kind's
+  rows on a day, its paths and filter lines, read by the Data view's reader with every check of a download), `model` (an MQ query),
+  `pivot` (a pivot view, as `POST /api/v1/pivot/query`), `measure` (`var.scenarios`, a scope's P&L vector in float64; `var.parts`, one
+  vector per part, float32 for positions and trades as the hot file keeps them) and `lake` (a table found through the lake configuration).
+  `GetFlightInfo` lists each part with the real addresses of the nodes that hold it; `DoGet` sends snapshots in batches, or with
+  `stream: true` a live stream (VaR after each intraday batch, appends to an in-memory table) whose batches carry a sequence to resume
+  after. API tokens only, with the new scope `data:read` (or `data:read:<domain>`), checked at the handshake by the token services; an
+  application's token may act on behalf of a person (`x-drishti-on-behalf-of`), an embed token for its signed-in person. Each read is
+  admitted by busy protection (`Work.FLIGHT`, `DRS-9506`), held to its role's rows, bytes and time limits and an Arrow memory cap per read
+  and per node (counted on Health's busy card), audited (`data.flight`), and shown on Admin → Data out (`GET /api/v1/admin/data-out`, Stop
+  a live read). New error codes `DRS-5601` to `DRS-5610`.
+- **One Arrow library.** Apache Arrow Java 19.0.0 (`arrow-vector`, `arrow-memory-netty`, `flight-core`; `flight-sql` managed for the next
+  step), one version for every Arrow artifact. The hand-written Arrow IPC code is gone: the compute workers' exchange (`ArrowIpc`), the
+  engine's result format and the Arrow answers (`ArrowIpcWriter`, `ArrowAnswers`) are written and read with the official library, the same
+  wire format (pyarrow, Arrow JS, DuckDB-Wasm and the Python workers read them unchanged). The JVM option
+  `--add-opens=java.base/java.nio=ALL-UNNAMED` Arrow's memory module needs is in the server jar's manifest and the test forks.
+- **The console writes no Arrow of its own.** It passes the server's Arrow bytes through and sends a JSON answer as JSON (an answer given
+  in time by a BI run now reaches the browser as JSON, which `drishtiFetchTable` reads as well); the scenario matrix's Arrow download is the
+  server's stream. Python reads Drishti's data through `clients/python/drishti_flight.py`, a one-file client over `pyarrow.flight`
+  (parallel parts, a node down served by the next, streams with resume, Drishti's codes on refusals, a command line).
+- **Direct memory for Arrow's buffers.** The official Arrow library keeps its buffers in direct memory, so the launchers now size it
+  from the one place that already sized the in-memory lake's stores, `tools/lake/memory_caps.py`: Arrow's budget (`--arrow-only`) is
+  512 MB for the compute exchange and BI answers (`DRISHTI_ARROW_EXCHANGE_MB`) plus Flight's `memory.total-mb` (now
+  `${DRISHTI_FLIGHT_MEMORY_MB:4096}`) when its engine is on; the stack, `start-server.ps1`, the ECS entrypoint (`DRISHTI_ARROW_MB`, no
+  Python in the image) and the IDE run configurations add it to `-XX:MaxDirectMemorySize` (the later flag wins) and pass it as Arrow's own
+  cap, `-Ddrishti.arrow.max-bytes`; the run configurations also carry `--add-opens=java.base/java.nio=ALL-UNNAMED` (they start from
+  classes). Tested by `tools/lake/test_memory_caps.py` (OPERATIONS.md 12.1a, FLIGHT_GUIDE.md section 10, CONFIGURATION.md).
+- **Flight SQL (Q10), the second step: SQL over the BI models from JDBC and ODBC tools (FLIGHT_GUIDE.md section 12, FLIGHT_REFERENCE.md
+  section 6).** On the same port, read only: a statement, written in DSQL, becomes a `form: model` read `{"model", "sql"}` answered by the
+  server's own SQL path (`SqlService`), never a second engine, and goes through the same token, scope (`data:read` or `data:read:bi`), BI
+  power, row rules, masks, busy protection, limits, Data out and audit. The model is named by a first line `-- model: <model>` or the
+  header `model` (a JDBC URL's `model=`). Catalog calls list one catalog, a schema per model the person may read and a table per alias of
+  the model; prepared statements are read only and stateless; updates, ingestion, transactions, Substrait and parameters are refused. A
+  client that sends its token on every call (the JDBC driver) keeps one session. `DrishtiSqlProducer`, `FlightSqlCatalog`,
+  `CallHeadersMiddleware`, `ServerFlightSqlCatalog`; `FlightSqlServiceTest`.
+- New module `drishti-flight` (plain Java: `FlightService`, `DrishtiFlightProducer`, `TokenAuthenticator`, `FlightRequest`,
+  `FlightBackend`, `FlightActivity`, `FlightLimits`); the server's wiring is `server.flight` (`FlightConfiguration`, `ServerFlightBackend`,
+  the forms, `DataOutController`). Tests: `FlightServiceTest`, `FlightServerTest`, `ArrowIpcTest`, the console's `test_flight_client.py`.
+- **The lake configuration: one file per lake (LAKE_GUIDE.md; LAKE_CONFIG.md "As built"; DELTA_CONNECTOR.md and ICEBERG_CONNECTOR.md,
+  As a connector file; DATA_GUIDE.md section 3; TOOLS.md sections 4 and 4.13).** `config/lakes/<lake>.yaml` says where a lake is (a
+  folder, `s3://`, or `mem://<store>`), how to reach it, and every table in it: path, partitions after `business_date` (always first, at
+  most four more), promoted columns, vectors, id, date, latest-by, load mode, file layout, retention, properties. A new module,
+  `drishti-lakeconfig` (plain Java and Jackson), reads and checks it once; the Python tools run its `LakesCli` for the JSON, so the
+  rules exist once. Writers refer to it: the parallel loader (`target.lake: <name>` and `target.kind`; a load key that contradicts the
+  file, such as `--partition-by`, is refused with both named; a kind the file lacks is refused), the data inbox (rules name a lake, `demo`
+  as shipped; a kind the lake lacks gets its pack's recommended entry copied into the file once), `lake build --lake <name>` (with
+  `--lake-root` for a scratch lake), `lake demo` and `build_demo_lakes.py` (the hard-coded `PRODUCT_TYPE` partition is gone:
+  `config/lakes/demo.yaml` describes the demo lake like any other). Readers refer to it: a Delta or Iceberg connector names `lake:` (and
+  `lake-tables:` where a kind has several tables), and its root, folders, storage, catalog, promoted columns and vectors come from the
+  file. **Append**: `load-mode: append` adds rows instead of replacing dates; each load's batch id is recorded in the commit (Delta: a
+  transaction id per batch and date; Iceberg: the snapshot summary), so a repeated or retried batch is never appended twice; the inbox
+  sends one for every load. **In-memory stores are lakes** (`root: mem://<store>`, `memory: {max-mb, contract, ...}`); the engine file
+  keeps the switch, the replenish jobs and the compaction policy. **Checks**: `drishti.py lake check` (connectors name known lakes; each
+  lake file matches its tables on disk: format, partition columns, promoted columns; reported, never rewritten) and `drishti.py lake
+  show`. **Admin → Lakes** lists every lake and table from the files, read-only (`GET /api/v1/admin/lakes/files`). **Migration**:
+  `drishti.py lake migrate-config [--write]` writes lake files from connector files that still carry `root`, `domain`, `table.<kind>` or
+  `layout.<kind>.*` and rewrites them to `lake: <name>`; until then such a connector starts as before with one warning (the old keys are
+  removed one release later). Nothing under the data folder changes. Help: Data → Loads and lakes → Lake guide, and tutorial 35
+  (one file per lake). **Every shipped pack** now ships its tables as a `lake:` block and its Delta templates name `lake: demo` and
+  `lake-tables:` (the generators write it through `tools/packlake.py`; the tools that read a template's layout read it through the same
+  module); `config/lakes/demo.yaml` holds their entries and ships inside the server too, so a container or a stack node knows the demo
+  lake. A template update never adds `lake:` to an older connector file. References nest (`${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`).
+  The connector examples are in the lake form with their lake files in `config/lakes.examples/`; the stack's synthetic lakes are laid
+  out by the demo lake file. `lake build` passes the parallel loader a lake by name (or the table's path, never a folder as a lake) and
+  `--batch-id`; its Python path refuses a lake-file append table (the batch rule lives in the loader only). **The official results**
+  are lakes of their own (`config/lakes/var-official.yaml`, `ccr-official.yaml`: format, root and storage from the publishers' settings),
+  so `var-results` and `exposure-results` name them and the demo has no older-form connector left; the server only makes them Iceberg
+  when the publisher writes Iceberg. **The data inbox's loader** is handed the settings the lake files refer to as the server resolves
+  them (a `DRISHTI_DELTA_ROOT` given as a `--setting` reaches it). **`build_demo_lakes.py --store ...=iceberg`** writes its connectors in
+  the lake form (`lake: demo-iceberg`, its lake file beside the connector folder). **`lake maintain`** acts on a table's lake file:
+  `retention`, `maintenance` (compaction, vacuum or expire-snapshots age, checkpoint, target size; `checkpoint-interval` set by the
+  writers as `delta.checkpointInterval`) and `time-travel`, over the maintenance file and under the domain's retention floor.
+- **Every static asset we wrote is named `drishti_<name>`, and the console puts one global on `window` (product owner, 2026-11-03).** The
+  console's own files under `web/static/` (`js/`, `js/build/`, `css/`, `img/`, `calc/`, the web manifest) are renamed by
+  `tools/dev/asset_prefix.py` (`bi-runs-tab.js` -> `drishti_bi-runs-tab.js`, `drishti-logo.png` -> `drishti_logo.png`), with every template, route,
+  test, tool and document that names them; vendored libraries and the published renderer versions keep their names. Every global the scripts
+  set moves under `window.Drishti` (`window.drishtiWorkbench` -> `window.Drishti.workbench`, `window.DrishtiBusy` -> `window.Drishti.Busy`), except
+  `drishtiModules`, `drishtiBi` and `drishtiGeo`, which the published renderer and Elements versions read. Custom events start `drishti:`
+  (`bi:reload` -> `drishti:bi-reload`). The embed routes keep their public names (`/embed/v2/js/tables.js` serves `drishti_tables.js`), and
+  `/static/js/<name>.js` for an old name answers with the `drishti_` file, so renderer 1.0.0-1.2.0 pages keep working. Guard:
+  `drishti-console/tests/test_asset_names.py` (file names, window globals, storage keys, custom elements and events, no new generic CSS class
+  or third-party data- attribute). The mapping is `tools/dev/asset_prefix_map.yaml`.
+
+- **One linear-algebra seam** (`compute.linalg.LinearAlgebra`: `dgemm`, `dgemv`, `ddot`, `daxpy`) with a pure-Java implementation and
+  **OpenBLAS 0.3.26 bundled** through JavaCPP (`org.bytedeco:openblas`, the `linux-x86_64` and `windows-x86_64` builds only, about
+  44 MB); nothing to install on a server, nothing added to the Docker images. Unpacked under `drishti.native.cache-dir`
+  (`<data>/native-cache`); one OpenBLAS thread per call. Only `NativeBlas` names the binding (an ArchUnit rule).
+- **`drishti.native.blas.mode`**: `auto` (default: OpenBLAS where it fits, else Java) or `java` (chosen, quiet). Nothing about BLAS
+  stops the server: a 32-bit JVM, ARM, macOS or a failed load runs on Java with a **WARN banner** in the log, Admin → Health
+  **DEGRADED** (never down) with each member's binding, a notice on Admin → Health and Admin → Engines, the platform alert
+  **`native-blas-fallback`** and the metric `drishti_native_blas{path,reason}`; `drishti.py server health` prints the line.
+- **Resilience**: a start-up self-test of awkward shapes against Java, argument checks in Java before every native call, a per-call
+  size bound (`drishti.native.blas.max-call-mb`), any failure or NaN from finite inputs redone on Java with a circuit breaker for the run,
+  the self-test repeated every `drishti.native.blas.canary-interval` (6 h), JavaCPP's own memory bounded (`drishti.native.max-bytes-mb`).
+- **Many scopes in one pass** (`MultiSums`, behind `VarBook.vectors`: a cube's cells, ad-hoc baskets, many portfolios): on Java the
+  same bits as one set at a time, the rows read once per cache-sized tile for every set; on OpenBLAS dense tiles of many sets are one
+  `dgemm`. At 1M positions x 509 scenarios: 100 overlapping portfolios 3.1x faster, 100 cube cells 2.4x, 100 desks 3.2x
+  ([BENCHMARK.md section 17](docs/admin/BENCHMARK.md#17-many-var-scopes-at-once-blas)). FRTB's bucket sums and exposure's means were
+  measured on BLAS and stay on Java (faster there).
+- **Linear algebra switch, live**: Admin → Engines has a row **Linear algebra: OpenBLAS** (engine `openblas`,
+  `config/engines/openblas.yaml`): off chooses the pure-Java path at once (`java (chosen by admin: ...)`, a notice, never the DEGRADED
+  warning; a server started with it off does not load OpenBLAS); on runs the self-test first and is refused in words if it fails. Written,
+  audited and kept in History like every engine switch, for any member from the Cluster tab; a member switched to Java takes the cluster's
+  many-scope sums to Java. `drishti.py server blas java|native|status`.
+- **The near-tie rule**: scenario P&Ls within a relative 1e-12 of the vector's largest are ordered by scenario date (the older first), so
+  the VaR scenario, its date and every component VaR are the same on the Java and the OpenBLAS paths; VaR and ES agree within 1e-12.
+- **One path for the cluster**: each member publishes its BLAS path in its digest; when any member runs on Java, every member sums many
+  scopes on Java (a WARN banner names the member), never a refusal. The `dgemm` thresholds are settings
+  (`drishti.native.blas.gemm-min-sets`, `gemm-min-density`), tuned on one machine. The release's VaR regression check runs `java`
+  (bit-exact against the previous release) and `auto` (within 1e-12, the same VaR dates): BENCHMARK.md section 17.
+- **Parametric VaR and ES beside historical** ([VAR_GUIDE.md sections 3.12 and 18.15](docs/guides/VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check),
+  [PARAMETRIC_VAR.md](docs/architecture/PARAMETRIC_VAR.md), tutorial 43): the normal fitted to a scope's own scenario P&L vector
+  (z·σ − μ; ES σ·φ(z_ES)/(1 − c) − μ; equal weights or EWMA λ 0.94; the horizon follows the lens), a **cross-check, never official**.
+  On the VaR explorer it is a **Parametric toggle** and **columns** (product review, 2026-11-04): the tiles, the tree's Parametric and Gap
+  columns, the normal curve over the P&L histogram with both markers, shaded tails and the fat-tail gap bracket (the N toggle), and a **?**
+  on every figure with the server's own lines; `PVAR` is an alias that opens the explorer with the toggle on (no screen, view or menu
+  item of its own). The VaR Playground gains a **Parametric tab** (the figures, the steps, each position's Euler component with the −μᵢ
+  term adding up exactly). The API's `parametric`
+  block on `/scope`, `/tree`, `/scope/path` and `/scope/contributions` (`parametric=false`, `matrix=true`), `/status`, VRES 1.3's optional
+  fields (the correlation matrix through the BLAS seam with `matrix=true`), `pvar()` in the pivot and the MR cube, `drishti.py var
+  show|parts --matrix|playground --measure parametric`, and the playground's workbook gains its Parametric tab (recalculated by LibreOffice
+  equal to the engine to the cent; `NORM.S.INV` and `PI` join the common function set). Settings `drishti.var.parametric.*`.
+- Docs: [OPERATIONS.md section 2.1](docs/admin/OPERATIONS.md#21-server-requirements-native-libraries-blas) (server requirements, platforms,
+  verification, the fallback and the warning), [HIGH_PERFORMANCE_NATIVE.md section 6](docs/architecture/HIGH_PERFORMANCE_NATIVE.md#6-blas)
+  as built, TROUBLESHOOTING, CONFIGURATION.md regenerated, THIRD-PARTY-NOTICES.
+- **Excel, SAS and MATLAB/Octave coverage (FUNCTION_CATALOGUE.md section 12).** Every family of Excel's functions, SAS's DATA-step
+  functions and PROC MEANS/UNIVARIATE/FREQ/RANK statistics, and MATLAB's everyday data functions, marked covered (by which Drishti
+  function), added, or not with the reason (non-deterministic, spreadsheet-cell, pricing for QLRisk, the risk engines, the matrix tier,
+  tier 3, locale or legacy, no use yet). 154 functions added, each under its one name; 268 Excel/SAS/MATLAB names were already covered,
+  207 are answered by the added ones, 193 are not added.
+- **Rachana scalars.** Math: `round` (half away from zero, in decimal), `round_sig`, `log(x, base)`, `fact`, `combin`, `permut`, `gcd`,
+  `lcm`, `even`, `odd`, `pi`, `sin` … `atan2`, `sinh`, `cosh`, `tanh`, `radians`, `degrees`, `base`, `decimal`. Information:
+  `is_number`, `is_text`, `is_date`, `is_boolean`, `is_blank`, `is_error`, `type_of`, `choose`. Text: `len`, `proper`, `rept`, `exact`,
+  `char`, `code` (Unicode), `find`, `search` (positions, 0 when not there), `text_before`, `text_after`, `regex_replace` (the linear-time
+  engine; `SafeRegex.replaceAll`), `reverse`, `clean`, `value` (text to a number: groups, currency signs, %, accounting brackets),
+  `text` (a number or a date with an Excel format code). Dates: `date(text)`, `date(y, m, d)` (Excel's carry-over), `year`, `quarter`,
+  `month`, `week` (ISO), `day`, `hour`, `minute`, `second`, `weekday` (Excel's return types), `days360` (US and European), `datedif`,
+  `shift_date` (on the bank's calendars). DEL's `round`, `len`, `date`, `year`, `quarter`, `month`, `week`, `day`, `shift_date` are now
+  also Rachana's, ahead of the fold; DEL keeps its own until then.
+- **Distributions (FUNCTION_CATALOGUE.md section 9).** `norm_dist`, `norm_inv`, `norm_s_dist`, `norm_s_inv`, `lognorm_dist`,
+  `lognorm_inv`, `t_dist`, `t_inv`, `chisq_dist`, `chisq_inv`, `f_dist`, `f_inv`, `binom_dist`, `binom_inv`, `poisson_dist`,
+  `expon_dist`, `gamma_dist`, `gamma_inv`, `gamma`, `gamma_ln`, `beta_dist`, `beta_inv`, `weibull_dist`, `hypgeom_dist`,
+  `negbinom_dist`, `erf`, `erfc`, `standardize`, `confidence_norm`, `confidence_t`, `fisher`, `fisher_inv`, on published numerics
+  (`SpecialFunctions`: Lanczos's gamma, the incomplete gamma and beta by series and continued fractions, erfc from the incomplete
+  gamma, Acklam's inverse normal refined by Halley's step); no library added (commons-math3 is not on Rachana's class path). Every one
+  matches the examples on Excel's own pages.
+- **Finance on given flows (FUNCTION_CATALOGUE.md section 8).** `npv`, `xnpv`, `irr`, `xirr`, `mirr`, `pv`, `fv`, `pmt`, `ipmt`, `ppmt`,
+  `nper`, `rate`, `cumipmt`, `cumprinc`, `effect`, `nominal`, `fvschedule`, `rri`, `pduration`, `accrued` (exact in decimal), `dollarde`,
+  `dollarfr`, `macaulay_duration`, `modified_duration`, `convexity`. `irr`, `xirr` and `rate` find their root by Newton's method, then a
+  scan for a change of sign and bisection, to 1e-12 (`RootFinder`), and say in words when no rate makes the value 0. A missing flow
+  gives an empty figure, never a shifted one. `discount_factor` and `forward_rate` stay planned: Rachana has no clean reader of an
+  `ir-curve` kind.
+- **The engine's aggregates.** `sumproduct`, `sumsq`, `product` (a mantissa and a binary exponent, so a long product never overflows on
+  the way), `devsq`, `skewness_pop`, `covar_pop`, `steyx` (mergeable, each through the split-and-merge harness within 1e-12), `avedev`,
+  `percentile_exc`, `rank_avg`, `percent_rank_of`, `mode_multi` (holistic, merging their values exactly); in a pivot cell and over a
+  Rachana list alike.
+- **MATLAB's list functions.** In Rachana: `fillmissing`, `interp1`, `polyval`, `trapz`, `cumtrapz`, `union`, `intersect`, `difference`,
+  `is_member`, and `sort` by several keys (MATLAB's `sortrows`). From the engine (its aggregates, registered into Rachana): `cumsum`,
+  `cumprod`, `cummax`, `cummin`, `movsum`, `movmean`, `movstd`, `movmedian`, `maxk`, `mink`, `bounds`, `zscore`, `rescale`, `isoutlier`
+  (MATLAB's three scaled MADs), `polyfit` (degree ≤ 6, Householder QR, refused in words when ill-conditioned).
+- **Rules (FUNCTION_CATALOGUE.md, "Rules every function keeps").** The null rule (product owner): `null != 'X'` is true and
+  `null == 'X'` false, a function of a missing value is missing. One rule for text in numbers: no `AVERAGEA`-style forms. No
+  non-deterministic function in a figure.
+- **Docs and tests.** FUNCTION_CATALOGUE.md (sections 1 to 9, the new section 12), FUNCTIONS.md regenerated (253 functions; the
+  catalogue test now checks sections 8 and 9), RACHANA_REFERENCE.md "The Excel, SAS and MATLAB set". Tests: `DistributionsTest`,
+  `FinanceFunctionsTest`, `MoreScalarsTest`, `ListMoreTest` (drishti-rachana), `MoreAggregatesTest`, `RachanaListAnalyticsTest`
+  (drishti-bicompute), each on Excel's or MATLAB's documented examples, with empty, masked and wrong-typed arguments.
+
+- **The load rules: the table, pack, business date and mode of every load (DATA_LOAD_RULES.md, decided by the product owner on
+  2026-11-04; DATA_GUIDE.md section 2.8; DATALOAD_INBOX.md section 5.1; TOOLS.md sections 4 and 4.13; CLI_GUIDE.md `data ingest`).** A
+  file's name is `<table>[.<YYYY-MM-DD>].<extension>`; a plain file (`.jsonl`, `.gz`, `.zst`, `.zip`) is one table and one business date; a
+  tar (`.tar`, `.tgz`, `.tar.gz`, `.tar.zip`) holds `<table>/<YYYY-MM-DD>/` folders and is checked whole before anything is written. The
+  business date comes from outside the data only: `--as-of`, the `.ready` file's `business-date:`, the name's date, the business today; a
+  row's own date field is only counted when it differs. The `.ready` file pairs by full name or without the data extension and is read by
+  the command-line loaders too; its keys are checked. A table resolves to one pack (or is refused with the candidates). Append is the
+  default mode (the parallel loader appends to Delta and Iceberg; replace on request). Empty files are ignored. One rule per language,
+  `tools/lake/filedate.py` and `FileDates`, both tested against `tools/lake/testdata/file-dates/names.json`; the command line's and the
+  `.ready` file's routing in `tools/lake/feedroute.py` and drishti-dataload `Routes`/`ReadyNote`. `lake build --plan` shows the plan.
+- **Every row carries its load; appends read newest first; undo by load id.** Both loaders write `_load_id` (`<run>.<file>`, in time order;
+  one per data file, an archive's tables sharing it) and `_source_file` on every row, and list the run's loads in the summary. The Delta and
+  Iceberg connectors read an id two loads wrote on one date as the newest load's copy (the larger `_load_id`, then commit order) in fetches,
+  lists, columns and vector reads. `drishti.py lake undo LOAD_ID`, `POST /api/v1/admin/dataload/undo` and Admin → Data loads → Inbox →
+  Undo a load (a check first, then the load id typed again) remove a load's rows, one commit per table and date, and give a date a load
+  replaced back as it was. A table built before the load columns gains them on its first load, with no file rewritten (Delta: a
+  metadata commit; Iceberg: the columns added). Its rows read as the oldest load, and undoing a later load leaves them as they were.
+- **The data inbox loads tar archives table by table, all or nothing,** routes a table from a file's name, may create a table when asked
+  (`new-table: true`, `drishti.dataload.new-tables`), holds a file whose `.ready` says `hold: true`, pairs a short `.ready` name
+  (`trades.2026-11-03.ready`), and appends by default (`drishti.dataload.default-mode`).
+- **A wrong date in a file name is refused, never replaced.** A plain name whose date part is not a calendar date or is in the
+  future (`trades.2026-13-03.jsonl`, `trades.2999-01-04.jsonl`) is refused with the reason, also when the table is given (`--kind`) and
+  under `--as-of`: one check in `FileDates.decide` (Java, drishti-common) and `filedate.decide` (Python), so `lake build`, the parallel
+  loader, `data ingest`, the store loaders and `var` all refuse it.
+- **Store-loader retention counts back from the load's newest business date** (a plain file's date, a tar's newest folder), not
+  from the business today; `--as-of` means only a plain file's business date (LoadGuard).
+- **The load rules on the lake-file path.** A table of a lake file (`config/lakes/`) takes its partitions and settings from its entry,
+  and the entry's `load-mode` is the table's default mode: `--mode` > the `.ready` file's `mode:` > the lake file's entry > the inbox's
+  `default-mode` > append (DATA_LOAD_RULES.md section 3); the summary's `modeFrom` says which. `target.batch-id` is
+  optional: when given (the inbox always gives one), an append of the batch is committed once; without it each run's rows carry their
+  `_load_id`. The new-table route reads the pack's domain from `PackEntry` (drishti-lakeconfig).
+- **Schema to pack has its own guide**, `docs/guides/SCHEMA_TO_PACK_GUIDE.md` (help page *Schema to pack*), from DATA_GUIDE.md.
+- **Our own data follows the load rules (DATA_LOAD_RULES.md section 10; data/testdata/README.md; VAR_GUIDE.md section 30; the Windows
+  QA guide).** Every committed test-data file is named `<table>.<YYYY-MM-DD>.jsonl.gz` after the table it feeds (`trade_endur`,
+  `counterparty`, `risk-hierarchy` ...; 2,845 files renamed, their bytes unchanged), or is a plain tar of `<table>/<YYYY-MM-DD>/`
+  folders where a date is several files or one run writes many dates (the P&L vectors and scenario PVs one tar a date, the exposure
+  paths, the funds' holdings, the scenario sets and scenario FX with the stress set's files, the desks' 260-day P&L): 2,914 files
+  become 2,858, 181.8 MB become 182.1 MB. The generators write them (`tools/lake/feedfiles.py`: deterministic gzip and tar;
+  `make_testdata.py`, `make_var_data.py`, `make_ccr_data.py`, `make_sensitivity_data.py`, `capture_market.py`, the public-data packs'
+  `publicsnap.py`, `make_trades.py`, `bulk_trades.py`, `pvgen` morning and intraday, `vargen.py`), the public snapshots were rewritten
+  by their own writers from the committed documents. `lake demo` and `build_demo_lakes.py` load every day under its dated name by the
+  rules (no `--date` field, mode replace said); `--endur-dir`/`--source-dir` take `trade_<system>.<date>.jsonl[.gz|.zip]` or tars of
+  `trade_<system>/<date>/` folders and refuse the older `YYYY-MM-DD.jsonl` with the name to give; `var intraday --load`, `var_bench`,
+  `pivot_bench` and the AWS `load-day.sh` date their loads from outside (the name or `--as-of`). Checked: the same 983,924 rows in the
+  same 1,762 (table, business date) pairs, by count and checksum of every row, before and after; the demo lake built from the old
+  inputs by develop's tools and from the new ones the same (89 tables, 4,846 table and date pairs, 4,835,519 rows, every row's checksum
+  equal); the VaR tree of two servers on the two lakes the same (MGMT, LEGAL and LL, three dates, 1-day and 10-day: 786 nodes, VaR, ES
+  and trades, no difference); look-alike ENDUR files through `--endur-dir` the same table either way. The Java tests read the files
+  through drishti-testkit `FeedFiles`. No caller dates rows from a field any more: Admin → Data loads → Lakes says the business date
+  (the file name's, else the business today) and takes an optional other date (`--as-of`), never a field (a bound connector's layout no
+  longer lists the load's own `_load_id` and `_source_file`); `lake scan` reports the rows' date field as counted only; the tests,
+  examples, run configuration and `official_market_data.py` (one `<kind>.<AS_OF>.jsonl` a date) load by the name or `--as-of`.
+  DEMO_DATA.md says the test data's snapshot-plus-changes files are a generator format that `lake demo` replays, not feed files.
+  `data ingest` the same: a kind loads with no date field (each file under `--as-of`, its `.ready` file's date, its name's, or the
+  business today; the run says which, in `lake build`'s words), `--date`/the pack's ingest date only names the field whose differing
+  rows are counted; `pack_from_jsonl --lake` no longer needs `--date` (every kind in the dated store); a file's kind is its name's table
+  (`trade.2026-11-03.jsonl` is `trade`) in `sutra gen`, `pack make` and `data ingest` alike.
+  Lake rows the same (product owner, 2026-11-04): `load_rows.py` keeps each row as it is but stores it under its file's business date
+  by the rules (a tar's `<table>/<YYYY-MM-DD>/` folder; a plain file's `--as-of`, `.ready` date, name's or the business today), never
+  the row's `date`, which is counted when it differs; a plain file of several tables is refused (send a tar). The generators
+  (`make_data.py --lake`, `samplegen/lake.py`, the pack generators' `--lake`) write `<name>-history.tar` and `<name>-restated.tar`;
+  checked against develop's: the same 25,477 rows in the same 517 table-and-date groups, the same ten partition dates (2026-09-17 to
+  2026-09-30), and the two lakes the same (47 tables, 470 table-and-date pairs, 25,430 rows, every row equal).
+  The store loaders the same (product owner, 2026-11-04; the connector guides, DEMO_DATA.md, TOOLS.md section 6, CLI_GUIDE.md
+  `data load`, OPERATIONS.md): PostgreSQL, DuckDB, MongoDB, Redis, Cassandra, Aerospike, Iceberg and the files loader read through one
+  feed (drishti-common `RowFeed`, on `FileDates`, now in drishti-common) and file each row under a business date from outside it (a
+  tar's `<kind>/<YYYY-MM-DD>/` folder; a plain file's `--as-of`, `.ready` date, name's or the business today), never its `date`,
+  which is counted when it differs; a plain file of two kinds is refused (send a tar), and so is `--as-of` with a tar; a tar's layout
+  is checked whole before any row is read; a folder argument loads every tar and JSONL file in it; standard input takes a tar stream
+  too (lake build's Iceberg writer and the Delta-to-Iceberg copy send one); one note line per tar (its dates). `make_data.py --jsonl`
+  and `bulk_trades.py --jsonl` write tars of `<kind>/<YYYY-MM-DD>/` folders (`bulk_trades.py --jsonl -` or a plain file only with
+  `--days 1`); `tools/load-*.sh`, `load-cassandra.ps1`, `load-iceberg.ps1` and `bench/pinning.sh` write them under
+  `<data folder>/build/loader-rows/`, load them and remove them, and no longer pass `--as-of` (retention counts back from the
+  business today). Checked against develop's generators: the same 25,430 sample rows and 900 book rows, each in the folder of its own
+  date (0 rows elsewhere), and a DuckDB store loaded from the tars holds exactly develop's rows under the same dates.
+
+### Under construction (lean)
+
+- **Nothing unbuilt looks built** ([UNDER_CONSTRUCTION.md](docs/admin/UNDER_CONSTRUCTION.md), product owner 2026-11-04): figures that are
+  stored rather than computed by their engine show *Under construction* (a chip, tone `uc`, `drishti_under-construction.css`, theme-aware)
+  in place of a number: the `sa-ccr` kind's EAD, RC, add-ons, multiplier, RWA and its panels; the `cva` kind's CVA, DVA, FVA, KVA, CS01,
+  components and sensitivities, and the netting set's stored CVA; a credit limit's stored used amount and utilisation (its strip, columns,
+  the utilisation bars and the checks that read them); the counterparty's stored net MTM (the one computed from the trade valuations
+  stays). The data stays in the lake. **One registry, one mechanism:** `config/under-construction.yaml` lists every item that depends on
+  unbuilt work (what it is, where it shows, the release that builds it, `hidden` or `under-construction`); the server rewrites a kind's
+  Sutra when it is matched (`UnderConstruction` in drishti-rachana, `drishti.under-construction.file`), so pages, phone lines, pivots and
+  the client renderer read the same answer; the console reads the same file for its menu items and help pages (`under_construction.file`;
+  the planned contracts SACCR, CVA, WWR, COLL and MC carry the chip on their help pages). Also registered: the pre-deal limit decision
+  (2.9.11.h). `tools/under_construction.py` writes UNDER_CONSTRUCTION.md (`--check`: every place it names exists, the document is current;
+  it also lists the shipped screenshots to retake); `UnderConstructionTest` and `test_under_construction.py` guard both sides. The rule for
+  new unbuilt items: PACK_DEVELOPER_GUIDE.md (Unbuilt work), ARCHITECTURE.md (Quality rules). EXPOSURE_GUIDE says it; CONFIGURATION.md
+  regenerated.
+
+### Removed (lean)
+
+- **The engine switches with no engine behind them:** `config/engines/sa-ccr.yaml`, `fva.yaml` and `ccr-cube.yaml` (and their jar copies,
+  their catalogue entries and Admin → Engines rows, `DRISHTI_SACCR_ENABLED`, `DRISHTI_FVA_ENABLED`, `DRISHTI_CCR_CUBE_ENABLED`). They come
+  back with their engines. The `sa-ccr` data kind of the counterparty-risk pack is unchanged.
+- **Duplicate menu items:** Pre-deal check (`XWIF`) is only under Counterparties (no longer also in the Engines menu's Exposure column);
+  FX volatility (`FXV`) only under Volatility (no longer also under FX). The commands are unchanged.
+- **The `studio` feature switch** (`features.yaml`, the editions, the console's `studio.enabled`): `/studio`, the Build workbench's entry,
+  follows `features.build`. The `/studio/reviews` redirects are gone (the reviews are `/build/reviews`).
+- **The deprecated notes API** (`/api/v1/notes`, kept one release as a facade over comment threads) and the console's `/api/notes`:
+  use `/api/v1/threads`. Old notes are still imported into threads once at start.
+- **Ask's deprecated model settings** (`drishti.explain.ask.endpoint`, `api`, `api-key`, `DRISHTI_ASK_ENDPOINT`, `DRISHTI_ASK_KEY`): Ask's
+  model is a provider file of the AI layer (`config/ai/<name>.yaml`, `drishti.explain.ask.model: <provider>/<model>`; AI.md).
+- Docs: OPERATIONS (21.1, 21.3, Ask), COMPUTE_ENGINES as built, API_GUIDE (the Notes section), RACHANA_REFERENCE (Ask), USER_GUIDE,
+  EDITIONS, the lens documents, CONFIGURATION.md regenerated. Kept, and why: the client renderer's 0.1.0, 1.0.0 and 1.1.0 folders
+  (released folders are immutable and embeds pin them with subresource integrity); the `/studio` routes the workbench and the published
+  renderer bundles call.
+
+- **Client examples (examples/clients/README.md), read only, through Arrow Flight.** Nine Python notebooks, each cell explained and no
+  outputs stored: connect with a token and list what it may read; a kind into pandas and polars; a BI model query (`trades-basic`); a
+  pivot view with Rachana paths over trade legs (`sum($.LEGS[*].NOTIONAL)` by desk, a desk-by-year grid, trades with a JPY leg); a desk's
+  VaR scenario P&L plotted over its 509 historical days with the VaR scenario and the ES tail marked from the engine's own figures, and
+  one vector per position; a live intraday stream with resume; Drishti's data joined with your own in DuckDB; an in-memory lake table
+  (the plan pointing at its owner node, nothing written to disk); and a direct read of a table found through `config/lakes/demo.yaml`
+  with `deltalake` or `pyiceberg`, labelled for users who already hold lake access (no entitlements or masks, no in-memory tables, no
+  computed figures). A Java example in one file (a kind and a desk's VaR P&L, each part from the first node that answers) and a JDBC
+  example through Flight SQL (the models and their tables, then a statement); Excel through Python (`openpyxl`, no add-in), with the ODBC route through Flight SQL noted
+  (its driver is an installer). Tokens only from `DRISHTI_TOKEN` or `DRISHTI_TOKEN_FILE`. `test_client_examples.py`
+  checks every notebook's form on every run and runs every notebook, the Excel script and the Java example against a Flight server when
+  one is set. Linked from the Flight guide, the Python, Java, JDBC and ODBC pages and tutorial 35. C#/.NET, R and Go examples come later.
+- `tools/license_headers.py` checks notebooks: the notice is a notebook's first markdown cell.
+
+- **Arrow Flight: Drishti's data to any client (FLIGHT_GUIDE.md, FLIGHT_REFERENCE.md, tutorial 35, pages for Python, Java, JDBC and ODBC (C#/.NET, R and Go later); ARROW_FLIGHT.md).**
+  A new engine `flight` (`config/engines/flight.yaml`, off as shipped, a restart to turn on) answers Arrow Flight on its own port (18815),
+  TLS always (the server's certificate; mutual TLS with `tls.client-ca`). Requests are Rachana requests in five forms: `kind` (a kind's
+  rows on a day, its paths and filter lines, read by the Data view's reader with every check of a download), `model` (an MQ query),
+  `pivot` (a pivot view, as `POST /api/v1/pivot/query`), `measure` (`var.scenarios`, a scope's P&L vector in float64; `var.parts`, one
+  vector per part, float32 for positions and trades as the hot file keeps them) and `lake` (a table found through the lake configuration).
+  `GetFlightInfo` lists each part with the real addresses of the nodes that hold it; `DoGet` sends snapshots in batches, or with
+  `stream: true` a live stream (VaR after each intraday batch, appends to an in-memory table) whose batches carry a sequence to resume
+  after. API tokens only, with the new scope `data:read` (or `data:read:<domain>`), checked at the handshake by the token services; an
+  application's token may act on behalf of a person (`x-drishti-on-behalf-of`), an embed token for its signed-in person. Each read is
+  admitted by busy protection (`Work.FLIGHT`, `DRS-9506`), held to its role's rows, bytes and time limits and an Arrow memory cap per read
+  and per node (counted on Health's busy card), audited (`data.flight`), and shown on Admin → Data out (`GET /api/v1/admin/data-out`, Stop
+  a live read). New error codes `DRS-5601` to `DRS-5610`.
+- **One Arrow library.** Apache Arrow Java 19.0.0 (`arrow-vector`, `arrow-memory-netty`, `flight-core`; `flight-sql` managed for the next
+  step), one version for every Arrow artifact. The hand-written Arrow IPC code is gone: the compute workers' exchange (`ArrowIpc`), the
+  engine's result format and the Arrow answers (`ArrowIpcWriter`, `ArrowAnswers`) are written and read with the official library, the same
+  wire format (pyarrow, Arrow JS, DuckDB-Wasm and the Python workers read them unchanged). The JVM option
+  `--add-opens=java.base/java.nio=ALL-UNNAMED` Arrow's memory module needs is in the server jar's manifest and the test forks.
+- **The console writes no Arrow of its own.** It passes the server's Arrow bytes through and sends a JSON answer as JSON (an answer given
+  in time by a BI run now reaches the browser as JSON, which `drishtiFetchTable` reads as well); the scenario matrix's Arrow download is the
+  server's stream. Python reads Drishti's data through `clients/python/drishti_flight.py`, a one-file client over `pyarrow.flight`
+  (parallel parts, a node down served by the next, streams with resume, Drishti's codes on refusals, a command line).
+- **Direct memory for Arrow's buffers.** The official Arrow library keeps its buffers in direct memory, so the launchers now size it
+  from the one place that already sized the in-memory lake's stores, `tools/lake/memory_caps.py`: Arrow's budget (`--arrow-only`) is
+  512 MB for the compute exchange and BI answers (`DRISHTI_ARROW_EXCHANGE_MB`) plus Flight's `memory.total-mb` (now
+  `${DRISHTI_FLIGHT_MEMORY_MB:4096}`) when its engine is on; the stack, `start-server.ps1`, the ECS entrypoint (`DRISHTI_ARROW_MB`, no
+  Python in the image) and the IDE run configurations add it to `-XX:MaxDirectMemorySize` (the later flag wins) and pass it as Arrow's own
+  cap, `-Ddrishti.arrow.max-bytes`; the run configurations also carry `--add-opens=java.base/java.nio=ALL-UNNAMED` (they start from
+  classes). Tested by `tools/lake/test_memory_caps.py` (OPERATIONS.md 12.1a, FLIGHT_GUIDE.md section 10, CONFIGURATION.md).
+- **Flight SQL (Q10), the second step: SQL over the BI models from JDBC and ODBC tools (FLIGHT_GUIDE.md section 12, FLIGHT_REFERENCE.md
+  section 6).** On the same port, read only: a statement, written in DSQL, becomes a `form: model` read `{"model", "sql"}` answered by the
+  server's own SQL path (`SqlService`), never a second engine, and goes through the same token, scope (`data:read` or `data:read:bi`), BI
+  power, row rules, masks, busy protection, limits, Data out and audit. The model is named by a first line `-- model: <model>` or the
+  header `model` (a JDBC URL's `model=`). Catalog calls list one catalog, a schema per model the person may read and a table per alias of
+  the model; prepared statements are read only and stateless; updates, ingestion, transactions, Substrait and parameters are refused. A
+  client that sends its token on every call (the JDBC driver) keeps one session. `DrishtiSqlProducer`, `FlightSqlCatalog`,
+  `CallHeadersMiddleware`, `ServerFlightSqlCatalog`; `FlightSqlServiceTest`.
+- New module `drishti-flight` (plain Java: `FlightService`, `DrishtiFlightProducer`, `TokenAuthenticator`, `FlightRequest`,
+  `FlightBackend`, `FlightActivity`, `FlightLimits`); the server's wiring is `server.flight` (`FlightConfiguration`, `ServerFlightBackend`,
+  the forms, `DataOutController`). Tests: `FlightServiceTest`, `FlightServerTest`, `ArrowIpcTest`, the console's `test_flight_client.py`.
+- **The lake configuration: one file per lake (LAKE_GUIDE.md; LAKE_CONFIG.md "As built"; DELTA_CONNECTOR.md and ICEBERG_CONNECTOR.md,
+  As a connector file; DATA_GUIDE.md section 3; TOOLS.md sections 4 and 4.13).** `config/lakes/<lake>.yaml` says where a lake is (a
+  folder, `s3://`, or `mem://<store>`), how to reach it, and every table in it: path, partitions after `business_date` (always first, at
+  most four more), promoted columns, vectors, id, date, latest-by, load mode, file layout, retention, properties. A new module,
+  `drishti-lakeconfig` (plain Java and Jackson), reads and checks it once; the Python tools run its `LakesCli` for the JSON, so the
+  rules exist once. Writers refer to it: the parallel loader (`target.lake: <name>` and `target.kind`; a load key that contradicts the
+  file, such as `--partition-by`, is refused with both named; a kind the file lacks is refused), the data inbox (rules name a lake, `demo`
+  as shipped; a kind the lake lacks gets its pack's recommended entry copied into the file once), `lake build --lake <name>` (with
+  `--lake-root` for a scratch lake), `lake demo` and `build_demo_lakes.py` (the hard-coded `PRODUCT_TYPE` partition is gone:
+  `config/lakes/demo.yaml` describes the demo lake like any other). Readers refer to it: a Delta or Iceberg connector names `lake:` (and
+  `lake-tables:` where a kind has several tables), and its root, folders, storage, catalog, promoted columns and vectors come from the
+  file. **Append**: `load-mode: append` adds rows instead of replacing dates; each load's batch id is recorded in the commit (Delta: a
+  transaction id per batch and date; Iceberg: the snapshot summary), so a repeated or retried batch is never appended twice; the inbox
+  sends one for every load. **In-memory stores are lakes** (`root: mem://<store>`, `memory: {max-mb, contract, ...}`); the engine file
+  keeps the switch, the replenish jobs and the compaction policy. **Checks**: `drishti.py lake check` (connectors name known lakes; each
+  lake file matches its tables on disk: format, partition columns, promoted columns; reported, never rewritten) and `drishti.py lake
+  show`. **Admin → Lakes** lists every lake and table from the files, read-only (`GET /api/v1/admin/lakes/files`). **Migration**:
+  `drishti.py lake migrate-config [--write]` writes lake files from connector files that still carry `root`, `domain`, `table.<kind>` or
+  `layout.<kind>.*` and rewrites them to `lake: <name>`; until then such a connector starts as before with one warning (the old keys are
+  removed one release later). Nothing under the data folder changes. Help: Data → Loads and lakes → Lake guide, and tutorial 35
+  (one file per lake). **Every shipped pack** now ships its tables as a `lake:` block and its Delta templates name `lake: demo` and
+  `lake-tables:` (the generators write it through `tools/packlake.py`; the tools that read a template's layout read it through the same
+  module); `config/lakes/demo.yaml` holds their entries and ships inside the server too, so a container or a stack node knows the demo
+  lake. A template update never adds `lake:` to an older connector file. References nest (`${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`).
+  The connector examples are in the lake form with their lake files in `config/lakes.examples/`; the stack's synthetic lakes are laid
+  out by the demo lake file. `lake build` passes the parallel loader a lake by name (or the table's path, never a folder as a lake) and
+  `--batch-id`; its Python path refuses a lake-file append table (the batch rule lives in the loader only). **The official results**
+  are lakes of their own (`config/lakes/var-official.yaml`, `ccr-official.yaml`: format, root and storage from the publishers' settings),
+  so `var-results` and `exposure-results` name them and the demo has no older-form connector left; the server only makes them Iceberg
+  when the publisher writes Iceberg. **The data inbox's loader** is handed the settings the lake files refer to as the server resolves
+  them (a `DRISHTI_DELTA_ROOT` given as a `--setting` reaches it). **`build_demo_lakes.py --store ...=iceberg`** writes its connectors in
+  the lake form (`lake: demo-iceberg`, its lake file beside the connector folder). **`lake maintain`** acts on a table's lake file:
+  `retention`, `maintenance` (compaction, vacuum or expire-snapshots age, checkpoint, target size; `checkpoint-interval` set by the
+  writers as `delta.checkpointInterval`) and `time-travel`, over the maintenance file and under the domain's retention floor.
+- **Every static asset we wrote is named `drishti_<name>`, and the console puts one global on `window` (product owner, 2026-11-03).** The
+  console's own files under `web/static/` (`js/`, `js/build/`, `css/`, `img/`, `calc/`, the web manifest) are renamed by
+  `tools/dev/asset_prefix.py` (`bi-runs-tab.js` -> `drishti_bi-runs-tab.js`, `drishti-logo.png` -> `drishti_logo.png`), with every template, route,
+  test, tool and document that names them; vendored libraries and the published renderer versions keep their names. Every global the scripts
+  set moves under `window.Drishti` (`window.drishtiWorkbench` -> `window.Drishti.workbench`, `window.DrishtiBusy` -> `window.Drishti.Busy`), except
+  `drishtiModules`, `drishtiBi` and `drishtiGeo`, which the published renderer and Elements versions read. Custom events start `drishti:`
+  (`bi:reload` -> `drishti:bi-reload`). The embed routes keep their public names (`/embed/v2/js/tables.js` serves `drishti_tables.js`), and
+  `/static/js/<name>.js` for an old name answers with the `drishti_` file, so renderer 1.0.0-1.2.0 pages keep working. Guard:
+  `drishti-console/tests/test_asset_names.py` (file names, window globals, storage keys, custom elements and events, no new generic CSS class
+  or third-party data- attribute). The mapping is `tools/dev/asset_prefix_map.yaml`.
+
+### Security
+
+- **A BI dataset's declared mask always holds (a leak fixed).** A column a dataset lists under `security.masked` was masked only when the
+  installation masked some field of its own (`drishti.security.redact` not empty): "raw" was read as "nothing masked for this person". It
+  is now the raw power itself (`Entitlements.rawPower`: a role with `raw`, never through an embedded app), so the column is masked for
+  every reader without it, whatever `redact` names (`DatasetService.masks`; BI's per-reader kept results now name it in their key). With
+  the shipped `redact` list nothing changes. In an installation with an empty `redact`, readers without the raw power now see masked:
+  `trading-risk-counterparties` and `counterparty-exposure-counterparties` NAME and RATING, `trading-risk-trades` COUNTERPARTY,
+  `counterparty-exposure-official` NODE_NAME, `live-trading` and `live-trading-trade` TRADER_ID (and so the models trading-risk,
+  counterparty-exposure, live-trading and desk-pnl-vs-exposure-py). `DeclaredMasksTest`.
+
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (2026-11-04)
 
 - **The VaR screen's layout (2.9.11.b, the product owner's approved mock-up A, `docs/lenses/mockups/var-layout/A.html` and
@@ -4661,7 +5124,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   call fails with `DRS-5003`, a banner ("Server not reachable - retrying...", Retry now) polls the console with a 2 s to 30 s backoff and, when
   the server is back, says "Connected again" and reloads the page (never one with unsaved edits: it offers Reload). The sign-in page says so too.
 - **One large file of deep trading documents, from Build -> New pack to a deployed pack with its data, all in the browser**
-  ([Schema to pack, A deep trading JSON](docs/guides/DATA_GUIDE.md#appendix-a-deep-trading-json)). *Reading:* a JSON array of any size
+  ([Schema to pack, A deep trading JSON](docs/guides/SCHEMA_TO_PACK_GUIDE.md#appendix-a-deep-trading-json)). *Reading:* a JSON array of any size
   is streamed like JSON Lines (one document in memory at a time); **every row is counted** for the columns that could tell record types apart
   (rare types are found, with their true row count), up to `builder.pack_profile_rows_per_type` (10,000) rows of each type are **profiled**
   (how often each field has a value, digits written as text, every array's size at every depth) and `builder.pack_design_samples_per_type` (50)

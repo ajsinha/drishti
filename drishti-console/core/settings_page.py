@@ -17,7 +17,7 @@
 The page is the document as the help centre renders it, with the generated half (``Every setting``) made searchable: each settings
 row carries its area and words (``data-hay``), a query (``?q=``, words in any order: a key, an environment variable or words of a
 meaning) and an area (``?area=``) hide the rows that do not match, server-side and again in the browser as the person types
-(``web/static/js/configuration.js``). On a phone each row becomes a card (``help-config.css``): no sideways scroll.
+(``web/static/js/drishti_configuration.js``). On a phone each row becomes a card (``drishti_help-config.css``): no sideways scroll.
 
 For an administrator, the rows of the server's and the console's ``application.yaml`` gain an *In effect* cell: the value on the
 server (``GET /api/v1/admin/settings``) or in this console process, and where it came from. Secrets never show: a key with a word

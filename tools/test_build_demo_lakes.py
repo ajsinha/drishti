@@ -24,12 +24,13 @@ def run(*args):
     return subprocess.run([sys.executable, str(SCRIPT), *args, "--dry-run"], capture_output=True, text=True)
 
 
-def files(tmp_path):
+def files(tmp_path, system="endur"):
+    """Two days of a system's trades named by the load rules (trade_<system>.<YYYY-MM-DD>.jsonl), and a note that is not data."""
     d = tmp_path / "src"
     d.mkdir()
     for day in ("2026-10-15", "2026-10-16"):
-        (d / f"{day}.jsonl").write_text("{}\n")
-    (d / "notes.txt").write_text("not a dated file")
+        (d / f"trade_{system}.{day}.jsonl").write_text("{}\n")
+    (d / "notes.txt").write_text("not a data file")
     return d
 
 
@@ -38,11 +39,40 @@ def test_everything_ends_on_the_newest_file_and_loads_each_file(tmp_path):
     assert "lake demo --as-of 2026-10-16" in out
     assert out.count("lake build --from") == 2 and "--connector trade-endur" in out
     assert "notes.txt" not in out
+    assert "--as-of 2026-10-15" not in out and "--mode overwrite-dates" in out      # each file's date from its name: the load rules
+
+
+def test_the_older_names_are_refused_with_the_name_to_give(tmp_path):
+    d = tmp_path / "src"
+    d.mkdir()
+    (d / "2026-10-15.jsonl").write_text("{}\n")
+    (d / "trade_murex.2026-10-15.jsonl").write_text("{}\n")
+    (d / "trade_endur.final.jsonl").write_text("{}\n")
+    r = run("--endur-dir", str(d), "--lake", str(tmp_path / "lake"))
+    assert r.returncode != 0 and "nothing was loaded" in r.stderr
+    assert "name it trade_endur.2026-10-15.jsonl" in r.stderr
+    assert "trade_murex.2026-10-15.jsonl: the file of table trade_murex, not trade_endur" in r.stderr
+    assert "'final' is neither the date" in r.stderr
+
+
+def test_a_tar_of_date_folders_is_one_load_and_gives_its_newest_date(tmp_path):
+    import io
+    import tarfile
+    d = tmp_path / "src"
+    d.mkdir()
+    with tarfile.open(d / "endur-week.tar", "w") as t:
+        for day in ("2026-10-14", "2026-10-15"):
+            data = b'{"TRADE_ID": "1000279"}\n'
+            info = tarfile.TarInfo(f"trade_endur/{day}/trades.jsonl")
+            info.size = len(data)
+            t.addfile(info, io.BytesIO(data))
+    out = run("--endur-dir", str(d), "--lake", str(tmp_path / "lake")).stdout
+    assert "lake demo --as-of 2026-10-15" in out and out.count("lake build --from") == 1 and "endur-week.tar" in out
 
 
 def test_files_only_keeps_the_lakes_and_loads_one_system(tmp_path):
-    out = run("--source-dir", str(files(tmp_path)), "--system", "calypso", "--files-only", "--lake", str(tmp_path / "lake")).stdout
-    assert "lake demo" not in out and "kept as they are" in out
+    out = run("--source-dir", str(files(tmp_path, "calypso")), "--system", "calypso", "--files-only", "--lake", str(tmp_path / "lake")).stdout
+    assert "drishti.py lake demo" not in out and "kept as they are" in out
     assert "--connector trade-calypso" in out and "trade_calypso" in out and out.count("lake build --from") == 2
 
 
@@ -106,7 +136,7 @@ def test_files_only_for_calypso_names_a_calypso_trade_and_needs_no_restart(tmp_p
     d = tmp_path / "src"
     d.mkdir()
     for day, tid in (("2026-10-15", "CLY-3000157"), ("2026-10-16", "CLY-3000301")):
-        (d / f"{day}.jsonl").write_text('{"SOURCE_SYSTEM": "CALYPSO", "TRADE_ID": "%s"}\n' % tid)
+        (d / f"trade_calypso.{day}.jsonl").write_text('{"SOURCE_SYSTEM": "CALYPSO", "TRADE_ID": "%s"}\n' % tid)
     out = run("--source-dir", str(d), "--system", "calypso", "--files-only", "--lake", str(tmp_path / "lake")).stdout
     closing = out.split("3/3 done", 1)[1]
     assert "TRD CLY-3000301 60" in closing and "1000279" not in closing          # an id from the newest file, not an ENDUR one
@@ -115,7 +145,7 @@ def test_files_only_for_calypso_names_a_calypso_trade_and_needs_no_restart(tmp_p
 
 
 def test_files_only_with_a_server_tells_it_once(tmp_path):
-    out = run("--source-dir", str(files(tmp_path)), "--system", "murex", "--files-only", "--lake", str(tmp_path / "lake"),
+    out = run("--source-dir", str(files(tmp_path, "murex")), "--system", "murex", "--files-only", "--lake", str(tmp_path / "lake"),
               "--server", "http://10.0.0.5:18480").stdout
     assert out.count("tell http://10.0.0.5:18480/api/v1/packs/trading/loads: trade 2026-10-16") == 1
     assert "TRD MX-20000001 60" in out                                              # the files hold no TRADE_ID: the synthetic one
@@ -188,9 +218,9 @@ def test_store_all_and_wrong_values(tmp_path):
 
 
 def test_store_with_files_only_loads_the_files_into_iceberg_through_a_staging_lake(tmp_path):
-    out = run("--source-dir", str(files(tmp_path)), "--system", "murex", "--files-only", "--store", "murex=iceberg",
+    out = run("--source-dir", str(files(tmp_path, "murex")), "--system", "murex", "--files-only", "--store", "murex=iceberg",
               "--lake", str(tmp_path / "data" / "delta"), "--connectors-dir", str(tmp_path / "connectors")).stdout
-    assert "lake demo" not in out and out.count("lake build --from") == 2
+    assert "drishti.py lake demo" not in out and out.count("lake build --from") == 2
     assert str(tmp_path / "data" / "build" / "iceberg-stage") in out and "MUREX into Iceberg" in out
     assert "trade-murex: would be written to read iceberg" in out
     # a system the run does not rebuild is not moved by --files-only: it says how

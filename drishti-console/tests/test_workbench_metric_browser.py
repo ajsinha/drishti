@@ -25,7 +25,7 @@ SUTRA = ("rachana: 1\nsutra: metric-test\nversion: 1\nmatch: { kind: trade }\nti
 
 
 def option(page, panel, name):
-    return page.evaluate("([p, o]) => window.DrishtiWB.model(window.drishtiWorkbench.store.state.yaml).panels.filter(x => x.id === p)[0].values[o]",
+    return page.evaluate("([p, o]) => window.Drishti.WB.model(window.Drishti.workbench.store.state.yaml).panels.filter(x => x.id === p)[0].values[o]",
                          [panel, name])
 
 

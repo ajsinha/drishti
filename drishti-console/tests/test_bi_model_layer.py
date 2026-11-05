@@ -110,12 +110,12 @@ MODEL = {"rachana": 2, "model": "trading-risk", "version": "1.0.0", "title": "Tr
 
 # ---- pages and the proxy ------------------------------------------------------------------------------------------------
 
-@pytest.mark.parametrize("url,script", [("/bi/models", "bi-models.js"), ("/bi/ds/pack.trading.trade", "bi-models.js"), ("/bi/md/bi-m1", "bi-model-designer.js"),
-                                        ("/bi/datasets/new-layer", "bi-dataset-layer.js")])
+@pytest.mark.parametrize("url,script", [("/bi/models", "drishti_bi-models.js"), ("/bi/ds/pack.trading.trade", "drishti_bi-models.js"), ("/bi/md/bi-m1", "drishti_bi-model-designer.js"),
+                                        ("/bi/datasets/new-layer", "drishti_bi-dataset-layer.js")])
 def test_the_pages_are_shells_with_their_scripts_and_need_the_bi_power(url, script):
     client, _ = make()
     r = client.get(url)
-    assert r.status_code == 200 and script in r.text and "bi-layer.js" in r.text and "bi-layer.css" in r.text
+    assert r.status_code == 200 and script in r.text and "drishti_bi-layer.js" in r.text and "drishti_bi-layer.css" in r.text
     assert make(powers=())[0].get(url).status_code == 403
 
 

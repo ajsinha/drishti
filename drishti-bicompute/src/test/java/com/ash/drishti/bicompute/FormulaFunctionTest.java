@@ -25,6 +25,7 @@ import com.ash.drishti.bicompute.core.PivotView;
 import com.ash.drishti.bicompute.formula.FormulaFunction;
 import com.ash.drishti.bicompute.formula.FormulaParser;
 import com.ash.drishti.bicompute.harness.FunctionCheck;
+import com.ash.drishti.bicompute.harness.Playground;
 import com.ash.drishti.bicompute.spi.Batch;
 import com.ash.drishti.bicompute.spi.Kind;
 import com.ash.drishti.bicompute.spi.Viewer;
@@ -63,6 +64,23 @@ class FormulaFunctionTest {
         assertThat(f.finish(f.add(f.start(), b))).isCloseTo(4.0 / 6.0, offset(1e-15));
         FormulaFunction zero = FormulaFunction.of("sum(X) / sum(X, where=X > 100)");
         assertThat(zero.finish(zero.add(zero.start(), b))).as("a division by zero is nothing, never infinity").isNull();
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void thePlaygroundShowsEachStateAsItsSumsNeverAsAnObjectName() {
+        // tutorial 37 step 2: sum(r * w) / sum(w) on four rows; each state is [Σrw, Σw], shown with its values, the figure unrounded
+        FormulaFunction f = FormulaFunction.of("wret", "sum(r * w) / sum(w)", List.of("r", "w"));
+        Batch sample = new Batch(4, new Object[] {new double[] {0.012, -0.004, 0.020, 0.001}, new double[] {3, 1, 2, 5}});
+        Map<String, Object> out = Playground.run(f, sample, 2, null, 0, 1);
+        List<Map<String, Object>> steps = (List<Map<String, Object>>) out.get("steps");
+        assertThat(steps).isNotEmpty();
+        for (Map<String, Object> s : steps) {
+            assertThat(String.valueOf(s.get("state"))).doesNotContain("@").doesNotContain("$").contains("Σ=").contains("n=");
+        }
+        Map<String, Object> last = steps.get(steps.size() - 1);
+        assertThat(String.valueOf(last.get("state"))).contains("Σ=11.0 n=4");
+        assertThat((Double) out.get("final")).isCloseTo(0.077 / 11, offset(1e-12));
     }
 
     @Test

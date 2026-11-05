@@ -37,7 +37,7 @@ class ArrowAnswersTest {
 
     private static final ObjectMapper JSON = new ObjectMapper();
 
-    /** The answer rebuilt from the stream as the browser's helper rebuilds it (drishti-table.js), as a JSON tree. */
+    /** The answer rebuilt from the stream as the browser's helper rebuilds it (drishti_table.js), as a JSON tree. */
     static JsonNode rebuilt(byte[] bytes) throws Exception {
         Map<String, String> meta = ArrowTestReader.metadata(bytes);
         ObjectNode answer = (ObjectNode) JSON.readTree(meta.get(ArrowAnswers.ANSWER_KEY));

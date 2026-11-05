@@ -22,8 +22,8 @@
 # The samples replace each domain they reach (--recreate); a bulk book replaces the trade days it covers. Each load
 # writes <database>.loading and renames it over <database>, so a running Drishti server keeps reading the old file
 # until it reopens the new one. --keep-days N drops the business dates more than N calendar days before today.
-# Dates are guarded (LoadGuard): a row dated after tomorrow in the business zone is not loaded (--future-days N, --zone Z)
-# and the load ends with an error naming it; retention counts back from --as-of (today), never from the newest date
+# Dates are guarded (LoadGuard): a day after tomorrow in the business zone (a tar folder's date) is not loaded (--future-days N, --zone Z)
+# and the load ends with an error naming it; retention counts back from the business today, never from the newest date
 # loaded, and dropping more than --max-drop-share (0.5) of a table needs --force-drop. The database defaults to DRISHTI_DUCKDB_PATH, else data/duckdb/drishti.duckdb.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -36,20 +36,22 @@ DB="${DRISHTI_DUCKDB_PATH:-data/duckdb/drishti.duckdb}"; OPTS=(); TRADES=""; DAY
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --keep-days|--memory-limit|--parsers|--threads) OPTS+=("$1" "$2"); shift 2 ;;
-    --as-of|--future-days|--zone|--max-drop-share) OPTS+=("$1" "$2"); shift 2 ;;
+    --future-days|--zone|--max-drop-share) OPTS+=("$1" "$2"); shift 2 ;;
     --force-drop) OPTS+=("$1"); shift ;;
     --trades) TRADES="$2"; shift 2 ;;
     --days) DAYS="$2"; shift 2 ;;
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
-uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$DATA/banking.jsonl"
+# loader rows by the load rules (docs/architecture/DATA_LOAD_RULES.md): tars of <kind>/<YYYY-MM-DD>/ folders, each row under its folder's date
+ROWS="$DATA/build/loader-rows"; rm -rf "$ROWS"; mkdir -p "$ROWS"
+uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$ROWS/banking.tar"
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-duckdb -am
 CP="plugins/drishti-plugin-duckdb/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-duckdb -Dmdep.outputFile=/dev/stdout)"
-"$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.duckdb.DuckDbLoader "$DATA/banking.jsonl" "$DB" --recreate "${OPTS[@]}"
+"$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.duckdb.DuckDbLoader "$ROWS/banking.tar" "$DB" --recreate "${OPTS[@]}"
 if [[ -n "$TRADES" ]]; then
-  # the bulk book straight from the generator into the loader: no file of gigabytes in between
-  uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl - \
-    | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.duckdb.DuckDbLoader - "$DB" "${OPTS[@]}"
+  # the bulk book: a tar of trade/<YYYY-MM-DD>/ folders (the load rules), then the loader on it
+  uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl "$ROWS/bulk-trades.tar"
+  "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.duckdb.DuckDbLoader "$ROWS/bulk-trades.tar" "$DB" "${OPTS[@]}"
 fi
-rm -f "$DATA/banking.jsonl"
+rm -rf "$ROWS"

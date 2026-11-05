@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.lakeload;
 
+import com.ash.drishti.common.FileDates;
 import com.ash.drishti.iceberg.io.FileAccess;
 import com.ash.drishti.iceberg.io.Relocation;
 import com.ash.drishti.lakeio.S3Settings;
@@ -99,8 +100,13 @@ final class Loader {
                 if (f.isArchive()) {
                     throw new IllegalStateException(f.path() + ": an archive is read through its plan (DatasetLoads)");
                 }
+                FileDates.Decided d = ParseWorker.decide(plan, f, FileDates.today());
+                if (d.error() != null) {
+                    throw new IllegalArgumentException(d.error() + " (nothing was loaded)");
+                }
             }
             List<Split> splits = Inputs.splits(files, par.splitBytes());
+            loadIds(splits);
             report.inputs(files);
             checkSpillSpace(spillDir, files);
             int readers = Math.max(1, Math.min(par.readers(), splits.size()));
@@ -299,6 +305,16 @@ final class Loader {
                 int done = 0;
                 for (Map.Entry<Integer, List<Runs.Run>> e : byDate.entrySet()) {
                     LocalDate date = LocalDate.ofEpochDay(e.getKey());
+                    if (target.appended(date)) {           // this batch's append of the date is committed already: never twice
+                        progress.phase("skipping " + date + ": batch " + cfg.target().batchId() + " was appended already");
+                        report.skippedBatch(date);
+                        for (Runs.Run r : e.getValue()) {
+                            r.close();
+                        }
+                        e.getValue().clear();
+                        progress.done(++done, byDate.size());
+                        continue;
+                    }
                     progress.phase("writing " + date);
                     target.begin(date);
                     List<Runs.Run> runs = fanIn(date, e.getValue());
@@ -363,6 +379,27 @@ final class Loader {
         String d = cfg.memory().spillDir();
         Path base = d != null ? Path.of(d) : Path.of(System.getProperty("java.io.tmpdir"));
         return base.resolve("drishti-lakeload-" + ProcessHandle.current().pid() + "-" + System.nanoTime());
+    }
+
+    /**
+     * Each split's load id and file label (the {@code _load_id} and {@code _source_file} of its rows): one load id per data file of the
+     * input, {@code <run>.<n>} in input order, an archive's members sharing their archive's; the ids go to the summary ({@code loads}).
+     */
+    private void loadIds(List<Split> splits) {
+        byte[][] ids = new byte[splits.size()][];
+        byte[][] names = new byte[splits.size()][];
+        Map<String, String> byFile = new java.util.LinkedHashMap<>();
+        for (Split s : splits) {
+            InputFile f = s.file();
+            String top = f.member() != null ? f.member().archive() : f.path();
+            String id = byFile.computeIfAbsent(top, k -> report.run + "." + (byFile.size() + 1));
+            ids[s.id()] = id.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            names[s.id()] = f.name().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        }
+        plan.loadIds = ids;
+        plan.sourceFiles = names;
+        report.loads.clear();
+        byFile.forEach((file, id) -> report.loads.put(id, Inputs.name(file)));
     }
 
     private static void removeSpillDir(Path dir) {

@@ -795,8 +795,7 @@ def cmd_server_health(a, extra) -> int:
         print(f"status {h.get('status')}  version {v.get('version')}  java {v.get('java')}  uptime {v.get('uptimeSeconds')}s")
         print(f"packs {s.get('packs')}  sources {s.get('sources')} (degraded {s.get('sourcesDegraded')}, down {s.get('sourcesDown')})  "
               f"packs with problems {s.get('packsWithProblems')}  failed to start {s.get('failedToStart')}")
-        for src in h.get("sources", []):
-            print(f"  {src['name']:<28}{src['status']:<10}{src.get('health', '')}")
+        sys.stdout.write("".join(x + "\n" for x in load_module("enginescli", "enginescli.py").health_lines(h)))   # linear algebra (engine openblas), then each source
     return 0 if h.get("status") == "OK" else 1
 
 
@@ -1171,7 +1170,7 @@ def build_parser() -> argparse.ArgumentParser:
              "  drishti.py pack new your-folder/ --name my-bank --date BUSINESS_DATE --store files --files-root data/files "
              "--load --server http://localhost:18977")
     pm = add(k, "make", cmd_pack_make, "pack make: ONE folder to deploy from JSON Lines: pack, Delta data, bundle, server config, run scripts and README.txt (tools/packmake.py)", [],
-             "example:\n  drishti.py pack make data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank\n"
+             "example:\n  drishti.py pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank\n"
              "Chooses --key and --date itself when you do not (and says why), then runs pack check and pack verify.")
     load_module("packmake", "packmake.py").add_arguments(pm)
     pn.add_argument("--load", action="store_true", help="afterwards ask the running server to load the pack (administrator; takes effect at once, no restart)")

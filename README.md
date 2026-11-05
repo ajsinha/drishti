@@ -10,253 +10,185 @@
 
 **Any data. Any domain. One grammar.**
 
-Drishti (दृष्टि, "sight") is a live, keyboard-driven terminal for any kind of record. Type an identifier and it renders the entity
-behind it, a swap, a counterparty, a netting set, a fund, as a dense, linked view that ticks while the source changes, from whichever
-system holds it. Every number links to what it depends on, any past business day is one click away, and every table sorts, filters
-and walks with the keyboard.
+**For a bank, Drishti is explainable and controlled risk aggregation over the engines it already has.** Your pricing and simulation
+systems deliver trade-grain inputs (scenario P&L vectors, exposure paths, sensitivities); Drishti computes **VaR, ES, counterparty
+exposure, FRTB-SA and SIMM on demand for any scope**, from the whole bank down to an ad-hoc set of trades, instead of storing finished
+numbers. Every figure can be explained: where it came from, how it was calculated and why it moved. Every figure is also controlled:
+roles and masks decide who sees what, changes go through four eyes, access is logged and audited, and anything not built yet is clearly
+marked as such.
 
-The idea behind it: **a screen is a paragraph, not a program.** Nobody codes a screen per product. A product family gets a **Sutra**, a
-short, versioned YAML file in the **Rachana** (रचना, *composition*) screen grammar that says what the screen shows; where there is no
-Sutra, or a Sutra leaves gaps, an **inference engine** reads the shape of the data and lays out the rest. One generic pipeline draws
-every entity of every kind. **Domain packs** bring an industry (its kinds, mnemonics, Sutras, vocabulary, links, roles and connectors);
-the core knows no industry.
-
-On the same data, **business intelligence** (Rūpaka) gives analysts models, reports and live boards, and risk measures such as **VaR**
-and **counterparty exposure** are computed on demand, for any scope from the whole bank to an ad-hoc set of trades, from trade-level
-inputs, rather than stored as finished numbers.
+Beneath the risk sits a general platform: any data through connectors and domain packs, screens written as short YAML **Sutras** in the
+**Rachana** grammar, a pivot engine, business intelligence, data out through Arrow Flight and Flight SQL, and lakes in Delta Lake,
+Apache Iceberg or memory. The motto is **lean & streamlined**: one implementation of each thing, one grammar for every expression,
+nothing on screen that is not built.
 
 ```
-TRD MX-20000001 <GO>                          →  the trade: terms, legs, cashflows, curve, DV01 ladder, links
-NSET NS-SUMMIT-NY <GO>                        →  the netting set: member trades, CSA, collateral
-VAR BANK <GO>                                 →  VaR and ES of the bank, down the hierarchy to a trade
-EXP CPTY:CP-ALDERSHOT <GO>                    →  exposure computed from the paths: EE, PFE, EPE, EEPE
-FORM trading <GO>                             →  a form for the trading pack's kinds that writes the search for you
-TRD where QUANTITY > 200m order by QUANTITY desc   →  every trade over 200m, largest first
-amended trades over 5m in BOOK-RATES-3, biggest first   →  plain words: Drishti shows the search it makes
+VAR BANK <GO>                           →  VaR and ES of the bank, down the hierarchy to a trade, contributions that add up
+PVAR DESK DESK-RATES <GO>               →  the same explorer with parametric VaR beside historical, as a cross-check
+EXP CPTY:CP-ALDERSHOT <GO>              →  exposure from the simulator's paths: EE, PFE, EPE, EEPE
+FRSA BANK <GO>                          →  FRTB-SA capital: SBM, DRC and RRAO, by class and bucket
+SIMM <GO>                               →  initial margin per netting set, to collect and to post
+MCUBE <GO>                              →  the market-risk cube: VaR by desk and risk class against limits
+TRD MX-20000001 <GO>                    →  a trade: terms, legs, cashflows, links to what it touches
 ```
-
-**Learn it by doing:** [twenty-nine tutorials](docs/tutorials/README.md), from your first 15 minutes to VaR on Iceberg, each showing
-the UI, the command line and the YAML at every step, with real screenshots. The [documentation map](docs/README.md) lists every guide.
 
 ## Contents
 
-[Features](#features) · [How it works](#how-it-works) · [Try it](#try-it) · [Measured performance](#measured-performance) ·
-[Documentation map](#documentation-map) · [Project facts](#project-facts)
+[Risk, computed and explained](#risk-computed-and-explained) · [The platform](#the-platform) · [Try it](#try-it) ·
+[Measured performance](#measured-performance) · [Documentation](#documentation) · [Project facts](#project-facts)
 
-## Features
+## Risk, computed and explained
 
-### Look things up
-
-- **A command line** with type-ahead, as on a Bloomberg terminal: mnemonics, recent entities and matches from every source as you type.
-  One match opens; several give a **pick list** with each kind's key fields (`TRD MX-200000`, `CPTY north`).
-- **Views** of any entity: a title line, a strip of key figures, panels of 22 kinds (tables, key-value, ladders, curves, surfaces,
-  waterfalls, histograms, candlesticks, pivots, graphs, timelines, maps and more), function keys, and the raw document (F9)
-  ([RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one)). Tables filter like Excel and chart in place.
-- **Links** between entities, resolved through the entity graph, with badges; **impact** (F8) shows what depends on an entity, what it
-  rolls into and the amount at stake.
-- **Pivot** (`PIVOT <GO>`, [PIVOT_GUIDE.md](docs/guides/PIVOT_GUIDE.md)): any table, a page's table, a search's every match or VaR as a
-  pivot computed by the pivot engine, every total from its own members; saved and shared views, Excel with formulas only where a figure
-  adds up; a page table's arrangement promoted to its Sutra by an author.
-- Guides: [USER_GUIDE.md](docs/guides/USER_GUIDE.md), [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md). Tutorial:
-  [2, Look up anything](docs/tutorials/02-look-up-anything.md).
-
-### Search and forms
-
-- **Search by value** (`TRD where QUANTITY >= 250m and PRODUCT_GROUP = 'Rates' order by QUANTITY desc limit 20`) over every source of a
-  kind ([USER_GUIDE.md › Search by value](docs/guides/USER_GUIDE.md#search-by-value)).
-- **Plain words** (`amended trades over 5m in BOOK-RATES-3, biggest first`): a deterministic parser shows the search it makes, part by
-  part, before anything runs. No AI service is involved.
-- **Query by form** (`FORM <pack> <GO>`, `/forms`): typed inputs per kind (amounts, dates, multi-select dropdowns, pasted lists of ids)
-  that write the search; name it, watch it as a monitor, schedule it ([USER_GUIDE.md](docs/guides/USER_GUIDE.md#query-by-form),
-  [tutorial 3](docs/tutorials/03-query-by-form.md)).
-- **The data map** (`DATAMAP <GO>`): every kind of data the packs hold, how much there is today, and how the kinds join, each join
-  checked against the data ([USER_GUIDE.md › The data map](docs/guides/USER_GUIDE.md#the-data-map)).
-
-### Over time and live
-
-- **Business dates**: Live, or any past business day; views, links, search and impact all follow the date. **Known at** shows a day as
-  it was known at an earlier time ([USER_GUIDE.md › Business dates](docs/guides/USER_GUIDE.md#business-dates-live-or-a-day-in-the-past)).
-- **History and compare**: a range after an id (`TRD 1000015 30`, `3M`, `YTD`) gives the entity's history with what moved tinted;
-  compare an entity or a search between two dates, field by field; every view says how fresh its source is
-  ([tutorial 21](docs/tutorials/21-an-entity-over-time.md), [DATA_ARCHITECTURE.md](docs/architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)).
-- **Live views** tick over server-sent events; changed values flash ([DATA_ARCHITECTURE.md](docs/architecture/DATA_ARCHITECTURE.md#1-live-updates)).
-- **Monitors** (live watchlists), **alerts** (rules checked on every change, with a bell and history) and **workspaces** (several live
-  views on one screen, a pane following another's selection) ([USER_GUIDE.md › Monitors](docs/guides/USER_GUIDE.md#monitors),
-  [Alerts](docs/guides/USER_GUIDE.md#alerts), [Workspaces](docs/guides/USER_GUIDE.md#workspaces)).
-
-### Business intelligence (Rūpaka)
-
-- **Datasets and models**: tables from pack kinds, relationships, measures, several fact tables in one model, row rules and masks per
-  reader, on an embedded query engine ([BI_GUIDE.md](docs/guides/BI_GUIDE.md), [BI_GUIDE.md](docs/guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules),
-  [tutorial 18](docs/tutorials/18-several-datasets-in-one-report.md)).
-- **Reports in BI Studio**: a designer, slicers, cross-filtering, drill-through, maps from the world to a region, conditional formatting,
-  themes, phone and tablet layouts, statements laid out on paper ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave),
-  [tutorial 10](docs/tutorials/10-first-bi-report.md), [tutorial 20](docs/tutorials/20-statements-and-field-parameters.md)).
-- **Live BI and boards**: reports that follow the ticks, live tables, boards of tiles in kiosk mode
-  ([tutorial 12](docs/tutorials/12-live-bi-and-boards.md)); long questions as background runs.
-- **Governance**: versions and diffs, review with four eyes, certification, lineage, bundles between environments
-  ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments), [tutorial 13](docs/tutorials/13-govern-bi.md)).
-- **Python and AI in BI**: Python measures, visuals and Transforms, **Analyse** (slice, Drishti SQL and Python on your masked extract);
-  with AI switched on, a report from words, ask the data, explain a number ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python),
-  [USER_GUIDE.md](docs/guides/USER_GUIDE.md#analyse-slice-sql-and-python), [tutorial 14](docs/tutorials/14-python-and-analyse.md),
-  [tutorial 15](docs/tutorials/15-ai-in-drishti.md)).
-
-### Risk, computed on demand
-
-- **VaR and ES for any scope**: the bank, a desk, a book, a counterparty, a stored portfolio, a basket or an ad-hoc set written as a
-  scope (`BANK - DESK:CREDIT`), drilled from the bank to a trade with contributions that add up
-  ([VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), [tutorial 25](docs/tutorials/25-var-from-the-bank-to-a-trade.md)).
-- **Inputs as your pricing systems deliver them**: P&L vectors or scenario PVs per trade or position, positions derived by the pack's
-  rules; hierarchies from rows or **configured from the trades' columns** (such as limit letters) with VaR limits per node; any
-  reporting currency ([VAR_GUIDE.md › Inputs](docs/guides/VAR_GUIDE.md#15-inputs-from-upstream-engines)).
-- **Intraday**: updates from files (`drishti.py var intraday --load`) or a Kafka topic, applied on top of the morning run; the
-  **official** end-of-day record; captures and compare; history and **backtests** (Kupiec, Christoffersen); a pre-deal **what-if**.
+- **VaR and ES for any scope**: the bank, a desk, a book, a counterparty, a portfolio, a basket, or an ad-hoc scope written as an
+  expression (`BANK - DESK:CREDIT`). Drill from the bank to a trade with contributions that add up, hierarchies from rows or configured
+  from the trades' own columns, limits per node, any reporting currency, intraday updates on top of the morning run, the official
+  end-of-day record, captures, history and backtests ([VAR_GUIDE.md](docs/guides/VAR_GUIDE.md),
+  [tutorial 25](docs/tutorials/25-var-from-the-bank-to-a-trade.md)).
+- **Parametric VaR as a cross-check**: the explorer's **Parametric** toggle (or `PVAR`) fits the normal distribution to the scope's own
+  scenario P&L and shows parametric VaR, ES and the fat-tail gap beside historical VaR. It is never the official figure: limits,
+  backtesting and official records stay historical ([VAR_GUIDE.md section 3.12](docs/guides/VAR_GUIDE.md#312-parametric-var-beside-historical-pvar),
+  [tutorial 43](docs/tutorials/43-parametric-var-beside-historical.md)).
 - **Counterparty exposure** (EE, PFE, EPE, EEPE) for any scope, from the simulator's paths, with netting, collateral on each path and a
-  pre-deal what-if ([EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md),
-  [tutorial 26](docs/tutorials/26-exposure-from-the-bank-to-a-trade.md)); groupings and analytics computed the same way
-  ([GROUPINGS_ANALYTICS_GUIDE.md](docs/guides/GROUPINGS_ANALYTICS_GUIDE.md)).
-- **Sharded across the cluster** (off by default): a date's trades cut into shards by legal entity and desk, each owned by members of
-  Drishti\*net, every member still answering every scope, measured equal to one server to the cent; never a partial answer
-  ([VAR_SHARDING.md](docs/architecture/VAR_SHARDING.md)).
+  pre-deal what-if ([EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [tutorial 26](docs/tutorials/26-exposure-from-the-bank-to-a-trade.md)).
+- **FRTB-SA** (sensitivities-based method, default risk charge, residual risk add-on) for any VaR scope, with its parameters as
+  configuration ([FRTB_SA_GUIDE.md](docs/guides/FRTB_SA_GUIDE.md), [tutorial 30](docs/tutorials/30-frtb-sa-from-the-cases-to-a-desk.md)).
+- **SIMM** initial margin per netting set and as an analytic over any scope. ISDA's calibrated numbers are licensed, so the parameter
+  file ships empty and the bank installs its version ([SIMM_GUIDE.md](docs/guides/SIMM_GUIDE.md#4-the-licensed-parameter-file),
+  [tutorial 32](docs/tutorials/32-simm-from-the-examples-to-a-netting-set.md)).
+- **The MR cube** (`MCUBE`): VaR by desk and risk class on the pivot engine, each cell equal to the VaR engine's answer for its scope,
+  with tail and attribution, DV01 buckets and what-if ([MR_CUBE_GUIDE.md](docs/guides/MR_CUBE_GUIDE.md),
+  [tutorial 38](docs/tutorials/38-the-mr-cube-on-the-pivot-engine.md)).
+
+**Explained.** The **?** on a figure opens the server's own lines: the method, the inputs and the formula with the scope's numbers.
+**Explain the move** breaks a change between two dates into exact steps that add up. A cell's **provenance** shows its scope, members,
+data and method. VaR, FRTB-SA and SIMM each have a **playground** (`PLAY VAR`, `PLAY FRTB`, `PLAY SIMM`) that works a small case step by step and exports an Excel workbook with live
+formulas. The pivot's **Why** and **What-if** explain any difference ([PIVOT_GUIDE.md section 20](docs/guides/PIVOT_GUIDE.md#20-why-did-it-move-explain-the-difference),
+[tutorial 37](docs/tutorials/37-custom-functions-and-explain.md)).
+
+**Controlled.** All risk is computed on the server in Java; the console only draws it. Roles per kind, row rules and field masks apply to
+every screen, pivot, BI query and Flight read. Corrections and screen designs go through four eyes, access is logged and audited, and each compute engine is
+switched on or off per node in **Admin → Engines** ([OPERATIONS.md section 21](docs/admin/OPERATIONS.md#21-compute-engines-on-or-off)).
+**Nothing unbuilt looks built**: a figure, panel or menu item that depends on unbuilt work is registered in
+`config/under-construction.yaml` and is either shown with an *Under construction* chip or hidden
+([UNDER_CONSTRUCTION.md](docs/admin/UNDER_CONSTRUCTION.md)). Today that covers the stored SA-CCR and xVA figures, credit limit usage and
+the pre-deal limit decision, among others.
+
+## The platform
+
+### Look up, search and analyse
+
+- **A keyboard-driven terminal**: type-ahead over every source, linked views of any entity, impact (F8), the raw document (F9), any past
+  business day, history and compare, live views that tick ([USER_GUIDE.md](docs/guides/USER_GUIDE.md),
+  [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md), [tutorial 2](docs/tutorials/02-look-up-anything.md)).
+- **Search** by value (`TRD where QUANTITY > 200m order by QUANTITY desc`), in plain words parsed without any AI service, or with a
+  form (`FORM <pack>`); monitors, alerts and workspaces ([tutorial 3](docs/tutorials/03-query-by-form.md)).
+- **The pivot engine** (`PIVOT`): any kind, search or measure as a pivot, every total computed from its own members, saved and shared
+  views, live pivots, Excel export with formulas ([PIVOT_GUIDE.md](docs/guides/PIVOT_GUIDE.md), [tutorial 33](docs/tutorials/33-the-pivot-engine.md)).
+- **Business intelligence** (Rūpaka) on the pivot engine: models, reports, live boards, governance and distribution, with row rules and
+  masks per reader ([BI_GUIDE.md](docs/guides/BI_GUIDE.md), [tutorial 10](docs/tutorials/10-first-bi-report.md)).
+- **One grammar.** Rachana paths and expressions are used everywhere: in Sutras, search, the pivot, BI and custom functions. The
+  **function catalogue** lists every function with the rules each keeps (nulls, rounding, dates on the bank's calendars) and its Excel,
+  SAS and MATLAB counterparts ([FUNCTIONS.md](docs/guides/FUNCTIONS.md), [FUNCTION_CATALOGUE.md](docs/architecture/FUNCTION_CATALOGUE.md)).
+
+### Screens without code
+
+- **Sutras**: a product family's screen is a short, versioned YAML file. Where there is no Sutra, the inference engine lays the screen
+  out from the shape of the data. One generic pipeline draws every entity of every kind
+  ([SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md), [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md)).
+- **Domain packs** bring an industry: kinds, mnemonics, Sutras, links, roles and connectors, in YAML only. The core knows no industry.
+  Packs load and unload from Admin → Packs, and a pack can be made from your own JSON Schema or JSON Lines
+  ([PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md), [SCHEMA_TO_PACK_GUIDE.md](docs/guides/SCHEMA_TO_PACK_GUIDE.md),
+  [tutorial 5](docs/tutorials/05-build-a-pack.md)).
+- **The Build workbench and the Sutra designer**: drag panels onto a live screen; a save is a proposal an approver reviews
+  ([tutorial 22](docs/tutorials/22-build-a-screen-with-the-designer.md)).
 
 ### Data in
 
-- **Connectors**, each one YAML file in `config/connectors/`, changed live in Admin → Connectors, with TLS and an outbound proxy. The
-  plugin families: lakes (Delta Lake, Apache Iceberg, other teams' Iceberg tables), databases (PostgreSQL and other JDBC databases,
-  DuckDB, MongoDB, Redis, Aerospike, Cassandra), messaging (Kafka, ActiveMQ, RabbitMQ), storage and services (files, Amazon S3, REST),
-  and public feeds, news and quotes ([CONNECTORS.md](docs/connectors/CONNECTORS.md),
-  [tutorial 4](docs/tutorials/04-connect-your-data.md)).
-- **Delta Lake and Apache Iceberg**, both read and written by Drishti's own engines without Hadoop, on local disk (Windows included) or
-  S3; Delta is the default, Iceberg a full alternative, and your own Databricks or Iceberg tables can be read too
-  ([DATA_GUIDE.md](docs/guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg), [DATA_ARCHITECTURE.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine),
-  [tutorial 29](docs/tutorials/29-var-on-iceberg.md)).
-- **JSON Lines is the data standard**: `drishti.py lake build` loads it into Delta or Iceberg (Python by default); for large loads,
-  `--engine java` runs the **parallel Java loader**, multi-threaded, memory-bounded, one commit per business date
-  ([DATA_GUIDE.md](docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard), [PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md),
-  [TOOLS.md](docs/guides/TOOLS.md)). One call tells Drishti a load has landed ([DATA_GUIDE.md](docs/guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed),
-  [tutorial 7](docs/tutorials/07-load-data-daily.md)).
-- **Public-data packs**: world economy, US equities from SEC EDGAR, GLEIF legal entities, US funds and ETFs from SEC filings, each with
-  its own refresh script in `tools/publicdata/` and its licence and internal-only rules stated
-  ([EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md), [FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md),
-  [tutorial 28](docs/tutorials/28-funds-and-etfs.md)).
-- **Data contracts**: a contract per mnemonic states what the upstream engines write, where and when, and what Drishti answers
-  ([docs/contracts/](docs/contracts/README.md)); `DATAMAP` shows the result.
+- **Connectors**, one YAML file each in `config/connectors/`: Delta Lake and Apache Iceberg (Drishti's own engines, no Hadoop, local disk
+  or S3), JDBC databases, DuckDB, MongoDB, Redis, Aerospike, Cassandra, Kafka, ActiveMQ, RabbitMQ, files, S3, REST and public feeds
+  ([CONNECTORS.md](docs/connectors/CONNECTORS.md), [tutorial 4](docs/tutorials/04-connect-your-data.md)).
+- **One file per lake**: `config/lakes/<lake>.yaml` says where a lake is (a folder, `s3://` or `mem://`) and describes every table in it
+  (partitions after `business_date`, promoted columns, vectors, load mode, retention). Loaders, the data inbox and connectors all refer to
+  it; `drishti.py lake check` compares it with the tables on disk ([LAKE_GUIDE.md](docs/guides/LAKE_GUIDE.md),
+  [tutorial 34](docs/tutorials/34-one-file-per-lake.md)).
+- **The load rules**: JSON Lines is the data standard. A plain file is one table and one business date, named in the file
+  (`<name>.<YYYY-MM-DD>.jsonl.gz`); a `.ready` control file says the file is complete and may override the name; a tar archive carries
+  several tables and dates and loads all or nothing. Loads **append** by default, and every row carries its load id, so
+  `drishti.py lake undo <load-id>` removes exactly one load. Nothing is guessed: a file that breaks a rule is refused with the reason
+  ([DATA_LOAD_RULES.md](docs/architecture/DATA_LOAD_RULES.md), [tutorial 7](docs/tutorials/07-load-data-daily.md)).
+- **The data inbox** loads the files your ETL drops, by routing rules, with Admin → Data loads to watch, retry and undo
+  ([tutorial 36](docs/tutorials/36-load-files-with-the-data-inbox.md)). For large loads, the parallel Java loader is multi-threaded and
+  memory-bounded ([PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md)).
+- **In-memory lakes** (`mem://`) for feeds that never touch disk, such as news ([IN_MEMORY_LAKE_GUIDE.md](docs/guides/IN_MEMORY_LAKE_GUIDE.md),
+  [tutorial 31](docs/tutorials/31-news-in-memory-only.md)).
+- **Data contracts**: one per mnemonic, stating what the upstream engines deliver and what Drishti answers
+  ([docs/contracts/](docs/contracts/README.md)); `DATAMAP` shows what the packs hold today.
 
-### Build without code
+### Data out
 
-- **Domain packs**: eleven ship in `config/packs/`, seven on by default (`core`, `market-data`, `trading`, `counterparty-risk`,
-  `market-risk`, `world-economy`, `news-and-markets`); `us-equities`, `gleif`, `funds` and the sample `compute-demo` are opt-in. Packs
-  inherit, load and unload from Admin → Packs, and install from a signed registry with rollback ([PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which),
-  [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md)).
-- **A pack from your data**: JSON Schema files or a folder of JSON Lines in, a pack out (`drishti.py pack make`, or Build → New pack)
-  ([DATA_GUIDE.md](docs/guides/DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema), [tutorial 5](docs/tutorials/05-build-a-pack.md)).
-- **Sutras** in YAML with a JSON Schema, fragments from a UI kit, panels that talk to each other, forms with drafts
-  ([SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md), [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md)).
-- **The Build workbench** (`/build`) and the **Sutra designer**: drag panels onto a live screen, or describe a screen in one line; a save
-  is a proposal an approver reviews (four eyes) ([RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench),
-  [tutorial 6](docs/tutorials/06-design-a-screen.md), [tutorial 22](docs/tutorials/22-build-a-screen-with-the-designer.md)).
-- **Query-by-form design**: a pack's `form:` and `columns:` declare its forms; no form code ([USER_GUIDE.md](docs/guides/USER_GUIDE.md#query-by-form)).
-- **The CLI** (`tools/drishti.py`): packs, Sutras, data, lakes, VaR, exposure and designs from a terminal or a pipeline
-  ([CLI_GUIDE.md](docs/guides/CLI_GUIDE.md)); **Calc** (`Alt+C`) runs Python in the browser on the view you are looking at
-  ([USER_GUIDE.md](docs/guides/USER_GUIDE.md#calc-python-on-any-view)).
-
-### Collaboration and distribution
-
-- **Share a view with a note**, an inbox, and discussion threads anchored to a number; everyone sees the view with their own permissions
-  ([USER_GUIDE.md › Share a view](docs/guides/USER_GUIDE.md#share-a-view-with-a-note), [tutorial 8](docs/tutorials/08-share-and-collaborate.md)).
-- **Scheduled reports**: a search run as you on a schedule, delivered as CSV to a folder or an approved webhook
-  ([tutorial 9](docs/tutorials/09-reports.md)).
-- **Subscriptions and alerts in BI**: a report as PDF, PNG, Excel or CSV by email, webhook or text, each reader on their own masks
-  ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding), [tutorial 11](docs/tutorials/11-bi-that-runs-itself.md)).
-- **Write-back with four eyes**: a correction proposed on a form, reviewed and confirmed, applied and shown to everyone
-  ([WRITE_BACK.md](docs/guides/WRITE_BACK.md), [tutorial 24](docs/tutorials/24-correct-a-trade-and-approve-it.md)).
-- **Export** any table as CSV, a document as JSON, print or PDF, and a link that reopens the view exactly as you see it.
-
-### Embed Drishti elsewhere
-
-- **Drishti Elements**: live views, single panels, published BI reports, *About this page* and search inside another web application
-  as `<drishti-view>`, `<drishti-panel>`, `<drishti-report>`, `<drishti-about>` and `<drishti-search>` Web Components, without
-  iframes, under a strict content security policy; React, Vue and Angular samples ([CLIENT_RENDERER.md](docs/architecture/CLIENT_RENDERER.md#19-drishti-elements-developer-guide),
+- **Arrow Flight and Flight SQL** (engine `flight`, off as shipped): Drishti's data, BI models, pivot views and VaR scenario P&L vectors
+  delivered to Python, Java, JDBC and ODBC clients as Arrow, over TLS, read only, with API tokens scoped `data:read`. The reader's
+  entitlements, masks, limits and audit apply exactly as on the screens. Flight SQL answers SQL over the BI models
+  ([FLIGHT_GUIDE.md](docs/guides/FLIGHT_GUIDE.md), [FLIGHT_REFERENCE.md](docs/guides/FLIGHT_REFERENCE.md),
+  [tutorial 35](docs/tutorials/35-data-out-with-arrow-flight.md)). Reads on a single node are tested; the three-node end to end is
+  under construction.
+- **Client examples** ([examples/clients/](examples/clients/README.md)): Python notebooks (pandas, polars, DuckDB, a VaR P&L plot, a live
+  stream with resume), a Java program, JDBC through Flight SQL, and Excel through Python.
+- **REST API and embedding**: everything under `/api/v1` with API tokens ([API_GUIDE.md](docs/guides/API_GUIDE.md)); live views, panels
+  and reports inside other web applications as Web Components ([CLIENT_RENDERER.md](docs/architecture/CLIENT_RENDERER.md#19-drishti-elements-developer-guide),
   [tutorial 16](docs/tutorials/16-embed-drishti.md)).
-- **The ViewModel contract**: every entity screen is one JSON document, with a JSON Schema served at `GET /api/v1/viewmodel/schema`, so
-  scripts, golden tests and other renderers read exactly what the console draws ([VIEWMODEL.md](docs/architecture/VIEWMODEL.md)).
-- **REST API, API tokens and clients**: everything under `/api/v1`, read-only revocable tokens, a Python client and Excel through
-  Power Query ([API_GUIDE.md](docs/guides/API_GUIDE.md)).
 
 ### Operate
 
-- **Clustering (Drishti\*net, off by default)**: several servers join by gossip; each keeps its own packs, connectors and data, and any
-  of them answers any request with the caller's masks applied; the console fails over with no new sign-in. Members advertise real
-  addresses only ([OPERATIONS.md](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [tutorial 19](docs/tutorials/19-a-cluster-of-three.md),
-  [drishti-stack/](drishti-stack/README.md) for three servers on one machine).
-- **Security**: sign-in with passwords or OpenID Connect, roles per kind, field masks, API tokens, an access log of who looked at what,
-  commands switched off for everyone, and an audit trail ([USER_MANAGEMENT.md](docs/admin/USER_MANAGEMENT.md)).
-- **Admin and Health**: packs, connectors, lakes, roles and functions from the Admin pages; Health shows sources, freshness, pools and a
-  **Memory and files** row (direct and mapped memory, heap, threads, open files); Prometheus metrics and a Grafana dashboard
-  ([OPERATIONS.md › Admin → Health](docs/admin/OPERATIONS.md#132-admin--health)).
-- **Deployment**: one machine by hand or with systemd, Docker Compose ([deploy/docker/compose.yaml](deploy/docker/compose.yaml)), AWS on ECS (Fargate or EC2)
-  with S3 and EFS ([CLUSTER_DEPLOYMENT.md](docs/architecture/CLUSTER_DEPLOYMENT.md#appendix-b-drishti-on-aws-ecs-efs-and-s3)), and Windows with Java and Python only
-  ([GETTING_STARTED.md › Windows](docs/guides/GETTING_STARTED.md#drishti-on-windows)). Production steps:
-  [tutorial 17](docs/tutorials/17-run-it-in-production.md).
-- **Performance**: virtual threads, layouts cached by shape, memory-mapped hot files for VaR and exposure, tuning knobs and how to
-  measure ([PERFORMANCE.md](docs/admin/PERFORMANCE.md), [Measured performance](#measured-performance) below).
-- An **AI layer** and an **MCP client**, both off by default, with masking and audit of every call
-  ([AI.md](docs/admin/AI.md#1-model-providers), [AI.md](docs/admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy)).
+- **Security**: sign-in with passwords or OpenID Connect, roles per kind, field masks, API tokens, an access log and an audit trail. It
+  is **off by default** for local development and is turned on for any shared machine ([USER_MANAGEMENT.md](docs/admin/USER_MANAGEMENT.md),
+  [tutorial 17](docs/tutorials/17-run-it-in-production.md)).
+- **Clustering** (Drishti\*net, off by default): servers join by gossip, any member answers any request, VaR shards across members
+  ([OPERATIONS.md section 18](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [tutorial 19](docs/tutorials/19-a-cluster-of-three.md),
+  [drishti-stack/](drishti-stack/README.md)).
+- **Linear algebra**: OpenBLAS is bundled for Linux and Windows x86-64 but **off as shipped**. A 250,000-position run gave the same VaR to
+  the dollar with it on and off, with no clear end-to-end gain. Turn it on per node in Admin → Engines after measuring on your own
+  hardware ([OPERATIONS.md section 2.1](docs/admin/OPERATIONS.md#21-server-requirements-native-libraries-blas)).
+- **Admin and Health**: packs, connectors, lakes, engines, roles and functions from the Admin pages; Prometheus metrics; deployment by
+  hand, with systemd, with Docker Compose ([deploy/docker/compose.yaml](deploy/docker/compose.yaml)), on AWS ECS, and on Windows with
+  Java and Python only ([OPERATIONS.md](docs/admin/OPERATIONS.md), [GETTING_STARTED.md › Windows](docs/guides/GETTING_STARTED.md#drishti-on-windows)).
+- An **AI layer** and an **MCP client**, both off by default, with masking and audit of every call ([AI.md](docs/admin/AI.md)).
 
 ## How it works
 
-![How a command becomes a screen: sources such as trade systems, Delta and Iceberg lakes, databases, Kafka, files and S3 feed the
-connector plugins; the server's view pipeline runs seven steps (command, fetch, match Sutra, shape, layout from Sutra and inference,
-links, bind) into a ViewModel in JSON, which the web console, Drishti Elements in other applications and the REST API and CLI render.
-Beneath: the VaR and exposure engines sharded across Drishti*net, BI (Rūpaka) on the same data, and the domain packs in
-YAML.](docs/img/readme/drishti-flow.svg)
+![How a command becomes a screen: sources feed the connector plugins; the server's view pipeline turns a command into a ViewModel in
+JSON, which the console, Drishti Elements and the API render; beneath it, the risk engines, BI and the domain packs.](docs/img/readme/drishti-flow.svg)
 
-**The view pipeline.** Every view, live or not, is built in the same seven stages: the command is parsed into a kind and an id; the
-source router fetches the document from the connector that holds it for the chosen date; the kind's Sutra is matched; the document's
-shape is fingerprinted; the layout (Sutra plus inference) is taken from a cache keyed by Sutra version, kind and shape, or made once;
-linked entities are fetched in parallel within a time budget; and every panel is bound in parallel. Each stage works on immutable inputs
-and each view reports its own timings ([ARCHITECTURE.md › The view pipeline](docs/architecture/ARCHITECTURE.md#4-the-view-pipeline)).
+Every view is built by the same pipeline: the command is parsed, the document is fetched from the connector that holds it for the
+chosen date, the kind's Sutra is matched, the layout is taken from a cache keyed by Sutra version and data shape, links are fetched in
+parallel, and the panels are bound. The server sends the bound screen as one JSON **ViewModel**, and live updates are patches to it.
+A Sutra is interpreted, never compiled, and there is no screen per product
+([ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [VIEWMODEL.md](docs/architecture/VIEWMODEL.md)).
 
-**Generic rendering.** A Sutra is not compiled and no code is generated from it: the server interprets the YAML, and the console draws
-every ViewModel with one page template and one macro per panel kind, with the same scripts on every page. There is no screen per
-product, kind or mnemonic; a pack is YAML only. The few hand-built pages and why they exist are listed too
-([ARCHITECTURE.md › How a screen is made](docs/architecture/ARCHITECTURE.md#7a-how-a-screen-is-made-generic-not-bespoke)).
+The server is one Spring Boot application on virtual threads, built from Maven modules that depend in one direction (the plugin SPI
+has no Spring). The console is a separate Python web application that computes nothing itself.
 
-**The ViewModel contract.** What the server sends is neither HTML nor the raw record but the screen, laid out and bound, as JSON:
-title, strip, panels, links, keys, provenance and timings. Live updates are patches to it in frames over server-sent events. Its JSON
-Schema is generated from the Java records and checked against real views ([VIEWMODEL.md](docs/architecture/VIEWMODEL.md)).
-
-**The module layout.** One Spring Boot application on virtual threads, built from Maven modules that depend in one direction: the
-plugin SPI (`drishti-api`, no Spring), the Rachana grammar and inference, the entity graph, the engine, identity, packs, the lake
-engines (`drishti-deltalake`, `drishti-iceberg`, `drishti-lakeio`, `drishti-lakeload`), the in-memory lake (`drishti-memlake`), compute, Drishti\*net, the AI layer, and one
-module per connector. The console is a separate Python web application
-([ARCHITECTURE.md › Module layout](docs/architecture/ARCHITECTURE.md#13-module-layout-java)).
-
-The connector plugins, `plugins/drishti-plugin-*/`: `demo`, `file`, `rest`, `jdbc`, `delta`, `aerospike`, `cassandra`, `redis`, `mongodb`, `iceberg`, `iceberg-external`, `duckdb`, `feeds`, `news`, `yfinance`, `kafka`, `activemq`, `rabbitmq`, `s3`.
-
-Key design documents: [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) (the whole picture and its decisions, with the
-[ADRs](docs/architecture/adr/README.md)), [VAR_SHARDING.md](docs/architecture/VAR_SHARDING.md),
-[PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md), [CLUSTER_DEPLOYMENT.md](docs/architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti),
-[CLIENT_RENDERER.md](docs/architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design), [DATA_ARCHITECTURE.md](docs/architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches) (user content every node can
-reach), [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md#inference-the-screens-drishti-draws-with-no-sutra), [BI_DESIGN.md](docs/architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase).
+The connector plugins, `plugins/drishti-plugin-*/`: `demo`, `file`, `rest`, `jdbc`, `delta`, `iceberg`, `iceberg-external`, `duckdb`, `mongodb`, `redis`, `aerospike`, `cassandra`, `kafka`, `activemq`, `rabbitmq`, `s3`, `feeds`, `news`, `yfinance`.
 
 ## Try it
 
-New to Drishti? **[GETTING_STARTED.md](docs/guides/GETTING_STARTED.md)** installs and starts it from a clean machine, and
-**[tutorial 1](docs/tutorials/01-first-15-minutes.md)** takes you through your first quarter of an hour. The short version, from the
-repository root (Java 21 or newer; Python 3.13, [the minimum and why](docs/guides/GETTING_STARTED.md#step-1--install-the-prerequisites);
-[uv](https://docs.astral.sh/uv/)):
+[GETTING_STARTED.md](docs/guides/GETTING_STARTED.md) installs and starts Drishti from a clean machine, and
+[tutorial 1](docs/tutorials/01-first-15-minutes.md) walks through your first quarter of an hour. The short version, from the repository
+root:
+
+- **Prerequisites**: a 64-bit Java 21 (JDK) and Python as stated in
+  [GETTING_STARTED.md, Step 1](docs/guides/GETTING_STARTED.md#step-1--install-the-prerequisites); [uv](https://docs.astral.sh/uv/)
+  to set up the console's Python. Maven ships with the repository (`./mvnw`).
 
 ```bash
-# 1. Build (Maven comes with the repository)
-export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-./mvnw -q package -DskipTests                 # or: ./mvnw -q verify  (also runs every test)
+# 1. Build the server
+./mvnw -q package -DskipTests -pl drishti-server -am
 
-# 2. The console's Python environment (also runs tools/drishti.py)
+# 2. The console's Python environment (it also runs tools/drishti.py)
 uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 
-# 3. The demo lakes from the committed test data: sixty business days, 85 tables (about 15 minutes, 3.4 GB)
+# 3. The demo lakes, from the committed test data in data/testdata
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 
 # 4. The server on :18480 (native libraries unpack in its own folder, not /tmp)
@@ -267,80 +199,62 @@ java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-
 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
-Checks: `curl -s localhost:18480/actuator/health` and `curl -s localhost:17480/healthz` answer `{"status":"UP"…}`. The server loads the
-seven default packs; `DRISHTI_PACKS` chooses others ([PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)). Sign-in is off for local development; to turn it
-on, see [GETTING_STARTED.md, Step 8](docs/guides/GETTING_STARTED.md#step-8--sign-in-and-change-the-admin-password).
+Then open http://localhost:17480/t and try `TRD MX-20000001`, `VAR BANK`, `EXP BANK` and `PIVOT`. Security is off in this start, which
+is meant for one developer machine. To run with sign-in, which is how the tutorials run, follow
+[GETTING_STARTED.md, Step 6](docs/guides/GETTING_STARTED.md#step-6--start-the-server) and
+[Step 8](docs/guides/GETTING_STARTED.md#step-8--sign-in-and-change-the-admin-password).
 
-**What to try first**, at http://localhost:17480/t:
-
-- `TRD MX-20000001`, then F8 for its impact and F9 for the raw document;
-- `CPTY CP-NORTHBRIDGE`, then follow a link to its agreement and its country's economy;
-- a past date in the top bar, and `TRD 1000015 30` for a trade's last thirty business days;
-- `amended trades over 5m, biggest first`, then `FORM trading`;
-- `VAR BANK` and `EXP BANK`, then click down to a trade;
-- `BI` for the catalogue of reports and boards.
-
-Other ways to run it: [Windows](docs/guides/GETTING_STARTED.md#drishti-on-windows) (PowerShell; Java and Python only),
-[Docker](docs/guides/GETTING_STARTED.md#running-everything-in-docker-optional), the
+Other ways to run it: [Windows](docs/guides/GETTING_STARTED.md#drishti-on-windows) (`tools/windows/start-server.ps1`; Java and Python
+only), [Docker](docs/guides/GETTING_STARTED.md#running-everything-in-docker-optional), the
 [IDEs](docs/guides/GETTING_STARTED.md#running-from-intellij-idea-and-pycharm), and a three-server cluster from
 [drishti-stack/](drishti-stack/README.md).
 
 ## Measured performance
 
-Measured on one developer workstation; the method and every figure are in the linked documents.
+All figures were measured on one developer workstation. The method, the commands to run each benchmark again and the limits of each
+figure are in [BENCHMARK.md](docs/admin/BENCHMARK.md).
 
-| Data | Measure | Result |
+| Run | Result | Where |
 |---|---|---|
-| 35.7 million trades (ENDUR, CALYPSO, MUREX over 30 dates), 8 GB heap | 50 simultaneous users against the server | 179 requests/s, 0 failures; a trade p50 / p95 0.16 / 0.73 s; heap 3.7 GB ([BENCHMARK.md](docs/admin/BENCHMARK.md#83-thirty-days-and-a-day-restated-while-serving)) |
-| the same | 50 users through the console | 182 pages/s, 0 failures; form search p50 0.21 s |
-| the same | a day of 400,000 trades restated while 30 users read | load 2 min 54 s; 202 requests/s, 0 failures |
-| 8.2 million trades over 7 dates, 8 GB heap | 50 users: server / console | 146 / 69 requests/s, 0 failures; heap 1.8 GB ([CLUSTER_DEPLOYMENT.md](docs/architecture/CLUSTER_DEPLOYMENT.md#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap)) |
-| 1 million trades a day | search over every trade, 2,017 matches | 134 ms ([BENCHMARK.md](docs/admin/BENCHMARK.md#81-a-million-trades-a-day-on-delta)) |
-| 1 million trades in memory (VaR) | a node's VaR and ES / an ad-hoc scope of 50,000 positions / the whole bank summed from its trades | under 1 ms / 52 ms / 58 ms ([BENCHMARK.md section 5.3](docs/admin/BENCHMARK.md#53-the-heap-tier-varscalebenchmark)) |
-| 10,000 positions × 510 scenarios (53.7 MB of JSON Lines), 24 cores | the parallel Java loader into Delta, warm | 0.19 to 0.29 s, 34,000 to 52,000 rows/s ([BENCHMARK.md section 7.2](docs/admin/BENCHMARK.md#72-the-java-parallel-loader-per-stage)) |
-| three real servers, 20 users, one node killed and restarted | the console's failover; answers checked against one server | moved in 0.27 s, nobody signed out; 9,362 answers, 0 wrong ([OPERATIONS.md › Drishti*net: running several servers as one, section 13](docs/admin/OPERATIONS.md#13-measured-the-soak-on-real-processes)) |
-| warm cache | view built on the server / over HTTP, p99; live tick to frame, p99 | 0.6 ms / 3.0 ms; 11.2 ms ([PERFORMANCE.md](docs/admin/PERFORMANCE.md#targets-and-measured-numbers)) |
+| VaR, 200,000 positions, one server (`-Xmx8g`) | first open of a date 4.5 s; 50 users 270 requests/s, 0 errors; heap with two dates open 881 MB | [§4.2](docs/admin/BENCHMARK.md#42-one-server-and-the-three-node-cluster), [§4.3](docs/admin/BENCHMARK.md#43-users-50-100-and-200) |
+| VaR, 200,000 positions, three-node cluster | the bank's VaR bit-equal to one server | [§4.2](docs/admin/BENCHMARK.md#42-one-server-and-the-three-node-cluster) |
+| VaR, 1,000,000 positions, one server (`-Xmx6g`) | first open of a date 20.9 s; 50 users 183 requests/s, 0 errors; heap with two dates open 2.2 GB | [§4.2](docs/admin/BENCHMARK.md#42-one-server-and-the-three-node-cluster), [§4.3](docs/admin/BENCHMARK.md#43-users-50-100-and-200) |
+| Many VaR scopes at once, 1,000,000 positions | 100 overlapping sets 3.1x faster summed together on OpenBLAS; 100 desks 3.3x on Java; results identical or within 4.5e-16 | [§17](docs/admin/BENCHMARK.md#17-many-var-scopes-at-once-blas) |
+| 1,000,000 trades a day on Delta | search over every trade 134 ms (2,017 matches); open a trade 48 ms cached | [§8.1](docs/admin/BENCHMARK.md#81-a-million-trades-a-day-on-delta) |
+| 35.7 million trades over 30 dates, 50 users | server 179 requests/s, 0 failures; a day of 400,000 trades restated in 2 min 54 s while 30 users read | [§8.3](docs/admin/BENCHMARK.md#83-thirty-days-and-a-day-restated-while-serving) |
+| The parallel Java loader, 10,000 positions × 510 scenarios | 0.19 to 0.29 s warm, 34,000 to 52,000 rows/s | [§7.2](docs/admin/BENCHMARK.md#72-the-java-parallel-loader-per-stage) |
 
-Every benchmark, with the commands to run it again and the extrapolations to 2.3M and 10M positions: [BENCHMARK.md](docs/admin/BENCHMARK.md).
+## Documentation
 
-## Documentation map
+The map of every document, by what you want to do, is [docs/README.md](docs/README.md); the console's Help centre holds the same
+guides. Start from the door that fits:
 
-The full map, every document by what you want to do, is [docs/README.md](docs/README.md); the console's Help centre holds the same
-guides. The key ones by audience:
+| You want to… | Start with |
+|---|---|
+| use Drishti | [Use Drishti](docs/README.md#use-drishti): [USER_GUIDE.md](docs/guides/USER_GUIDE.md), [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), [EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [BI_GUIDE.md](docs/guides/BI_GUIDE.md) |
+| change how screens look | [Change how screens look](docs/README.md#change-how-screens-look): [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md), [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md) |
+| add an industry or data | [Add an industry or data](docs/README.md#add-an-industry-or-data): [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md), [DATA_GUIDE.md](docs/guides/DATA_GUIDE.md), [LAKE_GUIDE.md](docs/guides/LAKE_GUIDE.md) |
+| run and administer it | [Run and administer it](docs/README.md#run-and-administer-it): [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md), [OPERATIONS.md](docs/admin/OPERATIONS.md), [CONFIGURATION.md](docs/admin/CONFIGURATION.md) |
+| develop on it | [Develop on it](docs/README.md#develop-on-it): [PACK_DEVELOPER_GUIDE.md, Part VIII](docs/guides/PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide), [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [API_GUIDE.md](docs/guides/API_GUIDE.md) |
 
-| You are… | Guides | Tutorials |
-|---|---|---|
-| **a user** of the terminal | [USER_GUIDE.md](docs/guides/USER_GUIDE.md), [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md), [USER_GUIDE.md](docs/guides/USER_GUIDE.md#query-by-form), [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), [EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [FUNDS_GUIDE.md](docs/guides/FUNDS_GUIDE.md) | [1](docs/tutorials/01-first-15-minutes.md), [2](docs/tutorials/02-look-up-anything.md), [3](docs/tutorials/03-query-by-form.md), [8](docs/tutorials/08-share-and-collaborate.md), [9](docs/tutorials/09-reports.md), [21](docs/tutorials/21-an-entity-over-time.md), [25](docs/tutorials/25-var-from-the-bank-to-a-trade.md), [26](docs/tutorials/26-exposure-from-the-bank-to-a-trade.md), [27](docs/tutorials/27-groupings-and-analytics.md), [28](docs/tutorials/28-funds-and-etfs.md) |
-| **an analyst or BI author** | [BI_GUIDE.md](docs/guides/BI_GUIDE.md), [BI_GUIDE.md](docs/guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules), [BI_GUIDE.md](docs/guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave), [BI_GUIDE.md](docs/guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), [USER_GUIDE.md](docs/guides/USER_GUIDE.md#analyse-slice-sql-and-python), [BI_LANGUAGE_REFERENCE.md](docs/guides/BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models), [BI_GUIDE.md](docs/guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments), [BI_GUIDE.md](docs/guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding) | [10](docs/tutorials/10-first-bi-report.md), [11](docs/tutorials/11-bi-that-runs-itself.md), [12](docs/tutorials/12-live-bi-and-boards.md), [13](docs/tutorials/13-govern-bi.md), [14](docs/tutorials/14-python-and-analyse.md), [15](docs/tutorials/15-ai-in-drishti.md), [18](docs/tutorials/18-several-datasets-in-one-report.md), [20](docs/tutorials/20-statements-and-field-parameters.md) |
-| **a pack or Sutra author** | [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which), [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md), [DATA_GUIDE.md](docs/guides/DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema), [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md), [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md), [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one), [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench), [CLI_GUIDE.md](docs/guides/CLI_GUIDE.md), [data contracts](docs/contracts/README.md) | [5](docs/tutorials/05-build-a-pack.md), [6](docs/tutorials/06-design-a-screen.md), [22](docs/tutorials/22-build-a-screen-with-the-designer.md), [23](docs/tutorials/23-computed-panels.md), [24](docs/tutorials/24-correct-a-trade-and-approve-it.md) |
-| **an operator or administrator** | [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md), [OPERATIONS.md](docs/admin/OPERATIONS.md), [CONFIGURATION.md](docs/admin/CONFIGURATION.md), [USER_MANAGEMENT.md](docs/admin/USER_MANAGEMENT.md), [OPERATIONS.md](docs/admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one), [CONNECTORS.md](docs/connectors/CONNECTORS.md), [DATA_GUIDE.md](docs/guides/DATA_GUIDE.md#1-telling-drishti-new-data-has-landed), [OPERATIONS.md](docs/admin/OPERATIONS.md#20-lake-maintenance-admin--lakes--maintain-and-lake-maintain), [EXTERNAL_DATA.md](docs/guides/EXTERNAL_DATA.md), [PERFORMANCE.md](docs/admin/PERFORMANCE.md), [TROUBLESHOOTING.md](docs/guides/TROUBLESHOOTING.md), [runbooks](docs/admin/runbooks/) | [4](docs/tutorials/04-connect-your-data.md), [7](docs/tutorials/07-load-data-daily.md), [17](docs/tutorials/17-run-it-in-production.md), [19](docs/tutorials/19-a-cluster-of-three.md), [29](docs/tutorials/29-var-on-iceberg.md) |
-| **a developer** | [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide), [API_GUIDE.md](docs/guides/API_GUIDE.md), [CLIENT_RENDERER.md](docs/architecture/CLIENT_RENDERER.md#19-drishti-elements-developer-guide), [CONNECTOR_DEVELOPER_GUIDE.md](docs/connectors/CONNECTOR_DEVELOPER_GUIDE.md), [TOOLS.md](docs/guides/TOOLS.md), [VIEWMODEL.md](docs/architecture/VIEWMODEL.md) | [16](docs/tutorials/16-embed-drishti.md), [23](docs/tutorials/23-computed-panels.md) |
-| **an architect** | [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [ADRs](docs/architecture/adr/README.md), [CLUSTER_DEPLOYMENT.md](docs/architecture/CLUSTER_DEPLOYMENT.md#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap), [VAR_SHARDING.md](docs/architecture/VAR_SHARDING.md), [PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md), [CLUSTER_DEPLOYMENT.md](docs/architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti), [DATA_ARCHITECTURE.md](docs/architecture/DATA_ARCHITECTURE.md#3-drishti-iceberg-drishtis-own-apache-iceberg-engine), [DATA_ARCHITECTURE.md](docs/architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches), [CLUSTER_DEPLOYMENT.md](docs/architecture/CLUSTER_DEPLOYMENT.md#appendix-b-drishti-on-aws-ecs-efs-and-s3) | [all twenty-nine](docs/tutorials/README.md) |
+**Learn by doing**: [the tutorials](docs/tutorials/README.md) run on the shipped demo data and show the UI, the command line and the YAML
+at every step, with real screenshots. Every setting is in [CONFIGURATION.md](docs/admin/CONFIGURATION.md); the command line is
+[CLI_GUIDE.md](docs/guides/CLI_GUIDE.md).
+
+**Where it's going**: [IMPLEMENTATION_PLAN.md, The roadmap from 2.9.11.c](docs/architecture/IMPLEMENTATION_PLAN.md#the-roadmap-from-2911c-product-owner-2026-11-04-supersedes-every-later-release-table-in-this-file).
+What changed and when: [RELEASE_NOTES.md](RELEASE_NOTES.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ## Project facts
 
-- **Server**: Java 21 or newer (production runs 21), one Spring Boot application on virtual threads, REST under `/api/v1` with OpenAPI;
-  identity and user content in SQLite by default or PostgreSQL, one complete schema file per database and no migrations.
-- **Console**: Python 3.13, FastAPI and Jinja2, every front-end asset vendored (no CDN), a strict content security policy; it works on
-  phones.
+- **Server**: Java 21 (64-bit), Spring Boot on virtual threads, REST under `/api/v1` with OpenAPI; identity and user content in SQLite
+  by default or PostgreSQL, one complete schema file per database and no migrations.
+- **Console**: Python, FastAPI and Jinja2; every front-end asset is vendored (no CDN) under a strict content security policy; it works
+  on phones.
 - **Command line**: `tools/drishti.py`, run with the console's Python.
-- **Licence**: proprietary; see [Legal](#legal), [LICENSE](LICENSE) and [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
-
-### Contributing rules
-
-- Work on `develop`. `tools/drill.sh` runs every check, pushes `develop` and merges it into `main`; releases are
-  tagged on `main` after it.
-- Every build runs Error Prone and Spotless; `./mvnw -q verify` must pass, as must the console tests
-  (`drishti-console/.venv/bin/python -m pytest -q drishti-console/tests`).
-- No source file over 1,500 lines (UX templates excepted), and every file carries the copyright header
-  (`python3 tools/license_headers.py --fix`). Both are enforced by tests.
-- Modules depend in one direction only, controllers live only in the server, and the plugin SPI is Spring-free
-  (ArchUnit).
-- Front-end assets are vendored; a test rejects any external URL. Product name and legal notices come from
-  configuration, never from code.
-- Every change updates the documents it affects and the [changelog](CHANGELOG.md) in the same push.
-
-What changed and when: [release notes](RELEASE_NOTES.md) · [changelog](CHANGELOG.md) · [plan](docs/architecture/IMPLEMENTATION_PLAN.md).
+- **Contributing**: work on `develop`; `./mvnw -q verify` and the console tests
+  (`drishti-console/.venv/bin/python -m pytest -q drishti-console/tests`) must pass; no source file over 1,500 lines; every file carries
+  the copyright header (`python3 tools/license_headers.py --fix`); every change updates the documents it affects and the changelog in
+  the same push.
 
 ## Legal
 

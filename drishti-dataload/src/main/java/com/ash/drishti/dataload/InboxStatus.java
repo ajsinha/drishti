@@ -84,7 +84,7 @@ final class InboxStatus {
         out.put("lockText", lockText(holder, now));
         Routes routes = null;
         try {
-            routes = Routes.read(Path.of(settings.rulesFile()), settings.lake(), packs);
+            routes = Routes.read(Path.of(settings.rulesFile()), settings.lake(), packs).with(settings.defaultMode(), settings.newTables());
         } catch (IOException | IllegalArgumentException e) {
             out.put("rulesError", "the routing rules cannot be read: " + e.getMessage());
         }
@@ -126,7 +126,8 @@ final class InboxStatus {
                 waiting.add(w);
             }
             for (Inbox.Waiting x : f.waiting()) {
-                Path marker = inbox.resolve(x.name() + Inbox.READY);
+                String mn = Inbox.markerOf(x.name(), names(inbox), new String[1]);
+                Path marker = mn == null ? inbox.resolve(x.name() + Inbox.READY) : inbox.resolve(mn);
                 boolean marked = Files.isRegularFile(marker, LinkOption.NOFOLLOW_LINKS);
                 Map<String, Object> w = switch (x.code()) {
                     case Inbox.NOT_STABLE -> file(x.name(), x.size(), x.modified(), now, "not-stable", "not yet stable",
@@ -134,8 +135,9 @@ final class InboxStatus {
                             "taken once unchanged for " + settings.stableSeconds() + " s (stable-seconds)");
                     case Inbox.NEXT_CYCLE -> file(x.name(), x.size(), x.modified(), now, "next-cycle", "ready, next run",
                             "this run took its most files or bytes (max-files, max-gb)", "taken at the cycle after");
+                    case Inbox.HELD -> file(x.name(), x.size(), x.modified(), now, "held", "held", x.why(), "taken once its .ready file no longer says hold");
                     default -> file(x.name(), x.size(), x.modified(), now, "no-marker", "no marker", "since " + time(x.modified()),
-                            "never taken without " + x.name() + Inbox.READY + " or ready.all");
+                            x.why().startsWith("no ") ? "never taken without " + x.name() + Inbox.READY + " or ready.all" : x.why());
                 };
                 w.put("rule", preview(routes, x.name(), marked ? marker : null));
                 waiting.add(w);
@@ -176,6 +178,17 @@ final class InboxStatus {
         w.put("detail", detail);
         w.put("next", next);
         return w;
+    }
+
+    /** The names in the inbox folder (to pair a file with its marker, {@link Inbox#markerOf}). */
+    private static Set<String> names(Path inbox) {
+        Set<String> out = new java.util.HashSet<>();
+        try (var s = Files.list(inbox)) {
+            s.forEach(p -> out.add(p.getFileName().toString()));
+        } catch (IOException e) {
+            // no folder: no names
+        }
+        return out;
     }
 
     private static String markerText(Path marker) {
@@ -287,13 +300,21 @@ final class InboxStatus {
         StringBuilder d = new StringBuilder();
         t.path("versions").fields().forEachRemaining(v -> d.append(d.isEmpty() ? "" : ", ").append(v.getKey()).append(" → v").append(v.getValue().asLong()));
         String detail = switch (state) {
-            case "committed" -> d + " · " + count(t.path("rows").asLong()) + " rows · " + count(t.path("rejected").asLong()) + " rejects";
+            case "committed" -> d + " · " + count(t.path("rows").asLong()) + " rows · " + count(t.path("rejected").asLong()) + " rejects"
+                    + notes(t.path("dateNotes"));
             case "loading" -> "the loader is writing";
             case "waiting" -> "loads after the table before it";
             default -> t.path("reason").asText("");
         };
         m.put("detail", detail);
         return m;
+    }
+
+    /** The loader's notes on rows loaded under the date of their file's name, after " · " (none: nothing). */
+    private static String notes(JsonNode notes) {
+        StringBuilder b = new StringBuilder();
+        notes.forEach(n -> b.append(" · ").append(n.asText()));
+        return b.toString();
     }
 
     /** The last cycles of today (this server's), each in one line of words and numbers; the run loading now first. */
@@ -326,8 +347,12 @@ final class InboxStatus {
             long rows = 0;
             long rejects = 0;
             Set<String> counted = new java.util.HashSet<>();
+            List<String> dateNotes = new ArrayList<>();
             for (Cycle.FileOutcome f : c.files()) {
                 by.merge(f.outcome(), 1, Integer::sum);
+                if (f.dateNote() != null) {
+                    dateNotes.add(f.dateNote());
+                }
                 if (Ledger.LOADED.equals(f.outcome())) {
                     String t = f.pack() + "/" + f.kind();
                     tables.add(t);
@@ -368,6 +393,7 @@ final class InboxStatus {
                 } else if ("duplicate".equals(outcome)) {
                     parts.add("already loaded: moved to the outbox, not loaded again");
                 }
+                parts.addAll(dateNotes);
                 parts.add(took);
                 text = String.join(" · ", parts);
                 r.put("versionsText", String.join(" · ", versions));

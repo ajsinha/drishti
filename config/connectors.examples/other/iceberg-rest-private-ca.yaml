@@ -14,17 +14,13 @@
 # Example: an Iceberg REST catalog whose object store (MinIO, Ceph) has a certificate from a private CA. tls.* secures the object
 # store; the catalog's own https connection uses the JVM's truststore. Copy to config/connectors/iceberg-rest-private-ca.yaml.
 # See docs/connectors/ICEBERG_CONNECTOR.md, section Security.
+# The lake (iceberg, its root or catalog, storage and tables) is config/lakes.examples/other/rest-catalog.yaml: copy it to
+# config/lakes/rest-catalog.yaml beside this file (docs/guides/LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: iceberg
-kinds: [trade]
+kinds:
+- trade
 description: Iceberg tables behind a REST catalog, object store over TLS
 settings:
-  catalog: rest
-  uri: http://catalog.example.com:8181
-  warehouse: s3://lake/warehouse
-  namespace: risk
-  s3.endpoint: https://minio.example.com:9000
-  s3.region: us-east-1
-  s3.access-key: ${LAKE_ACCESS_KEY}
-  s3.secret-key: ${LAKE_SECRET_KEY}
-  tls:
-    ca-file: /etc/drishti/tls/ca.pem
+  lake: rest-catalog
+  lake-tables: risk.trade
+  tls.ca-file: /etc/drishti/tls/ca.pem

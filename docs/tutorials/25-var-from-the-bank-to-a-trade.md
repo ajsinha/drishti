@@ -379,7 +379,7 @@ $ drishti.py var compare CAP-20260930-89
 rates-short <GO>`. `drishti.py var baskets` lists what *My baskets* shows (yours and those shared with you).
 
 **In YAML.** The two drop-downs have no setting of their own. *System baskets* are the bank's portfolios: the market-risk pack's
-`portfolio` feed (`data/testdata/market-risk/portfolio/cob-<date>.jsonl.gz` in the demo, one record a portfolio: `PORTFOLIO_ID`, `NAME`,
+`portfolio` feed (`data/testdata/market-risk/portfolio/portfolio.<date>.jsonl.gz` in the demo, one record a portfolio: `PORTFOLIO_ID`, `NAME`,
 `OWNER`, `TYPE`, `DEFINITION`), loaded into the lake and read through its connector like every VaR input; *My baskets* are the content
 store's `var/baskets/<owner>/<name>.json`.
 
@@ -580,7 +580,8 @@ I-2026-09-30-003: 10 trades (6 amended, 1 new, 3 cancelled), 7 pnl-vector, 3 sce
 wrote 3 batches to data/pvgen/intraday-2026-09-30
 ```
 
-Each batch is a small JSONL file per kind (`data/pvgen/intraday-2026-09-30/I-2026-09-30-001.pnl-vector.jsonl`, `….scenario-pv.jsonl`),
+Each batch is a folder of small JSONL files, one per kind, named by the load rules
+(`data/pvgen/intraday-2026-09-30/I-2026-09-30-001/pnl-vector.2026-09-30.jsonl`, `…/scenario-pv.2026-09-30.jsonl`),
 marked `RUN_KIND: INTRADAY` with its own `BATCH_ID` and a later `COMPUTED_AT`, appended to the lake and signalled: the engine applies it
 without a reload.
 
@@ -968,6 +969,7 @@ and 500 positions, is tested on every build.
 
 ## Next steps
 
+- Read the same vectors through a normal distribution: [tutorial 43](43-parametric-var-beside-historical.md), parametric VaR beside historical and the fat-tail gap.
 - Read [VAR_GUIDE.md](../guides/VAR_GUIDE.md): the measures by hand on ten scenarios, the data flow and restatements, the scope grammar in full, the
   data contract (Part II), sizing for a bank of a million trades and the benchmark (Part III), troubleshooting.
 - Load your own batch: the columns are in [VAR_GUIDE.md section 15](../guides/VAR_GUIDE.md#15-inputs-from-upstream-engines); send the data-load

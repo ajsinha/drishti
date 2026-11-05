@@ -103,9 +103,9 @@ def test_nothing_is_hidden_until_the_server_has_said(monkeypatch):
 
 def test_a_lens_or_a_tile_of_an_engine_running_nowhere_is_not_offered(monkeypatch):
     engines.reset()
-    engines.learn([{"id": "ccr-cube", "cluster": False}, {"id": "sa-ccr", "cluster": False}, {"id": "var", "cluster": False}])
-    assert engines.lens_hidden("ccr-cube") and engines.tile_hidden("VaR of the bank") and not engines.lens_hidden("risk")
-    assert engines.menu_hidden("saccr") and not engines.menu_hidden("exp-explorer")
+    engines.learn([{"id": "mr-cube", "cluster": False}, {"id": "frtb-sa", "cluster": False}, {"id": "var", "cluster": False}])
+    assert engines.lens_hidden("mr-cube") and engines.tile_hidden("VaR of the bank") and not engines.lens_hidden("risk")
+    assert engines.menu_hidden("frsa") and not engines.menu_hidden("exp-explorer")
     engines.reset()
 
 
@@ -136,7 +136,7 @@ def test_the_engines_page_draws_the_servers_answer_and_carries_the_batch(monkeyp
     monkeypatch.setattr(app.state.backend, "admin", admin)
     page = c.get("/admin/engines")
     assert page.status_code == 200
-    assert "data-eng-table" in page.text and "drishti-main" in page.text and "/static/js/admin-engines.js" in page.text
+    assert "data-eng-table" in page.text and "drishti-main" in page.text and "/static/js/drishti_admin-engines.js" in page.text
     r = c.post("/admin/api/engines", json={"reason": "capital on var-1", "changes": [{"engine": "frtb-sa", "on": False}], "expected": {"frtb-sa": "abc"}})
     assert r.status_code == 200 and r.json()["outcomes"][0]["outcome"] == "live"
     assert ("POST", "/engines", {"reason": "capital on var-1", "node": "", "changes": [{"engine": "frtb-sa", "on": False}], "withNeeds": False,

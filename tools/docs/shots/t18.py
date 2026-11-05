@@ -192,7 +192,7 @@ def designer(c: Ctx):
     p.click("[data-publish]")
     p.wait_for_function("() => /Published/.test(document.querySelector('[data-state]').textContent)", timeout=30000)
     bi(c, "PUT", "/items/" + STATE["model"], {"audienceRoles": AUDIENCE})     # its item page's Audience: rita and hana may read the model (step 7)
-    STATE["model_yaml"] = p.evaluate("window.drishtiModel.yaml")
+    STATE["model_yaml"] = p.evaluate("window.Drishti.model.yaml")
     print("  the designer wrote:\n" + STATE["model_yaml"])
 
 

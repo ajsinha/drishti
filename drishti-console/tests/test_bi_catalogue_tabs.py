@@ -112,7 +112,7 @@ def test_the_page_carries_the_tabs_and_a_refusal_is_passed_back(bi):
     html = client.get("/bi/catalogue?kind=boards").text
     for key in ("reports", "boards", "models", "datasets", "python", "all"):
         assert f'data-cat-tab="{key}"' in html and f'href="?kind={key}"' in html
-    assert 'role="tablist"' in html and "bi-runs.css" in html and 'name="kind"' not in html
+    assert 'role="tablist"' in html and "drishti_bi-runs.css" in html and 'name="kind"' not in html
     backend.refuse = ("DRS-9001", 403, "no")
     r = client.get("/bi/api/catalogue-tabs", params={"kind": "all"})
     assert r.status_code == 403 and r.json()["code"] == "DRS-9001"

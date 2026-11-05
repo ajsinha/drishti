@@ -13,30 +13,28 @@
 # See the LICENSE file in the root of this repository for the full terms.
 #
 # The in-memory lake for news (docs/guides/IN_MEMORY_LAKE_GUIDE.md): copy this block into application.local.yaml (in the server's working
-# folder) together with config/connectors.examples/memory/news-store.yaml as config/connectors/news-store.yaml, and restart. The store
-# holds at most max-mb of memory off the heap; the start scripts add the stores' caps to -XX:MaxDirectMemorySize. The jobs here fill the
+# folder) together with config/connectors.examples/memory/news-store.yaml as config/connectors/news-store.yaml and the store's lake file
+# config/lakes.examples/memory/news.yaml as config/lakes/news.yaml (root: mem://news, its cap and contract; docs/guides/LAKE_GUIDE.md
+# section 6), and restart. The store holds at most max-mb of memory off the heap; the start scripts add the stores' caps to
+# -XX:MaxDirectMemorySize. The jobs here fill the
 # tables from the committed snapshot and the pack's samples (the demo); a site points source at its feed instead: a url (a vendor's REST
 # feed answering JSON Lines), a connector and kind, or the news connector by ids (source: { connector: news, kind: news, ids-from:
 # listed-company.NEWS_ID }). Switching back: remove the block and the connector file; the pack's own connector reads the disk lake again.
 drishti:
   lake:
     memory:
-      stores:
-        news:
-          max-mb: ${DRISHTI_NEWS_MEMORY_MB:256}       # the hard cap
-          chunk-kb: 64                                  # small tables: a file holds at least one chunk (RESOURCES_AND_SCALE, measured)
-          contract: ${DRISHTI_NEWS_CONTRACT:NEWS-MEMORY-ONLY}   # shown on every refusal and on Admin -> Lakes
+      # the store news: config/lakes/news.yaml (max-mb ${DRISHTI_NEWS_MEMORY_MB:256}, chunk-kb 64, contract ${DRISHTI_NEWS_CONTRACT:...})
       tables:
         - name: news
           store: news
-          source: { file: data/testdata/news-and-markets/news/snapshot-2026-10-18.jsonl.gz }
+          source: { file: data/testdata/news-and-markets/news/news.2026-10-18.jsonl.gz }
           key: [NEWS_ID]
           every: 15m
           warm-up: 1
           pin: true
         - name: quote
           store: news
-          source: { file: data/testdata/news-and-markets/quote/snapshot-2026-10-18.jsonl.gz }
+          source: { file: data/testdata/news-and-markets/quote/quote.2026-10-18.jsonl.gz }
           key: [QUOTE_ID]
           every: 15m
           warm-up: 2

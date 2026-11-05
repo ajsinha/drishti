@@ -14,14 +14,14 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {# Rupaka phase 3: the Model view of a dataset (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 6.2): tables as boxes, relationships as lines, drag a column onto another to relate them, relationships
-   proposed from the data, and the YAML beside it (two views of one draft). Drawn by static/js/bi-model.js from /bi/api/items/<id> and /bi/api/datasets/validate. #}
+   proposed from the data, and the YAML beside it (two views of one draft). Drawn by static/js/drishti_bi-model.js from /bi/api/items/<id> and /bi/api/datasets/validate. #}
 {% extends "bi/shell.html" %}
 {% block bi_title %}Model view{% endblock %}
 {% block bi_keys %}
     <dt><kbd>Tab</kbd></dt><dd>Walk the columns of the tables</dd>
     <dt><kbd>Enter</kbd></dt><dd>On a column: choose it; press Enter on a second column to relate the two</dd>
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-design.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-ai.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-design.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-ai.css?v={{ ASSET_V }}">{% endblock %}
 {% block bi_main %}
 <div class="bi-design" data-model-root data-ready="">
   <header class="bi-dbar">
@@ -69,4 +69,4 @@
     <textarea data-yaml class="studio-in mono" rows="20" spellcheck="false" aria-label="Dataset YAML"></textarea></section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script><script src="/static/js/cm-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-model.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/codemirror/codemirror.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_cm-yaml.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-model.js?v={{ ASSET_V }}"></script>{% endblock %}

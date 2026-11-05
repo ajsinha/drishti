@@ -140,6 +140,16 @@ A Delta connector is running on Hadoop's engine, which needs Hadoop's `winutils.
 engine: unset `DRISHTI_DELTA_ENGINE` (it defaults to `native`) or set it to `native`, and remove any `engine: hadoop`
 from the connector's settings. Admin → Health then shows `UP (engine: native)`. See [GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows).
 
+### The log says `NATIVE BLAS NOT LOADED`, Health is DEGRADED with "BLAS runs on the pure-Java path"
+
+`drishti.native.blas.mode` is `auto` and the bundled OpenBLAS is not in use; the server runs the same sums in Java (identical results,
+many-scope VaR/ES slower). The banner's *Reason* says why: `no bundled OpenBLAS for macosx-aarch64` (or another platform: only 64-bit
+Linux and Windows on x86-64 have the bundled build), `32-bit JVM` (install a 64-bit Java 21), `did not load` (the native cache
+`drishti.native.cache-dir` is not writable, or the `openblas`/`javacpp` jars are missing from the server's library folder),
+`self-test failed` or `OpenBLAS switched off for this run` (a native result disagreed with Java or a call failed: restart; if it
+returns, keep Java and report it). To run on Java on purpose and silence the warning, set `drishti.native.blas.mode: java`. See
+[OPERATIONS.md section 2.1](../admin/OPERATIONS.md#21-server-requirements-native-libraries-blas).
+
 ### "Web server failed to start. Port 18480 was already in use."
 
 - **Check:** who holds the port: `ss -ltnp | grep 18480` (or `lsof -i :18480`). Often it is an earlier Drishti
@@ -147,7 +157,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 - **Fix:** stop the other process, or start this one on another port and tell the console where it is:
 
   ```bash
-  DRISHTI_PORT=18481 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+  DRISHTI_PORT=18481 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar
   DRISHTI_BACKEND_URL=http://127.0.0.1:18481 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
 
@@ -165,7 +175,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
   ```bash
   DRISHTI_PACKS=trading,counterparty-risk DRISHTI_PACKS_DIR=$PWD/packs \
-    java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+    java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar
   ```
 
   A pack's parents load by themselves: enabling `trading` also loads `core` and `market-data`. Other
@@ -187,7 +197,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
   expands to all of them; Java runs the **first** (the oldest, alphabetically) and ignores the rest.
 - **Check:** `curl -s http://localhost:18480/api/v1/about | python3 -c "import json,sys; print(json.load(sys.stdin)['version'])"`
   and `ls drishti-server/target/*-exec.jar`.
-- **Fix:** name the jar exactly (`drishti-server-2.9.11.b-exec.jar`), or delete the old ones.
+- **Fix:** name the jar exactly (`drishti-server-2.9.11.c-exec.jar`), or delete the old ones.
 
 ### The console will not start: `ModuleNotFoundError: No module named 'fastapi'`
 
@@ -293,7 +303,7 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
 
   ```bash
   export DRISHTI_TOKEN_SECRET='at-least-32-characters-shared-secret!!'   # same value for both
-  DRISHTI_SECURITY_ENABLED=true java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+  DRISHTI_SECURITY_ENABLED=true java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.c-exec.jar
   DRISHTI_AUTH_ENABLED=true DRISHTI_SESSION_SECRET='another-secret-of-32-characters-or-more' \
     drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
@@ -412,7 +422,7 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
   connection per tab. Each **browser** holds one live
   connection, shared by all its tabs and panes (see [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#one-connection-per-browser)).
 - **Fix:** hard-refresh old tabs once (**Ctrl+Shift+R**) so they load the new scripts. To check, run
-  `DrishtiChannel.transport()` in the browser console of any tab: `shared-worker`, `leader` or `follower` means the
+  `Drishti.Channel.transport()` in the browser console of any tab: `shared-worker`, `leader` or `follower` means the
   tab shares the browser's connection; the network panel shows a single `/api/channel?s=…` request for the whole
   browser (in the SharedWorker's own panel, `chrome://inspect/#workers`, when it runs there).
 
@@ -1288,7 +1298,7 @@ Every setting of a connector is in its plugin's README and its own document ([CO
 * **`ModuleNotFoundError: No module named 'drishti_bi'`.** The module is fetched into the worker when a cell **names** `drishti_bi`; write `import drishti_bi` in the cell that uses it (a cell that only calls `walk` through another name does not trigger it).
 * **`needs JavaScript Promise Integration`.** Write `await drishti_bi.query_async(...)` (also `datasets_async`, `describe_async`).
 * **`DRS-9002` or an empty frame.** The call is a BI read as you: you need the `bi` power, and a masked column comes back masked (`df.attrs["masked"]`).
-* **The Graphic Walker frame stays blank.** Open the browser console: a refusal of `/static/calc/walker.html` or of its script means a proxy rewrote the policy header (the page needs the console's own `Content-Security-Policy` for that path, [USER_GUIDE.md › Calc: Python on any view, section 19](USER_GUIDE.md#19-the-bi-client-and-graphic-walker)). A refused stylesheet and image from `blocked.invalid` is expected and harmless.
+* **The Graphic Walker frame stays blank.** Open the browser console: a refusal of `/static/calc/drishti_walker.html` or of its script means a proxy rewrote the policy header (the page needs the console's own `Content-Security-Policy` for that path, [USER_GUIDE.md › Calc: Python on any view, section 19](USER_GUIDE.md#19-the-bi-client-and-graphic-walker)). A refused stylesheet and image from `blocked.invalid` is expected and harmless.
 
 ### Analyse: the extract is short, a SQL cell is refused, a Python cell will not run
 

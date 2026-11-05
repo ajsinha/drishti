@@ -23,7 +23,7 @@ One financial concept of one company (revenue, net income, assets...) over up to
 
 |  |  |
 |---|---|
-| Path | `data/testdata/us-equities/financial-fact/` + `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/us-equities/financial-fact/` + `financial-fact.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `FACT_ID` |
 | Date field | none in the record: a snapshot of public data, its file named by the capture date; the demo lake serves the same records on every business date (partition `business_date`) |

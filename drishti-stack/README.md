@@ -62,6 +62,11 @@ On the first start `start.sh` makes what is missing: the secrets, `run/server.ja
 lakes (`tools/bench/trades.py`: 1,500 trades a day per system for two business days, 300 counterparties). The servers run the copy, so a
 rebuild never replaces the jar under a running server: the next `start.sh` copies a newer build, and a restarted node runs it.
 
+The synthetic lakes are laid out as the demo lake's file says (`config/lakes/demo.yaml`, [LAKE_GUIDE.md](../docs/guides/LAKE_GUIDE.md)):
+`trades.py` writes through it (`lake build --lake demo --lake-root data/stack/lakes/<name>`), and a node with `lake:` reads the same file
+(`DRISHTI_LAKES_DIR`) with its root, `${DRISHTI_DELTA_ROOT}`, set to its synthetic lake. One description of the tables for every node; only
+the root differs.
+
 ## Secrets
 
 The repository is public, so no secret is ever in it. `secrets.env` holds three:

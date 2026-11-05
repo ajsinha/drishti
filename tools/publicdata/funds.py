@@ -355,11 +355,14 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
     try:
         if a.command == "status":
-            import gzip
             import json
-            parts = sorted((B.ROOT / "data" / "testdata" / PACK / "fund").glob("snapshot-*.jsonl.gz"))
-            n = sum(1 for p in parts for line in gzip.open(p, "rt", encoding="utf-8") if line.strip()) if parts else 0
-            first = json.loads(gzip.open(parts[0], "rt", encoding="utf-8").readline()) if parts else {}
+            sys.path.insert(0, str(B.ROOT / "tools" / "lake"))
+            import feedfiles
+            folder = B.ROOT / "data" / "testdata" / PACK / "fund"
+            got = feedfiles.read_table(folder) if folder.is_dir() else {}
+            parts = got[max(got)] if got else []                 # the newest snapshot's files (a tar's members)
+            n = sum(1 for p in parts for _ in p.lines())
+            first = json.loads(next(parts[0].lines())) if parts else {}
             print(f"committed pack: {n} funds in {len(parts)} parts, data retrieved {first.get('PROVENANCE', {}).get('RETRIEVED_AT', '-')}")
             return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "publicdata" / "cache" / PACK,
                             "data/testdata/funds and config/packs/funds; a widened build <data>/publicdata/funds")

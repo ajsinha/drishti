@@ -255,9 +255,9 @@ Drishti only reads the lake. Whatever writes it must follow the layout. The repo
 |---|---|
 | `drishti.py lake build --from <file> --pack <pack> --connector <name>` | a day of a source system's documents into its table, in the pack's layout ([TOOLS.md](../guides/TOOLS.md)): rows sorted by id, row groups of 256 KB and pages of 64 KB (`DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB`), the pack's `ingest.<kind>.flatten` fields added as plain fields and promoted columns |
 | `drishti.py lake build --engine java …`, or the parallel lake loader on its own | millions of JSON Lines rows (the scenario PVs of 2.3M positions) from a folder or S3, parsed and written on every core with memory bounded by `memory.budget-mb`, one Delta version per business date replacing it; the same table as `lake build` (documents byte for byte, columns, `list<double>` vectors), each date sorted by `LEGAL_ENTITY`, `DESK`, id by default so a file's statistics name its legal entities and desks, the vector column BYTE_STREAM_SPLIT + ZSTD ([TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader), [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md)) |
-| `tools/packgen/banking/make_data.py --lake data/delta` | the banking packs' sample documents, 10 business days, every domain, the trade tables in their layout: written as JSON Lines rows (`data/build/lake-rows/banking-history.jsonl`, `banking-restated.jsonl`), then loaded by `load_rows.py` (`--no-load` stops after the JSONL) |
+| `tools/packgen/banking/make_data.py --lake data/delta` | the banking packs' sample documents, 10 business days, every domain, the trade tables in their layout: written as JSON Lines rows (`data/build/lake-rows/banking-history.tar`, `banking-restated.tar`: tars of `<table>/<YYYY-MM-DD>/rows.jsonl`, the load rules' form), then loaded by `load_rows.py` (`--no-load` stops after the rows) |
 | `tools/samplegen/lake.py --samples <dir> --root data/delta --domain <d> --days 10` | one pack's samples into one domain, the same two steps; it prints `<table>: <n> entities x 10 business days` per table and writes the newest date twice (the restated file is a second commit, restating one document per kind), so *known at* before that commit shows the original; local disk only |
-| `tools/samplegen/load_rows.py --rows <history.jsonl> --restated <restated.jsonl> --root data/delta` | the loader of those rows: one JSON object a line, `{"domain", "kind", "table", "id", "date", "doc"}` ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)) |
+| `tools/samplegen/load_rows.py --rows <history.tar> --restated <restated.tar> --root data/delta` | the loader of those rows: one JSON object a line, `{"domain", "kind", "table", "id", "date", "doc"}` ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)); each row stored under its tar folder's date (a plain file: `--as-of`, its `.ready` date, its name's, or the business today), never its own `date`, which is only counted when it differs; a plain file of several tables is refused (send a tar) |
 | `tools/samplegen/bulk_trades.py --trades N --days D` | a large trade book for scale tests: one JSONL file a day (`data/build/bulk/<system>/`), then each through `lake build` into the system's trade table, replacing it |
 | `tools/lake/maintain.py relayout` | rewrites an existing table into its layout, one business day at a time |
 | `tools/samplegen/layout.py` | the shared code: reads a pack's layout, promotes fields, sorts, cuts files and row groups, sets the statistics columns |
@@ -801,6 +801,27 @@ Tested in `S3StorageProxyTest` (native S3 reader against a fake proxy and a stan
 no-proxy, site default, `proxy: none`) and `HadoopLakeProxyTest` (the `fs.s3a.proxy.*` mapping).
 
 ## As a connector file
+
+### The lake file: where the root and the layout live
+
+The lake itself (its root, storage, each table's folder, partitions, promoted columns and vectors) is described once, in its lake file
+`config/lakes/<lake>.yaml`, and the connector names it ([LAKE_GUIDE.md](../guides/LAKE_GUIDE.md)). The connector file then keeps only
+reading concerns:
+
+```yaml
+# config/connectors/trade-endur.yaml
+plugin: delta
+kinds: [trade]
+settings:
+  lake: demo                          # config/lakes/demo.yaml: root, table folder, promoted columns, vectors
+  lake-tables: trading.trade_endur    # the entry, where a kind has several tables (ENDUR, CALYPSO, MUREX)
+  union: "true"
+  refresh-seconds: 10
+```
+
+A connector that names a lake and also sets `root`, `domain`, `table.<kind>`, `layout.<kind>.columns` or `layout.<kind>.vectors` fails,
+naming both. The form below, with those keys in the connector file, is the older one: it is read for one more release with one warning,
+and `drishti.py lake migrate-config` moves it into a lake file ([LAKE_GUIDE.md section 8](../guides/LAKE_GUIDE.md#8-migrating-an-older-installation)).
 
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 

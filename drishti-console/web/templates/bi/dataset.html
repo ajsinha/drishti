@@ -14,7 +14,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {# Rupaka phase 2: one dataset: its model as tables (tables, relationships, measures, rules, layers) and a query preview grid. The Model view (the diagram, phase 3)
-   is one click away for authors. Drawn by static/js/bi-dataset.js from /bi/api/datasets/<id>. #}
+   is one click away for authors. Drawn by static/js/drishti_bi-dataset.js from /bi/api/datasets/<id>. #}
 {% extends "bi/shell.html" %}
 {% block bi_title %}Dataset{% endblock %}
 {% block bi_main %}
@@ -94,4 +94,4 @@
   <div class="tbl-wrap"><table class="tbl bi-tbl" data-tests-table data-plain hidden><caption class="visually-hidden">Expected values</caption>
     <thead><tr><th scope="col">Test</th><th scope="col">Measure</th><th scope="col">Expected</th><th scope="col">Found</th><th scope="col">Result</th></tr></thead><tbody></tbody></table></div></section>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-dataset.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-dataset.js?v={{ ASSET_V }}"></script>{% endblock %}

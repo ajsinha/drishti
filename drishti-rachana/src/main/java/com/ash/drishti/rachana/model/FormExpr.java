@@ -26,7 +26,7 @@ import java.util.Set;
 
 /**
  * The small expression language of a form's rules and hints (RACHANA_REFERENCE.md 10): the same text is evaluated in the browser
- * ({@code static/js/form-expr.js}) for speed and here, on the server, as the authority. It reads the form's fields by id
+ * ({@code static/js/drishti_form-expr.js}) for speed and here, on the server, as the authority. It reads the form's fields by id
  * ({@code notional}), a lookup's carried values ({@code counterparty.LIMIT}), numbers, 'text', {@code true}, {@code false},
  * {@code null} and {@code today} (an ISO date); it has {@code + - * /}, {@code == != < <= > >=} (numbers as numbers, anything else as
  * text, so ISO dates compare), {@code and or not}, brackets and the functions {@code empty(x) len(x) abs(x) min(a, b) max(a, b)}.

@@ -76,7 +76,8 @@ final class DeltaTable {
         }
         java.util.Collections.sort(paths);
         try {
-            byte[] h = java.security.MessageDigest.getInstance("SHA-256").digest(String.join("\n", paths).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            String text = "files in load order\n" + String.join("\n", paths);     // the order changed with newest-last: older id maps rebuilt
+            byte[] h = java.security.MessageDigest.getInstance("SHA-256").digest(text.getBytes(java.nio.charset.StandardCharsets.UTF_8));
             return java.util.HexFormat.of().formatHex(h).substring(0, 16);
         } catch (java.security.NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
@@ -139,6 +140,15 @@ final class DeltaTable {
     private final String idColumn;
     private final String docColumn;
     private final String dateColumn;
+
+    /** The column every row carries: the load that wrote it ({@code <run>.<file>}, in time order; DATA_LOAD_RULES.md section 6.1). */
+    static final String LOAD_ID = "_load_id";
+
+    /**
+     * Per layout version and date: the ids that more than one load wrote, each with the index of the file whose copy wins (the newest
+     * load: the largest {@code _load_id}, then the latest commit); empty when no id was written twice. Kept for a few dates.
+     */
+    private final Map<String, Map<String, Integer>> shadows = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true));   // at most 64, the least used first out
 
     DeltaTable(Engine engine, String path, String idColumn, String docColumn, String dateColumn) {
         this.engine = engine;
@@ -313,6 +323,64 @@ final class DeltaTable {
         return out;
     }
 
+    /**
+     * A date's files in load order, the newest last: by the largest {@code _load_id} each holds (its statistics), then the time the file
+     * was added (commit order), then the path. A reader that keeps the last copy of an id keeps the newest load's.
+     */
+    static void newestLast(List<Row> files) {
+        files.sort(java.util.Comparator.comparing((Row f) -> {
+            String max = textBounds(f, LOAD_ID)[1];
+            return max == null ? "" : max;
+        }).thenComparingLong(f -> InternalScanFileUtils.getAddFileStatus(f).getModificationTime())
+                .thenComparing(f -> InternalScanFileUtils.getAddFileStatus(f).getPath()));
+    }
+
+    /**
+     * Whether more than one load may have written the date's files: {@code _load_id} statistics of two runs, or a file without them
+     * (then the ids are read to know). Only then can an id be there twice.
+     */
+    static boolean severalLoads(List<Row> files) {
+        String run = null;
+        for (Row f : files) {
+            String[] b = textBounds(f, LOAD_ID);
+            if (b[0] == null || b[1] == null) {
+                return true;
+            }
+            for (String v : new String[] {b[0], b[1]}) {
+                String r = v.contains(".") ? v.substring(0, v.lastIndexOf('.')) : v;
+                if (run == null) {
+                    run = r;
+                } else if (!run.equals(r)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** The ids written by more than one load on the date, each with its winning file ({@link #shadows}); computed by {@link #ids}. */
+    Map<String, Integer> shadow(Layout layout, LocalDate date) {
+        List<Row> files = layout.files().getOrDefault(date, List.of());
+        if (files.size() < 2 || layout.schema() == null || layout.schema().indexOf(LOAD_ID) < 0 || !severalLoads(files)) {
+            return Map.of();                                     // one load, or a table from before load ids: no id twice
+        }
+        Map<String, Integer> s = shadows.get(layout.version() + "|" + date);
+        if (s == null) {
+            ids(layout, date);
+            s = shadows.getOrDefault(layout.version() + "|" + date, Map.of());
+        }
+        return s;
+    }
+
+    /** Whether the row of {@code id} in file {@code file} is the one readers see (not shadowed by a newer load's copy). */
+    static boolean seen(Map<String, Integer> shadow, String id, int file) {
+        if (shadow.isEmpty()) {
+            return true;
+        }
+        Integer w = shadow.get(id);
+        return w == null || w == file;
+    }
+
     /** {@code numRecords} of a scan file's add action statistics, or null when it has none. */
     private static Long numRecords(Row scanFile) {
         try {
@@ -358,6 +426,7 @@ final class DeltaTable {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+        byDate.values().forEach(DeltaTable::newestLast);
         Row idScanState = s.getScanBuilder().withReadSchema(new StructType().add(idColumn, StringType.STRING)).build().getScanState(engine);
         return Optional.of(new Layout(s.getVersion(), s.getTimestamp(engine), scan.getScanState(engine), byDate, s.getSchema(), dvs,
                 idScanState));
@@ -396,14 +465,30 @@ final class DeltaTable {
         for (int i = 0; i < order.length; i++) {
             order[i] = i;
         }
-        java.util.Arrays.sort(order, java.util.Comparator.comparing(ids::get));
-        String[] sortedIds = new String[order.length];
-        int[] sortedFiles = new int[order.length];
+        java.util.Arrays.sort(order, java.util.Comparator.comparing(ids::get));        // stable: an id's copies stay in file (load) order
+        List<String> sortedIds = new ArrayList<>(order.length);
+        List<Integer> sortedFiles = new ArrayList<>(order.length);
+        Map<String, Integer> shadow = new java.util.HashMap<>();
         for (int i = 0; i < order.length; i++) {
-            sortedIds[i] = ids.get(order[i]);
-            sortedFiles[i] = fileOf.get(order[i]);
+            String id = ids.get(order[i]);
+            int n = sortedIds.size();
+            if (n > 0 && sortedIds.get(n - 1).equals(id)) {             // a newer load's copy of the id: it wins (newest last)
+                sortedFiles.set(n - 1, fileOf.get(order[i]));
+                shadow.put(id, fileOf.get(order[i]));
+                continue;
+            }
+            sortedIds.add(id);
+            sortedFiles.add(fileOf.get(order[i]));
         }
-        return new HeapIdMap(sortedIds, sortedFiles);
+        synchronized (shadows) {                              // a plain map (no subclass: nothing here is Serializable), trimmed by hand
+            shadows.put(layout.version() + "|" + date, shadow.isEmpty() ? Map.of() : shadow);
+            var eldest = shadows.keySet().iterator();
+            while (shadows.size() > 64 && eldest.hasNext()) {
+                eldest.next();
+                eldest.remove();
+            }
+        }
+        return new HeapIdMap(sortedIds.toArray(new String[0]), sortedFiles.stream().mapToInt(Integer::intValue).toArray());
     }
 
     /**
@@ -471,30 +556,46 @@ final class DeltaTable {
                 interned.put(p, new java.util.HashMap<>());
             }
         });
-        for (Row file : files) {
+        Map<String, Integer> shadow = shadow(layout, date);
+        for (int fi = 0; fi < files.size(); fi++) {
+            Row file = files.get(fi);
+            int fileIndex = fi;
             // a partition column (PRODUCT_TYPE=Cash/) is not in the Parquet file: its one value for the file is in the log
             Map<String, String> partition = InternalScanFileUtils.getPartitionValues(file);
             raw(file, schema, Optional.empty(), batch -> {
                 int n = batch.getSize();
                 io.delta.kernel.data.ColumnVector idv = batch.getColumnVector(0);
+                boolean[] keep = new boolean[n];
+                int kept = 0;
                 for (int r = 0; r < n; r++) {
-                    ids.add(idv.isNullAt(r) ? "" : idv.getString(r));
+                    String id = idv.isNullAt(r) ? "" : idv.getString(r);
+                    keep[r] = seen(shadow, id, fileIndex);                  // an older load's copy of an id a newer load wrote: not seen
+                    if (keep[r]) {
+                        ids.add(id);
+                        kept++;
+                    }
                 }
                 for (int c = 0; c < paths.size(); c++) {
                     String p = paths.get(c);
                     io.delta.kernel.data.ColumnVector v = batch.getColumnVector(c + 1);
                     String fixed = partition.get(pathToColumn.get(p));
                     if (numeric.get(p)) {
-                        double[] chunk = new double[n];
+                        double[] chunk = new double[kept];
                         double whole = fixed == null ? Double.NaN : partitionNumber(fixed);
+                        int k = 0;
                         for (int r = 0; r < n; r++) {
-                            chunk[r] = fixed != null ? whole : v.isNullAt(r) ? Double.NaN : v.getDouble(r);
+                            if (keep[r]) {
+                                chunk[k++] = fixed != null ? whole : v.isNullAt(r) ? Double.NaN : v.getDouble(r);
+                            }
                         }
                         nums.get(p).add(chunk);
                     } else {
                         Map<String, String> pool = interned.get(p);
                         List<String> out = texts.get(p);
                         for (int r = 0; r < n; r++) {
+                            if (!keep[r]) {
+                                continue;
+                            }
                             String s = fixed != null ? fixed : v.isNullAt(r) ? null : text(v, r);
                             out.add(s == null || pool.size() > 200_000 ? s : pool.computeIfAbsent(s, x -> x));
                         }
@@ -540,13 +641,16 @@ final class DeltaTable {
             schema = schema.add(c, have != null && isScalar(have) ? have : StringType.STRING);
         }
         StructType read = schema;
+        Map<String, Integer> shadow = shadow(layout, date);
+        List<Row> all = layout.files().getOrDefault(date, List.of());
         List<Piece> pieces = pieces(files, sink);
         int[] order = new int[pieces.size()];
         for (int i = 0; i < order.length; i++) {
             order[i] = i;
         }
         // piece by piece in file order; several decode at once when the reader asked for it (VectorReads, VAR_GUIDE.md 27a.6)
-        com.ash.drishti.api.VectorReads.inFileOrder(order, sink, (i, to) -> fileVectors(pieces.get(i), read, textColumns, to));
+        com.ash.drishti.api.VectorReads.inFileOrder(order, sink, (i, to) -> fileVectors(pieces.get(i), read, textColumns, to, shadow,
+                all.indexOf(pieces.get(i).file())));
     }
 
     /** A file, or the row groups {@code [from, to)} of one: what one decoding thread reads. */
@@ -594,7 +698,8 @@ final class DeltaTable {
     }
 
     /** One piece's rows into {@code sink}: buffers of its own, so pieces may decode on several threads at once. */
-    private void fileVectors(Piece piece, StructType read, List<String> textColumns, com.ash.drishti.api.VectorSink sink) {
+    private void fileVectors(Piece piece, StructType read, List<String> textColumns, com.ash.drishti.api.VectorSink sink, Map<String, Integer> shadow,
+            int fileIndex) {
         Row file = piece.file();
         double[][] buf = {new double[512]};
         String[] texts = new String[textColumns.size()];
@@ -616,6 +721,9 @@ final class DeltaTable {
                     texts[c] = fixed[c] != null ? fixed[c] : tvs[c].isNullAt(r) ? null : text(tvs[c], r);
                 }
                 String id = idv.isNullAt(r) ? "" : idv.getString(r);
+                if (!seen(shadow, id, fileIndex)) {
+                    continue;                                           // an older load's copy of an id a newer load wrote
+                }
                 if (vec.isNullAt(r)) {
                     sink.row(id, buf[0], -1, texts);
                     continue;
@@ -787,7 +895,9 @@ final class DeltaTable {
             return;
         }
         StructType physical = ScanStateRow.getPhysicalDataReadSchema(layout.scanState());
-        for (Row fileRow : files) {
+        Map<String, Integer> shadow = shadow(layout, date);
+        for (int fi = 0; fi < files.size(); fi++) {
+            Row fileRow = files.get(fi);
             FileStatus fs = InternalScanFileUtils.getAddFileStatus(fileRow);
             try (CloseableIterator<FileReadResult> raw = engine.getParquetHandler()
                     .readParquetFiles(Utils.singletonCloseableIterator(fs), physical, Optional.empty());
@@ -801,7 +911,7 @@ final class DeltaTable {
                     try (CloseableIterator<Row> rows = b.getRows()) {
                         while (rows.hasNext()) {
                             Row r = rows.next();
-                            if (!r.isNullAt(idIx) && !r.isNullAt(docIx)) {
+                            if (!r.isNullAt(idIx) && !r.isNullAt(docIx) && seen(shadow, r.getString(idIx), fi)) {
                                 sink.accept(r.getString(idIx), r.getString(docIx));
                             }
                         }

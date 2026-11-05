@@ -23,7 +23,7 @@ A US mutual fund or ETF from SEC public data: the fact sheet, the look-through h
 
 |  |  |
 |---|---|
-| Path | `data/testdata/funds/fund/` + `snapshot-YYYY-MM-DD.part-NNN.jsonl.gz` |
+| Path | `data/testdata/funds/fund/` + `fund.tar!/fund/YYYY-MM-DD/snapshot.part-NNN.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `TICKER` |
 | Date field | none in the record: a snapshot of public data, its file named by the capture date; the demo lake serves the same records on every business date (partition `business_date`) |

@@ -284,8 +284,11 @@ iceberg: loaded 30,000 rows into 1 tables in 5 s
 
 How the loader works:
 
-- **Input**: JSON lines `{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`, from a file or standard input
-  (`-`): `make_data.py --jsonl` writes the samples, `bulk_trades.py --jsonl -` streams a generated book straight into it.
+- **Input**: loader rows, JSON lines `{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`: `make_data.py --jsonl
+  FILE.tar` writes the samples and `bulk_trades.py --jsonl FILE.tar` a generated book, each a tar of `<kind>/<YYYY-MM-DD>/rows.jsonl`
+  folders; `tools/load-iceberg.sh` gives the loader the folder holding both, so each business day is written once. `-` reads
+  standard input: one kind on one date.
+- **Each row is filed under a business date from outside it** (the load rules, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md), the same as `lake build`'s): a tar of `<kind>/<YYYY-MM-DD>/` folders files each row under its folder's date, and a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input) is one kind on one date: `--as-of`, else its `.ready` file's `business-date:`, else the date in its name, else the business today. The row's own `date` stays in the row as data; rows whose date differs are loaded under the file's date and counted (*N rows of trade.jsonl carried another date in date; loaded under 2026-09-30*). A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar (its folders name the dates). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it, in name order. Retention (`--keep-days`, `--ttl-days`, `--keep-months`) counts back from `--as-of`, else the business today.
 - **An external sort per day.** The generator's stream interleaves days and ids (it is not sorted: workers emit slices
   of trade numbers as they finish). Each business day of each kind gets a sorter (`SortedRuns`). At most `--buffer-mb`
   (1024) of rows are held; beyond it the largest day's buffer is sorted and written to a run file in `--spill-dir`, on a
@@ -299,8 +302,8 @@ How the loader works:
   partition (`OverwriteFiles` with `business_date = d`). The smaller days of a table are committed together in one
   overwrite of exactly those days, so 46 small tables of 10 days each take 46 commits, not 460. Commits to one table are
   serialised. Loading a day again replaces it: the load is idempotent, and a reader sees the old day or the new one.
-- **`--keep-days N`** then removes the business days older than each table's newest N on or before `--as-of` (default:
-  today in the business zone; a day after it is neither counted nor removed) and expires snapshots older than a week
+- **`--keep-days N`** then removes the business days older than each table's newest N on or before the newest business date of the load (a plain file's date, a tar's newest folder; a day
+  after it is neither counted nor removed) and expires snapshots older than a week
   ([section 9](#9-retention-and-maintenance)). Removing more than `--max-drop-share` (0.5) of a table's rows fails,
   removing nothing, unless `--force-drop`.
 - **Dates are guarded**: a row dated after tomorrow in the business zone is not loaded; the first few are named on
@@ -435,7 +438,7 @@ java -cp <plugin classpath> com.ash.drishti.plugin.iceberg.IcebergMaintenance ./
 
 | Option | What it does |
 |---|---|
-| `--keep-days N` | deletes the business days older than the table's newest N on or before `--as-of` (today): a metadata-only delete of whole partitions; more than `--max-drop-share` (0.5) of a table's rows needs `--force-drop` |
+| `--keep-days N` | deletes the business days older than the table's newest N on or before the newest business date of the load (a plain file's date, a tar's newest folder): a metadata-only delete of whole partitions; more than `--max-drop-share` (0.5) of a table's rows needs `--force-drop` |
 | `--relayout` | rewrites, sorted into files of the table's `file-rows`, only days that drifted: files whose id ranges overlap (an append out of order), a file over `file-rows`, more files than needed, delete files, a promoted column missing from a file; one `RewriteFiles` commit per day, validated against the snapshot it read |
 | `--force` | with `--relayout`: every day |
 | `--columns kind:path,path` | adds promoted columns (types inferred from the newest documents) and rewrites every day, filling them from the documents |
@@ -698,6 +701,25 @@ Tested in `IcebergProxyTest` (the S3 file IO through a fake proxy, plain and `CO
 
 ## As a connector file
 
+### The lake file: where the root and the layout live
+
+The lake itself (its root, storage, catalog and its settings, each table's folder, promoted columns and vectors; an Iceberg table of the layout is partitioned by business date alone) is described once, in its lake file
+`config/lakes/<lake>.yaml`, and the connector names it ([LAKE_GUIDE.md](../guides/LAKE_GUIDE.md)). The connector file then keeps only
+reading concerns:
+
+```yaml
+# config/connectors/market-store.yaml
+plugin: iceberg
+kinds: [ir-curve, fx-spot]
+settings:
+  lake: iceberg-main                  # config/lakes/iceberg-main.yaml: root, catalog (rest, glue, s3tables), tables, promoted columns
+  refresh-seconds: 10
+```
+
+A connector that names a lake and also sets `root`, `domain`, `table.<kind>`, `layout.<kind>.*`, `uri` or `warehouse` fails,
+naming both. The form below, with those keys in the connector file, is the older one: it is read for one more release with one warning,
+and `drishti.py lake migrate-config` moves it into a lake file ([LAKE_GUIDE.md section 8](../guides/LAKE_GUIDE.md#8-migrating-an-older-installation)).
+
 A connector is a site resource: one YAML file in `config/connectors/`, and the file name is the connector's name. The settings of this document go under `settings:` in that file, with nesting flattened to dotted keys (`layout: {trade: {columns: [...]}}` is `layout.trade.columns`); `${ENV_VAR}` placeholders are resolved when the connector starts, and a credential is only ever an `${ENV_VAR}` or a `file:/path` reference. A pack names the connectors it reads through and may suggest a template; the server writes the template to the file once, at the first start, and the file is then the site's. A complete file:
 
 ```yaml
@@ -737,7 +759,7 @@ Read beside them, and not in that table:
 | `warehouse`, `credential`, `token`, `scope`, `oauth2-server-uri`, `prefix`, `io-impl` | none | `rest`: passed to the catalog |
 
 Loader options (`IcebergLoader FILE|- [root]`): `--file-rows` (250000), `--row-group-mb` (1), `--buffer-mb` (1024),
-`--engine` (`native`, `library` or `auto`, as the connector's `engine`), `--threads` (half the cores, at most 8), `--spill-dir` (the system temp folder), `--keep-days`, `--as-of yyyy-MM-dd` (today in the business zone), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--catalog`,
+`--engine` (`native`, `library` or `auto`, as the connector's `engine`), `--threads` (half the cores, at most 8), `--spill-dir` (the system temp folder), `--keep-days`, `--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--catalog`,
 `--uri`, `--warehouse`, `--credential`, `--token`, `--set key=value`.
 
 ## 16. Checklist for production
@@ -794,8 +816,8 @@ manifests (`drishti.iceberg.manifest-cache-entries`, 2,000,000 entries) and dele
 (`drishti.iceberg.delete-cache-rows`, 5,000,000 rows); a purge of the connector's caches empties all three.
 
 **Speed.** The same 10,000 trades a day over three days (`tools/samplegen/bulk_trades.py --trades 10000 --days 3
---jsonl`, documents of about 18 KB), loaded by each engine's loader into its own lake and read by the connector on that
-engine in one JVM (`IcebergEnginesBenchTest`, `-Ddrishti.iceberg.bench=<jsonl>`; 2026-10-20, a 24-core workstation, heap 6 GB):
+--jsonl FILE.tar`, documents of about 18 KB), loaded by each engine's loader into its own lake and read by the connector on that
+engine in one JVM (`IcebergEnginesBenchTest`, `-Ddrishti.iceberg.bench=<the tar>`; 2026-10-20, a 24-core workstation, heap 6 GB):
 
 | | native | library |
 |---|---|---|

@@ -64,7 +64,7 @@ def test_sign_in_waits_in_place_and_keeps_what_was_typed():
     page = c.post("/login", content="user=k.mehta&password=x&next=/t", headers=FORM, follow_redirects=False)
     assert page.status_code == 503 and page.headers["retry-after"] == "45"
     assert "data-busy=" in page.text and "DRS-9501" in page.text and 'value="k.mehta"' in page.text
-    assert "/static/js/login-busy.js" in page.text and "/static/js/busy.js" in page.text
+    assert "/static/js/drishti_login-busy.js" in page.text and "/static/js/drishti_busy.js" in page.text
     assert "Unknown user or wrong password" not in page.text
 
 
@@ -121,7 +121,7 @@ def test_health_draws_the_busy_protection_card_and_sends_the_override(client, ba
     assert 'data-busy-gauge="memory"' in page and "93% · 6.5 of 7.0 GB" in page and "3 of 3 slots" in page and "164 of 200 · queue 6" in page
     assert 'data-busy-gauge="memory-store:news"' in page and "0% · 1.0 of 256.0 MB" in page
     assert "k.mehta" in page and "DRS-9501" in page and "23 in the last 15 minutes" in page
-    assert "data-busy-override" in page and "Hold all new heavy work" in page and "/static/js/admin-busy.js" in page
+    assert "data-busy-override" in page and "Hold all new heavy work" in page and "/static/js/drishti_admin-busy.js" in page
     assert 'style="' not in page.split("data-health-busy", 1)[1].split("</section>", 1)[0]      # no inline style (the page's policy)
     r = client.post("/admin/api/busy/override", json={"mode": "hold", "reason": "planned restart", "minutes": "30"})
     assert r.status_code == 200 and sent == [("PUT", {"mode": "hold", "reason": "planned restart", "minutes": 30})]

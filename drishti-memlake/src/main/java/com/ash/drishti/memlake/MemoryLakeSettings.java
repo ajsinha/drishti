@@ -46,6 +46,41 @@ public record MemoryLakeSettings(Map<String, Store> stores, List<TableSpec> tabl
     }
 
     /**
+     * These settings with the memory stores the lake files describe (decision L3, docs/guides/LAKE_GUIDE.md section 6): every lake whose
+     * root is {@code mem://<store>} is a store, its {@code memory:} block giving the cap, chunk size, contract, owner and idle trim, its
+     * {@code format} the store's. A store still under {@code drishti.lake.memory.stores} (the engine file, the old place) is read with one
+     * warning naming {@code drishti.py lake migrate-config}; a store named in both places is refused, naming both.
+     *
+     * @param lakes the lakes of this server
+     * @param warn  where the one warning goes
+     */
+    public MemoryLakeSettings withLakeStores(com.ash.drishti.lakeconfig.Lakes lakes, java.util.function.Consumer<String> warn) {
+        Map<String, Store> merged = new java.util.LinkedHashMap<>(stores);
+        if (!stores.isEmpty()) {
+            warn.accept("the in-memory lake's stores " + stores.keySet() + " are in drishti.lake.memory.stores (config/engines/memory-lake.yaml): "
+                    + "describe each as a lake (config/lakes/<store>.yaml, root: mem://<store>, memory: {max-mb: ...}); read there for one more release");
+        }
+        for (com.ash.drishti.lakeconfig.Lake l : lakes.all().values()) {
+            if (!l.inMemory()) {
+                continue;
+            }
+            String name = l.store();
+            if (merged.containsKey(name) && stores.containsKey(name)) {
+                throw new IllegalArgumentException("memory store " + name + " is described twice: in " + l.file() + " and in drishti.lake.memory.stores "
+                        + "(config/engines/memory-lake.yaml); keep the lake file and remove it from the engine file");
+            }
+            Map<String, String> m = l.memory();
+            merged.put(name, new Store(integer(m.get("max-mb")), integer(m.get("chunk-kb")), m.get("contract"),
+                    m.get("owner") == null ? null : Boolean.parseBoolean(m.get("owner").trim()), l.format(), integer(m.get("idle-trim-minutes"))));
+        }
+        return new MemoryLakeSettings(merged, tables, compaction, historyKeep, jobThreads);
+    }
+
+    private static Integer integer(String v) {
+        return v == null || v.isBlank() ? null : (int) Double.parseDouble(v.trim());
+    }
+
+    /**
      * One memory store.
      *
      * @param maxMb the hard cap in MB (the stores' caps add to the JVM's direct-memory limit: the launchers add them)

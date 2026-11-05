@@ -69,13 +69,12 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 19. [Personal API tokens](#personal-api-tokens)
 20. [A field over time](#a-field-over-time)
 21. [How fresh a view is](#how-fresh-a-view-is)
-22. [Notes (deprecated)](#notes-deprecated)
-23. [Share with a note, the directory and the inbox](#share-with-a-note-the-directory-and-the-inbox)
-24. [Comment threads](#comment-threads)
-25. [Shared workspaces](#shared-workspaces)
-26. [Scheduled reports](#scheduled-reports)
-27. [The access log (administrators)](#the-access-log-administrators)
-28. [A phrase as a search](#a-phrase-as-a-search)
+22. [Share with a note, the directory and the inbox](#share-with-a-note-the-directory-and-the-inbox)
+23. [Comment threads](#comment-threads)
+24. [Shared workspaces](#shared-workspaces)
+25. [Scheduled reports](#scheduled-reports)
+26. [The access log (administrators)](#the-access-log-administrators)
+27. [A phrase as a search](#a-phrase-as-a-search)
 
 ## Before you start
 
@@ -543,7 +542,7 @@ Three catch-alls are worth knowing: a bad argument anywhere (`IllegalArgumentExc
 logged on the server with the stack trace. The full list is in the [error code table](#error-code-table).
 
 **When the server is busy.** New heavy work (a sign-in, opening a VaR or exposure date that is not open yet, a Data view download, a BI
-run, a bulk load) may be asked to wait: `503` with `Retry-After` and a code `DRS-9501` to `DRS-9505` or `DRS-9507` (a large pivot). The body adds `busy: true`, `title`
+run, a bulk load) may be asked to wait: `503` with `Retry-After` and a code `DRS-9501` to `DRS-9505`, `DRS-9506` (an Arrow Flight read) or `DRS-9507` (a large pivot). The body adds `busy: true`, `title`
 and `because` (the same words the console and `drishti.py` show) and `retryAfterSeconds`. A script waits that many seconds and asks
 again, a few times at most; reads of what is already open are never asked to wait. Busy protection is described in
 [OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over).
@@ -572,7 +571,7 @@ EOF
 ```
 
 `drishti-console/core/arrow_answer.py` (`decode`) rebuilds the whole JSON answer from such a stream; in a browser page,
-`drishtiTable.fromArrow` (`/static/js/drishti-table.js`) does.
+`Drishti.table.fromArrow` (`/static/js/drishti_table.js`) does.
 
 ## Endpoint reference
 
@@ -1701,6 +1700,7 @@ as an administrator's announcement.
 | `GET` | `/admin/dataload/report?path=` | A report the status links to, by its path under the inbox's folder: a file's `.loaded.json` or `.failed.json`, a loader's `load-<n>.summary.json` or `load-plan.json` (JSON), or `load-<n>.rejects.jsonl` (the first 500 lines, an array). Only under `outbox/` and `failed/`; anything else `400 DRS-5001`, a report no longer kept `404` |
 | `POST` | `/admin/dataload/run` | Load now: `{started: true, by}`; while a run still loads none starts: `{started: false, skipped: "skipped: run 20261103T150000Z-drishti-main still loading (12 min)"}` (recorded as a skipped cycle). `400 DRS-5001` the inbox is off here. Audited `dataload.run` |
 | `POST` | `/admin/dataload/retry` | body `{file}` (or `?file=`): a failed file and its `.ready` back into the inbox: `{file, from, to, next}`. `404 DRS-1001` no failed file of that name, `400 DRS-5001` a bad name or one in the inbox already. Audited `dataload.retry` |
+| `POST` | `/admin/dataload/undo` | body `{loadId}`: what undoing that load would do, nothing changed; `{loadId, confirm}` with `confirm` the same id: the load undone, its rows removed from every Delta and Iceberg table of the inbox's lake, one commit per table and date, a replace restored ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md) section 6.3): `{loadId, undone, lines: [{table, format, date, removed, restored, replaced}], text}`. `400 DRS-5001` no id, or the undo failed. Audited (`dataload.undo`). |
 
 ### Administration: node readiness and the drain before a stop
 
@@ -1726,9 +1726,12 @@ until curl -s -H "Authorization: Bearer $DRISHTI_DRAIN_TOKEN" $B/admin/node | jq
 | `PUT` | `/admin/busy/override` | admin, never a token. `{mode: automatic \| open \| hold, reason, minutes}`: let everything through or hold all new heavy work for 1 to `drishti.admission.override-max-minutes` minutes (a reason is required; `400 DRS-5001` without one), or back to automatic at once; audited as `busy-override`; answers as `GET /admin/busy` |
 | `GET` | `/admin/alerts` | admin. The platform alert rules (from `config/alerts/platform-alerts.yaml`, with any rule that could not be read and why), the open alerts (rule, severity, value, threshold, since) and the recent closed ones; the same alerts appear on Admin → Health and in administrators' inboxes ([OPERATIONS.md](../admin/OPERATIONS.md)) |
 | `GET` | `/admin/caches` | admin. `{memory, disk, caches}`. `memory`: the cache budget (`budgetBytes`, `usedBytes`, `cacheShare`, `pools`) and the heap (`heapMaxBytes`, `heapUsedBytes`); `disk`: `freeBytes`, `guardBytes`, `state` and each folder's `usedBytes` against `limitBytes`; `caches`: one row each, `{name, owner, type, where (heap, mapped, disk), path, sizeBytes, limitBytes, entries, limitEntries, ttlSeconds, oldestAgeSeconds, hits, misses, freshness, dates, lastPurge {at, by, date}, stats}` (a value it cannot say is null): `engine`, `history`, `memory-budget`, every connector that caches, `var.answers`, `var.dates`, `var.hot-files`, `var.views`, `var.shard-books`, `exposure.answers`, `exposure.trade-paths`, `exposure.dates`, `exposure.hot-files`, `exposure.views`, `bi.results`, `bi.layers`, `security.pack-access`, `connectors.id-maps`. |
+| `GET` | `/admin/lakes/files?check=false` | admin. Every lake of the lake files (`config/lakes/`, [LAKE_GUIDE.md](LAKE_GUIDE.md)) and its tables, read-only, as Admin → Lakes lists them: `{dir, lakes: [...], error?}`; a lake file the reader refuses gives `lakes: []` and the refusal in `error`, so the page always opens; `check=true` adds `findings`, each local table compared with its lake file (format, partition columns, promoted columns); `drishti.py lake show`, `lake check` |
 | `GET` | `/admin/lakes/memory` | admin. The in-memory lake ([IN_MEMORY_LAKE_GUIDE.md](IN_MEMORY_LAKE_GUIDE.md)): `{stores: [{name, owner, contract, format, capBytes, usedBytes, allocatedBytes, releasedBytes, files, refusals, lastRefusal, directLimitProblem}], tables: [{name, store, path, source, mode, state (empty, refilling, ready, evicted, failed, refused, remote), stateWords, since, words, bytes, fileBytes, files, decodedBytes, ratio, rows, version, lastRefill, nextRefill, pinned, evictions, refusals, compactions, savedTodayBytes, savedTotalBytes, contract}], warm, compaction: {enabled, idleOnly, rewrites, savedTotalBytes, waitedForRoom, lastRun}, health: {state, problems, host, directLimitBytes, directNeededBytes}, guard: {refusals, downloads}}`; ids and counts only, never a value of the data; `drishti.py lake memory status` |
 | `GET` | `/admin/lakes/memory/jobs?table=&limit=100` | admin. The replenish jobs' runs, newest first: `{runs: [{table, at, trigger (warm-up, schedule, signal, after eviction, by <user>, compaction, eviction), outcome (ok, failed, refused, evicted), rows, bytes, version, millis, message}]}`; `drishti.py lake memory jobs` |
 | `POST` | `/admin/lakes/memory/refill/{table}` | admin. Queues a run of the table's job now (`404 DRS-1001` for no such table; `400` when its store is owned by another node); audited as `lake.memory.refill`; `drishti.py lake memory refill <table>` |
+| `GET` | `/admin/data-out` | admin. Arrow Flight on this node ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md), Admin → Data out, both views): `{service: {enabled, running, port, tls, mutualTls, memory: {used, cap}, problem, forms, batchRows}, nodes: [{id, host, port, self}], live: [{id, person, onBehalfOf, token, form, request, part, stream, started, rows, bytes, sequence, memory, node}], recent: [{at, person, onBehalfOf, tokenId, form, request, part, stream, rows, bytes, millis, node, refusal}], limits: {default, roles}, tokens: [{id, user, name, scopes, expiresAt, lastUsedAt}]}`; the live and recent reads are this node's (the screen asks each node listed); token ids only, never a secret |
+| `POST` | `/admin/data-out/streams/{id}/stop` | admin. Ends a live Flight read after its current batch (the client gets `DRS-5610`); `404 DRS-1001` when it is not live on this node; audited as `data.flight-stopped` |
 | `GET` | `/admin/capacity` | admin. The single-node capacity planner, `capacity/planner.yaml` as JSON (RESOURCES_AND_SCALE.md 9.7): `inputs` (`name, group, label, default, unit, kind, choices, hint`; the server jar's name with this server's version), `coefficients`, `results` (bands of `name, label, expression, unit, why`), `settings`, `jvm`, `warnings`, `calibration`, `examples`. Admin → Capacity and `drishti.py admin capacity` evaluate the expressions ([OPERATIONS.md 12.4](../admin/OPERATIONS.md#124-admin--capacity-today-against-the-plan)) |
 | `GET` | `/admin/capacity/live` | admin. This server measured now: `{measuredAt, server: {java, javaVersion, heapUsedMb, heapMaxMb, heapAfterGcMb, rssMb, cpus, ramMb}, var: {enabled, datesLoaded, newestDate, positions, trades, nodes, dateHeapMb, openDates, hotDates, protected, openHeapMb, openHeapLimitMb, openHeapSetting, mappedMb}, disk: {path, totalBytes, freeBytes, guardBytes, state, foldersUsedBytes, folders}, load: {usersActive, usersPeakToday, requestsPerSecond, requestsPerSecondPeakToday}, inputs: {Positions, Trades, Nodes, HotDates, CcysAhead, Users, PeakRps, JavaVersion, DataFolder}}`; `inputs` are the planner inputs the figures stand for. A figure the server cannot tell is null (`rssMb` off Linux; `var` when the engine is absent) |
 | `GET` | `/admin/capacity.xlsx?inputs=plan\|live\|both&<Input>=<value>…` | admin. The planner workbook, streamed: the template's parts with only the Inputs sheet's values filled, every result a live formula (`fullCalcOnLoad`). Any input by its name (`Trades=450000`, `Collector=ZGC`); an unknown name or a non-number is `400 DRS-5001` with the list. `live` puts the measured inputs in the Inputs and the plan in a column beside them, `both` the plan in the Inputs and a *Live, measured …* column; either lists the measured figures that are not inputs under them. Audited as `capacity-workbook-downloaded` |
@@ -2037,6 +2040,16 @@ and the fix for the codes that need more than the meaning.
 | DRS-5444 | 422 | Exposure row rejected | a row of the date's exposure paths was rejected at load (another vector length, NaN or infinity, a grid index or date outside the run's grid): listed in the provenance, never padded |
 | DRS-5445 | 503 | Exposure capacity | a date's netting-set matrices need more memory than `drishti.ccr.exposure.memory-budget-gb` |
 | DRS-5446 | 503 | What-if method | the exact what-if (`method: paths`) runs in the Python exposure engine (`exposure-whatif`, compute pool `exposure`, `DRISHTI_COMPUTE_ENABLED=true`): it is not running or did not answer in time; use `method: addon` (a conservative proxy) or start compute |
+| DRS-5601 | 401 | Flight: no token | Arrow Flight ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md)): no token, a token unknown, expired or revoked, an account disabled, or a browser session (never accepted); send `authorization: Bearer <API token>` (or Basic with the token as the password) |
+| DRS-5602 | 403 | Flight: scope | the token lacks `data:read` (or `data:read:<domain>` for the domain asked), the person may not read the kind, model or measure, or a token that is not an application's names an on-behalf-of person |
+| DRS-5603 | 400 | Flight: bad request | the ticket or descriptor is not a request Drishti reads: not JSON, an unknown form, a kind, model, measure or lake table that is not there, a bad date or filter line ([FLIGHT_REFERENCE.md](FLIGHT_REFERENCE.md)) |
+| DRS-5604 | 429 | Flight: rows limit | the read passed the rows limit of the person's role; whole batches before it were sent; narrow the request or read it in parts |
+| DRS-5605 | 429 | Flight: bytes limit | the read passed the bytes limit of the person's role |
+| DRS-5606 | 504 | Flight: time limit | the read ran past the time limit of the person's role, or the client did not take the next batch in time |
+| DRS-5607 | 503 | Flight: memory | the read passed its Arrow memory cap (per read, or the node's total); fewer columns or a narrower scope |
+| DRS-5608 | 421 | Flight: not here | no node of a part answered, or this node does not hold the part; ask GetFlightInfo again |
+| DRS-5609 | 410 | Flight: resume gone | a stream's resume point is older than the node can send from; read a snapshot, then subscribe again |
+| DRS-5610 | 409 | Flight: stopped | an administrator stopped the stream (Admin → Data out) |
 | DRS-5031 | 422 | connector invalid | a connector file or body is not valid: bad name, unknown plugin or top-level key, missing required setting, wrong type, a `name:` that is not the file name, or a credential that is not an `${ENV_VAR}` or `file:` reference; `detail` names the setting |
 | DRS-5032 | 409 | connector conflict | a connector change conflicts (HTTP 409): the version you read is stale (reload and apply again), a file of that name exists and no `If-Match` was sent, or the change switches off or deletes a connector packs use (repeat with `confirm=true`/`--confirm` once you have read who uses it), or you tried to delete a connector a pack's template names (reset or disable it) |
 | DRS-5033 | 404 | no such connector | no connector of that name (a file, a pack template or the server's configuration) |
@@ -2105,6 +2118,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9503 | 503 | Busy: a download waits | busy protection: a Data view download did not start (memory, request handlers, disk); nothing was sent; `Retry-After` |
 | DRS-9504 | 503 | Busy: a BI run waits | busy protection: a BI run (or asking a run again) did not start (memory, request handlers); `Retry-After` |
 | DRS-9505 | 503 | Busy: a bulk load waits | busy protection: a bulk load of a pack's data did not start (memory, request handlers, disk); nothing was read or written; `Retry-After` |
+| DRS-9506 | 503 | Busy: a Flight read waits | busy protection: an Arrow Flight read did not start (memory, request handlers); nothing was sent; retry after the seconds the refusal names |
 | DRS-9507 | 503 | Busy: a pivot waits | busy protection: a pivot view of more cells than `drishti.pivot.busy-cells` did not open its deeper levels; `Retry-After` |
 | DRS-6001 | 404 | user not found | no such user |
 | DRS-6002 | 409 | user exists | a user with that name already exists |
@@ -3116,6 +3130,25 @@ the list without a lens) stays the comparison (`override`). For example
 `POST /api/v1/compute/var-engine/var-result` with `"params": {"horizon": "10d", "method": "sum", "confidence": 0.95}` (`HORIZON`,
 `METHOD` in the record).
 
+**Parametric VaR (a cross-check, never official).** While `drishti.var.parametric.enabled` is on (the default), the answers that carry
+historical figures carry a **`parametric` block** beside them, computed from the same vector in the same request; the historical fields
+are unchanged ([VAR_GUIDE.md section 18.15](VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check), [PARAMETRIC_VAR.md](../architecture/PARAMETRIC_VAR.md)).
+`parametric=false` on any of them leaves the block out; `parametric=true` while the measure is off answers `403 DRS-5002` in words.
+
+| Answer | Its `parametric` |
+|---|---|
+| `GET /scope`, `/scopes/{scope}` | `var`, `es` (positive for a loss, the answer's currency), `confidence`, `esConfidence`, `mu`, `sigma`, `n`, `z`, `zEs`, `esFactor`, `zSigma`, `weighting`, `lambda`, `horizonRule`, `skew`, `excessKurtosis`, `gap` (historical − parametric), `gapPct`, `esGap`, `beyond` (scenario days below −`var`), `expectedBeyond` (n·(1 − c)), `official` (always `false`), `notes`, `describe` (the **?**'s lines, built in the server) |
+| `GET /tree` | per node `var`, `es`, `gap`, `gapPct` |
+| `GET /scope/path` | the headline's figures plus `curve {x, y}` (`curve-points` points; y in expected days per bin), `expected` (the normal's days per histogram bin), `markers {historical, parametric}`, `binWidth`, `curveDescribe`, `showCurve` |
+| `GET /scope/contributions` | per row `pComponentVar`, `pComponentEs`, `pStandaloneVar`, `pIncrementalVar`, `pPct`, `pMarginalPer1m`, `pMarginalPer1pct`, `rho`, `sigma`, `mu`, `zCovOverSigma`; totals `pSumComponent`, `pSumStandalone`, `pDiversification`, `addsUp`; with `matrix=true` also `matrix {keys, labels, correlation, covariance, truncated, sigmaCheck, engine}` (at most `matrix-max-parts` parts, the largest by component; `engine` `openblas` or `java`). `matrix=true` with `parametric=false` is `400` |
+| `GET /status` | `parametric {enabled, weighting, lambda, horizonRule, curvePoints, matrixMaxParts, showCurve, official}` |
+| `GET /playground`, `/playground.xlsx` | `measure=parametric` (the playground's Parametric tab): its figures and `steps`; the workbook gains its Parametric tab |
+
+For example `GET /api/v1/var/scope?scope=DESK:DESK-RATES&asOf=2026-09-30` answers historical `var` 74,633,680 and `parametric.var`
+58,409,229 (`mu` −732,297, `sigma` 24,792,909, `gap` 16,224,451, `beyond` 12 of an expected 5.09) on the demo data; the computed kind
+`VRES` carries the same as `PARAMETRIC_*` and `FAT_TAIL_GAP*` fields (`"params": {"parametric": false}` leaves them out).
+[Tutorial 43](../tutorials/43-parametric-var-beside-historical.md) walks through them.
+
 | Method and path | What it does |
 |---|---|
 | `GET /api/v1/var/scope?scope=` | the headline: VaR, ES, diversification, limit, backtest and provenance |
@@ -3672,23 +3705,6 @@ Every view's `provenance` has `updatedAt` (when its source last received new dat
 tell), `staleAfter` (the source's `stale-after` as an ISO-8601 duration, or null) and `stale` (true when nothing new
 arrived within `staleAfter`; always false on a picked business date). Admin health carries the same per connector as
 `lastUpdate`, `staleAfter` and `stale`.
-
-## Notes (deprecated)
-
-**Deprecated.** Notes are now comment threads ([below](#comment-threads)); `/notes` stays for one release as a facade with the old shape and
-numbers. Existing notes were imported once as single-comment threads (on the whole view, or on the field of `path`; no business date,
-generation 0). Differences: the text is scrubbed for readers without `raw`, an edit stops after `threads.edit-window` (`403 DRS-7008`),
-and a `DELETE` retracts (the author) or hides (an administrator) instead of erasing: the text stays in the thread's revisions. Writes need
-`collaborate` and `drishti.collab.enabled`. Only notes made here or imported are listed; notes made through `/threads` are not.
-
-| Method | Path | What it does |
-|---|---|---|
-| `GET` | `/notes/{kind}/{id}` | the entity's notes, oldest first: `[{id, kind, entityId, path, author, body, createdAt, updatedAt}]` |
-| `POST` | `/notes/{kind}/{id}` | adds one: `{"body": "…", "path": "$.mtm"}` (`path` optional; at most 2000 characters, 200 notes per entity); `201` |
-| `PUT` | `/notes/{noteId}` | edits the text: the author only (`403` otherwise) |
-| `DELETE` | `/notes/{noteId}` | the author or an administrator; `204` |
-
-Reading and adding need the right to open the kind (`403 DRS-5002` otherwise). Personal API tokens only read.
 
 ## Share with a note, the directory and the inbox
 

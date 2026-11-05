@@ -23,10 +23,10 @@ A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the
 
 |  |  |
 |---|---|
-| Path | `data/testdata/trades/murex/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/trades/murex/` + `trade_murex.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `TRADE_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_SUB_TYPE`, `PRODUCT_GROUP`, `TRADE_STATUS`, `TRADE_VERSION`, `BUY_SELL_CODE`, `CURRENCY`, `QUANTITY`, `TRADE_DATE`, `MATURITY_DATE`, `COUNTERPARTY`, `LEGAL_ENTITY`, `PORTFOLIO`, `TRADER_ID`, `NOTIONAL`, `INDEX_NAME` |
 | Vector fields | none |
 | Partitioned by | `business_date`, `PRODUCT_TYPE` |
@@ -120,61 +120,61 @@ The example is from the **OIS** record.
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
 | `SOURCE_SYSTEM` | string | required | The booking system the trade comes from: ENDUR, CALYPSO or MUREX (upper case). | one of `CALYPSO`, `ENDUR`, `MUREX` | `"MUREX"` |
-| `SOURCE_UPDATE_TIME` | timestamp (ISO-8601) | optional (filled in every row) | When the booking system last changed the trade, ISO-8601 UTC; moves with every amendment (empty on an ENDUR trade never amended). | — | `"2026-07-09T17:50:00Z"` |
-| `TRADE_DATE` | date (YYYY-MM-DD) | required | The date the trade was agreed. | — | `"2024-06-18"` |
-| `INPUT_DATE` | date (YYYY-MM-DD) | optional (filled in every row) | The day the trade was entered in the booking system (CALYPSO and MUREX: the trade date; empty on ENDUR). | — | `"2024-06-18"` |
-| `TRADE_ID` | string | required | The record's id (the business key) | links to `trade` | `"MX-20000010"` |
+| `SOURCE_UPDATE_TIME` | timestamp (ISO-8601) | optional (filled in every row) | When the booking system last changed the trade, ISO-8601 UTC; moves with every amendment (empty on an ENDUR trade never amended). | — | `"2026-07-08T18:30:00Z"` |
+| `TRADE_DATE` | date (YYYY-MM-DD) | required | The date the trade was agreed. | — | `"2026-02-18"` |
+| `INPUT_DATE` | date (YYYY-MM-DD) | optional (filled in every row) | The day the trade was entered in the booking system (CALYPSO and MUREX: the trade date; empty on ENDUR). | — | `"2026-02-18"` |
+| `TRADE_ID` | string | required | The record's id (the business key) | links to `trade` | `"MX-20000007"` |
 | `TRADE_STATUS` | string | required | Life-cycle status: NEW, VALIDATED, AMENDED, MATURED or CANCELLED. A cancellation is a new version with CANCELLED, never a deleted row; VaR counts only live statuses. | one of `AMENDED`, `CANCELLED`, `MATURED`, `NEW`, `VALIDATED` | `"VALIDATED"` |
-| `TRADE_ACTION` | string | optional (filled in every row) | The last action on the trade: NEW or AMEND (empty on ENDUR when none). | one of `AMEND`, `NEW` | `"AMEND"` |
-| `TRADE_VERSION` | string | optional (filled in every row) | The booking system's version of the trade, as text; it goes up by one with every amendment (empty when the system gives none). | — | `"2"` |
-| `TRANSACTION_ID` | string | required | The booking system's number of this version of the trade: it changes with every amendment while TRADE_ID stays. Text. | — | `"20000010002"` |
-| `QUANTITY` | number | required | The trade's quantity: units of the commodity in the leg's PRICE_UNIT for a commodity trade, else the notional or face amount in CURRENCY. Unsigned: the side is BUY_SELL_CODE. | unit: PRICE_UNIT or CURRENCY | `134000000.0` |
+| `TRADE_ACTION` | string | optional (filled in every row) | The last action on the trade: NEW or AMEND (empty on ENDUR when none). | one of `AMEND`, `NEW` | `"NEW"` |
+| `TRADE_VERSION` | string | optional (filled in every row) | The booking system's version of the trade, as text; it goes up by one with every amendment (empty when the system gives none). | — | `"1"` |
+| `TRANSACTION_ID` | string | required | The booking system's number of this version of the trade: it changes with every amendment while TRADE_ID stays. Text. | — | `"20000007001"` |
+| `QUANTITY` | number | required | The trade's quantity: units of the commodity in the leg's PRICE_UNIT for a commodity trade, else the notional or face amount in CURRENCY. Unsigned: the side is BUY_SELL_CODE. | unit: PRICE_UNIT or CURRENCY | `199000000.0` |
 | `BUY_SELL_CODE` | string | required | The bank's side: B (bought, pays fixed, buys protection) or S (sold). | one of `B`, `S` | `"B"` |
 | `PRODUCT_TYPE` | string | required | The product type as the booking system types it; it selects the trade's Sutra. ENDUR: ComSwap, ComFut, Cash, CallNot, Commodity; CALYPSO and MUREX: the product taxonomy code (FRA, SWAPTION_BERM, EQ_TRS, CMD_APO,...). | — | `"OIS"` |
 | `PRODUCT_SUB_TYPE` | string | required | The finer type: ENDUR its sub-type code (ENGY-SWAP, ENGY-B-SWAP, ENGY-EXCH-FUT, CASH, NOSTRO, NGX-COMM-PHYS, COMM-WARRANTS-INV); CALYPSO and MUREX the product's name (Basis swap (float/float)). | — | `"Overnight index swap"` |
 | `PRODUCT_GROUP` | string | optional (filled in every row) | The asset class (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market, Securities financing, Structured); empty on ENDUR. | seen: `Rates`, `Equity`, `Commodity`, `Inflation`, `Structured` | `"Rates"` |
 | `PRODUCT_SUB_GROUP` | string | optional (filled in every row) | The product family within the group (linear, option, exotic, bond, future, cds, loan, money, note,...); empty on ENDUR. | seen: `swap`, `option`, `exotic`, `linear`, `note`, `future`, `bond`, `position` | `"swap"` |
-| `COUNTERPARTY` | string | required | The trade's counterparty: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | pattern `^CP-`; links to `counterparty` | `"CP-BRAMBLE"` |
-| `COUNTERPARTY_UEN` | string | required | The counterparty's unique entity number in the bank's client master (UENnnnnnnn). | — | `"UEN0100111"` |
-| `COUNTERPARTY_COUNTRY_OF_RISK` | string | required | The counterparty's country of risk, ISO 3166-1 alpha-2. | — | `"GB"` |
+| `COUNTERPARTY` | string | required | The trade's counterparty: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | pattern `^CP-`; links to `counterparty` | `"CP-MERIDIAN-RE"` |
+| `COUNTERPARTY_UEN` | string | required | The counterparty's unique entity number in the bank's client master (UENnnnnnnn). | — | `"UEN0100407"` |
+| `COUNTERPARTY_COUNTRY_OF_RISK` | string | required | The counterparty's country of risk, ISO 3166-1 alpha-2. | — | `"BM"` |
 | `INTERNAL_EXTERNAL_CODE` | string | required | External for a trade with a client or market counterparty; Portfolio (ENDUR's internal code) for one between two of the bank's books. | one of `External`, `Portfolio` | `"External"` |
 | `TRANSIT` | string | required | The bank's branch transit number of the booking legal entity: five digits, text, leading zeros kept. | one of `00107`, `00214`, `00321`, `00428` | `"00107"` |
 | `LEGAL_ENTITY` | string | required | The bank's legal entity that booked the trade: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | pattern `^LE-`; links to `legal-entity` | `"LE-NY"` |
-| `PORTFOLIO` | string | required | The book the trade is booked in: a BOOK_ID of the core pack's book kind (BOOK-…). | pattern `^BOOK-`; links to `book` | `"BOOK-RATES-1"` |
-| `TRADER_ID` | string | required | The trader who booked it: a TRADER_ID of the core pack's trader kind (TRDR-…). | pattern `^TRDR-`; links to `trader` | `"TRDR-ASHAH"` |
-| `TRADER_FIRST_NAME` | string | required | The trader's first name or initial, as the booking system keeps it. | — | `"A."` |
-| `TRADER_LAST_NAME` | string | required | The trader's last name, as the booking system keeps it. | — | `"Shah"` |
-| `START_DATE` | date (YYYY-MM-DD) | required | The trade's start (effective) date. | — | `"2024-06-20"` |
-| `MATURITY_DATE` | date (YYYY-MM-DD) | required | The trade's final maturity (last payment or expiry) date. | — | `"2032-11-29"` |
-| `CURRENCY` | string | required | The trade's currency, ISO 4217. | one of `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` | `"USD"` |
+| `PORTFOLIO` | string | required | The book the trade is booked in: a BOOK_ID of the core pack's book kind (BOOK-…). | pattern `^BOOK-`; links to `book` | `"BOOK-RATES-3"` |
+| `TRADER_ID` | string | required | The trader who booked it: a TRADER_ID of the core pack's trader kind (TRDR-…). | pattern `^TRDR-`; links to `trader` | `"TRDR-MOKAFOR"` |
+| `TRADER_FIRST_NAME` | string | required | The trader's first name or initial, as the booking system keeps it. | — | `"M."` |
+| `TRADER_LAST_NAME` | string | required | The trader's last name, as the booking system keeps it. | — | `"Okafor"` |
+| `START_DATE` | date (YYYY-MM-DD) | required | The trade's start (effective) date. | — | `"2026-02-20"` |
+| `MATURITY_DATE` | date (YYYY-MM-DD) | required | The trade's final maturity (last payment or expiry) date. | — | `"2034-06-26"` |
+| `CURRENCY` | string | required | The trade's currency, ISO 4217. | one of `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` | `"CHF"` |
 | `DELIVERY_VERSUS_PAYMENT` | string | required | YES when the instrument and the cash change hands together (securities), else NO. | one of `NO`, `YES` | `"NO"` |
 | `TT_GROUP` | string | optional (filled in every row) | CALYPSO and MUREX: the desk of the trade, a DESK_ID of the core pack's desk kind (DESK-…); empty on ENDUR. Carried through; not read by Drishti. | pattern `^DESK-`; links to `desk` | `"DESK-RATES"` |
-| `TT_BOOK` | string | optional (filled in every row) | CALYPSO and MUREX: the trade's book, a BOOK_ID of the core pack's book kind (BOOK-…), the same as PORTFOLIO; empty on ENDUR. | pattern `^BOOK-`; links to `book` | `"BOOK-RATES-1"` |
-| `SETTLEMENT_DATE` | date (YYYY-MM-DD) | optional (filled in every row) | The day the trade settles (CALYPSO and MUREX: the start date; empty on ENDUR). | — | `"2024-06-20"` |
+| `TT_BOOK` | string | optional (filled in every row) | CALYPSO and MUREX: the trade's book, a BOOK_ID of the core pack's book kind (BOOK-…), the same as PORTFOLIO; empty on ENDUR. | pattern `^BOOK-`; links to `book` | `"BOOK-RATES-3"` |
+| `SETTLEMENT_DATE` | date (YYYY-MM-DD) | optional (filled in every row) | The day the trade settles (CALYPSO and MUREX: the start date; empty on ENDUR). | — | `"2026-02-20"` |
 | `LEGS` | array of objects | required | The trade's legs, in LEG_ID order: one object per leg (a swap has two, a future or a cash deal one). | — | [2 objects] |
 | `LEGS[].LEG_ID` | string | required | The leg's number within the trade (1, 2,...), text; EVENTS[].LEG_ID names it. | — | `"1"` |
 | `LEGS[].LEG_TYPE` | string | required | FIXED, FLOAT (set by an index), OPTION or PHYSICAL. | one of `FIXED`, `FLOAT`, `OPTION`, `PHYSICAL` | `"FIXED"` |
 | `LEGS[].LEG_ECONOMIC_TYPE` | string | optional (filled in every `LEGS[]` entry) | CALYPSO and MUREX: Pay or Receive (whether the bank pays or receives the leg's flows); ENDUR: what the leg is (Fixed price, Floating price, Basis, Fee), empty when not given. | one of `Basis`, `Fee`, `Fixed price`, `Floating price`, `Pay`, `Receive` | `"Pay"` |
-| `LEGS[].CURRENCY` | string | required | The leg's currency, ISO 4217. | one of `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` | `"USD"` |
-| `LEGS[].NOTIONAL` | number | required | The leg's amount: quantity times price for a commodity leg, the principal for a rates leg, in the leg's CURRENCY. | unit: leg currency | `134000000.0` |
+| `LEGS[].CURRENCY` | string | required | The leg's currency, ISO 4217. | one of `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` | `"CHF"` |
+| `LEGS[].NOTIONAL` | number | required | The leg's amount: quantity times price for a commodity leg, the principal for a rates leg, in the leg's CURRENCY. | unit: leg currency | `199000000.0` |
 | `LEGS[].SETTLEMENT_TYPE` | string | required | Cash Settlement or Physical Settlement. | one of `Cash Settlement`, `Physical Settlement` | `"Cash Settlement"` |
-| `LEGS[].NUM_PROFILE_REC` | string | optional (filled in every `LEGS[]` entry) | The number of profile (flow) records the booking system holds for the leg, as text: the length of CASH_FLOWS on CALYPSO and MUREX; empty on ENDUR. Not read by Drishti. | — | `"17"` |
+| `LEGS[].NUM_PROFILE_REC` | string | optional (filled in every `LEGS[]` entry) | The number of profile (flow) records the booking system holds for the leg, as text: the length of CASH_FLOWS on CALYPSO and MUREX; empty on ENDUR. Not read by Drishti. | — | `"34"` |
 | `LEGS[].INDEX` | object | required | The leg's floating index: NAME, GROUP and SUB_GROUP, each empty on a fixed leg. | — | {…} |
-| `LEGS[].CASH_FLOWS` | array of objects | required | The leg's periods: each with its dates, notional, rate or price, and its resets. | — | [17 objects] |
-| `LEGS[].CASH_FLOWS[].FLOW_ID` | string | required | The flow's number in the booking system, unique within the system; text. | — | `"20000010001"` |
-| `LEGS[].CASH_FLOWS[].NOTIONAL` | number | required | The flow's notional (for a commodity flow its quantity times price), in the leg's currency. | unit: leg currency | `134000000.0` |
-| `LEGS[].CASH_FLOWS[].START_DATE` | date (YYYY-MM-DD) | required | The first day of the flow's accrual or pricing period. | — | `"2024-06-20"` |
-| `LEGS[].CASH_FLOWS[].END_DATE` | date (YYYY-MM-DD) | required | The last day of the flow's accrual or pricing period. | — | `"2024-11-29"` |
-| `LEGS[].CASH_FLOWS[].PAYMENT_DATE` | date (YYYY-MM-DD) | required | The day the flow is paid. | — | `"2024-12-03"` |
+| `LEGS[].CASH_FLOWS` | array of objects | required | The leg's periods: each with its dates, notional, rate or price, and its resets. | — | [34 objects] |
+| `LEGS[].CASH_FLOWS[].FLOW_ID` | string | required | The flow's number in the booking system, unique within the system; text. | — | `"20000007001"` |
+| `LEGS[].CASH_FLOWS[].NOTIONAL` | number | required | The flow's notional (for a commodity flow its quantity times price), in the leg's currency. | unit: leg currency | `199000000.0` |
+| `LEGS[].CASH_FLOWS[].START_DATE` | date (YYYY-MM-DD) | required | The first day of the flow's accrual or pricing period. | — | `"2026-02-20"` |
+| `LEGS[].CASH_FLOWS[].END_DATE` | date (YYYY-MM-DD) | required | The last day of the flow's accrual or pricing period. | — | `"2026-03-26"` |
+| `LEGS[].CASH_FLOWS[].PAYMENT_DATE` | date (YYYY-MM-DD) | required | The day the flow is paid. | — | `"2026-03-30"` |
 | `LEGS[].CASH_FLOWS[].STRIKE_PRICE` | number | required | The flow's strike or fixed price (an option's strike rate; ENDUR a fixed leg's price); 0.0 when none. | — | `0.0` |
-| `EVENTS` | array of objects | required | The trade's life-cycle and cash events, in EVENT_NUMBER order: one object per event (an empty array when none). | — | [58 objects] |
-| `EVENTS[].EVENT_ID` | string | optional (filled in every `EVENTS[]` entry) | The event's number in the booking system; text. | — | `"20000010001"` |
+| `EVENTS` | array of objects | required | The trade's life-cycle and cash events, in EVENT_NUMBER order: one object per event (an empty array when none). | — | [73 objects] |
+| `EVENTS[].EVENT_ID` | string | optional (filled in every `EVENTS[]` entry) | The event's number in the booking system; text. | — | `"20000007001"` |
 | `EVENTS[].EVENT_NUMBER` | integer | optional (filled in every `EVENTS[]` entry) | The event's position among the trade's events (1, 2,...). | — | `1` |
 | `EVENTS[].EVENT_TYPE` | string | optional (filled in every `EVENTS[]` entry) | What happened or will: CASH_SETTLEMENT, FEE, RESET, AMENDMENT, NOVATION (ENDUR), BOOKED, CONFIRMED, CLEARED, AMENDED, CASH_SETTLED, NEXT_PAYMENT, PARTIALLY_TERMINATED, MATURITY (CALYPSO, MUREX); may be empty on ENDUR. | — | `"BOOKED"` |
-| `EVENTS[].EVENT_DATE` | date (YYYY-MM-DD) | optional (filled in every `EVENTS[]` entry) | The day of the event; for a cash event the day the cash moves. | — | `"2024-06-18"` |
-| `EVENTS[].CURRENCY` | string | optional (filled in every `EVENTS[]` entry) | The currency of the event's amount, ISO 4217. | one of `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` | `"USD"` |
+| `EVENTS[].EVENT_DATE` | date (YYYY-MM-DD) | optional (filled in every `EVENTS[]` entry) | The day of the event; for a cash event the day the cash moves. | — | `"2026-02-18"` |
+| `EVENTS[].CURRENCY` | string | optional (filled in every `EVENTS[]` entry) | The currency of the event's amount, ISO 4217. | one of `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` | `"CHF"` |
 | `EVENTS[].SEQUENCE_NUMBER` | integer | optional (filled in every `EVENTS[]` entry) | The event's order in the booking system (equal to EVENT_NUMBER in the test data). | — | `1` |
-| `EVENTS[].AMOUNT` | number | optional (filled in 75% of `EVENTS[]` entries) | The event's cash amount from the bank's side, in EVENTS[].CURRENCY: negative is paid, positive received; empty for a non-cash event. | unit: event currency | `1265058.27` |
+| `EVENTS[].AMOUNT` | number | optional (filled in 75% of `EVENTS[]` entries) | The event's cash amount from the bank's side, in EVENTS[].CURRENCY: negative is paid, positive received; empty for a non-cash event. | unit: event currency | `161599.06` |
 | `EVENTS[].LEG_ID` | string | optional (filled in 72% of `EVENTS[]` entries) | The leg the event belongs to (a LEGS[].LEG_ID); empty for a deal-level event (BOOKED, CONFIRMED, MATURITY...). | — | `"1"` |
 | `EVENTS[].PAYMENT_TYPE` | string | optional (filled in 72% of `EVENTS[]` entries) | What a cash event pays (Interest, Premium, Commodity payment, Fee, Amendment fee, Novation fee, Fixing, Adjustment, Futures settlement, Cash payment, Caplet,... or the accrual period START..END); empty for a non-cash event. | — | `"Interest"` |
 
@@ -189,17 +189,17 @@ Each record is real, the most complete of its sub-type, pretty-printed with two-
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:50:00Z",
-  "TRADE_DATE": "2024-06-18",
-  "INPUT_DATE": "2024-06-18",
-  "TRADE_ID": "MX-20000010",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2026-02-18",
+  "INPUT_DATE": "2026-02-18",
+  "TRADE_ID": "MX-20000007",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "20000010002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000007001",
   "PACKAGE_ID": "",
-  "QUANTITY": 134000000.0,
-  "PRICE": 0.011984,
+  "QUANTITY": 199000000.0,
+  "PRICE": 0.053662,
   "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "OIS",
   "PRODUCT_SUB_TYPE": "Overnight index swap",
@@ -207,22 +207,22 @@ Each record is real, the most complete of its sub-type, pretty-printed with two-
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-BRAMBLE",
-  "COUNTERPARTY_UEN": "UEN0100111",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "GB",
+  "COUNTERPARTY": "CP-MERIDIAN-RE",
+  "COUNTERPARTY_UEN": "UEN0100407",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "BM",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-RATES-1",
-  "TRADER_ID": "TRDR-ASHAH",
-  "TRADER_FIRST_NAME": "A.",
-  "TRADER_LAST_NAME": "Shah",
-  "START_DATE": "2024-06-20",
-  "MATURITY_DATE": "2032-11-29",
+  "PORTFOLIO": "BOOK-RATES-3",
+  "TRADER_ID": "TRDR-MOKAFOR",
+  "TRADER_FIRST_NAME": "M.",
+  "TRADER_LAST_NAME": "Okafor",
+  "START_DATE": "2026-02-20",
+  "MATURITY_DATE": "2034-06-26",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "USD",
+  "CURRENCY": "CHF",
   "DELIVERY_VERSUS_PAYMENT": "NO",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -230,33 +230,33 @@ Each record is real, the most complete of its sub-type, pretty-printed with two-
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-RATES",
-  "TT_BOOK": "BOOK-RATES-1",
+  "TT_BOOK": "BOOK-RATES-3",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2024-06-20",
+  "SETTLEMENT_DATE": "2026-02-20",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FIXED",
       "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "USD",
+      "CURRENCY": "CHF",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 134000000.0,
-      "DISCOUNT_INDEX": "CRV-USD-OIS",
+      "NOTIONAL": 199000000.0,
+      "DISCOUNT_INDEX": "CRV-CHF-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
       "RESET_FIXING_SHIFT": "",
-      "RESET_HOLIDAY_SCHEDULE": "USNY",
-      "RESET_CONVENTION": "Semi-annual",
+      "RESET_HOLIDAY_SCHEDULE": "EUTA",
+      "RESET_CONVENTION": "Quarterly",
       "EMISSIONS_VINTAGE_MIN": "",
       "EMISSIONS_VINTAGE_MAX": "",
       "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "17",
+      "NUM_PROFILE_REC": "34",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -265,14 +265,14 @@ Each record is real, the most complete of its sub-type, pretty-printed with two-
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "20000010001",
+          "FLOW_ID": "20000007001",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 134000000.0,
-          "RATE": 0.011984,
+          "NOTIONAL": 199000000.0,
+          "RATE": 0.053662,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2024-06-20",
-          "END_DATE": "2024-11-29",
-          "PAYMENT_DATE": "2024-12-03",
+          "START_DATE": "2026-02-20",
+          "END_DATE": "2026-03-26",
+          "PAYMENT_DATE": "2026-03-30",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
@@ -280,38 +280,38 @@ Each record is real, the most complete of its sub-type, pretty-printed with two-
           "RESETS": []
         },
         {
-          "FLOW_ID": "20000010002",
+          "FLOW_ID": "20000007002",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 134000000.0,
-          "RATE": 0.011984,
+          "NOTIONAL": 199000000.0,
+          "RATE": 0.053662,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2024-11-29",
-          "END_DATE": "2025-05-29",
-          "PAYMENT_DATE": "2025-06-02",
+          "START_DATE": "2026-03-26",
+          "END_DATE": "2026-06-26",
+          "PAYMENT_DATE": "2026-06-30",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 15 more elements of the same shape"
+        "… 32 more elements of the same shape"
       ]
     },
     {
       "LEG_ID": "2",
       "LEG_TYPE": "FLOAT",
       "LEG_ECONOMIC_TYPE": "Receive",
-      "CURRENCY": "USD",
+      "CURRENCY": "CHF",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 134000000.0,
-      "DISCOUNT_INDEX": "CRV-USD-OIS",
+      "NOTIONAL": 199000000.0,
+      "DISCOUNT_INDEX": "CRV-CHF-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
       "RESET_FIXING_SHIFT": "-2",
-      "RESET_HOLIDAY_SCHEDULE": "USNY",
+      "RESET_HOLIDAY_SCHEDULE": "EUTA",
       "RESET_CONVENTION": "Monthly",
       "EMISSIONS_VINTAGE_MIN": "",
       "EMISSIONS_VINTAGE_MAX": "",
@@ -322,100 +322,90 @@ Each record is real, the most complete of its sub-type, pretty-printed with two-
       "NUM_PROFILE_REC": "34",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "SOFR",
+        "NAME": "SARON",
         "GROUP": "Rates",
         "SUB_GROUP": "Monthly"
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "20000010018",
+          "FLOW_ID": "20000007035",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 134000000.0,
-          "RATE": 0.036977,
+          "NOTIONAL": 199000000.0,
+          "RATE": 0.003038,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2024-06-20",
-          "END_DATE": "2024-08-29",
-          "PAYMENT_DATE": "2024-09-03",
-          "RATE_DETERMINATION_DATE": "2024-08-27",
-          "FIRST_RESET_DATE": "2024-06-20",
-          "LAST_RESET_DATE": "2024-08-20",
+          "START_DATE": "2026-02-20",
+          "END_DATE": "2026-03-26",
+          "PAYMENT_DATE": "2026-03-30",
+          "RATE_DETERMINATION_DATE": "2026-03-24",
+          "FIRST_RESET_DATE": "2026-02-20",
+          "LAST_RESET_DATE": "2026-03-20",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
               "RESET_ID": "R-1",
               "ACCRUAL": "",
-              "START_DATE": "2024-06-20",
-              "END_DATE": "2024-08-29",
-              "RESET_DATE": "2024-06-20",
-              "ACCRUAL_START_DATE": "2024-06-20",
-              "ACCRUAL_END_DATE": "2024-08-29",
-              "RATE": 0.037004
+              "START_DATE": "2026-02-20",
+              "END_DATE": "2026-03-26",
+              "RESET_DATE": "2026-02-20",
+              "ACCRUAL_START_DATE": "2026-02-20",
+              "ACCRUAL_END_DATE": "2026-03-26",
+              "RATE": 0.003034
             },
             {
               "RESET_ID": "R-2",
               "ACCRUAL": "",
-              "START_DATE": "2024-07-20",
-              "END_DATE": "2024-08-29",
-              "RESET_DATE": "2024-07-20",
-              "ACCRUAL_START_DATE": "2024-06-20",
-              "ACCRUAL_END_DATE": "2024-08-29",
-              "RATE": 0.03696
-            },
-            {
-              "RESET_ID": "R-3",
-              "ACCRUAL": "",
-              "START_DATE": "2024-08-20",
-              "END_DATE": "2024-08-29",
-              "RESET_DATE": "2024-08-20",
-              "ACCRUAL_START_DATE": "2024-06-20",
-              "ACCRUAL_END_DATE": "2024-08-29",
-              "RATE": 0.036949
+              "START_DATE": "2026-03-20",
+              "END_DATE": "2026-03-26",
+              "RESET_DATE": "2026-03-20",
+              "ACCRUAL_START_DATE": "2026-02-20",
+              "ACCRUAL_END_DATE": "2026-03-26",
+              "RATE": 0.003057
             }
           ]
         },
         {
-          "FLOW_ID": "20000010019",
+          "FLOW_ID": "20000007036",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 134000000.0,
-          "RATE": 0.036793,
+          "NOTIONAL": 199000000.0,
+          "RATE": 0.002333,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2024-08-29",
-          "END_DATE": "2024-11-29",
-          "PAYMENT_DATE": "2024-12-03",
-          "RATE_DETERMINATION_DATE": "2024-11-26",
-          "FIRST_RESET_DATE": "2024-08-29",
-          "LAST_RESET_DATE": "2024-10-29",
+          "START_DATE": "2026-03-26",
+          "END_DATE": "2026-06-26",
+          "PAYMENT_DATE": "2026-06-30",
+          "RATE_DETERMINATION_DATE": "2026-06-24",
+          "FIRST_RESET_DATE": "2026-03-26",
+          "LAST_RESET_DATE": "2026-05-26",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
+              "RESET_ID": "R-3",
+              "ACCRUAL": "",
+              "START_DATE": "2026-03-26",
+              "END_DATE": "2026-06-26",
+              "RESET_DATE": "2026-03-26",
+              "ACCRUAL_START_DATE": "2026-03-26",
+              "ACCRUAL_END_DATE": "2026-06-26",
+              "RATE": 0.00231
+            },
+            {
               "RESET_ID": "R-4",
               "ACCRUAL": "",
-              "START_DATE": "2024-08-29",
-              "END_DATE": "2024-11-29",
-              "RESET_DATE": "2024-08-29",
-              "ACCRUAL_START_DATE": "2024-08-29",
-              "ACCRUAL_END_DATE": "2024-11-29",
-              "RATE": 0.036815
+              "START_DATE": "2026-04-26",
+              "END_DATE": "2026-06-26",
+              "RESET_DATE": "2026-04-26",
+              "ACCRUAL_START_DATE": "2026-03-26",
+              "ACCRUAL_END_DATE": "2026-06-26",
+              "RATE": 0.002324
             },
             {
               "RESET_ID": "R-5",
               "ACCRUAL": "",
-              "START_DATE": "2024-09-29",
-              "END_DATE": "2024-11-29",
-              "RESET_DATE": "2024-09-29",
-              "ACCRUAL_START_DATE": "2024-08-29",
-              "ACCRUAL_END_DATE": "2024-11-29",
-              "RATE": 0.036804
-            },
-            {
-              "RESET_ID": "R-6",
-              "ACCRUAL": "",
-              "START_DATE": "2024-10-29",
-              "END_DATE": "2024-11-29",
-              "RESET_DATE": "2024-10-29",
-              "ACCRUAL_START_DATE": "2024-08-29",
-              "ACCRUAL_END_DATE": "2024-11-29",
-              "RATE": 0.03676
+              "START_DATE": "2026-05-26",
+              "END_DATE": "2026-06-26",
+              "RESET_DATE": "2026-05-26",
+              "ACCRUAL_START_DATE": "2026-03-26",
+              "ACCRUAL_END_DATE": "2026-06-26",
+              "RATE": 0.002365
             }
           ]
         },
@@ -426,31 +416,31 @@ Each record is real, the most complete of its sub-type, pretty-printed with two-
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "20000010001",
+      "EVENT_ID": "20000007001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2024-06-18",
+      "EVENT_DATE": "2026-02-18",
       "AMOUNT": "",
-      "CURRENCY": "USD",
+      "CURRENCY": "CHF",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
     {
       "LEG_ID": "",
-      "EVENT_ID": "20000010002",
+      "EVENT_ID": "20000007002",
       "EVENT_NUMBER": 2,
       "EVENT_TYPE": "CONFIRMED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2024-06-18",
+      "EVENT_DATE": "2026-02-18",
       "AMOUNT": "",
-      "CURRENCY": "USD",
+      "CURRENCY": "CHF",
       "SEQUENCE_NUMBER": 2,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 56 more elements of the same shape"
+    "… 71 more elements of the same shape"
   ]
 }
 ```
@@ -459,27 +449,27 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.011984` |
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-USD-OIS"` |
-| `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"USNY"` |
-| `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Semi-annual"` |
+| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.053662` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-CHF-OIS"` |
+| `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"EUTA"` |
+| `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Quarterly"` |
 | `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Interest"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.011984` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.053662` |
 | `LEGS[].RESET_FIXING_SHIFT` | string | optional (filled in 33% of `LEGS[]` entries) | Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg. | one of `-2`, `0`; unit: business days | `"-2"` |
-| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"SOFR"` |
+| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"SARON"` |
 | `LEGS[].INDEX.GROUP` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Rates"` |
 | `LEGS[].INDEX.SUB_GROUP` | string | optional (filled in 22% of `LEGS[].INDEX` entries) | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly,...); empty for a fixed leg. | seen: `Monthly`, `Quarterly`, `Semi-annual`, `Daily` | `"Monthly"` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2024-08-27"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2024-06-20"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2024-08-20"` |
-| `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [3 objects] |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2026-03-24"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2026-02-20"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2026-03-20"` |
+| `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [2 objects] |
 | `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2024-06-20"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2024-08-29"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2024-06-20"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2024-06-20"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2024-08-29"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.037004` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2026-02-20"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2026-03-26"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2026-02-20"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-02-20"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-03-26"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.003034` |
 
 ### COLLAR
 
@@ -488,40 +478,40 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:41:00Z",
-  "TRADE_DATE": "2024-12-23",
-  "INPUT_DATE": "2024-12-23",
-  "TRADE_ID": "MX-20000093",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2025-11-26",
+  "INPUT_DATE": "2025-11-26",
+  "TRADE_ID": "MX-20000091",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "20000093002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000091001",
   "PACKAGE_ID": "",
-  "QUANTITY": 75000000.0,
+  "QUANTITY": 119000000.0,
   "PRICE": null,
-  "BUY_SELL_CODE": "S",
+  "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "COLLAR",
   "PRODUCT_SUB_TYPE": "Interest rate collar",
   "PRODUCT_GROUP": "Rates",
   "PRODUCT_SUB_GROUP": "option",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-AURORA",
-  "COUNTERPARTY_UEN": "UEN0100074",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "NO",
+  "COUNTERPARTY": "CP-MERIDIAN",
+  "COUNTERPARTY_UEN": "UEN0100370",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "US",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-RATES-3",
+  "PORTFOLIO": "BOOK-RATES-1",
   "TRADER_ID": "TRDR-ASHAH",
   "TRADER_FIRST_NAME": "A.",
   "TRADER_LAST_NAME": "Shah",
-  "START_DATE": "2024-12-26",
+  "START_DATE": "2025-11-28",
   "MATURITY_DATE": "2026-10-07",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "USD",
+  "CURRENCY": "JPY",
   "DELIVERY_VERSUS_PAYMENT": "NO",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -529,20 +519,168 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-RATES",
-  "TT_BOOK": "BOOK-RATES-3",
+  "TT_BOOK": "BOOK-RATES-1",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2024-12-26",
+  "SETTLEMENT_DATE": "2025-11-28",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "OPTION",
-      "LEG_ECONOMIC_TYPE": "Receive",
-      "CURRENCY": "USD",
+      "LEG_ECONOMIC_TYPE": "Pay",
+      "CURRENCY": "JPY",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 75000000.0,
-      "DISCOUNT_INDEX": "CRV-USD-OIS",
+      "NOTIONAL": 119000000.0,
+      "DISCOUNT_INDEX": "CRV-JPY-OIS",
+      "SPOT_CONVERSION_FACTOR": "",
+      "PHYSICAL_LOCATION_NAME": "",
+      "INDEX_LOCATION_NAME": "",
+      "RESET_FIXING_SHIFT": "",
+      "RESET_HOLIDAY_SCHEDULE": null,
+      "RESET_CONVENTION": "",
+      "EMISSIONS_VINTAGE_MIN": "",
+      "EMISSIONS_VINTAGE_MAX": "",
+      "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+      "SETTLEMENT_TYPE": "Cash Settlement",
+      "NY_CURVE_FLAG": "",
+      "NUM_RRDC_REC": "",
+      "NUM_PROFILE_REC": "4",
+      "DAILY_VOLUME": "",
+      "INDEX": {
+        "NAME": "",
+        "GROUP": "",
+        "SUB_GROUP": ""
+      },
+      "CASH_FLOWS": [
+        {
+          "FLOW_ID": "20000091001",
+          "FLOW_TYPE": "2026-02-28..2026-05-28",
+          "NOTIONAL": 119000000.0,
+          "RATE": 0.03346,
+          "FLOAT_SPREAD": "",
+          "START_DATE": "2025-11-28",
+          "END_DATE": "2026-02-28",
+          "PAYMENT_DATE": "2026-02-28",
+          "RATE_DETERMINATION_DATE": "2026-02-28",
+          "FIRST_RESET_DATE": "2026-02-28",
+          "LAST_RESET_DATE": "2026-02-28",
+          "STRIKE_PRICE": 0.0,
+          "RESETS": [
+            {
+              "RESET_ID": "R-1",
+              "ACCRUAL": "",
+              "START_DATE": "2026-02-28",
+              "END_DATE": "2026-02-28",
+              "RESET_DATE": "2026-02-28",
+              "ACCRUAL_START_DATE": "",
+              "ACCRUAL_END_DATE": "",
+              "RATE": 0.03346
+            }
+          ]
+        },
+        "… 3 more elements of the same shape"
+      ]
+    }
+  ],
+  "EVENTS": [
+    {
+      "LEG_ID": "",
+      "EVENT_ID": "20000091001",
+      "EVENT_NUMBER": 1,
+      "EVENT_TYPE": "BOOKED",
+      "PAYMENT_TYPE": "",
+      "EVENT_DATE": "2025-11-26",
+      "AMOUNT": "",
+      "CURRENCY": "JPY",
+      "SEQUENCE_NUMBER": 1,
+      "VAULT_LOCATION_ALLOCATION": "",
+      "NY_CURVE_FLAG": ""
+    },
+    "… 6 more elements of the same shape"
+  ]
+}
+```
+
+Its fields beyond the shared table:
+
+| Field | Type | Required | Meaning | Values, format, unit | Example |
+|---|---|---|---|---|---|
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-JPY-OIS"` |
+| `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"2026-02-28..2026-05-28"` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.03346` |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2026-02-28"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2026-02-28"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2026-02-28"` |
+| `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [1 objects] |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2026-02-28"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2026-02-28"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2026-02-28"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.03346` |
+
+### FRA
+
+316 rows; recognised by `PRODUCT_TYPE` `FRA`.
+
+```json
+{
+  "SOURCE_SYSTEM": "MUREX",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2024-10-18",
+  "INPUT_DATE": "2024-10-18",
+  "TRADE_ID": "MX-20000061",
+  "TRADE_STATUS": "VALIDATED",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000061001",
+  "PACKAGE_ID": "",
+  "QUANTITY": 394000000.0,
+  "PRICE": null,
+  "BUY_SELL_CODE": "S",
+  "PRODUCT_TYPE": "FRA",
+  "PRODUCT_SUB_TYPE": "Forward rate agreement",
+  "PRODUCT_GROUP": "Rates",
+  "PRODUCT_SUB_GROUP": "linear",
+  "OPTION_TYPE": null,
+  "STRIKE_PRICE": null,
+  "COUNTERPARTY": "CP-CORAL",
+  "COUNTERPARTY_UEN": "UEN0100185",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "US",
+  "ORIGINAL_COUNTERPARTY": "",
+  "ORIGINAL_COUNTERPARTY_UEN": "",
+  "INTERNAL_EXTERNAL_CODE": "External",
+  "TRANSIT": "00107",
+  "LEGAL_ENTITY": "LE-NY",
+  "PORTFOLIO": "BOOK-RATES-1",
+  "TRADER_ID": "TRDR-MOKAFOR",
+  "TRADER_FIRST_NAME": "M.",
+  "TRADER_LAST_NAME": "Okafor",
+  "START_DATE": "2024-10-21",
+  "MATURITY_DATE": "2026-10-07",
+  "REGISTRY_DELIVERY_DATE": "",
+  "CURRENCY": "GBP",
+  "DELIVERY_VERSUS_PAYMENT": "NO",
+  "STRATEGY": null,
+  "INTERNAL_TRADING_STRATEGY": "",
+  "NY_CURVE_FLAG": "",
+  "VAULT_LOCATION_ALLOCATION": "",
+  "PRECIOUS_METAL_FLAG": "",
+  "TT_GROUP": "DESK-RATES",
+  "TT_BOOK": "BOOK-RATES-1",
+  "LEASE_PERPETUITY_FLAG": "",
+  "SETTLEMENT_DATE": "2024-10-21",
+  "LEGS": [
+    {
+      "LEG_ID": "1",
+      "LEG_TYPE": "FIXED",
+      "LEG_ECONOMIC_TYPE": "Receive",
+      "CURRENCY": "GBP",
+      "LEASE_CURRENCY": "",
+      "FLOAT_SPREAD": "",
+      "PRICE_UNIT": "",
+      "NOTIONAL": 394000000.0,
+      "DISCOUNT_INDEX": "CRV-GBP-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
@@ -564,28 +702,28 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "20000093001",
-          "FLOW_TYPE": "2025-03-26..2025-06-26",
-          "NOTIONAL": 75000000.0,
-          "RATE": 0.036838,
+          "FLOW_ID": "20000061001",
+          "FLOW_TYPE": "2025-01-21..2025-04-21",
+          "NOTIONAL": 394000000.0,
+          "RATE": 0.025045,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2024-12-26",
-          "END_DATE": "2025-03-26",
-          "PAYMENT_DATE": "2025-03-26",
-          "RATE_DETERMINATION_DATE": "2025-03-26",
-          "FIRST_RESET_DATE": "2025-03-26",
-          "LAST_RESET_DATE": "2025-03-26",
+          "START_DATE": "2024-10-21",
+          "END_DATE": "2025-01-21",
+          "PAYMENT_DATE": "2025-01-21",
+          "RATE_DETERMINATION_DATE": "2025-01-21",
+          "FIRST_RESET_DATE": "2025-01-21",
+          "LAST_RESET_DATE": "2025-01-21",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
               "RESET_ID": "R-1",
               "ACCRUAL": "",
-              "START_DATE": "2025-03-26",
-              "END_DATE": "2025-03-26",
-              "RESET_DATE": "2025-03-26",
+              "START_DATE": "2025-01-21",
+              "END_DATE": "2025-01-21",
+              "RESET_DATE": "2025-01-21",
               "ACCRUAL_START_DATE": "",
               "ACCRUAL_END_DATE": "",
-              "RATE": 0.036838
+              "RATE": 0.025045
             }
           ]
         },
@@ -596,18 +734,18 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "20000093001",
+      "EVENT_ID": "20000061001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2024-12-23",
+      "EVENT_DATE": "2024-10-18",
       "AMOUNT": "",
-      "CURRENCY": "USD",
+      "CURRENCY": "GBP",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 11 more elements of the same shape"
+    "… 8 more elements of the same shape"
   ]
 }
 ```
@@ -616,47 +754,47 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-USD-OIS"` |
-| `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"2025-03-26..2025-06-26"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.036838` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2025-03-26"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2025-03-26"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2025-03-26"` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-GBP-OIS"` |
+| `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"2025-01-21..2025-04-21"` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.025045` |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2025-01-21"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2025-01-21"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2025-01-21"` |
 | `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [1 objects] |
 | `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2025-03-26"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2025-03-26"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2025-03-26"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.036838` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2025-01-21"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2025-01-21"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2025-01-21"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.025045` |
 
-### FRA
+### AMORT_SWAP
 
-316 rows; recognised by `PRODUCT_TYPE` `FRA`.
+314 rows; recognised by `PRODUCT_TYPE` `AMORT_SWAP`.
 
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:55:00Z",
-  "TRADE_DATE": "2024-05-29",
-  "INPUT_DATE": "2024-05-29",
-  "TRADE_ID": "MX-30002726",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2025-09-26",
+  "INPUT_DATE": "2025-09-26",
+  "TRADE_ID": "MX-20000037",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30002726002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000037001",
   "PACKAGE_ID": "",
-  "QUANTITY": 2284820000.0,
-  "PRICE": null,
-  "BUY_SELL_CODE": "B",
-  "PRODUCT_TYPE": "FRA",
-  "PRODUCT_SUB_TYPE": "Forward rate agreement",
+  "QUANTITY": 161000000.0,
+  "PRICE": 0.023916,
+  "BUY_SELL_CODE": "S",
+  "PRODUCT_TYPE": "AMORT_SWAP",
+  "PRODUCT_SUB_TYPE": "Amortising swap",
   "PRODUCT_GROUP": "Rates",
-  "PRODUCT_SUB_GROUP": "linear",
+  "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-AURORA",
-  "COUNTERPARTY_UEN": "UEN0100074",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "NO",
+  "COUNTERPARTY": "CP-KESTREL",
+  "COUNTERPARTY_UEN": "UEN0100296",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "KY",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
@@ -666,8 +804,8 @@ Its fields beyond the shared table:
   "TRADER_ID": "TRDR-ASHAH",
   "TRADER_FIRST_NAME": "A.",
   "TRADER_LAST_NAME": "Shah",
-  "START_DATE": "2024-05-31",
-  "MATURITY_DATE": "2026-10-07",
+  "START_DATE": "2025-09-29",
+  "MATURITY_DATE": "2031-12-22",
   "REGISTRY_DELIVERY_DATE": "",
   "CURRENCY": "USD",
   "DELIVERY_VERSUS_PAYMENT": "NO",
@@ -679,179 +817,31 @@ Its fields beyond the shared table:
   "TT_GROUP": "DESK-RATES",
   "TT_BOOK": "BOOK-RATES-3",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2024-05-31",
-  "LEGS": [
-    {
-      "LEG_ID": "1",
-      "LEG_TYPE": "FIXED",
-      "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "USD",
-      "LEASE_CURRENCY": "",
-      "FLOAT_SPREAD": "",
-      "PRICE_UNIT": "",
-      "NOTIONAL": 2284820000.0,
-      "DISCOUNT_INDEX": "CRV-USD-OIS",
-      "SPOT_CONVERSION_FACTOR": "",
-      "PHYSICAL_LOCATION_NAME": "",
-      "INDEX_LOCATION_NAME": "",
-      "RESET_FIXING_SHIFT": "",
-      "RESET_HOLIDAY_SCHEDULE": null,
-      "RESET_CONVENTION": "",
-      "EMISSIONS_VINTAGE_MIN": "",
-      "EMISSIONS_VINTAGE_MAX": "",
-      "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
-      "SETTLEMENT_TYPE": "Cash Settlement",
-      "NY_CURVE_FLAG": "",
-      "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "10",
-      "DAILY_VOLUME": "",
-      "INDEX": {
-        "NAME": "",
-        "GROUP": "",
-        "SUB_GROUP": ""
-      },
-      "CASH_FLOWS": [
-        {
-          "FLOW_ID": "30002726001",
-          "FLOW_TYPE": "2024-08-31..2024-11-30",
-          "NOTIONAL": 2284820000.0,
-          "RATE": 0.033135,
-          "FLOAT_SPREAD": "",
-          "START_DATE": "2024-05-31",
-          "END_DATE": "2024-08-31",
-          "PAYMENT_DATE": "2024-08-31",
-          "RATE_DETERMINATION_DATE": "2024-08-31",
-          "FIRST_RESET_DATE": "2024-08-31",
-          "LAST_RESET_DATE": "2024-08-31",
-          "STRIKE_PRICE": 0.0,
-          "RESETS": [
-            {
-              "RESET_ID": "R-1",
-              "ACCRUAL": "",
-              "START_DATE": "2024-08-31",
-              "END_DATE": "2024-08-31",
-              "RESET_DATE": "2024-08-31",
-              "ACCRUAL_START_DATE": "",
-              "ACCRUAL_END_DATE": "",
-              "RATE": 0.033135
-            }
-          ]
-        },
-        "… 9 more elements of the same shape"
-      ]
-    }
-  ],
-  "EVENTS": [
-    {
-      "LEG_ID": "",
-      "EVENT_ID": "30002726001",
-      "EVENT_NUMBER": 1,
-      "EVENT_TYPE": "BOOKED",
-      "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2024-05-29",
-      "AMOUNT": "",
-      "CURRENCY": "USD",
-      "SEQUENCE_NUMBER": 1,
-      "VAULT_LOCATION_ALLOCATION": "",
-      "NY_CURVE_FLAG": ""
-    },
-    "… 11 more elements of the same shape"
-  ]
-}
-```
-
-Its fields beyond the shared table:
-
-| Field | Type | Required | Meaning | Values, format, unit | Example |
-|---|---|---|---|---|---|
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-USD-OIS"` |
-| `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"2024-08-31..2024-11-30"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.033135` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2024-08-31"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2024-08-31"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2024-08-31"` |
-| `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [1 objects] |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2024-08-31"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2024-08-31"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2024-08-31"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.033135` |
-
-### AMORT_SWAP
-
-314 rows; recognised by `PRODUCT_TYPE` `AMORT_SWAP`.
-
-```json
-{
-  "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:51:00Z",
-  "TRADE_DATE": "2026-05-05",
-  "INPUT_DATE": "2026-05-05",
-  "TRADE_ID": "MX-20000040",
-  "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "20000040002",
-  "PACKAGE_ID": "",
-  "QUANTITY": 163000000.0,
-  "PRICE": 0.042353,
-  "BUY_SELL_CODE": "S",
-  "PRODUCT_TYPE": "AMORT_SWAP",
-  "PRODUCT_SUB_TYPE": "Amortising swap",
-  "PRODUCT_GROUP": "Rates",
-  "PRODUCT_SUB_GROUP": "swap",
-  "OPTION_TYPE": null,
-  "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-CASCADIA",
-  "COUNTERPARTY_UEN": "UEN0100148",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "CA",
-  "ORIGINAL_COUNTERPARTY": "",
-  "ORIGINAL_COUNTERPARTY_UEN": "",
-  "INTERNAL_EXTERNAL_CODE": "External",
-  "TRANSIT": "00107",
-  "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-RATES-1",
-  "TRADER_ID": "TRDR-MOKAFOR",
-  "TRADER_FIRST_NAME": "M.",
-  "TRADER_LAST_NAME": "Okafor",
-  "START_DATE": "2026-05-07",
-  "MATURITY_DATE": "2036-06-12",
-  "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "CAD",
-  "DELIVERY_VERSUS_PAYMENT": "NO",
-  "STRATEGY": null,
-  "INTERNAL_TRADING_STRATEGY": "",
-  "NY_CURVE_FLAG": "",
-  "VAULT_LOCATION_ALLOCATION": "",
-  "PRECIOUS_METAL_FLAG": "",
-  "TT_GROUP": "DESK-RATES",
-  "TT_BOOK": "BOOK-RATES-1",
-  "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2026-05-07",
+  "SETTLEMENT_DATE": "2025-09-29",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FIXED",
       "LEG_ECONOMIC_TYPE": "Receive",
-      "CURRENCY": "CAD",
+      "CURRENCY": "USD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 163000000.0,
-      "DISCOUNT_INDEX": "CRV-CAD-OIS",
+      "NOTIONAL": 161000000.0,
+      "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
       "RESET_FIXING_SHIFT": "",
       "RESET_HOLIDAY_SCHEDULE": "USNY",
-      "RESET_CONVENTION": "Quarterly",
+      "RESET_CONVENTION": "Annual",
       "EMISSIONS_VINTAGE_MIN": "",
       "EMISSIONS_VINTAGE_MAX": "",
       "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "41",
+      "NUM_PROFILE_REC": "7",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -860,33 +850,33 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "20000040001",
+          "FLOW_ID": "20000037001",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 163000000.0,
-          "RATE": 0.042353,
+          "NOTIONAL": 161000000.0,
+          "RATE": 0.023916,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-05-07",
-          "END_DATE": "2026-06-12",
-          "PAYMENT_DATE": "2026-06-16",
+          "START_DATE": "2025-09-29",
+          "END_DATE": "2025-12-22",
+          "PAYMENT_DATE": "2025-12-24",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 40 more elements of the same shape"
+        "… 6 more elements of the same shape"
       ]
     },
     {
       "LEG_ID": "2",
       "LEG_TYPE": "FLOAT",
       "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "CAD",
+      "CURRENCY": "USD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 163000000.0,
-      "DISCOUNT_INDEX": "CRV-CAD-OIS",
+      "NOTIONAL": 161000000.0,
+      "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
@@ -899,69 +889,60 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "41",
+      "NUM_PROFILE_REC": "25",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "CORRA",
+        "NAME": "SOFR",
         "GROUP": "Rates",
         "SUB_GROUP": "Monthly"
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "20000040042",
+          "FLOW_ID": "20000037008",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 163000000.0,
-          "RATE": 0.027098,
+          "NOTIONAL": 161000000.0,
+          "RATE": 0.036753,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-05-07",
-          "END_DATE": "2026-06-12",
-          "PAYMENT_DATE": "2026-06-16",
-          "RATE_DETERMINATION_DATE": "2026-06-10",
-          "FIRST_RESET_DATE": "2026-05-07",
-          "LAST_RESET_DATE": "2026-06-07",
+          "START_DATE": "2025-09-29",
+          "END_DATE": "2025-12-22",
+          "PAYMENT_DATE": "2025-12-24",
+          "RATE_DETERMINATION_DATE": "2025-12-18",
+          "FIRST_RESET_DATE": "2025-09-29",
+          "LAST_RESET_DATE": "2025-11-29",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
               "RESET_ID": "R-1",
               "ACCRUAL": "",
-              "START_DATE": "2026-05-07",
-              "END_DATE": "2026-06-12",
-              "RESET_DATE": "2026-05-07",
-              "ACCRUAL_START_DATE": "2026-05-07",
-              "ACCRUAL_END_DATE": "2026-06-12",
-              "RATE": 0.027098
+              "START_DATE": "2025-09-29",
+              "END_DATE": "2025-12-22",
+              "RESET_DATE": "2025-09-29",
+              "ACCRUAL_START_DATE": "2025-09-29",
+              "ACCRUAL_END_DATE": "2025-12-22",
+              "RATE": 0.036746
             },
-            {
-              "RESET_ID": "R-2",
-              "ACCRUAL": "",
-              "START_DATE": "2026-06-07",
-              "END_DATE": "2026-06-12",
-              "RESET_DATE": "2026-06-07",
-              "ACCRUAL_START_DATE": "2026-05-07",
-              "ACCRUAL_END_DATE": "2026-06-12",
-              "RATE": 0.027099
-            }
+            "… 2 more elements of the same shape"
           ]
         },
-        "… 40 more elements of the same shape"
+        "… 24 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "20000040001",
+      "EVENT_ID": "20000037001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2026-05-05",
+      "EVENT_DATE": "2025-09-26",
       "AMOUNT": "",
-      "CURRENCY": "CAD",
+      "CURRENCY": "USD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 88 more elements of the same shape"
+    "… 37 more elements of the same shape"
   ]
 }
 ```
@@ -970,27 +951,27 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.042353` |
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-CAD-OIS"` |
+| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.023916` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-USD-OIS"` |
 | `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"USNY"` |
-| `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Quarterly"` |
+| `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Annual"` |
 | `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Interest"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.042353` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.023916` |
 | `LEGS[].RESET_FIXING_SHIFT` | string | optional (filled in 33% of `LEGS[]` entries) | Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg. | one of `-2`, `0`; unit: business days | `"-2"` |
-| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"CORRA"` |
+| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"SOFR"` |
 | `LEGS[].INDEX.GROUP` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Rates"` |
 | `LEGS[].INDEX.SUB_GROUP` | string | optional (filled in 22% of `LEGS[].INDEX` entries) | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly,...); empty for a fixed leg. | seen: `Monthly`, `Quarterly`, `Semi-annual`, `Daily` | `"Monthly"` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2026-06-10"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2026-05-07"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2026-06-07"` |
-| `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [2 objects] |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2025-12-18"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2025-09-29"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2025-11-29"` |
+| `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [3 objects] |
 | `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2026-05-07"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2026-06-12"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2026-05-07"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-05-07"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-06-12"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.027098` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2025-09-29"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2025-12-22"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2025-09-29"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-09-29"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-12-22"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.036746` |
 
 ### SWAPTION_EUR
 
@@ -999,38 +980,38 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:00:00Z",
-  "TRADE_DATE": "2025-07-22",
-  "INPUT_DATE": "2025-07-22",
-  "TRADE_ID": "MX-30002317",
-  "TRADE_STATUS": "CANCELLED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30002317002",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2025-10-17",
+  "INPUT_DATE": "2025-10-17",
+  "TRADE_ID": "MX-20000097",
+  "TRADE_STATUS": "VALIDATED",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000097001",
   "PACKAGE_ID": "",
-  "QUANTITY": 30537000.0,
-  "PRICE": 1406455.43,
-  "BUY_SELL_CODE": "S",
+  "QUANTITY": 160000000.0,
+  "PRICE": 1580986.0,
+  "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "SWAPTION_EUR",
   "PRODUCT_SUB_TYPE": "European swaption",
   "PRODUCT_GROUP": "Rates",
   "PRODUCT_SUB_GROUP": "option",
   "OPTION_TYPE": "Receiver",
-  "STRIKE_PRICE": 0.035812,
-  "COUNTERPARTY": "CP-HARBORPT",
-  "COUNTERPARTY_UEN": "UEN0100259",
+  "STRIKE_PRICE": 0.022469,
+  "COUNTERPARTY": "CP-PINNACLE",
+  "COUNTERPARTY_UEN": "UEN0100481",
   "COUNTERPARTY_COUNTRY_OF_RISK": "US",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-RATES-2",
-  "TRADER_ID": "TRDR-MOKAFOR",
-  "TRADER_FIRST_NAME": "M.",
-  "TRADER_LAST_NAME": "Okafor",
-  "START_DATE": "2025-07-24",
-  "MATURITY_DATE": "2029-09-25",
+  "PORTFOLIO": "BOOK-RATES-1",
+  "TRADER_ID": "TRDR-ASHAH",
+  "TRADER_FIRST_NAME": "A.",
+  "TRADER_LAST_NAME": "Shah",
+  "START_DATE": "2025-10-20",
+  "MATURITY_DATE": "2028-07-26",
   "REGISTRY_DELIVERY_DATE": "",
   "CURRENCY": "USD",
   "DELIVERY_VERSUS_PAYMENT": "NO",
@@ -1040,9 +1021,9 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-RATES",
-  "TT_BOOK": "BOOK-RATES-2",
+  "TT_BOOK": "BOOK-RATES-1",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2025-07-24",
+  "SETTLEMENT_DATE": "2025-10-20",
   "LEGS": [
     {
       "LEG_ID": "1",
@@ -1052,7 +1033,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 30537000.0,
+      "NOTIONAL": 160000000.0,
       "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -1075,14 +1056,14 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30002317001",
+          "FLOW_ID": "20000097001",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 30537000.0,
-          "RATE": 0.035812,
+          "NOTIONAL": 160000000.0,
+          "RATE": 0.022469,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2029-09-27",
-          "END_DATE": "2030-03-29",
-          "PAYMENT_DATE": "2030-04-02",
+          "START_DATE": "2028-07-28",
+          "END_DATE": "2029-01-29",
+          "PAYMENT_DATE": "2029-01-31",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
@@ -1100,7 +1081,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 30537000.0,
+      "NOTIONAL": 160000000.0,
       "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -1123,37 +1104,37 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30002317005",
+          "FLOW_ID": "20000097005",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 30537000.0,
-          "RATE": 0.037958,
+          "NOTIONAL": 160000000.0,
+          "RATE": 0.034923,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2029-09-27",
-          "END_DATE": "2029-12-31",
-          "PAYMENT_DATE": "2030-01-03",
-          "RATE_DETERMINATION_DATE": "2029-09-25",
-          "FIRST_RESET_DATE": "2029-09-25",
-          "LAST_RESET_DATE": "2029-12-24",
+          "START_DATE": "2028-07-28",
+          "END_DATE": "2028-10-30",
+          "PAYMENT_DATE": "2028-11-01",
+          "RATE_DETERMINATION_DATE": "2028-07-26",
+          "FIRST_RESET_DATE": "2028-07-26",
+          "LAST_RESET_DATE": "2028-10-26",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
               "RESET_ID": "R-1",
               "ACCRUAL": "",
-              "START_DATE": "2029-09-25",
-              "END_DATE": "2029-12-31",
-              "RESET_DATE": "2029-09-25",
-              "ACCRUAL_START_DATE": "2029-09-27",
-              "ACCRUAL_END_DATE": "2029-12-31",
+              "START_DATE": "2028-07-26",
+              "END_DATE": "2028-10-30",
+              "RESET_DATE": "2028-07-26",
+              "ACCRUAL_START_DATE": "2028-07-28",
+              "ACCRUAL_END_DATE": "2028-10-30",
               "RATE": ""
             },
             {
               "RESET_ID": "R-2",
               "ACCRUAL": "",
-              "START_DATE": "2029-12-24",
-              "END_DATE": "2029-12-31",
-              "RESET_DATE": "2029-12-24",
-              "ACCRUAL_START_DATE": "2029-09-27",
-              "ACCRUAL_END_DATE": "2029-12-31",
+              "START_DATE": "2028-10-26",
+              "END_DATE": "2028-10-30",
+              "RESET_DATE": "2028-10-26",
+              "ACCRUAL_START_DATE": "2028-07-28",
+              "ACCRUAL_END_DATE": "2028-10-30",
               "RATE": ""
             }
           ]
@@ -1165,11 +1146,11 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30002317001",
+      "EVENT_ID": "20000097001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2025-07-22",
+      "EVENT_DATE": "2025-10-17",
       "AMOUNT": "",
       "CURRENCY": "USD",
       "SEQUENCE_NUMBER": 1,
@@ -1185,28 +1166,28 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `1406455.43` |
+| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `1580986.0` |
 | `OPTION_TYPE` | string | optional (filled in 22% of rows) | For an option: Call or Put, Payer or Receiver (swaption), Cap or Floor; null otherwise. | one of `Call`, `Cap`, `Floor`, `Payer`, `Put`, `Receiver` | `"Receiver"` |
-| `STRIKE_PRICE` | number | optional (filled in 29% of rows) | For an option: the strike, as a price or as a rate (a fraction a year for rates); null otherwise. | — | `0.035812` |
+| `STRIKE_PRICE` | number | optional (filled in 29% of rows) | For an option: the strike, as a price or as a rate (a fraction a year for rates); null otherwise. | — | `0.022469` |
 | `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-USD-OIS"` |
 | `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"USNY"` |
 | `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Semi-annual"` |
 | `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Interest"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.035812` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.022469` |
 | `LEGS[].RESET_FIXING_SHIFT` | string | optional (filled in 33% of `LEGS[]` entries) | Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg. | one of `-2`, `0`; unit: business days | `"-2"` |
 | `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"TERM-SOFR-3M"` |
 | `LEGS[].INDEX.GROUP` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Rates"` |
 | `LEGS[].INDEX.SUB_GROUP` | string | optional (filled in 22% of `LEGS[].INDEX` entries) | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly,...); empty for a fixed leg. | seen: `Monthly`, `Quarterly`, `Semi-annual`, `Daily` | `"Quarterly"` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2029-09-25"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2029-09-25"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2029-12-24"` |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2028-07-26"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2028-07-26"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2028-10-26"` |
 | `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [2 objects] |
 | `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2029-09-25"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2029-12-31"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2029-09-25"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2029-09-27"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2029-12-31"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2028-07-26"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2028-10-30"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2028-07-26"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2028-07-28"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2028-10-30"` |
 
 ### SWAPTION_BERM
 
@@ -1345,195 +1326,38 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:23:00Z",
-  "TRADE_DATE": "2025-10-27",
-  "INPUT_DATE": "2025-10-27",
-  "TRADE_ID": "MX-30003188",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2025-12-15",
+  "INPUT_DATE": "2025-12-15",
+  "TRADE_ID": "MX-20000079",
   "TRADE_STATUS": "AMENDED",
   "TRADE_ACTION": "AMEND",
   "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30003188002",
+  "TRANSACTION_ID": "20000079002",
   "PACKAGE_ID": "",
-  "QUANTITY": 100646000.0,
-  "PRICE": 4595709.26,
+  "QUANTITY": 190000000.0,
+  "PRICE": 1131707.0,
   "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "CAP",
   "PRODUCT_SUB_TYPE": "Interest rate cap",
   "PRODUCT_GROUP": "Rates",
   "PRODUCT_SUB_GROUP": "option",
   "OPTION_TYPE": null,
-  "STRIKE_PRICE": 0.044882,
-  "COUNTERPARTY": "CP-ALDERSHOT",
-  "COUNTERPARTY_UEN": "UEN0100037",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "GB",
+  "STRIKE_PRICE": 0.047883,
+  "COUNTERPARTY": "CP-KESTREL",
+  "COUNTERPARTY_UEN": "UEN0100296",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "KY",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-RATES-1",
-  "TRADER_ID": "TRDR-ASHAH",
-  "TRADER_FIRST_NAME": "A.",
-  "TRADER_LAST_NAME": "Shah",
-  "START_DATE": "2025-10-29",
-  "MATURITY_DATE": "2027-05-14",
-  "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "AUD",
-  "DELIVERY_VERSUS_PAYMENT": "NO",
-  "STRATEGY": null,
-  "INTERNAL_TRADING_STRATEGY": "",
-  "NY_CURVE_FLAG": "",
-  "VAULT_LOCATION_ALLOCATION": "",
-  "PRECIOUS_METAL_FLAG": "",
-  "TT_GROUP": "DESK-RATES",
-  "TT_BOOK": "BOOK-RATES-1",
-  "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2025-10-29",
-  "LEGS": [
-    {
-      "LEG_ID": "1",
-      "LEG_TYPE": "OPTION",
-      "LEG_ECONOMIC_TYPE": "Receive",
-      "CURRENCY": "AUD",
-      "LEASE_CURRENCY": "",
-      "FLOAT_SPREAD": "",
-      "PRICE_UNIT": "",
-      "NOTIONAL": 100646000.0,
-      "DISCOUNT_INDEX": "CRV-AUD-OIS",
-      "SPOT_CONVERSION_FACTOR": "",
-      "PHYSICAL_LOCATION_NAME": "",
-      "INDEX_LOCATION_NAME": "",
-      "RESET_FIXING_SHIFT": "",
-      "RESET_HOLIDAY_SCHEDULE": "GBLO",
-      "RESET_CONVENTION": "Semi-annual",
-      "EMISSIONS_VINTAGE_MIN": "",
-      "EMISSIONS_VINTAGE_MAX": "",
-      "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
-      "SETTLEMENT_TYPE": "Cash Settlement",
-      "NY_CURVE_FLAG": "",
-      "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "4",
-      "DAILY_VOLUME": "",
-      "INDEX": {
-        "NAME": "TERM-AONIA-6M",
-        "GROUP": "Rates",
-        "SUB_GROUP": "Semi-annual"
-      },
-      "CASH_FLOWS": [
-        {
-          "FLOW_ID": "30003188001",
-          "FLOW_TYPE": "Caplet",
-          "NOTIONAL": 100646000.0,
-          "RATE": 0.037138,
-          "FLOAT_SPREAD": "",
-          "START_DATE": "2025-10-29",
-          "END_DATE": "2025-11-14",
-          "PAYMENT_DATE": "2025-11-18",
-          "RATE_DETERMINATION_DATE": "2025-10-27",
-          "FIRST_RESET_DATE": "2025-10-27",
-          "LAST_RESET_DATE": "2025-10-27",
-          "STRIKE_PRICE": 0.044882,
-          "RESETS": [
-            {
-              "RESET_ID": "R-1",
-              "ACCRUAL": "",
-              "START_DATE": "2025-10-27",
-              "END_DATE": "2025-11-14",
-              "RESET_DATE": "2025-10-27",
-              "ACCRUAL_START_DATE": "2025-10-29",
-              "ACCRUAL_END_DATE": "2025-11-14",
-              "RATE": 0.037138
-            }
-          ]
-        },
-        "… 3 more elements of the same shape"
-      ]
-    }
-  ],
-  "EVENTS": [
-    {
-      "LEG_ID": "",
-      "EVENT_ID": "30003188001",
-      "EVENT_NUMBER": 1,
-      "EVENT_TYPE": "BOOKED",
-      "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2025-10-27",
-      "AMOUNT": "",
-      "CURRENCY": "AUD",
-      "SEQUENCE_NUMBER": 1,
-      "VAULT_LOCATION_ALLOCATION": "",
-      "NY_CURVE_FLAG": ""
-    },
-    "… 5 more elements of the same shape"
-  ]
-}
-```
-
-Its fields beyond the shared table:
-
-| Field | Type | Required | Meaning | Values, format, unit | Example |
-|---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `4595709.26` |
-| `STRIKE_PRICE` | number | optional (filled in 29% of rows) | For an option: the strike, as a price or as a rate (a fraction a year for rates); null otherwise. | — | `0.044882` |
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-AUD-OIS"` |
-| `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"GBLO"` |
-| `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Semi-annual"` |
-| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"TERM-AONIA-6M"` |
-| `LEGS[].INDEX.GROUP` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Rates"` |
-| `LEGS[].INDEX.SUB_GROUP` | string | optional (filled in 22% of `LEGS[].INDEX` entries) | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly,...); empty for a fixed leg. | seen: `Monthly`, `Quarterly`, `Semi-annual`, `Daily` | `"Semi-annual"` |
-| `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Caplet"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.037138` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2025-10-27"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2025-10-27"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2025-10-27"` |
-| `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [1 objects] |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2025-10-27"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2025-11-14"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2025-10-27"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-10-29"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-11-14"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.037138` |
-
-### FLOOR
-
-303 rows; recognised by `PRODUCT_TYPE` `FLOOR`.
-
-```json
-{
-  "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:33:00Z",
-  "TRADE_DATE": "2025-10-07",
-  "INPUT_DATE": "2025-10-07",
-  "TRADE_ID": "MX-30002305",
-  "TRADE_STATUS": "AMENDED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30002305002",
-  "PACKAGE_ID": "",
-  "QUANTITY": 422380000.0,
-  "PRICE": 2661458.62,
-  "BUY_SELL_CODE": "B",
-  "PRODUCT_TYPE": "FLOOR",
-  "PRODUCT_SUB_TYPE": "Interest rate floor",
-  "PRODUCT_GROUP": "Rates",
-  "PRODUCT_SUB_GROUP": "option",
-  "OPTION_TYPE": null,
-  "STRIKE_PRICE": 0.005377,
-  "COUNTERPARTY": "CP-TOKAI",
-  "COUNTERPARTY_UEN": "UEN0100629",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "JP",
-  "ORIGINAL_COUNTERPARTY": "",
-  "ORIGINAL_COUNTERPARTY_UEN": "",
-  "INTERNAL_EXTERNAL_CODE": "External",
-  "TRANSIT": "00107",
-  "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-RATES-1",
+  "PORTFOLIO": "BOOK-RATES-3",
   "TRADER_ID": "TRDR-MOKAFOR",
   "TRADER_FIRST_NAME": "M.",
   "TRADER_LAST_NAME": "Okafor",
-  "START_DATE": "2025-10-09",
-  "MATURITY_DATE": "2027-02-26",
+  "START_DATE": "2025-12-17",
+  "MATURITY_DATE": "2028-06-29",
   "REGISTRY_DELIVERY_DATE": "",
   "CURRENCY": "JPY",
   "DELIVERY_VERSUS_PAYMENT": "NO",
@@ -1543,9 +1367,9 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-RATES",
-  "TT_BOOK": "BOOK-RATES-1",
+  "TT_BOOK": "BOOK-RATES-3",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2025-10-09",
+  "SETTLEMENT_DATE": "2025-12-17",
   "LEGS": [
     {
       "LEG_ID": "1",
@@ -1555,7 +1379,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 422380000.0,
+      "NOTIONAL": 190000000.0,
       "DISCOUNT_INDEX": "CRV-JPY-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -1569,7 +1393,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "6",
+      "NUM_PROFILE_REC": "11",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "TERM-TONA-3M",
@@ -1578,50 +1402,50 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30002305001",
-          "FLOW_TYPE": "Floorlet",
-          "NOTIONAL": 422380000.0,
-          "RATE": 0.005852,
+          "FLOW_ID": "20000079001",
+          "FLOW_TYPE": "Caplet",
+          "NOTIONAL": 190000000.0,
+          "RATE": 0.005847,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2025-10-09",
-          "END_DATE": "2025-11-26",
-          "PAYMENT_DATE": "2025-11-28",
-          "RATE_DETERMINATION_DATE": "2025-10-07",
-          "FIRST_RESET_DATE": "2025-10-07",
-          "LAST_RESET_DATE": "2025-10-07",
-          "STRIKE_PRICE": 0.005377,
+          "START_DATE": "2025-12-17",
+          "END_DATE": "2025-12-29",
+          "PAYMENT_DATE": "2026-01-05",
+          "RATE_DETERMINATION_DATE": "2025-12-15",
+          "FIRST_RESET_DATE": "2025-12-15",
+          "LAST_RESET_DATE": "2025-12-15",
+          "STRIKE_PRICE": 0.047883,
           "RESETS": [
             {
               "RESET_ID": "R-1",
               "ACCRUAL": "",
-              "START_DATE": "2025-10-07",
-              "END_DATE": "2025-11-26",
-              "RESET_DATE": "2025-10-07",
-              "ACCRUAL_START_DATE": "2025-10-09",
-              "ACCRUAL_END_DATE": "2025-11-26",
-              "RATE": 0.005852
+              "START_DATE": "2025-12-15",
+              "END_DATE": "2025-12-29",
+              "RESET_DATE": "2025-12-15",
+              "ACCRUAL_START_DATE": "2025-12-17",
+              "ACCRUAL_END_DATE": "2025-12-29",
+              "RATE": 0.005847
             }
           ]
         },
-        "… 5 more elements of the same shape"
+        "… 10 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30002305001",
+      "EVENT_ID": "20000079001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2025-10-07",
+      "EVENT_DATE": "2025-12-15",
       "AMOUNT": "",
       "CURRENCY": "JPY",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 5 more elements of the same shape"
+    "… 8 more elements of the same shape"
   ]
 }
 ```
@@ -1630,27 +1454,184 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `2661458.62` |
-| `STRIKE_PRICE` | number | optional (filled in 29% of rows) | For an option: the strike, as a price or as a rate (a fraction a year for rates); null otherwise. | — | `0.005377` |
+| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `1131707.0` |
+| `STRIKE_PRICE` | number | optional (filled in 29% of rows) | For an option: the strike, as a price or as a rate (a fraction a year for rates); null otherwise. | — | `0.047883` |
 | `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-JPY-OIS"` |
 | `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"JPTO"` |
 | `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Quarterly"` |
 | `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"TERM-TONA-3M"` |
 | `LEGS[].INDEX.GROUP` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Rates"` |
 | `LEGS[].INDEX.SUB_GROUP` | string | optional (filled in 22% of `LEGS[].INDEX` entries) | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly,...); empty for a fixed leg. | seen: `Monthly`, `Quarterly`, `Semi-annual`, `Daily` | `"Quarterly"` |
-| `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Floorlet"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.005852` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2025-10-07"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2025-10-07"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2025-10-07"` |
+| `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Caplet"` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.005847` |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2025-12-15"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2025-12-15"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2025-12-15"` |
 | `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [1 objects] |
 | `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2025-10-07"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2025-11-26"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2025-10-07"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-10-09"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-11-26"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.005852` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2025-12-15"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2025-12-29"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2025-12-15"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-12-17"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-12-29"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.005847` |
+
+### FLOOR
+
+303 rows; recognised by `PRODUCT_TYPE` `FLOOR`.
+
+```json
+{
+  "SOURCE_SYSTEM": "MUREX",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2025-10-31",
+  "INPUT_DATE": "2025-10-31",
+  "TRADE_ID": "MX-20000085",
+  "TRADE_STATUS": "AMENDED",
+  "TRADE_ACTION": "AMEND",
+  "TRADE_VERSION": "2",
+  "TRANSACTION_ID": "20000085002",
+  "PACKAGE_ID": "",
+  "QUANTITY": 30000000.0,
+  "PRICE": 854406.0,
+  "BUY_SELL_CODE": "S",
+  "PRODUCT_TYPE": "FLOOR",
+  "PRODUCT_SUB_TYPE": "Interest rate floor",
+  "PRODUCT_GROUP": "Rates",
+  "PRODUCT_SUB_GROUP": "option",
+  "OPTION_TYPE": null,
+  "STRIKE_PRICE": 0.013742,
+  "COUNTERPARTY": "CP-CORAL",
+  "COUNTERPARTY_UEN": "UEN0100185",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "US",
+  "ORIGINAL_COUNTERPARTY": "",
+  "ORIGINAL_COUNTERPARTY_UEN": "",
+  "INTERNAL_EXTERNAL_CODE": "External",
+  "TRANSIT": "00107",
+  "LEGAL_ENTITY": "LE-NY",
+  "PORTFOLIO": "BOOK-RATES-1",
+  "TRADER_ID": "TRDR-MOKAFOR",
+  "TRADER_FIRST_NAME": "M.",
+  "TRADER_LAST_NAME": "Okafor",
+  "START_DATE": "2025-11-03",
+  "MATURITY_DATE": "2027-09-23",
+  "REGISTRY_DELIVERY_DATE": "",
+  "CURRENCY": "CHF",
+  "DELIVERY_VERSUS_PAYMENT": "NO",
+  "STRATEGY": null,
+  "INTERNAL_TRADING_STRATEGY": "",
+  "NY_CURVE_FLAG": "",
+  "VAULT_LOCATION_ALLOCATION": "",
+  "PRECIOUS_METAL_FLAG": "",
+  "TT_GROUP": "DESK-RATES",
+  "TT_BOOK": "BOOK-RATES-1",
+  "LEASE_PERPETUITY_FLAG": "",
+  "SETTLEMENT_DATE": "2025-11-03",
+  "LEGS": [
+    {
+      "LEG_ID": "1",
+      "LEG_TYPE": "OPTION",
+      "LEG_ECONOMIC_TYPE": "Pay",
+      "CURRENCY": "CHF",
+      "LEASE_CURRENCY": "",
+      "FLOAT_SPREAD": "",
+      "PRICE_UNIT": "",
+      "NOTIONAL": 30000000.0,
+      "DISCOUNT_INDEX": "CRV-CHF-OIS",
+      "SPOT_CONVERSION_FACTOR": "",
+      "PHYSICAL_LOCATION_NAME": "",
+      "INDEX_LOCATION_NAME": "",
+      "RESET_FIXING_SHIFT": "",
+      "RESET_HOLIDAY_SCHEDULE": "EUTA",
+      "RESET_CONVENTION": "Semi-annual",
+      "EMISSIONS_VINTAGE_MIN": "",
+      "EMISSIONS_VINTAGE_MAX": "",
+      "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
+      "SETTLEMENT_TYPE": "Cash Settlement",
+      "NY_CURVE_FLAG": "",
+      "NUM_RRDC_REC": "",
+      "NUM_PROFILE_REC": "4",
+      "DAILY_VOLUME": "",
+      "INDEX": {
+        "NAME": "TERM-SARON-6M",
+        "GROUP": "Rates",
+        "SUB_GROUP": "Semi-annual"
+      },
+      "CASH_FLOWS": [
+        {
+          "FLOW_ID": "20000085001",
+          "FLOW_TYPE": "Floorlet",
+          "NOTIONAL": 30000000.0,
+          "RATE": 0.004063,
+          "FLOAT_SPREAD": "",
+          "START_DATE": "2025-11-03",
+          "END_DATE": "2026-03-23",
+          "PAYMENT_DATE": "2026-03-25",
+          "RATE_DETERMINATION_DATE": "2025-10-30",
+          "FIRST_RESET_DATE": "2025-10-30",
+          "LAST_RESET_DATE": "2025-10-30",
+          "STRIKE_PRICE": 0.013742,
+          "RESETS": [
+            {
+              "RESET_ID": "R-1",
+              "ACCRUAL": "",
+              "START_DATE": "2025-10-30",
+              "END_DATE": "2026-03-23",
+              "RESET_DATE": "2025-10-30",
+              "ACCRUAL_START_DATE": "2025-11-03",
+              "ACCRUAL_END_DATE": "2026-03-23",
+              "RATE": 0.004063
+            }
+          ]
+        },
+        "… 3 more elements of the same shape"
+      ]
+    }
+  ],
+  "EVENTS": [
+    {
+      "LEG_ID": "",
+      "EVENT_ID": "20000085001",
+      "EVENT_NUMBER": 1,
+      "EVENT_TYPE": "BOOKED",
+      "PAYMENT_TYPE": "",
+      "EVENT_DATE": "2025-10-31",
+      "AMOUNT": "",
+      "CURRENCY": "CHF",
+      "SEQUENCE_NUMBER": 1,
+      "VAULT_LOCATION_ALLOCATION": "",
+      "NY_CURVE_FLAG": ""
+    },
+    "… 10 more elements of the same shape"
+  ]
+}
+```
+
+Its fields beyond the shared table:
+
+| Field | Type | Required | Meaning | Values, format, unit | Example |
+|---|---|---|---|---|---|
+| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `854406.0` |
+| `STRIKE_PRICE` | number | optional (filled in 29% of rows) | For an option: the strike, as a price or as a rate (a fraction a year for rates); null otherwise. | — | `0.013742` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-CHF-OIS"` |
+| `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"EUTA"` |
+| `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Semi-annual"` |
+| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"TERM-SARON-6M"` |
+| `LEGS[].INDEX.GROUP` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Rates"` |
+| `LEGS[].INDEX.SUB_GROUP` | string | optional (filled in 22% of `LEGS[].INDEX` entries) | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly,...); empty for a fixed leg. | seen: `Monthly`, `Quarterly`, `Semi-annual`, `Daily` | `"Semi-annual"` |
+| `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Floorlet"` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.004063` |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2025-10-30"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2025-10-30"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2025-10-30"` |
+| `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [1 objects] |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2025-10-30"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2026-03-23"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2025-10-30"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-11-03"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-03-23"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.004063` |
 
 ### BASIS_SWAP
 
@@ -1659,40 +1640,40 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:51:00Z",
-  "TRADE_DATE": "2024-04-22",
-  "INPUT_DATE": "2024-04-22",
-  "TRADE_ID": "MX-30000014",
-  "TRADE_STATUS": "AMENDED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30000014002",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2024-11-12",
+  "INPUT_DATE": "2024-11-12",
+  "TRADE_ID": "MX-20000013",
+  "TRADE_STATUS": "VALIDATED",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000013001",
   "PACKAGE_ID": "",
-  "QUANTITY": 97965000.0,
-  "PRICE": 19.3,
-  "BUY_SELL_CODE": "S",
+  "QUANTITY": 7000000.0,
+  "PRICE": 15.1,
+  "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "BASIS_SWAP",
   "PRODUCT_SUB_TYPE": "Basis swap (float/float)",
   "PRODUCT_GROUP": "Rates",
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-KESTREL",
-  "COUNTERPARTY_UEN": "UEN0100296",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "KY",
+  "COUNTERPARTY": "CP-VERDANT",
+  "COUNTERPARTY_UEN": "UEN0100666",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "BR",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-RATES-2",
+  "PORTFOLIO": "BOOK-RATES-3",
   "TRADER_ID": "TRDR-MOKAFOR",
   "TRADER_FIRST_NAME": "M.",
   "TRADER_LAST_NAME": "Okafor",
-  "START_DATE": "2024-04-24",
-  "MATURITY_DATE": "2027-10-14",
+  "START_DATE": "2024-11-14",
+  "MATURITY_DATE": "2032-05-12",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "GBP",
+  "CURRENCY": "EUR",
   "DELIVERY_VERSUS_PAYMENT": "NO",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -1700,25 +1681,25 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-RATES",
-  "TT_BOOK": "BOOK-RATES-2",
+  "TT_BOOK": "BOOK-RATES-3",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2024-04-24",
+  "SETTLEMENT_DATE": "2024-11-14",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FLOAT",
-      "LEG_ECONOMIC_TYPE": "Receive",
-      "CURRENCY": "GBP",
+      "LEG_ECONOMIC_TYPE": "Pay",
+      "CURRENCY": "EUR",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 97965000.0,
-      "DISCOUNT_INDEX": "CRV-GBP-OIS",
+      "NOTIONAL": 7000000.0,
+      "DISCOUNT_INDEX": "CRV-EUR-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
       "RESET_FIXING_SHIFT": "-2",
-      "RESET_HOLIDAY_SCHEDULE": "GBLO",
+      "RESET_HOLIDAY_SCHEDULE": "EUTA",
       "RESET_CONVENTION": "Monthly",
       "EMISSIONS_VINTAGE_MIN": "",
       "EMISSIONS_VINTAGE_MAX": "",
@@ -1726,59 +1707,59 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "7",
+      "NUM_PROFILE_REC": "15",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "SONIA",
+        "NAME": "ESTR",
         "GROUP": "Rates",
         "SUB_GROUP": "Monthly"
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000014001",
+          "FLOW_ID": "20000013001",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 97965000.0,
-          "RATE": 0.038214,
+          "NOTIONAL": 7000000.0,
+          "RATE": 0.019391,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2024-04-24",
-          "END_DATE": "2024-10-14",
-          "PAYMENT_DATE": "2024-10-16",
-          "RATE_DETERMINATION_DATE": "2024-04-22",
-          "FIRST_RESET_DATE": "2024-04-22",
-          "LAST_RESET_DATE": "2024-09-20",
+          "START_DATE": "2024-11-14",
+          "END_DATE": "2025-05-12",
+          "PAYMENT_DATE": "2025-05-14",
+          "RATE_DETERMINATION_DATE": "2024-11-12",
+          "FIRST_RESET_DATE": "2024-11-12",
+          "LAST_RESET_DATE": "2025-04-10",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
               "RESET_ID": "R-1",
               "ACCRUAL": "",
-              "START_DATE": "2024-04-22",
-              "END_DATE": "2024-10-14",
-              "RESET_DATE": "2024-04-22",
-              "ACCRUAL_START_DATE": "2024-04-24",
-              "ACCRUAL_END_DATE": "2024-10-14",
-              "RATE": 0.038651
+              "START_DATE": "2024-11-12",
+              "END_DATE": "2025-05-12",
+              "RESET_DATE": "2024-11-12",
+              "ACCRUAL_START_DATE": "2024-11-14",
+              "ACCRUAL_END_DATE": "2025-05-12",
+              "RATE": 0.019835
             },
             "… 5 more elements of the same shape"
           ]
         },
-        "… 6 more elements of the same shape"
+        "… 14 more elements of the same shape"
       ]
     },
     {
       "LEG_ID": "2",
       "LEG_TYPE": "FLOAT",
-      "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "GBP",
+      "LEG_ECONOMIC_TYPE": "Receive",
+      "CURRENCY": "EUR",
       "LEASE_CURRENCY": "",
-      "FLOAT_SPREAD": 0.00193,
+      "FLOAT_SPREAD": 0.00151,
       "PRICE_UNIT": "",
-      "NOTIONAL": 97965000.0,
-      "DISCOUNT_INDEX": "CRV-GBP-OIS",
+      "NOTIONAL": 7000000.0,
+      "DISCOUNT_INDEX": "CRV-EUR-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
       "RESET_FIXING_SHIFT": "-2",
-      "RESET_HOLIDAY_SCHEDULE": "GBLO",
+      "RESET_HOLIDAY_SCHEDULE": "EUTA",
       "RESET_CONVENTION": "Semi-annual",
       "EMISSIONS_VINTAGE_MIN": "",
       "EMISSIONS_VINTAGE_MAX": "",
@@ -1786,59 +1767,59 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "7",
+      "NUM_PROFILE_REC": "15",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "TERM-SONIA-6M",
+        "NAME": "TERM-ESTR-6M",
         "GROUP": "Rates",
         "SUB_GROUP": "Semi-annual"
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000014008",
+          "FLOW_ID": "20000013016",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 97965000.0,
-          "RATE": 0.039451,
-          "FLOAT_SPREAD": 0.00193,
-          "START_DATE": "2024-04-24",
-          "END_DATE": "2024-10-14",
-          "PAYMENT_DATE": "2024-10-16",
-          "RATE_DETERMINATION_DATE": "2024-04-22",
-          "FIRST_RESET_DATE": "2024-04-22",
-          "LAST_RESET_DATE": "2024-04-22",
+          "NOTIONAL": 7000000.0,
+          "RATE": 0.020635,
+          "FLOAT_SPREAD": 0.00151,
+          "START_DATE": "2024-11-14",
+          "END_DATE": "2025-05-12",
+          "PAYMENT_DATE": "2025-05-14",
+          "RATE_DETERMINATION_DATE": "2024-11-12",
+          "FIRST_RESET_DATE": "2024-11-12",
+          "LAST_RESET_DATE": "2024-11-12",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
-              "RESET_ID": "R-43",
+              "RESET_ID": "R-94",
               "ACCRUAL": "",
-              "START_DATE": "2024-04-22",
-              "END_DATE": "2024-10-14",
-              "RESET_DATE": "2024-04-22",
-              "ACCRUAL_START_DATE": "2024-04-24",
-              "ACCRUAL_END_DATE": "2024-10-14",
-              "RATE": 0.039451
+              "START_DATE": "2024-11-12",
+              "END_DATE": "2025-05-12",
+              "RESET_DATE": "2024-11-12",
+              "ACCRUAL_START_DATE": "2024-11-14",
+              "ACCRUAL_END_DATE": "2025-05-12",
+              "RATE": 0.020635
             }
           ]
         },
-        "… 6 more elements of the same shape"
+        "… 14 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30000014001",
+      "EVENT_ID": "20000013001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2024-04-22",
+      "EVENT_DATE": "2024-11-12",
       "AMOUNT": "",
-      "CURRENCY": "GBP",
+      "CURRENCY": "EUR",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 19 more elements of the same shape"
+    "… 34 more elements of the same shape"
   ]
 }
 ```
@@ -1847,29 +1828,29 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `19.3` |
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-GBP-OIS"` |
+| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `15.1` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-EUR-OIS"` |
 | `LEGS[].RESET_FIXING_SHIFT` | string | optional (filled in 33% of `LEGS[]` entries) | Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg. | one of `-2`, `0`; unit: business days | `"-2"` |
-| `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"GBLO"` |
+| `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"EUTA"` |
 | `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Monthly"` |
-| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"SONIA"` |
+| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"ESTR"` |
 | `LEGS[].INDEX.GROUP` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Rates"` |
 | `LEGS[].INDEX.SUB_GROUP` | string | optional (filled in 22% of `LEGS[].INDEX` entries) | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly,...); empty for a fixed leg. | seen: `Monthly`, `Quarterly`, `Semi-annual`, `Daily` | `"Monthly"` |
 | `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Interest"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.038214` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2024-04-22"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2024-04-22"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2024-09-20"` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.019391` |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2024-11-12"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2024-11-12"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2025-04-10"` |
 | `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [6 objects] |
 | `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2024-04-22"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2024-10-14"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2024-04-22"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2024-04-24"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2024-10-14"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.038651` |
-| `LEGS[].FLOAT_SPREAD` | number | optional (filled in 3% of `LEGS[]` entries) | The spread added to the floating index of the leg: a rate as a fraction a year (rates) or a price differential in PRICE_UNIT (commodities); text or number; empty when none. | — | `0.00193` |
-| `LEGS[].CASH_FLOWS[].FLOAT_SPREAD` | number, some rows write it as text (`"14.2486"`) | optional (filled in 7% of `LEGS[].CASH_FLOWS[]` entries) | The spread over the index for this flow (rate fraction or price differential); text or number; empty when none. | seen: `0.2500`, `0.1000`, `0.0500`, `-0.0500` | `0.00193` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2024-11-12"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2025-05-12"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2024-11-12"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2024-11-14"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-05-12"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.019835` |
+| `LEGS[].FLOAT_SPREAD` | number | optional (filled in 3% of `LEGS[]` entries) | The spread added to the floating index of the leg: a rate as a fraction a year (rates) or a price differential in PRICE_UNIT (commodities); text or number; empty when none. | — | `0.00151` |
+| `LEGS[].CASH_FLOWS[].FLOAT_SPREAD` | number, some rows write it as text (`"14.2486"`) | optional (filled in 7% of `LEGS[].CASH_FLOWS[]` entries) | The spread over the index for this flow (rate fraction or price differential); text or number; empty when none. | seen: `0.2500`, `0.1000`, `0.0500`, `-0.0500` | `0.00151` |
 
 ### WEATHER_HDD
 
@@ -2358,16 +2339,16 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:46:00Z",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
   "TRADE_DATE": "2025-03-14",
   "INPUT_DATE": "2025-03-14",
-  "TRADE_ID": "MX-30001374",
+  "TRADE_ID": "MX-20000043",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30001374002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000043001",
   "PACKAGE_ID": "",
-  "QUANTITY": 535453200.0,
+  "QUANTITY": 172000000.0,
   "PRICE": 0.054423,
   "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "ACCRETING_SWAP",
@@ -2376,9 +2357,9 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-BRAMBLE",
-  "COUNTERPARTY_UEN": "UEN0100111",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "GB",
+  "COUNTERPARTY": "CP-HALCYON",
+  "COUNTERPARTY_UEN": "UEN0100222",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "GR",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
@@ -2411,7 +2392,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 594948000.0,
+      "NOTIONAL": 172000000.0,
       "DISCOUNT_INDEX": "CRV-CHF-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -2434,9 +2415,9 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30001374001",
+          "FLOW_ID": "20000043001",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 594948000.0,
+          "NOTIONAL": 172000000.0,
           "RATE": 0.054423,
           "FLOAT_SPREAD": "",
           "START_DATE": "2025-03-17",
@@ -2459,7 +2440,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 535453200.0,
+      "NOTIONAL": 172000000.0,
       "DISCOUNT_INDEX": "CRV-CHF-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -2482,9 +2463,9 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30001374011",
+          "FLOW_ID": "20000043011",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 535453200.0,
+          "NOTIONAL": 172000000.0,
           "RATE": 0.00237,
           "FLOAT_SPREAD": "",
           "START_DATE": "2025-03-17",
@@ -2524,7 +2505,7 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30001374001",
+      "EVENT_ID": "20000043001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
@@ -2573,16 +2554,16 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:33:00Z",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
   "TRADE_DATE": "2025-05-30",
   "INPUT_DATE": "2025-05-30",
-  "TRADE_ID": "MX-30000498",
-  "TRADE_STATUS": "AMENDED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30000498002",
+  "TRADE_ID": "MX-20000055",
+  "TRADE_STATUS": "VALIDATED",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000055001",
   "PACKAGE_ID": "",
-  "QUANTITY": 1133370000.0,
+  "QUANTITY": 245000000.0,
   "PRICE": -41.7,
   "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "CMS_SWAP",
@@ -2591,9 +2572,9 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-CORAL",
-  "COUNTERPARTY_UEN": "UEN0100185",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "US",
+  "COUNTERPARTY": "CP-ALDERSHOT",
+  "COUNTERPARTY_UEN": "UEN0100037",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "GB",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
@@ -2626,7 +2607,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 1133370000.0,
+      "NOTIONAL": 245000000.0,
       "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -2649,9 +2630,9 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000498001",
+          "FLOW_ID": "20000055001",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 1133370000.0,
+          "NOTIONAL": 245000000.0,
           "RATE": 0.0384,
           "FLOAT_SPREAD": "",
           "START_DATE": "2025-06-02",
@@ -2674,7 +2655,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": -0.00417,
       "PRICE_UNIT": "",
-      "NOTIONAL": 1133370000.0,
+      "NOTIONAL": 245000000.0,
       "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -2697,9 +2678,9 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000498013",
+          "FLOW_ID": "20000055013",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 1133370000.0,
+          "NOTIONAL": 245000000.0,
           "RATE": 0.037086,
           "FLOAT_SPREAD": -0.00417,
           "START_DATE": "2025-06-02",
@@ -2729,7 +2710,7 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30000498001",
+      "EVENT_ID": "20000055001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
@@ -2780,27 +2761,27 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:08:00Z",
-  "TRADE_DATE": "2025-10-03",
-  "INPUT_DATE": "2025-10-03",
-  "TRADE_ID": "MX-30000766",
-  "TRADE_STATUS": "CANCELLED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30000766002",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2025-08-25",
+  "INPUT_DATE": "2025-08-25",
+  "TRADE_ID": "MX-20000319",
+  "TRADE_STATUS": "VALIDATED",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000319001",
   "PACKAGE_ID": "",
-  "QUANTITY": 134784000.0,
+  "QUANTITY": 230000000.0,
   "PRICE": null,
-  "BUY_SELL_CODE": "B",
+  "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "CMD_APO",
   "PRODUCT_SUB_TYPE": "Average price option (APO)",
   "PRODUCT_GROUP": "Commodity",
   "PRODUCT_SUB_GROUP": "exotic",
-  "OPTION_TYPE": "Put",
-  "STRIKE_PRICE": 4715.72,
-  "COUNTERPARTY": "CP-VERDANT",
-  "COUNTERPARTY_UEN": "UEN0100666",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "BR",
+  "OPTION_TYPE": "Call",
+  "STRIKE_PRICE": 989.78,
+  "COUNTERPARTY": "CP-HALCYON",
+  "COUNTERPARTY_UEN": "UEN0100222",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "GR",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
@@ -2810,8 +2791,8 @@ Its fields beyond the shared table:
   "TRADER_ID": "TRDR-FROSSI",
   "TRADER_FIRST_NAME": "F.",
   "TRADER_LAST_NAME": "Rossi",
-  "START_DATE": "2025-10-06",
-  "MATURITY_DATE": "2027-09-28",
+  "START_DATE": "2025-08-27",
+  "MATURITY_DATE": "2027-12-28",
   "REGISTRY_DELIVERY_DATE": "",
   "CURRENCY": "USD",
   "DELIVERY_VERSUS_PAYMENT": "NO",
@@ -2823,17 +2804,17 @@ Its fields beyond the shared table:
   "TT_GROUP": "DESK-COMM",
   "TT_BOOK": "BOOK-COMM-1",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2025-10-06",
+  "SETTLEMENT_DATE": "2025-08-27",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "OPTION",
-      "LEG_ECONOMIC_TYPE": "Pay",
+      "LEG_ECONOMIC_TYPE": "Receive",
       "CURRENCY": "USD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 134784000.0,
+      "NOTIONAL": 230000000.0,
       "DISCOUNT_INDEX": "",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -2847,7 +2828,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "24",
+      "NUM_PROFILE_REC": "18",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -2856,50 +2837,50 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000766001",
-          "FLOW_TYPE": "2026-01-06..2026-04-06",
-          "NOTIONAL": 134784000.0,
-          "RATE": 0.034705,
+          "FLOW_ID": "20000319001",
+          "FLOW_TYPE": "2025-11-27..2026-02-27",
+          "NOTIONAL": 230000000.0,
+          "RATE": 0.026386,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2025-10-06",
-          "END_DATE": "2026-01-06",
-          "PAYMENT_DATE": "2026-01-06",
-          "RATE_DETERMINATION_DATE": "2026-01-06",
-          "FIRST_RESET_DATE": "2026-01-06",
-          "LAST_RESET_DATE": "2026-01-06",
+          "START_DATE": "2025-08-27",
+          "END_DATE": "2025-11-27",
+          "PAYMENT_DATE": "2025-11-27",
+          "RATE_DETERMINATION_DATE": "2025-11-27",
+          "FIRST_RESET_DATE": "2025-11-27",
+          "LAST_RESET_DATE": "2025-11-27",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
               "RESET_ID": "R-1",
               "ACCRUAL": "",
-              "START_DATE": "2026-01-06",
-              "END_DATE": "2026-01-06",
-              "RESET_DATE": "2026-01-06",
+              "START_DATE": "2025-11-27",
+              "END_DATE": "2025-11-27",
+              "RESET_DATE": "2025-11-27",
               "ACCRUAL_START_DATE": "",
               "ACCRUAL_END_DATE": "",
-              "RATE": 0.034705
+              "RATE": 0.026386
             }
           ]
         },
-        "… 23 more elements of the same shape"
+        "… 17 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30000766001",
+      "EVENT_ID": "20000319001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2025-10-03",
+      "EVENT_DATE": "2025-08-25",
       "AMOUNT": "",
       "CURRENCY": "USD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 18 more elements of the same shape"
+    "… 9 more elements of the same shape"
   ]
 }
 ```
@@ -2908,19 +2889,19 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `OPTION_TYPE` | string | optional (filled in 22% of rows) | For an option: Call or Put, Payer or Receiver (swaption), Cap or Floor; null otherwise. | one of `Call`, `Cap`, `Floor`, `Payer`, `Put`, `Receiver` | `"Put"` |
-| `STRIKE_PRICE` | number | optional (filled in 29% of rows) | For an option: the strike, as a price or as a rate (a fraction a year for rates); null otherwise. | — | `4715.72` |
-| `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"2026-01-06..2026-04-06"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.034705` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2026-01-06"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2026-01-06"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2026-01-06"` |
+| `OPTION_TYPE` | string | optional (filled in 22% of rows) | For an option: Call or Put, Payer or Receiver (swaption), Cap or Floor; null otherwise. | one of `Call`, `Cap`, `Floor`, `Payer`, `Put`, `Receiver` | `"Call"` |
+| `STRIKE_PRICE` | number | optional (filled in 29% of rows) | For an option: the strike, as a price or as a rate (a fraction a year for rates); null otherwise. | — | `989.78` |
+| `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"2025-11-27..2026-02-27"` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.026386` |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2025-11-27"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2025-11-27"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2025-11-27"` |
 | `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [1 objects] |
 | `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2026-01-06"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2026-01-06"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2026-01-06"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.034705` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2025-11-27"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2025-11-27"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2025-11-27"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.026386` |
 
 ### FWD_START_SWAP
 
@@ -2929,17 +2910,17 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:32:00Z",
-  "TRADE_DATE": "2026-03-06",
-  "INPUT_DATE": "2026-03-06",
-  "TRADE_ID": "MX-30001385",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2026-04-06",
+  "INPUT_DATE": "2026-04-06",
+  "TRADE_ID": "MX-20000049",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30001385002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000049001",
   "PACKAGE_ID": "",
-  "QUANTITY": 177520000.0,
-  "PRICE": 0.048824,
+  "QUANTITY": 177000000.0,
+  "PRICE": 0.014894,
   "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "FWD_START_SWAP",
   "PRODUCT_SUB_TYPE": "Forward-starting swap",
@@ -2947,22 +2928,22 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-MERIDIAN-RE",
-  "COUNTERPARTY_UEN": "UEN0100407",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "BM",
+  "COUNTERPARTY": "CP-VERDANT",
+  "COUNTERPARTY_UEN": "UEN0100666",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "BR",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-RATES-2",
-  "TRADER_ID": "TRDR-ASHAH",
-  "TRADER_FIRST_NAME": "A.",
-  "TRADER_LAST_NAME": "Shah",
-  "START_DATE": "2026-03-09",
-  "MATURITY_DATE": "2037-12-14",
+  "PORTFOLIO": "BOOK-RATES-1",
+  "TRADER_ID": "TRDR-MOKAFOR",
+  "TRADER_FIRST_NAME": "M.",
+  "TRADER_LAST_NAME": "Okafor",
+  "START_DATE": "2026-04-08",
+  "MATURITY_DATE": "2033-03-14",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "CAD",
+  "CURRENCY": "USD",
   "DELIVERY_VERSUS_PAYMENT": "NO",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -2970,33 +2951,33 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-RATES",
-  "TT_BOOK": "BOOK-RATES-2",
+  "TT_BOOK": "BOOK-RATES-1",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2026-03-09",
+  "SETTLEMENT_DATE": "2026-04-08",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FIXED",
       "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "CAD",
+      "CURRENCY": "USD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 177520000.0,
-      "DISCOUNT_INDEX": "CRV-CAD-OIS",
+      "NOTIONAL": 177000000.0,
+      "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
       "RESET_FIXING_SHIFT": "",
       "RESET_HOLIDAY_SCHEDULE": "USNY",
-      "RESET_CONVENTION": "Annual",
+      "RESET_CONVENTION": "Quarterly",
       "EMISSIONS_VINTAGE_MIN": "",
       "EMISSIONS_VINTAGE_MAX": "",
       "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "12",
+      "NUM_PROFILE_REC": "28",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -3005,33 +2986,33 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30001385001",
+          "FLOW_ID": "20000049001",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 177520000.0,
-          "RATE": 0.048824,
+          "NOTIONAL": 177000000.0,
+          "RATE": 0.014894,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-03-09",
-          "END_DATE": "2026-12-14",
-          "PAYMENT_DATE": "2026-12-16",
+          "START_DATE": "2026-04-08",
+          "END_DATE": "2026-06-15",
+          "PAYMENT_DATE": "2026-06-17",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 11 more elements of the same shape"
+        "… 27 more elements of the same shape"
       ]
     },
     {
       "LEG_ID": "2",
       "LEG_TYPE": "FLOAT",
       "LEG_ECONOMIC_TYPE": "Receive",
-      "CURRENCY": "CAD",
+      "CURRENCY": "USD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 221900000.0,
-      "DISCOUNT_INDEX": "CRV-CAD-OIS",
+      "NOTIONAL": 177000000.0,
+      "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
@@ -3044,60 +3025,60 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "47",
+      "NUM_PROFILE_REC": "28",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "CORRA",
+        "NAME": "SOFR",
         "GROUP": "Rates",
         "SUB_GROUP": "Monthly"
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30001385013",
+          "FLOW_ID": "20000049029",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 221900000.0,
-          "RATE": 0.027056,
+          "NOTIONAL": 177000000.0,
+          "RATE": 0.036392,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-03-09",
+          "START_DATE": "2026-04-08",
           "END_DATE": "2026-06-15",
           "PAYMENT_DATE": "2026-06-17",
           "RATE_DETERMINATION_DATE": "2026-06-11",
-          "FIRST_RESET_DATE": "2026-03-09",
-          "LAST_RESET_DATE": "2026-06-09",
+          "FIRST_RESET_DATE": "2026-04-08",
+          "LAST_RESET_DATE": "2026-06-08",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
               "RESET_ID": "R-1",
               "ACCRUAL": "",
-              "START_DATE": "2026-03-09",
+              "START_DATE": "2026-04-08",
               "END_DATE": "2026-06-15",
-              "RESET_DATE": "2026-03-09",
-              "ACCRUAL_START_DATE": "2026-03-09",
+              "RESET_DATE": "2026-04-08",
+              "ACCRUAL_START_DATE": "2026-04-08",
               "ACCRUAL_END_DATE": "2026-06-15",
-              "RATE": 0.027075
+              "RATE": 0.036403
             },
-            "… 3 more elements of the same shape"
+            "… 2 more elements of the same shape"
           ]
         },
-        "… 46 more elements of the same shape"
+        "… 27 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30001385001",
+      "EVENT_ID": "20000049001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2026-03-06",
+      "EVENT_DATE": "2026-04-06",
       "AMOUNT": "",
-      "CURRENCY": "CAD",
+      "CURRENCY": "USD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 64 more elements of the same shape"
+    "… 61 more elements of the same shape"
   ]
 }
 ```
@@ -3106,27 +3087,27 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.048824` |
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-CAD-OIS"` |
+| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.014894` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-USD-OIS"` |
 | `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"USNY"` |
-| `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Annual"` |
+| `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Quarterly"` |
 | `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Interest"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.048824` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.014894` |
 | `LEGS[].RESET_FIXING_SHIFT` | string | optional (filled in 33% of `LEGS[]` entries) | Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg. | one of `-2`, `0`; unit: business days | `"-2"` |
-| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"CORRA"` |
+| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"SOFR"` |
 | `LEGS[].INDEX.GROUP` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Rates"` |
 | `LEGS[].INDEX.SUB_GROUP` | string | optional (filled in 22% of `LEGS[].INDEX` entries) | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly,...); empty for a fixed leg. | seen: `Monthly`, `Quarterly`, `Semi-annual`, `Daily` | `"Monthly"` |
 | `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2026-06-11"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2026-03-09"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2026-06-09"` |
-| `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [4 objects] |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2026-04-08"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2026-06-08"` |
+| `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [3 objects] |
 | `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2026-03-09"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2026-04-08"` |
 | `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2026-06-15"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2026-03-09"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-03-09"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2026-04-08"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-04-08"` |
 | `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-06-15"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.027075` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.036403` |
 
 ### XCCY_SWAP_MTM
 
@@ -3135,16 +3116,16 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:34:00Z",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
   "TRADE_DATE": "2026-02-24",
   "INPUT_DATE": "2026-02-24",
-  "TRADE_ID": "MX-30002689",
-  "TRADE_STATUS": "AMENDED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30002689002",
+  "TRADE_ID": "MX-20000026",
+  "TRADE_STATUS": "VALIDATED",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000026001",
   "PACKAGE_ID": "",
-  "QUANTITY": 73750000.0,
+  "QUANTITY": 50000000.0,
   "PRICE": null,
   "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "XCCY_SWAP_MTM",
@@ -3153,9 +3134,9 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-NORTHBRIDGE",
-  "COUNTERPARTY_UEN": "UEN0100444",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "GB",
+  "COUNTERPARTY": "CP-AURORA",
+  "COUNTERPARTY_UEN": "UEN0100074",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "NO",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
@@ -3188,7 +3169,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 73750000.0,
+      "NOTIONAL": 50000000.0,
       "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -3211,9 +3192,9 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30002689001",
+          "FLOW_ID": "20000026001",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 73750000.0,
+          "NOTIONAL": 50000000.0,
           "RATE": 0.0384,
           "FLOAT_SPREAD": "",
           "START_DATE": "2026-02-26",
@@ -3236,7 +3217,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 73750000.0,
+      "NOTIONAL": 50000000.0,
       "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -3259,9 +3240,9 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30002689012",
+          "FLOW_ID": "20000026012",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 73750000.0,
+          "NOTIONAL": 50000000.0,
           "RATE": 0.036388,
           "FLOAT_SPREAD": "",
           "START_DATE": "2026-02-26",
@@ -3301,7 +3282,7 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30002689001",
+      "EVENT_ID": "20000026001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
@@ -3645,16 +3626,16 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:14:00Z",
-  "TRADE_DATE": "2024-11-22",
-  "INPUT_DATE": "2024-11-22",
-  "TRADE_ID": "MX-30000467",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2026-03-13",
+  "INPUT_DATE": "2026-03-13",
+  "TRADE_ID": "MX-20000019",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30000467002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000019001",
   "PACKAGE_ID": "",
-  "QUANTITY": 252638100.0,
+  "QUANTITY": 192000000.0,
   "PRICE": null,
   "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "XCCY_SWAP",
@@ -3663,22 +3644,22 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-MERIDIAN",
-  "COUNTERPARTY_UEN": "UEN0100370",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "US",
+  "COUNTERPARTY": "CP-MERIDIAN-RE",
+  "COUNTERPARTY_UEN": "UEN0100407",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "BM",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-RATES-2",
+  "PORTFOLIO": "BOOK-RATES-3",
   "TRADER_ID": "TRDR-MOKAFOR",
   "TRADER_FIRST_NAME": "M.",
   "TRADER_LAST_NAME": "Okafor",
-  "START_DATE": "2024-11-25",
-  "MATURITY_DATE": "2029-10-09",
+  "START_DATE": "2026-03-16",
+  "MATURITY_DATE": "2029-02-12",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "CAD",
+  "CURRENCY": "USD",
   "DELIVERY_VERSUS_PAYMENT": "NO",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -3686,20 +3667,20 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-RATES",
-  "TT_BOOK": "BOOK-RATES-2",
+  "TT_BOOK": "BOOK-RATES-3",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2024-11-25",
+  "SETTLEMENT_DATE": "2026-03-16",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FLOAT",
       "LEG_ECONOMIC_TYPE": "Receive",
-      "CURRENCY": "CAD",
+      "CURRENCY": "USD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 229671000.0,
-      "DISCOUNT_INDEX": "CRV-CAD-OIS",
+      "NOTIONAL": 192000000.0,
+      "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
@@ -3712,47 +3693,47 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "22",
+      "NUM_PROFILE_REC": "14",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "TERM-CORRA-3M",
+        "NAME": "TERM-SOFR-3M",
         "GROUP": "Rates",
         "SUB_GROUP": "Quarterly"
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000467001",
+          "FLOW_ID": "20000019001",
           "FLOW_TYPE": "Initial exchange",
-          "NOTIONAL": 229671000.0,
+          "NOTIONAL": 192000000.0,
           "RATE": "",
           "FLOAT_SPREAD": "",
-          "START_DATE": "2024-11-25",
-          "END_DATE": "2024-11-25",
-          "PAYMENT_DATE": "2024-11-25",
+          "START_DATE": "2026-03-16",
+          "END_DATE": "2026-03-16",
+          "PAYMENT_DATE": "2026-03-16",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 21 more elements of the same shape"
+        "… 13 more elements of the same shape"
       ]
     },
     {
       "LEG_ID": "2",
       "LEG_TYPE": "FLOAT",
       "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "GBP",
+      "CURRENCY": "JPY",
       "LEASE_CURRENCY": "",
-      "FLOAT_SPREAD": -0.00029,
+      "FLOAT_SPREAD": -0.00264,
       "PRICE_UNIT": "",
-      "NOTIONAL": 134541000.0,
-      "DISCOUNT_INDEX": "CRV-CAD-OIS",
+      "NOTIONAL": 28454000000.0,
+      "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
       "RESET_FIXING_SHIFT": "-2",
-      "RESET_HOLIDAY_SCHEDULE": "GBLO",
+      "RESET_HOLIDAY_SCHEDULE": "JPTO",
       "RESET_CONVENTION": "Quarterly",
       "EMISSIONS_VINTAGE_MIN": "",
       "EMISSIONS_VINTAGE_MAX": "",
@@ -3760,48 +3741,48 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "22",
+      "NUM_PROFILE_REC": "14",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "TERM-SONIA-3M",
+        "NAME": "TERM-TONA-3M",
         "GROUP": "Rates",
         "SUB_GROUP": "Quarterly"
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000467023",
+          "FLOW_ID": "20000019015",
           "FLOW_TYPE": "Initial exchange",
-          "NOTIONAL": 134541000.0,
+          "NOTIONAL": 28454000000.0,
           "RATE": "",
           "FLOAT_SPREAD": "",
-          "START_DATE": "2024-11-25",
-          "END_DATE": "2024-11-25",
-          "PAYMENT_DATE": "2024-11-25",
+          "START_DATE": "2026-03-16",
+          "END_DATE": "2026-03-16",
+          "PAYMENT_DATE": "2026-03-16",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 21 more elements of the same shape"
+        "… 13 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30000467001",
+      "EVENT_ID": "20000019001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2024-11-22",
+      "EVENT_DATE": "2026-03-13",
       "AMOUNT": "",
-      "CURRENCY": "CAD",
+      "CURRENCY": "USD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 49 more elements of the same shape"
+    "… 33 more elements of the same shape"
   ]
 }
 ```
@@ -3810,28 +3791,28 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-CAD-OIS"` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-USD-OIS"` |
 | `LEGS[].RESET_FIXING_SHIFT` | string | optional (filled in 33% of `LEGS[]` entries) | Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg. | one of `-2`, `0`; unit: business days | `"-2"` |
 | `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"USNY"` |
 | `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Quarterly"` |
-| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"TERM-CORRA-3M"` |
+| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"TERM-SOFR-3M"` |
 | `LEGS[].INDEX.GROUP` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Rates"` |
 | `LEGS[].INDEX.SUB_GROUP` | string | optional (filled in 22% of `LEGS[].INDEX` entries) | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly,...); empty for a fixed leg. | seen: `Monthly`, `Quarterly`, `Semi-annual`, `Daily` | `"Quarterly"` |
 | `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Initial exchange"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.028045` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2024-11-21"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2024-11-21"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2024-11-21"` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.037519` |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2026-03-12"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2026-03-12"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2026-03-12"` |
 | `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [1 objects] |
 | `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2024-11-21"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2025-01-09"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2024-11-21"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2024-11-25"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-01-09"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.028045` |
-| `LEGS[].FLOAT_SPREAD` | number | optional (filled in 3% of `LEGS[]` entries) | The spread added to the floating index of the leg: a rate as a fraction a year (rates) or a price differential in PRICE_UNIT (commodities); text or number; empty when none. | — | `-0.00029` |
-| `LEGS[].CASH_FLOWS[].FLOAT_SPREAD` | number, some rows write it as text (`"14.2486"`) | optional (filled in 7% of `LEGS[].CASH_FLOWS[]` entries) | The spread over the index for this flow (rate fraction or price differential); text or number; empty when none. | seen: `0.2500`, `0.1000`, `0.0500`, `-0.0500` | `-0.00029` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2026-03-12"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2026-05-12"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2026-03-12"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-03-16"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-05-12"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.037519` |
+| `LEGS[].FLOAT_SPREAD` | number | optional (filled in 3% of `LEGS[]` entries) | The spread added to the floating index of the leg: a rate as a fraction a year (rates) or a price differential in PRICE_UNIT (commodities); text or number; empty when none. | — | `-0.00264` |
+| `LEGS[].CASH_FLOWS[].FLOAT_SPREAD` | number, some rows write it as text (`"14.2486"`) | optional (filled in 7% of `LEGS[].CASH_FLOWS[]` entries) | The spread over the index for this flow (rate fraction or price differential); text or number; empty when none. | seen: `0.2500`, `0.1000`, `0.0500`, `-0.0500` | `-0.00264` |
 
 ### CMD_FUT_OPTION
 
@@ -4116,40 +4097,40 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:20:00Z",
-  "TRADE_DATE": "2025-03-21",
-  "INPUT_DATE": "2025-03-21",
-  "TRADE_ID": "MX-30001891",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2025-03-25",
+  "INPUT_DATE": "2025-03-25",
+  "TRADE_ID": "MX-20000115",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30001891002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000115001",
   "PACKAGE_ID": "",
-  "QUANTITY": 214684000.0,
+  "QUANTITY": 15000000.0,
   "PRICE": null,
-  "BUY_SELL_CODE": "B",
+  "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "CMS_CAP",
   "PRODUCT_SUB_TYPE": "CMS cap / floor",
   "PRODUCT_GROUP": "Rates",
   "PRODUCT_SUB_GROUP": "option",
   "OPTION_TYPE": "Cap",
-  "STRIKE_PRICE": 0.05186,
-  "COUNTERPARTY": "CP-MERIDIAN-RE",
-  "COUNTERPARTY_UEN": "UEN0100407",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "BM",
+  "STRIKE_PRICE": 0.055841,
+  "COUNTERPARTY": "CP-LUMEN",
+  "COUNTERPARTY_UEN": "UEN0100333",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "CH",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-RATES-2",
-  "TRADER_ID": "TRDR-MOKAFOR",
-  "TRADER_FIRST_NAME": "M.",
-  "TRADER_LAST_NAME": "Okafor",
-  "START_DATE": "2025-03-24",
-  "MATURITY_DATE": "2027-09-13",
+  "PORTFOLIO": "BOOK-RATES-1",
+  "TRADER_ID": "TRDR-ASHAH",
+  "TRADER_FIRST_NAME": "A.",
+  "TRADER_LAST_NAME": "Shah",
+  "START_DATE": "2025-03-27",
+  "MATURITY_DATE": "2027-01-04",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "EUR",
+  "CURRENCY": "USD",
   "DELIVERY_VERSUS_PAYMENT": "NO",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -4157,20 +4138,20 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-RATES",
-  "TT_BOOK": "BOOK-RATES-2",
+  "TT_BOOK": "BOOK-RATES-1",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2025-03-24",
+  "SETTLEMENT_DATE": "2025-03-27",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "OPTION",
-      "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "EUR",
+      "LEG_ECONOMIC_TYPE": "Receive",
+      "CURRENCY": "USD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 214684000.0,
-      "DISCOUNT_INDEX": "CRV-EUR-OIS",
+      "NOTIONAL": 15000000.0,
+      "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
@@ -4183,7 +4164,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "10",
+      "NUM_PROFILE_REC": "8",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -4192,45 +4173,45 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30001891001",
-          "FLOW_TYPE": "2025-06-24..2025-09-24",
-          "NOTIONAL": 214684000.0,
-          "RATE": 0.021532,
+          "FLOW_ID": "20000115001",
+          "FLOW_TYPE": "2025-06-27..2025-09-27",
+          "NOTIONAL": 15000000.0,
+          "RATE": 0.037252,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2025-03-24",
-          "END_DATE": "2025-06-24",
-          "PAYMENT_DATE": "2025-06-24",
-          "RATE_DETERMINATION_DATE": "2025-06-24",
-          "FIRST_RESET_DATE": "2025-06-24",
-          "LAST_RESET_DATE": "2025-06-24",
+          "START_DATE": "2025-03-27",
+          "END_DATE": "2025-06-27",
+          "PAYMENT_DATE": "2025-06-27",
+          "RATE_DETERMINATION_DATE": "2025-06-27",
+          "FIRST_RESET_DATE": "2025-06-27",
+          "LAST_RESET_DATE": "2025-06-27",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
               "RESET_ID": "R-1",
               "ACCRUAL": "",
-              "START_DATE": "2025-06-24",
-              "END_DATE": "2025-06-24",
-              "RESET_DATE": "2025-06-24",
+              "START_DATE": "2025-06-27",
+              "END_DATE": "2025-06-27",
+              "RESET_DATE": "2025-06-27",
               "ACCRUAL_START_DATE": "",
               "ACCRUAL_END_DATE": "",
-              "RATE": 0.021532
+              "RATE": 0.037252
             }
           ]
         },
-        "… 9 more elements of the same shape"
+        "… 7 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30001891001",
+      "EVENT_ID": "20000115001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2025-03-21",
+      "EVENT_DATE": "2025-03-25",
       "AMOUNT": "",
-      "CURRENCY": "EUR",
+      "CURRENCY": "USD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
@@ -4245,19 +4226,19 @@ Its fields beyond the shared table:
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
 | `OPTION_TYPE` | string | optional (filled in 22% of rows) | For an option: Call or Put, Payer or Receiver (swaption), Cap or Floor; null otherwise. | one of `Call`, `Cap`, `Floor`, `Payer`, `Put`, `Receiver` | `"Cap"` |
-| `STRIKE_PRICE` | number | optional (filled in 29% of rows) | For an option: the strike, as a price or as a rate (a fraction a year for rates); null otherwise. | — | `0.05186` |
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-EUR-OIS"` |
-| `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"2025-06-24..2025-09-24"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.021532` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2025-06-24"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2025-06-24"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2025-06-24"` |
+| `STRIKE_PRICE` | number | optional (filled in 29% of rows) | For an option: the strike, as a price or as a rate (a fraction a year for rates); null otherwise. | — | `0.055841` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-USD-OIS"` |
+| `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"2025-06-27..2025-09-27"` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.037252` |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2025-06-27"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2025-06-27"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2025-06-27"` |
 | `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [1 objects] |
 | `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2025-06-24"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2025-06-24"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2025-06-24"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.021532` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2025-06-27"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2025-06-27"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2025-06-27"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.037252` |
 
 ### ZC_SWAP
 
@@ -4266,16 +4247,16 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:45:00Z",
-  "TRADE_DATE": "2025-12-11",
-  "INPUT_DATE": "2025-12-11",
-  "TRADE_ID": "MX-30000032",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2024-05-17",
+  "INPUT_DATE": "2024-05-17",
+  "TRADE_ID": "MX-20000032",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30000032002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000032001",
   "PACKAGE_ID": "",
-  "QUANTITY": 100044000.0,
+  "QUANTITY": 85000000.0,
   "PRICE": null,
   "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "ZC_SWAP",
@@ -4284,22 +4265,22 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-LUMEN",
-  "COUNTERPARTY_UEN": "UEN0100333",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "CH",
+  "COUNTERPARTY": "CP-HALCYON",
+  "COUNTERPARTY_UEN": "UEN0100222",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "GR",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-RATES-1",
+  "PORTFOLIO": "BOOK-RATES-3",
   "TRADER_ID": "TRDR-ASHAH",
   "TRADER_FIRST_NAME": "A.",
   "TRADER_LAST_NAME": "Shah",
-  "START_DATE": "2025-12-15",
-  "MATURITY_DATE": "2030-08-27",
+  "START_DATE": "2024-05-20",
+  "MATURITY_DATE": "2033-05-06",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "GBP",
+  "CURRENCY": "CHF",
   "DELIVERY_VERSUS_PAYMENT": "NO",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -4307,25 +4288,25 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-RATES",
-  "TT_BOOK": "BOOK-RATES-1",
+  "TT_BOOK": "BOOK-RATES-3",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2025-12-15",
+  "SETTLEMENT_DATE": "2024-05-20",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FIXED",
       "LEG_ECONOMIC_TYPE": "Receive",
-      "CURRENCY": "GBP",
+      "CURRENCY": "CHF",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 100044000.0,
-      "DISCOUNT_INDEX": "CRV-GBP-OIS",
+      "NOTIONAL": 85000000.0,
+      "DISCOUNT_INDEX": "CRV-CHF-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
       "RESET_FIXING_SHIFT": "",
-      "RESET_HOLIDAY_SCHEDULE": "GBLO",
+      "RESET_HOLIDAY_SCHEDULE": "EUTA",
       "RESET_CONVENTION": "Annual",
       "EMISSIONS_VINTAGE_MIN": "",
       "EMISSIONS_VINTAGE_MAX": "",
@@ -4333,7 +4314,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "5",
+      "NUM_PROFILE_REC": "9",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -4342,38 +4323,38 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000032001",
+          "FLOW_ID": "20000032001",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 100044000.0,
-          "RATE": 0.025599,
+          "NOTIONAL": 85000000.0,
+          "RATE": 0.045814,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2025-12-15",
-          "END_DATE": "2026-08-27",
-          "PAYMENT_DATE": "2026-09-01",
+          "START_DATE": "2024-05-20",
+          "END_DATE": "2025-05-06",
+          "PAYMENT_DATE": "2025-05-08",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 4 more elements of the same shape"
+        "… 8 more elements of the same shape"
       ]
     },
     {
       "LEG_ID": "2",
       "LEG_TYPE": "FLOAT",
       "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "GBP",
+      "CURRENCY": "CHF",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 100044000.0,
-      "DISCOUNT_INDEX": "CRV-GBP-OIS",
+      "NOTIONAL": 85000000.0,
+      "DISCOUNT_INDEX": "CRV-CHF-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
       "RESET_FIXING_SHIFT": "-2",
-      "RESET_HOLIDAY_SCHEDULE": "GBLO",
+      "RESET_HOLIDAY_SCHEDULE": "EUTA",
       "RESET_CONVENTION": "Monthly",
       "EMISSIONS_VINTAGE_MIN": "",
       "EMISSIONS_VINTAGE_MAX": "",
@@ -4381,60 +4362,60 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "19",
+      "NUM_PROFILE_REC": "36",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "SONIA",
+        "NAME": "SARON",
         "GROUP": "Rates",
         "SUB_GROUP": "Monthly"
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000032006",
+          "FLOW_ID": "20000032010",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 100044000.0,
-          "RATE": 0.038295,
+          "NOTIONAL": 85000000.0,
+          "RATE": 0.002333,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2025-12-15",
-          "END_DATE": "2026-02-27",
-          "PAYMENT_DATE": "2026-03-03",
-          "RATE_DETERMINATION_DATE": "2026-02-25",
-          "FIRST_RESET_DATE": "2025-12-15",
-          "LAST_RESET_DATE": "2026-02-15",
+          "START_DATE": "2024-05-20",
+          "END_DATE": "2024-08-06",
+          "PAYMENT_DATE": "2024-08-08",
+          "RATE_DETERMINATION_DATE": "2024-08-02",
+          "FIRST_RESET_DATE": "2024-05-20",
+          "LAST_RESET_DATE": "2024-07-20",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
               "RESET_ID": "R-1",
               "ACCRUAL": "",
-              "START_DATE": "2025-12-15",
-              "END_DATE": "2026-02-27",
-              "RESET_DATE": "2025-12-15",
-              "ACCRUAL_START_DATE": "2025-12-15",
-              "ACCRUAL_END_DATE": "2026-02-27",
-              "RATE": 0.0383
+              "START_DATE": "2024-05-20",
+              "END_DATE": "2024-08-06",
+              "RESET_DATE": "2024-05-20",
+              "ACCRUAL_START_DATE": "2024-05-20",
+              "ACCRUAL_END_DATE": "2024-08-06",
+              "RATE": 0.002351
             },
             "… 2 more elements of the same shape"
           ]
         },
-        "… 18 more elements of the same shape"
+        "… 35 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30000032001",
+      "EVENT_ID": "20000032001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2025-12-11",
+      "EVENT_DATE": "2024-05-17",
       "AMOUNT": "",
-      "CURRENCY": "GBP",
+      "CURRENCY": "CHF",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 29 more elements of the same shape"
+    "… 50 more elements of the same shape"
   ]
 }
 ```
@@ -4443,26 +4424,26 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-GBP-OIS"` |
-| `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"GBLO"` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-CHF-OIS"` |
+| `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"EUTA"` |
 | `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Annual"` |
 | `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Interest"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.025599` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.045814` |
 | `LEGS[].RESET_FIXING_SHIFT` | string | optional (filled in 33% of `LEGS[]` entries) | Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg. | one of `-2`, `0`; unit: business days | `"-2"` |
-| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"SONIA"` |
+| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"SARON"` |
 | `LEGS[].INDEX.GROUP` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Rates"` |
 | `LEGS[].INDEX.SUB_GROUP` | string | optional (filled in 22% of `LEGS[].INDEX` entries) | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly,...); empty for a fixed leg. | seen: `Monthly`, `Quarterly`, `Semi-annual`, `Daily` | `"Monthly"` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2026-02-25"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2025-12-15"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2026-02-15"` |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2024-08-02"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2024-05-20"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2024-07-20"` |
 | `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [3 objects] |
 | `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2025-12-15"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2026-02-27"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2025-12-15"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-12-15"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-02-27"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.0383` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2024-05-20"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2024-08-06"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2024-05-20"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2024-05-20"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2024-08-06"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.002351` |
 
 ### REVERSE_CONVERTIBLE
 
@@ -4471,17 +4452,17 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:26:00Z",
-  "TRADE_DATE": "2024-05-03",
-  "INPUT_DATE": "2024-05-03",
-  "TRADE_ID": "MX-30000229",
-  "TRADE_STATUS": "AMENDED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "3",
-  "TRANSACTION_ID": "30000229003",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2025-01-10",
+  "INPUT_DATE": "2025-01-10",
+  "TRADE_ID": "MX-20000229",
+  "TRADE_STATUS": "VALIDATED",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000229001",
   "PACKAGE_ID": "",
-  "QUANTITY": 185861000.0,
-  "PRICE": 0.101744,
+  "QUANTITY": 222000000.0,
+  "PRICE": 0.147576,
   "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "REVERSE_CONVERTIBLE",
   "PRODUCT_SUB_TYPE": "Reverse convertible",
@@ -4489,20 +4470,20 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "note",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-ALDERSHOT",
-  "COUNTERPARTY_UEN": "UEN0100037",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "GB",
+  "COUNTERPARTY": "CP-LUMEN",
+  "COUNTERPARTY_UEN": "UEN0100333",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "CH",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00214",
   "LEGAL_ENTITY": "LE-LDN",
-  "PORTFOLIO": "BOOK-EQD-2",
+  "PORTFOLIO": "BOOK-EQD-1",
   "TRADER_ID": "TRDR-PLINDQVIST",
   "TRADER_FIRST_NAME": "P.",
   "TRADER_LAST_NAME": "Lindqvist",
-  "START_DATE": "2024-05-06",
-  "MATURITY_DATE": "2026-10-07",
+  "START_DATE": "2025-01-13",
+  "MATURITY_DATE": "2027-05-12",
   "REGISTRY_DELIVERY_DATE": "",
   "CURRENCY": "EUR",
   "DELIVERY_VERSUS_PAYMENT": "YES",
@@ -4512,9 +4493,9 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-EQD",
-  "TT_BOOK": "BOOK-EQD-2",
+  "TT_BOOK": "BOOK-EQD-1",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2024-05-06",
+  "SETTLEMENT_DATE": "2025-01-13",
   "LEGS": [
     {
       "LEG_ID": "1",
@@ -4524,7 +4505,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 185861000.0,
+      "NOTIONAL": 222000000.0,
       "DISCOUNT_INDEX": "",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -4547,14 +4528,14 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000229001",
+          "FLOW_ID": "20000229001",
           "FLOW_TYPE": "",
-          "NOTIONAL": 185861000.0,
-          "RATE": 0.045871,
+          "NOTIONAL": 222000000.0,
+          "RATE": 0.028122,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2024-05-06",
-          "END_DATE": "2024-11-06",
-          "PAYMENT_DATE": "2024-11-06",
+          "START_DATE": "2025-01-13",
+          "END_DATE": "2025-07-13",
+          "PAYMENT_DATE": "2025-07-13",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
@@ -4568,18 +4549,18 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30000229001",
+      "EVENT_ID": "20000229001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2024-05-03",
+      "EVENT_DATE": "2025-01-10",
       "AMOUNT": "",
       "CURRENCY": "EUR",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 11 more elements of the same shape"
+    "… 9 more elements of the same shape"
   ]
 }
 ```
@@ -4588,8 +4569,8 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.101744` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.045871` |
+| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.147576` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.028122` |
 
 ### ZC_INFL_SWAP
 
@@ -4598,17 +4579,17 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:35:00Z",
-  "TRADE_DATE": "2026-01-16",
-  "INPUT_DATE": "2026-01-16",
-  "TRADE_ID": "MX-30000824",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2026-01-27",
+  "INPUT_DATE": "2026-01-27",
+  "TRADE_ID": "MX-20000379",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30000824002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000379001",
   "PACKAGE_ID": "",
-  "QUANTITY": 357840000.0,
-  "PRICE": 0.020956,
+  "QUANTITY": 200000000.0,
+  "PRICE": 0.029504,
   "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "ZC_INFL_SWAP",
   "PRODUCT_SUB_TYPE": "Zero-coupon inflation swap",
@@ -4616,22 +4597,22 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-HALCYON",
-  "COUNTERPARTY_UEN": "UEN0100222",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "GR",
+  "COUNTERPARTY": "CP-NORTHBRIDGE",
+  "COUNTERPARTY_UEN": "UEN0100444",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "GB",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00214",
   "LEGAL_ENTITY": "LE-LDN",
-  "PORTFOLIO": "BOOK-INFL-1",
-  "TRADER_ID": "TRDR-HOKORO",
-  "TRADER_FIRST_NAME": "H.",
-  "TRADER_LAST_NAME": "Okoro",
-  "START_DATE": "2026-01-19",
-  "MATURITY_DATE": "2037-06-15",
+  "PORTFOLIO": "BOOK-INFL-2",
+  "TRADER_ID": "TRDR-GMENDES",
+  "TRADER_FIRST_NAME": "G.",
+  "TRADER_LAST_NAME": "Mendes",
+  "START_DATE": "2026-01-29",
+  "MATURITY_DATE": "2035-07-12",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "JPY",
+  "CURRENCY": "EUR",
   "DELIVERY_VERSUS_PAYMENT": "NO",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -4639,25 +4620,25 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-INFL",
-  "TT_BOOK": "BOOK-INFL-1",
+  "TT_BOOK": "BOOK-INFL-2",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2026-01-19",
+  "SETTLEMENT_DATE": "2026-01-29",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FIXED",
       "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "JPY",
+      "CURRENCY": "EUR",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 357840000.0,
-      "DISCOUNT_INDEX": "CRV-JPY-OIS",
+      "NOTIONAL": 200000000.0,
+      "DISCOUNT_INDEX": "CRV-EUR-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
       "RESET_FIXING_SHIFT": "",
-      "RESET_HOLIDAY_SCHEDULE": "JPTO",
+      "RESET_HOLIDAY_SCHEDULE": "EUTA",
       "RESET_CONVENTION": "Annual",
       "EMISSIONS_VINTAGE_MIN": "",
       "EMISSIONS_VINTAGE_MAX": "",
@@ -4665,7 +4646,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "12",
+      "NUM_PROFILE_REC": "10",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -4674,38 +4655,38 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000824001",
+          "FLOW_ID": "20000379001",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 357840000.0,
-          "RATE": 0.020956,
+          "NOTIONAL": 200000000.0,
+          "RATE": 0.029504,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-01-19",
-          "END_DATE": "2026-06-15",
-          "PAYMENT_DATE": "2026-06-17",
+          "START_DATE": "2026-01-29",
+          "END_DATE": "2026-07-13",
+          "PAYMENT_DATE": "2026-07-15",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 11 more elements of the same shape"
+        "… 9 more elements of the same shape"
       ]
     },
     {
       "LEG_ID": "2",
       "LEG_TYPE": "FLOAT",
       "LEG_ECONOMIC_TYPE": "Receive",
-      "CURRENCY": "JPY",
+      "CURRENCY": "EUR",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 357840000.0,
-      "DISCOUNT_INDEX": "CRV-JPY-OIS",
+      "NOTIONAL": 200000000.0,
+      "DISCOUNT_INDEX": "CRV-EUR-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
       "RESET_FIXING_SHIFT": "-2",
-      "RESET_HOLIDAY_SCHEDULE": "JPTO",
+      "RESET_HOLIDAY_SCHEDULE": "EUTA",
       "RESET_CONVENTION": "Monthly",
       "EMISSIONS_VINTAGE_MIN": "",
       "EMISSIONS_VINTAGE_MAX": "",
@@ -4713,69 +4694,60 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "46",
+      "NUM_PROFILE_REC": "38",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "TONA",
+        "NAME": "ESTR",
         "GROUP": "Inflation",
         "SUB_GROUP": "Monthly"
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000824013",
+          "FLOW_ID": "20000379011",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 357840000.0,
-          "RATE": 0.005947,
+          "NOTIONAL": 200000000.0,
+          "RATE": 0.018907,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-01-19",
-          "END_DATE": "2026-03-16",
-          "PAYMENT_DATE": "2026-03-18",
-          "RATE_DETERMINATION_DATE": "2026-03-12",
-          "FIRST_RESET_DATE": "2026-01-19",
-          "LAST_RESET_DATE": "2026-02-19",
+          "START_DATE": "2026-01-29",
+          "END_DATE": "2026-04-13",
+          "PAYMENT_DATE": "2026-04-15",
+          "RATE_DETERMINATION_DATE": "2026-04-09",
+          "FIRST_RESET_DATE": "2026-01-29",
+          "LAST_RESET_DATE": "2026-03-29",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
               "RESET_ID": "R-1",
               "ACCRUAL": "",
-              "START_DATE": "2026-01-19",
-              "END_DATE": "2026-03-16",
-              "RESET_DATE": "2026-01-19",
-              "ACCRUAL_START_DATE": "2026-01-19",
-              "ACCRUAL_END_DATE": "2026-03-16",
-              "RATE": 0.005944
+              "START_DATE": "2026-01-29",
+              "END_DATE": "2026-04-13",
+              "RESET_DATE": "2026-01-29",
+              "ACCRUAL_START_DATE": "2026-01-29",
+              "ACCRUAL_END_DATE": "2026-04-13",
+              "RATE": 0.018862
             },
-            {
-              "RESET_ID": "R-2",
-              "ACCRUAL": "",
-              "START_DATE": "2026-02-19",
-              "END_DATE": "2026-03-16",
-              "RESET_DATE": "2026-02-19",
-              "ACCRUAL_START_DATE": "2026-01-19",
-              "ACCRUAL_END_DATE": "2026-03-16",
-              "RATE": 0.00595
-            }
+            "… 2 more elements of the same shape"
           ]
         },
-        "… 45 more elements of the same shape"
+        "… 37 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30000824001",
+      "EVENT_ID": "20000379001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2026-01-16",
+      "EVENT_DATE": "2026-01-27",
       "AMOUNT": "",
-      "CURRENCY": "JPY",
+      "CURRENCY": "EUR",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 63 more elements of the same shape"
+    "… 52 more elements of the same shape"
   ]
 }
 ```
@@ -4784,27 +4756,27 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.020956` |
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-JPY-OIS"` |
-| `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"JPTO"` |
+| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.029504` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-EUR-OIS"` |
+| `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"EUTA"` |
 | `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Annual"` |
 | `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Interest"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.020956` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.029504` |
 | `LEGS[].RESET_FIXING_SHIFT` | string | optional (filled in 33% of `LEGS[]` entries) | Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg. | one of `-2`, `0`; unit: business days | `"-2"` |
-| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"TONA"` |
+| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"ESTR"` |
 | `LEGS[].INDEX.GROUP` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Inflation"` |
 | `LEGS[].INDEX.SUB_GROUP` | string | optional (filled in 22% of `LEGS[].INDEX` entries) | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly,...); empty for a fixed leg. | seen: `Monthly`, `Quarterly`, `Semi-annual`, `Daily` | `"Monthly"` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2026-03-12"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2026-01-19"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2026-02-19"` |
-| `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [2 objects] |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2026-04-09"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2026-01-29"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2026-03-29"` |
+| `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [3 objects] |
 | `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2026-01-19"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2026-03-16"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2026-01-19"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-01-19"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-03-16"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.005944` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2026-01-29"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2026-04-13"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2026-01-29"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-01-29"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-04-13"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.018862` |
 
 ### EQ_OPTION_OTC
 
@@ -4942,40 +4914,40 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:58:00Z",
-  "TRADE_DATE": "2024-12-13",
-  "INPUT_DATE": "2024-12-13",
-  "TRADE_ID": "MX-30000697",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2024-05-24",
+  "INPUT_DATE": "2024-05-24",
+  "TRADE_ID": "MX-20000253",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30000697002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000253001",
   "PACKAGE_ID": "",
-  "QUANTITY": 87060.94,
+  "QUANTITY": 761678.0,
   "PRICE": null,
-  "BUY_SELL_CODE": "B",
+  "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "EQ_TRS",
   "PRODUCT_SUB_TYPE": "Equity total return swap",
   "PRODUCT_GROUP": "Equity",
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-SOLARIS",
-  "COUNTERPARTY_UEN": "UEN0100555",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "US",
+  "COUNTERPARTY": "CP-ALDERSHOT",
+  "COUNTERPARTY_UEN": "UEN0100037",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "GB",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00214",
   "LEGAL_ENTITY": "LE-LDN",
-  "PORTFOLIO": "BOOK-EQD-1",
+  "PORTFOLIO": "BOOK-EQD-3",
   "TRADER_ID": "TRDR-JWEISS",
   "TRADER_FIRST_NAME": "J.",
   "TRADER_LAST_NAME": "Weiss",
-  "START_DATE": "2024-12-16",
-  "MATURITY_DATE": "2033-11-02",
+  "START_DATE": "2024-05-28",
+  "MATURITY_DATE": "2028-11-24",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "CAD",
+  "CURRENCY": "USD",
   "DELIVERY_VERSUS_PAYMENT": "YES",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -4983,20 +4955,20 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-EQD",
-  "TT_BOOK": "BOOK-EQD-1",
+  "TT_BOOK": "BOOK-EQD-3",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2024-12-16",
+  "SETTLEMENT_DATE": "2024-05-28",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FLOAT",
-      "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "CAD",
+      "LEG_ECONOMIC_TYPE": "Receive",
+      "CURRENCY": "USD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 587936000.0,
-      "DISCOUNT_INDEX": "CRV-CAD-OIS",
+      "NOTIONAL": 243000000.0,
+      "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
@@ -5009,42 +4981,42 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "9",
+      "NUM_PROFILE_REC": "5",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "CSCA",
+        "NAME": "SLRS",
         "GROUP": "Equity",
         "SUB_GROUP": ""
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000697001",
+          "FLOW_ID": "20000253001",
           "FLOW_TYPE": "Premium",
-          "NOTIONAL": 587936000.0,
+          "NOTIONAL": 243000000.0,
           "RATE": 0.01,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2024-12-16",
-          "END_DATE": "2025-12-16",
-          "PAYMENT_DATE": "2025-12-16",
+          "START_DATE": "2024-05-28",
+          "END_DATE": "2025-05-28",
+          "PAYMENT_DATE": "2025-05-28",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 8 more elements of the same shape"
+        "… 4 more elements of the same shape"
       ]
     },
     {
       "LEG_ID": "2",
       "LEG_TYPE": "FLOAT",
-      "LEG_ECONOMIC_TYPE": "Receive",
-      "CURRENCY": "CAD",
+      "LEG_ECONOMIC_TYPE": "Pay",
+      "CURRENCY": "USD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 734920000.0,
-      "DISCOUNT_INDEX": "CRV-CAD-OIS",
+      "NOTIONAL": 243000000.0,
+      "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
@@ -5060,20 +5032,20 @@ Its fields beyond the shared table:
       "NUM_PROFILE_REC": "1",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "CORRA",
+        "NAME": "SOFR",
         "GROUP": "Equity",
         "SUB_GROUP": ""
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000697010",
+          "FLOW_ID": "20000253006",
           "FLOW_TYPE": "Float",
-          "NOTIONAL": 734920000.0,
-          "RATE": 0.027559,
+          "NOTIONAL": 243000000.0,
+          "RATE": 0.036215,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2024-12-16",
-          "END_DATE": "2033-11-02",
-          "PAYMENT_DATE": "2033-11-02",
+          "START_DATE": "2024-05-28",
+          "END_DATE": "2028-11-24",
+          "PAYMENT_DATE": "2028-11-24",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
@@ -5086,18 +5058,18 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30000697001",
+      "EVENT_ID": "20000253001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2024-12-13",
+      "EVENT_DATE": "2024-05-24",
       "AMOUNT": "",
-      "CURRENCY": "CAD",
+      "CURRENCY": "USD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 13 more elements of the same shape"
+    "… 9 more elements of the same shape"
   ]
 }
 ```
@@ -5106,10 +5078,10 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-CAD-OIS"` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-USD-OIS"` |
 | `LEGS[].RESET_FIXING_SHIFT` | string | optional (filled in 33% of `LEGS[]` entries) | Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg. | one of `-2`, `0`; unit: business days | `"-2"` |
 | `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Quarterly"` |
-| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"CSCA"` |
+| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"SLRS"` |
 | `LEGS[].INDEX.GROUP` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Equity"` |
 | `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Premium"` |
 | `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.01` |
@@ -5247,18 +5219,18 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:30:00Z",
-  "TRADE_DATE": "2026-06-26",
-  "INPUT_DATE": "2026-06-26",
-  "TRADE_ID": "MX-20000005",
-  "TRADE_STATUS": "VALIDATED",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2025-07-25",
+  "INPUT_DATE": "2025-07-25",
+  "TRADE_ID": "MX-20000001",
+  "TRADE_STATUS": "AMENDED",
   "TRADE_ACTION": "AMEND",
   "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "20000005002",
+  "TRANSACTION_ID": "20000001002",
   "PACKAGE_ID": "",
-  "QUANTITY": 140000000.0,
-  "PRICE": 0.053791,
-  "BUY_SELL_CODE": "B",
+  "QUANTITY": 242000000.0,
+  "PRICE": 0.040829,
+  "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "IRS_FIXFLOAT",
   "PRODUCT_SUB_TYPE": "Interest rate swap (fixed/float)",
   "PRODUCT_GROUP": "Rates",
@@ -5277,10 +5249,10 @@ Its fields beyond the shared table:
   "TRADER_ID": "TRDR-ASHAH",
   "TRADER_FIRST_NAME": "A.",
   "TRADER_LAST_NAME": "Shah",
-  "START_DATE": "2026-06-29",
-  "MATURITY_DATE": "2036-08-15",
+  "START_DATE": "2025-07-28",
+  "MATURITY_DATE": "2032-06-25",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "GBP",
+  "CURRENCY": "AUD",
   "DELIVERY_VERSUS_PAYMENT": "NO",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -5290,31 +5262,31 @@ Its fields beyond the shared table:
   "TT_GROUP": "DESK-RATES",
   "TT_BOOK": "BOOK-RATES-3",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2026-06-29",
+  "SETTLEMENT_DATE": "2025-07-28",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FIXED",
-      "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "GBP",
+      "LEG_ECONOMIC_TYPE": "Receive",
+      "CURRENCY": "AUD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 112000000.0,
-      "DISCOUNT_INDEX": "CRV-GBP-OIS",
+      "NOTIONAL": 242000000.0,
+      "DISCOUNT_INDEX": "CRV-AUD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
       "RESET_FIXING_SHIFT": "",
       "RESET_HOLIDAY_SCHEDULE": "GBLO",
-      "RESET_CONVENTION": "Semi-annual",
+      "RESET_CONVENTION": "Annual",
       "EMISSIONS_VINTAGE_MIN": "",
       "EMISSIONS_VINTAGE_MAX": "",
       "EMISSIONS_VINTAGE_DELIVERY_TYPE": "",
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "21",
+      "NUM_PROFILE_REC": "7",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -5323,33 +5295,33 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "20000005001",
+          "FLOW_ID": "20000001001",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 112000000.0,
-          "RATE": 0.053791,
+          "NOTIONAL": 242000000.0,
+          "RATE": 0.040829,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-06-29",
-          "END_DATE": "2026-08-17",
-          "PAYMENT_DATE": "2026-08-19",
+          "START_DATE": "2025-07-28",
+          "END_DATE": "2026-06-25",
+          "PAYMENT_DATE": "2026-06-29",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 20 more elements of the same shape"
+        "… 6 more elements of the same shape"
       ]
     },
     {
       "LEG_ID": "2",
       "LEG_TYPE": "FLOAT",
-      "LEG_ECONOMIC_TYPE": "Receive",
-      "CURRENCY": "GBP",
+      "LEG_ECONOMIC_TYPE": "Pay",
+      "CURRENCY": "AUD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 140000000.0,
-      "DISCOUNT_INDEX": "CRV-GBP-OIS",
+      "NOTIONAL": 242000000.0,
+      "DISCOUNT_INDEX": "CRV-AUD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
@@ -5362,69 +5334,69 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "41",
+      "NUM_PROFILE_REC": "28",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "SONIA",
+        "NAME": "AONIA",
         "GROUP": "Rates",
         "SUB_GROUP": "Monthly"
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "20000005022",
+          "FLOW_ID": "20000001008",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 140000000.0,
-          "RATE": 0.038209,
+          "NOTIONAL": 242000000.0,
+          "RATE": 0.035377,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-06-29",
-          "END_DATE": "2026-08-17",
-          "PAYMENT_DATE": "2026-08-19",
-          "RATE_DETERMINATION_DATE": "2026-08-13",
-          "FIRST_RESET_DATE": "2026-06-29",
-          "LAST_RESET_DATE": "2026-07-29",
+          "START_DATE": "2025-07-28",
+          "END_DATE": "2025-09-25",
+          "PAYMENT_DATE": "2025-09-29",
+          "RATE_DETERMINATION_DATE": "2025-09-23",
+          "FIRST_RESET_DATE": "2025-07-28",
+          "LAST_RESET_DATE": "2025-08-28",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
               "RESET_ID": "R-1",
               "ACCRUAL": "",
-              "START_DATE": "2026-06-29",
-              "END_DATE": "2026-08-17",
-              "RESET_DATE": "2026-06-29",
-              "ACCRUAL_START_DATE": "2026-06-29",
-              "ACCRUAL_END_DATE": "2026-08-17",
-              "RATE": 0.03819
+              "START_DATE": "2025-07-28",
+              "END_DATE": "2025-09-25",
+              "RESET_DATE": "2025-07-28",
+              "ACCRUAL_START_DATE": "2025-07-28",
+              "ACCRUAL_END_DATE": "2025-09-25",
+              "RATE": 0.035376
             },
             {
               "RESET_ID": "R-2",
               "ACCRUAL": "",
-              "START_DATE": "2026-07-29",
-              "END_DATE": "2026-08-17",
-              "RESET_DATE": "2026-07-29",
-              "ACCRUAL_START_DATE": "2026-06-29",
-              "ACCRUAL_END_DATE": "2026-08-17",
-              "RATE": 0.038239
+              "START_DATE": "2025-08-28",
+              "END_DATE": "2025-09-25",
+              "RESET_DATE": "2025-08-28",
+              "ACCRUAL_START_DATE": "2025-07-28",
+              "ACCRUAL_END_DATE": "2025-09-25",
+              "RATE": 0.035378
             }
           ]
         },
-        "… 40 more elements of the same shape"
+        "… 27 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "20000005001",
+      "EVENT_ID": "20000001001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2026-06-26",
+      "EVENT_DATE": "2025-07-25",
       "AMOUNT": "",
-      "CURRENCY": "GBP",
+      "CURRENCY": "AUD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 66 more elements of the same shape"
+    "… 41 more elements of the same shape"
   ]
 }
 ```
@@ -5433,27 +5405,27 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.053791` |
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-GBP-OIS"` |
+| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.040829` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-AUD-OIS"` |
 | `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"GBLO"` |
-| `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Semi-annual"` |
+| `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Annual"` |
 | `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Interest"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.053791` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.040829` |
 | `LEGS[].RESET_FIXING_SHIFT` | string | optional (filled in 33% of `LEGS[]` entries) | Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg. | one of `-2`, `0`; unit: business days | `"-2"` |
-| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"SONIA"` |
+| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"AONIA"` |
 | `LEGS[].INDEX.GROUP` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Rates"` |
 | `LEGS[].INDEX.SUB_GROUP` | string | optional (filled in 22% of `LEGS[].INDEX` entries) | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly,...); empty for a fixed leg. | seen: `Monthly`, `Quarterly`, `Semi-annual`, `Daily` | `"Monthly"` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2026-08-13"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2026-06-29"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2026-07-29"` |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2025-09-23"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2025-07-28"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2025-08-28"` |
 | `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [2 objects] |
 | `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2026-06-29"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2026-08-17"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2026-06-29"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-06-29"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-08-17"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.03819` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2025-07-28"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2025-09-25"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2025-07-28"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-07-28"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-09-25"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.035376` |
 
 ### CMD_SWAPTION
 
@@ -5590,17 +5562,17 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:30:00Z",
-  "TRADE_DATE": "2025-03-26",
-  "INPUT_DATE": "2025-03-26",
-  "TRADE_ID": "MX-20000375",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2026-06-18",
+  "INPUT_DATE": "2026-06-18",
+  "TRADE_ID": "MX-20000373",
   "TRADE_STATUS": "AMENDED",
   "TRADE_ACTION": "AMEND",
   "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "20000375002",
+  "TRANSACTION_ID": "20000373002",
   "PACKAGE_ID": "",
-  "QUANTITY": 31000000.0,
-  "PRICE": 21201.0,
+  "QUANTITY": 66000000.0,
+  "PRICE": 23774.0,
   "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "FREIGHT_FFA",
   "PRODUCT_SUB_TYPE": "Freight forward agreement",
@@ -5608,20 +5580,20 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "linear",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-TOKAI",
-  "COUNTERPARTY_UEN": "UEN0100629",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "JP",
+  "COUNTERPARTY": "CP-PINNACLE",
+  "COUNTERPARTY_UEN": "UEN0100481",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "US",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-COMM-1",
-  "TRADER_ID": "TRDR-TBRENNAN",
-  "TRADER_FIRST_NAME": "T.",
-  "TRADER_LAST_NAME": "Brennan",
-  "START_DATE": "2025-03-28",
-  "MATURITY_DATE": "2026-10-07",
+  "PORTFOLIO": "BOOK-COMM-2",
+  "TRADER_ID": "TRDR-FROSSI",
+  "TRADER_FIRST_NAME": "F.",
+  "TRADER_LAST_NAME": "Rossi",
+  "START_DATE": "2026-06-22",
+  "MATURITY_DATE": "2028-04-13",
   "REGISTRY_DELIVERY_DATE": "",
   "CURRENCY": "USD",
   "DELIVERY_VERSUS_PAYMENT": "NO",
@@ -5631,9 +5603,9 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-COMM",
-  "TT_BOOK": "BOOK-COMM-1",
+  "TT_BOOK": "BOOK-COMM-2",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2025-03-28",
+  "SETTLEMENT_DATE": "2026-06-22",
   "LEGS": [
     {
       "LEG_ID": "1",
@@ -5643,7 +5615,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 31000000.0,
+      "NOTIONAL": 66000000.0,
       "DISCOUNT_INDEX": "",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -5657,7 +5629,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "7",
+      "NUM_PROFILE_REC": "8",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -5666,43 +5638,43 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "20000375001",
-          "FLOW_TYPE": "2025-06-28..2025-09-28",
-          "NOTIONAL": 31000000.0,
-          "RATE": 0.043241,
+          "FLOW_ID": "20000373001",
+          "FLOW_TYPE": "2026-09-22..2026-12-22",
+          "NOTIONAL": 66000000.0,
+          "RATE": 0.022568,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2025-03-28",
-          "END_DATE": "2025-06-28",
-          "PAYMENT_DATE": "2025-06-28",
-          "RATE_DETERMINATION_DATE": "2025-06-28",
-          "FIRST_RESET_DATE": "2025-06-28",
-          "LAST_RESET_DATE": "2025-06-28",
+          "START_DATE": "2026-06-22",
+          "END_DATE": "2026-09-22",
+          "PAYMENT_DATE": "2026-09-22",
+          "RATE_DETERMINATION_DATE": "2026-09-22",
+          "FIRST_RESET_DATE": "2026-09-22",
+          "LAST_RESET_DATE": "2026-09-22",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
               "RESET_ID": "R-1",
               "ACCRUAL": "",
-              "START_DATE": "2025-06-28",
-              "END_DATE": "2025-06-28",
-              "RESET_DATE": "2025-06-28",
+              "START_DATE": "2026-09-22",
+              "END_DATE": "2026-09-22",
+              "RESET_DATE": "2026-09-22",
               "ACCRUAL_START_DATE": "",
               "ACCRUAL_END_DATE": "",
-              "RATE": 0.043241
+              "RATE": 0.022568
             }
           ]
         },
-        "… 6 more elements of the same shape"
+        "… 7 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "20000375001",
+      "EVENT_ID": "20000373001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2025-03-26",
+      "EVENT_DATE": "2026-06-18",
       "AMOUNT": "",
       "CURRENCY": "USD",
       "SEQUENCE_NUMBER": 1,
@@ -5718,18 +5690,18 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `21201.0` |
-| `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"2025-06-28..2025-09-28"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.043241` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2025-06-28"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2025-06-28"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2025-06-28"` |
+| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `23774.0` |
+| `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"2026-09-22..2026-12-22"` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.022568` |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2026-09-22"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2026-09-22"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2026-09-22"` |
 | `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [1 objects] |
 | `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2025-06-28"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2025-06-28"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2025-06-28"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.043241` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2026-09-22"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2026-09-22"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2026-09-22"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.022568` |
 
 ### GAS_SWING
 
@@ -6269,16 +6241,16 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:15:00Z",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
   "TRADE_DATE": "2024-06-21",
   "INPUT_DATE": "2024-06-21",
-  "TRADE_ID": "MX-30000403",
+  "TRADE_ID": "MX-20000404",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30000403002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000404001",
   "PACKAGE_ID": "",
-  "QUANTITY": 409275000.0,
+  "QUANTITY": 153000000.0,
   "PRICE": null,
   "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "INFL_ASSET_SWAP",
@@ -6287,9 +6259,9 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-VERDANT",
-  "COUNTERPARTY_UEN": "UEN0100666",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "BR",
+  "COUNTERPARTY": "CP-MERIDIAN-RE",
+  "COUNTERPARTY_UEN": "UEN0100407",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "BM",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
@@ -6322,7 +6294,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 409275000.0,
+      "NOTIONAL": 153000000.0,
       "DISCOUNT_INDEX": "CRV-JPY-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -6345,9 +6317,9 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000403001",
+          "FLOW_ID": "20000404001",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 409275000.0,
+          "NOTIONAL": 153000000.0,
           "RATE": 0.012341,
           "FLOAT_SPREAD": "",
           "START_DATE": "2024-06-24",
@@ -6370,7 +6342,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 327420000.0,
+      "NOTIONAL": 153000000.0,
       "DISCOUNT_INDEX": "CRV-JPY-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -6393,9 +6365,9 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000403005",
+          "FLOW_ID": "20000404005",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 327420000.0,
+          "NOTIONAL": 153000000.0,
           "RATE": 0.004948,
           "FLOAT_SPREAD": "",
           "START_DATE": "2024-06-24",
@@ -6435,7 +6407,7 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30000403001",
+      "EVENT_ID": "20000404001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
@@ -6483,17 +6455,17 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:22:00Z",
-  "TRADE_DATE": "2024-08-27",
-  "INPUT_DATE": "2024-08-27",
-  "TRADE_ID": "MX-30002941",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2026-04-27",
+  "INPUT_DATE": "2026-04-27",
+  "TRADE_ID": "MX-20000277",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30002941002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000277001",
   "PACKAGE_ID": "",
-  "QUANTITY": 12658800.0,
-  "PRICE": 0.039841,
+  "QUANTITY": 214000000.0,
+  "PRICE": 0.012696,
   "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "CONVERTIBLE_BOND",
   "PRODUCT_SUB_TYPE": "Convertible bond",
@@ -6501,22 +6473,22 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "bond",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-AURORA",
-  "COUNTERPARTY_UEN": "UEN0100074",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "NO",
+  "COUNTERPARTY": "CP-CASCADIA",
+  "COUNTERPARTY_UEN": "UEN0100148",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "CA",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00214",
   "LEGAL_ENTITY": "LE-LDN",
-  "PORTFOLIO": "BOOK-EQD-1",
+  "PORTFOLIO": "BOOK-EQD-2",
   "TRADER_ID": "TRDR-JWEISS",
   "TRADER_FIRST_NAME": "J.",
   "TRADER_LAST_NAME": "Weiss",
-  "START_DATE": "2024-08-29",
-  "MATURITY_DATE": "2033-03-09",
+  "START_DATE": "2026-04-29",
+  "MATURITY_DATE": "2031-07-28",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "USD",
+  "CURRENCY": "CAD",
   "DELIVERY_VERSUS_PAYMENT": "YES",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -6524,20 +6496,20 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-EQD",
-  "TT_BOOK": "BOOK-EQD-1",
+  "TT_BOOK": "BOOK-EQD-2",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2024-08-29",
+  "SETTLEMENT_DATE": "2026-04-29",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FIXED",
       "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "USD",
+      "CURRENCY": "CAD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 12658800.0,
-      "DISCOUNT_INDEX": "CRV-USD-OIS",
+      "NOTIONAL": 214000000.0,
+      "DISCOUNT_INDEX": "CRV-CAD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
@@ -6550,7 +6522,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "18",
+      "NUM_PROFILE_REC": "11",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -6559,39 +6531,39 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30002941001",
+          "FLOW_ID": "20000277001",
           "FLOW_TYPE": "",
-          "NOTIONAL": 12658800.0,
-          "RATE": 0.048481,
+          "NOTIONAL": 214000000.0,
+          "RATE": 0.035321,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2024-08-29",
-          "END_DATE": "2025-02-28",
-          "PAYMENT_DATE": "2025-02-28",
+          "START_DATE": "2026-04-29",
+          "END_DATE": "2026-10-29",
+          "PAYMENT_DATE": "2026-10-29",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 17 more elements of the same shape"
+        "… 10 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30002941001",
+      "EVENT_ID": "20000277001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2024-08-27",
+      "EVENT_DATE": "2026-04-27",
       "AMOUNT": "",
-      "CURRENCY": "USD",
+      "CURRENCY": "CAD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 22 more elements of the same shape"
+    "… 14 more elements of the same shape"
   ]
 }
 ```
@@ -6600,9 +6572,9 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.039841` |
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-USD-OIS"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.048481` |
+| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.012696` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-CAD-OIS"` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.035321` |
 
 ### EQ_CASH
 
@@ -7523,16 +7495,16 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:35:00Z",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
   "TRADE_DATE": "2026-03-05",
   "INPUT_DATE": "2026-03-05",
-  "TRADE_ID": "MX-30001728",
+  "TRADE_ID": "MX-20000397",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30001728002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000397001",
   "PACKAGE_ID": "",
-  "QUANTITY": 175682505.01,
+  "QUANTITY": 41037726.0,
   "PRICE": 88.42,
   "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "INFL_LINKED_BOND",
@@ -7541,9 +7513,9 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "bond",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-TOKAI",
-  "COUNTERPARTY_UEN": "UEN0100629",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "JP",
+  "COUNTERPARTY": "CP-AURORA",
+  "COUNTERPARTY_UEN": "UEN0100074",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "NO",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
@@ -7576,7 +7548,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 47091000.0,
+      "NOTIONAL": 11000000.0,
       "DISCOUNT_INDEX": "",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -7599,9 +7571,9 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30001728001",
+          "FLOW_ID": "20000397001",
           "FLOW_TYPE": "",
-          "NOTIONAL": 47091000.0,
+          "NOTIONAL": 11000000.0,
           "RATE": 0.059886,
           "FLOAT_SPREAD": "",
           "START_DATE": "2026-03-09",
@@ -7620,7 +7592,7 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30001728001",
+      "EVENT_ID": "20000397001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
@@ -7631,7 +7603,7 @@ Its fields beyond the shared table:
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 29 more elements of the same shape"
+    "… 28 more elements of the same shape"
   ]
 }
 ```
@@ -8923,16 +8895,16 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:57:00Z",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
   "TRADE_DATE": "2024-08-30",
   "INPUT_DATE": "2024-08-30",
-  "TRADE_ID": "MX-30000854",
-  "TRADE_STATUS": "AMENDED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30000854002",
+  "TRADE_ID": "MX-20000411",
+  "TRADE_STATUS": "VALIDATED",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000411001",
   "PACKAGE_ID": "",
-  "QUANTITY": 482236000.0,
+  "QUANTITY": 124000000.0,
   "PRICE": null,
   "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "LPI_SWAP",
@@ -8941,9 +8913,9 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-MERIDIAN",
-  "COUNTERPARTY_UEN": "UEN0100370",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "US",
+  "COUNTERPARTY": "CP-HALCYON",
+  "COUNTERPARTY_UEN": "UEN0100222",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "GR",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
@@ -8976,7 +8948,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 482236000.0,
+      "NOTIONAL": 124000000.0,
       "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -8999,9 +8971,9 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000854001",
+          "FLOW_ID": "20000411001",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 482236000.0,
+          "NOTIONAL": 124000000.0,
           "RATE": 0.0384,
           "FLOAT_SPREAD": "",
           "START_DATE": "2024-09-03",
@@ -9024,7 +8996,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 482236000.0,
+      "NOTIONAL": 124000000.0,
       "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -9047,9 +9019,9 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000854006",
+          "FLOW_ID": "20000411006",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 482236000.0,
+          "NOTIONAL": 124000000.0,
           "RATE": 0.036122,
           "FLOAT_SPREAD": "",
           "START_DATE": "2024-09-03",
@@ -9089,7 +9061,7 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30000854001",
+      "EVENT_ID": "20000411001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
@@ -9137,17 +9109,17 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:19:00Z",
-  "TRADE_DATE": "2026-03-17",
-  "INPUT_DATE": "2026-03-17",
-  "TRADE_ID": "MX-30000830",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2025-01-13",
+  "INPUT_DATE": "2025-01-13",
+  "TRADE_ID": "MX-20000385",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30000830002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000385001",
   "PACKAGE_ID": "",
-  "QUANTITY": 827427000.0,
-  "PRICE": 0.03348,
+  "QUANTITY": 6000000.0,
+  "PRICE": 0.019796,
   "BUY_SELL_CODE": "S",
   "PRODUCT_TYPE": "YOY_INFL_SWAP",
   "PRODUCT_SUB_TYPE": "Year-on-year inflation swap",
@@ -9155,22 +9127,22 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-HALCYON",
-  "COUNTERPARTY_UEN": "UEN0100222",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "GR",
+  "COUNTERPARTY": "CP-MERIDIAN",
+  "COUNTERPARTY_UEN": "UEN0100370",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "US",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00214",
   "LEGAL_ENTITY": "LE-LDN",
   "PORTFOLIO": "BOOK-INFL-2",
-  "TRADER_ID": "TRDR-GMENDES",
-  "TRADER_FIRST_NAME": "G.",
-  "TRADER_LAST_NAME": "Mendes",
-  "START_DATE": "2026-03-19",
-  "MATURITY_DATE": "2028-04-24",
+  "TRADER_ID": "TRDR-HOKORO",
+  "TRADER_FIRST_NAME": "H.",
+  "TRADER_LAST_NAME": "Okoro",
+  "START_DATE": "2025-01-15",
+  "MATURITY_DATE": "2030-10-15",
   "REGISTRY_DELIVERY_DATE": "",
-  "CURRENCY": "USD",
+  "CURRENCY": "EUR",
   "DELIVERY_VERSUS_PAYMENT": "NO",
   "STRATEGY": null,
   "INTERNAL_TRADING_STRATEGY": "",
@@ -9180,23 +9152,23 @@ Its fields beyond the shared table:
   "TT_GROUP": "DESK-INFL",
   "TT_BOOK": "BOOK-INFL-2",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2026-03-19",
+  "SETTLEMENT_DATE": "2025-01-15",
   "LEGS": [
     {
       "LEG_ID": "1",
       "LEG_TYPE": "FIXED",
       "LEG_ECONOMIC_TYPE": "Receive",
-      "CURRENCY": "USD",
+      "CURRENCY": "EUR",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 827427000.0,
-      "DISCOUNT_INDEX": "CRV-USD-OIS",
+      "NOTIONAL": 6000000.0,
+      "DISCOUNT_INDEX": "CRV-EUR-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
       "RESET_FIXING_SHIFT": "",
-      "RESET_HOLIDAY_SCHEDULE": "USNY",
+      "RESET_HOLIDAY_SCHEDULE": "EUTA",
       "RESET_CONVENTION": "Annual",
       "EMISSIONS_VINTAGE_MIN": "",
       "EMISSIONS_VINTAGE_MAX": "",
@@ -9204,7 +9176,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "3",
+      "NUM_PROFILE_REC": "6",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -9213,38 +9185,38 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000830001",
+          "FLOW_ID": "20000385001",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 827427000.0,
-          "RATE": 0.03348,
+          "NOTIONAL": 6000000.0,
+          "RATE": 0.019796,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-03-19",
-          "END_DATE": "2026-04-24",
-          "PAYMENT_DATE": "2026-04-28",
+          "START_DATE": "2025-01-15",
+          "END_DATE": "2025-10-15",
+          "PAYMENT_DATE": "2025-10-17",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 2 more elements of the same shape"
+        "… 5 more elements of the same shape"
       ]
     },
     {
       "LEG_ID": "2",
       "LEG_TYPE": "FLOAT",
       "LEG_ECONOMIC_TYPE": "Pay",
-      "CURRENCY": "USD",
+      "CURRENCY": "EUR",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 827427000.0,
-      "DISCOUNT_INDEX": "CRV-USD-OIS",
+      "NOTIONAL": 6000000.0,
+      "DISCOUNT_INDEX": "CRV-EUR-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
       "INDEX_LOCATION_NAME": "",
       "RESET_FIXING_SHIFT": "-2",
-      "RESET_HOLIDAY_SCHEDULE": "USNY",
+      "RESET_HOLIDAY_SCHEDULE": "EUTA",
       "RESET_CONVENTION": "Monthly",
       "EMISSIONS_VINTAGE_MIN": "",
       "EMISSIONS_VINTAGE_MAX": "",
@@ -9252,69 +9224,60 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "9",
+      "NUM_PROFILE_REC": "23",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "SOFR",
+        "NAME": "ESTR",
         "GROUP": "Inflation",
         "SUB_GROUP": "Monthly"
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000830004",
+          "FLOW_ID": "20000385007",
           "FLOW_TYPE": "Interest",
-          "NOTIONAL": 827427000.0,
-          "RATE": 0.036218,
+          "NOTIONAL": 6000000.0,
+          "RATE": 0.0196,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-03-19",
-          "END_DATE": "2026-04-24",
-          "PAYMENT_DATE": "2026-04-28",
-          "RATE_DETERMINATION_DATE": "2026-04-22",
-          "FIRST_RESET_DATE": "2026-03-19",
-          "LAST_RESET_DATE": "2026-04-19",
+          "START_DATE": "2025-01-15",
+          "END_DATE": "2025-04-15",
+          "PAYMENT_DATE": "2025-04-17",
+          "RATE_DETERMINATION_DATE": "2025-04-11",
+          "FIRST_RESET_DATE": "2025-01-15",
+          "LAST_RESET_DATE": "2025-03-15",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
               "RESET_ID": "R-1",
               "ACCRUAL": "",
-              "START_DATE": "2026-03-19",
-              "END_DATE": "2026-04-24",
-              "RESET_DATE": "2026-03-19",
-              "ACCRUAL_START_DATE": "2026-03-19",
-              "ACCRUAL_END_DATE": "2026-04-24",
-              "RATE": 0.036219
+              "START_DATE": "2025-01-15",
+              "END_DATE": "2025-04-15",
+              "RESET_DATE": "2025-01-15",
+              "ACCRUAL_START_DATE": "2025-01-15",
+              "ACCRUAL_END_DATE": "2025-04-15",
+              "RATE": 0.019544
             },
-            {
-              "RESET_ID": "R-2",
-              "ACCRUAL": "",
-              "START_DATE": "2026-04-19",
-              "END_DATE": "2026-04-24",
-              "RESET_DATE": "2026-04-19",
-              "ACCRUAL_START_DATE": "2026-03-19",
-              "ACCRUAL_END_DATE": "2026-04-24",
-              "RATE": 0.036212
-            }
+            "… 2 more elements of the same shape"
           ]
         },
-        "… 8 more elements of the same shape"
+        "… 22 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30000830001",
+      "EVENT_ID": "20000385001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2026-03-17",
+      "EVENT_DATE": "2025-01-13",
       "AMOUNT": "",
-      "CURRENCY": "USD",
+      "CURRENCY": "EUR",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 17 more elements of the same shape"
+    "… 33 more elements of the same shape"
   ]
 }
 ```
@@ -9323,27 +9286,27 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.03348` |
-| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-USD-OIS"` |
-| `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"USNY"` |
+| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `0.019796` |
+| `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-EUR-OIS"` |
+| `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"EUTA"` |
 | `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Annual"` |
 | `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Interest"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.03348` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.019796` |
 | `LEGS[].RESET_FIXING_SHIFT` | string | optional (filled in 33% of `LEGS[]` entries) | Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg. | one of `-2`, `0`; unit: business days | `"-2"` |
-| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"SOFR"` |
+| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"ESTR"` |
 | `LEGS[].INDEX.GROUP` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Inflation"` |
 | `LEGS[].INDEX.SUB_GROUP` | string | optional (filled in 22% of `LEGS[].INDEX` entries) | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly,...); empty for a fixed leg. | seen: `Monthly`, `Quarterly`, `Semi-annual`, `Daily` | `"Monthly"` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2026-04-22"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2026-03-19"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2026-04-19"` |
-| `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [2 objects] |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2025-04-11"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2025-01-15"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2025-03-15"` |
+| `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [3 objects] |
 | `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2026-03-19"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2026-04-24"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2026-03-19"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-03-19"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-04-24"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.036219` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2025-01-15"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2025-04-15"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2025-01-15"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-01-15"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2025-04-15"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `0.019544` |
 
 ### DIVIDEND_SWAP
 
@@ -9478,16 +9441,16 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:52:00Z",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
   "TRADE_DATE": "2026-03-02",
   "INPUT_DATE": "2026-03-02",
-  "TRADE_ID": "MX-30003672",
+  "TRADE_ID": "MX-20000121",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30003672002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000121001",
   "PACKAGE_ID": "",
-  "QUANTITY": 22139000.0,
+  "QUANTITY": 13000000.0,
   "PRICE": null,
   "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "CMS_SPREAD_OPT",
@@ -9496,9 +9459,9 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "option",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": 6.8,
-  "COUNTERPARTY": "CP-MERIDIAN-RE",
-  "COUNTERPARTY_UEN": "UEN0100407",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "BM",
+  "COUNTERPARTY": "CP-PINNACLE",
+  "COUNTERPARTY_UEN": "UEN0100481",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "US",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
@@ -9531,7 +9494,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 22139000.0,
+      "NOTIONAL": 13000000.0,
       "DISCOUNT_INDEX": "CRV-JPY-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -9554,9 +9517,9 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30003672001",
+          "FLOW_ID": "20000121001",
           "FLOW_TYPE": "2026-06-04..2026-09-04",
-          "NOTIONAL": 22139000.0,
+          "NOTIONAL": 13000000.0,
           "RATE": 0.037414,
           "FLOAT_SPREAD": "",
           "START_DATE": "2026-03-04",
@@ -9586,7 +9549,7 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30003672001",
+      "EVENT_ID": "20000121001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
@@ -9755,17 +9718,17 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:22:00Z",
-  "TRADE_DATE": "2026-04-15",
-  "INPUT_DATE": "2026-04-15",
-  "TRADE_ID": "MX-20000306",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2026-05-15",
+  "INPUT_DATE": "2026-05-15",
+  "TRADE_ID": "MX-20000301",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "20000306002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000301001",
   "PACKAGE_ID": "",
-  "QUANTITY": 24000000.0,
-  "PRICE": 46.63,
+  "QUANTITY": 208000000.0,
+  "PRICE": 4.85,
   "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "CMD_SWAP",
   "PRODUCT_SUB_TYPE": "Commodity swap",
@@ -9773,20 +9736,20 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-ALDERSHOT",
-  "COUNTERPARTY_UEN": "UEN0100037",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "GB",
+  "COUNTERPARTY": "CP-HARBORPT",
+  "COUNTERPARTY_UEN": "UEN0100259",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "US",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
-  "PORTFOLIO": "BOOK-COMM-2",
+  "PORTFOLIO": "BOOK-COMM-3",
   "TRADER_ID": "TRDR-TBRENNAN",
   "TRADER_FIRST_NAME": "T.",
   "TRADER_LAST_NAME": "Brennan",
-  "START_DATE": "2026-05-01",
-  "MATURITY_DATE": "2027-01-31",
+  "START_DATE": "2026-06-01",
+  "MATURITY_DATE": "2027-05-31",
   "REGISTRY_DELIVERY_DATE": "",
   "CURRENCY": "USD",
   "DELIVERY_VERSUS_PAYMENT": "NO",
@@ -9796,9 +9759,9 @@ Its fields beyond the shared table:
   "VAULT_LOCATION_ALLOCATION": "",
   "PRECIOUS_METAL_FLAG": "",
   "TT_GROUP": "DESK-COMM",
-  "TT_BOOK": "BOOK-COMM-2",
+  "TT_BOOK": "BOOK-COMM-3",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2026-05-01",
+  "SETTLEMENT_DATE": "2026-06-01",
   "LEGS": [
     {
       "LEG_ID": "1",
@@ -9807,8 +9770,8 @@ Its fields beyond the shared table:
       "CURRENCY": "USD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
-      "PRICE_UNIT": "USD/oz",
-      "NOTIONAL": 4168722.0,
+      "PRICE_UNIT": "USD/lb",
+      "NOTIONAL": 348715.0,
       "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -9822,7 +9785,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "9",
+      "NUM_PROFILE_REC": "12",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -9831,21 +9794,21 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "20000306001",
+          "FLOW_ID": "20000301001",
           "FLOW_TYPE": "Fixed price",
-          "NOTIONAL": 4168722.0,
-          "RATE": 46.63,
+          "NOTIONAL": 348715.0,
+          "RATE": 4.85,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-05-01",
-          "END_DATE": "2026-05-31",
-          "PAYMENT_DATE": "2026-06-05",
+          "START_DATE": "2026-06-01",
+          "END_DATE": "2026-06-30",
+          "PAYMENT_DATE": "2026-07-08",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 8 more elements of the same shape"
+        "… 11 more elements of the same shape"
       ]
     },
     {
@@ -9855,8 +9818,8 @@ Its fields beyond the shared table:
       "CURRENCY": "USD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
-      "PRICE_UNIT": "USD/oz",
-      "NOTIONAL": 4130280.0,
+      "PRICE_UNIT": "USD/lb",
+      "NOTIONAL": 349434.0,
       "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -9870,42 +9833,42 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "9",
+      "NUM_PROFILE_REC": "12",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "COMEX Silver settle",
+        "NAME": "COMEX Copper settle",
         "GROUP": "Commodity",
         "SUB_GROUP": "Daily"
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "20000306010",
+          "FLOW_ID": "20000301013",
           "FLOW_TYPE": "Index average",
-          "NOTIONAL": 4130280.0,
-          "RATE": 45.314,
+          "NOTIONAL": 349434.0,
+          "RATE": 4.9619,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-05-01",
-          "END_DATE": "2026-05-31",
-          "PAYMENT_DATE": "2026-06-05",
-          "RATE_DETERMINATION_DATE": "2026-05-01",
-          "FIRST_RESET_DATE": "2026-05-01",
-          "LAST_RESET_DATE": "2026-05-29",
+          "START_DATE": "2026-06-01",
+          "END_DATE": "2026-06-30",
+          "PAYMENT_DATE": "2026-07-08",
+          "RATE_DETERMINATION_DATE": "2026-06-01",
+          "FIRST_RESET_DATE": "2026-06-01",
+          "LAST_RESET_DATE": "2026-06-30",
           "STRIKE_PRICE": 0.0,
           "RESETS": [
             {
               "RESET_ID": "R-1",
               "ACCRUAL": "",
-              "START_DATE": "2026-05-01",
-              "END_DATE": "2026-05-31",
-              "RESET_DATE": "2026-05-01",
-              "ACCRUAL_START_DATE": "2026-05-01",
-              "ACCRUAL_END_DATE": "2026-05-31",
-              "RATE": 44.59
+              "START_DATE": "2026-06-01",
+              "END_DATE": "2026-06-30",
+              "RESET_DATE": "2026-06-01",
+              "ACCRUAL_START_DATE": "2026-06-01",
+              "ACCRUAL_END_DATE": "2026-06-30",
+              "RATE": 4.88
             },
-            "… 19 more elements of the same shape"
+            "… 20 more elements of the same shape"
           ]
         },
-        "… 8 more elements of the same shape"
+        "… 11 more elements of the same shape"
       ]
     },
     {
@@ -9915,8 +9878,8 @@ Its fields beyond the shared table:
       "CURRENCY": "USD",
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
-      "PRICE_UNIT": "USD/oz",
-      "NOTIONAL": 9923.0,
+      "PRICE_UNIT": "USD/lb",
+      "NOTIONAL": 719.0,
       "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -9930,7 +9893,7 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "9",
+      "NUM_PROFILE_REC": "12",
       "DAILY_VOLUME": "",
       "INDEX": {
         "NAME": "",
@@ -9939,39 +9902,39 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "20000306019",
+          "FLOW_ID": "20000301025",
           "FLOW_TYPE": "Fee",
-          "NOTIONAL": 9923.0,
-          "RATE": 0.111,
+          "NOTIONAL": 719.0,
+          "RATE": 0.01,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2026-05-01",
-          "END_DATE": "2026-05-31",
-          "PAYMENT_DATE": "2026-06-05",
+          "START_DATE": "2026-06-01",
+          "END_DATE": "2026-06-30",
+          "PAYMENT_DATE": "2026-07-08",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 8 more elements of the same shape"
+        "… 11 more elements of the same shape"
       ]
     }
   ],
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "20000306001",
+      "EVENT_ID": "20000301001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2026-04-15",
+      "EVENT_DATE": "2026-05-15",
       "AMOUNT": "",
       "CURRENCY": "USD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 32 more elements of the same shape"
+    "… 40 more elements of the same shape"
   ]
 }
 ```
@@ -9980,28 +9943,28 @@ Its fields beyond the shared table:
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `46.63` |
-| `LEGS[].PRICE_UNIT` | string | optional (filled in 3% of `LEGS[]` entries) | The unit the leg's quantities and prices are in (ENDUR BBL, MT, MMBTU, MWH, OZ, BU; MUREX USD/bbl, USD/oz,...); empty for money. | seen: `USc/bu`, `USD/bbl`, `USD/lb`, `USD/oz` | `"USD/oz"` |
+| `PRICE` | number | optional (filled in 38% of rows) | The deal's headline price or rate as booked. ENDUR: the fixed price per the leg's PRICE_UNIT; CALYPSO and MUREX: the first of the product's clean price, trade price, forward price, fixed price, fixed rate, coupon, rate, repo rate, spread or premium (a rate as a fraction, 0.042 is 4.2%; a price in the product's quote); null when the product has none. | — | `4.85` |
+| `LEGS[].PRICE_UNIT` | string | optional (filled in 3% of `LEGS[]` entries) | The unit the leg's quantities and prices are in (ENDUR BBL, MT, MMBTU, MWH, OZ, BU; MUREX USD/bbl, USD/oz,...); empty for money. | seen: `USc/bu`, `USD/bbl`, `USD/lb`, `USD/oz` | `"USD/lb"` |
 | `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-USD-OIS"` |
 | `LEGS[].RESET_HOLIDAY_SCHEDULE` | string | optional (filled in 37% of `LEGS[]` entries) | The holiday calendar the fixings follow (MUREX USNY, GBLO, EUTA, JPTO); null otherwise. | one of `EUTA`, `GBLO`, `JPTO`, `USNY` | `"USNY"` |
 | `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Monthly"` |
 | `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Fixed price"` |
-| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `46.63` |
+| `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `4.85` |
 | `LEGS[].RESET_FIXING_SHIFT` | string | optional (filled in 33% of `LEGS[]` entries) | Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg. | one of `-2`, `0`; unit: business days | `"-2"` |
-| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"COMEX Silver settle"` |
+| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"COMEX Copper settle"` |
 | `LEGS[].INDEX.GROUP` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Commodity"` |
 | `LEGS[].INDEX.SUB_GROUP` | string | optional (filled in 22% of `LEGS[].INDEX` entries) | The finer family of the index: ENDUR the commodity sub-sector (Crude oil, Natural gas, Power, Base metals, Precious, Refined, Grains); MUREX the reset frequency (Monthly, Quarterly,...); empty for a fixed leg. | seen: `Monthly`, `Quarterly`, `Semi-annual`, `Daily` | `"Daily"` |
-| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2026-05-01"` |
-| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2026-05-01"` |
-| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2026-05-29"` |
-| `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [20 objects] |
+| `LEGS[].CASH_FLOWS[].RATE_DETERMINATION_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The day the flow's floating rate or price is determined (its fixing date); empty when not given. | — | `"2026-06-01"` |
+| `LEGS[].CASH_FLOWS[].FIRST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The first day the flow's floating price or rate is observed (its first RESETS[].RESET_DATE); empty for a fixed flow. | — | `"2026-06-01"` |
+| `LEGS[].CASH_FLOWS[].LAST_RESET_DATE` | date (YYYY-MM-DD) | optional (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The last day the flow's floating price or rate is observed; empty for a fixed flow. | — | `"2026-06-30"` |
+| `LEGS[].CASH_FLOWS[].RESETS` | array of objects | required (filled in 56% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixings: one object per reset (observation) date in date order; an empty array for a fixed flow. | — | [21 objects] |
 | `LEGS[].CASH_FLOWS[].RESETS[].RESET_ID` | string | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The reset's number: ENDUR 1, 2,... within the flow; CALYPSO and MUREX R-n within the trade; text, may be empty. | — | `"R-1"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2026-05-01"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2026-05-31"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2026-05-01"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-05-01"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-05-31"` |
-| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `44.59` |
+| `LEGS[].CASH_FLOWS[].RESETS[].START_DATE` | date (YYYY-MM-DD) | required | The first day the reset applies to. | — | `"2026-06-01"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].END_DATE` | date (YYYY-MM-DD) | required | The last day the reset applies to. | — | `"2026-06-30"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RESET_DATE` | date (YYYY-MM-DD) | optional (filled in every `LEGS[].CASH_FLOWS[].RESETS[]` entry) | The day the index is observed; may be empty on ENDUR. | — | `"2026-06-01"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_START_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The first day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-06-01"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].ACCRUAL_END_DATE` | date (YYYY-MM-DD) | optional (filled in 93% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The last day the reset accrues (ENDUR averaging legs, MUREX); empty otherwise. | — | `"2026-06-30"` |
+| `LEGS[].CASH_FLOWS[].RESETS[].RATE` | number | optional (filled in 24% of `LEGS[].CASH_FLOWS[].RESETS[]` entries) | The fixing the reset observed (a rate fraction or a price); text on ENDUR; empty until fixed. | — | `4.88` |
 
 ### CMD_INDEX_SWAP
 
@@ -10010,16 +9973,16 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:36:00Z",
-  "TRADE_DATE": "2025-03-03",
-  "INPUT_DATE": "2025-03-03",
-  "TRADE_ID": "MX-30000788",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
+  "TRADE_DATE": "2024-10-07",
+  "INPUT_DATE": "2024-10-07",
+  "TRADE_ID": "MX-20000343",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "30000788002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000343001",
   "PACKAGE_ID": "",
-  "QUANTITY": 637557000.0,
+  "QUANTITY": 123000000.0,
   "PRICE": null,
   "BUY_SELL_CODE": "B",
   "PRODUCT_TYPE": "CMD_INDEX_SWAP",
@@ -10028,20 +9991,20 @@ Its fields beyond the shared table:
   "PRODUCT_SUB_GROUP": "swap",
   "OPTION_TYPE": null,
   "STRIKE_PRICE": null,
-  "COUNTERPARTY": "CP-AURORA",
-  "COUNTERPARTY_UEN": "UEN0100074",
-  "COUNTERPARTY_COUNTRY_OF_RISK": "NO",
+  "COUNTERPARTY": "CP-MERIDIAN",
+  "COUNTERPARTY_UEN": "UEN0100370",
+  "COUNTERPARTY_COUNTRY_OF_RISK": "US",
   "ORIGINAL_COUNTERPARTY": "",
   "ORIGINAL_COUNTERPARTY_UEN": "",
   "INTERNAL_EXTERNAL_CODE": "External",
   "TRANSIT": "00107",
   "LEGAL_ENTITY": "LE-NY",
   "PORTFOLIO": "BOOK-COMM-3",
-  "TRADER_ID": "TRDR-FROSSI",
-  "TRADER_FIRST_NAME": "F.",
-  "TRADER_LAST_NAME": "Rossi",
-  "START_DATE": "2025-03-05",
-  "MATURITY_DATE": "2034-11-06",
+  "TRADER_ID": "TRDR-TBRENNAN",
+  "TRADER_FIRST_NAME": "T.",
+  "TRADER_LAST_NAME": "Brennan",
+  "START_DATE": "2024-10-09",
+  "MATURITY_DATE": "2035-11-20",
   "REGISTRY_DELIVERY_DATE": "",
   "CURRENCY": "USD",
   "DELIVERY_VERSUS_PAYMENT": "NO",
@@ -10053,7 +10016,7 @@ Its fields beyond the shared table:
   "TT_GROUP": "DESK-COMM",
   "TT_BOOK": "BOOK-COMM-3",
   "LEASE_PERPETUITY_FLAG": "",
-  "SETTLEMENT_DATE": "2025-03-05",
+  "SETTLEMENT_DATE": "2024-10-09",
   "LEGS": [
     {
       "LEG_ID": "1",
@@ -10063,7 +10026,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 637557000.0,
+      "NOTIONAL": 123000000.0,
       "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -10077,30 +10040,30 @@ Its fields beyond the shared table:
       "SETTLEMENT_TYPE": "Cash Settlement",
       "NY_CURVE_FLAG": "",
       "NUM_RRDC_REC": "",
-      "NUM_PROFILE_REC": "10",
+      "NUM_PROFILE_REC": "12",
       "DAILY_VOLUME": "",
       "INDEX": {
-        "NAME": "COPPER",
+        "NAME": "BRENT",
         "GROUP": "Commodity",
         "SUB_GROUP": ""
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000788001",
+          "FLOW_ID": "20000343001",
           "FLOW_TYPE": "Premium",
-          "NOTIONAL": 637557000.0,
+          "NOTIONAL": 123000000.0,
           "RATE": 0.01,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2025-03-05",
-          "END_DATE": "2026-03-05",
-          "PAYMENT_DATE": "2026-03-05",
+          "START_DATE": "2024-10-09",
+          "END_DATE": "2025-10-09",
+          "PAYMENT_DATE": "2025-10-09",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
           "STRIKE_PRICE": 0.0,
           "RESETS": []
         },
-        "… 9 more elements of the same shape"
+        "… 11 more elements of the same shape"
       ]
     },
     {
@@ -10111,7 +10074,7 @@ Its fields beyond the shared table:
       "LEASE_CURRENCY": "",
       "FLOAT_SPREAD": "",
       "PRICE_UNIT": "",
-      "NOTIONAL": 637557000.0,
+      "NOTIONAL": 123000000.0,
       "DISCOUNT_INDEX": "CRV-USD-OIS",
       "SPOT_CONVERSION_FACTOR": "",
       "PHYSICAL_LOCATION_NAME": "",
@@ -10134,14 +10097,14 @@ Its fields beyond the shared table:
       },
       "CASH_FLOWS": [
         {
-          "FLOW_ID": "30000788011",
+          "FLOW_ID": "20000343013",
           "FLOW_TYPE": "Float",
-          "NOTIONAL": 637557000.0,
+          "NOTIONAL": 123000000.0,
           "RATE": 0.036215,
           "FLOAT_SPREAD": "",
-          "START_DATE": "2025-03-05",
-          "END_DATE": "2034-11-06",
-          "PAYMENT_DATE": "2034-11-06",
+          "START_DATE": "2024-10-09",
+          "END_DATE": "2035-11-20",
+          "PAYMENT_DATE": "2035-11-20",
           "RATE_DETERMINATION_DATE": "",
           "FIRST_RESET_DATE": "",
           "LAST_RESET_DATE": "",
@@ -10154,18 +10117,18 @@ Its fields beyond the shared table:
   "EVENTS": [
     {
       "LEG_ID": "",
-      "EVENT_ID": "30000788001",
+      "EVENT_ID": "20000343001",
       "EVENT_NUMBER": 1,
       "EVENT_TYPE": "BOOKED",
       "PAYMENT_TYPE": "",
-      "EVENT_DATE": "2025-03-03",
+      "EVENT_DATE": "2024-10-07",
       "AMOUNT": "",
       "CURRENCY": "USD",
       "SEQUENCE_NUMBER": 1,
       "VAULT_LOCATION_ALLOCATION": "",
       "NY_CURVE_FLAG": ""
     },
-    "… 14 more elements of the same shape"
+    "… 16 more elements of the same shape"
   ]
 }
 ```
@@ -10177,7 +10140,7 @@ Its fields beyond the shared table:
 | `LEGS[].DISCOUNT_INDEX` | string | optional (filled in 72% of `LEGS[]` entries) | The curve the leg's flows are discounted on (CALYPSO and MUREX an ir-curve id, CRV-USD-OIS; ENDUR DISC-<ccy>); empty when not given. | seen: `CRV-USD-OIS`, `CRV-JPY-OIS`, `CRV-EUR-OIS`, `CRV-GBP-OIS`, `CRV-AUD-OIS`, `CRV-CAD-OIS`, `CRV-CHF-OIS` | `"CRV-USD-OIS"` |
 | `LEGS[].RESET_FIXING_SHIFT` | string | optional (filled in 33% of `LEGS[]` entries) | Business days between the fixing and the period start (negative is before): -2 on CALYPSO and MUREX floating legs, 0 on ENDUR; empty for a fixed leg. | one of `-2`, `0`; unit: business days | `"-2"` |
 | `LEGS[].RESET_CONVENTION` | string | optional (filled in 55% of `LEGS[]` entries) | How often or how the floating rate or price is set: Daily, Daily average, Monthly, Quarterly, Semi-annual, Annual; empty for a fixed leg. | one of `Annual`, `Daily`, `Daily average`, `Monthly`, `Quarterly`, `Semi-annual` | `"Quarterly"` |
-| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"COPPER"` |
+| `LEGS[].INDEX.NAME` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | The benchmark a floating leg is set by. | — | `"BRENT"` |
 | `LEGS[].INDEX.GROUP` | string | optional (filled in 40% of `LEGS[].INDEX` entries) | CALYPSO and MUREX: the asset class of the trade the index serves (Rates, Commodity, Inflation …); empty on ENDUR. Not a counterparty group, although the contract links the name GROUP to counterparty-group. | links to `counterparty-group` | `"Commodity"` |
 | `LEGS[].CASH_FLOWS[].FLOW_TYPE` | string | optional (filled in 96% of `LEGS[].CASH_FLOWS[]` entries) | What the flow is, in the system's words: ENDUR Fixed price or Floating average; CALYPSO and MUREX Interest, Principal, Coupon paid, Premium, Fee, Caplet, Floorlet, Pending (not yet fixed), or the accrual period START..END; may be empty. | — | `"Premium"` |
 | `LEGS[].CASH_FLOWS[].RATE` | number | optional (filled in 80% of `LEGS[].CASH_FLOWS[]` entries) | The flow's fixed rate (a fraction a year) or fixed price (in PRICE_UNIT); text on ENDUR, number on CALYPSO and MUREX; empty until known. | — | `0.01` |
@@ -10796,14 +10759,14 @@ Its fields beyond the shared table:
 ```json
 {
   "SOURCE_SYSTEM": "MUREX",
-  "SOURCE_UPDATE_TIME": "2026-07-09T17:52:00Z",
+  "SOURCE_UPDATE_TIME": "2026-07-08T18:30:00Z",
   "TRADE_DATE": "2026-06-18",
   "INPUT_DATE": "2026-06-18",
   "TRADE_ID": "MX-20000391",
   "TRADE_STATUS": "VALIDATED",
-  "TRADE_ACTION": "AMEND",
-  "TRADE_VERSION": "2",
-  "TRANSACTION_ID": "20000391002",
+  "TRADE_ACTION": "NEW",
+  "TRADE_VERSION": "1",
+  "TRANSACTION_ID": "20000391001",
   "PACKAGE_ID": "",
   "QUANTITY": 243000000.0,
   "PRICE": null,

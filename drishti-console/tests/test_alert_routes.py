@@ -175,5 +175,5 @@ def test_the_inbox_has_an_alerts_tab_and_an_alert_row_opens_what_it_is_about(cli
 def test_the_reports_menu_and_the_view_page_lead_to_alerts(client):
     top = client.get("/reports").text
     assert 'href="/alerts#measure"' in top and "My alerts" in top and 'href="/alerts/all"' in top
-    assert "/alerts/new?source=field" in (client.get("/static/js/history.js").text.replace(" ", "") .replace("'", "")) or "alerts/new?source=field" in client.get("/static/js/history.js").text
-    assert "Alert me about this visual" in client.get("/static/js/bi-report.js").text
+    assert "/alerts/new?source=field" in (client.get("/static/js/drishti_history.js").text.replace(" ", "") .replace("'", "")) or "alerts/new?source=field" in client.get("/static/js/drishti_history.js").text
+    assert "Alert me about this visual" in client.get("/static/js/drishti_bi-report.js").text

@@ -31,7 +31,7 @@ import java.util.TreeSet;
 /**
  * The single-node capacity planner's one file, {@code capacity/planner.yaml} on the classpath (RESOURCES_AND_SCALE.md 9.7): the inputs,
  * coefficients, results, settings, JVM arguments, warnings and calibration lines, each result an Excel-subset expression over names. The
- * server never evaluates them: Admin → Capacity's {@code capacity.js} does as you type, {@code tools/sizing_planner.py} writes the same
+ * server never evaluates them: Admin → Capacity's {@code drishti_capacity.js} does as you type, {@code tools/sizing_planner.py} writes the same
  * expressions into the workbook and the shared test vectors keep both honest. Here the file is read once, the server jar's version put in
  * its {@code {VERSION}} placeholder, and inputs given by name are checked and typed.
  */

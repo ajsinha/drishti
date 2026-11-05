@@ -178,7 +178,7 @@ class SizingPlannerTest(unittest.TestCase):
                 toks = sp._tokens(cell[1:])
                 for i, (k, v) in enumerate(toks):
                     if k == "name" and i + 1 < len(toks) and toks[i + 1] == ("op", "("):
-                        self.assertIn(v.upper(), allowed, f"{name} calls {v}: capacity.js evaluates only {sorted(allowed)}")
+                        self.assertIn(v.upper(), allowed, f"{name} calls {v}: drishti_capacity.js evaluates only {sorted(allowed)}")
 
     def test_the_test_vectors_are_the_evaluators_figures(self):
         import json
