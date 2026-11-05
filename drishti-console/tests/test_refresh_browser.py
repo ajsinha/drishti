@@ -93,8 +93,9 @@ def test_panels_refresh_on_their_interval_without_a_reload_and_the_freshness_tic
     assert pg.evaluate("window.__doc") == 1                   # the same document: no reload
     assert any("/panels?" in u and "trades" in u for u in pg.fetches)
     assert pg.evaluate("document.querySelectorAll('#p-trades').length") == 1
-    pg.wait_for_timeout(1100)
-    assert pg.locator("[data-fresh='trades'] [data-fresh-text]").inner_text().startswith("updated ")
+    # the refetched answer lands and the label says so (waited on, not read after a fixed pause: under a loaded lane the panel's
+    # answer can take seconds, and the label read too early said "stale · updated 6 s ago")
+    wait(pg, "((document.querySelector(\"[data-fresh='trades'] [data-fresh-text]\") || {}).innerText || '').startsWith('updated ')")
     first = pg.evaluate("Drishti.refresh.state().trades.fetched")
     wait(pg, "Drishti.refresh.state().trades.fetched > %d" % first)
     pg.close()

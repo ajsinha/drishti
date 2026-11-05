@@ -1630,5 +1630,5 @@ The console's browser tests as the release drill runs them (the design, its rule
 | Run | Workers | Wall | Work (the files' seconds together) | Peak memory |
 |---|---:|---:|---:|---|
 | the drill's browser lane, by file (`--dist loadfile`), measured | 3 | 58 min 42 s | 10,535 s | 17 server JVMs and 16 GB at once (beside the Java verify) |
-| the browser lane by test (`--dist loadgroup`), the redesigned harness | to be measured | to be measured | to be measured | to be measured |
+| the browser lane by test (`--dist loadgroup`), the redesigned harness, three runs (no Java verify beside it) | 9 | 25 min 15 s, 28 min 55 s, 25 min 54 s | 13,444 s, 15,420 s, 13,848 s | about 36 GB (18 to 19 server JVMs, 81 Chromium processes); at least 10.8 GB left available |
 | both render suites alone, by test, measured on a shared machine | 4 | 353 s | | |

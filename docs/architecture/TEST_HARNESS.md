@@ -238,7 +238,21 @@ Measured so far, on the release machine while other jobs shared it (load average
 | both render suites (485 tests), 4 workers, the pack views bound by one server | 2,704 s of work on one worker each | 353 s wall (469 passed, 16 skipped: Sutras the preview does not bind, a stand-in without layout mode) |
 | the edge-case and behaviour tests of both render suites | | 56 passed, as on develop |
 
-The three full lane runs and their comparison with develop's lane are to be measured.
+**The whole lane, three runs** (2026-11-05, the same machine, 163 browser files, 1,625 tests, 9 workers as `drill_plan.py workers`
+chose from the memory available with 16 GB reserved; the owner's three-node stack running beside it, no Java verify):
+
+| Run | Wall | Work (files' seconds together) | Slowest files (seconds of work) | Failed | Lowest memory available | Lane's peak |
+|---|---:|---:|---|---:|---:|---:|
+| 1 | 1,515 s | 13,444 s | render console 1,070, MR cube 738, embed elements 528, render parity 496, page widths 418 | 2 | 12.4 GB | 35.6 GB |
+| 2 | 1,735 s | 15,420 s | render console 1,150, MR cube 884, embed elements 558, render parity 551, page widths 481 | 3 | 10.8 GB | 35.9 GB |
+| 3 | 1,554 s | 13,848 s | render console 913, MR cube 834, embed elements 569, page widths 472, VaR currency 460 | 2 | 14.0 GB | 36.0 GB |
+
+The last drill's browser lane on develop (by file, 3 workers, beside the Java verify): 3,654 to 3,768 s. Every failure passed when its
+file ran alone: the write-back test (also failed in develop's drill), the Drishti\*net stack failover (a navigation under a loaded
+machine) and the refresh test (fixed: it read the freshness label after a fixed pause; it now waits for it). The lane's peak at 9
+workers was about 4 GB a worker (18 to 19 server JVMs, 81 Chromium processes, 18 pytest processes), above the 2.5 GB the sizing
+assumes: within the drill, with the Java verify reserved, the sizing gives 3 workers, which the measurement covers; outside it, size
+the workers with a reserve that leaves at least 10 GB free.
 
 ## 6. Rules for browser tests
 
