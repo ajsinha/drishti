@@ -17,6 +17,8 @@
 
 ## 2.9.11.d (unreleased)
 
+- Docs: **the guides' data sections are generated** (`tools/docs/guide_data.py`, spec `tools/docs/guide_data.yaml`): every dataset a feature reads, what it is for, whether it is required, its sample files and one real record from `data/testdata`, formatted, with the kind's key and field counts from its data contract. VAR_GUIDE section 36 (36.1–36.13) moves onto the tool; new data sections in EXPOSURE_GUIDE (29), FRTB_SA_GUIDE (13), SIMM_GUIDE (13), MR_CUBE_GUIDE (14), FUNDS_GUIDE (18), GROUPINGS_ANALYTICS_GUIDE (25) and PIVOT_GUIDE (27). `--check` fails on a stale section or a shown field outside the contract; the static test `drishti-console/tests/test_guide_data.py` runs it in the drill's gate checks.
+
 - Docs: **VaR data** (VAR_GUIDE section 36): every dataset the VaR engine reads, what it is for, whether it is required, the sample files, and one formatted sample record each (long arrays shortened); what the engine computes and never stores. In the VaR guide, not a third Help page (each measure keeps two).
 
 - **VaR's scenario window is 250 as shipped** (product owner, 2026-11-05; was `all`): historical VaR, ES, components, parametric VaR and the backtest use the newest 250 scenarios of each date's set (one year, the Basel minimum); `DRISHTI_VAR_SCENARIO_WINDOW=all` keeps the whole set. **Upgrade note:** VaR figures change for an installation that relied on the default (the k-th worst is now of 250, e.g. the 3rd worst at 99%). The owner's stack sets 250 explicitly (drishti-stack/stack.yaml). Tests written for the full 509-scenario set pin `all`; VarWindowApiTest covers the window.

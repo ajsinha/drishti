@@ -385,6 +385,12 @@ are the contracts.
 - Tests: `tools/test_contracts.py` (every contract against its data) and `drishti-console/tests/test_data_contracts.py` (one contract per
   command, valid, pages current).
 
+**The guides' data sections.** Each measure or feature guide (VaR, exposure, FRTB-SA, SIMM, the market-risk cube, funds, groupings and
+analytics, pivot) has a section listing every dataset the feature reads: what it is for, whether it is required, its sample files and one
+real record from `data/testdata`, formatted. `tools/docs/guide_data.py` writes those sections from `tools/docs/guide_data.yaml` and these
+contracts (the key, the field and required counts, the link to the pack's page); `--check` fails when a section is stale or shows a field
+its kind's contract does not have ([TOOLS.md](../guides/TOOLS.md)).
+
 ---
 
 *Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
