@@ -54,6 +54,11 @@ def test_pvar_view_a_the_tooltips_and_the_curve(browser, stack):
     assert pg.is_hidden(".vp-pop")
     wait(pg, "document.querySelector('[data-vx-tree]').classList.contains('vp-cols')")
     assert "Parametric" in pg.inner_text("[data-vx-tree] .vx-row.hdr") and "Gap" in pg.inner_text("[data-vx-tree] .vx-row.hdr")
+    # with the two parametric columns the scope names stay readable (they were once squeezed to "…") and a row stays one line high
+    sizes = pg.evaluate("""[...document.querySelectorAll('[data-vx-tree] .vx-row:not(.hdr)')].slice(0, 6).map(r => ({
+        name: r.firstElementChild.getBoundingClientRect().width, high: r.getBoundingClientRect().height}))""")
+    assert sizes and all(s["name"] >= 120 for s in sizes), sizes
+    assert all(s["high"] < 34 for s in sizes), sizes
     wait(pg, "!!document.querySelector('[data-vx-histo] .vp-curve')", seconds=60)
     assert pg.locator("[data-vx-histo] .vp-mark").count() >= 1 and pg.locator("[data-vx-histo] .vp-gap-label").count() == 1
     pg.keyboard.press("n")
