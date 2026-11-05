@@ -15,7 +15,7 @@
 -->
 # Changelog
 
-## 2.9.11.c (unreleased)
+## 2.9.11.c (2026-11-05)
 
 - **Fixed before release:** with OpenBLAS off, Help hid the whole Operations guide (the engine's catalogue entry listed it as its own page); an engine now lists only pages about itself, and a test refuses a shared guide. The Admin → Engines browser test starts from OpenBLAS off.
 

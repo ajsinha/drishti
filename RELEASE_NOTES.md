@@ -15,7 +15,7 @@
 -->
 # Drishti 2.9.11.c — release notes
 
-*Released 2026-11-04.* **Data in by clear rules, data out through Arrow Flight; parametric VaR as a cross-check; lean & streamlined.**
+*Released 2026-11-05.* **Data in by clear rules, data out through Arrow Flight; parametric VaR as a cross-check; lean & streamlined.**
 
 ## What changes for VaR users
 
@@ -23,7 +23,9 @@
   beside the historical figures, the tree's Parametric and Gap columns, the normal curve over the P&L histogram (key N) and a ? on every
   figure that shows how it was calculated; the VaR Playground gains a Parametric tab with each step as a formula. `PVAR` opens the
   explorer with the toggle on. `pvar()` works in the pivot and the MR cube (tutorial 43, VAR_GUIDE sections 3.12 and 18.15).
-- **VaR figures are unchanged**: VAR_CHECK_LINE
+- **VaR figures are unchanged**: the release was checked against the previous release (2.9.11.b) on the same data: VaR and ES of every node of
+  the three hierarchies (131 nodes) on all three business dates, 1-day and 10-day, and the 28 stored portfolios: 2,526 figures, every one
+  equal. The same figures with OpenBLAS switched on were equal too.
 - **OpenBLAS is bundled and off as shipped.** VaR is computed by the Java kernels, as before. Turning the `openblas` engine on in
   Admin → Engines gives the same figures (proved to the dollar on 250,000 positions) and faster sums when many overlapping scopes are
   asked at once; measure on your own hardware first (BENCHMARK.md section 17).
@@ -68,7 +70,7 @@
 
 # Drishti 2.9.11.b — release notes
 
-*Released 2026-11-04.* **The MR cube and BI on the pivot engine; live pivots and pivots at scale; one grammar, one engine; the VaR
+*Released 2026-11-05.* **The MR cube and BI on the pivot engine; live pivots and pivots at scale; one grammar, one engine; the VaR
 screen's baskets in two searchable lists; a console that keeps every person's session to themselves.**
 
 ## What changes for VaR users
