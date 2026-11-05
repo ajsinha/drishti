@@ -37,7 +37,7 @@ drishti:
       length: 250                    # the days of a window (about 12 months); a request may ask for another (at least 20)
       top: 5                         # the candidate windows listed, none overlapping another
       alert-threshold: 0.05          # alert when the worst window's stressed VaR exceeds the current window's by more than this (5%)
-    scenario-window: ${DRISHTI_VAR_SCENARIO_WINDOW:all}  # all (the scenario set's length, 509 in the demo) or N: the newest N scenarios (250: 1 year; at least 20)
+    scenario-window: ${DRISHTI_VAR_SCENARIO_WINDOW:250}  # the newest N scenarios of each date's set (250: one year, the Basel minimum; at least 20), or all (the whole set, 509 in the demo)
     rank-rule: kth-worst             # kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated
     component-window: 5              # component VaR averages the scenarios ranked k-2 .. k+2, scaled to add up to the VaR
     threads: ${DRISHTI_VAR_THREADS:0}                  # cores the vector sums use (0: every core)

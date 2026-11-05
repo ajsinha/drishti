@@ -17,6 +17,8 @@
 
 ## 2.9.11.d (unreleased)
 
+- **VaR's scenario window is 250 as shipped** (product owner, 2026-11-05; was `all`): historical VaR, ES, components, parametric VaR and the backtest use the newest 250 scenarios of each date's set (one year, the Basel minimum); `DRISHTI_VAR_SCENARIO_WINDOW=all` keeps the whole set. **Upgrade note:** VaR figures change for an installation that relied on the default (the k-th worst is now of 250, e.g. the 3rd worst at 99%). The owner's stack sets 250 explicitly (drishti-stack/stack.yaml). Tests written for the full 509-scenario set pin `all`; VarWindowApiTest covers the window.
+
 - **Fixed:** with Parametric on, the VaR explorer's scope names were squeezed to nothing by the two extra columns; the tree panel widens and each name keeps at least 130px, and a figure's ? stays on its line (a browser check).
 
 - Design: the brief for an independent product critique (docs/architecture/PRODUCT_CRITIQUE_BRIEF.md): eight areas, evidence-only findings with severities, the reviewer kept independent of our claims, fixes and re-checks.
