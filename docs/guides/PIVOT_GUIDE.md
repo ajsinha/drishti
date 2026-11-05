@@ -577,9 +577,9 @@ written straight into a view's values, unnamed: `sum(PNL) / sum(abs(PNL))`.
 **The harness.** A function is saved, shared or used only after its harness passes on sample rows: one pass; batches of 1, 7, 1,000 and
 65,536 rows; the rows split into 2, 3 and 16 random parts merged left-deep and balanced under five seeds, every state serialised and read
 back as the cluster does; an empty cell, a part of nulls, a single row, 100 equal rows, infinities and NaN; a state read back finishes to
-the same figure; the same rows give the same bits twice; the cost a row (judged on 1,000 rows or more); the state within its declared
-bytes. A mergeable function whose split-and-merge answer differs from one pass by more than its tolerance (1e-12 relative) fails, with the
-run that differed and by how much.
+the same figure; the same rows give the same bits twice; the cost a row (judged on 1,000 rows or more, the fastest of up to five warm
+runs, so a busy machine does not refuse a function within its limit); the state within its declared bytes. A mergeable function whose
+split-and-merge answer differs from one pass by more than its tolerance (1e-12 relative) fails, with the run that differed and by how much.
 
 **The playground.** On the pivot screen, **Functions** (`U`): write the function, paste sample rows (CSV with a header), **Check**. You
 see the harness's checks, the state after each part and after each merge beside the one-pass figure, the cost (nanoseconds a row, the

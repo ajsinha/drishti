@@ -97,7 +97,11 @@ def test_a_formula_changes_the_preview_in_place_and_a_cell_reads_another_cells_s
     pg = sheet(browser, stack)
     assert formula_of(pg, "A1") == 'metric(id: pay7, title: "Payments, next 7 days", value: $.PAY_7D, fmt: signed0)'
     assert pg.inner_text("[data-gd-name]") == "A1:B1"
-    wait(pg, "!!document.querySelector('[data-gd-preview]').contentDocument.querySelector('#p-pay7')")
+    # the preview is drawn again in place only once its own scripts are up (its grid and wiring); before that the designer reloads it, as
+    # it should. Its panel in the document is not that signal: the frame's scripts run after, and under load the step below came first
+    wait(pg, """(f => { const d = f.contentDocument, D = f.contentWindow.Drishti || {}, g = d.querySelector('[data-view] .vgrid');
+      return d.readyState === 'complete' && !!d.querySelector('#p-pay7') && !!g && (!g.hasAttribute('data-sgrid') || !!D.screenGrid)
+        && (!g.querySelector('section.pnl[data-wire]') || !!D.wire); })(document.querySelector('[data-gd-preview]'))""")
     pg.evaluate("document.querySelector('[data-gd-preview]').contentWindow.__kept = 1")
     stepped(pg, typed(pg, "A1", 'metric(id: pay7, title: "Payments this week", value: $.PAY_7D, fmt: signed0)'))
     wait(pg, "document.querySelector('[data-gd-preview]').contentDocument.querySelector('#p-pay7').textContent.includes('Payments this week')")

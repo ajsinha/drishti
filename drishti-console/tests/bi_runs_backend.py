@@ -166,11 +166,11 @@ class RunsBackend(BiBackend):
             for r in self.runs.values():
                 if r["state"] not in ("queued", "running", "storing"):
                     continue
-                t = now - r["_t0"]
+                t, took = now - r["_t0"], r.get("_seconds", self.run_seconds)       # a run made with _seconds takes that long
                 if t < 0.4:
                     st, prog, phase = "queued", None, None
-                elif t < self.run_seconds:
-                    frac = (t - 0.4) / max(0.1, self.run_seconds - 0.4)
+                elif t < took:
+                    frac = (t - 0.4) / max(0.1, took - 0.4)
                     built = min(41, int(frac * 41) + 1)
                     st, prog, phase = "running", round(frac, 2), f"building {built} of 41 dates"
                 else:

@@ -82,6 +82,20 @@ public final class FileUserStore implements UserStore {
     }
 
     @Override
+    public boolean putIfEmpty(User user) {
+        lock.writeLock().lock();
+        try {
+            if (!users.isEmpty()) {
+                return false;
+            }
+            put(user);                                   // the write lock is re-entrant
+            return true;
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    @Override
     public void put(User user) {
         lock.writeLock().lock();
         try {

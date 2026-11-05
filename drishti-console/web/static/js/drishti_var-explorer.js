@@ -977,11 +977,17 @@
   });
 
   // ---------------------------------------------------------------------------------------------------------------- the tree
+  // A new lens, currency or hierarchy asks the tree again while an earlier ask may still be out: only the newest answer is drawn (an
+  // earlier one landing last drew the old lens's figures under the new lens's tiles), and the tree is aria-busy until it is drawn.
   function loadTree() {
+    var seq = S.treeSeq = (S.treeSeq || 0) + 1, box = $("[data-vx-tree]");
     fresh("tree", "loading…", "computing");
     S.treeLoading = true;
+    box.setAttribute("aria-busy", "true");
     return api("tree", { hierarchy: S.hierarchy }).then(function (d) {
+      if (seq !== S.treeSeq) return;
       S.treeLoading = false;
+      box.removeAttribute("aria-busy");
       S.tree = d;
       fillHierarchies(d);
       var byId = {};
@@ -991,7 +997,9 @@
       renderAdhoc();
       fresh("tree", d.businessDate);
     }).catch(function (e) {
+      if (seq !== S.treeSeq) return;
       S.treeLoading = false;
+      box.removeAttribute("aria-busy");
       if (e.status === 404 && S.hierarchy !== "MGMT") {             // a hierarchy the date has not: the management tree, said
         var n = $("[data-vx-notice]");
         n.hidden = false;

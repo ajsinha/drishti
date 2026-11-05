@@ -34,14 +34,20 @@ os.environ.setdefault("DRISHTI_DISK_MINFREEPERCENT", "1")
 # their servers run with -Xmx768m, where the heap after a collection sits past busy protection's 85% in its steady state: busy
 # protection is off for them (drishti.admission.enabled); its own tests use a stand-in server or set it themselves
 os.environ.setdefault("DRISHTI_ADMISSION_ENABLED", "false")
-if not os.environ.get("DRISHTI_CONSOLE_DATA_DIR"):
-    # what the console keeps between runs (user stamps, net/servers.json): a folder of the test run's own, never the repository's data/
+#: the pytest process that made the console data folder below. pytest-xdist starts its workers after the controller has read this file,
+#: so they inherit its environment: without this each worker would use the controller's folder, and one worker's stamp for everyone
+#: (an admin test switching a pack) would make another worker's cached session check stale (test_sessions counts those asks)
+_DATA_OWNER = "DRISHTI_CONSOLE_TEST_DATA_PID"
+if not os.environ.get("DRISHTI_CONSOLE_DATA_DIR") or os.environ.get(_DATA_OWNER, str(os.getpid())) != str(os.getpid()):
+    # what the console keeps between runs (user stamps, net/servers.json): a folder of this test process's own (one per xdist worker),
+    # never the repository's data/; a folder set from outside the test run (no owner) is used as it is
     import atexit
     import shutil
     import tempfile
 
     _DATA = tempfile.mkdtemp(prefix="drishti-console-tests-")
     os.environ["DRISHTI_CONSOLE_DATA_DIR"] = _DATA
+    os.environ[_DATA_OWNER] = str(os.getpid())
     atexit.register(shutil.rmtree, _DATA, True)
 if not os.environ.get("DRISHTI_CONSOLE_TMP_DIR"):
     # every console a test starts (in this process or as a child, whose workers a test may kill outright) keeps its temp folders in
@@ -1082,9 +1088,16 @@ def _backend_state_is_per_test(request):
     be = request.getfixturevalue("backend")
     # one level deeper than the fields: a list or dict a test appends to in place (backend.calls) must not leak into the next test
     saved = {k: (v.copy() if isinstance(v, (list, dict, set)) else v) for k, v in be.__dict__.items()}
+    # the session's client is one cookie jar for every test of the worker: a cookie the server set in one test (drishti_asof=2026-09-26)
+    # stayed beside the one the next test set by hand (domain ""), both were sent, and which one the console read hung on the order the
+    # jar had first seen the two domains, that is on which files ran earlier on the worker (test_gram_inputs [2030-01-01]). Its jar is
+    # emptied after each test (taken now: a file's own function-scoped client is torn down before this fixture's end)
+    jar = request.getfixturevalue("client").cookies if "client" in request.fixturenames else None
     yield
     be.__dict__.clear()
     be.__dict__.update(saved)
+    if jar is not None:
+        jar.clear()
     for app in _SESSION_APPS:            # what the session's console kept of the stand-in server's answers goes with them (below)
         forget_backend_answers(app)
 

@@ -154,7 +154,7 @@ def test_the_runs_tab_lists_reuses_on_the_same_data_and_cancels(ctx, stack):
         assert want in row, want
     assert "Failed" in page.inner_text("[data-runs-table]") and "ran out of its memory budget" in page.inner_text("[data-runs-table]")
     page.click(f'[data-run-open="{done["id"]}"]')
-    page.wait_for_selector("[data-run-drawer]:not([hidden]) [data-run-drawer-state]")
+    page.wait_for_selector("[data-run-drawer]:not([hidden]):not([aria-busy]) [data-run-drawer-state]")      # drawn from its own record
     text = page.inner_text("[data-run-drawer]")
     assert "Estimate" in text and "actual 41 s" in text and "Delta statistics" in text and "DESK in (DESK-FX, DESK-FI)" in text
     page.select_option('[data-run-again-as]', "same")
@@ -165,7 +165,8 @@ def test_the_runs_tab_lists_reuses_on_the_same_data_and_cancels(ctx, stack):
     page.keyboard.press("Escape")
     expect(page.locator("[data-run-drawer]")).to_be_hidden()
     # a second run, cancelled from its row's drawer
-    other = backend._new("Cash ladder 30 days")
+    # it must still be running when Cancel is pressed: the module's runs take 3 s, which a loaded machine spent before the drawer opened
+    other = backend._new("Cash ladder 30 days", _seconds=600)
     page.wait_for_selector(f'[data-run-row="{other["id"]}"]', timeout=10000)
     page.click(f'[data-run-open="{other["id"]}"]')
     page.click('[data-run-drawer] [data-run-act="cancel"]')
