@@ -203,7 +203,13 @@
     openId = null;
     const u = new URL(window.location.href);
     if (u.searchParams.has('run')) { u.searchParams.delete('run'); window.history.replaceState(null, '', u.pathname + u.search); }
-    if (returnTo && returnTo.isConnected) { returnTo.focus(); }
+    // the focus goes back where it came from; a row drawn again while the drawer was open (a run's event, the list reloaded) is the same
+    // run's row now: focus that one, or a keyboard user is left on the bare page
+    let back = returnTo;
+    if (back && !back.isConnected && back.hasAttribute && back.hasAttribute('data-run-row')) {
+      back = tbody.querySelector('[data-run-row="' + CSS.escape(back.getAttribute('data-run-row')) + '"]');
+    }
+    if (back && back.isConnected) { back.focus(); }
   }
   q('[data-run-drawer-close]').addEventListener('click', closeDrawer);
   // the focus can leave the open drawer for nowhere (a button it was on became disabled while it works): Esc on the bare page still closes it
