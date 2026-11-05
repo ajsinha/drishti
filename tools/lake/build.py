@@ -399,6 +399,8 @@ def lake_layout(a, p: dict) -> None:
         lakeconfig.disagree("--key", a.key, t.get("id") or a.key, t)
         lakeconfig.disagree("--format", getattr(a, "format", "delta") if getattr(a, "format", "delta") != "delta" else None, t["format"], t)
     except lakeconfig.LakeConfigError as e:
+        if "t" in locals():                             # refused after the entry was read: the run's summary goes to that lake's folder
+            a._state_lake = str(getattr(a, "lake_root", None) or t["root"].rstrip("/"))
         raise BuildError(str(e))
     parent, _, folder = t["path"].rpartition("/")
     p["domain"], p["kind"], p["table"] = parent.rpartition("/")[2] or t["domain"], t["kind"], folder
@@ -455,7 +457,8 @@ def run(a, say=print) -> tuple[int, dict]:
     """The whole build; returns (exit code, summary). Never raises for a data problem: it is in the summary."""
     started = time.monotonic()
     remote = bool(a.lake) and "://" in str(a.lake) and not str(a.lake).startswith("file:")
-    lake = pathlib.Path(a.lake) if a.lake and not remote else None
+    named = _lake_name(a)                                 # --lake NAME: a name, never a folder of the current directory
+    lake = pathlib.Path(a.lake) if a.lake and not remote and not named else None
     run_id = datetime.now().strftime("%Y%m%dT%H%M%S.%f")[:-3] + f"-{os.getpid()}"     # time order: the newest load's rows sort last
     summary: dict = {"run": run_id, "startedAt": now_iso(), "status": "failed", "dryRun": bool(a.dry_run), "mode": a.mode}
     prog = Progress(a.progress, a.verbose)
@@ -464,7 +467,7 @@ def run(a, say=print) -> tuple[int, dict]:
             raise BuildError("give --from (a file or a folder)")
         if remote and getattr(a, "format", "delta") != "iceberg" and getattr(a, "engine", "auto") != "java":
             raise BuildError("--lake s3://... is for --format iceberg: a Delta table in object storage is built locally and published with lake publish")
-        if not lake and not remote and not a.dry_run and not getattr(a, "plan", False):
+        if not lake and not remote and not named and not a.dry_run and not getattr(a, "plan", False):
             raise BuildError("give --lake DIR (the Delta root the connector reads)")
         if _feed(a) == "tar":
             return _run_tars(a, say, summary, started, lake)
@@ -497,7 +500,33 @@ def run(a, say=print) -> tuple[int, dict]:
         return _finish(a, lake, summary, EXIT_LOCKED, started, say, write_files=False)
     except (BuildError, writers.WriteError, FileNotFoundError, ValueError, OSError) as e:
         summary.update(status="failed", error=f"{e}" if not isinstance(e, FileNotFoundError) else f"{e}: no such file or folder")
+        if lake is None and named and not remote:
+            lake = refused_home(a, named)
         return _finish(a, lake, summary, EXIT_FAILED, started, say)
+
+
+def _lake_name(a) -> str | None:
+    """The lake's name when --lake names a lake of config/lakes/ (LAKE_GUIDE.md), else None (a folder, a URL or nothing)."""
+    ref = getattr(a, "lake", None)
+    if not ref:
+        return None
+    import lakeconfig
+    return str(ref) if lakeconfig.is_lake_name(str(ref)) else None
+
+
+def refused_home(a, name: str) -> pathlib.Path:
+    """Where a run refused before its table was known keeps its summary: the lake's own folder (--lake-root, else the root of the lake
+    file when its entry was read), else <data>/lakes/<name> (DRISHTI_DATA_DIR, else the repository's data folder). Never the current
+    directory: a lake's name is not a folder."""
+    state = getattr(a, "_state_lake", None) or getattr(a, "lake_root", None)
+    if state and "://" not in state:
+        return pathlib.Path(state)
+    return data_dir() / "lakes" / name
+
+
+def data_dir() -> pathlib.Path:
+    """The configured data folder: DRISHTI_DATA_DIR, else the repository's data folder."""
+    return pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or (HERE.parents[1] / "data"))
 
 
 def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str | None = None) -> tuple[int, dict]:
@@ -698,8 +727,7 @@ def signal(a, p, summary) -> list[dict]:
 
 def bi_store() -> pathlib.Path:
     """The server's BI store: DRISHTI_BI_STORE, else <data>/bi-store (DRISHTI_DATA_DIR, else the repository's data folder)."""
-    data = pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or (HERE.parents[1] / "data"))
-    return pathlib.Path(os.environ.get("DRISHTI_BI_STORE") or (data / "bi-store"))
+    return pathlib.Path(os.environ.get("DRISHTI_BI_STORE") or (data_dir() / "bi-store"))
 
 
 def served_lake(lake) -> bool:
@@ -707,8 +735,7 @@ def served_lake(lake) -> bool:
     server's next start does not clear its BI store for data it never reads."""
     if lake is None:
         return False
-    data = pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or (HERE.parents[1] / "data"))
-    served = pathlib.Path(os.environ.get("DRISHTI_DELTA_ROOT") or (data / "delta"))
+    served = pathlib.Path(os.environ.get("DRISHTI_DELTA_ROOT") or (data_dir() / "delta"))
     return pathlib.Path(lake).resolve() == served.resolve()
 
 

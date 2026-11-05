@@ -133,7 +133,7 @@ def test_the_console_s_behaviours_run_inside_the_element_and_about_comes_as_json
     assert "Where the data came from" in h.js(f"{root}.querySelector('.r-about').innerText")
 
 
-def test_the_versioned_paths_answer_and_the_bytes_match_the_record():
+def test_the_versioned_paths_answer_and_the_bytes_match_the_record(stack):  # noqa: F811 - the stack serves the paths
     status, headers, _ = get(E.CONSOLE_URL + "/embed/v2/render/1/drishti-render.js")
     assert status == 200 or status == 302
     req = urllib.request.Request(E.CONSOLE_URL + "/embed/v2/render/1/drishti-render.js", headers={"Origin": E.HOST})

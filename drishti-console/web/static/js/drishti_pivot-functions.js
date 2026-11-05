@@ -21,7 +21,7 @@
    Nothing here computes a figure: every number is the drishti-bicompute engine's. */
 (function () {
   "use strict";
-  var root = document.querySelector("[data-pivot]");
+  var root = document.querySelector("[data-pivot-screen]");
   if (!root || !window.Drishti.PivotScreen) { return; }
   var S = window.Drishti.PivotScreen;
   var esc = window.Drishti.PivotCore.esc;

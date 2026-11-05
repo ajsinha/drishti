@@ -33,7 +33,7 @@
             paused: false
             by: admin
 
-The default file is ``<data>/lakes/lake-maintenance.yaml`` (``<data>`` is DRISHTI_DATA_DIR or ./data). Saving writes a new file
+The default file is ``<data>/lakes/lake-maintenance.yaml`` (``<data>`` is DRISHTI_DATA_DIR, else the repository's data folder). Saving writes a new file
 and renames it over the old one, keeping every key this module does not know."""
 from __future__ import annotations
 
@@ -163,7 +163,8 @@ def floor_days(name: str, retain: dict | None = None) -> int:
 
 
 def data_dir() -> pathlib.Path:
-    return pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or "data")
+    """DRISHTI_DATA_DIR, else the repository's data folder (never ./data of wherever the command was started)."""
+    return pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or pathlib.Path(__file__).resolve().parents[2] / "data")
 
 
 def default_path(data: pathlib.Path | None = None) -> pathlib.Path:

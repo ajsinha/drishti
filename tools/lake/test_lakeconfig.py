@@ -89,3 +89,57 @@ def test_the_shipped_demo_lake_reads_whole():
     trades = [t for t in demo["tables"] if t["kind"] == "trade"]
     assert {t["path"] for t in trades} == {"trading/trade_endur", "trading/trade_calypso", "trading/trade_murex"}
     assert all(t["partition-by"] == ["PRODUCT_TYPE"] for t in trades)
+
+
+def _files(d: pathlib.Path) -> list[str]:
+    return sorted(str(p.relative_to(d)) for p in d.rglob("*") if p.is_file()) if d.is_dir() else []
+
+
+@pytest.mark.parametrize("kind, partition, home", [("trade", "DESK", "lake"), ("pnl-vector", None, "data/lakes/main")])
+def test_a_refused_build_writes_nothing_outside_the_lake_or_the_data_folder(tmp_path, monkeypatch, kind, partition, home):
+    """No root litter: ``--lake NAME`` is a lake's name, never a folder of the current directory. A run refused by the lake file (a
+    --partition-by that contradicts it: the summary in that lake's folder, as a successful run's; a kind it has no entry for: under
+    <data>/lakes/<name>) writes nothing where it was started."""
+    monkeypatch.setenv("DRISHTI_LAKES_DIR", str(_folder(tmp_path)))
+    monkeypatch.setenv("DRISHTI_DATA_DIR", str(tmp_path / "data"))
+    cwd = tmp_path / "cwd"
+    src = tmp_path / "in"
+    cwd.mkdir()
+    src.mkdir()
+    (src / "trade_2026-10-28.jsonl").write_text('{"TRADE_ID": "T-1", "PRODUCT_TYPE": "IRS"}\n', encoding="utf-8")
+    monkeypatch.chdir(cwd)
+    import build
+    args = ["--from", str(src), "--kind", kind, "--as-of", "2026-10-28", "--lake", "main", "--quiet"]
+    if partition:
+        args += ["--partition-by", partition]
+    a = build.add_arguments(argparse.ArgumentParser()).parse_args(args)
+    code, summary = build.run(a, say=lambda *_x, **_k: None)
+    assert code == build.EXIT_FAILED and summary["status"] == "failed", summary
+    assert _files(cwd) == [], _files(cwd)                                 # nothing where it was started
+    state = tmp_path / home / build.STATE
+    assert (state / "last-run.json").is_file() and (state / "runs.log").is_file()
+    assert summary["summaryFile"].startswith(str(state))
+    outside = [f for f in _files(tmp_path) if not f.startswith(("lakes/", "in/", home + "/"))]
+    assert outside == [], outside
+
+
+def test_a_refused_build_with_a_lake_root_keeps_its_summary_there(tmp_path, monkeypatch):
+    """lake demo's builds (--lake demo --lake-root DIR): refused before the entry is read (here a lake name whose reader fails), the
+    summary goes to DIR's _drishti-lake, never ./demo of the current directory."""
+    monkeypatch.setenv("DRISHTI_LAKES_DIR", str(_folder(tmp_path)))
+    monkeypatch.setenv("DRISHTI_DATA_DIR", str(tmp_path / "data"))
+    cwd = tmp_path / "cwd"
+    cwd.mkdir()
+    monkeypatch.chdir(cwd)
+    import build
+
+    def broken(*_a, **_k):
+        raise lakeconfig.LakeConfigError("the lake reader said: no")
+    monkeypatch.setattr(lakeconfig, "table", broken)
+    a = build.add_arguments(argparse.ArgumentParser()).parse_args(
+        ["--from", str(tmp_path / "lakes"), "--kind", "trade", "--as-of", "2026-10-28", "--lake", "main", "--lake-root",
+         str(tmp_path / "scratch"), "--quiet"])
+    code, summary = build.run(a, say=lambda *_x, **_k: None)
+    assert code == build.EXIT_FAILED and "the lake reader said" in summary["error"]
+    assert _files(cwd) == []
+    assert (tmp_path / "scratch" / build.STATE / "last-run.json").is_file()
