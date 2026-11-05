@@ -1,0 +1,53 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Build home · mock-ups</title><link rel="stylesheet" href="../editors/common.css">
+<style>.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}.tile{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:12px}
+.tile h4{margin:0 0 4px;font-size:14px}.tile .n{font-size:22px;color:var(--ac);font-weight:700}.tile p{margin:4px 0 0;color:var(--mu);font-size:12px}
+.side a{display:flex;justify-content:space-between;padding:7px 10px;color:var(--ink);text-decoration:none;font-size:13px;border-radius:4px}.side a.on{background:var(--sf2);border-left:3px solid var(--ac)}.side a small{color:var(--mu)}
+.side h5{margin:12px 10px 4px;color:var(--mu);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.flow{display:flex;gap:6px;align-items:center;margin-top:10px;flex-wrap:wrap}.flow .st{background:var(--sf);border:1px solid var(--bd);border-radius:20px;padding:6px 12px;font-size:12px}.flow .st.on{border-color:var(--ac);color:var(--ac)}.flow i{color:var(--mu);font-style:normal}
+.y{color:var(--ok)}.m{color:var(--wa)}</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">BUILD &lt;GO&gt;</div><span class="mu">Build</span></div>
+<div class="pick"><button data-v="A" class="on">A · One rail, every kind</button><button data-v="B">B · Task tiles</button><button data-v="C">C · The data-to-screen flow</button>
+<span>E1 of 4: one Build home: every authoring job in one place (today: Studio, BI Studio, the workbench, pack tools, Admin pages)</span></div>
+
+<div class="v on" id="A"><div class="grid2" style="grid-template-columns:230px 1fr">
+<div class="card side"><h5>Data</h5><a>Connectors <small>18</small></a><a>Lakes <small>3</small></a><a class="on">Tables &amp; models <small>34</small></a><a>Python tables <small>2</small></a>
+<h5>Screens</h5><a>Sutras <small>183</small></a><a>Packs <small>11</small></a><a>UI kit <small>40</small></a>
+<h5>Analysis</h5><a>Reports &amp; boards <small>27</small></a><a>Pivot views <small>12</small></a><a>Functions <small>9</small></a>
+<h5>Work</h5><a>My drafts <small>3</small></a><a>Waiting for review <small class="m">2</small></a><a>Recently changed <small>14</small></a></div>
+<div><div class="hdr"><div><div class="crumb">Build › Data</div><h1>Tables &amp; models</h1></div><span class="sp"></span><span class="btn">🔎 search everything you can build</span><span class="btn p">+ New ▾</span></div>
+<div class="card"><table><tr><th>Name</th><th>Kind</th><th>Status</th><th>Used by</th><th>Changed</th></tr>
+<tr><td>trades-with-limits</td><td>virtual table</td><td class="y">approved v3</td><td>2 models · 3 reports</td><td>today, Mara</td></tr>
+<tr><td>risk-by-desk</td><td>semantic model</td><td class="m">draft v4</td><td>6 reports</td><td>today, you</td></tr>
+<tr><td>fx-implied-vol</td><td>Python table</td><td class="m">in review</td><td>1 model</td><td>yesterday, Li</td></tr></table></div>
+<div class="note"><b>A, one rail.</b> Every kind you can build in one left rail, grouped Data · Screens · Analysis · Work, with counts; the middle lists the chosen kind; opening one goes to its editor (the decided three-pane shell). "My drafts" and "Waiting for review" are always one click away. Familiar from IDEs and Power BI's left bar.</div></div></div></div>
+
+<div class="v" id="B"><div class="hdr"><div><div class="crumb">Build</div><h1>What do you want to build?</h1></div><span class="sp"></span><span class="btn">🔎 search</span></div>
+<div class="tiles"><div class="tile"><h4>Bring data in</h4><p>connectors, lakes, a file, a Python table</p><div class="n">23</div></div><div class="tile"><h4>Shape it</h4><p>virtual tables and semantic models</p><div class="n">34</div></div><div class="tile"><h4>Show it</h4><p>Sutras (screens), reports and boards</p><div class="n">210</div></div><div class="tile"><h4>Package it</h4><p>packs, the UI kit, functions</p><div class="n">60</div></div></div>
+<div class="grid2" style="grid-template-columns:1fr 1fr;margin-top:10px"><div class="card"><h3>Continue where you left off</h3>risk-by-desk <span class="m">draft v4</span> · vr-daily report · BOOK sutra</div><div class="card"><h3>Waiting for you</h3><span class="m">2 to review</span> · 1 of yours returned with comments</div></div>
+<div class="note"><b>B, task tiles.</b> Four plain-language jobs; each opens its list. Very friendly for a newcomer and for a lens with few builders; one more click for an expert.</div></div>
+
+<div class="v" id="C"><div class="hdr"><div><div class="crumb">Build</div><h1>From data to screen</h1></div><span class="sp"></span><span class="btn p">+ New ▾</span></div>
+<div class="flow"><span class="st">Connectors 18</span><i>→</i><span class="st">Lakes 3</span><i>→</i><span class="st on">Tables &amp; models 34</span><i>→</i><span class="st">Reports &amp; boards 27</span><i>→</i><span class="st">Sutras 183</span><i>→</i><span class="st">Packs 11</span></div>
+<div class="card"><h3>Tables &amp; models: what feeds them and what they feed</h3><table><tr><th>Name</th><th>From</th><th>Feeds</th><th>Status</th></tr><tr><td>trades-with-limits</td><td>trade (delta) + var-limit (jdbc)</td><td>risk-by-desk, trades-basic</td><td class="y">approved</td></tr><tr><td>risk-by-desk</td><td>trades-with-limits, desk</td><td>6 reports, 1 board</td><td class="m">draft</td></tr></table></div>
+<div class="note"><b>C, the flow.</b> The stages a datum travels through, left to right; each list shows what feeds an item and what it feeds (lineage at a glance). Teaches the product's model; less direct for jumping to one thing.</div></div>
+
+<div style="padding:0 16px 20px" class="mu"><b style="color:var(--ink)">In every option:</b> one search across everything you can build; + New opens the guided steps (the decided B pattern); every item opens in its editor's three-pane shell; drafts, reviews and recent changes are one click away; what a person may build follows their role; the old separate homes (Studio, BI Studio, the workbench, pack tools) redirect here.</div>
+<script>document.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.pick button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.v').forEach(v=>v.classList.toggle('on',v.id===b.dataset.v))});</script>
+</body></html>

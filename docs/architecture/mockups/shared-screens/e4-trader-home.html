@@ -1,0 +1,50 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trader home · mock-ups</title><link rel="stylesheet" href="../editors/common.css">
+<style>.k{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:10px}.kk{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:8px 10px}.kk small{color:var(--mu);font-size:11px}.kk b{display:block;font-size:20px}
+.pos{color:var(--ln)}.neg{color:#f2955a}.y{color:var(--ok)}.m{color:var(--wa)}.r{color:var(--bad)}.tick{font-size:10px;color:var(--ok)}
+.bar{height:8px;background:var(--bg2);border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ok)}.bar i.w{background:var(--wa)}
+.watch td:nth-child(n+2){text-align:right;font-family:ui-monospace,monospace}</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">HOME &lt;GO&gt;</div><span class="mu">Trading lens · Li Wei · DESK-RATES</span></div>
+<div class="pick"><button data-v="A" class="on">A · Desk dashboard</button><button data-v="B">B · My book first</button><button data-v="C">C · Command line + feed</button>
+<span>E4 of 4: the trader home (ticking, computed on the server; today a trader starts at a generic home)</span></div>
+
+<div class="v on" id="A"><div class="k">
+<div class="kk"><small>P&amp;L today <span class="tick">● live</span></small><b class="pos">+412,300</b><small>vs yesterday −88k</small></div>
+<div class="kk"><small>VaR 99 1d</small><b>7.46m</b><small>limit 90m · <span class="y">8.3%</span></small></div>
+<div class="kk"><small>Biggest risk</small><b>USD 10y</b><small>DV01 +85k / bp</small></div>
+<div class="kk"><small>Breaches</small><b class="y">0</b><small>2 near (&gt;80%)</small></div>
+<div class="kk"><small>Approvals for me</small><b class="m">1</b><small>a correction</small></div></div>
+<div class="grid2" style="grid-template-columns:1.3fr 1fr;margin-top:10px">
+<div class="card"><h3>My books <span class="tick">● live</span></h3><table class="watch"><tr><th>Book</th><th>P&amp;L</th><th>VaR</th><th>Limit use</th></tr>
+<tr><td>BOOK-RATES-1</td><td class="pos">+301,200</td><td>4.10m</td><td><div class="bar"><i style="width:52%"></i></div></td></tr>
+<tr><td>BOOK-RATES-2</td><td class="neg">−22,900</td><td>2.95m</td><td><div class="bar"><i class="w" style="width:84%"></i></div></td></tr>
+<tr><td>BOOK-RATES-3</td><td class="pos">+134,000</td><td>1.02m</td><td><div class="bar"><i style="width:30%"></i></div></td></tr></table></div>
+<div class="card"><h3>Markets I watch <span class="tick">● live</span></h3><table class="watch"><tr><th></th><th>Last</th><th>Chg</th></tr><tr><td>USD SOFR 10y</td><td>4.212%</td><td class="neg">+3.1bp</td></tr><tr><td>EUR/USD</td><td>1.0842</td><td class="pos">+0.12%</td></tr><tr><td>UST 10y</td><td>4.38%</td><td class="neg">+2.4bp</td></tr></table></div></div>
+<div class="card"><h3>What changed since this morning</h3>3 new trades (+310k VaR) · 1 amended · market moved −58k · <a style="color:var(--ln)">Why it moved ›</a></div>
+<div class="note"><b>A, desk dashboard.</b> Five headline figures (today's P&amp;L, VaR and limit, the biggest risk, breaches, approvals), my books with live P&amp;L, VaR and limit bars, the markets I watch, and what changed since the morning. Everything ticks; every number has the Explain drawer.</div></div>
+
+<div class="v" id="B"><div class="card"><h3>BOOK-RATES-1 · my main book <span class="tick">● live</span></h3><table class="watch"><tr><th>Position</th><th>P&amp;L</th><th>DV01</th><th>VaR contrib.</th></tr><tr><td>IRS USD 10y pay</td><td class="pos">+190k</td><td>+52k</td><td>2.1m</td></tr><tr><td>UST 2029</td><td class="neg">−12k</td><td>−8k</td><td>0.4m</td></tr><tr><td colspan="4" class="mu">… 38 more positions</td></tr></table></div>
+<div class="note"><b>B, my book first.</b> Opens straight into the trader's main book, position by position, with P&amp;L, sensitivities and VaR contribution. The most direct for a single-book trader; less overview.</div></div>
+
+<div class="v" id="C"><div class="card"><div class="cmd" style="font-family:ui-monospace,monospace;background:#0a1120;padding:8px;border-radius:4px">&gt; PNL BOOK-RATES-1 &lt;GO&gt;_</div><h3 style="margin-top:10px">Feed</h3><div class="mu">09:12 trade MX-20000412 booked (+40k VaR) · 09:30 SOFR 10y +3bp · 09:41 BOOK-RATES-2 at 84% of its limit · 10:02 correction waiting for you</div></div>
+<div class="note"><b>C, command line + feed.</b> The terminal's command line front and centre and a live feed of what happened. Closest to how Bloomberg users work; relies on knowing the commands.</div></div>
+
+<div style="padding:0 16px 20px" class="mu"><b style="color:var(--ink)">In every option:</b> what the person sees follows their desk and role; every figure is computed on the server and ticks (the live hub), never in the browser; every number opens the Explain drawer; the command line is always at the top; it is the Trading lens's home (configuration, not a new product); a pre-deal "what if I add this trade" box can sit on it once the Java pre-deal service is built.</div>
+<script>document.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.pick button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.v').forEach(v=>v.classList.toggle('on',v.id===b.dataset.v))});</script>
+</body></html>
