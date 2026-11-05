@@ -23,6 +23,7 @@
 
 - **VaR → Backtest** (product owner, 2026-11-05): the VaR explorer's toolbar has a **Backtest ›** link that opens the regulatory backtest of the scope and date in view (VAR_GUIDE section 3, tutorial 25 step 8); a click test.
 - Tests: the Help card's tutorial count is checked against the files, never a typed number.
+- Tests: the five VaR browser files over the 300 s per-file budget (currency, lens, explain, parts shown, Arrow) spent nearly all their time building the VaR demo lake each for itself; `var_stack.py` now builds each lake once per test run for every worker and starts a server per file over it (its own VaR hot folder and official-results root, so the shared lake is only read). Same tests and assertions (TEST_HARNESS section 3.12).
 
 - Decks refreshed for 2.9.11–2.9.11.c
 

@@ -18,32 +18,20 @@ the table says "3 of N positions shown (the largest by gross size); totals are o
 row is the answer's sums over all N. Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
 import json
 import re
-import subprocess
-import sys
 import urllib.request
 
 import pytest
 
-from test_var_explorer_browser import ROOT, VAR_DATA, _engine_ready, open_var, painted
+from test_var_explorer_browser import open_var, painted
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
-from wb_live import _stack
+from var_stack import var_data, var_lake, var_server
 
 MAX_PARTS = 3
 
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
-    work = tmp_path_factory.mktemp("var-shown-lake")
-    lake = work / "delta"
-    r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
-                        "--connectors-dir", str(work / "connectors"), "--as-of", "today", "--only", VAR_DATA, "--no-signal", "-q",
-                        "--engine", "deltalake"], capture_output=True, text=True, cwd=ROOT, timeout=1500)   # the Python writer, in this process: auto starts a JVM for every table and business day
-    if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
-        pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
-    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
-                                        "DRISHTI_VAR_MAXPARTS": str(MAX_PARTS)}):
-        _engine_ready(str(st))
-        yield st
+    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data("trades/murex")), DRISHTI_VAR_MAXPARTS=str(MAX_PARTS))
 
 
 def test_limited_rows_say_how_many_of_how_many_are_shown(stack, browser):
