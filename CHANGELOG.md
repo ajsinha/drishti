@@ -17,6 +17,8 @@
 
 ## 2.9.11.d (unreleased)
 
+- Design: the brief for an independent product critique (docs/architecture/PRODUCT_CRITIQUE_BRIEF.md): eight areas, evidence-only findings with severities, the reviewer kept independent of our claims, fixes and re-checks.
+
 - Design: **the editors** (docs/architecture/EDITORS.md, mock-ups in docs/architecture/mockups/editors/): one three-pane shell with live YAML for tables, virtual tables, semantic models and Python-driven tables and models, and the screens of people, roles and API keys, chosen by the product owner from mock-ups (2026-11-05); a build checklist.
 
 - Drill: the container tests no longer run beside the browser lane (their network changes made Chromium cancel requests): Java 21 runs with Docker hidden, and the Testcontainers classes run on their own (`java21-docker`) after the browser lane.
