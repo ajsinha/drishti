@@ -17,6 +17,8 @@
 
 ## 2.9.11.d (unreleased)
 
+- Design: **controls screens** for 2.9.11.f (docs/architecture/CONTROLS_SCREENS.md, mock-ups in docs/architecture/mockups/controls/): run status and sign-off, one breach and escalation queue, number honesty (computed, stored, official), chosen by the product owner from mock-ups (2026-11-05).
+
 - Design: **shared screens** for 2.9.11.e (docs/architecture/SHARED_SCREENS.md, mock-ups in docs/architecture/mockups/shared-screens/): one Build home, one Approvals queue, one Explain for every number, the trader home, chosen by the product owner from mock-ups (2026-11-05); a build checklist.
 
 - Tests: the five VaR browser files share one built lake (both trade sets, `var_stack.VAR_TRADES`): the currency file no longer builds its own; the five run in about 4 minutes together.

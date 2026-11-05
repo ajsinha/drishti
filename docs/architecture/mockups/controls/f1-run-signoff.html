@@ -1,0 +1,43 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Run status and sign-off · mock-ups</title><link rel="stylesheet" href="../editors/common.css">
+<style>.y{color:var(--ok)}.m{color:var(--wa)}.r{color:var(--bad)}.steps3{display:flex;gap:0;margin-top:10px}.steps3 div{flex:1;padding:10px;border:1px solid var(--bd);background:var(--sf);font-size:12px;text-align:center}
+.steps3 div b{display:block;font-size:13px;margin-bottom:3px}.steps3 .ok{border-top:3px solid var(--ok)}.steps3 .wa{border-top:3px solid var(--wa)}.steps3 .no{border-top:3px solid var(--bd);color:var(--mu)}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}.cell{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:8px;font-size:12px}.cell b{display:block}
+.tl{border-left:2px solid var(--bd);margin-left:8px;padding-left:12px}.tl div{margin:6px 0;font-size:12px}</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">RUN VAR 2026-11-04 &lt;GO&gt;</div><span class="mu">Risk › Daily run</span></div>
+<div class="pick"><button data-v="A" class="on">A · The day's run, step by step</button><button data-v="B">B · Grid of dates × measures</button><button data-v="C">C · Timeline</button>
+<span>F1 of 3: run status and sign-off ("Official" means signed off): VaR and exposure</span></div>
+
+<div class="v on" id="A"><div class="hdr"><div><div class="crumb">Daily run · VaR</div><h1>Business date 2026-11-04</h1></div><span class="pill draft">awaiting sign-off</span><span class="sp"></span><span class="btn">Rerun…</span><span class="btn p">Sign off</span></div>
+<div class="steps3"><div class="ok"><b>1 Inputs arrived</b>06:02 · 17 of 17 files</div><div class="ok"><b>2 Complete</b>412,118 of 412,130 positions priced</div><div class="wa"><b>3 Checks</b>2 warnings</div><div class="ok"><b>4 Computed</b>06:14 · every hierarchy</div><div class="no"><b>5 Signed off</b>waiting: risk manager</div></div>
+<div class="grid2" style="grid-template-columns:1fr 1fr;margin-top:10px"><div class="card"><h3>Checks</h3><div class="y">✓ scenario set HS-509, window 250</div><div class="y">✓ FX for 31 currencies</div><div class="m">! 12 positions not priced (STATUS failed): 0.003% of gross, listed</div><div class="m">! DESK-RATES VaR +18% day on day (threshold 15%): <a style="color:var(--ln)">why it moved ›</a></div><div class="y">✓ backtest: green zone</div></div>
+<div class="card"><h3>Sign-off</h3><div>Prepared by: system (06:14)</div><div>Reviewer: <b>Mara Okafor</b> (risk manager) · <span class="m">due 10:00</span></div><div class="mu" style="margin-top:6px">Signing records the warnings and your comment; the official figures and their capture become <b>Official</b>; anything later is a restatement with its reason.</div><div style="margin-top:8px"><span class="chip">comment: "RATES move is the new swap book; checked"</span></div></div></div>
+<div class="note"><b>A, step by step.</b> The day's run as five steps (inputs → complete → checks → computed → signed off), each green, amber or waiting, with the checks listed and the sign-off panel (who, by when, what signing means). The clearest for the person who signs.</div></div>
+
+<div class="v" id="B"><div class="grid4">
+<div class="cell"><b>2026-11-04 · VaR</b><span class="m">awaiting sign-off</span></div><div class="cell"><b>2026-11-04 · Exposure</b><span class="y">signed 08:40 J. Patel</span></div><div class="cell"><b>2026-11-03 · VaR</b><span class="y">signed 09:12 M. Okafor</span></div><div class="cell"><b>2026-11-03 · Exposure</b><span class="y">signed 08:55</span></div>
+<div class="cell"><b>2026-11-02 · VaR</b><span class="r">restated 11-03 (late trades)</span></div><div class="cell"><b>2026-11-02 · Exposure</b><span class="y">signed</span></div><div class="cell"><b>2026-10-30 · VaR</b><span class="y">signed</span></div><div class="cell"><b>2026-10-30 · Exposure</b><span class="y">signed</span></div></div>
+<div class="note"><b>B, grid.</b> Dates down, measures across; each cell the run's state (computed, awaiting, signed, restated). The overview a head of risk or an auditor wants; click a cell for A.</div></div>
+
+<div class="v" id="C"><div class="card"><h3>2026-11-04 · VaR · timeline</h3><div class="tl"><div>06:02 inputs complete (17 files)</div><div>06:09 12 positions failed to price (listed)</div><div>06:14 computed, every hierarchy</div><div class="m">06:14 check: DESK-RATES +18% day on day</div><div>08:51 Mara opened the run, commented</div><div class="mu">… waiting for sign-off (due 10:00)</div></div></div>
+<div class="note"><b>C, timeline.</b> Everything that happened to the run, in order. Good for audit and for "why is it late"; less good for deciding.</div></div>
+
+<div style="padding:0 16px 20px" class="mu"><b style="color:var(--ink)">In every option:</b> "Official" appears on a figure only after sign-off; the signer cannot be the preparer when a person prepared it; warnings and the signer's comment are stored with the capture; a change after sign-off is a <b>restatement</b> with its reason and a second sign-off; overdue sign-offs reach the Approvals queue (due soon) and the breach queue; everything audited.</div>
+<script>document.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.pick button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.v').forEach(v=>v.classList.toggle('on',v.id===b.dataset.v))});</script>
+</body></html>
