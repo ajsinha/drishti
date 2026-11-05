@@ -17,6 +17,8 @@
 
 ## 2.9.11.d (unreleased)
 
+- Design: **shared screens** for 2.9.11.e (docs/architecture/SHARED_SCREENS.md, mock-ups in docs/architecture/mockups/shared-screens/): one Build home, one Approvals queue, one Explain for every number, the trader home, chosen by the product owner from mock-ups (2026-11-05); a build checklist.
+
 - Tests: the five VaR browser files share one built lake (both trade sets, `var_stack.VAR_TRADES`): the currency file no longer builds its own; the five run in about 4 minutes together.
 
 - Docs: **the guides' data sections are generated** (`tools/docs/guide_data.py`, spec `tools/docs/guide_data.yaml`): every dataset a feature reads, what it is for, whether it is required, its sample files and one real record from `data/testdata`, formatted, with the kind's key and field counts from its data contract. VAR_GUIDE section 36 (36.1–36.13) moves onto the tool; new data sections in EXPOSURE_GUIDE (29), FRTB_SA_GUIDE (13), SIMM_GUIDE (13), MR_CUBE_GUIDE (14), FUNDS_GUIDE (18), GROUPINGS_ANALYTICS_GUIDE (25) and PIVOT_GUIDE (27). `--check` fails on a stale section or a shown field outside the contract; the static test `drishti-console/tests/test_guide_data.py` runs it in the drill's gate checks.

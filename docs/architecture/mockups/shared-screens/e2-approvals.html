@@ -1,0 +1,54 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Approvals queue · mock-ups</title><link rel="stylesheet" href="../editors/common.css">
+<style>.y{color:var(--ok)}.m{color:var(--wa)}.r{color:var(--bad)}.diff{font:12px/1.5 ui-monospace,monospace;background:#0a1120;border:1px solid var(--bd);border-radius:6px;padding:8px;white-space:pre}
+.diff .a{color:var(--ok)}.diff .d{color:var(--bad)}.cardrow{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px}.ccard{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:10px}.ccard h4{margin:0 0 6px;font-size:13px}
+.lane{background:var(--bg2);border:1px solid var(--bd);border-radius:6px;padding:8px}.lane h3{margin:0 0 6px;font-size:12px;color:var(--mu);text-transform:uppercase}</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">APPROVALS &lt;GO&gt;</div><span class="mu">Approvals</span></div>
+<div class="pick"><button data-v="A" class="on">A · One inbox + detail</button><button data-v="B">B · Cards by urgency</button><button data-v="C">C · Board by stage</button>
+<span>E2 of 4: one Approvals queue for everything that needs four eyes (today: Sutras, BI items, corrections, pivot functions, users, captures… in separate places)</span></div>
+
+<div class="v on" id="A"><div class="grid3" style="grid-template-columns:330px 1fr 280px">
+<div class="card"><h3>Waiting for me · 7</h3><ul class="list">
+<li class="on"><b>Trade correction</b> MX-20000274 QUANTITY <span class="mu">· Li · 12 min</span></li>
+<li><b>Model</b> risk-by-desk v4 <span class="mu">· Mara · 1 h</span></li>
+<li><b>Sutra</b> BOOK v12 <span class="mu">· Raj · 3 h</span></li>
+<li><b>Pivot function</b> wret <span class="mu">· Asha · 1 d</span></li>
+<li><b>VaR sign-off</b> 2026-11-04 official <span class="m">· due 10:00</span></li>
+<li><b>User</b> new role approver for Tom <span class="mu">· admin · 2 d</span></li></ul>
+<div style="margin-top:8px"><span class="chip">All</span><span class="chip">Data</span><span class="chip">Screens</span><span class="chip">Risk</span><span class="chip">Access</span> · <span class="mu">Mine sent · Done</span></div></div>
+<div><div class="hdr"><div><div class="crumb">Approvals › Trade correction</div><h1>MX-20000274 · QUANTITY</h1></div><span class="pill draft">waiting</span><span class="sp"></span><span class="btn">Ask a question</span><span class="btn">Reject…</span><span class="btn p">Approve</span></div>
+<div class="card"><h3>What changes</h3><div class="diff"><span class="d">- QUANTITY: 120,000,000</span>
+<span class="a">+ QUANTITY: 12,000,000</span>      reason: "booking error, one zero too many" (Li Wei)</div></div>
+<div class="card"><h3>Effect if approved</h3>DESK-RATES VaR 99 1d: 7,463,368 → <b>7,102,945</b> (−360,423) · limit use 8.3% → 7.9% · 1 report, 2 boards refresh</div></div>
+<div class="card"><h3>Rules</h3><div class="y">✓ you didn't make it (four eyes)</div><div class="y">✓ you may approve trading corrections</div><h3 style="margin-top:12px">History</h3><div class="mu">12:04 proposed by Li · 12:06 auto-check passed</div></div></div>
+<div class="note"><b>A, one inbox.</b> Everything waiting for me in one list (any kind), filters by area, the chosen item in the middle with <b>what changes</b> (a diff), <b>its effect</b> (here on VaR and limits) and the rules that allow me to decide. Like an email inbox; fast to work through.</div></div>
+
+<div class="v" id="B"><div class="cardrow">
+<div class="ccard" style="border-color:var(--bad)"><h4 class="r">Due soon</h4>VaR sign-off 2026-11-04 · due 10:00<br><span class="btn p">Open</span></div>
+<div class="ccard"><h4>Affects risk numbers</h4>Trade correction MX-20000274 (−360k VaR)<br>Model risk-by-desk v4 (6 reports)</div>
+<div class="ccard"><h4>Everything else</h4>Sutra BOOK v12 · Pivot function wret · User Tom</div></div>
+<div class="note"><b>B, cards by urgency.</b> Grouped by what matters: due soon, changes risk numbers, the rest. Good for a manager glancing in the morning; less good for working through many.</div></div>
+
+<div class="v" id="C"><div class="grid2" style="grid-template-columns:repeat(4,1fr)">
+<div class="lane"><h3>Proposed · 4</h3>MX-20000274 · BOOK v12 · wret · Tom</div><div class="lane"><h3>Questions asked · 1</h3>risk-by-desk v4</div><div class="lane"><h3>Approved today · 9</h3>…</div><div class="lane"><h3>Rejected · 1</h3>…</div></div>
+<div class="note"><b>C, board by stage.</b> A kanban of proposed → questions → approved / rejected. Shows the team's flow; heavier for one person's daily work.</div></div>
+
+<div style="padding:0 16px 20px" class="mu"><b style="color:var(--ink)">In every option:</b> one queue for every four-eyes item (Sutras, tables and models, reports, corrections, pivot functions, VaR and exposure sign-offs, users and roles, API keys, captures); the maker can never approve their own; each item shows what changes and its effect before you decide; approve, reject with a reason, or ask a question (a thread on the item); everything audited; the old per-kind queues redirect here; a count on the top bar.</div>
+<script>document.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.pick button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.v').forEach(v=>v.classList.toggle('on',v.id===b.dataset.v))});</script>
+</body></html>
