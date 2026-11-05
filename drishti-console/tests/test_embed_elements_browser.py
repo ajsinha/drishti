@@ -49,6 +49,7 @@ from playwright.sync_api import expect, sync_playwright  # noqa: E402
 from conftest import CONSOLE  # noqa: E402
 from scratch_ports import worker_ports  # noqa: E402
 from java_launch import java_cmd
+from wb_live import should_reload  # noqa: E402 - one reload, for a changed network only
 
 ROOT = CONSOLE.parent
 # (server, console, host) plus the pytest-xdist worker offset; a file that reuses this stack (test_embed_controls_browser.py) names its own PORTS
@@ -235,10 +236,22 @@ class Page:
         self.console = []
         self.page.on("console", lambda m: self.console.append(m.text))
         self.page.on("pageerror", lambda e: self.console.append("PAGEERROR " + str(e)))
+        self.failed = []
+        self.page.on("requestfailed", lambda r: self.failed.append(f"request failed: {r.url} ({r.failure})"))
 
     def open(self):
+        """The host page with its main element live. The page needs the console's drishti-elements.js before any of its own code runs (a
+        module script): when that request is cancelled because the machine's network changed (Docker starting a container beside the drill),
+        nothing on the page starts ("signed in as nobody", no data-state). The page is then loaded once more, for that cause only
+        (wb_live.should_reload, TEST_HARNESS.md rule 7); any other failure says which requests failed."""
         self.page.goto(HOST + "/")
-        self.state("#main", "live")
+        try:
+            self.state("#main", "live")
+        except AssertionError as e:
+            if not should_reload(self.failed, False):
+                raise AssertionError(f"{e}\nfailed requests: {self.failed or 'none'}\nconsole: {self.console[-10:]}") from None
+            self.page.reload()
+            self.state("#main", "live")
         return self
 
     def state(self, sel, want, timeout=20000):
