@@ -1088,14 +1088,16 @@ def _backend_state_is_per_test(request):
     be = request.getfixturevalue("backend")
     # one level deeper than the fields: a list or dict a test appends to in place (backend.calls) must not leak into the next test
     saved = {k: (v.copy() if isinstance(v, (list, dict, set)) else v) for k, v in be.__dict__.items()}
+    # the session's client is one cookie jar for every test of the worker: a cookie the server set in one test (drishti_asof=2026-09-26)
+    # stayed beside the one the next test set by hand (domain ""), both were sent, and which one the console read hung on the order the
+    # jar had first seen the two domains, that is on which files ran earlier on the worker (test_gram_inputs [2030-01-01]). Its jar is
+    # emptied after each test (taken now: a file's own function-scoped client is torn down before this fixture's end)
+    jar = request.getfixturevalue("client").cookies if "client" in request.fixturenames else None
     yield
     be.__dict__.clear()
     be.__dict__.update(saved)
-    if "client" in request.fixturenames:
-        # the session's client is one cookie jar for every test of the worker: a cookie the server set in one test (drishti_asof=2026-09-26)
-        # stayed beside the one the next test set by hand (domain ""), both were sent, and which one the console read hung on the order the
-        # jar had first seen the two domains, that is on which files ran earlier on the worker (test_gram_inputs [2030-01-01])
-        request.getfixturevalue("client").cookies.clear()
+    if jar is not None:
+        jar.clear()
     for app in _SESSION_APPS:            # what the session's console kept of the stand-in server's answers goes with them (below)
         forget_backend_answers(app)
 
