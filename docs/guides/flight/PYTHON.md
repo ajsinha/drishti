@@ -36,16 +36,39 @@ passes `on_behalf_of="alice"`; a service asking for client certificates takes `c
 ## Read
 
 ```python
-trades = f.kind("trade", paths=["TRADE_ID", "PRODUCT_TYPE", "QUANTITY"], where=["PRODUCT_TYPE = IRS"])
+trades = f.kind("trade", paths=["TRADE_ID", "PRODUCT_TYPE", "QUANTITY"], where=["PRODUCT_TYPE = BASIS_SWAP"])
 df = trades.to_pandas()                         # or polars.from_arrow(trades)
 pnl = f.measure("var.scenarios", "DESK:RATES", date="2026-09-30")
 parts = f.measure("var.parts", "DESK:RATES", by="position")
 risk = f.model("risk-summary", {"fields": ["DESK"], "measures": ["MTM"]})
-cells = f.pivot({"pivot": 1, "source": "trade", "rows": ["PRODUCT_TYPE"], "values": [{"measure": "count"}]})
+cells = f.pivot({"pivot": 1, "source": "trade", "rows": ["PRODUCT_TYPE"], "values": [{"measure": "count()"}]})
 f.catalogue()                                   # what this token may read
 ```
 
-(output from the demo lake: to be filled in the heavy run)
+Run on the test data of 2026-09-30 (`PRODUCT_TYPE = BASIS_SWAP`, a product of that data; the model query is left out here, its
+request form is in [FLIGHT_REFERENCE.md](../FLIGHT_REFERENCE.md)):
+
+```text
+>>> df.head(3); len(df)
+      TRADE_ID PRODUCT_TYPE    QUANTITY
+0  MX-20000013   BASIS_SWAP   7000000.0
+1  MX-20000014   BASIS_SWAP  64000000.0
+2  MX-20000015   BASIS_SWAP  63000000.0
+72
+>>> pnl.to_pandas()
+     SCENARIO SCENARIO_DATE         PNL
+0           0    2024-09-17  11293350.0
+1           1    2024-09-18  17864629.0
+...
+508       508    2026-09-29  -2066043.0
+[509 rows x 3 columns]
+>>> parts.num_rows
+1358
+>>> cells.num_rows, cells.schema.names
+75 ['ROW', 'COLUMN', 'PRODUCT_TYPE', 'MEASURE', 'VALUE', 'MEMBERS']
+>>> len(f.catalogue())
+199
+```
 
 `read` asks for the plan and reads each part from its nodes in parallel, the next node of a part when one does not answer.
 

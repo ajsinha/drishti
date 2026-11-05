@@ -51,7 +51,16 @@ for (FlightEndpoint e : info.getEndpoints()) {          // each part, from the f
 }
 ```
 
-(output from the demo lake: to be filled in the heavy run)
+Run as written (the elided body printing each batch's rows, its first P&L and the worst; Java 21; the test data of 2026-09-30, the
+server's own port 18825):
+
+```text
+1 endpoint(s)
+a batch of 509 rows from grpc+tls://192.168.2.77:18825; PNL[0] = 11,293,350.00; the worst = -119,535,289.00
+metadata: {drishti.scope=DESK:RATES, drishti.var=7.463368E7, drishti.es=7.5377415E7, drishti.measure=var.scenarios, drishti.date=2026-09-30, drishti.currency=USD, drishti.intraday=0}
+```
+
+Java 17 to 21: on Java 25 Arrow 19's memory module does not start (`ExceptionInInitializerError` in `DefaultAllocationManagerFactory`).
 
 A part on another node needs a client for that node's location (`e.getLocations().get(0)`), authenticated the same way.
 

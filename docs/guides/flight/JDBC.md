@@ -61,7 +61,21 @@ try (Connection c = DriverManager.getConnection("jdbc:arrow-flight-sql://drishti
 }
 ```
 
-(output from the demo lake: to be filled in the heavy run)
+Run as written against a server with a test PKI (`&trustStore=ca.jks&trustStorePassword=…&useSystemTrustStore=false` added to the URL;
+Java 21; the test data of 2026-09-30):
+
+```text
+DESK-COMM 8.850170019852502E11
+DESK-CREDIT 3.4835024551415E11
+DESK-EQD 4.3052971792252997E11
+DESK-FI 4.0315015623297003E11
+DESK-FX 3.7284221311835E11
+DESK-INFL 1.299456220881E11
+DESK-MM 1.30992079528E11
+DESK-RATES 6.0533722239374E11
+DESK-SFT 2.27897073212E11
+DESK-STRUCT 1.06026316978E11
+```
 
 A prepared statement works the same way (read only, no parameters). Updates, DDL and transactions are refused: Flight SQL is read only here.
 
