@@ -17,6 +17,8 @@
 
 ## 2.9.11.d (unreleased)
 
+- **Fixed:** with Parametric on, the VaR explorer's scope names were squeezed to nothing by the two extra columns; the tree panel widens and each name keeps at least 130px, and a figure's ? stays on its line (a browser check).
+
 - Design: the brief for an independent product critique (docs/architecture/PRODUCT_CRITIQUE_BRIEF.md): eight areas, evidence-only findings with severities, the reviewer kept independent of our claims, fixes and re-checks.
 
 - Design: **the editors** (docs/architecture/EDITORS.md, mock-ups in docs/architecture/mockups/editors/): one three-pane shell with live YAML for tables, virtual tables, semantic models and Python-driven tables and models, and the screens of people, roles and API keys, chosen by the product owner from mock-ups (2026-11-05); a build checklist.
