@@ -2536,7 +2536,7 @@ plus those below. Contract: `config/packs/market-risk/contracts/scenario-pv.cont
 
 | Column | JSON | Delta | Req. | Engine | Unit | Meaning | Example |
 |---|---|---|---|---|---|---|---|
-| `SCENARIO_PV_ID` | id | `id` STRING | required | – | | the lake key | `SPV-1000054-HS-509` |
+| `SCENARIO_PV_ID` | id | `id` STRING | required | – | | the lake key: `SPV-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>` (an intraday update adds `-<BATCH_ID>`); it names the input row, never a position ([section 36.14](#3614-from-an-input-row-to-a-position)) | `SPV-1000054-HS-509` |
 | `TRADE_ID` … `TAGS` | | | | R | | the trade's terms, as in [section 15.2](#152-pnl-vector-one-pl-vector-per-trade) (`LEGAL_ENTITY`, `DESK` and `TT_BOOK` promoted) | |
 | `CURRENCY` | ccy | STRING | required | R | | the currency **both PVs** are in: the trade's own | `EUR` |
 | `BASE_PV` | amount | DOUBLE | required | R | `CURRENCY` | the trade's value on the business date, from the same run as the scenario PVs | `14997.44` |
@@ -5422,7 +5422,36 @@ fixings), omitted here.
 }
 ```
 
-### 36.14 What the engine computes and never stores
+### 36.14 From an input row to a position
+
+An input row's id names **the row** (one trade, or one position its source sends whole, for one scenario set); it is never a position id.
+Positions are derived by Drishti from the rows' columns ([section 15.6](#156-positions-derived-by-drishti)):
+
+```text
+input row        SCENARIO_PV_ID  SPV-1000003-HS-509   = "SPV-" + TRADE_ID + "-" + SCENARIO_SET_ID
+                 VECTOR_ID       PNL-CLY-3000267-HS-509 = "PNL-" + TRADE_ID + "-" + SCENARIO_SET_ID   (the P&L-vector form)
+                    │  TRADE_ID 1000003, TT_BOOK BOOK-COMM-1, PRODUCT_GROUP Commodity, SECURITY_ID none
+                    ▼
+position         POSITION_ID     POS-BOOK-COMM-1~1000003   (OTC: one position per trade, keyed by book and trade)
+                    ▼
+hierarchy        BOOK-COMM-1 → DESK-COMM → DIV-MARKETS (MGMT) / LE-NY (LEGAL) → the bank
+```
+
+| The row's trade is… | Position id | So |
+|---|---|---|
+| OTC (swaps, repos, commodity swaps) | `POS-<TT_BOOK>~<TRADE_ID>` | one position per trade |
+| a security (bonds, equities) | `POS-<TT_BOOK>~<SECURITY_ID, ISIN or TICKER>` | trades in the same security and book net into one position |
+| a listed derivative | `POS-<TT_BOOK>~<SECURITY_ID or CONTRACT>` | the same, by contract |
+| sent whole as a position (`GRAIN: POSITION`) | its own `POSITION_ID` | the row is the position |
+
+- **A position's P&L vector** is the sum of its trades' USD P&L vectors (scenario PVs converted first).
+- **Netting** happens only within one book and one instrument: a long in one book and a short in another stay two positions (different
+  desks and limits); their P&Ls offset when a scope holds both.
+- **Positions live in memory**, rebuilt each time a date loads from the same rows and rules (reproducible); each official capture records
+  the membership (every position with its trades), so an official figure can be recomputed later. `POS <id> <GO>` opens one, linked to its
+  trades; basket members (section 36.8) are position ids.
+
+### 36.15 What the engine computes and never stores
 
 None of these is an input, and none is written back to the lake (VAR_GUIDE [section 1](#contents) and [15.6](#156-positions-derived-by-drishti)):
 
