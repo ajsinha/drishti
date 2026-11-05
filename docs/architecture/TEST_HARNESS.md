@@ -252,7 +252,9 @@ file ran alone: the write-back test (also failed in develop's drill), the Drisht
 machine) and the refresh test (fixed: it read the freshness label after a fixed pause; it now waits for it). The lane's peak at 9
 workers was about 4 GB a worker (18 to 19 server JVMs, 81 Chromium processes, 18 pytest processes), so the sizing
 budgets 4 GB a worker (`PER_WORKER_GB`). Each drill keeps the previous runs' logs and failure lists in `<data>/drill/runs/<when>/`
-(the last 20), so a flake's traceback is still there after the next run.
+(the last 20), so a flake's traceback is still there after the next run. The drill's Java 21 run hides Docker while the browser lane
+runs; the container tests (every test class using Testcontainers) run on their own, as `java21-docker`, once the browser lane has
+finished (rule 8).
 
 ## 6. Rules for browser tests
 

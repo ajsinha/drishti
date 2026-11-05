@@ -385,7 +385,24 @@ copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ 
 }
 
 # Java 21 in a copy, every test and the containers (Testcontainers), as production runs; its cluster tests on their own ports.
-java21_verify() { copy_verify java21 "$JAVA21_HOME" 20783,20784,20785 check -P api-docs; }
+# Java 21 runs beside the browser lane with Docker hidden: containers starting and stopping change the machine's network, and Chromium
+# then cancels its requests (ERR_NETWORK_CHANGED). The container tests (@Testcontainers, disabledWithoutDocker) skip here and run
+# on their own in java21-docker once the browser lane has finished (TEST_HARNESS.md rule 8).
+java21_verify() {
+  export DOCKER_HOST=unix:///nonexistent/drill-java21 TESTCONTAINERS_RYUK_DISABLED=true
+  copy_verify java21 "$JAVA21_HOME" 20783,20784,20785 check -P api-docs
+}
+docker_test_classes() {   # every test class that uses Testcontainers, as Maven's -Dtest list
+  grep -rl --include='*Test.java' -e 'org.testcontainers' "$REPO" --exclude-dir=.claude --exclude-dir=target 2>/dev/null \
+    | sed -E 's#.*/##; s#\.java$##' | sort -u | paste -sd, -
+}
+java21_docker() {
+  after 7200 "$LOGS/console-browser.secs"
+  echo "drill: java21-docker starts at $(date +%T)"
+  local classes; classes=$(docker_test_classes)
+  [[ -n "$classes" ]] || { echo "drill: java21-docker: no container tests found" >&2; return 1; }
+  copy_verify java21-docker "$JAVA21_HOME" 21783,21784,21785 none -Dtest="$classes" -Dsurefire.failIfNoSpecifiedTests=false
+}
 # Java 21 and newer are supported: the same tests again on Java 25, so a library that breaks on a newer JVM (Hadoop and the
 # removed Security Manager, Unsafe memory access) fails the drill. It starts once the browser lane has
 # finished and Java 21 has (with three heavy jobs at once a 61 GB machine ran short of memory), at lower priority, with two test forks. Docker is
@@ -502,12 +519,13 @@ else
   python3 "$PLAN" lanes --durations "$DURATIONS" --out "$LOGS/lanes" --browser-workers "$browser_workers" --other-workers "$other_workers" \
     --exclude "${GATE_CONSOLE[@]}"
   mv "$LOGS/lanes/browser.txt" "$LOGS/lane-browser.txt"; mv "$LOGS/lanes/other.txt" "$LOGS/lane-other.txt"; rmdir "$LOGS/lanes"
-  stage2=(console-browser console-other tools-a tools-b java21)
+  stage2=(console-browser console-other tools-a tools-b java21 java21-docker)
   start_job console-browser console_lane browser "$browser_workers" "${DRILL_BROWSER_RERUNS:-1}"
   start_job console-other niced 5 console_lane other "$other_workers" 2
   start_job tools-a niced 5 tools_lane_a
   start_job tools-b niced 5 tools_lane_b
   start_job java21 niced 5 java21_verify
+  start_job java21-docker niced 5 java21_docker
   if [[ -x "$JAVA25_HOME/bin/java" ]]; then start_job java25 niced 10 java25_verify; stage2+=(java25)
   else echo "drill: no JDK 25 at $JAVA25_HOME (set JAVA25_HOME): the forward-compatibility run is skipped" >&2; fi
   rc=0; watch_jobs "${stage2[@]}" || rc=1
