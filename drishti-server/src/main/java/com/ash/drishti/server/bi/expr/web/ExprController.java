@@ -15,13 +15,14 @@
  */
 package com.ash.drishti.server.bi.expr.web;
 
+import com.ash.drishti.rachana.el.check.Scope;
+import com.ash.drishti.rachana.el.check.Signatures;
 import com.ash.drishti.server.bi.BiAccess;
 import com.ash.drishti.server.bi.BiService;
 import com.ash.drishti.server.bi.expr.DelException;
 import com.ash.drishti.server.bi.expr.ExpressionMigrator;
 import com.ash.drishti.server.bi.expr.Expressions;
 import com.ash.drishti.server.bi.expr.FunctionCatalog;
-import com.ash.drishti.server.bi.expr.Scope;
 import com.ash.drishti.server.bi.mq.ModelCatalog;
 import com.ash.drishti.server.bi.mq.MqException;
 import com.ash.drishti.server.security.Principal;
@@ -65,7 +66,7 @@ public class ExprController {
         m.put("version", 2);
         m.put("legacy", Expressions.legacyMode().name().toLowerCase(java.util.Locale.ROOT));
         m.put("families", cat.families());
-        m.put("functions", cat.all().stream().filter(f -> s == null || f.allowedIn(s)).map(FunctionCatalog.Fn::toMap).toList());
+        m.put("functions", cat.all().stream().filter(f -> s == null || f.allowedIn(s)).map(Signatures.Signature::toMap).toList());
         m.put("keywords", List.of("where", "by", "desc", "over", "ignore", "keep", "via", "to", "at", "unit", "period", "hierarchy"));
         m.put("operators", List.of("+", "-", "*", "/", "//", "%", "**", "==", "!=", "<", "<=", ">", ">=", "in", "not in", "is None", "is not None", "and", "or", "not",
                 "a if c else b"));

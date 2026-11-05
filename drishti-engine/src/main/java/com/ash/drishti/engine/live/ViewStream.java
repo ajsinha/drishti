@@ -56,8 +56,7 @@ public final class ViewStream implements AutoCloseable {
     private final ExecutorService executor;
     private final LiveMetrics metrics;
     private final Consumer<Frame> sink;
-    private final UnaryOperator<DataNode> redact;
-    private final java.util.function.Predicate<String> mayOpen;
+    private final com.ash.drishti.engine.ViewerContext who;
     private final ControlValues controls;
     private final List<Subscription> subscriptions = new ArrayList<>();
     private final AtomicReference<ViewModel> shown = new AtomicReference<>();
@@ -83,17 +82,15 @@ public final class ViewStream implements AutoCloseable {
     public ViewStream(EntityRef ref, ViewModel initial, List<EntityRef> sources, TopicHub hub, ViewPipeline pipeline,
             ExecutorService executor, LiveMetrics metrics, Consumer<Frame> sink, UnaryOperator<DataNode> redact,
             java.util.function.Predicate<String> mayOpen) {
-        this(ref, initial, sources, hub, pipeline, executor, metrics, sink, redact, mayOpen, ControlValues.NONE);
+        this(ref, initial, sources, hub, pipeline, executor, metrics, sink, com.ash.drishti.engine.ViewerContext.of(redact, mayOpen), ControlValues.NONE);
     }
 
     /** As above, and every rebuild applies the control values the stream was opened with ({@code ctl.leg=L2}): a tick keeps the filter. */
     public ViewStream(EntityRef ref, ViewModel initial, List<EntityRef> sources, TopicHub hub, ViewPipeline pipeline,
-            ExecutorService executor, LiveMetrics metrics, Consumer<Frame> sink, UnaryOperator<DataNode> redact,
-            java.util.function.Predicate<String> mayOpen, ControlValues controls) {
+            ExecutorService executor, LiveMetrics metrics, Consumer<Frame> sink, com.ash.drishti.engine.ViewerContext who, ControlValues controls) {
         this.controls = controls;
-        this.mayOpen = mayOpen;
         this.ref = ref;
-        this.redact = redact;
+        this.who = who;
         this.pipeline = pipeline;
         this.executor = executor;
         this.metrics = metrics;
@@ -141,8 +138,8 @@ public final class ViewStream implements AutoCloseable {
                     }
                     continue;
                 }
-                ViewModel next = main != null ? pipeline.build(main, System.nanoTime(), System.nanoTime(), redact, mayOpen, controls)
-                        : pipeline.view(ref, com.ash.drishti.api.AsOf.LATEST, redact, mayOpen, controls);
+                ViewModel next = main != null ? pipeline.build(main, System.nanoTime(), System.nanoTime(), who, controls)
+                        : pipeline.view(ref, com.ash.drishti.api.AsOf.LATEST, who, controls);
                 ViewModel before = shown.getAndSet(next);
                 List<Patch> patches = differ.diff(before, next);
                 if (gone) {

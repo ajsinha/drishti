@@ -64,6 +64,25 @@ class ArchitectureRulesTest {
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.engine..", "com.ash.drishti.server..", "org.springframework..",
                     "com.ash.drishti.identity..", "com.ash.drishti.rachana..", "com.ash.drishti.packs..");
 
+    /**
+     * The table layer (drishti-tables, BI_FOUNDATION_2911E.md Q30) depends one way: on Rachana (paths and expressions) and the pivot engine
+     * (the function catalogue, the compiler), never on BI or anything else of the server, and it is plain Java (the server wires it in).
+     * BI depends on the layer, never the reverse.
+     */
+    @ArchTest
+    static final ArchRule tablesDependOnRachanaAndTheEngineNeverOnBi = noClasses()
+            .that().resideInAPackage("com.ash.drishti.tables..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.server..", "com.ash.drishti.engine..", "com.ash.drishti.compute..",
+                    "com.ash.drishti.identity..", "com.ash.drishti.packs..", "com.ash.drishti.ai..", "org.springframework..")
+            .because("the table layer is beneath BI: BI reads tables and models, the layer never reads BI (docs/architecture/BI_FOUNDATION_2911E.md)");
+
+    /** Nothing beneath the table layer sees it: Rachana, the pivot engine, the SPI and common know nothing of tables. */
+    @ArchTest
+    static final ArchRule nothingBeneathTheTableLayerSeesIt = noClasses()
+            .that().resideInAnyPackage("com.ash.drishti.rachana..", "com.ash.drishti.bicompute..", "com.ash.drishti.api..", "com.ash.drishti.common..")
+            .should().dependOnClassesThat().resideInAPackage("com.ash.drishti.tables..")
+            .because("the layer depends on Rachana and the engine, never the reverse");
+
     /** The in-memory lake is plain Java: no Spring, nothing of the server (the server wires it in, server.memlake). */
     @ArchTest
     static final ArchRule memoryLakeIsPlainJava = noClasses()

@@ -859,7 +859,7 @@ computing moved to the pivot engine in 2.9.11.b, and here its expression languag
 rollup layers move to **virtual tables** ([VIRTUAL_TABLES.md](VIRTUAL_TABLES.md)), in one release: one migration tool rewrites each
 dataset as a virtual table and each measure from DEL to Rachana in one pass, and one parity proof (every BI suite and shipped report the
 same figures, every person the same rows) covers both. Arrow Flight gains its `table` and `model` request forms; the client examples gain
-virtual-table notebooks. Two large items, two drills. Nothing is coded until the design discussion is finished.
+virtual-table notebooks. Two large items, two drills. Nothing is coded until the design discussion is finished. The detailed design draft for that discussion (nothing decided): [BI_FOUNDATION_2911E.md](BI_FOUNDATION_2911E.md) (the 59 DEL functions mapped, every dataset and model key mapped, the one migration tool, the one parity proof, the order of work and drills, questions Q1 to Q30).
 
 ## 2.9.12: counterparty engines (proposed)
 

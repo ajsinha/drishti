@@ -2815,6 +2815,31 @@ wrote empty.pdf (2,093 bytes)
   hint: No data is held for 9999-12-31, the date this December 9999 statement reads: every band is empty. The nearest date with data is 2026-10-20 (before). Choose a date the data covers.
 ```
 
+### `tables`: virtual tables and models
+
+The table layer's definitions under `config/tables` ([TABLES_GUIDE.md](TABLES_GUIDE.md)): listed, checked, previewed over sample documents,
+traced, and BI's datasets and models migrated into them. The commands run in Java from the server's exec jar
+(`java -jar drishti-server-*-exec.jar tables ...`) without starting a server and write nothing under the data folder; paths are read from
+the folder you run them in (`--root` for another catalogue folder). Every command takes `--json`.
+
+```
+drishti.py tables list                                              every table and model: source, grain, columns, materialisation
+drishti.py tables check [--sample TABLE=FILE.jsonl]... [--stored NAME,...]   every definition and the catalogue; exit 1 on an error
+drishti.py tables preview TABLE --sample FILE.jsonl [--limit N]     the table's first rows over sample documents (JSONL, .gz too)
+drishti.py tables lineage NAME                                      who uses a table or a model
+drishti.py tables offer NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE) [--grain '$.LIST[*]'] [--write]
+                                                                    the flat virtual table offered for a new table, columns from a sample
+drishti.py tables migrate [--bi DIR] [--dry-run | --check] [--report FILE] [--audit FILE] [--who NAME] [--moved-to DIR]
+```
+
+`tables migrate --dry-run` prints the unified diff of every file it would write under `config/tables/bi/` and the report (every item, every
+expression before and after, every refusal); `--check` exits 1 when anything would change; without either it writes the files, one audit
+line each with `--audit`. A second run changes nothing. Captured on the shipped samples:
+
+```text
+(filled in the heavy run)
+```
+
 ### Shell completion
 
 `drishti.py completion bash|zsh|powershell` prints a completion script generated from the command tree (groups, commands,

@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.expr;
 
+import com.ash.drishti.rachana.el.check.Signatures;
 import java.util.List;
 import java.util.Map;
 
@@ -46,7 +47,7 @@ public final class FunctionDocs {
         }
         for (String family : cat.families()) {
             b.append("\n### ").append(capital(family)).append("\n");
-            for (FunctionCatalog.Fn f : cat.all()) {
+            for (Signatures.Signature f : cat.all()) {
                 if (!f.family().equals(family)) {
                     continue;
                 }
@@ -62,14 +63,14 @@ public final class FunctionDocs {
                 b.append("\n\n").append(f.description()).append("\n");
                 if (!f.params().isEmpty()) {
                     b.append("\n| Parameter | Type | Default | Notes |\n|---|---|---|---|\n");
-                    for (FunctionCatalog.Param p : f.params()) {
+                    for (Signatures.Param p : f.params()) {
                         b.append("| `").append(p.name()).append("` | ").append(p.type()).append(" | ").append(p.defaultText() == null ? (p.variadic() ? "—" : "required")
                                 : "`" + p.defaultText() + "`").append(" | ").append(p.keywordOnly() ? "keyword only: `" + p.name() + "=...`" : p.variadic() ? "one or more" : "")
                                 .append(" |\n");
                     }
                 }
                 b.append("\n| Example | What it says |\n|---|---|\n");
-                for (FunctionCatalog.Example e : f.examples()) {
+                for (Signatures.Example e : f.examples()) {
                     b.append("| `").append(e.expr().replace("|", "\\|")).append("` | ").append(e.says().replace("|", "\\|")).append(" |\n");
                 }
                 if (!f.edgeCases().isEmpty()) {
@@ -87,7 +88,7 @@ public final class FunctionDocs {
         return b.toString();
     }
 
-    private static String returns(FunctionCatalog.Fn f) {
+    private static String returns(Signatures.Signature f) {
         if ("same".equals(f.returns())) {
             return f.params().isEmpty() ? "any" : "the type of `" + f.params().get(0).name() + "`";
         }

@@ -19,6 +19,7 @@ import com.ash.drishti.api.DataNode;
 import com.ash.drishti.bicompute.spi.FigureSource;
 import com.ash.drishti.rachana.el.FunctionProvider;
 import com.ash.drishti.rachana.el.Values;
+import com.ash.drishti.rachana.el.check.Signatures;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -143,12 +144,44 @@ public final class EngineFunctions implements FunctionProvider {
         agg(out, "mode_multi", 1, 2, "list, [field]", "holistic", "every most frequent value, ascending, as a list (Excel's MODE.MULT)",
                 "mode_multi($.LEGS[*].CURRENCY)");
         ListAnalytics.register(out);
+        measureLevel(out);
         out.add(new Provided("measure", 1, 3, "name, [scope], [options]", "measure",
                 "a compute engine's measure for one scope (VaR, ES …), exactly from its engine, never summed",
                 "measure('VAR', 'DESK:DESK-COMM')", (a, c) -> measure(a)));
         out.add(new Provided("cell", 1, 33, "view, [field, member] ...", "measure", "a cell of a saved pivot view, as the view computes it",
                 "cell('desk-pnl', 'DESK', 'DESK-COMM', 'month', '2026-09')", (a, c) -> cell(a)));
         return out;
+    }
+
+    /**
+     * The functions of a model's measures the engine computes over an answer (BI_FOUNDATION_2911E.md 2.5, runs E): the filter context,
+     * time intelligence, windows, balances, {@code convert} and {@code ratio}. Their signatures are checked mode's; the one compiler
+     * ({@code lang.Compiler}) lowers them. Over a list they are refused in words, except {@code ratio}, which is a division (null on 0).
+     */
+    private static void measureLevel(List<Provided> out) {
+        java.util.Set<String> done = new java.util.HashSet<>();
+        out.forEach(p -> done.add(p.name()));
+        for (Signatures.Signature s : Signatures.get().all()) {
+            if (!"E".equals(s.runs()) || done.contains(s.name()) || "measure".equals(s.name()) || "related".equals(s.name())) {
+                continue;
+            }
+            long positional = s.params().stream().filter(p -> !p.keywordOnly()).count();
+            long required = s.params().stream().filter(p -> !p.keywordOnly() && !p.optional()).count();
+            String args = String.join(", ", s.params().stream().map(p -> p.keywordOnly() ? p.name() + " = …" : p.name()).toList());
+            if ("ratio".equals(s.name())) {
+                out.add(new Provided("ratio", 2, 2, args, "measure", s.description(), s.examples().get(0).expr(), (a, c) -> {
+                    double x = Values.number(a.get(0));
+                    double y = Values.number(a.get(1));
+                    return Values.isNull(a.get(0)) || Values.isNull(a.get(1)) || y == 0 ? null : Values.normalise(x / y);
+                }));
+                continue;
+            }
+            String name = s.name();
+            out.add(new Provided(name, (int) required, (int) positional, args, "measure", s.description(), s.examples().get(0).expr(), (a, c) -> {
+                throw ListAggregates.error(name, "belongs to a measure of a model: the engine computes it over a query's answer (its groups, dates "
+                        + "or filters), never over a list");
+            }));
+        }
     }
 
     private static void agg(List<Provided> out, String name, int min, int max, String args, String form, String description,

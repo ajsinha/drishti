@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.expr;
 
+import com.ash.drishti.rachana.el.check.Problem;
 import com.ash.drishti.server.bi.dataset.ExprParser;
 
 /**
@@ -57,30 +58,5 @@ public final class DelException extends ExprParser.ExprException {
 
     public Problem problem() {
         return new Problem(code, Problem.ERROR, getMessage(), fix, position(), end);
-    }
-
-    /**
-     * One finding about an expression.
-     *
-     * @param level {@code error} or {@code warning}
-     * @param fix what to write instead (null when there is no mechanical fix)
-     */
-    public record Problem(String code, String level, String message, String fix, int start, int end) {
-        public static final String ERROR = "error";
-        public static final String WARNING = "warning";
-
-        public boolean error() {
-            return ERROR.equals(level);
-        }
-
-        public java.util.Map<String, Object> toMap() {
-            java.util.Map<String, Object> m = new java.util.LinkedHashMap<>();
-            m.put("code", code);
-            m.put("level", level);
-            m.put("message", message);
-            m.put("fix", fix);
-            m.put("at", java.util.Map.of("start", start, "end", end));
-            return m;
-        }
     }
 }

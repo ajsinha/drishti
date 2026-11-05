@@ -15,9 +15,7 @@
  */
 package com.ash.drishti.rachana.el;
 
-import com.ash.drishti.common.BusinessCalendar;
 import java.time.DateTimeException;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.IsoFields;
@@ -29,22 +27,16 @@ import java.util.Set;
  * More dates (FUNCTION_CATALOGUE.md section 3), beside {@link DateFunctions}: {@code date} (ISO text, or year, month and day with Excel's
  * overflow: month 14 is February of the next year), the parts {@code year}, {@code quarter}, {@code month}, {@code week} (ISO),
  * {@code day}, {@code hour}, {@code minute}, {@code second} (of a timestamp's text; 0 for a plain date), {@code weekday} (with Excel's
- * return types), {@code days360} (US or European), {@code datedif} (complete years, months, days, Excel's units) and
- * {@code shift_date} (by business days on the bank's calendars, or days, weeks, months, quarters, years). A date is ISO text and a date
+ * return types), {@code days360} (US or European), {@code datedif} (complete years, months, days, Excel's units).
+ * {@code shift_date}, {@code business_days_between} and {@code timestamp} are {@link DatePartFunctions}'. A date is ISO text and a date
  * result is ISO text, as everywhere in Rachana.
  */
 final class DateParts {
 
     private DateParts() {}
 
-    /** The units of {@code shift_date}. */
-    static final Set<String> SHIFT_UNITS = Set.of("business_day", "day", "week", "month", "quarter", "year");
-
     /** The units of {@code datedif}, Excel's. */
     static final Set<String> DATEDIF_UNITS = Set.of("Y", "M", "D", "MD", "YM", "YD");
-
-    /** The most business days {@code shift_date} walks: about 400 years, a bound on the work. */
-    static final int MAX_BUSINESS_SHIFT = 100_000;
 
     static void register(Functions.Table t) {
         t.fn("date", 1, 3, (a, c) -> date(a));
@@ -69,9 +61,6 @@ final class DateParts {
         });
         t.fn("datedif", 3, 3, (a, c) -> datedif(a)).check("datedif", args -> Functions.literal(args, 2) instanceof String u
                 && !DATEDIF_UNITS.contains(u.toUpperCase(Locale.ROOT)) ? unitProblem(u) : null);
-        t.fn("shift_date", 2, 4, (a, c) -> shift(a)).check("shift_date", args -> Functions.literal(args, 2) instanceof String u
-                && !SHIFT_UNITS.contains(u) ? "unknown unit '" + u + "' (known: " + String.join(", ", new java.util.TreeSet<>(SHIFT_UNITS)) + ")"
-                : null);
     }
 
     private static void part(Functions.Table t, String name, java.util.function.ToIntFunction<LocalDate> f) {
@@ -218,61 +207,5 @@ final class DateParts {
                 yield ChronoUnit.DAYS.between(base, y);
             }
         };
-    }
-
-    /**
-     * {@code shift_date(d, n, [unit], [calendar])}: d moved by n units: {@code 'business_day'} (the default, on the calendar, USNY by
-     * default: weekends and its holidays skipped; from a holiday, n = 0 stays put), {@code 'day'}, {@code 'week'}, {@code 'month'},
-     * {@code 'quarter'}, {@code 'year'} (a month's 31st into a shorter month: its last day). Excel's WORKDAY.INTL and EDATE; SAS's INTNX
-     * with 'same'.
-     */
-    private static Object shift(List<Object> a) {
-        LocalDate d = Args.date("shift_date", a.get(0));
-        Integer n = Args.whole("shift_date", a.get(1));
-        String unit = a.size() > 2 ? Args.text("shift_date", a.get(2)) : "business_day";
-        if (d == null || n == null || unit == null) {
-            return null;
-        }
-        if (!SHIFT_UNITS.contains(unit)) {
-            throw Args.error("shift_date", "unknown unit '" + unit + "' (known: " + String.join(", ", new java.util.TreeSet<>(SHIFT_UNITS)) + ")");
-        }
-        if (a.size() > 3 && !"business_day".equals(unit)) {
-            throw Args.error("shift_date", "a calendar moves only 'business_day', not '" + unit + "'");
-        }
-        try {
-            return switch (unit) {
-                case "day" -> Args.out(d.plusDays(n));
-                case "week" -> Args.out(d.plusWeeks(n));
-                case "month" -> Args.out(d.plusMonths(n));
-                case "quarter" -> Args.out(d.plusMonths(3L * n));
-                case "year" -> Args.out(d.plusYears(n));
-                default -> {
-                    if (Math.abs(n) > MAX_BUSINESS_SHIFT) {
-                        throw Args.error("shift_date", "moves at most " + MAX_BUSINESS_SHIFT + " business days");
-                    }
-                    String spec = a.size() > 3 ? Args.text("shift_date", a.get(3)) : DateFunctions.DEFAULT_CALENDAR;
-                    if (spec == null) {
-                        yield null;
-                    }
-                    BusinessCalendar cal;
-                    try {
-                        cal = BusinessCalendar.of(spec.trim().toUpperCase(Locale.ROOT));
-                    } catch (IllegalArgumentException e) {
-                        throw Args.error("shift_date", e.getMessage());
-                    }
-                    LocalDate x = d;
-                    int step = n < 0 ? -1 : 1;
-                    for (int left = Math.abs(n); left > 0;) {
-                        x = x.plusDays(step);
-                        if (x.getDayOfWeek() != DayOfWeek.SATURDAY && x.getDayOfWeek() != DayOfWeek.SUNDAY && cal.isBusinessDay(x)) {
-                            left--;
-                        }
-                    }
-                    yield Args.out(x);
-                }
-            };
-        } catch (DateTimeException e) {
-            throw Args.error("shift_date", "the date falls outside the calendar's years");
-        }
     }
 }

@@ -255,6 +255,7 @@ public final class RachanaSchema {
         // Sutra Next (RACHANA_REFERENCE.md 6 to 8): sources over any pack, events, waiting words, child panels
         Map<String, Object> source = new LinkedHashMap<>();
         source.put("kind", text("The entity kind read (any enabled pack's)"));
+        source.put("table", text("A virtual table read instead of a kind (<domain>.<name>, TABLES_GUIDE.md): its rows, as you may read them, are $src; takes where, limit and as-of"));
         source.put("id", text(EL + " for one entity's id: $src is that record"));
         source.put("where", text(EL + " over each entity of the kind (@): $src is the list it keeps"));
         source.put("search", text(EL + " for the text searched in the kind: $src is the list found"));
@@ -263,8 +264,9 @@ public final class RachanaSchema {
         source.put("pack", text("The pack serving the kind"));
         source.put("params", Map.of("type", "object", "description", "A computed kind's parameters (a reactive connector): name: " + EL
                 + " (a number or true/false is its own literal); only with id", "additionalProperties", Map.of("type", List.of("string", "number", "boolean"))));
-        common.put("source", Map.of("description", "The record the panel reads: " + EL + " naming a linked entity (it reads as $), or {kind, id | where | search, limit, as-of, pack, params} (it reads as $src)",
-                "oneOf", List.of(Map.of("type", "string"), Map.of("type", "object", "properties", source, "required", List.of("kind")))));
+        common.put("source", Map.of("description", "The record the panel reads: " + EL + " naming a linked entity (it reads as $), or {kind, id | where | search, limit, as-of, pack, params} (it reads as $src), or {table, where, limit, as-of} (a virtual table's rows as $src)",
+                "oneOf", List.of(Map.of("type", "string"), Map.of("type", "object", "properties", source, "anyOf", List.of(Map.of("required", List.of("kind")),
+                Map.of("required", List.of("table")))))));
         Map<String, Object> emit = new LinkedHashMap<>();
         emit.put("name", text("The event's name: select, open, drill, filter, change"));
         emit.put("on", Map.of("type", "string", "enum", new TreeSet<>(com.ash.drishti.rachana.model.Wiring.TRIGGERS)));

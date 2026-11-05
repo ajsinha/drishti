@@ -72,8 +72,8 @@ public final class PanelTitles {
             public Map<String, String> titles(String kind, String entityId, Principal reader, ViewState state) {
                 Map<String, String> out = new LinkedHashMap<>();
                 ViewModel raw = state == null || state.isEmpty()
-                        ? pipeline.view(EntityRef.of(kind, entityId), AsOf.LATEST, entitlements.redactor(reader), k -> entitlements.mayOpen(reader, k))
-                        : pipeline.view(EntityRef.of(kind, entityId), AsOf.LATEST, entitlements.redactor(reader), k -> entitlements.mayOpen(reader, k),
+                        ? pipeline.view(EntityRef.of(kind, entityId), AsOf.LATEST, entitlements.viewer(reader))
+                        : pipeline.view(EntityRef.of(kind, entityId), AsOf.LATEST, entitlements.viewer(reader),
                                 state.controls());
                 for (PanelView p : entitlements.restrict(reader, raw).panels()) {
                     out.put(p.id(), p.title());

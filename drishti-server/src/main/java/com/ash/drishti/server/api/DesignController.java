@@ -399,12 +399,12 @@ public class DesignController {
                 throw new DrishtiException(ErrorCode.FORBIDDEN, Entitlements.DENIED + ": you may not open " + info.refKind() + " entities");
             }
             return entitlements.restrict(who, pipeline.preview(s, EntityRef.of(info.refKind(), info.refId()), AsOf.LATEST,
-                    entitlements.redactor(who), mayOpen, controls));
+                    entitlements.viewer(who), controls));
         }
         String json = designs.sample(who.user(), id, info.name());
         EntityDocument doc = new EntityDocument(EntityRef.of(d.kind, "SAMPLE"), codec.read(json),
                 new com.ash.drishti.api.Provenance("design sample JSON", 0, java.time.Instant.now(), false));
-        return entitlements.restrict(who, pipeline.builtPreview(Optional.of(s), doc, entitlements.redactor(who), mayOpen, controls).view());
+        return entitlements.restrict(who, pipeline.builtPreview(Optional.of(s), doc, entitlements.viewer(who), controls).view());
     }
 
     /** Drafts a Sutra from the Design's samples (as {@code /builder/design}), keeps it as the Design's Sutra (a new revision) and returns the draft with its {@code rev}. */

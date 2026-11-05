@@ -13,20 +13,23 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.bi.expr;
+package com.ash.drishti.rachana.el.check;
 
 import java.util.Locale;
 
 /**
- * Where an expression is written decides what it may name (docs/architecture/BI_DESIGN.md section 3.3.1).
+ * Where an expression is written decides what it may name (BI_FOUNDATION_2911E.md 2.2; moved from DEL, BI_DESIGN.md section 3.3.1).
  *
  * <ul>
- *   <li>{@link #ROW}: a dataset's derive and calculated columns, its {@code where}, {@code grain.keep}, MQ and DSQL row filters: the columns of one dataset,
- *       {@code related()} one hop; one value per row; no aggregate.</li>
- *   <li>{@link #RULE}: a row rule ({@code security.rows[].where}): the dataset's columns and {@code user.*}; a boolean per row.</li>
- *   <li>{@link #AGGREGATE}: measures, MQ {@code define}, {@code having}, report local measures: {@code alias.column} inside an aggregate, {@code measure('name')};
- *       one value per group.</li>
- *   <li>{@link #CONTEXT}: the first argument of {@code calc}, {@code share_of}, {@code parent_of}, {@code as_of} (wave B).</li>
+ *   <li>{@link #ROW}: a table's column {@code expr}, its {@code filter}, {@code keep:}; a dataset's derive and calculated columns, MQ and
+ *       DSQL row filters: the source ({@code $}, {@code @}, {@code ^}) or the columns of one table, {@code related()} one hop,
+ *       {@code param.x}; one value per row; no aggregate.</li>
+ *   <li>{@link #RULE}: a row rule (a table's {@code rules[].where}, a model's {@code security.rows}): the columns and {@code user.x};
+ *       a condition per row; never removable by any function.</li>
+ *   <li>{@link #AGGREGATE}: measures, MQ {@code define}, {@code having}, report local measures: {@code alias.COLUMN} inside an
+ *       aggregate, {@code measure('name')}, {@code param.x}; one value per group.</li>
+ *   <li>{@link #CONTEXT}: the first argument of {@code calc}, {@code share_of}, {@code parent_of}, {@code as_of}: as aggregate, in an
+ *       edited filter context.</li>
  * </ul>
  */
 public enum Scope {

@@ -61,15 +61,16 @@ for several arguments (Rachana's `min(a, b, ...)`), `cumulative` folded into `ru
 and models and rewritten by the migration tool. Rachana has the one names (`starts_with`, `ends_with`, `days_between`, `least`,
 `greatest`, `matches_case`, `one_of`); its old spellings `startsWith`, `days`, `matchesCase`, `oneOf` and `min`/`max` with several
 arguments are read with the results they always gave. Rachana's tier-1 functions, their rules and an example of each on the demo trade
-are in [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#functions). Rachana has no list literals, so an example here that writes a
-list (`['DESK-COMM', 'DESK-RATES']`) reads it from the document or a control there.
+are in [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#functions). Since 2.9.11.e Rachana writes lists (`['DESK-COMM', 'DESK-RATES']`), a strict `in` (an empty list holds nothing) beside
+`one_of` (an empty choice holds everything, for controls), named arguments (`where = ...`) and the parent path `^`; checked mode
+types an expression where the types are known (BI_FOUNDATION_2911E.md section 2).
 
 ## 1. Math and logic (scalars)
 
 | Function | Means | Example | Excel / SAS | Runs | Status |
 |---|---|---|---|---|---|
 | `abs(x)` | absolute value | `abs(trades.MTM)` | `ABS` / `ABS` | R | built (DEL, Rachana) |
-| `round(x, [n])` | round half away from zero to n places | `round(trades.NOTIONAL / 1e6, 1)` | `ROUND` / `ROUND` | R | built (DEL) |
+| `round(x, [n])` | round half away from zero to n places, in decimal (`round(2.675, 2)` is 2.68; n may be negative) | `round(trades.NOTIONAL / 1e6, n = 1)` | `ROUND` / `ROUND` | R | built (Rachana; DEL until part B) |
 | `round_up(x, [n])`, `round_down(x, [n])` | away from or towards zero | `round_up(trades.QUANTITY / 100)` | `ROUNDUP`, `ROUNDDOWN` | R | built (Rachana) |
 | `mround(x, m)` | to the nearest multiple of m | `mround(trades.PRICE, 0.25)` | `MROUND` | R | built (Rachana) |
 | `ceiling(x, [m])`, `floor(x, [m])` | up or down to a multiple | `ceiling(size($.LEGS), 2)` | `CEILING.MATH`, `FLOOR.MATH` / `CEIL`, `FLOOR` | R | built (Rachana) |
@@ -85,7 +86,6 @@ list (`['DESK-COMM', 'DESK-RATES']`) reads it from the document or a control the
 | `switch(x, v1, a1, v2, a2, ..., [else])` | value match | `switch($.LEG_TYPE, 'FIXED', 'F', 'FLOAT', 'V', '?')` | `SWITCH` / `SELECT` | R | built (Rachana) |
 | `iferror(x, y)` | y when x fails (a division by zero, a bad date) | `iferror(trades.PNL / trades.NOTIONAL, 0)` | `IFERROR` | R | built (Rachana) |
 | `let(name = expr, ..., result)` | names a part to reuse | `let(n = $.LEGS[0].NOTIONAL, q = $.QUANTITY, n * q)` | `LET` | R | built (Rachana) |
-| `round(x, [n])` in Rachana | half away from zero, in decimal (`round(2.675, 2)` is 2.68) | `round($.QUANTITY / 1e6, 1)` | `ROUND` / `ROUND` | R | built (Rachana; DEL's until the fold) |
 | `round_sig(x, digits)` | to significant digits | `round_sig($.NOTIONAL, 3)` | `ROUND(x, d-1-INT(LOG10(ABS(x))))` / `ROUND` with a computed unit | R | built (Rachana) |
 | `log(x, [base])` | logarithm, base 10 by default | `log(8, 2)` is 3 | `LOG` / `LOG`, `LOG2` | R | built (Rachana) |
 | `fact(n)`, `combin(n, k)`, `permut(n, k)` | factorial, combinations, permutations, exact (n ≤ 1,000) | `combin(8, 2)` is 28 | `FACT`, `COMBIN`, `PERMUT` / `FACT`, `COMB`, `PERM` | R | built (Rachana) |
@@ -102,8 +102,8 @@ list (`['DESK-COMM', 'DESK-RATES']`) reads it from the document or a control the
 
 | Function | Means | Example | Excel / SAS | Runs | Status |
 |---|---|---|---|---|---|
-| `upper(s)`, `lower(s)` | case | `upper($.COUNTERPARTY)` | `UPPER`, `LOWER` / `UPCASE`, `LOWCASE` | R | built |
-| `len(s)` | characters | `len($.TRADE_ID)` | `LEN` / `LENGTH` | R | built (DEL) |
+| `upper(s)`, `lower(s)` | case; null in, null out | `upper($.COUNTERPARTY)` | `UPPER`, `LOWER` / `UPCASE`, `LOWCASE` | R | built (Rachana) |
+| `len(s)` | characters (code points, as the engine's SQL counts them); `len(null)` is null (`size` counts a list) | `len($.TRADE_ID)` | `LEN` / `LENGTH` | R | built (Rachana; DEL until part B) |
 | `contains(s, part)`, `starts_with(s, p)`, `ends_with(s, p)` | ignore case | `starts_with($.PRODUCT_TYPE, 'Com')` | `SEARCH`, `LEFT(...)=` / `FIND`, `INDEX` | R | built (Rachana; old spelling `startsWith`) |
 | `matches(s, regex)`, `matches_case(s, regex)` | regular expression | `matches($.INSTRUMENT, 'USD 20[0-9]{2}')` | `REGEXTEST` / `PRXMATCH` | R | built (Rachana; old spelling `matchesCase`) |
 | `within(x, range)`, `one_of(x, list)` | in a range, in a list | `one_of($.DESK, ['DESK-COMM', 'DESK-RATES'])` | `OR(x=...)` / `IN` | R | built (Rachana; old spelling `oneOf`) |
@@ -116,7 +116,6 @@ list (`['DESK-COMM', 'DESK-RATES']`) reads it from the document or a control the
 | `fmt(x, format)` | a pack's display format | `fmt(trades.NOTIONAL, 'amount0')` | `TEXT` / `PUT` | R | built (Rachana) |
 | `text(x, format)` | a number or a date written with an Excel format code (`#,##0.00`, `0.0%`, `0.00E+00`, `#,##0;(#,##0);"-"`, `dd-mmm-yyyy`, `hh:mm`); `fmt` writes a pack's named format | `text($.PRICE, '0.00%')` | `TEXT`, `FIXED`, `DOLLAR` / `PUT` | R | built (Rachana) |
 | `value(text, [decimal_sep], [group_sep])` | text read as a number: groups, a currency sign, a trailing %, accounting brackets | `value('(1,250.50)')` is −1250.5 | `VALUE`, `NUMBERVALUE` / `INPUT(s, COMMA.)` | R | built (Rachana) |
-| `len(s)` in Rachana | characters | `len($.TRADE_ID)` | `LEN` / `LENGTH` | R | built (Rachana; DEL's until the fold) |
 | `proper(s)`, `reverse(s)`, `clean(s)` | each word capitalised; reversed; control characters removed | `proper($.COUNTERPARTY_NAME)` | `PROPER`, `CLEAN` / `PROPCASE`, `REVERSE`, `COMPRESS(s, , 'c')` | R | built (Rachana) |
 | `rept(s, n)` | s n times (at most 10,000 characters) | `rept('*', 3)` | `REPT` / `REPEAT` | R | built (Rachana) |
 | `exact(a, b)` | equal as written, case counts; two empty values are equal | `exact($.BOOK, 'BOOK-RATES-3')` | `EXACT` / `=` | R | built (Rachana) |
@@ -130,22 +129,20 @@ list (`['DESK-COMM', 'DESK-RATES']`) reads it from the document or a control the
 
 | Function | Means | Example | Excel / SAS | Runs | Status |
 |---|---|---|---|---|---|
-| `date(text)`, `timestamp(text)`, `today()`, `asof()` | constants and the query's date | `asof()` | `DATEVALUE`, `TODAY` / `MDY`, `TODAY` | R | built |
-| `year(d)`, `quarter(d)`, `month(d)`, `week(d)`, `day(d)` | parts | `quarter($.TRADE_DATE)` | `YEAR`, `MONTH`, `WEEKNUM` / `YEAR`, `QTR` | R | built (DEL) |
+| `timestamp(text)`, `asof()` | a timestamp constant and the query's date (`today()` is read as `asof()`, Q7) | `asof()` | `DATEVALUE`, `TODAY` / `MDY`, `TODAY` | R | built (Rachana) |
+| `year(d)`, `quarter(d)`, `month(d)`, `week(d)`, `day(d)` | parts (`week` is the ISO week) | `quarter($.TRADE_DATE)` | `YEAR`, `MONTH`, `DAY`, `ISOWEEKNUM` / `YEAR`, `QTR`, `MONTH`, `WEEK(d, 'V')`, `DAY` | R | built (Rachana; DEL until part B) |
 | `days_between(a, b)` | calendar days | `days_between($.TRADE_DATE, $.MATURITY_DATE)` | `DAYS` / `INTCK('day', ...)` | R | built (DEL, Rachana; old spelling `days`) |
-| `business_days_between(a, b, [calendar])` | business days | `business_days_between($.TRADE_DATE, asof(), 'USNY')` | `NETWORKDAYS.INTL` / `INTCK('weekday', ...)` | R | built (DEL) |
-| `shift_date(d, n, [unit], [calendar])` | moved by business days, weeks, months | `shift_date(asof(), -1)` | `WORKDAY.INTL`, `EDATE` / `INTNX` | R | built (DEL) |
+| `business_days_between(a, b, [calendar])` | business days after a up to b (negative when b is before a) | `business_days_between($.TRADE_DATE, asof(), calendar = 'USNY')` | `NETWORKDAYS.INTL` / `INTCK('weekday', ...)` | R | built (Rachana) |
+| `shift_date(d, n, [unit], [calendar])` | moved by `business-day` (the default, on the bank's calendars; `business_day`, as `intck` writes it, is the same), `day`, `week`, `month`, `quarter` or `year`; a calendar moves only business days | `shift_date(asof(), -1)` | `WORKDAY.INTL`, `EDATE` / `INTNX(..., 'same')` | R | built (Rachana; DEL until part B) |
 | `eomonth(d, [n])`, `edate(d, n)` | month end, months later | `eomonth($.TRADE_DATE)` | `EOMONTH`, `EDATE` / `INTNX('month', d, n, 'end')` | R | built (Rachana) |
 | `yearfrac(a, b, basis)` | year fraction: `ACT/360`, `ACT/365F`, `30/360`, `30E/360`, `ACT/ACT` | `yearfrac($.START_DATE, $.MATURITY_DATE, 'ACT/360')` | `YEARFRAC` / `YRDIF` | R | built (Rachana) |
 | `intck(interval, a, b, [calendar])` | how many interval boundaries are crossed | `intck('month', $.TRADE_DATE, asof())` | `DATEDIF` / `INTCK` | R | built (Rachana) |
 | `is_business_day(d, [calendar])` | a business day? | `is_business_day($.MATURITY_DATE, 'USNY')` | `NETWORKDAYS(d, d)=1` | R | built (Rachana) |
-| `date(text)`, `date(y, m, d)` in Rachana | a date from ISO text, or from its parts with Excel's carry-over (month 14 is February next year) | `date(year($.TRADE_DATE), 12, 31)` | `DATE`, `DATEVALUE` / `MDY`, `INPUT(s, YYMMDD10.)` | R | built (Rachana) |
-| `year(d)`, `quarter(d)`, `month(d)`, `week(d)`, `day(d)` in Rachana | parts; `week` is ISO's | `quarter($.TRADE_DATE)` | `YEAR`, `MONTH`, `DAY`, `ISOWEEKNUM` / `YEAR`, `QTR`, `MONTH`, `WEEK(d, 'V')`, `DAY` | R | built (Rachana; DEL's until the fold) |
+| `date(text)`, `date(y, m, d)` | a date from ISO text, or from its parts with Excel's carry-over (month 14 is February next year) | `date(year($.TRADE_DATE), 12, 31)` | `DATE`, `DATEVALUE` / `MDY`, `INPUT(s, YYMMDD10.)` | R | built (Rachana) |
 | `hour(t)`, `minute(t)`, `second(t)` | of a timestamp's text or a time (`09:30`); 0 for a plain date | `hour($.EXECUTION_TIME)` | `HOUR`, `MINUTE`, `SECOND` / `HOUR`, `MINUTE`, `SECOND` | R | built (Rachana) |
 | `weekday(d, [type])` | day of the week with Excel's return types (1: Sunday 1; 2: Monday 1; 3: Monday 0; 11 to 17) | `weekday($.TRADE_DATE, 2) > 5` | `WEEKDAY` / `WEEKDAY` (type 1) | R | built (Rachana) |
 | `days360(a, b, [european])` | days on a 360-day year, US (NASD) or European | `days360($.START_DATE, $.MATURITY_DATE)` | `DAYS360` / `DATDIF(a, b, '30/360')` | R | built (Rachana) |
 | `datedif(a, b, unit)` | complete years, months, days: `Y`, `M`, `D`, `MD`, `YM`, `YD` (`intck` counts boundaries crossed instead) | `datedif($.TRADE_DATE, today(), 'M')` | `DATEDIF` / `INTCK(..., 'continuous')` | R | built (Rachana) |
-| `shift_date(d, n, [unit], [calendar])` in Rachana | moved by `business_day` (the default, on the bank's calendars), `day`, `week`, `month`, `quarter`, `year` | `shift_date(today(), -1)` | `WORKDAY.INTL`, `EDATE` / `INTNX(..., 'same')` | R | built (Rachana; DEL's until the fold) |
 
 ## 4. Aggregates (many rows or list elements to one value)
 
@@ -182,7 +179,8 @@ the cell's rows. `mode` of names and `string_agg` answer text.
 | `trimmean(x, pct)` | mean without ⌊n·pct/2⌋ values at each end (Excel's rule) | `trimmean(trades.PRICE, 0.1)` | `TRIMMEAN` / PROC UNIVARIATE `TRIMMED=` | holistic | built (engine) |
 | `corr(x, y)`, `covar(x, y)` | correlation, sample covariance, over the pairs where both are present | `corr(trades.PNL, trades.NOTIONAL)` | `CORREL`, `COVARIANCE.S` / PROC CORR | mergeable (sums of products) | built (engine) |
 | `slope(y, x)`, `intercept(y, x)`, `rsq(y, x)` | least-squares line of y on x (y first, as Excel); none when x does not vary | `slope(trades.PNL, trades.QUANTITY)` | `SLOPE`, `INTERCEPT`, `RSQ` / PROC REG | mergeable | built (engine) |
-| `ratio(num, den)` | num / den, null on 0 | `ratio(sum(trades.PNL), sum(trades.NOTIONAL))` | `IFERROR(a/b, "")` | of its parts | built (DEL) |
+| `ratio(num, den)` | num / den, null on 0 | `ratio(sum(trades.PNL), sum(trades.NOTIONAL))` | `IFERROR(a/b, "")` | of its parts | built (engine: a measure of measures, the one compiler) |
+| `avg_by(agg, by = [fields])` | the aggregate per value of the fields, then their mean: iteration written out, never a context transition | `avg_by(sum(trades.PNL), by = [trades.TRADE_DATE])` | none (DAX `AVERAGEX`) | of its parts | built (engine: a context sub-plan, FilterContext) |
 | `sum_once(x)`, `count_once(x)`, `avg_once(x)` | a coarser figure counted once per parent (a trade's in a per-leg view) | `sum_once($.QUANTITY)` beside `count($.LEGS[*])` | none | mergeable by parent id | built (engine) |
 | `group(list, key, [agg])` | grouping inside one document | `group($.LEGS[*], @.CURRENCY, sum(@.NOTIONAL))` | `GROUPBY` / PROC MEANS `CLASS` | the engine's grouping | built (engine: Rachana reads the key and the inputs, the engine groups) |
 | `sumproduct(a, b)` | Σ a·b over the rows where both are present; 0 for none | `sumproduct(trades.QUANTITY, trades.PRICE)` | `SUMPRODUCT` / PROC SQL `SUM(a*b)` | mergeable (a compensated sum) | built (engine) |
@@ -210,22 +208,23 @@ grand total and Others without a figure (an open member's total is that member, 
 
 | Function | Means | Example | Excel / SAS | Status |
 |---|---|---|---|---|
-| `pct_of_total(agg)`, `pct_of_row(agg)`, `pct_of_column(agg)` | share of the grand, row or column total | `pct_of_total(sum(trades.NOTIONAL))` | PivotTable "% of grand total" / TABULATE `PCTSUM`, `ROWPCTSUM`, `COLPCTSUM` | built (engine; DEL `share_of` stays until 2.9.11.e) |
-| `pct_of_parent(agg, [hierarchy])` | share of the parent level | `pct_of_parent(sum(trades.NOTIONAL), 'MGMT')` | "% of parent row" / `ROWPCTSUM` | built (engine: the level above on the rows; a named hierarchy with DEL `parent_of` until 2.9.11.e) |
-| `share_of(agg, over)` | share with chosen fields ignored | `share_of(sum(trades.NOTIONAL), over = [trades.DESK])` | none | built (DEL) |
-| `rank(agg, [desc], [by])`, `dense_rank`, `percent_rank` | position | `rank(sum(trades.NOTIONAL), by = [trades.DESK])` | `RANK.EQ`, `PERCENTRANK` / PROC RANK | built (DEL) |
+| `pct_of_total(agg)`, `pct_of_row(agg)`, `pct_of_column(agg)` | share of the grand, row or column total **visible** in the answer (Excel's "show values as") | `pct_of_total(sum(trades.NOTIONAL))` | PivotTable "% of grand total" / TABULATE `PCTSUM`, `ROWPCTSUM`, `COLPCTSUM` | built (engine) |
+| `pct_of_parent(agg, [hierarchy])` | share of the parent level's **visible** total (the level above on the rows); not `parent_of`, which drops filters (Q6) | `pct_of_parent(sum(trades.NOTIONAL), 'MGMT')` | "% of parent row" / `ROWPCTSUM` | built (engine) |
+| `share_of(agg, over = [fields] \| ALL)` | `agg / calc(agg, ignore = over)`: the share of everything you may see with those filters dropped (DAX's `ALL`), whatever the slicers say | `share_of(sum(trades.NOTIONAL), over = [trades.DESK])` | none | built (engine: a context sub-plan, FilterContext) |
+| `parent_of(agg, hierarchy = 'name')` | `agg` over the same with the deepest level of the hierarchy in the answer ignored; null at the top | `parent_of(measure('MTM'), hierarchy = 'Desk and book')` | none | built (engine: a context sub-plan, FilterContext) |
+| `rank(agg, desc = true, by = [f])`, `dense_rank(agg, desc = true, by = [f])`, `percent_rank(agg, desc = true, by = [f])` | position | `rank(sum(trades.NOTIONAL), by = [trades.DESK])` | `RANK.EQ`, `PERCENTRANK` / PROC RANK | built (engine: a window over the answer, the one compiler) |
 | `ntile(agg, n)` | the bucket 1..n among the siblings, ascending, ties at their mean rank: SAS's ⌊rank·n/(count+1)⌋ plus one | `ntile(sum(trades.NOTIONAL), 10)` | `QUARTILE` buckets / PROC RANK `GROUPS=10` | built (engine) |
 | `kth_largest(x, k)`, `kth_smallest(x, k)` | k-th value | `kth_largest(trades.NOTIONAL, 3)` | `LARGE`, `SMALL` / PROC UNIVARIATE extremes | built (engine, an aggregate: section 4) |
 | `top_n(n, agg)`, `bottom_n(n, agg)` with Others | the n leading members, the rest as Others | `top_n(10, sum(trades.NOTIONAL))` | PivotTable Top 10 filter | built (the pivot view's `top`: Top N and Others) |
-| `lag(agg, n, order)`, `lead(agg, n, order)` | n cells before or after | `lag(sum(trades.PNL), 1, trades.TRADE_DATE.month)` | `OFFSET` / `LAG` | built (DEL) |
+| `lag(agg, n, order, by = [f])`, `lead(agg, n, order, by = [f])` | n cells before or after | `lag(sum(trades.PNL), 1, trades.TRADE_DATE)` | `OFFSET` / `LAG` | built (engine: a window over the answer, the one compiler) |
 | `diff(agg, [n], order)`, `pct_change(agg, [n], order)` | change from n members before along the order dimension (rows or columns, members in natural order); `pct_change` over the earlier figure, none where it is 0 | `pct_change(sum(trades.NOTIONAL), 1, month)` | `B2-B1` / `DIF` | built (engine) |
-| `moving_avg`, `moving_sum`, `moving_min`, `moving_max` (agg, n, order) | rolling windows | `moving_avg(sum(trades.PNL), 20, day)` | `AVERAGE(OFFSET())` / PROC EXPAND | built (DEL) |
-| `running(agg, date)` | running total | `running(sum(trades.PNL), trades.TRADE_DATE)` | running total / `RETAIN` | built (DEL; `cumulative` folds in) |
-| `ytd`, `mtd`, `qtd`, `fiscal_ytd` (agg, date) | to date | `ytd(sum(trades.PNL), trades.TRADE_DATE)` | none / `INTNX` windows | built (DEL) |
-| `prior_period`, `same_period_last_year` (agg, date) | comparisons | `same_period_last_year(sum(trades.PNL), trades.TRADE_DATE)` | none | built (DEL) |
-| `opening`, `closing`, `first`, `last`, `avg_over` (agg, date, [period]) | balances | `closing(sum(positions.BALANCE), positions.DATE, 'month')` | none / `FIRST.`, `LAST.` | built (DEL) |
-| `calc(agg, where, ignore, keep, via)` | the aggregate in an edited filter context | `calc(sum(trades.NOTIONAL), ignore = [trades.DESK])` | none (DAX `CALCULATE`) | built (DEL) |
-| `as_of(agg, date)` | the aggregate on another business date | `as_of(sum(trades.NOTIONAL), shift_date(asof(), -1))` | none | built (DEL) |
+| `moving_avg(agg, n, order)`, `moving_sum(agg, n, order)`, `moving_min(agg, n, order)`, `moving_max(agg, n, order)` | rolling windows | `moving_avg(sum(trades.PNL), 20, trades.TRADE_DATE)` | `AVERAGE(OFFSET())` / PROC EXPAND | built (engine: a window over the answer, the one compiler) |
+| `running(agg, date)` | running total (`cumulative` folds in) | `running(sum(trades.PNL), trades.TRADE_DATE)` | running total / `RETAIN` | built (engine: time intelligence, the one compiler) |
+| `ytd(agg, date)`, `mtd(agg, date)`, `qtd(agg, date)`, `fiscal_ytd(agg, date)` | to date | `ytd(sum(trades.PNL), trades.TRADE_DATE)` | none / `INTNX` windows | built (engine: time intelligence, the one compiler) |
+| `prior_period(agg, date)`, `same_period_last_year(agg, date)` | comparisons | `same_period_last_year(sum(trades.PNL), trades.TRADE_DATE)` | none | built (engine: time intelligence, the one compiler) |
+| `opening(agg, date, period = 'month')`, `closing(agg, date, period = 'month')`, `earliest(agg, date)`, `latest(agg, date)`, `avg_over(agg, date)` | balances (`latest` and `earliest` were DEL's `last` and `first`, Q5; `first(list)` and `last(list)` stay Rachana's list ends) | `closing(sum(positions.BALANCE), positions.DATE, period = 'month')` | none / `FIRST.`, `LAST.` | built (engine: balances, the dates by context.Periods) |
+| `calc(agg, where = c, ignore = [f] \| ALL, keep = [f], via = 'r')` | the aggregate in an edited filter context (BI_DESIGN 3.3.5, carried over word for word) | `calc(sum(trades.NOTIONAL), ignore = [trades.DESK])` | none (DAX `CALCULATE`) | built (engine: a context sub-plan, FilterContext) |
+| `as_of(agg, date)` | the aggregate on another business date, worked out before the query runs | `as_of(sum(trades.NOTIONAL), shift_date(asof(), -1))` | none | built (engine: a context sub-plan, FilterContext) |
 
 ## 6. Lists (Excel's dynamic arrays, over `[*]`)
 
@@ -257,10 +256,10 @@ grand total and Others without a figure (an open member's total is that member, 
 
 | Function | Means | Example | Excel / SAS | Runs | Status |
 |---|---|---|---|---|---|
-| `fx(ccy, to, [at])` | an FX rate | `fx('EUR', 'USD')` | none | R | built (DEL) |
-| `convert(agg, [to], [at])` | an aggregate of many currencies in one | `convert(sum(trades.NOTIONAL), 'USD')` | none | E | built (DEL) |
-| `related(alias.column)` | a column of the row a reference points at | `related(counterparties.RATING)` | `XLOOKUP` / a `MERGE` | E | built (DEL) |
-| `measure(name, [scope], [options])` | a compute engine's measure for one scope, exactly from its engine (never summed); model measures through it with DEL's fold (part 4) | `measure('VAR', 'DESK:DESK-COMM')` | none | M | built (engine, answered by the server's pivot engine for the person; model measures: DEL) |
+| `fx(ccy, to, at = d)` | an FX rate from the installation's FX source (Q15); its Java and SQL forms come with the table layer (part B) | `fx('EUR', 'USD')` | none | R | T1 (Rachana parses and checks it; DEL until part B) |
+| `convert(agg, to = 'USD', at = 'as-of')` | an aggregate of many currencies in one (the currency guard lifted) | `convert(sum(trades.NOTIONAL), to = 'USD')` | none | E | built (engine: the one compiler's plan; the rates with the table layer) |
+| `related(alias.COLUMN)`, `related(table.COLUMN, on = key)` | a column of the row a reference points at (one many-to-one hop, Q29) | `related(counterparties.RATING)` | `XLOOKUP` / a `MERGE` | E | T1 (Rachana parses and checks it; resolved by the table layer's joins in part B; DEL until then) |
+| `measure(name, [scope], [options])` | a model's measure in a model; a compute engine's measure for one scope, exactly from its engine (never summed) | `measure('VAR', 'DESK:DESK-COMM')` | none | M | built (engine, answered by the server's pivot engine for the person; model measures by the one compiler) |
 | `cell(view, field, member, ...)` | a cell of a saved pivot view, as the view computes it for the person | `cell('owner/desk-pnl', 'DESK', 'DESK-COMM', 'month', '2026-09')` | `GETPIVOTDATA` | E | built (engine, answered by the server's pivot engine) |
 
 ## 8. Finance on given flows (tier 2)
@@ -394,8 +393,8 @@ calls for it; added on a person's request.
 | Text and dates | `upper`, `lower`, `strtrim` (`trim`), `strsplit` (`split`), `strjoin` (`string_agg`), `strrep` (`replace`), `regexp` (`regex_extract`), `regexprep` (`regex_replace`), `contains`, `startsWith`, `endsWith`, `datestr` (`text`), `year`, `month`, `day`, `weekday`, `calmonths` (`intck`), `busdate` (`shift_date`) | | `datetime('now')`, `now`, `clock`, `rand`, `randn`, `randi` (non-deterministic) |
 | Signal, matrices, toolboxes | | | `filter`, `conv`, `fft`, `ifft`, `xcorr` (signal processing: no use on risk data; `movmean` covers smoothing); `mtimes`, `inv`, `mldivide`, `det`, `eig`, `chol`, `svd`, `pca` (MX); plotting (`plot` …: the console draws); Financial Toolbox pricing (`blsprice`, `bndprice`, `zbtprice` …: QLRisk), `portvar`, `portopt` (risk engines, `measure(...)`) |
 
-**Counts (2.9.11.e).** Drishti gained **154** registered functions, each under its one name: 127 in Rachana (9 of them DEL's scalars
-written in Rachana ahead of the fold: `round`, `len`, `date`, `year`, `quarter`, `month`, `week`, `day`, `shift_date`), 12 aggregates
+**Counts (2.9.11.e).** Drishti gained **154** registered functions, each under its one name: 127 in Rachana (9 of them DEL's scalars,
+each one implementation shared with part A's fold: `round`, `len`, `date`, `year`, `quarter`, `month`, `week`, `day`, `shift_date`), 12 aggregates
 and 15 list analytics in the engine; Rachana's `sort` takes several keys. Counting each Excel, SAS or MATLAB name once as these tables
 list it (a family written with "…" counts once): **268** were already covered, **207** are answered by the added functions, **193** are not
 added: no use yet (about 45, accounting depreciation and fuzzy matching among them), MX matrices (about 30), non-deterministic (18),
