@@ -159,7 +159,7 @@ fallback route.
 | No duplicate classes | Enforcer `banDuplicateClasses` (extra-enforcer-rules) |
 | Natives only where allowed | an ArchUnit rule: `org.bytedeco`, `com.github.luben.zstd`, `org.xerial.snappy`, `net.jpountz`, `org.rocksdb`, `org.duckdb` are imported only in `drishti-native` |
 | Platforms | only the `linux-x86_64` and `windows-x86_64` classifiers, never the `-platform` artifacts (which pull every OS) |
-| One list | `docs/admin/NATIVE_DEPENDENCIES.md`, generated from the POMs by a tool and checked by a test: each native library, its version, licence, platforms, the capability it serves and its Java fallback |
+| One list | `docs/admin/NATIVE_DEPENDENCIES.md` (planned), generated from the POMs by a tool and checked by a test: each native library, its version, licence, platforms, the capability it serves and its Java fallback |
 
 ## 8. Parity and tolerances
 
@@ -187,7 +187,7 @@ models are designed in 2.9.12 and built later, with QLRisk.
 | `drishti.native.mode` | `auto` | `auto` uses each native capability that loads; `off` uses Java everywhere; `on` refuses to start if one cannot load |
 | `drishti.native.<capability>.mode` | `auto` | per capability: `auto`, `java`, `native` (`blas`, `lapack`, `codec`, `store`) |
 | `drishti.native.cache-dir` | `<data>/native-cache` | where native libraries are unpacked |
-| `drishti.native.canary-hours` | `6` | the canary's period |
+| `drishti.native.canary-hours` (planned) | `6` | the canary's period |
 
 Admin → Engines shows each capability (native or Java, why, version, calls, last canary) with its switch; Health shows `native.*`; the
 console shows the DEGRADED banner when any capability fell back.
