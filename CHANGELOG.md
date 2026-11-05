@@ -78,7 +78,13 @@
 - **A custom function's cost is the fastest of up to five warm runs.** One timed run also timed whatever else the machine did meanwhile
   (a collection, another busy thread), and a function within its limit was refused on a busy server (CustomFunctionsTest: "2819 ns a row
   (limit 2000)" on a function that costs a fraction of that; PIVOT_GUIDE.md).
+- **The VaR screen's tree shows the lens you chose.** A new horizon, confidence, currency or hierarchy asks the tree again while an earlier
+  ask may still be out; the earlier answer landing last drew the old lens's figures under the new lens's tiles. Only the newest answer is
+  drawn, and the tree is `aria-busy` until it is (test_var_lens_browser: the 10-day √10 tree read the 1-day bank figure under load).
 - **Tests, the causes and their fixes** (no retries, sleeps or quarantine added):
+  - *test_admin_net_stack_browser* (stopping a moves the console): the open page's live stream reconnects when its console moves, and a
+    page that reconnects is repainted by a reload, as designed; the tick count was read across that reload ("Execution context was
+    destroyed") and restarted with it. The ticks are now summed over the page's documents, a read during the reload waiting for the new one.
   - *test_write_back_browser*: the other browser's page is drawn again by a reload when the edit reaches it (a source that does not
     stream); the test polled the old page across that reload and failed whenever a poll landed mid-navigation ("Execution context was
     destroyed"). It now waits for that navigation, then reads the new page.

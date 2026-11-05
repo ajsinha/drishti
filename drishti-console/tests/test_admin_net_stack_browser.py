@@ -30,6 +30,29 @@ from test_live_tabs_browser import COUNT_TICKS  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
 
 
+class Ticks:
+    """The open page's live ticks, summed over its documents. A page whose live stream reconnects is drawn again by a reload (drishti_live.js:
+    "reconnected: the server sent a fresh view, so repaint from it"), as it does when its console moves off a stopped server; the reload starts
+    the page's own count again, and an evaluate that lands while it navigates finds no page ("Execution context was destroyed"). Such a read
+    waits for the new document and reads it; a count lower than the last is a new document, whose ticks are added to the earlier ones."""
+
+    def __init__(self, page):
+        self.page, self.base, self.last = page, 0, 0
+
+    def __call__(self):
+        try:
+            n = self.page.evaluate(COUNT_TICKS)
+        except Exception as e:  # noqa: BLE001 - only the navigation's own error is waited out
+            if "Execution context was destroyed" not in str(e) and "navigat" not in str(e):
+                raise
+            self.page.wait_for_load_state("load")
+            n = self.page.evaluate(COUNT_TICKS)
+        if n < self.last:
+            self.base += self.last
+        self.last = n
+        return self.base + n
+
+
 @pytest.fixture(scope="module")
 def cluster(tmp_path_factory):
     if not HOST:
@@ -99,11 +122,12 @@ def test_stopping_a_moves_the_console_to_another_server_and_the_page_live_view_a
     page = browser.new_page()
     page.goto(CONSOLE_URL + "/v/trade/IRS-48213")                # held on b, which ticks; the console is on a
     page.wait_for_timeout(1500)
-    before = page.evaluate(COUNT_TICKS)
+    ticks = Ticks(page)
+    before = ticks()
     deadline = time.time() + 20
-    while page.evaluate(COUNT_TICKS) <= before and time.time() < deadline:
+    while ticks() <= before and time.time() < deadline:
         page.wait_for_timeout(250)
-    assert page.evaluate(COUNT_TICKS) > before, "the live view did not tick before the stop"
+    assert ticks() > before, "the live view did not tick before the stop"
     t0 = time.time()
     stopping = cluster.stop("a", wait=False)                    # timed from the stop, not from the process's exit (see NetStack.stop)
     moved, status, body = None, 0, ""
@@ -117,19 +141,19 @@ def test_stopping_a_moves_the_console_to_another_server_and_the_page_live_view_a
             moved = time.time() - t0
             break
         time.sleep(0.2)
-    at_move = page.evaluate(COUNT_TICKS)
+    at_move = ticks()
     deadline = time.time() + 45                                 # the old stream breaks when a's graceful shutdown ends (30 s at most); it reconnects
-    while page.evaluate(COUNT_TICKS) <= at_move + 2 and time.time() < deadline:
+    while ticks() <= at_move + 2 and time.time() < deadline:
         page.wait_for_timeout(250)
-    ticking = page.evaluate(COUNT_TICKS) > at_move + 2
+    ticking = ticks() > at_move + 2
     cluster.reap(stopping)
-    after_exit = page.evaluate(COUNT_TICKS)
+    after_exit = ticks()
     deadline = time.time() + 20
-    while page.evaluate(COUNT_TICKS) <= after_exit + 2 and time.time() < deadline:
+    while ticks() <= after_exit + 2 and time.time() < deadline:
         page.wait_for_timeout(250)
-    assert ticking and page.evaluate(COUNT_TICKS) > after_exit + 2, "the open page's live view stopped ticking after the move"
+    assert ticking and ticks() > after_exit + 2, "the open page's live view stopped ticking after the move"
     assert moved is not None and moved < 10, f"the console took {moved} s to move; last answer {status}: {body[-600:]}"
-    print(f"net: the console moved off a stopped server in {moved:.1f} s; the open page kept ticking without a reload")
+    print(f"net: the console moved off a stopped server in {moved:.1f} s; the open page kept ticking (repainted by its reconnect)")
     page.reload()
     assert "IRS-48213" in page.content()
     status, body = get(CONSOLE_URL, "/s?q=" + urllib.request.quote("TRD where BOOKING_SYSTEM = 'CALYPSO' limit 200"))
