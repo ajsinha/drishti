@@ -17,6 +17,8 @@
 
 ## 2.9.11.c (unreleased)
 
+- Tests: the in-process S3 simulator (S3Mock) is never counted as handling racing conditional writes: the probe's five rounds passed by luck in Drill 2 and the race test then saw 7 winners; FakeS3 and MinIO cover the race.
+
 - **OpenBLAS is off as shipped** (`drishti.engines.openblas.enabled: false`; the product owner, 2026-11-04): a 250,000-position run gave the same VaR to the dollar with it on and off but no clear end-to-end gain; it is turned on per node in Admin → Engines after measuring on the bank's hardware, and profiled further with the native work of a later release.
 
 ### Fixes
