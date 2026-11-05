@@ -1,0 +1,48 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Breach queue · mock-ups</title><link rel="stylesheet" href="../editors/common.css">
+<style>.y{color:var(--ok)}.m{color:var(--wa)}.r{color:var(--bad)}.bar{height:8px;background:var(--bg2);border-radius:4px;overflow:hidden;width:120px;display:inline-block;vertical-align:middle}.bar i{display:block;height:100%}
+.esc{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12px}.esc span{border:1px solid var(--bd);border-radius:14px;padding:4px 10px}.esc span.on{border-color:var(--bad);color:var(--bad)}
+.heat{display:grid;grid-template-columns:120px repeat(5,1fr);gap:3px;margin-top:10px;font-size:11px}.heat div{padding:6px;text-align:center;border-radius:3px}</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">BREACHES &lt;GO&gt;</div><span class="mu">Risk › Limits</span></div>
+<div class="pick"><button data-v="A" class="on">A · Breach list + case</button><button data-v="B">B · Inside the Approvals queue</button><button data-v="C">C · Heat map</button>
+<span>F2 of 3: one breach and escalation queue (VaR limits and credit limits; replaces today's separate alert lists)</span></div>
+
+<div class="v on" id="A"><div class="grid3" style="grid-template-columns:360px 1fr 260px">
+<div class="card"><h3>Open · 4</h3><table><tr><th>Limit</th><th>Use</th><th>Age</th></tr>
+<tr class="on"><td><b>DESK-RATES VaR 99</b></td><td class="r">104%</td><td>2 h</td></tr><tr><td>CP-ALDERSHOT PFE</td><td class="r">101%</td><td>1 d</td></tr><tr><td>BOOK-RATES-2 VaR</td><td class="m">94% (near)</td><td>3 h</td></tr><tr><td>LL-0007 VaR</td><td class="m">88% (near)</td><td>1 d</td></tr></table>
+<div style="margin-top:8px"><span class="chip">VaR</span><span class="chip">Credit</span><span class="chip">Breached</span><span class="chip">Near (&gt;85%)</span></div></div>
+<div><div class="hdr"><div><div class="crumb">Breaches › VaR limit</div><h1>DESK-RATES · VaR 99 1d · 104%</h1></div><span class="pill draft">escalated: level 2</span><span class="sp"></span><span class="btn">Comment</span><span class="btn">Temporary increase…</span><span class="btn p">Resolve…</span></div>
+<div class="card"><h3>The breach</h3>VaR <b>93.6m</b> against limit <b>90.0m</b> (104%) since 2026-11-04 06:14 · <a style="color:var(--ln)">Explain ›</a> · <a style="color:var(--ln)">why it moved ›</a> (new swap book +4.1m)</div>
+<div class="card"><h3>Escalation</h3><div class="esc"><span>desk head · notified 06:15</span>→<span class="on">head of market risk · 08:15 (no action in 2 h)</span>→<span>CRO · at 24 h</span></div></div>
+<div class="card"><h3>Actions</h3><div class="mu">08:40 desk head: "reducing the 10y receive by 30%" · 09:10 trader booked an offset (VaR −2.1m expected)</div></div></div>
+<div class="card"><h3>Rules</h3><div>Limit from the limit letter LL-0003, approved 2026-01-02</div><div class="mu" style="margin-top:6px">Resolve needs: back under the limit, or an approved temporary increase (four eyes), or a waiver with reason. Every step audited.</div></div></div>
+<div class="note"><b>A, breach list + case.</b> Every open breach and near-breach (VaR and credit) in one list; the chosen one as a case: the numbers with Explain, the escalation ladder with who was told when, the actions taken, and how it may be resolved.</div></div>
+
+<div class="v" id="B"><div class="card"><h3>Approvals › Waiting for me · 8</h3><ul class="list"><li class="on"><span class="r">● Breach</span> DESK-RATES VaR 104% · escalated to you · 2 h</li><li><span class="m">● Due soon</span> VaR sign-off 2026-11-04 · due 10:00</li><li>Trade correction MX-20000274 · 12 min</li></ul></div>
+<div class="note"><b>B, inside the Approvals queue.</b> A breach escalated to a person appears in their one inbox (E2), at the top, as a case they act on. One place for "things waiting for me"; the full breach list stays in A for risk control.</div></div>
+
+<div class="v" id="C"><div class="heat"><div></div><div class="mu">Mon</div><div class="mu">Tue</div><div class="mu">Wed</div><div class="mu">Thu</div><div class="mu">Fri</div>
+<div>DESK-RATES</div><div style="background:#2a5a3f">62%</div><div style="background:#2a5a3f">70%</div><div style="background:#7a6a2a">88%</div><div style="background:#7a2a2a">104%</div><div></div>
+<div>DESK-FX</div><div style="background:#2a5a3f">40%</div><div style="background:#2a5a3f">42%</div><div style="background:#2a5a3f">39%</div><div style="background:#2a5a3f">45%</div><div></div>
+<div>CP-ALDERSHOT</div><div style="background:#7a6a2a">91%</div><div style="background:#7a6a2a">96%</div><div style="background:#7a2a2a">101%</div><div style="background:#7a2a2a">101%</div><div></div></div>
+<div class="note"><b>C, heat map.</b> Limits down, days across, colour by use: shows trends building toward a breach. A management view; not where a case is worked.</div></div>
+
+<div style="padding:0 16px 20px" class="mu"><b style="color:var(--ink)">In every option:</b> one queue for VaR limits and credit limits (credit-limit use computed from the engine, not stored); near-breaches (configurable, e.g. 85%) shown before they break; escalation by time and level, configured; a temporary increase or waiver is four-eyes; built on the one alert engine, so today's separate alert lists fold into it; every step audited.</div>
+<script>document.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.pick button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.v').forEach(v=>v.classList.toggle('on',v.id===b.dataset.v))});</script>
+</body></html>
