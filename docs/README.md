@@ -14,7 +14,7 @@ before the consolidation (for example `/help/quickstart` or `/help/connector-kaf
 ## New here? Read these, in order
 
 1. **[GETTING_STARTED.md](guides/GETTING_STARTED.md)** (*Install and run*): prerequisites, build, start the server and the console, sign-in, Docker, other ways to build, and Windows.
-2. **[tutorials/](tutorials/README.md)**: thirty hands-on tutorials on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
+2. **[tutorials/](tutorials/README.md)**: hands-on tutorials on the shipped demo data, with the exact commands, real output and real screenshots. Start with [your first 15 minutes](tutorials/01-first-15-minutes.md).
 3. **[USER_GUIDE.md](guides/USER_GUIDE.md)**: every feature of the console, as a reference. **[PACK_DEVELOPER_GUIDE.md, Part V](guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)**: which industries are available and how to load them; building your own is [PACK_DEVELOPER_GUIDE.md](guides/PACK_DEVELOPER_GUIDE.md).
 
 If you will change the code, continue with [PACK_DEVELOPER_GUIDE.md, Part VIII: the developer guide](guides/PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide).
@@ -37,7 +37,7 @@ If you will change the code, continue with [PACK_DEVELOPER_GUIDE.md, Part VIII: 
 | Folder | What is in it |
 |---|---|
 | [knowledge/](knowledge/README.md) | what the words of a bank's data mean and how Drishti's data connects them: one page per domain, the glossary (`glossary.yaml`, `WHAT <term>`) |
-| [tutorials/](tutorials/README.md) | the thirty hands-on tutorials: a worked example each, on the demo data, with commands, real output and screenshots |
+| [tutorials/](tutorials/README.md) | the hands-on tutorials: a worked example each, on the demo data, with commands, real output and screenshots |
 | [guides/](guides/) | one document per subject: install and run, the user guide (with Calc, Analyse and query by form), business intelligence (the BI guide, the BI language reference), the data guide (loads, formats, lakes, schema to pack) and external data (every public source and its script), packs (with the developer guide), the funds guide, the groupings and analytics guide, VaR and exposure, the Sutra guide and the Rachana reference (with panels, the screen designer and the screen designs), write-back, the command line, API and troubleshooting; `examples/` holds working Sutras |
 | [connectors/](connectors/) | connecting your data: the Connectors reference, the connector files, TLS and proxy, the developer guide, a design document per store (Delta Lake, PostgreSQL, Aerospike, Cassandra, files …) and demo data |
 | [contracts/](contracts/README.md) | the data contracts: the shared rules (keys, types, dates, signs, vectors, validation), the computed measures' contracts, and [the contract of every command](contracts/packs/README.md) (one YAML file per mnemonic beside its pack) |
