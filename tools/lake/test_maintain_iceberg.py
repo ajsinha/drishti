@@ -133,6 +133,8 @@ class RunTest(unittest.TestCase):
             def fake_run(cmd, **kw):
                 if any("LakesCli" in str(c) for c in cmd):      # the lake files read (config/lakes/): none here
                     return subprocess.CompletedProcess(cmd, 0, "{}\n", "")
+                if "-XshowSettings:properties" in cmd:          # javacmd asking the JVM's version (when a lake reader is found)
+                    return subprocess.CompletedProcess(cmd, 0, "", "java.specification.version = 21\n")
                 seen.append(cmd)
                 line = {"table": "risk/pnl-vector", "dryRun": "--dry-run" in cmd, "before": {"files": 2, "mb": 1.0, "dates": 2},
                         "after": {"files": 2, "mb": 1.0, "dates": 2, "latestDate": "2026-10-16", "latestRows": 20},

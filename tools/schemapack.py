@@ -326,7 +326,7 @@ def make(a, cli) -> int:
     cli.need_yaml()
     if not PM.NAME_RE.fullmatch(a.name):
         raise PM.MakeError("--name is lower-case letters, digits and '-'")
-    out = (a.out or pathlib.Path(__import__("os").environ.get("DRISHTI_DATA_DIR") or "data") / "build" / f"{a.name}-{a.version}").resolve()
+    out = (a.out or pathlib.Path(__import__("os").environ.get("DRISHTI_DATA_DIR") or pathlib.Path(__file__).resolve().parents[1] / "data") / "build" / f"{a.name}-{a.version}").resolve()
     plan = make_plan(a, SG, P)
     plan.pack.update(name=a.name, version=a.version, title=a.title or plan.pack.get("title") or a.name,
                      code=getattr(a, "code", None) or P.suggest_pack(plan.kinds, a.name)["code"])

@@ -104,6 +104,20 @@ class PivotBackend(ChartBackend):
         if path.startswith("/live/") and method == "DELETE":
             self.ended.append(path)
             return {}
+        # ---- the Why, What-if and Functions cards (drishti_pivot-functions.js), answered as the engine words them ----
+        if path == "/explain" and method == "POST":
+            self.asked.append(("explain", body))
+            return {"words": "Rates minus FX is 30", "method": "by DESK, member by member",
+                    "steps": [{"member": "IRS", "cause": "member", "step": 40, "cumulative": 40},
+                              {"member": "CDS", "cause": "member", "step": -10, "cumulative": 30}],
+                    "residual": {"name": "none", "value": 0}, "difference": 30}
+        if path == "/whatif" and method == "POST":
+            self.asked.append(("whatif", body))
+            return {"diff": {"DESK=Rates|*": {"delta": {"count()": -25}}, "DESK=FX|*": {"delta": {"count()": 0}}, "*|*": {"delta": {"count()": -25}}}}
+        if path == "/functions" and method == "GET":
+            return {"languages": {"formula": True, "sql": True, "python": False, "java": False}, "requireApproval": True,
+                    "functions": [{"id": "u/wret", "version": 1, "ref": "u.wret", "language": "formula", "kind": "mergeable", "status": "private",
+                                   "inputs": [{"name": "r"}, {"name": "w"}]}]}
         if path == "/views/u/desk" and method == "GET":
             return {"id": "u/desk", "version": 2, "owner": "u", "view": {"source": "trade", "rows": ["DESK"], "columns": [],
                     "values": [{"measure": "count()", "as": "count()"}]}}

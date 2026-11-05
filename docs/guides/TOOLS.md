@@ -403,7 +403,7 @@ and ENDUR and CALYPSO loaded side by side into one lake, finishing a second apar
 **The log and the summary.** Every run appends its log line to `<lake>/_drishti-lake/runs.log` and writes its summary to
 `<lake>/_drishti-lake/runs/<run>.json` and `<lake>/_drishti-lake/last-run.json` (and `--summary FILE`). Staged rows go to
 `<lake>/_drishti-lake/staging/<run>/` while the run lasts and are removed after it (`--keep-staging` keeps them); a crashed run's are
-removed by the next run, which holds the lock. A summary (the run of 4.3, two of its four partitions shown):
+removed by the next run, which holds the lock. With `--lake NAME` (a lake of `config/lakes/`) a run refused before its table is known (a `--partition-by` that contradicts the lake file, a kind it has no entry for, a lake file that cannot be read) keeps its summary in the lake's own folder (`--lake-root`, else the root of the lake file) or, when that is not known, under `<data>/lakes/<name>/_drishti-lake/`: never in a folder of the current directory. A summary (the run of 4.3, two of its four partitions shown):
 
 ```json
 {

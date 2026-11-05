@@ -37,6 +37,14 @@
   6th worst, Java 17 to 21 for Arrow 19. The JDBC example (`JdbcFlightSql.java`) and JDBC.md: a trust store is read only with
   `useSystemTrustStore=false`.
 
+- **The pivot screen's Why, What-if and Functions buttons (keys W, I, U) work again**: their script looked for the screen's old root attribute (`data-pivot`, renamed `data-pivot-screen` when the old Pivot tab retired) and quietly did nothing; a browser test now opens each card and checks its content.
+
+- **A refused `lake build --lake NAME` no longer writes `./NAME/_drishti-lake/` in the current directory**: its summary goes to the lake's own folder (or `<data>/lakes/<name>/` when that is not known); the run summaries committed by mistake under `demo/` are removed; a guard test.
+
+- **The lake-file reader's development classpath uses one Jackson version** (databind, core and YAML of the same release), not the newest of each from the local Maven repository, which failed with NoSuchMethodError.
+
+- **`pack make`, `schema pack`, the pack catalogue and the lake-maintenance settings default to the repository's data folder** (or DRISHTI_DATA_DIR), never `./data` of wherever the command was started.
+
 - **The client example "read the lake directly" (notebook 09) resolves a nested default** in the lake file's root (`${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`) innermost first, as the server does; it built a folder named after the placeholder.
 
 - **Docs: FRTB-SA and SIMM are built.** REGULATORY_VAR_REPORTING.md (sections 1 and 8: the FRTB standardised approach built, its reports'

@@ -55,21 +55,43 @@ def is_lake_name(ref: str | None, folder: pathlib.Path | None = None) -> bool:
     return ((folder or lakes_dir()) / f"{ref}.yaml").is_file()
 
 
+def _version_key(v: str) -> tuple:
+    return tuple(int(x) if x.isdigit() else -1 for x in v.replace("-", ".").split("."))
+
+
+def _jars(m2: pathlib.Path, group: str, art: str) -> dict[str, pathlib.Path]:
+    """The versions of one artifact in the local Maven repository: version -> its jar."""
+    out = {}
+    for d in (m2 / group / art).glob("*"):
+        j = d / f"{art}-{d.name}.jar"
+        if j.is_file():
+            out[d.name] = j
+    return out
+
+
 def _maven_classpath() -> str | None:
+    """The compiled drishti-lakeconfig with Jackson from the local Maven repository: databind, core and the YAML format of ONE version
+    (the newest present for all three; the annotations of that version or its minor line), never the newest of each (a mixed Jackson
+    fails with NoSuchMethodError before a lake file is read)."""
     classes = ROOT / "drishti-lakeconfig" / "target" / "classes"
     if not (classes / "com" / "ash" / "drishti" / "lakeconfig" / "LakesCli.class").is_file():
         return None
     m2 = pathlib.Path(os.environ.get("MAVEN_REPO") or pathlib.Path.home() / ".m2" / "repository")
-    parts = [str(classes)]
-    for group, art in (("com/fasterxml/jackson/core", "jackson-databind"), ("com/fasterxml/jackson/core", "jackson-core"),
-                       ("com/fasterxml/jackson/core", "jackson-annotations"), ("com/fasterxml/jackson/dataformat", "jackson-dataformat-yaml"),
-                       ("org/yaml", "snakeyaml")):
-        jars = sorted((m2 / group / art).glob("*/" + art + "-*.jar"), key=lambda p: p.stat().st_mtime)
-        jars = [j for j in jars if not j.name.endswith(("-sources.jar", "-javadoc.jar"))]
-        if not jars:
-            return None
-        parts.append(str(jars[-1]))
-    return os.pathsep.join(parts)
+    core = "com/fasterxml/jackson/core"
+    databind, jcore = _jars(m2, core, "jackson-databind"), _jars(m2, core, "jackson-core")
+    yaml = _jars(m2, "com/fasterxml/jackson/dataformat", "jackson-dataformat-yaml")
+    common = sorted(set(databind) & set(jcore) & set(yaml), key=_version_key)
+    if not common:
+        return None
+    v = common[-1]
+    annotations = _jars(m2, core, "jackson-annotations")
+    minor = ".".join(v.split(".")[:2])
+    ann = annotations.get(v) or annotations.get(minor) or annotations.get(minor + ".0")
+    snake = _jars(m2, "org/yaml", "snakeyaml")
+    if not ann or not snake:
+        return None
+    return os.pathsep.join([str(classes), str(databind[v]), str(jcore[v]), str(ann), str(yaml[v]),
+                            str(snake[max(snake, key=_version_key)])])
 
 
 def command(jar: str | None = None, java: str | None = None) -> list[str]:
