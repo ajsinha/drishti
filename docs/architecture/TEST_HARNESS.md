@@ -176,7 +176,7 @@ file, and written with the offset.
 ### 3.9 Worker sizing
 
 `tools/drillkit/drill_plan.py workers`: the memory available (`MemAvailable`) less what runs beside the lane (in the drill: the Java
-verify's 20 GB, 1 GB per worker of the other lane and 4 GB to spare), divided by one browser worker's budget (2.5 GB: its Chromium,
+verify's 20 GB, 1 GB per worker of the other lane and 4 GB to spare), divided by one browser worker's budget (4 GB: its Chromium,
 its stand-in console, its session server's JVM and the JVM of the file it runs), at most the CPU threads less two and at most 12 (the
 ports), at least 1. `DRILL_BROWSER_WORKERS` overrides it.
 
@@ -220,7 +220,7 @@ generated documents in its static job.
 | the two render suites together (wall time in the lane) | ≤ 8 min |
 | one browser file's tests together (unless spread or listed in `tools/drill-budgets.txt`) | ≤ 300 s |
 | a fixed pause in a browser test without a reason | none over 100 ms |
-| memory | the lane's peak ≤ its workers × 2.5 GB plus the shared Chromium processes; at most two server JVMs per worker |
+| memory | the lane's peak ≤ its workers × 4 GB plus the shared Chromium processes; at most two server JVMs per worker |
 
 ## 5. Validation
 
@@ -250,9 +250,9 @@ chose from the memory available with 16 GB reserved; the owner's three-node stac
 The last drill's browser lane on develop (by file, 3 workers, beside the Java verify): 3,654 to 3,768 s. Every failure passed when its
 file ran alone: the write-back test (also failed in develop's drill), the Drishti\*net stack failover (a navigation under a loaded
 machine) and the refresh test (fixed: it read the freshness label after a fixed pause; it now waits for it). The lane's peak at 9
-workers was about 4 GB a worker (18 to 19 server JVMs, 81 Chromium processes, 18 pytest processes), above the 2.5 GB the sizing
-assumes: within the drill, with the Java verify reserved, the sizing gives 3 workers, which the measurement covers; outside it, size
-the workers with a reserve that leaves at least 10 GB free.
+workers was about 4 GB a worker (18 to 19 server JVMs, 81 Chromium processes, 18 pytest processes), so the sizing
+budgets 4 GB a worker (`PER_WORKER_GB`). Each drill keeps the previous runs' logs and failure lists in `<data>/drill/runs/<when>/`
+(the last 20), so a flake's traceback is still there after the next run.
 
 ## 6. Rules for browser tests
 

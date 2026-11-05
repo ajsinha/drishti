@@ -1350,6 +1350,13 @@
   } else {
     select(S.scope, { noPush: true });
   }
+  // the Backtest link follows the scope and date in view (VAR <scope> BACKTEST, /var/backtesting)
+  var bt = document.querySelector("[data-vx-backtest]");
+  if (bt) bt.addEventListener("click", function (ev) {
+    ev.preventDefault();
+    location.href = "/var/backtesting?scope=" + encodeURIComponent(S.scope || "BANK") + (S.asOf ? "&asOf=" + encodeURIComponent(S.asOf) : "");
+  });
+
   window.Drishti.VarExplorer = { select: select, switchTab: switchTab, setCcy: setCcy, setLens: setLens, state: S, api: api, words: words,
     lensWords: lensWords, renderTree: function () { if (S.tree) renderTree(); },
     redrawPath: function () { if (S.path && S.path.series && S.path.series.some(function (v) { return v !== 0; })) drawPath(S.path); } };

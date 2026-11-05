@@ -17,6 +17,11 @@
 
 ## 2.9.11.d (unreleased)
 
+- Drill: each run keeps the previous runs' logs and failure lists in `<data>/drill/runs/<when>/` (the last 20); the browser workers are sized at 4 GB each, as measured (TEST_HARNESS.md).
+
+- **VaR → Backtest** (product owner, 2026-11-05): the VaR explorer's toolbar has a **Backtest ›** link that opens the regulatory backtest of the scope and date in view (VAR_GUIDE section 3, tutorial 25 step 8); a click test.
+- Tests: the Help card's tutorial count is checked against the files, never a typed number.
+
 - Decks refreshed for 2.9.11–2.9.11.c
 
 ### Tests and the drill

@@ -229,6 +229,23 @@ def test_the_backtest_shows_the_engines_zone_multiplier_and_exceptions(stack, pe
 
 # ------------------------------------------------------------------------------------------------------------------------------- statistics
 
+def test_the_explorer_links_to_the_backtest_of_the_scope_in_view(stack, people, browser):
+    """VaR -> Backtest: the explorer's Backtest link opens the backtest of the scope (and date) in view, not always the bank's."""
+    base = str(stack)
+    pg = sign_in(browser, base, "mara", PASSWORD)
+    pg.goto(base + "/var?scope=DESK:RATES")
+    wait(pg, "!!document.querySelector('[data-vx-backtest]') && !!window.Drishti && !!window.Drishti.VarExplorer")
+    link = pg.locator("[data-vx-backtest]")
+    assert link.is_visible() and "Backtest" in link.inner_text()
+    link.click()
+    pg.wait_for_url("**/var/backtesting?scope=DESK*")
+    assert "scope=DESK%3ARATES" in pg.url or "scope=DESK:RATES" in pg.url, pg.url
+    d = get(pg, base, "/api/var/backtesting?scope=DESK:RATES")
+    bt_painted(pg, d["node"])
+    assert not pg.errors, pg.errors
+    pg.context.close()
+
+
 def test_the_period_statistics_are_the_engines(stack, people, browser):
     base = str(stack)
     pg = sign_in(browser, base, "chen", PASSWORD)

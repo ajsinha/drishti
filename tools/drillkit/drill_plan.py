@@ -69,8 +69,9 @@ STATIC_ANY = re.compile(r"^\s*(?:@pytest\.mark\.static\b|pytestmark\s*=.*\bpytes
 STATIC_MODULE = re.compile(r"^pytestmark\s*=.*\bpytest\.mark\.static\b", re.MULTILINE)
 SPREAD_WORDS = re.compile(r"^(?:@pytest\.mark\.spread\b|pytestmark\s*=.*\bpytest\.mark\.spread\b)", re.MULTILINE)
 # one browser worker's memory at its peak (its Chromium, its stand-in console, its real server's JVM and that of the file it runs),
-# measured on the release machine (TEST_HARNESS.md, "Measurements"); the drill's Java verify and other lane are reserved beside it
-PER_WORKER_GB = 2.5
+# measured on the release machine (TEST_HARNESS.md, "Measurements": about 4 GB a worker at 9 workers, 2026-11-05); the drill's Java
+# verify and other lane are reserved beside it
+PER_WORKER_GB = 4.0
 RESERVE_GB = 24.0
 MAX_WORKERS = 12             # drishti-console/tests/scratch_ports.py MAX_WORKERS: each worker's ports in a block of their own
 BUDGET_SECONDS = 300         # a browser file's tests together; a longer file is split into spread tests or listed with its reason

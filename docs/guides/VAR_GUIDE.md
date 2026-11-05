@@ -350,7 +350,10 @@ set says so in place of the figures.
 
 Two columns and a toolbar, as the approved mock-up (`docs/lenses/mockups/var-layout/A.html`, and `A-drawer.html` with the drawer open):
 
-- **The toolbar** (under the status line): two searchable drop-downs for the baskets, **+ New basket** and **How calculated ›**.
+- **The toolbar** (under the status line): two searchable drop-downs for the baskets, **+ New basket**, **Backtest ›** and **How calculated ›**.
+  - **Backtest ›** opens the regulatory backtest of the scope in view, on the date in view (the same page as `VAR <scope> BACKTEST`,
+    [REGULATORY_VAR_REPORTING.md section 4.6](REGULATORY_VAR_REPORTING.md#46-backtesting)): its VaR against the P&L of the last 250
+    business days, the exceptions and the zone.
   - **System baskets** (key **B**): the baskets the system provides, the bank's **portfolios** (the market-risk pack's `portfolio` feed;
     [section 5.7](#57-stored-portfolios)), each with its name, its id, its owner and its type.
   - **My baskets** (key **M**): the baskets you saved, under *Mine*, then those shared with you, under *Shared with me*

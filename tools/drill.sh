@@ -95,6 +95,13 @@ if [[ ! -x "$PY" ]]; then
   exit 1
 fi
 DATA="${DRISHTI_DATA_DIR:-data}"; mkdir -p "$DATA/drill"; LOGS=$(cd "$DATA/drill" && pwd -P)
+# the previous run's failure logs are kept in runs/<when>/ (the last 20 runs), so a flake's traceback is not lost to the next run
+if compgen -G "$LOGS/console-*.txt" >/dev/null || compgen -G "$LOGS/rerun-*.log" >/dev/null || compgen -G "$LOGS/*.log" >/dev/null; then
+  prev="$LOGS/runs/$(date -r "$LOGS/durations.json" +%Y%m%d-%H%M%S 2>/dev/null || date +%Y%m%d-%H%M%S)"; mkdir -p "$prev"
+  cp -p "$LOGS"/*.log "$LOGS"/console-*.txt "$LOGS"/*.secs "$LOGS"/budget-*.txt "$prev"/ 2>/dev/null || true
+  rm -f "$prev/flakes.log"
+  ls -1d "$LOGS"/runs/*/ 2>/dev/null | sort | head -n -20 | xargs -r rm -rf
+fi
 rm -f "$LOGS"/*.secs "$LOGS"/timings-*.json "$LOGS"/rerun-*.log "$LOGS"/console-*.txt "$LOGS"/monitor-*.csv "$LOGS"/budget-*.txt   # this run's own; durations.json and flakes.log stay
 # Every temporary file of the drill goes to a folder on disk under the data folder (git-ignored with the rest of data/), never the
 # system /tmp: on a machine whose /tmp is a RAM disk, parallel suites would fill it and take memory from the test servers.

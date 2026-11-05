@@ -100,6 +100,7 @@
     {% endfor %}
     <button type="button" class="vx-link vx-newb" data-vx-basket-open{{ part(PP, 'basket') }} title="Construct your basket: the sheet (Alt+B)" aria-keyshortcuts="Alt+B">+ New basket <span class="tool-count" data-basket-count hidden>0</span></button>
     <span class="vx-keys" aria-hidden="true"><b>B</b> system <b>M</b> mine <b>H</b> how</span>
+    <a class="vx-link vx-backtest" data-vx-backtest href="/var/backtesting?scope={{ (scope or 'BANK')|urlencode }}" title="This scope's backtest: its VaR against the P&amp;L of the last 250 business days, the exceptions and the zone (VAR &lt;scope&gt; BACKTEST)">Backtest ›</a>
     <button type="button" class="vx-how{{ ' on' if HOW }}" data-vx-how aria-expanded="{{ 'true' if HOW else 'false' }}" aria-controls="vxHow" aria-keyshortcuts="H" title="How this number was built (H)">How calculated ›</button>
   </div>
   <p class="vx-notice" data-vx-notice role="status" hidden></p>
