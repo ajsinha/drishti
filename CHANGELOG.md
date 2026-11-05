@@ -17,6 +17,8 @@
 
 ## 2.9.11.d (unreleased)
 
+- Design: **the editors** (docs/architecture/EDITORS.md, mock-ups in docs/architecture/mockups/editors/): one three-pane shell with live YAML for tables, virtual tables, semantic models and Python-driven tables and models, and the screens of people, roles and API keys, chosen by the product owner from mock-ups (2026-11-05); a build checklist.
+
 - Drill: the container tests no longer run beside the browser lane (their network changes made Chromium cancel requests): Java 21 runs with Docker hidden, and the Testcontainers classes run on their own (`java21-docker`) after the browser lane.
 
 - Drill: each run keeps the previous runs' logs and failure lists in `<data>/drill/runs/<when>/` (the last 20); the browser workers are sized at 4 GB each, as measured (TEST_HARNESS.md).

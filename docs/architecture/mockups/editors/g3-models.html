@@ -1,0 +1,54 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Model editor · mock-ups</title><link rel="stylesheet" href="common.css">
+<style>.tabs{display:flex;gap:2px;margin-top:10px}.tabs span{padding:6px 12px;background:var(--sf);border:1px solid var(--bd);border-bottom:none;border-radius:4px 4px 0 0;font-size:12px;color:var(--mu)}.tabs span.on{color:var(--ink);background:var(--sf2);border-top:2px solid var(--ac)}
+.mc{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:10px;margin-top:8px}.mc h4{margin:0 0 4px;font-size:13px}.mc .f{font-family:ui-monospace,monospace;color:var(--ln)}
+.mx td{text-align:center}.mx td:first-child{text-align:left}.y{color:var(--ok)}.n{color:var(--bad)}.m{color:var(--wa)}
+.grp h3{margin-top:14px}</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">MODEL risk-by-desk &lt;GO&gt;</div><span class="mu">Build › Tables &amp; models</span></div>
+<div class="pick"><button data-v="A" class="on">A · Tabs per part</button><button data-v="B">B · Business questions</button><button data-v="C">C · Measure cards</button>
+<span>Group 3 of 6: semantic models (fields, measures, hierarchies, row rules, masks, access)</span></div>
+
+<div class="v on" id="A"><div class="hdr"><div><div class="crumb">Build › Semantic models</div><h1>risk-by-desk</h1></div><span class="pill appr">Approved v3</span><span class="pill draft">Draft v4</span><span class="sp"></span><span class="tog"><i>Visual</i><i>Text</i><i class="on">Both</i></span><span class="btn">Validate</span><span class="btn p">Propose for review</span></div>
+<div class="grid3"><div class="card"><h3>Objects</h3><ul class="list"><li>▾ Semantic models</li><li class="on">&nbsp;&nbsp;risk-by-desk</li><li>&nbsp;&nbsp;trades-basic</li><li>▾ Tables</li><li>&nbsp;&nbsp;trades-with-limits</li></ul></div>
+<div><div class="tabs"><span>Tables 2</span><span>Fields 14</span><span class="on">Measures 6</span><span>Hierarchies 2</span><span>Row rules 2</span><span>Masks 1</span><span>Access</span></div>
+<div class="card" style="margin-top:0;border-top-left-radius:0"><table><tr><th>Measure</th><th>Formula</th><th>Adds up?</th><th>Format</th><th>Explain</th></tr>
+<tr><td>MTM</td><td><code>sum(MTM_USD)</code></td><td class="ok">yes</td><td>#,##0</td><td>?</td></tr>
+<tr><td>Limit used %</td><td><code>VaR99 / sum(LIMIT)</code></td><td class="wa">ratio · per total</td><td>0.0%</td><td>?</td></tr>
+<tr><td>VaR99</td><td><code>var(scope, 0.99)</code></td><td class="wa">no · each total computed</td><td>#,##0</td><td>?</td></tr></table>
+<div style="margin-top:8px"><span class="btn">+ Measure</span> <span class="mu">or pick from the function catalogue (statistics, finance, Excel names)</span></div></div></div>
+<div class="card prev"><h3>Preview · by DESK</h3><table><tr><th>DESK</th><th>MTM</th><th>Used %</th></tr><tr><td>RATES</td><td>12.5m</td><td>8.3%</td></tr><tr><td>FX</td><td>-2.1m</td><td>7.8%</td></tr><tr><td><b>Total</b></td><td><b>15.7m</b></td><td><b>6.9%</b></td></tr></table><h3 style="margin-top:12px">Checks</h3><div class="ok">✓ 6 measures valid</div><div class="wa">! Limit used % is not a sum: totals computed</div></div></div>
+<div class="note"><b>A, tabs.</b> Each part of the model on its own tab with a count; grids like the table editor. Predictable and consistent with group 2; an expert's view.</div></div>
+
+<div class="v" id="B"><div class="hdr"><div><div class="crumb">Build › Semantic models</div><h1>risk-by-desk</h1></div><span class="pill draft">Draft v4</span><span class="sp"></span><span class="btn p">Propose for review</span></div>
+<div class="grp">
+<div class="card"><h3>1 · What is it about?</h3>Trades with their VaR limits, by desk and book. <span class="mu">Tables: trades-with-limits, desk</span></div>
+<div class="card"><h3>2 · What do people look at it by?</h3><span class="chip">DESK</span><span class="chip">BOOK</span><span class="chip">CCY</span><span class="chip">AS_OF</span> · hierarchy <span class="chip">Bank › Division › Desk › Book</span></div>
+<div class="card"><h3>3 · What numbers does it give?</h3>MTM (sum) · Notional (sum) · VaR 99 (computed per total) · Limit used % (ratio)</div>
+<div class="card"><h3>4 · Who may see what?</h3>Traders: own desk's rows only (<code>DESK = me.desk</code>) · COUNTERPARTY masked unless raw power · Risk managers: everything</div></div>
+<div class="note"><b>B, business questions.</b> The model described as four plain questions, each opening its editor. Best for a business owner reviewing or creating; less direct for fast editing.</div></div>
+
+<div class="v" id="C"><div class="hdr"><div><div class="crumb">Build › Semantic models</div><h1>risk-by-desk · measures</h1></div><span class="pill draft">Draft v4</span><span class="sp"></span><span class="btn p">Propose for review</span></div>
+<div class="grid2" style="grid-template-columns:1fr 1fr">
+<div class="mc"><h4>Limit used %</h4><div class="f">VaR99 / sum(LIMIT)</div><p class="mu">VaR at 99% of the scope divided by the sum of its desks' limits. Not additive: each total is computed from its members.</p><div>Test: DESK RATES → 7,463,368 / 90,000,000 = <b>8.3%</b> <span class="ok">✓</span></div><div class="mu" style="margin-top:4px">Used by: 2 reports · 1 board · approved v3 by J. Patel</div></div>
+<div class="card mx"><h3>Access at a glance</h3><table><tr><th></th><th>Rows</th><th>COUNTERPARTY</th><th>MTM</th><th>Edit</th></tr><tr><td>trader</td><td class="m">own desk</td><td class="n">masked</td><td class="y">✓</td><td class="n">—</td></tr><tr><td>risk-manager</td><td class="y">all</td><td class="y">✓</td><td class="y">✓</td><td class="n">—</td></tr><tr><td>bi-author</td><td class="y">all</td><td class="n">masked</td><td class="y">✓</td><td class="y">propose</td></tr></table></div></div>
+<div class="note"><b>C, measure cards.</b> Each measure as a card with its formula, a plain explanation, a <b>test value worked out</b>, and its usage; plus an access matrix (roles × rows/columns/edit). The most explainable; slower to scan many measures.</div></div>
+
+<div style="padding:0 16px 20px" class="mu"><b style="color:var(--ink)">In every option:</b> formulas in Rachana with the function catalogue; "adds up?" decided by the engine (VaR and ratios computed per total); row rules and masks enforced on the server for every reader (BI, Pivot, Flight, API); Propose for review; impact before change.</div>
+<script>document.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.pick button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.v').forEach(v=>v.classList.toggle('on',v.id===b.dataset.v))});</script>
+</body></html>

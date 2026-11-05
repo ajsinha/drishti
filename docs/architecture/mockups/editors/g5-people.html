@@ -1,0 +1,50 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Users and roles · mock-ups</title><link rel="stylesheet" href="common.css">
+<style>.mx td{text-align:center}.mx td:first-child,.mx th:first-child{text-align:left}.y{color:var(--ok)}.n{color:#5b6782}.m{color:var(--wa)}
+.kv td:first-child{color:var(--mu);width:140px}.ans{font-size:15px;margin:6px 0}.why li{font-size:12px;margin:3px 0}</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">USER mara &lt;GO&gt;</div><span class="mu">Admin › People &amp; access</span></div>
+<div class="pick"><button data-v="A" class="on">A · People list + detail</button><button data-v="B">B · Role matrix</button><button data-v="C">C · Access checker</button>
+<span>Group 5 of 6: users and roles (the details settle in the security &amp; RBAC release; this is the screen pattern)</span></div>
+
+<div class="v on" id="A"><div class="hdr"><div><div class="crumb">Admin › People</div><h1>Mara Okafor</h1></div><span class="pill appr">Active</span><span class="sp"></span><span class="btn">Reset password</span><span class="btn">Sign out everywhere</span><span class="btn p">Propose change</span></div>
+<div class="grid3"><div class="card"><h3>People · 214</h3><ul class="list"><li>🔎 search name, role, desk</li><li class="on">Mara Okafor <span class="mu">· risk-manager</span></li><li>Jon Patel <span class="mu">· approver</span></li><li>Li Wei <span class="mu">· trader · RATES</span></li><li>svc-nightly <span class="mu">· service</span></li></ul></div>
+<div><div class="card"><table class="kv"><tr><td>Sign-in</td><td>bank directory (SSO) · last 09:12 today · MFA on</td></tr><tr><td>Roles</td><td><span class="chip">risk-manager</span><span class="chip">approver</span> <span class="btn">+ role</span></td></tr><tr><td>Scope</td><td>packs: trading, market-risk · desks: all · lens: Risk</td></tr><tr><td>Powers</td><td>raw JSON: no · approve Sutras: yes · export: yes</td></tr><tr><td>API keys</td><td>1 active (see group 6)</td></tr></table></div>
+<div class="card"><h3>Recent activity</h3><div class="mu">09:14 opened VAR DESK RATES · 09:20 approved report vr-daily v12 · 09:31 exported risk-by-desk (CSV)</div></div></div>
+<div class="card"><h3>What Mara sees</h3><div class="ok">✓ every desk's VaR</div><div class="ok">✓ COUNTERPARTY (unmasked)</div><div class="wa">! cannot edit models (propose only)</div><h3 style="margin-top:12px">Changes</h3><div class="mu">role approver added by J. Patel, approved by A. Sinha, 2026-11-02</div></div></div>
+<div class="note"><b>A, people.</b> A searchable list and a person's page: sign-in, roles, scope, powers, keys, activity, and a plain "what this person sees". Changes to a person are proposed and approved (four eyes) and audited.</div></div>
+
+<div class="v" id="B"><div class="hdr"><div><div class="crumb">Admin › Roles</div><h1>Roles · 7</h1></div><span class="sp"></span><span class="btn">+ Role</span><span class="btn p">Propose change</span></div>
+<div class="card mx"><table><tr><th>Can…</th><th>viewer</th><th>trader</th><th>risk-manager</th><th>bi-author</th><th>approver</th><th>pivot-approver</th><th>admin</th></tr>
+<tr><td>see rows</td><td class="m">own desk</td><td class="m">own desk</td><td class="y">all</td><td class="y">all</td><td class="y">all</td><td class="y">all</td><td class="y">all</td></tr>
+<tr><td>see masked columns</td><td class="n">—</td><td class="n">—</td><td class="y">✓</td><td class="n">—</td><td class="y">✓</td><td class="n">—</td><td class="y">✓</td></tr>
+<tr><td>run VaR / exposure</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+<tr><td>build tables &amp; models</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="m">propose</td><td class="n">—</td><td class="n">—</td><td class="m">propose</td></tr>
+<tr><td>approve</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="y">Sutras, models</td><td class="y">pivot functions</td><td class="n">—</td></tr>
+<tr><td>export / Flight</td><td class="n">—</td><td class="y">CSV</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td><td class="n">—</td><td class="y">✓</td></tr>
+<tr><td>admin screens</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="n">—</td><td class="y">✓</td></tr></table></div>
+<div class="note"><b>B, role matrix.</b> Every role against every power on one page; click a cell to change it (proposed, approved, audited). Built-in roles come from configuration and show a lock. The clearest picture of who can do what.</div></div>
+
+<div class="v" id="C"><div class="hdr"><div><div class="crumb">Admin › People &amp; access</div><h1>Check access</h1></div></div>
+<div class="card"><table class="kv"><tr><td>Who</td><td><span class="chip">Li Wei</span></td></tr><tr><td>Wants to</td><td><span class="chip">read</span> <span class="chip">risk-by-desk</span> rows for <span class="chip">DESK = FX</span></td></tr></table>
+<div class="ans n" style="color:var(--bad)">✗ No: Li Wei sees only RATES rows</div><ul class="why"><li>role <b>trader</b> → row rule <code>DESK = me.desk</code> (model risk-by-desk, v3)</li><li>Li Wei's desk is <b>RATES</b> (directory attribute)</li><li>to change: give a desk scope or another role (propose; needs an approver)</li></ul></div>
+<div class="note"><b>C, access checker.</b> Ask "can this person do this?" and get yes/no <b>with the reason</b>: which role, rule and attribute decided it. For support ("why can't I see FX?") and for audit.</div></div>
+
+<div style="padding:0 16px 20px" class="mu"><b style="color:var(--ink)">In every option:</b> people come from the bank directory where there is one; every change is proposed, approved and audited; one entitlement service answers BI, Pivot, VaR, Flight and the API the same way; built-in roles from configuration, the bank's own roles editable.</div>
+<script>document.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.pick button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.v').forEach(v=>v.classList.toggle('on',v.id===b.dataset.v))});</script>
+</body></html>

@@ -1,0 +1,65 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Table editor · mock-ups</title><link rel="stylesheet" href="common.css"></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">TABLE trades-with-limits &lt;GO&gt;</div><span class="mu">Build › Tables &amp; models</span></div>
+<div class="pick"><button data-v="A" class="on">A · Column grid + join rows</button><button data-v="B">B · Diagram</button><button data-v="C">C · Formula text first</button>
+<span>Group 2 of 6: tables (one source) and virtual tables (across connectors), in the decided three-pane shell</span></div>
+
+<!-- A -->
+<div class="v on" id="A"><div class="hdr"><div><div class="crumb">Build › Tables › Virtual tables</div><h1>trades-with-limits</h1></div><span class="pill draft">Draft</span><span class="sp"></span><span class="tog"><i>Visual</i><i>YAML</i><i class="on">Both</i></span><span class="btn">Validate</span><span class="btn p">Propose for review</span></div>
+<div class="grid3">
+ <div class="card"><h3>Objects</h3><ul class="list"><li>▾ Tables</li><li>&nbsp;&nbsp;trade <span class="mu">· delta</span></li><li>&nbsp;&nbsp;var-limit <span class="mu">· jdbc</span></li><li class="on">&nbsp;&nbsp;trades-with-limits <span class="mu">· virtual</span></li><li>&nbsp;&nbsp;trade-lite <span class="mu">· virtual</span></li><li>&nbsp;&nbsp;fx-rates <span class="mu">· python</span></li></ul><p class="mu" style="font-size:11px">Several virtual tables can share one connector, each with its own columns.</p></div>
+ <div><div class="card"><h3>Sources and joins</h3><table><tr><th>Source</th><th>Connector</th><th>Join</th><th>On</th><th>Rows (today)</th></tr>
+  <tr><td>trade</td><td>delta · market-risk lake</td><td class="mu">base</td><td></td><td>2,304,118</td></tr>
+  <tr><td>var-limit</td><td>jdbc · limits DB</td><td>left join</td><td><code>trade.DESK = var-limit.DESK</code></td><td>412</td></tr></table>
+  <div class="warn">! A join across two connectors reads both sides into the server: 2.3m × 412 rows, estimated 1.1 GB and ~6 s. Fine; above 10m rows Drishti asks you to filter first.</div></div>
+  <div class="card"><h3>Columns (14 of 61 chosen)</h3><table><tr><th>Show</th><th>Name here</th><th>From</th><th>Type</th><th>Business date</th></tr>
+  <tr><td>☑</td><td>TRADE_ID</td><td>trade.TRADE_ID</td><td>text · key</td><td></td></tr><tr><td>☑</td><td>DESK</td><td>trade.DESK</td><td>text</td><td></td></tr>
+  <tr><td>☑</td><td>MTM_USD</td><td><code>trade.MTM * fx(trade.CCY,'USD')</code></td><td>number · computed</td><td></td></tr><tr><td>☑</td><td>LIMIT</td><td>var-limit.LIMIT</td><td>number</td><td></td></tr>
+  <tr><td>☑</td><td>AS_OF</td><td>trade.business_date</td><td>date</td><td class="ok">● partition</td></tr></table></div></div>
+ <div class="card prev"><h3>Preview · 5 rows</h3><table><tr><th>TRADE_ID</th><th>DESK</th><th>MTM_USD</th><th>LIMIT</th></tr><tr><td>MX-2000001</td><td>RATES</td><td>1,204,330</td><td>90m</td></tr><tr><td>MX-2000002</td><td>FX</td><td>-88,120</td><td>40m</td></tr></table>
+ <h3 style="margin-top:12px">Checks</h3><div class="ok">✓ name unique across Drishti</div><div class="ok">✓ key TRADE_ID unique</div><div class="ok">✓ dates follow the source (trade)</div><div class="wa">! 3 desks have no limit (nulls)</div>
+ <h3 style="margin-top:12px">Used by</h3><div class="mu">2 models · 1 Sutra · 3 reports</div></div></div>
+<div class="yaml"><div class="yh">▾ YAML · live</div><span class="k">table</span>: trades-with-limits
+<span class="k">from</span>: { <span class="k">base</span>: trade, <span class="k">join</span>: [{ <span class="k">table</span>: var-limit, <span class="k">type</span>: left, <span class="k">on</span>: "trade.DESK = var-limit.DESK" }] }
+<span class="k">columns</span>: [TRADE_ID, DESK, { <span class="k">name</span>: MTM_USD, <span class="k">formula</span>: "trade.MTM * fx(trade.CCY,'USD')" }, LIMIT, AS_OF]</div>
+<div class="note"><b>A, column grid.</b> Sources and joins as rows, columns as a checklist with renames and computed columns (Rachana formulas), cost warning on cross-connector joins. Familiar (like Power BI's query editor), fast for wide tables.</div></div>
+
+<!-- B -->
+<div class="v" id="B"><div class="hdr"><div><div class="crumb">Build › Tables › Virtual tables</div><h1>trades-with-limits</h1></div><span class="pill draft">Draft</span><span class="sp"></span><span class="btn p">Propose for review</span></div>
+<div class="dia">
+ <div class="box" style="left:30px;top:30px"><b>trade</b><span class="src">delta · market-risk lake · 2.3m</span><br>☑ TRADE_ID ☑ DESK ☑ MTM ☑ CCY …</div>
+ <div class="box" style="left:330px;top:120px"><b>var-limit</b><span class="src">jdbc · limits DB · 412</span><br>☑ DESK ☑ LIMIT</div>
+ <div class="box" style="left:620px;top:50px;border-color:var(--ac)"><b>trades-with-limits</b><span class="src">virtual · 14 columns</span><br>TRADE_ID, DESK, MTM_USD, LIMIT, AS_OF …</div>
+ <svg width="100%" height="230" style="position:absolute;left:0;top:0;pointer-events:none"><path d="M200 70 C260 70 270 150 330 150" stroke="#7fb2ff" fill="none" stroke-width="2"/><text x="240" y="100" fill="#93a0b8" font-size="11">left join · DESK</text><path d="M200 60 L620 80" stroke="#e8a33a" fill="none" stroke-width="2"/><path d="M500 150 L620 100" stroke="#e8a33a" fill="none" stroke-width="2"/></svg></div>
+<div class="warn">! Cross-connector join: both sides read into the server (2.3m × 412). Click the line to change the join.</div>
+<div class="note"><b>B, diagram.</b> Sources as boxes, joins as lines you draw; click a box to tick columns, the result box on the right. Very clear for 2–4 sources and for explaining to others; gets crowded with many sources or 60+ columns. The same YAML below.</div></div>
+
+<!-- C -->
+<div class="v" id="C"><div class="hdr"><div><div class="crumb">Build › Tables › Virtual tables</div><h1>trades-with-limits</h1></div><span class="pill draft">Draft</span><span class="sp"></span><span class="tog"><i>Visual</i><i class="on">Text</i></span><span class="btn p">Propose for review</span></div>
+<div class="code"><span class="c"># one Rachana statement; type-ahead knows every table, column and function</span>
+<span class="k">table</span> trades-with-limits <span class="k">from</span> trade
+  <span class="k">left join</span> var-limit <span class="k">on</span> trade.DESK = var-limit.DESK
+  <span class="k">select</span> TRADE_ID, DESK, <span class="f">trade.MTM * fx(trade.CCY, 'USD')</span> <span class="k">as</span> MTM_USD, LIMIT, business_date <span class="k">as</span> AS_OF
+  <span class="k">where</span> trade.STATUS != 'CANCELLED'</div>
+<div class="card"><h3>As you type</h3><span class="ok">✓ valid</span> · 14 columns · <span class="wa">cross-connector join, ~6 s</span> · preview below updates on pause</div>
+<div class="note"><b>C, text first.</b> One statement in the same grammar as searches and BI formulas (the one-grammar goal of 2.9.11.d); the visual grid is a toggle away. Fastest for experts and diffs well in reviews; least friendly for a layman.</div></div>
+
+<div style="padding:0 16px 20px" class="mu"><b style="color:var(--ink)">In every option:</b> a plain table (one source, its columns and renames) is the same editor with no join; dates follow the source; the name is unique; a cross-connector join shows its cost and refuses above a limit until filtered; "Used by" shows impact before you change anything.</div>
+<script>document.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.pick button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.v').forEach(v=>v.classList.toggle('on',v.id===b.dataset.v))});</script>
+</body></html>

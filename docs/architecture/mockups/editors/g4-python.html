@@ -1,0 +1,54 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Python table editor · mock-ups</title><link rel="stylesheet" href="common.css">
+<style>.run{display:flex;gap:8px;align-items:center;margin-top:8px}.log{background:#0a1120;border:1px solid var(--bd);border-radius:6px;font:11px/1.5 ui-monospace,monospace;padding:8px;color:var(--mu);white-space:pre;margin-top:8px}
+.nb{background:var(--sf);border:1px solid var(--bd);border-radius:6px;margin-top:8px}.nb .in{border-left:3px solid var(--ln);padding:8px 10px;font:12px/1.5 ui-monospace,monospace;white-space:pre;color:#cfd8ea}.nb .out{border-top:1px solid var(--bd);padding:6px 10px;font-size:12px}
+.kv td:first-child{color:var(--mu);width:150px}</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">TABLE fx-implied-vol &lt;GO&gt;</div><span class="mu">Build › Tables &amp; models</span></div>
+<div class="pick"><button data-v="A" class="on">A · Code + contract</button><button data-v="B">B · Notebook cells</button><button data-v="C">C · Template form</button>
+<span>Group 4 of 6: Python-driven tables and models (run on the server's compute pool, never in the console)</span></div>
+
+<div class="v on" id="A"><div class="hdr"><div><div class="crumb">Build › Tables › Python</div><h1>fx-implied-vol</h1></div><span class="pill draft">Draft</span><span class="sp"></span><span class="tog"><i>Code</i><i>YAML</i><i class="on">Both</i></span><span class="btn">Run on sample</span><span class="btn p">Propose for review</span></div>
+<div class="grid3"><div class="card"><h3>Objects</h3><ul class="list"><li>▾ Tables</li><li>&nbsp;&nbsp;trade <span class="mu">· delta</span></li><li class="on">&nbsp;&nbsp;fx-implied-vol <span class="mu">· python</span></li><li>▾ Semantic models</li><li>&nbsp;&nbsp;fx-risk <span class="mu">· uses it</span></li></ul></div>
+<div><div class="code"><span class="c"># inputs arrive as Arrow tables, read as the person who runs it (their rows and masks)</span>
+<span class="k">def</span> <span class="f">build</span>(inputs, params):
+    spots = inputs[<span class="f">"fx-spot"</span>].to_pandas()
+    vols  = inputs[<span class="f">"fx-vol-surface"</span>].to_pandas()
+    out = vols.merge(spots, on=<span class="f">"PAIR"</span>)
+    out[<span class="f">"ATM_VOL_1M"</span>] = out.pipe(interp_atm, tenor=<span class="f">"1M"</span>)
+    <span class="k">return</span> out[[<span class="f">"PAIR"</span>, <span class="f">"SPOT"</span>, <span class="f">"ATM_VOL_1M"</span>]]</div>
+<div class="card"><h3>Contract (what the code must return)</h3><table><tr><th>Column</th><th>Type</th><th>Key</th><th>Rule</th></tr><tr><td>PAIR</td><td>text</td><td>●</td><td>not empty</td></tr><tr><td>SPOT</td><td>number</td><td></td><td>&gt; 0</td></tr><tr><td>ATM_VOL_1M</td><td>number</td><td></td><td>0 – 3</td></tr></table></div>
+<div class="card"><table class="kv"><tr><td>Inputs</td><td><span class="chip">fx-spot</span><span class="chip">fx-vol-surface</span> (as of the business date asked)</td></tr><tr><td>Runs</td><td>on demand, cached per business date · or <b>each load of an input</b></td></tr><tr><td>Compute pool</td><td>python-default · 2 workers · limit 60 s, 2 GB · libraries: pandas, numpy, scipy (pinned)</td></tr></table></div></div>
+<div class="card prev"><h3>Sample run · 0.8 s</h3><table><tr><th>PAIR</th><th>SPOT</th><th>ATM 1M</th></tr><tr><td>EURUSD</td><td>1.0842</td><td>0.071</td></tr><tr><td>USDCAD</td><td>1.3710</td><td>0.054</td></tr></table><h3 style="margin-top:12px">Checks</h3><div class="ok">✓ matches the contract</div><div class="ok">✓ no network, no files outside its folder</div><div class="ok">✓ deterministic on re-run</div><div class="log">12:04:11 build() 0.8 s · 38 rows · 1.1 MB peak</div></div></div>
+<div class="note"><b>A, code + contract.</b> A code editor beside the <b>output contract</b> (columns, types, keys, rules), the inputs, when it runs and its compute pool and limits; a sample run on the right. A reviewer sees exactly what the code promises. Engineer-friendly.</div></div>
+
+<div class="v" id="B"><div class="hdr"><div><div class="crumb">Build › Tables › Python</div><h1>fx-implied-vol</h1></div><span class="pill draft">Draft</span><span class="sp"></span><span class="btn">Run all</span><span class="btn p">Turn into table</span></div>
+<div class="nb"><div class="in">spots = drishti.read("fx-spot", as_of="2026-10-28")</div><div class="out mu">38 rows · PAIR, SPOT, BID, ASK …</div></div>
+<div class="nb"><div class="in">vols = drishti.read("fx-vol-surface", as_of="2026-10-28")</div><div class="out mu">1,140 rows</div></div>
+<div class="nb"><div class="in">out = vols.merge(spots, on="PAIR").pipe(interp_atm, tenor="1M")
+out[["PAIR","SPOT","ATM_VOL_1M"]]</div><div class="out"><table><tr><th>PAIR</th><th>SPOT</th><th>ATM_VOL_1M</th></tr><tr><td>EURUSD</td><td>1.0842</td><td>0.071</td></tr></table></div></div>
+<div class="note"><b>B, notebook.</b> Explore in cells (the server-side Notebook of item 4), then <b>Turn into table</b>: Drishti gathers the cells into a build function and opens A's contract to fill in. Natural for quants exploring; the step to a governed table is explicit.</div></div>
+
+<div class="v" id="C"><div class="hdr"><div><div class="crumb">Build › Tables › New Python table</div><h1>From a template</h1></div><span class="sp"></span></div>
+<div class="grid2" style="grid-template-columns:1fr 1fr"><div class="card"><h3>Pick a template</h3><ul class="list"><li class="on">Join and derive columns</li><li>Read a file or URL feed (approved sources only)</li><li>Resample a time series</li><li>Statistics per group (mean, stdev, percentiles)</li><li>Blank</li></ul></div>
+<div class="card"><h3>Join and derive columns</h3><table class="kv"><tr><td>Left</td><td>fx-vol-surface</td></tr><tr><td>Right</td><td>fx-spot</td></tr><tr><td>On</td><td>PAIR</td></tr><tr><td>New column</td><td>ATM_VOL_1M = interpolate(VOL, tenor 1M)</td></tr></table><div class="run"><span class="btn">Show the code</span><span class="sp"></span><span class="btn p">Create</span></div></div></div>
+<div class="note"><b>C, templates.</b> A non-programmer fills a form; Drishti writes the Python and shows it. Gets common cases started fast; anything unusual still ends in A.</div></div>
+
+<div style="padding:0 16px 20px" class="mu"><b style="color:var(--ink)">In every option:</b> the code runs on the server's Python compute pool (one runtime), never in the console; it reads its inputs as the person running it (row rules and masks apply); the output must meet its contract or the run is refused in words; pinned libraries, time and memory limits, no network except approved sources; every version reviewed (four eyes) and its runs audited; a Python <b>model</b> is the same with measures computed in Python and declared in the contract.</div>
+<script>document.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.pick button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.v').forEach(v=>v.classList.toggle('on',v.id===b.dataset.v))});</script>
+</body></html>
