@@ -19,6 +19,24 @@
 
 ### Fixes
 
+- **Docs: the heavy run of tutorials 34, 36, 37, 38 and 43.** Every step run against a built server on the demo lake (writes to scratch
+  lakes only): real command output and light-theme screenshots in tutorials 34 (lake files), 36 (the data inbox), 38 (the MR cube) and
+  43 (parametric VaR, every figure the engine's), and 37 (custom functions, why and what-if: two signed-in people, the author's own approval refused; Split by offers the view's own rows and columns, the steps are a list, the function's column header is its call); new picture scripts `tools/docs/shots/t34.py`, `t36.py`,
+  `t37.py`, `t38.py`, `t43.py` (and `light()` in `_tut.py`). Text corrected to the product: three shipped lake files, not one; the endur
+  test file's real name; a repeated append batch reports its rows but commits nothing (the run summary says *batch appended already*);
+  Admin → Lakes lists the lake files but does not run the check; the inbox's folders are made by its first cycle; `stable-seconds` is
+  read at start; `date-from: name` needs `<name>.<YYYY-MM-DD>.jsonl.gz`; an unmatched file fails as *no pack, kind or table of that
+  name*; tutorial 37's fields are the trade source's own (`PRODUCT_TYPE`, `NOTIONAL`, `COUNTERPARTY`) and its members the demo's. The
+  six under-construction pictures retaken with their chips (computed 02, 03, 06, 07; t02/07; qa-windows/09).
+
+- **Docs: tutorial 35 (Arrow Flight) run for real.** Flight turned on from Admin → Engines over a test PKI, a reader's `data:read` token,
+  whoami and the catalogue, a desk's VaR scenario P&L in pandas (the 6th worst of 509 is the VaR; the VaR and ES travel in the Arrow
+  schema's metadata, not in pandas' attrs), the positions' float32 vectors summing to the desk's exactly, the Java page's program, a JDBC
+  client's answer through the Flight SQL driver (in place of a DBeaver picture), a live stream across an intraday batch, Stop
+  (`DRS-5610`) and resume; pictures by `tools/docs/shots/t35.py`. Text corrected: a token cannot make tokens (`DRS-5002`), the VaR is the
+  6th worst, Java 17 to 21 for Arrow 19. The JDBC example (`JdbcFlightSql.java`) and JDBC.md: a trust store is read only with
+  `useSystemTrustStore=false`.
+
 - **The pivot screen's Why, What-if and Functions buttons (keys W, I, U) work again**: their script looked for the screen's old root attribute (`data-pivot`, renamed `data-pivot-screen` when the old Pivot tab retired) and quietly did nothing; a browser test now opens each card and checks its content.
 
 - **A refused `lake build --lake NAME` no longer writes `./NAME/_drishti-lake/` in the current directory**: its summary goes to the lake's own folder (or `<data>/lakes/<name>/` when that is not known); the run summaries committed by mistake under `demo/` are removed; a guard test.

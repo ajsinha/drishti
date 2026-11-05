@@ -35,7 +35,7 @@ jdbc:arrow-flight-sql://drishti-1.bank.example:18815/?useEncryption=true&token=<
 |---|---|
 | `useEncryption=true` | TLS (always on at Drishti's Flight port) |
 | `token=` | a personal API token with `data:read` (or `data:read:bi`); the driver sends it on every call, the service keeps one session for it |
-| `trustStore=`, `trustStorePassword=` | the bank's CA as a Java trust store, when the JVM's own does not hold it (or `disableCertificateVerification=true` on a test machine only) |
+| `trustStore=`, `trustStorePassword=` | the bank's CA as a Java trust store, when the JVM's own does not hold it, with `useSystemTrustStore=false` (the driver reads `trustStore` only then; or `disableCertificateVerification=true` on a test machine only) |
 | `model=` | the BI model statements read, unless a statement names its own with a first line `-- model: <model>` (the driver sends this property as the header `model`) |
 
 In DBeaver: Database → New connection → **Arrow Flight SQL** (or a generic JDBC connection with the jar), the URL above. The navigator

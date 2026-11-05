@@ -140,3 +140,11 @@ def elem_shot(c: Ctx, name: str, selector: str, pad: int = 10, extra: int = 0):
     """A picture of one element, cut out of the whole page so the sticky top bar never covers it."""
     r = c.page.evaluate("(s) => { const e = document.querySelector(s); const b = e.getBoundingClientRect(); return {x: b.x, y: b.y + window.scrollY, width: b.width, height: b.height}; }", selector)
     page_shot(c, name, r, extra=extra, pad=pad)
+
+
+def light(c: Ctx) -> None:
+    """The light (Parchment) theme for every page this browser opens from now on: the theme the newer tutorials' pictures are taken in."""
+    if getattr(c, "_light", False):
+        return
+    c.page.context.add_init_script("try { localStorage.setItem('drishti.theme', 'light'); } catch (e) {}")
+    c._light = True

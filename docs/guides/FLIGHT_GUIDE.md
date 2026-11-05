@@ -129,7 +129,22 @@ f = Flight("grpc+tls://drishti-1.bank.example:18815", token="drk_…", ca="bank-
 pnl = f.measure("var.scenarios", "DESK:RATES").to_pandas()
 ```
 
-(output from the demo lake: to be filled in the heavy run)
+```text
+     SCENARIO SCENARIO_DATE          PNL
+0           0    2024-09-17  11278589.52
+1           1    2024-09-18  17875177.30
+2           2    2024-09-19  21633915.20
+3           3    2024-09-20 -61160944.54
+4           4    2024-09-23  17550177.08
+..        ...           ...          ...
+504       504    2026-09-23  17561028.82
+505       505    2026-09-24  42481517.80
+506       506    2026-09-25 -12337742.74
+507       507    2026-09-28 -35955103.30
+508       508    2026-09-29  -2062964.68
+
+[509 rows x 3 columns]
+```
 
 `ListFlights` lists what a token may read (names only); the action `whoami` says who the service thinks you are, your scopes and limits.
 
@@ -192,7 +207,17 @@ for seq, batch in f.stream(req, resume=last):
     ...
 ```
 
-(output from the demo lake: to be filled in the heavy run)
+With `print(seq, batch.num_rows)` in the first loop, across one intraday batch of the stand-in pricing system (its P&L vectors, then its
+scenario PVs), stopped from Admin → Data out:
+
+```text
+18 509
+26 509
+27 509
+DRS-5610: stopped by drishti-dev-admin on Admin → Data out
+```
+
+The first batch is the scope's vector as it stands, with the stream's current sequence.
 
 ## 8. Limits, and what a refusal says
 
@@ -283,7 +308,19 @@ FROM trades
 GROUP BY trades.DESK
 ```
 
-(output from the demo lake: to be filled in the heavy run)
+```text
+desk	notional	n
+DESK-COMM	8.850170019852502E11	5990
+DESK-CREDIT	3.4835024551415E11	1172
+DESK-EQD	4.3052971792252997E11	1452
+DESK-FI	4.0315015623297003E11	1248
+DESK-FX	3.7284221311835E11	1428
+DESK-INFL	1.299456220881E11	396
+DESK-MM	1.30992079528E11	480
+DESK-RATES	6.0533722239374E11	1832
+DESK-SFT	2.27897073212E11	672
+DESK-STRUCT	1.06026316978E11	330
+```
 
 **What a tool browses.** One catalog (the product's name), a **schema per model** the person may read (`trading-risk@1`), a **table per
 alias** of the model (`trades`, `counterparties`) with the columns the model describes for that person (hidden fields left out). Table
