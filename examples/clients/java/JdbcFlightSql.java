@@ -57,6 +57,7 @@ public final class JdbcFlightSql {
         String trustStore = System.getenv("DRISHTI_FLIGHT_TRUSTSTORE");
         if (trustStore != null) {
             props.setProperty("trustStore", trustStore);
+            props.setProperty("useSystemTrustStore", "false");            // the driver reads trustStore only when the system one is off
             props.setProperty("trustStorePassword", System.getenv().getOrDefault("DRISHTI_FLIGHT_TRUSTSTORE_PASSWORD", ""));
         }
         if (args.length >= 1) {

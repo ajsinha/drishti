@@ -29,6 +29,14 @@
   name*; tutorial 37's fields are the trade source's own (`PRODUCT_TYPE`, `NOTIONAL`, `COUNTERPARTY`) and its members the demo's. The
   six under-construction pictures retaken with their chips (computed 02, 03, 06, 07; t02/07; qa-windows/09).
 
+- **Docs: tutorial 35 (Arrow Flight) run for real.** Flight turned on from Admin → Engines over a test PKI, a reader's `data:read` token,
+  whoami and the catalogue, a desk's VaR scenario P&L in pandas (the 6th worst of 509 is the VaR; the VaR and ES travel in the Arrow
+  schema's metadata, not in pandas' attrs), the positions' float32 vectors summing to the desk's exactly, the Java page's program, a JDBC
+  client's answer through the Flight SQL driver (in place of a DBeaver picture), a live stream across an intraday batch, Stop
+  (`DRS-5610`) and resume; pictures by `tools/docs/shots/t35.py`. Text corrected: a token cannot make tokens (`DRS-5002`), the VaR is the
+  6th worst, Java 17 to 21 for Arrow 19. The JDBC example (`JdbcFlightSql.java`) and JDBC.md: a trust store is read only with
+  `useSystemTrustStore=false`.
+
 - **The client example "read the lake directly" (notebook 09) resolves a nested default** in the lake file's root (`${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`) innermost first, as the server does; it built a folder named after the placeholder.
 
 - **Docs: FRTB-SA and SIMM are built.** REGULATORY_VAR_REPORTING.md (sections 1 and 8: the FRTB standardised approach built, its reports'
