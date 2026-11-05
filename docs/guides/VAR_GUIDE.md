@@ -92,6 +92,7 @@ fat-tailed factor market), not prices.
 33. [Where VaR is shown: editions and lenses](#33-where-var-is-shown-editions-and-lenses)
 34. [Configuration keys](#34-configuration-keys)
 35. [Measured performance](#35-measured-performance)
+36. [VaR data: every dataset the engine reads](#36-var-data-every-dataset-the-engine-reads)
 
 ## Input, computed, cache and the official record (compute-first)
 
@@ -2164,6 +2165,8 @@ also served as the computed kind `var-result` through a reactive connector; the 
 | **Reporting currency** `ccy=` on every answer, `--ccy` on the command line; USD built at load, other currencies on first ask, kept per date on the tiered memory; official records per `drishti.var.official.currencies` | Built (the console's picker: mock-ups first) | §15.10 |
 
 ## 15. Inputs from upstream engines
+
+Every dataset below, with one formatted sample record each and whether it is required: [section 36](#36-var-data-every-dataset-the-engine-reads).
 
 ### 15.1 Where they live
 
@@ -4934,3 +4937,502 @@ with 50, 100 and 200 users, Java 21 and 25, G1 and ZGC ([section 4](../admin/BEN
 store, a date's first open and the cost per request ([section 5](../admin/BENCHMARK.md#5-var-the-store-a-dates-first-open-and-the-cost-per-request));
 the loaders ([section 7](../admin/BENCHMARK.md#7-the-loaders)); and the extrapolations to 2.3M and 10M positions
 ([section 12](../admin/BENCHMARK.md#12-scaling-fits-and-extrapolation-to-23m-and-10m-positions)).
+
+## 36. VaR data: every dataset the engine reads
+
+Every dataset historical VaR uses, what it is for, whether it is required, where it lives, and one real record from the shipped sample
+data (`data/testdata/`), formatted, with long arrays shortened as `/* … N more … */`. The engine itself, its computations and its
+screens are in the sections above; the field-by-field rules of each kind are its **data contract**
+([docs/contracts/packs/market-risk.md](../contracts/packs/market-risk.md)); how files are named, dated and loaded is
+[DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md).
+
+The sample data is synthetic (a 40-factor model, labelled with source systems such as ENDUR, CALYPSO and MUREX); the demo lake moves its
+dates to the latest business days when it is built, so a file dated 2026-09-30 appears on a recent business date in the console.
+
+### 36.1 At a glance
+
+| Dataset (kind) | What it is for | Required? | Sample files (`data/testdata/…`) | Guide |
+|---|---|---|---|---|
+| `scenario-set` | the ordered scenario days every vector lines up with | **yes** | `market-risk/scenario-set/scenario-set.tar` | [15.3](#153-scenario-set-the-scenario-days) |
+| `scenario-pv` | each trade's base PV and its PV under each scenario; Drishti computes the P&L | **one of the two**, per trade | `market-risk/scenario-pv/scenario-pv-<date>.tar` | [15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency) |
+| `pnl-vector` | each trade's scenario P&L, computed by the source | **one of the two**, per trade | `market-risk/pnl-vector/pnl-vector-<date>.tar` | [15.2](#152-pnl-vector-one-pl-vector-per-trade) |
+| `fx-scenario` | each currency's rate on each scenario day, to convert scenario PVs to USD | when scenario PVs are in other currencies (else derived from `fx-spot`) | `market-risk/fx-scenario/fx-scenario.tar` | [15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency) |
+| `fx-spot` | FX history: today's rates, reporting currencies, scenario FX when not supplied | for other currencies | `market-data/fx-spot/fx-spot.<date>.jsonl.gz` | [15.10](#1510-reporting-currency) |
+| `risk-hierarchy` | the trees (MGMT, LEGAL, limit letters…) that make the scopes | **yes** (or built from the trades' columns) | `market-risk/risk-hierarchy/risk-hierarchy.<date>.jsonl.gz` | [15.4](#154-risk-hierarchy-the-trees-and-their-limits), [15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns) |
+| `portfolio` | stored portfolios: hierarchy, rule and basket portfolios | optional | `market-risk/portfolio/portfolio.<date>.jsonl.gz` | [15.5](#155-portfolio-stored-portfolio-definitions) |
+| `var-limit` | a node's VaR limit (the Limit column, limit use) | optional | `market-risk/var-limit/var-limit.<date>.jsonl.gz` | [15.15](#1515-var-limit-the-nodes-var-limits) |
+| `desk-pnl` | actual and hypothetical P&L of each desk, per day | for backtesting | `market-risk/desk-pnl/desk-pnl.tar` | [15.16](#1516-desk-pnl-the-banks-actual-and-hypothetical-pl) |
+| `pnl-history` | a node's P&L over many years | for stressed VaR and long-history views | `market-risk/pnl-history/pnl-history.<date>.jsonl.gz` | VAR_GUIDE (stressed VaR) |
+| `trade-valuation` | each trade's MTM today and its attributes | optional (the position page, What-if) | `market-risk/trade-valuation/trade-valuation.<date>.jsonl.gz` | — |
+| trades (`trade_murex`, `trade_endur`, `trade_calypso`) | the trades themselves, linked from every position | optional for the number, used by the screens | `trades/<system>/trade_<system>.<date>.jsonl.gz` | — |
+
+**The minimum for a VaR number:** `scenario-set`, a `risk-hierarchy` (or hierarchy columns on the vectors), and for every trade either a
+`scenario-pv` row or a `pnl-vector` row. Everything else adds a feature: currencies, portfolios, limits, backtesting, the trade pages.
+
+### 36.2 `scenario-set`: the scenario days
+
+The ordered list of historical days the scenarios are taken from, the same for every trade on a business date: position *s* of every P&L
+vector and every scenario PV is the market move of `SCENARIO_DATES[s]`. One row per set per business date. `SCENARIO_COUNT` is the set's
+length (509 in the sample); the engine uses the newest `drishti.var.scenario-window` of them (250 as shipped).
+
+- **Key:** `SCENARIO_SET_ID` + `BUSINESS_DATE`. Every vector names its set in `SCENARIO_SET_ID`.
+- **`SCENARIO_DATES`:** strictly increasing; the newest N are the window.
+
+```jsonc
+{
+  "SCENARIO_SET_ID": "HS-509",
+  "BUSINESS_DATE": "2026-09-28",
+  "SCENARIO_DATES": [
+    "2024-09-13",
+    "2024-09-16",
+    "2024-09-17",
+    "2024-09-18",
+    /* … 501 more … */,
+    "2026-09-22",
+    "2026-09-23",
+    "2026-09-24",
+    "2026-09-25"
+  ],
+  "SCENARIO_COUNT": 509,
+  "WINDOW_START": "2024-09-13",
+  "WINDOW_END": "2026-09-25",
+  "HORIZON_DAYS": 1,
+  "REVALUATION": "full",
+  "WEIGHTS": null,
+  "SOURCE_BATCH": "B-2026-09-28-01",
+  "DESCRIPTION": "Historical simulation, 509 business days, equal weights"
+}
+```
+
+### 36.3 `scenario-pv`: scenario PVs per trade (preferred)
+
+What a pricing system naturally produces: the trade's value today (`BASE_PV`) and its value under each scenario (`SCENARIO_PV`, one per
+scenario day, in the trade's currency `CURRENCY`). Drishti computes the USD P&L at load: **P&L(s) = PV(s) × FX(s) − BASE_PV × FX(base)**.
+The other columns place the trade in the hierarchies (legal entity, division, desk, book, limit letter, portfolio, product, counterparty),
+so a trade's position is known without reading the trade itself.
+
+- **Key:** `SCENARIO_PV_ID` (`SPV-<trade>-<set>`), one per trade per date.
+- **`STATUS`:** `ok`, or a pricing failure the completeness checks show.
+- **`BATCH_ID`, `RESTATEMENT`, `RUN_KIND`:** which run produced it; a restatement replaces the earlier row.
+
+```jsonc
+{
+  "VALUE_TYPE": "PV",
+  "GRAIN": "TRADE",
+  "TRADE_ID": "1000003",
+  "CURRENCY": "USD",
+  "SOURCE_SYSTEM": "ENDUR",
+  "SCENARIO_PV_ID": "SPV-1000003-HS-509",
+  "SECURITY_ID": null,
+  "INSTRUMENT": "ENGY-B-SWAP USD 2027-02",
+  "BUSINESS_DATE": "2026-09-30",
+  "SCENARIO_SET_ID": "HS-509",
+  "TRADE_VERSIONS": "v7",
+  "TRADE_STATUS": "AMENDED",
+  "MATURITY_DATE": "2027-02-28",
+  "LEGAL_ENTITY": "LE-NY",
+  "DIVISION": "DIV-MARKETS",
+  "DESK": "DESK-COMM",
+  "TT_BOOK": "BOOK-COMM-1",
+  "LIMIT_LETTER": "LL-0001",
+  "PORTFOLIO": "BOOK-COMM-1",
+  "STRATEGY": "",
+  "PRODUCT_GROUP": "Commodity",
+  "PRODUCT_TYPE": "ComSwap",
+  "COUNTERPARTY": "CP-CASCADIA",
+  "DIRECTION": "SHORT",
+  "QUANTITY": -4687500.0,
+  "TAGS": "",
+  "BASE_PV": -5176568.0,
+  "VALUATION_DATE": "2026-09-30",
+  "BASE_VALUATION_DATE": "2026-09-30",
+  "SCENARIO_PV": [
+    -4754754.0,
+    -5608689.0,
+    -5444664.0,
+    -5103789.0,
+    /* … 501 more … */,
+    -5371205.0,
+    -5327780.0,
+    -4800104.0,
+    -5239083.0
+  ],
+  "STATUS": "ok",
+  "PRICER": "demo-factor-model",
+  "MODEL_VERSION": "demo-2",
+  "COMPUTED_AT": "2026-09-30T06:00:00Z",
+  "BATCH_ID": "B-2026-09-30-01",
+  "RESTATEMENT": 0,
+  "RUN_KIND": "FULL"
+}
+```
+
+### 36.4 `pnl-vector`: P&L vectors per trade (accepted)
+
+For a source that already computes scenario P&L: the trade's P&L on each scenario day (`PNL`, in `CURRENCY`, usually USD), used as it is.
+Same placement columns as a scenario PV. A trade arrives in one form only; both forms may sit side by side on one date, and nothing
+downstream knows which form a trade came in.
+
+- **Key:** `VECTOR_ID` (`PNL-<trade>-<set>`).
+- **`GRAIN`:** `TRADE`, or a coarser grain (a position or a book) when the source aggregates ([15.13](#1513-inputs-any-form-any-grain)).
+- **`PV`:** today's value, shown beside the P&L.
+
+```jsonc
+{
+  "VALUE_TYPE": "PNL",
+  "GRAIN": "TRADE",
+  "TRADE_ID": "CLY-3000267",
+  "CURRENCY": "USD",
+  "SOURCE_SYSTEM": "CALYPSO",
+  "VECTOR_ID": "PNL-CLY-3000267-HS-509",
+  "SECURITY_ID": null,
+  "INSTRUMENT": "Repurchase agreement USD 2027-01",
+  "BUSINESS_DATE": "2026-09-30",
+  "SCENARIO_SET_ID": "HS-509",
+  "TRADE_VERSIONS": "v3",
+  "TRADE_STATUS": "AMENDED",
+  "MATURITY_DATE": "2027-01-04",
+  "LEGAL_ENTITY": "LE-FRA",
+  "DIVISION": "DIV-TREASURY",
+  "DESK": "DESK-SFT",
+  "TT_BOOK": "BOOK-SFT-1",
+  "LIMIT_LETTER": "LL-0001",
+  "PORTFOLIO": "BOOK-SFT-1",
+  "STRATEGY": "",
+  "PRODUCT_GROUP": "Securities financing",
+  "PRODUCT_TYPE": "REPO",
+  "COUNTERPARTY": "CP-BRAMBLE",
+  "DIRECTION": "SHORT",
+  "QUANTITY": -178000000.0,
+  "TAGS": "",
+  "TRADE_CURRENCY": "USD",
+  "REPORTING_CCY": "USD",
+  "PV": 396058,
+  "PNL": [
+    1535,
+    57,
+    5271,
+    -2374,
+    /* … 501 more … */,
+    -855,
+    -5201,
+    57,
+    2303
+  ],
+  "STATUS": "ok",
+  "PRICER": "demo-factor-model",
+  "MODEL_VERSION": "demo-2",
+  "COMPUTED_AT": "2026-09-30T06:00:00Z",
+  "BATCH_ID": "B-2026-09-30-01",
+  "RESTATEMENT": 0,
+  "RUN_KIND": "FULL"
+}
+```
+
+### 36.5 `fx-scenario`: scenario FX rates
+
+One row per currency per business date: the currency's rate (`QUOTE`, USD per one unit) today (`RATE`) and on each scenario day
+(`RATES`, in the scenario set's order). Used to turn scenario PVs in other currencies into USD P&L. When it is not sent, the engine
+derives the same rates from `fx-spot` history of each scenario day.
+
+```jsonc
+{
+  "FX_SCENARIO_ID": "FXS-AUD-HS-509",
+  "BUSINESS_DATE": "2026-09-28",
+  "SCENARIO_SET_ID": "HS-509",
+  "CURRENCY": "AUD",
+  "QUOTE": "USD per 1 AUD",
+  "RATE": 0.6683,
+  "RATES": [
+    0.6729415125,
+    0.6667086598,
+    0.6709755486,
+    0.670913006,
+    /* … 501 more … */,
+    0.6708494492,
+    0.6719584576,
+    0.6745211482,
+    0.6651427482
+  ],
+  "SOURCE": "demo-factor-model",
+  "BATCH_ID": "B-2026-09-28-01"
+}
+```
+
+### 36.6 `fx-spot`: FX history
+
+Market data: each currency pair's quote today and its recent history (`HISTORY`). VaR reads it for reporting currencies (the page's
+Reporting currency picker), for today's conversion, and to derive scenario FX when `fx-scenario` is not supplied. It is read, never
+watched: a change during the day does not recompute VaR.
+
+```jsonc
+{
+  "PAIR": "FX-AUDUSD",
+  "PAIR_NAME": "AUD/USD",
+  "MID": 0.68418,
+  "BID": 0.68415,
+  "ASK": 0.68421,
+  "CHANGE_1D": -0.01049,
+  "SPOT_DATE": "2026-07-10",
+  "HISTORY": [
+    {
+      "DATE": "2026-05-26",
+      "MID": 0.74924
+    },
+    {
+      "DATE": "2026-05-27",
+      "MID": 0.74797
+    },
+    /* … 28 more … */
+  ],
+  "CONVENTIONS": {
+    "BASE": "AUD",
+    "QUOTE": "USD",
+    "PIP_FACTOR": 10000,
+    "SPOT_LAG": "T+2",
+    "CALENDAR": "GBLO+USNY",
+    "NDF": false
+  },
+  "FX_FORWARD_CURVE": "FXF-AUDUSD",
+  "FX_VOL_SURFACE": "FXV-AUDUSD"
+}
+```
+
+### 36.7 `risk-hierarchy`: the trees
+
+One row per node of each tree: the bank, its divisions or legal entities, desks and books (MGMT, LEGAL, LL for limit letters, or any
+other hierarchy the bank defines). `CHILDREN` and `PARENT_ID` give the tree; `BOOKS` the books under the node, which is how positions
+join it. These are the **Scopes** on the VaR screen.
+
+- **Key:** `NODE_ID` (`<hierarchy>~<id>`), valid from `VALID_FROM` to `VALID_TO` (open-ended when null).
+- A hierarchy can instead be built from the trades' own columns ([15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns)).
+
+```jsonc
+{
+  "NODE_ID": "LEGAL~BANK",
+  "HIERARCHY": "LEGAL",
+  "LEVEL": "bank",
+  "PARENT_ID": null,
+  "NAME": "Drishti Bank",
+  "REF": null,
+  "CHILDREN": [
+    "LEGAL~LE-NY",
+    "LEGAL~LE-LDN",
+    "LEGAL~LE-FRA",
+    "LEGAL~LE-TKY"
+  ],
+  "BOOKS": [
+    "BOOK-COMM-1",
+    "BOOK-COMM-2",
+    "BOOK-COMM-3",
+    "BOOK-CREDIT-1",
+    /* … 22 more … */,
+    "BOOK-SFT-3",
+    "BOOK-STRUCT-1",
+    "BOOK-STRUCT-2",
+    "BOOK-STRUCT-3"
+  ],
+  "BUSINESS_DATE": "2026-09-30",
+  "VALID_FROM": "2026-01-02",
+  "VALID_TO": null
+}
+```
+
+### 36.8 `portfolio`: stored portfolios and baskets
+
+Named sets of positions beyond the trees: a **hierarchy** portfolio (a node), a **rule** portfolio (a filter, e.g. every swap over 5 years)
+and a **basket** (an explicit member list, as here). They appear as Portfolios and System baskets on the VaR screen. `ROLLS_UP_TO` says
+which node it belongs to for limits and reporting.
+
+```jsonc
+{
+  "PORTFOLIO_ID": "PF-ASHA-UNWIND",
+  "NAME": "Unwind candidates (Asha)",
+  "OWNER": "asha",
+  "TYPE": "BASKET",
+  "DEFINITION": {
+    "MEMBERS": [
+      {
+        "POSITION_ID": "POS-BOOK-RATES-1~MX-20000002"
+      },
+      {
+        "POSITION_ID": "POS-BOOK-RATES-1~MX-20000003"
+      },
+      /* … 7 more … */
+    ]
+  },
+  "ROLLS_UP_TO": {
+    "KIND": "division",
+    "ID": "DIV-MARKETS"
+  },
+  "BUSINESS_DATE": "2026-09-30",
+  "VALID_FROM": "2026-01-02",
+  "VALID_TO": null
+}
+```
+
+### 36.9 `var-limit`: VaR limits
+
+A node's VaR limit with its horizon and confidence: the **Limit** column and limit use on the VaR screen. A limit is compared only at its
+own horizon and confidence (the screen says *not comparable* otherwise).
+
+```jsonc
+{
+  "LIMIT_ID": "VL-LL~BANK",
+  "HIERARCHY": "LL",
+  "NODE_ID": "LL~BANK",
+  "LIMIT_VAR": 150000000,
+  "CURRENCY": "USD",
+  "HORIZON": "1D",
+  "CONFIDENCE": 0.99,
+  "BUSINESS_DATE": "2026-09-30",
+  "VALID_FROM": "2026-01-02",
+  "VALID_TO": null
+}
+```
+
+### 36.10 `desk-pnl`: actual and hypothetical P&L for backtesting
+
+Each desk's real P&L per day, from finance: **actual** (with intraday trading and fees), **hypothetical** (today's positions held still)
+and fees. The backtest compares each day's VaR with these to count exceptions and set the traffic-light zone (Backtest ›).
+
+```jsonc
+{
+  "DESK_PNL_ID": "DPNL-DESK-COMM-2025-09-17",
+  "BUSINESS_DATE": "2025-09-17",
+  "DESK_ID": "DESK-COMM",
+  "LEGAL_ENTITY": "LE-NY",
+  "ACTUAL_PNL": -351052,
+  "HYPOTHETICAL_PNL": -2307182,
+  "FEES_AND_COMMISSIONS": 837316,
+  "CURRENCY": "USD",
+  "SOURCE": "demo-finance",
+  "AS_OF": "2025-09-17T22:00:00Z"
+}
+```
+
+### 36.11 `pnl-history`: the long history of each node
+
+A node's P&L over many years (`HISTORY_DATES`, `PNL`), e.g. from 2007, so a stressed window (2008) can be found and long-history views
+drawn. The sample's history is synthetic (`SYNTHETIC: true`), anchored to the stress set and HS-509.
+
+```jsonc
+{
+  "HISTORY_ID": "PNLH-LEGAL~BANK",
+  "BUSINESS_DATE": "2026-09-30",
+  "HIERARCHY": "LEGAL",
+  "NODE_ID": "LEGAL~BANK",
+  "NAME": "Drishti Bank",
+  "LEVEL": "bank",
+  "CURRENCY": "USD",
+  "FIRST_DAY": "2007-01-02",
+  "LAST_DAY": "2026-09-29",
+  "DAY_COUNT": 4938,
+  "HISTORY_DATES": [
+    "2007-01-02",
+    "2007-01-03",
+    "2007-01-04",
+    "2007-01-05",
+    /* … 4930 more … */,
+    "2026-09-24",
+    "2026-09-25",
+    "2026-09-28",
+    "2026-09-29"
+  ],
+  "PNL": [
+    34375815.28,
+    -26816987.53,
+    -31968465.89,
+    -9368696.87,
+    /* … 4930 more … */,
+    70184458.13,
+    35883219.34,
+    -44744875.68,
+    -2554349.24
+  ],
+  "SYNTHETIC": true,
+  "ANCHORS": [
+    "HS-STRESS-2008",
+    "HS-509"
+  ],
+  "SOURCE_BATCH": "B-2026-09-30-HIST",
+  "DESCRIPTION": "The long-history P&L of today's portfolio at this node, one value per business day since 2007, for the stress window selection; synthetic for the demo (not market history), equal to the stress set's and the normal set's P&L on their days"
+}
+```
+
+### 36.12 `trade-valuation`: each trade's value today
+
+The trade's MTM today with its attributes (desk, portfolio, counterparty, netting set, trader). Shown on a position's page and used by
+What-if; not needed for the VaR number itself, which comes from the vectors.
+
+```jsonc
+{
+  "VALUATION_ID": "TVAL-1000001",
+  "TRADE_ID": "1000001",
+  "SOURCE_SYSTEM": "ENDUR",
+  "PRODUCT_TYPE": "ComSwap",
+  "PRODUCT_GROUP": "Commodity",
+  "PORTFOLIO": "BOOK-COMM-2",
+  "DESK": "DESK-COMM",
+  "COUNTERPARTY": "CP-HARBORPT",
+  "NETTING_SET": "NS-HARBORPT-NY",
+  "TRADER_ID": "TRDR-FROSSI",
+  "BUY_SELL_CODE": "S",
+  "TRADE_STATUS": "AMENDED",
+  "CURRENCY": "USD",
+  "NOTIONAL": 209962179.0,
+  "MTM": 5151600,
+  "MTM_CURRENCY": "USD",
+  "PNL_1D": -347255,
+  "DV01": 0,
+  "TRADE_DATE": "2025-06-20",
+  "MATURITY_DATE": "2028-07-31",
+  "VALUATION_DATE": "2026-09-30"
+}
+```
+
+### 36.13 The trades
+
+The trades themselves (one kind per source system: `trade_murex`, `trade_endur`, `trade_calypso`), in the source system's names. VaR does
+not need them for the number (the vectors carry the placement columns), but every position links to its trade, and hierarchies may be
+built from the trades' columns. The record below shows the main fields; a real trade also carries its `LEGS` and `EVENTS` (cash flows,
+fixings), omitted here.
+
+```jsonc
+{
+  "SOURCE_SYSTEM": "MUREX",
+  "TRADE_ID": "MX-20000022",
+  "TRADE_VERSION": "4",
+  "TRADE_STATUS": "AMENDED",
+  "TRADE_DATE": "2026-08-27",
+  "PRODUCT_GROUP": "Rates",
+  "PRODUCT_TYPE": "XCCY_SWAP",
+  "BUY_SELL_CODE": "S",
+  "QUANTITY": 141900000.0,
+  "PRICE": null,
+  "CURRENCY": "USD",
+  "COUNTERPARTY": "CP-VERDANT",
+  "LEGAL_ENTITY": "LE-NY",
+  "PORTFOLIO": "BOOK-RATES-1",
+  "TT_BOOK": "BOOK-RATES-1",
+  "TRADER_ID": "TRDR-ASHAH",
+  "STRATEGY": null,
+  "START_DATE": "2026-08-31",
+  "MATURITY_DATE": "2035-02-01"
+}
+```
+
+### 36.14 What the engine computes and never stores
+
+None of these is an input, and none is written back to the lake (VAR_GUIDE [section 1](#contents) and [15.6](#156-positions-derived-by-drishti)):
+
+| Computed | From |
+|---|---|
+| a scenario-PV trade's USD P&L vector | `scenario-pv`, `fx-scenario` or `fx-spot` |
+| **positions** (one per trade per book, or as the source's grain) | the vectors' placement columns |
+| every node's and scope's vector (the totals) | the positions and the `risk-hierarchy` / `portfolio` membership |
+| VaR, ES, components, contributions, diversification, parametric VaR, the 10-day lenses, other reporting currencies | the vectors, `var-limit`, `fx-spot` |
+| backtest exceptions and zone | the day's VaR and `desk-pnl` |
+
+The only VaR figures written to a table are the **official record** (`risk-results/var-official`: one row per node and capture with its
+VaR, ES and companions, no vectors), described in [VAR_GUIDE section 19](#contents).
