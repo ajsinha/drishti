@@ -26,37 +26,21 @@ real browser over the market-risk pack's committed VaR data built into a scratch
 
 Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
 import math
-import subprocess
-import sys
 import urllib.request
-from pathlib import Path
 
 import pytest
 
-from test_var_explorer_browser import _engine_ready, open_var, painted, shot
+from test_var_explorer_browser import open_var, painted, shot
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
-from wb_live import _stack
+from var_stack import var_data, var_lake, var_server
 
-ROOT = Path(__file__).resolve().parents[2]
-VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio",
-                                                 "var-limit")] + ["trades/murex"])   # var-limit: the limits that limit use reads
 THEMES = ["terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"]
 TILE = "document.querySelector('.vx-tile[data-tile=\"%d\"] %s').innerText"
 
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
-    work = tmp_path_factory.mktemp("var-lens-lake")
-    lake = work / "delta"
-    r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
-                        "--connectors-dir", str(work / "connectors"), "--as-of", "today", "--only", VAR_DATA, "--no-signal", "-q",
-                        "--engine", "deltalake"], capture_output=True, text=True, cwd=ROOT, timeout=1500)   # the Python writer, in this process: auto starts a JVM for every table and business day
-    if r.returncode != 0 or not (lake / "risk" / "scenario-pv").is_dir():
-        pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
-    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
-                                        "DRISHTI_VAR_HOT_DIR": str(work / "hot")}):
-        _engine_ready(str(st))
-        yield st
+    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data("trades/murex")))   # var-limit: the limits that limit use reads
 
 
 def money(text: str) -> float:

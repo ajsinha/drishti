@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Arrow to the browser (2.9.7, docs/guides/DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6) in Chromium, over the real server and console with the market-risk
-pack's committed VaR data (the stack of test_var_explorer_browser.py: free scratch ports, a scratch folder, the demo connector off):
+pack's committed VaR data (the stack of test_var_explorer_browser.py, its lake shared through var_stack.py: free scratch ports, a scratch folder, the demo connector off):
 
 - the VaR explorer reads its contribution tables by position and by trade as Arrow (and the rest as JSON) and draws them, the P&L path
   and its charts exactly as it does from JSON alone (?tables=json), cell for cell;
@@ -22,14 +22,15 @@ pack's committed VaR data (the stack of test_var_explorer_browser.py: free scrat
 - the page asks nothing of any other host, and the content security policy reports nothing (Arrow JS needs no eval);
 - on a phone (390 px) nothing scrolls sideways.
 
-Skipped when Playwright, Chromium, the built server jar or a JDK is missing. Run one file at a time (it starts its own stack)."""
+Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
 import json
 from urllib.parse import urlparse
 
 import pytest
 
-from test_var_explorer_browser import painted, stack  # noqa: F401 - the VaR stack and its painted wait
+from test_var_explorer_browser import painted
 from test_workbench_browser import browser  # noqa: F401
+from var_stack import var_data, var_lake, var_server
 
 DESK = "NODE:MGMT~DESK-RATES"
 WATCH = """window.__csp = []; document.addEventListener('securitypolicyviolation', (e) => window.__csp.push(e.violatedDirective + ' ' + e.blockedURI));"""
@@ -44,6 +45,12 @@ SNAPSHOT = """() => ({
 })"""
 
 WIDE = """() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1"""
+
+
+@pytest.fixture(scope="module")
+def stack(tmp_path_factory):
+    """The VaR explorer's stack (test_var_explorer_browser.py): its data, the compute workers off."""
+    yield from var_server(tmp_path_factory, var_lake(tmp_path_factory, var_data("trades/murex")), DRISHTI_COMPUTE_ENABLED="false")
 
 
 def open_page(browser, base, query, block_arrow=False, size=None):  # noqa: F811

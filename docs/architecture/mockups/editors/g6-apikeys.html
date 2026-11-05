@@ -1,0 +1,48 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>API keys · mock-ups</title><link rel="stylesheet" href="common.css">
+<style>.kv td:first-child{color:var(--mu);width:150px}.secret{font-family:ui-monospace,monospace;background:#0a1120;border:1px dashed var(--ac);padding:8px;border-radius:4px;margin:6px 0;color:var(--ac)}
+.y{color:var(--ok)}.n{color:var(--bad)}.m{color:var(--wa)}</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">KEYS &lt;GO&gt;</div><span class="mu">My keys · Admin › API keys</span></div>
+<div class="pick"><button data-v="A" class="on">A · Key list + detail</button><button data-v="B">B · Issue in steps</button><button data-v="C">C · Admin overview</button>
+<span>Group 6 of 6: API keys (Flight, REST, scripts, service accounts)</span></div>
+
+<div class="v on" id="A"><div class="hdr"><div><div class="crumb">My keys</div><h1>excel-desk-report</h1></div><span class="pill appr">Active · expires in 41 days</span><span class="sp"></span><span class="btn">Rotate</span><span class="btn">Revoke</span></div>
+<div class="grid3"><div class="card"><h3>My keys · 3</h3><ul class="list"><li class="on">excel-desk-report <span class="mu">· data:read</span></li><li>notebook-var <span class="mu">· data:read</span></li><li>old-script <span class="n">· revoked</span></li></ul><div style="margin-top:8px"><span class="btn">+ New key</span></div></div>
+<div class="card"><table class="kv"><tr><td>Acts as</td><td>Mara Okafor (her rows and masks; never more than she has)</td></tr><tr><td>Scopes</td><td><span class="chip">data:read</span> <span class="mu">(Flight, Flight SQL, REST reads)</span></td></tr><tr><td>Limited to</td><td>models: risk-by-desk, trades-basic · from 10.20.0.0/16</td></tr><tr><td>Expires</td><td>2026-12-16 (90 days at most)</td></tr><tr><td>Key id</td><td><code>dk_7f3a…c91</code> (the secret was shown once, at creation)</td></tr></table></div>
+<div class="card"><h3>Last used</h3><div class="mu">today 08:02 · Flight · 10.20.4.17 · risk-by-desk · 5,000 rows</div><div class="mu">yesterday 08:01 · same</div><h3 style="margin-top:12px">Audit</h3><div class="mu">created 2026-09-17 · rotated 2026-10-20</div></div></div>
+<div class="note"><b>A, key list.</b> A person's own keys: what each acts as, its scopes and limits, expiry, last use (when, from where, what), Rotate and Revoke. The same screen for an admin, for anyone.</div></div>
+
+<div class="v" id="B"><div class="hdr"><div><div class="crumb">My keys › New key</div><h1>New key</h1></div></div>
+<div class="steps"><div class="done">1 Purpose ✓</div><div class="done">2 What it may do ✓</div><div class="on">3 Limits &amp; expiry</div><div>4 Create</div></div>
+<div class="card"><h3>Step 3 · Limits and expiry</h3><table class="kv"><tr><td>Only these models</td><td><span class="chip">risk-by-desk</span> <span class="btn">+</span></td></tr><tr><td>Only from</td><td>10.20.0.0/16 <span class="mu">(the bank network)</span></td></tr><tr><td>Expires after</td><td>30 · <b>90</b> days <span class="mu">(policy maximum 90)</span></td></tr></table></div>
+<div class="card"><h3>Step 4 · Created</h3><div class="secret">dk_7f3a2e…c91.QmFzZTY0U2VjcmV0…</div><div class="wa">Copy it now: Drishti keeps only a fingerprint and cannot show it again.</div></div>
+<div class="note"><b>B, steps.</b> Purpose → what it may do (scopes in words) → limits and expiry → the secret shown <b>once</b>. The "+ New key" path, as group 1's B for every "+ New".</div></div>
+
+<div class="v" id="C"><div class="hdr"><div><div class="crumb">Admin › API keys</div><h1>All keys · 46 active</h1></div><span class="sp"></span><span class="btn">Policy</span><span class="btn">Export audit</span></div>
+<div class="card"><table><tr><th>Key</th><th>Owner</th><th>Scopes</th><th>Expires</th><th>Last used</th><th>Flags</th></tr>
+<tr><td>excel-desk-report</td><td>Mara Okafor</td><td>data:read</td><td>41 d</td><td>today</td><td></td></tr>
+<tr><td>svc-nightly-load</td><td>svc-nightly</td><td>load:write</td><td>12 d</td><td>02:00</td><td class="m">expires soon</td></tr>
+<tr><td>notebook-old</td><td>Jon Patel</td><td>data:read</td><td>60 d</td><td>94 days ago</td><td class="m">unused 90 d</td></tr>
+<tr><td>ext-vendor</td><td>vendor-x</td><td>data:read</td><td>3 d</td><td>yesterday</td><td class="n">outside network</td></tr></table>
+<div style="margin-top:8px"><span class="btn">Revoke selected</span> <span class="mu">Policy: max 90 days · unused 90 days → revoked · rotation warning 14 days before</span></div></div>
+<div class="note"><b>C, admin overview.</b> Every key in the bank with owner, scopes, expiry, last use and flags (expiring, unused, used from outside the network); revoke in bulk; the key policy.</div></div>
+
+<div style="padding:0 16px 20px" class="mu"><b style="color:var(--ink)">In every option:</b> a key acts as its owner and never exceeds the owner's rights; scopes in words (data:read, load:write…); a maximum lifetime; the secret shown once, stored only as a fingerprint; every use audited; revoking takes effect on every node at once.</div>
+<script>document.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.pick button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.v').forEach(v=>v.classList.toggle('on',v.id===b.dataset.v))});</script>
+</body></html>

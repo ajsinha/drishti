@@ -1,0 +1,118 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Editor shell · mock-ups</title>
+<style>
+:root{--bg:#0e1628;--bg2:#121c33;--sf:#16213a;--sf2:#1b2744;--bd:#26345a;--ink:#e7ecf5;--mu:#93a0b8;--ac:#e8a33a;--ln:#7fb2ff;--ok:#5fd39a;--wa:#f2c14e;--bad:#ff7a7a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 "Inter",system-ui,sans-serif}
+.top{display:flex;gap:10px;align-items:center;padding:10px 16px;background:#0a1120;border-bottom:1px solid var(--bd)}
+.top b{color:var(--ac);letter-spacing:.06em}.top .cmd{flex:1;background:var(--sf);border:1px solid var(--bd);border-radius:4px;padding:5px 9px;color:var(--mu);font-family:ui-monospace,monospace}
+.pick{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--bg2);align-items:center}
+.pick button{background:var(--sf);color:var(--ink);border:1px solid var(--bd);border-radius:4px;padding:6px 12px;cursor:pointer;font-weight:600}
+.pick button.on{background:var(--ac);color:#14100a;border-color:var(--ac)}.pick span{color:var(--mu);margin-left:8px}
+.v{display:none;padding:14px 16px}.v.on{display:block}
+.hdr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:10px 12px}
+.hdr h1{font-size:16px;margin:0}.crumb{color:var(--mu);font-size:12px}
+.pill{font-size:11px;padding:2px 8px;border-radius:10px;border:1px solid}.draft{color:var(--wa);border-color:var(--wa)}.appr{color:var(--ok);border-color:var(--ok)}
+.sp{flex:1}.btn{background:var(--sf2);border:1px solid var(--bd);color:var(--ink);border-radius:4px;padding:5px 10px;font-size:12px}
+.btn.p{background:var(--ac);color:#14100a;border-color:var(--ac);font-weight:700}
+.tog{display:inline-flex;border:1px solid var(--bd);border-radius:4px;overflow:hidden}.tog i{font-style:normal;padding:4px 10px;font-size:12px}.tog i.on{background:var(--ln);color:#0a1120;font-weight:700}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:10px 12px;margin-top:10px}
+.card h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
+table{width:100%;border-collapse:collapse}td,th{padding:5px 6px;border-bottom:1px solid var(--bd);text-align:left;font-size:12px}th{color:var(--mu);font-weight:600}
+.chip{display:inline-block;background:var(--sf2);border:1px solid var(--bd);border-radius:3px;padding:1px 6px;margin:1px;font-size:11px}
+.yaml{background:#0a1120;border:1px solid var(--bd);border-radius:6px;margin-top:10px;font:12px/1.5 ui-monospace,monospace;padding:8px 12px;color:#cfd8ea;white-space:pre}
+.yaml .k{color:var(--ln)}.yaml .hl{background:rgba(232,163,58,.18);display:inline-block;width:100%}
+.yh{display:flex;align-items:center;gap:8px;color:var(--mu);font:11px system-ui;margin-bottom:6px}
+.ok{color:var(--ok)}.wa{color:var(--wa)}.mu{color:var(--mu)}
+.grid2{display:grid;grid-template-columns:200px 1fr;gap:10px}.grid3{display:grid;grid-template-columns:210px 1fr 300px;gap:10px}
+.nav a{display:block;padding:6px 8px;border-radius:4px;color:var(--ink);text-decoration:none;font-size:12px}.nav a.on{background:var(--sf2);border-left:3px solid var(--ac)}
+.nav a small{float:right;color:var(--mu)}
+.steps{display:flex;gap:0;margin-top:10px}.steps div{flex:1;padding:8px;text-align:center;border:1px solid var(--bd);background:var(--sf);font-size:12px;color:var(--mu)}
+.steps div.on{color:#14100a;background:var(--ac);font-weight:700}.steps div.done{color:var(--ok)}
+.note{margin-top:14px;padding:10px 12px;border-left:3px solid var(--ln);background:var(--bg2);color:var(--mu);font-size:12px}
+.note b{color:var(--ink)}
+.list li{list-style:none;padding:5px 6px;border-bottom:1px solid var(--bd);font-size:12px}.list{padding:0;margin:0}.list li.on{background:var(--sf2)}
+.prev td{font-family:ui-monospace,monospace}
+</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">MODEL risk-by-desk &lt;GO&gt;</div><span class="mu">Build › Tables &amp; models</span></div>
+<div class="pick"><button data-v="A" class="on">A · Sections + YAML below</button><button data-v="B">B · Steps + YAML below</button><button data-v="C">C · Three panes + YAML below</button>
+<span>Group 1 of 6: the shell every editor shares (shown on a semantic model)</span></div>
+
+<!-- ============ A ============ -->
+<div class="v on" id="A">
+<div class="hdr"><div><div class="crumb">Build › Tables &amp; models › Semantic models</div><h1>risk-by-desk</h1></div>
+<span class="pill draft">Draft · v4 (v3 approved)</span><span class="sp"></span>
+<span class="tog"><i class="on">Visual</i><i>YAML</i><i>Both</i></span>
+<span class="btn">Validate</span><span class="btn">Preview</span><span class="btn">History</span><span class="btn">Impact (6)</span><span class="btn p">Propose for review</span></div>
+<div class="grid2">
+ <div class="card nav"><h3>Sections</h3>
+  <a class="on">General</a><a>Source tables <small>2</small></a><a>Joins <small>1</small></a><a>Fields <small>14</small></a><a>Measures <small>6</small></a><a>Row rules <small>2</small></a><a>Masks <small>1</small></a><a>Access <small>3 roles</small></a></div>
+ <div>
+  <div class="card"><h3>Measures</h3>
+   <table><tr><th>Name</th><th>Formula (Rachana)</th><th>Format</th><th>Adds up?</th><th></th></tr>
+   <tr><td>MTM</td><td><code>sum(trade.MTM)</code></td><td>#,##0</td><td class="ok">yes</td><td class="ok">✓</td></tr>
+   <tr><td>Notional</td><td><code>sum(trade.QUANTITY)</code></td><td>#,##0.0,,"m"</td><td class="ok">yes</td><td class="ok">✓</td></tr>
+   <tr><td>VaR 99</td><td><code>var(scope, 0.99)</code></td><td>#,##0</td><td class="wa">no · computed per total</td><td class="ok">✓</td></tr>
+   <tr><td>Avg MTM / trade</td><td><code>MTM / count()</code></td><td>#,##0</td><td class="wa">ratio</td><td class="ok">✓</td></tr>
+   </table><div style="margin-top:8px"><span class="btn">+ Measure</span> <span class="mu">Type a formula; the function list and each column's type appear as you type.</span></div></div>
+ </div></div>
+<div class="yaml"><div class="yh">▾ YAML · live · editable · <span class="ok">valid</span> · edits on either side show on the other</div><span class="k">model</span>: risk-by-desk
+<span class="k">tables</span>: [trade, desk]
+<span class="k">measures</span>:
+  - { <span class="k">name</span>: MTM, <span class="k">formula</span>: "sum(trade.MTM)", <span class="k">format</span>: "#,##0" }
+<span class="hl">  - { <span class="k">name</span>: VaR 99, <span class="k">formula</span>: "var(scope, 0.99)", <span class="k">additive</span>: false }</span>
+  - { <span class="k">name</span>: Avg MTM / trade, <span class="k">formula</span>: "MTM / count()" }</div>
+<div class="note"><b>A, sections.</b> One page; a section list on the left (with counts), the chosen section on the right, the live YAML under it with the line you're on highlighted. Best for <b>editing</b> something that already exists; experts jump straight to a section. A layman sees the same page with the YAML collapsed.</div>
+</div>
+
+<!-- ============ B ============ -->
+<div class="v" id="B">
+<div class="hdr"><div><div class="crumb">Build › Tables &amp; models › New semantic model</div><h1>risk-by-desk</h1></div>
+<span class="pill draft">New · draft</span><span class="sp"></span><span class="tog"><i class="on">Visual</i><i>YAML</i><i>Both</i></span><span class="btn">Save draft</span></div>
+<div class="steps"><div class="done">1 Tables ✓</div><div class="done">2 Joins ✓</div><div>3 Fields</div><div class="on">4 Measures</div><div>5 Rules &amp; masks</div><div>6 Access</div><div>7 Check &amp; propose</div></div>
+<div class="card"><h3>Step 4 · What do you want to add up?</h3>
+ <p class="mu" style="margin:0 0 8px">Pick a column and how to combine it, or write a formula. Drishti tells you whether a total can be summed.</p>
+ <table><tr><th>Name</th><th>Built from</th><th>How</th><th>Adds up?</th></tr>
+ <tr><td>MTM</td><td><span class="chip">trade.MTM</span></td><td>Sum</td><td class="ok">yes</td></tr>
+ <tr><td>VaR 99</td><td><span class="chip">scope</span></td><td>VaR 99%</td><td class="wa">no · each total computed</td></tr></table>
+ <div style="margin-top:10px;display:flex;gap:8px"><span class="btn">‹ Back</span><span class="sp"></span><span class="btn p">Next: rules &amp; masks ›</span></div></div>
+<div class="yaml"><div class="yh">▸ YAML · collapsed for this person (open with Y)</div></div>
+<div class="note"><b>B, steps.</b> A guided wizard for <b>creating</b>; plain-language questions per step; the YAML is still there, collapsed. After creation the same object opens in a section layout for edits. Easiest for a layman; slower for experts.</div>
+</div>
+
+<!-- ============ C ============ -->
+<div class="v" id="C">
+<div class="hdr"><div><div class="crumb">Build › Tables &amp; models</div><h1>risk-by-desk</h1></div>
+<span class="pill appr">Approved v3</span><span class="pill draft">Draft v4 · 2 changes</span><span class="sp"></span><span class="tog"><i>Visual</i><i>YAML</i><i class="on">Both</i></span><span class="btn">Validate</span><span class="btn p">Propose for review</span></div>
+<div class="grid3">
+ <div class="card"><h3>Objects</h3><ul class="list"><li>▾ Semantic models</li><li class="on">&nbsp;&nbsp;risk-by-desk</li><li>&nbsp;&nbsp;trades-basic</li><li>▾ Tables</li><li>&nbsp;&nbsp;trade</li><li>&nbsp;&nbsp;desk</li><li>&nbsp;&nbsp;fx-rates (Python)</li></ul><div style="margin-top:8px"><span class="btn">+ New</span></div></div>
+ <div><div class="card"><h3>Measures</h3><table><tr><th>Name</th><th>Formula</th><th>Adds up?</th></tr>
+  <tr><td>MTM</td><td><code>sum(trade.MTM)</code></td><td class="ok">yes</td></tr><tr><td>VaR 99</td><td><code>var(scope, 0.99)</code></td><td class="wa">no</td></tr></table></div>
+  <div class="yaml"><div class="yh">▾ YAML · live</div><span class="k">measures</span>:
+  - { <span class="k">name</span>: MTM, <span class="k">formula</span>: "sum(trade.MTM)" }
+<span class="hl">  - { <span class="k">name</span>: VaR 99, <span class="k">formula</span>: "var(scope, 0.99)" }</span></div></div>
+ <div class="card prev"><h3>Live preview · first 5 rows</h3><table><tr><th>DESK</th><th>MTM</th><th>VaR 99</th></tr><tr><td>RATES</td><td>12,480,113</td><td>7,463,368</td></tr><tr><td>FX</td><td>-2,104,550</td><td>3,118,902</td></tr><tr><td>CREDIT</td><td>5,331,020</td><td>4,002,117</td></tr><tr><td><b>Total</b></td><td><b>15,706,583</b></td><td><b>9,884,410</b></td></tr></table>
+ <p class="mu" style="font-size:11px">Totals computed by the pivot engine (VaR is not the sum).</p>
+ <h3 style="margin-top:12px">Checks</h3><div class="ok">✓ formulas valid</div><div class="ok">✓ joins one-to-many</div><div class="wa">! 2 reports use the old MTM name</div></div>
+</div>
+<div class="note"><b>C, three panes.</b> A workbench: every object on the left, the editor and YAML in the middle, a <b>live preview with checks</b> on the right. The richest for authors and power users, and it's the Build shell's layout (where 2.9.11.e's Build home lands). Dense for a casual user.</div>
+</div>
+
+<div style="padding:0 16px 20px" class="mu"><b style="color:var(--ink)">The same in every option.</b> The header (where you are, name, status: draft / proposed / approved with versions), Validate, Preview, History, Impact, and <b>Propose for review</b> (four eyes, as Sutras today); the Visual / YAML / Both toggle, remembered per person; YAML edits validate live and show back in the visual side; nothing goes live without approval.</div>
+<script>document.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.pick button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.v').forEach(v=>v.classList.toggle('on',v.id===b.dataset.v))});</script>
+</body></html>

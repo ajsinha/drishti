@@ -23,43 +23,25 @@ connector off:
 - F1 on the tab opens the guide's section.
 
 Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
-import datetime
 import json
-import subprocess
-import sys
 import urllib.request
 from pathlib import Path
 
 import pytest
 
-from test_var_explorer_browser import _engine_ready, open_var, shot
+from test_var_explorer_browser import open_var, shot
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
-from wb_live import _stack
-
-ROOT = Path(__file__).resolve().parents[2]
-VAR_DATA = ",".join([f"market-risk/{k}" for k in ("pnl-vector", "scenario-pv", "fx-scenario", "scenario-set", "risk-hierarchy", "portfolio",
-                                                 "var-limit")] + ["trades/murex"])
-
+from var_stack import var_data, var_lake, var_server
 
 @pytest.fixture(scope="module")
 def stack(tmp_path_factory):
     import os
     keep = os.environ.get("DRISHTI_TEST_EXPLAIN_WORK")           # a lake built before, reused (debugging: the build takes minutes)
-    work = Path(keep) if keep else tmp_path_factory.mktemp("var-explain-lake")
-    lake = work / "delta"
-    today = datetime.date.today()
-    while today.weekday() >= 5:
-        today -= datetime.timedelta(days=1)
-    for as_of in () if keep and (lake / "risk" / "pnl-vector").is_dir() else (today,):   # the committed three dates, ending today
-        r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
-                            "--connectors-dir", str(work / "connectors"), "--as-of", as_of.isoformat(), "--only", VAR_DATA, "--no-signal", "-q",
-                            "--engine", "deltalake"], capture_output=True, text=True, cwd=ROOT, timeout=1500)   # the Python writer, in this process: auto starts a JVM for every table and business day
-        if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
-            pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
-    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
-                                        "DRISHTI_VAR_HOT_DIR": str(work / "hot")}):
-        _engine_ready(str(st))
-        yield st
+    if keep and (Path(keep) / "delta" / "risk" / "pnl-vector").is_dir():
+        lake = Path(keep) / "delta"
+    else:
+        lake = var_lake(tmp_path_factory, var_data("trades/murex"))   # the committed three dates, ending today (the last weekday)
+    yield from var_server(tmp_path_factory, lake)
 
 
 def explained(pg, view: str):

@@ -1,0 +1,52 @@
+/*
+ *  Project Drishti · Any data. Any domain. One grammar.
+ *
+ *  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ *  All rights reserved.
+ *
+ *  PROPRIETARY AND CONFIDENTIAL.
+ *
+ *  This file is the confidential and proprietary property of Ashutosh Sinha.
+ *  Unauthorised copying, use, modification, distribution or disclosure of this
+ *  file, via any medium, is strictly prohibited except with the express prior
+ *  written permission of the copyright holder.
+ *
+ *  See the LICENSE file in the root of this repository for the full terms.
+ */
+:root{--bg:#0e1628;--bg2:#121c33;--sf:#16213a;--sf2:#1b2744;--bd:#26345a;--ink:#e7ecf5;--mu:#93a0b8;--ac:#e8a33a;--ln:#7fb2ff;--ok:#5fd39a;--wa:#f2c14e;--bad:#ff7a7a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.45 "Inter",system-ui,sans-serif}
+.top{display:flex;gap:10px;align-items:center;padding:10px 16px;background:#0a1120;border-bottom:1px solid var(--bd)}
+.top b{color:var(--ac);letter-spacing:.06em}.top .cmd{flex:1;background:var(--sf);border:1px solid var(--bd);border-radius:4px;padding:5px 9px;color:var(--mu);font-family:ui-monospace,monospace}
+.pick{display:flex;gap:6px;padding:10px 16px;border-bottom:1px solid var(--bd);background:var(--bg2);align-items:center}
+.pick button{background:var(--sf);color:var(--ink);border:1px solid var(--bd);border-radius:4px;padding:6px 12px;cursor:pointer;font-weight:600}
+.pick button.on{background:var(--ac);color:#14100a;border-color:var(--ac)}.pick span{color:var(--mu);margin-left:8px}
+.v{display:none;padding:14px 16px}.v.on{display:block}
+.hdr{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:10px 12px}
+.hdr h1{font-size:16px;margin:0}.crumb{color:var(--mu);font-size:12px}
+.pill{font-size:11px;padding:2px 8px;border-radius:10px;border:1px solid}.draft{color:var(--wa);border-color:var(--wa)}.appr{color:var(--ok);border-color:var(--ok)}
+.sp{flex:1}.btn{background:var(--sf2);border:1px solid var(--bd);color:var(--ink);border-radius:4px;padding:5px 10px;font-size:12px}
+.btn.p{background:var(--ac);color:#14100a;border-color:var(--ac);font-weight:700}
+.tog{display:inline-flex;border:1px solid var(--bd);border-radius:4px;overflow:hidden}.tog i{font-style:normal;padding:4px 10px;font-size:12px}.tog i.on{background:var(--ln);color:#0a1120;font-weight:700}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:10px 12px;margin-top:10px}
+.card h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--mu)}
+table{width:100%;border-collapse:collapse}td,th{padding:5px 6px;border-bottom:1px solid var(--bd);text-align:left;font-size:12px}th{color:var(--mu);font-weight:600}
+.chip{display:inline-block;background:var(--sf2);border:1px solid var(--bd);border-radius:3px;padding:1px 6px;margin:1px;font-size:11px}
+.yaml{background:#0a1120;border:1px solid var(--bd);border-radius:6px;margin-top:10px;font:12px/1.5 ui-monospace,monospace;padding:8px 12px;color:#cfd8ea;white-space:pre}
+.yaml .k{color:var(--ln)}.yaml .hl{background:rgba(232,163,58,.18);display:inline-block;width:100%}
+.yh{display:flex;align-items:center;gap:8px;color:var(--mu);font:11px system-ui;margin-bottom:6px}
+.ok{color:var(--ok)}.wa{color:var(--wa)}.mu{color:var(--mu)}
+.grid2{display:grid;grid-template-columns:200px 1fr;gap:10px}.grid3{display:grid;grid-template-columns:210px 1fr 300px;gap:10px}
+.nav a{display:block;padding:6px 8px;border-radius:4px;color:var(--ink);text-decoration:none;font-size:12px}.nav a.on{background:var(--sf2);border-left:3px solid var(--ac)}
+.nav a small{float:right;color:var(--mu)}
+.steps{display:flex;gap:0;margin-top:10px}.steps div{flex:1;padding:8px;text-align:center;border:1px solid var(--bd);background:var(--sf);font-size:12px;color:var(--mu)}
+.steps div.on{color:#14100a;background:var(--ac);font-weight:700}.steps div.done{color:var(--ok)}
+.note{margin-top:14px;padding:10px 12px;border-left:3px solid var(--ln);background:var(--bg2);color:var(--mu);font-size:12px}
+.note b{color:var(--ink)}
+.list li{list-style:none;padding:5px 6px;border-bottom:1px solid var(--bd);font-size:12px}.list{padding:0;margin:0}.list li.on{background:var(--sf2)}
+.prev td{font-family:ui-monospace,monospace}
+.dia{position:relative;height:230px;background:#0a1120;border:1px solid var(--bd);border-radius:6px;margin-top:10px}
+.box{position:absolute;background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:6px 8px;font-size:11px;width:170px}
+.box b{display:block;color:var(--ac);font-size:12px;margin-bottom:3px}.box .src{color:var(--mu);font-size:10px}
+.warn{margin-top:8px;padding:8px 10px;border:1px solid var(--wa);border-radius:4px;color:var(--wa);font-size:12px}
+.code{background:#0a1120;border:1px solid var(--bd);border-radius:6px;font:12px/1.6 ui-monospace,monospace;padding:10px 12px;white-space:pre;color:#cfd8ea}
+.code .k{color:var(--ac)}.code .f{color:var(--ln)}.code .c{color:var(--mu)}
