@@ -60,6 +60,46 @@ class UserServiceTest {
         assertThat(s.defaultAdminPasswordInUse()).isFalse();
     }
 
+    /**
+     * A node of a cluster may receive the cluster's users while it seeds (the password's hash takes a while): the seed is then not written,
+     * and the user that came stays as it came (NetLastAdminTest once saw a node keep a seed of its own over the cluster's administrator).
+     */
+    @Test
+    void aUserArrivingWhileTheSeedIsHashedIsNotOverwritten() {
+        IdentityProperties p = new IdentityProperties(dir.resolve("users.json").toString(), dir.resolve("audit.jsonl").toString(),
+                1000, 10, 3, Duration.ofMinutes(15), true, null, null, null, false, false, dir.resolve("prefs").toString(), null, null, null, null, null);
+        FileUserStore real = new FileUserStore(Path.of(p.usersFile()));
+        java.time.Instant then = java.time.Instant.parse("2026-11-01T00:00:00Z");
+        User clusters = new User("drishti-dev-admin", "Cluster admin", "", "Administration", Set.of("admin"), true, false, "x", 0, null, then, then,
+                null, then, null);
+        UserStore arriving = new UserStore() {                // the cluster's administrator arrives just after the seed's look
+            public java.util.Optional<User> find(String username) {
+                return real.find(username);
+            }
+
+            public List<User> all() {
+                List<User> now = real.all();
+                real.put(clusters);
+                return now;
+            }
+
+            public void put(User user) {
+                real.put(user);
+            }
+
+            public boolean delete(String username) {
+                return real.delete(username);
+            }
+
+            public boolean putIfEmpty(User user) {
+                return real.putIfEmpty(user);
+            }
+        };
+        UserService s = new UserService(arriving, new PasswordHasher(1000), new FileAuditLog(Path.of(p.auditFile())), p, Set.of("admin"));
+        assertThat(s.seedIfEmpty()).isFalse();
+        assertThat(real.all()).containsExactly(clusters);
+    }
+
     @Test
     void disablingTheDevelopmentAdminClearsTheDefaultPasswordWarning() {
         UserService s = service();

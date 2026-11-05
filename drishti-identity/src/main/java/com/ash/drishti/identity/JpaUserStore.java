@@ -57,6 +57,8 @@ public final class JpaUserStore implements UserStore {
     private record Hit(Optional<User> user, long at) {}
     static final long RECENT_NANOS = java.util.concurrent.TimeUnit.SECONDS.toNanos(5);
     private final java.util.concurrent.ConcurrentHashMap<String, Hit> recent = new java.util.concurrent.ConcurrentHashMap<>();
+    /** Writes committed through this store, counted after each commit and before its user is forgotten (see {@link #find}). */
+    private final java.util.concurrent.atomic.AtomicLong writes = new java.util.concurrent.atomic.AtomicLong();
 
     @Override
     public Optional<User> find(String username) {
@@ -65,11 +67,19 @@ public final class JpaUserStore implements UserStore {
         if (h != null && now - h.at() < RECENT_NANOS) {
             return h.user();
         }
+        long began = writes.get();
         Optional<User> u = tx.execute(s -> users.findById(username).map(JpaUserStore::toUser));
         if (recent.size() > 100_000) {
             recent.clear();
         }
-        recent.put(username, new Hit(u, now));
+        // a write that committed while this read was in flight may have forgotten the user before the read is kept: the read then
+        // put back what the database held before the write, for RECENT_NANOS (a node that had just seeded its administrator read it
+        // as absent and took a peer's newer one over it, NetLastAdminTest). The read is kept only if no write was counted since it began
+        Hit hit = new Hit(u, now);
+        recent.put(username, hit);
+        if (writes.get() != began) {
+            recent.remove(username, hit);
+        }
         return u;
     }
 
@@ -79,36 +89,74 @@ public final class JpaUserStore implements UserStore {
                 .sorted(java.util.Comparator.comparing(User::username)).toList());
     }
 
+    /**
+     * Writes of users here one at a time: {@link #putIfEmpty}'s look and its write are one step against every other write of this server
+     * (a lock, not a monitor: a virtual thread waiting on the database while holding a monitor pins its carrier on Java 21).
+     */
+    private final java.util.concurrent.locks.ReentrantLock writing = new java.util.concurrent.locks.ReentrantLock();
+
+    @Override
+    public boolean putIfEmpty(User u) {
+        boolean wrote;
+        writing.lock();
+        try {
+            wrote = Boolean.TRUE.equals(tx.execute(s -> {
+                if (users.count() != 0) {
+                    return false;
+                }
+                users.save(entity(u, new UserEntity()));
+                return true;
+            }));
+        } finally {
+            writing.unlock();
+        }
+        if (wrote) {
+            writes.incrementAndGet();
+            recent.remove(u.username());
+            for (Listener l : listeners) {
+                l.written(u);
+            }
+        }
+        return wrote;
+    }
+
     @Override
     public void put(User u) {
-        tx.executeWithoutResult(s -> {
-            UserEntity e = users.findById(u.username()).orElseGet(UserEntity::new);
-            e.username = u.username();
-            e.displayName = u.displayName();
-            e.email = u.email() == null ? "" : u.email();
-            e.desk = u.desk() == null ? "" : u.desk();
-            e.enabled = u.enabled();
-            e.mustChangePassword = u.mustChangePassword();
-            e.passwordHash = u.passwordHash();
-            e.failedAttempts = u.failedAttempts();
-            e.lockedUntil = u.lockedUntil();
-            e.createdAt = u.createdAt();
-            e.updatedAt = u.updatedAt();
-            e.lastLoginAt = u.lastLoginAt();
-            e.passwordChangedAt = u.passwordChangedAt();
-            e.roles.clear();
-            e.roles.addAll(u.roles());
-            e.packsAssigned = u.packs() != null;
-            e.packs.clear();
-            if (u.packs() != null) {
-                e.packs.addAll(u.packs());
-            }
-            users.save(e);
-        });
+        writing.lock();
+        try {
+            tx.executeWithoutResult(s -> users.save(entity(u, users.findById(u.username()).orElseGet(UserEntity::new))));
+        } finally {
+            writing.unlock();
+        }
+        writes.incrementAndGet();
         recent.remove(u.username());
         for (Listener l : listeners) {
             l.written(u);
         }
+    }
+
+    private static UserEntity entity(User u, UserEntity e) {
+        e.username = u.username();
+        e.displayName = u.displayName();
+        e.email = u.email() == null ? "" : u.email();
+        e.desk = u.desk() == null ? "" : u.desk();
+        e.enabled = u.enabled();
+        e.mustChangePassword = u.mustChangePassword();
+        e.passwordHash = u.passwordHash();
+        e.failedAttempts = u.failedAttempts();
+        e.lockedUntil = u.lockedUntil();
+        e.createdAt = u.createdAt();
+        e.updatedAt = u.updatedAt();
+        e.lastLoginAt = u.lastLoginAt();
+        e.passwordChangedAt = u.passwordChangedAt();
+        e.roles.clear();
+        e.roles.addAll(u.roles());
+        e.packsAssigned = u.packs() != null;
+        e.packs.clear();
+        if (u.packs() != null) {
+            e.packs.addAll(u.packs());
+        }
+        return e;
     }
 
     @Override
@@ -120,6 +168,7 @@ public final class JpaUserStore implements UserStore {
             users.deleteById(username);
             return true;
         }));
+        writes.incrementAndGet();
         recent.remove(username);
         if (gone) {
             for (Listener l : listeners) {

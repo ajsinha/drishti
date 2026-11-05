@@ -29,4 +29,11 @@ public interface UserStore {
     void put(User user);
 
     boolean delete(String username);
+
+    /**
+     * Writes the user only when the store holds no user at all, in one step with that check; returns whether it wrote. The first
+     * administrator is seeded this way: a node of a cluster may receive the cluster's users while it starts, and a seed written after
+     * an earlier look found the store empty replaced the cluster's administrator with a new one of the same name.
+     */
+    boolean putIfEmpty(User user);
 }

@@ -91,9 +91,14 @@ public final class UserService {
         if (!props.seedAdmin() || !store.all().isEmpty()) {
             return false;
         }
+        // the hash takes a while on purpose; a node of a cluster may receive the cluster's users meanwhile (Drishti*net), so the store is
+        // asked again in the same step as the write: a seed written over them replaced the cluster's administrator with a new one
+        String hash = hasher.hash(props.seedPassword());
         Instant now = Instant.now();
-        store.put(new User(props.seedUsername(), props.seedDisplayName(), "", "Administration", new LinkedHashSet<>(props.seedRoles()),
-                true, false, hasher.hash(props.seedPassword()), 0, null, now, now, null, now, null));
+        if (!store.putIfEmpty(new User(props.seedUsername(), props.seedDisplayName(), "", "Administration", new LinkedHashSet<>(props.seedRoles()),
+                true, false, hash, 0, null, now, now, null, now, null))) {
+            return false;
+        }
         audit.record("system", "user-seeded", props.seedUsername(), "development admin created because the user store was empty");
         if (props.seedPasswordIsDefault()) {
             LOG.warn("Created development admin '{}' with the default password. Change it before any shared use.", props.seedUsername());

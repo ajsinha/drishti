@@ -141,16 +141,22 @@ class RunSharingTest {
         return waitDone(o.run().id());
     }
 
+    /**
+     * Waits for the run to end. Bounded by time, not by a count of polls: 300 polls of 20 ms gave a run 6 s at best, and a background
+     * run (DuckDB, the stored result) beside the drill's other JVM lanes took longer; a run that fails or is cancelled still fails at once.
+     */
     Run waitDone(String id) throws Exception {
-        for (int i = 0; i < 300; i++) {
-            Optional<Run> r = runs.get(id);
+        long end = System.nanoTime() + Duration.ofSeconds(90).toNanos();
+        Optional<Run> r = runs.get(id);
+        while (System.nanoTime() < end) {
+            r = runs.get(id);
             if (r.isPresent() && (r.get().state() == RunState.DONE || r.get().state() == RunState.REUSED)) {
                 return r.get();
             }
             assertThat(r.map(Run::state).orElse(RunState.QUEUED)).isNotIn(RunState.FAILED, RunState.CANCELLED);
             Thread.sleep(20);
         }
-        throw new AssertionError("run " + id + " did not finish");
+        throw new AssertionError("run " + id + " did not finish in 90 s: " + r.map(Run::state).orElse(null));
     }
 
     Map<String, Object> direct(String user, String yaml) {

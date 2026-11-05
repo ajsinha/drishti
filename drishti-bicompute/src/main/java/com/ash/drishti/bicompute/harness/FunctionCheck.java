@@ -35,7 +35,7 @@ import java.util.Map;
  *   <li><b>empty and null</b>: an empty input, an empty part, a part of nulls, a single row, all values equal, infinities and NaN;</li>
  *   <li><b>state round trip</b>: a state read back finishes to the same figure;</li>
  *   <li><b>deterministic</b>: the same rows in the same order give the same bits;</li>
- *   <li><b>cost</b>: nanoseconds a row under {@code maxNsPerRow};</li>
+ *   <li><b>cost</b>: nanoseconds a row under {@code maxNsPerRow}, the fastest of up to {@link #COST_RUNS} warm runs;</li>
  *   <li><b>state bound</b>: the largest state within the declared bytes.</li>
  * </ol>
  *
@@ -110,6 +110,9 @@ public final class FunctionCheck {
         }
     }
 
+    /** The most warm runs timed for the cost: the fastest counts, and timing stops at the first run within the limit. */
+    static final int COST_RUNS = 5;
+
     private FunctionCheck() {}
 
     /** Runs every check on {@code sample} (the function's declared inputs, in order). */
@@ -162,6 +165,13 @@ public final class FunctionCheck {
             boolean same = second == null ? one == null : one != null && Double.doubleToLongBits(second) == Double.doubleToLongBits(one);
             checks.add(new Check("deterministic", same, same ? "the same rows in the same order gave the same bits" : "two runs gave " + one
                     + " and " + second));
+            // the cost is the fastest of a few warm runs: one run timed alone also timed whatever else the machine did meanwhile (a
+            // collection, another busy thread), and a function within its limit was refused on a busy server
+            for (int k = 1; k < COST_RUNS && sample.rows() > 0 && o.maxNsPerRow() > 0 && ns > o.maxNsPerRow(); k++) {
+                long t2 = System.nanoTime();
+                f.finish(f.add(f.start(), sample));
+                ns = Math.min(ns, (System.nanoTime() - t2) / (double) sample.rows());
+            }
         } catch (RuntimeException e) {
             checks.add(new Check("deterministic", false, "failed: " + e.getMessage()));
         }
