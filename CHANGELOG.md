@@ -21,7 +21,7 @@
 
 - **Docs: the heavy run of tutorials 34, 36, 37, 38 and 43.** Every step run against a built server on the demo lake (writes to scratch
   lakes only): real command output and light-theme screenshots in tutorials 34 (lake files), 36 (the data inbox), 38 (the MR cube) and
-  43 (parametric VaR, every figure the engine's), and step 1 of tutorial 37; new picture scripts `tools/docs/shots/t34.py`, `t36.py`,
+  43 (parametric VaR, every figure the engine's), and 37 (custom functions, why and what-if: two signed-in people, the author's own approval refused; Split by offers the view's own rows and columns, the steps are a list, the function's column header is its call); new picture scripts `tools/docs/shots/t34.py`, `t36.py`,
   `t37.py`, `t38.py`, `t43.py` (and `light()` in `_tut.py`). Text corrected to the product: three shipped lake files, not one; the endur
   test file's real name; a repeated append batch reports its rows but commits nothing (the run summary says *batch appended already*);
   Admin → Lakes lists the lake files but does not run the check; the inbox's folders are made by its first cycle; `stable-seconds` is

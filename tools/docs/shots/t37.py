@@ -94,7 +94,8 @@ def function_column(c: Ctx):
 
 @shot("04-explain.jpg")
 def explain(c: Ctx):
-    _open(c, "by-product", BY_PRODUCT)
+    # Split by offers the view's own rows and columns: COUNTERPARTY goes on Columns first
+    _open(c, "by-product-and-counterparty", {**BY_PRODUCT, "columns": ["COUNTERPARTY"]})
     _card(c, "explain")
     c.page.fill("[data-pf-from]", "PRODUCT_TYPE=FX_SWAP")
     c.page.fill("[data-pf-to]", "PRODUCT_TYPE=FX_FORWARD")

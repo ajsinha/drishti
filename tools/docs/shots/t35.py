@@ -77,3 +77,24 @@ def data_out(c: Ctx):
     c.page.goto(c.base + "/admin/data-out")
     c.page.wait_for_timeout(3000)
     c.save("03-data-out.jpg")
+
+
+@shot("04-data-out-map.jpg")
+def data_out_map(c: Ctx):
+    """Step 8: the same reads as a map (nodes, clients and their lines); take it while a stream reads."""
+    c.page.goto(c.base + "/admin/data-out")
+    c.page.wait_for_timeout(2000)
+    c.page.locator('[data-dout-switch="map"]').click()
+    c.page.wait_for_timeout(2500)
+    c.save("04-data-out-map.jpg")
+
+
+@shot("05-readers.jpg")
+def readers(c: Ctx):
+    """Step 8, after Stop: the last day's readers, the stopped stream among them."""
+    c.page.goto(c.base + "/admin/data-out")
+    c.page.wait_for_timeout(3000)
+    y = c.page.evaluate("""() => { const h = Array.from(document.querySelectorAll('*')).find(x => Array.from(x.childNodes).some(n =>
+        n.nodeType === 3 && n.textContent.trim() === 'Readers')); return h ? h.getBoundingClientRect().top + window.scrollY : 0; }""")
+    c.page.screenshot(path=str(OUT / "t35" / "05-readers.jpg"), type="jpeg", quality=84, full_page=True,
+                      clip={"x": 0, "y": max(0, y - 20), "width": WIDE, "height": 520})

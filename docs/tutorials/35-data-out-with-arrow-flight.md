@@ -239,6 +239,14 @@ with `DRS-5610`. The last day's readers list your earlier reads.
 
 ![Admin → Data out: the live stream, its rows and bytes, and the last day's readers](img/t35/03-data-out.jpg)
 
+The same reads as a map, one line per live read from its client to the node:
+
+![Admin → Data out → Map: the reader's line to the node](img/t35/04-data-out-map.jpg)
+
+After **Stop**, the stream is among the last day's readers, listed first as *refused* with the reason:
+
+![Admin → Data out: the readers, the stopped stream first with DRS-5610](img/t35/05-readers.jpg)
+
 ```text
 ended: DRS-5610: stopped by drishti-dev-admin on Admin → Data out. gRPC client debug context: UNKNOWN:Error received from peer ipv4:192.168.2.77:18825 {grpc_status:1, grpc_message:"DRS-5610: stopped by drishti-dev-admin on Admin → Data out"}. Client context: OK
 ```

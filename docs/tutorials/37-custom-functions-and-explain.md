@@ -21,9 +21,6 @@ someone else approve it and use it in a view, withdraw it, then explain why one 
 add up, and try a what-if. Each step shows the UI, the command line and the JSON or YAML. The guide is
 [PIVOT_GUIDE.md, sections 19 to 22](../guides/PIVOT_GUIDE.md#19-custom-functions).
 
-> Screenshots marked *(filled in the heavy run)* are taken when the steps are run against a built server (`tools/docs/screenshots.py`);
-> until then the marker stands where the picture goes.
-
 ## Time to complete
 
 About 25 minutes.
@@ -43,7 +40,7 @@ About 25 minutes.
 - what the harness checks before a function is saved, shared or used;
 - why sharing needs an approver who is not the author, and what a withdrawn function looks like;
 - how a difference is split into steps that add up, for sums, ratios and holistic measures;
-- how a what-if overlay changes only the cells it touches, beside the original.
+- how a what-if overlay changes only the cells it touches, each change listed against the original.
 
 ## Step 1 · A formula in a view
 
@@ -119,7 +116,7 @@ PASSED: fn:ravi/wret@0 (mergeable), one pass 0.007, 4 rows, 2245.0 ns a row, sta
 
 **JSON** (`POST /api/v1/pivot/functions/test`): the YAML's keys, plus `"sample": [{"r": 0.012, "w": 3, "g": "A"}, ...]` and `"group": "g"`.
 
-*(screenshot filled in the heavy run: the playground with "Passes the harness", the states part by part and the sample's pivot)*
+![The playground with "Passes the harness", the states part by part and the sample's pivot](img/t37/02-playground.jpg)
 
 **You should see** *Passes the harness*; the final figure is (0.012·3 − 0.004·1 + 0.020·2 + 0.001·5) / 11 = 0.077 / 11 = 0.007.
 
@@ -137,7 +134,8 @@ each cell's figure is computed by DuckDB from its own rows) and the harness runs
 
 **UI.** Back to `wret` (formula), **Save version**: `fn:you/wret@1`, private. As the second user, open **Functions**, find
 `fn:you/wret@1` and press **Approve**, giving the reason "reviewed: a weighted mean". As yourself, in Values add
-`fn:you/wret@1(PRICE, NOTIONAL)` (the trades' price and notional): the column header says `fn:you/wret@1 ... by you`.
+`fn:you/wret@1(PRICE, NOTIONAL)` (the trades' price and notional): the column header is the call itself, `fn:ravi/wret@1(PRICE, NOTIONAL)`
+for the author `ravi`.
 
 **CLI.**
 
@@ -158,7 +156,17 @@ The refusal is the author's own `approve`; the approval is the second user's (`v
 **JSON.** `POST /api/v1/pivot/functions/you/wret@1/approve` with `{"scope": "everyone", "reason": "reviewed: a weighted mean"}`; the view's
 value is `{"measure": "fn:you/wret@1(PRICE, NOTIONAL)"}`.
 
-*(screenshot filled in the heavy run: the view with the column `fn:you/wret@1 ... by you`)*
+```text
+Trade · 2026-09-30 · 131 cells · 2 sets, 0 from the cache · 1 queries · 267 ms · exact
+PRODUCT_TYPE                        fn:ravi/wret@1(PRICE, NO
++ ABS                                                      ·
++ ACCRETING_SWAP                                        0.05
++ AMORT_BOND                                           98.20
++ AMORT_SWAP                                            0.03
+...
+```
+
+![The view with the column fn:ravi/wret@1(PRICE, NOTIONAL)](img/t37/03-function-column.jpg)
 
 **You should see** the new column in every row and the total; approving your own function is refused (DRS-5712: "an author never approves their own function"); Admin → Audit shows
 `pivot.function.save`, `pivot.function.approve` and `pivot.function.use`, with the version.
@@ -174,9 +182,10 @@ by … on …: reason", with no figure; the other values answer as before.
 
 ## Step 6 · Why did it move?
 
-**UI.** In the `PRODUCT_TYPE` pivot with `sum(NOTIONAL)`, select two product rows (click one, Shift-click the other) and press `W`. **Split
-by** `COUNTERPARTY`, **Explain**. The words say how much the second differs from the first and the largest steps; the waterfall has one bar
-per counterparty (new, gone or changed) and the steps add up to the difference. Change the value to `avg(NOTIONAL)` and explain again: each
+**UI.** In the `PRODUCT_TYPE` pivot with `sum(NOTIONAL)`, put `COUNTERPARTY` on Columns (**Split by** offers the view's own rows and
+columns), select two product rows (click one, Shift-click the other) or type them as **First cell** and **Second cell**, and press `W`.
+**Split by** `COUNTERPARTY`, **Explain**. The words say how much the second differs from the first and the largest steps; below them one
+step per counterparty (its cause: new, gone or changed) and the steps add up to the difference. Change the value to `avg(NOTIONAL)` and explain again: each
 step is now that counterparty's effect on the average given the steps before it, the order is shown (switch **Order** to "largest first"
 and the same difference splits differently), and they still add up.
 
@@ -202,9 +211,9 @@ sum(NOTIONAL) moved from 35,644,171,130 to 25,679,859,409 (-9,964,311,721); the 
  "from": {"PRODUCT_TYPE": "FX_SWAP"}, "to": {"PRODUCT_TYPE": "FX_FORWARD"}, "by": "COUNTERPARTY"}
 ```
 
-*(screenshot filled in the heavy run: the waterfall of two product types split by counterparty)*
+![Why did it move: two product types split by counterparty, one step per counterparty and the difference](img/t37/04-explain.jpg)
 
-**You should see** the words and the waterfall; the sum of the steps plus the residual equals `difference`; the residual is named ("rounding"). For a cell on two dates, give
+**You should see** the words and the steps; the sum of the steps plus the residual equals `difference`; the residual is named ("rounding"). For a cell on two dates, give
 `fromDate` and `toDate` (`--from`, `--to`) instead of a second cell.
 
 ## Step 7 · What-if
@@ -233,9 +242,10 @@ drishti.py pivot whatif --source trade --rows PRODUCT_TYPE --values "sum(NOTIONA
  "whatIf": {"exclude": {"PRODUCT_TYPE": ["FX_FORWARD"]}, "changes": [{"field": "NOTIONAL", "scale": 1.1, "where": {"COUNTERPARTY": ["CP-ALDERSHOT"]}}]}}
 ```
 
-*(screenshot filled in the heavy run: the what-if beside the original, the changed cells listed)*
+![The what-if: the changed cells listed, what-if minus original](img/t37/05-whatif.jpg)
 
-**You should see** the what-if beside the original: FX_FORWARD is gone from the what-if side, and the grand total moved by 10 % of CP-ALDERSHOT's notional less FX_FORWARD's.
+**You should see** *108 cell(s) change; differences are what-if minus original* and each changed cell with its change: FX_FORWARD's
+cell is gone from the what-if, and the grand total moved by 10 % of CP-ALDERSHOT's notional less FX_FORWARD's.
 
 ## Step 8 · Python (an administrator turns it on)
 
