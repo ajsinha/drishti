@@ -34,6 +34,7 @@ import pytest
 
 REPO = Path(__file__).resolve().parents[2]
 EXAMPLES = REPO / "examples" / "clients"
+READ_KIND_EXAMPLE = EXAMPLES.joinpath("java", "ReadKindAndVarPnl.java")   # the Java example (read as text here)
 PY = EXAMPLES / "python"
 NOTEBOOKS = sorted(PY.glob("*.ipynb"))
 MARK = "Copyright (c) 2026 Ashutosh Sinha"
@@ -95,6 +96,88 @@ def test_index_lists_every_example():
 def test_example_sources_parse():
     for p in [PY / "flight_setup.py", EXAMPLES / "excel" / "flight_to_excel.py"]:
         ast.parse(p.read_text(encoding="utf-8"))
+
+
+def _contract_fields(kind):
+    """The fields of a kind's data contract (config/packs/*/contracts/<kind>.contract.yaml): what a Flight read of the kind may ask for."""
+    import yaml
+    for p in sorted((REPO / "config" / "packs").glob(f"*/contracts/{kind}.contract.yaml")):
+        doc = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+        if doc.get("kind") == kind:
+            return {f["name"] for f in doc.get("fields") or []}
+    return None
+
+
+def _kind_reads():
+    """Every kind read in the examples (the Java example, the notebooks, the Excel script): (where, kind, paths)."""
+    texts = [(p.name, p.read_text(encoding="utf-8")) for p in [READ_KIND_EXAMPLE, EXAMPLES / "excel" / "flight_to_excel.py"]]
+    for nb in NOTEBOOKS:
+        cells = json.loads(nb.read_text(encoding="utf-8"))["cells"]
+        texts.append((nb.name, "\n".join("".join(c["source"]) for c in cells if c["cell_type"] == "code")))
+    out = []
+    for where, text in texts:
+        consts = {}
+        for m in re.finditer(r"^(\w+) = (\[[^\]]*\])", text, re.M):
+            try:
+                consts[m.group(1)] = ast.literal_eval(m.group(2))
+            except (ValueError, SyntaxError):
+                pass                                     # not a list of names (a comprehension)
+        for m in re.finditer(r'"kind": "([\w.-]+)", "paths": (\[[^\]]*\])', text):
+            out.append((where, m.group(1), json.loads(m.group(2))))
+        for m in re.finditer(r'\.kind\("([\w.-]+)", paths=(\[[^\]]*\]|\w+)', text):
+            paths = consts.get(m.group(2)) if re.fullmatch(r"\w+", m.group(2)) else ast.literal_eval(m.group(2))
+            out.append((where, m.group(1), paths))
+    return out
+
+
+def _mq_keys():
+    """The keys a model query may have: MqParser.TOP in the server's source (anything else is DRS-9150 "unknown key")."""
+    src = (REPO / "drishti-server/src/main/java/com/ash/drishti/server/bi/mq/MqParser.java").read_text(encoding="utf-8")
+    m = re.search(r"Set<String> TOP = Set\.of\(([^;]*)\);", src)
+    return set(re.findall(r'"([\w-]+)"', m.group(1)))
+
+
+def _model_queries():
+    """Every model query in the examples, the Python client and the Flight docs: (where, query)."""
+    out = []
+    sources = [(p.name, p.read_text(encoding="utf-8")) for p in [EXAMPLES / "excel" / "flight_to_excel.py",
+                                                                    REPO / "clients" / "python" / "drishti_flight.py",
+                                                                    REPO / "docs" / "guides" / "flight" / "PYTHON.md"]]
+    sources += [(nb.name, "\n".join("".join(c["source"]) for c in json.loads(nb.read_text(encoding="utf-8"))["cells"])) for nb in NOTEBOOKS]
+    for where, text in sources:
+        for m in re.finditer(r'\.model\("[\w@.-]+", (\{.*?\})\)', text, re.S):
+            out.append((where, ast.literal_eval(m.group(1).replace("true", "True"))))
+    for doc in ("FLIGHT_REFERENCE.md", "FLIGHT_GUIDE.md"):
+        for line in (REPO / "docs" / "guides" / doc).read_text(encoding="utf-8").splitlines():
+            if line.startswith('{"form": "model"'):
+                out.append((doc, json.loads(line)["request"]["query"]))
+    return out
+
+
+def test_every_model_query_uses_the_servers_keys():
+    """A Flight model query is the MQ JSON (BI_GUIDE.md): select {fields, measures}, where, sort, limit ...; the old report-visual body
+    ({"fields", "measures", "orderBy"}) is refused with DRS-9150 "unknown key 'fields'"."""
+    keys, queries = _mq_keys(), _model_queries()
+    assert {"select", "where", "sort", "limit"} <= keys
+    found = {w for w, _ in queries}
+    assert {"03_bi_model_query.ipynb", "flight_to_excel.py", "drishti_flight.py", "PYTHON.md", "FLIGHT_REFERENCE.md"} <= found, found
+    for where, q in queries:
+        assert set(q) <= keys, f"{where}: unknown key(s) {sorted(set(q) - keys)} in {q}"
+        assert set(q.get("select") or {}) <= {"fields", "measures"}, (where, q)
+
+
+def test_every_kind_read_asks_for_fields_of_the_kind():
+    """A Flight read of a kind checks its paths against the kind's data contract (DRS-5603: "trade has no column 'NOTIONAL'"): each
+    example asks only for fields the contract names, so it runs on the demo lake."""
+    reads = _kind_reads()
+    assert any(w == "ReadKindAndVarPnl.java" for w, _, _ in reads) and any(w.startswith("02_") for w, _, _ in reads)
+    for where, kind, paths in reads:
+        fields = _contract_fields(kind)
+        if fields is None:
+            continue                                     # a kind with no contract (the error example's no-such-kind)
+        assert paths, (where, kind)
+        missing = [p for p in paths if p not in fields]
+        assert not missing, f"{where}: {kind} has no field {missing} in its data contract"
 
 
 # ---- against a Flight server (the heavy run) -------------------------------------------------------------------------------------

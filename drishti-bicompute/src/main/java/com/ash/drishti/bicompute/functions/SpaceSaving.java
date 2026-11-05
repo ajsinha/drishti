@@ -48,6 +48,12 @@ public final class SpaceSaving {
         return capacity;
     }
 
+    /** The state as the playground shows it: the values counted. */
+    @Override
+    public String toString() {
+        return "space-saving n=" + n;
+    }
+
     public long n() {
         return n;
     }

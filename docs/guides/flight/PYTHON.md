@@ -40,7 +40,7 @@ trades = f.kind("trade", paths=["TRADE_ID", "PRODUCT_TYPE", "QUANTITY"], where=[
 df = trades.to_pandas()                         # or polars.from_arrow(trades)
 pnl = f.measure("var.scenarios", "DESK:RATES", date="2026-09-30")
 parts = f.measure("var.parts", "DESK:RATES", by="position")
-risk = f.model("risk-summary", {"fields": ["DESK"], "measures": ["MTM"]})
+risk = f.model("trades-basic", {"select": {"fields": ["trade.DESK"], "measures": ["MTM"]}})
 cells = f.pivot({"pivot": 1, "source": "trade", "rows": ["PRODUCT_TYPE"], "values": [{"measure": "count"}]})
 f.catalogue()                                   # what this token may read
 ```

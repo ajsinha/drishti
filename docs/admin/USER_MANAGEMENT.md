@@ -157,7 +157,12 @@ Configuration ships with these:
 | `viewer` | everything | masked | — | — | — | — | — (`layout: false`) |
 | `author` | everything | yes | yes | — | — | yes | yes |
 | `approver` | everything | yes | yes | yes | — | yes | yes |
+| `pivot-approver` | everything | masked | — | — | — | — | yes |
 | `admin` | everything | yes | yes | — | yes (and admins may approve) | yes | yes |
+
+`pivot-approver` approves custom pivot functions someone else wrote (four eyes: never one's own; administrators may too); it is the
+role `drishti.pivot.functions.approver-role` names as shipped ([PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md)). Its `approve` is not the
+Sutra review's: a pivot approver does not make Sutras live.
 
 Packs add their own. The seven shipped packs add `trader` (trading), `market-risk` (market-risk), `credit-risk` (counterparty-risk),
 `economist` and `analyst` (world-economy), `news-analyst` and `market-analyst` (news-and-markets); core and market-data add none. The roles

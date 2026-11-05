@@ -29,9 +29,8 @@ About 25 minutes.
 
 - [Tutorial 33](33-the-pivot-engine.md) done: `PIVOT trade <GO>` answers with the demo trades.
 - Two users: you (an analyst) and a second user who may approve: an administrator, or a member of the role named by
-  `drishti.pivot.functions.approver-role` (`pivot-approver` as shipped). That role is not one of the seeded roles: make it first
-  (Admin → Roles), or a new user given it is refused (`DRS-6007 unknown role 'pivot-approver'`). See
-  [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
+  `drishti.pivot.functions.approver-role` (`pivot-approver`, one of the built-in roles as shipped: give it to the second user in
+  Admin → Users). See [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#2-roles).
 - A token for the command line in `DRISHTI_TOKEN` or a `--token-file` ([TOOLS.md](../guides/TOOLS.md)).
 
 ## What you will learn

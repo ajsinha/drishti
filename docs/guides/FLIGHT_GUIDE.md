@@ -111,7 +111,7 @@ measure call). Full detail per form: [FLIGHT_REFERENCE.md](FLIGHT_REFERENCE.md).
 | Form | Request | Answered by | Rows |
 |---|---|---|---|
 | `kind` | `{"kind": "trade", "paths": ["TRADE_ID", "PRODUCT_TYPE"], "where": ["PRODUCT_TYPE = IRS"], "date": "2026-09-30"}` | the Data view's reader (as a download) | the kind's rows on the day, the chosen paths |
-| `model` | `{"model": "risk-summary", "query": {"fields": [...], "measures": [...]}}` | MQ, BI's model queries | the query's answer |
+| `model` | `{"model": "trades-basic", "query": {"select": {"fields": [...], "measures": [...]}, "where": [...], "sort": [...], "limit": 50}}` | MQ, BI's model queries | the query's answer |
 | `pivot` | the view, as `POST /api/v1/pivot/query` takes it | the pivot engine | one per cell and measure |
 | `measure` | `measure('var.scenarios', 'DESK:RATES', date: 2026-09-30)` or `{"measure": "var.parts", "scope": "DESK:RATES", "by": "position"}` | the VaR engine, computed when asked | one per scenario; one per part with its vector |
 | `lake` | `{"lake": "feeds", "kind": "news.headlines", "cursor": "SEQ"}` | the lake configuration ([LAKE_CONFIG.md](../architecture/LAKE_CONFIG.md)), then the kind's reader | the table's rows; appends live |
@@ -298,8 +298,8 @@ protection, the limits, Admin → Data out and the audit apply exactly as for an
 **Naming the model.** A DSQL statement reads one model, its `FROM` naming the model's aliases (`FROM trades`). Say which model in one of
 two ways:
 
-- a first line of the statement: `-- model: risk-summary@1` (or `/* model: risk-summary@1 */`), which works in any tool;
-- the connection: the JDBC URL's `model=risk-summary@1` (the driver sends a property it does not know as the header `model`).
+- a first line of the statement: `-- model: trades-basic@1` (or `/* model: trades-basic@1 */`), which works in any tool;
+- the connection: the JDBC URL's `model=trades-basic@1` (the driver sends a property it does not know as the header `model`).
 
 ```sql
 -- model: trading-risk@1

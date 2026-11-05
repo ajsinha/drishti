@@ -21,7 +21,7 @@
     df = trades.to_pandas()                                                                   # or polars.from_arrow(trades)
     pnl = f.measure("var.scenarios", "DESK:RATES", date="2026-10-30")                         # SCENARIO, SCENARIO_DATE, PNL
     parts = f.measure("var.parts", "DESK:RATES", by="position")                               # one P&L vector per position (float32)
-    risk = f.model("risk-summary", {"fields": ["DESK"], "measures": ["MTM"]})
+    risk = f.model("trades-basic", {"select": {"fields": ["trade.DESK"], "measures": ["MTM"]}})
     cells = f.pivot({"pivot": 1, "source": "trade", "rows": ["DESK"], "values": [{"measure": "sum(MTM)"}]})
     for seq, batch in f.stream(f.request("measure", "measure('var.scenarios', 'DESK:RATES')")):   # each intraday batch, as it lands
         ...
@@ -235,7 +235,8 @@ class Flight:
         return self.read(self.request("kind", q))
 
     def model(self, model: str, query: dict | None = None):
-        """A BI model query (MQ): fields, measures, filters, as BI_GUIDE.md writes them."""
+        """A BI model query (MQ, BI_GUIDE.md): its keys ``select`` ({"fields": [...], "measures": [...]}), ``where``, ``sort``,
+        ``limit``, ``time`` ...; ``mq: 1`` is added by the server."""
         return self.read(self.request("model", {"model": model, "query": query or {}}))
 
     def pivot(self, view: dict):

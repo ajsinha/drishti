@@ -135,9 +135,35 @@ public final class Playground {
             for (Object o : a) {
                 parts.add(describe(o));
             }
-            return parts.toString();
+            return cut(parts.toString());
+        }
+        if (st instanceof java.util.Collection<?> c) {
+            List<String> parts = new ArrayList<>();
+            for (Object o : c) {
+                parts.add(describe(o));
+            }
+            return cut(parts.toString());
+        }
+        if (st != null && st.getClass().isRecord()) {           // a record's parts, each described (an array inside one too)
+            List<String> parts = new ArrayList<>();
+            for (java.lang.reflect.RecordComponent rc : st.getClass().getRecordComponents()) {
+                try {
+                    rc.getAccessor().setAccessible(true);
+                    parts.add(rc.getName() + "=" + describe(rc.getAccessor().invoke(st)));
+                } catch (ReflectiveOperationException | RuntimeException e) {
+                    parts.add(rc.getName() + "=?");
+                }
+            }
+            return cut("{" + String.join(", ", parts) + "}");
         }
         String s = String.valueOf(st);
+        if (st != null && s.startsWith(st.getClass().getName() + "@")) {   // no text of its own: never an identity string
+            return st.getClass().getSimpleName() + " state";
+        }
+        return cut(s);
+    }
+
+    private static String cut(String s) {
         return s.length() > 400 ? s.substring(0, 400) + "..." : s;
     }
 

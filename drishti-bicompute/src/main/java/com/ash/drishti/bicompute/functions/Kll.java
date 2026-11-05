@@ -56,6 +56,12 @@ public final class Kll {
         return k;
     }
 
+    /** The state as the playground shows it: the sketch's accuracy parameter and the values summarised. */
+    @Override
+    public String toString() {
+        return "kll k=" + k() + " n=" + n;
+    }
+
     public long n() {
         return n;
     }

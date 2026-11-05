@@ -35,8 +35,8 @@ from flight_setup import DATE, SCOPE, FlightRefused, connect, meta  # noqa: E402
 def read(scope: str, date: str | None):
     with connect() as f:
         who = f.whoami()
-        by_desk = f.model("trades-basic", {"fields": ["trade.DESK"], "measures": ["Notional", "MTM", "Trades"],
-                                           "orderBy": [{"by": "Notional", "desc": True}], "limit": 200})
+        by_desk = f.model("trades-basic", {"select": {"fields": ["trade.DESK"], "measures": ["Notional", "MTM", "Trades"]},
+                                           "sort": [{"by": "Notional", "desc": True}], "limit": 200})
         pnl = f.measure("var.scenarios", scope, date=date)
     return who, by_desk, pnl
 

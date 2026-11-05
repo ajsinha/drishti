@@ -74,6 +74,12 @@ public final class Builtins {
             ByteBuffer bb = ByteBuffer.wrap(b);
             return new KSum(bb.getDouble(), bb.getDouble(), bb.getLong());
         }
+
+        /** The state as the playground shows it: the sum and the values counted ({@code Σ=0.077 n=4}). */
+        @Override
+        public String toString() {
+            return "Σ=" + value() + " n=" + n;
+        }
     }
 
     static double num(Object o) {
@@ -560,6 +566,16 @@ public final class Builtins {
                 v = Arrays.copyOf(v, n * 2);
             }
             v[n++] = x;
+        }
+
+        /** The state as the playground shows it: the first values kept and how many. */
+        @Override
+        public String toString() {
+            StringBuilder b = new StringBuilder("values n=").append(n).append(" [");
+            for (int i = 0; i < Math.min(n, 8); i++) {
+                b.append(i == 0 ? "" : ", ").append(v[i]);
+            }
+            return b.append(n > 8 ? ", ...]" : "]").toString();
         }
 
         Values plus(Values o) {

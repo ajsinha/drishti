@@ -90,7 +90,7 @@ public final class ReadKindAndVarPnl {
     /** A kind's rows: the trades of the latest business date, five paths, the first rows printed. */
     void trades(String url) throws Exception {
         String request = """
-            {"form": "kind", "request": {"kind": "trade", "paths": ["TRADE_ID", "SOURCE_SYSTEM", "PRODUCT_TYPE", "CURRENCY", "NOTIONAL"]}}""";
+            {"form": "kind", "request": {"kind": "trade", "paths": ["TRADE_ID", "SOURCE_SYSTEM", "PRODUCT_TYPE", "CURRENCY", "QUANTITY"]}}""";
         long rows = 0;
         FlightInfo info = plan(url, request);
         for (FlightEndpoint endpoint : info.getEndpoints()) {
