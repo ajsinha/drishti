@@ -21,6 +21,12 @@
 
 ### Fixes
 
+- **Docs: the Flight client pages run for real.** PYTHON.md, JAVA.md, JDBC.md's Java snippet and ODBC.md carry real output from a Flight
+  server on the test data of 2026-09-30 (ODBC through the JDBC driver: its driver is an installer, not run here); PYTHON.md's examples
+  use a product of that data (`BASIS_SWAP`) and `count()`; FLIGHT_GUIDE section 10 gives the measured Arrow memory (the caps, a stream,
+  the bank's `var.parts` peaking at 17.8 MB). The three-node end to end is not measured yet: FLIGHT_GUIDE section 13 says so and it is
+  registered in `config/under-construction.yaml` (`flight-cluster-end-to-end`).
+
 - **Docs: the heavy run of tutorials 34, 36, 37, 38 and 43.** Every step run against a built server on the demo lake (writes to scratch
   lakes only): real command output and light-theme screenshots in tutorials 34 (lake files), 36 (the data inbox), 38 (the MR cube) and
   43 (parametric VaR, every figure the engine's), and 37 (custom functions, why and what-if: two signed-in people, the author's own approval refused; Split by offers the view's own rows and columns, the steps are a list, the function's column header is its call); new picture scripts `tools/docs/shots/t34.py`, `t36.py`,

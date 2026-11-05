@@ -35,7 +35,18 @@ In Excel: Data → Get Data → From ODBC → the DSN → a schema (a BI model) 
 statement such as `-- model: trading-risk@1` then `SELECT trades.DESK, MEASURE('Notional') FROM trades GROUP BY trades.DESK`. In
 Power BI the same through its ODBC connector.
 
-(output from the demo lake: to be filled in the heavy run)
+The ODBC driver is a third-party installer and is not run in Drishti's own test runs. The same statement through the Flight SQL JDBC
+driver, on the test data of 2026-09-30, answers one row per desk (the figures an ODBC client receives are the same, from the same service):
+
+```text
+trades.DESK	Notional
+DESK-COMM	8.850170019852502E11
+DESK-CREDIT	3.4835024551415E11
+...
+DESK-RATES	6.0533722239374E11
+DESK-SFT	2.27897073212E11
+DESK-STRUCT	1.06026316978E11
+```
 
 ## Without an installer
 

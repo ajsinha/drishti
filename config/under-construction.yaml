@@ -20,7 +20,7 @@
 # table columns by their bind, panels by their id); the console hides or marks the menu items and help pages named here. A new item that
 # depends on unbuilt work is registered here in the same change (PACK_DEVELOPER_GUIDE.md, "Unbuilt work: the under-construction registry").
 #
-# Each item: id, what (field | panel | menu item | help page | contract | decision | engine), about, release (the release that builds it),
+# Each item: id, what (field | panel | menu item | help page | contract | decision | engine | test), about, release (the release that builds it),
 # treatment, and where it appears: sutras (kind, binds, panels), menus (menu item ids), help (help page slugs), contracts (contract
 # documents and their sections, for the record); screenshots: the shipped pictures that still show the item's old value (to retake).
 items:
@@ -100,3 +100,10 @@ items:
     treatment: under-construction
     help: [docs-contracts-mc]
     contracts: [docs/contracts/MC.md]
+
+  - id: flight-cluster-end-to-end
+    what: test
+    about: "Arrow Flight on a three-node cluster, end to end (endpoints on every node, a node stopped mid-read, a VaR stream through an intraday batch): not measured yet; the single-node reads, the stream, Stop and resume are run (tutorial 35)"
+    release: "a later heavy run (needs a three-node scratch cluster)"
+    treatment: under-construction
+    contracts: ["docs/guides/FLIGHT_GUIDE.md#13-testing"]

@@ -260,8 +260,13 @@ plus the in-memory lake's stores, plus Arrow's budget (512 MB for the compute ex
 `memory.total-mb` when Flight is on), and set Arrow's own cap (`-Ddrishti.arrow.max-bytes`) to that budget. With Flight on and the
 defaults: 256 + 512 + 4,096 = 4,864 MB. Check it with `python3 tools/lake/memory_caps.py --arrow-only`; on ECS set `DRISHTI_ARROW_MB` to
 what it prints ([OPERATIONS.md](../admin/OPERATIONS.md#121a-direct-memory-and-the-diagnostics-of-a-long-run), section 12.1a); the host must
-have that memory beside the heap. Changing `memory.total-mb` needs a restart (the limit is set at start). (measured figures: to be filled
-in the heavy run)
+have that memory beside the heap. Changing `memory.total-mb` needs a restart (the limit is set at start).
+
+Measured on one node (the test data of 2026-09-30, the defaults): `memory_caps.py` prints 4864 with Flight on (`--arrow-only` 4608);
+the server's log says `Arrow memory cap 4294967296 bytes`. A desk's `var.scenarios` (509 rows) holds about 52 kB of Arrow memory
+while it streams. The bank's `var.parts` by position (5,000 rows, the `drishti.var.max-parts` limit, of 509 float32 each: 10.7 MB in
+the client) peaked at 17.8 MB of Arrow memory on the node (`health()`'s `arrowBytes`, sampled during the read) and took 0.1 s;
+`arrowBytes` is back at 0 when the read ends.
 
 **The port.** Open TCP 18815 between clients and every node (each node is read directly). A load balancer passes it through as TCP (TLS
 ends on the node, HTTP/2 inside); it must not terminate TLS, since the endpoints name the nodes themselves.
@@ -339,5 +344,7 @@ Clients: the [JDBC page](flight/JDBC.md) (DBeaver, DataGrip, any JDBC program; t
 `drishti-flight`'s `FlightServiceTest` runs the service over TLS with a stand-in backend (the handshake, a plan, batches, the limits, a
 stream with resume, Stop); the server's `FlightServerTest` runs it inside the server with real tokens, entitlements and the audit; the
 `FlightSqlServiceTest` runs Flight SQL in process (statements, the model by comment and header, the catalog, prepared statements,
-an update refused); the console's `test_flight_client.py` runs the Python client against a stand-in service over TLS. The end to end on a three-node cluster
-(endpoints on every node, a node stopped mid-read, a VaR stream through an intraday batch) is part of the release's heavy run.
+an update refused); the console's `test_flight_client.py` runs the Python client against a stand-in service over TLS. On one node, every read form, the
+stream across an intraday batch, Stop and resume are run against a real server ([tutorial 35](../tutorials/35-data-out-with-arrow-flight.md)).
+The end to end on a three-node cluster (endpoints on every node, a node stopped mid-read, a VaR stream through an intraday batch) is
+**not measured yet**; it is listed in [UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md).
