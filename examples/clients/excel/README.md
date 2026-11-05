@@ -38,7 +38,29 @@ The workbook:
 | P&L | one row per historical scenario: `SCENARIO`, `SCENARIO_DATE`, `PNL` |
 | About | as whom, when and what was read |
 
-(output from the demo lake: to be filled in the heavy run)
+On the test data of 2026-09-30:
+
+```text
+wrote desk-rates.xlsx (10 desks, 509 scenarios)
+```
+
+The workbook, read back (the first rows of each sheet; Excel computes the formulas when it opens the file):
+
+```text
+Summary   Scope DESK:RATES · Business date 2026-09-30 · Currency USD · VaR (engine) 74633680 · ES (engine) 75377415
+          Scenarios =COUNT('P&L'!C2:C510) · Worst P&L =MIN('P&L'!C2:C510)
+          Scenarios worse than -VaR =COUNTIF('P&L'!C2:C510,"<"&-B5) · Average of those =IFERROR(AVERAGEIF('P&L'!C2:C510,"<"&-B5),"")
+By desk   trade.DESK  Notional            MTM                 Trades
+          DESK-COMM   885017001985.2504   -395383250.5300001  5990
+          DESK-RATES  605337222393.74     4484481851.440001   1832
+          ...                                                  (10 desks)
+P&L       SCENARIO  SCENARIO_DATE  PNL
+          0         2024-09-17     11293350
+          1         2024-09-18     17864629
+          ...                                                  (509 scenarios)
+About     Read through Arrow Flight, read only, as ravi · Read at 2026-11-04T21:41:20
+          Requests: model trades-basic by trade.DESK; measure('var.scenarios', 'DESK:RATES')
+```
 
 ## Into an open workbook with xlwings
 

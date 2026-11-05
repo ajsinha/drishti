@@ -47,7 +47,20 @@ jars only.
 
 `--add-opens=java.base/java.nio=ALL-UNNAMED` is Arrow's memory module's need on Java 17 and later.
 
-(output from the demo lake: to be filled in the heavy run)
+On the test data of 2026-09-30 (Java 21; a Flight server on a test PKI):
+
+```text
+trade: Schema<TRADE_ID: Utf8, SOURCE_SYSTEM: Utf8, PRODUCT_TYPE: Utf8, CURRENCY: Utf8, QUANTITY: FloatingPoint(DOUBLE)>
+TRADE_ID	SOURCE_SYSTEM	PRODUCT_TYPE	CURRENCY	QUANTITY
+MX-20000001	MUREX	IRS_FIXFLOAT	AUD	2.3958E8
+MX-20000002	MUREX	IRS_FIXFLOAT	EUR	1.1E8
+MX-20000003	MUREX	IRS_FIXFLOAT	USD	2.04E8
+MX-20000004	MUREX	IRS_FIXFLOAT	CAD	1.784E8
+MX-20000005	MUREX	IRS_FIXFLOAT	GBP	1.4E8
+5000 trades
+DESK:RATES on 2026-09-30: 509 scenarios, worst P&L -119,535,289 on 2025-12-22
+VaR 7.463368E7  ES 7.5377415E7  USD (the engine's figures)
+```
 
 ## JDBC through Flight SQL
 
