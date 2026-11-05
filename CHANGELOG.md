@@ -26,6 +26,15 @@
   use a product of that data (`BASIS_SWAP`) and `count()`; FLIGHT_GUIDE section 10 gives the measured Arrow memory (the caps, a stream,
   the bank's `var.parts` peaking at 17.8 MB). The three-node end to end is not measured yet: FLIGHT_GUIDE section 13 says so and it is
   registered in `config/under-construction.yaml` (`flight-cluster-end-to-end`).
+- **The pivot playground shows each function state as its values** (`[Σ=0.036 n=2, Σ=4.0 n=2]`), never a Java object name, and its figures below 1 to four significant digits (0.007, not 0.01).
+
+- **The pivot Why card splits by any field of the source** (the field picker's catalogue), not only the view's rows and columns.
+
+- **The client examples read the trade kind's real fields**: the Java example and notebooks 02 and 07 ask for `QUANTITY` (the trade's notional or face amount), not `NOTIONAL`, which the trade contract does not have (DRS-5603); a test checks every example's paths against the kind's data contract.
+
+- **Flight model queries in the docs, the examples and the Python client use the model query's keys** (`select` with `fields` and `measures`, `where`, `sort`, `limit`), not the old report-visual body the server refuses (DRS-9150 unknown key 'fields'); a test checks them against the server's key list.
+
+- **The `pivot-approver` role is built in**, so the four-eyes approval of custom pivot functions works out of the box (a user given it was refused with DRS-6007 unknown role).
 
 - **Docs: the heavy run of tutorials 34, 36, 37, 38 and 43.** Every step run against a built server on the demo lake (writes to scratch
   lakes only): real command output and light-theme screenshots in tutorials 34 (lake files), 36 (the data inbox), 38 (the MR cube) and

@@ -99,3 +99,32 @@ def test_the_keys_open_the_cards_one_at_a_time(page):
         others = [w for w in ("explain", "whatif", "functions") if w != which]
         assert all(_card(page, w).is_hidden() for w in others)
     assert not page.errors, page.errors
+
+
+def test_why_splits_by_any_field_of_the_source(stack, page):
+    """Split by offers every field of the source (the catalogue the field picker reads), the view's own rows first, not only the view's
+    rows and columns; the field chosen is the one sent (the CLI and the API accept any field too)."""
+    page.click("[data-pf-open='explain']")
+    _card(page, "explain").wait_for(state="visible")
+    options = page.locator("[data-pf-by] option").all_text_contents()
+    assert options[0] == "DESK", options                                  # the view's row first
+    assert {"CURRENCY", "PRODUCT", "TRADE_DATE", "NOTIONAL", "PNL"} <= set(options), options
+    page.select_option("[data-pf-by]", "PRODUCT")
+    page.click("[data-pf-explain]")
+    page.wait_for_selector("[data-pf-waterfall] .pf-bar")
+    sent = [b for k, b in stack[1].asked if k == "explain"][-1]
+    assert sent["by"] == "PRODUCT"
+    assert not page.errors, page.errors
+
+
+def test_the_playground_shows_the_states_and_small_figures_unrounded(page):
+    """Tutorial 37 step 2: each state as the engine words it ([Σ=… n=…, Σ=… n=…]), and a figure such as 0.007 or 0.006429 as it is,
+    never rounded to 0.01."""
+    page.click("[data-pf-open='functions']")
+    _card(page, "functions").wait_for(state="visible")
+    page.click("[data-pf-check]")
+    page.wait_for_selector("[data-pf-check-result] table")
+    text = page.locator("[data-pf-check-result]").text_content()
+    assert "[Σ=0.036 n=2, Σ=4.0 n=2]" in text and "@" not in text
+    assert "0.006429" in text and "0.007" in text and "0.01 " not in text
+    assert not page.errors, page.errors

@@ -67,7 +67,7 @@ line and the Data view's `data.flight` on the kind. One part; any member may ans
 ### 3.2 `model`
 
 ```json
-{"form": "model", "request": {"model": "risk-summary", "query": {"fields": ["DESK"], "measures": ["MTM"]}}}
+{"form": "model", "request": {"model": "trades-basic", "query": {"select": {"fields": ["trade.DESK"], "measures": ["MTM"]}, "sort": [{"by": "MTM", "desc": true}], "limit": 50}}}
 ```
 
 `query` is an MQ query ([BI_GUIDE.md](BI_GUIDE.md)); the request may also be the MQ text or JSON with `model` in it, or

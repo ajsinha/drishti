@@ -403,14 +403,6 @@ schemas:
 # Environment variables no settings file above names: read by the packs' manifests, the server's profile files, the code or the tools.
 # by: server, console, packs, profile, tools.
 env:
-  # the tutorials' picture scripts (tools/docs/shots/t35.py, t36.py, t37.py)
-  - { name: DRISHTI_T35_USER, by: tools, default: ~, sets: "(a picture script)", meaning: "the user tutorial 35's picture script signs in as" }
-  - { name: DRISHTI_T35_PASSWORD, by: tools, default: ~, sets: "(a picture script)", meaning: "that user's password" }
-  - { name: DRISHTI_T35_TOKEN_FILE, by: tools, default: ~, sets: "(a picture script)", meaning: "a file holding the access token tutorial 35's picture script uses" }
-  - { name: DRISHTI_T36_WORK, by: tools, default: ~, sets: "(a picture script)", meaning: "the server's working folder for tutorial 36's picture script (the data inbox steps run there)" }
-  - { name: DRISHTI_T37_USER, by: tools, default: ~, sets: "(a picture script)", meaning: "the user tutorial 37's picture script signs in as" }
-  - { name: DRISHTI_T37_PASSWORD, by: tools, default: ~, sets: "(a picture script)", meaning: "that user's password" }
-  - { name: DRISHTI_T37_FN, by: tools, default: ~, sets: "(a picture script)", meaning: "the approved custom function tutorial 37's pictures show" }
   # the packs' connectors (config/packs/<pack>/pack.yaml)
   - { name: DRISHTI_DELTA_ROOT, by: packs, default: "./data/delta", sets: "every pack's delta connectors' root", meaning: "Root of every pack's Delta Lake connector" }
   - { name: DRISHTI_LAKES_DIR, by: server, default: "./config/lakes", sets: "drishti.lakes.dir", meaning: "The lake folder: one config/lakes/<lake>.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/LAKE_GUIDE.md)" }
@@ -506,5 +498,12 @@ env:
   - { name: DRISHTI_SHOTS_LAKE_END, by: tools, default: ~, sets: "screenshot tools", meaning: "The last business date of the lake they build" }
   - { name: DRISHTI_SHOTS_INDEX, by: tools, default: ~, sets: "screenshot tools", meaning: "Which shots of a tutorial to take" }
   - { name: DRISHTI_SHOTS_DELTA_ROOT, by: tools, default: ~, sets: "screenshot tools", meaning: "The lake they read" }
+  - { name: DRISHTI_T35_USER, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 35's shots: the reader who signs in (default the administrator)" }
+  - { name: DRISHTI_T35_PASSWORD, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 35's shots: that reader's password" }
+  - { name: DRISHTI_T35_TOKEN_FILE, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 35's shots: a scratch file the new token is kept in for the later steps" }
+  - { name: DRISHTI_T36_WORK, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 36's shots: the working folder of the data inbox run" }
+  - { name: DRISHTI_T37_USER, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 37's shots: the function's author who signs in" }
+  - { name: DRISHTI_T37_PASSWORD, by: tools, default: ~, sets: "screenshot tools", meaning: "Tutorial 37's shots: that author's password" }
+  - { name: DRISHTI_T37_FN, by: tools, default: "fn:you/wret@1", sets: "screenshot tools", meaning: "Tutorial 37's shots: the saved function shown" }
   - { name: DRISHTI_ARTIFACTS_SERVER_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The server port of the artifacts screenshots" }
   - { name: DRISHTI_ARTIFACTS_CONSOLE_PORT, by: tools, default: ~, sets: "screenshot tools", meaning: "The console port of the artifacts screenshots" }

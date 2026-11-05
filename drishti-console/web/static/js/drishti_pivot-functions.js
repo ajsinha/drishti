@@ -25,7 +25,14 @@
   if (!root || !window.Drishti.PivotScreen) { return; }
   var S = window.Drishti.PivotScreen;
   var esc = window.Drishti.PivotCore.esc;
-  var fmt = window.Drishti.PivotCore.fmt;
+  var gridFmt = window.Drishti.PivotCore.fmt;
+  /** A figure of these cards: as the grid formats it from 1 up; below 1, four significant digits (0.007, 0.006429), never rounded to
+      0.01 or 0.00: a return or a rate is often that small. */
+  var fmt = function (v) {
+    if (typeof v !== "number" || !isFinite(v)) { return v == null ? "" : String(v); }
+    if (v === 0 || Math.abs(v) >= 1) { return gridFmt(v); }
+    return v.toLocaleString("en-US", {maximumSignificantDigits: 4});
+  };
   var API = "/api/pivot";
   var $ = function (s) { return document.querySelector(s); };
 
@@ -77,8 +84,10 @@
     var by = $("[data-pf-by]");
     var dims = [];
     if (v) { dims = v.rows.concat(v.columns).map(String); }
-    var a = S.answer();
-    var fields = a && a.catalogue && a.catalogue.fields ? a.catalogue.fields.map(function (f) { return f.name; }) : [];
+    // any field of the source, as the field picker offers them (the source's catalogue; the engine's own fields _p0, ~all left out):
+    // the view's rows and columns first
+    var cat = S.catalogue() || {};
+    var fields = (cat.fields || []).map(function (f) { return f.name; }).filter(function (n) { return !/^_|~/.test(n); });
     var all = dims.concat(fields.filter(function (f) { return dims.indexOf(f) < 0; }));
     if (!by.options.length || by.getAttribute("data-for") !== all.join(",")) {
       by.innerHTML = all.map(function (d) { return "<option>" + esc(d) + "</option>"; }).join("");

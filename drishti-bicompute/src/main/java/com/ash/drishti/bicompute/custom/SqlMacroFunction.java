@@ -163,6 +163,11 @@ public final class SqlMacroFunction {
         static final class Rows {
             final List<Object[]> parts = new ArrayList<>();
             int n;
+
+            @Override
+            public String toString() {
+                return "rows n=" + n;
+            }
         }
 
         @Override
