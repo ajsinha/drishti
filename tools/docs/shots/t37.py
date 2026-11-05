@@ -23,7 +23,9 @@ function's column in a view, the waterfall of two product types split by counter
 from __future__ import annotations
 
 import _var
-from _tut import OUT, light, page_shot
+import os
+
+from _tut import OUT, light, login, page_shot
 from shotlib import Ctx, register
 
 _var.VAR_DATA = ",".join([_var.VAR_DATA, "trades/calypso", "trades/endur"])
@@ -37,6 +39,10 @@ BY_PRODUCT = {"source": "trade", "rows": ["PRODUCT_TYPE"], "values": [{"measure"
 
 def before(c: Ctx, _name: str) -> None:
     light(c)
+    user = os.environ.get("DRISHTI_T37_USER")                   # with sign-in on: the function's author (step 4's approver is someone else)
+    if user:
+        login(c, user, os.environ.get("DRISHTI_T37_PASSWORD"), width=WIDE, height=HIGH)
+        c.page.request.fetch(c.base + "/api/settings", method="PATCH", data='{"theme": "light"}', headers={"Content-Type": "application/json"})
 
 
 def _open(c: Ctx, name: str, view: dict) -> None:
@@ -75,6 +81,15 @@ def playground(c: Ctx):
     c.until("/harness/i.test(document.querySelector('[data-pf-check-result]').innerText)", 60)
     c.page.wait_for_timeout(800)
     _card_shot(c, "02-playground.jpg", "functions")
+
+
+@shot("03-function-column.jpg")
+def function_column(c: Ctx):
+    """Step 4: the approved function in a view (DRISHTI_T37_FN, e.g. fn:ravi/wret@1, saved by the author and approved by another person)."""
+    fn = os.environ.get("DRISHTI_T37_FN", "fn:you/wret@1")
+    _open(c, "wret-by-product", {"source": "trade", "rows": ["PRODUCT_TYPE"], "values": [{"measure": "sum(NOTIONAL)", "as": "Notional"},
+                                                                                         {"measure": fn + "(PRICE, NOTIONAL)"}]})
+    c.save("03-function-column.jpg")
 
 
 @shot("04-explain.jpg")

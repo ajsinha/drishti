@@ -31,8 +31,10 @@ About 25 minutes.
 ## Before you start
 
 - [Tutorial 33](33-the-pivot-engine.md) done: `PIVOT trade <GO>` answers with the demo trades.
-- Two users: you (an analyst) and a second user in the role `pivot-approver` (or an administrator) for step 4
-  ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)).
+- Two users: you (an analyst) and a second user who may approve: an administrator, or a member of the role named by
+  `drishti.pivot.functions.approver-role` (`pivot-approver` as shipped). That role is not one of the seeded roles: make it first
+  (Admin → Roles), or a new user given it is refused (`DRS-6007 unknown role 'pivot-approver'`). See
+  [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 - A token for the command line in `DRISHTI_TOKEN` or a `--token-file` ([TOOLS.md](../guides/TOOLS.md)).
 
 ## What you will learn
@@ -96,6 +98,25 @@ r,w,g
 drishti.py pivot functions test wret.yaml --sample rows.csv --group g
 ```
 
+```text
+PASSED: fn:ravi/wret@0 (mergeable), one pass 0.007, 4 rows, 2245.0 ns a row, state 56 bytes
+  ok  one pass             the figure is 0.007
+  ok  batches and splits   36 runs within 1.0E-12 of the one pass
+  ok  empty                an empty cell finishes to nothing (no values in the cell, or a division by zero)
+  ok  nulls                a part of nulls merged equals one pass over the rows and the nulls
+  ok  single row           one row finishes to 0.012000000000000002
+  ok  all equal            100 equal rows finish to 0.012000000000000002, split or not
+  ok  state round trip     the state read back finishes to the same figure
+  ok  deterministic        the same rows in the same order gave the same bits
+  ok  cost                 2245 ns a row (limit 2000); under 1,000 sample rows the cost is shown, not judged
+  ok  state bound          the largest state was 56 bytes
+  part 1 (rows 1 to 2)               0.008  (56 bytes)
+  part 2 (rows 3 to 4)               0.0064285714285714285  (56 bytes)
+  merged parts 1 to 2                0.007  (56 bytes)
+```
+
+(The author here is `ravi`: a function is named after the person who writes it, `fn:<you>/<name>@<version>`; `@0` is the unsaved draft.)
+
 **JSON** (`POST /api/v1/pivot/functions/test`): the YAML's keys, plus `"sample": [{"r": 0.012, "w": 3, "g": "A"}, ...]` and `"group": "g"`.
 
 *(screenshot filled in the heavy run: the playground with "Passes the harness", the states part by part and the sample's pivot)*
@@ -125,6 +146,14 @@ drishti.py pivot functions save wret.yaml --sample rows.csv
 drishti.py pivot functions approve you/wret@1 --reason "reviewed: a weighted mean"      # as the approver
 drishti.py pivot run --source trade --rows PRODUCT_TYPE --values "fn:you/wret@1(PRICE, NOTIONAL)"
 ```
+
+```text
+saved fn:ravi/wret@1 (mergeable): private until an approver who is not you approves it
+drishti: the server said 403 DRS-5712: an author never approves their own function (fn:ravi/wret@1): another approver must ...
+fn:ravi/wret@1: approved
+```
+
+The refusal is the author's own `approve`; the approval is the second user's (`vera`, with her own token).
 
 **JSON.** `POST /api/v1/pivot/functions/you/wret@1/approve` with `{"scope": "everyone", "reason": "reviewed: a weighted mean"}`; the view's
 value is `{"measure": "fn:you/wret@1(PRICE, NOTIONAL)"}`.
