@@ -59,6 +59,45 @@ class TablesCliTest {
     }
 
     @Test
+    void previewReadsRelatedTablesAndSpotRates() throws Exception {
+        Files.createDirectories(cwd.resolve("config/tables/trading"));
+        Files.createDirectories(cwd.resolve("config/tables/core"));
+        Files.writeString(cwd.resolve("config/tables/core/books.table.yaml"), """
+                rachana: 3
+                table: core.books
+                from: { kind: book }
+                keys: [BOOK_ID]
+                columns:
+                  BOOK_ID:   { path: $.BOOK_ID, type: string }
+                  DESK_NAME: { path: $.DESK_NAME, type: string }
+                """);
+        Files.writeString(cwd.resolve("config/tables/trading/legs.table.yaml"), """
+                rachana: 3
+                table: trading.legs
+                from: { kind: trade }
+                grain: $.LEGS[*]
+                keys: [TRADE_ID, LEG_ID]
+                columns:
+                  TRADE_ID: $.TRADE_ID
+                  LEG_ID:   { path: "@.LEG_ID", type: string }
+                  USD:      { expr: "@.NOTIONAL * fx(@.CURRENCY, 'USD')", type: decimal }
+                  JPY:      { expr: "@.NOTIONAL * fx(@.CURRENCY, 'JPY')", type: decimal }
+                  DESK:     { expr: "related(core.books.DESK_NAME, on = $.BOOK)", type: string }
+                """);
+        Files.writeString(cwd.resolve("trades.jsonl"), "{\"TRADE_ID\":\"T1\",\"BOOK\":\"B1\",\"LEGS\":[{\"LEG_ID\":\"1\",\"CURRENCY\":\"EUR\",\"NOTIONAL\":100},"
+                + "{\"LEG_ID\":\"2\",\"CURRENCY\":\"GBP\",\"NOTIONAL\":10}]}\n");
+        Files.writeString(cwd.resolve("books.jsonl"), "{\"BOOK_ID\":\"B1\",\"DESK_NAME\":\"Rates\"}\n");
+        Files.writeString(cwd.resolve("fx.jsonl"), "{\"PAIR_NAME\":\"EUR/USD\",\"MID\":1.25}\n{\"PAIR_NAME\":\"USD/JPY\",\"MID\":150}\n");
+        assertThat(run("preview", "trading.legs", "--sample", "trades.jsonl", "--json")).isEqualTo(TablesCli.OK);
+        assertThat(out()).as("no sources: only a currency to itself converts").doesNotContain("Rates").doesNotContain("125");
+        assertThat(run("preview", "trading.legs", "--sample", "trades.jsonl", "--related", "core.books=books.jsonl", "--fx", "fx.jsonl", "--json"))
+                .isEqualTo(TablesCli.OK);
+        assertThat(out()).as("EUR to USD as quoted, EUR to JPY through USD, the book's desk; GBP has no quote: no rate")
+                .contains("[ \"row-1\", null, 0, \"T1\", \"1\", 125, 18750, \"Rates\" ]").contains("[ \"row-1\", null, 1, \"T1\", \"2\", null, null, \"Rates\" ]");
+        assertThat(run("preview", "trading.legs", "--sample", "trades.jsonl", "--related", "core.nope=books.jsonl")).isEqualTo(TablesCli.USAGE);
+    }
+
+    @Test
     void usageAndUnknownCommands() {
         assertThat(run()).isEqualTo(TablesCli.USAGE);
         assertThat(run("--help")).isEqualTo(TablesCli.OK);
@@ -99,6 +138,9 @@ class TablesCliTest {
         assertThat(Files.readString(cwd.resolve("audit.jsonl"))).contains("\"who\":\"ajsinha\"");
         assertThat(run("migrate", "--check")).isEqualTo(TablesCli.OK);
         assertThat(out()).contains("nothing to migrate");
+        tables();                                                   // a table of its own beside the migrated ones: checked in its own folder
+        assertThat(run("migrate", "--dry-run")).isEqualTo(TablesCli.OK);
+        assertThat(out()).doesNotContain("DRS-9601");
     }
 
     @Test

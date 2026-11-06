@@ -15,12 +15,14 @@
  */
 package com.ash.drishti.tables.cli;
 
+import com.ash.drishti.api.DataNode;
 import com.ash.drishti.tables.Problem;
 import com.ash.drishti.tables.catalog.Catalogue;
 import com.ash.drishti.tables.catalog.ItemStore;
 import com.ash.drishti.tables.catalog.Lineage;
 import com.ash.drishti.tables.def.ModelDef;
 import com.ash.drishti.tables.def.TableDef;
+import com.ash.drishti.tables.lang.LateBound;
 import com.ash.drishti.tables.migrate.MigrationAudit;
 import com.ash.drishti.tables.migrate.TablesMigrator;
 import com.ash.drishti.tables.preview.Preview;
@@ -45,7 +47,7 @@ import java.util.Optional;
  * <pre>
  * tables list     [--root DIR] [--json]
  * tables check    [--root DIR] [--sample TABLE=FILE.jsonl]... [--json]          exit 1 on an error
- * tables preview  TABLE --sample FILE.jsonl [--limit N] [--root DIR] [--json]
+ * tables preview  TABLE --sample FILE.jsonl [--related TABLE=FILE.jsonl]... [--fx FILE.jsonl] [--limit N] [--root DIR] [--json]
  * tables lineage  NAME [--root DIR] [--json]
  * tables migrate  [--bi DIR] [--root DIR] [--dry-run | --check] [--report FILE] [--audit FILE] [--who NAME] [--moved-to DIR] [--json]
  * </pre>
@@ -64,7 +66,8 @@ public final class TablesCli {
               list     [--root DIR] [--json]                                every table and model, with its source and materialisation
               check    [--root DIR] [--sample TABLE=FILE.jsonl]... [--stored NAME,...]... [--json]
                        every definition and the catalogue checked; --sample adds the sample checks; --stored refuses a stored table's name
-              preview  TABLE --sample FILE.jsonl [--limit N] [--json]        the table's first rows over sample documents (JSONL, .gz too)
+              preview  TABLE --sample FILE.jsonl [--related TABLE=FILE.jsonl]... [--fx FILE.jsonl] [--limit N] [--json]
+                       the table's first rows over sample documents (JSONL, .gz too); related() reads the other tables' samples, fx() the spot rates
               lineage  NAME [--json]                                         who uses a table or a model
               offer    NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE) [--grain '$.LIST[*]'] [--stored NAME,...] [--write]
                        the flat virtual table offered for a new table, columns from the sample; --write accepts it (a new file only)
@@ -208,7 +211,21 @@ public final class TablesCli {
             err.println("note: '" + a.positional.get(0) + "' is now " + t.get().name());
         }
         int limit = Integer.parseInt(a.value("--limit", "20"));
-        Preview.Rows rows = Preview.rows(t.get(), Preview.read(cwd.resolve(a.value("--sample", null)), Preview.MAX_DOCUMENTS), limit, RowEvaluator.rachana());
+        Map<String, Map<String, DataNode>> related = new LinkedHashMap<>();
+        for (String s : a.values("--related")) {                       // another table's rows over its own sample: what related() reads
+            int eq = s.indexOf('=');
+            Optional<TableDef> other = eq < 0 ? Optional.empty() : c.table(s.substring(0, eq));
+            if (other.isEmpty()) {
+                err.println("tables preview: --related TABLE=FILE.jsonl names no table '" + (eq < 0 ? s : s.substring(0, eq)) + "'");
+                return USAGE;
+            }
+            related.put(other.get().name(), keyed(other.get(), Preview.rows(other.get(), Preview.read(cwd.resolve(s.substring(eq + 1)), Preview.MAX_DOCUMENTS),
+                    Preview.MAX_ROWS, RowEvaluator.rachana())));
+        }
+        LateBound.Fx fx = a.value("--fx", null) == null ? LateBound.Fx.NONE : spot(Preview.read(cwd.resolve(a.value("--fx", null)), Preview.MAX_DOCUMENTS));
+        LateBound.Lookup lookup = (table, key) -> related.getOrDefault(table, Map.of()).get(String.valueOf(key));
+        Preview.Rows rows = Preview.rows(t.get(), Preview.read(cwd.resolve(a.value("--sample", null)), Preview.MAX_DOCUMENTS), limit,
+                RowEvaluator.rachana(fx, lookup, null));
         if (a.flag("--json")) {
             json(rows);
             return OK;
@@ -218,6 +235,59 @@ public final class TablesCli {
         out.println(rows.rows().size() + " row(s) from " + rows.documents() + " document(s)");
         rows.problems().forEach(p -> out.println(p.line()));
         return OK;
+    }
+
+    /** A table's preview rows by key (its first key column, else the entity id): the rows {@code related(table.COLUMN, on = key)} finds. */
+    static Map<String, DataNode> keyed(TableDef t, Preview.Rows rows) {
+        String key = t.keys() == null || t.keys().isEmpty() ? "id" : t.keys().get(0);
+        Map<String, DataNode> out = new LinkedHashMap<>();
+        for (DataNode row : Preview.objects(rows)) {
+            DataNode k = row.get(key);
+            if (k != null && !k.isMissing() && !k.isNull()) {
+                out.putIfAbsent(k.asText(), row);
+            }
+        }
+        return out;
+    }
+
+    /**
+     * An FX source over spot documents ({@code PAIR_NAME: "EUR/USD", MID: 1.17}, the market-data pack's {@code fx-spot}): a pair as quoted, its
+     * inverse, or through USD; the same currency is 1; anything else has no rate (the value is empty, as with no source).
+     */
+    static LateBound.Fx spot(List<Preview.Doc> docs) {
+        Map<String, Double> mids = new LinkedHashMap<>();
+        for (Preview.Doc d : docs) {
+            DataNode pair = d.doc().get("PAIR_NAME");
+            DataNode mid = d.doc().get("MID");
+            if (pair != null && !pair.isMissing() && mid != null && !mid.isMissing() && !mid.isNull() && pair.asText().contains("/")) {
+                mids.put(pair.asText().strip().toUpperCase(java.util.Locale.ROOT), mid.asDouble());
+            }
+        }
+        java.util.function.BiFunction<String, String, Double> direct = (from, to) -> {
+            if (from.equals(to)) {
+                return 1.0;
+            }
+            Double r = mids.get(from + "/" + to);
+            if (r != null) {
+                return r;
+            }
+            Double inv = mids.get(to + "/" + from);
+            return inv == null || inv == 0 ? null : 1 / inv;
+        };
+        return (from, to, at) -> {
+            if (from == null || to == null) {
+                return null;
+            }
+            String f = from.strip().toUpperCase(java.util.Locale.ROOT);
+            String t = to.strip().toUpperCase(java.util.Locale.ROOT);
+            Double r = direct.apply(f, t);
+            if (r != null) {
+                return r;
+            }
+            Double a = direct.apply(f, "USD");
+            Double b = direct.apply("USD", t);
+            return a == null || b == null ? null : (Double) (a * b);
+        };
     }
 
     private int lineage(Args a) throws IOException {
@@ -362,7 +432,7 @@ public final class TablesCli {
 
         private static final java.util.Set<String> FLAGS = java.util.Set.of("--json", "--dry-run", "--check", "--write");
         private static final java.util.Set<String> OPTIONS = java.util.Set.of("--root", "--bi", "--sample", "--limit", "--report", "--audit", "--who", "--moved-to",
-                "--stored", "--kind", "--lake", "--table", "--grain");
+                "--stored", "--kind", "--lake", "--table", "--grain", "--related", "--fx");
 
         static Args parse(List<String> args) {
             Args a = new Args();

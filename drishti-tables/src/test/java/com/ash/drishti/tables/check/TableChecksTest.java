@@ -88,6 +88,18 @@ class TableChecksTest {
     }
 
     @Test
+    void aTableOverATableMayAddNoColumnAndIsWrittenWithoutOne() {
+        String over = "rachana: 3\ntable: bi.nsets\nfrom: { table: bi.results }\nfilter: \"$.HIERARCHY == 'NSET'\"\nkeys: [NODE_ID]\n";
+        TableYaml.Result r = TableYaml.read(over);
+        assertThat(r.problems()).isEmpty();
+        String written = TableYaml.write(r.table(), List.of());
+        assertThat(written).doesNotContain("columns:");
+        assertThat(TableYaml.read(written).problems()).isEmpty();
+        assertThat(TableYaml.read("rachana: 3\ntable: a.b\nfrom: { kind: k }\n").problems()).as("a table over a kind still needs columns")
+                .anyMatch(p -> p.path().equals("columns"));
+    }
+
+    @Test
     void aColumnBuiltFromAMaskedPathIsMasked() {
         TableDef t = TableYaml.read(TRADES).table();
         assertThat(TableChecks.masked(t)).containsExactlyInAnyOrder("COUNTERPARTY", "CPTY_UPPER");

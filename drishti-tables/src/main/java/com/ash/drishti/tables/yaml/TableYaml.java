@@ -87,7 +87,7 @@ public final class TableYaml {
             }
         }
         TableDef.Source from = from(root.get("from"), y);
-        Map<String, ColumnDef> columns = columns(root.get("columns"), y);
+        Map<String, ColumnDef> columns = columns(root.get("columns"), from != null && from.form() == TableDef.Source.Form.TABLE, y);
         List<String> keys = y.strings(root, "keys", "");
         columns.values().stream().filter(ColumnDef::key).map(ColumnDef::name).filter(k -> !keys.contains(k)).forEach(keys::add);
         String keepLatest = null;
@@ -137,10 +137,12 @@ public final class TableYaml {
         return s;
     }
 
-    private static Map<String, ColumnDef> columns(JsonNode c, Yaml y) {
+    private static Map<String, ColumnDef> columns(JsonNode c, boolean overTable, Yaml y) {
         Map<String, ColumnDef> out = new LinkedHashMap<>();
         if (c == null || c.isNull()) {
-            y.error(TableCodes.UNREADABLE, "columns", "a table has columns");
+            if (!overTable) {                                       // a table over a table has its base's columns and may add none
+                y.error(TableCodes.UNREADABLE, "columns", "a table has columns");
+            }
             return out;
         }
         if (!c.isObject()) {
@@ -264,7 +266,9 @@ public final class TableYaml {
         } else if (t.retention() != null) {
             w.kv("keep", t.retention());
         }
-        w.line("columns:");
+        if (!t.columns().isEmpty()) {                               // a table over a table that adds no column writes none
+            w.line("columns:");
+        }
         int width = t.columns().keySet().stream().mapToInt(String::length).max().orElse(0) + 1;
         for (ColumnDef c : t.columns().values()) {
             Map<String, Object> m = new LinkedHashMap<>();

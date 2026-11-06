@@ -18,7 +18,8 @@ migrated into them.
   tables list    [--root DIR] [--json]                                 every table and model, its source and materialisation
   tables check   [--root DIR] [--sample TABLE=FILE.jsonl]... [--stored NAME,...]... [--json]
                                                                       every definition and the catalogue; exit 1 on an error
-  tables preview TABLE --sample FILE.jsonl [--limit N] [--json]       the table's first rows over sample documents (JSONL, .gz too)
+  tables preview TABLE --sample FILE.jsonl [--related TABLE=FILE.jsonl]... [--fx FILE.jsonl] [--limit N] [--json]
+                                                                      the table's first rows over sample documents (JSONL, .gz too)
   tables lineage NAME [--json]                                        who uses a table or a model
   tables offer   NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE) [--grain '$.LIST[*]'] [--stored NAME,...] [--write]
                                                                       the flat virtual table offered for a new table (columns from a sample)
@@ -45,7 +46,7 @@ def register(groups, ctx: dict) -> None:
         args = [a.cmd]
         if getattr(a, "name", None):
             args.append(a.name)
-        for flag in ("root", "bi", "limit", "report", "audit", "who", "moved_to", "kind", "lake", "table", "grain"):
+        for flag in ("root", "bi", "limit", "report", "audit", "who", "moved_to", "kind", "lake", "table", "grain", "fx"):
             v = getattr(a, flag, None)
             if v is not None:
                 args += ["--" + flag.replace("_", "-"), str(v)]
@@ -53,6 +54,8 @@ def register(groups, ctx: dict) -> None:
             args += ["--sample", s]
         for s in getattr(a, "stored", None) or []:
             args += ["--stored", s]
+        for s in getattr(a, "related", None) or []:
+            args += ["--related", s]
         for flag in ("json", "dry_run", "check", "write"):
             if getattr(a, flag, False):
                 args.append("--" + flag.replace("_", "-"))
@@ -79,9 +82,12 @@ def register(groups, ctx: dict) -> None:
     p.add_argument("--sample", action="append", metavar="TABLE=FILE.jsonl", help="sample documents for a table (repeatable)")
     p.add_argument("--stored", action="append", metavar="NAME,...", help="stored tables' names (lake tables, kinds): a virtual table named like one is refused")
     p = add("preview", "a table's first rows over sample documents (JSON Lines, one entity a line)",
-            "examples:\n  drishti.py tables preview bi.trading_cashflows_cashflows --sample trades.jsonl --limit 10")
+            "examples:\n  drishti.py tables preview bi.trading_cashflows_cashflows --sample trades.jsonl --limit 10\n"
+            "  drishti.py tables preview trading.trade_legs --sample trades.jsonl --related core.books=books.jsonl --fx fx-spot.jsonl")
     p.add_argument("name", metavar="TABLE", help="the table (or its was: name)")
     p.add_argument("--sample", action="append", required=True, metavar="FILE.jsonl", help="the sample documents")
+    p.add_argument("--related", action="append", metavar="TABLE=FILE.jsonl", help="another table's sample, what related() reads (repeatable)")
+    p.add_argument("--fx", metavar="FILE.jsonl", help="spot rates (PAIR_NAME 'EUR/USD', MID), what fx() reads; without it only a currency to itself converts")
     p.add_argument("--limit", type=int, help="the most rows shown (default 20)")
     p = add("lineage", "who uses a table or a model: models, tables over it, look-ups",
             "examples:\n  drishti.py tables lineage bi.trading_risk_trades\n  drishti.py tables lineage trading-risk")
