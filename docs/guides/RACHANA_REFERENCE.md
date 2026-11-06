@@ -2884,7 +2884,7 @@ shows the problem and the rest of the view renders.
 | Literals | `true`, `false`, `null` | there are no object literals |
 | Grouping | `( … )` | |
 
-Anything else (`&`, `|` alone, `;`, a lone `#`) is a compile error: `unexpected character '&'`. DEL's `**` and `//` are refused with
+Anything else (`&`, `|` alone, `;`, a lone `#`) is a compile error: `unexpected character '&'`. `**` and `//` are refused with
 their Rachana form: `'**' is not Rachana: write power(x, y)`, `'//' is not Rachana: write floor(x / y)`.
 
 A field name with a hyphen is the classic trap: `$.day-count` **compiles**, as `$.day` minus a field `count`, and shows `NaN`. Write
@@ -2992,8 +2992,8 @@ table`).
 ### Checked mode: tables, models and typed pivots
 
 Where the types are known (a table's columns, a model's tables, a pivot over a typed source) an expression is **checked** before it
-runs: the same language, read by the same parser, with DEL's discipline. Checked mode only refuses more; it never makes the same text
-mean something else. It refuses with DEL's codes, at the place written:
+runs: the same language, read by the same parser, with a type checker's discipline. Checked mode only refuses more; it never makes the
+same text mean something else. BI's tables, models, measures, filters and row rules are always checked. It refuses at the place written:
 
 | Code | Refuses | Example |
 |---|---|---|
@@ -3002,8 +3002,8 @@ mean something else. It refuses with DEL's codes, at the place written:
 | `DRS-9152` | a name the table or model does not have, with "did you mean" | `sum(trades.MTX)` |
 | `DRS-9161` | a filter, `in`, sort or grouping on a field masked for the reader: a hidden value must not be inferred from what a filter keeps | `trades.DESK == 'DESK-FX'` when DESK is masked |
 
-The types are DEL's: integer, decimal, number (a measure), text, boolean, date, timestamp; `date - date` is whole days; a text in ISO
-form compared with a date is that date. The signatures checked mode knows are the 53 functions DEL had, under their Rachana names, and
+The types are: integer, decimal, number (a measure), text, boolean, date, timestamp; `date - date` is whole days; a text in ISO
+form compared with a date is that date. The signatures checked mode knows are the 53 functions of BI's measures, filters and columns, and
 `power`, `floor`, `if`, `switch`, `least`, `greatest` (`rachana/el/signatures.yaml`; FUNCTION_CATALOGUE.md says where each runs).
 
 **Scopes.** Where an expression is written decides what it may name:
@@ -3031,8 +3031,7 @@ slicers and drill; (3) the group's values; (4) the measure's own `where =` and `
 | `as_of(agg, date)` | the aggregate at another business date, worked out before the query runs (`shift_date(asof(), -1)`; a date from a row is refused, `DRS-9166`; a live table has no other dates, `DRS-9157`) |
 
 They nest at most three deep (through the measures they name too); every sub-plan is planned for the same reader, so it never sees more;
-a masked field is never a group, in the answer or in a context. `latest(agg, date)` and `earliest(agg, date)` (DEL's `last` and `first`;
-`first(list)` and `last(list)` stay the ends of a list), `opening` and `closing` (with `period = 'month'`), the time functions (`ytd`,
+a masked field is never a group, in the answer or in a context. `latest(agg, date)` and `earliest(agg, date)` (`first(list)` and `last(list)` stay the ends of a list), `opening` and `closing` (with `period = 'month'`), the time functions (`ytd`,
 `mtd`, `qtd`, `fiscal_ytd`, `prior_period`, `same_period_last_year`, `running`) and the windows (`lag`, `lead`, `rank`, `dense_rank`,
 `percent_rank`, `moving_avg`, `moving_sum`, `moving_min`, `moving_max`) are computed over the answer too.
 

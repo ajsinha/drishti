@@ -48,7 +48,7 @@ import org.springframework.test.web.servlet.MockMvc;
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=core,market-data,trading,market-risk",
         "drishti.sources.plugins.demo.enabled=false", "drishti.var.official.enabled=false", "drishti.var.official.on-start=false",
-        "drishti.bi.dir=${drishti.test.dir}/var-bi-folder", "drishti.bi.folder-refresh=1s",
+        "drishti.bi.dir=${drishti.test.dir}/var-bi-folder", "drishti.tables.root=${drishti.test.dir}/var-bi-folder/tables", "drishti.bi.folder-refresh=1s",
         "drishti.bi.query.store-dir=${drishti.test.dir}/var-bi-store/${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/var-bi-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
@@ -70,10 +70,11 @@ class VarOfficialBiTest {
     static {
         try {
             Path to = com.ash.drishti.server.TestRun.root().resolve("var-bi-folder");
-            for (String f : List.of("datasets/market-risk-var-official.dataset.yaml", "datasets/market-risk-var-latest.dataset.yaml",
-                    "models/market-risk-var.model.yaml", "reports/market-risk-var.report.yaml")) {
-                Files.createDirectories(to.resolve(f).getParent());
-                Files.copy(Path.of("../config/bi", f), to.resolve(f), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            for (String f : List.of("../tables/bi/market_risk_var_official.table.yaml", "../tables/bi/market_risk_var_latest.table.yaml",
+                    "../tables/bi/market-risk-var.model.yaml", "reports/market-risk-var.report.yaml")) {
+                Path dest = to.resolve(f.replace("../", ""));                  // the table layer's files under tables/, BI's report beside
+                Files.createDirectories(dest.getParent());
+                Files.copy(Path.of("../config/bi", f), dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);

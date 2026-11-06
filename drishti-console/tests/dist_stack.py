@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The scratch stack for the distribution tests and pictures: tests/bi_report_stack.py (security on, the sample report "Trades overview" over a small file lake) with the
-sample dataset given row rules and a masked column, and the server pointed at a local fake SMTP (tests/fake_smtp.py), so each person sees different figures and no
+sample table given row rules and a masked column, and the server pointed at a local fake SMTP (tests/fake_smtp.py), so each person sees different figures and no
 mail leaves the machine. Ports come from the environment (DRISHTI_BI_REPORT_SERVER_PORT, DRISHTI_BI_REPORT_CONSOLE_PORT; the work in this repository uses 18950 and 17950)."""
 from __future__ import annotations
 
@@ -22,11 +22,9 @@ from bi_report_stack import CONSOLE_URL
 
 REPORT = "file:report:trades-overview"
 SECURITY = """
-security:
-  rows:
-    - { role: desk-head, where: "DESK in user.desks" }
-    - { role: [risk, analyst, bi-writer, admin], where: "True" }
-  masked: [MTM]
+rules:
+  - { role: desk-head, where: "$.DESK in user.desks" }
+  - { role: [risk, analyst, bi-writer, admin], where: "true" }
 """
 
 
@@ -39,5 +37,7 @@ class DistStack(bi_report_stack.ReportStack):
                             "--drishti.collab.email.from=drishti@desk.test", "--drishti.distribution.subscriptions.tick=1h"]
 
     def prepare(self, work):
-        ds = work / "config" / "bi" / "datasets" / "trades-basic-trade.dataset.yaml"           # the rules live on the dataset the model trades-basic reads
-        ds.write_text(ds.read_text() + SECURITY)
+        ds = work / "config" / "tables" / "bi" / "trades_basic_trade.table.yaml"              # the rules live on the table the model trades-basic reads
+        text = ds.read_text().replace('MTM:             { path: "$.MTM",', 'MTM:             { masked: true, path: "$.MTM",')
+        assert "masked: true" in text, "the table's MTM column moved"
+        ds.write_text(text + SECURITY)

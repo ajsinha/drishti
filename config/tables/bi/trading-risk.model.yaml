@@ -1,0 +1,64 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Migrated from config/bi/models/trading-risk.model.yaml by drishti.py tables migrate (docs/architecture/BI_FOUNDATION_2911E.md section 4).
+rachana: 3
+model: trading-risk
+version: 1.0.0
+title: Trading and counterparty risk
+description: "Trades with their counterparties, desks, books and netting sets, across three packs. Measures: MTM, notional, P&L 1d, trade counts, and exposure (EE and PFE peaks) computed by the exposure engine (its official end-of-day results). A desk-head sees only the trades of their own desks; counterparty names and traders are masked for readers without the raw power."
+sample: true
+endorsement: promoted
+tags: [sample, trading, counterparty-risk, cross-pack]
+tables:
+  trades:         { table: bi.trading_risk_trades, role: fact }
+  netting_sets:   { table: bi.trading_risk_netting_sets, role: fact }
+  set_exposure:   { table: bi.counterparty_exposure_official_netting_sets, role: fact }
+  cpty_exposure:  { table: bi.counterparty_exposure_official_counterparties, role: fact }
+  counterparties: { table: bi.trading_risk_counterparties, role: dimension }
+  desks:          { table: bi.trading_risk_desks, role: dimension }
+  books:          { table: bi.trading_risk_books, role: dimension }
+relationships:
+  - { from: trades.DESK, to: desks.id }
+  - { from: trades.PORTFOLIO, to: books.id }
+  - { from: trades.COUNTERPARTY, to: counterparties.id }
+  - { from: trades.NETTING_SET, to: netting_sets.id, active: false }
+  - { from: netting_sets.COUNTERPARTY, to: counterparties.id }
+  - { from: set_exposure.COUNTERPARTY, to: counterparties.id }
+  - { from: cpty_exposure.COUNTERPARTY, to: counterparties.id }
+measures:
+  MTM:                 { expr: sum(trades.MTM), format: signed0, description: "Mark-to-market in USD, signed." }
+  Notional:            { expr: sum(trades.NOTIONAL), format: amount0 }
+  P&L 1d:              { expr: sum(trades.PNL_1D), format: signed0, description: Profit and loss over the last day. }
+  Trades:              { expr: count(trades) }
+  Counterparties:      { expr: distinct(trades.COUNTERPARTY), description: How many different counterparties the trades are with. }
+  MTM per 1m notional: { expr: "ratio(sum(trades.MTM), sum(trades.NOTIONAL)) * 1000000", format: signed2 }
+  Worst trade MTM:     { expr: min(trades.MTM), format: signed0 }
+  MTM median:          { expr: "percentile(trades.MTM, 0.5)", format: signed0, description: The median trade MTM. }
+  MTM ytd:             { expr: "ytd(sum(trades.MTM), trades.TRADE_DATE)", format: signed0, description: "MTM of the trades dated this year up to the as-of date (the end of the report's dates). Time intelligence: ytd, mtd, qtd, prior_period, same_period_last_year, running." }
+  MTM rank:            { expr: rank(sum(trades.MTM)), description: "The position of each row of the visual by MTM, 1 for the highest (a window function: rank, dense_rank, percent_rank, lag, lead, moving_avg, moving_sum, moving_min, moving_max, cumulative)." }
+  MTM 3-day average:   { expr: "moving_avg(sum(trades.MTM), 3, trades.TRADE_DATE)", format: signed0, description: The average of MTM over the row and the two before it along the trade date (the visual needs trades.TRADE_DATE as a field). }
+  Open MTM:            { expr: "sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)", format: signed0, description: MTM of the trades not yet matured (a condition inside the aggregate). }
+  Exposure (EE peak):  { expr: sum(set_exposure.PEAK_EE), format: amount0, description: "The netting sets' computed peak expected exposure (the exposure engine's official end-of-day result, latest version), summed over the netting sets of the visual's row: a reporting sum of the sets' peaks. Group by counterparty, not by desk." }
+  Exposure (PFE peak): { expr: sum(cpty_exposure.PEAK_PFE_95), format: amount0, description: "The counterparty's computed peak 95% PFE: the exposure engine's counterparty row (all its netting sets netted path by path), never a sum of its sets' PFEs. By counterparty it is that counterparty's own figure; over several counterparties it is a reporting sum of their PFEs. Group by counterparty, not by desk." }
+  Netting sets:        { expr: count(netting_sets) }
+  P&L per exposure:    { expr: "measure('P&L 1d') / measure('Exposure (EE peak)')", format: signed2, description: "One-day P&L divided by the expected exposure peak, the sums taken over the rows of the visual." }
+  Collateral:          { expr: sum(netting_sets.COLLATERAL), format: signed0 }
+hierarchies:
+  Trade date: [trades.TRADE_DATE.year, trades.TRADE_DATE.quarter, trades.TRADE_DATE.month, trades.TRADE_DATE]
+  Desk and book: [desks.NAME, books.NAME]
+  Counterparty: [counterparties.SECTOR, counterparties.NAME]
+rollups: [{ name: by_desk_currency, table: trades, by: [DESK, CURRENCY, PRODUCT_GROUP], measures: [MTM, Notional, "P&L 1d", Trades, MTM per 1m notional] }]
+security:
+  may-see-all: { netting_sets: [desk-head], set_exposure: [desk-head], cpty_exposure: [desk-head], counterparties: [desk-head], desks: [desk-head], books: [desk-head] }

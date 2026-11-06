@@ -90,7 +90,7 @@ public final class MqPlans {
             q.define().forEach((name, text) -> {
                 String canonical;
                 try {
-                    canonical = com.ash.drishti.server.bi.expr.DelPrinter.print(com.ash.drishti.server.bi.expr.Expressions.parse(text));   // spacing and quotes do not matter
+                    canonical = com.ash.drishti.server.bi.dataset.NodeText.print(com.ash.drishti.server.bi.expr.Expressions.parse(text));   // spacing and quotes do not matter
                 } catch (RuntimeException e) {
                     canonical = text;
                 }

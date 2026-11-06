@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 class OptimiserPropertyTest {
 
     static final List<String> ALIASES = List.of("trades", "desks");
-    static final List<String> RULES = List.of("trades.desk in ['DESK-A']", "trades.notional > 10", "desks.region == 'EMEA'", "True", "filter trades.currency == 'EUR'");
+    static final List<String> RULES = List.of("trades.desk in ['DESK-A']", "trades.notional > 10", "desks.region == 'EMEA'", "true", "filter trades.currency == 'EUR'");
     static final List<String> FIELDS = List.of("trades.desk", "trades.currency", "trades.notional", "desks.region", "desks.desk");
 
     /** Per alias: its rules, masks and denial, in a canonical form. */

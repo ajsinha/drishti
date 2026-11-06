@@ -52,7 +52,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-py-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/bi-py-overlay/added.yaml",
-        "drishti.bi.dir=${drishti.test.dir}/bi-py-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-py-store/${random.uuid}"})
+        "drishti.bi.dir=${drishti.test.dir}/bi-py-folder", "drishti.tables.root=${drishti.test.dir}/bi-py-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-py-store/${random.uuid}"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -63,9 +63,9 @@ class PythonBiApiTest {
 
     static {
         try {
-            for (String f : List.of("datasets/trades-basic-trade.dataset.yaml", "models/trades-basic.model.yaml", "python/desk-pnl-volatility.python.yaml", "python/pnl-histogram.python.yaml",
-                    "reports/python-desk-risk.report.yaml")) {
-                Path to = FOLDER.resolve(f);
+            for (String f : List.of("../tables/bi/trades_basic_trade.table.yaml", "../tables/bi/trades-basic.model.yaml", "python/desk-pnl-volatility.python.yaml",
+                    "python/pnl-histogram.python.yaml", "reports/python-desk-risk.report.yaml")) {
+                Path to = FOLDER.resolve(f.replace("../", ""));
                 Files.createDirectories(to.getParent());
                 Files.writeString(to, Files.readString(CONFIG.resolve(f)).replace("sample: true", "sample: false"));
             }

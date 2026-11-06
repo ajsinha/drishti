@@ -23,7 +23,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.ash.drishti.server.bi.engine.ArrowTestReader;
-import com.ash.drishti.server.bi.migrate.ModelConverter;
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,7 +58,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-dataset-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/bi-dataset-overlay/added.yaml",
-        "drishti.bi.dir=${drishti.test.dir}/bi-dataset-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-dataset-store/${random.uuid}",
+        "drishti.bi.dir=${drishti.test.dir}/bi-dataset-folder", "drishti.tables.root=${drishti.test.dir}/bi-dataset-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-dataset-store/${random.uuid}",
         "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/bi-dataset-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.test-lake.plugin=file", "drishti.sources.connectors.test-lake.kinds[0]=trade",
@@ -148,13 +147,8 @@ class DatasetApiTest {
                     rollups:
                       - { name: by_desk, table: trades, by: [desk, currency], measures: [Notional, MTM, Trades] }
                     """);
-            // since 2.2 a dataset is asked through its model: the converter writes lake-test's datasets and model beside it (BI_DESIGN.md 8.3)
-            Path models = Files.createDirectories(datasets.resolveSibling("models"));
-            ModelConverter.Result converted = ModelConverter.convert(List.of(new ModelConverter.Source("datasets/lake-test.dataset.yaml", "dataset",
-                    Files.readString(datasets.resolve("lake-test.dataset.yaml")))), ModelConverter.Exposure.NOTE);
-            for (Map.Entry<String, String> w : converted.writes().entrySet()) {
-                Files.writeString((w.getKey().startsWith("models/") ? models : datasets).resolve(w.getKey().substring(w.getKey().indexOf('/') + 1)), w.getValue());
-            }
+            // a dataset is asked through its model: tables migrate writes lake-test's tables and model under tables/ (BI_FOUNDATION_2911E.md 4.3)
+            TablesFolder.migrate(datasets.getParent(), false);              // the version-1 file stays: its own endpoints are tested here
             Files.writeString(datasets.resolve("hidden-sample.dataset.yaml"), "dataset: hidden-sample\ntitle: A sample\nsample: true\ntables:\n  t:\n    source: { kind: trade }\n    columns: { desk: string }\n");
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);

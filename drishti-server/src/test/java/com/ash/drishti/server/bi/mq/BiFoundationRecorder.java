@@ -92,8 +92,11 @@ class BiFoundationRecorder {
                         notRecorded.put(r.getKey(), "its model " + model + " is not loaded");
                         continue;
                     }
-                    files.put("report-" + r.getKey() + ".json", BiFoundationCases.report(service, report, v.flat(), "report:" + report.name(), "h|" + v.def().name(),
-                            who -> h.caller(v.flat(), who), shipped.lake()));
+                    // a report on a model over live tables is asked of the live service, as its dataset was before the switch
+                    boolean onLive = v.flat().tables().values().stream().anyMatch(Dataset.Table::isLive);
+                    MqHarness rh = onLive ? new MqHarness(live, SampleLake.DAY2) : h;
+                    files.put("report-" + r.getKey() + ".json", BiFoundationCases.report(onLive ? live : service, report, v.flat(), "report:" + report.name(),
+                            "h|" + v.def().name(), who -> rh.caller(v.flat(), who), shipped.lake()));
                 } else if (report.dataset() != null && !report.dataset().isBlank()) {
                     Dataset d = shipped.direct().get(report.dataset());
                     if (d == null) {

@@ -37,10 +37,10 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /**
- * Every expression of the shipped models and datasets ({@code config/bi/models}, {@code config/bi/datasets}) read as Rachana
- * (BI_FOUNDATION_2911E.md 2.4, 2.6 and 7.1): DEL's tree mapped ({@link DelToRachana}), printed in Rachana's one spelling
- * ({@link Printer}), parsed back to the same text, checked in its scope (measures in aggregate scope, rules in rule scope, the rest in
- * row scope) and lowered by the one compiler without a problem. The values of the same expressions in Java and in SQL are compared by
+ * Every expression of the shipped tables and models ({@code config/tables}, migrated from BI's datasets and models) read as Rachana
+ * (BI_FOUNDATION_2911E.md 2.4, 2.6 and 7.1): in Rachana's one spelling ({@link Printer}: parsed and printed, the same text), checked in
+ * its scope (measures in aggregate scope, rules in rule scope, the rest in row scope) and lowered by the one compiler without a problem;
+ * and the worked examples of the design as the migration's DEL step ({@link DelToRachana}) maps them. The values of the same expressions in Java and in SQL are compared by
  * drishti-bicompute's DifferentialTest; the parity of BI's figures is part B's.
  */
 class ShippedInRachanaTest {
@@ -50,7 +50,7 @@ class ShippedInRachanaTest {
     static List<Shipped> shipped() throws IOException {
         List<Shipped> out = new ArrayList<>();
         ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
-        for (String dir : List.of("../config/bi/models", "../config/bi/datasets")) {
+        for (String dir : List.of("../config/tables/bi")) {
             try (Stream<Path> files = Files.list(Path.of(dir))) {
                 for (Path f : files.filter(p -> p.toString().endsWith(".yaml")).sorted().toList()) {
                     walk(yaml.readTree(f.toFile()), f.getFileName().toString(), "", out);
@@ -64,8 +64,8 @@ class ShippedInRachanaTest {
         if (n.isObject()) {
             n.properties().forEach(e -> {
                 String p = path + "/" + e.getKey();
-                if (("expr".equals(e.getKey()) || "where".equals(e.getKey())) && e.getValue().isTextual()) {
-                    Scope s = p.contains("/measures/") ? Scope.AGGREGATE : p.contains("/security/") ? Scope.RULE : Scope.ROW;
+                if (("expr".equals(e.getKey()) || "where".equals(e.getKey()) || "filter".equals(e.getKey())) && e.getValue().isTextual()) {
+                    Scope s = p.contains("/measures/") ? Scope.AGGREGATE : p.contains("/security/") || p.startsWith("/rules") ? Scope.RULE : Scope.ROW;
                     out.add(new Shipped(file, p, e.getValue().asText(), s));
                 } else {
                     walk(e.getValue(), file, p, out);
@@ -86,7 +86,7 @@ class ShippedInRachanaTest {
         List<String> nullRule = new ArrayList<>();
         for (Shipped s : all) {
             String where = s.file() + s.path() + ": " + s.del();
-            String rachana = Printer.print(DelToRachana.map(DelParser.parse(s.del())).expr());
+            String rachana = s.del();
             assertThat(Printer.print(CheckedMode.parse(rachana).expr())).as(where).isEqualTo(rachana);
             assertThat(CheckedMode.check(rachana, s.scope(), Fields.NONE).problems().stream().filter(Problem::error)).as(where + " => " + rachana).isEmpty();
             if (s.scope() == Scope.AGGREGATE) {
@@ -98,7 +98,7 @@ class ShippedInRachanaTest {
                 nullRule.add(where);                                           // the migration's null-rule rewrite applies here (Q1)
             }
         }
-        // the comparisons whose meaning changes for a null under Rachana's rule are few, and part B's migrator rewrites each
+        // the comparisons whose meaning changes for a null under Rachana's rule are few, and the migrator rewrote each (Q1)
         assertThat(nullRule).hasSizeLessThan(10);
     }
 

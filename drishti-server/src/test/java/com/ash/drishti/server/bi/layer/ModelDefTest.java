@@ -31,7 +31,7 @@ class ModelDefTest {
             security:
               rows:
                 - { role: desk-head, where: "trades.desk in user.desks" }
-                - { role: [risk, analyst], where: "True" }
+                - { role: [risk, analyst], where: "true" }
               masked: [mtm]
             """, "");
 
@@ -80,7 +80,7 @@ class ModelDefTest {
               rows:
                 trades:
                   - { role: desk-head, where: "trades.desk in user.desks" }
-                  - { role: [risk, analyst], where: "True" }
+                  - { role: [risk, analyst], where: "true" }
               may-see-all: { limits: [desk-head], desks: [desk-head] }
             """;
 
@@ -188,11 +188,11 @@ class ModelDefTest {
         assertThat(open).containsExactly(new ModelChecker.Exposure("limits", "desk-head"), new ModelChecker.Exposure("desks", "desk-head"));
         assertThat(codes(noNote)).contains("w:DRS-9130");
         // a rule on the dataset (in the model) or the explicit note answers it, one dataset at a time
-        String oneRule = noNote.replace("  rows:\n", "  rows:\n    limits:\n      - { role: desk-head, where: \"limits.desk in user.desks\" }\n      - { role: [risk, analyst], where: \"True\" }\n");
+        String oneRule = noNote.replace("  rows:\n", "  rows:\n    limits:\n      - { role: desk-head, where: \"limits.desk in user.desks\" }\n      - { role: [risk, analyst], where: \"true\" }\n");
         assertThat(ModelChecker.exposures(ModelDefParser.parse(oneRule).model(), resolved())).containsExactly(new ModelChecker.Exposure("desks", "desk-head"));
         assertThat(ModelChecker.exposures(ModelDefParser.parse(MODEL).model(), resolved())).isEmpty();
         // a role that only has `true` rules is not restricted
-        String allTrue = noNote.replace("- { role: desk-head, where: \"trades.desk in user.desks\" }", "- { role: desk-head, where: \"True\" }");
+        String allTrue = noNote.replace("- { role: desk-head, where: \"trades.desk in user.desks\" }", "- { role: desk-head, where: \"true\" }");
         assertThat(ModelChecker.exposures(ModelDefParser.parse(allTrue).model(), resolved())).isEmpty();
     }
 
@@ -224,10 +224,10 @@ class ModelDefTest {
 
     @Test
     void ruleTextIsRewrittenForTheAliasOnly() {
-        assertThat(RuleText.qualify("pack.trading.trade.desk in user.desks and trade.status == 'Live'", "pack.trading.trade", java.util.Set.of("desk", "status"), "t"))
-                .isEqualTo("t.desk in user.desks and t.status == 'Live'");
-        assertThat(RuleText.qualify("upper(desk) == 'desk' or year(tradeDate) > 2020", "x", java.util.Set.of("desk", "tradeDate"), "a"))
-                .isEqualTo("upper(a.desk) == 'desk' or year(a.tradeDate) > 2020");
+        assertThat(RuleText.qualify("pack.trading.trade.desk in user.desks && trade.status == 'Live'", "pack.trading.trade", java.util.Set.of("desk", "status"), "t"))
+                .isEqualTo("t.desk in user.desks && t.status == 'Live'");
+        assertThat(RuleText.qualify("upper(desk) == 'desk' || year(tradeDate) > 2020", "x", java.util.Set.of("desk", "tradeDate"), "a"))
+                .isEqualTo("upper(a.desk) == 'desk' || year(a.tradeDate) > 2020");
     }
 
     @Test

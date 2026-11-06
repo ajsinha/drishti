@@ -24,7 +24,6 @@ import com.ash.drishti.server.bi.engine.Layers;
 import com.ash.drishti.server.bi.engine.QueryProperties;
 import com.ash.drishti.server.bi.engine.QueryRequest;
 import com.ash.drishti.server.bi.engine.QueryService;
-import com.ash.drishti.server.bi.layer.DatasetDefParser;
 import com.ash.drishti.server.bi.layer.ModelDef;
 import com.ash.drishti.server.bi.layer.ModelDefParser;
 import com.ash.drishti.server.bi.pivot.BiAggregate;
@@ -97,6 +96,9 @@ public final class BiFoundationCases {
     /** The shipped BI folder, read only. */
     static final Path BI = Path.of("..", "config", "bi");
 
+    /** The shipped table layer (config/tables): the tables and models BI reads since the switch (BI_FOUNDATION_2911E.md step 5), read only. */
+    static final Path TABLES = Path.of("..", "config", "tables");
+
     /**
      * The seven persons of section 5.1: a desk-head with two desks, a desk-head with no desks (the strict {@code in}: no rows), risk, an
      * analyst, an administrator, a reader without the raw power (masks) and a role no rule names ({@code DRS-9131}: no rows and the reason).
@@ -129,35 +131,29 @@ public final class BiFoundationCases {
         Map<String, String> datasets = new LinkedHashMap<>();
         Map<String, Dataset> direct = new TreeMap<>();
         Map<String, String> problems = new TreeMap<>();
-        try (Stream<Path> s = Files.list(BI.resolve("datasets"))) {
-            for (Path f : s.filter(p -> p.toString().endsWith(".dataset.yaml")).sorted().toList()) {
-                String y = Files.readString(f);
-                if (DatasetDefParser.isVersion2(y)) {
-                    datasets.put(f.getFileName().toString(), y);
-                } else {
-                    DatasetParser.Result r = DatasetParser.parse(y);
-                    if (r.ok()) {
-                        direct.put(r.dataset().name(), r.dataset());
-                    } else {
-                        problems.put(f.getFileName().toString(), "not loaded: " + r.problems());
-                    }
-                }
+        List<Path> files;
+        try (Stream<Path> s = Files.walk(TABLES)) {
+            files = s.filter(Files::isRegularFile).sorted().toList();
+        }
+        for (Path f : files) {
+            if (f.toString().endsWith(".table.yaml")) {
+                datasets.put(f.getFileName().toString(), Files.readString(f));
             }
         }
         Map<String, ModelView> models = new TreeMap<>();
-        try (Stream<Path> s = Files.list(BI.resolve("models"))) {
-            for (Path f : s.filter(p -> p.toString().endsWith(".model.yaml")).sorted().toList()) {
-                String y = Files.readString(f);
-                String name = ModelDefParser.parse(y).model() == null ? f.getFileName().toString() : ModelDefParser.parse(y).model().name();
-                try {
-                    models.put(name, MqHarness.model(y, k -> Optional.empty(), datasets.values().toArray(String[]::new)));
-                } catch (RuntimeException e) {
-                    problems.put(name, "not loaded: " + e.getMessage());
-                }
+        for (Path f : files) {
+            if (!f.toString().endsWith(".model.yaml")) {
+                continue;
+            }
+            String y = Files.readString(f);
+            String name = ModelDefParser.parse(y).model() == null ? f.getFileName().toString() : ModelDefParser.parse(y).model().name();
+            try {
+                models.put(name, MqHarness.model(y, k -> Optional.empty(), datasets.values().toArray(String[]::new)));
+            } catch (RuntimeException e) {
+                problems.put(name, "not loaded: " + e.getMessage());
             }
         }
         List<Dataset> flats = new ArrayList<>(models.values().stream().map(ModelView::flat).filter(d -> !d.framed()).toList());
-        direct.values().stream().filter(d -> !d.framed()).forEach(flats::add);
         return new Shipped(models, direct, new SampleLake(flats), problems);
     }
 
@@ -200,7 +196,7 @@ public final class BiFoundationCases {
             for (String measure : measures) {
                 for (Map.Entry<String, String> t : TIMES.entrySet()) {
                     for (List<String> by : t.getKey().equals("as-of-day2") ? groupings : List.of(List.<String>of())) {
-                        String q = "{ mq: 1, model: x, select: { fields: " + ConvertedSamplesTest.list(by) + ", measures: " + ConvertedSamplesTest.list(List.of(measure))
+                        String q = "{ mq: 1, model: x, select: { fields: " + list(by) + ", measures: " + list(List.of(measure))
                                 + " }, " + t.getValue() + (by.isEmpty() ? "" : ", totals: grand") + " }";
                         mine.put(measure + " | " + t.getKey() + " | by " + (by.isEmpty() ? "(none)" : by.get(0)), answer(service, v, q, p.getValue(), mq));
                     }
@@ -213,7 +209,7 @@ public final class BiFoundationCases {
                 if (cols.isEmpty()) {
                     continue;
                 }
-                String q = "{ mq: 1, model: x, select: { fields: " + ConvertedSamplesTest.list(cols) + " }, shape: rows, limit: 100000 }";
+                String q = "{ mq: 1, model: x, select: { fields: " + list(cols) + " }, shape: rows, limit: 100000 }";
                 mine.put("rows of " + alias, extract(answer(service, v, q, p.getValue(), mq)));
             }
             out.put(p.getKey(), mine);
@@ -237,8 +233,8 @@ public final class BiFoundationCases {
         MqHarness.Reader admin = new MqHarness.Reader("ada", true, "", List.of("admin"));
         for (String f : candidates) {
             for (String m : measures) {
-                Map<String, Object> a = answer(service, v, "{ mq: 1, model: x, select: { fields: " + ConvertedSamplesTest.list(List.of(f)) + ", measures: "
-                        + ConvertedSamplesTest.list(List.of(m)) + " }, time: { as-of: " + SampleLake.DAY2 + " } }", admin, mq);
+                Map<String, Object> a = answer(service, v, "{ mq: 1, model: x, select: { fields: " + list(List.of(f)) + ", measures: "
+                        + list(List.of(m)) + " }, time: { as-of: " + SampleLake.DAY2 + " } }", admin, mq);
                 if (a.get("rows") instanceof List<?> rows) {
                     for (Object r : rows) {
                         if (r instanceof List<?> row && !row.isEmpty() && row.get(0) instanceof String s && !s.isBlank()) {
@@ -272,8 +268,8 @@ public final class BiFoundationCases {
             }
             List<String> two = h.getValue().subList(0, 2);
             for (String m : measures) {
-                mine.put(m + " | subtotals | by " + String.join(", ", two), answer(service, v, "{ mq: 1, model: x, select: { fields: " + ConvertedSamplesTest.list(two)
-                        + ", measures: " + ConvertedSamplesTest.list(List.of(m)) + " }, " + day2 + ", totals: subtotals }", who, mq));
+                mine.put(m + " | subtotals | by " + String.join(", ", two), answer(service, v, "{ mq: 1, model: x, select: { fields: " + list(two)
+                        + ", measures: " + list(List.of(m)) + " }, " + day2 + ", totals: subtotals }", who, mq));
             }
         }
         if (slice == null) {
@@ -282,7 +278,7 @@ public final class BiFoundationCases {
         String where = "where: [{ field: \"" + slice.field() + "\", op: in, values: [\"" + slice.value().replace("\"", "\\\"") + "\"] }]";
         for (String m : measures) {
             mine.put(m + " | slicer " + slice.field() + " = " + slice.value(), answer(service, v, "{ mq: 1, model: x, select: { measures: "
-                    + ConvertedSamplesTest.list(List.of(m)) + " }, " + where + ", " + day2 + " }", who, mq));
+                    + list(List.of(m)) + " }, " + where + ", " + day2 + " }", who, mq));
         }
         String base = measures.stream().filter(m -> String.valueOf(v.def().measures().get(m).expr()).startsWith("sum(")).findFirst()
                 .orElse(measures.isEmpty() ? null : measures.get(0));
@@ -292,8 +288,8 @@ public final class BiFoundationCases {
         String ref = "measure('" + base.replace("'", "\\'") + "')";
         String define = "define: { \"Ignore all\": \"calc(" + ref + ", ignore=ALL)\", \"Ignore field\": \"calc(" + ref + ", ignore=[" + slice.field() + "])\", "
                 + "\"Share\": \"share_of(" + ref + ", over=ALL)\", \"Only value\": \"calc(" + ref + ", where=" + slice.field() + " == '" + slice.value().replace("'", "\\'") + "')\" }";
-        String select = "select: { fields: " + ConvertedSamplesTest.list(List.of(slice.field())) + ", measures: "
-                + ConvertedSamplesTest.list(List.of(base, "Ignore all", "Ignore field", "Share", "Only value")) + " }";
+        String select = "select: { fields: " + list(List.of(slice.field())) + ", measures: "
+                + list(List.of(base, "Ignore all", "Ignore field", "Share", "Only value")) + " }";
         mine.put("calc " + base + " | by " + slice.field(), answer(service, v, "{ mq: 1, model: x, " + define + ", " + select + ", " + day2 + ", totals: grand }", who, mq));
         mine.put("calc " + base + " | by " + slice.field() + " | slicer = " + slice.value(), answer(service, v, "{ mq: 1, model: x, " + define + ", " + select + ", "
                 + where + ", " + day2 + ", totals: grand }", who, mq));
@@ -608,5 +604,10 @@ public final class BiFoundationCases {
         if (want == null ? got != null : !want.equals(got)) {
             problems.add(path + ": " + got + " now, " + want + " recorded");
         }
+    }
+
+    /** Names as a YAML list of quoted texts. */
+    static String list(List<String> names) {
+        return "[" + String.join(", ", names.stream().map(n -> "\"" + n + "\"").toList()) + "]";
     }
 }

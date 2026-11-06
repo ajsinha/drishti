@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.engine;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.ash.drishti.server.bi.dataset.Resolver;
-import com.ash.drishti.server.bi.expr.DelPrinter;
+import com.ash.drishti.server.bi.dataset.NodeText;
 import com.ash.drishti.server.bi.expr.Expressions;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -257,10 +257,10 @@ public final class Incremental {
         asked.add(ROWS);
         for (int i = 0; i < inc.leaves.size(); i++) {
             Leaf l = inc.leaves.get(i);
-            String where = l.cond() == null ? "" : ", where=" + DelPrinter.print(l.cond());
+            String where = l.cond() == null ? "" : ", where=" + NodeText.print(l.cond());
             String s = "__inc_s" + i;
             String c = "__inc_c" + i;
-            String arg = l.rowCount() ? table : DelPrinter.print(l.arg());
+            String arg = l.rowCount() ? table : NodeText.print(l.arg());
             measures.put(c, new Dataset.Measure(c, "count(" + arg + where + ")", null, "incremental count", null));
             asked.add(c);
             if (!l.rowCount() && !"count".equals(l.fn())) {

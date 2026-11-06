@@ -120,12 +120,12 @@ public class TestLake implements SourceGateway {
                   EurMTM: { expr: "sum(trades.mtm, where=trades.currency == 'EUR')" }
                   Biggest: { expr: "max(trades.notional)" }
                   Share: { expr: "measure('MTM') / measure('Notional')" }
-                  NotionalM: { expr: "round(sum(trades.notional) / 1_000_000, 1)" }
+                  NotionalM: { expr: "round(sum(trades.notional) / 1000000, 1)" }
                 security:
                   rows:
                     - { role: desk-head, where: "trades.desk in user.desks" }
                     - { role: risk, where: "true" }
-                    - { role: auditor, where: "trades.desk == 'DESK-B' or trades.desk == 'DESK-C'" }
+                    - { role: auditor, where: "trades.desk == 'DESK-B' || trades.desk == 'DESK-C'" }
                   masked: [cpty, trades.mtm]
                 rollups:
                   - { name: byDesk, table: trades, by: [desk, currency], measures: [Notional, MTM, Trades, AvgMTM, MTMperM, Biggest, Share] }

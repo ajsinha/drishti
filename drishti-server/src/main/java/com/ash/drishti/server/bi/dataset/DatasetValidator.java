@@ -524,10 +524,6 @@ final class DatasetValidator {
     private Node parse(String path, String text) {
         try {
             Node n = com.ash.drishti.server.bi.expr.Expressions.parse(text);
-            String note = com.ash.drishti.server.bi.expr.Expressions.oldSyntaxNote(text);
-            if (note != null) {
-                out.add(new Problem("warning", com.ash.drishti.server.bi.expr.Expressions.OLD_SYNTAX, path, note));
-            }
             return n;
         } catch (ExprException e) {
             err(EXPRESSION, path, e.getMessage() + " (at position " + e.position() + " of: " + text + ")");

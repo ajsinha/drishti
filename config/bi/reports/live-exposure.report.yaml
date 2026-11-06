@@ -26,7 +26,7 @@ description: "Netting sets, net MTM, collateral and trade count, redrawn as they
 sample: true
 endorsement: promoted
 tags: [sample, counterparty-risk, live, streaming]
-dataset: live-exposure
+model: live-exposure@1
 theme: { palette: default }
 
 pages:

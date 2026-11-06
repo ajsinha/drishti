@@ -46,6 +46,8 @@ class ShippedExamplesPacksTest {
 
     private static final Path BI = Path.of("..", "config", "bi");
     private static final Path PACKS = Path.of("..", "config", "packs");
+    /** The table layer's shipped tables and models: BI's datasets and models since the switch. */
+    private static final Path TABLES = Path.of("..", "config", "tables");
     private static final Pattern PACK_DATASET = Pattern.compile("\\bpack\\.([a-z0-9-]+)\\.([a-z0-9-]+)");
     private final ObjectMapper yaml = new ObjectMapper(new YAMLFactory());
 
@@ -62,10 +64,16 @@ class ShippedExamplesPacksTest {
         }
         List<String> problems = new ArrayList<>();
         int sources = 0;
-        try (Stream<Path> files = Files.walk(BI)) {
-            for (Path f : files.filter(x -> x.toString().endsWith(".yaml")).sorted().toList()) {
+        List<Path> all = new ArrayList<>();
+        for (Path dir : List.of(BI, TABLES)) {
+            try (Stream<Path> files = Files.walk(dir)) {
+                all.addAll(files.filter(x -> x.toString().endsWith(".yaml")).sorted().toList());
+            }
+        }
+        {
+            for (Path f : all) {
                 String text = Files.readString(f);
-                String name = BI.relativize(f).toString();
+                String name = f.getParent().getParent().relativize(f).toString();
                 List<JsonNode> found = new ArrayList<>();
                 sourcesOf(yaml.readTree(text), found);
                 for (JsonNode s : found) {
@@ -88,7 +96,7 @@ class ShippedExamplesPacksTest {
                 }
             }
         }
-        assertThat(sources).as("data sources found in config/bi").isGreaterThan(10);
+        assertThat(sources).as("data sources found in config/bi and config/tables").isGreaterThan(10);
         assertThat(problems).as("shipped BI items that read a retired or renamed pack").isEmpty();
     }
 
@@ -99,7 +107,7 @@ class ShippedExamplesPacksTest {
         }
         if (n.isObject()) {
             n.properties().forEach(e -> {
-                if (e.getKey().equals("source") && e.getValue().isObject()) {
+                if ((e.getKey().equals("source") || e.getKey().equals("from")) && e.getValue().isObject()) {
                     out.add(e.getValue());
                 }
                 sourcesOf(e.getValue(), out);
