@@ -22,7 +22,7 @@ from urllib.parse import parse_qs, quote
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import about_index, asof, collab as collab_core, compare_side, controls, render_mode, screen_grid
+from core import about_index, asof, collab as collab_core, compare_side, controls, screen_grid
 from core.settings import changed_at
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
@@ -581,8 +581,7 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
     layout = await request.app.state.layouts.context(request, vm, bool(embed))      # the user's own arrangement, if any
     grid_mine = await _grid_layout(request, vm, layout)                             # a Sutra with layout: (RACHANA_REFERENCE.md 13)
     panels = layout["panels"]
-    rc = render_mode.client(request, "pane" if embed else "view")   # ui.render: the client-side renderer draws the page from this ViewModel
-    phone = await phone_routes.plan_for(request, vm, panels, bool(embed), bool(rc))   # a phone or tablet (MOBILE_DISPLAY.md): its tiers
+    phone = await phone_routes.plan_for(request, vm, panels, bool(embed))   # a phone or tablet (MOBILE_DISPLAY.md): its tiers
     if phone and phone["device"] == "tablet":                       # a tablet keeps the page's layout, less its desk panels (under More)
         keep = {p.get("id") for p in phone["shown"]}
         panels = [p for p in panels if p.get("id") in keep]
@@ -599,9 +598,7 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
         except BackendError:
             shared = None                           # the banner is a courtesy: never fail the view for it
     calc = {"offered": False} if embed else await request.app.state.calc.context(request, await packs(request), vm["ref"]["kind"])
-    boot =render_mode.view_boot(request, vm, panels, grid, bool(embed), request.app.state.templates.env.globals["design_on"]()) if rc else None
     return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_, (vm.get("provenance") or {}).get("generation"), ctl),
-                  render_client=rc, render_boot=boot,
                   pin=pin, pin_gen=gen or None, chosen_sutra=chosen, pin_via="history" if request.query_params.get("via") == "history" else None, ctl_query=controls.to_query(ctl), shared=shared, calc=calc, layout=layout, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")],
                   designer=designer_routes.view_context(request, mine), grid=grid, phone=phone,
                   phone_everything=phone_routes.everything(request, bool(embed)))

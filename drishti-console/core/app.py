@@ -39,12 +39,6 @@ WEB = Path(__file__).resolve().parent.parent / "web"
 _PAGE_KINDS = ("", "share", "datamap", "data", "form", "functions", "pack")      # missing.html for a console page, not an entity
 
 
-def _render_modules() -> list[str]:
-    """The current renderer's modules a console page imports (drishti_view-render.js -> drishti-render.js -> m/*.js), Elements' own left out."""
-    from core import render_dist as rd
-
-    skip = {"drishti-elements.js", "m/elements.js"}
-    return [f"/static/render/{rd.VERSION}/{rel}" for rel in rd.files() if rel.endswith(".js") and rel not in skip]
 ASSET_VERSION = "2.9.11.c"
 
 
@@ -389,9 +383,6 @@ def create_app(settings: Settings) -> FastAPI:
                                                              if code == "DRS-4023" and kind not in _PAGE_KINDS
                                                              else drs_advice(settings.get("ui.error_advice"), code, kind, id_)),
         ASSET_V=f"{ASSET_VERSION}-{asset_fingerprint()}",
-        # a page the client-side renderer draws preloads the library's whole module graph at once (2.9.7 row 2a): discovered import by import
-        # on a cold cache, it held every deferred script of the page back for longer than a quick person takes to type into it
-        RENDER_MODULES=_render_modules(),
         PRODUCT=settings.get("ui.product", ""),
         PRODUCT_MEANING=settings.get("ui.product_meaning", ""),
         PRODUCT_NATIVE=settings.get("ui.product_native", ""),

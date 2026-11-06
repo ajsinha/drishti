@@ -23,7 +23,7 @@
        data-worker="/static/js/drishti_calc-worker.js?v={{ ASSET_V }}"
        data-module="/static/calc/drishti.py?v={{ ASSET_V }}"
        data-max-rows="{{ calc.maxColumnRows or '' }}">
-  <header><strong>Calc</strong> <span class="calc-labs" data-calc-labs title="A Labs feature: a scratch pad in your browser; nothing here is published or shared">Labs · Scratch: runs in your browser</span> <span class="mono">Python · {{ vm.title.id }}</span>
+  <header><strong>Calc</strong> <span class="text-muted-d" data-calc-labs title="A Labs feature: a scratch pad in your browser; nothing here is published or shared">Labs · Scratch: runs in your browser</span> <span class="mono">Python · {{ vm.title.id }}</span>
     <span class="calc-status mono" data-calc-status role="status" aria-live="polite">{% if not calc.runtime.installed %}{{ calc.runtime.message }}{% else %}Python not started{% endif %}</span>
     <a class="tbar-link" href="/help/user-guide#calc-python-on-any-view" title="How Calc works: the drishti module, keys, limits"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
     <button type="button" class="raw-x" data-calc-close aria-label="Close">×</button></header>

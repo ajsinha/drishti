@@ -3538,8 +3538,8 @@ The same token, CORS, scopes, rates and masks as v1; the difference is the paylo
 | `GET /embed/v2/views/{kind}/{id}/about` (scope `embed:about`) | `{explain, index}` (About this page as JSON), or `{error: {code, detail}}` |
 | `GET /embed/v2/resolve?text=` | a typed command or id to `{ref, mnemonic, title}`, as v1 |
 | `GET /embed/v2/channel?s=vm:{kind}/{id}`, `POST /embed/v2/channel/{cid}`, `POST /embed/v2/channel/{cid}/token` | the live channel, as v1; a `vm:` key's panel patches are panels (JSON), with no HTML |
-| `GET /embed/v2/render/{version}/{file}` | the renderer's files (`drishti-render.js`, `drishti-elements.js`, `m/*.js`, `drishti-render.css`, `drishti-render.d.ts`, `integrity.json`): immutable; `1` and `1.0` answer `302` to the exact version; one this console does not serve is `410 DRS-8006` |
-| `GET /embed/v2/elements/{2, 2.1, 2.1.0, 2.0, 2.0.0}/drishti-elements.js` | `302` to the renderer version that carries that Elements version (renderer 1.1.0; 2.0.0: 1.0.0; `2` the newest) |
+| `GET /embed/v2/render/{version}/{file}` | the renderer's files (`drishti-render.js`, `drishti-elements.js`, `m/*.js`, `drishti-render.css`, `drishti-render.d.ts`, `integrity.json`): immutable; one version is served (1.2.0), `1` and `1.2` answer `302` to it; one this console does not serve (0.1.0 to 1.1.0) is `410 DRS-8006` |
+| `GET /embed/v2/elements/{2, 2.2, 2.2.0}/drishti-elements.js` | `302` to the renderer version that carries that Elements version (renderer 1.2.0, the one served); Elements 2.0 and 2.1 are `410 DRS-8006` (pin 2.2.0, or the alias `2`) |
 | `GET /embed/v2/sign-in/check` | the sign-in window (`auth: 'popup'`, no token): may the calling page (its `Origin`) sign in here? `{allowed, origin, product, signIn, code?, detail?}` (`DRS-8002` naming an unregistered origin, `DRS-8003` when the window is off); readable by any origin (`Access-Control-Allow-Origin: *`, no data, no credentials) |
 | `GET /embed/v2/sign-in?origin=&state=&mode=popup\|tab\|redirect[&return=]` | the window itself: to the provider (`auth.oidc`, PKCE) for a registered `origin` only; `return` (same-tab mode) must be on that origin |
 | `GET /embed/v2/sign-in/callback` | the provider comes back; the page gets `{type: 'drishti:sign-in', state, access_token, expires_in, user, refresh}` by `postMessage` to its exact origin (or `drishti:sign-in-failed` with `code` and `detail`); same-tab mode returns to `return#drishti-sign-in=<code>&drishti-server=<console>` |
@@ -3560,7 +3560,7 @@ curl -s -H "Authorization: Bearer $EMBED_TOKEN" -H "Origin: https://crm.bank.exa
 
 The console's own pages read the same JSON on the console's origin: `GET /v/{kind}/{id}/about?format=json` (`{explain, index}`), and
 `/v/{kind}/{id}/panels`, `/events` and `/children` answer each panel's JSON (`panel`) beside its HTML, and `/panels` the strip's cells
-(`stripCells`), for the pages the client-side renderer draws (`ui.render`).
+(`stripCells`), for an embed whose renderer draws them (the console's own pages are the server's HTML).
 
 **What a view says about masks.** `provenance.masked` (a number) and `provenance.maskedPanels` (panel ids) in every ViewModel and live `provenance` patch count the values the caller's masks replaced; both are `0` and `[]` when nothing is masked for the caller.
 

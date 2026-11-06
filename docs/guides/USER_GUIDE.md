@@ -1084,11 +1084,6 @@ whole. A long amount widens its own column. Either way the page never scrolls si
 
 **A candlestick's Data table** shows each price as the panel formats it (`74.00`, `120,000`), as the strip and tables do.
 
-**Drawn by your browser (when your administrator turns it on).** With `ui.render` set to `client` the entity page is drawn in
-your browser from the same data the server would have turned into HTML: it looks and works the same (links, the column funnels,
-*Chart any table*, drill-downs and Back, Pivot, *Customize*, layout mode, downloads, *About this page*, live updates). Add
-`?render=server` to a page's address to see it drawn by the server, for a comparison.
-
 ### 4 · Links
 
 Every identifier in a view is a door. Click `BOOK-RATES-3` in the strip and the book opens. The

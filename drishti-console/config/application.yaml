@@ -78,14 +78,6 @@ ui:
   # The Sutra designer (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): Customize on every entity page and Describe under Build -> New screen. A
   # user's changes are their own Design, never the pack's Sutra. Off: pages and the screen designer are exactly as before.
   designer: ${DRISHTI_UI_DESIGNER:false}
-  # Which renderer draws a page (docs/architecture/CLIENT_RENDERER.md section 16): server (the Jinja macros, as always) or client (Drishti
-  # Render draws the page in the browser from its ViewModel, the same JSON /api/view answers). Page by page: mode applies to the pages
-  # listed (view: an entity page, /v/<kind>/<id>, and what /go, a shared link and a history day open; pane: the same page in a workspace
-  # pane), so a page can be turned back without a release. ?render=server or ?render=client on an address overrides both for that request.
-  render:
-    mode: ${DRISHTI_UI_RENDER:server}  # server or client: the renderer of the pages listed in ui.render.pages
-    # the pages ui.render.mode applies to: view (an entity page) and pane (the same page in a workspace pane)
-    pages: ${DRISHTI_UI_RENDER_PAGES:view,pane}
   # The phone display (docs/architecture/MOBILE_DISPLAY.md): each panel of a page goes to a phone as must (shown in full, first), glance
   # (a compact form: five rows, a sparkline), more (loaded when tapped, under More on this page) or desk (named under On desktop). The
   # browser says what it is (the drishti-device cookie from the screen width, or an X-Drishti-Device header); a desktop is unchanged.
