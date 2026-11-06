@@ -17,6 +17,30 @@
 
 ## 2.9.11.d (unreleased)
 
+- **One analysis path, Pivot → Report** (SYNTHESIS A8 to A10; lean & streamlined: one way per job, the old deleted in the same release):
+  - **Analyse becomes the Notebook** (`/bi/notebook`, BI rail *Notebook*; USER_GUIDE.md › The Notebook): SQL cells are Drishti SQL run by the server
+    as the reader; Python cells run on the server's compute pool, never the console or the browser (running them is *Under construction* with
+    one Python runtime: `python-table-runs`; cells are written, saved and promoted meanwhile); the Profile tab; notebooks; promotion of a SQL cell
+    to a report visual and of a Python cell to a Measure, Visual or Transform draft. **Cut:** Explore's **Slice** (the console's pivot of an extract;
+    slicing is the Pivot's, *Pivot* on the BI rail) and its **SQL over the extract in SQLite**; a saved notebook's `slice` cell is left out with a
+    note. **Deleted:** the browser **Python console** (`/pyconsole`, its page, script, routes and `bi.pyconsole.*`); `/bi/explore` and `/pyconsole`
+    lead to the Notebook. Settings `bi.explore.*` are `bi.notebook.*` (`sql_max_seconds` and `quant_engine` gone).
+  - **Calc behind a Labs switch** (`labs.calc` on the console, `drishti.calc.enabled` on the server, both `DRISHTI_LABS_CALC`, **off as shipped**):
+    a scratch pad in the browser that never publishes, labelled *Labs · Scratch: runs in your browser*. **Graphic Walker removed** (the 4.7 MB
+    vendored bundle, its sandboxed frame page and policy, `drishti_bi.walk`, `tools/vendor-js`).
+  - **"Data view" is "Export data"** everywhere it shows (the page, Views menu, Help, guides, tutorials, the command catalogue). `EXPORT` is the
+    command word; `DATA`, the older one, is kept as its alias (one edition switch for both; both reserved for packs).
+  - **The MR and CCR cubes are Pivot presets** (`drishti-console/config/pivot-presets.yaml`, `/pivot?preset=mr|ccr`; PIVOT_GUIDE.md section 28):
+    one grid, several doors. The MR cube's doors: `MCUBE`, VaR → MR cube, and a new **MR cube ›** link in the VaR explorer (its scope and date);
+    `/mcube` leads to the preset. The CCR cube: `CCUBE` and **Counterparties → CCR cube**, *Under construction* (`ccr-cube-preset`) until the CCR
+    provider. The MR cube's own page route is deleted. **Parity:** for eight forms of `MCUBE` the preset asks the server for exactly the view the
+    cube asked for (`tests/test_cube_presets.py`, fixture recorded before the change).
+  - **One page renderer (Jinja).** The console's client-drawn mode for entity pages (`ui.render`, `core/render_mode.py`,
+    `drishti_view-render.js` and the fall-backs for it in seven scripts) is deleted; the client-side renderer draws embeds and `<drishti-report>`
+    only, in one version (1.2.0): renderers **0.1.0, 1.0.0 and 1.1.0** are deleted with **Elements 2.0 and 2.1** (`410 DRS-8006`).
+  - Click tests for every changed button (the Notebook, Export data's menu item and both words, the VaR explorer's MR cube link, Counterparties →
+    CCR cube); tutorials 10, 14 and 18 on the Notebook (tutorial 14's Python console step removed).
+
 - Decided (product owner, 2026-11-06): **tables use look-ups, models join**. The table editor says *look-up* (Source and look-ups, + Look-up); combining tables row by row is a model's relationships (EDITORS.md section 2, VIRTUAL_TABLES.md V10a, TABLES_GUIDE).
 
 - **The editors of the table layer** (docs/architecture/EDITORS.md groups 1 to 4; TABLES_GUIDE.md section 11): **Build › Tables & models** (`/build/tables`, also on BI's rail). One shell: the objects with search | the editor with the **live YAML below it** (a visual edit is written back by the layer's own writer, the file's header kept, the edited line highlighted; a YAML edit is checked as typed and shows in the visual side; an invalid line is marked and the visual side keeps the last valid version) | a **preview read on the server as you** (rows, the totals of the number columns by the pivot engine, checks, the cost of a join across connectors, Used by). Visual / YAML / Both remembered per person (the server's preference store); Validate, Preview, History, Impact, Save draft and **Propose for review** (BI's four-eyes review: the item kinds `table` and `model` in the layer's form, approved through the layer's checks); **+ New** steps for a table (columns suggested from a sample of the source), a model (the four questions) and a Python-driven table. The **table editor**: the source and its look-ups as rows with the cross-connector cost (`drishti.tables.scan-warn-rows`), columns as a checklist with computed columns in Rachana (type-ahead from the function catalogue), and a **Text** toggle (the table as one Rachana statement, read back on the server). The **model editor**: Overview, Tables, Fields, Measures (each **?** opens its card: formula, plain words, a worked value, used by; **adds up?** from the pivot engine's functions), Hierarchies, Row rules, Masks and the **Access** matrix. The **Python-driven table editor**: the build function beside its output contract, inputs, schedule, pool and limits, templates (join and derive, resample, statistics per group, an approved feed) and **Notebook → Turn into table**; the **sample run on the server's compute pool is under construction** (`python-table-runs` in the registry) until one Python runtime runs authored code. The API is `/api/v1/tables/editor/*`.

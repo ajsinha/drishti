@@ -13,6 +13,27 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.d — release notes (unreleased)
+
+## Upgrade: removed and renamed pages
+
+- **Analyse is the Notebook.** `/bi/explore` opens `/bi/notebook` (a notebook's `?item=` is kept). Its **Slice** tab is removed: slice and total a
+  table in the **Pivot** (`PIVOT <GO>`, *Pivot* on the BI rail). A **SQL cell over the extract** (`FROM extract`, SQLite on the console) no longer
+  runs: write it in Drishti SQL over the model (the server runs it as you). A saved notebook's `slice` cell is left out when it opens, with a note.
+  **Python cells** run on the server's compute pool; running them is *Under construction* until one Python runtime (write, save and promote them
+  meanwhile). Settings: rename `bi.explore.*` to `bi.notebook.*` and `DRISHTI_BI_EXPLORE_MAX_ROWS` to `DRISHTI_BI_NOTEBOOK_MAX_ROWS`;
+  `bi.explore.sql_max_seconds` and `bi.explore.quant_engine` are gone.
+- **The browser Python console is removed.** `/pyconsole` opens the Notebook; `bi.pyconsole.*`, `DRISHTI_BI_PYCONSOLE_ENABLED`,
+  `DRISHTI_BI_PYCONSOLE_MAX_ROWS` and the edition feature `pyconsole` are no longer read (remove `pyconsole:` from your edition files).
+- **Calc is a Labs feature, off as shipped.** To keep Calc, set `DRISHTI_LABS_CALC=true` (console `labs.calc`, server `drishti.calc.enabled`);
+  `calc.enabled` and `DRISHTI_CALC_ENABLED` are no longer read. Calc's `drishti_bi.walk` (Graphic Walker) is removed.
+- **Data view is Export data.** The page is the same (`/data`); its command word is `EXPORT`, and `DATA` still works.
+- **The MR cube is the Pivot's preset `mr`** (`/pivot?preset=mr`); `/mcube` and `MCUBE` lead there, saved views open unchanged. The CCR cube
+  (`/pivot?preset=ccr`, `CCUBE`) is under construction.
+- **One page renderer.** `ui.render` (`DRISHTI_UI_RENDER`, `DRISHTI_UI_RENDER_PAGES`) and `?render=client` are gone: the console's pages are drawn
+  by the server. Embeds: renderers **0.1.0, 1.0.0 and 1.1.0** and **Elements 2.0 and 2.1** are no longer served (`410 DRS-8006`): pin renderer
+  `1.2.0` and Elements `2.2.0` (or the aliases `1` and `2`), with the new `integrity.json` hashes.
+
 # Drishti 2.9.11.c — release notes
 
 *Released 2026-11-05.* **Data in by clear rules, data out through Arrow Flight; parametric VaR as a cross-check; lean & streamlined.**
