@@ -116,7 +116,7 @@ final class Differential implements AutoCloseable {
         };
         compiler = new Compiler(cols, new SqlLowering.Options(AS_OF, null));
         memory = new RowsEvaluator(EvalContext.of(DataNode.missing(), null).withToday(AS_OF));
-        scan = new ScanEvaluator(db, "t");
+        scan = new ScanEvaluator("t");
     }
 
     /** {@code [MTM]}, {@code [trades, MTM]} and {@code [$, MTM]} all name the column MTM. */
@@ -192,7 +192,7 @@ final class Differential implements AutoCloseable {
         Checker.Checked c = CheckedMode.check(text, Scope.ROW, FIELDS);
         assertThat(c.problems().stream().filter(p -> p.error())).as(text).isEmpty();
         Lowered.Row row = compiler.row(CheckedMode.parse(text).expr());
-        List<Object> sql = scan.rows(row, "ID");
+        List<Object> sql = scan.rows(db, row, "ID");
         List<String> out = new ArrayList<>();
         for (int i = 0; i < rows.size(); i++) {
             Object j = memory.row(row, rows.get(i));
@@ -214,7 +214,7 @@ final class Differential implements AutoCloseable {
         Checker.Checked c = CheckedMode.check(text, Scope.AGGREGATE, FIELDS);
         assertThat(c.problems().stream().filter(p -> p.error())).as(text).isEmpty();
         Lowered l = compiler.measure(CheckedMode.parse(text).expr());
-        return new Object[] {memory.measure(l, rows, Map.of()), scan.measure(l, Map.of())};
+        return new Object[] {memory.measure(l, rows, Map.of()), scan.measure(db, l, Map.of())};
     }
 
     /** Two values the same: nulls, numbers to 1e-9 relative, texts and booleans exactly, timestamps by their instant. */
