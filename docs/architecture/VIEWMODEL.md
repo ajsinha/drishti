@@ -816,7 +816,7 @@ ViewModel itself and draw it with Drishti Render ([CLIENT_RENDERER.md › Drisht
 The client-side renderer ([CLIENT_RENDERER.md section 7](CLIENT_RENDERER.md#7-how-every-panel-kind-maps)) ports every row of this
 table to `static/render/<version>/m/` and is compared with these macros by `tests/test_render_parity_browser.py` and, on the console's
 own page in both modes, `tests/test_render_console_browser.py`. In phase 2 (built) the console's entity page draws with it when
-`ui.render.mode` is `client`, and Elements 2.0 do; the macros stay as the `server` path and are retired later
+a client mode (since retired) is on, and Elements 2.0 do; the macros stay as the `server` path and are retired later
 ([ADR-022](adr/022-one-renderer-in-the-browser.md)). On a client page live panel patches come over a `vm:` subscription as panels, with
 no HTML, and are applied by the renderer.
 
@@ -847,7 +847,7 @@ no HTML, and are applied by the renderer.
 **The client-side renderer is built (phase 1 and phase 2, 2026-10-30;** [CLIENT_RENDERER.md](CLIENT_RENDERER.md),
 [ADR-022](adr/022-one-renderer-in-the-browser.md)): Drishti Render (`static/render/1.0.0/`) draws every kind of section 4 from this JSON,
 applies section 5's patches, and is compared with the console's macros by a parity suite over every pack Sutra; the console's entity page
-draws with it behind `ui.render`, and Elements 2.0 receive this JSON from the embed API v2. Items 1 (on every ViewModel; not on frames
+draws with it behind a client mode (since retired), and Elements 2.0 receive this JSON from the embed API v2. Items 1 (on every ViewModel; not on frames
 yet) and 2 are built, 3 and 4 are not; item 5 is ADR-022. The proposals, which turn this document into a published contract:
 
 1. **A contract version on every ViewModel and frame**: a top-level `"contract": "1.0"` (major.minor). The minor moves for

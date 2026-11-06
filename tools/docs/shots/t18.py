@@ -241,7 +241,7 @@ def analyse(c: Ctx):
     c.page.wait_for_function("() => /rows/.test(document.querySelector('[data-info]').textContent)", timeout=60000)
     c.page.evaluate("window.scrollTo(0, 0)")
     c.save("13-two-extracts.jpg", clip={"x": 240, "y": 56, "width": 1040, "height": 844})
-    # the two cells (14-the-trap.jpg, 15-the-cure.jpg) run on the server's compute pool: under construction, so their pictures are kept, not retaken
+    # the two cells run on the server's compute pool (under construction): the tutorial shows their output as text
 
 
 @shot("16-python-dataset.jpg")

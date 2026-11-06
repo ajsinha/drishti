@@ -282,8 +282,6 @@ If both facts reach the counterparty, why not join each trade to its counterpart
 You should see `10000 rows, 3 columns.` with the note that the extract was cut (an extract holds at most `bi.notebook.max_rows`, 10,000; the lake has
 15,000 trade valuations) and, under **More extracts**, `exposure` (all 76 netting sets of the official results). In the **Python** tab, the first cell does what a person who thinks in rows would do: join each trade to the netting sets of its counterparty, and add up. The cells run on the server's compute pool (*Under construction*, so **Run** is greyed for now); what they give is below.
 
-![The first Python cell and its output: 10000 trade rows, 76 netting-set rows, 32293 rows after the join; P&L 95,004,093 became 397,124,778 and exposure 2,663,018,256 became 1,165,433,266,636](img/t18/14-the-trap.jpg)
-
 They give (the `true` figures are the extract's own: the P&L of the 10,000 trades it holds):
 
 ```text
@@ -294,7 +292,6 @@ EE peak  true 2663018256   row join 1165433266636
 
 Every trade of a counterparty with four netting sets became four rows, so its P&L was counted four times; every netting set met every trade of its counterparty, so exposure was counted once per trade. The P&L is **4.2 times** too big and the exposure **438 times**; nothing failed, and the table looks like a table. That is the **fan-out** trap. The second cell does what the model does for you: add each side up to the counterparty first, then join the sums, and draw it:
 
-![The second cell: groupby counterparty on both sides, then a join of the sums; a chart of the ten largest counterparties with MTM and exposure bars](img/t18/15-the-cure.jpg)
 
 Its exposure is step 1's total again (`2,663,018,256`); its MTM is the extract's (the 10,000 trades it holds), and the model of step 3 gives the full one. **From the command line** the model of step 3 answers the same question without a join of rows: `python3 tools/drishti.py bi mq --model cp-risk@1 --select counterparty.id --measures MTM,"Exposure (EE peak)"`.
 

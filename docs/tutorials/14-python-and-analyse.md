@@ -244,6 +244,8 @@ or the Notebook's own line *To slice and total a table, use the Pivot*. Its tota
 ([PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md)); **on the command line** `PIVOT <table> <GO>` opens it on a table, and a pivot view is saved as YAML there.
 The Notebook is for what a grid cannot say: SQL over the model and Python.
 
+You should see the Pivot open with its source picker: choose the trades' table, then drag `DESK` to Rows, `CURRENCY` to Columns and `NOTIONAL` to Values.
+
 ## Step 5 · SQL
 
 Open the **SQL** tab (it opens first). A SQL cell is **one read-only SELECT** in **Drishti SQL over the model**, asked of the **server** as you, so its
@@ -293,7 +295,7 @@ result = {'title': {'text': 'Notional by desk'}, 'xAxis': {'type': 'category', '
 
 The line beside **Run** says *Runs on the server's compute pool*: a cell never runs in the console or your browser. Running it there comes with one
 Python runtime on the server and is **Under construction**: **Run** and **Run all** carry the chip and are greyed, and pressing a cell's Run says so.
-Write the cell, keep it in the notebook (step 7) and promote it to an item (below): whoever opens the notebook later runs it on the pool, over their own
+You should see *Runs on the server's compute pool* beside the greyed **Run**, and the *Under construction* chip. Write the cell, keep it in the notebook (step 7) and promote it to an item (below): whoever opens the notebook later runs it on the pool, over their own
 rows. Running Python needs `bi-author`; a person with only `bi` writes and runs SQL cells.
 
 ## Step 7 · Keep it as a notebook, promote it

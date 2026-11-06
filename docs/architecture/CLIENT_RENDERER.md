@@ -17,7 +17,7 @@
 
 **Status: built; one page renderer.** The console's pages are drawn by the server (Jinja, the macros): that is the one page renderer.
 This library draws **embeds** (Elements 2.x, the embed API v2) and **`<drishti-report>`** only, in **one version (1.2.0)**; the
-console's own client-drawn mode (`ui.render`, phase 2's `drishti_view-render.js`) and the versions 0.1.0 to 1.1.0 are retired. Both
+console's own client-drawn mode (a client mode, phase 2's `drishti_view-render.js`) and the versions 0.1.0 to 1.1.0 are retired. Both
 phases are built. The decision:
 [ADR-022](adr/022-one-renderer-in-the-browser.md), which supersedes the rendering part of
 [ADR-021](adr/021-embedding-is-html-over-the-wire.md). The contract it draws: [VIEWMODEL.md](VIEWMODEL.md) (its own reference, [section 22](#22-the-viewmodel-contract-its-own-reference)).
@@ -31,7 +31,7 @@ console under a versioned path, with the vendored ECharts and nothing from a CDN
 and one call (`render(el, { kind: 'trade', id: 'IRS-48213' })`); the screen draws inside the host's own container, in a Shadow DOM,
 follows live updates, and navigates **in place** with its own back stack. It also accepts a **streamed** ViewModel, panel by panel,
 which is how GenUI's ephemeral screens will reach the browser. Phase 1 (built, 0.1.0) is the library and the evidence that it draws
-exactly what the macros draw; phase 2 (built, **1.0.0**) moves the console's entity page onto it (`ui.render: client`, page by page),
+exactly what the macros draw; phase 2 (built, **1.0.0**) moves the console's entity page onto it (a client mode page by page, since retired),
 brings the console's own behaviours into the library, and puts Elements 2.0 on it, so there is never a second renderer. The follow-ups
 (**1.1.0**, Elements 2.1, plan row 2a) add the optional sign-in window for hosts without a backend (section 10.1), name the lens or edition
 in a `DRS-4023` refusal (section 10), open the playground on an entity the server holds, and fix the client-mode reply race (section 16.5).
@@ -1427,7 +1427,7 @@ Nothing at all (the element stays in `loading`, with no event): the token provid
 **Drishti Render 1.0.0** paints a Drishti screen **in the browser** from the server's ViewModel JSON, instead of swapping in
 the console's HTML (this document, [ADR-022](adr/022-one-renderer-in-the-browser.md)).
 It draws every panel kind as the console does (a parity suite compares them on every pack Sutra), with no build step and nothing from a
-CDN, and the console's own entity page can draw with it (`ui.render`). **Elements 2.0** is `<drishti-view>` and `<drishti-panel>` on it,
+CDN, and the console's own entity page can draw with it (a client mode, since retired). **Elements 2.0** is `<drishti-view>` and `<drishti-panel>` on it,
 beside the Elements 1.x above (unchanged) for one release ([section 19, its section 19](#19-elements-20-drawn-by-the-client-side-renderer)).
 **Drishti Render 1.1.0 and Elements 2.1** (the current versions; `/embed/v2/elements/2/` answers 2.1) add the sign-in window for
 pages without a backend (`auth: 'popup'`, `auth="popup"`; [above](#a-page-without-a-backend-the-sign-in-window-auth)), the events
