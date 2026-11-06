@@ -111,8 +111,8 @@ and the counterparty engines and stress are one.*
 | **2.9.11.k** | CVA | BA-CVA from SA-CCR exposure; FVA |
 
 **Not scheduled:** QuantLib (a release of its own: the `quantlib_for_maven` binding in single-threaded worker processes); the
-PostgreSQL wire protocol (when a pilot asks); FRTB internal models, SA-CVA and full xVA; new domains (IFRS 9, financial crime, other
-industries) are frozen until no more than five jobs have more than one way and a first reference client exists. At the end, an
+PostgreSQL wire protocol (when a pilot asks); FRTB internal models, SA-CVA and full xVA; new domains beyond the two named above wait
+until those are built. At the end, an
 independent critique of the whole product ([PRODUCT_CRITIQUE_BRIEF.md](PRODUCT_CRITIQUE_BRIEF.md)).
 
 **Domains are modules** (product owner, 2026-11-05). The core knows no industry: each domain (risk and banking now, the public sector
@@ -123,6 +123,31 @@ a person sees follows their role and lens through the one entitlement service. T
 names the modules an installation may run; an unlicensed module is not loaded at all), with editions folded into it. Designed in
 2.9.11.e, visibility by role in 2.9.11.f, the code split in 2.9.11.g, licensing on the clean modules after it; the public-sector domain is
 built as a module from day one.
+
+**A large commercial product** (product owner, 2026-11-05). Beyond features, the roadmap carries what a bank buys and audits:
+
+| Theme | What it means | Where |
+|---|---|---|
+| **Data licensing** | every dataset carries its licence (vendor, terms, who may see it, redistribution, display versus non-display use, derived data rules); a person sees a source's data only if both RBAC and the data licence allow it; exports, Flight, embeds and the AI honour the same rule; usage reported per source for vendor audits (market data vendors bill by user and use) | designed with the security model (2.9.11.f), enforced by the one entitlement service |
+| **Module licensing** | signed licence naming modules and limits; unlicensed modules not loaded; editions folded in | after 2.9.11.g's module split |
+| **Metering** | per module, per user and per data source: who used what, for licence compliance and billing | with licensing |
+| **Tenancy and residency** | several business units (or clients) on one installation with separated data; data kept in a chosen region | after licensing |
+| **Security assurance** | penetration tests, dependency and container scanning, signed releases, an SBOM, secrets in a vault, customer-managed keys | 2.9.11.f onward, every release |
+| **Compliance evidence** | audit trail export, access reviews, SOC 2 and ISO 27001 style evidence, model governance (SR 11-7) for risk models | with the controls (2.9.11.f) |
+| **Operations** | high availability and disaster recovery (tested restore), observability (metrics, traces, alerts), upgrades with versioned migrations, a long-term-support branch | 2.9.11.g and every release |
+| **Support** | diagnostics bundle, support tooling, documented service levels | with operations |
+| **Ecosystem** | a pack and module SDK, partner certification, a signed pack registry (exists) as a marketplace | after the module split |
+| **Accessibility and languages** | WCAG 2.2 AA everywhere, right-to-left and translations for the console | a UX pass each release |
+
+**New domains, in order** (product owner, 2026-11-05): **economy, government and the public sector** first (as much public open data as
+possible), then **anti-money laundering** (customers and KYC, accounts, transactions, alerts and cases, sanctions and PEP screening,
+typologies, network analysis and the suspicious-activity report), each a licensable domain module.
+
+**Packs organised by domain** (product owner, 2026-11-05): `config/packs/` grouped into domain folders, each folder the packs of one
+domain module, licensed and shipped with it: e.g. `config/packs/core/` (the generic pack), `banking/` (trading, market-data,
+market-risk, counterparty-risk, funds, us-equities, gleif), `economy/` (world-economy, news-and-markets) and later `gov/` and `aml/`;
+the pack loader reads the folders, a pack names its domain, and Admin → Packs, Help and the Build home group by it. Done with the module
+split (2.9.11.g); pack ids stay the same, so links and saved items keep working.
 
 **Every release:** two drills, the VaR check, the README rewritten, the decks updated, a code survey and A/B/C mock-ups before a new
 screen, and anything unbuilt hidden or marked "Under construction" through the one registry
