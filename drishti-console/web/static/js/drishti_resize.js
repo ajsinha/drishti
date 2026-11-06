@@ -20,7 +20,7 @@
  * Declared by markup, bound by itself (on load and whenever such markup appears):
  *
  *   Splitter between a side panel and the main area: a handle inside the panel (the panel is its parent, or data-resize-target).
- *     <aside class="vx-side">… <div data-resize="panel" data-resize-key="var.scopes" data-resize-var="--vx-side"
+ *     <aside class="vx-side">… <div data-resize="panel" data-resize-key="<screen>.<panel>" data-resize-var="--vx-side"
  *                                   data-resize-min="220" data-resize-max="640" aria-label="Resize the Scopes panel"></div></aside>
  *     The width goes to the CSS variable data-resize-var (default --d-panel-w) on the panel's parent, so the layout's own CSS says
  *     where it lands: .vx-layout { grid-template-columns: var(--vx-side, 330px) minmax(0, 1fr); }. data-resize-edge="left" for a
