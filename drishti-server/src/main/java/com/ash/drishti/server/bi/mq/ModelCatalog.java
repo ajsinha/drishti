@@ -1211,7 +1211,7 @@ public final class ModelCatalog {
      */
     public Map<String, Object> layerDataset(Principal p, String id) {
         BiStore.Item i = bi.readableItem(p, id);
-        if (!"dataset".equals(i.kind())) {
+        if (!"dataset".equals(i.kind()) && !"table".equals(i.kind())) {
             throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "'" + id + "' is not a dataset");
         }
         String body = bi.bodyFor(p, i);
@@ -1225,8 +1225,8 @@ public final class ModelCatalog {
         if (DatasetDefParser.isVersion2(body)) {
             DatasetDefParser.Result r = DatasetDefParser.parse(body);
             problems.addAll(r.problems());
-            if (r.dataset() != null && r.ok() && r.dataset().extendsRef() != null) {
-                ResolvedDataset folded = chain(r.dataset(), new LinkedHashSet<>(), problems);
+            if (r.dataset() != null && r.ok() && (r.dataset().extendsRef() != null || com.ash.drishti.server.bi.layer.LayerTables.isTable(body))) {
+                ResolvedDataset folded = chain(r.dataset(), new LinkedHashSet<>(), problems);      // a table of the layer: said in BI's terms
                 if (folded != null) {
                     resolved = PackDatasets.resolvedYaml(folded);
                 }
