@@ -102,8 +102,8 @@ public final class EditorService {
         bi.tablesCheck(this::publishCheck);
     }
 
-    /** What proposing or publishing a table or a model of the layer checks: the layer's checks in the catalogue, the errors in words. */
-    String publishCheck(Principal p, BiStore.Item i) {
+    /** What publishing a table or a model of the layer checks: the layer's checks in the catalogue; an error refuses it, in words. */
+    void publishCheck(Principal p, BiStore.Item i) {
         EditorYaml.Read read = EditorYaml.read(i.body());
         Object name = read.ok() ? read.doc().get(i.kind()) : null;
         Map<String, Object> c = check(p, i.kind(), i.body(), null, name == null ? null : String.valueOf(name));
@@ -115,7 +115,9 @@ public final class EditorService {
                 }
             }
         }
-        return String.join("; ", errors);
+        if (!errors.isEmpty()) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, "'" + i.title() + "' cannot be published: " + String.join("; ", errors) + " (check it in its editor)");
+        }
     }
 
     // ---- who may -----------------------------------------------------------------------------------------------------------------

@@ -517,7 +517,7 @@ public final class BiService {
         }
         Instant now = Instant.now();
         String title = text(body, "title", 200, true);
-        String content = onSave(kind, checkedBody(body.get("body")));
+        String content = com.ash.drishti.server.bi.layer.LayerBodies.onSave(kind, checkedBody(body.get("body")));
         String asReport = "board".equals(kind) ? BoardConverter.onCreate(content, title) : null;      // 2.4.0 (R7): a board is a report with board pages
         if (asReport != null) {
             kind = "report";
@@ -706,6 +706,7 @@ public final class BiService {
     }
 
     private volatile java.util.function.BiFunction<Principal, BiStore.Item, String> layerCheck;
+    private volatile java.util.function.BiConsumer<Principal, BiStore.Item> tablesCheck; public void tablesCheck(java.util.function.BiConsumer<Principal, BiStore.Item> c) { this.tablesCheck = c; }   // the table layer's editors (EDITORS.md): its checks refuse in words
 
     /**
      * Set once by the model catalogue: what publishing a data model or a {@code rachana: 2} dataset runs (Check, the contract's versioning, the security
@@ -713,29 +714,6 @@ public final class BiService {
      */
     public void layerCheck(java.util.function.BiFunction<Principal, BiStore.Item, String> check) {
         this.layerCheck = check;
-    }
-
-    private volatile java.util.function.BiFunction<Principal, BiStore.Item, String> tablesCheck;
-
-    /**
-     * Set once by the table layer's editors (EDITORS.md section 7): what proposing and publishing a table or a model in the layer's form
-     * ({@code rachana: 3}) runs instead of BI's own model checks. It answers the errors in words, empty when there are none.
-     */
-    public void tablesCheck(java.util.function.BiFunction<Principal, BiStore.Item, String> check) {
-        this.tablesCheck = check;
-    }
-
-    /** A body as saved: BI's model layer writes its stable ids; a table or model of the table layer is kept as typed. */
-    private static String onSave(String kind, String body) {
-        if (body != null && ("table".equals(kind) || "model".equals(kind)) && body.lines().anyMatch(l -> l.strip().equals("rachana: 3"))) {
-            return body;
-        }
-        return com.ash.drishti.server.bi.layer.LayerBodies.onSave(kind, body);
-    }
-
-    /** True for an item of the table layer: a table, or a model in the layer's form ({@code rachana: 3}). */
-    static boolean layerItem(BiStore.Item i) {
-        return ("table".equals(i.kind()) || "model".equals(i.kind())) && i.body() != null && i.body().lines().anyMatch(l -> l.strip().equals("rachana: 3"));
     }
 
     /** Every published item of a kind, stored and shipped, whoever may read it (the model catalogue resolves names among them). */
@@ -844,7 +822,7 @@ public final class BiService {
         if (base != null && !String.valueOf(base).isBlank() && !String.valueOf(base).equals(i.updatedAt() == null ? "" : i.updatedAt().toString())) {
             throw new DrishtiException(ErrorCode.BI_STALE, "'" + i.title() + "' was saved by " + i.updatedBy() + " since you opened it: reload it, save yours as a copy, or overwrite");
         }
-        String newBody = body.containsKey("body") ? onSave(i.kind(), checkedBody(body.get("body"))) : i.body();
+        String newBody = body.containsKey("body") ? com.ash.drishti.server.bi.layer.LayerBodies.onSave(i.kind(), checkedBody(body.get("body"))) : i.body();
         String newTitle = body.containsKey("title") ? text(body, "title", 200, true) : i.title();
         if (BiTitles.KINDS.contains(i.kind())) {                                       // one title: the item's and the body's agree after every save
             String inBody = BiTitles.of(newBody);
@@ -1046,12 +1024,7 @@ public final class BiService {
     }
 
     private Map<String, Object> publishNow(Principal p, BiStore.Item i, String note, boolean force, boolean applyRenames) {
-        if (layerItem(i)) {
-            String why = tablesCheck == null ? "" : tablesCheck.apply(p, i);
-            if (!why.isEmpty()) {
-                throw new DrishtiException(ErrorCode.BI_INVALID, "'" + i.title() + "' cannot be published: " + why + " (check it in its editor)");
-            }
-        } else if (layerCheck != null && ("model".equals(i.kind()) || "dataset".equals(i.kind()) && com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(i.body()))) {
+        if (tablesCheck != null && com.ash.drishti.server.bi.layer.LayerBodies.tableLayer(i.kind(), i.body())) { tablesCheck.accept(p, i); } else if (layerCheck != null && ("model".equals(i.kind()) || "dataset".equals(i.kind()) && com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(i.body()))) {
             String noted = layerCheck.apply(p, i);                                  // the model layer's checks, contract and security safeguard: refuses with its code
             if (!noted.isEmpty()) {
                 audit.record(p.user(), "bi-model-may-see-all", i.id(), noted);
