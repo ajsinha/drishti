@@ -1,0 +1,30 @@
+{
+  "itemTests" : "none ship in config/bi (no tests: or golden: in a shipped dataset, model or report); the BI suites run unchanged",
+  "models" : [ "counterparty-exposure", "desk-pnl-vs-exposure-py", "live-exposure", "live-trading", "market-risk-var", "region-economics", "trades-basic", "trading-cashflows", "trading-risk", "world-economics" ],
+  "notLoaded" : { },
+  "notRecordable" : {
+    "python visuals and the python model's measures" : "the console runs them (a python visual, desk-pnl-vs-exposure-py's result frame): left out, or recorded as their refusal",
+    "saved pivot views" : "none ship: a pivot view is a person's, in the content store; BI's pivot figures are recorded as the matrices' totals and the models' subtotals"
+  },
+  "persons" : [ "desk-head-two-desks", "desk-head-no-desks", "risk", "analyst", "admin", "no-raw-power", "unnamed-role" ],
+  "recordedWith" : "BI before 2.9.11.e: models through MqService, reports through VisualQueries and QueryService (their totals through BiAggregate), reports on a live dataset through a live QueryService at load, boards through the reports their tiles show, live through LiveTable",
+  "reports" : [ "cashflow-ladder", "counterparty-risk", "desk-wall", "live-exposure", "live-trading-desk", "market-risk-var", "pnl-vs-exposure", "python-desk-risk", "python-wall", "region-economics", "trades-overview", "world-economics" ],
+  "reportsNotRecorded" : { },
+  "slices" : {
+    "counterparty-exposure" : "counterparties.SECTOR = sector-0",
+    "desk-pnl-vs-exposure-py" : "none: no text field with a value",
+    "live-exposure" : "netting.COUNTERPARTY = COUNTERPARTY-0",
+    "live-trading" : "trade.DESK = DESK-0",
+    "market-risk-var" : "nodes.HIERARCHY = hierarchy-0",
+    "region-economics" : "regions.COUNTRY_NAME = country_name-0",
+    "trades-basic" : "trade.DESK = DESK-0",
+    "trading-cashflows" : "trades.SOURCE_SYSTEM = source_system-0",
+    "trading-risk" : "desks.NAME = name-0",
+    "world-economics" : "economies.NAME = name-0"
+  },
+  "times" : {
+    "as-of-day1" : "time: { as-of: 2026-10-08 }",
+    "as-of-day2" : "time: { as-of: 2026-10-09 }",
+    "window" : "time: { window: { from: 2026-10-08, to: 2026-10-09 } }"
+  }
+}

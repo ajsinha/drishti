@@ -2825,7 +2825,9 @@ the folder you run them in (`--root` for another catalogue folder). Every comman
 ```
 drishti.py tables list                                              every table and model: source, grain, columns, materialisation
 drishti.py tables check [--sample TABLE=FILE.jsonl]... [--stored NAME,...]   every definition and the catalogue; exit 1 on an error
-drishti.py tables preview TABLE --sample FILE.jsonl [--limit N]     the table's first rows over sample documents (JSONL, .gz too)
+drishti.py tables preview TABLE --sample FILE.jsonl [--related TABLE=FILE.jsonl]... [--fx FILE.jsonl] [--limit N]
+                                                                    the table's first rows over sample documents (JSONL, .gz too);
+                                                                    related() reads another table's sample, fx() spot rates (PAIR_NAME, MID)
 drishti.py tables lineage NAME                                      who uses a table or a model
 drishti.py tables offer NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE) [--grain '$.LIST[*]'] [--write]
                                                                     the flat virtual table offered for a new table, columns from a sample
@@ -2837,7 +2839,18 @@ expression before and after, every refusal); `--check` exits 1 when anything wou
 line each with `--audit`. A second run changes nothing. Captured on the shipped samples:
 
 ```text
-(filled in the heavy run)
+$ drishti.py tables migrate --dry-run --report migration.txt
+--- /dev/null
++++ b/bi/counterparty_exposure_counterparties.table.yaml
+...
+items: 34 (converted 34, unchanged 0, refused 0)
+expressions: 103 (rewritten 22, refused 0)
+files to write: 32
+$ drishti.py tables migrate --audit data/audit/tables-migrate.jsonl
+...
+34 file(s) written under /path/to/drishti/config/tables
+$ drishti.py tables migrate --check
+nothing to migrate
 ```
 
 ### Shell completion

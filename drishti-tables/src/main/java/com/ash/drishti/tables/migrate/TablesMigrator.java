@@ -300,6 +300,9 @@ public final class TablesMigrator {
             marked.add("converted".equals(i.state()) && !anyWrite ? new Item(i.source(), i.kind(), "unchanged", i.outputs(), i.notes(), null) : i);
         }
         Catalogue existing = Catalogue.load(tables, ItemStore.NONE);
+        // a definition already under config/tables keeps its own file as its label: the check reads the domain folder from it
+        existing.entries().stream().filter(e -> e.table() != null || e.model() != null)
+                .forEach(e -> labels.putIfAbsent(e.table() != null ? e.table() : e.model(), e.source()));
         List<TableDef> all = new ArrayList<>(newTables);
         existing.tables().stream().filter(t -> all.stream().noneMatch(x -> x.name().equals(t.name()))).forEach(all::add);
         List<ModelDef> allModels = new ArrayList<>(newModels);

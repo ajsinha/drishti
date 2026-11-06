@@ -54,7 +54,8 @@ public final class BiParityCases {
      * @param from the first business date
      * @param to the last business date
      * @param filters the visual's filters
-     * @param reader {@code risk} (sees everything) or {@code masked} (the trades' mtm masked)
+     * @param reader {@code risk} (sees everything), {@code masked} (the trades' mtm masked), {@code desk-head} (DESK-A and DESK-B by the row
+     *        rule), {@code desk-head-none} (no desks: no rows) or {@code auditor} (DESK-B or DESK-C)
      */
     public record Case(String name, LocalDate from, LocalDate to, List<QueryRequest.Filter> filters, String reader) {}
 
@@ -63,14 +64,30 @@ public final class BiParityCases {
             new Case("day1", TestLake.DAY1, TestLake.DAY1, List.of(), "risk"),
             new Case("two-days", TestLake.DAY1, TestLake.DAY2, List.of(), "risk"),
             new Case("eur-usd", TestLake.DAY2, TestLake.DAY2, List.of(new QueryRequest.Filter("trades.currency", "in", List.<Object>of("EUR", "USD"))), "risk"),
-            new Case("masked-mtm", TestLake.DAY2, TestLake.DAY2, List.of(), "masked"));
+            new Case("masked-mtm", TestLake.DAY2, TestLake.DAY2, List.of(), "masked"),
+            // 2.9.11.d: the readers' row rules (a desk-head's strict in, with and without desks; an auditor's or-rule), a filter that excludes, a
+            // slicer of one desk over the window, the masked reader over the window, a rule and a filter together, and a filter no row passes
+            new Case("desk-head-two-desks", TestLake.DAY2, TestLake.DAY2, List.of(), "desk-head"),
+            new Case("desk-head-no-desks", TestLake.DAY2, TestLake.DAY2, List.of(), "desk-head-none"),
+            new Case("auditor", TestLake.DAY2, TestLake.DAY2, List.of(), "auditor"),
+            new Case("not-eur", TestLake.DAY2, TestLake.DAY2, List.of(new QueryRequest.Filter("trades.currency", "not-in", List.<Object>of("EUR"))), "risk"),
+            new Case("desk-a-two-days", TestLake.DAY1, TestLake.DAY2, List.of(new QueryRequest.Filter("trades.desk", "in", List.<Object>of("DESK-A"))), "risk"),
+            new Case("masked-two-days", TestLake.DAY1, TestLake.DAY2, List.of(), "masked"),
+            new Case("auditor-usd", TestLake.DAY2, TestLake.DAY2, List.of(new QueryRequest.Filter("trades.currency", "in", List.<Object>of("USD"))), "auditor"),
+            new Case("no-rows", TestLake.DAY2, TestLake.DAY2, List.of(new QueryRequest.Filter("trades.desk", "in", List.<Object>of("NO-SUCH-DESK"))), "risk"));
 
     private BiParityCases() {}
 
     public static QueryService.Caller caller(String reader) {
-        return "masked".equals(reader)
-                ? new QueryService.Caller("ann", Set.of("risk"), true, UserAttributes.of("ann", List.of("risk"), "", null), (t, c) -> c.equals("mtm"))
-                : new QueryService.Caller("rita", Set.of("risk"), true, UserAttributes.of("rita", List.of("risk"), "", null), SqlCompiler.Masks.NONE);
+        return switch (reader) {
+            case "masked" -> new QueryService.Caller("ann", Set.of("risk"), true, UserAttributes.of("ann", List.of("risk"), "", null), (t, c) -> c.equals("mtm"));
+            case "desk-head" -> new QueryService.Caller("hana", Set.of("desk-head"), true, UserAttributes.of("hana", List.of("desk-head"), "DESK-A,DESK-B", null),
+                    SqlCompiler.Masks.NONE);
+            case "desk-head-none" -> new QueryService.Caller("dina", Set.of("desk-head"), true, UserAttributes.of("dina", List.of("desk-head"), "", null),
+                    SqlCompiler.Masks.NONE);
+            case "auditor" -> new QueryService.Caller("otto", Set.of("auditor"), true, UserAttributes.of("otto", List.of("auditor"), "", null), SqlCompiler.Masks.NONE);
+            default -> new QueryService.Caller("rita", Set.of("risk"), true, UserAttributes.of("rita", List.of("risk"), "", null), SqlCompiler.Masks.NONE);
+        };
     }
 
     /** The case's question with no fields (each level adds its own). */

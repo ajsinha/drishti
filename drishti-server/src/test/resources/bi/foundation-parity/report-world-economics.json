@@ -1,0 +1,464 @@
+{
+  "admin" : {
+    "world/economies" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "world/economies | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "world/gdp" : {
+      "masked" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "world/gdp | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "world/gdp-map" : {
+      "masked" : [ ],
+      "rows" : [ [ "iso3-0", 102.07744791082374 ], [ "iso3-1", 3590.6736928178802 ], [ "iso3-2", -10404.559544045595 ], [ "iso3-3", 362.33731431923695 ] ]
+    },
+    "world/gdp-map | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "iso3-0", 102.07744791082374 ] ]
+    },
+    "world/growth" : {
+      "masked" : [ ],
+      "rows" : [ [ 14008.0 ] ]
+    },
+    "world/growth | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 9005.5 ] ]
+    },
+    "world/income" : {
+      "masked" : [ ],
+      "rows" : [ [ "income_name-0" ], [ "income_name-1" ], [ "income_name-2" ], [ "income_name-3" ] ]
+    },
+    "world/pop" : {
+      "masked" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "world/pop | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 49026.5 ] ]
+    },
+    "world/region" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_name-0" ], [ "region_name-1" ], [ "region_name-2" ], [ "region_name-3" ] ]
+    },
+    "world/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "region_name-0", 5004.5, 102.07744791082374, 9005.5, 42022.0, 24513.25 ], [ "name-1", "region_name-1", 79041.5, 3590.6736928178802, -4501.25, 28515.25, 11006.5 ], [ "name-2", "region_name-2", 52028.0, -10404.559544045595, 32517.25, 15008.5, -2500.25 ], [ "name-3", "region_name-3", 25014.5, 362.33731431923695, 19010.5, 1501.75, 34518.25 ] ]
+    },
+    "world/table | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "region_name-0", 5004.5, 102.07744791082374, 9005.5, 42022.0, 24513.25 ] ]
+    },
+    "world/top-gdp" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ]
+    },
+    "world/top-gdp | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ] ]
+    }
+  },
+  "analyst" : {
+    "world/economies" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "world/economies | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "world/gdp" : {
+      "masked" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "world/gdp | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "world/gdp-map" : {
+      "masked" : [ ],
+      "rows" : [ [ "iso3-0", 102.07744791082374 ], [ "iso3-1", 3590.6736928178802 ], [ "iso3-2", -10404.559544045595 ], [ "iso3-3", 362.33731431923695 ] ]
+    },
+    "world/gdp-map | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "iso3-0", 102.07744791082374 ] ]
+    },
+    "world/growth" : {
+      "masked" : [ ],
+      "rows" : [ [ 14008.0 ] ]
+    },
+    "world/growth | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 9005.5 ] ]
+    },
+    "world/income" : {
+      "masked" : [ ],
+      "rows" : [ [ "income_name-0" ], [ "income_name-1" ], [ "income_name-2" ], [ "income_name-3" ] ]
+    },
+    "world/pop" : {
+      "masked" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "world/pop | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 49026.5 ] ]
+    },
+    "world/region" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_name-0" ], [ "region_name-1" ], [ "region_name-2" ], [ "region_name-3" ] ]
+    },
+    "world/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "region_name-0", 5004.5, 102.07744791082374, 9005.5, 42022.0, 24513.25 ], [ "name-1", "region_name-1", 79041.5, 3590.6736928178802, -4501.25, 28515.25, 11006.5 ], [ "name-2", "region_name-2", 52028.0, -10404.559544045595, 32517.25, 15008.5, -2500.25 ], [ "name-3", "region_name-3", 25014.5, 362.33731431923695, 19010.5, 1501.75, 34518.25 ] ]
+    },
+    "world/table | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "region_name-0", 5004.5, 102.07744791082374, 9005.5, 42022.0, 24513.25 ] ]
+    },
+    "world/top-gdp" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ]
+    },
+    "world/top-gdp | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ] ]
+    }
+  },
+  "desk-head-no-desks" : {
+    "world/economies" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "world/economies | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "world/gdp" : {
+      "masked" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "world/gdp | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "world/gdp-map" : {
+      "masked" : [ ],
+      "rows" : [ [ "iso3-0", 102.07744791082374 ], [ "iso3-1", 3590.6736928178802 ], [ "iso3-2", -10404.559544045595 ], [ "iso3-3", 362.33731431923695 ] ]
+    },
+    "world/gdp-map | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "iso3-0", 102.07744791082374 ] ]
+    },
+    "world/growth" : {
+      "masked" : [ ],
+      "rows" : [ [ 14008.0 ] ]
+    },
+    "world/growth | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 9005.5 ] ]
+    },
+    "world/income" : {
+      "masked" : [ ],
+      "rows" : [ [ "income_name-0" ], [ "income_name-1" ], [ "income_name-2" ], [ "income_name-3" ] ]
+    },
+    "world/pop" : {
+      "masked" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "world/pop | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 49026.5 ] ]
+    },
+    "world/region" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_name-0" ], [ "region_name-1" ], [ "region_name-2" ], [ "region_name-3" ] ]
+    },
+    "world/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "region_name-0", 5004.5, 102.07744791082374, 9005.5, 42022.0, 24513.25 ], [ "name-1", "region_name-1", 79041.5, 3590.6736928178802, -4501.25, 28515.25, 11006.5 ], [ "name-2", "region_name-2", 52028.0, -10404.559544045595, 32517.25, 15008.5, -2500.25 ], [ "name-3", "region_name-3", 25014.5, 362.33731431923695, 19010.5, 1501.75, 34518.25 ] ]
+    },
+    "world/table | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "region_name-0", 5004.5, 102.07744791082374, 9005.5, 42022.0, 24513.25 ] ]
+    },
+    "world/top-gdp" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ]
+    },
+    "world/top-gdp | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ] ]
+    }
+  },
+  "desk-head-two-desks" : {
+    "world/economies" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "world/economies | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "world/gdp" : {
+      "masked" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "world/gdp | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "world/gdp-map" : {
+      "masked" : [ ],
+      "rows" : [ [ "iso3-0", 102.07744791082374 ], [ "iso3-1", 3590.6736928178802 ], [ "iso3-2", -10404.559544045595 ], [ "iso3-3", 362.33731431923695 ] ]
+    },
+    "world/gdp-map | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "iso3-0", 102.07744791082374 ] ]
+    },
+    "world/growth" : {
+      "masked" : [ ],
+      "rows" : [ [ 14008.0 ] ]
+    },
+    "world/growth | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 9005.5 ] ]
+    },
+    "world/income" : {
+      "masked" : [ ],
+      "rows" : [ [ "income_name-0" ], [ "income_name-1" ], [ "income_name-2" ], [ "income_name-3" ] ]
+    },
+    "world/pop" : {
+      "masked" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "world/pop | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 49026.5 ] ]
+    },
+    "world/region" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_name-0" ], [ "region_name-1" ], [ "region_name-2" ], [ "region_name-3" ] ]
+    },
+    "world/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "region_name-0", 5004.5, 102.07744791082374, 9005.5, 42022.0, 24513.25 ], [ "name-1", "region_name-1", 79041.5, 3590.6736928178802, -4501.25, 28515.25, 11006.5 ], [ "name-2", "region_name-2", 52028.0, -10404.559544045595, 32517.25, 15008.5, -2500.25 ], [ "name-3", "region_name-3", 25014.5, 362.33731431923695, 19010.5, 1501.75, 34518.25 ] ]
+    },
+    "world/table | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "region_name-0", 5004.5, 102.07744791082374, 9005.5, 42022.0, 24513.25 ] ]
+    },
+    "world/top-gdp" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ]
+    },
+    "world/top-gdp | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ] ]
+    }
+  },
+  "no-raw-power" : {
+    "world/economies" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "world/economies | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "world/gdp" : {
+      "masked" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "world/gdp | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "world/gdp-map" : {
+      "masked" : [ ],
+      "rows" : [ [ "iso3-0", 102.07744791082374 ], [ "iso3-1", 3590.6736928178802 ], [ "iso3-2", -10404.559544045595 ], [ "iso3-3", 362.33731431923695 ] ]
+    },
+    "world/gdp-map | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "iso3-0", 102.07744791082374 ] ]
+    },
+    "world/growth" : {
+      "masked" : [ ],
+      "rows" : [ [ 14008.0 ] ]
+    },
+    "world/growth | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 9005.5 ] ]
+    },
+    "world/income" : {
+      "masked" : [ ],
+      "rows" : [ [ "income_name-0" ], [ "income_name-1" ], [ "income_name-2" ], [ "income_name-3" ] ]
+    },
+    "world/pop" : {
+      "masked" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "world/pop | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 49026.5 ] ]
+    },
+    "world/region" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_name-0" ], [ "region_name-1" ], [ "region_name-2" ], [ "region_name-3" ] ]
+    },
+    "world/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "region_name-0", 5004.5, 102.07744791082374, 9005.5, 42022.0, 24513.25 ], [ "name-1", "region_name-1", 79041.5, 3590.6736928178802, -4501.25, 28515.25, 11006.5 ], [ "name-2", "region_name-2", 52028.0, -10404.559544045595, 32517.25, 15008.5, -2500.25 ], [ "name-3", "region_name-3", 25014.5, 362.33731431923695, 19010.5, 1501.75, 34518.25 ] ]
+    },
+    "world/table | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "region_name-0", 5004.5, 102.07744791082374, 9005.5, 42022.0, 24513.25 ] ]
+    },
+    "world/top-gdp" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ]
+    },
+    "world/top-gdp | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ] ]
+    }
+  },
+  "risk" : {
+    "world/economies" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "world/economies | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "world/gdp" : {
+      "masked" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "world/gdp | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "world/gdp-map" : {
+      "masked" : [ ],
+      "rows" : [ [ "iso3-0", 102.07744791082374 ], [ "iso3-1", 3590.6736928178802 ], [ "iso3-2", -10404.559544045595 ], [ "iso3-3", 362.33731431923695 ] ]
+    },
+    "world/gdp-map | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "iso3-0", 102.07744791082374 ] ]
+    },
+    "world/growth" : {
+      "masked" : [ ],
+      "rows" : [ [ 14008.0 ] ]
+    },
+    "world/growth | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 9005.5 ] ]
+    },
+    "world/income" : {
+      "masked" : [ ],
+      "rows" : [ [ "income_name-0" ], [ "income_name-1" ], [ "income_name-2" ], [ "income_name-3" ] ]
+    },
+    "world/pop" : {
+      "masked" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "world/pop | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 49026.5 ] ]
+    },
+    "world/region" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_name-0" ], [ "region_name-1" ], [ "region_name-2" ], [ "region_name-3" ] ]
+    },
+    "world/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "region_name-0", 5004.5, 102.07744791082374, 9005.5, 42022.0, 24513.25 ], [ "name-1", "region_name-1", 79041.5, 3590.6736928178802, -4501.25, 28515.25, 11006.5 ], [ "name-2", "region_name-2", 52028.0, -10404.559544045595, 32517.25, 15008.5, -2500.25 ], [ "name-3", "region_name-3", 25014.5, 362.33731431923695, 19010.5, 1501.75, 34518.25 ] ]
+    },
+    "world/table | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "region_name-0", 5004.5, 102.07744791082374, 9005.5, 42022.0, 24513.25 ] ]
+    },
+    "world/top-gdp" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ]
+    },
+    "world/top-gdp | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ] ]
+    }
+  },
+  "unnamed-role" : {
+    "world/economies" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "world/economies | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "world/gdp" : {
+      "masked" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "world/gdp | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "world/gdp-map" : {
+      "masked" : [ ],
+      "rows" : [ [ "iso3-0", 102.07744791082374 ], [ "iso3-1", 3590.6736928178802 ], [ "iso3-2", -10404.559544045595 ], [ "iso3-3", 362.33731431923695 ] ]
+    },
+    "world/gdp-map | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "iso3-0", 102.07744791082374 ] ]
+    },
+    "world/growth" : {
+      "masked" : [ ],
+      "rows" : [ [ 14008.0 ] ]
+    },
+    "world/growth | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 9005.5 ] ]
+    },
+    "world/income" : {
+      "masked" : [ ],
+      "rows" : [ [ "income_name-0" ], [ "income_name-1" ], [ "income_name-2" ], [ "income_name-3" ] ]
+    },
+    "world/pop" : {
+      "masked" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "world/pop | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 49026.5 ] ]
+    },
+    "world/region" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_name-0" ], [ "region_name-1" ], [ "region_name-2" ], [ "region_name-3" ] ]
+    },
+    "world/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "region_name-0", 5004.5, 102.07744791082374, 9005.5, 42022.0, 24513.25 ], [ "name-1", "region_name-1", 79041.5, 3590.6736928178802, -4501.25, 28515.25, 11006.5 ], [ "name-2", "region_name-2", 52028.0, -10404.559544045595, 32517.25, 15008.5, -2500.25 ], [ "name-3", "region_name-3", 25014.5, 362.33731431923695, 19010.5, 1501.75, 34518.25 ] ]
+    },
+    "world/table | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", "region_name-0", 5004.5, 102.07744791082374, 9005.5, 42022.0, 24513.25 ] ]
+    },
+    "world/top-gdp" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ], [ "name-1", 79041.5 ], [ "name-2", 52028.0 ], [ "name-3", 25014.5 ] ]
+    },
+    "world/top-gdp | slicer region = region_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 5004.5 ] ]
+    }
+  }
+}

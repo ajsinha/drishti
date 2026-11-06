@@ -1,0 +1,380 @@
+{
+  "admin" : {
+    "desk/by-desk <- live-trading-desk/desk/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "desk/latest <- live-trading-desk/desk/latest" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "2026-10-09 10:00:00.0", 53028.5 ], [ "trade_id-1", "2026-10-09 10:00:00.0", 26015.0 ], [ "trade_id-2", "2026-10-09 10:00:00.0", -998.5 ], [ "trade_id-3", "2026-10-09 10:00:00.0", 73038.5 ] ]
+    },
+    "desk/losses <- live-trading-desk/desk/losses" : {
+      "masked" : [ ],
+      "rows" : [ [ -38017.0 ] ]
+    },
+    "desk/movers <- live-trading-desk/desk/movers" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "trader_id-0", 3002.5 ], [ "trade_id-0", "DESK-5", "trader_id-0", 50026.0 ], [ "trade_id-1", "DESK-0", "trader_id-1", -14006.0 ], [ "trade_id-1", "DESK-4", "trader_id-1", 40021.0 ], [ "trade_id-2", "DESK-3", "trader_id-2", 23012.5 ], [ "trade_id-2", "DESK-7", "trader_id-2", -24011.0 ], [ "trade_id-3", "DESK-2", "trader_id-3", 13007.5 ], [ "trade_id-3", "DESK-6", "trader_id-3", 60031.0 ] ]
+    },
+    "desk/net-mtm <- live-trading-desk/desk/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "desk/rolling <- live-trading-desk/desk/rolling" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5, -38017.0 ] ]
+    },
+    "desk/trades <- live-trading-desk/desk/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/collateral <- live-exposure/exposure/collateral" : {
+      "masked" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "exposure/limits <- live-exposure/exposure/limits" : {
+      "masked" : [ ],
+      "rows" : [ [ "netting_set_id-0", "COUNTERPARTY-1", 47024.5, 4 ], [ "netting_set_id-0", "COUNTERPARTY-5", -7002.5, 1 ], [ "netting_set_id-1", "COUNTERPARTY-0", 30016.0, 2 ], [ "netting_set_id-1", "COUNTERPARTY-4", -17007.5, 5 ], [ "netting_set_id-2", "COUNTERPARTY-3", 67034.5, 3 ], [ "netting_set_id-2", "COUNTERPARTY-7", 20011.0, 6 ], [ "netting_set_id-3", "COUNTERPARTY-2", 57029.5, 0 ], [ "netting_set_id-3", "COUNTERPARTY-6", 3002.5, 4 ] ]
+    },
+    "exposure/netmtm <- live-exposure/exposure/netmtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "exposure/sets <- live-exposure/exposure/sets" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/utilisation <- live-exposure/exposure/utilisation" : {
+      "masked" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "exposure/worst <- live-exposure/exposure/worst" : {
+      "masked" : [ ],
+      "rows" : [ [ "netting_set_id-0", 40022.0 ], [ "netting_set_id-1", 13008.5 ], [ "netting_set_id-2", 87045.5 ], [ "netting_set_id-3", 60032.0 ] ]
+    }
+  },
+  "analyst" : {
+    "desk/by-desk <- live-trading-desk/desk/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "desk/latest <- live-trading-desk/desk/latest" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "2026-10-09 10:00:00.0", 53028.5 ], [ "trade_id-1", "2026-10-09 10:00:00.0", 26015.0 ], [ "trade_id-2", "2026-10-09 10:00:00.0", -998.5 ], [ "trade_id-3", "2026-10-09 10:00:00.0", 73038.5 ] ]
+    },
+    "desk/losses <- live-trading-desk/desk/losses" : {
+      "masked" : [ ],
+      "rows" : [ [ -38017.0 ] ]
+    },
+    "desk/movers <- live-trading-desk/desk/movers" : {
+      "masked" : [ "trade.TRADER_ID" ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "•••", 3002.5 ], [ "trade_id-0", "DESK-5", "•••", 50026.0 ], [ "trade_id-1", "DESK-0", "•••", -14006.0 ], [ "trade_id-1", "DESK-4", "•••", 40021.0 ], [ "trade_id-2", "DESK-3", "•••", 23012.5 ], [ "trade_id-2", "DESK-7", "•••", -24011.0 ], [ "trade_id-3", "DESK-2", "•••", 13007.5 ], [ "trade_id-3", "DESK-6", "•••", 60031.0 ] ]
+    },
+    "desk/net-mtm <- live-trading-desk/desk/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "desk/rolling <- live-trading-desk/desk/rolling" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5, -38017.0 ] ]
+    },
+    "desk/trades <- live-trading-desk/desk/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/collateral <- live-exposure/exposure/collateral" : {
+      "masked" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "exposure/limits <- live-exposure/exposure/limits" : {
+      "masked" : [ ],
+      "rows" : [ [ "netting_set_id-0", "COUNTERPARTY-1", 47024.5, 4 ], [ "netting_set_id-0", "COUNTERPARTY-5", -7002.5, 1 ], [ "netting_set_id-1", "COUNTERPARTY-0", 30016.0, 2 ], [ "netting_set_id-1", "COUNTERPARTY-4", -17007.5, 5 ], [ "netting_set_id-2", "COUNTERPARTY-3", 67034.5, 3 ], [ "netting_set_id-2", "COUNTERPARTY-7", 20011.0, 6 ], [ "netting_set_id-3", "COUNTERPARTY-2", 57029.5, 0 ], [ "netting_set_id-3", "COUNTERPARTY-6", 3002.5, 4 ] ]
+    },
+    "exposure/netmtm <- live-exposure/exposure/netmtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "exposure/sets <- live-exposure/exposure/sets" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/utilisation <- live-exposure/exposure/utilisation" : {
+      "masked" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "exposure/worst <- live-exposure/exposure/worst" : {
+      "masked" : [ ],
+      "rows" : [ [ "netting_set_id-0", 40022.0 ], [ "netting_set_id-1", 13008.5 ], [ "netting_set_id-2", 87045.5 ], [ "netting_set_id-3", 60032.0 ] ]
+    }
+  },
+  "desk-head-no-desks" : {
+    "desk/by-desk <- live-trading-desk/desk/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "desk/latest <- live-trading-desk/desk/latest" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "2026-10-09 10:00:00.0", 53028.5 ], [ "trade_id-1", "2026-10-09 10:00:00.0", 26015.0 ], [ "trade_id-2", "2026-10-09 10:00:00.0", -998.5 ], [ "trade_id-3", "2026-10-09 10:00:00.0", 73038.5 ] ]
+    },
+    "desk/losses <- live-trading-desk/desk/losses" : {
+      "masked" : [ ],
+      "rows" : [ [ -38017.0 ] ]
+    },
+    "desk/movers <- live-trading-desk/desk/movers" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "trader_id-0", 3002.5 ], [ "trade_id-0", "DESK-5", "trader_id-0", 50026.0 ], [ "trade_id-1", "DESK-0", "trader_id-1", -14006.0 ], [ "trade_id-1", "DESK-4", "trader_id-1", 40021.0 ], [ "trade_id-2", "DESK-3", "trader_id-2", 23012.5 ], [ "trade_id-2", "DESK-7", "trader_id-2", -24011.0 ], [ "trade_id-3", "DESK-2", "trader_id-3", 13007.5 ], [ "trade_id-3", "DESK-6", "trader_id-3", 60031.0 ] ]
+    },
+    "desk/net-mtm <- live-trading-desk/desk/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "desk/rolling <- live-trading-desk/desk/rolling" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5, -38017.0 ] ]
+    },
+    "desk/trades <- live-trading-desk/desk/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/collateral <- live-exposure/exposure/collateral" : {
+      "masked" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "exposure/limits <- live-exposure/exposure/limits" : {
+      "masked" : [ ],
+      "rows" : [ [ "netting_set_id-0", "COUNTERPARTY-1", 47024.5, 4 ], [ "netting_set_id-0", "COUNTERPARTY-5", -7002.5, 1 ], [ "netting_set_id-1", "COUNTERPARTY-0", 30016.0, 2 ], [ "netting_set_id-1", "COUNTERPARTY-4", -17007.5, 5 ], [ "netting_set_id-2", "COUNTERPARTY-3", 67034.5, 3 ], [ "netting_set_id-2", "COUNTERPARTY-7", 20011.0, 6 ], [ "netting_set_id-3", "COUNTERPARTY-2", 57029.5, 0 ], [ "netting_set_id-3", "COUNTERPARTY-6", 3002.5, 4 ] ]
+    },
+    "exposure/netmtm <- live-exposure/exposure/netmtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "exposure/sets <- live-exposure/exposure/sets" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/utilisation <- live-exposure/exposure/utilisation" : {
+      "masked" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "exposure/worst <- live-exposure/exposure/worst" : {
+      "masked" : [ ],
+      "rows" : [ [ "netting_set_id-0", 40022.0 ], [ "netting_set_id-1", 13008.5 ], [ "netting_set_id-2", 87045.5 ], [ "netting_set_id-3", 60032.0 ] ]
+    }
+  },
+  "desk-head-two-desks" : {
+    "desk/by-desk <- live-trading-desk/desk/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "desk/latest <- live-trading-desk/desk/latest" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "2026-10-09 10:00:00.0", 53028.5 ], [ "trade_id-1", "2026-10-09 10:00:00.0", 26015.0 ], [ "trade_id-2", "2026-10-09 10:00:00.0", -998.5 ], [ "trade_id-3", "2026-10-09 10:00:00.0", 73038.5 ] ]
+    },
+    "desk/losses <- live-trading-desk/desk/losses" : {
+      "masked" : [ ],
+      "rows" : [ [ -38017.0 ] ]
+    },
+    "desk/movers <- live-trading-desk/desk/movers" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "trader_id-0", 3002.5 ], [ "trade_id-0", "DESK-5", "trader_id-0", 50026.0 ], [ "trade_id-1", "DESK-0", "trader_id-1", -14006.0 ], [ "trade_id-1", "DESK-4", "trader_id-1", 40021.0 ], [ "trade_id-2", "DESK-3", "trader_id-2", 23012.5 ], [ "trade_id-2", "DESK-7", "trader_id-2", -24011.0 ], [ "trade_id-3", "DESK-2", "trader_id-3", 13007.5 ], [ "trade_id-3", "DESK-6", "trader_id-3", 60031.0 ] ]
+    },
+    "desk/net-mtm <- live-trading-desk/desk/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "desk/rolling <- live-trading-desk/desk/rolling" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5, -38017.0 ] ]
+    },
+    "desk/trades <- live-trading-desk/desk/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/collateral <- live-exposure/exposure/collateral" : {
+      "masked" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "exposure/limits <- live-exposure/exposure/limits" : {
+      "masked" : [ ],
+      "rows" : [ [ "netting_set_id-0", "COUNTERPARTY-1", 47024.5, 4 ], [ "netting_set_id-0", "COUNTERPARTY-5", -7002.5, 1 ], [ "netting_set_id-1", "COUNTERPARTY-0", 30016.0, 2 ], [ "netting_set_id-1", "COUNTERPARTY-4", -17007.5, 5 ], [ "netting_set_id-2", "COUNTERPARTY-3", 67034.5, 3 ], [ "netting_set_id-2", "COUNTERPARTY-7", 20011.0, 6 ], [ "netting_set_id-3", "COUNTERPARTY-2", 57029.5, 0 ], [ "netting_set_id-3", "COUNTERPARTY-6", 3002.5, 4 ] ]
+    },
+    "exposure/netmtm <- live-exposure/exposure/netmtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "exposure/sets <- live-exposure/exposure/sets" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/utilisation <- live-exposure/exposure/utilisation" : {
+      "masked" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "exposure/worst <- live-exposure/exposure/worst" : {
+      "masked" : [ ],
+      "rows" : [ [ "netting_set_id-0", 40022.0 ], [ "netting_set_id-1", 13008.5 ], [ "netting_set_id-2", 87045.5 ], [ "netting_set_id-3", 60032.0 ] ]
+    }
+  },
+  "no-raw-power" : {
+    "desk/by-desk <- live-trading-desk/desk/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "desk/latest <- live-trading-desk/desk/latest" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "2026-10-09 10:00:00.0", 53028.5 ], [ "trade_id-1", "2026-10-09 10:00:00.0", 26015.0 ], [ "trade_id-2", "2026-10-09 10:00:00.0", -998.5 ], [ "trade_id-3", "2026-10-09 10:00:00.0", 73038.5 ] ]
+    },
+    "desk/losses <- live-trading-desk/desk/losses" : {
+      "masked" : [ ],
+      "rows" : [ [ -38017.0 ] ]
+    },
+    "desk/movers <- live-trading-desk/desk/movers" : {
+      "masked" : [ "trade.TRADER_ID" ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "•••", 3002.5 ], [ "trade_id-0", "DESK-5", "•••", 50026.0 ], [ "trade_id-1", "DESK-0", "•••", -14006.0 ], [ "trade_id-1", "DESK-4", "•••", 40021.0 ], [ "trade_id-2", "DESK-3", "•••", 23012.5 ], [ "trade_id-2", "DESK-7", "•••", -24011.0 ], [ "trade_id-3", "DESK-2", "•••", 13007.5 ], [ "trade_id-3", "DESK-6", "•••", 60031.0 ] ]
+    },
+    "desk/net-mtm <- live-trading-desk/desk/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "desk/rolling <- live-trading-desk/desk/rolling" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5, -38017.0 ] ]
+    },
+    "desk/trades <- live-trading-desk/desk/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/collateral <- live-exposure/exposure/collateral" : {
+      "masked" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "exposure/limits <- live-exposure/exposure/limits" : {
+      "masked" : [ ],
+      "rows" : [ [ "netting_set_id-0", "COUNTERPARTY-1", 47024.5, 4 ], [ "netting_set_id-0", "COUNTERPARTY-5", -7002.5, 1 ], [ "netting_set_id-1", "COUNTERPARTY-0", 30016.0, 2 ], [ "netting_set_id-1", "COUNTERPARTY-4", -17007.5, 5 ], [ "netting_set_id-2", "COUNTERPARTY-3", 67034.5, 3 ], [ "netting_set_id-2", "COUNTERPARTY-7", 20011.0, 6 ], [ "netting_set_id-3", "COUNTERPARTY-2", 57029.5, 0 ], [ "netting_set_id-3", "COUNTERPARTY-6", 3002.5, 4 ] ]
+    },
+    "exposure/netmtm <- live-exposure/exposure/netmtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "exposure/sets <- live-exposure/exposure/sets" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/utilisation <- live-exposure/exposure/utilisation" : {
+      "masked" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "exposure/worst <- live-exposure/exposure/worst" : {
+      "masked" : [ ],
+      "rows" : [ [ "netting_set_id-0", 40022.0 ], [ "netting_set_id-1", 13008.5 ], [ "netting_set_id-2", 87045.5 ], [ "netting_set_id-3", 60032.0 ] ]
+    }
+  },
+  "risk" : {
+    "desk/by-desk <- live-trading-desk/desk/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "desk/latest <- live-trading-desk/desk/latest" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "2026-10-09 10:00:00.0", 53028.5 ], [ "trade_id-1", "2026-10-09 10:00:00.0", 26015.0 ], [ "trade_id-2", "2026-10-09 10:00:00.0", -998.5 ], [ "trade_id-3", "2026-10-09 10:00:00.0", 73038.5 ] ]
+    },
+    "desk/losses <- live-trading-desk/desk/losses" : {
+      "masked" : [ ],
+      "rows" : [ [ -38017.0 ] ]
+    },
+    "desk/movers <- live-trading-desk/desk/movers" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "trader_id-0", 3002.5 ], [ "trade_id-0", "DESK-5", "trader_id-0", 50026.0 ], [ "trade_id-1", "DESK-0", "trader_id-1", -14006.0 ], [ "trade_id-1", "DESK-4", "trader_id-1", 40021.0 ], [ "trade_id-2", "DESK-3", "trader_id-2", 23012.5 ], [ "trade_id-2", "DESK-7", "trader_id-2", -24011.0 ], [ "trade_id-3", "DESK-2", "trader_id-3", 13007.5 ], [ "trade_id-3", "DESK-6", "trader_id-3", 60031.0 ] ]
+    },
+    "desk/net-mtm <- live-trading-desk/desk/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "desk/rolling <- live-trading-desk/desk/rolling" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5, -38017.0 ] ]
+    },
+    "desk/trades <- live-trading-desk/desk/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/collateral <- live-exposure/exposure/collateral" : {
+      "masked" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "exposure/limits <- live-exposure/exposure/limits" : {
+      "masked" : [ ],
+      "rows" : [ [ "netting_set_id-0", "COUNTERPARTY-1", 47024.5, 4 ], [ "netting_set_id-0", "COUNTERPARTY-5", -7002.5, 1 ], [ "netting_set_id-1", "COUNTERPARTY-0", 30016.0, 2 ], [ "netting_set_id-1", "COUNTERPARTY-4", -17007.5, 5 ], [ "netting_set_id-2", "COUNTERPARTY-3", 67034.5, 3 ], [ "netting_set_id-2", "COUNTERPARTY-7", 20011.0, 6 ], [ "netting_set_id-3", "COUNTERPARTY-2", 57029.5, 0 ], [ "netting_set_id-3", "COUNTERPARTY-6", 3002.5, 4 ] ]
+    },
+    "exposure/netmtm <- live-exposure/exposure/netmtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "exposure/sets <- live-exposure/exposure/sets" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/utilisation <- live-exposure/exposure/utilisation" : {
+      "masked" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "exposure/worst <- live-exposure/exposure/worst" : {
+      "masked" : [ ],
+      "rows" : [ [ "netting_set_id-0", 40022.0 ], [ "netting_set_id-1", 13008.5 ], [ "netting_set_id-2", 87045.5 ], [ "netting_set_id-3", 60032.0 ] ]
+    }
+  },
+  "unnamed-role" : {
+    "desk/by-desk <- live-trading-desk/desk/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "desk/latest <- live-trading-desk/desk/latest" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "2026-10-09 10:00:00.0", 53028.5 ], [ "trade_id-1", "2026-10-09 10:00:00.0", 26015.0 ], [ "trade_id-2", "2026-10-09 10:00:00.0", -998.5 ], [ "trade_id-3", "2026-10-09 10:00:00.0", 73038.5 ] ]
+    },
+    "desk/losses <- live-trading-desk/desk/losses" : {
+      "masked" : [ ],
+      "rows" : [ [ -38017.0 ] ]
+    },
+    "desk/movers <- live-trading-desk/desk/movers" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "trader_id-0", 3002.5 ], [ "trade_id-0", "DESK-5", "trader_id-0", 50026.0 ], [ "trade_id-1", "DESK-0", "trader_id-1", -14006.0 ], [ "trade_id-1", "DESK-4", "trader_id-1", 40021.0 ], [ "trade_id-2", "DESK-3", "trader_id-2", 23012.5 ], [ "trade_id-2", "DESK-7", "trader_id-2", -24011.0 ], [ "trade_id-3", "DESK-2", "trader_id-3", 13007.5 ], [ "trade_id-3", "DESK-6", "trader_id-3", 60031.0 ] ]
+    },
+    "desk/net-mtm <- live-trading-desk/desk/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "desk/rolling <- live-trading-desk/desk/rolling" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5, -38017.0 ] ]
+    },
+    "desk/trades <- live-trading-desk/desk/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/collateral <- live-exposure/exposure/collateral" : {
+      "masked" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "exposure/limits <- live-exposure/exposure/limits" : {
+      "masked" : [ ],
+      "rows" : [ [ "netting_set_id-0", "COUNTERPARTY-1", 47024.5, 4 ], [ "netting_set_id-0", "COUNTERPARTY-5", -7002.5, 1 ], [ "netting_set_id-1", "COUNTERPARTY-0", 30016.0, 2 ], [ "netting_set_id-1", "COUNTERPARTY-4", -17007.5, 5 ], [ "netting_set_id-2", "COUNTERPARTY-3", 67034.5, 3 ], [ "netting_set_id-2", "COUNTERPARTY-7", 20011.0, 6 ], [ "netting_set_id-3", "COUNTERPARTY-2", 57029.5, 0 ], [ "netting_set_id-3", "COUNTERPARTY-6", 3002.5, 4 ] ]
+    },
+    "exposure/netmtm <- live-exposure/exposure/netmtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 200108.0 ] ]
+    },
+    "exposure/sets <- live-exposure/exposure/sets" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/utilisation <- live-exposure/exposure/utilisation" : {
+      "masked" : [ ],
+      "rows" : [ [ 25 ] ]
+    },
+    "exposure/worst <- live-exposure/exposure/worst" : {
+      "masked" : [ ],
+      "rows" : [ [ "netting_set_id-0", 40022.0 ], [ "netting_set_id-1", 13008.5 ], [ "netting_set_id-2", 87045.5 ], [ "netting_set_id-3", 60032.0 ] ]
+    }
+  }
+}

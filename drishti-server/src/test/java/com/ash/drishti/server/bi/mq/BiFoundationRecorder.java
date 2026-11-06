@@ -17,6 +17,8 @@ package com.ash.drishti.server.bi.mq;
 
 import com.ash.drishti.server.bi.engine.BiFoundationLive;
 import com.ash.drishti.server.bi.engine.QueryService;
+import com.ash.drishti.server.bi.dataset.Dataset;
+import com.ash.drishti.server.bi.layer.ModelDef;
 import com.ash.drishti.server.bi.report.Report;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
@@ -61,32 +63,97 @@ class BiFoundationRecorder {
         BiFoundationCases.Shipped shipped = BiFoundationCases.shipped();
         MqService mq = new MqService(MqProperties.defaults());
         Map<String, Object> index = new LinkedHashMap<>();
-        index.put("recordedWith", "BI before 2.9.11.e: models through MqService, reports through VisualQueries and QueryService, live through LiveTable");
+        index.put("recordedWith", "BI before 2.9.11.e: models through MqService, reports through VisualQueries and QueryService (their totals through BiAggregate), "
+                + "reports on a live dataset through a live QueryService at load, boards through the reports their tiles show, live through LiveTable");
         index.put("persons", BiFoundationCases.persons(shipped.lake()).stream().map(Map.Entry::getKey).toList());
         index.put("times", new TreeMap<>(BiFoundationCases.TIMES));
         index.put("models", List.copyOf(shipped.models().keySet()));
         index.put("notLoaded", shipped.problems());
-        try (QueryService service = BiFoundationCases.service(store, shipped.lake())) {
+        Map<String, String> notRecorded = new TreeMap<>();
+        Map<String, Object> slices = new TreeMap<>();
+        Map<String, Report> reports = BiFoundationCases.reports();
+        try (QueryService service = BiFoundationCases.service(store, shipped.lake());
+                QueryService live = BiFoundationCases.liveService(liveStore.resolve("reports"), shipped.lake())) {
+            MqHarness h = new MqHarness(service, SampleLake.DAY2);
             for (Map.Entry<String, ModelView> m : shipped.models().entrySet()) {
-                files.put("model-" + m.getKey() + ".json", BiFoundationCases.model(service, m.getValue(), shipped.lake(), mq));
+                // a model over live tables is asked of the live service (its history tables exist only there), the others of the snapshot one
+                QueryService on = m.getValue().flat().tables().values().stream().anyMatch(Dataset.Table::isLive) ? live : service;
+                BiFoundationCases.Slice slice = BiFoundationCases.slice(on, m.getValue(), mq,
+                        m.getValue().def().measures().values().stream().filter(x -> x.python() == null).map(ModelDef.Meas::name).toList());
+                slices.put(m.getKey(), slice == null ? "none: no text field with a value" : slice.field() + " = " + slice.value());
+                files.put("model-" + m.getKey() + ".json", BiFoundationCases.model(on, m.getValue(), shipped.lake(), mq));
             }
-            Map<String, Report> reports = BiFoundationCases.reports();
-            Map<String, String> unbound = new TreeMap<>();
             for (Map.Entry<String, Report> r : reports.entrySet()) {
-                String model = r.getValue().model().replaceAll("@.*$", "").strip();
-                ModelView v = shipped.models().get(model);
-                if (v == null) {
-                    unbound.put(r.getKey(), "its model " + model + " is not loaded");
-                    continue;
+                Report report = r.getValue();
+                if (report.model() != null) {
+                    String model = report.model().replaceAll("@.*$", "").strip();
+                    ModelView v = shipped.models().get(model);
+                    if (v == null) {
+                        notRecorded.put(r.getKey(), "its model " + model + " is not loaded");
+                        continue;
+                    }
+                    files.put("report-" + r.getKey() + ".json", BiFoundationCases.report(service, report, v.flat(), "report:" + report.name(), "h|" + v.def().name(),
+                            who -> h.caller(v.flat(), who), shipped.lake()));
+                } else if (report.dataset() != null && !report.dataset().isBlank()) {
+                    Dataset d = shipped.direct().get(report.dataset());
+                    if (d == null) {
+                        notRecorded.put(r.getKey(), "its dataset " + report.dataset() + " is not loaded");
+                        continue;
+                    }
+                    MqHarness lh = new MqHarness(live, SampleLake.DAY2);
+                    files.put("report-" + r.getKey() + ".json", BiFoundationCases.report(live, report, d, "file:dataset:" + d.name(), "h|" + d.name(),
+                            who -> lh.caller(d, who), shipped.lake()));
                 }
-                files.put("report-" + r.getKey() + ".json", BiFoundationCases.report(service, r.getValue(), v, shipped.lake()));
             }
-            index.put("reports", List.copyOf(reports.keySet()));
-            index.put("reportsNotRecorded", unbound);
+            for (Map.Entry<String, Report> r : reports.entrySet()) {
+                if (r.getValue().model() == null && (r.getValue().dataset() == null || r.getValue().dataset().isBlank())) {
+                    files.put("board-" + r.getKey() + ".json", board(r.getValue(), reports, files));
+                }
+            }
         }
-        files.put("live.json", BiFoundationLive.replay(liveStore, BiFoundationCases::norm));
+        index.put("slices", slices);
+        index.put("reports", List.copyOf(reports.keySet()));
+        index.put("reportsNotRecorded", notRecorded);
+        java.nio.file.Files.createDirectories(liveStore.resolve("replay"));
+        files.put("live.json", BiFoundationLive.replay(liveStore.resolve("replay"), BiFoundationCases::norm));
         index.put("itemTests", "none ship in config/bi (no tests: or golden: in a shipped dataset, model or report); the BI suites run unchanged");
+        index.put("notRecordable", new TreeMap<>(Map.of(
+                "python visuals and the python model's measures", "the console runs them (a python visual, desk-pnl-vs-exposure-py's result frame): left out, or recorded as their refusal",
+                "saved pivot views", "none ship: a pivot view is a person's, in the content store; BI's pivot figures are recorded as the matrices' totals and the models' subtotals")));
         files.put("index.json", index);
         return files;
+    }
+
+    /**
+     * A board: per person, each tile's answer is the answer of the visual it shows ({@code from}), as recorded for that report (a python visual's
+     * tile says so: the console draws it).
+     */
+    @SuppressWarnings("unchecked")
+    static Map<String, Object> board(Report board, Map<String, Report> reports, Map<String, Object> files) {
+        Map<String, Object> out = new TreeMap<>();
+        for (Report.Page page : board.pages()) {
+            for (Report.Visual tile : page.visuals()) {
+                if (tile.from() == null) {
+                    continue;
+                }
+                Report source = reports.get(tile.from().report());
+                Report.Page at = source == null ? null : source.pages().stream()
+                        .filter(pg -> (tile.from().page() == null || tile.from().page().isBlank() || pg.id().equals(tile.from().page())) && pg.visual(tile.from().visual()) != null)
+                        .findFirst().orElse(null);
+                String key = at == null ? null : at.id() + "/" + tile.from().visual();
+                Map<String, Object> recorded = (Map<String, Object>) files.get("report-" + tile.from().report() + ".json");
+                if (recorded == null || key == null) {
+                    out.put(page.id() + "/" + tile.id(), Map.of("from", tile.from().report() + "/" + tile.from().visual(), "recorded", "no: its report is not recorded"));
+                    continue;
+                }
+                for (Map.Entry<String, Object> person : recorded.entrySet()) {
+                    Object answer = ((Map<String, Object>) person.getValue()).get(key);
+                    Map<String, Object> mine = (Map<String, Object>) out.computeIfAbsent(person.getKey(), k -> new TreeMap<>());
+                    mine.put(page.id() + "/" + tile.id() + " <- " + tile.from().report() + "/" + key,
+                            answer == null ? Map.of("python", "the console draws it") : answer);
+                }
+            }
+        }
+        return out;
     }
 }

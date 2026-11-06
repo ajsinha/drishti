@@ -1,0 +1,1598 @@
+{
+  "admin" : {
+    "Collateral | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "Collateral | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 79041.5 ], [ "name-1", 5004.5 ], [ "name-2", 25014.5 ], [ "name-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Collateral | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", 79041.5 ], [ "sector-1", 5004.5 ], [ "sector-2", 25014.5 ], [ "sector-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Collateral | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 79041.5 ] ]
+    },
+    "Collateral | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", "name-0", 79041.5 ], [ "sector-1", "name-1", 5004.5 ], [ "sector-2", "name-2", 25014.5 ], [ "sector-3", "name-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ [ "sector-0", 79041.5 ], [ "sector-1", 5004.5 ], [ "sector-2", 25014.5 ], [ "sector-3", 52028.0 ] ]
+      } ]
+    },
+    "Collateral | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Exposure (EE peak) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (EE peak) | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ ]
+      } ]
+    },
+    "Exposure (EE peak) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (PFE peak) | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ ]
+      } ]
+    },
+    "Exposure (PFE peak) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Netting sets | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by counterparties.NAME" : {
+      "refused" : "DRS-9020"
+    },
+    "Netting sets | as-of-day2 | by counterparties.SECTOR" : {
+      "refused" : "DRS-9020"
+    },
+    "Netting sets | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Netting sets | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", "name-0", 2 ], [ "sector-1", "name-1", 2 ], [ "sector-2", "name-2", 2 ], [ "sector-3", "name-3", 2 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 8.0 ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ [ "sector-0", 2.0 ], [ "sector-1", 2.0 ], [ "sector-2", 2.0 ], [ "sector-3", 2.0 ] ]
+      } ]
+    },
+    "Netting sets | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "calc Exposure (EE peak) | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "calc Exposure (EE peak) | by counterparties.SECTOR | slicer = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "rows of counterparties" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "0f03a5e2296f8ffdb6be82c0fb47529e901e015a5ab12243a5a509f0900398cb"
+    },
+    "rows of cpty_exposure" : {
+      "count" : 0,
+      "masked" : [ ],
+      "sha256" : "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "rows of netting_sets" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "8a620f68b32699afd85112db98e0156fd25053ec46a02b79fd2f6887f77f24c2"
+    },
+    "rows of set_exposure" : {
+      "count" : 0,
+      "masked" : [ ],
+      "sha256" : "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "analyst" : {
+    "Collateral | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "Collateral | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ "counterparties.NAME" ],
+      "noAccess" : [ ],
+      "rows" : [ [ "•••", 161088.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Collateral | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", 79041.5 ], [ "sector-1", 5004.5 ], [ "sector-2", 25014.5 ], [ "sector-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Collateral | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 79041.5 ] ]
+    },
+    "Collateral | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ "counterparties.NAME" ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", "•••", 79041.5 ], [ "sector-1", "•••", 5004.5 ], [ "sector-2", "•••", 25014.5 ], [ "sector-3", "•••", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ [ "sector-0", 79041.5 ], [ "sector-1", 5004.5 ], [ "sector-2", 25014.5 ], [ "sector-3", 52028.0 ] ]
+      } ]
+    },
+    "Collateral | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Exposure (EE peak) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ "counterparties.NAME" ],
+      "noAccess" : [ ],
+      "rows" : [ [ "•••", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (EE peak) | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ "counterparties.NAME" ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ ]
+      } ]
+    },
+    "Exposure (EE peak) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ "counterparties.NAME" ],
+      "noAccess" : [ ],
+      "rows" : [ [ "•••", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (PFE peak) | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ "counterparties.NAME" ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ ]
+      } ]
+    },
+    "Exposure (PFE peak) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Netting sets | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by counterparties.NAME" : {
+      "refused" : "DRS-9020"
+    },
+    "Netting sets | as-of-day2 | by counterparties.SECTOR" : {
+      "refused" : "DRS-9020"
+    },
+    "Netting sets | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Netting sets | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ "counterparties.NAME" ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", "•••", 2 ], [ "sector-1", "•••", 2 ], [ "sector-2", "•••", 2 ], [ "sector-3", "•••", 2 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 8.0 ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ [ "sector-0", 2.0 ], [ "sector-1", 2.0 ], [ "sector-2", 2.0 ], [ "sector-3", 2.0 ] ]
+      } ]
+    },
+    "Netting sets | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "calc Exposure (EE peak) | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "calc Exposure (EE peak) | by counterparties.SECTOR | slicer = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "rows of counterparties" : {
+      "count" : 8,
+      "masked" : [ "counterparties.NAME", "counterparties.RATING" ],
+      "sha256" : "2e0a7f480a7c8851eda2dc3eee6724593c5c400ca2412d6f0e56cace8cdc030b"
+    },
+    "rows of cpty_exposure" : {
+      "count" : 0,
+      "masked" : [ "cpty_exposure.NODE_NAME" ],
+      "sha256" : "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "rows of netting_sets" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "8a620f68b32699afd85112db98e0156fd25053ec46a02b79fd2f6887f77f24c2"
+    },
+    "rows of set_exposure" : {
+      "count" : 0,
+      "masked" : [ "set_exposure.NODE_NAME" ],
+      "sha256" : "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "desk-head-no-desks" : {
+    "Collateral | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "Collateral | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 79041.5 ], [ "name-1", 5004.5 ], [ "name-2", 25014.5 ], [ "name-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Collateral | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", 79041.5 ], [ "sector-1", 5004.5 ], [ "sector-2", 25014.5 ], [ "sector-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Collateral | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 79041.5 ] ]
+    },
+    "Collateral | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", "name-0", 79041.5 ], [ "sector-1", "name-1", 5004.5 ], [ "sector-2", "name-2", 25014.5 ], [ "sector-3", "name-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ [ "sector-0", 79041.5 ], [ "sector-1", 5004.5 ], [ "sector-2", 25014.5 ], [ "sector-3", 52028.0 ] ]
+      } ]
+    },
+    "Collateral | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Exposure (EE peak) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (EE peak) | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ ]
+      } ]
+    },
+    "Exposure (EE peak) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (PFE peak) | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ ]
+      } ]
+    },
+    "Exposure (PFE peak) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Netting sets | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by counterparties.NAME" : {
+      "refused" : "DRS-9020"
+    },
+    "Netting sets | as-of-day2 | by counterparties.SECTOR" : {
+      "refused" : "DRS-9020"
+    },
+    "Netting sets | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Netting sets | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", "name-0", 2 ], [ "sector-1", "name-1", 2 ], [ "sector-2", "name-2", 2 ], [ "sector-3", "name-3", 2 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 8.0 ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ [ "sector-0", 2.0 ], [ "sector-1", 2.0 ], [ "sector-2", 2.0 ], [ "sector-3", 2.0 ] ]
+      } ]
+    },
+    "Netting sets | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "calc Exposure (EE peak) | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "calc Exposure (EE peak) | by counterparties.SECTOR | slicer = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "rows of counterparties" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "0f03a5e2296f8ffdb6be82c0fb47529e901e015a5ab12243a5a509f0900398cb"
+    },
+    "rows of cpty_exposure" : {
+      "count" : 0,
+      "masked" : [ ],
+      "sha256" : "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "rows of netting_sets" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "8a620f68b32699afd85112db98e0156fd25053ec46a02b79fd2f6887f77f24c2"
+    },
+    "rows of set_exposure" : {
+      "count" : 0,
+      "masked" : [ ],
+      "sha256" : "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "desk-head-two-desks" : {
+    "Collateral | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "Collateral | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 79041.5 ], [ "name-1", 5004.5 ], [ "name-2", 25014.5 ], [ "name-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Collateral | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", 79041.5 ], [ "sector-1", 5004.5 ], [ "sector-2", 25014.5 ], [ "sector-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Collateral | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 79041.5 ] ]
+    },
+    "Collateral | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", "name-0", 79041.5 ], [ "sector-1", "name-1", 5004.5 ], [ "sector-2", "name-2", 25014.5 ], [ "sector-3", "name-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ [ "sector-0", 79041.5 ], [ "sector-1", 5004.5 ], [ "sector-2", 25014.5 ], [ "sector-3", 52028.0 ] ]
+      } ]
+    },
+    "Collateral | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Exposure (EE peak) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (EE peak) | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ ]
+      } ]
+    },
+    "Exposure (EE peak) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (PFE peak) | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ ]
+      } ]
+    },
+    "Exposure (PFE peak) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Netting sets | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by counterparties.NAME" : {
+      "refused" : "DRS-9020"
+    },
+    "Netting sets | as-of-day2 | by counterparties.SECTOR" : {
+      "refused" : "DRS-9020"
+    },
+    "Netting sets | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Netting sets | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", "name-0", 2 ], [ "sector-1", "name-1", 2 ], [ "sector-2", "name-2", 2 ], [ "sector-3", "name-3", 2 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 8.0 ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ [ "sector-0", 2.0 ], [ "sector-1", 2.0 ], [ "sector-2", 2.0 ], [ "sector-3", 2.0 ] ]
+      } ]
+    },
+    "Netting sets | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "calc Exposure (EE peak) | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "calc Exposure (EE peak) | by counterparties.SECTOR | slicer = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "rows of counterparties" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "0f03a5e2296f8ffdb6be82c0fb47529e901e015a5ab12243a5a509f0900398cb"
+    },
+    "rows of cpty_exposure" : {
+      "count" : 0,
+      "masked" : [ ],
+      "sha256" : "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "rows of netting_sets" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "8a620f68b32699afd85112db98e0156fd25053ec46a02b79fd2f6887f77f24c2"
+    },
+    "rows of set_exposure" : {
+      "count" : 0,
+      "masked" : [ ],
+      "sha256" : "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "no-raw-power" : {
+    "Collateral | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "Collateral | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ "counterparties.NAME" ],
+      "noAccess" : [ ],
+      "rows" : [ [ "•••", 161088.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Collateral | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", 79041.5 ], [ "sector-1", 5004.5 ], [ "sector-2", 25014.5 ], [ "sector-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Collateral | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 79041.5 ] ]
+    },
+    "Collateral | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ "counterparties.NAME" ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", "•••", 79041.5 ], [ "sector-1", "•••", 5004.5 ], [ "sector-2", "•••", 25014.5 ], [ "sector-3", "•••", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ [ "sector-0", 79041.5 ], [ "sector-1", 5004.5 ], [ "sector-2", 25014.5 ], [ "sector-3", 52028.0 ] ]
+      } ]
+    },
+    "Collateral | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Exposure (EE peak) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ "counterparties.NAME" ],
+      "noAccess" : [ ],
+      "rows" : [ [ "•••", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (EE peak) | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ "counterparties.NAME" ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ ]
+      } ]
+    },
+    "Exposure (EE peak) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ "counterparties.NAME" ],
+      "noAccess" : [ ],
+      "rows" : [ [ "•••", null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (PFE peak) | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ "counterparties.NAME" ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ ]
+      } ]
+    },
+    "Exposure (PFE peak) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Netting sets | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by counterparties.NAME" : {
+      "refused" : "DRS-9020"
+    },
+    "Netting sets | as-of-day2 | by counterparties.SECTOR" : {
+      "refused" : "DRS-9020"
+    },
+    "Netting sets | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Netting sets | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ "counterparties.NAME" ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", "•••", 2 ], [ "sector-1", "•••", 2 ], [ "sector-2", "•••", 2 ], [ "sector-3", "•••", 2 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 8.0 ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ [ "sector-0", 2.0 ], [ "sector-1", 2.0 ], [ "sector-2", 2.0 ], [ "sector-3", 2.0 ] ]
+      } ]
+    },
+    "Netting sets | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "calc Exposure (EE peak) | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "calc Exposure (EE peak) | by counterparties.SECTOR | slicer = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "rows of counterparties" : {
+      "count" : 8,
+      "masked" : [ "counterparties.NAME", "counterparties.RATING" ],
+      "sha256" : "2e0a7f480a7c8851eda2dc3eee6724593c5c400ca2412d6f0e56cace8cdc030b"
+    },
+    "rows of cpty_exposure" : {
+      "count" : 0,
+      "masked" : [ "cpty_exposure.NODE_NAME" ],
+      "sha256" : "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "rows of netting_sets" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "8a620f68b32699afd85112db98e0156fd25053ec46a02b79fd2f6887f77f24c2"
+    },
+    "rows of set_exposure" : {
+      "count" : 0,
+      "masked" : [ "set_exposure.NODE_NAME" ],
+      "sha256" : "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "risk" : {
+    "Collateral | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "Collateral | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 79041.5 ], [ "name-1", 5004.5 ], [ "name-2", 25014.5 ], [ "name-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Collateral | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", 79041.5 ], [ "sector-1", 5004.5 ], [ "sector-2", 25014.5 ], [ "sector-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Collateral | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 79041.5 ] ]
+    },
+    "Collateral | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", "name-0", 79041.5 ], [ "sector-1", "name-1", 5004.5 ], [ "sector-2", "name-2", 25014.5 ], [ "sector-3", "name-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ [ "sector-0", 79041.5 ], [ "sector-1", 5004.5 ], [ "sector-2", 25014.5 ], [ "sector-3", 52028.0 ] ]
+      } ]
+    },
+    "Collateral | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Exposure (EE peak) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (EE peak) | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ ]
+      } ]
+    },
+    "Exposure (EE peak) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (PFE peak) | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ ]
+      } ]
+    },
+    "Exposure (PFE peak) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Netting sets | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by counterparties.NAME" : {
+      "refused" : "DRS-9020"
+    },
+    "Netting sets | as-of-day2 | by counterparties.SECTOR" : {
+      "refused" : "DRS-9020"
+    },
+    "Netting sets | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Netting sets | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", "name-0", 2 ], [ "sector-1", "name-1", 2 ], [ "sector-2", "name-2", 2 ], [ "sector-3", "name-3", 2 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 8.0 ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ [ "sector-0", 2.0 ], [ "sector-1", 2.0 ], [ "sector-2", 2.0 ], [ "sector-3", 2.0 ] ]
+      } ]
+    },
+    "Netting sets | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "calc Exposure (EE peak) | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "calc Exposure (EE peak) | by counterparties.SECTOR | slicer = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "rows of counterparties" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "0f03a5e2296f8ffdb6be82c0fb47529e901e015a5ab12243a5a509f0900398cb"
+    },
+    "rows of cpty_exposure" : {
+      "count" : 0,
+      "masked" : [ ],
+      "sha256" : "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "rows of netting_sets" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "8a620f68b32699afd85112db98e0156fd25053ec46a02b79fd2f6887f77f24c2"
+    },
+    "rows of set_exposure" : {
+      "count" : 0,
+      "masked" : [ ],
+      "sha256" : "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  },
+  "unnamed-role" : {
+    "Collateral | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "Collateral | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Collateral | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 79041.5 ], [ "name-1", 5004.5 ], [ "name-2", 25014.5 ], [ "name-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Collateral | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", 79041.5 ], [ "sector-1", 5004.5 ], [ "sector-2", 25014.5 ], [ "sector-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "Collateral | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 79041.5 ] ]
+    },
+    "Collateral | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", "name-0", 79041.5 ], [ "sector-1", "name-1", 5004.5 ], [ "sector-2", "name-2", 25014.5 ], [ "sector-3", "name-3", 52028.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ [ "sector-0", 79041.5 ], [ "sector-1", 5004.5 ], [ "sector-2", 25014.5 ], [ "sector-3", 52028.0 ] ]
+      } ]
+    },
+    "Collateral | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "Exposure (EE peak) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (EE peak) | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (EE peak) | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (EE peak) | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ ]
+      } ]
+    },
+    "Exposure (EE peak) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (PFE peak) | as-of-day2 | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "Exposure (PFE peak) | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Exposure (PFE peak) | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ ]
+      } ]
+    },
+    "Exposure (PFE peak) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "Netting sets | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Netting sets | as-of-day2 | by counterparties.NAME" : {
+      "refused" : "DRS-9020"
+    },
+    "Netting sets | as-of-day2 | by counterparties.SECTOR" : {
+      "refused" : "DRS-9020"
+    },
+    "Netting sets | slicer counterparties.SECTOR = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Netting sets | subtotals | by counterparties.SECTOR, counterparties.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "sector-0", "name-0", 2 ], [ "sector-1", "name-1", 2 ], [ "sector-2", "name-2", 2 ], [ "sector-3", "name-3", 2 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 8.0 ] ]
+      }, {
+        "by" : [ "counterparties.SECTOR" ],
+        "rows" : [ [ "sector-0", 2.0 ], [ "sector-1", 2.0 ], [ "sector-2", 2.0 ], [ "sector-3", 2.0 ] ]
+      } ]
+    },
+    "Netting sets | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "calc Exposure (EE peak) | by counterparties.SECTOR" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "calc Exposure (EE peak) | by counterparties.SECTOR | slicer = sector-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ null ] ]
+      } ]
+    },
+    "rows of counterparties" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "0f03a5e2296f8ffdb6be82c0fb47529e901e015a5ab12243a5a509f0900398cb"
+    },
+    "rows of cpty_exposure" : {
+      "count" : 0,
+      "masked" : [ ],
+      "sha256" : "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    },
+    "rows of netting_sets" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "8a620f68b32699afd85112db98e0156fd25053ec46a02b79fd2f6887f77f24c2"
+    },
+    "rows of set_exposure" : {
+      "count" : 0,
+      "masked" : [ ],
+      "sha256" : "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    }
+  }
+}

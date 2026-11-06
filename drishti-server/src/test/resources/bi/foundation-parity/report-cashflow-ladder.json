@@ -1,0 +1,576 @@
+{
+  "admin" : {
+    "ladder/amount" : {
+      "masked" : [ ],
+      "rows" : [ [ 1824039.2630000005 ] ]
+    },
+    "ladder/amount | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 551817.065 ] ]
+    },
+    "ladder/by-pay-date" : {
+      "masked" : [ ],
+      "rows" : [ [ 2026, 1824039.2630000005 ] ]
+    },
+    "ladder/by-pay-date | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2026, 551817.065 ] ]
+    },
+    "ladder/by-system" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0", 20, 551817.065, 93059.854, null, null ], [ "source_system-1", 20, 465504.27799999993, 79573.114, null, null ], [ "source_system-2", 20, 377624.186, 66086.37400000001, null, null ], [ "source_system-3", 20, 429093.734, 93059.854, null, null ] ]
+    },
+    "ladder/by-system | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0", 20, 551817.065, 93059.854, null, null ] ]
+    },
+    "ladder/count" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/count | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/largest" : {
+      "masked" : [ ],
+      "rows" : [ [ 93059.854 ] ]
+    },
+    "ladder/largest | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 93059.854 ] ]
+    },
+    "ladder/source-system" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0" ], [ "source_system-1" ], [ "source_system-2" ], [ "source_system-3" ] ]
+    },
+    "ladder/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/trades | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "legs/leg-matrix" : {
+      "masked" : [ ],
+      "rows" : [ [ "leg_economic_type-0", "leg_type-0", 20, 305172.5 ], [ "leg_economic_type-1", "leg_type-1", 20, 272156.0 ], [ "leg_economic_type-2", "leg_type-2", 20, 406223.0 ], [ "leg_economic_type-3", "leg_type-3", 20, 540290.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ 80.0, 1523841.5 ] ]
+      }, {
+        "by" : [ "legs.LEG_TYPE" ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ "leg_type-0", 20.0, 305172.5 ], [ "leg_type-1", 20.0, 272156.0 ], [ "leg_type-2", 20.0, 406223.0 ], [ "leg_type-3", 20.0, 540290.0 ] ]
+      }, {
+        "by" : [ "legs.LEG_ECONOMIC_TYPE" ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ "leg_economic_type-0", 20.0, 305172.5 ], [ "leg_economic_type-1", 20.0, 272156.0 ], [ "leg_economic_type-2", 20.0, 406223.0 ], [ "leg_economic_type-3", 20.0, 540290.0 ] ]
+      } ]
+    },
+    "legs/legs-count" : {
+      "masked" : [ ],
+      "rows" : [ [ 80 ] ]
+    },
+    "legs/legs-notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 1523841.5 ] ]
+    }
+  },
+  "analyst" : {
+    "ladder/amount" : {
+      "masked" : [ ],
+      "rows" : [ [ 1824039.2630000005 ] ]
+    },
+    "ladder/amount | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 551817.065 ] ]
+    },
+    "ladder/by-pay-date" : {
+      "masked" : [ ],
+      "rows" : [ [ 2026, 1824039.2630000005 ] ]
+    },
+    "ladder/by-pay-date | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2026, 551817.065 ] ]
+    },
+    "ladder/by-system" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0", 20, 551817.065, 93059.854, null, null ], [ "source_system-1", 20, 465504.27799999993, 79573.114, null, null ], [ "source_system-2", 20, 377624.186, 66086.37400000001, null, null ], [ "source_system-3", 20, 429093.734, 93059.854, null, null ] ]
+    },
+    "ladder/by-system | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0", 20, 551817.065, 93059.854, null, null ] ]
+    },
+    "ladder/count" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/count | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/largest" : {
+      "masked" : [ ],
+      "rows" : [ [ 93059.854 ] ]
+    },
+    "ladder/largest | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 93059.854 ] ]
+    },
+    "ladder/source-system" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0" ], [ "source_system-1" ], [ "source_system-2" ], [ "source_system-3" ] ]
+    },
+    "ladder/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/trades | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "legs/leg-matrix" : {
+      "masked" : [ ],
+      "rows" : [ [ "leg_economic_type-0", "leg_type-0", 20, 305172.5 ], [ "leg_economic_type-1", "leg_type-1", 20, 272156.0 ], [ "leg_economic_type-2", "leg_type-2", 20, 406223.0 ], [ "leg_economic_type-3", "leg_type-3", 20, 540290.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ 80.0, 1523841.5 ] ]
+      }, {
+        "by" : [ "legs.LEG_TYPE" ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ "leg_type-0", 20.0, 305172.5 ], [ "leg_type-1", 20.0, 272156.0 ], [ "leg_type-2", 20.0, 406223.0 ], [ "leg_type-3", 20.0, 540290.0 ] ]
+      }, {
+        "by" : [ "legs.LEG_ECONOMIC_TYPE" ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ "leg_economic_type-0", 20.0, 305172.5 ], [ "leg_economic_type-1", 20.0, 272156.0 ], [ "leg_economic_type-2", 20.0, 406223.0 ], [ "leg_economic_type-3", 20.0, 540290.0 ] ]
+      } ]
+    },
+    "legs/legs-count" : {
+      "masked" : [ ],
+      "rows" : [ [ 80 ] ]
+    },
+    "legs/legs-notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 1523841.5 ] ]
+    }
+  },
+  "desk-head-no-desks" : {
+    "ladder/amount" : {
+      "masked" : [ ],
+      "rows" : [ [ 1824039.2630000005 ] ]
+    },
+    "ladder/amount | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 551817.065 ] ]
+    },
+    "ladder/by-pay-date" : {
+      "masked" : [ ],
+      "rows" : [ [ 2026, 1824039.2630000005 ] ]
+    },
+    "ladder/by-pay-date | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2026, 551817.065 ] ]
+    },
+    "ladder/by-system" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0", 20, 551817.065, 93059.854, null, null ], [ "source_system-1", 20, 465504.27799999993, 79573.114, null, null ], [ "source_system-2", 20, 377624.186, 66086.37400000001, null, null ], [ "source_system-3", 20, 429093.734, 93059.854, null, null ] ]
+    },
+    "ladder/by-system | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0", 20, 551817.065, 93059.854, null, null ] ]
+    },
+    "ladder/count" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/count | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/largest" : {
+      "masked" : [ ],
+      "rows" : [ [ 93059.854 ] ]
+    },
+    "ladder/largest | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 93059.854 ] ]
+    },
+    "ladder/source-system" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0" ], [ "source_system-1" ], [ "source_system-2" ], [ "source_system-3" ] ]
+    },
+    "ladder/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/trades | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "legs/leg-matrix" : {
+      "masked" : [ ],
+      "rows" : [ [ "leg_economic_type-0", "leg_type-0", 20, 305172.5 ], [ "leg_economic_type-1", "leg_type-1", 20, 272156.0 ], [ "leg_economic_type-2", "leg_type-2", 20, 406223.0 ], [ "leg_economic_type-3", "leg_type-3", 20, 540290.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ 80.0, 1523841.5 ] ]
+      }, {
+        "by" : [ "legs.LEG_TYPE" ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ "leg_type-0", 20.0, 305172.5 ], [ "leg_type-1", 20.0, 272156.0 ], [ "leg_type-2", 20.0, 406223.0 ], [ "leg_type-3", 20.0, 540290.0 ] ]
+      }, {
+        "by" : [ "legs.LEG_ECONOMIC_TYPE" ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ "leg_economic_type-0", 20.0, 305172.5 ], [ "leg_economic_type-1", 20.0, 272156.0 ], [ "leg_economic_type-2", 20.0, 406223.0 ], [ "leg_economic_type-3", 20.0, 540290.0 ] ]
+      } ]
+    },
+    "legs/legs-count" : {
+      "masked" : [ ],
+      "rows" : [ [ 80 ] ]
+    },
+    "legs/legs-notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 1523841.5 ] ]
+    }
+  },
+  "desk-head-two-desks" : {
+    "ladder/amount" : {
+      "masked" : [ ],
+      "rows" : [ [ 1824039.2630000005 ] ]
+    },
+    "ladder/amount | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 551817.065 ] ]
+    },
+    "ladder/by-pay-date" : {
+      "masked" : [ ],
+      "rows" : [ [ 2026, 1824039.2630000005 ] ]
+    },
+    "ladder/by-pay-date | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2026, 551817.065 ] ]
+    },
+    "ladder/by-system" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0", 20, 551817.065, 93059.854, null, null ], [ "source_system-1", 20, 465504.27799999993, 79573.114, null, null ], [ "source_system-2", 20, 377624.186, 66086.37400000001, null, null ], [ "source_system-3", 20, 429093.734, 93059.854, null, null ] ]
+    },
+    "ladder/by-system | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0", 20, 551817.065, 93059.854, null, null ] ]
+    },
+    "ladder/count" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/count | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/largest" : {
+      "masked" : [ ],
+      "rows" : [ [ 93059.854 ] ]
+    },
+    "ladder/largest | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 93059.854 ] ]
+    },
+    "ladder/source-system" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0" ], [ "source_system-1" ], [ "source_system-2" ], [ "source_system-3" ] ]
+    },
+    "ladder/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/trades | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "legs/leg-matrix" : {
+      "masked" : [ ],
+      "rows" : [ [ "leg_economic_type-0", "leg_type-0", 20, 305172.5 ], [ "leg_economic_type-1", "leg_type-1", 20, 272156.0 ], [ "leg_economic_type-2", "leg_type-2", 20, 406223.0 ], [ "leg_economic_type-3", "leg_type-3", 20, 540290.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ 80.0, 1523841.5 ] ]
+      }, {
+        "by" : [ "legs.LEG_TYPE" ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ "leg_type-0", 20.0, 305172.5 ], [ "leg_type-1", 20.0, 272156.0 ], [ "leg_type-2", 20.0, 406223.0 ], [ "leg_type-3", 20.0, 540290.0 ] ]
+      }, {
+        "by" : [ "legs.LEG_ECONOMIC_TYPE" ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ "leg_economic_type-0", 20.0, 305172.5 ], [ "leg_economic_type-1", 20.0, 272156.0 ], [ "leg_economic_type-2", 20.0, 406223.0 ], [ "leg_economic_type-3", 20.0, 540290.0 ] ]
+      } ]
+    },
+    "legs/legs-count" : {
+      "masked" : [ ],
+      "rows" : [ [ 80 ] ]
+    },
+    "legs/legs-notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 1523841.5 ] ]
+    }
+  },
+  "no-raw-power" : {
+    "ladder/amount" : {
+      "masked" : [ ],
+      "rows" : [ [ 1824039.2630000005 ] ]
+    },
+    "ladder/amount | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 551817.065 ] ]
+    },
+    "ladder/by-pay-date" : {
+      "masked" : [ ],
+      "rows" : [ [ 2026, 1824039.2630000005 ] ]
+    },
+    "ladder/by-pay-date | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2026, 551817.065 ] ]
+    },
+    "ladder/by-system" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0", 20, 551817.065, 93059.854, null, null ], [ "source_system-1", 20, 465504.27799999993, 79573.114, null, null ], [ "source_system-2", 20, 377624.186, 66086.37400000001, null, null ], [ "source_system-3", 20, 429093.734, 93059.854, null, null ] ]
+    },
+    "ladder/by-system | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0", 20, 551817.065, 93059.854, null, null ] ]
+    },
+    "ladder/count" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/count | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/largest" : {
+      "masked" : [ ],
+      "rows" : [ [ 93059.854 ] ]
+    },
+    "ladder/largest | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 93059.854 ] ]
+    },
+    "ladder/source-system" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0" ], [ "source_system-1" ], [ "source_system-2" ], [ "source_system-3" ] ]
+    },
+    "ladder/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/trades | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "legs/leg-matrix" : {
+      "masked" : [ ],
+      "rows" : [ [ "leg_economic_type-0", "leg_type-0", 20, 305172.5 ], [ "leg_economic_type-1", "leg_type-1", 20, 272156.0 ], [ "leg_economic_type-2", "leg_type-2", 20, 406223.0 ], [ "leg_economic_type-3", "leg_type-3", 20, 540290.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ 80.0, 1523841.5 ] ]
+      }, {
+        "by" : [ "legs.LEG_TYPE" ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ "leg_type-0", 20.0, 305172.5 ], [ "leg_type-1", 20.0, 272156.0 ], [ "leg_type-2", 20.0, 406223.0 ], [ "leg_type-3", 20.0, 540290.0 ] ]
+      }, {
+        "by" : [ "legs.LEG_ECONOMIC_TYPE" ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ "leg_economic_type-0", 20.0, 305172.5 ], [ "leg_economic_type-1", 20.0, 272156.0 ], [ "leg_economic_type-2", 20.0, 406223.0 ], [ "leg_economic_type-3", 20.0, 540290.0 ] ]
+      } ]
+    },
+    "legs/legs-count" : {
+      "masked" : [ ],
+      "rows" : [ [ 80 ] ]
+    },
+    "legs/legs-notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 1523841.5 ] ]
+    }
+  },
+  "risk" : {
+    "ladder/amount" : {
+      "masked" : [ ],
+      "rows" : [ [ 1824039.2630000005 ] ]
+    },
+    "ladder/amount | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 551817.065 ] ]
+    },
+    "ladder/by-pay-date" : {
+      "masked" : [ ],
+      "rows" : [ [ 2026, 1824039.2630000005 ] ]
+    },
+    "ladder/by-pay-date | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2026, 551817.065 ] ]
+    },
+    "ladder/by-system" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0", 20, 551817.065, 93059.854, null, null ], [ "source_system-1", 20, 465504.27799999993, 79573.114, null, null ], [ "source_system-2", 20, 377624.186, 66086.37400000001, null, null ], [ "source_system-3", 20, 429093.734, 93059.854, null, null ] ]
+    },
+    "ladder/by-system | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0", 20, 551817.065, 93059.854, null, null ] ]
+    },
+    "ladder/count" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/count | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/largest" : {
+      "masked" : [ ],
+      "rows" : [ [ 93059.854 ] ]
+    },
+    "ladder/largest | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 93059.854 ] ]
+    },
+    "ladder/source-system" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0" ], [ "source_system-1" ], [ "source_system-2" ], [ "source_system-3" ] ]
+    },
+    "ladder/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/trades | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "legs/leg-matrix" : {
+      "masked" : [ ],
+      "rows" : [ [ "leg_economic_type-0", "leg_type-0", 20, 305172.5 ], [ "leg_economic_type-1", "leg_type-1", 20, 272156.0 ], [ "leg_economic_type-2", "leg_type-2", 20, 406223.0 ], [ "leg_economic_type-3", "leg_type-3", 20, 540290.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ 80.0, 1523841.5 ] ]
+      }, {
+        "by" : [ "legs.LEG_TYPE" ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ "leg_type-0", 20.0, 305172.5 ], [ "leg_type-1", 20.0, 272156.0 ], [ "leg_type-2", 20.0, 406223.0 ], [ "leg_type-3", 20.0, 540290.0 ] ]
+      }, {
+        "by" : [ "legs.LEG_ECONOMIC_TYPE" ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ "leg_economic_type-0", 20.0, 305172.5 ], [ "leg_economic_type-1", 20.0, 272156.0 ], [ "leg_economic_type-2", 20.0, 406223.0 ], [ "leg_economic_type-3", 20.0, 540290.0 ] ]
+      } ]
+    },
+    "legs/legs-count" : {
+      "masked" : [ ],
+      "rows" : [ [ 80 ] ]
+    },
+    "legs/legs-notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 1523841.5 ] ]
+    }
+  },
+  "unnamed-role" : {
+    "ladder/amount" : {
+      "masked" : [ ],
+      "rows" : [ [ 1824039.2630000005 ] ]
+    },
+    "ladder/amount | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 551817.065 ] ]
+    },
+    "ladder/by-pay-date" : {
+      "masked" : [ ],
+      "rows" : [ [ 2026, 1824039.2630000005 ] ]
+    },
+    "ladder/by-pay-date | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2026, 551817.065 ] ]
+    },
+    "ladder/by-system" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0", 20, 551817.065, 93059.854, null, null ], [ "source_system-1", 20, 465504.27799999993, 79573.114, null, null ], [ "source_system-2", 20, 377624.186, 66086.37400000001, null, null ], [ "source_system-3", 20, 429093.734, 93059.854, null, null ] ]
+    },
+    "ladder/by-system | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0", 20, 551817.065, 93059.854, null, null ] ]
+    },
+    "ladder/count" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/count | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/largest" : {
+      "masked" : [ ],
+      "rows" : [ [ 93059.854 ] ]
+    },
+    "ladder/largest | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 93059.854 ] ]
+    },
+    "ladder/source-system" : {
+      "masked" : [ ],
+      "rows" : [ [ "source_system-0" ], [ "source_system-1" ], [ "source_system-2" ], [ "source_system-3" ] ]
+    },
+    "ladder/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "ladder/trades | slicer source-system = source_system-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "legs/leg-matrix" : {
+      "masked" : [ ],
+      "rows" : [ [ "leg_economic_type-0", "leg_type-0", 20, 305172.5 ], [ "leg_economic_type-1", "leg_type-1", 20, 272156.0 ], [ "leg_economic_type-2", "leg_type-2", 20, 406223.0 ], [ "leg_economic_type-3", "leg_type-3", 20, 540290.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ 80.0, 1523841.5 ] ]
+      }, {
+        "by" : [ "legs.LEG_TYPE" ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ "leg_type-0", 20.0, 305172.5 ], [ "leg_type-1", 20.0, 272156.0 ], [ "leg_type-2", 20.0, 406223.0 ], [ "leg_type-3", 20.0, 540290.0 ] ]
+      }, {
+        "by" : [ "legs.LEG_ECONOMIC_TYPE" ],
+        "masked" : [ ],
+        "measures" : [ "Legs", "Leg notional" ],
+        "rows" : [ [ "leg_economic_type-0", 20.0, 305172.5 ], [ "leg_economic_type-1", 20.0, 272156.0 ], [ "leg_economic_type-2", 20.0, 406223.0 ], [ "leg_economic_type-3", 20.0, 540290.0 ] ]
+      } ]
+    },
+    "legs/legs-count" : {
+      "masked" : [ ],
+      "rows" : [ [ 80 ] ]
+    },
+    "legs/legs-notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 1523841.5 ] ]
+    }
+  }
+}

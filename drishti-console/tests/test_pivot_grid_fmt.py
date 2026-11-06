@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pivot grid's fmt() (pivot-grid.js; PIVOT_GUIDE.md): how a figure of the server's answer is shown, driven only by the answer's own
+"""The pivot grid's fmt() (drishti_pivot-grid.js; PIVOT_GUIDE.md): how a figure of the server's answer is shown, driven only by the answer's own
 fields (a text value, the measure's unit and show-as); it formats and computes nothing. Run in Node, no browser: the drawn grid is
 test_pivot_screen_browser.py's."""
 from __future__ import annotations
@@ -24,8 +24,8 @@ from pathlib import Path
 
 import pytest
 
-GRID_JS = Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "pivot-grid.js"
-needs_node = pytest.mark.skipif(shutil.which("node") is None, reason="needs Node to run pivot-grid.js")
+GRID_JS = Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "drishti_pivot-grid.js"
+needs_node = pytest.mark.skipif(shutil.which("node") is None, reason="needs Node to run drishti_pivot-grid.js")
 
 CASES = [
     ("a<b, Ann & Bo", {"id": "string_agg(TRADER)", "unit": ""}, "a&lt;b, Ann &amp; Bo"),   # string_agg: the text, escaped
@@ -44,7 +44,7 @@ CASES = [
 
 @needs_node
 def test_fmt_shows_text_as_text_and_whole_numbers_without_decimals():
-    script = ("global.window = {}; require(process.argv[1]); const f = window.PivotCore.fmt;"
+    script = ("global.window = {}; require(process.argv[1]); const f = window.Drishti.PivotCore.fmt;"
               "console.log(JSON.stringify(JSON.parse(process.argv[2]).map((c) => f(c[0], c[1]))));")
     run = subprocess.run(["node", "-e", script, str(GRID_JS), json.dumps([[v, m] for v, m, _ in CASES])],
                          capture_output=True, text=True, timeout=30)

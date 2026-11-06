@@ -17,21 +17,26 @@ package com.ash.drishti.server.bi.mq;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.server.bi.dataset.Dataset;
+import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.engine.BiLiveProperties;
 import com.ash.drishti.server.bi.engine.DuckDbEngine;
 import com.ash.drishti.server.bi.engine.Layers;
 import com.ash.drishti.server.bi.engine.QueryProperties;
+import com.ash.drishti.server.bi.engine.QueryRequest;
 import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.bi.layer.DatasetDefParser;
 import com.ash.drishti.server.bi.layer.ModelDef;
 import com.ash.drishti.server.bi.layer.ModelDefParser;
+import com.ash.drishti.server.bi.pivot.BiAggregate;
 import com.ash.drishti.server.bi.report.BiReportProperties;
 import com.ash.drishti.server.bi.report.Report;
 import com.ash.drishti.server.bi.report.ReportParser;
 import com.ash.drishti.server.bi.report.ReportState;
 import com.ash.drishti.server.bi.report.VisualQueries;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
@@ -48,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -58,15 +64,23 @@ import java.util.stream.Stream;
  *
  * <p><b>Compiles and runs on the unchanged tree</b> (develop before 2.9.11.e): it uses only what BI has there and keeps after the switch's
  * rename of its internals is mapped (the model query service {@link MqService#ask}, the model harness {@link MqHarness}, the sample lake
- * {@link SampleLake}, {@link VisualQueries} for a report's visuals, {@link QueryService#query}); nothing of drishti-tables.
+ * {@link SampleLake}, {@link VisualQueries} for a report's visuals, {@link QueryService#query}, {@link BiAggregate} for a matrix's totals,
+ * and {@link DatasetParser} for the two live originals); nothing of drishti-tables. The switch maps these calls onto the layer (the live
+ * originals' reports onto the converted live models).
  *
  * <ul>
  *   <li><b>Models</b>: every shipped model of {@code config/bi/models} × every person × (the grand total; each hierarchy level alone) × three
  *       times (the later business date, the earlier, the two as a window): the rows of all its measures at once, and the totals.</li>
  *   <li><b>Rows each person sees</b>: model × alias × person: a {@code shape: rows} extract of the alias's columns (the set of rows hashed,
  *       their count, the masked columns).</li>
- *   <li><b>Reports</b>: every shipped report bound to a model × page × visual × person: the rows the visual's query gives (python visuals
- *       are the console's and are left out).</li>
+ *   <li><b>Subtotals, slicer, filter context</b> (2.9.11.d): per model and person, each hierarchy's first two levels with
+ *       {@code totals: subtotals}, each measure; each measure under a slicer on the model's {@link Slice}; and {@code calc} with
+ *       {@code ignore=ALL}, {@code ignore=[field]}, {@code where=} and {@code share_of} by the slice's field, without and with the slicer.</li>
+ *   <li><b>Reports</b>: every shipped report (on a model, and the two live originals on a dataset, asked of a live query service) × page ×
+ *       visual × person: the rows the visual's query gives (top-N ranked), its masked columns, the true totals of a matrix or a totalled
+ *       table (BiAggregate) and a chart's highlight query; and each page's visuals again with its first list or dropdown slicer set (python
+ *       visuals are the console's and are left out).</li>
+ *   <li><b>Boards</b>: each tile of a board as the answer of the report visual it shows.</li>
  *   <li><b>Live replay</b>: {@code BiFoundationLive} (a deterministic tick sequence on the test lake's live table, answers at checkpoints).</li>
  *   <li><b>Items' own tests and golden questions</b>: none ship in {@code config/bi} today; the BI suites run unchanged on the new code
  *       (section 5.1), and a test added later is recorded by its suite.</li>
@@ -105,20 +119,32 @@ public final class BiFoundationCases {
     private BiFoundationCases() {}
 
     /** The shipped models with their views, the datasets they read, and the sample lake over every kind they read. */
-    record Shipped(Map<String, ModelView> models, SampleLake lake, Map<String, String> problems) {}
+    /**
+     * The shipped models with their views, the {@code rachana: 1} datasets a report on a dataset reads (the two live originals), the sample lake over
+     * every kind they read, and what could not be loaded.
+     */
+    record Shipped(Map<String, ModelView> models, Map<String, Dataset> direct, SampleLake lake, Map<String, String> problems) {}
 
     static Shipped shipped() throws IOException {
         Map<String, String> datasets = new LinkedHashMap<>();
+        Map<String, Dataset> direct = new TreeMap<>();
+        Map<String, String> problems = new TreeMap<>();
         try (Stream<Path> s = Files.list(BI.resolve("datasets"))) {
             for (Path f : s.filter(p -> p.toString().endsWith(".dataset.yaml")).sorted().toList()) {
                 String y = Files.readString(f);
                 if (DatasetDefParser.isVersion2(y)) {
                     datasets.put(f.getFileName().toString(), y);
+                } else {
+                    DatasetParser.Result r = DatasetParser.parse(y);
+                    if (r.ok()) {
+                        direct.put(r.dataset().name(), r.dataset());
+                    } else {
+                        problems.put(f.getFileName().toString(), "not loaded: " + r.problems());
+                    }
                 }
             }
         }
         Map<String, ModelView> models = new TreeMap<>();
-        Map<String, String> problems = new TreeMap<>();
         try (Stream<Path> s = Files.list(BI.resolve("models"))) {
             for (Path f : s.filter(p -> p.toString().endsWith(".model.yaml")).sorted().toList()) {
                 String y = Files.readString(f);
@@ -130,8 +156,9 @@ public final class BiFoundationCases {
                 }
             }
         }
-        List<Dataset> flats = models.values().stream().map(ModelView::flat).filter(d -> !d.framed()).toList();
-        return new Shipped(models, new SampleLake(flats), problems);
+        List<Dataset> flats = new ArrayList<>(models.values().stream().map(ModelView::flat).filter(d -> !d.framed()).toList());
+        direct.values().stream().filter(d -> !d.framed()).forEach(flats::add);
+        return new Shipped(models, direct, new SampleLake(flats), problems);
     }
 
     /** A query service over the sample lake, snapshots only (the live replay has its own). */
@@ -139,6 +166,17 @@ public final class BiFoundationCases {
         QueryProperties props = QueryProperties.defaults(store.toString());
         BiLiveProperties live = new BiLiveProperties(false, null, null, null, null, null, null, null, null, null, null, null);
         return new QueryService(props, live, new DuckDbEngine(props), lake, Clock.systemUTC());
+    }
+
+    /**
+     * A query service for the reports on a live dataset (the live originals): live tables loaded from the sample lake at their first question,
+     * no ticks, the clock fixed, so the answers are the table as loaded.
+     */
+    static QueryService liveService(Path store, SampleLake lake) throws IOException {
+        Files.createDirectories(store);
+        QueryProperties props = QueryProperties.defaults(store.toString());
+        BiLiveProperties live = BiLiveProperties.defaults().fast(java.time.Duration.ofMillis(20), java.time.Duration.ofHours(1));
+        return new QueryService(props, live, new DuckDbEngine(props), lake, Clock.fixed(java.time.Instant.parse("2026-10-09T10:00:00Z"), java.time.ZoneOffset.UTC));
     }
 
     /**
@@ -156,6 +194,7 @@ public final class BiFoundationCases {
                 groupings.add(List.of(l));
             }
         }));
+        Slice slice = slice(service, v, mq, measures);
         for (Map.Entry<String, MqHarness.Reader> p : persons(lake)) {
             Map<String, Object> mine = new TreeMap<>();
             for (String measure : measures) {
@@ -167,6 +206,7 @@ public final class BiFoundationCases {
                     }
                 }
             }
+            extras(service, v, p.getValue(), mq, measures, slice, mine);
             for (String alias : v.def().datasets().keySet()) {
                 Dataset.Table table = v.flat().tables().get(alias);
                 List<String> cols = table == null ? List.of() : table.columns().keySet().stream().map(c -> alias + "." + c).sorted().toList();
@@ -181,37 +221,121 @@ public final class BiFoundationCases {
         return out;
     }
 
-    /** Every model-bound report's visuals, per person: the rows each visual's own query gives on the later date. */
-    static Map<String, Object> report(QueryService service, Report report, ModelView v, SampleLake lake) {
+    /**
+     * The field the slicer, filter and calc cases of a model cut on and the value they keep: the first hierarchy level that is a text column,
+     * else the model's first text column that is not a key, whose grouped answer as the administrator (on the later date) has a value.
+     * Null when the model has none (no case is recorded then, and the index says so).
+     */
+    record Slice(String field, String value) {}
+
+    static Slice slice(QueryService service, ModelView v, MqService mq, List<String> measures) {
+        List<String> candidates = new ArrayList<>();
+        v.def().hierarchies().values().forEach(levels -> levels.stream().filter(l -> text(v, l)).findFirst().filter(l -> !candidates.contains(l))
+                .ifPresent(candidates::add));
+        v.flat().tables().forEach((alias, t) -> t.columns().values().stream().filter(c -> "string".equals(c.type()) && !c.key())
+                .map(c -> alias + "." + c.name()).filter(f -> !candidates.contains(f)).forEach(candidates::add));
+        MqHarness.Reader admin = new MqHarness.Reader("ada", true, "", List.of("admin"));
+        for (String f : candidates) {
+            for (String m : measures) {
+                Map<String, Object> a = answer(service, v, "{ mq: 1, model: x, select: { fields: " + ConvertedSamplesTest.list(List.of(f)) + ", measures: "
+                        + ConvertedSamplesTest.list(List.of(m)) + " }, time: { as-of: " + SampleLake.DAY2 + " } }", admin, mq);
+                if (a.get("rows") instanceof List<?> rows) {
+                    for (Object r : rows) {
+                        if (r instanceof List<?> row && !row.isEmpty() && row.get(0) instanceof String s && !s.isBlank()) {
+                            return new Slice(f, s);
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    private static boolean text(ModelView v, String field) {
+        int dot = field.indexOf('.');
+        Dataset.Table t = dot < 0 ? null : v.flat().tables().get(field.substring(0, dot));
+        Dataset.Column c = t == null ? null : t.columns().get(field.substring(dot + 1));
+        return c != null && "string".equals(c.type());
+    }
+
+    /**
+     * A model's cases beyond each measure alone, for one person on the later date: subtotals (each hierarchy's first two levels with
+     * {@code totals: subtotals}: the grand total, the first level's subtotals and the detail, non-additive measures included); a slicer (each
+     * measure under a filter on the slice's field); and the filter-context functions over the first additive measure ({@code calc} with
+     * {@code ignore=ALL}, {@code ignore=[field]} and {@code where=}, and {@code share_of}) by the slice's field, without and with the slicer.
+     */
+    static void extras(QueryService service, ModelView v, MqHarness.Reader who, MqService mq, List<String> measures, Slice slice, Map<String, Object> mine) {
+        String day2 = "time: { as-of: " + SampleLake.DAY2 + " }";
+        for (Map.Entry<String, List<String>> h : v.def().hierarchies().entrySet()) {
+            if (h.getValue().size() < 2) {
+                continue;
+            }
+            List<String> two = h.getValue().subList(0, 2);
+            for (String m : measures) {
+                mine.put(m + " | subtotals | by " + String.join(", ", two), answer(service, v, "{ mq: 1, model: x, select: { fields: " + ConvertedSamplesTest.list(two)
+                        + ", measures: " + ConvertedSamplesTest.list(List.of(m)) + " }, " + day2 + ", totals: subtotals }", who, mq));
+            }
+        }
+        if (slice == null) {
+            return;
+        }
+        String where = "where: [{ field: \"" + slice.field() + "\", op: in, values: [\"" + slice.value().replace("\"", "\\\"") + "\"] }]";
+        for (String m : measures) {
+            mine.put(m + " | slicer " + slice.field() + " = " + slice.value(), answer(service, v, "{ mq: 1, model: x, select: { measures: "
+                    + ConvertedSamplesTest.list(List.of(m)) + " }, " + where + ", " + day2 + " }", who, mq));
+        }
+        String base = measures.stream().filter(m -> String.valueOf(v.def().measures().get(m).expr()).startsWith("sum(")).findFirst()
+                .orElse(measures.isEmpty() ? null : measures.get(0));
+        if (base == null) {
+            return;
+        }
+        String ref = "measure('" + base.replace("'", "\\'") + "')";
+        String define = "define: { \"Ignore all\": \"calc(" + ref + ", ignore=ALL)\", \"Ignore field\": \"calc(" + ref + ", ignore=[" + slice.field() + "])\", "
+                + "\"Share\": \"share_of(" + ref + ", over=ALL)\", \"Only value\": \"calc(" + ref + ", where=" + slice.field() + " == '" + slice.value().replace("'", "\\'") + "')\" }";
+        String select = "select: { fields: " + ConvertedSamplesTest.list(List.of(slice.field())) + ", measures: "
+                + ConvertedSamplesTest.list(List.of(base, "Ignore all", "Ignore field", "Share", "Only value")) + " }";
+        mine.put("calc " + base + " | by " + slice.field(), answer(service, v, "{ mq: 1, model: x, " + define + ", " + select + ", " + day2 + ", totals: grand }", who, mq));
+        mine.put("calc " + base + " | by " + slice.field() + " | slicer = " + slice.value(), answer(service, v, "{ mq: 1, model: x, " + define + ", " + select + ", "
+                + where + ", " + day2 + ", totals: grand }", who, mq));
+    }
+
+    /**
+     * Every report's visuals, per person, on the later date: the rows each visual's own query gives (top-N filters ranked as the report
+     * service ranks them), the masked columns, the true totals the report service adds (a matrix's grand total and subtotals, a table's
+     * totals, through the pivot engine's {@code BiAggregate}) and the highlight query of a chart; then, per page with a list or dropdown
+     * slicer, every other visual of the page with the first slicer set to its first value (the value the slicer's own query gives the
+     * administrator). A python visual is the console's and is left out; a visual with no query (text, an entity view) says so.
+     *
+     * @param ds the dataset the visuals read (a model's flat dataset, or a report's own dataset)
+     * @param key the loaded key the queries run under
+     * @param caller the reader as the query service's caller
+     */
+    static Map<String, Object> report(QueryService service, Report report, Dataset ds, String key, String hash,
+            Function<MqHarness.Reader, QueryService.Caller> caller, SampleLake lake) {
         Map<String, Object> out = new TreeMap<>();
-        BiReportProperties props = BiReportProperties.defaults();
+        QueryService.Loaded loaded = new QueryService.Loaded(key, Layers.key(key), ds, hash);
+        Map<String, ReportState> slicers = slicerStates(service, report, ds, loaded, caller.apply(new MqHarness.Reader("ada", true, "", List.of("admin"))));
         for (Map.Entry<String, MqHarness.Reader> p : persons(lake)) {
             Map<String, Object> mine = new TreeMap<>();
-            MqHarness h = new MqHarness(service, SampleLake.DAY2);
+            QueryService.Caller who = caller.apply(p.getValue());
             for (Report.Page page : report.pages()) {
                 for (Report.Visual visual : page.visuals()) {
-                    String key = page.id() + "/" + visual.id();
                     if (visual.type() != null && visual.type().startsWith("python")) {
                         continue;                                           // the console runs a python visual
                     }
-                    try {
-                        VisualQueries.Built b = VisualQueries.build(report, page, visual, ReportState.NONE, v.flat(), props, (f, n, by, desc, ctx, from, to) -> List.of());
-                        if (b.query() == null) {
-                            mine.put(key, Map.of("query", "none"));
-                            continue;
-                        }
-                        String k = "report:" + report.name();
-                        QueryService.Result r = service.query(new QueryService.Loaded(k, Layers.key(k), v.flat(), "h|" + v.def().name()), b.query(),
-                                h.caller(v.flat(), p.getValue()), false);
-                        Map<String, Object> a = new TreeMap<>();
-                        a.put("rows", sorted(norm(MqService.rows(r))));
-                        a.put("masked", r.meta().masked() == null ? List.of() : r.meta().masked().stream().sorted().toList());
-                        mine.put(key, a);
-                    } catch (DrishtiException e) {
-                        mine.put(key, Map.of("refused", e.errorCode().code()));
-                    } catch (RuntimeException e) {
-                        mine.put(key, Map.of("failed", e.getClass().getSimpleName()));
+                    mine.put(page.id() + "/" + visual.id(), visual(service, report, page, visual, ReportState.NONE, ds, loaded, who));
+                }
+                ReportState sliced = slicers.get(page.id());
+                if (sliced == null) {
+                    continue;
+                }
+                Map.Entry<String, JsonNode> set = sliced.slicers().entrySet().iterator().next();
+                for (Report.Visual visual : page.visuals()) {
+                    if (visual.type() == null || visual.type().startsWith("python") || "slicer".equals(visual.type())) {
+                        continue;
                     }
+                    mine.put(page.id() + "/" + visual.id() + " | slicer " + set.getKey() + " = " + set.getValue().get(0).asText(),
+                            visual(service, report, page, visual, sliced, ds, loaded, who));
                 }
             }
             out.put(p.getKey(), mine);
@@ -219,13 +343,120 @@ public final class BiFoundationCases {
         return out;
     }
 
-    /** The reports of config/bi that bind a model, parsed. */
+    /** One visual under a state, as one reader: rows, masked, totals and highlight; or the refusal's code. */
+    static Map<String, Object> visual(QueryService service, Report report, Report.Page page, Report.Visual visual, ReportState state, Dataset ds,
+            QueryService.Loaded loaded, QueryService.Caller who) {
+        BiReportProperties props = BiReportProperties.defaults();
+        try {
+            VisualQueries.Built b = VisualQueries.build(report, page, visual, state, ds, props, (field, n, by, desc, context, from, to) -> {
+                QueryRequest q = new QueryRequest(List.of(field), List.of(by), context, from, to, List.of(new QueryRequest.Sort(by, desc)),
+                        Math.min(n, props.topCandidates()), "auto");
+                QueryService.Result r = service.query(loaded, q, who, false);
+                List<Object> values = new ArrayList<>();
+                for (int i = 0; i < r.rows(); i++) {
+                    values.add(r.columns().get(0).values()[i]);
+                }
+                return values;
+            });
+            if (b.query() == null) {
+                return Map.of("query", "none");
+            }
+            QueryService.Result r = service.query(loaded, b.query(), who, false);
+            Map<String, Object> a = new TreeMap<>();
+            a.put("rows", sorted(norm(MqService.rows(r))));
+            a.put("masked", r.meta().masked() == null ? List.of() : r.meta().masked().stream().sorted().toList());
+            List<Map<String, Object>> totals = totals(service, visual, ds, b.query(), loaded, who, props);
+            if (!totals.isEmpty()) {
+                a.put("totals", totals);
+            }
+            if (b.highlight() != null) {
+                a.put("highlight", sorted(norm(MqService.rows(service.query(loaded, b.highlight(), who, false)))));
+            }
+            return a;
+        } catch (DrishtiException e) {
+            return Map.of("refused", e.errorCode().code());
+        } catch (RuntimeException e) {
+            return Map.of("failed", e.getClass().getSimpleName());
+        }
+    }
+
+    /** The true totals the report service adds to a matrix with subtotals or a table with totals ({@code BiReportService#totals}), per level. */
+    private static List<Map<String, Object>> totals(QueryService service, Report.Visual v, Dataset ds, QueryRequest query, QueryService.Loaded loaded,
+            QueryService.Caller who, BiReportProperties props) {
+        List<List<String>> levels;
+        List<String> measures;
+        if ("matrix".equals(v.type())) {
+            levels = BiAggregate.matrixLevels(v.well("rows"), v.well("columns"));
+            measures = v.well("values");
+        } else if ("table".equals(v.type()) && v.format() != null && Boolean.TRUE.equals(v.format().get("totals"))) {
+            levels = List.of(List.of());
+            measures = v.well("columns").stream().filter(ds.measures()::containsKey).toList();
+        } else {
+            return List.of();
+        }
+        if (measures.isEmpty()) {
+            return List.of();
+        }
+        try {
+            BiAggregate.Totals t = BiAggregate.totals(ds, levels, measures, query, props.totalsMaxRows() * levels.size(), q -> service.query(loaded, q, who, false));
+            List<Map<String, Object>> out = new ArrayList<>();
+            for (BiAggregate.Level l : t.levels()) {
+                Map<String, Object> level = new TreeMap<>();
+                level.put("by", l.by());
+                level.put("measures", l.measures());
+                level.put("masked", l.masked() == null ? List.of() : l.masked().stream().sorted().toList());
+                level.put("rows", sorted(norm(l.rows())));
+                out.add(level);
+            }
+            if (!t.notTotalled().isEmpty()) {
+                out.add(Map.of("notTotalled", List.copyOf(new TreeMap<>(t.notTotalled()).keySet())));
+            }
+            return out;
+        } catch (DrishtiException e) {
+            return List.of(Map.of("refused", e.errorCode().code()));
+        }
+    }
+
+    /**
+     * Per page, the state with its first list or dropdown slicer set to the first value that slicer's own query gives the administrator;
+     * a page with no such slicer, or whose slicer has no value, is left out.
+     */
+    static Map<String, ReportState> slicerStates(QueryService service, Report report, Dataset ds, QueryService.Loaded loaded, QueryService.Caller admin) {
+        Map<String, ReportState> out = new TreeMap<>();
+        for (Report.Page page : report.pages()) {
+            for (Report.Visual s : page.visuals()) {
+                Object mode = s.format() == null ? null : s.format().get("mode");
+                if (!"slicer".equals(s.type()) || mode != null && !List.of("list", "dropdown").contains(String.valueOf(mode))) {
+                    continue;
+                }
+                Object first = null;
+                try {
+                    VisualQueries.Built b = VisualQueries.build(report, page, s, ReportState.NONE, ds, BiReportProperties.defaults(), (f, n, by, d, c, from, to) -> List.of());
+                    if (b.query() != null) {
+                        List<List<Object>> rows = sorted(norm(MqService.rows(service.query(loaded, b.query(), admin, false))));
+                        first = rows.stream().map(r -> r.isEmpty() ? null : r.get(0)).filter(x -> x instanceof String t && !t.isBlank()).findFirst().orElse(null);
+                    }
+                } catch (RuntimeException e) {
+                    first = null;
+                }
+                if (first == null) {
+                    continue;
+                }
+                Map<String, JsonNode> set = new TreeMap<>(Map.of(s.id(), JsonNodeFactory.instance.arrayNode().add(String.valueOf(first))));
+                out.put(page.id(), new ReportState(set, List.of(), List.of(), List.of(), null, null, null, null, null));
+                break;
+            }
+        }
+        return out;
+    }
+
+    /** Every report of config/bi (on a model, on a dataset, and the boards: reports whose pages are walls of tiles), parsed. */
     static Map<String, Report> reports() throws IOException {
         Map<String, Report> out = new TreeMap<>();
         try (Stream<Path> s = Files.list(BI.resolve("reports"))) {
             for (Path f : s.filter(p -> p.toString().endsWith(".report.yaml")).sorted().toList()) {
                 ReportParser.Result r = ReportParser.parse(Files.readString(f));
-                if (r.report() != null && r.report().model() != null) {
+                if (r.report() != null) {
                     out.put(r.report().name(), r.report());
                 }
             }
