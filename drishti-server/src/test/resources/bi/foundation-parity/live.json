@@ -1,0 +1,194 @@
+{
+  "checkpoint-0" : {
+    "desk-head" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 7, 7.0, 7007.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 7, 7.0, 7007.0 ] ]
+      }
+    },
+    "no-raw-power" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 20, null, 21020.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 7, null, 7007.0 ], [ "DESK-B", 7, null, 7707.0 ], [ "DESK-C", 6, null, 6306.0 ] ]
+      }
+    },
+    "risk" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 20, -2980.0, 21020.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 7, 7.0, 7007.0 ], [ "DESK-B", 7, 7.0, 7707.0 ], [ "DESK-C", 6, -2994.0, 6306.0 ] ]
+      }
+    }
+  },
+  "checkpoint-12" : {
+    "desk-head" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 7, -6997.0, 7007.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 7, -6997.0, 7007.0 ] ]
+      }
+    },
+    "no-raw-power" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 20, null, 21020.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 7, null, 7007.0 ], [ "DESK-B", 7, null, 7707.0 ], [ "DESK-C", 6, null, 6306.0 ] ]
+      }
+    },
+    "risk" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 20, -9992.0, 21020.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 7, -6997.0, 7007.0 ], [ "DESK-B", 7, 3.0, 7707.0 ], [ "DESK-C", 6, -2998.0, 6306.0 ] ]
+      }
+    }
+  },
+  "checkpoint-4" : {
+    "desk-head" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 7, -6995.0, 7007.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 7, -6995.0, 7007.0 ] ]
+      }
+    },
+    "no-raw-power" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 20, null, 21020.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 7, null, 7007.0 ], [ "DESK-B", 7, null, 7707.0 ], [ "DESK-C", 6, null, 6306.0 ] ]
+      }
+    },
+    "risk" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 20, -16984.0, 21020.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 7, -6995.0, 7007.0 ], [ "DESK-B", 7, -3494.0, 7707.0 ], [ "DESK-C", 6, -6495.0, 6306.0 ] ]
+      }
+    }
+  },
+  "checkpoint-8" : {
+    "desk-head" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 7, -10496.0, 7007.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 7, -10496.0, 7007.0 ] ]
+      }
+    },
+    "no-raw-power" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 20, null, 21020.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 7, null, 7007.0 ], [ "DESK-B", 7, null, 7707.0 ], [ "DESK-C", 6, null, 6306.0 ] ]
+      }
+    },
+    "risk" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 20, -23988.0, 21020.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 7, -10496.0, 7007.0 ], [ "DESK-B", 7, -3496.0, 7707.0 ], [ "DESK-C", 6, -9996.0, 6306.0 ] ]
+      }
+    }
+  },
+  "checkpoint-new" : {
+    "desk-head" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 8, -2676.0, 2507007.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 8, -2676.0, 2507007.0 ] ]
+      }
+    },
+    "no-raw-power" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 21, null, 2521020.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 8, null, 2507007.0 ], [ "DESK-B", 7, null, 7707.0 ], [ "DESK-C", 6, null, 6306.0 ] ]
+      }
+    },
+    "risk" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 21, -5671.0, 2521020.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 8, -2676.0, 2507007.0 ], [ "DESK-B", 7, 3.0, 7707.0 ], [ "DESK-C", 6, -2998.0, 6306.0 ] ]
+      }
+    }
+  },
+  "checkpoint-repeat" : {
+    "desk-head" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 8, -2676.0, 2506906.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 8, -2676.0, 2506906.0 ] ]
+      }
+    },
+    "no-raw-power" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 21, null, 2520919.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 8, null, 2506906.0 ], [ "DESK-B", 7, null, 7707.0 ], [ "DESK-C", 6, null, 6306.0 ] ]
+      }
+    },
+    "risk" : {
+      "q0" : {
+        "layer" : "live",
+        "rows" : [ [ 21, -5671.0, 2520919.0 ] ]
+      },
+      "q1" : {
+        "layer" : "live",
+        "rows" : [ [ "DESK-A", 8, -2676.0, 2506906.0 ], [ "DESK-B", 7, 3.0, 7707.0 ], [ "DESK-C", 6, -2998.0, 6306.0 ] ]
+      }
+    }
+  }
+}

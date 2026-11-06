@@ -1,0 +1,765 @@
+{
+  "admin" : {
+    "counterparty/c-ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "counterparty/c-mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "counterparty/c-notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "counterparty/c-trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "counterparty/c-trades-table" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "product_type-0", "USD", 3002.5, 58030.0 ], [ "trade_id-0", "DESK-5", "product_type-0", "EUR", 50026.0, 4003.0 ], [ "trade_id-1", "DESK-0", "product_type-1", "GBP", -14006.0, 41021.5 ], [ "trade_id-1", "DESK-4", "product_type-1", "EUR", 40021.0, -6002.0 ], [ "trade_id-2", "DESK-3", "product_type-2", "USD", 23012.5, -23010.5 ], [ "trade_id-2", "DESK-7", "product_type-2", "GBP", -24011.0, 31016.5 ], [ "trade_id-3", "DESK-2", "product_type-3", "USD", 13007.5, 68035.0 ], [ "trade_id-3", "DESK-6", "product_type-3", "EUR", 60031.0, 14008.0 ] ]
+    },
+    "exposure/by-counterparty" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-sector" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-sector | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/country" : {
+      "masked" : [ ],
+      "rows" : [ [ "country-0" ], [ "country-1" ], [ "country-2" ], [ "country-3" ] ]
+    },
+    "exposure/ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/ee | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/exposure-map" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/exposure-map | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/mtm-by-counterparty" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0", 2, 26015.0, 2 ], [ "sector-1", 2, 53028.5, 2 ], [ "sector-2", 2, 73038.5, 2 ], [ "sector-3", 2, -998.5, 2 ] ]
+    },
+    "exposure/mtm-by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0", 2, 26015.0, 2 ] ]
+    },
+    "exposure/mtm-spread" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", 53028.5 ], [ "trade_id-1", 26015.0 ], [ "trade_id-2", -998.5 ], [ "trade_id-3", 73038.5 ] ]
+    },
+    "exposure/mtm-spread | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-1", 26015.0 ] ]
+    },
+    "exposure/mtm-ytd" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "exposure/mtm-ytd | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 26015.0 ] ]
+    },
+    "exposure/pfe" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/pfe | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/sector" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0" ], [ "sector-1" ], [ "sector-2" ], [ "sector-3" ] ]
+    },
+    "exposure/sets" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/sets | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "lookup/counterparty-view" : {
+      "refused" : "DRS-9035"
+    },
+    "lookup/ids" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    }
+  },
+  "analyst" : {
+    "counterparty/c-ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "counterparty/c-mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "counterparty/c-notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "counterparty/c-trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "counterparty/c-trades-table" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "product_type-0", "USD", 3002.5, 58030.0 ], [ "trade_id-0", "DESK-5", "product_type-0", "EUR", 50026.0, 4003.0 ], [ "trade_id-1", "DESK-0", "product_type-1", "GBP", -14006.0, 41021.5 ], [ "trade_id-1", "DESK-4", "product_type-1", "EUR", 40021.0, -6002.0 ], [ "trade_id-2", "DESK-3", "product_type-2", "USD", 23012.5, -23010.5 ], [ "trade_id-2", "DESK-7", "product_type-2", "GBP", -24011.0, 31016.5 ], [ "trade_id-3", "DESK-2", "product_type-3", "USD", 13007.5, 68035.0 ], [ "trade_id-3", "DESK-6", "product_type-3", "EUR", 60031.0, 14008.0 ] ]
+    },
+    "exposure/by-counterparty" : {
+      "masked" : [ "counterparties.NAME" ],
+      "rows" : [ [ "•••", null, null ] ]
+    },
+    "exposure/by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ "counterparties.NAME" ],
+      "rows" : [ [ "•••", null, null ] ]
+    },
+    "exposure/by-sector" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-sector | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/country" : {
+      "masked" : [ ],
+      "rows" : [ [ "country-0" ], [ "country-1" ], [ "country-2" ], [ "country-3" ] ]
+    },
+    "exposure/ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/ee | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/exposure-map" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/exposure-map | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/mtm-by-counterparty" : {
+      "masked" : [ "Counterparties" ],
+      "rows" : [ [ "sector-0", 2, 26015.0, null ], [ "sector-1", 2, 53028.5, null ], [ "sector-2", 2, 73038.5, null ], [ "sector-3", 2, -998.5, null ] ]
+    },
+    "exposure/mtm-by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ "Counterparties" ],
+      "rows" : [ [ "sector-0", 2, 26015.0, null ] ]
+    },
+    "exposure/mtm-spread" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", 53028.5 ], [ "trade_id-1", 26015.0 ], [ "trade_id-2", -998.5 ], [ "trade_id-3", 73038.5 ] ]
+    },
+    "exposure/mtm-spread | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-1", 26015.0 ] ]
+    },
+    "exposure/mtm-ytd" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "exposure/mtm-ytd | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 26015.0 ] ]
+    },
+    "exposure/pfe" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/pfe | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/sector" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0" ], [ "sector-1" ], [ "sector-2" ], [ "sector-3" ] ]
+    },
+    "exposure/sets" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/sets | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "lookup/counterparty-view" : {
+      "refused" : "DRS-9035"
+    },
+    "lookup/ids" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    }
+  },
+  "desk-head-no-desks" : {
+    "counterparty/c-ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "counterparty/c-mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "counterparty/c-notional" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "counterparty/c-trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "counterparty/c-trades-table" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-counterparty" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-sector" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-sector | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/country" : {
+      "masked" : [ ],
+      "rows" : [ [ "country-0" ], [ "country-1" ], [ "country-2" ], [ "country-3" ] ]
+    },
+    "exposure/ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/ee | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/exposure-map" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/exposure-map | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/mtm-by-counterparty" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/mtm-by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/mtm-spread" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/mtm-spread | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/mtm-ytd" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/mtm-ytd | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/pfe" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/pfe | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/sector" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0" ], [ "sector-1" ], [ "sector-2" ], [ "sector-3" ] ]
+    },
+    "exposure/sets" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/sets | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "lookup/counterparty-view" : {
+      "refused" : "DRS-9035"
+    },
+    "lookup/ids" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    }
+  },
+  "desk-head-two-desks" : {
+    "counterparty/c-ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "counterparty/c-mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ -11003.5 ] ]
+    },
+    "counterparty/c-notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 99051.5 ] ]
+    },
+    "counterparty/c-trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "counterparty/c-trades-table" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "product_type-0", "USD", 3002.5, 58030.0 ], [ "trade_id-1", "DESK-0", "product_type-1", "GBP", -14006.0, 41021.5 ] ]
+    },
+    "exposure/by-counterparty" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-sector" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-sector | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/country" : {
+      "masked" : [ ],
+      "rows" : [ [ "country-0" ], [ "country-1" ], [ "country-2" ], [ "country-3" ] ]
+    },
+    "exposure/ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/ee | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/exposure-map" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/exposure-map | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/mtm-by-counterparty" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0", 1, -14006.0, 1 ], [ "sector-1", 1, 3002.5, 1 ] ]
+    },
+    "exposure/mtm-by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0", 1, -14006.0, 1 ] ]
+    },
+    "exposure/mtm-spread" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", 3002.5 ], [ "trade_id-1", -14006.0 ] ]
+    },
+    "exposure/mtm-spread | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-1", -14006.0 ] ]
+    },
+    "exposure/mtm-ytd" : {
+      "masked" : [ ],
+      "rows" : [ [ -11003.5 ] ]
+    },
+    "exposure/mtm-ytd | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ -14006.0 ] ]
+    },
+    "exposure/pfe" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/pfe | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/sector" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0" ], [ "sector-1" ], [ "sector-2" ], [ "sector-3" ] ]
+    },
+    "exposure/sets" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/sets | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "lookup/counterparty-view" : {
+      "refused" : "DRS-9035"
+    },
+    "lookup/ids" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    }
+  },
+  "no-raw-power" : {
+    "counterparty/c-ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "counterparty/c-mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "counterparty/c-notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "counterparty/c-trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "counterparty/c-trades-table" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "product_type-0", "USD", 3002.5, 58030.0 ], [ "trade_id-0", "DESK-5", "product_type-0", "EUR", 50026.0, 4003.0 ], [ "trade_id-1", "DESK-0", "product_type-1", "GBP", -14006.0, 41021.5 ], [ "trade_id-1", "DESK-4", "product_type-1", "EUR", 40021.0, -6002.0 ], [ "trade_id-2", "DESK-3", "product_type-2", "USD", 23012.5, -23010.5 ], [ "trade_id-2", "DESK-7", "product_type-2", "GBP", -24011.0, 31016.5 ], [ "trade_id-3", "DESK-2", "product_type-3", "USD", 13007.5, 68035.0 ], [ "trade_id-3", "DESK-6", "product_type-3", "EUR", 60031.0, 14008.0 ] ]
+    },
+    "exposure/by-counterparty" : {
+      "masked" : [ "counterparties.NAME" ],
+      "rows" : [ [ "•••", null, null ] ]
+    },
+    "exposure/by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ "counterparties.NAME" ],
+      "rows" : [ [ "•••", null, null ] ]
+    },
+    "exposure/by-sector" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-sector | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/country" : {
+      "masked" : [ ],
+      "rows" : [ [ "country-0" ], [ "country-1" ], [ "country-2" ], [ "country-3" ] ]
+    },
+    "exposure/ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/ee | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/exposure-map" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/exposure-map | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/mtm-by-counterparty" : {
+      "masked" : [ "Counterparties" ],
+      "rows" : [ [ "sector-0", 2, 26015.0, null ], [ "sector-1", 2, 53028.5, null ], [ "sector-2", 2, 73038.5, null ], [ "sector-3", 2, -998.5, null ] ]
+    },
+    "exposure/mtm-by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ "Counterparties" ],
+      "rows" : [ [ "sector-0", 2, 26015.0, null ] ]
+    },
+    "exposure/mtm-spread" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", 53028.5 ], [ "trade_id-1", 26015.0 ], [ "trade_id-2", -998.5 ], [ "trade_id-3", 73038.5 ] ]
+    },
+    "exposure/mtm-spread | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-1", 26015.0 ] ]
+    },
+    "exposure/mtm-ytd" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "exposure/mtm-ytd | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 26015.0 ] ]
+    },
+    "exposure/pfe" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/pfe | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/sector" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0" ], [ "sector-1" ], [ "sector-2" ], [ "sector-3" ] ]
+    },
+    "exposure/sets" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/sets | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "lookup/counterparty-view" : {
+      "refused" : "DRS-9035"
+    },
+    "lookup/ids" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    }
+  },
+  "risk" : {
+    "counterparty/c-ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "counterparty/c-mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "counterparty/c-notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "counterparty/c-trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "counterparty/c-trades-table" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "product_type-0", "USD", 3002.5, 58030.0 ], [ "trade_id-0", "DESK-5", "product_type-0", "EUR", 50026.0, 4003.0 ], [ "trade_id-1", "DESK-0", "product_type-1", "GBP", -14006.0, 41021.5 ], [ "trade_id-1", "DESK-4", "product_type-1", "EUR", 40021.0, -6002.0 ], [ "trade_id-2", "DESK-3", "product_type-2", "USD", 23012.5, -23010.5 ], [ "trade_id-2", "DESK-7", "product_type-2", "GBP", -24011.0, 31016.5 ], [ "trade_id-3", "DESK-2", "product_type-3", "USD", 13007.5, 68035.0 ], [ "trade_id-3", "DESK-6", "product_type-3", "EUR", 60031.0, 14008.0 ] ]
+    },
+    "exposure/by-counterparty" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-sector" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-sector | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/country" : {
+      "masked" : [ ],
+      "rows" : [ [ "country-0" ], [ "country-1" ], [ "country-2" ], [ "country-3" ] ]
+    },
+    "exposure/ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/ee | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/exposure-map" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/exposure-map | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/mtm-by-counterparty" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0", 2, 26015.0, 2 ], [ "sector-1", 2, 53028.5, 2 ], [ "sector-2", 2, 73038.5, 2 ], [ "sector-3", 2, -998.5, 2 ] ]
+    },
+    "exposure/mtm-by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0", 2, 26015.0, 2 ] ]
+    },
+    "exposure/mtm-spread" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", 53028.5 ], [ "trade_id-1", 26015.0 ], [ "trade_id-2", -998.5 ], [ "trade_id-3", 73038.5 ] ]
+    },
+    "exposure/mtm-spread | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-1", 26015.0 ] ]
+    },
+    "exposure/mtm-ytd" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "exposure/mtm-ytd | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 26015.0 ] ]
+    },
+    "exposure/pfe" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/pfe | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/sector" : {
+      "masked" : [ ],
+      "rows" : [ [ "sector-0" ], [ "sector-1" ], [ "sector-2" ], [ "sector-3" ] ]
+    },
+    "exposure/sets" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "exposure/sets | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "lookup/counterparty-view" : {
+      "refused" : "DRS-9035"
+    },
+    "lookup/ids" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    }
+  },
+  "unnamed-role" : {
+    "counterparty/c-ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "counterparty/c-mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "counterparty/c-notional" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "counterparty/c-trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "counterparty/c-trades-table" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-counterparty" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-sector" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/by-sector | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/country" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/ee" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/ee | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/exposure-map" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/exposure-map | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/mtm-by-counterparty" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/mtm-by-counterparty | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/mtm-spread" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/mtm-spread | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/mtm-ytd" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/mtm-ytd | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/pfe" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/pfe | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "exposure/sector" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "exposure/sets" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "exposure/sets | slicer sector = sector-0" : {
+      "masked" : [ ],
+      "rows" : [ [ 0 ] ]
+    },
+    "lookup/counterparty-view" : {
+      "refused" : "DRS-9035"
+    },
+    "lookup/ids" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    }
+  }
+}

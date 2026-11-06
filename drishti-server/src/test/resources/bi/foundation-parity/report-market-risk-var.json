@@ -1,0 +1,485 @@
+{
+  "admin" : {
+    "desk-over-time/desk-line" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "desk-over-time/desk-use" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "desk-over-time/desk-var" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "desk-over-time/pick-desk" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "node/n-es" : {
+      "masked" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "node/n-limit" : {
+      "masked" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "node/n-rows" : {
+      "masked" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", "node_id-0", "parent_id-0", 50026.0, 39020.5, -20009.0, 4003.0, 4 ], [ "hierarchy-1", "level-1", "node_id-1", "parent_id-1", -14006.0, -25011.5, 17009.5, 41021.5, 5 ], [ "hierarchy-2", "level-2", "node_id-2", "parent_id-2", 23012.5, 12007.0, 54028.0, -23010.5, 6 ], [ "hierarchy-3", "level-3", "node_id-3", "parent_id-3", 13007.5, 2002.0, 44023.0, 68035.0, 3 ] ]
+    },
+    "node/n-use" : {
+      "masked" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "node/n-var" : {
+      "masked" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "overview/bank-es" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/bank-over-time" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/bank-use" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/bank-var" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/by-le" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/nodes" : {
+      "masked" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", "node_id-0", "node_name-0", 50026.0, 39020.5, -29013.5, 15008.5, 4 ], [ "hierarchy-1", "level-1", "node_id-1", "node_name-1", -14006.0, -25011.5, 8005.0, 52027.0, 5 ], [ "hierarchy-2", "level-2", "node_id-2", "node_name-2", 23012.5, 12007.0, 45023.5, -12005.0, 6 ], [ "hierarchy-3", "level-3", "node_id-3", "node_name-3", 13007.5, 2002.0, 35018.5, -22010.0, 3 ] ]
+    },
+    "overview/note" : {
+      "refused" : "DRS-9035"
+    }
+  },
+  "analyst" : {
+    "desk-over-time/desk-line" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "desk-over-time/desk-use" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "desk-over-time/desk-var" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "desk-over-time/pick-desk" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "node/n-es" : {
+      "masked" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "node/n-limit" : {
+      "masked" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "node/n-rows" : {
+      "masked" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", "node_id-0", "parent_id-0", 50026.0, 39020.5, -20009.0, 4003.0, 4 ], [ "hierarchy-1", "level-1", "node_id-1", "parent_id-1", -14006.0, -25011.5, 17009.5, 41021.5, 5 ], [ "hierarchy-2", "level-2", "node_id-2", "parent_id-2", 23012.5, 12007.0, 54028.0, -23010.5, 6 ], [ "hierarchy-3", "level-3", "node_id-3", "parent_id-3", 13007.5, 2002.0, 44023.0, 68035.0, 3 ] ]
+    },
+    "node/n-use" : {
+      "masked" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "node/n-var" : {
+      "masked" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "overview/bank-es" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/bank-over-time" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/bank-use" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/bank-var" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/by-le" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/nodes" : {
+      "masked" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", "node_id-0", "node_name-0", 50026.0, 39020.5, -29013.5, 15008.5, 4 ], [ "hierarchy-1", "level-1", "node_id-1", "node_name-1", -14006.0, -25011.5, 8005.0, 52027.0, 5 ], [ "hierarchy-2", "level-2", "node_id-2", "node_name-2", 23012.5, 12007.0, 45023.5, -12005.0, 6 ], [ "hierarchy-3", "level-3", "node_id-3", "node_name-3", 13007.5, 2002.0, 35018.5, -22010.0, 3 ] ]
+    },
+    "overview/note" : {
+      "refused" : "DRS-9035"
+    }
+  },
+  "desk-head-no-desks" : {
+    "desk-over-time/desk-line" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "desk-over-time/desk-use" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "desk-over-time/desk-var" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "desk-over-time/pick-desk" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "node/n-es" : {
+      "masked" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "node/n-limit" : {
+      "masked" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "node/n-rows" : {
+      "masked" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", "node_id-0", "parent_id-0", 50026.0, 39020.5, -20009.0, 4003.0, 4 ], [ "hierarchy-1", "level-1", "node_id-1", "parent_id-1", -14006.0, -25011.5, 17009.5, 41021.5, 5 ], [ "hierarchy-2", "level-2", "node_id-2", "parent_id-2", 23012.5, 12007.0, 54028.0, -23010.5, 6 ], [ "hierarchy-3", "level-3", "node_id-3", "parent_id-3", 13007.5, 2002.0, 44023.0, 68035.0, 3 ] ]
+    },
+    "node/n-use" : {
+      "masked" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "node/n-var" : {
+      "masked" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "overview/bank-es" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/bank-over-time" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/bank-use" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/bank-var" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/by-le" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/nodes" : {
+      "masked" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", "node_id-0", "node_name-0", 50026.0, 39020.5, -29013.5, 15008.5, 4 ], [ "hierarchy-1", "level-1", "node_id-1", "node_name-1", -14006.0, -25011.5, 8005.0, 52027.0, 5 ], [ "hierarchy-2", "level-2", "node_id-2", "node_name-2", 23012.5, 12007.0, 45023.5, -12005.0, 6 ], [ "hierarchy-3", "level-3", "node_id-3", "node_name-3", 13007.5, 2002.0, 35018.5, -22010.0, 3 ] ]
+    },
+    "overview/note" : {
+      "refused" : "DRS-9035"
+    }
+  },
+  "desk-head-two-desks" : {
+    "desk-over-time/desk-line" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "desk-over-time/desk-use" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "desk-over-time/desk-var" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "desk-over-time/pick-desk" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "node/n-es" : {
+      "masked" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "node/n-limit" : {
+      "masked" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "node/n-rows" : {
+      "masked" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", "node_id-0", "parent_id-0", 50026.0, 39020.5, -20009.0, 4003.0, 4 ], [ "hierarchy-1", "level-1", "node_id-1", "parent_id-1", -14006.0, -25011.5, 17009.5, 41021.5, 5 ], [ "hierarchy-2", "level-2", "node_id-2", "parent_id-2", 23012.5, 12007.0, 54028.0, -23010.5, 6 ], [ "hierarchy-3", "level-3", "node_id-3", "parent_id-3", 13007.5, 2002.0, 44023.0, 68035.0, 3 ] ]
+    },
+    "node/n-use" : {
+      "masked" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "node/n-var" : {
+      "masked" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "overview/bank-es" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/bank-over-time" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/bank-use" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/bank-var" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/by-le" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/nodes" : {
+      "masked" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", "node_id-0", "node_name-0", 50026.0, 39020.5, -29013.5, 15008.5, 4 ], [ "hierarchy-1", "level-1", "node_id-1", "node_name-1", -14006.0, -25011.5, 8005.0, 52027.0, 5 ], [ "hierarchy-2", "level-2", "node_id-2", "node_name-2", 23012.5, 12007.0, 45023.5, -12005.0, 6 ], [ "hierarchy-3", "level-3", "node_id-3", "node_name-3", 13007.5, 2002.0, 35018.5, -22010.0, 3 ] ]
+    },
+    "overview/note" : {
+      "refused" : "DRS-9035"
+    }
+  },
+  "no-raw-power" : {
+    "desk-over-time/desk-line" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "desk-over-time/desk-use" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "desk-over-time/desk-var" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "desk-over-time/pick-desk" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "node/n-es" : {
+      "masked" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "node/n-limit" : {
+      "masked" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "node/n-rows" : {
+      "masked" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", "node_id-0", "parent_id-0", 50026.0, 39020.5, -20009.0, 4003.0, 4 ], [ "hierarchy-1", "level-1", "node_id-1", "parent_id-1", -14006.0, -25011.5, 17009.5, 41021.5, 5 ], [ "hierarchy-2", "level-2", "node_id-2", "parent_id-2", 23012.5, 12007.0, 54028.0, -23010.5, 6 ], [ "hierarchy-3", "level-3", "node_id-3", "parent_id-3", 13007.5, 2002.0, 44023.0, 68035.0, 3 ] ]
+    },
+    "node/n-use" : {
+      "masked" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "node/n-var" : {
+      "masked" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "overview/bank-es" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/bank-over-time" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/bank-use" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/bank-var" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/by-le" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/nodes" : {
+      "masked" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", "node_id-0", "node_name-0", 50026.0, 39020.5, -29013.5, 15008.5, 4 ], [ "hierarchy-1", "level-1", "node_id-1", "node_name-1", -14006.0, -25011.5, 8005.0, 52027.0, 5 ], [ "hierarchy-2", "level-2", "node_id-2", "node_name-2", 23012.5, 12007.0, 45023.5, -12005.0, 6 ], [ "hierarchy-3", "level-3", "node_id-3", "node_name-3", 13007.5, 2002.0, 35018.5, -22010.0, 3 ] ]
+    },
+    "overview/note" : {
+      "refused" : "DRS-9035"
+    }
+  },
+  "risk" : {
+    "desk-over-time/desk-line" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "desk-over-time/desk-use" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "desk-over-time/desk-var" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "desk-over-time/pick-desk" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "node/n-es" : {
+      "masked" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "node/n-limit" : {
+      "masked" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "node/n-rows" : {
+      "masked" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", "node_id-0", "parent_id-0", 50026.0, 39020.5, -20009.0, 4003.0, 4 ], [ "hierarchy-1", "level-1", "node_id-1", "parent_id-1", -14006.0, -25011.5, 17009.5, 41021.5, 5 ], [ "hierarchy-2", "level-2", "node_id-2", "parent_id-2", 23012.5, 12007.0, 54028.0, -23010.5, 6 ], [ "hierarchy-3", "level-3", "node_id-3", "parent_id-3", 13007.5, 2002.0, 44023.0, 68035.0, 3 ] ]
+    },
+    "node/n-use" : {
+      "masked" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "node/n-var" : {
+      "masked" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "overview/bank-es" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/bank-over-time" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/bank-use" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/bank-var" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/by-le" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/nodes" : {
+      "masked" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", "node_id-0", "node_name-0", 50026.0, 39020.5, -29013.5, 15008.5, 4 ], [ "hierarchy-1", "level-1", "node_id-1", "node_name-1", -14006.0, -25011.5, 8005.0, 52027.0, 5 ], [ "hierarchy-2", "level-2", "node_id-2", "node_name-2", 23012.5, 12007.0, 45023.5, -12005.0, 6 ], [ "hierarchy-3", "level-3", "node_id-3", "node_name-3", 13007.5, 2002.0, 35018.5, -22010.0, 3 ] ]
+    },
+    "overview/note" : {
+      "refused" : "DRS-9035"
+    }
+  },
+  "unnamed-role" : {
+    "desk-over-time/desk-line" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "desk-over-time/desk-use" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "desk-over-time/desk-var" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "desk-over-time/pick-desk" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "node/n-es" : {
+      "masked" : [ ],
+      "rows" : [ [ 39020.5 ] ]
+    },
+    "node/n-limit" : {
+      "masked" : [ ],
+      "rows" : [ [ 45023.5 ] ]
+    },
+    "node/n-rows" : {
+      "masked" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", "node_id-0", "parent_id-0", 50026.0, 39020.5, -20009.0, 4003.0, 4 ], [ "hierarchy-1", "level-1", "node_id-1", "parent_id-1", -14006.0, -25011.5, 17009.5, 41021.5, 5 ], [ "hierarchy-2", "level-2", "node_id-2", "parent_id-2", 23012.5, 12007.0, 54028.0, -23010.5, 6 ], [ "hierarchy-3", "level-3", "node_id-3", "parent_id-3", 13007.5, 2002.0, 44023.0, 68035.0, 3 ] ]
+    },
+    "node/n-use" : {
+      "masked" : [ ],
+      "rows" : [ [ 52027.0 ] ]
+    },
+    "node/n-var" : {
+      "masked" : [ ],
+      "rows" : [ [ 50026.0 ] ]
+    },
+    "overview/bank-es" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/bank-over-time" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/bank-use" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/bank-var" : {
+      "masked" : [ ],
+      "rows" : [ [ null ] ]
+    },
+    "overview/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/by-le" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "overview/nodes" : {
+      "masked" : [ ],
+      "rows" : [ [ "hierarchy-0", "level-0", "node_id-0", "node_name-0", 50026.0, 39020.5, -29013.5, 15008.5, 4 ], [ "hierarchy-1", "level-1", "node_id-1", "node_name-1", -14006.0, -25011.5, 8005.0, 52027.0, 5 ], [ "hierarchy-2", "level-2", "node_id-2", "node_name-2", 23012.5, 12007.0, 45023.5, -12005.0, 6 ], [ "hierarchy-3", "level-3", "node_id-3", "node_name-3", 13007.5, 2002.0, 35018.5, -22010.0, 3 ] ]
+    },
+    "overview/note" : {
+      "refused" : "DRS-9035"
+    }
+  }
+}

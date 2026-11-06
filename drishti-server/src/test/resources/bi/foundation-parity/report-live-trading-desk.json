@@ -1,0 +1,492 @@
+{
+  "admin" : {
+    "chart/mtm-chart" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", -14006.0 ], [ "DESK-1", "USD", 3002.5 ], [ "DESK-2", "USD", 13007.5 ], [ "DESK-3", "USD", 23012.5 ], [ "DESK-4", "EUR", 40021.0 ], [ "DESK-5", "EUR", 50026.0 ], [ "DESK-6", "EUR", 60031.0 ], [ "DESK-7", "GBP", -24011.0 ] ]
+    },
+    "desk/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "desk/last-hour" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "desk/latest" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "2026-10-09 10:00:00.0", 53028.5 ], [ "trade_id-1", "2026-10-09 10:00:00.0", 26015.0 ], [ "trade_id-2", "2026-10-09 10:00:00.0", -998.5 ], [ "trade_id-3", "2026-10-09 10:00:00.0", 73038.5 ] ]
+    },
+    "desk/losses" : {
+      "masked" : [ ],
+      "rows" : [ [ -38017.0 ] ]
+    },
+    "desk/movers" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "trader_id-0", 3002.5 ], [ "trade_id-0", "DESK-5", "trader_id-0", 50026.0 ], [ "trade_id-1", "DESK-0", "trader_id-1", -14006.0 ], [ "trade_id-1", "DESK-4", "trader_id-1", 40021.0 ], [ "trade_id-2", "DESK-3", "trader_id-2", 23012.5 ], [ "trade_id-2", "DESK-7", "trader_id-2", -24011.0 ], [ "trade_id-3", "DESK-2", "trader_id-3", 13007.5 ], [ "trade_id-3", "DESK-6", "trader_id-3", 60031.0 ] ]
+    },
+    "desk/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "desk/notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "desk/pnl" : {
+      "masked" : [ ],
+      "rows" : [ [ 112064.0 ] ]
+    },
+    "desk/rolling" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5, -38017.0 ] ]
+    },
+    "desk/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "grid/all-trades" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "portfolio-0", "product_type-0", "USD", "buy_sell_code-0", "trader_id-0", 58030.0, 3002.5, 36019.0, "TRADE-VALUATION-0", 1 ], [ "trade_id-0", "DESK-5", "portfolio-0", "product_type-0", "EUR", "buy_sell_code-0", "trader_id-0", 4003.0, 50026.0, -18008.0, "TRADE-VALUATION-4", 5 ], [ "trade_id-1", "DESK-0", "portfolio-1", "product_type-1", "GBP", "buy_sell_code-1", "trader_id-1", 41021.5, -14006.0, 19010.5, "TRADE-VALUATION-5", 6 ], [ "trade_id-1", "DESK-4", "portfolio-1", "product_type-1", "EUR", "buy_sell_code-1", "trader_id-1", -6002.0, 40021.0, -28013.0, "TRADE-VALUATION-1", 2 ], [ "trade_id-2", "DESK-3", "portfolio-2", "product_type-2", "USD", "buy_sell_code-2", "trader_id-2", -23010.5, 23012.5, 56029.0, "TRADE-VALUATION-6", 7 ], [ "trade_id-2", "DESK-7", "portfolio-2", "product_type-2", "GBP", "buy_sell_code-2", "trader_id-2", 31016.5, -24011.0, 9005.5, "TRADE-VALUATION-2", 3 ], [ "trade_id-3", "DESK-2", "portfolio-3", "product_type-3", "USD", "buy_sell_code-3", "trader_id-3", 68035.0, 13007.5, 46024.0, "TRADE-VALUATION-3", 4 ], [ "trade_id-3", "DESK-6", "portfolio-3", "product_type-3", "EUR", "buy_sell_code-3", "trader_id-3", 14008.0, 60031.0, -8003.0, "TRADE-VALUATION-7", 8 ] ]
+    },
+    "pivot/desk-currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", -14006.0, 41021.5 ], [ "DESK-1", "USD", 3002.5, 58030.0 ], [ "DESK-2", "USD", 13007.5, 68035.0 ], [ "DESK-3", "USD", 23012.5, -23010.5 ], [ "DESK-4", "EUR", 40021.0, -6002.0 ], [ "DESK-5", "EUR", 50026.0, 4003.0 ], [ "DESK-6", "EUR", 60031.0, 14008.0 ], [ "DESK-7", "GBP", -24011.0, 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ 151083.5, 187101.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ "EUR", 150078.0, 12009.0 ], [ "GBP", -38017.0, 72038.0 ], [ "USD", 39022.5, 103054.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ "DESK-0", -14006.0, 41021.5 ], [ "DESK-1", 3002.5, 58030.0 ], [ "DESK-2", 13007.5, 68035.0 ], [ "DESK-3", 23012.5, -23010.5 ], [ "DESK-4", 40021.0, -6002.0 ], [ "DESK-5", 50026.0, 4003.0 ], [ "DESK-6", 60031.0, 14008.0 ], [ "DESK-7", -24011.0, 31016.5 ] ]
+      } ]
+    }
+  },
+  "analyst" : {
+    "chart/mtm-chart" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", -14006.0 ], [ "DESK-1", "USD", 3002.5 ], [ "DESK-2", "USD", 13007.5 ], [ "DESK-3", "USD", 23012.5 ], [ "DESK-4", "EUR", 40021.0 ], [ "DESK-5", "EUR", 50026.0 ], [ "DESK-6", "EUR", 60031.0 ], [ "DESK-7", "GBP", -24011.0 ] ]
+    },
+    "desk/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "desk/last-hour" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "desk/latest" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "2026-10-09 10:00:00.0", 53028.5 ], [ "trade_id-1", "2026-10-09 10:00:00.0", 26015.0 ], [ "trade_id-2", "2026-10-09 10:00:00.0", -998.5 ], [ "trade_id-3", "2026-10-09 10:00:00.0", 73038.5 ] ]
+    },
+    "desk/losses" : {
+      "masked" : [ ],
+      "rows" : [ [ -38017.0 ] ]
+    },
+    "desk/movers" : {
+      "masked" : [ "trade.TRADER_ID" ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "•••", 3002.5 ], [ "trade_id-0", "DESK-5", "•••", 50026.0 ], [ "trade_id-1", "DESK-0", "•••", -14006.0 ], [ "trade_id-1", "DESK-4", "•••", 40021.0 ], [ "trade_id-2", "DESK-3", "•••", 23012.5 ], [ "trade_id-2", "DESK-7", "•••", -24011.0 ], [ "trade_id-3", "DESK-2", "•••", 13007.5 ], [ "trade_id-3", "DESK-6", "•••", 60031.0 ] ]
+    },
+    "desk/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "desk/notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "desk/pnl" : {
+      "masked" : [ ],
+      "rows" : [ [ 112064.0 ] ]
+    },
+    "desk/rolling" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5, -38017.0 ] ]
+    },
+    "desk/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "grid/all-trades" : {
+      "masked" : [ "trade.TRADER_ID" ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "portfolio-0", "product_type-0", "USD", "buy_sell_code-0", "•••", 58030.0, 3002.5, 36019.0, "TRADE-VALUATION-0", 1 ], [ "trade_id-0", "DESK-5", "portfolio-0", "product_type-0", "EUR", "buy_sell_code-0", "•••", 4003.0, 50026.0, -18008.0, "TRADE-VALUATION-4", 5 ], [ "trade_id-1", "DESK-0", "portfolio-1", "product_type-1", "GBP", "buy_sell_code-1", "•••", 41021.5, -14006.0, 19010.5, "TRADE-VALUATION-5", 6 ], [ "trade_id-1", "DESK-4", "portfolio-1", "product_type-1", "EUR", "buy_sell_code-1", "•••", -6002.0, 40021.0, -28013.0, "TRADE-VALUATION-1", 2 ], [ "trade_id-2", "DESK-3", "portfolio-2", "product_type-2", "USD", "buy_sell_code-2", "•••", -23010.5, 23012.5, 56029.0, "TRADE-VALUATION-6", 7 ], [ "trade_id-2", "DESK-7", "portfolio-2", "product_type-2", "GBP", "buy_sell_code-2", "•••", 31016.5, -24011.0, 9005.5, "TRADE-VALUATION-2", 3 ], [ "trade_id-3", "DESK-2", "portfolio-3", "product_type-3", "USD", "buy_sell_code-3", "•••", 68035.0, 13007.5, 46024.0, "TRADE-VALUATION-3", 4 ], [ "trade_id-3", "DESK-6", "portfolio-3", "product_type-3", "EUR", "buy_sell_code-3", "•••", 14008.0, 60031.0, -8003.0, "TRADE-VALUATION-7", 8 ] ]
+    },
+    "pivot/desk-currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", -14006.0, 41021.5 ], [ "DESK-1", "USD", 3002.5, 58030.0 ], [ "DESK-2", "USD", 13007.5, 68035.0 ], [ "DESK-3", "USD", 23012.5, -23010.5 ], [ "DESK-4", "EUR", 40021.0, -6002.0 ], [ "DESK-5", "EUR", 50026.0, 4003.0 ], [ "DESK-6", "EUR", 60031.0, 14008.0 ], [ "DESK-7", "GBP", -24011.0, 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ 151083.5, 187101.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ "EUR", 150078.0, 12009.0 ], [ "GBP", -38017.0, 72038.0 ], [ "USD", 39022.5, 103054.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ "DESK-0", -14006.0, 41021.5 ], [ "DESK-1", 3002.5, 58030.0 ], [ "DESK-2", 13007.5, 68035.0 ], [ "DESK-3", 23012.5, -23010.5 ], [ "DESK-4", 40021.0, -6002.0 ], [ "DESK-5", 50026.0, 4003.0 ], [ "DESK-6", 60031.0, 14008.0 ], [ "DESK-7", -24011.0, 31016.5 ] ]
+      } ]
+    }
+  },
+  "desk-head-no-desks" : {
+    "chart/mtm-chart" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", -14006.0 ], [ "DESK-1", "USD", 3002.5 ], [ "DESK-2", "USD", 13007.5 ], [ "DESK-3", "USD", 23012.5 ], [ "DESK-4", "EUR", 40021.0 ], [ "DESK-5", "EUR", 50026.0 ], [ "DESK-6", "EUR", 60031.0 ], [ "DESK-7", "GBP", -24011.0 ] ]
+    },
+    "desk/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "desk/last-hour" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "desk/latest" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "2026-10-09 10:00:00.0", 53028.5 ], [ "trade_id-1", "2026-10-09 10:00:00.0", 26015.0 ], [ "trade_id-2", "2026-10-09 10:00:00.0", -998.5 ], [ "trade_id-3", "2026-10-09 10:00:00.0", 73038.5 ] ]
+    },
+    "desk/losses" : {
+      "masked" : [ ],
+      "rows" : [ [ -38017.0 ] ]
+    },
+    "desk/movers" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "trader_id-0", 3002.5 ], [ "trade_id-0", "DESK-5", "trader_id-0", 50026.0 ], [ "trade_id-1", "DESK-0", "trader_id-1", -14006.0 ], [ "trade_id-1", "DESK-4", "trader_id-1", 40021.0 ], [ "trade_id-2", "DESK-3", "trader_id-2", 23012.5 ], [ "trade_id-2", "DESK-7", "trader_id-2", -24011.0 ], [ "trade_id-3", "DESK-2", "trader_id-3", 13007.5 ], [ "trade_id-3", "DESK-6", "trader_id-3", 60031.0 ] ]
+    },
+    "desk/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "desk/notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "desk/pnl" : {
+      "masked" : [ ],
+      "rows" : [ [ 112064.0 ] ]
+    },
+    "desk/rolling" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5, -38017.0 ] ]
+    },
+    "desk/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "grid/all-trades" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "portfolio-0", "product_type-0", "USD", "buy_sell_code-0", "trader_id-0", 58030.0, 3002.5, 36019.0, "TRADE-VALUATION-0", 1 ], [ "trade_id-0", "DESK-5", "portfolio-0", "product_type-0", "EUR", "buy_sell_code-0", "trader_id-0", 4003.0, 50026.0, -18008.0, "TRADE-VALUATION-4", 5 ], [ "trade_id-1", "DESK-0", "portfolio-1", "product_type-1", "GBP", "buy_sell_code-1", "trader_id-1", 41021.5, -14006.0, 19010.5, "TRADE-VALUATION-5", 6 ], [ "trade_id-1", "DESK-4", "portfolio-1", "product_type-1", "EUR", "buy_sell_code-1", "trader_id-1", -6002.0, 40021.0, -28013.0, "TRADE-VALUATION-1", 2 ], [ "trade_id-2", "DESK-3", "portfolio-2", "product_type-2", "USD", "buy_sell_code-2", "trader_id-2", -23010.5, 23012.5, 56029.0, "TRADE-VALUATION-6", 7 ], [ "trade_id-2", "DESK-7", "portfolio-2", "product_type-2", "GBP", "buy_sell_code-2", "trader_id-2", 31016.5, -24011.0, 9005.5, "TRADE-VALUATION-2", 3 ], [ "trade_id-3", "DESK-2", "portfolio-3", "product_type-3", "USD", "buy_sell_code-3", "trader_id-3", 68035.0, 13007.5, 46024.0, "TRADE-VALUATION-3", 4 ], [ "trade_id-3", "DESK-6", "portfolio-3", "product_type-3", "EUR", "buy_sell_code-3", "trader_id-3", 14008.0, 60031.0, -8003.0, "TRADE-VALUATION-7", 8 ] ]
+    },
+    "pivot/desk-currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", -14006.0, 41021.5 ], [ "DESK-1", "USD", 3002.5, 58030.0 ], [ "DESK-2", "USD", 13007.5, 68035.0 ], [ "DESK-3", "USD", 23012.5, -23010.5 ], [ "DESK-4", "EUR", 40021.0, -6002.0 ], [ "DESK-5", "EUR", 50026.0, 4003.0 ], [ "DESK-6", "EUR", 60031.0, 14008.0 ], [ "DESK-7", "GBP", -24011.0, 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ 151083.5, 187101.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ "EUR", 150078.0, 12009.0 ], [ "GBP", -38017.0, 72038.0 ], [ "USD", 39022.5, 103054.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ "DESK-0", -14006.0, 41021.5 ], [ "DESK-1", 3002.5, 58030.0 ], [ "DESK-2", 13007.5, 68035.0 ], [ "DESK-3", 23012.5, -23010.5 ], [ "DESK-4", 40021.0, -6002.0 ], [ "DESK-5", 50026.0, 4003.0 ], [ "DESK-6", 60031.0, 14008.0 ], [ "DESK-7", -24011.0, 31016.5 ] ]
+      } ]
+    }
+  },
+  "desk-head-two-desks" : {
+    "chart/mtm-chart" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", -14006.0 ], [ "DESK-1", "USD", 3002.5 ], [ "DESK-2", "USD", 13007.5 ], [ "DESK-3", "USD", 23012.5 ], [ "DESK-4", "EUR", 40021.0 ], [ "DESK-5", "EUR", 50026.0 ], [ "DESK-6", "EUR", 60031.0 ], [ "DESK-7", "GBP", -24011.0 ] ]
+    },
+    "desk/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "desk/last-hour" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "desk/latest" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "2026-10-09 10:00:00.0", 53028.5 ], [ "trade_id-1", "2026-10-09 10:00:00.0", 26015.0 ], [ "trade_id-2", "2026-10-09 10:00:00.0", -998.5 ], [ "trade_id-3", "2026-10-09 10:00:00.0", 73038.5 ] ]
+    },
+    "desk/losses" : {
+      "masked" : [ ],
+      "rows" : [ [ -38017.0 ] ]
+    },
+    "desk/movers" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "trader_id-0", 3002.5 ], [ "trade_id-0", "DESK-5", "trader_id-0", 50026.0 ], [ "trade_id-1", "DESK-0", "trader_id-1", -14006.0 ], [ "trade_id-1", "DESK-4", "trader_id-1", 40021.0 ], [ "trade_id-2", "DESK-3", "trader_id-2", 23012.5 ], [ "trade_id-2", "DESK-7", "trader_id-2", -24011.0 ], [ "trade_id-3", "DESK-2", "trader_id-3", 13007.5 ], [ "trade_id-3", "DESK-6", "trader_id-3", 60031.0 ] ]
+    },
+    "desk/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "desk/notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "desk/pnl" : {
+      "masked" : [ ],
+      "rows" : [ [ 112064.0 ] ]
+    },
+    "desk/rolling" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5, -38017.0 ] ]
+    },
+    "desk/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "grid/all-trades" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "portfolio-0", "product_type-0", "USD", "buy_sell_code-0", "trader_id-0", 58030.0, 3002.5, 36019.0, "TRADE-VALUATION-0", 1 ], [ "trade_id-0", "DESK-5", "portfolio-0", "product_type-0", "EUR", "buy_sell_code-0", "trader_id-0", 4003.0, 50026.0, -18008.0, "TRADE-VALUATION-4", 5 ], [ "trade_id-1", "DESK-0", "portfolio-1", "product_type-1", "GBP", "buy_sell_code-1", "trader_id-1", 41021.5, -14006.0, 19010.5, "TRADE-VALUATION-5", 6 ], [ "trade_id-1", "DESK-4", "portfolio-1", "product_type-1", "EUR", "buy_sell_code-1", "trader_id-1", -6002.0, 40021.0, -28013.0, "TRADE-VALUATION-1", 2 ], [ "trade_id-2", "DESK-3", "portfolio-2", "product_type-2", "USD", "buy_sell_code-2", "trader_id-2", -23010.5, 23012.5, 56029.0, "TRADE-VALUATION-6", 7 ], [ "trade_id-2", "DESK-7", "portfolio-2", "product_type-2", "GBP", "buy_sell_code-2", "trader_id-2", 31016.5, -24011.0, 9005.5, "TRADE-VALUATION-2", 3 ], [ "trade_id-3", "DESK-2", "portfolio-3", "product_type-3", "USD", "buy_sell_code-3", "trader_id-3", 68035.0, 13007.5, 46024.0, "TRADE-VALUATION-3", 4 ], [ "trade_id-3", "DESK-6", "portfolio-3", "product_type-3", "EUR", "buy_sell_code-3", "trader_id-3", 14008.0, 60031.0, -8003.0, "TRADE-VALUATION-7", 8 ] ]
+    },
+    "pivot/desk-currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", -14006.0, 41021.5 ], [ "DESK-1", "USD", 3002.5, 58030.0 ], [ "DESK-2", "USD", 13007.5, 68035.0 ], [ "DESK-3", "USD", 23012.5, -23010.5 ], [ "DESK-4", "EUR", 40021.0, -6002.0 ], [ "DESK-5", "EUR", 50026.0, 4003.0 ], [ "DESK-6", "EUR", 60031.0, 14008.0 ], [ "DESK-7", "GBP", -24011.0, 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ 151083.5, 187101.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ "EUR", 150078.0, 12009.0 ], [ "GBP", -38017.0, 72038.0 ], [ "USD", 39022.5, 103054.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ "DESK-0", -14006.0, 41021.5 ], [ "DESK-1", 3002.5, 58030.0 ], [ "DESK-2", 13007.5, 68035.0 ], [ "DESK-3", 23012.5, -23010.5 ], [ "DESK-4", 40021.0, -6002.0 ], [ "DESK-5", 50026.0, 4003.0 ], [ "DESK-6", 60031.0, 14008.0 ], [ "DESK-7", -24011.0, 31016.5 ] ]
+      } ]
+    }
+  },
+  "no-raw-power" : {
+    "chart/mtm-chart" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", -14006.0 ], [ "DESK-1", "USD", 3002.5 ], [ "DESK-2", "USD", 13007.5 ], [ "DESK-3", "USD", 23012.5 ], [ "DESK-4", "EUR", 40021.0 ], [ "DESK-5", "EUR", 50026.0 ], [ "DESK-6", "EUR", 60031.0 ], [ "DESK-7", "GBP", -24011.0 ] ]
+    },
+    "desk/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "desk/last-hour" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "desk/latest" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "2026-10-09 10:00:00.0", 53028.5 ], [ "trade_id-1", "2026-10-09 10:00:00.0", 26015.0 ], [ "trade_id-2", "2026-10-09 10:00:00.0", -998.5 ], [ "trade_id-3", "2026-10-09 10:00:00.0", 73038.5 ] ]
+    },
+    "desk/losses" : {
+      "masked" : [ ],
+      "rows" : [ [ -38017.0 ] ]
+    },
+    "desk/movers" : {
+      "masked" : [ "trade.TRADER_ID" ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "•••", 3002.5 ], [ "trade_id-0", "DESK-5", "•••", 50026.0 ], [ "trade_id-1", "DESK-0", "•••", -14006.0 ], [ "trade_id-1", "DESK-4", "•••", 40021.0 ], [ "trade_id-2", "DESK-3", "•••", 23012.5 ], [ "trade_id-2", "DESK-7", "•••", -24011.0 ], [ "trade_id-3", "DESK-2", "•••", 13007.5 ], [ "trade_id-3", "DESK-6", "•••", 60031.0 ] ]
+    },
+    "desk/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "desk/notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "desk/pnl" : {
+      "masked" : [ ],
+      "rows" : [ [ 112064.0 ] ]
+    },
+    "desk/rolling" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5, -38017.0 ] ]
+    },
+    "desk/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "grid/all-trades" : {
+      "masked" : [ "trade.TRADER_ID" ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "portfolio-0", "product_type-0", "USD", "buy_sell_code-0", "•••", 58030.0, 3002.5, 36019.0, "TRADE-VALUATION-0", 1 ], [ "trade_id-0", "DESK-5", "portfolio-0", "product_type-0", "EUR", "buy_sell_code-0", "•••", 4003.0, 50026.0, -18008.0, "TRADE-VALUATION-4", 5 ], [ "trade_id-1", "DESK-0", "portfolio-1", "product_type-1", "GBP", "buy_sell_code-1", "•••", 41021.5, -14006.0, 19010.5, "TRADE-VALUATION-5", 6 ], [ "trade_id-1", "DESK-4", "portfolio-1", "product_type-1", "EUR", "buy_sell_code-1", "•••", -6002.0, 40021.0, -28013.0, "TRADE-VALUATION-1", 2 ], [ "trade_id-2", "DESK-3", "portfolio-2", "product_type-2", "USD", "buy_sell_code-2", "•••", -23010.5, 23012.5, 56029.0, "TRADE-VALUATION-6", 7 ], [ "trade_id-2", "DESK-7", "portfolio-2", "product_type-2", "GBP", "buy_sell_code-2", "•••", 31016.5, -24011.0, 9005.5, "TRADE-VALUATION-2", 3 ], [ "trade_id-3", "DESK-2", "portfolio-3", "product_type-3", "USD", "buy_sell_code-3", "•••", 68035.0, 13007.5, 46024.0, "TRADE-VALUATION-3", 4 ], [ "trade_id-3", "DESK-6", "portfolio-3", "product_type-3", "EUR", "buy_sell_code-3", "•••", 14008.0, 60031.0, -8003.0, "TRADE-VALUATION-7", 8 ] ]
+    },
+    "pivot/desk-currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", -14006.0, 41021.5 ], [ "DESK-1", "USD", 3002.5, 58030.0 ], [ "DESK-2", "USD", 13007.5, 68035.0 ], [ "DESK-3", "USD", 23012.5, -23010.5 ], [ "DESK-4", "EUR", 40021.0, -6002.0 ], [ "DESK-5", "EUR", 50026.0, 4003.0 ], [ "DESK-6", "EUR", 60031.0, 14008.0 ], [ "DESK-7", "GBP", -24011.0, 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ 151083.5, 187101.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ "EUR", 150078.0, 12009.0 ], [ "GBP", -38017.0, 72038.0 ], [ "USD", 39022.5, 103054.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ "DESK-0", -14006.0, 41021.5 ], [ "DESK-1", 3002.5, 58030.0 ], [ "DESK-2", 13007.5, 68035.0 ], [ "DESK-3", 23012.5, -23010.5 ], [ "DESK-4", 40021.0, -6002.0 ], [ "DESK-5", 50026.0, 4003.0 ], [ "DESK-6", 60031.0, 14008.0 ], [ "DESK-7", -24011.0, 31016.5 ] ]
+      } ]
+    }
+  },
+  "risk" : {
+    "chart/mtm-chart" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", -14006.0 ], [ "DESK-1", "USD", 3002.5 ], [ "DESK-2", "USD", 13007.5 ], [ "DESK-3", "USD", 23012.5 ], [ "DESK-4", "EUR", 40021.0 ], [ "DESK-5", "EUR", 50026.0 ], [ "DESK-6", "EUR", 60031.0 ], [ "DESK-7", "GBP", -24011.0 ] ]
+    },
+    "desk/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "desk/last-hour" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "desk/latest" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "2026-10-09 10:00:00.0", 53028.5 ], [ "trade_id-1", "2026-10-09 10:00:00.0", 26015.0 ], [ "trade_id-2", "2026-10-09 10:00:00.0", -998.5 ], [ "trade_id-3", "2026-10-09 10:00:00.0", 73038.5 ] ]
+    },
+    "desk/losses" : {
+      "masked" : [ ],
+      "rows" : [ [ -38017.0 ] ]
+    },
+    "desk/movers" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "trader_id-0", 3002.5 ], [ "trade_id-0", "DESK-5", "trader_id-0", 50026.0 ], [ "trade_id-1", "DESK-0", "trader_id-1", -14006.0 ], [ "trade_id-1", "DESK-4", "trader_id-1", 40021.0 ], [ "trade_id-2", "DESK-3", "trader_id-2", 23012.5 ], [ "trade_id-2", "DESK-7", "trader_id-2", -24011.0 ], [ "trade_id-3", "DESK-2", "trader_id-3", 13007.5 ], [ "trade_id-3", "DESK-6", "trader_id-3", 60031.0 ] ]
+    },
+    "desk/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "desk/notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "desk/pnl" : {
+      "masked" : [ ],
+      "rows" : [ [ 112064.0 ] ]
+    },
+    "desk/rolling" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5, -38017.0 ] ]
+    },
+    "desk/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "grid/all-trades" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "portfolio-0", "product_type-0", "USD", "buy_sell_code-0", "trader_id-0", 58030.0, 3002.5, 36019.0, "TRADE-VALUATION-0", 1 ], [ "trade_id-0", "DESK-5", "portfolio-0", "product_type-0", "EUR", "buy_sell_code-0", "trader_id-0", 4003.0, 50026.0, -18008.0, "TRADE-VALUATION-4", 5 ], [ "trade_id-1", "DESK-0", "portfolio-1", "product_type-1", "GBP", "buy_sell_code-1", "trader_id-1", 41021.5, -14006.0, 19010.5, "TRADE-VALUATION-5", 6 ], [ "trade_id-1", "DESK-4", "portfolio-1", "product_type-1", "EUR", "buy_sell_code-1", "trader_id-1", -6002.0, 40021.0, -28013.0, "TRADE-VALUATION-1", 2 ], [ "trade_id-2", "DESK-3", "portfolio-2", "product_type-2", "USD", "buy_sell_code-2", "trader_id-2", -23010.5, 23012.5, 56029.0, "TRADE-VALUATION-6", 7 ], [ "trade_id-2", "DESK-7", "portfolio-2", "product_type-2", "GBP", "buy_sell_code-2", "trader_id-2", 31016.5, -24011.0, 9005.5, "TRADE-VALUATION-2", 3 ], [ "trade_id-3", "DESK-2", "portfolio-3", "product_type-3", "USD", "buy_sell_code-3", "trader_id-3", 68035.0, 13007.5, 46024.0, "TRADE-VALUATION-3", 4 ], [ "trade_id-3", "DESK-6", "portfolio-3", "product_type-3", "EUR", "buy_sell_code-3", "trader_id-3", 14008.0, 60031.0, -8003.0, "TRADE-VALUATION-7", 8 ] ]
+    },
+    "pivot/desk-currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", -14006.0, 41021.5 ], [ "DESK-1", "USD", 3002.5, 58030.0 ], [ "DESK-2", "USD", 13007.5, 68035.0 ], [ "DESK-3", "USD", 23012.5, -23010.5 ], [ "DESK-4", "EUR", 40021.0, -6002.0 ], [ "DESK-5", "EUR", 50026.0, 4003.0 ], [ "DESK-6", "EUR", 60031.0, 14008.0 ], [ "DESK-7", "GBP", -24011.0, 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ 151083.5, 187101.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ "EUR", 150078.0, 12009.0 ], [ "GBP", -38017.0, 72038.0 ], [ "USD", 39022.5, 103054.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ "DESK-0", -14006.0, 41021.5 ], [ "DESK-1", 3002.5, 58030.0 ], [ "DESK-2", 13007.5, 68035.0 ], [ "DESK-3", 23012.5, -23010.5 ], [ "DESK-4", 40021.0, -6002.0 ], [ "DESK-5", 50026.0, 4003.0 ], [ "DESK-6", 60031.0, 14008.0 ], [ "DESK-7", -24011.0, 31016.5 ] ]
+      } ]
+    }
+  },
+  "unnamed-role" : {
+    "chart/mtm-chart" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", -14006.0 ], [ "DESK-1", "USD", 3002.5 ], [ "DESK-2", "USD", 13007.5 ], [ "DESK-3", "USD", 23012.5 ], [ "DESK-4", "EUR", 40021.0 ], [ "DESK-5", "EUR", 50026.0 ], [ "DESK-6", "EUR", 60031.0 ], [ "DESK-7", "GBP", -24011.0 ] ]
+    },
+    "desk/by-desk" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+    },
+    "desk/last-hour" : {
+      "masked" : [ ],
+      "rows" : [ ]
+    },
+    "desk/latest" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "2026-10-09 10:00:00.0", 53028.5 ], [ "trade_id-1", "2026-10-09 10:00:00.0", 26015.0 ], [ "trade_id-2", "2026-10-09 10:00:00.0", -998.5 ], [ "trade_id-3", "2026-10-09 10:00:00.0", 73038.5 ] ]
+    },
+    "desk/losses" : {
+      "masked" : [ ],
+      "rows" : [ [ -38017.0 ] ]
+    },
+    "desk/movers" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "trader_id-0", 3002.5 ], [ "trade_id-0", "DESK-5", "trader_id-0", 50026.0 ], [ "trade_id-1", "DESK-0", "trader_id-1", -14006.0 ], [ "trade_id-1", "DESK-4", "trader_id-1", 40021.0 ], [ "trade_id-2", "DESK-3", "trader_id-2", 23012.5 ], [ "trade_id-2", "DESK-7", "trader_id-2", -24011.0 ], [ "trade_id-3", "DESK-2", "trader_id-3", 13007.5 ], [ "trade_id-3", "DESK-6", "trader_id-3", 60031.0 ] ]
+    },
+    "desk/mtm" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "desk/notional" : {
+      "masked" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "desk/pnl" : {
+      "masked" : [ ],
+      "rows" : [ [ 112064.0 ] ]
+    },
+    "desk/rolling" : {
+      "masked" : [ ],
+      "rows" : [ [ 151083.5, -38017.0 ] ]
+    },
+    "desk/trades" : {
+      "masked" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "grid/all-trades" : {
+      "masked" : [ ],
+      "rows" : [ [ "trade_id-0", "DESK-1", "portfolio-0", "product_type-0", "USD", "buy_sell_code-0", "trader_id-0", 58030.0, 3002.5, 36019.0, "TRADE-VALUATION-0", 1 ], [ "trade_id-0", "DESK-5", "portfolio-0", "product_type-0", "EUR", "buy_sell_code-0", "trader_id-0", 4003.0, 50026.0, -18008.0, "TRADE-VALUATION-4", 5 ], [ "trade_id-1", "DESK-0", "portfolio-1", "product_type-1", "GBP", "buy_sell_code-1", "trader_id-1", 41021.5, -14006.0, 19010.5, "TRADE-VALUATION-5", 6 ], [ "trade_id-1", "DESK-4", "portfolio-1", "product_type-1", "EUR", "buy_sell_code-1", "trader_id-1", -6002.0, 40021.0, -28013.0, "TRADE-VALUATION-1", 2 ], [ "trade_id-2", "DESK-3", "portfolio-2", "product_type-2", "USD", "buy_sell_code-2", "trader_id-2", -23010.5, 23012.5, 56029.0, "TRADE-VALUATION-6", 7 ], [ "trade_id-2", "DESK-7", "portfolio-2", "product_type-2", "GBP", "buy_sell_code-2", "trader_id-2", 31016.5, -24011.0, 9005.5, "TRADE-VALUATION-2", 3 ], [ "trade_id-3", "DESK-2", "portfolio-3", "product_type-3", "USD", "buy_sell_code-3", "trader_id-3", 68035.0, 13007.5, 46024.0, "TRADE-VALUATION-3", 4 ], [ "trade_id-3", "DESK-6", "portfolio-3", "product_type-3", "EUR", "buy_sell_code-3", "trader_id-3", 14008.0, 60031.0, -8003.0, "TRADE-VALUATION-7", 8 ] ]
+    },
+    "pivot/desk-currency" : {
+      "masked" : [ ],
+      "rows" : [ [ "DESK-0", "GBP", -14006.0, 41021.5 ], [ "DESK-1", "USD", 3002.5, 58030.0 ], [ "DESK-2", "USD", 13007.5, 68035.0 ], [ "DESK-3", "USD", 23012.5, -23010.5 ], [ "DESK-4", "EUR", 40021.0, -6002.0 ], [ "DESK-5", "EUR", 50026.0, 4003.0 ], [ "DESK-6", "EUR", 60031.0, 14008.0 ], [ "DESK-7", "GBP", -24011.0, 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ 151083.5, 187101.5 ] ]
+      }, {
+        "by" : [ "trade.CURRENCY" ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ "EUR", 150078.0, 12009.0 ], [ "GBP", -38017.0, 72038.0 ], [ "USD", 39022.5, 103054.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "masked" : [ ],
+        "measures" : [ "MTM", "Notional" ],
+        "rows" : [ [ "DESK-0", -14006.0, 41021.5 ], [ "DESK-1", 3002.5, 58030.0 ], [ "DESK-2", 13007.5, 68035.0 ], [ "DESK-3", 23012.5, -23010.5 ], [ "DESK-4", 40021.0, -6002.0 ], [ "DESK-5", 50026.0, 4003.0 ], [ "DESK-6", 60031.0, 14008.0 ], [ "DESK-7", -24011.0, 31016.5 ] ]
+      } ]
+    }
+  }
+}
