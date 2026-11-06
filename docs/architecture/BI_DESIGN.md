@@ -659,7 +659,7 @@ business date, disposable), the live table (in memory), or the source (`direct`)
 * Fragments run concurrently on virtual threads; source fragments use the connector's pool (6.6); each fragment has
   a deadline derived from the query's budget; cancelling the request (page left, slicer changed) cancels its
   fragments (the console sends `DELETE /mq/run/{id}` or closes the stream).
-* Arrow flows between tiers; the Java tier materialises at most `drishti.bi.query.max-memory-mb` per query (DuckDB
+* Arrow flows between tiers; the Java tier materialises within `drishti.bi.query.memory-limit` (DuckDB
   `memory_limit`, spill to the scratch dir), else `DRS-9024`.
 * **Answer** = rows + totals + meta (`generation` vector, tiers, layer, rollup, cache hit, warnings, canonical MQ, plan
   hash, security signature id *not* the predicates).

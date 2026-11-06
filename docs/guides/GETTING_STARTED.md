@@ -166,7 +166,7 @@ uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 ```
 
-uv fetches Python 3.13 if the machine does not have it, then installs FastAPI, Uvicorn, PyYAML, pandas, pyarrow, deltalake and the
+uv fetches Python 3.13 if the machine does not have it, then installs FastAPI, Uvicorn, PyYAML, pyarrow, deltalake and the
 rest. Check it:
 
 ```bash
@@ -186,6 +186,17 @@ drishti-console/.venv/bin/pip install -r drishti-console/requirements.txt
 > matching `python3.X-venv` package, and `python3 -m venv` stops with *The virtual environment was not created successfully because
 > ensurepip is not available … apt install python3.14-venv* (seen on Ubuntu with Python 3.14.4). Either install that package
 > (`sudo apt install python3.14-venv`, matching your `python3 --version`) or use uv as above, which needs neither.
+
+**Python in BI** (python visuals, Python-driven tables, the Notebook's Python cells) runs on the **server's compute pool** `python`,
+never in the console, in a strict sandbox (Linux only). It needs an interpreter that carries exactly the libraries pinned in
+`config/compute/locks/python.lock`; the console's environment can be that interpreter:
+
+```bash
+uv pip install --python drishti-console/.venv/bin/python --require-hashes --no-deps -r config/compute/locks/python.lock
+export DRISHTI_COMPUTE_ENABLED=true DRISHTI_PYTHON=$PWD/drishti-console/.venv/bin/python     # before starting the server
+```
+
+Without it everything else works, and each Python run says why it does not run ([OPERATIONS.md section 19](../admin/OPERATIONS.md#19-compute-workers)).
 
 If you will use **Calc** (Python in the browser on a view), install its runtime once with `tools/fetch-pyodide.sh` (about a 340 MB
 download, cached; on Windows run it in Git Bash or WSL). Without it a Calc panel stays dead; see
