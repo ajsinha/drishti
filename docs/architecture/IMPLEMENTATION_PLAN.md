@@ -115,6 +115,15 @@ PostgreSQL wire protocol (when a pilot asks); FRTB internal models, SA-CVA and f
 industries) are frozen until no more than five jobs have more than one way and a first reference client exists. At the end, an
 independent critique of the whole product ([PRODUCT_CRITIQUE_BRIEF.md](PRODUCT_CRITIQUE_BRIEF.md)).
 
+**Domains are modules** (product owner, 2026-11-05). The core knows no industry: each domain (risk and banking now, the public sector
+next) is a set of modules owning its compute (`drishti-compute-<domain>`, beside the generic `drishti-compute`), its services and API
+(`/api/v1/<domain>/…`), its console routes, screens and static assets (served only to people whose role, lens or packs use it), its Help
+and tutorials, and its packs. The core and the generic compute never import a domain module, and domains never import each other. What
+a person sees follows their role and lens through the one entitlement service. The reason: **module-based licensing** (a signed licence
+names the modules an installation may run; an unlicensed module is not loaded at all), with editions folded into it. Designed in
+2.9.11.e, visibility by role in 2.9.11.f, the code split in 2.9.11.g, licensing on the clean modules after it; the public-sector domain is
+built as a module from day one.
+
 **Every release:** two drills, the VaR check, the README rewritten, the decks updated, a code survey and A/B/C mock-ups before a new
 screen, and anything unbuilt hidden or marked "Under construction" through the one registry
 ([UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md)).
