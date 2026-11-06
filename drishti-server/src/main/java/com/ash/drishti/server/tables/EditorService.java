@@ -585,7 +585,7 @@ public final class EditorService {
 
     private List<Map<String, Object>> tableChecks(TableDef t, TableReads.Read read, Catalogue over, TableReads reads) {
         List<Map<String, Object>> out = new ArrayList<>();
-        out.add(check("ok", "the name " + t.name() + " is unique across Drishti's tables (virtual and stored)"));
+        out.add(check("ok", "the name " + t.name() + " is unique across every table, virtual and stored"));
         List<String> keys = new ArrayList<>();
         for (int i = 0; i < read.columns().size(); i++) {
             String c = read.columns().get(i);
@@ -886,7 +886,7 @@ public final class EditorService {
             throw new DrishtiException(ErrorCode.BI_INVALID, "the definition does not read yet: fix the YAML at the marked line, then save");
         }
         if (!Boolean.TRUE.equals(checked.get("nameFree"))) {
-            throw new DrishtiException(ErrorCode.TABLE_NAME_CLASH, "'" + checked.get("name") + "' is taken: names are unique across Drishti's tables and models");
+            throw new DrishtiException(ErrorCode.TABLE_NAME_CLASH, "'" + checked.get("name") + "' is taken: names are unique across every table and model");
         }
         String title = title(((Map<String, Object>) checked.get("doc")), String.valueOf(checked.get("name")));
         String message = body.get("message") == null ? "" : String.valueOf(body.get("message"));

@@ -465,6 +465,7 @@ contextual:
   mcube: docs-guides-mr-cube-guide   # the MR cube, MCUBE (F1 and its ?): the MR cube guide
   landing: user-guide#home-the-fact-of-the-day
   bi: bi-guide
+  tables-editor: tables-guide#11-the-editors   # Build -> Tables & models (F1): the editors section of the tables guide
   terminal: user-guide
   view: user-guide
   studio: rachana-reference#screen-designer-and-the-build-workbench

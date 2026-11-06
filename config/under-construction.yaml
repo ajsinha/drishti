@@ -107,3 +107,10 @@ items:
     release: "a later heavy run (needs a three-node scratch cluster)"
     treatment: under-construction
     contracts: ["docs/guides/FLIGHT_GUIDE.md#13-testing"]
+
+  - id: python-table-runs
+    what: panel
+    about: "The Python-driven table editor's sample run and Notebook cells run on the server's compute pool: the editor, its output contract, inputs, schedule, limits, templates and Notebook → Turn into table are built; running authored code on the pool comes with one Python runtime"
+    release: 2.9.11.d
+    treatment: under-construction
+    contracts: ["docs/guides/TABLES_GUIDE.md#114-python-driven-tables-and-models"]

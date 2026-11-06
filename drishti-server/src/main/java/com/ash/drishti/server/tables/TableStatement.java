@@ -386,6 +386,10 @@ public final class TableStatement {
             for (String c : CLAUSES) {
                 int end = i + c.length();
                 if (text.regionMatches(true, i, c, 0, c.length()) && end < text.length() && Character.isWhitespace(text.charAt(end))) {
+                    boolean fromsTable = c.equals("table") && out.containsKey("from") && !out.containsKey("grain") && !out.containsKey("select");
+                    if (fromsTable) {
+                        break;                                       // from table <name>: the source's form, not a second clause
+                    }
                     if (out.containsKey(c)) {
                         throw new Refused(line(text, i), "'" + c + "' comes once in a table statement");
                     }

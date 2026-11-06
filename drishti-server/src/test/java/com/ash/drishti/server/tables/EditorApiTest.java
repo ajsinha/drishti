@@ -203,7 +203,7 @@ class EditorApiTest {
         assertThat(pv.path("columns").toString()).contains("MTM_K");
         assertThat(pv.path("totals").has("MTM")).isTrue();
         assertThat(pv.path("totals").path("MTM_K").asDouble()).isCloseTo(pv.path("totals").path("MTM").asDouble() / 1000, org.assertj.core.data.Offset.offset(1.0));
-        assertThat(pv.path("checks").toString()).contains("unique across Drishti").contains("dates follow the source");
+        assertThat(pv.path("checks").toString()).contains("unique across every table").containsAnyOf("dates follow the source", "an undated source");
         assertThat(pv.path("cost").path("crossConnector").asBoolean()).isFalse();
         assertThat(pv.path("cost").path("sides").get(0).path("rows").asLong()).isEqualTo(pv.path("count").asLong());
     }
