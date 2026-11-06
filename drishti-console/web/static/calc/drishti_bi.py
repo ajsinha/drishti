@@ -21,7 +21,6 @@
     df = drishti_bi.query("trades-basic", measures=["MTM", "Trades"], by=["trade.desk"])
     df = drishti_bi.query("trades-basic", measures=["MTM"], by=["trade.desk", "trade.book"],
                           filters={"trade.desk": ["FX", "RATES"]})            # or [{"field": ..., "op": "in", "values": [...]}]
-    drishti_bi.walk(df)                                      # explore the frame with Graphic Walker (PygWalker's interface)
 
 It runs inside Pyodide in the Web Worker of Calc, like ``drishti``. Every call is a message to the page, which asks the BI engine of the server with **your**
 session: the same query a report makes, so your row rules apply, and a column that is masked for you comes back masked (the names are in ``df.attrs["masked"]``).
@@ -38,11 +37,7 @@ import sys
 import drishti
 from drishti import DrishtiError, _async, _call, _pd, _sync
 
-__all__ = ["datasets", "describe", "query", "walk", "datasets_async", "describe_async", "query_async", "DrishtiError"]
-
-#: The most rows ``walk`` hands to Graphic Walker (it keeps them in the tab's memory); more are cut with a note.
-WALK_ROWS = 20_000
-
+__all__ = ["datasets", "describe", "query", "datasets_async", "describe_async", "query_async", "DrishtiError"]
 
 def _filters(filters) -> list[dict]:
     """``{"trade.desk": ["FX", "RATES"]}`` as ``in`` filters; a list of ``{field, op, values}`` as it is."""
@@ -146,34 +141,3 @@ def query(dataset: str, measures=None, by=None, filters=None, dates=None, limit=
 async def query_async(dataset: str, measures=None, by=None, filters=None, dates=None, limit=None):
     body = {**_body(measures, by, filters, dates, limit), "model": model_ref(dataset)}
     return _frame(await _async("bi.query", {"dataset": dataset, "body": body}), dataset)
-
-
-def walk(df, title: str | None = None, limit: int = WALK_ROWS) -> None:
-    """Explores a DataFrame with Graphic Walker, the interface PygWalker puts over a frame: drag fields to the axes, colour, size and filters, and the chart is drawn.
-
-    It is vendored and runs in a sandboxed frame of this page that cannot reach the network or the console; the rows go to it by message. Graphic Walker is
-    loaded the first time you ask for it. (PygWalker itself is a Jupyter package that needs a Python server and the internet; this is its front end, over your frame.)"""
-    pd = _pd()
-    if not isinstance(df, pd.DataFrame):
-        df = pd.DataFrame(df)
-    if not isinstance(df.index, pd.RangeIndex):
-        df = df.reset_index()
-    total = len(df)
-    cap = max(1, min(int(limit), drishti.LIMITS["cells"] * 10 // max(1, len(df.columns))))
-    part = df.head(cap)
-    fields = []
-    for c in part.columns:
-        s = part[c]
-        if pd.api.types.is_bool_dtype(s):
-            semantic, analytic = "nominal", "dimension"
-        elif pd.api.types.is_numeric_dtype(s):
-            semantic, analytic = "quantitative", "measure"
-        elif pd.api.types.is_datetime64_any_dtype(s):
-            semantic, analytic = "temporal", "dimension"
-        else:
-            semantic, analytic = "nominal", "dimension"
-        fields.append({"fid": str(c), "name": str(c), "semanticType": semantic, "analyticType": analytic})
-    rows = [{str(c): drishti._clean(v) for c, v in zip(part.columns, r)} for r in part.itertuples(index=False, name=None)]
-    drishti._send({"kind": "walker", "title": title, "fields": fields, "rows": rows, "total": total})
-    if total > len(part):
-        drishti._note(f"{title + ': ' if title else ''}Graphic Walker has the first {len(part):,} of {total:,} rows")

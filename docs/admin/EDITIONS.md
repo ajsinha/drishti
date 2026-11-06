@@ -227,7 +227,7 @@ edition:
     landing: map
 ```
 
-Any feature preset can be overridden by its own setting too (for example `DRISHTI_CALC_ENABLED=true` turns Calc back on).
+Any feature preset can be overridden by its own setting too (for example `DRISHTI_LABS_CALC=true` turns Calc, a Labs feature, on).
 
 **On a phone** ([MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md), [USER_GUIDE.md, On a phone](../guides/USER_GUIDE.md#on-a-phone)).
 An edition's `phone:` block sets and caps the phone tier of panels over every Sutra, after the site's `ui.phone` (the console's

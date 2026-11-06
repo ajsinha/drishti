@@ -240,21 +240,15 @@ def open_calc(c: Ctx, code: str):
     c.page.wait_for_function("() => /^(Done|Failed)/.test(document.querySelector('[data-calc-status]').textContent)", timeout=180000)
 
 
-@shot("21-calc-bi.jpg", also=("22-calc-walker.jpg",))
+@shot("21-calc-bi.jpg")
 def calc_bi(c: Ctx):
-    """Calc's BI client (drishti_bi.query: the engine's answer as you, a DataFrame) and Graphic Walker over that frame (drishti_bi.walk)."""
+    """Calc's BI client (drishti_bi.query: the engine's answer as you, a DataFrame); Calc is a Labs feature, switched on for the shot's stack."""
     login(c, height=900)
     quiet_inbox(c)
     open_calc(c, "import drishti_bi\ndf = await drishti_bi.query_async('trades-basic@1', measures=['MTM', 'Trades'], by=['trade.DESK'])\nshow(df, 'MTM by desk')")
     assert "Done" in c.page.inner_text("[data-calc-status]"), c.page.inner_text("[data-calc-status]")
     c.page.wait_for_timeout(500)
     c.save("21-calc-bi.jpg", "#calcDrawer")
-    open_calc(c, "import drishti_bi\ndf = await drishti_bi.query_async('trades-basic@1', measures=['MTM'], by=['trade.DESK', 'trade.CURRENCY'])\ndrishti_bi.walk(df, 'MTM by desk and currency')")
-    c.page.wait_for_selector("[data-calc-walker]", timeout=30000)
-    frame = c.page.frame_locator("[data-calc-walker]")
-    frame.locator("#walker[data-ready='1']").wait_for(timeout=60000)
-    c.page.wait_for_timeout(2500)
-    c.save("22-calc-walker.jpg", "#calcDrawer")
 
 
 STARTER = "Mean notional (starter)"

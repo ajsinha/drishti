@@ -97,12 +97,6 @@ WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-
 _HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
 WORKER = "/static/js/drishti_calc-worker.js"
 PYODIDE = "/pyodide/"
-# Calc's Graphic Walker frame (drishti_bi.walk, docs/guides/USER_GUIDE.md): a third-party UI that needs eval (Vega compiles chart expressions) and writes its own styles
-# (styled-components, a shadow root). So the one page that holds it, and only it, has this narrow policy, and it is a sandboxed frame: `sandbox allow-scripts` (no same-origin, so
-# no cookie and no console API), `connect-src 'none'` and no navigation or forms, so the rows it is given by message cannot leave it. Calc's own page keeps the strict policy.
-WALKER_PAGE = "/static/calc/drishti_walker.html"
-WALKER_CSP = ("default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src data: blob:; font-src data:; worker-src blob:; connect-src 'none'; "
-              "base-uri 'none'; form-action 'none'; frame-ancestors 'self'; sandbox allow-scripts")
 # Wave B (BI_DESIGN.md P3): no BI page loads WebAssembly any more (Perspective and DuckDB-Wasm are gone); only Calc's worker above may compile it.
 EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.enabled (routes/embed_routes.py)
 
@@ -274,8 +268,7 @@ class SecurityHeaders(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         path = request.url.path
-        policy = (worker_csp(request.headers.get("host", "")) if path == WORKER
-                  else WALKER_CSP if path == WALKER_PAGE else CSP)
+        policy = worker_csp(request.headers.get("host", "")) if path == WORKER else CSP
         response.headers.setdefault("Content-Security-Policy", policy)
         if path.startswith(PYODIDE) and response.status_code == 200:
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"   # the URL names the version

@@ -13,8 +13,9 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# Calc: Python in the browser (docs/guides/USER_GUIDE.md). A slide-in drawer like F9's, opened with Alt+C. The code
-   runs in Pyodide inside a Web Worker (drishti_calc-worker.js); reads go through this page with the user's session. #}
+{# Calc, a Labs feature (labs.calc, off as shipped): Python in the browser (docs/guides/USER_GUIDE.md). A slide-in drawer like F9's, opened with Alt+C.
+   The code runs in Pyodide inside a Web Worker (drishti_calc-worker.js); reads go through this page with the user's session. A scratch pad: nothing it
+   computes is published, shared or kept, except the person's own code snippets. #}
 <aside class="raw calc-drawer" id="calcDrawer" aria-label="Calc: Python" hidden
        data-calc data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-label="{{ vm.title.id }}"
        data-runtime="{{ calc.runtime.base if calc.runtime.installed else '' }}"
@@ -22,7 +23,7 @@
        data-worker="/static/js/drishti_calc-worker.js?v={{ ASSET_V }}"
        data-module="/static/calc/drishti.py?v={{ ASSET_V }}"
        data-max-rows="{{ calc.maxColumnRows or '' }}">
-  <header><strong>Calc</strong> <span class="mono">Python · {{ vm.title.id }}</span>
+  <header><strong>Calc</strong> <span class="calc-labs" data-calc-labs title="A Labs feature: a scratch pad in your browser; nothing here is published or shared">Labs · Scratch: runs in your browser</span> <span class="mono">Python · {{ vm.title.id }}</span>
     <span class="calc-status mono" data-calc-status role="status" aria-live="polite">{% if not calc.runtime.installed %}{{ calc.runtime.message }}{% else %}Python not started{% endif %}</span>
     <a class="tbar-link" href="/help/user-guide#calc-python-on-any-view" title="How Calc works: the drishti module, keys, limits"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
     <button type="button" class="raw-x" data-calc-close aria-label="Close">×</button></header>

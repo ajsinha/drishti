@@ -41,7 +41,7 @@ About 60 minutes (step 12: 15 minutes).
 - how a report uses them, where they run, and what the sandbox forbids;
 - the **Notebook**: the extract of a model, **SQL** (Drishti SQL on the server over the model), a **Python** cell for the server's compute pool, saving a **notebook**, and **promoting** work into BI items; slicing in the **Pivot**.
 - **Python across models**: a **Transform** that turns the answers of two model queries into a table (a **Python dataset**, 2.2), and a notebook that joins two extracts in pandas and promotes the join to a Transform;
-- **Vega-Lite** charts (written in a report, or returned by Python), the **tests** a Python item carries, where a SQL cell runs and promoting into an **existing** report, **Calc's BI client** (steps 9 to 11).
+- **Vega-Lite** charts (written in a report, or returned by Python), the **tests** a Python item carries, where a SQL cell runs and promoting into an **existing** report, **Calc's BI client** (a Labs scratch pad; steps 9 to 11).
 - **Data prep**: a Transform built step by step in the **Transform editor** from raw trades read straight through a connector, with a preview
   and a profile after every step and no YAML to type (step 12).
 
@@ -458,7 +458,7 @@ filter `trade.CURRENCY eq USD`) below what was there. The reader understands Dri
 A SQL cell of **another** model is not added to an existing report (a report reads one model: `DRS-9070` names both); promote it to a new draft.
 [USER_GUIDE.md › The Notebook](../guides/USER_GUIDE.md#the-notebook) section 6 has the details.
 
-## Step 11 · Calc: the BI engine as a DataFrame, and Graphic Walker; a Python measure in an alert
+## Step 11 · Calc: the BI engine as a DataFrame; a Python measure in an alert
 
 In **Calc** (`Alt+C` on any view) the module `drishti_bi` asks the BI engine, **as you**: `query` sends one model query (a model's `name@major`; a 2.1
 dataset's name reads the model the converter made of it, `trades-basic` is `trades-basic@1`):
@@ -481,12 +481,9 @@ DESK-COMM    -429,967,635.39  5990
 DESK-CREDIT  360,552,941.89   1172
 DESK-EQD     -79,395,510.75   1452
 3 row(s)  as of 2026-10-16  plan p_5d2cad2dda86953b
-``` `drishti_bi.walk(df)` explores a frame with **Graphic Walker** (PygWalker's
-front end, vendored):
+```
 
-![Graphic Walker over the frame: fields on the left, shelves for the axes, colour and size, and the chart builder](img/t14/22-calc-walker.jpg)
-
-Drag `trade.DESK` to the X axis and `MTM` to the Y axis. The chart is drawn in a **sandboxed frame** that cannot reach the network or the console: the rows went in by message and nothing goes out ([USER_GUIDE.md](../guides/USER_GUIDE.md#19-the-bi-client-and-graphic-walker)).
+Calc is a **Labs** feature (off as shipped: an administrator switches `labs.calc` on), a scratch pad in your browser that never publishes.
 
 Last, a **Python measure in an alert**. An alert on a measure of a model asks a model query, and a model query runs Python measures (step 1), so
 **Alerts → New → Watch a measure of a model** on **Desk P&L volatility** works like any other: choose the model `trades-basic@1`, the measure, *crosses a

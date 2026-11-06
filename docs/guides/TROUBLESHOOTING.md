@@ -1294,12 +1294,11 @@ Every setting of a connector is in its plugin's README and its own document ([CO
 * **"Promote ... the target is not a report draft you can edit" (`DRS-9070`).** The target must be a report item in a workspace you contribute to (not a shipped sample and not another kind). Comments in its YAML are not kept when the visual is added.
 * **A notebook opens with "cell N was a slice ... left out".** The notebook held a `slice` cell; slicing is the Pivot's, so the cell is left out and the rest opens.
 
-### Calc: `drishti_bi` or Graphic Walker
+### Calc: `drishti_bi`
 
 * **`ModuleNotFoundError: No module named 'drishti_bi'`.** The module is fetched into the worker when a cell **names** `drishti_bi`; write `import drishti_bi` in the cell that uses it (a cell that only calls `walk` through another name does not trigger it).
 * **`needs JavaScript Promise Integration`.** Write `await drishti_bi.query_async(...)` (also `datasets_async`, `describe_async`).
 * **`DRS-9002` or an empty frame.** The call is a BI read as you: you need the `bi` power, and a masked column comes back masked (`df.attrs["masked"]`).
-* **The Graphic Walker frame stays blank.** Open the browser console: a refusal of `/static/calc/drishti_walker.html` or of its script means a proxy rewrote the policy header (the page needs the console's own `Content-Security-Policy` for that path, [USER_GUIDE.md › Calc: Python on any view, section 19](USER_GUIDE.md#19-the-bi-client-and-graphic-walker)). A refused stylesheet and image from `blocked.invalid` is expected and harmless.
 
 ### The Notebook: the extract is short, a SQL cell is refused
 

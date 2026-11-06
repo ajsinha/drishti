@@ -18,7 +18,7 @@
 # name keeps the product's default. The console's features.* flags are the console-only switches (all on by default).
 features:
   bi:            { server: [drishti.bi.enabled], console: [bi.enabled] }     # edition: BI with the edition's datasets only (bi.datasets)
-  calc:          { server: [drishti.calc.enabled], console: [calc.enabled] }
+  calc:          { server: [drishti.calc.enabled], console: [labs.calc] }       # Labs: Calc, Python in the browser, a scratch pad; off as shipped
   layouts:       { server: [drishti.layouts.enabled], console: [layouts.enabled] }
   pivot:         { server: [drishti.pivot.enabled] }
   reports:       { server: [drishti.reports.enabled], console: [features.reports] }

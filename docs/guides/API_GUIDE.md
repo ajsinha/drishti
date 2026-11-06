@@ -1254,7 +1254,7 @@ for every kind until your pack does. An entry has the shape of a rule, for insta
 ### Python in the browser (Calc) and test entities
 
 [USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view). The Python runs in the user's browser; the server only says who may use it, keeps the user's snippets and serves whole columns.
-Calc needs the `calc` power and `drishti.calc.enabled`.
+Calc needs the `calc` power and `drishti.calc.enabled` (the Labs switch, off as shipped).
 
 | Method | Path | Notes |
 |---|---|---|

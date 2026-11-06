@@ -381,7 +381,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_REPORTS_ENABLED` | `drishti.reports.enabled` | `true` | Run the scheduled-reports scheduler on this server. |
 | `DRISHTI_REPORTS_DIR` | `drishti.reports.folder` | `./data/reports` | Where report files are written. |
 | `DRISHTI_SUTRA_WATCH` | `drishti.rachana.watch` | `auto` | How Sutra hot reload notices edits: `auto` (file events, polling when they are unavailable) or `poll`. |
-| `DRISHTI_CALC_ENABLED` | `drishti.calc.enabled` | `true` | Allow Calc (Python in the browser). |
+| `DRISHTI_LABS_CALC` | `drishti.calc.enabled` | `false` | Labs: allow Calc (Python in the browser, a scratch pad that never publishes). |
 | `DRISHTI_VAR_ENABLED` | `drishti.var.enabled` | `true` | Run the VaR engine (`/api/v1/var`, the VaR explorer). |
 | `DRISHTI_VAR_THREADS` | `drishti.var.threads` | `0` | Cores the VaR engine's vector sums use (`0`: every core). |
 | `DRISHTI_VAR_MEMORY_MB` | `drishti.var.memory-budget-mb` | `0` | Most memory one date's P&L vectors take (`0`: a quarter of the heap). |
@@ -517,7 +517,7 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_OIDC_CLIENT_SECRET` | `auth.oidc.client_secret` | empty | The OIDC client secret; empty for a public client (PKCE alone). |
 | `DRISHTI_OIDC_REDIRECT_URI` | `auth.oidc.redirect_uri` | empty | The redirect URI; empty: `<console>/auth/oidc/callback`. |
 | `DRISHTI_LIVE_MAX_SUBSCRIPTIONS` | `live.max_subscriptions` | `32` | Live subscriptions one browser may hold. |
-| `DRISHTI_CALC_ENABLED` | `calc.enabled` | `true` | Offer Calc. |
+| `DRISHTI_LABS_CALC` | `labs.calc` | `false` | Labs: offer Calc. |
 | `DRISHTI_BI_ENABLED` | `bi.enabled` | `true` | Rupaka phase 1: the BI top-bar menu, the `/bi` pages and the `RUPAKA` keyword. The server has its own switch, `drishti.bi.enabled`. |
 | `DRISHTI_BI_LIVE_MIN_INTERVAL_MS` | `bi.live.min_interval_ms` | `250` | Rupaka phase 5: a report or board redraws its live visuals at most this often, never two rounds at once; a burst of ticks is one redraw (100 to 5000). |
 | `DRISHTI_BI_LIVE_STALE_SECONDS` | `bi.live.stale_seconds` | `30` | A live report or board that has heard nothing from the server (not even its 5-second status) for this long says **Stale** (5 to 600). |
@@ -1523,7 +1523,7 @@ decides who may use it (roles with `calc`), keeps each user's snippets, and serv
 
 | Key | Default | Meaning |
 |---|---|---|
-| `enabled` | `true` (`DRISHTI_CALC_ENABLED`) | Calc at all. Off: nobody may use it, and its endpoints refuse with `403 DRS-5002`. The console has its own switch, `calc.enabled`, read from the same variable. |
+| `enabled` | `false` (`DRISHTI_LABS_CALC`) | The Labs switch: Calc at all, off as shipped. Off: nobody may use it, and its endpoints refuse with `403 DRS-5002`. The console has its own switch, `labs.calc`, read from the same variable. |
 | `max-column-rows` | `250000` | `drishti.columns()` (`GET /api/v1/search/columns/{kind}`) returns at most this many entities, the first by id; the browser holds them all. |
 | `columns-budget` | `20s` | How long a columns read may wait for its source (the first read of a business day loads its columns). |
 | `max-snippet-chars` | `50000` | A saved snippet's code, at most (never more than 60,000: a saved document is at most 64 KB). Each user keeps at most 50 snippets. |
@@ -2665,7 +2665,7 @@ Whether a design can save Sutra files is decided by the server (`drishti.rachana
 
 | Key | Default | Meaning |
 |---|---|---|
-| `calc.enabled` | `true` (`DRISHTI_CALC_ENABLED`) | Off: no view offers Calc and the console's `/api/calc/*` routes refuse, whatever packs and roles say ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)). |
+| `labs.calc` | `false` (`DRISHTI_LABS_CALC`) | Labs: Calc, a scratch pad in the browser that never publishes. Off (as shipped): no view offers Calc and the console's `/api/calc/*` routes refuse, whatever packs and roles say ([USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view)). |
 
 ### `layouts`
 
@@ -2716,7 +2716,7 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 | `DRISHTI_UI_KIT_DIR`, `DRISHTI_UI_KIT_SITE_DIR` | S | `drishti.ui-kit.dir`, `drishti.ui-kit.site-dir` |
 | `DRISHTI_SUTRA_REVIEW`, `DRISHTI_SUTRA_FOUR_EYES`, `DRISHTI_GOVERNANCE_DIR` | S | `drishti.governance.*` |
 | `DRISHTI_SECURITY_ENABLED` | S | `drishti.security.enabled` |
-| `DRISHTI_CALC_ENABLED` | S, C | `drishti.calc.enabled`, `calc.enabled` |
+| `DRISHTI_LABS_CALC` | S, C | `drishti.calc.enabled`, `labs.calc` |
 | `DRISHTI_LIVE_MAX_SUBSCRIPTIONS` | C | `live.max_subscriptions` |
 | `DRISHTI_TOKEN_SECRET` | S, C | `drishti.security.secret`, `auth.token_secret` |
 | `DRISHTI_OIDC_ENABLED`, `DRISHTI_OIDC_ISSUER`, `DRISHTI_OIDC_CLIENT_ID` | S, C | `drishti.security.oidc.*`, `auth.oidc.*` |
@@ -3294,7 +3294,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.calc.enabled` | boolean | `true` | `DRISHTI_CALC_ENABLED` | server | also needs a role with calc, and a pack that enables it for the view's kind | restart |  |
+| `drishti.calc.enabled` | boolean | `false` | `DRISHTI_LABS_CALC` | server | Labs: off as shipped; on also needs a role with calc, and a pack that enables it for the view's kind | restart |  |
 | `drishti.calc.max-column-rows` | integer | `250000` |  | server | drishti.columns() returns at most this many entities (the browser holds them all) | restart |  |
 | `drishti.calc.columns-budget` | duration | `20s` |  | server | how long a columns read may wait (the first read of a day loads its columns) | restart |  |
 | `drishti.calc.max-snippet-chars` | integer | `50000` |  | server | a saved snippet's code (each user keeps at most 50 snippets) | restart |  |
@@ -4501,11 +4501,11 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 |---|---|---|---|---|---|---|---|
 | `form.collapse_on_submit` | boolean | `true` |  | console | after Search the form folds to one line of its criteria so the results get the room; Show form (Alt+F) brings it back | restart |  |
 
-#### `calc`
+#### `labs`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `calc.enabled` | boolean | `true` | `DRISHTI_CALC_ENABLED` | console | false: no view offers it, whatever packs and roles say | restart |  |
+| `labs.calc` | boolean | `false` | `DRISHTI_LABS_CALC` | console | Calc (Alt+C): Python in your browser on a view's rows, a scratch pad that never publishes; on also needs a role with calc and a pack that enables it | restart |  |
 
 #### `layouts`
 
@@ -5588,7 +5588,7 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `bi` | on, off or edition | none |  | server and console | The feature bi an edition file names under features: off presets false, on or edition true; presets drishti.bi.enabled on the server and bi.enabled in the console. edition: BI with the edition's datasets only (bi.datasets) | restart |  |
-| `calc` | on, off or edition | none |  | server and console | The feature calc an edition file names under features: off presets false, on or edition true; presets drishti.calc.enabled on the server and calc.enabled in the console | restart |  |
+| `calc` | on, off or edition | none |  | server and console | The feature calc an edition file names under features: off presets false, on or edition true; presets drishti.calc.enabled on the server and labs.calc in the console. Labs: Calc, Python in the browser, a scratch pad; off as shipped | restart |  |
 | `layouts` | on, off or edition | none |  | server and console | The feature layouts an edition file names under features: off presets false, on or edition true; presets drishti.layouts.enabled on the server and layouts.enabled in the console | restart |  |
 | `pivot` | on, off or edition | none |  | server and console | The feature pivot an edition file names under features: off presets false, on or edition true; presets drishti.pivot.enabled on the server | restart |  |
 | `reports` | on, off or edition | none |  | server and console | The feature reports an edition file names under features: off presets false, on or edition true; presets drishti.reports.enabled on the server and features.reports in the console | restart |  |
@@ -6158,7 +6158,6 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_BI_TRANSFORM_RUNNER` | `drishti.bi.transform.runner` | empty | server | the console's core/transform\_cli.py; blank: looked for in drishti-console/core from here and its parents |
 | `DRISHTI_CACHE_RESET_AT` | trading-stream cache reset | `02:00` | packs | The disk cache's nightly clearing time (New York) |
 | `DRISHTI_CACHE_ROOT` | trading-stream cache root | `./data/cache` | packs | Disk cache root (one folder per connector) |
-| `DRISHTI_CALC_ENABLED` | `drishti.calc.enabled`, `calc.enabled` | `true` | console, server | also needs a role with calc, and a pack that enables it for the view's kind |
 | `DRISHTI_CALENDAR` | `drishti.business-date.calendar` | `USNY` | server | Every read is for a business date. The default is today in `zone`, rolled back to a business day of `calendar` (weekends and holidays roll to the previous business day). Users pick another date in the top bar; dated sources (Delta Lake, dated folders, databases with a date column) then read that date. USNY, GBLO, EUTA, JPTO, CATO or joint, e.g. USNY+GBLO |
 | `DRISHTI_CCR_DERIVED_ENABLED` | counterparty-risk's derived connector | `true` | packs | The counterparty-risk pack's derived kinds (netting-set and counterparty totals) on or off |
 | `DRISHTI_COLLAB_DIR` | `drishti.collab.dir` | `./data/collab` | server | the file store, and exports |
@@ -6263,6 +6262,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_JDBC_URL` | `drishti.sources.plugins.jdbc.settings.url` | empty | server | the JDBC URL of that instance |
 | `DRISHTI_JDBC_USER` | `drishti.sources.plugins.jdbc.settings.user` | empty | server | its database user |
 | `DRISHTI_KAFKA_BOOTSTRAP` | Kafka brokers | `localhost:9092` | packs | The brokers of the trading stream and the VaR PV topic |
+| `DRISHTI_LABS_CALC` | `drishti.calc.enabled`, `labs.calc` | `false` | console, server | Labs: off as shipped; on also needs a role with calc, and a pack that enables it for the view's kind |
 | `DRISHTI_LAKES_DIR` | drishti.lakes.dir | `./config/lakes` | server | The lake folder: one config/lakes/&lt;lake&gt;.yaml per lake, read by the server, the loader, the data inbox and the tools (docs/guides/LAKE\_GUIDE.md) |
 | `DRISHTI_LAKE_CLASSPATH` | lake load | none | tools | The class path of the Java lake loader |
 | `DRISHTI_LAKE_ENABLED` | the packs' data connectors | `true` | packs | false switches every pack's data connector off (the demo samples still answer) |

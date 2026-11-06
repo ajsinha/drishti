@@ -285,8 +285,8 @@ data_view:                   # the Data view (DATA, /data; docs/guides/DATA_GUID
   download_idle_seconds: 300 # the longest pause between two parts of a download before the console gives up on it
 form:                        # query by form (FORM <pack>; docs/guides/USER_GUIDE.md)
   collapse_on_submit: true   # after Search the form folds to one line of its criteria so the results get the room; Show form (Alt+F) brings it back
-calc:                        # Calc: Python in the browser (docs/guides/USER_GUIDE.md); also needs a role with calc
-  enabled: ${DRISHTI_CALC_ENABLED:true}   # false: no view offers it, whatever packs and roles say
+labs:                        # Labs: features outside the product's one way per job, each off as shipped (docs/guides/USER_GUIDE.md › Calc: Python on any view)
+  calc: ${DRISHTI_LABS_CALC:false}   # Calc (Alt+C): Python in your browser on a view's rows, a scratch pad that never publishes; on also needs a role with calc and a pack that enables it
 layouts:                     # layout mode (Alt+L): each user's own arrangement of a view's panels; also needs a role with layout
   enabled: ${DRISHTI_LAYOUTS_ENABLED:true}   # false: no view offers it and saved layouts are not applied
   min_span: 3                # the narrowest a panel can be made in layout mode, in columns of 12 (narrower is unreadable)

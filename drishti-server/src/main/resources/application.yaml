@@ -826,8 +826,8 @@ drishti:
     per-user: 20  # reports a person may keep
     tick: 30s  # how often the scheduler looks for due reports
     keep-runs: 20  # runs remembered per report (time, rows, where it went, or the error)
-  calc:                              # Calc: Python in the browser (docs/guides/USER_GUIDE.md); the server never runs the code
-    enabled: ${DRISHTI_CALC_ENABLED:true}   # also needs a role with calc, and a pack that enables it for the view's kind
+  calc:                              # Calc, a Labs feature: Python in the browser on a view's rows, a scratch pad that never publishes (USER_GUIDE.md); the server never runs the code
+    enabled: ${DRISHTI_LABS_CALC:false}   # Labs: off as shipped; on also needs a role with calc, and a pack that enables it for the view's kind
     max-column-rows: 250000          # drishti.columns() returns at most this many entities (the browser holds them all)
     columns-budget: 20s              # how long a columns read may wait (the first read of a day loads its columns)
     max-snippet-chars: 50000         # a saved snippet's code (each user keeps at most 50 snippets)
