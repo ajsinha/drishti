@@ -58,8 +58,8 @@ public final class BiFolder implements AutoCloseable {
     public static final String SAMPLE_TAG = "sample";
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
     private static final Map<String, String> KINDS = Map.of("reports", "report", "boards", "board", "notebooks", "notebook", "python", "python", "themes", "theme");
-    /** The table layer's files (BI_FOUNDATION_2911E.md step 5): tables are what BI's models read as their datasets, models are BI's models. */
-    private static final Map<String, String> LAYER = Map.of("table", "dataset", "model", "model");
+    /** The table layer's files (BI_FOUNDATION_2911E.md step 5): items of the kinds {@code table} and {@code model}, as the editors store them. */
+    private static final Map<String, String> LAYER = Map.of("table", "table", "model", "model");
 
     /** One file as last read: its stamp, the last good item (null until one parses) and the problem with the latest content, if any. */
     private record Entry(long modified, long size, BiStore.Item item, String problem, Instant problemSince) {}

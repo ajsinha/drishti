@@ -569,9 +569,9 @@ public final class ModelCatalog {
 
     /** Whether the caller may read a published {@code rachana: 2} dataset item of this name (or id). */
     private boolean mayReadDataset(Principal p, String name) {
-        for (BiStore.Item i : bi.publishedOfKind("dataset")) {
+        for (BiStore.Item i : tablesPublished()) {
             DatasetDef d = DatasetDefParser.isVersion2(bi.publishedBody(i)) ? DatasetDefParser.parse(bi.publishedBody(i)).dataset() : null;
-            if (d != null && (d.name().equals(name) || i.id().equals(name) || i.id().equals("file:dataset:" + name))) {
+            if (d != null && (d.name().equals(name) || i.id().equals(name) || i.id().equals("file:dataset:" + name) || i.id().equals("file:table:" + name))) {
                 try {
                     bi.readableItem(p, i.id());
                     return true;
@@ -640,20 +640,27 @@ public final class ModelCatalog {
         return out;
     }
 
+    /** The published tables BI's models read: the table layer's ({@code table}) and, until they are migrated, BI's own datasets. */
+    private List<BiStore.Item> tablesPublished() {
+        List<BiStore.Item> out = new ArrayList<>(bi.publishedOfKind("table"));
+        out.addAll(bi.publishedOfKind("dataset"));
+        return out;
+    }
+
     /** A dataset by name and range: a pack-generated one, else the highest published {@code rachana: 2} item in range, its {@code extends} chain folded in. */
     Optional<ResolvedDataset> resolveDataset(String name, Semver.Range range, Set<String> visiting, List<DatasetParser.Problem> problems) {
         if (name.startsWith(DatasetDef.PACK_PREFIX)) {
             return packs.named(name).filter(d -> range.matches(Semver.parse(d.version()))).map(ResolvedDataset::of);
         }
         DatasetDef best = null;
-        for (BiStore.Item i : bi.publishedOfKind("dataset")) {
+        for (BiStore.Item i : tablesPublished()) {
             String body = bi.publishedBody(i);
             if (!DatasetDefParser.isVersion2(body)) {
                 continue;
             }
             DatasetDefParser.Result r = DatasetDefParser.parse(body);
             DatasetDef d = r.dataset();
-            if (d == null || !r.ok() || !(d.name().equals(name) || i.id().equals(name) || i.id().equals("file:dataset:" + name)) || !range.matches(Semver.parse(d.version()))) {
+            if (d == null || !r.ok() || !(d.name().equals(name) || i.id().equals(name) || i.id().equals("file:dataset:" + name) || i.id().equals("file:table:" + name)) || !range.matches(Semver.parse(d.version()))) {
                 continue;
             }
             if (best == null || Semver.parse(d.version()).compareTo(Semver.parse(best.version())) > 0) {
