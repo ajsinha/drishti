@@ -39,8 +39,8 @@ final class TextFunctions {
 
     static void register(Functions.Table t) {
         t.fn("fmt", 2, 2, (a, c) -> c.formats().format(Values.text(a.get(1)), a.get(0)));
-        t.fn("upper", 1, 1, (a, c) -> Values.text(a.get(0)).toUpperCase(Locale.ROOT));
-        t.fn("lower", 1, 1, (a, c) -> Values.text(a.get(0)).toLowerCase(Locale.ROOT));
+        t.fn("upper", 1, 1, (a, c) -> Values.isNull(a.get(0)) ? null : Values.text(a.get(0)).toUpperCase(Locale.ROOT));   // null in, null out
+        t.fn("lower", 1, 1, (a, c) -> Values.isNull(a.get(0)) ? null : Values.text(a.get(0)).toLowerCase(Locale.ROOT));   // null in, null out
         t.fn("contains", 2, 2, (a, c) -> contains(a.get(0), Values.text(a.get(1))));
         t.fn("starts_with", 2, 2, (a, c) -> lower(a.get(0)).startsWith(lower(a.get(1))));
         t.old("startsWith", "starts_with", 2, 2);                       // read for compatibility: existing Sutras write startsWith

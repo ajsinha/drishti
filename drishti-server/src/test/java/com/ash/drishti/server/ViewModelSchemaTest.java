@@ -167,12 +167,12 @@ class ViewModelSchemaTest {
     void maskedValuesAndDeniedPanelsMatchTheSchema() throws Exception {
         Set<String> masked = Set.of("MTM", "NOTIONAL", "PNL", "DV01", "COUNTERPARTY", "CLOSE", "VALUE");
         UnaryOperator<DataNode> redact = d -> mask(d, masked);
-        ViewModel v = pipeline.preview(Optional.of(showcase()), showcaseDoc(1, x -> x), redact, k -> false);
+        ViewModel v = pipeline.preview(Optional.of(showcase()), showcaseDoc(1, x -> x), com.ash.drishti.engine.ViewerContext.of(redact, k -> false));
         assertThat(v.provenance().masked()).isPositive();
         assertThat(v.provenance().maskedPanels()).isNotEmpty();
         assertThat(errors(v, null)).isEmpty();
-        ViewModel denied = pipeline.view(EntityRef.of("trade", "IRS-48213"), com.ash.drishti.api.AsOf.LATEST, UnaryOperator.identity(),
-                k -> !"curve".equals(k), com.ash.drishti.engine.control.ControlValues.NONE);
+        ViewModel denied = pipeline.view(EntityRef.of("trade", "IRS-48213"), com.ash.drishti.api.AsOf.LATEST, com.ash.drishti.engine.ViewerContext.of(UnaryOperator.identity(),
+                k -> !"curve".equals(k)), com.ash.drishti.engine.control.ControlValues.NONE);
         assertThat(denied.panels()).anyMatch(p -> "no access to curve".equals(p.denied()) && p.data() == null);
         assertThat(errors(denied, null)).as("a panel whose source the caller may not open").isEmpty();
     }

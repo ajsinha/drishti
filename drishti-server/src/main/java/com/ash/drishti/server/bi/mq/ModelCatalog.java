@@ -18,6 +18,8 @@ package com.ash.drishti.server.bi.mq;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.bi.BiStore;
+import com.ash.drishti.rachana.el.check.Fields;
+import com.ash.drishti.rachana.el.check.Scope;
 import com.ash.drishti.server.bi.BiService;
 import com.ash.drishti.server.bi.DatasetService;
 import com.ash.drishti.server.bi.dataset.Dataset;
@@ -935,19 +937,19 @@ public final class ModelCatalog {
      * {@code POST /api/v1/bi/expr/validate}: an expression checked in its scope, against the model (or {@code dataset:<name>}) as the caller sees it when one is
      * named, else against the language and the catalogue only.
      */
-    public Map<String, Object> validateExpression(Principal p, String expr, com.ash.drishti.server.bi.expr.Scope scope, String model, String alias) {
+    public Map<String, Object> validateExpression(Principal p, String expr, Scope scope, String model, String alias) {
         if (model == null) {
-            return ExpressionCheck.run(expr, scope, com.ash.drishti.server.bi.expr.Fields.NONE, null, Map.of());
+            return ExpressionCheck.run(expr, scope, Fields.NONE, null, Map.of());
         }
         return validateExpression(expr, scope, bind(p, model), alias);
     }
 
     /**
-     * As {@link #validateExpression(Principal, String, com.ash.drishti.server.bi.expr.Scope, String, String)} against an unsaved draft: the YAML of a model
+     * As {@link #validateExpression(Principal, String, Scope, String, String)} against an unsaved draft: the YAML of a model
      * ({@code model:}) or of a {@code rachana: 2} dataset (its implicit model) as the designer holds it, its datasets resolved as published, read as the
      * caller (their row rules, masks and hidden fields).
      */
-    public Map<String, Object> validateExpressionDraft(Principal p, String expr, com.ash.drishti.server.bi.expr.Scope scope, String yaml, String alias) {
+    public Map<String, Object> validateExpressionDraft(Principal p, String expr, Scope scope, String yaml, String alias) {
         Found f;
         if (DatasetDefParser.isVersion2(yaml)) {
             DatasetDefParser.Result r = DatasetDefParser.parse(yaml);
@@ -972,11 +974,11 @@ public final class ModelCatalog {
         return out;
     }
 
-    private Map<String, Object> validateExpression(String expr, com.ash.drishti.server.bi.expr.Scope scope, MqService.Bound b, String alias) {
+    private Map<String, Object> validateExpression(String expr, Scope scope, MqService.Bound b, String alias) {
         ModelFields f = ModelFields.of(b, alias, b.context().roles());
         Map<String, Object> out = ExpressionCheck.run(expr, scope, f, b.view().flat(), com.ash.drishti.server.bi.layer.Flattener.measureIds(b.view().measureDefs()));
         out.put("model", MqService.model(b.view()));
-        if (f.current() != null && scope != com.ash.drishti.server.bi.expr.Scope.AGGREGATE) {
+        if (f.current() != null && scope != Scope.AGGREGATE) {
             out.put("alias", f.current());
         }
         return out;

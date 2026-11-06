@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.bi.engine;
+package com.ash.drishti.tables.materialize;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
@@ -112,12 +112,12 @@ public final class FileSwap {
      * file more than once while it reads it, and a file replaced in between read as {@code TProtocolException: Invalid data}); the
      * layer's metadata names the file that is current, and {@link #sweep} removes the replaced ones later.
      */
-    static Path unique(Path dir) {
+    public static Path unique(Path dir) {
         return dir.resolve("part-" + Long.toString(System.currentTimeMillis(), 36) + "-" + UUID.randomUUID().toString().substring(0, 8) + ".parquet");
     }
 
     /** The partition's data files other than {@code keep}, replaced more than {@link #KEEP_REPLACED} ago, removed (a held one stays for next time). */
-    static void sweep(Path dir, String keep) {
+    public static void sweep(Path dir, String keep) {
         long before = System.currentTimeMillis() - KEEP_REPLACED.toMillis();
         try (var files = Files.newDirectoryStream(dir, "part*.parquet")) {
             for (Path p : files) {
@@ -131,7 +131,7 @@ public final class FileSwap {
     }
 
     /** Whether the folder holds a partition data file (current or replaced). */
-    static boolean holdsData(Path dir) {
+    public static boolean holdsData(Path dir) {
         try (var files = Files.newDirectoryStream(dir, "part*.parquet")) {
             return files.iterator().hasNext();
         } catch (IOException | RuntimeException e) {

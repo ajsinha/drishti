@@ -79,8 +79,8 @@ public final class ViewExporter {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "the date is yyyy-mm-dd");
         }
         EntityRef ref = EntityRef.of(kind, id);
-        ViewModel v = state.isEmpty() ? pipeline.view(ref, asOf, entitlements.redactor(who), k -> entitlements.mayOpen(who, k))
-                : pipeline.view(ref, asOf, entitlements.redactor(who), k -> entitlements.mayOpen(who, k), state.controls());
+        ViewModel v = state.isEmpty() ? pipeline.view(ref, asOf, entitlements.viewer(who))
+                : pipeline.view(ref, asOf, entitlements.viewer(who), state.controls());
         v = ColumnFilters.apply(entitlements.restrict(who, v), state, LocalDate.now(ZoneOffset.UTC));      // the filters run after the masks: a masked cell never matches
         ViewModel.Provenance pv = v.provenance();
         String as = pv != null && pv.businessDate() != null ? pv.businessDate() : date == null || date.isBlank() ? "live" : date;

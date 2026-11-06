@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.server.bi.expr;
 
+import com.ash.drishti.rachana.el.check.Fields;
+import com.ash.drishti.rachana.el.check.Problem;
 import com.ash.drishti.server.bi.dataset.ExprParser;
 import com.ash.drishti.server.bi.dataset.Node;
 import java.util.Map;
@@ -113,7 +115,7 @@ public final class Expressions {
             return old(text, v2, false);
         }
         DelChecker.Checked c = DelChecker.check(tree, null, Fields.NONE);
-        java.util.Optional<DelException.Problem> bad = c.firstError();
+        java.util.Optional<Problem> bad = c.firstError();
         if (bad.isPresent()) {
             if (DelChecker.LATER.equals(bad.get().code())) {
                 throw new DelException(bad.get());                              // DEL v2 of a later wave: never the old syntax

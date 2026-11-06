@@ -1515,6 +1515,28 @@ drishti-console/.venv/bin/python tools/drishti.py pivot comments asha/desk-risk 
 drishti-console/.venv/bin/python tools/drishti.py pivot explain --source trade --rows productType --values "sum(notional)" --cell productType=IRS --other-cell productType=FXFWD --by counterparty
 ```
 
+### 5.17 tables
+
+The table layer's virtual tables and models under `config/tables` (`tools/tablescli.py`; [TABLES_GUIDE.md](TABLES_GUIDE.md),
+[CLI_GUIDE.md, tables](CLI_GUIDE.md#tables-virtual-tables-and-models)). The commands run in Java from the server's exec jar without
+starting a server and read definitions and sample files only, from the folder you run them in:
+
+- `tables list`: every table and model, its source, grain, columns and materialisation.
+- `tables check [--sample TABLE=FILE.jsonl]...`: every definition and the catalogue; exit 1 on an error.
+- `tables preview TABLE --sample FILE.jsonl [--limit N]`: the table's first rows over sample documents (JSONL, `.gz` too).
+- `tables lineage NAME`: who uses a table or a model.
+- `tables offer NAME --sample FILE.jsonl (--kind KIND | --lake LAKE --table TABLE) [--grain '$.LIST[*]'] [--write]`: the flat virtual
+  table offered for a new table, one typed column per scalar field of the sample; `--write` accepts it as a new file.
+- `tables check --stored NAME,...`: also refuses a virtual table named like a stored table (`DRS-9616`).
+- `tables migrate [--dry-run | --check] [--report FILE] [--audit FILE] [--moved-to DIR]`: BI's datasets and models into tables and
+  models (the unified diff and the report with `--dry-run`; exit 1 with `--check` when anything is left to migrate). A second run
+  changes nothing.
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py tables check
+drishti-console/.venv/bin/python tools/drishti.py tables migrate --dry-run
+```
+
 ## 6. Store loaders: `tools/load-*.sh`
 
 Each loader writes the banking packs' demo data (1,791 sample documents x 10 business days, and with `--trades N --days D` a

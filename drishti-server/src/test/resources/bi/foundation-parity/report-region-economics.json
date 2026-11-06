@@ -1,0 +1,254 @@
+{
+  "admin" : {
+    "regions/country" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0" ], [ "country_name-1" ], [ "country_name-2" ], [ "country_name-3" ] ]
+    },
+    "regions/gdp-map" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_code-0", 5004.5 ], [ "region_code-1", 79041.5 ], [ "region_code-2", 52028.0 ], [ "region_code-3", 25014.5 ] ]
+    },
+    "regions/gdp-map | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_code-0", 5004.5 ] ]
+    },
+    "regions/note" : {
+      "refused" : "DRS-9035"
+    },
+    "regions/note | slicer country = country_name-0" : {
+      "refused" : "DRS-9035"
+    },
+    "regions/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0", "region_code-0", "name-0", 5004.5, 5004.5, 1.0E9 ], [ "country_name-1", "region_code-1", "name-1", 79041.5, 79041.5, 1.0E9 ], [ "country_name-2", "region_code-2", "name-2", 52028.0, 52028.0, 1.0E9 ], [ "country_name-3", "region_code-3", "name-3", 25014.5, 25014.5, 1.0E9 ] ]
+    },
+    "regions/table | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0", "region_code-0", "name-0", 5004.5, 5004.5, 1.0E9 ] ]
+    },
+    "regions/top-per-head" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ], [ "name-1", 1.0E9 ], [ "name-2", 1.0E9 ], [ "name-3", 1.0E9 ] ]
+    },
+    "regions/top-per-head | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ] ]
+    }
+  },
+  "analyst" : {
+    "regions/country" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0" ], [ "country_name-1" ], [ "country_name-2" ], [ "country_name-3" ] ]
+    },
+    "regions/gdp-map" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_code-0", 5004.5 ], [ "region_code-1", 79041.5 ], [ "region_code-2", 52028.0 ], [ "region_code-3", 25014.5 ] ]
+    },
+    "regions/gdp-map | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_code-0", 5004.5 ] ]
+    },
+    "regions/note" : {
+      "refused" : "DRS-9035"
+    },
+    "regions/note | slicer country = country_name-0" : {
+      "refused" : "DRS-9035"
+    },
+    "regions/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0", "region_code-0", "name-0", 5004.5, 5004.5, 1.0E9 ], [ "country_name-1", "region_code-1", "name-1", 79041.5, 79041.5, 1.0E9 ], [ "country_name-2", "region_code-2", "name-2", 52028.0, 52028.0, 1.0E9 ], [ "country_name-3", "region_code-3", "name-3", 25014.5, 25014.5, 1.0E9 ] ]
+    },
+    "regions/table | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0", "region_code-0", "name-0", 5004.5, 5004.5, 1.0E9 ] ]
+    },
+    "regions/top-per-head" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ], [ "name-1", 1.0E9 ], [ "name-2", 1.0E9 ], [ "name-3", 1.0E9 ] ]
+    },
+    "regions/top-per-head | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ] ]
+    }
+  },
+  "desk-head-no-desks" : {
+    "regions/country" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0" ], [ "country_name-1" ], [ "country_name-2" ], [ "country_name-3" ] ]
+    },
+    "regions/gdp-map" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_code-0", 5004.5 ], [ "region_code-1", 79041.5 ], [ "region_code-2", 52028.0 ], [ "region_code-3", 25014.5 ] ]
+    },
+    "regions/gdp-map | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_code-0", 5004.5 ] ]
+    },
+    "regions/note" : {
+      "refused" : "DRS-9035"
+    },
+    "regions/note | slicer country = country_name-0" : {
+      "refused" : "DRS-9035"
+    },
+    "regions/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0", "region_code-0", "name-0", 5004.5, 5004.5, 1.0E9 ], [ "country_name-1", "region_code-1", "name-1", 79041.5, 79041.5, 1.0E9 ], [ "country_name-2", "region_code-2", "name-2", 52028.0, 52028.0, 1.0E9 ], [ "country_name-3", "region_code-3", "name-3", 25014.5, 25014.5, 1.0E9 ] ]
+    },
+    "regions/table | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0", "region_code-0", "name-0", 5004.5, 5004.5, 1.0E9 ] ]
+    },
+    "regions/top-per-head" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ], [ "name-1", 1.0E9 ], [ "name-2", 1.0E9 ], [ "name-3", 1.0E9 ] ]
+    },
+    "regions/top-per-head | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ] ]
+    }
+  },
+  "desk-head-two-desks" : {
+    "regions/country" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0" ], [ "country_name-1" ], [ "country_name-2" ], [ "country_name-3" ] ]
+    },
+    "regions/gdp-map" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_code-0", 5004.5 ], [ "region_code-1", 79041.5 ], [ "region_code-2", 52028.0 ], [ "region_code-3", 25014.5 ] ]
+    },
+    "regions/gdp-map | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_code-0", 5004.5 ] ]
+    },
+    "regions/note" : {
+      "refused" : "DRS-9035"
+    },
+    "regions/note | slicer country = country_name-0" : {
+      "refused" : "DRS-9035"
+    },
+    "regions/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0", "region_code-0", "name-0", 5004.5, 5004.5, 1.0E9 ], [ "country_name-1", "region_code-1", "name-1", 79041.5, 79041.5, 1.0E9 ], [ "country_name-2", "region_code-2", "name-2", 52028.0, 52028.0, 1.0E9 ], [ "country_name-3", "region_code-3", "name-3", 25014.5, 25014.5, 1.0E9 ] ]
+    },
+    "regions/table | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0", "region_code-0", "name-0", 5004.5, 5004.5, 1.0E9 ] ]
+    },
+    "regions/top-per-head" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ], [ "name-1", 1.0E9 ], [ "name-2", 1.0E9 ], [ "name-3", 1.0E9 ] ]
+    },
+    "regions/top-per-head | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ] ]
+    }
+  },
+  "no-raw-power" : {
+    "regions/country" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0" ], [ "country_name-1" ], [ "country_name-2" ], [ "country_name-3" ] ]
+    },
+    "regions/gdp-map" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_code-0", 5004.5 ], [ "region_code-1", 79041.5 ], [ "region_code-2", 52028.0 ], [ "region_code-3", 25014.5 ] ]
+    },
+    "regions/gdp-map | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_code-0", 5004.5 ] ]
+    },
+    "regions/note" : {
+      "refused" : "DRS-9035"
+    },
+    "regions/note | slicer country = country_name-0" : {
+      "refused" : "DRS-9035"
+    },
+    "regions/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0", "region_code-0", "name-0", 5004.5, 5004.5, 1.0E9 ], [ "country_name-1", "region_code-1", "name-1", 79041.5, 79041.5, 1.0E9 ], [ "country_name-2", "region_code-2", "name-2", 52028.0, 52028.0, 1.0E9 ], [ "country_name-3", "region_code-3", "name-3", 25014.5, 25014.5, 1.0E9 ] ]
+    },
+    "regions/table | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0", "region_code-0", "name-0", 5004.5, 5004.5, 1.0E9 ] ]
+    },
+    "regions/top-per-head" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ], [ "name-1", 1.0E9 ], [ "name-2", 1.0E9 ], [ "name-3", 1.0E9 ] ]
+    },
+    "regions/top-per-head | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ] ]
+    }
+  },
+  "risk" : {
+    "regions/country" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0" ], [ "country_name-1" ], [ "country_name-2" ], [ "country_name-3" ] ]
+    },
+    "regions/gdp-map" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_code-0", 5004.5 ], [ "region_code-1", 79041.5 ], [ "region_code-2", 52028.0 ], [ "region_code-3", 25014.5 ] ]
+    },
+    "regions/gdp-map | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_code-0", 5004.5 ] ]
+    },
+    "regions/note" : {
+      "refused" : "DRS-9035"
+    },
+    "regions/note | slicer country = country_name-0" : {
+      "refused" : "DRS-9035"
+    },
+    "regions/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0", "region_code-0", "name-0", 5004.5, 5004.5, 1.0E9 ], [ "country_name-1", "region_code-1", "name-1", 79041.5, 79041.5, 1.0E9 ], [ "country_name-2", "region_code-2", "name-2", 52028.0, 52028.0, 1.0E9 ], [ "country_name-3", "region_code-3", "name-3", 25014.5, 25014.5, 1.0E9 ] ]
+    },
+    "regions/table | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0", "region_code-0", "name-0", 5004.5, 5004.5, 1.0E9 ] ]
+    },
+    "regions/top-per-head" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ], [ "name-1", 1.0E9 ], [ "name-2", 1.0E9 ], [ "name-3", 1.0E9 ] ]
+    },
+    "regions/top-per-head | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ] ]
+    }
+  },
+  "unnamed-role" : {
+    "regions/country" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0" ], [ "country_name-1" ], [ "country_name-2" ], [ "country_name-3" ] ]
+    },
+    "regions/gdp-map" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_code-0", 5004.5 ], [ "region_code-1", 79041.5 ], [ "region_code-2", 52028.0 ], [ "region_code-3", 25014.5 ] ]
+    },
+    "regions/gdp-map | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "region_code-0", 5004.5 ] ]
+    },
+    "regions/note" : {
+      "refused" : "DRS-9035"
+    },
+    "regions/note | slicer country = country_name-0" : {
+      "refused" : "DRS-9035"
+    },
+    "regions/table" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0", "region_code-0", "name-0", 5004.5, 5004.5, 1.0E9 ], [ "country_name-1", "region_code-1", "name-1", 79041.5, 79041.5, 1.0E9 ], [ "country_name-2", "region_code-2", "name-2", 52028.0, 52028.0, 1.0E9 ], [ "country_name-3", "region_code-3", "name-3", 25014.5, 25014.5, 1.0E9 ] ]
+    },
+    "regions/table | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "country_name-0", "region_code-0", "name-0", 5004.5, 5004.5, 1.0E9 ] ]
+    },
+    "regions/top-per-head" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ], [ "name-1", 1.0E9 ], [ "name-2", 1.0E9 ], [ "name-3", 1.0E9 ] ]
+    },
+    "regions/top-per-head | slicer country = country_name-0" : {
+      "masked" : [ ],
+      "rows" : [ [ "name-0", 1.0E9 ] ]
+    }
+  }
+}

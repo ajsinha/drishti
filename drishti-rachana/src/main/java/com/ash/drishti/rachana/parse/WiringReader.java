@@ -42,7 +42,9 @@ final class WiringReader {
     static final String EVENTS = "DRS-2057";
     static final String CHILDREN = "DRS-2056";
     private static final Pattern NAME = Pattern.compile("[a-z][a-z0-9-]{0,63}");
-    private static final Set<String> SOURCE_KEYS = Set.of("pack", "kind", "id", "where", "search", "limit", "as-of", "model", "params");
+    private static final Set<String> SOURCE_KEYS = Set.of("pack", "kind", "id", "where", "search", "limit", "as-of", "model", "params", "table");
+    /** A virtual table's name: {@code <domain>.<name>} (TABLES_GUIDE.md section 2), with an optional major ({@code @1}). */
+    private static final Pattern TABLE = Pattern.compile("[a-z][a-z0-9_]{0,62}\\.[a-z][a-z0-9_]{0,62}(@\\^?[0-9]+)?");
     private static final Pattern PARAM = Pattern.compile("[A-Za-z][A-Za-z0-9_-]{0,63}");
     private static final Set<String> EMIT_KEYS = Set.of("name", "on", "payload");
     private static final Set<String> GROUP_KEYS = Set.of("place", "show", "source", "waits", "panels");
@@ -90,16 +92,47 @@ final class WiringReader {
                 : new Wiring(source, emits, waits, children);
     }
 
+    /**
+     * A virtual table as a panel's source (VIRTUAL_TABLES.md V13): {@code source: { table: trading.trade_legs, where: "...", limit, as-of }};
+     * the rows are {@code $src}, read as the viewer may read the table. A table takes no kind, pack, id, search or parameters.
+     */
+    private Wiring.Source tableSource(PNode n, Map<String, PNode> m) {
+        String table = text(m.get("table"));
+        if (table == null || !TABLE.matcher(table).matches()) {
+            problem("DRS-2012", "'table' in a source is a virtual table's name, <domain>.<name> (trading.trade_legs)", m.get("table"));
+            return null;
+        }
+        for (String k : List.of("kind", "pack", "id", "search", "params", "model")) {
+            if (m.containsKey(k)) {
+                problem(EVENTS, "a source names a table or a kind, not both: '" + k + "' does not go with table (keep where, limit, as-of)", m.get(k));
+                return null;
+            }
+        }
+        int limit = Wiring.Source.DEFAULT_LIMIT;
+        PNode l = m.get("limit");
+        if (l != null) {
+            if (!(l.value() instanceof Long v) || v < 1 || v > Wiring.Source.MAX_LIMIT) {
+                problem(EVENTS, "'limit' in a source is a whole number from 1 to " + Wiring.Source.MAX_LIMIT, l);
+            } else {
+                limit = v.intValue();
+            }
+        }
+        return Wiring.Source.ofTable(table, expr(m.get("where")), limit, expr(m.get("as-of")));
+    }
+
     Wiring.Source source(PNode n) {
         Map<String, PNode> m = n.map();
         m.forEach((k, v) -> {
             if (!SOURCE_KEYS.contains(k)) {
-                problem("DRS-2011", "unknown key '" + k + "' in source; a source takes pack, kind, id, where, search, limit, as-of, params", v);
+                problem("DRS-2011", "unknown key '" + k + "' in source; a source takes pack, kind, id, where, search, limit, as-of, params, or table", v);
             }
         });
         if (m.containsKey("model")) {
             problem(EVENTS, "a source over a BI model is not built yet (RACHANA_REFERENCE.md 6): name a kind with id, where or search", m.get("model"));
             return null;
+        }
+        if (m.containsKey("table")) {
+            return tableSource(n, m);
         }
         String kind = text(m.get("kind"));
         if (kind == null || !NAME.matcher(kind).matches()) {

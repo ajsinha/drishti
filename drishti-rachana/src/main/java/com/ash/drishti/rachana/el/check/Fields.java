@@ -13,25 +13,30 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.bi.expr;
+package com.ash.drishti.rachana.el.check;
 
 import java.util.List;
 import java.util.Optional;
 
 /**
- * What an expression may name, as the checker sees it: the fields of a model (or of one dataset, for row and rule scope), the dataset aliases (for
- * {@code count(trades)}), and the measures. Built from a model or a dataset as the caller sees it, so a hidden column does not exist and a masked one is marked.
- * Without one ({@link #NONE}), the checker checks the language and the catalogue only and types every field as {@link DelType#ANY}.
+ * What an expression may name, as the checker sees it (moved from DEL): the fields of a model (or of one table, for row and rule
+ * scope), the table aliases (for {@code count(trades)}), the measures and the parameters. Built from a table or model as the caller
+ * sees it, so a hidden column does not exist and a masked one is marked. Without one ({@link #NONE}), the checker checks the language
+ * and the catalogue only and types every field as {@link ElType#ANY}.
+ *
+ * <p>A name reaches {@link #field} as its parts: {@code trades.MTM} is {@code [trades, MTM]}, a bare {@code DESK} is {@code [DESK]}, and
+ * a path of the source starts with its root: {@code $.LEGS} is {@code [$, LEGS]}, {@code @.AMOUNT} {@code [@, AMOUNT]}, {@code ^.LEG_ID}
+ * {@code [^, LEG_ID]}.
  */
 public interface Fields {
 
-    /** A field: its full path ({@code trades.mtm} or {@code trades.tradeDate.month}), type, and whether it is masked for the caller. */
-    record Field(String path, DelType type, boolean masked) {}
+    /** A field: its full path ({@code trades.MTM} or {@code trades.TRADE_DATE.month}), type, and whether it is masked for the caller. */
+    record Field(String path, ElType type, boolean masked) {}
 
-    /** The field the parts name ({@code alias.column[.part]}, or a bare {@code column} of the dataset in row and rule scope); empty when there is none. */
+    /** The field the parts name; empty when there is none. */
     Optional<Field> field(List<String> parts);
 
-    /** True when the name is a dataset alias of the model ({@code trades} in {@code count(trades)}). */
+    /** True when the name is a table alias of the model ({@code trades} in {@code count(trades)}). */
     boolean alias(String name);
 
     /** The measure a name or stable id names (its name); empty when there is none. */
@@ -42,14 +47,14 @@ public interface Fields {
         return List.of();
     }
 
-    /** True when names are checked (a model or dataset is known). */
+    /** True when names are checked (a table or model is known). */
     default boolean known() {
         return true;
     }
 
-    /** The type of a parameter of the model ({@code param.name}, wave B); empty when there is none. Without a model every name is accepted. */
-    default Optional<DelType> param(String name) {
-        return known() ? Optional.empty() : Optional.of(DelType.ANY);
+    /** The type of a parameter ({@code param.name}); empty when there is none. Without a model every name is accepted. */
+    default Optional<ElType> param(String name) {
+        return known() ? Optional.empty() : Optional.of(ElType.ANY);
     }
 
     /** The parameters' names, for the suggestion in a problem. */
@@ -60,7 +65,7 @@ public interface Fields {
     Fields NONE = new Fields() {
         @Override
         public Optional<Field> field(List<String> parts) {
-            return Optional.of(new Field(String.join(".", parts), DelType.ANY, false));
+            return Optional.of(new Field(String.join(".", parts), ElType.ANY, false));
         }
 
         @Override

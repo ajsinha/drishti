@@ -119,7 +119,7 @@ public class DesignAboutService {
         try {
             Predicate<String> mayOpen = k -> entitlements.mayOpen(who, k);
             EntityDocument doc = document(who, d, info, mayOpen);
-            ViewPipeline.Built built = pipeline.builtPreview(Optional.of(s), doc, entitlements.redactor(who), mayOpen);
+            ViewPipeline.Built built = pipeline.builtPreview(Optional.of(s), doc, entitlements.viewer(who));
             ViewModel view = entitlements.restrict(who, built.view());
             AboutPreview.Card card = preview.card(source, built, view, catalog.maxRendered());
             out.set("card", JSON.valueToTree(card));

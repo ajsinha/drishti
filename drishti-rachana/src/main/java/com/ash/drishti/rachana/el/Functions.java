@@ -132,7 +132,7 @@ public final class Functions {
                 continue;
             }
             FunctionProvider.Provided p = Aggregates.all().get(name);
-            boolean engine = p != null || Aggregates.EXPECTED.contains(name) || "group".equals(name);
+            boolean engine = p != null || Aggregates.EXPECTED.contains(name) || Aggregates.MEASURE_LEVEL.contains(name) || "group".equals(name);
             if (!engine) {
                 out.add(new Entry(name, FAMILY.getOrDefault(name, ""), "R", "Rachana", "", "", ""));
                 continue;
@@ -144,8 +144,10 @@ public final class Functions {
                         + "or any aggregate over @)"));
                 continue;
             }
-            out.add(new Entry(name, p != null && "list".equals(p.form()) ? "lists" : "aggregates", "E",
-                    source == null ? "none on the class path" : source, p == null ? "" : p.args(), p == null ? "" : p.form(), p == null ? "" : p.description()));
+            String family = Aggregates.MEASURE_LEVEL.contains(name) ? "measures"
+                    : p != null && "list".equals(p.form()) ? "lists" : "aggregates";
+            out.add(new Entry(name, family, "E", source == null ? "none on the class path" : source,
+                    p == null ? "" : p.args(), p == null ? "" : p.form(), p == null ? "" : p.description()));
         }
         return out;
     }
@@ -163,6 +165,11 @@ public final class Functions {
      */
     public static Map<String, String> oldSpellings() {
         return OLD_SPELLINGS;
+    }
+
+    /** The one name of {@code name}: itself, or the name an old spelling stands for ({@code startsWith} is {@code starts_with}). */
+    public static String oneName(String name) {
+        return OLD_SPELLINGS.getOrDefault(name, name);
     }
 
     static ElFunction get(String name) {

@@ -70,10 +70,10 @@ public class SampleCheckService {
             if (!mayOpen.test(in.ref().kind())) {
                 throw new SampleChecker.NoAccess(Entitlements.DENIED + ": you may not open " + in.ref().kind() + " entities");
             }
-            return entitlements.restrict(who, pipeline.preview(sutra, in.ref(), AsOf.LATEST, entitlements.redactor(who), mayOpen));
+            return entitlements.restrict(who, pipeline.preview(sutra, in.ref(), AsOf.LATEST, entitlements.viewer(who)));
         }
         EntityDocument doc = new EntityDocument(EntityRef.of(kind, "SAMPLE"), codec.read(in.document().toString()),
                 new Provenance("builder sample JSON", 0, Instant.now(), false));
-        return entitlements.restrict(who, pipeline.preview(Optional.of(sutra), doc, entitlements.redactor(who), mayOpen));
+        return entitlements.restrict(who, pipeline.preview(Optional.of(sutra), doc, entitlements.viewer(who)));
     }
 }

@@ -43,7 +43,7 @@ final class TextParts {
     static void register(Functions.Table t) {
         t.fn("len", 1, 1, (a, c) -> {
             String s = Args.text("len", a.get(0));
-            return s == null ? null : (Object) (long) s.length();
+            return s == null ? null : (Object) (long) s.codePointCount(0, s.length());   // characters, as the engine's SQL counts them
         });
         t.fn("proper", 1, 1, (a, c) -> proper(Args.text("proper", a.get(0))));
         t.fn("rept", 2, 2, (a, c) -> {

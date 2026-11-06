@@ -49,7 +49,10 @@ final class DateFunctions {
     static final Set<String> INTERVALS = Set.of("day", "week", "month", "quarter", "year", "business_day");
 
     static void register(Functions.Table t) {
-        t.fn("today", 0, 0, (a, c) -> c.today() == null ? null : c.today().toString());
+        // asof(): the view's or the query's as-of date; today() is read as asof() (BI_FOUNDATION_2911E.md Q7)
+        t.fn("asof", 0, 0, (a, c) -> c.asOf() == null ? null : c.asOf().toString());
+        t.old("today", "asof", 0, 0);
+        DatePartFunctions.register(t);
         t.fn("days_between", 2, 2, (a, c) -> {
             LocalDate x = Args.date("days_between", a.get(0));
             LocalDate y = Args.date("days_between", a.get(1));
@@ -97,7 +100,7 @@ final class DateFunctions {
     private static final ConcurrentHashMap<String, BusinessCalendar> CALENDARS = new ConcurrentHashMap<>();
 
     /** The calendar of argument {@code i} ({@value #DEFAULT_CALENDAR} when not given); null when given empty. */
-    private static BusinessCalendar calendar(String fn, List<Object> a, int i) {
+    static BusinessCalendar calendar(String fn, List<Object> a, int i) {
         String spec = a.size() > i ? Args.text(fn, a.get(i)) : DEFAULT_CALENDAR;
         if (spec == null) {
             return null;
@@ -117,7 +120,7 @@ final class DateFunctions {
         return cal;
     }
 
-    private static String calendarProblem(Object literal) {
+    static String calendarProblem(Object literal) {
         if (literal instanceof String spec) {
             try {
                 BusinessCalendar.of(spec.trim());

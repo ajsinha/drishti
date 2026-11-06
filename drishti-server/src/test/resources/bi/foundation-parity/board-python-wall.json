@@ -1,0 +1,79 @@
+{
+  "admin" : {
+    "risk/hist <- python-desk-risk/risk/histogram" : {
+      "python" : "the console draws it"
+    },
+    "risk/strip <- python-desk-risk/risk/strip" : {
+      "python" : "the console draws it"
+    },
+    "risk/vol <- python-desk-risk/risk/volatility" : {
+      "python" : "the console draws it"
+    }
+  },
+  "analyst" : {
+    "risk/hist <- python-desk-risk/risk/histogram" : {
+      "python" : "the console draws it"
+    },
+    "risk/strip <- python-desk-risk/risk/strip" : {
+      "python" : "the console draws it"
+    },
+    "risk/vol <- python-desk-risk/risk/volatility" : {
+      "python" : "the console draws it"
+    }
+  },
+  "desk-head-no-desks" : {
+    "risk/hist <- python-desk-risk/risk/histogram" : {
+      "python" : "the console draws it"
+    },
+    "risk/strip <- python-desk-risk/risk/strip" : {
+      "python" : "the console draws it"
+    },
+    "risk/vol <- python-desk-risk/risk/volatility" : {
+      "python" : "the console draws it"
+    }
+  },
+  "desk-head-two-desks" : {
+    "risk/hist <- python-desk-risk/risk/histogram" : {
+      "python" : "the console draws it"
+    },
+    "risk/strip <- python-desk-risk/risk/strip" : {
+      "python" : "the console draws it"
+    },
+    "risk/vol <- python-desk-risk/risk/volatility" : {
+      "python" : "the console draws it"
+    }
+  },
+  "no-raw-power" : {
+    "risk/hist <- python-desk-risk/risk/histogram" : {
+      "python" : "the console draws it"
+    },
+    "risk/strip <- python-desk-risk/risk/strip" : {
+      "python" : "the console draws it"
+    },
+    "risk/vol <- python-desk-risk/risk/volatility" : {
+      "python" : "the console draws it"
+    }
+  },
+  "risk" : {
+    "risk/hist <- python-desk-risk/risk/histogram" : {
+      "python" : "the console draws it"
+    },
+    "risk/strip <- python-desk-risk/risk/strip" : {
+      "python" : "the console draws it"
+    },
+    "risk/vol <- python-desk-risk/risk/volatility" : {
+      "python" : "the console draws it"
+    }
+  },
+  "unnamed-role" : {
+    "risk/hist <- python-desk-risk/risk/histogram" : {
+      "python" : "the console draws it"
+    },
+    "risk/strip <- python-desk-risk/risk/strip" : {
+      "python" : "the console draws it"
+    },
+    "risk/vol <- python-desk-risk/risk/volatility" : {
+      "python" : "the console draws it"
+    }
+  }
+}

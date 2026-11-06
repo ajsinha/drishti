@@ -1,0 +1,1157 @@
+{
+  "admin" : {
+    "Average growth | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14007.0 ] ]
+    },
+    "Average growth | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14008.0 ] ]
+    },
+    "Average growth | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 9005.5 ] ]
+    },
+    "Average growth | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14007.5 ] ]
+    },
+    "Average inflation | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21760.875 ] ]
+    },
+    "Average inflation | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21761.875 ] ]
+    },
+    "Average inflation | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 42022.0 ] ]
+    },
+    "Average inflation | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21761.375 ] ]
+    },
+    "Average unemployment | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16883.4375 ] ]
+    },
+    "Average unemployment | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16884.4375 ] ]
+    },
+    "Average unemployment | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 24513.25 ] ]
+    },
+    "Average unemployment | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16883.9375 ] ]
+    },
+    "Economies | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Economies | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Economies | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Economies | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "GDP (USD bn) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP (USD bn) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "GDP (USD bn) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP per capita (USD) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.5925925925926 ] ]
+    },
+    "GDP per capita (USD) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.581186077416 ] ]
+    },
+    "GDP per capita (USD) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 102.07744791082374 ] ]
+    },
+    "GDP per capita (USD) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.5868891661082 ] ]
+    },
+    "Population (m) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135067.5 ] ]
+    },
+    "Population (m) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "Population (m) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 49026.5 ] ]
+    },
+    "Population (m) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "calc GDP (USD bn) | by economies.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ], [ "name-1", 79041.5, 161088.5, 161088.5, 0.49067127696887114, null ], [ "name-2", 52028.0, 161088.5, 161088.5, 0.32297774204862545, null ], [ "name-3", 25014.5, 161088.5, 161088.5, 0.15528420712837973, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "calc GDP (USD bn) | by economies.NAME | slicer = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 5004.5 ] ]
+      } ]
+    },
+    "rows of economies" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "a335388bd6fe61828b8c73d06ef0461d40420d7d865ab0edce779d2adc2c10df"
+    }
+  },
+  "analyst" : {
+    "Average growth | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14007.0 ] ]
+    },
+    "Average growth | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14008.0 ] ]
+    },
+    "Average growth | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 9005.5 ] ]
+    },
+    "Average growth | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14007.5 ] ]
+    },
+    "Average inflation | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21760.875 ] ]
+    },
+    "Average inflation | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21761.875 ] ]
+    },
+    "Average inflation | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 42022.0 ] ]
+    },
+    "Average inflation | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21761.375 ] ]
+    },
+    "Average unemployment | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16883.4375 ] ]
+    },
+    "Average unemployment | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16884.4375 ] ]
+    },
+    "Average unemployment | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 24513.25 ] ]
+    },
+    "Average unemployment | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16883.9375 ] ]
+    },
+    "Economies | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Economies | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Economies | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Economies | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "GDP (USD bn) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP (USD bn) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "GDP (USD bn) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP per capita (USD) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.5925925925926 ] ]
+    },
+    "GDP per capita (USD) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.581186077416 ] ]
+    },
+    "GDP per capita (USD) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 102.07744791082374 ] ]
+    },
+    "GDP per capita (USD) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.5868891661082 ] ]
+    },
+    "Population (m) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135067.5 ] ]
+    },
+    "Population (m) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "Population (m) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 49026.5 ] ]
+    },
+    "Population (m) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "calc GDP (USD bn) | by economies.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ], [ "name-1", 79041.5, 161088.5, 161088.5, 0.49067127696887114, null ], [ "name-2", 52028.0, 161088.5, 161088.5, 0.32297774204862545, null ], [ "name-3", 25014.5, 161088.5, 161088.5, 0.15528420712837973, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "calc GDP (USD bn) | by economies.NAME | slicer = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 5004.5 ] ]
+      } ]
+    },
+    "rows of economies" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "a335388bd6fe61828b8c73d06ef0461d40420d7d865ab0edce779d2adc2c10df"
+    }
+  },
+  "desk-head-no-desks" : {
+    "Average growth | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14007.0 ] ]
+    },
+    "Average growth | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14008.0 ] ]
+    },
+    "Average growth | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 9005.5 ] ]
+    },
+    "Average growth | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14007.5 ] ]
+    },
+    "Average inflation | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21760.875 ] ]
+    },
+    "Average inflation | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21761.875 ] ]
+    },
+    "Average inflation | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 42022.0 ] ]
+    },
+    "Average inflation | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21761.375 ] ]
+    },
+    "Average unemployment | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16883.4375 ] ]
+    },
+    "Average unemployment | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16884.4375 ] ]
+    },
+    "Average unemployment | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 24513.25 ] ]
+    },
+    "Average unemployment | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16883.9375 ] ]
+    },
+    "Economies | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Economies | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Economies | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Economies | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "GDP (USD bn) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP (USD bn) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "GDP (USD bn) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP per capita (USD) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.5925925925926 ] ]
+    },
+    "GDP per capita (USD) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.581186077416 ] ]
+    },
+    "GDP per capita (USD) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 102.07744791082374 ] ]
+    },
+    "GDP per capita (USD) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.5868891661082 ] ]
+    },
+    "Population (m) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135067.5 ] ]
+    },
+    "Population (m) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "Population (m) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 49026.5 ] ]
+    },
+    "Population (m) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "calc GDP (USD bn) | by economies.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ], [ "name-1", 79041.5, 161088.5, 161088.5, 0.49067127696887114, null ], [ "name-2", 52028.0, 161088.5, 161088.5, 0.32297774204862545, null ], [ "name-3", 25014.5, 161088.5, 161088.5, 0.15528420712837973, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "calc GDP (USD bn) | by economies.NAME | slicer = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 5004.5 ] ]
+      } ]
+    },
+    "rows of economies" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "a335388bd6fe61828b8c73d06ef0461d40420d7d865ab0edce779d2adc2c10df"
+    }
+  },
+  "desk-head-two-desks" : {
+    "Average growth | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14007.0 ] ]
+    },
+    "Average growth | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14008.0 ] ]
+    },
+    "Average growth | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 9005.5 ] ]
+    },
+    "Average growth | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14007.5 ] ]
+    },
+    "Average inflation | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21760.875 ] ]
+    },
+    "Average inflation | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21761.875 ] ]
+    },
+    "Average inflation | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 42022.0 ] ]
+    },
+    "Average inflation | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21761.375 ] ]
+    },
+    "Average unemployment | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16883.4375 ] ]
+    },
+    "Average unemployment | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16884.4375 ] ]
+    },
+    "Average unemployment | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 24513.25 ] ]
+    },
+    "Average unemployment | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16883.9375 ] ]
+    },
+    "Economies | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Economies | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Economies | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Economies | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "GDP (USD bn) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP (USD bn) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "GDP (USD bn) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP per capita (USD) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.5925925925926 ] ]
+    },
+    "GDP per capita (USD) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.581186077416 ] ]
+    },
+    "GDP per capita (USD) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 102.07744791082374 ] ]
+    },
+    "GDP per capita (USD) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.5868891661082 ] ]
+    },
+    "Population (m) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135067.5 ] ]
+    },
+    "Population (m) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "Population (m) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 49026.5 ] ]
+    },
+    "Population (m) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "calc GDP (USD bn) | by economies.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ], [ "name-1", 79041.5, 161088.5, 161088.5, 0.49067127696887114, null ], [ "name-2", 52028.0, 161088.5, 161088.5, 0.32297774204862545, null ], [ "name-3", 25014.5, 161088.5, 161088.5, 0.15528420712837973, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "calc GDP (USD bn) | by economies.NAME | slicer = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 5004.5 ] ]
+      } ]
+    },
+    "rows of economies" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "a335388bd6fe61828b8c73d06ef0461d40420d7d865ab0edce779d2adc2c10df"
+    }
+  },
+  "no-raw-power" : {
+    "Average growth | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14007.0 ] ]
+    },
+    "Average growth | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14008.0 ] ]
+    },
+    "Average growth | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 9005.5 ] ]
+    },
+    "Average growth | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14007.5 ] ]
+    },
+    "Average inflation | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21760.875 ] ]
+    },
+    "Average inflation | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21761.875 ] ]
+    },
+    "Average inflation | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 42022.0 ] ]
+    },
+    "Average inflation | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21761.375 ] ]
+    },
+    "Average unemployment | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16883.4375 ] ]
+    },
+    "Average unemployment | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16884.4375 ] ]
+    },
+    "Average unemployment | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 24513.25 ] ]
+    },
+    "Average unemployment | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16883.9375 ] ]
+    },
+    "Economies | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Economies | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Economies | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Economies | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "GDP (USD bn) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP (USD bn) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "GDP (USD bn) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP per capita (USD) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.5925925925926 ] ]
+    },
+    "GDP per capita (USD) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.581186077416 ] ]
+    },
+    "GDP per capita (USD) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 102.07744791082374 ] ]
+    },
+    "GDP per capita (USD) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.5868891661082 ] ]
+    },
+    "Population (m) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135067.5 ] ]
+    },
+    "Population (m) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "Population (m) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 49026.5 ] ]
+    },
+    "Population (m) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "calc GDP (USD bn) | by economies.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ], [ "name-1", 79041.5, 161088.5, 161088.5, 0.49067127696887114, null ], [ "name-2", 52028.0, 161088.5, 161088.5, 0.32297774204862545, null ], [ "name-3", 25014.5, 161088.5, 161088.5, 0.15528420712837973, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "calc GDP (USD bn) | by economies.NAME | slicer = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 5004.5 ] ]
+      } ]
+    },
+    "rows of economies" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "a335388bd6fe61828b8c73d06ef0461d40420d7d865ab0edce779d2adc2c10df"
+    }
+  },
+  "risk" : {
+    "Average growth | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14007.0 ] ]
+    },
+    "Average growth | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14008.0 ] ]
+    },
+    "Average growth | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 9005.5 ] ]
+    },
+    "Average growth | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14007.5 ] ]
+    },
+    "Average inflation | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21760.875 ] ]
+    },
+    "Average inflation | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21761.875 ] ]
+    },
+    "Average inflation | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 42022.0 ] ]
+    },
+    "Average inflation | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21761.375 ] ]
+    },
+    "Average unemployment | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16883.4375 ] ]
+    },
+    "Average unemployment | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16884.4375 ] ]
+    },
+    "Average unemployment | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 24513.25 ] ]
+    },
+    "Average unemployment | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16883.9375 ] ]
+    },
+    "Economies | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Economies | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Economies | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Economies | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "GDP (USD bn) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP (USD bn) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "GDP (USD bn) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP per capita (USD) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.5925925925926 ] ]
+    },
+    "GDP per capita (USD) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.581186077416 ] ]
+    },
+    "GDP per capita (USD) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 102.07744791082374 ] ]
+    },
+    "GDP per capita (USD) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.5868891661082 ] ]
+    },
+    "Population (m) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135067.5 ] ]
+    },
+    "Population (m) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "Population (m) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 49026.5 ] ]
+    },
+    "Population (m) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "calc GDP (USD bn) | by economies.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ], [ "name-1", 79041.5, 161088.5, 161088.5, 0.49067127696887114, null ], [ "name-2", 52028.0, 161088.5, 161088.5, 0.32297774204862545, null ], [ "name-3", 25014.5, 161088.5, 161088.5, 0.15528420712837973, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "calc GDP (USD bn) | by economies.NAME | slicer = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 5004.5 ] ]
+      } ]
+    },
+    "rows of economies" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "a335388bd6fe61828b8c73d06ef0461d40420d7d865ab0edce779d2adc2c10df"
+    }
+  },
+  "unnamed-role" : {
+    "Average growth | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14007.0 ] ]
+    },
+    "Average growth | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14008.0 ] ]
+    },
+    "Average growth | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 9005.5 ] ]
+    },
+    "Average growth | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 14007.5 ] ]
+    },
+    "Average inflation | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21760.875 ] ]
+    },
+    "Average inflation | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21761.875 ] ]
+    },
+    "Average inflation | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 42022.0 ] ]
+    },
+    "Average inflation | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 21761.375 ] ]
+    },
+    "Average unemployment | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16883.4375 ] ]
+    },
+    "Average unemployment | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16884.4375 ] ]
+    },
+    "Average unemployment | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 24513.25 ] ]
+    },
+    "Average unemployment | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 16883.9375 ] ]
+    },
+    "Economies | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Economies | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Economies | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 2 ] ]
+    },
+    "Economies | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "GDP (USD bn) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161080.5 ] ]
+    },
+    "GDP (USD bn) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP (USD bn) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 5004.5 ] ]
+    },
+    "GDP (USD bn) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 161088.5 ] ]
+    },
+    "GDP per capita (USD) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.5925925925926 ] ]
+    },
+    "GDP per capita (USD) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.581186077416 ] ]
+    },
+    "GDP per capita (USD) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 102.07744791082374 ] ]
+    },
+    "GDP per capita (USD) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1192.5868891661082 ] ]
+    },
+    "Population (m) | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135067.5 ] ]
+    },
+    "Population (m) | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "Population (m) | slicer economies.NAME = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 49026.5 ] ]
+    },
+    "Population (m) | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 135075.5 ] ]
+    },
+    "calc GDP (USD bn) | by economies.NAME" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ], [ "name-1", 79041.5, 161088.5, 161088.5, 0.49067127696887114, null ], [ "name-2", 52028.0, 161088.5, 161088.5, 0.32297774204862545, null ], [ "name-3", 25014.5, 161088.5, 161088.5, 0.15528420712837973, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 161088.5 ] ]
+      } ]
+    },
+    "calc GDP (USD bn) | by economies.NAME | slicer = name-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "name-0", 5004.5, 161088.5, 161088.5, 0.031066773854123667, 5004.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 5004.5 ] ]
+      } ]
+    },
+    "rows of economies" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "a335388bd6fe61828b8c73d06ef0461d40420d7d865ab0edce779d2adc2c10df"
+    }
+  }
+}

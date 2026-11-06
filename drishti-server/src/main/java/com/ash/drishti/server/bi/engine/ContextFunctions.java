@@ -15,18 +15,17 @@
  */
 package com.ash.drishti.server.bi.engine;
 
-import com.ash.drishti.common.BusinessCalendar;
+import com.ash.drishti.bicompute.context.FilterContext;
+import com.ash.drishti.bicompute.context.Periods;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.rachana.el.DatePartFunctions;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.ash.drishti.server.bi.dataset.Resolver;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  * The SQL of the wave B functions (docs/architecture/BI_DESIGN.md sections 3.3.4 and 3.3.5), written by the {@link SqlEmitter} that meets them:
@@ -45,12 +44,6 @@ import java.util.Set;
  * While the compiler only plans (finds the tables a measure reads), a context function stands for its aggregate.
  */
 final class ContextFunctions {
-
-    /** The period units of {@code opening}, {@code closing} and {@code shift_date}. */
-    static final Set<String> PERIODS = Set.of("day", "week", "month", "quarter", "year");
-    static final Set<String> UNITS = Set.of("business-day", "day", "week", "month", "quarter", "year");
-    /** How far back {@code closing} looks for period ends when the query has no window (its rows can only be in what was read). */
-    static final int CLOSING_YEARS = 5;
 
     private ContextFunctions() {}
 
@@ -85,13 +78,13 @@ final class ContextFunctions {
             case "parent_of" -> parentOf(e, c, agg, inAgg);
             case "avg_by" -> {
                 Node.Call by = Node.keyword(c, "by");
-                yield contexts(e, f).register(Contexts.Kind.AVERAGE, kept(agg, e), null, null, null, by == null ? List.of() : by.args(), null, null, null);
+                yield contexts(e, f).register(FilterContext.Kind.AVERAGE, kept(agg, e), null, null, null, by == null ? List.of() : by.args(), null, null, null);
             }
-            case "avg_over" -> contexts(e, f).register(Contexts.Kind.AVERAGE, kept(agg, e), null, null, null, List.of(pos.get(1)), null, null, null);
-            case "as_of" -> contexts(e, f).register(Contexts.Kind.DATED, kept(agg, e), null, null, null, null, constant(e, pos.get(1)), null, null);
+            case "avg_over" -> contexts(e, f).register(FilterContext.Kind.AVERAGE, kept(agg, e), null, null, null, List.of(pos.get(1)), null, null, null);
+            case "as_of" -> contexts(e, f).register(FilterContext.Kind.DATED, kept(agg, e), null, null, null, null, constant(e, pos.get(1)), null, null);
             case "last", "first" -> {
                 Node date = pos.get(1);
-                String edge = contexts(e, f).register(Contexts.Kind.EDGE, null, null, null, null, null, null, date, "last".equals(f) ? "max" : "min");
+                String edge = contexts(e, f).register(FilterContext.Kind.EDGE, null, null, null, null, null, null, date, "last".equals(f) ? "max" : "min");
                 yield e.restricted("(" + dateSql(e, date) + " = " + edge + ")", agg, inAgg);
             }
             case "closing" -> e.restricted(closingDays(e, pos.get(1), period(c)), agg, inAgg);
@@ -114,7 +107,7 @@ final class ContextFunctions {
             return cond == null ? e.emit(agg, inAgg) : e.restricted(cond, agg, inAgg);
         }
         Node inner = kept(cond == null ? agg : new Node.Call("calc", List.of(agg, new Node.Call(Node.KEYWORD + "where", List.of(cond)))), e);
-        return contexts(e, "calc").register(Contexts.Kind.EDIT, inner, ignore == null ? null : ignore.args(), keep == null ? null : keep.args(), viaText, null, null, null, null);
+        return contexts(e, "calc").register(FilterContext.Kind.EDIT, inner, ignore == null ? null : ignore.args(), keep == null ? null : keep.args(), viaText, null, null, null, null);
     }
 
     /** The aggregate with the conditions the emitter is now under (an outer {@code calc(where=)}), which a context sub-query must keep. */
@@ -138,19 +131,23 @@ final class ContextFunctions {
             throw new DrishtiException(ErrorCode.MQ_CONTEXT, "parent_of(): hierarchy='" + name + "' names no hierarchy of this model (hierarchies: " + e.dataset().hierarchies().keySet() + ")");
         }
         Contexts ctx = contexts(e, "parent_of");
-        int deepest = -1;
-        String field = null;
-        for (int i = 0; i < levels.size(); i++) {
+        List<Boolean> present = new ArrayList<>();
+        List<String> fieldAt = new ArrayList<>();
+        for (String level : levels) {
+            String found = null;
             for (SqlCompiler.Field f : ctx.fields()) {
-                if (!f.masked() && same(e, levels.get(i), f)) {
-                    deepest = i;
-                    field = f.text();
+                if (!f.masked() && same(e, level, f)) {
+                    found = f.text();
                 }
             }
+            present.add(found != null);
+            fieldAt.add(found);
         }
-        if (deepest <= 0) {
+        int deepest = FilterContext.parentLevel(present);                        // the engine's rule (BI_DESIGN 3.3.5)
+        if (deepest < 0) {
             return "CAST(NULL AS " + e.dialect().doubleType() + ")";                // the top level has no parent; no level in the answer, no parent either
         }
+        String field = fieldAt.get(deepest);
         Node parent = new Node.Call("calc", List.of(agg, new Node.Call(Node.KEYWORD + "ignore", List.of(new Node.Ref(List.of(field.split("\\.", -1)))))));
         return e.emit(new Node.Bin("/", agg, parent), inAgg);
     }
@@ -180,10 +177,11 @@ final class ContextFunctions {
     private static String period(Node.Call c) {
         Node.Call p = Node.keyword(c, "period");
         String period = p == null || p.args().isEmpty() || !(p.args().get(0) instanceof Node.Str s) ? "month" : s.value();
-        if (!PERIODS.contains(period)) {
-            throw new DrishtiException(ErrorCode.MQ_CONTEXT, c.function() + "(): period is one of " + new java.util.TreeSet<>(PERIODS) + ", not '" + period + "'");
+        try {
+            return Periods.period(c.function(), period);
+        } catch (IllegalArgumentException x) {
+            throw new DrishtiException(ErrorCode.MQ_CONTEXT, x.getMessage());
         }
-        return period;
     }
 
     /** The date column's SQL, as a date. */
@@ -208,15 +206,9 @@ final class ContextFunctions {
     /** {@code date in [the closing business day of each period from the window's start to the as-of date]}. */
     private static Node closingDays(SqlEmitter e, Node date, String period) {
         TimeWindows.Context t = time(e);
-        LocalDate asOf = t.asOf();
-        LocalDate lo = t.from() != null && t.from().isBefore(asOf) ? t.from() : asOf.minusYears(CLOSING_YEARS);
         List<Node> days = new ArrayList<>();
-        for (LocalDate start = start(lo, period); !start.isAfter(asOf); start = next(start, period)) {
-            LocalDate end = next(start, period).minusDays(1);
-            LocalDate close = onOrBefore(t.calendar(), end.isAfter(asOf) ? asOf : end);
-            if (!close.isBefore(lo) && !close.isBefore(start)) {
-                days.add(new Node.Call("date", List.of(new Node.Str(close.toString()))));
-            }
+        for (LocalDate close : Periods.closingDays(t.asOf(), t.from(), period, t.calendar())) {
+            days.add(new Node.Call("date", List.of(new Node.Str(close.toString()))));
         }
         if (days.isEmpty()) {
             return new Node.Bool(false);
@@ -239,10 +231,10 @@ final class ContextFunctions {
             return e.emit(new Node.Call("lag", List.of(closing, new Node.Num(1, true), date)), inAgg);
         }
         TimeWindows.Context t = time(e);
-        LocalDate before = t.calendar().previous(start(t.asOf(), period));
+        LocalDate before = Periods.openingDay(t.asOf(), period, t.calendar());
         if (Dataset.DATE.equals(col.column())) {
             // the business date of a snapshot: that day's rows are another partition
-            return contexts(e, "opening").register(Contexts.Kind.DATED, kept(agg, e), null, null, null, null, before, null, null);
+            return contexts(e, "opening").register(FilterContext.Kind.DATED, kept(agg, e), null, null, null, null, before, null, null);
         }
         return e.restricted(new Node.Bin("==", date, new Node.Call("date", List.of(new Node.Str(before.toString())))), agg, inAgg);
     }
@@ -279,7 +271,7 @@ final class ContextFunctions {
                 case Node.Call c when "shift_date".equals(c.function()) -> {
                     List<Node> pos = Node.positional(c);
                     LocalDate base = constantOrNull(e, pos.get(0));
-                    yield base == null ? null : shift(base, count(pos.get(1)), unit(c), time(e).calendar());
+                    yield base == null ? null : DatePartFunctions.shift(base, count(pos.get(1)), unit(c), time(e).calendar());
                 }
                 default -> null;
             };
@@ -301,28 +293,10 @@ final class ContextFunctions {
     private static String unit(Node.Call c) {
         Node.Call u = Node.keyword(c, "unit");
         String unit = u == null || u.args().isEmpty() || !(u.args().get(0) instanceof Node.Str s) ? "business-day" : s.value();
-        if (!UNITS.contains(unit)) {
-            throw new DrishtiException(ErrorCode.QUERY_INVALID, "shift_date(): unit is one of " + new java.util.TreeSet<>(UNITS) + ", not '" + unit + "'");
+        if (!DatePartFunctions.UNITS.contains(unit)) {
+            throw new DrishtiException(ErrorCode.QUERY_INVALID, "shift_date(): unit is one of " + new java.util.TreeSet<>(DatePartFunctions.UNITS) + ", not '" + unit + "'");
         }
         return unit;
-    }
-
-    /** A date moved by {@code n} units (business days on the calendar: holidays and weekends skipped). */
-    static LocalDate shift(LocalDate d, int n, String unit, BusinessCalendar cal) {
-        return switch (unit) {
-            case "day" -> d.plusDays(n);
-            case "week" -> d.plusWeeks(n);
-            case "month" -> d.plusMonths(n);
-            case "quarter" -> d.plusMonths(3L * n);
-            case "year" -> d.plusYears(n);
-            default -> {
-                LocalDate x = d;
-                for (int i = 0; i < Math.abs(n); i++) {
-                    x = n < 0 ? cal.previous(x) : cal.next(x);
-                }
-                yield x;
-            }
-        };
     }
 
     private static String shiftDate(SqlEmitter e, Node.Call c, boolean inAgg) {
@@ -351,32 +325,5 @@ final class ContextFunctions {
         };
         e.params().add(n);
         return "CAST(CAST(" + d + " AS DATE) + " + interval + " AS DATE)";
-    }
-
-    /** The first day of the period that holds {@code d}. */
-    static LocalDate start(LocalDate d, String period) {
-        return switch (period) {
-            case "day" -> d;
-            case "week" -> d.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-            case "month" -> d.withDayOfMonth(1);
-            case "quarter" -> LocalDate.of(d.getYear(), ((d.getMonthValue() - 1) / 3) * 3 + 1, 1);
-            default -> LocalDate.of(d.getYear(), 1, 1);
-        };
-    }
-
-    /** The first day of the period after the one starting at {@code start}. */
-    static LocalDate next(LocalDate start, String period) {
-        return switch (period) {
-            case "day" -> start.plusDays(1);
-            case "week" -> start.plusWeeks(1);
-            case "month" -> start.plusMonths(1);
-            case "quarter" -> start.plusMonths(3);
-            default -> start.plusYears(1);
-        };
-    }
-
-    /** The business day on or before {@code d}. */
-    static LocalDate onOrBefore(BusinessCalendar cal, LocalDate d) {
-        return cal.isBusinessDay(d) ? d : cal.previous(d);
     }
 }

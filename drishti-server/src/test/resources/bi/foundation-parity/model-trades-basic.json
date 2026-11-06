@@ -1,0 +1,1493 @@
+{
+  "admin" : {
+    "Average MTM per trade | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18884.4375 ] ]
+    },
+    "Average MTM per trade | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18885.4375 ] ]
+    },
+    "Average MTM per trade | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      } ]
+    },
+    "Average MTM per trade | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 26514.25 ], [ "portfolio-1", 13007.5 ], [ "portfolio-2", -499.25 ], [ "portfolio-3", 36519.25 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      } ]
+    },
+    "Average MTM per trade | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -14006.0 ] ]
+    },
+    "Average MTM per trade | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", -14006.0 ], [ "DESK-1", "portfolio-0", 3002.5 ], [ "DESK-2", "portfolio-3", 13007.5 ], [ "DESK-3", "portfolio-2", 23012.5 ], [ "DESK-4", "portfolio-1", 40021.0 ], [ "DESK-5", "portfolio-0", 50026.0 ], [ "DESK-6", "portfolio-3", 60031.0 ], [ "DESK-7", "portfolio-2", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+      } ]
+    },
+    "Average MTM per trade | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18884.9375 ] ]
+    },
+    "MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151075.5 ] ]
+    },
+    "MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "MTM | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      } ]
+    },
+    "MTM | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 53028.5 ], [ "portfolio-1", 26015.0 ], [ "portfolio-2", -998.5 ], [ "portfolio-3", 73038.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      } ]
+    },
+    "MTM | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -14006.0 ] ]
+    },
+    "MTM | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", -14006.0 ], [ "DESK-1", "portfolio-0", 3002.5 ], [ "DESK-2", "portfolio-3", 13007.5 ], [ "DESK-3", "portfolio-2", 23012.5 ], [ "DESK-4", "portfolio-1", 40021.0 ], [ "DESK-5", "portfolio-0", 50026.0 ], [ "DESK-6", "portfolio-3", 60031.0 ], [ "DESK-7", "portfolio-2", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+      } ]
+    },
+    "MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "Notional | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187093.5 ] ]
+    },
+    "Notional | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "Notional | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5 ], [ "DESK-1", 58030.0 ], [ "DESK-2", 68035.0 ], [ "DESK-3", -23010.5 ], [ "DESK-4", -6002.0 ], [ "DESK-5", 4003.0 ], [ "DESK-6", 14008.0 ], [ "DESK-7", 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "Notional | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 62033.0 ], [ "portfolio-1", 35019.5 ], [ "portfolio-2", 8006.0 ], [ "portfolio-3", 82043.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "Notional | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 41021.5 ] ]
+    },
+    "Notional | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", 41021.5 ], [ "DESK-1", "portfolio-0", 58030.0 ], [ "DESK-2", "portfolio-3", 68035.0 ], [ "DESK-3", "portfolio-2", -23010.5 ], [ "DESK-4", "portfolio-1", -6002.0 ], [ "DESK-5", "portfolio-0", 4003.0 ], [ "DESK-6", "portfolio-3", 14008.0 ], [ "DESK-7", "portfolio-2", 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", 41021.5 ], [ "DESK-1", 58030.0 ], [ "DESK-2", 68035.0 ], [ "DESK-3", -23010.5 ], [ "DESK-4", -6002.0 ], [ "DESK-5", 4003.0 ], [ "DESK-6", 14008.0 ], [ "DESK-7", 31016.5 ] ]
+      } ]
+    },
+    "Notional | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "Trades | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day2 | by trade.DESK" : {
+      "refused" : "DRS-9020"
+    },
+    "Trades | as-of-day2 | by trade.PORTFOLIO" : {
+      "refused" : "DRS-9020"
+    },
+    "Trades | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Trades | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", 1 ], [ "DESK-1", "portfolio-0", 1 ], [ "DESK-2", "portfolio-3", 1 ], [ "DESK-3", "portfolio-2", 1 ], [ "DESK-4", "portfolio-1", 1 ], [ "DESK-5", "portfolio-0", 1 ], [ "DESK-6", "portfolio-3", 1 ], [ "DESK-7", "portfolio-2", 1 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 8.0 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", 1.0 ], [ "DESK-1", 1.0 ], [ "DESK-2", 1.0 ], [ "DESK-3", 1.0 ], [ "DESK-4", 1.0 ], [ "DESK-5", 1.0 ], [ "DESK-6", 1.0 ], [ "DESK-7", 1.0 ] ]
+      } ]
+    },
+    "Trades | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "calc Notional | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5, 187101.5, 187101.5, 0.2192473069430229, 41021.5 ], [ "DESK-1", 58030.0, 187101.5, 187101.5, 0.3101525108029599, null ], [ "DESK-2", 68035.0, 187101.5, 187101.5, 0.36362616013233456, null ], [ "DESK-3", -23010.5, 187101.5, 187101.5, -0.12298404876497517, null ], [ "DESK-4", -6002.0, 187101.5, 187101.5, -0.03207884490503817, null ], [ "DESK-5", 4003.0, 187101.5, 187101.5, 0.021394804424336524, null ], [ "DESK-6", 14008.0, 187101.5, 187101.5, 0.07486845375371122, null ], [ "DESK-7", 31016.5, 187101.5, 187101.5, 0.1657736576136482, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "calc Notional | by trade.DESK | slicer = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5, 187101.5, 187101.5, 0.2192473069430229, 41021.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 41021.5 ] ]
+      } ]
+    },
+    "rows of trade" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "a24af1b1e25c82b7a8883538f9aa0eca9c25c0e948c8cbf6c003739cbea32279"
+    }
+  },
+  "analyst" : {
+    "Average MTM per trade | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18884.4375 ] ]
+    },
+    "Average MTM per trade | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18885.4375 ] ]
+    },
+    "Average MTM per trade | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      } ]
+    },
+    "Average MTM per trade | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 26514.25 ], [ "portfolio-1", 13007.5 ], [ "portfolio-2", -499.25 ], [ "portfolio-3", 36519.25 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      } ]
+    },
+    "Average MTM per trade | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -14006.0 ] ]
+    },
+    "Average MTM per trade | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", -14006.0 ], [ "DESK-1", "portfolio-0", 3002.5 ], [ "DESK-2", "portfolio-3", 13007.5 ], [ "DESK-3", "portfolio-2", 23012.5 ], [ "DESK-4", "portfolio-1", 40021.0 ], [ "DESK-5", "portfolio-0", 50026.0 ], [ "DESK-6", "portfolio-3", 60031.0 ], [ "DESK-7", "portfolio-2", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+      } ]
+    },
+    "Average MTM per trade | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18884.9375 ] ]
+    },
+    "MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151075.5 ] ]
+    },
+    "MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "MTM | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      } ]
+    },
+    "MTM | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 53028.5 ], [ "portfolio-1", 26015.0 ], [ "portfolio-2", -998.5 ], [ "portfolio-3", 73038.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      } ]
+    },
+    "MTM | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -14006.0 ] ]
+    },
+    "MTM | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", -14006.0 ], [ "DESK-1", "portfolio-0", 3002.5 ], [ "DESK-2", "portfolio-3", 13007.5 ], [ "DESK-3", "portfolio-2", 23012.5 ], [ "DESK-4", "portfolio-1", 40021.0 ], [ "DESK-5", "portfolio-0", 50026.0 ], [ "DESK-6", "portfolio-3", 60031.0 ], [ "DESK-7", "portfolio-2", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+      } ]
+    },
+    "MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "Notional | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187093.5 ] ]
+    },
+    "Notional | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "Notional | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5 ], [ "DESK-1", 58030.0 ], [ "DESK-2", 68035.0 ], [ "DESK-3", -23010.5 ], [ "DESK-4", -6002.0 ], [ "DESK-5", 4003.0 ], [ "DESK-6", 14008.0 ], [ "DESK-7", 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "Notional | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 62033.0 ], [ "portfolio-1", 35019.5 ], [ "portfolio-2", 8006.0 ], [ "portfolio-3", 82043.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "Notional | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 41021.5 ] ]
+    },
+    "Notional | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", 41021.5 ], [ "DESK-1", "portfolio-0", 58030.0 ], [ "DESK-2", "portfolio-3", 68035.0 ], [ "DESK-3", "portfolio-2", -23010.5 ], [ "DESK-4", "portfolio-1", -6002.0 ], [ "DESK-5", "portfolio-0", 4003.0 ], [ "DESK-6", "portfolio-3", 14008.0 ], [ "DESK-7", "portfolio-2", 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", 41021.5 ], [ "DESK-1", 58030.0 ], [ "DESK-2", 68035.0 ], [ "DESK-3", -23010.5 ], [ "DESK-4", -6002.0 ], [ "DESK-5", 4003.0 ], [ "DESK-6", 14008.0 ], [ "DESK-7", 31016.5 ] ]
+      } ]
+    },
+    "Notional | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "Trades | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day2 | by trade.DESK" : {
+      "refused" : "DRS-9020"
+    },
+    "Trades | as-of-day2 | by trade.PORTFOLIO" : {
+      "refused" : "DRS-9020"
+    },
+    "Trades | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Trades | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", 1 ], [ "DESK-1", "portfolio-0", 1 ], [ "DESK-2", "portfolio-3", 1 ], [ "DESK-3", "portfolio-2", 1 ], [ "DESK-4", "portfolio-1", 1 ], [ "DESK-5", "portfolio-0", 1 ], [ "DESK-6", "portfolio-3", 1 ], [ "DESK-7", "portfolio-2", 1 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 8.0 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", 1.0 ], [ "DESK-1", 1.0 ], [ "DESK-2", 1.0 ], [ "DESK-3", 1.0 ], [ "DESK-4", 1.0 ], [ "DESK-5", 1.0 ], [ "DESK-6", 1.0 ], [ "DESK-7", 1.0 ] ]
+      } ]
+    },
+    "Trades | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "calc Notional | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5, 187101.5, 187101.5, 0.2192473069430229, 41021.5 ], [ "DESK-1", 58030.0, 187101.5, 187101.5, 0.3101525108029599, null ], [ "DESK-2", 68035.0, 187101.5, 187101.5, 0.36362616013233456, null ], [ "DESK-3", -23010.5, 187101.5, 187101.5, -0.12298404876497517, null ], [ "DESK-4", -6002.0, 187101.5, 187101.5, -0.03207884490503817, null ], [ "DESK-5", 4003.0, 187101.5, 187101.5, 0.021394804424336524, null ], [ "DESK-6", 14008.0, 187101.5, 187101.5, 0.07486845375371122, null ], [ "DESK-7", 31016.5, 187101.5, 187101.5, 0.1657736576136482, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "calc Notional | by trade.DESK | slicer = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5, 187101.5, 187101.5, 0.2192473069430229, 41021.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 41021.5 ] ]
+      } ]
+    },
+    "rows of trade" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "a24af1b1e25c82b7a8883538f9aa0eca9c25c0e948c8cbf6c003739cbea32279"
+    }
+  },
+  "desk-head-no-desks" : {
+    "Average MTM per trade | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18884.4375 ] ]
+    },
+    "Average MTM per trade | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18885.4375 ] ]
+    },
+    "Average MTM per trade | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      } ]
+    },
+    "Average MTM per trade | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 26514.25 ], [ "portfolio-1", 13007.5 ], [ "portfolio-2", -499.25 ], [ "portfolio-3", 36519.25 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      } ]
+    },
+    "Average MTM per trade | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -14006.0 ] ]
+    },
+    "Average MTM per trade | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", -14006.0 ], [ "DESK-1", "portfolio-0", 3002.5 ], [ "DESK-2", "portfolio-3", 13007.5 ], [ "DESK-3", "portfolio-2", 23012.5 ], [ "DESK-4", "portfolio-1", 40021.0 ], [ "DESK-5", "portfolio-0", 50026.0 ], [ "DESK-6", "portfolio-3", 60031.0 ], [ "DESK-7", "portfolio-2", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+      } ]
+    },
+    "Average MTM per trade | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18884.9375 ] ]
+    },
+    "MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151075.5 ] ]
+    },
+    "MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "MTM | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      } ]
+    },
+    "MTM | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 53028.5 ], [ "portfolio-1", 26015.0 ], [ "portfolio-2", -998.5 ], [ "portfolio-3", 73038.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      } ]
+    },
+    "MTM | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -14006.0 ] ]
+    },
+    "MTM | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", -14006.0 ], [ "DESK-1", "portfolio-0", 3002.5 ], [ "DESK-2", "portfolio-3", 13007.5 ], [ "DESK-3", "portfolio-2", 23012.5 ], [ "DESK-4", "portfolio-1", 40021.0 ], [ "DESK-5", "portfolio-0", 50026.0 ], [ "DESK-6", "portfolio-3", 60031.0 ], [ "DESK-7", "portfolio-2", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+      } ]
+    },
+    "MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "Notional | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187093.5 ] ]
+    },
+    "Notional | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "Notional | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5 ], [ "DESK-1", 58030.0 ], [ "DESK-2", 68035.0 ], [ "DESK-3", -23010.5 ], [ "DESK-4", -6002.0 ], [ "DESK-5", 4003.0 ], [ "DESK-6", 14008.0 ], [ "DESK-7", 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "Notional | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 62033.0 ], [ "portfolio-1", 35019.5 ], [ "portfolio-2", 8006.0 ], [ "portfolio-3", 82043.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "Notional | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 41021.5 ] ]
+    },
+    "Notional | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", 41021.5 ], [ "DESK-1", "portfolio-0", 58030.0 ], [ "DESK-2", "portfolio-3", 68035.0 ], [ "DESK-3", "portfolio-2", -23010.5 ], [ "DESK-4", "portfolio-1", -6002.0 ], [ "DESK-5", "portfolio-0", 4003.0 ], [ "DESK-6", "portfolio-3", 14008.0 ], [ "DESK-7", "portfolio-2", 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", 41021.5 ], [ "DESK-1", 58030.0 ], [ "DESK-2", 68035.0 ], [ "DESK-3", -23010.5 ], [ "DESK-4", -6002.0 ], [ "DESK-5", 4003.0 ], [ "DESK-6", 14008.0 ], [ "DESK-7", 31016.5 ] ]
+      } ]
+    },
+    "Notional | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "Trades | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day2 | by trade.DESK" : {
+      "refused" : "DRS-9020"
+    },
+    "Trades | as-of-day2 | by trade.PORTFOLIO" : {
+      "refused" : "DRS-9020"
+    },
+    "Trades | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Trades | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", 1 ], [ "DESK-1", "portfolio-0", 1 ], [ "DESK-2", "portfolio-3", 1 ], [ "DESK-3", "portfolio-2", 1 ], [ "DESK-4", "portfolio-1", 1 ], [ "DESK-5", "portfolio-0", 1 ], [ "DESK-6", "portfolio-3", 1 ], [ "DESK-7", "portfolio-2", 1 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 8.0 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", 1.0 ], [ "DESK-1", 1.0 ], [ "DESK-2", 1.0 ], [ "DESK-3", 1.0 ], [ "DESK-4", 1.0 ], [ "DESK-5", 1.0 ], [ "DESK-6", 1.0 ], [ "DESK-7", 1.0 ] ]
+      } ]
+    },
+    "Trades | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "calc Notional | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5, 187101.5, 187101.5, 0.2192473069430229, 41021.5 ], [ "DESK-1", 58030.0, 187101.5, 187101.5, 0.3101525108029599, null ], [ "DESK-2", 68035.0, 187101.5, 187101.5, 0.36362616013233456, null ], [ "DESK-3", -23010.5, 187101.5, 187101.5, -0.12298404876497517, null ], [ "DESK-4", -6002.0, 187101.5, 187101.5, -0.03207884490503817, null ], [ "DESK-5", 4003.0, 187101.5, 187101.5, 0.021394804424336524, null ], [ "DESK-6", 14008.0, 187101.5, 187101.5, 0.07486845375371122, null ], [ "DESK-7", 31016.5, 187101.5, 187101.5, 0.1657736576136482, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "calc Notional | by trade.DESK | slicer = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5, 187101.5, 187101.5, 0.2192473069430229, 41021.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 41021.5 ] ]
+      } ]
+    },
+    "rows of trade" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "a24af1b1e25c82b7a8883538f9aa0eca9c25c0e948c8cbf6c003739cbea32279"
+    }
+  },
+  "desk-head-two-desks" : {
+    "Average MTM per trade | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18884.4375 ] ]
+    },
+    "Average MTM per trade | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18885.4375 ] ]
+    },
+    "Average MTM per trade | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      } ]
+    },
+    "Average MTM per trade | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 26514.25 ], [ "portfolio-1", 13007.5 ], [ "portfolio-2", -499.25 ], [ "portfolio-3", 36519.25 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      } ]
+    },
+    "Average MTM per trade | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -14006.0 ] ]
+    },
+    "Average MTM per trade | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", -14006.0 ], [ "DESK-1", "portfolio-0", 3002.5 ], [ "DESK-2", "portfolio-3", 13007.5 ], [ "DESK-3", "portfolio-2", 23012.5 ], [ "DESK-4", "portfolio-1", 40021.0 ], [ "DESK-5", "portfolio-0", 50026.0 ], [ "DESK-6", "portfolio-3", 60031.0 ], [ "DESK-7", "portfolio-2", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+      } ]
+    },
+    "Average MTM per trade | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18884.9375 ] ]
+    },
+    "MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151075.5 ] ]
+    },
+    "MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "MTM | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      } ]
+    },
+    "MTM | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 53028.5 ], [ "portfolio-1", 26015.0 ], [ "portfolio-2", -998.5 ], [ "portfolio-3", 73038.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      } ]
+    },
+    "MTM | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -14006.0 ] ]
+    },
+    "MTM | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", -14006.0 ], [ "DESK-1", "portfolio-0", 3002.5 ], [ "DESK-2", "portfolio-3", 13007.5 ], [ "DESK-3", "portfolio-2", 23012.5 ], [ "DESK-4", "portfolio-1", 40021.0 ], [ "DESK-5", "portfolio-0", 50026.0 ], [ "DESK-6", "portfolio-3", 60031.0 ], [ "DESK-7", "portfolio-2", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+      } ]
+    },
+    "MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "Notional | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187093.5 ] ]
+    },
+    "Notional | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "Notional | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5 ], [ "DESK-1", 58030.0 ], [ "DESK-2", 68035.0 ], [ "DESK-3", -23010.5 ], [ "DESK-4", -6002.0 ], [ "DESK-5", 4003.0 ], [ "DESK-6", 14008.0 ], [ "DESK-7", 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "Notional | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 62033.0 ], [ "portfolio-1", 35019.5 ], [ "portfolio-2", 8006.0 ], [ "portfolio-3", 82043.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "Notional | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 41021.5 ] ]
+    },
+    "Notional | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", 41021.5 ], [ "DESK-1", "portfolio-0", 58030.0 ], [ "DESK-2", "portfolio-3", 68035.0 ], [ "DESK-3", "portfolio-2", -23010.5 ], [ "DESK-4", "portfolio-1", -6002.0 ], [ "DESK-5", "portfolio-0", 4003.0 ], [ "DESK-6", "portfolio-3", 14008.0 ], [ "DESK-7", "portfolio-2", 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", 41021.5 ], [ "DESK-1", 58030.0 ], [ "DESK-2", 68035.0 ], [ "DESK-3", -23010.5 ], [ "DESK-4", -6002.0 ], [ "DESK-5", 4003.0 ], [ "DESK-6", 14008.0 ], [ "DESK-7", 31016.5 ] ]
+      } ]
+    },
+    "Notional | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "Trades | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day2 | by trade.DESK" : {
+      "refused" : "DRS-9020"
+    },
+    "Trades | as-of-day2 | by trade.PORTFOLIO" : {
+      "refused" : "DRS-9020"
+    },
+    "Trades | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Trades | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", 1 ], [ "DESK-1", "portfolio-0", 1 ], [ "DESK-2", "portfolio-3", 1 ], [ "DESK-3", "portfolio-2", 1 ], [ "DESK-4", "portfolio-1", 1 ], [ "DESK-5", "portfolio-0", 1 ], [ "DESK-6", "portfolio-3", 1 ], [ "DESK-7", "portfolio-2", 1 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 8.0 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", 1.0 ], [ "DESK-1", 1.0 ], [ "DESK-2", 1.0 ], [ "DESK-3", 1.0 ], [ "DESK-4", 1.0 ], [ "DESK-5", 1.0 ], [ "DESK-6", 1.0 ], [ "DESK-7", 1.0 ] ]
+      } ]
+    },
+    "Trades | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "calc Notional | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5, 187101.5, 187101.5, 0.2192473069430229, 41021.5 ], [ "DESK-1", 58030.0, 187101.5, 187101.5, 0.3101525108029599, null ], [ "DESK-2", 68035.0, 187101.5, 187101.5, 0.36362616013233456, null ], [ "DESK-3", -23010.5, 187101.5, 187101.5, -0.12298404876497517, null ], [ "DESK-4", -6002.0, 187101.5, 187101.5, -0.03207884490503817, null ], [ "DESK-5", 4003.0, 187101.5, 187101.5, 0.021394804424336524, null ], [ "DESK-6", 14008.0, 187101.5, 187101.5, 0.07486845375371122, null ], [ "DESK-7", 31016.5, 187101.5, 187101.5, 0.1657736576136482, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "calc Notional | by trade.DESK | slicer = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5, 187101.5, 187101.5, 0.2192473069430229, 41021.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 41021.5 ] ]
+      } ]
+    },
+    "rows of trade" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "a24af1b1e25c82b7a8883538f9aa0eca9c25c0e948c8cbf6c003739cbea32279"
+    }
+  },
+  "no-raw-power" : {
+    "Average MTM per trade | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18884.4375 ] ]
+    },
+    "Average MTM per trade | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18885.4375 ] ]
+    },
+    "Average MTM per trade | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      } ]
+    },
+    "Average MTM per trade | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 26514.25 ], [ "portfolio-1", 13007.5 ], [ "portfolio-2", -499.25 ], [ "portfolio-3", 36519.25 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      } ]
+    },
+    "Average MTM per trade | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -14006.0 ] ]
+    },
+    "Average MTM per trade | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", -14006.0 ], [ "DESK-1", "portfolio-0", 3002.5 ], [ "DESK-2", "portfolio-3", 13007.5 ], [ "DESK-3", "portfolio-2", 23012.5 ], [ "DESK-4", "portfolio-1", 40021.0 ], [ "DESK-5", "portfolio-0", 50026.0 ], [ "DESK-6", "portfolio-3", 60031.0 ], [ "DESK-7", "portfolio-2", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+      } ]
+    },
+    "Average MTM per trade | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18884.9375 ] ]
+    },
+    "MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151075.5 ] ]
+    },
+    "MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "MTM | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      } ]
+    },
+    "MTM | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 53028.5 ], [ "portfolio-1", 26015.0 ], [ "portfolio-2", -998.5 ], [ "portfolio-3", 73038.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      } ]
+    },
+    "MTM | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -14006.0 ] ]
+    },
+    "MTM | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", -14006.0 ], [ "DESK-1", "portfolio-0", 3002.5 ], [ "DESK-2", "portfolio-3", 13007.5 ], [ "DESK-3", "portfolio-2", 23012.5 ], [ "DESK-4", "portfolio-1", 40021.0 ], [ "DESK-5", "portfolio-0", 50026.0 ], [ "DESK-6", "portfolio-3", 60031.0 ], [ "DESK-7", "portfolio-2", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+      } ]
+    },
+    "MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "Notional | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187093.5 ] ]
+    },
+    "Notional | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "Notional | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5 ], [ "DESK-1", 58030.0 ], [ "DESK-2", 68035.0 ], [ "DESK-3", -23010.5 ], [ "DESK-4", -6002.0 ], [ "DESK-5", 4003.0 ], [ "DESK-6", 14008.0 ], [ "DESK-7", 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "Notional | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 62033.0 ], [ "portfolio-1", 35019.5 ], [ "portfolio-2", 8006.0 ], [ "portfolio-3", 82043.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "Notional | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 41021.5 ] ]
+    },
+    "Notional | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", 41021.5 ], [ "DESK-1", "portfolio-0", 58030.0 ], [ "DESK-2", "portfolio-3", 68035.0 ], [ "DESK-3", "portfolio-2", -23010.5 ], [ "DESK-4", "portfolio-1", -6002.0 ], [ "DESK-5", "portfolio-0", 4003.0 ], [ "DESK-6", "portfolio-3", 14008.0 ], [ "DESK-7", "portfolio-2", 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", 41021.5 ], [ "DESK-1", 58030.0 ], [ "DESK-2", 68035.0 ], [ "DESK-3", -23010.5 ], [ "DESK-4", -6002.0 ], [ "DESK-5", 4003.0 ], [ "DESK-6", 14008.0 ], [ "DESK-7", 31016.5 ] ]
+      } ]
+    },
+    "Notional | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "Trades | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day2 | by trade.DESK" : {
+      "refused" : "DRS-9020"
+    },
+    "Trades | as-of-day2 | by trade.PORTFOLIO" : {
+      "refused" : "DRS-9020"
+    },
+    "Trades | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Trades | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", 1 ], [ "DESK-1", "portfolio-0", 1 ], [ "DESK-2", "portfolio-3", 1 ], [ "DESK-3", "portfolio-2", 1 ], [ "DESK-4", "portfolio-1", 1 ], [ "DESK-5", "portfolio-0", 1 ], [ "DESK-6", "portfolio-3", 1 ], [ "DESK-7", "portfolio-2", 1 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 8.0 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", 1.0 ], [ "DESK-1", 1.0 ], [ "DESK-2", 1.0 ], [ "DESK-3", 1.0 ], [ "DESK-4", 1.0 ], [ "DESK-5", 1.0 ], [ "DESK-6", 1.0 ], [ "DESK-7", 1.0 ] ]
+      } ]
+    },
+    "Trades | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "calc Notional | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5, 187101.5, 187101.5, 0.2192473069430229, 41021.5 ], [ "DESK-1", 58030.0, 187101.5, 187101.5, 0.3101525108029599, null ], [ "DESK-2", 68035.0, 187101.5, 187101.5, 0.36362616013233456, null ], [ "DESK-3", -23010.5, 187101.5, 187101.5, -0.12298404876497517, null ], [ "DESK-4", -6002.0, 187101.5, 187101.5, -0.03207884490503817, null ], [ "DESK-5", 4003.0, 187101.5, 187101.5, 0.021394804424336524, null ], [ "DESK-6", 14008.0, 187101.5, 187101.5, 0.07486845375371122, null ], [ "DESK-7", 31016.5, 187101.5, 187101.5, 0.1657736576136482, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "calc Notional | by trade.DESK | slicer = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5, 187101.5, 187101.5, 0.2192473069430229, 41021.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 41021.5 ] ]
+      } ]
+    },
+    "rows of trade" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "a24af1b1e25c82b7a8883538f9aa0eca9c25c0e948c8cbf6c003739cbea32279"
+    }
+  },
+  "risk" : {
+    "Average MTM per trade | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18884.4375 ] ]
+    },
+    "Average MTM per trade | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18885.4375 ] ]
+    },
+    "Average MTM per trade | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      } ]
+    },
+    "Average MTM per trade | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 26514.25 ], [ "portfolio-1", 13007.5 ], [ "portfolio-2", -499.25 ], [ "portfolio-3", 36519.25 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      } ]
+    },
+    "Average MTM per trade | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -14006.0 ] ]
+    },
+    "Average MTM per trade | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", -14006.0 ], [ "DESK-1", "portfolio-0", 3002.5 ], [ "DESK-2", "portfolio-3", 13007.5 ], [ "DESK-3", "portfolio-2", 23012.5 ], [ "DESK-4", "portfolio-1", 40021.0 ], [ "DESK-5", "portfolio-0", 50026.0 ], [ "DESK-6", "portfolio-3", 60031.0 ], [ "DESK-7", "portfolio-2", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+      } ]
+    },
+    "Average MTM per trade | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18884.9375 ] ]
+    },
+    "MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151075.5 ] ]
+    },
+    "MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "MTM | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      } ]
+    },
+    "MTM | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 53028.5 ], [ "portfolio-1", 26015.0 ], [ "portfolio-2", -998.5 ], [ "portfolio-3", 73038.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      } ]
+    },
+    "MTM | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -14006.0 ] ]
+    },
+    "MTM | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", -14006.0 ], [ "DESK-1", "portfolio-0", 3002.5 ], [ "DESK-2", "portfolio-3", 13007.5 ], [ "DESK-3", "portfolio-2", 23012.5 ], [ "DESK-4", "portfolio-1", 40021.0 ], [ "DESK-5", "portfolio-0", 50026.0 ], [ "DESK-6", "portfolio-3", 60031.0 ], [ "DESK-7", "portfolio-2", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+      } ]
+    },
+    "MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "Notional | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187093.5 ] ]
+    },
+    "Notional | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "Notional | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5 ], [ "DESK-1", 58030.0 ], [ "DESK-2", 68035.0 ], [ "DESK-3", -23010.5 ], [ "DESK-4", -6002.0 ], [ "DESK-5", 4003.0 ], [ "DESK-6", 14008.0 ], [ "DESK-7", 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "Notional | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 62033.0 ], [ "portfolio-1", 35019.5 ], [ "portfolio-2", 8006.0 ], [ "portfolio-3", 82043.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "Notional | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 41021.5 ] ]
+    },
+    "Notional | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", 41021.5 ], [ "DESK-1", "portfolio-0", 58030.0 ], [ "DESK-2", "portfolio-3", 68035.0 ], [ "DESK-3", "portfolio-2", -23010.5 ], [ "DESK-4", "portfolio-1", -6002.0 ], [ "DESK-5", "portfolio-0", 4003.0 ], [ "DESK-6", "portfolio-3", 14008.0 ], [ "DESK-7", "portfolio-2", 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", 41021.5 ], [ "DESK-1", 58030.0 ], [ "DESK-2", 68035.0 ], [ "DESK-3", -23010.5 ], [ "DESK-4", -6002.0 ], [ "DESK-5", 4003.0 ], [ "DESK-6", 14008.0 ], [ "DESK-7", 31016.5 ] ]
+      } ]
+    },
+    "Notional | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "Trades | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day2 | by trade.DESK" : {
+      "refused" : "DRS-9020"
+    },
+    "Trades | as-of-day2 | by trade.PORTFOLIO" : {
+      "refused" : "DRS-9020"
+    },
+    "Trades | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Trades | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", 1 ], [ "DESK-1", "portfolio-0", 1 ], [ "DESK-2", "portfolio-3", 1 ], [ "DESK-3", "portfolio-2", 1 ], [ "DESK-4", "portfolio-1", 1 ], [ "DESK-5", "portfolio-0", 1 ], [ "DESK-6", "portfolio-3", 1 ], [ "DESK-7", "portfolio-2", 1 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 8.0 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", 1.0 ], [ "DESK-1", 1.0 ], [ "DESK-2", 1.0 ], [ "DESK-3", 1.0 ], [ "DESK-4", 1.0 ], [ "DESK-5", 1.0 ], [ "DESK-6", 1.0 ], [ "DESK-7", 1.0 ] ]
+      } ]
+    },
+    "Trades | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "calc Notional | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5, 187101.5, 187101.5, 0.2192473069430229, 41021.5 ], [ "DESK-1", 58030.0, 187101.5, 187101.5, 0.3101525108029599, null ], [ "DESK-2", 68035.0, 187101.5, 187101.5, 0.36362616013233456, null ], [ "DESK-3", -23010.5, 187101.5, 187101.5, -0.12298404876497517, null ], [ "DESK-4", -6002.0, 187101.5, 187101.5, -0.03207884490503817, null ], [ "DESK-5", 4003.0, 187101.5, 187101.5, 0.021394804424336524, null ], [ "DESK-6", 14008.0, 187101.5, 187101.5, 0.07486845375371122, null ], [ "DESK-7", 31016.5, 187101.5, 187101.5, 0.1657736576136482, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "calc Notional | by trade.DESK | slicer = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5, 187101.5, 187101.5, 0.2192473069430229, 41021.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 41021.5 ] ]
+      } ]
+    },
+    "rows of trade" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "a24af1b1e25c82b7a8883538f9aa0eca9c25c0e948c8cbf6c003739cbea32279"
+    }
+  },
+  "unnamed-role" : {
+    "Average MTM per trade | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18884.4375 ] ]
+    },
+    "Average MTM per trade | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18885.4375 ] ]
+    },
+    "Average MTM per trade | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      } ]
+    },
+    "Average MTM per trade | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 26514.25 ], [ "portfolio-1", 13007.5 ], [ "portfolio-2", -499.25 ], [ "portfolio-3", 36519.25 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      } ]
+    },
+    "Average MTM per trade | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -14006.0 ] ]
+    },
+    "Average MTM per trade | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", -14006.0 ], [ "DESK-1", "portfolio-0", 3002.5 ], [ "DESK-2", "portfolio-3", 13007.5 ], [ "DESK-3", "portfolio-2", 23012.5 ], [ "DESK-4", "portfolio-1", 40021.0 ], [ "DESK-5", "portfolio-0", 50026.0 ], [ "DESK-6", "portfolio-3", 60031.0 ], [ "DESK-7", "portfolio-2", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 18885.4375 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+      } ]
+    },
+    "Average MTM per trade | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 18884.9375 ] ]
+    },
+    "MTM | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151075.5 ] ]
+    },
+    "MTM | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "MTM | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      } ]
+    },
+    "MTM | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 53028.5 ], [ "portfolio-1", 26015.0 ], [ "portfolio-2", -998.5 ], [ "portfolio-3", 73038.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      } ]
+    },
+    "MTM | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ -14006.0 ] ]
+    },
+    "MTM | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", -14006.0 ], [ "DESK-1", "portfolio-0", 3002.5 ], [ "DESK-2", "portfolio-3", 13007.5 ], [ "DESK-3", "portfolio-2", 23012.5 ], [ "DESK-4", "portfolio-1", 40021.0 ], [ "DESK-5", "portfolio-0", 50026.0 ], [ "DESK-6", "portfolio-3", 60031.0 ], [ "DESK-7", "portfolio-2", -24011.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 151083.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", -14006.0 ], [ "DESK-1", 3002.5 ], [ "DESK-2", 13007.5 ], [ "DESK-3", 23012.5 ], [ "DESK-4", 40021.0 ], [ "DESK-5", 50026.0 ], [ "DESK-6", 60031.0 ], [ "DESK-7", -24011.0 ] ]
+      } ]
+    },
+    "MTM | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 151083.5 ] ]
+    },
+    "Notional | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187093.5 ] ]
+    },
+    "Notional | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "Notional | as-of-day2 | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5 ], [ "DESK-1", 58030.0 ], [ "DESK-2", 68035.0 ], [ "DESK-3", -23010.5 ], [ "DESK-4", -6002.0 ], [ "DESK-5", 4003.0 ], [ "DESK-6", 14008.0 ], [ "DESK-7", 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "Notional | as-of-day2 | by trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "portfolio-0", 62033.0 ], [ "portfolio-1", 35019.5 ], [ "portfolio-2", 8006.0 ], [ "portfolio-3", 82043.0 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "Notional | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 41021.5 ] ]
+    },
+    "Notional | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", 41021.5 ], [ "DESK-1", "portfolio-0", 58030.0 ], [ "DESK-2", "portfolio-3", 68035.0 ], [ "DESK-3", "portfolio-2", -23010.5 ], [ "DESK-4", "portfolio-1", -6002.0 ], [ "DESK-5", "portfolio-0", 4003.0 ], [ "DESK-6", "portfolio-3", 14008.0 ], [ "DESK-7", "portfolio-2", 31016.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", 41021.5 ], [ "DESK-1", 58030.0 ], [ "DESK-2", 68035.0 ], [ "DESK-3", -23010.5 ], [ "DESK-4", -6002.0 ], [ "DESK-5", 4003.0 ], [ "DESK-6", 14008.0 ], [ "DESK-7", 31016.5 ] ]
+      } ]
+    },
+    "Notional | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 187101.5 ] ]
+    },
+    "Trades | as-of-day1 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day2 | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "Trades | as-of-day2 | by trade.DESK" : {
+      "refused" : "DRS-9020"
+    },
+    "Trades | as-of-day2 | by trade.PORTFOLIO" : {
+      "refused" : "DRS-9020"
+    },
+    "Trades | slicer trade.DESK = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 1 ] ]
+    },
+    "Trades | subtotals | by trade.DESK, trade.PORTFOLIO" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", "portfolio-1", 1 ], [ "DESK-1", "portfolio-0", 1 ], [ "DESK-2", "portfolio-3", 1 ], [ "DESK-3", "portfolio-2", 1 ], [ "DESK-4", "portfolio-1", 1 ], [ "DESK-5", "portfolio-0", 1 ], [ "DESK-6", "portfolio-3", 1 ], [ "DESK-7", "portfolio-2", 1 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 8.0 ] ]
+      }, {
+        "by" : [ "trade.DESK" ],
+        "rows" : [ [ "DESK-0", 1.0 ], [ "DESK-1", 1.0 ], [ "DESK-2", 1.0 ], [ "DESK-3", 1.0 ], [ "DESK-4", 1.0 ], [ "DESK-5", 1.0 ], [ "DESK-6", 1.0 ], [ "DESK-7", 1.0 ] ]
+      } ]
+    },
+    "Trades | window | by (none)" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ 8 ] ]
+    },
+    "calc Notional | by trade.DESK" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5, 187101.5, 187101.5, 0.2192473069430229, 41021.5 ], [ "DESK-1", 58030.0, 187101.5, 187101.5, 0.3101525108029599, null ], [ "DESK-2", 68035.0, 187101.5, 187101.5, 0.36362616013233456, null ], [ "DESK-3", -23010.5, 187101.5, 187101.5, -0.12298404876497517, null ], [ "DESK-4", -6002.0, 187101.5, 187101.5, -0.03207884490503817, null ], [ "DESK-5", 4003.0, 187101.5, 187101.5, 0.021394804424336524, null ], [ "DESK-6", 14008.0, 187101.5, 187101.5, 0.07486845375371122, null ], [ "DESK-7", 31016.5, 187101.5, 187101.5, 0.1657736576136482, null ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 187101.5 ] ]
+      } ]
+    },
+    "calc Notional | by trade.DESK | slicer = DESK-0" : {
+      "masked" : [ ],
+      "noAccess" : [ ],
+      "rows" : [ [ "DESK-0", 41021.5, 187101.5, 187101.5, 0.2192473069430229, 41021.5 ] ],
+      "totals" : [ {
+        "by" : [ ],
+        "rows" : [ [ 41021.5 ] ]
+      } ]
+    },
+    "rows of trade" : {
+      "count" : 8,
+      "masked" : [ ],
+      "sha256" : "a24af1b1e25c82b7a8883538f9aa0eca9c25c0e948c8cbf6c003739cbea32279"
+    }
+  }
+}

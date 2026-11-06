@@ -632,7 +632,13 @@ public enum ErrorCode {
     /** Arrow Flight: a stream's resume sequence is older than the node keeps; read a snapshot, then subscribe again. */
     FLIGHT_RESUME_GONE("DRS-5609", 410),
     /** Arrow Flight: an administrator stopped the stream (Admin → Data out). */
-    FLIGHT_STOPPED("DRS-5610", 409);
+    FLIGHT_STOPPED("DRS-5610", 409),
+    /** Virtual tables (TABLES_GUIDE.md): a table or model the catalogue does not hold. */
+    TABLE_NOT_FOUND("DRS-9609", 404),
+    /** Virtual tables: a read refused (a date the source does not hold, known-at without history, too many rows, a condition on a masked column, a reader no rule names). */
+    TABLE_READ("DRS-9615", 422),
+    /** Virtual tables: a table named like a stored table (names are unique across virtual and stored tables). */
+    TABLE_NAME_CLASH("DRS-9616", 409);
 
     private final String code;
     private final int httpStatus;

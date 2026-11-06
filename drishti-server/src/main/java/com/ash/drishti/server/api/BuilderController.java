@@ -267,7 +267,7 @@ public class BuilderController {
             EntityDocument doc = new EntityDocument(EntityRef.of(kind, "SAMPLE"), codec.read(document.toString()),
                     new com.ash.drishti.api.Provenance("auto-design sample JSON", 0, java.time.Instant.now(), false));
             return entitlements.restrict(principal,
-                    pipeline.preview(Optional.of((Sutra) last[1]), doc, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k)));
+                    pipeline.preview(Optional.of((Sutra) last[1]), doc, entitlements.viewer(principal)));
         };
     }
 

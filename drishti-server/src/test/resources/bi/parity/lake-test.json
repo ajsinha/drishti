@@ -105,6 +105,174 @@
       "by" : [ "trades.desk", "trades.currency" ],
       "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
       "rows" : [ [ "DESK-A", "EUR", 15407.0, null, 7.0, null, null, 2.0, null, null, 4001.0, null, 0.0 ], [ "DESK-A", "USD", 13307.0, null, 7.0, null, null, 2.0, null, null, 3701.0, null, 0.0 ], [ "DESK-B", "EUR", 14007.0, null, 7.0, null, null, 2.0, null, null, 3801.0, null, 0.0 ], [ "DESK-B", "USD", 12006.0, null, 6.0, null, null, 2.0, null, null, 3501.0, null, 0.0 ], [ "DESK-C", "EUR", 12606.0, null, 6.0, null, null, 2.0, null, null, 3601.0, null, 0.0 ], [ "DESK-C", "USD", 14707.0, null, 7.0, null, null, 2.0, null, null, 3901.0, null, 0.0 ] ]
+    } ],
+    "desk-head-two-desks" : [ {
+      "by" : [ ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ 54727.0, -1973.0, 27.0, -73.07407407407408, -36051.67467611965, 4.0, 1.0, 14.0, 4001.0, -0.036051674676119645, 0.1 ] ]
+    }, {
+      "by" : [ "trades.desk" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-A", 28714.0, 14.0, 14.0, 1.0, 487.56704046806436, 4.0, 1.0, 7.0, 4001.0, 4.8756704046806434E-4, 0.0 ], [ "DESK-B", 26013.0, -1987.0, 13.0, -152.84615384615384, -76384.88448083651, 4.0, 1.0, 7.0, 3801.0, -0.07638488448083651, 0.0 ] ]
+    }, {
+      "by" : [ "trades.cpty" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "CP-0", 12707.0, -5993.0, 7.0, -856.1428571428571, -471629.8103407571, 1.0, -999.0, null, 3701.0, -0.47162981034075707, 0.0 ], [ "CP-1", 14607.0, -993.0, 7.0, -141.85714285714286, -67981.10494968166, 1.0, -999.0, -993.0, 3801.0, -0.06798110494968165, 0.0 ], [ "CP-2", 12606.0, 4006.0, 6.0, 667.6666666666666, 317785.1816595272, 1.0, 501.0, null, 3501.0, 0.3177851816595272, 0.0 ], [ "CP-3", 14807.0, 1007.0, 7.0, 143.85714285714286, 68008.37441750524, 1.0, 1.0, 1007.0, 4001.0, 0.06800837441750524, 0.0 ] ]
+    }, {
+      "by" : [ "trades.desk", "trades.cpty" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-A", "CP-0", 7604.0, -2996.0, 4.0, -749.0, -394003.1562335613, 1.0, -999.0, null, 3701.0, -0.3940031562335613, 0.0 ], [ "DESK-A", "CP-1", 6603.0, -1997.0, 3.0, -665.6666666666666, -302438.2856277449, 1.0, -999.0, -1997.0, 3401.0, -0.30243828562774494, 0.0 ], [ "DESK-A", "CP-2", 5703.0, 3003.0, 3.0, 1001.0, 526564.9658074697, 1.0, 1001.0, null, 3101.0, 0.5265649658074697, 0.0 ], [ "DESK-A", "CP-3", 8804.0, 2004.0, 4.0, 501.0, 227623.80736029078, 1.0, 501.0, 2004.0, 4001.0, 0.22762380736029078, 0.0 ], [ "DESK-B", "CP-0", 5103.0, -2997.0, 3.0, -999.0, -587301.5873015873, 1.0, -999.0, null, 2901.0, -0.5873015873015873, 0.0 ], [ "DESK-B", "CP-1", 8004.0, 1004.0, 4.0, 251.0, 125437.28135932033, 1.0, 1.0, 1004.0, 3801.0, 0.12543728135932034, 0.0 ], [ "DESK-B", "CP-2", 6903.0, 1003.0, 3.0, 334.3333333333333, 145299.1452991453, 1.0, 1.0, null, 3501.0, 0.1452991452991453, 0.0 ], [ "DESK-B", "CP-3", 6003.0, -997.0, 3.0, -332.3333333333333, -166083.62485423955, 1.0, 1.0, -997.0, 3201.0, -0.16608362485423955, 0.0 ] ]
+    }, {
+      "by" : [ "trades.desk", "trades.currency" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-A", "EUR", 15407.0, 7.0, 7.0, 1.0, 454.33893684688775, 2.0, 1.0, 7.0, 4001.0, 4.5433893684688776E-4, 0.0 ], [ "DESK-A", "USD", 13307.0, 7.0, 7.0, 1.0, 526.0389268805892, 2.0, 1.0, null, 3701.0, 5.260389268805891E-4, 0.0 ], [ "DESK-B", "EUR", 14007.0, 7.0, 7.0, 1.0, 499.7501249375312, 2.0, 1.0, 7.0, 3801.0, 4.997501249375312E-4, 0.0 ], [ "DESK-B", "USD", 12006.0, -1994.0, 6.0, -332.3333333333333, -166083.62485423955, 2.0, -499.0, null, 3501.0, -0.16608362485423955, 0.0 ] ]
+    } ],
+    "desk-head-no-desks" : [ {
+      "by" : [ ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ null, null, 0.0, null, null, 0.0, null, null, null, null, null ] ]
+    }, {
+      "by" : [ "trades.desk" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ ]
+    }, {
+      "by" : [ "trades.cpty" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ ]
+    }, {
+      "by" : [ "trades.desk", "trades.cpty" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ ]
+    }, {
+      "by" : [ "trades.desk", "trades.currency" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ ]
+    } ],
+    "auditor" : [ {
+      "by" : [ ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ 53326.0, -4974.0, 26.0, -191.30769230769232, -93275.32535723662, 4.0, 1.0, -2987.0, 3901.0, -0.09327532535723662, 0.1 ] ]
+    }, {
+      "by" : [ "trades.desk" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-B", 26013.0, -1987.0, 13.0, -152.84615384615384, -76384.88448083651, 4.0, 1.0, 7.0, 3801.0, -0.07638488448083651, 0.0 ], [ "DESK-C", 27313.0, -2987.0, 13.0, -229.76923076923077, -109361.84234613554, 4.0, 1.0, -2994.0, 3901.0, -0.10936184234613554, 0.0 ] ]
+    }, {
+      "by" : [ "trades.cpty" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "CP-0", 11406.0, -994.0, 6.0, -165.66666666666666, -87147.1155532176, 1.0, 1.0, null, 3301.0, -0.08714711555321761, 0.0 ], [ "CP-1", 13407.0, 1007.0, 7.0, 143.85714285714286, 75110.01715521743, 1.0, 1.0, 1007.0, 3801.0, 0.07511001715521742, 0.0 ], [ "CP-2", 15307.0, -993.0, 7.0, -141.85714285714286, -64872.28065590907, 1.0, 1.0, null, 3901.0, -0.06487228065590907, 0.0 ], [ "CP-3", 13206.0, -3994.0, 6.0, -665.6666666666666, -302438.2856277449, 1.0, -499.0, -3994.0, 3601.0, -0.30243828562774494, 0.0 ] ]
+    }, {
+      "by" : [ "trades.desk", "trades.cpty" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-B", "CP-0", 5103.0, -2997.0, 3.0, -999.0, -587301.5873015873, 1.0, -999.0, null, 2901.0, -0.5873015873015873, 0.0 ], [ "DESK-B", "CP-1", 8004.0, 1004.0, 4.0, 251.0, 125437.28135932033, 1.0, 1.0, 1004.0, 3801.0, 0.12543728135932034, 0.0 ], [ "DESK-B", "CP-2", 6903.0, 1003.0, 3.0, 334.3333333333333, 145299.1452991453, 1.0, 1.0, null, 3501.0, 0.1452991452991453, 0.0 ], [ "DESK-B", "CP-3", 6003.0, -997.0, 3.0, -332.3333333333333, -166083.62485423955, 1.0, 1.0, -997.0, 3201.0, -0.16608362485423955, 0.0 ], [ "DESK-C", "CP-0", 6303.0, 2003.0, 3.0, 667.6666666666666, 317785.1816595272, 1.0, 1001.0, null, 3301.0, 0.3177851816595272, 0.0 ], [ "DESK-C", "CP-1", 5403.0, 3.0, 3.0, 1.0, 555.247084952804, 1.0, 1.0, 3.0, 3001.0, 5.55247084952804E-4, 0.0 ], [ "DESK-C", "CP-2", 8404.0, -1996.0, 4.0, -499.0, -237505.94954783435, 1.0, -499.0, null, 3901.0, -0.23750594954783436, 0.0 ], [ "DESK-C", "CP-3", 7203.0, -2997.0, 3.0, -999.0, -416076.63473552687, 1.0, -999.0, -2997.0, 3601.0, -0.41607663473552686, 0.0 ] ]
+    }, {
+      "by" : [ "trades.desk", "trades.currency" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-B", "EUR", 14007.0, 7.0, 7.0, 1.0, 499.7501249375312, 2.0, 1.0, 7.0, 3801.0, 4.997501249375312E-4, 0.0 ], [ "DESK-B", "USD", 12006.0, -1994.0, 6.0, -332.3333333333333, -166083.62485423955, 2.0, -499.0, null, 3501.0, -0.16608362485423955, 0.0 ], [ "DESK-C", "EUR", 12606.0, -2994.0, 6.0, -499.0, -237505.94954783435, 2.0, -499.0, -2994.0, 3601.0, -0.23750594954783436, 0.0 ], [ "DESK-C", "USD", 14707.0, 7.0, 7.0, 1.0, 475.963826749167, 2.0, 1.0, null, 3901.0, 4.7596382674916705E-4, 0.0 ] ]
+    } ],
+    "not-eur" : [ {
+      "by" : [ ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ 40020.0, -1980.0, 20.0, -99.0, -49475.262368815595, 2.0, 1.0, null, 3901.0, -0.049475262368815595, 0.0 ] ]
+    }, {
+      "by" : [ "trades.desk" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-A", 13307.0, 7.0, 7.0, 1.0, 526.0389268805892, 2.0, 1.0, null, 3701.0, 5.260389268805891E-4, 0.0 ], [ "DESK-B", 12006.0, -1994.0, 6.0, -332.3333333333333, -166083.62485423955, 2.0, -499.0, null, 3501.0, -0.16608362485423955, 0.0 ], [ "DESK-C", 14707.0, 7.0, 7.0, 1.0, 475.963826749167, 2.0, 1.0, null, 3901.0, 4.7596382674916705E-4, 0.0 ] ]
+    }, {
+      "by" : [ "trades.cpty" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "CP-0", 19010.0, -3990.0, 10.0, -399.0, -209889.53182535508, 1.0, -499.0, null, 3701.0, -0.20988953182535508, 0.0 ], [ "CP-2", 21010.0, 2010.0, 10.0, 201.0, 95668.72917658258, 1.0, 1.0, null, 3901.0, 0.09566872917658258, 0.0 ] ]
+    }, {
+      "by" : [ "trades.desk", "trades.cpty" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-A", "CP-0", 7604.0, -2996.0, 4.0, -749.0, -394003.1562335613, 1.0, -999.0, null, 3701.0, -0.3940031562335613, 0.0 ], [ "DESK-A", "CP-2", 5703.0, 3003.0, 3.0, 1001.0, 526564.9658074697, 1.0, 1001.0, null, 3101.0, 0.5265649658074697, 0.0 ], [ "DESK-B", "CP-0", 5103.0, -2997.0, 3.0, -999.0, -587301.5873015873, 1.0, -999.0, null, 2901.0, -0.5873015873015873, 0.0 ], [ "DESK-B", "CP-2", 6903.0, 1003.0, 3.0, 334.3333333333333, 145299.1452991453, 1.0, 1.0, null, 3501.0, 0.1452991452991453, 0.0 ], [ "DESK-C", "CP-0", 6303.0, 2003.0, 3.0, 667.6666666666666, 317785.1816595272, 1.0, 1001.0, null, 3301.0, 0.3177851816595272, 0.0 ], [ "DESK-C", "CP-2", 8404.0, -1996.0, 4.0, -499.0, -237505.94954783435, 1.0, -499.0, null, 3901.0, -0.23750594954783436, 0.0 ] ]
+    }, {
+      "by" : [ "trades.desk", "trades.currency" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-A", "USD", 13307.0, 7.0, 7.0, 1.0, 526.0389268805892, 2.0, 1.0, null, 3701.0, 5.260389268805891E-4, 0.0 ], [ "DESK-B", "USD", 12006.0, -1994.0, 6.0, -332.3333333333333, -166083.62485423955, 2.0, -499.0, null, 3501.0, -0.16608362485423955, 0.0 ], [ "DESK-C", "USD", 14707.0, 7.0, 7.0, 1.0, 475.963826749167, 2.0, 1.0, null, 3901.0, 4.7596382674916705E-4, 0.0 ] ]
+    } ],
+    "desk-a-two-days" : [ {
+      "by" : [ ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ 57414.0, 14.0, 28.0, 0.5, 243.842965130456, 4.0, 0.5, 7.0, 4001.0, 2.43842965130456E-4, 0.1 ] ]
+    }, {
+      "by" : [ "trades.desk" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-A", 57414.0, 14.0, 28.0, 0.5, 243.842965130456, 4.0, 0.5, 7.0, 4001.0, 2.43842965130456E-4, 0.1 ] ]
+    }, {
+      "by" : [ "trades.cpty" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "CP-0", 15204.0, -5996.0, 8.0, -749.5, -394369.90265719546, 1.0, -999.5, null, 3701.0, -0.39436990265719546, 0.0 ], [ "CP-1", 13203.0, -3997.0, 6.0, -666.1666666666666, -302734.2270696054, 1.0, -999.5, -3997.0, 3401.0, -0.3027342270696054, 0.0 ], [ "CP-2", 11403.0, 6003.0, 6.0, 1000.5, 526440.410418311, 1.0, 1000.5, null, 3101.0, 0.526440410418311, 0.0 ], [ "CP-3", 17604.0, 4004.0, 8.0, 500.5, 227448.3072029084, 1.0, 500.5, 4004.0, 4001.0, 0.22744830720290843, 0.0 ] ]
+    }, {
+      "by" : [ "trades.desk", "trades.cpty" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-A", "CP-0", 15204.0, -5996.0, 8.0, -749.5, -394369.90265719546, 1.0, -999.5, null, 3701.0, -0.39436990265719546, 0.0 ], [ "DESK-A", "CP-1", 13203.0, -3997.0, 6.0, -666.1666666666666, -302734.2270696054, 1.0, -999.5, -3997.0, 3401.0, -0.3027342270696054, 0.0 ], [ "DESK-A", "CP-2", 11403.0, 6003.0, 6.0, 1000.5, 526440.410418311, 1.0, 1000.5, null, 3101.0, 0.526440410418311, 0.0 ], [ "DESK-A", "CP-3", 17604.0, 4004.0, 8.0, 500.5, 227448.3072029084, 1.0, 500.5, 4004.0, 4001.0, 0.22744830720290843, 0.0 ] ]
+    }, {
+      "by" : [ "trades.desk", "trades.currency" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-A", "EUR", 30807.0, 7.0, 14.0, 0.5, 227.22108611679164, 2.0, 0.5, 7.0, 4001.0, 2.2722108611679165E-4, 0.0 ], [ "DESK-A", "USD", 26607.0, 7.0, 14.0, 0.5, 263.08866087871615, 2.0, 0.5, null, 3701.0, 2.6308866087871614E-4, 0.0 ] ]
+    } ],
+    "masked-two-days" : [ {
+      "by" : [ ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ 164040.0, null, 80.0, null, null, 4.0, null, null, 4001.0, null, 0.2 ] ]
+    }, {
+      "by" : [ "trades.desk" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-A", 57414.0, null, 28.0, null, null, 4.0, null, null, 4001.0, null, 0.1 ], [ "DESK-B", 52013.0, null, 26.0, null, null, 4.0, null, null, 3801.0, null, 0.1 ], [ "DESK-C", 54613.0, null, 26.0, null, null, 4.0, null, null, 3901.0, null, 0.1 ] ]
+    }, {
+      "by" : [ "trades.cpty" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "CP-0", 38010.0, null, 20.0, null, null, 1.0, null, null, 3701.0, null, 0.0 ], [ "CP-1", 40010.0, null, 20.0, null, null, 1.0, null, null, 3801.0, null, 0.0 ], [ "CP-2", 42010.0, null, 20.0, null, null, 1.0, null, null, 3901.0, null, 0.0 ], [ "CP-3", 44010.0, null, 20.0, null, null, 1.0, null, null, 4001.0, null, 0.0 ] ]
+    }, {
+      "by" : [ "trades.desk", "trades.cpty" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-A", "CP-0", 15204.0, null, 8.0, null, null, 1.0, null, null, 3701.0, null, 0.0 ], [ "DESK-A", "CP-1", 13203.0, null, 6.0, null, null, 1.0, null, null, 3401.0, null, 0.0 ], [ "DESK-A", "CP-2", 11403.0, null, 6.0, null, null, 1.0, null, null, 3101.0, null, 0.0 ], [ "DESK-A", "CP-3", 17604.0, null, 8.0, null, null, 1.0, null, null, 4001.0, null, 0.0 ], [ "DESK-B", "CP-0", 10203.0, null, 6.0, null, null, 1.0, null, null, 2901.0, null, 0.0 ], [ "DESK-B", "CP-1", 16004.0, null, 8.0, null, null, 1.0, null, null, 3801.0, null, 0.0 ], [ "DESK-B", "CP-2", 13803.0, null, 6.0, null, null, 1.0, null, null, 3501.0, null, 0.0 ], [ "DESK-B", "CP-3", 12003.0, null, 6.0, null, null, 1.0, null, null, 3201.0, null, 0.0 ], [ "DESK-C", "CP-0", 12603.0, null, 6.0, null, null, 1.0, null, null, 3301.0, null, 0.0 ], [ "DESK-C", "CP-1", 10803.0, null, 6.0, null, null, 1.0, null, null, 3001.0, null, 0.0 ], [ "DESK-C", "CP-2", 16804.0, null, 8.0, null, null, 1.0, null, null, 3901.0, null, 0.0 ], [ "DESK-C", "CP-3", 14403.0, null, 6.0, null, null, 1.0, null, null, 3601.0, null, 0.0 ] ]
+    }, {
+      "by" : [ "trades.desk", "trades.currency" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-A", "EUR", 30807.0, null, 14.0, null, null, 2.0, null, null, 4001.0, null, 0.0 ], [ "DESK-A", "USD", 26607.0, null, 14.0, null, null, 2.0, null, null, 3701.0, null, 0.0 ], [ "DESK-B", "EUR", 28007.0, null, 14.0, null, null, 2.0, null, null, 3801.0, null, 0.0 ], [ "DESK-B", "USD", 24006.0, null, 12.0, null, null, 2.0, null, null, 3501.0, null, 0.0 ], [ "DESK-C", "EUR", 25206.0, null, 12.0, null, null, 2.0, null, null, 3601.0, null, 0.0 ], [ "DESK-C", "USD", 29407.0, null, 14.0, null, null, 2.0, null, null, 3901.0, null, 0.0 ] ]
+    } ],
+    "auditor-usd" : [ {
+      "by" : [ ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ 26713.0, -1987.0, 13.0, -152.84615384615384, -74383.25908733575, 2.0, 1.0, null, 3901.0, -0.07438325908733576, 0.0 ] ]
+    }, {
+      "by" : [ "trades.desk" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-B", 12006.0, -1994.0, 6.0, -332.3333333333333, -166083.62485423955, 2.0, -499.0, null, 3501.0, -0.16608362485423955, 0.0 ], [ "DESK-C", 14707.0, 7.0, 7.0, 1.0, 475.963826749167, 2.0, 1.0, null, 3901.0, 4.7596382674916705E-4, 0.0 ] ]
+    }, {
+      "by" : [ "trades.cpty" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "CP-0", 11406.0, -994.0, 6.0, -165.66666666666666, -87147.1155532176, 1.0, 1.0, null, 3301.0, -0.08714711555321761, 0.0 ], [ "CP-2", 15307.0, -993.0, 7.0, -141.85714285714286, -64872.28065590907, 1.0, 1.0, null, 3901.0, -0.06487228065590907, 0.0 ] ]
+    }, {
+      "by" : [ "trades.desk", "trades.cpty" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-B", "CP-0", 5103.0, -2997.0, 3.0, -999.0, -587301.5873015873, 1.0, -999.0, null, 2901.0, -0.5873015873015873, 0.0 ], [ "DESK-B", "CP-2", 6903.0, 1003.0, 3.0, 334.3333333333333, 145299.1452991453, 1.0, 1.0, null, 3501.0, 0.1452991452991453, 0.0 ], [ "DESK-C", "CP-0", 6303.0, 2003.0, 3.0, 667.6666666666666, 317785.1816595272, 1.0, 1001.0, null, 3301.0, 0.3177851816595272, 0.0 ], [ "DESK-C", "CP-2", 8404.0, -1996.0, 4.0, -499.0, -237505.94954783435, 1.0, -499.0, null, 3901.0, -0.23750594954783436, 0.0 ] ]
+    }, {
+      "by" : [ "trades.desk", "trades.currency" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ "DESK-B", "USD", 12006.0, -1994.0, 6.0, -332.3333333333333, -166083.62485423955, 2.0, -499.0, null, 3501.0, -0.16608362485423955, 0.0 ], [ "DESK-C", "USD", 14707.0, 7.0, 7.0, 1.0, 475.963826749167, 2.0, 1.0, null, 3901.0, 4.7596382674916705E-4, 0.0 ] ]
+    } ],
+    "no-rows" : [ {
+      "by" : [ ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ [ null, null, 0.0, null, null, 0.0, null, null, null, null, null ] ]
+    }, {
+      "by" : [ "trades.desk" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ ]
+    }, {
+      "by" : [ "trades.cpty" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ ]
+    }, {
+      "by" : [ "trades.desk", "trades.cpty" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ ]
+    }, {
+      "by" : [ "trades.desk", "trades.currency" ],
+      "measures" : [ "Notional", "MTM", "Trades", "AvgMTM", "MTMperM", "Names", "P50", "EurMTM", "Biggest", "Share", "NotionalM" ],
+      "rows" : [ ]
     } ]
   }
 }

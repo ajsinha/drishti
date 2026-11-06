@@ -24,6 +24,19 @@
 - Design: **controls screens** for 2.9.11.f (docs/architecture/CONTROLS_SCREENS.md, mock-ups in docs/architecture/mockups/controls/): run status and sign-off, one breach and escalation queue, number honesty (computed, stored, official), chosen by the product owner from mock-ups (2026-11-05).
 
 - Design: **shared screens** for 2.9.11.e (docs/architecture/SHARED_SCREENS.md, mock-ups in docs/architecture/mockups/shared-screens/): one Build home, one Approvals queue, one Explain for every number, the trader home, chosen by the product owner from mock-ups (2026-11-05); a build checklist.
+- **BI's parity set widened before the switch** (BI_FOUNDATION_2911E.md sections 5 and 10): `BiFoundationRecorder` and `BiFoundationCases` record, on BI as it is (still on its own layer), every shipped model (each measure alone at two dates and a window, by each hierarchy level with its grand total, each hierarchy's first two levels with subtotals, a slicer on the model's first text field, and the filter-context functions `calc` with `ignore=ALL`, `ignore=[field]` and `where=` and `share_of`, without and with the slicer), every alias's rows as each person sees them (masks and row rules), every shipped report (the two live originals through a live query service) page by page and visual by visual (top-N ranked, the true totals of matrices and totalled tables, chart highlights, and each page with its first slicer set), the two boards through the visuals their tiles show, and the live replay; for seven persons (a desk-head with two desks and with none, risk, an analyst, an administrator, a reader without the raw power, a role no rule names). The fixtures (`drishti-server/src/test/resources/bi/foundation-parity/`: 24 files, 6,468 answers) are the reference the switch must match; `BiFoundationParityTest` compares them on every commit (recording takes about 15 s). The test lake's totals (`BiParityCases`, PIVOT_ENGINE section 12.4) grow from 5 cases to 13 (row rules for a desk-head with two desks and with none and an auditor's or-rule, an excluding filter, a desk over the window, the masked reader over the window, a rule with a filter, a filter no row passes); the first five unchanged.
+
+- **Tables:** `tables preview` reads another table's sample for `related(...)` (`--related core.books=books.jsonl`, repeatable) and spot rates for `fx(...)` (`--fx fx-spot.jsonl`: a pair as quoted, its inverse, or through USD); without them `related` finds nothing and only a currency to itself converts (TABLES_GUIDE section 8, CLI_GUIDE).
+
+- **Fixed (tables):** a table over a table that adds no column of its own was written with an empty `columns:` and then refused by `tables check` (`DRS-9600`): such a table now reads and writes without `columns:` (the two exposure-official tables of the shipped migration). `tables migrate` checked the tables already under `config/tables` as if they sat in a folder named `config` (`DRS-9601` for every one of them); each is checked in its own domain folder.
+
+- Docs: **tutorial 44** (virtual tables and models) runs for real on the test data (Endur trades, books and FX spots of 2026-09-30): the legs keyed to their book, a column in dollars and the desk's name looked up in a books table, a trader's rule and a masked trader column, a model of legs and books, and the migration with its real dry run, write and check; five pictures (`tools/docs/shots/t44.py`). TABLES_GUIDE and CLI_GUIDE show the real outputs (list, check, preview, lineage, offer, the migration).
+
+- Fixed (the merged base's rule tests): the pivot's cache of opened virtual tables is weighed in bytes (a Caffeine cache; it was a
+  Serializable map, which ArchitectureRulesTest refuses), and `ScanEvaluator` holds no database connection (each call is one unit of
+  work on the connection it is given, ConnectionDisciplineTest).
+
+- Tests: the pivot grid's format test reads `drishti_pivot-grid.js` and `window.Drishti.PivotCore` (the asset prefix and the one namespace).
 
 - Tests: the five VaR browser files share one built lake (both trade sets, `var_stack.VAR_TRADES`): the currency file no longer builds its own; the five run in about 4 minutes together.
 
@@ -843,6 +856,216 @@
   console lane twice green with -n 8. Also: `test_no_shared_user_state.py` follows the merged context branch (the relay per app,
   `core/request_context.py` the one place that makes a fresh `contextvars.Context()`), and `test_channel_relay_hosts.py` writes a number
   outside the scratch-port range.
+
+## 2.9.11.e — BI's foundation: DEL's language in Rachana, virtual tables and models, the function catalogue complete (unreleased)
+
+### Part A: DEL's language in Rachana
+
+- **Rachana gains DEL's language (BI_FOUNDATION_2911E.md section 2 and 9; RACHANA_REFERENCE.md "Lists, membership and the parent",
+  "Named arguments", "Checked mode").** List literals (`['DESK-COMM', 'DESK-RATES']`, at most 1,000 values); a strict `in` and `not in`
+  (an empty list holds nothing; `one_of` keeps its control meaning, where an empty choice holds everything); the parent path `^` (and
+  `^^`): in `$.LEGS[*].CASH_FLOWS[?^.LEG_TYPE == 'FIXED']`, the leg (`EvalContext.withRow` binds it, `withRows` binds a grain's chain);
+  named arguments bound by the function's signature (`round(x, n = 2)`, `shift_date(asof(), -1, unit = 'week')`; the engine's keep
+  theirs: `sum(trades.MTM, where = ...)`, `calc(..., ignore = [...])`); DEL's `**` and `//` refused with their Rachana form (`power`,
+  `floor(x / y)`); `today()` read as `asof()` (Q7). The null rule (Q1, Rachana's): `null != 'X'` is true, arithmetic on an empty value
+  is empty (it showed `NaN`; `null + 1` was the text `1`), `upper`, `lower` and `abs` of an empty value are empty, `date - date` is the
+  days between.
+- **Checked mode** (`drishti-rachana` `el.check`, `el.CheckedMode`): DEL's type checker moved into Rachana and DEL now calls it
+  (`DelChecker` maps its tree with `DelToRachana`; `DelType`, `Scope`, `Fields` and `DelException.Problem` are Rachana's `ElType`,
+  `Scope`, `Fields`, `Problem`). Where the types are known it refuses with DEL's codes: `DRS-9127` (types, scopes, chained comparisons,
+  paths in measures, a screen's controls in a table or model, nesting of the filter-context functions past three), `DRS-9129` (not yet
+  in a table or model), `DRS-9152` (unknown name), `DRS-9161` (a filter on a masked field). The four scopes: row, rule, aggregate,
+  context. The signatures of the 53 DEL functions under Rachana names (`starts_with`, `ends_with`, `latest`, `earliest`; `cumulative`
+  folded into `running`) and `power`, `floor`, `if`, `switch`, `least`, `greatest` (`rachana/el/signatures.yaml`).
+- **The DEL functions in Rachana and the engine (2.5).** In Rachana: `round`, `len`, `date`, `timestamp`, `year`, `quarter`, `month`,
+  `week` (ISO), `day`, `business_days_between`, `shift_date`, `asof`. From the engine: `ratio`, `avg_by`, `avg_over`, `calc`,
+  `share_of`, `parent_of`, `as_of`, `ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year`, `running`, `fiscal_ytd`, `lag`,
+  `lead`, `rank`, `dense_rank`, `percent_rank`, `moving_avg`, `moving_sum`, `moving_min`, `moving_max`, `latest`, `earliest`,
+  `opening`, `closing`, `convert`, `related`, `fx` (over a list they are refused in words; `fx` and `related` are lowered with the table
+  layer).
+- **The filter-context algebra moved into the engine** (`drishti-bicompute` `context.FilterContext`, `context.Periods`): the edited
+  question of each function (BI_DESIGN 3.3.5, rules 1 to 7, word for word), the sub-plan's average, join and read, nesting at most three,
+  `parent_of`'s level, the balances' dates. BI's `Contexts` and `ContextFunctions` ask it.
+- **One compiler from Rachana's tree to the engine** (`drishti-bicompute` `lang.Compiler`, `lang.SqlLowering`, `lang.RowsEvaluator`,
+  `lang.ScanEvaluator`): a row expression in Java (Rachana's evaluator) and in SQL, an aggregate as the engine's own function with its
+  `where =`, measure-level shapes, context sub-plans, windows, time and balances. `DifferentialTest` proves Java and SQL agree value for
+  value over every operator, every Rachana function, the engine's aggregates and the shipped models' expressions on a table of edges; it
+  found, and the compiler fixes, `%` of a negative double, business days on observed holidays, `abs(null)` and `floor(null, 0)`.
+  `ShippedInRachanaTest` reads every expression of `config/bi/models` and `config/bi/datasets` as Rachana (`el.Printer`, the one
+  spelling), checks it in its scope and compiles it.
+- FUNCTION_CATALOGUE.md's statuses (and `pct_of_parent` is no longer called DEL's `parent_of`, Q6); FUNCTIONS.md regenerated;
+  `OneGrammarRulesTest`'s exceptions say where DEL (part B) and `ScopeExpr` (Q20) go. DEL is not deleted and BI is not switched: that is
+  part B, with the migration and the parity proof.
+
+### Part B: virtual tables and models, up to the switch
+
+- **The table layer's foundation: virtual tables and models in a module of their own (BI_FOUNDATION_2911E.md sections 3 to 5 and 9;
+  TABLES_GUIDE.md; VIRTUAL_TABLES.md).** New module `drishti-tables` (plain Java, on Rachana and the pivot engine; `drishti-server`
+  depends on it; `ArchitectureRulesTest` holds the direction): the catalogue of `config/tables/<domain>/<name>.table.yaml` and
+  `.model.yaml` and of stored items (`ItemStore`, kinds `table` and `model`), the definitions with every key of BI's datasets and models
+  (names `<domain>.<name>`, `was:` for one release, built-in columns `id`, `business_date`, `index`, `update_seq`, `updated_at`, rules
+  and masks on the table, model aliases, summary tables, `materialize: none | on-load | { live }`, `related(...)`), the checks of a table,
+  a model and the catalogue (codes `DRS-9600` to `DRS-9614`), lineage, a preview over JSONL samples with the grain expanded and
+  `$`, `@`, `^` walked, and the materialisation's API with its store layout. `FileSwap` moved from BI into the layer. BI does not read the
+  layer yet (the switch).
+- **`drishti.py tables list | check | preview | lineage | migrate`** (CLI_GUIDE.md section 7; `java -jar drishti-server-*-exec.jar tables`,
+  no server): `check` exits 1 on an error and takes `--sample TABLE=FILE.jsonl`; `migrate` turns `config/bi`'s datasets and models into
+  tables and layer models with `--dry-run` (the unified diff and the report), `--check`, `--report`, `--audit`, `--moved-to`, refusing by
+  name (`DRS-9195`). Expressions go through a pluggable DEL translator (the language step provides it; a token stand-in does the mechanical
+  part now), then columns to paths, date parts and Q1's null rule: `a != b` becomes `a != b && a != null` where `a` may be missing, so
+  every figure stays the same (`trading-risk`'s *Open MTM*). Idempotent.
+- **The table layer on part A, and the rest of part B before the switch (BI_FOUNDATION_2911E.md section 10).** The layer's expressions
+  are Rachana's tree, printer and checked mode (its own reader is gone); `fx` (the installation's one FX source, Q15) and `related` (Q29) are
+  lowered by the layer; a model query is answered by the layer in memory through part A's one compiler (`ModelAnswers`: rules, masks and the
+  model's rules per reader, joins, filters, fields and date parts, measures of measures); `LiveStore` and `ParquetOnLoad` materialise a
+  table from its own definition; `PackTables` regenerates a pack's kinds and lists as tables. `tables migrate` reads DEL with part A's
+  `DelToRachana` (all 34 shipped items convert, `trading-cashflows`' chains included), turns a grouped dataset into its rows and a summary
+  table, and rewrites consumers in place (a report bound to a version-1 dataset binds its model; `expr:` and `define:` translated). Stored
+  items: `BiItemTableStore` over `drishti_bi_item` and `StoredTablesMigration` (every version rewritten in place, the text before kept,
+  audited). BI does not read the layer yet: the switch flips it in one change after the parity proof.
+- **The parity recorder of the release** (`BiFoundationRecorder`, `BiFoundationCases`, `BiFoundationLive`, `BiFoundationParityTest`): every
+  shipped model and report, seven persons (a desk-head with two desks and one with none, risk, an analyst, an administrator, a reader
+  without the raw power, a role no rule names), three times, each alias's rows per person, and a live replay; recorded on the tree before
+  anything moves, compared at 1e-9 relative for floating point and exactly for everything else. The parity test is skipped until the
+  fixtures are committed.
+
+### The function catalogue: the engine's statistics, shares and windows; Excel, SAS and MATLAB coverage
+
+- **The engine's tier-1 statistics, shares and windows (FUNCTION_CATALOGUE.md sections 4 and 5,
+  FUNCTIONS.md, PIVOT_GUIDE.md section 4).** In `drishti-bicompute`, once each, registered into Rachana: `nmiss`, `range`, `stderr`,
+  `cv`, `skewness`, `kurtosis` (central moments to the fourth order, merged by Pébay's formulas), `geomean`, `harmean`, `corr`, `covar`,
+  `slope`, `intercept`, `rsq` (co-moments, Chan's merge), every one mergeable and through the split-and-merge harness at 1e-12; `mode`
+  (a number or a name), `iqr`, `trimmean`, `kth_largest`, `kth_smallest` and `string_agg` (in text order, at most 1,000 values) holistic.
+  Excel's documented examples (`SKEW`, `KURT`, `CORREL`, `COVARIANCE.S`, `SLOPE`, `INTERCEPT`, `RSQ`, `TRIMMEAN`, `GEOMEAN`, `HARMEAN`,
+  `MODE.SNGL`, `LARGE`, `SMALL`, `QUARTILE.INC`) give their printed digits. A pivot value may be written around an aggregate:
+  `pct_of_total`, `pct_of_row`, `pct_of_column`, `pct_of_parent` (the level above on the rows; a named hierarchy with DEL's
+  `parent_of` in 2.9.11.e), `ntile(agg, n)`, `diff(agg, [n], order)`, `pct_change(agg, [n], order)`, computed from the answer's
+  finished cells beside Top N and Others (`core.ShowAs`). A function may answer text (`AggFunction.result`) and name its unit
+  (`resultUnit`); a measure may take a quoted text (`string_agg(CCY, ', ', true)`). Fixed: a show-as on a view with two or more row or
+  column dimensions read the wrong total (a cell's key was split at the first `|`, which a key of several coordinates also has).
+  The pivot grid shows a text answer (`string_agg`, the `mode` of names) as its text, escaped (it was blank), and an `ntile` bucket, a
+  rank and a measure whose unit is `count` as whole numbers (an ntile showed two decimals), read from the answer's `unit` and `showAs`
+  (`pivot-grid.js` `fmt`, `tests/test_pivot_grid_fmt.py`).
+- **Excel, SAS and MATLAB/Octave coverage (FUNCTION_CATALOGUE.md section 12).** Every family of Excel's functions, SAS's DATA-step
+  functions and PROC MEANS/UNIVARIATE/FREQ/RANK statistics, and MATLAB's everyday data functions, marked covered (by which Drishti
+  function), added, or not with the reason (non-deterministic, spreadsheet-cell, pricing for QLRisk, the risk engines, the matrix tier,
+  tier 3, locale or legacy, no use yet). 154 functions added, each under its one name; 268 Excel/SAS/MATLAB names were already covered,
+  207 are answered by the added ones, 193 are not added.
+- **Rachana scalars.** Math: `round` (half away from zero, in decimal), `round_sig`, `log(x, base)`, `fact`, `combin`, `permut`, `gcd`,
+  `lcm`, `even`, `odd`, `pi`, `sin` … `atan2`, `sinh`, `cosh`, `tanh`, `radians`, `degrees`, `base`, `decimal`. Information:
+  `is_number`, `is_text`, `is_date`, `is_boolean`, `is_blank`, `is_error`, `type_of`, `choose`. Text: `len`, `proper`, `rept`, `exact`,
+  `char`, `code` (Unicode), `find`, `search` (positions, 0 when not there), `text_before`, `text_after`, `regex_replace` (the linear-time
+  engine; `SafeRegex.replaceAll`), `reverse`, `clean`, `value` (text to a number: groups, currency signs, %, accounting brackets),
+  `text` (a number or a date with an Excel format code). Dates: `date(text)`, `date(y, m, d)` (Excel's carry-over), `year`, `quarter`,
+  `month`, `week` (ISO), `day`, `hour`, `minute`, `second`, `weekday` (Excel's return types), `days360` (US and European), `datedif`,
+  `shift_date` (on the bank's calendars). DEL's `round`, `len`, `date`, `year`, `quarter`, `month`, `week`, `day`, `shift_date` are now
+  also Rachana's, ahead of the fold; DEL keeps its own until then.
+- **Distributions (FUNCTION_CATALOGUE.md section 9).** `norm_dist`, `norm_inv`, `norm_s_dist`, `norm_s_inv`, `lognorm_dist`,
+  `lognorm_inv`, `t_dist`, `t_inv`, `chisq_dist`, `chisq_inv`, `f_dist`, `f_inv`, `binom_dist`, `binom_inv`, `poisson_dist`,
+  `expon_dist`, `gamma_dist`, `gamma_inv`, `gamma`, `gamma_ln`, `beta_dist`, `beta_inv`, `weibull_dist`, `hypgeom_dist`,
+  `negbinom_dist`, `erf`, `erfc`, `standardize`, `confidence_norm`, `confidence_t`, `fisher`, `fisher_inv`, on published numerics
+  (`SpecialFunctions`: Lanczos's gamma, the incomplete gamma and beta by series and continued fractions, erfc from the incomplete
+  gamma, Acklam's inverse normal refined by Halley's step); no library added (commons-math3 is not on Rachana's class path). Every one
+  matches the examples on Excel's own pages.
+- **Finance on given flows (FUNCTION_CATALOGUE.md section 8).** `npv`, `xnpv`, `irr`, `xirr`, `mirr`, `pv`, `fv`, `pmt`, `ipmt`, `ppmt`,
+  `nper`, `rate`, `cumipmt`, `cumprinc`, `effect`, `nominal`, `fvschedule`, `rri`, `pduration`, `accrued` (exact in decimal), `dollarde`,
+  `dollarfr`, `macaulay_duration`, `modified_duration`, `convexity`. `irr`, `xirr` and `rate` find their root by Newton's method, then a
+  scan for a change of sign and bisection, to 1e-12 (`RootFinder`), and say in words when no rate makes the value 0. A missing flow
+  gives an empty figure, never a shifted one. `discount_factor` and `forward_rate` stay planned: Rachana has no clean reader of an
+  `ir-curve` kind.
+- **The engine's aggregates.** `sumproduct`, `sumsq`, `product` (a mantissa and a binary exponent, so a long product never overflows on
+  the way), `devsq`, `skewness_pop`, `covar_pop`, `steyx` (mergeable, each through the split-and-merge harness within 1e-12), `avedev`,
+  `percentile_exc`, `rank_avg`, `percent_rank_of`, `mode_multi` (holistic, merging their values exactly); in a pivot cell and over a
+  Rachana list alike.
+- **MATLAB's list functions.** In Rachana: `fillmissing`, `interp1`, `polyval`, `trapz`, `cumtrapz`, `union`, `intersect`, `difference`,
+  `is_member`, and `sort` by several keys (MATLAB's `sortrows`). From the engine (its aggregates, registered into Rachana): `cumsum`,
+  `cumprod`, `cummax`, `cummin`, `movsum`, `movmean`, `movstd`, `movmedian`, `maxk`, `mink`, `bounds`, `zscore`, `rescale`, `isoutlier`
+  (MATLAB's three scaled MADs), `polyfit` (degree ≤ 6, Householder QR, refused in words when ill-conditioned).
+- **Rules (FUNCTION_CATALOGUE.md, "Rules every function keeps").** The null rule (product owner): `null != 'X'` is true and
+  `null == 'X'` false, a function of a missing value is missing. One rule for text in numbers: no `AVERAGEA`-style forms. No
+  non-deterministic function in a figure.
+- **Docs and tests.** FUNCTION_CATALOGUE.md (sections 1 to 9, the new section 12), FUNCTIONS.md regenerated (285 functions with part A's and the measure-level ones; the
+  catalogue test now checks sections 8 and 9), RACHANA_REFERENCE.md "The Excel, SAS and MATLAB set". Tests: `DistributionsTest`,
+  `FinanceFunctionsTest`, `MoreScalarsTest`, `ListMoreTest` (drishti-rachana), `MoreAggregatesTest`, `RachanaListAnalyticsTest`
+  (drishti-bicompute), each on Excel's or MATLAB's documented examples, with empty, masked and wrong-typed arguments.
+- **One implementation of each function after the merge onto 2.9.11.b.** Part A and the function catalogue both added `round`, `len`,
+  `date`, the date parts and `shift_date`; each is now registered once: `round` in `NumberFunctions` (half away from zero, in decimal,
+  places within ±100), `len` in `TextParts` (characters, counted as code points as the engine's SQL counts them), `date` (one ISO text
+  or year, month, day) and `year` … `second` in `DateParts`, `timestamp`, `business_days_between` and `shift_date` in
+  `DatePartFunctions` (the BI lowering and filter context call its `shift`). `shift_date`'s unit is `'business-day'` (the design's) and
+  `'business_day'` (as `intck` writes it) is read as the same; a calendar moves only business days; at most 100,000 business days.
+  The pivot's show-as is `core.ShowAs` alone (develop's copy inside `PivotAnswer` is gone). Help → Functions lists the engine's
+  measure-level functions (`ratio`, `share_of`, `calc` …) under their own heading.
+
+### Part C: virtual tables for every consumer (decided 2026-11-04)
+
+- **The decisions (VIRTUAL_TABLES.md section 10, status decided).** V1 to V5 as recommended, V6 (built with the DEL fold: one migration,
+  one parity proof, two drills), and V7 to V15: many tables over one source with reads shared per request, new tables offered never made,
+  editors and reading as the source, models across connectors with the scan warning, dates as the source has them, names unique across
+  virtual and stored tables, Sutras reading tables, DuckDB the one SQL engine reached only through the existing executors, one grammar.
+- **Reading a table (TABLES_GUIDE.md section 7a).** `tables.read.TableReads`: a table resolved to its root source (a table over a table
+  reads its base's source with the base's grain and filter, its own added), the source's documents read once per business date and
+  known-at time for every table over it within one request, the rows computed by the preview's one computation
+  (`Preview.rows(table, doc, ...)`, now shared), the reader's access applied; a reader's condition in Rachana over the table's columns
+  (a masked column cannot filter); dates: none is the latest, a date not held is refused, an undated source is today's rows, known-at
+  refused where the source keeps no history; more than `drishti.tables.read-max-rows` (2,000,000) refused, never cut short. It is the
+  layer's `ModelAnswers.Rows` too, so a model's answer reads the same rows.
+- **One access rule.** `answer.TableAccess`: a table's rules for the reader's roles, the table and its columns hidden from a role, the masks
+  for a reader without the raw power; `ModelAnswers` now asks it (moved out of `ModelAnswers`, not copied).
+- **Names and joins.** `Catalogue.clashes` refuses a virtual table named like a stored table (`DRS-9616`); `tables check --stored`.
+  `read.ScanEstimate` warns of a large unfiltered side of a model's join across connectors.
+- **New tables offered.** `read.TableOffer` and `drishti.py tables offer NAME --sample FILE (--kind K | --lake L --table T) [--grain]
+  [--write]`: one typed column per scalar field of a sample, the id key when unique, the lists of objects as grains to choose; `--write`
+  accepts it as a new file, refused when the name is taken.
+- **Codes.** `DRS-9615` (a read refused, HTTP 422), `DRS-9616` (a name clash, 409) and `DRS-9609` (no such table, 404) in the server's
+  error codes, TABLES_GUIDE.md and API_GUIDE.md.
+- **The server reads virtual tables (V5).** `server.tables.TablesService` (`drishti.tables.root`, `read-max-rows`, `scan-warn-rows`): the
+  catalogue read again when a file under it changes, a table named like a stored kind or lake table refused at load and never served, and
+  the reads of one request for one person over `DataViewService.walk` (the kind's entitlement, the edition, the person's masks on every
+  document; a row rule knows `user.name`, `user.roles`, `user.desk`, `user.desks`, `user.email` as BI's do; rules off while security is
+  off). A column masked at the source for the reader is masked in the table.
+- **The pivot reads virtual tables.** Source `table:<domain>.<name>` (PIVOT_GUIDE.md section 3): listed with the kinds a person may open,
+  its columns as fields (masked ones left out), staged in the pivot engine's executor. `StagedRows` is the one staging of rows in hand
+  (moved out of `PanelSources`, which uses it too).
+- **Sutras read virtual tables (V13, in 2.9.11.e).** `source: { table: <domain>.<name>, where, limit, as-of }` on any panel that reads
+  data (RACHANA_REFERENCE.md, TABLES_GUIDE.md section 7a; the Sutra schema): the rows, read for the page's viewer through the table layer
+  (`TableRows`, the engine's one port to it), are `$src`; `where` keeps rows with the page's context; a page built for nobody in particular
+  reads no table. **The viewer through the view pipeline** (its own commit, mechanical): one `ViewerContext` (user, roles, attributes, raw
+  power, masks, kinds) per request, made by `Entitlements.viewer`, passed with every call of `ViewPipeline`, the screen, live streams and
+  explain in place of the masks-and-kinds pair, never kept shared. `TablesService` reads for a `ViewerContext` (the viewer's masks and kinds,
+  so an embedded app's masks hold too). `SutraTableSourceTest`: two people with different row rules and masks on the same page, in turn and
+  sixteen at once, each get their own rows and masks.
+- **A declared mask always holds (a leak fixed).** A column a virtual table declares `masked: true`, and a column a BI dataset lists under
+  `security.masked`, was masked only when the installation masked some field of its own (`drishti.security.redact` not empty): "raw" was
+  read as "nothing masked for this person". It is now the raw power itself (`Entitlements.rawPower`: a role with `raw`, never through an
+  embedded app), so a declared mask holds for every reader without it, whatever `redact` names. The `ViewerContext`'s `raw`, the tables'
+  reads and BI's `DatasetService.masks` use it; BI's per-reader result key names it. **For the parity test:** in an installation with an
+  empty `redact` (the shipped one is not empty, so the shipped demo's figures do not change), readers without the raw power now see masked:
+  `trading-risk-counterparties` and `counterparty-exposure-counterparties` NAME and RATING, `trading-risk-trades` COUNTERPARTY,
+  `counterparty-exposure-official` NODE_NAME, `live-trading` and `live-trading-trade` TRADER_ID (and through them the models
+  trading-risk, counterparty-exposure, live-trading and desk-pnl-vs-exposure-py). `DeclaredMasksTest` (empty `redact`: masked without the raw
+  power, shown with it, for a table and a BI dataset).
+- **The large-join threshold (V10, decided).** `drishti.tables.scan-warn-rows` for the installation, and `scan-warn-rows:` in a
+  `.model.yaml` for that model (checked: a whole number above zero); CONFIGURATION.md regenerated.
+- **The pivot keeps what it staged.** `TablesService.version` names a read without making it (the definitions, the table, the date, the
+  source kind's data version, who reads); `TableSources` keeps each open's fields and staging by that version, so a view opened again on
+  unchanged data reads nothing, and reads its rows only if the staged table was dropped (`StagedRows` takes the rows lazily). A source
+  without a data version is read on every open.
+- **Screens: decided (VIRTUAL_TABLES.md section 11).** Of the table editor's mock-ups A, B and C (`docs/lenses/mockups/virtual-tables/`),
+  the product owner chose B and C with a switch (`BC.html`): Visual (B: the document, the columns, the rows) by default, YAML (C: the
+  definition as text with checks) for experts, both editing the one draft; unsaved text that does not parse cannot switch back until
+  fixed; each person's last choice remembered. The model editor's mock-ups `model-A.html` (lists), `model-B.html` (diagram, measures,
+  answer; recommended) and `model-C.html` (measures first) follow the same Visual-and-YAML idea. Refined the same day: a live YAML panel
+  below every visual view (updated by each visual edit, collapsible, its state remembered per person), editable in place or full screen
+  with the edit right (a valid edit updates the visual part at once; invalid text shows its error at the line while the visual part keeps
+  the last valid version), read-only without it; models get B (diagram) and C (measures) behind one switch (`model-BC.html`); `BC.html`
+  shows the panel open, collapsed, with an error and read-only. A and the single-option mock-ups kept for the record. Not built yet.
+- **Build fixes on the branch.** Error Prone's `ReturnValueIgnored` (`lang.Compiler`) and `JavaTimeDefaultTimeZone` (`lang.SqlLowering`,
+  the preview's evaluator) and `NullTernary` (`ModelAnswersTest`), which stopped `drishti-bicompute` and `drishti-tables` compiling.
+- **Tests.** `TableReadsTest` (shared reads, rules, masks, hidden columns, conditions, a table over a table, dates, the limit),
+  `TableOfferTest` (the offer and its grain pass the checks and preview; name clashes; the scan warning), `TablesCliTest` (offer, `--stored`),
+  `tools/test_tablescli.py`, `PivotTablesApiTest` (a table as a pivot source with its kind's counts and its masks; two tables over one
+  kind read it once; stored names).
 
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 

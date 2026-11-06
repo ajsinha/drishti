@@ -17,7 +17,7 @@ package com.ash.drishti.server.bi.runs;
 
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
-import com.ash.drishti.server.bi.engine.FileSwap;
+import com.ash.drishti.tables.materialize.FileSwap;
 import com.ash.drishti.server.bi.plan.SecuritySignature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;

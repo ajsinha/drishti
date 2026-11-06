@@ -1,0 +1,289 @@
+{
+  "admin" : {
+    "Counterparties | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Counterparties | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Counterparties | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "rows of result" : {
+      "refused" : "DRS-9026"
+    }
+  },
+  "analyst" : {
+    "Counterparties | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Counterparties | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Counterparties | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "rows of result" : {
+      "refused" : "DRS-9026"
+    }
+  },
+  "desk-head-no-desks" : {
+    "Counterparties | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Counterparties | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Counterparties | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "rows of result" : {
+      "refused" : "DRS-9026"
+    }
+  },
+  "desk-head-two-desks" : {
+    "Counterparties | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Counterparties | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Counterparties | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "rows of result" : {
+      "refused" : "DRS-9026"
+    }
+  },
+  "no-raw-power" : {
+    "Counterparties | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Counterparties | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Counterparties | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "rows of result" : {
+      "refused" : "DRS-9026"
+    }
+  },
+  "risk" : {
+    "Counterparties | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Counterparties | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Counterparties | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "rows of result" : {
+      "refused" : "DRS-9026"
+    }
+  },
+  "unnamed-role" : {
+    "Counterparties | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Counterparties | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Counterparties | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Desk P&L | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "Exposure (EE peak) | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | as-of-day1 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | as-of-day2 | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "P&L per exposure | window | by (none)" : {
+      "refused" : "DRS-9026"
+    },
+    "rows of result" : {
+      "refused" : "DRS-9026"
+    }
+  }
+}
