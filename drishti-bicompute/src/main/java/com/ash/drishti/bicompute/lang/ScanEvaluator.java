@@ -29,21 +29,19 @@ import java.util.Map;
  * the engine's {@link AggFunction} state computed by the database ({@link AggFunction#sqlState}, the input set to null where the
  * measure's condition is not true) and finished by the engine ({@link AggFunction#fromSql}), as the tabular provider computes a cell; a
  * {@link Lowered.Shape} is its SQL over its parts' values. The same results as {@link RowsEvaluator}'s, which the differential test
- * proves.
+ * proves. It holds no connection: each call is one unit of work on the connection it is given.
  */
 public final class ScanEvaluator {
 
-    private final Connection db;
     private final String from;
 
     /** {@code from}: the FROM text of the scan ({@code "t"}, a sub-query in parentheses with its alias). */
-    public ScanEvaluator(Connection db, String from) {
-        this.db = db;
+    public ScanEvaluator(String from) {
         this.from = from;
     }
 
     /** A row expression's value for each row of the scan, in {@code order}'s order. */
-    public List<Object> rows(Lowered.Row r, String order) throws SQLException {
+    public List<Object> rows(Connection db, Lowered.Row r, String order) throws SQLException {
         List<Object> out = new ArrayList<>();
         try (Statement s = db.createStatement(); ResultSet rs = s.executeQuery("SELECT " + r.sql() + " FROM " + from + " ORDER BY " + order)) {
             while (rs.next()) {
@@ -54,15 +52,15 @@ public final class ScanEvaluator {
     }
 
     /** A measure over the scan; {@code measures}: the values of the model's measures it names. */
-    public Object measure(Lowered l, Map<String, Object> measures) throws SQLException {
+    public Object measure(Connection db, Lowered l, Map<String, Object> measures) throws SQLException {
         return switch (l) {
-            case Lowered.Aggregate a -> aggregate(a);
+            case Lowered.Aggregate a -> aggregate(db, a);
             case Lowered.Shape s -> {
                 String sql = s.sql();
                 for (int i = 0; i < s.parts().size(); i++) {
-                    sql = sql.replace(Lowered.Shape.placeholder(i), "(" + SqlLowering.literal(measure(s.parts().get(i), measures)) + ")");
+                    sql = sql.replace(Lowered.Shape.placeholder(i), "(" + SqlLowering.literal(measure(db, s.parts().get(i), measures)) + ")");
                 }
-                yield single("SELECT " + sql);
+                yield single(db, "SELECT " + sql);
             }
             case Lowered.Measure m -> {
                 if (m.scope() != null || !measures.containsKey(m.name())) {
@@ -74,7 +72,7 @@ public final class ScanEvaluator {
         };
     }
 
-    private Object aggregate(Lowered.Aggregate a) throws SQLException {
+    private Object aggregate(Connection db, Lowered.Aggregate a) throws SQLException {
         AggFunction<Object> f = RowsEvaluator.function(a);
         List<String> inputs = new ArrayList<>();
         String where = a.where() == null ? null : "coalesce(" + a.where().sql() + ", FALSE)";
@@ -100,7 +98,7 @@ public final class ScanEvaluator {
         }
     }
 
-    private Object single(String sql) throws SQLException {
+    private static Object single(Connection db, String sql) throws SQLException {
         try (Statement s = db.createStatement(); ResultSet rs = s.executeQuery(sql)) {
             rs.next();
             return value(rs.getObject(1));

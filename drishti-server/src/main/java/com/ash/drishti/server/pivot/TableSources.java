@@ -52,15 +52,19 @@ public final class TableSources implements TabularSource.Resolver {
         this.tables = tables;
         this.entitlements = entitlements;
         this.staged = new StagedRows(keep);
-        int most = Math.max(16, keep * 4);
-        this.opened = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true) {
-            private static final long serialVersionUID = 1L;
+        long most = Math.max(16, keep * 4L);                     // about that many opened tables' descriptions, weighed in bytes
+        this.opened = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(most * AVERAGE_OPENED)
+                .weigher((String k, Opened o) -> weight(o)).<String, Opened>build().asMap();
+    }
 
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<String, Opened> eldest) {
-                return size() > most;
-            }
-        });
+    /** The bytes an opened table's description is counted at, on average (its fields, dates and problems; the rows are never kept). */
+    private static final long AVERAGE_OPENED = 16L * 1024;
+
+    /** An opened table's description in bytes, roughly: what it holds besides the rows. */
+    private static int weight(Opened o) {
+        long w = 1024L + 256L * o.fields().size() + 16L * o.cols().size() + 32L * o.dates().size()
+                + o.problems().stream().mapToLong(p -> 64L + 2L * p.length()).sum();
+        return (int) Math.min(Integer.MAX_VALUE, w);
     }
 
     @Override
