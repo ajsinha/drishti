@@ -95,20 +95,22 @@ Drill A and Drill B).
 
 *Decided after a six-seat product review (product manager, BI, market risk, trader, counterparty credit risk, architect): the engines
 are strong; what a bank needs first is a coherent product. The motto is **lean & streamlined**: one way per job, the old way deleted in
-the same release, nothing unbuilt shown as if it works. Revised 2026-11-05: security and controls and the platform are two releases,
-and the counterparty engines and stress are one.*
+the same release, nothing unbuilt shown as if it works. Revised 2026-11-05 and 2026-11-06: the domain-module platform comes right after the BI
+foundation, so the next releases are built straight into the modules; security and controls (with module licensing) follow; performance
+has its own release.*
 
 | Release | Theme | Contents |
 |---|---|---|
 | **2.9.11.c** | Performance and data | OpenBLAS with a Java fallback; parametric VaR as a toggle, a column and a curve in the VaR explorer and a tab in the VaR Playground; the data load rules ([DATA_LOAD_RULES.md](DATA_LOAD_RULES.md)) with the demo and test data converted; Arrow Flight and Flight SQL; the lake configuration; the client examples; the `drishti_` asset names; the function catalogue; the BI declared-mask fix; lean removals and the under-construction registry |
 | **2.9.11.d** | BI foundation, one analysis path | the formula parsers folded into Rachana with one row-rule system; virtual tables as BI's only data layer (migration, parity proof, switch, old code deleted) with the new table and model editors ([EDITORS.md](EDITORS.md)); one Python runtime on the server with Python-driven tables and models; one analysis path, Pivot → Report (cubes as Pivot presets, one report designer, one page renderer); resizable panels and columns on every screen (one shared component); the BI tutorials consolidated; a mid-way independent critique ([PRODUCT_CRITIQUE_BRIEF.md](PRODUCT_CRITIQUE_BRIEF.md)) |
-| **2.9.11.e** | One Build home, one search | one authoring home and one Admin configuration editor (settings in three tiers); one sitemap; one Approvals queue; one search; Python compute moved to Java; one Explain drawer; one alert engine; one keymap; the pre-deal service in Java; the trader home |
-| **2.9.11.f** | Trust, RBAC, security and controls | designed with the product owner first: security on by default, server-minted tokens, one entitlement service, People & access and API keys ([EDITORS.md](EDITORS.md) sections 5 and 6); number honesty ("Official" means signed off); VaR and exposure run status and sign-off; one breach and escalation queue; computed credit-limit usage; the PLA test; the pilot kit |
-| **2.9.11.g** | Lean platform and performance | `drishti-native` ([DRISHTI_NATIVE.md](DRISHTI_NATIVE.md)): every native library behind an interface with a Java fallback; a thin jar with a plugins folder; one storage profile and versioned migrations; the native-access flag; OpenBLAS profiled; BLAS, LAPACK and the Vector API; the 1M-position benchmark; Java 25; ONNX Runtime and OR-Tools |
-| **2.9.11.h** | Documentation and onboarding | four role doors; the long guides split into task guides and references; tutorial tracks completed; documentation truth checked in the gate; the decks |
-| **2.9.11.i** | Risk engines II | SA-CCR with incremental EAD in the pre-deal answer; the CCR cube as a Pivot preset with a limit board; the exposure playground; a stress-testing engine. Finance P&L reconciliation, US capital totals and forms, and delta-gamma-vega VaR only when their inputs exist (else under construction) |
-| **2.9.11.j** | Collateral and margin | collateral valuation and eligibility; margin calls and disputes; stressed exposure; wrong-way risk flags |
-| **2.9.11.k** | CVA | BA-CVA from SA-CCR exposure; FVA |
+| **2.9.11.e** | Platform: domain modules | the core knows no industry: generic `drishti-compute` and `drishti-compute-banking`; the banking services and API (`/api/v1/risk/…`, old paths redirecting one release) and its console plugin (routes, screens, static assets served only to the people who use them, Help, tutorials); packs grouped by domain (`config/packs/core/`, `banking/`, `economy/`; ids unchanged); a thin jar with a plugins folder; `drishti-native` ([DRISHTI_NATIVE.md](DRISHTI_NATIVE.md)) with a Java fallback for every native library and the native-access flag; one storage profile and versioned migrations; an architecture test that the core never imports a domain and domains never import each other |
+| **2.9.11.f** | One Build home, one search | built straight into the modules ([SHARED_SCREENS.md](SHARED_SCREENS.md)): one Build home and the Admin configuration editor (settings in three tiers); one sitemap and Help grouped by domain, visible by lens; one Approvals queue; one Explain for every number; one search; one alert engine; one keymap; Python compute moved to Java; the pre-deal service in Java; the trader home |
+| **2.9.11.g** | Trust, RBAC, security and controls | designed with the product owner first: security on by default, server-minted tokens, one entitlement service for every door, visibility by role, People & access and API keys ([EDITORS.md](EDITORS.md) sections 5 and 6); data licensing (RBAC and the data licence both decide); **module licensing** on the clean modules; the controls ([CONTROLS_SCREENS.md](CONTROLS_SCREENS.md)): run status and sign-off, one breach and escalation queue, computed credit-limit usage, number honesty; the PLA test; the pilot kit |
+| **2.9.11.h** | Performance | OpenBLAS profiled (on by default or not, decided by measurement); BLAS, LAPACK and the Vector API; the 1M-position benchmark and the 2.3M extrapolation; Java 25 measured; ONNX Runtime and OR-Tools behind `drishti-native` |
+| **2.9.11.i** | Documentation and onboarding | four role doors; the long guides split into task guides and references; tutorial tracks completed; documentation truth checked in the gate; the decks |
+| **2.9.11.j** | Risk engines II | SA-CCR with incremental EAD in the pre-deal answer; the CCR cube as a Pivot preset with a limit board; the exposure playground; a stress-testing engine. Finance P&L reconciliation, US capital totals and forms, and delta-gamma-vega VaR only when their inputs exist (else under construction) |
+| **2.9.11.k** | Collateral and margin | collateral valuation and eligibility; margin calls and disputes; stressed exposure; wrong-way risk flags |
+| **2.9.11.l** | CVA | BA-CVA from SA-CCR exposure; FVA |
 
 **Not scheduled:** QuantLib (a release of its own: the `quantlib_for_maven` binding in single-threaded worker processes); the
 PostgreSQL wire protocol (when a pilot asks); FRTB internal models, SA-CVA and full xVA; new domains beyond the two named above wait
@@ -120,21 +122,21 @@ next) is a set of modules owning its compute (`drishti-compute-<domain>`, beside
 (`/api/v1/<domain>/…`), its console routes, screens and static assets (served only to people whose role, lens or packs use it), its Help
 and tutorials, and its packs. The core and the generic compute never import a domain module, and domains never import each other. What
 a person sees follows their role and lens through the one entitlement service. The reason: **module-based licensing** (a signed licence
-names the modules an installation may run; an unlicensed module is not loaded at all), with editions folded into it. Designed in
-2.9.11.e, visibility by role in 2.9.11.f, the code split in 2.9.11.g, licensing on the clean modules after it; the public-sector domain is
+names the modules an installation may run; an unlicensed module is not loaded at all), with editions folded into it. The split is
+2.9.11.e, visibility by lens in 2.9.11.f and by role in 2.9.11.g, module licensing in 2.9.11.g; the public-sector domain is
 built as a module from day one.
 
 **A large commercial product** (product owner, 2026-11-05). Beyond features, the roadmap carries what a bank buys and audits:
 
 | Theme | What it means | Where |
 |---|---|---|
-| **Data licensing** | every dataset carries its licence (vendor, terms, who may see it, redistribution, display versus non-display use, derived data rules); a person sees a source's data only if both RBAC and the data licence allow it; exports, Flight, embeds and the AI honour the same rule; usage reported per source for vendor audits (market data vendors bill by user and use) | designed with the security model (2.9.11.f), enforced by the one entitlement service |
-| **Module licensing** | signed licence naming modules and limits; unlicensed modules not loaded; editions folded in | after 2.9.11.g's module split |
+| **Data licensing** | every dataset carries its licence (vendor, terms, who may see it, redistribution, display versus non-display use, derived data rules); a person sees a source's data only if both RBAC and the data licence allow it; exports, Flight, embeds and the AI honour the same rule; usage reported per source for vendor audits (market data vendors bill by user and use) | designed and built with the security model (2.9.11.g), enforced by the one entitlement service |
+| **Module licensing** | signed licence naming modules and limits; unlicensed modules not loaded; editions folded in | 2.9.11.g, on 2.9.11.e's modules |
 | **Metering** | per module, per user and per data source: who used what, for licence compliance and billing | with licensing |
 | **Tenancy and residency** | several business units (or clients) on one installation with separated data; data kept in a chosen region | after licensing |
-| **Security assurance** | penetration tests, dependency and container scanning, signed releases, an SBOM, secrets in a vault, customer-managed keys | 2.9.11.f onward, every release |
-| **Compliance evidence** | audit trail export, access reviews, SOC 2 and ISO 27001 style evidence, model governance (SR 11-7) for risk models | with the controls (2.9.11.f) |
-| **Operations** | high availability and disaster recovery (tested restore), observability (metrics, traces, alerts), upgrades with versioned migrations, a long-term-support branch | 2.9.11.g and every release |
+| **Security assurance** | penetration tests, dependency and container scanning, signed releases, an SBOM, secrets in a vault, customer-managed keys | 2.9.11.g onward, every release |
+| **Compliance evidence** | audit trail export, access reviews, SOC 2 and ISO 27001 style evidence, model governance (SR 11-7) for risk models | with the controls (2.9.11.g) |
+| **Operations** | high availability and disaster recovery (tested restore), observability (metrics, traces, alerts), upgrades with versioned migrations, a long-term-support branch | 2.9.11.e and every release |
 | **Support** | diagnostics bundle, support tooling, documented service levels | with operations |
 | **Ecosystem** | a pack and module SDK, partner certification, a signed pack registry (exists) as a marketplace | after the module split |
 | **Accessibility and languages** | WCAG 2.2 AA everywhere, right-to-left and translations for the console | a UX pass each release |
@@ -147,7 +149,7 @@ typologies, network analysis and the suspicious-activity report), each a licensa
 domain module, licensed and shipped with it: e.g. `config/packs/core/` (the generic pack), `banking/` (trading, market-data,
 market-risk, counterparty-risk, funds, us-equities, gleif), `economy/` (world-economy, news-and-markets) and later `gov/` and `aml/`;
 the pack loader reads the folders, a pack names its domain, and Admin → Packs, Help and the Build home group by it. Done with the module
-split (2.9.11.g); pack ids stay the same, so links and saved items keep working.
+split (2.9.11.e); pack ids stay the same, so links and saved items keep working.
 
 **Every release:** two drills, the VaR check, the README rewritten, the decks updated, a code survey and A/B/C mock-ups before a new
 screen, and anything unbuilt hidden or marked "Under construction" through the one registry
