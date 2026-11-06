@@ -137,7 +137,7 @@ def test_the_doors_open_the_same_preset_the_var_explorer_link_and_the_older_addr
     opened(pg)
     v = view(pg)
     assert v["source"] == "var" and (v.get("options") or {}).get("scope") == "BANK"
-    assert pg.locator("[data-pv-title]").text_content().strip() == "MR cube"
+    assert pg.locator("[data-pv-title]").text_content().strip().endswith("MR cube")             # the source's title, "VaR · MR cube"
     pg.goto(base + "/mcube")
     pg.wait_for_url("**/pivot?preset=mr**")
     opened(pg)
