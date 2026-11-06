@@ -57,8 +57,9 @@ public final class BiFolder implements AutoCloseable {
     /** The tag a shipped file with {@code sample: true} carries; the sample-visibility setting hides tagged items from those who may not see samples. */
     public static final String SAMPLE_TAG = "sample";
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
-    private static final Map<String, String> KINDS = Map.of("datasets", "dataset", "models", "model", "reports", "report", "boards", "board", "notebooks", "notebook", "python", "python",
-            "themes", "theme");
+    private static final Map<String, String> KINDS = Map.of("reports", "report", "boards", "board", "notebooks", "notebook", "python", "python", "themes", "theme");
+    /** The table layer's files (BI_FOUNDATION_2911E.md step 5): tables are what BI's models read as their datasets, models are BI's models. */
+    private static final Map<String, String> LAYER = Map.of("table", "dataset", "model", "model");
 
     /** One file as last read: its stamp, the last good item (null until one parses) and the problem with the latest content, if any. */
     private record Entry(long modified, long size, BiStore.Item item, String problem, Instant problemSince) {}
@@ -67,6 +68,7 @@ public final class BiFolder implements AutoCloseable {
     public record Problem(String file, String message, Instant since, boolean keptLastGood) {}
 
     private final Path dir;
+    private final Path tablesDir;
     private final Duration refresh;
     private final String watchMode;
     private final AtomicBoolean loading = new AtomicBoolean();
@@ -76,9 +78,19 @@ public final class BiFolder implements AutoCloseable {
     private volatile Set<String> hidden = Set.of();
     private volatile long loadedAt = Long.MIN_VALUE;
     private volatile DirectoryWatcher watcher;
+    private volatile DirectoryWatcher tablesWatcher;
 
     public BiFolder(String dir, Duration refresh, String watchMode) {
+        this(dir, null, refresh, watchMode);
+    }
+
+    /**
+     * @param dir the BI folder (reports, boards, notebooks, Python items, themes)
+     * @param tablesDir the table layer's folder ({@code drishti.tables.root}: a folder per domain of {@code .table.yaml} and {@code .model.yaml}), or null
+     */
+    public BiFolder(String dir, String tablesDir, Duration refresh, String watchMode) {
         this.dir = Path.of(dir);
+        this.tablesDir = tablesDir == null ? null : Path.of(tablesDir);
         this.refresh = refresh;
         this.watchMode = watchMode == null ? "auto" : watchMode;
         if (!Set.of("auto", "poll", "off").contains(this.watchMode)) {
@@ -93,6 +105,11 @@ public final class BiFolder implements AutoCloseable {
             DirectoryWatcher w = new DirectoryWatcher(dir, watchMode, Math.max(50, refresh.toMillis()), this::reload, "drishti-bi-watch");
             w.start();
             watcher = w;
+            if (tablesDir != null) {
+                DirectoryWatcher t = new DirectoryWatcher(tablesDir, watchMode, Math.max(50, refresh.toMillis()), this::reload, "drishti-bi-tables-watch");
+                t.start();
+                tablesWatcher = t;
+            }
         }
     }
 
@@ -102,6 +119,11 @@ public final class BiFolder implements AutoCloseable {
         watcher = null;
         if (w != null) {
             w.close();
+        }
+        DirectoryWatcher t = tablesWatcher;
+        tablesWatcher = null;
+        if (t != null) {
+            t.close();
         }
     }
 
@@ -179,6 +201,24 @@ public final class BiFolder implements AutoCloseable {
                     LOG.warn("BI folder: {} unreadable: {}", folder, e.getMessage());
                 }
             }
+            if (tablesDir != null && Files.isDirectory(tablesDir)) {
+                try (Stream<Path> domains = Files.list(tablesDir)) {
+                    for (Path domain : domains.filter(Files::isDirectory).sorted().toList()) {
+                        try (Stream<Path> files = Files.list(domain)) {
+                            for (Path f : files.sorted().toList()) {
+                                String n = f.getFileName().toString();
+                                String layerKind = n.endsWith(".table.yaml") ? "table" : n.endsWith(".model.yaml") ? "model" : null;
+                                if (layerKind != null) {
+                                    String key = "tables/" + domain.getFileName() + "/" + n;
+                                    next.put(key, read(LAYER.get(layerKind), f, entries.get(key)));
+                                }
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    LOG.warn("BI folder: the tables folder {} unreadable: {}", tablesDir, e.getMessage());
+                }
+            }
             entries.keySet().stream().filter(x -> !next.containsKey(x)).forEach(x -> LOG.info("BI folder: {} removed", x));
             entries = Map.copyOf(next);
             Map<String, BiStore.Item> byId = new java.util.LinkedHashMap<>();
@@ -238,7 +278,11 @@ public final class BiFolder implements AutoCloseable {
             throw new IOException("the file is YAML with a mapping at the top (key: value)");
         }
         String name = file.getFileName().toString();
-        name = name.substring(0, name.length() - ("." + kind + ".yaml").length());
+        if (root.has("table") || root.path("rachana").asInt(0) == 3 && root.has("model")) {
+            name = root.path(root.has("table") ? "table" : "model").asText(name);    // a definition of the table layer: its name
+        } else {
+            name = name.substring(0, name.length() - ("." + kind + ".yaml").length());
+        }
         if ("board".equals(kind)) {                                       // 2.4.0 (R7): a board is a report with board pages; a 2.3 board file is read as one
             String converted = com.ash.drishti.server.bi.board.BoardConverter.toReport(text, "boards/" + file.getFileName());
             if (converted == null) {

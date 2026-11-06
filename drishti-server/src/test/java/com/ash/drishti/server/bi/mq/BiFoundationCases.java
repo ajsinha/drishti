@@ -97,6 +97,9 @@ public final class BiFoundationCases {
     /** The shipped BI folder, read only. */
     static final Path BI = Path.of("..", "config", "bi");
 
+    /** The shipped table layer (config/tables): the tables and models BI reads since the switch (BI_FOUNDATION_2911E.md step 5), read only. */
+    static final Path TABLES = Path.of("..", "config", "tables");
+
     /**
      * The seven persons of section 5.1: a desk-head with two desks, a desk-head with no desks (the strict {@code in}: no rows), risk, an
      * analyst, an administrator, a reader without the raw power (masks) and a role no rule names ({@code DRS-9131}: no rows and the reason).
@@ -129,35 +132,29 @@ public final class BiFoundationCases {
         Map<String, String> datasets = new LinkedHashMap<>();
         Map<String, Dataset> direct = new TreeMap<>();
         Map<String, String> problems = new TreeMap<>();
-        try (Stream<Path> s = Files.list(BI.resolve("datasets"))) {
-            for (Path f : s.filter(p -> p.toString().endsWith(".dataset.yaml")).sorted().toList()) {
-                String y = Files.readString(f);
-                if (DatasetDefParser.isVersion2(y)) {
-                    datasets.put(f.getFileName().toString(), y);
-                } else {
-                    DatasetParser.Result r = DatasetParser.parse(y);
-                    if (r.ok()) {
-                        direct.put(r.dataset().name(), r.dataset());
-                    } else {
-                        problems.put(f.getFileName().toString(), "not loaded: " + r.problems());
-                    }
-                }
+        List<Path> files;
+        try (Stream<Path> s = Files.walk(TABLES)) {
+            files = s.filter(Files::isRegularFile).sorted().toList();
+        }
+        for (Path f : files) {
+            if (f.toString().endsWith(".table.yaml")) {
+                datasets.put(f.getFileName().toString(), Files.readString(f));
             }
         }
         Map<String, ModelView> models = new TreeMap<>();
-        try (Stream<Path> s = Files.list(BI.resolve("models"))) {
-            for (Path f : s.filter(p -> p.toString().endsWith(".model.yaml")).sorted().toList()) {
-                String y = Files.readString(f);
-                String name = ModelDefParser.parse(y).model() == null ? f.getFileName().toString() : ModelDefParser.parse(y).model().name();
-                try {
-                    models.put(name, MqHarness.model(y, k -> Optional.empty(), datasets.values().toArray(String[]::new)));
-                } catch (RuntimeException e) {
-                    problems.put(name, "not loaded: " + e.getMessage());
-                }
+        for (Path f : files) {
+            if (!f.toString().endsWith(".model.yaml")) {
+                continue;
+            }
+            String y = Files.readString(f);
+            String name = ModelDefParser.parse(y).model() == null ? f.getFileName().toString() : ModelDefParser.parse(y).model().name();
+            try {
+                models.put(name, MqHarness.model(y, k -> Optional.empty(), datasets.values().toArray(String[]::new)));
+            } catch (RuntimeException e) {
+                problems.put(name, "not loaded: " + e.getMessage());
             }
         }
         List<Dataset> flats = new ArrayList<>(models.values().stream().map(ModelView::flat).filter(d -> !d.framed()).toList());
-        direct.values().stream().filter(d -> !d.framed()).forEach(flats::add);
         return new Shipped(models, direct, new SampleLake(flats), problems);
     }
 

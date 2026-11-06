@@ -30,7 +30,7 @@ description: >-
 sample: true
 endorsement: promoted
 tags: [sample, trading, live, streaming, tutorial]
-dataset: live-trading
+model: live-trading@1
 theme: { palette: default }
 
 # On a phone (640 px and narrower) the Desk page shows net MTM and the trade count first, then the desk chart (5 rows tall), the worst trades, notional and P&L;

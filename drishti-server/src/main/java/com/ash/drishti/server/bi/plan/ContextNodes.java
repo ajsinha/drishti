@@ -17,7 +17,7 @@ package com.ash.drishti.server.bi.plan;
 
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.Node;
-import com.ash.drishti.server.bi.expr.DelPrinter;
+import com.ash.drishti.server.bi.dataset.NodeText;
 import com.ash.drishti.server.bi.expr.Expressions;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -73,13 +73,13 @@ final class ContextNodes {
     private static PlanNode node(Node.Call c, String measure, List<PlanNode> scans, List<PlanNode.Cond> conds, String fact, List<String> fields) {
         Map<String, Object> edits = new TreeMap<>();
         List<Node> pos = Node.positional(c);
-        edits.put("aggregate", DelPrinter.print(pos.get(0)));
+        edits.put("aggregate", NodeText.print(pos.get(0)));
         Set<String> dropped = new LinkedHashSet<>();
         boolean all = false;
         for (Node a : c.args()) {
             if (a instanceof Node.Call k && k.function().startsWith(Node.KEYWORD)) {
                 String key = k.function().substring(Node.KEYWORD.length());
-                List<String> items = k.args().stream().map(DelPrinter::print).toList();
+                List<String> items = k.args().stream().map(NodeText::print).toList();
                 edits.put(key, items.size() == 1 && !List.of("ignore", "keep", "over", "by").contains(key) ? items.get(0) : items);
                 if (List.of("ignore", "over").contains(key)) {
                     if (items.equals(List.of("ALL"))) {
@@ -90,7 +90,7 @@ final class ContextNodes {
             }
         }
         for (int i = 1; i < pos.size(); i++) {
-            edits.put(i == 1 ? "date" : "arg" + i, DelPrinter.print(pos.get(i)));
+            edits.put(i == 1 ? "date" : "arg" + i, NodeText.print(pos.get(i)));
         }
         Object keep = edits.get("keep");
         List<String> by = new ArrayList<>();

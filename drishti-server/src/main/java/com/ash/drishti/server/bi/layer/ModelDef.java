@@ -35,7 +35,16 @@ import java.util.Set;
 public record ModelDef(String name, String version, String id, String title, String description, String owner, boolean sample, String endorsement,
         Map<String, Use> datasets, List<Rel> relationships, Map<String, Meas> measures, Map<String, List<String>> hierarchies, Security security, Contract contract,
         String lifecycle, String replacedBy, List<Dataset.Rollup> rollups, List<JsonNode> tests, List<JsonNode> golden, JsonNode ai, String implicitFrom,
-        List<String> placeholders, Semantics semantics, Calculation calculation) {
+        List<String> placeholders, Semantics semantics, Calculation calculation, Map<String, DatasetDef.History> histories) {
+
+    /** A model without live histories of its own (its tables' live sampling, if any, is theirs). */
+    public ModelDef(String name, String version, String id, String title, String description, String owner, boolean sample, String endorsement, Map<String, Use> datasets,
+            List<Rel> relationships, Map<String, Meas> measures, Map<String, List<String>> hierarchies, Security security, Contract contract, String lifecycle, String replacedBy,
+            List<Dataset.Rollup> rollups, List<JsonNode> tests, List<JsonNode> golden, JsonNode ai, String implicitFrom, List<String> placeholders, Semantics semantics,
+            Calculation calculation) {
+        this(name, version, id, title, description, owner, sample, endorsement, datasets, relationships, measures, hierarchies, security, contract, lifecycle, replacedBy, rollups,
+                tests, golden, ai, implicitFrom, placeholders, semantics, calculation, Map.of());
+    }
 
     /** As written before field properties, perspectives and object-level security (none). */
     public ModelDef(String name, String version, String id, String title, String description, String owner, boolean sample, String endorsement, Map<String, Use> datasets,
@@ -189,6 +198,7 @@ public record ModelDef(String name, String version, String id, String title, Str
         placeholders = placeholders == null ? List.of() : List.copyOf(placeholders);
         semantics = semantics == null ? Semantics.NONE : semantics;
         calculation = calculation == null ? Calculation.NONE : calculation;
+        histories = histories == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(histories));
     }
 
     public int major() {

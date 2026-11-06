@@ -17,7 +17,6 @@ package com.ash.drishti.server.bi.layer;
 
 import com.ash.drishti.common.BusinessCalendar;
 import com.ash.drishti.server.bi.expr.DelException;
-import com.ash.drishti.server.bi.expr.DelParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -115,7 +114,7 @@ final class CalculationParser {
                 y.error("DRS-9127", path + ".items." + e.getKey(), "an item applies to the selected measure: write SELECTED where it goes, for example ytd(SELECTED, trades.tradeDate)");
             }
             try {
-                DelParser.parse(text);
+                com.ash.drishti.server.bi.expr.Expressions.parse(text);
             } catch (DelException ex) {
                 y.error("DRS-9127", path + ".items." + e.getKey(), ex.getMessage());
             }

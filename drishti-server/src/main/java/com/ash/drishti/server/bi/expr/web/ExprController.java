@@ -125,7 +125,7 @@ public class ExprController {
             throw new MqException(MqException.Problem.of("DRS-9127", "expr", "the expression to convert (expr), or an item's YAML (yaml)"));
         }
         try {
-            Expressions.Converted c = Expressions.convert(expr);
+            ExpressionMigrator.Converted c = ExpressionMigrator.toRachana(expr);
             m.put("expr", c.from());
             m.put("converted", c.to());
             m.put("changed", c.changed());

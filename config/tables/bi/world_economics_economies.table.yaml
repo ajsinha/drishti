@@ -1,0 +1,38 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Migrated from config/bi/datasets/world-economics-economies.dataset.yaml by drishti.py tables migrate (docs/architecture/BI_FOUNDATION_2911E.md section 4).
+rachana: 3
+table: bi.world_economics_economies
+was: world-economics-economies
+version: 1.0.0
+title: "World economics: economies"
+description: The economies table of the model world-economics.
+sample: true
+endorsement: promoted
+tags: [sample, economics, real-data, map]
+from: { kind: economy, connector: macro-store }
+columns:
+  NAME:           { path: "$.NAME", type: string }
+  ISO3:           { path: "$.ISO3", type: string }
+  REGION_NAME:    { path: "$.REGION_NAME", type: string }
+  INCOME_NAME:    { path: "$.INCOME_NAME", type: string }
+  GDP_USD_BN:     { path: "$.GDP_USD_BN", type: decimal, format: amount0 }
+  GDP_PER_CAPITA: { path: "$.GDP_PER_CAPITA", type: decimal, format: amount0 }
+  GROWTH:         { path: "$.GROWTH", type: decimal, format: pc2 }
+  INFLATION:      { path: "$.INFLATION", type: decimal, format: pc2 }
+  UNEMPLOYMENT:   { path: "$.UNEMPLOYMENT", type: decimal, format: pc2 }
+  POPULATION_M:   { path: "$.POPULATION_M", type: decimal, format: price2 }
+refresh: { on-load: true }
+materialize: on-load

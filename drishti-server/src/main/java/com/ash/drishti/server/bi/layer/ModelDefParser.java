@@ -66,6 +66,59 @@ public final class ModelDefParser {
     }
 
     static ModelDef read(JsonNode root, LayerYaml y) {
+        Map<String, DatasetDef.History> histories = Map.of();
+        if (root.path("rachana").asInt(0) == LAYER && root.isObject()) {
+            histories = histories(root.path("history"), y);
+            root = asBi((com.fasterxml.jackson.databind.node.ObjectNode) root.deepCopy());
+        }
+        return read(root, y, histories);
+    }
+
+    /** The layer's model files say {@code rachana: 3} (TABLES_GUIDE.md): tables by alias, the live history on the model. */
+    static final int LAYER = 3;
+
+    /** A model of the layer said with BI's keys: {@code tables: { a: { table: t } }} as {@code datasets: { a: { dataset: t } }}. */
+    private static JsonNode asBi(com.fasterxml.jackson.databind.node.ObjectNode m) {
+        com.fasterxml.jackson.databind.node.ObjectNode datasets = m.objectNode();
+        m.path("tables").fields().forEachRemaining(e -> {
+            com.fasterxml.jackson.databind.node.ObjectNode u = m.objectNode();
+            JsonNode v = e.getValue();
+            u.put("dataset", v.isTextual() ? v.asText() : v.path("table").asText(""));
+            if (v.has("role")) {
+                u.set("role", v.get("role"));
+            }
+            datasets.set(e.getKey(), u);
+        });
+        m.remove(java.util.List.of("tables", "history", "scan-warn-rows", "expressions"));
+        m.set("datasets", datasets);
+        m.put("rachana", DatasetDef.RACHANA);
+        return m;
+    }
+
+    /** {@code history: { every, keep, by, measures }} (the model's live tables sampled), or one such per alias. */
+    private static Map<String, DatasetDef.History> histories(JsonNode h, LayerYaml y) {
+        Map<String, DatasetDef.History> out = new LinkedHashMap<>();
+        if (!h.isObject()) {
+            return out;
+        }
+        if (h.has("every") || h.has("keep") || h.has("measures")) {
+            out.put("*", history(h, "history", y));
+        } else {
+            h.fields().forEachRemaining(e -> out.put(e.getKey(), history(e.getValue(), "history." + e.getKey(), y)));
+        }
+        return out;
+    }
+
+    private static DatasetDef.History history(JsonNode h, String path, LayerYaml y) {
+        java.time.Duration every = DatasetParser.span(LayerYaml.text(h, "every", "10s"));
+        if (every == null) {
+            y.error("DRS-9103", path + ".every", "an interval such as 10s or 1m");
+        }
+        return new DatasetDef.History(every, h.path("keep").asInt(360), y.strings(h.path("by"), path + ".by", "DRS-9103"),
+                y.strings(h.path("measures"), path + ".measures", "DRS-9103"));
+    }
+
+    private static ModelDef read(JsonNode root, LayerYaml y, Map<String, DatasetDef.History> histories) {
         y.unknownKeys(root, TOP, "DRS-9120", "");
         DatasetDefParser.expressionsVersion(root, y);
         if (root.path("rachana").asInt(0) != DatasetDef.RACHANA) {
@@ -123,7 +176,7 @@ public final class ModelDefParser {
         return new ModelDef(name, version, LayerYaml.text(root, "id", ""), LayerYaml.text(root, "title", name), LayerYaml.text(root, "description", ""),
                 LayerYaml.text(root, "owner", ""), root.path("sample").asBoolean(false), LayerYaml.text(root, "endorsement", "none"), datasets, rels, measures, hierarchies,
                 security, contract, lifecycle, root.has("replaced-by") ? LayerYaml.text(root, "replaced-by", "") : null, rollups, tests, golden,
-                root.has("ai") ? root.get("ai") : null, root.has("implicit-from") ? LayerYaml.text(root, "implicit-from", "") : null, placeholders, semantics, calculation);
+                root.has("ai") ? root.get("ai") : null, root.has("implicit-from") ? LayerYaml.text(root, "implicit-from", "") : null, placeholders, semantics, calculation, histories);
     }
 
     // ---- field properties, perspectives, object-level security (docs/architecture/BI_DESIGN.md sections 2.2 and 5.1) ----------

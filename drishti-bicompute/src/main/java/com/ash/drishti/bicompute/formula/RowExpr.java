@@ -136,7 +136,11 @@ final class RowExpr {
                 Boolean all = true;
                 for (int i = 0; i < c.ops().size(); i++) {
                     Object right = value(c.rest().get(i), b, r, cols);
-                    Boolean t = compare(c.ops().get(i), left, right);
+                    String op = c.ops().get(i);
+                    boolean nullTest = (op.equals("==") || op.equals("!=")) && (c.rest().get(i) instanceof FormulaAst.NoneLit
+                            || (i == 0 ? c.first() : c.rest().get(i - 1)) instanceof FormulaAst.NoneLit);
+                    // x == null tests for nothing (Rachana's one null rule, BI_FOUNDATION_2911E.md Q1); other comparisons with nothing are unknown
+                    Boolean t = nullTest ? (left == null && right == null) == op.equals("==") : compare(op, left, right);
                     if (t == null) {
                         all = null;
                         break;
@@ -374,6 +378,9 @@ final class RowExpr {
                 String kind = text ? "text" : "num";
                 String items = String.join(", ", l.items().stream().map(x -> sql(x, in, kind)).toList());
                 parts.add("(" + sql(left, in, kind) + (op.equals("in") ? " IN (" : " NOT IN (") + items + "))");
+            } else if ((op.equals("==") || op.equals("!=")) && (left instanceof FormulaAst.NoneLit || right instanceof FormulaAst.NoneLit)) {
+                FormulaAst other = right instanceof FormulaAst.NoneLit ? left : right;
+                parts.add("(" + sql(other, in, "text") + (op.equals("==") ? " IS NULL)" : " IS NOT NULL)"));
             } else {
                 boolean text = left instanceof FormulaAst.Str || right instanceof FormulaAst.Str;
                 String kind = text ? "text" : "num";

@@ -57,7 +57,7 @@ public final class Flattener {
             if (r == null) {
                 continue;
             }
-            DatasetDef d = r.def();
+            DatasetDef d = withHistory(r.def(), m.histories().getOrDefault(use.alias(), use.fact() ? m.histories().get("*") : null));
             Dataset.Table table = table(use.alias(), d, unbuilt);
             for (DatasetDef.Col c : d.columns().values()) {                      // related(x.y): the field y of the kind x references, one hop
                 java.util.Optional<String[]> rel = Derivations.related(c);
@@ -120,7 +120,7 @@ public final class Flattener {
         for (ModelDef.Meas x : all.values()) {
             String expr = com.ash.drishti.server.bi.expr.Expressions.withMeasureNames(x.expr(), ids);
             if (expr != null && x.via() != null && !x.via().isBlank()) {
-                expr = "calc(" + expr + ", via=" + com.ash.drishti.server.bi.expr.DelPrinter.quote(x.via()) + ")";   // a measure along an inactive relationship (wave B)
+                expr = "calc(" + expr + ", via=" + com.ash.drishti.server.bi.dataset.NodeText.quote(x.via()) + ")";   // a measure along an inactive relationship (wave B)
             }
             measures.put(x.name(), new Dataset.Measure(x.name(), expr, x.format(), x.description(), x.python(), x.inputs(), x.by()));
         }
@@ -161,6 +161,17 @@ public final class Flattener {
     }
 
     /** The engine table of a dataset under its alias. */
+    /** A live table with the model's sampling of it (the layer keeps a live history on the model, Q14); anything else as it is. */
+    static DatasetDef withHistory(DatasetDef d, DatasetDef.History h) {
+        DatasetDef.Time t = d.time();
+        if (h == null || t == null || !"live".equals(t.mode()) || t.history() != null) {
+            return d;
+        }
+        return new DatasetDef(d.name(), d.version(), d.id(), d.title(), d.description(), d.owner(), d.sample(), d.endorsement(), d.generated(), d.source(), d.grain(),
+                d.columns(), new DatasetDef.Time(t.mode(), t.asOf(), t.keep(), t.storage(), t.liveRows(), t.liveAge(), h), d.refresh(), d.security(), d.extendsRef(),
+                d.where(), d.ai(), d.tests(), d.rollups(), d.derivation());
+    }
+
     static Dataset.Table table(String alias, DatasetDef d, Set<String> unbuilt) {
         DatasetDef.Source s = d.source();
         DatasetDef.Time t = d.time() == null ? DatasetDef.Time.SNAPSHOT : d.time();
