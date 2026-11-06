@@ -38,7 +38,7 @@ import org.springframework.test.web.servlet.MvcResult;
  * and the type-ahead (no trades, no VaR, no world economy), no VaR or exposure BI item, and the About answers and branding.
  */
 @SpringBootTest(properties = {"drishti.edition=market", "drishti.packs.enabled=default", "drishti.rachana.hot-reload=false",
-        "drishti.sources.plugins.demo.enabled=false", "drishti.bi.dir=../config/bi",
+        "drishti.sources.plugins.demo.enabled=false", "drishti.bi.dir=../config/bi", "drishti.tables.root=../config/tables",
         "drishti.bi.query.store-dir=${drishti.test.dir}/market-bi-store/${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/market-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
@@ -109,7 +109,7 @@ class EditionMarketServerTest {
         List<String> ids = new ArrayList<>();
         getJson("/api/v1/bi/datasets").path("datasets").forEach(d -> ids.add(d.path("id").asText()));
         assertThat(ids).allSatisfy(id -> assertThat(id.substring(id.lastIndexOf(':') + 1)).startsWith("market-data-"));
-        assertThat(mvc.perform(get("/api/v1/bi/items/file:dataset:market-risk-var-latest")).andReturn().getResponse().getStatus()).isEqualTo(404);
+        assertThat(mvc.perform(get("/api/v1/bi/items/file:table:bi.market_risk_var_latest")).andReturn().getResponse().getStatus()).isEqualTo(404);
         List<String> items = new ArrayList<>();
         getJson("/api/v1/bi/catalogue").path("items").forEach(i -> items.add(i.path("id").asText()));
         assertThat(items).doesNotContain("file:report:market-risk-var", "file:report:trades-overview", "file:report:world-economics");

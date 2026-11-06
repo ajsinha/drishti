@@ -623,14 +623,14 @@ public final class BiService {
     /** The published dataset items the caller may see. */
     public List<BiStore.Item> datasetItems(Principal p) {
         open(p);
-        return catalogueItems(p).stream().filter(i -> "dataset".equals(i.kind())).toList();
+        return catalogueItems(p).stream().filter(i -> Set.of("dataset", "table").contains(i.kind())).toList();
     }
 
     /** The caller's own unpublished datasets (in their private workspace, or in a workspace they belong to): listed, greyed with the reason, never usable by a report until published. */
     public List<BiStore.Item> draftDatasets(Principal p) {
         open(p);
         Set<String> mine = myWorkspaces(p);
-        return store.items().stream().filter(i -> "dataset".equals(i.kind()) && !i.isPublished() && (i.owner().equals(p.user()) || mine.contains(i.workspace()))).toList();
+        return store.items().stream().filter(i -> Set.of("dataset", "table").contains(i.kind()) && !i.isPublished() && (i.owner().equals(p.user()) || mine.contains(i.workspace()))).toList();
     }
 
     /** The published report items the caller may see (what a board's tile can name). */
@@ -654,7 +654,7 @@ public final class BiService {
     public List<BiStore.Item> allDatasets() {
         List<BiStore.Item> all = new ArrayList<>(store.published());
         all.addAll(folder.items());
-        return all.stream().filter(i -> "dataset".equals(i.kind())).toList();
+        return all.stream().filter(i -> Set.of("dataset", "table").contains(i.kind())).toList();
     }
 
     /** The dataset item a source of a composed dataset names (catalogue id, file name, the dataset's name or title): published before draft; empty when there is none. */

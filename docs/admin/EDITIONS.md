@@ -139,7 +139,7 @@ outside it are skipped, and they load again when you switch back.
 | **Menus** | Views (above), BI, Admin, Help (Help centre, Knowledge, Install and run, About); footer: Help, About, Release notes | Build, Forms, the competitive analysis link |
 | **Features** | BI (the edition's datasets), VaR, exposure, layouts, workspaces, monitors, alerts, reports, lakes, the data map | Calc, the Python console and Python visuals, the Sutra designer, Studio, Build, Forms, AI, embedding |
 | **Admin pages** | users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, health, caches, capacity, BI, scopes (Ad-hoc scopes: every person's VaR baskets) | AI, collaboration, embedding, edits, compute |
-| **BI datasets** | `market-risk-var-latest`, `market-risk-var-official`, `counterparty-exposure-counterparties`, `counterparty-exposure-netting-sets`, `counterparty-exposure-official`, `counterparty-exposure-official-counterparties`, `counterparty-exposure-official-netting-sets`, `live-exposure`, `live-exposure-netting` (models `market-risk-var`, `counterparty-exposure`, `live-exposure`, and the reports on them) | every other dataset, model, report and board |
+| **BI datasets** (the table layer's tables) | `bi.market_risk_var_latest`, `bi.market_risk_var_official`, `bi.counterparty_exposure_counterparties`, `bi.counterparty_exposure_netting_sets`, `bi.counterparty_exposure_official`, `bi.counterparty_exposure_official_counterparties`, `bi.counterparty_exposure_official_netting_sets`, `bi.live_exposure_netting`, `bi.trading_risk_*` (models `market-risk-var`, `counterparty-exposure`, `live-exposure`, and the reports on them) | every other dataset, model, report and board |
 
 A hidden command is hidden from people only. The engines still read every kind they need (the VaR engine reads P&L vectors, positions,
 hierarchies, scenario PVs and FX; the exposure engine its paths and agreements), and the API is the same.
@@ -214,7 +214,7 @@ drishti:
     packs:
       allow-only: false            # let Admin -> Packs load other packs too
     bi:
-      datasets: [market-risk-var-latest, market-risk-var-official, trades-basic-trade]   # a list replaces the edition's
+      datasets: [bi.market_risk_var_latest, bi.market_risk_var_official, bi.trades_basic_trade]   # a list replaces the edition's
 ```
 
 and in the console's `drishti-console/config/application.local.yaml` (menus, Home and help are drawn by the console):
@@ -562,7 +562,7 @@ commands:
 features: { bi: edition, var: on, exposure: on, calc: off, pyconsole: off, python: off, designer: off, build: off,
             forms: off, datamap: on, layouts: on, workspaces: on, monitors: on, alerts: on, reports: on, lakes: on, ai: off, embed: off }
 bi:
-  datasets: [market-risk-var-latest, market-risk-var-official, counterparty-exposure-counterparties, ...]
+  datasets: [bi.market_risk_var_latest, bi.market_risk_var_official, bi.counterparty_exposure_counterparties, ...]
   models: [market-risk-var, counterparty-exposure, live-exposure]
 menus:
   views: [terminal, search, functions, datamap, var, exposure, reports, workspaces, monitors, alerts]

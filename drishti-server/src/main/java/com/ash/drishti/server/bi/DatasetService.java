@@ -621,7 +621,7 @@ public final class DatasetService {
 
     private BiStore.Item datasetItem(Principal p, String id) {
         BiStore.Item i = bi.readableItem(p, id);
-        if (!"dataset".equals(i.kind())) {
+        if (!"dataset".equals(i.kind()) && !"table".equals(i.kind())) {
             throw new DrishtiException(ErrorCode.BI_NOT_FOUND, "'" + id + "' is not a dataset");
         }
         return i;

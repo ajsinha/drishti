@@ -62,7 +62,7 @@ features:                                # presets of existing switches (config/
   embed: off
 
 bi:                                      # the market-data pack ships no BI dataset or model yet: these names keep BI to the pack's own
-  datasets: [market-data-*]              # (a dataset named market-data-... or the model market-data, when one is added), never the
+  datasets: [bi.market_data_*]              # (a dataset named market-data-... or the model market-data, when one is added), never the
   models: [market-data]                  # VaR or exposure reports; an empty list would offer every BI item of the product
 
 menus:                                   # by id, per menu; a menu not named shows every item its switches allow
