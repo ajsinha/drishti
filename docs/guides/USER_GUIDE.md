@@ -1415,6 +1415,10 @@ view it opens with. Everything is computed by the server's pivot engine: rows, c
 the provenance of every cell and its rows, a chart of a selection, Excel with outline levels and formulas only where a figure adds up, CSV
 and Arrow.
 
+**One analysis path: the Pivot, then a report.** The Pivot is the one grid for slicing: the risk cubes are its **presets** (the MR cube,
+`MCUBE`, and the CCR cube, `CCUBE`; [PIVOT_GUIDE.md section 28](PIVOT_GUIDE.md#28-presets-the-risk-cubes)), and a figure for other people is a
+BI report. Code over a model is the [Notebook](#the-notebook).
+
 | What | How |
 |---|---|
 | Open it | **Pivot** under a table or above a search's results; or `PIVOT <table>`, `PIVOT @owner/name` |

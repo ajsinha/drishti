@@ -472,7 +472,7 @@ async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
     shown = layout["panels"]
     env = request.app.state.templates.env
     parts = env.get_template("_macros/view.html").module
-    # each panel as HTML (the macros) and as its JSON (the client-side renderer draws that on the pages it draws: ui.render, CLIENT_RENDERER.md 16)
+    # each panel as HTML (the macros, the page's) and as its JSON (what an embed's renderer draws: CLIENT_RENDERER.md)
     out = [{"id": p["id"], "kind": p["kind"], "title": p.get("title") or "", "html": api_routes._panel_html(request, p, ref={"kind": kind, "id": id_}), "panel": p,
             **({"provenance": p["provenance"]} if p.get("provenance") else {})} for p in shown]   # a panel's own source: its freshness (RACHANA_REFERENCE.md 9)
     prov = vm.get("provenance") or {}
