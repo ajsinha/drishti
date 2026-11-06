@@ -1309,8 +1309,8 @@ A side panel and the main area of a screen are divided by a thin line, and so ar
 the line to make one wider. The line shows when you point at it or move the focus to it.
 
 - **Side panels**: the VaR explorer's Scopes, the exposure explorer's Scope, Help's contents list, the Build workbench's Data and
-  Details, the pivot's Fields and the BI model designer's Datasets and Inspector. A panel stays between the least and the most
-  width its screen allows.
+  Details, the pivot's Fields, the BI report designer's Filters, Visualizations and Fields panes, the BI model designer's Datasets
+  and Inspector, and the Context column of a view. A panel stays between the least and the most width its screen allows.
 - **Columns**: the VaR tree, the data tables of every view, BI grids and matrices, and the pivot grid. Drag the line at the right
   of a column's heading; the rows follow. A column is never narrower than about 40 pixels, so it cannot vanish. Columns made wider
   than the panel scroll sideways.

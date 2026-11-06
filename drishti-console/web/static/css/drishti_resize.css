@@ -16,6 +16,7 @@
 /* Resizable panels and columns (static/js/drishti_resize.js): the one handle every screen uses. Theme tokens only, so light and dark
    both work. A thin line shows on hover, focus and while dragging; the hit area is wider than the line. */
 
+[data-resize="panel"]:not(.rz-handle) { display: none; }     /* declared, not yet bound: takes no room in its panel */
 .rz-handle { touch-action: none; user-select: none; -webkit-user-select: none; background: transparent; border: 0; padding: 0;
   cursor: col-resize; z-index: 6; }
 .rz-handle.rz-y { cursor: row-resize; }
