@@ -110,7 +110,7 @@ def test_a_lens_draws_its_own_subject_menus_for_that_person_only(backend, monkey
     page = alice.get("/t").text
     assert _commands(_panel(page, "Blotter")) == ["TRD", "CTRD", "PTRD", "LTRD"]
     assert _commands(_panel(page, "Risk")) == ["VAR", "VLIM", "TVAL", "PNLV"]
-    assert _commands(_panel(page, "Counterparties")) == ["CPTY", "NSET", "LIM", "XWIF", "EXP"]
+    assert _commands(_panel(page, "Counterparties")) == ["CPTY", "NSET", "LIM", "XWIF", "EXP", "CCUBE"]   # CCUBE: the Pivot's preset ccr, under construction
 
 
 def test_every_subject_item_runs_a_command_its_edition_shows():

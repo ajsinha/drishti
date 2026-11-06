@@ -462,7 +462,8 @@ knowledge:
 
 # F1 opens the guide for the current screen.
 contextual:
-  mcube: docs-guides-mr-cube-guide   # the MR cube, MCUBE (F1 and its ?): the MR cube guide
+  mcube: docs-guides-mr-cube-guide   # the MR cube, MCUBE, the Pivot's preset mr (F1 and its ?): the MR cube guide
+  ccr-cube: docs-guides-pivot-guide#28-presets-the-risk-cubes   # the CCR cube, the Pivot's preset ccr (under construction): the presets section of the pivot guide
   landing: user-guide#home-the-fact-of-the-day
   bi: bi-guide
   tables-editor: tables-guide#11-the-editors   # Build -> Tables & models (F1): the editors section of the tables guide

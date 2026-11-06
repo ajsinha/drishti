@@ -108,6 +108,14 @@ items:
     treatment: under-construction
     contracts: ["docs/guides/FLIGHT_GUIDE.md#13-testing"]
 
+  - id: ccr-cube-preset
+    what: menu item
+    about: "The CCR cube, the Pivot's preset ccr (Counterparties → CCR cube, /pivot?preset=ccr): the preset, its door and its landing are defined; its source, the CCR provider (each netting set's exposure paths netted and collateralised first, then summed per cell), comes with the counterparty engines"
+    release: 2.9.14
+    treatment: under-construction
+    menus: [ccr-cube]
+    contracts: ["docs/guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes", "docs/architecture/PIVOT_ENGINE.md#65-the-ccr-provider-later"]
+
   - id: python-table-runs
     what: panel
     about: "The Python-driven table editor's sample run, its Notebook cells and the Notebook page's Python cells (/bi/notebook) run on the server's compute pool: the editor, its output contract, inputs, schedule, limits, templates, Notebook → Turn into table, and the Notebook page's cells, saving and promotion are built; running authored code on the pool comes with one Python runtime (the console never runs it)"

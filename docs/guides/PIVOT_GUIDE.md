@@ -50,6 +50,7 @@ walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md); custom funct
 - [25. Live pivots](#25-live-pivots)
 - [26. Cell comments](#26-cell-comments)
 - [27. Pivot data: the sources of the examples](#27-pivot-data-the-sources-of-the-examples)
+- [28. Presets: the risk cubes](#28-presets-the-risk-cubes)
 
 ## 1. Open it
 
@@ -1016,3 +1017,27 @@ A stored position table, pivoted like any other kind. The demo derives its posit
 - **Data contract:** [`position`](../contracts/packs/market-risk.md#pos-position-position) (POS), key `POSITION_ID`; 32 fields, 30 required.
 - **Sample:** no sample in the demo data.
 <!-- guide-data:end -->
+
+## 28. Presets: the risk cubes
+
+**One grid, several doors.** A preset is this screen opened with a source, a lens and a landing view, under its own name and command word. It
+draws no grid of its own and computes nothing of its own: every cell, subtotal and total is the pivot engine's answer for the view, as the person
+asking, exactly as on `PIVOT <GO>`. The presets are defined in `drishti-console/config/pivot-presets.yaml`, and each opens at
+`/pivot?preset=<name>`:
+
+| Preset | Word | Source | Lens and landing | Doors |
+|---|---|---|---|---|
+| `mr`, the **MR cube** | `MCUBE` | `var` (the VaR engine's book of the date) | the MR lens (headline strip, time-travel slider, tabs B and C); lands on the source's default view: desks by risk class, the VaR, the bank | `MCUBE <GO>`; **VaR → MR cube**; the VaR explorer's **MR cube ›** link (its scope and date); `/mcube` |
+| `ccr`, the **CCR cube** | `CCUBE` | the CCR provider (each netting set's exposure paths, netted and collateralised first) | lands on the limit board and the netting-set drill | `CCUBE <GO>`; **Counterparties → CCR cube** |
+
+**The MR cube.** `MCUBE <scope> [BY rows[,columns]] [MEASURE m,...] [DATE d] [SORT desc] <GO>` lays what you type over the landing
+(`MCUBE DESK:RATES BY MGMT.BOOK,CURRENCY MEASURE VAR,COMP_VAR`); `MCUBE @owner/name <GO>` opens a saved view; in the VaR explorer, **MR cube ›**
+opens the scope and date you are looking at. Its measures, lens and figures are the [MR cube guide](MR_CUBE_GUIDE.md). A test records the view the
+cube asked the server for, for each form of `MCUBE`, and checks the preset asks for exactly the same (`tests/test_cube_presets.py`).
+
+**The CCR cube** is *Under construction*: the preset, its word and its door exist, and its page says so; its source, the CCR provider, comes with
+the counterparty engines ([PIVOT_ENGINE.md section 6.5](../architecture/PIVOT_ENGINE.md#65-the-ccr-provider-later),
+[UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md), `ccr-cube-preset`). Meanwhile every counterparty's computed exposure is the
+[Exposure explorer](EXPOSURE_GUIDE.md) (`EXP`).
+
+A preset whose engine runs on no server of the cluster (the MR cube needs `mr-cube`) is refused in words (`DRS-1020`), like its word.

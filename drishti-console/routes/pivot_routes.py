@@ -14,7 +14,8 @@
 
 """The pivot screen (docs/guides/PIVOT_GUIDE.md; mock-up A of docs/architecture/PIVOT_ENGINE.md section 25): ``PIVOT <GO>``,
 ``PIVOT <table> <GO>`` (a table of Export data, or ``var``), ``PIVOT @owner/name <GO>`` (a saved view), Views → Pivot and "Pivot" on a
-table. The page is a shell that web/static/js/drishti_pivot-grid.js and drishti_pivot.js fill: the field list and its four zones on the right, the grid with
+table; ``/pivot?preset=<name>`` is a preset (config/pivot-presets.yaml: the MR cube, ``MCUBE``, and the CCR cube), the same screen with a source,
+a lens and a landing, never a grid of its own. The page is a shell that web/static/js/drishti_pivot-grid.js and drishti_pivot.js fill: the field list and its four zones on the right, the grid with
 nested rows opened with + and −, the scan-estimate bar, the provenance popover, a chart of a selection and the Export menu. Every figure is
 the server's (``/api/v1/pivot``, asked as the person through the same-origin proxy ``/api/pivot/...``); the console only draws."""
 from __future__ import annotations
@@ -25,6 +26,7 @@ from urllib.parse import quote, urlencode
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response, StreamingResponse
 
+from core import pivot_presets, under_construction
 from core.backend import BackendError
 from core.csrf import json_body
 from routes.common import ident, render
@@ -62,11 +64,24 @@ def _problem(e: BackendError) -> JSONResponse:
 
 
 @router.get("/pivot")
-async def page(request: Request, source: str = "", view: str = "", date: str = ""):
-    """PIVOT: the pivot screen."""
-    text = f"{WORD} @{view}" if view else f"{WORD} {source} {date}".strip()
-    return render(request, "terminal/pivot.html", screen="pivot", source=source.strip(), view_id=view.strip(), date=date.strip(),
-                  command_text=text)
+async def page(request: Request, source: str = "", view: str = "", date: str = "", preset: str = "", text: str = ""):
+    """PIVOT: the pivot screen; with ``preset`` (and its word's ``text``), one of its presets: the MR cube, the CCR cube."""
+    cube = pivot_presets.get(preset) if preset else None
+    if cube is None:
+        typed = f"{WORD} @{view}" if view else f"{WORD} {source} {date}".strip()
+        return render(request, "terminal/pivot.html", screen="pivot", source=source.strip(), view_id=view.strip(), date=date.strip(),
+                      command_text=typed)
+    from core import engines
+    if cube.engine and not engines.engine_available(cube.engine):          # its engine runs on no server of the cluster: said in the server's words
+        return RedirectResponse("/t?error=" + quote(engines.refusal(engines.entry(cube.engine) or {"id": cube.engine})), status_code=303)
+    from routes.mcube_routes import parse                                  # a preset's word lays a view over its landing (the PIVOT grammar's preset form)
+    laid = parse(text.split()) if text.strip() else {}
+    if date and "date" not in laid:
+        laid["date"] = date
+    typed = f"{cube.word} @{view}" if view else f"{cube.word} {text}".strip()
+    building = bool(cube.under_construction) and under_construction.of(request).marked(cube.under_construction)
+    return render(request, "terminal/pivot.html", screen=cube.help, source=cube.source, view_id=view.strip(), date=laid.get("date", ""),
+                  command_text=typed, lens=cube.lens, preset=json.dumps(laid) if laid else "", cube=cube, cube_building=building)
 
 
 async def _call(request: Request, method: str, path: str, body=None, **params):

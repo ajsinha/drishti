@@ -12,15 +12,15 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The MR cube in the console (docs/guides/MR_CUBE_GUIDE.md): not a page of its own but the pivot screen (terminal/pivot.html) on source
-``var`` with the MR lens (``lens=mr``: the headline strip, the lens controls, the time-travel slider and tabs A, B and C drawn by
-web/static/js/drishti_mr-lens.js). ``MCUBE <GO>`` opens the source's landing view (the catalogue's defaultView: desks by risk class, VaR);
-``MCUBE <scope> [BY rows[,columns]] [MEASURE m,...] [DATE d] [SORT desc] <GO>`` lays what was typed over it (the MR cube's preset of the
-PIVOT grammar); ``MCUBE @owner/name <GO>`` opens a saved pivot view. The lens's own answers are the server's ``/api/v1/pivot/mr/...``,
+"""The MR cube in the console (docs/guides/MR_CUBE_GUIDE.md): a Pivot preset (config/pivot-presets.yaml ``mr``; the screen is
+``/pivot?preset=mr``, terminal/pivot.html on source ``var`` with the MR lens: the headline strip, the lens controls, the time-travel slider and tabs
+A, B and C drawn by web/static/js/drishti_mr-lens.js). This module is its word and its lens's API, not a page: ``MCUBE <GO>`` opens the preset's
+landing (the source's defaultView: desks by risk class, VaR); ``MCUBE <scope> [BY rows[,columns]] [MEASURE m,...] [DATE d] [SORT desc] <GO>``
+lays what was typed over it (the preset form of the PIVOT grammar); ``MCUBE @owner/name <GO>`` opens a saved pivot view; ``/mcube`` is the older
+address of the preset. The lens's own answers are the server's ``/api/v1/pivot/mr/...``,
 asked as the person through the same-origin proxy ``/api/pivot/mr/...``; the grid is the pivot engine's (pivot_routes.py)."""
 from __future__ import annotations
 
-import json
 from urllib.parse import urlencode
 
 from fastapi import APIRouter, Request
@@ -28,7 +28,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.backend import BackendError
 from core.csrf import json_body
-from routes.common import ident, render
+from routes.common import ident
 
 router = APIRouter(include_in_schema=False)
 
@@ -82,17 +82,14 @@ def parse(words: list[str]) -> dict:
     return out
 
 
+PRESET = "/pivot?preset=mr"     # the MR cube is the Pivot's preset mr (config/pivot-presets.yaml)
+
+
 def mcube_command(words: list[str]) -> str | None:
-    """Where ``MCUBE ...`` goes, or None when it is not the command."""
-    if words and words[-1].upper() == "<GO>":
-        words = words[:-1]
-    if not words or words[0].upper() != WORD:
-        return None
-    if len(words) == 1:
-        return "/mcube"
-    if len(words) == 2 and words[1].startswith("@") and "/" in words[1]:
-        return "/mcube?" + urlencode({"view": words[1][1:]})
-    return "/mcube?" + urlencode({"text": " ".join(words[1:])})
+    """Where ``MCUBE ...`` goes (the Pivot's preset ``mr``, core/pivot_presets.py), or None when it is not the command."""
+    from core import pivot_presets
+    lead = [w for w in words if w.upper() != "<GO>"][:1]
+    return pivot_presets.command(words) if lead and lead[0].upper() == WORD else None
 
 
 def redirect_for(typed: str):
@@ -108,13 +105,9 @@ def _problem(e: BackendError) -> JSONResponse:
 
 @router.get("/mcube")
 async def page(request: Request, text: str = "", view: str = "", date: str = ""):
-    """MCUBE: the pivot screen on the VaR source with the MR lens."""
-    preset = parse(text.split()) if text.strip() else {}
-    if date and "date" not in preset:
-        preset["date"] = date
-    command = f"{WORD} @{view}" if view else f"{WORD} {text}".strip()
-    return render(request, "terminal/pivot.html", screen="mcube", source="var", view_id=view.strip(), date=preset.get("date", ""),
-                  command_text=command, lens="mr", preset=json.dumps(preset) if preset else "")
+    """The older address of the MR cube: the Pivot's preset ``mr``, with what was asked."""
+    q = {k: v for k, v in (("text", text), ("view", view), ("date", date)) if v}
+    return RedirectResponse(PRESET + ("&" + urlencode(q) if q else ""), status_code=308)
 
 
 async def _call(request: Request, method: str, path: str, body=None, **params):
