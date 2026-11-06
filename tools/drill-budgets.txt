@@ -18,4 +18,3 @@
 # here with why it cannot be split yet. A file whose tests are spread one by one has no file budget.
 drishti-console/tests/test_mr_cube_browser.py  # four tests on one server over a VaR demo lake built for the file (about 3 minutes to build)
 drishti-console/tests/test_embed_elements_browser.py  # 35 tests on one host, console and server, run once per browser engine (module params)
-drishti-console/tests/test_page_widths_browser.py  # a sweep of every page at two widths in one test per width; to be split per page

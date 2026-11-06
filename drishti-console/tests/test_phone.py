@@ -185,10 +185,10 @@ def test_a_lens_folds_its_subject_menus_into_one_menu_named_after_it(backend, mo
     html = _client(app).get("/t").text
     fold = html[html.index("data-lens-fold"):html.index("</template>")]
     assert 'class="tbar-lens-l">Trading<' in fold
-    for subject in ("Blotter", "Positions", "Risk", "Counterparties"):
+    for subject in ("Markets", "Blotter", "Positions", "Risk", "Counterparties"):
         assert f'mega-subject">{subject}<' in fold, subject
     assert "Engines" not in fold                                              # the Engines menu is no subject menu: it stays in the bar
-    assert html.count("data-subject>") == 4                                   # the subject menus stay, for a wider screen
+    assert html.count("data-subject>") == 5                                   # the subject menus stay, for a wider screen
 
 
 def test_the_risk_edition_has_no_lens_menu_now_its_engines_menu_replaced_var_and_exposure(backend, monkeypatch):

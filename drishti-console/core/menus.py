@@ -121,6 +121,14 @@ def _menu_order(edition: Edition, menus: list) -> list:
     return [by_id[i] for i in top if i in by_id]
 
 
+def _columns(menu: dict, menus: list) -> list:
+    """A menu's columns: those of the menus it gathers (``gather: [ids]``, in order: one Markets menu over Curves, Volatility, FX and
+    Credit without a second copy of their items), then its own."""
+    by_id = {str(m.get("id") or ""): m for m in menus}
+    out = [c for g in menu.get("gather") or [] for c in (by_id.get(str(g)) or {}).get("columns") or []]
+    return out + list(menu.get("columns") or [])
+
+
 def _text(s, fill: dict) -> str:
     out = str(s or "")
     for k, v in fill.items():
@@ -273,7 +281,8 @@ def top_bar(request, ctx: dict) -> list:
     g = request.app.state.templates.env.globals
     fill = {"product": ctx.get("PRODUCT") or g.get("PRODUCT", ""), "tutorials": g.get("TUTORIALS_WORD", "")}
     out = []
-    for menu in _menu_order(edition, _spec(_console_dir(request)).get("menus") or []):
+    every = _spec(_console_dir(request)).get("menus") or []
+    for menu in _menu_order(edition, every):
         mid = str(menu.get("id") or "")
         if menu.get("engines"):
             columns = [(t, items) for t, items, _w, _e in _engine_columns(request, edition, menu, ctx, fill)]
@@ -281,7 +290,7 @@ def top_bar(request, ctx: dict) -> list:
                 out.append((_text(menu.get("label"), fill), menu.get("icon"), columns))
             continue
         columns = []
-        for col in menu.get("columns") or []:
+        for col in _columns(menu, every):                       # an item of a gathered column is filtered as the gathering menu's
             items = _items(request, edition, mid, col, ctx, fill)
             if mid == "views" and col is (menu.get("columns") or [None])[-1]:
                 for link in lens_links(request):                # the lenses: one link each, in Views (and on Home)
