@@ -96,3 +96,25 @@ def test_an_item_to_finish_fills_the_command_line(browser, consoles):
         assert page.input_value("#cmdInput") == "EXP NSET "
     finally:
         page.close()
+
+
+def test_the_trading_markets_menu_opens_inside_the_screen_and_runs_its_command(browser, consoles):
+    """Product panel A19: Drishti Trading's one Markets menu (rates, vols, FX, credit, equities and commodities) opens inside the screen
+    at a desktop width, three columns to a row, and a click on an item runs its command (FXF, unhidden in the lens) as typed. BI and
+    Admin are not in the bar (by command only)."""
+    page = browser.new_page(viewport={"width": 1280, "height": 900})
+    try:
+        page.goto(consoles["trading"] + "/t", wait_until="load")
+        buttons = page.locator(".tbar-menus .tbar-menu-btn")
+        assert buttons.filter(has_text="BI").count() == 0 and buttons.filter(has_text="Admin").count() == 0
+        buttons.filter(has_text="Markets").click()
+        item = page.locator("a.mega-item[href='/go?q=FXF%20%3CGO%3E']")
+        item.wait_for(state="visible")
+        box = page.evaluate("""() => { const p = document.querySelector('.mega-panel.show'), r = p.getBoundingClientRect();
+          return {left: r.left, right: r.right, cols: getComputedStyle(p).gridTemplateColumns.split(' ').length,
+                  vw: document.documentElement.clientWidth, sw: document.documentElement.scrollWidth}; }""")
+        assert box["left"] >= 0 and box["right"] <= box["vw"] + 1 and box["sw"] <= box["vw"] + 1 and box["cols"] == 3, box
+        with page.expect_request(lambda r: "/go?q=FXF" in r.url):
+            item.click()
+    finally:
+        page.close()

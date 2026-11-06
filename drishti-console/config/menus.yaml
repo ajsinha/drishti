@@ -26,7 +26,8 @@
 # An edition (or a lens) lists the items it shows per menu (menus.<menu-id>: [item ids]); a menu it does not name keeps every item its
 # requirements allow, and a menu with no item left is not drawn. {product} and {tutorials} are filled in.
 # An edition's menus.top names its top menus by id, in order (a menu it does not name is not drawn); without one, every menu below in
-# its order except the subject menus (subject: true), which only a menus.top draws.
+# its order except the subject menus (subject: true), which only a menus.top draws. A menu's gather: [ids] puts the columns of those
+# menus first in its own (the Markets menu), each item filtered as the gathering menu's (menus.<its id> in the edition).
 menus:
   - id: views
     label: Views
@@ -136,6 +137,9 @@ menus:
           - { id: vlim, cmd: VLIM, icon: speedometer2, label: VaR limits, desc: "Each limit and how much of it is used", requires: [cmd:VLIM] }
           - { id: tval, cmd: TVAL, icon: currency-exchange, label: Trade valuations, desc: "Each trade's value and its sensitivities", requires: [cmd:TVAL] }
           - { id: pnlv, cmd: PNLV, icon: bar-chart, label: P&L vectors, desc: "Each position's P&L under every scenario", requires: [cmd:PNLV] }
+          - { id: dpnl, cmd: DPNL, icon: cash-coin, label: Desk P&L, desc: "Each desk's actual and hypothetical P&L, day by day", requires: [cmd:DPNL] }
+          - { id: pnl, cmd: PNL, icon: bar-chart-steps, label: P&L explain, desc: "A day's P&L by risk factor, new trades and residual", requires: [cmd:PNL] }
+          - { id: sens, cmd: SENS, icon: speedometer, label: Sensitivities, desc: "Delta, vega and curvature of each position by risk factor", requires: [cmd:SENS] }
   - id: counterparties
     label: Counterparties
     icon: building
@@ -200,12 +204,21 @@ menus:
           - { id: macro, cmd: MACRO, icon: graph-up, label: Indicators, desc: "Every indicator of every economy", requires: [cmd:MACRO] }
           - { id: fcst, cmd: FCST, icon: binoculars, label: IMF forecasts, desc: "The IMF's forecasts by economy", requires: [cmd:FCST] }
           - { id: rege, cmd: REGE, icon: map, label: Regions, desc: "Sub-national regions and their figures", requires: [cmd:REGE] }
+  # The one Markets menu: the market-data screens together. It gathers the columns of Curves, Volatility, FX and Credit (gather: their
+  # ids, in order; their items are not repeated here), then its own. An edition (or a lens) picks its items in menus.markets, by id.
   - id: markets
     label: Markets
-    icon: newspaper
+    icon: graph-up-arrow
     subject: true
+    gather: [curves, volatility, fx, credit]
     columns:
-      - title: Markets
+      - title: Equities and commodities
+        items:
+          - { id: eq, cmd: EQ, icon: building, label: Equities, desc: "Listed equities, their prices and dividends", requires: [cmd:EQ] }
+          - { id: eqx, cmd: EQX, icon: list-ol, label: Equity indices, desc: "Equity indices and their levels", requires: [cmd:EQX] }
+          - { id: cmd, cmd: CMD, icon: droplet, label: Commodities, desc: "Commodities and their spot prices", requires: [cmd:CMD] }
+          - { id: cmdc, cmd: CMDC, icon: graph-up, label: Commodity curves, desc: "Commodity forward curves", requires: [cmd:CMDC] }
+      - title: News and quotes
         items:
           - { id: news, cmd: NEWS, icon: newspaper, label: News, desc: "The news by topic", requires: [cmd:NEWS] }
           - { id: quote, cmd: QUOTE, icon: currency-dollar, label: Quotes, desc: "Quotes of listed companies and indices", requires: [cmd:QUOTE] }

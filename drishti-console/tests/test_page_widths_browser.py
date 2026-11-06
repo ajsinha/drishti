@@ -16,20 +16,25 @@
 scrolls sideways (wide tables scroll inside their own container), the top bar fits with its Live pill and avatar on
 screen, and no image is wider than its column; help-centre screenshots keep their aspect ratio and open full size.
 
-Runs Chromium through Playwright, with the console and stand-in server of test_live_tabs_browser.py (the same fixtures,
-the same DRISHTI_LIVE_E2E_URL / DRISHTI_LIVE_E2E_VIEWS to run against a real console); skipped when Playwright or its
-Chromium is not installed (`pip install playwright` and `playwright install chromium`)."""
+One spread test per page (docs/architecture/TEST_HARNESS.md, section 3.1), the three widths of a page opened side by side on the
+worker's Chromium (``browsers``) against a stand-in console of this file, one per worker (the ticking stand-in server of
+test_live_tabs_browser.py; DRISHTI_LIVE_E2E_URL and DRISHTI_LIVE_E2E_VIEWS run it against a real console). The phone sweep on a real
+server is test_phone_pages_browser.py. Skipped when Playwright or its Chromium is not installed (`pip install playwright` and
+`playwright install chromium`)."""
+import asyncio
+import os
 import re
 
 import pytest
 import yaml
 
 from conftest import CONSOLE
-from wb_live import BROWSER_WAIT_MS, _stack  # the real server: the phone sweep needs real pages, not the stand-in's
 
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 
-from test_live_tabs_browser import _views, browser, console_url  # noqa: E402,F401 - the shared browser fixtures
+from browser_harness import open_settled  # noqa: E402
+from table_chart_backend import serve  # noqa: E402
+from test_live_tabs_browser import TickingBackend, _views  # noqa: E402 - the ticking stand-in server and its views
 
 WIDTHS = (390, 1600, 2560)
 PACK = "trading"                      # a pack the stand-in server loads (its loads page is the same shape for any pack)
@@ -113,104 +118,43 @@ AUDIT = r"""() => {
 DECODED = "() => Promise.race([Promise.all([...document.images].map(i => i.decode().catch(() => null))), new Promise(r => setTimeout(r, 1000))])"
 
 
-@pytest.mark.parametrize("width", WIDTHS)
-def test_no_page_scrolls_sideways_and_images_fit(browser, console_url, width):
-    ctx = browser.new_context(viewport={"width": width, "height": 900 if width < 2000 else 1440})
-    page = ctx.new_page()
-    problems = []
-    try:
-        for url in _pages():
-            page.goto(console_url + url, wait_until="load", timeout=BROWSER_WAIT_MS)
-            page.wait_for_timeout(250)                       # let the page's own scripts lay it out
-            page.evaluate(DECODED)
-            problems += [f"{url} @ {width} px: {p}" for p in page.evaluate(AUDIT)]
-    finally:
-        ctx.close()
+def _id(url: str) -> str:
+    return re.sub(r"[^A-Za-z0-9]+", "-", url).strip("-") or "home"
+
+
+PAGES = _pages()
+
+
+@pytest.fixture(scope="session")
+def widths_console():
+    """The console under test, one per worker: a real one when DRISHTI_LIVE_E2E_URL is set, else the stand-in started here."""
+    if os.environ.get("DRISHTI_LIVE_E2E_URL"):
+        yield os.environ["DRISHTI_LIVE_E2E_URL"].rstrip("/")
+        return
+    url, _backend, stop = serve(TickingBackend())
+    yield url
+    stop()
+
+
+async def _audit(browsers, url: str, width: int) -> list[str]:
+    async with browsers.page(width, 900 if width < 2000 else 1440, show_everything=False) as page:
+        await open_settled(page, url)                      # loaded, laid out by its own scripts and quiet (the settled signal)
+        await page.evaluate(DECODED)
+        return await page.evaluate(AUDIT)
+
+
+@pytest.mark.spread
+@pytest.mark.parametrize("path", PAGES, ids=_id)
+def test_no_page_scrolls_sideways_and_images_fit(browsers, widths_console, path):
+    async def every_width():
+        return await asyncio.gather(*(_audit(browsers, widths_console + path, w) for w in WIDTHS))
+    problems = [f"{path} @ {w} px: {p}" for w, found in zip(WIDTHS, browsers.run(every_width())) for p in found]
     assert not problems, "\n".join(problems)
 
 
+@pytest.mark.spread
 def test_the_sweep_covers_every_help_guide_and_admin_page():
-    pages = _pages()
+    pages = PAGES
+    assert len({_id(p) for p in pages}) == len(pages)           # one test id per page
     assert sum(1 for p in pages if re.match(r"/help/[a-z]", p) and "search" not in p) >= 30
     assert all(f"/admin/{a}" in pages for a in ADMIN)
-
-
-# ---- a phone (390 px, touch): real content, finger-sized controls, nothing clipped ----------------------------------------
-# Pages that are meant to be problem pages (a missing entity, a kind that does not exist, a share nobody may open).
-PROBLEM_PAGES = ("/v/trade/NOPE-404", "/v/nosuchkind/X", f"/share/{NO_SHARE}")
-# What marks a page that fell over instead of showing its content: the problem template's alert, an error status.
-CONTENT = r"""() => {
-  const bad = [...document.querySelectorAll('.thome > .pnl-err, .dv-error, .adm-err, [data-problem]')].map(e => e.textContent.trim().slice(0, 90));
-  return { bad, text: document.body.innerText.trim().length };
-}"""
-
-# Visible controls smaller than 44 px in their smaller side (the console's own bar for touch). Not counted: a link inside a
-# sentence of running text (the inline exception of WCAG 2.5.8: its size is set by the line), a control whose label or wrapping
-# link/button gives it a 44 px hit area, the page footer, and
-# CodeMirror's hidden input proxy inside an editor (the editor itself is the target).
-TARGETS = r"""() => {
-  const out = [], seen = new Set();
-  const vis = e => { const r = e.getBoundingClientRect(), s = getComputedStyle(e);
-    return r.width > 0 && r.height > 0 && s.visibility !== 'hidden' && s.display !== 'none' && !e.closest('[hidden], [aria-hidden=true], .skip-link') && r.bottom > 0; };
-  const big = r => Math.min(r.width, r.height) >= 43.5;
-  const inline = e => { if (e.tagName !== 'A' || getComputedStyle(e).display !== 'inline') return false;
-    const p = e.closest('p, li, td, dd, dt, h1, h2, h3, h4, label, small, figcaption') || e.parentElement;
-    return p && (p.textContent || '').trim().length > (e.textContent || '').trim().length + 12; };
-  for (const e of document.querySelectorAll('a[href], button, input:not([type=hidden]), select, textarea, [role=button], summary')) {
-    if (!vis(e) || e.closest('footer')) continue;
-    if (e.tagName === 'TEXTAREA' && e.closest('.CodeMirror')) continue;   // the editor's hidden input proxy: people tap the editor itself
-    const r = e.getBoundingClientRect();
-    const label = e.labels && e.labels[0] && vis(e.labels[0]) ? e.labels[0].getBoundingClientRect() : null;
-    if (big(r) || (label && big(label)) || inline(e)) continue;
-    const wrap = e.parentElement && e.parentElement.closest('a[href], button, label, summary');
-    if (wrap && big(wrap.getBoundingClientRect())) continue;
-    const cls = x => typeof x.className === 'string' && x.className ? '.' + x.className.trim().split(/\s+/)[0] : '';
-    const name = (e.parentElement ? e.parentElement.tagName.toLowerCase() + cls(e.parentElement) + ' > ' : '') + e.tagName.toLowerCase() + cls(e) + (e.getAttribute('type') ? '[' + e.getAttribute('type') + ']' : '');
-    const key = name + ' ' + Math.round(r.width) + 'x' + Math.round(r.height);
-    if (!seen.has(key)) { seen.add(key); out.push(key + ' "' + (e.textContent || e.getAttribute('aria-label') || e.getAttribute('title') || '').trim().slice(0, 24) + '"'); }
-  }
-  return out;
-}"""
-
-# Text cut off by overflow:hidden without an ellipsis or a way to scroll (text-overflow: ellipsis is a decision; clipping silently is not).
-CLIPPED = r"""() => {
-  const out = [];
-  for (const e of document.querySelectorAll('body *')) {
-    const s = getComputedStyle(e);
-    if (s.overflowX !== 'hidden' && s.overflowX !== 'clip') continue;
-    if (e.scrollWidth <= e.clientWidth + 1 || e.clientWidth <= 1 || s.textOverflow === 'ellipsis' || s.display === 'none') continue;
-    if (e.classList.contains('CodeMirror')) continue;   // CodeMirror hides native scrollbars with a -50 px margin on its own scroller; it scrolls, it does not clip
-    if (!e.textContent.trim() || e.closest('[aria-hidden=true], svg, canvas, .chart, .xchart, .surface, .visually-hidden, .sr-only, .asof-live-l')) continue;
-    out.push(e.tagName.toLowerCase() + (typeof e.className === 'string' && e.className ? '.' + e.className.trim().split(/\s+/)[0] : '') + ' ' + e.scrollWidth + '>' + e.clientWidth);
-  }
-  return [...new Set(out)].slice(0, 6);
-}"""
-
-
-@pytest.fixture(scope="module")
-def phone_console(tmp_path_factory):
-    """The real server with the trading pack (its sample trade exists) behind a console; skipped without the built jar."""
-    yield from _stack(tmp_path_factory, {"DRISHTI_PACKS": PACK})
-
-
-def test_phone_pages_show_content_have_finger_sized_targets_and_clip_nothing(browser, phone_console):
-    console_url = str(phone_console)
-    ctx = browser.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
-    page = ctx.new_page()
-    broken, small, clipped = [], [], []
-    try:
-        for url in _pages(["trade/1000008"]):
-            if url == "/history":                      # a page that does not exist (it is in the sweep as a 404 page)
-                continue
-            resp = page.goto(console_url + url, wait_until="load", timeout=BROWSER_WAIT_MS)
-            page.wait_for_timeout(250)
-            seen = page.evaluate(CONTENT)
-            if url not in PROBLEM_PAGES and (resp.status >= 400 or seen["bad"] or not seen["text"]):
-                broken.append(f"{url}: status {resp.status} {seen['bad'][:1]}")
-            small += [f"{url}: {t}" for t in page.evaluate(TARGETS)]
-            clipped += [f"{url}: {c}" for c in page.evaluate(CLIPPED)]
-    finally:
-        ctx.close()
-    assert not broken, "pages that show a problem instead of content:\n" + "\n".join(broken)
-    assert not small, "tap targets under 44 px:\n" + "\n".join(small)
-    assert not clipped, "text clipped horizontally:\n" + "\n".join(clipped)
