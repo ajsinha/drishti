@@ -435,8 +435,9 @@ keyboard; the model's tabs move with the arrow keys.
 
 ### 11.2 Tables and virtual tables
 
-**Sources and joins** are rows: the source (a kind any connector serves, or another table) and each **look-up**: a join to another table on
-a key, one row of it for each row (`related(trading.desks.NAME, on = $.DESK)`, many to one). **+ Join** picks the table, the key and the
+**The source and its look-ups** are rows: the source (a kind any connector serves, or another table) and each **look-up**: one row of
+another table by a key for each row (`related(trading.desks.NAME, on = $.DESK)`, many to one). A table never multiplies its rows:
+combining tables row by row is a model's relationships. **+ Look-up** picks the table, the key and the
 columns to bring in. When the two sides are served by different connectors, the cost shows under the sources: the rows each side read now,
 the memory they take and the time the read took; above `drishti.tables.scan-warn-rows` (1,000,000) on a side and with no filter, readers
 are asked to filter first.

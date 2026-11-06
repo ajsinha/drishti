@@ -42,13 +42,15 @@ Mock-up: [g1-editor-shell.html](mockups/editors/g1-editor-shell.html), option **
 
 Mock-up: [g2-tables.html](mockups/editors/g2-tables.html), option **A** as the editor, option **C** as its Text toggle.
 
-- **Sources and joins as rows**; **columns as a checklist** with the name here, where it comes from, its type, and computed columns as
-  Rachana formulas. A plain table is the same editor with one source and no join.
-- **Text toggle**: the same table as one Rachana statement (`table … from … left join … on … select … where …`) with type-ahead.
-- **A join across connectors shows its cost** (rows each side, memory, time) and is refused above a limit until the reader filters.
-- Several virtual tables may share a connector, each with its own columns; names are unique across Drishti; business dates follow the
-  source.
-- The diagram (option B) is not an editing mode; it may appear later as a read-only picture of the joins.
+- **The source and its look-ups as rows**; **columns as a checklist** with the name here, where it comes from, its type, and computed
+  columns as Rachana formulas. A look-up brings one row of another table by a key (many to one: `related(table.COLUMN, on = key)`).
+  A plain table is the same editor with one source and no look-up.
+- **Tables use look-ups; models join** (product owner, 2026-11-06): a table enriches its rows with look-ups and never multiplies them;
+  combining tables row by row (one to many, several facts) is a semantic model's relationships (section 3).
+- **Text toggle**: the same table as one Rachana statement (`table … from … select … where …`, look-ups as `related(…)` columns) with
+  type-ahead.
+- **A look-up across connectors shows its cost** (rows each side, memory, time) and is refused above a limit until the reader filters.
+- The diagram (option B) is not an editing mode; it may appear later as a read-only picture of the look-ups and a model's relationships.
 
 ## 3. Semantic models
 

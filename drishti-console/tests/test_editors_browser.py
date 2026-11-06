@@ -285,7 +285,7 @@ def test_text_toggle_and_a_join_with_its_cost(pg):
     pg.click("[data-table-view=grid]")
     wait(pg, "!!document.querySelector('[data-columns]')")
     settle(pg)
-    # + Join (look-up): a dialog, a key, a column; the join is a row with its rows read now; then removed
+    # + Look-up: a dialog, a key, a column; the look-up is a row with its rows read now; then removed
     pg.click("[data-add-lookup]")
     wait(pg, "!!document.querySelector('[data-dialog][open] [data-lookup-go]')")
     pg.select_option("[data-lookup-table]", "trading.trade_products")

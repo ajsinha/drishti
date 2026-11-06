@@ -82,9 +82,9 @@
 
   function sources(ctx, doc) {
     var h = ctx.h;
-    var sec = h('section', { class: 'ed-card', 'aria-labelledby': 'edSrcH' }, h('h3', { id: 'edSrcH', text: 'Sources and joins' }));
+    var sec = h('section', { class: 'ed-card', 'aria-labelledby': 'edSrcH' }, h('h3', { id: 'edSrcH', text: 'Source and look-ups' }));
     var t = h('table', { class: 'ed-grid-t', 'data-sources': '', 'data-resize': 'columns', 'data-resize-key': 'editors.table-sources' });
-    t.appendChild(h('thead', {}, h('tr', {}, ['Source', 'Connector', 'Join', 'On', 'Rows (now)', ''].map(function (x) { return h('th', { scope: 'col', text: x }); }))));
+    t.appendChild(h('thead', {}, h('tr', {}, ['Source', 'Connector', 'Look-up', 'On', 'Rows (now)', ''].map(function (x) { return h('th', { scope: 'col', text: x }); }))));
     var tb = h('tbody');
     var from = doc.from || {};
     var src = ctx.sources();
@@ -111,7 +111,7 @@
     });
     t.appendChild(tb);
     sec.appendChild(h('div', { class: 'ed-scroll' }, t));
-    sec.appendChild(h('p', {}, h('button', { type: 'button', class: 'ed-btn', 'data-edit': '', 'data-add-lookup': '', on: { click: function () { addLookup(ctx); } } }, '+ Join (look-up)')));
+    sec.appendChild(h('p', {}, h('button', { type: 'button', class: 'ed-btn', 'data-edit': '', 'data-add-lookup': '', on: { click: function () { addLookup(ctx); } } }, '+ Look-up')));
     return sec;
   }
 
@@ -129,11 +129,11 @@
     }
     table.addEventListener('change', fill);
     fill();
-    var go = h('button', { type: 'button', class: 'ed-btn ed-primary', 'data-lookup-go': '' }, 'Add the join');
+    var go = h('button', { type: 'button', class: 'ed-btn ed-primary', 'data-lookup-go': '' }, 'Add the look-up');
     go.addEventListener('click', function () {
       var key = on.value.trim();
       var picked = Array.prototype.filter.call(cols.querySelectorAll('input:checked'), function () { return true; }).map(function (x) { return x.value; });
-      if (!key || !picked.length) { E.say('Say the key it joins on and tick at least one column.', true); return; }
+      if (!key || !picked.length) { E.say('Say the key it looks up on and tick at least one column.', true); return; }
       var t = (src.tables || []).filter(function (x) { return x.table === table.value; })[0] || { columns: [] };
       ctx.change(function (d) {
         d.columns = d.columns || {};
@@ -146,8 +146,8 @@
       E.closeDialog();
       ctx.redraw();
     });
-    ctx.dialog('Join a table (look-up)', h('div', { class: 'ed-form' },
-      h('p', { class: 'ed-small', text: 'Each row of this table looks up one row of the other by its key (many to one). A join across connectors reads both sides into the server: its cost shows under the sources.' }),
+    ctx.dialog('Look up a column from another table', h('div', { class: 'ed-form' },
+      h('p', { class: 'ed-small', text: 'Each row of this table looks up one row of the other by its key (many to one). To combine tables row by row, relate them in a semantic model. A look-up across connectors reads both sides into the server: its cost shows under the source.' }),
       h('label', {}, 'Table ', table), h('label', {}, 'On ', on), h('p', { text: 'Columns to bring in' }), cols, h('p', {}, go)));
   }
 
