@@ -128,7 +128,10 @@
       areasEl.appendChild(bar);
       var designed = cols.slice();
       function have() { return cols.slice(0, k).reduce(function (a, b) { return a + b; }, 0); }
-      window.Drishti.resize.handle(bar, split.resizable ? {                   // the shared resize handle (drishti_resize.js)
+      var resizer = function (o) {                                         // drishti_resize.js loads at the page's end: this script may run first
+        if (window.Drishti.resize) { window.Drishti.resize.handle(bar, o); } else { document.addEventListener('DOMContentLoaded', function () { window.Drishti.resize.handle(bar, o); if (!split.resizable) { bar.removeAttribute('tabindex'); } }); }
+      };
+      resizer(split.resizable ? {                   // the shared resize handle (drishti_resize.js)
         axis: 'x',
         start: function () { return areasEl.getBoundingClientRect(); },
         move: function (box, dx, dy, ev) { nudge(k, (ev.clientX - box.left) / box.width * 12 - have()); },
