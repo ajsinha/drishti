@@ -351,6 +351,13 @@ drishti:
       - /api/v1/pivot/rows
       - /api/v1/pivot/export
       - /api/v1/pivot/inline             # rows the caller already holds (a chart of a table's shown rows), aggregated by the engine
+      - /api/v1/tables/editor/check      # the table and model editors (TABLES_GUIDE.md section 11): checks, previews and proposals that store nothing
+      - /api/v1/tables/editor/statement
+      - /api/v1/tables/editor/preview
+      - /api/v1/tables/editor/access
+      - /api/v1/tables/editor/suggest
+      - /api/v1/tables/editor/python/notebook
+      - /api/v1/tables/editor/python/contract
       - /api/v1/pivot/live               # a live pivot: the same answer kept current for the caller (ended by DELETE, or when no stream reads it)
       - /api/v1/pivot/explain            # the difference between two cells in steps, computed as the caller, stored nowhere
       - /api/v1/pivot/whatif             # a view with an overlay beside the original, computed as the caller, stored nowhere
@@ -453,6 +460,8 @@ drishti:
           - POST /api/v1/bi/items/*/open
           - POST /api/v1/bi/items/*/move
           - POST /api/v1/bi/items/*/propose
+          - POST /api/v1/tables/editor/save
+          - POST /api/v1/tables/editor/propose
           - POST /api/v1/bi/items/*/withdraw
           - POST /api/v1/bi/items/*/publish
           - POST /api/v1/bi/items/*/versions/*/restore
@@ -568,6 +577,7 @@ drishti:
       - POST /api/v1/bi/migrate/expressions
       - POST /api/v1/bi/migrate/boards           # the stored 2.3 boards converted into reports: an administrator in the console
       - POST /api/v1/bi/models/*/preview-as     # previews another role's answers: audited, in the console only
+      - PUT /api/v1/tables/editor/prefs         # a person's editor view: personal, in the console
       - "* /api/v1/me/**"
       - "* /api/v1/drafts/**"                  # form drafts: personal, kept per person, saved from the console (WRITE_BACK.md)
       - POST /api/v1/admin/edits/**            # write-back's switches (a connector's writes, withdrawing an overlay): an administrator in the console
