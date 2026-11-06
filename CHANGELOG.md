@@ -25,6 +25,10 @@
 
 - Docs: **tutorial 44** (virtual tables and models) runs for real on the test data (Endur trades, books and FX spots of 2026-09-30): the legs keyed to their book, a column in dollars and the desk's name looked up in a books table, a trader's rule and a masked trader column, a model of legs and books, and the migration with its real dry run, write and check; five pictures (`tools/docs/shots/t44.py`). TABLES_GUIDE and CLI_GUIDE show the real outputs (list, check, preview, lineage, offer, the migration).
 
+- Fixed (the merged base's rule tests): the pivot's cache of opened virtual tables is weighed in bytes (a Caffeine cache; it was a
+  Serializable map, which ArchitectureRulesTest refuses), and `ScanEvaluator` holds no database connection (each call is one unit of
+  work on the connection it is given, ConnectionDisciplineTest).
+
 - Tests: the pivot grid's format test reads `drishti_pivot-grid.js` and `window.Drishti.PivotCore` (the asset prefix and the one namespace).
 
 - Tests: the five VaR browser files share one built lake (both trade sets, `var_stack.VAR_TRADES`): the currency file no longer builds its own; the five run in about 4 minutes together.
