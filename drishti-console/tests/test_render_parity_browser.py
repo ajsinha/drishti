@@ -43,8 +43,13 @@ INTENTIONAL = {
     "unknown-kind": "a kind the client does not know says so (VIEWMODEL.md section 8); the macros draw an empty body",
     "header-role": "a panel header in a tabbed grid area: Chromium exposes it as a banner when the console's script turns the section into a "
                    "tabpanel after parsing; the renderer sets the role before the panel is in the page, and HTML-AAM says generic",
+    "resize-handles": "the console's resize handles are its chrome, bound by its own component (drishti_resize.js): a side column's "
+                      "splitter, a table's column handles and the screen grid's split (drag, arrows, Home or a double-click: as designed); "
+                      "the library, for embeds and <drishti-report>, draws the grid's split with its own handle (1.2.0, unchanged)",
 }
 UNKNOWN = re.compile(r"This panel kind is not supported by this client \([^)]*\)")
+HANDLE = re.compile(r'''^\s*- '?separator "Resize the ''')                # a splitter or column handle: the console's only
+SPLIT = re.compile(r'''^(\s*- )'?(separator "Divider between [^":]+)(?::[^"]*)?"'?$''')   # the grid's split, in both: its name, not its keys
 
 
 def _aria(text: str) -> list[str]:
@@ -58,6 +63,9 @@ def _aria(text: str) -> list[str]:
             continue
         if UNKNOWN.search(line):                                            # unknown-kind
             continue
+        if HANDLE.match(line):                                              # resize-handles
+            continue
+        line = SPLIT.sub(r'\1\2"', line)
         out.append(line[2:] if drop is not None else line)
     return out
 
