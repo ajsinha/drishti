@@ -1014,7 +1014,7 @@ and released on its own.
 
 ### 16. The console's QuantEngine slot (built, lean)
 
-This section is what is **built** of RUPAKA 9.2's `QuantEngine` for Analyse, and it is deliberately small: `price` only (no sensitivities, scenarios, VaR or XVA yet), no pack adapters, no Arrow in or out, a stand-in in place of QLRisk. A Python cell in [Analyse](../guides/USER_GUIDE.md#the-notebook) can price things with `quant.price(instrument, **parameters)`. The console does not contain a pricing library of its own: it has a **slot**, the
+This section is what is **built** of RUPAKA 9.2's `QuantEngine` for Python items, and it is deliberately small: `price` only (no sensitivities, scenarios, VaR or XVA yet), no pack adapters, no Arrow in or out, a stand-in in place of QLRisk. A Python item run in the console's sandbox can price things with `quant.price(instrument, **parameters)`. The console does not contain a pricing library of its own: it has a **slot**, the
 `QuantEngine` interface, and a small **stand-in** that fills it so notebooks, demos and tests run anywhere. A real library plugs into the same slot.
 
 #### 16.1 The interface
@@ -1054,8 +1054,7 @@ put-call parity, a par bond and an NPV of zero.
 
 #### 16.3 Setting
 
-`bi.explore.quant_engine` (console `application.yaml`), default `stand-in`. A name no installed engine answers to is `ValueError: no quant engine named ...` in the cell, and the Analyse page
-shows the engine in use.
+A Python item manifest's `quant_engine`, default `stand-in`. A name no installed engine answers to is `ValueError: no quant engine named ...` in the item's run.
 
 #### 16.4 How QLRisk plugs in (design only)
 
@@ -1088,5 +1087,5 @@ Decided 2026-10-24 (product owner); the design is [PYTHON_COMPUTE.md](../archite
 | market data for a business date assembled by the server (section 7) | **kept** |
 | the `quant` power, limits, caching, audit (sections 4, 10, 11) | **kept**, joined by the `compute` power and the compute audit ([DATA_ARCHITECTURE.md › Reactive connectors, section 15](../architecture/DATA_ARCHITECTURE.md#15-observability-and-audit)) |
 
-The console's `QuantEngine` slot (section 16) is unchanged: it serves Analyse cells; when QLRisk is stable its adapter and the compute
+The console's `QuantEngine` slot (section 16) is unchanged: it serves Python items; when QLRisk is stable its adapter and the compute
 pricer SPI share the packs' pricer mappings.

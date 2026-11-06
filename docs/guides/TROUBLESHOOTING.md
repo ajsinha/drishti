@@ -1285,13 +1285,14 @@ Every setting of a connector is in its plugin's README and its own document ([CO
   on the server's tick (`drishti.bi.mq.tick`).
 * **No chip at all.** The visual reads a version 1 dataset (no model query): it follows the report's stream, with the live bar above the page.
 
-### Analyse: where the Slice, SQL and Python cells run
+### The Notebook: where the SQL and Python cells run
 
-* **Everything runs on the console and the server.** There is no DuckDB-Wasm or browser Python: the Slice is worked out by the console
-  (`POST /bi/explore/pivot`, the line under it says "Worked out by the console"), a SQL cell is Drishti SQL run by the server over the model (or, for a cell
-  over the table `extract`, the console's read-only SQLite), and a Python cell runs in the console's sandbox. An older notebook cell with `target: browser`
-  runs on the console.
+* **Nothing of yours runs in the console or the browser.** A SQL cell is Drishti SQL run by the server over the model (the line under it says *run by the
+  server ... as you*); a Python cell runs on the server's compute pool. Slicing is the Pivot's (`PIVOT <GO>`).
+* **A Python cell's Run is greyed with *Under construction*.** Python cells run on the server's compute pool, which comes with one Python runtime
+  ([UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md), `python-table-runs`). Write, save and promote the cell meanwhile.
 * **"Promote ... the target is not a report draft you can edit" (`DRS-9070`).** The target must be a report item in a workspace you contribute to (not a shipped sample and not another kind). Comments in its YAML are not kept when the visual is added.
+* **A notebook opens with "cell N was a slice ... left out".** The notebook held a `slice` cell; slicing is the Pivot's, so the cell is left out and the rest opens.
 
 ### Calc: `drishti_bi` or Graphic Walker
 
@@ -1300,16 +1301,14 @@ Every setting of a connector is in its plugin's README and its own document ([CO
 * **`DRS-9002` or an empty frame.** The call is a BI read as you: you need the `bi` power, and a masked column comes back masked (`df.attrs["masked"]`).
 * **The Graphic Walker frame stays blank.** Open the browser console: a refusal of `/static/calc/drishti_walker.html` or of its script means a proxy rewrote the policy header (the page needs the console's own `Content-Security-Policy` for that path, [USER_GUIDE.md › Calc: Python on any view, section 19](USER_GUIDE.md#19-the-bi-client-and-graphic-walker)). A refused stylesheet and image from `blocked.invalid` is expected and harmless.
 
-### Analyse: the extract is short, a SQL cell is refused, a Python cell will not run
+### The Notebook: the extract is short, a SQL cell is refused
 
-* **"60 rows of 4,000 (cut to the row limit)".** The extract holds the first `bi.explore.max_rows` (10,000) of the rows *you* may see. Pick fewer fields, add a filter in the Slice or in SQL, or ask an administrator to raise the limit. Slice and SQL work on the cut extract, so their totals are the extract's, not the dataset's (use a report for true totals).
-* **A column is empty and the info line says "Masked for you".** The server masks that column for your role; the extract carries only what it was given. SQL and Python see the same empty column. Ask the dataset's owner for access, not Analyse.
-* **`DRS-9073` "only a single SELECT over the table extract is allowed".** The SQL cell is read-only: one `SELECT` (or `WITH ... SELECT`) over the table `extract`. `INSERT`, `UPDATE`, `DROP`, `ATTACH`, `PRAGMA` and `load_extension` are refused. `DRS-9070` is a syntax error, or two statements.
-* **`DRS-9072` on SQL.** More than `bi.explore.sql_max_chars` characters, or the query ran past `bi.explore.sql_max_seconds` (a runaway join or recursion). Rows past `bi.explore.sql_max_rows` are cut, not refused.
-* **A Python cell says `DRS-9073` "needs the bi-author power".** Running Python needs the `bi-author` power (the code runs in the console's sandbox). Slice and SQL need only `bi`.
-* **`DRS-9074` on a Python cell.** The runner is off, busy or lacks `pandas`/`pyarrow`: see the Python visual entry above. The *browser* target also needs Pyodide (`tools/fetch-pyodide.sh`), and `quant` is not available there (`ValueError: quant: ... server target only`).
-* **`ValueError: quant: unknown instrument`.** `quant.instruments()` lists what the engine prices; the stand-in prices `black_scholes`, `bond` and `npv`.
-* **A saved notebook will not open.** `DRS-9070` names the cell: a notebook is YAML with `cells` of type `slice`, `sql` or `python`. Open the item page to see and fix the body.
+* **"60 rows of 4,000 (cut to the row limit)".** The extract holds the first `bi.notebook.max_rows` (10,000) of the rows *you* may see. Pick fewer fields,
+  or ask an administrator to raise the limit. A SQL cell is answered by the server over the whole model, so its totals are true totals.
+* **A column is empty and the info line says "Masked for you".** The server masks that column for your role; the extract carries only what it was given. Ask the model's owner for access.
+* **`DRS-9170` on a SQL cell.** Drishti SQL is read-only: one `SELECT` (or `WITH ... SELECT`) over the model's tables. A write, a second statement or a
+  table the model does not have is refused.
+* **`DRS-9072` on SQL.** More than `bi.notebook.sql_max_chars` characters. Rows past `bi.notebook.sql_max_rows` are cut, not refused.
 
 ### A python visual says `DRS-9071`, `DRS-9072` or `DRS-9073`
 
@@ -1386,7 +1385,7 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 | A temp folder `drishti-<pid>` or `drishti-console-<pid>` is left in the temp base (`<data dir>/tmp` for the server) | the process was killed (`kill -9`, a power cut) | it is kept (never deleted automatically) and listed on Admin, Health: delete it by hand when no such process runs ([CONFIGURATION.md](../admin/CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir)) |
 | The temp base (`<data dir>/tmp`, or `/tmp` with an older server) fills up while DuckDB works on a big query | its spill files are in the server's temp folder | point `DRISHTI_TMP_DIR` at a disk with room and restart; Admin, Health shows the folder's size |
 
-## BI: Studio, board pages, data prep and the Python console
+## BI: Studio, board pages and data prep
 
 | Symptom | Cause | Check and fix |
 |---|---|---|
@@ -1396,9 +1395,6 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 | A Transform's input is refused on validate (`DRS-9102` or `DRS-9108`) | a kind no pack declares, a field the kind lacks (the message lists its columns), or a misspelt key | pick the kind and fields from the editor's lists; a connector named on the input that is not running is `DRS-9026` ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17.1](BI_GUIDE.md#171-inputs-straight-from-a-connector)) |
 | A Transform's input has no rows, or a column reads `•••` | the input is read **as you**: a role that may not read the kind gets no rows, and a masked column arrives masked | by design; preview as a role that may read it, or ask for the entitlement |
 | The Transform editor's step preview stops at a step | that step raised: the editor shows the step's line and the error; a run past `bi.transform.timeout_seconds` (20) or `memory_mb` (512) is stopped | fix the step (the snippet's example shows its expected input), or lower `bi.transform.preview_rows` |
-| **BI → Python console** says the Python runtime is not installed | the console uses Calc's Pyodide worker, which is not in the repository | run `tools/fetch-pyodide.sh` once on the console host ([USER_GUIDE.md › Calc: Python on any view, section 12](USER_GUIDE.md#12-installing-the-python-runtime)) |
-| The Python console's extract is cut short | it holds at most `bi.pyconsole.max_rows` (20,000) rows | filter the extract, or raise the setting (up to 100,000) |
-| *Promote to the server* is not offered, or the result is not kept | promoting needs **bi-author**; code that fails on the console backend is not kept | ask for the power; run the same code in Analyse to see the backend's error ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](USER_GUIDE.md#the-notebook)) |
 | A form search says no data is loaded for the date | no source holds the kind on that business date (`noData`) | press **Search on** the newest date it names, or load the day ([USER_GUIDE.md](USER_GUIDE.md#query-by-form)) |
 
 ## BI: after an upgrade (migrations of stored items)

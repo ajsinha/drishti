@@ -535,15 +535,12 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_BI_PYTHON_WARM` | `bi.python.warm` | `true` | Start the fork-server when the console starts, so the first Python call (a report, a Transform's step run) is warm too; `/bi/python/status` says `forkServer.warm` and `warmedMs`. |
 | (no variable) | `bi.python.cache_entries`, `cache_max_bytes`, `cache_seconds` | `256`, `64000000`, `600` | The **L4 result cache** of Python answers, by the item's code, its parameters and the exact input bytes (already masked for the reader): most entries, most bytes, how long one is kept. `0` entries turns it off. A cell is never cached. |
 | `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | `bi.python.runner_token` | empty | The secret the server sends as `X-Drishti-Runner-Token` on every call of the console's **Py-node endpoint** (`/internal/py/transform`, `/measure`, `/column`; [API_GUIDE.md](../guides/API_GUIDE.md)); the same variable sets the server's `drishti.bi.transform.console-token`. Empty: the endpoint is off (`503 DRS-9074`); a wrong token is `403 DRS-9073`. |
-| `DRISHTI_BI_EXPLORE_MAX_ROWS` | `bi.explore.max_rows` | `10000` | Rupaka phase 9 ([USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook)): the most rows of an Analyse extract (the reader's rows, cut here; 10 to 100000). Without `pyarrow` on the console the server's JSON limit (`drishti.bi.query.json-max-rows`, 5000) also applies. |
-| (no variable) | `bi.explore.max_fields`, `sql_max_rows`, `sql_max_seconds`, `sql_max_chars` | `60`, `5000`, `5`, `20000` | Most columns of an extract; most rows a SQL cell returns; a SQL cell running longer is stopped; longest SQL text (`DRS-9072` for each). |
-| (no variable) | `bi.explore.max_extracts` | `6` | Most further extracts in one notebook, besides the first (`extract("name")` in a cell, a table of that name in SQL; `DRS-9072`). See [USER_GUIDE.md › Analyse: slice, SQL and Python, section 2](../guides/USER_GUIDE.md#2-the-extract). |
-| (no variable) | `bi.explore.cell_timeout_seconds`, `cell_memory_mb`, `cell_max_chars`, `max_cells` | `20`, `512`, `65536`, `60` | A Python cell's time and memory on the server (also capped by `bi.python.max_timeout_seconds` and `max_memory_mb`); longest cell; most cells in a notebook. |
-| (no variable) | `bi.explore.quant_engine` | `stand-in` | The engine behind `quant.price(...)` in a Python cell ([AI.md](AI.md#16-the-consoles-quantengine-slot-built-lean)); only `stand-in` is built in. |
+| `DRISHTI_BI_NOTEBOOK_MAX_ROWS` | `bi.notebook.max_rows` | `10000` | The Notebook ([USER_GUIDE.md › The Notebook](../guides/USER_GUIDE.md#the-notebook)): the most rows of an extract (the reader's rows, cut here; 10 to 100000). |
+| (no variable) | `bi.notebook.max_fields`, `sql_max_rows`, `sql_max_chars` | `60`, `5000`, `20000` | Most columns of an extract; most rows a SQL cell returns (run by the server); the longest SQL text. |
+| (no variable) | `bi.notebook.max_extracts` | `6` | Most further extracts in one notebook, besides the first (`extract("name")` in a Python cell; `DRS-9072`). |
+| (no variable) | `bi.notebook.cell_timeout_seconds`, `cell_memory_mb`, `cell_max_chars`, `max_cells` | `20`, `512`, `65536`, `60` | A Python cell's time and memory on the server's compute pool; the longest cell; the most cells in a notebook. |
 | `DRISHTI_BI_TRANSFORM_PREVIEW_ROWS` | `bi.transform.preview_rows` | `1000` | The Transform editor ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](../guides/BI_GUIDE.md#17-data-prep-the-transform-editor)): rows of each input its step-by-step run starts from, asked of the server as the person (10 to 50000; the server's `drishti.bi.transform.max-input-rows` also caps it). |
 | (no variable) | `bi.transform.timeout_seconds`, `memory_mb`, `snippets_file` | `20`, `512`, empty | The step run's time and memory (also capped by `bi.python.max_timeout_seconds`, `max_memory_mb`); a file of more data-prep snippets read after `drishti-console/config/prep-snippets.yaml`. |
-| `DRISHTI_BI_PYCONSOLE_ENABLED` | `bi.pyconsole.enabled` | `true` | The browser Python console at `/pyconsole` ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#the-notebook)); it also needs Calc's runtime (`tools/fetch-pyodide.sh`). |
-| `DRISHTI_BI_PYCONSOLE_MAX_ROWS` | `bi.pyconsole.max_rows` | `20000` | Most rows of an extract handed to the browser (the reader's masked rows, cut here; 10 to 100000). |
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
 | `DRISHTI_PACKS_EXTRA_DIRS` | `packs.extra_dirs` | empty | Further pack folders, comma-separated, as on the server (relative paths resolve from `drishti-console/`, so `../examples/packs`). |
@@ -2738,17 +2735,17 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 
 ## Every setting
 
-Every key of every kind: 2,165 settings in 18 areas, and 346 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,160 settings in 18 areas, and 344 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
 | Area | Settings |
 |---|---|
 | [The server: `application.yaml`](#the-server-applicationyaml) | 545 |
 | [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 323 |
-| [The console: `application.yaml`](#the-console-applicationyaml) | 210 |
+| [The console: `application.yaml`](#the-console-applicationyaml) | 206 |
 | [The console's other files](#the-consoles-other-files) | 93 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 535 |
 | [Packs: `pack.yaml`](#packs-packyaml) | 137 |
-| [Editions: `config/editions/`](#editions-configeditions) | 70 |
+| [Editions: `config/editions/`](#editions-configeditions) | 69 |
 | [The content store: `config/store/store.yaml`](#the-content-store-configstorestoreyaml) | 14 |
 | [BI runs: `config/runs/runs.yaml`](#bi-runs-configrunsrunsyaml) | 48 |
 | [Write-back: `config/edit/`](#write-back-configedit) | 18 |
@@ -2760,7 +2757,7 @@ Every key of every kind: 2,165 settings in 18 areas, and 346 environment variabl
 | [The data inbox's routing rules: `config/dataload.yaml`](#the-data-inboxs-routing-rules-configdataloadyaml) | 2 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 346 |
+| [Environment variable index](#environment-variable-index) | 344 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -4585,21 +4582,19 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `bi.python.cache_seconds` | integer | `600` |  | console | how long a cached answer is kept | restart |  |
 | `bi.python.runner_token` | string | empty | `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | console | the Py-node endpoint (/internal/py/\*) the server calls with X-Drishti-Runner-Token; empty: the endpoint is off (secret) | restart |  |
 
-#### `bi.explore`
+#### `bi.notebook`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `bi.explore.max_rows` | integer | `10000` | `DRISHTI_BI_EXPLORE_MAX_ROWS` | console | most rows of an extract (the reader's rows, cut here); 10 to 100000 | restart |  |
-| `bi.explore.max_fields` | integer | `60` |  | console | most columns of an extract | restart |  |
-| `bi.explore.sql_max_rows` | integer | `5000` |  | console | most rows a SQL cell returns | restart |  |
-| `bi.explore.sql_max_seconds` | integer | `5` |  | console | a SQL cell running longer is stopped (DRS-9081) | restart |  |
-| `bi.explore.sql_max_chars` | integer | `20000` |  | console | longest SQL text | restart |  |
-| `bi.explore.cell_timeout_seconds` | integer | `20` |  | console | a Python cell's time limit on the server (also capped by bi.python.max\_timeout\_seconds) | restart |  |
-| `bi.explore.cell_memory_mb` | integer | `512` |  | console | a Python cell's memory on the server (also capped by bi.python.max\_memory\_mb) | restart |  |
-| `bi.explore.cell_max_chars` | integer | `65536` |  | console | longest Python cell | restart |  |
-| `bi.explore.max_cells` | integer | `60` |  | console | most cells in a notebook | restart |  |
-| `bi.explore.max_extracts` | integer | `6` |  | console | most further extracts in a notebook (extract("name") in a cell), besides the first | restart |  |
-| `bi.explore.quant_engine` | string | `stand-in` |  | console | the engine behind quant.price(...) in a Python cell (docs/guides/QUANT\_SERVICE.md) | restart |  |
+| `bi.notebook.max_rows` | integer | `10000` | `DRISHTI_BI_NOTEBOOK_MAX_ROWS` | console | most rows of an extract (the reader's rows, cut here); 10 to 100000 | restart |  |
+| `bi.notebook.max_fields` | integer | `60` |  | console | most columns of an extract | restart |  |
+| `bi.notebook.sql_max_rows` | integer | `5000` |  | console | most rows a SQL cell returns | restart |  |
+| `bi.notebook.sql_max_chars` | integer | `20000` |  | console | longest SQL text | restart |  |
+| `bi.notebook.cell_timeout_seconds` | integer | `20` |  | console | a Python cell's time limit on the server (also capped by bi.python.max\_timeout\_seconds) | restart |  |
+| `bi.notebook.cell_memory_mb` | integer | `512` |  | console | a Python cell's memory on the server (also capped by bi.python.max\_memory\_mb) | restart |  |
+| `bi.notebook.cell_max_chars` | integer | `65536` |  | console | longest Python cell | restart |  |
+| `bi.notebook.max_cells` | integer | `60` |  | console | most cells in a notebook | restart |  |
+| `bi.notebook.max_extracts` | integer | `6` |  | console | most further extracts in a notebook (extract("name") in a cell), besides the first | restart |  |
 
 #### `bi.transform`
 
@@ -4609,13 +4604,6 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `bi.transform.timeout_seconds` | integer | `20` |  | console | the step-by-step run's time limit (also capped by bi.python.max\_timeout\_seconds) | restart |  |
 | `bi.transform.memory_mb` | integer | `512` |  | console | its memory (also capped by bi.python.max\_memory\_mb) | restart |  |
 | `bi.transform.snippets_file` | string | `""` |  | console | more data-prep snippets (a list under snippets:), read after config/prep-snippets.yaml | restart |  |
-
-#### `bi.pyconsole`
-
-| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
-|---|---|---|---|---|---|---|---|
-| `bi.pyconsole.enabled` | boolean | `true` | `DRISHTI_BI_PYCONSOLE_ENABLED` | console | false: no /pyconsole page; it also needs Calc's runtime (tools/fetch-pyodide.sh) | restart |  |
-| `bi.pyconsole.max_rows` | integer | `20000` | `DRISHTI_BI_PYCONSOLE_MAX_ROWS` | console | most rows of an extract handed to the browser (the reader's rows, masked, cut here); 10 to 100000 | restart |  |
 
 ### The console's other files
 
@@ -5613,7 +5601,6 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `ai` | on, off or edition | none |  | server and console | The feature ai an edition file names under features: off presets false, on or edition true; presets drishti.ai.enabled on the server and ai.enabled in the console | restart |  |
 | `mcp` | on, off or edition | none |  | server and console | The feature mcp an edition file names under features: off presets false, on or edition true; presets drishti.mcp.enabled on the server and mcp.enabled in the console | restart |  |
 | `embed` | on, off or edition | none |  | server and console | The feature embed an edition file names under features: off presets false, on or edition true; presets drishti.embed.enabled on the server and embed.enabled in the console | restart |  |
-| `pyconsole` | on, off or edition | none |  | server and console | The feature pyconsole an edition file names under features: off presets false, on or edition true; presets bi.pyconsole.enabled in the console | restart |  |
 | `python` | on, off or edition | none |  | server and console | The feature python an edition file names under features: off presets false, on or edition true; presets bi.python.enabled in the console | restart |  |
 | `designer` | on, off or edition | none |  | server and console | The feature designer an edition file names under features: off presets false, on or edition true; presets ui.designer in the console | restart |  |
 | `facts` | on, off or edition | none |  | server and console | The feature facts an edition file names under features: off presets false, on or edition true; presets ui.facts.enabled in the console | restart |  |
@@ -6148,13 +6135,11 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_BI_BOARD_ROTATE_SECONDS` | `bi.board.rotate_seconds` | `30` | console | a board in kiosk mode turns to its next page after this long, unless the board sets rotate:; 3 to 3600 |
 | `DRISHTI_BI_DIR` | `drishti.bi.dir` | `./config/bi` | server | Rupaka files: datasets/, reports/, boards/, notebooks/, python/ (config/bi/README.md); never inside a pack |
 | `DRISHTI_BI_ENABLED` | `bi.enabled` | `true` | console | false: no BI top-bar menu, no /bi pages (the server's drishti.bi.enabled is separate) |
-| `DRISHTI_BI_EXPLORE_MAX_ROWS` | `bi.explore.max_rows` | `10000` | console | most rows of an extract (the reader's rows, cut here); 10 to 100000 |
 | `DRISHTI_BI_LIVE_MIN_INTERVAL_MS` | `bi.live.min_interval_ms` | `250` | console | a report redraws its live visuals at most this often (a burst of ticks becomes one redraw); 100 to 5000 |
 | `DRISHTI_BI_LIVE_STALE_SECONDS` | `bi.live.stale_seconds` | `30` | console | no tick or status from the server for this long: the report says "Stale"; 5 to 600 |
 | `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | server | at start: old-syntax expressions to DEL v2, audited, the text before kept in each item's history; idempotent |
 | `DRISHTI_BI_NODE` | `drishti.bi.exec.node` | empty | server | this Java node's name when several serve the site (blank: one node) |
-| `DRISHTI_BI_PYCONSOLE_ENABLED` | `bi.pyconsole.enabled` | `true` | console | false: no /pyconsole page; it also needs Calc's runtime (tools/fetch-pyodide.sh) |
-| `DRISHTI_BI_PYCONSOLE_MAX_ROWS` | `bi.pyconsole.max_rows` | `20000` | console | most rows of an extract handed to the browser (the reader's rows, masked, cut here); 10 to 100000 |
+| `DRISHTI_BI_NOTEBOOK_MAX_ROWS` | `bi.notebook.max_rows` | `10000` | console | most rows of an extract (the reader's rows, cut here); 10 to 100000 |
 | `DRISHTI_BI_PYTHON_ENABLED` | `bi.python.enabled` | `true` | console | false: python visuals answer DRS-9074 (the browser target still works where a manifest allows it) |
 | `DRISHTI_BI_PYTHON_FORK_SERVER` | `bi.python.fork_server` | `true` | console | one pre-imported parent forks a child per call (no interpreter start per call); false: a new process per call |
 | `DRISHTI_BI_PYTHON_MAX_INPUT_BYTES` | `bi.python.max_input_bytes` | `16000000` | console | largest Arrow table handed to Python |

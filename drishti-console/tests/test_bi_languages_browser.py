@@ -400,7 +400,7 @@ def test_an_sql_view_dataset_in_the_wizard_and_an_analyse_cell_on_the_server(bro
     page.click("[data-save]")
     expect(page.locator("[data-after-open]")).to_be_visible(timeout=20000)
     # Analyse: an extract of the model; a new SQL cell is Drishti SQL over it, run by the server
-    page.goto(CONSOLE_URL + "/bi/explore")
+    page.goto(CONSOLE_URL + "/bi/notebook")
     page.wait_for_function("() => document.querySelectorAll('[data-dataset] option').length > 1", timeout=30000)
     page.select_option("[data-dataset]", "mq:" + ref)
     page.wait_for_selector("[data-fields] input[name=f]", timeout=30000)
