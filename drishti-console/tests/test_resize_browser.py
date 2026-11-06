@@ -212,9 +212,9 @@ def test_on_a_phone_there_are_no_handles_and_no_kept_width(browsers):
 def test_light_and_dark_themes_draw_the_line_from_the_theme(browsers):
     async def body(pg):
         handle = "#lay > [data-resize='panel']"
-        await pg.focus(handle)
+        await pg.emulate_media(reduced_motion="reduce")                               # no colour transition to wait for
         dark = await pg.evaluate("(s) => getComputedStyle(document.querySelector(s), '::after').backgroundColor", handle)
         await pg.evaluate("document.documentElement.setAttribute('data-theme', 'light')")
         light = await pg.evaluate("(s) => getComputedStyle(document.querySelector(s), '::after').backgroundColor", handle)
-        assert dark != light                                                          # the accent of each theme
+        assert dark != light                                                          # the line of each theme
     run(browsers, body)

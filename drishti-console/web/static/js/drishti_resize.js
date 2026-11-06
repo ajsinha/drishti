@@ -152,10 +152,11 @@
     if (host) { host.classList.add('rz-host'); }
     function place() {                                                  // the gutter's middle, beside the panel's edge
       if (!host) { return; }
-      var hb = host.getBoundingClientRect(), pb = panel.getBoundingClientRect(), gap = num(getComputedStyle(host).columnGap, 0) || 0;
+      var hb = host.getBoundingClientRect(), pb = panel.getBoundingClientRect(), cs = getComputedStyle(host), gap = num(cs.columnGap, 0) || 0;
       var at = left ? pb.left - hb.left - gap / 2 : pb.right - hb.left + gap / 2;
+      var inner = host.clientWidth - num(cs.paddingLeft, 0) - num(cs.paddingRight, 0);
       hd.style.left = Math.round(at - 5 + host.scrollLeft) + 'px';
-      hd.hidden = panel.hidden || pb.width === 0 || (left ? pb.left <= hb.left + 2 : pb.right >= hb.right - 2);   // stacked: nothing beside it
+      hd.hidden = panel.hidden || pb.width === 0 || pb.width >= inner - 2;   // stacked (the panel the whole width): nothing beside it
     }
     if (window.ResizeObserver) { var ro = new ResizeObserver(place); ro.observe(host); ro.observe(panel); }
     function maxNow() { return host ? Math.max(min, Math.min(max, host.getBoundingClientRect().width - 240)) : max; }
@@ -253,6 +254,18 @@
       if (!ws || ws.length !== count()) { s.style.removeProperty(cssVar); return; }
       s.style.setProperty(cssVar, ws.map(function (w, i) { w = Math.max(min, w); return i === flex ? 'minmax(' + w + 'px, 1fr)' : w + 'px'; }).join(' '));
     }
+    /** Column i by dx: a grid row with a flexible column keeps its width (the flexible column gives or takes, or, for the flexible one
+     *  itself, its neighbour does); a table grows or shrinks as a whole. Never below the least. */
+    function resized(ws0, i, dx) {
+      var ws = ws0.slice(), give = flex < 0 ? -1 : i === flex ? (i + 1 < ws.length ? i + 1 : i - 1) : flex;
+      ws[i] = Math.max(min, ws0[i] + dx);
+      if (give >= 0 && give !== i) {
+        var room = ws0[give] - min, d = ws[i] - ws0[i];
+        if (d > room) { d = room; ws[i] = ws0[i] + d; }
+        ws[give] = ws0[give] - d;
+      }
+      return ws;
+    }
     function saved() { return phone() ? null : load(key, h); }
     function keep(ws) { store(key, h, ws); }
     h.__rzApply = function () { apply(saved()); };
@@ -270,9 +283,9 @@
       handle(hd, {
         axis: 'x', label: 'Resize the ' + name + ' column',
         start: function () { return widths(); },
-        move: function (ws0, dx) { var ws = ws0.slice(); ws[i] = Math.max(min, ws0[i] + dx); apply(ws); },
+        move: function (ws0, dx) { apply(resized(ws0, i, dx)); },
         end: function () { keep(widths()); },
-        key: function (step) { var ws = widths(); ws[i] = Math.max(min, ws[i] + step * STEP); apply(ws); keep(widths()); },
+        key: function (step) { apply(resized(widths(), i, step * STEP)); keep(widths()); },
         reset: function () { keep(null); apply(null); },
         value: function () { var w = widths()[i] || 0; return { now: w, min: min, max: null }; }
       });
