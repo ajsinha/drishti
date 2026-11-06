@@ -14,14 +14,17 @@
 
 """Wave C (2.4.0) data prep on the console (docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17, docs/architecture/BI_DESIGN.md section 11.1, items P1 to P3 and P5) and the Notebook's profile:
 
-* the snippets library: every snippet's own example is right in plain pandas **and** in the sandbox, a value is always a literal (never code), an
+* the snippets library: every snippet's own example is right in plain pandas **and** as a step of the compute pool's step-by-step run (the
+  engine's own function, here in the test), a value is always a literal (never code), an
   ``input`` parameter must be one of the Transform's inputs;
 * the editor's documents: a spec is written as a Python item and a Python dataset and read back as the same steps; hand-written YAML opens as steps;
-* ``/bi/transform/steps`` asks each input of the server as the reader (the preview's row limit, the masked columns) and runs the steps in the sandbox;
-  without bi-author it runs nothing;
-* the Notebook's Profile tab profiles the reader's extract (masked columns as empty)."""
-import asyncio
+* ``/bi/transform/steps`` hands the server the inputs to read as the reader (the preview's row limit) and the code: the server reads them and runs
+  the steps on its compute pool; without bi-author it runs nothing;
+* the Notebook's Profile tab asks the server to profile the reader's extract."""
 import io
+import math
+import re
+import sys
 from pathlib import Path
 
 import pytest
@@ -35,10 +38,49 @@ from bi_backend import BiBackend  # noqa: E402
 from conftest import CONSOLE  # noqa: E402
 from core.app import CSP, create_app  # noqa: E402
 from core.config import load_settings  # noqa: E402
-from core.prep_snippets import SnippetError, SnippetLibrary, frame, plain, run_example  # noqa: E402
+from core.prep_snippets import SnippetError, SnippetLibrary  # noqa: E402
 from core.transform_editor import EditorError, compose, parse  # noqa: E402
 
+sys.path.insert(0, str(CONSOLE.parent / "drishti-compute" / "src" / "main" / "python"))
+from drishti_compute import items  # noqa: E402  (the compute pool's engine: its step-by-step run, called here without its sandbox)
+
 LIBRARY = SnippetLibrary([CONSOLE / "config" / "prep-snippets.yaml"])
+
+
+def frame(spec: dict):
+    import pandas as pd
+    return pd.DataFrame([list(r) for r in spec.get("rows") or []], columns=list(spec.get("columns") or []))
+
+
+def plain(v):
+    """A cell as the examples write it: numbers, text, None for empty, dates as ISO text."""
+    if v is None:
+        return None
+    if hasattr(v, "item") and not isinstance(v, (str, bytes)):
+        try:
+            v = v.item()
+        except (ValueError, TypeError):
+            pass
+    if isinstance(v, float) and math.isnan(v):
+        return None
+    if type(v).__name__ in ("NAType", "NaTType"):
+        return None
+    if hasattr(v, "isoformat"):
+        return v.isoformat()[:10] if not getattr(v, "hour", 0) and not getattr(v, "minute", 0) else v.isoformat()
+    return v
+
+
+def run_example(library: SnippetLibrary, sid: str):
+    """A snippet's example in plain pandas: the rendered step over its input frames; (columns, rows) as the example's ``expect`` writes them."""
+    import numpy as np
+    import pandas as pd
+    ex = library.get(sid)["example"]
+    frames = {name: frame(spec) for name, spec in (ex.get("inputs") or {}).items()}
+    step = library.render(sid, ex.get("params") or {}, [n for n in frames if n != "df"])
+    ns = {"pd": pd, "np": np, "re": re, **{k: v.copy() for k, v in frames.items()}}
+    exec(compile(step["code"], f"<snippet {sid}>", "exec"), ns)   # noqa: S102 - the library's own tested code, in a test
+    out = ns["df"]
+    return [str(c) for c in out.columns], [[plain(v) for v in r] for r in out.astype(object).itertuples(index=False, name=None)]
 
 
 def arrow(cols: dict) -> bytes:
@@ -70,6 +112,10 @@ class PrepBackend(BiBackend):
         return arrow(TRADES), {"X-Bi-Rows": "3", "X-Bi-Masked": "", "X-Bi-Model": "dataset:pack.trading.trade", "X-Bi-As-Of": "2026-10-08"}
 
     async def bi(self, method, path, ident, body=None, **params):
+        if path in ("/python/steps", "/python/profile"):
+            self.asked.append((path, body, params, ident.user))
+            return {"kind": "steps", "complete": True, "inputs": [{"name": "trades", "masked": []}], "steps": []} if path == "/python/steps" \
+                else {"kind": "profile", "rows": 3, "columns": [], "inputRows": 3, "masked": []}
         if method == "POST" and path == "/workspaces/me/items":
             self.saved.append(body)
             return {"id": "bi-nb-1", "kind": body["kind"], "title": body["title"]}
@@ -81,7 +127,6 @@ def made():
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = PrepBackend()
     yield TestClient(app), app.state.backend
-    asyncio.run(app.state.pyrunner.close())
 
 
 SPEC = {"title": "Desk notional", "inputs": [{"name": "trades", "input": {"kind": "trade", "pack": "trading", "fields": ["TRADE_ID", "DESK", "NOTIONAL"]}}],
@@ -99,10 +144,8 @@ def test_each_snippets_example_is_right_in_pandas(sid):
     assert rows == [[plain(v) for v in r] for r in ex["expect"]["rows"]]
 
 
-def test_every_snippets_example_is_right_in_the_sandbox(made):
-    """Each snippet as the step of a Transform, run by the console's sandboxed runner: the frame after the step is the example's."""
-    client, _ = made
-    runner = client.app.state.pyrunner
+def test_every_snippets_example_is_right_as_a_step():
+    """Each snippet as the step of a Transform, run by the compute pool's step-by-step function: the frame after the step is the example's."""
     for sid, s in sorted(LIBRARY.snippets.items()):
         ex = s["example"]
         given = list(ex["inputs"])
@@ -111,9 +154,9 @@ def test_every_snippets_example_is_right_in_the_sandbox(made):
         spec = {"title": sid, "inputs": [{"name": n, "input": {"kind": "x"}} for n in names],
                 "steps": [{"label": "Start", "code": "df = base.copy()"}, {"label": sid, "code": step["code"]}]}
         source = compose(spec)["source"]
-        blobs = [_arrow_of(frame(ex["inputs"][n])) for n in given]
-        m = {"name": sid, "interface": "transform", "entry": "run", "inputs": names, "packages": ["pandas", "numpy"], "timeout": 20, "memory": 512, "params": {}, "source": source}
-        a = asyncio.run(runner.run_steps(m, blobs, names))
+        frames = [pa.ipc.open_stream(io.BytesIO(_arrow_of(frame(ex["inputs"][n])))).read_all().to_pandas() for n in given]
+        req = {"source": source, "entry": "run", "params": {}}
+        a = items._steps(req, frames, names, {"__name__": "python_item"})
         assert a["complete"], (sid, a.get("failed"))
         last = a["steps"][-1]
         assert last["head"]["columns"] == ex["expect"]["columns"], sid
@@ -181,17 +224,13 @@ def test_the_editor_page_keeps_the_strict_policy(made):
     assert any(x["id"] == "asof-fx" and any(p["kind"] == "input" for p in x["params"]) for x in s)
 
 
-def test_the_steps_run_on_the_readers_inputs(made):
+def test_the_steps_run_on_the_server_over_the_readers_inputs(made):
     client, backend = made
-    a = client.post("/bi/transform/steps", json={"spec": SPEC}).json()
-    path, body, params, user = backend.asked[0]
-    assert path == "/python/input" and params == {"format": "arrow"} and body["limit"] == 1000 and body["input"]["kind"] == "trade" and user == "ash"
-    assert a["complete"] and [s["rows"] for s in a["steps"]] == [3, 3, 2]
-    assert a["steps"][-1]["head"]["rows"] == [["DESK-FX", 3000], ["DESK-RATES", 500]]
-    assert a["inputs"][0]["model"] == "dataset:pack.trading.trade" and a["inputs"][0]["asOf"] == "2026-10-08"
-    backend.reader = "bob"                                                     # another reader: their rows, the masked column empty
-    b = client.post("/bi/transform/steps", json={"spec": SPEC}).json()
-    assert b["inputs"][0]["masked"] == ["NOTIONAL"] and b["steps"][-1]["head"]["rows"] == [["DESK-FX", 0.0]]
+    a = client.post("/bi/transform/steps", json={"spec": SPEC, "asOf": "2026-10-08"}).json()
+    path, body, _, user = backend.asked[0]
+    assert path == "/python/steps" and user == "ash" and body["limit"] == 1000 and body["asOf"] == "2026-10-08"
+    assert body["inputs"] == [{"name": "trades", "input": SPEC["inputs"][0]["input"]}] and "def run(trades" in body["source"]
+    assert a["complete"] and a["source"] == body["source"]
 
 
 def test_without_bi_author_no_step_runs(made):
@@ -199,21 +238,17 @@ def test_without_bi_author_no_step_runs(made):
     backend.powers = ["bi"]
     client.app.state.bi_me = type(client.app.state.bi_me)()                   # forget the cached powers
     r = client.post("/bi/transform/steps", json={"spec": SPEC})
-    assert r.status_code == 403 and r.json()["code"] == "DRS-9073" and not backend.asked
+    assert r.status_code == 403 and r.json()["code"] == "DRS-9073" and not backend.asked                 # nothing asked of the server
     assert client.post("/bi/transform/compose", json={"spec": SPEC}).status_code == 200      # the documents are still written
 
 
 # ---- the browser Python console's server side ---------------------------------------------------------------------------------------------
-def test_the_notebook_profiles_the_readers_extract(made):
+def test_the_notebook_profile_is_the_servers(made):
     client, backend = made
     spec = {"dataset": "dataset:pack.trading.trade", "fields": ["trade.TRADE_ID", "trade.DESK", "trade.NOTIONAL"]}
     p = client.post("/bi/notebook/profile", json={"extract": spec}).json()
-    cols = {c["name"]: c for c in p["columns"]}
-    assert p["kind"] == "profile" and p["inputRows"] == 3 and cols["TRADE_ID"]["unique"] and cols["NOTIONAL"]["looksLike"] == "decimal"
-    assert ["DESK-FX", 2] in cols["DESK"]["top"]
-    backend.reader = "bob"
-    b = client.post("/bi/notebook/profile", json={"extract": spec}).json()
-    assert b["masked"] == ["NOTIONAL"] and {c["name"]: c for c in b["columns"]}["NOTIONAL"]["nullPct"] == 100.0
+    path, body, _, user = backend.asked[-1]
+    assert p["kind"] == "profile" and path == "/python/profile" and body["extract"] == spec and body["limit"] == 10000 and user == "ash"
     r = client.get("/bi/notebook")
     assert 'data-tab="profile"' in r.text and "drishti_bi-notebook-profile.js" in r.text and 'href="/pyconsole"' not in r.text
 

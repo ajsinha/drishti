@@ -38,9 +38,9 @@ python:
     modules: [drishti_compute, drishti_compute.engine, drishti_compute.arrow]
   - name: bi-python
     title: "BI Python items"
-    summary: "The functions a BI Python item defines: a Transform's run, a measure's compute and compute_groups, a column's derive, a visual's render."
-    paths: [drishti-console]
-    modules: [core.python_items]
+    summary: "The functions a BI Python item defines: a Transform's run, a measure's compute and compute_groups, a column's derive, a visual's render; run on the server's compute pool."
+    paths: [drishti-compute/src/main/python]
+    modules: [drishti_compute.items]
   - name: cli
     title: "drishti.py and its client library"
     summary: "The command line's reusable parts (the server API client, the Java launcher, the parser) and drishti_client, the small library for scripts."

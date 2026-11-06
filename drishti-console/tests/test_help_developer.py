@@ -13,12 +13,17 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Help -> Developer (IMPLEMENTATION_PLAN row 2g): the API references a build wrote, served from their folder and nothing else, and the
-contract of BI Python items held to the runner."""
+contract of BI Python items held to the runner (drishti_compute.items, on the server's compute pool)."""
 import json
 
 import pytest
 
-from core import pyrunner, python_items
+import sys
+
+from conftest import CONSOLE
+
+sys.path.insert(0, str(CONSOLE.parent / "drishti-compute" / "src" / "main" / "python"))
+from drishti_compute import items  # noqa: E402  (the BI Python items' contract, on the server's compute pool)
 
 
 @pytest.fixture()
@@ -76,7 +81,7 @@ def test_without_a_build_the_page_says_how_to_make_one(client, tmp_path):
 
 
 def test_the_python_items_contract_names_the_runners_entries():
-    for interface, (entry, _) in python_items.INTERFACES.items():
-        assert pyrunner.ENTRIES[interface] == entry, interface
-    authored = {k for k, v in pyrunner.ENTRIES.items() if v and k != "steps"}          # steps and profile are the editor's own runs
-    assert authored == set(python_items.INTERFACES)
+    for interface, entry in items.INTERFACES.items():
+        assert items.ENTRIES[interface] == entry and interface in items.__doc__ and entry in items.__doc__, interface
+    authored = {k for k, v in items.ENTRIES.items() if v and k != "steps"}             # steps and profile are the editor's own runs
+    assert authored == set(items.INTERFACES)

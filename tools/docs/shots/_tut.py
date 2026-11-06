@@ -33,8 +33,8 @@ from shotlib import ROOT, Ctx, out_dir
 OUT = ROOT / "docs" / "tutorials" / "img"
 SERVER_ENV = {"DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": "tutorial-scratch-secret-0123456789abcdef-xyz",
               "DRISHTI_AUTH_ENABLED": "true", "DRISHTI_SESSION_SECRET": "tutorial-session-secret-0123456789abcdef-xyz", "DRISHTI_SECURE_COOKIE": "false",
-              # the server runs a Python Transform in the console's sandboxed runner, started with the Python that makes the pictures (it has pandas and pyarrow)
-              "DRISHTI_BI_TRANSFORM_PYTHON": sys.executable, "DRISHTI_BI_TRANSFORM_RUNNER": str(ROOT / "drishti-console" / "core" / "transform_cli.py")}
+              # the server runs Python on its compute pool python, in the interpreter that makes the pictures (it carries the pinned libraries)
+              "DRISHTI_COMPUTE_ENABLED": "true", "DRISHTI_PYTHON": sys.executable}
 ADMIN, ADMIN_PASSWORD = "drishti-dev-admin", "drishti-dev-admin123"
 VERA, PASSWORD = "vera", "tutorial-pass-2026"
 WIDE, HIGH = 1280, 800

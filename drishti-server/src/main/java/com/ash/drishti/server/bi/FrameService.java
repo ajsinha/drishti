@@ -104,7 +104,9 @@ public final class FrameService implements DatasetRefresher.FramedHooks {
                 }
                 frames.add(ArrowIpcWriter.write(cols, r.rows()));
             }
-            return new TransformService.Prepared(t.manifest().toMap(), frames, all, p);
+            Map<String, Object> manifest = new LinkedHashMap<>(t.manifest().toMap());
+            manifest.put("inputs", new ArrayList<>(inputs.keySet()));          // the dataset's names of its inputs: what build(inputs, params) reads them by
+            return new TransformService.Prepared(manifest, frames, all, p);
         });
         return queries.readParquet(out.file(), queries.properties().maxRows());
     }

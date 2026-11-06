@@ -249,7 +249,7 @@ public final class PythonRuns implements TransformRunner {
         limits.put("max_output_bytes", "transform".equals(interfaceKind) ? transform.maxBytes() : MAX_ANSWER_BYTES);
         limits.put("max_rows", transform.maxRows());
         limits.put("max_groups", 5000);
-        ComputeRequest.Builder b = ComputeRequest.on(POOL, "run", who.user()).viewer(Viewers.of(who)).param("interface", interfaceKind)
+        ComputeRequest.Builder b = ComputeRequest.on(POOL, "run", who.user()).viewer(viewer(who)).param("interface", interfaceKind)
                 .param("manifest", manifest).param("params", params == null ? Map.of() : params).param("limits", limits)
                 .params(inputs.how()).timeout(Duration.ofSeconds(seconds + 15L));
         inputs.files().forEach(b::file);
@@ -289,13 +289,19 @@ public final class PythonRuns implements TransformRunner {
             return List.of(Map.of("level", "warning", "code", "DRS-9074", "path", "source", "message", "the source was not checked: " + why.get()));
         }
         try {
-            ComputeResult r = compute.run(ComputeRequest.on(POOL, "check", who.user()).viewer(Viewers.of(who)).param("manifest", manifest)
+            ComputeResult r = compute.run(ComputeRequest.on(POOL, "check", who.user()).viewer(viewer(who)).param("manifest", manifest)
                     .param("allowed", packages()).timeout(Duration.ofSeconds(30)).build());
             Object problems = r.rows().isEmpty() ? null : r.rows().get(0).get("problems");
             return problems instanceof List<?> l ? (List<Map<String, Object>>) l : List.of();
         } catch (ComputeException e) {
             return List.of(Map.of("level", "warning", "code", "DRS-9074", "path", "source", "message", "the source was not checked: " + e.getMessage()));
         }
+    }
+
+    /** Who runs it, as the compute request carries it: the user, their roles and the signature of their rights (never a credential). */
+    private static ComputeRequest.Viewer viewer(Principal who) {
+        com.ash.drishti.api.compute.Viewer v = Viewers.of(who);
+        return new ComputeRequest.Viewer(v.user(), v.roles(), v.viewSignature());
     }
 
     private static ErrorCode code(String kind) {
@@ -339,7 +345,12 @@ public final class PythonRuns implements TransformRunner {
             files.put("in_" + i + ".arrow", r.frames().get(i));
             names.add("in_" + i + ".arrow");
         }
-        Answer a = run(r.who(), "transform", r.manifest(), r.params(), new Inputs(files, Map.of("frames", names)), false,
+        Map<String, Object> how = new LinkedHashMap<>();
+        how.put("frames", names);
+        if (r.manifest().get("inputs") instanceof List<?> declared && declared.size() == names.size()) {
+            how.put("names", declared.stream().map(String::valueOf).toList());     // build(inputs, params) reads the frames by these names
+        }
+        Answer a = run(r.who(), "transform", r.manifest(), r.params(), new Inputs(files, how), false,
                 "transform " + r.manifest().getOrDefault("name", ""));
         if (a.file() == null) {
             throw new DrishtiException(ErrorCode.PYTHON_FAILED, "the Transform returned no frame");

@@ -57,6 +57,8 @@ from .engine import Engine, Result
 
 FILE = "<python-item>"
 RESULT_FILE = "result.parquet"
+#: Each author-facing interface and its default entry function (the module's docstring is the contract; tests/test_help_developer.py holds the two together).
+INTERFACES = {"transform": "run", "measure": "compute", "column": "derive", "visual": "render"}
 ENTRIES = {"measure": "compute", "transform": "run", "column": "derive", "visual": "render", "cell": "", "steps": "run", "profile": ""}
 SAFE_STDLIB = {"math", "statistics", "json", "datetime", "re", "collections", "itertools", "functools", "typing", "decimal", "fractions",
                "numbers", "string", "random", "operator", "bisect", "heapq", "dataclasses", "enum", "copy", "calendar", "time", "textwrap", "__future__"}
@@ -311,8 +313,9 @@ def _arrow_type(t) -> str:
 
 
 def _transform(req: dict, frames: list, ns: dict, out_dir: str) -> dict:
-    """A Transform of a derived dataset: ``run(*frames)`` (a top-level function, or the method of a class named ``Transform``, which gets ``self.params``) returns a
-    pandas DataFrame; it is checked, typed from its columns and written as Parquet in ``out/`` for the server to collect."""
+    """A Transform: ``run(*frames)`` (a top-level function, or the method of a class named ``Transform``, which gets ``self.params``), or a Python-driven
+    table's ``build(inputs, params)`` (``inputs``: the frames by their names), returns a pandas DataFrame; it is checked, typed from its columns and
+    written as Parquet in ``out/`` for the server to collect, with its first rows in the answer."""
     import inspect
     import pandas as pd
     import pyarrow as pa
@@ -328,8 +331,14 @@ def _transform(req: dict, frames: list, ns: dict, out_dir: str) -> dict:
         fn = ns.get(req["entry"])
         if not callable(fn):
             raise ValueError(f"the source defines no function '{req['entry']}' (nor a class Transform with that method)")
-    wants_params = "params" in inspect.signature(fn).parameters
-    result = fn(*frames, params=params) if wants_params else fn(*frames)
+    parameters = list(inspect.signature(fn).parameters)
+    wants_params = "params" in parameters
+    if parameters and parameters[0] == "inputs":                   # build(inputs, params): the frames by name
+        names = list(req.get("names") or []) or [f"input_{i + 1}" for i in range(len(frames))]
+        by_name = dict(zip(names, frames))
+        result = fn(by_name, params) if len(parameters) > 1 else fn(by_name)
+    else:
+        result = fn(*frames, params=params) if wants_params else fn(*frames)
     if not isinstance(result, pd.DataFrame):
         raise TypeError(f"a transform returns a pandas DataFrame, not {type(result).__name__}")
     if len(result) > int(req["max_rows"]):
@@ -355,7 +364,8 @@ def _transform(req: dict, frames: list, ns: dict, out_dir: str) -> dict:
             table = table.set_column(table.schema.get_field_index(f.name), f.name, table[f.name].cast(pa.string()))
     os.makedirs(out_dir, exist_ok=True)
     pq.write_table(table, os.path.join(out_dir, RESULT_FILE))
-    return {"kind": "transform", "columns": columns, "rows": int(table.num_rows)}
+    head = [[_jsonable(v) for v in r] for r in result.head(HEAD_ROWS).astype(object).itertuples(index=False, name=None)]
+    return {"kind": "transform", "columns": columns, "rows": int(table.num_rows), "head": head}
 
 
 # ---- profiling and the step-by-step run (wave C, 2.4.0: docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17; docs/architecture/BI_DESIGN.md section 11.1, items P1 and P3) -------------------------

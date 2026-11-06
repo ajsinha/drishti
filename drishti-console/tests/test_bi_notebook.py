@@ -13,11 +13,12 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The Notebook (docs/guides/USER_GUIDE.md › The Notebook): the extract is the reader's rows (two readers, two extracts, nothing kept between calls), a SQL
-cell is Drishti SQL run by the server, Python cells run on the server's compute pool (under construction: the console runs none), notebooks check and
-promote, an older notebook's slice is left out with a note, the cut routes are gone and the old addresses lead here, and the console's and the server's
-Python allow-lists agree."""
+cell is Drishti SQL run by the server, Python cells run on the server's compute pool (the server reads the extracts; the console runs none), notebooks
+check and promote, an older notebook's slice is left out with a note, the cut routes are gone and the old addresses lead here, and the server's Python
+packages are pinned."""
 import io
 import re
+import sys
 from pathlib import Path
 
 import pytest
@@ -31,8 +32,8 @@ from conftest import CONSOLE  # noqa: E402
 from core.app import create_app  # noqa: E402
 from core.config import load_settings  # noqa: E402
 from core.notebook import Limits, NotebookError, check_extracts, from_arrow, parse_notebook, promote_python, promote_transform  # noqa: E402
-from core.pyrunner import check_source  # noqa: E402
-from core.quant import QuantError, get_engine  # noqa: E402
+sys.path.insert(0, str(CONSOLE.parent / "drishti-compute" / "src" / "main" / "python"))
+from drishti_compute.items import check_source  # noqa: E402  (the compute pool's static check, parsed here: nothing runs)
 
 DS = "file:dataset:trades-basic"
 FIELDS = ["trade.desk", "trade.notional", "trade.mtm"]
@@ -54,7 +55,15 @@ class NotebookBackend(BiBackend):
 
     def __init__(self, powers=("bi", "bi-author")):
         super().__init__(powers)
-        self.reader, self.queries = "ann", []
+        self.reader, self.queries, self.python_runs = "ann", [], True
+
+    async def bi(self, method, path, ident, body=None, **params):
+        if path == "/python/runtime":
+            return {"runs": self.python_runs, "why": None if self.python_runs else "compute is off", "packages": ["pandas", "numpy", "pyarrow", "scipy"]}
+        if path == "/python/cell":
+            self.queries.append((path, body, ident.user))
+            return {"kind": "cell", "stdout": "5\n", "table": {"columns": ["desk"], "rows": [["FX"]], "rowCount": 1}, "ms": 3, "inputRows": 5, "masked": [], "target": "server"}
+        return await super().bi(method, path, ident, body, **params)
 
     async def bi_arrow(self, path, ident, body, **params):
         self.queries.append((path, body, ident.user))
@@ -108,9 +117,9 @@ def test_a_bad_extract_request_is_refused_with_a_code():
 
 
 # ---- one analysis path: what was cut is gone, and the old addresses lead here ----------------------------------------------------
-@pytest.mark.parametrize("path", ["/bi/explore/pivot", "/bi/explore/sql", "/bi/explore/python", "/bi/explore/dsql", "/bi/notebook/python", "/bi/notebook/pivot",
+@pytest.mark.parametrize("path", ["/bi/explore/pivot", "/bi/explore/sql", "/bi/explore/python", "/bi/explore/dsql", "/bi/notebook/pivot",
                                   "/pyconsole/extract", "/pyconsole/promote"])
-def test_the_console_runs_no_slice_no_sqlite_and_no_python_of_the_readers(path):
+def test_the_console_runs_no_slice_no_sqlite_and_no_python_of_the_readers(path):          # /bi/notebook/python passes a cell to the server
     client, _ = make()
     assert client.post(path, json={"extract": {"dataset": DS, "fields": FIELDS}, "source": "result = 1", "sql": "SELECT 1"}).status_code in (404, 405)
 
@@ -152,18 +161,25 @@ def test_a_sql_cell_is_drishti_sql_run_by_the_server_as_the_reader():
     assert client.post("/bi/notebook/sql", json={"extract": {"dataset": "mq:"}, "sql": "SELECT 1"}).json()["code"] == "DRS-9070"
 
 
-# ---- Python: on the server's compute pool (under construction) -------------------------------------------------------------------------
-def test_python_cells_are_marked_under_construction_and_run_nowhere_else():
-    client, _ = make()
+# ---- Python: on the server's compute pool -------------------------------------------------------------------------------------------
+def test_python_cells_run_on_the_server_which_reads_the_extracts_as_the_reader():
+    client, backend = make()
     page = client.get("/bi/notebook").text
-    assert 'data-python-runs="false"' in page and 'data-uc="python-table-runs"' in page and "Under construction" in page
-    assert "compute pool" in page
+    assert 'data-python-runs="true"' in page and "python-table-runs" not in page and "compute pool" in page
     st = client.get("/bi/notebook/status").json()
-    assert st["python"] == {"runs": False, "where": "server", "mayRun": True}
-    reg = (CONSOLE.parent / "config/under-construction.yaml").read_text(encoding="utf-8")
-    assert "id: python-table-runs" in reg and "Notebook" in reg
+    assert st["python"]["runs"] is True and st["python"]["where"] == "server" and st["python"]["mayRun"] is True
+    spec = {"dataset": DS, "fields": FIELDS}
+    r = client.post("/bi/notebook/python", json={"extract": spec, "extracts": EXTRA, "source": "print(len(df))\nresult = df[['desk']]"})
+    assert r.status_code == 200 and r.json()["kind"] == "cell" and r.json()["target"] == "server"
+    path, body, user = backend.queries[-1]
+    assert path == "/python/cell" and user == "ash" and body["extract"] == spec and body["extracts"] == EXTRA and body["limit"] == 10000 and body["timeout"] == 20
+    assert not [q for q in backend.queries if q[0] != "/python/cell"]                 # the console read no rows for it: the server does
+    assert client.post("/bi/notebook/python", json={"extract": spec, "source": " "}).status_code == 413
     js = (CONSOLE / "web/static/js/drishti_bi-notebook-cells.js").read_text(encoding="utf-8")
-    assert "/bi/notebook/python" not in js and "/bi/explore" not in js and "pyodide" not in js.lower()
+    assert "/bi/notebook/python" in js and "/bi/explore" not in js and "pyodide" not in js.lower()
+    backend.python_runs = False                                                       # a server that cannot run Python safely says why
+    off = client.get("/bi/notebook").text
+    assert 'data-python-runs="false"' in off and "compute is off" in off
 
 
 # ---- notebooks and promotion ---------------------------------------------------------------------------------------------------------
@@ -251,32 +267,13 @@ def test_the_page_is_live_strict_and_wired():
     assert 'href="/bi/notebook"' in rail and 'href="/pivot"' in rail and "/pyconsole" not in rail and "/bi/explore" not in rail
 
 
-def test_python_packages_agree_between_the_server_and_the_console():
+def test_the_servers_python_packages_are_all_pinned():
     root = Path(__file__).resolve().parents[2]
     java = (root / "drishti-server/src/main/java/com/ash/drishti/server/bi/report/BiReportProperties.java").read_text(encoding="utf-8")
     default = re.search(r'java\.util\.List\.of\(([^)]*)\)\s*:\s*java\.util\.List\.copyOf\(pythonPackages\)', java)
     assert default, "the server's default python-packages list was not found in BiReportProperties"
     server = re.findall(r'"([a-z0-9_]+)"', default.group(1))
-    console = load_settings(CONSOLE / "config").get("bi.python.packages")
-    assert sorted(server) == sorted(console), f"drishti.bi.report.python-packages {server} and bi.python.packages {console} must list the same packages"
-    yaml_text = (root / "drishti-server/src/main/resources/application.yaml").read_text(encoding="utf-8")
-    m = re.search(r"python-packages:\s*\[([^\]]*)\]", yaml_text)
-    if m:                                                                                                       # when the server's own file lists them, those agree too
-        assert sorted(x.strip() for x in m.group(1).split(",")) == sorted(console)
-
-
-# ---- the quant stand-in -----------------------------------------------------------------------------------------------------------
-def test_the_quant_stand_in_prices():
-    q = get_engine("stand-in")
-    call = q.price("black_scholes", spot=100, strike=100, rate=0.05, vol=0.2, years=1)
-    put = q.price("black_scholes", spot=100, strike=100, rate=0.05, vol=0.2, years=1, kind="put")
-    assert call == pytest.approx(10.4506, abs=1e-3) and put == pytest.approx(5.5735, abs=1e-3)
-    assert call - put == pytest.approx(100 - 100 * 2.718281828459045 ** -0.05, abs=1e-9)                       # put-call parity
-    assert q.price("bond", coupon=0.05, yield_=0.05, years=10, freq=2) == pytest.approx(100.0, abs=1e-9)         # a par bond
-    assert q.price("npv", rate=0.1, cashflows=[-100, 110]) == pytest.approx(0.0, abs=1e-9)
-    assert set(q.instruments()) == {"black_scholes", "bond", "npv"} and q.describe()["engine"] == "stand-in"
-    for bad in (("nope", {}), ("black_scholes", {"spot": 1}), ("npv", {"rate": 0.1, "cashflows": "x"}), ("black_scholes", {"spot": -1, "strike": 1, "rate": 0, "vol": 1, "years": 1})):
-        with pytest.raises(QuantError):
-            q.price(bad[0], **bad[1])
-    with pytest.raises(QuantError):
-        get_engine("qlrisk")                                                                                     # not installed: the slot is documented, not wired
+    lock = (root / "config/compute/locks/python.lock").read_text(encoding="utf-8")
+    pinned = re.findall(r"(?m)^([A-Za-z0-9_.-]+)==", lock)
+    assert set(server) <= set(pinned), f"drishti.bi.report.python-packages {server}: each must be pinned in config/compute/locks/python.lock ({pinned})"
+    assert load_settings(CONSOLE / "config").get("bi.python.packages") is None                                # the console holds no Python runtime

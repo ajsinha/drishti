@@ -182,7 +182,7 @@ public final class TransformService implements AutoCloseable {
     }
 
     /** Whether a column the code returned fits the type the contract declares (a whole number fits a decimal; anything fits text). */
-    static boolean fits(String got, String declared) {
+    public static boolean fits(String got, String declared) {
         String w = declared == null ? "" : declared.toLowerCase(java.util.Locale.ROOT).strip();
         String g = got == null ? "string" : got.toLowerCase(java.util.Locale.ROOT);
         return switch (w) {

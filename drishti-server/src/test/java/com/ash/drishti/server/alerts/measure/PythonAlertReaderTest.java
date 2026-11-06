@@ -73,7 +73,7 @@ class PythonAlertReaderTest {
         }
 
         @Override
-        public JsonNode measure(Map<String, Object> manifest, Map<String, Object> params, List<String> groupBy, List<String> columns, List<List<Object>> rows) {
+        public JsonNode measure(Principal p, Map<String, Object> manifest, Map<String, Object> params, List<String> groupBy, List<String> columns, List<List<Object>> rows) {
             calls.add(new Object[] {manifest, params, groupBy, columns, rows});
             if (rows.isEmpty()) {
                 throw new DrishtiException(ErrorCode.PYTHON_FAILED, "no rows to run on");
