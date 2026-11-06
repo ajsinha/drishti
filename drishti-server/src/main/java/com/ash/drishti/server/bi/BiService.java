@@ -58,7 +58,7 @@ import java.util.stream.Collectors;
  */
 public final class BiService {
 
-    public static final List<String> KINDS = List.of("dataset", "model", "report", "board", "notebook", "python", "theme");
+    public static final List<String> KINDS = List.of("dataset", "model", "report", "board", "notebook", "python", "theme", "table");
     public static final List<String> ENDORSEMENTS = List.of("none", "promoted", "certified");
     private static final Pattern SLUG = Pattern.compile("[a-z][a-z0-9-]{1,47}");
     private static final Pattern TAG = Pattern.compile("[A-Za-z0-9][A-Za-z0-9 ._:/-]{0,39}");
@@ -706,6 +706,7 @@ public final class BiService {
     }
 
     private volatile java.util.function.BiFunction<Principal, BiStore.Item, String> layerCheck;
+    private volatile java.util.function.BiConsumer<Principal, BiStore.Item> tablesCheck; public void tablesCheck(java.util.function.BiConsumer<Principal, BiStore.Item> c) { this.tablesCheck = c; }   // the table layer's editors (EDITORS.md): its checks refuse in words
 
     /**
      * Set once by the model catalogue: what publishing a data model or a {@code rachana: 2} dataset runs (Check, the contract's versioning, the security
@@ -1023,7 +1024,7 @@ public final class BiService {
     }
 
     private Map<String, Object> publishNow(Principal p, BiStore.Item i, String note, boolean force, boolean applyRenames) {
-        if (layerCheck != null && ("model".equals(i.kind()) || "dataset".equals(i.kind()) && com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(i.body()))) {
+        if (tablesCheck != null && com.ash.drishti.server.bi.layer.LayerBodies.tableLayer(i.kind(), i.body())) { tablesCheck.accept(p, i); } else if (layerCheck != null && ("model".equals(i.kind()) || "dataset".equals(i.kind()) && com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(i.body()))) {
             String noted = layerCheck.apply(p, i);                                  // the model layer's checks, contract and security safeguard: refuses with its code
             if (!noted.isEmpty()) {
                 audit.record(p.user(), "bi-model-may-see-all", i.id(), noted);

@@ -1,0 +1,87 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The Python-driven table editor's templates (docs/architecture/EDITORS.md section 4, option C; docs/guides/TABLES_GUIDE.md section 11):
+# each writes the build function and shows it, with its inputs, parameters and output contract filled in. The table names in `inputs`
+# are examples: the editor asks for the person's own. A build function is build(inputs, params): inputs by alias, each a table of rows
+# (a pandas DataFrame), read as the person may see it; it returns one table whose columns are the contract's.
+templates:
+  - id: join-derive
+    title: Join and derive
+    says: Two tables joined on a key, with columns worked out from both
+    inputs: { legs: trading.trade_legs, limits: risk.desk_limits }
+    params: {}
+    code: |
+      import pandas as pd
+
+      def build(inputs, params):
+          legs = inputs["legs"]
+          limits = inputs["limits"]
+          out = legs.merge(limits, on="DESK", how="left")
+          out["HEADROOM"] = out["LIMIT"] - out["NOTIONAL"].abs()
+          return out[["TRADE_ID", "DESK", "NOTIONAL", "LIMIT", "HEADROOM"]]
+    contract:
+      TRADE_ID: { type: string, key: true }
+      DESK: { type: string }
+      NOTIONAL: { type: decimal }
+      LIMIT: { type: decimal }
+      HEADROOM: { type: decimal }
+  - id: resample
+    title: Resample a series
+    says: A time series brought to one row per period (the last value of each)
+    inputs: { prices: market.prices }
+    params: { period: W }
+    code: |
+      import pandas as pd
+
+      def build(inputs, params):
+          prices = inputs["prices"].copy()
+          prices["DATE"] = pd.to_datetime(prices["DATE"])
+          out = prices.set_index("DATE").groupby("SYMBOL")["CLOSE"].resample(params.get("period", "W")).last().reset_index()
+          return out[["SYMBOL", "DATE", "CLOSE"]]
+    contract:
+      SYMBOL: { type: string, key: true }
+      DATE: { type: date, key: true }
+      CLOSE: { type: decimal }
+  - id: group-stats
+    title: Statistics per group
+    says: Count, mean, standard deviation and a percentile of a number for each group
+    inputs: { pnl: risk.daily_pnl }
+    params: { by: DESK, value: PNL, percentile: 0.05 }
+    code: |
+      def build(inputs, params):
+          by, value = params.get("by", "DESK"), params.get("value", "PNL")
+          g = inputs["pnl"].groupby(by)[value]
+          out = g.agg(["count", "mean", "std"]).reset_index()
+          out["P_LOW"] = g.quantile(params.get("percentile", 0.05)).values
+          out = out.rename(columns={by: "GROUP", "count": "N", "mean": "MEAN", "std": "STDEV"})
+          return out[["GROUP", "N", "MEAN", "STDEV", "P_LOW"]]
+    contract:
+      GROUP: { type: string, key: true }
+      N: { type: integer }
+      MEAN: { type: decimal }
+      STDEV: { type: decimal }
+      P_LOW: { type: decimal }
+  - id: approved-feed
+    title: A file or feed from an approved source
+    says: Rows read from a source an administrator approved for the compute pool (no other network or file access)
+    inputs: {}
+    params: { source: approved-source-name }
+    code: |
+      def build(inputs, params):
+          # the compute pool hands an approved source's rows in as an input; it reaches nothing else
+          feed = inputs.get(params.get("source", "feed"))
+          out = feed.rename(columns=str.upper)
+          return out
+    contract: {}

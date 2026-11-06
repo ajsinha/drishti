@@ -242,6 +242,7 @@ menus:
           - { id: new-screen, href: /build/new, icon: plus-square, label: New screen, desc: "Bring JSON files, a schema or stored entities, then design", match: /build/new, requires: [feature:build] }
           - { id: new-pack, href: /build/pack/new, icon: box-seam, label: New pack, desc: "Schema files and/or a folder of JSON Lines in, a pack to download or deploy out", match: /build/pack/new, requires: [feature:build] }
           - { id: designs, href: /build, icon: collection, label: My designs, desc: "Your saved work: open, rename, duplicate, delete", match: /build/d/, requires: [feature:build] }
+          - { id: tables-models, href: /build/tables, icon: table, label: "Tables & models", desc: "Virtual tables, semantic models and Python-driven tables: one editor, live YAML, a preview as you may see it, review before live", match: /build/tables, requires: [bi, word:BI] }
           - { id: examples, href: "/build/new#examples", icon: journal-richtext, label: Examples, desc: Every example opens as your own copy, requires: [feature:build] }
       - title: Govern
         items:
