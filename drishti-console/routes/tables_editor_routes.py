@@ -66,7 +66,7 @@ async def editors_page(request: Request):
 async def editor_api(request: Request, path: str):
     """The editor API as the signed-in person: the server decides what they may see and change, every time."""
     if request.method not in ROUTES.get(path, ()):
-        return JSONResponse({"code": "DRS-1404", "detail": f"no editor call {request.method} {path}"}, status_code=404, headers=NO_STORE)
+        return JSONResponse({"code": "DRS-9003", "detail": f"no editor call {request.method} {path}"}, status_code=404, headers=NO_STORE)
     kw: dict = {"timeout": 60.0}
     if request.method == "GET":
         kw["params"] = {k: v for k, v in request.query_params.items() if k in PARAMS and v}
@@ -74,7 +74,7 @@ async def editor_api(request: Request, path: str):
         try:
             kw["json"] = await json_body(request, limit=LIMIT)
         except BodyError as e:
-            return JSONResponse({"code": "DRS-1400", "detail": str(e)}, status_code=getattr(e, "status", 400), headers=NO_STORE)
+            return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status, headers=NO_STORE)
     try:
         got = await request.app.state.backend._send(request.method, "/tables/editor/" + path, ident(request), **kw)
     except BackendError as e:
