@@ -112,6 +112,7 @@ own release.*
 | **2.9.11.j** | Risk engines II | SA-CCR with incremental EAD in the pre-deal answer; the CCR cube as a Pivot preset with a limit board; the exposure playground; a stress-testing engine. Finance P&L reconciliation, US capital totals and forms, and delta-gamma-vega VaR only when their inputs exist (else under construction) |
 | **2.9.11.k** | Collateral and margin | collateral valuation and eligibility; margin calls and disputes; stressed exposure; wrong-way risk flags |
 | **2.9.11.l** | CVA | BA-CVA from SA-CCR exposure; FVA |
+| **2.9.11.m** | Hardening: adversarial and soak testing | the last release of the line, after every feature: adversarial tests (malformed and hostile inputs at every door: the API, Flight, the loaders and their file names and `.ready` files, Rachana and SQL texts, Sutras, uploads; concurrency and race tests; a node killed mid-request; disk full; a lake half-written; clock and business-date edges; permission probing across users) and soak tests (days of load at production-like volumes: memory, file handles, threads, caches and hot files that must not grow; the cluster's gossip and failover; scheduled jobs and retention over many business dates). Every finding fixed at its cause with a test that keeps it fixed; the VaR check exactly equal |
 
 **Not scheduled:** QuantLib (a release of its own: the `quantlib_for_maven` binding in single-threaded worker processes); the
 PostgreSQL wire protocol (when a pilot asks); FRTB internal models, SA-CVA and full xVA; new domains beyond the two named above wait
