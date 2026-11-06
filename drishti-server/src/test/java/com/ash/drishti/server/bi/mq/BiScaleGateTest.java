@@ -42,12 +42,13 @@ import org.junit.jupiter.api.io.TempDir;
 class BiScaleGateTest {
 
     /** The budgets (BENCHMARK.md 19.2): the figure measured on the reference workstation, times the headroom given there. */
-    static final double COLD_MS = 4_000;                    // the first query: reads the source, builds the columns layer of two dates, answers
-    static final double WARM_P95_MS = 250;                  // the same query from the columns layer (no result cache), 95th percentile of RUNS
-    static final long WARM_ALLOCATED_BYTES = 64L << 20;     // Java bytes allocated on the asking thread by one warm query (median of RUNS)
+    static final double COLD_MS = 3_000;                    // measured 590 ms, five times; the first query: reads the source, builds the columns layer of two dates, answers
+    static final double WARM_P95_MS = 100;                  // measured 18 ms, five times; the same query from the columns layer (no result cache), 95th percentile of RUNS
+    static final long WARM_ALLOCATED_BYTES = 4L << 20;      // measured 0.9 MB, four times; Java bytes allocated on the asking thread by one warm query (median of RUNS)
     static final int RUNS = 30;
 
-    static final String QUERY = "{ mq: 1, model: desk-risk, select: { fields: [desks.region, desks.desk, trades.currency], "
+    // grouped by fields both facts reach (trades and limits meet at desks; a trade field would be DRS-9156)
+    static final String QUERY = "{ mq: 1, model: desk-risk, select: { fields: [desks.region, desks.desk], "
             + "measures: [MTM, Notional, Trades, AvgMTM, Limit, Usage] } }";
 
     @TempDir Path store;
@@ -69,7 +70,7 @@ class BiScaleGateTest {
             double cold = (System.nanoTime() - t0) / 1e6;
             List<?> rows = (List<?>) first.get("rows");
             assertThat(rows).isNotEmpty();
-            double counted = rows.stream().mapToDouble(r -> ((Number) ((List<?>) r).get(5)).doubleValue()).sum();
+            double counted = rows.stream().mapToDouble(r -> ((Number) ((List<?>) r).get(4)).doubleValue()).sum();   // Trades: after the two fields, MTM and Notional
             assertThat(counted).isEqualTo(lake.trades.get(TestLake.DAY2).size());   // the newest date's 10,000 trades, each counted once
 
             for (int i = 0; i < 5; i++) {

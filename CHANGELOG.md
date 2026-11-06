@@ -17,6 +17,24 @@
 
 ## 2.9.11.d (unreleased)
 
+- **The Trading lens is configuration** (product panel A19, TRADING_LENS.md section 3.7): `trading.yaml` unhides `DPNL`, `PNL` and `SENS`
+  (risk on my book, in the Risk menu) and `REPO`, `FIX`, `IRV`, `CPV` and `FXF` (market data). **One Markets menu** gathers every
+  market-data screen: rates, volatility surfaces, FX, credit, equities and commodities (`gather:` of the Curves, Volatility, FX and Credit
+  menus' columns in `menus.yaml`, the lens's items by `menus.markets`). BI and Admin leave the lens's bar and are reached by command.
+- **`ADMIN` is a command word for administrators**: `ADMIN <GO>` opens the first Admin page the edition keeps, `ADMIN <page>` that page
+  (`ADMIN USERS`, `ADMIN LOADS`); anyone else is told it is for administrators, and a page the edition does not keep answers `DRS-4023`
+  with the pages it does. `ADMIN` is reserved: a pack may not define a mnemonic of that name (`PackLoader.RESERVED_WORDS`,
+  `drishti.py pack check`).
+- **The P&L explain's waterfall is under construction** (`pnl-explain-waterfall` in `config/under-construction.yaml`): the stored
+  explain's steps are a generator's and disagree with the Attribution bars on new trades (F19); the computed explain is PNL.md's.
+- **The BI scale gate** (`BiScaleGateTest`, BENCHMARK.md section 19): one model query over 20,000 rows timed and its Java allocation
+  counted in every drill's Java lanes, against budgets from a measured run with headroom (cold 590 ms, budget 3,000 ms; warm p95 18 ms,
+  budget 100 ms; 0.9 MB allocated, budget 4 MiB).
+- **The page-widths sweep split** (TEST_HARNESS.md section 3.1): `test_page_widths_browser.py` is one spread test per page (its three
+  widths side by side against a stand-in console, one per worker) and the phone sweep on a real server is `test_phone_pages_browser.py`.
+  Measured alone: 341 s as one file before (the drill recorded 421 to 455 s), 101 s and 57 s after; the file leaves
+  `tools/drill-budgets.txt`. A page named twice (a guide also in the catalogue) is swept once.
+
 - **One analysis path, Pivot → Report** (SYNTHESIS A8 to A10; lean & streamlined: one way per job, the old deleted in the same release):
   - **Analyse becomes the Notebook** (`/bi/notebook`, BI rail *Notebook*; USER_GUIDE.md › The Notebook): SQL cells are Drishti SQL run by the server
     as the reader; Python cells run on the server's compute pool, never the console or the browser (running them is *Under construction* with

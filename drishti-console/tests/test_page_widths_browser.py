@@ -71,7 +71,7 @@ def _pages(views: list[str] | None = None) -> list[str]:
     pages += [f"/help/{g['slug']}" for g in guides if g["slug"] not in off and "engine:" + str(g.get("engine")) not in off]
     # last, a view at a past business date and then as known at a time: the top bar's widest state
     pages += [f"/asof?d=2026-09-29&next=/v/{first}", f"/asof?d=2026-09-29&k=2026-09-29T10:00&next=/v/{first}"]
-    return pages
+    return list(dict.fromkeys(pages))       # once each: a page named above may also be a catalogue guide (/help/competitive-analysis)
 
 
 # What a person would see as broken at this width: the page scrolling sideways, a top-bar control off screen, an image
