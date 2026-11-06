@@ -2734,7 +2734,7 @@ $ python3 tools/drishti.py bi transform snippet filter-values column=TRADE_STATU
 df = df[df['TRADE_STATUS'].isin(['MATURED']) == False].reset_index(drop=True)
 ```
 
-The steps themselves run in the console's sandbox (the editor), or on the server when the dataset is read; save the drafts with `bi item new`.
+The steps themselves run on the server's compute pool (the editor's step-by-step run, and the dataset when it is read); save the drafts with `bi item new`.
 
 ### `bi item`, `bi dataset`: items from files, tests and refresh
 

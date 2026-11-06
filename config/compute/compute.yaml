@@ -64,7 +64,7 @@ compute:
       idle-stop: 5m
       timeout: 60s
       timeout-batch: 10m
-    python:                          # code people write: Python items, Python-driven tables and models, Notebook cells (PYTHON_COMPUTE.md section 12)
+    python:                          # code people write: Python items, Python-driven tables and models, Notebook cells (PYTHON_COMPUTE.md section 19)
       type: python
       engines: [drishti_compute.items:ItemsEngine]
       environment: system            # the site's interpreter, checked against locks/python.lock before any run; or { python: "3.13", lock: locks/python.lock, index: <name> }

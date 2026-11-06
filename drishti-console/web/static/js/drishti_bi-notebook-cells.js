@@ -139,7 +139,7 @@
 
   ['sql', 'python'].forEach(function (kind) {
     q('[data-add=' + kind + ']', root).addEventListener('click', function () { X.cells[kind].push(newCell(kind)); draw(kind); });
-    q('[data-run-all=' + kind + ']', root).addEventListener('click', function () { runAll(kind); });   // Python's is disabled while its running is under construction
+    q('[data-run-all=' + kind + ']', root).addEventListener('click', function () { runAll(kind); });   // Python's is off where the server cannot run it safely
   });
   document.addEventListener('drishti:bx-extras', function () { draw('python'); });                        // a cell that reads extract(...) can be promoted to a Transform
   document.addEventListener('drishti:bx-extract', function () {

@@ -17,10 +17,39 @@
 
 ## 2.9.11.d (unreleased)
 
+- **One Python runtime: every Python run on the server's compute pools** (SYNTHESIS A11, Brief 3; PYTHON_COMPUTE.md section 19; lean & streamlined):
+  - **The pool `python`** (`config/compute/compute.yaml`) runs code people write: python visuals and Python measures of reports, boards and alerts,
+    Transforms behind Python datasets, Python-driven tables and models, the Notebook's Python cells, the Transform editor's step-by-step run, a frame's
+    profile and an item's own tests. Its engine is `drishti_compute.items` (the console's worker logic, moved into the compute SDK). The server's one
+    door is `PythonRuns` (also the one `TransformRunner`); `PythonFrames` reads every run's rows **as the person running it**; `PythonTestRuns` runs an
+    item's `tests:` on the pool, so **publishing a Python item with a failing test is refused whichever way it is asked** (before: the console's gate only).
+    New server routes `GET /api/v1/bi/python/runtime`, `POST /api/v1/bi/python/{check, visual, cell, steps, profile}`,
+    `POST /api/v1/tables/editor/python/run` and `GET /api/v1/tables/editor/python/runtime`; the plan's Python tier is `python` (was `console`).
+  - **Safety:** a new pool setting `isolation: strict` (Linux, fork mode): the worker leaves the network at start (a user and network namespace with no
+    interface) and each request's child is held by **Landlock** to the Python installation and its own scratch folder before its code runs (C++ file and
+    socket calls included: `pyarrow.fs` cannot read a home folder); the item's own CPU and memory limits; the import guard and audit hook; **pinned
+    libraries** (`config/compute/locks/python.lock`, every file's sha256, written by the new `tools/python_lock.py` from `python.in`): the server checks
+    the pool's interpreter against the pins and refuses every run, naming each package, while one differs; **every run audited** (`python-run`); a
+    Transform's or Python table's rows **checked against their contract** (columns and types; the sample run also keys and never-empty columns), refused in
+    words (`DRS-9075`). Where the strict sandbox cannot be had (**Windows**, a Linux without Landlock or user namespaces) code does not run and says why.
+  - **Compute:** requests and results carry **files** as they are (`ComputeRequest.files`, `ComputeResult.files`, over Drishti*net too), for Arrow
+    frames of any type and a Transform's Parquet.
+  - **Enabled:** the Python-driven table editor's **Sample run** and its Notebook's **Run cells on the server**, and the Notebook page's **Python cells**
+    (`POST /bi/notebook/python`); `python-table-runs` removed from the under-construction registry.
+  - **Deleted from the console** (2,089 lines): `core/pyrunner.py`, `core/pyrunner_worker.py`, `core/transform_cli.py`, `core/pytests.py`,
+    `core/python_items.py`, the quant stand-in `core/quant/`, the Py-node endpoint `routes/pynode_routes.py` (`/internal/py/*`), the snippet examples'
+    pandas runner in `core/prep_snippets.py`, and the `bi.python.*` settings; its Python routes pass to the server. **Deleted from the server:**
+    `ProcessTransformRunner`, `ConsolePythonRunner` and `drishti.bi.transform.python`, `runner`, `work-dir`, `console-url`, `console-token`.
+    A static test bans compute libraries (pandas, NumPy, SciPy, polars, DuckDB, statsmodels, scikit-learn) in the console's code
+    (`tests/test_console_runs_no_compute.py`, in the gate). `statsmodels` left the default `python-packages` (it was never installed or pinned).
+  - Tests: `drishti-compute/src/test/python/test_items.py` (every interface, the sandbox's refusals in words, the kernel's refusal of a C++ read, a
+    limit stopping one request), `PythonRunsTest` (refusals until safe, the pin check, a measure, a Transform and failures through a strict worker, the
+    audit); the console's tests now check what it passes to the server; the browser tests run a Notebook cell, the editor's sample run and its
+    contract check on a real pool.
+
 - **One analysis path, Pivot → Report** (SYNTHESIS A8 to A10; lean & streamlined: one way per job, the old deleted in the same release):
   - **Analyse becomes the Notebook** (`/bi/notebook`, BI rail *Notebook*; USER_GUIDE.md › The Notebook): SQL cells are Drishti SQL run by the server
-    as the reader; Python cells run on the server's compute pool, never the console or the browser (running them is *Under construction* with
-    one Python runtime: `python-table-runs`; cells are written, saved and promoted meanwhile); the Profile tab; notebooks; promotion of a SQL cell
+    as the reader; Python cells run on the server's compute pool, never the console or the browser (see *One Python runtime* below); the Profile tab; notebooks; promotion of a SQL cell
     to a report visual and of a Python cell to a Measure, Visual or Transform draft. **Cut:** Explore's **Slice** (the console's pivot of an extract;
     slicing is the Pivot's, *Pivot* on the BI rail) and its **SQL over the extract in SQLite**; a saved notebook's `slice` cell is left out with a
     note. **Deleted:** the browser **Python console** (`/pyconsole`, its page, script, routes and `bi.pyconsole.*`); `/bi/explore` and `/pyconsole`

@@ -33,7 +33,7 @@ target: server                   # the console runs it (2.3.0: no browser target
 timeout: 10                      # seconds
 memory: 256                      # megabytes
 params: { min_trades: 2 }        # defaults the function reads; a visual may override them in format.params
-tests:                           # shipped with the item: Check runs them in the console's sandbox, and a publish through the console is refused while one fails
+tests:                           # shipped with the item: Check runs them on the server's compute pool, and a publish is refused while one fails
   - name: the standard deviation of one desk
     input: { columns: [PNL_1D], rows: [[1.0], [2.0], [3.0], [4.0]] }
     expect: 1.2909944

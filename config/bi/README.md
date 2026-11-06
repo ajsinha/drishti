@@ -40,7 +40,7 @@ config/bi/
   boards/     <id>.board.yaml     2.3 boards (no samples ship): read as reports with board pages until converted (drishti.py bi migrate --boards config/bi/boards --write)
   themes/     <id>.theme.yaml     theme items: series colours, good and bad colours, a font, format defaults per kind of visual (samples: corporate, print)
   notebooks/  <id>.notebook.yaml  an analyst notebook: stored, versioned and published like any item, but not run (phase 9; one sample: pnl-vs-exposure-pandas, two extracts joined in pandas)
-  python/     <id>.python.yaml    a Python Measure, Visual or Transform with its manifest (inputs, packages, target, limits, source); run by the console's sandboxed runner
+  python/     <id>.python.yaml    a Python Measure, Visual or Transform with its manifest (inputs, packages, target, limits, source); run on the server's compute pool python
                                   (target: server) (commented samples: desk-pnl-volatility, pnl-histogram, pnl-vega, and the
                                   Transform pnl-vs-exposure behind the Python dataset desk-pnl-vs-exposure-py-result; docs/guides/BI_GUIDE.md)
 ```

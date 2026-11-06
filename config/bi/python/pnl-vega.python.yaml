@@ -19,7 +19,7 @@
 # loads nothing from a URL (a `url` or a `loader` anywhere in the specification is refused), draws it with the vendored Vega-Lite and its expression interpreter (no
 # eval, so the page keeps the strict content security policy), and puts it in the theme's colours.
 #
-# `tests:` ship with the item. Check runs them in the console's sandbox and a publish through the console is refused while one fails.
+# `tests:` ship with the item. Check runs them on the server's compute pool and a publish is refused while one fails.
 rachana: 1
 python: pnl-vega
 title: P&L by desk (Vega-Lite)

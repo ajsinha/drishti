@@ -72,7 +72,7 @@
     {% if not may_python %}<strong>Running Python needs the bi-author power.</strong>{% endif %}</p>
   <div data-cells="python"></div>
   <div class="bi-actions"><button type="button" class="btn-pill btn-ghost" data-add="python"><i class="bi bi-plus-lg" aria-hidden="true"></i> Python cell</button>
-    <button type="button" class="btn-pill btn-ghost" data-run-all="python"{% if not python_runs %} disabled title="Under construction: Python cells run on the server's compute pool"{% endif %}><i class="bi bi-play-fill" aria-hidden="true"></i> Run all</button></div>
+    <button type="button" class="btn-pill btn-ghost" data-run-all="python"{% if not python_runs %} disabled title="Python does not run on this server: {{ python_why }}"{% endif %}><i class="bi bi-play-fill" aria-hidden="true"></i> Run all</button></div>
 </section>
 <section id="bxP-profile" role="tabpanel" aria-labelledby="bxT-profile" data-pane="profile" hidden>
   <p class="text-muted-d">Every column of the extract: its type, what its text looks like, empty values, distinct values, whether it could be a key, the range, the most common values and a histogram.
