@@ -57,7 +57,7 @@ def env(design_on: bool) -> Environment:
 
 def console_html(vm: dict, theme: str = "", design_on: bool = True) -> str:
     """The view as the console's macros draw it (banners, the head of an embedded view, the panels in their grid), on a page with the
-    console's sheets and the scripts that enhance first paint (charts, tabs, widths, the grid)."""
+    console's sheets and the scripts that enhance first paint (charts, tabs, widths, the grid and its resize handle)."""
     e = env(design_on)
     parts = e.get_template("_macros/view.html").module
     panels = vm.get("panels") or []
@@ -75,8 +75,10 @@ def console_html(vm: dict, theme: str = "", design_on: bool = True) -> str:
             + str(parts.provenance_banners(vm, "live", {}, False, "")) + str(parts.vhead(vm)) + body + "</div>")
     links = "".join(f'<link rel="stylesheet" href="/static/{s.removeprefix("static/")}">' for s in CONSOLE_SHEETS)
     scripts = "".join(f'<script src="{s}"></script>' for s in ("/render-test/csp.js", "/static/vendor/echarts/echarts.min.js", "/static/js/drishti_geomap.js", "/static/js/drishti_charts.js", "/static/js/drishti_view.js"))
+    # the resize component in the head, as base.html has it: the grid's split is its handle (drishti_screen-grid.js)
+    resize = '<link rel="stylesheet" href="/static/css/drishti_resize.css"><script src="/static/js/drishti_resize.js"></script>'
     t = f' data-theme="{theme}"' if theme else ""
-    return f'<!DOCTYPE html><html lang="en"{t}><head><meta charset="utf-8"><title>console</title>{links}</head><body class="terminal">{view}{scripts}</body></html>'
+    return f'<!DOCTYPE html><html lang="en"{t}><head><meta charset="utf-8"><title>console</title>{links}{resize}</head><body class="terminal">{view}{scripts}</body></html>'
 
 
 def library_html() -> str:

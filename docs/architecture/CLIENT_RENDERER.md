@@ -687,6 +687,7 @@ widths.
 | A panel header in a tabbed grid area is a `banner` landmark on the console page and generic in the library | the console's script turns the section into a tabpanel after parsing and Chromium then exposes the header as a banner; the library sets the role before the panel is in the page, and HTML-AAM says a header inside a section is generic |
 | An outside URL in the data: the console opens it in a new tab (`target="_blank"`); the library sends `drishti:navigate` | in place by default (section 12); `outsideLinks: 'new-window'` gives the console's behaviour |
 | Console-only affordances: the download menu, Customize, the arrange handles, the pivot's saved arrangements, the address state of drills and filters | console features, not part of a screen; kept by the console when it is the host (phase 2) |
+| The resize handles: a side column's splitter ("Resize the Context column") and a table's column handles are the console's; the grid's split is in both, with Home or a double-click (as designed) only on the console | the console's resize component (`drishti_resize.js`) binds them on its own pages and remembers each person's widths; the library, for embeds and `<drishti-report>`, draws the grid's split with its own handle (drag, arrow keys). The comparison drops the console's handles and compares the split by its name |
 | A nested pivot is the plain table in `'library'` mode | `drishti_tree-rows.js`'s redraw with `drishti_pivot-grid.js` is a console behaviour; the parity page draws the plain table, the console page redraws the same rows (the engine's figures) as a collapsible grid |
 | Tables sort with heading buttons, one filter box and a pager, not the console's per-column funnels and chart button | phase 1 ports the sort rules exactly (`test_a_column_sorts_as_the_console_sorts_it` compares the order with `drishti_tables.js`'s); the funnels and Chart any table come with phase 2 |
 
@@ -813,8 +814,10 @@ library-drawn panel; each server page is unchanged (its browser tests unchanged 
 | `test_render_behaviours_browser.py` | the library on a page that is not the console: `behaviours: 'console'` (funnels, Chart any table, the Pivot grid from records read as the person, the nested pivot, a drill in place), `about: true`, `navigation: 'follow'`, `subscribe(fn)`, the candle texts | 8 tests |
 | `test_embed_elements2_browser.py` | Elements 2.0 on the demo host with a real server: live under the host's CSP from the ViewModel, masks, a link the host takes over, the behaviours and About in the element, one `vm:` connection, the versioned paths and bytes | 5 tests |
 
-**Intentional differences on the console's own page: none.** The page keeps its chrome, its behaviours are the same scripts, and
-section 14.1's differences were all about a page without the console's scripts.
+**Intentional differences on the console's own page: one**, the side column's splitter ("Resize the Context column"): it is part of the
+server-drawn page's frame, which the library's drawing does not carry (section 14.1, the resize handles). Otherwise the page keeps its
+chrome, its behaviours are the same scripts (the column handles of the drawn tables included), and section 14.1's differences were all
+about a page without the console's scripts.
 
 ### 16.5 The console's whole browser suite with `ui.render.mode: client`
 
