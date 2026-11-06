@@ -662,12 +662,13 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(ai_routes.router)
     if app.state.bi_on:
         from core.explore import Limits
-        from routes import bi_routes, explore_routes, model_routes, pynode_routes, pyconsole_routes, python_routes, transform_routes, wizard_routes
+        from routes import bi_routes, explore_routes, model_routes, pynode_routes, pyconsole_routes, python_routes, tables_editor_routes, transform_routes, wizard_routes
 
         app.state.explore_limits = Limits.from_settings(settings)      # Analyse (docs/guides/USER_GUIDE.md): extract, SQL and cell limits
         app.include_router(bi_routes.router)
         app.include_router(wizard_routes.router)
         app.include_router(model_routes.router)
+        app.include_router(tables_editor_routes.router)     # Build › Tables & models: the editors on the table layer (EDITORS.md)
         app.include_router(python_routes.router)
         app.include_router(explore_routes.router)
         app.include_router(transform_routes.router)        # wave C: the Transform editor (/bi/transform), step by step

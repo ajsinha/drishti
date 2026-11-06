@@ -806,6 +806,10 @@ governed table (what one row is, its columns with roles and meanings, how it kee
 relationships, measures and tighter security. Reports, Analyse and the API ask a model with **one request shape**, the model query (`mq: 1`). Everything in
 sections 13 to 22 still works as written: version-1 datasets are read as models by a compatibility reader.
 
+The table layer's own editors (tables, virtual tables, semantic models in the layer's form and Python-driven tables) are on the rail as
+**Tables & models** (`/build/tables`): one shell with the live YAML below the editor, a preview read as you, "adds up?" from the engine,
+and review before live ([TABLES_GUIDE.md section 11](TABLES_GUIDE.md#11-the-editors)).
+
 **Models in the rail** (`/bi/models`, "Start from your data"):
 
 * **Datasets from the packs.** Every kind of every pack you may open is already a dataset, named `pack.<pack>.<kind>`, certified by its pack, read-only,

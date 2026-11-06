@@ -27,8 +27,13 @@ public final class LayerBodies {
 
     private LayerBodies() {}
 
+    /** True for a table or a model of the table layer ({@code rachana: 3}): checked by the layer, kept as typed (EDITORS.md). */
+    public static boolean tableLayer(String kind, String body) {
+        return ("table".equals(kind) || "model".equals(kind)) && body != null && body.lines().anyMatch(l -> l.strip().equals("rachana: 3"));
+    }
+
     public static String onSave(String kind, String body) {
-        if (body == null || body.isBlank()) {
+        if (body == null || body.isBlank() || tableLayer(kind, body)) {
             return body;
         }
         boolean model = "model".equals(kind);

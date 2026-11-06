@@ -46,6 +46,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Zoom a panel](#zoom-a-panel) | `Z`: one panel fills the view area; restore with `Esc`; shareable as `#zoom=<panel>` |
 | [On a phone](#on-a-phone) | What a phone shows first, *More on this page*, *On desktop*, *Show everything*, the lens menu |
 | [Pivot](#pivot-slice-a-table-your-way) | Rows, columns, values and filters over a table or a search's results, by drag or by key; totals, drill-down, chart, export |
+| [Tables and models](#tables-and-models-the-editors) | The editors of virtual tables, semantic models and Python-driven tables: live YAML, a preview as you, review before live |
 | [Keyboard](#keyboard) | Every key in one table |
 | [Live updates](#live-updates), [Business dates](#business-dates-live-or-a-day-in-the-past), [Compare](#compare-what-changed) | Ticking values, past dates, what changed |
 | [Search by value](#search-by-value) | `where` searches, sorting and limits |
@@ -80,6 +81,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/models`, `/bi/datasets`, `/bi/designer`, `/bi/explore`, `/bi/transform` | Rūpaka business intelligence, for people with the `bi` power: reports (a board is a report page; `/bi/b/<id>` opens it), BI Studio's designers, Analyse and the Transform editor ([BI_GUIDE.md](BI_GUIDE.md)) |
 | Python console | `/pyconsole` | Your own Python in the browser on a masked extract of a BI model; promote it to the server (BI rail, *Python console*; [section 16](#16-the-browser-python-console)) |
 | Build | `/build`, `/build/new`, `/build/pack/new`, `/build/reviews` | Design layouts (Sutras) in the workbench, make a pack from schemas, approve proposed Sutras |
+| Tables & models | `/build/tables` | The editors of virtual tables, semantic models and Python-driven tables, for people with the `bi` power ([Tables and models: the editors](#tables-and-models-the-editors)) |
 | My account | `/account` | Your profile, settings and password |
 | Servers | `/servers` | The Drishti servers this console may talk to ([Working with several servers](#working-with-several-servers)) |
 | Admin | `/admin/users`, `/admin/roles`, `/admin/audit`, `/admin/packs`, `/admin/connectors`, `/admin/artifacts`, `/admin/loads`, `/admin/lakes`, `/admin/collab`, `/admin/embedding`, `/admin/net`, `/admin/health`, `/admin/caches` (and `/admin/ai`, `/admin/bi`, `/admin/tokens`, `/admin/access` where those features are on) | Users, roles, audit log, packs, connectors, installed artifacts, data loads, lakes (Delta, the default; Iceberg tables where configured: a **Format** column, and Iceberg maintenance with orphan-file removal, [OPERATIONS.md › Lake maintenance: Admin → Lakes → Maintain and `lake maintain`, section 8](../admin/OPERATIONS.md#8-iceberg-lakes)), collaboration moderation, embedding, Drishti\*net, health and caches (admins only) |
@@ -1426,6 +1428,16 @@ and Arrow.
 | Make it everyone's opening | an author's **promotion** (`POST /api/v1/pivot/promote` with the panel's view and its Sutra): the Sutra's next version with the panel's `pivot:` arrangement, through review when review is on ([Reviews](#reviews-approving-a-sutra)) |
 | Masked fields | not read at all: they are not in the field list and cannot be grouped, summed or filtered |
 | Limits | a page's table: at most `drishti.pivot.max-records` rows (50,000), more is refused in words; every view: the cell budget of the pivot engine (`drishti.pivot.max-cells`), refused with the count, never cut short |
+
+## Tables and models: the editors
+
+**Build › Tables & models** (`/build/tables`, also on BI's rail) edits the definitions every reader shares: virtual tables, semantic models
+and Python-driven tables ([TABLES_GUIDE.md section 11](TABLES_GUIDE.md#11-the-editors)). Three panes: the objects with a search; the editor
+with its **live YAML** below it (a change on either side shows on the other, the line you edit highlighted, a problem marked at its line);
+and a **preview read as you** with its checks and totals. **Visual**, **YAML** or **Both** is remembered for you. **+ New** walks you through
+a table, a model or a Python-driven table in plain steps. **Save draft** keeps your work private to your workspace; **Propose for review**
+asks a second person to approve it before anyone else reads it. Keys: Ctrl+S saves a draft, Ctrl+Enter validates, the arrow keys move
+between a model's tabs; on a phone the panes stack.
 
 ## On a phone
 

@@ -49,6 +49,14 @@ public class TablesConfiguration {
         return new TablesService(root, data, router, edition, security::enabled, maxRows, warn, java.time.Clock.systemUTC());
     }
 
+    /** The editors of tables, models and Python-driven tables (EDITORS.md sections 1 to 4): their API is {@link EditorController}. */
+    @Bean
+    public EditorService tablesEditorService(TablesService tables, DataViewService data, com.ash.drishti.server.security.Entitlements entitlements,
+            com.ash.drishti.server.bi.BiAccess access, com.ash.drishti.server.bi.BiService bi, com.ash.drishti.identity.PreferenceStore preferences,
+            com.ash.drishti.server.security.RoleCatalog roles, SecurityProperties security) {
+        return new EditorService(tables, data, entitlements, access, bi, preferences, roles, security.enabled());
+    }
+
     /** A Sutra panel's {@code source: { table }}: the table read for the page's viewer, its rows as objects of its columns. */
     @Bean
     public TableRows sutraTableRows(TablesService tables, ViewPipeline pipeline) {

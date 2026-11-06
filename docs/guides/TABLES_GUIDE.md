@@ -38,6 +38,7 @@ test data's samples of 2026-09-30 (`data/testdata`: Endur trades, counterparties
 8. [Checks, preview and lineage](#8-checks-preview-and-lineage)
 9. [The migration: tables migrate](#9-the-migration-tables-migrate)
 10. [Problem codes](#10-problem-codes)
+11. [The editors](#11-the-editors)
 
 ## 1. Where definitions live
 
@@ -405,3 +406,127 @@ their models. Run against a `config/tables` that already holds tables of its own
 | `DRS-9616` | a virtual table named like a stored table |
 | `DRS-9127`, `DRS-9129`, `DRS-9152`, `DRS-9122` | the language's (checked mode): a type or scope, not yet, an unknown name; a relationship's ends |
 | `DRS-9195` | the migration refused an item or an expression |
+
+## 11. The editors
+
+**Build › Tables & models** (`/build/tables`; also from BI's rail) is one screen for every table, virtual table, semantic model and
+Python-driven table. The designs and the mock-ups the product owner chose are in [EDITORS.md](../architecture/EDITORS.md). Opening it needs
+the `bi` power; saving and proposing need `bi-author` (or an administrator); a person without it reads the YAML and the preview but cannot
+change them.
+
+### 11.1 The shell
+
+| Part | What it does |
+|---|---|
+| **Objects** (left) | every table, Python-driven table and model you may open, in three groups, with a search over name, title, form and connector. A definition shipped under `config/tables/` is read-only here (*Shipped*); **Copy as a draft** starts an editable copy |
+| **Editor** (middle) | the visual editor of the object, and **below it the live YAML**: a visual edit rewrites the YAML at once (the layer's own writer, the file's comment header kept) and the line being edited is highlighted; a YAML edit is checked as you type and shows in the visual side. An invalid YAML is marked at its line and kept as typed; the visual side keeps the last valid version and the switch to **Visual** waits until it reads |
+| **Preview and checks** (right) | read on the server as you may see the source, on the source's latest business date (or one you choose): the first 20 rows, the **totals of the number columns computed by the pivot engine** over every row read, the checks (name unique, key unique, empty values, dates follow the source, the read's own problems), the cost of a join across connectors, and *Used by* |
+| **Visual / YAML / Both** | the views; your choice and whether the YAML panel is open are remembered for you on the server (`PUT /api/v1/tables/editor/prefs`) |
+| **Validate** (Ctrl+Enter) | the layer's checks now, every problem listed with its line (click it to go there) |
+| **Preview** | reads the preview again |
+| **History** | the saved versions and reviews of a stored object |
+| **Impact (n)** | what uses it: models, tables over it, look-ups, and BI's reports, boards and notebooks that bind it |
+| **Save draft** (Ctrl+S) | saves a draft in a workspace (your own, or a shared one); nothing goes live |
+| **Propose for review** | asks a second person to approve it (four eyes: BI's review, the same approve power and notifications); approving runs the layer's checks and refuses a definition with an error |
+| **+ New** | guided steps that land in the editor: a table (name, source, the columns suggested from a sample of the source, check), a model (the four questions below), a Python-driven table (name, then a template, a notebook or an empty function) |
+
+The panes are resized with the shared handles (remembered per person; off on a phone, where the panes stack). Every button is reachable by
+keyboard; the model's tabs move with the arrow keys.
+
+### 11.2 Tables and virtual tables
+
+**Sources and joins** are rows: the source (a kind any connector serves, or another table) and each **look-up**: a join to another table on
+a key, one row of it for each row (`related(trading.desks.NAME, on = $.DESK)`, many to one). **+ Join** picks the table, the key and the
+columns to bring in. When the two sides are served by different connectors, the cost shows under the sources: the rows each side read now,
+the memory they take and the time the read took; above `drishti.tables.scan-warn-rows` (1,000,000) on a side and with no filter, readers
+are asked to filter first.
+
+**Columns** are a checklist: the source's own fields unticked until you tick them, each with the name here, where it comes from (a path such
+as `$.mtm`, or a Rachana formula: a computed column), its type and whether it is a key. **+ Computed column** adds a formula; the function
+catalogue and the columns complete as you type. `business_date` is built in and follows the source. The **Rows** card holds the filter, the
+grain and the materialisation.
+
+**Text** shows the same table as one Rachana statement, read back as you type:
+
+```text
+table trading.trade_view from trade
+grain $.LEGS[*]
+select $.TRADE_ID as TRADE_ID: string key,
+       @.NOTIONAL / 1000000 as NOTIONAL_M: decimal,
+       related(core.desks.NAME, on = $.DESK) as DESK_NAME: string
+where $.STATUS != 'CANCELLED' && $.STATUS != null
+```
+
+Every other key of the table (formats, masks, rules, materialisation) is kept as it was. A table whose source is SQL, Python or a model's
+answer is edited in the visual view or the YAML.
+
+### 11.3 Semantic models
+
+Tabs with counts: **Overview**, **Tables** (aliases, their tables and roles, and the relationships from the many side, with the join cost
+across connectors), **Fields** (every `alias.COLUMN`), **Measures**, **Hierarchies**, **Row rules**, **Masks** and **Access**.
+
+- **Overview** answers four questions: what it is about, what people look at it by, what numbers it gives, who may see what. The same four
+  questions are the *+ New model* steps.
+- **Measures**: each with its formula, format and **Adds up?**. That answer is the engine's: each aggregate is looked up in the pivot
+  engine's functions, and a total adds up only when every aggregate in it is a plain sum of its parts (`sum`, `count`) and they are only
+  added, subtracted or scaled by a number. An average, a ratio, a distinct count or VaR is computed per total.
+- A measure's **?** opens its card: the formula, the formula in words (from the function catalogue), a worked test value (the measure's total
+  over every row you may see, from the preview), whether it adds up and why, and the measures that use it.
+- **Access** is the matrix of every role against the rows it sees (the tables' rules and the model's, `all`, or `none`), the columns masked for
+  it (none for a role with the raw power) and whether it may edit.
+- The preview pane is the model's live answer: each measure's grand total, read as you.
+
+### 11.4 Python-driven tables and models
+
+A Python-driven table is a table whose source is a build function: `from: { python: <item>, inputs: { alias: table }, params: { pool, runs } }`.
+Its **output contract** is the table's columns (names, types, keys) and tests (`not-null`, `unique`); its code is kept in the build
+function's item (a BI Python item: `interface: transform`, `entry: build`, `target: server`, with its time and memory limits) and saved with
+the table.
+
+```yaml
+rachana: 3
+table: risk.desk_pnl_stats
+from:
+  python: risk-desk_pnl_stats
+  inputs: { pnl: risk.daily_pnl }
+  params: { pool: default, runs: on-demand, by: DESK, value: PNL }
+columns:
+  GROUP: { type: string, key: true }
+  N:     { type: integer }
+  MEAN:  { type: decimal }
+tests:
+  - { not-null: MEAN }
+```
+
+| Part | What it does |
+|---|---|
+| **Build function** | `build(inputs, params)`: the inputs by alias, each a table as you may see it; returns one table with the contract's columns |
+| **Output contract** | the columns, types, keys and *never empty*; **Contract from the code** proposes it from the columns the code assigns and selects |
+| **Inputs** | the tables it reads, read as the person the run is for |
+| **Runs** | on demand and kept per business date, or on each load of an input; the compute pool and the time and memory limits |
+| **Templates** | join and derive, resample a series, statistics per group, a file or feed from an approved source: each writes the code, the inputs and the contract |
+| **Notebook → Turn into table** | cells become the build function: `drishti.table("domain.name")` becomes an input, the imports move to the top, the last expression is returned, and the contract is proposed |
+| **Sample run** | *Under construction*: running authored code on the server's compute pool comes with one Python runtime (registered as `python-table-runs` in [UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md)); the editor, the contract, the inputs, the schedule and the templates work now |
+
+A Python **model** is a model whose measures are Python measures (`{ python, inputs, by }`): the Measures tab lists them with the engine's "adds up?" (computed per total), and their keys are edited in the YAML.
+
+### 11.5 The editor API
+
+Everything the screen shows is computed on the server, for the person who asks: `/api/v1/tables/editor`.
+
+| Call | What it answers |
+|---|---|
+| `GET /objects` | the tables, Python tables and models you may open, with where each comes from and its status; whether you may edit |
+| `GET /object?kind=table&name=` (or `&item=`) | the YAML, the document, the problems at their lines, the statement, the build function of a Python table |
+| `POST /check` `{kind, yaml}` or `{kind, yaml, doc}` | the layer's checks as typed; a `doc` is written back as YAML |
+| `POST /statement` `{statement, yaml}` | the Text toggle's statement read onto the table |
+| `POST /preview` `{kind, yaml, date}` | a table's rows, totals (pivot engine), checks and cost; a model's measures with their totals and "adds up?" |
+| `POST /access` `{yaml}` | a model's Access matrix |
+| `GET /impact?kind=&name=`, `GET /history?item=` | what uses it; its versions |
+| `POST /suggest` `{kind, name}` | + New: a table over a kind with columns from a sample |
+| `POST /save`, `POST /propose` | a draft saved in a workspace; proposed for review |
+| `GET`/`PUT /prefs` | your view (`visual`, `yaml`, `both`) and the YAML panel |
+| `GET /python/templates`, `POST /python/notebook`, `POST /python/contract` | the Python table's templates, a notebook turned into a build function, a contract proposed from code |
+
+The same definitions are checked on the command line by `drishti.py tables check` (section 8); a saved draft is a BI item of kind `table` or
+`model` in the layer's form (`rachana: 3`).

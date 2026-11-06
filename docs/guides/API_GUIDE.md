@@ -962,6 +962,31 @@ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/
   -d '{"source": "panel/netting-set/trades/NS-NORTHPLAINS-NY", "rows": ["PRODUCT"], "values": ["sum(NOTIONAL)"]}'
 ```
 
+### Table and model editors
+
+The API of **Build › Tables & models** ([TABLES_GUIDE.md section 11](TABLES_GUIDE.md#11-the-editors)): every answer worked out for the caller.
+Reading needs the `bi` power (else `403 DRS-9002`); saving and proposing need `bi-author` or an administrator.
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/tables/editor/objects` | the tables, Python-driven tables and models the caller may open: name, title, form, connector, origin (`file` or `item`), status, version; `canEdit`, `scanWarnRows` |
+| `GET` | `/tables/editor/object?kind=table\|model&name=` (or `&item=`) | the YAML, the document, the problems at their lines, each key's line, the statement (a table), the build function (a Python-driven table) |
+| `GET` | `/tables/editor/sources` | the kinds the caller may open with their columns, the tables with theirs, the roles and Rachana's function catalogue |
+| `POST` | `/tables/editor/check` | `{kind, yaml}`, or `{kind, yaml, doc}` (the document written back as YAML, the header kept), `original` the name before the edit → `{ok, valid, yaml, doc, problems: [{level, code, path, line, message}], lines, statement, name, nameFree}` |
+| `POST` | `/tables/editor/statement` | `{statement, yaml}`: the Text toggle's statement read onto the table, then checked |
+| `POST` | `/tables/editor/preview` | `{kind, yaml, date}`: a table's first rows, `totals` (the pivot engine's sums over every row read), `checks` and `cost`; a model's `measures` with their totals and `addsUp` |
+| `POST` | `/tables/editor/access` | `{yaml}`: a model's roles against rows, columns and editing |
+| `GET` | `/tables/editor/impact?kind=&name=` | what uses the object |
+| `GET` | `/tables/editor/history?item=` | the item's versions |
+| `POST` | `/tables/editor/suggest` | `{kind, name, grain}`: a table over a kind with columns from a sample of its documents |
+| `POST` | `/tables/editor/save` | `{kind, yaml, item?, workspace?, message?, python?}`: a draft (a BI item of kind `table` or `model`; a Python-driven table's build function as its Python item) |
+| `POST` | `/tables/editor/propose` | `{item, note}`: proposed for review (four eyes) |
+| `GET` | `/tables/editor/prefs` | the caller's view: `{mode: visual\|yaml\|both, yamlOpen}` |
+| `PUT` | `/tables/editor/prefs` | sets it (`422 DRS-9003` for another mode) |
+| `GET` | `/tables/editor/python/templates` | the Python-driven table templates |
+| `POST` | `/tables/editor/python/notebook` | `{cells}`: a build function and its inputs |
+| `POST` | `/tables/editor/python/contract` | `{source, columns}`: the output contract proposed from the code |
+
 ### Live streams
 
 All three are Server-Sent Events (`text/event-stream`). Use `curl -N` (no buffering). Details, event

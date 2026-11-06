@@ -54,6 +54,11 @@ class Registry:
     def help_marked(self, slug: str) -> bool:
         return self.help.get(slug) == "under-construction"
 
+    def marked(self, item_id: str) -> bool:
+        """True when the registry's item ``item_id`` is still registered (a part of a screen that depends on unbuilt work: the screen
+        shows the chip in its place, or leaves it out when the item is hidden)."""
+        return any(str(i.get("id")) == item_id for i in self.items)
+
 
 def load(settings, console_dir: Path) -> Registry:
     """``under_construction.file`` (default: the repository's ``config/under-construction.yaml``); none when the file is absent."""

@@ -135,6 +135,25 @@ public final class TablesService {
         return enforce.getAsBoolean() ? r : r.rulesOff();
     }
 
+    /** The definitions' folder ({@code drishti.tables.root}). */
+    public Path root() {
+        return root;
+    }
+
+    /** The source as {@code who} may see it: each kind through its connector, their entitlement, the edition's kinds and their masks. */
+    public SourceRows source(ViewerContext who) {
+        return new KindRows(who);
+    }
+
+    /**
+     * Reads over another catalogue through {@code source}: the editors' preview of a draft (the catalogue with the draft in it), for one
+     * request only. Rules apply as in {@link #reads}.
+     */
+    public TableReads readsOver(Catalogue over, SourceRows source) {
+        TableReads r = new TableReads(over, source, null, maxRows, clock);
+        return enforce.getAsBoolean() ? r : r.rulesOff();
+    }
+
     /**
      * The version of what a read of {@code table} for {@code p} on {@code date} would give, without reading it: the catalogue's files, the
      * table, the business date, the source kind's data version, and who reads (user, roles, attributes, raw, rules on or off). Null when it

@@ -111,9 +111,9 @@ its help entry.
 
 | # | Editor | Built in | Done |
 |---|---|---|---|
-| 1 | The three-pane shell, the Visual / YAML / Both toggle, the header, + New steps | BI foundation | ☐ |
-| 2 | Tables and virtual tables (grid, Text toggle, cross-connector cost) | BI foundation | ☐ |
-| 3 | Semantic models (tabs, Overview, measure cards, Access matrix) | BI foundation | ☐ |
-| 4 | Python-driven tables and models (code and contract, Notebook → table, templates) | BI foundation | ☐ |
+| 1 | The three-pane shell, the Visual / YAML / Both toggle, the header, + New steps | BI foundation | ☑ |
+| 2 | Tables and virtual tables (grid, Text toggle, cross-connector cost) | BI foundation | ☑ |
+| 3 | Semantic models (tabs, Overview, measure cards, Access matrix) | BI foundation | ☑ |
+| 4 | Python-driven tables and models (code and contract, Notebook → table, templates) | BI foundation | ☑ (the sample run on the compute pool: under construction) |
 | 5 | People & access (People, Roles, Check access) | Trust, RBAC and security | ☐ |
 | 6 | API keys (My keys, + New key, Admin overview) | Trust, RBAC and security | ☐ |
