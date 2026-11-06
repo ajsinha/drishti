@@ -31,7 +31,6 @@ features:
   ai:            { server: [drishti.ai.enabled], console: [ai.enabled] }
   mcp:           { server: [drishti.mcp.enabled], console: [mcp.enabled] }
   embed:         { server: [drishti.embed.enabled], console: [embed.enabled] }
-  pyconsole:     { console: [bi.pyconsole.enabled] }
   python:        { console: [bi.python.enabled] }
   designer:      { console: [ui.designer] }
   facts:         { console: [ui.facts.enabled] }

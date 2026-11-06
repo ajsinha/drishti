@@ -92,7 +92,7 @@ async def run(request: Request):
 async def run_item_tests(request: Request, manifest: dict) -> dict:
     """Runs the tests an item ships with, in the same sandbox a report uses. A test that reads a dataset gets the rows the signed-in person may see."""
     async def sample(spec: dict) -> bytes:
-        from routes.explore_routes import extract_for
+        from routes.notebook_routes import extract_for
         ex = await extract_for(request, {"dataset": spec["dataset"], "fields": spec["fields"]})
         return limit_arrow(ex.arrow or b"", int(spec.get("limit") or 200))
     return await run_tests(request.app.state.pyrunner, manifest, sample)

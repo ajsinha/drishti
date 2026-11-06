@@ -501,7 +501,7 @@ filter `trade.CURRENCY eq USD`) below what was there. The reader understands Dri
 ```
 
 A slice or SQL cell of **another** model is not added to an existing report (a report reads one model: `DRS-9070` names both); promote it to a new draft.
-[USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) sections 13 and 14 have the details.
+[USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) sections 13 and 14 have the details.
 
 ## Step 11 · Calc: the BI engine as a DataFrame, and Graphic Walker; a Python measure in an alert
 
@@ -694,13 +694,13 @@ cells:
 ```
 
 The console is not a BI page: Analyse and the reports still compute nothing in the browser. The reference is
-[USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#16-the-browser-python-console).
+[USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#the-notebook).
 
 ## Next steps
 
 - [Tutorial 15](15-ai-in-drishti.md): ask the data in words.
 - [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python): the manifest, where Python runs, the sandbox in full, `DRS-9070` to `9075`, section 13 for the Transform and
-  section 17 for the Transform editor and the snippets. [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python): the page, limits and notebooks. [USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view) is Calc, the Python panel inside a screen.
+  section 17 for the Transform editor and the snippets. [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook): the page, limits and notebooks. [USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view) is Calc, the Python panel inside a screen.
 
 ## If something goes wrong
 

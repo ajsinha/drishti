@@ -13,30 +13,27 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 9, Analyse (docs/guides/USER_GUIDE.md): the SQL and Python cells of the page. SQL is Drishti SQL, run by the server over the model
-   as the reader (an older cell over the table `extract` runs on the console, read-only, limited); a Python cell runs on the console's sandboxed runner with
-   `df` and `quant`. Wave B: nothing runs in the browser. Output is data drawn as text,
-   a table, a chart (ECharts, formatter strings removed by the runner) or an image; never markup. */
+/* The Notebook (docs/guides/USER_GUIDE.md › The Notebook): the SQL and Python cells of the page. SQL is Drishti SQL, run by the server over the model
+   as the reader. A Python cell runs on the server's compute pool; until the one Python runtime is built its Run is under construction (the cell is
+   written, saved and promoted all the same). Nothing runs in the console or the browser. Output is data drawn as text, a table, a chart (ECharts,
+   formatter strings removed) or an image; never markup. */
 (function () {
   'use strict';
   // the product's name from configuration (ui.product, on <body data-product>); its SQL is "<product> SQL"
   const PRODUCT = (document.body && document.body.dataset.product) || '', SQL_NAME = (PRODUCT + ' SQL').trim();
-  var B = window.drishtiBi, X = B && B.explore;
+  var B = window.drishtiBi, X = B && B.notebook;
   if (!X) { return; }
   var h = B.h, q = B.q, qa = B.qa, clear = B.clear, root = document.getElementById('bx');
-  var STARTER = { sql: 'SELECT * FROM extract LIMIT 20', python: "print(df.describe())\nresult = df.head(10)" };
-  /** Drishti SQL runs on the server over the model the extract reads (the default, BI_DESIGN.md 3.4); a version 1 dataset only has its extract. */
-  function modelOf() { return B.layer.refOf((X.spec && X.spec.dataset) || ''); }
-  function sqlEngine() { return modelOf() ? 'server' : 'extract'; }
-  /** A first statement for a new cell: over the model, a field and a measure grouped (written by the Query panel's printer); over the extract, its rows. */
-  function sqlStarter(engine) {
+  var STARTER = { sql: '', python: "print(df.describe())\nresult = df.head(10)" };
+  /** A first statement for a new cell: over the model, a field and a measure grouped (written by the Query panel's printer). */
+  function sqlStarter() {
     var m = X.model;
-    if (engine !== 'server' || !m || !B.mq || !B.mq.sql) { return STARTER.sql; }
+    if (!m || !B.mq || !B.mq.sql) { return STARTER.sql; }
     var field = (X.qual || []).filter(function (f) { var p = f.split('.'); var t = (m.tables || []).filter(function (x) { return x.name === p[0]; })[0]; var c = t && t.columns.filter(function (x) { return x.name === p[1]; })[0]; return c && c.type === 'string' && !c.masked; })[0];
     var measure = ((m.measures || [])[0] || {}).name;
     return B.mq.sql({ mq: 1, select: { fields: field ? [field] : [], measures: measure ? [measure] : [] }, limit: 20 }, m) || STARTER.sql;
   }
-  function newCell(kind) { var engine = kind === 'sql' ? sqlEngine() : ''; return { source: kind === 'sql' ? sqlStarter(engine) : STARTER[kind], target: 'server', engine: engine }; }
+  function newCell(kind) { return { source: kind === 'sql' ? sqlStarter() : STARTER[kind], target: 'server' }; }
 
   function spec() { return X.spec ? { dataset: X.spec.dataset, fields: X.spec.fields, filters: X.spec.filters, dates: X.spec.dates, report: X.spec.report, page: X.spec.page, visual: X.spec.visual, state: X.spec.state } : null; }
 
@@ -53,7 +50,11 @@
       run.addEventListener('click', function () { runCell(kind, cell); });
       bar.appendChild(run);
       if (kind === 'python') {
-        bar.appendChild(h('small', { class: 'text-muted-d', 'data-runs-on': 'console', text: 'Runs on the console (sandbox)' }));
+        bar.appendChild(h('small', { class: 'text-muted-d', 'data-runs-on': 'server', text: "Runs on the server's compute pool" }));
+        if (!X.pythonRuns) {                                                                        // config/under-construction.yaml python-table-runs
+          run.disabled = true; run.title = "Under construction: Python cells run on the server's compute pool";
+          bar.appendChild(h('span', { class: 'drishti_uc-chip', 'data-uc': 'python-table-runs', text: 'Under construction' }));
+        }
         [['measure', 'Promote to a measure'], ['visual', 'Promote to a visual'], ['transform', 'Promote to a Transform']].forEach(function (p) {
           var b = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-promote': p[0], text: p[1] });
           if (p[0] === 'transform' && !X.extras.length) {                                          // a Transform joins extracts: it needs a second one
@@ -67,7 +68,7 @@
         });
       }
       if (kind === 'sql') {
-        bar.appendChild(h('small', { class: 'text-muted-d', 'data-sql-engine': sqlEngine(), text: sqlEngine() === 'server' ? SQL_NAME + ', run by the server over the model' : 'Over the extract, on the console' }));
+        bar.appendChild(h('small', { class: 'text-muted-d', 'data-sql-engine': 'server', text: SQL_NAME + ', run by the server over the model' }));
         var pb = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-promote-report': '' }, 'Promote to a report visual');
         pb.addEventListener('click', function () { X.promoteReport({ sql: cell.source }, 'SQL', pb); });
         bar.appendChild(pb);
@@ -83,47 +84,26 @@
 
   function runCell(kind, cell) {
     if (!X.ex) { note(cell.out, 'Open an extract first.', true); return Promise.resolve(); }
-    note(cell.out, 'Running…');
-    if (kind === 'sql') {
-      var showSql = function (r, engine) {
-        clear(cell.out);
-        var where = engine === 'dsql' ? SQL_NAME + ', run by the server over ' + r.model + ' as you' + (r.plan ? ' · plan ' + String(r.plan).slice(0, 12) : '') + (r.masked && r.masked.length ? ' · masked: ' + r.masked.join(', ') : '')
-          : 'over the extract, run by the console';
-        cell.out.appendChild(h('p', { class: 'bi-result-meta', 'data-engine': engine, text: r.rowCount + ' rows' + (r.truncated ? ' (cut to the SQL row limit)' : '') + ' in ' + r.ms + ' ms · ' + where }));
-        var host = h('div', { class: 'tbl-wrap' });
-        cell.out.appendChild(host);
-        X.table(host, r.columns, r.rows, 200);
-      };
-      // the server is the default engine (Drishti SQL over the model); a statement over the table `extract` (an older notebook) still runs over the extract
-      var overExtract = !modelOf() || /\b(from|join)\s+extract\b/i.test(cell.source || '');
-      if (!overExtract) {
-        return X.post('/bi/explore/dsql', { extract: spec(), sql: cell.source }).then(function (r) { showSql(r, 'dsql'); }).catch(function (e) { note(cell.out, e.message, true); });
-      }
-      return X.post('/bi/explore/sql', { extract: spec(), extracts: X.extras, sql: cell.source }).then(function (r) { showSql(r, 'server'); }).catch(function (e) { note(cell.out, e.message, true); });
+    if (kind === 'python') {                                                                      // Python runs on the server's compute pool, never here
+      note(cell.out, "Under construction: Python cells run on the server's compute pool, which comes with one Python runtime. Save the notebook or promote the cell meanwhile.", false);
+      return Promise.resolve();
     }
-    var done = function (r) { show(cell.out, r); };
-    var fail = function (e) { note(cell.out, e.message, true); if (e.traceback) { cell.out.appendChild(h('pre', { class: 'bx-pre', text: e.traceback })); } };
-    return X.post('/bi/explore/python', { extract: spec(), extracts: X.extras, source: cell.source }).then(done, fail);
-  }
-
-  function show(out, r) {
-    clear(out);
-    out.appendChild(h('p', { class: 'bi-result-meta', 'data-py-foot': r.target, text: 'Python · ' + r.target + ' · ' + r.ms + ' ms · ' + r.inputRows + ' rows' }));
-    if (r.stdout) { out.appendChild(h('pre', { class: 'bx-pre', 'data-stdout': '', text: r.stdout })); }
-    if (r.table) {
-      var host = h('div', { class: 'tbl-wrap' }); out.appendChild(host);
-      X.table(host, r.table.columns, r.table.rows, 200);
-    } else if (r.option || r.svg || r.png) {
-      var box = h('div', { class: 'bx-chart' }); out.appendChild(box);
-      B.python.draw(box, { title: 'Python result', alt: 'Result of the Python cell' }, { t: B.tokens(box), palette: null }, { kind: r.option ? 'echarts' : r.svg ? 'svg' : 'png', option: r.option, svg: r.svg, png: r.png });
-    } else if (r.value !== undefined) { out.appendChild(h('pre', { class: 'bx-pre', 'data-value': '', text: typeof r.value === 'string' ? r.value : JSON.stringify(r.value, null, 1) })); }
+    note(cell.out, 'Running…');
+    return X.post('/bi/notebook/sql', { extract: spec(), sql: cell.source }).then(function (r) {
+      clear(cell.out);
+      var where = SQL_NAME + ', run by the server over ' + r.model + ' as you' + (r.plan ? ' · plan ' + String(r.plan).slice(0, 12) : '') + (r.masked && r.masked.length ? ' · masked: ' + r.masked.join(', ') : '');
+      cell.out.appendChild(h('p', { class: 'bi-result-meta', 'data-engine': 'dsql', text: r.rowCount + ' rows' + (r.truncated ? ' (cut to the SQL row limit)' : '') + ' in ' + r.ms + ' ms · ' + where }));
+      var host = h('div', { class: 'tbl-wrap' });
+      cell.out.appendChild(host);
+      X.table(host, r.columns, r.rows, 200);
+    }).catch(function (e) { note(cell.out, e.message, true); });
   }
 
   function promote(cell, to, anchor) {
-    var title = (q('input[name=title]', root).value || 'Analyse cell') + ' (' + to + ')';
+    var title = (q('input[name=title]', root).value || 'Notebook cell') + ' (' + to + ')';
     var body = { to: to, name: title, source: cell.source, extracts: X.extras, columns: X.ex ? X.ex.columns.map(function (c) { return c.name; }) : [] };
     X.promoteOnce(anchor, 'python:' + to + ':' + cell.source, function (existing) {
-      return X.post('/bi/explore/promote', body).then(function (d) {
+      return X.post('/bi/notebook/promote', body).then(function (d) {
         var saved = existing ? B.api('PUT', '/items/' + B.id2path(existing), { body: d.yaml }) : X.createItem('python', d.title, d.yaml);
         return saved.then(function (it) { return { item: it, text: 'Python ' + to + (existing ? ' draft updated: ' : ' draft saved in your workspace: ') + it.title + '. ' + d.notes.join(' ') }; });
       });
@@ -136,11 +116,11 @@
 
   ['sql', 'python'].forEach(function (kind) {
     q('[data-add=' + kind + ']', root).addEventListener('click', function () { X.cells[kind].push(newCell(kind)); draw(kind); });
-    q('[data-run-all=' + kind + ']', root).addEventListener('click', function () { runAll(kind); });
+    q('[data-run-all=' + kind + ']', root).addEventListener('click', function () { runAll(kind); });   // Python's is disabled while its running is under construction
   });
   document.addEventListener('drishti:bx-extras', function () { draw('python'); });                        // a cell that reads extract(...) can be promoted to a Transform
   document.addEventListener('drishti:bx-extract', function () {
     ['sql', 'python'].forEach(function (kind) { if (!X.cells[kind].length) { X.cells[kind].push(newCell(kind)); } draw(kind); });
   });
-  if (!X.mayPython) { qa('[data-pane=python] button', root).forEach(function (b) { b.disabled = true; b.title = 'Running Python needs the bi-author power'; }); }
+  if (!X.mayPython) { qa('[data-pane=python] [data-run], [data-pane=python] [data-run-all]', root).forEach(function (b) { b.disabled = true; b.title = 'Running Python needs the bi-author power'; }); }
 })();

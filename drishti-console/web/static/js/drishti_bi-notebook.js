@@ -13,22 +13,22 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Rupaka phase 9, Analyse (docs/guides/USER_GUIDE.md): the page. It opens a dataset as the reader's masked extract (POST /bi/explore/extract), has the Slice worked
-   out by the console (POST /bi/explore/pivot: wave B, the browser draws and adds nothing up), keeps the notebook, and saves or promotes
-   through the BI item API. The SQL and Python cells are in drishti_bi-explore-cells.js. Text only, never markup. */
+/* The Notebook (docs/guides/USER_GUIDE.md › The Notebook): the page. It opens a model as the reader's masked extract (POST /bi/notebook/extract), keeps the
+   notebook, and saves or promotes through the BI item API. The SQL and Python cells are in drishti_bi-notebook-cells.js; slicing is the Pivot's.
+   Text only, never markup. */
 (function () {
   'use strict';
   var B = window.drishtiBi, root = document.getElementById('bx');
   if (!B || !root) { return; }
   var h = B.h, q = B.q, qa = B.qa, clear = B.clear;
   var MAX_SHOWN = 500;
-  var X = (B.explore = {
+  var X = (B.notebook = {
     ex: null,                                   // the extract the console sent: {columns[{name,type,masked}], rows, rowCount, total, truncated, masked}
     spec: null,                                 // what to send to rebuild it: {dataset, fields}
     qual: [],                                   // the qualified field names asked for, in the order of the extract's columns
-    slice: { rows: [], columns: [], values: [], filters: [] },
     extras: [],                                 // the notebook's other extracts: [{name, dataset, fields}], read by a cell as extract("name")
     mayPython: root.getAttribute('data-may-python') === 'true',
+    pythonRuns: root.getAttribute('data-python-runs') === 'true',   // false: Python cells' running on the server's compute pool is under construction
     item: null,                                 // the notebook item being edited
     model: null
   });
@@ -58,7 +58,7 @@
   // ---- opening an extract -----------------------------------------------------------------------------------------------------
   var dsSel = q('[data-dataset]', root), fieldsBox = q('[data-fields-box]', root), fieldsEl = q('[data-fields]', root), go = q('[data-open-go]', root);
 
-  /** The sources a person can open, grouped: models, their datasets, each pack's datasets, then the version 1 datasets. Shared with the extra extracts (drishti_bi-explore-extracts.js). */
+  /** The sources a person can open, grouped: models, their datasets, each pack's datasets, then the version 1 datasets. Shared with the extra extracts (drishti_bi-notebook-extracts.js). */
   X.sources = function () {
     return B.layer.groups({ legacy: function () { return B.api('GET', '/datasets').then(function (d) { return Array.isArray(d) ? d : (d.datasets || []); }); } });
   };
@@ -103,22 +103,15 @@
   /** Opens (or reopens) the extract for `spec` and redraws the tabs. */
   X.open = function (spec) {
     say('Opening the extract…');
-    return X.post('/bi/explore/extract', spec).then(function (ex) {
+    return X.post('/bi/notebook/extract', spec).then(function (ex) {
       X.ex = ex; X.spec = spec; X.qual = spec.fields || [];
       var masked = ex.masked.length ? ' Masked for you: ' + ex.masked.join(', ') + '.' : '';
       q('[data-info]', root).textContent = ex.rowCount + ' rows' + (ex.truncated ? ' of ' + ex.total + ' (cut to the row limit)' : '') + ', ' + ex.columns.length + ' columns.' + masked;
       say('');
-      X.slice = sliceFits() ? X.slice : { rows: [], columns: [], values: [], filters: [] };
-      drawChips(); drawSlice();
       q('[data-save-go]', root).disabled = false;
       document.dispatchEvent(new CustomEvent('drishti:bx-extract'));
     }).catch(function (e) { say(e.message, true); throw e; });
   };
-  function sliceFits() {
-    var names = X.ex.columns.map(function (c) { return c.name; });
-    var all = X.slice.rows.concat(X.slice.columns, X.slice.values.map(function (v) { return v.field; }), X.slice.filters.map(function (f) { return f.field; }));
-    return all.every(function (n) { return names.indexOf(n) >= 0; });
-  }
   X.time = B.consume && q('[data-time]', root) ? B.consume.timePicker(q('[data-time]', root), function () {}) : null;
   q('[data-open]', root).addEventListener('submit', function (e) {
     e.preventDefault();
@@ -130,95 +123,11 @@
     X.open(spec).catch(function () {});
   });
 
-  // ---- slice ---------------------------------------------------------------------------------------------------------------------
-  var AGGS = ['sum', 'avg', 'count', 'min', 'max'];
-  function colType(name) { var c = X.ex.columns.filter(function (x) { return x.name === name; })[0]; return c ? c.type : 'string'; }
-
-  function drawChips() { drawChipsOnly(); drawPivot(); }
-  function drawChipsOnly() {
-    var box = q('[data-chips]', root); clear(box);
-    X.ex.columns.forEach(function (c) {
-      var chip = h('span', { class: 'bx-chip', draggable: 'true', 'data-field': c.name, title: c.type + (c.masked ? ', masked' : '') }, h('span', { text: c.name }));
-      [['rows', 'R', 'Rows'], ['columns', 'C', 'Columns'], ['values', 'V', 'Values'], ['filters', 'F', 'Filters']].forEach(function (z) {
-        chip.appendChild(h('button', { type: 'button', class: 'bx-mini', 'data-to': z[0], 'aria-label': 'Add ' + c.name + ' to ' + z[2], title: 'Add to ' + z[2], text: z[1] }));
-      });
-      chip.addEventListener('dragstart', function (e) { e.dataTransfer.setData('text/plain', c.name); e.dataTransfer.effectAllowed = 'copy'; });
-      box.appendChild(chip);
-    });
-  }
-  q('[data-chips]', root).addEventListener('click', function (e) {
-    var b = e.target.closest('[data-to]');
-    if (b) { addTo(b.getAttribute('data-to'), b.parentNode.getAttribute('data-field')); }
-  });
-  qa('[data-zone]', root).forEach(function (z) {
-    z.addEventListener('dragover', function (e) { e.preventDefault(); z.classList.add('bx-over'); });
-    z.addEventListener('dragleave', function () { z.classList.remove('bx-over'); });
-    z.addEventListener('drop', function (e) { e.preventDefault(); z.classList.remove('bx-over'); addTo(z.getAttribute('data-zone'), e.dataTransfer.getData('text/plain')); });
-  });
-
-  function addTo(zone, field) {
-    if (!X.ex || X.ex.columns.every(function (c) { return c.name !== field; })) { return; }
-    var s = X.slice;
-    if (zone === 'values') { s.values.push({ field: field, agg: colType(field) === 'string' ? 'count' : 'sum' }); } else if (zone === 'filters') {
-      if (s.filters.every(function (f) { return f.field !== field; })) { s.filters.push({ field: field, value: '' }); }
-    } else if (s[zone].indexOf(field) < 0) { s[zone].push(field); }
-    drawSlice();
-  }
-
-  function drawSlice(zonesOnly) {
-    var s = X.slice;
-    qa('[data-zone]', root).forEach(function (z) {
-      var name = z.getAttribute('data-zone'), body = clear(q('[data-zone-body]', z));
-      s[name].forEach(function (item, i) {
-        var label = typeof item === 'string' ? item : item.field;
-        var row = h('span', { class: 'bx-item' }, h('span', { text: label }));
-        if (name === 'values') {
-          var sel = h('select', { class: 'studio-select', 'aria-label': 'Aggregation of ' + label }, AGGS.map(function (a) { return h('option', { value: a, text: a, selected: a === item.agg }); }));
-          sel.addEventListener('change', function () { item.agg = sel.value; drawPivot(); });
-          row.appendChild(sel);
-        } else if (name === 'filters') {
-          var sel2 = h('select', { class: 'studio-select', 'aria-label': 'Keep rows where ' + label + ' is' }, [h('option', { value: '', text: '(all)' })].concat(distinct(label).map(function (v) { return h('option', { value: v, text: v, selected: v === item.value }); })));
-          sel2.addEventListener('change', function () { item.value = sel2.value; drawPivot(); });
-          row.appendChild(sel2);
-        }
-        row.appendChild(h('button', { type: 'button', class: 'bx-mini', 'aria-label': 'Remove ' + label + ' from ' + name, text: '×' }));
-        row.lastChild.addEventListener('click', function () { s[name].splice(i, 1); drawSlice(); });
-        body.appendChild(row);
-      });
-    });
-    if (!zonesOnly) { drawPivot(); }               // the console works the slice out again (a field added, moved or removed)
-  }
-  /** A filter's values, as the console's last pivot listed them (the browser does not go through the rows). */
-  X.distinct = {};
-  function distinct(field) { return X.distinct[field] || []; }
-
-  var pivotRun = 0;
-  /** The pivot, worked out by the console over the reader's extract (POST /bi/explore/pivot); this page only draws it. */
-  function drawPivot() {
-    var host = clear(q('[data-pivot]', root)), s = X.slice, meta = q('[data-pivot-meta]', root);
-    q('[data-promote-slice]', root).disabled = !(s.rows.length || s.columns.length);
-    if (!X.ex || !(s.rows.length || s.columns.length || s.values.length)) { meta.textContent = 'Add fields to Rows, Columns or Values.'; return; }
-    var run = ++pivotRun, ex = X.ex;
-    meta.textContent = 'Working it out…';
-    X.post('/bi/explore/pivot', { extract: X.spec, slice: s }).then(function (p) {
-      if (run !== pivotRun || ex !== X.ex) { return; }
-      var fresh = Object.keys(p.distinct || {}).some(function (k) { return !X.distinct[k]; });
-      Object.keys(p.distinct || {}).forEach(function (k) { X.distinct[k] = p.distinct[k]; });
-      showPivot(host, meta, s, p, p.engine || 'console');
-      if (fresh) { drawSlice(true); }                             // a filter's picker lists the values the console just sent
-    }, function (e) { if (run === pivotRun) { meta.textContent = e.message; } });
-  }
-
-  function showPivot(host, meta, s, p, engine) {
-    meta.textContent = p.used + ' of ' + X.ex.rowCount + ' rows used; ' + p.body.length + ' pivot rows. Worked out by the console.';
-    meta.setAttribute('data-engine', engine);
-    X.table(host, p.header, p.body, MAX_SHOWN);
-  }
-  // ---- promote a slice -------------------------------------------------------------------------------------------------------------
+  // ---- promote a SQL cell -------------------------------------------------------------------------------------------------------------
   X.qualified = function (name) { var i = X.ex.columns.findIndex(function (c) { return c.name === name; }); return X.qual[i] || name; };
-  X.createItem = function (kind, title, body) { return B.api('POST', '/workspaces/me/items', { kind: kind, title: title, description: 'Started in Analyse.', body: body }); };
+  X.createItem = function (kind, title, body) { return B.api('POST', '/workspaces/me/items', { kind: kind, title: title, description: 'Started in the Notebook.', body: body }); };
   var targetSel = q('[data-promote-target]', root), pageIn = q('[data-promote-page]', root);
-  X.promotedItems = {};                           // what was promoted already, by the cell or slice: promoting it again offers to update that draft
+  X.promotedItems = {};                           // what was promoted already, by the cell: promoting it again offers to update that draft
 
   /** The answer beside the button that asked for it (one message, never also at the top), with a link to the draft. */
   X.tell = function (anchor, text, bad, item) {
@@ -247,18 +156,18 @@
   };
   /** The title of the open dataset in words (the model's), not its id. */
   X.datasetTitle = function () { return (X.model && X.model.title) || (dsSel.selectedOptions[0] && dsSel.selectedOptions[0].textContent) || X.spec.dataset || 'data'; };
-  /** A slice or a SQL cell (`extra`: {slice, filters} or {sql}) as a visual in a new report draft, or added to the report chosen above (its draft is saved with the new visual). */
+  /** A SQL cell (`extra`: {sql}) as a visual in a new report draft, or added to the report chosen above (its draft is saved with the new visual). */
   X.promoteReport = function (extra, label, anchor) {
     if (!X.spec || !X.ex) { X.tell(anchor, 'Open an extract first.', true); return Promise.resolve(); }
     var typed = q('input[name=title]', root).value;
-    var title = (typed || (label === 'SQL' ? X.datasetTitle() + ' SQL' : label + ' of ' + (X.datasetTitle() || X.spec.dataset || 'data'))).slice(0, 80);
+    var title = (typed || X.datasetTitle() + ' ' + label).slice(0, 80);
     var target = targetSel.value;
     var body = Object.assign({ to: 'report', name: title, dataset: X.spec.dataset, columns: X.ex.columns.map(function (c) { return c.name; }), qualified: X.qual, target: target || undefined, page: pageIn.value.trim() || undefined }, extra);
     var make = function (existing) {
-      return X.post('/bi/explore/promote', body).then(function (d) {
+      return X.post('/bi/notebook/promote', body).then(function (d) {
         var saved = target ? B.api('PUT', '/items/' + B.id2path(target), { body: d.yaml }) : existing ? B.api('PUT', '/items/' + B.id2path(existing), { body: d.yaml }) : X.createItem('report', d.title, d.yaml);
         return saved.then(function (it) {
-          X.lastPromoted = { item: it.id, visual: d.visual || (extra.sql ? 'sql' : 'slice') };
+          X.lastPromoted = { item: it.id, visual: d.visual || 'sql' };
           return { item: it, text: (target ? 'Visual ' + d.visual + ' added to the report draft: ' : existing ? 'Report draft updated: ' : 'Report draft saved in your workspace: ') + it.title + '. ' + d.notes.join(' ') };
         });
       });
@@ -266,11 +175,6 @@
     return target ? make(null).then(function (r) { X.tell(anchor, r.text, false, r.item); }).catch(function (e) { X.tell(anchor, e.message, true); })
       : X.promoteOnce(anchor, 'report:' + JSON.stringify([X.spec.dataset, extra]), make);
   };
-  q('[data-promote-slice]', root).addEventListener('click', function (ev) {
-    var s = X.slice;
-    X.promoteReport({ slice: { rows: s.rows, columns: s.columns, values: s.values.map(function (v) { return { field: v.field, agg: v.agg }; }) },
-      filters: s.filters.filter(function (f) { return f.value !== '' && f.value != null; }).map(function (f) { return { field: f.field, op: 'in', values: [f.value] }; }) }, 'Slice', ev.currentTarget);
-  });
   B.api('GET', '/workspaces').then(function (list) {                                              // the report drafts you may edit: your workspace and the shared ones you contribute to
     var mine = list.filter(function (w) { return !w.shipped && (w.personal || ['contributor', 'member', 'owner', 'admin'].indexOf(w.role) >= 0); }).slice(0, 8);
     return Promise.all(mine.map(function (w) { return B.api('GET', '/workspaces/' + B.id2path(w.personal ? 'me' : w.id) + '/items').catch(function () { return []; }); }));
@@ -282,9 +186,9 @@
   X.link = link;
 
   // ---- notebooks -----------------------------------------------------------------------------------------------------------------
-  X.cells = { sql: [], python: [] };            // [{source, target?}], kept by drishti_bi-explore-cells.js
-  X.notebook = function () {
-    var cells = [{ type: 'slice', slice: JSON.parse(JSON.stringify(X.slice)) }];
+  X.cells = { sql: [], python: [] };            // [{source, target?}], kept by drishti_bi-notebook-cells.js
+  X.body = function () {
+    var cells = [];
     X.cells.sql.forEach(function (c) { cells.push({ type: 'sql', source: c.source }); });
     X.cells.python.forEach(function (c) { cells.push({ type: 'python', source: c.source, target: c.target || 'server' }); });
     var nb = { rachana: 1, notebook: B.slug(q('input[name=title]', root).value || 'analysis') || 'analysis', title: q('input[name=title]', root).value || 'Analysis',
@@ -295,8 +199,8 @@
   q('[data-save]', root).addEventListener('submit', function (e) {
     e.preventDefault();
     if (!X.spec) { say('Open an extract first.', true); return; }
-    var nb = X.notebook();
-    X.post('/bi/explore/notebook/check', { notebook: nb }).then(function (c) {
+    var nb = X.body();
+    X.post('/bi/notebook/check', { notebook: nb }).then(function (c) {
       if (!c.valid) { throw new Error(c.problems.map(function (p) { return p.code + ' ' + p.message; }).join('; ')); }
       var save = X.item && X.item.can && X.item.can.edit ? B.api('PUT', '/items/' + B.id2path(X.item.id), { title: nb.title, body: c.yaml }) : X.createItem('notebook', nb.title, c.yaml);
       return save.then(function (it) { X.item = it; say('Saved as a notebook: ' + nb.title + (it.version ? '' : '.')); link(it); });
@@ -304,10 +208,9 @@
   });
 
   X.restore = function (nb) {
-    X.slice = { rows: [], columns: [], values: [], filters: [] };
     X.cells = { sql: [], python: [] };
     (nb.cells || []).forEach(function (c) {
-      if (c.type === 'slice') { X.slice = Object.assign({ rows: [], columns: [], values: [], filters: [] }, c.slice); } else if (c.type === 'sql') { X.cells.sql.push({ source: c.source }); } else { X.cells.python.push({ source: c.source, target: c.target || 'server' }); }
+      if (c.type === 'sql') { X.cells.sql.push({ source: c.source }); } else { X.cells.python.push({ source: c.source, target: 'server' }); }
     });
     q('input[name=title]', root).value = nb.title || '';
     X.extras = (nb.extracts || []).map(function (e) { return { name: e.name, dataset: e.dataset, fields: e.fields }; });
@@ -325,12 +228,16 @@
   }
   function openNotebook(id) {
     return B.api('GET', '/items/' + B.id2path(id)).then(function (it) {
-      return X.post('/bi/explore/notebook/check', { yaml: it.body || '' }).then(function (c) {
+      return X.post('/bi/notebook/check', { yaml: it.body || '' }).then(function (c) {
         if (!c.valid) { throw new Error(c.problems.map(function (p) { return p.code + ' ' + p.message; }).join('; ')); }
         X.item = it;
         if (!Array.prototype.some.call(notebookSel.options, function (o) { return o.value === it.id; })) { notebookSel.appendChild(h('option', { value: it.id, text: it.title })); }   // a draft is not in the catalogue
         notebookSel.value = it.id;
-        return X.restore(c.notebook).then(function (r) { q('input[name=title]', root).value = it.title; link(it); return r; });      // the item's title is the notebook's name
+        return X.restore(c.notebook).then(function (r) {
+          q('input[name=title]', root).value = it.title; link(it);                                   // the item's title is the notebook's name
+          if (c.notes && c.notes.length) { say(c.notes.join(' ') + ' Open the Pivot to slice.'); }  // an older notebook's slice: left out, said
+          return r;
+        });
       });
     });
   }
@@ -349,7 +256,7 @@
       if (n >= 0) { var t2 = tabs[(n + tabs.length) % tabs.length]; showTab(t2.getAttribute('data-tab')); t2.focus(); e.preventDefault(); }
     });
   });
-  showTab('slice');
+  showTab('sql');
 
   loadDatasets().then(loadNotebooks).then(function () {
     var want = new URLSearchParams(window.location.search).get('item');

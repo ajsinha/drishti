@@ -44,7 +44,6 @@ features:                                # presets of existing switches (config/
   var: off
   exposure: off
   calc: off
-  pyconsole: off
   python: off
   designer: off
   build: off

@@ -1014,7 +1014,7 @@ and released on its own.
 
 ### 16. The console's QuantEngine slot (built, lean)
 
-This section is what is **built** of RUPAKA 9.2's `QuantEngine` for Analyse, and it is deliberately small: `price` only (no sensitivities, scenarios, VaR or XVA yet), no pack adapters, no Arrow in or out, a stand-in in place of QLRisk. A Python cell in [Analyse](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) can price things with `quant.price(instrument, **parameters)`. The console does not contain a pricing library of its own: it has a **slot**, the
+This section is what is **built** of RUPAKA 9.2's `QuantEngine` for Analyse, and it is deliberately small: `price` only (no sensitivities, scenarios, VaR or XVA yet), no pack adapters, no Arrow in or out, a stand-in in place of QLRisk. A Python cell in [Analyse](../guides/USER_GUIDE.md#the-notebook) can price things with `quant.price(instrument, **parameters)`. The console does not contain a pricing library of its own: it has a **slot**, the
 `QuantEngine` interface, and a small **stand-in** that fills it so notebooks, demos and tests run anywhere. A real library plugs into the same slot.
 
 #### 16.1 The interface

@@ -261,7 +261,7 @@ moved:
   swin: docs-guides-var-guide#189-choosing-the-stress-window
   databricks: data-guide#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg                                              # Databricks Delta Lake or Apache Iceberg
   transforms: bi-guide#17-data-prep-the-transform-editor             # BI -> Transforms, /bi/transform (2.4.0)
-  python-console: user-guide#16-the-browser-python-console                  # BI -> Python console, /pyconsole (2.4.0)
+  notebook: user-guide#the-notebook                                        # BI -> Notebook, /bi/notebook: SQL on the server, Python on its compute pool
   themes: bi-guide#52-themes                                               # report themes and the theme designer (2.4.0)
   console-themes: user-guide#themes                                       # the console's ten themes (three Terminal hues in 2.6.0)
   statements: bi-guide#24-statements-paginated-reports-page-exact-one-per-reader                                      # statement pages, paginated reports, bursting (2.6.0; docs/guides/BI_GUIDE.md)
@@ -392,7 +392,7 @@ moved:
   docs-architecture-write-back: write-back#16-the-design-and-its-reasons   # architecture/WRITE_BACK.md merged into guides/WRITE_BACK.md (2.9.7)
   docs-guides-write-back-guide: write-back   # guides/WRITE_BACK_GUIDE.md renamed guides/WRITE_BACK.md (2.9.7)
   docs-guides-write-back: write-back   # guides/WRITE_BACK.md is listed as Write-back (2.9.7)
-  analyse: user-guide#analyse-slice-sql-and-python   # guides/ANALYSE.md merged into guides/USER_GUIDE.md (2.9.7)
+  analyse: user-guide#the-notebook   # guides/ANALYSE.md, later Analyse: now the Notebook
   python-calc: user-guide#calc-python-on-any-view   # guides/PYTHON_CALC.md merged into guides/USER_GUIDE.md (2.9.7)
   query-by-form: user-guide#query-by-form   # guides/QUERY_BY_FORM.md merged into guides/USER_GUIDE.md (2.9.7)
   ai-providers: ai#1-model-providers   # architecture/AI_PROVIDERS.md merged into admin/AI.md (2.9.7)
@@ -508,5 +508,4 @@ contextual:
   bi-designer: bi-guide#26-bi-studio-authoring-as-one-product
   bi-theme-designer: bi-guide#52-themes
   bi-transform: bi-guide#17-data-prep-the-transform-editor
-  bi-pyconsole: user-guide#16-the-browser-python-console
-  bi-explore: user-guide#analyse-slice-sql-and-python
+  bi-notebook: user-guide#the-notebook

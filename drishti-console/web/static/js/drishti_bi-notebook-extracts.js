@@ -13,12 +13,12 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Analyse (docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 2): more extracts in one notebook. Each is a masked extract of a dataset (the rows the signed-in person may see,
-   built by the server as for the first), named so that a Python cell reads it as extract("name") and a SQL cell as a table of that name. The cells post them
-   with every run (drishti_bi-explore-cells.js); the notebook stores them under `extracts:`. Text only, never markup. */
+/* The Notebook (docs/guides/USER_GUIDE.md › The Notebook): more extracts in one notebook. Each is a masked extract of a model (the rows the signed-in person may see,
+   built by the server as for the first), named so that a Python cell reads it as extract("name"). The Python cells send them
+   with every run (drishti_bi-notebook-cells.js); the notebook stores them under `extracts:`. Text only, never markup. */
 (function () {
   'use strict';
-  var B = window.drishtiBi, X = B && B.explore, root = document.getElementById('bx');
+  var B = window.drishtiBi, X = B && B.notebook, root = document.getElementById('bx');
   if (!X || !root) { return; }
   var h = B.h, q = B.q, qa = B.qa, clear = B.clear;
   var list = q('[data-extras]', root), form = q('[data-add-extract]', root), sel = q('[data-edataset]', root), box = q('[data-efields-box]', root), fields = q('[data-efields]', root), add = q('[data-eadd]', root);
@@ -61,7 +61,7 @@
     if (!name || !sel.value || !picked.length) { X.say('Name the extract, choose a dataset and at least one field.', true); return; }
     if (X.extras.some(function (e) { return e.name === name; })) { X.say('There is already an extract called ' + name + '.', true); return; }
     X.say('Opening the extract…');
-    X.post('/bi/explore/extract', { dataset: sel.value, fields: picked }).then(function (ex) {
+    X.post('/bi/notebook/extract', { dataset: sel.value, fields: picked }).then(function (ex) {
       X.extras.push({ name: name, dataset: sel.value, fields: picked });
       info[name] = { rows: ex.rowCount, masked: ex.masked };
       form.elements.ename.value = '';

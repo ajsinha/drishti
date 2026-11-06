@@ -22,7 +22,7 @@ from core import model_layer as ml
 from test_bi_model_layer import make
 
 
-@pytest.mark.parametrize("url", ["/bi/md/bi-m1", "/bi/datasets/new-layer", "/bi/datasets/new", "/bi/design/bi-r1", "/bi/explore"])
+@pytest.mark.parametrize("url", ["/bi/md/bi-m1", "/bi/datasets/new-layer", "/bi/datasets/new", "/bi/design/bi-r1", "/bi/notebook"])
 def test_every_page_that_writes_an_expression_loads_the_editor(url):
     client, _ = make()
     text = client.get(url).text
@@ -148,8 +148,8 @@ def test_field_properties_and_perspectives_are_written_one_line_each():
     assert text.index("measures:") < text.index("fields:") < text.index("perspectives:")
 
 
-def test_an_analyse_sql_cell_runs_drishti_sql_on_the_server_over_the_extracts_model():
-    from core.explore import model_ref
+def test_a_notebook_sql_cell_runs_drishti_sql_on_the_server_over_the_extracts_model():
+    from core.notebook import model_ref
     assert model_ref("mq:trading-risk@1") == "trading-risk@1" and model_ref("dataset:pack.trading.trade") == "dataset:pack.trading.trade"
     assert model_ref("file:dataset:trading") == "trading@1" and model_ref("trading-risk") == "trading-risk@1" and model_ref("") is None
     client, backend = make()
@@ -163,13 +163,13 @@ def test_an_analyse_sql_cell_runs_drishti_sql_on_the_server_over_the_extracts_mo
                     "meta": {"millis": 7, "plan": "p-1234567890abcdef", "masked": []}}
         return await orig(method, path, ident, body, **params)
     backend.bi = bi
-    limits = client.app.state.explore_limits
-    r = client.post("/bi/explore/dsql", json={"extract": {"dataset": "mq:trading-risk@1", "fields": ["trade.desk"]}, "sql": "SELECT desk.name, MEASURE('MTM') FROM trade JOIN desk GROUP BY desk.name;"})
+    limits = client.app.state.notebook_limits
+    r = client.post("/bi/notebook/sql", json={"extract": {"dataset": "mq:trading-risk@1", "fields": ["trade.desk"]}, "sql": "SELECT desk.name, MEASURE('MTM') FROM trade JOIN desk GROUP BY desk.name;"})
     assert r.status_code == 200, r.text
     got = r.json()
     assert sent[0] == {"sql": "SELECT desk.name, MEASURE('MTM') FROM trade JOIN desk GROUP BY desk.name", "model": "trading-risk@1", "limit": limits.sql_max_rows + 1}
     assert got["columns"] == ["desk", "mtm"] and got["rowCount"] == 3 and got["engine"] == "server" and got["plan"] == "p-1234567890abcdef" and got["ms"] == 7
-    older = client.post("/bi/explore/dsql", json={"extract": {"dataset": "file:dataset:trading"}, "sql": "SELECT 1"})   # a notebook saved before 2.2: the converter's model
+    older = client.post("/bi/notebook/sql", json={"extract": {"dataset": "file:dataset:trading"}, "sql": "SELECT 1"})   # a notebook saved before 2.2: the converter's model
     assert older.status_code == 200 and sent[-1]["model"] == "trading@1"
 
 

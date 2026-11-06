@@ -16,7 +16,7 @@
 
 An engine prices an *instrument* (a name such as ``black_scholes``) from keyword parameters and returns a number. The console ships a small stand-in
 (``standin.py``) so notebooks and tests run anywhere; a real quant library (QLRisk) plugs in by implementing this interface and being named in
-``bi.explore.quant_engine`` (see docs/admin/AI.md › Server-side pricing: the quant service (proposed), section 16). Engines are pure functions of their inputs: no network, no files, no state."""
+a Python item manifest's ``quant_engine`` (see docs/admin/AI.md › Server-side pricing: the quant service (proposed), section 16). Engines are pure functions of their inputs: no network, no files, no state."""
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

@@ -336,26 +336,20 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
     cache_max_bytes: 64000000  # the L4 result cache's size in bytes
     cache_seconds: 600  # how long a cached answer is kept
     runner_token: ${DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN:}        # the Py-node endpoint (/internal/py/*) the server calls with X-Drishti-Runner-Token; empty: the endpoint is off
-  # Rupaka phase 9 (docs/guides/USER_GUIDE.md): Analyse at /bi/explore: the masked extract, SQL cells, Python cells and notebooks.
-  explore:
-    max_rows: ${DRISHTI_BI_EXPLORE_MAX_ROWS:10000}             # most rows of an extract (the reader's rows, cut here); 10 to 100000
+  # The Notebook at /bi/notebook (docs/guides/USER_GUIDE.md › The Notebook): the masked extract, SQL cells (on the server), Python cells (on its compute pool).
+  notebook:
+    max_rows: ${DRISHTI_BI_NOTEBOOK_MAX_ROWS:10000}            # most rows of an extract (the reader's rows, cut here); 10 to 100000
     max_fields: 60                                              # most columns of an extract
     sql_max_rows: 5000                                          # most rows a SQL cell returns
-    sql_max_seconds: 5                                          # a SQL cell running longer is stopped (DRS-9081)
     sql_max_chars: 20000                                        # longest SQL text
     cell_timeout_seconds: 20                                    # a Python cell's time limit on the server (also capped by bi.python.max_timeout_seconds)
     cell_memory_mb: 512                                         # a Python cell's memory on the server (also capped by bi.python.max_memory_mb)
     cell_max_chars: 65536                                       # longest Python cell
     max_cells: 60                                               # most cells in a notebook
     max_extracts: 6                                             # most further extracts in a notebook (extract("name") in a cell), besides the first
-    quant_engine: stand-in                                      # the engine behind quant.price(...) in a Python cell (docs/guides/QUANT_SERVICE.md)
   # (docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17): the Transform editor at /bi/transform, built step by step with a preview and profile after each step.
   transform:
     preview_rows: ${DRISHTI_BI_TRANSFORM_PREVIEW_ROWS:1000}     # rows of each input the step-by-step run starts from (the reader's rows, asked of the server); 10 to 50000
     timeout_seconds: 20                                         # the step-by-step run's time limit (also capped by bi.python.max_timeout_seconds)
     memory_mb: 512                                              # its memory (also capped by bi.python.max_memory_mb)
     snippets_file: ""                                           # more data-prep snippets (a list under snippets:), read after config/prep-snippets.yaml
-  # (docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 15): the browser Python console at /pyconsole, personal analysis in Pyodide on a masked extract of a model.
-  pyconsole:
-    enabled: ${DRISHTI_BI_PYCONSOLE_ENABLED:true}               # false: no /pyconsole page; it also needs Calc's runtime (tools/fetch-pyodide.sh)
-    max_rows: ${DRISHTI_BI_PYCONSOLE_MAX_ROWS:20000}            # most rows of an extract handed to the browser (the reader's rows, masked, cut here); 10 to 100000

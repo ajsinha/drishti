@@ -358,13 +358,13 @@
       q('[data-review]').checked = !!ws.reviewRequired;
     }
     // What each kind needs before it is useful: a report needs a dataset (then opens in the designer), a board is a report with board pages (2.4.0) and opens in the designer too; datasets, notebooks and
-    // Python items start where they are authored (the Datasets page and Analyse), so this form sends you there rather than create an empty item.
+    // Python items start where they are authored (the Datasets page and the Notebook), so this form sends you there rather than create an empty item.
     var START = {
       report: { hint: 'A report reads one model: choose a model (or a dataset, which reads as its own small model), and the report opens in the designer.', go: 'Create and open in the designer' },
       board: { hint: 'A board is a report with board pages: tiles from other reports beside visuals of its own. It opens in the report designer, no model needed.', go: 'Create and open in the designer' },
       dataset: { hint: 'A dataset is built in the wizard: pick a source, tick columns, add measures. It opens there, and is saved as a draft in this workspace. Or paste a dataset YAML document you already have.', go: 'New dataset', href: '/bi/datasets/new-layer?workspace=' },
       model: { hint: 'A model puts datasets in a star with relationships, measures and security. It is made on the Models page (New model) and edited in the model designer.', go: 'Go to Models', href: '/bi/models' },
-      notebook: { hint: 'A notebook is started in Analyse (SQL and Python cells); Analyse saves it here with Save as a notebook.', go: 'Go to Analyse', href: '/bi/explore' },
+      notebook: { hint: 'A notebook is started in the Notebook (SQL and Python cells, run on the server); it saves it here with Save as a notebook.', go: 'Go to the Notebook', href: '/bi/notebook' },
       python: { hint: 'Choose what the Python item makes. It is created with a valid, commented starter body and opens in its editor, ready to change and Check.', go: 'Create and open the editor' }
     };
     function kindChanged() {
@@ -486,8 +486,8 @@
       var enc = encodeURIComponent(it.id).replace(/%3A/g, ':');
       var rep = q('[data-open-report]'), des = q('[data-open-design]'), mod = q('[data-open-model]');
       if (rep) { rep.hidden = it.kind !== 'report'; rep.href = '/bi/r/' + enc; }
-      var ana = q('[data-open-analyse]');
-      if (ana) { ana.hidden = it.kind !== 'notebook'; ana.href = '/bi/explore?item=' + encodeURIComponent(it.id); }
+      var nbk = q('[data-open-notebook]');
+      if (nbk) { nbk.hidden = it.kind !== 'notebook'; nbk.href = '/bi/notebook?item=' + encodeURIComponent(it.id); }
       var brd = q('[data-open-board]');
       if (brd) { brd.hidden = !it.board; brd.href = '/bi/r/' + enc + '?kiosk=1'; }                 // a report with board pages (2.4.0): its kiosk
       if (des) { const designable = it.kind === 'report'; des.hidden = !(designable && it.can && it.can.edit) && !(designable && it.shipped); des.href = '/bi/design/' + enc; des.lastChild.textContent = it.shipped ? ' Open a copy in the designer' : ' Open in the designer'; }
