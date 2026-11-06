@@ -508,7 +508,7 @@ tests:
 | **Notebook → Turn into table** | cells become the build function: `drishti.table("domain.name")` becomes an input, the imports move to the top, the last expression is returned, and the contract is proposed |
 | **Sample run** | *Under construction*: running authored code on the server's compute pool comes with one Python runtime (registered as `python-table-runs` in [UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md)); the editor, the contract, the inputs, the schedule and the templates work now |
 
-A Python **model** is a model whose measures are Python measures (`{ python, inputs, by }`), edited in the model editor's Measures tab.
+A Python **model** is a model whose measures are Python measures (`{ python, inputs, by }`): the Measures tab lists them with the engine's "adds up?" (computed per total), and their keys are edited in the YAML.
 
 ### 11.5 The editor API
 

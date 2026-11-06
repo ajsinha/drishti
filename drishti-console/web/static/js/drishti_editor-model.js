@@ -176,7 +176,7 @@
       var f = (ctx.S.measureFacts || []).filter(function (y) { return y.name === m; })[0] || {};
       return h('tr', { 'data-path': p, 'data-measure': m },
         h('td', { text: m }),
-        h('td', {}, input(ctx, x.expr, p + '.expr', 'Formula of ' + m, function (d, v) { d.measures[m].expr = v; }, true)),
+        h('td', {}, x.python ? h('span', { class: 'ed-small', 'data-python-measure': m, text: 'Python: ' + (typeof x.python === 'string' ? x.python : JSON.stringify(x.python)) + ' (edit it in the YAML)' }) : input(ctx, x.expr, p + '.expr', 'Formula of ' + m, function (d, v) { d.measures[m].expr = v; }, true)),
         h('td', {}, input(ctx, x.format, p + '.format', 'Format of ' + m, function (d, v) { if (v.trim()) { d.measures[m].format = v; } else { delete d.measures[m].format; } })),
         h('td', { 'data-adds-up': m, title: f.why || '', text: f.word ? (f.word === 'yes' ? 'yes ✓' : f.word === 'ratio' ? 'ratio · per total' : 'no · per total') : '' }),
         h('td', {}, h('button', { type: 'button', class: 'ed-linkbtn', 'data-always': '', 'data-measure-card': m, 'aria-label': 'About ' + m, on: { click: function () { card(ctx, m); } } }, '?'),
