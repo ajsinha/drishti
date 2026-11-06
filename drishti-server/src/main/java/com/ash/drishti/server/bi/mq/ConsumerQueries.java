@@ -73,6 +73,13 @@ public final class ConsumerQueries implements DatasetService.ModelGateway {
     }
 
     @Override
+    public com.ash.drishti.server.bi.engine.QueryService.Loaded loadedModel(Principal p, String model, String consumer) {
+        MqService.Bound b = consumer == null ? catalog.bind(p, model) : catalog.bindVia(p, model, consumer);
+        ModelView v = b.view();
+        return new com.ash.drishti.server.bi.engine.QueryService.Loaded(v.id(), v.key(), v.flat(), v.hash());
+    }
+
+    @Override
     public DatasetService.Asked askModel(Principal p, String model, QueryRequest q, boolean explain) {
         try {
             MqService.Bound b = catalog.bind(p, model);

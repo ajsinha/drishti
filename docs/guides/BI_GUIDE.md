@@ -373,7 +373,7 @@ to every query, for each reader ([section 30, its section 6](#6-security-row-rul
 ## 10. Shipped content, settings and the command line
 
 **Shipped content.** Files in the BI folder (`drishti.bi.dir`, default `./config/bi`) appear as published, read-only items of the
-workspace *Shipped content*: `models/<id>.model.yaml`, `datasets/<id>.dataset.yaml`, `reports/<id>.report.yaml`, `python/<id>.python.yaml`, `themes/<id>.theme.yaml`, `boards/<id>.board.yaml` (2.3),
+workspace *Shipped content*: the table layer's tables and models (`config/tables/<domain>/<name>.table.yaml` and `.model.yaml`, [TABLES_GUIDE.md](TABLES_GUIDE.md)), `reports/<id>.report.yaml`, `python/<id>.python.yaml`, `themes/<id>.theme.yaml`, `boards/<id>.board.yaml` (2.3),
 `notebooks/<id>.notebook.yaml`. The top-level keys `title`, `description`, `owner`, `tags`, `endorsement` (`none`, `promoted`,
 `certified`) and `audience` (`roles`, `users`, `packs`) describe the catalogue entry; the file is the body. The folder is read again
 **live, with no restart** (`drishti.bi.watch`: `auto` file events with a polling safety net every `folder-refresh` (5 s), `poll`, or `off`, where the
@@ -544,7 +544,7 @@ the workspace requires review, or you are not a member with `bi-author`. More in
 
 ## 13. Datasets and the query engine (phase 2)
 
-**Datasets** in the rail lists the datasets you may read (shipped files and published ones; the five samples of `config/bi/datasets/` are marked *sample*: three over stored data, two live). A dataset item is the model
+**Datasets** in the rail lists the datasets you may read (the table layer's shipped tables in `config/tables/bi/` and published ones; the samples are marked *sample*). A dataset item is the model
 reports will sit on; its page (`/bi/d/<id>`) shows the **model** (tables and columns, relationships, measures and their expressions, hierarchies, row rules and which apply to you, masked
 columns, and the layers on disk) and a **query preview**: choose fields, measures, one filter, dates and a row limit, **Run the query**, and the grid shows the answer with the layer it came from
 (`rollup`, `columns`, `direct` or `live`), the time, whether the cache answered, the dates read, the columns masked for you and any warnings. Authors may tick *Show the SQL*.
@@ -869,7 +869,7 @@ security:
   rows:
     trade:
       - {role: desk-head, where: trade.DESK in user.desks}
-      - {role: bi-writer, where: 'True'}
+      - {role: bi-writer, where: 'true'}
   may-see-all:
     desk: [desk-head]
 ```
@@ -943,12 +943,12 @@ schedule text under *Advanced*.
 
 ## 24. The languages in the console
 
-BI has one expression language, DEL (Python-like,
-[BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)), and Drishti SQL over models. In the console that is five things.
+BI has one expression language, Rachana's ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), the same language every Drishti expression is
+written in), and Drishti SQL over models. In the console that is five things.
 
 **1. One expression editor everywhere.** A model's measures, a report's own measures, the dataset wizard's filter and worked-out columns all use the
 same editor: it completes fields, measures (writing `measure('…')`) and the server's functions with their signature and an example, offers a call's
-keyword arguments (`where=`, `by=`), shows the server's problems as you type with the fix as a button, and **Try it** answers on the saved draft, as
+named arguments (`where =`, `by =`), shows the server's problems as you type with the fix as a button, and **Try it** answers on the saved draft, as
 you ([BI_LANGUAGE_REFERENCE.md §8.1](BI_LANGUAGE_REFERENCE.md#81-in-the-console-the-expression-editor)).
 
 **2. The dataset wizard, version 2** (`/bi/datasets/new-layer`): pick the root, keep some columns, keep some rows, say what one row is and which duplicate
@@ -1747,7 +1747,7 @@ Reference for the **dataset** of Drishti Rūpaka (BI) (live tables are section 7
 
 A dataset is a YAML document: the **model** reports sit on. Tables come from pack kinds through connectors (by their logical names), relationships
 join them, measures compute over them, row rules and masks decide who sees what. It is **stored** as a BI item of kind `dataset` (a draft in a
-workspace, published with review like any item) or **shipped** as `config/bi/datasets/<id>.dataset.yaml` (read-only, watched live). Nothing in it
+workspace, published with review like any item) or **shipped** as a table of the table layer, `config/tables/<domain>/<name>.table.yaml` (read-only, watched live; [TABLES_GUIDE.md](TABLES_GUIDE.md)). Nothing in it
 is executed: it is parsed, validated, compiled to SQL with **bound values**, and run by the embedded DuckDB.
 
 
@@ -1775,7 +1775,7 @@ derived: { ... }            # not supported (DRS-9190): a derived dataset (secti
 columns: { ... }            #   ... and the columns it returns, typed
 ```
 
-Unknown top-level keys are a warning. The shipped samples are **models** in `config/bi/models/` over datasets in `config/bi/datasets/` (a
+Unknown top-level keys are a warning. The shipped samples are **models** in `config/tables/bi/` over the tables beside them (a
 multi-table dataset is a model whose tables are datasets of their own: `trading-risk` reads `trading-risk-trades`, `trading-risk-netting-sets` and
 the rest), every one commented and in the packs' UPPER_SNAKE column names: `trades-basic` (one table), `trading-risk` (five tables across three packs, a row
 rule, masks, a rollup) and `trading-cashflows` (nested arrays as tables), which [section 17](#17-worked-examples-the-shipped-models-row-rules-and-the-model-view) reads, and the live `live-trading` and
@@ -1844,7 +1844,7 @@ turned on by a measure.
 Two fact tables that share dimensions (every trade has a desk; every limit has a desk) are not joined to each other: joining them would repeat each desk's limits once per trade. A query that asks for a measure of each, grouped by the shared dimension, is answered **per fact, then joined**:
 
 ```yaml
-# the shape of config/bi/models/trading-risk.model.yaml (its tables are datasets of their own: trading-risk-trades and the rest)
+# the shape of config/tables/bi/trading-risk.model.yaml (its tables are tables of their own: bi.trading_risk_trades and the rest)
 datasets:
   trades:         { dataset: trading-risk-trades, role: fact }           # risk-store, kind trade-valuation: TRADE_ID, DESK, COUNTERPARTY, MTM, ...
   netting_sets:   { dataset: trading-risk-netting-sets, role: fact }     # credit-store, kind netting-set: COUNTERPARTY, COLLATERAL, LIMIT, ...
@@ -1894,35 +1894,36 @@ measures:
   MTM:        "sum(trades.MTM)"                                   # shorthand: just the expression
   MTM per 1m: { expr: "ratio(sum(trades.MTM), sum(trades.NOTIONAL)) * 1_000_000" }
   Share:      { expr: "measure('MTM') / measure('Notional')" }   # measure('Name') uses another measure
-  Open MTM:   { expr: "sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')" }   # a condition inside the aggregate
+  Open MTM:   { expr: "sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)" }   # a condition inside the aggregate
   Vol:        { python: desk-pnl-volatility, inputs: [trades.PNL_1D], by: [trades.DESK] }   # a PYTHON measure: run by the console's runner, shown by a python visual (4.2)
 ```
 
-The expression language is **DEL**: a safe, side-effect-free subset of **Python's expression syntax** extended with aggregation. It compiles
-to SQL on the server and is never run as code. **The full reference is [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)**: every function with its examples and edge cases,
+The expression language is **Rachana's** ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), checked mode): safe and side-effect free, with
+aggregation, `&&`, `||`, `!`, `c ? a : b`, `null`, `true`, `x == null`, lists and `in`, and named arguments (`sum(x, where = c)`). It
+compiles to SQL on the server and is never run as code. **The full reference is [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)**: every function with its examples and edge cases,
 the problems with their fixes, and fifty-odd finance and risk recipes; the expression editor completes all of it in the designers. Names: `table.column`,
 `table.column.part` (a date part), `measure('Measure name')`, `user.<attribute>` (row rules only), and in a calculated column a bare column of its own table.
 
 | Aggregates | Meaning |
 |---|---|
-| `sum(x)`, `avg(x)`, `min(x)`, `max(x)` | over the rows of the group; `None` rows are ignored |
-| `count(table)` or `count(x)` | rows, or values of `x` that are not `None` |
+| `sum(x)`, `avg(x)`, `min(x)`, `max(x)` | over the rows of the group; `null` rows are ignored |
+| `count(table)` or `count(x)` | rows, or values of `x` that are not `null` |
 | `distinct(x)` | number of different values |
-| `ratio(a, b)` | `a / b` as a double, `None` when `b` is 0; `a` and `b` are aggregate expressions |
+| `ratio(a, b)` | `a / b` as a double, `null` when `b` is 0; `a` and `b` are aggregate expressions |
 | `percentile(x, p)` | the `p`-quantile (0 to 1, a literal) with interpolation |
-| `where=` | `sum(x, where=condition)`: only rows where the condition is `True` (`FILTER (WHERE ...)`); every aggregate takes it |
+| `where =` | `sum(x, where = condition)`: only rows where the condition is `true` (`FILTER (WHERE ...)`); every aggregate takes it |
 
 | Row functions and operators | |
 |---|---|
-| `+ - * / // % **`, comparisons `== != < <= > >=` (chained: `0 < x <= 10`), `and or not`, `x in [a, b]`, `x not in [...]`, `x is None`, `a if c else b` | `/` is always a floating-point division and `None` on a zero divisor; `and`, `or`, `not` take booleans only |
+| `+ - * / %`, `power(x, y)`, comparisons `== != < <= > >=` (`0 < x && x <= 10`), `&& \|\| !`, `x in [a, b]`, `x not in [...]`, `x == null`, `c ? a : b` | `/` is always a floating-point division and `None` on a zero divisor; `and`, `or`, `not` take booleans only |
 | `abs`, `round(x, n=0)`, `coalesce(a, b, ...)`, `upper`, `lower`, `len`, `contains(text, part)`, `startswith`, `endswith`, `date('2026-10-09')`, `days_between(a, b)`, `business_days_between(a, b)` | |
 | `year(d)`, `quarter`, `month`, `week`, `day`, and the field form `table.dateColumn.year` (also `quarter`, `month`, `day`, `week`) | date parts of a `date` or `timestamp` column |
 
 A measure must aggregate (a column outside an aggregate is `DRS-9127` with the fix *wrap it: `sum(trades.MTM)`*), aggregates do not nest (except
 `ratio`'s two arguments), and measures may not refer to each other in a circle. **Window functions** (`lag`, `lead`, `rank`, `dense_rank`,
 `percent_rank`, `moving_avg`, `moving_sum`, `moving_min`, `moving_max`, `cumulative`) are built: section 4.3. Time intelligence and running totals:
-section 4.1. The older syntax (`[Measure]`, `&&`, `c ? a : b`, a positional condition) is refused with `DRS-9100` and its DEL text as the fix
-([BI_LANGUAGE_REFERENCE.md › Expressions: the Drishti expression language (DEL), section 10](BI_LANGUAGE_REFERENCE.md#10-the-old-syntax-and-the-converter)).
+section 4.1. A text in another syntax does not parse (`DRS-9127`, at the place it stops); `drishti.py tables migrate` rewrites an old
+definition ([TABLES_GUIDE.md](TABLES_GUIDE.md)).
 
 Real compiled output (captured on the demo lakes from the `trades-basic` sample model, `fields: [trade.DESK]`, its four measures, by an
 administrator with `options.explain: true`; the values are placeholders, never in the text):
@@ -2012,7 +2013,7 @@ A window function is worked out **over the rows the query returns**, after the r
 | `lag(agg, n, order, by=[fields])` / `lead(...)` | the aggregate of the row `n` rows **before** / **after** in `order` (empty at the edge); `n` is 1 to 1000 |
 | `moving_avg(agg, n, order, by=[fields])`, `moving_sum`, `moving_min`, `moving_max` | the average, sum, minimum or maximum of the aggregate over this row and the `n - 1` before it |
 | `cumulative(agg, date)` | a running total (the same as `running`, 4.1) |
-| `rank(agg, desc=True, by=[fields])`, `dense_rank(...)`, `percent_rank(...)` | the position of the row by the aggregate (`desc=False`: lowest first); `rank` leaves gaps after a tie, `dense_rank` does not, `percent_rank` is 0 to 1 |
+| `rank(agg, desc = true, by = [fields])`, `dense_rank(...)`, `percent_rank(...)` | the position of the row by the aggregate (`desc = false`: lowest first); `rank` leaves gaps after a tie, `dense_rank` does not, `percent_rank` is 0 to 1 |
 
 `agg` is an aggregate expression (`sum(trades.MTM)`, `ratio(...)`, `count(trades)`). `order` is a **column** of the dataset (`trades.TRADE_DATE`) and must be a **field of the visual** (its axis), as for `running`; the window runs along its finest part (`trades.TRADE_DATE.month` before `trades.TRADE_DATE`). Without `by=` the window **restarts for each combination of the visual's other fields**; with it (`lag(sum(trades.MTM), 1, trades.TRADE_DATE, by=[trades.DESK])`) it restarts by those fields, which must be fields of the visual too. `rank` with no partition ranks all rows.
 
@@ -2083,7 +2084,7 @@ returned with the model for the designer and the viewer (phase 3) to drill with:
 security:
   rows:
     - { role: desk-head, where: "trades.DESK in user.desks" }
-    - { role: risk,      where: "True" }
+    - { role: risk,      where: "true" }
   masked: [counterpartyName, counterparties.NAME]
 ```
 
@@ -2222,7 +2223,7 @@ No new write endpoint: `POST .../refresh` is the one that existed and needs `bi-
 
 A `mode: live` table is the **current state of a kind**, not a copy per business date. The engine reads the kind **once** when the table is first needed (the first query, or the first stream of a report over it), subscribes to
 each entity through the same live machinery the terminal's live views use, and then **applies every change to its in-memory table by key**: a new id is inserted, a known id replaces its row, a deletion removes it. Reports and
-boards over it redraw as it changes ([section 31](#13-live-visuals), [section 31, its section 23](#23-boards-report-pages-of-live-tiles)). The sample is [config/bi/datasets/live-trading.dataset.yaml](../../config/bi/datasets/live-trading.dataset.yaml):
+boards over it redraw as it changes ([section 31](#13-live-visuals), [section 31, its section 23](#23-boards-report-pages-of-live-tiles)). The sample is the table [config/tables/bi/live_trading_trade.table.yaml](../../config/tables/bi/live_trading_trade.table.yaml) and its model [config/tables/bi/live-trading.model.yaml](../../config/tables/bi/live-trading.model.yaml) (in the shape below, the dataset form it had before the table layer):
 
 ```yaml
 tables:
@@ -2253,7 +2254,7 @@ rollups:
   - { name: byDeskBook, table: trade, by: [DESK, PORTFOLIO, PRODUCT_TYPE, CURRENCY], measures: [Trades, Notional, MTM, PnL 1d, Worst trade, Best trade] }
 ```
 
-The Live trading desk sample (`config/bi/datasets/live-trading.dataset.yaml`) declares that. A bar of `Notional`, `MTM` and `Worst trade` by desk, with the demo ticker running (real answer, `?explain=true`, captured over 750 demo trades with lower-case columns; over the demo lakes the columns are `DESK` and the rest), reads 90 trades for `DESK-COMM` from the kept groups, not from the trades:
+The Live trading desk sample (`config/tables/bi/live-trading.model.yaml`) declares that. A bar of `Notional`, `MTM` and `Worst trade` by desk, with the demo ticker running (real answer, `?explain=true`, captured over 750 demo trades with lower-case columns; over the demo lakes the columns are `DESK` and the rest), reads 90 trades for `DESK-COMM` from the kept groups, not from the trades:
 
 ```text
 SELECT "trade"."desk" AS "trade.desk", (CAST(coalesce(sum(m0), 0) AS BIGINT)) AS "Trades", (sum(m1)) AS "Notional", (sum(m2)) AS "MTM", (min(m4)) AS "Worst trade"
@@ -2422,9 +2423,9 @@ The 2.1 sample files (`counterparty-exposure.dataset.yaml`, the composed `desk-p
 
 | File | What |
 |---|---|
-| `config/bi/models/counterparty-exposure.model.yaml` (tables `counterparty-exposure-netting-sets`, `counterparty-exposure-counterparties` in `config/bi/datasets/`) | the second model: netting sets by counterparty, no row rule, names masked |
-| `config/bi/models/trading-risk.model.yaml` | the composed dataset folded in: P&L of the trades and exposure of the netting sets in one model with two facts (3.1), with `P&L per exposure` |
-| `config/bi/python/pnl-vs-exposure.python.yaml` + `config/bi/datasets/desk-pnl-vs-exposure-py-result.dataset.yaml` + `config/bi/models/desk-pnl-vs-exposure-py.model.yaml` | the derived one: a Python dataset (`source.python`) whose Transform joins two model queries (inputs `pnl` and `exposure`), and a model of the old name over it |
+| `config/tables/bi/counterparty-exposure.model.yaml` (tables `bi.counterparty_exposure_netting_sets`, `bi.counterparty_exposure_counterparties` beside it) | the second model: netting sets by counterparty, no row rule, names masked |
+| `config/tables/bi/trading-risk.model.yaml` | the composed dataset folded in: P&L of the trades and exposure of the netting sets in one model with two facts (3.1), with `P&L per exposure` |
+| `config/bi/python/pnl-vs-exposure.python.yaml` + `config/tables/bi/desk_pnl_vs_exposure_py_result.table.yaml` + `config/tables/bi/desk-pnl-vs-exposure-py.model.yaml` | the derived one: a Python dataset (`source.python`) whose Transform joins two model queries (inputs `pnl` and `exposure`), and a model of the old name over it |
 | `config/bi/reports/pnl-vs-exposure.report.yaml` | a report over `trading-risk@1` with a slicer and a donut that read `counterparty-exposure@1` (section 31, its section 16) |
 | `config/bi/notebooks/pnl-vs-exposure-pandas.notebook.yaml` | the join done by hand in pandas over two masked extracts (USER_GUIDE.md › The Notebook, section 2) |
 
@@ -2460,7 +2461,7 @@ The console's two helper calls (`POST /bi/wizard/yaml` writes a JSON document as
 
 Everything above describes the version-1 dataset, which is still read as written. The **model layer**
 ([BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification) section 1): a dataset becomes **one table** (a source, a grain, columns with roles, meanings, units
-and additivity, a time mode, its own security), and a **model** (`config/bi/models/<id>.model.yaml`, item kind `model`) puts datasets together with
+and additivity, a time mode, its own security), and a **model** (`config/tables/<domain>/<id>.model.yaml`, item kind `model`) puts datasets together with
 relationships and measures. Version-1 files keep working through a compatibility reader.
 
 **Pack datasets: nothing to build.** Every kind of every pack you may open is a dataset `pack.<pack>.<kind>`, generated from the pack (its promoted
@@ -2574,7 +2575,7 @@ security:
 | `where:` | filters the base's rows | row scope DEL; not a security rule (rules are `security.rows`) |
 | `grain: { one-row-per, keep }` | one row per key within a business date: `keep: latest by <col>` or `earliest by <col>` | key and order columns exist (`DRS-9104`); never by a masked column (`DRS-9106`); no rollups of its own; not on a live dataset |
 | `derive: { x: { expr, type } }` | a column worked out per row | `type` is required; no aggregate (a measure); a column derived from a masked one is masked |
-| `derive: { x: { expr: "related(col.field)" } }` | the field of the row a pack reference points at, one hop (None when it points at nothing) | `col` has `references: <kind>` and the kind has `field` (`DRS-9101`); not in a grouped dataset |
+| `derive: { x: { expr: "related(col.field)" } }` | the field of the row a pack reference points at, one hop (null when it points at nothing) | `col` has `references: <kind>` and the kind has `field` (`DRS-9101`); not in a grouped dataset |
 | `derive: { x: { python, inputs, type } }` | a Python column: the base's rows (as the reader) go to the item as the frame `rows`; it returns the frame with `x` added | a `column` item; the dataset is read by staging (no rollups); not live |
 | `group: { by, columns, grain }` | one row per `by` with the columns aggregated | the dataset's columns become `by` plus the grouped ones (`sum` and `count` add up across groups, `min`/`max` keep their aggregate, `avg` and `distinct` do not add); rules name `by` columns; no rollups; a dataset that is de-duplicated or grouped is not reshaped again |
 
@@ -2659,8 +2660,8 @@ drishti.py bi expr validate "NOTIONAL / 1000000" --scope row --model dataset:pac
 # valid  (del2, row scope, type decimal)
 ```
 
-and save the YAML as a draft with the API (`POST /api/v1/bi/workspaces/<id>/items` with `{kind: dataset, title, body}`) or put the file under
-`config/bi/datasets/`.
+and save the YAML as a draft with the API (`POST /api/v1/bi/workspaces/<id>/items` with `{kind: table, title, body}`) or put the file under
+`config/tables/<domain>/` as a table of the layer (`drishti.py tables migrate` writes one from a dataset in the older form).
 
 **An SQL view over a model** is a reviewed Drishti SQL statement whose answer is the table ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)): choose the model, write the statement
 (in the expression editor: the model's fields, its tables and `MEASURE('…')` completed as you type, and the server's check under it),
@@ -2761,7 +2762,7 @@ steps are the same.
 | `trading-risk` | three packs, relationships from the packs' links, a rollup, a row rule, masks, window and time measures | `trades`, `netting_sets`, `counterparties`, `desks`, `books` |
 | `trading-cashflows` | nested documents: legs, cash flows and payments as tables of the trades of three source systems | `trades`, `legs`, `cashflows`, `payments` |
 
-Each is a **model** in `config/bi/models/` whose tables are datasets in `config/bi/datasets/` (`trading-risk` reads `trading-risk-trades`,
+Each is a **model** in `config/tables/bi/` whose tables are beside it (`trading-risk` reads `trading-risk-trades`,
 `trading-risk-netting-sets` and the rest), commented line by line, with the packs' UPPER_SNAKE column names.
 
 #### Set up
@@ -2813,7 +2814,7 @@ describe trading-risk` prints every table, column and measure.
 #### `trades-basic`: read the model, run a query
 
 Open **Trades, the basics**. The page has the model (its table with every column and type; measures with their expressions; security; the layers on
-disk) and a **query preview**. Read the YAML first: `config/bi/models/trades-basic.model.yaml` and `config/bi/datasets/trades-basic-trade.dataset.yaml`
+disk) and a **query preview**. Read the YAML first: `config/tables/bi/trades-basic.model.yaml` and `config/tables/bi/trades_basic_trade.table.yaml`
 explain each part in comments (the source: the risk-store connector's kind `trade-valuation`; `refresh: { on-load: true }`; the columns `TRADE_ID`, `DESK`,
 `PORTFOLIO`, `NOTIONAL`, `MTM` and the rest; a calculated column `MTM_IN_MILLIONS`; four measures including one made of two others; a hierarchy).
 
@@ -2981,8 +2982,8 @@ for the 15,000 trades here).
 Shipped files are read-only. Copy one and edit the copy, which is private to you until you publish it.
 
 1. Open **Trades, the basics** and press **Save a copy** (or, in **My workspace**, **New item** of kind **model**, and paste the YAML of
-   `config/bi/models/trades-basic.model.yaml`, changing `model: trades-basic` to `model: my-copy`).
-2. Add a measure, for example `Big trades: { expr: "sum(trade.NOTIONAL, where=trade.NOTIONAL > 100000000)" }` under `measures:`, write a note in *What
+   `config/tables/bi/trades-basic.model.yaml`, changing `model: trades-basic` to `model: my-copy`).
+2. Add a measure, for example `Big trades: { expr: "sum(trade.NOTIONAL, where = trade.NOTIONAL > 100000000)" }` under `measures:`, write a note in *What
    changed*, and press **Save draft** (*Draft saved.*).
 3. **Check** validates it (`POST /api/v1/bi/models/validate` with `{yaml}` does the same with no item; `drishti.py bi expr validate "..." --model
    trades-basic` checks one expression). A mistake, say `sum(trade.nope)`, is `DRS-9152` *no field 'trade.nope'* with the columns the table does have.
@@ -4030,7 +4031,7 @@ asked) or as **SQL** (Drishti SQL: the model's aliases as tables, `MEASURE('name
 one switch. **Run as SQL** sends the statement to the server (`POST /api/v1/bi/sql`) and shows its rows, its time and its plan, saying whether the plan is
 the one the visual's query ran: one question, one plan, one cache entry, whichever language asks it. The SQL text is written by the console from the
 model query (a printer: the server parses, binds and checks it). A report's own measure is written in its SQL form when it has one (`measure('x')`
-is `MEASURE('x')`, `sum` is `SUM`, `distinct(x)` is `COUNT(DISTINCT x)`); one with no SQL form (a `where=`, a conditional, a time function) is named
+is `MEASURE('x')`, `sum` is `SUM`, `distinct(x)` is `COUNT(DISTINCT x)`); one with no SQL form (a `where =`, a conditional, a time function) is named
 `MEASURE('…')` with its DEL in a comment above. Captured for the bar above (a desk axis and the report's own measure):
 
 ```sql
@@ -4049,8 +4050,8 @@ checks it).
 
 ![The query panel of the selected visual with SQL chosen: the statement above (SELECT trade.DESK, MEASURE('Sum of MTM') ...) and Run as SQL](img/bi-languages/query-panel-sql.jpg)
 
-**Expressions are DEL v2.** Every formula the designer writes uses the Python-like syntax ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)); a report saved
-with the older syntax is refused (`DRS-9100`, with the DEL v2 text as the fix; stored items are converted when the server starts, and `drishti.py bi migrate --expressions` converts files).
+**Expressions are Rachana.** Every formula the designer writes is Rachana ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md)); a definition
+in an older syntax is rewritten by `drishti.py tables migrate` ([TABLES_GUIDE.md](TABLES_GUIDE.md)).
 
 ### 20. Report schema v2 in one report
 

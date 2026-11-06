@@ -175,7 +175,7 @@ drishti:
     retry-after:                     # the seconds each kind of work is told to wait (Retry-After); a refusal is remembered that long
       sign-in: 45                    # a new sign-in (DRS-9501)
       load: 30                       # a new VaR or exposure date (DRS-9502)
-      download: 30                   # a Data view download (DRS-9503)
+      download: 30                   # an Export data download (DRS-9503)
       bi-run: 60                     # a BI run (DRS-9504)
       bulk-load: 120                 # a bulk load of a pack's data (DRS-9505)
       pivot-view: 20                 # a large pivot view (DRS-9507)

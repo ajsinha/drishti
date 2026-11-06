@@ -495,7 +495,7 @@
       if (wiz) { wiz.hidden = !(it.kind === 'dataset' && it.can && it.can.edit && it.status !== 'proposed'); wiz.href = '/bi/datasets/new?edit=' + encodeURIComponent(it.id).replace(/%3A/g, ':'); }
       if (mod) { mod.hidden = !(it.kind === 'dataset' && ((it.can && it.can.edit) || it.shipped)); mod.href = '/bi/m/' + enc; }
       if (mod && it.kind === 'model') { mod.hidden = false; mod.href = '/bi/md/' + enc; mod.lastChild.textContent = ' Open in the designer'; }           // a data model opens in the model designer
-      if (open && it.kind === 'dataset' && /^rachana:\s*2\b/m.test(it.body || '')) { open.href = '/bi/ds/' + enc; }   // a model-layer dataset has its own page
+      if (open && (it.kind === 'table' || it.kind === 'dataset' && /^rachana:\s*2\b/m.test(it.body || ''))) { open.href = '/bi/ds/' + enc; }   // a model-layer dataset has its own page
       document.dispatchEvent(new CustomEvent('drishti:bi-item', { detail: x }));          // drishti_bi-govern.js draws history, review, impact and lineage
     }
     function act(label, run, cls) {

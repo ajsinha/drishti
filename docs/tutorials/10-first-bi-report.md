@@ -455,7 +455,7 @@ $ python3 tools/drishti.py bi mq --model trading-risk@1 --select counterparties.
 ["2 fact tables, each aggregated alone at the query's fields and then joined: [trades, counterparties, set_exposure]","a measure that combines measures of different grains is worked out over the joined results: P&L per exposure"]
 ```
 
-**In the YAML** (`config/bi/models/trading-risk.model.yaml`), the part that makes it work:
+**In the YAML** (`config/tables/bi/trading-risk.model.yaml`), the part that makes it work:
 
 ```yaml
 datasets:

@@ -129,8 +129,8 @@ async def dataset(request: Request, item: str):
     try:
         got = await request.app.state.backend.bi("GET", "/layer-datasets/" + quote(item, safe=":"), ident(request))
         text = str((got or {}).get("yaml") or "")
-        name = re.search(r"^dataset:\s*([A-Za-z0-9_.-]+)", text, flags=re.M)
-        if re.search(r"^rachana:\s*2\b", text, flags=re.M) and name:
+        name = re.search(r"^(dataset|table):\s*([A-Za-z0-9_.-]+)", text, flags=re.M)
+        if re.search(r"^rachana:\s*[23]\b", text, flags=re.M) and name:          # a model-layer dataset, or a table of the table layer
             return RedirectResponse("/bi/ds/" + quote(str(got.get("id") or item), safe=":"), status_code=307)
     except BackendError:
         pass                                                        # not a dataset of the model layer (or not readable): the 2.1 page says what it can

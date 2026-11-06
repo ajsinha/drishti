@@ -68,7 +68,7 @@ def _body(measures, by, filters, dates, limit) -> dict:
 
 
 def model_ref(source: str) -> str:
-    """The model a name stands for (the console's core/explore.py model_of): ``trading-risk@1`` or ``dataset:<name>`` as they are, a 2.1 dataset's name
+    """The model a name stands for (the console's core/notebook.py model_of): ``trading-risk@1`` or ``dataset:<name>`` as they are, a 2.1 dataset's name
     (``trades-basic``) or shipped id (``file:dataset:trades-basic``) the model the converter made of it, ``trades-basic@1``."""
     s = str(source or "").strip()
     if s.startswith("mq:"):

@@ -77,7 +77,7 @@ source: |
       return float(pnl.std(ddof=1))
 ```
 
-The **model** (`config/bi/models/trades-basic.model.yaml`) says which groups it is called for (one number per desk) in a measure that is a Python item,
+The **model** (`config/tables/bi/trades-basic.model.yaml`) says which groups it is called for (one number per desk) in a measure that is a Python item,
 not an expression:
 
 ```yaml
@@ -348,7 +348,7 @@ input is a **model query**. Open **Models**, find **Desk P&L vs counterparty exp
 
 You should see *Source: the Python Transform pnl-vs-exposure*, the key `counterparty` and the nine columns the Transform returns (a contract: a column it
 does not return is `DRS-9075`). There is nothing to refresh: the Transform runs **when the dataset is asked**, for the person asking, and its frame is kept
-for them until an input changes. **The YAML** says what it reads (`config/bi/datasets/desk-pnl-vs-exposure-py-result.dataset.yaml`):
+for them until an input changes. **The YAML** says what it reads (`config/tables/bi/desk_pnl_vs_exposure_py_result.table.yaml`):
 
 ```yaml
 rachana: 2

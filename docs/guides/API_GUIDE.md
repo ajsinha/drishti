@@ -2440,7 +2440,7 @@ Every query is audited (`bi-query`: the counts, the rows, the layer). From the c
 ## Models and the model query language: `/api/v1/bi`
 
 The model layer ([BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification)): a **dataset** is one governed table (`rachana: 2`, item kind `dataset`), a **data model** puts
-datasets in a star with relationships, measures, model security (only tighter) and a semver contract (item kind `model`, shipped files in `config/bi/models/<name>.model.yaml`),
+datasets in a star with relationships, measures, model security (only tighter) and a semver contract (item kind `model`, shipped files in `config/tables/<domain>/<name>.model.yaml`),
 and the **model query** (`mq: 1`, YAML or JSON) is the one request for data. Every pack kind gets a read-only dataset `pack.<pack>.<kind>` without anyone writing it.
 A query names its model as `name@major` (`desk-trading@1`), a catalogue id, `dataset:<name>` (the **implicit model** of one dataset: its default measures and, for a
 pack dataset, the pack dimensions its columns reference, one hop), or the name of a model the converter made of an older dataset (the same name). A `rachana: 1` dataset is not read as a model

@@ -54,7 +54,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"drishti.sources.plugins.demo.settings.tick-ms=60", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.security.registered-users-only=false",
         "drishti.packs.enabled=trading,counterparty-risk,market-risk", "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-live-${random.uuid}/identity.db",
-        "drishti.packs.overlay=${drishti.test.dir}/bi-live-overlay/added.yaml", "drishti.bi.dir=${drishti.test.dir}/bi-live-folder", "drishti.bi.folder-refresh=1s",
+        "drishti.packs.overlay=${drishti.test.dir}/bi-live-overlay/added.yaml", "drishti.bi.dir=${drishti.test.dir}/bi-live-folder", "drishti.tables.root=${drishti.test.dir}/bi-live-folder/tables", "drishti.bi.folder-refresh=1s",
         "drishti.bi.query.store-dir=${drishti.test.dir}/bi-live-store/${random.uuid}", "drishti.bi.live.batch=30ms", "drishti.bi.live.frame=50ms",
         "drishti.bi.live.status=1s", "drishti.bi.live.max-streams-per-user=2"})
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -71,10 +71,10 @@ class BiLiveApiTest {
 
     static {
         try {
-            for (String kind : List.of("datasets", "models", "reports")) {                       // a board is a report with board pages since 2.4.0 (R7)
+            for (String kind : List.of("tables/bi", "reports")) {                                // a board is a report with board pages since 2.4.0 (R7)
                 Path to = com.ash.drishti.server.TestRun.root().resolve("bi-live-folder/" + kind);
                 Files.createDirectories(to);
-                try (var files = Files.list(Path.of("../config/bi/" + kind))) {
+                try (var files = Files.list(Path.of(kind.startsWith("tables") ? "../config/" + kind : "../config/bi/" + kind))) {
                     for (Path f : files.filter(p -> p.getFileName().toString().contains("live") || p.getFileName().toString().startsWith("desk-wall")).toList()) {
                         Files.copy(f, to.resolve(f.getFileName()), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                     }
@@ -165,7 +165,7 @@ class BiLiveApiTest {
     void aReportOverALiveDatasetIsDrawnFromTheLiveTableAndSaysItIsLive() throws Exception {
         JsonNode rep = ok(call("GET", "/api/v1/bi/reports/" + REPORT, rita(), null));
         assertThat(rep.path("valid").asBoolean()).as(rep.path("problems").toString()).isTrue();
-        assertThat(rep.path("dataset").path("tables").get(0).path("mode").asText()).isEqualTo("live");
+        assertThat(rep.path("dataset").isObject()).as("the report's model, described").isTrue();      // the live sample is a model over a live table
         JsonNode card = ok(call("POST", "/api/v1/bi/reports/" + REPORT + "/query", rita(), "{\"page\":\"desk\",\"visual\":\"trades\",\"state\":{}}"));
         assertThat(card.path("meta").path("layer").asText()).isEqualTo("live");
         assertThat(card.path("rows").get(0).get(0).asLong()).isGreaterThan(100);
@@ -319,7 +319,7 @@ class BiLiveApiTest {
         String author = as("wes", "live-author");
         // the 2.1 copy keeps its Perspective pivot (config/bi has a matrix since 2.3.0, the browser computing nothing)
         String yaml = Files.readString(Path.of("src/test/resources/bi/samples-2.1/reports/live-trading-desk.report.yaml")).replace("aggregates: { trade.MTM: sum, trade.NOTIONAL: sum }",
-                "aggregates: { trade.MTM: total }");
+                "aggregates: { trade.MTM: total }").replace("\ndataset: live-trading\n", "\nmodel: live-trading@1\n");   // the live sample is a model of the table layer
         JsonNode r = ok(call("POST", "/api/v1/bi/reports/validate", author, json.writeValueAsString(Map.of("yaml", yaml))));
         assertThat(r.path("valid").asBoolean()).isFalse();
         assertThat(r.path("problems").toString()).contains("DRS-9032").contains("is not an aggregate");

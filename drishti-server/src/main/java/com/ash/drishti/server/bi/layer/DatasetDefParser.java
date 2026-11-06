@@ -56,6 +56,9 @@ public final class DatasetDefParser {
     private DatasetDefParser() {}
 
     public static Result parse(String yaml) {
+        if (LayerTables.isTable(yaml)) {
+            return LayerTables.read(yaml);                                     // a table of the layer (BI_FOUNDATION_2911E.md step 5)
+        }
         LayerYaml y = new LayerYaml();
         JsonNode root = y.read(yaml, "DRS-9100", "dataset");
         if (root == null) {
@@ -66,6 +69,9 @@ public final class DatasetDefParser {
 
     /** True when the text is a model-layer dataset ({@code rachana: 2} with {@code dataset:}), not a version-1 one. */
     public static boolean isVersion2(String yaml) {
+        if (LayerTables.isTable(yaml)) {
+            return true;
+        }
         try {
             JsonNode root = yaml == null || yaml.isBlank() ? null : LayerYaml.YAML.readTree(yaml);
             return root != null && root.isObject() && root.path("rachana").asInt(1) == DatasetDef.RACHANA && root.has("dataset");
@@ -546,16 +552,9 @@ public final class DatasetDefParser {
         }
     }
 
-    /** The {@code DRS-9100} warning for the old expression syntax (an error on an item that declares {@code expressions: 2}). */
+    /** Formerly the {@code DRS-9100} warning for the old expression syntax: BI reads Rachana only, so a text in another syntax does not parse. */
     static void oldSyntax(String text, String path, LayerYaml y) {
-        String note = com.ash.drishti.server.bi.expr.Expressions.oldSyntaxNote(text);
-        if (note != null) {
-            if (y.strictExpressions) {
-                y.error(com.ash.drishti.server.bi.expr.Expressions.OLD_SYNTAX, path, note.replace("(read until the end of wave A, then refused)", "(the item declares expressions: 2)"));
-            } else {
-                y.warning(com.ash.drishti.server.bi.expr.Expressions.OLD_SYNTAX, path, note);
-            }
-        }
+        // nothing: an expression that is not Rachana is refused where it is parsed
     }
 
     /** Reads {@code expressions:} (1, the old syntax read with a warning, or 2, DEL v2 only). */

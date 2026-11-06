@@ -15,7 +15,7 @@
 -->
 # BI's foundation (2.9.11.e): DEL into Rachana, and virtual tables
 
-*Status: **part A (the language) built** on `wip/bi-foundation`, see [section 9](#9-as-built-part-a-the-language); part B's foundation (the table layer, the migration, the parity proof) built on `wip/bi-foundation-tables`, see [section 10](#10-as-built-part-b-the-table-layer); the switch not yet. **Decided by the product owner on 2026-11-03**: every recommendation of section 8 accepted, except Q1, decided the other way (Rachana's null rule, below). Earlier wording: a design draft for discussion, nothing decided beyond what the documents it reads already
+*Status: **part A (the language) built** on `wip/bi-foundation`, see [section 9](#9-as-built-part-a-the-language); part B's foundation (the table layer, the migration, the parity proof) built on `wip/bi-foundation-tables`, see [section 10](#10-as-built-part-b-the-table-layer); **the switch built** (BI reads the layer and Rachana, the parity proof green; the old code still compiled until the mid-way critique), see [section 11](#11-as-built-part-c-the-switch). **Decided by the product owner on 2026-11-03**: every recommendation of section 8 accepted, except Q1, decided the other way (Rachana's null rule, below). Earlier wording: a design draft for discussion, nothing decided beyond what the documents it reads already
 record as decided (the release and its scope, product owner 2026-11-03; [VIRTUAL_TABLES.md](VIRTUAL_TABLES.md) V6;
 [ONE_GRAMMAR.md](ONE_GRAMMAR.md) part 4). Every command, path, setting, key and error code below that does not exist today is
 planned and says so on its line. Section 8 lists the questions, each with a recommendation. Nothing is coded until the discussion is
@@ -39,6 +39,7 @@ and 12), [LAKE_CONFIG.md](LAKE_CONFIG.md), [ARROW_FLIGHT.md](ARROW_FLIGHT.md), [
 8. [Decisions](#8-decisions-product-owner-2026-11-03-every-recommendation-accepted-q1-decided-as-rachanas-rule)
 9. [As built (part A): the language](#9-as-built-part-a-the-language)
 10. [As built (part B): the table layer](#10-as-built-part-b-the-table-layer)
+11. [As built (part C): the switch](#11-as-built-part-c-the-switch)
 
 ## 1. The goal in one page
 
@@ -811,3 +812,36 @@ machinery deleted with DEL: `Layers`, `TableBuilder`, `DatasetRefresher`, `bi.da
 `RowEval`, `config/bi/datasets` and `config/bi/models` (their outputs committed under `config/tables`). Until then those BI classes stay
 compiled and in use by BI, which is unavoidable: moving them means BI reads the layer's definitions, which is the switch itself. The
 editors and the layer's settings (the store folder) come with it.
+
+## 11. As built (part C): the switch
+
+Step 5 of 7.3, in two commits: the switch itself, then (after the mid-way critique of PRODUCT_CRITIQUE_BRIEF.md, area 3) the deletion of
+the old code.
+
+| Part | Built | Where |
+|---|---|---|
+| The shipped set | migrated with `tables migrate` (dry run first: 34 items converted, 0 refused; 103 expressions, 22 rewritten), 24 tables and 10 models under `config/tables/bi/`; the two live reports name their models; `config/bi/datasets` and `config/bi/models` removed | `config/tables/bi` |
+| BI reads the layer's files | BI's folder reads `drishti.tables.root`: a table is an item of the kind `table`, a model of the kind `model` (as the editors store them); BI's models read published tables of either kind | `bi.BiFolder`, `bi.mq.ModelCatalog` |
+| A table in BI's compiler | the layer's reader (`TableYaml`) and checks, then the table said in BI's terms: paths as columns (`@.X` under a grain is BI's `X`, `$.X` under one list `^.X`), the grain as BI's `each`, `keep: { latest }` as one row per key, rules and masked columns as BI's security, a table over a table as BI's narrowing, `materialize: { live }` as BI's live mode; a source's path in a rule, filter or column expression written as the column that reads it | `bi.layer.LayerTables` |
+| A model | `rachana: 3` models read with `tables:`; `history:` (Q14) samples the model's live facts | `bi.layer.ModelDefParser`, `Flattener.withHistory` |
+| One parser | BI reads Rachana only: `Expressions` parses with Rachana's parser and lowers Rachana's tree to BI's compiler tree (`NodeLowering`); what BI composes is written back as Rachana (`NodeText`); DSQL's inline expressions become Rachana (`SqlToRachana`); the expression check is Rachana's checked mode; calculation-group items are read by `CalculationGroups` (no parser of its own) | `bi.dataset.NodeLowering`, `NodeText`, `bi.sql.SqlToRachana`, `bi.mq.ExpressionCheck` |
+| The pivot's measures | BI hands the engine its measures from Rachana's tree (`BiMeasures`) | `bi.pivot.BiMeasures` |
+| One catalogue | `TablesService` reads BI's item store beside the files (`BiItemTableStore`): the pivot, Sutras and Flight see the tables and models the editors publish | `server.tables` |
+
+**Parity.** `BiFoundationParityTest` reproduces every recorded answer (23 files, 6,468 answers, seven persons) value for value; no
+compensated sum's last digit differed. **One difference was found and fixed at its cause:** the migrator writes Q1's rewrite
+(`trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null`), which BI's SQL answered as before, but the pivot engine's formula of
+the same measure (the totals of `Open MTM`) compared a value with `None` by SQL's rule, never true, so the totals were empty. The pivot's
+formulas now test for a missing value with `x == None` and `x != None`, in Java and SQL, as Rachana's `x == null` does. **The recorded
+refusals the switch may lift** (`count(trades)` alone or by a dimension field, measures of two facts with no join path, `moving_avg`
+without its date field) are unchanged: BI's compiler still answers them, and still refuses them.
+
+**Left for the deletion commit** (after the critique): DEL's parser, checker, lowering, printer and catalogue (`server.bi.expr`, except the
+migration's DEL reader `DelTablesTranslator` and what it needs, kept to 2.9.14 by Q24), `bi.dataset.ExprParser`, the readers of BI's own
+dataset and model files (`DatasetParser` version 1, `DatasetDefParser`'s `rachana: 2` form, `ModelDefParser`'s `datasets:` form) and the
+`datasets/` and `models/` folders of BI's folder, the wizard and `bi migrate --expressions/--models`; the BI test suites rewritten onto
+tables and models; `OneGrammarRulesTest`'s exceptions emptied but for the VaR scope selector (Q20) and the migration's DEL reader (Q24).
+**Open:** the pivot's formula parser (`bicompute.formula.FormulaParser`) still reads DEL's syntax (its fold needs `count()` without an
+argument in Rachana and a migration of saved formulas); BI's execution (`Layers`, `LiveTables`, the SQL compiler over `Node`) is BI's
+compiler fed by the layer's definitions, not yet the engine's one compiler of 2.6; the built-in columns keep BI's names (`businessDate`)
+in reports (Q12's rename not applied); `!=` in BI's SQL keeps SQL's rule (the migrated texts carry Q1's rewrite, so figures are equal).

@@ -248,7 +248,7 @@ def test_the_editor_offers_functions_and_keywords_and_fixes_what_the_server_find
     ed.type("su")
     expect(page.locator('[data-xe-opt="sum"]')).to_be_visible(timeout=10000)
     page.click('[data-xe-opt="sum"]')
-    expect(page.locator('[data-xe-card="sum"]')).to_contain_text("sum(x, where=None)", timeout=5000)
+    expect(page.locator('[data-xe-card="sum"]')).to_contain_text("sum(x, where = null)", timeout=5000)
     ed.type("trade.MTM, wh")
     expect(page.locator('[data-xe-opt="where="]')).to_be_visible(timeout=5000)
     shoot(page, "[data-nf]", "expr-editor-keyword", 420)
@@ -263,12 +263,11 @@ def test_the_editor_offers_functions_and_keywords_and_fixes_what_the_server_find
     shoot(page, "[data-nf]", "expr-editor-problem")
     page.locator('[data-xe-problem="DRS-9127"] [data-xe-fix]').click()
     assert ed.input_value() == "sum(trade.MTM) * 2", ed.input_value()
-    # the old syntax: the converter's text is the fix
+    # another syntax is not read: the place it stops is marked (tables migrate rewrites old definitions)
     ed.fill("[Sum of MTM] * 2")
-    expect(page.locator('[data-xe-problem="DRS-9100"]')).to_be_visible(timeout=10000)
-    page.locator('[data-xe-problem="DRS-9100"] [data-xe-fix]').click()
-    assert ed.input_value() == "measure('Sum of MTM') * 2", ed.input_value()
-    expect(page.locator("[data-xe-ok]")).to_be_visible(timeout=10000)                          # the fix is checked again: clean
+    expect(page.locator('[data-xe-problem="DRS-9127"]')).to_be_visible(timeout=10000)
+    ed.fill("measure('Sum of MTM') * 2")
+    expect(page.locator("[data-xe-ok]")).to_be_visible(timeout=10000)                          # Rachana: clean
     # Try it: the server's answer on the saved draft, by a suggested field
     page.click("[data-nf] [data-xe-try]")
     expect(page.locator("[data-nf] [data-xe-tried]")).to_be_visible(timeout=15000)

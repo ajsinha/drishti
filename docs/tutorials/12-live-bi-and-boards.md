@@ -140,7 +140,7 @@ settings:
 ## Step 2 · A live table
 
 Open **Datasets** and **Live trading desk** (a version 1 dataset: its page is the 2.1 one, with **Layers**). Its trade table is declared with `mode: live`
-over the `market-risk` pack's **trade valuations** (`config/bi/datasets/live-trading.dataset.yaml`):
+over the `market-risk` pack's **trade valuations** (`config/tables/bi/live_trading_trade.table.yaml` and its model `config/tables/bi/live-trading.model.yaml`):
 
 ```yaml
 tables:

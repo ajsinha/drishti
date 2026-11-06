@@ -87,7 +87,7 @@ public final class DatasetParser {
             return new Result(null, out);
         }
         int rachana = root.path("rachana").asInt(1);
-        if (rachana == com.ash.drishti.server.bi.layer.DatasetDef.RACHANA && root.has("dataset")) {
+        if (rachana == com.ash.drishti.server.bi.layer.DatasetDef.RACHANA && root.has("dataset") || rachana == 3 && root.has("table")) {
             return com.ash.drishti.server.bi.layer.Standalone.asVersion1(yaml);       // a model-layer dataset, read as the one-table dataset of its implicit model
         }
         root.fieldNames().forEachRemaining(k -> {

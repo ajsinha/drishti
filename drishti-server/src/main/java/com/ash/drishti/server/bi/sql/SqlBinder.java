@@ -64,7 +64,7 @@ public final class SqlBinder {
     public Leaf leaf(SqlAst.Select s) {
         Map<String, String> names = from(s);
         String fact = flat.tables().containsKey(s.from().get(0).table()) ? s.from().get(0).table() : names.values().iterator().next();
-        SqlToDel del = new SqlToDel(c -> field(c, names), fact);
+        SqlToRachana del = new SqlToRachana(c -> field(c, names), fact);
         List<String> fieldList = new ArrayList<>();
         List<String> measureList = new ArrayList<>();
         Map<String, String> define = new LinkedHashMap<>();
@@ -422,7 +422,7 @@ public final class SqlBinder {
 
     // ---- HAVING ------------------------------------------------------------------------------------------------------------
 
-    private ModelQuery.Having measureFilter(SqlAst.Expr p, SqlToDel del, Map<String, String> define, List<String> measures, List<Out> outs, Map<String, String> byAlias,
+    private ModelQuery.Having measureFilter(SqlAst.Expr p, SqlToRachana del, Map<String, String> define, List<String> measures, List<Out> outs, Map<String, String> byAlias,
             Map<String, String> byText) {
         if (!(p instanceof SqlAst.Binary b) || !isComparison(b.op())) {
             throw new DsqlException(DsqlException.SHAPE, "HAVING compares a measure with a number (=, <>, <, <=, >, >=), ANDed", null, p.at());

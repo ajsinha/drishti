@@ -77,7 +77,7 @@ class DatasetDefParserTest {
             security:
               rows:
                 - { role: desk-head, where: "trades.desk in user.desks" }
-                - { role: [risk, analyst], where: "True" }
+                - { role: [risk, analyst], where: "true" }
               masked: [mtm]
             """;
 

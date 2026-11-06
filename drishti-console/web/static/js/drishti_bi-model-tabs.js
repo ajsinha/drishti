@@ -150,7 +150,7 @@
       h('p', { class: 'text-muted-d bi-small-note', text: 'The aggregation, format, additivity and currency come from the dataset: amounts sum, ratios average and never add up, a balance takes its last value over time.' }),
       h('div', { class: 'bi-md-row' }, h('label', {}, 'Dataset ', dsSel), h('label', {}, 'Column ', colSel), h('label', {}, 'Aggregation ', aggSel), add)),
       h('details', { class: 'bi-sec', 'data-keep': '', 'data-nf': '', open: formulaOpen || null }, h('summary', { text: 'Write a formula' }),
-        h('p', { class: 'text-muted-d bi-small-note', text: 'Python-like: sum(trade.MTM, where=trade.TRADE_STATUS == \'VALIDATED\'), measure(\'MTM\') / measure(\'Notional\'), a if c else b. Type to see the fields, the measures and the functions; Ctrl+Space lists them.' }),
+        h('p', { class: 'text-muted-d bi-small-note', text: 'Rachana: sum(trade.MTM, where = trade.TRADE_STATUS == \'VALIDATED\'), measure(\'MTM\') / measure(\'Notional\'), c ? a : b. Type to see the fields, the measures and the functions; Ctrl+Space lists them.' }),
         h('div', { class: 'bi-md-row' }, h('label', {}, 'Name ', fName), h('div', { class: 'bi-md-grow' }, fExpr), fAdd)));
     if (!M.readOnly) { M.exprEditor(fExpr, null); }
     if (M.quickMeasure) { pane.appendChild(M.quickMeasure()); }
@@ -322,7 +322,7 @@
       go.addEventListener('click', () => {
         const rs = B.qa('[data-role-pick]', roleBox).filter((c) => c.checked).map((c) => c.value).concat(roles.value.split(',').map((x) => x.trim()).filter(Boolean)).filter((x, i, a) => a.indexOf(x) === i);
         if (!rs.length) { near(go, 'Name the role (or roles) the rule is for.', true); roles.focus(); return; }
-        const where = kind.value === 'all' ? 'True' : kind.value === 'expr' ? free.value.trim() : kind.value === 'attr' ? field.value + ' in ' + attr.value : field.value + " == '" + val.value.replace(/'/g, '') + "'";
+        const where = kind.value === 'all' ? 'true' : kind.value === 'expr' ? free.value.trim() : kind.value === 'attr' ? field.value + ' in ' + attr.value : field.value + " == '" + val.value.replace(/'/g, '') + "'";
         if (kind.value === 'value' && !val.value.trim()) { near(go, 'Give the value.', true); val.focus(); return; }
         if (kind.value === 'expr' && !where) { near(go, 'Write the condition, for example ' + aSel.value + ".desk in user.desks.", true); free.focus(); return; }
         if (kind.value === 'expr') { free.value = ''; }

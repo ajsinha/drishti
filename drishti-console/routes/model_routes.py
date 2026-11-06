@@ -22,6 +22,7 @@ suggested from the packs' references, default measures, the Fields pane of a rep
 from __future__ import annotations
 
 import asyncio
+import re
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
@@ -89,7 +90,7 @@ async def _dataset_info(request: Request, name: str) -> dict:
         return ml.dataset_info(got.get("yaml") or "", read_only=True)
     item = await _bi(request, "GET", "/items/" + quote(name, safe=":"))
     body = item.get("body") or ""
-    if "extends:" in body:                                              # a narrowed dataset reads as its base folded in (the server resolves the chain)
+    if "extends:" in body or re.search(r"^table:", body, flags=re.M):   # a narrowed dataset, or a table of the table layer: as the server resolves it
         try:
             body = (await _bi(request, "GET", "/layer-datasets/" + quote(item.get("id", name), safe=":"))).get("resolved") or body
         except BackendError:

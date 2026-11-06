@@ -40,16 +40,16 @@ import org.springframework.test.web.servlet.MvcResult;
  */
 @SpringBootTest(properties = {"drishti.edition=risk", "drishti.packs.enabled=default", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
         "drishti.var.official.enabled=false", "drishti.var.official.on-start=false", "drishti.ccr.exposure.official.enabled=false",
-        "drishti.bi.dir=../config/bi", "drishti.bi.query.store-dir=${drishti.test.dir}/edition-bi-store/${random.uuid}",
+        "drishti.bi.dir=../config/bi", "drishti.tables.root=../config/tables", "drishti.bi.query.store-dir=${drishti.test.dir}/edition-bi-store/${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/edition-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class EditionRiskServerTest {
 
     static final Set<String> RISK_PACKS = Set.of("core", "market-data", "trading", "counterparty-risk", "market-risk");
-    static final Set<String> RISK_DATASETS = Set.of("market-risk-var-latest", "market-risk-var-official", "counterparty-exposure-counterparties",
-            "counterparty-exposure-netting-sets", "counterparty-exposure-official", "counterparty-exposure-official-counterparties",
-            "counterparty-exposure-official-netting-sets", "live-exposure", "live-exposure-netting", "trading-risk-books", "trading-risk-counterparties",
-            "trading-risk-desks", "trading-risk-netting-sets", "trading-risk-trades");
+    static final Set<String> RISK_DATASETS = Set.of("bi.market_risk_var_latest", "bi.market_risk_var_official", "bi.counterparty_exposure_counterparties",
+            "bi.counterparty_exposure_netting_sets", "bi.counterparty_exposure_official", "bi.counterparty_exposure_official_counterparties",
+            "bi.counterparty_exposure_official_netting_sets", "bi.live_exposure", "bi.live_exposure_netting", "bi.trading_risk_books", "bi.trading_risk_counterparties",
+            "bi.trading_risk_desks", "bi.trading_risk_netting_sets", "bi.trading_risk_trades");
 
     @Autowired MockMvc mvc;
     final ObjectMapper json = new ObjectMapper();
@@ -126,8 +126,8 @@ class EditionRiskServerTest {
         getJson("/api/v1/bi/datasets").path("datasets").forEach(d -> ids.add(d.path("id").asText()));
         assertThat(ids).isNotEmpty();
         assertThat(ids).allSatisfy(id -> assertThat(RISK_DATASETS).contains(id.substring(id.lastIndexOf(':') + 1)));
-        assertThat(ids).contains("file:dataset:market-risk-var-latest");
-        MvcResult hidden = mvc.perform(get("/api/v1/bi/items/file:dataset:trades-basic-trade")).andReturn();
+        assertThat(ids).contains("file:table:bi.market_risk_var_latest");
+        MvcResult hidden = mvc.perform(get("/api/v1/bi/items/file:table:bi.trades_basic_trade")).andReturn();
         assertThat(hidden.getResponse().getStatus()).isEqualTo(404);
         List<String> reports = new ArrayList<>();
         getJson("/api/v1/bi/catalogue").path("items").forEach(i -> reports.add(i.path("id").asText()));

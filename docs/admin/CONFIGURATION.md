@@ -2862,7 +2862,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.admission.disk-refuse-gb` | integer | `10` |  | server | under this, new date loads, downloads and bulk loads wait | restart |  |
 | `drishti.admission.retry-after.sign-in` | integer | `45` |  | server | a new sign-in (DRS-9501) | restart |  |
 | `drishti.admission.retry-after.load` | integer | `30` |  | server | a new VaR or exposure date (DRS-9502) | restart |  |
-| `drishti.admission.retry-after.download` | integer | `30` |  | server | a Data view download (DRS-9503) | restart |  |
+| `drishti.admission.retry-after.download` | integer | `30` |  | server | an Export data download (DRS-9503) | restart |  |
 | `drishti.admission.retry-after.bi-run` | integer | `60` |  | server | a BI run (DRS-9504) | restart |  |
 | `drishti.admission.retry-after.bulk-load` | integer | `120` |  | server | a bulk load of a pack's data (DRS-9505) | restart |  |
 | `drishti.admission.retry-after.pivot-view` | integer | `20` |  | server | a large pivot view (DRS-9507) | restart |  |
@@ -5537,7 +5537,7 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `commands.allow` | string | empty |  | an edition (server and console) | the engines still read every kind of the packs above | restart |  |
 | `commands.words` | map | `{ BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: off, DATA: on,...` |  | an edition (server and console) | left out: regulatory (FRTB, SACCR, CVA, SIMM), stress (SCN, STR, SSPNL), collateral operations (COLL, MC), the exposure engine's runs, paths and official records (XRUN, XPATH, XOFC), VaR's scenario inputs (SPV, FXS, SSET, VOFF), macro economics | restart |  |
 | `features` | map | `{…}` |  | an edition (server and console) | presets of existing switches (config/editions/features.yaml); not named: the product's default | restart |  |
-| `bi.datasets` | list | `[market-data-*]` |  | an edition (server and console) | (a dataset named market-data-... or the model market-data, when one is added), never the | restart |  |
+| `bi.datasets` | list | `[bi.market_data_*]` |  | an edition (server and console) | (a table named bi.market\_data\_... or the model market-data, when one is added), never the | restart |  |
 | `bi.models` | list | `[market-data]` |  | an edition (server and console) | VaR or exposure reports; an empty list would offer every BI item of the product | restart |  |
 | `menus.top` | list | `[views, curves, volatility, fx, credit, bi, admin, help]` |  | an edition (server and console) | the top menus by id, in order; one not named is not drawn | restart |  |
 | `menus.views` | list | `[terminal, search, functions, datamap, data, reports, workspaces, monitors, a...` |  | an edition (server and console) | the Views menu's items by id, in order (drishti-console/config/menus.yaml) | restart |  |

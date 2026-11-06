@@ -13,9 +13,21 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 2.9.11.d — release notes (unreleased)
+# Drishti 2.9.11.d — release notes (draft)
 
-## Upgrade: removed and renamed pages
+*Not released yet.*
+
+## Upgrade
+
+- **BI reads the table layer.** BI's datasets and models are now tables and models of the table layer (`config/tables/<domain>/`,
+  `rachana: 3`), and every expression is Rachana (`&&`, `||`, `!`, `c ? a : b`, `null`, `true`, `x == null`; named arguments
+  `sum(x, where = c)`). An installation with **its own datasets or models** in `config/bi/datasets` or `config/bi/models` migrates them
+  before starting the new server: `drishti.py tables migrate --dry-run` (read the diff), then `drishti.py tables migrate`. The command
+  writes the tables and models under `config/tables/bi/`, rewrites the reports, boards, alerts and notebooks that named an old dataset,
+  and leaves the old files to be removed. Shipped content is migrated already.
+- **Pivot formulas:** `x == None` and `x != None` now test for a missing value (as Rachana's `x == null` does); before they were never true.
+
+## Upgrade: removed and renamed pages (one analysis path)
 
 - **Analyse is the Notebook.** `/bi/explore` opens `/bi/notebook` (a notebook's `?item=` is kept). Its **Slice** tab is removed: slice and total a
   table in the **Pivot** (`PIVOT <GO>`, *Pivot* on the BI rail). A **SQL cell over the extract** (`FROM extract`, SQLite on the console) no longer
