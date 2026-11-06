@@ -66,6 +66,7 @@ bi:                                      # the public-data packs' BI datasets an
 
 menus:                                   # by id, per menu; a menu not named shows every item its switches allow
   top: [views, economies, markets, companies, bi, admin, help]  # the top menus by id, in order; one not named is not drawn
+  markets: [news, quote, idx]          # the Markets menu's news and quotes (its market-data columns are for the trading lens)
   views: [terminal, search, forms, functions, datamap, data, reports, workspaces, monitors, alerts]
   help: [help-centre, knowledge, install, about]
   footer: [help, about, release-notes]

@@ -77,6 +77,16 @@ items:
     treatment: under-construction
     contracts: ["docs/contracts/LIM.md#64-pre-deal-check"]
 
+  - id: pnl-explain-waterfall
+    what: panel
+    about: "The P&L explain's waterfall: a generator's stored steps that disagree with the Attribution bars on new trades (F19); the computed explain (by trade events, then by risk factor) is PNL.md's"
+    release: "the P&L explain (TRADING_LENS.md TL4, PNL.md)"
+    treatment: under-construction
+    sutras:
+      - kind: pnl-explain
+        panels: [explain]
+    contracts: ["docs/contracts/PNL.md#1-summary"]
+
   - id: wwr-contract
     what: contract
     about: "Wrong-way risk: the contract of its inputs and results, planned"

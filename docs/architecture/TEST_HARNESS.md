@@ -95,7 +95,9 @@ The browser lane runs with `--dist loadgroup` (`drishti-console/tests/harness_pl
 Under any other `--dist` (the other lane, the gate, a single run) the marks change nothing.
 
 The two render suites are spread: one test per pack Sutra (both widths, both modes or both renderers in it), per edge case, per
-captured view and per theme.
+captured view and per theme. The page-width sweep is spread one test per page (`test_page_widths_browser.py`: the page's three widths opened side by
+side on the worker's Chromium, against a stand-in console of the file, one per worker); its phone sweep on a real server is a file group
+of its own (`test_phone_pages_browser.py`: one server, the pages four at a time in one touch context).
 
 ### 3.2 Per-worker fixtures
 
@@ -317,7 +319,6 @@ old pauses and starts in the test's `BASELINE`, which may only go down.
 
 ## 8. Next candidates
 
-- `test_page_widths_browser.py`: one test per page and width instead of a sweep per width (it is listed in `tools/drill-budgets.txt`).
 - `test_embed_elements_browser.py` and `test_mr_cube_browser.py`: their stack is built once per file; a session stack per worker
   through the pool would let their tests spread.
 - The other files that build a VaR demo lake (`test_var_explorer_browser.py`, `test_var_regulatory_browser.py`,

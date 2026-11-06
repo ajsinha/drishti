@@ -52,8 +52,8 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 class EditionTradingServerTest {
 
     static final List<String> TRADING_COMMANDS = List.of("TRD", "CTRD", "PTRD", "LTRD", "ITRD", "BOOK", "DESK", "TRDR", "POS", "VLIM",
-            "VRES", "TVAL", "PNLV", "HIER", "PORT", "CPTY", "GRP", "NSET", "NSMTM", "CPMTM", "LIM", "XWIF", "EXP", "CRV", "FX", "FXV", "EQ", "EQX",
-            "CMD", "CMDC", "BND", "CDS");
+            "VRES", "TVAL", "PNLV", "HIER", "PORT", "DPNL", "PNL", "SENS", "CPTY", "GRP", "NSET", "NSMTM", "CPMTM", "LIM", "XWIF", "EXP", "CRV",
+            "REPO", "FIX", "IRV", "CPV", "FX", "FXF", "FXV", "EQ", "EQX", "CMD", "CMDC", "BND", "CDS");
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
@@ -104,7 +104,7 @@ class EditionTradingServerTest {
         ok(get("/api/v1/functions").header("Authorization", bearer(eve)).header(EditionContext.HEADER, lens)).path("packs")
                 .forEach(p -> p.path("commands").forEach(c -> codes.add(c.path("code").asText())));
         assertThat(codes).containsAll(TRADING_COMMANDS)
-                .doesNotContain("ECON", "SCN", "STR", "SSPNL", "COLL", "MC", "FRTB", "SACCR", "CVA", "SIMM", "XRUN", "USEQ", "FUND", "IRV");
+                .doesNotContain("ECON", "SCN", "STR", "SSPNL", "COLL", "MC", "FRTB", "SACCR", "CVA", "SIMM", "XRUN", "USEQ", "FUND", "CMDV");
         List<String> suggested = new ArrayList<>();
         ok(get("/api/v1/command/suggest?q=CO").header("Authorization", bearer(eve)).header(EditionContext.HEADER, lens))
                 .forEach(s -> suggested.add(s.path("mnemonic").asText()));

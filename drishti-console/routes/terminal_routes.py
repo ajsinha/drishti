@@ -27,7 +27,7 @@ from core.settings import changed_at
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes import api_routes, designer_routes, history_routes, phone_routes
-from core.edition import WORDS
+from core.edition import ADMIN_PAGES, WORDS
 from routes.common import ident, packs, render
 from routes.var_routes import redirect_for as var_redirect
 from routes.var_routes import retired_link as var_retired_link
@@ -77,6 +77,7 @@ FORM_WORD = "FORM"        # a reserved command word: query by form (routes/form_
 FUNC_WORD = "FUNC"        # a reserved command word: the command directory, Functions (routes/functions_routes.py)
 WHAT_WORD = "WHAT"        # a reserved command word: the Knowledge pages and their glossary (routes/help_routes.py, docs/knowledge/README.md)
 DATAMAP_WORD = "DATAMAP"  # a reserved command word: the data map, the packs' kinds and joins (routes/datamap_routes.py)
+ADMIN_WORD = "ADMIN"       # a reserved command word: the Admin pages by command (a lens whose bar draws no Admin menu: Drishti Trading)
 EXPORT_WORDS = ("EXPORT", "DATA")   # reserved command words: Export data, every dataset and a day's download (routes/data_routes.py); DATA is the older alias
 BI_WORDS = ("BI", "RUPAKA")   # reserved command words: the BI page, RUPAKA being the older alias (a pack cannot define a mnemonic with either name)
 
@@ -140,6 +141,8 @@ async def go(request: Request, q: str = ""):
     if words and words[0].upper() == DATAMAP_WORD:                 # reserved too: DATAMAP the data map; DATAMAP <domain|kind> it focused
         rest = " ".join(words[1:])
         return RedirectResponse("/datamap" + (f"?q={quote(rest)}" if rest else ""), status_code=303)
+    if words and words[0].upper() == ADMIN_WORD:                   # reserved too: ADMIN the first Admin page kept; ADMIN <page> that page
+        return admin_redirect(request, ed, words[1:])
     if words and words[0].upper() in EXPORT_WORDS:                 # reserved too: EXPORT (or DATA) Export data; EXPORT <dataset> [date] it on that dataset
         rest = " ".join(words[1:])
         return RedirectResponse("/data" + (f"?q={quote(rest)}" if rest else ""), status_code=303)
@@ -186,6 +189,19 @@ async def go(request: Request, q: str = ""):
     if hist:
         return RedirectResponse(f"/v/{r['ref']['kind']}/{quote(r['ref']['id'])}/history?{hist}", status_code=303)
     return RedirectResponse(f"/v/{r['ref']['kind']}/{quote(r['ref']['id'])}", status_code=303)
+
+
+def admin_redirect(request: Request, ed, rest: list[str]):
+    """``ADMIN`` (the first Admin page the edition keeps) or ``ADMIN <page>`` (``ADMIN USERS``, ``ADMIN LOADS``), for an administrator; the
+    Admin pages themselves check again. Anyone else, or a page the edition does not keep, is told so on the command line."""
+    me = getattr(request.state, "identity", None)
+    if me is None or not me.is_admin:
+        return RedirectResponse(f"/t?error={quote('ADMIN is for administrators')}", status_code=303)
+    kept = [p for p in ADMIN_PAGES if ed.admin_page_shown(p)]
+    page = rest[0].lower() if rest else (kept[0] if kept else "")
+    if page not in kept:
+        return RedirectResponse(f"/t?error={quote(f'DRS-4023 no Admin page {page!r} in {ed.title}: ADMIN ' + ', '.join(kept).upper())}", status_code=303)
+    return RedirectResponse(f"/admin/{page}", status_code=303)
 
 
 async def _one_suggestion(request: Request, typed: str) -> dict | None:

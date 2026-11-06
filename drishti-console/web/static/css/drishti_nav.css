@@ -56,6 +56,8 @@
 .mega-panel.cols-1.show { grid-template-columns: minmax(280px, 320px); }
 .mega-panel.cols-2.show { grid-template-columns: repeat(2, minmax(260px, 300px)); }
 .mega-panel.cols-3.show { grid-template-columns: repeat(3, minmax(240px, 280px)); }
+/* a menu of more columns (the Markets menu: rates, vols, FX, credit, equities and commodities) wraps them three to a row */
+.mega-panel.cols-4.show, .mega-panel.cols-5.show, .mega-panel.cols-6.show { grid-template-columns: repeat(3, minmax(220px, 260px)); max-width: calc(100vw - 32px); }
 @keyframes mega-in { from { opacity: 0; translate: 0 -6px; } to { opacity: 1; translate: 0 0; } }
 .mega-title { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: .09em; color: var(--d-muted); padding: 0 .5rem .45rem; }
 .mega-item { display: flex; gap: .65rem; align-items: flex-start; padding: .5rem; border-radius: 10px; color: var(--d-ink); text-decoration: none; }
@@ -147,7 +149,8 @@
   .tbar-menu { position: static; }
   .tbar-menus .mega-panel, .mega-panel { left: 16px; right: 16px; width: auto; max-width: none; box-sizing: border-box; margin-top: 0 !important;
     max-height: calc(100dvh - 11rem); max-height: min(70vh, calc(100dvh - 11rem)); overflow-y: auto; overscroll-behavior: contain; }
-  .mega-panel.cols-1.show, .mega-panel.cols-2.show, .mega-panel.cols-3.show { grid-template-columns: minmax(0, 1fr); }
+  .mega-panel.cols-1.show, .mega-panel.cols-2.show, .mega-panel.cols-3.show, .mega-panel.cols-4.show, .mega-panel.cols-5.show,
+  .mega-panel.cols-6.show { grid-template-columns: minmax(0, 1fr); }
   .tbar-tools .dropdown { position: static; }
   .tbar-tools .dropdown-menu { position: absolute !important; left: 16px !important; right: 16px !important; top: 100% !important; inset-inline: 16px !important; transform: none !important;
     width: auto; min-width: 0; max-width: none; box-sizing: border-box; max-height: min(70vh, calc(100dvh - 11rem)); overflow-y: auto; overscroll-behavior: contain; }

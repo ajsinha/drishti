@@ -47,6 +47,7 @@ work is in the [VaR guide](../guides/VAR_GUIDE.md) and the [exposure guide](../g
 16. [The pivot engine at scale](#16-the-pivot-engine-at-scale)
 17. [Many VaR scopes at once (BLAS)](#17-many-var-scopes-at-once-blas)
 18. [The browser test lane](#18-the-browser-test-lane)
+19. [The BI scale gate](#19-the-bi-scale-gate)
 
 ## 1. What is measured, and why
 
@@ -1632,3 +1633,39 @@ The console's browser tests as the release drill runs them (the design, its rule
 | the drill's browser lane, by file (`--dist loadfile`), measured | 3 | 58 min 42 s | 10,535 s | 17 server JVMs and 16 GB at once (beside the Java verify) |
 | the browser lane by test (`--dist loadgroup`), the redesigned harness, three runs (no Java verify beside it) | 9 | 25 min 15 s, 28 min 55 s, 25 min 54 s | 13,444 s, 15,420 s, 13,848 s | about 36 GB (18 to 19 server JVMs, 81 Chromium processes); at least 10.8 GB left available |
 | both render suites alone, by test, measured on a shared machine | 4 | 353 s | | |
+
+## 19. The BI scale gate
+
+A small, always-on guard for the BI engine: one model query timed and its Java allocation counted, failing the build when the
+engine grows slower or hungrier than its budgets. The pivot engine at scale (section 16) shows such a regression only when it is run;
+this gate runs in every drill's Java lanes (a JUnit test, never in the gate's static checks).
+
+### 19.1 What it measures
+
+`BiScaleGateTest` (`drishti-server/src/test/java/com/ash/drishti/server/bi/mq/`) builds the BI test lake at the most a local test may
+hold: 10,000 trades a day for two days (20,000 rows), the desks dimension and the limits fact. It asks the `desk-risk` model for
+`MTM`, `Notional`, `Trades`, `AvgMTM`, `Limit` and `Usage` by region and desk (fields both facts reach), with the result cache off,
+so every warm query reads the columns layer:
+
+- **cold**: the first query (the source read, the columns layer of the two dates built, the answer);
+- **warm p95**: the same query again, 30 runs after 5 to warm up, the 95th percentile;
+- **warm allocation**: the Java bytes allocated on the asking thread by one warm query, the median of the 30 runs.
+
+It also checks the answer: the newest date's 10,000 trades are each counted once, and every warm answer equals the first. It writes
+`drishti-server/target/bi-scale-gate.txt`.
+
+### 19.2 Measured, and the budgets
+
+One run on the reference workstation (Ryzen AI 9 HX 370, 12 cores / 24 threads, 61 GB; Java 21; nothing else heavy running),
+2026-11-06:
+
+| Figure | Measured | Budget | Headroom |
+|---|---:|---:|---:|
+| cold | 590 ms | 3,000 ms | about 5 times |
+| warm p50 | 12.0 ms | | |
+| warm p95 | 18.1 ms | 100 ms | about 5 times |
+| warm Java allocation (median) | 0.9 MB | 4 MiB | about 4 times |
+
+The headroom covers a drill's Java lanes running beside each other on the same machine; a genuine regression (a lost columns layer,
+a query planned again on every ask, a per-row copy) costs far more than that. When the engine gets faster, the budgets are lowered
+from a new measured run with the same headroom; they are never raised to make a slower engine pass.

@@ -94,7 +94,7 @@ def risk_console():
 
 @pytest.fixture(scope="module")
 def trading_console():
-    """A Drishti Trading console over the stand-in server: the edition whose subject menus (Blotter, Positions, Risk, Counterparties)
+    """A Drishti Trading console over the stand-in server: the edition whose subject menus (Markets, Blotter, Positions, Risk, Counterparties)
     fold on a phone."""
     import uvicorn
 
@@ -180,7 +180,7 @@ def test_the_lens_menus_fold_into_one_on_a_phone(browser, trading_console, theme
         panel = page.locator(".mega-lens")
         panel.wait_for(state="visible")
         titles = [t.strip() for t in panel.locator(".mega-subject").all_text_contents()]
-        assert titles == ["Blotter", "Positions", "Risk", "Counterparties"]
+        assert titles == ["Markets", "Blotter", "Positions", "Risk", "Counterparties"]
         assert panel.locator("a.mega-item").first.is_visible()
         assert not page.evaluate(AUDIT)
     finally:
@@ -194,7 +194,7 @@ def test_the_subject_menus_stand_in_the_bar_on_a_desktop(browser, trading_consol
     try:
         _open(page, trading_console + "/t")
         assert page.locator(".tbar-lens-btn").count() == 0
-        assert page.locator(".tbar-menu[data-subject]").count() == 4
+        assert page.locator(".tbar-menu[data-subject]").count() == 5
         assert page.locator(".tbar-menu[data-subject]").first.is_visible()
         page.set_viewport_size({"width": 390, "height": 844})                   # narrowed: the lens menu comes in
         page.wait_for_timeout(500)

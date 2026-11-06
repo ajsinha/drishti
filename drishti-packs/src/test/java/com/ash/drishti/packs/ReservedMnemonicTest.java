@@ -37,7 +37,7 @@ class ReservedMnemonicTest {
 
     @Test
     void reservedWordsAreRefusedInAnyCase() throws Exception {
-        for (String word : List.of("BI", "bi", "RUPAKA", "rupaka", "Rupaka", "FORM", "form", "FUNC", "func", "Func", "WHAT", "what", "What", "DATAMAP", "datamap", "DataMap", "DATA", "data", "Data", "EXPORT", "export", "Export")) {
+        for (String word : List.of("BI", "bi", "RUPAKA", "rupaka", "Rupaka", "FORM", "form", "FUNC", "func", "Func", "WHAT", "what", "What", "DATAMAP", "datamap", "DataMap", "DATA", "data", "Data", "EXPORT", "export", "Export", "ADMIN", "admin")) {
             Pack p = pack(word);
             assertThatThrownBy(() -> new PackLoader().properties(List.of(p))).isInstanceOf(IllegalStateException.class)
                     .hasMessageContaining("reserved command word").hasMessageContaining(word);
