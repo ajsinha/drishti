@@ -40,7 +40,9 @@ LOG = logging.getLogger("drishti.console.edition")
 LENS_HEADER = "X-Drishti-Lens"                       # the server's EditionContext.HEADER: the person's lens, on every backend call
 _lens: contextvars.ContextVar[str | None] = contextvars.ContextVar("drishti_lens", default=None)
 
-WORDS = ("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "VAR", "EXP", "SMAT", "PLAY", "PIVOT")
+WORDS = ("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "EXPORT", "VAR", "EXP", "SMAT", "PLAY", "PIVOT")
+#: A command word and the switch it shares: EXPORT (Export data) is switched by an edition's DATA, its older name, kept as an alias.
+WORD_SWITCH = {"EXPORT": "DATA"}
 
 # The console pages each reserved word, console word and feature opens: hidden ones answer 404 (core/edition_gate.py).
 WORD_PATHS = {"BI": ("/bi",), "FORM": ("/forms", "/form/"), "FUNC": ("/func",), "WHAT": ("/what",), "DATAMAP": ("/datamap",), "DATA": ("/data", "/api/data/"),
@@ -177,7 +179,7 @@ class Edition:
         if not self.active:
             return True
         words = {str(k).upper(): v for k, v in (self._get("commands.words") or {}).items()}
-        return _on(words.get(word.upper())) is not False
+        return _on(words.get(WORD_SWITCH.get(word.upper(), word.upper()))) is not False
 
     # -- features ----------------------------------------------------------------------------------------------------
     def feature(self, key: str) -> bool | None:

@@ -39,7 +39,7 @@ menus:
           - { id: forms, href: /forms, icon: card-checklist, label: Forms, desc: "Query by form: every pack with a search form, your recent forms and saved searches. Also: FORM <GO>", match: /form, requires: [feature:forms, word:FORM] }
           - { id: functions, href: /func, icon: list-ul, label: Functions, desc: "Every command you can use, what it does · also FUNC <GO>", match: /func, requires: [word:FUNC] }
           - { id: datamap, href: /datamap, icon: diagram-3, label: Data map, desc: "Every kind of data, how it joins and how much there is · also DATAMAP <GO>", match: /datamap, requires: [feature:datamap, word:DATAMAP] }
-          - { id: data, href: /data, icon: cloud-arrow-down, label: Data, desc: "Every dataset, its dates; choose columns and filters, download a day as .jsonl.gz · also DATA <GO>", match: /data/, requires: [feature:data, word:DATA] }
+          - { id: data, href: /data, icon: cloud-arrow-down, label: Export data, desc: "Every dataset, its dates; choose columns and filters, download a day as .jsonl.gz · also EXPORT <GO> (or DATA)", match: /data/, requires: [feature:data, word:DATA] }
           - { id: pivot, cmd: PIVOT, href: /pivot, icon: grid-3x3-gap, label: Pivot, desc: "Any table, any entity document or VaR as a pivot: nested rows opened lazily, right totals, provenance, charts, Excel with formulas · also PIVOT <GO>", match: /pivot, requires: [word:PIVOT, route:/pivot] }
           - { id: reports, href: /reports, icon: file-earmark-bar-graph, label: Reports, desc: "Every report you have: scheduled reports, subscriptions, alerts, and BI reports", match: /reports, requires: [feature:reports] }
       - title: Watch

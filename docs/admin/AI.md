@@ -1066,7 +1066,7 @@ shaped so that, when its API is stable, the work is small and local:
 2. Register it in `core/quant/__init__.py: get_engine` under the name `qlrisk`.
 3. Make QLRisk importable by the worker: the worker's import guard allows only the packages a cell lists (on `bi.python.packages`), but the engine is loaded by the worker *before* its sandbox,
    from the console's own environment, so QLRisk must be installed there (and its data files readable at load time: the sandbox forbids reads after it closes).
-4. Set `bi.explore.quant_engine: qlrisk`.
+4. Set `quant_engine: qlrisk` in the Python item's manifest.
 
 Open questions for that day: whether QLRisk wants curves and market data passed in (a cell would load them from the extract and pass them as parameters) or fetches them itself (it
 cannot, in the sandbox: no network), whether it is fork- and memory-friendly under the worker's address-space limit, and how results with structure (a Greeks table) come back (the stand-in returns

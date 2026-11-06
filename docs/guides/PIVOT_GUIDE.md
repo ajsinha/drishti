@@ -57,7 +57,7 @@ walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md); custom funct
 |---|---|
 | The command line | `PIVOT <GO>` (choose a source), `PIVOT trade <GO>` (a table), `PIVOT trade 2026-10-30 <GO>` (a table on a date), `PIVOT var <GO>` (VaR), `PIVOT @asha/desk-risk <GO>` (a saved view) |
 | The menu | **Views → Pivot** |
-| A table | **Pivot** in the Data view's facts of the table (`DATA trade <GO>`, then Pivot) |
+| A table | **Pivot** in Export data's facts of the table (`EXPORT trade <GO>`, then Pivot) |
 | A page's table | **Pivot** under a table or ladder whose Sutra says `pivot:` (the source `panel/<kind>/<panel>/<id>`: the panel's own rows, the Sutra's arrangement as the opening view) |
 | Search results | **Pivot** above the results of a kind whose pack says `pivot:` (the kind, the pack's arrangement as the opening view) |
 
@@ -92,7 +92,7 @@ exports. The help line under the grid shows them.
 
 | Source | What it is | Its fields | Its measures |
 |---|---|---|---|
-| A table (`trade`, `position`, any stored kind) | the Data view's table, read for you through its connector on the date | its columns, typed from the data contract (`string`, `date`, `number`) | the built-in functions over any field |
+| A table (`trade`, `position`, any stored kind) | Export data's table, read for you through its connector on the date | its columns, typed from the data contract (`string`, `date`, `number`) | the built-in functions over any field |
 | `var` | the VaR engine's book of the date | the positions' text columns (DESK, CURRENCY, PRODUCT_GROUP …) | `var()`, `es()`, `pv()`, `trades()` |
 | `panel/<kind>/<panel>/<id>` | a table's or ladder's rows on its page: the same document, Sutra and business date | the fields of its Sutra's `pivot:` (masked ones left out) | the built-in functions |
 | `table:<domain>.<name>` | a virtual table ([TABLES_GUIDE.md](TABLES_GUIDE.md)) read for you on the date: its source as you may see it, then the table's rules, masks and hidden columns | its columns, typed by the table (`integer` and `decimal` as `number`, `date` and `timestamp` as `date`); a column masked for you is left out | the built-in functions |
@@ -115,7 +115,7 @@ How a table is read, chosen per table:
 | Route | When | How |
 |---|---|---|
 | **Direct lake** | the kind's one source is a Delta or Iceberg table on a local disk, a snapshot table (one partition holds the date), without deletion vectors or delete files, and every field you may use is a column it keeps | DuckDB reads the date's Parquet files itself: only the columns a statement uses (column pruning), the filters repeated on the raw columns so row groups and files are skipped by their statistics; masked columns are never named, so never read; no staging cap |
-| **Staged** | any other table (a document store, an object store, masks that also change values inside other fields, memory-only data) | read once per date, data version and mask signature through the Data view's own read and kept in the engine's in-memory DuckDB (`drishti.pivot.stage-keep` tables); over `drishti.pivot.stage-max-rows` rows refused in words, never cut short |
+| **Staged** | any other table (a document store, an object store, masks that also change values inside other fields, memory-only data) | read once per date, data version and mask signature through Export data's own read and kept in the engine's in-memory DuckDB (`drishti.pivot.stage-keep` tables); over `drishti.pivot.stage-max-rows` rows refused in words, never cut short |
 
 Memory-only data is never written: the executor has no spill folder unless `drishti.pivot.duckdb.temp-directory` names one. The estimate
 of a lake table comes from its metadata (the files' bytes, the manifests' or add-actions' row counts); nothing is read.
@@ -435,7 +435,7 @@ Comments on its cells are kept beside its versions ([section 26](#26-cell-commen
 
 ## 12. Who sees what
 
-- A table is read through the Data view's own read for you: a table you may not open is not offered; a **masked column is not read at
+- A table is read through Export data's own read for you: a table you may not open is not offered; a **masked column is not read at
   all**, so it cannot be a dimension, a measure's input or a filter (`403 DRS-5705`).
 - The VaR source applies the VaR engine's own entitlements: trades you may not see are left out of every cell; a role that sees the bank only
   in aggregate is offered no dimension unless the MR cube runs, which offers it the hierarchy levels ([MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md)).
@@ -552,7 +552,7 @@ SPI (`PivotProvider`: catalogue, estimate, evaluate a plan of declarative cell s
 (`AggFunction`: start, add a columnar batch, merge, finish; mergeable, sketch or holistic; each with its SQL state form), the built-ins,
 the `GROUP BY GROUPING SETS` compiler and the DuckDB tabular provider, the in-memory provider (`RowsProvider`: rows held in memory, the
 same states by the functions' own `add`), partial states merged in a fixed order (`OrderedMerge`), the
-partial-state cache, the split-and-merge harness and the exports. The server wires it: the Data view's tables as sources, the VaR provider,
+partial-state cache, the split-and-merge harness and the exports. The server wires it: Export data's tables as sources, the VaR provider,
 REST, busy protection, saved views and audit. The console only draws: `drishti_pivot-engine.js` asks the engine and lays its answer out,
 `drishti_pivot-grid.js` is the one grid (the Pivot screen and the nested `pivot` panel), and nothing in the browser adds up a figure.
 

@@ -595,7 +595,6 @@ bi-04b126d3c4  dataset  ENDUR trades, cleaned  draft in My workspace
 The steps run where every Python item runs, in the console's sandbox; the snippets write each value as a literal, never as code. The reference is
 [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](../guides/BI_GUIDE.md#17-data-prep-the-transform-editor).
 
-<a id="step-13--your-own-python-in-the-browser-the-python-console-240"></a>
 ## Next steps
 
 - [Tutorial 15](15-ai-in-drishti.md): ask the data in words.

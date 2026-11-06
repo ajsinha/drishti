@@ -14,7 +14,7 @@
 
 """Busy protection in the console (docs/admin/OPERATIONS.md, "Busy protection"; mock-up A). The server decides; the console passes its busy
 refusal on unchanged (503, Retry-After, the calm words) to the page that asked, which counts down in place: the sign-in form, a VaR or
-exposure panel, the Data view's Download card. Admin -> Health draws the "Busy protection" card and sends the operator's override."""
+exposure panel, Export data's Download card. Admin -> Health draws the "Busy protection" card and sends the operator's override."""
 from __future__ import annotations
 
 from fastapi.testclient import TestClient

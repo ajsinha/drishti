@@ -147,7 +147,7 @@ you are on is highlighted.
 
 | Menu | Column | Entries |
 |---|---|---|
-| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Data* (`/data`, also `DATA <GO>`: every dataset and its dates, a simple selection, a day downloaded as `.jsonl.gz`, [The Data view](#the-data-view)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
+| **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Data* (`/data`, also `EXPORT <GO>`: every dataset and its dates, a simple selection, a day downloaded as `.jsonl.gz`, [Export data](#export-data)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`) |
 | **Engines** (a role that opens an engine) | a column per engine running, its command word in the head | **VaR** `VAR`: *VaR explorer* `VAR BANK`, *Why it moved* `VAR BANK EXPLAIN`, *VaR Playground* `PLAY VAR`, *Scenario matrix* `SMAT`, *Regulatory reports*, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Hierarchies and limit letters* `HIER` · **Exposure** `EXP`: *Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …` (the pre-deal check `XWIF` is under **Counterparties**) · **FRTB-SA** `FRSA`: *FRTB-SA capital* `FRSA BANK`, *FRTB-SA Playground* `PLAY FRTB EXAMPLE` · **SIMM** `SIMM`: *Netting sets* `SIMM`, *SIMM Playground* `PLAY SIMM EXAMPLE`; administrators also see *Admin → Engines* and, at the foot, the engines not running on any server (greyed, never links) |
 | **BI** (people with the `bi` power) | Rupaka: business intelligence | *BI home* (`/bi`), *My workspace* (`/bi/w/me`), *Catalogue* (`/bi/catalogue`), then *Recent*: the three items you opened last. Administrators with `bi-admin` also see *BI settings* ([BI_GUIDE.md](BI_GUIDE.md)) |
@@ -395,7 +395,7 @@ their name. They work in any case, and each has type-ahead.
 | `WHAT <GO>` | Knowledge, the home of the [Knowledge pages](#knowledge-what-the-words-mean): what the words of your data mean and how the data connects | `WHAT PFE <GO>`, `WHAT netting set <GO>`, `WHAT value at risk <GO>` open the term's glossary entry (its long name or a synonym works too, any case); other words (`WHAT collateral posted <GO>`) search the Knowledge pages. The type-ahead lists the terms as you type |
 | `FUNC <GO>` | Functions, `/func`: every command you can use, by pack, with what it does and an example ([USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)) | `FUNC exposure <GO>` opens it filtered (every word must appear in a command's code, title, description or its pack); `FUNC trading` lists one pack's commands. Click a command to open it with its example, a pack to open its search form |
 | `DATAMAP <GO>` | the [data map](#the-data-map), `/datamap`: every kind of data your packs hold, how much of it there is, and how the kinds join | `DATAMAP trade <GO>` opens it on one kind (its name, mnemonic or label: `DATAMAP CPTY`), `DATAMAP organisation` or `DATAMAP counterparty-risk` on one domain; other words fill its Find box |
-| `DATA <GO>` | the [Data view](#the-data-view), `/data`: every dataset you may open, its format and the dates it holds; download a day as `.jsonl.gz` | `DATA trade-valuation 2026-09-30 <GO>` opens it on a dataset (its kind or its command: `DATA TVAL`) and a date; other words fill its Filter box |
+| `EXPORT <GO>` | the [Export data](#export-data), `/data`: every dataset you may open, its format and the dates it holds; download a day as `.jsonl.gz` | `EXPORT trade-valuation 2026-09-30 <GO>` opens it on a dataset (its kind or its command: `EXPORT TVAL`) and a date; other words fill its Filter box |
 | `FORM <GO>` | the forms home, `/forms` | `FORM trading <GO>` opens the trading pack's search form, `FORM trading trade <GO>` its form for trades ([Search with a form](#search-with-a-form-form-pack)) |
 | `BI <GO>` | the BI home, `/bi` (only with the `bi` power; otherwise the terminal says what is missing) | `BI WORKSPACE`, `BI CATALOGUE`, `BI SETTINGS`, `BI <report-or-board>` ([BI_GUIDE.md](BI_GUIDE.md)) |
 | `RUPAKA <GO>` | the same as `BI`, the older name | everything that works after `BI` works after `RUPAKA` |
@@ -456,11 +456,11 @@ Domains follow `drishti-console/config/datamap.yaml`, which is presentation only
 (and, rarely, a kind to draw dashed that its contract does not mark computed). A pack the file does not name appears as a domain of its
 own under its pack title, with its kinds and joins, with no configuration at all.
 
-### The Data view
+### Export data
 
-**Views → Data** (`/data`, or `DATA <GO>`) lists every data source and its datasets, and downloads a day of one of them as JSON Lines,
-gzip-compressed (`.jsonl.gz`). It is **download only**: it never shows the rows in a grid. `DATA <dataset> [date] <GO>` opens it on
-that dataset and date (`DATA trade-valuation 2026-09-30`; the dataset's command works too: `DATA TVAL 2026-09-30`).
+**Views → Export data** (`/data`, or `EXPORT <GO>`; `DATA`, the older word, works too) lists every data source and its datasets, and downloads a day of one of them as JSON Lines,
+gzip-compressed (`.jsonl.gz`). It is **download only**: it never shows the rows in a grid. `EXPORT <dataset> [date] <GO>` opens it on
+that dataset and date (`EXPORT trade-valuation 2026-09-30`; the dataset's command works too: `EXPORT TVAL 2026-09-30`).
 
 - **The list** (left): the datasets you may open, grouped by pack, each with its **format** (Delta, Iceberg, JSON Lines, Database ...)
   and the number of **dates** it holds. *internal only* marks a dataset whose source's terms restrict reuse (the IMF figures, the Yahoo
@@ -479,7 +479,7 @@ that dataset and date (`DATA trade-valuation 2026-09-30`; the dataset's command 
   the rows are read: *pushed down* when the connector filters as it reads its columns (Delta Lake and Iceberg tables whose columns are
   promoted), else filtered on the way as the rows stream.
 - **Download**: the **row count before you download** (*412 of 12,076 on the date*) and the estimated size; **Download
-  trade-valuation_2026-09-30.jsonl.gz**; **Copy link**; and the same download as a [`drishti.py data get`](CLI_GUIDE.md#data-get-a-dataset-as-jsonlgz-the-data-view)
+  trade-valuation_2026-09-30.jsonl.gz**; **Copy link**; and the same download as a [`drishti.py data get`](CLI_GUIDE.md#data-get-a-dataset-as-jsonlgz-export-data)
   command. A selection that matches no row shows 0 and leaves Download off.
 
 The selection lives in the address (`/data?kind=trade-valuation&date=2026-09-30&columns=TRADE_ID,DESK,MTM&where=DESK+%3D+DESK-COMM`),
@@ -488,8 +488,8 @@ the connector and never held whole, on the server or in the console, so a datase
 chosen columns in order. Every download is audited (who, the dataset, the date, the selection and the rows written: Admin → Audit,
 action `data.download`). On a phone the list and the facts show; choosing and downloading are for the desk.
 
-The word and the page follow the edition (`commands.words.DATA`, `features.data`) and the site (`features.data` in the console,
-`drishti.data-view.enabled` on the server); [DATA_GUIDE.md](DATA_GUIDE.md#6-the-data-view-download-a-dataset) has the API, the rules for
+The word (`EXPORT`, and its alias `DATA`) and the page follow the edition (`commands.words.DATA` switches both, `features.data`) and the site (`features.data` in the console,
+`drishti.data-view.enabled` on the server); [DATA_GUIDE.md](DATA_GUIDE.md#6-export-data-download-a-dataset) has the API, the rules for
 masks, internal-only datasets and pushdown, and the settings.
 
 ### Suggestions as you type

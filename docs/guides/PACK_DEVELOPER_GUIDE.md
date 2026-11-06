@@ -1051,7 +1051,7 @@ fields are **document paths** (`INDEX.NAME`; `$.` may be written), never express
 the kind's `columns:` as the fields. `false` (or no entry) offers nothing. The arrangement is the view the pivot screen opens with.
 
 The pivot is computed by the server's pivot engine over every row of the kind on the business date (not only the page shown), as the
-Data view reads it: through the kind's connector, or directly from a Delta or Iceberg table's Parquet files when every field is a column
+Export data reads it: through the kind's connector, or directly from a Delta or Iceberg table's Parquet files when every field is a column
 the connector keeps ([Large kinds](#large-kinds-the-lake-layout)). So choose fields the connector's `layout.<kind>.columns` lists. Fields the
 user's role may not see are not read at all: they are not offered and cannot be grouped, summed or filtered.
 

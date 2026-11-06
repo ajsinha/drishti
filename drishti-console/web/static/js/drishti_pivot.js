@@ -541,7 +541,7 @@
         });
       }
       if (src) { return open(src, root.getAttribute("data-date")); }
-      $("[data-pv-meta]").textContent = "choose a source: a table of the Data view, or VaR";
+      $("[data-pv-meta]").textContent = "choose a source: a table (the datasets of Export data), or VaR";
     }).catch(function (e) { notice(e.message); });
   }
 

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""`drishti.py data get ...`: the Data view (DATA) from the command line (docs/guides/DATA_GUIDE.md "The Data view"; the API:
+"""`drishti.py data get ...`: Export data (EXPORT) from the command line (docs/guides/DATA_GUIDE.md "Export data"; the API:
 /api/v1/data), as the token's user sees it: the datasets you may download (no dataset named), a selection's row count and read-back
 (--count), or a dataset's rows on a date with the chosen columns and filter lines, streamed to a .jsonl.gz file and never held whole.
 Exit codes: 0, 1 (the server said no), 2 (usage)."""

@@ -19,7 +19,7 @@
 not yet run: sketches, rollups and aggregate awareness, progressive answers, the cluster's partial states, refined estimates, the benchmark
 harness); the rest design, not built.** Built, and described for users in
 [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md): the module `drishti-bicompute` (the core with declarative cell sets, the provider and function
-SPIs, the mergeable and exact holistic built-ins, the GROUPING SETS compiler and the DuckDB tabular provider over the Data view's tables, the
+SPIs, the mergeable and exact holistic built-ins, the GROUPING SETS compiler and the DuckDB tabular provider over Export data's tables, the
 ordered merge, the partial-state cache, the split-and-merge harness, xlsx and CSV export), the VaR provider on the new SPI, the API, the
 CLI and the screen of mock-up A. Everything the build checklist ([section 24](#24-build-checklist)) leaves unticked is not built. The plan's
 rows are in [IMPLEMENTATION_PLAN.md, 2.9.11.a](IMPLEMENTATION_PLAN.md#2911a-the-pivot-engine-then-the-mr-cube).
@@ -967,7 +967,7 @@ fails any new class outside it that implements the function SPI's steps or emits
 | `drishti-server` | wires providers, REST, entitlements, busy protection, the memory budget for the cache, the cluster transport; hosts the VaR, FRTB-SA, SIMM and (later) CCR providers, which implement the module's SPI (the vector arithmetic stays where it is) |
 | BI | matrix visuals, totals, rollups and the semantic model's measures ([section 12](#12-bi-on-the-pivot-engine)) |
 | the MR and CCR cubes | providers and landings on the core |
-| the Data view, playgrounds, reports, the CLI | pivot views, function tests, exports |
+| Export data, playgrounds, reports, the CLI | pivot views, function tests, exports |
 
 ## 14. The screens and pivot charts
 
@@ -1077,7 +1077,7 @@ per saved view returning the cells, a personal token in the header, and a genera
 ### 15.6 Who may export, and audit
 
 Masks and entitlements are applied **before** export (the file holds what the screen showed this person, no more); an export of rows
-needs the same right as drill-through; datasets marked internal only follow the Data view's rule. **Every export is audited**: who, the
+needs the same right as drill-through; datasets marked internal only follow Export data's rule. **Every export is audited**: who, the
 view, what (pivot, rows, chart, definition), format, rows and columns, size, data versions; **never the values**.
 
 ### 15.7 Phases
@@ -1275,7 +1275,7 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 - [ ] core moved from `wip/mr-cube` with the eight changes of section 7 (built: changes 1 to 8 in the module; the branch's own tests run when the MR cube resumes on the engine)
 - [ ] DEL moved from `server/bi/expr`; BI calls the module
 - [x] function SPI, kinds, codecs; built-ins of section 5.2 except `first`/`last` and the sketches (P3); exact quantile from the values (selection with P3)
-- [ ] grouping-sets compiler; DuckDB executor; tabular provider (built: the Data view's tables staged in memory, direct Delta and Iceberg lake reads of local Parquet files with pruning and skipping, a panel's rows; not yet: BI layers, object stores)
+- [ ] grouping-sets compiler; DuckDB executor; tabular provider (built: Export data's tables staged in memory, direct Delta and Iceberg lake reads of local Parquet files with pruning and skipping, a panel's rows; not yet: BI layers, object stores)
 - [ ] VaR provider (built: `VarPivotProvider`, each cell the engine's scope; `VarCubeSource`'s batching, hierarchy levels and measures with the MR cube); FRTB-SA and SIMM providers with their engines
 - [ ] partial-state cache, cell budgets, busy protection, per-person limits (built: all but the per-person limit)
 - [ ] cluster: partial codec, ordered merge, file assignment, hedging, a node down said in the cell (built: state codecs, the ordered merge of local shards; P3 on `wip/pivot-c`: the plan and partial-state codec, `/api/v1/net/pivot/partials`, files by rendezvous hashing or row shards, the gather in node order with hedging and a deadline; a node with no answer refuses the whole view (DRS-5720) rather than marking its cells)

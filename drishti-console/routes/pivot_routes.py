@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The pivot screen (docs/guides/PIVOT_GUIDE.md; mock-up A of docs/architecture/PIVOT_ENGINE.md section 25): ``PIVOT <GO>``,
-``PIVOT <table> <GO>`` (a table of the Data view, or ``var``), ``PIVOT @owner/name <GO>`` (a saved view), Views → Pivot and "Pivot" on a
+``PIVOT <table> <GO>`` (a table of Export data, or ``var``), ``PIVOT @owner/name <GO>`` (a saved view), Views → Pivot and "Pivot" on a
 table. The page is a shell that web/static/js/drishti_pivot-grid.js and drishti_pivot.js fill: the field list and its four zones on the right, the grid with
 nested rows opened with + and −, the scan-estimate bar, the provenance popover, a chart of a selection and the Export menu. Every figure is
 the server's (``/api/v1/pivot``, asked as the person through the same-origin proxy ``/api/pivot/...``); the console only draws."""

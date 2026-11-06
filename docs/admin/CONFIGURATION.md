@@ -1047,7 +1047,7 @@ The console's side: `editions.dir` (`DRISHTI_EDITIONS_DIR`, default `../config/e
 `application.local.yaml` overrides the edition file's keys for the console (menus, Home, help, words; an edition's Home landings are its `home.landings`, drawn by its `home.template` with its `home.titles`: Drishti Risk's `desk`, `command`, `map`, Drishti World's `desk`, `explorer`, `map`, Drishti Market's `desk`, `explorer`, `quality`, Drishti Trading's `trader`, `desk`, `explorer`; Drishti Market's `quality.stale-days`, default 2, is the Quality landing's stale threshold in business days); Drishti Trading's `trading:` block: `trading.people` (who is who: `{user: {trader: TRDR-ASHAH}}` or `{user: {desk: DESK-COMM, role: desk-head}}`; the console's own `trading.people` in its `application.local.yaml` adds to the edition file's and wins for a name in both), `trading.match-records` (true: else a matching trader record), `trading.landing-by-role` (`{desk-head: desk, trader: trader}`, below the person's own choice), `trading.near-limit` (0.8), `trading.limit-days` (5), `trading.pnl-var-days` (60), `trading.max-rows` (20000), `trading.live-statuses`; a person's View as choice is their `tradingView` setting ([EDITIONS.md section 12](EDITIONS.md#12-drishti-trading)); `lens.roles` is the hook for
 role-based access to the lens link (read, not wired). Its own feature switches, each on by default and preset by an edition through
 `config/editions/features.yaml`: `features.build` (Build: new screens, packs, designs, reviews, changes), `features.forms` (`FORM`, `/forms`),
-`features.datamap`, `features.data` (the Data view, `DATA`), `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
+`features.datamap`, `features.data` (Export data, `DATA`), `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
 `features.collaboration` (Admin → Collaboration). `/studio` (the Build workbench's entry) follows `features.build`. A page whose switch is off answers 404.
 
 Branding keys of the console beside `ui.product`: `ui.placeholder` (the command line's placeholder; blank: `config/menus.yaml`'s),
@@ -1326,9 +1326,9 @@ The console's `drishti-console/config/datamap.yaml` holds the map's presentation
 draw dashed beyond those whose contract says `class: computed`, and the coverage under which a join is a finding (`low-coverage`, 0.95).
 A pack it does not name is a domain of its own.
 
-### `drishti.data-view` — the Data view
+### `drishti.data-view` — Export data
 
-The Data view (`DATA <GO>`, `/api/v1/data`; [DATA_GUIDE.md](../guides/DATA_GUIDE.md#6-the-data-view-download-a-dataset)) lists every stored
+Export data (`EXPORT <GO>`, `/api/v1/data`; [DATA_GUIDE.md](../guides/DATA_GUIDE.md#6-export-data-download-a-dataset)) lists every stored
 dataset and streams a day of one as `.jsonl.gz`. `enabled` switches the API (the edition feature `data` presets it, with the console's
 `features.data`); `internal-only` names the datasets whose sources' terms restrict reuse, and `internal-only-download: false` refuses
 them (the edition feature `internal-only-data: off` presets it; the four editions ship so). `count-budget` bounds a row count,
@@ -4440,7 +4440,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `features.build` | boolean | `true` |  | console | Build: new screens, new packs, designs, reviews and changes (/build, /review) | restart |  |
 | `features.forms` | boolean | `true` |  | console | query by form (FORM, /forms) | restart |  |
 | `features.datamap` | boolean | `true` |  | console | the data map (DATAMAP, /datamap) | restart |  |
-| `features.data` | boolean | `true` |  | console | the Data view (DATA, /data): every dataset, a simple selection, a day downloaded as .jsonl.gz | restart |  |
+| `features.data` | boolean | `true` |  | console | Export data (EXPORT, /data): every dataset, a simple selection, a day downloaded as .jsonl.gz | restart |  |
 | `features.workspaces` | boolean | `true` |  | console | /w | restart |  |
 | `features.monitors` | boolean | `true` |  | console | /m | restart |  |
 | `features.alerts` | boolean | `true` |  | console | /alerts | restart |  |
@@ -5607,8 +5607,8 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `build` | on, off or edition | none |  | server and console | The feature build an edition file names under features: off presets false, on or edition true; presets features.build in the console. Build: new screens, new packs, designs, reviews, changes | restart |  |
 | `forms` | on, off or edition | none |  | server and console | The feature forms an edition file names under features: off presets false, on or edition true; presets features.forms in the console. query by form (FORM, /forms) | restart |  |
 | `datamap` | on, off or edition | none |  | server and console | The feature datamap an edition file names under features: off presets false, on or edition true; presets features.datamap in the console. the data map (DATAMAP, /datamap) | restart |  |
-| `data` | on, off or edition | none |  | server and console | The feature data an edition file names under features: off presets false, on or edition true; presets drishti.data-view.enabled on the server and features.data in the console. the Data view (DATA, /data): every dataset, a day as .jsonl.gz | restart |  |
-| `internal-only-data` | on, off or edition | none |  | server and console | The feature internal-only-data an edition file names under features: off presets false, on or edition true; presets drishti.data-view.internal-only-download on the server. off: the Data view refuses datasets marked internal only | restart |  |
+| `data` | on, off or edition | none |  | server and console | The feature data an edition file names under features: off presets false, on or edition true; presets drishti.data-view.enabled on the server and features.data in the console. Export data (EXPORT, /data): every dataset, a day as .jsonl.gz | restart |  |
+| `internal-only-data` | on, off or edition | none |  | server and console | The feature internal-only-data an edition file names under features: off presets false, on or edition true; presets drishti.data-view.internal-only-download on the server. off: Export data refuses datasets marked internal only | restart |  |
 | `workspaces` | on, off or edition | none |  | server and console | The feature workspaces an edition file names under features: off presets false, on or edition true; presets features.workspaces in the console. /w | restart |  |
 | `monitors` | on, off or edition | none |  | server and console | The feature monitors an edition file names under features: off presets false, on or edition true; presets features.monitors in the console. /m | restart |  |
 | `alerts` | on, off or edition | none |  | server and console | The feature alerts an edition file names under features: off presets false, on or edition true; presets features.alerts in the console. /alerts | restart |  |

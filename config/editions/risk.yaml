@@ -48,8 +48,8 @@ features:                                # presets of existing switches (config/
   build: off
   forms: off
   datamap: on
-  data: on                               # the Data view (DATA, /data): every dataset, a simple selection, a day as .jsonl.gz
-  internal-only-data: off                # the Data view refuses datasets marked internal only (IMF, Yahoo, news headlines)
+  data: on                               # Export data (EXPORT, /data): every dataset, a simple selection, a day as .jsonl.gz
+  internal-only-data: off                # Export data refuses datasets marked internal only (IMF, Yahoo, news headlines)
   layouts: on
   workspaces: on
   monitors: on
