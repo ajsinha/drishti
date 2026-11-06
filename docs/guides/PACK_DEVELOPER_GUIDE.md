@@ -1051,7 +1051,7 @@ fields are **document paths** (`INDEX.NAME`; `$.` may be written), never express
 the kind's `columns:` as the fields. `false` (or no entry) offers nothing. The arrangement is the view the pivot screen opens with.
 
 The pivot is computed by the server's pivot engine over every row of the kind on the business date (not only the page shown), as the
-Data view reads it: through the kind's connector, or directly from a Delta or Iceberg table's Parquet files when every field is a column
+Export data reads it: through the kind's connector, or directly from a Delta or Iceberg table's Parquet files when every field is a column
 the connector keeps ([Large kinds](#large-kinds-the-lake-layout)). So choose fields the connector's `layout.<kind>.columns` lists. Fields the
 user's role may not see are not read at all: they are not offered and cannot be grouped, summed or filtered.
 
@@ -4872,7 +4872,7 @@ names and values from a request never change the SQL's shape.
 #### 3.6 The front end is vendored
 
 The console uses Bootstrap, Bootstrap Icons, ECharts (and ECharts GL), CodeMirror (with its Python mode), Vega and Vega-Lite (the
-`vega-lite` visual and a Python visual's output) and Graphic Walker (Calc's `drishti_bi.walk`, in a sandboxed frame), copied under
+`vega-lite` visual and a Python visual's output), copied under
 `drishti-console/web/static/vendor/`; `vendor/VENDOR.md` lists each library with its version, licence, size and whether the repository
 holds it. No FINOS Perspective or DuckDB-Wasm: **the servers compute every number and the
 browser draws**, so no BI page loads WebAssembly (a 2.1 report's `perspective-*` visuals are drawn as Drishti's own grid of the server's
@@ -4887,8 +4887,7 @@ connect-src 'self'; frame-src 'self'; worker-src 'self'; frame-ancestors 'self'
 Two files have their own, narrower policy. Calc's worker, `/static/js/drishti_calc-worker.js`, is served with
 `default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src <host>/static/ <host>/pyodide/`, so it alone may compile
 WebAssembly (Pyodide) and it can fetch nothing but static files and the runtime (never an `/api` route, which would carry the user's
-session). Calc's Graphic Walker page, `/static/calc/drishti_walker.html`, needs `unsafe-eval` and inline styles for the library, so it is a
-sandboxed frame (`sandbox allow-scripts`, no same-origin) with `connect-src 'none'`: the rows it is given by message cannot leave it.
+session).
 For Pyodide, `tools/fetch-pyodide.sh` downloads a pinned release, checks its SHA-256 and unpacks what Calc needs into
 `drishti-console/web/static/vendor/pyodide/` (git-ignored); the console serves it at `/pyodide/<version>/`
 ([USER_GUIDE.md](USER_GUIDE.md#12-installing-the-python-runtime)).

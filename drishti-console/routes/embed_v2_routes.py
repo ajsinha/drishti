@@ -51,10 +51,9 @@ WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 API = "2.0"
 BASE = "/embed/v2"
-ELEMENTS = {"2.0.0": "1.0.0", "2.1.0": "1.1.0", "2.2.0": "1.2.0"}   # Elements 2.x by its own version -> the renderer version that carries its drishti-elements.js
+ELEMENTS = {"2.2.0": "1.2.0"}   # Elements 2.x by its own version -> the renderer version that carries its drishti-elements.js (2.0.0 and 2.1.0 retired with renderers 1.0.0 and 1.1.0)
 # What the renderer loads from beside itself (its folder is /embed/v2/render/<v>/, so /embed/v2/ stands for the console's /static/)
-# ("pivot" stays loadable for renderers up to 1.1.0, which ask for it: it is now the pivot screen's script and does nothing in a view)
-SCRIPTS = {"pivot-engine", "pivot-grid", "colfilter", "tables", "tree-rows", "pivot", "drill", "zoom", "multiselect", "controls", "geomap",
+SCRIPTS = {"pivot-engine", "pivot-grid", "colfilter", "tables", "tree-rows", "drill", "zoom", "multiselect", "controls", "geomap",
            "table-chart", "table-chart-engine", "table-chart-sources"}
 VENDOR = re.compile(r"(echarts/echarts\.min\.js|echarts-gl/echarts-gl\.min\.js|echarts/maps/(world-countries|world-points)\.json|echarts/maps/regions/[A-Z]{3}\.json"
                     r"|bootstrap-icons/fonts/bootstrap-icons\.woff2)")

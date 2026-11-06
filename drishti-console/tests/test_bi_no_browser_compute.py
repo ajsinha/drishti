@@ -49,7 +49,7 @@ def test_no_bi_template_names_a_compute_engine_or_a_wasm_policy():
 
 @pytest.mark.static
 def test_the_removed_engines_are_gone():
-    for gone in ("web/static/js/bi-explore-duck.js", "web/static/js/bi-perspective.js", "web/static/calc/bi_driver.py", "core/perspective_csp.py",
+    for gone in ("web/static/js/bi-explore-duck.js", "web/static/js/bi-perspective.js", "web/static/calc/bi_driver.py", "core/perspective_csp.py", "web/static/js/drishti_pyconsole.js",
                  "web/static/vendor/perspective", "web/static/vendor/duckdb-wasm"):
         assert not (CONSOLE / gone).exists(), gone
     assert "wasm" not in CSP
@@ -71,7 +71,7 @@ def client():
     return TestClient(app)
 
 
-@pytest.mark.parametrize("path", ["/bi", "/bi/r/r1", "/bi/b/b1", "/bi/explore", "/bi/designer", "/bi/design/d1", "/bi/datasets", "/bi/models", "/bi/catalogue"])
+@pytest.mark.parametrize("path", ["/bi", "/bi/r/r1", "/bi/b/b1", "/bi/notebook", "/bi/designer", "/bi/design/d1", "/bi/datasets", "/bi/models", "/bi/catalogue"])
 def test_every_bi_page_has_the_strict_policy(client, path):
     r = client.get(path)
     assert r.status_code == 200, path

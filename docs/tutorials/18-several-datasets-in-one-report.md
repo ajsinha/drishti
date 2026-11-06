@@ -25,7 +25,7 @@ About 60 minutes.
 
 - The quick-start environment of [tutorial 10](10-first-bi-report.md#before-you-start): the demo lakes built by `drishti.py lake demo`, the server
   **Drishti server (demo lakes)** (sign-in on, the samples off) and the console. [Tutorial 10](10-first-bi-report.md) done (reports, workspaces, models)
-  and [tutorial 14](14-python-and-analyse.md) for Python and Analyse. You sign in as the development administrator, who holds `bi-author`.
+  and [tutorial 14](14-python-and-analyse.md) for Python and the Notebook. You sign in as the development administrator, who holds `bi-author`.
 - A token for the command line ([tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line)); the commands below read it from `DRISHTI_TOKEN` and the server from `DRISHTI_SERVER`. Step 7 also uses two colleagues; make them in **Admin → Users** ([tutorial 17](17-run-it-in-production.md)): `rita` with a role `risk` (raw power on, BI power `bi`), and `hana` with a role `desk-head` (raw power **off**, BI power `bi`) and **Desk** `DESK-FX`.
 - A shared workspace called **Exposure desk** (**Workspaces → New workspace**): a model and a report are published from a shared workspace; a private one cannot publish.
 - The console's Python environment from tutorial 1 (it carries `pandas` and `pyarrow`), for steps 4, 6 and 8.
@@ -44,7 +44,7 @@ About 60 minutes.
 - why Drishti **does not join rows** of two facts, with the inflated totals a row join gives, and why exposure **by desk** is refused (`DRS-9156`) rather than guessed;
 - a **dataset made by a Python Transform** whose inputs are model queries, kept per reader;
 - two readers with **different row rules and masks**, and why one reader's exposure is the same in the model and different in the Python table;
-- the same analysis in **Analyse**, promoted to a visual, and how this compares with Power BI.
+- the same analysis in the **Notebook**, promoted to a visual, and how this compares with Power BI.
 
 ## Step 1 · The two datasets and their grains
 
@@ -275,16 +275,14 @@ warning: 2 fact tables, each aggregated alone at the query's fields and then joi
 
 ## Step 4 · Why Drishti does not join rows across facts
 
-If both facts reach the counterparty, why not join each trade to its counterparty's netting sets and add up? Because the honest answer needs care. Open **Analyse** and the notebook [cp-risk-extracts.notebook.yaml](data/cp-risk-extracts.notebook.yaml) (create it as an item in the workspace, then choose it in the **Notebook** box). It holds **two extracts** of the model, each built by the server for you (your row rules, your masks): `df` is the trades (`COUNTERPARTY`, `MTM`, `PNL_1D`), and `extract("exposure")` is the netting sets (`COUNTERPARTY`, `PEAK_EE`):
+If both facts reach the counterparty, why not join each trade to its counterparty's netting sets and add up? Because the honest answer needs care. Open the **Notebook** (`/bi/notebook`) and the notebook [cp-risk-extracts.notebook.yaml](data/cp-risk-extracts.notebook.yaml) (create it as an item in the workspace, then choose it in the **Notebook** box). It holds **two extracts** of the model, each built by the server for you (your row rules, your masks): `df` is the trades (`COUNTERPARTY`, `MTM`, `PNL_1D`), and `extract("exposure")` is the netting sets (`COUNTERPARTY`, `PEAK_EE`):
 
-![Analyse with the notebook open: the first extract, 10,000 rows of trades from the model cp-risk (cut), and a second named exposure under More extracts](img/t18/13-two-extracts.jpg)
+![The Notebook with the notebook open: the first extract, 10,000 rows of trades from the model cp-risk (cut), and a second named exposure under More extracts](img/t18/13-two-extracts.jpg)
 
-You should see `10000 rows, 3 columns.` with the note that the extract was cut (an extract holds at most `bi.explore.max_rows`, 10,000; the lake has
-15,000 trade valuations) and, under **More extracts**, `exposure` (all 76 netting sets of the official results). In the **Python** tab, the first cell does what a person who thinks in rows would do: join each trade to the netting sets of its counterparty, and add up.
+You should see `10000 rows, 3 columns.` with the note that the extract was cut (an extract holds at most `bi.notebook.max_rows`, 10,000; the lake has
+15,000 trade valuations) and, under **More extracts**, `exposure` (all 76 netting sets of the official results). In the **Python** tab, the first cell does what a person who thinks in rows would do: join each trade to the netting sets of its counterparty, and add up. The cells run on the server's compute pool (*Under construction*, so **Run** is greyed for now); what they give is below.
 
-![The first Python cell and its output: 10000 trade rows, 76 netting-set rows, 32293 rows after the join; P&L 95,004,093 became 397,124,778 and exposure 2,663,018,256 became 1,165,433,266,636](img/t18/14-the-trap.jpg)
-
-You should see (the `true` figures are the extract's own: the P&L of the 10,000 trades it holds):
+They give (the `true` figures are the extract's own: the P&L of the 10,000 trades it holds):
 
 ```text
 trade rows 10000  netting-set rows 76  rows after the row join 32293
@@ -294,15 +292,8 @@ EE peak  true 2663018256   row join 1165433266636
 
 Every trade of a counterparty with four netting sets became four rows, so its P&L was counted four times; every netting set met every trade of its counterparty, so exposure was counted once per trade. The P&L is **4.2 times** too big and the exposure **438 times**; nothing failed, and the table looks like a table. That is the **fan-out** trap. The second cell does what the model does for you: add each side up to the counterparty first, then join the sums, and draw it:
 
-![The second cell: groupby counterparty on both sides, then a join of the sums; a chart of the ten largest counterparties with MTM and exposure bars](img/t18/15-the-cure.jpg)
 
-Its exposure is step 1's total again (`2,663,018,256`); its MTM is the extract's (the 10,000 trades it holds), and the model of step 3 gives the full one. **From the command line**, Analyse is the console's route (a signed-in session, not a token); with a cookie from `curl -c jar -d 'user=...&password=...' $CONSOLE/login` the first cell is one call:
-
-```text
-$ curl -s -b jar -H 'Content-Type: application/json' -X POST $CONSOLE/bi/explore/python -d '{"extract":{"dataset":"mq:cp-risk@1","fields":["trade.COUNTERPARTY","trade.MTM","trade.PNL_1D"]},
-    "extracts":[{"name":"exposure","dataset":"mq:cp-risk@1","fields":["netting_set.COUNTERPARTY","netting_set.PEAK_EE"]}], "source":"..."}'
-{"kind":"cell","stdout":"trade rows 10000  netting-set rows 76  rows after the row join 32293\nP&L 1d   true 95004093   row join 397124778\n...","inputRows":10000,"target":"server", ...}
-```
+Its exposure is step 1's total again (`2,663,018,256`); its MTM is the extract's (the 10,000 trades it holds), and the model of step 3 gives the full one. **From the command line** the model of step 3 answers the same question without a join of rows: `python3 tools/drishti.py bi mq --model cp-risk@1 --select counterparty.id --measures MTM,"Exposure (EE peak)"`.
 
 **What the model refuses.** A desk is a grain of trades only: a netting set has no desk. Ask the model for exposure by desk and it refuses rather than guess:
 
@@ -479,13 +470,13 @@ Hana's exposure there is **`2,407,959,011`**, not `2,663,018,256`: the Transform
 
 **In YAML** the readers' difference is the `security:` block of step 2, nothing else: the rule is on one dataset (`trade`), the notes on the others, the mask on one field. A join or filter on a masked field is refused (`DRS-9161`), which is why the Transform's inputs join on the counterparty's **id**, never its name.
 
-## Step 8 · The same analysis in Analyse, promoted to a visual
+## Step 8 · The same analysis in the Notebook, promoted to a visual
 
-When you do not yet know the question, work it out in **Analyse** before you build anything (step 4 did the first half). Opening this two-fact model in Analyse ticks the fields of one fact (trades) and the dimensions; the netting sets' fields are marked *another fact* and stay unticked, because one extract has one grain. Open the notebook of step 4, in the **Python** tab, and press **Promote to a visual** under the second cell (the chart):
+When you do not yet know the question, work it out in the **Notebook** before you build anything (step 4 did the first half). Opening this two-fact model in the Notebook ticks the fields of one fact (trades) and the dimensions; the netting sets' fields are marked *another fact* and stay unticked, because one extract has one grain. Open the notebook of step 4, in the **Python** tab, and press **Promote to a visual** under the second cell (the chart):
 
 ![After promoting: Python visual draft saved in your workspace, beside the button, with an Open the draft link](img/t18/19-promote-visual.jpg)
 
-You should see `Python visual draft saved in your workspace` **beside the button you pressed** (with an *Open the draft* link; pressing it again offers **Update that draft** or **Save another**), and the notes: the cell's `df` became the function's `table`, a visual returns an ECharts option, SVG or PNG, and nothing is published for you. Be exact about what was kept: a visual reads **one model query** of its report, so the draft keeps `df` (the first extract); a cell that reads `extract("exposure")` as well belongs in a **Transform** (step 6): **Promote to a Transform** writes the function with each `extract("name")` as a parameter of `run(...)`. The path from an idea to a shared number is therefore: explore in Analyse, put the measures in the **model** when sums and ratios do it (most of the time), or **promote to a Transform** and make a Python dataset when they do not, then build the report. **From the command line** a notebook is an item like the others (`python3 tools/drishti.py bi catalogue get <id>` shows its YAML); its SQL cells run Drishti SQL over the model on the server ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 4](../guides/USER_GUIDE.md#4-sql)).
+You should see `Python visual draft saved in your workspace` **beside the button you pressed** (with an *Open the draft* link; pressing it again offers **Update that draft** or **Save another**), and the notes: the cell's `df` became the function's `table`, a visual returns an ECharts option, SVG or PNG, and nothing is published for you. Be exact about what was kept: a visual reads **one model query** of its report, so the draft keeps `df` (the first extract); a cell that reads `extract("exposure")` as well belongs in a **Transform** (step 6): **Promote to a Transform** writes the function with each `extract("name")` as a parameter of `run(...)`. The path from an idea to a shared number is therefore: explore in Analyse, put the measures in the **model** when sums and ratios do it (most of the time), or **promote to a Transform** and make a Python dataset when they do not, then build the report. **From the command line** a notebook is an item like the others (`python3 tools/drishti.py bi catalogue get <id>` shows its YAML); its SQL cells run Drishti SQL over the model on the server ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 4](../guides/USER_GUIDE.md#3-sql-cells)).
 
 ## Step 9 · How this compares with Power BI
 
@@ -504,7 +495,7 @@ Where Drishti is **behind**: no bidirectional or many-to-many relationships yet,
 
 ## Next steps
 
-- [BI_GUIDE.md sections 23 and 24](../guides/BI_GUIDE.md#24-the-languages-in-the-console) for models and the model designer, [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del) for measures (fifty-odd recipes), [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models) for Drishti SQL, [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out) for Transforms, [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) for extracts and promotion.
+- [BI_GUIDE.md sections 23 and 24](../guides/BI_GUIDE.md#24-the-languages-in-the-console) for models and the model designer, [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del) for measures (fifty-odd recipes), [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models) for Drishti SQL, [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out) for Transforms, [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) for extracts and promotion.
 - [Tutorial 13](13-govern-bi.md): a change to the model is set against the reports and datasets that read it (impact), and the model travels in an environments bundle.
 - [Tutorial 11](11-bi-that-runs-itself.md): a subscription or an alert on a measure of the model runs as its owner, and the reader's rules apply.
 

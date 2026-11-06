@@ -55,14 +55,14 @@ At most 1 MB. A bad request is `DRS-5603` with the reason.
 
 | Key | Means |
 |---|---|
-| `kind` | the kind, as the Data view names it |
+| `kind` | the kind, as Export data names it |
 | `paths` (or `columns`) | the columns; none: every column the person may see. A masked column is left out; naming one in `where` is `DRS-5602` |
-| `where` | lines as the Data view takes them: `FIELD = value`, `!=`, `in`, `contains`, `starts`, `>`, `<`, `between`, `is empty`, `is not empty` |
+| `where` | lines as Export data takes them: `FIELD = value`, `!=`, `in`, `contains`, `starts`, `>`, `<`, `between`, `is empty`, `is not empty` |
 | `date` | the business date (a date the kind holds); none: the latest |
 
 Schema: one field per path, typed by the kind's data contract: `integer` int64; `amount`, `rate`, `number`, `decimal` float64; `boolean`
 bool; anything else utf8 (a nested value as its JSON). Scope: `data:read` or `data:read:<the kind's pack>`. Audited twice: the Flight
-line and the Data view's `data.flight` on the kind. One part; any member may answer it.
+line and Export data's `data.flight` on the kind. One part; any member may answer it.
 
 ### 3.2 `model`
 

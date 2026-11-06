@@ -22,7 +22,7 @@ from urllib.parse import parse_qs, quote
 from fastapi import APIRouter, Query, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import about_index, asof, collab as collab_core, compare_side, controls, render_mode, screen_grid
+from core import about_index, asof, collab as collab_core, compare_side, controls, screen_grid
 from core.settings import changed_at
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
@@ -37,6 +37,7 @@ from routes.simm_routes import redirect_for as simm_redirect
 from routes.play_routes import redirect_for as play_redirect
 from routes.smat_routes import redirect_for as smat_redirect
 from routes.mcube_routes import redirect_for as mcube_redirect
+from core import pivot_presets as _pivot_presets
 from routes.pivot_routes import redirect_for as pivot_redirect
 from routes.exposure_routes import retired_link as exp_retired_link
 
@@ -76,7 +77,7 @@ FORM_WORD = "FORM"        # a reserved command word: query by form (routes/form_
 FUNC_WORD = "FUNC"        # a reserved command word: the command directory, Functions (routes/functions_routes.py)
 WHAT_WORD = "WHAT"        # a reserved command word: the Knowledge pages and their glossary (routes/help_routes.py, docs/knowledge/README.md)
 DATAMAP_WORD = "DATAMAP"  # a reserved command word: the data map, the packs' kinds and joins (routes/datamap_routes.py)
-DATA_WORD = "DATA"        # a reserved command word: the Data view, every dataset and a day's download (routes/data_routes.py)
+EXPORT_WORDS = ("EXPORT", "DATA")   # reserved command words: Export data, every dataset and a day's download (routes/data_routes.py); DATA is the older alias
 BI_WORDS = ("BI", "RUPAKA")   # reserved command words: the BI page, RUPAKA being the older alias (a pack cannot define a mnemonic with either name)
 
 
@@ -139,7 +140,7 @@ async def go(request: Request, q: str = ""):
     if words and words[0].upper() == DATAMAP_WORD:                 # reserved too: DATAMAP the data map; DATAMAP <domain|kind> it focused
         rest = " ".join(words[1:])
         return RedirectResponse("/datamap" + (f"?q={quote(rest)}" if rest else ""), status_code=303)
-    if words and words[0].upper() == DATA_WORD:                    # reserved too: DATA the Data view; DATA <dataset> [date] it on that dataset
+    if words and words[0].upper() in EXPORT_WORDS:                 # reserved too: EXPORT (or DATA) Export data; EXPORT <dataset> [date] it on that dataset
         rest = " ".join(words[1:])
         return RedirectResponse("/data" + (f"?q={quote(rest)}" if rest else ""), status_code=303)
     me = getattr(request.state, "identity", None)
@@ -153,6 +154,8 @@ async def go(request: Request, q: str = ""):
         return to_simm
     if ed.word_on("VAR") and ed.word_on("PIVOT") and ed.word_on("MCUBE") and (to_mcube := mcube_redirect(typed)) is not None:   # MCUBE [scope BY ...]: the pivot screen with the MR lens (mcube_routes.py)
         return to_mcube
+    if ed.word_on("EXP") and ed.word_on("PIVOT") and [w.upper() for w in typed.split()[:1]] == ["CCUBE"]:              # CCUBE: the Pivot's preset ccr (core/pivot_presets.py), under construction
+        return RedirectResponse(_pivot_presets.command(typed.split()) or "/pivot?preset=ccr", status_code=303)
     if ed.word_on("PIVOT") and (to_pivot := pivot_redirect(typed)) is not None:        # PIVOT [table | @owner/name]: the pivot screen (pivot_routes.py)
         return to_pivot
     if ed.word_on("SMAT") and (to_smat := smat_redirect(typed)) is not None:          # SMAT <id> [N]: the scenario matrix (smat_routes.py)
@@ -469,7 +472,7 @@ async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
     shown = layout["panels"]
     env = request.app.state.templates.env
     parts = env.get_template("_macros/view.html").module
-    # each panel as HTML (the macros) and as its JSON (the client-side renderer draws that on the pages it draws: ui.render, CLIENT_RENDERER.md 16)
+    # each panel as HTML (the macros, the page's) and as its JSON (what an embed's renderer draws: CLIENT_RENDERER.md)
     out = [{"id": p["id"], "kind": p["kind"], "title": p.get("title") or "", "html": api_routes._panel_html(request, p, ref={"kind": kind, "id": id_}), "panel": p,
             **({"provenance": p["provenance"]} if p.get("provenance") else {})} for p in shown]   # a panel's own source: its freshness (RACHANA_REFERENCE.md 9)
     prov = vm.get("provenance") or {}
@@ -578,8 +581,7 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
     layout = await request.app.state.layouts.context(request, vm, bool(embed))      # the user's own arrangement, if any
     grid_mine = await _grid_layout(request, vm, layout)                             # a Sutra with layout: (RACHANA_REFERENCE.md 13)
     panels = layout["panels"]
-    rc = render_mode.client(request, "pane" if embed else "view")   # ui.render: the client-side renderer draws the page from this ViewModel
-    phone = await phone_routes.plan_for(request, vm, panels, bool(embed), bool(rc))   # a phone or tablet (MOBILE_DISPLAY.md): its tiers
+    phone = await phone_routes.plan_for(request, vm, panels, bool(embed))   # a phone or tablet (MOBILE_DISPLAY.md): its tiers
     if phone and phone["device"] == "tablet":                       # a tablet keeps the page's layout, less its desk panels (under More)
         keep = {p.get("id") for p in phone["shown"]}
         panels = [p for p in panels if p.get("id") in keep]
@@ -596,9 +598,7 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
         except BackendError:
             shared = None                           # the banner is a courtesy: never fail the view for it
     calc = {"offered": False} if embed else await request.app.state.calc.context(request, await packs(request), vm["ref"]["kind"])
-    boot =render_mode.view_boot(request, vm, panels, grid, bool(embed), request.app.state.templates.env.globals["design_on"]()) if rc else None
     return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_, (vm.get("provenance") or {}).get("generation"), ctl),
-                  render_client=rc, render_boot=boot,
                   pin=pin, pin_gen=gen or None, chosen_sutra=chosen, pin_via="history" if request.query_params.get("via") == "history" else None, ctl_query=controls.to_query(ctl), shared=shared, calc=calc, layout=layout, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")],
                   designer=designer_routes.view_context(request, mine), grid=grid, phone=phone,
                   phone_everything=phone_routes.everything(request, bool(embed)))

@@ -88,7 +88,7 @@ it is a retired example pack):
 
 Two things sit beside this picture. With **Drishti\*net** switched on (section 13a), several such servers gossip with each
 other, each with its own sources, and any of them answers any request; the console is given one server and learns the
-others. And BI's Python (Transforms, python visuals, Analyse's cells) runs in the **console's sandboxed runner**, which the
+others. And BI's Python (Transforms, python visuals) runs in the **console's sandboxed runner**, which the
 server's planner may call (`drishti.bi.transform.console-url`).
 
 **Deployment model — a departure from Pravaha.** The Drishti backend is always a
@@ -1178,8 +1178,7 @@ once, which is why it stays part of every production loader. Detail in
 
 Python 3.12, FastAPI + Jinja2: `core/` (app, settings, auth, backend client, business date), `routes/<area>_routes.py`,
 `web/templates/<area>/`, `web/templates/_macros/`, `web/static/{css,js,img,vendor}`. All libraries are **vendored**
-(Bootstrap 5, Bootstrap Icons, ECharts, ECharts GL, CodeMirror, Vega and Vega-Lite, Graphic Walker, and Pyodide for Calc and the BI
-Python console; vanilla JS, no build step); no CDN, no inline script
+(Bootstrap 5, Bootstrap Icons, ECharts, ECharts GL, CodeMirror, Vega and Vega-Lite, and Pyodide for Calc; vanilla JS, no build step); no CDN, no inline script
 (strict CSP); static assets are fingerprinted.
 
 **Themes** — tokens only in `web/static/css/drishti_tokens.css` (gradient chrome in `drishti_gradients.css`); ten themes selected by
@@ -1221,7 +1220,7 @@ bg, bg-2, surface and surface-2, and for `--d-on-accent` on accent fills; ≥ 3:
 | `/reports`, `/reports/all` | Saved and scheduled reports, and BI reports |
 | `/bi`, `/bi/catalogue`, `/bi/workspaces`, `/bi/models`, `/bi/d/{id}`, `/bi/r/{id}`, `/bi/designer`, `/bi/design/theme/{id}`, `/bi/m/{dataset}` | Rūpaka: home, catalogue, workspaces, models, datasets, report viewer (boards are report pages; `/bi/b/{id}` opens the viewer), BI Studio's report and model designers and the theme designer, Model view |
 | `/bi/datasets`, `/bi/w/{workspace}`, `/bi/environments`, `/bi/run/{id}` | BI datasets, one BI workspace, environments (export and import a workspace), where a BI run opens |
-| `/bi/explore`, `/bi/transform`, `/pyconsole` | Analyse (Slice, SQL and Python cells, worked out by the servers), the Transform editor (Python data prep step by step), the browser Python console on a masked extract |
+| `/bi/notebook`, `/bi/transform` | the Notebook (SQL cells run by the server, Python cells on its compute pool), the Transform editor (Python data prep step by step) |
 | `/inbox`, `/share/{id}` | The inbox and the page a shared link opens |
 | `/help`, `/help/{slug}`, `/help/search`, `/help/examples` | Help centre: guides and the repository's docs rendered in-app; F1 opens help for the current screen; the Rachana examples |
 | `/about` | Version and build, Java, uptime, loaded Sutras, source health, licence and notices; for administrators, the link to the competitive analysis (Help, `competitive-analysis`; `/about/competitive` leads there) |

@@ -360,8 +360,8 @@
     function swap(p) {
       var old = view.querySelector('#' + PFX + CSS.escape(p.id));
       if (!old) { return false; }
-      // drawn by the client-side renderer from the panel's JSON when the page is (ui.render: client; an element's renderer), else the HTML
-      var drawn = p.panel ? (options.panelNode || window.Drishti.panelNode || function () { return null; })(p.panel) : null;
+      // drawn by an element's renderer from the panel's JSON when an embed passes one (options.panelNode), else the console's HTML
+      var drawn = p.panel && options.panelNode ? options.panelNode(p.panel) : null;
       if (!drawn && !p.html) { if (window.Drishti.view && p.data) { window.Drishti.view.updateChart(p.id, p.data); } return true; }
       var chosen = old.querySelector('[role="tab"][aria-selected="true"]'), chosenId = chosen ? chosen.id : null;
       var fresh = drawn;

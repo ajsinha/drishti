@@ -12,8 +12,9 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave C (docs/guides/USER_GUIDE.md "Promote to a report"): a slice or a SQL cell of Analyse becomes a visual in a new or an existing report draft, with its dataset, wells and
-filters mapped, and notes for what a report cannot say."""
+"""The Notebook (docs/guides/USER_GUIDE.md › The Notebook, "Promote to a report visual"): a SQL cell becomes a visual in a new or an existing report draft, with its
+model, wells and filters mapped, and notes for what a report cannot say. (Slicing is the Pivot's; core/promote_report.py still reads a slice, the shape a SQL
+cell is read into.)"""
 import pytest
 
 pytest.importorskip("pyarrow")
@@ -21,7 +22,7 @@ pytest.importorskip("pandas")
 
 from bi_backend import BiBackend, DATASET_MODEL  # noqa: E402
 from core.promote_report import add_to_report, matching_measure, sql_to_slice, visual_for  # noqa: E402
-from test_bi_explore import DS, make  # noqa: E402
+from test_bi_notebook import DS, make  # noqa: E402
 
 COLS = ["desk", "currency", "notional", "mtm"]
 MODEL = {**DATASET_MODEL, "name": "trades-basic", "tables": [{"name": "trade"}],
@@ -114,7 +115,7 @@ def _client(backend):
 
 def test_a_sql_cell_promoted_into_an_existing_report_is_added_after_what_is_there():
     backend = PromoteBackend()
-    r = _client(backend).post("/bi/explore/promote", json={"to": "report", "name": "By desk", "dataset": DS, "target": "file:report:mine", "page": "p", "columns": COLS, "qualified": ["trade." + c for c in COLS],
+    r = _client(backend).post("/bi/notebook/promote", json={"to": "report", "name": "By desk", "dataset": DS, "target": "file:report:mine", "page": "p", "columns": COLS, "qualified": ["trade." + c for c in COLS],
                                                           "sql": "SELECT desk, sum(mtm) FROM extract WHERE currency = 'USD' GROUP BY desk"}).json()
     assert r["kind"] == "report" and r["target"] == "file:report:mine" and r["visual"] == "sql" and r["yaml"].startswith("report: mine")
     added = backend.puts[0]["report"]["pages"][0]["visuals"][1]
@@ -124,17 +125,18 @@ def test_a_sql_cell_promoted_into_an_existing_report_is_added_after_what_is_ther
 
 def test_a_target_that_is_not_an_editable_report_is_refused():
     body = {"to": "report", "name": "x", "dataset": DS, "target": "file:report:mine", "sql": "SELECT desk FROM extract", "columns": COLS}
-    assert _client(PromoteBackend(can_edit=False)).post("/bi/explore/promote", json=body).json()["code"] == "DRS-9070"
-    assert _client(PromoteBackend(kind="dataset")).post("/bi/explore/promote", json=body).json()["code"] == "DRS-9070"
+    assert _client(PromoteBackend(can_edit=False)).post("/bi/notebook/promote", json=body).json()["code"] == "DRS-9070"
+    assert _client(PromoteBackend(kind="dataset")).post("/bi/notebook/promote", json=body).json()["code"] == "DRS-9070"
 
 
-def test_a_slice_with_filters_promotes_them_and_a_new_report_is_still_the_default():
-    r = _client(PromoteBackend()).post("/bi/explore/promote", json={"to": "report", "name": "Desk slice", "dataset": DS, "columns": COLS, "qualified": ["trade." + c for c in COLS],
-                                                                    "slice": {"rows": ["desk"], "columns": [], "values": [{"field": "mtm", "agg": "sum"}]},
-                                                                    "filters": [{"field": "currency", "op": "in", "values": ["EUR"]}]}).json()
+def test_a_sql_cell_with_filters_promotes_them_and_a_new_report_is_still_the_default():
+    r = _client(PromoteBackend()).post("/bi/notebook/promote", json={"to": "report", "name": "Desk SQL", "dataset": DS, "columns": COLS, "qualified": ["trade." + c for c in COLS],
+                                                                     "sql": "SELECT desk, sum(mtm) FROM extract WHERE currency IN ('EUR') GROUP BY desk"}).json()
     assert r["target"] is None and "type: matrix" in r["yaml"] and "model: trades-basic@1" in r["yaml"] and "rachana: 2" in r["yaml"] and "trade.currency" in r["yaml"] and "EUR" in r["yaml"]
-    empty = _client(PromoteBackend()).post("/bi/explore/promote", json={"to": "report", "name": "x", "dataset": DS, "sql": "SELECT 1", "columns": COLS}).json()
+    empty = _client(PromoteBackend()).post("/bi/notebook/promote", json={"to": "report", "name": "x", "dataset": DS, "sql": "SELECT 1", "columns": COLS}).json()
     assert empty["code"] == "DRS-9070" and "no fields or measures" in empty["detail"]
+    sliced = _client(PromoteBackend()).post("/bi/notebook/promote", json={"to": "report", "name": "x", "dataset": DS, "slice": {"rows": ["desk"]}}).json()
+    assert sliced["code"] == "DRS-9070"                                                                   # a slice is the Pivot's: Pin to a report there
 
 
 def test_a_drishti_sql_cell_is_read_with_its_aliases_and_measures():

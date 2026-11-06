@@ -1270,7 +1270,7 @@ D and E; Python data prep and the browser Python console moved into C).
    pandas and in the sandbox; the profile of inputs, every step and the output; the step-by-step run. Not built: P4 (now 2.9.0),
    precompute on refresh (rest of P6), P7 to P10 ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](../guides/BI_GUIDE.md#17-data-prep-the-transform-editor)).
 3. **The browser Python console's server side:** masked extracts of a model for the browser, promotion of a result to run
-   on the console backend. **Built:** `POST /pyconsole/extract` (the reader's masked rows, `bi.pyconsole.max_rows`) and
+   on the console backend. **Built:** `POST /pyconsole/extract` (the reader's masked rows, cut to a row limit) and
    `/pyconsole/promote` (the code run in the console's cell sandbox over the extract rebuilt for the reader, kept as a notebook draft).
 
 **Console lane:**
@@ -1289,7 +1289,7 @@ D and E; Python data prep and the browser Python console moved into C).
    YAML written and read back, two drafts saved); Analyse's Profile tab shares the panel.
 3. **The browser Python console:** personal, just-in-time analysis on a masked extract of a model (Pyodide); promoted
    results run on the console backend. **Built:** `/pyconsole`, outside `/bi` (not a BI page: P3 holds), Calc's worker,
-   Promote compares the browser's and the backend's answers ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#16-the-browser-python-console)).
+   Promote compares the browser's and the backend's answers ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#the-notebook)).
 4. **Docs and tutorials** for all of the above (UI, CLI and YAML).
 
 **Accepted when:** (1) a Power BI author does the parity task list (BI_PARITY_PLAN §4 items 6–9, 13) without YAML; (2) a
@@ -1628,7 +1628,7 @@ and one model serves live and as-of answers.
 Every number is computed by the Java server, the console backend (FastAPI, Python) or the source behind a pack's
 connector; the browser only draws the answer it receives, so every device (an iPhone's Safari, a PC's Chrome) shows the
 same answer. Today's browser paths (Python visuals, measures and Analyse cells through Pyodide, DuckDB-Wasm slicing)
-were to move to the servers in W3 (2.3.0; [section 12.2](#122-the-three-waves) says what moved); a personal Python console in the browser came ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#16-the-browser-python-console)). Details: section 15, its section 12.
+were to move to the servers in W3 (2.3.0; [section 12.2](#122-the-three-waves) says what moved); a personal Python console in the browser came ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#the-notebook)). Details: section 15, its section 12.
 
 ### 14.6 The experience comes first
 
@@ -1662,7 +1662,7 @@ experience rules of its section 3). It fixes the **formats** W1 introduces so th
 second breaking change: every key that a later wave fills is already named here, marked with the wave that gives it
 behaviour. The gap analysis it answers was the 2.1 study (BI_PARITY_PLAN.md, deleted: in git at tag v2.9.5; today's gap check is [section 11](#11-gap-check-against-power-bi)); the current shapes it replaces are
 [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules), [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave), [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles),
-[USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python), [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number) and
+[USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook), [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number) and
 [BI_GUIDE.md](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments).
 
 
@@ -2427,7 +2427,7 @@ options: { layer: auto, explain: false, format: json }   # auto | columns | roll
 | `time` | exactly one of `as-of`, `window`, `live`; absent: the model's default (today: the latest business date with rows) |
 | `totals` | `grand` (no fields), `subtotals` (every prefix of `fields`), or explicit `levels` (each a subset of `fields`). Only non-additive measures are computed per level; additive ones are summed by the client (BI_GUIDE.md 3.2, now driven by declared additivity) |
 | `drill` | a hierarchy of the model and the values clicked; the compiler replaces the hierarchy's field by the next level and adds `eq` filters |
-| `shape: rows` | no measures; **one row per row** of the fields' **one** dataset (plus many-to-one attributes), duplicates kept (never `DISTINCT`: the sums of a rows extract equal the measures), with its security; cut at `bi.explore.max_rows`; used by Analyse extracts and *Show the rows* |
+| `shape: rows` | no measures; **one row per row** of the fields' **one** dataset (plus many-to-one attributes), duplicates kept (never `DISTINCT`: the sums of a rows extract equal the measures), with its security; cut at `bi.notebook.max_rows`; used by Analyse extracts and *Show the rows* |
 | `limit` | 1 to the server maximum; default 500 grouped, 10,000 rows |
 
 #### 5.2 The answer
@@ -3848,7 +3848,7 @@ dataset, report visual or terminal search result gives them, in one tabbed works
   appears as a table in SQL).
 - **Local and governed.** Everything runs on the data the server sent for this user: row rules and masks were applied
   before it arrived, so local analysis cannot reveal more than the user may see. Extract size is capped per dataset
-  (`bi.explore.max_rows` and `max_fields` in the console); a larger question goes back to the server as a query.
+  (`bi.notebook.max_rows` and `max_fields` in the console); a larger question goes back to the server as a query.
 - **From exploration to production.** A Slice becomes a visual in a report draft; a SQL cell becomes a dataset measure or
   table; a Python cell becomes a **Transform, Measure or Visual** draft (section 13) with its inputs captured as a test
   fixture, so notebook work turns into reviewed, tested, shared code instead of a lost notebook.
@@ -4386,13 +4386,13 @@ Reference: [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-fro
 
 #### 20.9 Analyse (phase 9, lean)
 
-References: [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) (the reference), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) section 16 (the console's `QuantEngine`), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 21, [tutorial 14](../tutorials/14-python-and-analyse.md),
-the console's `bi.explore.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `test_bi_explore.py` and `test_bi_explore_browser.py`.
+References: [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) (the reference), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) section 16 (the console's `QuantEngine`), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 21, [tutorial 14](../tutorials/14-python-and-analyse.md),
+the console's `bi.notebook.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `test_bi_explore.py` and `test_bi_explore_browser.py`.
 
 **Built (a lean slice of the phase).**
 
 * **The page** at `/bi/explore` (the rail's *Analyse*, no longer a placeholder): open a dataset (or, over the route, one report visual's data) as a **masked extract**: the server's dataset query *as the reader* (masks, row rules), the table's own rows with
-  their `id`, cut to `bi.explore.max_rows`, rebuilt on every call and never kept. Tabs **Slice**, **SQL**, **Python**; keyboard- and phone-friendly (field chips with R, C, V, F buttons as well as drag).
+  their `id`, cut to `bi.notebook.max_rows`, rebuilt on every call and never kept. Tabs **Slice**, **SQL**, **Python**; keyboard- and phone-friendly (field chips with R, C, V, F buttons as well as drag).
 * **Slice** in plain JavaScript over the extract the page holds (rows, columns, values with `sum`, `avg`, `count`, `min`, `max`, filters).
 * **SQL** cells over the table `extract` on the **console**, read-only (an authorizer: one SELECT), with limits on text, time and rows (`DRS-9070`, `9072`, `9073`).
 * **Python** cells over `df` with `result` drawn as a table, a chart (ECharts option, SVG, PNG) or a value, plus `quant`, on the phase 6 runner (server target, `bi-author`) or in Pyodide in Calc's worker (browser target); the Analyse page keeps the strict policy.
@@ -4409,8 +4409,8 @@ page itself still has no WebAssembly: only DuckDB's own worker compiles it. Pyth
 
 #### 20.10 Several datasets (composed datasets, Python Transforms, reports over several datasets)
 
-References: [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) section 11 (the reference), [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 13, [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 16, [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) section 2, [BI_GUIDE.md](../guides/BI_GUIDE.md) section 13,
-tutorials [10](../tutorials/10-first-bi-report.md) and [14](../tutorials/14-python-and-analyse.md), [API_GUIDE.md](../guides/API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2), the settings `drishti.bi.transform.*` and the console's `bi.explore.max_extracts` in
+References: [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) section 11 (the reference), [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 13, [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 16, [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) section 2, [BI_GUIDE.md](../guides/BI_GUIDE.md) section 13,
+tutorials [10](../tutorials/10-first-bi-report.md) and [14](../tutorials/14-python-and-analyse.md), [API_GUIDE.md](../guides/API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2), the settings `drishti.bi.transform.*` and the console's `bi.notebook.max_extracts` in
 [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `ComposedDatasetApiTest`, `TransformServiceTest`, `SampleDatasetsTest`, `test_pyrunner_transform.py`, `test_bi_explore_multi.py`, `test_bi_multi_dataset_browser.py`.
 
 The question ("more than one dataset in BI, joined, even by Python") is answered at three levels, and the one rule that decides every design choice is **each source is asked as the reader, before anything is joined**.
@@ -4465,7 +4465,7 @@ Nine items that the earlier phases listed as not built, now built; each is descr
 * **Tests shipped with a Python item.** `tests:` in the manifest (`PythonTests`: shape checked by the server, `DRS-9070` with the path; inline `input` frames or a dataset `sample`, `params`, `by`, `expect`, `tolerance`; measures, visuals (`kind` and dotted `has` paths) and transforms). The console runs them in the sandbox (`core/pytests.py`): **Check** shows each as passed, failed or could-not-run; **publish and approve through the console** are refused with `DRS-9076` while one fails (a bi-admin may `force`). Because only the console has Python, a call straight to the server's API is not gated (said in the docs, not hidden).
 * **Python on boards and in alerts.** A board tile may be a python visual (`bi-board.js` runs it through `drishti_bi-python.js`; no tile alert of its own). An alert's measure may be a **Python measure** (`PythonAlertReader`): the server builds the person's rows (the engine applies their row rules and masks), a masked column makes the reading masked and nothing runs, and `TransformRunner.measure` (`ProcessTransformRunner`, the same process boundary a Transform uses: `transform_cli.py` in `measure` mode over `core/pyrunner.py`) answers a number for each group, reduced to one. No new endpoint and no shared secret: the server starts the console's runner itself, as for Transforms (the alternative of the server calling the console over HTTP was built first and removed: a second authenticated door for no gain).
 * **Calc's `drishti_bi`.** `query` / `datasets` / `describe` (and `_async` forms) ask the BI engine through the page's `/bi/api/datasets/...` as the person (masks and row rules the server's), returning DataFrames. **`drishti_bi.walk(df)`** shows **Graphic Walker 0.5.3** (vendored, PygWalker's front end; **PygWalker itself cannot be vendored offline**: a Jupyter package that needs a server and the internet) in an `<iframe sandbox="allow-scripts">` whose page has its own policy (`unsafe-eval`, inline styles, `connect-src 'none'`, `sandbox`): the only place the console allows them, and a frame that has no cookie, storage or way to reach the console. The bundle is built from the npm package (`tools/vendor-js/`); its map chart's `react-leaflet` (Hippocratic-2.1) is replaced by a stand-in so none of that code is vendored; the library's service hosts are rewritten to `blocked.invalid`.
-* **DuckDB-Wasm in Analyse.** Slice (one `GROUP BY`, finished by the same code as the JavaScript pivot) and SQL cells run in the browser on the extract the page holds, with the server's SQLite and the JavaScript pivot as the fallback (this was removed with DuckDB-Wasm: not installed, `bi.explore.browser_engine: server`, a start slower than `browser_start_seconds`, further extracts). The **page keeps the strict policy**: only DuckDB's worker compiles WebAssembly, under the worker policy of that one file; after the load `enable_external_access = false` and `lock_configuration = true`, one read-only statement, a runaway query has its worker ended. `bi-explore-duck.js`; a Chromium test compares the two engines' tables and SQL results.
+* **DuckDB-Wasm in Analyse.** Slice (one `GROUP BY`, finished by the same code as the JavaScript pivot) and SQL cells run in the browser on the extract the page holds, with the server's SQLite and the JavaScript pivot as the fallback (this was removed with DuckDB-Wasm: not installed, `bi.notebook.browser_engine: server`, a start slower than `browser_start_seconds`, further extracts). The **page keeps the strict policy**: only DuckDB's worker compiles WebAssembly, under the worker policy of that one file; after the load `enable_external_access = false` and `lock_configuration = true`, one read-only statement, a runaway query has its worker ended. `bi-explore-duck.js`; a Chromium test compares the two engines' tables and SQL results.
 * **Promote to a report visual.** `core/promote_report.py`: a slice (with its filters) or a SQL cell (read for plain columns, `GROUP BY`, `sum/avg/count/min/max`, simple conditions; the rest named in the notes) becomes a `matrix`, `table` or `card` in a new report draft or **added to an existing draft** (read by the server's checker, written again by the designer's writer, saved as the draft). A value is a dataset measure only when one is exactly that aggregate.
 * **Perspective charts and the settings panel.** `perspective-chart` (the d3fc plugin; `format.plugin`) and a **Settings** button on every Perspective visual; **Save this view into the report** writes the viewer's state into the draft as `format.view` (`plugin, plugin_config, columns, group_by, split_by, aggregates, sort, filter, expressions, columns_config`; validated). A page that holds a chart gets the two more style hashes the plugin writes (`CHART_STYLE_HASHES`); the open panel sets about a dozen `style` attributes the policy refuses (`style-src-attr`), which are logged and harmless.
 * **Codes.** `DRS-9076` (a Python item's tests failed; console), `DRS-9077` (a Vega-Lite specification not drawn; in the frame).
@@ -4498,7 +4498,7 @@ This is the one summary at 2.1.0. Since then Perspective and DuckDB-Wasm were re
 | Streaming (phase 5, waves A and B) | live tables kept by key, **incremental live measures**, a **history of a live table**, Perspective grid, pivot and chart with the settings panel, boards with **tile hysteresis** and a **board designer**, kiosk | [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles) |
 | Python (phase 6, wave C) | Measure, Visual and Transform interfaces, sandboxed runner, browser target, **tests shipped with an item**, **Python on boards and in alerts**, Vega-Lite output, Calc's **`drishti_bi`** and **Graphic Walker** | [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), [USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view) |
 | Distribution (phase 7, wave D) | PDF, PNG, Excel (with **real charts**) and CSV exports, subscriptions per recipient with optional **narrative summaries**, alerts on measures with **retries**, **webhook and text** channels, `<drishti-report>`, **`<drishti-about>`**, **`<drishti-search>`**, React, Vue and Angular sample pages | [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding), [CLIENT_RENDERER.md](CLIENT_RENDERER.md#19-drishti-elements-developer-guide) |
-| Analyse (phase 9, wave C) | masked extracts, Slice and SQL in the browser (**DuckDB-Wasm**), Python cells, notebooks, **promotion to a report visual**, several extracts | [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) |
+| Analyse (phase 9, wave C) | masked extracts, Slice and SQL in the browser (**DuckDB-Wasm**), Python cells, notebooks, **promotion to a report visual**, several extracts | [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) |
 | Stage 2, AI | report from words, ask the data, explain a number, **designer copilot**, **dataset helper**, narrative summaries; off by default, under the AI policy | [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number) |
 | Operations | one temp folder per process; the multi-day type-ahead index with disk segments and reload | [OPERATIONS.md](../admin/OPERATIONS.md) |
 

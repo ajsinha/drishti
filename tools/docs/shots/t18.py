@@ -231,26 +231,17 @@ def refused(c: Ctx):
     bi(c, "DELETE", "/items/" + item["id"])
 
 
-@shot("13-two-extracts.jpg", also=("14-the-trap.jpg", "15-the-cure.jpg"))
+@shot("13-two-extracts.jpg")
 def analyse(c: Ctx):
     the_rest(c)
     login(c, height=900)
     c.page.set_viewport_size({"width": 1280, "height": 900})
-    c.page.goto(c.base + "/bi/explore?item=" + STATE["notebook"])
+    c.page.goto(c.base + "/bi/notebook?item=" + STATE["notebook"])
     c.page.wait_for_selector("[data-extra='exposure']", timeout=60000)
     c.page.wait_for_function("() => /rows/.test(document.querySelector('[data-info]').textContent)", timeout=60000)
     c.page.evaluate("window.scrollTo(0, 0)")
     c.save("13-two-extracts.jpg", clip={"x": 240, "y": 56, "width": 1040, "height": 844})
-    c.page.click("#bxT-python")
-    cells = c.page.locator("[data-cells=python] [data-run]")
-    cells.nth(0).click()
-    c.page.wait_for_selector("[data-cells=python] [data-stdout]", timeout=90000)
-    c.page.wait_for_timeout(1500)
-    elem_shot(c, "14-the-trap.jpg", "[data-pane=python]", pad=6)
-    cells.nth(1).click()
-    c.page.wait_for_function("() => document.querySelectorAll('[data-cells=python] .bx-out canvas, [data-cells=python] .bx-out .bi-chart').length > 0", timeout=90000)
-    c.page.wait_for_timeout(1500)
-    elem_shot(c, "15-the-cure.jpg", "[data-pane=python]", pad=6)
+    # the two cells run on the server's compute pool (under construction): the tutorial shows their output as text
 
 
 @shot("16-python-dataset.jpg")
@@ -278,7 +269,7 @@ def promote(c: Ctx):
     login(c, height=900)
     quiet_inbox(c)
     c.page.set_viewport_size({"width": 1280, "height": 900})
-    c.page.goto(c.base + "/bi/explore?item=" + STATE["notebook"])
+    c.page.goto(c.base + "/bi/notebook?item=" + STATE["notebook"])
     c.page.wait_for_selector("[data-extra='exposure']", timeout=60000)
     c.page.wait_for_function("() => /rows/.test(document.querySelector('[data-info]').textContent)", timeout=60000)
     c.page.click("#bxT-python")

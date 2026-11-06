@@ -45,14 +45,13 @@ features:                                # presets of existing switches (config/
   var: on
   exposure: on
   calc: off
-  pyconsole: off
   python: off
   designer: off
   build: off
   forms: off                             # as Drishti Risk: the blotter and the command line, no query by form
   datamap: off
-  data: on                               # the Data view (DATA, /data): every dataset, a simple selection, a day as .jsonl.gz
-  internal-only-data: off                # the Data view refuses datasets marked internal only (IMF, Yahoo, news headlines)
+  data: on                               # Export data (EXPORT, /data): every dataset, a simple selection, a day as .jsonl.gz
+  internal-only-data: off                # Export data refuses datasets marked internal only (IMF, Yahoo, news headlines)
   layouts: on
   workspaces: on
   monitors: on

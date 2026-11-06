@@ -21,8 +21,8 @@
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}">{% endblock %}
 {% block footer %}{% endblock %}
-{# F1 opens the guide of the page: the designers, Analyse, Transforms and the Python console have their own (config/help.yaml, contextual). #}
-{% block screen %}{% if bi_page in ('designer', 'theme-designer', 'explore', 'transform', 'pyconsole') %}bi-{{ bi_page }}{% else %}{{ screen | default('bi') }}{% endif %}{% endblock %}
+{# F1 opens the guide of the page: the designers, the Notebook and Transforms have their own (config/help.yaml, contextual). #}
+{% block screen %}{% if bi_page in ('designer', 'theme-designer', 'notebook', 'transform') %}bi-{{ bi_page }}{% else %}{{ screen | default('bi') }}{% endif %}{% endblock %}
 {% block content %}
 {% macro rail_link(href, icon, label, key, soon='') -%}
   <a href="{{ href }}" class="bi-rail-link{% if soon %} bi-rail-soon{% endif %}"{% if bi_page == key %} aria-current="page"{% endif %}>
@@ -40,9 +40,9 @@
     {{ rail_link('/bi/datasets', 'hdd-stack', 'Datasets', 'datasets') }}
     {{ rail_link('/bi/designer', 'bounding-box', 'Designer', 'designer') }}
     {{ rail_link('/bi/environments', 'arrow-left-right', 'Environments', 'environments') }}
-    {{ rail_link('/bi/explore', 'binoculars', 'Analyse', 'explore') }}
+    {{ rail_link('/pivot', 'grid-3x3', 'Pivot', 'pivot') }}
+    {{ rail_link('/bi/notebook', 'journal-code', 'Notebook', 'notebook') }}
     {{ rail_link('/bi/transform', 'funnel', 'Transforms', 'transform') }}
-    {{ rail_link('/pyconsole', 'terminal', 'Python console', 'pyconsole') }}
     <button type="button" class="bi-rail-link bi-rail-keys" data-bi-keys aria-label="Keyboard shortcuts (?)"><i class="bi bi-keyboard" aria-hidden="true"></i><span>Keys <kbd>?</kbd></span></button>
   </nav>
   <section class="bi-canvas" id="biCanvas" data-bi-page="{{ bi_page }}" data-workspace="{{ workspace | default('') }}" data-item="{{ item | default('') }}"

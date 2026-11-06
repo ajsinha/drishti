@@ -32,8 +32,8 @@
   var doFetch = options.fetch || function (u, o) { return fetch(u, o); };
   var toUrl = options.url || function (p) { return p; };
   var setHtml = options.setHtml || function (el, html) { el.innerHTML = html; };       // the element passes its sanitising, Trusted Types writer
-  // the client-side renderer draws the body from the explanation's JSON on the pages it draws (ui.render: client; CLIENT_RENDERER.md 16)
-  function drawer2() { return options.draw || window.Drishti.aboutNode || null; }
+  // an element's renderer draws the body from the explanation's JSON when an embed passes one (options.draw); a console page uses the HTML
+  function drawer2() { return options.draw || null; }
   function asJson(u) { return u + (u.indexOf('?') < 0 ? '?' : '&') + 'format=json'; }
   var drawer = root.getElementById('aboutDrawer');
   var view = root.querySelector('[data-view]');
