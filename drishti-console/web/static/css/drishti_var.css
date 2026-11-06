@@ -52,7 +52,7 @@
 .vx-ccytable tr.shown td:first-child { box-shadow: inset 2px 0 0 var(--d-accent); color: var(--d-accent); font-weight: 600; }
 .vx-ccytable td .vx-link { font-weight: 600; text-decoration: none; }
 .vx-ccytable td .vx-link:hover, .vx-ccytable td .vx-link:focus-visible { text-decoration: underline; }
-.vx-layout { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 10px; align-items: start; }
+.vx-layout { display: grid; grid-template-columns: var(--vx-side, 330px) minmax(0, 1fr); gap: 10px; align-items: start; }
 .vx-panel { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 4px; min-width: 0; display: flex; flex-direction: column; }
 .vx-ph { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-bottom: 1px solid var(--d-border); background: var(--d-surface-2);
   border-radius: 4px 4px 0 0; flex-wrap: wrap; }
@@ -69,8 +69,8 @@
 .vx-link { background: none; border: 0; padding: 0; color: var(--d-link); cursor: pointer; font-size: inherit; text-decoration: underline; }
 
 /* the tree */
-.vx-tree { font-size: 12px; }
-.vx-row { display: grid; grid-template-columns: minmax(0, 1fr) 58px 58px 52px; gap: 4px; align-items: center; padding: 4px 8px;
+.vx-tree { font-size: 12px; overflow-x: auto; }       /* columns widened past the panel scroll */
+.vx-row { display: grid; grid-template-columns: var(--rz-cols, minmax(0, 1fr) 58px 58px 52px); gap: 4px; align-items: center; padding: 4px 8px;
   border-bottom: 1px solid var(--d-border); cursor: pointer; }
 .vx-row:hover { background: var(--d-highlight); }
 .vx-row[aria-current="true"] { background: var(--d-accent-tint); box-shadow: inset 2px 0 0 var(--d-accent); }
@@ -204,7 +204,7 @@
 @media (hover: none) { .vx-row .vx-add { opacity: 1; } }
 .vx-gone { margin: 4px 0 8px; padding: 4px 8px; border-left: 3px solid var(--d-warn); }    /* a capture of a basket deleted since */
 
-@media (max-width: 1250px) { .vx-layout { grid-template-columns: 310px minmax(0, 1fr); } }
+@media (max-width: 1250px) { .vx-layout { grid-template-columns: var(--vx-side, 310px) minmax(0, 1fr); } }
 @media (max-width: 1100px) { .vx-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 800px) { .vx-layout { grid-template-columns: minmax(0, 1fr); } .vx-charts, .vx-hist2 { grid-template-columns: minmax(0, 1fr); }
   .vx-tree-panel .vx-tree { max-height: 280px; overflow: auto; } }

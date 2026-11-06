@@ -114,14 +114,7 @@
 .ws-pane { position: relative; }
 .ws-num { cursor: grab; touch-action: none; user-select: none; padding: 0 .2rem; border-radius: 3px; }
 .ws-num:hover { background: var(--d-accent-tint); }
-.ws-div { position: absolute; z-index: 8; touch-action: none; background: transparent; border: 0; padding: 0; }
-.ws-div-v { width: 12px; cursor: col-resize; }
-.ws-div-h { height: 12px; cursor: row-resize; }
-.ws-div::after { content: ""; position: absolute; background: var(--d-accent); opacity: 0; border-radius: 2px; transition: opacity .15s; }
-.ws-div-v::after { top: 0; bottom: 0; left: 5px; width: 2px; }
-.ws-div-h::after { left: 0; right: 0; top: 5px; height: 2px; }
-.ws-div:hover::after, .ws-div:focus-visible::after, .ws-div.active::after { opacity: 1; }
-.ws-div:focus-visible { outline: none; }
+.ws-div { z-index: 8; }                       /* a pane divider: the shared resize handle (drishti_resize.css), placed by the script */
 .ws-drop { display: none; position: absolute; inset: 2rem 0 0 0; z-index: 7; align-items: center; justify-content: center; text-align: center;
   border: 2px dashed var(--d-accent); border-radius: 6px; background: color-mix(in srgb, var(--d-accent) 10%, transparent);
   color: var(--d-ink); font-weight: 700; padding: 1rem; }

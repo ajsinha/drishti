@@ -185,41 +185,81 @@
   }
 
   /* ---- columns: an HTML table's header, or a CSS-grid header row ---------------------------------------------------------------- */
+  function tableOf(h) { return h.tagName === 'TABLE' ? h : (h.tagName === 'THEAD' || h.tagName === 'TR') ? h.closest('table') : null; }
+  /** A table's header as columns: each header cell one column wide (a leaf), by its column index (row and column spans counted). */
+  function tableColumns(t) {
+    var rows = t.tHead ? [].slice.call(t.tHead.rows) : (t.rows[0] ? [t.rows[0]] : []), taken = [], leaf = [], n = 0;
+    rows.forEach(function (r, ri) {
+      var c = 0;
+      [].slice.call(r.cells).forEach(function (cell) {
+        while (taken[ri] && taken[ri][c]) { c++; }
+        var cs = cell.colSpan || 1, rs = cell.rowSpan || 1;
+        for (var i = 0; i < rs; i++) { taken[ri + i] = taken[ri + i] || []; for (var j = 0; j < cs; j++) { taken[ri + i][c + j] = true; } }
+        if (cs === 1 && (cell.tagName === 'TH' || !leaf[c])) { leaf[c] = cell; }      // a header cell, not a filter row's box
+        c += cs; n = Math.max(n, c);
+      });
+    });
+    return { n: n, leaf: leaf };
+  }
   function headCells(h) {
-    if (h.tagName === 'TABLE') { var r = h.tHead ? h.tHead.rows[h.tHead.rows.length - 1] : h.rows[0]; return r ? [].slice.call(r.cells) : []; }
-    if (h.tagName === 'THEAD') { return h.rows.length ? [].slice.call(h.rows[h.rows.length - 1].cells) : []; }
+    var t = tableOf(h);
+    if (t) { var m = tableColumns(t), out = []; m.leaf.forEach(function (c) { if (c) { out.push(c); } }); return out; }
     return [].slice.call(h.children).filter(function (c) { return !c.classList.contains('rz-handle'); });
   }
   function bindColumns(h) {
-    var table = h.tagName === 'TABLE' ? h : h.closest('table');
+    var table = tableOf(h);
     var key = h.getAttribute('data-resize-key'), min = num(h.getAttribute('data-resize-min'), 40);
     var flex = h.hasAttribute('data-resize-flex') ? num(h.getAttribute('data-resize-flex'), -1) : -1;
     var scopeSel = h.getAttribute('data-resize-scope'), cssVar = h.getAttribute('data-resize-var') || '--rz-cols';
     function scope() { return (scopeSel && h.closest(scopeSel)) || h.parentElement; }
-    function cells() { return headCells(h); }
-    function widths() { return cells().map(function (c) { return Math.round(c.getBoundingClientRect().width); }); }
+    function count() { return table ? tableColumns(table).n : headCells(h).length; }
+    function widths() {                                     // every column's width now, in px
+      if (!table) { return headCells(h).map(function (c) { return Math.round(c.getBoundingClientRect().width); }); }
+      var m = tableColumns(table), body = table.tBodies[0] && table.tBodies[0].rows[0], out = [];
+      for (var i = 0; i < m.n; i++) {
+        var c = m.leaf[i] || (body && body.cells.length === m.n ? body.cells[i] : null);
+        out.push(c ? Math.round(c.getBoundingClientRect().width) : 80);
+      }
+      return out;
+    }
+    function cols() {                                       // the table's <colgroup> the widths go to (ours, or its own of the right size)
+      var g = table.querySelector(':scope > colgroup'), n = count();
+      if (g && !g.hasAttribute('data-rz') && g.children.length !== n) { return null; }
+      if (!g) {
+        g = document.createElement('colgroup'); g.setAttribute('data-rz', '');
+        for (var i = 0; i < n; i++) { g.appendChild(document.createElement('col')); }
+        table.insertBefore(g, table.tHead || table.tBodies[0] || null);
+      }
+      return g;
+    }
     function apply(ws) {
-      var cs = cells();
       if (table) {
-        if (!ws || ws.length !== cs.length) {
+        var n = count();
+        if (!ws || ws.length !== n) {
           table.classList.remove('rz-fixed'); table.style.removeProperty('width');
-          cs.forEach(function (c) { c.style.removeProperty('width'); });
+          var g0 = table.querySelector(':scope > colgroup');
+          if (g0) { if (g0.hasAttribute('data-rz')) { g0.remove(); } else { [].forEach.call(g0.children, function (c) { c.style.removeProperty('width'); }); } }
           return;
         }
+        var g = cols();
+        if (!g) { return; }
+        [].forEach.call(g.children, function (c, i) { c.style.width = Math.max(min, ws[i]) + 'px'; });
         table.classList.add('rz-fixed');
-        cs.forEach(function (c, i) { c.style.width = Math.max(min, ws[i]) + 'px'; });
         table.style.width = ws.reduce(function (a, b) { return a + Math.max(min, b); }, 0) + 'px';
         return;
       }
       var s = scope();
       if (!s) { return; }
-      if (!ws || ws.length !== cs.length) { s.style.removeProperty(cssVar); return; }
+      if (!ws || ws.length !== count()) { s.style.removeProperty(cssVar); return; }
       s.style.setProperty(cssVar, ws.map(function (w, i) { w = Math.max(min, w); return i === flex ? 'minmax(' + w + 'px, 1fr)' : w + 'px'; }).join(' '));
     }
     function saved() { return phone() ? null : load(key, h); }
     function keep(ws) { store(key, h, ws); }
     h.__rzApply = function () { apply(saved()); };
-    cells().forEach(function (c, i) {
+    var leafIndex = [];
+    if (table) { tableColumns(table).leaf.forEach(function (c, i) { if (c) { leafIndex.push(i); } }); }
+    headCells(h).forEach(function (c, k) {
+      var i = table ? leafIndex[k] : k;
       if (c.querySelector(':scope > .rz-col')) { return; }
       var hd = document.createElement('span');
       hd.className = 'rz-col';

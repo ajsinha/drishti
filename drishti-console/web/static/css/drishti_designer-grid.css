@@ -49,10 +49,6 @@
 .gd-w:hover, .gd-w:focus-visible { border-color: var(--d-accent); color: var(--d-ink); outline: none; }
 .gd-w-in { width: 3.4rem; margin-left: .2rem; font: inherit; font-size: .78rem; padding: 0 .2rem; border: 1px solid var(--d-accent); border-radius: 4px;
   background: var(--d-surface); color: var(--d-ink); }
-.gd-edge { position: absolute; top: 0; right: -4px; width: 8px; height: 100%; cursor: col-resize; z-index: 2; touch-action: none; }
-.gd-edge::after { content: ""; position: absolute; left: 3px; top: 20%; height: 60%; width: 2px; border-radius: 1px; background: var(--d-border); }
-.gd-edge:hover::after, .gd-edge:focus-visible::after, [data-gd-dragging] .gd-edge::after { background: var(--d-accent); }
-.gd-edge:focus-visible { outline: none; }
 .gd-kid { margin: .15rem 0 0 .6rem; padding: .25rem .4rem; border-left: 2px solid var(--d-accent); border-radius: 0 6px 6px 0; display: flex;
   flex-direction: column; gap: .1rem; background: var(--d-surface-2, var(--d-bg-2)); cursor: cell; outline: none; min-width: 0; }
 .gd-kid.gd-kid2 { margin-left: 1.5rem; border-left-style: dashed; }          /* a panel a click in an opened panel opens: one step further in */

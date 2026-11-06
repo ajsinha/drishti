@@ -84,11 +84,9 @@
       var h = el('div', { 'class': 'gd-colh', role: 'columnheader', 'data-gd-col': String(c) }, [letters(c), w ? ' · ' : '', w]);
       if (w) { w.addEventListener('click', typeWidth.bind(null, c)); }
       if (g.mode === 'areas' && c < g.cols - 1) {
-        var edge = el('span', { 'class': 'gd-edge', role: 'separator', tabindex: '0', 'aria-orientation': 'vertical', 'data-gd-edge': String(c),
-          'aria-label': 'Between columns ' + letters(c) + ' and ' + letters(c + 1) + ': drag, or Left and Right', 'aria-valuemin': '1',
-          'aria-valuemax': String(12 - 1), 'aria-valuenow': String(g.widths[c]) });
-        edge.addEventListener('pointerdown', dragEdge.bind(null, c));
-        edge.addEventListener('keydown', keyEdge.bind(null, c));
+        var edge = el('span', { 'class': 'rz-edge', 'data-gd-edge': String(c),
+          'aria-label': 'Between columns ' + letters(c) + ' and ' + letters(c + 1) + ': drag, or Left and Right; Home or a double-click: equal' });
+        window.Drishti.resize.handle(edge, edgeHandle(c));
         h.appendChild(edge);
       }
       h.style.gridColumn = String(c + 2); h.style.gridRow = '1';
@@ -196,24 +194,22 @@
     if (!ws || ws.join() === state.grid.widths.join()) { shown(state.grid.widths); return; }
     step({ op: 'widths', widths: ws });
   }
-  function dragEdge(c, e) {
-    e.preventDefault();
-    var start = e.clientX, ws = units(), per = sheet.querySelector('[data-gd-col="' + c + '"]').getBoundingClientRect().width / ws[c], now = ws;
-    var edge = e.currentTarget; edge.setPointerCapture && edge.setPointerCapture(e.pointerId);
-    root.setAttribute('data-gd-dragging', '');
-    function move(ev) { var d = Math.round((ev.clientX - start) / Math.max(per, 8)); now = balanced(ws, c, ws[c] + d) || now; shown(now); }
-    function up() {
-      edge.removeEventListener('pointermove', move); edge.removeEventListener('pointerup', up); edge.removeEventListener('pointercancel', up);
-      root.removeAttribute('data-gd-dragging'); keep(now);
-    }
-    edge.addEventListener('pointermove', move); edge.addEventListener('pointerup', up); edge.addEventListener('pointercancel', up);
+  function edgeHandle(c) {                                               /* the shared resize handle (drishti_resize.js) on a header's edge */
+    return {
+      axis: 'x',
+      start: function () {
+        root.setAttribute('data-gd-dragging', '');
+        var ws = units();
+        return { ws: ws, now: ws, per: sheet.querySelector('[data-gd-col="' + c + '"]').getBoundingClientRect().width / ws[c] };
+      },
+      move: function (x, dx) { x.now = balanced(x.ws, c, x.ws[c] + Math.round(dx / Math.max(x.per, 8))) || x.now; shown(x.now); },
+      end: function (x) { root.removeAttribute('data-gd-dragging'); keep(x.now); },
+      key: function (d) { d = d > 0 ? 1 : -1; var ws = balanced(units(), c, units()[c] + d); if (!ws) { say('A column is at least 1 unit wide'); return; } refocus(c, ws); },
+      reset: function () { var ws = units(), n = c + 1, sum = ws[c] + ws[n]; ws[c] = Math.ceil(sum / 2); ws[n] = sum - ws[c]; refocus(c, ws); },
+      value: function () { return { now: units()[c], min: 1, max: 11 }; }
+    };
   }
-  function keyEdge(c, e) {
-    var d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-    if (!d) { return; }
-    e.preventDefault(); e.stopPropagation();
-    var ws = balanced(units(), c, units()[c] + d);
-    if (!ws) { say('A column is at least 1 unit wide'); return; }
+  function refocus(c, ws) {
     step({ op: 'widths', widths: ws }).then(function () { var n = sheet.querySelector('[data-gd-edge="' + c + '"]'); if (n) { n.focus(); } });
   }
   function typeWidth(c) {

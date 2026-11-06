@@ -114,7 +114,8 @@
         return td;
       })));
     }
-    const table = h('table', { class: 'tbl bi-tbl bi-vgrid bi-vis-table' + (f.wrap ? ' bi-wrap' : ''), 'data-plain': true }, h('caption', { class: 'visually-hidden', text: spec.title || 'Table' }), h('thead', {}, head), body, foot);
+    const table = h('table', { class: 'tbl bi-tbl bi-vgrid bi-vis-table' + (f.wrap ? ' bi-wrap' : ''), 'data-plain': true,
+      'data-resize': 'columns', 'data-resize-key': 'bi.' + location.pathname + '|' + (spec.id || spec.title || 'table') }, h('caption', { class: 'visually-hidden', text: spec.title || 'Table' }), h('thead', {}, head), body, foot);
     if (typeof f.fontSize === 'number') { table.style.fontSize = f.fontSize + 'px'; }
     B.clear(host).appendChild(h('div', { class: 'tbl-wrap bi-vis-scroll' }, table));
     if (!rows.length) { host.appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'No rows for this selection.' })); }

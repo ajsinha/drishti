@@ -1079,7 +1079,10 @@
     var t = $("[data-vx-tree]");
     t.textContent = "";
     var hd = h("div", "vx-row hdr");
-    var pcols = PM && !!window.Drishti.VarParametric;
+    var pcols = PM && !!window.Drishti.VarParametric, lay = t.closest(".vx-layout");
+    if (lay) lay.setAttribute("data-resize-mode", pcols ? "parametric" : "historical");      // the widths a person set, kept per mode
+    hd.setAttribute("data-resize", "columns"); hd.setAttribute("data-resize-key", "var.tree");      // resizable columns (drishti_resize.js)
+    hd.setAttribute("data-resize-flex", "0"); hd.setAttribute("data-resize-scope", ".vx-tree");
     ["Scope", "VaR " + S.ccy, "ES", "Limit"].concat(pcols ? ["Parametric", "Gap"] : []).forEach(function (x, i) { hd.appendChild(h("span", i ? "num" : null, x)); });
     t.classList.toggle("vp-cols", !!pcols);
     t.appendChild(hd);

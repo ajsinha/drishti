@@ -33,7 +33,7 @@
 /* a handle on the right edge of its parent (a header cell, a design grid's column head) */
 .rz-edge { position: absolute; top: 0; right: -5px; width: 10px; height: 100%; }
 .rz-col { position: absolute; top: 0; right: 0; width: 8px; height: 100%; }
-.rz-edge::after { opacity: 1; top: 20%; bottom: 20%; }
+.rz-handle.rz-edge::after { opacity: 1; top: 20%; bottom: 20%; }
 
 /* splitter: in the gutter beside the panel (its left set by the script), the layout's whole height */
 .rz-host { position: relative; }

@@ -62,7 +62,7 @@
       if (hi >= lo) { ranges[m.label] = { lo: lo, hi: hi, style: formats[m.label].style }; }
     });
     var h = [];
-    h.push('<table class="pv-table" role="grid"><thead>');
+    h.push('<table class="pv-table" role="grid" data-resize="columns" data-resize-key="pivot.grid"><thead>');   // resizable columns (drishti_resize.js)
     if (cols.length > 1 || (cols[0] && cols[0].kind !== "grand")) {
       h.push('<tr><th class="pv-corner" rowspan="2">' + esc((a.rowDimensions || []).join(" › ")) + '</th>');
       cols.forEach(function (c) {
