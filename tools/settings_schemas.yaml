@@ -30,6 +30,7 @@ schemas:
       - { key: "menus[].label", type: string, meaning: "Its name in the top bar" }
       - { key: "menus[].icon", type: string, meaning: "Its Bootstrap icon name" }
       - { key: "menus[].subject", type: boolean, default: "false", meaning: "A lens's subject menu (Curves, Economies ...): drawn only where an edition's menus.top names it" }
+      - { key: "menus[].gather", type: list, default: none, meaning: "A menu that gathers the columns of other menus by id (the Trading lens's one Markets menu gathers Curves, Volatility, FX and Credit), each drawn as its own column" }
       - { key: "menus[].engines", type: boolean, default: "false", meaning: "The Engines menu: a column per compute engine, drawn for the engines running in the cluster that the person's role opens" }
       - { key: "menus[].search-over", type: number, default: "4", meaning: "The Engines menu: its search box shows when more engines than this run" }
       - { key: "menus[].admin-link", type: map, default: none, meaning: "The Engines menu: its Admin -> Engines link {href, label, requires} (administrators)" }
