@@ -50,6 +50,7 @@
   <link rel="stylesheet" href="/static/css/drishti_touch.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/css/drishti_server-watch.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/css/drishti_phone.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="/static/css/drishti_resize.css?v={{ ASSET_V }}">
   {% block head %}{% endblock %}
 </head>
 <body{% if (error is defined and error and ((error.code is defined and error.code == 'DRS-5003') or (error is string and 'unreachable' in error))) %} data-server-down="1"{% endif %} class="{% block body_class %}{% endblock %}{% if (settings or {}).density == 'compact' %} density-compact{% endif %}{% if (settings or {}).flash == false %} no-flash{% endif %}" data-product="{{ PRODUCT }}" data-screen="{% block screen %}{{ screen | default('landing') }}{% endblock %}">
@@ -66,6 +67,7 @@
   <script src="/static/js/drishti_colfilter.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_tables.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_phone.js?v={{ ASSET_V }}"></script>
+  <script src="/static/js/drishti_resize.js?v={{ ASSET_V }}"></script>{# resizable panels and columns: data-resize markup, one component #}
   <script src="/static/js/drishti_engines-menu.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_settled.js?v={{ ASSET_V }}"></script>{# Drishti.settled(): the page-settled signal browser tests wait on; inert until asked #}
   {% if me %}<script src="/static/js/drishti_alerts.js?v={{ ASSET_V }}"></script>{% endif %}

@@ -223,6 +223,15 @@ lake once more per part. Instead `var_stack.py` builds each lake **once per test
 read the same folder) and starts a server per file over it, with its own VaR hot folder (`var_lake`, `var_server`). The servers only read
 the lake. A file split later asks the same lake and pays only its server's start again.
 
+### 3.13 A component on a page of its own
+
+A console component that needs no data (the resize handles, `static/js/drishti_resize.js`) is tested on a page of its own markup, with
+no server: `browsers.page(width, height, route=...)` answers `http://render.test/<page>.html` with the test's HTML and a strict
+`Content-Security-Policy` header (`script-src 'self'; style-src 'self'`), and `/static/...` from the console's files. The test waits on
+the component's own condition (`wait_for_function`) and `Drishti.settled()`, and checks `window.__csp` is empty: nothing inline. Each
+behaviour is one `spread` test of a second or two (`tests/test_resize_browser.py`); the screens that use the component keep one test
+each in their own files for the real markup.
+
 ## 4. Numbers to hold
 
 | What | Number |

@@ -64,6 +64,7 @@
 
   <div class="wb-main">
     <aside class="wb-left" aria-label="Data" data-left>
+      <div data-resize="panel" data-resize-key="build.data" data-resize-var="--wb-left" data-resize-min="200" data-resize-max="640" aria-label="Resize the Data panel"></div>
       <section aria-labelledby="wbSamples"><h2 id="wbSamples" class="bs-h">Samples</h2>
         <ul class="wb-samples" aria-label="Samples" data-samples>{# drawn here first, redrawn by drishti_data.js once the page is live #}
           {% for s in design.samples %}<li class="wb-sample" data-sample="{{ s.name }}"><span class="mono">{{ s.name }}</span>
@@ -130,6 +131,7 @@
     </section>
 
     <aside class="wb-right" aria-label="Details">
+      <div data-resize="panel" data-resize-key="build.details" data-resize-var="--wb-right" data-resize-min="220" data-resize-max="720" data-resize-edge="left" aria-label="Resize the Details panel"></div>
       <div class="wb-tabs" role="tablist" aria-label="Details" data-right-tabs>
         <button type="button" role="tab" id="wbTabIns" data-tab="inspector" aria-controls="wbPaneIns" aria-selected="true">Inspector</button>
         <button type="button" role="tab" id="wbTabProb" data-tab="problems" aria-controls="wbPaneProb" aria-selected="false" tabindex="-1">Problems <span class="wb-count" data-problem-count hidden></span></button>

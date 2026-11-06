@@ -208,13 +208,12 @@
       for (var k = 0; k < t.length - 1; k++) {
         var d = document.createElement('button');
         d.type = 'button';
-        d.className = 'ws-div ws-div-' + (axis === 'cols' ? 'v' : 'h');
-        d.setAttribute('role', 'separator');
-        d.setAttribute('aria-orientation', axis === 'cols' ? 'vertical' : 'horizontal');
+        d.className = 'rz-free ws-div';
         d.setAttribute('aria-label', (axis === 'cols' ? 'Divider between columns ' : 'Divider between rows ') + (k + 1) + ' and ' + (k + 2));
         d.setAttribute('data-axis', axis);
         d.setAttribute('data-k', String(k));
-        d.title = 'Drag to resize (or use the arrow keys); double-click: equal sizes';
+        d.title = 'Drag to resize (or use the arrow keys); double-click or Home: equal sizes';
+        window.Drishti.resize.handle(d, divider(axis, k));              // the shared resize handle (drishti_resize.js)
         place(d, axis, k, t);
         grid.appendChild(d);
       }
@@ -246,47 +245,21 @@
       grid.querySelectorAll('.ws-div').forEach(function (d) { place(d, d.getAttribute('data-axis'), +d.getAttribute('data-k'), tracks(d.getAttribute('data-axis'))); });
     });
   }
-  var sizing = null;
-  grid.addEventListener('pointerdown', function (e) {
-    var d = e.target.closest('.ws-div');
-    if (!d || (e.pointerType === 'mouse' && e.button !== 0)) { return; }
-    e.preventDefault();
-    d.setPointerCapture(e.pointerId);
-    d.classList.add('active');
-    grid.querySelectorAll('iframe').forEach(function (f) { f.style.pointerEvents = 'none'; });
-    var axis = d.getAttribute('data-axis'), k = +d.getAttribute('data-k'), t = tracks(axis);
-    sizing = { d: d, axis: axis, k: k, start: t[k][0], total: t[k][1] + t[k + 1][1], id: e.pointerId };
-  });
-  grid.addEventListener('pointermove', function (e) {
-    if (!sizing || e.pointerId !== sizing.id) { return; }
-    var r = grid.getBoundingClientRect(), pos = sizing.axis === 'cols' ? e.clientX - r.left : e.clientY - r.top;
-    share(sizing.axis, sizing.k, (pos - sizing.start) / sizing.total);
-  });
-  function endSizing() {
-    if (!sizing) { return; }
-    sizing.d.classList.remove('active');
-    grid.querySelectorAll('iframe').forEach(function (f) { f.style.pointerEvents = ''; });
-    var w = weights(sizing.axis), k = sizing.k;
-    announce('Now ' + Math.round(100 * w[k] / (w[k] + w[k + 1])) + ' to ' + Math.round(100 * w[k + 1] / (w[k] + w[k + 1])) + '. Save to keep it.');
-    sizing = null;
+  function said(axis, k, then, after) { var w = weights(axis); announce((then || '') + Math.round(100 * w[k] / (w[k] + w[k + 1])) + ' to ' + Math.round(100 * w[k + 1] / (w[k] + w[k + 1])) + (after || '')); }
+  function divider(axis, k) {                   // a divider's drag, keys and reset, for the shared handle
+    return {
+      axis: axis === 'cols' ? 'x' : 'y',
+      start: function () { var t = tracks(axis); return { start: t[k][0], total: t[k][1] + t[k + 1][1] }; },
+      move: function (x, dx, dy, e) {
+        var r = grid.getBoundingClientRect(), pos = axis === 'cols' ? e.clientX - r.left : e.clientY - r.top;
+        share(axis, k, (pos - x.start) / x.total);
+      },
+      end: function () { said(axis, k, 'Now ', '. Save to keep it.'); },
+      key: function (step) { var w = weights(axis); share(axis, k, w[k] / (w[k] + w[k + 1]) + (step > 0 ? 0.05 : -0.05)); said(axis, k); },
+      reset: function () { share(axis, k, 0.5); announce('Equal sizes. Save to keep it.'); },
+      value: function () { var w = weights(axis); return { now: 100 * w[k] / (w[k] + w[k + 1]), min: 10, max: 90 }; }
+    };
   }
-  grid.addEventListener('pointerup', endSizing);
-  grid.addEventListener('pointercancel', endSizing);
-  grid.addEventListener('dblclick', function (e) {
-    var d = e.target.closest('.ws-div');
-    if (d) { share(d.getAttribute('data-axis'), +d.getAttribute('data-k'), 0.5); announce('Equal sizes. Save to keep it.'); }
-  });
-  grid.addEventListener('keydown', function (e) {
-    var d = e.target.closest && e.target.closest('.ws-div');
-    if (!d) { return; }
-    var axis = d.getAttribute('data-axis'), k = +d.getAttribute('data-k'), w = weights(axis), now = w[k] / (w[k] + w[k + 1]);
-    var less = axis === 'cols' ? 'ArrowLeft' : 'ArrowUp', more = axis === 'cols' ? 'ArrowRight' : 'ArrowDown';
-    if (e.key !== less && e.key !== more && e.key !== 'Home') { return; }
-    e.preventDefault();
-    share(axis, k, e.key === 'Home' ? 0.5 : now + (e.key === more ? 0.05 : -0.05));
-    w = weights(axis);
-    announce(Math.round(100 * w[k] / (w[k] + w[k + 1])) + ' to ' + Math.round(100 * w[k + 1] / (w[k] + w[k + 1])));
-  });
   window.addEventListener('resize', function () { requestAnimationFrame(dividers); });
 
   // ---- drag a view into a pane: from the command line's suggestions, or another pane's number ----------------------
