@@ -68,7 +68,7 @@ body.terminal { font-size: 14px; }
 
 /* ---- grid and panels ---- */
 .view-r { display: contents; }   /* the host the client-side renderer draws a view's parts into (ui.render: client): no box of its own, so the page lays out as the server's */
-.vgrid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: .8rem; padding: .8rem 1.25rem 1.2rem; }
+.vgrid { display: grid; grid-template-columns: minmax(0, 2fr) var(--v-right, minmax(0, 1fr)); gap: .8rem; padding: .8rem 1.25rem 1.2rem; }
 .vmain, .vright { display: flex; flex-direction: column; gap: .8rem; min-width: 0; }
 .pnl { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; min-width: 0; }
 .pnl:focus { outline: 2px solid var(--d-accent); outline-offset: 1px; }

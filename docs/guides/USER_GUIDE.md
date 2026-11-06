@@ -1303,6 +1303,28 @@ removed panel); the full line diff, where a move reads as a deleted block and an
 diff**. The promote drawer shows the same before you submit ([Reviews](#reviews-approving-a-sutra)). With review switched off on the server the button
 reads **Publish** and the new version is live at once.
 
+## Resize panels and columns
+
+A side panel and the main area of a screen are divided by a thin line, and so are the columns of a table, a tree or a grid: drag
+the line to make one wider. The line shows when you point at it or move the focus to it.
+
+- **Side panels**: the VaR explorer's Scopes, the exposure explorer's Scope, Help's contents list, the Build workbench's Data and
+  Details, the pivot's Fields, the BI report designer's Filters, Visualizations and Fields panes, the BI model designer's Datasets
+  and Inspector, and the Context column of a view. A panel stays between the least and the most width its screen allows.
+- **Columns**: the VaR tree, the data tables of every view, BI grids and matrices, and the pivot grid. Drag the line at the right
+  of a column's heading; the rows follow. A column is never narrower than about 40 pixels, so it cannot vanish. Columns made wider
+  than the panel scroll sideways.
+- **Kept for you**: the widths are kept in this browser for you alone, per screen and per mode. The VaR explorer keeps one set of
+  widths with Parametric on and another with it off. Nobody else sees your widths.
+- **Reset**: double-click a line, or focus it and press `Home`, to go back to the screen's own width.
+- **The keyboard**: `Tab` to a line, then `←` and `→` move it by a small step and `Shift`+`←` or `→` by a larger one. A screen
+  reader reads the line as a separator and its width.
+- **Phones**: below 640 pixels wide there is nothing to resize; the screens keep their single column.
+
+The dividers of a [workspace](#workspaces), of a screen laid out in areas and of the designer's grid work the
+same way (drag, the arrow keys, a double-click or `Home` to reset). Their widths are kept with the workspace, the screen's layout or
+the design, not in your browser.
+
 ## Screens that respond: clicks, refresh, editing and your own page
 
 Newer screens (every pack screen is built from the same parts) can do more than show a document. What you meet:
@@ -1491,6 +1513,7 @@ wins: a site that says "never more than glance" for a heavy panel keeps it so, w
 | `Ctrl+Enter` | In Calc: run the code (`Cmd+Enter` on a Mac) |
 | `Alt+1`…`Alt+4` | In a workspace: move to pane 1 to 4, also while the focus is inside a pane |
 | `Alt+0` | In a workspace: from a pane back to the workspace's bar |
+| `←` `→` `Home` | On a panel's or a column's resize line: move it (`Shift`: further), or reset it ([Resize panels and columns](#resize-panels-and-columns)) |
 
 The keys a view offers are also buttons along the bottom of the screen, so you can click them.
 

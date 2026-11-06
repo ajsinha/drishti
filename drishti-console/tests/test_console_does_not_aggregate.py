@@ -54,7 +54,8 @@ KNOWN = {
     'core/designer_grid.py: raise DesignerError(f"the columns share {UNITS} units: these add up to': "LAYOUT: the same, in the message",
     "web/static/js/drishti_designer-grid.js: var sum = out.reduce(function (a, b) { return a + b; }, 0);": "LAYOUT: column widths",
     "web/static/js/drishti_screen-grid.js: bar.setAttribute('aria-valuenow', String(Math.round(cols.slice(0, k).r": "LAYOUT: a column splitter's position",
-    "web/static/js/drishti_screen-grid.js: var want = (ev.clientX - box.left) / box.width * 12, have = cols.slice": "LAYOUT: the same, while dragging",
+    "web/static/js/drishti_screen-grid.js: function have() { return cols.slice(0, k).reduce(function (a, b) { ret": "LAYOUT: the same, for the resize handle",
+    "web/static/js/drishti_resize.js: table.style.width = ws.reduce(function (a, b) { return a + Math.max(mi": "LAYOUT: a resized table's width, the sum of its columns' widths",
     "web/static/js/drishti_admin-net-ring.js: var total = weights.reduce(function (a, b) { return a + b; }, 0) || 1;": "LAYOUT: a ring's arc lengths",
     "web/static/js/drishti_bi-visuals.js: const total = sr.values.reduce((a, v) => a + (typeof v === 'number' ? ":
         "LAYOUT: a donut's angles from the values the server sent",

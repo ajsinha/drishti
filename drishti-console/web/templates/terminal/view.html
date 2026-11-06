@@ -116,7 +116,7 @@
   {% if phone and phone.device == 'phone' %}{% include "terminal/_phone.html" %}{% else %}{% if grid %}{% include "terminal/_grid.html" %}{% else %}
   <div class="vgrid">
     <div class="vmain">{{ panels(main, false, vm.ref) }}</div>
-    <aside class="vright" aria-label="Context">{{ panels(right, false, vm.ref) }}</aside>
+    <aside class="vright" aria-label="Context">{% if right %}<div data-resize="panel" data-resize-key="view.{{ vm.ref.kind }}.context" data-resize-var="--v-right" data-resize-min="260" data-resize-max="900" data-resize-edge="left" aria-label="Resize the Context column"></div>{% endif %}{{ panels(right, false, vm.ref) }}</aside>
   </div>{% endif %}{% if phone %}{% include "terminal/_phone.html" %}{% endif %}{% endif %}
   {% endif %}
 </div>

@@ -210,7 +210,8 @@
       tools.appendChild(mk('Expand all', 'arrows-expand', true, 'data-expand-all'));
       tools.appendChild(mk('Collapse all', 'arrows-collapse', false, 'data-collapse-all'));
     }
-    const table = h('table', { class: 'tbl bi-tbl bi-vgrid bi-vis-table bi-matrix' + (stepped ? ' bi-mx-stepped' : ' bi-mx-tabular') + (onRows ? ' bi-mx-onrows' : ''), 'data-plain': true, 'data-depth': String(rowFields.length) },
+    const table = h('table', { class: 'tbl bi-tbl bi-vgrid bi-vis-table bi-matrix' + (stepped ? ' bi-mx-stepped' : ' bi-mx-tabular') + (onRows ? ' bi-mx-onrows' : ''), 'data-plain': true, 'data-depth': String(rowFields.length),
+      'data-resize': 'columns', 'data-resize-key': 'bi.' + location.pathname + '|' + (spec.id || spec.title || 'matrix') },
       h('caption', { class: 'visually-hidden', text: spec.title || 'Matrix' }), h('thead', {}, headRows), body);
     B.clear(host);
     if (tools) { host.appendChild(tools); }

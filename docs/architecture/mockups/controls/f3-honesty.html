@@ -1,0 +1,39 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stored or computed · mock-ups</title><link rel="stylesheet" href="../editors/common.css">
+<style>.kk{display:inline-block;background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:10px 14px;margin:6px;min-width:190px;vertical-align:top}.kk small{color:var(--mu);font-size:11px;display:block}.kk b{font-size:20px}
+.badge{font-size:10px;border-radius:3px;padding:1px 5px;margin-left:4px;vertical-align:middle}.bc{background:#1d3a2c;color:var(--ok)}.bs{background:#3a331d;color:var(--wa)}.bo{background:#1d2c4a;color:var(--ln)}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}.dc{background:var(--ok)}.ds{background:var(--wa)}.do{background:var(--ln)}
+.ital{font-style:italic;color:var(--wa)}.leg{font-size:12px;color:var(--mu);margin-top:8px}</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">EXP CPTY:CP-ALDERSHOT &lt;GO&gt;</div><span class="mu">any screen with figures</span></div>
+<div class="pick"><button data-v="A" class="on">A · Word badges</button><button data-v="B">B · Small dots + legend</button><button data-v="C">C · Style + Explain</button>
+<span>F3 of 3: number honesty: every figure says whether it is computed by Drishti, stored as delivered, or official (signed off)</span></div>
+
+<div class="v on" id="A"><div class="kk"><small>EPE</small><b>4.21m</b><span class="badge bc">COMPUTED</span></div><div class="kk"><small>PFE 95%</small><b>11.80m</b><span class="badge bc">COMPUTED</span></div><div class="kk"><small>SA-CCR EAD</small><b>9.40m</b><span class="badge bs">STORED · as delivered</span></div><div class="kk"><small>VaR 99 1d (11-04)</small><b>7.46m</b><span class="badge bo">OFFICIAL · signed 09:12</span></div>
+<div class="note"><b>A, word badges.</b> Each figure carries a small word: COMPUTED (by Drishti, now, from its inputs), STORED · as delivered (a source's number, not recomputed), OFFICIAL (signed off, with when). Impossible to miss; adds visual noise on dense tables.</div></div>
+
+<div class="v" id="B"><div class="kk"><small>EPE</small><b><span class="dot dc"></span>4.21m</b></div><div class="kk"><small>PFE 95%</small><b><span class="dot dc"></span>11.80m</b></div><div class="kk"><small>SA-CCR EAD</small><b><span class="dot ds"></span>9.40m</b></div><div class="kk"><small>VaR 99 1d</small><b><span class="dot do"></span>7.46m</b></div>
+<div class="leg"><span class="dot dc"></span>computed · <span class="dot ds"></span>stored as delivered · <span class="dot do"></span>official (signed off)</div>
+<div class="note"><b>B, dots + legend.</b> A coloured dot before each figure and one legend per screen. Quiet, works in dense tables and the pivot; needs the legend (and colour is never the only cue: the dot's tooltip says the word).</div></div>
+
+<div class="v" id="C"><div class="kk"><small>EPE</small><b>4.21m</b></div><div class="kk"><small>PFE 95%</small><b>11.80m</b></div><div class="kk"><small>SA-CCR EAD</small><b class="ital">9.40m</b><small class="ital">stored</small></div><div class="kk"><small>VaR 99 1d</small><b>7.46m</b><small style="color:var(--ln)">official</small></div>
+<div class="note"><b>C, style + Explain.</b> Computed figures look normal; a stored figure is italic with a small "stored", an official one says "official"; the Explain drawer's first line always states it. Least noise; relies on people noticing italics.</div></div>
+
+<div style="padding:0 16px 20px" class="mu"><b style="color:var(--ink)">In every option:</b> the server sends each figure's provenance (computed / stored / official) and the console only displays it; a guard test fails if a figure is drawn without one; the Explain drawer's first line states it with the source and time; "Official" only after sign-off (F1); a stored figure with an under-construction computation keeps the registry's chip; exports carry a provenance column.</div>
+<script>document.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.pick button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.v').forEach(v=>v.classList.toggle('on',v.id===b.dataset.v))});</script>
+</body></html>

@@ -38,7 +38,7 @@
   border: 1px solid var(--d-border); border-radius: 3px; padding: 0 .35rem; vertical-align: middle; }
 .more { color: var(--d-link); font-size: .85rem; }
 .help-none { color: var(--d-muted); }
-.help-layout { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 2rem; }
+.help-layout { display: grid; grid-template-columns: var(--help-side, 250px) minmax(0, 1fr); gap: 2rem; }
 .help-toc { position: sticky; top: 72px; align-self: start; max-height: calc(100vh - 90px); overflow: auto; font-size: .86rem; }
 .help-toc h2 { font-size: .75rem; text-transform: uppercase; letter-spacing: .08em; color: var(--d-muted); margin: 1rem 0 .4rem; }
 .help-toc ol, .help-toc ul { list-style: none; padding-left: 0; margin: 0; }

@@ -38,12 +38,12 @@
 .vp-pop-x { position: absolute; right: 6px; top: 4px; border: 0; background: none; color: var(--d-muted); font-size: 16px; cursor: pointer; }
 .vp-pop.sheet { position: fixed; left: 0 !important; right: 0; bottom: 0; top: auto !important; max-width: none; max-height: 70vh; overflow-y: auto;
   border-radius: 10px 10px 0 0; }
-.vx-tree.vp-cols .vx-row { grid-template-columns: minmax(130px, 1fr) 56px 50px 44px 62px 56px; }
+.vx-tree.vp-cols .vx-row { grid-template-columns: var(--rz-cols, minmax(130px, 1fr) 56px 50px 44px 62px 56px); }
 /* the two parametric columns need room: the scope names keep at least 130px (they were squeezed to nothing in a 330px panel) */
-@media (min-width: 1101px) { .vx-layout:has(.vx-tree.vp-cols) { grid-template-columns: 480px minmax(0, 1fr); } }
+@media (min-width: 1101px) { .vx-layout:has(.vx-tree.vp-cols) { grid-template-columns: var(--vx-side, 480px) minmax(0, 1fr); } }
 /* a figure and its ? on one line, so a row stays one line high */
 .vx-tree.vp-cols .vx-row > .vp-blue { white-space: nowrap; display: inline-flex; align-items: center; justify-content: flex-end; gap: 2px; }
-@media (min-width: 801px) and (max-width: 1100px) { .vx-layout:has(.vx-tree.vp-cols) { grid-template-columns: 440px minmax(0, 1fr); } }
+@media (min-width: 801px) and (max-width: 1100px) { .vx-layout:has(.vx-tree.vp-cols) { grid-template-columns: var(--vx-side, 440px) minmax(0, 1fr); } }
 .vx-svg .vp-curve { stroke: var(--d-link); stroke-width: 2; }
 .vx-svg .vp-mark { stroke: var(--d-link); stroke-dasharray: 5 3; fill: var(--d-link); }
 .vx-svg .vp-tail.hist { fill: var(--d-bad); opacity: 0.07; }

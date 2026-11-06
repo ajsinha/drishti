@@ -31,7 +31,7 @@
 .bi-md-tab[aria-selected="true"] { color: var(--d-ink); border-color: var(--d-border); background: var(--d-surface); font-weight: 600; }
 .bi-md-alert { color: var(--d-bad); font-weight: 700; margin-left: .25rem; }
 .bi-md-count { color: var(--d-muted); font-size: .8rem; margin-left: .2rem; }
-.bi-md-main { display: grid; grid-template-columns: 15rem minmax(0, 1fr) 18rem; gap: .8rem; align-items: start; }
+.bi-md-main { display: grid; grid-template-columns: var(--md-side, 15rem) minmax(0, 1fr) var(--md-inspector, 18rem); gap: .8rem; align-items: start; }
 .bi-md-side, .bi-md-inspector { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .6rem .7rem; min-width: 0; }
 .bi-md-side h2, .bi-md-inspector h2 { font-size: 1rem; margin: 0 0 .4rem; }
 .bi-md-dslist { list-style: none; margin: .4rem 0; padding: 0; max-height: 60vh; overflow: auto; display: flex; flex-direction: column; gap: .15rem; }

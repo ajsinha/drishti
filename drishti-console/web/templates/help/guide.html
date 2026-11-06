@@ -23,6 +23,7 @@
     <a href="/help/section/{{ category.id }}">{{ category.name }}</a><span class="sep">/</span><span>{{ guide.title }}</span></nav>
   <div class="help-layout">
     <aside class="help-toc" aria-label="On this page">
+      <div data-resize="panel" data-resize-key="help.toc" data-resize-var="--help-side" data-resize-min="180" data-resize-max="640" aria-label="Resize the contents list"></div>
       <form class="help-search small" action="/help/search" method="get" role="search"><i class="bi bi-search" aria-hidden="true"></i>
         <label class="visually-hidden" for="hs">Search help</label><input id="hs" name="q" type="search" placeholder="Search help"></form>
       {% if page.toc %}<h2>On this page</h2><ol>{% for t in page.toc %}<li><a href="#{{ t.id }}">{{ t.name }}</a>

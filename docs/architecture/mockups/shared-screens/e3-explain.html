@@ -1,0 +1,51 @@
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Explain drawer · mock-ups</title><link rel="stylesheet" href="../editors/common.css">
+<style>.page{position:relative;background:var(--bg2);border:1px solid var(--bd);border-radius:6px;padding:12px;min-height:420px;margin-top:10px}
+.tile2{display:inline-block;background:var(--sf);border:1px solid var(--bd);border-radius:6px;padding:10px 14px;margin:4px}.tile2 b{font-size:20px;color:var(--ink)}.tile2.sel{outline:2px solid var(--ac)}
+.drawer{position:absolute;right:0;top:0;bottom:0;width:440px;background:var(--sf);border-left:2px solid var(--ac);padding:12px;box-shadow:-8px 0 20px rgba(0,0,0,.4)}
+.tabs2{display:flex;gap:2px;margin-bottom:8px}.tabs2 span{padding:5px 9px;font-size:12px;border:1px solid var(--bd);border-radius:4px 4px 0 0;color:var(--mu)}.tabs2 span.on{color:var(--ink);border-top:2px solid var(--ac);background:var(--sf2)}
+.f{font:12px/1.6 ui-monospace,monospace;background:#0a1120;border:1px solid var(--bd);border-radius:6px;padding:8px;white-space:pre}
+.pop{position:absolute;left:190px;top:80px;width:300px;background:var(--sf);border:1px solid var(--ac);border-radius:6px;padding:10px;font-size:12px}
+.full{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.y{color:var(--ok)}</style></head><body>
+<div class="top"><b>DRISHTI</b><div class="cmd">VAR DESK RATES &lt;GO&gt;</div><span class="mu">any number, any screen</span></div>
+<div class="pick"><button data-v="A" class="on">A · Side drawer, four tabs</button><button data-v="B">B · Pop-over at the number</button><button data-v="C">C · Full explain page</button>
+<span>E3 of 4: one Explain for every number (VaR, cubes, FRTB, SIMM, Pivot, BI), replacing today's five explain panels</span></div>
+
+<div class="v on" id="A"><div class="page"><div class="tile2 sel">VaR 99 · 1d<br><b>7,463,368</b></div><div class="tile2">ES 97.5<br><b>7,537,742</b></div><div class="tile2">Limit use<br><b>8.3%</b></div>
+<div class="drawer"><div class="hdr" style="margin-bottom:8px"><div><div class="crumb">Explain · DESK-RATES · 2026-10-28</div><h1 style="font-size:14px">VaR 99%, 1 day: 7,463,368 USD</h1></div><span class="sp"></span><span class="btn">✕</span></div>
+<div class="tabs2"><span class="on">Formula</span><span>Inputs &amp; lineage</span><span>Why it moved</span><span>Workbook</span></div>
+<div class="f">VaR = −(k-th worst scenario P&amp;L)
+k   = ceil(250 × (1 − 0.99)) = 3
+P&amp;L(s) = Σ positions' P&amp;L(s)   (412 positions)
+3rd worst: 2026-03-17  −7,463,368</div>
+<p class="mu" style="font-size:12px">Each line links: the 412 positions → the position list; 2026-03-17 → that scenario's P&amp;L by position.</p>
+<div class="card"><h3>Checks</h3><div class="y">✓ inputs complete (412 of 412 priced)</div><div class="y">✓ equals the official capture of 06:00</div></div></div></div>
+<div class="note"><b>A, side drawer.</b> Click any number (or press E) and a drawer opens on the right with four tabs: <b>Formula</b> (with the actual values), <b>Inputs &amp; lineage</b> (what it was computed from, down to rows), <b>Why it moved</b> (since the previous date, steps that add up), <b>Workbook</b> (download the live-formula Excel). The page stays visible; the same drawer on every screen.</div></div>
+
+<div class="v" id="B"><div class="page"><div class="tile2 sel">VaR 99 · 1d<br><b>7,463,368</b></div>
+<div class="pop"><b>VaR 99%, 1 day = 7,463,368</b><br>the 3rd worst of 250 scenario P&amp;Ls (2026-03-17)<br><span class="mu">412 positions · inputs complete</span><br><a style="color:var(--ln)">Formula</a> · <a style="color:var(--ln)">Inputs</a> · <a style="color:var(--ln)">Why it moved</a> · <a style="color:var(--ln)">Workbook</a></div></div>
+<div class="note"><b>B, pop-over.</b> A small card right at the number with the one-line answer and links onward (today's ? pop-ups, made uniform). Quickest; the details open elsewhere.</div></div>
+
+<div class="v" id="C"><div class="hdr"><div><div class="crumb">Explain</div><h1>VaR 99%, 1 day, DESK-RATES, 2026-10-28</h1></div><span class="sp"></span><span class="btn">Back to the screen</span></div>
+<div class="full"><div class="card"><h3>Formula</h3>k = 3 of 250 · 3rd worst 2026-03-17 · −7,463,368</div><div class="card"><h3>Inputs</h3>412 positions · HS-250 window · USD</div><div class="card"><h3>Why it moved</h3>+212k since 10-27: window roll −40k, new trades +310k, market −58k</div><div class="card"><h3>Workbook</h3>Excel with live formulas</div></div>
+<div class="note"><b>C, full page.</b> Everything about one number on its own page, all four parts at once. Best for an auditor or for printing; you leave the screen you were on.</div></div>
+
+<div style="padding:0 16px 20px" class="mu"><b style="color:var(--ink)">In every option:</b> one Explain for every computed number on every screen (VaR, ES, components, parametric, exposure, FRTB, SIMM, cubes, Pivot cells, BI measures); the four parts are the same everywhere (Formula · Inputs &amp; lineage · Why it moved · Workbook); computed and explained by the server; a stored figure says it is stored (number honesty); the five existing explain panels fold into it.</div>
+<script>document.querySelectorAll('.pick button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.pick button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.v').forEach(v=>v.classList.toggle('on',v.id===b.dataset.v))});</script>
+</body></html>

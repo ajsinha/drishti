@@ -107,7 +107,7 @@
       bar.style.top = top + 'px';
       bar.style.height = Math.max(40, bottom - top) + 'px';
       var k = boundary();
-      bar.setAttribute('aria-valuenow', String(Math.round(cols.slice(0, k).reduce(function (a, b) { return a + b; }, 0) / 12 * 100)));
+      bar.setAttribute('aria-valuenow', String(Math.round(cols.slice(0, k).reduce(function (a, b) { return a + b; }, 0) / 12 * 100)));   // as the resize handle reports it
     }
     function nudge(k, delta) {
       var a = cols[k - 1] + delta, b = cols[k] - delta;
@@ -122,36 +122,25 @@
       var k = boundary();
       if (cols.length !== cellsOf((cfg.picture || [])[0]).length) { cols = Array(cellsOf(cfg.picture[0]).length).fill(12 / cellsOf(cfg.picture[0]).length); }
       bar = document.createElement('div');
-      bar.className = 'sg-split';
-      bar.setAttribute('role', 'separator');
-      bar.setAttribute('aria-orientation', 'vertical');
-      bar.setAttribute('aria-label', 'Divider between ' + split.left + ' and ' + split.right + (split.resizable ? ': drag, or use the arrow keys' : ''));
-      bar.setAttribute('aria-valuemin', '0'); bar.setAttribute('aria-valuemax', '100');
+      bar.className = 'rz-free';
+      bar.setAttribute('aria-label', 'Divider between ' + split.left + ' and ' + split.right + (split.resizable ? ': drag, or use the arrow keys; Home or a double-click: as designed' : ''));
       bar.setAttribute('data-sg-split', '');
       areasEl.appendChild(bar);
-      if (split.resizable) {
-        bar.tabIndex = 0;
-        bar.addEventListener('keydown', function (e) {
-          var d = e.key === 'ArrowLeft' ? -0.5 : e.key === 'ArrowRight' ? 0.5 : 0;
-          if (d && nudge(k, d)) { e.preventDefault(); keep(); }
-        });
-        bar.addEventListener('pointerdown', function (e) {
-          e.preventDefault();
-          bar.setPointerCapture(e.pointerId);
-          bar.classList.add('sg-dragging');
-          var box = areasEl.getBoundingClientRect();
-          function move(ev) {
-            var want = (ev.clientX - box.left) / box.width * 12, have = cols.slice(0, k).reduce(function (a, b) { return a + b; }, 0);
-            nudge(k, want - have);
-          }
-          function up() {
-            bar.classList.remove('sg-dragging');
-            bar.removeEventListener('pointermove', move); bar.removeEventListener('pointerup', up); bar.removeEventListener('pointercancel', up);
-            keep();
-          }
-          bar.addEventListener('pointermove', move); bar.addEventListener('pointerup', up); bar.addEventListener('pointercancel', up);
-        });
-      }
+      var designed = cols.slice();
+      function have() { return cols.slice(0, k).reduce(function (a, b) { return a + b; }, 0); }
+      var resizer = function (o) {                                         // drishti_resize.js loads at the page's end: this script may run first
+        if (window.Drishti.resize) { window.Drishti.resize.handle(bar, o); } else { document.addEventListener('DOMContentLoaded', function () { window.Drishti.resize.handle(bar, o); if (!split.resizable) { bar.removeAttribute('tabindex'); } }); }
+      };
+      resizer(split.resizable ? {                   // the shared resize handle (drishti_resize.js)
+        axis: 'x',
+        start: function () { return areasEl.getBoundingClientRect(); },
+        move: function (box, dx, dy, ev) { nudge(k, (ev.clientX - box.left) / box.width * 12 - have()); },
+        end: keep,
+        key: function (d) { return nudge(k, d > 0 ? 0.5 : -0.5) ? keep() : false; },
+        reset: function () { cols = designed.slice(); areasEl.style.gridTemplateColumns = fr(cols); placeSplit(); keep(); },
+        value: function () { return { now: have() / 12 * 100, min: 0, max: 100 }; }
+      } : { axis: 'x', value: function () { return { now: have() / 12 * 100, min: 0, max: 100 }; } });
+      if (!split.resizable) { bar.removeAttribute('tabindex'); bar.classList.add('rz-fixed-bar'); }
       if (window.ResizeObserver) { new ResizeObserver(placeSplit).observe(areasEl); }
     }
     picture();

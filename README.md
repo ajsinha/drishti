@@ -35,7 +35,7 @@ TRD MX-20000001 <GO>                    →  a trade: terms, legs, cashflows, li
 ## Contents
 
 [Risk, computed and explained](#risk-computed-and-explained) · [The platform](#the-platform) · [Try it](#try-it) ·
-[Measured performance](#measured-performance) · [Documentation](#documentation) · [Project facts](#project-facts)
+[Measured performance](#measured-performance) · [Documentation](#documentation) · [Project facts](#project-facts) · [By the numbers](#by-the-numbers)
 
 ## Risk, computed and explained
 
@@ -255,6 +255,26 @@ What changed and when: [RELEASE_NOTES.md](RELEASE_NOTES.md) and [CHANGELOG.md](C
   (`drishti-console/.venv/bin/python -m pytest -q drishti-console/tests`) must pass; no source file over 1,500 lines; every file carries
   the copyright header (`python3 tools/license_headers.py --fix`); every change updates the documents it affects and the changelog in
   the same push.
+
+## By the numbers
+
+<!-- code-volume:begin -->
+
+*Measured 2026-11-05 from the files the repository tracks (`tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
+
+| Kind | Lines | Files |
+|---|---|---|
+| Java, product | 409k | 2,037 |
+| Java, tests | 155k | 979 |
+| Python, product (console, tools, loaders) | 133k | 686 |
+| Python, tests | 96k | 540 |
+| JavaScript, HTML and CSS (console) | 124k | 753 |
+| YAML: configuration, Sutras, data contracts | 102k | 1,284 |
+| Markdown: guides, tutorials, design | 243k | 434 |
+
+About **666k lines of product code** and **251k lines of tests** (38% of the product code), with **243k lines of documentation**; 47 Maven modules, 11 domain packs and 38 tutorials.
+
+<!-- code-volume:end -->
 
 ## Legal
 
