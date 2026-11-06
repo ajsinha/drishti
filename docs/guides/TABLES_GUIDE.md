@@ -22,8 +22,8 @@ reference: every key, every check, the command line and the migration of BI's da
 [virtual tables tutorial](../tutorials/44-virtual-tables-and-models.md). The design, with its decisions, is
 [BI_FOUNDATION_2911E.md](../architecture/BI_FOUNDATION_2911E.md) and [VIRTUAL_TABLES.md](../architecture/VIRTUAL_TABLES.md).
 
-Examples marked *(filled in the heavy run)* are replaced by real output from the demo lake when the release's examples are run; the YAML and
-the commands around them are the real ones.
+The outputs below are real: the shipped `config/bi` migrated into `config/tables/bi` beside the tutorial's own two tables and model, and the
+test data's samples of 2026-09-30 (`data/testdata`: Endur trades, counterparties).
 
 ## Contents
 
@@ -230,11 +230,24 @@ The command line reads definitions and sample files only; it starts no server. R
 
 ```text
 $ drishti.py tables list
-(filled in the heavy run)
+table  bi.counterparty_exposure_counterparties@1.0.0  from kind, 4 columns, materialize on-load
+table  bi.counterparty_exposure_official_counterparties@1.0.0  from table, 0 columns, materialize on-load
+...
+table  bi.live_trading_trade@1.0.0  from kind, 14 columns, materialize live
+table  bi.trading_cashflows_cashflows@1.0.0  from kind, grain $.LEGS[*].CASH_FLOWS[*], 9 columns, materialize on-load
+table  bi.trading_risk_trades@1.0.0  from kind, 17 columns, materialize on-load
+table  core.books@1.0.0  from kind, 3 columns, materialize none
+table  trading.trade_legs@1.0.0  from kind, grain $.LEGS[*], 8 columns, materialize on-load
+model  trading-risk@1.0.0  7 tables, 17 measures
+model  legs@1.0.0  2 tables, 4 measures
+...
+24 table(s), 11 model(s)
 
 $ drishti.py tables check
-(filled in the heavy run)
+24 table(s), 11 model(s): 0 error(s), 0 warning(s)
 ```
+
+A table over a table (`from: { table }`) has its base's columns; `0 columns` counts only those it adds.
 
 `tables check` checks every table (name and folder, source, grain, paths, columns, types, keys, materialisation, rules, expressions in their
 scopes), every model (aliases, tables found at the major asked, relationships, measures, hierarchies, security) and the catalogue (two
@@ -244,15 +257,25 @@ business date, every path present in some row.
 
 ```text
 $ drishti.py tables preview bi.trading_cashflows_cashflows --sample trades.jsonl --limit 5
-(filled in the heavy run)
+id	business_date	index	LEG_ID	CURRENCY	FLOW_TYPE	FLOW_ID	PAYMENT_DATE	START_DATE	END_DATE	NOTIONAL	RATE
+row-1		0	1	USD		5000028	2026-11-03	2026-11-01	2026-11-01	1.484794E7
+row-1		0	2	USD		5000029	2026-11-03	2026-11-01	2026-11-01	1.1878352E7
+row-2		0	1	USD		5002953	2026-04-07	2026-03-01	2026-03-31	979542.3
+row-2		1	1	USD		5002954	2026-05-10	2026-04-01	2026-04-30	979542.3
+row-2		2	1	USD		5002955	2026-06-10	2026-05-01	2026-05-31	979542.3
+5 row(s) from 136 document(s)
 ```
 
 A sample is JSON Lines (plain or `.gz`), one entity a line: the document itself, or `{ id, business_date, doc }` as the lake keeps it.
 The preview expands the grain, walks `$`, `@` and `^`, evaluates filters and calculated columns with Rachana, and shows at most 10,000 rows.
+A sample has no entity id or business date unless it is in the lake's form: the preview numbers its documents (`row-1`). `related(...)`
+reads another table's sample given with `--related TABLE=FILE.jsonl` (repeatable), and `fx(...)` the spot rates of `--fx FILE.jsonl`
+(documents with `PAIR_NAME: "EUR/USD"` and `MID`, the market-data pack's `fx-spot`: a pair as quoted, its inverse, or through USD); without
+them `related` finds nothing and only a currency to itself converts.
 
 ```text
 $ drishti.py tables lineage bi.trading_risk_trades
-(filled in the heavy run)
+used by  model trading-risk: reads it as trades (fact)
 ```
 
 Lineage lists who uses a table: models that read it (and as which alias), tables over it, columns that look it up; BI's reports, alerts
@@ -269,7 +292,23 @@ new file under `config/tables/<domain>/`, refused when the name is taken (a tabl
 
 ```text
 $ drishti.py tables offer bank.counterparties --sample counterparties.jsonl --kind counterparty
-(filled in the heavy run)
+rachana: 3
+table: bank.counterparties
+version: 1.0.0
+description: "Offered from a sample of 24 documents; review the columns before accepting."
+from: { kind: counterparty }
+keys: [COUNTERPARTY_ID]
+columns:
+  COUNTERPARTY_ID:         { path: "$.COUNTERPARTY_ID", type: string }
+  NAME:                    { path: "$.NAME", type: string }
+  ...
+  NET_MTM:                 { path: "$.NET_MTM", type: decimal }
+  KYC_STATUS:              { path: "$.KYC.STATUS", type: string }
+  KYC_LAST_REVIEW:         { path: "$.KYC.LAST_REVIEW", type: date }
+  KYC_PD_1Y:               { path: "$.KYC.PD_1Y", type: decimal }
+  ...
+materialize: none
+# offered from 24 document(s); grains you may choose instead: [$.NETTING_SETS[*]]
 ```
 
 ## 9. The migration: tables migrate
@@ -321,8 +360,28 @@ measures is recognised, not refused), a pack-generated dataset (regenerated, nev
 The report:
 
 ```text
-(filled in the heavy run: drishti.py tables migrate --dry-run on config/bi)
+$ drishti.py tables migrate --dry-run --report migration.txt
+...
+items: 34 (converted 34, unchanged 0, refused 0)
+expressions: 103 (rewritten 22, refused 0)
+files to write: 32
+
+converted  datasets/counterparty-exposure-official-netting-sets.dataset.yaml  ->  bi/counterparty_exposure_official_netting_sets.table.yaml
+    filter:
+      - HIERARCHY == 'NSET'
+      + $.HIERARCHY == 'NSET'
+        (HIERARCHY is $.HIERARCHY (an expression reads the source))
+...
+converted  models/trading-risk.model.yaml  ->  bi/trading-risk.model.yaml
+    measures.Open MTM.expr:
+      - sum(trades.MTM, where=trades.TRADE_STATUS != 'MATURED')
+      + sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)
+        (DEL into Rachana (section 2.4))
+        (kept DEL's meaning for a missing value: trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null (Q1))
 ```
+
+The 32 files are 22 tables and 10 models under `config/tables/bi/`; the two consumers rewritten in place are the live reports, bound to
+their models. Run against a `config/tables` that already holds tables of its own, each is checked in its own domain folder.
 
 ## 10. Problem codes
 

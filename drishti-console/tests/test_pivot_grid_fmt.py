@@ -44,7 +44,7 @@ CASES = [
 
 @needs_node
 def test_fmt_shows_text_as_text_and_whole_numbers_without_decimals():
-    script = ("global.window = {}; require(process.argv[1]); const f = window.PivotCore.fmt;"
+    script = ("global.window = {}; require(process.argv[1]); const f = window.Drishti.PivotCore.fmt;"
               "console.log(JSON.stringify(JSON.parse(process.argv[2]).map((c) => f(c[0], c[1]))));")
     run = subprocess.run(["node", "-e", script, str(GRID_JS), json.dumps([[v, m] for v, m, _ in CASES])],
                          capture_output=True, text=True, timeout=30)

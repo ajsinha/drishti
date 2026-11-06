@@ -783,6 +783,25 @@ reference for every key, check and command is [TABLES_GUIDE.md](../guides/TABLES
 On the shipped `config/bi` all 34 items convert (`trading-cashflows`' chains as `c ? a : b`; the two live originals are the converted
 forms that ship beside them), the outputs pass the layer's checks, the two live reports bind their models, and a second run changes nothing.
 
+**The parity fixtures, as recorded** (2.9.11.d, on BI before the switch; `drishti-server/src/test/resources/bi/foundation-parity/`, 24
+files, 6,468 answers, about 15 s to record or compare). Per person of 5.1 (seven) on the sample lake (`SampleLake`: every kind the shipped
+datasets read, two business dates):
+
+| Set | What each file holds |
+|---|---|
+| models (10) | each measure alone on the later date by no field and by each hierarchy level with `totals: grand`, on the earlier date and on the window by no field; each hierarchy's first two levels with `totals: subtotals`; each measure under a slicer on the model's first text field; `calc(..., ignore=ALL)`, `calc(..., ignore=[field])`, `calc(..., where=)` and `share_of(..., over=ALL)` of its first additive measure by that field, without and with the slicer; each alias's rows as a `shape: rows` extract (count, hash, masked columns). A model over live tables is asked of a live query service (its history tables exist only there) |
+| reports (10) | every visual of every page: rows, masked columns, the true totals of a matrix or a totalled table (`BiAggregate`, as the report service adds them), a chart's highlight; then each page's visuals with its first list or dropdown slicer set to the first value; the two live originals on their datasets through a live query service, the table as loaded |
+| boards (2) | each tile as the answer of the visual it shows (`from:`) |
+| live | the replay of `BiFoundationLive` (5.1) |
+
+The test lake's totals (`BiParityCases`, 13 cases) hold the row rules, filters and masks the pivot engine's totals must keep.
+**Not recorded, and why:** python visuals and the python model's measures (`desk-pnl-vs-exposure-py`) are run by the console's Python
+runner (recorded as their refusal); saved pivot views are a person's, in the content store, and none ship; the official exposure tables
+(`HIERARCHY == 'NSET'` and `'CPTY'`) are empty on the sample lake, whose generated values never match those literals, so their measures
+are recorded as empty answers. **Recorded refusals the switch may lift** (each a difference for the product owner, 5.2): a count of a fact
+asked alone or by a dimension's field (`count(trades)` by `desks.NAME`: `DRS-9020`, the query names no column of the fact), measures of two
+facts no many-to-one path joins (`DRS-9156`), and `moving_avg` without its date field (`DRS-9020`).
+
 **What the switch does, in one change, after the parity proof passes on the heavy run.** BI reads the layer: `MqService` answers a model
 through the layer (the in-memory route above for live tables; the scan route, the same compiled plan over `ParquetOnLoad`'s files or a
 connector's scan with part A's `ScanEvaluator`, written then); the first-start migration (`StoredTablesMigration`) and the server's refusal of
