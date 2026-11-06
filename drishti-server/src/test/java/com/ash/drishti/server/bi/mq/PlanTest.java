@@ -72,7 +72,7 @@ class PlanTest {
               rows:
                 trades:
                   - { role: desk-head, where: "trades.desk in user.desks" }
-                  - { role: [risk, analyst], where: "True" }
+                  - { role: [risk, analyst], where: "true" }
               may-see-all: { desks: [desk-head] }
             """;
 
@@ -248,7 +248,7 @@ class PlanTest {
                 + "2026-10-09 } } }"), false).body().get("rows")).as("a balance and a snapshot count: both the last date's, so answered").isNotNull();
         assertThatThrownBy(() -> refusing.ask(flows, MqParser.parse("{ mq: 1, model: desk-risk, select: { measures: [Sum of amount, Bookings] }, time: { window: { from: 2026-10-08, to: "
                 + "2026-10-09 } } }"), false)).isInstanceOf(MqException.class).hasMessageContaining("DRS-9159").hasMessageContaining("last(measure(");
-        Map<String, Object> last = refusing.ask(b, MqParser.parse("{ mq: 1, model: desk-risk, define: { Closing: \"last(sum(limits.amount), limits.businessDate)\" }, "
+        Map<String, Object> last = refusing.ask(b, MqParser.parse("{ mq: 1, model: desk-risk, define: { Closing: \"latest(sum(limits.amount), limits.businessDate)\" }, "
                 + "select: { measures: [Closing] }, time: { window: { from: 2026-10-08, to: 2026-10-09 } } }"), false).body();
         assertThat(((Number) ((List<List<Object>>) last.get("rows")).get(0).get(0)).doubleValue()).isEqualTo(118.0);       // the latest date's limits
     }
@@ -269,7 +269,7 @@ class PlanTest {
         Random rnd = new Random(20261012);
         MqService mq = new MqService(MqProperties.defaults());
         List<String> predicates = List.of("trades.notional > 1500", "trades.currency == 'EUR'", "trades.desk in ['DESK-A', 'DESK-C']", "trades.mtm < 0",
-                "trades.tradeDate >= date('2026-10-09')", "not trades.desk == 'DESK-B'", "trades.notional % 3 == 0");
+                "trades.tradeDate >= date('2026-10-09')", "!(trades.desk == 'DESK-B')", "trades.notional % 3 == 0");
         List<List<String>> groupings = List.of(List.of(), List.of("trades.desk"), List.of("trades.currency"), List.of("desks.region"), List.of("trades.desk", "trades.currency"));
         int compared = 0;
         for (int i = 0; i < 40; i++) {
@@ -279,7 +279,7 @@ class PlanTest {
             String one = base.replace("- { role: [risk, analyst, emea], where: \"true\" }", "- { role: [risk, analyst, emea], where: \"" + p1 + "\" }");
             String both = one.replace("              may-see-all:", "              may-see-all:").replace("    rows:\n      trades:", "    rows:\n      trades:");
             ModelView m1 = MqHarness.model(one, MqEngineTest.TRADES, MqEngineTest.DESKS, MqEngineTest.LIMITS);
-            ModelView m2 = MqHarness.model(both.replace("    rows:\n", "    rows:\n").replace("where: \"" + p1 + "\" }", "where: \"(" + p1 + ") and (" + p2 + ")\" }"),
+            ModelView m2 = MqHarness.model(both.replace("    rows:\n", "    rows:\n").replace("where: \"" + p1 + "\" }", "where: \"(" + p1 + ") && (" + p2 + ")\" }"),
                     MqEngineTest.TRADES, MqEngineTest.DESKS, MqEngineTest.LIMITS);
             List<String> by = groupings.get(rnd.nextInt(groupings.size()));
             String q = "{ mq: 1, model: desk-risk, select: { fields: " + EquivalenceTest.list(by) + ", measures: [Trades] } }";

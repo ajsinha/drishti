@@ -171,6 +171,14 @@ public final class DatasetService {
         /** As {@link #detail} for a model named by reference, through a consumer when one is given. */
         QueryService.Result detailModel(Principal p, String model, String consumer, QueryRequest q);
 
+        /**
+         * The loaded form of a model named by reference as the reader asks it (its id, layers key and flattened dataset): what a report bound with
+         * {@code model:} follows when its model reads live tables (a tick, a stream). Null without the model layer.
+         */
+        default QueryService.Loaded loadedModel(Principal p, String model, String consumer) {
+            return null;
+        }
+
         /** As {@link #ask} on a model named by reference ({@code trades@1}, {@code dataset:<name>}): a report bound with {@code model:}. */
         Asked askModel(Principal p, String model, QueryRequest q, boolean explain);
 
@@ -878,12 +886,12 @@ public final class DatasetService {
 
     /** The state of a dataset's live tables (generation, last update, state, counters), starting them when they are not running: {@code state: none} without live tables. */
     public Map<String, Object> liveTick(Principal p, BiStore.Item item) {
-        return queries.liveTick(loaded(p, item));
+        return queries.liveTick(isModelRef(item) ? requireGateway().loadedModel(p, item.id(), consumerOf(item)) : loaded(p, item));
     }
 
     /** A reader of the dataset's live state for a stream: the dataset is resolved once; each call reads the tables' counters (and starts a table that was closed as idle). */
     public java.util.function.Supplier<Map<String, Object>> liveWatch(Principal p, BiStore.Item item) {
-        QueryService.Loaded ds = loaded(p, item);
+        QueryService.Loaded ds = isModelRef(item) ? requireGateway().loadedModel(p, item.id(), consumerOf(item)) : loaded(p, item);
         queries.liveTick(ds);
         return () -> queries.liveTick(ds);
     }

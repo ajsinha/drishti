@@ -73,7 +73,7 @@ class DerivationTest {
             security:
               rows:
                 - { role: desk-head, where: "desk in user.desks" }
-                - { role: [risk, analyst], where: "True" }
+                - { role: [risk, analyst], where: "true" }
             """;
 
     /** A where on a column the grouping drops: it filters the rows that are grouped, never the groups (the console's wizard found it applied after). */

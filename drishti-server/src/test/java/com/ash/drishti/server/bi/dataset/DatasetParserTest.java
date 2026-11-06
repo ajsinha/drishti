@@ -143,8 +143,8 @@ class DatasetParserTest {
     @Test
     void theParserIsBoundedAndTotal() {
         String deep = "(".repeat(200) + "1" + ")".repeat(200);
-        assertThat(errors(GOOD.replace("sum(trades.notional)\"", "sum(" + deep + ")\""))).extracting(Problem::message).anyMatch(m -> m.contains("nests deeper"));
-        String long1 = "1" + " + 1".repeat(1000);
+        assertThat(errors(GOOD.replace("sum(trades.notional)\"", "sum(" + deep + ")\""))).extracting(Problem::message).anyMatch(m -> m.contains("nested deeper"));
+        String long1 = "1" + " + 1".repeat(2600);                          // past Rachana's 10,000 characters
         assertThat(errors(GOOD.replace("sum(trades.notional)\"", "sum(" + long1 + ")\""))).extracting(Problem::message).anyMatch(m -> m.contains("longer than"));
     }
 

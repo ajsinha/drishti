@@ -197,7 +197,7 @@ public final class BiFoundationCases {
             for (String measure : measures) {
                 for (Map.Entry<String, String> t : TIMES.entrySet()) {
                     for (List<String> by : t.getKey().equals("as-of-day2") ? groupings : List.of(List.<String>of())) {
-                        String q = "{ mq: 1, model: x, select: { fields: " + ConvertedSamplesTest.list(by) + ", measures: " + ConvertedSamplesTest.list(List.of(measure))
+                        String q = "{ mq: 1, model: x, select: { fields: " + list(by) + ", measures: " + list(List.of(measure))
                                 + " }, " + t.getValue() + (by.isEmpty() ? "" : ", totals: grand") + " }";
                         mine.put(measure + " | " + t.getKey() + " | by " + (by.isEmpty() ? "(none)" : by.get(0)), answer(service, v, q, p.getValue(), mq));
                     }
@@ -210,7 +210,7 @@ public final class BiFoundationCases {
                 if (cols.isEmpty()) {
                     continue;
                 }
-                String q = "{ mq: 1, model: x, select: { fields: " + ConvertedSamplesTest.list(cols) + " }, shape: rows, limit: 100000 }";
+                String q = "{ mq: 1, model: x, select: { fields: " + list(cols) + " }, shape: rows, limit: 100000 }";
                 mine.put("rows of " + alias, extract(answer(service, v, q, p.getValue(), mq)));
             }
             out.put(p.getKey(), mine);
@@ -234,8 +234,8 @@ public final class BiFoundationCases {
         MqHarness.Reader admin = new MqHarness.Reader("ada", true, "", List.of("admin"));
         for (String f : candidates) {
             for (String m : measures) {
-                Map<String, Object> a = answer(service, v, "{ mq: 1, model: x, select: { fields: " + ConvertedSamplesTest.list(List.of(f)) + ", measures: "
-                        + ConvertedSamplesTest.list(List.of(m)) + " }, time: { as-of: " + SampleLake.DAY2 + " } }", admin, mq);
+                Map<String, Object> a = answer(service, v, "{ mq: 1, model: x, select: { fields: " + list(List.of(f)) + ", measures: "
+                        + list(List.of(m)) + " }, time: { as-of: " + SampleLake.DAY2 + " } }", admin, mq);
                 if (a.get("rows") instanceof List<?> rows) {
                     for (Object r : rows) {
                         if (r instanceof List<?> row && !row.isEmpty() && row.get(0) instanceof String s && !s.isBlank()) {
@@ -269,8 +269,8 @@ public final class BiFoundationCases {
             }
             List<String> two = h.getValue().subList(0, 2);
             for (String m : measures) {
-                mine.put(m + " | subtotals | by " + String.join(", ", two), answer(service, v, "{ mq: 1, model: x, select: { fields: " + ConvertedSamplesTest.list(two)
-                        + ", measures: " + ConvertedSamplesTest.list(List.of(m)) + " }, " + day2 + ", totals: subtotals }", who, mq));
+                mine.put(m + " | subtotals | by " + String.join(", ", two), answer(service, v, "{ mq: 1, model: x, select: { fields: " + list(two)
+                        + ", measures: " + list(List.of(m)) + " }, " + day2 + ", totals: subtotals }", who, mq));
             }
         }
         if (slice == null) {
@@ -279,7 +279,7 @@ public final class BiFoundationCases {
         String where = "where: [{ field: \"" + slice.field() + "\", op: in, values: [\"" + slice.value().replace("\"", "\\\"") + "\"] }]";
         for (String m : measures) {
             mine.put(m + " | slicer " + slice.field() + " = " + slice.value(), answer(service, v, "{ mq: 1, model: x, select: { measures: "
-                    + ConvertedSamplesTest.list(List.of(m)) + " }, " + where + ", " + day2 + " }", who, mq));
+                    + list(List.of(m)) + " }, " + where + ", " + day2 + " }", who, mq));
         }
         String base = measures.stream().filter(m -> String.valueOf(v.def().measures().get(m).expr()).startsWith("sum(")).findFirst()
                 .orElse(measures.isEmpty() ? null : measures.get(0));
@@ -289,8 +289,8 @@ public final class BiFoundationCases {
         String ref = "measure('" + base.replace("'", "\\'") + "')";
         String define = "define: { \"Ignore all\": \"calc(" + ref + ", ignore=ALL)\", \"Ignore field\": \"calc(" + ref + ", ignore=[" + slice.field() + "])\", "
                 + "\"Share\": \"share_of(" + ref + ", over=ALL)\", \"Only value\": \"calc(" + ref + ", where=" + slice.field() + " == '" + slice.value().replace("'", "\\'") + "')\" }";
-        String select = "select: { fields: " + ConvertedSamplesTest.list(List.of(slice.field())) + ", measures: "
-                + ConvertedSamplesTest.list(List.of(base, "Ignore all", "Ignore field", "Share", "Only value")) + " }";
+        String select = "select: { fields: " + list(List.of(slice.field())) + ", measures: "
+                + list(List.of(base, "Ignore all", "Ignore field", "Share", "Only value")) + " }";
         mine.put("calc " + base + " | by " + slice.field(), answer(service, v, "{ mq: 1, model: x, " + define + ", " + select + ", " + day2 + ", totals: grand }", who, mq));
         mine.put("calc " + base + " | by " + slice.field() + " | slicer = " + slice.value(), answer(service, v, "{ mq: 1, model: x, " + define + ", " + select + ", "
                 + where + ", " + day2 + ", totals: grand }", who, mq));
@@ -605,5 +605,10 @@ public final class BiFoundationCases {
         if (want == null ? got != null : !want.equals(got)) {
             problems.add(path + ": " + got + " now, " + want + " recorded");
         }
+    }
+
+    /** Names as a YAML list of quoted texts. */
+    static String list(List<String> names) {
+        return "[" + String.join(", ", names.stream().map(n -> "\"" + n + "\"").toList()) + "]";
     }
 }

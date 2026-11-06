@@ -22,7 +22,7 @@ reference: every key, every check, the command line and the migration of BI's da
 [virtual tables tutorial](../tutorials/44-virtual-tables-and-models.md). The design, with its decisions, is
 [BI_FOUNDATION_2911E.md](../architecture/BI_FOUNDATION_2911E.md) and [VIRTUAL_TABLES.md](../architecture/VIRTUAL_TABLES.md).
 
-The outputs below are real: the shipped `config/bi` migrated into `config/tables/bi` beside the tutorial's own two tables and model, and the
+The outputs below are real: the shipped BI datasets and models as migrated into `config/tables/bi` (where they ship) beside the tutorial's own two tables and model, and the
 test data's samples of 2026-09-30 (`data/testdata`: Endur trades, counterparties).
 
 ## Contents
@@ -315,6 +315,8 @@ materialize: none
 ## 9. The migration: tables migrate
 
 One command turns BI's datasets and models into tables and models of the layer, and every DEL expression in them into Rachana, in one pass.
+BI reads only the layer's tables and models and only Rachana: an installation with its own datasets or models in `config/bi/datasets` or
+`config/bi/models` runs the command (dry run first) before it starts the server. The shipped ones ship migrated, in `config/tables/bi`.
 
 ```text
 $ drishti.py tables migrate --dry-run          # the diff per file and the report; nothing written

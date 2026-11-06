@@ -22,7 +22,6 @@ import com.ash.drishti.server.bi.BiService;
 import com.ash.drishti.server.bi.expr.DelException;
 import com.ash.drishti.server.bi.expr.ExpressionMigrator;
 import com.ash.drishti.server.bi.expr.Expressions;
-import com.ash.drishti.server.bi.expr.FunctionCatalog;
 import com.ash.drishti.server.bi.mq.ModelCatalog;
 import com.ash.drishti.server.bi.mq.MqException;
 import com.ash.drishti.server.security.Principal;
@@ -60,17 +59,15 @@ public class ExprController {
     public Map<String, Object> functions(@RequestParam(required = false) String scope, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
         Scope s = Scope.of(scope);
-        FunctionCatalog cat = FunctionCatalog.get();
+        Signatures cat = Signatures.get();                                       // Rachana's one catalogue (BI_FOUNDATION_2911E.md 2.5)
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("language", "DEL");
-        m.put("version", 2);
-        m.put("legacy", Expressions.legacyMode().name().toLowerCase(java.util.Locale.ROOT));
+        m.put("language", "Rachana");
+        m.put("version", 3);
         m.put("families", cat.families());
         m.put("functions", cat.all().stream().filter(f -> s == null || f.allowedIn(s)).map(Signatures.Signature::toMap).toList());
         m.put("keywords", List.of("where", "by", "desc", "over", "ignore", "keep", "via", "to", "at", "unit", "period", "hierarchy"));
-        m.put("operators", List.of("+", "-", "*", "/", "//", "%", "**", "==", "!=", "<", "<=", ">", ">=", "in", "not in", "is None", "is not None", "and", "or", "not",
-                "a if c else b"));
-        m.put("literals", List.of("12", "1.5", "1e6", "1_000_000", "'text'", "\"text\"", "True", "False", "None", "[a, b]", "date('2026-10-09')", "timestamp('2026-10-09T09:30')"));
+        m.put("operators", List.of("+", "-", "*", "/", "%", "==", "!=", "<", "<=", ">", ">=", "in", "not in", "&&", "||", "!", "c ? a : b"));
+        m.put("literals", List.of("12", "1.5", "1e6", "'text'", "true", "false", "null", "[a, b]", "date('2026-10-09')", "timestamp('2026-10-09T09:30')"));
         m.put("scopes", List.of(Map.of("name", "row", "where", "derive and calculated columns, a dataset's where, MQ and DSQL row filters"),
                 Map.of("name", "rule", "where", "security.rows[].where (may use user.*)"),
                 Map.of("name", "aggregate", "where", "measures, MQ define, having, report local measures"),

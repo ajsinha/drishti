@@ -669,10 +669,10 @@ public final class BiReportService {
 
     /** The state of the live tables behind a report (for the indicator and for a client that keeps rows), or null when the dataset has none. */
     private Map<String, Object> liveOf(Principal p, Prepared pre) {
-        if (DatasetService.isModelRef(pre.dsItem()) || pre.dataset().tables().values().stream().noneMatch(Dataset.Table::isLive)) {
+        if (pre.dataset().tables().values().stream().noneMatch(Dataset.Table::isLive)) {
             return null;
         }
-        return datasets.liveTick(p, pre.dsItem());
+        return datasets.liveTick(p, pre.dsItem());                     // a model over live tables too (the live samples are models since the table layer)
     }
 
     /**
@@ -856,8 +856,8 @@ public final class BiReportService {
         if (l.datasetItem() == null || l.dataset() == null) {
             throw new DrishtiException(ErrorCode.REPORT_DATASET, "the report's dataset cannot be found, so it has no live state");
         }
-        if (DatasetService.isModelRef(l.datasetItem()) || l.dataset().tables().values().stream().noneMatch(Dataset.Table::isLive)) {
-            return null;                                                         // a report on a model follows its live data through standing queries (W3)
+        if (l.dataset().tables().values().stream().noneMatch(Dataset.Table::isLive)) {
+            return null;
         }
         return datasets.liveWatch(p, l.datasetItem());
     }

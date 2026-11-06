@@ -74,8 +74,8 @@ class BalancesTest {
                 measures:
                   Closing: { expr: "closing(sum(trades.mtm), trades.tradeDate)" }
                   QuarterEnd: { expr: "closing(sum(trades.mtm), trades.tradeDate, period='quarter')" }
-                  Last: { expr: "last(sum(trades.mtm), trades.tradeDate)" }
-                  First: { expr: "first(sum(trades.mtm), trades.tradeDate)" }
+                  Last: { expr: "latest(sum(trades.mtm), trades.tradeDate)" }
+                  First: { expr: "earliest(sum(trades.mtm), trades.tradeDate)" }
                   Opening: { expr: "opening(sum(trades.mtm), trades.tradeDate)" }
                   Daily: { expr: "avg_over(sum(trades.mtm), trades.tradeDate)" }
                   Fytd: { expr: "fiscal_ytd(sum(trades.mtm), trades.tradeDate)" }

@@ -57,7 +57,7 @@ public final class BiFolder implements AutoCloseable {
     /** The tag a shipped file with {@code sample: true} carries; the sample-visibility setting hides tagged items from those who may not see samples. */
     public static final String SAMPLE_TAG = "sample";
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
-    private static final Map<String, String> KINDS = Map.of("reports", "report", "boards", "board", "notebooks", "notebook", "python", "python", "themes", "theme");
+    private static final Map<String, String> KINDS = Map.of("datasets", "dataset", "models", "model", "reports", "report", "boards", "board", "notebooks", "notebook", "python", "python", "themes", "theme");
     /** The table layer's files (BI_FOUNDATION_2911E.md step 5): items of the kinds {@code table} and {@code model}, as the editors store them. */
     private static final Map<String, String> LAYER = Map.of("table", "table", "model", "model");
 

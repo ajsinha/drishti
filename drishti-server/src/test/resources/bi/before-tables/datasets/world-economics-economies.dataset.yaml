@@ -1,0 +1,44 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# STORED SAMPLE 6: "World economics". One table over the world-economy pack's economy kind (real, public data for about 200 economies: World Bank, World Development
+# Indicators, CC BY 4.0). Only World Bank fields are used here; the pack's IMF fields (debt, forecasts) are left out on purpose, because the IMF's terms limit
+# reuse. Ratio measures are worked out from sums, so a region's GDP per capita is its GDP over its population, not an average of averages.
+# Report: config/bi/reports/world-economics.report.yaml. Reference: docs/guides/BI_GUIDE.md.
+
+# CONVERTED from datasets/world-economics.dataset.yaml (rachana: 1) by the dataset-to-model converter (drishti.py bi migrate --models;
+# docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8). The model keeps the old name and table names as aliases, so fields read as before.
+
+rachana: 2
+expressions: 2                  # DEL v2, the Python-like expression language (docs/guides/BI_LANGUAGE_REFERENCE.md)
+dataset: world-economics-economies
+version: 1.0.0
+title: "World economics: economies"
+description: "The economies table of the model world-economics."
+sample: true
+endorsement: "promoted"
+tags: [sample, economics, real-data, map]
+source: { connector: macro-store, kind: economy }
+refresh: { on-load: true }
+columns:
+  NAME:           { type: string }
+  ISO3:           { type: string }
+  REGION_NAME:    { type: string }
+  INCOME_NAME:    { type: string }
+  GDP_USD_BN:     { type: decimal, format: amount0 }
+  GDP_PER_CAPITA: { type: decimal, format: amount0 }
+  GROWTH:         { type: decimal, format: pc2 }
+  INFLATION:      { type: decimal, format: pc2 }
+  UNEMPLOYMENT:   { type: decimal, format: pc2 }
+  POPULATION_M:   { type: decimal, format: price2 }

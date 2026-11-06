@@ -13,6 +13,20 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.d — release notes (draft)
+
+*Not released yet.*
+
+## Upgrade
+
+- **BI reads the table layer.** BI's datasets and models are now tables and models of the table layer (`config/tables/<domain>/`,
+  `rachana: 3`), and every expression is Rachana (`&&`, `||`, `!`, `c ? a : b`, `null`, `true`, `x == null`; named arguments
+  `sum(x, where = c)`). An installation with **its own datasets or models** in `config/bi/datasets` or `config/bi/models` migrates them
+  before starting the new server: `drishti.py tables migrate --dry-run` (read the diff), then `drishti.py tables migrate`. The command
+  writes the tables and models under `config/tables/bi/`, rewrites the reports, boards, alerts and notebooks that named an old dataset,
+  and leaves the old files to be removed. Shipped content is migrated already.
+- **Pivot formulas:** `x == None` and `x != None` now test for a missing value (as Rachana's `x == null` does); before they were never true.
+
 # Drishti 2.9.11.c — release notes
 
 *Released 2026-11-05.* **Data in by clear rules, data out through Arrow Flight; parametric VaR as a cross-check; lean & streamlined.**

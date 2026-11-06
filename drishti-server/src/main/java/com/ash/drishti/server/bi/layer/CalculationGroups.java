@@ -39,16 +39,16 @@ import java.util.Set;
  * fx: { rates: fx_rates, from: fromCcy, to: toCcy, rate: rate, date: businessDate, base: USD }
  * </pre>
  *
- * An item is DEL with {@code SELECTED} for the measure it is applied to ({@code ${measure}}, the earlier spelling, is read as {@code SELECTED}). Problems are
- * {@code DRS-9120} (the shape) and {@code DRS-9127} (an item that is not DEL); what names fields is checked with the datasets (ModelChecker).
+ * An item is Rachana with {@code SELECTED} for the measure it is applied to ({@code ${measure}}, the earlier spelling, is read as {@code SELECTED}). Problems are
+ * {@code DRS-9120} (the shape) and {@code DRS-9127} (an item Rachana does not read); what names fields is checked with the datasets (ModelChecker).
  */
-final class CalculationParser {
+final class CalculationGroups {
 
     static final Set<String> KINDS = Set.of("number", "integer", "text", "date", "boolean", "field");
     /** The name of the measure a calculation item applies to, in its template. */
     static final String SELECTED = "SELECTED";
 
-    private CalculationParser() {}
+    private CalculationGroups() {}
 
     static ModelDef.Calculation read(JsonNode root, Map<String, ModelDef.Use> datasets, LayerYaml y) {
         Map<String, ModelDef.CalcGroup> groups = new LinkedHashMap<>();

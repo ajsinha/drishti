@@ -140,7 +140,7 @@ public final class ModelDefParser {
         ModelDef.Security security = security(root.path("security"), datasets, y);
         ModelDef.Contract contract = contract(root.path("contract"), measures, datasets, y);
         List<String> placeholders = new ArrayList<>();
-        ModelDef.Calculation calculation = CalculationParser.read(root, datasets, y);
+        ModelDef.Calculation calculation = CalculationGroups.read(root, datasets, y);
         Set<String> relIds = new java.util.LinkedHashSet<>();
         rels.forEach(r -> {
             if (r.id() != null) {
