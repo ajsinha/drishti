@@ -237,6 +237,7 @@ final class Pool implements AutoCloseable {
             ComputeResult r;
             try (Scratch scratch = Scratch.create(compute.scratch(), job.id())) {
                 Map<String, String> files = scratch.writeInputs(job.req.inputs());
+                files.putAll(scratch.writeFiles(job.req.files()));
                 WorkerProcess.Outcome o = worker.run(message(job, scratch.dir(), files), job.id(), job.deadline, () -> job.cancelled,
                         data -> job.progress.progress(job.id(), data));
                 reusable = o.reusable();
@@ -324,7 +325,9 @@ final class Pool implements AutoCloseable {
         Object rows = msg.get("rows");
         Object tables = msg.get("tables");
         Object meta = msg.get("meta");
-        if (rows != null && !(rows instanceof List<?>) || tables != null && !(tables instanceof Map<?, ?>) || meta != null && !(meta instanceof Map<?, ?>)) {
+        Object files = msg.get("files");
+        if (rows != null && !(rows instanceof List<?>) || tables != null && !(tables instanceof Map<?, ?>) || meta != null && !(meta instanceof Map<?, ?>)
+                || files != null && !(files instanceof Map<?, ?>)) {
             throw new ComputeException(ComputeException.Code.INVALID, "the computation returned an invalid result", job.id(), null);
         }
         List<Map<String, Object>> rs = new ArrayList<>();
@@ -338,7 +341,12 @@ final class Pool implements AutoCloseable {
             ((Map<String, Object>) tables).forEach((k, v) -> names.put(k, String.valueOf(v)));
         }
         Map<String, ArrowTable> read = scratch.readResults(names, compute.maxResultBytes());
-        return new ComputeResult(job.id(), rs, read, meta == null ? Map.of() : (Map<String, Object>) meta, worker.id(), node, queued, run);
+        Map<String, String> fileNames = new LinkedHashMap<>();
+        if (files != null) {
+            ((Map<String, Object>) files).forEach((k, v) -> fileNames.put(k, String.valueOf(v)));
+        }
+        return new ComputeResult(job.id(), rs, read, meta == null ? Map.of() : (Map<String, Object>) meta, worker.id(), node, queued, run,
+                scratch.readFiles(fileNames, compute.maxResultBytes()));
     }
 
     /** Housekeeping, every second: expired waiting requests time out; workers are kept between min and max; idle ones stop. */

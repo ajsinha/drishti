@@ -119,7 +119,7 @@ class TiersAndPythonTest {
         String tree = String.valueOf(meta.get("explain"));
         assertThat(tree).contains("tier=java").contains("tier=console").contains("PyAggregate").contains("layer=columns");
         assertThat((Map<String, Object>) meta.get("timings")).containsKeys("engineMillis", "pythonMillis", "layer");
-        assertThat((Map<String, Object>) meta.get("tiers")).containsKeys("java", "console");
+        assertThat((Map<String, Object>) meta.get("tiers")).containsKeys("java", "python");
         assertThat((String) meta.get("explainText")).contains("tier: console").contains("timings:");
     }
 }

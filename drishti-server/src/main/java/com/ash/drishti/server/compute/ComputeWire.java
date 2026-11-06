@@ -52,6 +52,7 @@ final class ComputeWire {
             m.put("chunk", Map.of("parent", r.chunk().parent(), "index", r.chunk().index(), "of", r.chunk().of()));
         }
         m.put("inputs", tables(r.inputs()));
+        m.put("files", blobs(r.files()));
         return m;
     }
 
@@ -67,7 +68,7 @@ final class ComputeWire {
         return new ComputeRequest(String.valueOf(m.get("id")), String.valueOf(m.get("pool")), (String) m.get("engine"), (String) m.get("kind"),
                 (Map<String, Object>) m.get("params"), untables((Map<String, Object>) m.getOrDefault("inputs", Map.of())), viewer,
                 RequestClass.of((String) m.get("cls")), t == null ? null : Duration.ofMillis(((Number) t).longValue()),
-                m.get("seed") == null ? 0 : ((Number) m.get("seed")).longValue(), chunk);
+                m.get("seed") == null ? 0 : ((Number) m.get("seed")).longValue(), chunk, unblobs((Map<String, Object>) m.getOrDefault("files", Map.of())));
     }
 
     static Map<String, Object> result(ComputeResult r) {
@@ -80,6 +81,7 @@ final class ComputeWire {
         m.put("node", r.node());
         m.put("queuedMs", r.queuedMs());
         m.put("runMs", r.runMs());
+        m.put("files", blobs(r.files()));
         return m;
     }
 
@@ -96,7 +98,8 @@ final class ComputeWire {
         }
         return new ComputeResult(String.valueOf(m.get("requestId")), (List<Map<String, Object>>) m.get("rows"),
                 untables((Map<String, Object>) m.getOrDefault("tables", Map.of())), (Map<String, Object>) m.get("meta"), (String) m.get("worker"),
-                (String) m.get("node"), ((Number) m.getOrDefault("queuedMs", 0)).longValue(), ((Number) m.getOrDefault("runMs", 0)).longValue());
+                (String) m.get("node"), ((Number) m.getOrDefault("queuedMs", 0)).longValue(), ((Number) m.getOrDefault("runMs", 0)).longValue(),
+                unblobs((Map<String, Object>) m.getOrDefault("files", Map.of())));
     }
 
     static Map<String, Object> error(ComputeException e) {
@@ -105,6 +108,18 @@ final class ComputeWire {
         err.put("message", e.getMessage());
         err.put("requestId", e.requestId());
         return Map.of("error", err);
+    }
+
+    private static Map<String, Object> blobs(Map<String, byte[]> in) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        in.forEach((k, v) -> out.put(k, java.util.Base64.getEncoder().encodeToString(v)));
+        return out;
+    }
+
+    private static Map<String, byte[]> unblobs(Map<String, Object> in) {
+        Map<String, byte[]> out = new LinkedHashMap<>();
+        in.forEach((k, v) -> out.put(k, java.util.Base64.getDecoder().decode(String.valueOf(v))));
+        return out;
     }
 
     private static Map<String, Object> tables(Map<String, ArrowTable> in) {

@@ -38,7 +38,7 @@ import java.util.TreeSet;
 
 /**
  * The Python Transform of a {@code rachana: 2} Python dataset (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2 C): its inputs, model queries already asked as
- * the reader, are handed to the Transform in the console's sandbox, and the frame it returns is kept for that reader until the inputs change. (The 2.1
+ * the reader, are handed to the Transform on the server's compute pool, and the frame it returns is kept for that reader until the inputs change. (The 2.1
  * composed and derived datasets this service once joined and ran were removed in 2.2: BI_DESIGN.md › The model layer: the specification of wave W1, section 8; a {@code rachana: 1} text with
  * {@code from:} or {@code derived:} parses with an error and never reaches it.)
  */
@@ -104,7 +104,7 @@ public final class FrameService implements DatasetRefresher.FramedHooks {
                 }
                 frames.add(ArrowIpcWriter.write(cols, r.rows()));
             }
-            return new TransformService.Prepared(t.manifest().toMap(), frames, all);
+            return new TransformService.Prepared(t.manifest().toMap(), frames, all, p);
         });
         return queries.readParquet(out.file(), queries.properties().maxRows());
     }

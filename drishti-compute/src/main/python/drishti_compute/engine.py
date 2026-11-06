@@ -125,11 +125,13 @@ class Progress:
 @dataclass
 class Result:
     """What the engine returns: small ``rows`` (JSON values) and named ``tables`` (SDK tables or pyarrow tables, written as Arrow
-    files and validated by the server), plus ``meta`` (the engine's version, counts)."""
+    files and validated by the server), plus ``meta`` (the engine's version, counts) and ``files``: names of files the engine wrote
+    itself under ``out/`` in the scratch folder (a Parquet result), handed to the server as they are."""
 
     rows: list = field(default_factory=list)
     tables: dict = field(default_factory=dict)
     meta: dict = field(default_factory=dict)
+    files: list = field(default_factory=list)
 
 
 class Engine:
