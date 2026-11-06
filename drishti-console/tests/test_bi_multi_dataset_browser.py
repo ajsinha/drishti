@@ -201,24 +201,18 @@ def test_the_python_datasets_page_names_its_transform_and_its_inputs(stack, brow
     page.close()
 
 
-# ---- Analyse: two extracts in one notebook, joined in pandas ----------------------------------------------------------------------------
+# ---- the Notebook: two extracts in one notebook, a join cell for the server's compute pool ------------------------------------------------
 
-def test_analyse_joins_two_extracts_of_a_notebook_in_pandas(stack, browser):
-    page = sign_in(browser, "rex", "/bi/explore")                                                          # rex reads every row and holds bi-author: Python cells run for authors
-    page.goto(f"{CONSOLE_URL}/bi/explore?item=file:notebook:pnl-vs-exposure-pandas")
+def test_the_notebook_opens_two_extracts_and_its_join_cell_waits_for_the_compute_pool(stack, browser):
+    page = sign_in(browser, "rex", "/bi/notebook")                                                         # rex reads every row and holds bi-author
+    page.goto(f"{CONSOLE_URL}/bi/notebook?item=file:notebook:pnl-vs-exposure-pandas")
     page.wait_for_selector("[data-extra='exposure']", timeout=60000)
     page.wait_for_function("() => /rows/.test(document.querySelector('[data-info]').textContent)", timeout=60000)        # the first extract is open
     page.click('[data-tab="python"]')
     page.wait_for_selector('[data-cells=python] [data-run]')
-    page.click('[data-cells=python] [data-run]')
-    page.wait_for_function("() => { const o = document.querySelector('[data-cells=python] .bx-out'); return o && o.textContent && !/Running/.test(o.textContent); }", timeout=90000)
-    out = page.locator('[data-cells=python] .bx-out').inner_text()
-    assert page.locator('[data-cells=python] .bx-out table').count() == 1, out
-    head = page.locator('[data-cells=python] .bx-out thead th').all_inner_texts()
-    assert head == ["counterparty", "desk_pnl", "ee_peak", "pnl_per_exposure"]
-    first = page.locator('[data-cells=python] .bx-out tbody tr').first.inner_text().split("\t")
-    pnl, ee = hand_join(("rex", ["risk", "bi-writer"]))
-    assert first[0] in ee and float(first[1]) == pytest.approx(pnl[first[0]], rel=1e-6) and float(first[2]) == pytest.approx(ee[first[0]], rel=1e-6)
-    assert page.locator('[data-promote="transform"]').count() == 1                                         # a cell that joins extracts can become a Transform
+    assert 'extract("exposure")' in page.locator('[data-cells=python] textarea').first.input_value()
+    assert page.locator('[data-cells=python] [data-run]').first.is_disabled()                              # Python runs on the server's compute pool: under construction
+    expect(page.locator('[data-cells=python] [data-uc="python-table-runs"]').first).to_be_visible()
+    assert page.locator('[data-promote="transform"]').count() == 1 and page.locator('[data-promote="transform"]').is_enabled()   # a cell that joins extracts can become a Transform
     clean(page)
     page.close()

@@ -17,7 +17,7 @@
 
 A lake is configuration of its own. One file, `config/lakes/<lake>.yaml`, says where a lake is and describes every table in it. Every
 **writer** (the parallel loader, the data inbox, `lake build`, the demo lakes) creates and writes tables exactly as that file says, and
-every **reader** (the Delta and Iceberg connectors, and through them BI, the pivot engine and the Data view) finds its tables through it.
+every **reader** (the Delta and Iceberg connectors, and through them BI, the pivot engine and Export data) finds its tables through it.
 Nobody else holds a root, a table path, a partition column or a promoted column. The design and its decisions are in
 [LAKE_CONFIG.md](../architecture/LAKE_CONFIG.md).
 

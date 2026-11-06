@@ -19,7 +19,7 @@ Getting data into Drishti and keeping it current, for the people who load it: **
 one call from your ETL, the Data loads page, expectations and late data), **the data formats** (section 2: JSON Lines is the standard;
 Arrow to the browser where it pays), **reading the lake you already have** (section 3: Databricks Delta Lake or Apache Iceberg, by
 configuration), **external data** (section 4: every public source of every pack, its licence and its refresh script, with worked
-examples), and **a pack from a schema** (section 5: JSON Schema files or a folder of JSON Lines in, a pack out); and taking data out, **the Data view** (section 6: every dataset, a simple selection, a day downloaded as `.jsonl.gz`); and
+examples), and **a pack from a schema** (section 5: JSON Schema files or a folder of JSON Lines in, a pack out); and taking data out, **Export data** (section 6: every dataset, a simple selection, a day downloaded as `.jsonl.gz`); and
 **the data inbox** (section 7: drop files in a folder with a `.ready` marker, and they are loaded into the lake by themselves).
 
 Connecting a store is [CONNECTORS.md](../connectors/CONNECTORS.md) and [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md); the
@@ -61,7 +61,7 @@ Each section keeps its own numbering (section 1's "section 4" is *4. The API ref
     - [6. Connector files, one per case](#6-connector-files-one-per-case)
 4. [External data: where it comes from and how to refresh it](#4-external-data-where-it-comes-from-and-how-to-refresh-it): its own guide, [EXTERNAL_DATA.md](EXTERNAL_DATA.md)
 5. [Schema to pack: generate a pack from JSON Schema](#5-schema-to-pack-generate-a-pack-from-json-schema)
-6. [The Data view: download a dataset](#6-the-data-view-download-a-dataset)
+6. [Export data: download a dataset](#6-export-data-download-a-dataset)
     - [1. What a dataset is](#1-what-a-dataset-is)
     - [2. The selection](#2-the-selection)
     - [3. How the rows are read: pushdown and streaming](#3-how-the-rows-are-read-pushdown-and-streaming)
@@ -1191,11 +1191,11 @@ EDGAR, Wikidata, Nasdaq Trader, GLEIF), where it comes from, its licence, which 
 A pack made from JSON Schema files, a folder of JSON Lines, or both (Build → New pack, or `drishti.py pack make`) has its own guide:
 [SCHEMA_TO_PACK_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md).
 
-## 6. The Data view: download a dataset
+## 6. Export data: download a dataset
 
-Taking data **out** of Drishti, a dataset and a day at a time: `DATA <GO>` (Views → Data, `/data`), the API under `/api/v1/data` and
+Taking data **out** of Drishti, a dataset and a day at a time: `EXPORT <GO>` (Views → Export data, `/data`; `DATA` works too), the API under `/api/v1/data` and
 `drishti.py data get`. It is download only: rows are never shown in a grid. The screen itself, panel by panel, is in
-[USER_GUIDE.md (The Data view)](USER_GUIDE.md#the-data-view).
+[USER_GUIDE.md (Export data)](USER_GUIDE.md#export-data).
 
 ### 1. What a dataset is
 
@@ -1296,7 +1296,7 @@ zcat trade-valuation_2026-09-30.jsonl.gz | head -2
 
 ### 6. The command line
 
-`drishti.py data get` does the same from a terminal ([CLI_GUIDE.md](CLI_GUIDE.md#data-get-a-dataset-as-jsonlgz-the-data-view)):
+`drishti.py data get` does the same from a terminal ([CLI_GUIDE.md](CLI_GUIDE.md#data-get-a-dataset-as-jsonlgz-export-data)):
 
 ```bash
 python3 tools/drishti.py data get                                     # the datasets you may download

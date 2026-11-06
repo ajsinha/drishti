@@ -84,33 +84,24 @@ def own_python(c: Ctx):
 
 def open_extract(c: Ctx):
     c.page.set_viewport_size({"width": 1280, "height": 900})
-    c.page.goto(c.base + "/bi/explore")
+    c.page.goto(c.base + "/bi/notebook")
     c.page.wait_for_function("() => document.querySelectorAll('[data-dataset] option').length > 1", timeout=30000)
     c.page.select_option("[data-dataset]", "mq:trades-basic@1")                     # the model of the sample (2.2)
     c.page.wait_for_selector("[data-fields] input[name=f]", timeout=30000)
 
 
-@shot("05-analyse-start.jpg", also=("06-slice.jpg", "07-sql.jpg", "08-python-cell.jpg", "09-saved.jpg", "10-promote-visual.jpg", "11-promote-slice.jpg"))
+@shot("05-analyse-start.jpg", also=("07-sql.jpg", "09-saved.jpg", "10-promote-visual.jpg"))
 def analyse(c: Ctx):
     login(c, height=900)
     quiet_inbox(c)
     listing = bi(c, "GET", "/workspaces/me/items")
     for it in (listing if isinstance(listing, list) else listing.get("items", [])):
-        if it["title"].startswith(("Slice of ", "Analyse cell", "Desk notional, first look")):
+        if it["title"].startswith(("Notebook cell", "Desk notional, first look")):
             bi(c, "DELETE", "/items/" + it["id"])
     open_extract(c)
     c.save("05-analyse-start.jpg", clip={"x": 240, "y": 56, "width": 1040, "height": 844})
     c.page.click("[data-open-go]")
     c.page.wait_for_function("() => /rows,/.test(document.querySelector('[data-info]').textContent)", timeout=60000)
-    c.page.click('.bx-chip[data-field="DESK"] [data-to="rows"]')
-    c.page.click('.bx-chip[data-field="CURRENCY"] [data-to="columns"]') if c.page.locator('.bx-chip[data-field="CURRENCY"]').count() else c.page.click('.bx-chip[data-field="PORTFOLIO"] [data-to="columns"]')
-    c.page.click('.bx-chip[data-field="NOTIONAL"] [data-to="values"]')
-    c.page.wait_for_selector("[data-pivot] table")
-    c.page.wait_for_timeout(500)
-    elem_shot(c, "06-slice.jpg", "#bx", pad=6)
-    c.page.click("[data-promote-slice]")
-    c.page.wait_for_timeout(2500)
-    c.save("11-promote-slice.jpg", clip={"x": 240, "y": 56, "width": 1040, "height": 844})
     c.page.click("#bxT-sql")
     c.page.fill("[data-cells=sql] textarea", DSQL)
     c.page.click("[data-cells=sql] [data-run]")
@@ -118,11 +109,7 @@ def analyse(c: Ctx):
     c.page.wait_for_timeout(500)
     elem_shot(c, "07-sql.jpg", "[data-pane=sql]", pad=6)
     c.page.click("#bxT-python")
-    c.page.fill("[data-cells=python] textarea", CHART)
-    c.page.click("[data-cells=python] [data-run]")
-    c.page.wait_for_selector("[data-cells=python] [data-ready]", timeout=60000)
-    c.page.wait_for_timeout(800)
-    elem_shot(c, "08-python-cell.jpg", "[data-pane=python]", pad=6)
+    c.page.fill("[data-cells=python] textarea", CHART)                                  # running it is under construction: written and promoted only
     c.page.click('[data-cells=python] [data-promote="visual"]')
     c.page.wait_for_timeout(2500)
     c.page.evaluate("window.scrollTo(0, 0)")
@@ -149,9 +136,9 @@ def python_dataset(c: Ctx):
     span_shot(c, "12-python-dataset.jpg", "[data-layer-dataset] header", "[data-columns]")
 
 
-@shot("13-analyse-extracts.jpg", also=("14-analyse-join.jpg", "15-promote-transform.jpg"))
+@shot("13-analyse-extracts.jpg", also=("15-promote-transform.jpg",))
 def analyse_extracts(c: Ctx):
-    """The sample notebook: two extracts of two datasets, joined in pandas in one cell, and the cell promoted to a Python Transform draft."""
+    """The sample notebook: two extracts of two models, a join cell in pandas, and the cell promoted to a Python Transform draft."""
     login(c, height=900)
     quiet_inbox(c)
     listing = bi(c, "GET", "/workspaces/me/items")
@@ -159,16 +146,12 @@ def analyse_extracts(c: Ctx):
         if it["title"].startswith("Join of P&L and exposure"):
             bi(c, "DELETE", "/items/" + it["id"])
     c.page.set_viewport_size({"width": 1280, "height": 1100})        # 2.9.0: the model has two more facts, so the extracts sit lower
-    c.page.goto(c.base + "/bi/explore?item=" + NOTEBOOK)
+    c.page.goto(c.base + "/bi/notebook?item=" + NOTEBOOK)
     c.page.wait_for_selector("[data-extra='exposure']", timeout=60000)
     c.page.wait_for_function("() => /rows/.test(document.querySelector('[data-info]').textContent)", timeout=60000)
     c.page.evaluate("window.scrollTo(0, 0)")
     c.save("13-analyse-extracts.jpg", clip={"x": 240, "y": 56, "width": 1040, "height": 1044})
     c.page.click("#bxT-python")
-    c.page.click("[data-cells=python] [data-run]")
-    c.page.wait_for_selector("[data-cells=python] .bx-out table", timeout=90000)
-    c.page.wait_for_timeout(800)
-    elem_shot(c, "14-analyse-join.jpg", "[data-pane=python]", pad=6)
     c.page.fill("input[name=title]", "Join of P&L and exposure")
     c.page.click('[data-cells=python] [data-promote="transform"]')
     c.page.wait_for_function("() => [...document.querySelectorAll('[data-cells=python] .bi-near')].some(e => /Python transform draft saved/.test(e.textContent))", timeout=30000)
@@ -257,21 +240,15 @@ def open_calc(c: Ctx, code: str):
     c.page.wait_for_function("() => /^(Done|Failed)/.test(document.querySelector('[data-calc-status]').textContent)", timeout=180000)
 
 
-@shot("21-calc-bi.jpg", also=("22-calc-walker.jpg",))
+@shot("21-calc-bi.jpg")
 def calc_bi(c: Ctx):
-    """Calc's BI client (drishti_bi.query: the engine's answer as you, a DataFrame) and Graphic Walker over that frame (drishti_bi.walk)."""
+    """Calc's BI client (drishti_bi.query: the engine's answer as you, a DataFrame); Calc is a Labs feature, switched on for the shot's stack."""
     login(c, height=900)
     quiet_inbox(c)
     open_calc(c, "import drishti_bi\ndf = await drishti_bi.query_async('trades-basic@1', measures=['MTM', 'Trades'], by=['trade.DESK'])\nshow(df, 'MTM by desk')")
     assert "Done" in c.page.inner_text("[data-calc-status]"), c.page.inner_text("[data-calc-status]")
     c.page.wait_for_timeout(500)
     c.save("21-calc-bi.jpg", "#calcDrawer")
-    open_calc(c, "import drishti_bi\ndf = await drishti_bi.query_async('trades-basic@1', measures=['MTM'], by=['trade.DESK', 'trade.CURRENCY'])\ndrishti_bi.walk(df, 'MTM by desk and currency')")
-    c.page.wait_for_selector("[data-calc-walker]", timeout=30000)
-    frame = c.page.frame_locator("[data-calc-walker]")
-    frame.locator("#walker[data-ready='1']").wait_for(timeout=60000)
-    c.page.wait_for_timeout(2500)
-    c.save("22-calc-walker.jpg", "#calcDrawer")
 
 
 STARTER = "Mean notional (starter)"
@@ -356,41 +333,3 @@ def transform_editor(c: Ctx):
     p.click("[data-ptab=rows]")
     p.wait_for_timeout(500)
     c.save("27-transform-steps.jpg", ".tx-work")
-
-
-CONSOLE_CODE = ('live = df[df["TRADE_STATUS"] != "MATURED"]\n'
-                'by_book = live.groupby("PORTFOLIO", as_index=False)["NOTIONAL"].sum().nlargest(8, "NOTIONAL").reset_index(drop=True)\n'
-                'print(len(live), "live trades of", len(df))\n'
-                'show(by_book, "Live notional by book, top 8")\n'
-                'chart(by_book, kind="bar", x="PORTFOLIO", y="NOTIONAL")\n')
-LIVE_NOTEBOOK = "Live notional by book"
-
-
-@shot("28-pyconsole.jpg", also=("29-pyconsole-promoted.jpg",))
-def pyconsole(c: Ctx):
-    """Step 13: the browser Python console on the trading pack's trades (Pyodide in the page), then the same cell promoted to the console backend."""
-    login(c, height=900)
-    quiet_inbox(c)
-    clean_items(c, LIVE_NOTEBOOK)
-    p = c.page
-    go(c, "/pyconsole", height=1400, wait="[data-dataset]", settle=500)
-    p.wait_for_function("() => [...document.querySelectorAll('[data-dataset] option')].some(o => o.value === 'dataset:pack.trading.trade')", timeout=30000)
-    p.select_option("[data-dataset]", "dataset:pack.trading.trade")
-    p.wait_for_selector("[data-fields] input[name=f]")
-    for box in p.locator("[data-fields] input[name=f]").all():
-        if (box.get_attribute("value").split(".")[-1] in ("TRADE_ID", "TRADE_STATUS", "PORTFOLIO", "CURRENCY", "NOTIONAL")) != box.is_checked():
-            box.click()
-    p.click("[data-open-go]")
-    p.wait_for_function("() => window.Drishti.pyConsole && window.Drishti.pyConsole.ex", timeout=60000)
-    p.wait_for_function("() => document.getElementById('pc').getAttribute('data-ready') === 'true'", timeout=180000)
-    p.evaluate("(code) => window.Drishti.pyConsole.setCode(code)", CONSOLE_CODE)
-    p.click("[data-run]")
-    p.wait_for_function("() => document.getElementById('pc').getAttribute('data-ran') && document.getElementById('pc').getAttribute('data-running') === 'false'", timeout=180000)
-    p.locator("[data-out] [data-pc-chart] canvas").wait_for(timeout=30000)
-    p.wait_for_timeout(800)
-    c.save("28-pyconsole.jpg", "section[aria-labelledby=pcCodeH]")
-    p.fill("[data-ptitle]", LIVE_NOTEBOOK)
-    p.click("[data-promote]")
-    p.wait_for_function("() => document.getElementById('pc').getAttribute('data-promoted')", timeout=120000)
-    p.wait_for_timeout(500)
-    c.save("29-pyconsole-promoted.jpg", "[data-compare]")

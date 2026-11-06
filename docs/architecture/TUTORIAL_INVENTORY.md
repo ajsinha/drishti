@@ -257,7 +257,7 @@ the tutorials planned but not written.
 
 #### 14. Python and Analyse
 
-- **Teaches**: a Python measure and visual, Analyse (slice, SQL, Python cell, notebook, promote), Vega-Lite, item tests, Calc, Graphic Walker, the Transform editor, the browser Python console.
+- **Teaches**: a Python measure and visual, the Notebook (SQL on the server, a Python cell for the compute pool, notebook, promote), slicing in the Pivot, Vega-Lite, item tests, Calc, the Transform editor.
 - **Size**: 13 steps, 720 lines, 29 pictures. **Last produced**: text 2026-10-31, pictures (`img/t14`) 2026-11-01.
 - **Commands**: `bi catalogue`, `bi item`, `bi model`, `bi mq`, `bi sql`, `bi transform`.
 - **Command words**: `ORDER`.

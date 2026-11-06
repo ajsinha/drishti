@@ -27,7 +27,7 @@ doc: docs/guides/IN_MEMORY_LAKE_GUIDE.md
 
 A ready-made connector file for **data that may not, by contract, be saved on a disk**: the `delta` plugin with its root in a memory
 store, `mem://<store>`. The tables are ordinary Delta tables (a `_delta_log` and Parquet files) whose files live in the server's memory
-under a hard cap; the server's replenish jobs fill them; every page, search, BI dataset and the Data view read them as they read a lake
+under a hard cap; the server's replenish jobs fill them; every page, search, BI dataset and Export data read them as they read a lake
 on a disk.
 
 ## What it reads

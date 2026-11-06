@@ -170,7 +170,7 @@ def test_a_new_report_from_the_workspace_asks_for_its_dataset_and_a_new_title_is
     page.goto(CONSOLE_URL + "/bi/w/me")
     page.select_option("[data-new-item] [name=kind]", "notebook")
     page.click("[data-create]")
-    page.wait_for_url("**/bi/explore**")
+    page.wait_for_url("**/bi/notebook**")
     clean(page)
 
 

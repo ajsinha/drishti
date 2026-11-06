@@ -71,7 +71,7 @@ class Calc:
     def __init__(self, settings, web: Path, stamps=None):
         from core.user_stamps import NONE
 
-        self.enabled = bool(settings.get("calc.enabled", True))
+        self.enabled = str(settings.get("labs.calc", False)).lower() in ("true", "1", "yes", "on")    # a Labs switch: off as shipped
         self.runtime = Runtime(web / "static" / "vendor" / "pyodide")
         self.stamps = stamps or NONE    # core/user_stamps.py: a role or Calc change through another worker is seen at once
         self._allowed: dict[str, tuple[float, dict, float]] = {}

@@ -15,8 +15,9 @@
 -->
 # The client-side renderer: one renderer, in the browser
 
-**Status: phase 1 and phase 2 built (2026-10-30); the console's entity page draws with it behind `ui.render` (default
-`server`); retiring the macros is planned.** Both
+**Status: built; one page renderer.** The console's pages are drawn by the server (Jinja, the macros): that is the one page renderer.
+This library draws **embeds** (Elements 2.x, the embed API v2) and **`<drishti-report>`** only, in **one version (1.2.0)**; the
+console's own client-drawn mode (a client mode, phase 2's `drishti_view-render.js`) and the versions 0.1.0 to 1.1.0 are retired. Both
 phases are built. The decision:
 [ADR-022](adr/022-one-renderer-in-the-browser.md), which supersedes the rendering part of
 [ADR-021](adr/021-embedding-is-html-over-the-wire.md). The contract it draws: [VIEWMODEL.md](VIEWMODEL.md) (its own reference, [section 22](#22-the-viewmodel-contract-its-own-reference)).
@@ -30,7 +31,7 @@ console under a versioned path, with the vendored ECharts and nothing from a CDN
 and one call (`render(el, { kind: 'trade', id: 'IRS-48213' })`); the screen draws inside the host's own container, in a Shadow DOM,
 follows live updates, and navigates **in place** with its own back stack. It also accepts a **streamed** ViewModel, panel by panel,
 which is how GenUI's ephemeral screens will reach the browser. Phase 1 (built, 0.1.0) is the library and the evidence that it draws
-exactly what the macros draw; phase 2 (built, **1.0.0**) moves the console's entity page onto it (`ui.render: client`, page by page),
+exactly what the macros draw; phase 2 (built, **1.0.0**) moves the console's entity page onto it (a client mode page by page, since retired),
 brings the console's own behaviours into the library, and puts Elements 2.0 on it, so there is never a second renderer. The follow-ups
 (**1.1.0**, Elements 2.1, plan row 2a) add the optional sign-in window for hosts without a backend (section 10.1), name the lens or edition
 in a `DRS-4023` refusal (section 10), open the playground on an entity the server holds, and fix the client-mode reply race (section 16.5).
@@ -234,7 +235,7 @@ first hit of a common kind, in your lens), names the lens you are inside, and sa
 | No CDN, ever | a test reads every file for an outside URL (`test_render_library.py`); the parity suite fails any request off the console's origin |
 | Files under 1,500 lines | the largest module is about 300 lines (2,220 in all) |
 
-**The modules** (`drishti-console/web/static/render/0.1.0/`):
+**The modules** (version 0.1.0, retired; today `drishti-console/web/static/render/1.2.0/`):
 
 | Module | What it holds |
 |---|---|
@@ -743,8 +744,13 @@ The accessible tree is compared node for node (section 14), so what the macros g
 
 ## 16. Phase 2: the console drawn by the renderer
 
-**Built** behind `ui.render` (CONFIGURATION.md): `ui.render.mode` is `server` (the macros, the default)
-or `client` (the library), applied page by page to `ui.render.pages` (`view`, `pane`), so a page can be turned back without a release;
+**Retired: one page renderer.** Phase 2 drew the console's entity page with this library behind the retired render setting; it was never the default, and
+two renderers for one page meant two ways to be wrong. The console's pages are the server's (Jinja) again, and the setting, the page's
+client mode and `drishti_view-render.js` are gone. The library keeps drawing embeds and `<drishti-report>`. What follows records the
+design as it was built, for the embed renderer that shares it.
+
+**Built** behind the retired render setting (CONFIGURATION.md): the retired render mode is `server` (the macros, the default)
+or `client` (the library), applied page by page to the retired render pages (`view`, `pane`), so a page can be turned back without a release;
 `?render=server|client` on an address overrides both for one request (a comparison; both draw the same ViewModel with the same masks).
 
 ### 16.1 The pages: what moved, what stays
@@ -816,10 +822,10 @@ library-drawn panel; each server page is unchanged (its browser tests unchanged 
 **Intentional differences on the console's own page: none.** The page keeps its chrome, its behaviours are the same scripts, and
 section 14.1's differences were all about a page without the console's scripts.
 
-### 16.5 The console's whole browser suite with `ui.render.mode: client`
+### 16.5 The console's whole browser suite with the retired client mode
 
 Every browser file of the console (128, all but `test_render_console_browser.py`, which compares both modes itself) was run once with
-`DRISHTI_UI_RENDER=client` (`ui.render.mode: client` for `view` and `pane`), on four workers: **902 passed, 9 skipped, 15 failed, 9
+the retired client mode (for `view` and `pane`), on four workers: **902 passed, 9 skipped, 15 failed, 9
 errors** in 38 minutes. Every failure was then run again on its own, and in server mode where it still failed:
 
 | Test | Cause | Now |
@@ -842,7 +848,7 @@ share_view_state, workspace_keys, record_forms, write_back and render_console: a
 - **Built (row 2a):** the sign-in window (10.1), the lens named in `DRS-4023` (section 10), the playground's default entity (an
   entity the server holds, from `/render/demo/start`, with the person's lens shown), the client-mode reply race (16.5).
 - **Retiring the macros** (planned, product owner): the panel macros, `_panel_html`, the channel's HTML, the embed API v1's
-  HTML path, once `ui.render.mode: client` has run a release; then the Studio and Build previews and the exports move.
+  HTML path, once the retired client mode has run a release; then the Studio and Build previews and the exports move.
 - The contract on live frames and in the schema's `$id`; publishing `@drishti/render` (section 13); GenUI's stream (section 21 9).
 
 Rendering first paint in the browser costs one script run more and no second request (the ViewModel is in the page); ECharts loads only
@@ -868,7 +874,7 @@ Asked with phase 1; **answered by the product owner for phase 2** and built as a
 
 | # | Question | Answer |
 |---|---|---|
-| 1 | A setting for phase 2 | **Yes**: `ui.render.mode` (`server` \| `client`) page by page (`ui.render.pages: [view, pane]`), default `server`, so it can be turned back (CONFIGURATION.md) |
+| 1 | A setting for phase 2 | **Yes**: a render mode (`server` \| `client`) page by page (since retired), default `server`, so it can be turned back (CONFIGURATION.md) |
 | 2 | Links that cannot be drawn in place | In the **console** (a host like any other) console links navigate as the console does today. For **other hosts**, "event only" stays the default for console pages and outside URLs, with `consoleLinks` / `outsideLinks` to open them in a new tab when the host asks |
 | 3 | Moving `<drishti-view>` onto the renderer | **Elements 2.0 / embed API v2 beside v1 for one release**, v1 unchanged (section 13; section 19, its section 19) |
 | 4 | npm publishing | **Not in this phase**: the package layout is documented (section 13) |
@@ -1421,7 +1427,7 @@ Nothing at all (the element stays in `loading`, with no event): the token provid
 **Drishti Render 1.0.0** paints a Drishti screen **in the browser** from the server's ViewModel JSON, instead of swapping in
 the console's HTML (this document, [ADR-022](adr/022-one-renderer-in-the-browser.md)).
 It draws every panel kind as the console does (a parity suite compares them on every pack Sutra), with no build step and nothing from a
-CDN, and the console's own entity page can draw with it (`ui.render`). **Elements 2.0** is `<drishti-view>` and `<drishti-panel>` on it,
+CDN, and the console's own entity page can draw with it (a client mode, since retired). **Elements 2.0** is `<drishti-view>` and `<drishti-panel>` on it,
 beside the Elements 1.x above (unchanged) for one release ([section 19, its section 19](#19-elements-20-drawn-by-the-client-side-renderer)).
 **Drishti Render 1.1.0 and Elements 2.1** (the current versions; `/embed/v2/elements/2/` answers 2.1) add the sign-in window for
 pages without a backend (`auth: 'popup'`, `auth="popup"`; [above](#a-page-without-a-backend-the-sign-in-window-auth)), the events

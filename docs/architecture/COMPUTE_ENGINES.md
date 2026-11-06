@@ -94,7 +94,7 @@ settings.
 | `simm` | ISDA SIMM initial margin per netting set and regime, its playground | `simm.yaml` | `drishti.simm.*` (new) | `SIMM`, `PLAY SIMM`; the netting set page's IM panel | `sensitivities` | `exposure` (IM in the exposure page's collateral) |
 | `sa-ccr` | SA-CCR exposure at default, its playground | `sa-ccr.yaml` | `drishti.ccr.saccr.*` | `SACCR`, `PLAY SACCR`; the SA-CCR page; BI `counterparty-saccr-*` | none | |
 | `fva` | funding cost and benefit (the xVA engine; CVA and DVA join later), its playground | `fva.yaml` | `drishti.ccr.fva.*` | `FVA`, `PLAY FVA`; FVA on the netting set and counterparty pages | `exposure` | |
-| `pivot` | the pivot engine: any table or VaR as a pivot, nested rows opened lazily, totals from their own members, exports ([PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md)) | `pivot.yaml` | `drishti.pivot.*` (its old switch name `drishti.pivot.enabled` still works and still hides the Pivot tab) | `PIVOT`, Views → Pivot, Pivot on a Data view table, `drishti.py pivot` | none | `var` (the `var` source) |
+| `pivot` | the pivot engine: any table or VaR as a pivot, nested rows opened lazily, totals from their own members, exports ([PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md)) | `pivot.yaml` | `drishti.pivot.*` (its old switch name `drishti.pivot.enabled` still works and still hides the Pivot tab) | `PIVOT`, Views → Pivot, Pivot on a Export data table, `drishti.py pivot` | none | `var` (the `var` source) |
 | `mr-cube` | the market-risk cube on the pivot engine (the VaR source's hierarchy levels and MR measures, ladders, heat map, explain the move; MR_CUBE_GUIDE.md) | `mr-cube.yaml` | `drishti.cube.mr.*` | `MCUBE` (the pivot screen with the MR lens), `/mcube`, `/api/v1/pivot/mr` | `var`, `pivot` | `sensitivities` (ladders, heat map), `frtb-sa` (the capital measure chip) |
 | `ccr-cube` | the counterparty cube (limit board, allocation, group roll-up, pre-deal overlay) | `ccr-cube.yaml` | `drishti.cube.ccr.*` (new) | the CCR Cube lens, `/ccube`, its landing and chips | `exposure` | `sa-ccr` (the EAD chip, incremental EAD tile), `fva` (the FVA chip and tile) |
 | `openblas` | linear algebra on the bundled OpenBLAS, **off as shipped**; off: the pure-Java kernels, the same figures, chosen (OPERATIONS.md section 2.1) | `openblas.yaml` | `drishti.native.*` | nothing hidden: off switches the many-scope sums to Java, live; on runs the self-test first; `drishti.py server blas` | none | |
@@ -102,7 +102,7 @@ settings.
 
 Not engines, and not in this design: the compute workers (they already have their own file, `config/compute/compute.yaml`, and switch,
 `compute.enabled`; Admin → Engines shows them as a row of their own, read from that file, so one page answers "what runs here"), BI,
-the Data view and the other platform features (their switches stay where they are, in `application.yaml` and the editions' `features:`).
+Export data and the other platform features (their switches stay where they are, in `application.yaml` and the editions' `features:`).
 A future engine (liquidity, climate, CVA) adds one catalogue entry and one file; nothing else in this design changes.
 
 ## 3. One file per engine

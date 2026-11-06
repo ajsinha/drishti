@@ -58,7 +58,7 @@ SECRET = "sign-in-window-scratch-secret-0123456789abcdef"
 USER = "pat"
 TRADE = "1000008"
 APP = "intranet"
-LIB = CONSOLE / "web" / "static" / "render" / "1.1.0"
+LIB = CONSOLE / "web" / "static" / "render" / "1.2.0"
 
 
 # ---- the stand-in identity provider -----------------------------------------------------------------------------------------------
@@ -175,7 +175,7 @@ class Host:
             def do_GET(self):
                 path = urllib.parse.urlsplit(self.path).path
                 if path == "/page.html":
-                    body, kind = (PAGE % {"lib": CONSOLE_URL + "/embed/v2/render/1.1.0/drishti-render.js", "console": CONSOLE_URL, "trade": TRADE}).encode(), "text/html"
+                    body, kind = (PAGE % {"lib": CONSOLE_URL + "/embed/v2/render/1.2.0/drishti-render.js", "console": CONSOLE_URL, "trade": TRADE}).encode(), "text/html"
                 elif path == "/bundled.html":                # the library bundled with the page (the npm package's files), on any origin
                     body, kind = (PAGE % {"lib": "/lib/drishti-render.js", "console": CONSOLE_URL, "trade": TRADE}).encode(), "text/html"
                 elif path == "/elements.html":

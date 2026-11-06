@@ -39,7 +39,7 @@ async def _refused(request: Request) -> JSONResponse | None:
     """None when the user may use Calc; otherwise the 403 to answer with."""
     calc = request.app.state.calc
     if not calc.enabled:
-        return JSONResponse({"code": "DRS-5002", "detail": "Calc is switched off on this console (calc.enabled)"}, status_code=403)
+        return JSONResponse({"code": "DRS-5002", "detail": "Calc is a Labs feature, switched off on this console (labs.calc)"}, status_code=403)
     s = await calc.settings(request.app.state.backend, ident(request))
     if not s.get("allowed"):
         return JSONResponse({"code": "DRS-5002", "detail": "you may not use Calc: ask an administrator for a role with calc"},

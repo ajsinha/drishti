@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Data view, DATA, in a real browser (docs/guides/USER_GUIDE.md "The Data view"): a dataset opened from the address shows its calendar,
+"""Export data, EXPORT (DATA works too), in a real browser (docs/guides/USER_GUIDE.md "Export data"): a dataset opened from the address shows its calendar,
 its columns all ticked, the count and the read-back the server gives; choosing columns, a date and filter lines rewrites the address, asks the
 count with every line, and builds the Download link and the CLI line from the same selection; a selection matching nothing turns Download off.
 Runs Chromium through Playwright; skipped when Playwright or its Chromium is missing."""
@@ -110,4 +110,22 @@ def test_the_selection_drives_the_address_the_count_the_download_and_the_cli(bro
     page.wait_for_function("() => document.querySelector('[data-download]').getAttribute('aria-disabled') === 'true'")
     assert "no row matches" in page.locator("[data-total]").inner_text()
     assert not errors, errors
+    page.close()
+
+
+def test_views_export_data_opens_the_page_and_both_words_reach_it(browser, data_console):
+    """The menu item reads Export data and opens the page; EXPORT is the word and DATA, the older one, still works."""
+    page = browser.new_page(viewport={"width": 1440, "height": 1000})
+    page.goto(data_console + "/t")
+    item = page.locator(".tbar-menus a[href='/data']").first
+    if not item.is_visible():                                                     # inside its menu: open the menu that holds it
+        page.locator(".tbar-menu", has=page.locator("a[href='/data']")).locator(".tbar-menu-btn").first.click()
+    assert "Export data" in item.inner_text()
+    item.click()
+    page.wait_for_url("**/data**")
+    assert page.locator("h1.ws-h").text_content().strip().startswith("Export data") and page.title().startswith("Export data")
+    for word in ("EXPORT", "DATA"):
+        page.goto(data_console + "/go?q=" + word + "%20%3CGO%3E")
+        page.wait_for_url("**/data**")
+        assert page.locator("h1.ws-h").text_content().strip().startswith("Export data"), word
     page.close()

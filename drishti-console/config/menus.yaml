@@ -39,7 +39,7 @@ menus:
           - { id: forms, href: /forms, icon: card-checklist, label: Forms, desc: "Query by form: every pack with a search form, your recent forms and saved searches. Also: FORM <GO>", match: /form, requires: [feature:forms, word:FORM] }
           - { id: functions, href: /func, icon: list-ul, label: Functions, desc: "Every command you can use, what it does · also FUNC <GO>", match: /func, requires: [word:FUNC] }
           - { id: datamap, href: /datamap, icon: diagram-3, label: Data map, desc: "Every kind of data, how it joins and how much there is · also DATAMAP <GO>", match: /datamap, requires: [feature:datamap, word:DATAMAP] }
-          - { id: data, href: /data, icon: cloud-arrow-down, label: Data, desc: "Every dataset, its dates; choose columns and filters, download a day as .jsonl.gz · also DATA <GO>", match: /data/, requires: [feature:data, word:DATA] }
+          - { id: data, href: /data, icon: cloud-arrow-down, label: Export data, desc: "Every dataset, its dates; choose columns and filters, download a day as .jsonl.gz · also EXPORT <GO> (or DATA)", match: /data/, requires: [feature:data, word:DATA] }
           - { id: pivot, cmd: PIVOT, href: /pivot, icon: grid-3x3-gap, label: Pivot, desc: "Any table, any entity document or VaR as a pivot: nested rows opened lazily, right totals, provenance, charts, Excel with formulas · also PIVOT <GO>", match: /pivot, requires: [word:PIVOT, route:/pivot] }
           - { id: reports, href: /reports, icon: file-earmark-bar-graph, label: Reports, desc: "Every report you have: scheduled reports, subscriptions, alerts, and BI reports", match: /reports, requires: [feature:reports] }
       - title: Watch
@@ -76,7 +76,7 @@ menus:
           - { id: backtesting, cmd: VAR BANK BACKTEST, icon: activity, label: Backtesting, desc: "VaR against the P&L, with the traffic light", match: /var/backtesting, requires: [word:VAR, route:/var/backtesting] }
           - { id: stress-window, cmd: SWIN BANK, icon: calendar-range, label: Stress window, desc: "The most stressful year of history for stressed VaR", match: /var/stress-window, requires: [word:VAR] }
           - { id: var-results, cmd: VRES, icon: table, label: VaR results, desc: "The stored results of every hierarchy node", requires: [cmd:VRES] }
-          - { id: mcube, cmd: MCUBE, href: /mcube, icon: grid-3x3-gap, label: MR cube, desc: "Market risk on the pivot engine: desks by risk class with the right totals, the tail, why it moved, the DV01 ladder and a what-if · also MCUBE <GO>", match: /mcube, requires: [word:VAR, word:PIVOT, word:MCUBE, route:/mcube] }
+          - { id: mcube, cmd: MCUBE, href: "/pivot?preset=mr", icon: grid-3x3-gap, label: MR cube, desc: "The Pivot's market-risk preset: desks by risk class with the right totals, the tail, why it moved, the DV01 ladder and a what-if · also MCUBE <GO>", requires: [word:VAR, word:PIVOT, word:MCUBE] }
           - { id: var-official, cmd: VOFF, icon: patch-check, label: Official records, desc: "The signed-off VaR of each business date", requires: [cmd:VOFF] }
           - { id: hier, cmd: HIER, icon: diagram-3, label: Hierarchies and limit letters, desc: "The VaR hierarchies, their nodes and limits", requires: [cmd:HIER] }
       - engine: exposure
@@ -148,6 +148,7 @@ menus:
           - { id: lim, cmd: LIM, icon: speedometer2, label: Credit limits, desc: "Each credit limit and how much of it is used", requires: [cmd:LIM] }
           - { id: xwif, cmd: XWIF, icon: sliders, label: Pre-deal check, desc: "A new trade's exposure against the limit before it is done", requires: [cmd:XWIF] }
           - { id: exp, cmd: EXP, icon: graph-up, label: Exposure, desc: "EE, PFE and EPE of a counterparty or netting set", match: /exposure, requires: [word:EXP] }
+          - { id: ccr-cube, cmd: CCUBE, href: "/pivot?preset=ccr", icon: grid-3x3-gap, label: CCR cube, desc: "The Pivot's counterparty preset: exposure by counterparty and tenor against limits, with the right totals · also CCUBE <GO>", requires: [word:EXP, word:PIVOT] }
   - id: curves
     label: Curves
     icon: graph-up-arrow

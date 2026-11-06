@@ -37,4 +37,4 @@
     <td class="mono">{{ (t.nextRefill or '')[:19] }}</td><td>{{ 'yes' if t.pinned else '' }}</td><td>{{ t.evictions }}</td><td>{{ mb(t.savedTotalBytes) }}</td></tr>{% endfor %}</tbody>
 </table></div>
 <p class="text-muted-d">Refill a table: <span class="mono">drishti.py lake memory refill &lt;table&gt;</span> · the runs: <span class="mono">drishti.py lake memory jobs</span>.
-  Nothing of these tables is written to a disk; only a download from the Data view leaves the server.</p>
+  Nothing of these tables is written to a disk; only a download from Export data leaves the server.</p>

@@ -22,7 +22,7 @@ __all__ = ["QuantEngine", "QuantError", "StandInQuantEngine", "get_engine"]
 
 
 def get_engine(name: str = "stand-in") -> QuantEngine:
-    """The engine named in ``bi.explore.quant_engine``. Only ``stand-in`` is built in; QLRisk's adapter registers here (docs/admin/AI.md › Server-side pricing: the quant service (proposed), section 16.4)."""
+    """The engine named in a Python item manifest's ``quant_engine``. Only ``stand-in`` is built in; QLRisk's adapter registers here (docs/admin/AI.md › Server-side pricing: the quant service (proposed), section 16.4)."""
     if name in ("stand-in", "standin", ""):
         return StandInQuantEngine()
     raise QuantError(f"no quant engine named '{name}' is installed (built in: stand-in)")

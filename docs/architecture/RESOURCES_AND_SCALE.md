@@ -586,7 +586,7 @@ the soak.
 ### 5.7 Busy protection: refuse politely before the heap runs out
 
 The budgets above bound what the server keeps; busy protection bounds what it starts. One gate (`AdmissionGate`, package
-`com.ash.drishti.server.admission`) stands in front of new sign-ins, VaR and exposure date loads, Data view downloads, BI runs and bulk
+`com.ash.drishti.server.admission`) stands in front of new sign-ins, VaR and exposure date loads, Export data downloads, BI runs and bulk
 loads. It reads the heap after the last collection (every collector's notification, so reading it costs nothing), each engine's loads
 in flight against `load-threads`, the open dates' heap against their safety net (section 5.1), the requests answered at once and the
 free disk; past a wait level new heavy work is answered `503` with `Retry-After` and `DRS-9501` to `DRS-9505`, and past the highest

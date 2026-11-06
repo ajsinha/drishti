@@ -39,12 +39,6 @@ WEB = Path(__file__).resolve().parent.parent / "web"
 _PAGE_KINDS = ("", "share", "datamap", "data", "form", "functions", "pack")      # missing.html for a console page, not an entity
 
 
-def _render_modules() -> list[str]:
-    """The current renderer's modules a console page imports (drishti_view-render.js -> drishti-render.js -> m/*.js), Elements' own left out."""
-    from core import render_dist as rd
-
-    skip = {"drishti-elements.js", "m/elements.js"}
-    return [f"/static/render/{rd.VERSION}/{rel}" for rel in rd.files() if rel.endswith(".js") and rel not in skip]
 ASSET_VERSION = "2.9.11.c"
 
 
@@ -97,17 +91,11 @@ WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-
 _HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
 WORKER = "/static/js/drishti_calc-worker.js"
 PYODIDE = "/pyodide/"
-# Calc's Graphic Walker frame (drishti_bi.walk, docs/guides/USER_GUIDE.md): a third-party UI that needs eval (Vega compiles chart expressions) and writes its own styles
-# (styled-components, a shadow root). So the one page that holds it, and only it, has this narrow policy, and it is a sandboxed frame: `sandbox allow-scripts` (no same-origin, so
-# no cookie and no console API), `connect-src 'none'` and no navigation or forms, so the rows it is given by message cannot leave it. Calc's own page keeps the strict policy.
-WALKER_PAGE = "/static/calc/drishti_walker.html"
-WALKER_CSP = ("default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src data: blob:; font-src data:; worker-src blob:; connect-src 'none'; "
-              "base-uri 'none'; form-action 'none'; frame-ancestors 'self'; sandbox allow-scripts")
 # Wave B (BI_DESIGN.md P3): no BI page loads WebAssembly any more (Perspective and DuckDB-Wasm are gone); only Calc's worker above may compile it.
 EMBED = "/embed/"                           # embedded views for other web applications: off unless embed.enabled (routes/embed_routes.py)
 
 
-PROTECTED = ("/t", "/bi", "/pyconsole", "/v/", "/go", "/form", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build", "/share/", "/inbox", "/render/")
+PROTECTED = ("/t", "/bi", "/v/", "/go", "/form", "/studio", "/api/", "/admin", "/account", "/w", "/m", "/alerts", "/impact", "/s/", "/compare/", "/export/", "/pin/", "/p/", "/reports", "/build", "/share/", "/inbox", "/render/")
 EXACT = ("/t", "/s")                        # pages whose path is a prefix of public ones (/s of /static)
 # all a user whose password change is due may reach until it is done (besides public pages): QA 2026-10-01 SEC-06
 WHILE_MUST_CHANGE = ("/account", "/account/password", "/logout")
@@ -274,8 +262,7 @@ class SecurityHeaders(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
         path = request.url.path
-        policy = (worker_csp(request.headers.get("host", "")) if path == WORKER
-                  else WALKER_CSP if path == WALKER_PAGE else CSP)
+        policy = worker_csp(request.headers.get("host", "")) if path == WORKER else CSP
         response.headers.setdefault("Content-Security-Policy", policy)
         if path.startswith(PYODIDE) and response.status_code == 200:
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"   # the URL names the version
@@ -396,9 +383,6 @@ def create_app(settings: Settings) -> FastAPI:
                                                              if code == "DRS-4023" and kind not in _PAGE_KINDS
                                                              else drs_advice(settings.get("ui.error_advice"), code, kind, id_)),
         ASSET_V=f"{ASSET_VERSION}-{asset_fingerprint()}",
-        # a page the client-side renderer draws preloads the library's whole module graph at once (2.9.7 row 2a): discovered import by import
-        # on a cold cache, it held every deferred script of the page back for longer than a quick person takes to type into it
-        RENDER_MODULES=_render_modules(),
         PRODUCT=settings.get("ui.product", ""),
         PRODUCT_MEANING=settings.get("ui.product_meaning", ""),
         PRODUCT_NATIVE=settings.get("ui.product_native", ""),
@@ -649,7 +633,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(admin_commands_routes.router)    # the command switches' JSON; /admin/commands redirects to /func
     app.include_router(functions_routes.router)         # Functions: FUNC, the command directory for everyone (docs/admin/USER_MANAGEMENT.md)
     app.include_router(datamap_routes.router)           # Data map: DATAMAP, the packs' kinds and joins, checked against the data (USER_GUIDE.md)
-    app.include_router(data_routes.router)              # the Data view: DATA, every dataset and a day as .jsonl.gz (DATA_GUIDE.md)
+    app.include_router(data_routes.router)              # Export data: DATA, every dataset and a day as .jsonl.gz (DATA_GUIDE.md)
     app.include_router(compute_admin_routes.router)     # Admin -> Compute (docs/admin/OPERATIONS.md)
     app.include_router(admin_engines_routes.router)     # Admin -> Engines: compute engines on or off per server (COMPUTE_ENGINES.md)
     app.include_router(data_out_routes.router)          # Admin -> Data out: Arrow Flight, the page and the map (FLIGHT_GUIDE.md)
@@ -661,18 +645,17 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(form_routes.router)
     app.include_router(ai_routes.router)
     if app.state.bi_on:
-        from core.explore import Limits
-        from routes import bi_routes, explore_routes, model_routes, pynode_routes, pyconsole_routes, python_routes, tables_editor_routes, transform_routes, wizard_routes
+        from core.notebook import Limits
+        from routes import bi_routes, model_routes, notebook_routes, pynode_routes, python_routes, tables_editor_routes, transform_routes, wizard_routes
 
-        app.state.explore_limits = Limits.from_settings(settings)      # Analyse (docs/guides/USER_GUIDE.md): extract, SQL and cell limits
+        app.state.notebook_limits = Limits.from_settings(settings)     # the Notebook (docs/guides/USER_GUIDE.md): extract, SQL and cell limits
         app.include_router(bi_routes.router)
         app.include_router(wizard_routes.router)
         app.include_router(model_routes.router)
         app.include_router(tables_editor_routes.router)     # Build › Tables & models: the editors on the table layer (EDITORS.md)
         app.include_router(python_routes.router)
-        app.include_router(explore_routes.router)
+        app.include_router(notebook_routes.router)         # the Notebook (/bi/notebook): SQL on the server, Python on its compute pool
         app.include_router(transform_routes.router)        # wave C: the Transform editor (/bi/transform), step by step
-        app.include_router(pyconsole_routes.router)        # wave C: the browser Python console (/pyconsole) and its masked extracts
         app.include_router(pynode_routes.router)          # the Py-node endpoint the server's planner calls (/internal/py/*: its token only)
     from core.ai import AiRuntime
 

@@ -56,7 +56,7 @@ def hidden(request, edition: Edition, path: str) -> str | None:
             return f"{word} is not part of {edition.title}"
     for feature, prefixes in FEATURE_PATHS.items():
         if not edition.active and feature not in CONSOLE_SWITCHES:
-            continue                    # without an edition a product switch (calc, bi, pyconsole) answers as it always did, not 404
+            continue                    # without an edition a product switch (calc, bi) answers as it always did, not 404
         if _under(path, prefixes) and not feature_on(request, edition, feature):
             return f"this page is switched off ({feature})"
     if path.startswith("/admin/"):

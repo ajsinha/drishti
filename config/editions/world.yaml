@@ -44,14 +44,13 @@ features:                                # presets of existing switches (config/
   var: off
   exposure: off
   calc: off
-  pyconsole: off
   python: off
   designer: off
   build: off
   forms: on                              # query by form: companies, funds and economies by their fields
   datamap: on
-  data: on                               # the Data view (DATA, /data): every dataset, a simple selection, a day as .jsonl.gz
-  internal-only-data: off                # the Data view refuses datasets marked internal only (IMF, Yahoo, news headlines)
+  data: on                               # Export data (EXPORT, /data): every dataset, a simple selection, a day as .jsonl.gz
+  internal-only-data: off                # Export data refuses datasets marked internal only (IMF, Yahoo, news headlines)
   layouts: on
   workspaces: on
   monitors: on

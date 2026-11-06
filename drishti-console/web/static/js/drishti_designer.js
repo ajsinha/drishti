@@ -88,8 +88,7 @@
       if (!r.ok) { throw new Error('The page could not be drawn again (HTTP ' + r.status + ')'); }
       return r.text();
     }).then(function (html) {
-      // a page the client-side renderer draws (ui.render: client) embeds its ViewModel: its body is drawn by the library in this document
-      var fresh = (window.Drishti.freshGrid && window.Drishti.freshGrid(html)) || new DOMParser().parseFromString(html, 'text/html').querySelector('[data-view] .vgrid');
+      var fresh = new DOMParser().parseFromString(html, 'text/html').querySelector('[data-view] .vgrid');
       if (!fresh) { location.reload(); return null; }                     // not a page any more (signed out...): the only full reload
       var old = {}, added = [];
       grid.querySelectorAll('section.pnl[id]').forEach(function (s) { old[s.id] = s; });

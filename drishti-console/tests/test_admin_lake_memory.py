@@ -58,7 +58,7 @@ def test_the_lakes_page_lists_memory_stores_and_tables(client, backend, monkeypa
     fake(backend, monkeypatch, MEMORY)
     page = client.get("/admin/lakes").text
     for text in ("Held in memory only", "mem://news", "VX-2026-07", "256.0 MB", "evicted to make room; a refill is queued", "4.2x",
-                 "drishti.py lake memory refill", "only a download from the Data view leaves the server", "amber"):
+                 "drishti.py lake memory refill", "only a download from Export data leaves the server", "amber"):
         assert text in page, text
 
 

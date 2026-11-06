@@ -252,7 +252,7 @@ public class DataViewController {
 
     private void requireOn() {
         if (!enabled) {
-            throw new DrishtiException(ErrorCode.FORBIDDEN, "the Data view is switched off on this server (drishti.data-view.enabled)");
+            throw new DrishtiException(ErrorCode.FORBIDDEN, "Export data is switched off on this server (drishti.data-view.enabled)");
         }
         Edition e = edition.edition();
         if (!e.wordOn(WORD)) {

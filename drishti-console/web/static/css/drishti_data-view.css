@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The Data view, DATA (docs/guides/DATA_GUIDE.md "The Data view"): the dataset list on the left, the chosen dataset and its selection on the
+/* Export data, EXPORT (docs/guides/DATA_GUIDE.md "Export data"): the dataset list on the left, the chosen dataset and its selection on the
    right (option A of docs/architecture/mockups/data-view). Every colour is a theme token, so light and dark both work; a state always has its
    words (internal only, not dated, at least), never colour alone. On a phone the list and the facts come first, one column. */
 .dv { min-width: 0; }

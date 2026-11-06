@@ -12,10 +12,12 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The MR cube in the console (routes/mcube_routes.py; docs/guides/MR_CUBE_GUIDE.md): MCUBE and its forms, the page as the pivot screen
-on source var with the MR lens (landing A, tabs B and C; one pivot engine, no second grid), the typed view laid over the landing as a
-preset, every MR answer read from the server as the person through the same-origin proxy /api/pivot/mr/..., the server's refusals passed
-on in words. The figures themselves are the server's tests (VarMrCubeApiTest, VarMrCubeShardTest, MrCubeOffTest)."""
+"""The MR cube in the console, the Pivot's preset mr (config/pivot-presets.yaml, routes/pivot_routes.py, routes/mcube_routes.py;
+docs/guides/MR_CUBE_GUIDE.md, PIVOT_GUIDE.md › Presets): MCUBE and its forms lead to /pivot?preset=mr, the pivot screen on source var with the MR
+lens (landing A, tabs B and C; one pivot engine, no second grid), the typed view laid over the landing, /mcube kept as the older address, every MR
+answer read from the server as the person through the same-origin proxy /api/pivot/mr/..., the server's refusals passed on in words. The
+parity of the preset with the cube it replaced is test_cube_presets.py; the figures themselves are the server's tests (VarMrCubeApiTest,
+VarMrCubeShardTest, MrCubeOffTest)."""
 from __future__ import annotations
 
 import pytest
@@ -26,10 +28,10 @@ from test_play import RISK_ABOUT, _app
 
 
 @pytest.mark.parametrize("typed, where", [
-    ("MCUBE", "/mcube"),
-    ("MCUBE <GO>", "/mcube"),
-    ("MCUBE BANK BY MGMT.DESK,RISK_CLASS MEASURE VAR <GO>", "/mcube?text=BANK+BY+MGMT.DESK%2CRISK_CLASS+MEASURE+VAR"),
-    ("MCUBE @asha/morning", "/mcube?view=asha%2Fmorning"),
+    ("MCUBE", "/pivot?preset=mr"),
+    ("MCUBE <GO>", "/pivot?preset=mr"),
+    ("MCUBE BANK BY MGMT.DESK,RISK_CLASS MEASURE VAR <GO>", "/pivot?preset=mr&text=BANK+BY+MGMT.DESK%2CRISK_CLASS+MEASURE+VAR"),
+    ("MCUBE @asha/morning", "/pivot?preset=mr&view=asha%2Fmorning"),
     ("VAR BANK", None),
 ])
 def test_mcube_and_its_forms(typed, where):
@@ -57,17 +59,19 @@ def test_the_page_is_the_pivot_screen_with_the_mr_lens_and_the_api_is_read_as_th
     monkeypatch.setattr(backend, "pivot", pivot, raising=False)
     app, c = _app(backend, monkeypatch, RISK_ABOUT)
     r = c.get("/go", params={"q": "MCUBE DESK:RATES BY MGMT.BOOK <GO>"}, follow_redirects=False)
-    assert r.status_code == 303 and r.headers["location"] == "/mcube?text=DESK%3ARATES+BY+MGMT.BOOK"
-    page = c.get("/mcube").text
+    assert r.status_code == 303 and r.headers["location"] == "/pivot?preset=mr&text=DESK%3ARATES+BY+MGMT.BOOK"
+    old = c.get("/mcube", params={"text": "DESK:RATES"}, follow_redirects=False)                       # the older address: the preset
+    assert old.status_code == 308 and old.headers["location"] == "/pivot?preset=mr&text=DESK%3ARATES"
+    page = c.get("/pivot?preset=mr").text
     assert "data-pivot-screen" in page and 'data-source="var"' in page and 'data-lens="mr"' in page
     assert "drishti_pivot.js" in page and "drishti_mr-lens.js" in page and "drishti_mr-lens.css" in page and "cube-core.js" not in page
     for marker in ("data-mr-tiles", "data-mr-seg=\"horizon\"", "data-mr-slider", 'data-mr-tab="tail"', 'data-mr-tab="sensitivities"',
                    "data-mr-tail", "data-mr-explain", "data-mr-comp", "data-mr-waterfall", "data-mr-heat", "data-mr-ladder", "data-mr-whatif",
                    "data-pv-grid", "data-pv-fields"):
         assert marker in page, marker
-    typed = c.get("/mcube", params={"text": "DESK:RATES BY MGMT.BOOK"}).text
+    typed = c.get("/pivot", params={"preset": "mr", "text": "DESK:RATES BY MGMT.BOOK"}).text
     assert "data-preset=" in typed and "DESK:RATES" in typed
-    assert 'data-view-id="asha/morning"' in c.get("/mcube?view=asha/morning").text
+    assert 'data-view-id="asha/morning"' in c.get("/pivot?preset=mr&view=asha/morning").text
     plain = c.get("/pivot", params={"source": "var"}).text
     assert "drishti_mr-lens.js" not in plain and 'data-lens="mr"' not in plain
     view = {"source": "var", "rows": ["MGMT.DESK"], "values": [{"measure": "var()"}]}

@@ -61,7 +61,7 @@ drishti.py pivot run --source trade --rows PRODUCT_TYPE --values "sum(NOTIONAL, 
 
 ![The trades by product type with the large-notional share as a value](img/t37/01-large-share.jpg)
 
-**You should see** one ratio per product type and a grand total that equals the sum of the notional of trades over 100 million divided by the sum of all notional (`DATA trade`, filter and sum).
+**You should see** one ratio per product type and a grand total that equals the sum of the notional of trades over 100 million divided by the sum of all notional (`EXPORT trade`, filter and sum).
 
 ## Step 2 · The playground: a function and its harness
 

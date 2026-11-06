@@ -260,19 +260,19 @@ What changed and when: [RELEASE_NOTES.md](RELEASE_NOTES.md) and [CHANGELOG.md](C
 
 <!-- code-volume:begin -->
 
-*Measured 2026-11-05 from the files the repository tracks (`tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
+*Measured 2026-11-06 from the files the repository tracks (`tools/docs/code_volume.py`; sample data and vendored libraries not counted).*
 
 | Kind | Lines | Files |
 |---|---|---|
-| Java, product | 409k | 2,037 |
-| Java, tests | 155k | 979 |
-| Python, product (console, tools, loaders) | 133k | 686 |
-| Python, tests | 96k | 540 |
-| JavaScript, HTML and CSS (console) | 124k | 753 |
-| YAML: configuration, Sutras, data contracts | 102k | 1,284 |
-| Markdown: guides, tutorials, design | 243k | 434 |
+| Java, product | 423k | 2,110 |
+| Java, tests | 160k | 1,009 |
+| Python, product (console, tools, loaders) | 133k | 687 |
+| Python, tests | 96k | 544 |
+| JavaScript, HTML and CSS (console) | 111k | 698 |
+| YAML: configuration, Sutras, data contracts | 103k | 1,287 |
+| Markdown: guides, tutorials, design | 245k | 437 |
 
-About **666k lines of product code** and **251k lines of tests** (38% of the product code), with **243k lines of documentation**; 47 Maven modules, 11 domain packs and 38 tutorials.
+About **667k lines of product code** and **256k lines of tests** (38% of the product code), with **245k lines of documentation**; 48 Maven modules, 11 domain packs and 39 tutorials.
 
 <!-- code-volume:end -->
 

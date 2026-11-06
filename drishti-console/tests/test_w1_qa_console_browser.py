@@ -42,7 +42,7 @@ CONSOLE_URL = f"http://127.0.0.1:{PORTS[1]}"
 
 def test_analyse_opens_a_pack_dataset_through_the_grouped_picker(browser):
     page = sign_in(browser, "wes")
-    page.goto(CONSOLE_URL + "/bi/explore")
+    page.goto(CONSOLE_URL + "/bi/notebook")
     sel = page.locator("[data-dataset]")
     expect(sel.locator("optgroup")).not_to_have_count(0, timeout=20000)
     labels = page.evaluate("[...document.querySelectorAll('[data-dataset] optgroup')].map(g => g.label)")

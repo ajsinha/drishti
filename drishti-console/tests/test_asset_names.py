@@ -114,7 +114,7 @@ def test_an_old_name_is_served_the_prefixed_file_for_the_published_renderer(tmp_
     app = FastAPI()
     app.mount("/static", CompressedStatic(directory=str(root), cache_dir=str(tmp_path / "cache")), name="static")
     c = TestClient(app)
-    assert c.get("/static/js/tables.js").text == "/* tables */\n"                 # what renderer 1.0.0-1.2.0 request
+    assert c.get("/static/js/tables.js").text == "/* tables */\n"                 # what renderer 1.2.0 requests
     assert c.get("/static/js/drishti_tables.js").text == "/* tables */\n"
     assert c.get("/static/js/drishti-table.js").text == "/* table */\n"           # drishti-<rest> became drishti_<rest>
     assert c.get("/static/img/logo.png").status_code == 404                      # js/ and css/ only: what the renderer loads

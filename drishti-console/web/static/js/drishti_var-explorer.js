@@ -1360,6 +1360,13 @@
     location.href = "/var/backtesting?scope=" + encodeURIComponent(S.scope || "BANK") + (S.asOf ? "&asOf=" + encodeURIComponent(S.asOf) : "");
   });
 
+  // the MR cube link: the Pivot's preset mr on the scope and date in view (MCUBE <scope> [DATE d], /pivot?preset=mr)
+  var cube = document.querySelector("[data-vx-cube]");
+  if (cube) cube.addEventListener("click", function (ev) {
+    ev.preventDefault();
+    location.href = "/pivot?preset=mr&text=" + encodeURIComponent((S.scope || "BANK") + (S.asOf ? " DATE " + S.asOf : ""));
+  });
+
   window.Drishti.VarExplorer = { select: select, switchTab: switchTab, setCcy: setCcy, setLens: setLens, state: S, api: api, words: words,
     lensWords: lensWords, renderTree: function () { if (S.tree) renderTree(); },
     redrawPath: function () { if (S.path && S.path.series && S.path.series.some(function (v) { return v !== 0; })) drawPath(S.path); } };

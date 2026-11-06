@@ -16,7 +16,7 @@
 # MR cube guide: market risk as a pivot with the right totals
 
 The **MR cube** puts the VaR engine's figures on any rows and columns: desks by risk class, books by currency, legal entities by product,
-a desk's positions by counterparty. It is not a second grid: it is the **pivot engine** ([PIVOT_GUIDE.md](PIVOT_GUIDE.md)) on its VaR source
+a desk's positions by counterparty. It is not a second grid: it is a **preset of the Pivot** ([PIVOT_GUIDE.md › Presets](PIVOT_GUIDE.md#28-presets-the-risk-cubes), `/pivot?preset=mr`), the pivot engine on its VaR source
 (`var`), with the MR lens around it. Every cell, every subtotal and the grand total is the **figure of its own set of trades**, computed by
 the server from those trades' scenario P&L vectors. A total is never the sum of the cells above it: VaR does not add up, and the pivot shows
 the gap as **diversification**. Around the pivot sit the headline of the view's scope, the time-travel slider, sparklines, a cell's tail
@@ -162,8 +162,8 @@ in words (`403`). A masked column is not offered and is refused if asked.
 
 ## 5. The landing (layout A)
 
-`MCUBE <GO>` (or **MR cube** in the VaR menu) opens the pivot screen on the VaR source with the MR lens: layout A, the pivot first, with
-tabs B and C beside it. `MCUBE <scope> BY <rows>,<columns> MEASURE <m>,… DATE <date> SORT desc <GO>` lays what you typed over the landing
+`MCUBE <GO>` (or **MR cube** in the VaR menu, or **MR cube ›** in the VaR explorer, which opens the scope and date you are looking at) opens the
+Pivot's preset `mr` (`/pivot?preset=mr`): the pivot screen on the VaR source with the MR lens, layout A, the pivot first, with tabs B and C beside it. `MCUBE <scope> BY <rows>,<columns> MEASURE <m>,… DATE <date> SORT desc <GO>` lays what you typed over the landing
 view (`MCUBE DESK:RATES BY MGMT.BOOK,CURRENCY MEASURE VAR,COMP_VAR`); `MCUBE @owner/name <GO>` opens a saved view.
 
 | Panel | What it shows |

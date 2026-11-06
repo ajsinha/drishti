@@ -107,7 +107,7 @@ def test_the_risk_edition_follows_its_file_on_every_surface(backend, monkeypatch
         assert hidden not in links, hidden
     assert "Drishti Risk" in t and "VAR BANK, VAR DESK RATES" in t                     # branding and the placeholder
     # words and features switched off: pages answer 404, typed words are refused
-    for path in ("/forms", "/pyconsole", "/build/new", "/admin/ai", "/admin/embedding", "/admin/edits", "/admin/compute"):
+    for path in ("/forms", "/build/new", "/admin/ai", "/admin/embedding", "/admin/edits", "/admin/compute"):
         assert c.get(path).status_code == 404, path
     for path in ("/admin/users", "/admin/packs"):
         assert c.get(path).status_code == 200, path
@@ -240,7 +240,7 @@ def test_the_world_edition_follows_its_file_on_every_surface(backend, monkeypatc
     for hidden in ("/var", "/exposure", "/build/new", "/admin/collab", "/admin/embedding"):
         assert hidden not in links, hidden
     assert "Drishti World" in t and "ECON CAN, NEWS rates, USEQ AAPL" in t                # branding and the placeholder
-    for path in ("/var", "/exposure", "/smat", "/api/smat/matrix", "/pyconsole", "/build/new", "/admin/ai", "/admin/compute"):
+    for path in ("/var", "/exposure", "/smat", "/api/smat/matrix", "/build/new", "/admin/ai", "/admin/compute"):
         assert c.get(path).status_code == 404, path
     assert c.get("/admin/packs").status_code == 200 and c.get("/admin/users").status_code == 200
     for typed in ("VAR BANK <GO>", "RUPAKA <GO>", "SMAT T1 20 <GO>"):                                  # EXP is also a mnemonic: the server refuses it
@@ -382,7 +382,7 @@ def test_the_market_edition_follows_its_file_on_every_surface(market, monkeypatc
     for hidden in ("/var", "/exposure", "/build/new", "/admin/collab", "/admin/embedding"):
         assert hidden not in links, hidden
     assert "Drishti Market" in t and "CRV CRV-USD-OIS, FXV FXV-EURUSD, IRV IRV-USD" in t               # branding and the placeholder
-    for path in ("/var", "/exposure", "/smat", "/api/smat/matrix", "/pyconsole", "/build/new", "/admin/ai", "/admin/compute"):
+    for path in ("/var", "/exposure", "/smat", "/api/smat/matrix", "/build/new", "/admin/ai", "/admin/compute"):
         assert c.get(path).status_code == 404, path
     for typed in ("VAR BANK <GO>", "RUPAKA <GO>", "SMAT T1 <GO>"):
         r = c.get("/go", params={"q": typed}, follow_redirects=False)
@@ -549,7 +549,7 @@ def test_the_trading_edition_follows_its_file_on_every_surface(trading, monkeypa
     for hidden in ("/forms", "/datamap", "/build/new", "/admin/collab", "/admin/embedding"):
         assert hidden not in links, hidden
     assert 'data-product="Drishti Trading"' in t and "TRD 1000001, BOOK BOOK-RATES-1, VAR BOOK BOOK-RATES-1" in t
-    for path in ("/forms", "/datamap", "/pyconsole", "/build/new", "/studio", "/admin/ai", "/admin/compute"):
+    for path in ("/forms", "/datamap", "/build/new", "/studio", "/admin/ai", "/admin/compute"):
         assert c.get(path).status_code == 404, path
     for typed in ("DATAMAP <GO>", "RUPAKA <GO>", "FORM <GO>"):
         r = c.get("/go", params={"q": typed}, follow_redirects=False)

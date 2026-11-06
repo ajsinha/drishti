@@ -28,10 +28,10 @@ from routes.common import ident, packs
 router = APIRouter()
 
 
-async def plan_for(request: Request, vm: dict, panels: list[dict], embed: bool, client_rendered: bool) -> dict | None:
-    """The phone or tablet plan for this page, or None: a desktop, an embedded pane, a page the client-side renderer draws, the phone
-    display off (``ui.phone.enabled``), or *Show everything* chosen for the session."""
-    if embed or client_rendered or not phone.enabled(request) or phone.show_all(request):
+async def plan_for(request: Request, vm: dict, panels: list[dict], embed: bool) -> dict | None:
+    """The phone or tablet plan for this page, or None: a desktop, an embedded pane, the phone display off (``ui.phone.enabled``), or
+    *Show everything* chosen for the session."""
+    if embed or not phone.enabled(request) or phone.show_all(request):
         return None
     dev = phone.device(request)
     if dev == "desk":

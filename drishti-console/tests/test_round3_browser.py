@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""QA round 3 in Chromium (the stack of test_bi_explore_browser.py, ports 18956 and 17956): Publish on an item in a private workspace explains itself (item page and the
+"""QA round 3 in Chromium (the stack of test_bi_notebook_browser.py, ports 18956 and 17956): Publish on an item in a private workspace explains itself (item page and the
 designer, a board too); one title for a notebook whether the item or its YAML is renamed; Ctrl+S saves from the YAML editors; Analyse fits 390 px with long titles, promotes a cell once
 (a second press offers to update that draft) and disables Promote to a Transform until there is a second extract; a dataset can be pasted as YAML; an item nobody may see shows
 only the not-found message; a value that rounds to zero is never signed.
@@ -21,7 +21,7 @@ Skipped when Playwright, Chromium, the built server jar or pandas and pyarrow ar
 import pytest
 from playwright.sync_api import expect
 
-from test_bi_explore_browser import browser, open_extract, stack  # noqa: F401  (the module's stack and browser fixtures)
+from test_bi_notebook_browser import browser, open_extract, stack  # noqa: F401  (the module's stack and browser fixtures)
 from bi_report_helpers import sign_in
 from bi_report_stack import CONSOLE_URL, PASSWORD, admin
 
@@ -63,8 +63,8 @@ def test_publish_in_a_private_workspace_explains_and_ctrl_s_saves_the_yaml(stack
     assert page.inner_text("#biCanvas").split() == "Not found This item does not exist, or you may not see it.".split()      # only what is visible: nothing of the item
 
 
-def test_a_notebook_has_one_title_and_analyse_promotes_once_and_fits_a_phone(stack, browser):
-    page = sign_in(browser, "wes", "/bi/explore")
+def test_a_notebook_has_one_title_and_promotes_once_and_fits_a_phone(stack, browser):
+    page = sign_in(browser, "wes", "/bi/notebook")
     open_extract(page)
     assert "trade.PNL_1D" in page.eval_on_selector_all("[data-fields] input:checked", "xs => xs.map(x => x.value)")      # the numeric columns are ticked, not only the first eight
     page.click("[data-tab=sql]")
@@ -90,7 +90,7 @@ def test_a_notebook_has_one_title_and_analyse_promotes_once_and_fits_a_phone(sta
     page.click("[data-edit] [type=submit]")
     expect(page.locator("[data-title]")).to_have_text("Changed in the YAML", timeout=15000)                  # and the YAML's is the item's
     page.set_viewport_size({"width": 390, "height": 800})
-    page.goto(f"{CONSOLE_URL}/bi/explore?item={item.split('/bi/i/')[1]}")
+    page.goto(f"{CONSOLE_URL}/bi/notebook?item={item.split('/bi/i/')[1]}")
     page.wait_for_function("() => /rows,/.test(document.querySelector('[data-info]').textContent)", timeout=60000)
     assert page.evaluate("() => [document.querySelector('[data-dataset]').value, document.querySelector('input[name=title]').value]") == ["mq:trades-basic@1", "Changed in the YAML"]
     assert page.evaluate("() => document.documentElement.scrollWidth <= document.documentElement.clientWidth")

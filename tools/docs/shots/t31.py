@@ -19,7 +19,7 @@ connectors folder and the example store and tables (config/examples/in-memory-la
     drishti-console/.venv/bin/python tools/docs/screenshots.py --guide t31
 
 The pictures, in the tutorial's order: Admin → Connectors on news-store, Admin → Lakes with the store and its four tables, a news page, a
-quote and a company read from memory, the Data view, and Admin → Health."""
+quote and a company read from memory, Export data, and Admin → Health."""
 from __future__ import annotations
 
 import shutil

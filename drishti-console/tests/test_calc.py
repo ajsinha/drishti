@@ -14,9 +14,12 @@
 
 """Calc, the console side: the panel on a view (offered by a pack, allowed by a role), its routes, the runtime folder,
 and the security headers that let only its worker compile WebAssembly."""
+import re
 from pathlib import Path
 
 import pytest
+
+from conftest import CONSOLE
 
 from core.calc import NOT_INSTALLED, Calc, Runtime
 
@@ -28,7 +31,8 @@ SNIPPETS = {"enabled": True, "snippets": [
 
 @pytest.fixture()
 def calc_on(client, backend):
-    """The finance pack offers Calc (as the server's pack model says), and the user may use it."""
+    """Labs switched on (labs.calc), the finance pack offers Calc (as the server's pack model says), and the user may use it."""
+    client.app.state.calc.enabled = True
     backend.python = {"finance": SNIPPETS}
     backend.calc_allowed = True
     backend.calc_kept = {}
@@ -37,6 +41,7 @@ def calc_on(client, backend):
     yield
     backend.python = {}
     backend.calc_allowed = True
+    client.app.state.calc.enabled = False
     client.app.state.packs.forget_all()
     client.app.state.calc._allowed.clear()
 
@@ -123,9 +128,31 @@ def test_calc_is_switched_off_on_the_console(client, calc_on):
     calc.enabled = False
     try:
         assert "calcDrawer" not in client.get("/v/trade/IRS-48213").text
-        assert client.get("/api/calc/snippets?kind=trade").status_code == 403
+        r = client.get("/api/calc/snippets?kind=trade")
+        assert r.status_code == 403 and "Labs" in r.json()["detail"]
     finally:
         calc.enabled = True
+
+
+def test_calc_is_a_labs_switch_off_as_shipped_and_never_publishes():
+    """Calc sits behind Labs (labs.calc, off as shipped, on the server too) and is a scratch pad: its routes read and keep the person's own
+    snippets, nothing else; nothing it computes is published, shared or promoted."""
+    from core.calc import Calc
+    from core.config import load_settings
+    settings = load_settings(CONSOLE / "config")
+    assert settings.get("labs.calc") in (False, "false") and settings.get("calc") is None
+    assert Calc(settings, CONSOLE / "web").enabled is False
+    root = CONSOLE.parent
+    server = (root / "drishti-server/src/main/resources/application.yaml").read_text(encoding="utf-8")
+    assert "enabled: ${DRISHTI_LABS_CALC:false}" in server
+    assert "console: [labs.calc]" in (root / "config/editions/features.yaml").read_text(encoding="utf-8")
+    routes = (CONSOLE / "routes/calc_routes.py").read_text(encoding="utf-8")
+    assert not re.search(r"publish|promote|/workspaces|/items|share", routes, re.I)
+    for f in ("web/static/js/drishti_calc.js", "web/static/js/drishti_calc-worker.js", "web/static/calc/drishti.py", "web/static/calc/drishti_bi.py"):
+        text = (CONSOLE / f).read_text(encoding="utf-8")
+        assert not re.search(r"/publish|promote|/workspaces/me/items|walker", text, re.I), f
+    tpl = (CONSOLE / "web/templates/terminal/_calc.html").read_text(encoding="utf-8")
+    assert "Labs · Scratch: runs in your browser" in tpl
 
 
 def test_the_runtime_folder_is_read_from_its_stamp(tmp_path):
@@ -185,7 +212,8 @@ def test_the_runtime_is_served_from_this_origin_versioned_and_cached(client):
 
 
 def test_offered_follows_the_pack_that_owns_the_kind():
-    calc = Calc(_Settings(), Path("/nonexistent"))
+    assert Calc(_Settings(), Path("/nonexistent")).enabled is False            # Labs: off as shipped
+    calc = Calc(_Settings(labs=True), Path("/nonexistent"))
     packs = [{"name": "finance", "title": "Finance", "kinds": ["trade"], "python": {"enabled": True, "snippets": []}},
              {"name": "logistics", "title": "Logistics", "kinds": ["shipment"], "python": {"enabled": False, "snippets": [
                  {"title": "x", "kinds": ["trade"], "code": "1"}]}}]
@@ -194,8 +222,11 @@ def test_offered_follows_the_pack_that_owns_the_kind():
 
 
 class _Settings:
+    def __init__(self, labs=False):
+        self.labs = labs
+
     def get(self, key, default=None):
-        return default
+        return self.labs if key == "labs.calc" else default
 
 
 def test_the_backend_client_sends_a_field_path_and_reads_columns_with_a_longer_wait():

@@ -36,7 +36,7 @@ typed columns, joined where they relate. Today only BI turns the first into the 
 
 A **virtual table** is that turn made central: a named, typed table defined by configuration in Rachana, over any kind any connector
 serves (a lake table, a database table, an in-memory table) or over other virtual tables. Every consumer reads virtual tables the same
-way: BI, the pivot, Sutras, Arrow Flight and Flight SQL, the PostgreSQL protocol, the Data view and its downloads, alerts, the AI's
+way: BI, the pivot, Sutras, Arrow Flight and Flight SQL, the PostgreSQL protocol, Export data and its downloads, alerts, the AI's
 questions. BI keeps what is BI's (reports, visuals, the designer, boards); the tables move under it.
 
 ## 2. Two forms, one layer
@@ -143,7 +143,7 @@ Flight reading it, the checks and preview, docs (a tables guide with real exampl
 | V2 | **BI's datasets become flat virtual tables and BI's models the layer's models**, migrated by one tool (`drishti.py tables migrate`, dry run and report) and proved by the BI parity test; BI keeps reports, visuals and boards |
 | V3 | **A flat table's columns are scalar** Rachana paths or row expressions; aggregates exist only as a model's measures |
 | V4 | **Materialisation is BI's cached and rollup layers moved, not copied**: one mechanism, the old code deleted at the switch |
-| V5 | **Every consumer reads the layer**: BI, the pivot, Sutras, Arrow Flight, Flight SQL, the PostgreSQL protocol, the Data view, alerts, the AI |
+| V5 | **Every consumer reads the layer**: BI, the pivot, Sutras, Arrow Flight, Flight SQL, the PostgreSQL protocol, Export data, alerts, the AI |
 | V6 | **Built in 2.9.11.e together with the DEL fold**: one migration tool, one parity proof, two drills |
 | V7 | **Many tables over one source.** Any number of virtual tables may be rooted in one connector and kind, each with its own columns, grain and filter (`trading.trade_summary` and `trading.trade_legs` both `from: { kind: trade }`). Within one request (a pivot view, a model query, a Flight read, a Sutra page), the reads of one source for one business date are shared: the source is read once and every table over it is computed from that one read |
 | V8 | **New tables from data loads are offered, never made automatically.** A table a data load creates (DATA_LOAD_RULES.md section 7) is offered a flat virtual table in one click, its columns suggested from a sample of the new rows (`drishti.py tables offer`); nothing is defined until someone accepts |

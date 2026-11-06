@@ -1925,7 +1925,7 @@ with gigabytes free at 85% keeps working; the same share on a 4 GB heap (about 6
 |---|---|---|---|
 | a sign-in | `503 DRS-9501` | memory after clean-up over `memory-refuse-sign-in` (92%) | 45 s |
 | opening a VaR or exposure date not yet open | `503 DRS-9502` | memory over `memory-refuse-heavy` (85%); that engine's loads full (`load-threads` running and `queued-loads` waiting); the open dates' heap over `open-heap-refuse` (1.2) times their safety net; request handlers full; disk nearly full | 30 s |
-| a Data view download | `503 DRS-9503` | memory, request handlers, disk | 30 s |
+| an Export data download | `503 DRS-9503` | memory, request handlers, disk | 30 s |
 | a BI run (and asking a run again) | `503 DRS-9504` | memory, request handlers | 60 s |
 | a bulk load of a pack's data (Admin → Packs → Data) | `503 DRS-9505` | memory, request handlers, disk | 120 s |
 
@@ -1953,7 +1953,7 @@ the same second get the same answer and the same countdown, and the server reads
 cause clears: memory back under its warn level, a load finished, disk freed, the operator's hold ended.
 
 **What people see.** The console says it in place, where the work was asked for, and nothing else on the screen changes: the sign-in form,
-the VaR or exposure panel of the new date (the date already open stays below), the Data view's Download card. A ring counts down the
+the VaR or exposure panel of the new date (the date already open stays below), Export data's Download card. A ring counts down the
 server's `Retry-After`; **Try now** and **Cancel** sit beside it; when the time is up it tries again by itself, three times at most, and
 then says so and waits for **Try now**. The console keeps no list of waiting requests: the server decides, the page only counts down.
 
@@ -2044,7 +2044,7 @@ Feeds that may not be saved on a disk are held in memory stores (`drishti.lake.m
 
 Nothing of a memory-only connector is written to the data folder (no document cache, id-map files or index segments), a scheduled report,
 a share's picture or e-mail and an Ask about its pages are refused (`DRS-5219`), a BI run's rows are not stored, DuckDB does not spill on
-a server with memory stores, and logs and audit lines carry ids and counts only. A user's download from the Data view is the one way out,
+a server with memory stores, and logs and audit lines carry ids and counts only. A user's download from Export data is the one way out,
 audited.
 
 ## 12a. Several servers as one (Drishti*net)

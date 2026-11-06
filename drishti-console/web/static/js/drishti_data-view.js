@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The Data view, DATA (docs/guides/DATA_GUIDE.md "The Data view"; templates/terminal/data.html, routes/data_routes.py).
+/* Export data, EXPORT (DATA works too; docs/guides/DATA_GUIDE.md "Export data"; templates/terminal/data.html, routes/data_routes.py).
    The selection (date, columns, filter lines) lives in the address: every change rewrites it (replaceState), asks the server for the row
    count (debounced, the last answer wins), and fills the read-back, the Download link and the CLI line from what the server says. The
    filter lines are written as the server and the CLI read them: "DESK = DESK-COMM", "PRODUCT_TYPE in ComSwap,ComFut", "MTM between 1 and 5". */

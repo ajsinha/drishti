@@ -13,10 +13,9 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
-"""The client-side renderer's phase 2 on the console's side (docs/architecture/CLIENT_RENDERER.md section 16), without a browser:
-``ui.render`` (mode, pages, the short form, ``?render=``), the entity page as the client draws it (the embedded ViewModel, the scripts
-deferred after the renderer's module, no drishti_live.js) and as the server draws it (unchanged), About as JSON, panels answered with their
-JSON, the channel's ``vm:`` subscriptions, the embed API v2 (the ViewModel with its contract, its parts as JSON, the renderer's
+"""The client-side renderer on the console's side (docs/architecture/CLIENT_RENDERER.md), without a browser: one page renderer, Jinja (the
+console's pages are the server's; the library draws embeds and <drishti-report> only), About as JSON, panels answered with their JSON (for an
+embed's renderer), the channel's ``vm:`` subscriptions, the embed API v2 (the ViewModel with its contract, its parts as JSON, the renderer's
 versioned files, Elements 2.x's address), and the three console fixes phase 1 found (a panel with no data, the candles' texts, a bar
 list that never widens the page)."""
 import html
@@ -26,30 +25,11 @@ import re
 from jinja2 import Environment, FileSystemLoader
 
 from conftest import CONSOLE, FIXTURES
-from core import channel, render_dist as rd, render_mode
-from core.config import Settings, load_settings
+from core import channel, render_dist as rd
+from core.config import load_settings
 from test_embed import HOST, make_client, token
 
 WEB = CONSOLE / "web"
-
-
-class Req:
-    def __init__(self, settings, query=""):
-        self.query_params = dict(x.split("=", 1) for x in query.split("&") if "=" in x)
-        self.app = type("A", (), {"state": type("S", (), {"settings": settings})()})()
-
-
-def test_ui_render_is_server_by_default_and_page_by_page():
-    s = load_settings(CONSOLE / "config")
-    assert render_mode.mode(s) == "server" and render_mode.pages(s) == ("view", "pane")
-    assert not render_mode.client(Req(s), "view")
-    on = Settings({"ui": {"render": {"mode": "client", "pages": ["view"]}}})
-    assert render_mode.client(Req(on), "view") and not render_mode.client(Req(on), "pane")
-    assert render_mode.pages(Settings({"ui": {"render": {"pages": "pane, view, nonsense"}}})) == ("pane", "view")
-    short = Settings({"ui": {"render": "client"}})                                   # the short form: ui.render: client
-    assert render_mode.mode(short) == "client" and render_mode.client(Req(short), "pane")
-    assert render_mode.mode(Settings({"ui": {"render": {"mode": "weird"}}})) == "server"
-    assert render_mode.client(Req(s, "render=client"), "view") and not render_mode.client(Req(on, "render=server"), "view")
 
 
 def _page(client, path):
@@ -58,28 +38,15 @@ def _page(client, path):
     return r.text
 
 
-def test_the_server_page_is_unchanged_and_the_client_page_embeds_its_view_model(client):
-    server = _page(client, "/v/trade/IRS-48213")
-    assert "data-render-host" not in server and "drishti_view-render.js" not in server and "drishti_live.js" in server
-    assert ' defer>' not in server.split("{% block scripts %}")[0] and '<section class="vhead">' in server and 'id="p-legs"' in server
-    page = _page(client, "/v/trade/IRS-48213?render=client")
-    boot = json.loads(html.unescape(re.search(r'data-render-boot="([^"]+)"', page).group(1)))
-    vm = json.loads((FIXTURES / "view_trade_IRS-48213.json").read_text())
-    assert boot["vm"]["ref"] == vm["ref"] and [p["id"] for p in boot["vm"]["panels"]] == [p["id"] for p in vm["panels"]]
-    assert boot["asOf"] == "live" and boot["backToLive"].startswith("/asof?d=live&next=/v/trade/IRS-48213")
-    assert '<section class="vhead">' not in page and 'id="p-legs"' not in page, "the panels are drawn by the library, not the macros"
-    module = page.index('src="/static/js/drishti_view-render.js')
-    assert page.index('src="/static/vendor/echarts/echarts.min.js') < module < page.index('src="/static/js/drishti_view.js')
-    assert re.search(r'src="/static/js/drishti_view\.js\?v=[^"]*" defer>', page) and re.search(r'src="/static/js/drishti_tables\.js', page)
-    assert "/static/js/drishti_live.js" not in page, "the renderer's page follows the channel itself"
-    assert 'data-render-chrome' in page and 'data-share=' in page, "the console's tools are on the page, placed after the paint"
-    pane = _page(client, "/v/trade/IRS-48213?embed=1&render=client")
-    assert "data-render-host" in pane and '"backToLive": null' in html.unescape(pane)
-
-
-def test_view_render_imports_the_current_renderer():
-    text = (WEB / "static/js/drishti_view-render.js").read_text(encoding="utf-8")
-    assert f"from '../render/{rd.VERSION}/drishti-render.js'" in text
+def test_the_console_draws_its_pages_with_jinja_only(client):
+    """One page renderer: an entity page is the server's HTML whatever is asked; the console holds no client-render mode any more."""
+    for path in ("/v/trade/IRS-48213", "/v/trade/IRS-48213?render=client", "/v/trade/IRS-48213?embed=1&render=client"):
+        page = _page(client, path)
+        assert "data-render-host" not in page and "drishti_view-render.js" not in page and 'id="p-legs"' in page, path
+        assert "modulepreload" not in page and ' defer>' not in page, path
+    assert '<section class="vhead">' in _page(client, "/v/trade/IRS-48213") and "drishti_live.js" in _page(client, "/v/trade/IRS-48213")
+    assert not (WEB / "static/js/drishti_view-render.js").exists() and not (CONSOLE / "core/render_mode.py").exists()
+    assert load_settings(CONSOLE / "config").get("ui.render") is None
 
 
 def test_about_answers_json_on_asking(client):
@@ -133,7 +100,7 @@ def test_v2_serves_the_renderer_immutably_with_partial_versions_and_elements_2(b
         assert r.status_code == 200 and rd.sri(r.content) == record["files"][rel]["integrity"] and "immutable" in r.headers["cache-control"]
     r = embed.get("/embed/v2/render/1/drishti-render.js", headers={"Origin": HOST}, follow_redirects=False)
     assert r.status_code == 302 and r.headers["location"] == f"/embed/v2/render/{rd.VERSION}/drishti-render.js"
-    assert embed.get("/embed/v2/render/0.1/drishti-render.js", follow_redirects=False).headers["location"] == "/embed/v2/render/0.1.0/drishti-render.js"
+    assert embed.get("/embed/v2/render/0.1/drishti-render.js", follow_redirects=False).status_code in (404, 410)     # retired with 1.0.0 and 1.1.0
     gone = embed.get("/embed/v2/render/3.0.0/drishti-render.js")
     assert gone.status_code == 410 and gone.json()["code"] == "DRS-8006"
     e2 = embed.get("/embed/v2/elements/2/drishti-elements.js", follow_redirects=False)
@@ -187,6 +154,6 @@ def test_every_released_renderer_folder_is_immutable():
         assert have == rd.record(v), f"static/render/{v} changed: a released version is immutable"
 
 
-def test_the_console_serves_both_renderer_versions(client):
-    for v in ("0.1.0", rd.VERSION):
-        assert client.get(f"/static/render/{v}/drishti-render.js").status_code == 200
+def test_the_console_serves_the_one_renderer_version(client):
+    assert client.get(f"/static/render/{rd.VERSION}/drishti-render.js").status_code == 200
+    assert client.get("/static/render/0.1.0/drishti-render.js").status_code == 404

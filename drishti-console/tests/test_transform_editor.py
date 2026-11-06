@@ -12,16 +12,14 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Wave C (2.4.0) data prep on the console (docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17, docs/architecture/BI_DESIGN.md section 11.1, items P1 to P3 and P5) and the browser Python console's server
-side (docs/guides/USER_GUIDE.md › Analyse: slice, SQL and Python, section 15):
+"""Wave C (2.4.0) data prep on the console (docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17, docs/architecture/BI_DESIGN.md section 11.1, items P1 to P3 and P5) and the Notebook's profile:
 
 * the snippets library: every snippet's own example is right in plain pandas **and** in the sandbox, a value is always a literal (never code), an
   ``input`` parameter must be one of the Transform's inputs;
 * the editor's documents: a spec is written as a Python item and a Python dataset and read back as the same steps; hand-written YAML opens as steps;
 * ``/bi/transform/steps`` asks each input of the server as the reader (the preview's row limit, the masked columns) and runs the steps in the sandbox;
   without bi-author it runs nothing;
-* ``/pyconsole``: not a BI page, the strict policy, Calc's worker; its extract is the reader's (masked), and a promotion runs the same code on the console
-  backend over the extract rebuilt for the reader and keeps it as a notebook draft."""
+* the Notebook's Profile tab profiles the reader's extract (masked columns as empty)."""
 import asyncio
 import io
 from pathlib import Path
@@ -206,66 +204,18 @@ def test_without_bi_author_no_step_runs(made):
 
 
 # ---- the browser Python console's server side ---------------------------------------------------------------------------------------------
-def test_the_console_page_is_not_a_bi_page_and_keeps_the_strict_policy(made):
-    client, _ = made
-    r = client.get("/pyconsole")
-    assert r.status_code == 200 and r.headers["content-security-policy"] == CSP and "wasm" not in r.headers["content-security-policy"]
-    assert "/static/js/drishti_calc-worker.js" in r.text and 'id="pc"' in r.text                                # Calc's worker, the one script that compiles WebAssembly
-    assert not (CONSOLE / "web/templates/bi/pyconsole.html").exists()
-
-
-def test_the_browser_gets_the_readers_masked_extract(made):
+def test_the_notebook_profiles_the_readers_extract(made):
     client, backend = made
     spec = {"dataset": "dataset:pack.trading.trade", "fields": ["trade.TRADE_ID", "trade.DESK", "trade.NOTIONAL"]}
-    a = client.post("/pyconsole/extract", json={"extract": spec}).json()
-    assert a["rowCount"] == 3 and a["masked"] == [] and a["maxRows"] == 20000
-    assert backend.asked[-1][1]["limit"] == 20000 and backend.asked[-1][1]["shape"] == "rows"
-    backend.reader = "bob"
-    b = client.post("/pyconsole/extract", json={"extract": spec}).json()
-    assert b["rowCount"] == 2 and b["masked"] == ["NOTIONAL"] and all(r[2] is None for r in b["rows"])
-
-
-def test_a_promoted_result_runs_on_the_backend_and_is_kept_as_a_notebook(made):
-    client, backend = made
-    spec = {"dataset": "dataset:pack.trading.trade", "fields": ["trade.DESK", "trade.NOTIONAL"]}
-    code = 'df["NOTIONAL"] = pd.to_numeric(df["NOTIONAL"].str.replace(",", ""))\nimport pandas as pd\nshow(df.groupby("DESK")["NOTIONAL"].sum(), "By desk")\nchart(df, kind="bar")\n'
-    code = "import pandas as pd\n" + code
-    p = client.post("/pyconsole/promote", json={"extract": spec, "code": code, "title": "Desk notional"}).json()
-    assert p["target"] == "server" and p["inputRows"] == 3
-    assert p["answer"]["table"]["columns"] == ["DESK", "NOTIONAL"] and p["answer"]["table"]["rows"] == [["DESK-FX", 3000], ["DESK-RATES", 500]]
-    nb = backend.saved[-1]
-    assert nb["kind"] == "notebook" and nb["title"] == "Desk notional" and p["item"]["href"] == "/bi/explore?item=bi-nb-1"
-    doc = yaml.safe_load(nb["body"])
-    assert doc["dataset"] == "dataset:pack.trading.trade" and doc["cells"][0]["target"] == "server" and "show(" in doc["cells"][0]["source"]
-    failing = client.post("/pyconsole/promote", json={"extract": spec, "code": "1/0\n", "title": "Bad"})
-    assert failing.status_code == 422 and failing.json()["code"] == "DRS-9071" and len(backend.saved) == 1        # a failing code is not kept
-    backend.powers = ["bi"]
-    client.app.state.bi_me = type(client.app.state.bi_me)()
-    refused = client.post("/pyconsole/promote", json={"extract": spec, "code": code})
-    assert refused.status_code == 403 and refused.json()["code"] == "DRS-9073"
-
-
-def test_the_sandbox_still_refuses_in_a_promoted_cell(made):
-    client, _ = made
-    spec = {"dataset": "dataset:pack.trading.trade", "fields": ["trade.DESK"]}
-    r = client.post("/pyconsole/promote", json={"extract": spec, "code": "import socket\nsocket.socket()\n"})
-    assert r.status_code in (403, 422) and r.json()["code"] in ("DRS-9073", "DRS-9071")
-    r = client.post("/pyconsole/promote", json={"extract": spec, "code": "open('/etc/passwd').read()\n"})
-    assert r.status_code == 403 and r.json()["code"] == "DRS-9073"
-
-
-def test_analyse_profiles_the_readers_extract(made):
-    client, backend = made
-    spec = {"dataset": "dataset:pack.trading.trade", "fields": ["trade.TRADE_ID", "trade.DESK", "trade.NOTIONAL"]}
-    p = client.post("/bi/explore/profile", json={"extract": spec}).json()
+    p = client.post("/bi/notebook/profile", json={"extract": spec}).json()
     cols = {c["name"]: c for c in p["columns"]}
     assert p["kind"] == "profile" and p["inputRows"] == 3 and cols["TRADE_ID"]["unique"] and cols["NOTIONAL"]["looksLike"] == "decimal"
     assert ["DESK-FX", 2] in cols["DESK"]["top"]
     backend.reader = "bob"
-    b = client.post("/bi/explore/profile", json={"extract": spec}).json()
+    b = client.post("/bi/notebook/profile", json={"extract": spec}).json()
     assert b["masked"] == ["NOTIONAL"] and {c["name"]: c for c in b["columns"]}["NOTIONAL"]["nullPct"] == 100.0
-    r = client.get("/bi/explore")
-    assert 'data-tab="profile"' in r.text and "drishti_bi-explore-profile.js" in r.text and 'href="/pyconsole"' in r.text
+    r = client.get("/bi/notebook")
+    assert 'data-tab="profile"' in r.text and "drishti_bi-notebook-profile.js" in r.text and 'href="/pyconsole"' not in r.text
 
 
 def test_the_preview_rows_setting_is_read(made):

@@ -1,0 +1,140 @@
+{
+ "MCUBE": {
+  "data-date": "",
+  "data-lens": "mr",
+  "data-preset": null,
+  "data-source": "var",
+  "data-view-id": "",
+  "title": "MR cube"
+ },
+ "MCUBE <GO>": {
+  "data-date": "",
+  "data-lens": "mr",
+  "data-preset": null,
+  "data-source": "var",
+  "data-view-id": "",
+  "title": "MR cube"
+ },
+ "MCUBE @asha/morning": {
+  "data-date": "",
+  "data-lens": "mr",
+  "data-preset": null,
+  "data-source": "var",
+  "data-view-id": "asha/morning",
+  "title": "MR cube"
+ },
+ "MCUBE BANK BY MGMT.DESK,RISK_CLASS MEASURE VAR <GO>": {
+  "data-date": "",
+  "data-lens": "mr",
+  "data-preset": {
+   "columns": [
+    "RISK_CLASS"
+   ],
+   "options": {
+    "scope": "BANK"
+   },
+   "rows": [
+    "MGMT.DESK"
+   ],
+   "values": [
+    {
+     "as": "VaR",
+     "measure": "var()"
+    }
+   ]
+  },
+  "data-source": "var",
+  "data-view-id": "",
+  "title": "MR cube"
+ },
+ "MCUBE BANK DATE 2026-10-16 <GO>": {
+  "data-date": "2026-10-16",
+  "data-lens": "mr",
+  "data-preset": {
+   "date": "2026-10-16",
+   "options": {
+    "scope": "BANK"
+   }
+  },
+  "data-source": "var",
+  "data-view-id": "",
+  "title": "MR cube"
+ },
+ "MCUBE DESK:RATES BY MGMT.BOOK <GO>": {
+  "data-date": "",
+  "data-lens": "mr",
+  "data-preset": {
+   "columns": [],
+   "options": {
+    "scope": "DESK:RATES"
+   },
+   "rows": [
+    "MGMT.BOOK"
+   ]
+  },
+  "data-source": "var",
+  "data-view-id": "",
+  "title": "MR cube"
+ },
+ "MCUBE DESK:RATES BY MGMT.BOOK,CURRENCY MEASURE VAR,COMP_VAR DATE 2026-09-30 SORT desc <GO>": {
+  "data-date": "2026-09-30",
+  "data-lens": "mr",
+  "data-preset": {
+   "columns": [
+    "CURRENCY"
+   ],
+   "date": "2026-09-30",
+   "options": {
+    "scope": "DESK:RATES"
+   },
+   "rows": [
+    "MGMT.BOOK"
+   ],
+   "sort": {
+    "MGMT.BOOK": {
+     "by": "VaR",
+     "desc": true
+    }
+   },
+   "values": [
+    {
+     "as": "VaR",
+     "measure": "var()"
+    },
+    {
+     "as": "Comp VaR",
+     "measure": "comp_var()"
+    }
+   ]
+  },
+  "data-source": "var",
+  "data-view-id": "",
+  "title": "MR cube"
+ },
+ "MCUBE LE:LE-US BY RISK_CLASS MEASURE ES,PVAR <GO>": {
+  "data-date": "",
+  "data-lens": "mr",
+  "data-preset": {
+   "columns": [],
+   "options": {
+    "scope": "LE:LE-US"
+   },
+   "rows": [
+    "RISK_CLASS"
+   ],
+   "values": [
+    {
+     "as": "ES",
+     "measure": "es()"
+    },
+    {
+     "as": "Parametric VaR",
+     "measure": "pvar()"
+    }
+   ]
+  },
+  "data-source": "var",
+  "data-view-id": "",
+  "title": "MR cube"
+ }
+}

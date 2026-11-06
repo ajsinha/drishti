@@ -1,0 +1,42 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The Pivot's presets (docs/guides/PIVOT_GUIDE.md › Presets: the risk cubes; core/pivot_presets.py). One grid: a preset is the pivot screen
+# (/pivot?preset=<name>) opened on a source, with a lens and a landing, behind its own doors (a command word, a tab or a menu item). It
+# computes nothing and draws no grid of its own: every figure is the pivot engine's answer for the view, as the person asking.
+#   title        the screen's name
+#   word         its command word: <word> <scope> [BY rows[,columns]] [MEASURE m,...] [DATE d] [SORT desc] <GO> lays a view over the landing
+#   source       the pivot source it opens (var: the VaR engine's book of the date)
+#   lens         the lens drawn around the grid (mr: the headline strip, the time-travel slider, tabs B and C; drishti_mr-lens.js)
+#   landing      source: the source's own default view (the server's catalogue: for var, desks by risk class, the VaR, the bank)
+#   help         the help address its ? opens (/help/context/<help>)
+#   engine       the compute engine it needs (config/engines.yaml): off on every server of the cluster, the preset is refused in words (DRS-1020)
+#   under_construction   the registry item (config/under-construction.yaml) while the preset's source is not built: its doors carry the chip
+presets:
+  mr:
+    title: MR cube
+    word: MCUBE
+    source: var
+    lens: mr
+    landing: source
+    help: mcube
+    engine: mr-cube
+  ccr:
+    title: CCR cube
+    word: CCUBE
+    source: ""                 # the CCR provider (netting-set exposure paths, netted and collateralised per set; PIVOT_ENGINE.md section 6.5)
+    lens: ""
+    landing: limit-board       # the CCR cube's landing: the limit board and the netting-set drill (CCR_CUBE_LENS.md)
+    help: ccr-cube
+    under_construction: ccr-cube-preset

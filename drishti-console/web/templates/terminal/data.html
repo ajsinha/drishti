@@ -14,19 +14,19 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {% extends "base.html" %}
-{% block title %}Data · {{ PRODUCT }}{% endblock %}
+{% block title %}Export data · {{ PRODUCT }}{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/drishti_functions.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_data-view.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}data{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
-{# The Data view, DATA <GO> (docs/guides/DATA_GUIDE.md "The Data view"; routes/data_routes.py). Download only, never a viewer: the list of
+{# Export data, EXPORT <GO> (DATA, its older word, works too; docs/guides/DATA_GUIDE.md "Export data"; routes/data_routes.py). Download only, never a viewer: the list of
    every dataset on the left, the chosen dataset and its selection on the right. static/js/drishti_data-view.js keeps the selection in the address,
    asks for the row count as it changes and fills the read-back, the download link and the CLI line. #}
 <div class="adm dv" data-dataview data-kind="{{ kind }}" data-sel="{{ sel | tojson | forceescape }}"
      data-dataset="{{ (chosen or {}) | tojson | forceescape }}">
-  <h1 class="ws-h">Data <span class="func-word mono" title="Type DATA, or DATA and a dataset and a date, then &lt;GO&gt;">{{ command_text }}</span>
-    <a class="emb-help" href="/help/user-guide#the-data-view" aria-label="Help: the Data view" title="Help: the Data view">?</a></h1>
+  <h1 class="ws-h">Export data <span class="func-word mono" title="Type EXPORT, or EXPORT and a dataset and a date, then &lt;GO&gt; (DATA works too)">{{ command_text }}</span>
+    <a class="emb-help" href="/help/user-guide#export-data" aria-label="Help: Export data" title="Help: Export data">?</a></h1>
   <p class="text-muted-d dv-lede">Every data source, its datasets and the dates each holds; download a day as JSON Lines, gzip-compressed. Download only, not a viewer.</p>
   {% if error %}<p class="dv-error" role="alert" data-error>{{ error }}</p>{% endif %}
 
@@ -58,7 +58,7 @@
     <section class="dv-main" aria-label="The chosen dataset">
       {% if not chosen %}
       <div class="dv-card dv-empty"><p>Pick a dataset on the left. Then a date, the columns and any filter lines; the row count shows before you download.</p>
-        <p class="text-muted-d">Or type <span class="mono">DATA trade-valuation 2026-09-30</span> on the command line.</p></div>
+        <p class="text-muted-d">Or type <span class="mono">EXPORT trade-valuation 2026-09-30</span> on the command line.</p></div>
       {% else %}
       <div class="dv-card dv-facts">
         <div class="dv-facts-h"><h2>{{ chosen.kind }}</h2><span class="text-muted-d">{{ chosen.pack }} pack{% if chosen.description %} · {{ chosen.description }}{% endif %}</span>

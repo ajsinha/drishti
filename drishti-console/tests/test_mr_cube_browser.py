@@ -15,7 +15,7 @@
 """The MR cube in a real browser (docs/guides/MR_CUBE_GUIDE.md; MR_CUBE_LENS.md section 6.7), over the market-risk pack's committed VaR data
 built into a scratch lake and served by its Delta connector, the demo connector off:
 
-- ``MCUBE <GO>`` opens the pivot screen on source var with the MR lens: the landing view (desks by risk class), the headline strip, the
+- ``MCUBE <GO>`` opens the Pivot's preset mr, the pivot screen on source var with the MR lens: the landing view (desks by risk class), the headline strip, the
   slider and the tabs; no second grid, no script error;
 - every cell's VaR shown is the VaR engine's for the cell's scope (``/api/var/scope``) to the cent, and a total is never a sum: the desks'
   VaRs add up to more than the bank's, and the grand total's diversification is the difference;
@@ -94,7 +94,7 @@ def open_cube(browser, base, size=None):
     pg.errors = []
     pg.on("pageerror", lambda e: pg.errors.append(str(e)))
     pg.goto(base + "/go?q=" + urllib.parse.quote("MCUBE <GO>"))
-    assert "/mcube" in pg.url
+    assert "/pivot?preset=mr" in pg.url                                          # the MR cube is the Pivot's preset mr
     opened(pg)
     return pg
 
@@ -121,6 +121,26 @@ def test_mcube_opens_the_pivot_screen_with_the_mr_lens_and_every_cell_is_the_eng
     headline = pg.locator("[data-mr-tiles] .mr-tile").first.locator(".mr-tv").text_content()
     assert headline.replace(",", "").strip() == f"{total['values']['VaR']:.0f}"
     shot(pg, "mr-cube-landing")
+    assert not pg.errors, pg.errors
+    pg.close()
+
+
+def test_the_doors_open_the_same_preset_the_var_explorer_link_and_the_older_address(stack, browser):
+    """One grid, several doors: the VaR explorer's MR cube link opens its scope in the preset, and /mcube (the older address) lands on it too."""
+    base = str(stack)
+    pg = browser.new_page(viewport={"width": 1600, "height": 1000})
+    pg.errors = []
+    pg.on("pageerror", lambda e: pg.errors.append(str(e)))
+    pg.goto(base + "/var?scope=BANK")
+    pg.locator("[data-vx-cube]").click()
+    pg.wait_for_url("**/pivot?preset=mr**")
+    opened(pg)
+    v = view(pg)
+    assert v["source"] == "var" and (v.get("options") or {}).get("scope") == "BANK"
+    assert pg.locator("[data-pv-title]").text_content().strip().endswith("MR cube")             # the source's title, "VaR · MR cube"
+    pg.goto(base + "/mcube")
+    pg.wait_for_url("**/pivot?preset=mr**")
+    opened(pg)
     assert not pg.errors, pg.errors
     pg.close()
 

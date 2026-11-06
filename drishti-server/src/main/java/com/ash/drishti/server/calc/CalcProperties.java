@@ -22,7 +22,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * Calc: Python run in the browser (USER_GUIDE.md). The server never runs the code; it answers the same reads as for the
  * screen, keeps each user's saved snippets, and serves whole columns of a day.
  *
- * @param enabled Calc is offered at all (to roles with {@code calc}); off: nobody sees it and its endpoints refuse
+ * @param enabled Calc is offered at all (to roles with {@code calc}); a Labs switch, off as shipped: nobody sees it and its endpoints refuse
  * @param maxColumnRows {@code drishti.columns()} returns at most this many entities (the browser holds them all)
  * @param columnsBudget how long a columns read may wait for its source (the first read of a day loads the columns)
  * @param maxSnippetChars a saved snippet's code is at most this long
@@ -31,7 +31,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public record CalcProperties(Boolean enabled, Integer maxColumnRows, Duration columnsBudget, Integer maxSnippetChars) {
 
     public CalcProperties {
-        enabled = enabled == null || enabled;
+        enabled = enabled != null && enabled;
         maxColumnRows = maxColumnRows == null || maxColumnRows <= 0 ? 250_000 : maxColumnRows;
         columnsBudget = columnsBudget == null || columnsBudget.isNegative() || columnsBudget.isZero() ? Duration.ofSeconds(20) : columnsBudget;
         maxSnippetChars = maxSnippetChars == null || maxSnippetChars <= 0 ? 50_000 : Math.min(maxSnippetChars, 60_000);

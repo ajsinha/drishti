@@ -38,7 +38,7 @@ About 30 minutes.
 - an **expectation** (`trade by 18:00 New York time`) and its states: on time, late, landed late, missing, failed;
 - where late data shows: Data loads, Admin → Health, and a notice to the people the pack names;
 - a **measure alert** with the condition *no data by a time*, triggered after a load.
-- taking a day back out with the **Data view** (`DATA`) and `data get`: chosen columns, filter lines, the count first, a `.jsonl.gz` file.
+- taking a day back out with the **Export data** (`DATA`) and `data get`: chosen columns, filter lines, the count first, a `.jsonl.gz` file.
 
 ## Step 1 · Say when you expect data
 
@@ -251,7 +251,7 @@ because a *no data* alert is looked at after **every** load, announcing a `ready
 
 ## Step 7 · Take a day back out
 
-The day that landed can be taken out again as a file, for a check in another tool or a hand-over: the **Data view**. Type `DATA trade 2026-10-15 <GO>`
+The day that landed can be taken out again as a file, for a check in another tool or a hand-over: the **Export data**. Type `EXPORT trade 2026-10-15 <GO>`
 (or open **Views**, then **Data**, and pick `trade` under *Trading*).
 
 You should see every dataset you may open on the left, `trade` among them with its format and the number of dates it holds, and on the right

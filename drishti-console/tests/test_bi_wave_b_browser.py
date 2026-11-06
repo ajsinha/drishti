@@ -161,7 +161,7 @@ def test_no_bi_page_loads_a_compute_engine(browser, made):
     page = sign_in(browser, "wes")
     seen = []
     page.on("request", lambda r: seen.append(r.url) if COMPUTE.search(r.url) else None)
-    for path in ("/bi", "/bi/explore", "/bi/r/" + made["report"], "/bi/models", "/bi/designer"):
+    for path in ("/bi", "/bi/notebook", "/bi/r/" + made["report"], "/bi/models", "/bi/designer"):
         resp = page.goto(CONSOLE_URL + path)
         csp = resp.headers["content-security-policy"]
         assert "wasm" not in csp and "unsafe-eval" not in csp, (path, csp)

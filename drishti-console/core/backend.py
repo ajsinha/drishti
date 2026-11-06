@@ -535,7 +535,7 @@ class BackendClient:
         return await self._get("/datamap", ident)
 
     async def data_datasets(self, ident=None, read_timeout: float | None = None) -> dict:
-        """The Data view's datasets (DATA, /api/v1/data): the ones the user may open, each with its source, format and dates held."""
+        """Export data's datasets (DATA, /api/v1/data): the ones the user may open, each with its source, format and dates held."""
         return await self._send("GET", "/data", ident,
                                 timeout=httpx.Timeout(self._client.timeout.connect, read=read_timeout) if read_timeout else httpx.USE_CLIENT_DEFAULT)
 

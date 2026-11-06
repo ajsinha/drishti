@@ -309,23 +309,6 @@
     });
     charts.push(c);
   }
-  /** Graphic Walker over a DataFrame (drishti_bi.walk): in a frame of its own that is sandboxed (no same-origin, no network), given the rows by message. */
-  function walker(item) {
-    heading(item.title);
-    var frame = el('iframe', 'calc-walker');
-    frame.setAttribute('sandbox', 'allow-scripts');
-    frame.setAttribute('title', item.title || 'Graphic Walker');
-    frame.setAttribute('data-calc-walker', '');
-    frame.src = '/static/calc/drishti_walker.html';
-    var dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    var onMessage = function (e) {
-      if (e.source !== frame.contentWindow || !e.data || e.data.type !== 'walker-ready') { return; }
-      frame.contentWindow.postMessage({ type: 'walker-data', fields: item.fields, data: item.rows, dark: dark }, '*');
-      window.removeEventListener('message', onMessage);
-    };
-    window.addEventListener('message', onMessage);
-    out.appendChild(frame);
-  }
   function render(item) {
     if (item.kind === 'table') { table(item); }
     else if (item.kind === 'chart') { chart(item); }
@@ -336,7 +319,6 @@
       img.src = 'data:image/png;base64,' + item.png;
       out.appendChild(img);
     } else if (item.kind === 'note') { out.appendChild(el('p', 'calc-note', item.text)); }
-    else if (item.kind === 'walker') { walker(item); }
     else { heading(item.title); out.appendChild(el('pre', 'calc-text mono', item.text)); }
   }
   window.addEventListener('resize', function () { charts.forEach(function (c) { c.resize(); }); });

@@ -44,7 +44,7 @@ def _grid(c: Ctx) -> None:
 
 def _cube(c: Ctx, query: str = "") -> None:
     c.page.set_viewport_size({"width": WIDE, "height": HIGH})
-    c.page.goto(c.base + "/mcube" + query)
+    c.page.goto(c.base + "/pivot?preset=mr" + query.replace("?", "&", 1))              # the MR cube: the Pivot's preset mr
     _grid(c)
 
 

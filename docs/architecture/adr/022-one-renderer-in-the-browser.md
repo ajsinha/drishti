@@ -17,7 +17,7 @@
 
 | Status | Date | Decider |
 |---|---|---|
-| Accepted (phase 1 built: the library and its parity tests; phase 2 built: renderer 1.0.0, the console's entity page drawn by it behind `ui.render`, Elements 2.0 and the embed API v2 beside v1; retiring the macros is the release after) | 2026-10-30 | Ashutosh Sinha |
+| Accepted (phase 1 built: the library and its parity tests; phase 2 built: renderer 1.0.0, the console's entity page drawn by it behind a client mode (since retired), Elements 2.0 and the embed API v2 beside v1; retiring the macros is the release after) | 2026-10-30 | Ashutosh Sinha |
 
 ## Context
 [ADR-021](021-embedding-is-html-over-the-wire.md) chose to render a view on the console and send HTML to `<drishti-view>`, because a

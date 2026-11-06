@@ -981,7 +981,7 @@ commands:
   words: { BI: on, FUNC: on, WHAT: on, DATAMAP: on, VAR: on, EXP: on, FORM: off, RUPAKA: off }
 features: { bi: edition, var: on, exposure: on, reports: on, alerts: on, monitors: on, workspaces: on, layouts: on,
             collaboration: on, governance: on,            # governance: the new feature (breaches, RNIV, sign-offs)
-            build: off, designer: off, forms: off, calc: off, pyconsole: off, python: off, ai: off, embed: off }
+            build: off, designer: off, forms: off, calc: off, python: off, ai: off, embed: off }
 bi:
   datasets: [market-risk-var-latest, market-risk-var-official, and the proposed: limit utilisation, breaches, backtests, RNIV]
 menus:

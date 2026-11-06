@@ -155,7 +155,7 @@ public class CalcController {
 
     private void require(Principal p) {
         if (!props.enabled()) {
-            throw new DrishtiException(ErrorCode.FORBIDDEN, "Calc is switched off on this server (drishti.calc.enabled)");
+            throw new DrishtiException(ErrorCode.FORBIDDEN, "Calc is a Labs feature, switched off on this server (drishti.calc.enabled)");
         }
         entitlements.requireCalc(p);
     }

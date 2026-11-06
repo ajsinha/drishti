@@ -38,7 +38,7 @@
     post: (path, body) => call('POST', '/bi/model-api/' + path, body),
     /** The model a report body names (`model: trading-risk@1` or `model: dataset:pack.trading.trade`), or ''. */
     modelOf: (body) => { const m = /^model:[ \t]*(\S+)[ \t]*(?:#.*)?$/m.exec(body || ''); return m ? m[1].replace(/^["']|["']$/g, '') : ''; },
-    /** The model a source names (core/explore.py model_of): `mq:<ref>` is that model, `dataset:<name>` an implicit one, a catalogue id `bi-...` as it is,
+    /** The model a source names (core/notebook.py model_of): `mq:<ref>` is that model, `dataset:<name>` an implicit one, a catalogue id `bi-...` as it is,
      *  and a 2.1 dataset's name or shipped id (`file:dataset:<name>`) the model the converter made of it, `<name>@1`. */
     refOf: (source) => {
       let s = String(source || '').trim();
