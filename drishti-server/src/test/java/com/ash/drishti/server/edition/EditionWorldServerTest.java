@@ -38,13 +38,13 @@ import org.springframework.test.web.servlet.MvcResult;
  * exposure words off), the BI datasets of the world-economy pack only, and the About answers and branding.
  */
 @SpringBootTest(properties = {"drishti.edition=world", "drishti.packs.enabled=default", "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false",
-        "drishti.bi.dir=../config/bi", "drishti.bi.query.store-dir=${drishti.test.dir}/world-bi-store/${random.uuid}",
+        "drishti.bi.dir=../config/bi", "drishti.tables.root=../config/tables", "drishti.bi.query.store-dir=${drishti.test.dir}/world-bi-store/${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/world-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class EditionWorldServerTest {
 
     static final Set<String> WORLD_PACKS = Set.of("world-economy", "news-and-markets", "us-equities", "gleif", "funds");
-    static final Set<String> WORLD_DATASETS = Set.of("world-economics-economies", "region-economics-regions");
+    static final Set<String> WORLD_DATASETS = Set.of("bi.world_economics_economies", "bi.region_economics_regions");
 
     @Autowired MockMvc mvc;
     final ObjectMapper json = new ObjectMapper();
@@ -107,8 +107,8 @@ class EditionWorldServerTest {
         getJson("/api/v1/bi/datasets").path("datasets").forEach(d -> ids.add(d.path("id").asText()));
         assertThat(ids).isNotEmpty();
         assertThat(ids).allSatisfy(id -> assertThat(WORLD_DATASETS).contains(id.substring(id.lastIndexOf(':') + 1)));
-        assertThat(ids).contains("file:dataset:world-economics-economies");
-        assertThat(mvc.perform(get("/api/v1/bi/items/file:dataset:market-risk-var-latest")).andReturn().getResponse().getStatus()).isEqualTo(404);
+        assertThat(ids).contains("file:table:bi.world_economics_economies");
+        assertThat(mvc.perform(get("/api/v1/bi/items/file:table:bi.market_risk_var_latest")).andReturn().getResponse().getStatus()).isEqualTo(404);
         List<String> items = new ArrayList<>();
         getJson("/api/v1/bi/catalogue").path("items").forEach(i -> items.add(i.path("id").asText()));
         assertThat(items).contains("file:report:world-economics").doesNotContain("file:report:market-risk-var", "file:report:trades-overview");

@@ -58,9 +58,9 @@ columns:
   notional:    { type: decimal }
   mtm:         { type: decimal }
   tradeDate:   { type: date }
-  country:     { type: string, expr: "'US' if desk == 'DESK-FX' else 'GB' if desk == 'DESK-FI' else 'JP'" }
-  lat:         { type: decimal, expr: "40.7 if desk == 'DESK-FX' else 51.5 if desk == 'DESK-FI' else 35.7" }
-  lon:         { type: decimal, expr: "-74.0 if desk == 'DESK-FX' else -0.1 if desk == 'DESK-FI' else 139.7" }
+  country:     { type: string, expr: "desk == 'DESK-FX' ? 'US' : desk == 'DESK-FI' ? 'GB' : 'JP'" }
+  lat:         { type: decimal, expr: "desk == 'DESK-FX' ? 40.7 : desk == 'DESK-FI' ? 51.5 : 35.7" }
+  lon:         { type: decimal, expr: "desk == 'DESK-FX' ? -74 : desk == 'DESK-FI' ? -0.1 : 139.7" }
 """
 
 MODEL_YAML = """rachana: 2

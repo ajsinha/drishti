@@ -25,11 +25,11 @@
   'use strict';
   const B = (window.drishtiBi = window.drishtiBi || {});
   const h = (...a) => B.h(...a);
-  const GUIDE = '/help/bi-language-reference#1-expressions-the-drishti-expression-language-del';
-  const WORDS = { aggregate: ['True', 'False', 'None', 'ALL', 'and', 'or', 'not', 'in', 'if', 'else', 'is'], row: ['True', 'False', 'None', 'and', 'or', 'not', 'in', 'if', 'else', 'is'] };
+  const GUIDE = '/help/rachana-reference';
+  const WORDS = { aggregate: ['true', 'false', 'null', 'ALL', 'in', 'not in'], row: ['true', 'false', 'null', 'in', 'not in'] };   // Rachana's words (&&, ||, !, ?: are operators)
   let catalogue = null, uid = 0;
 
-  /** The server's function catalogue (bi/expr/functions.yaml), read once per page: [{name, signature, description, example, examples, scopes, keywords, link}]. */
+  /** The server's function catalogue (Rachana's signatures), read once per page: [{name, signature, description, example, examples, scopes, keywords, link}]. */
   function functions() {
     if (!catalogue) {
       // only what works now: a function of a later wave (status B, C) is refused by the server (DRS-9129), so it is not offered

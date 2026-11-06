@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.plan;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.ash.drishti.server.bi.engine.SqlCompiler;
-import com.ash.drishti.server.bi.expr.DelPrinter;
+import com.ash.drishti.server.bi.dataset.NodeText;
 import com.ash.drishti.server.bi.expr.Expressions;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -184,7 +184,7 @@ public final class SecuritySignature {
             return where;
         }
         try {
-            return DelPrinter.print(bind(n, attributes));
+            return NodeText.print(bind(n, attributes));
         } catch (RuntimeException e) {
             return n.toString();
         }

@@ -166,7 +166,7 @@ def test_a_free_row_rule_and_an_expected_value_are_written_to_the_model(browser)
     page.fill("[data-rule-roles]", "desk-head")
     page.select_option("[data-rule-alias]", "trade")
     page.select_option("[data-rule-kind]", "expr")
-    page.fill("[data-rule-expr]", "trade.DESK in user.desks and trade.TRADE_STATUS == 'VALIDATED'")
+    page.fill("[data-rule-expr]", "trade.DESK in user.desks && trade.TRADE_STATUS == 'VALIDATED'")
     page.click("[data-rule-add]")
     expect(page.locator('[data-rule="trade:0"]')).to_contain_text("trade.TRADE_STATUS == 'VALIDATED'", timeout=20000)
     page.fill("[data-test-name]", "Some MTM")
@@ -177,7 +177,7 @@ def test_a_free_row_rule_and_an_expected_value_are_written_to_the_model(browser)
     expect(page.locator('[data-model-test="Some MTM"]').first).to_be_visible(timeout=20000)
     page.wait_for_timeout(1500)                                        # the YAML is written by the Check that follows the edit
     text = yaml_tab(page)
-    assert "user.desks and trade.TRADE_STATUS" in text and "Some MTM" in text and "min: -100000000" in text, text
+    assert "user.desks && trade.TRADE_STATUS" in text and "Some MTM" in text and "min: -100000000" in text, text
     clean(page)
     page.context.close()
 

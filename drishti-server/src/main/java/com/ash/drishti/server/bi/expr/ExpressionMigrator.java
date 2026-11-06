@@ -129,9 +129,9 @@ public final class ExpressionMigrator {
             return;
         }
         count[0]++;
-        Expressions.Converted c;
+        Converted c;
         try {
-            c = Expressions.convert(text);
+            c = toRachana(text);
         } catch (DelException e) {
             problems.add(new Change(path, text, null, e.code() + " " + e.getMessage()));
             return;
@@ -181,5 +181,17 @@ public final class ExpressionMigrator {
         }
         int first = root.getValue().isEmpty() ? 0 : root.getValue().get(0).getKeyNode().getStartMark().getIndex();
         return text.substring(0, first) + "expressions: 2\n" + text.substring(first);
+    }
+
+    /** What the converter made of one expression: the Rachana text, and whether it changed. */
+    public record Converted(String from, String to, boolean changed) {}
+
+    /** A DEL expression as Rachana (the migration's DEL step, {@link DelTablesTranslator}); a text DEL does not read is refused. */
+    public static Converted toRachana(String text) {
+        com.ash.drishti.tables.migrate.DelTranslator.Result r = new DelTablesTranslator().translate(text, null);
+        if (r.rachana() == null) {
+            throw new DelException(Expressions.NOT_CONVERTIBLE, r.refusal(), null, 0, text.length());
+        }
+        return new Converted(text, r.rachana(), !r.rachana().equals(text.strip()));
     }
 }

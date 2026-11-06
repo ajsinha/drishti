@@ -50,7 +50,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=core,market-data,trading,market-risk,counterparty-risk",
         "drishti.sources.plugins.demo.enabled=false", "drishti.var.official.enabled=false", "drishti.var.official.on-start=false",
         "drishti.ccr.exposure.official.enabled=false", "drishti.ccr.exposure.official.on-start=false",
-        "drishti.bi.dir=${drishti.test.dir}/exposure-bi-folder", "drishti.bi.folder-refresh=1s",
+        "drishti.bi.dir=${drishti.test.dir}/exposure-bi-folder", "drishti.tables.root=${drishti.test.dir}/exposure-bi-folder/tables", "drishti.bi.folder-refresh=1s",
         "drishti.bi.query.store-dir=${drishti.test.dir}/exposure-bi-store/${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/exposure-bi-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
@@ -74,15 +74,16 @@ class ExposureOfficialBiTest {
     static {
         try {
             Path to = com.ash.drishti.server.TestRun.root().resolve("exposure-bi-folder");
-            List<String> files = new ArrayList<>(List.of("datasets/counterparty-exposure-official.dataset.yaml",
-                    "datasets/counterparty-exposure-official-netting-sets.dataset.yaml", "datasets/counterparty-exposure-official-counterparties.dataset.yaml",
-                    "models/trading-risk.model.yaml", "reports/counterparty-risk.report.yaml"));
-            for (String t : List.of("trades", "netting-sets", "counterparties", "desks", "books")) {
-                files.add("datasets/trading-risk-" + t + ".dataset.yaml");
+            List<String> files = new ArrayList<>(List.of("../tables/bi/counterparty_exposure_official.table.yaml",
+                    "../tables/bi/counterparty_exposure_official_netting_sets.table.yaml", "../tables/bi/counterparty_exposure_official_counterparties.table.yaml",
+                    "../tables/bi/trading-risk.model.yaml", "reports/counterparty-risk.report.yaml"));
+            for (String t : List.of("trades", "netting_sets", "counterparties", "desks", "books")) {
+                files.add("../tables/bi/trading_risk_" + t + ".table.yaml");
             }
             for (String f : files) {
-                Files.createDirectories(to.resolve(f).getParent());
-                Files.copy(Path.of("../config/bi", f), to.resolve(f), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                Path dest = to.resolve(f.replace("../", ""));                  // the table layer's files under tables/, BI's report beside
+                Files.createDirectories(dest.getParent());
+                Files.copy(Path.of("../config/bi", f), dest, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);

@@ -22,7 +22,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.ash.drishti.server.bi.dataset.Resolver;
-import com.ash.drishti.server.bi.expr.DelPrinter;
+import com.ash.drishti.server.bi.dataset.NodeText;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -140,12 +140,12 @@ final class Contexts {
             measure = new Node.Call(edgeFn, List.of(edge));
         }
         List<String> grouped = question.groups();
-        String key = FilterContext.key(edit, DelPrinter.print(measure), question, filters);
+        String key = FilterContext.key(edit, NodeText.print(measure), question, filters);
         String alias = byKey.get(key);
         if (alias == null) {
             alias = FilterContext.alias(depth, joined.size());
             Map<String, Dataset.Measure> measures = new LinkedHashMap<>(sub.measures());
-            measures.put(MEASURE, new Dataset.Measure(MEASURE, DelPrinter.print(measure), null, "a filter context", null));
+            measures.put(MEASURE, new Dataset.Measure(MEASURE, NodeText.print(measure), null, "a filter context", null));
             sub = sub.withMeasures(measures);
             LocalDate from = date != null ? date : query.from();
             LocalDate to = date != null ? date : query.to();

@@ -55,7 +55,6 @@ class OneGrammarRulesTest {
             "com.ash.drishti.server.bi.expr.", "DEL, BI's expression language: its checker is Rachana's checked mode since 2.9.11.e part A; "
                     + "deleted with the migration in part B (BI_FOUNDATION_2911E.md 2.6)",
             "com.ash.drishti.server.bi.dataset.ExprParser", "BI dataset expressions (DEL's operators): fold with DEL in 2.9.11.e",
-            "com.ash.drishti.server.bi.layer.CalculationParser", "BI model calculations in DEL: fold with DEL in 2.9.11.e",
             "com.ash.drishti.bicompute.formula.", "pivot formulas of built-ins in DEL's syntax (PIVOT_ENGINE.md 8.2): fold with DEL in 2.9.11.e",
             "com.ash.drishti.compute.var.ScopeExpr", "the VaR scope selector (VAR_GUIDE.md 5.2): moves in its own change with VaR's "
                     + "exact-equality regression check, after 2.9.11.e (BI_FOUNDATION_2911E.md Q20)");

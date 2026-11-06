@@ -32,7 +32,9 @@ public final class DelTablesTranslator implements DelTranslator {
     @Override
     public Result translate(String del, ExpressionChecker.Scope scope) {
         try {
-            DelAst tree = DelParser.parse(del);
+            String t = del == null ? "" : del.strip();
+            // a rule written as a YAML boolean (where: true) reached DEL as the text true, which BI read as True: the one spelling YAML chose
+            DelAst tree = DelParser.parse(t.equals("true") ? "True" : t.equals("false") ? "False" : del);
             String rachana = Printer.print(DelToRachana.map(tree).expr());
             return Result.ok(rachana, rachana.equals(del.strip()) ? List.of() : List.of("DEL into Rachana (section 2.4)"));
         } catch (DelException e) {

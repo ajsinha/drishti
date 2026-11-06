@@ -18,9 +18,8 @@ package com.ash.drishti.server.bi.pivot;
 import com.ash.drishti.bicompute.formula.FormulaFunction;
 import com.ash.drishti.bicompute.formula.FormulaParser;
 import com.ash.drishti.server.bi.dataset.Dataset;
-import com.ash.drishti.server.bi.expr.DelAst;
-import com.ash.drishti.server.bi.expr.DelParser;
-import com.ash.drishti.server.bi.expr.DelPrinter;
+import com.ash.drishti.rachana.el.Expr;
+import com.ash.drishti.rachana.el.Functions;
 import com.ash.drishti.server.bi.expr.Expressions;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -116,10 +115,9 @@ public final class BiMeasures {
             throw new NotPivot(measure + " refers to itself");
         }
         path.add(measure);
-        DelAst tree;
+        Expr tree;
         try {
-            Expressions.Parsed p = Expressions.read(m.expr());
-            tree = p.del() != null ? p.del() : DelParser.parse(DelPrinter.print(p.node()));
+            tree = Expressions.read(m.expr()).rachana().expr();
         } catch (RuntimeException e) {
             throw new NotPivot(measure + ": " + e.getMessage());
         }
@@ -128,88 +126,95 @@ public final class BiMeasures {
         return out;
     }
 
-    private static String print(Dataset ds, DelAst n, Set<String> fields, Set<String> tables, List<String> path, boolean inAgg) {
+    private static String print(Dataset ds, Expr n, Set<String> fields, Set<String> tables, List<String> path, boolean inAgg) {
         return switch (n) {
-            case DelAst.Num x -> x.integral() ? Long.toString((long) x.value()) : Double.toString(x.value());
-            case DelAst.Str x -> "'" + x.value().replace("\\", "\\\\").replace("'", "\\'") + "'";
-            case DelAst.Bool x -> x.value() ? "True" : "False";
-            case DelAst.NoneLit x -> "None";
-            case DelAst.AllLit x -> throw new NotPivot("ALL is a filter context: not a pivot function");
-            case DelAst.ListLit l -> "[" + String.join(", ", l.items().stream().map(i -> print(ds, i, fields, tables, path, inAgg)).toList()) + "]";
-            case DelAst.Field f -> field(ds, f, fields, tables, inAgg);
-            case DelAst.Unary u -> u.op().equals("not") ? "(not " + print(ds, u.operand(), fields, tables, path, inAgg) + ")"
-                    : "(" + u.op() + print(ds, u.operand(), fields, tables, path, inAgg) + ")";
-            case DelAst.Binary b -> "(" + print(ds, b.left(), fields, tables, path, inAgg) + " " + b.op() + " "
-                    + print(ds, b.right(), fields, tables, path, inAgg) + ")";
-            case DelAst.BoolOp b -> "(" + String.join(" " + b.op() + " ", b.values().stream().map(v -> print(ds, v, fields, tables, path, inAgg))
-                    .toList()) + ")";
-            case DelAst.Compare c -> {
-                StringBuilder s = new StringBuilder("(").append(print(ds, c.first(), fields, tables, path, inAgg));
-                for (int i = 0; i < c.ops().size(); i++) {
-                    s.append(' ').append(c.ops().get(i)).append(' ').append(print(ds, c.rest().get(i), fields, tables, path, inAgg));
-                }
-                yield s.append(')').toString();
-            }
-            case DelAst.IfExp i -> "(" + print(ds, i.body(), fields, tables, path, inAgg) + " if " + print(ds, i.test(), fields, tables, path, inAgg)
-                    + " else " + print(ds, i.orElse(), fields, tables, path, inAgg) + ")";
-            case DelAst.Call c -> call(ds, c, fields, tables, path, inAgg);
+            case Expr.Lit x when x.value() == null -> "None";
+            case Expr.Lit x when x.value() instanceof Boolean b -> b ? "True" : "False";
+            case Expr.Lit x when x.value() instanceof String v -> "'" + v.replace("\\", "\\\\").replace("'", "\\'") + "'";
+            case Expr.Lit x -> x.value() instanceof Double d ? Double.toString(d) : String.valueOf(x.value());
+            case Expr.ListLit l -> "[" + String.join(", ", l.items().stream().map(i -> print(ds, i, fields, tables, path, inAgg)).toList()) + "]";
+            case Expr.Field f -> field(ds, f, fields, tables, inAgg);
+            case Expr.Not u -> "(not " + print(ds, u.e(), fields, tables, path, inAgg) + ")";
+            case Expr.Neg u -> "(-" + print(ds, u.e(), fields, tables, path, inAgg) + ")";
+            case Expr.And a -> "(" + print(ds, a.l(), fields, tables, path, inAgg) + " and " + print(ds, a.r(), fields, tables, path, inAgg) + ")";
+            case Expr.Or o -> "(" + print(ds, o.l(), fields, tables, path, inAgg) + " or " + print(ds, o.r(), fields, tables, path, inAgg) + ")";
+            case Expr.Binary b -> "(" + print(ds, b.l(), fields, tables, path, inAgg) + " " + b.op() + " " + print(ds, b.r(), fields, tables, path, inAgg) + ")";
+            case Expr.In i -> "(" + print(ds, i.value(), fields, tables, path, inAgg) + (i.negated() ? " not in " : " in ") + print(ds, i.list(), fields, tables, path, inAgg) + ")";
+            case Expr.Ternary t -> "(" + print(ds, t.then(), fields, tables, path, inAgg) + " if " + print(ds, t.cond(), fields, tables, path, inAgg)
+                    + " else " + print(ds, t.otherwise(), fields, tables, path, inAgg) + ")";
+            case Expr.Call c -> call(ds, c, fields, tables, path, inAgg);
+            default -> throw new NotPivot(com.ash.drishti.rachana.el.Printer.print(n) + " is not a pivot input");
         };
     }
 
-    private static String field(Dataset ds, DelAst.Field f, Set<String> fields, Set<String> tables, boolean inAgg) {
-        String text = f.text();
+    /** The dotted name of a chain of fields from the row ({@code trades.MTM}), or null. */
+    private static List<String> parts(Expr e) {
+        List<String> out = new ArrayList<>();
+        while (e instanceof Expr.Field f) {
+            out.add(0, f.name());
+            e = f.target();
+        }
+        return e instanceof Expr.RowOrRoot ? out : null;
+    }
+
+    private static String field(Dataset ds, Expr.Field f, Set<String> fields, Set<String> tables, boolean inAgg) {
+        List<String> parts = parts(f);
+        String text = com.ash.drishti.rachana.el.Printer.print(f);
+        if ("ALL".equals(text)) {
+            throw new NotPivot("ALL is a filter context: not a pivot function");
+        }
         if (!inAgg) {
             throw new NotPivot(text + " outside an aggregate");
         }
-        if (f.parts().size() < 2 || !ds.tables().containsKey(f.parts().get(0))) {
+        if (parts == null || parts.size() < 2 || !ds.tables().containsKey(parts.get(0))) {
             throw new NotPivot(text + " is not a field of a table of the model (a parameter or the reader's attribute is not a pivot input)");
         }
-        tables.add(f.parts().get(0));
+        tables.add(parts.get(0));
         fields.add(text);
         return text;
     }
 
-    private static String call(Dataset ds, DelAst.Call c, Set<String> fields, Set<String> tables, List<String> path, boolean inAgg) {
-        String name = c.name().toLowerCase(Locale.ROOT);
+    private static String call(Dataset ds, Expr.Call c, Set<String> fields, Set<String> tables, List<String> path, boolean inAgg) {
+        String name = Functions.oneName(c.name()).toLowerCase(Locale.ROOT);
+        List<Expr> positional = c.args().stream().filter(a -> !(a instanceof Expr.Absent)).toList();
         if (name.equals("measure")) {
-            if (inAgg || c.args().size() != 1 || !(c.args().get(0) instanceof DelAst.Str s)) {
+            if (inAgg || positional.size() != 1 || !(positional.get(0) instanceof Expr.Lit l) || !(l.value() instanceof String s)) {
                 throw new NotPivot("measure('Name') names one measure");
             }
-            return "(" + text(ds, s.value(), fields, tables, path) + ")";
+            return "(" + text(ds, s, fields, tables, path) + ")";
         }
         if (name.equals("ratio") && !inAgg) {
-            if (c.args().size() != 2 || !c.keywords().isEmpty()) {
+            if (positional.size() != 2 || !c.named().isEmpty()) {
                 throw new NotPivot("ratio(a, b) takes two aggregates");
             }
-            return "(" + print(ds, c.args().get(0), fields, tables, path, false) + " / " + print(ds, c.args().get(1), fields, tables, path, false) + ")";
+            return "(" + print(ds, positional.get(0), fields, tables, path, false) + " / " + print(ds, positional.get(1), fields, tables, path, false) + ")";
         }
         String agg = AGGREGATES.get(name);
         if (agg != null && !inAgg) {
             List<String> args = new ArrayList<>();
-            if (name.equals("count") && c.args().size() == 1 && c.args().get(0) instanceof DelAst.Field f && f.parts().size() == 1
-                    && ds.tables().containsKey(f.parts().get(0))) {
-                tables.add(f.parts().get(0));                       // count(trades): the rows of the table
+            List<String> parts = positional.size() == 1 ? parts(positional.get(0)) : null;
+            if (name.equals("count") && parts != null && parts.size() == 1 && ds.tables().containsKey(parts.get(0))) {
+                tables.add(parts.get(0));                       // count(trades): the rows of the table
             } else {
-                for (int i = 0; i < c.args().size(); i++) {
-                    DelAst a = c.args().get(i);
+                for (int i = 0; i < positional.size(); i++) {
                     boolean param = name.equals("percentile") && i == 1;
-                    args.add(param ? print(ds, a, fields, tables, path, false) : print(ds, a, fields, tables, path, true));
+                    args.add(print(ds, positional.get(i), fields, tables, path, !param));
                 }
             }
-            for (DelAst.Keyword k : c.keywords()) {
-                if (!k.name().equals("where")) {
-                    throw new NotPivot(name + "(" + k.name() + "=...) reads beyond its group's rows (a filter context or a time window)");
+            for (Map.Entry<String, Expr> k : c.named().entrySet()) {
+                if (!k.getKey().equals("where")) {
+                    throw new NotPivot(name + "(" + k.getKey() + "=...) reads beyond its group's rows (a filter context or a time window)");
                 }
-                args.add("where=" + print(ds, k.value(), fields, tables, path, true));
+                args.add("where=" + print(ds, k.getValue(), fields, tables, path, true));
             }
             return agg + "(" + String.join(", ", args) + ")";
         }
         if (FormulaParser.SCALARS.containsKey(name)) {
             List<String> args = new ArrayList<>();
-            for (DelAst a : c.args()) {
+            for (Expr a : positional) {
                 args.add(print(ds, a, fields, tables, path, inAgg));
             }
-            if (!c.keywords().isEmpty()) {
+            if (!c.named().isEmpty()) {
                 throw new NotPivot(name + " takes no keywords here");
             }
             return name + "(" + String.join(", ", args) + ")";

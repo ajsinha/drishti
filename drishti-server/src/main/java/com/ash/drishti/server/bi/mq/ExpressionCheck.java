@@ -20,10 +20,7 @@ import com.ash.drishti.rachana.el.check.Problem;
 import com.ash.drishti.rachana.el.check.Scope;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
-import com.ash.drishti.server.bi.expr.DelAst;
-import com.ash.drishti.server.bi.expr.DelChecker;
 import com.ash.drishti.server.bi.expr.DelException;
-import com.ash.drishti.server.bi.expr.DelParser;
 import com.ash.drishti.server.bi.expr.Expressions;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -31,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The answer of {@code POST /api/v1/bi/expr/validate}: one expression read (DEL v2, or the old syntax while it is read, with the converted text), checked in
+ * The answer of {@code POST /api/v1/bi/expr/validate}: one Rachana expression read and checked in
  * its scope against the caller's fields and measures (types, names, masks, aggregates), and for a measure on a model also compiled the way a model measure
  * is (the engine's own checks: reachability, windows, time intelligence), without reading data. Pure apart from the model it is given.
  */
@@ -47,49 +44,22 @@ final class ExpressionCheck {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("expr", expr);
         out.put("scope", scope.word());
-        DelAst tree = null;
-        String syntax = "del2";
-        String converted = null;
-        try {
-            Expressions.Parsed parsed = Expressions.read(expr);
-            if (parsed.legacy()) {
-                syntax = "legacy";
-                try {
-                    converted = Expressions.convert(expr).to();
-                    tree = DelParser.parse(converted);
-                } catch (DelException e) {
-                    problems.add(e.problem());
-                }
-                problems.add(new Problem(Expressions.OLD_SYNTAX, Problem.WARNING,
-                        "old expression syntax (read until the end of wave A, then refused): run the converter", converted == null ? null : "write: " + converted, 0, expr.length()));
-            } else {
-                tree = parsed.del();
+        String syntax = "rachana";
+        com.ash.drishti.rachana.el.check.Checker.Checked c = com.ash.drishti.rachana.el.CheckedMode.check(expr, scope, fields);
+        problems.addAll(c.problems());
+        out.put("type", c.type().word());
+        out.put("uses", Map.of("functions", c.functions(), "fields", c.fields(), "measures", c.measures()));
+        if (c.ok()) {
+            try {
+                Expressions.parse(expr);                                       // what BI's compiler runs
+            } catch (DelException e) {
+                problems.add(e.problem());
             }
-        } catch (DelException e) {
-            if (Expressions.OLD_SYNTAX.equals(e.code())) {
-                syntax = "legacy";                                              // refused: still say what the converter writes
-                try {
-                    converted = Expressions.convert(expr).to();
-                } catch (DelException ignored) {
-                    // no mechanical conversion: the refusal says so
-                }
-            }
-            problems.add(e.problem());
         }
-        if (tree != null) {
-            DelChecker.Checked c = DelChecker.check(tree, scope, fields);
-            boolean shifted = converted != null;
-            c.problems().forEach(x -> problems.add(shifted ? new Problem(x.code(), x.level(), x.message() + " (in the converted text)", x.fix(), 0, expr.length()) : x));
-            out.put("type", c.type().word());
-            out.put("uses", Map.of("functions", c.functions(), "fields", c.fields(), "measures", c.measures()));
-            if (c.ok() && flat != null && scope == Scope.AGGREGATE) {
-                engineChecks(Expressions.withMeasureNames(converted == null ? expr : converted, ids), flat, expr.length(), problems);
-            }
+        if (problems.stream().noneMatch(Problem::error) && flat != null && scope == Scope.AGGREGATE) {
+            engineChecks(Expressions.withMeasureNames(expr, ids), flat, expr.length(), problems);
         }
         out.put("syntax", syntax);
-        if (converted != null) {
-            out.put("converted", converted);
-        }
         out.put("valid", problems.stream().noneMatch(Problem::error));
         out.put("problems", problems.stream().map(Problem::toMap).toList());
         return out;

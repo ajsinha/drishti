@@ -183,6 +183,8 @@ public final class LayerLineage implements BiGovernance.Layered {
         pool.addAll(bi.draftsOfKind(p, "model"));
         pool.addAll(bi.publishedOfKind("dataset"));
         pool.addAll(bi.draftsOfKind(p, "dataset"));
+        pool.addAll(bi.publishedOfKind("table"));
+        pool.addAll(bi.draftsOfKind(p, "table"));
         for (BiStore.Item it : pool) {
             if (!seen.add(it.id())) {
                 continue;

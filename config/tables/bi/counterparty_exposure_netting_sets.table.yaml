@@ -1,0 +1,33 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Migrated from config/bi/datasets/counterparty-exposure-netting-sets.dataset.yaml by drishti.py tables migrate (docs/architecture/BI_FOUNDATION_2911E.md section 4).
+rachana: 3
+table: bi.counterparty_exposure_netting_sets
+was: counterparty-exposure-netting-sets
+version: 1.0.0
+title: "Counterparty exposure: netting_sets"
+description: The netting_sets table of the model counterparty-exposure.
+sample: true
+endorsement: promoted
+tags: [sample, counterparty-risk, multi-dataset]
+from: { kind: netting-set, connector: credit-store }
+columns:
+  COUNTERPARTY: { path: "$.COUNTERPARTY", type: string }
+  TRADE_COUNT:  { path: "$.TRADE_COUNT", type: integer }
+  NET_MTM:      { path: "$.NET_MTM", type: decimal, format: signed0 }
+  COLLATERAL:   { path: "$.COLLATERAL", type: decimal, format: signed0 }
+  LIMIT:        { path: "$.LIMIT", type: decimal, format: amount0 }
+refresh: { on-load: true }
+materialize: on-load

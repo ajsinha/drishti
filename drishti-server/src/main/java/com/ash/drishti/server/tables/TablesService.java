@@ -67,6 +67,7 @@ public final class TablesService {
     private final long maxRows;
     private final long scanWarnRows;
     private final Clock clock;
+    private volatile ItemStore items = ItemStore.NONE;
     private volatile Loaded loaded = new Loaded("", Catalogue.of(List.of(), List.of()), List.of(), Set.of());
 
     /** The catalogue as last read, with the stamp of the files it was read from and the names refused. */
@@ -84,7 +85,15 @@ public final class TablesService {
         this.clock = clock == null ? Clock.systemUTC() : clock;
     }
 
-    /** The catalogue, read again when a definition under the root changed (added, edited, removed). */
+    /**
+     * The stored tables and models (BI's item store: what the editors publish, BI_FOUNDATION_2911E.md Q16) beside the files: the pivot, Sutras,
+     * Flight and BI then read one catalogue. Set once at start.
+     */
+    public void itemStore(ItemStore store) {
+        this.items = store == null ? ItemStore.NONE : store;
+    }
+
+    /** The catalogue, read again when a definition under the root or a stored one changed (added, edited, removed, published). */
     public Catalogue catalogue() {
         return current().catalogue();
     }
@@ -256,7 +265,7 @@ public final class TablesService {
             Catalogue c;
             List<Problem> problems = new ArrayList<>();
             try {
-                c = Catalogue.load(root, ItemStore.NONE);
+                c = Catalogue.load(root, items);
                 problems.addAll(c.check());
             } catch (IOException | RuntimeException e) {
                 LOG.warn("virtual tables under {} could not be read: {}", root, e.getMessage());
@@ -275,10 +284,17 @@ public final class TablesService {
 
     /** The files' names, sizes and times, so an edit, an addition or a removal reads the catalogue again. */
     private String stamp() {
-        if (root == null || !Files.isDirectory(root)) {
-            return "none";
-        }
         StringBuilder b = new StringBuilder();
+        try {
+            for (ItemStore.StoredItem i : items.list()) {
+                b.append(i.id()).append('@').append(i.version()).append(':').append(i.yaml().hashCode()).append(';');
+            }
+        } catch (RuntimeException e) {
+            b.append("store-unreadable;");
+        }
+        if (root == null || !Files.isDirectory(root)) {
+            return "none:" + Integer.toHexString(b.toString().hashCode());
+        }
         try (Stream<Path> walk = Files.walk(root, 2)) {
             for (Path f : walk.filter(Files::isRegularFile).sorted().toList()) {
                 b.append(f).append(':').append(Files.size(f)).append(':').append(Files.getLastModifiedTime(f).toMillis()).append(';');

@@ -44,7 +44,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 @SpringBootTest(properties = {"drishti.lenses=risk,world,market,trading", "drishti.packs.enabled=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,us-equities,gleif,funds",
         "drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.enabled=false", "drishti.var.official.enabled=false",
         "drishti.var.official.on-start=false", "drishti.ccr.exposure.official.enabled=false", "drishti.security.enabled=true",
-        "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.bi.dir=../config/bi",
+        "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.bi.dir=../config/bi", "drishti.tables.root=../config/tables",
         "drishti.bi.query.store-dir=${drishti.test.dir}/lenses-bi-store/${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/lenses-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
@@ -100,7 +100,7 @@ class EditionTwoLensesServerTest {
         List<String> datasets = new ArrayList<>();
         ok(get("/api/v1/bi/datasets").header("Authorization", bearer(ana)).header(EditionContext.HEADER, lens)).path("datasets")
                 .forEach(d -> datasets.add(d.path("id").asText()));
-        assertThat(datasets).contains("file:dataset:world-economics-economies").doesNotContain("file:dataset:market-risk-var-latest");
+        assertThat(datasets).contains("file:table:bi.world_economics_economies").doesNotContain("file:table:bi.market_risk_var_latest");
 
         // switching to Drishti Risk is one patch; the landing chosen stays until the person picks another
         settings(ana, "{\"lens\":\"risk\"}");
@@ -146,7 +146,7 @@ class EditionTwoLensesServerTest {
         List<String> datasets = new ArrayList<>();
         ok(get("/api/v1/bi/datasets").header("Authorization", bearer(cy)).header(EditionContext.HEADER, "market")).path("datasets")
                 .forEach(d -> datasets.add(d.path("id").asText()));
-        assertThat(datasets).doesNotContain("file:dataset:market-risk-var-latest", "file:dataset:world-economics-economies");
+        assertThat(datasets).doesNotContain("file:table:bi.market_risk_var_latest", "file:table:bi.world_economics_economies");
 
         // switching: to Drishti World, then Drishti Risk, each one patch; the market data is hidden in both
         settings(cy, "{\"lens\":\"world\"}");

@@ -1,0 +1,116 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# SAMPLE REPORT (2.9.0): "Market risk: VaR". VaR in BI from the PUBLISHED official end-of-day results (risk-results/var-official,
+# docs/guides/VAR_GUIDE.md section 19), never from a stored VaR record: the bank's VaR and ES, VaR by desk and by legal entity, the bank and
+# a desk over time, and every node with its limit and limit use. VaR is not additive: every visual groups by the node or filters to one
+# (the model market-risk-var says why), so no bar or total is a sum of VaRs.
+# Drill: a bar's "Drill through" opens the Node page for that node; a NODE_ID cell opens the node in the terminal, and
+# VAR NODE:<NODE_ID> <GO> (or VAR DESK <id>) opens the VaR explorer at it (BI has no command drill-through: the text visual says so).
+# Over time: each query reads the latest business date unless the person picks a window of dates in the viewer's toolbar; the demo's
+# test data has one date (2026-09-30), so the lines have one point until more dates are captured.
+
+rachana: 2
+report: market-risk-var
+version: 1
+title: "Market risk: VaR"
+description: >-
+  The bank's official end-of-day VaR (99%) and expected shortfall (97.5%) as of the latest date, VaR by desk and by legal entity, the bank and
+  a desk over time, and every node with its limit and limit use; from the published official results (var-official). VaR is never added up
+  across nodes.
+sample: true
+endorsement: promoted
+tags: [sample, market-risk, var]
+model: market-risk-var@1
+theme: { palette: default }
+
+pages:
+  - id: overview
+    title: Overview
+    visuals:
+      - { id: bank-var, type: card, title: "Bank VaR (99%, 1 day)",       at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Bank VaR] } }
+      - { id: bank-es,  type: card, title: Bank ES (97.5%),              at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [Bank ES] } }
+      - { id: bank-use, type: card, title: Bank VaR limit use,           at: { x: 6, y: 0, w: 3, h: 2 }, wells: { values: [Limit use] },
+          filters: [{ field: nodes.NODE_ID, op: eq, values: [MGMT~BANK] }] }
+      - { id: note, type: text, title: The VaR explorer, at: { x: 9, y: 0, w: 3, h: 2 },
+          text: "Official end-of-day figures, the latest result version of each date. VAR NODE:<node id> <GO> or VAR DESK RATES <GO> opens the VaR explorer; a node id in the table opens the node." }
+
+      - id: by-desk
+        type: bar
+        title: VaR by desk (management hierarchy)
+        at: { x: 0, y: 2, w: 6, h: 6 }
+        wells: { axis: [nodes.NODE_NAME], values: [VaR 99%, VaR limit] }
+        filters: [{ field: nodes.HIERARCHY, op: eq, values: [MGMT] }, { field: nodes.LEVEL, op: eq, values: [desk] }]
+        sort: { by: VaR 99%, desc: true }
+        drillthrough: { page: node, field: nodes.NODE_NAME }        # click a bar, choose "Drill through": the Node page for that desk
+        format: { labels: true }
+        alt: Bars of each desk's official VaR beside its VaR limit
+
+      - id: by-le
+        type: bar
+        title: VaR by legal entity (legal hierarchy)
+        at: { x: 6, y: 2, w: 6, h: 6 }
+        wells: { axis: [nodes.NODE_NAME], values: [VaR 99%, ES 97.5%] }
+        filters: [{ field: nodes.HIERARCHY, op: eq, values: [LEGAL] }, { field: nodes.LEVEL, op: eq, values: [legal-entity] }]
+        sort: { by: VaR 99%, desc: true }
+        drillthrough: { page: node, field: nodes.NODE_NAME }
+        format: { labels: true }
+        alt: Bars of each legal entity's official VaR and expected shortfall
+
+      - id: bank-over-time
+        type: line
+        title: Bank VaR and ES over time (pick a window of dates in the toolbar)
+        at: { x: 0, y: 8, w: 12, h: 5 }
+        wells: { axis: [nodes.businessDate], values: [VaR 99%, ES 97.5%] }
+        filters: [{ field: nodes.NODE_ID, op: eq, values: [MGMT~BANK] }]
+        format: { labels: false, smooth: false }
+        alt: Line of the bank's official VaR and expected shortfall for each business date
+
+      - id: nodes
+        type: table
+        title: Every node, its VaR, ES, limit and limit use
+        at: { x: 0, y: 13, w: 12, h: 8 }
+        wells: { columns: [nodes.HIERARCHY, nodes.LEVEL, nodes.NODE_ID, nodes.NODE_NAME, VaR 99%, ES 97.5%, VaR limit, Limit use, Backtest exceptions] }
+        sort: { by: VaR 99%, desc: true }
+        limit: 200
+        format: { dataBars: [VaR 99%], conditional: [{ measure: Limit use, op: gt, value: 0.9, colour: "#b3261e" }] }   # over 90% of the limit is red
+
+  - id: desk-over-time
+    title: A desk over time
+    filters: [{ field: nodes.HIERARCHY, op: eq, values: [MGMT] }, { field: nodes.LEVEL, op: eq, values: [desk] }]
+    visuals:
+      - { id: pick-desk, type: slicer, title: Desk, at: { x: 0, y: 0, w: 4, h: 2 }, wells: { field: [nodes.NODE_NAME] }, format: { mode: dropdown, scope: page } }
+      - { id: desk-var, type: card, title: VaR (99%), at: { x: 4, y: 0, w: 4, h: 2 }, wells: { values: [VaR 99%] } }
+      - { id: desk-use, type: card, title: Limit use, at: { x: 8, y: 0, w: 4, h: 2 }, wells: { values: [Limit use] } }
+      - id: desk-line
+        type: line
+        title: The desk's VaR and ES over time (choose one desk; pick a window of dates in the toolbar)
+        at: { x: 0, y: 2, w: 12, h: 6 }
+        wells: { axis: [nodes.businessDate], legend: [nodes.NODE_NAME], values: [VaR 99%, ES 97.5%] }
+        format: { labels: false, smooth: false }
+        alt: Line of the chosen desk's official VaR and expected shortfall for each business date
+
+  - id: node
+    title: Node
+    drillthrough: { fields: [nodes.NODE_NAME] }      # opened from a bar of the Overview page, carrying the node's name
+    visuals:
+      - { id: n-var,   type: card, title: VaR (99%),        at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [VaR 99%] } }
+      - { id: n-es,    type: card, title: ES (97.5%),       at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [ES 97.5%] } }
+      - { id: n-limit, type: card, title: VaR limit,        at: { x: 6, y: 0, w: 3, h: 2 }, wells: { values: [VaR limit] } }
+      - { id: n-use,   type: card, title: Limit use,        at: { x: 9, y: 0, w: 3, h: 2 }, wells: { values: [Limit use] } }
+      - id: n-rows
+        type: table
+        title: The node in each hierarchy (open its id in the terminal; VAR NODE:<id> <GO> opens the explorer)
+        at: { x: 0, y: 2, w: 12, h: 4 }
+        wells: { columns: [nodes.HIERARCHY, nodes.LEVEL, nodes.NODE_ID, nodes.PARENT_ID, VaR 99%, ES 97.5%, Diversification, Hypothetical P&L, Backtest exceptions] }

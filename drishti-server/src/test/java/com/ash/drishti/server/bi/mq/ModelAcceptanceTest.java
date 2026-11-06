@@ -22,7 +22,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.ash.drishti.server.bi.migrate.ModelConverter;
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -59,7 +58,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/mq-accept-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/mq-accept-overlay/added.yaml",
-        "drishti.bi.dir=${drishti.test.dir}/mq-accept-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/mq-accept-store/${random.uuid}",
+        "drishti.bi.dir=${drishti.test.dir}/mq-accept-folder", "drishti.tables.root=${drishti.test.dir}/mq-accept-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/mq-accept-store/${random.uuid}",
         "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/mq-accept-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.acc-lake.plugin=file", "drishti.sources.connectors.acc-lake.kinds[0]=trade",
@@ -151,16 +150,7 @@ class ModelAcceptanceTest {
                           - { id: by-desk, type: bar, title: By desk, at: { x: 0, y: 2, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Notional, MTM] } }
                     """);
             // since 2.2 the 2.1 dataset and its report are converted (BI_DESIGN.md 8.3): the model acc-trades and its dataset, the report on the model
-            ModelConverter.Result converted = ModelConverter.convert(List.of(
-                    new ModelConverter.Source("datasets/acc-trades.dataset.yaml", "dataset", Files.readString(datasets.resolve("acc-trades.dataset.yaml"))),
-                    new ModelConverter.Source("reports/acc-report.report.yaml", "report", Files.readString(reports.resolve("acc-report.report.yaml")))),
-                    ModelConverter.Exposure.NOTE);
-            for (Map.Entry<String, String> w : converted.writes().entrySet()) {
-                Files.writeString(folder.resolve(w.getKey()), w.getValue());
-            }
-            for (String gone : converted.removes()) {
-                Files.deleteIfExists(folder.resolve(gone));
-            }
+            com.ash.drishti.server.bi.TablesFolder.migrate(folder);           // tables migrate: the table acc-trades_trades, the model acc-trades, the report rebound
             // a model of the model layer over the same lake, and a dataset whose source is that model's answer (wave W1 package S4)
             Files.writeString(datasets.resolve("acc-trade.dataset.yaml"), """
                     rachana: 2
