@@ -444,7 +444,7 @@ or open it as a lens: it is the fourth of the default lenses (`drishti.lenses: r
 
 - the title, top bar and About say **Drishti Trading**;
 - Views: Terminal, Search, Functions, VaR, Exposure, Reports, Workspaces, Monitors, Alerts; no Forms, Data map or Build;
-- the command line suggests `TRD 1000001`, `BOOK BOOK-RATES-1`, `VAR BOOK BOOK-RATES-1`; `FUNC` lists its 41 commands; `SCN`, `FRTB`,
+- the command line suggests `TRD 1000001`, `BOOK BOOK-RATES-1`, `VAR BOOK BOOK-RATES-1`; `FUNC` lists its 40 commands; `SCN`, `FRTB`,
   `COLL` and `ECON` say they are not part of Drishti Trading;
 - `SMAT BOOK BOOK-RATES-1 20` opens the scenario matrix: the book's scenarios across its last 20 business dates, and a trade's,
   position's and the VaR page's **Scenario matrix** link opens it too ([VAR_GUIDE.md section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat));
