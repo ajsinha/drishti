@@ -116,5 +116,19 @@ def test_the_trading_markets_menu_opens_inside_the_screen_and_runs_its_command(b
         assert box["left"] >= 0 and box["right"] <= box["vw"] + 1 and box["sw"] <= box["vw"] + 1 and box["cols"] == 3, box
         with page.expect_request(lambda r: "/go?q=FXF" in r.url):
             item.click()
+def test_counterparties_ccr_cube_opens_the_pivot_preset_under_construction(browser, consoles):
+    """The CCR cube's door: Counterparties → CCR cube, with the chip, opens the Pivot's preset ccr, which says it is under construction."""
+    page = browser.new_page(viewport={"width": 1600, "height": 900})
+    try:
+        page.goto(consoles["trading"] + "/t", wait_until="load")                    # Drishti Trading draws Counterparties in its bar
+        page.locator(".tbar-menu-btn", has_text="Counterparties").click()
+        item = page.locator("a.mega-item[href='/pivot?preset=ccr']")
+        item.wait_for(state="visible")
+        assert "CCR cube" in item.inner_text() and item.locator(".drishti_uc-chip").count() == 1
+        item.click()
+        page.wait_for_url("**/pivot?preset=ccr**")
+        assert page.locator("[data-pv-title]").text_content().strip() == "CCR cube"
+        assert page.locator("[data-cube-building] .drishti_uc-chip").is_visible()
+        page.locator("[data-cube-building] a[href='/exposure']").wait_for(state="visible")
     finally:
         page.close()

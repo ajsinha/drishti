@@ -210,7 +210,7 @@ Sign in as **sue** and open the item.
 
 You should see the **Review** section: who asked and the note, **what changed** against what is published (here all 37 lines are new: nothing is
 published yet), `Check passed: nothing to fix` (the server's Check of the model: its datasets, relationships, measures and the security safeguard), and
-*Data preview*, which a model leaves to its designer (*there is no data to preview for a model*: the designer's Query panel and Analyse ask it).
+*Data preview*, which a model leaves to its designer (*there is no data to preview for a model*: the designer's Query panel and the Notebook ask it).
 Write `looks right` and press **Approve and publish**. On the command line the same decision is
 `curl -X POST .../api/v1/bi/items/<id>/approve -d '{"note":"looks right"}'` with sue's token.
 

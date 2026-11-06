@@ -312,7 +312,14 @@ async def page(request: Request, scope: str = "", capture: str = "", hierarchy: 
     return render(request, "terminal/var.html", scope=scope or "BANK", capture=capture, hierarchy=hierarchy_of(hierarchy),
                   user=(me.user if me else "") or "", admin=bool(me and me.is_admin), screen="var", ccy=ccy.upper() if CCY.match(ccy or "") else "",
                   lens=lens_of(request, h, m, q, esq, set), tab=tab if tab in TABS else "path", explain_view=explain_view(request, view),
-                  parametric_mode=pm == "1")
+                  parametric_mode=pm == "1", mr_cube=_mr_cube_door(request))
+
+
+def _mr_cube_door(request: Request) -> bool:
+    """The explorer's door to the MR cube (the Pivot's preset mr): shown when its engine runs in the cluster and the edition has its words."""
+    from core import engines
+    ed = getattr(request.state, "edition", None) or request.app.state.editions.instance
+    return engines.engine_available("mr-cube") and ed.word_on("MCUBE") and ed.word_on("PIVOT")
 
 
 #: GET endpoints of the engine the page may ask for, and the parameters each passes on

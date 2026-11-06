@@ -51,7 +51,7 @@ def _pages(views: list[str] | None = None) -> list[str]:
              "/build", "/build/pack/new", "/build/reviews", "/reports", "/forms", "/servers", "/account", *(f"/admin/{a}" for a in ADMIN),
              "/help", "/help/search?q=pivot", "/about", "/help/competitive-analysis",
              # the newer pages: data loads (all, and one pack's), collaboration admin, the inbox, a share nobody may open, the landing page's way back
-             "/bi", "/bi/catalogue", "/bi/workspaces", "/bi/w/me", "/bi/datasets", "/bi/designer", "/bi/explore", "/admin/bi",
+             "/bi", "/bi/catalogue", "/bi/workspaces", "/bi/w/me", "/bi/datasets", "/bi/designer", "/bi/notebook", "/admin/bi",
              # Rupaka phase 3: the report viewer (a page and a drill-through page), the designer on a draft, the Model view (their shells: no data behind the stand-in server)
              "/bi/r/file:report:trades-overview", "/bi/r/file:report:counterparty-risk/counterparty", "/bi/design/bi-draft", "/bi/m/file:dataset:trades-basic",
              # Rupaka phase 5: a live report (and its Perspective pages) and a board, in kiosk too (their shells: no data behind the stand-in server)

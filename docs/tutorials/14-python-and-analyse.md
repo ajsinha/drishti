@@ -13,38 +13,37 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 14 · Python and Analyse
+# Tutorial 14 · Python and the Notebook
 
-SQL measures cover most questions. When a figure needs a real function (a standard deviation of P&L per desk, a histogram, a model) you write it in **Python**, and Drishti runs it **sandboxed, on the rows the person looking may see**. And when you do not yet know the question, **Analyse** gives you
-an extract of a model to **slice**, query with **SQL**, work on in **Python**, keep as a **notebook**, and **promote** to a measure, a visual or a report draft. This tutorial does both on the demo trades, through the
+SQL measures cover most questions. When a figure needs a real function (a standard deviation of P&L per desk, a histogram, a model) you write it in **Python**, and Drishti runs it **sandboxed, on the rows the person looking may see**. And when you do not yet know the question, the **Notebook** gives you
+an extract of a model to query with **SQL** on the server, work on in **Python** on the server's compute pool, keep as a **notebook**, and **promote** to a measure, a visual or a report draft (slicing is the **Pivot**'s). This tutorial does both on the demo trades, through the
 model `trades-basic@1` (2.2: every sample is a model over datasets). Every step shows it **in the UI**, **on the command line** (`python3 tools/drishti.py`, or `curl`) and **as YAML**, or says why one of the three does not apply.
 
 ## Time to complete
 
-About 70 minutes (steps 12 and 13: 15 minutes).
+About 60 minutes (step 12: 15 minutes).
 
 ## Before you start
 
 - The quick-start environment of [tutorial 10](10-first-bi-report.md#before-you-start) (the demo lakes: 15,000 trade valuations over ten desks,
-  business date 2026-10-16) and tutorial 10 done (reports, workspaces, `Economics desk`). You sign in as the development administrator, who holds the `bi-author` power that Python needs (reading with **Slice** and **SQL** needs only `bi`).
-- The console's Python environment from [tutorial 1](01-first-15-minutes.md) (`drishti-console/.venv`): it carries `pandas`, `numpy` and `pyarrow`, which Python items may import. Nothing else to install for BI: every Python item and Analyse cell runs on the console, in its sandbox (a fork-server forks one child per call), never in
+  business date 2026-10-16) and tutorial 10 done (reports, workspaces, `Economics desk`). You sign in as the development administrator, who holds the `bi-author` power that Python needs (SQL cells need only `bi`).
+- The console's Python environment from [tutorial 1](01-first-15-minutes.md) (`drishti-console/.venv`): it carries `pandas`, `numpy` and `pyarrow`, which Python items may import. Nothing else to install for BI: every Python item runs on the console, in its sandbox (a fork-server forks one child per call), never in
   the browser. **Calc** (the step that asks a BI model from a view, Alt+C) is the one exception: it is Python on the screen you are on, in your browser, so its
   runtime must be installed once on the console with `tools/fetch-pyodide.sh` ([GETTING_STARTED.md](../guides/GETTING_STARTED.md)); without it Calc says
   *Python runtime not installed* and Run stays disabled.
 - Two small files in [data/](data/): [notional-by-desk.python.yaml](data/notional-by-desk.python.yaml) (a Python visual) and [desk-python.report.yaml](data/desk-python.report.yaml) (a report on the model `trades-basic@1` that uses it).
 - The personal API token of [tutorial 1, step 9](01-first-15-minutes.md#step-9--make-a-token-for-the-command-line) in `DRISHTI_TOKEN` (with `bi:write`),
-  and `DRISHTI_SERVER`. The Analyse and Calc calls quoted below are the console's, made with your session: a personal token does not reach them.
+  and `DRISHTI_SERVER`. The Notebook and Calc calls quoted below are the console's, made with your session: a personal token does not reach them.
 
 ## What you will learn
 
 - the two kinds of Python item: a **measure** (`compute(table, params)`, one number per group) and a **visual** (`render(table, params)`, a chart);
 - how a report uses them, where they run, and what the sandbox forbids;
-- **Analyse**: the extract of a model, **Slice**, **SQL** (Drishti SQL on the server over the model, or one read-only SELECT over the extract), a **Python** cell that draws a chart, saving a **notebook**, and **promoting** work into BI items.
-- **Python across models**: a **Transform** that turns the answers of two model queries into a table (a **Python dataset**, 2.2), and an Analyse notebook that joins two extracts in pandas and promotes the join to a Transform;
-- **Vega-Lite** charts (written in a report, or returned by Python), the **tests** a Python item carries, the **engines** of a SQL cell and promoting into an **existing** report, **Calc's BI client** with Graphic Walker (steps 9 to 11).
+- the **Notebook**: the extract of a model, **SQL** (Drishti SQL on the server over the model), a **Python** cell for the server's compute pool, saving a **notebook**, and **promoting** work into BI items; slicing in the **Pivot**.
+- **Python across models**: a **Transform** that turns the answers of two model queries into a table (a **Python dataset**, 2.2), and a notebook that joins two extracts in pandas and promotes the join to a Transform;
+- **Vega-Lite** charts (written in a report, or returned by Python), the **tests** a Python item carries, where a SQL cell runs and promoting into an **existing** report, **Calc's BI client** (a Labs scratch pad; steps 9 to 11).
 - **Data prep**: a Transform built step by step in the **Transform editor** from raw trades read straight through a connector, with a preview
-  and a profile after every step and no YAML to type (step 12), and the **browser Python console** on a masked extract, with a result promoted to the
-  console backend (step 13).
+  and a profile after every step and no YAML to type (step 12).
 
 ## Step 1 · Python in a report: the shipped sample
 
@@ -216,19 +215,17 @@ You should see your chart, `Notional of the 8 largest desks`, drawn by your func
 
 **The sandbox.** The server target runs a short-lived worker process per call: **no network**, a scratch folder only, limits on CPU, memory, time and output, and **nothing kept between calls**, so nothing leaks between people. `import` works for the allow-listed packages. Python never reaches the server's data directly; it receives the Arrow rows the server built for the person.
 
-## Step 3 · Analyse: an extract to explore
+## Step 3 · The Notebook: an extract to work on
 
-Choose **Analyse** in the BI rail. In **Model or dataset** choose **Trades, the basics (model 1.0.0, published)** (the list holds the models first, then your
-datasets and the packs' datasets, one group per pack), tick the fields you want and press **Open the extract**.
+Choose **Notebook** in the BI rail (`/bi/notebook`). In **Model or dataset** choose **Trades, the basics (model 1.0.0, published)** (the list holds the
+models first, then your datasets and the packs' datasets, one group per pack), tick the fields you want and press **Open the extract**.
 
-![The Analyse page: the Extract card with the model Trades, the basics and its fields ticked, and the Open the extract button](img/t14/05-analyse-start.jpg)
+![The Extract card with the model Trades, the basics and its fields ticked, and the Open the extract button](img/t14/05-analyse-start.jpg)
 
 You should see the fields grouped by the model's alias (`trade`) and, after **Open the extract**, the line `10000 rows, 10 columns.` with a note that the
-extract was cut (the lake holds 15,000). The extract is **one
-model query** (its rows, `shape: rows`) asked as **you** (masked columns arrive empty, and the line says `Masked for you: ...`), cut to
-`bi.explore.max_rows` (10,000; a cut says so). It is rebuilt on every run and never kept, so a mask or row rule changed on the server applies the next
-time. Because it can be cut, Slice gives the **extract's** totals; for true totals use a SQL cell on the server (step 5) or a report. **On the command
-line** the same rows are a model query, and **the YAML** of it is what Analyse sends:
+extract was cut (the lake holds 15,000). The extract is **one model query** (its rows, `shape: rows`) asked as **you** (masked columns arrive empty, and
+the line says `Masked for you: ...`), cut to `bi.notebook.max_rows` (10,000; a cut says so). It is rebuilt on every run and never kept, so a mask or row
+rule changed on the server applies the next time. **On the command line** the same rows are a model query, and **the YAML** of it is what the Notebook sends:
 
 ```yaml
 mq: 1
@@ -240,21 +237,20 @@ limit: 10000
 
 (`python3 tools/drishti.py bi mq that.yaml` prints them.)
 
-## Step 4 · Slice
+## Step 4 · Slicing is the Pivot's
 
-On the **Slice** tab each field is a chip with four small buttons: `R` rows, `C` columns, `V` values, `F` filters. Press `R` on `DESK`, `C` on `CURRENCY` and `V` on `NOTIONAL`.
+To put desks down, currencies across and notional in the cells, use the **Pivot**, the one grid for slicing any table: the *Pivot* link in the BI rail,
+or the Notebook's own line *To slice and total a table, use the Pivot*. Its totals are the whole table's, worked out by the server
+([PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md)); **on the command line** `PIVOT <table> <GO>` opens it on a table, and a pivot view is saved as YAML there.
+The Notebook is for what a grid cannot say: SQL over the model and Python.
 
-![Slice: desk down, currency across, notional summed; a pivot of the extract](img/t14/06-slice.jpg)
-
-You should see the pivot redraw: the desks down, the currencies across, notional summed in the cells (`10000 of 10000 rows used`). A value takes `sum`,
-`avg`, `count`, `min` or `max`; a filter keeps rows equal to chosen values. The console works the pivot out (the line under it says *Worked out
-by the console*); nothing is computed in the browser.
+You should see the Pivot open with its source picker: choose the trades' table, then drag `DESK` to Rows, `CURRENCY` to Columns and `NOTIONAL` to Values.
 
 ## Step 5 · SQL
 
-Open the **SQL** tab. A SQL cell is **one read-only SELECT**. Its engine (the select beside **Run**) is **Server: Drishti SQL over the model** by default:
-the cell is asked of the **server**, over the model the extract reads, so its answers are true totals, not the extract's. Its tables are the model's
-aliases and a measure is `MEASURE('name')` ([BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)):
+Open the **SQL** tab (it opens first). A SQL cell is **one read-only SELECT** in **Drishti SQL over the model**, asked of the **server** as you, so its
+answers are true totals, not the extract's. Its tables are the model's aliases and a measure is `MEASURE('name')`
+([BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)):
 
 ```sql
 SELECT trade.DESK, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional
@@ -267,9 +263,9 @@ Press **Run**.
 
 ![The SQL cell in Drishti SQL on the server: desks with trade counts and notional, largest first, and the line naming the model, the plan and as you](img/t14/07-sql.jpg)
 
-You should see a table, the largest desk first (`DESK-COMM`, `5,990` trades, `888,803,742,774` of notional: true totals over all 15,000 rows, not the extract's), and the line *10 rows in 7 ms · Drishti SQL,
-run by the server over trades-basic@1 as you · plan p_...*: the same plan a visual of the same question would run. **From the command line** the same
-statement (and what a write is told):
+You should see a table, the largest desk first (`DESK-COMM`, `5,990` trades, `888,803,742,774` of notional: true totals over all 15,000 rows, not the
+extract's), and the line *10 rows in 7 ms · Drishti SQL, run by the server over trades-basic@1 as you · plan p_...*: the same plan a visual of the same
+question would run. **From the command line** the same statement (and what a write is told):
 
 ```text
 $ python3 tools/drishti.py bi sql "SELECT trade.DESK, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional FROM trade GROUP BY trade.DESK ORDER BY notional DESC LIMIT 3" --model trades-basic@1
@@ -284,23 +280,12 @@ $ python3 tools/drishti.py bi sql "DROP TABLE trade" --model trades-basic@1
 drishti: the server said 422 DRS-9170: DRS-9170 Drishti SQL is read-only: DROP is refused; a statement is one SELECT (or WITH ... SELECT)
 ```
 
-The other engine, **Over the extract** (selectable), reads the table `extract` (the rows the page holds) in an in-memory SQLite on the
-console, **read-only by construction**; a statement that reads `extract` (an older notebook's) runs there whatever the choice. Asked of the extract, the
-same refusals are codes, not damage:
-
-```text
-POST /bi/explore/sql   {"sql": "DROP TABLE extract"}
-403 {"code":"DRS-9073","detail":"only a single SELECT over the table extract is allowed"}
-POST /bi/explore/sql   {"sql": "SELECT 1; SELECT 2"}
-422 {"code":"DRS-9070","detail":"only one statement is allowed"}
-```
-
-(Text over 20,000 characters or a query over 5 seconds is `DRS-9072`; at most 5,000 rows come back.) There is no YAML for a cell on its own: it is kept
-in a notebook (step 7).
+(Text over 20,000 characters is `DRS-9072`; at most 5,000 rows come back.) There is no YAML for a cell on its own: it is kept in a notebook (step 7).
 
 ## Step 6 · A Python cell
 
-Open the **Python** tab. A cell sees three names: `df` (the extract as a pandas table), `params` and `quant` (a pricing helper). What it prints comes back as text; what it puts in `result` is **drawn**: a table as a table, a dict as an ECharts option, SVG or PNG as an image.
+Open the **Python** tab. A cell sees `df` (the extract as a pandas table), `extract("name")` (another extract of the notebook) and `params`. What it prints
+comes back as text; what it puts in `result` is **drawn**: a table as a table, a dict as an ECharts option, SVG or PNG as an image.
 
 ```python
 g = df.groupby('DESK', as_index=False)['NOTIONAL'].sum()
@@ -308,26 +293,21 @@ result = {'title': {'text': 'Notional by desk'}, 'xAxis': {'type': 'category', '
           'series': [{'type': 'bar', 'data': [float(v) for v in g['NOTIONAL']]}]}
 ```
 
-Press **Run** (the line beside it says *Runs on the console (sandbox)*: there is no browser target).
-
-![A Python cell and its chart: Notional by desk, ten bars; the line says Python, server, the time and the rows](img/t14/08-python-cell.jpg)
-
-You should see `Python · server · ... ms · 10000 rows` and the chart. The same worker as a Python visual runs it, with the same sandbox. A cell that only prints and returns a table, run on the same extract:
-
-```text
-POST /bi/explore/python   {"source": "print(len(df))\nresult = df.groupby('DESK')['NOTIONAL'].sum().head(3)", "target": "server"}
-200 {"kind":"cell","stdout":"10000\n","table":{"columns":["NOTIONAL"],"rows":[...],"rowCount":3},"ms":...,"inputRows":10000,"masked":[],"target":"server",...}
-```
-
-You should see `10000` printed (the extract, cut) and a three-row table. Running Python needs `bi-author`; a person with only `bi` sees the Slice and SQL tabs work and the Python tab explain why it will not run. (Python cells have no command of their own: the call above is the console's, with your session.)
+The line beside **Run** says *Runs on the server's compute pool*: a cell never runs in the console or your browser. Running it there comes with one
+Python runtime on the server and is **Under construction**: **Run** and **Run all** carry the chip and are greyed, and pressing a cell's Run says so.
+You should see *Runs on the server's compute pool* beside the greyed **Run**, and the *Under construction* chip. Write the cell, keep it in the notebook (step 7) and promote it to an item (below): whoever opens the notebook later runs it on the pool, over their own
+rows. Running Python needs `bi-author`; a person with only `bi` writes and runs SQL cells.
 
 ## Step 7 · Keep it as a notebook, promote it
 
-Under **Notebook** give it a title (`Desk notional, first look`) and press **Save as a notebook**. (**My workspace → New item → notebook** only points you here: a notebook is made from the work you did, not from a form.)
+Under **Save** give it a title (`Desk notional, first look`) and press **Save as a notebook**. (**My workspace → New item → notebook** only points you here:
+a notebook is made from the work you did, not from a form.)
 
-![The notebook card after saving: Save as a notebook and Open the item; the Python chart above](img/t14/09-saved.jpg)
+![The notebook card after saving: Save as a notebook and Open the item](img/t14/09-saved.jpg)
 
-You should see a link, **Open the item**: the extract's definition, the slice and every cell are now a BI item of kind **notebook** in your workspace, with versions, diffs, review and publishing like any other. Opening it again rebuilds the extract **for whoever opens it**: a notebook shared with a colleague shows *their* rows. Outputs are not stored, only the code. **The YAML** of the notebook (the item page shows it; `bi catalogue get <id> --body` prints it):
+You should see a link, **Open the item**: the extract's definition and every cell are now a BI item of kind **notebook** in your workspace, with versions,
+diffs, review and publishing like any other. Opening it again (**Open in the Notebook** on the item page) rebuilds the extract **for whoever opens it**: a
+notebook shared with a colleague shows *their* rows. Outputs are not stored, only the code. **The YAML** of the notebook:
 
 ```yaml
 rachana: 1
@@ -336,13 +316,6 @@ title: Desk notional, first look
 dataset: mq:trades-basic@1            # the model the extract reads
 fields: [trade.TRADE_ID, trade.DESK, trade.PORTFOLIO, trade.PRODUCT_TYPE, trade.CURRENCY, trade.TRADE_STATUS, trade.NOTIONAL, trade.MTM, trade.PNL_1D, trade.MTM_IN_MILLIONS]
 cells:
-- type: slice
-  slice:
-    rows: [DESK]
-    columns: [CURRENCY]
-    values:
-    - {field: NOTIONAL, agg: sum}
-    filters: []
 - type: sql
   source: |
     SELECT trade.DESK, MEASURE('Trades') AS trades, MEASURE('Notional') AS notional
@@ -356,21 +329,15 @@ cells:
   target: server
 ```
 
-(The SQL cell keeps no engine: a cell over a model runs on the server, and one that reads the table `extract` runs over the extract.)
+To turn a Python cell into a reusable item press **Promote to a visual** (or **to a measure**) under the cell.
 
-To turn a cell into a reusable item press **Promote to a visual** (or **to a measure**) under the cell.
+![After promoting: "Python visual draft saved in your workspace: Notebook cell (visual). The cell's df became the function's table..."](img/t14/10-promote-visual.jpg)
 
-![After promoting: "Python visual draft saved in your workspace: Analyse cell (visual). The cell's df became the function's table..."](img/t14/10-promote-visual.jpg)
+You should see `Python visual draft saved in your workspace: Notebook cell (visual).` and the reminder: the cell's `df` became the function's `table`,
+`result` is returned, a measure must return one number and a visual an ECharts option, SVG or PNG; check it with **Check the Python** on the item page,
+then publish. Nothing is published for you. A SQL cell becomes a **report visual** the same way (step 10).
 
-You should see `Python visual draft saved in your workspace: Analyse cell (visual).` and the reminder: the cell's `df` became the function's `table`, `result` is returned, a measure must return one number and a visual an ECharts option, SVG or PNG; check it with **Check the Python** on the item page, then publish. Nothing is published for you. And to turn a **slice** into a report press **Promote to a report draft**.
-
-![After promoting a slice: "Report draft saved in your workspace: Slice of Trades, the basics." beside the button](img/t14/11-promote-slice.jpg)
-
-You should see, beside the button, `Report draft saved in your workspace: Slice of Trades, the basics.` and **Open the draft**. The draft is a one-page
-report on the same model (`model: trades-basic@1`) with a **matrix** (rows, the column field, and the model's measure that is exactly the slice's
-aggregate: `sum(NOTIONAL)` is `Notional`), which you open in the designer to finish ([tutorial 10](10-first-bi-report.md)).
-
-## Step 8 · Two models: a Python Transform and a join in Analyse
+## Step 8 · Two models: a Python Transform and a join in the Notebook
 
 Steps 1 to 7 used Python on one model. Python can also **join answers**. The sample **Desk P&L vs counterparty exposure (Python)** makes one table, P&L
 next to exposure per counterparty, with a **Python Transform**: a Python item with `interface: transform` whose function `run(pnl, exposure, params)`
@@ -416,24 +383,16 @@ CP-BRAMBLE           Bramble Asset Management      Asset management  6,448,473.6
 The item is `config/bi/python/pnl-vs-exposure.python.yaml` (the model queries hand their columns over as the models name them, `NAME` and `SECTOR`;
 the Transform renames them to the table's own `name` and `sector`); the reference is [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out).
 
-How would you write such a Transform? In **Analyse**, with **two extracts**. Open the notebook **Desk P&L vs counterparty exposure, in pandas** (the Notebook box in the Extract card).
+How would you write such a Transform? In the **Notebook**, with **two extracts**. Open the notebook **Desk P&L vs counterparty exposure, in pandas** (the Notebook box in the Extract card).
 
-![Analyse with the sample notebook: the first extract is the trades of the model trading-risk (3 columns); under More extracts, the second is called exposure and reads the same model's computed netting-set exposure](img/t14/13-analyse-extracts.jpg)
+![The Notebook with the sample notebook: the first extract is the trades of the model trading-risk (3 columns); under More extracts, the second is called exposure and reads the same model's computed netting-set exposure](img/t14/13-analyse-extracts.jpg)
 
 You should see `10000 rows, 3 columns.` for the first extract (cut: the lake holds 15,000 trade valuations) (the trades of the model **Trading and counterparty risk**) and, in **More extracts: join
-several datasets**, a second one called `exposure` (`mq:trading-risk@1`, 3 fields: the netting sets' computed exposure, `set_exposure`, of the same
+several models**, a second one called `exposure` (`mq:trading-risk@1`, 3 fields: the netting sets' computed exposure, `set_exposure`, of the same
 model: the exposure engine's official end-of-day results). Each is built for you by the
-server, with your row rules and masks. Open the **Python** tab and **Run** its cell.
-
-![The join cell: df and extract("exposure") grouped and merged; the result is a table of counterparties with their P&L, exposure and P&L per exposure, largest exposure first](img/t14/14-analyse-join.jpg)
-
-You should see the cell (`df` is the trades; `extract("exposure")` is the netting sets' computed exposure, `PEAK_EE`) and a table of
-counterparties, the largest exposure first: `CP-ALDERSHOT` with exposure `276416536`, then `CP-LUMEN` and the rest (the second extract holds the 73
-netting sets the demo's exposure run covers; the join keeps the counterparties of the first extract's 10,000 trades, so Verdant Agri Holdings,
-whose trades are past the cut, is not in it). The P&L column adds up the
-trades **of the extract**, cut at 10,000 rows, so it is not the counterparty's full P&L: the server's figure is the Transform's, or Drishti SQL's below. The same join works in a SQL cell over the extract: the second extract is a table called
-`exposure` (`SELECT ... FROM extract JOIN exposure ON ...`); on the server, one model already joins its facts through the counterparty (Drishti SQL
-`FROM trades JOIN counterparties JOIN set_exposure`). When the pandas join is what you want to keep, press **Promote to a Transform**.
+server, with your row rules and masks. Open the **Python** tab: the join cell is there (`df` is the trades; `extract("exposure")` is the
+netting sets' computed exposure, `PEAK_EE`), ready for the server's compute pool (running it is under construction, step 6). On the server, one model
+already joins its facts through the counterparty (Drishti SQL `FROM trades JOIN counterparties JOIN set_exposure`). When the pandas join is what you want to keep, press **Promote to a Transform**.
 
 ![After promoting: "Python transform draft saved in your workspace: Join of P&L and exposure (transform). Each extract("name") became a parameter of run()..."](img/t14/15-promote-transform.jpg)
 
@@ -465,13 +424,12 @@ You should see `Tests: 3 of 3 passed.` and a line for each (`passed · the stand
 ## Step 10 · Where a SQL cell runs, and promote into a report you already have
 
 A SQL cell is **Drishti SQL over the model**, run by the server as you (the answer is the model's, with true totals, and the cell is the same plan a
-report visual runs); the line beside **Run** says so. A cell over the table `extract` (a notebook of 2.2) still runs, over the rows of the extract, on the
-console. Nothing runs in the browser: the **Slice** too is worked out by the console (the line under it says *Worked out by the console*). Above the tabs, **Promote a slice or a SQL cell to** a *new report draft* or to one of your report
-drafts. Choose one, write a SQL cell and **Run** it:
+report visual runs); the line beside **Run** says so. Nothing runs in the browser or the console. Above the tabs, **Promote a SQL cell to** a *new report
+draft* or to one of your report drafts. Choose one, write a SQL cell and **Run** it:
 
 ![A SQL cell on the server engine: MTM by desk for the USD trades, the engine select, and the line naming the model and the plan](img/t14/19-analyse-engines.jpg)
 
-You should see the engine *Server: Drishti SQL over the model*, ten desks (`DESK-RATES` `2,863,034,263` first, for the USD trades) and the line naming
+You should see ten desks (`DESK-RATES` `2,863,034,263` first, for the USD trades) and the line naming
 `trades-basic@1`. **From the command line**:
 
 ```text
@@ -488,8 +446,7 @@ DESK-SFT     264,809,126.60
 
 You should see, beside the button, `Visual sql added to the report draft: Desk views.` and notes: the `ORDER BY` was left out (a visual sorts in its own
 settings) and the report was written again by the designer's writer. Open the draft in the designer: a new `matrix` (rows `trade.DESK`, values `MTM`, the
-filter `trade.CURRENCY eq USD`) below what was there. The reader understands Drishti SQL (aliases and `MEASURE('...')`) and SQL over the extract
-(columns and plain aggregates, matched to the model's measures). **The YAML** of the visual it added:
+filter `trade.CURRENCY eq USD`) below what was there. The reader understands Drishti SQL (aliases and `MEASURE('...')`) and plain aggregates of columns, matched to the model's measures. **The YAML** of the visual it added:
 
 ```yaml
       - id: sql
@@ -500,10 +457,10 @@ filter `trade.CURRENCY eq USD`) below what was there. The reader understands Dri
         filters: [{ field: trade.CURRENCY, op: eq, values: [USD] }]
 ```
 
-A slice or SQL cell of **another** model is not added to an existing report (a report reads one model: `DRS-9070` names both); promote it to a new draft.
-[USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python) sections 13 and 14 have the details.
+A SQL cell of **another** model is not added to an existing report (a report reads one model: `DRS-9070` names both); promote it to a new draft.
+[USER_GUIDE.md › The Notebook](../guides/USER_GUIDE.md#the-notebook) section 6 has the details.
 
-## Step 11 · Calc: the BI engine as a DataFrame, and Graphic Walker; a Python measure in an alert
+## Step 11 · Calc: the BI engine as a DataFrame; a Python measure in an alert
 
 In **Calc** (`Alt+C` on any view) the module `drishti_bi` asks the BI engine, **as you**: `query` sends one model query (a model's `name@major`; a 2.1
 dataset's name reads the model the converter made of it, `trades-basic` is `trades-basic@1`):
@@ -526,12 +483,9 @@ DESK-COMM    -429,967,635.39  5990
 DESK-CREDIT  360,552,941.89   1172
 DESK-EQD     -79,395,510.75   1452
 3 row(s)  as of 2026-10-16  plan p_5d2cad2dda86953b
-``` `drishti_bi.walk(df)` explores a frame with **Graphic Walker** (PygWalker's
-front end, vendored):
+```
 
-![Graphic Walker over the frame: fields on the left, shelves for the axes, colour and size, and the chart builder](img/t14/22-calc-walker.jpg)
-
-Drag `trade.DESK` to the X axis and `MTM` to the Y axis. The chart is drawn in a **sandboxed frame** that cannot reach the network or the console: the rows went in by message and nothing goes out ([USER_GUIDE.md](../guides/USER_GUIDE.md#19-the-bi-client-and-graphic-walker)).
+Calc is a **Labs** feature (off as shipped: an administrator switches `labs.calc` on), a scratch pad in your browser that never publishes.
 
 Last, a **Python measure in an alert**. An alert on a measure of a model asks a model query, and a model query runs Python measures (step 1), so
 **Alerts → New → Watch a measure of a model** on **Desk P&L volatility** works like any other: choose the model `trades-basic@1`, the measure, *crosses a
@@ -643,64 +597,11 @@ bi-04b126d3c4  dataset  ENDUR trades, cleaned  draft in My workspace
 The steps run where every Python item runs, in the console's sandbox; the snippets write each value as a literal, never as code. The reference is
 [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](../guides/BI_GUIDE.md#17-data-prep-the-transform-editor).
 
-<a id="step-13--your-own-python-in-the-browser-the-python-console-240"></a>
-## Step 13 · Your own Python in the browser: the Python console
-
-Analyse runs everything on the console. When you want to poke at the data **yourself, in your browser**, open **BI → Python console** (`/pyconsole`).
-It runs Calc's Python (Pyodide) on a **masked extract** of a model: the rows you may see, with masked columns masked. Nothing you do there is kept or
-shared until you **promote** it.
-
-**In the UI.** Choose the dataset **Trade** (`dataset:pack.trading.trade`, the trading pack's), tick `TRADE_ID`, `TRADE_STATUS`, `PORTFOLIO`, `CURRENCY`
-and `NOTIONAL`, and **Open the extract**: you should see `15,000 rows, 5 columns, in your browser.` (an extract is at most `bi.pyconsole.max_rows`,
-20,000). Python starts in the page (`Python ready · Pyodide ...`). Type, and **Run in the browser** (Ctrl+Enter):
-
-```python
-live = df[df["TRADE_STATUS"] != "MATURED"]
-by_book = live.groupby("PORTFOLIO", as_index=False)["NOTIONAL"].sum().nlargest(8, "NOTIONAL").reset_index(drop=True)
-print(len(live), "live trades of", len(df))
-show(by_book, "Live notional by book, top 8")
-chart(by_book, kind="bar", x="PORTFOLIO", y="NOTIONAL")
-```
-
-![The Python console: the cell, 12751 live trades of 15000, the top eight books by live notional as a table and a bar chart, run in the browser](img/t14/28-pyconsole.jpg)
-
-You should see `12751 live trades of 15000`, then eight books, `BOOK-COMM-1 258,926,542,975.48` first, and the bars. The status says `Done in your browser`.
-Now give it the title `Live notional by book` and press **Promote to the server**:
-
-![Promoted: the same code run on the console backend over the 15,000 rows rebuilt for you: the same answer as in your browser, saved as a notebook draft](img/t14/29-pyconsole-promoted.jpg)
-
-You should see *Ran on the console backend in 45 ms over 15,000 rows rebuilt for you. The same answer as in your browser. Saved as the notebook draft "Live
-notional by book".* **Open the notebook in Analyse** runs it there, on the console, for whoever opens it (each with their own rows). Promoting needs
-`bi-author`.
-
-**On the command line** there is no browser to run Python in; the promoted notebook is an item like any other, and
-`python3 tools/drishti.py bi catalogue get <its id> --body` prints it. **As YAML**, the notebook draft is:
-
-```yaml
-rachana: 1
-notebook: live-notional-by-book
-title: Live notional by book
-dataset: dataset:pack.trading.trade
-fields: [trade.CURRENCY, trade.NOTIONAL, trade.PORTFOLIO, trade.TRADE_ID, trade.TRADE_STATUS]
-cells:
-- type: python
-  source: |
-    live = df[df["TRADE_STATUS"] != "MATURED"]
-    by_book = live.groupby("PORTFOLIO", as_index=False)["NOTIONAL"].sum().nlargest(8, "NOTIONAL").reset_index(drop=True)
-    print(len(live), "live trades of", len(df))
-    show(by_book, "Live notional by book, top 8")
-    chart(by_book, kind="bar", x="PORTFOLIO", y="NOTIONAL")
-  target: server
-```
-
-The console is not a BI page: Analyse and the reports still compute nothing in the browser. The reference is
-[USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](../guides/USER_GUIDE.md#16-the-browser-python-console).
-
 ## Next steps
 
 - [Tutorial 15](15-ai-in-drishti.md): ask the data in words.
 - [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python): the manifest, where Python runs, the sandbox in full, `DRS-9070` to `9075`, section 13 for the Transform and
-  section 17 for the Transform editor and the snippets. [USER_GUIDE.md](../guides/USER_GUIDE.md#analyse-slice-sql-and-python): the page, limits and notebooks. [USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view) is Calc, the Python panel inside a screen.
+  section 17 for the Transform editor and the snippets. [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook): the page, limits and notebooks. [USER_GUIDE.md](../guides/USER_GUIDE.md#calc-python-on-any-view) is Calc, the Python panel inside a screen.
 
 ## If something goes wrong
 
@@ -708,13 +609,11 @@ The console is not a BI page: Analyse and the reports still compute nothing in t
 |---|---|
 | `DRS-9001 no item 'xyz'` in a Python visual | the item is not published, or the name does not match its id, file name or title |
 | `DRS-9070` | the manifest or a cell is wrong; the message names the key (a package not on the allow-list, a second SQL statement, a source that does not parse) |
-| `DRS-9072` | the SQL ran too long or was too long (`bi.explore.sql_max_seconds`, `sql_max_chars`) |
-| `DRS-9073` | the SQL over the extract tried to do more than read the table `extract` |
+| `DRS-9072` | the SQL was too long (`bi.notebook.sql_max_chars`) |
 | `DRS-9170` | Drishti SQL on the server was asked to do more than one SELECT (a write, a second statement) |
 | `DRS-9074` | the runner is busy or not installed (`bi.python.workers`, the pandas environment) |
-| the Python tab will not run | you lack the `bi-author` power |
+| a Python cell's Run is greyed with *Under construction* | Python cells run on the server's compute pool, which comes with one Python runtime |
 | a column is empty in the extract | it is masked for your role; the line under the form names it |
 | the Transform editor's steps do not run | running them needs `bi-author`; the page still writes the YAML |
 | `DRS-9108 the kind 'trade' has no column [X]` | a field the kind does not have; the message lists the kind's columns |
 | `DRS-9026 connector 'x' is not running` | the input names a connector that is off; leave it empty to read whichever serves the kind |
-| the Python console says *Python runtime not installed* | Calc's runtime is not on the console: `tools/fetch-pyodide.sh` |

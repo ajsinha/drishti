@@ -56,8 +56,7 @@
     var w = frame.contentWindow, d = frame.contentDocument;
     var url = '/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id) + '?design=' + encodeURIComponent(draft) + '&embed=1';
     return fetch(url, { credentials: 'same-origin', cache: 'no-store', headers: { Accept: 'text/html' } }).then(function (r) { return r.text(); }).then(function (html) {
-      // a preview the client-side renderer draws (ui.render: client) embeds its ViewModel: the frame's library draws its body in the frame
-      var fresh = (w && (w.Drishti || {}).freshGrid && (w.Drishti || {}).freshGrid(html)) || new DOMParser().parseFromString(html, 'text/html').querySelector('[data-view] .vgrid'), old = d && d.querySelector('[data-view] .vgrid');
+      var fresh = new DOMParser().parseFromString(html, 'text/html').querySelector('[data-view] .vgrid'), old = d && d.querySelector('[data-view] .vgrid');
       var needsGrid = fresh && fresh.hasAttribute('data-sgrid') && !(w && (w.Drishti || {}).screenGrid);
       var needsWire = fresh && fresh.querySelector('section.pnl[data-wire]') && !(w && (w.Drishti || {}).wire);   // the first click wired: its script starts with the page
       if (!fresh || !old || needsGrid || needsWire) { frame.setAttribute('src', url); return; }

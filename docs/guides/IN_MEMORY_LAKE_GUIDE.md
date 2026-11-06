@@ -17,7 +17,7 @@
 
 Some feeds may not, by contract, be saved on a disk. Drishti holds them in an **in-memory lake**: ordinary Delta tables (a `_delta_log`
 and Parquet files) whose files live in the server's memory, off the Java heap, under a hard cap. A server job, the **replenish job**,
-fills each table from its feed; every page, search, BI dataset and the Data view read it exactly as they read a lake on a disk; and a
+fills each table from its feed; every page, search, BI dataset and Export data read it exactly as they read a lake on a disk; and a
 guard refuses every way the data could reach a disk. Only a user's download leaves the server.
 
 This guide sets one up end to end, explains what the server does with it, and lists every setting. The design and its reasoning are in
@@ -43,7 +43,7 @@ This guide sets one up end to end, explains what the server does with it, and li
 ```
  feed (URL, file, connector) ──► replenish job ──► lake writer ──► mem://<store>/<table>   (Delta: _delta_log + Parquet, zstd)
                                      (server)                              │ off-heap chunks, hard cap
- pages, search, BI, Data view ◄── Delta connector (root: mem://<store>) ◄──┘
+ pages, search, BI, Export data ◄── Delta connector (root: mem://<store>) ◄──┘
 ```
 
 - A **memory store** (`mem://<store>`) is one pool of memory with its own cap: files are lists of fixed-size chunks (direct buffers)
@@ -188,7 +188,7 @@ writes:
 | A BI run's stored result | not stored: the definition is kept, the rows are recomputed when opened |
 | DuckDB's temporary spill | **off** on a server with memory stores (a query past `memory-limit` fails instead of spilling) |
 | Ask about this page (an outside AI provider) | **refused** (`DRS-5219`) |
-| **A user's download** (the Data view) | **allowed**: streamed from memory with no temporary file, audited (the audit line keeps the selection's shape, not its values) |
+| **A user's download** (Export data) | **allowed**: streamed from memory with no temporary file, audited (the audit line keeps the selection's shape, not its values) |
 | Another node of the cluster | answers over Drishti\*net only ([section 8](#8-a-cluster-the-owner-node-binds-the-pack)) |
 | Logs and audit | ids and counts only |
 
@@ -282,6 +282,6 @@ keeps a memory warehouse off every disk as the Delta connector does; the repleni
 | `UP: mem://news is held in memory only and is empty now` | the warm-up has not reached it, or its job failed: `drishti.py lake memory jobs --table <t>` gives the reason |
 | a run `refused: the store is full` | raise `max-mb` (and restart, so the launcher raises the direct-memory limit), unpin a table, or lower `keep-versions` |
 | Health red, *direct-memory limit* | the server was started without the caps in `-XX:MaxDirectMemorySize`: use the shipped scripts or add the flag |
-| `DRS-5219` on a report, a share, an Ask | as the contract asks; download the rows from the Data view instead |
+| `DRS-5219` on a report, a share, an Ask | as the contract asks; download the rows from Export data instead |
 | a table *evicted, a refill is queued* | the store needed room for another table; pin the tables that must stay |
 | a run `failed: … connector cannot list its documents` | that connector computes documents when asked: give `ids` or `ids-from`, or read its feed by `url` |

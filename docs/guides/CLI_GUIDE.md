@@ -1613,11 +1613,11 @@ expectations:
 > `data ingest`, `data ingest --watch` and `pack make` stage data for a demo, a small team or a proof of concept. They are **not** a production
 > ETL: in production your own ETL loads the store and ends by calling `data landed`.
 
-### `data get`: a dataset as `.jsonl.gz` (the Data view)
+### `data get`: a dataset as `.jsonl.gz` (Export data)
 
-The Data view (`DATA <GO>`) from a terminal: a dataset's rows on a date, the columns you choose and filter lines joined by AND, streamed to
+Export data (`EXPORT <GO>`) from a terminal: a dataset's rows on a date, the columns you choose and filter lines joined by AND, streamed to
 a `.jsonl.gz` file (never held whole), as the token's user sees them. The rules (operators, masks, internal-only datasets, pushdown, the
-audit) are in [DATA_GUIDE.md](DATA_GUIDE.md#6-the-data-view-download-a-dataset).
+audit) are in [DATA_GUIDE.md](DATA_GUIDE.md#6-export-data-download-a-dataset).
 
 ```
 drishti.py data get [--json]                                    the datasets you may download: pack, format, dates held
@@ -2632,7 +2632,7 @@ $ drishti.py bi catalogue publish bi-27def70913 --note x
 drishti: the server said 403 DRS-9002: DRS-9002 cat does not hold the bi-author power (an administrator grants it on a role)
 ```
 
-`drishti.py pack check` also refuses a pack that defines a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `DATA` or `ADMIN` (reserved command words).
+`drishti.py pack check` also refuses a pack that defines a mnemonic named `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `DATA`, `EXPORT` or `ADMIN` (reserved command words).
 
 ### `bi expr`, `bi migrate`, `bi sql`: the BI languages
 

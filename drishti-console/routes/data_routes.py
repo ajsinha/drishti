@@ -12,7 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Data view (``/data``, ``DATA [dataset] [date] <GO>``; docs/guides/DATA_GUIDE.md "The Data view", USER_GUIDE.md "The Data view").
+"""Export data (``/data``, ``EXPORT [dataset] [date] <GO>``, the older word ``DATA`` kept as an alias; docs/guides/DATA_GUIDE.md "Export data",
+USER_GUIDE.md "Export data").
 
 Download only, never a viewer. On the left every dataset the person may open (by source, with its format and the dates it holds; internal-only
 ones marked); on the right the chosen dataset's facts, a calendar of its dates, the simple selection (columns; filter lines joined by AND,
@@ -36,7 +37,7 @@ from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
 
-WORD = "DATA"
+WORD = "EXPORT"
 _KIND = re.compile(r"^[a-z0-9][a-z0-9._-]{0,80}$")
 _DATE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -62,7 +63,7 @@ def selection(request: Request) -> dict:
 
 
 def resolve(datasets: list[dict], words: str) -> tuple[str, str]:
-    """``DATA <dataset> [date]``: the dataset its first word names (its kind or its command, any case) and the date, if one follows."""
+    """``EXPORT <dataset> [date]``: the dataset its first word names (its kind or its command, any case) and the date, if one follows."""
     parts = words.split()
     if not parts:
         return "", ""
@@ -80,7 +81,7 @@ async def page(request: Request, q: str = "", kind: str = "", find: str = ""):
     except BackendError as e:
         return render(request, "terminal/missing.html", status_code=e.page_status, kind="data", id="", error=e, embed=False)
     datasets = listed.get("datasets") or []
-    if q.strip():                                           # DATA <dataset> [date]: the dataset and date in the address
+    if q.strip():                                           # EXPORT <dataset> [date]: the dataset and date in the address
         k, d = resolve(datasets, q)
         params = {"kind": k, "date": d} if k else {"find": q.strip()}
         return RedirectResponse("/data?" + urlencode({a: b for a, b in params.items() if b}), status_code=303)

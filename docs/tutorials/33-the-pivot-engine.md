@@ -27,7 +27,7 @@ About 30 minutes.
 
 ## Before you start
 
-- The server and console running on the demo lake (`drishti.py lake demo`, [tutorial 1](01-first-15-minutes.md)); `DATA trade <GO>` lists
+- The server and console running on the demo lake (`drishti.py lake demo`, [tutorial 1](01-first-15-minutes.md)); `EXPORT trade <GO>` lists
   the trades. The figures below are those of the demo lake on business date 2026-09-30.
 - For step 6, the VaR engine on with the demo risk lake (`VAR BANK <GO>` answers).
 - A token for the command line in `DRISHTI_TOKEN` or a `--token-file` ([TOOLS.md](../guides/TOOLS.md)).
@@ -67,7 +67,7 @@ drishti.py pivot run --source trade --rows PRODUCT_TYPE --values "count()" --val
 {"source": "trade", "rows": ["PRODUCT_TYPE"], "values": [{"measure": "count()", "as": "Trades"}, {"measure": "count_distinct(COUNTERPARTY)", "as": "Counterparties"}]}
 ```
 
-Check: the grand total's `count()` equals the Data view's row count (`DATA trade`, "Rows").
+Check: the grand total's `count()` equals Export data's row count (`EXPORT trade`, "Rows").
 
 ## Step 2 · Open a row, then expand another by a different field
 

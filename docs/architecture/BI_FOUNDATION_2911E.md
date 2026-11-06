@@ -53,7 +53,7 @@ subscriptions and alerts' presentation**. Everything it computes or defines unde
 | Tables (datasets) | BI datasets (`config/bi/datasets`, stored items) | the same | **virtual tables** in a central layer (planned module `drishti-tables`, files `config/tables/`, planned) |
 | Models (relationships, measures, hierarchies, model security) | BI models | the same, answered by the engine | **the layer's models**; MQ stays the query contract, answered by the layer |
 | Cached, rollup and live layers | BI's `Layers`, `Rollups`, `LiveTables` | rollups of partial states (P3) | the layer's **materialisation** (moved, not copied) |
-| Who reads tables | BI only | BI, the pivot (through BI's plan) | BI, the pivot, Arrow Flight (`table` and `model` forms), alerts; later the Data view, Sutras, the AI |
+| Who reads tables | BI only | BI, the pivot (through BI's plan) | BI, the pivot, Arrow Flight (`table` and `model` forms), alerts; later Export data, Sutras, the AI |
 
 **Two large items, one migration, one proof.** (1) DEL folds into Rachana: Rachana gains the checked mode, the scopes and the
 filter-context functions DEL has; DEL's parser, checker and lowering are deleted. (2) BI's datasets and models become virtual tables and
@@ -78,7 +78,7 @@ expression or a dataset name.
   │   aggregation: the pivot engine (drishti-bicompute)  │  one function catalogue
   └──────────────────────┬───────────────────────────────┘
         kinds through connectors · lake tables · the in-memory lake · other tables
-  consumers beside BI: the pivot · Arrow Flight (table, model) · alerts · later the Data view, Sutras, the AI
+  consumers beside BI: the pivot · Arrow Flight (table, model) · alerts · later Export data, Sutras, the AI
 ```
 
 ## 2. DEL into Rachana
@@ -707,7 +707,7 @@ Each with a recommendation. Q30 collects what this deeper look suggests changing
 | Q19 | **Version-1 datasets** (`rachana: 1`, `live-trading`, `live-exposure`) and their compatibility reader | **Migrated by the same tool and the reader deleted** |
 | Q20 | **The other parsers** `OneGrammarRulesTest` lists until 2.9.11.e: DEL, `ExprParser`, `CalculationParser`, the pivot's DEL-syntax formulas, the VaR scope selector `ScopeExpr` | **The first four go now**; `ScopeExpr` moves in its own change with VaR's exact-equality regression check, after this release |
 | Q21 | **Document paths in measures** (`sum(trades.LEGS[*].NOTIONAL)`) | **Refused**: a path is a table column, defined once |
-| Q22 | **Consumers in this release** (V5 says everything) | **BI, the pivot, Flight (`table`, `model`), alerts**; the Data view, Sutras reading tables, Flight SQL's catalogs (if not built in 2.9.11.c) and the AI in the next release; the PostgreSQL protocol stays on hold |
+| Q22 | **Consumers in this release** (V5 says everything) | **BI, the pivot, Flight (`table`, `model`), alerts**; Export data, Sutras reading tables, Flight SQL's catalogs (if not built in 2.9.11.c) and the AI in the next release; the PostgreSQL protocol stays on hold |
 | Q23 | **Tier 1 functions.** The plan puts the whole of tier 1 in 2.9.11.e | **Only the DEL fold's 44 and the six the migration needs** (`power`, `floor`, `if`, `switch`, `least`, `greatest`); the rest of tier 1 in the next release, keeping the release to two large items |
 | Q24 | **How long the migration tool lives** (it carries the old DEL reader) | **Until 2.9.14** (planned), then deleted; later upgrades pass through 2.9.14 |
 | Q25 | **Version marker** of the new files | **`rachana: 3`** (planned); the `expressions:` key goes |

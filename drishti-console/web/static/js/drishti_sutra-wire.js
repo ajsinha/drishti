@@ -60,12 +60,9 @@
     t.innerHTML = (html || '').trim();
     return t.content;
   }
-  /** A panel of an answer as nodes: drawn by the client-side renderer from its JSON when the page is drawn by it (ui.render: client,
-      CLIENT_RENDERER.md section 16), else the console's HTML. */
+  /** A panel of an answer as nodes: the console's HTML (the page is the server's). */
   function nodes(p) {
-    var n = p.panel && window.Drishti.panelNode ? window.Drishti.panelNode(p.panel) : null;
-    if (!n) { return fragment(p.html); }
-    var f = document.createDocumentFragment(); f.appendChild(n); return f;
+    return fragment(p.html);
   }
   function enhance(node) {
     if (window.Drishti.view && window.Drishti.view.enhance) { window.Drishti.view.enhance(node); }

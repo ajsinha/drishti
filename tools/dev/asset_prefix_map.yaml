@@ -23,10 +23,6 @@
 #   storage, elements   checked only: every key starts drishti, every custom element drishti-
 files:
   calc/quant.py: calc/drishti_quant.py
-  calc/walker-frame.js: calc/drishti_walker-frame.js
-  calc/walker-shim.js: calc/drishti_walker-shim.js
-  calc/walker.css: calc/drishti_walker.css
-  calc/walker.html: calc/drishti_walker.html
   css/about.css: css/drishti_about.css
   css/admin-artifacts.css: css/drishti_admin-artifacts.css
   css/admin-caches.css: css/drishti_admin-caches.css

@@ -260,7 +260,7 @@ def test_an_analyse_extract_of_a_model_is_one_model_query_of_rows():
         return sink.getvalue(), {"X-Bi-Masked": ""}
 
     backend.bi_arrow = arrow
-    r = client.post("/bi/explore/extract", json={"model": "dataset:pack.trading.trade", "fields": ["trade.desk", "trade.notional"]})
+    r = client.post("/bi/notebook/extract", json={"model": "dataset:pack.trading.trade", "fields": ["trade.desk", "trade.notional"]})
     assert r.status_code == 200, r.text
     assert sent[0][0] == "/mq" and sent[0][1]["shape"] == "rows" and sent[0][1]["select"] == {"fields": ["trade.desk", "trade.notional"], "measures": []}
 

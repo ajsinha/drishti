@@ -19,11 +19,9 @@ and prep-store, a file lake of two business days of 60 synthetic trades in the t
     trade read straight through trading-store, then steps from the snippets (filter, group and total) by filling forms; after every step the preview shows
     its rows and a profile of each column, and the figures equal a computation from the same trades; the YAML is written for them and read back as the same
     steps; saving makes two drafts;
-(b) **the browser console analyses a masked extract and a result is promoted**: in /pyconsole an analyst's extract arrives masked; an author's code runs in
-    Pyodide (Calc's worker) on the extract, then runs again on the console backend when promoted, gives the same answer and is kept as a notebook draft that
-    opens in Analyse. Neither page has a policy violation or a script error, and only Calc's worker compiles WebAssembly.
+(b) **the Notebook profiles a masked extract with the editor's panel**: an analyst's extract arrives with PRICE masked, and the Profile says so.
 
-Skipped when Playwright, Chromium, the built server jar, pandas and pyarrow (or, for the console, Pyodide: tools/fetch-pyodide.sh) are missing, or a scratch
+Skipped when Playwright, Chromium, the built server jar, pandas or pyarrow are missing, or a scratch
 port is in use. Never run with pytest -n (the ports are fixed). DRISHTI_DOC_SHOTS=<folder> also saves the documentation pictures there."""
 import os
 import re
@@ -103,7 +101,6 @@ class PrepStack(bi_report_stack.ReportStack):
         (work / "config" / "bi" / "datasets" / "prep-trades.dataset.yaml").write_text(PREP_DATASET)
         (work / "config" / "bi" / "models").mkdir(parents=True, exist_ok=True)
         (work / "config" / "bi" / "models" / "prep-model.model.yaml").write_text(PREP_MODEL)
-PYODIDE = ROOT / "drishti-console/web/static/vendor/pyodide/pyodide.mjs"
 SHOTS = os.environ.get("DRISHTI_DOC_SHOTS")
 
 
@@ -146,14 +143,6 @@ def fx_value():
         t = prep_trade(DAY, i)
         if t["PORTFOLIO"] == "BOOK-FX-1":
             total[t["CURRENCY"]] += t["QUANTITY"] * t["PRICE"]
-    return dict(total)
-
-
-def fx_quantity():
-    total = defaultdict(float)
-    for i in range(60):
-        t = prep_trade(DAY, i)
-        total[t["PORTFOLIO"]] += t["QUANTITY"]
     return dict(total)
 
 
@@ -269,8 +258,8 @@ def test_a_failing_step_says_where_and_keeps_the_steps_before(stack, browser):
     page.close()
 
 
-def test_analyse_profiles_the_extract_with_the_editors_panel(stack, browser):
-    page = sign_in(browser, "ann", "/bi/explore")                                             # no raw power: PRICE is masked for her
+def test_the_notebook_profiles_the_extract_with_the_editors_panel(stack, browser):
+    page = sign_in(browser, "ann", "/bi/notebook")                                             # no raw power: PRICE is masked for her
     page.wait_for_function("() => [...document.querySelectorAll('[data-dataset] option')].some(o => o.value === 'mq:prep-model@1')", timeout=30000)
     page.select_option("[data-dataset]", "mq:prep-model@1")
     page.wait_for_selector("[data-fields] input[name=f]")
@@ -283,59 +272,4 @@ def test_analyse_profiles_the_extract_with_the_editors_panel(stack, browser):
     expect(page.locator("[data-profile-meta]")).to_contain_text("Masked for you: PRICE")
     shot(page, "07-analyse-profile.png", page.locator("#bxP-profile"))
     clean(page)
-    page.close()
-
-
-def open_extract(page, date=None):
-    page.wait_for_function("() => [...document.querySelectorAll('[data-dataset] option')].some(o => o.value === 'mq:prep-model@1')")
-    page.select_option("[data-dataset]", "mq:prep-model@1")
-    page.wait_for_selector("[data-fields] input[name=f]")
-    if date:
-        page.fill("[data-date]", date)
-    page.click("[data-open-go]")
-    page.wait_for_function("() => window.Drishti.pyConsole && window.Drishti.pyConsole.ex")
-
-
-@pytest.mark.skipif(not PYODIDE.exists(), reason="needs Pyodide (tools/fetch-pyodide.sh)")
-def test_the_browser_console_analyses_a_masked_extract_and_a_result_is_promoted(stack, browser):
-    ann = sign_in(browser, "ann", "/pyconsole")                                               # an analyst: no raw power, so PRICE is masked for her
-    open_extract(ann, DAY)
-    expect(ann.locator("[data-info]")).to_contain_text("Masked for you: PRICE")
-    ex = ann.evaluate("() => window.Drishti.pyConsole.ex")
-    price = [c["name"] for c in ex["columns"]].index("PRICE")
-    assert ex["masked"] == ["PRICE"] and {r[price] for r in ex["rows"]} <= {None, "•••"}, {r[price] for r in ex["rows"]}   # the browser never received a price
-    assert ann.locator("[data-promote]").is_disabled()                                        # promoting runs Python on the console: bi-author only
-    clean(ann)
-    ann.close()
-
-    page = sign_in(browser, "wes", "/pyconsole")
-    workers = []
-    page.on("worker", lambda w: workers.append(w.url))
-    open_extract(page, DAY)
-    assert page.evaluate("() => window.Drishti.pyConsole.ex.rowCount") == 60
-    page.wait_for_function("() => document.getElementById('pc').getAttribute('data-ready') === 'true'", timeout=120000)
-    code = ('by_book = df.groupby("PORTFOLIO", as_index=False)["QUANTITY"].sum()\n'
-            'print(len(df), "rows in the browser")\nshow(by_book, "Quantity by book")\nchart(by_book, kind="bar", x="PORTFOLIO", y="QUANTITY")\n')
-    page.evaluate("(c) => window.Drishti.pyConsole.setCode(c)", code)
-    page.click("[data-run]")
-    page.wait_for_function("() => document.getElementById('pc').getAttribute('data-ran') && document.getElementById('pc').getAttribute('data-running') === 'false'", timeout=120000)
-    expect(page.locator("[data-out]")).to_contain_text("60 rows in the browser")
-    expect(page.locator("[data-out] [data-pc-table] tbody tr")).to_have_count(3)
-    expect(page.locator("[data-out] [data-pc-chart] canvas")).to_be_visible()
-    browser_rows = page.evaluate("() => window.Drishti.pyConsole.browser.table.rows")
-    assert {r[0]: r[1] for r in browser_rows} == pytest.approx(fx_quantity())
-    assert any("drishti_calc-worker.js" in w for w in workers)                                       # Calc's worker ran it, in this tab
-    shot(page, "05-browser-console.png", page.locator("section[aria-labelledby=pcCodeH]"))
-
-    page.fill("[data-ptitle]", "Quantity by book, from the browser")
-    page.click("[data-promote]")
-    page.wait_for_function("() => document.getElementById('pc').getAttribute('data-promoted')", timeout=60000)
-    assert page.locator("#pc").get_attribute("data-promoted") == "same"                     # the console backend gave the browser's answer
-    expect(page.locator("[data-compare-line]")).to_contain_text("The same answer as in your browser")
-    shot(page, "06-promoted.png", page.locator("[data-compare]"))
-    href = page.locator("[data-open-notebook]").get_attribute("href")
-    assert href.startswith("/bi/explore?item=")
-    clean(page)
-    page.goto(CONSOLE_URL + href)                                                             # the notebook draft opens in Analyse, where it runs on the console
-    page.wait_for_function("() => document.querySelectorAll('[data-cells=python] textarea, [data-cells=python] .CodeMirror').length > 0", timeout=30000)
     page.close()

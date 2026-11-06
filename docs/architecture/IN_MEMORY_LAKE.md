@@ -160,7 +160,7 @@ Admin → Health show its cap and use, and the overload defences (2.9.11 row 8) 
 
 ## 7. Reading: every Java reader unchanged
 
-- **The Delta connector** with `root: mem://feeds/vendor-x` reads it like any lake: pages, search, history, BI, the Data view.
+- **The Delta connector** with `root: mem://feeds/vendor-x` reads it like any lake: pages, search, history, BI, Export data.
 - **Readers see one version.** A read takes the table's version at its start and keeps its files alive until it ends, so a replace in
   the middle never breaks it (a reference count per file; the files are freed when the last reader leaves).
 - **VaR may read from it** (scenario PVs or P&L kept in memory): the VaR inputs' connector points at `mem://…`. The VaR hot tier for
@@ -185,7 +185,7 @@ memory-only data unless the configuration allows that place:
 | VaR and exposure hot files | memory-only hot tier (section 7) |
 | The BI store, saved BI runs and their results | the definition is saved, the rows are not (recomputed when opened) |
 | DuckDB's temporary spill | off for those queries |
-| **Downloads by a user** (Data view, Excel, CSV, JSON Lines) | **allowed** (product owner), streamed from memory with no temporary file on the server, audited per download |
+| **Downloads by a user** (Export data, Excel, CSV, JSON Lines) | **allowed** (product owner), streamed from memory with no temporary file on the server, audited per download |
 | Scheduled reports, e-mail attachments, inbox and share items carrying rows | **refused** (product owner): only downloads leave |
 | An outside AI provider | refused |
 | Another node of the cluster | over Drishti\*net only, to answer a request for the pack (section 9); never written to its disk |

@@ -58,7 +58,7 @@ repository root. Scratch output (`lake`, `lake2`, `build/...`) goes into the clo
 | Check a pack in CI | | `drishti.py pack check --junit` |
 | Ship a pack to a server | Admin → Packs → Deploy | `drishti.py pack bundle`, `pack deploy`, `server packs deploy` |
 | Tell the server that a batch landed | the Lakes page does it after a build | `drishti.py data landed`, or `lake build --signal` |
-| Take a day of a dataset out as a file | Views → Data (`DATA <GO>`): columns, filter lines, Download | `drishti.py data get <dataset> --date D --columns ... --where ...` |
+| Take a day of a dataset out as a file | Views → Export data (`EXPORT <GO>`): columns, filter lines, Download | `drishti.py data get <dataset> --date D --columns ... --where ...` |
 | Change where a connector reads | Admin → **Connectors** | `drishti.py connector apply` |
 | Install or uninstall a pack, connector or BI file safely | Admin → **Artifacts** | `drishti.py server packs`, `connector delete` |
 | Keep a lake small and fast | | `drishti.py lake maintain` (on a timer) |
@@ -103,7 +103,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 |---|---|---|
 | `sutra` | `sutra shape`, `sutra design`, `sutra lint`, `sutra test`, `sutra preview`, `sutra gen` | [5.1](#51-sutra) |
 | `pack` | `pack make`, `pack new`, `pack regenerate`, `pack diff`, `pack catalogue`, `pack i18n`, `pack check`, `pack about-check`, `pack bundle`, `pack verify`, `pack deploy`, `pack rollback`, `pack publish`, `pack keygen`, `pack install` | [5.2](#52-pack) |
-| `data` | `data profile`, `data ingest`, `data load`, `data landed`, `data loads`, `data get` (a dataset as `.jsonl.gz`, the Data view) | [5.3](#53-data) |
+| `data` | `data profile`, `data ingest`, `data load`, `data landed`, `data loads`, `data get` (a dataset as `.jsonl.gz`, Export data) | [5.3](#53-data) |
 | `dataload` | `dataload status`, `dataload run`, `dataload retry` (the data inbox: files dropped in a folder, loaded by the server) | [5.3a](#53a-dataload) |
 | `lake` | `lake build`, `lake publish`, `lake scan`, `lake status`, `lake demo`, `lake maintain`, `lake undo` (one load's rows removed by its load id, [DATA_LOAD_RULES.md section 6.3](../architecture/DATA_LOAD_RULES.md)), `lake memory` (the in-memory lake's stores, jobs and refills, [IN_MEMORY_LAKE_GUIDE](IN_MEMORY_LAKE_GUIDE.md)) | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
 | `server` | `server health`, `server caches`, `server packs`, `server commands`, `server smoke`, `server engines` (`admin engines` is the same: the compute engines on or off, [OPERATIONS section 21](../admin/OPERATIONS.md)) | [5.4](#54-server-and-doctor) |
