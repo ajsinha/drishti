@@ -117,7 +117,7 @@ public final class Derivations {
             return Optional.empty();
         }
         try {
-            Node n = com.ash.drishti.server.bi.expr.Expressions.parse(c.expr());
+            Node n = com.ash.drishti.server.bi.expr.Expressions.node(c.expr());
             if (n instanceof Node.Call call && "related".equals(call.function()) && call.args().size() == 1 && call.args().get(0) instanceof Node.Ref r && r.parts().size() == 2) {
                 return Optional.of(new String[] {r.parts().get(0), r.parts().get(1)});
             }

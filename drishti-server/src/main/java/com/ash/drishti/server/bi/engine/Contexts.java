@@ -251,7 +251,7 @@ final class Contexts {
         }
         Node n;
         try {
-            n = com.ash.drishti.server.bi.expr.Expressions.parse(m.expr());
+            n = com.ash.drishti.server.bi.expr.Expressions.node(m.expr());
         } catch (RuntimeException e) {
             return false;
         }

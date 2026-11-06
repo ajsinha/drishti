@@ -31,7 +31,7 @@ import java.util.Map;
  * @param owner the author's user name
  * @param name the function's name ({@code wavg_return})
  * @param version {@code 1, 2, ...}
- * @param language formula (DEL), sql (a DuckDB macro), python or java (a plug-in)
+ * @param language formula (Rachana), sql (a DuckDB macro), python or java (a plug-in)
  * @param kind as declared (formula and SQL: as the engine finds it)
  * @param code the formula, the macro, the Python source; for Java the class name
  * @param entry Python: the class decorated with {@code @function}; Java: the jar's file name in the plug-in folder

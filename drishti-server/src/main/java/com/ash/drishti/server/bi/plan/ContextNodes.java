@@ -53,7 +53,7 @@ final class ContextNodes {
         }
         Node n;
         try {
-            n = Expressions.parse(m.expr());
+            n = Expressions.node(m.expr());
         } catch (RuntimeException e) {
             return;
         }

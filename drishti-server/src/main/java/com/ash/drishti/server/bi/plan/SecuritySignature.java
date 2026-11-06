@@ -169,7 +169,7 @@ public final class SecuritySignature {
 
     private static boolean names(String where, String table) {
         try {
-            return Node.anyMatch(Expressions.parse(where), x -> x instanceof Node.Ref r && r.parts().size() >= 2 && r.parts().get(0).equals(table));
+            return Node.anyMatch(Expressions.node(where), x -> x instanceof Node.Ref r && r.parts().size() >= 2 && r.parts().get(0).equals(table));
         } catch (RuntimeException e) {
             return false;
         }
@@ -179,7 +179,7 @@ public final class SecuritySignature {
     static String resolved(String where, Map<String, List<Object>> attributes) {
         Node n;
         try {
-            n = Expressions.parse(where);
+            n = Expressions.node(where);
         } catch (RuntimeException e) {
             return where;
         }

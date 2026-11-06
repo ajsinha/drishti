@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.pivot;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.bicompute.formula.FormulaFunction;
@@ -33,7 +34,7 @@ import org.junit.jupiter.api.Test;
  */
 class BiMeasuresTest {
 
-    final Dataset ds = DatasetParser.parse(TestLake.yaml()).dataset();
+    final Dataset ds = Layered.dataset(TestLake.yaml()).dataset();
 
     @Test
     void theTestLakesMeasuresArePivotFunctions() {

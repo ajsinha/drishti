@@ -41,7 +41,25 @@ public final class Histories {
 
     /** The column a sampled measure has in the history table. */
     public static String columnName(String measure, java.util.Collection<String> taken) {
-        return LegacySources.identifier(measure, taken);
+        StringBuilder b = new StringBuilder();
+        for (char ch : measure.toCharArray()) {
+            b.append(ch < 128 && Character.isLetterOrDigit(ch) || ch == '_' ? ch : '_');
+        }
+        String base = b.toString().replaceAll("_+", "_").replaceAll("^_|_$", "");
+        if (base.isEmpty() || Character.isDigit(base.charAt(0))) {
+            base = "c_" + base;
+        }
+        if (base.length() > 60) {
+            base = base.substring(0, 60);
+        }
+        if (Dataset.ID.equals(base) || Dataset.DATE.equals(base) || Dataset.INDEX.equals(base)) {
+            base = base + "_";
+        }
+        String candidate = base;
+        for (int n = 2; taken.contains(candidate); n++) {
+            candidate = base + "_" + n;
+        }
+        return candidate;
     }
 
     /** The column each sampled measure has in the history table, in the order of {@code history.measures}. */

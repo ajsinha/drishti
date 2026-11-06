@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.report;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -38,7 +39,7 @@ class ReportParserTest {
     }
 
     static Dataset dataset(String name) throws IOException {
-        return DatasetParser.parse(Files.readString(DATASETS.resolve(name + ".dataset.yaml"))).dataset();
+        return Layered.dataset(Files.readString(DATASETS.resolve(name + ".dataset.yaml"))).dataset();
     }
 
     static final String MINI = """

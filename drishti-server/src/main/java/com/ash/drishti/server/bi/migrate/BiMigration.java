@@ -25,10 +25,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The BI migrations of stored items (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems"): old-syntax
- * expressions to DEL v2 ({@link ExpressionUpgrade}), then {@code rachana: 1} datasets to datasets and models ({@link ModelUpgrade}). Run once at start-up ({@code drishti.bi.migrate.on-start}), and by a bi-admin from the API or
- * {@code drishti.py bi migrate --expressions [--dry-run]}. Runs are serialised; each is idempotent; what a run could not convert is listed in
- * {@link MigrationProblems}, shown in Admin, BI settings and on the item's page.
+ * The BI migrations of stored items (docs/guides/TROUBLESHOOTING.md "Migration problems"): every stored dataset and model into the table layer
+ * ({@link com.ash.drishti.server.tables.StoredTablesMigration}, BI_FOUNDATION_2911E.md 4.3), then the 2.3 boards into reports ({@link BoardUpgrade}).
+ * Run once at start-up ({@code drishti.bi.migrate.on-start}); boards also by a bi-admin from the API or {@code drishti.py bi migrate --boards [--dry-run]}.
+ * Runs are serialised; each is idempotent; what a run could not convert is listed in {@link MigrationProblems}, shown in Admin, BI settings and on
+ * the item's page.
  */
 public final class BiMigration {
 
@@ -36,8 +37,6 @@ public final class BiMigration {
 
     private final MigrateProperties props;
     private final MigrationProblems problems = new MigrationProblems();
-    private final ExpressionUpgrade expressions;
-    private final ModelUpgrade models;
     private final BoardUpgrade boards;
     private final com.ash.drishti.server.tables.StoredTablesMigration tables;
     private final AuditLog audit;
@@ -47,8 +46,6 @@ public final class BiMigration {
         this.props = props;
         this.audit = audit;
         StoredRewrite rewrite = new StoredRewrite(store, audit, versionsKeep, revisionsKeep);
-        this.expressions = new ExpressionUpgrade(store, rewrite, problems);
-        this.models = new ModelUpgrade(store, rewrite, problems, audit, versionsKeep, revisionsKeep);
         this.boards = new BoardUpgrade(store, rewrite, problems);
         this.tables = new com.ash.drishti.server.tables.StoredTablesMigration(store, audit, new com.ash.drishti.server.bi.expr.DelTablesTranslator(),
                 java.time.Clock.systemUTC());
@@ -107,30 +104,6 @@ public final class BiMigration {
             Map<String, Object> r = boards.run(actor, dryRun);
             if (!dryRun) {
                 audit.record(actor, "bi-migration-run", BoardUpgrade.STEP, r.get("converted") + " converted, " + r.get("problems") + " with problems, " + r.get("scanned")
-                        + " scanned");
-            }
-            return r;
-        }
-    }
-
-    /** Converts (or, with {@code dryRun}, lists) the stored items in the old expression syntax. */
-    public Map<String, Object> expressions(String actor, boolean dryRun) {
-        synchronized (running) {
-            Map<String, Object> r = expressions.run(actor, dryRun);
-            if (!dryRun) {
-                audit.record(actor, "bi-migration-run", ExpressionUpgrade.STEP, r.get("converted") + " converted, " + r.get("problems") + " with problems, "
-                        + r.get("scanned") + " scanned");
-            }
-            return r;
-        }
-    }
-
-    /** Converts (or, with {@code dryRun}, plans) the stored {@code rachana: 1} datasets to datasets and models, and rebinds their reports. */
-    public Map<String, Object> models(String actor, boolean dryRun) {
-        synchronized (running) {
-            Map<String, Object> r = models.run(actor, dryRun);
-            if (!dryRun) {
-                audit.record(actor, "bi-migration-run", ModelUpgrade.STEP, r.get("converted") + " converted, " + r.get("problems") + " with problems, " + r.get("scanned")
                         + " scanned");
             }
             return r;

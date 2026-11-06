@@ -517,7 +517,7 @@ public final class BiService {
         }
         Instant now = Instant.now();
         String title = text(body, "title", 200, true);
-        String content = com.ash.drishti.server.bi.layer.LayerBodies.onSave(kind, checkedBody(body.get("body")));
+        String content = checkedBody(body.get("body"));
         String asReport = "board".equals(kind) ? BoardConverter.onCreate(content, title) : null;      // 2.4.0 (R7): a board is a report with board pages
         if (asReport != null) {
             kind = "report";
@@ -822,7 +822,7 @@ public final class BiService {
         if (base != null && !String.valueOf(base).isBlank() && !String.valueOf(base).equals(i.updatedAt() == null ? "" : i.updatedAt().toString())) {
             throw new DrishtiException(ErrorCode.BI_STALE, "'" + i.title() + "' was saved by " + i.updatedBy() + " since you opened it: reload it, save yours as a copy, or overwrite");
         }
-        String newBody = body.containsKey("body") ? com.ash.drishti.server.bi.layer.LayerBodies.onSave(i.kind(), checkedBody(body.get("body"))) : i.body();
+        String newBody = body.containsKey("body") ? checkedBody(body.get("body")) : i.body();
         String newTitle = body.containsKey("title") ? text(body, "title", 200, true) : i.title();
         if (BiTitles.KINDS.contains(i.kind())) {                                       // one title: the item's and the body's agree after every save
             String inBody = BiTitles.of(newBody);
@@ -1024,7 +1024,7 @@ public final class BiService {
     }
 
     private Map<String, Object> publishNow(Principal p, BiStore.Item i, String note, boolean force, boolean applyRenames) {
-        if (tablesCheck != null && com.ash.drishti.server.bi.layer.LayerBodies.tableLayer(i.kind(), i.body())) { tablesCheck.accept(p, i); } else if (layerCheck != null && ("model".equals(i.kind()) || "dataset".equals(i.kind()) && com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(i.body()))) {
+        if (tablesCheck != null && com.ash.drishti.server.bi.layer.LayerBodies.tableLayer(i.kind(), i.body())) { tablesCheck.accept(p, i); } else if (layerCheck != null && ("model".equals(i.kind()) || "dataset".equals(i.kind()) && com.ash.drishti.server.bi.layer.DatasetDefParser.isTable(i.body()))) {
             String noted = layerCheck.apply(p, i);                                  // the model layer's checks, contract and security safeguard: refuses with its code
             if (!noted.isEmpty()) {
                 audit.record(p.user(), "bi-model-may-see-all", i.id(), noted);

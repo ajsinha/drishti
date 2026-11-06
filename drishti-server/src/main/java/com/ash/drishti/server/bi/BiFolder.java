@@ -39,8 +39,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The shipped content of the BI folder ({@code drishti.bi.dir}): {@code datasets/<id>.dataset.yaml}, {@code reports/<id>.report.yaml},
- * {@code boards/<id>.board.yaml}, {@code notebooks/<id>.notebook.yaml}. Each file is a published, read-only item of the virtual
+ * The shipped content of the BI folder ({@code drishti.bi.dir}): {@code reports/<id>.report.yaml}, {@code boards/<id>.board.yaml},
+ * {@code notebooks/<id>.notebook.yaml}, {@code python/}, {@code themes/}; and the table layer's folder ({@code drishti.tables.root}): a folder per
+ * domain of {@code .table.yaml} and {@code .model.yaml} files, items of the kinds {@code table} and {@code model}. Each file is a published, read-only item of the virtual
  * workspace {@value #WORKSPACE}; its catalogue fields come from the top-level keys {@code title}, {@code description}, {@code owner},
  * {@code tags}, {@code endorsement} and {@code audience} ({@code roles}, {@code users}, {@code packs}). Phase 1 stores the body and does not run it.
  *
@@ -57,7 +58,11 @@ public final class BiFolder implements AutoCloseable {
     /** The tag a shipped file with {@code sample: true} carries; the sample-visibility setting hides tagged items from those who may not see samples. */
     public static final String SAMPLE_TAG = "sample";
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
-    private static final Map<String, String> KINDS = Map.of("datasets", "dataset", "models", "model", "reports", "report", "boards", "board", "notebooks", "notebook", "python", "python", "themes", "theme");
+    private static final Map<String, String> KINDS = Map.of("reports", "report", "boards", "board", "notebooks", "notebook", "python", "python", "themes", "theme");
+    /** BI's old folders of dataset and model files: a file there is refused with the migration's command (BI_FOUNDATION_2911E.md Q18). */
+    private static final List<String> OLD_FOLDERS = List.of("datasets", "models");
+    /** The code of an old dataset or model file the server refuses (TABLES_GUIDE.md, the migration). */
+    public static final String MIGRATE_FIRST = "DRS-9196";
     /** The table layer's files (BI_FOUNDATION_2911E.md step 5): items of the kinds {@code table} and {@code model}, as the editors store them. */
     private static final Map<String, String> LAYER = Map.of("table", "table", "model", "model");
 
@@ -187,6 +192,23 @@ public final class BiFolder implements AutoCloseable {
         }
         try {
             Map<String, Entry> next = new TreeMap<>();
+            for (String old : OLD_FOLDERS) {                                   // BI's own dataset and model files: refused, the command named
+                Path folder = dir.resolve(old);
+                if (!Files.isDirectory(folder)) {
+                    continue;
+                }
+                try (Stream<Path> files = Files.list(folder)) {
+                    for (Path f : files.filter(p -> p.getFileName().toString().endsWith(".yaml")).sorted().toList()) {
+                        String key = old + "/" + f.getFileName();
+                        Entry was = entries.get(key);
+                        next.put(key, new Entry(0, 0, null, MIGRATE_FIRST + ": a " + old.substring(0, old.length() - 1) + " file in BI's old form is not read; run "
+                                + "drishti.py tables migrate --dry-run, then without it (the tables and models are written under the table layer's folder)",
+                                was != null && was.problemSince() != null ? was.problemSince() : Instant.now()));
+                    }
+                } catch (IOException e) {
+                    LOG.warn("BI folder: {} unreadable: {}", folder, e.getMessage());
+                }
+            }
             for (Map.Entry<String, String> k : KINDS.entrySet()) {
                 Path folder = dir.resolve(k.getKey());
                 if (!Files.isDirectory(folder)) {

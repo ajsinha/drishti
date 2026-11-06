@@ -174,7 +174,7 @@ final class SqlEmitter {
     String calculated(Dataset.Table table, String expr) {
         current = table.name();
         try {
-            return emit(com.ash.drishti.server.bi.expr.Expressions.parse(expr), false);
+            return emit(com.ash.drishti.server.bi.expr.Expressions.node(expr), false);
         } finally {
             current = null;
         }
@@ -250,7 +250,7 @@ final class SqlEmitter {
             throw new DrishtiException(ErrorCode.DATASET_EXPRESSION, "measures refer to each other in a circle at '" + name + "'");
         }
         try {
-            return "(" + emit(com.ash.drishti.server.bi.expr.Expressions.parse(m.expr()), false) + ")";
+            return "(" + emit(com.ash.drishti.server.bi.expr.Expressions.node(m.expr()), false) + ")";
         } finally {
             trail.remove(name);
         }

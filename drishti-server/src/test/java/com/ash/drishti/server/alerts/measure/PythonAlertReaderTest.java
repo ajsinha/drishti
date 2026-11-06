@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.alerts.measure;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -84,7 +85,7 @@ class PythonAlertReaderTest {
     };
 
     PythonAlertReader reader() {
-        Dataset ds = DatasetParser.parse(DATASET).dataset();
+        Dataset ds = Layered.dataset(DATASET).dataset();
         when(datasets.parsed(any(), anyString())).thenReturn(ds);
         when(datasets.ask(any(), anyString(), any(), anyBoolean())).thenReturn(mock(QueryService.Result.class));
         when(datasets.json(any())).thenAnswer(i -> answer);

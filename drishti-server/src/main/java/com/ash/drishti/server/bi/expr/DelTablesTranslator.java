@@ -37,7 +37,7 @@ public final class DelTablesTranslator implements DelTranslator {
             DelAst tree = DelParser.parse(t.equals("true") ? "True" : t.equals("false") ? "False" : del);
             String rachana = Printer.print(DelToRachana.map(tree).expr());
             return Result.ok(rachana, rachana.equals(del.strip()) ? List.of() : List.of("DEL into Rachana (section 2.4)"));
-        } catch (DelException e) {
+        } catch (ExpressionException e) {
             return Result.refused("DEL does not read it: " + e.getMessage());
         } catch (IllegalArgumentException e) {
             return Result.refused("no Rachana form: " + e.getMessage());

@@ -1085,6 +1085,7 @@ public final class EditorService {
             case SQL -> "sql";
             case PYTHON -> "python";
             case MODEL -> "summary";
+            case RUN -> "a run's snapshot";
             case NONE -> "unsourced";
         };
     }

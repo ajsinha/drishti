@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.plan;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.dataset.DatasetParser;
@@ -89,7 +90,7 @@ class OptimiserPropertyTest {
     @Test
     void noRuleRemovesChangesOrAddsSecurityAndNoConditionIsLost() {
         Random r = new Random(4242);
-        var flat = DatasetParser.parse(TestLake.yaml()).dataset();
+        var flat = Layered.dataset(TestLake.yaml()).dataset();
         for (int i = 0; i < 1000; i++) {
             PlanNode body = r.nextInt(3) == 0 ? new PlanNode.Meet(List.of(aggregate(r, "trades"), aggregate(r, "trades")), List.of("trades.desk")) : aggregate(r, "trades");
             if (r.nextBoolean()) {

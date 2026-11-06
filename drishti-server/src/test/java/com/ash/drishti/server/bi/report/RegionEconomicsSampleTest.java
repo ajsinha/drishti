@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.report;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.dataset.Dataset;
@@ -37,7 +38,7 @@ class RegionEconomicsSampleTest {
     private static final Path SHAPES = Path.of("../drishti-console/web/static/vendor/echarts/maps/regions");
 
     private static Dataset dataset() throws IOException {
-        DatasetParser.Result r = DatasetParser.parse(Files.readString(ReportParserTest.DATASETS.resolve("region-economics.dataset.yaml")));
+        DatasetParser.Result r = Layered.dataset(Files.readString(ReportParserTest.DATASETS.resolve("region-economics.dataset.yaml")));
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         return r.dataset();
     }

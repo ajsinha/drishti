@@ -309,6 +309,10 @@ final class DatasetMigration {
             String base = baseName(d.path("extends").asText());
             return new TableDef.Source(null, null, null, null, TableName.ofDataset(base), null, null, null, null, null, null);
         }
+        if (s.has("run")) {                                                   // a promoted run's snapshot (BI_DESIGN.md 9.4)
+            JsonNode v = s.path("version");
+            return TableDef.Source.ofRun(s.path("run").asText(), v.isNumber() ? (Object) v.asInt() : v.asText("latest"), s.path("token").asText(""));
+        }
         if (s.has("python")) {
             return new TableDef.Source(null, null, null, null, null, null, map(s.path("params")), s.path("python").asText(), map(s.path("inputs")), null, null);
         }

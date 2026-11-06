@@ -23,7 +23,6 @@ import com.ash.drishti.identity.User;
 import com.ash.drishti.identity.UserService;
 import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.packs.PackRegistry;
-import com.ash.drishti.server.bi.dataset.LegacySources;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
@@ -608,9 +607,6 @@ public final class DatasetService {
 
     private DatasetParser.Result parse(String id, String body) {
         String h = hash(body);
-        if (LegacySources.dependsOnOthers(body)) {
-            return DatasetParser.parse(body);                      // its model depends on the datasets it is made of, which may have changed: never served from the cache
-        }
         Parsed p = parsed.get(id);
         if (p == null || !p.hash().equals(h)) {
             p = new Parsed(h, DatasetParser.parse(body));
@@ -811,7 +807,7 @@ public final class DatasetService {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("kind", d.composed() ? "composed" : "derived");
         List<Map<String, Object>> sources = new ArrayList<>();
-        for (Dataset.Input in : LegacySources.sources(d)) {
+        for (Dataset.Input in : d.inputs()) {
             Map<String, Object> s = new LinkedHashMap<>();
             s.put("alias", in.alias());
             s.put("dataset", in.dataset());
@@ -1086,7 +1082,7 @@ public final class DatasetService {
     /** The name of a {@code rachana: 2} dataset item (one of the model layer), or null for a version 1 dataset. */
     private String layerDatasetName(Principal p, BiStore.Item item) {
         String body = bi.bodyFor(p, item);
-        if (!com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(body)) {
+        if (!com.ash.drishti.server.bi.layer.DatasetDefParser.isTable(body)) {
             return null;
         }
         com.ash.drishti.server.bi.layer.DatasetDef d = com.ash.drishti.server.bi.layer.DatasetDefParser.parse(body).dataset();

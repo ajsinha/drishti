@@ -117,11 +117,13 @@ public final class LayerTables {
                     null, from.params());
             case MODEL -> new DatasetDef.Source(DatasetDef.Source.MODEL, null, null, null, null, null, null, null, null, null, from.model(),
                     LayerYaml.YAML.valueToTree(from.modelQuery()), null);
+            case RUN -> DatasetDef.Source.ofRun(from.run(), from.params().get("version") == null ? "latest" : String.valueOf(from.params().get("version")),
+                    from.params().get("token") == null ? "" : String.valueOf(from.params().get("token")));
             case TABLE -> {
                 extendsRef = from.table();
                 yield null;
             }
-            default -> throw new IllegalArgumentException("BI reads a table from a kind, a connector query, a Python Transform, a model or another table; '" + t.name()
+            default -> throw new IllegalArgumentException("BI reads a table from a kind, a connector query, a Python Transform, a model, a promoted run or another table; '" + t.name()
                     + "' reads " + from.form().name().toLowerCase(java.util.Locale.ROOT));
         };
         String where = t.filter() == null ? null : rowExpression(t.filter(), byPath, "filter");

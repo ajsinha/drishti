@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.server.bi.layer.DatasetDef;
@@ -41,7 +42,7 @@ class ModelViewHashTest {
     static final String BODY = "rachana: 2\nmodel: desk-risk\nversion: 1.0.0\n";
 
     static DatasetDef dataset(String name, String version) {
-        return DatasetDefParser.parse("""
+        return Layered.tableDef("""
                 rachana: 2
                 dataset: %s
                 version: %s

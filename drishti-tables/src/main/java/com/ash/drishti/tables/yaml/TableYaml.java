@@ -39,7 +39,7 @@ public final class TableYaml {
 
     static final Set<String> TOP = Set.of("rachana", "table", "was", "version", "from", "grain", "filter", "columns", "keys", "keep", "says",
             "materialize", "as-of", "refresh", "rules", "hidden-for", "tests");
-    static final Set<String> FROM = Set.of("kind", "pack", "connector", "lake", "table", "query", "params", "python", "inputs", "model");
+    static final Set<String> FROM = Set.of("kind", "pack", "connector", "lake", "table", "query", "params", "python", "inputs", "model", "run");
     static final Set<String> COLUMN = Set.of("path", "expr", "python", "type", "role", "meaning", "references", "unit", "additive", "aggregate",
             "format", "key", "description", "masked", "hidden-for", "title", "id", "term", "means", "sign");
 
@@ -130,9 +130,9 @@ public final class TableYaml {
         String sql = modelName == null && query != null && query.isValueNode() ? query.asText() : null;
         TableDef.Source s = new TableDef.Source(y.text(f, "kind", "from", null), y.text(f, "pack", "from", null), y.text(f, "connector", "from", null),
                 y.text(f, "lake", "from", null), y.text(f, "table", "from", null), sql, Yaml.map(f.get("params")), y.text(f, "python", "from", null),
-                Yaml.map(f.get("inputs")), modelName, modelQuery);
+                Yaml.map(f.get("inputs")), modelName, modelQuery, y.text(f, "run", "from", null));
         if (s.form() == TableDef.Source.Form.NONE) {
-            y.error(TableCodes.UNREADABLE, "from", "from names a kind, a lake table, a table, a query, a Python item or a model");
+            y.error(TableCodes.UNREADABLE, "from", "from names a kind, a lake table, a table, a query, a Python item, a model or a promoted run");
         }
         return s;
     }
@@ -337,6 +337,7 @@ public final class TableYaml {
         put(m, "table", s.table());
         put(m, "python", s.python());
         put(m, "model", s.model());
+        put(m, "run", s.run());
         if (s.query() != null) {
             m.put("query", s.query());
         } else if (!s.modelQuery().isEmpty()) {
