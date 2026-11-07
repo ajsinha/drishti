@@ -101,98 +101,56 @@
   function why(f) { return f.masked ? 'Hidden for you' : f.locked ? f.locked : f.readonly ? (f.reason ? 'read-only: ' + f.reason : 'locked: you can view, not change') : ''; }
 
   // ---- one field (beside and drawer) --------------------------------------------------------------------------------------
-  /* An entity field: a search box over the records it may link to (as the viewer may see them), the id kept and the name shown. */
+  /* An entity field: drishti-inputs' Combobox over the records it may link to (as the viewer may see them), the id kept and the name
+     shown. The search is the server's records of the kind (/api/forms/lookup, read as the viewer) for what is typed, 250 ms after the last
+     key, a late answer dropped; the preloaded choices answer at once and stay the answer when the server cannot be reached. */
   function entityInput(st, f, value, onChange, id) {
-    var opts = f.options || [], pick = -1, shown = [];
+    var opts = (f.options || []).map(function (o) { return { value: String(o.value), label: String(o.label) }; });
     var wrap = el('span', 'fm-entity');
-    var n = el('input', 'fm-in fm-entity-in'); n.type = 'search'; n.id = id; n.name = f.id; n.autocomplete = 'off';
-    n.setAttribute('data-field', f.id); n.setAttribute('role', 'combobox'); n.setAttribute('aria-autocomplete', 'list'); n.setAttribute('aria-expanded', 'false');
+    var n = el('input', 'fm-in fm-entity-in'); n.type = 'search'; n.id = id; n.name = f.id;
+    n.setAttribute('data-field', f.id);
     n.placeholder = f.placeholder || 'Search by name or id…';
     if (f.required) { n.setAttribute('aria-required', 'true'); }
-    var list = el('ul', 'fm-entity-list'); list.id = id + '-list'; list.setAttribute('role', 'listbox'); list.hidden = true;
-    n.setAttribute('aria-controls', list.id);
     var open = el('a', 'fm-entity-open', 'Open'); open.target = '_blank'; open.rel = 'noopener'; open.setAttribute('data-fm-open', f.id);
-    function label(v) { var o = opts.filter(function (x) { return String(x.value) === String(v); })[0]; return o ? (o.label !== o.value ? o.label + ' · ' + o.value : o.value) : (X.empty(v) ? '' : String(v)); }
+    function label(v) { var o = opts.filter(function (x) { return x.value === String(v); })[0]; return o ? (o.label !== o.value ? o.label + ' · ' + o.value : o.value) : (X.empty(v) ? '' : String(v)); }
     function set(v) {
-      n.setAttribute('data-value', X.empty(v) ? '' : String(v)); n.value = label(v);
+      n.setAttribute('data-value', X.empty(v) ? '' : String(v));
       open.hidden = X.empty(v) || !f.entity;
       if (!open.hidden) { open.href = '/v/' + encodeURIComponent(f.entity.kind) + '/' + encodeURIComponent(v); open.setAttribute('aria-label', 'Open ' + label(v)); }
     }
-    /* The live search: the server's records of the kind (/api/forms/lookup, read as the viewer) for what is typed, 250 ms after the
-       last key; the preloaded choices answer at once and stay the answer when the server cannot be reached. */
-    var timer = 0, asked = '', found = null, searching = false, seq = 0;
-    function query() {
-      var q = n.value.trim();
-      return q.toLowerCase() === label(n.getAttribute('data-value')).toLowerCase() ? '' : q;
+    function local(q) { q = q.toLowerCase(); return opts.filter(function (o) { return !q || o.value.toLowerCase().indexOf(q) >= 0 || o.label.toLowerCase().indexOf(q) >= 0; }); }
+    function source(text, signal) {
+      var q = text.trim();
+      if (q.toLowerCase() === label(n.getAttribute('data-value')).toLowerCase()) { q = ''; }
+      if (!f.entity || !f.entity.kind || !q) { return Promise.resolve(local(q).slice(0, 8)); }
+      var p = new URLSearchParams({ kind: f.entity.kind, q: q, limit: '20' });
+      if (f.entity.pack) { p.set('pack', f.entity.pack); }
+      if (f.entity.label) { p.set('label', f.entity.label); }
+      if (f.entity.value) { p.set('value', f.entity.value); }
+      return fetch('/api/forms/lookup?' + p.toString(), { credentials: 'same-origin', headers: { Accept: 'application/json' }, signal: signal })
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function (e) { if (e && e.name === 'AbortError') { throw e; } return null; })
+        .then(function (j) {
+          var found = j && Array.isArray(j.results) ? j.results.map(function (x) { return { value: String(x.id), label: String(x.label || x.id) }; }) : [];
+          found.forEach(function (o) { if (!opts.some(function (x) { return x.value === o.value; })) { opts.push(o); } });
+          var ids = found.map(function (o) { return o.value; });           // the server's answer first, then any preloaded choice it did not name
+          return found.concat(local(q).filter(function (o) { return ids.indexOf(o.value) < 0; })).slice(0, 8);
+        });
     }
-    function search() {
-      clearTimeout(timer); searching = false;
-      var q = query();
-      if (!f.entity || !f.entity.kind || !q || q === asked) { return; }
-      searching = true;
-      timer = setTimeout(function () {
-        var mine = ++seq, p = new URLSearchParams({ kind: f.entity.kind, q: q, limit: '20' });
-        if (f.entity.pack) { p.set('pack', f.entity.pack); }
-        if (f.entity.label) { p.set('label', f.entity.label); }
-        if (f.entity.value) { p.set('value', f.entity.value); }
-        fetch('/api/forms/lookup?' + p.toString(), { credentials: 'same-origin', headers: { Accept: 'application/json' } })
-          .then(function (r) { return r.ok ? r.json() : null; })
-          .catch(function () { return null; })
-          .then(function (j) {
-            if (mine !== seq) { return; }
-            searching = false; asked = q;
-            found = j && Array.isArray(j.results) ? j.results.map(function (x) { return { value: String(x.id), label: String(x.label || x.id) }; }) : null;
-            (found || []).forEach(function (o) { if (!opts.some(function (x) { return String(x.value) === o.value; })) { opts.push(o); } });
-            if (!list.hidden || document.activeElement === n) { draw(); }
-          });
-      }, 250);
-    }
-    function draw() {
-      var q = query().toLowerCase();
-      shown = opts.filter(function (o) { return !q || String(o.value).toLowerCase().indexOf(q) >= 0 || String(o.label).toLowerCase().indexOf(q) >= 0; });
-      if (found && q && asked.toLowerCase() === q) {      // the server's answer first, then any preloaded choice it did not name
-        var ids = found.map(function (o) { return o.value; });
-        shown = found.concat(shown.filter(function (o) { return ids.indexOf(String(o.value)) < 0; }));
-      }
-      shown = shown.slice(0, 8);
-      pick = Math.min(Math.max(pick, 0), shown.length - 1);
-      list.textContent = '';
-      shown.forEach(function (o, k) {
-        var li = el('li', k === pick ? 'on' : ''); li.id = id + '-o' + k; li.setAttribute('role', 'option'); li.setAttribute('aria-selected', k === pick ? 'true' : 'false');
-        li.setAttribute('data-value', o.value);
-        li.appendChild(el('b', '', o.label)); if (o.label !== o.value) { li.appendChild(el('span', 'fm-entity-id', ' ' + o.value)); }
-        li.addEventListener('mousedown', function (e) { e.preventDefault(); choose(o); });
-        list.appendChild(li);
-      });
-      if (searching && q) {
-        var s = el('li', 'fm-entity-status', 'Searching…'); s.setAttribute('aria-live', 'polite'); list.appendChild(s);
-      } else if (!shown.length) {
-        list.appendChild(el('li', 'fm-entity-none', q || opts.length ? 'No match for “' + n.value.trim() + '”' : 'Nothing you may link to'));
-      }
-      list.hidden = false; n.setAttribute('aria-expanded', 'true');
-      n.setAttribute('aria-activedescendant', pick >= 0 ? id + '-o' + pick : '');
-    }
-    function close() { list.hidden = true; n.setAttribute('aria-expanded', 'false'); n.removeAttribute('aria-activedescendant'); }
-    function choose(o) { set(o.value); close(); onChange(o.value); }
-    n.addEventListener('input', function () { pick = 0; search(); draw(); });
-    n.addEventListener('click', function () { if (list.hidden) { draw(); } });
-    n.addEventListener('keydown', function (e) {
-      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-        e.preventDefault();
-        if (list.hidden) { draw(); return; }
-        pick = shown.length ? (pick + (e.key === 'ArrowDown' ? 1 : shown.length - 1)) % shown.length : -1; draw();
-      } else if (e.key === 'Enter' && !list.hidden && shown[pick]) {
-        e.preventDefault(); e.stopImmediatePropagation(); choose(shown[pick]);
-      } else if (e.key === 'Escape' && !list.hidden) {
-        e.preventDefault(); e.stopImmediatePropagation(); close(); set(n.getAttribute('data-value'));
-      }
+    wrap.appendChild(n);
+    var I = window.Drishti.elements.inputs;
+    var cb = new I.Combobox(wrap, { input: n, source: source, minChars: 0, debounceMs: f.entity && f.entity.kind ? 250 : 0, label: f.label || f.id,
+      value: X.empty(value) ? null : { value: String(value), label: label(value) },
+      renderOption: function (o, li) { li.setAttribute('data-value', o.value); li.appendChild(el('b', '', o.label)); if (o.label !== o.value) { li.appendChild(el('span', 'fm-entity-id', ' ' + o.value)); } } });
+    cb.on('change', function (e) {
+      var v = e.value ? e.value.value : '';
+      if (e.value) { cb.setValue({ value: v, label: label(v) }); }
+      set(v); onChange(v);
     });
-    n.addEventListener('blur', function () {
-      close();
-      if (!n.value.trim() && n.getAttribute('data-value')) { set(''); onChange(''); } else { set(n.getAttribute('data-value')); }
-    });
+    n.addEventListener('click', function () { if (!cb.isOpen()) { cb.ta.query(''); } });
+    n.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === 'Escape') && cb.isOpen()) { e.stopImmediatePropagation(); } });
     set(value);
-    wrap.appendChild(n); wrap.appendChild(open); wrap.appendChild(list);
+    wrap.appendChild(open);
     n.fmWrap = wrap;
     return n;
   }
@@ -211,7 +169,7 @@
       n = el('input', 'fm-check'); n.type = 'checkbox'; n.checked = value === true || value === 'true';
     } else {
       n = el('input', 'fm-in');
-      n.type = f.type === 'date' ? 'date' : f.type === 'datetime' ? 'datetime-local' : 'text';
+      n.type = f.type === 'datetime' ? 'datetime-local' : 'text';         // a date is drishti-inputs' date picker (fieldBox upgrades it once it has a place)
       if (numeric(f)) { n.inputMode = 'decimal'; n.value = X.empty(value) ? '' : fmt(f, value); } else { n.value = X.empty(value) ? '' : String(value).slice(0, f.type === 'datetime' ? 16 : undefined); }
     }
     if (f.placeholder && 'placeholder' in n) { n.placeholder = f.placeholder; }
@@ -256,6 +214,7 @@
     var n = input(st, f, value, onChange);
     lab.htmlFor = n.id;
     box.appendChild(n.fmWrap || n);
+    if (f.type === 'date') { n.type = 'date'; lab.htmlFor = window.Drishti.elements.inputs.upgradeDateInput(n, { label: f.label || f.id }).input.id; }
     var msg = el('div', 'fm-msgs'); msg.id = n.id + '-msg'; msg.setAttribute('data-msgs', f.id);
     n.setAttribute('aria-describedby', ((n.getAttribute('aria-describedby') || '') + ' ' + msg.id).trim());
     box.appendChild(msg);
@@ -529,7 +488,10 @@
     var n = input(st, f, cur, function () {});
     n.classList.add('fm-cell-in');
     n.setAttribute('aria-label', f.label);
-    td.textContent = ''; td.appendChild(n.fmWrap || n); n.focus(); if (n.select) { n.select(); }
+    td.textContent = ''; td.appendChild(n.fmWrap || n);
+    var dp = null, keys = n;                                 // a date: drishti-inputs' date picker in the cell, its field takes the keys
+    if (f.type === 'date') { n.type = 'date'; dp = window.Drishti.elements.inputs.upgradeDateInput(n, { label: f.label || f.id, placeholder: '2026-11-06, T-1' }); keys = dp.input; }
+    keys.focus(); if (keys.select) { keys.select(); }
     var done = false;
     function finish(keep, move) {
       if (done) { return; }
@@ -546,12 +508,13 @@
       var next = move ? cells[at + move] : cells[at];
       if (next) { next.focus(); }
     }
-    n.addEventListener('keydown', function (e) {
+    keys.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') { e.preventDefault(); finish(true, 0); }
-      else if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finish(false, 0); }
+      else if (e.key === 'Escape') { if (dp && dp.pop.isOpen()) { return; } e.preventDefault(); e.stopPropagation(); finish(false, 0); }
       else if (e.key === 'Tab') { e.preventDefault(); finish(true, e.shiftKey ? -1 : 1); }
     });
-    n.addEventListener('blur', function () { setTimeout(function () { finish(true, null); }, 0); });
+    keys.addEventListener('blur', function () { setTimeout(function () { if (!(dp && dp.pop.isOpen())) { finish(true, null); } }, 0); });
+    if (dp) { dp.on('change', function () { setTimeout(function () { if (!dp.pop.isOpen()) { finish(true, 0); } }, 0); }); }
   }
 
   function cellIssues(st, i) {

@@ -224,6 +224,8 @@
       wrap.appendChild(hint);
       wrap.appendChild(h('p', { class: 'bi-vis-note', text: nums.length ? 'Values run from ' + nums[0] + ' to ' + nums[nums.length - 1] + '.' : 'No values.' }));
       B.clear(host).appendChild(wrap);
+      const I = window.Drishti.elements && window.Drishti.elements.inputs;
+      if (type === 'date' && I) { [from, to].forEach((x) => I.upgradeDateInput(x, { placeholder: x.placeholder })); }   // drishti-inputs' date picker
       return NONE;
     }
     const chosen = new Set(Array.isArray(cur) ? cur.map(String) : []);
@@ -239,15 +241,14 @@
       const picked = boxes.filter((b) => b.checked).map((b) => { const orig = values.find((v) => String(v) === b.value); return orig; });
       set(picked.length && picked.length < boxes.length ? picked : picked.length === boxes.length && boxes.length ? picked : null);
     };
-    if (mode === 'dropdown') {
-      const details = h('details', { class: 'bi-dropdown', 'data-slicer-dropdown': '' }, h('summary', { text: 'All' }));
-      boxes.forEach((b) => { b.addEventListener('change', () => {}); });
-      wrap.appendChild(details);
+    if (mode === 'dropdown') {                                                   // drishti-inputs' multi-select over the slicer's checkboxes
+      const box = h('div', { class: 'bi-dropdown', 'data-slicer-dropdown': '' });
+      wrap.appendChild(box);
       B.clear(host).appendChild(wrap);
-      list.hidden = false;
-      details.appendChild(list);
-      const ms = window.drishtiModules && window.drishtiModules.multiselect;
-      if (ms) { ms.decorate(details, { label: spec.title || field, boxes, onChange: emit }); } else { boxes.forEach((b) => b.addEventListener('change', emit)); }
+      box.appendChild(list);
+      const I = window.Drishti.elements && window.Drishti.elements.inputs;
+      const up = I ? I.upgradeCheckboxes(list, { label: spec.title || field }) : null;
+      if (up) { up.picker.on('change', emit); } else { boxes.forEach((b) => b.addEventListener('change', emit)); }
       return NONE;
     }
     if ((spec.format || {}).style === 'tiles') {                                  // a tile slicer (2.4.0): the values as buttons, pressed when chosen

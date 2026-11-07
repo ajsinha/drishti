@@ -213,3 +213,10 @@
 .di-k-delete, .di-k-changed:first-child { background: color-mix(in srgb, var(--d-bad) 12%, var(--d-surface)); }
 .di-k-insert, .di-k-changed + .di-k-changed { background: color-mix(in srgb, var(--d-ok) 12%, var(--d-surface)); }
 .di-k-none { background: var(--d-surface-2); }
+
+/* a page's own fields upgraded in place (drishti_native.js): the picker where the field was */
+.di-upgraded { display: inline-block; vertical-align: middle; min-width: 11rem; }
+.di-upgraded[hidden] { display: none; }
+.di-upgraded-checks { display: block; max-width: 24rem; width: 100%; }
+/* a finger's size on a touch screen: every field, button and option at least 44 px high */
+@media (pointer: coarse) { .di-control, .di-field, .di-inline-field, .di-btn, .di-chip-btn, .di-option, .di-preset, .di-icon-btn, .di-chip-x { min-height: 44px; } }

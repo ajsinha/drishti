@@ -21,6 +21,22 @@
 
 ## 2.9.11.e (unreleased)
 
+- **The console's pickers on drishti-inputs** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  the as-of date in the top bar is a business-date picker keyed by the server's holidays (T-1, month-end, a weekend or holiday refused
+  in words); every date field of the terminal, BI and Admin pages (and the ones scripts make: BI's statement, designer and slicer
+  dates, the record forms and their cells, Explain's dates) is upgraded in place to the date picker and keeps sending its ISO date;
+  the query forms' long enums, a Sutra's multi-select and BI's drop-down slicer are `MultiSelect`; a Sutra's date control is
+  `DatePicker` and its date range `DateRangePicker` with the server's presets (open-ended allowed); the history page's range is a
+  `DateRangePicker` whose presets open the server's ranges; the people picker (`Drishti.People.attach(input, opts)`, four screens),
+  the comment box's `@` and `{` lists and the record forms' entity field are drishti-inputs' combobox. Deleted: the console's
+  multi-select (`drishti_multiselect.js`, 106 lines, now a 40-line loader for the frozen renderer 1.2.0), the hand-made listboxes of
+  the people picker, the comment box and the entity field, the native date handling of the top bar, and their CSS (`.ms-*`,
+  `.ctl-pop`, `.shr-list`, `.fm-entity-list`). **drishti-inputs 0.2.0**: `upgradeDateInput`, `upgradeCheckboxes` and `upgradeFields`
+  (a page's own fields upgraded in place: the field keeps its name, id and value, its `value` setter moves the picker, the picker's
+  changes come back as `input` and `change` events, `hidden`, `disabled`, `min` and `max` followed, a required or unreadable date stops
+  the submit); `Combobox` on a page's own field and in a `suggest` mode; `DateRangePicker` with presets given whole and `openEnded`;
+  44 px targets on touch screens. The renderer 2.0.0 and the embeds load drishti-inputs for the controls (its style sheet in the view
+  sheet, raised to 29 KB gzip on purpose). A guard fails a console script that draws its own multi-select or picker list.
 - **Drishti Elements, the design, decided by the product owner** ([ELEMENTS.md](docs/architecture/ELEMENTS.md)): the console's JavaScript as eight libraries (drishti-core, -inputs, -grid, -chart, -data, -insight, -renderer, -risk; 1 to 5 without a Drishti server), the measured inventory (116 of 258 scripts and modules, about 21,000 lines, fold into them; about 10 grids and 22 chart scripts into one each), the grid's three layouts (wells, panel, terminal: VaR screens default to terminal) and its server-side pivot with non-additive totals from the server, an AG Grid-style adapter for the Enterprise pivot API from public documentation only, one chart spec over ECharts with the risk kinds and maps (world to every country's first-level regions), packaging and licensing per domain module, the documentation of every library (guide, generated API reference, tutorial, gallery, AG Grid migration guide), the guards and the migration order; the decisions (Vega retired, the grid on phones, a standalone Excel writer, the adapter's scope, both options of g2, g3 and g4 built as modes with A the default); mock-ups [g1](docs/architecture/mockups/elements/g1-pivot-grid.html), [g2](docs/architecture/mockups/elements/g2-charts.html), [g3](docs/architecture/mockups/elements/g3-maps.html) and [g4](docs/architecture/mockups/elements/g4-gallery.html).
 - **Drishti Elements, the foundation** ([ELEMENTS.md section 8.1](docs/architecture/ELEMENTS.md#81-as-built-the-foundation-drishti-core-and-the-grids-engine)):
   `static/elements/` with a manifest of the libraries and their versions, ES modules per library and one bundled file each written by

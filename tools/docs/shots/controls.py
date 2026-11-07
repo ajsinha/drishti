@@ -21,6 +21,8 @@ QUICKSTART packs, the real console:
 """
 from __future__ import annotations
 
+import re
+
 from shotlib import Ctx, register
 
 shot = register("controls")
@@ -62,9 +64,9 @@ def header(c: Ctx):
 @shot("02-filtered.jpg")
 def filtered(c: Ctx):
     open_view(c, IRS, 1440, 1700)
-    done(c, lambda: c.page.locator("#p-event-list [data-ctl='when'] .ctl-preset").select_option(label="Next 90 days"))
-    c.page.locator("#p-event-list [data-ctl='legs'] summary").click()
-    done(c, lambda: c.page.locator("#p-event-list [data-ctl='legs'] input[value='2']").uncheck())
+    done(c, lambda: (c.page.locator("#p-event-list [data-ctl='when'] .di-range-btn").click(), c.page.locator(".di-range-pop .di-preset", has_text="Next 90 days").click(), c.page.locator(".di-range-pop [data-act=apply]").click()))
+    c.page.locator("#p-event-list [data-ctl='legs'] .di-ms-control").click()
+    done(c, lambda: c.page.locator(".di-ms-pop .di-option").filter(has=c.page.locator(".di-option-label", has_text=re.compile("^2$"))).click())
     c.page.keyboard.press("Escape")
     c.page.mouse.move(1430, 1650)
     c.page.wait_for_timeout(300)

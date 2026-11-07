@@ -75,7 +75,6 @@
 .bi-run-form small { flex-basis: 100%; }
 /* sharing: the picker, the chips, each recipient's mode; schedules: the presets; export: CSV and Excel */
 .bi-run-picker { position: relative; display: flex; flex-direction: column; min-width: min(16rem, 100%); }
-.bi-run-picker .shr-list { z-index: 20; min-width: 100%; }
 .bi-run-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .35rem; flex-basis: 100%; }
 .bi-run-chips:empty { display: none; }
 .bi-run-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .1rem .2rem .1rem .6rem; border: 1px solid var(--d-border); border-radius: 999px; background: var(--d-surface);

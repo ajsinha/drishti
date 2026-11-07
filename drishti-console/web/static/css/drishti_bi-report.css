@@ -123,7 +123,6 @@ h3.bi-text { font-size: 1.1rem; }
 .bi-button { margin: .4rem; }
 
 @media (pointer: coarse) {
-  .bi-slicer .ms-sum, .bi-dropdown summary { min-height: 44px; display: flex; align-items: center; }
   .bi-vis-btn { min-width: 44px; min-height: 44px; }
   .bi-tab, .bi-twist { min-height: 44px; }
   .bi-slicer-list label { min-height: 44px; }
@@ -152,11 +151,7 @@ h3.bi-text { font-size: 1.1rem; }
 .bi-py-foot { color: var(--d-muted); }
 @media (max-width: 40rem) { .bi-rgrid .bi-vis-python { height: 18rem; } }
 
-/* A dropdown slicer: its list floats over the visuals below instead of being cut off by the slicer's frame. */
-.bi-vis details > .ms-pop { position: absolute; left: 0; right: 0; top: 100%; max-height: 22rem; overflow: auto; }
-.bi-vis:has(details[open]) { overflow: visible; z-index: 40; position: relative; }
-.bi-vis:has(details[open]) .bi-vis-body, .bi-vis:has(details[open]) .bi-slicer { overflow: visible; }
-.bi-vis details:has(> .ms-pop) { position: relative; }
+/* A dropdown slicer is drishti-inputs' multi-select: its list floats in the page's body, over the visuals below. */
 
 /* an entity view: the Drishti view of the selected entity, in a frame of the visual's size */
 .bi-entity-frame { display: block; width: 100%; height: 100%; min-height: 12rem; border: 0; background: var(--d-bg); }

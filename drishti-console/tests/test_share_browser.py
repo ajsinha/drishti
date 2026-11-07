@@ -75,7 +75,7 @@ def share_by_keyboard(ann, who_prefix, note):
     dlg.wait_for()
     assert ann.evaluate("document.activeElement.id") == "shrTo"            # the focus starts on the people field
     ann.keyboard.type(who_prefix)
-    ann.locator("#shrList [role=option]").first.wait_for()
+    ann.locator(".di-combo-pop [role=option]").first.wait_for()          # drishti-inputs' combobox list
     ann.keyboard.press("Enter")                                           # picks the highlighted person
     ann.locator("[data-shr-chips] .shr-chip").first.wait_for()
     ann.keyboard.press("Tab")

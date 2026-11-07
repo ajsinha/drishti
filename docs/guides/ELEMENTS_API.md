@@ -24,7 +24,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 |---|---|---|
 | [drishti-core](#drishti-core) | 1.1.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines |
 | [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
-| [drishti-inputs](#drishti-inputs) | 0.1.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead, forms from a schema with four eyes, the filter bar, the code editor over CodeMirror |
+| [drishti-inputs](#drishti-inputs) | 0.1.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema with four eyes, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
 | [drishti-chart](#drishti-chart) | 0.1.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
 | [drishti-risk](#drishti-risk) | 0.1.0 | The banking module's chart kinds on drishti-chart (licensed with the module): the P&L distribution with VaR and ES, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit |
@@ -6574,6 +6574,16 @@ The presets this picker offers.
 
 Returns `Array&lt;{id: string, label: string}&gt;`.
 
+##### `DateRangePicker.presetRange(id)`
+
+A preset's dates: a given range as it is, a named one from the business date and the calendar.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `{from: string, to: string}`.
+
 ##### `DateRangePicker.text()`
 
 The range in words: "3–7 Nov 2026 · Month to date".
@@ -7007,6 +7017,18 @@ A combobox with type-ahead. Events: change {value, option}, search {query}, erro
 | `host` | `HTMLElement` |  |
 | `options` | `ComboboxOptions` |  |
 
+##### `Combobox.isOpen()`
+
+Whether the list is open.
+
+Returns `boolean`.
+
+##### `Combobox.close()`
+
+Closes the list.
+
+Returns `void`.
+
 ##### `Combobox.pick(it)`
 
 Picks an option.
@@ -7402,6 +7424,41 @@ Sets the filters (and tells the bus).
 | `v` | `{model: Object, quickFilter: string}` |  |
 
 Returns `void`.
+
+### drishti_native.js
+
+#### `upgradeDateInput(input, options)`
+
+Upgrades an `&lt;input type="date"&gt;` to the business-date picker in place (once; a second call answers the same picker). The input becomes a hidden input with its name, id and value; the picker is drawn just after it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `input` | `HTMLInputElement` |  |
+| `[options]` | `UpgradeDateOptions` |  |
+
+Returns `?DatePicker`.
+
+#### `upgradeCheckboxes(group, options)`
+
+Upgrades a group of checkbox labels to the multi-select in place (once). The group stays in the page, hidden, with its checkboxes: the form submits them as before. Each option is a checkbox: its value, and as its label the checkbox's data-text or its label's text.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `group` | `HTMLElement` |  |
+| `[options]` | `UpgradeChecksOptions` |  |
+
+Returns `?{picker: MultiSelect, host: HTMLElement, sync: function(): void}`.
+
+#### `upgradeFields(root, options)`
+
+Upgrades every `&lt;input type="date"&gt;` under a root (not those marked data-native) and every group marked `[data-multiselect]` with more than `small` checkboxes (fewer stay a compact row of checkboxes).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `(Document\|Element)` |  |
+| `[options]` | `{small: number, offClass: string, dates: UpgradeDateOptions}` |  |
+
+Returns `{dates: DatePicker[], checks: Array&lt;Object&gt;}`.
 
 ### drishti_code-modes.js
 
@@ -7821,6 +7878,8 @@ An entry of the function catalogue (the server's: GET /api/v1/functions, or a pa
 | `[label]` | `string` |  |
 | `[placeholder]` | `string` |  |
 | `[renderOption]` | `function(Object, HTMLElement): void` | draws an option's content |
+| `[input]` | `HTMLInputElement` | a field of the page to use (wrapped in place) instead of a new one |
+| `[suggest=false]` | `boolean` | suggestions only: the field's text is the page's; Enter and Escape with the list closed are not taken |
 
 #### `DatePickerOptions` : `Object`
 
@@ -7854,11 +7913,12 @@ An entry of the function catalogue (the server's: GET /api/v1/functions, or a pa
 | `[value]` | `DateRange` |  |
 | `[calendar='weekends']` | `(string\|Object)` |  |
 | `[asOf]` | `string` | the business date the presets count from |
-| `[presets=true]` | `(boolean\|string[])` | true: every preset; or the ids to offer |
+| `[presets=true]` | `(boolean\|Array&lt;(string\|{id: string, label: string, from: string, to: string})&gt;)` | true: every preset; or the ids to offer; or ranges given whole (a server's own presets, already resolved: id, label, from, to), mixed with ids as wished |
 | `[businessOnly=false]` | `boolean` | the ends must be business days |
 | `[min]` | `string` |  |
 | `[max]` | `string` |  |
 | `[maxDays]` | `number` | the longest range in calendar days |
+| `[openEnded=false]` | `boolean` | one end may stay open (from a day on, or up to a day) |
 | `[weekStart=1]` | `number` |  |
 | `[label]` | `string` |  |
 
@@ -7920,6 +7980,26 @@ A field the bar may filter.
 | `[selectAll=true]` | `boolean` | the Select all and Clear buttons |
 | `[label]` | `string` |  |
 | `[placeholder='Any']` | `string` |  |
+
+#### `UpgradeDateOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[calendar]` | `(string\|Object)` | the business calendar; default: the field's data-calendar, or its data-holidays (dates, comma separated, from the server) as a calendar of their own, else weekends only |
+| `[businessOnly]` | `boolean` | only business days; default: the field's data-business attribute |
+| `[asOf]` | `string` | the business date T; default: the field's data-current |
+| `[shortcuts]` | `boolean` | the business date, T-1 and month-end; default true when businessOnly |
+| `[label]` | `string` | default: the field's aria-label or its label's text |
+| `[placeholder]` | `string` |  |
+
+#### `UpgradeChecksOptions` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[label]` | `string` | default: the group's aria-label |
+| `[offClass]` | `string` | a label with this class is not offered (a dependent list's values that do not apply) |
+| `[maxChips]` | `number` |  |
+| `[placeholder]` | `string` |  |
 
 #### `FieldSchema` : `Object`
 

@@ -343,6 +343,14 @@
       i.addEventListener('change', () => onChange(i.value));
       return i;
     }
+    /** A date: drishti-inputs' date picker over a date field (typed T-1 or 6 Nov 2026, or the calendar); onChange hears the ISO date. */
+    function dateInput(value, onChange, label) {
+      const i = textInput(value, onChange, { type: 'date', 'aria-label': label });
+      const box = h('span', { class: 'bi-date' }, i);
+      const I = window.Drishti.elements && window.Drishti.elements.inputs;
+      if (I) { I.upgradeDateInput(i); }
+      return box;
+    }
     function checkbox(label, value, onChange, attrs) {
       const c = h('input', Object.assign({ type: 'checkbox' }, attrs || {}));
       c.checked = !!value;
@@ -443,8 +451,8 @@
       D.reportV2(fmt, m);
       fmt.appendChild(frow('Colours', selectInput(B.PALETTES.map((n) => [n, n]), (m.theme || {}).palette || 'default', (x) => D.change('Theme', () => { m.theme = Object.assign({}, m.theme, { palette: x }); }), { 'data-theme-palette': '' }), 'default follows the console theme; colour-blind is Okabe-Ito.'));
       const dates = m.dates || {};
-      fmt.appendChild(frow('Business date from', textInput(dates.from, (x) => setDates({ from: x }), { type: 'date' })));
-      fmt.appendChild(frow('Business date to', textInput(dates.to, (x) => setDates({ to: x }), { type: 'date' })));
+      fmt.appendChild(frow('Business date from', dateInput(dates.from, (x) => setDates({ from: x }), 'Business date from')));
+      fmt.appendChild(frow('Business date to', dateInput(dates.to, (x) => setDates({ to: x }), 'Business date to')));
       fmt.appendChild(frow('Dataset', h('code', { text: m.dataset })));
       const lk = h('fieldset', { class: 'bi-fieldset', 'data-links': '' }, h('legend', { text: 'Links between datasets' }));
       (m.links || []).forEach((l, i) => {

@@ -57,8 +57,7 @@
       <label class="wide">To (user names, <code>role:NAME</code> for everyone with a role, separated by commas)
         <input name="recipients" class="studio-in mono" value="{{ form.recipients or '' }}" required placeholder="alice, role:risk"></label>
       <label class="wide bi-people">Find people or roles to add
-        <input class="studio-in" data-find-people autocomplete="off" placeholder="type a name or a role to search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="subFindList">
-        <ul class="shr-list" id="subFindList" role="listbox" aria-label="Known people and roles" data-find-list hidden></ul></label>
+        <input class="studio-in" data-find-people autocomplete="off" placeholder="type a name or a role to search"></label>
       {% if opts.ai %}<label class="wide"><input type="checkbox" name="narrative" data-narrative{% if form.narrative %} checked{% endif %}> Open the email with a short written summary
         <span class="text-muted-d">Written by an AI model from <b>each recipient's own</b> figures (what they may see, masked values left out), through your administrator's AI policy.
         {% if opts.mode != 'aggregates' %}The policy here lets the model see labels only, so the summary is left out of every email until an administrator sets <code>drishti.bi.ai.values: aggregates</code>.{% endif %}</span></label>{% endif %}

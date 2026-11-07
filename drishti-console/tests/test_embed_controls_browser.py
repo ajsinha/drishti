@@ -70,7 +70,7 @@ def test_the_element_draws_the_controls_and_the_attribute_sets_them(host):
     assert h.js(f"{SR}.querySelector('#p-event-list .pnl-h [data-ctl=legs]') !== null")            # in the panel's header, inside the shadow root
     assert h.js(f"{SR}.querySelector('[data-ctl=when]') !== null")
     assert h.js("document.querySelectorAll('[data-ctl]').length") == 0                                # nothing leaked into the host page
-    assert h.js(f"{SR}.querySelector('[data-ctl=legs] summary').textContent.trim()") == "2"
+    assert h.js(f"[...{SR}.querySelectorAll('[data-ctl=legs] .di-chip-label')].map(e => e.textContent)") == ["2"]    # drishti-inputs' multi-select
     got = legs(h)
     assert got and set(got) == {"2"}
     assert h.js("document.querySelector('#main').controls") == "legs=2"
@@ -84,8 +84,8 @@ def test_a_change_asks_for_only_the_panels_that_read_it_and_tells_the_host(host)
     assert total > 2
     h.js(f"{SR}.querySelector('#p-ticket').setAttribute('data-mark', 'kept')")
     before = len(h.requests)
-    h.page.locator("#main").locator("[data-ctl=legs] summary").click()
-    h.page.locator("#main").locator("[data-ctl=legs] input[value='1']").uncheck()
+    h.page.locator("#main").locator("[data-ctl=legs] .di-ms-control").click()                              # its list floats in the host's body
+    h.page.locator(".di-ms-pop .di-option").filter(has=h.page.locator(".di-option-label", has_text=re.compile("^1$"))).click()
     h.until(lambda: h.js("window.__done && window.__done.length > 0"), 30)
     got = legs(h)
     assert got and set(got) == {"2"} and len(got) < total
@@ -119,13 +119,16 @@ def test_a_date_range_and_the_keyboard_work_inside_the_shadow_root(host):
     h = host()
     show_irs(h)
     h.until(lambda: h.js(f"!!{SR}.querySelector('[data-ctl=when]')"), 30)
-    h.js(f"{SR}.querySelector('[data-ctl=legs] summary').focus()")
-    h.page.keyboard.press("Enter")                                                                         # the multi-select opens by keyboard
-    assert h.js(f"{SR}.querySelector('[data-ctl=legs] details').open")
+    h.js(f"{SR}.querySelector('[data-ctl=legs] input[role=combobox]').focus()")
+    h.page.keyboard.press("ArrowDown")                                                                     # the multi-select opens by keyboard
+    assert h.js(f"{SR}.querySelector('[data-ctl=legs] input[role=combobox]').getAttribute('aria-expanded')") == "true"
     h.page.keyboard.press("Escape")
-    assert not h.js(f"{SR}.querySelector('[data-ctl=legs] details').open")
+    assert h.js(f"{SR}.querySelector('[data-ctl=legs] input[role=combobox]').getAttribute('aria-expanded')") == "false"
     total = len(rows(h))
-    h.page.locator("#main").locator("[data-ctl=when] .ctl-from").fill("2099-01-01")
+    h.page.locator("#main").locator("[data-ctl=when] .di-range-btn").click()                               # the range picker: one end typed, open-ended
+    h.page.locator(".di-range-pop [data-end=from]").fill("2099-01-01")
+    h.page.locator(".di-range-pop [data-end=from]").press("Tab")
+    h.page.locator(".di-range-pop [data-act=apply]").click()
     h.until(lambda: h.js("window.__done && window.__done.length > 0"), 30)
     assert len(rows(h)) == 0 and len(rows(h)) < total                                                      # after the last cashflow: no rows
     assert "2099-01-01.." in h.js("document.querySelector('#main').controls")

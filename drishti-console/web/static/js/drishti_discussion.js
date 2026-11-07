@@ -106,7 +106,7 @@
     if (!threads.length) { list.appendChild(V.el('p', 'disc-empty', only.panel || only.path ? 'No comments here yet.' : 'No comments yet. Start the discussion below.')); }
     var c = ctx();
     threads.forEach(function (t) { list.appendChild(V.thread(t, c)); });
-    list.querySelectorAll('form[data-reply]').forEach(function (f) { var ta = f.querySelector('textarea'); window.Drishti.Compose.attach(ta, f.querySelector('ul'), { kind: kind, minQuery: function () { return conf.minQuery; }, fields: fields }); });
+    list.querySelectorAll('form[data-reply]').forEach(function (f) { var ta = f.querySelector('textarea'); window.Drishti.Compose.attach(ta, { kind: kind, minQuery: function () { return conf.minQuery; }, fields: fields }); });
     scope.hidden = !(only.panel || only.path);
     var label = only.panel ? (panels().filter(function (p) { return p.id === only.panel; })[0] || {}).title || only.panel : only.path;
     scope.querySelector('[data-disc-scope-name]').textContent = label || '';
@@ -197,9 +197,8 @@
         var ta = inline(li, cur.body || '', 'Edit your comment', function (text, note) {
           api('PATCH', '/api/comment/' + cid, { body: text, revision: Number(li.getAttribute('data-revision')) }).then(function (r) { go(r, note); });
         });
-        var opts = V.el('ul', 'shr-list disc-opts'); opts.id = 'discEditList-' + cid; opts.hidden = true; opts.setAttribute('role', 'listbox'); opts.setAttribute('aria-label', 'Suggestions');
-        ta.parentNode.insertBefore(opts, ta.nextSibling); tools.hidden = true;
-        window.Drishti.Compose.attach(ta, opts, { kind: kind, minQuery: function () { return conf.minQuery; }, fields: fields });
+        tools.hidden = true;
+        window.Drishti.Compose.attach(ta, { kind: kind, minQuery: function () { return conf.minQuery; }, fields: fields });
         break;
       }
       case 'retract':
@@ -252,7 +251,7 @@
     form.hidden = !conf.collaborate;
     if (!conf.collaborate) { say(msg, 'You can read this discussion; writing needs the collaborate right.', false); }
     box.maxLength = conf.maxText;
-    window.Drishti.Compose.attach(box, form.querySelector('[data-disc-opts]'), { kind: kind, minQuery: function () { return conf.minQuery; }, fields: fields });
+    window.Drishti.Compose.attach(box, { kind: kind, minQuery: function () { return conf.minQuery; }, fields: fields });
     if (!embed) {
       panelBadges(document);
       if (window.Drishti.view && window.Drishti.view.enhance) {                  // a panel swapped in later (a result landed, a control, a live patch,

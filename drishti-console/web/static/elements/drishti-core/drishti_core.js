@@ -1353,7 +1353,7 @@
         },
         "drishti-inputs": {
           "version": "0.1.0",
-          "title": "Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead, forms from a schema with four eyes, the filter bar, the code editor over CodeMirror",
+          "title": "Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema with four eyes, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place",
           "bundle": "drishti-inputs/drishti_inputs.js",
           "entry": "drishti-inputs/src/drishti_index.js",
           "global": "inputs",

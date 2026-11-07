@@ -554,8 +554,29 @@ library with its module: an unlicensed module's library is not served, its kinds
   bar (with `?fourEyes=1`), the form with four eyes, the code editors and diff, a grid fed by `LiveClient` through stand-in
   EventSource and WebSocket classes, and an Arrow grid; no server (the Arrow part reads a fixture the browser test serves). Node:
   `tests/elements/inputs.test.mjs`, `data.test.mjs`, `grid-edit.test.mjs`; one browser file, `tests/test_elements_inputs_browser.py`.
-- **Screens that move onto them later** (section 12, steps 2 and 6; none folded yet: each needs its page to load the library and its
-  screen tests run, which is the screen's migration, not this build):
+- **drishti-inputs 0.2.0, the console's pickers** (`drishti_native.js`, and options on two components): `upgradeDateInput(input)`
+  turns a page's `<input type="date">` into the date picker in place (the input becomes a hidden input with its name, id and value;
+  its `value` setter moves the picker, the picker's changes come back as `input` and `change` events; `hidden`, `disabled`, `min` and
+  `max` are followed; a required or unreadable date stops its form's submit with the words beside it; `data-holidays`, `data-calendar`,
+  `data-current` and `data-business` choose the calendar, the business date and business days only); `upgradeCheckboxes(group)` puts
+  the multi-select over a group of checkboxes that stay in the form (ticked with a `change` each; a label with the `offClass` is not
+  offered, so a dependent list follows); `upgradeFields(root)` does both for a page. `Combobox` takes a page's own `input` and a
+  `suggest` mode (the text stays the page's; Enter and Escape with the list closed reach the page). `DateRangePicker` takes presets
+  given whole (`{id, label, from, to}`: a server's own) and `openEnded`. Every field, option and button is 44 px high on a touch screen.
+  The console loads drishti-inputs on every page (`base.html`); `drishti_app.js` upgrades the page's fields once.
+- **Moved onto them** (2.9.11.e, wip/e-inputs-convert):
+
+  | Was | Now | Deleted |
+  |---|---|---|
+  | `drishti_multiselect.js` (106 lines, every query form, the controls, BI's slicer) | `upgradeCheckboxes` (query forms, `data-multiselect`), `MultiSelect` (controls, BI's drop-down slicer) | the file is a 40-line loader of drishti-inputs for the frozen renderer 1.2.0; `.ms-*` and `.ctl-pop` CSS |
+  | `drishti_controls.js`: the multi-select, the date, the date range | `MultiSelect`, `DatePicker`, `DateRangePicker` (the server's presets, open-ended) | the details/summary multi-select and the native date fields; the number range stays two number fields |
+  | the as-of date (`drishti_app.js`, `terminal/_topbar.html`) | `DatePicker` keyed by the server's holidays, T-1 and month-end; non-business days refused in words | the native date handling and its validity messages |
+  | raw date fields: `terminal/compare`, `form`, `search`; `bi/report`, `notebook`; `admin/caches`, `collab`, `lakes`, `access`, `loads`, `pack_detail`; `drishti_bi-design-panes.js`, `drishti_bi-statement.js`, `drishti_bi-grids.js` (range slicer), `drishti_explain.js`, `drishti_record-forms.js` (fields and cells) | `upgradeDateInput` (`upgradeFields` on every page) | the query form's date that turned into text: a separate relative field (`.qf-vrel`) |
+  | `drishti_history-page.js` range presets | `DateRangePicker` whose presets open the server's ranges | the links stay only for a page without scripts |
+  | `drishti_people.js` (four screens), `drishti_discussion-compose.js` (`@`, `{`) | `Combobox` (suggest mode, on the page's field); the comment box with the combobox's `TypeAhead`, `Listbox` and `Popover` | the hand-made listboxes, their `<ul>`s in five templates and scripts, `.shr-list` CSS |
+  | `drishti_record-forms.js` entity field | `Combobox` over the page's field with the server's lookup | the hand-made list, its search ordering, `.fm-entity-list` CSS |
+
+- **Still to move** (each a later branch; none is drawn twice):
 
   | Today (file, lines) | Moves onto | Note |
   |---|---|---|
@@ -563,14 +584,11 @@ library with its module: an unlicensed module's library is not served, its kinds
   | `drishti_studio-yaml.js` (28–241), `drishti_studio-assist.js` (54–372) | `CodeEditor` lint and completion hooks | Studio's own YAML reading and hint box |
   | `drishti_bi-expr-editor.js` (33–375), `drishti_editor-formula.js` (27–100), `build/drishti_expr.js` (28–106) | `CodeEditor` completion, a `Combobox` | three completions of formulas and paths |
   | `drishti_bi-design.js` (602), `drishti_calc.js` (71), `build/drishti_yamltab.js` (29), `build/drishti_about.js` (39) | `CodeEditor` | four `CodeMirror.fromTextArea` |
-  | `drishti_multiselect.js` (44–105) | `MultiSelect` | on every page through `base.html` (`.qf-enum[data-ms]`) |
-  | `drishti_people.js` (37–103), `drishti_discussion-compose.js` (34–126) | `Combobox` | people type-ahead (four screens), @-mentions |
-  | `drishti_controls.js` (87–262, 274–311) | `DatePicker`, `DateRangePicker`, `MultiSelect`, `FilterBar` | a Sutra's controls and their filter model |
-  | `drishti_app.js` (51–100), `terminal/_topbar.html` (54) | `DatePicker` | the as-of date with holidays (every page) |
-  | `drishti_history-page.js` (159–215) | `DateRangePicker` presets | 1M, 3M, 6M, 1Y, YTD |
-  | raw date fields: `terminal/compare`, `form`, `var`, `search`; `bi/report`, `notebook`; six admin pages; `drishti_bi-design-panes.js` (446), `drishti_bi-statement.js` (110), `drishti_bi-report.js` (279, 519–527) | `DatePicker`, `DateRangePicker` | |
-  | `drishti_form.js` (39–125), `drishti_form-expr.js` (27–212), `build/drishti_forms.js` (29–184), `drishti_bi-format-pane.js` (41–171), `drishti_editor-table.js` (54–263), `drishti_subscribe-when.js` (28–76) | `Form` | dependent fields, conditions, schema-driven editing |
-  | `drishti_record-forms.js` (883 lines) | `Form` with four eyes, grid editing | edit in cells, drafts and review |
+  | `drishti_controls.js` (the filter model) | `FilterBar` | the controls' values are the server's (`ctl.*`, panels asked again); a filter bar emits a browser-side filter model, so it waits for a Sutra whose panels filter in the browser |
+  | `drishti_form.js` (the query form, server-drawn GET), `build/drishti_forms.js` (29–184), `drishti_bi-format-pane.js` (41–171), `drishti_editor-table.js` (54–263), `drishti_subscribe-when.js` (28–76) | `Form` | `Form` draws its own `<form>` with Save and Reset and validates at submit; these are live property panes or parts of a server form. They need a **live mode** (no form element, a change per field), **custom widgets** (colour, rules, swatches, the format pane's `x-control`s), **per-field hooks** (`data-*` names the tutorials and tests use) and a **time** type (the subscription's "At") first |
+  | `drishti_form-expr.js` (27–212) | stays | the browser's copy of the server's form expressions (`FormExpr.java`): a language, not a form; `Form`'s `when` conditions are a different, smaller one |
+  | `drishti_record-forms.js` (the rest: beside, cells, the drawer's steps, drafts, review) | `Form` with four eyes, grid editing | the entity field and every date moved (above); the beside form, the cells and the stepped drawer need `Form` steps, money and datetime types with their adornments, and the server's drafts as the four-eyes hook |
+  | `<input type="datetime-local">` (the top bar's *Known at*, compare, the record forms' datetime) | a date-and-time picker | drishti-inputs has no time yet |
   | `drishti_var-basket-sheet.js` (40–290) | grid editing | its cell editor (200) and paste (210–248) |
   | `drishti_live-hub.js` (40–316), `drishti_channel.js` (60–163), `drishti_live.js` (34–155), `drishti_monitor.js` (32–49), `drishti_bi-consume.js` (158–216), the renderer's `m/net.js` (55–105) and `m/elements.js` (85–256) | `LiveClient` | one connection, reconnect and resync; the channel's leader election stays a page concern |
   | `drishti_table.js` (39–242) | `ArrowClient`, `DataFrame` | the VaR explorer and the scenario matrix |
@@ -781,10 +799,10 @@ drishti-risk) behind a generic hook. The chart studio's options for the risk kin
 ['log', 'zoom']` when it registers). Comments, the harness pages and the generated manifest's titles are documentation; a threshold
 (`limit`) is a generic hook.
 
-**Still to move** (each needs its screens' browser files run, and the multi-select and the pickers are on every page): the multi-select
-(`drishti_multiselect.js` → `MultiSelect`, with the query forms' dependent lists and the embed's controls), the as-of date and the
-raw date fields (→ `DatePicker`, `DateRangePicker`), the controls (`drishti_controls.js`), the forms (`drishti_form*.js`,
-`drishti_record-forms.js`, `drishti_editor-table.js`, `drishti_subscribe-when.js` → `Form`), the Build and Studio editors
+The multi-select, the as-of date, the raw date fields, the controls' pickers, the history range and the people pickers moved in
+2.9.11.e (8.2, "Moved onto them"). **Still to move**: the forms (`drishti_form.js`, `build/drishti_forms.js`,
+`drishti_bi-format-pane.js`, `drishti_editor-table.js`, `drishti_subscribe-when.js`, the rest of `drishti_record-forms.js` → `Form`,
+which first needs a live mode, custom widgets, per-field hooks and a time type; 8.2), the Build and Studio editors
 (`drishti_yamltab.js`, `build/drishti_about.js`, `drishti_studio-yaml.js`, `drishti_studio-assist.js`, `drishti_editor-formula.js`,
 `build/drishti_expr.js` → `CodeEditor` hooks; `drishti_cm-yaml.js` goes when the BI designer's editor moves too), polling and staleness
 (`drishti_refresh.js` → a data source), and inside drishti-grid the renderer's simpler document tables (`enhanceDocTables`' sort and
@@ -926,6 +944,7 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [ ] Documentation per library (section 9): guide, generated API reference with `--check`, tutorial, gallery, the AG Grid migration guide, theming and accessibility guides, changelogs, versioning policy; Help entries
 - [x] The guards of section 11, the allow list (8.6: `test_elements_guards.py`; the allow-list holds only the BI, Pivot, VaR and exposure screens still moving)
 - [x] The general screens' tables, panel charts, history charts, Calc, the live connection and their numbers on the libraries (8.6)
-- [ ] The general screens' multi-select, pickers, controls, forms and Build editors (8.6, still to move)
+- [x] The general screens' multi-select, the as-of date and every date field, the controls' pickers, the history range, the people pickers and the comment box's lists on drishti-inputs 0.2.0 (8.2)
+- [ ] The forms on `Form` (needs its live mode, custom widgets, per-field hooks and a time type) and the Build and Studio editors (8.2, 8.6)
 - [ ] Every screen moved (section 12) and the old code deleted; the allow list empty (the BI and Pivot family: 12.1)
 - [ ] `tools/elements/inventory.py` (planned) regenerates section 2's figures; README and CHANGELOG updated; two drills

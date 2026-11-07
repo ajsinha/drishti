@@ -80,7 +80,6 @@ h1 .bi-soon, h2 .bi-soon { margin-left: .5rem; vertical-align: middle; }
 .bi-ask { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .4rem; margin-left: .5rem; }
 .bi-stale { padding: .4rem .6rem; border: 1px solid var(--d-bad); border-radius: var(--d-radius); background: var(--d-surface-2); }
 .bi-form input:not([type="checkbox"]):not([type="color"]), .bi-form select { min-width: min(24rem, 100%); }
-.bi-people .shr-list { z-index: 20; min-width: 100%; }
 .bi-approvers { flex: 1 1 100%; margin: 0; }
 .bi-count { font-size: .75rem; color: var(--d-muted); }
 .bi-empty, .bi-placeholder { color: var(--d-muted); padding: .75rem 0; }

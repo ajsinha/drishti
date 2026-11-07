@@ -194,6 +194,30 @@ def query(page):
     return page.evaluate("location.search")
 
 
+def toggle(page, ctl, label):
+    """Picks or unpicks one value in a control's multi-select (drishti-inputs): opens its list, clicks the option (the list stays open)."""
+    if page.locator(f"[data-ctl='{ctl}'] input[role=combobox]").get_attribute("aria-expanded") != "true":
+        page.locator(f"[data-ctl='{ctl}'] .di-ms-control").click()
+    page.locator(".di-ms-pop .di-option").filter(has=page.locator(".di-option-label", has_text=re.compile("^" + re.escape(label) + "$"))).click()
+
+
+def chips(page, ctl):
+    return page.locator(f"[data-ctl='{ctl}'] .di-chip-label").all_inner_texts()
+
+
+def range_pick(page, ctl, preset=None, to=None, clear=False):
+    """Sets a date-range control (drishti-inputs' DateRangePicker): a preset, a typed end, or Clear; then Apply."""
+    page.locator(f"[data-ctl='{ctl}'] .di-range-btn").click()
+    if preset:
+        page.locator(".di-range-pop .di-preset", has_text=preset).click()
+    if to:
+        page.locator(".di-range-pop [data-end=to]").fill(to)
+        page.locator(".di-range-pop [data-end=to]").press("Tab")
+    if clear:
+        page.locator(".di-range-pop [data-act=clear]").click()
+    page.locator(".di-range-pop [data-act=apply]").click()
+
+
 # ---- the controls are drawn --------------------------------------------------------------------------------------------------
 
 def test_every_kind_is_drawn_in_its_place_with_a_label(page):
@@ -215,10 +239,9 @@ def test_every_kind_is_drawn_in_its_place_with_a_label(page):
 
 def test_a_dropdown_a_multi_select_and_the_search_filter_only_their_panels(page, backend):
     page.evaluate("document.querySelector('#p-other').setAttribute('data-mark', 'kept')")
-    page.locator("[data-ctl='legs'] summary").click()
-    done(page, lambda: page.locator("[data-ctl='legs'] input[value='2']").uncheck())
+    done(page, lambda: toggle(page, "legs", "2"))
     assert [r.split("|")[0] for r in rows(page)] == ["1", "1", "1"]
-    assert page.locator("[data-ctl='legs'] summary").inner_text() == "1"
+    assert chips(page, "legs") == ["1"]
     assert backend.asked[-1][1] == ["schedule", "byleg"] and backend.asked[-1][0] == {"ctl.legs": "1"}      # only the panels that read it were asked for
     assert page.evaluate("document.querySelector('#p-other').getAttribute('data-mark')") == "kept"       # the others did not move
     done(page, lambda: page.locator("[data-ctl='q'] input").fill("2027"))
@@ -228,14 +251,13 @@ def test_a_dropdown_a_multi_select_and_the_search_filter_only_their_panels(page,
 
 
 def test_a_date_range_has_presets_and_ends_a_number_range_bounds_and_top_n_cuts(page, backend):
-    done(page, lambda: page.locator("[data-ctl='when'] .ctl-preset").select_option(label="This month"))
+    done(page, lambda: range_pick(page, "when", preset="This month"))                     # the server's presets, in drishti-inputs' range picker
     assert [r.split("|")[1] for r in rows(page)] == ["2026-10-15", "2026-10-20"]
-    assert page.locator("[data-ctl='when'] .ctl-from").input_value() == "2026-10-01" and page.locator("[data-ctl='when'] .ctl-to").input_value() == "2026-10-31"
+    assert "ctl.when=2026-10-01..2026-10-31" in query(page) and "This month" in page.locator("[data-ctl='when'] .di-range-btn").inner_text()
     assert page.locator("#p-schedule h3").inner_text() == "Cashflows · paid 2026-10-01..2026-10-31"        # the title reads the control
-    done(page, lambda: page.locator("[data-ctl='when'] .ctl-to").fill("2026-10-16"))
+    done(page, lambda: range_pick(page, "when", to="2026-10-16"))
     assert rows(page) == ["1|2026-10-15|100"]
-    done(page, lambda: page.locator("[data-ctl='when'] .ctl-from").fill(""))
-    done(page, lambda: page.locator("[data-ctl='when'] .ctl-to").fill(""))
+    done(page, lambda: range_pick(page, "when", clear=True))
     assert len(rows(page)) == 6
     assert page.locator("[data-ctl='size'] .ctl-from").get_attribute("placeholder") == "min 0"
     done(page, lambda: page.locator("[data-ctl='size'] .ctl-from").fill("250"))
@@ -261,14 +283,13 @@ def test_cascading_toggle_segmented_and_date_move_the_other_panel_only(page, bac
     assert page.locator("button[role=switch]").get_attribute("aria-checked") == "true" and "Gross" in page.locator("#p-other h3").inner_text()
     done(page, lambda: page.locator("[data-ctl='view'] [data-value='C']").click())
     assert page.locator("[data-ctl='view'] [data-value='C']").get_attribute("aria-checked") == "true" and page.locator("#p-other h3").inner_text().endswith(" C")
-    done(page, lambda: page.locator("[data-ctl='day'] input").fill("2026-10-09"))
+    done(page, lambda: (page.locator("[data-ctl='day'] input").fill("2026-10-09"), page.locator("[data-ctl='day'] input").press("Enter")))
     assert page.locator("#p-other h3").inner_text().endswith("2026-10-09")
 
 
 def test_the_address_carries_the_values_and_reproduces_the_view(page, url, backend):
-    page.locator("[data-ctl='legs'] summary").click()
-    done(page, lambda: page.locator("[data-ctl='legs'] input[value='1']").uncheck())
-    done(page, lambda: page.locator("[data-ctl='when'] .ctl-preset").select_option(label="Next 90 days"))
+    done(page, lambda: toggle(page, "legs", "1"))
+    done(page, lambda: range_pick(page, "when", preset="Next 90 days"))
     q = query(page)
     assert "ctl.legs=2" in q and "ctl.when=2026-10-10..2027-01-07" in q and "%2C" not in q
     share = page.evaluate("document.querySelector('[data-share]').dataset.share")
@@ -281,8 +302,8 @@ def test_the_address_carries_the_values_and_reproduces_the_view(page, url, backe
     other.goto(url + VIEW + q, wait_until="load")                      # a link: the same rows, the same controls, with no request after the page
     other.wait_for_selector("[data-ctl]")
     assert tickless(rows(other)) == expected
-    assert other.locator("[data-ctl='when'] .ctl-from").input_value() == "2026-10-10"
-    assert other.locator("[data-ctl='legs'] summary").inner_text() == "2"
+    assert "10 Oct" in other.locator("[data-ctl='when'] .di-range-btn").inner_text()
+    assert chips(other, "legs") == ["2"]
     ctx2.close()
 
 
@@ -295,16 +316,15 @@ def test_a_live_tick_keeps_the_filter_also_after_a_change(browser, url, backend)
     pg.wait_for_selector("[data-ctl]")
     pg.wait_for_function("document.querySelector('#p-schedule tbody td:last-child') && /t\\d+/.test(document.querySelector('#p-schedule tbody td:last-child').textContent)", timeout=10000)
     assert {r.split("|")[0] for r in rows(pg)} == {"2"} and len(rows(pg)) == 3                    # a tick rebuilt the panel with the filter
-    pg.locator("[data-ctl='legs'] summary").click()
-    pg.locator("[data-ctl='legs'] input[value='1']").check()
-    pg.locator("[data-ctl='legs'] input[value='2']").uncheck()
+    toggle(pg, "legs", "1")
+    toggle(pg, "legs", "2")
     pg.wait_for_function("document.querySelector('#p-schedule tbody') && [...document.querySelectorAll('#p-schedule tbody tr')].every(r => r.cells[0].textContent === '1') && /t\\d+/.test(document.querySelector('#p-schedule tbody td:last-child').textContent)", timeout=10000)
     n = pg.locator("#p-schedule tbody tr").count()
     assert n == 3
     first = pg.locator("#p-schedule tbody td:last-child").first.inner_text()
     pg.wait_for_function("(t) => document.querySelector('#p-schedule tbody td:last-child').textContent !== t", arg=first, timeout=10000)   # it keeps ticking, still leg 1 only
     assert {r.split("|")[0] for r in rows(pg)} == {"1"}
-    assert pg.locator("[data-ctl='legs'] summary").inner_text() == "1"                            # the header control survived the live swap
+    assert chips(pg, "legs") == ["1"]                                                             # the header control survived the live swap
     ctx.close()
 
 
@@ -316,7 +336,7 @@ def test_a_click_or_enter_on_a_row_sets_the_control_and_again_clears_it(page, ba
     done(page, lambda: row.click())
     assert {r.split("|")[0] for r in rows(page)} == {"2"} and "ctl.legs=2" in query(page)
     assert page.locator("#p-byleg tbody tr[data-pick='2']").get_attribute("aria-selected") == "true"
-    assert page.locator("[data-ctl='legs'] summary").inner_text() == "2"
+    assert chips(page, "legs") == ["2"]
     done(page, lambda: page.locator("#p-byleg tbody tr[data-pick='2']").click())
     assert len(rows(page)) == 6
     page.locator("#p-byleg tbody tr[data-pick='1']").focus()
@@ -327,20 +347,20 @@ def test_a_click_or_enter_on_a_row_sets_the_control_and_again_clears_it(page, ba
 # ---- keyboard ------------------------------------------------------------------------------------------------------------------------
 
 def test_every_control_works_from_the_keyboard(page):
-    page.locator("[data-ctl='legs'] summary").focus()
-    page.keyboard.press("Enter")
-    assert page.locator("[data-ctl='legs'] details").evaluate("d => d.open")
-    page.wait_for_function("document.activeElement.classList.contains('ms-q')")   # opening puts the focus in the filter box
-    page.keyboard.press("Tab")                                               # All
-    page.keyboard.press("Tab")                                               # None
-    done(page, lambda: page.keyboard.press("Enter"))
-    assert len(rows(page)) == 6                                              # none ticked: no filter
-    page.keyboard.press("Tab"); page.keyboard.press("Tab")                   # leg 1
-    done(page, lambda: page.keyboard.press("Space"))
+    field = page.locator("[data-ctl='legs'] input[role=combobox]")
+    field.focus()
+    page.keyboard.press("ArrowDown")                                         # opens the list; the field keeps the focus, leg 1 is active
+    assert field.get_attribute("aria-expanded") == "true"
+    done(page, lambda: page.keyboard.press("Enter"))                         # leg 1 off
+    assert {r.split("|")[0] for r in rows(page)} == {"2"}
+    page.keyboard.press("ArrowDown")
+    done(page, lambda: page.keyboard.press("Enter"))                         # leg 2 off: none picked, no filter
+    assert len(rows(page)) == 6
+    page.keyboard.press("ArrowUp")
+    done(page, lambda: page.keyboard.press("Enter"))                         # leg 1 on
     assert {r.split("|")[0] for r in rows(page)} == {"1"}
     page.keyboard.press("Escape")
-    assert not page.locator("[data-ctl='legs'] details").evaluate("d => d.open")
-    assert page.evaluate("document.activeElement.tagName") == "SUMMARY"
+    assert field.get_attribute("aria-expanded") == "false" and page.evaluate("document.activeElement.getAttribute('role')") == "combobox"
     seg = page.locator("[data-ctl='view'] [data-value='A']")
     seg.focus()
     done(page, lambda: page.keyboard.press("ArrowRight"))
@@ -368,9 +388,9 @@ def test_on_a_phone_the_controls_are_finger_sized_and_the_page_does_not_scroll_s
         .filter(e => e.offsetParent !== null && e.getBoundingClientRect().height < 43.5).map(e => e.tagName + '.' + e.className)""")
     assert small == []
     assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
-    pg.locator("[data-ctl='legs'] summary").tap()
+    pg.locator("[data-ctl='legs'] .di-ms-control").tap()
     n = pg.evaluate("(window.Drishti.__controls || []).length")
-    pg.locator("[data-ctl='legs'] input[value='2']").tap()
+    pg.locator(".di-ms-pop .di-option").filter(has=pg.locator(".di-option-label", has_text=re.compile("^2$"))).tap()
     pg.wait_for_function("(n) => (window.Drishti.__controls || []).length > n", arg=n, timeout=10000)
     assert len(rows(pg)) == 3
     ctx.close()
@@ -391,8 +411,7 @@ def test_a_control_that_remembers_restores_the_last_choice_in_this_browser(brows
     pg = ctx.new_page()
     pg.goto(url + VIEW, wait_until="load")
     pg.wait_for_selector("[data-ctl]")
-    pg.locator("[data-ctl='legs'] summary").click()
-    done(pg, lambda: pg.locator("[data-ctl='legs'] input[value='1']").uncheck())
+    done(pg, lambda: toggle(pg, "legs", "1"))
     assert pg.evaluate("Object.keys(localStorage).filter(k => k.startsWith('drishti.ctl.'))")       # kept for this browser and sign-in
     again = ctx.new_page()
     again.goto(url + VIEW, wait_until="load")

@@ -42,6 +42,8 @@ RULES = {
                 "formats numbers itself: use drishti-core's formatNumber, formatCompact, formatPercent or formatNamed"),
     "live": (re.compile(r"\bnew\s+(?:[\w$.]*\.)?(?:EventSource|WebSocket)\b|\b(?:window|self|globalThis)\.(?:EventSource|WebSocket)\s*="),
              "opens its own EventSource or WebSocket: use drishti-data's LiveClient"),
+    "inputs": (re.compile(r"drishtiModules\.multiselect|\bms-(?:box|pop|sum|q)\b|Drishti\.People\.attach\([^,()]+,[^,()]+,"),
+               "draws its own multi-select or picker list: use drishti-inputs (MultiSelect, upgradeCheckboxes, Combobox; Drishti.People.attach(input, opts))"),
 }
 
 # A date's or a time's toLocaleString is a date, not a number (drishti-core's formatDate has no clock yet).

@@ -168,9 +168,8 @@
 <script src="/static/js/drishti_compute.js?v={{ ASSET_V }}"></script>
 {% if not embed and vm.panels | selectattr('form') | list %}<script src="/static/js/drishti_form-expr.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_write-back.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_record-forms.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if designer and designer.on and not embed %}<link rel="stylesheet" href="/static/css/drishti_designer.css?v={{ ASSET_V }}"><script src="/static/js/drishti_designer-forms.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_designer-settings.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_designer.js?v={{ ASSET_V }}"></script>{% endif %}
-{% if vm.controls %}<script src="/static/js/drishti_multiselect.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_controls.js?v={{ ASSET_V }}"></script>{% endif %}
-{% if calc and calc.offered and calc.allowed %}<script src="/static/elements/drishti-inputs/drishti_inputs.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_calc.js?v={{ ASSET_V }}"></script>{% endif %}
+{% if vm.controls %}<script src="/static/js/drishti_controls.js?v={{ ASSET_V }}"></script>{% endif %}
+{% if calc and calc.offered and calc.allowed %}<script src="/static/js/drishti_calc.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if vm.provenance.live and asof == 'live' %}<script src="/static/js/drishti_live.js?v={{ ASSET_V }}"></script>{% endif %}
 {% if layout and layout.offered and layout.allowed %}<script src="/static/js/drishti_layout-rules.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_layout.js?v={{ ASSET_V }}"></script>{% endif %}
 {% endblock %}
