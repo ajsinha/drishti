@@ -34,14 +34,15 @@ function registry() {
 
 /**
  * Where the libraries are: base, the elements folder ("/static/elements/"); staticBase, the static root the style sheets are named from
- * (default: the folder above base); modules, the domain modules on for the person (a library of any other module is refused).
- * @param {{base: string, staticBase: string, modules: string[]}} o
+ * (default: the folder above base); modules, the domain modules on for the person (a library of any other module is refused; null:
+ * the page's own meta, or nothing said).
+ * @param {{base: string, staticBase: string, modules: ?string[]}} o
  * @returns {void}
  */
 export function configure(o) {
   if (o.base) { state.base = o.base.replace(/\/?$/, '/'); }
   if (o.staticBase) { state.staticBase = o.staticBase.replace(/\/?$/, '/'); }
-  if (Array.isArray(o.modules)) { state.modules = o.modules.map(String); }
+  if (o.modules === null || Array.isArray(o.modules)) { state.modules = o.modules ? o.modules.map(String) : null; }
 }
 
 function modulesOn() {

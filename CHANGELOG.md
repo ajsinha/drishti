@@ -94,6 +94,25 @@
   core reference data; economy keeps world-economy and news-and-markets. The Market lens needs capital markets and banking.
 - **Editions as lenses**: the risk, trading, market and world editions are lenses of the registry; an edition opened as a lens is offered
   only while its modules are on.
+- **Domain modules, phase 2 (first half): the console follows the modules** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md)
+  section 8, [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md) section 8; OPERATIONS.md section 22). The console asks the server and
+  nothing else: the public about answer now lists the `modules` loaded, and `GET /api/v1/modules` answers, as the person, the modules not
+  loaded (with why), the lenses open to them (with the modules and functions each needs) and the **functions they may not use** (each with
+  its module and the words to say). A module that is off, or a function off for the person, is gone from every door the console draws:
+  its pages and routes answer 404, menus (sitemap `domain:` tags, now drawn by the module's state; a new `requires: module:<id>`), the
+  Engines menu, the Admin strip, search, the command line and its type-ahead, Help (its guides, tutorials and section) and the Build home
+  leave it out, and typed anyway it says *VRES is not available to you: ask your administrator*.
+- **Static assets by module**: each module's console part is `drishti-console/plugins/<module>/plugin.yaml` (its routers, engines, words,
+  pages, templates, static files, and the parts it adds to a core screen). An off module's scripts, styles and Elements library are not
+  served (404), and neither to a person whose lens does not use the module (the World lens gets no banking file). The Elements manifest
+  carries each library's `module` (drishti-risk: banking) and the loader refuses a library of a module the page does not list
+  (`<meta name="drishti-modules">`, `configure({modules})`, `refused(name)`).
+- **The console's cycles C1 to C7 are broken in place** (no screen moved yet): the banking routers are included from the plugin's list;
+  commands, retired links, the type-ahead, the Pivot presets' word grammar and the landing rules are hooks the module fills
+  (`core/plugins.py`); one workbook streamer (`core/workbook_stream.py`); the core client has one engine call (`BackendClient.engine`) and
+  the banking calls are the module's own (`plugins/banking/risk_api.py`), **on `/api/v1/risk/…`**; the market landing's figures moved to the
+  banking routes, Admin → Saved VaR baskets to the VaR routes, the Pivot draws the MR lens through the plugin's `screens:`. A static test
+  (`test_module_boundaries.py`) fails when the core imports a module's code, includes its templates or names its files.
 
 ## 2.9.11.e (unreleased)
 

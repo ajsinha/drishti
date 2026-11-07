@@ -55,6 +55,7 @@ class Plugin:
     title: str
     routers: tuple[str, ...] = ()
     registers: tuple[str, ...] = ()
+    code: tuple[str, ...] = ()
     engines: tuple[str, ...] = ()
     words: tuple[str, ...] = ()
     paths: tuple[str, ...] = ()
@@ -83,7 +84,7 @@ def plugins() -> list[Plugin]:
                 continue
             mid = str(raw.get("module") or f.parent.name)
             out.append(Plugin(mid, str(raw.get("title") or mid), _tuple(raw.get("routers")), _tuple(raw.get("registers")),
-                              _tuple(raw.get("engines")), tuple(w.upper() for w in _tuple(raw.get("words"))), _tuple(raw.get("paths")),
+                              _tuple(raw.get("code")), _tuple(raw.get("engines")), tuple(w.upper() for w in _tuple(raw.get("words"))), _tuple(raw.get("paths")),
                               _tuple(raw.get("assets")), _tuple(raw.get("templates")),
                               dict(raw.get("screens") or {})))
         _plugins = out

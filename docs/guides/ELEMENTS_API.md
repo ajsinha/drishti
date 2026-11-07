@@ -986,11 +986,11 @@ Returns `?{element: HTMLElement, close: function(): void}`.
 
 #### `configure(o)`
 
-Where the libraries are: base, the elements folder ("/static/elements/"); staticBase, the static root the style sheets are named from (default: the folder above base).
+Where the libraries are: base, the elements folder ("/static/elements/"); staticBase, the static root the style sheets are named from (default: the folder above base); modules, the domain modules on for the person (a library of any other module is refused; null: the page's own meta, or nothing said).
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `o` | `{base: string, staticBase: string}` |  |
+| `o` | `{base: string, staticBase: string, modules: ?string[]}` |  |
 
 Returns `void`.
 
@@ -1043,6 +1043,16 @@ Returns `Promise&lt;(Object\|Object[])&gt;`.
 ```js
 Drishti.elements.core.load('drishti-grid').then((grid) => grid.createGridModel({...}))
 ```
+
+#### `refused(name)`
+
+Why a library may not be loaded on this page (its module is not on for the person), or null when it may.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` | for example "drishti-risk" |
+
+Returns `?string`.
 
 #### `staticUrl(path)`
 

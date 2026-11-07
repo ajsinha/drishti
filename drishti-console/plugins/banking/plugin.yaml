@@ -26,6 +26,8 @@ routers: [routes.trading_routes, routes.var_regulatory_routes, routes.var_routes
           routes.play_routes, routes.exposure_routes, routes.mcube_routes]
 # files that fill the core's hooks on import (core/plugins.py): the Build home's types, the landings' figures
 registers: [core.build_types_banking, routes.trading_routes]
+# its other Python modules (the core imports none of them: tests/test_module_boundaries.py); they move into this folder in the second half
+code: [core.trading_landing, core.market_landing, plugins.banking.risk_api]
 
 # its compute engines: their words, console pages, menus, Help pages, tiles and lenses are the engine catalogue's (config/engines.yaml)
 engines: [var, exposure, sensitivities, frtb-sa, simm, mr-cube]

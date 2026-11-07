@@ -1447,7 +1447,7 @@
     function configure(o) {
       if (o.base) { state.base = o.base.replace(/\/?$/, '/'); }
       if (o.staticBase) { state.staticBase = o.staticBase.replace(/\/?$/, '/'); }
-      if (Array.isArray(o.modules)) { state.modules = o.modules.map(String); }
+      if (o.modules === null || Array.isArray(o.modules)) { state.modules = o.modules ? o.modules.map(String) : null; }
     }
     function modulesOn() {
       if (state.modules) { return state.modules; }
