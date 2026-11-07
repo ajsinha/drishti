@@ -13,13 +13,14 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* drishti-risk: the banking module's chart kinds on drishti-chart (licensed with the module; the console serves this library only where
+/* drishti-risk: the banking module's chart kinds on drishti-chart and its trading screens on drishti-grid (the trader home) (licensed with the module; the console serves this library only where
    the banking module is licensed and to the people whose role or lens uses it). Loading it registers the kinds; a chart then names them
    like any other: new Chart(el, {kind: 'risk.backtest', ...}). */
 import { registerRiskKinds } from './drishti_risk-kinds.js';
 
 export { TRAFFIC_LIGHT, trafficLight, tailFigures, tenorText, eepeOf, buildPnlDistribution, buildBacktest, buildExposureProfile, buildVarChange,
   registerRiskKinds } from './drishti_risk-kinds.js';
+export { TRADER_HOME_PARTS, TICK_WAIT_MS, money, useText, marketText, limitWords, TraderHome } from './drishti_trader-home.js';
 
 /** The kinds this library adds to drishti-chart. */
 export const RISK_KINDS = Object.freeze(['risk.pnl-distribution', 'risk.backtest', 'risk.exposure-profile', 'risk.var-change']);

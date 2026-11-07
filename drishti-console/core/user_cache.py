@@ -48,6 +48,12 @@ def fingerprint(items) -> str:
     return h[:16]
 
 
+def _holds(key: tuple, mine: tuple) -> bool:
+    """Whether a key made by :func:`user_key` (anywhere in it: a cache may put its own name first) is this person's."""
+    n = len(mine)
+    return any(key[i:i + n] == mine for i in range(0, max(0, len(key) - n + 1)))
+
+
 class LRU:
     """A bounded store with an optional time to live: a new entry past ``maxsize`` drops the least recently used one."""
 
@@ -79,6 +85,15 @@ class LRU:
 
     def clear(self) -> None:
         self._data.clear()
+
+    def drop_person(self, me) -> int:
+        """Drops what was kept for ``me`` only (on this server, with their roles): a live page that heard the data change asks again,
+        and nobody else's entries go. Returns how many went."""
+        mine = (servers.current(), str(getattr(me, "user", "") or ""), _roles(me))
+        gone = [k for k in list(self._data) if isinstance(k, tuple) and _holds(k, mine)]
+        for k in gone:
+            self._data.pop(k, None)
+        return len(gone)
 
     def __contains__(self, key) -> bool:
         return self.get(key, _MISSING) is not _MISSING

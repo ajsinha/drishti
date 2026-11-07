@@ -294,6 +294,11 @@ def forget() -> None:
     _CACHE.clear()
 
 
+def forget_person(me) -> int:
+    """Drops what was kept for this person only (the trader home after a server tick: the next read is fresh)."""
+    return _CACHE.drop_person(me)
+
+
 # -- dates --------------------------------------------------------------------------------------------------------------------------
 def _day(v: Any) -> date | None:
     try:

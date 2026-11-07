@@ -224,6 +224,13 @@ class Edition:
         t = str(self._get("home.template") or "") if self.active else ""
         return t if _LANDING_TEMPLATE.fullmatch(t) else DEFAULT_LANDING_TEMPLATE
 
+    def landing_template_for(self, landing: str) -> str:
+        """The page that draws one landing: its own (``home.templates.<landing>``, e.g. Drishti Trading's ``trader: home/trader_home_landing.html``,
+        the trader home of SHARED_SCREENS.md section 4), else the edition's page for all of them (:attr:`landing_template`)."""
+        own = self._get("home.templates") if self.active else None
+        t = str(own.get(landing) or "") if isinstance(own, dict) else ""
+        return t if _LANDING_TEMPLATE.fullmatch(t) else self.landing_template
+
     def landing_titles(self) -> dict[str, str]:
         """Each offered landing's title on Home's switch (``home.titles``); a landing the file does not title: the Drishti Risk titles
         of before, else its id."""

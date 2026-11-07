@@ -751,7 +751,13 @@ drishti:
     per-kind: 200                    # most items one kind adds to one list
     max-question: 2000               # longest question or answer on an item, in characters
     max-questions: 200               # most questions and answers kept on one item
-  alerts:                            # the one alert engine (USER_GUIDE.md, Alerts; CONFIGURATION.md, drishti.alerts): every key has a default
+  trading:                           # the trading domain (docs/architecture/SHARED_SCREENS.md section 4; USER_GUIDE.md, The trader home)
+    home:                            # the trader home's live ticks: GET /api/v1/trading/home/live (a tick carries no data; the console asks again as the person)
+      watch: [trade, trade-valuation, var-limit, pnl-vector, ir-curve, fx-spot]   # the kinds whose new data versions make the trader home tick
+      frame: 2s                      # how often the kinds' data versions are compared (the shortest time between two ticks to one browser)
+      status: 15s                    # how often a stream says it is still there when nothing changed (also its heartbeat)
+      max-streams-per-user: 8        # trader home streams one person may hold at once
+  alerts:                          # the one alert engine (USER_GUIDE.md, Alerts; CONFIGURATION.md, drishti.alerts): every key has a default
     enabled: true                    # false stops the evaluator and refuses new alert rules (stored ones are kept)
   access-log:                        # who looked at what: views, raw, history, searches, CSV (Admin → Access)
     enabled: ${DRISHTI_ACCESS_LOG:true}  # record who looked at what (Admin -> Access)

@@ -1,0 +1,31 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Drishti Trading's landings' head (trading_landing.html, trader_home_landing.html): the landing switch, the lens links, whose figures
+   they are and the View as picker, painted by drishti_trading-landing.js. #}
+  <nav class="tl-switch" aria-label="Choose your Home">
+    <span class="tl-switch-l">Home</span>
+    {% for l in landings %}<a href="{{ l.href }}"{% if l.id == landing %} aria-current="page" class="on"{% endif %} data-landing-link="{{ l.id }}">{{ l.title }}</a>{% endfor %}
+    <span class="tl-lenses">{% for link in lens_links(request) %}<a class="tl-lens" href="{{ link.href }}" data-lens-link="{{ link.name }}"><i class="bi bi-{{ 'box-arrow-left' if link.leave else 'eye' }}" aria-hidden="true"></i> {{ link.label }}</a>{% endfor %}</span>
+  </nav>
+
+  <section class="tl-who" aria-label="Whose figures">
+    <p class="tl-meta" data-tl-who aria-live="polite">…</p>
+    <form class="tl-viewas" action="/home/trading/view-as" method="get" data-tl-viewas hidden>
+      <label for="tlAs">View as</label>
+      <select id="tlAs" name="as" data-tl-as><option value="">Pick a trader or a desk…</option></select>
+      <button type="submit" class="tl-btn">View</button>
+    </form>
+  </section>

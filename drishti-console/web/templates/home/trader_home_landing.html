@@ -1,0 +1,61 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The trader home (docs/architecture/SHARED_SCREENS.md section 4; the product owner's option A, with C's feed as a column and B one click
+   from a book; USER_GUIDE.md, "The trader home"): the Trading lens's landing "trader" (config/editions/trading.yaml, home.templates). The
+   head (the landing switch, whose figures, View as) and the new-trade check are drishti_trading-landing.js's; the home itself (headline
+   figures, my books, markets, what changed, the live feed) is drishti-risk's TraderHome, drawn with drishti-grid at terminal density from
+   GET /api/home/trading/home (core/trader_home.py: the servers' answers as the person) and ticking with the server's
+   GET /api/v1/trading/home/live through the browser's one live channel (trading:home), by drishti_trader-home.js. Every number opens the
+   one Explain (data-explain). #}
+{% extends "base.html" %}
+{% block title %}{{ PRODUCT }}{% endblock %}
+{% block screen %}home{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_trading-landing.css?v={{ ASSET_V }}">{% endblock %}
+{% block content %}
+{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
+{{ back(request) }}
+<div class="tl" data-trading-landing="{{ landing }}">
+{% include "home/_trading_head.html" %}
+
+  <div class="th" data-trader-home aria-label="Trader home">
+    <p class="tl-muted" data-th-loading>Loading the trader home…</p>
+  </div>
+
+  <div class="tl-cols">
+    <section class="tl-card" aria-labelledby="tlChkH" data-tl-check-card{{ part(PP, 'table') }}>
+      <h2 id="tlChkH">Check a new trade<small>VaR what-if and the counterparty's limit, one answer</small></h2>
+      <form class="tl-check" data-tl-check autocomplete="off">
+        <label>Product<select name="product" data-tl-product required><option value="">…</option></select></label>
+        <label>Side<select name="side"><option value="">as booked</option><option value="B">Buy</option><option value="S">Sell</option></select></label>
+        <label>Notional<input name="notional" class="mono" inputmode="decimal" placeholder="250m" required></label>
+        <label>Counterparty<input name="counterparty" class="mono" list="tlCps" placeholder="CP-…" required></label>
+        <label>Book<select name="book" data-tl-book></select></label>
+        <button type="submit" class="tl-btn" data-tl-check-go>Check</button>
+        <datalist id="tlCps" data-tl-cps></datalist>
+      </form>
+      <div class="tl-verdict" data-tl-verdict aria-live="polite">
+        <div data-tl-verdict-var><b>VaR</b><br><span class="tl-muted">Pick a product, a notional and a counterparty</span></div>
+        <div data-tl-verdict-exp><b>Counterparty</b><br><span class="tl-muted">one call each to the VaR what-if and the pre-deal check</span></div>
+      </div>
+      <p class="tl-note" data-tl-check-note>Priced as a copy of a booked trade of the product in your books, scaled to the notional: the engines' own what-ifs, nothing estimated here.</p>
+    </section>
+  </div>
+  <p class="tl-classic"><a href="/?landing=today">The classic Home</a></p>
+  {{ foot(PP, request.url | string) }}
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_trading-landing.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_trader-home.js?v={{ ASSET_V }}"></script>{% endblock %}

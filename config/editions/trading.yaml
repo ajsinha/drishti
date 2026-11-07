@@ -78,10 +78,11 @@ menus:                                   # by id, per menu; a menu not named sho
   placeholder: "TRD 1000001, BOOK BOOK-RATES-1, VAR BOOK BOOK-RATES-1, XWIF, CTRD CP-ALDERSHOT …  then <GO>"
 
 home:
-  landing: trader                        # the default landing: trader (A, Trader desk), desk (B, Desk head), explorer (C, Explorer)
+  landing: trader                        # the default landing: trader (the trader home), desk (B, Desk head), explorer (C, Explorer)
   landings: [trader, desk, explorer]     # the landings a person may pick on Home (their choice is kept in their settings)
   template: home/trading_landing.html    # the page that draws them (it names its script and style: drishti_trading-landing.js, drishti_trading-landing.css)
-  titles: { trader: Trader desk, desk: Desk head, explorer: Explorer }
+  templates: { trader: home/trader_home_landing.html }   # a landing's own page: the trader home (SHARED_SCREENS.md section 4), drawn with Drishti Elements
+  titles: { trader: Trader home, desk: Desk head, explorer: Explorer }
   landing-by-role: {}                    # {access role: landing}: wins over the person's choice when set (the RBAC hook, as the others)
   chips: [TRD 1000001, BOOK BOOK-RATES-1, CTRD CP-ALDERSHOT, POS BOOK-RATES-1, VAR DESK DESK-RATES, XWIF, CRV CRV-USD-OIS]   # C's chips
   sections: { stats: off, grammar: off, pipeline: off, capabilities: off, views: off }   # the product's Home (signed out, or landing=today)

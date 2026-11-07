@@ -40,6 +40,18 @@ RESUME_BACKOFF = 1.0                    # seconds before the first try, growing 
 
 _HOLDER = re.compile(r"sq-([A-Za-z0-9._-]+)-[0-9a-f]{16}")
 
+#: the upstreams a domain module adds to the channel (``register_upstream("trading:", opener)``), so the channel itself knows no domain:
+#: ``opener(backend, me, rest, responses)`` gives the upstream stream of a subscription ``<prefix><rest>``. Filled once at import by the
+#: domain's routes (process configuration, the same for every person: nothing per user is kept here).
+UPSTREAMS: dict[str, Callable] = {}
+
+
+def register_upstream(prefix: str, opener: Callable) -> None:
+    """A domain's live subscriptions (``trading:home``): ``prefix`` ends with ``:``; the opener runs as the channel's person."""
+    if not prefix.endswith(":") or prefix in ("view:", "vm:", "bilive:", "mq:", "monitor:", "pivotlive:", "compute:"):
+        raise ValueError(f"a domain's live prefix ends with ':' and is not one of the channel's own: {prefix!r}")
+    UPSTREAMS[prefix] = opener
+
 
 def raw_view(event: str, data: str) -> str:
     """A ``vm:`` subscription's event (a page the client-side renderer draws): frames as the server sent them, every panel patch a panel (JSON),
@@ -146,6 +158,9 @@ class ChannelSession:
             return _renamed(stream, {"error": "failed"}), False       # an EventSource's own "error" is its connection's: the stream's is "failed"
         if sub.startswith("compute:") and len(sub) > 8:        # a computed panel's request (DATA_ARCHITECTURE.md): progress, state, done,
             return self.backend.sse(f"/compute/requests/{quote(sub[8:], safe='')}/stream", self.me, opened=responses), False   # failed, updated
+        for prefix, opener in UPSTREAMS.items():                # a domain module's own (register_upstream)
+            if sub.startswith(prefix) and len(sub) > len(prefix):
+                return opener(self.backend, self.me, sub[len(prefix):], responses), False
         return None, False
 
     def _pool(self):

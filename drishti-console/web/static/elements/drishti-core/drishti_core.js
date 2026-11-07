@@ -1394,16 +1394,19 @@
           ]
         },
         "drishti-risk": {
-          "version": "0.1.0",
-          "title": "The banking module's chart kinds on drishti-chart (licensed with the module): the P&L distribution with VaR and ES, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit",
+          "version": "0.2.0",
+          "title": "The banking module's chart kinds on drishti-chart (licensed with the module): the P&L distribution with VaR and ES, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit; and the trader home on drishti-grid (headline figures, my books, markets, what changed, the live feed)",
           "bundle": "drishti-risk/drishti_risk.js",
           "entry": "drishti-risk/src/drishti_index.js",
           "global": "risk",
           "requires": [
             "drishti-core",
-            "drishti-chart"
+            "drishti-chart",
+            "drishti-grid"
           ],
-          "css": [],
+          "css": [
+            "elements/drishti-risk/drishti_risk.css"
+          ],
           "scripts": []
         },
         "drishti-renderer": {

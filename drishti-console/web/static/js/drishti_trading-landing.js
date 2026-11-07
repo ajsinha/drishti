@@ -14,7 +14,8 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Drishti Trading's Home (home/trading_landing.html; EDITIONS.md › The design as built, section 14): paints the landing from the console's answers, which
+/* Drishti Trading's Home (home/trading_landing.html; on the trader home, home/trader_home_landing.html, the who line, View as and the
+   new-trade check; EDITIONS.md › The design as built, section 14): paints the landing from the console's answers, which
    core/trading_landing.py works out from the servers' own, read as the person: /api/home/trading/me (whose figures: the trader or desk,
    their books, and the View as picker when they may pick), then valuations (P&L today, by book and trader, movers, DV01, the largest
    counterparty), blotter (today's trades), risk (VaR, limits, positions), limits (limit use by book over the last business dates),
@@ -113,26 +114,15 @@
     return s;
   }
 
-  // ---- A · Trader desk ------------------------------------------------------------------------------------------------------------
-  function trader(m) {
+  // ---- the trader home's new-trade check (home/trader_home_landing.html; the rest of that page is drishti-risk's TraderHome) --------
+  function check(m) {
     var s = m.scope;
     if (!$("[data-tl-check-card]")) return;
-    if (!m.check) $("[data-tl-check-card]").hidden = true;
+    if (!m.check) { $("[data-tl-check-card]").hidden = true; return; }
     var book = $("[data-tl-book]");
     (s.books || []).forEach(function (b) { var o = el("option", "", b); o.value = b; book.appendChild(o); });
     get("/api/home/trading/valuations" + FOR).then(function (v) {
       if (!v.available) throw new Error(v.reason);
-      $$("[data-tl-date]").forEach(function (e) { e.textContent = v.businessDate + (v.dataDate && v.dataDate !== v.businessDate ? " (the latest valuations are of " + v.dataDate + ")" : ""); });
-      $("[data-tl-count]").textContent = F.formatNumber(v.liveTrades) + " live trades in my books" + (v.partial ? " (partial: " +
-        F.formatNumber(v.trades) + " of " + F.formatNumber(v.matched) + " read)" : "");
-      if (v.pnl === null) tile("pnl", "—", v.mtmMasked ? "MtM is masked for your role" : v.figuresProblem ? v.figuresProblem :
-        "no valuations on " + v.previousDate + ": no change to show");
-      else tile("pnl", tone(el("span", "", money(v.pnl, true)), v.pnl), "MtM change since " + v.previousDate + " · " +
-        F.formatNumber(v.valuedBoth) + " trades valued both days", v.pnl > 0 ? "good" : v.pnl < 0 ? "bad" : null);
-      if (v.dv01 !== null) {
-        $("[data-tl-tile='dv01']").hidden = false;
-        tile("dv01", money(v.dv01, true), "per bp, " + F.formatNumber(v.dv01Trades) + " live trades");
-      }
       var prod = $("[data-tl-product]");
       prod.textContent = "";
       prod.appendChild(el("option", "", v.products.length ? "Pick a product…" : "no product in your books"));
@@ -140,75 +130,8 @@
       v.products.forEach(function (p) { var o = el("option", "", p); o.value = p; prod.appendChild(o); });
       var dl = $("[data-tl-cps]");
       v.counterparties.forEach(function (c) { var o = el("option"); o.value = c; dl.appendChild(o); });
-      quick(s, v);
-    }).catch(function (e) {
-      $$("[data-tl-date]").forEach(function (x) { x.textContent = "—"; });
-      $("[data-tl-count]").textContent = "";
-      tile("pnl", "—", e.message);
-    });
-    get("/api/home/trading/risk" + FOR).then(function (r) {
-      if (!r.available) throw new Error(r.reason);
-      var conf = num(r.confidence);
-      $("[data-tl-var-k]").textContent = "My VaR" + (conf ? " (" + Math.round(conf * 100) + "%, 1-day)" : "");
-      tile("var", money(r["var"]), r.intraday ? "intraday · " + (r.intraday.trades || 0) + " trades updated" + (r.intraday.lastAt ? " · " +
-        String(r.intraday.lastAt).slice(11, 16) : "") : "end of day · " + F.formatNumber(r.trades || 0) + " trades");
-      if (r.intraday) $("[data-tl-intraday]").textContent = "· intraday as of " + String(r.intraday.lastAt || "").slice(11, 16);
-      var w = r.worst;
-      if (w) tile("limit", pct(w.limitUse), w.book + " · limit " + money(w.limit) + ((r.books || []).length > 1 ? " · the highest of " + r.books.length + " books" : ""),
-        STATE_TILE[w.state]);
-      else tile("limit", "—", "no VaR limit set on my books");
-      var body = $("[data-tl-positions]");
-      body.textContent = "";
-      if (!(r.positions || []).length) { said(body, r.positionsProblem || "No positions in the VaR answer", 3); return; }
-      r.positions.forEach(function (p) {
-        var tr = el("tr");
-        cell(tr, p.scope ? (function () { var a = el("a", "", p.label); a.href = "/var?scope=" + encodeURIComponent(p.scope); return a; })() : p.label);
-        cell(tr, tone(el("span", "", money(p.marketValue, true)), p.marketValue), "n");
-        cell(tr, money(p.componentVar), "n");
-        body.appendChild(tr);
-      });
-    }).catch(function (e) {
-      tile("var", "—", e.message); tile("limit", "—", "");
-      said($("[data-tl-positions]"), e, 3);
-    });
-    get("/api/home/trading/blotter" + FOR).then(function (b) {
-      if (!b.available) throw new Error(b.reason);
-      var c = b.counts || {};
-      tile("trades", String(b.total), (c["new"] || 0) + " new · " + (c.amended || 0) + " amended · " + (c.cancelled || 0) + " cancelled" +
-        (b.partial ? " · of " + b.matched : "") + (b.how === "valuations" ? " · " + b.note : ""));
-      var body = $("[data-tl-blotter]");
-      body.textContent = "";
-      if (!b.rows.length) { said(body, "No trade of my books changed on " + b.businessDate, 5); return; }
-      b.rows.slice(0, 12).forEach(function (r) {
-        var tr = el("tr");
-        tr.setAttribute("data-tl-event", r.event);
-        cell(tr, r.time || "—");
-        cell(tr, link("TRD " + r.trade, r.trade));
-        cell(tr, r.counterparty || "", "tl-wide");
-        cell(tr, r.notional === null || r.notional === undefined ? "—" : money(r.notional), "n");
-        var p = el("td"); p.appendChild(el("span", "tl-pill " + r.event, r.event)); tr.appendChild(p);
-        tr.title = (r.product || "") + (r.version ? " · version " + r.version : "") + (r.status ? " · " + r.status : "");
-        body.appendChild(tr);
-      });
-    }).catch(function (e) { tile("trades", "—", e.message); said($("[data-tl-blotter]"), e, 5); });
+    }).catch(function (e) { $("[data-tl-verdict-var]").textContent = "Not available: " + e.message; });
     $("[data-tl-check]").addEventListener("submit", function (ev) { ev.preventDefault(); runCheck(); });
-  }
-
-  function quick(s, v) {
-    var nav = $("[data-tl-quick]");
-    var mine = [];
-    if (s.kind === "trader") mine.push(["TRDR " + s.id, "me: books, trades, desk"]);
-    if ((s.books || []).length) {
-      mine.push(["VAR BOOK " + s.books[0], "my book's VaR, path and contributions"]);
-      mine.push(["BOOK " + s.books[0], "my book: trades, positions, MtM"]);
-    }
-    if ((v.counterparties || []).length) mine.push(["CTRD " + v.counterparties[0], "my most traded counterparty's trades"]);
-    mine.reverse().forEach(function (q) {
-      if (nav.querySelector("[data-home-card='" + q[0] + "']")) return;
-      var a = el("a", "tl-q"); a.href = go(q[0]); a.setAttribute("data-home-card", q[0]); a.setAttribute("data-tl-mine", "1");
-      a.appendChild(el("code", "mono", q[0])); a.appendChild(el("span", "", q[1]));
-      nav.insertBefore(a, nav.firstChild);
-    });
   }
 
   var WORDS = { ok: "fits", near: "near", breach: "breaches" };
@@ -375,9 +298,10 @@
     if (!s.kind) {
       $$("[data-tl-v]").forEach(function (v) { v.textContent = "—"; });
       $$("[data-tl-s]").forEach(function (v) { v.textContent = "pick a trader or a desk to view as"; });
+      if ($("[data-tl-check-card]")) $("[data-tl-check-card]").hidden = true;
       $$("tbody").forEach(function (b) { said(b, "Pick a trader or a desk to view as", 5); });
       return;
     }
-    if (landing === "desk") desk(m); else trader(m);
+    if (landing === "desk") desk(m); else check(m);
   }).catch(function (e) { $("[data-tl-who]").textContent = "Not available: " + e.message; });
 })();

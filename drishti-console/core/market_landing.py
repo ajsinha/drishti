@@ -494,6 +494,11 @@ async def quality(backend, me, stale_days: int, key: tuple | None = None) -> dic
     return _keep(("quality", stale_days) + key, out)
 
 
+def forget_person(me) -> int:
+    """Drops what was kept for this person only (the trader home after a server tick)."""
+    return _CACHE.drop_person(me)
+
+
 def forget() -> None:
     """Drops the cached answers (tests)."""
     _CACHE.clear()

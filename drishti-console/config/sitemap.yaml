@@ -152,6 +152,7 @@ menus:
     columns:
       - title: Risk on my book
         items:
+          - { id: trader-home, href: /home/trader, icon: speedometer2, label: Trader home, desc: "My P&L, VaR and limits, my books, the markets I watch, what changed and a live feed, ticking", match: /home/trader, requires: [edition, cmd:TRD] }
           - { id: my-var, cmd: VAR, icon: shield-check, label: My VaR, desc: "The VaR of the books you trade", match: /var, requires: [word:VAR] }
           - { id: vlim, cmd: VLIM, icon: speedometer2, label: VaR limits, desc: "Each limit and how much of it is used", requires: [cmd:VLIM] }
           - { id: tval, cmd: TVAL, icon: currency-exchange, label: Trade valuations, desc: "Each trade's value and its sensitivities", requires: [cmd:TVAL] }

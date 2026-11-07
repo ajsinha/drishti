@@ -100,7 +100,7 @@ async def render_landing(request, ed: Edition, landing: str, cards: list):
             recents = seen[:6]
         except BackendError:
             recents = []
-    return render(request, ed.landing_template, landing=landing, landings=offered, cards=cards, chips=chips, monitors=monitors,
+    return render(request, ed.landing_template_for(landing), landing=landing, landings=offered, cards=cards, chips=chips, monitors=monitors,
                   recents=recents, topics=[str(t) for t in ed._get("home.topics") or []], stale_days=stale_days(ed),
                   hierarchies=[str(h) for h in ed._get("home.hierarchies") or ["MGMT"]], screen="home")
 
