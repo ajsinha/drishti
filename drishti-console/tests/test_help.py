@@ -116,7 +116,8 @@ def test_mobile_ready(client):
     m = client.get("/static/drishti_manifest.webmanifest")
     assert m.status_code == 200 and '"start_url": "/t"' in m.text
     css = client.get("/static/css/drishti_terminal.css").text
-    assert "@media (max-width: 640px)" in css and "safe-area-inset-bottom" in css and "font-size: 16px" in css
+    assert "@media (max-width: 640px)" in css and "safe-area-inset-bottom" in css and "font-size: var(--d-fs-16)" in css   # 16px: iOS does not zoom
+    assert "--d-fs-16: 1rem;" in client.get("/static/css/drishti_tokens.css").text
 
 
 SUTRA_GUIDE = Path(__file__).resolve().parents[2] / "docs" / "guides" / "SUTRA_DEVELOPER_GUIDE.md"

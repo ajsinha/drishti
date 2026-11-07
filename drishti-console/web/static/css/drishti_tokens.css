@@ -425,7 +425,7 @@
 
 /* ---- Scales: type, spacing, radius, layers, breakpoints, densities ----
    One step per value in use, named by its size in px at the browser's default 16px (13_12 = 13.12px), written in rem so the console
-   follows the reader's own font size. The steps are exactly the sizes the screens had when they were tokenised (2.9.11.e): a
+   follows the reader's own font size. The steps are exactly the sizes the screens had when they were tokenised: a
    step is folded into its neighbour only under the visual check (tools/dev/css_visual_check.py), never by guesswork.
    test_css_tokens.py holds the console's CSS to these: no colour literal outside this file, font sizes only from the type scale,
    @media widths only from the breakpoints, !important only on its allow-list. */

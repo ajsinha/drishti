@@ -127,6 +127,31 @@ keys.register('grid', { 'E': explainCell, 'Ctrl+C': copyRange });
 const ok = await dialog.confirm({ title: 'Delete the basket?', danger: true });
 ```
 
+#### Design tokens
+
+drishti-core's tokens are one file, `static/css/drishti_tokens.css`, the only home of every colour and scale the console and the
+libraries draw with. `tools/elements/build.py` generates the themes' table (`drishti_theme-table.js`) from it, and the embedded view,
+report and renderer sheets (`tools/elements_sheet.py`, `tools/render_sheet.py`) write its fixed values into their rules.
+
+| Family | Tokens | What they hold |
+|---|---|---|
+| Theme colours | `--d-bg` … `--d-bad`, `--d-fill`, `--d-grad-*`, `--d-nav-*` | one block per theme (`data-theme` on `<html>`: terminal, light, blue, green, wallstreet, crimson, crimson-dark, terminal-green, terminal-crimson, terminal-blue), the light fallback, and the print palette last; text colours read at 4.5:1 on every ground (`test_contrast.py`) |
+| Semantic hues | `--d-market-violet`, `--d-trading-green`, `--d-world-teal`, `--d-cap-*` | a screen's own hue, with a dark and a light value per theme |
+| Fixed colours | `--d-on-color`, `--d-paper`, `--d-on-band`, `--d-band-*`, `--d-scrim*`, `--d-swatch-*`, … | the same in every theme: white labels on coloured fills, the navigation band, scrims under dialogs, the theme menu's swatches |
+| Elevation | `--d-shadow` (per theme), `--d-elev-*` | shadows by role: paper, raised, bar, pop, toast, panel, list, menu, sheet, dialog, drawer, mega menu |
+| Type | `--d-fs-<px>`, `--d-fs-em-<percent>`, `--d-fs-display-<n>` | absolute steps named by their size in px at the default 16px and written in rem (so the console follows the reader's font size); relative steps; fluid display sizes |
+| Spacing | `--d-sp-<px>` | padding, margin and gap steps up to 2rem; larger offsets are layout |
+| Radius | `--d-radius` (cards and panels), `--d-radius-<px>`, `--d-radius-pill` | corner radii |
+| Layers | `--d-z-bar` … `--d-z-confirm` | the stacking order of what floats over the page (a z-index under 100 orders things inside one component) |
+| Breakpoints | `--d-bp-*` | the only widths an `@media` may use (a media query cannot read a custom property, so it repeats the number) |
+| Densities | `--d-density-data-*`, `--d-density-control-*` | the base text of the three densities (comfortable, compact, terminal) for data (grid, chart) and controls (inputs) |
+
+The steps are the sizes the screens use; two are folded into one only under the visual check (`tools/dev/css_visual_check.py`:
+screenshots of a set of screens in every theme, before and after, compared pixel by pixel). `test_css_tokens.py` keeps the console's CSS
+on the tokens: no colour literal outside this file, font sizes only from the type scale, `@media` widths only from the breakpoints, no
+undefined token, and `!important` only on an allow-list that gives each one its reason (print, reduced motion, a position a script
+writes inline, utilities) and only shrinks.
+
 Takes over: `drishti_app.js`, `drishti_theme-init.js`, `drishti_resize.js`, `drishti_settled.js`, `drishti_pack-ui.js`,
 `build/drishti_drag.js`, `build/drishti_menus.js`, the renderer's `m/dom.js`, `m/format.js`, `m/net.js`, `m/signin.js`, `m/assets.js`;
 the formats and JSON calls of `drishti_bi-lib.js`, and the dialogs of `drishti_busy.js`, `drishti_scope-delete.js`,
@@ -834,6 +859,7 @@ is the example's source, not a copy).
 | **Licence** | drishti-risk served, or its kinds registered, without the banking module's licence |
 | **Docs** | `api_ref.py --check`, a gallery example that does not run, a hand-written option table |
 | **Size budget** | a library's gzip size over its budget (set from the first release, raised only on purpose) |
+| **Design tokens** (`test_css_tokens.py`) | a colour literal in a console sheet outside `drishti_tokens.css`, a font size off the type scale, an `@media` width that is not a breakpoint, an undefined `--d-*`, an `!important` not on its allow-list ([4.1, Design tokens](#design-tokens)) |
 
 ## 12. Moving Drishti's screens onto the libraries
 
