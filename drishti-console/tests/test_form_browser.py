@@ -244,7 +244,7 @@ def test_an_enum_with_many_values_is_one_dropdown_with_search_and_the_url_stays_
     box.locator("input[value=REPO]").check()
     assert sum_.inner_text() == "3 selected: BOND, PUTTABLE_BOND, +1"
     box.locator("input[value=REPO]").press("Enter")
-    page.get_by_role("button", name="Search").first.click() if page.get_by_role("button", name="Search").count() else page.keyboard.press("Enter")
+    page.get_by_role("button", name="Search", exact=True).first.click() if page.get_by_role("button", name="Search", exact=True).count() else page.keyboard.press("Enter")
     page.wait_for_url("**/form/trading?**")
     assert "v.productType=BOND" in page.url and "v.productType=PUTTABLE_BOND" in page.url and "v.productType=REPO" in page.url        # the criteria encoding is unchanged
     page.locator(".qf-toggle").click()                                                                                                   # the criteria fold away after a search
@@ -320,7 +320,7 @@ def test_endur_and_comswap_offer_only_their_sub_types_and_find_only_endur_swaps(
         offered = page.eval_on_selector_all('.qf-field[data-field="PRODUCT_SUB_TYPE"] input[type=checkbox]',
                                             "els => els.filter(e => !e.closest('.qf-dep-off')).map(e => e.value)")
         assert sorted(offered) == ["ENGY-B-SWAP", "ENGY-SWAP"]
-        page.get_by_role("button", name="Search").first.click()
+        page.get_by_role("button", name="Search", exact=True).first.click()
         page.wait_for_url("**/form/trading?**")
         assert "v.SOURCE_SYSTEM=ENDUR" in page.url and "v.PRODUCT_TYPE=ComSwap" in page.url
         assert "SOURCE_SYSTEM = 'ENDUR'" in be.asked[-1] and "PRODUCT_TYPE = 'ComSwap'" in be.asked[-1]
