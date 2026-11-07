@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The VaR Playground (terminal/play.html; docs/architecture/VAR_PLAYGROUND.md, option A with option B's Rest of scope). The grid is drawn
    in windows: only the cells in view are in the page, the header rows and the scenario column kept in place while scrolling, so 500
    positions by 509 scenarios stay light. Selecting a cell shows its formula as the workbook writes it (the server's templates) and moves

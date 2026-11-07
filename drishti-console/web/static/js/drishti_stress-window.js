@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The stress window selection (docs/guides/VAR_GUIDE.md section 18.9; terminal/stress_window.html): fills the shell from
    /api/var/stress-window (the server's analysis of a node) and /api/var/stress-window/proposals. The chart is drawn as SVG here (no
    library); the node chips, hierarchy and window length are kept in the address; a click on the chart or a candidate selects the
