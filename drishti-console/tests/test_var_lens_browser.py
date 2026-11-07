@@ -87,8 +87,8 @@ def test_each_horizon_and_confidence_redraws_every_panel_and_round_trips(stack, 
     assert "backtesting is 1-day" in pg.evaluate(TILE % (5, ".s"))
     assert "√10" in pg.locator("[data-vx-method]").inner_text()
     # the tree drawn for this lens: asked again on the lens change, aria-busy until its answer is drawn (its rows before that are the old lens's)
-    wait(pg, "!!document.querySelector('[data-vx-tree]:not([aria-busy]) .vx-row[data-scope=\"NODE:MGMT~BANK\"]')", 60)
-    tree_bank = pg.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~BANK"] .num').first.inner_text()
+    wait(pg, "!!document.querySelector('[data-vx-tree]:not([aria-busy]) .dg-row[data-scope=\"NODE:MGMT~BANK\"]')", 60)
+    tree_bank = pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~BANK"] .dg-cell[aria-colindex="2"]').first.inner_text()
     assert abs(money(tree_bank) - sq) <= 0.006 * sq, (tree_bank, sq)
     shot(pg, "lens-10d-sqrt")
 
@@ -98,8 +98,8 @@ def test_each_horizon_and_confidence_redraws_every_panel_and_round_trips(stack, 
     assert pg.locator("[data-vx-cmd]").inner_text() == "VAR BANK 10D SUM"
     assert "5th worst of 500 overlapping windows" in pg.evaluate(TILE % (0, ".s"))
     assert "(500 windows)" in pg.locator("[data-vx-n]").inner_text()
-    wait(pg, "document.querySelectorAll('[data-vx-pathtable] tbody tr').length > 0", 60)
-    first = pg.locator("[data-vx-pathtable] tbody tr").first.locator("td").nth(1).inner_text()
+    wait(pg, "(((document.querySelector('[data-vx-pathtable] drishti-grid') || {}).grid || null) ? ((document.querySelector('[data-vx-pathtable] drishti-grid') || {}).grid || null).model.rowCount() : 0) > 0", 60)
+    first = pg.locator("[data-vx-pathtable] .dg-row").first.locator('.dg-cell[aria-colindex="2"]').inner_text()
     assert " … " in first, first                                                     # a window: its first and last day
     assert "sum of days" in pg.locator("[data-vx-method]").inner_text()
     shot(pg, "lens-10d-sum")
@@ -108,9 +108,9 @@ def test_each_horizon_and_confidence_redraws_every_panel_and_round_trips(stack, 
     assert "backtesting is 1-day" in pg.locator("[data-vx-hist-note]").inner_text()
     pg.locator('.vx-tab[data-tab="contrib"]').click()
     wait(pg, "document.querySelector('[data-var]').dataset.tabPainted === 'contrib'", 60)
-    assert pg.locator("[data-vx-ctable] tbody tr.vx-click").count() > 0
+    assert pg.locator("[data-vx-ctable] .dg-row[data-scope]").count() > 0
     pg.locator('.vx-tab[data-tab="ccy"]').click()
-    wait(pg, "document.querySelectorAll('[data-vx-ccytable] tbody tr[data-ccy]').length >= 5", 60)
+    wait(pg, "(((document.querySelector('[data-vx-ccytable] drishti-grid') || {}).grid || null) ? ((document.querySelector('[data-vx-ccytable] drishti-grid') || {}).grid || null).model.rowCount() : 0) >= 5", 60)
     pg.locator('.vx-tab[data-tab="path"]').click()
 
     # a confidence: another rank of the same vector; 95% at 10 days sum is the 25th of 500

@@ -879,6 +879,47 @@ old code is gone and its tests run against the new DOM with the same assertions.
 The embed (Elements 1.4.5) loads drishti-core and drishti-grid with the console's scripts, and its view sheet carries the grid's style, so
 an embedded view or report draws the same grid.
 
+### 12.2 The VaR and exposure family (step 9, 2.9.11.e): the migration checklist
+
+Every table of the family is a `<drishti-grid>` made by drishti-risk's preset `riskGrid` (the `terminal` layout and density, the
+product owner's default for VaR screens; the grid's own command line, wells, toolbar and function keys off inside a screen that has
+its own; `clientAggregation: false`; VaR, ES, limits and exposures `additive: false`, never summed in the browser), every chart a
+`<drishti-chart>` made by `riskChart` (drishti-risk's kinds where one fits), the figures in words by `riskMoney`, `riskSigned`,
+`riskInt` and `riskPct` (one home; the texts the screens printed before, so no figure changed). What the libraries gained for it:
+drishti-grid 0.4.0 (a column's `cellClass` and `cellRenderer`, a row's `getRowClass` and `getRowData`, `fitRows`, `chrome: false`,
+`pinnedTopRows` with `pinnedCellClicked`, a tree node's own row in its cell context), drishti-chart 0.2.0 (the histogram of the server's
+bins), drishti-risk 0.2.0 (the P&L distribution from the server's bins with its fitted normal; the presets).
+
+| Screen | Before (file, lines) | After | Tables → grids | Charts | Old code and CSS deleted |
+|---|---|---|---|---|---|
+| [x] VaR explorer (`VAR <scope>`) | `drishti_var-explorer.js` 1,343, `drishti_var-charts.js` 208, `drishti_var.css` 217 | explorer 1,326, charts deleted, CSS 168 | the scope tree (tree data: nodes, a book's positions and a position's trades asked when opened; the column widths kept per mode), the path, the scenario's contributors, the history, the contributions (Euler totals the server's, under the grid), the captures, a capture reopened, a comparison, the currencies | `risk.pnl-distribution` (the server's bins, VaR and ES), the worst 25 and the P&L by scenario date (bars, the VaR scenario and the tail toned, −VaR line), the history (P&L, −VaR, −ES, exceptions) | the SVG charts and their tip, the hand-built tables and the tree's rows |
+| [x] Parametric VaR (`PVAR`) | `drishti_var-parametric.js` 124, `drishti_var-parametric.css` 46 | 132, CSS 35 | the tree's Parametric and Gap columns (grid columns with the ?) | the fitted normal and its marker on the P&L distribution (the server's curve) | the tree cells, the SVG curve, tails and gap bracket (the gap is in its tile) |
+| [x] Basket sheet | `drishti_var-basket-sheet.js` 292, sheet CSS 22 lines | 186, 7 | one grid with cell editing: typing, Enter, Tab, Delete, undo; the paste with headings stays the sheet's; each cell toned by the server's check | — | the sheet's own table, editor, keys and windowing |
+| [x] Basket what-if | two tables in `drishti_var-basket.js` (831) | grids (807) | the what-if trades, before and after | — | `vb-table` |
+| [x] VaR Playground | `drishti_var-playground.js` 425, `drishti_var-playground.css` 118 | 405, CSS 111 | the workbook grid (the six header rows pinned, the label column pinned, 500 × 509 windowed), the Parametric tab's figures, positions and scenarios | — | the canvas, its windowing, keys and scroll code |
+| [x] Backtesting (`VAR <scope> BACKTEST`) | `drishti_var-backtesting.js` 235 | 181 | the zone counts, the bank and its desks (a desk redraws in place), the exceptions | `risk.backtest` with the server's zone, count and multiplier on the card (`spec.light`), both exception sets marked | the SVG chart |
+| [x] Regulatory screens (`VRES`, reports, statistics) | `drishti_var-reports.js` 283, `drishti_var-regulatory.css` 96 | 281, CSS 77 | the pilot pack (Generate in a cell), the report as filed (a cell opens its lineage; totals marked), the checks | — | the hand-built tables |
+| [x] Stress window | `drishti_stress-window.js` 281, CSS 69 | 225, CSS 52 | the candidates, by node, current against proposed, the proposals | an area of the windows' VaR with today's line, the candidates and the selected window; a click selects | the SVG chart |
+| [x] Scenario matrix (`SMAT`) | `drishti_scenario-matrix.js` 869, CSS 130 | 669, CSS 91 | the matrix (a column per date, the heat, V and E, the tail outline), each date's VaR, ES and base PV under it | line, scatter, area or bar with −VaR, base PV, the tail and the VaR scenario marked | about 400 lines of SVG and the virtualised table |
+| [x] MR lens and cube panes | `drishti_mr-lens.js` 384, CSS 99 | 392, CSS 86 | the components (the server's total row), the heat map, the ladder, the what-if | `risk.pnl-distribution` of the server's bins, a waterfall to the server's total | the string tables and SVG |
+| [x] Risk landing | `drishti_risk-landing.js` 254, CSS 97 | 249, CSS 94 | VaR by desk, exposure by counterparty (the limit use in the cell) | — | the hand-built tables |
+| [x] Exposure explorer and counterparty screens (`EXP`) | `drishti_exposure-explorer.js` 985, `drishti_exposure-charts.js` 126, `drishti_exposure.css` 142 | 967, charts deleted, CSS 109 | all nine tables (netting sets with the server's peak PFE as their total, a row drills to its scope) | `risk.exposure-profile` (EE, PFE, the server's EEPE, the limit at the page's confidence, the peak; the uncollateralised EE and a netting set's 5/25/75/95% paths as more series) | the SVG profile and its legend |
+| [x] FRTB-SA | `drishti_frtb-sa.js` 250, CSS 52 | 269, CSS 44 | class by measure, scenarios, contributions, the bucket drill, compare, the playground's sensitivities (the formula bar follows the focus) | the capital stack as horizontal bars | the hand-built tables |
+| [x] SIMM | `drishti_simm.js` 242 | 241 | the netting sets, against the counterparty, the breakdown, compare, the sensitivities | — | the hand-built tables |
+
+drishti-risk also gained `textColumn` and `moneyColumn` (the exposure, FRTB and SIMM columns), `more` series on the exposure profile, and
+the shared page partials `terminal/_risk_elements.html` and `_risk_elements_css.html` load the libraries in order.
+
+**Before and after.** `tests/screen_figures.py` reads every table or grid of a screen as rows by heading, the tiles and the playground's
+cells, the same way before and after the move; `tests/test_var_family_figures_browser.py` (run only with `DRISHTI_FIGURES_OUT` or
+`DRISHTI_FIGURES_BASELINE`) captures sixteen screens and tabs on the market-risk demo data and compares them with a capture of the code
+before the move.
+
+**Open.** The exposure scope tree is still hand-built (not tree data yet); FRTB-SA's per-class total column is still summed in the page
+(the server sends no class totals: a server field to add); the pre-deal form, the hierarchy, horizon and confidence pickers stay native
+selects (drishti-inputs has no single-choice select); the scenario matrix's date headings lose their hover note (in the column
+description instead); the screens' scripts move into the banking plugin with the module platform (section 8).
+
 ## 13. Risks
 
 | Risk | Mitigation |

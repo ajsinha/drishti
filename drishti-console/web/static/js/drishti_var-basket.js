@@ -563,25 +563,13 @@
     if (!el.wifList) return;
     el.wifList.textContent = "";
     if (!T.whatif.length) return;
-    var t = h("table", "vb-table");
-    var hr = h("tr");
-    ["Copy of", "Factor", ""].forEach(function (x, i) { hr.appendChild(h("th", i === 1 ? "n" : null, x)); });
-    t.appendChild(h("thead")).appendChild(hr);
-    var tb = h("tbody");
-    T.whatif.forEach(function (w, k) {
-      var tr = h("tr");
-      tr.dataset.vbWhatifChip = w.copyOf;
-      tr.appendChild(h("td", "mono", w.copyOf));
-      tr.appendChild(h("td", "n mono", String(w.factor).replace("-", "−")));
-      var td = h("td");
-      var x = btn("", "×", "Remove the what-if " + w.copyOf);
-      x.dataset.vbWdel = String(k);
-      td.appendChild(x);
-      tr.appendChild(td);
-      tb.appendChild(tr);
-    });
-    t.appendChild(tb);
-    el.wifList.appendChild(t);
+    var R = window.Drishti.elements.risk;                  // drishti-risk's grid preset (the terminal layout)
+    R.riskGrid(el.wifList, { title: "What-if trades", rows: T.whatif.map(function (w, k) { return { k: k, copyOf: w.copyOf, factor: w.factor }; }),
+      getRowId: function (r) { return String(r.k); }, getRowData: function (r) { return { vbWhatifChip: r.copyOf }; },
+      columns: [{ field: "copyOf", header: "Copy of", width: 200 },
+        { field: "factor", header: "Factor", type: "number", width: 80, format: function (v) { return String(v).replace("-", "−"); } },
+        { id: "x", header: "", width: 50, sortable: false, valueGetter: function () { return ""; },
+          cellRenderer: function (c) { var x = btn("", "×", "Remove the what-if " + c.row.copyOf); x.dataset.vbWdel = String(c.row.k); return x; } }] });
   }
   function openWhatIf() {
     show();
@@ -603,30 +591,18 @@
       el.wifOut.textContent = "";
       el.wifOut.dataset.done = "ready";
       var b = w.before || {}, a = w.after || {}, ch = w.change || {};
-      var t = h("table", "vb-table");
-      var hr = h("tr");
-      ["", "Before", "After", "Incremental"].forEach(function (x, i) { hr.appendChild(h("th", i ? "n" : null, x)); });
-      t.appendChild(h("thead")).appendChild(hr);
-      var tb = h("tbody");
       var cl = function (x) { return x ? Math.round(x * 1000) / 10 + "%" : ""; };   // the answer's confidences, never fixed here
-      [[("VaR " + cl(w.confidence)).trim(), b["var"], a["var"], ch["var"]], [("ES " + cl(w.esConfidence)).trim(), b.es, a.es, ch.es]].forEach(function (r) {
-        var tr = h("tr");
-        tr.appendChild(h("td", null, r[0]));
-        tr.appendChild(h("td", "n mono", short(r[1])));
-        tr.appendChild(h("td", "n mono", short(r[2])));
-        tr.appendChild(h("td", "n mono " + (r[3] > 0 ? "up" : "down"), (r[3] > 0 ? "+" : "") + short(r[3])));
-        tb.appendChild(tr);
-      });
-      (w.items || []).forEach(function (it) {
-        var tr = h("tr", "vb-sub");
-        tr.appendChild(h("td", null, it.label + " alone " + short(it.standaloneVar)));
-        tr.appendChild(h("td", "n mono", ""));
-        tr.appendChild(h("td", "n mono", "component " + short(it.componentVar)));
-        tr.appendChild(h("td", "n mono", (it.incrementalVar > 0 ? "+" : "") + short(it.incrementalVar)));
-        tb.appendChild(tr);
-      });
-      t.appendChild(tb);
-      el.wifOut.appendChild(t);
+      var rows = [{ what: ("VaR " + cl(w.confidence)).trim(), before: short(b["var"]), after: short(a["var"]), inc: ch["var"] },
+                  { what: ("ES " + cl(w.esConfidence)).trim(), before: short(b.es), after: short(a.es), inc: ch.es }]
+        .concat((w.items || []).map(function (it) {
+          return { what: it.label + " alone " + short(it.standaloneVar), before: "", after: "component " + short(it.componentVar), inc: it.incrementalVar, sub: true };
+        }));
+      var g = h("div", "vb-grid");
+      el.wifOut.appendChild(g);
+      window.Drishti.elements.risk.riskGrid(g, { title: "What-if: before and after", rows: rows, getRowClass: function (r) { return r.sub ? "vb-sub" : null; },
+        columns: [{ field: "what", header: "", width: 240 }, { field: "before", header: "Before", width: 100 }, { field: "after", header: "After", width: 140 },
+          { field: "inc", header: "Incremental", type: "number", additive: false, width: 110, format: function (v) { return (v > 0 ? "+" : "") + short(v); },
+            cellClass: function (v) { return v > 0 ? "dg-tone-bad" : "dg-tone-good"; } }] });
       el.wifOut.appendChild(h("p", "vb-note", "Pre-deal what-if by the server's VaR engine: " + (w.note || "")));
     }).catch(function (e) {
       el.wifOut.textContent = "";

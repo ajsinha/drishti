@@ -80,23 +80,23 @@ def test_the_picker_moves_every_panel_and_the_tab_loads_only_when_opened(stack, 
     prov = pg.locator("[data-explain-drawer]").inner_text()
     assert "Reporting currency" in prov and "EUR, chosen in the header" in prov, prov
     assert "scenario PVs" in prov and "supplied" in prov and "via USD" in prov, prov
-    wait(pg, "document.querySelector('.vx-tree .vx-row.hdr') && document.querySelector('.vx-tree .vx-row.hdr').innerText.indexOf('EUR') >= 0", 60)
+    wait(pg, "document.querySelector('.vx-tree .dg-hrow.dg-hleaf') && document.querySelector('.vx-tree .dg-hrow.dg-hleaf').innerText.indexOf('EUR') >= 0", 60)
     assert all("ccy=EUR" in u for u in requests_to(pg, "/api/var/tree?")[-1:]), pg.seen
     shot(pg, "ccy-eur")
     assert not requests_to(pg, "/api/var/scope/currencies"), "the tab is loaded only when opened"
 
     pg.locator('.vx-tab[data-tab="ccy"]').click()
-    wait(pg, "document.querySelectorAll('[data-vx-ccytable] tbody tr[data-ccy]').length >= 5", 60)
+    wait(pg, "((document.querySelector('[data-vx-ccytable] drishti-grid') || {}).grid ? document.querySelector('[data-vx-ccytable] drishti-grid').grid.model.rowCount() : 0) >= 5", 60)
     assert len(requests_to(pg, "/api/var/scope/currencies")) == 1
-    rows = pg.eval_on_selector_all("[data-vx-ccytable] tbody tr[data-ccy]", "rs => rs.map(r => [r.dataset.ccy, r.className])")
+    rows = pg.evaluate("((document.querySelector('[data-vx-ccytable] drishti-grid') || {}).grid || null).model.rowModel.rows.map((r) => [r.currency, r.shown ? 'shown' : ''])")
     assert [r[0] for r in rows] == ["USD", "EUR", "CAD", "JPY", "GBP"], rows
     assert dict(rows)["EUR"] == "shown"
-    assert "VaR in EUR at today's rate" in pg.locator("[data-vx-ccy-inpage]").inner_text()
+    assert "VaR in EUR at today's rate" in pg.evaluate("((document.querySelector('[data-vx-ccytable] drishti-grid') || {}).grid || null).model.shownColumns().map((c) => c.header)")    # the grid's heading
     shot(pg, "ccy-tab")
-    pg.locator('[data-vx-ccytable] tbody tr[data-ccy="CAD"] button').click()      # a row switches the page
+    pg.locator('[data-vx-ccytable] .dg-row[data-ccy="CAD"] button').click()      # a row switches the page
     wait(pg, "document.querySelector('.vx-tile[data-tile=\"0\"] .l').innerText.indexOf('CAD') >= 0", 60)
     assert "ccy=CAD" in pg.url and pg.input_value("[data-vx-ccy]") == "CAD"
-    wait(pg, "!!document.querySelector('[data-vx-ccytable] tbody tr.shown[data-ccy=\"CAD\"]')", 60)
+    wait(pg, "!!document.querySelector('[data-vx-ccytable] .dg-row.vx-shown[data-ccy=\"CAD\"]')", 60)
 
     # the session keeps it: another VaR page in this tab opens in CAD
     pg.goto(str(stack) + "/var?scope=BANK")
@@ -129,7 +129,7 @@ def test_on_a_phone_the_picker_and_the_tab_fit(stack, browser):
     box = pg.locator("[data-vx-ccy]").bounding_box()
     assert box and box["height"] >= 36 and box["x"] + box["width"] <= 391, box          # a touch target, inside the screen
     pg.locator('.vx-tab[data-tab="ccy"]').click()
-    wait(pg, "document.querySelectorAll('[data-vx-ccytable] tbody tr[data-ccy]').length >= 5", 60)
+    wait(pg, "((document.querySelector('[data-vx-ccytable] drishti-grid') || {}).grid ? document.querySelector('[data-vx-ccytable] drishti-grid').grid.model.rowCount() : 0) >= 5", 60)
     assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
     shot(pg, "ccy-phone")
     pg.close()

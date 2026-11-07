@@ -1378,7 +1378,7 @@
           "scripts": []
         },
         "drishti-chart": {
-          "version": "0.1.0",
+          "version": "0.2.0",
           "title": "The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec",
           "bundle": "drishti-chart/drishti_chart.js",
           "entry": "drishti-chart/src/drishti_index.js",
@@ -1394,13 +1394,14 @@
           ]
         },
         "drishti-risk": {
-          "version": "0.1.0",
-          "title": "The banking module's chart kinds on drishti-chart (licensed with the module): the P&L distribution with VaR and ES, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit",
+          "version": "0.2.0",
+          "title": "The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser)",
           "bundle": "drishti-risk/drishti_risk.js",
           "entry": "drishti-risk/src/drishti_index.js",
           "global": "risk",
           "requires": [
             "drishti-core",
+            "drishti-grid",
             "drishti-chart"
           ],
           "css": [],
@@ -1496,7 +1497,7 @@
       if (scripts[plain]) { return scripts[plain]; }
       const doc = root().document;
       if (!doc) { return Promise.reject(new Error('loadScript: there is no page to load ' + src + ' into')); }
-      if (Array.prototype.some.call(doc.scripts, (s) => (s.getAttribute('src') || '').split('?')[0] === plain && (s.dataset.loaded === '1' || !s.hasAttribute('data-drishti-script')))) { return Promise.resolve(); }
+      if (Array.prototype.some.call(doc.scripts, (x) => (x.getAttribute('src') || '').split('?')[0] === plain && (x.dataset.loaded === '1' || !x.hasAttribute('data-drishti-script')))) { return (scripts[plain] = Promise.resolve()); }
       scripts[plain] = new Promise((resolve, reject) => {
         const s = doc.createElement('script');
         s.src = src;

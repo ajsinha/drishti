@@ -15,12 +15,14 @@
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The stress window selection (docs/guides/VAR_GUIDE.md section 18.9; terminal/stress_window.html): fills the shell from
-   /api/var/stress-window (the server's analysis of a node) and /api/var/stress-window/proposals. The chart is drawn as SVG here (no
-   library); the node chips, hierarchy and window length are kept in the address; a click on the chart or a candidate selects the
-   window Freeze and propose sends. */
+   /api/var/stress-window (the server's analysis of a node) and /api/var/stress-window/proposals. The chart is a drishti-chart area (the server's stressed VaR for every window start, today's VaR,
+   the candidates, the worst and the current marked, the selected window a line); the candidates, the nodes, current against proposed
+   and the proposals are risk grids (<drishti-grid>, terminal layout). The node chips, hierarchy and window length are kept in the
+   address; a click on the chart or a candidate selects the window Freeze and propose sends. */
 (function () {
   "use strict";
   var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
+  var R = window.Drishti.elements.risk;                                       // the risk grid preset and chart (drishti-risk)
   var root = document.querySelector("[data-swin]");
   if (!root) return;
   var S = { scope: root.dataset.scope || "BANK", hierarchy: root.dataset.hierarchy || "MGMT", length: root.dataset.length || "",
@@ -33,11 +35,8 @@
     if (text !== undefined && text !== null) e.textContent = text;
     return e;
   }
-  function svg(tag, attrs) {
-    var e = document.createElementNS("http://www.w3.org/2000/svg", tag);
-    Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });
-    return e;
-  }
+  function tag(cls, text) { return h("span", "sw-tag " + cls, text); }
+  function select(first) { S.selected = first; chart(S.data); compare(S.data); candidates(S.data); }
   var money = F.formatter("compact", { decimals: function (a, u) { return u === "k" ? 1 : !u ? 0 : 2; } });
   function whole(v) { return v === null || v === undefined || isNaN(v) ? "—" : Math.round(v).toLocaleString("en-US"); }
   function pct(v) { return v === null || v === undefined || isNaN(v) ? "—" : (v >= 0 ? "+" : "−") + Math.abs(v * 100).toFixed(1) + "%"; }
@@ -115,99 +114,49 @@
         "% of the worst (" + pct(al.gap) + ")."));
   }
 
+  /** The server's stressed VaR for every window start as an area; today's VaR a line; the candidates, the worst and the current points;
+   *  the selected window a line across. A click on a point selects its window. */
   function chart(d) {
-    var box = $("[data-sw-chart]"); box.textContent = "";
-    var xs = d.series.starts, ys = d.series["var"], n = ys.length;
-    if (!n) return;
-    var W = Math.max(600, box.clientWidth || 1000), H = box.clientHeight || 340, L = 56, R = 16, T = 22, B = 26;
-    var max = Math.max.apply(null, ys), min = Math.min.apply(null, ys);
-    if (d.today) { max = Math.max(max, d.today["var"]); min = Math.min(min, d.today["var"]); }
-    var pad = (max - min) * 0.08 || 1; max += pad; min = Math.max(0, min - pad);
-    var x = function (i) { return L + (W - L - R) * i / Math.max(1, n - 1); };
-    var y = function (v) { return T + (H - T - B) * (1 - (v - min) / (max - min)); };
-    var s = svg("svg", { viewBox: "0 0 " + W + " " + H, preserveAspectRatio: "none" });
-    for (var k = 0; k <= 4; k++) {
-      var v = min + (max - min) * k / 4;
-      s.appendChild(svg("line", { x1: L, x2: W - R, y1: y(v), y2: y(v), "class": "axis" }));
-      var t = svg("text", { x: L - 6, y: y(v) + 4, "text-anchor": "end", "class": "tick" }); t.textContent = money(v); s.appendChild(t);
-    }
-    var lastYear = "";
-    xs.forEach(function (day, i) {
-      var yr = day.slice(0, 4);
-      if (yr !== lastYear && day.slice(5, 7) === "01") {
-        lastYear = yr;
-        var tt = svg("text", { x: x(i), y: H - 8, "text-anchor": "middle", "class": "tick" }); tt.textContent = yr; s.appendChild(tt);
-      }
-    });
-    var path = "", step = Math.max(1, Math.floor(n / 2000));
-    for (var i = 0; i < n; i += step) path += (i ? "L" : "M") + x(i).toFixed(1) + "," + y(ys[i]).toFixed(1);
-    path += "L" + x(n - 1).toFixed(1) + "," + y(ys[n - 1]).toFixed(1);
-    s.appendChild(svg("path", { d: path + "L" + x(n - 1) + "," + y(min) + "L" + x(0) + "," + y(min) + "Z", "class": "area" }));
-    s.appendChild(svg("path", { d: path, "class": "line" }));
-    if (d.today) {
-      s.appendChild(svg("line", { x1: L, x2: W - R, y1: y(d.today["var"]), y2: y(d.today["var"]), "class": "today" }));
-      var tl = svg("text", { x: W - R, y: y(d.today["var"]) - 4, "text-anchor": "end", "class": "tick" });
-      tl.textContent = "today's VaR " + money(d.today["var"]) + " (the last " + d.today.days + " days)"; s.appendChild(tl);
-    }
-    var at = function (first) { return xs.indexOf(first); };
+    var box = $("[data-sw-chart]");
+    var xs = d.series.starts, ys = d.series["var"];
+    if (!ys.length) { box.textContent = ""; return; }
+    var rows = xs.map(function (s, i) { return { start: s, "var": ys[i] }; });
+    var notes = [];
+    if (d.today) { notes.push({ type: "line", axis: "y", value: d.today["var"], tone: "muted", label: "today's VaR " + money(d.today["var"]) + " (the last " + d.today.days + " days)", showValue: false }); }
     (d.candidates || []).forEach(function (c) {
-      var i = at(c.first); if (i < 0) return;
-      var cls = c.worst ? "worst" : c.current ? "current" : "";
-      s.appendChild(svg("circle", { cx: x(i), cy: y(c["var"]), r: c.worst || c.current ? 5 : 3.5, "class": "mark-" + (cls || "cand") }));
-      // the worst above its point, the current and the other candidates below theirs (close windows do not print over each other)
-      var below = c.worst ? -6 : c.current ? 16 : 16 + 13 * ((c.rank || 0) % 2);
-      var lab = svg("text", { x: x(i) + 7, y: y(c["var"]) + below, "class": "lab " + cls });
-      lab.textContent = (c.worst ? "worst " : c.current ? "current " : "#" + c.rank + " ") + c.first + " · " + money(c["var"]);
-      s.appendChild(lab);
+      if (xs.indexOf(c.first) < 0) return;
+      notes.push({ type: "point", x: c.first, y: c["var"], tone: c.worst ? "bad" : c.current ? "warn" : "ink",
+        label: (c.worst ? "worst " : c.current ? "current " : "#" + c.rank + " ") + c.first + " · " + money(c["var"]) });
     });
-    if (S.selected && at(S.selected) >= 0) {
-      var si = at(S.selected);
-      s.appendChild(svg("line", { x1: x(si), x2: x(si), y1: T, y2: H - B, "class": "mark-sel" }));
-    }
-    s.addEventListener("click", function (ev) {
-      var r = s.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width;
-      var i = Math.round((px - L) / (W - L - R) * (n - 1));
-      if (i >= 0 && i < n) { S.selected = xs[i]; chart(d); compare(d); candidates(d); }
-    });
-    s.addEventListener("mousemove", function (ev) {
-      var r = s.getBoundingClientRect(), px = (ev.clientX - r.left) * W / r.width;
-      var i = Math.round((px - L) / (W - L - R) * (n - 1));
-      if (i >= 0 && i < n) box.title = "window from " + xs[i] + ": stressed VaR " + whole(ys[i]);
-    });
-    box.appendChild(s);
+    if (S.selected && xs.indexOf(S.selected) >= 0) { notes.push({ type: "line", axis: "x", value: S.selected, tone: "accent", style: "solid", label: "selected", showValue: false }); }
+    R.riskChart(box, { kind: "area", data: { rows: rows }, id: "start", x: { field: "start", type: "category" }, y: { format: "compact", min: 0 },
+      series: [{ field: "var", name: "stressed VaR, " + d.length + "-day window", tone: "link" }], annotations: notes, legend: "none", zoom: true },
+      { height: 320, onPick: function (row) { if (row && row.start) select(row.start); } });
   }
 
   function candidates(d) {
-    var tb = $("[data-sw-cands] tbody"); tb.textContent = "";
-    (d.candidates || []).forEach(function (c) {
-      var tr = h("tr", c.first === S.selected ? "sel" : ""); tr.dataset.first = c.first;
-      tr.appendChild(h("td", "", c.rank));
-      tr.appendChild(h("td", "l", c.first + " to " + c.last));
-      tr.appendChild(h("td", "mono", whole(c["var"])));
-      tr.appendChild(h("td", "mono" + (c.vsCurrent > 0 ? " sw-pos" : ""), pct(c.vsCurrent)));
-      var tag = h("td", "l");
-      if (c.worst) tag.appendChild(h("span", "sw-tag worst", "worst"));
-      if (c.current) tag.appendChild(h("span", "sw-tag current", "current"));
-      tr.appendChild(tag);
-      tr.appendChild(h("td", "l", c.worstDay + " · " + money(c.worstPnl)));
-      tr.addEventListener("click", function () { S.selected = c.first; chart(d); compare(d); candidates(d); });
-      tb.appendChild(tr);
-    });
+    var rows = (d.candidates || []).map(function (c) { return Object.assign({}, c, { window: c.first + " to " + c.last, worstIn: c.worstDay + " · " + money(c.worstPnl) }); });
+    R.riskGrid($("[data-sw-cands]"), { title: "Top candidates", rows: rows, getRowId: function (c) { return c.first; },
+      getRowClass: function (c) { return c.first === S.selected ? "sw-sel" : null; }, getRowData: function (c) { return { first: c.first }; },
+      onRow: function (c) { select(c.first); },
+      columns: [{ field: "rank", header: "#", type: "number", width: 50 }, { field: "window", header: "Window", width: 200 },
+        R.figureColumn("var", "Stressed VaR", { format: whole, width: 130 }),
+        R.figureColumn("vsCurrent", "Against current", { format: pct, width: 120, tone: function (v) { return v > 0 ? "warn" : null; } }),
+        { id: "tags", field: "first", header: "", width: 140, sortable: false, cellRenderer: function (x) {
+          var s = h("span"); if (x.row.worst) s.appendChild(tag("worst", "worst")); if (x.row.current) s.appendChild(tag("current", "current")); return s; } },
+        { field: "worstIn", header: "Worst day in it", width: 200 }] });
   }
 
   function byNode(d) {
-    var tb = $("[data-sw-bynode] tbody"); tb.textContent = "";
-    (d.byNode || []).forEach(function (m) {
-      var tr = h("tr");
-      var td = h("td", "l"), a = h("a", "", m.id.split("~").pop()); a.href = "#"; a.title = m.name;
-      a.addEventListener("click", function (ev) { ev.preventDefault(); S.scope = m.id; load(); });
-      td.appendChild(a); tr.appendChild(td);
-      tr.appendChild(h("td", "mono", money(m.current)));
-      tr.appendChild(h("td", "mono", money(m.worst)));
-      tr.appendChild(h("td", "l mono", m.worstFirst || "—"));
-      tr.appendChild(h("td", "mono" + (m.gap > 0 ? " sw-pos" : ""), pct(m.gap)));
-      tb.appendChild(tr);
-    });
+    var rows = (d.byNode || []).map(function (m) { return Object.assign({}, m, { short: m.id.split("~").pop() }); });
+    R.riskGrid($("[data-sw-bynode]"), { title: "By node", rows: rows, getRowId: function (m) { return m.id; },
+      columns: [{ field: "short", header: "Node", width: 130, cellRenderer: function (x) {
+          var a = h("a", "", x.value); a.href = "#"; a.title = x.row.name;
+          a.addEventListener("click", function (ev) { ev.preventDefault(); S.scope = x.row.id; load(); });
+          return a; } },
+        R.figureColumn("current", "Current window", { format: money }), R.figureColumn("worst", "Its worst window", { format: money }),
+        { field: "worstFirst", header: "Worst starts", width: 110, format: function (v) { return v || "—"; } },
+        R.figureColumn("gap", "Gap", { format: pct, width: 90, tone: function (v) { return v > 0 ? "warn" : null; } })] });
   }
 
   function selectedWindow(d) {
@@ -219,43 +168,38 @@
   }
 
   function compare(d) {
-    var tb = $("[data-sw-compare] tbody"); tb.textContent = "";
     var c = d.current || {}, p = selectedWindow(d) || {};
     var rows = [["Window", (c.first || "—") + (c.last ? " to " + c.last : ""), (p.first || "—") + (p.last ? " to " + p.last : "")],
                 ["Stressed VaR 1-day", whole(c["var"]), whole(p["var"])], ["10-day √10", whole(c.var10), whole(p.var10)],
                 ["Scenarios", c.scenarios || "—", p.scenarios || "—"], ["Worst day in it", c.worstDay || "—", p.worstDay || "—"],
                 ["Approved", d.approval ? (d.approval.at || "").slice(0, 10) + " · " + d.approval.by : "—", "—"]];
-    rows.forEach(function (r) {
-      var tr = h("tr"); tr.appendChild(h("td", "l", r[0])); tr.appendChild(h("td", "mono", r[1])); tr.appendChild(h("td", "mono", r[2]));
-      tb.appendChild(tr);
-    });
+    R.riskGrid($("[data-sw-compare]"), { title: "Current against proposed", rows: rows.map(function (r) { return { what: r[0], current: String(r[1]), proposed: String(r[2]) }; }),
+      getRowId: function (r) { return r.what; },
+      columns: [{ field: "what", header: "", width: 150, sortable: false }, { field: "current", header: "Current", width: 190, sortable: false, cellClass: function () { return "dg-num"; } },
+        { field: "proposed", header: "Proposed", width: 190, sortable: false, cellClass: function () { return "dg-num"; } }] });
   }
 
   function proposals() {
-    var tb = $("[data-sw-proposals] tbody");
+    var box = $("[data-sw-proposals]");
     get("stress-window/proposals?limit=20").then(function (b) {
-      tb.textContent = "";
-      (b.items || []).forEach(function (r) {
-        var tr = h("tr");
-        tr.appendChild(h("td", "l mono", r.id));
-        tr.appendChild(h("td", "l", r.node ? r.node.id : ""));
-        tr.appendChild(h("td", "l mono", r.proposed ? r.proposed.first + (r.proposed.last ? " to " + r.proposed.last : "") : ""));
-        tr.appendChild(h("td", "mono", whole(r.proposed && r.proposed["var"])));
-        var st = h("td", "l"); st.appendChild(h("span", "sw-tag " + r.status, r.status)); tr.appendChild(st);
-        tr.appendChild(h("td", "l", r.proposedBy + " · " + (r.proposedAt || "").slice(0, 10)));
-        tr.appendChild(h("td", "l", r.decidedBy ? r.decidedBy + " · " + (r.decidedAt || "").slice(0, 10) : "—"));
-        var act = h("td", "l");
-        if (r.status === "PROPOSED" && r.proposedBy !== root.dataset.user) {
-          var go = h("a", "sw-btn small", "Decide in Approvals"); go.href = "/approvals/stress-window/" + encodeURIComponent(r.id);
-          go.setAttribute("data-sw-approvals", r.id); act.appendChild(go);
-        } else if (r.status === "PROPOSED") {
-          act.textContent = "awaiting another person";
-        }
-        tr.appendChild(act);
-        tb.appendChild(tr);
+      var rows = (b.items || []).map(function (r) {
+        return { id: r.id, node: r.node ? r.node.id : "", window: r.proposed ? r.proposed.first + (r.proposed.last ? " to " + r.proposed.last : "") : "",
+          "var": r.proposed && r.proposed["var"], status: r.status, by: r.proposedBy + " · " + (r.proposedAt || "").slice(0, 10),
+          decided: r.decidedBy ? r.decidedBy + " · " + (r.decidedAt || "").slice(0, 10) : "—", mine: r.proposedBy === root.dataset.user };
       });
-      if (!(b.items || []).length) { var tr = h("tr"); var td = h("td", "l", "No proposal yet."); td.colSpan = 8; tr.appendChild(td); tb.appendChild(tr); }
-    }).catch(function () { tb.textContent = ""; });
+      if (!rows.length) { box.textContent = ""; box.appendChild(h("p", "sw-note", "No proposal yet.")); return; }
+      R.riskGrid(box, { title: "Proposals", rows: rows, getRowId: function (r) { return r.id; },
+        columns: [{ field: "id", header: "Id", width: 150 }, { field: "node", header: "Node", width: 130 }, { field: "window", header: "Proposed window", width: 190 },
+          R.figureColumn("var", "Stressed VaR", { format: whole, width: 120 }),
+          { field: "status", header: "Status", width: 110, cellRenderer: function (x) { return tag(x.value, x.value); } },
+          { field: "by", header: "Proposed by", width: 160 }, { field: "decided", header: "Decided by", width: 160 },
+          { id: "act", field: "status", header: "", width: 170, sortable: false, cellRenderer: function (x) {
+            if (x.row.status !== "PROPOSED") return "";
+            if (x.row.mine) return "awaiting another person";
+            var go = h("a", "sw-btn small", "Decide in Approvals"); go.href = "/approvals/stress-window/" + encodeURIComponent(x.row.id);
+            go.setAttribute("data-sw-approvals", x.row.id);
+            return go; } }] });
+    }).catch(function () { box.textContent = ""; });
   }
 
   $("[data-sw-hierarchy]").addEventListener("change", function (e) { S.hierarchy = e.target.value; S.scope = "BANK"; load(); });

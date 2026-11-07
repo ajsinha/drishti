@@ -25,8 +25,8 @@
 (function () {
   "use strict";
   var root = document.querySelector("[data-exposure]");
-  if (!root || !window.Drishti.ExposureCharts) return;
-  var C = window.Drishti.ExposureCharts;
+  if (!root || !window.Drishti.elements.risk) return;
+  var R = window.Drishti.elements.risk, F = window.Drishti.elements.core;   // tables and the profile on Drishti Elements (drishti-risk)
   var $ = function (sel) { return root.querySelector(sel); };
   var params = new URLSearchParams(location.search);
   var S = { scope: root.dataset.scope || "BANK", q: Number(params.get("q")) || 0.95, collateral: params.get("collateral") || "lagged",
@@ -85,18 +85,29 @@
     if (text !== undefined && text !== null) e.textContent = text;
     return e;
   }
-  var m = C.money;
-  function int(v) { return v === null || v === undefined || isNaN(v) ? "—" : Math.round(v).toLocaleString("en-US"); }
+  /** 1.23m, 412k, 2.31bn: the compact money of the mock-up (drishti-core's formats). */
+  var m = F.formatter("compact", { decimals: function (a, u) { return u === "bn" ? 2 : u === "m" ? 1 : 0; }, minus: "-" });
+  var int = R.riskInt;                                                         // whole units, "—" for none (drishti-risk)
   function pct(v, d) { return v === null || v === undefined || isNaN(v) ? "—" : (v * 100).toFixed(d === undefined ? 1 : d) + "%"; }
-  function cell(tr, text, cls) { var td = h("td", cls, text); tr.appendChild(td); return td; }
-  function table(heads, numeric) {
-    var t = h("table", "xx-table"), tr = document.createElement("tr");
-    heads.forEach(function (x, i) { tr.appendChild(h("th", numeric && numeric.indexOf(i) >= 0 ? "n" : null, x)); });
-    t.appendChild(h("thead")).appendChild(tr);
-    t.appendChild(h("tbody"));
-    return t;
+
+  // ---- the tables: every one a <drishti-grid> in the terminal layout (drishti-risk's preset); every figure the server's, as sent
+  /** A grid in the pane (its box is in the page before the grid is made, so it measures itself); a row's scope is its data-scope. */
+  function gridIn(pane, o) {
+    var box = h("div", "xx-grid");
+    pane.appendChild(box);
+    return R.riskGrid(box, Object.assign({ getRowId: function (r, i) { return r.scope || r.id || String(i); },
+      getRowData: function (r) { return r.scope ? { scope: r.scope } : null; },
+      getRowClass: function (r) { return (r.scope ? "xx-click" : "") + (r.total ? " xx-total" : ""); } }, o));
   }
-  function wrap(t) { var d = h("div", "xx-scroll"); d.appendChild(t); return d; }
+  function money(field, header, o) { return R.moneyColumn(field, header, m, Object.assign({ width: 110 }, o)); }   // drishti-risk's money column, the compact rule
+  function share(field, header, o) { return R.figureColumn(field, header, Object.assign({ format: function (v) { return pct(v); }, width: 80 }, o || {})); }
+  function whole(field, header, o) { return R.figureColumn(field, header, Object.assign({ format: function (v) { return int(v); }, additive: true, width: 90 }, o || {})); }
+  function text(field, header, o) { return R.textColumn(field, header, Object.assign({ width: 150 }, o)); }
+  /** A small EE line in a row (drishti-core's sparkline). */
+  function spark(field) {
+    return { id: "spark", field: field, header: "Profile (EE)", width: 124, sortable: false, filterable: false, valueGetter: function () { return ""; },
+      cellRenderer: function (c) { var v = c.row[field]; return v && v.length ? F.sparkline(document, v, undefined, "xx") : null; } };
+  }
   function useClass(u) { return u > 1 ? "crit" : u > 0.9 ? "warn" : "ok"; }
   function errorBox(host, e, retry) {
     var busy = window.Drishti.Busy && window.Drishti.Busy.problem(e);
@@ -205,7 +216,6 @@
   function renderHead(d) {
     var run = d.provenance || {};
     $("[data-xx-meta]").textContent = "run " + d.runId + " · " + int(d.paths) + " paths · " + (d.profile || []).length + " tenors · " + d.businessDate;
-    $("[data-xx-pfe-legend]").textContent = "PFE " + qLabel();
     var tiles;
     if (level(d) === "trade") {
       tiles = [["Peak PFE alone", m(d.peakPfe), "the trade as if it had no netting set, at " + (d.peakPfeTenor || "—")],
@@ -307,27 +317,45 @@
     return up;
   }
 
+  /**
+   * The profile: drishti-risk's exposure profile (EE and PFE over the tenors, EEPE over the first year, the counterparty's limit when it
+   * is at the page's confidence), with the uncollateralised EE and, on a netting set, the paths' 5–95% and 25–75% lines. Every figure is
+   * the server's (EEPE and the peak included); the page only draws them.
+   */
   function renderChart(d) {
     var prof = d.profile || [], set = d.kind === "netting-set";
+    var at = 0;
+    prof.forEach(function (r, i) { if (r.pfe > prof[at].pfe) at = i; });
+    var log = prof.every(function (r) { return r.t > 0; });
     var draw = function (bands) {
-      C.profile($("[data-xx-chart]"), {
-        tenors: prof.map(function (r) { return r.tenor; }), dates: prof.map(function (r) { return r.date; }), t: prof.map(function (r) { return r.t; }),
-        series: [{ name: "EE uncollateralised", cls: "unc", data: prof.map(function (r) { return r.eeUncoll; }) },
-          { name: "EE", cls: "ee", data: prof.map(function (r) { return r.ee; }), area: !set },
-          { name: "PFE " + qLabel(), cls: "pfe", data: prof.map(function (r) { return r.pfe; }), peak: true }],
-        bands: bands
+      var rows = prof.map(function (r, i) {
+        var x = { id: r.tenor, tenor: r.tenor, date: r.date, t: r.t, ee: r.ee, pfe: r.pfe, eeUncoll: r.eeUncoll };
+        if (bands && bands[i]) { x.q5 = bands[i].q5; x.q25 = bands[i].q25; x.q75 = bands[i].q75; x.q95 = bands[i].q95; }
+        return x;
       });
+      var more = [{ field: "eeUncoll", name: "EE uncollateralised", tone: "muted", style: "dashed", opacity: 0.001 }];
+      if (bands) {
+        more.push({ field: "q95", name: "paths 95%", tone: "accent", style: "dotted", opacity: 0.001 }, { field: "q75", name: "paths 75%", tone: "accent", style: "dashed", opacity: 0.001 },
+          { field: "q25", name: "paths 25%", tone: "accent", style: "dashed", opacity: 0.001 }, { field: "q5", name: "paths 5%", tone: "accent", style: "dotted", opacity: 0.001 });
+      }
+      var lim = d.limit && Math.abs(d.limit.confidence - S.q) < 1e-9 ? d.limit.limit : undefined;
+      var peak = prof[at];
+      R.riskChart($("[data-xx-chart]"), { kind: "risk.exposure-profile", title: "Exposure profile", subtitle: d.label + " · " + d.businessDate,
+        data: { rows: rows }, id: "id", x: "t", ee: "ee", pfe: "pfe", pfeTitle: "PFE " + qLabel(), eepe: d.eepe, limit: lim, log: log, more: more,
+        y: { format: "compact" },
+        annotations: peak ? [{ type: "point", x: peak.t, y: peak.pfe, tone: "accent", label: "peak " + m(peak.pfe) + " · " + peak.tenor }] : [] }, { height: 230 });   // the drawing 230 px, the card's title and legend around it
+      root.dataset.peak = peak ? peak.tenor : "";
     };
-    $("[data-xx-fan-legend]").hidden = !set;
     draw(null);
+    $("[data-xx-fan-legend]").hidden = true;
     if (set) {
       var seq = S.seq;
       api("scope/distribution", { scope: d.canonical, bands: "true" }).then(function (x) {
         if (seq !== S.seq) return;
         var b = x.bands || [];
-        draw([{ cls: "xx-fan1", lo: b.map(function (r) { return r.q5; }), hi: b.map(function (r) { return r.q95; }) },
-              { cls: "xx-fan2", lo: b.map(function (r) { return r.q25; }), hi: b.map(function (r) { return r.q75; }) }]);
+        draw(b);
         root.dataset.fan = String(b.length);
+        $("[data-xx-fan-legend]").hidden = !b.length;
       }).catch(function () { /* the profile stands without its fan */ });
     }
   }
@@ -388,32 +416,27 @@
       pane.appendChild(h("p", "xx-note", withPaths.length + " counterparties with paths" + (lev === "bank" ? " across " + (S.tree.legalEntities || []).length
         + " legal entities" : " in " + d.label) + (without ? " (" + without + " without paths on " + d.businessDate + ")" : "") + " · sorted by peak PFE "
         + qLabel() + " · click a row to open it" + (lev === "legal-entity" ? " · figures of the whole counterparty" : "")));
-      var t = table(["Counterparty", "Profile (EE)", "Peak PFE", "EPE", "Limit", "Used", "", "Sets"], [2, 3, 4, 7]), tb = t.tBodies[0];
-      shown.forEach(function (cp) {
-        var tr = document.createElement("tr");
-        tr.className = "xx-click";
-        tr.dataset.scope = cp.scope;
-        cell(tr, cp.label);
-        cell(tr, "").appendChild(C.spark(cp.ee, S.tree.t));
-        cell(tr, m(cp.peakPfe), "n");
-        cell(tr, m(cp.epe), "n");
+      var rows = shown.map(function (cp) {
         var l = cp.limit;
-        cell(tr, l ? m(l.limit) : "—", "n");
-        var bar = cell(tr, "");
-        var chip = cell(tr, "");
-        if (l) {
-          var b = h("span", "xx-bar"), i = h("i", useClass(l.use));
-          i.style.width = Math.min(100, l.use * 100) + "%";
-          b.appendChild(i);
-          b.title = pct(l.use, 0) + " of the stored limit " + l.id + " (" + (l.measure || "") + ")";
-          bar.appendChild(b);
-          chip.appendChild(h("span", "xx-chip " + useClass(l.use), pct(l.use, 0)));
-        } else chip.appendChild(h("span", "muted", "no limit"));
-        cell(tr, String((cp.children || []).filter(function (s) { return !s.noPaths; }).length), "n");
-        tr.addEventListener("click", function () { select(cp.scope, { via: lev === "legal-entity" ? d.canonical : null }); });
-        tb.appendChild(tr);
+        return { scope: cp.scope, label: cp.label, ee: cp.ee, peakPfe: cp.peakPfe, epe: cp.epe, limit: l ? l.limit : null, use: l ? l.use : null, lim: l,
+          sets: (cp.children || []).filter(function (s) { return !s.noPaths; }).length };
       });
-      pane.appendChild(wrap(t));
+      gridIn(pane, { title: "Counterparties", label: "Counterparties by peak PFE", rows: rows, fitRows: PAGE + 1,
+        columns: [text("label", "Counterparty", { width: 200, pinned: "left" }), spark("ee"), money("peakPfe", "Peak PFE"), money("epe", "EPE", { additive: true }),
+          money("limit", "Limit"),
+          { id: "bar", field: "use", header: "Used", width: 84, sortable: false, valueGetter: function () { return ""; }, cellRenderer: function (c) {
+            var l = c.row.lim;
+            if (!l) return null;
+            var b = h("span", "xx-bar"), i = h("i", useClass(l.use));
+            i.style.width = Math.min(100, l.use * 100) + "%";
+            b.appendChild(i);
+            b.title = pct(l.use, 0) + " of the stored limit " + l.id + " (" + (l.measure || "") + ")";
+            return b;
+          } },
+          share("use", "Use", { id: "chip", format: function (v) { return v === null || v === undefined ? "no limit" : pct(v, 0); },
+            cellRenderer: function (c) { return c.row.lim ? h("span", "xx-chip " + useClass(c.row.use), pct(c.row.use, 0)) : h("span", "muted", "no limit"); } }),
+          whole("sets", "Sets", { width: 64 })],
+        onRow: function (r) { select(r.scope, { via: lev === "legal-entity" ? d.canonical : null }); } });
       if (withPaths.length > shown.length) {
         var more = h("button", "xx-link", "Show all " + withPaths.length);
         more.type = "button";
@@ -429,21 +452,15 @@
     return treeReady().then(function () {
       pane.textContent = "";
       var bank = S.tree.bankNode || {};
-      var t = table(["Legal entity", "Profile (EE)", "Peak PFE", "EPE", "Netting sets", "Share of bank peak"], [2, 3, 4, 5]), tb = t.tBodies[0];
-      (S.tree.legalEntities || []).slice().sort(function (a, b) { return (b.peakPfe || 0) - (a.peakPfe || 0); }).forEach(function (le) {
-        var tr = document.createElement("tr");
-        tr.className = "xx-click";
-        tr.dataset.scope = le.scope;
-        cell(tr, le.label);
-        cell(tr, "").appendChild(C.spark(le.ee, S.tree.t));
-        cell(tr, le.note ? "batch" : m(le.peakPfe), "n");
-        cell(tr, m(le.epe), "n");
-        cell(tr, int(le.nettingSets), "n");
-        cell(tr, bank.peakPfe ? pct(le.peakPfe / bank.peakPfe) : "—", "n");
-        tr.addEventListener("click", function () { select(le.scope); });
-        tb.appendChild(tr);
+      var rows = (S.tree.legalEntities || []).slice().sort(function (a, b) { return (b.peakPfe || 0) - (a.peakPfe || 0); }).map(function (le) {
+        return { scope: le.scope, label: le.label, ee: le.ee, peakPfe: le.peakPfe, note: le.note, epe: le.epe, nettingSets: le.nettingSets,
+          share: bank.peakPfe ? le.peakPfe / bank.peakPfe : null };       // a ratio of two of the server's peaks, for reading only
       });
-      pane.appendChild(wrap(t));
+      gridIn(pane, { title: "Legal entities", rows: rows,
+        columns: [text("label", "Legal entity", { width: 200, pinned: "left" }), spark("ee"),
+          money("peakPfe", "Peak PFE", { format: function (v, r) { return r && r.note ? "batch" : m(v); } }), money("epe", "EPE", { additive: true }),
+          whole("nettingSets", "Netting sets"), share("share", "Share of bank peak", { width: 130 })],
+        onRow: function (r) { select(r.scope); } });
       pane.appendChild(h("p", "xx-note after", "A node's PFE is the PFE of everything it faces, from the summed paths, so the legal entities do "
         + "not add up to the bank. EPE adds up."));
     });
@@ -462,44 +479,28 @@
       if (!rows.length) { pane.appendChild(h("p", "xx-note", "No netting sets you may see below this scope (your role sees it in aggregate only).")); return; }
       pane.appendChild(h("p", "xx-note", "Contributions to the peak PFE " + qLabel() + " at " + d.peakPfeTenor + " (the paths around the quantile, "
         + "scaled to add up) · click a netting set for its workbench"));
-      var t = table(["Netting set", "CSA", "Profile (EE)", "EPE", "Peak PFE alone", "PFE contribution", "Share"], [3, 4, 5, 6]), tb = t.tBodies[0], sum = 0;
-      rows.forEach(function (r) {
-        var n = setNode(r.nettingSet) || {}, tr = document.createElement("tr");
-        tr.className = "xx-click";
-        tr.dataset.scope = "NSET:" + r.nettingSet;
-        cell(tr, r.nettingSet + (r.partial ? " (part)" : ""));
-        cell(tr, n.csa || "");
-        cell(tr, "").appendChild(C.spark(n.ee, S.tree.t));
-        cell(tr, m(r.epe), "n");
-        cell(tr, m(r.peakPfe), "n");
-        cell(tr, m(r.pfeContribution), "n");
-        cell(tr, d.peakPfe ? pct(r.pfeContribution / d.peakPfe) : "—", "n");
-        sum += r.pfeContribution;
-        tr.addEventListener("click", function () { select("NSET:" + r.nettingSet); });
-        tb.appendChild(tr);
+      // the contributions are the server's, scaled to add up to the scope's peak PFE: the total row is the server's peak, never a sum here
+      var list = rows.map(function (r) {
+        var n = setNode(r.nettingSet) || {};
+        return { scope: "NSET:" + r.nettingSet, label: r.nettingSet + (r.partial ? " (part)" : ""), csa: n.csa || "", ee: n.ee, epe: r.epe, peakPfe: r.peakPfe,
+          pfeContribution: r.pfeContribution, share: d.peakPfe ? r.pfeContribution / d.peakPfe : null };
       });
-      var tot = document.createElement("tr");
-      tot.className = "xx-total";
-      cell(tot, "Total");
-      cell(tot, ""); cell(tot, ""); cell(tot, ""); cell(tot, "");
-      cell(tot, m(sum), "n");
-      cell(tot, d.peakPfe ? pct(sum / d.peakPfe) : "—", "n");
-      tb.appendChild(tot);
-      pane.appendChild(wrap(t));
+      list.push({ id: "TOTAL", total: true, label: "Total", pfeContribution: d.peakPfe, share: d.peakPfe ? 1 : null });
+      gridIn(pane, { title: "Netting sets", label: "Contributions of the netting sets to the peak PFE", rows: list,
+        columns: [text("label", "Netting set", { width: 190, pinned: "left" }), text("csa", "CSA", { width: 110 }), spark("ee"), money("epe", "EPE"),
+          money("peakPfe", "Peak PFE alone", { width: 120, format: function (v, r) { return r && r.total ? "" : m(v); } }),
+          money("pfeContribution", "PFE contribution", { width: 130 }), share("share", "Share")],
+        onRow: function (r) { if (r.scope) select(r.scope); } });
     });
   }
 
   function tenor(pane, d) {
     pane.textContent = "";
     var prof = d.profile || [];
-    var t = table(["Figure"].concat(prof.map(function (r) { return r.tenor; })), prof.map(function (_, i) { return i + 1; })), tb = t.tBodies[0];
-    [["EE", "ee"], ["ENE", "ene"], ["EEE", "eee"], ["PFE " + qLabel(), "pfe"], ["PFE 99%", "pfe99"], ["EE uncollateralised", "eeUncoll"]].forEach(function (f) {
-      var tr = document.createElement("tr");
-      cell(tr, f[0]);
-      prof.forEach(function (r) { cell(tr, int(r[f[1]]), "n"); });
-      tb.appendChild(tr);
-    });
-    pane.appendChild(wrap(t));
+    tenorGrid(pane, "By tenor", prof.map(function (r) { return r.tenor; }),
+      [["EE", "ee"], ["ENE", "ene"], ["EEE", "eee"], ["PFE " + qLabel(), "pfe"], ["PFE 99%", "pfe99"], ["EE uncollateralised", "eeUncoll"]].map(function (f) {
+        return { id: f[1], figure: f[0], values: prof.map(function (r) { return r[f[1]]; }) };
+      }), int);
     var p = h("p", "xx-note after", "USD. CSV of the profile: ");
     var a = h("a", null, "download");
     a.href = "/api/exposure/scope/profile?" + query({ scope: d.canonical, format: "csv" });
@@ -510,6 +511,15 @@
     p.appendChild(aj);
     p.appendChild(document.createTextNode(" · drishti.py exposure profile '" + d.canonical + "' --csv (or --jsonl) · GET /api/v1/exposure/scope/profile?format=csv"));
     pane.appendChild(p);
+  }
+
+  /** A figure per row and a tenor per column (By tenor, a trade in its netting set): rows {id, figure, values[]}, fmt each cell's words. */
+  function tenorGrid(pane, title, tenors, rows, fmt) {
+    var data = rows.map(function (r) { var x = { id: r.id, figure: r.figure }; r.values.forEach(function (v, i) { x["t" + i] = v; }); return x; });
+    return gridIn(pane, { title: title, rows: data,
+      columns: [text("figure", "Figure", { width: 170, pinned: "left" })].concat(tenors.map(function (t, i) {
+        return R.figureColumn("t" + i, t, { width: 92, format: function (v, r) { return fmt(v, r, i); } });
+      })) });
   }
 
   function kv(rows) {
@@ -561,21 +571,13 @@
       S.page = Math.min(S.page, pages - 1);
       pane.appendChild(h("p", "xx-note", "All " + rows.length + " trades, paged, by EE contribution at " + c.tenor + " (read from the lake on request) · a "
         + "row opens the trade's exposure · the id opens TRD"));
-      var t = table(["Trade", "Product", "Desk", "EE contribution", "Share", "Peak PFE alone"], [3, 4, 5]), tb = t.tBodies[0];
-      rows.slice(S.page * PAGE, (S.page + 1) * PAGE).forEach(function (r) {
-        var tr = document.createElement("tr");
-        tr.className = "xx-click";
-        tr.dataset.scope = "TRD:" + r.key;
-        cell(tr, "").appendChild(trdLink(r.key));
-        cell(tr, r.product || "");
-        cell(tr, r.desk || "");
-        cell(tr, m(r.value), "n");
-        cell(tr, pct(r.pct), "n");
-        cell(tr, m(r.peakPfeAlone), "n");
-        tr.addEventListener("click", function () { select("TRD:" + r.key); });
-        tb.appendChild(tr);
-      });
-      pane.appendChild(wrap(t));
+      gridIn(pane, { title: "Trades", label: "The netting set's trades by EE contribution", fitRows: PAGE,
+        rows: rows.slice(S.page * PAGE, (S.page + 1) * PAGE).map(function (r) {
+          return { scope: "TRD:" + r.key, key: r.key, product: r.product || "", desk: r.desk || "", value: r.value, pct: r.pct, peakPfeAlone: r.peakPfeAlone };
+        }),
+        columns: [text("key", "Trade", { width: 150, pinned: "left", cellRenderer: function (c) { return trdLink(c.row.key); } }), text("product", "Product", { width: 130 }),
+          text("desk", "Desk", { width: 130 }), money("value", "EE contribution", { width: 120 }), share("pct", "Share"), money("peakPfeAlone", "Peak PFE alone", { width: 120 })],
+        onRow: function (r) { select(r.scope); } });
       var pg = h("div", "xx-pager");
       pg.appendChild(h("span", null, "page " + (S.page + 1) + " of " + pages));
       [["‹ previous", -1], ["next ›", 1]].forEach(function (x) {
@@ -704,14 +706,9 @@
     }
     out.appendChild(kv(rows));
     var prof = inc.profile || [];
-    var t = table(["Tenor", "EE before", "EE after", "PFE before", "PFE after", "Incremental PFE"], [1, 2, 3, 4, 5]), tb = t.tBodies[0];
-    prof.forEach(function (r) {
-      var tr = document.createElement("tr");
-      cell(tr, r.tenor);
-      cell(tr, m(r.eeBase), "n"); cell(tr, m(r.ee), "n"); cell(tr, m(r.pfeBase), "n"); cell(tr, m(r.pfe), "n"); cell(tr, m(r.incrementalPfe), "n");
-      tb.appendChild(tr);
-    });
-    out.appendChild(wrap(t));
+    gridIn(out, { title: "What-if by tenor", fitRows: 40, rows: prof.map(function (r) { return Object.assign({ id: r.tenor }, r); }),
+      columns: [text("tenor", "Tenor", { width: 80, pinned: "left" }), money("eeBase", "EE before"), money("ee", "EE after"), money("pfeBase", "PFE before"),
+        money("pfe", "PFE after"), money("incrementalPfe", "Incremental PFE", { width: 130, tone: function (v) { return v > 0 ? "warn" : null; } })] });
     out.appendChild(h("p", "xx-note after", w.note || ""));
   }
 
@@ -722,16 +719,12 @@
       var me = (x[0].rows || []).filter(function (r) { return r.key === d.trade.id; })[0], sp = x[1].profile || [];
       pane.appendChild(h("p", "xx-note", "The chart above is the trade alone. Its contribution to " + d.trade.nettingSet + " after netting and "
         + "collateral, by tenor (the shares of the set's trades add up to the set's EE at every date):"));
-      var t = table(["Figure"].concat(sp.map(function (r) { return r.tenor; })), sp.map(function (_, i) { return i + 1; })), tb = t.tBodies[0];
       var prof = me && me.profile ? me.profile : [];
-      [["EE contribution", function (i) { return int(prof[i]); }], ["Set EE", function (i) { return int(sp[i].ee); }],
-        ["Share of set EE", function (i) { return sp[i].ee ? pct(prof[i] / sp[i].ee) : "—"; }]].forEach(function (f) {
-        var tr = document.createElement("tr");
-        cell(tr, f[0]);
-        sp.forEach(function (_, i) { cell(tr, f[1](i), "n"); });
-        tb.appendChild(tr);
-      });
-      pane.appendChild(wrap(t));
+      tenorGrid(pane, "In its netting set", sp.map(function (r) { return r.tenor; }), [
+        { id: "contribution", figure: "EE contribution", values: sp.map(function (_, i) { return prof[i]; }) },
+        { id: "set", figure: "Set EE", values: sp.map(function (r) { return r.ee; }) },
+        { id: "share", figure: "Share of set EE", values: sp.map(function (r, i) { return r.ee ? prof[i] / r.ee : null; }) }],   // a ratio for reading
+        function (v, r) { return r && r.id === "share" ? (v === null || v === undefined ? "—" : pct(v)) : int(v); });
       var acts = h("div", "xx-actions");
       var open = h("a", "btn btn-sm xx-btn", "Open TRD " + d.trade.id);
       open.href = "/go?q=" + encodeURIComponent("TRD " + d.trade.id + " <GO>");
@@ -759,30 +752,31 @@
       b.addEventListener("click", function () { doCapture(note.value, msg); });
       bar.appendChild(note); bar.appendChild(b); bar.appendChild(msg);
       pane.appendChild(bar);
-      var t = table(["Capture", "Date", "Captured", "By", "Peak PFE", "EPE", "Note", ""], [4, 5]), tb = t.tBodies[0];
-      if (!list.length) { var tr0 = document.createElement("tr"); cell(tr0, "Nothing captured for this scope yet.", "xx-note").colSpan = 8; tb.appendChild(tr0); }
-      list.forEach(function (c) {
-        var tr = document.createElement("tr");
-        tr.dataset.capture = c.id;
-        cell(tr, c.id, "mono"); cell(tr, c.businessDate, "mono"); cell(tr, String(c.capturedAt || "").replace("T", " ").slice(0, 19), "mono");
-        cell(tr, c.owner || ""); cell(tr, m(c.peakPfe), "n"); cell(tr, m(c.epe), "n"); cell(tr, c.note || "");
-        var act = cell(tr, "");
-        var cmp = h("button", "xx-link", "Compare with now");
-        cmp.type = "button";
-        cmp.addEventListener("click", function () { compare(box, c.id, "now"); });
-        act.appendChild(cmp);
-        act.appendChild(document.createTextNode(" "));
-        var csv = h("a", null, "CSV");
-        csv.href = "/api/exposure/captures/" + encodeURIComponent(c.id) + "/csv";
-        act.appendChild(csv);
-        act.appendChild(document.createTextNode(" "));
-        var jsonl = h("a", null, "JSONL");
-        jsonl.href = "/api/exposure/captures/" + encodeURIComponent(c.id) + "/jsonl";
-        act.appendChild(jsonl);
-        tb.appendChild(tr);
-      });
-      pane.appendChild(wrap(t));
       var box = h("div", "xx-compare");
+      if (!list.length) pane.appendChild(h("p", "xx-note", "Nothing captured for this scope yet."));
+      else gridIn(pane, { title: "Captures", rows: list.map(function (c) {
+          return { id: c.id, businessDate: c.businessDate, capturedAt: String(c.capturedAt || "").replace("T", " ").slice(0, 19), owner: c.owner || "",
+            peakPfe: c.peakPfe, epe: c.epe, note: c.note || "" };
+        }),
+        getRowData: function (r) { return { capture: r.id }; },
+        columns: [text("id", "Capture", { width: 170, pinned: "left" }), text("businessDate", "Date", { width: 100 }), text("capturedAt", "Captured", { width: 150 }),
+          text("owner", "By", { width: 100 }), money("peakPfe", "Peak PFE"), money("epe", "EPE"), text("note", "Note", { width: 180 }),
+          { id: "act", header: "Actions", width: 230, sortable: false, filterable: false, valueGetter: function () { return ""; }, cellRenderer: function (c) {
+            var act = h("span"), id = c.row.id;
+            var cmp = h("button", "dg-cell-btn", "Compare with now");
+            cmp.type = "button";
+            cmp.addEventListener("click", function () { compare(box, id, "now"); });
+            act.appendChild(cmp);
+            act.appendChild(document.createTextNode(" "));
+            var csv = h("a", null, "CSV");
+            csv.href = "/api/exposure/captures/" + encodeURIComponent(id) + "/csv";
+            act.appendChild(csv);
+            act.appendChild(document.createTextNode(" "));
+            var jsonl = h("a", null, "JSONL");
+            jsonl.href = "/api/exposure/captures/" + encodeURIComponent(id) + "/jsonl";
+            act.appendChild(jsonl);
+            return act;
+          } }] });
       box.dataset.xxCompare = "1";
       pane.appendChild(box);
       if (list.length >= 2) {
@@ -810,18 +804,12 @@
       box.textContent = "";
       box.dataset.compared = a + "|" + b;
       box.appendChild(h("h3", "xx-note", "Compare " + d.a.id + " (" + d.a.businessDate + ") with " + (d.b.id === "now" ? "now" : d.b.id) + " (" + d.b.businessDate + ")"));
-      var t = table(["", d.a.id, d.b.id === "now" ? "now" : d.b.id, "Change"], [1, 2, 3]), tb = t.tBodies[0];
-      [["Peak PFE", "peakPfe"], ["EPE", "epe"], ["EEPE", "eepe"], ["Peak EE", "peakEe"], ["CE", "ce"]].forEach(function (f) {
-        var tr = document.createElement("tr");
-        cell(tr, f[0]); cell(tr, m(d.a[f[1]]), "n"); cell(tr, m(d.b[f[1]]), "n"); cell(tr, m(d.change[f[1]]), "n");
-        tb.appendChild(tr);
-      });
-      (d.pfeProfile || []).forEach(function (r) {
-        var tr = document.createElement("tr");
-        cell(tr, "PFE " + r.tenor); cell(tr, m(r.a), "n"); cell(tr, m(r.b), "n"); cell(tr, m(r.change), "n");
-        tb.appendChild(tr);
-      });
-      box.appendChild(wrap(t));
+      var rows = [["Peak PFE", "peakPfe"], ["EPE", "epe"], ["EEPE", "eepe"], ["Peak EE", "peakEe"], ["CE", "ce"]].map(function (f) {
+        return { id: f[1], figure: f[0], a: d.a[f[1]], b: d.b[f[1]], change: d.change[f[1]] };
+      }).concat((d.pfeProfile || []).map(function (r) { return { id: "pfe-" + r.tenor, figure: "PFE " + r.tenor, a: r.a, b: r.b, change: r.change }; }));
+      gridIn(box, { title: "Compare", fitRows: 40, rows: rows,
+        columns: [text("figure", "Figure", { width: 130, pinned: "left" }), money("a", d.a.id, { width: 150 }), money("b", d.b.id === "now" ? "now" : d.b.id, { width: 150 }),
+          money("change", "Change", { width: 110 })] });
       if ((d.membersAdded || []).length || (d.membersRemoved || []).length) {
         box.appendChild(h("p", "xx-note after", "Trades added: " + (d.membersAdded.join(", ") || "none") + ". Removed: " + (d.membersRemoved.join(", ") || "none") + "."));
       }
@@ -969,12 +957,8 @@
 
   $("[data-xx-capture-side]").addEventListener("click", function () { doCapture("", null); });
   window.addEventListener("popstate", function (ev) { if (ev.state && ev.state.scope) select(ev.state.scope, { noPush: true, back: true }); });
-  // ? is the keymap's list of keys (drishti_keys.js); F1 and the ? button open the exposure guide
-  var resizeTimer = null;
-  window.addEventListener("resize", function () {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function () { if (S.head) renderChart(S.head); }, 150);
-  });
+  // ? is the keymap's list of keys (drishti_keys.js); F1 and the ? button open the exposure guide; the chart and the grids follow
+  // their own size (drishti-chart, drishti-grid)
 
   history.replaceState({ scope: S.scope }, "", location.href);
   switches();

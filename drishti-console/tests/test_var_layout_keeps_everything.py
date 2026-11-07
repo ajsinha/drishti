@@ -47,7 +47,7 @@ PAGE_INVENTORY = [
     ("the sheet's opener (Alt+B)", 'aria-keyshortcuts="Alt+B"'), ("the basket's count", "data-basket-count"),
     # the hierarchy tree (stays on the left)
     ("the scopes panel", 'aria-label="Scopes"'), ("the hierarchy select", "data-vx-hierarchy"), ("the tree's freshness", 'data-vx-fresh="tree"'),
-    ("the tree", 'role="tree" data-vx-tree'),
+    ("the tree", 'data-vx-tree aria-label="Scope tree"'),
     # the scope
     ("the breadcrumb", "data-vx-crumb"), ("the tiles", "data-vx-tiles"), ("the method strip", "data-vx-method"),
     ("the tab list", "data-vx-tabs"), ("the tabs' freshness", 'data-vx-fresh="main"'),
@@ -58,12 +58,12 @@ PAGE_INVENTORY = [
     ("the histogram", "data-vx-histo"), ("the VaR legend", "data-vx-var-legend"), ("the ES legend", "data-vx-es-legend"),
     ("the tail scenarios legend", "tail scenarios"), ("the worst 25", "data-vx-tail"), ("Worst 25 scenarios, sorted", "Worst 25 scenarios, sorted"),
     ("the P&L by scenario date", "data-vx-series"), ("its title", "data-vx-series-title"), ("the drill", "data-vx-drill"),
-    ("the path table", "data-vx-pathtable"), ("its Largest loss from", "<th>Largest loss from</th>"), ("Next page", "data-vx-more"),
+    ("the path table", "data-vx-pathtable"), ("its Largest loss from", 'header: "Largest loss from"'), ("Next page", "data-vx-more"),
     ("the path note", "data-vx-path-note"), ("Download the path (CSV)", "data-vx-csv-path"), ("the path as JSONL", "data-vx-jsonl-path"),
     # VaR / ES history
     ("the history chart", "data-vx-hline"), ("its −VaR", "−VaR"), ("its −ES", "−ES"), ("its hypothetical P&L", "hypothetical P&amp;L"),
     ("its backtest exceptions", "backtest exception"), ("the history note", "data-vx-hist-note"), ("the history table", "data-vx-histtable"),
-    ("the history table's ES", '<th class="n">VaR</th><th class="n">ES</th><th class="n">P&amp;L</th>'),
+    ("the history table's ES", 'R.figureColumn("var", "VaR", { format: money }), R.figureColumn("es", "ES", { format: money }),'),
     # contributions
     ("Children", 'data-by="child"'), ("By position", 'data-by="position"'), ("By trade", 'data-by="trade"'),
     ("rows shown", "data-vx-ctable-shown"), ("the contributions table", "data-vx-ctable"), ("Standalone VaR", "Standalone VaR"),
@@ -71,24 +71,24 @@ PAGE_INVENTORY = [
     ("the contributions note", "data-vx-ctable-note"),
     # captures
     ("the capture note", "data-vx-cap-note"), ("Capture VaR", "data-vx-capture>"), ("the capture message", "data-vx-cap-msg"),
-    ("the captures table", "data-vx-captable"), ("the captures table's ES", '<th class="n">VaR</th><th class="n">ES</th><th>Note</th>'),
+    ("the captures table", "data-vx-captable"), ("the captures table's ES", 'R.figureColumn("es", "ES", { format: function (v, c) { return int(v) + lensOf(c); } }),'),
     ("the compare", "data-vx-compare"),
     # other currencies
     ("the currencies note", "data-vx-ccy-note"), ("the currencies table", "data-vx-ccytable"),
-    ("the currencies table's ES", '<th class="n">VaR</th><th class="n">ES</th><th class="n" data-vx-ccy-inpage>'),
+    ("the currencies table's ES", '"VaR in " + d.currency + " at today\'s rate"'),
     # the one Explain (the drawer: How this number was built and Why it moved), What-if in the toolbar
     ("Explain › (E)", "data-vx-explain data-explain-primary"), ("its key", 'aria-keyshortcuts="E"'), ("What-if…", "data-vx-whatif"),
 ]
 
 #: the scripts the page loads, in order
-SCRIPTS = ["drishti_explain.js", "Arrow.es2015.min.js", "drishti_table.js", "drishti_var-basket-sheet.js", "drishti_var-basket.js", "drishti_scope-delete.js",
-           "drishti_var-charts.js", "drishti_var-explorer.js"]
+SCRIPTS = ["drishti_explain.js", "drishti_risk.js", "Arrow.es2015.min.js", "drishti_table.js", "drishti_var-basket-sheet.js", "drishti_var-basket.js", "drishti_scope-delete.js",
+           "drishti_var-explorer.js"]
 
 #: what the scripts draw (drishti_var-explorer.js): the six tiles, the tree's columns, the actions, the Explain requests
 EXPLORER_INVENTORY = [
-    '(stressed ? "Stressed VaR " : "VaR ")', '(stressed ? "Stressed ES " : "ES ")', "C.money(d.es)", '"mean of worst " + d.esCount',
+    '(stressed ? "Stressed VaR " : "VaR ")', '(stressed ? "Stressed ES " : "ES ")', "money(d.es)", '"mean of worst " + d.esCount',
     '"1-day ES × √10"', '"Sum of standalone VaR"', '"Diversification"', '"Limit utilisation"', '"Backtest exceptions ("',
-    '"-week average"', '["Scope", "VaR " + S.ccy, "ES", "Limit"]', "n.es", "r.standaloneEs",
+    '"-week average"', 'header: "Scope"', '"VaR " + S.ccy', 'R.figureColumn("es", "ES"', 'header: "Limit"', "n.es", "r.standaloneEs",
     '"ES " + esc + "% (mean of worst "', "doCapture", "csvOfPath", "jsonlOfPath", "B.openWhatIf()", "Drishti.ScopeDelete.ask", "B.edit(scope)",
     '"Edit a copy"', "addButton(", "b.owner === S.user || S.admin", "switchTab", "setCcy", "setLens", "bindExplain", "explainReq",
 ]
@@ -109,7 +109,8 @@ def _page(client, path="/var?scope=BANK"):
 
 def test_every_part_of_the_var_screen_is_still_served(client):
     html = _page(client)
-    missing = [what for what, needle in PAGE_INVENTORY if needle not in html]
+    js = client.get("/static/js/drishti_var-explorer.js").text                 # the tables' headings are the grids' columns (drishti-grid)
+    missing = [what for what, needle in PAGE_INVENTORY if needle not in html and needle not in js]
     assert not missing, "gone from the VaR page: " + ", ".join(missing)
 
 
@@ -315,13 +316,13 @@ def test_the_drawn_screen_keeps_every_figure_and_the_explanation_is_the_one_expl
         assert pg.locator(".vx-tile").count() == 6
         es_tile = pg.locator('.vx-tile[data-tile="1"]')
         assert es_tile.locator(".l").inner_text().startswith("ES 97.5%")
-        assert es_tile.locator(".v").inner_text() == pg.evaluate(f"window.Drishti.VarCharts.money({ES})")
+        assert es_tile.locator(".v").inner_text() == pg.evaluate(f"window.Drishti.elements.risk.riskMoney({ES})")
         assert "mean of worst 13" in es_tile.inner_text()
         assert pg.locator('.vx-tile[data-tile="0"] .l').inner_text().startswith("VaR 99%")
         # the tree stays on the left, with its VaR and ES columns; a click on a node moves the page
-        hdr = pg.locator(".vx-tree .vx-row.hdr").first.inner_text()
+        hdr = pg.locator(".vx-tree .dg-hrow.dg-hleaf").first.inner_text()
         assert "VaR USD" in hdr and "ES" in hdr and "Limit" in hdr
-        assert pg.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DESK-FX"]').is_visible()
+        assert pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DESK-FX"]').is_visible()
         tree_box = pg.locator(".vx-tree-panel").bounding_box()
         main_box = pg.locator(".vx-main").bounding_box()
         assert tree_box["x"] < main_box["x"]
@@ -333,7 +334,7 @@ def test_the_drawn_screen_keeps_every_figure_and_the_explanation_is_the_one_expl
             bottom, vh = tb["y"] + tb["height"], pg.evaluate("innerHeight")
             assert abs(bottom - (vh - 10)) <= 4 or abs(bottom - (mb["y"] + mb["height"])) <= 4, (width, tb, mb, vh)
         pg.set_viewport_size({"width": 1500, "height": 1000})
-        pg.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DESK-FX"]').click()
+        pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DESK-FX"]').click()
         _wait(pg, "document.querySelector('[data-var]').dataset.painted === 'NODE:MGMT~DESK-FX'")
         # the five tabs, each with its pane
         for tab in ("path", "hist", "contrib", "captures", "ccy"):
