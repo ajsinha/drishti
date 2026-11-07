@@ -354,10 +354,9 @@ def test_every_control_works_from_the_keyboard(page):
     done(page, lambda: page.keyboard.press("Enter"))                         # leg 1 off
     assert {r.split("|")[0] for r in rows(page)} == {"2"}
     page.keyboard.press("ArrowDown")
-    done(page, lambda: page.keyboard.press("Enter"))                         # leg 2 off: none picked, no filter
-    assert len(rows(page)) == 6
-    page.keyboard.press("ArrowUp")
-    done(page, lambda: page.keyboard.press("Enter"))                         # leg 1 on
+    done(page, lambda: page.keyboard.press("Enter"))                         # leg 2 off: none picked, no filter (the server answers both legs)
+    assert len(rows(page)) == 6 and chips(page, "legs") == ["1", "2"]
+    done(page, lambda: page.keyboard.press("Enter"))                         # leg 2, still the active option, off again
     assert {r.split("|")[0] for r in rows(page)} == {"1"}
     page.keyboard.press("Escape")
     assert field.get_attribute("aria-expanded") == "false" and page.evaluate("document.activeElement.getAttribute('role')") == "combobox"

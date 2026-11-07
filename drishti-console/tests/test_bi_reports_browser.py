@@ -548,8 +548,8 @@ def test_every_visual_type_draws_with_data(stack, browser):
     page.click('[data-visual="matrix"] [data-group="DESK-FX"]')
     expect(page.locator('[data-visual="matrix"] tr[data-row^="DESK-FX"]')).to_have_count(1)
     assert page.locator('[data-visual="s-list"] [data-slicer-value]').count() == 3
-    page.click('[data-visual="s-drop"] summary')
-    assert page.locator('[data-visual="s-drop"] [data-slicer-value]').count() == 3
+    page.click('[data-visual="s-drop"] .di-ms-control')                              # drishti-inputs' multi-select over the slicer's values
+    assert page.locator('[data-visual="s-drop"] [data-slicer-value]').count() == 3 and page.locator(".di-ms-pop .di-option").count() == 3
     page.keyboard.press("Escape")
     page.fill('[data-visual="s-range"] [data-range="from"]', "3000000")
     page.press('[data-visual="s-range"] [data-range="from"]', "Enter")

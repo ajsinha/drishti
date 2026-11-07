@@ -7880,6 +7880,7 @@ An entry of the function catalogue (the server's: GET /api/v1/functions, or a pa
 | `[value]` | `{value: *, label: string}` |  |
 | `[debounceMs=200]` | `number` |  |
 | `[minChars=1]` | `number` |  |
+| `[cacheSize=50]` | `number` | recent answers kept by query (0: every search asks again) |
 | `[allowFree=false]` | `boolean` | typed text that is not an option is a value of its own |
 | `[label]` | `string` |  |
 | `[placeholder]` | `string` |  |

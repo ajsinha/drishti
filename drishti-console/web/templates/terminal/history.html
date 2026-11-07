@@ -62,7 +62,7 @@
     </div>
     <div class="hx-tools">
       {# the range: drishti-inputs' date-range picker (drishti_history-page.js), its presets the server's ranges; the links are the page without scripts #}
-      <div class="hx-dates" data-hx-dates data-from="{{ w.get('from') or '' }}" data-to="{{ w.get('to') or '' }}"></div>
+      <div class="hx-range-pick" data-hx-range-pick data-from="{{ w.get('from') or '' }}" data-to="{{ w.get('to') or '' }}"></div>
       <nav class="hx-ranges" aria-label="Range" data-hx-range-links>
         {% for label, href, on in ranges %}<a class="hx-rng{% if on %} on{% endif %}" href="{{ href }}"{% if on %} aria-current="true"{% endif %} data-hx-range-btn="{{ label }}">{{ label }}</a>{% endfor %}
       </nav>

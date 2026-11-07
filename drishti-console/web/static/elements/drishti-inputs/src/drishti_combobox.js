@@ -34,7 +34,7 @@ export class TypeAhead {
    */
   constructor(o) {
     const local = Array.isArray(o.source);
-    this.o = Object.assign({ debounceMs: local ? 0 : 200, minChars: local ? 0 : 1, cacheSize: 50 }, o);
+    this.o = Object.assign({ debounceMs: local ? 0 : 200, minChars: local ? 0 : 1, cacheSize: 50 }, Object.fromEntries(Object.entries(o).filter((kv) => kv[1] !== undefined)));   // an option left out keeps its default
     this.list = local ? normalizeOptions(o.source) : null;
     this.cache = new Map();
     this.timer = 0;
@@ -95,6 +95,7 @@ export class TypeAhead {
  * @property {{value: *, label: string}} [value]
  * @property {number} [debounceMs=200]
  * @property {number} [minChars=1]
+ * @property {number} [cacheSize=50] recent answers kept by query (0: every search asks again)
  * @property {boolean} [allowFree=false] typed text that is not an option is a value of its own
  * @property {string} [label]
  * @property {string} [placeholder]
@@ -134,7 +135,7 @@ export class Combobox extends InputBase {
       this.control = this.el('div', { cls: 'di-control' }, [this.input]);
       host.appendChild(this.control);
     }
-    this.ta = new TypeAhead({ source: o.source, debounceMs: o.debounceMs, minChars: o.minChars, onResult: (r) => this.result(r) });
+    this.ta = new TypeAhead({ source: o.source, debounceMs: o.debounceMs, minChars: o.minChars, cacheSize: o.cacheSize, onResult: (r) => this.result(r) });
     this.input.addEventListener('input', () => { this.emit('search', { query: this.input.value }); this.ta.query(this.input.value); });
     this.input.addEventListener('focus', () => { if (Array.isArray(o.source)) { this.ta.query(this.input.value === (this.value && this.value.label) ? '' : this.input.value); } });
     this.input.addEventListener('keydown', (e) => this.onKey(e));

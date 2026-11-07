@@ -119,7 +119,7 @@
   // link, so the address keeps the server's own words and the server counts the days; the dates beside a preset are a hint from the
   // window's end), two months to pick any FROM … TO, and the ends typed (T-5, ME, 6 Nov 2026). The links stay for a page without scripts.
   (function dates() {
-    var host = root.querySelector('[data-hx-dates]'), links = root.querySelector('[data-hx-range-links]');
+    var host = root.querySelector('[data-hx-range-pick]'), links = root.querySelector('[data-hx-range-links]');
     var I = window.Drishti.elements && window.Drishti.elements.inputs;
     if (!host || !links || !I) { return; }
     var end = host.getAttribute('data-to') || null, on = null;

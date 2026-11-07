@@ -139,7 +139,7 @@
     }
     wrap.appendChild(n);
     var I = window.Drishti.elements.inputs;
-    var cb = new I.Combobox(wrap, { input: n, source: source, minChars: 0, debounceMs: f.entity && f.entity.kind ? 250 : 0, label: f.label || f.id,
+    var cb = new I.Combobox(wrap, { input: n, source: source, minChars: 0, cacheSize: 0, debounceMs: f.entity && f.entity.kind ? 250 : 0, label: f.label || f.id,
       value: X.empty(value) ? null : { value: String(value), label: label(value) },
       renderOption: function (o, li) { li.setAttribute('data-value', o.value); li.appendChild(el('b', '', o.label)); if (o.label !== o.value) { li.appendChild(el('span', 'fm-entity-id', ' ' + o.value)); } } });
     cb.on('change', function (e) {
