@@ -14,22 +14,18 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The VaR screen's layout (docs/guides/VAR_GUIDE.md section 3.1; the approved mock-up docs/lenses/mockups/var-layout/A.html and
-   A-drawer.html). Two things, nothing else:
+/* The VaR screen's layout (docs/guides/VAR_GUIDE.md section 3.1; the approved mock-up docs/lenses/mockups/var-layout/A.html). One thing:
 
    - the baskets in two searchable drop-downs in the toolbar: System baskets (the bank's portfolios, from the market-risk pack's
      portfolio feed) and My baskets (the baskets saved, mine and those shared with me). Each is a button that opens a popup with a
      combobox (type to search the name and the description) over a listbox: ↑↓ move, Enter opens the scope, Esc closes; B and M open
      them from anywhere on the page. The rows and their actions (+ basket, Edit, Edit a copy, Delete) are the explorer's own
-     (drishti_var-explorer.js hands them over with setItems); a choice moves the explorer (Drishti.VarExplorer.select);
-   - How calculated (H): the provenance box as a drawer over the right of the screen (a bottom sheet on a phone), its content the
-     explorer's as before (the server's text and figures; the browser computes nothing). Esc or ✕ closes it and the focus goes back to
-     the link; its state is in the page's link (how=1), so a link opens it. */
+     (drishti_var-explorer.js hands them over with setItems); a choice moves the explorer (Drishti.VarExplorer.select).
+   How a number was built is the one Explain's (drishti_explain.js: Explain ›, E, or a click on a tile). */
 (function () {
   "use strict";
   var root = document.querySelector("[data-var]");
   if (!root) return;
-  var drawer = root.querySelector("[data-vx-drawer]"), how = root.querySelector("[data-vx-how]");
   var P = {}, current = "";
 
   function h(tag, cls, text) {
@@ -221,34 +217,9 @@
     });
   }
 
-  // ---------------------------------------------------------------------------------------------------------------- the drawer
-  function isOpen() { return drawer && !drawer.hidden; }
-  function setLink(on) {
-    var u = new URL(location.href);
-    if (on) u.searchParams.set("how", "1"); else u.searchParams.delete("how");
-    if (u.toString() !== location.href) history.replaceState(history.state, "", u.toString());
-  }
-  function openHow(focus) {
-    if (!drawer) return;
-    drawer.hidden = false;
-    drawer.classList.add("vx-open", "ph-open");                  // ph-open: a phone's More part shown (MOBILE_DISPLAY.md 8)
-    how.setAttribute("aria-expanded", "true");
-    how.classList.add("on");
-    setLink(true);
-    if (focus !== false) { var x = drawer.querySelector("[data-vx-how-close]"); (x || drawer).focus(); }
-  }
-  function closeHow() {
-    if (!drawer) return;
-    var inside = drawer.contains(document.activeElement) || document.activeElement === document.body;
-    drawer.hidden = true;
-    drawer.classList.remove("vx-open", "ph-open");
-    how.setAttribute("aria-expanded", "false");
-    how.classList.remove("on");
-    setLink(false);
-    if (inside) how.focus();
-  }
-  /** The drawer starts below the console's top bar (header.tbar, sticky): its measured height is --vx-header-h, kept current as the bar
-      wraps or folds (ResizeObserver), so the command line, the date and the bar's icons stay visible and clickable. */
+  // ---------------------------------------------------------------------------------------------------------------- the top bar
+  /** The scope tree stays below the console's top bar (header.tbar, sticky): its measured height is --vx-header-h, kept current as the
+      bar wraps or folds (ResizeObserver). */
   var bar = document.querySelector("header.tbar");
   function headerHeight() {
     root.style.setProperty("--vx-header-h", (bar ? Math.max(0, Math.round(bar.getBoundingClientRect().bottom)) : 0) + "px");
@@ -257,35 +228,17 @@
   if (bar && window.ResizeObserver) new ResizeObserver(headerHeight).observe(bar);
   window.addEventListener("resize", headerHeight);
   window.addEventListener("scroll", headerHeight, { passive: true });
-  if (how) how.addEventListener("click", function () { if (isOpen()) closeHow(); else openHow(); });
-  var x = drawer && drawer.querySelector("[data-vx-how-close]");
-  if (x) x.addEventListener("click", closeHow);
-  if (isOpen()) { drawer.classList.add("ph-open"); }
-  // a phone's More on this page: "How this number was built" opens the bottom sheet
-  document.addEventListener("click", function (ev) {
-    if (ev.target.closest && ev.target.closest('[data-phone-reveal="prov"]')) openHow();
-  }, true);
-  window.addEventListener("popstate", function () {
-    var on = new URLSearchParams(location.search).get("how") === "1";
-    if (on !== isOpen()) { if (on) openHow(false); else closeHow(); }
-  });
-
-  // ---------------------------------------------------------------------------------------------------------------- keys B, M, H, Esc
+  // ---------------------------------------------------------------------------------------------------------------- keys B and M
   function typing(t) {
     return !!(t && t.closest && (t.closest("input, textarea, select, [contenteditable=''], [contenteditable=true], [data-var-basket], dialog")));
   }
   document.addEventListener("keydown", function (ev) {
     if (ev.defaultPrevented || ev.ctrlKey || ev.metaKey || ev.altKey || dialogOpen()) return;
-    if (ev.key === "Escape") {
-      if (isOpen() && !typing(ev.target)) { ev.preventDefault(); closeHow(); }
-      return;
-    }
     if (typing(ev.target)) return;
     var k = ev.key.toLowerCase();
     if (k === "b" && P.system) { ev.preventDefault(); open("system"); }
     else if (k === "m" && P.mine) { ev.preventDefault(); open("mine"); }
-    else if (k === "h" && drawer) { ev.preventDefault(); if (isOpen()) closeHow(); else openHow(); }
   });
 
-  window.Drishti.VarLayout = { setItems: setItems, mark: markCurrent, open: open, close: close, openHow: openHow, closeHow: closeHow, isOpen: isOpen };
+  window.Drishti.VarLayout = { setItems: setItems, mark: markCurrent, open: open, close: close };
 })();

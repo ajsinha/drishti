@@ -717,8 +717,8 @@ made up; the panels under the toolbar are the explorer's own, unchanged. **Code:
 | L3 | + New basket | (the brief: in the toolbar and at the foot of My baskets) | the basket's sheet (`drishti_var-basket.js`), collapsed on load | click, Alt+B; Save adds the basket to My baskets and collapses the sheet | **Built** |
 | L4 | The hierarchy tree | *Hierarchy MGMT*, BANK, ▾ ▸ nodes with their VaR, unchanged | `/api/var/tree` | ▸ opens, a click shows the node's VaR | **Built** (as before) |
 | L5 | Keys strip | **B** system baskets **M** my baskets **H** how | — | the keys | **Built** |
-| L6 | How calculated › | a link at the toolbar's right | — | **H**, click | **Built** |
-| L7 | The drawer | *How BANK's VaR was calculated*, *Esc ✕*, over the right of the screen | the scope's `provenance`, as before (the server's text) | Esc, ✕; the focus back on the link; `&how=1` in the link | **Built** (its title and lines are the column's: *How this number was built*) |
+| L6 | How calculated › | a link at the toolbar's right | — | **H**, click | **Folded** into the one Explain: **Explain ›**, key **E** (SHARED_SCREENS.md section 3) |
+| L7 | The drawer | *How BANK's VaR was calculated*, *Esc ✕*, over the right of the screen | the scope's `provenance`, as before (the server's text) | Esc, ✕; the focus back on the link; `&how=1` in the link | **Folded** into the one Explain's drawer, tab Inputs & lineage (its lines are the server's, row for row) |
 | L8 | Phone (`@media (max-width:700px)`) | the drop-downs full width, the drawer full width | — | tap | **Built** (390 px: full-width drop-downs, the drawer a bottom sheet, no sideways scroll) |
 
 ---

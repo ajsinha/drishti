@@ -613,11 +613,13 @@ def register(groups, srv, ctx: dict) -> None:
                     f.write(body)
                 print(f"wrote {a.xlsx} ({len(body):,} bytes): why VaR moved, every state and step a formula (Main, Data, States, Drivers, "
                       "Explain, Provenance)")
-            elif a.matrix:
-                res = api.json("GET", "/api/v1/var/explain/matrix?" + enc(q))
+            elif a.matrix:                                # the one Explain (GET /api/v1/explain?kind=var), its Why it moved, Matrix view
+                res = api.json("GET", "/api/v1/explain?" + enc(dict(q, kind="var", part="why", view="matrix")))
+                res = (res.get("why") or {}).get("answer", {}).get("matrix", {})
                 say_json(res) if a.json else render_explain_matrix(res, print)
             else:
-                res = api.json("GET", "/api/v1/var/explain?" + enc(q))
+                res = api.json("GET", "/api/v1/explain?" + enc(dict(q, kind="var", part="why")))
+                res = (res.get("why") or {}).get("answer", {})
                 say_json(res) if a.json else render_explain(res, print)
         elif c == "tree":
             res = api.json("GET", "/api/v1/var/tree?" + enc(lensed(a, dated(a, {"hierarchy": a.hierarchy}))))

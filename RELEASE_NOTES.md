@@ -48,6 +48,26 @@
   server. Before, the model refused (`DRS-9026`) and the visuals were the console's. With compute off they still refuse, in words. The BI
   foundation parity record keeps the compute-off answers: they are its baseline, and nothing in it changed.
 
+## Upgrade: one Explain for every number (2.9.11.f)
+
+Every computed number now has one **Explain** (USER_GUIDE.md, "Explain: one for every number"): hover a figure for a preview, click it
+(or press **E**) for a drawer with **Formula · Inputs & lineage · Why it moved · Workbook**, and **Open as a page** to print. It replaces
+these, which are **removed**:
+
+| Removed | Use instead |
+|---|---|
+| The VaR page's **How calculated ›** drawer (key **H**, `&how=1` in a link) | **Explain ›** (key **E**) or a click on a tile: tab *Inputs & lineage*, the same rows |
+| The VaR page's **Why it moved** tab (`&tab=why`, `&view=`, `&efrom=`, `&eto=`) and the setting `varExplainView` | the drawer's *Why it moved* (Waterfall, Matrix, Sentences, the two dates); `VAR EXPLAIN <scope> [from] [to]` opens `/explain?kind=var&…&tab=why` |
+| The **?** pop-ups of the parametric figures | the same **?**: its Explain, the server's lines in *Formula* |
+| The MR cube's **Explain the move** tables (rail and tab C) | the card's button: the cell's Explain at *Why it moved* |
+| The exposure page's **How this number was built** box | **Explain ›** and the tiles: tab *Inputs & lineage* (CSV, JSONL and Capture exposure stay beside it) |
+| `GET /api/v1/var/explain`, `GET /api/v1/var/explain/matrix` | `GET /api/v1/explain?kind=var&part=why&scope=…&from=…&to=…` (`view=matrix`); the engine's answer is `why.answer`; `method=shapley` is now `attribution=shapley` (still refused: planned) |
+| `GET /api/v1/pivot/mr/explain` | `GET /api/v1/explain?kind=var&part=why&scope=<the cell's scope>` |
+| Console `GET /api/var/explain`, `/api/var/explain/matrix`, `/api/pivot/mr/explain` | console `GET /api/explain` (the same parameters) |
+
+`GET /api/v1/var/explain.xlsx` stays (the drawer's Workbook). A saved link with `how=1` or `tab=why` opens the VaR page as before
+without them. Scripts that read the removed endpoints read `why.answer` of the new one (`drishti.py var explain` does).
+
 ## Upgrade: removed and renamed pages (one analysis path)
 
 - **Analyse is the Notebook.** `/bi/explore` opens `/bi/notebook` (a notebook's `?item=` is kept). Its **Slice** tab is removed: slice and total a

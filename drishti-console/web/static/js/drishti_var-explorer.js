@@ -27,8 +27,8 @@
    in the toolbar's two drop-downs (2.9.11.b, drishti_var-layout.js): System baskets (the bank's portfolios) and My baskets (saved: mine, then
    shared with me); the sheet is collapsed until "+ New basket" (or Alt+B, + basket, Edit) and collapses again once saved. A saved
    basket of yours has "Edit" (an administrator's on everyone's; a basket shared with you and a portfolio, the bank's, have "Edit a copy")
-   and "Delete", which asks in a dialog (drishti_scope-delete.js), then refreshes the list and says so. How this number was built is a drawer
-   (How calculated, H; drishti_var-layout.js) drawn by renderProv as before. "Capture VaR" stores an immutable snapshot that reopens exactly, compares with
+   and "Delete", which asks in a dialog (drishti_scope-delete.js), then refreshes the list and says so. How a number was built is the one Explain's
+   (drishti_explain.js): the VaR and ES tiles and Explain › carry their figure's request (bindExplain), the page's scope, date and lens. "Capture VaR" stores an immutable snapshot that reopens exactly, compares with
    another capture or with now, and exports as CSV.
 
    The reporting currency (2.9.4, the product owner's mock-up A): a select in the header strip lists the configured currencies and
@@ -278,7 +278,6 @@
     if (S.tab === "hist") return loadHistory(seq);
     if (S.tab === "contrib") return loadContrib(seq);
     if (S.tab === "ccy") return loadCurrencies(seq);
-    if (S.tab === "why") return explain();
     return loadCaptures(seq);
   }
 
@@ -353,7 +352,7 @@
     syncLensPicker(d.lens);
     renderCrumb(d);
     renderIntraday(d.intraday);
-    renderProv(d.provenance, d);
+    bindExplain(d);
     if (PM && window.Drishti.VarParametric) window.Drishti.VarParametric.headline(d);   // the parametric tiles, each with its ? (drishti_var-parametric.js)
     document.title = "VaR · " + d.label + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
   }
@@ -427,39 +426,22 @@
     if (chipText) c.appendChild(h("span", "vx-chip amber", chipText));
   }
 
-  /** Per source system on the date: its form and grain, its records, how decided (VAR_GUIDE.md section 15.13). */
-  function bySystem(m) {
-    var names = Object.keys(m || {}).sort();
-    if (!names.length) return "one form a trade";
-    return names.map(function (k) {
-      var x = m[k];
-      return k + ": " + (x.form === "pv" ? "scenario PVs" : "P&L vectors") + " per " + x.grain + " (" + int(x.rows) + ")";
-    }).join("; ");
+  /** The one Explain's request for a figure of this page (SHARED_SCREENS.md section 3): its scope, date, currency and lens. */
+  function explainReq(measure, scope) {
+    var r = Object.assign({ kind: "var", measure: measure, scope: scope || S.scope }, lensParams());
+    if (S.asOf) r.date = S.asOf;
+    if (S.ccy && S.ccy !== "USD" && S.set !== "stressed") r.ccy = S.ccy;
+    return r;
   }
 
-  function renderProv(p, d) {
-    var dl = $("[data-vx-prov]");
-    dl.textContent = "";
-    var fx = p.fx || {};
-    [["Scope", d.kind + " " + d.label], ["Reporting currency", (p.currency || "USD") + ", chosen in the header"],
-      ["Input", p.input || "P&L vectors (USD)"],
-      ["By source system", bySystem(p.inputsBySystem)],
-      ["Intraday", p.intraday ? int(p.intraday.updates) + " updates of " + int(p.intraday.trades) + " trades in " + int(p.intraday.batchCount)
-        + " batches, latest " + p.intraday.lastAt + "; the official records are the morning run's" : "none: the morning run"], ["Scenario FX", fx.scenarioFx || "none needed"], ["Cross rates", "via USD"],
-      ["Resolved", (p.resolved || []).join("; ") || p.scope], ["Positions", int(p.positions)],
-      ["Trades", int(p.trades) + (p.failed ? " · " + p.failed + " without a vector" : "")],
-      ["Outside your view", p.hidden ? int(p.hidden) + " trades not included" : "none"],
-      ["Unknown ids", (p.unknown || []).length ? p.unknown.join(", ") : "none"],
-      ["Warnings", (p.warnings || []).length ? p.warnings.join("; ") : "none"],
-      ["Rows left out", int(p.rejected || 0) + " rejected" + ((p.rejections || []).length ? " (" + p.rejections.slice(0, 3).join("; ") + ")" : "")
-        + " · " + int(p.excluded || 0) + " not live"],
-      ["Vectors", p.vectors + (p.tier ? " · " + p.tier : "")], ["Scenario set", p.scenarioSet], ["Method", p.method], ["ES", p.es], ["Components", p.components],
-      ["Positions by", p.positionRules || ""],
-      ["Engine", p.engine], ["View", p.view], ["Members", p.membershipHash],
-      ["Computed", p.computedAt.replace("T", " ").slice(0, 19) + " · " + p.computeMs + " ms · cache " + p.cache]].forEach(function (r) {
-      dl.appendChild(h("dt", null, r[0]));
-      dl.appendChild(h("dd", "mono", r[1]));
-    });
+  /** The VaR and ES tiles and Explain ›: hover previews, a click (or E) opens the drawer (drishti_explain.js). */
+  function bindExplain(d) {
+    var E = window.Drishti.Explain, b = $("[data-vx-explain]");
+    if (b) b.setAttribute("data-explain", JSON.stringify(explainReq("var")));
+    if (!E || d.empty) return;
+    var v = $('[data-vx-tiles] [data-tile="0"] .v'), es = $('[data-vx-tiles] [data-tile="1"] .v');
+    if (v) E.bind(v, explainReq("var"));
+    if (es) E.bind(es, explainReq("es"));
   }
 
   // ---------------------------------------------------------------------------------------------------------------- P&L path
@@ -1223,26 +1205,15 @@
   $("[data-vx-basket-open]").addEventListener("click", function () { if (B) { B.show(); var f = root.querySelector("[data-vb-find]"); if (f) f.focus(); } });
   $("[data-vx-whatif]").addEventListener("click", function () {
     if (!B) return;
-    if (window.Drishti.VarLayout && window.Drishti.VarLayout.isOpen()) window.Drishti.VarLayout.closeHow();   // the drawer gives way to the sheet it opens
+    if (window.Drishti.Explain) window.Drishti.Explain.close();     // the Explain drawer gives way to the sheet it opens
     if (B.isEmpty() && S.head) B.add(S.head.kind === "basket" ? S.head.canonical : S.scope, { name: S.head.label });
     B.openWhatIf();
   });
 
-  /** Why it moved (2.9.10, VAR_GUIDE.md section 3.11): drawn by drishti_var-explain.js, which may load after this script. */
-  function explain() {
-    if (window.Drishti.varExplain) return window.Drishti.varExplain.load(S.scope);
-    return new Promise(function (resolve) {
-      document.addEventListener("drishti:var-explain-ready", function () { resolve(window.Drishti.varExplain.load(S.scope)); }, { once: true });
-    });
-  }
-
-  /** The tab in the link (tab=why opens Why it moved) and F1's help: the tab's own section of the VaR guide. */
+  /** The tab in the link (tab=hist, contrib, captures, ccy). */
   function tabState(tab) {
     root.querySelectorAll(".vx-tab").forEach(function (x) { x.setAttribute("aria-selected", x.dataset.tab === tab ? "true" : "false"); });
     root.querySelectorAll("[data-pane]").forEach(function (p) { p.hidden = p.dataset.pane !== tab; });
-    document.body.setAttribute("data-screen", tab === "why" ? "var-explain" : "var");
-    var help = $("[data-vx-help]");
-    if (help) help.setAttribute("href", tab === "why" ? "/help/context/var-explain" : "/help/context/var");
   }
 
   // ---------------------------------------------------------------------------------------------------------------- tabs, toggles, exports
@@ -1276,7 +1247,6 @@
   $("[data-vx-hierarchy]").value = S.hierarchy;
   $("[data-vx-hierarchy]").addEventListener("change", function (ev) { setHierarchy(ev.target.value); loadTree(); });
   $("[data-vx-capture]").addEventListener("click", function () { doCapture($("[data-vx-cap-note]")); });
-  $("[data-vx-capture-side]").addEventListener("click", function () { doCapture(null); });
 
   function csvOfPath(ev) {
     ev.preventDefault();
@@ -1295,7 +1265,6 @@
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   }
   $("[data-vx-csv-path]").addEventListener("click", csvOfPath);
-  $("[data-vx-csv]").addEventListener("click", csvOfPath);
 
   /** The path as JSON Lines (2.9.4): a scenario a line, ranked, keyed as the CSV's header (rank, scenario_date, pnl). */
   function jsonlOfPath(ev) {
@@ -1368,7 +1337,7 @@
   });
 
   window.Drishti.VarExplorer = { select: select, switchTab: switchTab, setCcy: setCcy, setLens: setLens, state: S, api: api, words: words,
-    lensWords: lensWords, renderTree: function () { if (S.tree) renderTree(); },
+    lensWords: lensWords, explainReq: explainReq, renderTree: function () { if (S.tree) renderTree(); },
     redrawPath: function () { if (S.path && S.path.series && S.path.series.some(function (v) { return v !== 0; })) drawPath(S.path); } };
   if (window.Drishti.VarParametric) window.Drishti.VarParametric.start(window.Drishti.VarExplorer);
 })();

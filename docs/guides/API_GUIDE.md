@@ -3121,6 +3121,38 @@ Between Drishti\*net members only (forwarded, signed calls; anything else is `40
 workers, busy, queued), `POST /api/v1/compute/peer/run` (a fan-out chunk, run here as the viewer the call is made for) and
 `POST /api/v1/compute/peer/cancel/{id}`.
 
+## Explain any number
+
+One Explain for every number (`/api/v1/explain`; [USER_GUIDE.md, "Explain: one for every number"](USER_GUIDE.md#explain-one-for-every-number)):
+the same four parts for any kind, computed by the server as the caller (the entitlements, row rules and masks of the screen the number came
+from: a part never names a row or an input the caller may not see, only how many are outside the view). Reads only.
+
+| Endpoint | What it answers |
+|---|---|
+| `GET /api/v1/explain/kinds` | the kinds that can be explained on this server (their engines running): `kind`, `title`, `measures`, `engine`; and `underConstruction`, the Explain work not built yet (registry entries `explain-*`: `id`, `about`, `release`) |
+| `GET /api/v1/explain?kind=&measure=&part=&…` | one number; every other parameter is the kind's own (below). `part`: `all` (the default: the drawer and the page), `preview` (the hover card only: the head, cheap), or one part (`formula`, `inputs`, `why`, `workbook`) |
+| `POST /api/v1/explain` | the same with a JSON body `{kind, measure, part, …}` (a pivot cell sends its view) |
+
+The answer: the head (`kind`, `measure`, `subject`, `title`, `value`, `text`, `unit`, `asOf`, `stored`, `origin`, `preview`, `facts`),
+then the parts asked: `formula` (`lines`, the formula with its values; `rachana`, the number's measure in Rachana when it has one),
+`inputs` (`rows` of `{label, value}`; `lineage` of `{source, read, version}`), `why` (`available`; when it is: `from`, `to`, `change`,
+`addsUp`, `views`, `view`, `panels` (ViewModel panels of the standard kinds, [VIEWMODEL.md](../architecture/VIEWMODEL.md)) and `answer`,
+the engine's own answer; when not: `note` or `underConstruction`), `workbook` (`available`, `links` of `{label, href, api, note}`), `checks`
+(`{ok, text}`: `true`, `false`, or `null` for not made), `links`, and `underConstruction` for a check not built. The as-of header (or
+`asOf`) is the number's date unless `date` names one. A kind whose engine is off answers `404 DRS-1020`; an unknown kind `404`; a measure
+the kind does not explain, a bad date or part `400`.
+
+| Kind | Measures (first: the default) | Its parameters |
+|---|---|---|
+| `var` | `var`, `es`, `pvar`, `pes`, `pgap` | `scope` (required), `date`, `ccy`, the lens (`horizon`, `method`, `confidence`, `esConfidence`, `set`); for `why` (VaR only): `from`, `to` (none: the business date before, and the newest or `date`), `view` (`waterfall`, `matrix`, `sentences`), `attribution` (`sequence`; `shapley` answers 400: planned). `why.answer` is the engine's explanation (the states, the steps with their drivers, the lines, the order, the order-free view, the limit line, the sentences, `change`, `sumOfSteps`, `addsUp`; with `view=matrix`: `{explain, matrix}`, the scope and each child node with every step) |
+| `exposure` | `peak-pfe`, `ce`, `epe`, `eepe`, `peak-ee`, `ead` | `scope` (required), `date`, `q`, `collateral`, `run`; `why` and `workbook` are under construction |
+| `pivot` | `cell` | `POST` only: the pivot's own body (`view`, `value`, `from`, `fromDate`, `to`, `toDate`, `by`, `order`): the cell's move split by `by`'s members in steps that add up |
+
+```bash
+curl -s -H "Authorization: Bearer $T" "$S/api/v1/explain?kind=var&measure=var&scope=DESK:RATES&part=preview"
+curl -s -H "Authorization: Bearer $T" "$S/api/v1/explain?kind=var&scope=BANK&part=why&from=2026-09-29&to=2026-09-30&view=matrix"
+```
+
 ## VaR engine: `/api/v1/var`
 
 VaR computed on demand from the trades' 509-day P&L vectors (the complete guide: [VAR_GUIDE.md](VAR_GUIDE.md), the API in its
@@ -3215,9 +3247,7 @@ For example `GET /api/v1/var/scope?scope=DESK:DESK-RATES&asOf=2026-09-30` answer
 | `GET /api/v1/var/captures/{id}/jsonl?part=` | the same rows as JSON Lines, one a line keyed as the CSV's header (`scenario_date`, `pnl`; or the components); the provenance is the capture's JSON |
 | `GET /api/v1/var/compare?a=&b=` | two captures side by side, or a capture and now (`b=now`) |
 | `GET /api/v1/var/matrix?id=&days=20` | the **scenario matrix** (`SMAT`): one trade, position (its own `POSITION_ID` too) or VaR scope (`id`: a trade or position id, a P&L vector's or scenario PV's id, or `DESK:RATES`, `BANK`, ...) across its last `days` business dates (20; at most `drishti.var.smat.max-days`, 60; `asOf` the newest): `dates` (oldest first, each with its `source` `open`, `lake`, `official` or `engine`, `var`, `es`, `k`, `esCount`, `basePv`, `fx`, `batch`, `dataVersion`, `link`, `tail`, and `gap` with its DRS `code` when it has no values) and `rows` (a scenario day each, its P&L per date, `null` outside a date's window or on a gap: never 0). `by=trade&scenario=` a position's trades under one scenario day; `ccy`, `confidence`, `es-confidence`, `window`, `horizon` (1 only). Read as the caller (`403 DRS-5002` for a role that sees the scope only in aggregate). `Accept: application/vnd.apache.arrow.stream` answers the rows as Arrow ([VAR_GUIDE.md section 3.9](VAR_GUIDE.md#39-the-scenario-matrix-smat)) |
-| `GET /api/v1/var/explain?scope=&from=&to=&confidence=` | **why VaR moved** (`VAR EXPLAIN`): the change between two business dates (none: the one before the newest, and the newest) as states S0 to S7, each a full VaR, and the steps between them, which add up exactly (`change`, `sumOfSteps`, `addsUp`); each step's drivers (incremental VaR of the trades out and in, the children's component VaR change for the market, the days that left and entered), the VaR scenario of every state, the order used (`drishti.var.explain.order`), the order-free view by part, the limit-use line and the sentences; a GET read with the scope's entitlements, never stored ([VAR_GUIDE.md section 3.11](VAR_GUIDE.md#311-why-it-moved-the-var-change-explained)); `method=shapley` is `400` (planned) |
-| `GET /api/v1/var/explain/matrix?scope=&from=&to=` | the Matrix view: the scope and each child node, VaR before, every step, VaR after |
-| `GET /api/v1/var/explain.xlsx?scope=&from=&to=` | the explanation as a workbook of formulas (Main, Data, States, Drivers, Explain, Provenance), every state's VaR checked against the engine to the cent |
+| `GET /api/v1/var/explain.xlsx?scope=&from=&to=` | why VaR moved (the explanation itself: [Explain any number](#explain-any-number), kind `var`) as a workbook of formulas (Main, Data, States, Drivers, Explain, Provenance), every state's VaR checked against the engine to the cent |
 | `GET /api/v1/var/playground?scope=&ids=&ccy=&horizon=&method=&confidence=&esConfidence=&set=&view=` | the **VaR Playground** (`PLAY VAR`): at most 500 positions (`drishti.var.playground.max-positions`, the largest by \|component VaR\|) with each one's P&L per scenario (`view=pv`: the scenario PVs too), Rest of scope, the portfolio, its rank and marks, the FX, every figure, the engine's figures and the checks, the formula bar's formulas and the export's choices ([VAR_GUIDE.md section 3.10](VAR_GUIDE.md#310-the-var-playground-play-var)) |
 | `GET /api/v1/var/playground/estimate?scope=&ids=` | each export size (100, 500, 1,000, 10,000, All): positions, layout, columns, rows, cells, estimated size and recalculation time, the applications that open it, or why it cannot be made |
 | `GET /api/v1/var/playground.xlsx?scope=&ids=&count=500` | the workbook of real formulas (Main, Config, Data, FX, PnL, Explain, Provenance), streamed; `count` 100, 500, 1000, 10000 or `all` (the rest in Rest of scope); a size no application opens, or above `export-max-cells`, is `400` in words |
@@ -3461,7 +3491,6 @@ source then offers the hierarchy levels (`MGMT.DESK`), `RISK_CLASS`, `POSITION`,
 | `POST /api/v1/pivot/mr/detail` | `{view, coords}`: one cell's tail: `edges`, `counts`, `var`, `es`, `k`, `varDate`, `tail`, `trades`, `positions`, `scope` |
 | `POST /api/v1/pivot/mr/history` | `{view}`: the sparklines: `dates`, `series` by cell key of the first measure |
 | `GET /api/v1/pivot/mr/versions` | the time-travel slider's stops: dates and their batches |
-| `GET /api/v1/pivot/mr/explain?scope=&from=&to=&confidence=` | why a scope's VaR moved: the engine's exact steps |
 | `GET /api/v1/pivot/mr/sensitivities?scope=&grid=&by=&class=&measure=&ccy=&asOf=` | the DV01 ladder by a grid, or the heat map by two factor parts |
 | `POST /api/v1/pivot/mr/what-if` | `{view, items: [{copyOf, factor}]}`: each row of the view's first row dimension and the total, before, after, incremental |
 

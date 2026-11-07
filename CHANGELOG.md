@@ -19,6 +19,32 @@
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
+## 2.9.11.f (unreleased)
+
+- **One Explain for every number** (SHARED_SCREENS.md section 3, the approved mock-up e3: A, the drawer, with B its preview and C the
+  page; USER_GUIDE.md "Explain: one for every number"; API_GUIDE.md "Explain any number"; lean & streamlined):
+  - **One server service**, `GET /api/v1/explain` (and `POST` with a body, `GET /api/v1/explain/kinds`): any number's formula with its
+    values, inputs and lineage, why it moved (steps that add up, as ViewModel panels the one renderer paints, and the engine's own answer),
+    workbook links and checks; `part=preview` for the hover card. Core code (`server.explain`): **explainers register per kind** through the
+    `Explainer` interface; the banking ones live with their engines (`var`: VaR, ES, parametric VaR and ES, the fat-tail gap;
+    `exposure`: peak PFE, CE, EPE, EEPE, peak EE, EAD) and move with 2.9.11.e; the core's `pivot` explains a pivot cell's move. A kind
+    whose engine is off answers `DRS-1020`. Computed as the caller: a restricted person is told how many trades are outside the view,
+    never which (two-person tests on VaR and exposure).
+  - **One client component**, `drishti_explain.js` and `drishti_explain.css`, on every signed-in page: any element with `data-explain`
+    gets the preview (hover, `?`), the drawer (click, `E`; tabs Formula · Inputs & lineage · Why it moved · Workbook, the checks under
+    them) and the page (`/explain?…`, Print). The console only displays.
+  - **Folded and deleted:** the VaR page's **How calculated** drawer (key H, `how=1`), its **Why it moved** tab (`tab=why`,
+    `drishti_var-explain.js`, the person's `varExplainView` setting), the parametric figures' **?** pop-ups, the MR cube's two **Explain
+    the move** cards (now a button that opens the drawer) and the exposure page's **How this number was built** box. Their server
+    endpoints `GET /api/v1/var/explain`, `GET /api/v1/var/explain/matrix` and `GET /api/v1/pivot/mr/explain` and the console's
+    `/api/var/explain`, `/api/var/explain/matrix` and `/api/pivot/mr/explain` are gone; `VAR EXPLAIN` opens the Explain page at Why it
+    moved. Every explanation they gave is kept with the same numbers: `VarExplainApiTest` compares the drawer's rows with the old box's,
+    the parametric lines with the old ?'s and the steps with the engine's; `ExposureApiTest` the exposure box's rows.
+  - `drishti.py var explain` and `drishti.py pivot mr explain` read the new endpoint (the same output).
+  - Under construction (`config/under-construction.yaml`, `explain-*`): why it moved for ES and parametric figures and for exposure, the
+    exposure and pivot workbooks, the check against the official capture, BI measures, Sutra metrics, FRTB-SA and SIMM, and the Pivot
+    screen's own **Why did it move?** card, which moves onto the component once 2.9.11.d's BI internals are released.
+
 ## 2.9.11.d (unreleased)
 
 - **One Python runtime: every Python run on the server's compute pools** (SYNTHESIS A11, Brief 3; PYTHON_COMPUTE.md section 19; lean & streamlined):

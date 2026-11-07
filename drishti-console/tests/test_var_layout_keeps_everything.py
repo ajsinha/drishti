@@ -18,7 +18,11 @@ My baskets: the saved baskets, mine and shared with me), and the right-hand "How
 by How calculated (H). This file is the guard that nothing else went: the inventory below was taken from the page BEFORE the change
 (terminal/var.html, drishti_var-explorer.js, drishti_var-explain.js): every tile, panel, chart, table, tab, control, key, every expected-shortfall
 figure and every line of the explanation. The server-rendered page and the scripts are checked here; the drawn page in Chromium
-(a stand-in engine, the console in-process) at the end of the file. Skipped without Playwright or Chromium (the browser part only)."""
+(a stand-in engine, the console in-process) at the end of the file. Skipped without Playwright or Chromium (the browser part only).
+
+2.9.11.f folded the drawer and the Why it moved tab into the one Explain (SHARED_SCREENS.md section 3, drishti_explain.js): every line
+of How this number was built is now the server's (VarNumberExplainer.java, checked below row for row), the tab is the drawer's Why it
+moved, and Explain › (E) opens it; the drawer's What-if moved to the toolbar."""
 import os
 import re
 import threading
@@ -49,7 +53,7 @@ PAGE_INVENTORY = [
     ("the tab list", "data-vx-tabs"), ("the tabs' freshness", 'data-vx-fresh="main"'),
     ("tab: P&L path", 'data-tab="path"'), ("its scenario count", "data-vx-n"), ("tab: VaR / ES history", 'data-tab="hist"'),
     ("tab: Contributions", 'data-tab="contrib"'), ("tab: Captured results", 'data-tab="captures"'),
-    ("tab: In other currencies", 'data-tab="ccy"'), ("tab: Why it moved", 'data-tab="why"'),
+    ("tab: In other currencies", 'data-tab="ccy"'),
     # P&L path
     ("the histogram", "data-vx-histo"), ("the VaR legend", "data-vx-var-legend"), ("the ES legend", "data-vx-es-legend"),
     ("the tail scenarios legend", "tail scenarios"), ("the worst 25", "data-vx-tail"), ("Worst 25 scenarios, sorted", "Worst 25 scenarios, sorted"),
@@ -72,32 +76,29 @@ PAGE_INVENTORY = [
     # other currencies
     ("the currencies note", "data-vx-ccy-note"), ("the currencies table", "data-vx-ccytable"),
     ("the currencies table's ES", '<th class="n">VaR</th><th class="n">ES</th><th class="n" data-vx-ccy-inpage>'),
-    # why it moved
-    ("Waterfall", 'data-vw-view="waterfall"'), ("Matrix", 'data-vw-view="matrix"'), ("Sentences", 'data-vw-view="sentences"'),
-    ("the dates", "data-vw-dates"), ("From", "data-vw-from"), ("To", "data-vw-to"), ("Explain", ">Explain</button>"),
-    ("the working (.xlsx)", "data-vw-xlsx"), ("the explain message", "data-vw-msg"), ("the explain host", "data-vw-host"),
-    ("how it is worked out (F1)", 'href="/help/context/var-explain"'),
-    # how this number was built (now the drawer): its list, its note and its three actions
-    ("How this number was built", "How this number was built"), ("the explanation's list", "<dl data-vx-prov></dl>"),
-    ("the reproducibility note", "Every figure on this page is reproducible from the vector batch, the scenario set and the engine above."),
-    ("Export CSV", "data-vx-csv "), ("Capture VaR (side)", "data-vx-capture-side"), ("What-if…", "data-vx-whatif"),
+    # the one Explain (the drawer: How this number was built and Why it moved), What-if in the toolbar
+    ("Explain › (E)", "data-vx-explain data-explain-primary"), ("its key", 'aria-keyshortcuts="E"'), ("What-if…", "data-vx-whatif"),
 ]
 
 #: the scripts the page loads, in order
-SCRIPTS = ["Arrow.es2015.min.js", "drishti_table.js", "drishti_var-basket-sheet.js", "drishti_var-basket.js", "drishti_scope-delete.js", "drishti_var-charts.js",
-           "drishti_var-explorer.js", "drishti_var-explain.js"]
+SCRIPTS = ["drishti_explain.js", "Arrow.es2015.min.js", "drishti_table.js", "drishti_var-basket-sheet.js", "drishti_var-basket.js", "drishti_scope-delete.js",
+           "drishti_var-charts.js", "drishti_var-explorer.js"]
 
-#: what the scripts draw (drishti_var-explorer.js): the six tiles, the tree's columns, every line of How this number was built, the actions
+#: what the scripts draw (drishti_var-explorer.js): the six tiles, the tree's columns, the actions, the Explain requests
 EXPLORER_INVENTORY = [
     '(stressed ? "Stressed VaR " : "VaR ")', '(stressed ? "Stressed ES " : "ES ")', "C.money(d.es)", '"mean of worst " + d.esCount',
     '"1-day ES × √10"', '"Sum of standalone VaR"', '"Diversification"', '"Limit utilisation"', '"Backtest exceptions ("',
     '"-week average"', '["Scope", "VaR " + S.ccy, "ES", "Limit"]', "n.es", "r.standaloneEs",
-    '"ES " + esc + "% (mean of worst "', '"Reporting currency"', '"Input"', '"By source system"', '"Intraday"', '"Scenario FX"',
-    '"Cross rates"', '"Resolved"', '"Positions"', '"Trades"', '"Outside your view"', '"Unknown ids"', '"Warnings"', '"Rows left out"',
-    '"Vectors"', '"Scenario set"', '"Method"', '["ES", p.es]', '"Components"', '"Positions by"', '"Engine"', '"View"', '"Members"',
-    '"Computed"', "doCapture", "csvOfPath", "jsonlOfPath", "B.openWhatIf()", "Drishti.ScopeDelete.ask", "B.edit(scope)",
-    '"Edit a copy"', "addButton(", "b.owner === S.user || S.admin", "switchTab", "setCcy", "setLens", "/help/context/var-explain",
+    '"ES " + esc + "% (mean of worst "', "doCapture", "csvOfPath", "jsonlOfPath", "B.openWhatIf()", "Drishti.ScopeDelete.ask", "B.edit(scope)",
+    '"Edit a copy"', "addButton(", "b.owner === S.user || S.admin", "switchTab", "setCcy", "setLens", "bindExplain", "explainReq",
 ]
+
+#: every line of How this number was built, now the server's Inputs & lineage (VarNumberExplainer.java), as the box labelled them
+EXPLAINER = Path(__file__).resolve().parents[2] / "drishti-server/src/main/java/com/ash/drishti/server/var/VarNumberExplainer.java"
+EXPLAINER_INVENTORY = ['"Scope"', '"Reporting currency"', '"Input"', '"By source system"', '"Intraday"', '"Scenario FX"', '"Cross rates"',
+                       '"Resolved"', '"Positions"', '"Trades"', '"Outside your view"', '"Unknown ids"', '"Warnings"', '"Rows left out"',
+                       '"Vectors"', '"Scenario set"', '"Method"', '"ES"', '"Components"', '"Positions by"', '"Engine"', '"View"', '"Members"',
+                       '"Computed"', '" trades not included"', '"none: the morning run"', '", chosen in the header"']
 
 
 def _page(client, path="/var?scope=BANK"):
@@ -112,10 +113,10 @@ def test_every_part_of_the_var_screen_is_still_served(client):
     assert not missing, "gone from the VaR page: " + ", ".join(missing)
 
 
-def test_the_six_tabs_stay_in_their_order(client):
+def test_the_five_tabs_stay_in_their_order(client):
     html = _page(client)
     tabs = re.findall(r'class="vx-tab" role="tab" data-tab="(\w+)"', html)
-    assert tabs == ["path", "hist", "contrib", "captures", "ccy", "why"]
+    assert tabs == ["path", "hist", "contrib", "captures", "ccy"]          # Why it moved is the Explain drawer's tab (2.9.11.f)
 
 
 def test_the_scripts_and_styles_stay(client):
@@ -129,12 +130,13 @@ def test_the_explorer_still_draws_every_tile_es_figure_and_explanation_line(clie
     js = client.get("/static/js/drishti_var-explorer.js").text
     missing = [needle for needle in EXPLORER_INVENTORY if needle not in js]
     assert not missing, "gone from drishti_var-explorer.js: " + ", ".join(missing)
-    explain = client.get("/static/js/drishti_var-explain.js").text
-    assert "Drishti.varExplain" in explain
+    java = EXPLAINER.read_text(encoding="utf-8")
+    missing = [needle for needle in EXPLAINER_INVENTORY if needle not in java]
+    assert not missing, "gone from the explanation (VarNumberExplainer.java): " + ", ".join(missing)
 
 
 def test_the_new_layout_baskets_in_two_drop_downs_and_the_drawer(client):
-    """The two changes themselves: the drop-downs (combobox, listbox, keys B and M), + New basket, How calculated (H) and its drawer."""
+    """The two changes themselves: the drop-downs (combobox, listbox, keys B and M), + New basket; and Explain › (E), the one Explain's."""
     html = _page(client)
     assert "data-vx-adhoc" not in html and "vx-sec\">Ad-hoc scopes" not in html        # the baskets left the column
     for pick, key, label in (("system", "B", "System baskets"), ("mine", "M", "My baskets")):
@@ -145,17 +147,10 @@ def test_the_new_layout_baskets_in_two_drop_downs_and_the_drawer(client):
         assert 'role="combobox"' in block and 'role="listbox"' in block and 'aria-autocomplete="list"' in block
     assert "data-vx-basket-new" in html                                               # + New basket at the bottom of My baskets
     assert re.search(r'data-vx-basket-open[^>]*>\s*\+ New basket', html)              # and in the toolbar
-    assert 'data-vx-how ' in html and 'aria-keyshortcuts="H"' in html and 'aria-controls="vxHow"' in html
-    drawer = re.search(r'<aside class="vx-panel vx-prov vx-drawer[^"]*"[^>]*>', html).group(0)
-    assert 'role="dialog"' in drawer and "hidden" in drawer and 'aria-labelledby="vxHowH"' in drawer
-    assert "data-vx-how-close" in html
-    # the drawer's state is in the link: ?how=1 serves it open
-    opened = _page(client, "/var?scope=BANK&how=1")
-    drawer = re.search(r'<aside class="vx-panel vx-prov vx-drawer[^"]*"[^>]*>', opened).group(0)
-    assert " hidden" not in drawer and "vx-open" in drawer
-    assert re.search(r'data-vx-how [^>]*aria-expanded="true"', opened)
+    assert "data-vx-how-close" not in html and "data-vx-drawer" not in html and "how=1" not in html
+    assert re.search(r'data-vx-explain data-explain-primary aria-keyshortcuts="E"', html)
     js = client.get("/static/js/drishti_var-layout.js").text
-    assert "VarLayout" in js and "aria-activedescendant" in js and '"how"' in js
+    assert "VarLayout" in js and "aria-activedescendant" in js and "openHow" not in js
 
 
 # ------------------------------------------------------------------------------------------------------------------ the browser
@@ -213,6 +208,43 @@ class LayoutBackend(FakeBackend):
                     "found": 1, "notFound": 0, "flagged": 0, "cells": [], "scope": "TRD:C", "empty": False, "trades": 1, "var": 1.0, "es": 1.2,
                     "sumOfParts": 1.0, "diversification": 0.0, "partsAdded": 1, "confidence": 0.99, "esConfidence": 0.975, "computeMs": 1}
         raise BackendError(404, "DRS-1003", "nothing here in this test")
+
+    async def explain(self, method, path, ident, body=None, **params):
+        """The one Explain, as the server answers it (shapes of VarNumberExplainer), from this engine's own figures."""
+        self.explained = getattr(self, "explained", []) + [dict(params)]
+        if path == "/kinds":
+            return {"kinds": [{"kind": "var", "title": "VaR", "measures": ["var", "es"]}], "underConstruction": []}
+        h, m, part = self.head(params.get("scope", "BANK")), params.get("measure", "var"), params.get("part", "all")
+        value = VAR if m == "var" else ES
+        out = {"kind": "var", "measure": m, "subject": h["canonical"], "title": ("VaR 99%" if m == "var" else "ES 97.5%") + ", 1 day, " + h["label"],
+               "stored": False, "value": value, "text": f"{value:,.0f}", "unit": "USD", "asOf": "2026-10-28",
+               "origin": "computed by the VaR engine in the server for you (" + PROV["engine"] + ")", "part": part,
+               "preview": "the 6th worst of 509 scenario P&Ls (2026-03-17)" if m == "var" else "the mean of the worst 13 of 509 scenario P&Ls",
+               "facts": ["40 positions"]}
+        if part in ("all", "formula"):
+            out["formula"] = {"lines": ["VaR = −(k-th worst of 509 scenario P&Ls)", "k = 6   (" + PROV["method"] + ")", f"VaR = {VAR:,.0f} USD"],
+                              "rachana": "var()"}
+        if part in ("all", "inputs"):
+            out["inputs"] = {"rows": [{"label": k, "value": v} for k, v in (("Scope", "node " + h["label"]), ("Reporting currency", "USD, chosen in the header"),
+                                                                           ("Scenario set", PROV["scenarioSet"]), ("Method", PROV["method"]), ("ES", PROV["es"]),
+                                                                           ("Components", PROV["components"]), ("Engine", PROV["engine"]),
+                                                                           ("Computed", "2026-10-28 08:00:00 · 12 ms · cache miss"))],
+                             "lineage": [{"source": "pnl-vector", "read": "business date 2026-10-28", "version": "42"}]}
+        if part in ("all", "why"):
+            view = params.get("view") or "waterfall"
+            out["why"] = {"available": True, "from": params.get("from") or "2026-10-27", "to": params.get("to") or "2026-10-28", "change": 1000.0,
+                          "addsUp": True, "views": ["waterfall", "matrix", "sentences"], "view": view,
+                          "panels": [{"id": "answer", "kind": "markdown", "title": "The answer", "area": "main", "span": 12, "inferred": False,
+                                      "empty": False, "data": {"text": "VaR rose by 1,000 (" + view + ")."}}]}
+        if part in ("all", "workbook"):
+            out["workbook"] = {"available": True, "links": [
+                {"label": "Why it moved: every state and step as an Excel formula (.xlsx)", "href": "/api/var/explain.xlsx?scope=" + h["canonical"], "note": "checked"},
+                {"label": "Worked in the playground: the grid and its formula workbook", "href": "/play?scope=" + h["canonical"], "note": ""}]}
+        if part != "preview":
+            out["checks"] = [{"ok": True, "text": "inputs complete (120 of 120 trades with a vector)"}]
+            out["links"] = [{"label": "Guide: VaR", "href": "/help/context/var"}]
+            out["underConstruction"] = [{"id": "explain-official-check", "text": "Under construction", "about": "the official check", "release": "2.9.11.j"}]
+        return out
 
 
 @pytest.fixture(scope="module")
@@ -275,7 +307,7 @@ def _open(browser, url, width=1500, theme="terminal"):
 
 
 @pytest.mark.parametrize("theme", ("terminal", "light"))
-def test_the_drawn_screen_keeps_every_figure_and_the_explanation_moves_into_the_drawer(served, browser, theme):
+def test_the_drawn_screen_keeps_every_figure_and_the_explanation_is_the_one_explain(served, browser, theme):
     url, _ = served
     ctx, pg = _open(browser, url + "/var?scope=BANK", theme=theme)
     try:
@@ -303,54 +335,44 @@ def test_the_drawn_screen_keeps_every_figure_and_the_explanation_moves_into_the_
         pg.set_viewport_size({"width": 1500, "height": 1000})
         pg.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DESK-FX"]').click()
         _wait(pg, "document.querySelector('[data-var]').dataset.painted === 'NODE:MGMT~DESK-FX'")
-        # the six tabs, each with its pane
-        for tab in ("path", "hist", "contrib", "captures", "ccy", "why"):
+        # the five tabs, each with its pane
+        for tab in ("path", "hist", "contrib", "captures", "ccy"):
             pg.locator(f'.vx-tab[data-tab="{tab}"]').click()
             assert pg.locator(f'[data-pane="{tab}"]').is_visible(), tab
         pg.locator('.vx-tab[data-tab="path"]').click()
-        # no right-hand column: the scope's panel takes the width; the drawer is closed
-        assert not pg.locator("[data-vx-drawer]").is_visible()
+        # no right-hand column: the scope's panel takes the width; no Explain drawer until asked
+        assert not pg.locator("[data-explain-drawer]").is_visible()
         assert main_box["width"] > 1000
-        # How calculated (H): the drawer, the server's lines, Esc closes, the focus goes back, the link says so
+        # Explain (E): the one drawer, the server's lines, Esc closes, the focus goes back
         pg.locator("body").click(position={"x": 5, "y": 5})
-        pg.keyboard.press("h")
-        _wait(pg, "!document.querySelector('[data-vx-drawer]').hidden")
-        drawer = pg.locator("[data-vx-drawer]")
-        assert drawer.is_visible() and "how=1" in pg.url
+        pg.keyboard.press("e")
+        _wait(pg, "document.querySelector('[data-explain-drawer]') && document.querySelector('[data-explain-drawer]').dataset.state === 'ready'")
+        drawer = pg.locator("[data-explain-drawer]")
+        assert drawer.is_visible() and "k = 6" in drawer.inner_text() and PROV["method"] in drawer.inner_text()
+        pg.locator('[data-dx-tab="inputs"]').click()
+        _wait(pg, "document.querySelector('[data-explain-drawer]').dataset.tab === 'inputs'")
         text = drawer.inner_text()
         for line in ("Scope", "Reporting currency", "Scenario set", "Method", "ES", "Components", "Engine", "Computed"):
             assert line in text, line
         assert PROV["es"] in text and PROV["method"] in text and PROV["engine"] in text   # the server's text, as sent
-        assert pg.evaluate("document.activeElement.closest('[data-vx-drawer]') !== null")
-        for action in ("[data-vx-csv]", "[data-vx-capture-side]", "[data-vx-whatif]"):
-            assert pg.locator(action).is_visible(), action
-        assert pg.get_attribute("[data-vx-how]", "aria-expanded") == "true"
+        assert pg.locator("[data-vx-whatif]").is_visible()
         box = drawer.bounding_box()
         assert box["x"] + box["width"] >= 1499 and box["width"] < 700                  # over the right of the screen
-        # below the console's top bar, to the bottom: the bar (command line, date, its icons) stays visible and clickable
-        pg.wait_for_timeout(300)
-        box = drawer.bounding_box()
+        # below the console's top bar: the bar (command line, date, its icons) stays visible and clickable
         head = pg.locator("header.tbar").bounding_box()
-        assert abs(box["y"] - (head["y"] + head["height"])) <= 1 and abs(box["y"] + box["height"] - 1000) <= 1, (box, head)
-        hits = pg.evaluate("""() => [...document.querySelectorAll('header.tbar input, header.tbar button, header.tbar a')]
-            .filter(e => { const r = e.getBoundingClientRect(); return r.width && r.height && r.right > window.innerWidth - 440; })
-            .map(e => { const r = e.getBoundingClientRect(); const at = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-                        return e === at || e.contains(at); })""")
-        assert hits and all(hits), hits                                              # the bar's right-hand icons are on top
+        assert abs(box["y"] - (head["y"] + head["height"])) <= 2, (box, head)
         pg.locator("#cmdInput").click()                                             # the command line takes a click
         assert pg.evaluate("document.activeElement.id") == "cmdInput" and drawer.is_visible()
-        pg.locator("[data-vx-how-close]").focus()
-        pg.wait_for_timeout(300)
-        _shot(pg, f"var-layout-drawer-{theme}")
+        _shot(pg, f"var-layout-explain-{theme}")
+        pg.locator("[data-dx-close]").focus()
         pg.keyboard.press("Escape")
-        _wait(pg, "document.querySelector('[data-vx-drawer]').hidden")
-        assert "how=1" not in pg.url and pg.evaluate("document.activeElement.hasAttribute('data-vx-how')")
-        # a link opens it
-        pg.goto(url + "/var?scope=BANK&how=1")
-        _wait(pg, "document.querySelector('[data-var]').dataset.painted === 'BANK'")
-        assert pg.locator("[data-vx-drawer]").is_visible() and "6th worst of 509" in pg.locator("[data-vx-drawer]").inner_text()
-        pg.locator("[data-vx-how-close]").click()
-        assert not pg.locator("[data-vx-drawer]").is_visible()
+        _wait(pg, "document.querySelector('[data-explain-drawer]').hidden")
+        # a tile opens it at its own figure: ES
+        pg.locator('.vx-tile[data-tile="1"] .v').click()
+        _wait(pg, "document.querySelector('[data-explain-drawer]').dataset.state === 'ready'")
+        assert "ES 97.5%" in drawer.inner_text()
+        pg.locator("[data-dx-close]").click()
+        assert not drawer.is_visible()
     finally:
         ctx.close()
 
@@ -418,7 +440,7 @@ def test_the_basket_drop_downs_search_keys_actions_and_new_basket(served, browse
 
 
 @pytest.mark.parametrize("theme", ("terminal", "light"))
-def test_on_a_phone_the_drop_downs_are_full_width_and_the_drawer_a_bottom_sheet(served, browser, theme):
+def test_on_a_phone_the_drop_downs_are_full_width_and_explain_a_bottom_sheet(served, browser, theme):
     url, _ = served
     ctx, pg = _open(browser, url + "/var?scope=BANK", width=390, theme=theme)
     try:
@@ -434,10 +456,10 @@ def test_on_a_phone_the_drop_downs_are_full_width_and_the_drawer_a_bottom_sheet(
         assert pg.evaluate(audit)
         _shot(pg, f"var-layout-phone-{theme}")
         pg.keyboard.press("Escape")
-        pg.locator("[data-vx-how]").click()
-        _wait(pg, "!document.querySelector('[data-vx-drawer]').hidden")
+        pg.locator("[data-vx-explain]").click()
+        _wait(pg, "document.querySelector('[data-explain-drawer]') && document.querySelector('[data-explain-drawer]').dataset.state === 'ready'")
         pg.wait_for_timeout(400)                                                          # the sheet has risen
-        d = pg.locator("[data-vx-drawer]").bounding_box()
+        d = pg.locator("[data-explain-drawer]").bounding_box()
         assert d["width"] >= 389 and d["y"] > 100 and abs(d["y"] + d["height"] - 844) <= 2      # the bottom sheet
         assert pg.evaluate(audit)
         _shot(pg, f"var-layout-phone-drawer-{theme}")

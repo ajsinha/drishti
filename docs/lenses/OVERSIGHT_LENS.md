@@ -333,7 +333,7 @@ under a second on the demo; at 2.3M positions it is bounded by the churn, not th
 today's hierarchy only when a book moved: the books that moved, not the bank.
 
 **Where it shows.** **Built (2.9.10):** `VAR EXPLAIN <scope>` (and `VAR <scope> EXPLAIN`), the **Why it moved** tab on the VaR page
-(a waterfall, each step opening its contributors), `drishti.py var explain` and the API `GET /api/v1/var/explain?scope=&from=&to=`
+(a waterfall, each step opening its contributors), `drishti.py var explain` and the API `GET /api/v1/explain?kind=var&scope=&from=&to=&part=why`
 ([VAR_GUIDE.md section 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained)). Later: the Appetite landing's card
 ([section 5.4](#54-three-landings-to-mock-up-later)) and the daily risk report. `from` and `to` may be any two dates, not only consecutive ones (a month's
 change for the committee), and `to` may be **now** (intraday since the morning's official figure).
@@ -442,7 +442,7 @@ position grain). Nothing new is asked of the bank. The risk-factor overlay needs
 - `VAR EXPLAIN <scope> [from] [to]` or `VAR <scope> EXPLAIN [from] [to]` on the command line: `VAR EXPLAIN BANK`,
   `VAR DESK DESK-CREDIT EXPLAIN 2026-06-30` (FUNC lists it; the edition word `VAR` covers it).
 - `drishti.py var explain <scope> [--from] [--to] [--confidence] [--matrix] [--xlsx FILE] [--json]`, the waterfall as aligned lines.
-- `GET /api/v1/var/explain?scope=&from=&to=&confidence=` (`method=shapley` answers 400: planned), with `/explain/matrix` and
+- `GET /api/v1/explain?kind=var&part=why&scope=&from=&to=&confidence=` (`attribution=shapley` answers 400: planned), with `view=matrix` and
   `/explain.xlsx` (the working as a workbook of formulas): `{states[], steps[{name, effect,
   contributors[], rest}], orderFree[], limit{}, provenance}`; the same entitlements as the scope's VaR (a person who cannot see a
   book sees its contribution folded into *the others*).

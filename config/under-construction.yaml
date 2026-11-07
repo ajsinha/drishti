@@ -126,3 +126,52 @@ items:
     menus: [ccr-cube]
     contracts: ["docs/guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes", "docs/architecture/PIVOT_ENGINE.md#65-the-ccr-provider-later"]
 
+
+  - id: explain-why-es-parametric
+    what: panel
+    about: "Explain › Why it moved for ES, parametric VaR, parametric ES and the fat-tail gap: the exact attribution steps are VaR's only (the drawer says so; VaR's own Why it moved is built)"
+    release: "2.9.11.j (risk engines II)"
+    treatment: under-construction
+    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+
+  - id: explain-official-check
+    what: panel
+    about: "Explain's check 'equal to the official capture' (VaR and exposure): the captures are on each page's Captured results tab; the drawer does not compare yet"
+    release: "2.9.11.j (risk engines II)"
+    treatment: under-construction
+    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+
+  - id: explain-exposure-why
+    what: panel
+    about: "Explain › Why it moved for an exposure figure (peak PFE, EPE, EEPE, EE, CE, EAD): the attribution between two dates is not built; the formula, inputs, lineage and checks are"
+    release: "2.9.11.j (risk engines II)"
+    treatment: under-construction
+    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+
+  - id: explain-exposure-workbook
+    what: panel
+    about: "Explain › Workbook for an exposure figure: no exposure playground with a live-formula workbook yet"
+    release: "2.9.11.j (risk engines II)"
+    treatment: under-construction
+    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+
+  - id: explain-pivot-workbook
+    what: panel
+    about: "Explain › Workbook for a pivot cell's move: the steps are on the screen and in the API; no live-formula workbook yet"
+    release: "a later release (the pivot playground)"
+    treatment: under-construction
+    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+
+  - id: explain-more-kinds
+    what: panel
+    about: "Explain for a BI measure, a Sutra metric, an FRTB-SA or a SIMM figure: no explainer of these kinds is registered yet (GET /api/v1/explain/kinds lists the ones that are: var, exposure, pivot); FRTB-SA and SIMM keep their own step-by-step explanation on their pages"
+    release: "2.9.11.f (after 2.9.11.d's BI internals)"
+    treatment: under-construction
+    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
+
+  - id: explain-pivot-screen
+    what: panel
+    about: "The Pivot screen's Why did it move? card (W) still draws its own answer from POST /api/v1/pivot/explain; the server's pivot explainer (kind pivot) is built, the card moves onto the one Explain once 2.9.11.d's BI internals are released"
+    release: "2.9.11.f (after 2.9.11.d's BI internals)"
+    treatment: under-construction
+    contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]

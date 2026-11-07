@@ -284,11 +284,12 @@ class VarCli(unittest.TestCase):
 
     def test_explain_asks_its_paths_and_prints_the_waterfall_as_aligned_lines(self):
         run("explain", "DESK:RATES", "--from", "2026-09-29", "--to", "2026-09-30", "--json")
-        self.assertEqual(self.query(), ("GET", "/api/v1/var/explain", {"scope": "DESK:RATES", "from": "2026-09-29", "to": "2026-09-30"}, None))
+        self.assertEqual(self.query(), ("GET", "/api/v1/explain", {"scope": "DESK:RATES", "from": "2026-09-29", "to": "2026-09-30",
+                                                                "kind": "var", "part": "why"}, None))
         run("explain", "BANK", "--matrix", "--json")
-        self.assertEqual(self.query()[1:3], ("/api/v1/var/explain/matrix", {"scope": "BANK"}))
+        self.assertEqual(self.query()[1:3], ("/api/v1/explain", {"scope": "BANK", "kind": "var", "part": "why", "view": "matrix"}))
         run("explain", "BANK", "--confidence", "0.95", "--json")
-        self.assertEqual(self.query()[2], {"scope": "BANK", "confidence": "0.95"})
+        self.assertEqual(self.query()[2], {"scope": "BANK", "confidence": "0.95", "kind": "var", "part": "why"})
         out = []
         V.render_explain(EXPLAIN, out.append)
         text = "\n".join(out)
