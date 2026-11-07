@@ -420,8 +420,8 @@ exceptions are too many or too few, a Christoffersen p-value below 0.05 that the
 
 ## Step 9 · How the date sits in memory and on disk
 
-**In the UI.** **How calculated ›** in the toolbar (or the key **H**) slides *How this number was built* in from the right (**Esc**
-closes it; `&how=1` in the link opens the page with it): **Tier** says where the vector came from. A node is its float64 aggregate; any
+**In the UI.** **Explain ›** in the toolbar (or the key **E**, or a click on the VaR tile) slides the Explain drawer in from the right
+(**Esc** closes it); its **Inputs & lineage** tab is how the number was built: **Tier** says where the vector came from. A node is its float64 aggregate; any
 other scope sums the date's float32 position rows in float64:
 
 ![How this number was built: the rates desk without a book, from the hot file](img/t25/10-provenance.jpg)
@@ -530,8 +530,7 @@ The hedge alone has a VaR of 34,296,045; its incremental VaR is the change; its 
 hedge's is. A trade priced elsewhere goes in a file (`--trades new-swap.json`: `[{"LABEL": "new swap", "PNL": [509 numbers],
 "FACTOR": 1}]`).
 
-**In the UI.** Open `VAR DESK RATES <GO>`, **How calculated ›** (or **H**), then **What-if…** in the drawer (the drawer closes and the desk
-goes into the basket's sheet), then
+**In the UI.** Open `VAR DESK RATES <GO>`, then **What-if…** in the toolbar (the desk goes into the basket's sheet), then
 **+ What-if trade**: a trade id and a factor (−1: its unwind); the sheet shows VaR and ES before → after and each trade's figures.
 
 **In YAML.** Nothing: the what-if has no connector or setting of its own; it uses the VaR engine's confidence, rank rule and component
@@ -558,7 +557,7 @@ drishti:
 *Outside your view* counting the rest; `drishti.py var show 'POS:…'` for a position outside the desk answers `403 DRS-5002`. The
 computed kinds of steps 10 and 11 answer the same way: they are computed as you.
 
-**You should see** in *How this number was built*, as a restricted user, *View: restricted by node (… trades outside your
+**You should see** in the Explain drawer's *Inputs & lineage*, as a restricted user, *View: restricted by node (… trades outside your
 entitlement)* for the bank: the bank's 9,572 trades less the rates desk's 1,487, so 8,085 outside, and the bank's VaR equal to the desk's.
 
 **Further in the guide:** [section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) (entitlements and audit).
@@ -571,7 +570,7 @@ line one row of the contract; [VAR_GUIDE.md section 15.12](../guides/VAR_GUIDE.m
 **From the command line**, with the server of step 1 running (Windows: `tools\windows\pvgen-intraday.ps1` with the same options):
 
 ```text
-$ tools/pvgen/intraday.sh --batches 3 --trades-per-batch 10 --lake data/delta --server http://<host>:<port>
+$ tools/pvgen/intraday.sh --batches 3 --trades-per-batch 10 --lake data/delta/demo --server http://<host>:<port>
 lake-build ok exit=0 ... kind=pnl-vector engine=drishti mode=append rows=8 rejected=0 dates=1 partitions=1 seconds=1.75
 lake-build ok exit=0 ... kind=scenario-pv engine=drishti mode=append rows=2 rejected=0 dates=1 partitions=1 seconds=1.742
 ...
@@ -610,7 +609,7 @@ $ tools/pvgen/check.sh --morning data/pvgen/morning-2026-09-30 --intraday data/p
 every figure agrees
 ```
 
-**You should see** the bank move from 112,041,646 to **111,939,005** (ES 160,143,809 to 159,035,721), the badge, *intraday* in *How this number was built*, and every line of the check `ok`. The official end-of-day
+**You should see** the bank move from 112,041,646 to **111,939,005** (ES 160,143,809 to 159,035,721), the badge, *intraday* in the Explain drawer's *Inputs & lineage*, and every line of the check `ok`. The official end-of-day
 record is still the morning run's. The same updates can come from Kafka (the `pv-updates` connector, off by default; the publisher
 `tools/pvgen/publish-kafka.sh`): [VAR_GUIDE.md section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes).
 
@@ -886,13 +885,13 @@ MGMT~BANK VAR FY2026 (2025-11-01 to 2026-10-31): 228 official records, 227 synth
   period end 112,041,646 (2026-09-30)   average 151,812,526
   high 167,372,692 (2026-01-13)   low 87,874,268 (2025-12-10)
 $ drishti.py var report run annual-report-var FY2026
-$ drishti.py var report sign annual-report-var FY2026 --step maker --comment "Credit up on the new book"
+$ drishti.py approvals approve var-report annual-report-var:FY2026:v1 --param step=maker --comment "Credit up on the new book"
 ```
 
 **In the UI.** `VAR BANK BACKTEST <GO>`: the chart of the 250 days (actual P&L bars, −VaR 99% and 97.5% of the day before, the
 exceptions marked), the zone card (three lamps, the counts, the multiplier), every desk with its own counts, and the exceptions with the
 desks that drove them. Then `VAR REPORT annual-report-var FY2026 <GO>`: *Generate FY2026*, read the checks, click a cell for its
-lineage (the official record, its date and result version), write the narrative, *Approve as Maker*. A second person approves as
+lineage (the official record, its date and result version), write the narrative, *Sign as Maker in Approvals*, then **Approve**. A second person approves as
 checker, a third as CRO; the xlsx, csv and PDF are released after the last approval (before it, a draft marked so).
 
 **What it means.** The backtest counts the days the bank's actual (and hypothetical) P&L lost more than the official VaR of the day

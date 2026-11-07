@@ -152,6 +152,17 @@ public class SutraGovernance {
                 .flatMap(v -> sutras.source(pr.name(), v)).orElse("");
     }
 
+    /**
+     * What a proposal is compared with, whatever its status: the text it was proposed on (a change to a live version), else the latest
+     * version before it (a new version), else nothing. Once approved, the live text is the proposal itself, so it is never the base.
+     */
+    public String comparedWith(Proposal pr) {
+        if (pr.baseText() != null && !pr.baseText().isEmpty()) {
+            return pr.baseText();
+        }
+        return sutras.versions(pr.name()).stream().filter(v -> v < pr.version()).max(Integer::compare).flatMap(v -> sutras.source(pr.name(), v)).orElse("");
+    }
+
     /** The live text of the proposal's Sutra now (empty when that version is new). */
     public String liveText(Proposal pr) {
         return sutras.source(pr.name(), pr.version()).orElse("");

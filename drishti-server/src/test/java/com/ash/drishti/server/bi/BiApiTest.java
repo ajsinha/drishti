@@ -247,15 +247,16 @@ class BiApiTest {
         refused(call("POST", "/api/v1/bi/items/" + id + "/publish", ann(), Map.of()), 403, "DRS-9002");     // review is required
         assertThat(ok(call("POST", "/api/v1/bi/items/" + id + "/propose", ann(), Map.of("note", "please"))).path("status").asText()).isEqualTo("proposed");
         refused(call("PUT", "/api/v1/bi/items/" + id, ann(), Map.of("title", "Changed")), 409, "DRS-9004");   // frozen while proposed
-        refused(call("POST", "/api/v1/bi/items/" + id + "/approve", ann(), Map.of()), 403, "DRS-9002");     // ann lacks the approve power
-        JsonNode approved = ok(call("POST", "/api/v1/bi/items/" + id + "/approve", bob(), Map.of("note", "looks right")));
-        assertThat(approved.path("publishedVersion").asInt()).isEqualTo(1);
+        refused(call("POST", "/api/v1/approvals/bi/" + id + "/approve", ann(), Map.of()), 403, "DRS-9002");     // ann lacks the approve power
+        JsonNode approved = ok(call("POST", "/api/v1/approvals/bi/" + id + "/approve", bob(), Map.of("comment", "looks right")));
+        assertThat(approved.path("status").asText()).isEqualTo("approved");
+        assertThat(ok(call("GET", "/api/v1/bi/items/" + id, bob(), null)).path("publishedVersion").asInt()).isEqualTo(1);
         // four-eyes: bob proposes, bob may not approve
         JsonNode j = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", bob(), Map.of("kind", "table", "title", "Cashflows")));
         String jid = j.path("id").asText();
         ok(call("POST", "/api/v1/bi/items/" + jid + "/propose", bob(), Map.of()));
-        refused(call("POST", "/api/v1/bi/items/" + jid + "/approve", bob(), Map.of()), 403, "DRS-9005");
-        refused(call("POST", "/api/v1/bi/items/" + jid + "/reject", bob(), Map.of("reason", "no")), 403, "DRS-9005");
+        refused(call("POST", "/api/v1/approvals/bi/" + jid + "/approve", bob(), Map.of()), 403, "DRS-9005");
+        refused(call("POST", "/api/v1/approvals/bi/" + jid + "/reject", bob(), Map.of("comment", "no")), 403, "DRS-9005");
     }
 
     @Test @Order(6)
@@ -263,8 +264,9 @@ class BiApiTest {
         JsonNode i = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "report", "title", "To reject")));
         String id = i.path("id").asText();
         ok(call("POST", "/api/v1/bi/items/" + id + "/propose", ann(), Map.of()));
-        refused(call("POST", "/api/v1/bi/items/" + id + "/reject", bob(), Map.of()), 422, "DRS-9003");
-        assertThat(ok(call("POST", "/api/v1/bi/items/" + id + "/reject", bob(), Map.of("reason", "not yet"))).path("status").asText()).isEqualTo("draft");
+        refused(call("POST", "/api/v1/approvals/bi/" + id + "/reject", bob(), Map.of()), 422, "DRS-9003");
+        assertThat(ok(call("POST", "/api/v1/approvals/bi/" + id + "/reject", bob(), Map.of("comment", "not yet"))).path("status").asText()).isEqualTo("rejected");
+        assertThat(ok(call("GET", "/api/v1/bi/items/" + id, ann(), null)).path("status").asText()).isEqualTo("draft");
         ok(call("POST", "/api/v1/bi/items/" + id + "/propose", ann(), Map.of()));
         assertThat(ok(call("POST", "/api/v1/bi/items/" + id + "/withdraw", ann(), null)).path("status").asText()).isEqualTo("draft");
     }
@@ -418,7 +420,7 @@ class BiApiTest {
         JsonNode i = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "table", "title", "Broken", "body", "rachana: 3\ntable: desk.x\nversion: 1.0.0\nfrom: { kind: trade }\ncolumns:\n  a: { path: \"$.a\", type: strng }\n")));
         String id = i.path("id").asText();
         ok(call("POST", "/api/v1/bi/items/" + id + "/propose", ann(), Map.of()));
-        r1(call("POST", "/api/v1/bi/items/" + id + "/approve", bob(), Map.of()));
+        r1(call("POST", "/api/v1/approvals/bi/" + id + "/approve", bob(), Map.of()));
     }
 
     private void r1(ResultActions r) throws Exception {

@@ -16,7 +16,7 @@ schedule:
   at: "02:30"                    # after the nightly load, before the day starts
   zone: America/New_York
 lakes:
-  - root: ./data/delta           # a local lake: every domain, every table
+  - root: ./data/delta/demo      # a local lake (the demo lake's own folder): every domain, every table
     domains: ["*"]
     keep-business-days: 520      # about two years of business dates; older partitions are deleted (null keeps all)
     max-drop-share: 0.5          # a run that would delete more of a table's rows deletes nothing (--force-drop overrides)

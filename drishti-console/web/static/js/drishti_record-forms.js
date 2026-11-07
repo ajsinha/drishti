@@ -635,9 +635,9 @@
     document.body.appendChild(dlg);
     box.tabIndex = -1;
     (go.disabled ? box : go).focus();
-    function esc(e) { if (e.key === 'Escape') { e.preventDefault(); close(); } }
-    function close() { document.removeEventListener('keydown', esc, true); dlg.remove(); c.review.focus(); }
-    document.addEventListener('keydown', esc, true);
+    var off = window.Drishti.keys.register({ id: 'records.review.close', keys: ['Escape'], scope: 'dialog', area: 'records-review', capture: true, typing: true,
+      description: 'Keep editing: close the review', run: function () { close(); } });
+    function close() { off(); dlg.remove(); c.review.focus(); }
   }
 
   // ---- C: a guided drawer for New ------------------------------------------------------------------------------------------------

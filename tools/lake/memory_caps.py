@@ -17,7 +17,7 @@
 limit must have, 256 (the server's own buffers) plus every memory store's max-mb, read from the configuration the server reads
 (application.local.yaml in the working folder, then the files named on the command line), with ${VAR:default} resolved from the
 environment and DRISHTI_LAKE_MEMORY_<STORE>_MAX_MB overriding a store. DRISHTI_LAKE_MEMORY_MB, when set, is the stores' sum itself.
-A store is a lake (config/lakes/<store>.yaml, root: mem://<store>, memory.max-mb; docs/guides/LAKE_GUIDE.md section 6), and the old place,
+A store is a lake (config/lakes/<store>.yaml, root: mem://<store>, memory.max-mb; docs/guides/IN_MEMORY_LAKE_GUIDE.md), and the old place,
 drishti.lake.memory.stores, still counts. This is the one place the lake files are read without the Java reader (tools/lake/lakeconfig.py):
 the launcher runs before any JVM, to size the JVM, and reads two keys only (root and memory.max-mb).
 

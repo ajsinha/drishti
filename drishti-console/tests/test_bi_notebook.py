@@ -263,7 +263,7 @@ def test_the_page_is_live_strict_and_wired():
     assert "wasm-unsafe-eval" not in r.headers.get("content-security-policy", "")
     assert "<script>" not in r.text.replace("<script src", "") and " onclick=" not in r.text and " style=" not in r.text
     assert client.get("/bi/notebook/status").json()["limits"]["max_rows"] == 10000
-    rail = client.get("/bi").text
+    rail = client.get("/bi/catalogue").text
     assert 'href="/bi/notebook"' in rail and 'href="/pivot"' in rail and "/pyconsole" not in rail and "/bi/explore" not in rail
 
 

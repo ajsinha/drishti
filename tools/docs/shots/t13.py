@@ -138,7 +138,7 @@ def authoring(c: Ctx):
     c.page.wait_for_function("() => document.querySelector('[data-msg]').textContent.includes('Proposed')")
     c.page.wait_for_timeout(600)
     region(c, "04-propose.jpg", ".bi-canvas", pad=0)
-    show("ann_approve_own", call(c, "POST", f"/bi/api/items/{made['id']}/approve", {"note": "me"}))
+    show("ann_approve_own", call(c, "POST", f"/approvals/api/item/bi/{made['id']}/approve", {"comment": "me"}))
 
 
 @shot("05-review.jpg", also=("06-approved.jpg", "07-ann-inbox.jpg"))
@@ -152,9 +152,11 @@ def review(c: Ctx):
     c.page.wait_for_timeout(500)
     region(c, "05-review.jpg", "[data-sec-review]")
     show("review", bi(c, "GET", f"/items/{model}/review"))
-    c.page.fill(".bi-note", "looks right")
-    c.page.get_by_role("button", name="Approve and publish").click()
-    c.page.wait_for_function("() => document.querySelector('[data-msg]').textContent.includes('Approved')")
+    go(c, f"/approvals/bi/{model}", wait="[data-ap-item]:not([hidden])", settle=800)     # decided in the one Approvals queue
+    c.page.fill("[data-ap-comment]", "looks right")
+    c.page.get_by_role("button", name="Approve", exact=True).click()
+    c.page.wait_for_function("() => /Approved/.test(document.querySelector('[data-ap-said]').textContent)")
+    open_item(c, model)
     c.page.wait_for_timeout(700)
     region(c, "06-approved.jpg", ".bi-canvas", pad=0)
     as_(c, "ann")
@@ -167,7 +169,7 @@ def review(c: Ctx):
     STATE["report"] = made["id"]
     bi(c, "POST", f"/items/{made['id']}/propose", {"note": "the report on the model"})
     as_(c, "sue")
-    bi(c, "POST", f"/items/{made['id']}/approve", {"note": "good"})
+    call(c, "POST", f"/approvals/api/item/bi/{made['id']}/approve", {"comment": "good"})
 
 
 @shot("08-certify.jpg", also=("09-catalogue-certified.jpg", "10-lineage.jpg"))
@@ -213,12 +215,12 @@ def impact(c: Ctx):
     bi(c, "PUT", f"/items/{ds}", {"body": body, "message": "drop the book column"})
     bi(c, "POST", f"/items/{ds}/propose", {"note": "we no longer split by book"})
     as_(c, "sue")
-    open_item(c, ds)
-    c.page.get_by_role("button", name="Approve and publish").click()
-    c.page.wait_for_function("() => /DRS-9126/.test(document.querySelector('[data-msg]').textContent)", timeout=30000)
+    go(c, f"/approvals/bi/{ds}", wait="[data-ap-item]:not([hidden])", settle=800)        # decided in the one Approvals queue
+    c.page.get_by_role("button", name="Approve", exact=True).click()
+    c.page.wait_for_function("() => /DRS-9126/.test(document.querySelector('[data-ap-said]').textContent)", timeout=30000)
     c.page.wait_for_timeout(600)
-    region(c, "12-dataset-refused.jpg", ".bi-canvas", pad=0)
-    show("refusal", call(c, "POST", f"/bi/api/items/{ds}/approve", {"note": "x"}))
+    region(c, "12-dataset-refused.jpg", "[data-ap-detail]", pad=0)
+    show("refusal", call(c, "POST", f"/approvals/api/item/bi/{ds}/approve", {"comment": "x"}))
     as_(c, "ann")
     bi(c, "POST", f"/items/{ds}/withdraw", {})
     bi(c, "PUT", f"/items/{ds}", {"body": (DATA / "rates-trades.dataset.yaml").read_text(), "message": "keep the book column"})
@@ -315,7 +317,7 @@ def publish_as_sue(c: Ctx, item: str):
     as_(c, "ann")
     bi(c, "POST", f"/items/{item}/propose", {"note": "for review"})
     as_(c, "sue")
-    bi(c, "POST", f"/items/{item}/approve", {"note": "good"})
+    call(c, "POST", f"/approvals/api/item/bi/{item}/approve", {"comment": "good"})
 
 
 @shot("20-rename-impact.jpg", also=("21-renamed-report.jpg",))

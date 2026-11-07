@@ -108,7 +108,7 @@ class PacksServedWithoutDemoTest {
         if (ds.has("samples")) {
             return Files.isRegularFile(Path.of("..").resolve(ds.path("samples").asText()).resolve(kind + ".jsonl"));
         }
-        Path folder = TESTDATA.resolve(ds.path("folder").asText());   // its dated files or tars (DATA_LOAD_RULES.md section 10)
+        Path folder = TESTDATA.resolve(ds.path("folder").asText());   // its dated files or tars (DATA_LAKE_GUIDE.md section 5.2)
         try (Stream<Path> files = Files.list(folder)) {
             return files.anyMatch(f -> f.getFileName().toString().endsWith(".jsonl.gz") || f.getFileName().toString().endsWith(".tar"));
         } catch (IOException e) {

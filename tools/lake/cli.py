@@ -22,7 +22,7 @@ the default; Apache Iceberg with `build --format iceberg`, and `maintain` for a 
     demo       the demo lakes of the seven packs from the committed test data, data/testdata (tools/lake/demo.py)
     maintain   retention, compaction, checkpoints and vacuum, now or on schedules; --history (tools/lake/maintain.py; options passed through)
     memory     the in-memory lake over REST: status, jobs, refill (tools/lake/memory_cli.py; docs/guides/IN_MEMORY_LAKE_GUIDE.md)
-    show       every lake of config/lakes/ and its tables, as the server reads them (tools/lake/lakeconfig.py; docs/guides/LAKE_GUIDE.md)
+    show       every lake of config/lakes/ and its tables, as the server reads them (tools/lake/lakeconfig.py; docs/guides/DATA_LAKE_GUIDE.md)
     check      connectors name known lakes; each lake file matches its tables on disk (format, partitions, promoted columns)
     migrate-config  lake files from connector files that still describe their lake; the connectors rewritten to lake: <name>
 """
@@ -93,6 +93,10 @@ def cmd_undo(a, extra) -> int:
     return _mod("undo").run(a)
 
 
+def cmd_relocate(a, extra) -> int:
+    return _mod("relocate").run(a)
+
+
 def cmd_maintain(a, extra) -> int:
     return _mod("maintain").main(extra)
 
@@ -105,7 +109,7 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
     sub = g.add_subparsers(dest="cmd", metavar="COMMAND", required=True)
     b = add(sub, "build", cmd_build, "lake build: stream a JSON array / JSON Lines / .gz export into a Delta table, partitioned, with promoted columns",
             [], "examples:\n  drishti.py lake build --from exports/deal.2026-10-01.json --kind deal --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates "
-                "--lake data/delta --domain trading\n  drishti.py lake build --from drop/ --pack config/packs/my-book --lake data/delta --as-of 2026-10-01 "
+                "--lake data/delta/demo --domain trading\n  drishti.py lake build --from drop/ --pack config/packs/my-book --lake data/delta/demo --as-of 2026-10-01 "
                 "--signal http://localhost:18480\nexit: 0 ok, 2 written with rejects (or the signal failed), 1 failure, 3 another run holds the table's (or the lake's) lock. "
                 "Guide: docs/guides/TOOLS.md")
     _mod("build").add_arguments(b)
@@ -119,7 +123,7 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
             [], "example:\n  drishti.py lake scan exports/book.json --limit 5000")
     _mod("scan").add_arguments(s)
     st = add(sub, "status", cmd_status, "lake status: the lake's tables (rows, files, size, partitions, business dates, last build), its lock and last runs", [],
-             "example:\n  drishti.py lake status --lake data/delta")
+             "example:\n  drishti.py lake status --lake data/delta/demo")
     st.add_argument("--lake", required=True, metavar="DIR")
     st.add_argument("--runs", type=int, default=10, help="log lines shown (default 10)")
     st.add_argument("--json", action="store_true")
@@ -130,15 +134,20 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
              "Guide: data/testdata/README.md")
     _mod("demo").add_arguments(dm)
     u = add(sub, "undo", cmd_undo, "lake undo: remove one load's rows by its load id, in every table of the lake (a replace restored); asks "
-            "to confirm", [], "examples:\n  drishti.py lake undo 20261104T093000.123-4242.1 --lake data/delta --dry-run\n"
-            "  drishti.py lake undo 20261104T093000.123-4242.1 --lake data/delta --yes\nGuide: docs/architecture/DATA_LOAD_RULES.md section 6.3")
+            "to confirm", [], "examples:\n  drishti.py lake undo 20261104T093000.123-4242.1 --lake data/delta/demo --dry-run\n"
+            "  drishti.py lake undo 20261104T093000.123-4242.1 --lake data/delta/demo --yes\nGuide: docs/guides/DATA_LAKE_GUIDE.md section 5.5")
     _mod("undo").add_arguments(u)
+    rl = add(sub, "relocate", cmd_relocate, "lake relocate: move a lake built in the older layout (<data>/delta/<domain>) into its own folder "
+             "<data>/delta/<lake> once: verified, moved back on any error, never a delete", [],
+             "examples:\n  drishti.py lake relocate demo --dry-run\n  drishti.py lake relocate demo\n"
+             "The server does it for the demo lake at start (drishti.lakes.relocate-on-start). Guide: docs/admin/OPERATIONS.md")
+    _mod("relocate").add_arguments(rl)
     add(sub, "maintain", cmd_maintain, "lake maintain: retention, compaction, checkpoint and vacuum (tools/lake/maintain.py; its options are passed through)",
         [], "examples:\n  drishti.py lake maintain --config deploy/lake-maintenance.yaml --once --dry-run\n"
             "  drishti.py lake maintain --once --tables trading/trade_endur      (the file Admin -> Lakes writes: <data>/lakes/lake-maintenance.yaml)\n"
             "  drishti.py lake maintain --history\n"
-            "  drishti.py lake maintain relayout --root data/delta --domain trading\n"
+            "  drishti.py lake maintain relayout --root data/delta/demo --domain trading\n"
             "Only tables lake build built are maintained (--force-foreign overrides, with a warning). Guide: docs/admin/OPERATIONS.md")
-    _mod("lakeconfig").register(sub, add)                               # lake show|check|migrate-config (2.9.11.c, LAKE_GUIDE.md)
+    _mod("lakeconfig").register(sub, add)                               # lake show|check|migrate-config (2.9.11.c, DATA_LAKE_GUIDE.md)
     if ctx:
         _mod("memory_cli").register(sub, add, srv, ctx)                # lake memory status|jobs|refill (2.9.11, IN_MEMORY_LAKE.md)

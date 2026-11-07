@@ -130,7 +130,7 @@ def test_the_page_follows_the_server_while_it_is_still_checking(client, backend,
 
 
 def test_datamap_in_the_type_ahead_the_views_menu_and_help(client, shipped):
-    s = client.get("/api/suggest", params={"q": "DATAMAP coun"}).json()
+    s = client.get("/api/search", params={"in": "command", "q": "DATAMAP coun"}).json()["items"]
     assert s[0]["mnemonic"] == "DATAMAP" and s[0]["href"] == "/datamap?q=coun" and s[0]["complete"] == "DATAMAP coun"
     page = client.get("/t").text
     assert 'href="/datamap"' in page and "Every kind of data, how it joins and how much there is · also DATAMAP &lt;GO&gt;" in page

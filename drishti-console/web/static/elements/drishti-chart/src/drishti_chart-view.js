@@ -26,7 +26,7 @@ import { normalizeSpec, kindOf, specText } from './drishti_chart-spec.js';
 import { rowsOf } from './drishti_chart-data.js';
 import { chartTheme, formatterFor } from './drishti_chart-theme.js';
 import { rowId } from './drishti_chart-kinds.js';
-import { tooltipElement, dataTable, legendElement, markSelection, addZoom, svgOf, valueText } from './drishti_chart-parts.js';
+import { tooltipElement, dataTable, legendElement, markSelection, addZoom, dragBrush, svgOf, valueText } from './drishti_chart-parts.js';
 import { MapView } from './drishti_map-view.js';
 import { Studio } from './drishti_chart-studio.js';
 
@@ -133,6 +133,7 @@ export class Chart {
     this.engine.on('click', (p) => this.onMark(p));
     this.engine.getZr().on('click', (e) => { if (!e.target && this.selected.size && !this.map) { this.setSelection([]); } });
     this.engine.on('datazoom', () => { const z = this.engine.getOption().dataZoom; const d = z && z[0]; this.zoomReset.hidden = !d || (d.start <= 0 && d.end >= 100); this.emit('zoomChanged', d ? { start: d.start, end: d.end } : {}); });
+    dragBrush(this.engine, () => this.zooms && !this.map, 'rgba(127, 127, 127, 0.18)');
     this.ro = new this.win.ResizeObserver(() => { if (this.engine) { this.engine.resize(); } });
     this.ro.observe(this.canvas);
     if (this.spec.kind === 'map') { this.map = this.map ? this.map.remount() : new MapView(this); } else { this.map = null; }
@@ -194,7 +195,7 @@ export class Chart {
     markSelection(option, this.selected, env.theme);
     if (option.legend && this.hidden.size) { option.legend.selected = {}; this.hidden.forEach((n) => { option.legend.selected[n] = false; }); }
     this.engine.setOption(option, true);
-    if (zooms) { this.engine.dispatchAction({ type: 'takeGlobalCursor', key: 'dataZoomSelect', dataZoomSelectActive: true }); }
+    this.zooms = !!zooms;
     this.chrome(built, Date.now() - t0);
     this.emit('rendered', { kind: s.kind, ms: Date.now() - t0 });
   }

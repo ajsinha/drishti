@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Rupaka phase 1 (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 5): the BI pages. The pages are a shell; this script draws them from the same-origin JSON
    (/bi/api/..., passed on to the server under the signed-in user's identity). Everything is built with DOM calls and textContent, never innerHTML,
    so a title or a description can never become markup. Keys: / search, g h, g c, g w, ?. */
@@ -115,20 +116,6 @@
   function fillCards(box, items, onChange) {
     clear(box);
     items.forEach(function (it) { box.appendChild(card(it, onChange)); });
-  }
-
-  // -- Home -------------------------------------------------------------------------------------------------------------
-  function home() {
-    function load() {
-      api('GET', '/home').then(function (d) {
-        qa('[data-sec]').forEach(function (sec) {
-          var items = d[sec.getAttribute('data-sec')] || [];
-          fillCards(q('[data-cards]', sec), items, load);
-          q('[data-empty]', sec).hidden = items.length > 0;
-        });
-      }).catch(fail);
-    }
-    load();
   }
 
   // -- Catalogue --------------------------------------------------------------------------------------------------------
@@ -552,9 +539,8 @@
         box.appendChild(h('p', { class: 'bi-approvers', 'data-approvers': '' }, h('strong', { text: 'Waiting for review. ' }), 'Frozen until decided or withdrawn. Who can approve: ' + (it.approveRule || 'a reviewer') + (it.approvers && it.approvers.length ? '. Told by notification: ' + it.approvers.join(', ') : '. Nobody is eligible yet: ask a steward, or give a member of the workspace a role with the approve power') + '.'));
       }
       if (c.withdraw) { box.appendChild(act('Withdraw proposal', function (b) { post('withdraw', null, 'Withdrawn: a draft again.', b); })); }
-      if (c.approve) {
-        box.appendChild(act('Approve and publish', function (b) { post('approve', { note: note.value }, 'Approved and published.', b); }, 'btn-accent'));
-        box.appendChild(act('Reject', function (b) { post('reject', { reason: note.value }, 'Rejected: a draft again.', b); }));
+      if (c.approve) {                                    // decided in the one Approvals queue: what changes, its effect, the rules and questions
+        box.appendChild(h('a', { class: 'btn-pill btn-accent', 'data-bi-approvals': '', href: '/approvals/bi/' + encodeURIComponent(it.id).replace(/%3A/g, ':') }, 'Decide in Approvals'));
       }
       if (c.promote && it.endorsement !== 'certified') { box.appendChild(act(it.endorsement === 'promoted' ? 'Remove promotion' : 'Promote', function (b) { post('endorse', { level: it.endorsement === 'promoted' ? 'none' : 'promoted' }, it.endorsement === 'promoted' ? 'Promotion removed.' : 'Promoted: it is listed first for others.', b); })); }
       if (c.certify) { box.appendChild(act(it.endorsement === 'certified' ? 'Remove certification' : 'Certify', function (b) { post('endorse', { level: it.endorsement === 'certified' ? 'none' : 'certified' }, it.endorsement === 'certified' ? 'Certification removed.' : 'Certified.', b); })); }
@@ -715,29 +701,18 @@
     load();
   }
 
-  // -- Keys -------------------------------------------------------------------------------------------------------------
-  var pendingG = 0;
-  window.addEventListener('keydown', function (e) {
-    if (e.ctrlKey || e.metaKey || e.altKey) { return; }
-    var t = e.target, tag = (t.tagName || '').toLowerCase();
-    if (tag === 'input' || tag === 'textarea' || tag === 'select' || t.isContentEditable) { return; }
-    var keys = document.getElementById('biKeys');
-    if (e.key === '/') {
-      e.preventDefault(); e.stopImmediatePropagation();
-      var s = q('input[data-search]');
-      if (s) { s.focus(); } else { window.location.href = '/bi/catalogue?focus=1'; }
-    } else if (e.key === '?' && keys) {
-      e.preventDefault(); if (!keys.open) { keys.showModal(); }
-    } else if (pendingG && Date.now() - pendingG < 1500) {
-      var to = { h: '/bi', c: '/bi/catalogue', w: '/bi/w/me', r: '/bi/w/me?tab=runs' }[e.key];
-      pendingG = 0;
-      if (to) { e.preventDefault(); window.location.href = to; }
-    } else if (e.key === 'g') {
-      pendingG = Date.now();
-    }
-  }, true);
-  var keysBtn = document.querySelector('[data-bi-keys]');
-  if (keysBtn) { keysBtn.addEventListener('click', function () { document.getElementById('biKeys').showModal(); }); }
+  // -- Keys (the one keymap, drishti_keys.js: ? lists them with the rest of the screen's) ----------------------------------------
+  var K = window.Drishti.keys, pendingG = 0;
+  var gWaits = function () { return pendingG && Date.now() - pendingG < 1500; };
+  K.register({ id: 'bi.search', keys: ['/'], scope: 'screen', area: 'bi', group: 'BI', description: 'Search the catalogue',
+    run: function () { var s = q('input[data-search]'); if (s) { s.focus(); } else { window.location.href = '/bi/catalogue?focus=1'; } } });
+  K.register({ id: 'bi.go', keys: ['G'], scope: 'screen', area: 'bi', group: 'BI', label: 'g, then h c w r',
+    description: 'Go to: h the Build home, c the catalogue, w your workspace, r your runs', when: function () { return !gWaits(); },
+    run: function () { pendingG = Date.now(); } });
+  [['H', '/build', 'the Build home'], ['C', '/bi/catalogue', 'the catalogue'], ['W', '/bi/w/me', 'your workspace'], ['R', '/bi/w/me?tab=runs', 'your runs']].forEach(function (g) {
+    K.register({ id: 'bi.go.' + g[0].toLowerCase(), keys: [g[0]], scope: 'screen', area: 'bi-go', hidden: true, description: 'After g: ' + g[2],
+      when: gWaits, run: function () { pendingG = 0; window.location.href = g[1]; } });
+  });
 
   // -- start ------------------------------------------------------------------------------------------------------------
   /** The rail's Runs count: the person's runs queued or running (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 7.1); drishti_bi-runs-tab.js keeps it live on the Runs tab. Quiet on an older server. */
@@ -753,6 +728,6 @@
   api('GET', '/me').then(function (m) {
     me = m;
     runsCount();
-    ({ home: home, catalogue: catalogue, workspaces: workspaces, workspace: workspace, item: item, settings: settings }[page] || function () {})();
+    ({ catalogue: catalogue, workspaces: workspaces, workspace: workspace, item: item, settings: settings }[page] || function () {})();
   }).catch(fail);
 })();

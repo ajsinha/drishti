@@ -144,7 +144,7 @@ def ready(page, sel="#rep", timeout=60000):
     page.wait_for_function("(s) => !document.querySelector(s).shadowRoot.querySelector('.bi-vis-busy')", arg=sel, timeout=timeout)
 
 
-def console_page(browser, user, path="/bi", **ctx):
+def console_page(browser, user, path="/bi/catalogue", **ctx):
     context = browser.new_context(**{"viewport": {"width": 1400, "height": 900}, **ctx})
     page = context.new_page()
     page.errors = []

@@ -189,6 +189,40 @@ class TablesMigratorTest {
     }
 
     @Test
+    void aTableAlreadyThereIsNeverReplacedSoItsRulesAndMasksStay() throws Exception {
+        Path bi = bi();
+        Path tables = dir.resolve("tables");
+        TablesMigrator m = new TablesMigrator(AS_IS);
+        TablesMigrator.write(m.plan(bi, tables), tables, bi, null, MigrationAudit.NONE, null);
+        Path table = tables.resolve("bi/trades_basic_trade.table.yaml");
+        // the administrator tightens the converted table afterwards: MTM masked too, one more rule
+        String tightened = Files.readString(table).replaceFirst("(?m)^(  MTM:\\s+)\\{ ", "$1{ masked: true, ")
+                .replace("rules:\n", "rules:\n  - { role: auditor, where: \"false\" }\n");
+        assertThat(tightened).contains("masked: true, path: \"$.MTM\"").contains("role: auditor");
+        Files.writeString(table, tightened);
+        assertThat(com.ash.drishti.tables.yaml.TableYaml.read(tightened).ok()).as(tightened).isTrue();
+        TablesMigrator.Plan again = m.plan(bi, tables);
+        assertThat(again.writes()).as("the tightened file is kept, never written over").doesNotContainKey("bi/trades_basic_trade.table.yaml");
+        assertThat(again.items()).anyMatch(i -> i.source().equals("datasets/trades-basic-trade.dataset.yaml") && i.notes().stream().anyMatch(n -> n.contains("kept as it is")));
+        TablesMigrator.write(again, tables, bi, null, MigrationAudit.NONE, null);
+        assertThat(Files.readString(table)).isEqualTo(tightened);
+
+        // a file there that lacks the security the old dataset has is refused, never kept and never replaced silently
+        String loose = tightened.replaceAll("(?m)^rules:\\n(  - .*\\n)+", "").replace(", masked: true", "").replace("masked: true, ", "");
+        assertThat(loose).doesNotContain("masked").doesNotContain("rules:");
+        Files.writeString(table, loose);
+        TablesMigrator.Plan refused = m.plan(bi, tables);
+        assertThat(refused.items()).anyMatch(i -> i.source().equals("datasets/trades-basic-trade.dataset.yaml") && "refused".equals(i.state())
+                && i.refusal().contains("without row rules, masks or hidden columns"));
+        assertThat(refused.writes()).doesNotContainKey("bi/trades_basic_trade.table.yaml");
+
+        // another shape (a column more) is refused too
+        Files.writeString(table, tightened.replace("columns:\n", "columns:\n  EXTRA: { path: \"$.EXTRA\", type: string }\n"));
+        assertThat(m.plan(bi, tables).items()).anyMatch(i -> i.source().equals("datasets/trades-basic-trade.dataset.yaml") && "refused".equals(i.state())
+                && i.refusal().contains("already exists under config/tables and differs"));
+    }
+
+    @Test
     void refusesByNameAndNeverWritesHalf() throws Exception {
         Path bi = bi();
         Files.writeString(bi.resolve("models/conditional.model.yaml"), LICENCE + """

@@ -197,7 +197,7 @@ a Delta lake, so a machine without them runs everything else.
 
 ```bash
 uv run --with pyyaml python tools/drishti.py --help
-uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta
+uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta/demo
 ```
 
 **With the console's environment** (what an IDE wants, see [section 14](#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij);
@@ -250,7 +250,8 @@ must expire: 90 days at most by default) and copy the secret once:
 |---|---|---|
 | `read` (always) | everything you may read | nothing |
 | `design:write` | `design create\|save\|check\|autodesign\|import\|delete\|bind\|propose` (the Designs and Studio writes) | a role with `author` |
-| `design:approve` | `design approve\|reject` | a role with `approve` (or admin), and never your own proposal with four-eyes on |
+| `design:approve` | `approvals approve\|reject sutra` | a role with `approve` (or admin), and never your own proposal with four-eyes on |
+| `approve` | `approvals approve\|reject\|withdraw` for every kind your roles let you decide (report sign-offs, stress windows and compute packages stay a person's) | the kind's own rules |
 | `packs:admin` | `server packs load\|unload\|on\|off`, `pack install` | the admin role |
 | `loads:write` | `data landed` | a role that opens the kind (or the admin role) |
 
@@ -275,7 +276,8 @@ could do there and nothing more:
 |---|---|
 | `design list|create|get|save|check|autodesign|export|import|delete` | any user (your own designs) |
 | `design propose` | a user who may save: a role with `author`, and the server's `drishti.rachana.studio-save: true` (`DRISHTI_STUDIO_SAVE`) |
-| `design proposals` | any user; `design approve|reject`: a role with `approve` (or an administrator); with sign-in on and four-eyes on (the default) not your own proposal |
+| `design proposals` | any user |
+| `approvals approve|reject sutra` | a role with `approve` (or an administrator); with sign-in on and four-eyes on (the default) not your own proposal |
 | `design bind` | a user, when the server has file binding on (a development directory per user) |
 | `server health`, `server packs ...`, `pack install` | an administrator |
 
@@ -1441,7 +1443,7 @@ candidate; exit 0, or 2 when nothing could be read.
 `data ingest` (`tools/ingest_jsonl.py`) writes JSON Lines documents into the dated store a pack reads. Inputs are folders of
 `*.jsonl` or single files, repeatable with `--from`. With `--pack` the domain, the columns promoted in the lake and the key field come
 from the pack's `pack.yaml` (including the `ingest:` block); without it give `--domain` (and `--key`, `--columns`). Each file goes under
-its business date by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): `--as-of`, else its `.ready` file's
+its business date by the load rules ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)): `--as-of`, else its `.ready` file's
 `business-date:`, else the date in its name (`trade.2026-11-03.jsonl`, kind `trade`), else the business today; the run says which, in
 `lake build`'s words (*trade.2026-11-03.jsonl: business date 2026-11-03 from the file name*). `--date FIELD` (or the pack's ingest
 `date`) is optional: it names the field the documents carry their own date in, and rows that say another date are only counted.
@@ -1492,7 +1494,7 @@ options:
   --batch-rows BATCH_ROWS
 
 examples:
-  drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta
+  drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta/demo
   drishti.py data ingest --from day1.jsonl --from day2.jsonl --pack config/packs/my-bank --store files --root data/files --dry-run
 ```
 
@@ -1721,7 +1723,7 @@ bash tools/load-files.sh data/demo-files --trades 1000 --days 2
 
 A real small run (200 trades, one day) into a scratch folder; the scripts write under the data folder (`DRISHTI_DATA_DIR`, else
 the repository's `data/`, which is not tracked) and never rewrite the shipped packs' samples. Each loader's heap is
-`DRISHTI_LOADER_HEAP` (default `4g`). Its input is loader rows by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)):
+`DRISHTI_LOADER_HEAP` (default `4g`). Its input is loader rows by the load rules ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)):
 `make_data.py` and `bulk_trades.py` write tars of `<kind>/<YYYY-MM-DD>/` folders under `data/build/loader-rows/`, removed after the
 load, and the loader files each row under its folder's date and says so:
 
@@ -2182,7 +2184,7 @@ drishti.py var history 'DESK:RATES'                                VaR history, 
 drishti.py var tree --hierarchy LEGAL                              every node with its VaR, ES and limit use
 drishti.py var stress-window BANK                                 the stress window selection (SWIN): the worst 250-day window against the current, the candidates
 drishti.py var stress-window BANK --propose --first 2007-11-30     freeze the analysis and propose that window; another person decides it
-drishti.py var stress-window --decide SWP-000001 --decision approve   approve a proposal (not its proposer)
+drishti.py approvals approve stress-window SWP-000001   approve a proposal (not its proposer)
 drishti.py var matrix 'DESK:RATES' --days 20                       the scenario matrix (SMAT): each date's VaR, ES, source and gap, the worst scenarios
 drishti.py var matrix POS-BOOK-1~SEC-A --by trade                  a position's trades under the newest VaR scenario, across the dates
 drishti.py var matrix MX-30000121 --days 30 --csv > t.csv          the whole matrix as CSV (a gap's cells empty, never 0)
@@ -2850,7 +2852,7 @@ screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#22-sav
 | `design autodesign ID` | drafts a Sutra from the samples | `POST /designs/{id}/autodesign` |
 | `design propose ID` | sends it for review (governance on), or saves it (off) | `POST /designs/{id}/propose` |
 | `design proposals` | proposals, `--status pending` | `GET /api/v1/sutras/proposals` |
-| `design approve|reject PROPOSAL` | decides it (`--comment`; a rejection needs one) | `POST /api/v1/sutras/proposals/{id}/approve|reject` |
+| `approvals approve|reject sutra PROPOSAL` | decides it in the one queue (`--comment`; a rejection needs one) | `POST /api/v1/approvals/sutra/{id}/approve|reject` |
 | `design export ID -o f.zip` | the design as a pack-fragment zip | `GET /designs/{id}/export` |
 | `design import f.zip` | zip of a pack folder (or Sutras, tests, samples) as designs | `POST /designs/import` |
 | `design bind [ID]` | with no id: is file binding on; with `--file F` / `--sync` / `--save` / `--unbind` | `GET /designs/binding`, `POST /designs/{id}/bind|sync|save-file`, `DELETE .../bind` |
@@ -2901,7 +2903,7 @@ python3 tools/drishti.py design list
 python3 tools/drishti.py design check bdc51fed0ce7
 python3 tools/drishti.py design propose bdc51fed0ce7 --note "first cut"
 python3 tools/drishti.py design proposals
-python3 tools/drishti.py design reject P-000002 --comment "not this time"      # or: design approve P-000002 --comment "looks right"
+python3 tools/drishti.py approvals reject sutra P-000002 --comment "not this time"      # or: approvals approve sutra P-000002 --comment "looks right"
 ```
 
 ```text
@@ -2913,11 +2915,11 @@ check of rev 1: all samples ok
 proposed: proposal P-000002 for trade-auto v1 is pending; an approver decides it
 P-000002  trade-auto v1  pending  by drishti-dev-admin
 P-000001  counterparty-mine v1  withdrawn  by drishti-dev-admin
-reject: proposal P-000002: trade-auto v1 is rejected
+sutra P-000002  REJECTED
 ```
 
 `design list` also lists your other designs (the drafts of **Build → New pack** are designs too); the ids and proposal numbers are your
-own. `design approve` answers the same way (`approve: proposal P-000002: trade-auto v1 is approved`) and puts the Sutra live: on a
+own. `approvals approve sutra` answers the same way (`sutra P-000002  APPROVED`) and puts the Sutra live: on a
 shared server, reject or delete what you only tried (`design delete bdc51fed0ce7`).
 
 (`design check` exits 1 and lists each failing sample when something does not render.)
@@ -2951,25 +2953,29 @@ server connection:
   --timeout TIMEOUT     seconds to wait for the server (default 60)
 ```
 
-**`drishti.py design approve --help`**
+**`drishti.py approvals approve --help`** (the one Approvals queue decides every four-eyes kind: [USER_GUIDE.md › Approvals](USER_GUIDE.md#approvals))
 
 ```text
-usage: drishti.py design approve [-h] [--server SERVER]
-                                 [--token-file TOKEN_FILE] [--user USER]
-                                 [--timeout TIMEOUT] [--json]
-                                 [--comment COMMENT]
-                                 proposal
+usage: drishti.py approvals approve [-h] [--server SERVER]
+                                    [--token-file TOKEN_FILE] [--user USER]
+                                    [--timeout TIMEOUT] [--json]
+                                    [--comment COMMENT] [--param NAME=VALUE]
+                                    KIND ID
 
-design approve: approve a proposal (approver role)
+approvals approve: approve an item (never your own)
 
 positional arguments:
-  proposal              the proposal id (from `design proposals` or `design
-                        propose`)
+  KIND                  the kind: sutra, change, bi, compute, function,
+                        stress-window, var-report
+  ID                    the item's id within its kind (approvals list shows
+                        it)
 
 options:
   -h, --help            show this help message and exit
   --json                machine-readable output
-  --comment COMMENT     the reason (a rejection needs one)
+  --comment COMMENT     a note, or the reason (required to reject)
+  --param NAME=VALUE    what a kind needs besides: scope (a pivot function),
+                        step (a report run), force or applyRenames (a BI item)
 
 server connection:
   --server SERVER       the server's base URL (default: DRISHTI_SERVER, then
@@ -2982,11 +2988,11 @@ server connection:
   --timeout TIMEOUT     seconds to wait for the server (default 60)
 ```
 
-A rejection without a comment is refused by the server, and the refusal is what you see:
+A rejection without a comment is refused before it is sent (and the server would refuse it too):
 
 ```text
-$ python3 tools/drishti.py design reject P-000001
-drishti: the server said 400 DRS-5001: DRS-5001 say why the proposal is rejected      (exit 1)
+$ python3 tools/drishti.py approvals reject sutra P-000001
+drishti: say why it is rejected: --comment "..."      (exit 2)
 ```
 
 **Ship a design as a pack fragment** and take it somewhere else:
@@ -3107,7 +3113,7 @@ $ drishti-console/.venv/bin/python tools/drishti.py server packs load curves-dem
 drishti: the server said 400 DRS-5001: DRS-5001 'curves-demo' is already loaded
 ```
 
-With a **Delta lake** instead: `--lake data/delta` in step 1 (the server's `DRISHTI_DELTA_ROOT`, default `<data>/delta`).
+With a **Delta lake** instead: `--lake data/delta/demo` in step 1 (the server's `DRISHTI_DELTA_ROOT`, default `<data>/delta`).
 
 4. Open the console, type `DC CRV-USD-OIS` and press Enter (`DC` is the mnemonic `pack new` chose, the kind's initials; see the pack's
    `README.md`). Pick a business date in the top bar: each date you ingested has its documents. The same from a shell:
@@ -3168,7 +3174,7 @@ python3 tools/drishti.py design propose "$(cat /tmp/design-id)" --note "swap str
 
 # the approver (a role with `approve`; with four-eyes on, not the author)
 python3 tools/drishti.py design proposals --status pending
-python3 tools/drishti.py design approve P-000042 --comment "checked against 5 samples"
+python3 tools/drishti.py approvals approve sutra P-000042 --comment "checked against 5 samples"
 ```
 
 With review off (`drishti.governance.enabled: false`) `design propose` saves the Sutra live straight away.

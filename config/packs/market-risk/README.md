@@ -81,7 +81,6 @@ depends-on:
   - var-positions
   - var-pv-stream
   settings:
-  - DRISHTI_DELTA_ROOT
   - DRISHTI_KAFKA_BOOTSTRAP
   - DRISHTI_LAKE_ENABLED
   - DRISHTI_MR_DERIVED_ENABLED
@@ -736,7 +735,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `pv-updates` | `var-pv-stream` | `pv-update` | `${DRISHTI_VAR_PV_STREAM:false}` |
 | `var-engine` | `reactive` | `var-result` | `${DRISHTI_VAR_ENABLED:true}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_MR_DERIVED_ENABLED`, `DRISHTI_VAR_ENABLED`, `DRISHTI_VAR_PV_STREAM`, `DRISHTI_VAR_PV_TOPIC`.
+Settings (environment variables) its connectors read: `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_MR_DERIVED_ENABLED`, `DRISHTI_VAR_ENABLED`, `DRISHTI_VAR_PV_STREAM`, `DRISHTI_VAR_PV_TOPIC`.
 
 ## Refreshing the data
 

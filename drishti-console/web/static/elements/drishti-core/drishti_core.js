@@ -1309,7 +1309,7 @@
       "libraries": {
         "drishti-core": {
           "version": "1.1.0",
-          "title": "Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines",
+          "title": "Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines",
           "bundle": "drishti-core/drishti_core.js",
           "entry": "drishti-core/src/drishti_index.js",
           "global": "core",
@@ -1333,22 +1333,6 @@
             "elements/drishti-grid/drishti_grid.css"
           ],
           "scripts": []
-        },
-        "drishti-chart": {
-          "version": "0.1.0",
-          "title": "The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec",
-          "bundle": "drishti-chart/drishti_chart.js",
-          "entry": "drishti-chart/src/drishti_index.js",
-          "global": "chart",
-          "requires": [
-            "drishti-core"
-          ],
-          "css": [
-            "elements/drishti-chart/drishti_chart.css"
-          ],
-          "scripts": [
-            "vendor/echarts/echarts.min.js"
-          ]
         },
         "drishti-inputs": {
           "version": "0.1.0",
@@ -1375,6 +1359,22 @@
           ],
           "css": [],
           "scripts": []
+        },
+        "drishti-chart": {
+          "version": "0.1.0",
+          "title": "The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec",
+          "bundle": "drishti-chart/drishti_chart.js",
+          "entry": "drishti-chart/src/drishti_index.js",
+          "global": "chart",
+          "requires": [
+            "drishti-core"
+          ],
+          "css": [
+            "elements/drishti-chart/drishti_chart.css"
+          ],
+          "scripts": [
+            "vendor/echarts/echarts.min.js"
+          ]
         },
         "drishti-risk": {
           "version": "0.1.0",
@@ -1475,21 +1475,21 @@
     function staticUrl(path) { return staticBase() + String(path).replace(/^\//, ''); }
     const scripts = {};
     function loadScript(src) {
-      if (scripts[src]) { return scripts[src]; }
+      const plain = String(src).split('?')[0];
+      if (scripts[plain]) { return scripts[plain]; }
       const doc = root().document;
       if (!doc) { return Promise.reject(new Error('loadScript: there is no page to load ' + src + ' into')); }
-      const plain = src.split('?')[0];
-      if (Array.prototype.some.call(doc.scripts, (s) => (s.getAttribute('src') || '').split('?')[0] === plain && (s.dataset.loaded === '1' || !s.hasAttribute('data-drishti-script')))) { return Promise.resolve(); }
-      scripts[src] = new Promise((resolve, reject) => {
+      if (Array.prototype.some.call(doc.scripts, (x) => (x.getAttribute('src') || '').split('?')[0] === plain && (x.dataset.loaded === '1' || !x.hasAttribute('data-drishti-script')))) { return (scripts[plain] = Promise.resolve()); }
+      scripts[plain] = new Promise((resolve, reject) => {
         const s = doc.createElement('script');
         s.src = src;
         s.async = false;
         s.setAttribute('data-drishti-script', '');
         s.onload = () => { s.dataset.loaded = '1'; resolve(); };
-        s.onerror = () => { delete scripts[src]; reject(new Error('Could not load ' + src)); };
+        s.onerror = () => { delete scripts[plain]; reject(new Error('Could not load ' + src)); };
         doc.head.appendChild(s);
       });
-      return scripts[src];
+      return scripts[plain];
     }
     function loadStyle(href) { const doc = root().document; if (doc) { addCss(doc, href); } }
     function load(names) {

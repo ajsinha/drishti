@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The lake files (``config/lakes/<lake>.yaml``, docs/guides/LAKE_GUIDE.md) for the Python tools: ``lake build``, ``lake demo``,
+"""The lake files (``config/lakes/<lake>.yaml``, docs/guides/DATA_LAKE_GUIDE.md) for the Python tools: ``lake build``, ``lake demo``,
 ``build_demo_lakes.py``, ``lake check``, ``lake show`` and ``lake migrate-config``.
 
 There is ONE reader of the lake files, in Java (drishti-lakeconfig, ``com.ash.drishti.lakeconfig.LakesCli``): this module runs it and
@@ -152,6 +152,60 @@ def dump(folder: pathlib.Path | None = None) -> dict:
     return run(["dump"], folder)
 
 
+# ---- where lakes are ---------------------------------------------------------------------------------------------------------------------
+# The one place the tools know the lakes' folders (DATA_LAKE_GUIDE.md section 2): every lake in its own folder, <data>/delta/<lake> (an Iceberg
+# lake <data>/iceberg/<lake>), unless its lake file names a root; the demo lake's root may be named by DEMO_ROOT_ENV, as config/lakes/demo.yaml
+# says. A tool that needs a lake's folder asks root(); nothing else spells data/delta.
+
+#: the environment variable that names the demo lake's root (config/lakes/demo.yaml: ${DRISHTI_DELTA_ROOT:<data>/delta/demo})
+DEMO_ROOT_ENV = "DRISHTI_DELTA_ROOT"
+#: the demo lake's root as config/lakes/demo.yaml writes it (a connector or a lake file that names the demo lake's folder)
+DEMO_ROOT_REF = "${" + DEMO_ROOT_ENV + ":${drishti.data.dir:./data}/delta/demo}"
+#: the official results' root as config/lakes/var-official.yaml and ccr-official.yaml write it (the publisher's default)
+OFFICIAL_ROOT_REF = "${" + DEMO_ROOT_ENV + ":${drishti.data.dir:./data}/delta}"
+
+
+def data_dir() -> pathlib.Path:
+    """The data folder: DRISHTI_DATA_DIR, else this checkout's data/."""
+    return pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or (ROOT / "data"))
+
+
+def lakes_parent(data: pathlib.Path | None = None, fmt: str = "delta") -> pathlib.Path:
+    """The folder every lake's own folder is in: <data>/delta (<data>/iceberg for an Iceberg lake)."""
+    return pathlib.Path(data or data_dir()) / ("iceberg" if fmt == "iceberg" else "delta")
+
+
+def default_root(name: str, data: pathlib.Path | None = None, fmt: str = "delta") -> pathlib.Path:
+    """A lake's folder when its lake file names no root: <data>/delta/<name> (the demo lake: DEMO_ROOT_ENV when set)."""
+    if name == "demo" and os.environ.get(DEMO_ROOT_ENV):
+        return pathlib.Path(os.environ[DEMO_ROOT_ENV])
+    return lakes_parent(data, fmt) / name
+
+
+def root(name: str = "demo", folder: pathlib.Path | None = None) -> str:
+    """Lake ``name``'s root as its lake file says, read by the one reader (a folder, s3://bucket/prefix or mem://store); a relative folder is
+    this checkout's. Without Java to read the lake files, the documented default (default_root)."""
+    try:
+        for lake in dump(folder).get("lakes") or []:
+            if lake.get("lake") == name:
+                r = str(lake.get("root") or "")
+                if "://" in r or not r:
+                    return r
+                p = pathlib.Path(r)
+                return str(p if p.is_absolute() else (ROOT / p).resolve())
+        raise LakeConfigError(f"no lake named {name} in {folder or lakes_dir()}")
+    except LakeConfigError:
+        if (folder or lakes_dir()).joinpath(f"{name}.yaml").is_file() or name == "demo":
+            return str(default_root(name))
+        raise
+
+
+def demo_root() -> pathlib.Path:
+    """The demo lake's folder (config/lakes/demo.yaml): DEMO_ROOT_ENV, else <data>/delta/demo."""
+    r = root("demo")
+    return pathlib.Path(r)
+
+
 def disagree(what: str, given, lakes, entry: dict) -> None:
     """A command-line value the lake file also decides: the same, or the run is refused naming both."""
     if not given:
@@ -234,19 +288,19 @@ def cmd_migrate(a) -> int:
 def register(sub, add) -> None:
     """``lake show``, ``lake check`` and ``lake migrate-config`` (cli.py adds them to the ``lake`` group)."""
     s = add(sub, "show", lambda a, extra: cmd_show(a), "lake show: every lake of config/lakes/ and its tables, as the server reads them", [],
-            "example:\n  drishti.py lake show\nGuide: docs/guides/LAKE_GUIDE.md")
+            "example:\n  drishti.py lake show\nGuide: docs/guides/DATA_LAKE_GUIDE.md")
     s.add_argument("--dir", help="the lake folder (default DRISHTI_LAKES_DIR, else config/lakes)")
     s.add_argument("--json", action="store_true")
     c = add(sub, "check", lambda a, extra: cmd_check(a), "lake check: connectors name known lakes; each lake file matches its tables on disk "
             "(format, partition columns, promoted columns)", [], "example:\n  drishti.py lake check\nexit: 0 ok, 1 an error found. "
-            "Guide: docs/guides/LAKE_GUIDE.md")
+            "Guide: docs/guides/DATA_LAKE_GUIDE.md")
     c.add_argument("--dir", help="the lake folder (default DRISHTI_LAKES_DIR, else config/lakes)")
     c.add_argument("--connectors-dir", help="the connector files (default DRISHTI_CONNECTORS_DIR, else config/connectors)")
     c.add_argument("--json", action="store_true")
     m = add(sub, "migrate-config", lambda a, extra: cmd_migrate(a), "lake migrate-config: write lake files from connector files that "
             "describe their lake (root, domain, table.<kind>, layout.<kind>.*) and rewrite those connectors to lake: <name>", [],
             "examples:\n  drishti.py lake migrate-config                 (a dry run: prints the files)\n"
-            "  drishti.py lake migrate-config --write\nNothing in the data folder changes. Guide: docs/guides/LAKE_GUIDE.md section 8")
+            "  drishti.py lake migrate-config --write\nNothing in the data folder changes. Guide: docs/guides/DATA_LAKE_GUIDE.md section 12")
     m.add_argument("--dir", help="the lake folder written (default DRISHTI_LAKES_DIR, else config/lakes)")
     m.add_argument("--connectors-dir", help="the connector files (default DRISHTI_CONNECTORS_DIR, else config/connectors)")
     m.add_argument("--write", action="store_true", help="write the files (default: a dry run)")

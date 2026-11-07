@@ -25,7 +25,7 @@
 .EXAMPLE
   .\tools\windows\pvgen-morning.ps1 --all-vectors --dry-run
 .EXAMPLE
-  .\tools\windows\pvgen-morning.ps1 --lake data/delta --server http://127.0.0.1:18480
+  .\tools\windows\pvgen-morning.ps1 --lake data/delta/demo --server http://127.0.0.1:18480
 .EXAMPLE
   .\tools\windows\pvgen-morning.ps1 --help
 #>

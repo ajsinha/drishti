@@ -32,11 +32,11 @@ from bi_gov_stack import CONSOLE_URL, PASSWORD, call
 def sign_in(browser, user, **ctx):
     context = browser.new_context(**{"viewport": {"width": 1600, "height": 1000}, "accept_downloads": True, **ctx})
     page = context.new_page()
-    page.goto(CONSOLE_URL + "/login?next=/bi")
+    page.goto(CONSOLE_URL + "/login?next=/bi/catalogue")
     page.fill("#lu", user)
     page.fill("#lp", PASSWORD)
     page.click("button[type=submit]")
-    page.wait_for_url("**/bi")
+    page.wait_for_url("**/bi/catalogue")
     return page
 
 
@@ -102,9 +102,11 @@ def main(out: Path, captures: Path) -> None:
                 sue.wait_for_timeout(500)
                 shot(sue, "[data-sec-review]", out / "review.png")
                 got["review"] = call("GET", f"/bi/items/{ids['positions']}/review", "sue", sue_roles)[1]
-                sue.fill(".bi-note", "looks right")
-                sue.get_by_role("button", name="Approve and publish").click()
-                sue.wait_for_function("() => document.querySelector('[data-msg]').textContent.includes('Approved')")
+                sue.goto(CONSOLE_URL + "/approvals/bi/" + ids["positions"])                 # decided in the one Approvals queue
+                sue.wait_for_selector("[data-ap-item]:not([hidden])")
+                sue.fill("[data-ap-comment]", "looks right")
+                sue.get_by_role("button", name="Approve", exact=True).click()
+                sue.wait_for_function("() => document.querySelector('[data-ap-said]').textContent.includes('Approved')")
                 sue.wait_for_timeout(500)
                 got["inbox_ann"] = call("GET", "/me/inbox?limit=5", "ann", ann_roles)[1]
                 got["inbox_sue_before"] = None

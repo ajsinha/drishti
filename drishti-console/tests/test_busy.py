@@ -125,3 +125,17 @@ def test_health_draws_the_busy_protection_card_and_sends_the_override(client, ba
     assert 'style="' not in page.split("data-health-busy", 1)[1].split("</section>", 1)[0]      # no inline style (the page's policy)
     r = client.post("/admin/api/busy/override", json={"mode": "hold", "reason": "planned restart", "minutes": "30"})
     assert r.status_code == 200 and sent == [("PUT", {"mode": "hold", "reason": "planned restart", "minutes": 30})]
+
+
+def test_health_before_the_first_clean_up_says_the_memory_is_not_measured_yet(client, backend, monkeypatch):
+    """The server sends usedBytes null until the first garbage collection after start: the page says so instead of failing."""
+    first = {**HEALTH_BUSY, "gauges": [{**HEALTH_BUSY["gauges"][0], "value": 0.0, "usedBytes": None}]}
+    health = {"status": "OK", "summary": {"sources": 0, "sourcesDown": 0, "failedToStart": 0, "packs": 0, "packsWithProblems": 0},
+              "server": {"version": "dev", "uptimeSeconds": 5, "java": "21", "heapUsedMb": 300, "heapMaxMb": 4000, "threads": 60, "cpus": 8},
+              "sources": [], "packs": [], "live": {}, "tmp": {}, "busy": first}
+
+    async def admin(method, path, ident, body=None, **params):
+        return {"connectors": []} if path == "/connectors" else health
+    monkeypatch.setattr(backend, "admin", admin)
+    r = client.get("/admin/health")
+    assert r.status_code == 200 and 'data-busy-gauge="memory"' in r.text and "not measured yet" in r.text

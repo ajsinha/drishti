@@ -47,7 +47,7 @@ def test_the_workbench_and_my_designs_do_not_scroll_sideways_on_a_phone(live_con
         page.wait_for_timeout(500)
         width, client = page.evaluate(audit)
         assert width <= client + 1, f"{tab}: {width} px in {client}"
-    for url in ("/build", "/build/new", "/build/reviews"):
+    for url in ("/build", "/build/new", "/approvals"):
         page.goto(live_console + url)
         page.wait_for_timeout(300)
         width, client = page.evaluate(audit)

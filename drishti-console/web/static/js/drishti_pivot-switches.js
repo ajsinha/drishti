@@ -242,20 +242,17 @@
     }
     if (screen() && screen().answer()) { screen().run(); }   // exact / auto / ≈, progressive or rollups changed: asked again
   });
-  document.addEventListener("keydown", function (e) {
-    var tag = (e.target.tagName || "").toLowerCase();
-    if (tag === "input" || tag === "select" || tag === "textarea" || e.ctrlKey || e.metaKey || e.altKey) { return; }
-    var k = e.key.toLowerCase();
-    if (k === "l" && screen() && screen().answer()) {
-      e.preventDefault();
+  // L and M (the one keymap, drishti_keys.js)
+  window.Drishti.keys.register({id: "pivot.live", keys: ["L", "Shift+L"], scope: "screen", area: "pivot-switches", group: "Pivot", description: "Live: follow the source's changes, or stop",
+    when: function () { return !!(screen() && screen().answer()); },
+    run: function () {
       var cb = $("[data-pv-live]");
       cb.checked = !cb.checked;
       cb.dispatchEvent(new Event("change", {bubbles: true}));
-    } else if (k === "m") {
-      var t = root.querySelector("[data-pv-pop]:not([hidden]) [data-cm-text]");
-      if (t) { e.preventDefault(); t.focus(); }
-    }
-  });
+    }});
+  window.Drishti.keys.register({id: "pivot.comment", keys: ["M", "Shift+M"], scope: "screen", area: "pivot-switches", group: "Pivot", description: "Write a comment on the cell shown",
+    when: function () { return !!root.querySelector("[data-pv-pop]:not([hidden]) [data-cm-text]"); },
+    run: function () { root.querySelector("[data-pv-pop]:not([hidden]) [data-cm-text]").focus(); }});
   window.addEventListener("pagehide", function () { if (live.off) { live.off(); } });   // the server ends it after idle-seconds
 
   window.Drishti.PivotSwitches = {

@@ -75,7 +75,7 @@ How the numbers were taken: every `drishti_*.js` and renderer module was read an
 estimated from its sections); "expected" applies a deduplication factor per library (the grid's ten copies fold hardest) and then adds
 the new capability sections 5 to 7 call for. **After the move** the console keeps about 190 scripts of screen logic (49 scripts move
 whole, 58,864 lines become about 38,000) and every table, chart, picker and format comes from a library. The inventory is regenerated
-by the build (`tools/elements/inventory.py`, section 15) so these figures are checked, not trusted.
+by the build (`tools/elements/inventory.py`, planned, section 15) so these figures are checked, not trusted.
 
 **Dependencies.** Each library depends only on **drishti-core** (and on its vendored engine: ECharts for drishti-chart, CodeMirror for
 the code editor, Arrow JS for drishti-data). drishti-insight and drishti-renderer may use libraries 1 to 5; drishti-risk uses
@@ -699,11 +699,11 @@ generated, never written twice) every library has:
 | **API reference** (every option, event, method, type and CSS custom property) | library | Help → Developer → Elements, and the gallery's API tab | **generated** from typed JSDoc by `tools/elements/api_ref.py`; `--check` fails the build when a public member has no description or a type is missing |
 | **Tutorial** (one task end to end: a pivot over your own data, a chart with Explain, a world map with drill) | library | `docs/tutorials/`, numbered with the others | written, with screenshots from the gallery |
 | **Live gallery** (runnable examples) | component | `/elements/gallery/<library>/<component>` | the examples are files the tests also run (section 10) |
-| **Migration guide from AG Grid Enterprise (pivot)** | drishti-grid | `docs/guides/elements/grid-from-ag-grid.md` | written; its option table is **generated** from the adapter's mapping table (the code's table is the one home of section 6's table) |
-| **Theming guide** | the family | `docs/guides/elements/theming.md` | written; the list of tokens is generated from drishti-core's token file |
-| **Accessibility guide** | the family | `docs/guides/elements/accessibility.md` | written; each component's keyboard table is generated from its keymap registration |
+| **Migration guide from AG Grid Enterprise (pivot)** | drishti-grid | `docs/guides/elements/grid-from-ag-grid.md` | written (planned); its option table is **generated** from the adapter's mapping table (the code's table is the one home of section 6's table) |
+| **Theming guide** | the family | `docs/guides/elements/theming.md` | written (planned); the list of tokens is generated from drishti-core's token file |
+| **Accessibility guide** | the family | `docs/guides/elements/accessibility.md` | written (planned); each component's keyboard table is generated from its keymap registration |
 | **Changelog** | library | `static/elements/<library>/CHANGELOG.md`, shown on the gallery's Changelog tab | written per release; the product `CHANGELOG.md` links it rather than repeating it |
-| **Versioning policy** | the family | one section of the theming guide's sibling, `docs/guides/elements/versions.md` | written once |
+| **Versioning policy** | the family | one section of the theming guide's sibling, `docs/guides/elements/versions.md` | written once (planned) |
 
 Help lists one entry per library guide and per tutorial, grouped under Developer; the generated references are built at build time and
 never committed (as the Javadoc and pdoc references). The documentation tests gain: every public member documented (`--check`), every
@@ -799,4 +799,4 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [ ] Documentation per library (section 9): guide, generated API reference with `--check`, tutorial, gallery, the AG Grid migration guide, theming and accessibility guides, changelogs, versioning policy; Help entries
 - [ ] The guards of section 11, the allow list
 - [ ] Every screen moved (section 12) and the old code deleted; the allow list empty
-- [ ] `tools/elements/inventory.py` regenerates section 2's figures; README and CHANGELOG updated; two drills
+- [ ] `tools/elements/inventory.py` (planned) regenerates section 2's figures; README and CHANGELOG updated; two drills

@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The batch and the runs (DATALOAD_INBOX.md section 4): the whole ready batch is claimed in one step into {@code inprocess/<run>/}
+ * The batch and the runs (DATA_LAKE_GUIDE.md section 3.1): the whole ready batch is claimed in one step into {@code inprocess/<run>/}
  * before anything loads; files that become ready during the run wait for the next cycle; a cycle due while a run still loads is not
  * started but recorded as skipped, and Load now says the same; the run id is its start time and node.
  */

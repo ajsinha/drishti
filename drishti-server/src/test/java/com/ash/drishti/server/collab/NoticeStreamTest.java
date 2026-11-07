@@ -34,7 +34,7 @@ import org.springframework.boot.test.web.server.LocalServerPort;
 
 /**
  * The bell: a share sent to a user arrives as a {@code notice} event on the one stream the console already holds open
- * ({@code /me/alerts/stream}), rendered for that reader, with no data value in it.
+ * ({@code /alerts/stream}), rendered for that reader, with no data value in it.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
@@ -95,7 +95,7 @@ class NoticeStreamTest {
     }
 
     private void open(HttpClient client, String user, List<String> into) {
-        HttpRequest req = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/v1/me/alerts/stream"))
+        HttpRequest req = HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/api/v1/alerts/stream"))
                 .header("Authorization", as(user, "trader")).header("Accept", "text/event-stream").build();
         client.sendAsync(req, HttpResponse.BodyHandlers.ofLines()).thenAccept(r -> {
             try (Stream<String> lines = r.body()) {

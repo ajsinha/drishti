@@ -41,10 +41,12 @@ from datetime import datetime, timezone
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
+sys.path.insert(0, str(HERE))
+import lakeconfig  # noqa: E402  (where the lakes are: config/lakes/<lake>.yaml)
 SYSTEMS = ("endur", "calypso", "murex")
 STORES = ("delta", "iceberg")
 DOMAIN = "trading"
-DELTA_DEFAULT = "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
+DELTA_DEFAULT = lakeconfig.DEMO_ROOT_REF   # the demo lake: its own folder, <data>/delta/demo (config/lakes/demo.yaml)
 ICEBERG_DEFAULT = "${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}"
 LOADER = "com.ash.drishti.plugin.iceberg.IcebergLoader"
 WRITTEN_BY = "# Written by tools/build_demo_lakes.py --store"
@@ -83,10 +85,41 @@ def current(folder: pathlib.Path) -> dict[str, str]:
     return out
 
 
+def data_of(lake: pathlib.Path) -> pathlib.Path:
+    """The data folder a Delta lake sits in: <data>/delta/<lake> (every lake's own folder) gives <data>; a root named delta (the older
+    layout, or a DRISHTI_DELTA_ROOT such as /srv/data/delta) gives its parent; anything else, the folder holding it."""
+    lake = pathlib.Path(lake)
+    if lake.parent.name == "delta" and lake.name != "delta":
+        return lake.parent.parent
+    return lake.parent
+
+
+def older_layout(lake: pathlib.Path, lakes_dir: pathlib.Path | None = None) -> list[str]:
+    """The demo lake's table folders still directly in <data>/delta (the older layout) when ``lake`` is the demo lake's own folder
+    <data>/delta/<name> and does not exist yet: building there now would leave two copies. Empty: nothing in the way. The server moves them
+    at start, or ``drishti.py lake relocate demo`` (docs/admin/OPERATIONS.md)."""
+    import yaml
+    lake = pathlib.Path(lake).resolve()
+    if lake.exists() or lake.parent.name != "delta" or lake.name == "delta":
+        return []
+    f = pathlib.Path(lakes_dir or os.environ.get("DRISHTI_LAKES_DIR") or (ROOT / "config" / "lakes")) / f"{lake.name}.yaml"
+    if not f.is_file():
+        return []
+    doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+    tops = {(str((v or {}).get("path") or k.replace(".", "/", 1))).split("/")[0] for k, v in (doc.get("tables") or {}).items()}
+    return sorted(t for t in tops if (lake.parent / t).is_dir())
+
+
+def older_layout_words(lake: pathlib.Path, found: list[str]) -> str:
+    return (f"the demo lake's tables are still directly in {pathlib.Path(lake).parent} ({', '.join(found[:6])}{' ...' if len(found) > 6 else ''}), "
+            f"the older layout: move them into {lake} first (start the server once, or drishti.py lake relocate {pathlib.Path(lake).name}), "
+            "so the lake is not built twice")
+
+
 def iceberg_root(lake: pathlib.Path) -> pathlib.Path:
-    """Where the Iceberg tables go: DRISHTI_ICEBERG_ROOT, else the folder beside the Delta lake (data/delta: data/iceberg)."""
+    """Where the Iceberg tables go: DRISHTI_ICEBERG_ROOT, else <data>/iceberg beside the lakes' delta/ folder (data/delta/demo: data/iceberg)."""
     given = os.environ.get("DRISHTI_ICEBERG_ROOT")
-    return pathlib.Path(given).expanduser().resolve() if given else lake.parent / "iceberg"
+    return pathlib.Path(given).expanduser().resolve() if given else data_of(lake) / "iceberg"
 
 
 def table(store: str, system: str, lake: pathlib.Path, ice: pathlib.Path) -> pathlib.Path:
@@ -163,7 +196,7 @@ def copy(delta: pathlib.Path, root: pathlib.Path, table_name: str, data: pathlib
         reader = threading.Thread(target=echo, daemon=True)
         reader.start()
         try:
-            # the load rules (DATA_LOAD_RULES.md): rows of several dates go as a tar of <table>/<YYYY-MM-DD>/ folders, each row
+            # the load rules (DATA_LAKE_GUIDE.md): rows of several dates go as a tar of <table>/<YYYY-MM-DD>/ folders, each row
             # in its Delta business date's folder
             out = feedfiles.RowsTarStream(proc.stdin.buffer)
             for line in rows(delta, table_name, newest, domain):
@@ -222,7 +255,7 @@ def _template(pack: dict, name: str, store: str, lake: pathlib.Path, data: pathl
     sys.path.insert(0, str(ROOT / "tools"))
     import packlake
     raw = pack["connectors"][name]
-    if store == "delta" and lake.resolve() == _resolve(DELTA_DEFAULT, data, "DRISHTI_DELTA_ROOT"):
+    if store == "delta" and lake.resolve() == _resolve(DELTA_DEFAULT, data, lakeconfig.DEMO_ROOT_ENV):
         return raw
     if store == "iceberg" and "lake" in (raw.get("settings") or {}) and ice is not None and folder is not None:
         st = dict(raw["settings"])
@@ -240,7 +273,7 @@ def lakes_folder(connectors: pathlib.Path) -> pathlib.Path:
 
 def iceberg_lake(connectors: pathlib.Path, pack: dict, template: dict, ice: pathlib.Path, data: pathlib.Path) -> pathlib.Path:
     """``demo-iceberg.yaml``: the Iceberg store of the demo tables moved by --store, one entry per table the template reads, copied from
-    the pack's recommended entries (LAKE_GUIDE.md section 7; Iceberg keeps a partition field as a promoted column). Entries already
+    the pack's recommended entries (DATA_LAKE_GUIDE.md section 12; Iceberg keeps a partition field as a promoted column). Entries already
     there are kept as they are: the lake file is the truth once written."""
     import yaml
     sys.path.insert(0, str(ROOT / "tools"))
@@ -264,7 +297,7 @@ def iceberg_lake(connectors: pathlib.Path, pack: dict, template: dict, ice: path
             e["promote"] = [p for p in part if p not in (e.get("promote") or [])] + list(e.get("promote") or [])
         tables.setdefault(name, e or None)
     f.parent.mkdir(parents=True, exist_ok=True)
-    f.write_text(f"# Written by tools/build_demo_lakes.py --store: the demo tables kept in Iceberg (docs/guides/LAKE_GUIDE.md); edit here.\n"
+    f.write_text(f"# Written by tools/build_demo_lakes.py --store: the demo tables kept in Iceberg (docs/guides/DATA_LAKE_GUIDE.md); edit here.\n"
                  + yaml.safe_dump(doc, sort_keys=False, width=140), encoding="utf-8")
     return f
 
@@ -286,7 +319,7 @@ def connector_text(system: str, store: str, lake: pathlib.Path, ice: pathlib.Pat
         settings = {"root": root, "engine": "native", **{k: v for k, v in settings.items() if k != "root"}}
         where = f"{system.upper()}'s trades in Iceberg ({ice / DOMAIN / f'trade_{system}'})"
     else:
-        settings["root"] = DELTA_DEFAULT if lake.resolve() == _resolve(DELTA_DEFAULT, data, "DRISHTI_DELTA_ROOT") else str(lake)
+        settings["root"] = DELTA_DEFAULT if lake.resolve() == _resolve(DELTA_DEFAULT, data, lakeconfig.DEMO_ROOT_ENV) else str(lake)
         where = f"{system.upper()}'s trades in Delta ({lake / DOMAIN / f'trade_{system}'})"
     body = {**tpl, "plugin": store, "settings": settings}
     return (f"{WRITTEN_BY} {system}={store}: {where}, from the connector template of pack 'trading'.\n"
@@ -365,7 +398,7 @@ def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: path
         settings = {"root": root, "engine": "native", **{k: v for k, v in settings.items() if k != "root"}}
         where = f"every {domain} table in Iceberg ({ice / domain})"
     else:
-        settings["root"] = DELTA_DEFAULT if lake.resolve() == _resolve(DELTA_DEFAULT, data, "DRISHTI_DELTA_ROOT") else str(lake)
+        settings["root"] = DELTA_DEFAULT if lake.resolve() == _resolve(DELTA_DEFAULT, data, lakeconfig.DEMO_ROOT_ENV) else str(lake)
         where = f"every {domain} table in Delta ({lake / domain})"
     body = {**tpl, "plugin": store, "settings": settings}
     return (f"{WRITTEN_BY} {domain}={store}: {where}, from the connector template of pack '{pack_name}'.\n"

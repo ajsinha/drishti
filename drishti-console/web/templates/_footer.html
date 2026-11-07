@@ -18,7 +18,7 @@
     {% if TAGLINE %}<p class="sf-tag">{{ TAGLINE }}</p>{% endif %}
     <p class="sf-links"><span class="sf-name">{{ PRODUCT }}</span> <span class="mono">{{ ASSET_V.split('-')[0] }}</span>
       {% for link in footer_links(request) %}<a href="{{ link.href }}"><i class="bi bi-{{ link.icon }}" aria-hidden="true"></i> {{ link.label }}</a>
-      {% endfor %}</p>
+      {% endfor %}<button type="button" class="sf-keys" data-keys-open title="The keys of this screen">Keys <kbd>?</kbd></button></p>
     <p class="sf-fine">{{ COPYRIGHT }}{% if NOTICE %} · {{ NOTICE }}{% endif %}</p>
   </div>
 </footer>

@@ -241,11 +241,20 @@ def _feed(a) -> str:
             raise BuildError("a .tar archive names its own tables and dates (its <table>/<YYYY-MM-DD>/ folders): --as-of, --table and a "
                              ".ready file's business-date: and table: are refused for it")
         return "tar"
-    for key, attr in (("pack", "pack"), ("kind", "kind"), ("connector", "connector"), ("table", "table"), ("mode", "mode")):
+    for key, attr in (("pack", "pack"), ("kind", "kind"), ("connector", "connector"), ("table", "table"), ("mode", "mode"), ("lake", "lake")):
         vals = {str(m[key]) for m in marked if m.get(key)}
         if len(vals) > 1:
             raise BuildError(f"the files' .ready markers name different {key}s ({', '.join(sorted(vals))}): load them one at a time")
         if vals and not getattr(a, attr, None):
+            if key == "lake":                                    # a .ready file's lake: a lake of config/lakes/ (the inbox creates one; this does not)
+                import lakeconfig
+                name = vals.pop()
+                if not lakeconfig.is_lake_name(name):
+                    raise BuildError(f"the .ready file names lake {name}, which has no file in {lakeconfig.lakes_dir()}: add "
+                                     f"config/lakes/{name}.yaml (its root defaults to <data>/delta/{name}), or load the file once through the data "
+                                     "inbox, which creates it")
+                a.lake = name
+                continue
             setattr(a, attr, vals.pop() if key != "pack" else str(_pack_dir(vals.pop())))
     a._mode_given = bool(a.mode)                         # --mode, or a .ready file's mode: (over a lake file's entry, its table's default)
     a._mode_from = "given (--mode or the .ready file)" if a.mode else "the load rules' default"
@@ -382,7 +391,7 @@ def plan(a) -> dict:
 
 
 def lake_layout(a, p: dict) -> None:
-    """``--lake NAME`` naming a lake of config/lakes/ (docs/guides/LAKE_GUIDE.md): the table's location, partitioning, promoted columns,
+    """``--lake NAME`` naming a lake of config/lakes/ (docs/guides/DATA_LAKE_GUIDE.md): the table's location, partitioning, promoted columns,
     vectors, flattened fields, id, date, latest-by and load mode come from its lake file, read by the one reader (lakeconfig.py runs
     drishti-lakeconfig). A --partition-by, --promote or --vector that says otherwise is refused, naming both; a kind the lake file has
     no entry for is refused (a writer never creates a table its lake file does not describe). ``--lake-root DIR`` writes the same
@@ -415,7 +424,7 @@ def lake_layout(a, p: dict) -> None:
         root = root + "/" + parent.rpartition("/")[0]
     a.lake = str(getattr(a, "lake_root", None) or root)
     a.format = t["format"]
-    # the mode (DATA_LOAD_RULES.md section 3): --mode or a .ready file's mode:, else the table's entry here (its default), else append;
+    # the mode (DATA_LAKE_GUIDE.md section 5): --mode or a .ready file's mode:, else the table's entry here (its default), else append;
     # an append's batch (--batch-id, with --engine java) is committed once
     if not getattr(a, "_mode_given", False):
         a.mode = "append" if t.get("load-mode") == "append" else "overwrite-dates"
@@ -506,7 +515,7 @@ def run(a, say=print) -> tuple[int, dict]:
 
 
 def _lake_name(a) -> str | None:
-    """The lake's name when --lake names a lake of config/lakes/ (LAKE_GUIDE.md), else None (a folder, a URL or nothing)."""
+    """The lake's name when --lake names a lake of config/lakes/ (DATA_LAKE_GUIDE.md), else None (a folder, a URL or nothing)."""
     ref = getattr(a, "lake", None)
     if not ref:
         return None
@@ -731,12 +740,17 @@ def bi_store() -> pathlib.Path:
 
 
 def served_lake(lake) -> bool:
-    """Whether the lake is the one the server reads: DRISHTI_DELTA_ROOT, else <data>/delta. A scratch lake elsewhere leaves no stamp, so a
-    server's next start does not clear its BI store for data it never reads."""
+    """Whether the lake is one the server reads: DRISHTI_DELTA_ROOT, else a lake's own folder under <data>/delta (<data>/delta/demo, the
+    demo lake; <data>/delta/<lake>, any other). A scratch lake elsewhere leaves no stamp, so a server's next start does not clear its BI
+    store for data it never reads."""
     if lake is None:
         return False
-    served = pathlib.Path(os.environ.get("DRISHTI_DELTA_ROOT") or (data_dir() / "delta"))
-    return pathlib.Path(lake).resolve() == served.resolve()
+    import lakeconfig
+    given = os.environ.get(lakeconfig.DEMO_ROOT_ENV)
+    here = pathlib.Path(lake).resolve()
+    if given:
+        return here == pathlib.Path(given).resolve()
+    return here.parent == lakeconfig.lakes_parent(data_dir()).resolve()
 
 
 def leave_stamp(lake, table, summary) -> pathlib.Path:
@@ -865,7 +879,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
                    help="list-of-numbers fields kept as list<double> columns, out of the document (default: the pack's layout vectors)")
     g = p.add_argument_group("where")
     g.add_argument("--lake", metavar="NAME|DIR", help="the lake: a NAME of config/lakes/ (its file gives the table's location and layout; "
-                   "docs/guides/LAKE_GUIDE.md), or a folder, the old form (the options and the pack decide)")
+                   "docs/guides/DATA_LAKE_GUIDE.md), or a folder, the old form (the options and the pack decide)")
     g.add_argument("--lake-root", metavar="DIR", help="with --lake NAME: write the lake's layout under this folder instead of its root (a scratch "
                    "or test lake)")
     g.add_argument("--domain", help="the lake domain (default: the pack's Delta connector's domain)")
@@ -892,7 +906,7 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
                    help="append (the default: the rows are added), overwrite-dates (each business date of the input replaced) or "
                         "overwrite-partitions; a .ready file's mode: when not given (--format iceberg: overwrite-dates, its only mode)")
     g.add_argument("--batch-id", metavar="ID", help="an append's batch (with --engine java): recorded in each date's commit so the same batch is "
-                   "never appended twice; a lake file's table with load-mode: append needs it (docs/guides/LAKE_GUIDE.md section 4)")
+                   "never appended twice; a lake file's table with load-mode: append needs it (docs/guides/DATA_LAKE_GUIDE.md section 5.3)")
     g.add_argument("--batch-rows", type=int, default=50_000, help="most rows per batch written (default 50,000; also the most rows sorted at once)")
     g.add_argument("--batch-mb", type=int, default=128, help="most MB of documents per batch (default 128): large documents make smaller batches, so memory stays flat")
     g.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then drishti-server/target)")

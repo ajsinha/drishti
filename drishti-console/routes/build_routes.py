@@ -28,7 +28,6 @@ from core import builder, controls, designs, partial, sutra_diff
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes.common import ident, render
-from routes.review_routes import pending_count
 
 router = APIRouter(prefix="/build", include_in_schema=False)
 LOG = logging.getLogger("drishti.console.build")
@@ -55,15 +54,52 @@ async def _body(request: Request) -> dict:
 
 # ---- pages --------------------------------------------------------------------------------------------------------------
 
+TILES_COOKIE = "drishti_build_tiles"
+
+
 @router.get("")
-async def my_designs(request: Request):
-    """My designs: the signed-in user's Designs, newest first (the server keeps them; nobody else's are ever listed)."""
-    try:
-        data = await request.app.state.backend.designs("GET", "", ident(request))
-    except BackendError as e:
-        return render(request, "build/designs.html", status_code=e.status, designs=[], limits={}, error=e, screen="build")
+async def home(request: Request, type: str = "", q: str = "", tiles: str = ""):  # noqa: A002 (the address's word)
+    """The Build home (docs/architecture/SHARED_SCREENS.md section 1): a rail of every kind this person may build, grouped Data, Screens,
+    Analysis and Work, each with its count; the middle lists the chosen kind with its lineage (what each uses, what uses it); ``q`` searches
+    every kind at once. The four task tiles show on a first visit, until the person hides them (``tiles=0``; ``tiles=1`` shows them again,
+    both kept in a cookie of this browser)."""
+    return await build_home(request, type, q, tiles)
+
+
+async def build_home(request: Request, type_id: str = "", q: str = "", tiles: str = "", error: BackendError | None = None) -> Response:
+    """The Build home's page; ``error``: what a start that failed elsewhere (Studio's old addresses) says on it."""
+    from core import build_registry, menus
+
+    ctx = {"me": ident(request), "bi_me": getattr(request.state, "bi_me", None) or {},
+           "pack_switcher": getattr(request.state, "pack_switcher", None) or [], "PRODUCT": ""}
+    reg = build_registry.loaded()
+    mine = [t for t in reg.types() if all(menus.holds(request, str(n), ctx) for n in t.requires)]
+    rows = await build_registry.gather(request, mine)
+    lineage = build_registry.used_by(rows)
+    words = [w for w in q.lower().split() if w]
+    chosen = reg.get(type_id) if any(t.id == type_id for t in mine) else None
+    if chosen is None and not words:
+        chosen = reg.get("drafts")
+    if words:
+        listed = [it for t in mine if t.group != "work" for it in rows.get(t.id) or [] if build_registry.matches(it, words)]
+    else:
+        listed = list(rows.get(chosen.id) or []) if chosen else []
+    design_error = error or getattr(request.state, "build_design_error", None)
+    show_tiles = tiles == "1" or (tiles != "0" and request.cookies.get(TILES_COOKIE) != "hide")
+    groups = [{"id": g, "label": label, "types": [t for t in mine if t.group == g]} for g, label in build_registry.GROUPS]
+    tasks = [{"id": tid, "label": label, "blurb": blurb, "count": sum(len(rows.get(t.id) or []) for t in mine if t.task == tid),
+              "first": next((t.id for t in mine if t.task == tid), "")} for tid, label, blurb in build_registry.TASKS]
+    data = getattr(request.state, "build_designs", None) or {}
     designs = sorted(data.get("designs") or [], key=lambda d: d.get("updated", 0), reverse=True)
-    return render(request, "build/designs.html", designs=designs, limits=data.get("limits") or {}, error=None, screen="build")
+    page = render(request, "build/home.html", status_code=design_error.status if design_error else 200, groups=groups, rows=rows,
+                  lineage=lineage, chosen=chosen, listed=listed, q=q, tasks=[t for t in tasks if t["first"]], show_tiles=show_tiles,
+                  news=[t for t in mine if t.new], designs=designs, limits=data.get("limits") or {}, design_error=design_error,
+                  screen="build")
+    if tiles == "0":
+        page.set_cookie(TILES_COOKIE, "hide", max_age=400 * 86400, samesite="lax", httponly=True)
+    elif tiles == "1":
+        page.delete_cookie(TILES_COOKIE)
+    return page
 
 
 @router.get("/new")
@@ -110,8 +146,8 @@ async def design_page(request: Request, id_: str, tab: str = "", sample: str = "
             design = await request.app.state.backend.designs("POST", f"/{id_}/samples", ident(request), {"pack": True})
         except BackendError as e:
             LOG.info("design %s: no pack sample for %s (%s)", id_, design.get("base"), e.code)
-    review, pending = await pending_count(request)
     settings = await request.app.state.backend.studio_settings(ident(request))
+    review = bool(settings.get("review"))
     try:
         binding = await request.app.state.backend.designs("GET", "/binding", ident(request))
     except BackendError:
@@ -122,7 +158,7 @@ async def design_page(request: Request, id_: str, tab: str = "", sample: str = "
             "tab": tab if tab in ("design", "yaml", "summary", "notes", "split") else "", "sample": sample, "canSave": bool(settings.get("save")), "review": review,
             "notice": notice[:300], "base": design.get("base") or "", "notes": design.get("notes") or "", "about": design.get("about") or "", "form": design.get("form") or ""}
     return render(request, "build/design.html", design=design, init=init, error=None, screen="build", limits=request.app.state.builder_limits.as_dict(),
-                  examples=request.app.state.examples.names(), pending=pending)
+                  examples=request.app.state.examples.names())
 
 
 # ---- designs -------------------------------------------------------------------------------------------------------------

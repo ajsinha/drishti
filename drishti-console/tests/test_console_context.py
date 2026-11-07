@@ -92,7 +92,7 @@ def test_a_channel_reads_the_server_its_person_signed_in_on_with_the_whole_scope
 
     contextvars.Context().run(asyncio.run, go())
     assert fakes["open"].opened == []                                   # the first server never saw desk's person
-    assert sorted(o["what"] for o in fakes["desk"].opened) == ["/me/alerts/stream", "trade/T-1"]
+    assert sorted(o["what"] for o in fakes["desk"].opened) == ["/alerts/stream", "trade/T-1"]
     for o in fakes["desk"].opened:
         assert o == {**o, "user": "ann", "server": "desk", "lens": "var", "share": "sh_share0001", "session": "pin-of-desk-session",
                      "asof": "2026-10-30", "known": "2026-10-30T12:00:00Z"}

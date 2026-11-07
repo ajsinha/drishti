@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Help → Configuration in Chromium (2.9.7 C3): the search filters the settings as one types (a key, an environment variable, words),
-the area filter keeps one area, the address keeps the search, an administrator sees the values in effect; on a phone (375 px) every
+the area filter keeps one area, the address keeps the search, an administrator is pointed to Admin → Configuration; on a phone (375 px) every
 theme draws the page, searched or not, with no sideways scroll. The console runs in-process against a stand-in server, with its data
 folder in a scratch directory."""
 import os
@@ -100,8 +100,7 @@ def test_the_search_filters_as_one_types(url, browser):
         assert 0 < _visible_rows(pg) < 10 and not pg.is_visible(".cfg-explain")
         assert pg.is_visible("tr.cfg-row[data-hay^='drishti.history.max-days']")
         assert "q=history+max-days" in pg.url or "q=history%20max-days" in pg.url
-        cell = pg.inner_text("tr.cfg-row[data-hay^='drishti.history.max-days'] .cfg-eff")      # security off: the acting user is an admin
-        assert "90" in cell and "argument" in cell
+        assert pg.locator(".cfg-eff").count() == 0 and pg.is_visible("[data-cfg-admin]")      # the values in effect: Admin -> Configuration
 
         pg.fill("[data-cfg-q]", "DRISHTI_PORT")
         pg.wait_for_timeout(300)

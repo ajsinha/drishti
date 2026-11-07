@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""lake undo: remove one load's rows by its load id (docs/architecture/DATA_LOAD_RULES.md section 6.3).
+"""lake undo: remove one load's rows by its load id (docs/guides/DATA_LAKE_GUIDE.md section 5.5).
 
 Every row a load wrote carries its ``_load_id`` (``<run>.<file>``: a ``lake build``'s or the parallel loader's summary lists them under
 ``loads``; a row's ``_load_id`` column says it too). Undoing it removes exactly those rows, one commit per table and date, in every table
@@ -50,6 +50,10 @@ def plan(lake: str, load_id: str, dry_run: bool, jar=None, java=None, runner=Non
     cmd = stores.loader_command(data, jar, java, main=UNDO) + ["--lake", lake, "--load-id", load_id, "--json"] + (["--dry-run"] if dry_run else [])
     p = run(cmd)
     text = p.stdout.strip()
+    # the exec jar's libraries may log to standard output before the JSON array: it starts at the first line that is "[" or "[ {"
+    lines = text.splitlines()
+    start = next((i for i, x in enumerate(lines) if x.startswith("[")), None)
+    text = "\n".join(lines[start:]) if start is not None else text
     if p.returncode != 0 or not text.startswith("["):
         raise RuntimeError("lake undo (Delta): " + (text.splitlines()[-1] if text else f"exit {p.returncode}"))
     out += [{**d, "format": "delta"} for d in json.loads(text)]

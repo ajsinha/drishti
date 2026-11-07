@@ -115,10 +115,6 @@
 .xx-form label { color: var(--d-muted); }
 .xx-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
 .xx-pager { display: flex; gap: 10px; align-items: center; margin-top: 6px; font-size: 11.5px; color: var(--d-muted); }
-.xx-prov summary { cursor: pointer; list-style: none; }
-.xx-prov dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 5px 10px; font-size: 11.5px; }
-.xx-prov dt { color: var(--d-muted); }
-.xx-prov dd { margin: 0; word-break: break-word; font-family: var(--d-font-mono); }
 .xx-tip { position: fixed; pointer-events: none; background: var(--d-bg); border: 1px solid var(--d-border); color: var(--d-ink);
   font: 11.5px var(--d-font-mono); padding: 6px 8px; border-radius: 3px; z-index: 1050; white-space: pre; box-shadow: var(--d-shadow); }
 

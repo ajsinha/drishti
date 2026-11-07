@@ -18,6 +18,7 @@ passed through, /bi/run/<id> opening where the run's result is drawn, the bi-run
 import re
 
 import pytest
+from pathlib import Path
 from fastapi.testclient import TestClient
 
 from bi_runs_backend import REPORT_ID, RunsBackend
@@ -56,9 +57,10 @@ def test_the_workspace_has_three_tabs_and_the_runs_panel(bi):
 
 def test_the_rail_links_to_my_runs_with_a_count_and_g_r_is_listed(bi):
     client, _ = bi
-    r = client.get("/bi")
+    r = client.get("/bi/catalogue")
     assert 'href="/bi/w/me?tab=runs"' in r.text and "data-runs-count" in r.text
-    assert "<kbd>g</kbd> <kbd>r</kbd>" in r.text
+    js = (Path(__file__).resolve().parent.parent / "web" / "static" / "js" / "drishti_bi.js").read_text()
+    assert "id: 'bi.go.' +" in js and "'/bi/w/me?tab=runs', 'your runs'" in js          # g r: the keymap lists it (? on the page)
 
 
 @pytest.mark.parametrize("typed", ["BI RUNS <GO>", "bi runs", "Rupaka runs"])

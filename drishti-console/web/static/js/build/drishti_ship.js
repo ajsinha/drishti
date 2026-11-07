@@ -40,7 +40,7 @@
       chip.className = 'bs-role wb-state wb-state-' + word;
       if (word === 'proposed') {
         chip.appendChild(document.createTextNode('proposed '));
-        chip.appendChild(WB.el('a', 'lnk', arg, { href: '/build/reviews/' + encodeURIComponent(arg) }));
+        chip.appendChild(WB.el('a', 'lnk', arg, { href: '/approvals/sutra/' + encodeURIComponent(arg) }));
         chip.title = 'Waiting for an approver';
       } else if (word === 'live') {
         chip.textContent = 'live ' + arg;

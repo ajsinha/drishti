@@ -41,7 +41,7 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 
 | Connector | Folder | Kinds |
 |---|---|---|
-| `genomics-store` | `data/delta/genomics/` | `gene`, `variant`, `protein`, `pathway`, `sample`, `sequencing-run`, `expression-study`, `clinical-trial` |
+| `genomics-store` | `data/delta/demo/genomics/` | `gene`, `variant`, `protein`, `pathway`, `sample`, `sequencing-run`, `expression-study`, `clinical-trial` |
 
 ## Kinds
 

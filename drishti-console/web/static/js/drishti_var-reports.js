@@ -235,9 +235,11 @@
     });
     li(s.state === "signed" ? "done" : "", "File", (run.outputs || []).join(" · ") + " to the reporting team");
     const next = s.next;
-    $("[data-rp-approve]").textContent = next ? "Approve as " + (titles[next] || next.charAt(0).toUpperCase() + next.slice(1)) : "Signed";
-    $("[data-rp-approve]").disabled = !next;
-    $("[data-rp-return]").disabled = !next || next === "maker";
+    const sign = $("[data-rp-approve]");                // the step is signed in the one Approvals queue, where the run is an item
+    sign.textContent = next ? "Sign as " + (titles[next] || next.charAt(0).toUpperCase() + next.slice(1)) + " in Approvals" : "Signed";
+    sign.href = "/approvals/var-report/" + encodeURIComponent(run.report + ":" + run.period + ":v" + run.version).replace(/%3A/g, ":");
+    sign.classList.toggle("disabled", !next);
+    if (!next) { sign.setAttribute("aria-disabled", "true"); } else { sign.removeAttribute("aria-disabled"); }
     $("[data-rp-save-narrative]").disabled = next !== "maker";
     $("[data-rp-narrative]").readOnly = next !== "maker";
     const files = $("[data-rp-files]");
@@ -265,21 +267,17 @@
     });
   }
 
-  async function act(action, extra) {
-    const body = Object.assign({ version: run.version, action: action, comment: $("[data-rp-comment]").value }, extra || {});
-    const { ok, j } = await getJson("/api/var/reports/" + run.report + "/runs/" + encodeURIComponent(run.period) + "/signoff", {
+  async function saveNarrative() {
+    const body = { version: run.version, narrative: $("[data-rp-narrative]").value };
+    const { ok, j } = await getJson("/api/var/reports/" + run.report + "/runs/" + encodeURIComponent(run.period) + "/narrative", {
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (!ok) { notice(j.detail); return; }
     notice("");
-    // the comment it sent is used up; one typed while the answer was on its way (the next step's note) stays
-    if ($("[data-rp-comment]").value === body.comment) { $("[data-rp-comment]").value = ""; }
     run = j;
     draw();
     loadPack();
   }
-  $("[data-rp-approve]").addEventListener("click", () => act("approve", { step: (run.signoff || {}).next }));
-  $("[data-rp-return]").addEventListener("click", () => act("return"));
-  $("[data-rp-save-narrative]").addEventListener("click", () => act("narrative", { narrative: $("[data-rp-narrative]").value }));
+  $("[data-rp-save-narrative]").addEventListener("click", saveNarrative);
 
   loadPack().then(loadRun);
 })();

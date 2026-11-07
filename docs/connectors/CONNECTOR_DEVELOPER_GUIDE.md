@@ -192,7 +192,7 @@ reads through (`connectors: [trade-endur]` and `routes:` in its `pack.yaml`) and
 | the pack's template (`connectors:` mapping or `connector-templates:` in `pack.yaml`) | the pack's suggestion; written to the file once at the first start, and used in memory when the file cannot be written |
 
 A file with no template of that name is a new site connector. A connector file holds `plugin`, `enabled`, `kinds`, `description` and `settings`; nesting under
-`settings` is flattened to dotted keys. Values like `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}` are placeholders: the environment variable if set, else the default
+`settings` is flattened to dotted keys. Values like `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}` are placeholders: the environment variable if set, else the default
 after the colon. A **credential** setting (`password`, `secret…`, `token`, `api-key`, `access-key`, `private-key`, `credential`) may only be an `${ENV_VAR}` or a
 `file:/path` reference ([CONNECTOR_FILES.md, Credentials and TLS](CONNECTOR_FILES.md#5-credentials-and-tls)). The server's own settings (`drishti.sources.fetch-timeout`,
 `routes`, `plugins.<plugin>`) stay in `application.yaml` and `application.local.yaml`.

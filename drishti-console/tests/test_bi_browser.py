@@ -60,11 +60,11 @@ def sign_in(browser, user, **ctx):
     page = context.new_page()
     errors = []
     page.on("pageerror", lambda e: errors.append(str(e)))
-    page.goto(CONSOLE_URL + "/login?next=/bi")
+    page.goto(CONSOLE_URL + "/login?next=/bi/catalogue")
     page.fill("#lu", user)
     page.fill("#lp", PASSWORD)
     page.click("button[type=submit]")
-    page.wait_for_url("**/bi")
+    page.wait_for_url("**/bi/catalogue*")
     page.errors = errors
     return page
 
@@ -77,7 +77,7 @@ def clean(page):
 def test_the_keyword_opens_home_catalogue_and_my_workspace_in_any_case(stack, browser):
     page = sign_in(browser, "cat")
     page.goto(CONSOLE_URL + "/t")
-    for typed, path in (("rupaka", "/bi"), ("RUPAKA CATALOGUE", "/bi/catalogue"), ("Rupaka workspace", "/bi/w/"), ("RUPAKA <GO>", "/bi")):
+    for typed, path in (("rupaka", "/build"), ("RUPAKA CATALOGUE", "/bi/catalogue"), ("Rupaka workspace", "/bi/w/"), ("RUPAKA <GO>", "/build")):
         page.goto(CONSOLE_URL + "/t")
         page.fill("#cmdInput", typed)
         page.press("#cmdInput", "Enter")
@@ -126,23 +126,23 @@ def test_the_bi_menu_is_shown_to_people_with_the_power_only(stack, browser):
     sign_in(browser, "sue").goto(CONSOLE_URL + "/t")
 
 
-def test_home_shows_certified_recent_favourites_and_shared(stack, browser):
+def test_the_old_bi_home_is_the_build_home_and_an_item_still_stars(stack, browser):
+    """BI Studio's own home is folded into the one Build home: /bi opens /build. A certified item is first in the catalogue and its
+    page still stars it."""
     page = sign_in(browser, "cat")
-    certified = page.locator('[data-sec="certified"] .bi-card')
-    expect(certified).to_have_count(1)
-    expect(certified.first).to_contain_text("Desk P&L")
-    expect(certified.first).to_contain_text("certified")
-    expect(page.locator('[data-sec="shared"] .bi-card').first).to_be_visible()        # cat is a viewer of Rates Desk
-    certified.first.locator("a").click()
+    page.goto(CONSOLE_URL + "/bi")
+    page.wait_for_url("**/build")
+    page.goto(CONSOLE_URL + "/bi/catalogue?kind=all")
+    first = page.locator(".bi-card").first
+    expect(first).to_contain_text("Desk P&L")
+    expect(first).to_contain_text("certified")
+    first.locator("a").first.click()
     page.wait_for_url("**/bi/i/*")
     expect(page.locator("[data-meta]")).to_contain_text("owner")                      # the item has loaded: its buttons are wired
     page.click("[data-favourite]")
     expect(page.locator("[data-favourite]")).to_have_attribute("aria-pressed", "true")
-    page.goto(CONSOLE_URL + "/bi")
-    expect(page.locator('[data-sec="recent"] .bi-card').first).to_contain_text("Desk P&L")
-    expect(page.locator('[data-sec="favourites"] .bi-card')).to_have_count(1)
-    page.click('[data-sec="favourites"] .bi-fav')                                    # un-star from the card
-    expect(page.locator('[data-sec="favourites"] .bi-card')).to_have_count(0)
+    page.click("[data-favourite]")
+    expect(page.locator("[data-favourite]")).to_have_attribute("aria-pressed", "false")
     clean(page)
 
 
@@ -254,9 +254,12 @@ def test_review_before_publish_needs_a_second_person(stack, browser):
     expect(bob_ws.locator('[data-members] tr[data-user="bob"]')).to_be_visible()
     bob = sign_in(browser, "bob")
     bob.goto(url)
-    bob.click('text=Approve and publish')
+    bob.click('text=Decide in Approvals')                                                 # decided in the one Approvals queue
+    bob.locator("[data-ap-item]:not([hidden])").wait_for()
+    bob.get_by_role("button", name="Approve", exact=True).click()
+    expect(bob.locator("[data-ap-said]")).to_have_text("Approved.")
+    bob.goto(url)
     expect(bob.locator("[data-meta]")).to_contain_text("published v1")
-    expect(bob.locator("[data-msg]")).to_contain_text("Approved and published")
     clean(bob)
 
 
@@ -272,17 +275,23 @@ def test_the_keys_work_and_the_help_opens(stack, browser):
     page.keyboard.press("g")
     page.keyboard.press("w")
     page.wait_for_url("**/bi/w/me")
-    page.keyboard.press("g")
-    page.keyboard.press("h")
-    page.wait_for_url("**/bi")
-    page.keyboard.press("?")
-    expect(page.locator("#biKeys")).to_be_visible()
-    expect(page.locator("#biKeys")).to_contain_text("g")
+    page.keyboard.press("?")                                                              # the one keymap's list: BI's keys with the rest
+    overlay = page.locator("[data-keys-overlay]")
+    expect(overlay).to_be_visible()
+    expect(overlay.locator('[data-key-id="bi.go"]')).to_contain_text("g, then h c w r")
+    expect(overlay.locator('[data-key-id="bi.search"]')).to_be_visible()
     page.keyboard.press("Escape")
-    expect(page.locator("#biKeys")).not_to_be_visible()
+    expect(overlay).to_be_hidden()
+    page.click(".bi-rail-keys")                                                           # the rail's Keys button opens the same list
+    expect(overlay).to_be_visible()
+    page.keyboard.press("Escape")
     page.keyboard.press("/")                                                              # off the catalogue: goes there, search focused
     page.wait_for_url("**/bi/catalogue?focus=1")
     expect(page.locator("input[data-search]")).to_be_focused()
+    page.click("body", position={"x": 5, "y": 300})
+    page.keyboard.press("g")
+    page.keyboard.press("h")
+    page.wait_for_url("**/build")                                                         # g h: the Build home (BI's own home is folded into it)
     clean(page)
 
 
@@ -294,7 +303,7 @@ WIDE = """() => [...document.querySelectorAll('body *')].filter(e => e.getBoundi
 
 def test_a_phone_gets_a_scrolling_rail_finger_sized_controls_and_no_sideways_scroll(stack, browser):
     page = sign_in(browser, "ann", viewport={"width": 390, "height": 844}, has_touch=True, is_mobile=True)
-    for path in ("/bi", "/bi/catalogue", "/bi/workspaces", "/bi/w/rates-desk", "/bi/datasets"):
+    for path in ("/bi/catalogue", "/bi/workspaces", "/bi/w/rates-desk", "/bi/datasets"):
         page.goto(CONSOLE_URL + path)
         page.wait_for_timeout(500)
         assert page.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1"), (path, page.evaluate(WIDE))
@@ -304,7 +313,7 @@ def test_a_phone_gets_a_scrolling_rail_finger_sized_controls_and_no_sideways_scr
           .filter(e => Math.min(e.getBoundingClientRect().width, e.getBoundingClientRect().height) < 43.5 && !(e.type === 'checkbox'))
           .map(e => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().width) + 'x' + Math.round(e.getBoundingClientRect().height))""")
         assert small == [], (path, small)
-    page.goto(CONSOLE_URL + "/bi")
+    page.goto(CONSOLE_URL + "/bi/catalogue")
     rail = page.locator(".bi-rail")
     assert rail.evaluate("e => getComputedStyle(e).flexDirection") == "row"
     expect(page.locator('.bi-rail a:has-text("Catalogue")')).to_be_visible()
@@ -399,7 +408,7 @@ def test_the_bi_folder_is_live_a_file_added_changed_and_deleted_needs_no_restart
     expect(page.locator("[data-msg]")).to_contain_text("does not exist")
 
 
-def test_the_bi_keyword_types_ahead_opens_an_item_and_alone_opens_home(stack, browser):
+def test_the_bi_keyword_types_ahead_opens_an_item_and_alone_opens_the_build_home(stack, browser):
     page = sign_in(browser, "cat")
     page.goto(CONSOLE_URL + "/t")
     page.fill("#cmdInput", "bi ")
@@ -414,5 +423,5 @@ def test_the_bi_keyword_types_ahead_opens_an_item_and_alone_opens_home(stack, br
     page.goto(CONSOLE_URL + "/t")
     page.fill("#cmdInput", "BI")
     page.press("#cmdInput", "Enter")
-    page.wait_for_url("**/bi")
+    page.wait_for_url("**/build")
     clean(page)

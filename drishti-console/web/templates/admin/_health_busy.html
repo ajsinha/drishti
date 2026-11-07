@@ -30,7 +30,7 @@
   <div class="busy-gauge" data-busy-gauge="{{ g.id }}">
     <div class="busy-gauge-head"><span><b>{{ g.label }}</b> <span class="busy-state {{ g.state }}">{{ g.words }}</span></span>
       <span class="busy-num">
-      {%- if g.id == 'memory' -%}{{ (g.value * 100) | round(0) | int }}% · {{ (g.usedBytes / 1073741824) | round(1) }} of {{ (g.maxBytes / 1073741824) | round(1) }} GB
+      {%- if g.id == 'memory' -%}{% if g.usedBytes is none %}not measured yet (no clean-up since the start) · {{ ((g.maxBytes or 0) / 1073741824) | round(1) }} GB at most{% else %}{{ (g.value * 100) | round(0) | int }}% · {{ (g.usedBytes / 1073741824) | round(1) }} of {{ ((g.maxBytes or 0) / 1073741824) | round(1) }} GB{% endif %}
       {%- elif g.id == 'loads' -%}{{ g.running }} of {{ g.slots }} slots{% if g.engines %} · {% for x in g.engines %}{{ x.engine }} {{ x.running }}/{{ x.threads }}{{ ', ' if not loop.last }}{% endfor %}{% endif %}
       {%- elif g.id == 'requests' -%}{{ g.busy }} of {{ g.handlers }} · queue {{ g.queue }}
       {%- elif (g.id or '').startswith('memory-store:') -%}{{ (g.value * 100) | round(0) | int }}% · {{ ((g.usedBytes or 0) / 1048576) | round(1) }} of {{ ((g.maxBytes or 0) / 1048576) | round(1) }} MB

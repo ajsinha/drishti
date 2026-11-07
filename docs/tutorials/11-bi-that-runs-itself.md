@@ -372,7 +372,7 @@ You should see the model and its measures in the two lists (only the models and 
 measure read as you, with your row rules and masks*. Press **Save**: the FX desk's MTM is `-681,989,222`, below the limit, so it fires at once.
 
 **From the command line** you can read the number it watches, and list your alerts (a read); saving and **Check now** are the console's calls
-(`PUT /api/v1/me/measure-alerts/<name>` and `POST .../check`), which a personal token may not make (`403 DRS-5002`):
+(`PUT /api/v1/alerts/rules/<name>` and `POST .../check`), which a personal token may not make (`403 DRS-5002`):
 
 ```text
 $ python3 tools/drishti.py bi mq --model trades-daily@1 --select trade.DESK --measures "Trades,MTM" --where trade.DESK=DESK-FX
@@ -380,7 +380,7 @@ trade.DESK  Trades  MTM
 ----------  ------  ---------------
 DESK-FX     1428    -681,989,221.57
 1 row(s)  as of 2026-10-26  plan p_e316a98e618b4b4c
-$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$DRISHTI_SERVER/api/v1/me/measure-alerts" | jq -c '.[] | {name, describe, label, history: [.history[0] | {action, trigger, message, delivered}]}'
+$ curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "$DRISHTI_SERVER/api/v1/alerts/rules" | jq -c '.[] | {name, describe, label, history: [.history[0] | {action, trigger, message, delivered}]}'
 {"name":"FX desk MTM floor","describe":"below -10,000,000","label":"trades-daily@1 · MTM","history":[{"action":"fired","trigger":"saved","message":"FX desk MTM floor — now -681,989,221.57 (below -10,000,000)","delivered":{"inbox":"ok","email":"off","bridge":"off","sms":"off"}}]}
 ```
 

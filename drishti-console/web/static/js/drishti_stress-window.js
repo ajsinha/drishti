@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The stress window selection (docs/guides/VAR_GUIDE.md section 18.9; terminal/stress_window.html): fills the shell from
    /api/var/stress-window (the server's analysis of a node) and /api/var/stress-window/proposals. The chart is drawn as SVG here (no
    library); the node chips, hierarchy and window length are kept in the address; a click on the chart or a candidate selects the
@@ -245,15 +246,8 @@
         tr.appendChild(h("td", "l", r.decidedBy ? r.decidedBy + " · " + (r.decidedAt || "").slice(0, 10) : "—"));
         var act = h("td", "l");
         if (r.status === "PROPOSED" && r.proposedBy !== root.dataset.user) {
-          ["approve", "reject"].forEach(function (w) {
-            var bt = h("button", "sw-btn small", w === "approve" ? "Approve" : "Reject"); bt.type = "button";
-            bt.addEventListener("click", function () {
-              var note = window.prompt((w === "approve" ? "Approve " : "Reject ") + r.id + ": a note for the record", "") ;
-              if (note === null) return;
-              post("stress-window/proposals/" + r.id + "/decision", { decision: w, note: note }).then(load).catch(function (e) { notice(e.message); });
-            });
-            act.appendChild(bt);
-          });
+          var go = h("a", "sw-btn small", "Decide in Approvals"); go.href = "/approvals/stress-window/" + encodeURIComponent(r.id);
+          go.setAttribute("data-sw-approvals", r.id); act.appendChild(go);
         } else if (r.status === "PROPOSED") {
           act.textContent = "awaiting another person";
         }

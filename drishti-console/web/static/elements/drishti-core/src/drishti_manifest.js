@@ -23,7 +23,7 @@ export const MANIFEST = Object.freeze({
   "libraries": {
     "drishti-core": {
       "version": "1.1.0",
-      "title": "Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines",
+      "title": "Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines",
       "bundle": "drishti-core/drishti_core.js",
       "entry": "drishti-core/src/drishti_index.js",
       "global": "core",
@@ -47,22 +47,6 @@ export const MANIFEST = Object.freeze({
         "elements/drishti-grid/drishti_grid.css"
       ],
       "scripts": []
-    },
-    "drishti-chart": {
-      "version": "0.1.0",
-      "title": "The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec",
-      "bundle": "drishti-chart/drishti_chart.js",
-      "entry": "drishti-chart/src/drishti_index.js",
-      "global": "chart",
-      "requires": [
-        "drishti-core"
-      ],
-      "css": [
-        "elements/drishti-chart/drishti_chart.css"
-      ],
-      "scripts": [
-        "vendor/echarts/echarts.min.js"
-      ]
     },
     "drishti-inputs": {
       "version": "0.1.0",
@@ -89,6 +73,22 @@ export const MANIFEST = Object.freeze({
       ],
       "css": [],
       "scripts": []
+    },
+    "drishti-chart": {
+      "version": "0.1.0",
+      "title": "The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec",
+      "bundle": "drishti-chart/drishti_chart.js",
+      "entry": "drishti-chart/src/drishti_index.js",
+      "global": "chart",
+      "requires": [
+        "drishti-core"
+      ],
+      "css": [
+        "elements/drishti-chart/drishti_chart.css"
+      ],
+      "scripts": [
+        "vendor/echarts/echarts.min.js"
+      ]
     },
     "drishti-risk": {
       "version": "0.1.0",

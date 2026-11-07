@@ -246,12 +246,22 @@ class Estr(MarketSource):
 
 SOURCES = [EcbFx(), UsTreasury(), Sofr(), Estr()]
 KEYS = {"fx-spot": "PAIR", "ir-curve": "CURVE_ID", "rate-fixing": "INDEX_ID"}
+
+def _demo_root() -> str:
+    """The demo lake's root (config/lakes/demo.yaml), where the load goes."""
+    p = str(Path(__file__).resolve().parents[1] / "lake")
+    if p not in sys.path:
+        sys.path.insert(0, p)
+    import lakeconfig
+    return lakeconfig.root("demo")
+
+
 LOAD = ("uv run --with deltalake --with pyarrow --with pyyaml python tools/ingest_jsonl.py --from {out} --domain market "
         "--key fx-spot=PAIR,ir-curve=CURVE_ID,rate-fixing=INDEX_ID --lake {lake}")      # each file under its name's date
 
 
 def write(out: Path, sources: list[MarketSource]) -> list[Path]:
-    """One <kind>.<YYYY-MM-DD>.jsonl a kind and business date (the load rules, docs/architecture/DATA_LOAD_RULES.md: each document under
+    """One <kind>.<YYYY-MM-DD>.jsonl a kind and business date (the load rules, docs/guides/DATA_LAKE_GUIDE.md: each document under
     its AS_OF, the day its newest observation is of), sorted by id; a kind's documents from sources not in this run are kept (re-runs
     are idempotent)."""
     out.mkdir(parents=True, exist_ok=True)
@@ -328,7 +338,7 @@ def refresh(a, log=print) -> int:
     for f in files:
         log(f"wrote {f}")
     if files:
-        log("load: " + LOAD.format(out=out, lake=B.data_dir() / "delta"))
+        log("load: " + LOAD.format(out=out, lake=_demo_root()))
     return 1 if not files else 2 if (problems or run.http.failed or len(done) < len(selected)) else 0
 
 

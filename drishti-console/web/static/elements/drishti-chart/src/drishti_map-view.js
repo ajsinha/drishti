@@ -20,7 +20,7 @@
    drill) and 'table' (B: a floating legend, a world inset once drilled, the selected place in a floating card, a sortable table under
    the map). A click selects a place (its rows go to a linked grid) and explains it. */
 import { h, ToastTray } from '../../drishti-core/src/drishti_index.js';
-import { createGeoLoader } from './drishti_chart-geo.js';
+import { createGeoLoader, fitView } from './drishti_chart-geo.js';
 import { buildMap } from './drishti_chart-map.js';
 import { rowsOf } from './drishti_chart-data.js';
 import { tooltipElement } from './drishti_chart-parts.js';
@@ -205,10 +205,13 @@ export class MapView {
     if (!this.geo || !c.engine) { return; }
     if (this.geo.level === 'world') { this.worldGeo = this.geo; }
     const env = c.envNow = c.env(), th = env.theme, rows = this.rows();
+    c.side.hidden = this.mode !== 'ranking';
+    c.engine.resize();                                                   // the side column takes its width before the map is fitted
+    const size = { width: Math.max(1, c.engine.getWidth() - 16), height: Math.max(1, c.engine.getHeight() - 16) };
     const selCodes = new Set(this.sel ? [this.sel] : []);
-    const built = this.built = buildMap(c.spec, rows, this.geo, { theme: th, mapName: this.geo.registered, metric: this.metric(), highlight: this.highlight, selected: [], hatch: this.hatch(th) });
+    const built = this.built = buildMap(c.spec, rows, this.geo, { theme: th, mapName: this.geo.registered, metric: this.metric(), highlight: this.highlight, selected: [], hatch: this.hatch(th), width: size.width, height: size.height });
     if (c.selected.size) { built.places.forEach((p) => { if (p.ids.some((x) => c.selected.has(x))) { selCodes.add(p.code); } }); }
-    const again = buildMap(c.spec, rows, this.geo, { theme: th, mapName: this.geo.registered, metric: this.metric(), highlight: this.highlight, selected: Array.from(selCodes), hatch: this.hatch(th) });
+    const again = buildMap(c.spec, rows, this.geo, { theme: th, mapName: this.geo.registered, metric: this.metric(), highlight: this.highlight, selected: Array.from(selCodes), hatch: this.hatch(th), width: size.width, height: size.height });
     Object.assign(built, { option: again.option });
     const fmt = built.fmt, tot = built.places.reduce((s, p) => s + (p.v || 0), 0), byCode = new Map(built.places.map((p) => [p.code, p]));
     built.option.tooltip = Object.assign(built.option.tooltip, c.tooltipStyle(env), {
@@ -354,7 +357,7 @@ export class MapView {
   /** @private + − and reset */
   zoom(what) {
     const g = (this.c.engine.getOption().geo || [])[0] || {}, z = g.zoom || 1;
-    this.c.engine.setOption({ geo: what === 'reset' ? { zoom: 1, center: null } : { zoom: Math.max(0.8, Math.min(24, what === 'in' ? z * 1.4 : z / 1.4)) } });
+    this.c.engine.setOption({ geo: what === 'reset' ? fitView(this.geo, this.c.engine.getWidth() - 16, this.c.engine.getHeight() - 16) : { zoom: Math.max(0.8, Math.min(24, what === 'in' ? z * 1.4 : z / 1.4)) } });
   }
 
   /**

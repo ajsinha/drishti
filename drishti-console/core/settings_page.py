@@ -19,9 +19,9 @@ row carries its area and words (``data-hay``), a query (``?q=``, words in any or
 meaning) and an area (``?area=``) hide the rows that do not match, server-side and again in the browser as the person types
 (``web/static/js/drishti_configuration.js``). On a phone each row becomes a card (``drishti_help-config.css``): no sideways scroll.
 
-For an administrator, the rows of the server's and the console's ``application.yaml`` gain an *In effect* cell: the value on the
-server (``GET /api/v1/admin/settings``) or in this console process, and where it came from. Secrets never show: a key with a word
-secret, password, token, key or credential in it (and the known secret settings) shows ``••••``.
+The values in effect and where each came from are Admin → Configuration's (core/config_editor.py), which reads them with
+:func:`server_effective` and :func:`console_effective` below. Secrets never show: a key with a word secret, password, token, key or
+credential in it (and the known secret settings) shows ``••••``.
 """
 from __future__ import annotations
 
@@ -34,8 +34,6 @@ from typing import Any
 import yaml
 
 MASK = "••••"
-SERVER_AREA = "the-server-applicationyaml"
-CONSOLE_AREA = "the-console-applicationyaml"
 _SECRET_WORDS = {"secret", "secrets", "password", "passwd", "passphrase", "token", "key", "credential", "credentials", "apikey"}
 _KNOWN_SECRETS = {"auth.session_secret", "auth.token_secret", "auth.oidc.client_secret", "bi.python.runner_token"}
 _USERINFO = re.compile(r"(//[^/@:\s]+:)[^/@\s]+@")
@@ -152,20 +150,9 @@ def areas(page_html: str) -> list[dict]:
     return out
 
 
-def _effective_cell(eff: dict | None, default_text: str) -> str:
-    if eff is None:
-        return '<td data-label="In effect" class="cfg-eff cfg-none">not set</td>'
-    value = eff.get("value", "")
-    shown_value = html.escape(value) if value != "" else "<em>empty</em>"
-    differs = " cfg-differs" if eff.get("origin") not in ("default",) else ""
-    origin = html.escape(f"{eff.get('origin', '')}: {eff.get('source', '')}".strip(": "))
-    return (f'<td data-label="In effect" class="cfg-eff{differs}"><code>{shown_value}</code>'
-            f'<span class="cfg-origin">{origin}</span></td>')
-
-
-def searchable(page_html: str, q: str = "", area: str = "", server: dict | None = None, console: dict | None = None) -> tuple[str, int, int]:
+def searchable(page_html: str, q: str = "", area: str = "") -> tuple[str, int, int]:
     """The rendered document with its settings tables made searchable (and filtered by ``q`` and ``area``): returns the HTML, the
-    rows that match and the rows in all. ``server`` and ``console`` (administrators only) add the In effect cells."""
+    rows that match and the rows in all. The values in effect are Admin → Configuration's (core/config_editor.py)."""
     start = page_html.find(BEGIN)
     if start < 0:
         return page_html, 0, 0
@@ -183,27 +170,21 @@ def searchable(page_html: str, q: str = "", area: str = "", server: dict | None 
         if not heads or heads[0] not in ("Key", "Variable"):
             return block                                                   # the areas table, not settings
         a = state["area"]
-        effective = server if a == SERVER_AREA else console if a == CONSOLE_AREA else None
         out_rows, any_shown = [], False
         for i, row in enumerate(rows):
             cells = _CELL.findall(row)
             if i == 0:
-                extra = "<th>In effect</th>" if effective is not None else ""
-                out_rows.append("<tr>" + row + extra + "</tr>")
+                out_rows.append("<tr>" + row + "</tr>")
                 continue
-            key = _text(cells[0][2]).strip()
             hay = re.sub(r"\s+", " ", " ".join(_text(c[2]) for c in cells).lower() + " " + a.replace("-", " ")).strip()
             match = all(w in hay for w in words) and (not area or area == a)
             state["total"] += 1
             state["shown"] += match
             any_shown |= match
             tds = "".join(f'<td data-label="{html.escape(heads[j] if j < len(heads) else "")}"{c[1]}>{c[2]}</td>' for j, c in enumerate(cells))
-            if effective is not None:
-                default_text = _text(cells[2][2]).strip() if len(cells) > 2 else ""
-                tds += _effective_cell(effective.get(key), default_text)
             out_rows.append(f'<tr class="cfg-row" data-area="{html.escape(a)}" data-hay="{html.escape(hay)}"'
                             f'{"" if match else " hidden"}>{tds}</tr>')
-        cls = "tbl help-tbl cfg-tbl" + (" cfg-has-eff" if effective is not None else "")
+        cls = "tbl help-tbl cfg-tbl"
         body = "<thead>" + out_rows[0] + "</thead><tbody>" + "".join(out_rows[1:]) + "</tbody>"
         hidden = "" if any_shown else " data-cfg-empty"
         return f'<div class="tbl-wrap cfg-wrap"{hidden}><table class="{cls}" data-plain>{body}</table></div>'

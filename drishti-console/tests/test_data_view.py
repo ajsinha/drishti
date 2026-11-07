@@ -112,7 +112,7 @@ def test_data_and_a_dataset_and_a_date_go_to_it(client, backend, monkeypatch):
     assert client.get("/go", params={"q": "EXPORT <GO>"}, follow_redirects=False).headers["location"] == "/data"
     for word in ("EXPORT", "DATA"):                                                 # EXPORT is the word; DATA, the older one, is its alias
         assert client.get("/go", params={"q": f"{word} TVAL 2026-09-30 <GO>"}, follow_redirects=False).headers["location"] == "/data?q=TVAL%202026-09-30"
-        hints = client.get("/api/suggest", params={"q": f"{word} trade"}).json()
+        hints = client.get("/api/search", params={"in": "command", "q": f"{word} trade"}).json()["items"]
         assert hints and hints[0]["mnemonic"] == "EXPORT" and hints[0]["href"] == "/data?q=trade" and hints[0]["title"].startswith("Export data")
 
 

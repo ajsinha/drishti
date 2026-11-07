@@ -135,8 +135,8 @@ export function markSelection(option, ids, th) {
 }
 
 /**
- * The overview window and drag-to-zoom of a cartesian chart: an 'inside' zoom on the wheel, a slider with the series' shape under the
- * chart, and the engine's drag-select (the card takes the global cursor after drawing). A window of indexes ([150, 250]) or values.
+ * The overview window of a cartesian chart: an 'inside' zoom on the wheel and a slider with the series' shape under the chart (the
+ * card adds drag-to-zoom: dragBrush). A window of indexes ([150, 250]) or values.
  * @param {Object} option changed in place
  * @param {Object} spec
  * @param {Object} built the kind's answer (its table gives an index's value)
@@ -158,7 +158,6 @@ export function addZoom(option, spec, built, th) {
     slider.startValue = inside.startValue = a; slider.endValue = inside.endValue = b;
   }
   option.dataZoom = [inside, slider];
-  option.toolbox = { show: false, feature: { dataZoom: { yAxisIndex: 'none', xAxisIndex: 0, filterMode: 'none' } } };
   option.grid.bottom = (option.grid.bottom || 10) + 30;
   return true;
 }
@@ -178,4 +177,29 @@ export function svgOf(E, option, width, height) {
     off.setOption(o);
     return off.renderToSVGString();
   } finally { off.dispose(); }
+}
+
+/**
+ * Drag-to-zoom on a chart's plot: a drag across draws a band and zooms the x axis to it when the mouse is let go (a click, with no
+ * drag, stays a click on a mark).
+ * @param {Object} engine the chart's engine instance
+ * @param {function(): boolean} active whether the chart zooms now
+ * @param {string} colour the band's fill
+ * @returns {void}
+ */
+export function dragBrush(engine, active, colour) {
+  const zr = engine.getZr();
+  let from = null;
+  const band = (x0, x1) => engine.setOption({ graphic: [{ id: 'dc-brush', type: 'rect', silent: true, z: 100, shape: { x: Math.min(x0, x1), y: 0, width: Math.abs(x1 - x0), height: zr.getHeight() }, style: { fill: colour } }] });
+  zr.on('mousedown', (e) => { from = active() && engine.containPixel('grid', [e.offsetX, e.offsetY]) ? e.offsetX : null; });
+  zr.on('mousemove', (e) => { if (from !== null && Math.abs(e.offsetX - from) > 4) { band(from, e.offsetX); } });
+  zr.on('mouseup', (e) => {
+    if (from === null) { return; }
+    const x0 = from, x1 = e.offsetX;
+    from = null;
+    engine.setOption({ graphic: [{ id: 'dc-brush', $action: 'remove' }] });
+    if (Math.abs(x1 - x0) <= 6) { return; }
+    const a = engine.convertFromPixel({ xAxisIndex: 0 }, Math.min(x0, x1)), b = engine.convertFromPixel({ xAxisIndex: 0 }, Math.max(x0, x1));
+    engine.dispatchAction({ type: 'dataZoom', dataZoomIndex: 0, startValue: a, endValue: b });
+  });
 }

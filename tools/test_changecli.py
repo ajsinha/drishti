@@ -83,13 +83,9 @@ class ChangeCli(unittest.TestCase):
         with self.assertRaises(Err):
             run("change", "propose", "--kind", "trade", "--id", "MX-1")
 
-    def test_a_draft_is_submitted_by_its_id_and_decisions_reach_their_paths(self):
+    def test_a_draft_is_submitted_by_its_id_and_lists_reach_their_paths(self):
         run("change", "submit", "d-4ab964fa3060", "--reason", "typo")
         self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/changes", {"draft": "d-4ab964fa3060", "reason": "typo"}))
-        run("change", "approve", "chg-1", "--note", "ok")
-        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/changes/chg-1/approve", {"note": "ok"}))
-        run("change", "reject", "chg-1", "--reason", "wrong ticket")
-        self.assertEqual(FakeApi.calls[-1], ("POST", "/api/v1/changes/chg-1/reject", {"reason": "wrong ticket"}))
         run("change", "list", "--state", "awaiting", "--mine")
         self.assertEqual(FakeApi.calls[-1][1], "/api/v1/changes?state=awaiting&mine=true")
         run("change", "history", "trade", "MX 1")

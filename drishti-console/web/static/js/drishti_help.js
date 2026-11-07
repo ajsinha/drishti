@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Help centre (mock-up help-hub/A): an old address /help#cat-<id> opens its section's page; on a section's page the rows filter as you
    type (a group with none left folds away), falling back to a full-text search of the section; "all of Help" carries the words; code
    examples copy. */
@@ -48,6 +49,15 @@
         if (q) { e.preventDefault(); location.href = '/help/search?q=' + encodeURIComponent(q); }
       });
     }
+  }
+  // Help's search boxes (the hub, a guide's, the results page's): the one search box over Help's pages (GET /api/search?in=help); a page
+  // picked opens, Enter with none picked runs the full search (the form). A section's own filter and the Knowledge search stay as they are.
+  if (window.Drishti.searchBox) {
+    document.querySelectorAll('form.help-search[action="/help/search"]:not(.sec-search) input[name="q"]').forEach(function (q) {
+      if (q.form.querySelector('input[name="section"]')) { return; }
+      q.form.classList.add('drishti_search-host');
+      window.Drishti.searchBox(q, { where: 'help', label: 'Help pages', minChars: 2, fetchOnFocus: false });
+    });
   }
   document.querySelectorAll('[data-copy]').forEach(function (b) {
     b.addEventListener('click', function () {

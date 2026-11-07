@@ -351,7 +351,8 @@ set says so in place of the figures.
 
 Two columns and a toolbar, as the approved mock-up (`docs/lenses/mockups/var-layout/A.html`, and `A-drawer.html` with the drawer open):
 
-- **The toolbar** (under the status line): two searchable drop-downs for the baskets, **+ New basket**, **Backtest ›** and **How calculated ›**.
+- **The toolbar** (under the status line): two searchable drop-downs for the baskets, **+ New basket**, **Backtest ›**, **What-if…** and
+  **Explain ›**.
   - **Backtest ›** opens the regulatory backtest of the scope in view, on the date in view (the same page as `VAR <scope> BACKTEST`,
     [REGULATORY_VAR_REPORTING.md section 4.6](REGULATORY_VAR_REPORTING.md#46-backtesting)): its VaR against the P&L of the last 250
     business days, the exceptions and the zone.
@@ -368,8 +369,9 @@ Two columns and a toolbar, as the approved mock-up (`docs/lenses/mockups/var-lay
   - **+ New basket** (also **Alt+B**; the count of the parts your sheet holds beside it) opens **Construct your basket**, the sheet,
     across the top of the page ([section 3.5](#35-construct-your-basket)). The sheet is collapsed when the page opens; once you save, the
     new basket is in My baskets and the sheet collapses again.
-  - **How calculated ›** (key **H**) opens **How this number was built** as a drawer over the right of the screen
-    ([section 3.6](#36-how-this-number-was-built)).
+  - **Explain ›** (key **E**) opens the Explain drawer of the scope's VaR over the right of the screen: the formula with its values,
+    how the number was built, why it moved and the workbook ([section 3.6](#36-how-this-number-was-built)). Every figure tile has its
+    own: hover it for a one-line preview, click it for the drawer.
 - **Scopes** (left): the hierarchy chosen in the selector above it (Management: bank, division, desk, book; Legal entities: bank, legal
   entity, desk, book; and every configured hierarchy by its title, such as *Limit letters*: letter, desk; the choice kept
   in the link as `hierarchy=LL`; a hierarchy skipped on the date because its column is not in the data is listed *(not available)*,
@@ -557,19 +559,21 @@ owner's inbox; [OPERATIONS.md](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-
 
 ### 3.6 How this number was built
 
-**How calculated ›** in the toolbar (or the key **H**) slides a drawer over the right of the screen; **Esc** or **✕** closes it and
-the focus goes back to the link. The drawer's state is in the page's link (`&how=1`), so a link can open the page with it open. Its
-content is the server's, as sent with the scope's answer (the browser computes nothing), with **Export CSV** (the scope's path),
-**Capture VaR** and **What-if…** (which closes the drawer and opens the basket's sheet). It starts under the top bar, so the command
-line and the bar's menus stay in reach. On a phone it rises from the bottom.
-
-![How calculated open on the bank: the drawer under the top bar, over the right of the screen](img/var/18-how-calculated.jpg)
+How a VaR figure was built is the **Explain** drawer's tab **Inputs & lineage** (the one Explain of every number,
+[USER_GUIDE.md, "Explain: one for every number"](USER_GUIDE.md#explain-one-for-every-number)): **Explain ›** in the toolbar (or the key
+**E**), or a click on the VaR or ES tile, slides the drawer over the right of the screen; **Esc** or **✕** closes it and the focus goes
+back to where it was. It starts under the top bar, so the command line and the bar's menus stay in reach; on a phone it rises from the
+bottom. Its four tabs are the same on every screen: **Formula** (the rank rule with the scope's numbers: N, k, the k-th worst scenario
+and its P&L), **Inputs & lineage** (below), **Why it moved** ([section 3.11](#311-why-it-moved-the-var-change-explained)) and
+**Workbook** (the explanation's .xlsx and the VaR Playground). **Open as a page** shows all four at once, for an auditor or for printing
+(`/explain?kind=var&scope=…`). Everything is the server's, computed for you (the browser computes nothing).
 
 The scope as resolved, the positions and trades included, those without a vector, those outside your entitlement, unknown ids, the
 vector batch and data version, the scenario set and its window, the method and rank rule, the ES rule, how components are allocated,
 the engine and its threads, your view, **the tier** the vector came from (a node's float64 aggregate, the date's memory-mapped hot file,
 or memory: [section 26](#26-the-tiered-memory-and-the-hot-file)), the members' hash, the time taken and whether the cache answered. The
-fields are those of the answer's provenance ([section 11.2](#112-the-headline-get-scope-and-its-provenance)).
+fields are those of the answer's provenance ([section 11.2](#112-the-headline-get-scope-and-its-provenance)); the lineage lists every input
+table's data version on the date, the batches and the scenario set.
 
 ![How this number was built: the rates desk without one book, from the hot file](img/var/08-provenance.jpg)
 
@@ -618,8 +622,8 @@ Opening a trade page never waits for the engines to load a date: until they have
 
 ### 3.8 On a phone
 
-The panels stack, with no sideways scrolling; the two basket drop-downs are full width, and *How this number was built* is a sheet that
-rises from the bottom (How calculated, or *More on this page*):
+The panels stack, with no sideways scrolling; the two basket drop-downs are full width, and the Explain drawer is a sheet that rises
+from the bottom (Explain ›, or a tap on a tile):
 
 ![The explorer on a 390 px phone](img/var/11-phone.jpg)
 
@@ -793,8 +797,9 @@ From the command line: `drishti.py var playground <scope> [--ids ...] [--xlsx FI
 ### 3.11 Why it moved: the VaR change explained
 
 VaR moved from one business date to the next; **Why it moved** says why, in causes that **add up exactly** to the change, and who drove
-each one. It is a tab of the VaR page beside the others (`VAR EXPLAIN <scope> <GO>`, or `VAR <scope> EXPLAIN`), it answers any scope the
-page answers (a node, a portfolio, a basket, an ad-hoc scope), and by default it compares the business date before the newest with the
+each one. It is the **Why it moved** tab of the VaR figure's Explain (the drawer, or the page `VAR EXPLAIN <scope> <GO>`, or
+`VAR <scope> EXPLAIN [from] [to]`, opens), in three views (**Waterfall**, **Matrix**: the scope and each child node, the steps across,
+and **Sentences**) with the two dates to compare; it answers any scope the page answers (a node, a portfolio, a basket, an ad-hoc scope), and by default it compares the business date before the newest with the
 newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../lenses/OVERSIGHT_LENS.md#41-ro1-var-change-explanation).
 
 **In plain words.** Drishti moves **one thing at a time** from yesterday's state to today's (the corrections to yesterday's data, the
@@ -915,7 +920,7 @@ book moved in (+10); the new trade C offset 11. The newest day became the worst 
 
 **On the demo data.** The test data holds three business dates, 2026-09-28 to 2026-09-30 ([section 22.1](#221-what-the-repository-ships-verified-2026-10-25-version-13)),
 so the tab compares 2026-09-29 with 2026-09-30 by default. The engine's answers (99%, 1-day, the default order; `GET
-/api/v1/var/explain` on a lake built with `lake demo --as-of data`), USD:
+/api/v1/explain?kind=var&part=why` on a lake built with `lake demo --as-of data`), USD:
 
 | Step | BANK 2026-09-29 → 09-30 | BANK 2026-09-28 → 09-29 | DESK:CREDIT 09-28 → 09-29 | DESK:FI 09-28 → 09-29 |
 |---|---|---|---|---|
@@ -958,7 +963,7 @@ VaR 2026-09-30                         55
 change                                +35  the steps add up: yes
 ```
 
-**The working as a workbook.** *Download the working (.xlsx)* (`drishti.py var explain <scope> --xlsx FILE`, `GET
+**The working as a workbook.** The Explain drawer's **Workbook** tab (`drishti.py var explain <scope> --xlsx FILE`, `GET
 /api/v1/var/explain.xlsx`) writes the explanation on the VaR Playground's frame ([section 3.10](#310-the-var-playground-play-var)): **Main**
 (the inputs Confidence and RankRule; each state's VaR worked from its column, N, k, the VaR scenario's date, the engine's VaR beside it and
 a check; each step as the difference of two state cells beside the engine's; the add-up check; the last state checked against the later
@@ -971,8 +976,9 @@ formula over the state before it and Data, and its ranks), **Drivers** (the engi
 **Settings** (`drishti.var.explain.*`, [section 12](#12-settings)): `enabled` (true), `order`, `window-lines` (`two`, or `one` window-roll
 line), `split-amendments` (true), `top` (10), `drivers-max` (2,000 trades per step whose incremental VaR is computed, the largest by their
 share of the state's tail), `cache-minutes` (10: answers are kept, never stored), `cache-mb` (32, weighed in bytes) and `matrix-max` (60
-child nodes). The API: `GET /api/v1/var/explain`, `/explain/matrix` and `/explain.xlsx` ([section 11.1](#111-the-endpoints)); the same
-entitlements as the scope's VaR (a scope is resolved as you on each date).
+child nodes). The API: `GET /api/v1/explain?kind=var&scope=…&from=…&to=…&part=why` (`view=matrix` for the Matrix view;
+[API_GUIDE.md, "Explain"](API_GUIDE.md#explain-any-number)) and `GET /api/v1/var/explain.xlsx` ([section 11.1](#111-the-endpoints)); the
+same entitlements as the scope's VaR (a scope is resolved as you on each date).
 
 ### 3.12 Parametric VaR beside historical (PVAR)
 
@@ -991,12 +997,13 @@ With the toggle on:
 | **The tree** | the **Parametric** and **Gap** columns beside each node's VaR, ES and limit |
 | **The P&L path** | the **normal curve** over the histogram, the historical marker (solid) and the parametric one (dashed), both tails lightly shaded and the gap bracket between the markers |
 
-**The ? on every parametric figure** (a tile, a tree cell, the curve) opens the server's own lines: the method, the window, the
-weighting, the confidence and z, the horizon, n, μ and σ, the formula with the scope's numbers, ES, historical VaR beside it and the gap
-with its reading. Every number comes from the answer (the browser computes nothing); on a phone it is a bottom sheet.
+**The ? on every parametric figure** (a tile, a tree cell) is its Explain: hover it for the preview, click it for the drawer, whose
+**Formula** is the server's own lines: the method, the window, the weighting, the confidence and z, the horizon, n, μ and σ, the formula
+with the scope's numbers, ES, historical VaR beside it and the gap with its reading. Every number comes from the answer (the browser
+computes nothing); on a phone the drawer is a bottom sheet.
 
 **The Normal curve toggle** (key **N**) hides the curve, the parametric marker, its tail and the gap bracket; the choice is remembered
-for you and in the link (`nc=0`). **Worked in the playground** (and the ? popovers' foot) opens the VaR Playground's **Parametric tab**
+for you and in the link (`nc=0`). **Worked in the playground** (and the Explain drawer's Workbook tab) opens the VaR Playground's **Parametric tab**
 on the scope ([section 3.10](#310-the-var-playground-play-var)): the figures, the steps, each position's μᵢ, σᵢ, cov(Pᵢ, P), ρᵢ and the
 Euler components that add up to the parametric VaR, and the workbook's Parametric tab. The MR cube and the pivot offer `pvar()` beside
 `var()` and `comp_var()`. [Tutorial 43](../tutorials/43-parametric-var-beside-historical.md) walks through it on the demo data.
@@ -1243,7 +1250,7 @@ more than 20,000 rows are refused in words (`400`, `413`); a role that may not n
 
 ## 6. Captures and compare
 
-**Capture VaR** (in the *How calculated* drawer, or the *Captured results* tab with a note) stores an immutable record of the answer as it is now:
+**Capture VaR** (the *Captured results* tab, with a note) stores an immutable record of the answer as it is now:
 
 - the numbers: VaR, ES, the rank rule, each part's component VaR, the 25 worst scenarios, and the full vector (whole dollars);
 - the members: the trades the scope resolved to;
@@ -1642,7 +1649,7 @@ The key is not read: it may be absent or name a batch. An example message of thr
 | connector `pv-updates` `enabled` | `${DRISHTI_VAR_PV_STREAM:false}` | the stream on |
 | its `bootstrap-servers` | `${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}` | the brokers |
 | its `topic` | `${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}` | the PV topic |
-| its `lake` | `${DRISHTI_DELTA_ROOT:./data/delta}` | the risk lake's root (an Iceberg risk lake: the root holding `risk/<kind>/metadata`) |
+| its `lake` | `${DRISHTI_DELTA_ROOT:./data/delta/demo}` | the risk lake's root (an Iceberg risk lake: the root holding `risk/<kind>/metadata`) |
 
 **Admin.** `GET /api/v1/var/intraday/streams` (the topic, state, waiting trades, offsets, counts, the last ten windows and the newest 20
 rejections) and `POST /api/v1/var/intraday/streams/{connector}/apply` (administrators: the waiting window now); the connector's page
@@ -1748,12 +1755,12 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 | `var official --synthetic-history DAYS` | a demo server's synthetic official history before its oldest record (administrators; [section 18.10](#1810-period-statistics)) |
 | `var backtest [SCOPE] [--date D] [--xlsx FILE]` | the regulatory backtest of a node: the counts at 99% and 97.5%, the zone, the multiplier, the exceptions and the desks ([section 18.11](#1811-backtesting-for-regulation)) |
 | `var stats [SCOPE] [--period FY2026] [--measure var]` | period end, average, high and low over the official records, the 60-day and 12-week stressed averages ([section 18.10](#1810-period-statistics)) |
-| `var report list`, `var report run REPORT [PERIOD]`, `var report show REPORT PERIOD`, `var report sign REPORT PERIOD --step S [--do approve\|return\|narrative] [--comment]`, `var report file REPORT PERIOD --format xlsx\|csv\|pdf [--draft]` | report runs, their sign-off and files ([section 18.14](#1814-regulatory-reports-definitions-runs-checks-and-sign-off)) |
+| `var report list`, `var report run REPORT [PERIOD]`, `var report show REPORT PERIOD`, `var report narrative REPORT PERIOD --narrative TEXT` (each step is signed with `approvals approve var-report REPORT:PERIOD:vN --param step=S`), `var report file REPORT PERIOD --format xlsx\|csv\|pdf [--draft]` | report runs, their sign-off and files ([section 18.14](#1814-regulatory-reports-definitions-runs-checks-and-sign-off)) |
 | `var intraday [--date D]`, `var intraday --load FILE.jsonl [--date D] [--lake DIR] [--no-signal] [--dry-run]` | each loaded date's intraday layer (updates, trades, batches, what was ignored or refused); `--load` appends an intraday batch file (scenario PVs or P&L vectors, one kind a file) to the lake with `lake build --mode append` and raises its data-load signal (a Delta lake: `lake build --format iceberg` only replaces dates, so on an Iceberg risk lake the pricing system appends with its own Iceberg writer, or publishes to the PV topic), `--date` moving its rows to another business date ([section 8.4](#84-what-if-pricing-and-intraday-recomputes)) |
 | `var whatif <scope> [--copy TRADE=FACTOR ...] [--trades FILE]` | the pre-deal what-if: copies of booked trades or scopes scaled (`--copy MX-30000121=-1`, `--copy BOOK:BOOK-RATES-3=-0.5`), or trades priced elsewhere from a JSON file ([section 8.2](#82-the-what-if-the-java-engine)) |
 | `--horizon 1d\|10d [--method sqrt10\|sum] [--confidence Q] [--es-confidence Q]` | on `show`, `parts`, `path`, `history`, `tree` and `capture`: the answer through that lens ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)); `drishti.py var show BANK --horizon 10d --method sum`, `drishti.py var show BANK --confidence 95` |
 | `--stressed` | on the same commands: stressed VaR, the scope on the date's stress scenario set, in USD; `show` prints the 12-week average of a node's official stressed VaR ([section 18.8](#188-stressed-var)); `drishti.py var show BANK --stressed --horizon 10d --method sum` |
-| `var stress-window [scope] [--length N] [--propose [--first D]] [--proposals] [--decide ID --decision approve\|reject]` | the stress window selection ([section 18.9](#189-choosing-the-stress-window)): the current and the worst window, the alert, the candidates, each node; freeze and propose; decide |
+| `var stress-window [scope] [--length N] [--propose [--first D]] [--proposals]` | the stress window selection ([section 18.9](#189-choosing-the-stress-window)): the current and the worst window, the alert, the candidates, each node; freeze and propose; decide |
 | `var matrix <id> [--days N] [--date D] [--by trade [--scenario D]] [--confidence Q] [--window N] [--csv]` | the scenario matrix ([section 3.9](#39-the-scenario-matrix-smat)) of a trade, position or node over its last N business dates: each date's source, VaR (rank), ES, base PV and gap, then the scenarios worst on the newest date (`*` in a tail, `—` no value); `--csv` the whole matrix as the page's export |
 | `var explain <scope> [--from D] [--to D] [--confidence Q] [--matrix] [--xlsx FILE]` | why VaR moved ([section 3.11](#311-why-it-moved-the-var-change-explained)): the change between two business dates (default the one before the newest, and the newest) in steps that add up exactly, printed as sentences, the waterfall as aligned lines, the states, each step's top drivers and the order-free view; `--matrix` the scope and each child node, the steps across; `--xlsx` the working as a workbook of formulas |
 | `var playground <scope> [--ids A,B] [--xlsx FILE] [--count N\|all] [--estimate]` | the VaR Playground ([section 3.10](#310-the-var-playground-play-var)): the headline, the checks and the largest positions' figures; `--xlsx` writes the workbook of real formulas (500 positions by default, the rest in Rest of scope); `--estimate` each export size's file size, recalculation time and applications |
@@ -1825,7 +1832,8 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /reports` | | the report definitions and each one's newest run of its current period ([section 18.14](#1814-regulatory-reports-definitions-runs-checks-and-sign-off)) |
 | `POST /reports/{report}/runs` | `period` | generates and freezes the next run: its cells with their lineage, the checks, the facts; with its sign-off record |
 | `GET /reports/{report}/runs/{period}` | `version` (the newest) | a run with its sign-off record and the versions of the period |
-| `POST /reports/{report}/runs/{period}/signoff` | body `{version, action: approve\|return\|narrative, step, comment, narrative}` | the run with its updated sign-off record; refused (`409`) in words: not the next step, the same person twice, a failed check, a check needing the maker's note |
+| `POST /reports/{report}/runs/{period}/narrative` | body `{version, narrative}` | the maker's text, before the maker signs; the run with its sign-off record |
+| `POST /api/v1/approvals/var-report/{report}:{period}:v{n}/approve` · `/reject` | `{comment, params: {step}}` | a sign-off step in the one Approvals queue (reject sends the run back to the maker); refused (`409`) in words: not the next step, the same person twice, a failed check, a check needing the maker's note |
 | `GET /reports/{report}/runs/{period}/file` | `format` (`xlsx`, `csv`, `pdf`), `version`, `draft` | the file; released after the last approval (`409` before), a draft marked so on request |
 | `POST /official/synthetic-history` | `days` (259) | administrators, on a demo server (`drishti.regulatory.synthetic-history`): seeds synthetic official records ([section 18.10](#1810-period-statistics)) |
 | `GET /baskets`, `POST /baskets` | body `{name, title, description, scope or sheet, sharedWith, version, owner}` | baskets ([section 5.8](#58-baskets)): a list (without the sheets' lists, `fromSheet` on those), or a save; `version` the one the editor opened (`409` when changed since), `owner` someone else's basket an administrator edits (audited, the owner told) |
@@ -1844,9 +1852,7 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /playground/estimate` | `scope` or `ids`, `asOf`, `ccy`, `set` | the export's choices for the scope: `positions`, `layout`, `columns`, `rows`, `cells`, `formulas`, `bytes`, `size`, `recalc`, `apps`, `refused` (why it cannot be made) |
 | `GET /playground.xlsx` | as `/playground`, and `count` (`100`, `500` the default, `1000`, `10000`, `all`) | the workbook, streamed (`X-Drishti-Positions`, `X-Drishti-Estimated-Bytes`); a size no application opens, or above `playground.export-max-cells`: `400` in words before a byte is sent |
 | `GET /playground/template` | `positions` (10; 1 to 500), `scenarios` (509; 20 to 5,000) | the empty workbook: every formula in place, to paste PVs into and recalculate offline |
-| `GET /explain` | `scope`, `from`, `to` (business dates; none: the one before the newest, and the newest), `confidence`, `method` (`sequence`; `shapley` answers 400: planned) | why VaR moved ([section 3.11](#311-why-it-moved-the-var-change-explained)): the states (trades, vectors, days, VaR, the VaR scenario), the steps with their drivers, the display lines, the order used, the order-free view, the limit-use line, the sentences, `change`, `sumOfSteps` and `addsUp` |
-| `GET /explain/matrix` | `scope`, `from`, `to`, `confidence` | the Matrix view: the scope and each child node with every step |
-| `GET /explain.xlsx` | `scope`, `from`, `to`, `confidence` | the explanation as a workbook of formulas, checked against the engine |
+| `GET /explain.xlsx` | `scope`, `from`, `to`, `confidence` | why VaR moved as a workbook of formulas, checked against the engine (the explanation itself: `GET /api/v1/explain?kind=var`, [API_GUIDE.md, "Explain"](API_GUIDE.md#explain-any-number)) |
 
 ```
 GET  /api/v1/var/scope?scope=DESK:DESK-RATES               headline, ancestors, backtest summary, provenance
@@ -2171,7 +2177,7 @@ Every dataset below, with one formatted sample record each and whether it is req
 ### 15.1 Where they live
 
 All VaR inputs are tables in the **common risk lake**, domain `risk`, one table per kind, served by the market-risk pack's
-connector `risk-store` (`plugin: delta`, `root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`, `domain: risk`). Delta is the
+connector `risk-store` (`plugin: delta`, `root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}`, `domain: risk`). Delta is the
 default; the same tables may be Iceberg tables, read by the same connector switched to `plugin: iceberg`
 (`build_demo_lakes.py --store risk=iceberg` writes both the tables and the file; [section 29.3](#293-how-the-lake-tools-and-the-delta-plugin-carry-a-vector)),
 with the same VaR to the cent. The engine reads the kinds named by `drishti.var.kinds` (defaults below), whichever connector the kind
@@ -2728,8 +2734,8 @@ JSON object per line, UTF-8, a file `.jsonl` (or `.jsonl.gz`), each line exactly
 
 | Script | Does | Example |
 |---|---|---|
-| `tools/pvgen/morning.py` (`morning.sh`, `tools\windows\pvgen-morning.ps1`) | a full day: `scenario-pv` for `--pv-systems` (default ENDUR), `pnl-vector` for the others (`--pnl-systems`; `--all-vectors`: every trade a P&L vector), `fx-scenario`; `--date` moves it to another business date; `--lake` writes it into the lake (replacing the date), `--server` signals | `tools/pvgen/morning.sh --date 2026-10-27 --lake data/delta --server http://127.0.0.1:18480` |
-| `tools/pvgen/intraday.py` (`intraday.sh`, `pvgen-intraday.ps1`) | N small batches (`--batches 20 --trades-per-batch 15`) of amended, new and cancelled trades (`--mix amend=70,new=15,cancel=15`, or `--plan amend,new,cancel`), each its own `BATCH_ID` (`I-<date>-001`; a second run on the same date goes on with `--first 21` and a later `--start`), `RUN_KIND: INTRADAY`, a `COMPUTED_AT` a minute after the batch before; each update as scenario PVs or a P&L vector by its system; `--seed` makes the same batches; `--lake` appends each batch, `--server` signals it, `--every 30s` drips them | `tools/pvgen/intraday.sh --date 2026-10-27 --batches 5 --lake data/delta --server http://127.0.0.1:18480 --every 30s` |
+| `tools/pvgen/morning.py` (`morning.sh`, `tools\windows\pvgen-morning.ps1`) | a full day: `scenario-pv` for `--pv-systems` (default ENDUR), `pnl-vector` for the others (`--pnl-systems`; `--all-vectors`: every trade a P&L vector), `fx-scenario`; `--date` moves it to another business date; `--lake` writes it into the lake (replacing the date), `--server` signals | `tools/pvgen/morning.sh --date 2026-10-27 --lake data/delta/demo --server http://127.0.0.1:18480` |
+| `tools/pvgen/intraday.py` (`intraday.sh`, `pvgen-intraday.ps1`) | N small batches (`--batches 20 --trades-per-batch 15`) of amended, new and cancelled trades (`--mix amend=70,new=15,cancel=15`, or `--plan amend,new,cancel`), each its own `BATCH_ID` (`I-<date>-001`; a second run on the same date goes on with `--first 21` and a later `--start`), `RUN_KIND: INTRADAY`, a `COMPUTED_AT` a minute after the batch before; each update as scenario PVs or a P&L vector by its system; `--seed` makes the same batches; `--lake` appends each batch, `--server` signals it, `--every 30s` drips them | `tools/pvgen/intraday.sh --date 2026-10-27 --batches 5 --lake data/delta/demo --server http://127.0.0.1:18480 --every 30s` |
 | `tools/pvgen/publish_kafka.py` (`publish-kafka.sh`, `pvgen-publish-kafka.ps1`) | the same updates to the PV topic, each message's value JSONL text of `--per-message` records (default 10), one row of the contract a line; a cancel a cancel line; the key names the message, never a trade; `--rate`, `--seconds`, `--seed` as `tools/samplegen/stream.py`; `--save` keeps every record sent as JSONL | `tools/pvgen/publish-kafka.sh --bootstrap localhost:9092 --rate 5 --seconds 60 --save data/pvgen/sent.jsonl` |
 | `tools/pvgen/check.py` (`check.sh`, `pvgen-check.ps1`) | recomputes from the files what the engine should show (each trade's USD P&L, scenario PVs through the engine's own formula `engine_pnl`, the latest `COMPUTED_AT` per trade, cancels removed) and compares the bank's and every desk's VaR and ES with `GET /api/v1/var/scope`; exit 1 on a difference | `tools/pvgen/check.sh --morning data/pvgen/morning-2026-10-27 --intraday data/pvgen/intraday-2026-10-27 --server http://127.0.0.1:18480` |
 
@@ -2802,7 +2808,7 @@ already folded into the vector, so `inputsBySystem.<system>.tradesWithoutPv` cou
 
 **Visibility.** Every answer's provenance carries `inputsBySystem`: per source system on the date, `form`, `grain`, `rows`,
 `decidedBy` (*record fields*, or *record fields, agreeing with the pin pv, position*) and `tradesWithoutPv`; `GET /api/v1/var/status`
-lists it per loaded date; the VaR page shows it in *How this number was built*.
+lists it per loaded date; the VaR page shows it in the Explain drawer's *Inputs & lineage*.
 
 **Files without the fields.** The fields are required on every PV or vector record: a file without them is refused (`DRS-5208`). `drishti.py var convert
 FILE --set VALUE_TYPE=PNL --set GRAIN=TRADE --set CURRENCY=USD --set SOURCE_SYSTEM=MUREX` adds them (`--infer` takes `VALUE_TYPE` from
@@ -3407,7 +3413,7 @@ window).
 | Top candidates | the windows apart from one another, by stressed VaR: the window, its VaR, the change against the current, *worst* and *current* tags, the worst day in it; click a row to select it |
 | By node | each node's VaR in the current window, its own worst window and when it starts, the gap |
 | Current against proposed | window, stressed VaR 1-day and 10-day √10, scenarios, the worst day in each; who approved the current window |
-| Proposals | the frozen analyses, newest first: id, node, window, VaR, status, who proposed and who decided; **Approve** and **Reject** for another person |
+| Proposals | the frozen analyses, newest first: id, node, window, VaR, status, who proposed and who decided; **Decide in Approvals** for another person (approved or rejected in the one Approvals queue) |
 
 The page needs a role that sees every node of the VaR hierarchies (the history is node-level P&L of the whole bank); another role is
 refused in words. The page lives under the `VAR` command word: an edition or a lens without `VAR` does not offer it.
@@ -3420,7 +3426,7 @@ decided proposal is not decided again, `DRS-2006`). Every step is audited. An ap
 system's next stress scenario set; once a date's stress set covers it, the tool names the approval beside the current window. Stressed
 VaR itself always uses the stress set the date holds.
 
-**From the command line:** `drishti.py var stress-window BANK` (the analysis as text), `--propose --first 2007-11-30 --note "..."`, `--proposals`, `--decide SWP-000001 --decision approve` ([section 10](#10-the-command-line)).
+**From the command line:** `drishti.py var stress-window BANK` (the analysis as text), `--propose --first 2007-11-30 --note "..."`, `--proposals` (it is decided in the queue: `drishti.py approvals approve stress-window SWP-000001`) ([section 10](#10-the-command-line)).
 
 **The API** (every endpoint in [API_GUIDE.md](API_GUIDE.md)):
 
@@ -3429,7 +3435,7 @@ VaR itself always uses the stress set the date holds.
 | `GET /api/v1/var/stress-window?scope=BANK&hierarchy=MGMT&length=250&confidence=0.99&asOf=2026-09-30` | the analysis: `node`, `nodes`, `hierarchies`, `history`, `length`, `confidence`, `rank`, `stressSet`, `current`, `worst`, `today`, `alert`, `candidates`, `series` (`starts`, `var`), `byNode`, `approval` |
 | `POST /api/v1/var/stress-window/proposals` | freeze and propose: `{"scope", "hierarchy", "date", "length", "confidence", "first", "note"}` (`first`: the window's first day; none: the worst) |
 | `GET /api/v1/var/stress-window/proposals` and `/proposals/{id}` | the proposals, newest first; one proposal |
-| `POST /api/v1/var/stress-window/proposals/{id}/decision` | `{"decision": "approve" \| "reject", "note"}` by another person |
+| `POST /api/v1/approvals/stress-window/{id}/approve` | `{"decision": "approve" \| "reject", "note"}` by another person |
 
 A date without long-history rows answers `404` in words; a node without a row `404` naming the nodes that have one; a window shorter than
 20 days or longer than the history `400`; a row whose dates and values differ in length, or whose dates do not increase, `400`. A date
@@ -4944,7 +4950,7 @@ Every dataset historical VaR uses, what it is for, whether it is required, where
 data (`data/testdata/`), formatted, with long arrays shortened as `/* … N more … */`. The engine itself, its computations and its
 screens are in the sections above; the field-by-field rules of each kind are its **data contract**
 ([docs/contracts/packs/market-risk.md](../contracts/packs/market-risk.md)); how files are named, dated and loaded is
-[DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md).
+[DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo).
 
 The sample data is synthetic (a 40-factor model, labelled with source systems such as ENDUR, CALYPSO and MUREX); the demo lake moves its
 dates to the latest business days when it is built, so a file dated 2026-09-30 appears on a recent business date in the console.

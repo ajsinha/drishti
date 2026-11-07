@@ -25,7 +25,7 @@ fictitious, all deterministic:
 | Form | Where | What it is | Built by |
 |---|---|---|---|
 | **The test data** | `data/testdata/` (committed, about 138 MB of `.jsonl.gz`, 2,863 files, measured 2026-10-28) | sixty business days of every dataset the seven packs read: up to 5,000 trades a day per source system (ENDUR, CALYPSO, MUREX), counterparties, market data, agreements, netting sets, risk results; a first-day snapshot and each later day's changes | `tools/testdata/make_testdata.py` (`--check` says whether the files are current) |
-| **The demo lakes** | `data/delta/` (generated, never committed) | the test data as Delta tables, one per dataset, sixty daily snapshots each: what the packs' connectors read | `drishti.py lake demo` (one command, about 15 minutes) |
+| **The demo lakes** | `data/delta/demo/` (generated, never committed) | the test data as Delta tables, one per dataset, sixty daily snapshots each: what the packs' connectors read | `drishti.py lake demo` (one command, about 15 minutes) |
 | **The samples** | `config/packs/<pack>/samples/<kind>.jsonl` (committed) | a few hundred documents a pack, the same shape, that the `demo` source serves live and ticking, with no store at all | `tools/packgen/banking/make_data.py` and each pack's generator |
 
 The other stores (PostgreSQL, DuckDB, Iceberg, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files) are loaded with the samples (ten business
@@ -39,9 +39,9 @@ drishti-console/.venv/bin/python tools/drishti.py lake demo
 
 (the IDE run configuration **Build demo lakes**). Measured for sixty days: **943 s (about 15 minutes), 89 tables, about 3.4 GB**, sixty business days
 ending on today's business date (the test data's 2026-07-08 to 2026-09-30, moved; `--as-of data` keeps them). The trades go to one
-table per source system, `data/delta/trading/trade_endur`, `trade_calypso` and `trade_murex`, partitioned by business date and
+table per source system, `data/delta/demo/trading/trade_endur`, `trade_calypso` and `trade_murex`, partitioned by business date and
 `PRODUCT_TYPE`, each read by its own connector (`trade-endur`, `trade-calypso`, `trade-murex`) and served together as one kind,
-`trade`; every other dataset goes to `data/delta/<domain>/<kind>/`, partitioned by business date. Datasets of static reference data
+`trade`; every other dataset goes to `data/delta/demo/<domain>/<kind>/`, partitioned by business date. Datasets of static reference data
 (world-economy, news-and-markets) are built from those packs' samples, the same on every day. The real output, the options
 (`--lake`, `--only`, `--with-real`, `--server`, `--no-signal`) and what a running server is told are in
 [GETTING_STARTED.md, Step 5](../guides/GETTING_STARTED.md#step-5--build-the-demo-lakes); the datasets, one row each (key, connector,
@@ -63,7 +63,7 @@ and clears its stored BI columns and rollups; a running server also sees each re
 regenerated with `python3 tools/testdata/make_testdata.py` (deterministic, the same bytes on every Python version: `tools/testdata/test_testdata.py` and `test_deterministic.py` guard it).
 
 **The test data's files are a generator's format, not feed files.** Each sixty-day dataset is one file a business date named by the
-load rules (`trade_endur.2026-07-09.jsonl.gz`, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md) section 10), but only the first
+load rules (`trade_endur.2026-07-09.jsonl.gz`, [DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo) section 5.2), but only the first
 day's holds the whole table (the snapshot, `kind: snapshot` in `testdata.yaml`); each later day's holds only the documents new or
 changed that day. `lake demo` replays them, the snapshot with every change up to the day applied by key, and loads each day's whole
 table under its dated name. Loaded on its own (`lake build --from` one of them, or a folder of them), a later day's file is only that
@@ -88,7 +88,7 @@ BI answer the same whatever the storage. Every other dataset stays in Delta.
 | any of these with `--dry-run` | every step said, nothing changed |
 
 - **Where:** an Iceberg system's table is `<data>/iceberg/trading/trade_<system>`, beside the Delta lake (`data/iceberg` for the default
-  `data/delta`; `--lake /srv/data/delta` gives `/srv/data/iceberg`; `DRISHTI_ICEBERG_ROOT` moves it). Its Delta table is removed: each
+  `data/delta`; `--lake /srv/data/delta/demo` gives `/srv/data/iceberg`; `DRISHTI_ICEBERG_ROOT` moves it). Its Delta table is removed: each
   system is in one store.
 - **How it is written:** the system is built as Delta first (by `lake demo`, or by `lake build` of your files into a staging folder,
   `<data>/build/iceberg-stage`, removed after), so its documents and promoted columns are exactly those of a Delta build; then
@@ -108,9 +108,9 @@ BI answer the same whatever the storage. Every other dataset stays in Delta.
 
   ```text
     Stores (each source system's trades):
-      ENDUR    delta    …/data/delta/trading/trade_endur
+      ENDUR    delta    …/data/delta/demo/trading/trade_endur
       CALYPSO  iceberg  …/data/iceberg/trading/trade_calypso
-      MUREX    delta    …/data/delta/trading/trade_murex
+      MUREX    delta    …/data/delta/demo/trading/trade_murex
     Connector files:
       trade-endur: reads delta already (…/config/connectors/trade-endur.yaml)
       trade-calypso: now reads iceberg, was delta (…/config/connectors/trade-calypso.yaml; a running server restarts this connector by itself)
@@ -147,7 +147,7 @@ the same data. On a laptop keep books to about 10,000 trades; a million trades a
 The demo lakes above are the normal way. The older script writes the samples as ten days of history, with an optional book:
 
 ```bash
-tools/load-delta.sh                              # the samples as 10 business days: data/delta
+tools/load-delta.sh                              # the samples as 10 business days: data/delta/demo
 tools/load-delta.sh --trades 10000               # and 10,000 trades a day for 3 days
 tools/load-delta.sh /tmp/lake --trades 20000     # somewhere else
 ```
@@ -157,7 +157,7 @@ history as JSON Lines rows (`<data>/build/lake-rows/banking-history.tar` and `ba
 loads them (rewriting the whole lake the packs read, in the layout each declares; the restatement as a second commit); then
 `tools/samplegen/bulk_trades.py` writes the book as one JSONL file a day (`<data>/build/bulk/murex/trade_murex.<date>.jsonl.gz`, the load rules' name) and loads each
 with `lake build`, replacing **one source system's** trade table (`trade_murex`, or `--system CALYPSO`) and leaving every other table as
-it is (`--no-lake` stops after the JSONL). Neither step rewrites the packs' samples, the Sutra tests or the feed. The server reads `data/delta` (or `DRISHTI_DELTA_ROOT`) and
+it is (`--no-lake` stops after the JSONL). Neither step rewrites the packs' samples, the Sutra tests or the feed. The server reads the demo lake, `data/delta/demo` (or `DRISHTI_DELTA_ROOT`), and
 picks a new load up within a minute; no restart is needed. The layout: [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md).
 
 For your own export (a large JSON array or JSON Lines of real trades), `drishti.py lake build` streams it into a Delta table with flat
@@ -280,7 +280,7 @@ drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder
 
 `--mode overwrite-dates` (default) replaces only the business dates present, so a re-run is idempotent; `append`; `replace`. Without
 `--pack`, give `--domain` and `--key` per kind. Each file goes under the date in its name (`trade.2026-11-03.jsonl`), or `--as-of`, else
-the business today ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)); `--date FIELD` only names a field whose differing rows are
+the business today ([DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)); `--date FIELD` only names a field whose differing rows are
 counted. See
 [Generating a pack from JSON Lines](../guides/PACK_DEVELOPER_GUIDE.md#generating-a-pack-from-json-lines) and
 [CLI_GUIDE.md](../guides/CLI_GUIDE.md).
@@ -393,7 +393,7 @@ Every loader except Delta Lake's reads the same JSON lines, one per entity per b
 ```
 
 `columns` carries the fields the pack promotes (the trading pack's `layout.trade.columns`), taken from the same document. Two
-generators write it, by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): rows of several kinds or days go
+generators write it, by the load rules ([DATA_LAKE_GUIDE.md](../guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)): rows of several kinds or days go
 in a tar of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders, each row in its own date's folder, and the loaders file each row under its
 folder's date (never the row's `date`, which stays in the row as data):
 

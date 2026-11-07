@@ -753,7 +753,6 @@
         slider.startValue = inside.startValue = a; slider.endValue = inside.endValue = b;
       }
       option.dataZoom = [inside, slider];
-      option.toolbox = { show: false, feature: { dataZoom: { yAxisIndex: 'none', xAxisIndex: 0, filterMode: 'none' } } };
       option.grid.bottom = (option.grid.bottom || 10) + 30;
       return true;
     }
@@ -765,7 +764,23 @@
         return off.renderToSVGString();
       } finally { off.dispose(); }
     }
-    return { "valueText": valueText, "tooltipElement": tooltipElement, "dataTable": dataTable, "legendElement": legendElement, "markSelection": markSelection, "addZoom": addZoom, "svgOf": svgOf };
+    function dragBrush(engine, active, colour) {
+      const zr = engine.getZr();
+      let from = null;
+      const band = (x0, x1) => engine.setOption({ graphic: [{ id: 'dc-brush', type: 'rect', silent: true, z: 100, shape: { x: Math.min(x0, x1), y: 0, width: Math.abs(x1 - x0), height: zr.getHeight() }, style: { fill: colour } }] });
+      zr.on('mousedown', (e) => { from = active() && engine.containPixel('grid', [e.offsetX, e.offsetY]) ? e.offsetX : null; });
+      zr.on('mousemove', (e) => { if (from !== null && Math.abs(e.offsetX - from) > 4) { band(from, e.offsetX); } });
+      zr.on('mouseup', (e) => {
+        if (from === null) { return; }
+        const x0 = from, x1 = e.offsetX;
+        from = null;
+        engine.setOption({ graphic: [{ id: 'dc-brush', $action: 'remove' }] });
+        if (Math.abs(x1 - x0) <= 6) { return; }
+        const a = engine.convertFromPixel({ xAxisIndex: 0 }, Math.min(x0, x1)), b = engine.convertFromPixel({ xAxisIndex: 0 }, Math.max(x0, x1));
+        engine.dispatchAction({ type: 'dataZoom', dataZoomIndex: 0, startValue: a, endValue: b });
+      });
+    }
+    return { "valueText": valueText, "tooltipElement": tooltipElement, "dataTable": dataTable, "legendElement": legendElement, "markSelection": markSelection, "addZoom": addZoom, "svgOf": svgOf, "dragBrush": dragBrush };
   })();
   /* ---- src/drishti_chart-geo.js ---- */
   __m["src/drishti_chart-geo.js"] = (function () {
@@ -777,7 +792,7 @@
       const y = t * (A1 + A2 * t2 + t6 * (A3 + A4 * t2));
       return [x, -y];
     }
-    function wrap(d) { let x = d; while (x > 180) { x -= 360; } while (x <= -180) { x += 360; } return x; }
+    function wrap(d) { let x = d; while (x > 180) { x -= 360; } while (x < -180) { x += 360; } return x; }
     function albers(o) {
       const s1 = Math.sin(o.p1 * RAD), s2 = Math.sin(o.p2 * RAD), n = (s1 + s2) / 2, C = Math.cos(o.p1 * RAD) ** 2 + 2 * n * s1;
       const r0 = Math.sqrt(C - 2 * n * Math.sin(o.p0 * RAD)) / n;
@@ -792,6 +807,18 @@
       if (g.type === 'Polygon') { return { type: 'Polygon', coordinates: g.coordinates.map(ring) }; }
       if (g.type === 'MultiPolygon') { return { type: 'MultiPolygon', coordinates: g.coordinates.map((poly) => poly.map(ring)) }; }
       if (g.type === 'Point') { return { type: 'Point', coordinates: fn(g.coordinates[0], g.coordinates[1]) }; }
+      return g;
+    }
+    function holdAntimeridian(g) {
+      const ring = (r) => {
+        let lo = Infinity, hi = -Infinity, east = 0;
+        r.forEach((q) => { lo = Math.min(lo, q[0]); hi = Math.max(hi, q[0]); if (q[0] > 0) { east++; } });
+        if (hi - lo <= 180) { return r; }
+        const side = east * 2 >= r.length ? 180 : -180;
+        return r.map((q) => ((side > 0 && q[0] < 0) || (side < 0 && q[0] > 0) ? [side, q[1]] : q));
+      };
+      if (g.type === 'Polygon') { return { type: 'Polygon', coordinates: g.coordinates.map(ring) }; }
+      if (g.type === 'MultiPolygon') { return { type: 'MultiPolygon', coordinates: g.coordinates.map((poly) => poly.map(ring)) }; }
       return g;
     }
     function outerRings(g) { return g.type === 'Polygon' ? [g.coordinates[0]] : g.type === 'MultiPolygon' ? g.coordinates.map((p) => p[0]) : []; }
@@ -857,7 +884,13 @@
         });
         fit = bounds([[fit[0], fit[1]], [fit[2], fit[3]]].concat(frames.map((fr) => [fr.box[2], fr.box[3]])));
       }
-      return { level: iso3, iso3: iso3, projection: proj.name, project: proj.project, shapes: shapes, points: points, by: by, list: list, fit: fit, frames: frames };
+      return { level: iso3, iso3: iso3, projection: proj.name, project: proj.project, shapes: shapes, points: points, by: by, list: list, fit: fit, frames: frames, all: drawnBounds(shapes, frames) };
+    }
+    function drawnBounds(shapes, frames) { return bounds([].concat.apply([], shapes.map((x) => allPoints(x.geometry))).concat([].concat.apply([], (frames || []).map((f) => [[f.box[0], f.box[1]], [f.box[2], f.box[3]]])))); }
+    function fitView(geo, width, height) {
+      const a = geo.all || geo.fit, f = geo.fit, w = width || 1, ht = height || 1;
+      const scale = (b) => Math.min(w / ((b[2] - b[0]) || 1e-9), ht / ((b[3] - b[1]) || 1e-9));
+      return { center: [(f[0] + f[2]) / 2, (f[1] + f[3]) / 2], zoom: Math.max(1, scale(f) / scale(a)) };
     }
     function prepareWorld(geo, pts) {
       const shapes = [], points = [], by = { code: {}, name: {}, short: {} }, list = [];
@@ -866,7 +899,7 @@
         if (p.iso3 === 'ATA') { return; }
         list.push(item);
         by.code[p.iso3.toUpperCase()] = item; if (p.iso2) { by.short[p.iso2.toUpperCase()] = item; } by.name[p.name.toLowerCase()] = item;
-        shapes.push({ type: 'Feature', properties: { name: p.iso3, fullName: p.name }, geometry: projectGeometry(f.geometry, equalEarth) });
+        shapes.push({ type: 'Feature', properties: { name: p.iso3, fullName: p.name }, geometry: projectGeometry(holdAntimeridian(f.geometry), equalEarth) });
       });
       (pts || []).forEach((p) => {
         if (by.code[p.iso3]) { return; }
@@ -874,8 +907,8 @@
         list.push(item); points.push(item);
         by.code[p.iso3] = item; if (p.iso2) { by.short[p.iso2.toUpperCase()] = item; } by.name[p.name.toLowerCase()] = item;
       });
-      const fit = bounds([equalEarth(-180, 84), equalEarth(180, -58), equalEarth(0, 84), equalEarth(0, -58)]);
-      return { level: 'world', iso3: null, projection: 'equal-earth', project: equalEarth, shapes: shapes, points: points, by: by, list: list, fit: fit, frames: [] };
+      const fit = bounds([equalEarth(-180, 0), equalEarth(180, 0), equalEarth(0, 84), equalEarth(0, -58)]);
+      return { level: 'world', iso3: null, projection: 'equal-earth', project: equalEarth, shapes: shapes, points: points, by: by, list: list, fit: fit, frames: [], all: drawnBounds(shapes, []) };
     }
     function findPlace(geo, code) {
       if (code === null || code === undefined || !geo) { return null; }
@@ -909,14 +942,14 @@
         hasRegions(iso3) { return !!cache.regions[String(iso3).toUpperCase()]; }
       };
     }
-    return { "equalEarth": equalEarth, "albers": albers, "plateCarree": plateCarree, "projectGeometry": projectGeometry, "bounds": bounds, "coreExtent": coreExtent, "countryProjection": countryProjection, "US_INSETS": US_INSETS, "prepareRegions": prepareRegions, "prepareWorld": prepareWorld, "findPlace": findPlace, "createGeoLoader": createGeoLoader };
+    return { "equalEarth": equalEarth, "albers": albers, "plateCarree": plateCarree, "projectGeometry": projectGeometry, "holdAntimeridian": holdAntimeridian, "bounds": bounds, "coreExtent": coreExtent, "countryProjection": countryProjection, "US_INSETS": US_INSETS, "prepareRegions": prepareRegions, "fitView": fitView, "prepareWorld": prepareWorld, "findPlace": findPlace, "createGeoLoader": createGeoLoader };
   })();
   /* ---- src/drishti_chart-map.js ---- */
   __m["src/drishti_chart-map.js"] = (function () {
     var registerKind = __m["src/drishti_chart-spec.js"].registerKind;
     var fieldOf = __m["src/drishti_chart-data.js"].fieldOf, num = __m["src/drishti_chart-data.js"].num, quantileBreaks = __m["src/drishti_chart-data.js"].quantileBreaks, classOf = __m["src/drishti_chart-data.js"].classOf;
     var rampColour = __m["src/drishti_chart-theme.js"].rampColour, alpha = __m["src/drishti_chart-theme.js"].alpha, formatterFor = __m["src/drishti_chart-theme.js"].formatterFor, textStyle = __m["src/drishti_chart-theme.js"].textStyle, blend = __m["src/drishti_chart-theme.js"].blend;
-    var findPlace = __m["src/drishti_chart-geo.js"].findPlace, bounds = __m["src/drishti_chart-geo.js"].bounds;
+    var findPlace = __m["src/drishti_chart-geo.js"].findPlace, bounds = __m["src/drishti_chart-geo.js"].bounds, fitView = __m["src/drishti_chart-geo.js"].fitView;
     var rowId = __m["src/drishti_chart-kinds.js"].rowId;
     function mapMetrics(spec) {
       const list = (spec.metrics || []).map((m) => (typeof m === 'string' ? { field: m, title: m } : Object.assign({}, m)));
@@ -1003,7 +1036,7 @@
         animation: false, textStyle: textStyle(th),
         tooltip: { trigger: 'item', confine: true },
         geo: { map: env.mapName, projection: { project: (p) => p, unproject: (p) => p }, roam: true, scaleLimit: { min: 0.8, max: 24 },
-          boundingCoords: [[geo.fit[0], geo.fit[1]], [geo.fit[2], geo.fit[3]]], layoutCenter: ['50%', '50%'], layoutSize: '96%',
+          aspectScale: 1, left: 8, right: 8, top: 8, bottom: 8, center: fitView(geo, env.width, env.height).center, zoom: fitView(geo, env.width, env.height).zoom,
           itemStyle: { areaColor: env.hatch || th.nodata, borderColor: blend(th.border, th.surface, 0.2), borderWidth: 0.5 },
           emphasis: { itemStyle: { areaColor: alpha(th.tokens.accent, 0.55) }, label: { show: false } }, select: { disabled: true }, label: { show: false }, regions: regions },
         series: series
@@ -1022,7 +1055,7 @@
   /* ---- src/drishti_map-view.js ---- */
   __m["src/drishti_map-view.js"] = (function () {
     var h = __lib("drishti-core").h, ToastTray = __lib("drishti-core").ToastTray;
-    var createGeoLoader = __m["src/drishti_chart-geo.js"].createGeoLoader;
+    var createGeoLoader = __m["src/drishti_chart-geo.js"].createGeoLoader, fitView = __m["src/drishti_chart-geo.js"].fitView;
     var buildMap = __m["src/drishti_chart-map.js"].buildMap;
     var rowsOf = __m["src/drishti_chart-data.js"].rowsOf;
     var tooltipElement = __m["src/drishti_chart-parts.js"].tooltipElement;
@@ -1143,10 +1176,13 @@
         if (!this.geo || !c.engine) { return; }
         if (this.geo.level === 'world') { this.worldGeo = this.geo; }
         const env = c.envNow = c.env(), th = env.theme, rows = this.rows();
+        c.side.hidden = this.mode !== 'ranking';
+        c.engine.resize();                                                   // the side column takes its width before the map is fitted
+        const size = { width: Math.max(1, c.engine.getWidth() - 16), height: Math.max(1, c.engine.getHeight() - 16) };
         const selCodes = new Set(this.sel ? [this.sel] : []);
-        const built = this.built = buildMap(c.spec, rows, this.geo, { theme: th, mapName: this.geo.registered, metric: this.metric(), highlight: this.highlight, selected: [], hatch: this.hatch(th) });
+        const built = this.built = buildMap(c.spec, rows, this.geo, { theme: th, mapName: this.geo.registered, metric: this.metric(), highlight: this.highlight, selected: [], hatch: this.hatch(th), width: size.width, height: size.height });
         if (c.selected.size) { built.places.forEach((p) => { if (p.ids.some((x) => c.selected.has(x))) { selCodes.add(p.code); } }); }
-        const again = buildMap(c.spec, rows, this.geo, { theme: th, mapName: this.geo.registered, metric: this.metric(), highlight: this.highlight, selected: Array.from(selCodes), hatch: this.hatch(th) });
+        const again = buildMap(c.spec, rows, this.geo, { theme: th, mapName: this.geo.registered, metric: this.metric(), highlight: this.highlight, selected: Array.from(selCodes), hatch: this.hatch(th), width: size.width, height: size.height });
         Object.assign(built, { option: again.option });
         const fmt = built.fmt, tot = built.places.reduce((s, p) => s + (p.v || 0), 0), byCode = new Map(built.places.map((p) => [p.code, p]));
         built.option.tooltip = Object.assign(built.option.tooltip, c.tooltipStyle(env), {
@@ -1269,7 +1305,7 @@
       }
       zoom(what) {
         const g = (this.c.engine.getOption().geo || [])[0] || {}, z = g.zoom || 1;
-        this.c.engine.setOption({ geo: what === 'reset' ? { zoom: 1, center: null } : { zoom: Math.max(0.8, Math.min(24, what === 'in' ? z * 1.4 : z / 1.4)) } });
+        this.c.engine.setOption({ geo: what === 'reset' ? fitView(this.geo, this.c.engine.getWidth() - 16, this.c.engine.getHeight() - 16) : { zoom: Math.max(0.8, Math.min(24, what === 'in' ? z * 1.4 : z / 1.4)) } });
       }
       setMode(mode) {
         if (MAP_MODES.indexOf(mode) < 0) { return; }
@@ -1379,7 +1415,7 @@
     var rowsOf = __m["src/drishti_chart-data.js"].rowsOf;
     var chartTheme = __m["src/drishti_chart-theme.js"].chartTheme, formatterFor = __m["src/drishti_chart-theme.js"].formatterFor;
     var rowId = __m["src/drishti_chart-kinds.js"].rowId;
-    var tooltipElement = __m["src/drishti_chart-parts.js"].tooltipElement, dataTable = __m["src/drishti_chart-parts.js"].dataTable, legendElement = __m["src/drishti_chart-parts.js"].legendElement, markSelection = __m["src/drishti_chart-parts.js"].markSelection, addZoom = __m["src/drishti_chart-parts.js"].addZoom, svgOf = __m["src/drishti_chart-parts.js"].svgOf, valueText = __m["src/drishti_chart-parts.js"].valueText;
+    var tooltipElement = __m["src/drishti_chart-parts.js"].tooltipElement, dataTable = __m["src/drishti_chart-parts.js"].dataTable, legendElement = __m["src/drishti_chart-parts.js"].legendElement, markSelection = __m["src/drishti_chart-parts.js"].markSelection, addZoom = __m["src/drishti_chart-parts.js"].addZoom, dragBrush = __m["src/drishti_chart-parts.js"].dragBrush, svgOf = __m["src/drishti_chart-parts.js"].svgOf, valueText = __m["src/drishti_chart-parts.js"].valueText;
     var MapView = __m["src/drishti_map-view.js"].MapView;
     var Studio = __m["src/drishti_chart-studio.js"].Studio;
     const CHART_EVENTS = Object.freeze(['rendered', 'markClicked', 'selectionChanged', 'legendToggled', 'zoomChanged', 'explainOpened', 'explainShown', 'exported',
@@ -1449,6 +1485,7 @@
         this.engine.on('click', (p) => this.onMark(p));
         this.engine.getZr().on('click', (e) => { if (!e.target && this.selected.size && !this.map) { this.setSelection([]); } });
         this.engine.on('datazoom', () => { const z = this.engine.getOption().dataZoom; const d = z && z[0]; this.zoomReset.hidden = !d || (d.start <= 0 && d.end >= 100); this.emit('zoomChanged', d ? { start: d.start, end: d.end } : {}); });
+        dragBrush(this.engine, () => this.zooms && !this.map, 'rgba(127, 127, 127, 0.18)');
         this.ro = new this.win.ResizeObserver(() => { if (this.engine) { this.engine.resize(); } });
         this.ro.observe(this.canvas);
         if (this.spec.kind === 'map') { this.map = this.map ? this.map.remount() : new MapView(this); } else { this.map = null; }
@@ -1494,7 +1531,7 @@
         markSelection(option, this.selected, env.theme);
         if (option.legend && this.hidden.size) { option.legend.selected = {}; this.hidden.forEach((n) => { option.legend.selected[n] = false; }); }
         this.engine.setOption(option, true);
-        if (zooms) { this.engine.dispatchAction({ type: 'takeGlobalCursor', key: 'dataZoomSelect', dataZoomSelectActive: true }); }
+        this.zooms = !!zooms;
         this.chrome(built, Date.now() - t0);
         this.emit('rendered', { kind: s.kind, ms: Date.now() - t0 });
       }
@@ -2469,7 +2506,7 @@
     registerMapKind();
     registerKind('layer', { label: 'layers', cartesian: true, build: (spec, rows, env) => buildLayers(spec, rows, env, kindOf, (l) => rowsOf(l.data)) });
     function install(root) { if (root && root.document && root.customElements) { defineChartElement(root.customElements, root); } }
-    return { "install": install, "registerKind": __m["src/drishti_chart-spec.js"].registerKind, "kindOf": __m["src/drishti_chart-spec.js"].kindOf, "kindList": __m["src/drishti_chart-spec.js"].kindList, "KIND_ALIASES": __m["src/drishti_chart-spec.js"].KIND_ALIASES, "checkSpec": __m["src/drishti_chart-spec.js"].checkSpec, "normalizeSpec": __m["src/drishti_chart-spec.js"].normalizeSpec, "specText": __m["src/drishti_chart-spec.js"].specText, "rowsOf": __m["src/drishti_chart-data.js"].rowsOf, "fieldOf": __m["src/drishti_chart-data.js"].fieldOf, "num": __m["src/drishti_chart-data.js"].num, "members": __m["src/drishti_chart-data.js"].members, "sumBy": __m["src/drishti_chart-data.js"].sumBy, "bin": __m["src/drishti_chart-data.js"].bin, "quantile": __m["src/drishti_chart-data.js"].quantile, "boxStats": __m["src/drishti_chart-data.js"].boxStats, "quantileBreaks": __m["src/drishti_chart-data.js"].quantileBreaks, "classOf": __m["src/drishti_chart-data.js"].classOf, "compileCondition": __m["src/drishti_chart-data.js"].compileCondition, "conditionFields": __m["src/drishti_chart-data.js"].conditionFields, "CHART_DENSITIES": __m["src/drishti_chart-theme.js"].CHART_DENSITIES, "blend": __m["src/drishti_chart-theme.js"].blend, "alpha": __m["src/drishti_chart-theme.js"].alpha, "chartTheme": __m["src/drishti_chart-theme.js"].chartTheme, "toneColour": __m["src/drishti_chart-theme.js"].toneColour, "rampColour": __m["src/drishti_chart-theme.js"].rampColour, "formatterFor": __m["src/drishti_chart-theme.js"].formatterFor, "textStyle": __m["src/drishti_chart-theme.js"].textStyle, "axisOf": __m["src/drishti_chart-theme.js"].axisOf, "rowId": __m["src/drishti_chart-kinds.js"].rowId, "seriesDefs": __m["src/drishti_chart-kinds.js"].seriesDefs, "annotationMarks": __m["src/drishti_chart-kinds.js"].annotationMarks, "buildSeriesChart": __m["src/drishti_chart-kinds.js"].buildSeriesChart, "buildScatter": __m["src/drishti_chart-kinds.js"].buildScatter, "buildHistogram": __m["src/drishti_chart-kinds.js"].buildHistogram, "buildWaterfall": __m["src/drishti_chart-kinds.js"].buildWaterfall, "buildBoxplot": __m["src/drishti_chart-kinds.js"].buildBoxplot, "buildHeatmap": __m["src/drishti_chart-kinds.js"].buildHeatmap, "buildCandlestick": __m["src/drishti_chart-kinds.js"].buildCandlestick, "buildLayers": __m["src/drishti_chart-kinds.js"].buildLayers, "registerAxisKinds": __m["src/drishti_chart-kinds.js"].registerAxisKinds, "buildPie": __m["src/drishti_chart-kinds2.js"].buildPie, "buildGauge": __m["src/drishti_chart-kinds2.js"].buildGauge, "buildTreemap": __m["src/drishti_chart-kinds2.js"].buildTreemap, "buildSankey": __m["src/drishti_chart-kinds2.js"].buildSankey, "registerOtherKinds": __m["src/drishti_chart-kinds2.js"].registerOtherKinds, "equalEarth": __m["src/drishti_chart-geo.js"].equalEarth, "albers": __m["src/drishti_chart-geo.js"].albers, "plateCarree": __m["src/drishti_chart-geo.js"].plateCarree, "projectGeometry": __m["src/drishti_chart-geo.js"].projectGeometry, "bounds": __m["src/drishti_chart-geo.js"].bounds, "coreExtent": __m["src/drishti_chart-geo.js"].coreExtent, "countryProjection": __m["src/drishti_chart-geo.js"].countryProjection, "US_INSETS": __m["src/drishti_chart-geo.js"].US_INSETS, "prepareRegions": __m["src/drishti_chart-geo.js"].prepareRegions, "prepareWorld": __m["src/drishti_chart-geo.js"].prepareWorld, "findPlace": __m["src/drishti_chart-geo.js"].findPlace, "createGeoLoader": __m["src/drishti_chart-geo.js"].createGeoLoader, "mapMetrics": __m["src/drishti_chart-map.js"].mapMetrics, "placeValues": __m["src/drishti_chart-map.js"].placeValues, "mapScale": __m["src/drishti_chart-map.js"].mapScale, "ranking": __m["src/drishti_chart-map.js"].ranking, "buildMap": __m["src/drishti_chart-map.js"].buildMap, "registerMapKind": __m["src/drishti_chart-map.js"].registerMapKind, "colourTone": __m["src/drishti_chart-vega.js"].colourTone, "d3Format": __m["src/drishti_chart-vega.js"].d3Format, "fromVegaLite": __m["src/drishti_chart-vega.js"].fromVegaLite, "valueText": __m["src/drishti_chart-parts.js"].valueText, "tooltipElement": __m["src/drishti_chart-parts.js"].tooltipElement, "dataTable": __m["src/drishti_chart-parts.js"].dataTable, "legendElement": __m["src/drishti_chart-parts.js"].legendElement, "markSelection": __m["src/drishti_chart-parts.js"].markSelection, "addZoom": __m["src/drishti_chart-parts.js"].addZoom, "svgOf": __m["src/drishti_chart-parts.js"].svgOf, "MAP_MODES": __m["src/drishti_map-view.js"].MAP_MODES, "geoLoader": __m["src/drishti_map-view.js"].geoLoader, "MapView": __m["src/drishti_map-view.js"].MapView, "Studio": __m["src/drishti_chart-studio.js"].Studio, "CHART_EVENTS": __m["src/drishti_chart-view.js"].CHART_EVENTS, "CHART_MODES": __m["src/drishti_chart-view.js"].CHART_MODES, "SELECTION_EVENT": __m["src/drishti_chart-view.js"].SELECTION_EVENT, "Chart": __m["src/drishti_chart-view.js"].Chart, "linkGrid": __m["src/drishti_chart-link.js"].linkGrid, "publishSelection": __m["src/drishti_chart-link.js"].publishSelection, "PANEL_KINDS": __m["src/drishti_chart-panels.js"].PANEL_KINDS, "escapeTip": __m["src/drishti_chart-panels.js"].escapeTip, "panelCompact": __m["src/drishti_chart-panels.js"].panelCompact, "panelLineCompact": __m["src/drishti_chart-panels.js"].panelLineCompact, "panelTokens": __m["src/drishti_chart-panels.js"].panelTokens, "labelFit": __m["src/drishti_chart-panels.js"].labelFit, "panelOption": __m["src/drishti_chart-panels.js"].panelOption, "drawMap": __m["src/drishti_chart-panel-draw.js"].drawMap, "PanelCharts": __m["src/drishti_chart-panel-draw.js"].PanelCharts, "CHART_ELEMENT": __m["src/drishti_chart-element.js"].CHART_ELEMENT, "defineChartElement": __m["src/drishti_chart-element.js"].defineChartElement };
+    return { "install": install, "registerKind": __m["src/drishti_chart-spec.js"].registerKind, "kindOf": __m["src/drishti_chart-spec.js"].kindOf, "kindList": __m["src/drishti_chart-spec.js"].kindList, "KIND_ALIASES": __m["src/drishti_chart-spec.js"].KIND_ALIASES, "checkSpec": __m["src/drishti_chart-spec.js"].checkSpec, "normalizeSpec": __m["src/drishti_chart-spec.js"].normalizeSpec, "specText": __m["src/drishti_chart-spec.js"].specText, "rowsOf": __m["src/drishti_chart-data.js"].rowsOf, "fieldOf": __m["src/drishti_chart-data.js"].fieldOf, "num": __m["src/drishti_chart-data.js"].num, "members": __m["src/drishti_chart-data.js"].members, "sumBy": __m["src/drishti_chart-data.js"].sumBy, "bin": __m["src/drishti_chart-data.js"].bin, "quantile": __m["src/drishti_chart-data.js"].quantile, "boxStats": __m["src/drishti_chart-data.js"].boxStats, "quantileBreaks": __m["src/drishti_chart-data.js"].quantileBreaks, "classOf": __m["src/drishti_chart-data.js"].classOf, "compileCondition": __m["src/drishti_chart-data.js"].compileCondition, "conditionFields": __m["src/drishti_chart-data.js"].conditionFields, "CHART_DENSITIES": __m["src/drishti_chart-theme.js"].CHART_DENSITIES, "blend": __m["src/drishti_chart-theme.js"].blend, "alpha": __m["src/drishti_chart-theme.js"].alpha, "chartTheme": __m["src/drishti_chart-theme.js"].chartTheme, "toneColour": __m["src/drishti_chart-theme.js"].toneColour, "rampColour": __m["src/drishti_chart-theme.js"].rampColour, "formatterFor": __m["src/drishti_chart-theme.js"].formatterFor, "textStyle": __m["src/drishti_chart-theme.js"].textStyle, "axisOf": __m["src/drishti_chart-theme.js"].axisOf, "rowId": __m["src/drishti_chart-kinds.js"].rowId, "seriesDefs": __m["src/drishti_chart-kinds.js"].seriesDefs, "annotationMarks": __m["src/drishti_chart-kinds.js"].annotationMarks, "buildSeriesChart": __m["src/drishti_chart-kinds.js"].buildSeriesChart, "buildScatter": __m["src/drishti_chart-kinds.js"].buildScatter, "buildHistogram": __m["src/drishti_chart-kinds.js"].buildHistogram, "buildWaterfall": __m["src/drishti_chart-kinds.js"].buildWaterfall, "buildBoxplot": __m["src/drishti_chart-kinds.js"].buildBoxplot, "buildHeatmap": __m["src/drishti_chart-kinds.js"].buildHeatmap, "buildCandlestick": __m["src/drishti_chart-kinds.js"].buildCandlestick, "buildLayers": __m["src/drishti_chart-kinds.js"].buildLayers, "registerAxisKinds": __m["src/drishti_chart-kinds.js"].registerAxisKinds, "buildPie": __m["src/drishti_chart-kinds2.js"].buildPie, "buildGauge": __m["src/drishti_chart-kinds2.js"].buildGauge, "buildTreemap": __m["src/drishti_chart-kinds2.js"].buildTreemap, "buildSankey": __m["src/drishti_chart-kinds2.js"].buildSankey, "registerOtherKinds": __m["src/drishti_chart-kinds2.js"].registerOtherKinds, "equalEarth": __m["src/drishti_chart-geo.js"].equalEarth, "albers": __m["src/drishti_chart-geo.js"].albers, "plateCarree": __m["src/drishti_chart-geo.js"].plateCarree, "projectGeometry": __m["src/drishti_chart-geo.js"].projectGeometry, "bounds": __m["src/drishti_chart-geo.js"].bounds, "coreExtent": __m["src/drishti_chart-geo.js"].coreExtent, "countryProjection": __m["src/drishti_chart-geo.js"].countryProjection, "US_INSETS": __m["src/drishti_chart-geo.js"].US_INSETS, "prepareRegions": __m["src/drishti_chart-geo.js"].prepareRegions, "prepareWorld": __m["src/drishti_chart-geo.js"].prepareWorld, "findPlace": __m["src/drishti_chart-geo.js"].findPlace, "createGeoLoader": __m["src/drishti_chart-geo.js"].createGeoLoader, "holdAntimeridian": __m["src/drishti_chart-geo.js"].holdAntimeridian, "fitView": __m["src/drishti_chart-geo.js"].fitView, "mapMetrics": __m["src/drishti_chart-map.js"].mapMetrics, "placeValues": __m["src/drishti_chart-map.js"].placeValues, "mapScale": __m["src/drishti_chart-map.js"].mapScale, "ranking": __m["src/drishti_chart-map.js"].ranking, "buildMap": __m["src/drishti_chart-map.js"].buildMap, "registerMapKind": __m["src/drishti_chart-map.js"].registerMapKind, "colourTone": __m["src/drishti_chart-vega.js"].colourTone, "d3Format": __m["src/drishti_chart-vega.js"].d3Format, "fromVegaLite": __m["src/drishti_chart-vega.js"].fromVegaLite, "valueText": __m["src/drishti_chart-parts.js"].valueText, "tooltipElement": __m["src/drishti_chart-parts.js"].tooltipElement, "dataTable": __m["src/drishti_chart-parts.js"].dataTable, "legendElement": __m["src/drishti_chart-parts.js"].legendElement, "markSelection": __m["src/drishti_chart-parts.js"].markSelection, "addZoom": __m["src/drishti_chart-parts.js"].addZoom, "dragBrush": __m["src/drishti_chart-parts.js"].dragBrush, "svgOf": __m["src/drishti_chart-parts.js"].svgOf, "MAP_MODES": __m["src/drishti_map-view.js"].MAP_MODES, "geoLoader": __m["src/drishti_map-view.js"].geoLoader, "MapView": __m["src/drishti_map-view.js"].MapView, "Studio": __m["src/drishti_chart-studio.js"].Studio, "CHART_EVENTS": __m["src/drishti_chart-view.js"].CHART_EVENTS, "CHART_MODES": __m["src/drishti_chart-view.js"].CHART_MODES, "SELECTION_EVENT": __m["src/drishti_chart-view.js"].SELECTION_EVENT, "Chart": __m["src/drishti_chart-view.js"].Chart, "linkGrid": __m["src/drishti_chart-link.js"].linkGrid, "publishSelection": __m["src/drishti_chart-link.js"].publishSelection, "PANEL_KINDS": __m["src/drishti_chart-panels.js"].PANEL_KINDS, "escapeTip": __m["src/drishti_chart-panels.js"].escapeTip, "panelCompact": __m["src/drishti_chart-panels.js"].panelCompact, "panelLineCompact": __m["src/drishti_chart-panels.js"].panelLineCompact, "panelTokens": __m["src/drishti_chart-panels.js"].panelTokens, "labelFit": __m["src/drishti_chart-panels.js"].labelFit, "panelOption": __m["src/drishti_chart-panels.js"].panelOption, "drawMap": __m["src/drishti_chart-panel-draw.js"].drawMap, "PanelCharts": __m["src/drishti_chart-panel-draw.js"].PanelCharts, "CHART_ELEMENT": __m["src/drishti_chart-element.js"].CHART_ELEMENT, "defineChartElement": __m["src/drishti_chart-element.js"].defineChartElement };
   })();
   return Object.freeze(Object.assign({ library: "drishti-chart", version: "0.1.0" }, __m["src/drishti_index.js"]));
 });

@@ -114,17 +114,10 @@
 .pf-form label { display: flex; flex-direction: column; gap: 2px; font-size: 12px; }
 .pf-form .pf-wide { flex-basis: 100%; }
 .pf-code { font-family: monospace; width: 100%; min-height: 4em; }
-.pf-words { font-size: 13px; margin: 8px 0; }
-.pf-waterfall { display: grid; grid-template-columns: minmax(8em, 16em) 6em 1fr 9em; gap: 2px 8px; font-size: 12px; align-items: center; }
-.pf-track { position: relative; height: 12px; }
-.pf-bar { position: absolute; top: 0; height: 12px; border-radius: 2px; background: var(--d-fill); }
-.pf-bar.neg { background: var(--d-link); }
-.pf-num { text-align: right; font-variant-numeric: tabular-nums; }
 .pf-ok { font-weight: 600; }
 .pf-no { font-weight: 600; text-decoration: underline; }
 .pf-result table, .pf-list table { border-collapse: collapse; font-size: 12px; width: 100%; }
 .pf-result td, .pf-result th, .pf-list td, .pf-list th { border-bottom: 1px solid var(--d-border); padding: 2px 6px; text-align: left; }
-@media (max-width: 640px) { .pf-waterfall { grid-template-columns: 1fr 5em; } .pf-waterfall .pf-track, .pf-waterfall .pf-cum { display: none; } }
 /* the screen's switches, live pivots and cell comments (PIVOT_GUIDE.md): native controls, keyboard-reachable, larger to tap on a phone */
 .pv-switches { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .pv-seg { display: inline-flex; border: 1px solid var(--d-border); border-radius: 13px; overflow: hidden; }
