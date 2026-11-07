@@ -223,14 +223,14 @@ def test_every_menu_item_runs(browsers):
         assert await pg.locator(".dg-vf").count() == 1
         # the context menu: every item
         for action in ("explain", "copy", "copy-headers", "export-csv", "export-xlsx", "chart", "drill", "pin-totals", "group"):
-            await pg.click(cell(2, 2), button="right")
+            await pg.locator(".dg-row:not(.dg-k-header) .dg-cell.dg-num").nth(1).click(button="right")   # whatever the filters left
             await pg.wait_for_selector(".dg-menu")
             await click_item(pg, action)
             if action == "drill":
                 await pg.wait_for_selector("dialog.dg-dialog[open] .dg-row")
                 assert "rows" in await pg.text_content(".dg-dialog-head")
                 await pg.click(".dg-dialog-close")
-                assert await pg.locator("dialog.dg-dialog").count() == 0
+                await pg.wait_for_selector("dialog.dg-dialog", state="detached")             # closed and taken away
         h = await pg.evaluate("() => ({d: window.__harness.downloads.map((x) => x.name), c: window.__harness.charts.length})")
         assert h["d"] == ["grid.csv", "grid.xlsx"] and h["c"] == 1
         assert await ev(pg, "copied") == 2 and await ev(pg, "drillThrough") == 1 and await ev(pg, "chartRequested") == 1
@@ -333,6 +333,17 @@ def test_ranges_the_status_bar_and_the_non_additive_note(browsers):
         assert "not the sum of its parts" in await pg.text_content(".dg-tip")
         await pg.hover(".dg-toolbar")
         assert await ev(pg, "rangeChanged") >= 2
+        await pg.click(".dg-hcell .dg-check[data-all]")                                   # row checkboxes: all, none, two
+        await settle(pg)
+        assert int((await pg.text_content(".dg-st-rows")).split()[0]) > 10
+        await pg.click(".dg-hcell .dg-check[data-all]")
+        await settle(pg)
+        assert await pg.locator(".dg-st-rows").count() == 0
+        await pg.click(".dg-row .dg-check >> nth=1")
+        await pg.click(".dg-row .dg-check >> nth=2")
+        await settle(pg)
+        assert await pg.text_content(".dg-st-rows") == "2 rows selected"
+        assert await pg.locator(".dg-row[aria-selected='true']").count() == 2
     run(browsers, body)
 
 

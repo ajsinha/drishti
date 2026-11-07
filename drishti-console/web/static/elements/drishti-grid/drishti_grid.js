@@ -2234,7 +2234,7 @@
         }
         return Promise.resolve();
       }
-      idAt(r) { const x = this.rowAt(r); return x && x.kind === 'leaf' ? x.id : null; }
+      idAt(r) { const x = this.rowAt(r); return !x ? null : x.kind === 'leaf' ? x.id : x.kind === 'pivot' && x.entry.kind !== 'header' ? x.id : null; }
       key(e) {
         const before = this.navigator.focus ? Object.assign({}, this.navigator.focus) : null;
         const k = this.navigator.handleKey(e), f = this.navigator.focus;
@@ -3047,7 +3047,11 @@
         if (tw) { e.stopPropagation(); m.toggleRow(+tw.dataset.r); v.announceRow(+tw.dataset.r); return; }
         if (t.matches('input.dg-check')) {
           const r = +t.dataset.r;
-          if (t.dataset.all !== undefined) { if (t.checked) { m.selectAll(); } else { m.selection.selectAll([]); } }
+          if (t.dataset.all !== undefined) {
+            const ids = [];
+            if (t.checked && m.pivotMode) { for (let i = 0; i < m.rowCount(); i++) { const id = m.idAt(i); if (id !== null) { ids.push(id); } } }
+            if (t.checked && !m.pivotMode) { m.selectAll(); } else { m.selection.selectAll(ids); }
+          }
           else { m.selection.clickRow(r, (i) => m.idAt(i), { ctrl: true }); }
           return;
         }
@@ -3213,8 +3217,10 @@
         const m = this.model;
         const n = m.selection.selectedIds().length;
         const box = h(this.doc, 'input', { cls: 'dg-check', attrs: { type: 'checkbox', tabindex: '-1', 'aria-label': 'Select all rows' }, data: { all: '1', r: '-1' } });
-        box.checked = n > 0 && n >= m.rowCount();
-        box.indeterminate = n > 0 && n < m.rowCount();
+        let all = m.rowModel.filteredCount ? m.rowModel.filteredCount() : m.rowCount();
+        if (m.pivotMode) { all = 0; for (let i = 0; i < m.rowCount(); i++) { if (m.idAt(i) !== null) { all++; } } }
+        box.checked = n > 0 && n >= all;
+        box.indeterminate = n > 0 && n < all;
         cell.appendChild(box);
       }
       rowEl(r, x, disp, centerShown, lead, trail, focus, flash, levels) {
@@ -3368,7 +3374,7 @@
             const box = h(doc, 'input', { attrs: { type: 'checkbox', 'aria-label': 'Use ' + f.header }, data: { use: f.id } });
             box.checked = f.in.length > 0;
             out.push(h(doc, 'div', { cls: 'dg-field', attrs: { draggable: 'true' }, data: { field: f.id, well: '', index: '-1' } }, [box, h(doc, 'span', { text: f.header }),
-              f.additive ? null : h(doc, 'span', { cls: 'dg-na', text: '◆' }), h(doc, 'span', { cls: 'dg-ftype', text: f.value ? (f.additive ? 'Σ' : 'server') : 'abc' })]));
+              f.value && !f.additive ? h(doc, 'span', { cls: 'dg-na', text: '◆' }) : null, h(doc, 'span', { cls: 'dg-ftype', text: f.value ? (f.additive ? 'Σ' : 'server') : 'abc' })]));
           });
         });
         return out;

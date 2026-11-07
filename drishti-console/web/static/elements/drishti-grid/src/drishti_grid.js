@@ -366,11 +366,12 @@ export class GridModel {
 
   // ---- selection, focus, keys ----------------------------------------------------------------------------------------------------------
   /**
-   * The id of a display row, or null for a group, a pivot row or a placeholder.
+   * The id of a display row: a leaf's id, a pivot row's (pivot:<kind>:<key>, so the rows of a pivot may be selected too); null for a
+   * group, a pivot's heading line or a placeholder.
    * @param {number} r
    * @returns {?string}
    */
-  idAt(r) { const x = this.rowAt(r); return x && x.kind === 'leaf' ? x.id : null; }
+  idAt(r) { const x = this.rowAt(r); return !x ? null : x.kind === 'leaf' ? x.id : x.kind === 'pivot' && x.entry.kind !== 'header' ? x.id : null; }
 
   /**
    * A key press on the grid: moves the focus, changes the selection and runs the action the layout needs no part in; returns what the

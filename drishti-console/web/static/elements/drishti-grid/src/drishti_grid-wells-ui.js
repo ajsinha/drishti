@@ -88,7 +88,7 @@ export class WellsView {
         const box = h(doc, 'input', { attrs: { type: 'checkbox', 'aria-label': 'Use ' + f.header }, data: { use: f.id } });
         box.checked = f.in.length > 0;
         out.push(h(doc, 'div', { cls: 'dg-field', attrs: { draggable: 'true' }, data: { field: f.id, well: '', index: '-1' } }, [box, h(doc, 'span', { text: f.header }),
-          f.additive ? null : h(doc, 'span', { cls: 'dg-na', text: '◆' }), h(doc, 'span', { cls: 'dg-ftype', text: f.value ? (f.additive ? 'Σ' : 'server') : 'abc' })]));
+          f.value && !f.additive ? h(doc, 'span', { cls: 'dg-na', text: '◆' }) : null, h(doc, 'span', { cls: 'dg-ftype', text: f.value ? (f.additive ? 'Σ' : 'server') : 'abc' })]));
       });
     });
     return out;

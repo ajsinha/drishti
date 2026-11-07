@@ -123,7 +123,11 @@ export class GridBody {
     if (tw) { e.stopPropagation(); m.toggleRow(+tw.dataset.r); v.announceRow(+tw.dataset.r); return; }
     if (t.matches('input.dg-check')) {
       const r = +t.dataset.r;
-      if (t.dataset.all !== undefined) { if (t.checked) { m.selectAll(); } else { m.selection.selectAll([]); } }
+      if (t.dataset.all !== undefined) {
+        const ids = [];
+        if (t.checked && m.pivotMode) { for (let i = 0; i < m.rowCount(); i++) { const id = m.idAt(i); if (id !== null) { ids.push(id); } } }
+        if (t.checked && !m.pivotMode) { m.selectAll(); } else { m.selection.selectAll(ids); }
+      }
       else { m.selection.clickRow(r, (i) => m.idAt(i), { ctrl: true }); }
       return;
     }
@@ -314,8 +318,10 @@ export class GridBody {
     const m = this.model;
     const n = m.selection.selectedIds().length;
     const box = h(this.doc, 'input', { cls: 'dg-check', attrs: { type: 'checkbox', tabindex: '-1', 'aria-label': 'Select all rows' }, data: { all: '1', r: '-1' } });
-    box.checked = n > 0 && n >= m.rowCount();
-    box.indeterminate = n > 0 && n < m.rowCount();
+    let all = m.rowModel.filteredCount ? m.rowModel.filteredCount() : m.rowCount();
+    if (m.pivotMode) { all = 0; for (let i = 0; i < m.rowCount(); i++) { if (m.idAt(i) !== null) { all++; } } }
+    box.checked = n > 0 && n >= all;
+    box.indeterminate = n > 0 && n < all;
     cell.appendChild(box);
   }
 

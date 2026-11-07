@@ -2521,7 +2521,7 @@ Returns `Promise&lt;void&gt;`.
 
 ##### `GridModel.idAt(r)`
 
-The id of a display row, or null for a group, a pivot row or a placeholder.
+The id of a display row: a leaf's id, a pivot row's (pivot:&lt;kind&gt;:&lt;key&gt;, so the rows of a pivot may be selected too); null for a group, a pivot's heading line or a placeholder.
 
 | Parameter | Type | Meaning |
 |---|---|---|

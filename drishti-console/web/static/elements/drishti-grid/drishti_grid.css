@@ -79,6 +79,7 @@
 .dg-hcell.dg-leaf:hover { color: var(--d-ink); }
 .dg-hcell.dg-hgroup { color: var(--d-ink); }
 .dg-hcell.dg-num { justify-content: flex-end; }
+.dg-hcell.dg-hgroup { justify-content: flex-start; }
 .dg-hlabel { overflow: hidden; text-overflow: ellipsis; }
 .dg-sort { color: var(--d-accent); font-size: 0.8em; }
 .dg-hmenu { visibility: hidden; }
