@@ -13,6 +13,19 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.e — release notes (draft)
+
+*Not released yet.*
+
+## Upgrade: one search (the console's `/api/suggest` is removed)
+
+- **A script that called the console's `GET /api/suggest?q=...`** asks `GET /api/search?in=command&q=...` instead and reads `items`
+  (the same suggestions, in the same order, each now tagged with its `group`). `in=help` searches Help's pages and `in=all` everything
+  (entities, commands, screens, Help pages, things you can build), grouped ([API_GUIDE.md](docs/guides/API_GUIDE.md#the-consoles-own-json-routes)).
+  The server's `GET /api/v1/command/suggest` is unchanged.
+- **Keys:** `?` now lists the keys of the screen you are on (on a view it still opens About this page), and `Alt+K` opens the global
+  search. No key acts while you type in a field; the VaR screen's `B`, `M`, `H` and `N` keep their meaning.
+
 # Drishti 2.9.11.d — release notes (draft)
 
 *Not released yet.*

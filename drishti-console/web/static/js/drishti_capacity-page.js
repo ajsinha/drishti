@@ -428,9 +428,10 @@
       if (e.key === 'Escape') { page.querySelectorAll('.cap-why.open').forEach(function (x) { x.classList.remove('open'); }); }
       if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('cap-why')) { e.preventDefault(); e.target.classList.toggle('open'); }
     });
-    window.addEventListener('keydown', function (e) {                // F1: the guide's Capacity section, not the Admin guide's top
-      if (e.key === 'F1' && page.getAttribute('data-help')) { e.preventDefault(); window.location.href = page.getAttribute('data-help'); }
-    }, true);
+    if (page.getAttribute('data-help')) {                               // F1: the guide's Capacity section, not the Admin guide's top
+      window.Drishti.keys.register({ id: 'capacity.help', keys: ['F1', 'Alt+Shift+1'], scope: 'screen', area: 'capacity', group: 'Help', typing: true,
+        description: 'Help: the Capacity section of the guide', run: function () { window.location.href = page.getAttribute('data-help'); } });
+    }
     if (phone.matches) { page.querySelectorAll('details[data-tier="more"]').forEach(function (d) { d.removeAttribute('open'); }); }
     document.addEventListener('visibilitychange', function () { if (!document.hidden) { loadLive(); } });
     st.timer = setInterval(function () { if (!document.hidden) { loadLive(); } }, 60000);

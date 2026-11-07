@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Query by form (FORM <pack>). The page works without this script (a plain GET form); the script only makes it pleasanter:
    the second box appears for "between", a date field becomes free text for a relative range, Esc clears every field,
    Ctrl+Enter submits from a list box, and the result's buttons copy, save and share. The criteria live in the address. */
@@ -137,9 +138,8 @@
   if (form && body && toggle && brief) {
     toggle.addEventListener('click', function () { fold(!folded(), folded() ? 'show' : 'hide'); });
     brief.addEventListener('click', function (e) { e.preventDefault(); fold(false, 'show'); });
-    document.addEventListener('keydown', function (e) {
-      if (e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey && (e.code === 'KeyF' || e.key === 'f')) { e.preventDefault(); fold(!folded(), folded() ? 'show' : 'hide'); }
-    });
+    window.Drishti.keys.register({ id: 'form.fold', keys: ['Alt+F'], scope: 'screen', area: 'form', group: 'Search form', typing: true,
+      description: 'Show or hide the search form', run: function () { fold(!folded(), folded() ? 'show' : 'hide'); } });
     form.addEventListener('submit', function () {
       var kept = ''; try { kept = sessionStorage.getItem('drishti.form') || ''; } catch (e) { kept = ''; }
       if (kept === 'shown') { var h = document.createElement('input'); h.type = 'hidden'; h.name = 'form'; h.value = 'shown'; form.appendChild(h); }

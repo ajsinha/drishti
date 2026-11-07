@@ -65,20 +65,20 @@
   });
 
   // Alt+? (Alt+Shift+/) focuses the box when it is there; opening the drawer first if need be.
-  document.addEventListener('keydown', function (e) {
-    if (!e.altKey || e.ctrlKey || e.metaKey || e.key !== '?') { return; }
-    var go = function () {
-      var input = document.querySelector('#aboutDrawer [data-ask-input]');
-      if (input) { e.preventDefault(); input.focus(); }
-    };
-    var drawer = document.getElementById('aboutDrawer');
-    if (drawer && drawer.hidden && window.Drishti.about) {
-      e.preventDefault();
-      window.Drishti.about.ensure().then(function () {
-        var opener = document.querySelector('[data-about-open]');
-        if (opener) { opener.click(); }
-        go();
-      });
-    } else { go(); }
-  });
+  window.Drishti.keys.register({ id: 'about.ask', keys: ['Alt+?'], scope: 'screen', area: 'view', group: 'About this page', typing: true,
+    description: 'Ask about this page: the question box of About this page (opened first if need be)',
+    run: function () {
+      var go = function () {
+        var input = document.querySelector('#aboutDrawer [data-ask-input]');
+        if (input) { input.focus(); }
+      };
+      var drawer = document.getElementById('aboutDrawer');
+      if (drawer && drawer.hidden && window.Drishti.about) {
+        window.Drishti.about.ensure().then(function () {
+          var opener = document.querySelector('[data-about-open]');
+          if (opener) { opener.click(); }
+          go();
+        });
+      } else if (!document.querySelector('#aboutDrawer [data-ask-input]')) { return false; } else { go(); }
+    } });
 })();

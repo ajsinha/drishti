@@ -110,7 +110,7 @@ def test_the_reserved_word_func_opens_the_page_filtered(client, typed, where):
 
 
 def test_func_in_the_type_ahead_offers_the_page(client):
-    s = client.get("/api/suggest", params={"q": "FUNC expo"}).json()
+    s = client.get("/api/search", params={"in": "command", "q": "FUNC expo"}).json()["items"]
     assert s[0]["mnemonic"] == "FUNC" and s[0]["href"] == "/func?q=expo" and s[0]["complete"] == "FUNC expo"
 
 

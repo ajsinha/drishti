@@ -35,7 +35,7 @@
       document.removeEventListener('pointermove', move, true);
       document.removeEventListener('pointerup', up, true);
       document.removeEventListener('pointercancel', cancel, true);
-      document.removeEventListener('keydown', key, true);
+      offKey();
       active = null;
       if (moved) { document.addEventListener('click', swallow, true); setTimeout(function () { document.removeEventListener('click', swallow, true); }, 0); }
       h.end(ev, committed, moved);
@@ -51,11 +51,11 @@
     }
     function up(ev) { if (ev.pointerId === id) { end(ev, moved); } }
     function cancel(ev) { if (ev.pointerId === id) { end(ev, false); } }
-    function key(ev) { if (ev.key === 'Escape') { ev.preventDefault(); ev.stopPropagation(); end(ev, false); } }
     document.addEventListener('pointermove', move, true);
     document.addEventListener('pointerup', up, true);
     document.addEventListener('pointercancel', cancel, true);
-    document.addEventListener('keydown', key, true);
+    var offKey = window.Drishti.keys.register({ id: 'build.drag.cancel', keys: ['Escape'], scope: 'dialog', area: 'build-drag', capture: true, typing: true,
+      description: 'Cancel the drag', run: function (ev) { ev.stopPropagation(); end(ev, false); } });
     active = { id: id };
   }
 

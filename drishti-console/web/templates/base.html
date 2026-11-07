@@ -52,6 +52,7 @@
   <link rel="stylesheet" href="/static/css/drishti_server-watch.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/css/drishti_phone.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/css/drishti_resize.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="/static/css/drishti_keys.css?v={{ ASSET_V }}">{# the ? overlay of the one keymap and the one search box #}
   {% block head %}{% endblock %}
 </head>
 <body{% if (error is defined and error and ((error.code is defined and error.code == 'DRS-5003') or (error is string and 'unreachable' in error))) %} data-server-down="1"{% endif %} class="{% block body_class %}{% endblock %}{% if (settings or {}).density == 'compact' %} density-compact{% endif %}{% if (settings or {}).flash == false %} no-flash{% endif %}" data-product="{{ PRODUCT }}" data-screen="{% block screen %}{{ screen | default('landing') }}{% endblock %}">
@@ -60,6 +61,8 @@
   <main id="main">{% block content %}{% endblock %}</main>
   {% block footer %}{% include "_footer.html" %}{% endblock %}
   <script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js?v={{ ASSET_V }}"></script>
+  <script src="/static/js/drishti_keys.js?v={{ ASSET_V }}"></script>{# the one keymap: every key registers here first #}
+  <script src="/static/js/drishti_search-box.js?v={{ ASSET_V }}"></script>{# the one search box: command line, Help, the global search #}
   <script src="/static/js/drishti_server-watch.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_live-hub.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_channel.js?v={{ ASSET_V }}"></script>

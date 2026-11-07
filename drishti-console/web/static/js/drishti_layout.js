@@ -240,37 +240,38 @@
     setHeight(p, clamp(now + step, 1, MAX_H));
     changed(); relayout(); say(size(p));
   }
-  document.addEventListener('keydown', function (e) {
-    var tag = (e.target.tagName || '').toLowerCase(), typing = tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable;
-    if (e.altKey && !e.ctrlKey && !e.metaKey && (e.code === 'KeyL' || e.key === 'l' || e.key === 'L')) {
-      e.preventDefault();
-      if (!on) { enter(); } else if (!dirty) { leave(); say('Layout mode left.'); } else { say('Save with Ctrl+Enter, or cancel with Escape.'); }
-      return;
-    }
-    if (!on) { return; }
-    if (e.key === 'Escape') {
+  // captured, so in layout mode a panel's keys reach layout mode before the panel's own (Z, the table's arrows)
+  var K = window.Drishti.keys;
+  K.register({ id: 'layout.toggle', keys: ['Alt+L', 'Alt+Shift+L'], scope: 'screen', area: 'view', group: 'View', typing: true, capture: true,
+    description: 'Layout mode: arrange this view\'s panels for yourself (Option+L on a Mac)',
+    run: function () { if (!on) { enter(); } else if (!dirty) { leave(); say('Layout mode left.'); } else { say('Save with Ctrl+Enter, or cancel with Escape.'); } } });
+  K.register({ id: 'layout.cancel', keys: ['Escape'], scope: 'dialog', area: 'layout', group: 'Layout mode', typing: true, capture: true,
+    description: 'Cancel: leave layout mode and put everything back as it was', open: function () { return on; },
+    run: function () {
       var drawer = document.getElementById('layoutPromote');
-      e.preventDefault();
       if (drag) { endDrag(false); say('Move cancelled.'); } else if (drawer && !drawer.hidden) { drawer.hidden = true; } else { cancel(); }
-      return;
-    }
-    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); save(false); return; }
-    var p = e.target.closest && e.target.closest('.pnl[data-panel]');
-    if (typing || !p || p !== e.target) { return; }
-    var act = window.Drishti.GridKeys.interpret(e, window.Drishti.GridKeys.LAYOUT), done = !!act;
-    if (act) {
-      switch (act.type) {
+    } });
+  K.register({ id: 'layout.save', keys: ['Ctrl+Enter', 'Meta+Enter'], scope: 'dialog', area: 'layout', group: 'Layout mode', typing: true, capture: true,
+    description: 'Save (Cmd+Enter on a Mac)', open: function () { return on; }, run: function () { save(false); } });
+  K.register({ id: 'layout.panel', keys: ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Shift+ArrowLeft', 'Shift+ArrowRight', 'Shift+ArrowUp', 'Shift+ArrowDown', '-', '_', '+', '=', 'A', 'H', 'Delete'],
+    scope: 'dialog', area: 'layout', group: 'Layout mode', capture: true, label: '↑ ↓ ← → · Shift+arrows · - + · A · H',
+    description: 'On the focused panel: move it in its column or to the other column, narrower or wider, shorter or taller, its natural height, hide or show it',
+    open: function () { return on; },
+    run: function (e) {
+      var p = e.target.closest && e.target.closest('.pnl[data-panel]');
+      if (!p || p !== e.target) { return false; }
+      var act = window.Drishti.GridKeys.interpret(e, window.Drishti.GridKeys.LAYOUT);
+      switch (act && act.type) {
         case 'span': setSpan(p, spanOf(p) + act.delta); changed(); relayout(); say(size(p)); break;
         case 'height': taller(p, act.delta); break;
         case 'move': move(p, act.step); break;
         case 'column': toColumn(p, act.area); break;
         case 'hide': toggleHidden(p); break;
         case 'natural': setHeight(p, 0); changed(); relayout(); say(size(p)); break;
-        default: done = false;
+        default: return false;
       }
-    }
-    if (done) { e.preventDefault(); e.stopPropagation(); }
-  }, true);
+      e.stopPropagation();
+    } });
 
   // ---- dragging a panel by its heading ---------------------------------------------------------------
   function placeholder(p) {

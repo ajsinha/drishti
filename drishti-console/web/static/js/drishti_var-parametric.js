@@ -48,7 +48,8 @@
       pop.setAttribute("role", "dialog");
       pop.setAttribute("aria-label", "How it was calculated");
       document.body.appendChild(pop);
-      document.addEventListener("keydown", function (ev) { if (ev.key === "Escape") closeTip(); });
+      window.Drishti.keys.register({ id: "var.parametric.tip.close", keys: ["Escape"], scope: "dialog", area: "var-tip", typing: true, description: "Close How it was calculated",
+        open: function () { return !!pop && !pop.hidden; }, run: function () { closeTip(); } });
       document.addEventListener("click", function (ev) { if (pop && !pop.hidden && !pop.contains(ev.target)) closeTip(); });
     }
     if (popFor === anchor && !peek) { closeTip(); return; }
@@ -149,10 +150,8 @@
     if (!ON) return;
     $("[data-vp-curve]").checked = curve;
     $("[data-vp-curve]").addEventListener("change", function (e) { setCurve(e.target.checked); });
-    document.addEventListener("keydown", function (ev) {
-      var tag = (ev.target && ev.target.tagName) || "";
-      if ((ev.key === "n" || ev.key === "N") && !ev.ctrlKey && !ev.metaKey && !ev.altKey && !/INPUT|TEXTAREA|SELECT/.test(tag)) setCurve(!curve);
-    });
+    window.Drishti.keys.register({ id: "var.parametric.curve", keys: ["N", "Shift+N"], scope: "screen", area: "var", group: "VaR", keepDefault: true,
+      description: "Parametric VaR: the normal curve on or off", run: function () { setCurve(!curve); } });
     $("[data-vp-play]").addEventListener("click", function (ev) {
       ev.preventDefault();
       location.href = playLink();

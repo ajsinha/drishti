@@ -77,7 +77,7 @@ def test_sign_in_goes_through_the_server(backend):
     c = TestClient(app)
     assert c.get("/t", follow_redirects=False).headers["location"].startswith("/login")
     assert c.get("/admin/users", follow_redirects=False).status_code == 303
-    assert c.get("/api/suggest").status_code == 401
+    assert c.get("/api/search?in=command").status_code == 401
     assert c.get("/").status_code == 200
     bad = c.post("/login", content="user=drishti-dev-admin&password=nope&next=/t", headers=FORM)
     assert bad.status_code == 401 and "wrong password" in bad.text

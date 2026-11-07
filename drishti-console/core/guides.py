@@ -290,29 +290,6 @@ class Library:
             shown = Path(target)
         return f'<span class="help-repo" title="In the repository: {html.escape(str(shown))}">{m.group(3)}</span>'
 
-    def search(self, q: str, limit: int = 20, section: str = "") -> list[dict]:
-        """The guides whose text holds every word of ``q``, best first; with ``section`` only that section's listed pages (the
-        section-scoped search of its page)."""
-        words = [w for w in re.split(r"\W+", q.lower()) if len(w) > 1]
-        if not words:
-            return []
-        hits = []
-        sid = self.section_id(section) if section else ""
-        for g in self.guides.values():
-            if not g.listed and "qa" in g.path.parts:
-                continue                             # the QA records (history) are reachable by link, not search
-            if sid and (g.category != sid or not g.listed):
-                continue
-            text = self.render(g.slug)["text"]
-            low = text.lower()
-            score = sum(low.count(w) for w in words) + sum(10 for w in words if w in g.title.lower())
-            if score and all(w in low or w in g.title.lower() for w in words):
-                i = min((low.find(w) for w in words if low.find(w) >= 0), default=0)
-                snippet = text[max(0, i - 80): i + 160].strip()
-                hits.append({"guide": g, "score": score, "snippet": snippet})
-        hits.sort(key=lambda h: -h["score"])
-        return hits[:limit]
-
 
 def _full_size(m: re.Match) -> str:
     """An image not already inside a link opens full size in a new tab; the guide shows it fitted to the column."""

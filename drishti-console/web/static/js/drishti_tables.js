@@ -449,6 +449,15 @@
     Array.prototype.forEach.call((p || root).querySelectorAll('table.tbl'), function (x) { if (x.__tblClear) { x.__tblClear(); } });
   }
   root.addEventListener('keydown', onClearKey);
+  // the table's keys are its own (bound on the table and on root, so a host page's keys are untouched); on a console page the keymap lists them
+  if (root === document && window.Drishti && window.Drishti.keys && root.querySelector('table.tbl')) {
+    var KD = window.Drishti.keys;
+    KD.describe({ id: 'table.walk', keys: ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', 'Enter'], scope: 'panel', area: 'table', group: 'Tables',
+      label: '↑ ↓ · PgUp PgDn · Home End · Enter', description: 'In a selected table: move the selected row, a page, to the first or last; open it' });
+    KD.describe({ id: 'table.chart', keys: ['K'], scope: 'panel', area: 'table', group: 'Tables', description: 'On a focused table: chart it' });
+    KD.describe({ id: 'table.filters.clear', keys: ['Alt+Shift+X'], scope: 'panel', area: 'panel', group: 'Tables',
+      description: 'Clear all column filters (and the filter box) of the panel that has the focus' });
+  }
   zoomFit = !!zoomedPanel();                      // zoomed from the link before this ran
   scan(root);
   if (zoomFit) { fitAll(true); }

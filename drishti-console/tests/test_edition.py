@@ -115,7 +115,7 @@ def test_the_risk_edition_follows_its_file_on_every_surface(backend, monkeypatch
     assert r.status_code == 303 and "DRS-4023" in r.headers["location"]
     r = c.get("/go", params={"q": "RUPAKA <GO>"}, follow_redirects=False)
     assert "DRS-4023" in r.headers["location"]
-    assert not [s for s in c.get("/api/suggest", params={"q": "FORM"}).json() if s.get("mnemonic") == "FORM"]
+    assert not [s for s in c.get("/api/search", params={"in": "command", "q": "FORM"}).json()["items"] if s.get("mnemonic") == "FORM"]
     assert app.state.editions.instance.word_on("SMAT") and c.get("/smat").status_code == 200        # the scenario matrix is Risk's (2.9.7)
     r = c.get("/go", params={"q": "SMAT DESK RATES 30 <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/smat?id=DESK%3ARATES&days=30"
@@ -186,14 +186,14 @@ def test_a_lens_focuses_one_person_and_leaves_everyone_else_alone(backend, monke
         return []
 
     monkeypatch.setattr(backend, "suggest", suggest, raising=False)
-    alice.get("/api/suggest", params={"q": "VRE"})
+    alice.get("/api/search", params={"in": "command", "q": "VRE"})
     assert sent == {"X-Drishti-Lens": "risk"}                                           # the server filters her commands and BI too
     # bob, at the same time, sees the full product
     other = bob.get("/t").text
     assert "/forms" in _menu_links(other) and "/lens/risk" in _menu_links(other) and 'data-product="Drishti"' in other
     assert bob.get("/admin/ai").status_code == 200
     sent.clear()
-    bob.get("/api/suggest", params={"q": "VRE"})
+    bob.get("/api/search", params={"in": "command", "q": "VRE"})
     assert sent == {}
     # leaving it: the full product again
     alice.post("/lens/leave")

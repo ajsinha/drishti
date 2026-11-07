@@ -967,10 +967,7 @@
 
   $("[data-xx-capture-side]").addEventListener("click", function () { doCapture("", null); });
   window.addEventListener("popstate", function (ev) { if (ev.state && ev.state.scope) select(ev.state.scope, { noPush: true, back: true }); });
-  document.addEventListener("keydown", function (ev) {
-    var tag = (ev.target && ev.target.tagName) || "";
-    if (ev.key === "?" && !/INPUT|TEXTAREA|SELECT/.test(tag)) { ev.preventDefault(); location.href = $("[data-xx-help]").href; }
-  });
+  // ? is the keymap's list of keys (drishti_keys.js); F1 and the ? button open the exposure guide
   var resizeTimer = null;
   window.addEventListener("resize", function () {
     clearTimeout(resizeTimer);

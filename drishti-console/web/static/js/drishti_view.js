@@ -354,16 +354,20 @@
     }
   }
   document.querySelectorAll('[data-fkey]').forEach(function (b) { b.addEventListener('click', function () { run(b); }); });
-  document.addEventListener('keydown', function (e) {
-    if (e.altKey && e.key === 'ArrowLeft') { e.preventDefault(); history.back(); return; }
-    // Alt+Shift+1..9 (0 for F10) work as F1..F10: on Windows a laptop's F-keys are media keys until Fn is held, and Edge
-    // keeps some for itself (F9: Immersive Reader), so the function keys of a page cannot be relied on there
-    var d = e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey ? /^Digit([0-9])$/.exec(e.code || '') : null;
-    var key = d ? (d[1] === '0' ? 'F10' : 'F' + d[1]) : e.key;
-    if (!/^F([1-9]|1[0-2])$/.test(key)) { return; }
-    var b = document.querySelector('[data-fkey="' + key + '"]');
-    if (b) { e.preventDefault(); run(b); }
+  var K = window.Drishti.keys;          // the console's keymap; an element in a host page (no keymap) binds no page keys
+  if (K) {
+  K.register({ id: 'view.back', keys: ['Alt+ArrowLeft'], scope: 'screen', area: 'view', group: 'View', description: 'Back', typing: true,
+    run: function () { history.back(); } });
+  // Alt+Shift+1..9 (0 for F10) work as F1..F10: on Windows a laptop's F-keys are media keys until Fn is held, and Edge
+  // keeps some for itself (F9: Immersive Reader), so the function keys of a page cannot be relied on there
+  document.querySelectorAll('[data-fkey]').forEach(function (b) {
+    var key = b.getAttribute('data-fkey') || '', m = /^F([1-9]|1[0-2])$/.exec(key);
+    if (!m) { return; }
+    var keys = [key].concat(+m[1] <= 10 ? ['Alt+Shift+' + (m[1] === '10' ? '0' : m[1])] : []);
+    K.register({ id: 'view.fkey.' + key, keys: keys, scope: 'screen', area: 'view', group: 'Function keys', typing: true,
+      description: (b.getAttribute('aria-label') || key).replace(/^F\d+\s*/, ''), run: function () { run(b); } });
   });
+  }
   document.querySelectorAll('[data-fkey]').forEach(function (b) {
     var m = /^F([1-9]|10)$/.exec(b.getAttribute('data-fkey') || '');
     if (m) {
@@ -371,7 +375,8 @@
       b.title = b.title ? b.title + ' (' + keys + ')' : keys;
     }
   });
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && raw && !raw.hidden) { raw.hidden = true; } });
+  if (K) { K.register({ id: 'view.raw.close', keys: ['Escape'], scope: 'dialog', area: 'raw-json', description: 'Close the raw JSON drawer', typing: true,
+    open: function () { return !!raw && !raw.hidden; }, run: function () { raw.hidden = true; } }); }
 
   // ---- breadcrumbs: the path of views followed in this browser tab (not inside workspace panes) ---
   if (view && !view.hasAttribute('data-embed')) {

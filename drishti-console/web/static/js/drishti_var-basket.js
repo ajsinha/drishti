@@ -816,14 +816,10 @@
   // ---------------------------------------------------------------------------------------------------------------- Alt+B
   function start() {
     countBadge();
-    document.addEventListener("keydown", function (ev) {
-      if (ev.altKey && !ev.ctrlKey && !ev.metaKey && (ev.key === "b" || ev.key === "B" || ev.code === "KeyB")) {
-        // only where the page offers the basket (the explorer's "Construct your basket"); the landing page's Alt+B is its Back to
-        if (!document.querySelector("[data-vx-basket-open]") || document.querySelector("[accesskey=b]")) return;
-        ev.preventDefault();
-        toggle();
-      }
-    });
+    // only where the page offers the basket (the explorer's "Construct your basket"); the landing page's Alt+B is its Back to
+    window.Drishti.keys.register({ id: "var.basket.sheet", keys: ["Alt+B", "Alt+Shift+B"], scope: "screen", area: "var", group: "VaR", typing: true,
+      description: "Construct your basket: open or close the sheet",
+      when: function () { return !!document.querySelector("[data-vx-basket-open]") && !document.querySelector("[accesskey=b]"); }, run: function () { toggle(); } });
     // the explorer moved to another reporting currency: the basket's figures follow it
     document.addEventListener("drishti:var-currency", function () { if (host && !empty()) check(); });
   }

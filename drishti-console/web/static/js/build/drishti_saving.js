@@ -102,12 +102,11 @@
     if (fileB) { fileB.addEventListener('click', fileMenu); }
     if (saveB) { saveB.addEventListener('click', save); }
 
-    document.addEventListener('keydown', function (e) {
-      if (!(e.ctrlKey || e.metaKey) || e.altKey || WB.menu.isOpen()) { return; }
-      var k = e.key.toLowerCase();
-      if (k === 's' && !e.shiftKey) { e.preventDefault(); e.stopPropagation(); save(); }
-      else if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); preview(); }
-    }, true);
+    var K = window.Drishti.keys, menuShut = function () { return !WB.menu.isOpen(); };
+    K.register({ id: 'build.save', keys: ['Ctrl+S', 'Meta+S'], scope: 'screen', area: 'build-design', group: 'Workbench', capture: true, typing: true,
+      description: 'Save, or propose for review', when: menuShut, run: function (e) { e.stopPropagation(); save(); } });
+    K.register({ id: 'build.preview', keys: ['Ctrl+Enter', 'Meta+Enter', 'Ctrl+Shift+Enter', 'Shift+Meta+Enter'], scope: 'screen', area: 'build-design', group: 'Workbench',
+      capture: true, typing: true, description: 'Send what you typed and draw the preview again', when: menuShut, run: function (e) { e.stopPropagation(); preview(); } });
 
     return { save: save, preview: preview, open: open, canSave: function () { return can; }, review: function () { return review; }, fileMenu: fileMenu };
   };
