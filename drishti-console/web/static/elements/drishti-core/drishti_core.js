@@ -1365,6 +1365,21 @@
           ],
           "scripts": []
         },
+        "drishti-designer": {
+          "version": "0.1.0",
+          "title": "The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review)",
+          "bundle": "drishti-designer/drishti_designer.js",
+          "entry": "drishti-designer/src/drishti_index.js",
+          "global": "designer",
+          "requires": [
+            "drishti-core",
+            "drishti-inputs"
+          ],
+          "css": [
+            "elements/drishti-designer/drishti_designer.css"
+          ],
+          "scripts": []
+        },
         "drishti-data": {
           "version": "0.1.0",
           "title": "Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client",

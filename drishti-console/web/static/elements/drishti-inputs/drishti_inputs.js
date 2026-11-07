@@ -626,11 +626,17 @@
         const go = () => {
           this.area.remove();
           const cm = this.cm = CM(this.box, { value: this.value, mode: mode.cm, readOnly: o.readOnly ? true : false, lineNumbers: o.lineNumbers, gutters: ['di-lint-gutter', 'CodeMirror-linenumbers'],
-            indentUnit: o.indentUnit, tabSize: o.indentUnit, indentWithTabs: false, lineWrapping: false, screenReaderLabel: o.label || 'Code', extraKeys: this.extraKeys() });
+            indentUnit: o.indentUnit, tabSize: o.indentUnit, indentWithTabs: false, lineWrapping: !!o.lineWrapping, screenReaderLabel: o.label || 'Code', extraKeys: this.extraKeys() });
           cm.setSize(null, o.height);
           const ta = cm.getInputField();
           if (ta) { ta.setAttribute('aria-label', (o.label || 'Code') + (o.readOnly ? ' (read-only)' : '')); }
-          cm.on('change', (x, ch) => { this.value = cm.getValue(); this.changed(); if (ch.origin === '+input' && /[\w.$@]/.test(ch.text.join(''))) { this.complete(false); } else if (ch.origin !== 'complete') { this.pop.close(); } });
+          cm.on('change', (x, ch) => {
+            this.value = cm.getValue();
+            this.changed(ch.origin);
+            const before = ch.origin === '+input' && o.completeAfter ? cm.getLine(cm.getCursor().line).slice(0, cm.getCursor().ch) : '';
+            if (ch.origin === '+input' && (/[\w.$@]/.test(ch.text.join('')) || (before && o.completeAfter(before)))) { this.complete(!!(before && o.completeAfter(before))); } else if (ch.origin !== 'complete') { this.pop.close(); }
+          });
+          cm.on('cursorActivity', () => { const c = cm.getCursor(); this.emit('cursor', { line: c.line, ch: c.ch }); });
           cm.on('keydown', (x, e) => this.completionKey(e));
           cm.on('blur', () => this.doc.defaultView.setTimeout(() => { if (!this.cm.hasFocus()) { this.pop.close(); } }, 150));
           this.lintSoon();
@@ -648,7 +654,7 @@
         return keys;
       }
       refresh() { if (this.cm) { this.cm.refresh(); } }
-      changed() { this.emit('change', { value: this.value }); if (this.o.lint) { this.lintSoon(); } }
+      changed(origin) { this.emit('change', { value: this.value, origin: origin || 'input' }); if (this.o.lint) { this.lintSoon(); } }
       say(t) { this.host.setAttribute('data-note', t); announce(t); }
       complete(forced) {
         if (!this.cm || this.o.readOnly || (!this.o.catalogue && !this.o.complete)) { return Promise.resolve(); }
@@ -656,12 +662,13 @@
         if (!forced && w.word.replace(/^[$@]/, '').length < 1) { this.pop.close(); return Promise.resolve(); }
         this.asked = (this.asked || 0) + 1;
         const ask = this.asked;
-        const ctx = { word: w.word, line: line, ch: cur.ch, mode: this.o.mode };
+        const ctx = { word: w.word, line: line, ch: cur.ch, mode: this.o.mode, lineNo: cur.line, text: this.cm.getValue() };
         return Promise.resolve(this.o.complete ? this.o.complete(ctx) : completions(this.o.catalogue, w.word)).then((list) => {
           if (ask !== this.asked) { return; }
           list = (list || []).slice(0, 50);
           if (!list.length) { this.pop.close(); return; }
-          this.completing = { line: cur.line, from: w.from, to: cur.ch, list: list };
+          const from = list[0] && list[0].from !== undefined ? list[0].from : w.from;           // an entry may say where its word starts (a YAML key's '-')
+          this.completing = { line: cur.line, from: from, to: list[0] && list[0].to !== undefined ? list[0].to : cur.ch, list: list };
           this.listbox.render(list.map((e) => ({ value: e.name, label: e.name, detail: e.signature || e.description || e.kind || '', entry: e })), () => false);
           this.listbox.setActive(0);
           const at = this.cm.cursorCoords(true, 'window');
@@ -725,6 +732,28 @@
       goTo(line, ch) { if (this.cm) { this.cm.setCursor({ line: line - 1, ch: ch || 0 }); this.cm.focus(); } else { this.area.focus(); } }
       getValue() { return this.cm ? this.cm.getValue() : this.value; }
       setValue(text) { this.value = String(text || ''); if (this.cm) { this.cm.setValue(this.value); } else { this.area.value = this.value; } }
+      updateValue(text) {
+        text = String(text || '');
+        if (text === this.getValue()) { return false; }
+        if (!this.cm) { this.setValue(text); return true; }
+        const cm = this.cm, cur = cm.getCursor(), scroll = cm.getScrollInfo();
+        this.value = text;
+        cm.operation(() => { cm.setValue(text); cm.setCursor({ line: Math.min(cur.line, cm.lineCount() - 1), ch: cur.ch }); cm.scrollTo(scroll.left, scroll.top); });
+        return true;
+      }
+      highlight(from, to, o) {
+        this.lit = this.lit || [];
+        if (this.cm) { this.lit.forEach((n) => this.cm.removeLineClass(n, 'background', 'di-code-hl')); }
+        this.lit = [];
+        this.host.removeAttribute('data-hl');
+        if (from === null || from === undefined) { return; }
+        to = to === undefined ? from : to;
+        this.host.setAttribute('data-hl', (from + 1) + '-' + (to + 1));
+        if (!this.cm) { return; }
+        for (let n = from; n <= to && n < this.cm.lineCount(); n++) { this.lit.push(this.cm.addLineClass(n, 'background', 'di-code-hl')); }
+        if (!o || o.scroll !== false) { this.cm.scrollIntoView({ from: { line: from, ch: 0 }, to: { line: Math.min(to, from + 12), ch: 0 } }, 24); }
+      }
+      cursor() { if (this.cm) { const c = this.cm.getCursor(); return { line: c.line, ch: c.ch }; } const before = this.area.value.slice(0, this.area.selectionStart).split('\n'); return { line: before.length - 1, ch: before[before.length - 1].length }; }
       setReadOnly(on) { this.o.readOnly = !!on; this.host.toggleAttribute('data-readonly', !!on); if (this.cm) { this.cm.setOption('readOnly', !!on); } else { this.area.readOnly = !!on; } }
       focus() { if (this.cm) { this.cm.focus(); } else { this.area.focus(); } }
       destroy() { this.lintSoon.cancel(); if (this.anchor) { this.anchor.remove(); } super.destroy(); }
@@ -2018,7 +2047,7 @@
       }
       actions() {
         const bar = this.el('div', { cls: 'di-form-actions' });
-        if (this.state !== 'editing') { return bar; }
+        if (this.state !== 'editing' || this.o.live) { return bar; }
         this.submitBtn = this.el('button', { cls: 'di-btn di-primary', text: this.o.fourEyes ? 'Submit for approval' : (this.o.submitLabel || 'Save'), attrs: { type: 'submit' }, data: { act: 'submit' } });
         bar.append(this.submitBtn, this.el('button', { cls: 'di-btn', text: 'Reset', attrs: { type: 'button' }, data: { act: 'reset' }, on: { click: () => this.reset() } }));
         return bar;
