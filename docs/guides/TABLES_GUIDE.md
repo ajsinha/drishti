@@ -509,9 +509,16 @@ tests:
 | **Runs** | on demand and kept per business date, or on each load of an input; the compute pool and the time and memory limits |
 | **Templates** | join and derive, resample a series, statistics per group, a file or feed from an approved source: each writes the code, the inputs and the contract |
 | **Notebook → Turn into table** | cells become the build function: `drishti.table("domain.name")` becomes an input, the imports move to the top, the last expression is returned, and the contract is proposed |
-| **Sample run** | *Under construction*: running authored code on the server's compute pool comes with one Python runtime (registered as `python-table-runs` in [UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md)); the editor, the contract, the inputs, the schedule and the templates work now |
+| **Sample run** | reads each input as you may see it (a table by name, or a model query), runs the build function on the server's compute pool `python` (the strict sandbox of [BI_GUIDE.md section 34](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), section 7), and checks the rows against the contract: each contract column there and of its type, the keys unique and the never-empty columns filled, each failure said in words in the checks; the first 20 rows show. Needs `bi-author`; where the server cannot run Python safely (compute off, Windows) the button is off and says why. The Notebook's **Run cells on the server** turns the cells into a build function and runs it the same way |
 
-A Python **model** is a model whose measures are Python measures (`{ python, inputs, by }`): the Measures tab lists them with the engine's "adds up?" (computed per total), and their keys are edited in the YAML.
+**Where the code runs.** On the server's compute pool `python`, never in the console or the browser, in the strict sandbox of
+[PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write): the inputs read as the person the run
+is for (their row rules and masks), the pinned libraries only (`config/compute/locks/python.lock`), the build function's time and memory limits, no
+network (a file or feed from an approved source is read by the server and handed in as an input), files only in its own folder; every run is audited.
+When BI reads the table, the same function runs for the reader and its rows are checked against the contract: a column missing or of another type is
+refused in words (`DRS-9075`). Where the server cannot run Python safely (compute off, a Windows server), the table answers `DRS-9074` with the reason.
+
+A Python **model** is a model whose measures are Python measures (`{ python, inputs, by }`): the Measures tab lists them with the engine's "adds up?" (computed per total), and their keys are edited in the YAML; they run on the same pool.
 
 ### 11.5 The editor API
 
@@ -530,6 +537,8 @@ Everything the screen shows is computed on the server, for the person who asks: 
 | `POST /save`, `POST /propose` | a draft saved in a workspace; proposed for review |
 | `GET`/`PUT /prefs` | your view (`visual`, `yaml`, `both`) and the YAML panel |
 | `GET /python/templates`, `POST /python/notebook`, `POST /python/contract` | the Python table's templates, a notebook turned into a build function, a contract proposed from code |
+| `POST /python/run` `{yaml, source, date?, timeout?, memory?, inputs?}` | the sample run on the compute pool, checked against the contract (`bi-author`) |
+| `GET /python/runtime` | whether the sample run runs on this server, and why not |
 
 The same definitions are checked on the command line by `drishti.py tables check` (section 8); a saved draft is a BI item of kind `table` or
 `model` in the layer's form (`rachana: 3`).

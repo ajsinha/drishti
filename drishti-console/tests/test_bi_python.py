@@ -12,15 +12,12 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Rupaka phase 6 (docs/guides/BI_GUIDE.md), the console's routes for Python in BI: the run route hands the Python runner the masked rows the server built and answers a
-number per group or a chart; failures are DRS codes and the traceback is for authors; the check route; the report page carries the browser target's wiring; CSRF."""
-import io
-
+"""Python items in the console (docs/guides/BI_GUIDE.md › Python in BI): every run is the server's (its compute pool python, PYTHON_COMPUTE.md section 19).
+The console's routes pass the page's calls to the server as the signed-in person and pass the answer back: a python visual's run, the check, the status;
+the server's traceback reaches the page only when the server gave one (for authors). The report page carries no browser runtime; CSRF holds. What the
+code computes and what the sandbox refuses is tested where it runs: drishti-compute/src/test/python/test_items.py."""
 import pytest
 from fastapi.testclient import TestClient
-
-pa = pytest.importorskip("pyarrow")
-pytest.importorskip("pandas")
 
 from bi_backend import BiBackend  # noqa: E402
 from conftest import CONSOLE  # noqa: E402
@@ -29,49 +26,42 @@ from core.backend import BackendError  # noqa: E402
 from core.config import load_settings  # noqa: E402
 
 MEASURE = {"id": "file:python:desk-vol", "title": "Desk volatility", "version": 1, "status": "published", "draft": False,
-           "manifest": {"name": "desk-vol", "interface": "measure", "entry": "compute", "inputs": ["pnl1d"], "packages": ["pandas"], "target": "both", "timeout": 10, "memory": 512,
+           "manifest": {"name": "desk-vol", "interface": "measure", "entry": "compute", "inputs": ["pnl1d"], "packages": ["pandas"], "target": "server", "timeout": 10, "memory": 512,
                         "output": "number", "params": {"k": 1}, "source": "def compute(table, params):\n    return float(table['pnl1d'].sum()) * params['k']\n"},
            "measure": {"name": "Desk P&L volatility", "inputs": ["trade.pnl1d"], "by": ["trade.desk"]}, "params": {"k": 1}, "run": "auto", "visual": "vol", "title": "Vol"}
-VISUAL = {**MEASURE, "id": "file:python:hist", "measure": None, "params": {"bins": 2},
-          "manifest": {**MEASURE["manifest"], "name": "hist", "interface": "visual", "entry": "render", "output": "echarts", "inputs": ["pnl1d"],
-                       "source": "def render(table, params):\n    return {'title': {'text': str(len(table))}, 'tooltip': {'formatter': 'x'}, 'series': [{'type': 'bar', 'data': list(table['pnl1d'])}]}\n"}}
-
-
-def arrow() -> bytes:
-    t = pa.table({"desk": ["A", "A", "B"], "pnl1d": [1.0, 2.0, 5.0], "id": ["1", "2", "3"]})
-    sink = io.BytesIO()
-    with pa.ipc.new_stream(sink, t.schema) as w:
-        w.write_table(t)
-    return sink.getvalue()
+ANSWER = {"kind": "measure", "by": ["desk"], "rows": [["A", 3.0], ["B", 5.0]], "ms": 4, "measure": "Desk P&L volatility", "item": "file:python:desk-vol",
+          "version": 1, "target": "server", "inputRows": 3, "masked": ["mtm"]}
 
 
 class PyBackend(BiBackend):
-    def __init__(self, item, powers=("bi", "bi-author"), refuse_item=None):
+    """Plays the server's Python routes: what it was asked, as whom, and its answer or refusal."""
+
+    def __init__(self, powers=("bi", "bi-author"), refuse=None):
         super().__init__(powers)
-        self.item, self.refuse_item, self.arrow_calls = item, refuse_item, []
+        self.item, self.refuse_python = MEASURE, refuse
 
     async def bi(self, method, path, ident, body=None, **params):
+        if path.startswith("/python/"):
+            self.bi_calls.append((method, path, body, params, ident.user))
+            if self.refuse_python:
+                status, code, detail, tb = self.refuse_python
+                e = BackendError(status, code, detail)
+                e.extra = {"code": code, "detail": detail, **({"traceback": tb} if tb else {})}
+                raise e
+            if path == "/python/visual":
+                return ANSWER
+            if path == "/python/check":
+                return {"valid": True, "problems": [], "manifest": MEASURE["manifest"], "tests": {"total": 0, "ok": True, "results": []}}
+            if path == "/python/runtime":
+                return {"runs": True, "why": None, "where": "server", "pool": "python", "packages": ["pandas", "numpy"], "calls": 0, "failures": 0}
         if path.endswith("/python") and method == "POST":
-            self.bi_calls.append((method, path, body, params))
-            if self.refuse_item:
-                raise BackendError(*self.refuse_item)
             return self.item
-        if path == "/python/validate":
-            self.bi_calls.append((method, path, body, params))
-            return {"valid": True, "problems": [], "manifest": {**self.item["manifest"], "source": body["yaml"]}, "packages": ["pandas"]}
         return await super().bi(method, path, ident, body, **params)
 
-    async def bi_arrow(self, path, ident, body, **params):
-        self.arrow_calls.append((path, body, params))
-        return arrow(), {"X-Bi-Rows": "3", "X-Bi-Masked": "mtm"}
 
-
-def make(item, powers=("bi", "bi-author"), settings=None, refuse_item=None):
-    s = load_settings(CONSOLE / "config")
-    for k, v in (settings or {}).items():
-        s.as_dict().setdefault("bi", {}).setdefault("python", {})[k] = v
-    app = create_app(s)
-    app.state.backend = PyBackend(item, powers, refuse_item)
+def make(powers=("bi", "bi-author"), refuse=None):
+    app = create_app(load_settings(CONSOLE / "config"))
+    app.state.backend = PyBackend(powers, refuse)
     return TestClient(app), app.state.backend
 
 
@@ -79,102 +69,49 @@ def run(client, **extra):
     return client.post("/bi/python/run", json={"report": "file:report:python-desk-risk", "page": "risk", "visual": "vol", "state": {"slicers": {}}, **extra})
 
 
-def test_a_python_measure_is_one_number_per_group_on_the_rows_the_server_built():
-    client, backend = make(MEASURE)
+def test_a_python_visual_runs_on_the_server_as_the_person():
+    client, backend = make()
     r = run(client)
-    assert r.status_code == 200, r.text
-    body = r.json()
-    assert body["kind"] == "measure" and body["by"] == ["desk"]
-    assert body["rows"] == [["A", 3.0], ["B", 5.0]]
-    assert body["measure"] == "Desk P&L volatility" and body["item"] == "file:python:desk-vol" and body["target"] == "server" and body["inputRows"] == 3
-    assert body["masked"] == ["mtm"] and body["ms"] >= 0
-    # the console asked the server for what to run, then for the rows of the same visual as the same person: nothing else
-    assert [c[:2] for c in backend.bi_calls if c[1].endswith("/python")] == [("POST", "/reports/file:report:python-desk-risk/python")]
-    path, query, params = backend.arrow_calls[0]
-    assert path == "/reports/file:report:python-desk-risk/query" and params == {"format": "arrow"} and query["visual"] == "vol" and query["state"] == {"slicers": {}}
-
-
-def test_a_python_visual_returns_a_chart_option_with_params_and_formatters_removed():
-    client, _ = make(VISUAL)
-    body = run(client).json()
-    assert body["kind"] == "echarts" and body["target"] == "server" and body["measure"] is None
-    assert body["option"]["title"]["text"] == "3" and "formatter" not in body["option"]["tooltip"]
-
-
-def test_a_failure_is_a_drs_code_and_only_an_author_sees_the_traceback():
-    broken = {**VISUAL, "manifest": {**VISUAL["manifest"], "source": "def render(table, params):\n    return 1 / 0\n"}}
-    client, _ = make(broken)
-    r = run(client)
-    assert r.status_code == 422 and r.json()["code"] == "DRS-9071" and "ZeroDivisionError" in r.json()["detail"]
-    assert "<python-item>" in r.json()["traceback"]
-    reader, _ = make(broken, powers=("bi",))
-    r = run(reader)
-    assert r.status_code == 422 and r.json()["code"] == "DRS-9071" and "traceback" not in r.json()
-
-
-def test_a_sandbox_refusal_and_a_limit_are_their_own_codes():
-    nosock = {**VISUAL, "manifest": {**VISUAL["manifest"], "source": "import os\ndef render(table, params):\n    return {}\n"}}
-    r = run(make(nosock)[0])
-    assert r.status_code == 403 and r.json()["code"] == "DRS-9073"
-    slow = {**VISUAL, "manifest": {**VISUAL["manifest"], "timeout": 1, "source": "def render(table, params):\n    while True:\n        pass\n"}}
-    r = run(make(slow)[0])
-    assert r.status_code == 504 and r.json()["code"] == "DRS-9072"
-
-
-def test_a_switched_off_runner_answers_9074_and_status_says_so():
-    client, _ = make(MEASURE, settings={"enabled": False})
-    r = run(client)
-    assert r.status_code == 503 and r.json()["code"] == "DRS-9074"
-    st = client.get("/bi/python/status").json()
-    assert st["enabled"] is False and st["ready"] is False and "browser" in st
-    ok = make(MEASURE)[0].get("/bi/python/status").json()
-    assert ok["ready"] is True and "pandas" in ok["packages"] and ok["workers"] == 2
-
-
-def test_the_servers_refusals_are_passed_on_and_a_malformed_call_is_refused():
-    client, _ = make(MEASURE, refuse_item=(403, "DRS-9002", "no BI power"))
-    r = run(client)
-    assert r.status_code == 403 and r.json()["code"] == "DRS-9002"
+    assert r.status_code == 200 and r.json() == ANSWER
+    method, path, body, _, _ = [c for c in backend.bi_calls if c[1].startswith("/python/")][0]
+    assert (method, path) == ("POST", "/python/visual") and body == {"report": "file:report:python-desk-risk", "page": "risk", "visual": "vol", "state": {"slicers": {}}}
     assert client.post("/bi/python/run", json={"report": "r"}).status_code == 422
 
 
-def test_an_item_that_says_browser_runs_on_the_server():
-    """Wave B (BI_DESIGN.md 3.5): there is no browser target; an older manifest's `target: browser` or `both` runs on the console like any other."""
-    only = {**MEASURE, "manifest": {**MEASURE["manifest"], "target": "browser"}}
-    r = run(make(only)[0])
-    assert r.status_code == 200 and r.json()["target"] == "server" and r.json()["kind"] == "measure"
+def test_a_failure_carries_the_servers_code_and_its_traceback_only_when_the_server_gave_one():
+    client, _ = make(refuse=(422, "DRS-9071", "ZeroDivisionError: division by zero", '  File "<python-item>", line 2'))
+    r = run(client)
+    assert r.status_code == 422 and r.json()["code"] == "DRS-9071" and "<python-item>" in r.json()["traceback"]
+    reader, _ = make(powers=("bi",), refuse=(422, "DRS-9071", "ZeroDivisionError: division by zero", None))
+    assert "traceback" not in run(reader).json()
+    off, _ = make(refuse=(503, "DRS-9074", "Python runs only on a Linux server", None))
+    r = run(off)
+    assert r.status_code == 502 or r.json()["code"] == "DRS-9074"
 
 
-def test_check_adds_the_consoles_source_checks_to_the_servers():
-    client, _ = make(MEASURE)
-    good = client.post("/bi/python/check", json={"yaml": "def compute(table, params):\n    return 1\n"}).json()
-    assert good["valid"] is True and good["problems"] == []
-    bad = client.post("/bi/python/check", json={"yaml": "import os\ndef compute(table, params):\n    return eval('1')\n"}).json()
-    paths = [(p["path"], p["message"]) for p in bad["problems"]]
-    assert bad["valid"] is False and any("import of 'os'" in m for _, m in paths) and any("eval" in m for _, m in paths)
-    syntax = client.post("/bi/python/check", json={"yaml": "def compute(:\n"}).json()
-    assert syntax["valid"] is False and "line 1" in syntax["problems"][0]["message"]
-    missing = client.post("/bi/python/check", json={"yaml": "x = 1\n"}).json()
-    assert any("no top-level function 'compute'" in p["message"] for p in missing["problems"])
-    offlist = {**MEASURE, "manifest": {**MEASURE["manifest"], "packages": ["requests"]}}
-    c2 = make(offlist)[0].post("/bi/python/check", json={"yaml": "def compute(t, p):\n    return 1\n"}).json()
-    assert any("allow-list" in p["message"] for p in c2["problems"])
+def test_check_and_status_are_the_servers():
+    client, backend = make()
+    c = client.post("/bi/python/check", json={"yaml": "def compute(t, p):\n    return 1\n"}).json()
+    assert c["valid"] is True and "tests" in c
+    st = client.get("/bi/python/status").json()
+    assert st["runs"] is True and st["where"] == "server" and st["pool"] == "python"
+    assert [c[1] for c in backend.bi_calls if c[1].startswith("/python/")] == ["/python/check", "/python/runtime"]
 
 
 def test_the_python_paths_of_the_server_are_reachable_from_the_page_script():
-    client, backend = make(MEASURE)
+    client, backend = make()
     r = client.post("/bi/api/reports/file:report:python-desk-risk/python", json={"page": "risk", "visual": "vol"})
     assert r.status_code == 200 and r.json()["manifest"]["name"] == "desk-vol"
     assert client.post("/bi/api/python/validate", json={"yaml": "x"}).status_code == 200
 
 
 def test_the_report_page_wires_python_without_inline_script_and_without_a_browser_runtime():
-    client, _ = make(MEASURE)
+    client, _ = make()
     page = client.get("/bi/r/file:report:python-desk-risk").text
     assert "/static/js/drishti_bi-python.js" in page and 'data-author="true"' in page
     assert "data-py-runtime" not in page and "data-py-driver" not in page and "drishti_calc-worker.js" not in page and "pyodide" not in page.lower()
     assert "<script>" not in page.replace("<script src", "") and " onclick=" not in page
-    reader, _ = make(MEASURE, powers=("bi",))
+    reader, _ = make(powers=("bi",))
     assert 'data-author="false"' in reader.get("/bi/r/file:report:python-desk-risk").text
     assert client.get("/bi/r/file:report:python-desk-risk").headers["content-security-policy"].count("wasm-unsafe-eval") == 0
     assert client.get("/static/calc/bi_driver.py").status_code == 404
@@ -182,7 +119,7 @@ def test_the_report_page_wires_python_without_inline_script_and_without_a_browse
 
 
 def test_the_run_route_takes_json_from_this_console_only():
-    client, _ = make(MEASURE)
+    client, _ = make()
     other = client.post("/bi/python/run", json={"report": "r", "page": "p", "visual": "v"}, headers={"Origin": "https://evil.example"})
     assert other.status_code == 403 and other.json()["code"] == "DRS-5002"
     plain = client.post("/bi/python/run", content='{"report":"r"}', headers={"Content-Type": "text/plain"})

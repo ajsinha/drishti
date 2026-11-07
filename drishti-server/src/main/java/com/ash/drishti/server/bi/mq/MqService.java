@@ -142,7 +142,7 @@ public final class MqService {
         this.pythonSeconds = c == null ? (item, s) -> { } : c;
     }
 
-    /** Python measures in any grouped query (wave B): run by the console's runner after the query. */
+    /** Python measures in any grouped query (wave B): run on the compute pool python after the query. */
     public void python(PythonMeasures p) {
         this.python = p;
     }

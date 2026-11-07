@@ -330,7 +330,7 @@ public sealed interface PlanNode {
     }
 
     /**
-     * A Python node, run on the console backend (wave B, section 3.6): {@code PyAggregate} (a Python measure: its item computes one value per group of the
+     * A Python node, run on the server's compute pool {@code python} (wave B, section 3.6): {@code PyAggregate} (a Python measure: its item computes one value per group of the
      * answer from the rows of its input columns), {@code PyTransform}, {@code PyColumn}. Its sources are the secured scans of its inputs.
      */
     record PyNode(String kind, String item, String measure, List<String> columns, List<String> by, List<PlanNode> sources) implements PlanNode {

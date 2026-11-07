@@ -27,9 +27,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Python items for the console's runner (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8): finds an item by catalogue id, shipped file name or title, as the caller may read it, and
- * answers its parsed manifest and source. The server never runs Python: it stores, versions, reviews and publishes the item like any BI item (publishing
- * checks the manifest), and tells the console what to run and on which columns.
+ * Python items (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8): finds an item by catalogue id, shipped file name or title, as the caller may read it, and
+ * answers its parsed manifest and source. The server stores, versions, reviews and publishes the item like any BI item (publishing checks the manifest and
+ * runs its own tests), and runs it on its compute pool {@code python} ({@link PythonRuns}).
  */
 public final class PythonItems {
 
@@ -80,6 +80,23 @@ public final class PythonItems {
         out.put("status", item.status());
         out.put("draft", !body.equals(bi.publishedBody(item)));
         out.put("manifest", r.manifest().toMap());
+        return out;
+    }
+
+    /** The tests of a Python item that do not pass, run on the compute pool as {@code p} (the publish gate): one line each; empty when none fails. */
+    @SuppressWarnings("unchecked")
+    public List<String> failingTests(Principal p, BiStore.Item item, PythonTestRuns tests) {
+        PythonManifest.Result r = parse(item.body());
+        if (!r.ok() || r.manifest().tests() == null || r.manifest().tests().isEmpty()) {
+            return List.of();
+        }
+        Map<String, Object> result = tests.run(p, r.manifest().toMap());
+        List<String> out = new java.util.ArrayList<>();
+        for (Map<String, Object> t : (List<Map<String, Object>>) result.get("results")) {
+            if (!"pass".equals(t.get("status"))) {
+                out.add(t.get("name") + ": " + t.get("message"));
+            }
+        }
         return out;
     }
 

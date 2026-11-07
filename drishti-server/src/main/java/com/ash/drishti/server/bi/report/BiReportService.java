@@ -797,7 +797,7 @@ public final class BiReportService {
     }
 
     /**
-     * What the console's Python runner needs to run one python visual (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8): the Python item (manifest and source, as the caller reads it),
+     * What the compute pool python needs to run one python visual (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8): the Python item (manifest and source, as the caller reads it),
      * the Python measure it shows (its name and the columns it reads and groups by, as the table names them) or null, the visual's parameters, and where it
      * may run. The rows come from the same visual query as any other (as an Arrow stream, masked for this caller).
      */

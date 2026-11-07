@@ -125,7 +125,7 @@ final class DatasetValidator {
 
     /**
      * A Python measure names a Python item and the columns it reads ({@code inputs}) and is grouped by ({@code by}), all of one table; the query engine
-     * refuses it (the console's runner computes it, for a python visual), so the model says so as a warning.
+     * refuses it (the compute pool python computes it, for a python visual), so the model says so as a warning.
      */
     private void pythonMeasure(String path, Dataset.Measure m) {
         if (m.python().isBlank()) {
@@ -153,7 +153,7 @@ final class DatasetValidator {
         if (tables.size() > 1) {
             err(RELATION, path, "a Python measure reads the columns of one table, not " + tables);
         }
-        out.add(new Problem("warning", NOT_BUILT, path, "a Python measure (" + m.python() + ") is computed by the console's Python runner and shown by a python visual; a query that names it is refused"));
+        out.add(new Problem("warning", NOT_BUILT, path, "a Python measure (" + m.python() + ") is computed on the server's compute pool python and shown by a python visual; a query that names it is refused"));
     }
 
     private void measures() {

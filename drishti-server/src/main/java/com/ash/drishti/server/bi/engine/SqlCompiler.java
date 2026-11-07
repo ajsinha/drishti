@@ -184,7 +184,7 @@ public final class SqlCompiler {
                 throw invalid("no measure '" + name + "' in this dataset (measures: " + String.join(", ", ds.measures().keySet()) + ")");
             }
             if (m.expr() == null) {
-                throw new DrishtiException(ErrorCode.DATASET_NOT_BUILT, "measure '" + name + "' is a Python measure (" + m.python() + "); Python measures are run by the console's Python runner, shown by a python visual, never by a query");
+                throw new DrishtiException(ErrorCode.DATASET_NOT_BUILT, "measure '" + name + "' is a Python measure (" + m.python() + "); Python measures are run on the server's compute pool python, shown by a python visual, never by a query");
             }
             SqlEmitter probe = new SqlEmitter(ds, dialect, "", null, reader.user()).planning();
             probe.emit(new Node.MeasureRef(name), false);

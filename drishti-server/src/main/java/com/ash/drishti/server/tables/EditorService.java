@@ -88,6 +88,8 @@ public final class EditorService {
     private final PreferenceStore preferences;
     private final RoleCatalog roles;
     private final boolean securityOn;
+    private volatile com.ash.drishti.server.bi.python.PythonRuns pythonRuns;
+    private volatile com.ash.drishti.server.bi.python.PythonFrames pythonFrames;
 
     public EditorService(TablesService tables, DataViewService data, Entitlements entitlements, BiAccess access, BiService bi, PreferenceStore preferences,
             RoleCatalog roles, boolean securityOn) {
@@ -495,6 +497,161 @@ public final class EditorService {
         return Catalogue.of(ts, ms, d -> d == table || d == model ? DRAFT : "catalogue");
     }
 
+    /** Wired once at start: the one Python runtime (the sample run of a Python-driven table) and the reads of its model-query inputs. */
+    public void python(com.ash.drishti.server.bi.python.PythonRuns runs, com.ash.drishti.server.bi.python.PythonFrames frames) {
+        this.pythonRuns = runs;
+        this.pythonFrames = frames;
+    }
+
+    /** Whether authored code runs on this server's compute pool, and why not (the editor's Sample run and Notebook say it). */
+    public java.util.Optional<String> pythonUnavailable() {
+        return pythonRuns == null ? java.util.Optional.of("the Python runtime is not wired on this server") : pythonRuns.unavailable();
+    }
+
+    /** The rows a sample run hands one input: at most this many. */
+    static final int SAMPLE_INPUT_ROWS = 5_000;
+
+    /**
+     * A Python-driven table's sample run (EDITORS.md section 4): each input read as {@code p} may see it on {@code date} (a table by its name, or a
+     * model query), the build function {@code source} run once on the compute pool with them ({@code build(inputs, params)}), and its rows checked
+     * against the table's output contract (the columns and their types, the keys unique, the never-empty columns). Needs bi-author.
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> samplePython(Principal p, String yaml, String source, String date, int timeout, int memory, Map<String, Object> inputsOver) {
+        requireRead(p);
+        if (securityOn && !access.has(p, BiAccess.AUTHOR) && !entitlements.isAdmin(p)) {
+            throw new DrishtiException(ErrorCode.BI_FORBIDDEN, "a sample run runs Python: it needs the bi-author power");
+        }
+        TableYaml.Result r = TableYaml.read(yaml);
+        if (r.table() == null || !isPython(r.table())) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, "the sample run is for a Python-driven table (from: { python, inputs })");
+        }
+        if (source == null || source.isBlank()) {
+            throw new DrishtiException(ErrorCode.BI_INVALID, "write the build function first");
+        }
+        if (pythonRuns == null) {
+            throw new DrishtiException(ErrorCode.PYTHON_BUSY, "the Python runtime is not wired on this server");
+        }
+        TableDef t = r.table();
+        ViewerContext who = entitlements.viewer(p);
+        Map<String, byte[]> files = new LinkedHashMap<>();
+        List<String> fileNames = new ArrayList<>();
+        List<String> names = new ArrayList<>();
+        List<Map<String, Object>> read = new ArrayList<>();
+        Catalogue over = with(overlayBase(p, EditorYaml.TABLE, null), t, null);
+        TableReads reads = tables.readsOver(over, tables.source(who));
+        int n = 0;
+        Map<String, Object> inputs = inputsOver == null || inputsOver.isEmpty() ? t.from().inputs() : inputsOver;   // the Notebook's cells name their own
+        for (Map.Entry<String, Object> in : inputs.entrySet()) {
+            byte[] arrow;
+            int rows;
+            List<String> masked;
+            if (in.getValue() instanceof String table) {
+                TableReads.Read got;
+                try {
+                    got = reads.read(table, blank(date) ? null : date, null, TablesService.reader(who), null);
+                } catch (ModelAnswers.Refused e) {
+                    throw TablesService.refused(e);
+                }
+                List<List<Object>> rowsOf = got.rows().size() > SAMPLE_INPUT_ROWS ? got.rows().subList(0, SAMPLE_INPUT_ROWS) : got.rows();
+                arrow = com.ash.drishti.server.bi.python.PythonRuns.arrow(got.columns(), rowsOf);
+                rows = rowsOf.size();
+                masked = new ArrayList<>(got.masked());
+            } else {
+                com.fasterxml.jackson.databind.node.ObjectNode ask = JSON.createObjectNode();
+                ask.set("input", JSON.valueToTree(in.getValue()));
+                if (!blank(date)) {
+                    ask.put("asOf", date);
+                }
+                com.ash.drishti.server.bi.python.PythonFrames.Read got = pythonFrames.read(p, ask, SAMPLE_INPUT_ROWS);
+                arrow = got.arrow();
+                rows = got.rows();
+                masked = got.masked();
+            }
+            String file = "in_" + n++ + ".arrow";
+            files.put(file, arrow);
+            fileNames.add(file);
+            names.add(in.getKey());
+            read.add(Map.of("name", in.getKey(), "rows", rows, "masked", masked));
+        }
+        Map<String, Object> manifest = new LinkedHashMap<>();
+        manifest.put("name", PythonDrafts.itemName(t.name()));
+        manifest.put("interface", "transform");
+        manifest.put("entry", "build");
+        manifest.put("inputs", names);
+        manifest.put("packages", pythonRuns.packages().stream().filter(x -> source.matches("(?s).*\\b(import|from)\\s+" + x + "\\b.*")).toList());
+        manifest.put("source", source);
+        manifest.put("timeout", timeout);
+        manifest.put("memory", memory);
+        Map<String, Object> how = new LinkedHashMap<>();
+        how.put("frames", fileNames);
+        how.put("names", names);
+        com.ash.drishti.server.bi.python.PythonRuns.Answer a = pythonRuns.run(p, "transform", manifest, t.from().params(),
+                new com.ash.drishti.server.bi.python.PythonRuns.Inputs(files, how), true, "sample run of " + t.name());
+        List<Map<String, Object>> cols = (List<Map<String, Object>>) a.body().getOrDefault("columns", List.of());
+        List<String> got = cols.stream().map(c -> String.valueOf(c.get("name"))).toList();
+        List<List<Object>> head = (List<List<Object>>) a.body().getOrDefault("head", List.of());
+        List<Map<String, Object>> checks = new ArrayList<>();
+        boolean ok = true;
+        for (Map.Entry<String, ColumnDef> c : t.columns().entrySet()) {
+            int at = got.indexOf(c.getKey());
+            if (at < 0) {
+                checks.add(check("error", "the contract's column " + c.getKey() + " is not in what the code returned"));
+                ok = false;
+            } else if (!com.ash.drishti.server.bi.transform.TransformService.fits(String.valueOf(cols.get(at).get("type")), c.getValue().type())) {
+                checks.add(check("error", c.getKey() + " is " + cols.get(at).get("type") + ", the contract says " + c.getValue().type()));
+                ok = false;
+            }
+        }
+        for (String c : got) {
+            if (!t.columns().isEmpty() && !t.columns().containsKey(c)) {
+                checks.add(check("warning", "the code also returns " + c + ", which the contract does not name: it is left out of the table"));
+            }
+        }
+        List<String> keys = new ArrayList<>(t.keys());
+        t.columns().forEach((k, v) -> {
+            if (v.key() && !keys.contains(k)) {
+                keys.add(k);
+            }
+        });
+        if (!keys.isEmpty() && got.containsAll(keys)) {
+            Set<List<Object>> seen = new HashSet<>();
+            boolean unique = true;
+            for (List<Object> row : head) {
+                List<Object> k = keys.stream().map(x -> row.get(got.indexOf(x))).toList();
+                unique &= seen.add(k);
+            }
+            checks.add(unique ? check("ok", "the key " + keys + " is unique in the rows shown") : check("error", "the key " + keys + " repeats in the rows shown"));
+            ok &= unique;
+        }
+        for (Map<String, Object> test : t.tests()) {
+            if (test.get("not-null") != null) {
+                for (Object c : test.get("not-null") instanceof List<?> l ? l : List.of(test.get("not-null"))) {
+                    int at = got.indexOf(String.valueOf(c));
+                    if (at >= 0 && head.stream().anyMatch(row -> row.get(at) == null)) {
+                        checks.add(check("error", c + " is empty in some rows; the contract says never empty"));
+                        ok = false;
+                    }
+                }
+            }
+        }
+        if (ok) {
+            checks.add(0, check("ok", "the rows match the output contract"));
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("python", true);
+        out.put("ran", true);
+        out.put("columns", got);
+        out.put("types", cols.stream().map(c -> String.valueOf(c.get("type"))).toList());
+        out.put("rows", head.subList(0, Math.min(SHOWN, head.size())));
+        out.put("count", a.body().getOrDefault("rows", 0));
+        out.put("inputs", read);
+        out.put("ms", a.body().get("ms"));
+        out.put("matches", ok);
+        out.put("checks", checks);
+        return out;
+    }
+
     // ---- preview ------------------------------------------------------------------------------------------------------------------
 
     /**
@@ -511,7 +668,8 @@ public final class EditorService {
         Map<String, Object> out = new LinkedHashMap<>();
         if (isPython(t)) {
             out.put("python", true);
-            out.put("checks", List.of(check("info", "a Python table's rows come from its sample run on the server's compute pool: under construction")));
+            out.put("checks", List.of(check("info", pythonUnavailable().map(w -> "a Python table's rows come from its sample run, which cannot run here: " + w)
+                    .orElse("a Python table's rows come from its sample run on the server's compute pool: press Sample run"))));
             out.put("columns", new ArrayList<>(t.columns().keySet()));
             out.put("rows", List.of());
             return out;

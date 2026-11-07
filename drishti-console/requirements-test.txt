@@ -10,6 +10,7 @@ pytest>=8.0
 # CPython. Not needed to run the console (Calc's Python runs in the browser), so not in requirements.txt.
 -r requirements.txt
 numpy>=2.0
+pandas>=2.2       # tests that run the compute pool's engine or a promoted draft in-process (test_transform_editor.py, test_bi_notebook.py)
 scipy>=1.13
 # Test-only: tests/test_live_tabs_browser.py drives Chromium (many live tabs, UX-01). Skipped unless the browser is there
 # too: `python -m playwright install chromium`.

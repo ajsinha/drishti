@@ -17,8 +17,8 @@
 /* The Python-driven table editor (docs/architecture/EDITORS.md section 4: option A as the editor, B the Notebook, C the templates; all end
    in A). The build function beside its output contract (the columns, types, keys and rules it must return); its inputs (tables read as
    the person may see them); when it runs (on demand and cached per business date, or on each load of an input); its compute pool and
-   limits. The sample run on the server's compute pool is registered under construction (config/under-construction.yaml,
-   python-table-runs): the button carries the chip until one Python runtime runs authored code there. The code is kept in the table's
+   limits. Sample run reads the inputs as the person may see them and runs the code on the server's compute pool (POST python/run), and the rows
+   are checked against the contract; where the server cannot run Python safely the button is off and says why. The code is kept in the table's
    build-function item (a BI Python item) and saved with the table. */
 (function () {
   'use strict';
@@ -134,16 +134,31 @@
       on: { change: function (e) { f.timeout = parseInt(e.target.value, 10) || 60; ctx.markDirty(); } } });
     var memory = h('input', { class: 'ed-in ed-narrow', type: 'number', min: '64', max: '65536', value: String(f.memory || 512), 'data-py-memory': '', 'aria-label': 'Memory limit in MB',
       on: { change: function (e) { f.memory = parseInt(e.target.value, 10) || 512; ctx.markDirty(); } } });
-    var uc = E.runsUnderConstruction;
-    var run = h('button', { type: 'button', class: 'ed-btn', 'data-py-run': '', 'data-always': '', disabled: uc, 'aria-describedby': uc ? 'edRunUc' : null,
-      on: { click: function () { E.say('The sample run is not available on this server yet.', true); } } }, 'Sample run');
+    var off = !E.pythonRuns;
+    var run = h('button', { type: 'button', class: 'ed-btn', 'data-py-run': '', 'data-always': '', disabled: off, 'aria-describedby': off ? 'edRunOff' : null,
+      on: { click: function () { sampleRun(ctx); } } }, 'Sample run');
     return h('section', { class: 'ed-card' }, h('h3', { text: 'When it runs, where, and its limits' }),
       h('label', { class: 'ed-field' }, h('span', { text: 'Runs' }), when),
       h('div', { class: 'ed-row3' }, h('label', { class: 'ed-field' }, h('span', { text: 'Compute pool' }), pool),
         h('label', { class: 'ed-field' }, h('span', { text: 'Time (s)' }), timeout), h('label', { class: 'ed-field' }, h('span', { text: 'Memory (MB)' }), memory)),
-      h('p', {}, run, ' ', uc ? h('span', { id: 'edRunUc', class: 'drishti_uc-chip', 'data-uc': 'python-table-runs', text: 'Under construction' }) : null),
-      h('p', { class: 'ed-small', text: uc ? 'The sample run and its checks run on the server\'s compute pool; running authored code there comes with one Python runtime. The contract, inputs and schedule are checked now.'
-        : 'The sample run reads the inputs as you may see them, runs the code on the pool, and checks the rows against the contract.' }));
+      h('p', {}, run, ' ', off ? h('small', { id: 'edRunOff', class: 'ed-small', 'data-python-off': '', text: 'Off: ' + (E.pythonWhy || 'Python does not run on this server') }) : null),
+      h('p', { class: 'ed-small', text: 'The sample run reads the inputs as you may see them, runs the code on the server\'s compute pool, and checks the rows against the contract.' }));
+  }
+
+  /** The sample run: the server reads the inputs as this person, runs the build function on its pool and checks the rows against the contract. */
+  function sampleRun(ctx, inputs) {
+    var f = fields(ctx), S = ctx.S;
+    if (!f.source.trim()) { E.say('Write the build function first.', true); return Promise.resolve(); }
+    E.say('Running on the server\'s compute pool…');
+    return ctx.api('POST', 'python/run', { yaml: S.yaml || '', source: f.source, timeout: f.timeout || 60, memory: f.memory || 512, date: S.date || null, inputs: inputs || null })
+      .then(function (r) {
+        S.preview = r;
+        S.sampleRun = { source: f.source, answer: r };              // kept: a later preview of the same code shows this run, not the prompt again
+        var pane = document.querySelector('[data-preview]');
+        if (pane) { ctx.clear(pane); preview(ctx, pane, r); }
+        E.say(r.matches ? 'The sample run matches the contract: ' + r.count + ' rows in ' + r.ms + ' ms.' : 'The sample run does not match the contract: see the checks.', !r.matches);
+        return r;
+      }).catch(function (e) { E.say(e.message, true); });
   }
 
   function proposeContract(ctx) {
@@ -201,8 +216,18 @@
     add('import pandas as pd\nlegs = drishti.table("trading.trade_legs")');
     add('legs["ABS_NOTIONAL"] = legs["NOTIONAL"].abs()\nlegs');
     var addBtn = h('button', { type: 'button', class: 'ed-btn', 'data-cell-add': '', on: { click: function () { add('').focus(); } } }, '+ Cell');
-    var uc = E.runsUnderConstruction;
-    var runBtn = h('button', { type: 'button', class: 'ed-btn', 'data-cell-run': '', disabled: uc }, 'Run cells on the server');
+    var off = !E.pythonRuns;
+    var shown = h('div', { class: 'ed-scroll', 'data-cells-result': '' });
+    var runBtn = h('button', { type: 'button', class: 'ed-btn', 'data-cell-run': '', disabled: off, title: off ? 'Off: ' + E.pythonWhy : null, on: { click: function () {
+      var texts = Array.prototype.map.call(cells.querySelectorAll('textarea'), function (x) { return x.value; });
+      ctx.api('POST', 'python/notebook', { cells: texts }).then(function (r) {               // the cells as one build function, run as a sample run
+        fields(ctx).source = r.source;
+        return sampleRun(ctx, r.inputs || {});
+      }).then(function (r) {
+        ctx.clear(shown);
+        if (r) { shown.appendChild(rowsTable(ctx, r)); }
+      }).catch(function (e) { E.say(e.message, true); });
+    } } }, 'Run cells on the server');
     var go = h('button', { type: 'button', class: 'ed-btn ed-primary', 'data-turn-into-table': '', on: { click: function () {
       var texts = Array.prototype.map.call(cells.querySelectorAll('textarea'), function (x) { return x.value; });
       ctx.api('POST', 'python/notebook', { cells: texts }).then(function (r) {
@@ -215,15 +240,31 @@
     } } }, 'Turn into table');
     ctx.dialog('Notebook', h('div', { class: 'ed-form' },
       h('p', { class: 'ed-small', text: 'Explore in cells; drishti.table("domain.name") reads a table as you may see it. Turn into table makes the cells a build function and fills in its inputs and contract.' }),
-      cells, h('p', {}, addBtn, ' ', runBtn, uc ? h('span', { class: 'drishti_uc-chip', 'data-uc': 'python-table-runs', text: 'Under construction' }) : null), h('p', {}, go)));
+      cells, h('p', {}, addBtn, ' ', runBtn, off ? h('small', { class: 'ed-small', 'data-python-off': '', text: ' Off: ' + E.pythonWhy }) : null), shown, h('p', {}, go)));
   }
   E.pythonNotebook = notebook;
 
-  function preview(ctx, pane, r) {
+  /** The rows a sample run returned (its first rows), as a table. */
+  function rowsTable(ctx, r) {
     var h = ctx.h;
+    return h('table', { class: 'ed-grid-t', 'data-sample-rows': '' }, h('thead', {}, h('tr', {}, (r.columns || []).map(function (c) { return h('th', { scope: 'col', text: c }); }))),
+      h('tbody', {}, (r.rows || []).map(function (row) { return h('tr', {}, row.map(function (v) { return h('td', { text: v == null ? '' : String(v) }); })); })));
+  }
+
+  function preview(ctx, pane, r) {
+    var h = ctx.h, kept = ctx.S.sampleRun;
+    if (!(r && r.ran) && kept && kept.source === fields(ctx).source) { r = kept.answer; }
     pane.appendChild(h('h3', { text: 'Sample run' }));
+    if (r && r.ran) {
+      pane.appendChild(h('p', { class: 'ed-small', 'data-sample-run': 'ran', text: r.count + ' rows in ' + r.ms + ' ms on the server\'s compute pool' +
+        (r.inputs || []).map(function (i) { return ' · ' + i.name + ': ' + i.rows + ' rows' + (i.masked && i.masked.length ? ' (masked: ' + i.masked.join(', ') + ')' : ''); }).join('') }));
+      pane.appendChild(h('div', { class: 'ed-scroll' }, rowsTable(ctx, r)));
+      E.checks(pane, r.checks || []);
+      E.usedBy(pane);
+      return true;
+    }
     var cols = Object.keys((ctx.S.doc || {}).columns || {});
-    pane.appendChild(h('p', { class: 'ed-small', 'data-sample-run': '', text: E.runsUnderConstruction ? 'Under construction: the sample run on the server\'s compute pool. The contract below is what a run must return.' : 'Press Sample run.' }));
+    pane.appendChild(h('p', { class: 'ed-small', 'data-sample-run': '', text: E.pythonRuns ? 'Press Sample run: the rows it returns are checked against the contract below.' : 'Python does not run on this server: ' + E.pythonWhy + '. The contract below is what a run must return.' }));
     pane.appendChild(h('div', { class: 'ed-scroll' }, h('table', { class: 'ed-grid-t' }, h('thead', {}, h('tr', {}, cols.map(function (c) { return h('th', { scope: 'col', text: c }); }))))));
     E.checks(pane, r.checks || []);
     E.usedBy(pane);

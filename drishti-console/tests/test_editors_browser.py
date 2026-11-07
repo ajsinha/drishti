@@ -20,8 +20,11 @@ other; the theme and the phone layout; keyboard access; no page error and no pol
 Skipped when Playwright, Chromium or the built server jar is missing."""
 from __future__ import annotations
 
+import sys
+
 import pytest
 
+from conftest import CONSOLE
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import TOKEN_SECRET, _stack
 
@@ -67,7 +70,10 @@ def stack(tmp_path_factory):
     (root / "trading" / "trade_products.table.yaml").write_text(DESKS)
     (root / "trading" / "trading_brief.model.yaml").write_text(MODEL)
     yield from _stack(tmp_path_factory, {"DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": TOKEN_SECRET,
-                                         "DRISHTI_TABLES_ROOT": str(root), "DRISHTI_OFFLINE": "true"}, auth=True)
+                                         "DRISHTI_TABLES_ROOT": str(root), "DRISHTI_OFFLINE": "true",
+                                         # Python runs on the server's compute pool python, in the interpreter that runs this test (the pinned libraries)
+                                         "DRISHTI_COMPUTE_ENABLED": "true", "DRISHTI_PYTHON": sys.executable,
+                                         "DRISHTI_COMPUTE_FILE": str(CONSOLE.parent / "config" / "compute" / "compute.yaml")}, auth=True)
 
 
 def settle(pg):
@@ -393,7 +399,7 @@ def test_new_model_four_questions(pg):
 # ---- the Python-driven table editor ------------------------------------------------------------------------------------------------
 
 
-def test_python_table_template_notebook_contract_and_the_run_under_construction(pg):
+def test_python_table_template_notebook_contract_and_the_sample_run(pg):
     open_editors(pg)
     pg.click("[data-act=new]")
     pg.click("[data-new-kind=python]")
@@ -405,9 +411,8 @@ def test_python_table_template_notebook_contract_and_the_run_under_construction(
     pg.click("[data-template='group-stats']")
     wait(pg, "document.querySelector('[data-python-code]').value.includes('def build')")
     assert pg.locator("[data-contract-col]").count() == 5
-    # the run is under construction: the button is off and carries the chip
-    assert pg.is_disabled("[data-py-run]")
-    assert pg.locator("[data-uc='python-table-runs']").count() >= 1
+    # the sample run is on: the server runs authored code on its compute pool
+    assert not pg.is_disabled("[data-py-run]") and pg.locator("[data-uc='python-table-runs']").count() == 0
     pg.click("[data-py-templates]")
     wait(pg, "!!document.querySelector('[data-dialog][open] [data-templates]')")
     pg.click("[data-dialog-close]")
@@ -415,12 +420,14 @@ def test_python_table_template_notebook_contract_and_the_run_under_construction(
     wait(pg, "!!document.querySelector('[data-dialog][open] [data-cells]')")
     pg.click("[data-cell-add]")
     assert pg.locator("[data-cell]").count() == 3
-    assert pg.is_disabled("[data-cell-run]")
+    assert not pg.is_disabled("[data-cell-run]")
     pg.click("[data-turn-into-table]")
     wait(pg, "document.querySelector('[data-python-code]').value.includes('inputs[\"trade_legs\"]')")
     wait(pg, "!!document.querySelector(\"[data-input='trade_legs']\")")
     pg.click("[data-input-remove='trade_legs']")
     wait(pg, "!document.querySelector(\"[data-input='trade_legs']\")")
+    pg.click("[data-input-remove='pnl']")                          # the template's own input (risk.daily_pnl) is not in this catalogue: the run reads every input
+    wait(pg, "!document.querySelector(\"[data-input='pnl']\")")
     pg.select_option("[data-input-pick]", "trading.trade_summary")
     pg.click("[data-input-add]")
     wait(pg, "!!document.querySelector(\"[data-input='trade_summary']\")")
@@ -441,7 +448,13 @@ def test_python_table_template_notebook_contract_and_the_run_under_construction(
     pg.fill("[data-py-memory]", "1024")
     wait(pg, "document.querySelector('[data-yaml]').value.includes('on-load')")
     settle(pg)
-    assert "Under construction" in pg.inner_text("[data-sample-run]")
+    assert "Press Sample run" in pg.inner_text("[data-sample-run]")
+    # the sample run: the input read as this person, the code run on the pool, the rows checked against the contract (which names columns it does not return)
+    pg.fill("[data-python-code]", "def build(inputs, params):\n    t = inputs['trade_summary']\n    return t.groupby('PRODUCT', as_index=False)['MTM'].sum()\n")
+    pg.click("[data-py-run]")
+    wait(pg, "!!document.querySelector('[data-sample-run=ran]')", 180)
+    assert pg.locator("[data-sample-rows] th").all_inner_texts() == ["PRODUCT", "MTM"]
+    assert "is not in what the code returned" in pg.inner_text("[data-preview]")
     pg.click("[data-act=save]")
     wait(pg, "!!document.querySelector('[data-dialog][open] [data-save-go]')")
     pg.click("[data-save-go]")

@@ -189,8 +189,8 @@ async def model_view(request: Request, item: str):
 
 @router.get("/admin/bi/usage")
 async def usage_page(request: Request, limit: int = 2000):
-    """Admin → BI usage (wave B): what BI is asked, by whom and how it is answered (core/bi_usage.py), from the audit log, the engine's counters and the console's
-    Python runner. BI administrators; the audit log itself is the system administrator's, so a bi-admin who is not one sees the engine and the runner only."""
+    """Admin → BI usage (wave B): what BI is asked, by whom and how it is answered (core/bi_usage.py), from the audit log, the engine's counters and the server's
+    Python runtime. BI administrators; the audit log itself is the system administrator's, so a bi-admin who is not one sees the engine and the runner only."""
     from core.bi_usage import summarise
 
     me = getattr(request.state, "bi_me", None) or {}
@@ -209,7 +209,11 @@ async def usage_page(request: Request, limit: int = 2000):
         engine = await request.app.state.backend.bi("GET", "/engine", ident(request))
     except BackendError:
         engine = None
-    return render(request, "bi/usage.html", screen="admin", usage=usage, engine=engine, why=why, runner=request.app.state.pyrunner.status())
+    try:
+        runner = await request.app.state.backend.bi("GET", "/python/runtime", ident(request))
+    except BackendError:
+        runner = None
+    return render(request, "bi/usage.html", screen="admin", usage=usage, engine=engine, why=why, runner=runner)
 
 
 @router.get("/admin/bi")
@@ -332,11 +336,6 @@ async def proxy(request: Request, path: str):
     if head not in _ALLOWED or ".." in path:
         return JSONResponse({"code": "DRS-9001", "detail": "no such BI path"}, status_code=404)
     body = None if request.method in _NO_BODY else await json_body(request)
-    if request.method == "POST" and head == "items" and path.rsplit("/", 1)[-1] in ("publish", "approve"):
-        from routes.python_routes import publish_gate
-        refused = await publish_gate(request, path, body)          # a Python item whose own tests fail is not published (a bi-admin may force it)
-        if refused is not None:
-            return refused
     params = {k: v for k, v in request.query_params.items()}
     if request.method == "POST" and head == "reports" and path.endswith("/query") and params.get("format") == "arrow":
         try:                                                  # a Perspective visual's rows: the server's Arrow bytes, passed through unchanged

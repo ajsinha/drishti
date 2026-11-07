@@ -55,8 +55,12 @@ public class TablesConfiguration {
     @Bean
     public EditorService tablesEditorService(TablesService tables, DataViewService data, com.ash.drishti.server.security.Entitlements entitlements,
             com.ash.drishti.server.bi.BiAccess access, com.ash.drishti.server.bi.BiService bi, com.ash.drishti.identity.PreferenceStore preferences,
-            com.ash.drishti.server.security.RoleCatalog roles, SecurityProperties security) {
-        return new EditorService(tables, data, entitlements, access, bi, preferences, roles, security.enabled());
+            com.ash.drishti.server.security.RoleCatalog roles, SecurityProperties security,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.python.PythonRuns> runs,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.bi.python.PythonFrames> frames) {
+        EditorService editors = new EditorService(tables, data, entitlements, access, bi, preferences, roles, security.enabled());
+        editors.python(runs.getIfAvailable(), frames.getIfAvailable());          // the sample run of a Python-driven table, on the compute pool
+        return editors;
     }
 
     /** A Sutra panel's {@code source: { table }}: the table read for the page's viewer, its rows as objects of its columns. */

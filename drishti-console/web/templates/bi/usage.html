@@ -27,7 +27,7 @@
   {% with tab='bi' %}{% include "admin/_nav.html" %}{% endwith %}
   <h1 class="ws-h">BI usage</h1>
   <p class="text-muted-d">What BI is asked, by whom, and how it is answered: from the audit log (every model query, report visual and SQL statement), the engine's counters and
-    the console's Python runner. Use it to find the models that need a rollup (many questions, few from the cache), the busiest readers, and a runner that is not warm.
+    the server's Python runtime. Use it to find the models that need a rollup (many questions, few from the cache), the busiest readers, and whether Python runs.
     <a href="/admin/bi">BI settings</a></p>
   {% if usage %}
   <p class="bi-usage-facts" data-usage-facts><b>{{ usage.total }}</b> questions and <b>{{ usage.sql }}</b> SQL statements in the last {{ usage.events }} audit events
@@ -47,10 +47,10 @@
   {% if usage.other %}<h2 class="ws-h">Other BI actions</h2>
   <p data-usage-other>{% for o in usage.other %}<span class="bi-chip">{{ o.action }} {{ o.count }}</span> {% endfor %}</p>{% endif %}
   {% else %}<p class="adm-warn" data-usage-none>The questions are not shown: {{ why or 'the audit log could not be read' }}.</p>{% endif %}
-  <h2 class="ws-h">The console's Python runner</h2>
-  <p data-usage-runner>Fork-server: <b>{{ 'running' if runner.forkServer.running else ('off' if not runner.forkServer.on else 'not started yet') }}</b>, {{ runner.forkServer.forks }} calls forked{% if runner.forkServer.failed %} (could not start: {{ runner.forkServer.failed }}){% endif %} ·
-    result cache: {{ runner.cache.entries }} entries, {{ runner.cache.hits }} hits, {{ runner.cache.misses }} misses · {{ runner.calls }} calls, {{ runner.failures }} failed ·
-    Py-node endpoint for the server: <b>{{ 'on' if runner.pyNode else 'off (no runner token)' }}</b></p>
+  <h2 class="ws-h">Python on the server</h2>
+  {% if runner %}<p data-usage-runner>Python runs on the compute pool <b>{{ runner.pool }}</b>: <b>{{ 'yes' if runner.runs else 'no' }}</b>{% if runner.why %} ({{ runner.why }}){% endif %} ·
+    sandbox: {{ runner.isolation }} · pinned: {% for k, v in (runner.pins or {}).items() %}{{ k }} {{ v }}{{ ', ' if not loop.last }}{% endfor %} ·
+    {{ runner.calls }} runs, {{ runner.failures }} failed</p>{% else %}<p data-usage-runner>The server did not say how Python runs.</p>{% endif %}
   {% if engine %}<h2 class="ws-h">The engine</h2>
   <details data-usage-engine><summary>{{ engine.engine }} · live tables, transforms, limits and connector pools</summary><pre class="bi-explain-text">{{ engine | tojson(indent=1) }}</pre></details>{% endif %}
 </div>

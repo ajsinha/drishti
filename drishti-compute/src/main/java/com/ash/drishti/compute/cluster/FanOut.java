@@ -275,7 +275,7 @@ public final class FanOut implements ComputeHandle {
         meta.put("workerMs", run);
         state = "done";
         future.complete(new ComputeResult(parent.id(), rows, merged, meta, workers.size() + " workers", String.join(",", nodes.keySet()), queued,
-                (System.nanoTime() - started) / 1_000_000));
+                (System.nanoTime() - started) / 1_000_000, Map.of()));
     }
 
     private void cancelRest() {

@@ -15,8 +15,8 @@
 # SAMPLE REPORT: Python in a report (docs/guides/BI_GUIDE.md). Over the trades-basic dataset, three python visuals on one page:
 # a Python MEASURE (Desk P&L volatility, declared in the dataset and shown as bars), a Python VISUAL (a P&L histogram) and a Python VISUAL that returns a Vega-Lite
 # specification; and a second page with a vega-lite visual written in the report itself (BI_GUIDE.md, "Vega-Lite visuals").
-# Each visual hands the Python runner the rows the person looking may see; the runner is the console's sandboxed worker, or the
-# browser's Pyodide (format.run: server, browser or auto).
+# Each visual runs on the server's compute pool python, over the rows the person looking may see (read on the server as them); format.run
+# (server, browser or auto) is read and runs there too.
 rachana: 2
 report: python-desk-risk
 version: 1

@@ -39,7 +39,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 /**
  * Wave B task 4 through the model query: a Python measure in any grouped query (R8: the rows of its inputs per group of the answer, run by the Python runner
- * after the SQL measures, in its place in the answer; refused when it is sorted on), the plan's {@code PyAggregate} node on the console tier, and explain
+ * after the SQL measures, in its place in the answer; refused when it is sorted on), the plan's {@code PyAggregate} node on the python tier, and explain
  * annotated with tiers, layers and times (acceptance (6)).
  */
 class TiersAndPythonTest {
@@ -60,7 +60,7 @@ class TiersAndPythonTest {
         QueryProperties props = QueryProperties.defaults(store.toString());
         service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC());
         mq = new MqService(MqProperties.defaults(), new PlanProperties(0, null, null, "warn"));
-        // the console's runner, here in Java: the sum of the squares of the input per group
+        // the compute pool, here in Java: the sum of the squares of the input per group
         mq.python((reader, m, groupBy, columns, rows) -> {
             calls.incrementAndGet();
             int input = columns.indexOf("mtm");
@@ -117,9 +117,9 @@ class TiersAndPythonTest {
         Map<String, Object> a = ask("{ mq: 1, model: desk-risk, select: { fields: [trades.desk], measures: [MTM, Vol] }, options: { explain: true } }");
         Map<String, Object> meta = (Map<String, Object>) a.get("meta");
         String tree = String.valueOf(meta.get("explain"));
-        assertThat(tree).contains("tier=java").contains("tier=console").contains("PyAggregate").contains("layer=columns");
+        assertThat(tree).contains("tier=java").contains("tier=python").contains("PyAggregate").contains("layer=columns");
         assertThat((Map<String, Object>) meta.get("timings")).containsKeys("engineMillis", "pythonMillis", "layer");
-        assertThat((Map<String, Object>) meta.get("tiers")).containsKeys("java", "console");
-        assertThat((String) meta.get("explainText")).contains("tier: console").contains("timings:");
+        assertThat((Map<String, Object>) meta.get("tiers")).containsKeys("java", "python");
+        assertThat((String) meta.get("explainText")).contains("tier: python").contains("timings:");
     }
 }

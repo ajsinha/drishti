@@ -14,12 +14,13 @@
 
 """The Notebook (docs/guides/USER_GUIDE.md › The Notebook) in Chromium over the real server and console (tests/bi_report_stack.py on ports 18956 and 17956,
 security on, a small file lake). A BI author opens the trades model as an extract, runs a SQL cell (Drishti SQL, run by the server), promotes it to a report
-draft, finds Python's Run under construction (nothing runs in the console or the browser), opens the Profile, saves the notebook and opens it again from its
+draft, runs a Python cell on the server's compute pool (nothing runs in the console or the browser) and sees the sandbox refuse a file, opens the Profile, saves the notebook and opens it again from its
 item page; every button the page draws is clicked; the old addresses /bi/explore and /pyconsole land here; the page fits a 390 px phone. The page keeps the
 strict policy (no violation, no WebAssembly).
 
 Skipped when Playwright, Chromium, the built server jar or pandas and pyarrow are missing, or a scratch port is in use. Never run with pytest -n (the ports are fixed)."""
 import os
+import sys
 
 import pytest
 
@@ -41,7 +42,11 @@ def stack(tmp_path_factory):
         if bi_report_stack.listening(port):
             pytest.skip(f"port {port} is in use: stop whatever listens there")
     try:
-        s = bi_report_stack.ReportStack(tmp_path_factory.mktemp("analyse"), delta_root="").start()
+        s = bi_report_stack.ReportStack(tmp_path_factory.mktemp("analyse"), delta_root="")
+        # Python cells run on the server's compute pool python, in the interpreter that runs this test (it carries the pinned libraries)
+        s.server_args += ["--DRISHTI_COMPUTE_ENABLED=true", f"--DRISHTI_PYTHON={sys.executable}",
+                          f"--drishti.compute.file={bi_report_stack.ROOT}/config/compute/compute.yaml"]
+        s = s.start()
     except FileNotFoundError as e:
         pytest.skip(str(e))
     yield s
@@ -73,7 +78,7 @@ def open_extract(page):
     page.wait_for_function("() => /rows,/.test((document.querySelector('[data-info]') || {}).textContent || '')", timeout=60000)            # the line is drawn once the extract is in
 
 
-def test_sql_runs_on_the_server_python_is_under_construction_and_the_notebook_saves(stack, browser):
+def test_sql_and_python_run_on_the_server_and_the_notebook_saves(stack, browser):
     page = sign_in(browser, "wes", "/bi")
     errors = []
     page.on("console", lambda m: errors.append(m.text) if m.type == "error" else None)
@@ -99,17 +104,23 @@ def test_sql_runs_on_the_server_python_is_under_construction_and_the_notebook_sa
     page.click("[data-cells=sql] [data-promote-report]")
     expect(page.locator("[data-promoted-link]")).to_be_visible(timeout=30000)
 
-    # PYTHON: written here, run on the server's compute pool: under construction, so Run and Run all are disabled and say so
+    # PYTHON: written here, run on the server's compute pool over the extract the server reads as this person
     page.click("#bxT-python")
     cell = page.locator("[data-cells=python] .bx-cell").first
     assert cell.locator("[data-runs-on]").inner_text() == "Runs on the server's compute pool"
-    expect(cell.locator("[data-uc=python-table-runs]")).to_be_visible()
-    assert cell.locator("[data-run]").is_disabled() and page.locator("[data-run-all=python]").is_disabled()
+    assert cell.locator("[data-uc]").count() == 0 and cell.locator("[data-run]").is_enabled()
+    cell.locator("textarea").fill("print(len(df))\nresult = df.head(3)")
+    cell.locator("[data-run]").click()
+    expect(cell.locator("[data-engine=python]")).to_be_visible(timeout=120000)
+    assert cell.locator("[data-stdout]").inner_text().strip().isdigit() and cell.locator("[data-result] table").count() == 1
+    cell.locator("textarea").fill("open('/etc/hostname').read()")                                     # the sandbox refuses in words, the cell shows it
+    cell.locator("[data-run]").click()
+    expect(cell.locator("[role=alert]")).to_contain_text("DRS-9073", timeout=120000)
     page.click("[data-add=python]")
     assert page.locator("[data-cells=python] .bx-cell").count() == 2
     page.locator("[data-cells=python] .bx-cell").nth(1).locator("[data-promote=visual]").click()        # promoting writes a draft; nothing runs
     expect(page.locator("[data-cells=python] [data-promoted-link]")).to_be_visible(timeout=30000)
-    assert page.locator("[data-cells=python] [data-stdout]").count() == 0
+    assert page.locator("[data-cells=python] .bx-cell").nth(1).locator("[data-stdout]").count() == 0
 
     # PROFILE: every column of the extract, no code of the reader's
     page.click("#bxT-profile")

@@ -3558,7 +3558,7 @@ The walk-through is [tutorial 14](../tutorials/14-python-and-analyse.md); the de
                     ┌──────────────────────────────────────┬────────────────────────┤
                   SQL cell                              Python cell              Profile
    the server: Drishti SQL over the model,      the server's compute pool    every column of the extract,
-   as you (POST /bi/notebook/sql)               (Under construction)         no code of yours
+   as you (POST /bi/notebook/sql)               (POST /bi/notebook/python)   no code of yours
 ```
 
 The extract is **rebuilt for you on every call** and never kept: the console holds nothing between calls, so a mask or a row rule changed on the server
@@ -3617,9 +3617,9 @@ result = {"title": {"text": "Notional by desk"}, "xAxis": {"type": "category", "
           "yAxis": {"type": "value"}, "series": [{"type": "bar", "data": [float(v) for v in g["NOTIONAL"]]}]}
 ```
 
-**Where it runs: the server's compute pool** (`config/compute/compute.yaml`), never the console and never your browser. Running a cell there comes with one
-Python runtime on the server and is **Under construction**: the cell's *Run* and the tab's *Run all* carry the chip, and the line beside them says *Runs on
-the server's compute pool*. You write, save and promote Python cells now; whoever opens the notebook later runs them on the pool, over their own rows.
+**Where it runs: the server's compute pool** `python` (`config/compute/compute.yaml`), never the console and never your browser. **Run** sends the cell
+to the server (`POST /bi/notebook/python`), which reads the extract and the other extracts **as you** and runs the cell in its strict sandbox: no network,
+files held to its own folder, the cell's time and memory limits (`bi.notebook.cell_timeout_seconds`, `cell_memory_mb`), the pinned libraries only. The line above the output says where it ran, how long it took, how many rows it read and what was masked; what the cell printed shows first, then its `result` (a table, a chart option, an SVG or PNG picture, or a value); a failure shows the error and, as an author, your own code's traceback. Where the server cannot run Python safely (compute off, a Windows server), *Run* is off and says why; you can still write, save and promote cells. Whoever opens the notebook later runs them over their own rows.
 Running Python needs the **`bi-author`** power; SQL needs only `bi`.
 
 ### 5. Notebooks
@@ -3703,7 +3703,7 @@ The console's `bi.notebook.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)):
 | `max_cells` | `60` | most cells in a notebook |
 | `max_extracts` | `6` | most further extracts in a notebook, besides the first (`DRS-9072`) |
 
-**The server's `drishti.bi.report.python-packages` and the console's `bi.python.packages` must list the same packages** (a test fails the build otherwise).
+**The packages a Python cell may import** are the server's `drishti.bi.report.python-packages` that `config/compute/locks/python.lock` pins (a test holds the two together); a cell runs on the server's compute pool, as the person running it ([BI_GUIDE.md section 34](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python)).
 
 | Code | HTTP | In the Notebook |
 |---|---|---|

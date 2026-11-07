@@ -274,7 +274,7 @@ All per worker process (`drishti-console`), in memory unless marked disk.
 | calc permissions, business dates | `core/calc.py` (lines 69-89) (60 s), `core/asof.py` (lines 135-152) (60 s) | ⚠ no size cap | TTL |
 | landing figures | `core/market_landing.py:50` (120 s, cleared above 200), `core/trading_landing.py:59` (120 s, above 64) | count + TTL | TTL |
 | facts of the day | `core/facts.py` (lines 397-442) | 64 entries, `ui.facts.cache_seconds` 21,600 | FIFO |
-| Python results | `core/pyrunner.py` (lines 110-150) | LRU 256 entries, 64 MB (`bi.python.cache_entries`, `cache_max_bytes`), 600 s | bytes + TTL |
+| Python results | none: every Python run is a fresh fork child on the compute pool `python`; a Transform's frame is kept by `TransformService` per reader | | |
 | embed origins, JWKS, OIDC discovery | `core/embed.py` (60 s), `core/embed_auth.py` (300 s), `core/oidc.py` (1 h) | TTL | TTL |
 | compressed static files (disk) | `core/staticzip.py` (lines 46-52), `static.cache_dir` or the console's tmp | ⚠ one per file version, no cap | file version |
 | live channels | `routes/api_routes.py:335` `CHANNELS`; `core/channel.py` (lines 52-68) | 2,000 frames a channel (count); `live.max_subscriptions` 32 a browser | on disconnect; dead subscriptions stay (soak M4) |
@@ -627,7 +627,7 @@ small files appends leave (a rewrite saves what the extra footers and dictionari
 **Today.** The console (`drishti-console`, uvicorn, `server.workers` processes, default 4: `drishti-console/config/application.yaml:21`,
 `run_drishti_web.py` (lines 59-67)) turns each ViewModel into HTML with Jinja (`render(...)` in `routes/*`); charts are already drawn in the
 browser (vendored ECharts, `web/static/js/drishti_charts.js`, `drishti_var-charts.js`, `drishti_exposure-charts.js`). Python visuals return chart specifications,
-not pictures (`core/pyrunner_worker.py` (lines 747-762)). Measured: about 40 pages a second per worker process (`run_drishti_web.py:63`); one
+not pictures (made on the server's compute pool, `drishti_compute/items.py`). Measured: about 40 pages a second per worker process (`run_drishti_web.py:63`); one
 console of 4 workers about 69 to 70 pages a second at 50 users, against 140 to 150 requests a second for one server
 ([BENCHMARK.md section 8.4](../admin/BENCHMARK.md#84-sizing-for-millions-of-trades-a-day)). **The console
 is the first limit** (the decks' concurrency slide: two consoles of 4 vCPU, 100 to 140 page loads a second, 300 to 500 active people).

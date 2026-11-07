@@ -64,6 +64,22 @@ compute:
       idle-stop: 5m
       timeout: 60s
       timeout-batch: 10m
+    python:                          # code people write: Python items, Python-driven tables and models, Notebook cells (PYTHON_COMPUTE.md section 19)
+      type: python
+      engines: [drishti_compute.items:ItemsEngine]
+      environment: system            # the site's interpreter, checked against locks/python.lock before any run; or { python: "3.13", lock: locks/python.lock, index: <name> }
+      isolation: strict              # no network (a namespace with no interface) and files held by the kernel (Landlock): Linux only; elsewhere no run
+      workers:
+        min: 0
+        max: ${DRISHTI_COMPUTE_PYTHON_WORKERS:4}
+      mode: fork                     # strict isolation needs a fresh child per request
+      memory: 6GB                    # the worker's address space: pandas, NumPy and Arrow loaded (about 2.5 GB of it) plus an item's own memory
+      cpu-seconds: 120
+      recycle-after: 200
+      batch-share: 0.5               # a Python-driven table's scheduled build is batch work
+      idle-stop: 5m
+      timeout: 60s                   # an item's own timeout may be shorter (drishti.bi.report.python-max-seconds caps it)
+      timeout-batch: 10m
   # nodes:                           # a node's own worker counts (its Drishti*net id); pools scale out by adding nodes
   #   drishti-big-1:
   #     pools:
