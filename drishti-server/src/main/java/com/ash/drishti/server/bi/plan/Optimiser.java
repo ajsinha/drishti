@@ -184,7 +184,7 @@ public final class Optimiser {
             return;
         }
         try {
-            Node.walk(Expressions.parse(m.expr()), x -> {
+            Node.walk(Expressions.node(m.expr()), x -> {
                 if (x instanceof Node.Ref r && r.parts().size() >= 2) {
                     take(used, r.text());
                 } else if (x instanceof Node.MeasureRef r) {
@@ -199,7 +199,7 @@ public final class Optimiser {
     private static void ruleColumns(String rule, Map<String, Set<String>> used) {
         String text = rule.startsWith("filter ") ? rule.substring("filter ".length()) : rule;
         try {
-            Node.walk(Expressions.parse(text), x -> {
+            Node.walk(Expressions.node(text), x -> {
                 if (x instanceof Node.Ref r && r.parts().size() >= 2) {
                     take(used, r.text());
                 }

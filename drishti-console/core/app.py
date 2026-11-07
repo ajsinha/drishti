@@ -636,11 +636,10 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(ai_routes.router)
     if app.state.bi_on:
         from core.notebook import Limits
-        from routes import bi_routes, model_routes, notebook_routes, python_routes, tables_editor_routes, transform_routes, wizard_routes
+        from routes import bi_routes, model_routes, notebook_routes, python_routes, tables_editor_routes, transform_routes
 
         app.state.notebook_limits = Limits.from_settings(settings)     # the Notebook (docs/guides/USER_GUIDE.md): extract, SQL and cell limits
         app.include_router(bi_routes.router)
-        app.include_router(wizard_routes.router)
         app.include_router(model_routes.router)
         app.include_router(tables_editor_routes.router)     # Build › Tables & models: the editors on the table layer (EDITORS.md)
         app.include_router(python_routes.router)

@@ -255,7 +255,7 @@ warning: 2 fact tables, each aggregated alone at the query's fields and then joi
 warning: a measure that combines measures of different grains is worked out over the joined results: MTM per exposure
 ```
 
-The sector rows add up to the totals of step 1 (`3,210,381,876.57` and `2,663,018,256`), to the cent. The same question in **Drishti SQL** ([BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)): tables are the model's aliases, `JOIN` needs no `ON` (the model's relationships are used), a measure is `MEASURE('name')`:
+The sector rows add up to the totals of step 1 (`3,210,381,876.57` and `2,663,018,256`), to the cent. The same question in **Drishti SQL** ([API_GUIDE.md › Drishti SQL](../guides/API_GUIDE.md#drishti-sql-apiv1bisql)): tables are the model's aliases, `JOIN` needs no `ON` (the model's relationships are used), a measure is `MEASURE('name')`:
 
 ```text
 $ python3 tools/drishti.py bi sql "SELECT counterparty.SECTOR, MEASURE('MTM') AS mtm, MEASURE('Exposure (EE peak)') AS ee
@@ -347,7 +347,7 @@ drishti: the server said 422 DRS-9156: DRS-9156 the measures aggregate [trade, n
 Group by a field they all reach (counterparty.COUNTERPARTY_ID, counterparty.NAME, counterparty.LEI, counterparty.RATING) or ask the measures apart.
 ```
 
-(`--define` adds a measure of this query only, as a report's own measure travels.) Inside one aggregate every column belongs to one fact; ratios inside one fact are recipes R35 and R40 of [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#11-recipes).
+(`--define` adds a measure of this query only, as a report's own measure travels.) Inside one aggregate every column belongs to one fact; ratios inside one fact are recipes R35 and R40 of [RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions).
 
 ## Step 6 · A dataset made by a Python Transform
 
@@ -487,7 +487,7 @@ You should see a short, honest table, not a scorecard (the claims about Power BI
 | Several tables of different grains | one model, **relationships** between tables (many-to-one, many-to-many, bidirectional), DAX that follows them | one **model** with several **facts** and shared **dimensions**; each measure is aggregated **at its own fact's grain**, then the answers are joined on the asked fields |
 | A slicer on a shared dimension | filters every fact through relationships | the same, one way (the dimension filters the facts); *both ways* is not built yet |
 | A field only one fact reaches | blank or repeated values, depending on the relationships | **refused** with the fields that work (`DRS-9156`), never a guessed or repeated number |
-| A measure over two facts | DAX over two tables | `measure('MTM') / measure('Exposure (EE peak)')`, worked out over the joined results ([BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)) |
+| A measure over two facts | DAX over two tables | `measure('MTM') / measure('Exposure (EE peak)')`, worked out over the joined results ([RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions)) |
 | Row-level security | a rule per role in the model | a rule **per dataset, applied as the reader before any join**; a model can only tighten; the **safeguard** names a role left open on another dataset |
 | Behind the tools | DAX, the Power BI service, capacity licences | one closed, compiled expression language (DEL, Python-like), Drishti SQL over the same plan, one open server, your own infrastructure |
 
@@ -495,7 +495,7 @@ Where Drishti is **behind**: no bidirectional or many-to-many relationships yet,
 
 ## Next steps
 
-- [BI_GUIDE.md sections 23 and 24](../guides/BI_GUIDE.md#24-the-languages-in-the-console) for models and the model designer, [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del) for measures (fifty-odd recipes), [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models) for Drishti SQL, [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out) for Transforms, [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) for extracts and promotion.
+- [BI_GUIDE.md sections 23 and 24](../guides/BI_GUIDE.md#24-the-languages-in-the-console) for models and the model designer, [RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions) for measures (fifty-odd recipes), [API_GUIDE.md › Drishti SQL](../guides/API_GUIDE.md#drishti-sql-apiv1bisql) for Drishti SQL, [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out) for Transforms, [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) for extracts and promotion.
 - [Tutorial 13](13-govern-bi.md): a change to the model is set against the reports and datasets that read it (impact), and the model travels in an environments bundle.
 - [Tutorial 11](11-bi-that-runs-itself.md): a subscription or an alert on a measure of the model runs as its owner, and the reader's rules apply.
 

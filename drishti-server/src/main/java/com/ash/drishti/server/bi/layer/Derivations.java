@@ -38,10 +38,22 @@ public final class Derivations {
         List<DatasetParser.Problem> out = new ArrayList<>();
         DatasetDef.Derivation dv = d.derivation();
         Map<String, DatasetDef.Col> all = new LinkedHashMap<>(b.columns());
-        all.putAll(d.columns());
+        d.columns().forEach((n, c) -> {                                        // a column read as it is from the base keeps the base's (its reference, unit)
+            String src = c.path() == null ? n : c.path().replaceFirst("^\\$\\.", "");
+            if (c.expr() != null || !b.columns().containsKey(src) || !src.equals(n)) {
+                all.put(n, c);
+            }
+        });
         for (String s : dv.subset()) {
             if (!b.columns().containsKey(s) && !DatasetDef.BUILT_IN.contains(s)) {
                 out.add(error("DRS-9105", "columns", "'" + s + "' is not a column of the base " + b.name() + " (it has " + b.columns().keySet() + ")"));
+            }
+        }
+        for (DatasetDef.Col c : d.columns().values()) {                       // a table over a table: a column it reads must be the base's
+            String src = c.path() == null ? c.name() : c.path().replaceFirst("^\\$\\.", "");
+            if (c.expr() == null && d.extendsRef() != null && !b.columns().containsKey(src) && !DatasetDef.BUILT_IN.contains(src) && !dv.subset().contains(c.name())
+                    && !dv.python().containsKey(c.name()) && dv.group() == null) {
+                out.add(error("DRS-9105", "columns." + c.name(), "'" + src + "' is not a column of the base " + b.name() + " (it has " + b.columns().keySet() + ")"));
             }
         }
         if (!dv.subset().isEmpty()) {
@@ -117,7 +129,7 @@ public final class Derivations {
             return Optional.empty();
         }
         try {
-            Node n = com.ash.drishti.server.bi.expr.Expressions.parse(c.expr());
+            Node n = com.ash.drishti.server.bi.expr.Expressions.node(c.expr());
             if (n instanceof Node.Call call && "related".equals(call.function()) && call.args().size() == 1 && call.args().get(0) instanceof Node.Ref r && r.parts().size() == 2) {
                 return Optional.of(new String[] {r.parts().get(0), r.parts().get(1)});
             }

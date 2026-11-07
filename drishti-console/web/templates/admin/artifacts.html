@@ -43,7 +43,7 @@
       <label class="visually-hidden" for="artKind">Show</label>
       <select class="studio-in" id="artKind" data-kind-filter>
         <option value="">All kinds</option><option value="pack">Packs</option><option value="connector">Connectors</option>
-        <option value="dataset">BI datasets</option><option value="report">BI reports</option><option value="board">BI boards</option><option value="notebook">BI notebooks</option><option value="python">BI Python items</option></select>
+        <option value="table">BI tables</option><option value="model">BI models</option><option value="report">BI reports</option><option value="board">BI boards</option><option value="notebook">BI notebooks</option><option value="python">BI Python items</option></select>
       <label class="visually-hidden" for="artState">Status</label>
       <select class="studio-in" id="artState" data-state-filter>
         <option value="">Any status</option><option value="on">On</option><option value="off">Disabled</option><option value="problem">With a problem</option><option value="not loaded">Not loaded</option></select>
@@ -83,11 +83,11 @@
         <p class="text-muted-d">One YAML file per connector, edited with a form, tested before it is saved.</p>
         <a class="btn-pill btn-ghost" href="/admin/connectors">Open Connectors, then New connector</a></section>
       <section class="art-card" data-bi-install><h3>A BI file</h3>
-        <p class="text-muted-d">A dataset, report, board, notebook or Python item as <span class="mono">&lt;name&gt;.&lt;kind&gt;.yaml</span>. It is checked and its impact shown first; then it is placed in <span class="mono">config/bi</span>.</p>
+        <p class="text-muted-d">A table, model, report, board, notebook or Python item as <span class="mono">&lt;name&gt;.&lt;kind&gt;.yaml</span>. It is checked and its impact shown first; then it is placed: a table or model in <span class="mono">config/tables/&lt;domain&gt;</span>, the rest in <span class="mono">config/bi</span>. A dataset file in BI's old form is refused (<span class="mono">DRS-9196</span>): migrate it with <span class="mono">drishti.py tables migrate</span> first.</p>
         <label class="art-file">Choose a file <input type="file" accept=".yaml,.yml" data-bi-file></label>
         <div data-bi-result aria-live="polite"></div>
         <label class="chk" data-bi-replace-row hidden><input type="checkbox" data-bi-replace> Replace the file that is there (it is archived first)</label>
-        <button type="button" class="btn-pill btn-accent" data-bi-place hidden>Place in config/bi</button></section>
+        <button type="button" class="btn-pill btn-accent" data-bi-place hidden>Place it</button></section>
     </div>
   </div>
 

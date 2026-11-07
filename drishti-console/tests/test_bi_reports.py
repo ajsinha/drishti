@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Rupaka phase 3 (docs/architecture/BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 8 and 9), the console's routes for reports: the viewer, the designer, its start page and the Model view are
-shells drawn by drishti_bi-report.js, bi-design*.js and drishti_bi-model.js; ``BI <report> <GO>`` opens the viewer; the same-origin JSON reaches the server's report paths under the
+shells drawn by drishti_bi-report.js and bi-design*.js; ``BI <report> <GO>`` opens the viewer; the same-origin JSON reaches the server's report paths under the
 caller's identity and nothing else does; no page carries a script, handler or style of its own (the strict CSP of the BI pages)."""
 import re
 from pathlib import Path
@@ -52,8 +52,6 @@ def test_the_designer_start_and_one_draft_and_the_model_view_are_real_pages():
         assert hook in d.text, hook
     scripts = re.findall(r"/static/js/drishti_([a-z-]+)\.js", d.text)
     assert scripts.index("bi-design") < scripts.index("bi-design-canvas") < scripts.index("bi-design-panes") and "cm-yaml" in scripts
-    m = client.get("/bi/m/file:dataset:trades-basic")
-    assert m.status_code == 200 and "data-diagram-inner" in m.text and "data-nr-add" in m.text and "data-infer" in m.text and "drishti_bi-model.js" in m.text
 
 
 def test_the_designer_is_in_the_rail_without_a_phase_label():
@@ -70,7 +68,7 @@ def test_the_keyword_opens_a_report_in_the_viewer():
 
 def test_every_new_page_needs_the_bi_power():
     client, _ = make(powers=())
-    for path in ("/bi/r/" + REPORT_ID, "/bi/designer", "/bi/design/bi-77", "/bi/m/file:dataset:trades-basic"):
+    for path in ("/bi/r/" + REPORT_ID, "/bi/designer", "/bi/design/bi-77"):
         assert client.get(path).status_code == 403, path
 
 
@@ -104,13 +102,13 @@ def test_the_servers_refusals_for_reports_come_back_with_their_codes():
 
 
 def test_the_new_scripts_and_stylesheets_exist_and_carry_no_cdn_or_inline_code():
-    for rel in ("js/drishti_bi-lib.js", "js/drishti_bi-visuals.js", "js/drishti_bi-grids.js", "js/drishti_bi-frame.js", "js/drishti_bi-report.js", "js/drishti_bi-design.js", "js/drishti_bi-design-canvas.js", "js/drishti_bi-design-panes.js", "js/drishti_bi-model.js",
+    for rel in ("js/drishti_bi-lib.js", "js/drishti_bi-visuals.js", "js/drishti_bi-grids.js", "js/drishti_bi-frame.js", "js/drishti_bi-report.js", "js/drishti_bi-design.js", "js/drishti_bi-design-canvas.js", "js/drishti_bi-design-panes.js",
                 "css/drishti_bi-report.css", "css/drishti_bi-design.css"):
         text = (WEB / "static" / rel).read_text(encoding="utf-8")
         assert "http://" not in text.replace("http://www.w3.org/2000/svg", "") and "https://" not in text, rel
         assert "innerHTML" not in text and "document.write" not in text and "eval(" not in text, rel
         assert len(text.splitlines()) < 1500, rel
-    for rel in ("report.html", "design.html", "designer.html", "model.html"):
+    for rel in ("report.html", "design.html", "designer.html"):
         html = (WEB / "templates" / "bi" / rel).read_text(encoding="utf-8")
         assert " onclick=" not in html and "<style" not in html and " style=" not in html, rel
         assert not re.search(r"<script(?![^>]*\bsrc=)", html), rel
@@ -120,11 +118,11 @@ def test_no_class_the_bi_pages_define_is_a_bootstrap_icons_glyph():
     """``bi-`` is also the icon prefix: a class named like an icon (``bi-grid``, ``bi-type``) paints that glyph on the element; the pages use their own names."""
     glyphs = set(re.findall(r"\.(bi-[a-z0-9-]+)::before", (WEB / "static" / "vendor" / "bootstrap-icons" / "bootstrap-icons.css").read_text(encoding="utf-8")))
     used: set[str] = set()
-    for rel in ("js/drishti_bi-visuals.js", "js/drishti_bi-grids.js", "js/drishti_bi-frame.js", "js/drishti_bi-report.js", "js/drishti_bi-design.js", "js/drishti_bi-design-canvas.js", "js/drishti_bi-design-panes.js", "js/drishti_bi-model.js"):
+    for rel in ("js/drishti_bi-visuals.js", "js/drishti_bi-grids.js", "js/drishti_bi-frame.js", "js/drishti_bi-report.js", "js/drishti_bi-design.js", "js/drishti_bi-design-canvas.js", "js/drishti_bi-design-panes.js"):
         text = (WEB / "static" / rel).read_text(encoding="utf-8")
         for m in re.finditer(r"class: '([^']+)'", text):                      # an element's own class list, not the icon helper's names
             used.update(c for c in m.group(1).split() if c.startswith("bi-"))
-    for rel in ("report.html", "design.html", "designer.html", "model.html"):
+    for rel in ("report.html", "design.html", "designer.html"):
         for m in re.finditer(r'<(?!i\b)[a-z0-9]+[^>]*class="([^"]+)"', (WEB / "templates" / "bi" / rel).read_text(encoding="utf-8")):         # not the <i class="bi bi-x"> icons
             used.update(c for c in m.group(1).split() if c.startswith("bi-") and c != "bi")
     clashes = sorted(c for c in used & glyphs if c != "bi")

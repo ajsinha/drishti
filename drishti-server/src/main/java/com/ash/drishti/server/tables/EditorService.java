@@ -272,7 +272,8 @@ public final class EditorService {
         Map<String, BiStore.Item> out = new LinkedHashMap<>();
         for (String kind : List.of("table", "model")) {
             for (BiStore.Item i : bi.publishedOfKind(kind)) {
-                if (BiItemTableStore.layerForm(i.body())) {
+                // a file of the tables folder is BI's item too (BI reads config/tables): it is the catalogue's already, listed once
+                if (BiItemTableStore.layerForm(i.body()) && !i.id().startsWith("file:")) {
                     out.put(i.id(), i);
                 }
             }
@@ -1243,6 +1244,7 @@ public final class EditorService {
             case SQL -> "sql";
             case PYTHON -> "python";
             case MODEL -> "summary";
+            case RUN -> "a run's snapshot";
             case NONE -> "unsourced";
         };
     }

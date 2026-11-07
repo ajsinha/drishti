@@ -90,7 +90,6 @@ sections:
         words: [BI]
         guides:
           - { slug: bi-guide, doc: guides/BI_GUIDE.md, title: "Business intelligence (Rupaka)", icon: bar-chart-line, summary: "BI <GO> and the BI menu, the rail (Models, Designer, Analyse, Transforms, Python console), BI Studio (Explorer, tabs, Problems and Query), the catalogue by kind (Reports, Boards, Models, Datasets, Python, All), workspaces with roles, publish and review, certify, shipped files and BI settings; what is built and what is not." }
-          - { slug: bi-language-reference, doc: guides/BI_LANGUAGE_REFERENCE.md, title: "BI languages: expressions (DEL) and {product} SQL", icon: braces, summary: "The Python-like language of measures, derived columns, filters and row rules (scopes, grammar, every function, what is refused, errors, forty recipes that run on the demo lake), and read-only SQL over one model (tables are the model's aliases, MEASURE('name'), joins along the model's relationships, how a statement compiles, limits)." }
       - title: "Pivot"
         words: [PIVOT, MCUBE]
         guides:
@@ -428,8 +427,8 @@ moved:
   docs-architecture-sutra-next: rachana-reference#sutra-next-fragments-events-children-sources-layout-and-forms   # architecture/SUTRA_NEXT.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
   docs-architecture-table-charts: rachana-reference#chart-any-table-the-design   # architecture/TABLE_CHARTS.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
   screen-designer: rachana-reference#screen-designer-and-the-build-workbench   # guides/SCREEN_DESIGNER.md merged into guides/RACHANA_REFERENCE.md (2.9.7)
-  expressions: bi-language-reference#1-expressions-the-drishti-expression-language-del   # guides/EXPRESSIONS.md merged into guides/BI_LANGUAGE_REFERENCE.md (2.9.7)
-  sql: bi-language-reference#2-drishti-sql-read-only-sql-over-models   # guides/SQL.md merged into guides/BI_LANGUAGE_REFERENCE.md (2.9.7)
+  expressions: rachana-reference#rachana-el-expressions   # guides/EXPRESSIONS.md, then RACHANA_REFERENCE.md: BI's expressions are Rachana (2.9.11.d)
+  sql: api#drishti-sql-apiv1bisql   # guides/SQL.md, then API_GUIDE.md, Drishti SQL: Drishti SQL is in the API guide (2.9.11.d)
   bi-governance: bi-guide#32-publishing-and-governance-versions-review-certification-lineage-impact-environments   # guides/BI_GOVERNANCE.md merged into guides/BI_GUIDE.md (2.9.7)
   datasets: bi-guide#30-datasets-the-yaml-the-expression-language-and-the-security-rules   # guides/DATASETS.md merged into guides/BI_GUIDE.md (2.9.7)
   distribution: bi-guide#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding   # guides/DISTRIBUTION.md merged into guides/BI_GUIDE.md (2.9.7)

@@ -167,18 +167,18 @@ class PackModelsTest {
         assertThat(l.crossPack()).isTrue();
         assertThat(l.cardinality()).isEqualTo("many-to-one");
         assertThat(l.basis()).contains("link graph");
-        assertThat(d.yaml()).contains("dataset: shop-model").contains("from: order.customer").contains("to: customer.id").contains("kind: order");
+        assertThat(d.yaml()).contains("model: shop-model").contains("from: order.customer").contains("to: customer.id").contains("table: pack.");
     }
 
     @Test
-    void theDraftIsAValidDatasetWithStarterMeasures() {
+    void theDraftIsAValidModelOverThePacksTablesWithStarterMeasures() {
         PackModels.Draft d = models(Set.of("order", "customer")).start(List.of("order", "customer"), "shop-model");
-        DatasetParser.Result r = DatasetParser.parse(d.yaml());
-        assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
-        assertThat(r.dataset().tables()).containsOnlyKeys("order", "customer");
-        assertThat(r.dataset().measures()).containsKeys("Count of order", "Total order amount");
-        assertThat(r.dataset().tables().get("order").columns().get("amount").type()).isEqualTo("decimal");
-        assertThat(r.dataset().relationships()).hasSize(1);
+        com.ash.drishti.server.bi.layer.ModelDefParser.Result r = com.ash.drishti.server.bi.layer.ModelDefParser.parse(d.yaml());
+        assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).as(d.yaml()).isEmpty();
+        assertThat(r.model().datasets()).containsOnlyKeys("order", "customer");
+        assertThat(r.model().datasets().get("order").dataset()).startsWith("pack.").endsWith(".order");          // the pack's generated table of the kind
+        assertThat(r.model().measures()).containsKeys("Count of order", "Total order amount");
+        assertThat(r.model().relationships()).hasSize(1);
     }
 
     @Test

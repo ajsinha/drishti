@@ -23,7 +23,7 @@ import com.ash.drishti.bicompute.cache.StateCache;
 import com.ash.drishti.bicompute.core.PivotCore;
 import com.ash.drishti.bicompute.core.PivotView;
 import com.ash.drishti.bicompute.formula.FormulaFunction;
-import com.ash.drishti.bicompute.formula.FormulaParser;
+import com.ash.drishti.bicompute.formula.FormulaLowering;
 import com.ash.drishti.bicompute.harness.FunctionCheck;
 import com.ash.drishti.bicompute.harness.Playground;
 import com.ash.drishti.bicompute.spi.Batch;
@@ -34,7 +34,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * Formulas of built-ins (PIVOT_ENGINE.md section 8.2): DEL's syntax, refused in words where it is not a measure; the kind of the parts; the
+ * Formulas of built-ins (PIVOT_ENGINE.md section 8.2): Rachana, refused in words where it is not a measure; the kind of the parts; the
  * Java path (the harness, the playground) and the SQL path (the tabular provider's GROUPING SETS) giving the same figures, totals made from
  * states, never from the figures shown.
  */
@@ -42,14 +42,17 @@ class FormulaFunctionTest {
 
     @Test
     void aFormulaIsMadeOfAggregates() {
-        assertThat(FormulaParser.isFormula("sum(PNL) / sum(abs(PNL))")).isTrue();
-        assertThat(FormulaParser.isFormula("sum(NOTIONAL, where=DESK == 'RATES') / sum(NOTIONAL)")).isTrue();
-        assertThat(FormulaParser.isFormula("count(where=PNL < 0) / count()")).isTrue();
-        assertThatThrownBy(() -> FormulaParser.parse("PNL * 2")).hasMessageContaining("row value");
-        assertThatThrownBy(() -> FormulaParser.parse("sum(sum(PNL))")).hasMessageContaining("inside another aggregate");
-        assertThatThrownBy(() -> FormulaParser.parse("sum(PNL) if true else 0")).hasMessageContaining("True");
-        assertThatThrownBy(() -> FormulaParser.parse("lambda x: x")).hasMessageContaining("not DEL");
-        assertThatThrownBy(() -> FormulaParser.parse("percentile(PNL)")).hasMessageContaining("q between 0 and 1");
+        assertThat(FormulaLowering.isFormula("sum(PNL) / sum(abs(PNL))")).isTrue();
+        assertThat(FormulaLowering.isFormula("sum(NOTIONAL, where=DESK == 'RATES') / sum(NOTIONAL)")).isTrue();
+        assertThat(FormulaLowering.isFormula("count(where=PNL < 0) / count()")).isTrue();
+        assertThatThrownBy(() -> FormulaLowering.lower("PNL * 2")).hasMessageContaining("row value");
+        assertThatThrownBy(() -> FormulaLowering.lower("sum(sum(PNL))")).hasMessageContaining("inside another aggregate");
+        assertThat(FormulaLowering.isFormula("count() > 10 ? sum(PNL) : 0")).as("Rachana's spelling").isTrue();
+        assertThat(FormulaLowering.isFormula("sum(PNL, where = DESK in ['FX', 'RATES'] && !(PNL == null))")).isTrue();
+        assertThatThrownBy(() -> FormulaLowering.lower("sum(PNL) if count() > 10 else 0")).as("the old syntax is the migration's").isInstanceOf(FormulaLowering.FormulaException.class);
+        assertThatThrownBy(() -> FormulaLowering.lower("sum(PNL, where=PNL != None)")).hasMessageContaining("old syntax");
+        assertThatThrownBy(() -> FormulaLowering.lower("count(where=0 < PNL < 10)")).hasMessageContaining("a < b && b < c");
+        assertThatThrownBy(() -> FormulaLowering.lower("percentile(PNL)")).as("Rachana's signature: percentile(x, q)").hasMessageContaining("percentile takes 2-3 argument");
         assertThat(FormulaFunction.of("sum(PNL) / sum(NOTIONAL)").kind()).isEqualTo(Kind.MERGEABLE);
         assertThat(FormulaFunction.of("median(PNL) - avg(PNL)").kind()).isEqualTo(Kind.HOLISTIC);
         assertThat(FormulaFunction.of("sum(PNL) - sum(NOTIONAL)").plainSum()).isTrue();

@@ -41,7 +41,25 @@ public final class Histories {
 
     /** The column a sampled measure has in the history table. */
     public static String columnName(String measure, java.util.Collection<String> taken) {
-        return LegacySources.identifier(measure, taken);
+        StringBuilder b = new StringBuilder();
+        for (char ch : measure.toCharArray()) {
+            b.append(ch < 128 && Character.isLetterOrDigit(ch) || ch == '_' ? ch : '_');
+        }
+        String base = b.toString().replaceAll("_+", "_").replaceAll("^_|_$", "");
+        if (base.isEmpty() || Character.isDigit(base.charAt(0))) {
+            base = "c_" + base;
+        }
+        if (base.length() > 60) {
+            base = base.substring(0, 60);
+        }
+        if (Dataset.ID.equals(base) || Dataset.DATE.equals(base) || Dataset.INDEX.equals(base)) {
+            base = base + "_";
+        }
+        String candidate = base;
+        for (int n = 2; taken.contains(candidate); n++) {
+            candidate = base + "_" + n;
+        }
+        return candidate;
     }
 
     /** The column each sampled measure has in the history table, in the order of {@code history.measures}. */
@@ -122,7 +140,32 @@ public final class Histories {
         if (!any) {
             return ds;
         }
-        return new Dataset(ds.name(), ds.version(), ds.title(), ds.description(), ds.sample(), ds.engine(), tables, ds.relationships(), measures, ds.hierarchies(), ds.security(),
+        return new Dataset(ds.name(), ds.version(), ds.title(), ds.description(), ds.sample(), ds.engine(), tables, ds.relationships(), measures, ds.hierarchies(), secured(ds, tables),
                 ds.rollups(), ds.refresh(), ds.compose(), ds.derived(), ds.tests(), ds.model());
+    }
+
+    /**
+     * The security with each history table bound like its live table (BI_DESIGN.md 8.5, the owner's decision of 2026-11-07): a role that reads
+     * every row of the live table reads every sample; a role limited there reads the samples of the groups related to the live rows it sees
+     * ({@code related_rows}, on the history's group columns); a role the live table's rules do not name reads none.
+     */
+    private static Dataset.Security secured(Dataset ds, Map<String, Dataset.Table> tables) {
+        if (!ds.security().perTable()) {
+            return ds.security();
+        }
+        Map<String, Dataset.TableSecurity> bound = new LinkedHashMap<>(ds.security().tables());
+        for (Dataset.Table h : tables.values()) {
+            Dataset.TableSecurity live = h.isHistory() ? ds.security().tables().get(h.of()) : null;
+            if (live == null || live.open() || bound.containsKey(h.name())) {
+                continue;
+            }
+            List<List<Dataset.RowRule>> layers = new ArrayList<>();
+            for (List<Dataset.RowRule> layer : live.layers()) {
+                layers.add(layer.stream().map(r -> new Dataset.RowRule(r.role(), "true".equalsIgnoreCase(r.where().strip()) && live.filters().isEmpty() ? "true"
+                        : "related_rows('" + h.of() + "')")).toList());
+            }
+            bound.put(h.name(), new Dataset.TableSecurity(List.of(), layers, false));
+        }
+        return new Dataset.Security(ds.security().rows(), ds.security().masked(), bound);
     }
 }

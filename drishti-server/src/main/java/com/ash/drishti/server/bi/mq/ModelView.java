@@ -91,7 +91,7 @@ public record ModelView(String id, String key, String hash, ModelDef def, Datase
         if ((additive == null || currency == null) && em != null && em.expr() != null) {
             Node n;
             try {
-                n = com.ash.drishti.server.bi.expr.Expressions.parse(em.expr());
+                n = com.ash.drishti.server.bi.expr.Expressions.node(em.expr());
             } catch (RuntimeException e) {
                 n = null;
             }
@@ -137,7 +137,7 @@ public record ModelView(String id, String key, String hash, ModelDef def, Datase
     boolean snapshotsOnly(Dataset ds, String expr) {
         Node n;
         try {
-            n = com.ash.drishti.server.bi.expr.Expressions.parse(expr);
+            n = com.ash.drishti.server.bi.expr.Expressions.node(expr);
         } catch (RuntimeException e) {
             return false;
         }
@@ -165,7 +165,7 @@ public record ModelView(String id, String key, String hash, ModelDef def, Datase
             return null;
         }
         try {
-            Node n = com.ash.drishti.server.bi.expr.Expressions.parse(em.expr());
+            Node n = com.ash.drishti.server.bi.expr.Expressions.node(em.expr());
             return n instanceof Node.Call c ? c.function() : null;
         } catch (RuntimeException e) {
             return null;
@@ -188,7 +188,7 @@ public record ModelView(String id, String key, String hash, ModelDef def, Datase
             m.inputs().forEach(i -> out.add(i.substring(0, Math.max(0, i.indexOf('.')))));
             return;
         }
-        Node.walk(com.ash.drishti.server.bi.expr.Expressions.parse(m.expr()), n -> {
+        Node.walk(com.ash.drishti.server.bi.expr.Expressions.node(m.expr()), n -> {
             if (n instanceof Node.Ref r && ds.tables().containsKey(r.parts().get(0))) {
                 out.add(r.parts().get(0));
             } else if (n instanceof Node.MeasureRef x) {

@@ -15,10 +15,10 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
 import java.nio.file.Path;
 import java.time.Clock;
@@ -87,7 +87,7 @@ class AdmissionTest {
         TestLake lake = new TestLake(true);
         QueryProperties props = QueryProperties.defaults(store.toString());
         try (QueryService service = new QueryService(props, new DuckDbEngine(props), lake, Clock.systemUTC())) {
-            QueryService.Loaded ds = new QueryService.Loaded("file:dataset:cost", Layers.key("file:dataset:cost"), DatasetParser.parse(TestLake.yaml()).dataset(), "h");
+            QueryService.Loaded ds = new QueryService.Loaded("file:dataset:cost", Layers.key("file:dataset:cost"), Layered.dataset(TestLake.yaml()).dataset(), "h");
             QueryService.Caller rita = new QueryService.Caller("rita", Set.of("risk"), true, UserAttributes.of("rita", List.of("risk"), "", null), SqlCompiler.Masks.NONE);
             QueryRequest q = new QueryRequest(List.of("trades.cpty"), List.of("Notional"), List.of(), TestLake.DAY2, TestLake.DAY2, List.of(), null, "columns");
             assertThatThrownBy(() -> QueryContext.with(new QueryContext.Ctx(QueryContext.WorkClass.INTERACTIVE, 10L, null), () -> service.query(ds, q, rita, false)))

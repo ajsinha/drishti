@@ -33,7 +33,7 @@ import java.util.Set;
  * The signatures of the functions checked mode knows (BI_FOUNDATION_2911E.md 2.1 and 2.5): names, parameters (positional and named),
  * the scopes a function may be written in, its types, and whether Rachana ({@code R}) or the pivot engine ({@code E}) computes it.
  * Loaded once from {@code rachana/el/signatures.yaml} on the class path (the shipped catalogue, {@link #get()}); {@link #parse} reads
- * any file of the same shape, and DEL's own catalogue ({@code bi/expr/functions.yaml}) is read by it until DEL is deleted. Immutable
+ * any file of the same shape. Immutable
  * and shared. The parser binds named arguments by these signatures; the {@link Checker} validates calls against them.
  */
 public final class Signatures {

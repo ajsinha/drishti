@@ -79,81 +79,57 @@ def item(item_id):
     return r
 
 
-def next_step(page, step):
-    page.click("[data-wiz-next]")
-    page.wait_for_selector(f'[data-wiz-body][data-step="{step}"]')
+# ---- a table and a model of the layer, then a report on the model ------------------------------------------------------------------
+
+TABLE = """rachana: 3
+table: bi.wiz_trades_trade
+version: 1.0.0
+title: Wizard trades
+from: { kind: trade, connector: trading-store }
+keys: [id]
+columns:
+  desk:      { path: "$.desk", type: string, description: The desk that owns the trade }
+  book:      { path: "$.book", type: string }
+  currency:  { path: "$.currency", type: string }
+  notional:  { path: "$.notional", type: decimal }
+  tradeDate: { path: "$.tradeDate", type: date }
+rules:
+  - { role: [bi-writer, bi-reader, bi-steward, admin], where: "true" }
+"""
+MODEL = """rachana: 3
+model: wiz-trades
+version: 1.0.0
+title: Wizard trades
+tables:
+  trade: { table: bi.wiz_trades_trade, role: fact }
+measures:
+  Gross notional:   { expr: "sum(trade.notional)" }
+  Average notional: { expr: "avg(trade.notional)" }
+  Trades:           { expr: "count(trade)" }
+"""
 
 
-# ---- the wizard ------------------------------------------------------------------------------------------------------------------------
-
-def test_the_wizard_builds_a_dataset_from_a_connector_without_typing_yaml(stack, page):
-    s, ws = api("POST", "/bi/workspaces", *WES, {"name": "Wizard Lab", "description": "where the wizard saves"})
+def test_a_table_and_its_model_are_published_in_a_workspace(stack, page):
+    """Tables and models are written in Build › Tables & models (the dataset wizard is gone); here they are seeded through the API."""
+    s, ws = api("POST", "/bi/workspaces", *WES, {"name": "Wizard Lab", "description": "where the tables and models live"})
     assert s in (200, 201), ws
     state["ws"] = ws["id"]
-    page.click("[data-new-wizard]")                                                   # New dataset: the one entry
-    page.wait_for_selector('[data-src="extends"]')
-    page.goto(page.url.split("/bi/")[0] + "/bi/datasets/new")                        # the guided tables builder, no longer pointed at from New dataset
-    page.wait_for_selector('[data-wiz-body][data-step="source"]')
-    page.check('[data-wiz-mode="connector"]')
-    page.select_option("[data-wiz-connector]", "trade-endur")
-    page.check('[data-kind="trade"]')
-    page.fill("[data-wiz-name]", "wiz-trades")
-    page.fill("[data-wiz-title-in]", "Wizard trades")
-    next_step(page, "columns")
-    page.fill('[data-col-desc="trade.desk"]', "The desk that owns the trade")
-    page.select_option('[data-col="trade.tradeDate"] select', "date")                                   # a type the connector did not know
-    next_step(page, "relationships")
-    expect(page.locator("[data-rels]")).to_contain_text("No relationships yet")                           # one table: nothing to relate
-    next_step(page, "measures")
-    # an aggregate: pick the aggregation and the column
-    page.get_by_role("button", name="Add a measure").click()
-    last = page.locator("[data-measure-row]").count() - 1
-    page.fill(f'[data-m-name="{last}"]', "Gross notional")
-    page.select_option(f'[data-m-field="{last}"]', "trade.notional")
-    page.click(f'[data-measure-row] >> nth={last} >> text=Check')
-    expect(page.locator(f'[data-m-check="{last}"]')).to_contain_text("checks out", timeout=20000)
-    # a formula, with suggestions for the field being typed
-    page.get_by_role("button", name="Add a measure").click()
-    last += 1
-    page.fill(f'[data-m-name="{last}"]', "Average notional")
-    page.select_option(f'[data-m-mode="{last}"]', "formula")
-    expr = page.locator(f'[data-m-expr="{last}"]')
-    expr.click()
-    expr.press_sequentially("avg(trade.notio")
-    page.click('[data-xe-opt="trade.notional"]')                                 # the shared expression editor completes the field
-    expr.press("End")
-    expr.press_sequentially(")")
-    expr.press("Tab")
-    assert page.input_value(f'[data-m-expr="{last}"]') == "avg(trade.notional)"
-    next_step(page, "hierarchies")
-    next_step(page, "refresh")
-    page.select_option("[data-refresh-kind]", "daily")
-    page.fill("[data-refresh-time]", "06:30")
-    expect(page.locator("[data-refresh-preview]")).to_contain_text("refresh: daily 06:30")
-    expect(page.locator("[data-security]")).to_contain_text("No row rules")
-    next_step(page, "review")
-    page.wait_for_selector('[data-wiz-valid="yes"]', timeout=20000)
-    text = page.inner_text("[data-wiz-yaml]")
-    for want in ("dataset: wiz-trades", "Gross notional", "Average notional", "avg(trade.notional)", "refresh: daily 06:30", "The desk that owns the trade", "tradeDate: date"):
-        assert want in text, want
-    page.select_option("[data-wiz-workspace]", state["ws"])                                              # a shared workspace, so it can be published
-    page.click("[data-wiz-save]")
-    page.wait_for_selector("[data-wiz-after]")
-    state["dataset"] = re.sub(r".*/bi/m/", "", page.get_attribute("[data-wiz-open-model]", "href")).replace("%3A", ":")
-    saved = item(state["dataset"])
-    assert saved["kind"] == "dataset" and saved["status"] == "draft" and "daily 06:30" in saved["body"]
-    clean(page)
+    for kind, title, body in (("table", "Wizard trades table", TABLE), ("model", "Wizard trades", MODEL)):
+        s, it = api("POST", f"/bi/workspaces/{state['ws']}/items", *WES, {"kind": kind, "title": title, "description": "", "body": body})
+        assert s in (200, 201), it
+        s, r = api("POST", f"/bi/items/{it['id']}/publish", *WES, {"note": "first"})
+        assert s == 200, r
+        state[kind] = it["id"]
+    state["dataset"] = state["model"]
 
 
-def test_a_report_is_started_on_it_from_the_wizard_and_gets_a_relative_date_slicer_a_top_filter_and_a_bookmark(stack, page):
-    page.click("[data-wiz-publish]")                                                                     # a report reads a published dataset
-    page.wait_for_selector("[data-wiz-new-report]")
-    page.click("[data-wiz-new-report]")
+def test_a_report_is_started_on_the_model_and_gets_a_relative_date_slicer_a_top_filter_and_a_bookmark(stack, page):
+    page.goto(f"{CONSOLE_URL}/bi/designer?dataset=mq:wiz-trades@1")
     page.wait_for_selector("[data-new-dataset]")
     try:
-        page.wait_for_function(f"() => document.querySelector('[data-new-dataset]').value === '{state['dataset']}'", timeout=8000)
+        page.wait_for_function("() => document.querySelector('[data-new-dataset]').value === 'mq:wiz-trades@1'", timeout=8000)
     except Exception:
-        raise AssertionError(page.url + " | " + str(page.evaluate("[...document.querySelector('[data-new-dataset]').options].map(o => o.value)")) + " | " + state["dataset"])
+        raise AssertionError(page.url + " | " + str(page.evaluate("[...document.querySelector('[data-new-dataset]').options].map(o => o.value)")))
     expect(page.locator("[data-new-workspace] option").first).to_be_attached()
     page.fill("[data-new-title]", "Wizard report")
     page.click("[data-new] button[type=submit]")
@@ -205,11 +181,11 @@ def test_duplicate_and_delete_show_what_depends(stack, page):
     page.wait_for_url(re.compile(r"/bi/i/(?!" + re.escape(state["report"]) + r"$)"))
     copy = re.sub(r".*/bi/i/", "", page.url).replace("%3A", ":")
     assert copy != state["report"] and item(copy)["kind"] == "report" and item(copy)["title"].endswith("(copy)")
-    # the dataset: both reports read it
+    # the model: both reports read it
     page.goto(f"{CONSOLE_URL}/bi/i/{state['dataset']}")
     page.get_by_role("button", name="Delete", exact=True).click()
-    expect(page.locator("[data-delete-impact] [data-impact]")).to_have_attribute("data-impact", "2")
-    expect(page.locator("[data-delete-impact]")).to_contain_text("Wizard report")
+    expect(page.locator("[data-delete-refused]")).to_contain_text("2 items use this model")                # a model is shared: not deleted while used
+    expect(page.locator("[data-delete-refused]")).to_contain_text("Wizard report")
     # the workspace list says the same in its confirmation, and Cancel keeps everything
     page.goto(f"{CONSOLE_URL}/bi/w/{state['ws']}")
     page.wait_for_selector("[data-items] tbody tr")
@@ -217,47 +193,8 @@ def test_duplicate_and_delete_show_what_depends(stack, page):
     page.click("[data-delete-selected]")
     expect(page.locator(f'[data-confirm-item="{state["dataset"]}"] [data-impact]')).to_have_attribute("data-impact", "2")
     page.click("[data-confirm-no]")
-    assert item(state["dataset"])["kind"] == "dataset"
+    assert item(state["dataset"])["kind"] == "model"
     state["copy"] = copy
-    clean(page)
-
-
-def test_edit_in_the_wizard_keeps_a_key_it_has_no_control_for(stack, page):
-    saved = item(state["dataset"])
-    s, r = api("PUT", f"/bi/items/{state['dataset']}", *WES, {"body": saved["body"] + "future-key:\n  kept: [1, 2]\n", "message": "an extra key"})
-    assert s == 200, r
-    page.goto(f"{CONSOLE_URL}/bi/d/{state['dataset']}")
-    page.wait_for_selector("[data-edit-wizard]:not([hidden])")
-    page.click("[data-edit-wizard]")
-    page.wait_for_selector('[data-wiz-body][data-step="source"]')                                         # edit mode opens on an overview with the list of steps
-    expect(page.locator("[data-wiz-stepjump] [data-jump]")).to_have_count(6)
-    next_step(page, "columns")
-    expect(page.locator('[data-col-desc="trade.desk"]')).to_have_value("The desk that owns the trade")
-    page.fill('[data-col-desc="trade.book"]', "The book")
-    for step in ("relationships", "measures", "hierarchies", "refresh", "review"):
-        next_step(page, step)
-    page.wait_for_selector('[data-wiz-valid="yes"]', timeout=20000)
-    text = page.inner_text("[data-wiz-yaml]")
-    assert "future-key" in text and "The book" in text and "Gross notional" in text
-    page.click("[data-wiz-save]")
-    page.wait_for_selector("[data-wiz-after]")
-    again = item(state["dataset"])["body"]
-    assert "future-key" in again and "The book" in again and "daily 06:30" in again
-    clean(page)
-
-
-def test_a_dataset_with_no_schedule_gets_one_from_its_page(stack, page):
-    body = "rachana: 1\ndataset: plain-trades\ntitle: Plain trades\ntables:\n  trade:\n    source: { connector: trading-store, kind: trade }\n    columns: { desk: string, notional: decimal }\nmeasures:\n  Notional: { expr: \"sum(trade.notional)\" }\n"
-    s, r = api("POST", "/bi/workspaces/me/items", *WES, {"kind": "dataset", "title": "Plain trades", "description": "", "body": body})
-    assert s in (200, 201), r
-    page.goto(f"{CONSOLE_URL}/bi/d/{r['id']}")
-    page.wait_for_selector("[data-set-schedule]:not([hidden])", timeout=20000)
-    page.select_option('[data-set-schedule] [name="kind"]', "business-days")
-    page.fill('[data-set-schedule] [name="time"]', "07:15")
-    page.click("[data-set-schedule] button[type=submit]")
-    page.wait_for_function("() => /Saved refresh/.test(document.querySelector('[data-msg]').textContent)")
-    saved = item(r["id"])["body"]
-    assert "refresh: business-days 07:15" in saved and "Notional" in saved and "trading-store" in saved
     clean(page)
 
 
@@ -277,7 +214,8 @@ def test_a_python_item_starts_from_a_form_with_a_valid_body(stack, page):
     body = page.input_value('[data-edit] [name="body"]')
     assert "interface: measure" in body and "inputs: [notional]" in body and "def compute(table, params)" in body and "# " in body
     page.get_by_role("button", name="Check the Python").click()
-    page.wait_for_selector('[data-py-check="ok"]', timeout=30000)
+    page.wait_for_selector('[data-py-check]', timeout=30000)
+    assert page.locator('[data-py-check]').first.get_attribute('data-py-check') == 'ok', page.inner_text('[data-warnings]')
     clean(page)
 
 
@@ -314,22 +252,10 @@ def test_a_member_is_found_by_typing_part_of_a_name(stack, page):
     clean(page)
 
 
-def test_the_wizard_fits_a_phone(stack, browser):
-    phone = sign_in(browser, "wes", "/bi/datasets", viewport={"width": 390, "height": 800}, has_touch=True, is_mobile=True)
-    phone.goto(f"{CONSOLE_URL}/bi/datasets/new")
-    phone.wait_for_selector('[data-wiz-body][data-step="source"]')
-    assert phone.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
-    for sel in ("[data-wiz-next]", '[data-wiz-mode="packs"]'):
-        box = phone.locator(sel).bounding_box()
-        assert box["height"] >= 43.5, sel
-    clean(phone)
-    phone.context.close()
-
-
 # ---- saving safely: two tabs, a frozen draft, a refresh, add visual, one bad visual -------------------------------------------------------------
 
 def make_report(title, visuals, workspace=None):
-    body = f"rachana: 1\nreport: {title.lower().replace(' ', '-')}\ntitle: {title}\ndataset: {state['dataset']}\npages:\n  - id: page1\n    title: Page 1\n    visuals:\n{visuals}"
+    body = f"rachana: 1\nreport: {title.lower().replace(' ', '-')}\ntitle: {title}\nmodel: wiz-trades@1\npages:\n  - id: page1\n    title: Page 1\n    visuals:\n{visuals}"
     if not visuals:
         body = body.replace("    visuals:\n", "    visuals: []\n")
     s, r = api("POST", f"/bi/workspaces/{workspace or state['ws']}/items", *WES, {"kind": "report", "title": title, "description": "", "body": body})
@@ -384,61 +310,6 @@ def test_one_broken_visual_is_one_error_card_and_the_others_are_drawn_for_a_read
     pg.wait_for_function("() => !document.querySelector('.bi-vis-busy') && document.querySelectorAll('.bi-vis').length === 2", timeout=30000)
     expect(pg.locator(".bi-vis-failed")).to_have_count(1)
     expect(pg.locator(".bi-vis:not(.bi-vis-failed) .bi-vis-ms")).to_have_count(1)
-    clean(pg)
-    pg.context.close()
-
-
-def test_a_refresh_gives_the_wizard_its_draft_back_and_discard_draft_throws_it_away(stack, browser):
-    pg = sign_in(browser, "wes", "/bi/datasets/new")
-    pg.wait_for_selector('[data-wiz-body][data-step="source"]')
-    pg.check('[data-wiz-mode="connector"]')
-    pg.select_option("[data-wiz-connector]", "trade-endur")
-    pg.check('[data-kind="trade"]')
-    pg.fill("[data-wiz-name]", "refresh-me")
-    next_step(pg, "columns")
-    pg.fill('[data-col-desc="trade.desk"]', "kept across a refresh")
-    next_step(pg, "relationships")
-    pg.go_back()                                                                                          # the browser's Back is a step back, not a page away
-    pg.wait_for_selector('[data-wiz-body][data-step="columns"]')
-    pg.go_forward()
-    pg.wait_for_selector('[data-wiz-body][data-step="relationships"]')
-    pg.reload()
-    pg.wait_for_selector("[data-wiz-restored]", timeout=20000)
-    pg.wait_for_selector('[data-wiz-body][data-step="relationships"]')
-    pg.click("[data-wiz-back]")
-    pg.wait_for_selector('[data-wiz-body][data-step="columns"]')
-    expect(pg.locator('[data-col-desc="trade.desk"]')).to_have_value("kept across a refresh")
-    pg.click("[data-wiz-discard]")
-    pg.wait_for_selector('[data-wiz-body][data-step="source"]')
-    assert pg.locator("[data-wiz-restored]").count() == 0
-    clean(pg)
-    pg.context.close()
-
-
-def test_a_new_report_takes_a_main_dataset_and_more_and_greys_out_what_cannot_be_used(stack, browser):
-    pg = sign_in(browser, "wes", "/bi/designer")
-    pg.wait_for_selector("[data-new-also] option", state="attached", timeout=20000)
-    private = pg.locator('[data-new-dataset] option:has-text("Plain trades")')                              # a draft in the private workspace (made above)
-    assert private.count() == 1 and private.get_attribute("disabled") is not None
-    assert "private workspace" in private.inner_text() and "publish it first" in private.inner_text()
-    assert pg.locator('[data-new-dataset] option[value="mq:trades-basic@1"]').count() == 1               # models first; a report reads one model
-    pg.select_option("[data-new-dataset]", "mq:trades-basic@1")
-    expect(pg.locator("[data-new-also]")).to_be_disabled()                                                # more datasets are for a version 1 report only
-    pg.select_option("[data-new-dataset]", state["dataset"])
-    expect(pg.locator("[data-new-also]")).to_be_enabled()
-    pg.fill("[data-new-title]", "Two views")
-    pg.click("[data-new] button[type=submit]")
-    pg.wait_for_selector("[data-design-root][data-ready=yes]", timeout=30000)
-    box = pg.locator("[data-add-dataset]").bounding_box()
-    tree = pg.locator("[data-fields-tree]").bounding_box()
-    assert box["y"] < tree["y"], "Add dataset is above the tree"
-    clean(pg)
-    # the same pickers on the workspace form
-    pg.goto(f"{CONSOLE_URL}/bi/w/me")
-    pg.wait_for_selector("[data-new-item]:not([hidden])")
-    pg.select_option('[data-new-item] [name="kind"]', "report")
-    expect(pg.locator("[data-new-also]")).to_be_visible()
-    pg.wait_for_selector("[data-new-also] option", timeout=20000)
     clean(pg)
     pg.context.close()
 

@@ -41,18 +41,6 @@ def app_with(backend):
 
 
 # ---- task 3: the calculation UI ---------------------------------------------------------------------------------------------
-def test_the_model_designer_has_the_calculations_tab_and_its_script():
-    page = (CONSOLE / "web/templates/bi/model_designer.html").read_text(encoding="utf-8")
-    assert 'data-tab="calc"' in page and "data-calc-pane" in page and "/static/js/drishti_bi-model-calc.js" in page
-    calc = (JS / "drishti_bi-model-calc.js").read_text(encoding="utf-8")
-    for fn in ("share_of(", "calc(", "closing(", "opening(", "avg_over(", "fiscal_ytd(", "as_of(", "param."):
-        assert fn in calc, fn
-    for key in ("'calc-groups'", "doc.parameters", "doc.calendars", "doc.fx", "'fiscal-year-start'", "SELECTED"):
-        assert key in calc, key
-    tabs = (JS / "drishti_bi-model-tabs.js").read_text(encoding="utf-8")
-    assert "data-m-via" in tabs and "doc.measures[name].via" in tabs and "M.quickMeasure" in tabs
-    editor = (JS / "drishti_bi-expr-editor.js").read_text(encoding="utf-8")
-    assert "opts.names" in editor and "opts.keywordValues" in editor and "'ALL'" in editor
 
 
 def test_the_calculation_keys_are_written_as_the_server_reads_them():

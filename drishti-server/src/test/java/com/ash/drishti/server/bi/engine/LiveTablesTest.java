@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -179,7 +180,7 @@ public class LiveTablesTest {
         BiLiveProperties live = BiLiveProperties.defaults().fast(Duration.ofMillis(20), Duration.ofHours(1));
         service = new QueryService(props, live, new DuckDbEngine(props), lake, clock);
         String yaml = TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\n    mode: live" + liveBlock);
-        DatasetParser.Result r = DatasetParser.parse(yaml);
+        DatasetParser.Result r = Layered.dataset(yaml);
         assertThat(r.problems().stream().filter(DatasetParser.Problem::error).toList()).isEmpty();
         return new QueryService.Loaded("file:dataset:live-test", Layers.key("file:dataset:live-test"), r.dataset(), "h1");
     }
@@ -378,7 +379,7 @@ public class LiveTablesTest {
         BiLiveProperties live = BiLiveProperties.defaults().fast(Duration.ofMillis(20), Duration.ofMillis(100));
         service = new QueryService(props, live, new DuckDbEngine(props), lake, clock);
         String yaml = TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\n    mode: live");
-        QueryService.Loaded ds = new QueryService.Loaded("file:dataset:poll", Layers.key("file:dataset:poll"), DatasetParser.parse(yaml).dataset(), "h");
+        QueryService.Loaded ds = new QueryService.Loaded("file:dataset:poll", Layers.key("file:dataset:poll"), Layered.dataset(yaml).dataset(), "h");
         QueryService.Caller risk = who("rita", true, "", "risk");
         double before = mtmOf(run(ds, "{\"measures\":[\"MTM\"]}", risk));
         LiveTable t = service.live().find(ds.key(), "trades").orElseThrow();
@@ -388,39 +389,41 @@ public class LiveTablesTest {
         eventually(() -> mtmOf(run(ds, "{\"measures\":[\"MTM\"]}", risk)) == before + 10);
     }
 
+    /** The trades as one table of the layer, with {@code extra} lines (a grain, columns) and its materialisation. */
+    static String trades(String extra, String materialize) {
+        return "rachana: 3\ntable: bi.trades\nversion: 1.0.0\nfrom: { kind: trade, connector: trading-lake }\nkeys: [tradeId]\n" + extra
+                + "columns:\n  tradeId: { path: \"$.tradeId\", type: string, key: true }\n  desk: { path: \"$.desk\", type: string }\n"
+                + "  notional: { path: \"$.notional\", type: decimal }\nmaterialize: " + materialize + "\n";
+    }
+
     @Test
     void aTableOverAnArrayCannotBeLive() {
-        String yaml = TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade, each: legs }\n    mode: live");
-        DatasetParser.Result r = DatasetParser.parse(yaml);
-        assertThat(r.problems()).anyMatch(p -> p.error() && p.code().equals("DRS-9050") && p.message().contains("legs"));
+        DatasetParser.Result r = Layered.dataset(trades("grain: \"$.legs[*]\"\n", "{ live: {} }"));
+        assertThat(r.problems()).anyMatch(p -> p.error() && p.path().equals("materialize") && p.message().contains("cannot be live"));
         assertThat(r.ok()).isFalse();
     }
 
     @Test
     void retentionBelongsToLiveTablesAndIsChecked() {
-        DatasetParser.Result cached = DatasetParser.parse(TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\n    live: { rows: 5 }"));
-        assertThat(cached.problems()).anyMatch(p -> p.error() && p.path().endsWith(".live"));
-        DatasetParser.Result bad = DatasetParser.parse(TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }",
-                "source: { connector: trading-lake, kind: trade }\n    mode: live\n    live: { rows: 0, age: soon }"));
+        DatasetParser.Result bad = Layered.dataset(trades("", "{ live: { rows: 0, age: soon } }"));
         assertThat(bad.problems()).anyMatch(p -> p.error() && p.path().endsWith("live.rows"));
         assertThat(bad.problems()).anyMatch(p -> p.error() && p.path().endsWith("live.age"));
-        DatasetParser.Result good = DatasetParser.parse(TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }",
-                "source: { connector: trading-lake, kind: trade }\n    mode: live\n    live: { rows: 500, age: 15m }"));
-        assertThat(good.ok()).isTrue();
+        DatasetParser.Result good = Layered.dataset(trades("", "{ live: { rows: 500, age: 15m } }"));
+        assertThat(good.ok()).as(good.problems().toString()).isTrue();
         assertThat(good.dataset().tables().get("trades").live().age()).isEqualTo(Duration.ofMinutes(15));
     }
 
     @Test
     void aNameTheModelReservesCannotBeDeclared() {
-        DatasetParser.Result r = DatasetParser.parse(TestLake.yaml().replace("      notional: decimal", "      notional: decimal\n      updateSeq: integer"));
-        assertThat(r.problems()).anyMatch(p -> p.error() && p.path().endsWith("updateSeq"));
+        DatasetParser.Result r = Layered.dataset(trades("", "on-load").replace("  notional:", "  update_seq: { path: \"$.update_seq\", type: integer }\n  notional:"));
+        assertThat(r.problems()).anyMatch(p -> p.error() && p.path().endsWith("update_seq"));
     }
 
     @Test
     void aMissingConnectorIsRefusedWithItsCodeAndStartsNothing() {
         QueryService.Loaded ds = start("");
         String yaml = TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: nowhere, kind: trade }\n    mode: live");
-        QueryService.Loaded broken = new QueryService.Loaded("file:dataset:broken", Layers.key("file:dataset:broken"), DatasetParser.parse(yaml).dataset(), "h");
+        QueryService.Loaded broken = new QueryService.Loaded("file:dataset:broken", Layers.key("file:dataset:broken"), Layered.dataset(yaml).dataset(), "h");
         assertThatThrownBy(() -> run(broken, "{\"measures\":[\"Trades\"]}", who("rita", true, "", "risk"))).isInstanceOf(DrishtiException.class).hasMessageContaining("nowhere");
         assertThat(service.live().tables(broken.key())).isEmpty();
         assertThat(ds).isNotNull();

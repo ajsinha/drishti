@@ -207,7 +207,7 @@ public final class Planner {
             return out;
         }
         try {
-            Node.walk(Expressions.parse(m.expr()), n -> {
+            Node.walk(Expressions.node(m.expr()), n -> {
                 if (n instanceof Node.Ref r && ds.tables().containsKey(r.parts().get(0))) {
                     out.add(r.parts().get(0));
                 } else if (n instanceof Node.MeasureRef x) {
@@ -228,7 +228,7 @@ public final class Planner {
         }
         Node n;
         try {
-            n = Expressions.parse(m.expr());
+            n = Expressions.node(m.expr());
         } catch (RuntimeException e) {
             return false;
         }

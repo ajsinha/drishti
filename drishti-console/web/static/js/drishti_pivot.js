@@ -116,7 +116,7 @@
       list.forEach(function (p) {
         h.push('<div class="pv-sugg" title="' + esc(p.promote + "; or " + p.dataset) + '"><span class="mono">' + esc(p.path) + '</span> <span class="pv-sub">' + esc(String(p.uses)) + ' uses</span> '
           + (p.connector && p.grain === "entity" ? '<a class="pv-btn" href="/admin/connectors/' + encodeURIComponent(p.connector) + '">Promote</a> ' : "")
-          + '<a class="pv-btn" href="/bi/datasets/new">Add to dataset</a></div>');
+          + '<a class="pv-btn" href="/build/tables?new=table">Add to a table</a></div>');
       });
       $("[data-pv-fields]").insertAdjacentHTML("beforeend", h.join(""));
     }, function () { /* not an administrator: no suggestions */ });

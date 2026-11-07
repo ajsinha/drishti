@@ -55,14 +55,14 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance,logistics",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/bi-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/bi-api-overlay/added.yaml",
-        "drishti.bi.dir=${drishti.test.dir}/bi-api-folder", "drishti.bi.folder-refresh=1s"})
+        "drishti.bi.dir=${drishti.test.dir}/bi-api-folder", "drishti.tables.root=${drishti.test.dir}/bi-api-folder/tables", "drishti.bi.folder-refresh=1s"})
 @AutoConfigureMockMvc
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class BiApiTest {
 
     /** A minimal valid report: publishing a report checks its structure (DRS-9030). */
-    private static final String REPORT_BODY = "report: desk-pnl\ndataset: trades-basic\npages:\n  - { id: main, title: Main, visuals: [] }\n";
+    private static final String REPORT_BODY = "report: desk-pnl\nmodel: trades-basic@1\npages:\n  - { id: main, title: Main, visuals: [] }\n";
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
@@ -129,6 +129,7 @@ class BiApiTest {
             Files.createDirectories(datasets);
             Files.copy(Path.of("src/test/resources/bi/samples-2.1/datasets/trades-basic.dataset.yaml"), datasets.resolve("trades-basic.dataset.yaml"), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
             Files.writeString(reports.resolve("risk-only.report.yaml"), "title: Risk only\naudience:\n  roles: [steward]\n");
+            TablesFolder.migrate(datasets.getParent());                       // the 2.1 sample moved onto the table layer: the model trades-basic and its table
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
@@ -241,7 +242,7 @@ class BiApiTest {
     @Test @Order(5)
     void reviewBeforePublishUsesTheApproverPowerAndFourEyes() throws Exception {
         ok(call("PUT", "/api/v1/bi/workspaces/" + workspace, ann(), Map.of("reviewRequired", true)));
-        JsonNode i = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "dataset", "title", "Trades", "body", "dataset: trades\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: string }\n")));
+        JsonNode i = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "table", "title", "Trades", "body", "rachana: 3\ntable: desk.trades\nversion: 1.0.0\nfrom: { kind: trade }\ncolumns:\n  a: { path: \"$.a\", type: string }\n")));
         String id = i.path("id").asText();
         refused(call("POST", "/api/v1/bi/items/" + id + "/publish", ann(), Map.of()), 403, "DRS-9002");     // review is required
         assertThat(ok(call("POST", "/api/v1/bi/items/" + id + "/propose", ann(), Map.of("note", "please"))).path("status").asText()).isEqualTo("proposed");
@@ -250,7 +251,7 @@ class BiApiTest {
         JsonNode approved = ok(call("POST", "/api/v1/bi/items/" + id + "/approve", bob(), Map.of("note", "looks right")));
         assertThat(approved.path("publishedVersion").asInt()).isEqualTo(1);
         // four-eyes: bob proposes, bob may not approve
-        JsonNode j = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", bob(), Map.of("kind", "dataset", "title", "Cashflows")));
+        JsonNode j = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", bob(), Map.of("kind", "table", "title", "Cashflows")));
         String jid = j.path("id").asText();
         ok(call("POST", "/api/v1/bi/items/" + jid + "/propose", bob(), Map.of()));
         refused(call("POST", "/api/v1/bi/items/" + jid + "/approve", bob(), Map.of()), 403, "DRS-9005");
@@ -382,7 +383,7 @@ class BiApiTest {
     @Test @Order(15)
     void aBoardCanShowItsAuthorsDraftReportButCannotBePublishedUntilThatReportIs() throws Exception {
         ok(call("PUT", "/api/v1/bi/workspaces/" + workspace, ann(), Map.of("reviewRequired", false)));
-        String body = "report: kpis\ndataset: trades-basic\npages:\n  - id: main\n    title: Main\n    visuals:\n"
+        String body = "report: kpis\nmodel: trades-basic@1\npages:\n  - id: main\n    title: Main\n    visuals:\n"
                 + "      - { id: n, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n";
         String rid = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "report", "title", "Draft KPIs", "body", body))).path("id").asText();
         // the author's board designer lists the draft, labelled; a reader's list never has it
@@ -414,13 +415,13 @@ class BiApiTest {
 
     @Test @Order(99)
     void anInvalidDatasetCannotBePublishedAndSaysWhy() throws Exception {
-        JsonNode i = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "dataset", "title", "Broken", "body", "dataset: x\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: strng }\n")));
+        JsonNode i = ok(call("POST", "/api/v1/bi/workspaces/" + workspace + "/items", ann(), Map.of("kind", "table", "title", "Broken", "body", "rachana: 3\ntable: desk.x\nversion: 1.0.0\nfrom: { kind: trade }\ncolumns:\n  a: { path: \"$.a\", type: strng }\n")));
         String id = i.path("id").asText();
         ok(call("POST", "/api/v1/bi/items/" + id + "/propose", ann(), Map.of()));
         r1(call("POST", "/api/v1/bi/items/" + id + "/approve", bob(), Map.of()));
     }
 
     private void r1(ResultActions r) throws Exception {
-        refused(r, 422, "DRS-9010");
+        refused(r, 422, "DRS-9003");                                             // the table layer's check refuses the type
     }
 }

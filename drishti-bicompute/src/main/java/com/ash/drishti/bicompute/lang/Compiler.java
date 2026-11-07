@@ -134,7 +134,9 @@ public final class Compiler {
                 default -> 1;
             };
             for (int i = 0; i < args.size(); i++) {
-                if (i < n) {
+                if (i < n && args.get(i) instanceof Expr.Absent) {
+                    continue;                                                // count(where = ...): no row value, the rows
+                } else if (i < n) {
                     inputs.add(rows.row(args.get(i)));
                 } else if (args.get(i) instanceof Expr.Lit l && l.value() instanceof Number num) {
                     numbers.add(num.doubleValue());

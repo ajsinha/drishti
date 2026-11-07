@@ -61,7 +61,7 @@ def test_the_page_lists_every_kind_with_state_origin_and_problems(client, backen
     page = client.get("/admin/artifacts").text
     for text in ("Artifacts", "trading", "widgets", "trading-lake", "scratch", "trades-basic", "broken", "kind &#39;trade&#39; is owned by pack trading", "drishti_admin-artifacts.js",
                  "drishti_admin-artifacts.css", "drishti_artifact-uninstall.js", "/help/admin-artifacts", "Installed (6)", "Uninstalled (1)", "2 packs, 2 connectors, 2 BI files", "2 with a problem",
-                 "Filter by name", "Any origin", "Place in config/bi", "Deploy a pack archive", "Open Connectors", "/srv/drishti/data/uninstalled", "30 days",
+                 "Filter by name", "Any origin", "Place it", "Deploy a pack archive", "Open Connectors", "/srv/drishti/data/uninstalled", "30 days",
                  'aria-label="Uninstall trading"', 'aria-label="Disable trading"', 'aria-label="Enable scratch"', 'data-kind="bi" data-subtype="dataset" data-name="trades-basic"',
                  "data-uninstall-dialog", "data-typed-dialog", 'role="tablist"', "20261006T090000-connector-scratch", "Restore scratch", "Delete scratch permanently"):
         assert text in page, text
@@ -120,12 +120,12 @@ def test_a_bi_file_is_checked_and_placed_as_raw_bytes_with_its_name(client, back
         return {"valid": True, "name": "x", "subtype": "dataset", "problems": [], "warnings": [], "exists": False}
     monkeypatch.setattr(backend, "admin_upload", upload, raising=False)
     h = {"content-type": "application/octet-stream"}
-    assert client.post("/admin/artifacts/api/bi/check?file=x.dataset.yaml", content=b"dataset: x\n", headers=h).json()["valid"] is True
-    assert client.post("/admin/artifacts/api/bi?file=x.dataset.yaml&replace=true&confirm=x", content=b"dataset: x\n", headers=h).status_code == 200
-    assert sent[0][0] == "/artifacts/bi/check?file=x.dataset.yaml" and sent[0][1] == b"dataset: x\n"
-    assert sent[1][0] == "/artifacts/bi?file=x.dataset.yaml&replace=true&confirm=x"
-    assert client.post("/admin/artifacts/api/bi/check?file=x.dataset.yaml", json={"a": 1}).status_code == 415
-    assert client.post("/admin/artifacts/api/bi/check?file=x.dataset.yaml", content=b"", headers=h).status_code == 400
+    assert client.post("/admin/artifacts/api/bi/check?file=x.report.yaml", content=b"report: x\n", headers=h).json()["valid"] is True
+    assert client.post("/admin/artifacts/api/bi?file=x.report.yaml&replace=true&confirm=x", content=b"report: x\n", headers=h).status_code == 200
+    assert sent[0][0] == "/artifacts/bi/check?file=x.report.yaml" and sent[0][1] == b"report: x\n"
+    assert sent[1][0] == "/artifacts/bi?file=x.report.yaml&replace=true&confirm=x"
+    assert client.post("/admin/artifacts/api/bi/check?file=x.report.yaml", json={"a": 1}).status_code == 415
+    assert client.post("/admin/artifacts/api/bi/check?file=x.report.yaml", content=b"", headers=h).status_code == 400
 
 
 def test_the_packs_and_connectors_pages_carry_the_shared_safe_uninstall(client, backend, monkeypatch):

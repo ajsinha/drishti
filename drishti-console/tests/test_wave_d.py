@@ -84,17 +84,14 @@ def test_the_three_helpers_are_passed_on_with_the_callers_identity_and_their_ref
 
 def test_the_pages_carry_the_helper_scripts_and_the_scripts_are_plain_same_origin_and_safe(assist):
     assert "/static/js/drishti_bi-design-copilot.js" in assist.get("/bi/design/file:report:x").text
-    model = assist.get("/bi/m/file:dataset:x").text
-    assert "data-ai-helper" in model and "data-ai-box" in model and "/static/css/drishti_bi-ai.css" in model
-    for name in ("static/js/drishti_bi-design-copilot.js", "static/js/drishti_bi-model.js"):
+    for name in ("static/js/drishti_bi-design-copilot.js",):
         js = JS(name)
         assert not re.search(r"\binnerHTML\b|\beval\(|new Function|\bdocument\.write|insertAdjacentHTML|\.outerHTML", js), name
         assert "style=" not in js and "onclick" not in js.lower(), name
-        assert name.endswith("drishti_bi-model.js") or ("http://" not in js and "https://" not in js), name              # drishti_bi-model.js has the SVG namespace, which is a name, not an address
+        assert "http://" not in js and "https://" not in js, name
     copilot = JS("static/js/drishti_bi-design-copilot.js")
     assert "fetch(" not in copilot and "B.api('POST', '/ai/suggest'" in copilot and "'/ai/explain-checks'" in copilot       # every call through B.api
     assert "D.change(" in copilot, "a suggestion is added as an undoable edit of the draft, only on Add"
-    assert "'/ai/dataset-helper'" in JS("static/js/drishti_bi-model.js")
 
 
 # ---- the Subscribe form and the alert form ------------------------------------------------------------------------------------------------------
