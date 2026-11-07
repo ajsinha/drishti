@@ -87,6 +87,8 @@ public final class LakeRelocateOnStart implements EnvironmentPostProcessor, Orde
             com.ash.drishti.lakeconfig.LakeFiles.Migration m = com.ash.drishti.lakeconfig.LakeFiles.adoptDemo(Path.of(dir), lakes.folder() == null
                     ? Path.of(Lakes.DEFAULT_DIR) : lakes.folder(), true);
             m.notes().forEach(n -> LOG.log(System.Logger.Level.INFO, "connector " + n + " (the file before: <name>.yaml.before-lake-<time>.bak)"));
+            m.lakeFiles().keySet().forEach(f -> LOG.log(System.Logger.Level.INFO, "lake file " + f + ": the tables those connectors read that it "
+                    + "lacked were added at the end of its tables (every other line kept as it was)"));
         } catch (java.io.IOException | RuntimeException e) {
             LOG.log(System.Logger.Level.WARNING, "the connector files that read the demo lake by its old root were not moved to lake: demo ("
                     + e.getMessage() + "); they read " + o.from() + " until they are");

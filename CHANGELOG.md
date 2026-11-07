@@ -19,6 +19,30 @@
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
+## 2.9.11.e (unreleased)
+
+- **The demo lake's layout, the owner's decision** (`config/lakes/demo.yaml` and its jar copy; DATA_LAKE_GUIDE.md section 2): `risk.scenario-pv`
+  partitioned by `SCENARIO_SET_ID, GRAIN` after the business date, sorted by `LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID`, zstd
+  (vectors too), 256 MB files, 16 MB row groups, 30 days' time travel, maintenance (compaction to 256 MB, vacuum after 7 days,
+  checkpoints); `trading.trade_calypso` and `trading.trade_murex` partitioned by `PRODUCT_GROUP` instead of `PRODUCT_TYPE` (50+ product
+  types each; `PRODUCT_TYPE` stays promoted); every trade table compacted and vacuumed after 7 days. The trading pack's recommended
+  entries follow (tools/packgen/banking/make_packs.py). An existing demo lake is rebuilt with `drishti.py lake demo` to take it; a load
+  into an old-layout table is refused, naming both, until then. VaR figures are equal on either layout.
+
+- **The demo lake's move no longer changes the shipped `config/lakes/demo.yaml`** (found on the owner's stack after 2.9.11.d: at the
+  first start after the move the file was re-written in block style, quotes added, and 43 tables appended, so `git status` showed it
+  modified and the drill's clean-tree check would fail). Two causes: the shipped file lacked the 37 tables the example packs'
+  connectors read from the demo lake (climate, genomics, liquidity, operational risk, retail), and the code that moves old connector
+  files to `lake: demo` (`LakeFiles.adoptDemo`) re-serialised the whole file to add any entry. Now the shipped file (and its jar copy)
+  holds every table a shipped pack's connector reads, checked by a test and filled by `LakesCli pack-tables --lake demo --packs
+  config/packs,examples/packs --write`; a lake file is written only when an entry is really missing (a site's own connector naming a
+  kind the packs no longer have, or the data inbox's first load into a table), and then only that entry is added at the end of
+  `tables:` in the file's compact style, every other line and comment kept byte for byte (`tables: {}` of an empty lake becomes the
+  block). A start that finds nothing to add writes nothing (docs/admin/OPERATIONS.md, "The lakes' folders"). Found on the way: a
+  results reader of the older form (`var-results`, `exposure-results`: `risk-results` tables, same old root) was moved to `lake: demo`
+  and its table added to the demo lake, where it would have read `data/delta/demo/risk-results`; such a connector reads another shipped
+  lake's tables and is now left as it is.
+
 ## 2.9.11.d (2026-11-07)
 - **Six lake folders kept in git, their content never** (DATA_LAKE_GUIDE.md section 1): `data/delta/demo`, `risklake`, `newslake` (news), `worldlake` (World Bank, IMF, UN), `regulators` (SEC, Federal Reserve, OSFI, central banks) and `capitalmarket` (prices, curves, vols, funds), each with only its README.md; the test data's `.jsonl.gz` files stay in git to build the demo lake. The five new lakes ship as lake files with no tables (`config/lakes/<lake>.yaml` and their jar copies), and **nothing shipped points at them**: every connector, rule and setting reads `demo` (guarded by `tools/test_empty_lakes.py`); a site points at them itself. The demo lake's one-time move and `build_demo_lakes` treat a folder holding only its README.md as empty.
 
