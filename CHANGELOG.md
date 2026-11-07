@@ -44,6 +44,18 @@
   lake's tables and is now left as it is.
 
 - **Drishti Elements, the design, decided by the product owner** ([ELEMENTS.md](docs/architecture/ELEMENTS.md)): the console's JavaScript as eight libraries (drishti-core, -inputs, -grid, -chart, -data, -insight, -renderer, -risk; 1 to 5 without a Drishti server), the measured inventory (116 of 258 scripts and modules, about 21,000 lines, fold into them; about 10 grids and 22 chart scripts into one each), the grid's three layouts (wells, panel, terminal: VaR screens default to terminal) and its server-side pivot with non-additive totals from the server, an AG Grid-style adapter for the Enterprise pivot API from public documentation only, one chart spec over ECharts with the risk kinds and maps (world to every country's first-level regions), packaging and licensing per domain module, the documentation of every library (guide, generated API reference, tutorial, gallery, AG Grid migration guide), the guards and the migration order; the decisions (Vega retired, the grid on phones, a standalone Excel writer, the adapter's scope, both options of g2, g3 and g4 built as modes with A the default); mock-ups [g1](docs/architecture/mockups/elements/g1-pivot-grid.html), [g2](docs/architecture/mockups/elements/g2-charts.html), [g3](docs/architecture/mockups/elements/g3-maps.html) and [g4](docs/architecture/mockups/elements/g4-gallery.html).
+- **Drishti Elements distributed** ([ELEMENTS.md section 8.7](docs/architecture/ELEMENTS.md#87-as-built-the-distribution); the guide
+  [Using Drishti Elements in your app](docs/guides/ELEMENTS_IN_YOUR_APP.md)): other applications take the libraries as files kept
+  inside the organisation, never from a public CDN or registry. `drishti.py elements pack --libs core,grid,chart [--theme dark]`
+  writes one JavaScript file and one style sheet with exactly those libraries and what they require (core+grid+chart: 1.8 MB, 555 KB
+  gzip with ECharts; 50 KB CSS), naming what is inside; the banking module's library is refused unless `--include-domain banking`.
+  `drishti.py elements dist` writes `drishti-elements-<version>.zip` (every library's ES modules, bundle, sheets, TypeScript
+  declarations generated from the typed JSDoc, README and licence notice; the token sheet and one sheet per theme; the engines and map
+  shapes; the changelog lines; SRI hashes of every file; 3.3 MB) and the npm tarballs `@drishti/elements-<name>` for an internal
+  Artifactory or Nexus registry; `./mvnw -P elements -pl drishti-elements package` builds the WebJar
+  (`META-INF/resources/webjars/drishti-elements/<version>/`). The three forms hold the same bytes and are reproducible. Apps override
+  any design token after the sheet for their own theme. The manifest's duplicate entries of drishti-inputs and drishti-data are gone and
+  it gains `assets` (the folders a library reads at run time).
 - **Drishti Elements, the foundation** ([ELEMENTS.md section 8.1](docs/architecture/ELEMENTS.md#81-as-built-the-foundation-drishti-core-and-the-grids-engine)):
   `static/elements/` with a manifest of the libraries and their versions, ES modules per library and one bundled file each written by
   an offline Python build (`tools/elements/build.py`, `--check`), a loader (`Drishti.elements.load('drishti-grid')`), and the API
