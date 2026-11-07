@@ -19,9 +19,8 @@ This is the one document for configuring Drishti, and the only one: every settin
 connector plugin, packs, editions, the content store, BI runs, write-back, compute, Drishti*net, the UI kit, the AI provider and MCP
 server files), the environment variables that feed them, and how the layers combine. Other documents explain a feature and link
 here for its settings. The console shows the same document at **Help → Configuration** (`/help/configuration`), searchable by key,
-environment variable or words. **Admin → Configuration** (`/admin/configuration`) shows every setting by tier (everyday, admin,
-expert: the *Tier* column below) with the value in effect on the server and the console, where it came from, and a change proposed
-for a second administrator to approve ([OPERATIONS.md, The configuration editor](OPERATIONS.md#the-configuration-editor)).
+environment variable or words, and an administrator sees there the value in effect on the server and the console beside each
+default, and where it came from.
 
 The first half is written by hand: how configuration works, placeholders, value formats, recipes, and notes area by area with
 examples. The second half, [Every setting](#every-setting), is generated from the files themselves by `tools/settings_catalogue.py`
@@ -138,7 +137,7 @@ easier to write in YAML than as environment variables. Put them in `application.
 
 ### Seeing what is in effect
 
-Admin → Configuration shows the value in effect of every key of the server's and the console's `application.yaml` (and of the engines' files) and where it came from (`GET /api/v1/admin/settings` is its answer for the server). Most settings also show up somewhere you can read:
+There is no endpoint that dumps the configuration, but most settings show up somewhere you can read:
 
 | To check | Ask | Look for |
 |---|---|---|
@@ -572,7 +571,7 @@ area: `drishti.retry.<area>.<key>` on the server (areas `packs`, `connectors`, `
 | `drishti.retry.jitter` | `retry.jitter` | `0.2` | Each wait varies by up to this fraction either way (`0` = none), so many failing things do not retry together |
 | `drishti.retry.permanent-after` | `retry.permanent_after` | `3` | A failure waiting cannot fix (refused credentials, a setting that is wrong) seen this many times in a row is treated as permanent and retried only every `max` |
 | `drishti.retry.<area>.<key>` | `retry.<area>.<key>` | the general value | Per-area override of any key above |
-| `drishti.retry.alerts.*` | (none) | the general value | The retries of an alert's email, webhook and text; how many tries is `drishti.alerts.max-attempts` (below). A pending retry is kept in memory: a restart drops it and the alert's history keeps the last text it was given |
+| `drishti.retry.alerts.*` | (none) | the general value | The retries of an alert's email, webhook and text; how many tries is `drishti.alerts.measure.max-attempts` (below). A pending retry is kept in memory: a restart drops it and the alert's history keeps the last text it was given |
 | (none) | `ai.poll_seconds` | `5` | How often the console looks at `config/ai` and `config/mcp` for a changed file and for a retry that is due |
 
 ### `drishti.db.pool` — database connection pools
@@ -1033,7 +1032,7 @@ role-based access to the lens link (read, not wired). Its own feature switches, 
 `features.datamap`, `features.data` (Export data, `DATA`), `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
 `features.collaboration` (Admin → Collaboration). `/studio` (the Build workbench's entry) follows `features.build`. A page whose switch is off answers 404.
 
-Branding keys of the console beside `ui.product`: `ui.placeholder` (the command line's placeholder; blank: `config/sitemap.yaml`'s),
+Branding keys of the console beside `ui.product`: `ui.placeholder` (the command line's placeholder; blank: `config/menus.yaml`'s),
 `ui.logo` (an image under `/static/`, or a `data:` URL, drawn instead of the eye mark), `ui.favicon` and `ui.apple_touch_icon` (the
 browser and home-screen icons; the generated `/manifest.webmanifest` follows them). The console takes the server's product name and
 tagline from its about answer unless its own `ui.product` is set. The advice for `DRS-1017` and `DRS-4023` is in `ui.error_advice`.
@@ -1349,7 +1348,7 @@ with `413 DRS-5005` before it is all parsed.
 
 ### `drishti.builder.designs` — the Build workbench's Designs
 
-A Design (`/api/v1/builder/designs`, **Build → Build home → My drafts**) keeps a user's samples, Sutra and notes on the server, so work
+A Design (`/api/v1/builder/designs`, **Build → My designs**) keeps a user's samples, Sutra and notes on the server, so work
 survives a console restart and shows on every console. Only its owner can reach it (anyone else gets `404 DRS-5006`).
 Sample documents are never logged; deleting a Design deletes its samples at once. A limit answers `413 DRS-5005`.
 
@@ -1985,12 +1984,10 @@ Under `drishti.distribution.statements` (statement pages: [BI_GUIDE.md › Repor
 | `paper` | `A4` | The paper of a statement whose `statement:` names none (`A4`, `A3`, `A5`, `Letter`, `Legal`) |
 | `band-queries` | `2` | How many bands of one statement are asked at the same time (1 to 8), each as the reader, within the query limits |
 
-### `drishti.alerts` — the one alert engine
+### `drishti.alerts.measure` — alerts on numbers and board notifications
 
-Every alert rule (a visual, a dataset or model measure, a Sutra field, a Rachana-EL rule on one entity), the notifications from board tiles,
-and the lifecycle of every alert raised (raised, acknowledged, resolved; snooze; owners), the platform alerts included
-([USER_GUIDE.md › Alerts](../guides/USER_GUIDE.md#alerts); [BI_GUIDE.md, section 4](../guides/BI_GUIDE.md#4-alerts-on-numbers)). Every key has a
-default; change one in `application.yaml` or with `DRISHTI_ALERTS_*`.
+Alerts on a visual, a dataset measure or a Sutra field, and notifications from board tiles (phase 7, part 2: [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](../guides/BI_GUIDE.md#4-alerts-on-numbers)). Every key has a default;
+change one in `application.yaml` or with `DRISHTI_ALERTS_MEASURE_*`.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -2149,10 +2146,11 @@ pack expects and who is told is the pack's `loads:` section and the administrato
 The token scope that opens `POST /api/v1/packs/{pack}/loads` to a personal API token is `loads:write` (`drishti.security.token-scopes`); the
 user still needs a role that opens the kind. The expectation settings (`/api/v1/admin/loads/**`) are never open to a token.
 
-### `drishti.approvals` — the one Approvals queue
+### `drishti.alerts` — alert history
 
-Every four-eyes item in one inbox ([USER_GUIDE.md › Approvals](../guides/USER_GUIDE.md#approvals)): how near a due date pins an item on
-top, how long after its period a report run is due, and the size of the question threads. The keys are in the generated table below.
+| Key | Default | Meaning |
+|---|---|---|
+| `keep` | `1000` | Fired alerts kept per user, in the identity database (`drishti_alert`), so they survive restarts. Older ones are pruned as new ones arrive. |
 
 ### `drishti.access-log` — who looked at what
 
@@ -2712,18 +2710,19 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 
 ## Every setting
 
-Every key of every kind: 2,156 settings in 18 areas, and 330 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,161 settings in 19 areas, and 332 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
-Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,725, **expert** 413. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
+Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): **everyday** 18, **admin** 1,730, **expert** 413. *Everyday* is what a business lead changes (the lenses, the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.
 
 | Area | Settings |
 |---|---|
-| [The server: `application.yaml`](#the-server-applicationyaml) | 545 |
+| [The server: `application.yaml`](#the-server-applicationyaml) | 548 |
 | [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 323 |
+| [Modules: `config/modules/*.yaml`](#modules-configmodulesyaml) | 1 |
 | [The console: `application.yaml`](#the-console-applicationyaml) | 187 |
 | [The console's other files](#the-consoles-other-files) | 106 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 535 |
-| [Packs: `pack.yaml`](#packs-packyaml) | 137 |
+| [Packs: `pack.yaml`](#packs-packyaml) | 138 |
 | [Editions: `config/editions/`](#editions-configeditions) | 70 |
 | [The content store: `config/store/store.yaml`](#the-content-store-configstorestoreyaml) | 14 |
 | [BI runs: `config/runs/runs.yaml`](#bi-runs-configrunsrunsyaml) | 48 |
@@ -2736,7 +2735,7 @@ Every setting has a **tier** (the last column; Admin → Configuration shows the
 | [The data inbox's routing rules: `config/dataload.yaml`](#the-data-inboxs-routing-rules-configdataloadyaml) | 2 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 330 |
+| [Environment variable index](#environment-variable-index) | 332 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -2881,6 +2880,19 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.engines.dir` | string | `./config/engines` | `DRISHTI_ENGINES_DIR` | server | the folder of the engines' files Admin -&gt; Engines writes (the imports above name the same folder) | restart |  | admin |
 | `drishti.engines.drain` | duration | `30s` |  | server | an engine turned off live: requests in flight finish within this, then are cancelled | restart |  | admin |
 | `drishti.engines.watch-seconds` | integer | `5` |  | server | how often the engine files are compared with what was read (an edit by hand takes effect as from the page) | restart |  | admin |
+
+#### `drishti.modules`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
+|---|---|---|---|---|---|---|---|---|
+| `drishti.modules.dir` | string | `./config/modules` | `DRISHTI_MODULES_DIR` | server | the folder of the modules' switches (config/modules/&lt;id&gt;.yaml: enabled), written by Admin -&gt; Modules; drishti.modules.&lt;id&gt;.enabled (DRISHTI\_MODULES\_&lt;ID&gt;\_ENABLED) wins over a file | restart |  | admin |
+| `drishti.modules.watch-seconds` | integer | `5` |  | server | how often the module and access files are compared with what was read (a change to a module takes effect at the next start; lenses and the licence at once) | restart |  | admin |
+
+#### `drishti.access`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
+|---|---|---|---|---|---|---|---|---|
+| `drishti.access.dir` | string | `./config/access` | `DRISHTI_ACCESS_DIR` | server | licence.yaml (none: the development licence, every module), lenses.yaml, roles.yaml, assignments.yaml; none is needed | restart |  | admin |
 
 #### `drishti.metrics`
 
@@ -4211,6 +4223,16 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.simm.enabled` | boolean | none |  | server | The old name of drishti.engines.simm.enabled (SIMM): still accepted, and when set above the shipped files it decides, with a warning at start (DRS-1024). Move it to config/engines/simm.yaml or use Admin → Engines. | live | 2.9.11 | admin |
 | `drishti.pivot.enabled` | boolean | none |  | server | The old name of drishti.engines.pivot.enabled (Pivot): still accepted, and when set above the shipped files it decides, with a warning at start (DRS-1024). Move it to config/engines/pivot.yaml or use Admin → Engines. | live | 2.9.11 | admin |
 
+### Modules: `config/modules/*.yaml`
+
+One file per module (banking, economy), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch only; the module's manifest ships in its jar and the access registry reads both ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md), [OPERATIONS.md](OPERATIONS.md)). `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module is on when installed, licensed and enabled; a change takes effect at the next start.
+
+#### A module's switch: `config/modules/<module>.yaml` (docs/architecture/ACCESS_MODEL.md)
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since | Tier |
+|---|---|---|---|---|---|---|---|---|
+| `enabled` | boolean | `the manifest's (true)` |  | the module, on this server | false: the module is off here (Admin -&gt; Modules writes it); drishti.modules.&lt;id&gt;.enabled wins over it | restart (a module's beans, engines, jobs and API load at start) |  | admin |
+
 ### The console: `application.yaml`
 
 `drishti-console/config/application.yaml`. Override a key in `config/application.local.yaml`, with the variable named, with `DRISHTI_CONSOLE__SECTION__KEY` or a `--section.key=value` argument.
@@ -5365,6 +5387,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `pack` | string | none |  | the pack | Required: the pack's name, equal to its folder's name (else the pack is refused) | live |  | admin |
 | `version` | string | `0` |  | the pack | X.Y.Z, shown in About, Admin -&gt; Health and Admin -&gt; Packs and checked by deploys and the registry | live |  | admin |
 | `code` | string | `none` |  | the pack | The pack's short code: typed alone it opens the pack's overview (/p/&lt;pack&gt;); must not equal a mnemonic | live |  | admin |
+| `domain` | string | `core` |  | the pack | The domain it serves (core, banking, economy): a pack of a domain loads only while a module of that domain is on (docs/architecture/ACCESS\_MODEL.md) | live |  | admin |
 | `title` | string | `the pack's name` |  | the pack | Its name in menus, help and admin pages | live |  | admin |
 | `description` | string | empty |  | the pack | One paragraph for About and the help centre | live |  | admin |
 | `sample` | boolean | `false` |  | the pack | A demonstration pack: drishti.packs.samples can hide it from business users | live |  | admin |
@@ -6074,6 +6097,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `COHERE_API_KEY` | `api-key` (AI) | none | AI | COHERE\_API\_KEY or CO\_API\_KEY is also read when this line is left out |
 | `DRISHTI_ABOUT_DIR` | pack generators | none | tools | Where the pack generators write the About files |
 | `DRISHTI_ABOUT_PREFETCH` | `ui.about_prefetch` | `true` | console | About this page: fetch the page's explanation once the page is idle, so labels with a glossary entry are underlined before the drawer opens. Costs the server one explain (a re-run of the view, cached for drishti.explain.cache-ttl) per page view; set false on a busy installation and the labels are underlined when the drawer is first opened. |
+| `DRISHTI_ACCESS_DIR` | `drishti.access.dir` | `./config/access` | server | licence.yaml (none: the development licence, every module), lenses.yaml, roles.yaml, assignments.yaml; none is needed |
 | `DRISHTI_ACCESS_LOG` | `drishti.access-log.enabled` | `true` | server | record who looked at what (Admin -&gt; Access) |
 | `DRISHTI_ACTIVEMQ_ENABLED` | `drishti.sources.plugins.activemq.enabled` | `false` | server | run the activemq source as itself |
 | `DRISHTI_ADMISSION_ENABLED` | `drishti.admission.enabled` | `true` | server | false: nothing waits (Admin -&gt; Health still shows the readings) |
@@ -6248,6 +6272,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_MINIO_BIN` | S3 simulator tests | none | tools | A MinIO server binary for the lake tools' S3 tests |
 | `DRISHTI_MINIO_SHA256` | S3 simulator tests | none | tools | Its expected SHA-256 |
 | `DRISHTI_MINIO_URL` | S3 simulator tests | none | tools | Where that binary is downloaded from |
+| `DRISHTI_MODULES_DIR` | `drishti.modules.dir` | `./config/modules` | server | the folder of the modules' switches (config/modules/&lt;id&gt;.yaml: enabled), written by Admin -&gt; Modules; drishti.modules.&lt;id&gt;.enabled (DRISHTI\_MODULES\_&lt;ID&gt;\_ENABLED) wins over a file |
 | `DRISHTI_MONGODB_DATABASE` | mongodb profile | `drishti` | profile | Its database |
 | `DRISHTI_MONGODB_URI` | mongodb profile | `mongodb://localhost:27017` | profile | The mongodb profile's server |
 | `DRISHTI_MR_CUBE_ENABLED` | `drishti.engines.mr-cube.enabled` (engine) | `true` | engine | run the MR cube on this node: MCUBE, /api/v1/pivot/mr, the VaR source's hierarchy levels and MR measures; needs var and pivot |

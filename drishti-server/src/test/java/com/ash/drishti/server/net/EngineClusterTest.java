@@ -62,7 +62,7 @@ class EngineClusterTest {
         String a = cluster.node("a").net().nodeId();
         String about = cluster.call("GET", cluster.node("b").url() + "/public/about", null).body();
         assertThat(about).contains("{\"id\":\"frtb-sa\",\"title\":\"FRTB-SA\",\"here\":false,\"cluster\":true}");
-        String path = "/api/v1/frtb/sa?scope=EXAMPLE";
+        String path = "/api/v1/risk/frtb/sa?scope=EXAMPLE";
         var direct = cluster.call("GET", cluster.node("a").url() + path, null, "X-Drishti-User", "reader");
         var routed = cluster.call("GET", cluster.node("b").url() + path, null, "X-Drishti-User", "reader");
         assertThat(routed.statusCode()).isEqualTo(direct.statusCode());

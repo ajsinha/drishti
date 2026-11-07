@@ -22,6 +22,7 @@
 # tools/build_demo_lakes.py and served by the Delta connector funds-store below), a few reference samples, the README and
 # guides/funds.md, from the downloads tools/publicdata/funds.py keeps in the data folder. No prices or NAV history.
 pack: funds
+domain: economy   # the domain it serves (docs/architecture/ACCESS_MODEL.md): it loads only while a module of the domain is on
 version: 1.0.0
 code: FUNDS            # typed alone, opens this pack's overview
 title: Funds and ETFs

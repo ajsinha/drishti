@@ -26,11 +26,7 @@ import com.ash.drishti.server.admission.AdmissionGate;
 import com.ash.drishti.server.admission.Work;
 import com.ash.drishti.server.data.DataViewService;
 import com.ash.drishti.server.edition.EditionCommands;
-import com.ash.drishti.server.frtb.FrtbService;
 import com.ash.drishti.server.security.Entitlements;
-import com.ash.drishti.server.var.MrCubeProperties;
-import com.ash.drishti.server.var.VarPivotProvider;
-import com.ash.drishti.server.var.VarService;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import java.util.ArrayList;
@@ -152,20 +148,9 @@ public class PivotConfiguration {
 
     @Bean
     public PivotCore pivotCore(PivotProperties props, DuckDbExecutor exec, KindSources kinds, PanelSources panels, ObjectProvider<TableSources> tables,
-            States states,
-            ObjectProvider<VarService> var, ObjectProvider<MrCubeProperties> mr, ObjectProvider<FrtbService> frtb,
-            org.springframework.core.env.Environment env,
-            ObjectProvider<AdmissionGate> gate, ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines,
-            ObjectProvider<com.ash.drishti.server.var.VarParametricProperties> parametric) {
+            States states, ObjectProvider<PivotSourceProvider> contributed, ObjectProvider<AdmissionGate> gate) {
         List<PivotProvider> providers = new ArrayList<>();
-        VarService v = var.getIfAvailable();
-        if (v != null) {
-            boolean mrSwitch = env.getProperty("drishti.engines.mr-cube.enabled", Boolean.class, false);
-            providers.add(new VarPivotProvider(v, () -> running(engines, "var", true), () -> running(engines, "mr-cube", mrSwitch),
-                    mr.getIfAvailable(MrCubeProperties::defaults), () -> running(engines, "frtb-sa", true)
-                            ? com.ash.drishti.server.var.MrCubeExtras.running(frtb.getIfAvailable()) : null)
-                    .parametric(parametric.getIfAvailable()));
-        }
+        contributed.orderedStream().map(PivotSourceProvider::provider).filter(java.util.Objects::nonNull).forEach(providers::add);   // a module's own sources first
         providers.add(new TabularProvider(exec, both(kinds, panels, tables.getIfAvailable())));
         PivotCore core = new PivotCore(providers, states, props.core());
         AdmissionGate g = gate.getIfAvailable();
@@ -176,7 +161,7 @@ public class PivotConfiguration {
     }
 
     /** True when an engine runs here ({@code dflt} without the registry: tests and tools that start no engines). */
-    static boolean running(ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines, String id, boolean dflt) {
+    public static boolean running(ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines, String id, boolean dflt) {
         com.ash.drishti.server.engines.EngineRegistry r = engines.getIfAvailable();
         return r == null ? dflt : !r.known(id) || r.running(id);
     }

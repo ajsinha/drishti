@@ -66,7 +66,7 @@ def start_servers(work) -> list:
         time.sleep(1)
     for _ in range(100):                                 # the start's official capture published to Iceberg (step 3), then the reader reset (step 6)
         try:
-            with urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{SERVER_PORT}/api/v1/var/official",
+            with urllib.request.urlopen(urllib.request.Request(f"http://127.0.0.1:{SERVER_PORT}/api/v1/risk/var/official",
                                                                 headers={"X-Drishti-User": "rita"}), timeout=60) as resp:
                 if json.loads(resp.read()).get("published") is True:
                     break

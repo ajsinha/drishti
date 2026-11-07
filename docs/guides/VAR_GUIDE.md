@@ -549,9 +549,9 @@ and says the basket no longer exists. Official end-of-day records never name a b
 the dialog is not deleted unseen: the dialog says it changed (`409`) and you look again. Administrators manage everyone's baskets in
 **Admin → Ad-hoc scopes** (every owner's, filtered by owner, **Delete** with an optional reason that goes to the audit log and to the
 owner's inbox; [OPERATIONS.md](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-baskets)). CLI: `drishti.py var basket-delete <name>`
-(yours), `--owner <user> --reason <text>` (an administrator, anyone's). API: `POST /api/v1/var/basket/sheet` (the checks and figures),
-`GET /api/v1/var/basket/sheet?scope=` (a basket, a portfolio's copy or a scope laid into the sheet), `POST /api/v1/var/basket/sheet.xlsx`,
-`POST /api/v1/var/baskets` (save, edit), `DELETE /api/v1/var/baskets/<owner>/<name>` ([section 11](#11-the-api)).
+(yours), `--owner <user> --reason <text>` (an administrator, anyone's). API: `POST /api/v1/risk/var/basket/sheet` (the checks and figures),
+`GET /api/v1/risk/var/basket/sheet?scope=` (a basket, a portfolio's copy or a scope laid into the sheet), `POST /api/v1/risk/var/basket/sheet.xlsx`,
+`POST /api/v1/risk/var/baskets` (save, edit), `DELETE /api/v1/risk/var/baskets/<owner>/<name>` ([section 11](#11-the-api)).
 
 ![Construct your basket: one sheet, a column per kind; a position from its row, a portfolio from the hints, the FX desk from the tree, trades pasted from Excel, one taken away by its leading minus and one not live said in words on its cell; the basket's VaR, ES, sum of the parts and diversification, the server's](img/var/06-basket.jpg)
 
@@ -736,7 +736,7 @@ scenario picker and the details; the full matrix is on a larger screen. Nothing 
 **Editions.** `SMAT` is part of Drishti Risk and Drishti Trading (`commands.words.SMAT: on`); Drishti Market and Drishti World leave it
 out: the command answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and no page offers the link ([EDITIONS.md](../admin/EDITIONS.md)).
 From the command line: `drishti.py var matrix <id> [--days N] [--by trade] [--csv]` ([section 10](#10-the-command-line)); the API:
-`GET /api/v1/var/matrix` ([section 11.1](#111-the-endpoints)).
+`GET /api/v1/risk/var/matrix` ([section 11.1](#111-the-endpoints)).
 
 ### 3.10 The VaR Playground (PLAY VAR)
 
@@ -790,7 +790,7 @@ rules, PV and PnL input forms, and positions as rows; `VarPlaygroundApiTest` doe
 formula is scanned for functions outside the common set.
 
 From the command line: `drishti.py var playground <scope> [--ids ...] [--xlsx FILE] [--count N|all] [--estimate]`
-([section 10](#10-the-command-line)); the API: `GET /api/v1/var/playground`, `/playground.xlsx`, `/playground/estimate`,
+([section 10](#10-the-command-line)); the API: `GET /api/v1/risk/var/playground`, `/playground.xlsx`, `/playground/estimate`,
 `/playground/template` ([section 11.1](#111-the-endpoints)). **Editions:** `PLAY` is part of Drishti Risk and Drishti Trading
 (`commands.words.PLAY: on`); off, the command answers `DRS-4023` and `/play` and `/api/play/...` answer 404.
 
@@ -964,7 +964,7 @@ change                                +35  the steps add up: yes
 ```
 
 **The working as a workbook.** The Explain drawer's **Workbook** tab (`drishti.py var explain <scope> --xlsx FILE`, `GET
-/api/v1/var/explain.xlsx`) writes the explanation on the VaR Playground's frame ([section 3.10](#310-the-var-playground-play-var)): **Main**
+/api/v1/risk/var/explain.xlsx`) writes the explanation on the VaR Playground's frame ([section 3.10](#310-the-var-playground-play-var)): **Main**
 (the inputs Confidence and RankRule; each state's VaR worked from its column, N, k, the VaR scenario's date, the engine's VaR beside it and
 a check; each step as the difference of two state cells beside the engine's; the add-up check; the last state checked against the later
 date's scope; the order), **Data** (values only: the two dates' scope P&L by scenario day on one axis of both sets' days, and the churn's
@@ -977,7 +977,7 @@ formula over the state before it and Data, and its ranks), **Drivers** (the engi
 line), `split-amendments` (true), `top` (10), `drivers-max` (2,000 trades per step whose incremental VaR is computed, the largest by their
 share of the state's tail), `cache-minutes` (10: answers are kept, never stored), `cache-mb` (32, weighed in bytes) and `matrix-max` (60
 child nodes). The API: `GET /api/v1/explain?kind=var&scope=…&from=…&to=…&part=why` (`view=matrix` for the Matrix view;
-[API_GUIDE.md, "Explain"](API_GUIDE.md#explain-any-number)) and `GET /api/v1/var/explain.xlsx` ([section 11.1](#111-the-endpoints)); the
+[API_GUIDE.md, "Explain"](API_GUIDE.md#explain-any-number)) and `GET /api/v1/risk/var/explain.xlsx` ([section 11.1](#111-the-endpoints)); the
 same entitlements as the scope's VaR (a scope is resolved as you on each date).
 
 ### 3.12 Parametric VaR beside historical (PVAR)
@@ -1197,7 +1197,7 @@ once (two overlapping portfolios' vectors cannot simply be added, and a table of
 ### 5.8 Baskets
 
 A **basket** is a scope you save under a name (on the VaR explorer: **Construct your basket**, then **Save basket and open VaR**,
-[section 3.5](#35-construct-your-basket); CLI: `drishti.py var basket`; API: `POST /api/v1/var/baskets`). A basket built in the sheet is
+[section 3.5](#35-construct-your-basket); CLI: `drishti.py var basket`; API: `POST /api/v1/risk/var/baskets`). A basket built in the sheet is
 kept as the **sheet's lists**, one per column, never as one long scope text: `sheet` holds `wholeBank` (Start from the whole bank), `op`
 (the Op column, `+` or `-` a row) and each filled column (`TRD`, `POS`, `PORT`, `BOOK`, `DESK`, a configured hierarchy's word such as
 `LL`, `CPTY`), aligned by row. Its scope is composed from them whenever it is read: the parts added joined by ` + ` (the ids of a kind as
@@ -1205,7 +1205,7 @@ one list, `TRD:a,b`), or `BANK` when the whole bank is ticked, then each part ta
 (`TRD:MX-1,MX-2 + PORT:PF-USD-RATES + DESK:DESK-FX - TRD:MX-30000121`), so it computes like any scope and stays computable as the data
 changes. A basket saved from scope text (the CLI, the API) keeps its `scope`. Opening a basket in the sheet lays it out column by column:
 the sheet's own lists, or a scope's top-level terms, the parts added first and those taken away below them
-(`GET /api/v1/var/basket/sheet?scope=`).
+(`GET /api/v1/risk/var/basket/sheet?scope=`).
 
 A basket of two parts or more is broken down **by part** (`by=part`, the default child of a basket or an ad-hoc union): each part's
 standalone VaR is the part alone inside the basket, its component VaR the part's trades not already in an earlier part, so the components
@@ -1239,7 +1239,7 @@ anyone else naming another person's basket gets `404`. **Delete:** the owner, or
 **portfolio** is the bank's (the `portfolio` feed, [section 5.7](#57-stored-portfolios)): it is never saved, edited or deleted here; the
 sheet's *Edit a copy* saves its parts as your own basket.
 
-**The sheet's checks** (`POST /api/v1/var/basket/sheet`, the body the sheet itself or `{"sheet": {...}}`, with `asOf` and `ccy`) answer
+**The sheet's checks** (`POST /api/v1/risk/var/basket/sheet`, the body the sheet itself or `{"sheet": {...}}`, with `asOf` and `ccy`) answer
 `cells` (only the cells that need a word: `column`, `row`, `text`, `word`, `id`, `op`, `status` `not-found`, `adds-nothing` or
 `takes-nothing`, `reason`), the counts `found`, `notFound`, `flagged`, `takesNothing`, and the basket's `var`, `es`, `sumOfParts`,
 `diversification`, `trades`, `takenAway`, `partsAdded`, `confidence`, `esConfidence`, `currency`, `businessDate`, `scope` (composed from
@@ -1318,7 +1318,7 @@ for a viewer who sees every node, and the source of the node history ([section 1
 
 ## 7. History and backtesting
 
-The *VaR / ES history* tab and `GET /api/v1/var/scope/history` answer in one of two modes (`VarViews.history`):
+The *VaR / ES history* tab and `GET /api/v1/risk/var/scope/history` answer in one of two modes (`VarViews.history`):
 
 | Mode | When | Rows | Backtest |
 |---|---|---|---|
@@ -1370,7 +1370,7 @@ explorer's entitlements (computed as the person asking: their nodes, masks and a
 designs' `var-contribution`, `var-path` and `var-history` are not separate kinds: a `var-result` carries the parts (`CHILDREN`), the
 worst scenarios and the vector, and the explorer and the API serve paths and histories. Contract:
 `config/packs/market-risk/contracts/var-result.contract.yaml` (class `computed`). The **pre-deal what-if** is the same engine's, asked
-through the VaR API (`POST /api/v1/var/what-if`, [section 8.2](#82-the-what-if-the-java-engine)), not a kind.
+through the VaR API (`POST /api/v1/risk/var/what-if`, [section 8.2](#82-the-what-if-the-java-engine)), not a kind.
 
 **Ids.** The id is the scope text. Like every computed id ([ComputeRef](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)), a
 `~` inside it is written `%7E` (`NODE:MGMT%7EDESK-RATES`; prefer `DESK:RATES`, which needs none), `=` `%3D` (a `WHERE:` rule's `==`),
@@ -1379,7 +1379,7 @@ not a link.
 
 ### 8.1 `var-result`: the Java engine
 
-`VRES <scope> <GO>`: connector `var-engine`, Java engine `com.ash.drishti.server.var.VarResultEngine` (in the server, over `VarService`);
+`VRES <scope> <GO>`: connector `var-engine`, Java engine `com.ash.drishti.banking.var.VarResultEngine` (in the server, over `VarService`);
 triggers: the data versions of the four inputs (`affects: all`); answers wait up to 5 s.
 
 ```text
@@ -1419,7 +1419,7 @@ engine's refusal in words (`failed` with the reason); a role that may not open t
 
 ### 8.2 The what-if: the Java engine
 
-`POST /api/v1/var/what-if`: a scope's VaR, ES and stressed VaR **before and after hypothetical trades**, and each trade's figures,
+`POST /api/v1/risk/var/what-if`: a scope's VaR, ES and stressed VaR **before and after hypothetical trades**, and each trade's figures,
 computed by the server's VaR engine (`VarWhatIf` over `VarWhatIfMath`, the same rules as every other VaR answer: the confidence, the
 rank rule, the component window and its scale, [section 18](#18-the-computation)). Nothing else is needed: no compute workers, no
 sandbox, so it answers on every server, the compute workers on or off. A hypothetical trade is one of:
@@ -1651,8 +1651,8 @@ The key is not read: it may be absent or name a batch. An example message of thr
 | its `topic` | `${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}` | the PV topic |
 | its `lake` | `${DRISHTI_DELTA_ROOT:./data/delta/demo}` | the risk lake's root (an Iceberg risk lake: the root holding `risk/<kind>/metadata`) |
 
-**Admin.** `GET /api/v1/var/intraday/streams` (the topic, state, waiting trades, offsets, counts, the last ten windows and the newest 20
-rejections) and `POST /api/v1/var/intraday/streams/{connector}/apply` (administrators: the waiting window now); the connector's page
+**Admin.** `GET /api/v1/risk/var/intraday/streams` (the topic, state, waiting trades, offsets, counts, the last ten windows and the newest 20
+rejections) and `POST /api/v1/risk/var/intraday/streams/{connector}/apply` (administrators: the waiting window now); the connector's page
 in Admin has an **Apply now** button.
 
 **Sizing.** A record is 4–8 KB (509 numbers as JSON text): 10,000 updates a day are 40–80 MB on the topic, whatever the records per
@@ -1670,7 +1670,7 @@ VaR 99% and ES 97.5% **before → after** and the **incremental** change, and ea
 in the order listed and its component in the basket after. Several may be added; **×** removes one. Good for pre-deal (*what does this
 trade do to my desk's VaR?*) and for VaR (*which unwind takes the most out?*).
 
-It is `POST /api/v1/var/what-if {"scope": "BASKET:asha/unwind", "items": [{"copyOf": "MX-30000121", "factor": -1}]}`, computed by
+It is `POST /api/v1/risk/var/what-if {"scope": "BASKET:asha/unwind", "items": [{"copyOf": "MX-30000121", "factor": -1}]}`, computed by
 the server's VaR engine as you ([section 8.2](#82-the-what-if-the-java-engine)): each copied trade's vector is read as you (a trade you
 may not see one by one is refused). The answer: `before`, `after` and `change` (`var`, `es`; `stressedVar` before and after), `items`
 (`label`, `factor`, `standaloneVar`, `incrementalVar`, `incrementalAlone`, `componentVar`), `engine`, `note`. A scope with no trades, a
@@ -1738,7 +1738,7 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 
 ## 10. The command line
 
-`drishti.py var …` (`tools/varcli.py`) asks the server's `/api/v1/var` as your token's user ([TOOLS.md section 5.12](TOOLS.md#512-var),
+`drishti.py var …` (`tools/varcli.py`) asks the server's `/api/v1/risk/var` as your token's user ([TOOLS.md section 5.12](TOOLS.md#512-var),
 [CLI_GUIDE.md](CLI_GUIDE.md#var-the-var-engine)):
 
 | Command | Does |
@@ -1804,7 +1804,7 @@ Drishti Bank                     112,041,646  160,143,809      74.7%    9572
 
 ### 11.1 The endpoints
 
-Base `/api/v1/var`, JSON, as the caller (security on: the token's user or the console's session;
+Base `/api/v1/risk/var`, JSON, as the caller (security on: the token's user or the console's session;
 [API_GUIDE.md](API_GUIDE.md#var-engine-apiv1var)). Every scope endpoint takes `scope` and the platform's `asOf=YYYY-MM-DD` (or the
 `X-Drishti-As-Of` header; default, and when later than the newest date with vectors: the newest; a date that is not one run answers
 the date before it, with a warning). Errors are RFC 7807 problems with a `code` ([section 20](#20-validation-errors-and-data-quality)).
@@ -1855,15 +1855,15 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /explain.xlsx` | `scope`, `from`, `to`, `confidence` | why VaR moved as a workbook of formulas, checked against the engine (the explanation itself: `GET /api/v1/explain?kind=var`, [API_GUIDE.md, "Explain"](API_GUIDE.md#explain-any-number)) |
 
 ```
-GET  /api/v1/var/scope?scope=DESK:DESK-RATES               headline, ancestors, backtest summary, provenance
-GET  /api/v1/var/scope/path?scope=…&page=0&size=60          histogram, worst 25, the 509 values, a page of the ranked table
-GET  /api/v1/var/scope/history?scope=…                      250 days of VaR, ES, hypothetical P&L, exceptions, backtest
-GET  /api/v1/var/scope/contributions?scope=…&by=child|node|position|trade|desk|book&scenario=2025-01-31
-GET  /api/v1/var/tree?hierarchy=MGMT                        every node you see with its figures, and the stored portfolios
-POST /api/v1/var/baskets {"name": "unwind", "scope": "POS:… + TRD:…", "sharedWith": ["risk"]}
-POST /api/v1/var/captures {"scope": "BASKET:asha/unwind", "note": "before the unwind"}
-GET  /api/v1/var/captures/{id}/csv?part=components          GET /api/v1/var/compare?a=CAP-20260930-1&b=now
-POST /api/v1/var/official?asOf=2026-09-30                   an administrator's official capture of a date
+GET  /api/v1/risk/var/scope?scope=DESK:DESK-RATES               headline, ancestors, backtest summary, provenance
+GET  /api/v1/risk/var/scope/path?scope=…&page=0&size=60          histogram, worst 25, the 509 values, a page of the ranked table
+GET  /api/v1/risk/var/scope/history?scope=…                      250 days of VaR, ES, hypothetical P&L, exceptions, backtest
+GET  /api/v1/risk/var/scope/contributions?scope=…&by=child|node|position|trade|desk|book&scenario=2025-01-31
+GET  /api/v1/risk/var/tree?hierarchy=MGMT                        every node you see with its figures, and the stored portfolios
+POST /api/v1/risk/var/baskets {"name": "unwind", "scope": "POS:… + TRD:…", "sharedWith": ["risk"]}
+POST /api/v1/risk/var/captures {"scope": "BASKET:asha/unwind", "note": "before the unwind"}
+GET  /api/v1/risk/var/captures/{id}/csv?part=components          GET /api/v1/risk/var/compare?a=CAP-20260930-1&b=now
+POST /api/v1/risk/var/official?asOf=2026-09-30                   an administrator's official capture of a date
 ```
 
 **`by` and truncation (decided 2026-10-25, open question 9).** `by=node` lists a node's child nodes; on a scope that is not a
@@ -1880,11 +1880,11 @@ The headline's `children` is likewise the number of all the parts. How, and what
 `GET /api/v1/views/var-result/DESK:RATES`. For example, with a token in `DRISHTI_TOKEN`:
 
 ```bash
-curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "http://localhost:18480/api/v1/var/scope?scope=DESK:DESK-RATES" | python3 -m json.tool
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "http://localhost:18480/api/v1/risk/var/scope?scope=DESK:DESK-RATES" | python3 -m json.tool
 curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" -H "Content-Type: application/json" \
-     -d '{"scope": "TRD:MX-30000121,MX-30000565", "note": "two swaps"}' http://localhost:18480/api/v1/var/captures
+     -d '{"scope": "TRD:MX-30000121,MX-30000565", "note": "two swaps"}' http://localhost:18480/api/v1/risk/var/captures
 curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" \
-  "http://localhost:18480/api/v1/var/scope?scope=DESK:RATES%20-%20TRD:MX-30000121"
+  "http://localhost:18480/api/v1/risk/var/scope?scope=DESK:RATES%20-%20TRD:MX-30000121"
 ```
 
 The last answers:
@@ -1996,7 +1996,7 @@ has no `raw`) gets the scope's `var` and `es`, `masked: true`, no rows and the n
 needs a role that sees it*.
 
 ```bash
-curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "http://localhost:18480/api/v1/var/scope/contributions?scope=DESK:DESK-RATES&by=attribute:TRADER_ID"
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "http://localhost:18480/api/v1/risk/var/scope/contributions?scope=DESK:DESK-RATES&by=attribute:TRADER_ID"
 ```
 
 ### 11.4 History, the tree and the status
@@ -2018,7 +2018,7 @@ example is in [section 26.7](#267-what-the-status-shows).
 ## 12. Settings
 
 `drishti.var.*` in the engine's own file, `config/engines/var.yaml` (its switch `drishti.engines.var.enabled`; [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)) ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtivar--the-var-engine)), bound
-by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var/status` shows the effective values.
+by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/risk/var/status` shows the effective values.
 
 | Setting | application.yaml | Default when unset or invalid | Meaning |
 |---|---|---|---|
@@ -2107,7 +2107,7 @@ VaR needs no compute workers: every figure, the what-if included, is the server'
 | the history says *Replay* | the scope is not one node, you see the node in part, or it has one official date | as designed: the replay is in-sample |
 | other numbers than this guide's | the lake was built with `--as-of today`: trades matured since 2026-09-30 drop out | rebuild with `--as-of data` |
 
-The server's log names every load, hot file built or reopened, and refusal; `GET /api/v1/var/status` shows what is open and on disk.
+The server's log names every load, hot file built or reopened, and refusal; `GET /api/v1/risk/var/status` shows what is open and on disk.
 More codes: [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
 ## Part II · The data contract
@@ -2125,13 +2125,13 @@ guide's sections.
 **Sources of truth checked:** `tools/packgen/var/make_var_data.py`, `positions.py`, `portfolios.py`, `factors.py`, `varmath.py`, `rules.py`;
 `config/packs/market-risk/pack.yaml`, `config/packs/market-risk/config/about.yaml`, the pack's `samples/`; the test data in
 `data/testdata/market-risk/` and its entries in `data/testdata/testdata.yaml`; `drishti-compute` (packages
-`com.ash.drishti.compute.vector` and `com.ash.drishti.compute.var`); `drishti-server` (package `com.ash.drishti.server.var`); the Delta
+`com.ash.drishti.compute.vector` and `com.ash.drishti.banking.compute.var`); `drishti-server` (package `com.ash.drishti.banking.var`); the Delta
 plugin's vector reader (`DeltaTable.vectors`, `DeltaSourcePlugin.vectorColumns`); `tools/lake/stage.py` and `tools/lake/writers.py`;
 `drishti.var` in `config/engines/var.yaml` (and its jar copy); the market-risk pack's `positions:` section.
 
 **Commands and pages.** `VAR <word> <id> <GO>` opens the VaR explorer at a scope (`VAR DESK RATES <GO>`, `VAR BANK <GO>`,
 `VAR CAPTURE CAP-20260930-1 <GO>`); `POS` and `PORT` open the position and portfolio pages; `VRES` the computed kind; the
-API is `/api/v1/var`.
+API is `/api/v1/risk/var`.
 
 **Status.** The engine is **built** and tested: there is no stored `var` or `var-node` kind, no input or fundamental kind carries a VaR figure, positions are
 derived by Drishti, the test data holds every live trade, official end-of-day captures are taken and published, the data-load signal
@@ -2149,7 +2149,7 @@ also served as the computed kind `var-result` through a reactive connector; the 
 | The in-memory engine: vector store, trade ordinals, node aggregates, planner, parallel sums | Built | §25 |
 | VaR, ES, standalone, component, incremental, marginal, diversification; backtest | Built | §18 |
 | Scope grammar `BANK LE DIV DESK BOOK NODE POS TRD CPTY PORT BASKET CAPTURE WHERE`, `+ - &`; `LE:` by the trades' legal entity; ids in any case | Built | §5 |
-| API `/api/v1/var`, baskets and captures in the content store, entitlements by node, field masks, audit | Built | §11, §9 |
+| API `/api/v1/risk/var`, baskets and captures in the content store, entitlements by node, field masks, audit | Built | §11, §9 |
 | Retire the stored `var` kind: `VAR-*` ids and `/v/var/<id>` open the explorer at the matching scope | Built | §21 |
 | Retire the stored `var-node` kind: a node's history is the engine's **official end-of-day captures** | Built | §19, §21 |
 | No computed column on `position`, `portfolio` or the core pack's `desk`: their pages show the engine's figures, computed as they open (`VAR_ENGINE`) | Built | §3.7, §21.3 |
@@ -2162,7 +2162,7 @@ also served as the computed kind `var-result` through a reactive connector; the 
 | The benchmark 1 M trades × 50 dates (`VarTierBenchmark`, opt-in): measured at 100,000 trades × 5 dates, extrapolated | Built (measured locally; the full run is for a server) | [BENCHMARK.md section 5.2](../admin/BENCHMARK.md#52-the-tiered-store-vartierbenchmark) |
 | Sharding the hot store across Drishti*net nodes | Built (off by default: the pack's `sharding:` block) | §28, [VAR_SHARDING.md](../architecture/VAR_SHARDING.md) |
 | The common risk lake (domain `risk`, one connector `risk-store` for every risk pack) | PLANNED (VaR's tables already there) | §15.1 |
-| The computed kind `var-result` (`VRES`, the Java engine through the reactive connector `var-engine`) and the pre-deal what-if (`POST /api/v1/var/what-if`, the same engine: copies of booked trades or scopes, trades priced elsewhere, the stressed window) | Built | §8 |
+| The computed kind `var-result` (`VRES`, the Java engine through the reactive connector `var-engine`) and the pre-deal what-if (`POST /api/v1/risk/var/what-if`, the same engine: copies of booked trades or scopes, trades priced elsewhere, the stressed window) | Built | §8 |
 | VaR by a trade column (`by=attribute:TRADER_ID`), summed over every trade of the scope, the column's mask honoured | Built | §11.3 |
 | The command line `drishti.py var` (show, parts, path, history, tree, status, captures, baskets, official, reload, whatif) | Built | §10 |
 | What-if pricing of amended or new trades over the scenarios (QLRisk) | PLANNED (parked until QLRisk's API is stable; a what-if trade's vector is supplied) | §8.4 |
@@ -2502,7 +2502,7 @@ built: a node's backtest reads its official `HYPO_PNL`; any other scope replays 
 
 **Reload on load (open question 5).** A `ready` load of an input kind (`drishti.var.kinds`: `pnl-vector`, `scenario-set`,
 `risk-hierarchy`, `portfolio`) or of `trade` (`LoadService.onReady`) drops that date from the engine (the same as
-`POST /api/v1/var/reload` for the date, audited `var-reload`), so a restated date is never stale, then captures the date officially in
+`POST /api/v1/risk/var/reload` for the date, audited `var-reload`), so a restated date is never stale, then captures the date officially in
 the background ([section 19](#19-official-end-of-day-results)): a date whose inputs are unchanged is not captured again, a restated one
 gets the next result version. A **new** date is picked up without a signal (each request asks the connector for the newest date with
 vectors); a **restated** open date is too, within `drishti.var.version-check` (30 s, the version watch: reloaded in the
@@ -2680,14 +2680,14 @@ The provenance's `tier` says `per-trade-currency totals of the USD book (float64
 (2026-09-30) the figures of section 15.10 are unchanged (the totals equal the converted book).
 
 **The picker (the console, mock-up A).** The VaR page's header strip has **Reporting currency**: the listed currencies, then
-**More…**, which adds every other currency with scenario FX on the date (`GET /api/v1/var/currencies`: `listed`, `available`,
+**More…**, which adds every other currency with scenario FX on the date (`GET /api/v1/risk/var/currencies`: `listed`, `available`,
 `ready`). The whole page follows it: the tiles (`VaR 99% · 1 day · EUR`), the limit (`set in USD, at today's rate`), the P&L path,
 the history, the contributions, the scope tree (`VaR EUR`), captures and the basket's sheet. The choice stays for the browser tab's session
 and goes into the link (`/var?scope=DESK:DESK-RATES&ccy=EUR`); the command line says the same, **`VAR DESK DESK-RATES IN EUR`** (any
 VAR command ends with `IN <currency>`). The provenance says the reporting currency, the input form (`P&L vectors (USD) and scenario PVs
 in each trade's currency (1199 of 8566 trades)`), the scenario FX (`supplied`, `derived`) and `Cross rates: via USD`.
 
-**The tab In other currencies** (mock-up C's table, loaded **only when opened**): `GET /api/v1/var/scope/currencies?scope=&ccy=`, one
+**The tab In other currencies** (mock-up C's table, loaded **only when opened**): `GET /api/v1/risk/var/scope/currencies?scope=&ccy=`, one
 row per listed currency (and the page's own when it is not listed): its VaR 99% and ES 97.5% from the totals, that VaR in the page's
 currency at today's rate, and the difference from the page's VaR (`+3.2%`). The shown currency is marked; a click on another switches
 the page to it. The difference is the currency move on the scenario days: a euro-based owner carries a risk a dollar-based one does not.
@@ -2737,7 +2737,7 @@ JSON object per line, UTF-8, a file `.jsonl` (or `.jsonl.gz`), each line exactly
 | `tools/pvgen/morning.py` (`morning.sh`, `tools\windows\pvgen-morning.ps1`) | a full day: `scenario-pv` for `--pv-systems` (default ENDUR), `pnl-vector` for the others (`--pnl-systems`; `--all-vectors`: every trade a P&L vector), `fx-scenario`; `--date` moves it to another business date; `--lake` writes it into the lake (replacing the date), `--server` signals | `tools/pvgen/morning.sh --date 2026-10-27 --lake data/delta/demo --server http://127.0.0.1:18480` |
 | `tools/pvgen/intraday.py` (`intraday.sh`, `pvgen-intraday.ps1`) | N small batches (`--batches 20 --trades-per-batch 15`) of amended, new and cancelled trades (`--mix amend=70,new=15,cancel=15`, or `--plan amend,new,cancel`), each its own `BATCH_ID` (`I-<date>-001`; a second run on the same date goes on with `--first 21` and a later `--start`), `RUN_KIND: INTRADAY`, a `COMPUTED_AT` a minute after the batch before; each update as scenario PVs or a P&L vector by its system; `--seed` makes the same batches; `--lake` appends each batch, `--server` signals it, `--every 30s` drips them | `tools/pvgen/intraday.sh --date 2026-10-27 --batches 5 --lake data/delta/demo --server http://127.0.0.1:18480 --every 30s` |
 | `tools/pvgen/publish_kafka.py` (`publish-kafka.sh`, `pvgen-publish-kafka.ps1`) | the same updates to the PV topic, each message's value JSONL text of `--per-message` records (default 10), one row of the contract a line; a cancel a cancel line; the key names the message, never a trade; `--rate`, `--seconds`, `--seed` as `tools/samplegen/stream.py`; `--save` keeps every record sent as JSONL | `tools/pvgen/publish-kafka.sh --bootstrap localhost:9092 --rate 5 --seconds 60 --save data/pvgen/sent.jsonl` |
-| `tools/pvgen/check.py` (`check.sh`, `pvgen-check.ps1`) | recomputes from the files what the engine should show (each trade's USD P&L, scenario PVs through the engine's own formula `engine_pnl`, the latest `COMPUTED_AT` per trade, cancels removed) and compares the bank's and every desk's VaR and ES with `GET /api/v1/var/scope`; exit 1 on a difference | `tools/pvgen/check.sh --morning data/pvgen/morning-2026-10-27 --intraday data/pvgen/intraday-2026-10-27 --server http://127.0.0.1:18480` |
+| `tools/pvgen/check.py` (`check.sh`, `pvgen-check.ps1`) | recomputes from the files what the engine should show (each trade's USD P&L, scenario PVs through the engine's own formula `engine_pnl`, the latest `COMPUTED_AT` per trade, cancels removed) and compares the bank's and every desk's VaR and ES with `GET /api/v1/risk/var/scope`; exit 1 on a difference | `tools/pvgen/check.sh --morning data/pvgen/morning-2026-10-27 --intraday data/pvgen/intraday-2026-10-27 --server http://127.0.0.1:18480` |
 
 The files go under `<data folder>/pvgen/` by default (`morning-<date>/`, `intraday-<date>/`). The morning run of the test data's date is
 the engine's to the unit (`check.py` on it: VaR 112,041,646, ES 160,143,809; with `--all-vectors` 112,035,906 and 160,132,107).
@@ -2807,7 +2807,7 @@ currency with each scenario's FX (section 15.11); a P&L vector's conversion is a
 already folded into the vector, so `inputsBySystem.<system>.tradesWithoutPv` counts the records that limit multi-currency exactness.
 
 **Visibility.** Every answer's provenance carries `inputsBySystem`: per source system on the date, `form`, `grain`, `rows`,
-`decidedBy` (*record fields*, or *record fields, agreeing with the pin pv, position*) and `tradesWithoutPv`; `GET /api/v1/var/status`
+`decidedBy` (*record fields*, or *record fields, agreeing with the pin pv, position*) and `tradesWithoutPv`; `GET /api/v1/risk/var/status`
 lists it per loaded date; the VaR page shows it in the Explain drawer's *Inputs & lineage*.
 
 **Files without the fields.** The fields are required on every PV or vector record: a file without them is refused (`DRS-5208`). `drishti.py var convert
@@ -3059,7 +3059,7 @@ less from one day's scenario dropping out. The bank's lake can keep receiving lo
 99%. **Limits** are set against VaR at the configured confidence: changing the confidence changes limit use. **Backtesting** stays at
 its own setting: the Basel traffic light is defined at 99%.
 
-**Asked per request.** `GET /api/v1/var/scope?scope=BANK&window=250&confidence=0.95&es-confidence=0.975` (`drishti.py var show BANK
+**Asked per request.** `GET /api/v1/risk/var/scope?scope=BANK&window=250&confidence=0.95&es-confidence=0.975` (`drishti.py var show BANK
 --window 250 --confidence 0.95`) recomputes the headline's VaR and ES from the same vector on the newest 250 scenarios or at another
 confidence, to compare one year with two or 95% with 99%: the answer says so (`override`: `window`, `of`, `from`, `to`, the
 confidences, `official: false`, a note) and is never official or captured; a window longer than the date's is used whole, with a
@@ -3432,9 +3432,9 @@ VaR itself always uses the stress set the date holds.
 
 | Call | What |
 |---|---|
-| `GET /api/v1/var/stress-window?scope=BANK&hierarchy=MGMT&length=250&confidence=0.99&asOf=2026-09-30` | the analysis: `node`, `nodes`, `hierarchies`, `history`, `length`, `confidence`, `rank`, `stressSet`, `current`, `worst`, `today`, `alert`, `candidates`, `series` (`starts`, `var`), `byNode`, `approval` |
-| `POST /api/v1/var/stress-window/proposals` | freeze and propose: `{"scope", "hierarchy", "date", "length", "confidence", "first", "note"}` (`first`: the window's first day; none: the worst) |
-| `GET /api/v1/var/stress-window/proposals` and `/proposals/{id}` | the proposals, newest first; one proposal |
+| `GET /api/v1/risk/var/stress-window?scope=BANK&hierarchy=MGMT&length=250&confidence=0.99&asOf=2026-09-30` | the analysis: `node`, `nodes`, `hierarchies`, `history`, `length`, `confidence`, `rank`, `stressSet`, `current`, `worst`, `today`, `alert`, `candidates`, `series` (`starts`, `var`), `byNode`, `approval` |
+| `POST /api/v1/risk/var/stress-window/proposals` | freeze and propose: `{"scope", "hierarchy", "date", "length", "confidence", "first", "note"}` (`first`: the window's first day; none: the worst) |
+| `GET /api/v1/risk/var/stress-window/proposals` and `/proposals/{id}` | the proposals, newest first; one proposal |
 | `POST /api/v1/approvals/stress-window/{id}/approve` | `{"decision": "approve" \| "reject", "note"}` by another person |
 
 A date without long-history rows answers `404` in words; a node without a row `404` naming the nodes that have one; a window shorter than
@@ -3468,7 +3468,7 @@ and normal days giving 213,637,794 and 112,041,646, a node the sum of its childr
 A node's **period end, average, high and low** of `var`, `es`, `svar` or `ses` over a fiscal year, quarter or any dates, the
 **60-business-day average** of VaR and the **12-week average** of stressed VaR, computed on request from the official records
 ([section 19](#19-official-end-of-day-results)) and never stored (`VarPeriodStats`; `VAR <scope> STATS <period>`, `drishti.py var stats`,
-`GET /api/v1/var/statistics`). Missing records are named, never skipped; a demo server may seed a synthetic year of records
+`GET /api/v1/risk/var/statistics`). Missing records are named, never skipped; a demo server may seed a synthetic year of records
 (`drishti.regulatory.synthetic-history`). On the demo, FY2026: period end 112,041,646, average 151,812,526, high 167,372,692, low
 87,874,268. The formulas, periods, settings and the synthetic history: [REGULATORY_VAR_REPORTING.md section 4.4](REGULATORY_VAR_REPORTING.md#44-period-statistics).
 
@@ -3478,7 +3478,7 @@ The official VaR of the day before against the **bank's** actual and hypothetica
 [section 15.16](#1516-desk-pnl-the-banks-actual-and-hypothetical-pl)) and Drishti's own risk-theoretical P&L, at 99% and 97.5%, for the
 bank, a division, a legal entity or a desk, over 250 days: exceptions, the Basel zone, the capital multiplier, the desks that drove each
 exception, Kupiec and Christoffersen (`VarBacktesting`; `VAR <scope> BACKTEST`, `drishti.py var backtest`,
-`GET /api/v1/var/backtesting`). On the demo the bank has 3 exceptions at 99% against actual and against hypothetical P&L: green,
+`GET /api/v1/risk/var/backtesting`). On the demo the bank has 3 exceptions at 99% against actual and against hypothetical P&L: green,
 multiplier 3.00. The rule, the US and Canadian multiplier tables, the settings, the screen and the playground:
 [REGULATORY_VAR_REPORTING.md section 4.6](REGULATORY_VAR_REPORTING.md#46-backtesting).
 
@@ -3977,7 +3977,7 @@ the position rules and the measures.
 | 2 | **Decided (2026-10-25): in memory**, rebuilt from the date's trades and the rules on every load (reproducible); each official capture records the date's membership and the rules (audit). No database or lake table | §15.6 |
 | 3 | **Decided (2026-10-25):** the demo risk batch adds a deterministic synthetic `SECURITY_ID` to securities and listed trades (the trade master is unchanged); *securities* and *listed* are the pack's `positions:` rules (by product group and type), configuration not code | §15.6 |
 | 4 | Due time of the batch (for example 06:00 New York the next business day) and the completeness rule per book | §15.8 |
-| 5 | **Decided (product owner, 2026-10-25): yes.** The data-load signal of `pnl-vector`, `scenario-set`, `risk-hierarchy`, `portfolio` (and `trade`) reloads that date in the engine automatically (the same as `POST /api/v1/var/reload` for the date), so a restated date is never stale, then captures it officially. Built | §15.8 |
+| 5 | **Decided (product owner, 2026-10-25): yes.** The data-load signal of `pnl-vector`, `scenario-set`, `risk-hierarchy`, `portfolio` (and `trade`) reloads that date in the engine automatically (the same as `POST /api/v1/risk/var/reload` for the date), so a restated date is never stale, then captures it officially. Built | §15.8 |
 | 6 | Several scenario sets on one date (a stressed set `SVAR-250`): select by `SCENARIO_SET_ID` (a scope or request parameter), and which is the default? | §15.3 |
 | 7 | Lake layout for the vectors at bank scale: sort by hierarchy and partition by scenario set (both designed, not built); file and row-group sizes; `BYTE_STREAM_SPLIT` + ZSTD | §15.1, §29 |
 | 8 | **Decided and built (2026-10-26): keep `TMAT`, for the trades of positions of more than one trade only.** A trade alone in its position is its position's row; the others' rows are in the file, read only on a drill or a trade scope (a lake read per drill would scan a whole date) | §26 |
@@ -4033,7 +4033,7 @@ recommended defaults unless the product owner said otherwise):
 | Computed kinds | `var-result`, `var-contribution`, `var-path`, `var-history`, `what-if` | `var-result`; parts and worst scenarios inside `var-result`; the what-if is the VaR API's (`POST /what-if`) |
 | Where the engine runs | a reactive connector `var-engine` over a Python package `compute/drishti-var` | every figure in the server's JVM (additions and sorts next to the data), the what-if included; the reactive connector `var-engine` serves the computed kind ([section 24](#24-where-the-engine-lives)) |
 | The explorer | a Sutra of the market-risk pack, opened by `VARX <scope>` | a console page (`/var`), opened by `VAR` ([section 24](#24-where-the-engine-lives)) |
-| API paths | `/api/v1/var/scopes/{scope}`, `/path`, `/history`, `/contributions?by=child\|position\|risk-class`, `PATCH /baskets/{id}`, `/sandboxes` | `GET /scope?scope=` (and `/scopes/{scope}` for a scope without a slash) with `/scope/path`, `/scope/history`, `/scope/contributions`; baskets by owner and name; `POST /what-if` ([section 11](#11-the-api)) |
+| API paths | `/api/v1/risk/var/scopes/{scope}`, `/path`, `/history`, `/contributions?by=child\|position\|risk-class`, `PATCH /baskets/{id}`, `/sandboxes` | `GET /scope?scope=` (and `/scopes/{scope}` for a scope without a slash) with `/scope/path`, `/scope/history`, `/scope/contributions`; baskets by owner and name; `POST /what-if` ([section 11](#11-the-api)) |
 
 ## Part III · How the engine works and stores data
 
@@ -4054,9 +4054,9 @@ as the viewer; packs stay declarative.
 |---|---|
 | the pack | the **market-risk** pack: the kinds `position`, `portfolio`, `pnl-vector`, `scenario-set`, `risk-hierarchy` (`tools/packgen/banking/var_kinds.py`, written into `pack.yaml` by `make_packs.py`), routed to `risk-store`, and `position` to the `var-positions` connector (the engine's derived positions); the computed kind `var-result` on the reactive connector `var-engine`; mnemonics `POS`, `PORT`, `PNLV`, `SSET`, `HIER`, `VRES`; Sutras for `portfolio` and `position` |
 | the stored data | `risk-store` (Delta), the vectors in a `list<double>` column (`layout.<kind>.vectors: [PNL]`); demo data from `tools/packgen/var/make_var_data.py` |
-| the engine | **in the server, in Java**: the generic vector store, ordinal sets, parallel sums and the VaR maths in the module `drishti-compute` beside the compute workers (`com.ash.drishti.compute.vector`, `com.ash.drishti.compute.var`); loading, entitlements, baskets, captures, official records and the API in `drishti-server` (`com.ash.drishti.server.var`). Base VaR is additions and sorts, which Java does next to the data without moving vectors to a worker |
+| the engine | **in the server, in Java**: the generic vector store, ordinal sets, parallel sums and the VaR maths in the module `drishti-compute` beside the compute workers (`com.ash.drishti.compute.vector`, `com.ash.drishti.banking.compute.var`); loading, entitlements, baskets, captures, official records and the API in `drishti-server` (`com.ash.drishti.banking.var`). Base VaR is additions and sorts, which Java does next to the data without moving vectors to a worker |
 | the what-if | `VarWhatIf` (`drishti-server`) over `VarWhatIfMath` (`drishti-compute`): copies of booked trades or scopes and vectors priced elsewhere added to a scope, before and after ([section 8.2](#82-the-what-if-the-java-engine)) |
-| the explorer | a console page (`/var`, `drishti-console/routes/var_routes.py`, `web/static/js/drishti_var-explorer.js`, `drishti_var-charts.js`, `web/static/css/drishti_var.css`) over `/api/v1/var`, not a Sutra: a Sutra's `source:` reads a kind, and the parametrised sources a VaR panel needs came with reactive connectors. The portfolio and position pages are Sutras, with the UI kit fragment `pnl-distribution@1` |
+| the explorer | a console page (`/var`, `drishti-console/routes/var_routes.py`, `web/static/js/drishti_var-explorer.js`, `drishti_var-charts.js`, `web/static/css/drishti_var.css`) over `/api/v1/risk/var`, not a Sutra: a Sutra's `source:` reads a kind, and the parametrised sources a VaR panel needs came with reactive connectors. The portfolio and position pages are Sutras, with the UI kit fragment `pnl-distribution@1` |
 
 **The compute boundary.** Base VaR is sums of stored vectors and measures over the sums, in the server's JVM on a bounded pool
 (`drishti.var.threads`). The heavy work that needs Python or a pricer (what-if pricing over the scenarios, intraday repricing:
@@ -4338,7 +4338,7 @@ never grows with the years kept; it grows only with the dates **open at once**, 
 2. **Least recently used out first.** Every request stamps the date it reads (not only its load). A date asked for and not open is
    opened; when that makes one more than the number, the date used longest ago is closed.
 3. **Always kept (protected):** the date just used, the newest business date, and the dates pinned in memory (below; counted within the
-   number). When the protected dates alone exceed the number, it is exceeded and `GET /api/v1/var/status` says so (`memory.warnings`).
+   number). When the protected dates alone exceed the number, it is exceeded and `GET /api/v1/risk/var/status` says so (`memory.warnings`).
 4. **A date's books go together:** its reporting-currency books (`drishti.var.currencies`), its stress book and its intraday layers close
    with it; and when room is short (next point) a date's currency books, then its stress book, close first, before any date. They are
    reopened from their hot files on the next ask.
@@ -4408,9 +4408,9 @@ drishti:
 ```
 
 The calendars are those of the business date (`drishti.business-date.calendar`); a date pinned by two rules is kept once, with both
-reasons, in memory when either says so. `GET /api/v1/var/status` (`pinned`) lists every pinned date with its reasons, how
+reasons, in memory when either says so. `GET /api/v1/risk/var/status` (`pinned`) lists every pinned date with its reasons, how
 it is kept, whether it is open, whether its hot file is built and the state of its build (`queued`, `building`, `built in … ms`, or *not
-built:* and why), and `GET /api/v1/exposure/status` the same for exposure; Admin → Caches counts them (`var.hot-files`: `pinned`) and names the protected dates (`var.dates`).
+built:* and why), and `GET /api/v1/risk/exposure/status` the same for exposure; Admin → Caches counts them (`var.hot-files`: `pinned`) and names the protected dates (`var.dates`).
 
 **Opening a date, by where it is.** Open: no cost. A hot file on disk: mapped again, seconds. Only in the lake: built once, then on disk.
 For dates people return to (a year-end, the stress window), raise `disk-dates` and `max-disk-gb` or pin them; at 1,000,000 positions a
@@ -4531,13 +4531,13 @@ ordinal by ordinal.
 
 ### 27a.2 The headline and the contribution table
 
-**The headline** (`GET /api/v1/var/scope`) answers the scope's VaR and ES from the scope's own vector (the aggregates and the planned sum
+**The headline** (`GET /api/v1/risk/var/scope`) answers the scope's VaR and ES from the scope's own vector (the aggregates and the planned sum
 of [section 25](#25-one-business-date-in-memory)), and three figures about its default parts: `children` (how many), `sumStandalone`
 (Σ standalone VaR) and `diversification` (`sumStandalone − var`, with two parts or more). For a node the default parts are its child nodes
 (their aggregates). For a scope whose default parts are positions (a leaf node, a portfolio, a basket, an ad-hoc scope) or trades (a
 position), **the headline builds no list of parts**: it counts them and sums their standalone VaR in one pass (27a.3).
 
-**The contribution table** (`GET /api/v1/var/scope/contributions`) lists rows: each part's standalone VaR and ES, component VaR and ES,
+**The contribution table** (`GET /api/v1/risk/var/scope/contributions`) lists rows: each part's standalone VaR and ES, component VaR and ES,
 incremental and marginal VaR. It lists at most `max-parts` rows (27a.4); its totals `sumStandalone`, `sumComponent` and `diversification`
 are over **every** part.
 
@@ -4650,7 +4650,7 @@ the settings and the tests are in [VAR_SHARDING.md](../architecture/VAR_SHARDING
   checked), each its own hot file (`<hot>/<date>-shard-<i>/`, the same format with a `RANG` section).
 - **Every member puts the date together** from its own shards and the others' skeletons (the hot file without its matrices): the same
   trades, positions and nodes as one server, **every node's aggregate to the bit**, so `VAR BANK` and the desks answer at once everywhere.
-- **Any other scope**: the planner's rows split by shard, each part summed by one ready owner (`POST /api/v1/var/partial`, signed, one hop,
+- **Any other scope**: the planner's rows split by shard, each part summed by one ready owner (`POST /api/v1/risk/var/partial`, signed, one hop,
   as the caller), exactly one answer per shard, added in shard order, VaR and ES taken once. No live owner of a needed shard: `503
   DRS-5215`, never a partial VaR. The answer's `provenance.shards` says how many shards were asked and who answered.
 - **Handover**: a new owner builds its shards from the lake and announces them ready in its capability digest; the old owner keeps
@@ -4658,11 +4658,11 @@ the settings and the tests are in [VAR_SHARDING.md](../architecture/VAR_SHARDING
 - **Intraday**: each member reads the day's updates from the lake on its own data-load signal and applies them on the date it put
   together; `provenance.intraday.batches` says which batches an answer includes, in the same order on every member (section 8.4). A client
   that must see a batch everywhere polls it there (VAR_SHARDING.md section 7, *Convergence after a batch*).
-- **API tokens**: `POST /api/v1/var/partial` (the members' signed channel) and `POST /api/v1/var/shards/drain` (administrators) are in
+- **API tokens**: `POST /api/v1/risk/var/partial` (the members' signed channel) and `POST /api/v1/risk/var/shards/drain` (administrators) are in
   `token-never`.
 
 Measured equal to one server **to the cent** (VaR, ES, contributions, the P&L path, the tree, intraday, the official record) on three
-members in USD and EUR, on Delta and Iceberg inputs (`VarShardClusterTest`, VAR_SHARDING.md section 12). `GET /api/v1/var/shards?asOf=`
+members in USD and EUR, on Delta and Iceberg inputs (`VarShardClusterTest`, VAR_SHARDING.md section 12). `GET /api/v1/risk/var/shards?asOf=`
 and `drishti.py var shards` show the map, the owners and who is ready.
 
 **Bit-equality, and why.** Every member sums the same rows in the same fixed order: a shard's partial is summed in row order, the partials
@@ -4678,7 +4678,7 @@ two shards would break this, so such a date is refused (`422 DRS-5217`) rather t
 | switch it on | the market-risk pack's `sharding:` block (`enabled`, `key: [LEGAL_ENTITY, DESK]`, `kinds: [scenario-pv, pnl-vector]`, `target-shard-mb`, `replicas`), or the same keys under `drishti.var.sharding.*`, which win; needs `drishti.var.tier.mode: mapped` (the default) |
 | tune the hand-over | `drishti.var.sharding.stable-seconds` (members unchanged this long before shards move, 30), `grace-seconds` (a new owner ready this long before the old one releases, 30), `rebalance-seconds` (2), `release-after-seconds` (a shard book of a date nobody has open released, 900) |
 | place members | `coordinator-only` (puts dates together and coordinates, owns no shard), `zone-tag` (a second owner in another zone), `pins` (tests) |
-| stop a member safely | `drishti.py var shards --drain` (or `POST /api/v1/var/shards/drain`), then wait for `"safeToStop": true` on `GET /api/v1/var/shards`; give a Fargate task's `stopTimeout` the time to build its largest shard plus `grace-seconds` |
+| stop a member safely | `drishti.py var shards --drain` (or `POST /api/v1/risk/var/shards/drain`), then wait for `"safeToStop": true` on `GET /api/v1/risk/var/shards`; give a Fargate task's `stopTimeout` the time to build its largest shard plus `grace-seconds` |
 | an owner dies | its replica answers; after `stable-seconds` a new owner builds the shard from the lake (never from a peer) |
 | every owner of a shard down | a scope that needs it answers `503 DRS-5215`, never a partial VaR; node figures keep answering from the skeletons |
 | a load lands between members | `409 DRS-5216`, the next member asked; the date is put together again at the new version and swapped in whole, never dropped |

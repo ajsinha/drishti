@@ -19,6 +19,39 @@
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
+## 2.9.11.f (unreleased)
+
+- **Domain modules, phase 1: the backend split** ([DOMAIN_MODULES.md](docs/architecture/DOMAIN_MODULES.md), [ACCESS_MODEL.md](docs/architecture/ACCESS_MODEL.md)).
+  The core knows no industry: banking is a module. New Maven modules: **drishti-registry** (the access registry), **drishti-compute-banking**
+  (VaR and ES, parametric, components, backtesting, exposure, FRTB-SA, SIMM, beta and correlation: `com.ash.drishti.banking.compute`, pure
+  maths), **drishti-banking** (the VaR, exposure, FRTB-SA, SIMM, sensitivities, MR cube and official-results services, storage and API:
+  `com.ash.drishti.banking`) and **drishti-app** (the runnable jar, at its old path `drishti-server/target/drishti-server-<version>-exec.jar`).
+  The six places where the core used banking code are SPIs now (`PivotSourceProvider`, `CacheGroup`, `CapacityFigures`, `HealthFigures`,
+  `OfficialReaders.OfficialResults`, the edition's words); `ArchitectureRulesTest` fails the build when the core imports a domain, a
+  domain another, a domain's compute Spring or the server, or anything but the registry reads the access model. VaR, exposure and the BI
+  parity answers are unchanged.
+- **The access registry** (drishti-registry: `AccessRegistry`, `EmbeddedAccessRegistry`, `AccessStore`, `YamlAccessStore`): licence →
+  module → lens → function → permission, decided in one place. Each module's jar ships its manifest (`META-INF/drishti/module.yaml`:
+  packages, engines, packs, connectors, API, functions) and its lenses (with the modules they need and the functions they bundle); a module
+  is on when installed, licensed and enabled. No `config/access/licence.yaml` is the **development licence** (every module, unsigned), so an
+  existing installation changes nothing. A module that is off loads no bean, engine, job or API (`@ConditionalOnModule`), its packs and
+  connectors do not load, its API answers `404 DRS-1025`, and Admin → Engines says why its engines are not installed.
+- **Admin → Modules over REST**: `GET/POST /api/v1/admin/modules` (states, what each brings, the licence, the lenses; the switch, with a
+  reason, audited, written to `config/modules/<module>.yaml`, taken at the next start); `GET /api/v1/modules` (the modules loaded and the
+  lenses open to the caller). New settings `drishti.modules.dir`, `drishti.modules.<module>.enabled`, `drishti.modules.watch-seconds`,
+  `drishti.access.dir` (CONFIGURATION.md; OPERATIONS.md section 22).
+- **Functions** (command words such as VAR, TRD, EQV, EXP) are the finest unit of access: each belongs to one module (a word no module
+  declares is the core's), lenses bundle them, and the mnemonic switches (Admin → Commands) are decided by the registry: a function is on
+  when its module is on and no administrator turned it off; its API then answers `404 DRS-1026` (and `403 DRS-1027` is wired for per-person
+  grants in 2.9.11.i).
+- **The banking API is under `/api/v1/risk/…`** (`/risk/var`, `/risk/exposure`, `/risk/frtb`, `/risk/simm`, `/risk/sensitivities`,
+  `/risk/risk-factors`, `/risk/mr`); the old paths are answered as the new ones for this release (`Deprecation: true` and a `Link` to the
+  new path), then removed. Connector files naming the moved engine classes keep working for this release.
+- **Packs name their domain** (`domain: core | banking | economy` in `pack.yaml`; ids and folders unchanged): a pack loads only while a
+  module of its domain is on. The us-equities, gleif and funds packs are the economy module's (the World lens's public data).
+- **Editions as lenses**: the risk, trading, market and world editions are lenses of the registry; an edition opened as a lens is offered
+  only while its modules are on.
+
 ## 2.9.11.e (unreleased)
 
 - **Drishti Elements, the design, decided by the product owner** ([ELEMENTS.md](docs/architecture/ELEMENTS.md)): the console's JavaScript as eight libraries (drishti-core, -inputs, -grid, -chart, -data, -insight, -renderer, -risk; 1 to 5 without a Drishti server), the measured inventory (116 of 258 scripts and modules, about 21,000 lines, fold into them; about 10 grids and 22 chart scripts into one each), the grid's three layouts (wells, panel, terminal: VaR screens default to terminal) and its server-side pivot with non-additive totals from the server, an AG Grid-style adapter for the Enterprise pivot API from public documentation only, one chart spec over ECharts with the risk kinds and maps (world to every country's first-level regions), packaging and licensing per domain module, the documentation of every library (guide, generated API reference, tutorial, gallery, AG Grid migration guide), the guards and the migration order; the decisions (Vega retired, the grid on phones, a standalone Excel writer, the adapter's scope, both options of g2, g3 and g4 built as modes with A the default); mock-ups [g1](docs/architecture/mockups/elements/g1-pivot-grid.html), [g2](docs/architecture/mockups/elements/g2-charts.html), [g3](docs/architecture/mockups/elements/g3-maps.html) and [g4](docs/architecture/mockups/elements/g4-gallery.html).

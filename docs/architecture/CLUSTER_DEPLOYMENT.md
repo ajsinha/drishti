@@ -522,8 +522,8 @@ So **a shard in use always has a ready holder**: the release waits for the succe
 version of a shard is released once the newer has been ready here for the grace period; a shard of a replaced cut once the grace has
 passed. A date put together again is swapped in whole only when complete (`VarService.swap`); until then the loaded date answers.
 
-**Drain.** `POST /api/v1/var/shards/drain {"on": true}` or `drishti.py var shards --drain` (administrators): the member leaves every view at
-once, keeps answering and serving its shards until each is handed over, then `GET /api/v1/var/shards` reports `"safeToStop": true`. A
+**Drain.** `POST /api/v1/risk/var/shards/drain {"on": true}` or `drishti.py var shards --drain` (administrators): the member leaves every view at
+once, keeps answering and serving its shards until each is handed over, then `GET /api/v1/risk/var/shards` reports `"safeToStop": true`. A
 member started with `drishti.var.sharding.drain: true` takes no shard. The drain flag is in memory: a restart without the setting takes
 shards again. Drishti\*net's own drain (`POST /api/v1/net/drain`, the member's `drained` flag) is separate: it stops forwarded work and makes
 the member non-routable, which also takes it out of the shard view.
@@ -566,7 +566,7 @@ its own.
 
 **Scatter-gather** (`ShardGather`, VAR_SHARDING section 6): a scope's rows are split by shard; each shard's part goes to **one** member in
 this order: owners that announced it ready at the data version the date was put together from (first owner first), any other member that
-announced it so (an old owner mid-handover), then owners not yet ready (they build from the lake). `POST /api/v1/var/partial`, signed, one
+announced it so (an old owner mid-handover), then owners not yet ready (they build from the lake). `POST /api/v1/risk/var/partial`, signed, one
 hop, with the caller's on-behalf-of token; the answer is labelled with shard, map digest, data digest and row count and refused if any
 differs. **Exactly one answer per shard**, added in shard order; a shard nobody answers fails the whole scope with `503 DRS-5215` naming
 it; a member at another data version answers `409 DRS-5216` and the next is asked. **Never a partial VaR.**
@@ -1090,7 +1090,7 @@ skeletons are available. Whole-cluster stop: in reverse.
 | Role | Look at | Alert |
 |---|---|---|
 | every server | Admin → Health (net, disk, direct memory), Admin → Caches, `/actuator/prometheus` | heap after GC > 85% for 10 min; disk red; direct > 80% |
-| owners | `GET /api/v1/var/shards` (`drishti.py var shards`): shards held and ready, refusals | any `DRS-5215` in 5 min; a shard with one ready owner for more than 10 min |
+| owners | `GET /api/v1/risk/var/shards` (`drishti.py var shards`): shards held and ready, refusals | any `DRS-5215` in 5 min; a shard with one ready owner for more than 10 min |
 | cluster | Admin → Net, `drishti_net_members{state}`, `drishti_net_forwarded_total` | `suspect` > 0 for 5 min; `dead` > 0 |
 | consoles | `/readyz`, CPU, pages a second | p95 page > 300 ms |
 | loader | job exit code, the manifest | missed expectation (Data loads page) |
@@ -1687,7 +1687,7 @@ gossip changes:
 | `sources` per kind | connector name, type, **table identity** (a Delta table's id and location; section 10), `earliestDate` and `latestDate` (the oldest and newest business dates it holds; a node that goes down counts only for the dates between them, section 7), `dataVersion` of the latest date, whether columnar |
 | `load` | requests a second over the last minute (from `RequestActivity`) and p95 latency, for choosing between peers |
 | `calendar` | the business calendar (`DRISHTI_CALENDAR`): the as-of of a forwarded request must mean the same date |
-| `services.engines` | the compute engines of this node and their state (`var:running,frtb-sa:off,...`; [COMPUTE_ENGINES.md section 9](COMPUTE_ENGINES.md#9-in-a-cluster-each-node-runs-its-own-engines)): a request for an engine's API (`/api/v1/frtb/**`) arriving at a node that does not run it is forwarded to the least loaded node that does, signed for the caller (the answer carries `X-Drishti-Engine-Node`); none does: `404 DRS-1020`; the console offers an engine when any reachable node runs it |
+| `services.engines` | the compute engines of this node and their state (`var:running,frtb-sa:off,...`; [COMPUTE_ENGINES.md section 9](COMPUTE_ENGINES.md#9-in-a-cluster-each-node-runs-its-own-engines)): a request for an engine's API (`/api/v1/risk/frtb/**`) arriving at a node that does not run it is forwarded to the least loaded node that does, signed for the caller (the answer carries `X-Drishti-Engine-Node`); none does: `404 DRS-1020`; the console offers an engine when any reachable node runs it |
 
 A pack listed in `peer-only-packs` (`node.yaml`) is loaded and served to peers (view and data forwarding, search shares) but hidden from
 this node's own users: not in its catalog, forms home, type-ahead or command line, and a direct request for its kinds from
@@ -2206,7 +2206,7 @@ Each phase as it was built, with anything that differs from the design above. Th
 Drishti*net as it is: membership and liveness from the member table; **readiness in the capability digest**, a new optional field
 `services` (name to compact text; the VaR engine publishes `var-shards`: on, owner, draining, per date the shard map and the shards ready
 with their data digest), so a change raises the digest's hash, gossip carries it and peers pull it within a round; the coordinator's calls
-(`POST /api/v1/var/partial`, `GET /api/v1/var/shards/skeleton`) are signed one-hop calls, a partial with the caller's on-behalf-of token so
+(`POST /api/v1/risk/var/partial`, `GET /api/v1/risk/var/shards/skeleton`) are signed one-hop calls, a partial with the caller's on-behalf-of token so
 the owner applies the caller's rights too (masks and entitlements on both sides), the endpoints refusing an unsigned call (`401
 DRS-5051`). `drishti-net` itself gained only the `services` field (no Spring, no engine). The machinery is measure-agnostic
 (`com.ash.drishti.compute.shard`, `com.ash.drishti.server.shard`); VaR is its first measure.

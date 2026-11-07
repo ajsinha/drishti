@@ -236,7 +236,7 @@ is small. Its stored credit limit LIM-ALDERSHOT is 7,980,000,000, so the limit u
 | `EXP EXP-ALDERSHOT-FRA <GO>`, `/v/exposure-profile/EXP-ALDERSHOT-FRA` | a stored-profile id: the same netting set, with a notice |
 
 The page is `drishti-console/web/templates/terminal/exposure.html`, filled by `web/static/js/drishti_exposure-explorer.js` from the console's
-same-origin `/api/exposure/...`, which asks the server's `/api/v1/exposure` as you (so your entitlements apply as on every screen). The
+same-origin `/api/exposure/...`, which asks the server's `/api/v1/risk/exposure` as you (so your entitlements apply as on every screen). The
 computed kind `exposure-result` stays an ordinary kind too (`/v/exposure-result/<scope>`, [section 8](#8-exposure-as-a-kind)).
 
 ### 3.2 The screen
@@ -403,10 +403,10 @@ them) and the provenance; never paths. Ids are `XCAP-<yyyymmdd>-<n>`, kept per o
 |---|---|
 | Explorer | the **Captures** tab: a note, **Capture exposure**; or **Capture exposure** beside **Explain ›** |
 | CLI | `drishti.py exposure capture CPTY:CP-ALDERSHOT --note 'before the unwind'`; `captures [--scope]`; `compare XCAP-20260930-1 now` |
-| API | `POST /api/v1/exposure/captures {scope, note, q, collateral}` (a token needs `risk:write`); `GET /captures?scope=`, `GET /captures/{id}`, `GET /captures/{id}/csv`, `GET /captures/{id}/jsonl` |
+| API | `POST /api/v1/risk/exposure/captures {scope, note, q, collateral}` (a token needs `risk:write`); `GET /captures?scope=`, `GET /captures/{id}`, `GET /captures/{id}/csv`, `GET /captures/{id}/jsonl` |
 
 **Compare** two captures, or a capture with **now** (the scope computed again): peak PFE, EPE, EEPE, peak EE and CE side by side with
-the change, PFE per tenor, and the trades added and removed. `GET /api/v1/exposure/compare?a=<id>&b=<id|now>`. A capture's CSV is the `#
+the change, PFE per tenor, and the trades added and removed. `GET /api/v1/risk/exposure/compare?a=<id>&b=<id|now>`. A capture's CSV is the `#
 field: value` lines and then the profile.
 
 ## 7. Pre-deal what-if
@@ -446,7 +446,7 @@ answer has the same layout as the netting set's tab: before, after, the incremen
 
 ![Pre-deal on CP-ALDERSHOT: the netting set picked, a booked trade's unwind by the exact paths method, the counterparty's figures before and after](img/exp/09-predeal-counterparty.jpg)
 
-`--method addon`, or `--candidates new-swap.json`. **API**: `POST /api/v1/exposure/what-if`, [section 11](#11-the-api).
+`--method addon`, or `--candidates new-swap.json`. **API**: `POST /api/v1/risk/exposure/what-if`, [section 11](#11-the-api).
 
 **How the exact method gets its inputs**: the Java engine serves them as the asking person through the computed kind `exposure-result`
 with `detail=whatif` (the scope's E and N matrices, G_primary × P, the grid, the horizon, the candidate sets' ids) and `detail=set` (a
@@ -497,7 +497,7 @@ touches (`403`). The `counterparty` kind's `NAME` mask shows the id in labels. T
 
 ## 10. The command line
 
-`drishti.py exposure <command>` (`tools/expcli.py`) asks `/api/v1/exposure` as the token's user (`--server`, `--token` or the
+`drishti.py exposure <command>` (`tools/expcli.py`) asks `/api/v1/risk/exposure` as the token's user (`--server`, `--token` or the
 environment, as every `drishti.py` group). Exit codes: 0, 1 (the server said no), 2 (usage). Every scope command takes `--date
 YYYY-MM-DD` (default the newest with paths), `--q Q` (default 0.95), `--collateral lagged|current|none` and `--json`.
 
@@ -521,7 +521,7 @@ Real output of each on the test data: [tutorial 26](../tutorials/26-exposure-fro
 
 ## 11. The API
 
-All under `/api/v1/exposure`. Every `GET` takes `asOf` (the business date; default the newest with paths), `q` (default
+All under `/api/v1/risk/exposure`. Every `GET` takes `asOf` (the business date; default the newest with paths), `q` (default
 `limit-confidence`, 0.95), `collateral` (`lagged`, `current`, `none`); `/scope` also `run` and `strict`. Answers are camelCase (`epe`,
 `peakPfe`, `profile[].pfe99`); the computed kind spells the same fields in UPPER_SNAKE.
 
@@ -556,7 +556,7 @@ Every setting of this part, with its type, default, environment variable, meanin
 
 Also: the compute pool **`exposure`** in `config/compute/compute.yaml` (Python, `drishti_compute.exposure.whatif:ExposureWhatIfEngine`,
 system environment, `DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers (4), 2 GB, 300 CPU-seconds, 60 s timeout), active only with
-`DRISHTI_COMPUTE_ENABLED=true`; and the token rules: `POST /api/v1/exposure/what-if` is `read`, `POST /captures` `risk:write`, `POST
+`DRISHTI_COMPUTE_ENABLED=true`; and the token rules: `POST /api/v1/risk/exposure/what-if` is `read`, `POST /captures` `risk:write`, `POST
 /reload` and `POST /official` never a token's.
 
 ## 13. Troubleshooting
@@ -592,8 +592,8 @@ any confidence, peaks, contributions, incremental figures before dealing) for an
 and [WWR.md](../contracts/WWR.md) read too. Sections marked **Implementation** are checked against the code and the committed test data.
 
 **Sources of truth checked (1.2):** `tools/packgen/ccr/` (`paths.py`, `ccrmath.py`, `make_ccr_data.py`); `drishti-compute`
-(`com.ash.drishti.compute.ccr`: `ExposureGrid`, `CsaTerms`, `ExposureMath`, `ExposureBook`, `ExposureHotFile`, `ExposureScopes`,
-`ExposureCalc`; the Python `drishti_compute.exposure`: `measures`, `whatif`); `drishti-server` (`com.ash.drishti.server.exposure`,
+(`com.ash.drishti.banking.compute.ccr`: `ExposureGrid`, `CsaTerms`, `ExposureMath`, `ExposureBook`, `ExposureHotFile`, `ExposureScopes`,
+`ExposureCalc`; the Python `drishti_compute.exposure`: `measures`, `whatif`); `drishti-server` (`com.ash.drishti.banking.exposure`,
 `ExposureWhatIfPaths`, `ExposureWhatIfInputs`); `drishti.ccr.exposure` in `config/engines/exposure.yaml`; the pool `exposure` in
 `config/compute/compute.yaml`; the counterparty-risk pack's `pack.yaml` (`exposure-store`, `exposure-engine`, `exposure-whatif`);
 `data/testdata/counterparty-risk/{simulation-run,exposure-path}`.
@@ -608,7 +608,7 @@ averages EPE and effective EPE (EEPE), and potential future exposure (PFE) at a 
 netting set, a counterparty, a connected group, a legal entity or any ad-hoc scope, and for a scope plus candidate trades (pre-deal).
 
 **Commands.** `EXP NSET:NS-ALDERSHOT-FRA <GO>` (as typed; the spaced `EXP NSET NS-ALDERSHOT-FRA <GO>` too), `EXP CPTY:CP-ALDERSHOT <GO>`,
-`EXP GROUP:GRP-ALDERSHOT <GO>`, `EXP LE:LE-NY <GO>`, `EXP TRD:<trade> <GO>`; the API `/api/v1/exposure`; the netting-set and counterparty
+`EXP GROUP:GRP-ALDERSHOT <GO>`, `EXP LE:LE-NY <GO>`, `EXP TRD:<trade> <GO>`; the API `/api/v1/risk/exposure`; the netting-set and counterparty
 pages show the engine's figures as they open. **Implementation:** `EXP` is the computed kind `exposure-result`; its main screen is the
 exposure explorer ([section 3](#3-the-explorer-screen-by-screen)); `XWIF <scope>` is the exact what-if (`exposure-whatif`).
 
@@ -937,7 +937,7 @@ counterparties; a counterparty: its netting sets; a netting set: its trades; oth
 The `paths` method runs in the Python engine (§19.5) on the netting sets the candidate touches (2 MB per set matrix), well inside
 interactive time.
 
-**Implementation:** `POST /api/v1/exposure/what-if` with `method: addon` answers in Java (`ExposureWhatIf`): each candidate's PFE add-on
+**Implementation:** `POST /api/v1/risk/exposure/what-if` with `method: addon` answers in Java (`ExposureWhatIf`): each candidate's PFE add-on
 is `max(MTM, 0) + z_q · SF · d · |δ| · sqrt(min(t_k, M))` and its EE add-on `max(MTM, 0) + SF · d · |δ| · sqrt(min(t_k, M)) / sqrt(2π)` (the
 mean positive part of a normal of that spread), added to the scope's profile; SF by asset class (rates 0.5%, FX 4%, credit 0.54%, equity
 32%, commodity 18%), d the notional (rates: times the supervisory duration), z the normal quantile; flagged `proxy`. `method: paths` is
@@ -956,12 +956,12 @@ engine is not running (compute off, the pool `exposure` absent) the answer is `5
 
 | Work | Where | Why |
 |---|---|---|
-| Building V and E matrices per netting set at date load | Java (`drishti-compute`, planned `com.ash.drishti.compute.ccr.ExposureStore`), streaming the sorted `exposure-path` table, fanned out across the cluster's nodes by netting-set ranges | billions of float additions; SIMD loops; no copy to Python |
+| Building V and E matrices per netting set at date load | Java (`drishti-compute`, planned `com.ash.drishti.banking.compute.ccr.ExposureStore`), streaming the sorted `exposure-path` table, fanned out across the cluster's nodes by netting-set ranges | billions of float additions; SIMD loops; no copy to Python |
 | Statistics of a scope (sum of matrices, means, quantiles) | Java | per request: sum of the scope's set matrices (P × G), then a sort of P values per date |
 | What-if with candidate paths, other collateral models, stressed runs, custom quantile methods, path analytics | Python engine on the compute pool (`risk` pool), Arrow in and out | heavy or rarely used; the scope's few matrices are shipped, never the date |
 
-**Implementation:** everything in Java on one node: the maths in `drishti-compute` (`com.ash.drishti.compute.ccr`: `ExposureMath`,
-`ExposureBook`, `ExposureCalc`, `ExposureScopes`, `ExposureHotFile`), the service in `drishti-server` (`com.ash.drishti.server.exposure`).
+**Implementation:** everything in Java on one node: the maths in `drishti-compute` (`com.ash.drishti.banking.compute.ccr`: `ExposureMath`,
+`ExposureBook`, `ExposureCalc`, `ExposureScopes`, `ExposureHotFile`), the service in `drishti-server` (`com.ash.drishti.banking.exposure`).
 Other collateral models (`collateral=current|none`) are computed in Java from the value matrices. The exact what-if runs in the
 Python engine (`drishti_compute.exposure`, the compute pool `exposure`, part 2). Fan-out across nodes is PLANNED.
 
@@ -992,7 +992,7 @@ Standard tenor labels in `PROFILE`: the primary grid dates, labelled by the near
 in aggregate only; `PROVENANCE` in UPPER_SNAKE (the run, the inputs' versions, the intake, `TIER`). An id of the stored-profile form
 (`EXP-ALDERSHOT-FRA`) answers `NSET:NS-ALDERSHOT-FRA` with a `NOTE` saying so. The result's rule: `required: [SCOPE, STATUS, PROFILE]`.
 
-### 19.2 The API (`/api/v1/exposure`)
+### 19.2 The API (`/api/v1/risk/exposure`)
 
 | Method and path | Parameters | Answer |
 |---|---|---|
@@ -1004,7 +1004,7 @@ in aggregate only; `PROVENANCE` in UPPER_SNAKE (the run, the inputs' versions, t
 | `POST /captures`, `GET /captures[/{id}[/csv]]`, `GET /compare` | as VaR | captures of exposure answers (the profile and, optionally, the scope's E matrix summary, never the trade paths) |
 | `GET /status`, `POST /reload` | | runs loaded, hot files, sizes |
 
-**Implementation:** the paths are under `/api/v1/exposure`; every `GET` takes `asOf`, `q`, `collateral` and (`/scope`) `run` and
+**Implementation:** the paths are under `/api/v1/risk/exposure`; every `GET` takes `asOf`, `q`, `collateral` and (`/scope`) `run` and
 `strict`. Also `GET /scopes/{scope}` (the path form), `GET /scope/profile?format=csv`, `GET /tree` (groups, counterparties and netting
 sets with their EPE and peak PFE; sets without paths marked `noPaths`), `GET /retention` (§27.3), `GET /official?asOf=` and `POST
 /official` (administrators), `POST /reload` (administrators). Answers are camelCase (`epe`, `peakPfe`, `profile[].pfe99` ...); the computed
@@ -1046,7 +1046,7 @@ reads:
   - { kind: collateral-holding, as: holdings, all: true }
 engine:
   type: java
-  entry: com.ash.drishti.compute.ccr.ExposureEngine
+  entry: com.ash.drishti.banking.compute.ccr.ExposureEngine
   version: "1.0"
 triggers:
   - { on: data-version, kinds: [simulation-run, exposure-path, netting-set-member, csa, collateral-holding], affects: all }
@@ -1057,7 +1057,7 @@ limits: { timeout: 60s, wait: 50ms, max-inflight-per-user: 4, max-scope-netting-
 
 **Implementation:** the connector `exposure-engine` is in the counterparty-risk pack's `pack.yaml` (written by
 `tools/packgen/banking/ccr_kinds.py`), as VaR's `var-engine` is in the market-risk pack's: `engine: { type: java, class:
-com.ash.drishti.server.exposure.ExposureResultEngine }`, `params` `q`, `collateral`, `run` as above, `result: { required: [SCOPE, STATUS,
+com.ash.drishti.banking.exposure.ExposureResultEngine }`, `params` `q`, `collateral`, `run` as above, `result: { required: [SCOPE, STATUS,
 PROFILE], types: { EPE: number, PEAK_PFE: number } }`, `triggers` on the data versions of `simulation-run`, `exposure-path`,
 `netting-set`, `csa`, `collateral-balance`, `coalesce` 1 s / 10 s, `cache` 1,000 for 1 h, `limits` 60 s / 5 s / 4 per user; enabled by
 `DRISHTI_EXPOSURE_ENABLED`. The scope limit is the engine's setting `max-scope-netting-sets`. No `reads:`: the engine reads its store.
@@ -1456,8 +1456,8 @@ largest value). `lake demo` moves the run id, the rows' ids and the grid dates w
 
 | Piece | Where | What |
 |---|---|---|
-| the maths | `drishti-compute`, `com.ash.drishti.compute.ccr` | `ExposureGrid` (the grid, roles, look-back map, Δt), `CsaTerms` (thresholds, MTA, IA, rounding, called collateral), `ExposureMath` (E, N, EE, ENE, EEE, PFE, EPE, EEPE, contributions), `ExposureBook` (a date's netting sets and trades), `ExposureHotFile` (`DRSHEXP1`), `ExposureScopes` (the scope words), `ExposureCalc`; the benchmark `ExposureTierBenchmark` (drishti-server tests, §27.4) |
-| the service | `drishti-server`, `com.ash.drishti.server.exposure` | `ExposureLoader` and `ExposureIntake` (a date from the lake, checks), `ExposureTier` (the hot files, eviction), `ExposureService` (scopes as the viewer, answers, cache), `ExposureViews` and `ExposureExplorer` (profile, distribution and fan, contributions, tree, ancestors, collateral), `ExposureCaptures`, `ExposureWhatIf` (addon) and `ExposureWhatIfPaths` + `ExposureWhatIfInputs` (the exact method through the Python engine), `ExposureOfficial`, `ExposureOfficialStore`, `ExposurePublisher`, `ExposureRetention`, `ExposureAccess`, `ExposureResultEngine` (the kind), `ExposureFigures` (the netting-set and counterparty pages), `ExposureController` |
+| the maths | `drishti-compute`, `com.ash.drishti.banking.compute.ccr` | `ExposureGrid` (the grid, roles, look-back map, Δt), `CsaTerms` (thresholds, MTA, IA, rounding, called collateral), `ExposureMath` (E, N, EE, ENE, EEE, PFE, EPE, EEPE, contributions), `ExposureBook` (a date's netting sets and trades), `ExposureHotFile` (`DRSHEXP1`), `ExposureScopes` (the scope words), `ExposureCalc`; the benchmark `ExposureTierBenchmark` (drishti-server tests, §27.4) |
+| the service | `drishti-server`, `com.ash.drishti.banking.exposure` | `ExposureLoader` and `ExposureIntake` (a date from the lake, checks), `ExposureTier` (the hot files, eviction), `ExposureService` (scopes as the viewer, answers, cache), `ExposureViews` and `ExposureExplorer` (profile, distribution and fan, contributions, tree, ancestors, collateral), `ExposureCaptures`, `ExposureWhatIf` (addon) and `ExposureWhatIfPaths` + `ExposureWhatIfInputs` (the exact method through the Python engine), `ExposureOfficial`, `ExposureOfficialStore`, `ExposurePublisher`, `ExposureRetention`, `ExposureAccess`, `ExposureResultEngine` (the kind), `ExposureFigures` (the netting-set and counterparty pages), `ExposureController` |
 | the Python engine | `drishti-compute/src/main/python/drishti_compute/exposure/` | `measures.py` (the measures by the Java engine's rules), `whatif.py` (`ExposureWhatIfEngine`, kind `exposure-whatif`); tests `drishti-compute/src/test/python/test_exposure_engine.py` |
 | the console | `drishti-console` | `routes/exposure_routes.py` (`EXP` and `/exposure`, stored-profile ids), `web/templates/terminal/exposure.html`, `web/static/js/drishti_exposure-explorer.js`, `drishti_exposure-charts.js` (plain SVG), `web/static/css/drishti_exposure.css`; tests `tests/test_exposure_routes.py`, `tests/test_exposure_explorer_browser.py` (the explorer in a browser) |
 | the CLI | `tools/expcli.py` (`drishti.py exposure`) | tests `tools/test_expcli.py` |
@@ -1590,7 +1590,7 @@ contributions and captures) (instead of
 (`trade-paths-days` 20, `trade-paths-month-end-years` 1, `set-matrices-years` 1, `set-matrices-month-end-years` 7, `statistics-years` 7,
 `trade-contributions-years` 7; a month-end is the last weekday of its month). Drishti applies them to what it keeps: a hot file within
 its window is never trimmed by `disk-dates` (but is by the disk cap `max-disk-gb`); official records and trade contributions beyond theirs are removed after each capture. The
-trade paths are the lake owner's: `GET /api/v1/exposure/retention` lists each date held and whether its paths are beyond their window.
+trade paths are the lake owner's: `GET /api/v1/risk/exposure/retention` lists each date held and whether its paths are beyond their window.
 
 <a id="274-the-benchmark-measured-and-extrapolated-291"></a>
 ### 27.4 The benchmark: measured and extrapolated
