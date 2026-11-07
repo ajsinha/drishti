@@ -112,6 +112,43 @@ function loadOne(name) {
 }
 
 /**
+ * The address of a file under the static root (the vendored engines: "vendor/codemirror/codemirror.js").
+ * @param {string} path relative to the static root
+ * @returns {string}
+ */
+export function staticUrl(path) { return staticBase() + String(path).replace(/^\//, ''); }
+
+const scripts = {};
+
+/**
+ * Loads a classic script into the page once (a vendored engine a library wraps: CodeMirror, Arrow JS); resolves when it has run.
+ * @param {string} src its address (staticUrl for a vendored file)
+ * @returns {Promise<void>}
+ */
+export function loadScript(src) {
+  if (scripts[src]) { return scripts[src]; }
+  const doc = root().document;
+  if (!doc) { return Promise.reject(new Error('loadScript: there is no page to load ' + src + ' into')); }
+  if (Array.prototype.some.call(doc.scripts, (s) => (s.getAttribute('src') || '').split('?')[0] === src.split('?')[0] && s.dataset.loaded === '1')) { return Promise.resolve(); }
+  scripts[src] = new Promise((resolve, reject) => {
+    const s = doc.createElement('script');
+    s.src = src;
+    s.async = false;
+    s.onload = () => { s.dataset.loaded = '1'; resolve(); };
+    s.onerror = () => { delete scripts[src]; reject(new Error('Could not load ' + src)); };
+    doc.head.appendChild(s);
+  });
+  return scripts[src];
+}
+
+/**
+ * Adds a style sheet to the page once (a vendored engine's).
+ * @param {string} href
+ * @returns {void}
+ */
+export function loadStyle(href) { const doc = root().document; if (doc) { addCss(doc, href); } }
+
+/**
  * Loads libraries (and what they require) into the page, each once; resolves with the API of the one named, or the APIs in order.
  * @param {(string|string[])} names for example "drishti-grid"
  * @returns {Promise<(Object|Object[])>}

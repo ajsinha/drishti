@@ -13,7 +13,9 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The sort model and the filter model: plain data, kept with a view and sent to a server as they are. Sorting: by several columns, blanks
+/* The sort model and the filter model, the one contract every library shares: drishti-grid sorts and filters by it, drishti-inputs'
+   filter bar writes it, drishti-data's sources answer it, a chart filters its rows by it, and FILTER_CHANNEL on a bus carries it between
+   them. Plain data, kept with a view and sent to a server as they are. Sorting: by several columns, blanks
    last in either direction, numbers as numbers, text by the locale's collation with numbers inside it in order (T2 before T10), dates as
    ISO text. Filters, per column: text (contains, equals, starts, ends, not), number and date (equals, less, greater, between), set
    (members kept, or members left out: the member filter), blank or not; plus a quick filter across every shown column. */
@@ -197,4 +199,24 @@ export function filterWords(model, header) {
     if (sym[f.op]) { return h(k) + ' ' + sym[f.op] + ' ' + f.value; }
     return h(k) + ' ' + (f.op || 'contains').replace(/[A-Z]/g, (c) => ' ' + c.toLowerCase()) + ' "' + f.value + '"';
   }).join('; ');
+}
+
+/** The bus event a filter bar emits and grids and charts listen to; its payload is {model, quickFilter, source}. */
+export const FILTER_CHANNEL = 'filters:changed';
+
+/**
+ * The rows that pass a filter model (and a quick filter), each filter's column read as the row's property of that name unless a value
+ * function says otherwise: what a chart, an in-memory source or a page without a grid uses.
+ * @param {Object[]} rows
+ * @param {Object<string, ColumnFilter>} model
+ * @param {{quickFilter: string, columns: Array<{id: string, field: string}>, value: function(Object, Object): *}} [o] columns: where the
+ *   quick filter looks (default: the model's columns); value: a row's value in a column (default: row[column.field or column.id])
+ * @returns {Object[]}
+ */
+export function filterRows(rows, model, o) {
+  o = o || {};
+  const columns = (o.columns || []).slice();
+  Object.keys(model || {}).forEach((id) => { if (!columns.some((c) => c.id === id)) { columns.push({ id: id }); } });
+  const test = rowFilter(model, o.quickFilter || '', columns, o.value || ((row, c) => row[c.field || c.id]));
+  return test ? rows.filter(test) : rows.slice();
 }

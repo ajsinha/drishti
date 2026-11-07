@@ -27,6 +27,7 @@ import { columnMenuItems, cellMenuItems, FUNCTION_KEYS, parseCondition, pivotMea
 import { LAYOUTS, DENSITIES } from './drishti_grid.js';
 import { openDialog } from '../../drishti-core/src/drishti_index.js';
 import { h } from './drishti_grid-dom.js';
+import { editorOf } from './drishti_grid-edit.js';
 
 /**
  * A key on the grid: the view's own keys first, then the engine's navigator; the focus scrolled into view.
@@ -36,6 +37,8 @@ import { h } from './drishti_grid-dom.js';
  */
 export function onKey(v, e) {
   const m = v.model, k = e.key, mod = e.ctrlKey || e.metaKey;
+  if (e.target !== v.body.scroller && e.target.closest && e.target.closest('.dg-editor')) { return; }
+  if (editKey(v, e)) { return; }
   if (mod && e.shiftKey && (k === 'c' || k === 'C')) { e.preventDefault(); runAction(v, 'copy-headers'); return; }
   if (k === 'F2') { e.preventDefault(); v.explainFocused(); return; }
   if ((e.shiftKey && k === 'F10') || k === 'ContextMenu') {
@@ -64,6 +67,23 @@ export function onKey(v, e) {
   }
   v.afterFocus(true);
 }
+
+/** @private the editing keys: undo and redo, Delete, and on an editable cell Enter, F2, Space (a checkbox) and typing */
+function editKey(v, e) {
+  const m = v.model, k = e.key, mod = e.ctrlKey || e.metaKey, f = m.navigator.focus;
+  if (mod && !e.altKey && (k === 'z' || k === 'Z')) { e.preventDefault(); if (e.shiftKey) { v.redo(); } else { v.undo(); } return true; }
+  if (mod && !e.altKey && (k === 'y' || k === 'Y')) { e.preventDefault(); v.redo(); return true; }
+  if (!f || mod || e.altKey) { return false; }
+  if ((k === 'Delete' || k === 'Backspace') && anyEditable(v)) { e.preventDefault(); runAction(v, 'clear-cells'); return true; }
+  if (!m.editing.canEdit(f.row, f.col)) { return false; }
+  const ed = editorOf(m.shownColumns()[f.col]);
+  if ((k === 'Enter' && !e.shiftKey) || k === 'F2' || (k === ' ' && ed === 'checkbox')) { e.preventDefault(); v.startEditing(f.row, f.col); return true; }
+  if (k.length === 1 && k !== ' ' && ed !== 'checkbox') { e.preventDefault(); v.startEditing(f.row, f.col, { initial: k }); return true; }
+  return false;
+}
+
+/** @private whether any shown column may be edited */
+function anyEditable(v) { return !v.model.pivotMode && v.model.shownColumns().some((c) => c.editable); }
 
 /** @private copied text: the clipboard, the note, the event */
 function copied(v, text, headers) {
@@ -197,6 +217,13 @@ export function openCellMenu(v, r, c, at) {
   let cells = 0;
   m.selection.ranges.forEach((g) => { cells += (g.r2 - g.r1 + 1) * (g.c2 - g.c1 + 1); });
   const items = cellMenuItems({ explain: !!v.o.explain, pivot: m.pivotMode, cells: cells, drill: drillable(v, x), groupBy: groupField(v, col), pinned: col.pinned, pinTotals: v.ui.pinTotals });
+  if (anyEditable(v)) {
+    const hist = m.editing.history(), can = m.editing.canEdit(r, c);
+    items.push({ sep: true }, { id: 'edit', label: 'Edit the cell', key: 'F2', icon: '✎', disabled: !can, why: can ? null : 'this cell cannot be edited' },
+      { id: 'undo', label: 'Undo the last edit', key: 'Ctrl+Z', disabled: !hist.undo, why: hist.undo ? null : 'nothing to undo' },
+      { id: 'redo', label: 'Redo', key: 'Ctrl+Y', disabled: !hist.redo, why: hist.redo ? null : 'nothing to redo' },
+      { id: 'clear-cells', label: 'Clear ' + (cells > 1 ? 'the ' + cells + ' cells' : 'the cell'), key: 'Delete' });
+  }
   v.menu.open(items, { x: at.x, y: at.y, label: 'Cell menu', theme: v.host, run: (id) => { v.emitView('menuAction', { menu: 'cell', action: id, row: r, column: col.id }); runAction(v, id, { row: r, col: c }); } });
   v.emitView('menuOpened', { menu: 'cell', row: r, column: col.id });
 }
@@ -310,6 +337,15 @@ export function runAction(v, id, at) {
     }
     case 'save-view': { const st = v.getState(); v.emitView('viewSaved', { state: st }); return v.say('View saved'); }
     case 'toggle-fields': v.ui.fieldsOpen = !v.ui.fieldsOpen; return v.renderChrome();
+    case 'edit': return f ? v.startEditing(f.row, f.col) : null;
+    case 'undo': return v.undo();
+    case 'redo': return v.redo();
+    case 'clear-cells': {
+      const g = m.selection.ranges[m.selection.ranges.length - 1];
+      const range = g ? { r1: Math.min(g.r1, g.r2), c1: Math.min(g.c1, g.c2), r2: Math.max(g.r1, g.r2), c2: Math.max(g.c1, g.c2) } : f ? { r1: f.row, c1: f.col, r2: f.row, c2: f.col } : null;
+      if (!range) { return null; }
+      return m.editing.clear(range).then((res) => { v.say(res.transaction ? 'Cleared ' + res.transaction.edits.length + (res.transaction.edits.length === 1 ? ' cell' : ' cells') : res.problems.length ? 'Not cleared: ' + res.problems[0].message : 'Nothing to clear'); return res; }, (e2) => v.say('Not cleared: ' + e2.message));
+    }
     default: throw new Error('no grid action ' + id);
   }
 }

@@ -24,7 +24,7 @@
    Value filters (keep the members of a level whose figure passes, "Desk where Notional > 1m") are the browser's: locally the figures
    are recomputed without the members left out; on a server answer the rows are hidden and the totals say they include them. */
 import { aggFunc, parseMeasure, isServerMeasure } from './drishti_aggregate.js';
-import { passes } from './drishti_sort-filter.js';
+import { passes } from '../../drishti-core/src/drishti_index.js';
 
 /** The unit separator joining a path's values in a key. */
 export const SEP = '\u001f';

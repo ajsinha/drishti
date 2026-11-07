@@ -20,7 +20,7 @@
    wherever sorting moves it. */
 import { EventBus } from '../../drishti-core/src/drishti_index.js';
 import { getValue } from './drishti_columns.js';
-import { compareRows, compareValues, rowFilter, isBlank } from './drishti_sort-filter.js';
+import { compareRows, compareValues, rowFilter, isBlank } from '../../drishti-core/src/drishti_index.js';
 import { aggFunc } from './drishti_aggregate.js';
 import { memberText, SEP } from './drishti_pivot.js';
 

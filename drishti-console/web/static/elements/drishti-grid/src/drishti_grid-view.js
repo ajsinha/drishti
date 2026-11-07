@@ -28,6 +28,7 @@ import { FlashTracker, PHONE_WIDTH, VIEW_EVENTS } from './drishti_grid-ui.js';
 import { GridBase } from './drishti_grid-base.js';
 import { buildShell, renderChrome, renderStatus, renderExplainArea } from './drishti_grid-shell.js';
 import { onKey, openColumnMenu, openCellMenu, runAction } from './drishti_grid-actions.js';
+import { CellEditor } from './drishti_grid-editors.js';
 
 let seq = 0;
 
@@ -85,6 +86,7 @@ export class Grid extends GridBase {
     this.notes = new Notes(host, this.uid);
     this.wells = new WellsView(this);
     this.body = new GridBody(this);
+    this.editor = new CellEditor(this);
     buildShell(this);
     this.wire();
     if (o.pivotOptions) { this.model.pivotExtra = Object.assign({}, o.pivotOptions); }
@@ -115,6 +117,12 @@ export class Grid extends GridBase {
     on('filterChanged', () => announce('Filter changed: ' + m.rowCount() + ' rows'));
     on('pivotChanged', (p) => { announce('Pivot: ' + p.rows + ' rows'); this.flash.reset(); });
     this.body.scroller.addEventListener('keydown', (e) => onKey(this, e));
+    this.body.scroller.addEventListener('paste', (e) => {
+      if (e.target.closest && e.target.closest('.dg-editor')) { return; }
+      const t = e.clipboardData ? e.clipboardData.getData('text/plain') : '';
+      if (t) { e.preventDefault(); this.pasteText(t); }
+    });
+    on('changed', (p) => { if (p.what === 'edit') { this.body.invalidate(); this.body.schedule(); } });
   }
 
   /** @private follows the element's width: a phone below phoneWidth */
@@ -264,6 +272,59 @@ export class Grid extends GridBase {
    */
   runAction(id, arg) { return runAction(this, id, arg); }
 
+  // ---- editing (drishti_grid-edit.js, drishti_grid-editors.js) ------------------------------------------------------------------------
+  /**
+   * Starts editing a cell (Enter, F2, a double click or typing do it); a checkbox turns at once.
+   * @param {number} r
+   * @param {number} c
+   * @param {{initial: string}} [o] a typed character that replaces the value
+   * @returns {boolean} whether editing started
+   */
+  startEditing(r, c, o) { return this.editor.start(r, c, o); }
+
+  /**
+   * Stops editing: saves the value (cancel false) or leaves the cell as it was.
+   * @param {boolean} [cancel]
+   * @returns {Promise<boolean>} whether a value was saved
+   */
+  stopEditing(cancel) { if (cancel) { this.editor.cancel(); return Promise.resolve(false); } return this.editor.commit(null); }
+
+  /**
+   * Takes the last edit transaction back.
+   * @returns {Promise<?Object>}
+   */
+  undo() { return this.model.editing.undo().then((tx) => { this.say(tx ? 'Undone: ' + tx.edits.length + (tx.edits.length === 1 ? ' cell' : ' cells') : 'Nothing to undo'); return tx; }, (e) => { this.say('Not undone: ' + e.message); return null; }); }
+
+  /**
+   * Does the last undone edit transaction again.
+   * @returns {Promise<?Object>}
+   */
+  redo() { return this.model.editing.redo().then((tx) => { this.say(tx ? 'Redone: ' + tx.edits.length + (tx.edits.length === 1 ? ' cell' : ' cells') : 'Nothing to redo'); return tx; }, (e) => { this.say('Not redone: ' + e.message); return null; }); }
+
+  /**
+   * Pastes tab-separated text (from Excel) at the focus, or fills the selected range with one value; one transaction.
+   * @param {string} text
+   * @returns {Promise<Object>} {transaction, pasted, skipped, problems}
+   */
+  pasteText(text) {
+    const m = this.model, f = m.navigator.focus, g = m.selection.ranges[m.selection.ranges.length - 1];
+    if (!f && !g) { this.say('Pick a cell to paste into'); return Promise.resolve({ transaction: null, pasted: 0, skipped: 0, problems: [] }); }
+    const at = g ? { r: Math.min(g.r1, g.r2), c: Math.min(g.c1, g.c2), r2: Math.max(g.r1, g.r2), c2: Math.max(g.c1, g.c2) } : { r: f.row, c: f.col };
+    return m.editing.paste(text, at).then((res) => {
+      const words = 'Pasted ' + res.pasted + (res.pasted === 1 ? ' cell' : ' cells') + (res.skipped ? '; ' + res.skipped + ' cannot be edited' : '') + (res.problems.length ? '; ' + res.problems.length + ' not valid: ' + res.problems[0].message : '');
+      this.say(words);
+      return res;
+    }, (e) => { this.say('Not pasted: ' + e.message); return { transaction: null, pasted: 0, skipped: 0, problems: [{ message: e.message }] }; });
+  }
+
+  /**
+   * A four-eyes proposal of an edit was decided: approved keeps the values, rejected puts them back.
+   * @param {string} proposalId
+   * @param {('approved'|'rejected')} decision
+   * @returns {boolean}
+   */
+  resolveProposal(proposalId, decision) { const ok = this.model.editing.resolveProposal(proposalId, decision); if (ok) { this.say('Proposal ' + proposalId + ' ' + decision); } return ok; }
+
   // ---- the public API ---------------------------------------------------------------------------------------------------------------------
   /**
    * Changes the layout: 'wells', 'panel' or 'terminal'.
@@ -400,6 +461,7 @@ export class Grid extends GridBase {
    * @returns {void}
    */
   destroy() {
+    this.editor.cancel();
     this.listeners.forEach((off) => off());
     this.body.destroy();
     this.menu.close();

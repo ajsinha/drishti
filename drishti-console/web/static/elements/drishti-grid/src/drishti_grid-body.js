@@ -93,7 +93,7 @@ export class GridBody {
   down(e) {
     if (e.button !== 0) { return; }
     const t = e.target;
-    if (t.closest('.dg-tw, input, button, .dg-resize, .dg-hcell')) { return; }
+    if (t.closest('.dg-tw, input, button, select, .dg-resize, .dg-hcell, .dg-editor')) { return; }
     const x = this.cellOf(e);
     if (!x) { return; }
     e.preventDefault();
@@ -148,6 +148,7 @@ export class GridBody {
     const x = this.cellOf(e);
     if (!x) { return; }
     this.model.cellDoubleClicked(x.r, x.c);
+    if (this.model.editing.canEdit(x.r, x.c)) { this.view.startEditing(x.r, x.c); return; }
     if (this.model.navigator.grid.isGroup(x.r)) { this.model.toggleRow(x.r); this.view.announceRow(x.r); }
   }
 
@@ -270,6 +271,7 @@ export class GridBody {
     const why = v.emptyText();
     this.empty.hidden = !why;
     this.empty.textContent = why || '';
+    if (v.editor) { v.editor.place(); }
   }
 
   /** @private one pane's heading cells at a level */
@@ -367,6 +369,12 @@ export class GridBody {
     if (loading) { cls += ' dg-loading'; }
     if (d.pane === 'right' && disp.right[0] === d) { cls += ' dg-edge'; }
     if (m.selection.inRange(r, c)) { cls += ' dg-in-range'; }
+    let note = null;
+    if (x.kind === 'leaf' && col.editable) {
+      const mark = m.editing.markOf(x.id, col.id);
+      if (m.editing.canEdit(r, c)) { cls += ' dg-editable'; }
+      if (mark) { cls += ' dg-' + mark; note = mark === 'proposed' ? 'Waiting for a second person to approve' : 'Changed here'; }
+    }
     const focused = k.focus && k.focus.row === r && k.focus.col === c;
     if (focused) { cls += ' dg-focus'; }
     if (num && typeof value === 'number' && !total && !loading) {
@@ -378,7 +386,8 @@ export class GridBody {
       if (f) { cls += ' dg-flash-' + f.dir; style['animation-delay'] = (-f.age) + 'ms'; }
     }
     const cell = h(doc, 'div', { cls: cls, attrs: { role: col.rowHeader ? 'rowheader' : 'gridcell', id: this.uid + '-r' + r + '-c' + c, 'aria-colindex': String(c + 1),
-      'aria-selected': k.selected || m.selection.inRange(r, c) ? 'true' : null }, data: { r: String(r), c: String(c) }, style: style });
+      'aria-selected': k.selected || m.selection.inRange(r, c) ? 'true' : null, 'aria-readonly': x.kind === 'leaf' && col.editable && !m.editing.canEdit(r, c) ? 'true' : null,
+      title: note }, data: { r: String(r), c: String(c) }, style: style });
     if (k.first && !loading) {
       const depth = x.depth || 0;
       if (depth) { cell.style.paddingLeft = (8 + depth * 16) + 'px'; }

@@ -27,8 +27,9 @@ import { GridNavigator } from './drishti_keyboard.js';
 import { WellsModel } from './drishti_wells.js';
 import { PivotState, pivotLocal, pivotApplyUpdates, serverRequest, mergeAnswer, applyValueFilters, resultColumns, cellValue } from './drishti_pivot.js';
 import { GridLive } from './drishti_grid-live.js';
+import { GridEditing } from './drishti_grid-edit.js';
 import { toCsv, toXlsx } from './drishti_export.js';
-import { cycleSort } from './drishti_sort-filter.js';
+import { cycleSort } from '../../drishti-core/src/drishti_index.js';
 
 /** The layouts a grid is drawn in (the visual shell; the model is the same). */
 export const LAYOUTS = Object.freeze(['wells', 'panel', 'terminal']);
@@ -54,6 +55,9 @@ export const DENSITIES = Object.freeze({ comfortable: 36, compact: 28, terminal:
  * @property {function({groupBy: string[], groups: Array<{path: string[], columns: string[]}>}): Promise<Array<{path: string[], values: Object}>>} [serverGroupTotals]
  *   the server's figures of row groups for their non-additive columns (VaR, ES), asked when grouping and again after updates (debounced)
  * @property {{asyncWaitMs: number, flashMs: number, serverDebounceMs: number}} [live] the live data's timings (drishti_grid-live.js)
+ * @property {{writeBack: function(Object): Promise<Object>, fourEyes: boolean, undoLimit: number}} [editing] cell editing
+ *   (drishti_grid-edit.js): the server's write-back hook (each edit transaction; it answers applied, refused or proposed), four eyes
+ * @property {string} [locale] how typed and pasted numbers are read (de-DE: 1.250,5)
  */
 
 /**
@@ -90,6 +94,8 @@ export class GridModel {
     });
     /** @type {GridLive} the typed events and the live data */
     this.live = new GridLive(this, o.live);
+    /** @type {GridEditing} cell editing: transactions, undo and redo, paste, write-back and four eyes */
+    this.editing = new GridEditing(this, Object.assign({ locale: o.locale }, o.editing));
     this.rowModel.events.on('rowsChanged', (p) => { this.viewport.setRowCount(this.rowCount()); this.events.emit('changed', { what: 'rows', reason: p.reason }); });
     this.rowModel.events.on('blockLoaded', (p) => this.live.emit('blockLoaded', p));
     this.rowModel.events.on('loadFailed', (p) => this.live.emit('blockFailed', p));
@@ -513,18 +519,17 @@ export class GridModel {
   cellDoubleClicked(r, c) { this.live.emit('cellDoubleClicked', this.cellContext(r, c) || {}); }
 
   /**
-   * An edit: a leaf's value of an editable column set (the row replaced by id, as a transaction) and cellValueChanged.
+   * An edit: a leaf's value of an editable column set, validated, as an edit transaction (rows updated by id, cellValueChanged and
+   * editTransaction told, kept for undo); the write-back hook, when there is one, hears it.
    * @param {number} r
    * @param {number} c
    * @param {*} value
-   * @returns {boolean} whether the value was set
+   * @returns {boolean} whether the value was set (false: the cell may not be edited, or the value is not valid)
    */
   setCellValue(r, c, value) {
-    const row = this.rowAt(r), col = this.shownColumns()[c];
-    if (!row || row.kind !== 'leaf' || !col || !col.editable || this.serverSide || col.valueGetter) { return false; }
-    const old = row.row[col.field], next = Object.assign({}, row.row, { [col.field]: value });
-    this.live.apply({ update: [next] });
-    this.live.emit('cellValueChanged', { rowId: row.id, colId: col.id, old: old, value: value });
+    const p = this.editing.plan([{ r: r, c: c, value: value }]);
+    if (p.problems.length) { return false; }
+    this.editing.apply(p.edits, 'api').catch(() => {});
     return true;
   }
 

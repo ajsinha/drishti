@@ -182,123 +182,10 @@
     }
     return { "ADDITIVE_FUNCS": ADDITIVE_FUNCS, "normalizeColumn": normalizeColumn, "getValue": getValue, "formatValue": formatValue, "ColumnModel": ColumnModel };
   })();
-  /* ---- src/drishti_sort-filter.js ---- */
-  __m["src/drishti_sort-filter.js"] = (function () {
-    const collator = typeof Intl !== 'undefined' ? new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }) : null;
-    function isBlank(v) { return v === null || v === undefined || v === '' || (typeof v === 'number' && isNaN(v)); }
-    function compareValues(a, b) {
-      if (typeof a === 'number' && typeof b === 'number') { return a - b; }
-      if (typeof a === 'boolean' && typeof b === 'boolean') { return (a ? 1 : 0) - (b ? 1 : 0); }
-      if (a instanceof Date && b instanceof Date) { return a.getTime() - b.getTime(); }
-      const sa = String(a), sb = String(b);
-      return collator ? collator.compare(sa, sb) : sa < sb ? -1 : sa > sb ? 1 : 0;
-    }
-    function compareRows(model, column, value) {
-      if (!model || !model.length) { return null; }
-      const items = model.map((s) => ({ col: column(s.colId), dir: s.sort === 'desc' ? -1 : 1 }));
-      return (ra, rb) => {
-        for (const it of items) {
-          const a = value(ra, it.col), b = value(rb, it.col);
-          const ba = isBlank(a), bb = isBlank(b);
-          if (ba || bb) { if (ba && bb) { continue; } return ba ? 1 : -1; }
-          const c = it.col.comparator ? it.col.comparator(a, b) : compareValues(a, b);
-          if (c) { return c * it.dir; }
-        }
-        return 0;
-      };
-    }
-    function cycleSort(model, colId, multi) {
-      const cur = (model || []).find((s) => s.colId === colId);
-      const next = !cur ? 'asc' : cur.sort === 'asc' ? 'desc' : null;
-      const rest = multi ? (model || []).filter((s) => s.colId !== colId) : [];
-      if (!next) { return rest; }
-      if (multi && cur) { return (model || []).map((s) => (s.colId === colId ? { colId: colId, sort: next } : s)); }
-      return rest.concat([{ colId: colId, sort: next }]);
-    }
-    function asNumber(v) { return typeof v === 'number' ? v : v === null || v === undefined || v === '' ? NaN : Number(v); }
-    function asDateText(v) { if (v instanceof Date) { return v.toISOString().slice(0, 10); } return v === null || v === undefined ? '' : String(v).slice(0, 10); }
-    function fold(s) { return String(s).toLowerCase(); }
-    function passes(v, f) {
-      if (!f) { return true; }
-      const op = f.op;
-      switch (f.type) {
-        case 'blank': return op === 'notBlank' ? !isBlank(v) : isBlank(v);
-        case 'set': {
-          const key = isBlank(v) ? null : typeof v === 'number' ? v : String(v);
-          if (f.values) { return f.values.some((x) => (x === null ? key === null : key !== null && String(x) === String(key))); }
-          if (f.excluded) { return !f.excluded.some((x) => (x === null ? key === null : key !== null && String(x) === String(key))); }
-          return true;
-        }
-        case 'number':
-        case 'date': {
-          if (op === 'blank') { return isBlank(v); }
-          if (op === 'notBlank') { return !isBlank(v); }
-          if (isBlank(v)) { return op === 'notEquals'; }
-          const conv = f.type === 'number' ? asNumber : asDateText;
-          const x = conv(v), a = conv(f.value), b = conv(f.valueTo);
-          switch (op || 'equals') {
-            case 'equals': return x === a;
-            case 'notEquals': return x !== a;
-            case 'lt': return x < a;
-            case 'lte': return x <= a;
-            case 'gt': return x > a;
-            case 'gte': return x >= a;
-            case 'between': return x >= a && x <= b;
-            default: throw new Error('no number or date filter ' + op);
-          }
-        }
-        default: {
-          if (op === 'blank') { return isBlank(v); }
-          if (op === 'notBlank') { return !isBlank(v); }
-          const t = isBlank(v) ? '' : fold(v), q = fold(f.value === undefined || f.value === null ? '' : f.value);
-          switch (op || 'contains') {
-            case 'contains': return t.indexOf(q) >= 0;
-            case 'notContains': return t.indexOf(q) < 0;
-            case 'equals': return t === q;
-            case 'notEquals': return t !== q;
-            case 'startsWith': return t.indexOf(q) === 0;
-            case 'endsWith': return t.length >= q.length && t.slice(t.length - q.length) === q;
-            default: throw new Error('no text filter ' + op);
-          }
-        }
-      }
-    }
-    function rowFilter(model, quick, columns, value) {
-      const byId = {};
-      columns.forEach((c) => { byId[c.id] = c; });
-      const parts = Object.keys(model || {}).filter((k) => model[k]).map((k) => {
-        if (!byId[k]) { throw new Error('a filter on ' + k + ', which is not a column'); }
-        return [byId[k], model[k]];
-      });
-      const words = String(quick || '').toLowerCase().split(/\s+/).filter(Boolean);
-      if (!parts.length && !words.length) { return null; }
-      return (row) => {
-        for (const [c, f] of parts) { if (!passes(value(row, c), f)) { return false; } }
-        if (words.length) {
-          const hay = columns.map((c) => { const v = value(row, c); return isBlank(v) ? '' : String(v).toLowerCase(); }).join('\u0001');
-          for (const w of words) { if (hay.indexOf(w) < 0) { return false; } }
-        }
-        return true;
-      };
-    }
-    function filterWords(model, header) {
-      const h = header || ((id) => id);
-      const sym = { equals: '=', notEquals: '≠', lt: '<', lte: '≤', gt: '>', gte: '≥' };
-      return Object.keys(model || {}).filter((k) => model[k]).map((k) => {
-        const f = model[k];
-        if (f.type === 'set') { return f.values ? h(k) + ' in ' + f.values.map((x) => (x === null ? '(blank)' : x)).join(', ') : h(k) + ' not ' + (f.excluded || []).join(', '); }
-        if (f.type === 'blank' || f.op === 'blank' || f.op === 'notBlank') { return h(k) + (f.op === 'notBlank' ? ' is not blank' : ' is blank'); }
-        if (f.op === 'between') { return h(k) + ' ' + f.value + ' to ' + f.valueTo; }
-        if (sym[f.op]) { return h(k) + ' ' + sym[f.op] + ' ' + f.value; }
-        return h(k) + ' ' + (f.op || 'contains').replace(/[A-Z]/g, (c) => ' ' + c.toLowerCase()) + ' "' + f.value + '"';
-      }).join('; ');
-    }
-    return { "isBlank": isBlank, "compareValues": compareValues, "compareRows": compareRows, "cycleSort": cycleSort, "passes": passes, "rowFilter": rowFilter, "filterWords": filterWords };
-  })();
   /* ---- src/drishti_pivot.js ---- */
   __m["src/drishti_pivot.js"] = (function () {
     var aggFunc = __m["src/drishti_aggregate.js"].aggFunc, parseMeasure = __m["src/drishti_aggregate.js"].parseMeasure, isServerMeasure = __m["src/drishti_aggregate.js"].isServerMeasure;
-    var passes = __m["src/drishti_sort-filter.js"].passes;
+    var passes = __lib("drishti-core").passes;
     const SEP = '\u001f';
     const BLANK = '(blank)';
     const PLAIN = typeof Intl !== 'undefined' ? new Intl.NumberFormat('en-US', { useGrouping: false, maximumSignificantDigits: 15 }) : null;
@@ -697,7 +584,7 @@
   __m["src/drishti_client-rows.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus;
     var getValue = __m["src/drishti_columns.js"].getValue;
-    var compareRows = __m["src/drishti_sort-filter.js"].compareRows, compareValues = __m["src/drishti_sort-filter.js"].compareValues, rowFilter = __m["src/drishti_sort-filter.js"].rowFilter, isBlank = __m["src/drishti_sort-filter.js"].isBlank;
+    var compareRows = __lib("drishti-core").compareRows, compareValues = __lib("drishti-core").compareValues, rowFilter = __lib("drishti-core").rowFilter, isBlank = __lib("drishti-core").isBlank;
     var aggFunc = __m["src/drishti_aggregate.js"].aggFunc;
     var memberText = __m["src/drishti_pivot.js"].memberText, SEP = __m["src/drishti_pivot.js"].SEP;
     class ClientRowModel {
@@ -1917,7 +1804,8 @@
   __m["src/drishti_grid-live.js"] = (function () {
     const GRID_EVENTS = Object.freeze(['cellClicked', 'cellDoubleClicked', 'cellValueChanged', 'focusChanged', 'selectionChanged', 'rangeChanged',
       'sortChanged', 'filterChanged', 'pivotChanged', 'groupChanged', 'rowExpanded', 'rowCollapsed', 'columnMoved', 'columnResized', 'columnPinned',
-      'columnVisible', 'rowDataUpdated', 'blockLoaded', 'blockFailed', 'explainOpened', 'serverTotalsUpdated', 'serverTotalsFailed']);
+      'columnVisible', 'rowDataUpdated', 'blockLoaded', 'blockFailed', 'explainOpened', 'serverTotalsUpdated', 'serverTotalsFailed', 'cellEditStarted',
+      'cellEditStopped', 'editTransaction', 'editUndone', 'editRedone', 'proposalResolved']);
     function domEventName(name) { return 'drishti:' + name.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase()); }
     class GridLive {
       constructor(grid, o) {
@@ -2031,6 +1919,217 @@
     }
     return { "GRID_EVENTS": GRID_EVENTS, "domEventName": domEventName, "GridLive": GridLive };
   })();
+  /* ---- src/drishti_grid-edit.js ---- */
+  __m["src/drishti_grid-edit.js"] = (function () {
+    var parseNumberText = __lib("drishti-core").parseNumberText;
+    const EDITORS = Object.freeze(['text', 'number', 'date', 'select', 'checkbox']);
+    function editorOf(col) {
+      if (col.editor && EDITORS.indexOf(col.editor) >= 0) { return col.editor; }
+      if (col.type === 'boolean') { return 'checkbox'; }
+      if (col.type === 'date') { return 'date'; }
+      if (col.options) { return 'select'; }
+      if (col.type === 'number') { return 'number'; }
+      return 'text';
+    }
+    function opt(o) { return o !== null && typeof o === 'object' ? { value: o.value, label: String(o.label !== undefined ? o.label : o.value) } : { value: o, label: String(o) }; }
+    function parseCellText(col, text, o) {
+      const t = String(text === null || text === undefined ? '' : text).trim(), ed = editorOf(col), L = col.header;
+      if (col.parse) { try { return { value: col.parse(t), error: null }; } catch (e) { return { value: undefined, error: e.message }; } }
+      if (!t) { return { value: null, error: null }; }
+      if (ed === 'number') { const v = parseNumberText(t, o && o.locale); return v === null ? { value: undefined, error: L + ': "' + t + '" is not a number (write 1,250,000, 1.25m or −5k)' } : { value: v, error: null }; }
+      if (ed === 'checkbox') {
+        if (/^(true|yes|y|1|x|✓|☑)$/i.test(t)) { return { value: true, error: null }; }
+        if (/^(false|no|n|0|☐)$/i.test(t)) { return { value: false, error: null }; }
+        return { value: undefined, error: L + ': "' + t + '" is not yes or no' };
+      }
+      if (ed === 'date') {
+        let m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(t), y, mo, d;
+        if (m) { y = +m[1]; mo = +m[2]; d = +m[3]; }
+        else if ((m = /^(\d{1,2})[/.](\d{1,2})[/.](\d{4})$/.exec(t))) { const dmy = !(o && o.locale && /^en-US/.test(o.locale)); y = +m[3]; mo = dmy ? +m[2] : +m[1]; d = dmy ? +m[1] : +m[2]; }
+        else if ((m = /^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\s+(\d{4})$/.exec(t))) { y = +m[3]; mo = 'janfebmaraprmayjunjulaugsepoctnovdec'.indexOf(m[2].toLowerCase()) / 3 + 1; d = +m[1]; }
+        const ok = y && mo >= 1 && mo <= 12 && d >= 1 && d <= new Date(Date.UTC(y, mo, 0)).getUTCDate();
+        return ok ? { value: String(y).padStart(4, '0') + '-' + String(mo).padStart(2, '0') + '-' + String(d).padStart(2, '0'), error: null } : { value: undefined, error: L + ': "' + t + '" is not a date (write 2026-11-06 or 6 Nov 2026)' };
+      }
+      if (ed === 'select') {
+        const opts = (col.options || []).map(opt), hit = opts.find((x) => x.label.toLowerCase() === t.toLowerCase() || String(x.value).toLowerCase() === t.toLowerCase());
+        return hit ? { value: hit.value, error: null } : { value: undefined, error: L + ': "' + t + '" is not one of ' + opts.map((x) => x.label).slice(0, 8).join(', ') + (opts.length > 8 ? ', …' : '') };
+      }
+      return { value: t, error: null };
+    }
+    function validateCell(col, v, row) {
+      const L = col.header, blank = v === null || v === undefined || v === '';
+      if (blank) { return col.required ? L + ' is required' : null; }
+      if (typeof v === 'number') {
+        if (col.min !== undefined && v < col.min) { return L + ' must be at least ' + col.min; }
+        if (col.max !== undefined && v > col.max) { return L + ' must be at most ' + col.max; }
+      }
+      if (typeof v === 'string' && col.maxLength && v.length > col.maxLength) { return L + ' may have at most ' + col.maxLength + ' characters'; }
+      if (col.options && editorOf(col) === 'select' && !(col.options.map(opt).some((x) => x.value === v))) { return L + ' must be one of the options'; }
+      if (col.validate) {
+        const r = col.validate(v, row);
+        if (typeof r === 'string' && r) { return r; }
+        if (r === false) { return L + ' is not valid'; }
+      }
+      return null;
+    }
+    function parseTsv(text) {
+      const s = String(text || '').replace(/\r\n?/g, '\n'), rows = [];
+      let row = [], cell = '', i = 0, quoted = false, start = true;
+      while (i < s.length) {
+        const ch = s[i];
+        if (quoted) {
+          if (ch === '"' && s[i + 1] === '"') { cell += '"'; i += 2; continue; }
+          if (ch === '"') { quoted = false; i++; continue; }
+          cell += ch; i++; continue;
+        }
+        if (ch === '"' && start) { quoted = true; start = false; i++; continue; }
+        if (ch === '\t') { row.push(cell); cell = ''; start = true; i++; continue; }
+        if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; start = true; i++; continue; }
+        cell += ch; start = false; i++;
+      }
+      if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+      return rows;
+    }
+    function plain(row) { return row && typeof row.toObject === 'function' ? row.toObject() : Object.assign({}, row); }
+    class GridEditing {
+      constructor(grid, o) {
+        this.grid = grid;
+        this.o = Object.assign({ undoLimit: 100 }, o);
+        this.undoStack = [];
+        this.redoStack = [];
+        this.seq = 0;
+        this.marks = new Map();
+        this.proposals = new Map();
+      }
+      canEdit(r, c) {
+        const g = this.grid, x = g.rowAt(r), col = g.shownColumns()[c];
+        if (!x || x.kind !== 'leaf' || !col || g.pivotMode || g.serverSide || col.valueGetter || col.rowHeader) { return false; }
+        if (this.marks.get(x.id + '\u001f' + col.id) === 'proposed') { return false; }
+        return typeof col.editable === 'function' ? !!col.editable(x.row) : !!col.editable;
+      }
+      markOf(rowId, colId) { return this.marks.get(rowId + '\u001f' + colId) || null; }
+      plan(cells) {
+        const g = this.grid, edits = [], problems = [], next = new Map();
+        cells.forEach((x) => {
+          if (!this.canEdit(x.r, x.c)) { problems.push({ r: x.r, c: x.c, message: 'This cell cannot be edited' }); return; }
+          const row = g.rowAt(x.r), col = g.shownColumns()[x.c];
+          const base = next.get(row.id) || plain(row.row);
+          base[col.field] = x.value;
+          const why = validateCell(col, x.value, base);
+          if (why) { problems.push({ r: x.r, c: x.c, message: why }); return; }
+          next.set(row.id, base);
+          const old = row.row[col.field];
+          if (old === x.value || (old === undefined && x.value === null)) { return; }
+          edits.push({ rowId: row.id, colId: col.id, field: col.field, old: old === undefined ? null : old, value: x.value });
+        });
+        return { edits: edits, problems: problems };
+      }
+      commit(cells, source) {
+        const p = this.plan(cells);
+        if (p.problems.length) { const e = new Error(p.problems[0].message); e.problems = p.problems; return Promise.reject(e); }
+        return this.apply(p.edits, source || 'edit');
+      }
+      apply(edits, source) {
+        const g = this.grid;
+        if (!edits.length) { return Promise.resolve({ id: 0, source: source, edits: [], status: 'applied', proposalId: null }); }
+        const tx = { id: ++this.seq, source: source, edits: edits, status: 'pending', proposalId: null };
+        this.write(edits, 'value');
+        edits.forEach((e) => this.marks.set(e.rowId + '\u001f' + e.colId, this.o.fourEyes ? 'proposed' : 'edited'));
+        if (source !== 'undo' && source !== 'redo') { this.undoStack.push(tx); if (this.undoStack.length > this.o.undoLimit) { this.undoStack.shift(); } this.redoStack = []; }
+        edits.forEach((e) => g.live.emit('cellValueChanged', { rowId: e.rowId, colId: e.colId, old: e.old, value: e.value, source: source, transaction: tx.id }));
+        const settle = (res) => {
+          res = res || {};
+          if (res.status === 'refused') { return this.refuse(tx, res.message || 'The server refused the change'); }
+          if (res.status === 'proposed' || this.o.fourEyes) {
+            tx.status = 'proposed';
+            tx.proposalId = res.proposalId || ('P-' + tx.id);
+            this.proposals.set(tx.proposalId, tx);
+            edits.forEach((e) => this.marks.set(e.rowId + '\u001f' + e.colId, 'proposed'));
+          } else { tx.status = 'applied'; }
+          g.live.emit('editTransaction', this.describe(tx));
+          g.events.emit('changed', { what: 'edit' });
+          return tx;
+        };
+        if (!this.o.writeBack) { return Promise.resolve(settle({ status: this.o.fourEyes ? 'proposed' : 'applied' })); }
+        return Promise.resolve().then(() => this.o.writeBack(this.describe(tx))).then(settle, (err) => this.refuse(tx, err && err.message ? err.message : String(err)));
+      }
+      refuse(tx, message) {
+        this.write(tx.edits, 'old');
+        tx.edits.forEach((e) => this.marks.delete(e.rowId + '\u001f' + e.colId));
+        this.undoStack = this.undoStack.filter((t) => t !== tx);
+        tx.status = 'refused';
+        tx.message = message;
+        this.grid.live.emit('editTransaction', this.describe(tx));
+        this.grid.events.emit('changed', { what: 'edit' });
+        const e = new Error(message);
+        e.transaction = tx;
+        throw e;
+      }
+      write(edits, which) {
+        const g = this.grid, rows = new Map();
+        edits.forEach((e) => {
+          const cur = rows.get(e.rowId) || plain(g.rowModel.getRowById(e.rowId));
+          cur[e.field] = e[which];
+          rows.set(e.rowId, cur);
+        });
+        g.live.apply({ update: Array.from(rows.values()) });
+      }
+      describe(tx) { return { id: tx.id, source: tx.source, status: tx.status, proposalId: tx.proposalId, message: tx.message || null, edits: tx.edits.map((e) => Object.assign({}, e)) }; }
+      undo() {
+        const tx = this.undoStack.pop();
+        if (!tx) { return Promise.resolve(null); }
+        this.redoStack.push(tx);
+        const back = tx.edits.slice().reverse().map((e) => Object.assign({}, e, { old: e.value, value: e.old }));
+        return this.apply(back, 'undo').then((t) => { back.forEach((e) => { if (this.marks.get(e.rowId + '\u001f' + e.colId) === 'edited') { this.marks.delete(e.rowId + '\u001f' + e.colId); } }); this.grid.live.emit('editUndone', { transaction: tx.id }); return t; });
+      }
+      redo() {
+        const tx = this.redoStack.pop();
+        if (!tx) { return Promise.resolve(null); }
+        this.undoStack.push(tx);
+        return this.apply(tx.edits.map((e) => Object.assign({}, e)), 'redo').then((t) => { this.grid.live.emit('editRedone', { transaction: tx.id }); return t; });
+      }
+      history() { return { undo: this.undoStack.length, redo: this.redoStack.length }; }
+      resolveProposal(proposalId, decision) {
+        const tx = this.proposals.get(proposalId);
+        if (!tx) { return false; }
+        this.proposals.delete(proposalId);
+        if (decision === 'rejected') { this.write(tx.edits, 'old'); tx.edits.forEach((e) => this.marks.delete(e.rowId + '\u001f' + e.colId)); this.undoStack = this.undoStack.filter((t) => t !== tx); }
+        else { tx.edits.forEach((e) => this.marks.set(e.rowId + '\u001f' + e.colId, 'edited')); }
+        tx.status = decision === 'rejected' ? 'rejected' : 'applied';
+        this.grid.live.emit('proposalResolved', { proposalId: proposalId, decision: decision, transaction: this.describe(tx) });
+        this.grid.events.emit('changed', { what: 'edit' });
+        return true;
+      }
+      paste(text, at) {
+        const g = this.grid, grid = parseTsv(text), R = g.rowCount(), C = g.shownColumns().length, cells = [], problems = [];
+        if (!grid.length) { return Promise.resolve({ transaction: null, pasted: 0, skipped: 0, problems: [] }); }
+        const fill = grid.length === 1 && grid[0].length === 1 && at.r2 !== undefined && (at.r2 > at.r || at.c2 > at.c);
+        const rows = fill ? at.r2 - at.r + 1 : grid.length, cols = fill ? at.c2 - at.c + 1 : Math.max.apply(null, grid.map((x) => x.length));
+        let skipped = 0;
+        for (let i = 0; i < rows && at.r + i < R; i++) {
+          for (let j = 0; j < cols && at.c + j < C; j++) {
+            const text1 = fill ? grid[0][0] : (grid[i] || [])[j];
+            if (text1 === undefined) { continue; }
+            const r = at.r + i, c = at.c + j;
+            if (!this.canEdit(r, c)) { skipped++; continue; }
+            const p = parseCellText(g.shownColumns()[c], text1, { locale: this.o.locale });
+            if (p.error) { problems.push({ r: r, c: c, message: p.error }); continue; }
+            cells.push({ r: r, c: c, value: p.value });
+          }
+        }
+        const plan = this.plan(cells);
+        plan.problems.forEach((x) => problems.push(x));
+        return this.apply(plan.edits, 'paste').then((tx) => ({ transaction: tx.edits.length ? tx : null, pasted: plan.edits.length, skipped: skipped, problems: problems }));
+      }
+      clear(range) {
+        const cells = [];
+        for (let r = range.r1; r <= range.r2; r++) { for (let c = range.c1; c <= range.c2; c++) { if (this.canEdit(r, c)) { cells.push({ r: r, c: c, value: null }); } } }
+        const plan = this.plan(cells);
+        return this.apply(plan.edits, 'clear').then((tx) => ({ transaction: tx.edits.length ? tx : null, problems: plan.problems }));
+      }
+    }
+    return { "EDITORS": EDITORS, "editorOf": editorOf, "parseCellText": parseCellText, "validateCell": validateCell, "parseTsv": parseTsv, "GridEditing": GridEditing };
+  })();
   /* ---- src/drishti_grid.js ---- */
   __m["src/drishti_grid.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus;
@@ -2043,8 +2142,9 @@
     var WellsModel = __m["src/drishti_wells.js"].WellsModel;
     var PivotState = __m["src/drishti_pivot.js"].PivotState, pivotLocal = __m["src/drishti_pivot.js"].pivotLocal, pivotApplyUpdates = __m["src/drishti_pivot.js"].pivotApplyUpdates, serverRequest = __m["src/drishti_pivot.js"].serverRequest, mergeAnswer = __m["src/drishti_pivot.js"].mergeAnswer, applyValueFilters = __m["src/drishti_pivot.js"].applyValueFilters, resultColumns = __m["src/drishti_pivot.js"].resultColumns, cellValue = __m["src/drishti_pivot.js"].cellValue;
     var GridLive = __m["src/drishti_grid-live.js"].GridLive;
+    var GridEditing = __m["src/drishti_grid-edit.js"].GridEditing;
     var toCsv = __m["src/drishti_export.js"].toCsv, toXlsx = __m["src/drishti_export.js"].toXlsx;
-    var cycleSort = __m["src/drishti_sort-filter.js"].cycleSort;
+    var cycleSort = __lib("drishti-core").cycleSort;
     const LAYOUTS = Object.freeze(['wells', 'panel', 'terminal']);
     const DENSITIES = Object.freeze({ comfortable: 36, compact: 28, terminal: 22 });
     class GridModel {
@@ -2075,6 +2175,7 @@
           explain: !!o.explain
         });
         this.live = new GridLive(this, o.live);
+        this.editing = new GridEditing(this, Object.assign({ locale: o.locale }, o.editing));
         this.rowModel.events.on('rowsChanged', (p) => { this.viewport.setRowCount(this.rowCount()); this.events.emit('changed', { what: 'rows', reason: p.reason }); });
         this.rowModel.events.on('blockLoaded', (p) => this.live.emit('blockLoaded', p));
         this.rowModel.events.on('loadFailed', (p) => this.live.emit('blockFailed', p));
@@ -2307,11 +2408,9 @@
       }
       cellDoubleClicked(r, c) { this.live.emit('cellDoubleClicked', this.cellContext(r, c) || {}); }
       setCellValue(r, c, value) {
-        const row = this.rowAt(r), col = this.shownColumns()[c];
-        if (!row || row.kind !== 'leaf' || !col || !col.editable || this.serverSide || col.valueGetter) { return false; }
-        const old = row.row[col.field], next = Object.assign({}, row.row, { [col.field]: value });
-        this.live.apply({ update: [next] });
-        this.live.emit('cellValueChanged', { rowId: row.id, colId: col.id, old: old, value: value });
+        const p = this.editing.plan([{ r: r, c: c, value: value }]);
+        if (p.problems.length) { return false; }
+        this.editing.apply(p.edits, 'api').catch(() => {});
         return true;
       }
       applyTransaction(tx) { return this.live.apply(tx); }
@@ -2393,23 +2492,7 @@
   })();
   /* ---- src/drishti_grid-dom.js ---- */
   __m["src/drishti_grid-dom.js"] = (function () {
-    function h(doc, tag, p, children) {
-      const el = doc.createElement(tag);
-      p = p || {};
-      if (p.cls) { el.className = p.cls; }
-      if (p.text !== undefined && p.text !== null) { el.textContent = p.text; }
-      if (p.attrs) { Object.keys(p.attrs).forEach((k) => { if (p.attrs[k] !== null && p.attrs[k] !== undefined && p.attrs[k] !== false) { el.setAttribute(k, p.attrs[k] === true ? '' : String(p.attrs[k])); } }); }
-      if (p.data) { Object.keys(p.data).forEach((k) => { el.dataset[k] = p.data[k]; }); }
-      if (p.style) { Object.keys(p.style).forEach((k) => { el.style.setProperty(k, p.style[k]); }); }
-      if (p.on) { Object.keys(p.on).forEach((k) => el.addEventListener(k, p.on[k])); }
-      (children || []).forEach((c) => { if (c !== null && c !== undefined) { el.appendChild(typeof c === 'string' ? doc.createTextNode(c) : c); } });
-      return el;
-    }
-    function placeAt(el, x, y) {
-      const win = el.ownerDocument.defaultView, r = el.getBoundingClientRect();
-      el.style.left = Math.max(4, Math.min(x, win.innerWidth - r.width - 8)) + 'px';
-      el.style.top = Math.max(4, Math.min(y, win.innerHeight - r.height - 8)) + 'px';
-    }
+    var h = __lib("drishti-core").h, placeAt = __lib("drishti-core").placeAt;
     let menuSeq = 0;
     class Menu {
       constructor(doc, o) {
@@ -2541,8 +2624,11 @@
     var LAYOUTS = __m["src/drishti_grid.js"].LAYOUTS, DENSITIES = __m["src/drishti_grid.js"].DENSITIES;
     var openDialog = __lib("drishti-core").openDialog;
     var h = __m["src/drishti_grid-dom.js"].h;
+    var editorOf = __m["src/drishti_grid-edit.js"].editorOf;
     function onKey(v, e) {
       const m = v.model, k = e.key, mod = e.ctrlKey || e.metaKey;
+      if (e.target !== v.body.scroller && e.target.closest && e.target.closest('.dg-editor')) { return; }
+      if (editKey(v, e)) { return; }
       if (mod && e.shiftKey && (k === 'c' || k === 'C')) { e.preventDefault(); runAction(v, 'copy-headers'); return; }
       if (k === 'F2') { e.preventDefault(); v.explainFocused(); return; }
       if ((e.shiftKey && k === 'F10') || k === 'ContextMenu') {
@@ -2571,6 +2657,19 @@
       }
       v.afterFocus(true);
     }
+    function editKey(v, e) {
+      const m = v.model, k = e.key, mod = e.ctrlKey || e.metaKey, f = m.navigator.focus;
+      if (mod && !e.altKey && (k === 'z' || k === 'Z')) { e.preventDefault(); if (e.shiftKey) { v.redo(); } else { v.undo(); } return true; }
+      if (mod && !e.altKey && (k === 'y' || k === 'Y')) { e.preventDefault(); v.redo(); return true; }
+      if (!f || mod || e.altKey) { return false; }
+      if ((k === 'Delete' || k === 'Backspace') && anyEditable(v)) { e.preventDefault(); runAction(v, 'clear-cells'); return true; }
+      if (!m.editing.canEdit(f.row, f.col)) { return false; }
+      const ed = editorOf(m.shownColumns()[f.col]);
+      if ((k === 'Enter' && !e.shiftKey) || k === 'F2' || (k === ' ' && ed === 'checkbox')) { e.preventDefault(); v.startEditing(f.row, f.col); return true; }
+      if (k.length === 1 && k !== ' ' && ed !== 'checkbox') { e.preventDefault(); v.startEditing(f.row, f.col, { initial: k }); return true; }
+      return false;
+    }
+    function anyEditable(v) { return !v.model.pivotMode && v.model.shownColumns().some((c) => c.editable); }
     function copied(v, text, headers) {
       v.lastCopy = text;
       const win = v.doc.defaultView;
@@ -2677,6 +2776,13 @@
       let cells = 0;
       m.selection.ranges.forEach((g) => { cells += (g.r2 - g.r1 + 1) * (g.c2 - g.c1 + 1); });
       const items = cellMenuItems({ explain: !!v.o.explain, pivot: m.pivotMode, cells: cells, drill: drillable(v, x), groupBy: groupField(v, col), pinned: col.pinned, pinTotals: v.ui.pinTotals });
+      if (anyEditable(v)) {
+        const hist = m.editing.history(), can = m.editing.canEdit(r, c);
+        items.push({ sep: true }, { id: 'edit', label: 'Edit the cell', key: 'F2', icon: '✎', disabled: !can, why: can ? null : 'this cell cannot be edited' },
+          { id: 'undo', label: 'Undo the last edit', key: 'Ctrl+Z', disabled: !hist.undo, why: hist.undo ? null : 'nothing to undo' },
+          { id: 'redo', label: 'Redo', key: 'Ctrl+Y', disabled: !hist.redo, why: hist.redo ? null : 'nothing to redo' },
+          { id: 'clear-cells', label: 'Clear ' + (cells > 1 ? 'the ' + cells + ' cells' : 'the cell'), key: 'Delete' });
+      }
       v.menu.open(items, { x: at.x, y: at.y, label: 'Cell menu', theme: v.host, run: (id) => { v.emitView('menuAction', { menu: 'cell', action: id, row: r, column: col.id }); runAction(v, id, { row: r, col: c }); } });
       v.emitView('menuOpened', { menu: 'cell', row: r, column: col.id });
     }
@@ -2768,6 +2874,15 @@
         }
         case 'save-view': { const st = v.getState(); v.emitView('viewSaved', { state: st }); return v.say('View saved'); }
         case 'toggle-fields': v.ui.fieldsOpen = !v.ui.fieldsOpen; return v.renderChrome();
+        case 'edit': return f ? v.startEditing(f.row, f.col) : null;
+        case 'undo': return v.undo();
+        case 'redo': return v.redo();
+        case 'clear-cells': {
+          const g = m.selection.ranges[m.selection.ranges.length - 1];
+          const range = g ? { r1: Math.min(g.r1, g.r2), c1: Math.min(g.c1, g.c2), r2: Math.max(g.r1, g.r2), c2: Math.max(g.c1, g.c2) } : f ? { r1: f.row, c1: f.col, r2: f.row, c2: f.col } : null;
+          if (!range) { return null; }
+          return m.editing.clear(range).then((res) => { v.say(res.transaction ? 'Cleared ' + res.transaction.edits.length + (res.transaction.edits.length === 1 ? ' cell' : ' cells') : res.problems.length ? 'Not cleared: ' + res.problems[0].message : 'Nothing to clear'); return res; }, (e2) => v.say('Not cleared: ' + e2.message));
+        }
         default: throw new Error('no grid action ' + id);
       }
     }
@@ -3021,7 +3136,7 @@
       down(e) {
         if (e.button !== 0) { return; }
         const t = e.target;
-        if (t.closest('.dg-tw, input, button, .dg-resize, .dg-hcell')) { return; }
+        if (t.closest('.dg-tw, input, button, select, .dg-resize, .dg-hcell, .dg-editor')) { return; }
         const x = this.cellOf(e);
         if (!x) { return; }
         e.preventDefault();
@@ -3070,6 +3185,7 @@
         const x = this.cellOf(e);
         if (!x) { return; }
         this.model.cellDoubleClicked(x.r, x.c);
+        if (this.model.editing.canEdit(x.r, x.c)) { this.view.startEditing(x.r, x.c); return; }
         if (this.model.navigator.grid.isGroup(x.r)) { this.model.toggleRow(x.r); this.view.announceRow(x.r); }
       }
       context(e) {
@@ -3173,6 +3289,7 @@
         const why = v.emptyText();
         this.empty.hidden = !why;
         this.empty.textContent = why || '';
+        if (v.editor) { v.editor.place(); }
       }
       headPane(row, spans, disp, pane, lv, leaf) {
         const doc = this.doc, m = this.model;
@@ -3262,6 +3379,12 @@
         if (loading) { cls += ' dg-loading'; }
         if (d.pane === 'right' && disp.right[0] === d) { cls += ' dg-edge'; }
         if (m.selection.inRange(r, c)) { cls += ' dg-in-range'; }
+        let note = null;
+        if (x.kind === 'leaf' && col.editable) {
+          const mark = m.editing.markOf(x.id, col.id);
+          if (m.editing.canEdit(r, c)) { cls += ' dg-editable'; }
+          if (mark) { cls += ' dg-' + mark; note = mark === 'proposed' ? 'Waiting for a second person to approve' : 'Changed here'; }
+        }
         const focused = k.focus && k.focus.row === r && k.focus.col === c;
         if (focused) { cls += ' dg-focus'; }
         if (num && typeof value === 'number' && !total && !loading) {
@@ -3273,7 +3396,8 @@
           if (f) { cls += ' dg-flash-' + f.dir; style['animation-delay'] = (-f.age) + 'ms'; }
         }
         const cell = h(doc, 'div', { cls: cls, attrs: { role: col.rowHeader ? 'rowheader' : 'gridcell', id: this.uid + '-r' + r + '-c' + c, 'aria-colindex': String(c + 1),
-          'aria-selected': k.selected || m.selection.inRange(r, c) ? 'true' : null }, data: { r: String(r), c: String(c) }, style: style });
+          'aria-selected': k.selected || m.selection.inRange(r, c) ? 'true' : null, 'aria-readonly': x.kind === 'leaf' && col.editable && !m.editing.canEdit(r, c) ? 'true' : null,
+          title: note }, data: { r: String(r), c: String(c) }, style: style });
         if (k.first && !loading) {
           const depth = x.depth || 0;
           if (depth) { cell.style.paddingLeft = (8 + depth * 16) + 'px'; }
@@ -3324,6 +3448,153 @@
       }
     }
     return { "GridBody": GridBody };
+  })();
+  /* ---- src/drishti_grid-editors.js ---- */
+  __m["src/drishti_grid-editors.js"] = (function () {
+    var h = __lib("drishti-core").h, loaded = __lib("drishti-core").loaded, announce = __lib("drishti-core").announce, numberEditText = __lib("drishti-core").numberEditText, isoDate = __lib("drishti-core").isoDate;
+    var editorOf = __m["src/drishti_grid-edit.js"].editorOf, parseCellText = __m["src/drishti_grid-edit.js"].parseCellText;
+    class CellEditor {
+      constructor(view) {
+        this.view = view;
+        this.doc = view.doc;
+        this.at = null;
+        this.el = null;
+        this.busy = false;
+      }
+      isActive() { return !!this.at; }
+      start(r, c, o) {
+        const v = this.view, m = v.model;
+        if (this.at) { this.cancel(); }
+        if (!m.editing.canEdit(r, c)) { v.say(m.pivotMode ? 'A pivot\'s figures are computed: edit the rows behind them' : 'This cell cannot be edited'); return false; }
+        const col = m.shownColumns()[c], ed = editorOf(col), cur = m.cellValue(r, c);
+        if (ed === 'checkbox') { this.save(r, c, !cur, null); return true; }
+        v.focusCell(r, c);
+        this.at = { r: r, c: c, ed: ed, col: col, old: cur };
+        const box = this.el = h(this.doc, 'div', { cls: 'dg-editor dg-editor-' + ed, attrs: { role: 'presentation' } });
+        const msg = this.msg = h(this.doc, 'div', { cls: 'dg-editor-msg', attrs: { role: 'alert', id: v.uid + '-edit-msg', hidden: true } });
+        const label = col.header + ', row ' + (r + 1);
+        if (ed === 'select') {
+          const sel = this.input = h(this.doc, 'select', { cls: 'dg-editor-input', attrs: { 'aria-label': label, 'aria-describedby': msg.id } });
+          (col.options || []).forEach((x, i) => {
+            const val = x !== null && typeof x === 'object' ? x.value : x, lab = x !== null && typeof x === 'object' && x.label !== undefined ? x.label : String(x);
+            const op = h(this.doc, 'option', { text: lab, attrs: { value: String(i) } });
+            if (val === cur) { op.selected = true; }
+            if (o && o.initial && lab.toLowerCase().indexOf(o.initial.toLowerCase()) === 0 && !sel.dataset.typed) { op.selected = true; sel.dataset.typed = '1'; }
+            sel.appendChild(op);
+          });
+          box.appendChild(sel);
+        } else if (ed === 'date' && loaded('drishti-inputs') && loaded('drishti-inputs').DatePicker) {
+          const host = h(this.doc, 'div', { cls: 'dg-editor-picker' });
+          box.appendChild(host);
+          const picker = this.picker = new (loaded('drishti-inputs').DatePicker)(host, { value: cur || null, businessOnly: !!col.businessOnly, calendar: col.calendar, label: label, shortcuts: true });
+          this.input = picker.input;
+          this.input.setAttribute('aria-describedby', msg.id);
+          picker.on('change', () => Promise.resolve().then(() => { if (this.at && this.picker === picker) { this.commit({ dr: 0, dc: 0 }); } }));
+          if (o && o.initial) { this.input.value = o.initial; }
+        } else {
+          const inp = this.input = h(this.doc, 'input', { cls: 'dg-editor-input' + (ed === 'number' ? ' dg-num' : ''), attrs: { type: ed === 'date' ? 'date' : 'text', 'aria-label': label,
+            'aria-describedby': msg.id, inputmode: ed === 'number' ? 'decimal' : null, spellcheck: 'false', autocomplete: 'off' } });
+          inp.value = o && o.initial ? o.initial : ed === 'number' ? numberEditText(cur, m.editing.o.locale) : ed === 'date' ? isoDate(cur) : cur === null || cur === undefined ? '' : String(cur);
+          box.appendChild(inp);
+        }
+        box.appendChild(msg);
+        box.addEventListener('keydown', (e) => this.key(e), true);
+        box.addEventListener('focusout', () => this.doc.defaultView.setTimeout(() => this.left(), 0));
+        v.body.area.appendChild(box);
+        this.place();
+        this.input.focus();
+        if (this.input.select && !(o && o.initial)) { this.input.select(); }
+        if (this.picker && !(o && o.initial)) { this.picker.open(); this.input.focus(); }
+        m.live.emit('cellEditStarted', { row: r, col: c, colId: col.id, rowId: m.idAt(r), value: cur, editor: ed });
+        announce('Editing ' + label + '. Enter saves, Escape cancels');
+        return true;
+      }
+      place() {
+        if (!this.at || !this.el) { return; }
+        const v = this.view, cell = this.doc.getElementById(v.uid + '-r' + this.at.r + '-c' + this.at.c);
+        if (!cell) { this.el.style.visibility = 'hidden'; return; }
+        const a = v.body.area.getBoundingClientRect(), r = cell.getBoundingClientRect();
+        this.el.style.visibility = 'visible';
+        this.el.style.left = (r.left - a.left) + 'px';
+        this.el.style.top = (r.top - a.top) + 'px';
+        this.el.style.width = Math.max(r.width, this.at.ed === 'date' ? 150 : 60) + 'px';
+        this.el.style.height = r.height + 'px';
+      }
+      key(e) {
+        if (!this.at) { return; }
+        const k = e.key;
+        if (this.picker && this.picker.pop.isOpen() && (k === 'Escape' || k === 'ArrowDown' || k === 'ArrowUp')) { e.stopPropagation(); return; }
+        e.stopPropagation();
+        if (k === 'Escape') { e.preventDefault(); this.cancel(); return; }
+        if (k === 'Enter') { e.preventDefault(); this.commit({ dr: e.shiftKey ? -1 : 1, dc: 0 }); return; }
+        if (k === 'Tab') { e.preventDefault(); this.commit({ dr: 0, dc: e.shiftKey ? -1 : 1 }); }
+      }
+      left() {
+        if (!this.at || this.busy) { return; }
+        const a = this.doc.activeElement;
+        if (this.el && this.el.contains(a)) { return; }
+        if (this.picker && this.picker.pop.el && this.picker.pop.el.contains(a)) { return; }
+        this.commit(null, true);
+      }
+      read() {
+        const at = this.at;
+        if (at.ed === 'select') { const i = this.input.value === '' ? -1 : +this.input.value, x = (at.col.options || [])[i]; return { value: x !== null && typeof x === 'object' ? x.value : x, error: null }; }
+        if (this.picker) {
+          const t = this.input.value.trim();
+          if (!t) { return { value: null, error: null }; }
+          if (!this.picker.validate()) { return { value: undefined, error: this.picker.msg.textContent || at.col.header + ': not a date' }; }
+          return { value: this.picker.getValue(), error: null };
+        }
+        return parseCellText(at.col, this.input.value, { locale: this.view.model.editing.o.locale });
+      }
+      commit(move, leaving) {
+        if (!this.at || this.busy) { return Promise.resolve(false); }
+        const at = this.at, got = this.read();
+        if (got.error) { return Promise.resolve(this.problem(got.error, leaving)); }
+        return this.save(at.r, at.c, got.value, move, leaving);
+      }
+      save(r, c, value, move, leaving) {
+        const v = this.view, m = v.model;
+        this.busy = true;
+        const p = m.editing.commit([{ r: r, c: c, value: value }], 'edit');
+        return p.then((tx) => {
+          this.busy = false;
+          this.close(true);
+          if (tx.status === 'proposed') { v.say('Sent for approval (' + tx.proposalId + '): the cell is marked until a second person decides'); }
+          else if (tx.edits.length) { v.say('Saved ' + m.shownColumns()[c].header); }
+          if (move) { m.navigator.setFocus(r + move.dr, c + move.dc); m.selection.startRange(m.navigator.focus.row, m.navigator.focus.col, {}); v.afterFocus(true); }
+          v.body.scroller.focus({ preventScroll: true });
+          return true;
+        }, (err) => {
+          this.busy = false;
+          if (err.problems) { return this.problem(err.problems[0].message, leaving); }
+          this.close(false);
+          v.say('Not saved: ' + err.message);
+          v.body.scroller.focus({ preventScroll: true });
+          return false;
+        });
+      }
+      problem(text, leaving) {
+        if (leaving || !this.el) { this.close(false); this.view.say('Not saved: ' + text); return false; }
+        this.msg.hidden = false;
+        this.msg.textContent = text;
+        this.input.setAttribute('aria-invalid', 'true');
+        this.el.classList.add('dg-editor-bad');
+        this.view.model.live.emit('cellEditStopped', { row: this.at.r, col: this.at.c, saved: false, problem: text });
+        this.input.focus();
+        return false;
+      }
+      cancel() { if (this.at) { this.close(false); this.view.say('Edit cancelled'); this.view.body.scroller.focus({ preventScroll: true }); } }
+      close(saved) {
+        const at = this.at;
+        this.at = null;
+        if (this.picker) { this.picker.close(); this.picker = null; }
+        if (this.el) { this.el.remove(); this.el = null; }
+        if (at) { this.view.model.live.emit('cellEditStopped', { row: at.r, col: at.c, saved: !!saved }); }
+        this.view.body.schedule();
+      }
+    }
+    return { "CellEditor": CellEditor };
   })();
   /* ---- src/drishti_grid-wells-ui.js ---- */
   __m["src/drishti_grid-wells-ui.js"] = (function () {
@@ -3857,6 +4128,7 @@
     var GridBase = __m["src/drishti_grid-base.js"].GridBase;
     var buildShell = __m["src/drishti_grid-shell.js"].buildShell, renderChrome = __m["src/drishti_grid-shell.js"].renderChrome, renderStatus = __m["src/drishti_grid-shell.js"].renderStatus, renderExplainArea = __m["src/drishti_grid-shell.js"].renderExplainArea;
     var onKey = __m["src/drishti_grid-actions.js"].onKey, openColumnMenu = __m["src/drishti_grid-actions.js"].openColumnMenu, openCellMenu = __m["src/drishti_grid-actions.js"].openCellMenu, runAction = __m["src/drishti_grid-actions.js"].runAction;
+    var CellEditor = __m["src/drishti_grid-editors.js"].CellEditor;
     let seq = 0;
     class Grid extends GridBase {
       constructor(host, options) {
@@ -3884,6 +4156,7 @@
         this.notes = new Notes(host, this.uid);
         this.wells = new WellsView(this);
         this.body = new GridBody(this);
+        this.editor = new CellEditor(this);
         buildShell(this);
         this.wire();
         if (o.pivotOptions) { this.model.pivotExtra = Object.assign({}, o.pivotOptions); }
@@ -3912,6 +4185,12 @@
         on('filterChanged', () => announce('Filter changed: ' + m.rowCount() + ' rows'));
         on('pivotChanged', (p) => { announce('Pivot: ' + p.rows + ' rows'); this.flash.reset(); });
         this.body.scroller.addEventListener('keydown', (e) => onKey(this, e));
+        this.body.scroller.addEventListener('paste', (e) => {
+          if (e.target.closest && e.target.closest('.dg-editor')) { return; }
+          const t = e.clipboardData ? e.clipboardData.getData('text/plain') : '';
+          if (t) { e.preventDefault(); this.pasteText(t); }
+        });
+        on('changed', (p) => { if (p.what === 'edit') { this.body.invalidate(); this.body.schedule(); } });
       }
       watchSize() {
         const win = this.doc.defaultView;
@@ -3980,6 +4259,21 @@
       openColumnMenu(c, anchor) { openColumnMenu(this, c, anchor); }
       openCellMenu(r, c, at) { openCellMenu(this, r, c, at); }
       runAction(id, arg) { return runAction(this, id, arg); }
+      startEditing(r, c, o) { return this.editor.start(r, c, o); }
+      stopEditing(cancel) { if (cancel) { this.editor.cancel(); return Promise.resolve(false); } return this.editor.commit(null); }
+      undo() { return this.model.editing.undo().then((tx) => { this.say(tx ? 'Undone: ' + tx.edits.length + (tx.edits.length === 1 ? ' cell' : ' cells') : 'Nothing to undo'); return tx; }, (e) => { this.say('Not undone: ' + e.message); return null; }); }
+      redo() { return this.model.editing.redo().then((tx) => { this.say(tx ? 'Redone: ' + tx.edits.length + (tx.edits.length === 1 ? ' cell' : ' cells') : 'Nothing to redo'); return tx; }, (e) => { this.say('Not redone: ' + e.message); return null; }); }
+      pasteText(text) {
+        const m = this.model, f = m.navigator.focus, g = m.selection.ranges[m.selection.ranges.length - 1];
+        if (!f && !g) { this.say('Pick a cell to paste into'); return Promise.resolve({ transaction: null, pasted: 0, skipped: 0, problems: [] }); }
+        const at = g ? { r: Math.min(g.r1, g.r2), c: Math.min(g.c1, g.c2), r2: Math.max(g.r1, g.r2), c2: Math.max(g.c1, g.c2) } : { r: f.row, c: f.col };
+        return m.editing.paste(text, at).then((res) => {
+          const words = 'Pasted ' + res.pasted + (res.pasted === 1 ? ' cell' : ' cells') + (res.skipped ? '; ' + res.skipped + ' cannot be edited' : '') + (res.problems.length ? '; ' + res.problems.length + ' not valid: ' + res.problems[0].message : '');
+          this.say(words);
+          return res;
+        }, (e) => { this.say('Not pasted: ' + e.message); return { transaction: null, pasted: 0, skipped: 0, problems: [{ message: e.message }] }; });
+      }
+      resolveProposal(proposalId, decision) { const ok = this.model.editing.resolveProposal(proposalId, decision); if (ok) { this.say('Proposal ' + proposalId + ' ' + decision); } return ok; }
       setLayout(layout) {
         if (LAYOUTS.indexOf(layout) < 0) { throw new Error('no layout ' + layout + ' (' + LAYOUTS.join(', ') + ')'); }
         this.model.setLayout(layout);
@@ -4025,6 +4319,7 @@
         this.host.dispatchEvent(new this.doc.defaultView.CustomEvent(ev, { detail: detail || {}, bubbles: true, composed: true }));
       }
       destroy() {
+        this.editor.cancel();
         this.listeners.forEach((off) => off());
         this.body.destroy();
         this.menu.close();
@@ -4073,37 +4368,6 @@
   })();
   /* ---- src/drishti_live.js ---- */
   __m["src/drishti_live.js"] = (function () {
-    function parse(data, onError) {
-      try { return typeof data === 'string' ? JSON.parse(data) : data; } catch (e) { if (onError) { onError(new Error('the live feed sent text that is not JSON: ' + String(data).slice(0, 80))); } return null; }
-    }
-    function eventSourceFeed(url, o) {
-      o = o || {};
-      return {
-        subscribe(fn) {
-          const ES = o.EventSource || globalThis.EventSource;
-          if (!ES) { throw new Error('eventSourceFeed: this page has no EventSource'); }
-          const es = new ES(url, { withCredentials: !!o.withCredentials });
-          const on = (e) => { const m = parse(e.data, o.onError); if (m) { fn(m); } };
-          es.addEventListener(o.event || 'message', on);
-          if (o.onError) { es.addEventListener('error', () => o.onError(new Error('the live feed ' + url + ' failed; the browser tries again'))); }
-          return () => { es.removeEventListener(o.event || 'message', on); es.close(); };
-        }
-      };
-    }
-    function webSocketFeed(url, o) {
-      o = o || {};
-      return {
-        subscribe(fn) {
-          const WS = o.WebSocket || globalThis.WebSocket;
-          if (!WS) { throw new Error('webSocketFeed: this page has no WebSocket'); }
-          const ws = new WS(url, o.protocols);
-          const on = (e) => { const m = parse(e.data, o.onError); if (m) { fn(m); } };
-          ws.addEventListener('message', on);
-          if (o.onError) { ws.addEventListener('error', () => o.onError(new Error('the live feed ' + url + ' failed'))); }
-          return () => { ws.removeEventListener('message', on); ws.close(); };
-        }
-      };
-    }
     function manualFeed() {
       const subs = new Set();
       return {
@@ -4111,7 +4375,7 @@
         push(m) { subs.forEach((fn) => fn(m)); }
       };
     }
-    return { "eventSourceFeed": eventSourceFeed, "webSocketFeed": webSocketFeed, "manualFeed": manualFeed };
+    return { "manualFeed": manualFeed };
   })();
   /* ---- src/drishti_plain-render.js ---- */
   __m["src/drishti_plain-render.js"] = (function () {
@@ -4145,7 +4409,7 @@
   __m["src/drishti_index.js"] = (function () {
     var defineGridElement = __m["src/drishti_grid-element.js"].defineGridElement;
     function install(root) { if (root && root.document && root.customElements) { defineGridElement(root.customElements, root); } }
-    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "isBlank": __m["src/drishti_sort-filter.js"].isBlank, "compareValues": __m["src/drishti_sort-filter.js"].compareValues, "compareRows": __m["src/drishti_sort-filter.js"].compareRows, "cycleSort": __m["src/drishti_sort-filter.js"].cycleSort, "passes": __m["src/drishti_sort-filter.js"].passes, "rowFilter": __m["src/drishti_sort-filter.js"].rowFilter, "filterWords": __m["src/drishti_sort-filter.js"].filterWords, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot.js"].resultColumns, "cellValue": __m["src/drishti_pivot.js"].cellValue, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "toCsv": __m["src/drishti_export.js"].toCsv, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "LAYOUTS": __m["src/drishti_grid.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid.js"].DENSITIES, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "eventSourceFeed": __m["src/drishti_live.js"].eventSourceFeed, "webSocketFeed": __m["src/drishti_live.js"].webSocketFeed, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "h": __m["src/drishti_grid-dom.js"].h, "placeAt": __m["src/drishti_grid-dom.js"].placeAt, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement };
+    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "isBlank": __lib("drishti-core").isBlank, "compareValues": __lib("drishti-core").compareValues, "compareRows": __lib("drishti-core").compareRows, "cycleSort": __lib("drishti-core").cycleSort, "passes": __lib("drishti-core").passes, "rowFilter": __lib("drishti-core").rowFilter, "filterWords": __lib("drishti-core").filterWords, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot.js"].resultColumns, "cellValue": __m["src/drishti_pivot.js"].cellValue, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "toCsv": __m["src/drishti_export.js"].toCsv, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "LAYOUTS": __m["src/drishti_grid.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid.js"].DENSITIES, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "EDITORS": __m["src/drishti_grid-edit.js"].EDITORS, "editorOf": __m["src/drishti_grid-edit.js"].editorOf, "parseCellText": __m["src/drishti_grid-edit.js"].parseCellText, "validateCell": __m["src/drishti_grid-edit.js"].validateCell, "parseTsv": __m["src/drishti_grid-edit.js"].parseTsv, "GridEditing": __m["src/drishti_grid-edit.js"].GridEditing, "CellEditor": __m["src/drishti_grid-editors.js"].CellEditor, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "h": __m["src/drishti_grid-dom.js"].h, "placeAt": __m["src/drishti_grid-dom.js"].placeAt, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement };
   })();
   return Object.freeze(Object.assign({ library: "drishti-grid", version: "0.2.0" }, __m["src/drishti_index.js"]));
 });

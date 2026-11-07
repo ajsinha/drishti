@@ -45,6 +45,30 @@ export const MANIFEST = Object.freeze({
       "css": [
         "elements/drishti-grid/drishti_grid.css"
       ]
+    },
+    "drishti-inputs": {
+      "version": "0.1.0",
+      "title": "Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead, forms from a schema with four eyes, the filter bar, the code editor over CodeMirror",
+      "bundle": "drishti-inputs/drishti_inputs.js",
+      "entry": "drishti-inputs/src/drishti_index.js",
+      "global": "inputs",
+      "requires": [
+        "drishti-core"
+      ],
+      "css": [
+        "elements/drishti-inputs/drishti_inputs.css"
+      ]
+    },
+    "drishti-data": {
+      "version": "0.1.0",
+      "title": "Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client",
+      "bundle": "drishti-data/drishti_data.js",
+      "entry": "drishti-data/src/drishti_index.js",
+      "global": "data",
+      "requires": [
+        "drishti-core"
+      ],
+      "css": []
     }
   }
 });
