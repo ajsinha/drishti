@@ -55,7 +55,7 @@ public final class SettingProposals {
             return new Proposal(id, key, area, value, was, reason, proposedBy, proposedAt, newState, by, at, why, applied);
         }
 
-        Proposal applied() {
+        Proposal asApplied() {
             return new Proposal(id, key, area, value, was, reason, proposedBy, proposedAt, state, decidedBy, decidedAt, comment, true);
         }
     }
@@ -133,7 +133,7 @@ public final class SettingProposals {
         Proposal out = p.decided(approve ? "approved" : "rejected", by, now(), comment == null ? "" : comment.strip());
         if (approve && !"console".equals(p.area())) {
             writeLocal(p, by);
-            out = out.applied();
+            out = out.asApplied();
         }
         all.set(at, out);
         write(all);
@@ -165,7 +165,7 @@ public final class SettingProposals {
         if (!"approved".equals(p.state())) {
             throw new DrishtiException(ErrorCode.PROPOSAL_CONFLICT, "proposal " + id + " is not approved");
         }
-        Proposal out = p.applied();
+        Proposal out = p.asApplied();
         all.set(at, out);
         write(all);
         audit.record(by, "setting-applied", "setting/" + p.key(), p.area() + " | " + p.value());
