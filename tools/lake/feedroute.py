@@ -14,12 +14,13 @@
 
 """Where a feed file goes, for the command-line loaders (``lake build``, ``data ingest``): the one place that pairs a file with its
 ``.ready`` file and maps a table name (a file name's first segment, a tar's folder) to a pack and kind
-(docs/architecture/DATA_LOAD_RULES.md sections 3 and 5). The data inbox does the same in drishti-dataload (``Routes``, ``ReadyNote``).
+(docs/guides/DATA_LAKE_GUIDE.md sections 5 and 5). The data inbox does the same in drishti-dataload (``Routes``, ``ReadyNote``).
 
 * **Pairing**: ``<file>.ready`` (the data file's full name), or the name without its data extension (``trades.2026-11-03.ready``,
   ``eod.tar.ready``). A short name that could pair with two data files releases neither.
 * **Keys** (all optional; YAML or JSON; empty is fine): business-date, table, pack, kind, connector, mode, new-table, key, folders,
-  sha256, rows, hold. An unknown key refuses the file. The command line's own options win over the marker's.
+  sha256, rows, hold, lake (the lake the file goes to: a lake of config/lakes/). An unknown key refuses the file. The command line's own
+  options win over the marker's (``--lake`` over ``lake:``).
 * **The pack of a table**: the pack given (``--pack``, ``pack:``, a tar's ``folders:``); else the pack that already has a kind or table
   of that name (compared without case); else a pack of that name with a single kind. Two candidates or none: refused, listing them."""
 from __future__ import annotations
@@ -30,7 +31,8 @@ from dataclasses import dataclass
 from datetime import date
 
 READY = ".ready"
-READY_KEYS = ("business-date", "table", "pack", "kind", "connector", "mode", "new-table", "key", "folders", "sha256", "rows", "hold")
+#: the keys of a .ready file, in the documentation's order: the same list as the inbox's (drishti-dataload ReadyNote.KEYS; a test compares them)
+READY_KEYS = ("business-date", "table", "pack", "kind", "connector", "mode", "new-table", "key", "folders", "sha256", "rows", "hold", "lake")
 MODES = {"append": "append", "replace": "overwrite-dates", "overwrite-dates": "overwrite-dates"}
 DATA_EXTENSIONS = (".tar.gz", ".tar.zip", ".jsonl.gz", ".jsonl.zip", ".jsonl.zst", ".ndjson.gz", ".ndjson.zst", ".json.gz", ".tgz", ".tar",
                    ".jsonl", ".ndjson", ".json", ".gz", ".zip", ".zst")
@@ -97,6 +99,12 @@ def read_marker(path) -> dict:
         out["mode"] = MODES[mode]
     if out.get("table") is not None:
         out["table"] = str(out["table"]).lower()
+    if out.get("lake") is not None:
+        import re
+        out["lake"] = str(out["lake"]).strip()
+        if not re.fullmatch(r"[a-z0-9][a-z0-9_-]*", out["lake"]):
+            raise RouteError(f"{m.name}: lake {out['lake']}: a lake's name, lower-case letters, digits, '-' and '_' (risklake); its tables go to "
+                             "<data>/delta/<lake>/<domain>/<table>")
     if out.get("folders") is not None and not isinstance(out["folders"], dict):
         raise RouteError(f"{m.name}: folders: a mapping of a tar's folder to a pack ({{trades: core}})")
     if out.get("sha256"):

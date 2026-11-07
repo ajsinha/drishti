@@ -28,6 +28,10 @@ stops the users, when the machine has less than --min-free-gb available. Nothing
 from __future__ import annotations
 
 import argparse
+import sys as _sys
+from pathlib import Path as _P
+_sys.path.insert(0, str(_P(__file__).resolve().parents[1] / "lake"))
+import lakeconfig as LC  # noqa: E402  (the variable that names the demo lake's root)
 import base64
 import hashlib
 import hmac
@@ -200,7 +204,7 @@ class Bench:
             (home / "connectors" / f"{cname}.yaml").write_text(text, encoding="utf-8")
         env = dict(os.environ, JAVA_HOME=self.java, DRISHTI_TOKEN_SECRET=self.secret, DRISHTI_NET_SECRET=self.net_key,
                    DRISHTI_SECURITY_ENABLED="true", DRISHTI_DEMO_ENABLED="false", DRISHTI_OFFLINE="true", DRISHTI_DATA_DIR=str(home / "data"),
-                   DRISHTI_DELTA_ROOT=str(Path(self.a.lake).resolve()), DRISHTI_PACKS=PACKS, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"),
+                   **{LC.DEMO_ROOT_ENV: str(Path(self.a.lake).resolve())}, DRISHTI_PACKS=PACKS, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"),
                    DRISHTI_CONNECTORS_DIR=str(home / "connectors"), DRISHTI_STORE_ROOT=str(home / "data" / "fstore"), MALLOC_ARENA_MAX="2")
         jfr = self.work / "jfr" / f"{n}-run.jfr"
         flags = [f"-Xmx{self.a.heap}", *gc_flags(self.a.gc, self.a.java), "-XX:MaxDirectMemorySize=256m", "-XX:TrimNativeHeapInterval=60000",

@@ -17,7 +17,7 @@
 # written here: credentials come from the AWS default chain (the ECS task role, a profile, AWS_ACCESS_KEY_ID); an S3-compatible
 # store adds s3.endpoint and keys as ${ENV} references (other/customer-lake.yaml). Guide: DELTA_CONNECTOR.md section 17.
 # The lake (delta, its root or catalog, storage and tables) is config/lakes.examples/delta-s3/s3.yaml: copy it to
-# config/lakes/s3.yaml beside this file (docs/guides/LAKE_GUIDE.md). This file keeps only what the connector reads.
+# config/lakes/s3.yaml beside this file (docs/guides/DATA_LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: delta
 kinds:
 - stress-scenario

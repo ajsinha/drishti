@@ -49,7 +49,7 @@ class CliLauncherScratchTest {
         assertThat(p).containsEntry("drishti.var.official.enabled", "false").containsEntry("drishti.ccr.exposure.official.enabled", "false")
                 .containsEntry("drishti.sources.plugins.demo.settings.ticking", "false").containsEntry("drishti.sources.connectors-generate", "false");
         Path site = Path.of(com.ash.drishti.api.DataDir.root()).toAbsolutePath().normalize();
-        assertThat(p).as("the site's lakes are read where they are").containsEntry("DRISHTI_DELTA_ROOT", site.resolve("delta").toString());
+        assertThat(p).as("the site's lakes are read where they are").containsEntry("DRISHTI_DELTA_ROOT", site.resolve("delta/demo").toString());
         assertThat(p).as("a lake the environment names is left to it").doesNotContainKey("DRISHTI_FILES_ROOT");
         assertThat(CliLauncher.scratchProperties(scratch, Map.of("DRISHTI_PACKS_OVERLAY", "x", "drishti.packs.installed-dir", "y"), Map.of()))
                 .as("the command line's own pack settings win").doesNotContainKeys("DRISHTI_PACKS_OVERLAY", "DRISHTI_PACKS_INSTALLED");

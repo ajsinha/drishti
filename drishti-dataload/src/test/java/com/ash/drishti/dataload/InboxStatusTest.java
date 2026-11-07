@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The Admin screen's board (DATALOAD_INBOX.md section 10, mock-up A) as {@link DataInbox#status()} gives it: every waiting file's state and
+ * The Admin screen's board (DATA_LAKE_GUIDE.md section 3.1, mock-up A) as {@link DataInbox#status()} gives it: every waiting file's state and
  * rule, the run loading table by table, the last cycles in words, failures with reasons and reports, today's duplicates, the rules and the
  * settings. Every figure the screen shows is here (the browser computes nothing).
  */
@@ -76,7 +76,7 @@ class InboxStatusTest {
         Map<String, Object> board = map(st.get("board"));
         List<Map<String, Object>> waiting = list(board.get("waiting"));
         assertThat(board.get("waitingCount")).isEqualTo(waiting.size()).isEqualTo(9);
-        // the business date each file will load under, and where it comes from (DATALOAD_INBOX.md section 5.1)
+        // the business date each file will load under, and where it comes from (DATA_LAKE_GUIDE.md section 5.2)
         assertThat(map(byFile(waiting, "trades-b.2026-11-02.jsonl").get("rule"))).containsEntry("date", "2026-11-02 from the name")
                 .containsEntry("nameDate", "2026-11-02");
         assertThat((String) map(byFile(waiting, "trades-b.2026-11-02.jsonl").get("rule")).get("text")).endsWith("· 2026-11-02 from the name");

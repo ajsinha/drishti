@@ -20,7 +20,7 @@
 
 For every dataset of data/testdata/testdata.yaml (written by tools/testdata/make_testdata.py) it rebuilds the daily snapshots (the
 first day's file, then each later day's changes applied by key; one file a day, <table>.<YYYY-MM-DD>.jsonl.gz) and loads each day with
-`lake build` (tools/lake/build.py) by the load rules (docs/architecture/DATA_LOAD_RULES.md): the day staged as <table>.<YYYY-MM-DD>.jsonl,
+`lake build` (tools/lake/build.py) by the load rules (docs/guides/DATA_LAKE_GUIDE.md): the day staged as <table>.<YYYY-MM-DD>.jsonl,
 its business date from that name, mode replace, into the table the dataset's Delta connector reads: <lake>/<domain>/<kind>/, the trades
 into trading/trade_endur, trade_calypso and trade_murex, partitioned by business date (and PRODUCT_TYPE for trades). Each table is
 written afresh (its folder is removed first). A dataset ``dated-by`` its BUSINESS_DATE (the market-risk pack's VaR data, tools/packgen/var/make_var_data.py:
@@ -37,7 +37,7 @@ and gleif packs' public data (data/testdata/us-equities and gleif, one snapshot 
 and gleif/<kind>, which their Delta connectors us-equities-store and gleif-store read, and the funds pack's (data/testdata/funds, a large
 kind in parts listed under `parts:`) into funds/<kind> for funds-store: no pack needs the demo connector.
 
-Connector files: the packs' Delta connectors read ${DRISHTI_DELTA_ROOT:<data>/delta}. With the default lake nothing needs
+Connector files: the packs' Delta connectors read the demo lake (lake: demo), ${DRISHTI_DELTA_ROOT:<data>/delta/demo}. With the default lake nothing needs
 changing; a connector file (config/connectors/<name>.yaml) that points elsewhere, or any of them when --lake is another folder, is
 written to point at the lake (its earlier text kept in <data>/connectors/history/). A missing file is left for the server to
 generate at its first start, except with --lake elsewhere, where it is written from the pack's template.
@@ -74,7 +74,9 @@ from datetime import date, datetime, timezone
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-DEFAULT_ROOT = "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
+sys.path.insert(0, str(HERE))
+import lakeconfig  # noqa: E402  (where the lakes are: config/lakes/<lake>.yaml)
+DEFAULT_ROOT = lakeconfig.DEMO_ROOT_REF   # config/lakes/demo.yaml: the demo lake's own folder
 DEFAULT_SERVER = "http://localhost:18480"
 SIGNAL_TIMEOUT = 30.0                        # seconds a data-load signal waits for its answer
 REBUILT_STAMP = "lake-rebuilt.json"          # read by the server at start (Layers.REBUILT_STAMP)
@@ -97,12 +99,15 @@ def data_dir() -> pathlib.Path:
 
 def demo_data_dir(a, lake: pathlib.Path) -> pathlib.Path:
     """The data folder the demo writes beside its lake (the feeds, the staging): --data-dir, else DRISHTI_DATA_DIR, else the folder holding
-    the lake when it is a data folder's delta/ (--lake /srv/data/delta: /srv/data), else the repository's data/. QA2-21: a server on another
+    the lake when it is a data folder's delta/<lake> or delta/ (--lake /srv/data/delta/demo or /srv/data/delta: /srv/data), else the
+    repository's data/. QA2-21: a server on another
     data folder found no feeds there (its file connector DOWN) because they went to the repository."""
     if getattr(a, "data_dir", None):
         return pathlib.Path(a.data_dir).resolve()
     if os.environ.get("DRISHTI_DATA_DIR"):
         return pathlib.Path(os.environ["DRISHTI_DATA_DIR"]).resolve()
+    if lake.parent.name == "delta" and lake.name != "delta":
+        return lake.parent.parent.resolve()
     if lake.name == "delta":
         return lake.parent.resolve()
     return (ROOT / "data").resolve()
@@ -215,8 +220,8 @@ class DemoLake:
     def __init__(self, a):
         self.a = a
         self.testdata = pathlib.Path(a.testdata)
-        self.lake = pathlib.Path(a.lake).resolve()
         self.lake_name = getattr(a, "lake_name", None) or "demo"      # the lake file whose layout the demo tables take (config/lakes/demo.yaml)
+        self.lake = pathlib.Path(a.lake or lakeconfig.root(self.lake_name)).resolve()   # unset: where the lake file says
         self.data = demo_data_dir(a, self.lake)
         self.staging = self.data / "build" / "lake-demo"
         self.packs = Packs(pathlib.Path(a.packs))
@@ -303,8 +308,13 @@ class DemoLake:
             return 0
         if self.names and not self.a.quiet:
             print("\n".join(self.names.lines()))
-        started = time.monotonic()
         sys.path.insert(0, str(HERE))
+        import stores
+        older = stores.older_layout(self.lake)
+        if older:
+            print("lake demo: " + stores.older_layout_words(self.lake, older), file=sys.stderr)
+            return 1
+        started = time.monotonic()
         import build as LB
         self.lb = LB
         self.staging.mkdir(parents=True, exist_ok=True)
@@ -575,10 +585,10 @@ class DemoLake:
 
     # ---- connector files -----------------------------------------------------------------------------------------------------------------
     def resolve(self, root: str) -> pathlib.Path:
-        m = re.fullmatch(r"\$\{DRISHTI_DELTA_ROOT:(.*)\}", root.strip())
+        m = re.fullmatch(r"\$\{" + lakeconfig.DEMO_ROOT_ENV + r":(.*)\}", root.strip())
         if m:
-            if os.environ.get("DRISHTI_DELTA_ROOT"):
-                return pathlib.Path(os.environ["DRISHTI_DELTA_ROOT"]).resolve()
+            if os.environ.get(lakeconfig.DEMO_ROOT_ENV):
+                return pathlib.Path(os.environ[lakeconfig.DEMO_ROOT_ENV]).resolve()
             root = m.group(1)
         root = root.replace("${drishti.data.dir:./data}", str(self.data))
         p = pathlib.Path(root)
@@ -661,7 +671,7 @@ class DemoLake:
         print("Connector files:")
         for n in notes:
             print("  " + n)
-        env = "" if self.lake == self.resolve(DEFAULT_ROOT) else f"DRISHTI_DELTA_ROOT={self.lake} "
+        env = "" if self.lake == self.resolve(DEFAULT_ROOT) else f"{lakeconfig.DEMO_ROOT_ENV}={self.lake} "
         print("\nNext:\n"
               "  1. Start the server on the lakes: IDE run configuration 'Drishti server (demo lakes)' (the samples off, so every page reads\n"
               "     the lakes; offline mode on, so quotes and headlines come from the captured snapshot and nothing reaches the internet), or\n"
@@ -684,9 +694,10 @@ class DemoLake:
 def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--testdata", default=str(ROOT / "data" / "testdata"), help="the committed test data (default data/testdata)")
     p.add_argument("--lake-name", default="demo", help="the lake file (config/lakes/<name>.yaml) that gives every demo table its layout (default demo)")
-    p.add_argument("--lake", default=str(data_dir() / "delta"), help="the Delta root to build (default <data>/delta, what the packs read)")
+    p.add_argument("--lake", help="the folder to build the lake into (default: the root of --lake-name's lake file, config/lakes/demo.yaml: "
+                   "<data>/delta/demo, what the packs read)")
     p.add_argument("--data-dir", help="the data folder the feeds and the staging go to (default DRISHTI_DATA_DIR, else the folder holding "
-                   "--lake when it is a delta/ folder, else data/): the server's own data folder")
+                   "--lake when it is in a delta/ folder, else data/): the server's own data folder")
     p.add_argument("--packs", default=str(ROOT / "config" / "packs"), help="the packs folder (default config/packs)")
     p.add_argument("--connectors-dir", help="the connector files' folder (default DRISHTI_CONNECTORS_DIR, else config/connectors)")
     p.add_argument("--as-of", default="today", metavar="today|data|YYYY-MM-DD", help="the last business date of the lake: today (default: "

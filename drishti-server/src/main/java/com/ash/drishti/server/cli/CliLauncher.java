@@ -94,7 +94,7 @@ public final class CliLauncher {
 
     /** Settings of the site's data folder a command reads, each named by the variable that overrides it, and its place in the data folder. */
     private static final String[][] READ_FROM_SITE = {
-        {"DRISHTI_DELTA_ROOT", "delta"}, {"DRISHTI_ICEBERG_ROOT", "iceberg"}, {"DRISHTI_FILES_ROOT", "files"}, {"DRISHTI_FEEDS", "feeds"},
+        {com.ash.drishti.lakeconfig.Lakes.DEMO_ROOT_ENV, "delta/demo"}, {"DRISHTI_ICEBERG_ROOT", "iceberg"}, {"DRISHTI_FILES_ROOT", "files"}, {"DRISHTI_FEEDS", "feeds"},
         {"DRISHTI_PACKS_OVERLAY", "packs/added.yaml"}, {"DRISHTI_PACKS_INSTALLED", "packs/installed"},
         {"DRISHTI_PACKS_SETTINGS", "packs/settings"}, {"DRISHTI_PACKS_SAMPLES_FILE", "packs/samples-mode"}};
 

@@ -292,7 +292,7 @@ and Flight add theirs once BI reads the layer. Every command takes `--json`.
 
 ### Offering a table for new data
 
-A table a data load creates (a new lake table, DATA_LOAD_RULES.md section 7) is offered a flat virtual table; nothing is defined until
+A table a data load creates (a new lake table, DATA_LAKE_GUIDE.md section 5.6) is offered a flat virtual table; nothing is defined until
 someone accepts it. `tables offer` reads a sample of the new documents and suggests one column per scalar field (a nested object's
 fields one level down, `$.OWNER.NAME` as `OWNER_NAME`), each typed from its values (`integer`, `decimal`, `boolean`, `date`,
 `timestamp`, else `string`), the id field (`id` or a name ending `_ID`) as the key when it is unique in the sample, and names each list
@@ -339,7 +339,7 @@ $ drishti.py tables migrate --report migration.txt --audit data/audit/tables-mig
 | translate | each DEL expression read by DEL's parser and mapped to Rachana's tree (section 2.4 of the design): the words (`True`, `None`, `and`, `or`, `not`), `a if c else b` as `c ? a : b`, `**` and `//` as `power` and `floor`, chained comparisons, `x is None`, the renamed functions (`startswith` is `starts_with`, `last` and `first` of a balance are `latest` and `earliest`, `cumulative` is `running`) |
 | rewrite | a bare column to its path (`MTM / 1000000` is `$.MTM / 1000000`); `alias.COLUMN.month` in a measure to `month(alias.COLUMN)`; the null rule (below) |
 | check | the result through the layer's checks, as `tables check` would |
-| write | the files under `config/tables/bi/`, each with the source file's licence lines and a line naming the file it came from; one audit line per file (`tables-migrate`: who, when, the file, the SHA-256 of before and after); the BI files stay until BI reads the layer (`--moved-to DIR` moves them) |
+| write | the files under `config/tables/bi/`, each with the source file's licence lines and a line naming the file it came from; one audit line per file (`tables-migrate`: who, when, the file, the SHA-256 of before and after); the BI files stay until BI reads the layer (`--moved-to DIR` moves them). A file already under `config/tables` is never replaced: one of the same shape (the same columns, a model with every measure) that holds at least the old dataset's row rules, masks and hidden columns is kept as it is, with whatever was added to it; any other is refused with the reason (rename one, or remove the file to have it written) |
 
 **The null rule, kept.** DEL, like SQL, makes a comparison with a missing value false; Rachana makes `null != 'X'` true. The migration
 rewrites every comparison whose meaning would change, so every figure stays the same:

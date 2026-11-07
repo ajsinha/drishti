@@ -45,6 +45,14 @@ def test_plan_reads_the_java_answer(tmp_path, monkeypatch):
     assert undo.words([], "R.1", False) == ["no row of load R.1 in the lake"]
 
 
+def test_log_lines_before_the_answer_are_skipped(tmp_path, monkeypatch):
+    """The exec jar's libraries log to standard output before the JSON array (pretty-printed over several lines)."""
+    monkeypatch.setattr(stores, "loader_command", lambda data, jar, java, main: ["fake-jvm", main])
+    out = "08:02:01.665 [main] INFO io.delta.kernel.internal.snapshot.SnapshotManager -- Loading log segment\n" + json.dumps([LINE], indent=1)
+    got = undo.plan(str(tmp_path), "R.1", True, runner=lambda cmd: types.SimpleNamespace(returncode=0, stdout=out))
+    assert got == [{**LINE, "format": "delta"}]
+
+
 def test_the_undo_is_confirmed_by_the_load_id(tmp_path, monkeypatch):
     monkeypatch.setattr(stores, "loader_command", lambda data, jar, java, main: ["fake-jvm", main])
     done = []

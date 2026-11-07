@@ -197,7 +197,7 @@ a Delta lake, so a machine without them runs everything else.
 
 ```bash
 uv run --with pyyaml python tools/drishti.py --help
-uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta
+uv run --with pyyaml --with deltalake --with pyarrow python tools/drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta/demo
 ```
 
 **With the console's environment** (what an IDE wants, see [section 14](#14-running-the-tools-from-pycharm-and-the-java-sutra-from-intellij);
@@ -1441,7 +1441,7 @@ candidate; exit 0, or 2 when nothing could be read.
 `data ingest` (`tools/ingest_jsonl.py`) writes JSON Lines documents into the dated store a pack reads. Inputs are folders of
 `*.jsonl` or single files, repeatable with `--from`. With `--pack` the domain, the columns promoted in the lake and the key field come
 from the pack's `pack.yaml` (including the `ingest:` block); without it give `--domain` (and `--key`, `--columns`). Each file goes under
-its business date by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): `--as-of`, else its `.ready` file's
+its business date by the load rules ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)): `--as-of`, else its `.ready` file's
 `business-date:`, else the date in its name (`trade.2026-11-03.jsonl`, kind `trade`), else the business today; the run says which, in
 `lake build`'s words (*trade.2026-11-03.jsonl: business date 2026-11-03 from the file name*). `--date FIELD` (or the pack's ingest
 `date`) is optional: it names the field the documents carry their own date in, and rows that say another date are only counted.
@@ -1492,7 +1492,7 @@ options:
   --batch-rows BATCH_ROWS
 
 examples:
-  drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta
+  drishti.py data ingest --from data/new --pack config/packs/my-bank --lake data/delta/demo
   drishti.py data ingest --from day1.jsonl --from day2.jsonl --pack config/packs/my-bank --store files --root data/files --dry-run
 ```
 
@@ -1721,7 +1721,7 @@ bash tools/load-files.sh data/demo-files --trades 1000 --days 2
 
 A real small run (200 trades, one day) into a scratch folder; the scripts write under the data folder (`DRISHTI_DATA_DIR`, else
 the repository's `data/`, which is not tracked) and never rewrite the shipped packs' samples. Each loader's heap is
-`DRISHTI_LOADER_HEAP` (default `4g`). Its input is loader rows by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)):
+`DRISHTI_LOADER_HEAP` (default `4g`). Its input is loader rows by the load rules ([DATA_LAKE_GUIDE.md](DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo)):
 `make_data.py` and `bulk_trades.py` write tars of `<kind>/<YYYY-MM-DD>/` folders under `data/build/loader-rows/`, removed after the
 load, and the loader files each row under its folder's date and says so:
 
@@ -3125,7 +3125,7 @@ $ drishti-console/.venv/bin/python tools/drishti.py server packs load curves-dem
 drishti: the server said 400 DRS-5001: DRS-5001 'curves-demo' is already loaded
 ```
 
-With a **Delta lake** instead: `--lake data/delta` in step 1 (the server's `DRISHTI_DELTA_ROOT`, default `<data>/delta`).
+With a **Delta lake** instead: `--lake data/delta/demo` in step 1 (the server's `DRISHTI_DELTA_ROOT`, default `<data>/delta`).
 
 4. Open the console, type `DC CRV-USD-OIS` and press Enter (`DC` is the mnemonic `pack new` chose, the kind's initials; see the pack's
    `README.md`). Pick a business date in the top bar: each date you ingested has its documents. The same from a shell:

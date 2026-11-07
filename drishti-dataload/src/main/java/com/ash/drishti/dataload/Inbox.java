@@ -29,7 +29,7 @@ import java.util.Comparator;
 import java.util.List;
 
 /**
- * The inbox folder and its hand-shake (DATALOAD_INBOX.md section 3): a data file is ready when its {@code <file>.ready} marker sits beside
+ * The inbox folder and its hand-shake (DATA_LAKE_GUIDE.md section 3.1): a data file is ready when its {@code <file>.ready} marker sits beside
  * it, or when {@code ready.all} is in the folder; and it is taken only once its size and time have not changed for the stable time.
  * Hidden names (a leading dot) are never looked at; a link, a folder or a name the loader does not read, once marked ready, is refused
  * (it goes to {@code failed/} with the reason). A file without a marker is never touched.
@@ -38,7 +38,7 @@ public final class Inbox {
 
     /** The marker's suffix: {@code trades.2026-11-03.jsonl.gz.ready} or {@code trades.2026-11-03.ready}. */
     public static final String READY = ".ready";
-    /** The data extensions a short marker's name leaves out (DATA_LOAD_RULES.md section 5), longest first. */
+    /** The data extensions a short marker's name leaves out (DATA_LAKE_GUIDE.md section 4), longest first. */
     static final List<String> DATA_EXTENSIONS = List.of(".tar.gz", ".tar.zip", ".jsonl.gz", ".jsonl.zip", ".jsonl.zst", ".ndjson.gz", ".ndjson.zst",
             ".json.gz", ".tgz", ".tar", ".jsonl", ".ndjson", ".json", ".gz", ".zip", ".zst");
 
@@ -101,7 +101,7 @@ public final class Inbox {
     public static final String NO_MARKER = "no-marker";
     public static final String NOT_STABLE = "not-stable";
     public static final String NEXT_CYCLE = "next-cycle";
-    /** A file whose {@code .ready} file says {@code hold: true}: it waits until the key is removed (DATA_LOAD_RULES.md section 5). */
+    /** A file whose {@code .ready} file says {@code hold: true}: it waits until the key is removed (DATA_LAKE_GUIDE.md section 4). */
     public static final String HELD = "held";
 
     /** A file that waits ({@code code}: {@link #NO_MARKER}, {@link #NOT_STABLE}, {@link #NEXT_CYCLE}) and why, in words. */

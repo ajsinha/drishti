@@ -227,7 +227,7 @@ def test_notebook_runs_against_the_demo_lake(nb, server, monkeypatch):
 def test_direct_lake_notebook_runs(monkeypatch):
     for m in NEEDS["09"]:
         pytest.importorskip(m)
-    root = Path(os.environ.get("DRISHTI_DELTA_ROOT") or REPO / "data" / "delta")
+    root = Path(os.environ.get("DRISHTI_DELTA_ROOT") or REPO / "data" / "delta" / "demo")
     if not (root / "trading" / "trade_endur").is_dir():
         pytest.skip(f"the demo lake is not on disk at {root}")
     ns = _run_notebook(PY / "09_direct_lake_read.ipynb", monkeypatch)

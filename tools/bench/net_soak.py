@@ -51,6 +51,10 @@ PID; nothing is written outside --work.
 from __future__ import annotations
 
 import argparse
+import sys as _sys
+from pathlib import Path as _P
+_sys.path.insert(0, str(_P(__file__).resolve().parents[1] / "lake"))
+import lakeconfig as LC  # noqa: E402  (the variable that names the demo lake's root)
 import base64
 import hashlib
 import hmac
@@ -283,7 +287,7 @@ class Soak:
             (work / "connectors" / f"{cname}.yaml").write_text(text, encoding="utf-8")
         assert port not in FORBIDDEN and not listening(port), f"port {port} is in use"
         env = dict(os.environ, DRISHTI_NET_SECRET=KEY, DRISHTI_TOKEN_SECRET=TOKEN_SECRET, DRISHTI_SECURITY_ENABLED="true",
-                   DRISHTI_DATA_DIR=str(work / "data"), DRISHTI_DELTA_ROOT=str(self.work / "lakes" / lake), DRISHTI_PACKS=packs,
+                   DRISHTI_DATA_DIR=str(work / "data"), **{LC.DEMO_ROOT_ENV: str(self.work / "lakes" / lake)}, DRISHTI_PACKS=packs,
                    DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_CONNECTORS_DIR=str(work / "connectors"),
                    DRISHTI_NET_DIR=str(work / "net"), DRISHTI_ACCESS_LOG="false", **server_env(getattr(self.a, "server_env", None)))
         args = [*jvm_args(self.a.heap, getattr(self.a, "jvm_arg", None)), "-jar", self.jar, f"--server.port={port}", f"--drishti.net.dir={work / 'net'}", "--drishti.net.poll=1s",

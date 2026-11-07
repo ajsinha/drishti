@@ -34,7 +34,7 @@ enabled: true                     # optional, default true
 kinds: [trade]                    # optional: the exact kinds it serves (see the rule below)
 description: Trading lake         # optional
 settings:                         # the plugin's settings; nesting is flattened to dotted keys
-  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
   domain: trading
 ```
 
@@ -67,7 +67,7 @@ numbers, `CLY-…`, `MX-…`), and each document says where it came from (the tr
 plugin: delta
 kinds: [trade]
 settings:
-  root: ${DRISHTI_DELTA_ROOT:./data/delta}
+  root: ${DRISHTI_DELTA_ROOT:./data/delta/demo}
   domain: trading
   union: true                   # one slice of the kind: the union of the three serves it
   table: { trade: trade_calypso }
@@ -801,7 +801,7 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [order, position]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
       domain: equity           # <root>/equity/order/, <root>/equity/position/
       mode.position: snapshot
       mode.order: effective    # an order row is written only when the order changes

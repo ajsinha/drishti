@@ -109,13 +109,13 @@ the pre-deal limit decision, among others.
   ([CONNECTORS.md](docs/connectors/CONNECTORS.md), [tutorial 4](docs/tutorials/04-connect-your-data.md)).
 - **One file per lake**: `config/lakes/<lake>.yaml` says where a lake is (a folder, `s3://` or `mem://`) and describes every table in it
   (partitions after `business_date`, promoted columns, vectors, load mode, retention). Loaders, the data inbox and connectors all refer to
-  it; `drishti.py lake check` compares it with the tables on disk ([LAKE_GUIDE.md](docs/guides/LAKE_GUIDE.md),
+  it; `drishti.py lake check` compares it with the tables on disk ([DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md),
   [tutorial 34](docs/tutorials/34-one-file-per-lake.md)).
 - **The load rules**: JSON Lines is the data standard. A plain file is one table and one business date, named in the file
   (`<name>.<YYYY-MM-DD>.jsonl.gz`); a `.ready` control file says the file is complete and may override the name; a tar archive carries
   several tables and dates and loads all or nothing. Loads **append** by default, and every row carries its load id, so
   `drishti.py lake undo <load-id>` removes exactly one load. Nothing is guessed: a file that breaks a rule is refused with the reason
-  ([DATA_LOAD_RULES.md](docs/architecture/DATA_LOAD_RULES.md), [tutorial 7](docs/tutorials/07-load-data-daily.md)).
+  ([DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md#5-routing-business-dates-modes-repeats-and-undo), [tutorial 7](docs/tutorials/07-load-data-daily.md)).
 - **The data inbox** loads the files your ETL drops, by routing rules, with Admin → Data loads to watch, retry and undo
   ([tutorial 36](docs/tutorials/36-load-files-with-the-data-inbox.md)). For large loads, the parallel Java loader is multi-threaded and
   memory-bounded ([PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md)).
@@ -233,7 +233,7 @@ guides. Start from the door that fits:
 |---|---|
 | use Drishti | [Use Drishti](docs/README.md#use-drishti): [USER_GUIDE.md](docs/guides/USER_GUIDE.md), [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), [EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [BI_GUIDE.md](docs/guides/BI_GUIDE.md) |
 | change how screens look | [Change how screens look](docs/README.md#change-how-screens-look): [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md), [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md) |
-| add an industry or data | [Add an industry or data](docs/README.md#add-an-industry-or-data): [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md), [DATA_GUIDE.md](docs/guides/DATA_GUIDE.md), [LAKE_GUIDE.md](docs/guides/LAKE_GUIDE.md) |
+| add an industry or data | [Add an industry or data](docs/README.md#add-an-industry-or-data): [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md), [DATA_GUIDE.md](docs/guides/DATA_GUIDE.md), [DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md) |
 | run and administer it | [Run and administer it](docs/README.md#run-and-administer-it): [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md), [OPERATIONS.md](docs/admin/OPERATIONS.md), [CONFIGURATION.md](docs/admin/CONFIGURATION.md) |
 | develop on it | [Develop on it](docs/README.md#develop-on-it): [PACK_DEVELOPER_GUIDE.md, Part VIII](docs/guides/PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide), [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [API_GUIDE.md](docs/guides/API_GUIDE.md) |
 

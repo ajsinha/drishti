@@ -67,7 +67,7 @@ settings:
   lake-tables: news.news-topic,news.listed-company,news.news,news.quote
 ```
 
-The store is a lake like any other ([LAKE_GUIDE.md section 6](LAKE_GUIDE.md#6-in-memory-stores)): its own lake file, its root
+The store is a lake like any other ([IN_MEMORY_LAKE_GUIDE.md](IN_MEMORY_LAKE_GUIDE.md)): its own lake file, its root
 `mem://<store>`, its cap and contract under `memory:`:
 
 ```yaml

@@ -38,12 +38,12 @@ Contents: [1](#1-the-model-in-one-minute) the model · [2](#2-the-folder) the fo
   pack.yaml (trading)                    config/connectors/trade-endur.yaml          the system behind it
   ───────────────────                    ──────────────────────────────────          ────────────────────
   kinds: [trade, …]                      plugin: delta
-  connectors:                       ──►  kinds: [trade]                         ──►  data/delta/trading/trade_endur
+  connectors:                       ──►  kinds: [trade]                         ──►  data/delta/demo/trading/trade_endur
     trade-endur:   {template}            settings: { root: …, domain: trading,       (a Delta table, partitioned by
     trade-calypso: {template}                        table.trade: trade_endur,         business date and PRODUCT_TYPE)
     trade-murex:   {template}                        union: true, … }
-  routes: {trade: trade-endur, …}        config/connectors/trade-calypso.yaml   ──►  data/delta/trading/trade_calypso
-                                         config/connectors/trade-murex.yaml     ──►  data/delta/trading/trade_murex
+  routes: {trade: trade-endur, …}        config/connectors/trade-calypso.yaml   ──►  data/delta/demo/trading/trade_calypso
+                                         config/connectors/trade-murex.yaml     ──►  data/delta/demo/trading/trade_murex
 ```
 
 - The **pack** says *what* it needs: the kinds it owns and, in `routes:`, which connector answers each kind first.
@@ -94,7 +94,7 @@ enabled: "${DRISHTI_LAKE_ENABLED:true}"   # optional, default true
 kinds: [trade]                    # optional: the kinds it serves (default: what the plugin and the pack's routes say)
 description: ENDUR trades         # optional, free text
 settings:                         # the plugin's settings; nesting is flattened to the dotted keys the plugin reads
-  root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
+  root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}"
   domain: trading
   table.trade: trade_endur        # the table under <root>/<domain>/ that holds the kind (default: the kind's name)
   union: "true"                   # one slice of 'trade' among several connectors
@@ -163,7 +163,7 @@ enabled: "${DRISHTI_LAKE_ENABLED:true}"
 kinds:
 - trade
 settings:
-  root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
+  root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}"
   domain: trading
   layout.trade.columns: "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,PRODUCT_SUB_TYPE,PRODUCT_GROUP,TRADE_STATUS,TRADE_VERSION,BUY_SELL_CODE,CURRENCY,QUANTITY,TRADE_DATE,MATURITY_DATE,COUNTERPARTY,LEGAL_ENTITY,PORTFOLIO,TRADER_ID"
   layout.trade.sort-by: id
@@ -376,7 +376,7 @@ connectors:                         # a mapping: each entry is a TEMPLATE the se
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [trade]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
       domain: trading
       layout:
         trade:
@@ -853,7 +853,7 @@ connector trade-endur   origin file   plugin delta   running   version 1a3893dbc
   settings (credentials masked):
   setting                      value
   ---------------------------  ------------------------------------------------------------------
-  root                         ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+  root                         ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
   domain                       trading
   layout.trade.columns         TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,PRODUCT_SUB_TYPE,PRODUCT_GROUP,TRADE_STATUS,…
   layout.trade.sort-by         id
@@ -975,7 +975,7 @@ The panel itself is now a **view** of the pack's connectors with links to Admin 
 | `a credential is never written into a connector file` | Use `${ENV_VAR}` or `file:/path`. |
 | `no plugin named 'x'` | The plugin is not installed; `drishti.py connector plugins` lists them. |
 | A connector is `FAILED` | The plugin could not start; the message is the plugin's. **Test connection** shows it with a hint. It is retried by itself (*failed — next retry in Ns (attempt k)*, [above](#a-connector-that-fails-to-start-or-loses-its-connection-is-retried)); fix the cause and it starts, or press **Retry now**. |
-| A Delta connector `DOWN: cannot reach …/data/delta/trading` | No lake there: `drishti.py lake demo` (or point `root` / `DRISHTI_DELTA_ROOT` at your lake). |
+| A Delta connector `DOWN: cannot reach …/data/delta/demo/trading` | No lake there: `drishti.py lake demo` (or point `root` / `DRISHTI_DELTA_ROOT` at your lake). |
 | A Delta connector `DEGRADED: cannot read <kind> <date>: NoSuchFileException …` | A table was rewritten while the server read it (a `lake demo` or `lake build` run): it clears at the next reindex (about a minute); if not, *Admin → Caches* → purge that connector. |
 | A file in the folder is ignored | Its name breaks the rule (listed on the page and in the log). |
 | Edits are not picked up | `connectors-watch: off`, or `watch` is `STOPPED`; check Health and the log, or restart. |

@@ -41,7 +41,7 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 
 | Connector | Folder | Kinds |
 |---|---|---|
-| `climate-store` | `data/delta/climate/` | `climate-profile`, `financed-emissions`, `climate-scenario`, `climate-stress`, `physical-asset`, `taxonomy-alignment` |
+| `climate-store` | `data/delta/demo/climate/` | `climate-profile`, `financed-emissions`, `climate-scenario`, `climate-stress`, `physical-asset`, `taxonomy-alignment` |
 
 ## Kinds
 

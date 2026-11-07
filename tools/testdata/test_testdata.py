@@ -34,7 +34,7 @@ TD = ROOT / "data" / "testdata"
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "trades"))
 sys.path.insert(0, str(ROOT / "tools" / "lake"))
 import schema as TS  # noqa: E402
-import feedfiles as FF  # noqa: E402  (our dated files and tars: DATA_LOAD_RULES.md section 10)
+import feedfiles as FF  # noqa: E402  (our dated files and tars: DATA_LAKE_GUIDE.md section 5.2)
 import filedate  # noqa: E402
 
 UPPER = re.compile(r"^[A-Z][A-Z0-9_]*$")

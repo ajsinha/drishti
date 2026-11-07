@@ -18,7 +18,7 @@
 # read from the S3 Tables tables of the same names with underscores (pnl-vector is pnl_vector). No key is written here:
 # credentials come from the AWS default chain (the ECS task role, a profile, AWS_ACCESS_KEY_ID). Guide: ICEBERG_CONNECTOR.md section 20.
 # The lake (iceberg, its root or catalog, storage and tables) is config/lakes.examples/s3tables/s3tables.yaml: copy it to
-# config/lakes/s3tables.yaml beside this file (docs/guides/LAKE_GUIDE.md). This file keeps only what the connector reads.
+# config/lakes/s3tables.yaml beside this file (docs/guides/DATA_LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: iceberg
 kinds:
 - stress-scenario

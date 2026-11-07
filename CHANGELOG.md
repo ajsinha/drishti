@@ -52,6 +52,69 @@
 
 ## 2.9.11.d (unreleased)
 
+- **The data lake and data load guide, one home for lakes and loading** ([DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md); the
+  product owner, 2026-11-07: "there should be a dedicated document on Drishti data lake & data load with real examples"): what a lake is
+  (one file per lake, each lake in its own folder `data/delta/<lake>/`), every key of the lake file with a worked `risklake.yaml` for
+  trades, positions' scenario PVs and VaR nodes, why few partition columns (the folder-explosion arithmetic) and what to use instead, the
+  file layout's rules of thumb, retention and maintenance; loading three ways (the data inbox, `drishti.py lake build`, the parallel
+  loader); every key of the `.ready` file, `lake:` included, with examples (a plain file, a gz held, a tar of several tables, checksums);
+  routing, business dates, replace and append, repeats and undo; pointing the connectors at a lake and the *no connector reads it*
+  warning; the demo lake's one-time move; checking a load and a troubleshooting table; sizing a day of 1M trades and 50K positions × 509
+  scenarios in two layouts; reading an existing lakehouse (Delta by storage path, Iceberg through Unity Catalog's REST endpoint with vended
+  credentials, the Delta features read or refused by name; Unity Catalog for Delta, Delta Sharing and plain tables marked planned). Examples
+  run on a scratch data folder. **Folded in and deleted:** `docs/guides/LAKE_GUIDE.md`, `docs/architecture/DATA_LOAD_RULES.md`,
+  `docs/architecture/DATALOAD_INBOX.md` (their internal design notes now DATA_ARCHITECTURE.md section 7), and DATA_GUIDE's lakehouse,
+  archive, feed and inbox sections (DATA_GUIDE keeps connectors and links there). **Tutorial 45**, *Load your own data into a new lake*
+  (UI, command line and YAML at every step), with `docs/tutorials/data/risklake/make_day.py` (a deterministic synthetic day). Help: the
+  guide and the tutorial listed, `moved:` for the three folded pages; the docs map; DOCS_PLAN.md splits B1 into B1 Connect and B1b Data
+  lake & data load; every link re-pointed.
+- **`drishti.py lake undo` with the server's exec jar**: the Delta undo's JSON is read after any library log lines on standard output
+  (before, the command failed with `lake undo (Delta): } ]`).
+- **Every lake in its own folder; real data loads beside the demo, never over it** (product owner, 2026-11-07; DATA_LAKE_GUIDE.md sections 1, 4 and 7,
+  OPERATIONS.md *The lakes' folders*):
+  - **A lake's root defaults to `<data>/delta/<lake>`** (`Lakes.defaultRoot`): a lake file without `root:` is in its own folder, and a lake
+    file may still name any root. The demo lake is `data/delta/demo` (`config/lakes/demo.yaml`: `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}`;
+    `DRISHTI_DELTA_ROOT`, when a site sets it, still names its root). The official results stay at `<data>/delta/risk-results`.
+  - **The one-time move** of a demo lake built in the older layout (`data/delta/<domain>/<table>`) into `data/delta/demo/`
+    (`LakeRelocate`, drishti-lakeload): at the server's start before any connector opens a table (`drishti.lakes.relocate-on-start`,
+    on), or `drishti.py lake relocate demo [--dry-run]`. Only the lake's known folders and `_drishti-lake` move, by a rename on one file
+    system; every Delta table is measured before and after (version, data files, rows, every data file present); any difference or error
+    moves everything back; it refuses, saying why, when the target exists, when anything there belongs to no lake, across file systems,
+    for an Iceberg table, for a table that does not open, or while a build or load holds the lake's lock; it never deletes; it runs once,
+    recorded in `data/delta/demo/_drishti-lake/relocated.json`.
+  - **`lake:` in a `.ready` file** names the lake a file goes to, over a rule's `lake:` and the inbox's default; a lake with no file yet is
+    **created** by the load (`config/lakes/<lake>.yaml`: format delta, root `${drishti.data.dir:./data}/delta/<lake>`, the routed pack's
+    recommended entry), its tables at `data/delta/<lake>/<domain>/<table>` (`risklake/trading/trade_endur`, `risklake/risk/scenario-pv`).
+    The Data loads page, the load report (`warning`) and `drishti.py dataload status` say *loaded into risklake, but no connector reads
+    it: point market-risk's connectors at it (lake: risklake) and restart* (`SourceRegistry.lakesRead`).
+  - **Connectors: two forms, both permanent** (product owner, 2026-11-07): `lake: <name>` (the lake file's root: a folder, `s3://...` or
+    `mem://...`) or an explicit `root:` path or URI with `domain`, `table.<kind>` and `layout.<kind>.*` (tables no lake file describes, a
+    vendor's Delta table on S3), with no warning. A connector that gives both uses its own values over the lake file's, said in the log,
+    by `lake check` and on Admin → Connectors (a warning on the field). Before: such a connector was refused, and the path form warned.
+  - **The connectors generated with the demo lake's old root follow it:** once the demo lake is moved, the server rewrites each connector
+    file whose `root:` is the demo lake's old default (`${DRISHTI_DELTA_ROOT:./data/delta}` and its variants) to `lake: demo` with
+    `lake-tables:` (`LakeFiles.adoptDemo`, also the first step of `lake migrate-config`), the file kept beside it
+    (`<name>.yaml.before-lake-<time>.bak`), a table the demo lake file lacks added from the connector's layout; a `var-pv-stream`
+    connector's `lake:` folder of that form becomes `lake: demo` (the plugin takes a lake's name; the market-risk pack's `pv-updates`
+    ships `lake: demo`). A Delta connector with neither `root` nor `lake` reads `<data>/delta/demo`. An Iceberg lake file without a root is
+    at `<data>/iceberg/<lake>`.
+  - **One place spells where lakes are:** drishti-lakeconfig (`Lakes.defaultRoot`, `Lakes.DEMO_ROOT_ENV`) and `tools/lake/lakeconfig.py`
+    (`root()`, `DEMO_ROOT_ENV`, `DEMO_ROOT_REF`); `lake demo`, `build_demo_lakes.py`, `bulk_trades.py`, `varcli`, `packmake`, the pack
+    generators, the doc-shot and bench harnesses, `drishti-stack` and `schemakit` resolve through it. The guard `tools/test_lake_paths.py`
+    fails on a lake folder or the demo root's variable spelled in code (Java, Python, JavaScript) outside the lake configuration.
+  - **The command-line loaders read `lake:` too** (`tools/lake/feedroute.py`, `lake build`): a `.ready` file's `lake:` names a lake of
+    `config/lakes/` (`--lake` on the command line wins); its keys are the inbox's, one list (`test_feedroute.py` compares them with
+    `ReadyNote.KEYS`).
+  - **Fixed:** an archive's rollback undid the load in the folder named like the inbox's lake (`demo`) rather than the lake's root.
+  - **Tools follow:** `build_demo_lakes.py`, `lake demo`, `load-delta.sh`/`.ps1`, `bulk_trades.py`, `varcli` and `start-server.ps1` default
+    to `data/delta/demo` (and refuse to build there while the older layout still holds the demo lake: move it first); the Iceberg demo
+    store stays `data/iceberg`; Admin → Lakes lists every lake folder under `data/delta` at every ask; the packs' guides, the docs, the
+    Windows CI and `deploy/lake-maintenance.yaml` name `data/delta/demo`.
+  - Tests: `LakeRelocateTest` (the move, a dry run, each refusal, a held lock, a rollback at each step, the command line),
+    `LakeRelocateOnStartTest`, `LakeRoutingTest` (a `.ready` lake over the rule and the default, a new lake created with its tables in its
+    folder by the real loader, the warning and when it is not said), `LakesTest` (the default root, a new lake file written once), the
+    console's lake roots.
+
 - **One Python runtime: every Python run on the server's compute pools** (SYNTHESIS A11, Brief 3; PYTHON_COMPUTE.md section 19; lean & streamlined):
   - **The pool `python`** (`config/compute/compute.yaml`) runs code people write: python visuals and Python measures of reports, boards and alerts,
     Transforms behind Python datasets, Python-driven tables and models, the Notebook's Python cells, the Transform editor's step-by-step run, a frame's
@@ -294,6 +357,18 @@
   asked for the next level, found none and changed nothing. A member is now openable only when there is a next row level; a leaf draws no
   "+" and → does nothing on it. **Expand by…** (`E`) still opens any member by another field. Tested in Chromium over the core pack's
   issuers (no "+" on leaves, "+" opens each issuer's bonds, the Grand total right per column) and in the engine (`PivotCoreTest`).
+
+- **A masked column is never charted in exports, and row rules hold after the move to the table layer.** `drishti.py tables migrate`
+  never replaces a table or model already under `config/tables`: a file there of the same shape is kept as it is (with its row rules,
+  masks, hidden columns and edits), and one of another shape, or one that lacks security the old dataset has, is refused with the reason
+  (rename one, or remove the file to have it written): nobody sees more after the move. Tested in the migrator
+  (`TablesMigratorTest`), on the server (`DistApiTest`: a measure over a masked column has no chart, no figure in Excel, CSV or JSONL and
+  is marked masked in the query API for the reader it is masked for) and in Chromium (`test_wave_d_browser.py`: a desk head's mail holds
+  her desk only; the Excel export charts no masked measure).
+- **Admin → Health opens right after a start.** The memory gauge has no reading until the first clean-up; the page said nothing and
+  failed with an error. It now says *not measured yet* until there is one (`test_busy.py`).
+- **Home's quick cards keep their touch size on a phone** whether or not the fact of the day is shown: their styles are part of the
+  landing's, not the fact-of-the-day sheet.
 
 ### Fixes (flaky tests fixed at their cause)
 

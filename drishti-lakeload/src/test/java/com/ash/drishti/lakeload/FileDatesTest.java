@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Feeds (docs/architecture/DATA_LOAD_RULES.md; DATA_GUIDE.md section 2.8): the shared cases ({@code tools/lake/testdata/file-dates/names.json},
+ * Feeds (docs/guides/DATA_LAKE_GUIDE.md; DATA_GUIDE.md section 2.8): the shared cases ({@code tools/lake/testdata/file-dates/names.json},
  * which the Python {@code test_filedate.py} reads too, so the two rules cannot drift), then the loader end to end on a small lake: plain
  * files dated by their names, by {@code as-of} and by the business today; a row's own date only counted; an empty file ignored; a tar of
  * two tables and two dates (and a .tar.zip); a refused tar.
