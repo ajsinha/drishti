@@ -259,7 +259,8 @@ public class IdentityConfiguration {
 
     public static void requireSingleServerForFiles(com.ash.drishti.identity.collab.CollabProperties props, com.ash.drishti.identity.database.DatabaseSettings id) {
         if ("file".equals(props.store()) && !id.sqlite()) {
-            throw new IllegalStateException("drishti.collab.store=file keeps shares on this server only, but the Drishti database (drishti.database.kind) "
+            throw new IllegalStateException("drishti.collab.store=file keeps shares on this server only, but the " + com.ash.drishti.identity.database.DrishtiDatabase.label()
+                    + " (drishti.database.kind) "
                     + "is a shared database: use drishti.collab.store=jpa");
         }
     }

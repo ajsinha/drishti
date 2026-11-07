@@ -1435,7 +1435,7 @@ made by another version, or one that lacks a column of the schema, refuses to st
 ```text
 the Drishti database sqlite jdbc:sqlite:/opt/drishti/data/identity/drishti.db was made by schema 1; this server needs schema 2. Stop the
 servers and copy it into a fresh database: drishti.py db copy --from config/db/database.yaml --to <new database.yaml>, then point
-config/db/database.yaml at the new one (docs/admin/OPERATIONS.md, "Upgrading the Drishti database")
+config/db/database.yaml at the new one (docs/admin/OPERATIONS.md section 10.3)
 ```
 
 Upgrade by copying into a fresh database built from the new release's complete schema:

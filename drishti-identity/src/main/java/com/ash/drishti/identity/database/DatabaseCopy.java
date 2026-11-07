@@ -90,7 +90,7 @@ public final class DatabaseCopy {
         try (HikariDataSource src = DrishtiDatabase.pool(from, site, "drishti-db-copy-from"); Connection in = src.getConnection()) {
             Map<String, Set<String>> have = DatabaseSchema.columns(in, schema.keySet());
             if (have.isEmpty()) {
-                throw new IllegalArgumentException("the source " + from.describe() + " holds no Drishti tables");
+                throw new IllegalArgumentException("the source " + from.describe() + " holds none of the " + DrishtiDatabase.label() + "'s tables");
             }
             List<String> dropping = new ArrayList<>();
             for (Map.Entry<String, Set<String>> e : have.entrySet()) {

@@ -50,7 +50,7 @@ public class IdentityDatabase {
         for (String old : new String[] {"drishti.identity.database-url", "drishti.identity.database-user", "drishti.identity.database-password",
                 "drishti.identity.database-pool-size", "DRISHTI_IDENTITY_DB_URL", "DRISHTI_IDENTITY_DB_USER", "DRISHTI_IDENTITY_DB_PASSWORD"}) {
             if (env.getProperty(old) != null) {           // set by an older site's application.local.yaml, or the old environment names
-                throw new IllegalStateException(old + " has moved to the Drishti database's own file, config/db/database.yaml "
+                throw new IllegalStateException(old + " has moved to the " + com.ash.drishti.identity.database.DrishtiDatabase.label() + "'s own file, config/db/database.yaml "
                         + "(drishti.database.kind, sqlite.file, postgres.url, postgres.user, postgres.password, pool.size; environment "
                         + "DRISHTI_DB_KIND, DRISHTI_DB_FILE, DRISHTI_DB_URL, DRISHTI_DB_USER, DRISHTI_DB_PASSWORD). Move the setting and remove the old one "
                         + "(RELEASE_NOTES.md, upgrade notes)");

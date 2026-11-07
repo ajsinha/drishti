@@ -1191,7 +1191,8 @@
   epoch-millisecond values become PostgreSQL's types and back; PostgreSQL identities set past the copied keys), verifies every row
   count, stamps the target. It is the upgrade path and the SQLite ↔ PostgreSQL switch. OPERATIONS.md section 10.3 shows its real
   output for a fresh server's database (53 tables, 2 rows); TOOLS.md section 5.18 lists the `db` group; the docs rot check reads
-  `config/db/database.yaml` as server settings.
+  `config/db/database.yaml` as server settings; the database's messages name the product from `drishti.branding`
+  (`DrishtiDatabase.label()`), as the branding guard requires.
 - **Guard and tests.** `SchemaParityTest` (drishti-it): the same tables, columns, indexes and version in both files; no `ALTER`, `DROP`,
   `UPDATE` or `INSERT` in them; no code outside them creates or alters a table except the DuckDB engines and connector loaders it lists.
   `DatabaseCopyTest` (an older SQLite database refused at start, `--check`, `--drop-columns`, every row and value copied, the target

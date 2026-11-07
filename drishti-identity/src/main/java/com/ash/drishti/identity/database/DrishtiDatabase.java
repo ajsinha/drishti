@@ -190,10 +190,15 @@ public final class DrishtiDatabase {
         }
     }
 
+    /** The database by the product's name in messages ({@code "<product> database"}; {@code "database"} with no branding installed). */
+    public static String label() {
+        return com.ash.drishti.common.Branding.current().feature("database");
+    }
+
     private static IllegalStateException refused(DatabaseSettings s, String why) {
-        return new IllegalStateException("the Drishti database " + s.describe() + " " + why + ". Stop the servers and copy it into a fresh "
+        return new IllegalStateException("the " + label() + " " + s.describe() + " " + why + ". Stop the servers and copy it into a fresh "
                 + "database: drishti.py db copy --from config/db/database.yaml --to <new database.yaml>, then point config/db/database.yaml at "
-                + "the new one (docs/admin/OPERATIONS.md, \"Upgrading the Drishti database\")");
+                + "the new one (docs/admin/OPERATIONS.md section 10.3)");
     }
 
     /** The version the database is stamped with, if any. */
@@ -202,7 +207,7 @@ public final class DrishtiDatabase {
                 ResultSet r = ps.executeQuery()) {
             return r.next() ? OptionalInt.of(r.getInt(1)) : OptionalInt.empty();
         } catch (SQLException e) {
-            throw new IllegalStateException("cannot read the Drishti database's schema stamp: " + e.getMessage(), e);
+            throw new IllegalStateException("cannot read the " + label() + "'s schema stamp: " + e.getMessage(), e);
         }
     }
 
@@ -217,7 +222,7 @@ public final class DrishtiDatabase {
             ps.executeUpdate();
         } catch (SQLException e) {
             if (stamp(ds).orElse(-1) != version) {                       // two nodes stamping at once: the other one's row is the same
-                throw new IllegalStateException("cannot stamp the Drishti database: " + e.getMessage(), e);
+                throw new IllegalStateException("cannot stamp the " + label() + ": " + e.getMessage(), e);
             }
         }
     }

@@ -52,7 +52,7 @@ public record ContentStoreSettings(String backend, Path fsRoot, S3ContentStore.S
     static ContentStoreSettings from(Map<String, Object> m, Path dataDir, UnaryOperator<String> resolve, String origin) {
         String backend = str(m, "backend", "filesystem", resolve).toLowerCase(Locale.ROOT);
         if (backend.equals("sqlite") || backend.equals("postgres")) {
-            throw new IllegalArgumentException("store.yaml backend " + backend + " is now backend: database (the Drishti database, chosen in "
+            throw new IllegalArgumentException("store.yaml backend " + backend + " is now backend: database (the " + com.ash.drishti.identity.database.DrishtiDatabase.label() + ", chosen in "
                     + "config/db/database.yaml); its sqlite: and postgres: sections are gone");
         }
         if (!backend.matches("filesystem|database|s3")) {
