@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * The sketches (PIVOT_ENGINE.md sections 5.2, 5.3 and 9.5; FUNCTION_CATALOGUE.md section 4): the ≈ forms of functions that have one name
+ * The sketches (ARCHITECTURE.md sections 23.5.2, 23.5.3 and 23.9.5; FUNCTION_CATALOGUE.md section 4): the ≈ forms of functions that have one name
  * each, never functions of their own. A view writes {@code distinct(x)}, {@code median(x)}, {@code percentile(x, q)}; the scale policy
  * answers it by its sketch when the person accepts ≈ (or the view is large, in auto), and its id then ends in {@code ≈} (a different cache
  * key, a different rollup state). VaR and every provider's own measures are never approximated.

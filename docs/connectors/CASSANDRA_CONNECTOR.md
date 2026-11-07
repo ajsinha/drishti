@@ -131,7 +131,7 @@ How the loader works:
   `make_data.py --jsonl FILE.tar` and `bulk_trades.py --jsonl FILE.tar` write them: tars of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders (the
   Aerospike loader's input too). The script gives the loader **the folder holding both tars**, read in one load, so each business day is
   loaded once.
-- **Each row is filed under a business date from outside it** (the load rules, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md), the same as `lake build`'s): a tar of `<kind>/<YYYY-MM-DD>/` folders files each row under its folder's date, and a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input) is one kind on one date: `--as-of`, else its `.ready` file's `business-date:`, else the date in its name, else the business today. The row's own `date` stays in the row as data; rows whose date differs are loaded under the file's date and counted (*N rows of trade.jsonl carried another date in date; loaded under 2026-09-30*). A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar (its folders name the dates). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it, in name order. Retention (`--keep-days`, `--ttl-days`, `--keep-months`) counts back from `--as-of`, else the business today.
+- **Each row is filed under a business date from outside it** (the load rules, [DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load), the same as `lake build`'s): a tar of `<kind>/<YYYY-MM-DD>/` folders files each row under its folder's date, and a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input) is one kind on one date: `--as-of`, else its `.ready` file's `business-date:`, else the date in its name, else the business today. The row's own `date` stays in the row as data; rows whose date differs are loaded under the file's date and counted (*N rows of trade.jsonl carried another date in date; loaded under 2026-09-30*). A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar (its folders name the dates). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it, in name order. Retention (`--keep-days`, `--ttl-days`, `--keep-months`) counts back from `--as-of`, else the business today.
 - **A day appears whole or not at all.** Each day of the input gets a new **generation** (the seconds since 2020, or the current one plus
   one if that is larger). The day's rows go to the new generation's partitions; its `entity_days` rows are written; and only when every
   write has succeeded is the `kind_days` row naming the new generation written. Readers follow `kind_days`, so they read the old
@@ -352,7 +352,7 @@ Ready-made files: `config/connectors.examples/cassandra/` (the six banking domai
 
 ## 14. Settings
 
-Every setting, with defaults: [CONFIGURATION.md › cassandra](../admin/CONFIGURATION.md#cassandra). The connector form in Admin →
+Every setting, with defaults: [CONFIGURATION.md › cassandra](../reference/CONFIGURATION.md#cassandra). The connector form in Admin →
 Connectors is generated from the same catalogue.
 
 ## 15. Checklist for production

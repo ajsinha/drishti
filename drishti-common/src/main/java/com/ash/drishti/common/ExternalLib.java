@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 /**
- * The external library folder (docs/admin/CONFIGURATION.md, "External libraries"): {@code <base>/java} holds jars the
+ * The external library folder (docs/reference/CONFIGURATION.md, "External libraries"): {@code <base>/java} holds jars the
  * server loads at start (put on the class path by the launcher, {@code loader.properties}) and {@code <base>/python}
  * holds modules and packages the console makes importable. The base is {@code DRISHTI_EXTERNAL_LIB} (or the system
  * property {@code drishti.external-lib}), default {@code external_lib} under the working directory.

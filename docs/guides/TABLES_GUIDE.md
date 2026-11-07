@@ -284,7 +284,7 @@ and Flight add theirs once BI reads the layer. Every command takes `--json`.
 
 ### Offering a table for new data
 
-A table a data load creates (a new lake table, DATA_LOAD_RULES.md section 7) is offered a flat virtual table; nothing is defined until
+A table a data load creates (a new lake table, DATA_ARCHITECTURE.md section 10.7) is offered a flat virtual table; nothing is defined until
 someone accepts it. `tables offer` reads a sample of the new documents and suggests one column per scalar field (a nested object's
 fields one level down, `$.OWNER.NAME` as `OWNER_NAME`), each typed from its values (`integer`, `decimal`, `boolean`, `date`,
 `timestamp`, else `string`), the id field (`id` or a name ending `_ID`) as the key when it is unique in the sample, and names each list
@@ -512,7 +512,7 @@ tests:
 | **Sample run** | reads each input as you may see it (a table by name, or a model query), runs the build function on the server's compute pool `python` (the strict sandbox of [BI_GUIDE.md section 34](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), section 7), and checks the rows against the contract: each contract column there and of its type, the keys unique and the never-empty columns filled, each failure said in words in the checks; the first 20 rows show. Needs `bi-author`; where the server cannot run Python safely (compute off, Windows) the button is off and says why. The Notebook's **Run cells on the server** turns the cells into a build function and runs it the same way |
 
 **Where the code runs.** On the server's compute pool `python`, never in the console or the browser, in the strict sandbox of
-[PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write): the inputs read as the person the run
+[ARCHITECTURE.md section 24.19](../architecture/ARCHITECTURE.md#2419-the-python-runtime-for-code-people-write): the inputs read as the person the run
 is for (their row rules and masks), the pinned libraries only (`config/compute/locks/python.lock`), the build function's time and memory limits, no
 network (a file or feed from an approved source is read by the server and handed in as an input), files only in its own folder; every run is audited.
 When BI reads the table, the same function runs for the reader and its rows are checked against the contract: a column missing or of another type is

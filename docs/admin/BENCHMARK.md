@@ -809,7 +809,7 @@ set `DRISHTI_LAKE_HEAP` (4g here) for loads of 200,000 positions and more: the w
 `ThroughputTest`, 10,000 positions Ã— 510 scenarios, 53.7 MB of JSON Lines in eight gzip files (22.3 MB), into Delta on local disk. The
 first load in a JVM is cold (1.3 s, 7,700 rows/s); a warm one (what a long load runs at after its first seconds): **0.19 to 0.29 s, 34,000
 to 52,000 rows/s, 180 to 280 MB/s of JSON** end to end. Iceberg warm: 0.25 to 0.27 s (37,000 to 40,000 rows/s). With a 24 MB budget the
-same load spilled 37 MB and wrote the identical table. The design is [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md).
+same load spilled 37 MB and wrote the identical table. The design is [DATA_ARCHITECTURE.md section 11](../architecture/DATA_ARCHITECTURE.md#11-the-parallel-lake-loader-drishti-lakeload).
 
 | Stage | Per thread, warm | Note |
 |---|---|---|
@@ -1485,7 +1485,7 @@ run's) are counted and skipped. `python3 tools/bench/charts.py <results.jsonl â€
 
 **Status: the plan and the harness; to be measured.** Nothing in this section is measured yet; every cell below is filled by the run
 of 16.3, and the larger sizes of 16.4 are EXTRAPOLATED from those measured points, labelled so wherever they appear. The design is
-[PIVOT_ENGINE.md section 21](../architecture/PIVOT_ENGINE.md#21-the-benchmark-plan); what it measures is
+[ARCHITECTURE.md section 23.21](../architecture/ARCHITECTURE.md#2321-the-benchmark-plan); what it measures is
 [PIVOT_GUIDE.md section 23](../guides/PIVOT_GUIDE.md#23-scale-sketches-rollups-progressive-answers-and-the-cluster).
 
 ### 16.1 What is measured
@@ -1570,7 +1570,7 @@ JSON line:
 
 Read the extrapolations as section 14 says: straight lines through three points, orders of magnitude. Past what one node's disk and
 memory hold, other effects (spill, object-store bandwidth, more files than the disk cache) bend the line; the decision on a distributed
-SQL backend (PIVOT_ENGINE.md decision 8) waits for measured common views over 5 minutes on three nodes, not for an extrapolation.
+SQL backend (ARCHITECTURE.md section 23 decision 8) waits for measured common views over 5 minutes on three nodes, not for an extrapolation.
 
 ## 17. Many VaR scopes at once (BLAS)
 

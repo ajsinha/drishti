@@ -19,7 +19,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Settings of Python Transforms and of composed datasets, {@code drishti.bi.transform.*} (docs/admin/CONFIGURATION.md): how long a Transform's result
+ * Settings of Python Transforms and of composed datasets, {@code drishti.bi.transform.*} (docs/reference/CONFIGURATION.md): how long a Transform's result
  * is kept for a reader and the size limits on what goes in and comes out. The Transform itself runs on the server's compute pool {@code python}
  * ({@link com.ash.drishti.server.bi.python.PythonRuns}; the pool's workers, sandbox and time budget are config/compute/compute.yaml's).
  *

@@ -392,7 +392,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         if (!tf.equals("delta") && !tf.equals("iceberg")) {
             throw new IllegalArgumentException("target.format " + tf + ": delta or iceberg");
         }
-        // the load mode (docs/architecture/DATA_LOAD_RULES.md section 3): target.mode (--mode, a .ready file's mode:), else the lake file's
+        // the load mode (docs/architecture/DATA_ARCHITECTURE.md section 10.3): target.mode (--mode, a .ready file's mode:), else the lake file's
         // entry (the table's default), else target.default-mode (the data inbox's default-mode), else append; replace (overwrite-dates)
         // replaces each business date
         String given = r.text(t, "mode", null);

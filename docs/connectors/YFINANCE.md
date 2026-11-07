@@ -151,7 +151,7 @@ routes: { quote: yfinance }
 
 See the [`news-and-markets` sample pack](../guides/PACK_DEVELOPER_GUIDE.md#sample-packs).
 
-**Offline.** In offline mode (`DRISHTI_OFFLINE=true`, [CONFIGURATION](../admin/CONFIGURATION.md#drishtioffline--offline-mode-no-internet))
+**Offline.** In offline mode (`DRISHTI_OFFLINE=true`, [CONFIGURATION](../reference/CONFIGURATION.md#drishtioffline--offline-mode-no-internet))
 this connector never starts and shows *off (offline mode)* in Admin → Connectors; the `news-and-markets` pack's `news-store` then serves
 `quote` from a snapshot captured through this connector with `range: 1y` (`drishti.py testdata capture-market`;
 [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#news-and-markets-and-world-economy-offline)).

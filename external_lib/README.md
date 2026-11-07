@@ -25,4 +25,4 @@ Put libraries here and Drishti picks them up at start, with no rebuild:
 The folder is configurable: `DRISHTI_EXTERNAL_LIB=/opt/drishti/lib` (both processes), or the console setting
 `external_lib`. Default: `external_lib` in the working directory (server) and in the repository root (console).
 Admin → Health lists what each process found. Only administrators should be able to write here: what is in it runs
-inside the server and the console. Details: docs/admin/CONFIGURATION.md, "External libraries".
+inside the server and the console. Details: docs/reference/CONFIGURATION.md, "External libraries".

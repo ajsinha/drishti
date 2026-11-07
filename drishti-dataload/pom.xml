@@ -26,7 +26,7 @@
   </parent>
   <artifactId>drishti-dataload</artifactId>
   <name>drishti-dataload</name>
-  <description>The data inbox, plain Java (docs/architecture/DATALOAD_INBOX.md): files dropped in a folder with a .ready marker found, claimed, routed, loaded into the lake by the parallel lake loader (drishti-lakeload's LakeLoad, a child Java process with its own heap), recorded in a ledger and moved to the outbox with a report; crash-safe, duplicates skipped, one runner per folder</description>
+  <description>The data inbox, plain Java (docs/architecture/DATA_ARCHITECTURE.md section 9): files dropped in a folder with a .ready marker found, claimed, routed, loaded into the lake by the parallel lake loader (drishti-lakeload's LakeLoad, a child Java process with its own heap), recorded in a ledger and moved to the outbox with a report; crash-safe, duplicates skipped, one runner per folder</description>
   <properties>
     <!-- one test JVM: the integration tests start the loader as child Java processes -->
     <drishti.test.forks>1</drishti.test.forks>

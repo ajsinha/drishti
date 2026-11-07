@@ -19,7 +19,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Scheduled dataset refresh, {@code drishti.bi.refresh.*} (docs/admin/CONFIGURATION.md): a dataset's {@code refresh:} schedule rebuilds its columns and
+ * Scheduled dataset refresh, {@code drishti.bi.refresh.*} (docs/reference/CONFIGURATION.md): a dataset's {@code refresh:} schedule rebuilds its columns and
  * rollup layers; a failed run is retried with the shared policy ({@code drishti.retry.bi.*}, falling back to {@code drishti.retry.*}).
  *
  * @param enabled false: no schedule runs (a data-load signal and the Refresh button still do)

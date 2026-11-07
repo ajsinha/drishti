@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Random;
 
 /**
- * The harness every function passes (PIVOT_ENGINE.md section 8.3): split-and-merge must equal one pass. It runs the function on sample rows
+ * The harness every function passes (ARCHITECTURE.md section 23.8.3): split-and-merge must equal one pass. It runs the function on sample rows
  * in one pass, in batches (1, 7, 1,000, 65,536 rows), split into 2, 3 and 16 random parts merged left-deep and balanced under several seeds,
  * with every state serialised and read back before merging (as the cluster does), and on an empty input; a mergeable function fails when
  * any answer differs from the one pass beyond the tolerance (relative), a holistic one when its merged values differ at all.

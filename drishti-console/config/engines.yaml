@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The engine catalogue (docs/architecture/COMPUTE_ENGINES.md section 2): every compute engine of the product, what it needs and uses, and
+# The engine catalogue (docs/architecture/ARCHITECTURE.md section 25.2): every compute engine of the product, what it needs and uses, and
 # everything it brings to the screen. Part of the product: the server reads it from its jar (engines/catalogue.yaml), the console its copy
 # (drishti-console/config/engines.yaml, the same bytes: a test checks it). A site's config/engines/<id>.yaml holds only the switch and the
 # engine's settings. An engine still to be built is listed with installed: false: the switch framework knows it, Admin -> Engines shows it

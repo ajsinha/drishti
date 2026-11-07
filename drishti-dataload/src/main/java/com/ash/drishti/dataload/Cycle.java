@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * One run of the inbox (DATALOAD_INBOX.md section 4): the owner only, not while busy protection says the server is short, under the folder
+ * One run of the inbox (DATA_ARCHITECTURE.md section 9.4): the owner only, not while busy protection says the server is short, under the folder
  * lock; the stopped runs finished ({@link Recovery}); the whole batch of ready, stable files found ({@link Inbox}) and claimed at once into
  * {@code inprocess/<run>/} ({@link Claims}; files that become ready meanwhile wait for the next cycle), duplicates skipped by SHA-256 ({@link Ledger}), routed ({@link Routes}) and loaded, the files of one table in one
  * loader run ({@link LoaderProcess}), one table after another; recorded, moved with their reports ({@link Outbox}) and, last, the server
@@ -280,7 +280,7 @@ public final class Cycle {
             }
             if (FileDates.isTar(name)) {
                 List<String> tables = new ArrayList<>(LakeLoad.tarTables(file.toString()).keySet());
-                if (tables.isEmpty()) {                          // an empty archive: ignored, nothing touched (DATA_LOAD_RULES.md section 4.3)
+                if (tables.isEmpty()) {                          // an empty archive: ignored, nothing touched (DATA_ARCHITECTURE.md section 10.4.3)
                     String why = "empty: ignored (no file in <table>/<YYYY-MM-DD>/); nothing was written";
                     ledger.write(run, name, Ledger.IGNORED, JSON.createObjectNode().put("sha256", sha).put("size", size).put("reason", why));
                     outbox.done(run, file, marker, report(name, run, Ledger.IGNORED).put("sha256", sha).put("reason", why));
@@ -381,7 +381,7 @@ public final class Cycle {
     }
 
     /**
-     * A tar archive (DATA_LOAD_RULES.md sections 3.1 and 4): each table folder loaded in turn (table order), every load with one run id so
+     * A tar archive (DATA_ARCHITECTURE.md sections 10.3.1 and 10.4): each table folder loaded in turn (table order), every load with one run id so
      * the archive's rows share one load id; if a table's load fails, the tables already committed are undone (all or nothing) and the
      * archive goes to {@code failed/} saying what failed and what was rolled back; else one data-load signal per table and date.
      */

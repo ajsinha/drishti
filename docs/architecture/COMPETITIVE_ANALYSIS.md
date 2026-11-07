@@ -113,7 +113,7 @@ that want on-premises, explainable views of any data.
 Drishti's own capabilities are given in two columns throughout:
 
 - **Today**: built, released and documented (the guides linked in the text say how).
-- **Planned**: in the agreed release plan ([IMPLEMENTATION_PLAN](../architecture/IMPLEMENTATION_PLAN.md)), proposed and not started.
+- **Planned**: in the agreed release plan ([IMPLEMENTATION_PLAN](IMPLEMENTATION_PLAN.md)), proposed and not started.
   We name the release theme, not the number, because numbers move. Done: *sensitivities and market-risk capital* (position
   sensitivities, FRTB-SA, SIMM, the market-risk cube: today). The themes to come, in order: *counterparty engines* (SA-CCR, the counterparty cube, FVA, the
   exposure playground); *Java 25 and performance*; *oversight* (breaches and escalation, the board pack, market-data checks);
@@ -253,7 +253,7 @@ Each entry: what it is, its strengths (claimed), where Drishti wins, where it lo
   differentiation (from an Adaptiv Analytics sheet of uncertain provenance, treat as **not verified**).
 - **Where Drishti wins.** Exposure for any scope typed as text, with netting and collateral on each path and an exact pre-deal what-if,
   explained down to the trade; the counterparty cube is designed to beat Adaptiv's pivots on non-additive totals
-  ([CCR cube lens](../lenses/CCR_CUBE_LENS.md)); open lake; footprint.
+  ([CCR cube lens](LENSES.md#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why)); open lake; footprint.
 - **Where Drishti loses.** Simulation (Drishti reads paths, it does not generate them); limits workflow (planned); SA-CCR and XVA
   (planned); FIS's client base.
 - **Position.** **Coexist** today (Drishti reads the simulator's paths); **replace** the aggregation and limit-monitoring screens after
@@ -440,7 +440,7 @@ logistics, genomics, climate risk, liquidity risk and operational risk. This sec
 #### 4.3.1 BI: Power BI, Tableau, Qlik, Looker, Superset, Metabase
 
 - **What they do best.** Visual authoring for analysts, very large ecosystems, connectors to everything, certifications, SaaS at a
-  per-user price. Power BI is the reference our users know ([BI_DESIGN](../architecture/BI_DESIGN.md), section 11, maps every Power BI
+  per-user price. Power BI is the reference our users know ([BI_DESIGN](BI_DESIGN.md), section 11, maps every Power BI
   capability to a Drishti component). Looker's semantic model (LookML) and its Gemini conversational analytics; Superset and
   Metabase as open-source options.
 - **Drishti's angle.** BI on the same governed data as the terminal, drilling from a chart into the record with its links and history;
@@ -621,12 +621,12 @@ Every source read on **2026-11-01** unless noted. Claims are the publisher's own
 
 **Drishti (this repository)**
 
-- [README](../../README.md); [IMPLEMENTATION_PLAN](../architecture/IMPLEMENTATION_PLAN.md) (release table and themed releases);
+- [README](../../README.md); [IMPLEMENTATION_PLAN](IMPLEMENTATION_PLAN.md) (release table and themed releases);
   [VAR_GUIDE](../guides/VAR_GUIDE.md); [EXPOSURE_GUIDE](../guides/EXPOSURE_GUIDE.md);
   [REGULATORY_VAR_REPORTING](../guides/REGULATORY_VAR_REPORTING.md); [BI_GUIDE](../guides/BI_GUIDE.md);
-  [BI_DESIGN](../architecture/BI_DESIGN.md) (gap check against Power BI); [EDITIONS](../admin/EDITIONS.md);
-  [MOBILE_DISPLAY](../architecture/MOBILE_DISPLAY.md); [RESOURCES_AND_SCALE](../architecture/RESOURCES_AND_SCALE.md);
-  [BENCHMARK](../admin/BENCHMARK.md); [AI](../admin/AI.md); [lenses](../lenses/README.md); [connectors](../connectors/CONNECTORS.md).
+  [BI_DESIGN](BI_DESIGN.md) (gap check against Power BI); [EDITIONS](../admin/EDITIONS.md);
+  [MOBILE_DISPLAY](MOBILE_DISPLAY.md); [RESOURCES_AND_SCALE](RESOURCES_AND_SCALE.md);
+  [BENCHMARK](../admin/BENCHMARK.md); [AI](../admin/AI.md); [lenses](LENSES.md); [connectors](../connectors/CONNECTORS.md).
 
 **Risk aggregation cubes**
 

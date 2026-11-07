@@ -33,7 +33,7 @@ import java.util.function.BiFunction;
 
 /**
  * Splits one request into chunks and runs them on as many workers as there are, on this node and on the other nodes serving the pool, then
- * gathers the answers in chunk order (docs/architecture/PYTHON_COMPUTE.md section 7.6). This is how a batch of trades is priced over 509
+ * gathers the answers in chunk order (docs/architecture/ARCHITECTURE.md section 24.7.6). This is how a batch of trades is priced over 509
  * scenario days by N workers: the input named {@code split} is cut into chunks of {@code chunkRows} rows; every other input goes whole with
  * each chunk. Each chunk is an ordinary request (its own id, {@code <parent>-c<i>}, the parent's viewer, class and budget), so fairness,
  * limits and isolation apply to every chunk.

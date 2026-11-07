@@ -14,7 +14,7 @@
 
 """Writes the VaR engine's demo inputs (docs/guides/VAR_GUIDE.md) into data/testdata/market-risk/, from the committed trades of the business
 dates (data/testdata/trades/*) and the core pack's desks, as an upstream risk batch would deliver them, for the last VAR_DATES (three)
-business dates, each date in files of its own (docs/architecture/DATA_LOAD_RULES.md section 10): each date's trades replayed to it, its scenario window a day further on (a day
+business dates, each date in files of its own (docs/architecture/DATA_ARCHITECTURE.md section 10.10): each date's trades replayed to it, its scenario window a day further on (a day
 keeps its move on every date: factors.Market ``back``), one book moved between desks (MOVED_BOOK), so the VaR change explanation
 (VAR_GUIDE.md section 3.11) compares real dates. The stress set, the desk P&L and the long P&L history are the newest date's only:
 
@@ -90,7 +90,7 @@ VAR_DATES = 3
 #: date but one, when it moved to the fixed income desk (both LE-NY, Markets): (book, the desk before, dates back it still sat there from)
 MOVED_BOOK = ("BOOK-FI-3", "DESK-CREDIT", 2)
 PART_BYTES = 1_200_000                       # compressed bytes per file: the vectors are split into a few small files
-#: the kinds written as tar archives of <kind>/<YYYY-MM-DD>/ folders (docs/architecture/DATA_LOAD_RULES.md section 10): the P&L vectors
+#: the kinds written as tar archives of <kind>/<YYYY-MM-DD>/ folders (docs/architecture/DATA_ARCHITECTURE.md section 10.10): the P&L vectors
 #: and scenario PVs one archive per date (a date is ten files, and every date in one archive would be too large to commit), the desks'
 #: daily P&L (260 dates of one run) one archive; a kind whose date holds the stress set's file too (scenario-set, fx-scenario) one
 #: archive of its dates; every other kind one file per date, <kind>.<YYYY-MM-DD>.jsonl.gz

@@ -23,8 +23,8 @@ finished.*
 
 **Read with:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (2.9.11.b rows PB, OG and SC; 2.9.11.e; "Virtual tables"),
 [VIRTUAL_TABLES.md](VIRTUAL_TABLES.md), [ONE_GRAMMAR.md](ONE_GRAMMAR.md), [FUNCTION_CATALOGUE.md](FUNCTION_CATALOGUE.md),
-[BI_DESIGN.md](BI_DESIGN.md) (section 3.3, DEL; section 15, the model layer; MQ), [PIVOT_ENGINE.md](PIVOT_ENGINE.md) (sections 6.7
-and 12), [LAKE_CONFIG.md](LAKE_CONFIG.md), [ARROW_FLIGHT.md](ARROW_FLIGHT.md), [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md)
+[BI_DESIGN.md](BI_DESIGN.md) (section 3.3, DEL; section 15, the model layer; MQ), [ARCHITECTURE.md section 23](ARCHITECTURE.md#23-the-pivot-engine) (sections 6.7
+and 12), [DATA_ARCHITECTURE.md section 8](DATA_ARCHITECTURE.md#8-the-lake-configuration-one-place-that-says-what-the-lake-is), [DATA_ARCHITECTURE.md section 12](DATA_ARCHITECTURE.md#12-arrow-flight-the-data-to-any-client), [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md)
 ("Rachana-EL expressions"), [BI_GUIDE.md](../guides/BI_GUIDE.md) (sections 23 and 30).
 
 ## Contents
@@ -230,7 +230,7 @@ entry says). "Same" means the name and arguments are unchanged apart from the ke
 | 24 | `min(x, where=c)` | aggregate | same | E | one argument in aggregate scope; several arguments are `least` |
 | 25 | `max(x, where=c)` | aggregate | same | E | several arguments are `greatest` |
 | 26 | `count(alias \| x, where=c)` | aggregate | same | E | `count(trades)` counts the table's rows |
-| 27 | `distinct(x, where=c)` | aggregate | same | E | exact; ≈ only when the model's author opts in (PIVOT_ENGINE 12.4) |
+| 27 | `distinct(x, where=c)` | aggregate | same | E | exact; ≈ only when the model's author opts in (ARCHITECTURE.md section 23.12.4) |
 | 28 | `ratio(num, den)` | aggregate | same | E | null on 0 |
 | 29 | `percentile(x, p, where=c)` | aggregate | same | E | continuous quantile; the engine's interpolation proved equal to DuckDB's `quantile_cont` |
 | 30 | `avg_by(agg, by=[f])` | aggregate | `avg_by(agg, by = [f])` | E | missing from FUNCTION_CATALOGUE.md: added |
@@ -621,11 +621,11 @@ hold lake access.
 |---|---|
 | A **tables guide** (planned `docs/guides/TABLES_GUIDE.md`, Help → Data → Virtual tables) and its **tutorial** (two docs per feature) | new: tables, grains, paths, columns, rules, materialisation, models, the checks and preview, the migration; every example run on the demo lake with its real output, UI, command line and YAML at every step |
 | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) | checked mode, scopes, list literals, named arguments, `in`, `^`, the null rule; the filter-context section with before and after tables |
-| `docs/guides/FUNCTIONS.md` (generated, from 2.9.11.b) and [FUNCTION_CATALOGUE.md](FUNCTION_CATALOGUE.md) | the 44 functions added, `avg_by`, the renames (`latest`, `earliest`), the `share_of` and `pct_of_*` distinction |
+| `docs/reference/FUNCTIONS.md` (generated, from 2.9.11.b) and [FUNCTION_CATALOGUE.md](FUNCTION_CATALOGUE.md) | the 44 functions added, `avg_by`, the renames (`latest`, `earliest`), the `share_of` and `pct_of_*` distinction |
 | [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md) | deleted; its cookbook of finance recipes moves into the tables guide, rewritten in Rachana (Q27) |
 | [BI_GUIDE.md](../guides/BI_GUIDE.md) | sections 13 to 16, 23 and 30 rewritten: BI reads the layer's tables and models; the dataset editor and the Model view are the layer's editors, reached from BI and Admin |
 | [BI_DESIGN.md](BI_DESIGN.md) | section 3.3 replaced by a pointer to Rachana; section 15's dataset and model specification moved into the tables guide's reference part (current design only) |
-| [PIVOT_ENGINE.md](PIVOT_ENGINE.md), `docs/guides/PIVOT_GUIDE.md` | the "dataset column" route becomes "a virtual table's column"; Promote offers *add as a column of a virtual table* |
+| [ARCHITECTURE.md section 23](ARCHITECTURE.md#23-the-pivot-engine), `docs/guides/PIVOT_GUIDE.md` | the "dataset column" route becomes "a virtual table's column"; Promote offers *add as a column of a virtual table* |
 | [VIRTUAL_TABLES.md](VIRTUAL_TABLES.md), [ONE_GRAMMAR.md](ONE_GRAMMAR.md) | the decisions of section 8 written in; part 4 marked built |
 | Flight guide and reference (2.9.11.c) | the `table` form, the `model` form on the layer, the catalogs of Flight SQL |
 | `CLI_GUIDE.md`, `API_GUIDE.md`, `CONFIGURATION.md`, `TROUBLESHOOTING.md` | `tables` commands (planned), the layer's endpoints, settings and codes; the removed `bi expr` endpoints and `bi migrate` modes taken out |

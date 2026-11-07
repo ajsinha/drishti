@@ -20,7 +20,7 @@ import java.util.Locale;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The logical plan's settings, {@code drishti.bi.plan.*} (docs/admin/CONFIGURATION.md).
+ * The logical plan's settings, {@code drishti.bi.plan.*} (docs/reference/CONFIGURATION.md).
  *
  * @param cacheEntries answers the result cache keeps (L1 of section 6.1); 0 turns it off
  * @param cacheTtl how long an answer for the current state (not an as-of date) is served before it is asked again, even when no generation moved

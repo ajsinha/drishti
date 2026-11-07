@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """`drishti.py server engines` (and `drishti.py admin engines`, the same): Admin -> Engines from the command line
-(docs/architecture/COMPUTE_ENGINES.md section 10; the API: /api/v1/admin/engines, administrators only, never a personal token).
+(docs/architecture/ARCHITECTURE.md section 25.10; the API: /api/v1/admin/engines, administrators only, never a personal token).
 
     list [--cluster] [--json]                 every engine: state, memory, needs, its file (--cluster: every node side by side)
     show <id> [--sources]                     one engine: state, memory, needs, used by, what turning it off hides; --sources: where its switch comes from

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""docs/admin/CONFIGURATION.md is the one configuration document, complete by construction (2.9.7 C1-C2): its generated half is what
+"""docs/reference/CONFIGURATION.md is the one configuration document, complete by construction (2.9.7 C1-C2): its generated half is what
 tools/settings_catalogue.py writes from the sources, every key of every source is a row, every key has a meaning, and every environment
 variable a source names or the code reads is in the index."""
 from __future__ import annotations
@@ -148,7 +148,7 @@ def test_the_comment_reader():
 
 
 def test_the_engines_area_lists_every_engine_file_key_and_the_old_names(tmp_path, monkeypatch):
-    """COMPUTE_ENGINES.md section 12: the Engines area holds every key of every config/engines/*.yaml (the server area none of them), the
+    """ARCHITECTURE.md section 25.12: the Engines area holds every key of every config/engines/*.yaml (the server area none of them), the
     old switch names once each, and --check fails when a file and its jar copy differ or a key is in both application.yaml and a file."""
     rows, problems = cat.engine_rows()
     assert not problems, problems

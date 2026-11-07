@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Help → Configuration (``/help/configuration``; docs/admin/CONFIGURATION.md, 2.9.7 C3): the one configuration document, searchable.
+"""Help → Configuration (``/help/configuration``; docs/reference/CONFIGURATION.md, 2.9.7 C3): the one configuration document, searchable.
 
 The page is the document as the help centre renders it, with the generated half (``Every setting``) made searchable: each settings
 row carries its area and words (``data-hay``), a query (``?q=``, words in any order: a key, an environment variable or words of a

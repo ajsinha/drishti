@@ -35,7 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Crash safety (DATALOAD_INBOX.md section 7): every step can be repeated. Before a cycle looks at the inbox, every {@code inprocess/<run>/}
+ * Crash safety (DATA_ARCHITECTURE.md section 9.7): every step can be repeated. Before a cycle looks at the inbox, every {@code inprocess/<run>/}
  * folder a stopped server left is finished by what the ledger and the loader's own files say:
  *
  * <ul>

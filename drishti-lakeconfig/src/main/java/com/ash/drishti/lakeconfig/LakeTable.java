@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * One table of a lake as its lake file describes it (docs/architecture/LAKE_CONFIG.md section 3), the lake's {@code defaults:} already
+ * One table of a lake as its lake file describes it (docs/architecture/DATA_ARCHITECTURE.md section 8.3), the lake's {@code defaults:} already
  * applied. Every table is partitioned by {@code business_date} first, always: {@link #partitionBy()} names only what comes after it.
  *
  * @param domain      the domain ({@code trading} of {@code trading.trade})

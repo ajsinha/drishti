@@ -319,7 +319,7 @@ def main() -> None:
         days = int(sys.argv[sys.argv.index("--days") + 1]) if "--days" in sys.argv else 10
         if not out.name.endswith(".tar"):
             raise SystemExit(f"--jsonl {out}: the loader rows of several kinds and dates go in a tar of <kind>/<YYYY-MM-DD>/ folders "
-                             "(docs/architecture/DATA_LOAD_RULES.md): name it <name>.tar")
+                             "(docs/architecture/DATA_ARCHITECTURE.md section 10): name it <name>.tar")
         sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools" / "lake"))
         import feedfiles
         n = 0

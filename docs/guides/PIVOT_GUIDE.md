@@ -17,7 +17,7 @@
 
 The pivot engine turns any table of any pack, or the VaR engine's trades, into a pivot: these measures, broken down by these fields on
 rows and columns, under these filters, on this business date. Every figure is computed by the server; every total is made from its own
-members, never from the figures on the screen. The design behind it is [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md); the hands-on
+members, never from the figures on the screen. The design behind it is [ARCHITECTURE.md section 23](../architecture/ARCHITECTURE.md#23-the-pivot-engine); the hands-on
 walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md); custom functions, explain and what-if are walked through in
 [tutorial 37](../tutorials/37-custom-functions-and-explain.md).
 
@@ -62,14 +62,14 @@ walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md); custom funct
 | A page's table | **Pivot** under a table or ladder whose Sutra says `pivot:` (the source `panel/<kind>/<panel>/<id>`: the panel's own rows, the Sutra's arrangement as the opening view) |
 | Search results | **Pivot** above the results of a kind whose pack says `pivot:` (the kind, the pack's arrangement as the opening view) |
 
-The engine is a compute engine with its own file, `config/engines/pivot.yaml` ([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md)):
+The engine is a compute engine with its own file, `config/engines/pivot.yaml` ([ARCHITECTURE.md section 25](../architecture/ARCHITECTURE.md#25-compute-engines-on-or-off-each-with-its-own-configuration-file)):
 switch it with `drishti.engines.pivot.enabled` (on as shipped; `DRISHTI_PIVOT_ENGINE_ENABLED`), from Admin → Engines or
 `drishti.py admin engines`, live. Off, `/api/v1/pivot` answers `404 DRS-1020` in words, and `PIVOT`, Views → Pivot, its Help pages and
 `drishti.py pivot` disappear. The old name `drishti.pivot.enabled` still works (it is also the Pivot tab's switch). The MR cube needs it.
 
 ## 2. The screen
 
-The screen is mock-up A of the design ([section 25](../architecture/PIVOT_ENGINE.md#25-mock-ups-the-screens-to-build)): Excel's PivotTable
+The screen is mock-up A of the design ([section 25](../architecture/ARCHITECTURE.md#2325-mock-ups-the-screens-to-build)): Excel's PivotTable
 as people know it, with what Excel lacks in the places Excel's equivalents would be.
 
 | Part | What it does |
@@ -340,7 +340,7 @@ is written as a function around the aggregate, which is how the catalogue names 
 among the siblings), `diff(sum(PNL), 1, TRADE_DATE:month)` and `pct_change(sum(PNL), 1, TRADE_DATE:month)` (along a dimension on the
 rows or the columns). The column header is the text as written; the raw figure stays in the answer beside the shown one. The statistics
 (`skewness`, `kurtosis`, `corr`, `slope`, `iqr`, `trimmean`, `mode`, `string_agg` …) are ordinary values:
-[FUNCTIONS.md](FUNCTIONS.md).
+[FUNCTIONS.md](../reference/FUNCTIONS.md).
 
 ## 5. Nested rows, opened lazily
 
@@ -517,7 +517,7 @@ More in [TOOLS.md](TOOLS.md#516-pivot).
 
 ## 16. Settings
 
-All under `drishti.pivot` in `config/engines/pivot.yaml` (the switch `drishti.engines.pivot.enabled` there too), listed in [CONFIGURATION.md](../admin/CONFIGURATION.md): `enabled`, `max-cells`,
+All under `drishti.pivot` in `config/engines/pivot.yaml` (the switch `drishti.engines.pivot.enabled` there too), listed in [CONFIGURATION.md](../reference/CONFIGURATION.md): `enabled`, `max-cells`,
 `max-holistic-cells`, `busy-cells`, `cache-mb` (the partial-state cache `pivot.states`, in the one memory budget), `provenance-kept`,
 `local-shards`, `stage-max-rows`, `stage-keep`, `duckdb.connections`, `duckdb.threads`, `duckdb.memory-limit-mb`, `duckdb.temp-directory`,
 `estimate.confirm-above-seconds`, `estimate.confirm-above-rows`, `aggregate-only.min-members-per-cell`, `export.xlsx-max-rows`,
@@ -562,7 +562,7 @@ The engine is also Rachana's only source of aggregates ([ONE_GRAMMAR.md](../arch
 into Rachana's function table (`sum`, `count`, `avg`, `min`, `max`, `median`, `percentile`, `distinct`, `wavg`, `variance`, `stddev`,
 the `_once` forms), the grouping behind `group(...)`, and `measure(...)` and `cell(...)`, so a sum in a Sutra and a sum in a pivot cell
 are the same `AggFunction`. A Sutra's `pivot` panel writes its groupings as Rachana paths and its value as one of these
-(`by: "@.BOOK"`, `across: "@.CURRENCY"`, `value: sum(@.MTM)`). Every function, once, is listed in [FUNCTIONS.md](FUNCTIONS.md).
+(`by: "@.BOOK"`, `across: "@.CURRENCY"`, `value: sum(@.MTM)`). Every function, once, is listed in [FUNCTIONS.md](../reference/FUNCTIONS.md).
 
 ## 19. Custom functions
 
@@ -670,7 +670,7 @@ source (`mode: direct`) gets no engine totals either (they would read every row 
 ## 23. Scale: sketches, rollups, progressive answers and the cluster
 
 Large tables (a billion rows and more) are answered by four things that work together, each of them inside the engine and each saying in
-the answer what it did. The design and its reasons are [PIVOT_ENGINE.md section 9](../architecture/PIVOT_ENGINE.md#9-scale-extremely-large-data).
+the answer what it did. The design and its reasons are [ARCHITECTURE.md section 23.9](../architecture/ARCHITECTURE.md#239-scale-extremely-large-data).
 
 ### 23.1 Sketches, with a stated error and exact on request
 
@@ -710,7 +710,7 @@ How a sketch is made on the tabular provider: HyperLogLog's (register, rank) pai
 `GROUP BY GROUPING SETS` statement as every other state; KLL is built in Java from the cell's quantile points (`quantile_disc` at 2k + 1
 fractions) and its count; Space-Saving from the cell's value counts, kept to its counters. KLL is written in the module (Apache
 DataSketches, allowed by decision 2, is not resolvable in the offline build); its error is measured by `SketchErrorTest`. Up to about 10,000 distinct values (2.5 × the 4,096 registers) a distinct count is linear counting over the registers, which is closer there than the harmonic mean. A document
-source ([PIVOT_ENGINE.md section 6.7](../architecture/PIVOT_ENGINE.md#67-documents-paths-arrays-and-grains)) is sketched the same way at
+source ([ARCHITECTURE.md section 23.6.7](../architecture/ARCHITECTURE.md#2367-documents-paths-arrays-and-grains)) is sketched the same way at
 its view's grain: `distinct($.LEGS[*].CURRENCY)` counts the legs' currencies.
 
 ### 23.2 Rollups of partial states, chosen automatically
@@ -787,7 +787,7 @@ covers the view, and whether it may answer you), run in the background, not now.
 
 ### 23.6 Settings
 
-Under `drishti.pivot` in `config/engines/pivot.yaml`, in [CONFIGURATION.md](../admin/CONFIGURATION.md): `sketches.hll-precision` (12),
+Under `drishti.pivot` in `config/engines/pivot.yaml`, in [CONFIGURATION.md](../reference/CONFIGURATION.md): `sketches.hll-precision` (12),
 `sketches.kll-k` (200), `sketches.top-capacity-factor` (10), `sketches.approximate-above-rows` (10,000,000), `progressive.enabled`,
 `progressive.after-ms` (2000), `progressive.sample-fraction` (0.02), `rollups.enabled`, `rollups.refresh-seconds` (60),
 `rollups.advise-after-scans` (10), `rollups.dir`, `rollups.definitions`, `cluster.enabled`, `cluster.hedge-after-seconds` (20),
@@ -936,8 +936,8 @@ opens the scope and date you are looking at. Its measures, lens and figures are 
 cube asked the server for, for each form of `MCUBE`, and checks the preset asks for exactly the same (`tests/test_cube_presets.py`).
 
 **The CCR cube** is *Under construction*: the preset, its word and its door exist, and its page says so; its source, the CCR provider, comes with
-the counterparty engines ([PIVOT_ENGINE.md section 6.5](../architecture/PIVOT_ENGINE.md#65-the-ccr-provider-later),
-[UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md), `ccr-cube-preset`). Meanwhile every counterparty's computed exposure is the
+the counterparty engines ([ARCHITECTURE.md section 23.6.5](../architecture/ARCHITECTURE.md#2365-the-ccr-provider-later),
+[UNDER_CONSTRUCTION.md](../reference/UNDER_CONSTRUCTION.md), `ccr-cube-preset`). Meanwhile every counterparty's computed exposure is the
 [Exposure explorer](EXPOSURE_GUIDE.md) (`EXP`).
 
 A preset whose engine runs on no server of the cluster (the MR cube needs `mr-cube`) is refused in words (`DRS-1020`), like its word.

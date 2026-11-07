@@ -127,7 +127,7 @@ class BuildTest(unittest.TestCase):
         self.tmp.cleanup()
 
     def put(self, docs, indent=None):
-        """The documents as one file a business date (docs/architecture/DATA_LOAD_RULES.md: the date is the file's, never a row's):
+        """The documents as one file a business date (docs/architecture/DATA_ARCHITECTURE.md section 10: the date is the file's, never a row's):
         deal.<date>.json, a document without a date in deal.json (the business today)."""
         import re
         import shutil

@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The store loaders' feed by the load rules (docs/architecture/DATA_LOAD_RULES.md): the business date from outside (--as-of, .ready,
+ * The store loaders' feed by the load rules (docs/architecture/DATA_ARCHITECTURE.md section 10): the business date from outside (--as-of, .ready,
  * the name, a tar's folder), never a row's; a row's own date counted when it differs; a plain file is one table.
  */
 class RowFeedTest {

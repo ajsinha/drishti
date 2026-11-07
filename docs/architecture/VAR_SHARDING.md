@@ -18,7 +18,7 @@
 Status: **built** (expanding
 [VAR_GUIDE.md section 28](../guides/VAR_GUIDE.md#28-sharding-across-drishtinet)). **Off by default**: with no `sharding:` block in
 the market-risk pack and no `drishti.var.sharding.enabled`, every date is loaded whole on each server. The operator's notes
-are in [OPERATIONS.md](../admin/OPERATIONS.md#var-shards); the settings in [CONFIGURATION.md](../admin/CONFIGURATION.md); the errors `DRS-5215` to
+are in [OPERATIONS.md](../admin/OPERATIONS.md#var-shards); the settings in [CONFIGURATION.md](../reference/CONFIGURATION.md); the errors `DRS-5215` to
 `DRS-5217` in [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md). How sharding is deployed in a production cluster (counts per role, shard
 sizes, zones, drains in a rolling upgrade, every failure with its timing) is [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md), the deployment
 reference. This document is the machinery (measure-agnostic); what an operator of VaR needs from it, with bit-equality and the failure

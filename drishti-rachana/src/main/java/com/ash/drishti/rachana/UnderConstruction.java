@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The under-construction registry ({@code config/under-construction.yaml}; docs/admin/UNDER_CONSTRUCTION.md): every figure, panel, menu item,
+ * The under-construction registry ({@code config/under-construction.yaml}; docs/reference/UNDER_CONSTRUCTION.md): every figure, panel, menu item,
  * help page or contract that depends on work not built yet, and how it is treated: {@code hidden} (left out) or {@code under-construction}
  * (shown, its value replaced by the words "Under construction", tone {@code uc}, which the renderers draw as a chip). The data stays where it
  * is; only what is displayed changes. One mechanism: a Sutra is rewritten here, when it is matched to a document, so every page, panel,

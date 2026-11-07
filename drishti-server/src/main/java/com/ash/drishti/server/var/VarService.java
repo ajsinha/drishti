@@ -1082,7 +1082,7 @@ public final class VarService implements AutoCloseable {
     }
 
     /** What is loaded, for the provenance box and Admin. */
-    /** The engine registry's word on whether VaR runs on this node (COMPUTE_ENGINES.md); unset (a test of the service alone): the old switch. */
+    /** The engine registry's word on whether VaR runs on this node (ARCHITECTURE.md section 25); unset (a test of the service alone): the old switch. */
     private volatile java.util.function.BooleanSupplier running;
 
     public void running(java.util.function.BooleanSupplier on) {

@@ -415,7 +415,7 @@ def lake_layout(a, p: dict) -> None:
         root = root + "/" + parent.rpartition("/")[0]
     a.lake = str(getattr(a, "lake_root", None) or root)
     a.format = t["format"]
-    # the mode (DATA_LOAD_RULES.md section 3): --mode or a .ready file's mode:, else the table's entry here (its default), else append;
+    # the mode (DATA_ARCHITECTURE.md section 10.3): --mode or a .ready file's mode:, else the table's entry here (its default), else append;
     # an append's batch (--batch-id, with --engine java) is committed once
     if not getattr(a, "_mode_given", False):
         a.mode = "append" if t.get("load-mode") == "append" else "overwrite-dates"

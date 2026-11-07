@@ -16,7 +16,7 @@
 
   A screen mock-up (engines/B.html), self-contained: system fonts, everything inline, nothing from a CDN.
   Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/IMPLEMENTATION_PLAN.md (2.9.11 row 14, compute engines on or off;
-  the design: docs/architecture/COMPUTE_ENGINES.md).
+  the design: docs/architecture/ARCHITECTURE.md section 25).
 -->
 <html lang="en">
 <head>
@@ -247,7 +247,7 @@ tr.offrow td{color:var(--faint)}
 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><span class="btn p">Turn off all three</span><span class="btn">Cancel</span></div></div></div>
 </div></div>
 <div class="why"><div class="card"><h3>How it feels</h3><ul><li>Friendly and visual: a card per engine, grouped as the business thinks (market, counterparty, platform).</li><li>The dependency map makes 'what needs what' obvious at a glance.</li><li>One dialog per change, with the reason and the consequence.</li></ul></div><div class="card"><h3>Why not recommended</h3><ul><li>Cards spend the screen: ten engines fill it, and more engines will come.</li><li>Where a switch is set (file, local file, environment) and threads do not fit on a card.</li><li>A dialog per change; no batch of several changes with one reason.</li></ul></div><div class="card"><h3>Worth keeping</h3><ul><li>The dependency map, as a small drawing in A's side panel.</li><li>Grouping by family, as a filter in A's table.</li><li>The 'off hides' line on each card, as A's hover text.</li></ul></div></div>
-<footer>Mock-up. Design, not built (docs/architecture/COMPUTE_ENGINES.md). Names, numbers, nodes and the reference codes (DRS-1020 to DRS-1024) are illustrative; the codes are assigned when it is built. A change writes the engine's file config/engines/&lt;id&gt;.yaml, is audited with who, when and why, and is the same from <span class="mono">drishti.py server engines</span>.</footer>
+<footer>Mock-up. Design, not built (docs/architecture/ARCHITECTURE.md section 25). Names, numbers, nodes and the reference codes (DRS-1020 to DRS-1024) are illustrative; the codes are assigned when it is built. A change writes the engine's file config/engines/&lt;id&gt;.yaml, is audited with who, when and why, and is the same from <span class="mono">drishti.py server engines</span>.</footer>
 </div>
 </body>
 </html>

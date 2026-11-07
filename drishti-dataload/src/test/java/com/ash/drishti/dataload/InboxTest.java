@@ -27,7 +27,7 @@ import java.time.Instant;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** The hand-shake (DATALOAD_INBOX.md section 3): markers, ready.all, stability, names, links, the cycle's caps. */
+/** The hand-shake (DATA_ARCHITECTURE.md section 9.3): markers, ready.all, stability, names, links, the cycle's caps. */
 class InboxTest {
 
     @TempDir Path tmp;

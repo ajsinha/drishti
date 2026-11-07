@@ -131,7 +131,7 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
     _mod("demo").add_arguments(dm)
     u = add(sub, "undo", cmd_undo, "lake undo: remove one load's rows by its load id, in every table of the lake (a replace restored); asks "
             "to confirm", [], "examples:\n  drishti.py lake undo 20261104T093000.123-4242.1 --lake data/delta --dry-run\n"
-            "  drishti.py lake undo 20261104T093000.123-4242.1 --lake data/delta --yes\nGuide: docs/architecture/DATA_LOAD_RULES.md section 6.3")
+            "  drishti.py lake undo 20261104T093000.123-4242.1 --lake data/delta --yes\nGuide: docs/architecture/DATA_ARCHITECTURE.md section 10.6.3")
     _mod("undo").add_arguments(u)
     add(sub, "maintain", cmd_maintain, "lake maintain: retention, compaction, checkpoint and vacuum (tools/lake/maintain.py; its options are passed through)",
         [], "examples:\n  drishti.py lake maintain --config deploy/lake-maintenance.yaml --once --dry-run\n"
@@ -141,4 +141,4 @@ def register(groups, add, srv, ctx: dict | None = None) -> None:
             "Only tables lake build built are maintained (--force-foreign overrides, with a warning). Guide: docs/admin/OPERATIONS.md")
     _mod("lakeconfig").register(sub, add)                               # lake show|check|migrate-config (2.9.11.c, LAKE_GUIDE.md)
     if ctx:
-        _mod("memory_cli").register(sub, add, srv, ctx)                # lake memory status|jobs|refill (2.9.11, IN_MEMORY_LAKE.md)
+        _mod("memory_cli").register(sub, add, srv, ctx)                # lake memory status|jobs|refill (2.9.11, DATA_ARCHITECTURE.md section 7)

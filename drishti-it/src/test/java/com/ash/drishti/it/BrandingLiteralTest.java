@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 /**
- * Branding from configuration only (docs/admin/CONFIGURATION.md, {@code drishti.branding}): no message the server sends names the product
+ * Branding from configuration only (docs/reference/CONFIGURATION.md, {@code drishti.branding}): no message the server sends names the product
  * in a string literal. The name comes from {@code drishti.branding.product} ({@code Branding.sqlName()}, {@code Branding.netName()},
  * {@code Branding.name(..)}, or the injected value). Allowed: comments and Javadoc (the licence header is one), log lines (the operator's,
  * not the user's), header names ({@code X-Drishti-User}, {@code Drishti-Run}) and identifiers ({@code DrishtiException}, {@code drishti.*}).

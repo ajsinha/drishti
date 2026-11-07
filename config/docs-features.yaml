@@ -54,7 +54,7 @@ features:
     lenses: [all]
     section: analytics
     contracts: [VAR, PNL]
-    sources: [guides/PIVOT_GUIDE.md, guides/MR_CUBE_GUIDE.md, architecture/PIVOT_ENGINE.md, architecture/FUNCTION_CATALOGUE.md,
+    sources: [guides/PIVOT_GUIDE.md, guides/MR_CUBE_GUIDE.md, architecture/ARCHITECTURE.md section 23, architecture/FUNCTION_CATALOGUE.md,
               tutorials/33-the-pivot-engine.md, tutorials/37-custom-functions-and-explain.md, tutorials/38-the-mr-cube-on-the-pivot-engine.md]
   - id: F3
     name: Reports and dashboards
@@ -79,7 +79,7 @@ features:
     domain: core
     lenses: [all]
     section: analytics
-    sources: [guides/BI_GUIDE.md, architecture/PYTHON_COMPUTE.md, tutorials/14-python-and-analyse.md]
+    sources: [guides/BI_GUIDE.md, architecture/ARCHITECTURE.md section 24, tutorials/14-python-and-analyse.md]
   - id: F5
     name: AI assistant
     who: everyone, admin
@@ -299,4 +299,4 @@ features:
     domain: core
     lenses: [admin]
     section: operate
-    sources: [admin/USER_MANAGEMENT.md, admin/EDITIONS.md, architecture/COMPUTE_ENGINES.md]
+    sources: [admin/USER_MANAGEMENT.md, admin/EDITIONS.md, architecture/ARCHITECTURE.md section 25]

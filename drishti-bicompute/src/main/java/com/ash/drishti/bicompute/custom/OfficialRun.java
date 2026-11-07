@@ -18,7 +18,7 @@ package com.ash.drishti.bicompute.custom;
 import java.util.function.Supplier;
 
 /**
- * Marks work done for an official run, report or sign-off (PIVOT_ENGINE.md decision 14): while marked, no custom function resolves; the
+ * Marks work done for an official run, report or sign-off (ARCHITECTURE.md section 23 decision 14): while marked, no custom function resolves; the
  * official measures stay the Java engines. The host wraps its official runs in {@link #during}.
  */
 public final class OfficialRun {

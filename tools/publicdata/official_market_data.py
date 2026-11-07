@@ -251,7 +251,7 @@ LOAD = ("uv run --with deltalake --with pyarrow --with pyyaml python tools/inges
 
 
 def write(out: Path, sources: list[MarketSource]) -> list[Path]:
-    """One <kind>.<YYYY-MM-DD>.jsonl a kind and business date (the load rules, docs/architecture/DATA_LOAD_RULES.md: each document under
+    """One <kind>.<YYYY-MM-DD>.jsonl a kind and business date (the load rules, docs/architecture/DATA_ARCHITECTURE.md section 10: each document under
     its AS_OF, the day its newest observation is of), sorted by id; a kind's documents from sources not in this run are kept (re-runs
     are idempotent)."""
     out.mkdir(parents=True, exist_ok=True)

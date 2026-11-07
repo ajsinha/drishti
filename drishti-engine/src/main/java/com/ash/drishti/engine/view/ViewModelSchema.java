@@ -32,7 +32,7 @@ import java.util.Map;
 
 /**
  * The JSON Schema (draft 2020-12) of the ViewModel, its panels' {@code data} and the live stream's frames
- * ({@code GET /api/v1/viewmodel/schema}, docs/architecture/VIEWMODEL.md section 9).
+ * ({@code GET /api/v1/viewmodel/schema}, docs/reference/VIEWMODEL.md section 9).
  *
  * <p>Generated from the records themselves, so a field added to {@link ViewModel}, {@link PanelData}, {@link Frame} or
  * {@link Patch} is in the schema at once. Each record's Jackson inclusion decides what is required and what may be null:
@@ -148,7 +148,7 @@ public final class ViewModelSchema {
         s.put("$id", ID);
         s.put("title", "ViewModel");
         s.put("description", "The JSON the server returns for every entity screen (GET /api/v1/views/{kind}/{id}, and the view event of its "
-                + "stream). $defs.Frame is a frame event of the stream. See docs/architecture/VIEWMODEL.md.");
+                + "stream). $defs.Frame is a frame event of the stream. See docs/reference/VIEWMODEL.md.");
         s.put("$ref", "#/$defs/ViewModel");
         s.put("$defs", defs);
         return s;

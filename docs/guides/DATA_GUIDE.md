@@ -87,7 +87,7 @@ there**. One small signal, "this batch has landed", makes Drishti refresh what i
 alert rules on it, and tell the right people. Expectations then flag a batch that has *not* landed in time.
 
 Related: [API_GUIDE.md](API_GUIDE.md) (every endpoint, the error codes), [CLI_GUIDE.md](CLI_GUIDE.md) (the `drishti.py` program),
-[CONFIGURATION.md](../admin/CONFIGURATION.md) (every setting), [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) (what a pack is),
+[CONFIGURATION.md](../reference/CONFIGURATION.md) (every setting), [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which) (what a pack is),
 [OPERATIONALISING.md](OPERATIONALISING.md) (shipping packs and data to servers).
 
 ### 1. Why: what the signal is for
@@ -368,9 +368,9 @@ expect:
 
 #### 6.3 Server settings (`drishti.loads.*`)
 
-Also listed in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiloads--data-loads-a-batch-landed).
+Also listed in [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtiloads--data-loads-a-batch-landed).
 
-Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.loads`](../admin/CONFIGURATION.md#drishtiloads) (also at Help → Configuration in the console).
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.loads`](../reference/CONFIGURATION.md#drishtiloads) (also at Help → Configuration in the console).
 
 ### 7. What happens, step by step
 
@@ -708,8 +708,8 @@ page says what that means for data coming in, data going out, and the files Dris
 | Form | One line is | Written by | Read by |
 |---|---|---|---|
 | **Document** | one entity, as its source holds it: `{"TRADE_ID": "1000015", "LEGS": [...], ...}` | `make_trades.py`, `bulk_trades.py`, `comswap_synth.py`, `note_synth.py`, every pack's `samples/<kind>.jsonl` | `lake build`, `build_demo_lakes.py`, `ingest_jsonl.py`, the file connector, the demo connector |
-| **Loader row** | `{"domain", "kind", "id", "date", "doc", "columns"}`: a document (`doc`, as JSON text) of a kind on a business date, with the fields its pack promotes; kept as it is, but stored under the business date of its file by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)), never its own `date` (a row whose `date` differs is counted) | `make_data.py --jsonl`, `bulk_trades.py --jsonl`: tars of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders | the Java loaders (PostgreSQL, Cassandra, Iceberg, DuckDB, Redis, MongoDB, Aerospike, the file connector's `JsonlLoader`) |
-| **Lake row** | `{"domain", "kind", "table", "id", "date", "doc"}`: the same, naming the Delta table (`trade_endur`); kept as it is, but stored under the business date of its file by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)), never its own `date` (a row whose `date` differs is counted) | `make_data.py --lake`, `samplegen/lake.py`, the pack generators' `--lake`: tars of `<table>/<YYYY-MM-DD>/rows.jsonl` | `tools/samplegen/load_rows.py` |
+| **Loader row** | `{"domain", "kind", "id", "date", "doc", "columns"}`: a document (`doc`, as JSON text) of a kind on a business date, with the fields its pack promotes; kept as it is, but stored under the business date of its file by the load rules ([DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load)), never its own `date` (a row whose `date` differs is counted) | `make_data.py --jsonl`, `bulk_trades.py --jsonl`: tars of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders | the Java loaders (PostgreSQL, Cassandra, Iceberg, DuckDB, Redis, MongoDB, Aerospike, the file connector's `JsonlLoader`) |
+| **Lake row** | `{"domain", "kind", "table", "id", "date", "doc"}`: the same, naming the Delta table (`trade_endur`); kept as it is, but stored under the business date of its file by the load rules ([DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load)), never its own `date` (a row whose `date` differs is counted) | `make_data.py --lake`, `samplegen/lake.py`, the pack generators' `--lake`: tars of `<table>/<YYYY-MM-DD>/rows.jsonl` | `tools/samplegen/load_rows.py` |
 | **Sutra test case** | `{"case": "<name>", "document": {...}}` | every generator of Sutra tests (`tests/<sutra>/cases.jsonl`, beside `expect.yaml`) | `sutra test`; the older one-`.json`-a-case folders still read, with a warning |
 | **Catalogue entry** | `{"kind", "id", "title", "subtitle"}` | every pack generator (`samples/catalog.jsonl`; the `catalog.json` array of earlier releases is still read) | the demo connector, the pack tools |
 | **Staged lake row** | `{"id", "doc", "columns"}` | `lake build`'s staging (`<lake>/_drishti-lake/staging`), the official results' publishers | Drishti's Java lake writer (`LakeWriter`; the earlier `[id, doc, columns]` array a line still read) |
@@ -767,7 +767,7 @@ The compliance export's files are `.jsonl` (they were JSON Lines named `.ndjson`
 `exposure-official`, `exposure-official-cpty`), and each published date is also written as JSON Lines beside them:
 `<root>/risk-results/jsonl/<table>/<date>/<table>-v<table version>.jsonl`, one row a line, one file per commit (a restatement is a new
 file). The setting is `drishti.var.official.jsonl` and `drishti.ccr.exposure.official.jsonl`, on by default
-([CONFIGURATION.md](../admin/CONFIGURATION.md)). In the content store the row lists are JSON Lines too: `var/official/<date>-membership-v<n>.jsonl`
+([CONFIGURATION.md](../reference/CONFIGURATION.md)). In the content store the row lists are JSON Lines too: `var/official/<date>-membership-v<n>.jsonl`
 and `exposure/official/<date>-trades-v<n>.jsonl` (a header line, then a row a line). Records written as `.json` keep their `.json`
 and are read as they are: the store is append-only, nothing is rewritten. A single record or capture stays one JSON document.
 
@@ -793,7 +793,7 @@ it reaches the browser too, for the answers it was measured to win on, and nowhe
 
 | Path | Arrow | Since |
 |---|---|---|
-| Java to the Python compute workers | Arrow IPC files, memory-mapped | built ([PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md)) |
+| Java to the Python compute workers | Arrow IPC files, memory-mapped | built ([ARCHITECTURE.md section 24](../architecture/ARCHITECTURE.md#24-compute-workers-python-and-java-libraries-approved-pinned-and-isolated)) |
 | BI answers to the console's Python, Explore and Perspective-era clients | `?format=arrow` on `POST /bi/reports/{id}/query` and `POST /bi/mq`: the raw rows | 2.1 |
 | **Any JSON answer of the two endpoints below, to any client that asks** | `Accept: application/vnd.apache.arrow.stream`: the JSON answer itself, its table as the record batch, the rest in the schema's metadata | built |
 | **The VaR explorer's contribution tables by position and by trade, in the browser** | read with Arrow JS (vendored) into typed columns | built |
@@ -948,7 +948,7 @@ from 2 files, version 0`.
 | Expanded size (zip bombs) | while reading, the bytes the archive expands to and, apart, the JSON Lines text of its compressed members, each held to the same two caps: reading stops the moment one is passed (`… expands past its cap … a zip bomb? Reading stopped`) |
 
 The caps' defaults come from `DRISHTI_ARCHIVE_MAX_MB`, `DRISHTI_ARCHIVE_MAX_RATIO` and `DRISHTI_ARCHIVE_MAX_MEMBERS`
-([CONFIGURATION.md](../admin/CONFIGURATION.md)) for every loader; the parallel loader also takes `source.archive.max-mb`, `max-ratio`
+([CONFIGURATION.md](../reference/CONFIGURATION.md)) for every loader; the parallel loader also takes `source.archive.max-mb`, `max-ratio`
 and `max-members` in its load file.
 
 **Examples.**
@@ -987,7 +987,7 @@ datasets:
 ### 8. Feeds: the table and business date of a file
 
 Every loader (`drishti.py lake build`, `drishti.py data ingest`, the parallel lake loader and the data inbox, [section 7](#7-the-data-inbox-drop-files-and-they-load))
-follows one set of rules, written out with their decisions in [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md).
+follows one set of rules, written out with their decisions in [DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load).
 
 | File | Table | Business date |
 |---|---|---|
@@ -1320,14 +1320,14 @@ python3 tools/drishti.py data get trade-valuation --date 2026-09-30 \
 | console `features.data` | `true` | the page, the menu item and the word in the console |
 | console `data_view.*` | 30, 90, 300 s | how long the console waits for the list, a count, and between two parts of a download |
 
-Every setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md).
+Every setting is also in [CONFIGURATION.md](../reference/CONFIGURATION.md).
 
 ## 7. The data inbox: drop files and they load
 
 Put JSON Lines files (or archives of them) in one folder, add a `.ready` file beside each when it is complete, and the server loads them
 into the lake by itself, every ten minutes: the parallel lake loader writes them (one commit per business date), the files move to an
 outbox with a report, and the pack's connectors, checks, alerts and notices run as for any [data-load signal](#1-telling-drishti-new-data-has-landed).
-The design, with every decision, is [DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md); the hands-on walk-through, every step in
+The design, with every decision, is [DATA_ARCHITECTURE.md section 9](../architecture/DATA_ARCHITECTURE.md#9-the-data-inbox-files-dropped-in-a-folder-loaded-into-the-lake); the hands-on walk-through, every step in
 the UI, on the command line and in YAML, is [tutorial 36](../tutorials/36-load-files-with-the-data-inbox.md).
 
 ### 1. Turning it on
@@ -1364,7 +1364,7 @@ touch data/dataload/inbox/trade_endur.2026-11-03.ready            # or trade_end
 ```
 
 The `.ready` file is named after its data file in full or without the data extension; a short name that could release two files releases
-neither. It may stay empty, or say (YAML or JSON) how to load this one file ([DATA_LOAD_RULES.md section 5](../architecture/DATA_LOAD_RULES.md)):
+neither. It may stay empty, or say (YAML or JSON) how to load this one file ([DATA_ARCHITECTURE.md section 10.5](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load)):
 
 ```yaml
 business-date: 2026-11-03   # every row's business date, over the name's (refused for a tar)
@@ -1468,7 +1468,7 @@ the next cycle, or Load now, loads it. Fix the file or the rules first.
 
 The inbox's settings are in `config/engines/dataload.yaml` (`drishti.dataload.*`: `owner`, `dir`, `interval`, `stable-seconds`,
 `max-files`, `max-gb`, `loader-heap`, `load-timeout`, `reject-max-percent`, `reload-duplicates`, `keep-outbox-days`, `lake`,
-`rules-file`, `nice`), the rules in `config/dataload.yaml`; every key is in [CONFIGURATION.md](../admin/CONFIGURATION.md). The API is
+`rules-file`, `nice`), the rules in `config/dataload.yaml`; every key is in [CONFIGURATION.md](../reference/CONFIGURATION.md). The API is
 for administrators ([API_GUIDE.md](API_GUIDE.md)): `GET /api/v1/admin/dataload` (status), `POST /api/v1/admin/dataload/run` (Load now),
 `POST /api/v1/admin/dataload/retry` with `{"file": "<name>"}`; a personal token needs `loads:write` for those two. `GET /api/v1/admin/dataload/report?path=<path>` returns a
 report the status names (a `.loaded.json`, `.failed.json`, a loader's summary or rejects, under `outbox/` or `failed/` only).

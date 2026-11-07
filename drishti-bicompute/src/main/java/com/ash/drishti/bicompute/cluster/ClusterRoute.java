@@ -32,7 +32,7 @@ import java.util.Optional;
 import java.util.concurrent.Executor;
 
 /**
- * Cluster partial aggregation (PIVOT_ENGINE.md section 9.3): a mergeable plan of a provider that shards is scattered over the live nodes that
+ * Cluster partial aggregation (ARCHITECTURE.md section 23.9.3): a mergeable plan of a provider that shards is scattered over the live nodes that
  * run the pivot engine; each node evaluates its share (its files, assigned by rendezvous hashing of the file's path so a node's DuckDB and
  * disk cache stay warm for the same files; or, for a source that lists no files, one row-hash shard of N) and answers partial states per
  * cell key; the coordinator merges them in node order, then cell-key order ({@link OrderedMerge}), so the digits are the same on one node

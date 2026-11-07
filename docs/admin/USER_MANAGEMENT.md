@@ -131,7 +131,7 @@ A role says two things:
 
    | Power | Lets the holder |
    |---|---|
-   | `raw` | see every field, in raw JSON (F9) and everywhere else; others see the fields in `drishti.security.redact` as `•••` wherever their value could be seen or inferred: views, search, Impact, type-ahead, alerts ([CONFIGURATION.md](CONFIGURATION.md#field-masks)). Masks work on fields: a masked value copied into another text field (a timeline note) stays visible unless that field is masked too or `drishti.security.mask-copies` is on (best effort, exact match); fix the source so free text does not carry sensitive values |
+   | `raw` | see every field, in raw JSON (F9) and everywhere else; others see the fields in `drishti.security.redact` as `•••` wherever their value could be seen or inferred: views, search, Impact, type-ahead, alerts ([CONFIGURATION.md](../reference/CONFIGURATION.md#field-masks)). Masks work on fields: a masked value copied into another text field (a timeline note) stays visible unless that field is masked too or `drishti.security.mask-copies` is on (best effort, exact match); fix the source so free text does not carry sensitive values |
    | `author` | save Sutras from Studio and propose them (where Studio saving is on). **Designing is open to everyone**: any signed-in user may use Studio and the Screen Builder and preview against a pasted document; saving, proposing, approving and deleting need the right, and previewing a stored entity needs the right to its kind |
    | `approve` | approve or reject proposed Sutras, but never their own (four eyes) |
    | `admin` | everything in this guide: users, roles, caches, health, audit |
@@ -243,7 +243,7 @@ tokens** ([API_GUIDE.md (clients)](../guides/API_GUIDE.md#clients-scripts-notebo
 
 ## Embedding host applications
 
-Another web application (a CRM, a portal) can show live Drishti views in its own pages with `<drishti-view>` ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)), without an iframe. An administrator allows it, one **host application** at a time. Embedding is off until `drishti.embed.enabled` is on ([CONFIGURATION.md](CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)); register applications on **Admin → Embedding** (`/admin/embedding`), or with the API ([API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application)), for example:
+Another web application (a CRM, a portal) can show live Drishti views in its own pages with `<drishti-view>` ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)), without an iframe. An administrator allows it, one **host application** at a time. Embedding is off until `drishti.embed.enabled` is on ([CONFIGURATION.md](../reference/CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)); register applications on **Admin → Embedding** (`/admin/embedding`), or with the API ([API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application)), for example:
 
 ```bash
 curl -s -X POST $SERVER/api/v1/admin/embed/apps -H "Authorization: Bearer $ADMIN_TOKEN" -H 'Content-Type: application/json' -d '{
@@ -266,7 +266,7 @@ Admin menu → **Embedding** (`/admin/embedding`, administrators only) lists eve
 - **New application** (key `n`): name, id (made from the name; lower-case letters, digits and hyphens), origins one per line, how it signs in, scopes (the ones this server defines), the kinds it may show (empty: every kind its users' roles open), rates and token life. With a client secret, the secret is **shown once** in its own dialog, with a Copy button; closing the dialog forgets it, and a reload does not bring it back. With a public key, paste a JWK set (public keys only).
 - **Rotate secret** asks for a grace period (seconds; the old secret keeps working that long, `0` ends it at once) and shows the new secret once.
 - **Disable** stops the application at once (no new tokens; its tokens fail at the next call) but keeps its registration; **Enable** brings it back. **Delete** asks first and removes it for good. All of them are audited (`embed-app-created`, `-disabled`, `-enabled`, `-secret-rotated`, `-deleted`).
-- Applications **declared in configuration** (`drishti.embed.apps`, for GitOps; [CONFIGURATION.md](CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)) are marked *from config* and read-only: change them in the file and restart. A configured id cannot be registered again here.
+- Applications **declared in configuration** (`drishti.embed.apps`, for GitOps; [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)) are marked *from config* and read-only: change them in the file and restart. A configured id cannot be registered again here.
 - Keys: `n` opens *New application*, `/` focuses the filter, `Esc` closes a dialog. The page works at phone width and in both themes.
 
 ## Who looked at what: the access log
@@ -718,7 +718,7 @@ record, so a cluster of servers always agrees on both. (Admin → Commands opens
 
 Views → **Functions** (`/func`), or `FUNC <GO>` on the command line, lists every command **you can use**: the commands that are on, of the
 packs switched on for you, of the kinds your roles open. They are grouped by pack; each row says what the command opens, **what it does**
-(the one-line description of its data contract, the same text as the [command catalog](../guides/COMMAND_CATALOG.md)) and an example. A
+(the one-line description of its data contract, the same text as the [command catalog](../reference/COMMANDS.md)) and an example. A
 command an administrator turned off is not listed at all. The count reads *N commands you can use*.
 
 ![Functions as a user: the commands that are on, by pack, with what each does and its example; no switches](img/functions/functions-user.png)

@@ -26,7 +26,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * What a connector (or a pool) needs to run (docs/architecture/PYTHON_COMPUTE.md section 4): a locked Python environment, Java libraries
+ * What a connector (or a pool) needs to run (docs/architecture/ARCHITECTURE.md section 24.4): a locked Python environment, Java libraries
  * pinned by sha256, and connector plugins. Parsed from the {@code requires:} block; nothing in it is fetched, built or run until an
  * administrator approves it ({@link #items}).
  *

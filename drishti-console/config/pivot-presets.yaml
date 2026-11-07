@@ -35,8 +35,8 @@ presets:
   ccr:
     title: CCR cube
     word: CCUBE
-    source: ""                 # the CCR provider (netting-set exposure paths, netted and collateralised per set; PIVOT_ENGINE.md section 6.5)
+    source: ""                 # the CCR provider (netting-set exposure paths, netted and collateralised per set; ARCHITECTURE.md section 23.6.5)
     lens: ""
-    landing: limit-board       # the CCR cube's landing: the limit board and the netting-set drill (CCR_CUBE_LENS.md)
+    landing: limit-board       # the CCR cube's landing: the limit board and the netting-set drill (LENSES.md section 7)
     help: ccr-cube
     under_construction: ccr-cube-preset

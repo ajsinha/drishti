@@ -29,7 +29,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /**
- * Versions of a saved pivot view (PIVOT_ENGINE.md section 10, item 10): every save is kept ({@code pivot/view-versions/<owner>/<name>/<n>.json},
+ * Versions of a saved pivot view (ARCHITECTURE.md section 23.10, item 10): every save is kept ({@code pivot/view-versions/<owner>/<name>/<n>.json},
  * written by {@link PivotViews#save}); a reader of the view lists them, reads one, sees what changed between two (the definition, key by
  * key: rows, columns, values, filters, open nodes, sorts, top N, date) and the owner restores an old one as the next version. Definitions
  * only: a view never keeps numbers.

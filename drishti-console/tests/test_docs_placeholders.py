@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Every ${NAME:default} placeholder of the two application.yaml files is in docs/admin/CONFIGURATION.md's generated reference
+"""Every ${NAME:default} placeholder of the two application.yaml files is in docs/reference/CONFIGURATION.md's generated reference
 (tools/settings_catalogue.py): a row whose Env var column names the variable, with its default."""
 from __future__ import annotations
 

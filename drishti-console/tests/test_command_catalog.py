@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 
-"""The command catalog (docs/guides/COMMAND_CATALOG.md) is current: every pack mnemonic is in it with what it does, and it is what
+"""The command catalog (docs/reference/COMMANDS.md) is current: every pack mnemonic is in it with what it does, and it is what
 tools/command_catalog.py writes from the packs, their contracts and tools/commands.builtin.yaml."""
 import importlib.util
 from pathlib import Path

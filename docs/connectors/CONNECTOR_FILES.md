@@ -58,7 +58,7 @@ Contents: [1](#1-the-model-in-one-minute) the model · [2](#2-the-folder) the fo
 
 ## 2. The folder
 
-Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.sources`](../admin/CONFIGURATION.md#drishtisources) (also at Help → Configuration in the console).
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.sources`](../reference/CONFIGURATION.md#drishtisources) (also at Help → Configuration in the console).
 
 The folder holds the connector files and nothing else. What the server keeps *about* them lives in the **data folder**, never beside
 them and never in a hidden folder:
@@ -656,7 +656,7 @@ The log writes failures 1, 2, 4, 8, ... and always the recovery, so an hour of o
 Health show *failed — next retry in 20 s (attempt 3)* with the last error on the connector's row; **Retry now** (a button there and on
 Health, `POST /api/v1/admin/retry/connectors[?name=site-quotes]`, admin role, audited as `connector-retry-now`, token scope
 `packs:admin`) tries at once. Saving the file starts the count again. Failures and recoveries are audited (`connector-retry-failed`,
-`connector-recovered`). All settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#retry-settings); the overview:
+`connector-recovered`). All settings: [CONFIGURATION.md](../reference/CONFIGURATION.md#retry-settings); the overview:
 [OPERATIONS.md](../admin/OPERATIONS.md#retries-what-failed-is-tried-again-by-itself).
 
 What is **not** live: a connector defined in the server's own configuration (`application.yaml`, deprecated) and a change of
@@ -989,7 +989,7 @@ The panel itself is now a **view** of the pack's connectors with links to Admin 
 |---|---|
 | `status` | `OK`; `DEGRADED` (a connector is down or stale, one failed to start, or a pack has problems); `DOWN` (no connector is up) |
 | `summary` | counts: `sources`, `sourcesDown`, `failedToStart`, `packs`, `packsWithProblems` |
-| `sources[]` | one row per running connector: `status` (`UP` when `health` starts with `UP`, else `DOWN`), `health` text, `kinds`, `live`, `dated`, `search`, `reads` (`reads`, `found`, `notHeld`, `errors`, `lastError`, `lastErrorAt`, `lastOkAt`, `p50Ms`, `p99Ms`), `cache`, `lastUpdate` (when it last received new data; null for sources read on demand), `staleAfter` and `stale` (nothing new within the connector's `stale-after` setting, see [CONFIGURATION.md](../admin/CONFIGURATION.md#connector-settings-plugin-by-plugin)). Down connectors are listed first |
+| `sources[]` | one row per running connector: `status` (`UP` when `health` starts with `UP`, else `DOWN`), `health` text, `kinds`, `live`, `dated`, `search`, `reads` (`reads`, `found`, `notHeld`, `errors`, `lastError`, `lastErrorAt`, `lastOkAt`, `p50Ms`, `p99Ms`), `cache`, `lastUpdate` (when it last received new data; null for sources read on demand), `staleAfter` and `stale` (nothing new within the connector's `stale-after` setting, see [CONFIGURATION.md](../reference/CONFIGURATION.md#connector-settings-plugin-by-plugin)). Down connectors are listed first |
 | `failedToStart` | connector name → error message |
 | `packs[]` | each pack's `connectors`, `connectorsDown` (running but down), `connectorsOff` (switched off, or failed to start) |
 | `overrides` | pack definitions overridden by a child pack |
@@ -1157,10 +1157,10 @@ test (`ConnectionDisciplineTest`) enforces on the source:
   that says how busy the pool is.
 
 The settings are the same for every database connector, under its `settings:`; a connector that sets none inherits the **site
-default**, `drishti.db.pool.*` in `application.yaml` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtidbpool--database-connection-pools)).
+default**, `drishti.db.pool.*` in `application.yaml` ([CONFIGURATION.md](../reference/CONFIGURATION.md#drishtidbpool--database-connection-pools)).
 The example files in `config/connectors.examples/` set none, so they follow the site.
 
-Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, every plugin's settings (the `pool-*` settings)](../admin/CONFIGURATION.md#every-plugin) (also at Help → Configuration in the console).
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, every plugin's settings (the `pool-*` settings)](../reference/CONFIGURATION.md#every-plugin) (also at Help → Configuration in the console).
 
 | Store | What is pooled | Notes |
 |---|---|---|

@@ -39,7 +39,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * The MR cube switched off ({@code drishti.engines.mr-cube.enabled: false}, COMPUTE_ENGINES.md): its API ({@code /api/v1/pivot/mr}) answers
+ * The MR cube switched off ({@code drishti.engines.mr-cube.enabled: false}, ARCHITECTURE.md section 25): its API ({@code /api/v1/pivot/mr}) answers
  * {@code 404 DRS-1020} from the engines' gate; the pivot engine's VaR source stays, with VaR, ES, PV and trades by the positions' columns
  * only: no hierarchy level, no MR measure, no option, each refused in words; the same cells' VaR as with the cube on.
  */

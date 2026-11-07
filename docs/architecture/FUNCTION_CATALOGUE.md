@@ -20,7 +20,7 @@ should have a document with examples". This is the catalogue to review **before*
 or will have, under its **one** name, with what it means, an example on the demo data's names, its Excel and SAS equivalents, where it
 runs and its status. The design is [ONE_GRAMMAR.md](ONE_GRAMMAR.md) (section 7); when the functions are built this becomes the user's
 guide, each example then shown with its real result on the demo lake. Every function registered today, generated from the registries
-and checked against this page's names, is [FUNCTIONS.md](../guides/FUNCTIONS.md) (Help → Functions).*
+and checked against this page's names, is [FUNCTIONS.md](../reference/FUNCTIONS.md) (Help → Functions).*
 
 **How to read the tables.**
 

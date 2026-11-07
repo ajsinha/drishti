@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Writes a lock file for a compute pool's locked environment (docs/architecture/PYTHON_COMPUTE.md section 4): every package pinned to one
+"""Writes a lock file for a compute pool's locked environment (docs/architecture/ARCHITECTURE.md section 24.4): every package pinned to one
 version with the sha256 of each of its distribution files, so ``pip install --require-hashes --no-deps`` installs exactly these on Linux
 and on Windows. Nothing is resolved: the list given is the whole environment, transitive packages included.
 

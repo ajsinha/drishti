@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * A computed view as the API answers it (PIVOT_ENGINE.md section 4.4): the rows and columns as shown (nested levels in display order, with
+ * A computed view as the API answers it (ARCHITECTURE.md section 23.4.4): the rows and columns as shown (nested levels in display order, with
  * headers and subtotals below or above each open group, Others and the grand totals), every visible cell's finished figures keyed by
  * {@code rowKey|colKey}, the show-as figures, diversification beside holistic totals, and the provenance shared by every cell.
  */

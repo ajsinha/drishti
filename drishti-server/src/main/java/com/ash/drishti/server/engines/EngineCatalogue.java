@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * The engine catalogue (docs/architecture/COMPUTE_ENGINES.md section 2), {@code engines/catalogue.yaml} inside the jar: every compute engine
+ * The engine catalogue (docs/architecture/ARCHITECTURE.md section 25.2), {@code engines/catalogue.yaml} inside the jar: every compute engine
  * of the product, its file, switch, old switch names, what it needs and uses, and everything it brings to the screen. Read once; a cycle of
  * needs refuses it (the build test reads it too).
  */

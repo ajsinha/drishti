@@ -16,7 +16,7 @@
 
   A screen mock-up (engines/A.html), self-contained: system fonts, everything inline, nothing from a CDN.
   Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/IMPLEMENTATION_PLAN.md (2.9.11 row 14, compute engines on or off;
-  the design: docs/architecture/COMPUTE_ENGINES.md).
+  the design: docs/architecture/ARCHITECTURE.md section 25).
 -->
 <html lang="en">
 <head>
@@ -236,7 +236,7 @@ tr.offrow td{color:var(--faint)}
 </div>
 </div>
 <div class="why"><div class="card"><h3>How it feels</h3><ul><li>The page Functions already uses: a list, a staged change, a review panel with the reason, then History.</li><li>Before Apply, the two facts that matter: what depends on it and what disappears for people.</li><li>Memory and threads per engine answer 'what does this server spend on what'.</li></ul></div><div class="card"><h3>Why recommended</h3><ul><li>Nothing new to learn: the same flow as turning a command off.</li><li>Fits the single server most installs are; the cluster is one tab away (option C's matrix).</li><li>Says where each switch comes from (file, local file, environment), so a change never silently fails.</li></ul></div><div class="card"><h3>Trade-offs</h3><ul><li>Dependencies are read from columns, not drawn (B draws them).</li><li>Several nodes at once only in the Cluster tab.</li><li>A long row of columns: on a phone the table scrolls sideways; the side panel stacks below.</li></ul></div></div>
-<footer>Mock-up. Design, not built (docs/architecture/COMPUTE_ENGINES.md). Names, numbers, nodes and the reference codes (DRS-1020 to DRS-1024) are illustrative; the codes are assigned when it is built. A change writes the engine's file config/engines/&lt;id&gt;.yaml, is audited with who, when and why, and is the same from <span class="mono">drishti.py server engines</span>.</footer>
+<footer>Mock-up. Design, not built (docs/architecture/ARCHITECTURE.md section 25). Names, numbers, nodes and the reference codes (DRS-1020 to DRS-1024) are illustrative; the codes are assigned when it is built. A change writes the engine's file config/engines/&lt;id&gt;.yaml, is audited with who, when and why, and is the same from <span class="mono">drishti.py server engines</span>.</footer>
 </div>
 </body>
 </html>

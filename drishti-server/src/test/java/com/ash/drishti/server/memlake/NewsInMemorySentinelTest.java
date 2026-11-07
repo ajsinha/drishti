@@ -58,7 +58,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * News first, and the proof that it never touches a disk (docs/architecture/IN_MEMORY_LAKE.md sections 13 and 15, 3d): the news-and-markets
+ * News first, and the proof that it never touches a disk (docs/architecture/DATA_ARCHITECTURE.md sections 7.13 and 7.15, 7.3d): the news-and-markets
  * pack's four kinds are held in {@code mem://news}, filled by replenish jobs from a vendor feed whose every headline, snippet, source and
  * company name is a unique marker. The pages, the search, the raw documents, a download (the one allowed way out) are exercised through
  * the API; a scheduled report and an Ask are refused in words with the contract. Then the run's data folder, the process's temporary

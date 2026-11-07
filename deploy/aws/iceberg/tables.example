@@ -21,7 +21,7 @@
 #   connector  the pack's connector the table is for (its layout is the table's)
 #   landing    the dump prefix in s3://LANDING_BUCKET/, {date} replaced by the business date (YYYY-MM-DD)
 #   date       the field the documents carry their business date in, or -: for the record only; every load is dated by the day
-#              being loaded (lake build --as-of, docs/architecture/DATA_LOAD_RULES.md), never by a row
+#              being loaded (lake build --as-of, docs/architecture/DATA_ARCHITECTURE.md section 10), never by a row
 #   partition  fields kept as columns too (an Iceberg table here is partitioned by business_date alone), or - for none
 #
 # table                  kind         pack                       connector    landing                     date            partition

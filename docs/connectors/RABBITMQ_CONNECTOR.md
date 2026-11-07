@@ -30,7 +30,7 @@ type-ahead and live fan-out), which the ActiveMQ connector shares ([ACTIVEMQ_CON
 state store is `DiskCache` (module `drishti-diskcache`), also used by the Kafka connector's disk cache
 ([KAFKA_CONNECTOR.md](KAFKA_CONNECTOR.md)). For a first setup see
 [the walk-through at the end of this document](#walk-through-step-by-step); every setting is also listed in
-[CONFIGURATION.md](../admin/CONFIGURATION.md#activemq-and-rabbitmq--message-queues).
+[CONFIGURATION.md](../reference/CONFIGURATION.md#activemq-and-rabbitmq--message-queues).
 
 ## Contents
 
@@ -514,7 +514,7 @@ the server restarts. Restart once the queue exists again.
 
 `lastUpdate` is the time of the last message received (any message, including rejected ones). With `stale-after`
 set, Admin → Health shows the connector amber and the overall status `DEGRADED` when nothing arrived for that long,
-and views of its entities carry a banner ([CONFIGURATION.md](../admin/CONFIGURATION.md#connector-settings-plugin-by-plugin)).
+and views of its entities carry a banner ([CONFIGURATION.md](../reference/CONFIGURATION.md#connector-settings-plugin-by-plugin)).
 
 ### 11.4 Cache figures
 

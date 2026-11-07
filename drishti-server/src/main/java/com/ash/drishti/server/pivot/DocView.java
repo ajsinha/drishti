@@ -31,7 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * A view over entity documents (PIVOT_ENGINE.md section 6.7): its Rachana paths turned into field ids, its grain (the finest list its
+ * A view over entity documents (ARCHITECTURE.md section 23.6.7): its Rachana paths turned into field ids, its grain (the finest list its
  * rows, columns and values use), coarser figures counted once per parent, two separate lists never crossed, filters per grain; and the
  * relation one plan reads: the documents unnested down to the grain, every path field extracted by DuckDB's JSON functions, the parents'
  * keys beside them.
@@ -381,7 +381,7 @@ final class DocView {
 
     /**
      * A BI dataset table over one list of the kind ({@code each: LEGS}), built into the BI {@code cached} layer (Parquet, one row per
-     * element): the dataset route of a list's fields (PIVOT_ENGINE.md section 6.7).
+     * element): the dataset route of a list's fields (ARCHITECTURE.md section 23.6.7).
      *
      * @param from the layer's files as a FROM item ({@code read_parquet([...])})
      * @param id the entity id column; @param index the element's position in its list

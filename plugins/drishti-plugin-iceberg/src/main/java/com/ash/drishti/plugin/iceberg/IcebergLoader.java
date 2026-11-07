@@ -62,7 +62,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * --warehouse W --credential C --token T} for a REST catalog (the domain is
  * the namespace), {@code --set key=value} for any connector setting ({@code s3.endpoint}, {@code hadoop.…}),
  * {@code --keep-days N} to remove each loaded table's business days older than its newest N on or before
- * the newest business date of the load (a plain file's date, a tar's newest folder; DATA_LOAD_RULES.md) afterwards and expire the snapshots that referenced them ({@link IcebergMaintenance}; more
+ * the newest business date of the load (a plain file's date, a tar's newest folder; DATA_ARCHITECTURE.md section 10) afterwards and expire the snapshots that referenced them ({@link IcebergMaintenance}; more
  * than {@code --max-drop-share} of a table's rows needs {@code --force-drop}). A row dated after tomorrow in the
  * business zone ({@code --future-days}, {@code --zone}) is not loaded, and the load ends with an error naming it
  * ({@link LoadGuard}). {@code tools/load-iceberg.sh} runs it.

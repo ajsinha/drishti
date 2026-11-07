@@ -46,7 +46,7 @@ import java.util.TreeSet;
 import java.util.stream.Stream;
 
 /**
- * Undo a load by its id (docs/architecture/DATA_LOAD_RULES.md section 6.3): every row a load wrote carries its {@code _load_id}; undoing
+ * Undo a load by its id (docs/architecture/DATA_ARCHITECTURE.md section 10.6.3): every row a load wrote carries its {@code _load_id}; undoing
  * it removes exactly those rows, one commit per table and date, in every table of the lake that has them (an archive's tables together).
  * A load that replaced a date is undone by restoring the date as it was before it (the rows of the version before the load's commit), with
  * the rows later loads appended kept. Delta tables here; Iceberg tables by the Iceberg maintenance ({@code IcebergMaintenance --undo}).

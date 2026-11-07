@@ -22,7 +22,7 @@
 ## Context
 [ADR-021](021-embedding-is-html-over-the-wire.md) chose to render a view on the console and send HTML to `<drishti-view>`, because a
 JavaScript renderer would be "a second implementation of every panel kind and every accessibility detail, for ever". Since then the
-ViewModel has become a published contract with a JSON Schema ([VIEWMODEL.md](../VIEWMODEL.md)), hosts want Drishti screens without
+ViewModel has become a published contract with a JSON Schema ([VIEWMODEL.md](../../reference/VIEWMODEL.md)), hosts want Drishti screens without
 the console's HTML (their own pages, phones, frameworks), GenUI needs a screen that arrives panel by panel, and the product owner made
 a client-side renderer a first item. The reason ADR-021 gave stands: two renderers would drift. Its conclusion does not
 follow from it: one renderer can live in the browser.

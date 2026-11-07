@@ -952,7 +952,7 @@ what their reader needs.
 |---|---|
 | [USER_GUIDE.md](../guides/USER_GUIDE.md) | *Export, print and share* → *Share with a note* (dialog, recipients, as-shared banner, no-access page); a new *Discussion* section (threads, anchors, mentions, quotes, open as it was, edit window, resolve, follow); *The inbox*; the key table (`Alt+S`, `Alt+N`, `Alt+I`); the old Notes section points to Discussion |
 | [API_GUIDE.md](../guides/API_GUIDE.md) | endpoint reference for directory, shares, threads, inbox, admin; §Field masks lists shares, threads, inbox and email as masked answers; §access log adds `share` and `share:` detail; error table `DRS-7001`–`7012` and the new first digit; *Notes* marked deprecated with the mapping |
-| [CONFIGURATION.md](../admin/CONFIGURATION.md) | `drishti.collab.*`, `spring.mail.*` and their placeholders; the `collaborate` and `compliance` powers in `drishti.security` |
+| [CONFIGURATION.md](../reference/CONFIGURATION.md) | `drishti.collab.*`, `spring.mail.*` and their placeholders; the `collaborate` and `compliance` powers in `drishti.security` |
 | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) | moderation, legal holds, exports, the compliance power, what users can learn about each other through the directory |
 | [OPERATIONS.md](../admin/OPERATIONS.md) | the outbox (dead letters, retry, mail test), several servers (lease, `outbox.enabled`), retention purge, backups of the collab tables |
 | [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) | "the email never arrived", "the shared link opened today's data", "someone was not notified"; error rows |

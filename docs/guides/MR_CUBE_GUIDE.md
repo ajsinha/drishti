@@ -22,7 +22,7 @@ the server from those trades' scenario P&L vectors. A total is never the sum of 
 the gap as **diversification**. Around the pivot sit the headline of the view's scope, the time-travel slider, sparklines, a cell's tail
 histogram and why it moved, the components and their waterfall, the factor heat map, the DV01 ladder and a what-if side by side. The
 tutorial is [tutorial 38](../tutorials/38-the-mr-cube-on-the-pivot-engine.md); the lens design behind it is
-[MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md); the engine's design is [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md).
+[LENSES.md section 6](../architecture/LENSES.md#6-the-mr-cube-a-market-risk-cube-lens-that-answers-what-fis-adaptivs-artiq-answers-and-shows-why); the engine's design is [ARCHITECTURE.md section 23](../architecture/ARCHITECTURE.md#23-the-pivot-engine).
 
 ## Contents
 
@@ -105,7 +105,7 @@ position** in one value, exactly as a `WHERE:` rule selects it, so the cell's sc
 
 **The risk class** (`RISK_CLASS`) is derived from each position's product group by configuration (`drishti.cube.mr.risk-classes`): a
 position's primary class, the classes in their configured order, then `OTHER`. A bank that delivers its vectors split by risk class
-(MR_CUBE_LENS.md section 7.4) will give each position a vector per class; until then a desk of one product group has VaR in one class only.
+(LENSES.md section 6.7.4) will give each position a vector per class; until then a desk of one product group has VaR in one class only.
 
 ## 4. The view: dimensions, options, cells and totals
 
@@ -236,7 +236,7 @@ The cell budget, busy protection and the cache are the pivot engine's (`drishti.
 **Switched off** (Admin → Engines, or the file), `/api/v1/pivot/mr/...` answers `404 DRS-1020`, the `MCUBE` word, the menu entry and the
 Help pages are gone, the VaR source of the pivot engine offers `var()`, `es()`, `pv()` and `trades()` by the positions' columns only (an MR
 measure, a hierarchy level or an option is refused in words), and the cube's kept dimension codes are released. The engine-switch framework
-is [COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md). Every setting is in [CONFIGURATION.md](../admin/CONFIGURATION.md).
+is [ARCHITECTURE.md section 25](../architecture/ARCHITECTURE.md#25-compute-engines-on-or-off-each-with-its-own-configuration-file). Every setting is in [CONFIGURATION.md](../reference/CONFIGURATION.md).
 
 ## 10. API and command line
 

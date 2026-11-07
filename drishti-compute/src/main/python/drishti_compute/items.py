@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Python items on the server's compute pool (docs/guides/BI_GUIDE.md › Python in BI; docs/architecture/PYTHON_COMPUTE.md section 19): the one
+"""Python items on the server's compute pool (docs/guides/BI_GUIDE.md › Python in BI; docs/architecture/ARCHITECTURE.md section 24.19): the one
 Python runtime for code people write. The pool ``python`` loads :class:`ItemsEngine`; the server sends it a Python item (its manifest, with
 the source) and the rows the person running it may see, already read on the server as that person (row rules and masks applied), and gets
 back a number per group, a column, a chart, a table, a Notebook cell's answer, a step-by-step run or a profile. Nothing here decides access.

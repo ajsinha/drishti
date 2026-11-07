@@ -16,7 +16,7 @@
 package com.ash.drishti.bicompute.spi;
 
 /**
- * Who asks (PIVOT_ENGINE.md section 19): the module knows only the user's name; {@code principal} is the host's own identity (the server's
+ * Who asks (ARCHITECTURE.md section 23.19): the module knows only the user's name; {@code principal} is the host's own identity (the server's
  * {@code Principal}), passed through to its providers so they apply the person's entitlements and masks before any aggregation.
  *
  * @param user the user's name (audit, per-person limits, saved views)

@@ -21,7 +21,7 @@ import com.ash.drishti.bicompute.spi.Kind;
 import java.util.List;
 
 /**
- * A custom function whose approval was revoked (PIVOT_ENGINE.md section 8.7), as a view that uses it sees it: every cell of its column says
+ * A custom function whose approval was revoked (ARCHITECTURE.md section 23.8.7), as a view that uses it sees it: every cell of its column says
  * "function withdrawn" with who withdrew it and why, and no figure; the rest of the view answers as before. Nothing of the function's code
  * runs.
  */

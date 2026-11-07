@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The memory a table costs (IN_MEMORY_LAKE.md sections 2 and 5; the measured figures in RESOURCES_AND_SCALE.md): demo tables (at most 10,000
+ * The memory a table costs (DATA_ARCHITECTURE.md sections 7.2 and 7.5; the measured figures in RESOURCES_AND_SCALE.md): demo tables (at most 10,000
  * rows each, from data/testdata) written as the disk lake writes them (Snappy) and as the in-memory lake does (sorted by key, zstd), against
  * their decoded JSON. Prints one line a table; asserts only that memory is smaller than the decoded rows and not larger than the disk.
  */
@@ -58,7 +58,7 @@ class MemoryRatiosTest {
 
     private static List<ObjectNode> read(Path folder, int max) throws Exception {
         List<ObjectNode> out = new ArrayList<>();
-        for (FeedFiles.Part f : FeedFiles.parts(folder)) {           // its dated files and tars (DATA_LOAD_RULES.md section 10)
+        for (FeedFiles.Part f : FeedFiles.parts(folder)) {           // its dated files and tars (DATA_ARCHITECTURE.md section 10.10)
             for (String line : f.lines()) {
                 if (out.size() >= max) {
                     return out;

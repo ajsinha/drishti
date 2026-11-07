@@ -19,7 +19,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The model layer and its query language, {@code drishti.bi.mq.*} (docs/admin/CONFIGURATION.md). Every bound has a default.
+ * The model layer and its query language, {@code drishti.bi.mq.*} (docs/reference/CONFIGURATION.md). Every bound has a default.
  *
  * @param maxDays the longest date window one query may read ({@code time.window}, a relative window), in days
  * @param groupedLimit the rows a grouped query answers when it gives no {@code limit}

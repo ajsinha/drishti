@@ -296,7 +296,7 @@ What the settings do:
 
 | Setting | Meaning |
 |---|---|
-| `-Djava.io.tmpdir=data/tmp/server` (and the `mkdir` before it) | Java's temp folder for this server: DuckDB, RocksDB and CatBoost unpack their native libraries there (DuckDB 60 MB a start), not in `/tmp`, and the server removes stale copies from it at start. Only the command line moves it (since JDK 17); without it the server warns in its log and on Admin, Health. `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=…` works too. [CONFIGURATION.md](../admin/CONFIGURATION.md#pass--djavaiotmpdir-to-java) |
+| `-Djava.io.tmpdir=data/tmp/server` (and the `mkdir` before it) | Java's temp folder for this server: DuckDB, RocksDB and CatBoost unpack their native libraries there (DuckDB 60 MB a start), not in `/tmp`, and the server removes stale copies from it at start. Only the command line moves it (since JDK 17); without it the server warns in its log and on Admin, Health. `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=…` works too. [CONFIGURATION.md](../reference/CONFIGURATION.md#pass--djavaiotmpdir-to-java) |
 | `DRISHTI_PACKS` | The packs to load, comma-separated. A pack's parents load with it: `market-risk` brings `core`, `market-data` and `trading`. Without it the same seven load (they are the default). |
 | `DRISHTI_STUDIO_SAVE=true` | Lets the Build workbench save Sutras (the view layouts). Leave it out if you will not edit Sutras. |
 | `DRISHTI_SECURITY_ENABLED=true` | Sign-in on: every call needs a token. Off by default. |
@@ -594,7 +594,7 @@ Start the server first, then the console: the console calls the server for every
 both (IntelliJ IDEA Ultimate with the Python plugin runs the console too); the settings below are the same.
 
 For the command-line way to build and run, see [GETTING_STARTED.md](GETTING_STARTED.md). For every server and console setting, see
-[CONFIGURATION.md](../admin/CONFIGURATION.md).
+[CONFIGURATION.md](../reference/CONFIGURATION.md).
 
 ### 1. Before you open the IDE
 
@@ -668,7 +668,7 @@ profile)** in PyCharm); there is no compound configuration across the two.
 
 The configurations are plain Application configurations (not "Spring Boot"), so they behave the same in IDEA Community and Ultimate.
 To change one for yourself without touching the committed file, **Copy Configuration** (Ctrl+D) and keep the copy (it is stored in
-`.idea/`, which git ignores). Every `DRISHTI_*` variable is in [CONFIGURATION.md](../admin/CONFIGURATION.md#placeholders-namedefault).
+`.idea/`, which git ignores). Every `DRISHTI_*` variable is in [CONFIGURATION.md](../reference/CONFIGURATION.md#placeholders-namedefault).
 
 If you build a configuration by hand instead: **Run -> Edit Configurations -> + -> Application**, main class
 `com.ash.drishti.server.DrishtiApplication`, *Use classpath of module* `drishti-server`, JRE 21 or newer, **Working directory = the
@@ -815,7 +815,7 @@ This is the walk a tester follows without a terminal. It uses ports 18580 (serve
 2. **Start the QA server.** IntelliJ: run (or debug) **Drishti server (QA profile)**. The log ends with `Started DrishtiApplication`.
    Open http://127.0.0.1:18580/actuator/health: `{"status":"UP"...}`.
 3. **Start the QA console.** PyCharm: run **Drishti console (QA profile)** and open http://localhost:17580. Sign in as
-   `drishti-dev-admin` / `drishti-dev-admin123` (development defaults, [CONFIGURATION.md](../admin/CONFIGURATION.md)).
+   `drishti-dev-admin` / `drishti-dev-admin123` (development defaults, [CONFIGURATION.md](../reference/CONFIGURATION.md)).
 4. **Make an API token for the tools** (smoke, doctor, the lake build's `--signal`): console -> *My account -> API tokens*, create one, and
    save its text as `data/qa/token.txt` (create the folder; the file is git-ignored with the folder).
 5. **Check the stack.** Run **QA server smoke** and **QA doctor**: smoke ends `smoke: OK`; doctor shows no red lines.
@@ -828,7 +828,7 @@ This is the walk a tester follows without a terminal. It uses ports 18580 (serve
 
    | Parameter | Meaning | Placeholder |
    |---|---|---|
-   | `--from` | your big `.json` array, `.jsonl` or `.gz` (or a folder of them), named by its business date: the rows go under the date in the name ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)); add `--as-of YYYY-MM-DD` to give another | `$USER_HOME$/Downloads/trade.YYYY-MM-DD.json` |
+   | `--from` | your big `.json` array, `.jsonl` or `.gz` (or a folder of them), named by its business date: the rows go under the date in the name ([DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load)); add `--as-of YYYY-MM-DD` to give another | `$USER_HOME$/Downloads/trade.YYYY-MM-DD.json` |
    | `--kind`, `--key` | entity kind, its id field | `trade`, `TRADE_ID` |
    | `--mode` | `overwrite-dates`: a re-run of the same date replaces it (append, the default, would add the rows again) | `overwrite-dates` |
    | `--partition-by` | the column(s) the Delta table is split by | `PRODUCT_TYPE` |
@@ -894,7 +894,7 @@ still wins over both ([OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compu
 **Do not** write `--spring.config.location=file:/etc/drishti/site.yaml` alone: it replaces the bundled `application.yaml`, so the
 server starts with none of Drishti's defaults (tried: it came up on Spring's port 8080, not 18480). Prefer `additional-location`. A
 key set in a file you add overrides the bundled one; environment variables and `--key=value` arguments override both
-([CONFIGURATION.md](../admin/CONFIGURATION.md#placeholders-namedefault)). Do not set the same key in both `application.local.yaml`
+([CONFIGURATION.md](../reference/CONFIGURATION.md#placeholders-namedefault)). Do not set the same key in both `application.local.yaml`
 and an additional file. The profiles the jar ships are `files`, `postgres`, `duckdb`, `mongodb`, `redis`, `aerospike` and
 `iceberg`.
 
@@ -945,7 +945,7 @@ copy the one you want to `drishti-console/config/application.local.yaml`, or set
 
 A value written `${NAME:default}` is "the variable `NAME` if it is set, else `default`". The meaning, the order that wins, and a
 table of every such placeholder in both `application.yaml` files are in
-[CONFIGURATION.md](../admin/CONFIGURATION.md#placeholders-namedefault).
+[CONFIGURATION.md](../reference/CONFIGURATION.md#placeholders-namedefault).
 
 ## Drishti on Windows
 
@@ -1106,7 +1106,7 @@ Every Delta connector has an `engine` setting; `DRISHTI_DELTA_ENGINE` sets it fo
 | `hadoop` | needs Hadoop's `winutils.exe` and `HADOOP_HOME`; use it only for a lake in Azure (`abfs://`) or Google Cloud Storage (`gs://`), which the native engine does not read |
 
 A lake in S3 reads the same on Windows, with the connector's `s3.endpoint`, `s3.access-key`, `s3.secret-key`, `s3.region`
-([CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake)). Paths with spaces (`C:\Users\Jane Doe\drishti\data\delta`) are
+([CONFIGURATION.md](../reference/CONFIGURATION.md#delta--delta-lake)). Paths with spaces (`C:\Users\Jane Doe\drishti\data\delta`) are
 fine.
 
 **Iceberg tables on Windows.** The Iceberg loader and connector run on the native engine (drishti-iceberg), so no `winutils.exe` and

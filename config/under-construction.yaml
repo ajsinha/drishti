@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The under-construction registry (docs/admin/UNDER_CONSTRUCTION.md, generated from this file by tools/under_construction.py): every
+# The under-construction registry (docs/reference/UNDER_CONSTRUCTION.md, generated from this file by tools/under_construction.py): every
 # figure, panel, menu item, help page, contract or decision that depends on work not built yet, and how a person meets it.
 #   treatment: under-construction   shown, with the words "Under construction" (a chip) in place of its value
 #   treatment: hidden               left out
@@ -80,7 +80,7 @@ items:
   - id: pnl-explain-waterfall
     what: panel
     about: "The P&L explain's waterfall: a generator's stored steps that disagree with the Attribution bars on new trades (F19); the computed explain (by trade events, then by risk factor) is PNL.md's"
-    release: "the P&L explain (TRADING_LENS.md TL4, PNL.md)"
+    release: "the P&L explain (LENSES.md section 2 TL4, PNL.md)"
     treatment: under-construction
     sutras:
       - kind: pnl-explain
@@ -124,5 +124,5 @@ items:
     release: 2.9.14
     treatment: under-construction
     menus: [ccr-cube]
-    contracts: ["docs/guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes", "docs/architecture/PIVOT_ENGINE.md#65-the-ccr-provider-later"]
+    contracts: ["docs/guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes", "docs/architecture/ARCHITECTURE.md#2365-the-ccr-provider-later"]
 

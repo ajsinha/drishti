@@ -25,7 +25,7 @@ The exact form of every request, its schema and its errors are in the [reference
 pandas DataFrame is [tutorial 35](../tutorials/35-data-out-with-arrow-flight.md); the clients have their own pages
 ([Python](flight/PYTHON.md), [Java](flight/JAVA.md), [JDBC](flight/JDBC.md), [ODBC](flight/ODBC.md)).
 Working examples to start from, every one read only (Python notebooks from a token to VaR scenario P&L, a live stream, DuckDB and the
-in-memory lake; Java; Excel through Python) are in [examples/clients](../../examples/clients/README.md). Later: C#/.NET, R and Go client pages (the service already answers any Flight client). The design and its decisions are [ARROW_FLIGHT.md](../architecture/ARROW_FLIGHT.md).
+in-memory lake; Java; Excel through Python) are in [examples/clients](../../examples/clients/README.md). Later: C#/.NET, R and Go client pages (the service already answers any Flight client). The design and its decisions are [DATA_ARCHITECTURE.md section 12](../architecture/DATA_ARCHITECTURE.md#12-arrow-flight-the-data-to-any-client).
 
 ## Contents
 
@@ -61,7 +61,7 @@ Flight is an engine of its own, off as shipped. It needs a restart to turn on, b
 
 **In the UI.** Admin → Engines → **Arrow Flight** → On, with a reason. The page says *restart needed*; restart the server.
 
-**In the file.** `config/engines/flight.yaml` (every key is in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtienginesflight)):
+**In the file.** `config/engines/flight.yaml` (every key is in [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtienginesflight)):
 
 ```yaml
 drishti:
@@ -114,7 +114,7 @@ measure call). Full detail per form: [FLIGHT_REFERENCE.md](FLIGHT_REFERENCE.md).
 | `model` | `{"model": "trades-basic", "query": {"select": {"fields": [...], "measures": [...]}, "where": [...], "sort": [...], "limit": 50}}` | MQ, BI's model queries | the query's answer |
 | `pivot` | the view, as `POST /api/v1/pivot/query` takes it | the pivot engine | one per cell and measure |
 | `measure` | `measure('var.scenarios', 'DESK:RATES', date: 2026-09-30)` or `{"measure": "var.parts", "scope": "DESK:RATES", "by": "position"}` | the VaR engine, computed when asked | one per scenario; one per part with its vector |
-| `lake` | `{"lake": "feeds", "kind": "news.headlines", "cursor": "SEQ"}` | the lake configuration ([LAKE_CONFIG.md](../architecture/LAKE_CONFIG.md)), then the kind's reader | the table's rows; appends live |
+| `lake` | `{"lake": "feeds", "kind": "news.headlines", "cursor": "SEQ"}` | the lake configuration ([DATA_ARCHITECTURE.md section 8](../architecture/DATA_ARCHITECTURE.md#8-the-lake-configuration-one-place-that-says-what-the-lake-is)), then the kind's reader | the table's rows; appends live |
 
 **VaR's numbers are the engine's.** A scope's vector is float64, as the engine sums; a position's or trade's row is float32, as the hot
 file keeps it ([VAR_GUIDE.md](VAR_GUIDE.md), section 26), and the schema's metadata says which (`drishti.pnl.precision`). The vectors are
@@ -347,4 +347,4 @@ stream with resume, Stop); the server's `FlightServerTest` runs it inside the se
 an update refused); the console's `test_flight_client.py` runs the Python client against a stand-in service over TLS. On one node, every read form, the
 stream across an intraday batch, Stop and resume are run against a real server ([tutorial 35](../tutorials/35-data-out-with-arrow-flight.md)).
 The end to end on a three-node cluster (endpoints on every node, a node stopped mid-read, a VaR stream through an intraday batch) is
-**not measured yet**; it is listed in [UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md).
+**not measured yet**; it is listed in [UNDER_CONSTRUCTION.md](../reference/UNDER_CONSTRUCTION.md).

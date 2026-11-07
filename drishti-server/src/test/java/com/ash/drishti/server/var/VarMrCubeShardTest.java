@@ -37,7 +37,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
 /**
- * The MR cube on a sharded date (MR_CUBE_LENS.md section 4.11): the date of {@link VarHierarchyFixture} cut into one shard per legal entity
+ * The MR cube on a sharded date (LENSES.md section 6.4.11): the date of {@link VarHierarchyFixture} cut into one shard per legal entity
  * and desk ({@link VarShardSingleNodeTest}'s settings), a pivot view's cells summed in one batch through the shards ({@code VarBook.vectors},
  * one call per remote shard); every cell and total equals the engine's VaR of the cell's scope on the same sharded date to the cent, the
  * components add up to the total, and the same cells on the date read whole (not sharded) give the same figures. The remote side (one call

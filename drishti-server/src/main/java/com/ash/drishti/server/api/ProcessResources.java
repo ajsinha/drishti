@@ -59,7 +59,7 @@ public final class ProcessResources {
             }
         }
         m.put("directMaxBytes", directMax);
-        // the in-memory lake's stores live in direct memory under their own caps (IN_MEMORY_LAKE.md section 3a): the warning is about the
+        // the in-memory lake's stores live in direct memory under their own caps (DATA_ARCHITECTURE.md section 7.3a): the warning is about the
         // server's own buffers, the 256 MB beside the stores, so the stores' chunks and caps are taken out of both sides
         long stores = com.ash.drishti.memlake.store.MemoryStores.all().stream().mapToLong(s -> s.pool().allocatedBytes()).sum();
         long caps = com.ash.drishti.memlake.store.MemoryStores.totalCapBytes();

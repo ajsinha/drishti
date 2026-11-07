@@ -267,7 +267,7 @@ built).
 | Exposure owner (PLANNED, of 8) | 250,000 sets, P = 5,000, G = 100 | 24g | 256 GB | 24 | 4 TB NVMe | footnote 4, ASSUMPTION on sets |
 | BI and reporting | any | 16g | 64 GB | 16 | 500 GB SSD (`bi-store`, `bi-runs` 20 GB) | ASSUMPTION |
 | Data-serving | any | 24g | 64 GB | 16 | 1 TB NVMe (id maps, index, documents) | ASSUMPTION |
-| Loader | 2.3M in 10 minutes | 40g | 64 GB | 32 | 50 GB NVMe spill | measured at 10K, estimated at 2.3M ([PARALLEL_LOADER.md section 11](PARALLEL_LOADER.md#11-measured-and-the-23m-estimate)) |
+| Loader | 2.3M in 10 minutes | 40g | 64 GB | 32 | 50 GB NVMe spill | measured at 10K, estimated at 2.3M ([DATA_ARCHITECTURE.md section 11.11](DATA_ARCHITECTURE.md#1111-measured-and-the-23m-estimate)) |
 | Console | 300–500 people | — | 8 GB | 4 | 20 GB | measured 69–70 pages/s a console |
 | PostgreSQL | any | — | 32 GB | 8 | 500 GB SSD | ASSUMPTION |
 
@@ -930,7 +930,7 @@ stickiness**:
 - **Watching it:** Admin → Health, *Console watch*, shows the relay of the worker that drew the page: its address, calls passed on,
   calls answered for others, messages refused (not signed with the key, too old or replayed) and calls no worker answered.
 
-Settings: `live.relay.*` in the console's `application.yaml` ([CONFIGURATION.md](../admin/CONFIGURATION.md)). Later, with the client
+Settings: `live.relay.*` in the console's `application.yaml` ([CONFIGURATION.md](../reference/CONFIGURATION.md)). Later, with the client
 renderer, the browser's stream passes through to the server's SSE and the console holds no live state at all (the stateless console, the
 second half of `PO-11`).
 
@@ -990,7 +990,7 @@ gathered across both, a drain and an upgrade.
 
 ### 10.3 Data loads without downtime
 
-A new date is committed whole by the loader (one Delta commit or Iceberg `replacePartitions` a date, PARALLEL_LOADER section 6), then
+A new date is committed whole by the loader (one Delta commit or Iceberg `replacePartitions` a date, DATA_ARCHITECTURE.md section 11.6), then
 announced (`POST /api/v1/packs/{pack}/loads`, forwarded once to every live member, PO-5 built); each member builds the date in the
 background and swaps it in when complete (`VarService.swap`), the previous date answering meanwhile. A **restatement** is a re-load of the
 date: a new data version, rebuilt and swapped the same way; without a signal the version watch notices within `version-check` (30 s,
@@ -1031,7 +1031,7 @@ The one configuration document will carry a "live or restart" column per key.
  warm-up      hot files kept across restarts (keep-on-shutdown true in the images); a restarted member maps them again
 ```
 
-Timing (ESTIMATED): the loader's 2.3M load 1 to 5 minutes (PARALLEL_LOADER section 11); shard books in parallel across owners, each about
+Timing (ESTIMATED): the loader's 2.3M load 1 to 5 minutes (DATA_ARCHITECTURE.md section 11.11); shard books in parallel across owners, each about
 1/6 of a single server's build.
 
 ---
@@ -1468,7 +1468,7 @@ ephemeral storage hold them only to about 1 million positions at 1-day), and eac
 ¹ Halved by the client-side renderer (RESOURCES section 6.1, estimated 2–3 × a worker). ² Footnote 3 of section 3.2: the whole skeleton on
 the heap. ³ Section 3.2 footnote 1. ⁴ RESOURCES_AND_SCALE section 9.5 (capacity model: heap 21.2 GB need ÷ 0.61 → 36g; RAM need 69 GB
 ÷ 0.61 → 128 GB; NVMe 394 GB ÷ 0.61 → 650 GB, 800 GB provisioned; at 10M, 106 GB ÷ 0.61 → 192 GB, 643 GB → 1 TB). ⁵ Section 3.2 footnote 4.
-⁶ PARALLEL_LOADER section 11 (`-Xmx40g`, `memory.budget-mb` 32768, 16 writers, about 1 to 2 minutes for 2.3M positions on 32 vCPU).
+⁶ DATA_ARCHITECTURE.md section 11.11 (`-Xmx40g`, `memory.budget-mb` 32768, 16 writers, about 1 to 2 minutes for 2.3M positions on 32 vCPU).
 Request capacity (capacity model, ESTIMATED): 140 requests a second measured on 24 cores, so about 93 a 16-vCPU and 47 an 8-vCPU server:
 6 owners + 2 coordinators about 650 a second at peak, about 330 sustained with half kept free.
 
@@ -1687,7 +1687,7 @@ gossip changes:
 | `sources` per kind | connector name, type, **table identity** (a Delta table's id and location; section 10), `earliestDate` and `latestDate` (the oldest and newest business dates it holds; a node that goes down counts only for the dates between them, section 7), `dataVersion` of the latest date, whether columnar |
 | `load` | requests a second over the last minute (from `RequestActivity`) and p95 latency, for choosing between peers |
 | `calendar` | the business calendar (`DRISHTI_CALENDAR`): the as-of of a forwarded request must mean the same date |
-| `services.engines` | the compute engines of this node and their state (`var:running,frtb-sa:off,...`; [COMPUTE_ENGINES.md section 9](COMPUTE_ENGINES.md#9-in-a-cluster-each-node-runs-its-own-engines)): a request for an engine's API (`/api/v1/frtb/**`) arriving at a node that does not run it is forwarded to the least loaded node that does, signed for the caller (the answer carries `X-Drishti-Engine-Node`); none does: `404 DRS-1020`; the console offers an engine when any reachable node runs it |
+| `services.engines` | the compute engines of this node and their state (`var:running,frtb-sa:off,...`; [ARCHITECTURE.md section 25.9](ARCHITECTURE.md#259-in-a-cluster-each-node-runs-its-own-engines)): a request for an engine's API (`/api/v1/frtb/**`) arriving at a node that does not run it is forwarded to the least loaded node that does, signed for the caller (the answer carries `X-Drishti-Engine-Node`); none does: `404 DRS-1020`; the console offers an engine when any reachable node runs it |
 
 A pack listed in `peer-only-packs` (`node.yaml`) is loaded and served to peers (view and data forwarding, search shares) but hidden from
 this node's own users: not in its catalog, forms home, type-ahead or command line, and a direct request for its kinds from
@@ -2162,7 +2162,7 @@ stack, pictures of the real pages), as the product owner asked:
 |---|---|
 | `docs/admin/OPERATIONS.md` (new) | the operator's guide: set up a cluster of three, the `config/net/` files one by one, key rollover step by step, drain and maintenance, a node leaving, reading Admin → Net, sizing |
 | `docs/tutorials/` (new tutorial) | a cluster of three on one machine, from the first seed to a console that falls over: every step with the UI, the CLI (`drishti.py net`) and the YAML |
-| `docs/admin/CONFIGURATION.md` | `drishti.net.dir`, `watch`, `poll`; the console's `backend.urls`, `discover`, `discover-every`, `check-every`, `fail-after`; every file's settings |
+| `docs/reference/CONFIGURATION.md` | `drishti.net.dir`, `watch`, `poll`; the console's `backend.urls`, `discover`, `discover-every`, `check-every`, `fail-after`; every file's settings |
 | `docs/admin/OPERATIONS.md` | environment variables, ports, firewalls, health and metrics, `peers.json` and `servers.json`, backups |
 | `docs/guides/API_GUIDE.md` | the `/api/v1/net/*` endpoints, the hop and on-behalf-of headers, `nodes` in a search answer |
 | `docs/guides/CLI_GUIDE.md` | `drishti.py net list | check | add-peer | set` |

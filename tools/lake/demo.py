@@ -20,7 +20,7 @@
 
 For every dataset of data/testdata/testdata.yaml (written by tools/testdata/make_testdata.py) it rebuilds the daily snapshots (the
 first day's file, then each later day's changes applied by key; one file a day, <table>.<YYYY-MM-DD>.jsonl.gz) and loads each day with
-`lake build` (tools/lake/build.py) by the load rules (docs/architecture/DATA_LOAD_RULES.md): the day staged as <table>.<YYYY-MM-DD>.jsonl,
+`lake build` (tools/lake/build.py) by the load rules (docs/architecture/DATA_ARCHITECTURE.md section 10): the day staged as <table>.<YYYY-MM-DD>.jsonl,
 its business date from that name, mode replace, into the table the dataset's Delta connector reads: <lake>/<domain>/<kind>/, the trades
 into trading/trade_endur, trade_calypso and trade_murex, partitioned by business date (and PRODUCT_TYPE for trades). Each table is
 written afresh (its folder is removed first). A dataset ``dated-by`` its BUSINESS_DATE (the market-risk pack's VaR data, tools/packgen/var/make_var_data.py:

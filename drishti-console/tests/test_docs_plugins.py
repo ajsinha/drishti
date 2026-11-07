@@ -46,7 +46,7 @@ def test_developer_guide_table_and_readme_list_every_plugin_module():
 
 
 def test_configuration_lists_every_plugin_a_connector_can_name():
-    line = next(l for l in _text("docs/admin/CONFIGURATION.md").splitlines() if l.startswith("| `connectors.<name>.plugin`"))
+    line = next(l for l in _text("docs/reference/CONFIGURATION.md").splitlines() if l.startswith("| `connectors.<name>.plugin`"))
     for name in _modules():
         if name == "demo":
             continue  # runs only as the single instance `drishti.sources.plugins.demo`

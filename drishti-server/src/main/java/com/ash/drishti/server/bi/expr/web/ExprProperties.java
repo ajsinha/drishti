@@ -20,7 +20,7 @@ import java.util.Locale;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The expression language, {@code drishti.bi.expr.*} (docs/admin/CONFIGURATION.md).
+ * The expression language, {@code drishti.bi.expr.*} (docs/reference/CONFIGURATION.md).
  *
  * @param legacy {@code warn}: the old expression syntax is read with a {@code DRS-9100} warning (wave A); {@code refuse}: refused with the DEL v2 text as the fix
  * @param parseCache how many parsed expressions are kept (the L0 parse cache; 0 turns it off)

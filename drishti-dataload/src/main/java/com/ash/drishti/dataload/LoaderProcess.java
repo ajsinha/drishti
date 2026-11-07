@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The load itself (DATALOAD_INBOX.md section 6): the parallel lake loader, {@code com.ash.drishti.lakeload.LakeLoad}, started as a child
+ * The load itself (DATA_ARCHITECTURE.md section 9.6): the parallel lake loader, {@code com.ash.drishti.lakeload.LakeLoad}, started as a child
  * Java process of the server with its own heap ({@code loader-heap}), at a lower priority ({@code nice}) and the server's temp folder, on a
  * load file this class writes (the loader's own keys: TOOLS.md section 4.13). A large or malformed file can never take the server's heap;
  * the loader's exit code says what happened (0 loaded, 2 loaded with rejects, 1 failed, 3 the table locked); a load past
@@ -112,7 +112,7 @@ public final class LoaderProcess implements LoadRunner {
         boolean named = r.lake() != null && r.lake().matches("[a-z0-9][a-z0-9_-]*");      // a lake of config/lakes/ (else a folder: the old form)
         put(t, "table", r.table() != null || !named || r.connector() == null || r.newDomain() != null ? r.table()
                 : com.ash.drishti.lakeconfig.PackEntry.read(r.packDir(), r.kind(), r.connector()).table());
-        // the mode (DATA_LOAD_RULES.md section 3): the .ready file's, else the lake file's entry for the table, else the inbox's default
+        // the mode (DATA_ARCHITECTURE.md section 10.3): the .ready file's, else the lake file's entry for the table, else the inbox's default
         t.put(r.modeGiven() ? "mode" : "default-mode", "append".equals(r.mode()) ? "append" : "replace-date");
         t.put("batch-id", batchId(files));
         ObjectNode rj = root.putObject("rejects");

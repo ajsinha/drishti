@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The data inbox for administrators (DATALOAD_INBOX.md section 10) and {@code drishti.py dataload}: {@code GET /api/v1/admin/dataload} the
+ * The data inbox for administrators (DATA_ARCHITECTURE.md section 9.10) and {@code drishti.py dataload}: {@code GET /api/v1/admin/dataload} the
  * status (files waiting and why, the last cycles, failures with their reasons, the lock, the next cycle), {@code POST …/run} Load now,
  * {@code POST …/retry} a failed file back into the inbox. Load now and Retry are audited.
  */
@@ -119,7 +119,7 @@ public class DataLoadController {
     }
 
     /**
-     * Undo a load by its id (docs/architecture/DATA_LOAD_RULES.md section 6.3): {@code {"loadId": "<id>"}} says what would be undone (a
+     * Undo a load by its id (docs/architecture/DATA_ARCHITECTURE.md section 10.6.3): {@code {"loadId": "<id>"}} says what would be undone (a
      * dry run, nothing changed); {@code {"loadId": "<id>", "confirm": "<the same id>"}} undoes it: its rows removed from every Delta and
      * Iceberg table of the inbox's lake, one commit per table and date, a replace restored. The answer lists each table and date.
      */

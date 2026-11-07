@@ -15,7 +15,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 
   A screen mock-up (dataload-inbox/B.html), self-contained: system fonts, everything inline, nothing from a CDN.
-  Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/DATALOAD_INBOX.md (section 10, Admin → Data loads → Inbox).
+  Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/DATA_ARCHITECTURE.md (section 9.10, Admin → Data loads → Inbox).
 -->
 <html lang="en">
 <head>
@@ -233,7 +233,7 @@ summary{cursor:pointer;font-size:12.5px;color:var(--link)}
 <div class="why"><div class="card"><h3>How it feels</h3><ul><li>Tells the story in order: what happened, what is happening, what is next.</li><li>Every run's files and versions in place: the best view for "what did the 14:50 run do?".</li><li>The run's steps show where a long run is.</li></ul></div>
 <div class="card"><h3>Trade-offs</h3><ul><li>Waiting files, the thing a person most often checks, sit in the side panel (below the timeline on a phone).</li><li>Quiet days are a column of "nothing ready" (folded into thin lines and filters).</li><li>Rules and settings are folded: less visible.</li></ul></div>
 <div class="card"><h3>Build</h3><ul><li>The cycles and ledger of <span class="mono">GET /api/v1/admin/dataload</span> drive the timeline; the run's steps are new in the status.</li><li>Filters are a plain form; works without scripts.</li><li>More markup than A; same data.</li></ul></div></div>
-<footer>Mock-up. Design, not built: Admin → Data loads → Inbox (planned, DATALOAD_INBOX.md section 10). Every number is invented for the picture. The data comes from <span class="mono">GET /api/v1/admin/dataload</span>; Load now is <span class="mono">POST …/run</span>, Retry <span class="mono">POST …/retry</span> (both <span class="mono">loads:write</span>). On a node that is not the owner the tab names the owner and links to it. Phone width: columns stack, tables scroll in their frame, controls are touch sized. Open with #light for the light theme.</footer>
+<footer>Mock-up. Design, not built: Admin → Data loads → Inbox (planned, DATA_ARCHITECTURE.md section 9.10). Every number is invented for the picture. The data comes from <span class="mono">GET /api/v1/admin/dataload</span>; Load now is <span class="mono">POST …/run</span>, Retry <span class="mono">POST …/retry</span> (both <span class="mono">loads:write</span>). On a node that is not the owner the tab names the owner and links to it. Phone width: columns stack, tables scroll in their frame, controls are touch sized. Open with #light for the light theme.</footer>
 </div>
 </body>
 </html>

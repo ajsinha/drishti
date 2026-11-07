@@ -110,7 +110,7 @@ public final class LakeWriter {
     }
 
     /**
-     * A table in memory favours bytes over speed (IN_MEMORY_LAKE.md section 5): ZSTD at level 3 by default ({@code codec}: zstd, lz4,
+     * A table in memory favours bytes over speed (DATA_ARCHITECTURE.md section 7.5): ZSTD at level 3 by default ({@code codec}: zstd, lz4,
      * snappy; {@code zstd-level}), the same small row groups and pages as on disk.
      */
     static Map<String, String> memoryConf(Map<String, String> settings) {

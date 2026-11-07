@@ -190,7 +190,7 @@ async def help_search(request: Request, q: str = "", section: str = ""):
 
 @router.get("/help/configuration")
 async def help_configuration(request: Request, q: str = "", area: str = ""):
-    """Help → Configuration: docs/admin/CONFIGURATION.md, searchable by key, environment variable or words, filtered by area; an
+    """Help → Configuration: docs/reference/CONFIGURATION.md, searchable by key, environment variable or words, filtered by area; an
     administrator also sees the values in effect on the server and in this console, and where each came from (core/settings_page.py)."""
     from core.settings_page import areas, console_effective, searchable, server_effective
 
@@ -310,7 +310,7 @@ async def help_guide(request: Request, slug: str):
     lib = await library(request)
     if slug not in lib.guides and lib.moved.get(slug, "").partition("#")[0] in lib.guides:
         return RedirectResponse(f"/help/{lib.moved[slug]}", status_code=301)       # permanent: the address was retired, the target may carry an #anchor
-    uc = under_construction.of(request)                              # docs/admin/UNDER_CONSTRUCTION.md: a hidden page is not reached either
+    uc = under_construction.of(request)                              # docs/reference/UNDER_CONSTRUCTION.md: a hidden page is not reached either
     if slug not in lib.guides or not visible(request, lib.guides[slug]) or uc.help_hidden(slug):   # a guide the edition or the person's roles hide is not reached by its address either
         return render(request, "help/search.html", status_code=404, q=slug.replace("-", " "),
                       hits=[h for h in lib.search(slug.replace("-", " ")) if visible(request, h["guide"])], missing=slug, screen="help")
@@ -336,7 +336,7 @@ def _competitive(request, lib) -> bool:
 
 @router.get("/about/competitive")
 async def competitive(request: Request):
-    """One competitive analysis: the Help guide docs/strategy/COMPETITIVE_ANALYSIS.md (administrators only); the old address leads there."""
+    """One competitive analysis: the Help guide docs/architecture/COMPETITIVE_ANALYSIS.md (administrators only); the old address leads there."""
     return RedirectResponse("/help/competitive-analysis", status_code=301)
 
 

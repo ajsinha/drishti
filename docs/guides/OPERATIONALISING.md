@@ -664,7 +664,7 @@ An override the server cannot place (neither a template nor a file says which pl
 
 ### 17.6 Settings, scopes and API
 
-Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.packs.deploy`](../admin/CONFIGURATION.md#drishtipacksdeploy) (also at Help → Configuration in the console).
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.packs.deploy`](../reference/CONFIGURATION.md#drishtipacksdeploy) (also at Help → Configuration in the console).
 
 The endpoints (`/api/v1/admin/packs/...` for deploy and history, `/api/v1/admin/connectors` for connectors; administrator only; a personal token needs `packs:admin`): [API_GUIDE.md](API_GUIDE.md#deploying-a-pack-archive-and-the-packs-connectors) and [CONNECTOR_FILES.md, section 9](../connectors/CONNECTOR_FILES.md#9-the-rest-api).
 
@@ -857,9 +857,9 @@ for an administrator at the console, not for a script holding a token. From the 
 | `DRS-5043` | 422 | A destructive step needs the artifact's name typed |
 | `DRS-5044` | 422 | Does not apply: a connector a pack's template names, a pack named in `drishti.packs.enabled`, a connector with no file, or an uploaded BI file that is not valid |
 
-Settings ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiadmin--uninstalling-packs-connectors-and-bi-files-safely)):
+Settings ([CONFIGURATION.md](../reference/CONFIGURATION.md#drishtiadmin--uninstalling-packs-connectors-and-bi-files-safely)):
 
-Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.admin`](../admin/CONFIGURATION.md#drishtiadmin) (also at Help → Configuration in the console).
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.admin`](../reference/CONFIGURATION.md#drishtiadmin) (also at Help → Configuration in the console).
 
 Keep `data/` on one disk with `config/` so an uninstall is a single atomic move; across disks the server copies, then removes.
 

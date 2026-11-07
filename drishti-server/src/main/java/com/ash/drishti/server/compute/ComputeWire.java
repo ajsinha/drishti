@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A compute request and its result as one node sends them to another (a fan-out chunk run on a peer, docs/architecture/PYTHON_COMPUTE.md
+ * A compute request and its result as one node sends them to another (a fan-out chunk run on a peer, docs/architecture/ARCHITECTURE.md section 24
  * section 7.6): JSON, the tables as Arrow IPC bytes in base64. Errors travel as {@code {"error": {"code", "message"}}} so the caller
  * gets the same {@link ComputeException} code the peer's worker gave.
  */

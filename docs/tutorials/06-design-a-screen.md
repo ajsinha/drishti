@@ -45,7 +45,7 @@ About 75 minutes: 40 for Part A, 35 for Part B. Each part stands alone.
   The fields are UPPER_SNAKE (`DESK_ID`, `REGION`, `MTM`, `CURRENCIES[].TRADES[].NOTIONAL`), as production data is. For the command-line checks: the
   console's Python (tutorial 1); `sutra lint` and `sutra preview` run the server jar's Sutra tool locally, with no server needed.
 - **Part B**: the designer switched on. It is off by default; in the console's `config/application.yaml` set `ui.designer: true`, or start the console
-  with `DRISHTI_UI_DESIGNER=true` ([CONFIGURATION.md](../admin/CONFIGURATION.md)), and restart the console. Off, there is no **Customize** button and
+  with `DRISHTI_UI_DESIGNER=true` ([CONFIGURATION.md](../reference/CONFIGURATION.md)), and restart the console. Off, there is no **Customize** button and
   `/designer/*` answers 404. For its command-line steps: a token, `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN=...` (My account → API
   tokens; [CLI_GUIDE.md](../guides/CLI_GUIDE.md#3-connecting-to-a-server-url-tokens-and-permissions)), and `B=$DRISHTI_SERVER/api/v1` for `curl`.
   Nothing you do there changes the pack's screen: the designer keeps **your own design**, which only you see until you share it.

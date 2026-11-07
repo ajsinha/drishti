@@ -25,7 +25,7 @@ amended (quantity and every PV moved by a factor of 0.8 to 1.2), new (a copy of 
 ``BATCH_ID`` (``I-<date>-001``) and a ``COMPUTED_AT`` a minute after the batch before (the first five minutes after the morning run).
 A trade's update comes as scenario PVs when its system is in ``--pv-systems`` (default ENDUR), else as a P&L vector, the engine taking
 either. ``--seed`` makes the same batches every run. Files: ``<out>/intraday-<date>/I-<date>-<NNN>/<kind>.<date>.jsonl`` (one kind a
-file, named by the load rules, docs/architecture/DATA_LOAD_RULES.md; a batch a folder; ``.jsonl.gz`` with ``--gzip``). ``--lake`` appends each batch to the lake (``drishti.py lake build --mode append``), ``--server``
+file, named by the load rules, docs/architecture/DATA_ARCHITECTURE.md section 10; a batch a folder; ``.jsonl.gz`` with ``--gzip``). ``--lake`` appends each batch to the lake (``drishti.py lake build --mode append``), ``--server``
 raises its data-load signal (the VaR engine applies it without a reload), ``--every 30s`` drips them. Guide:
 docs/contracts/VAR.md section 2.12."""
 from __future__ import annotations

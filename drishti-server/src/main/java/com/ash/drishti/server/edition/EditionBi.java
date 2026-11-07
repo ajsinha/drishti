@@ -43,7 +43,7 @@ public final class EditionBi {
         this.context = context;
     }
 
-    /** Whether a dataset (or model) is built on a compute engine that runs nowhere in the cluster (COMPUTE_ENGINES.md section 5.2). */
+    /** Whether a dataset (or model) is built on a compute engine that runs nowhere in the cluster (ARCHITECTURE.md section 25.5.2). */
     private volatile java.util.function.Predicate<String> engineOff = name -> false;
     private final Map<String, String> reads = new ConcurrentHashMap<>();
 

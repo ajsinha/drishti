@@ -72,7 +72,7 @@ def write(lake, domain: str, table: str, by_day: dict, partition_names: list[str
         reader = threading.Thread(target=lambda: said.extend(proc.stdout), daemon=True)
         reader.start()
         try:
-            # the load rules (DATA_LOAD_RULES.md): rows of several dates go as a tar of <table>/<YYYY-MM-DD>/ folders, each row
+            # the load rules (DATA_ARCHITECTURE.md section 10): rows of several dates go as a tar of <table>/<YYYY-MM-DD>/ folders, each row
             # in its own day's folder (the day lake build decided for it)
             out = feedfiles.RowsTarStream(proc.stdin.buffer)
             for line in lines(domain, table, by_day, partition_names):

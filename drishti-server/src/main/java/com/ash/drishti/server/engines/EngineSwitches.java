@@ -24,7 +24,7 @@ import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.PropertySource;
 
 /**
- * Each engine's switch as the server starts with it (docs/architecture/COMPUTE_ENGINES.md sections 3.3 and 4): its value, and where it
+ * Each engine's switch as the server starts with it (docs/architecture/ARCHITECTURE.md sections 25.3.3 and 25.4): its value, and where it
  * comes from, read from Spring's own sources in their order (the command line, the environment, the packs overlay, application.local.yaml,
  * the edition, the site's engine file, the jar's copy). An old switch name ({@code drishti.var.enabled}) set anywhere above the shipped files
  * wins, with one warning (DRS-1024). The in-memory lake is on when its stores are configured in the old place and nothing sets its switch.

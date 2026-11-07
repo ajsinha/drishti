@@ -28,7 +28,7 @@ VaR follows the same rule: [VAR_GUIDE.md](VAR_GUIDE.md) and tutorial 25.
 
 For the proposed counterparty credit risk cube on this engine (allocated exposure, the GLEIF group roll-up, limits by tenor with
 headroom, CVA, SA-CCR, SIMM, wrong-way risk, pre-deal pricing on paths, every data contract), see the design:
-[CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md).
+[LENSES.md section 7](../architecture/LENSES.md#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why).
 
 Every number below that is not a hand-made example is the engine's on the demo lake that `drishti.py lake demo` builds by default
 (`--exposure demo`): the run `XR-2026-09-30-01` (business date 2026-09-30, 200 paths, 24 grid dates of which 13 primary) generated for
@@ -537,9 +537,9 @@ endpoint list of Drishti is [API_GUIDE.md](API_GUIDE.md).
 
 ## 12. Settings
 
-Every setting is under `drishti.ccr.exposure` in the engine's own file, `config/engines/exposure.yaml` (its switch `drishti.engines.exposure.enabled`; [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)) (and [CONFIGURATION.md](../admin/CONFIGURATION.md#drishticcrexposure--the-exposure-engine)).
+Every setting is under `drishti.ccr.exposure` in the engine's own file, `config/engines/exposure.yaml` (its switch `drishti.engines.exposure.enabled`; [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)) (and [CONFIGURATION.md](../reference/CONFIGURATION.md#drishticcrexposure--the-exposure-engine)).
 
-Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.ccr.exposure`](../admin/CONFIGURATION.md#drishticcrexposure) (also at Help → Configuration in the console).
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.ccr.exposure`](../reference/CONFIGURATION.md#drishticcrexposure) (also at Help → Configuration in the console).
 
 Also: the compute pool **`exposure`** in `config/compute/compute.yaml` (Python, `drishti_compute.exposure.whatif:ExposureWhatIfEngine`,
 system environment, `DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers (4), 2 GB, 300 CPU-seconds, 60 s timeout), active only with
@@ -614,7 +614,7 @@ and [WWR.md](../contracts/WWR.md) read too. Sections marked **Implementation** a
 `histogram-bins` (42), `t0-tolerance` (0.10), `kinds.*`, `access.<role>[<counterparty, group or legal entity>]`, `official.*` and
 `retention.*` (§27.3). `memory-budget-gb` 0 is a quarter of the heap and bounds the date's value matrices while it loads (float64,
 G × P per netting set). `im-model: current` reads the initial margin held from the collateral holding's `IM_HELD` (the test data has
-none: 0). Every setting is in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishticcrexposure--the-exposure-engine).
+none: 0). Every setting is in [CONFIGURATION.md](../reference/CONFIGURATION.md#drishticcrexposure--the-exposure-engine).
 
 ### 18.2 Netting per path
 

@@ -141,7 +141,7 @@ final class DeltaTable {
     private final String docColumn;
     private final String dateColumn;
 
-    /** The column every row carries: the load that wrote it ({@code <run>.<file>}, in time order; DATA_LOAD_RULES.md section 6.1). */
+    /** The column every row carries: the load that wrote it ({@code <run>.<file>}, in time order; DATA_ARCHITECTURE.md section 10.6.1). */
     static final String LOAD_ID = "_load_id";
 
     /**

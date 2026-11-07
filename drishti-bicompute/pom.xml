@@ -26,7 +26,7 @@
   </parent>
   <artifactId>drishti-bicompute</artifactId>
   <name>drishti-bicompute</name>
-  <description>The pivot engine (docs/architecture/PIVOT_ENGINE.md): plain Java, no Spring. The pivot model (views, cell keys, nested
+  <description>The pivot engine (docs/architecture/ARCHITECTURE.md section 23): plain Java, no Spring. The pivot model (views, cell keys, nested
     expandable axes), the provider SPI and the aggregation-function SPI (start, add, merge, finish; mergeable, sketch, holistic), the
     built-in functions, partial states merged in a fixed order, the partial-state cache, the GROUPING SETS compiler and the DuckDB tabular
     provider, and the exports (xlsx with outline levels and formulas only where a measure adds up, CSV). Every component that aggregates

@@ -640,7 +640,7 @@ Entities the caller opened recently (per `X-Drishti-User` or token subject) are 
 | `GET` | `/views/{kind}/{id}` | as-of. The `ViewModel`, with the caller's [field masks](#field-masks) (`"text":"•••"`); `404 DRS-1001` (no such entity), `404 DRS-1002` (no source serves the kind), `502 DRS-1003` (source failed), `504 DRS-1004` (source timed out); `403 DRS-5002` if the caller may not open the kind |
 | `POST` | `/views/{kind}/{id}/ask` | Ask about this page, optional and off by default. Body `{question, locale?}`; answer `{answer, sources[]}` (plain text). `404 DRS-4007` when Ask is off globally or for the page's pack, `502`/`504 DRS-4008` when the model endpoint fails or is slow, `429 DRS-4009` over the per-user rate, `400` for an empty or too long question, `403 DRS-5002` as the view. See [Ask about this page](#ask-about-this-page) |
 | `GET` | `/views/{kind}/{id}/explain` | as-of. About this page, layers 3 and 4 ([design](RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help)): where the data came from and why the page looks as it does, for exactly what the caller sees. Query `panel` (narrows to a panel of the view, else `404 DRS-4006`) and `generation` (the generation your page shows; a newer one on the server adds `"newer":true`). Same rules as the view: `403 DRS-5002`, `404 DRS-1001`, `400 DRS-4003`. See [Explaining a view](#explaining-a-view) |
-| `GET` | `/viewmodel/schema` | The JSON Schema (draft 2020-12, `application/schema+json`) of the `ViewModel`, its panels' `data` and the live stream's frames (`$defs.Frame`), generated from the server's own records. Read only. See [VIEWMODEL.md section 9](../architecture/VIEWMODEL.md#9-the-json-schema) |
+| `GET` | `/viewmodel/schema` | The JSON Schema (draft 2020-12, `application/schema+json`) of the `ViewModel`, its panels' `data` and the live stream's frames (`$defs.Frame`), generated from the server's own records. Read only. See [VIEWMODEL.md section 9](../reference/VIEWMODEL.md#9-the-json-schema) |
 
 Opening a view also records it in the caller's recent list. A view is formatted for display: every value
 comes as text with a tone, so all clients show `−1,403,091` the same way.
@@ -678,7 +678,7 @@ curl -s $B/views/trade/MX-20000001 | jq -c '.panels[] | {id, kind, title, key, a
 {"id":"refs","kind":"links","title":"Linked entities","key":null,"area":"right"}
 ```
 
-The full shape is in [The ViewModel in detail](#the-viewmodel-in-detail) and, as a contract, [VIEWMODEL.md](../architecture/VIEWMODEL.md).
+The full shape is in [The ViewModel in detail](#the-viewmodel-in-detail) and, as a contract, [VIEWMODEL.md](../reference/VIEWMODEL.md).
 
 `?sutra=<name>` draws the view with another Sutra of the entity's kind (the newest version; `400 DRS-5001` for one of another kind):
 `GET /api/v1/views/portfolio-trades/BOOK-RATES-2?sutra=book-desk`. `?design=<id>` draws it with one of the caller's own Designs (the
@@ -752,7 +752,7 @@ The explain answer carries `"ask": {"enabled": true|false}`: whether the box may
 It is off unless an administrator sets `drishti.explain.ask.enabled` and lists the page's pack. The server builds the prompt from the
 caller's own explain answer (so field masks are already applied: a masked value is never sent), the glossary and the pack's guide
 text, and nothing else; labels only unless `values: shown`. The model gets no tools. Limits are per user (`DRS-4009`). Questions are
-recorded in the access log (action `ask`); answers are not stored. Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiexplainask--ask-about-this-page-optional-off-by-default).
+recorded in the access log (action `ask`); answers are not stored. Settings: [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtiexplainask--ask-about-this-page-optional-off-by-default).
 
 The explain answer also carries `glossary`: an entry for each field the page shows, `[{key, label, shownIn[], term, means, origin}]` (`origin` says where the words came from: `core:vocabulary.rate` is the built-in vocabulary, a pack's own entry names the pack). For authors, the same card for a design in the Build workbench is `GET` and `PUT /builder/designs/{id}/about` and `POST .../about/preview` ([Designs](#designs-your-work-kept-on-the-server)); the design is [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#api). The pack's own text problems (`DRS-2040` to `DRS-2044`) are load problems, listed by `GET /sutras/problems`; they never fail an explain call.
 
@@ -835,7 +835,7 @@ compared with, the business days with no data in `missing`), `columns` (`path`, 
 
 Every day's document is redacted for the caller before anything is computed from it: a masked field reads `•••` on every row, is
 `masked: true` in `columns`, is never in `changed` and is not in `summary`. The kind's pack shapes the answer with its `history:` block
-([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)); the limits are `drishti.history.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)). Errors: `DRS-1012` (the
+([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)); the limits are `drishti.history.*` ([CONFIGURATION.md](../reference/CONFIGURATION.md)). Errors: `DRS-1012` (the
 kind keeps no daily history here), `DRS-1013` (no data in the range), `DRS-1014` (no day read in time), `DRS-4021` (range too large),
 `DRS-4022` (a range that cannot be read), `DRS-1001` (no such entity).
 
@@ -1601,7 +1601,7 @@ Every change is audited (`pack-upload-checked`, `pack-deployed`, `pack-rolled-ba
 | `GET` | `/about`, `/public/about` | Gain `engines`: `[{id, title, here, cluster}]`, each engine running on this node (`here`) and on any reachable node (`cluster`); the console shows an engine's words, menus and Help only when `cluster` is true. |
 | `GET` | `/admin/commands/{code}/impact` | What turning the command off stops: `{code, kind, page, api, uses[{category, label, count, items[{name, owner, detail}]}]}` (the BI datasets that read its kind and what is built on them, saved searches, monitors, alerts, subscriptions, workspaces, shares, embed hosts). Admin; never a token. |
 | `GET` | `/admin/retry` | What is failing and will be tried again, by area: `{packs{name{attempt, nextRetryInSeconds, nextRetryAt, lastError, permanent, failingSince}}, connectors{...}, ai{...}, mcp{...}, policy}`. Admin. |
-| `GET` | `/admin/settings` | the settings in effect on this server (Help → Configuration shows them beside the defaults of [CONFIGURATION.md](../admin/CONFIGURATION.md#every-setting)): `{settings: [{key, value, origin, source, secret}], profiles}`, every key of the `drishti`, `server`, `spring`, `management`, `logging` and `springdoc` trees a file, argument or pack contributes. `origin`: `default` (the bundled `application.yaml`), `file` (`source` names it), `env` (`source` names the variable), `argument`, `system-property`, `pack` or `other`. A list's items come joined. Secrets never: a key with a word secret, password, token, key or credential in it (and the known secret settings) answers `••••` (empty when unset), and a URL's user information is masked. Admin |
+| `GET` | `/admin/settings` | the settings in effect on this server (Help → Configuration shows them beside the defaults of [CONFIGURATION.md](../reference/CONFIGURATION.md#every-setting)): `{settings: [{key, value, origin, source, secret}], profiles}`, every key of the `drishti`, `server`, `spring`, `management`, `logging` and `springdoc` trees a file, argument or pack contributes. `origin`: `default` (the bundled `application.yaml`), `file` (`source` names it), `env` (`source` names the variable), `argument`, `system-property`, `pack` or `other`. A list's items come joined. Secrets never: a key with a word secret, password, token, key or credential in it (and the known secret settings) answers `••••` (empty when unset), and a URL's user information is masked. Admin |
 | `POST` | `/admin/retry/{area}` | **Retry now**: `area` is `packs`, `connectors` (optional `?name=` for one), `ai`, `mcp` or `all`. Tries at once and answers what was tried plus the new state; audited (`pack-retry-now`, `connector-retry-now`, `ai-retry-now`, `mcp-retry-now`). Admin; a token needs the `packs:admin` scope. `400 DRS-5001` for another area. |
 | `POST` | `/admin/packs/{name}/load`, `/unload` | Loads or unloads a pack at once, with no restart: `{name, added, loaded[], reloaded[], unloaded[], problems{}, restartFor[], restarting: false, note}`. `restartFor` is always empty (kept for compatibility): roles, graph, search columns, formats, hints, About pages, routes and sample folders are swapped in live too. `400` with the reason when the pack does not check out, or when an unload is refused because a loaded pack extends it. |
 | `GET` | `/admin/packs` | Admin. Every pack, loaded or only on disk: `{name, title, description, version, loaded, enabled, added, sample, problem, retry, connectors[], extends[], requiredBy[], kinds[], mnemonics[], updatedAt, updatedBy}` |
@@ -1727,7 +1727,7 @@ as an administrator's announcement.
 | `GET` | `/admin/dataload/report?path=` | A report the status links to, by its path under the inbox's folder: a file's `.loaded.json` or `.failed.json`, a loader's `load-<n>.summary.json` or `load-plan.json` (JSON), or `load-<n>.rejects.jsonl` (the first 500 lines, an array). Only under `outbox/` and `failed/`; anything else `400 DRS-5001`, a report no longer kept `404` |
 | `POST` | `/admin/dataload/run` | Load now: `{started: true, by}`; while a run still loads none starts: `{started: false, skipped: "skipped: run 20261103T150000Z-drishti-main still loading (12 min)"}` (recorded as a skipped cycle). `400 DRS-5001` the inbox is off here. Audited `dataload.run` |
 | `POST` | `/admin/dataload/retry` | body `{file}` (or `?file=`): a failed file and its `.ready` back into the inbox: `{file, from, to, next}`. `404 DRS-1001` no failed file of that name, `400 DRS-5001` a bad name or one in the inbox already. Audited `dataload.retry` |
-| `POST` | `/admin/dataload/undo` | body `{loadId}`: what undoing that load would do, nothing changed; `{loadId, confirm}` with `confirm` the same id: the load undone, its rows removed from every Delta and Iceberg table of the inbox's lake, one commit per table and date, a replace restored ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md) section 6.3): `{loadId, undone, lines: [{table, format, date, removed, restored, replaced}], text}`. `400 DRS-5001` no id, or the undo failed. Audited (`dataload.undo`). |
+| `POST` | `/admin/dataload/undo` | body `{loadId}`: what undoing that load would do, nothing changed; `{loadId, confirm}` with `confirm` the same id: the load undone, its rows removed from every Delta and Iceberg table of the inbox's lake, one commit per table and date, a replace restored ([DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load) section 6.3): `{loadId, undone, lines: [{table, format, date, removed, restored, replaced}], text}`. `400 DRS-5001` no id, or the undo failed. Audited (`dataload.undo`). |
 
 ### Administration: node readiness and the drain before a stop
 
@@ -1748,7 +1748,7 @@ until curl -s -H "Authorization: Bearer $DRISHTI_DRAIN_TOKEN" $B/admin/node | jq
 
 | Method | Path | Notes |
 |---|---|---|
-| `GET` | `/admin/health` | admin. Everything Drishti depends on, in one answer, including `disk` (`{path, totalBytes, freeBytes, guardBytes, state (ok, amber, red), folders: [{name, path, usedBytes, limitBytes, state, oldest}]}`; red makes the status `DEGRADED`), `tmp` (`{base, path, bytes, files}`: the server's temp folder `drishti-<pid>`, [CONFIGURATION.md](../admin/CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir)). `server` carries `rssMb`, the process's resident memory (`VmRSS` of `/proc/self/status`; null off Linux). Cheap enough to poll every few seconds |
+| `GET` | `/admin/health` | admin. Everything Drishti depends on, in one answer, including `disk` (`{path, totalBytes, freeBytes, guardBytes, state (ok, amber, red), folders: [{name, path, usedBytes, limitBytes, state, oldest}]}`; red makes the status `DEGRADED`), `tmp` (`{base, path, bytes, files}`: the server's temp folder `drishti-<pid>`, [CONFIGURATION.md](../reference/CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir)). `server` carries `rssMb`, the process's resident memory (`VmRSS` of `/proc/self/status`; null off Linux). Cheap enough to poll every few seconds |
 | `GET` | `/admin/busy` | admin. Busy protection ([OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over)): `{enabled, state (fine, getting full, new heavy work waits, new sign-ins wait, everything let through, off), waitingSince, override: {mode, reason, by, since, until, minutesLeft, maxMinutes}, gauges: [{id (memory, loads, requests, disk), label, value, warn, refuse, state (ok, warn, wait), words, note, ...}], refusals: {last15Minutes, people, sinceStart, rows: [{at, who, what, why, code, retryAfterSeconds}]}}`; the same is `busy` in `/admin/health` |
 | `PUT` | `/admin/busy/override` | admin, never a token. `{mode: automatic \| open \| hold, reason, minutes}`: let everything through or hold all new heavy work for 1 to `drishti.admission.override-max-minutes` minutes (a reason is required; `400 DRS-5001` without one), or back to automatic at once; audited as `busy-override`; answers as `GET /admin/busy` |
 | `GET` | `/admin/alerts` | admin. The platform alert rules (from `config/alerts/platform-alerts.yaml`, with any rule that could not be read and why), the open alerts (rule, severity, value, threshold, since) and the recent closed ones; the same alerts appear on Admin → Health and in administrators' inboxes ([OPERATIONS.md](../admin/OPERATIONS.md)) |
@@ -1936,7 +1936,7 @@ drishti_view_seconds_max 0.017122086
 
 ## The ViewModel in detail
 
-The full contract is [VIEWMODEL.md](../architecture/VIEWMODEL.md): every field of the top level, the common types (Cell, Link,
+The full contract is [VIEWMODEL.md](../reference/VIEWMODEL.md): every field of the top level, the common types (Cell, Link,
 tones, keys, provenance, `empty`/`error`/`denied`, grid), the `data` shape of all 22 panel kinds with real examples, live
 frames and patches, masks, a minimal render loop, and compatibility. Its JSON Schema is served at
 `GET /api/v1/viewmodel/schema`.
@@ -1963,7 +1963,7 @@ jq -c '.panels[] | select(.id=="terms").data.fields[0:2]' t.json
 in a `links` panel the item has `status: "denied"` and `badge: "no access"`; a function key's label gets
 ` (no access)` and `action: "denied"`; the title's `with` loses its link. People learn the entity exists
 without seeing it. Masked values read `•••` and `provenance.masked` counts them
-([VIEWMODEL.md section 6](../architecture/VIEWMODEL.md#6-entitlements-and-masks-in-a-view)).
+([VIEWMODEL.md section 6](../reference/VIEWMODEL.md#6-entitlements-and-masks-in-a-view)).
 
 ## Error code table
 
@@ -2701,7 +2701,7 @@ site sets `drishti.bi.expr.legacy: warn` it is a warning and the rest of the che
 ## BI migrations: `/api/v1/bi/migrate`
 
 Migrations ([BI_DESIGN.md › The model layer: the specification, section 8](../architecture/BI_DESIGN.md#8-migration)): migrations of the server's **stored** BI items. The
-server runs them once at start (`drishti.bi.migrate.on-start`, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibimigrate--migrations-of-stored-bi-items));
+server runs them once at start (`drishti.bi.migrate.on-start`, [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibimigrate--migrations-of-stored-bi-items));
 these endpoints let a **bi-admin** see what would change and run them again. Every run is idempotent and audited; the text before stays in each item's
 history; an item that cannot be converted is never changed and is listed in `problems`.
 
@@ -2807,7 +2807,7 @@ for the caller), `links {self, result, events}`, `schedule` (the owner's schedul
 changes need the `bi:write` scope (the administrator's cancel `bi:admin`). Every answer has `Cache-Control: no-store`.
 
 After a restart, every queued or running run of the node is started again as its runner (attempt + 1, up to `restart.max-attempts`) or failed
-`DRS-9085` with a reason; each is told on the bell. Settings: `config/runs/runs.yaml` ([CONFIGURATION.md](../admin/CONFIGURATION.md#bi-runs-configrunsrunsyaml)).
+`DRS-9085` with a reason; each is told on the bell. Settings: `config/runs/runs.yaml` ([CONFIGURATION.md](../reference/CONFIGURATION.md#bi-runs-configrunsrunsyaml)).
 
 ## Reports: `/api/v1/bi/reports` (phase 3)
 
@@ -3370,7 +3370,7 @@ are never a token's. Answers, captures, what-ifs, exports, reloads and official 
 
 ## Pivot engine: `/api/v1/pivot`
 
-The pivot engine ([PIVOT_GUIDE.md](PIVOT_GUIDE.md), design [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md)): any table of Export data,
+The pivot engine ([PIVOT_GUIDE.md](PIVOT_GUIDE.md), design [ARCHITECTURE.md section 23](../architecture/ARCHITECTURE.md#23-the-pivot-engine)): any table of Export data,
 or the VaR engine's trades (`source: var`), as a pivot. Every figure is computed by the engine (module `drishti-bicompute`); every total is
 made from its own members; masks apply before aggregation. Every view run and export is audited, never with its values.
 
@@ -3478,7 +3478,7 @@ Off, every `/api/v1/pivot/mr` call answers `404 DRS-1020`, and an MR measure, le
 
 ## Embedding views in another web application
 
-For `<drishti-view>` ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)): a host application shows live Drishti views in its own pages, and Drishti decides who may see what. Off by default; switch it on with `drishti.embed.enabled` (needs `drishti.security.enabled`; settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)).
+For `<drishti-view>` ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)): a host application shows live Drishti views in its own pages, and Drishti decides who may see what. Off by default; switch it on with `drishti.embed.enabled` (needs `drishti.security.enabled`; settings in [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)).
 
 **1. Register the host application** (an administrator; audited as `embed-app-created`, `embed-app-changed`, `embed-app-disabled`, `embed-app-secret-rotated`):
 
@@ -3492,7 +3492,7 @@ For `<drishti-view>` ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20
 | `POST /api/v1/admin/embed/apps/{id}/disable`, `/enable` | stop or resume the application without forgetting it (audited as `embed-app-disabled` / `-enabled`) |
 | `GET /api/v1/admin/embed/usage` | `{since, enabled, settings, apps: {id: {tokensIssued, calls, refusals, refusalsByCode, streamsOpen, lastUsedAt}}}`: counters since this server started, and what the registration form offers (`settings.scopes`, limits) |
 
-An application declared in `drishti.embed.apps` has `fromConfig: true` and answers `409` to every change; see [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications). The same pages are in the console at **Admin → Embedding**.
+An application declared in `drishti.embed.apps` has `fromConfig: true` and answers `409` to every change; see [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications). The same pages are in the console at **Admin → Embedding**.
 
 **2. The host's backend buys a token** (RFC 8693; never from a browser: a request with an `Origin` header is refused `403 DRS-8002`):
 
@@ -3523,7 +3523,7 @@ Other endpoints: `GET /api/v1/embed/check` answers `{app, user, jti, scopes, exp
 
 **Renewal.** Tokens are short (default 5 minutes) and never refreshed by the browser: when one is about to expire the element asks the host page, whose backend repeats the exchange above for the same user (a fresh `jti`, a later `exp`); the console accepts it on the open stream only when `sub` and `azp` are the same (CLIENT_RENDERER.md › Drishti Elements: the design, section 7.2). Disabling the application or the user takes effect at the next call, and on an open stream at the next re-check.
 
-**4. The console's embed API** (`/embed/v1`, served when the console has `embed.enabled`; the element calls it, a host rarely does): `GET /views/{kind}/{id}` (head, strip and panels as HTML), `GET /views/{kind}/{id}/about` (scope `embed:about`; `<drishti-about>`), `GET /search?q=&limit=` (scope `embed:search`; `<drishti-search>`), `GET /resolve?text=` (a typed command or id to `{ref, mnemonic, title}`, read-only), `GET /channel?s=view:{kind}/{id}` (server-sent events: `channel`, `view`, `frame`, `gone`, `end`, `token`), `POST /channel/{cid}` (`{add, remove}`) and `POST /channel/{cid}/token`. Every call carries `Authorization: Bearer <embed token>`; CORS answers only the registered origins. The console verifies the token's signature (the server's key from `/api/v1/embed/jwks`, cached, re-read when a key id is new), expiry, audience and origin, then passes it to the server. A stream outlives its token: at expiry the console sends `event: token`, the element posts a fresh token to `/channel/{cid}/token` (the same user and application, a later expiry) and the stream carries on; with none within `embed.token_grace_seconds` it ends with `gone` `DRS-8001`. Problems are `{"code", "detail"}` (`DRS-8001` to `DRS-8006`; `429` carries `Retry-After`). Responses are gzip or Brotli compressed when accepted. A report is `GET /reports/{id}`, `POST /reports/{id}/query` and the channel key `bilive:{id}`, below. The library itself is served at `GET /embed/v1/elements/{version}/drishti-elements.js`, `.../m/{name}.js` and `.../integrity.json` (an exact semantic version, immutable; `1` and `1.1` answer `302` to it; a version this console does not hold is `410 DRS-8006`; with `embed.lifecycle` set every answer carries `Deprecation` and `Sunset`). Console settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#console-embed--the-consoles-side-of-embedded-views).
+**4. The console's embed API** (`/embed/v1`, served when the console has `embed.enabled`; the element calls it, a host rarely does): `GET /views/{kind}/{id}` (head, strip and panels as HTML), `GET /views/{kind}/{id}/about` (scope `embed:about`; `<drishti-about>`), `GET /search?q=&limit=` (scope `embed:search`; `<drishti-search>`), `GET /resolve?text=` (a typed command or id to `{ref, mnemonic, title}`, read-only), `GET /channel?s=view:{kind}/{id}` (server-sent events: `channel`, `view`, `frame`, `gone`, `end`, `token`), `POST /channel/{cid}` (`{add, remove}`) and `POST /channel/{cid}/token`. Every call carries `Authorization: Bearer <embed token>`; CORS answers only the registered origins. The console verifies the token's signature (the server's key from `/api/v1/embed/jwks`, cached, re-read when a key id is new), expiry, audience and origin, then passes it to the server. A stream outlives its token: at expiry the console sends `event: token`, the element posts a fresh token to `/channel/{cid}/token` (the same user and application, a later expiry) and the stream carries on; with none within `embed.token_grace_seconds` it ends with `gone` `DRS-8001`. Problems are `{"code", "detail"}` (`DRS-8001` to `DRS-8006`; `429` carries `Retry-After`). Responses are gzip or Brotli compressed when accepted. A report is `GET /reports/{id}`, `POST /reports/{id}/query` and the channel key `bilive:{id}`, below. The library itself is served at `GET /embed/v1/elements/{version}/drishti-elements.js`, `.../m/{name}.js` and `.../integrity.json` (an exact semantic version, immutable; `1` and `1.1` answer `302` to it; a version this console does not hold is `410 DRS-8006`; with `embed.lifecycle` set every answer carries `Deprecation` and `Sunset`). Console settings: [CONFIGURATION.md](../reference/CONFIGURATION.md#console-embed--the-consoles-side-of-embedded-views).
 
 **5. The embed API v2** (`/embed/v2`, beside v1; served when the console has `embed.enabled`; Elements 2.0
 and the client-side renderer call it, [CLIENT_RENDERER.md › Drishti Elements: the design, section 19](../architecture/CLIENT_RENDERER.md#19-elements-20-drawn-by-the-client-side-renderer)).

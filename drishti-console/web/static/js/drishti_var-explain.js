@@ -14,13 +14,13 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Why it moved (docs/guides/VAR_GUIDE.md section 3.11; docs/lenses/OVERSIGHT_LENS.md section 4.1.1): the VaR page's tab that explains
+/* Why it moved (docs/guides/VAR_GUIDE.md section 3.11; docs/architecture/LENSES.md section 5.4.1.1): the VaR page's tab that explains
    a scope's VaR change between two business dates in causes that add up exactly. One answer (GET /api/var/explain), three views over it
    behind a switch, Waterfall (the default, mock-up A), Matrix (B: every child node, the steps across) and Sentences (C); the choice is
    kept in the address (view=) and in the person's settings (varExplainView), and a switch redraws from the answer already fetched.
 
    It is not drawn by the VaR page's own charts: the answer is turned into a ViewModel of the standard panel kinds (metric, waterfall,
-   table, hbar, markdown; docs/architecture/VIEWMODEL.md) and painted by the one renderer of every screen, Drishti Render
+   table, hbar, markdown; docs/reference/VIEWMODEL.md) and painted by the one renderer of every screen, Drishti Render
    (static/render/1.2.0, vendored with the console; CLIENT_RENDERER.md), so it looks and behaves like the rest of the product.
    Every step is a row of the Steps table that opens its drivers (drishti:row-click). On a phone (MOBILE_DISPLAY.md section 3) the answer
    in words is must, the steps as horizontal bars glance, the selected step's drivers more; the states and the matrix are desk. */

@@ -40,7 +40,7 @@ About 20 minutes.
 - what a failure looks like, how Retry puts a file back, and what the outbox and the ledger keep.
 
 The reference is the [data guide, section 7](../guides/DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load); the design is
-[DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md).
+[DATA_ARCHITECTURE.md section 9](../architecture/DATA_ARCHITECTURE.md#9-the-data-inbox-files-dropped-in-a-folder-loaded-into-the-lake).
 
 ## Step 1 · Turn the inbox on
 
@@ -386,7 +386,7 @@ off, no Inbox tab and `drishti.py dataload status` exiting 3 (`DRS-1020`).
 You turned the data inbox on, routed a file by a rule, handed it over with its `.ready` marker, watched it load on the Inbox screen,
 released a batch with `ready.all`, fixed a failure and retried it, saw a duplicate skipped, and read the reports the outbox and the ledger
 keep. The reference is the [data guide, section 7](../guides/DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load); the design is
-[DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md).
+[DATA_ARCHITECTURE.md section 9](../architecture/DATA_ARCHITECTURE.md#9-the-data-inbox-files-dropped-in-a-folder-loaded-into-the-lake).
 
 ## Next steps
 

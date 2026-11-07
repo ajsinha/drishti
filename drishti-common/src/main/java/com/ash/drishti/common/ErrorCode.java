@@ -49,7 +49,7 @@ public enum ErrorCode {
      */
     EDITION_PACK_REFUSED("DRS-1017", 403),
     /**
-     * A compute engine is not running on this server and no other server of the cluster runs it (docs/architecture/COMPUTE_ENGINES.md
+     * A compute engine is not running on this server and no other server of the cluster runs it (docs/architecture/ARCHITECTURE.md section 25
      * section 5.1): its API answers 404 in words, never 403 (nothing is forbidden; the engine is not here).
      */
     ENGINE_OFF("DRS-1020", 404),
@@ -203,7 +203,7 @@ public enum ErrorCode {
      */
     DISK_GUARD("DRS-5218", 503),
     /**
-     * The in-memory lake's guard (docs/architecture/IN_MEMORY_LAKE.md section 8): the data is held in memory only by contract, and this
+     * The in-memory lake's guard (docs/architecture/DATA_ARCHITECTURE.md section 7.8): the data is held in memory only by contract, and this
      * place would keep it (a scheduled report, a mail attachment, an inbox or share item with rows, a saved result, an outside AI provider).
      * Only a user's download may leave; the answer names the data and its contract.
      */
@@ -239,7 +239,7 @@ public enum ErrorCode {
     PIVOT_FUNCTION_OFF("DRS-5713", 404),
     /** A custom function past a limit: a holistic cell over its rows or megabytes, a state over its bound, a call over its time. */
     PIVOT_FUNCTION_LIMIT("DRS-5714", 422),
-    /** A custom function in an official run, report or sign-off: official measures stay the Java engines (PIVOT_ENGINE.md decision 14). */
+    /** A custom function in an official run, report or sign-off: official measures stay the Java engines (ARCHITECTURE.md section 23 decision 14). */
     PIVOT_FUNCTION_OFFICIAL("DRS-5715", 403),
     /** An explanation or a what-if the engine cannot make as asked (two cells of different measures, a holistic measure without its provider's steps). */
     PIVOT_EXPLAIN("DRS-5716", 400),
@@ -575,7 +575,7 @@ public enum ErrorCode {
     CONTENT_BAD_KEY("DRS-5058", 400),
     /** Content store: the backing store (database, bucket, shared folder) could not be reached or answered with an error. */
     CONTENT_UNAVAILABLE("DRS-5059", 503),
-    /** Compute workers (docs/architecture/PYTHON_COMPUTE.md): compute is off on this server ({@code compute.enabled}). */
+    /** Compute workers (docs/architecture/ARCHITECTURE.md section 24): compute is off on this server ({@code compute.enabled}). */
     COMPUTE_OFF("DRS-9201", 503),
     /** Compute: refused before any work (unknown pool, requirements not approved, an environment not built, four eyes, a bad request). */
     COMPUTE_REFUSED("DRS-9202", 409),

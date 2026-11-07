@@ -23,7 +23,7 @@ setting.
 
 For a first setup see [the walk-through at the end of this document](#walk-through-step-by-step); the plugin's
 settings in brief are in [the configuration examples at the end of this document](#configuration-by-example) and
-[CONFIGURATION.md](../admin/CONFIGURATION.md#kafka--a-live-stream); how a tick reaches the browser is in
+[CONFIGURATION.md](../reference/CONFIGURATION.md#kafka--a-live-stream); how a tick reaches the browser is in
 [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#streaming-sources). History for the same kinds comes from a dated store such as
 [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md) or [POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md). The message-queue
 connectors, which keep their own copy because a queue cannot be replayed, are in
@@ -86,7 +86,7 @@ size follows the number of entities, not the number of changes, and a restart re
   undated (`businessDate: null`).
 - **When it last received data.** The connector reports the newest message timestamp it has applied
   (`lastUpdate` in Admin → Health), which the engine compares with `stale-after`
-  ([CONFIGURATION.md](../admin/CONFIGURATION.md#connector-settings-plugin-by-plugin)). The trading pack sets
+  ([CONFIGURATION.md](../reference/CONFIGURATION.md#connector-settings-plugin-by-plugin)). The trading pack sets
   `stale-after: ${DRISHTI_STREAM_STALE_AFTER:15m}` on `trading-stream`.
 
 ## 3. The messages
@@ -201,7 +201,7 @@ connectors:
 The pack routes `trade` to `trade-endur` (Delta Lake); the stream is found as "every other connector serving
 `trade`", and is tried first on Live because it is live ([section 10.4](#104-with-a-lake-for-history)). The
 environment variables are listed in
-[CONFIGURATION.md](../admin/CONFIGURATION.md#environment-variables-used-by-the-packs-and-profiles).
+[CONFIGURATION.md](../reference/CONFIGURATION.md#environment-variables-used-by-the-packs-and-profiles).
 
 ### 5.2 Site form: envelopes and a mapped topic on a secured cluster
 
@@ -1029,7 +1029,7 @@ provenance.
 
 **Sizing.** A record is 4–8 KB (509 numbers as JSON text); 10,000 updates a day are 40–80 MB on the topic and, after a window's
 latest per trade, fewer rows in the lake. The window and the early flush are the server's settings (`drishti.var.intraday.kafka`,
-[CONFIGURATION.md](../admin/CONFIGURATION.md)), not the connector's. A window's batch is written in well under a second for a few hundred trades.
+[CONFIGURATION.md](../reference/CONFIGURATION.md)), not the connector's. A window's batch is written in well under a second for a few hundred trades.
 
 | Setting | Default | Meaning |
 |---|---|---|

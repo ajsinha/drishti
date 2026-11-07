@@ -685,7 +685,7 @@ Only roles with `calc: true` see Calc (here `support-lead`). More in [Calc: Pyth
 (generated, or published public data such as the us-equities and gleif packs):
 
 1. the documents as gzipped JSON Lines under `data/testdata/<pack>/<kind>/`, named by the load rules
-   ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md) section 10): `<table>.<YYYY-MM-DD>.jsonl.gz`, a file a business day (the
+   ([DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load) section 10): `<table>.<YYYY-MM-DD>.jsonl.gz`, a file a business day (the
    first the snapshot, then each day's changes), or one dated snapshot the same on every day, or a tar of `<table>/<YYYY-MM-DD>/`
    folders where a date is several files, each dataset listed in `data/testdata/testdata.yaml` with its pack,
    kind, Delta connector and key (`tools/testdata/make_testdata.py` and `tools/testdata/publicsnap.py` write it; never by hand);
@@ -1236,7 +1236,7 @@ routes: { netting-set: credit-store, margin-call: collateral-store }
   `connectorsNotConfigured`, and Admin → Packs → Data source offers a **Create** link pre-filled from your template. So give a template for every connector that has a
   sensible default, and for a site-specific one (a customer's own database) name it and document what the site must create.
 - **Older site overrides still apply, setting by setting**: environment variables and `drishti.sources.connectors.<name>.…` in the server's own
-  configuration still win over a file (and warn), see [CONFIGURATION.md](../admin/CONFIGURATION.md). The recommended way to change a connector is its file.
+  configuration still win over a file (and warn), see [CONFIGURATION.md](../reference/CONFIGURATION.md). The recommended way to change a connector is its file.
 - **Archives carry names and templates only.** `pack make`, `pack bundle` and Admin → Packs → Deploy archive ship the names and templates, never a site's settings. The deploy preview lists
   the connectors the pack names that the site lacks (`missing`), and the **Create connectors** step writes the files from your templates.
 
@@ -1449,7 +1449,7 @@ routes:
 - **Failures.** Health shows `DOWN` with the reason when a computation fails; a computation that runs out of memory fails cleanly
   (DEGRADED, the old pages serving, no reader waiting). Admin → Caches → Purge (or `drishti.py server caches purge trade-pages`) drops
   the pages; with `store: disk` the latest date is rebuilt from the lake at once. Every setting is in
-  [CONFIGURATION.md](../admin/CONFIGURATION.md#derived--kinds-computed-from-other-kinds).
+  [CONFIGURATION.md](../reference/CONFIGURATION.md#derived--kinds-computed-from-other-kinds).
 - **Everything else is a kind like any other.** Give it a mnemonic, a Sutra (or let inference lay it out), roles,
   alerts, a form and pick-list columns as usual. It shows in search (`CTRD TRADE_COUNT > 500`) and the type-ahead.
 - **Mistakes fail the start of the connector.** A missing `group-by`, an unknown aggregate, a field without its expression, an
@@ -2114,7 +2114,7 @@ How the setting works, and what it deliberately does not hide, is in
   stays readable unless the site turns on `drishti.security.mask-copies`, which scrubs exact copies of masked values
   from the other text of the same document. For the help-desk pack, a site that masks `CLIENT_NAME` should also turn it
   on, because `HISTORY` events may name the client;
-- the setting list, with defaults, is in [CONFIGURATION.md](../admin/CONFIGURATION.md) (`drishti.security`).
+- the setting list, with defaults, is in [CONFIGURATION.md](../reference/CONFIGURATION.md) (`drishti.security`).
 
 Packs that carry personal or confidential fields should say so in their guide, so that an administrator knows what to
 put in `redact`. The shipped setting masks the trader's identity on a trade (`TRADER_ID`, `TRADER_FIRST_NAME`, `TRADER_LAST_NAME`), the
@@ -2334,7 +2334,7 @@ computed by its engine, a decision still to come) is registered in `config/under
 the release that builds it and its treatment: `under-construction` (shown, the words *Under construction* in place of its value) or
 `hidden`. Never a number that looks computed and is not. Register a Sutra's figure by its kind and `bind` (strip items, kv and table
 columns) or a whole panel by its `id`; a menu item by its id; a help page by its slug. Then run `python3 tools/under_construction.py` (it
-writes [UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md); `--check` fails when a place it names does not exist). Nothing else is
+writes [UNDER_CONSTRUCTION.md](../reference/UNDER_CONSTRUCTION.md); `--check` fails when a place it names does not exist). Nothing else is
 needed: the server rewrites the Sutra when it is matched, the console hides or marks the menu items and help pages, and the data stays in
 the lake. When the engine is built, remove the item in the change that ships it.
 
@@ -3681,7 +3681,7 @@ A demonstration often runs on a laptop with no internet. Both packs then work fu
 - **Offline mode.** Start the server with `DRISHTI_OFFLINE=true` (the run configuration **Drishti server (demo lakes)** sets it):
   the `news`, `yfinance` and public-data `feed` connectors never start, even when a file enables them, so nothing waits on the
   network and Admin → Connectors shows them **off (offline mode)** while `news-store`, `macro-store` and `civic-store` run
-  ([CONFIGURATION](../admin/CONFIGURATION.md#drishtioffline--offline-mode-no-internet)). Without it the snapshot still answers
+  ([CONFIGURATION](../reference/CONFIGURATION.md#drishtioffline--offline-mode-no-internet)). Without it the snapshot still answers
   whenever the live connectors are off (their shipped state); with them on and the internet there, the live connector is asked first.
 
 Refresh the snapshot on a machine with internet: `drishti.py testdata capture-market` (about four minutes: two seconds between calls),
@@ -3933,7 +3933,7 @@ Admin → Packs and Health show it on the pack's row: *failed — next retry in 
 → Packs, or `POST /api/v1/admin/retry/packs`; admin role, audited as `pack-retry-now`; an API token needs the `packs:admin` scope) checks at
 once. When a pack loads because its blocker went away, the audit log has `pack-loaded` (actor `retry`) and `pack-recovered`; failures are
 audited as `pack-retry-failed`, only on attempts 1, 2, 4, 8, … so a pack that stays broken for a day does not fill the log. The settings
-are in [CONFIGURATION.md](../admin/CONFIGURATION.md#retry-settings) and the whole behaviour in
+are in [CONFIGURATION.md](../reference/CONFIGURATION.md#retry-settings) and the whole behaviour in
 [OPERATIONS.md](../admin/OPERATIONS.md#retries-what-failed-is-tried-again-by-itself). With `drishti.packs.watch: off` nothing looks at the
 folder on a timer, and so nothing retries either: use Retry now.
 
@@ -4243,8 +4243,8 @@ All Java code lives under the package `com.ash.drishti`. The parent POM (`pom.xm
 | `drishti-lakeio` | `lakeio` | Lake file access shared by the native Delta and Iceberg engines, no Hadoop: `Storage` (local disk through `java.nio`, Windows drive letters, backslashes and UNC shares included; S3 through the AWS SDK, with conditional PUTs for commits), byte ranges, Parquet page codecs (`NativeCodecs`, reading and writing) and the per-file Parquet footer cache. Other schemes come from a `StorageProvider` another module registers (`mem://`, the in-memory lake): the engines ask `StorageProviders` and never name that module. | `Storage`, `LocalStorage`, `S3Storage`, `LocalPaths`, `NativeCodecs`, `ParquetFooters`, `StorageProvider`, `StorageProviders` |
 | `drishti-iceberg` | `iceberg` | Drishti's own Apache Iceberg engine without Hadoop, on `drishti-lakeio`: metadata JSON kept whole, path-based, metadata-file and REST catalogs (JDK HTTP client, OAuth2, ETag, vended credentials, SigV4), Avro manifests, planning with partition and metric pruning, field-id Parquet reads with schema evolution and deletes, the Parquet writer with Iceberg metrics, safe commits and the table operations. Its tests prove the writer loads no Hadoop `Configuration`. | `Table`, `catalog.Catalogs`, `scan.Planner`, `read.TaskReader`, `write.Operations`, `write.ParquetDataWriter` |
 | `drishti-deltalake` | `deltalake` | A Delta Kernel engine without Hadoop on `drishti-lakeio` (local disk, Windows paths included, and S3; Parquet through parquet-java with the shared input files and codecs); and Drishti's own Delta writer (`lake build --engine drishti`). Its tests prove in an isolated class loader that no Hadoop `FileSystem`, `Shell` or `Configuration` loads. | `NativeEngine`, `write.LakeManifest` |
-| `drishti-memlake` | `memlake` | The in-memory lake, plain Java with no Spring ([IN_MEMORY_LAKE.md](../architecture/IN_MEMORY_LAKE.md)): the `mem://` memory stores (Parquet files in off-heap chunks under a hard cap; registered with `drishti-lakeio` as the `mem` storage provider), the tables and their replenish jobs, the eviction ladder, automated compaction, the owner node's binding, the never-on-disk guard and the host checks. The server keeps only its Spring wiring (`server.memlake`: settings binding, beans, the Admin, Lakes controller). | `MemoryLake`, `MemoryLakeSettings`, `Retention`, `MemoryBinding`, `store.MemoryStores`, `store.MemoryStorage` |
-| `drishti-lakeload` | `lakeload` | The parallel lake loader: JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md)). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget` |
+| `drishti-memlake` | `memlake` | The in-memory lake, plain Java with no Spring ([DATA_ARCHITECTURE.md section 7](../architecture/DATA_ARCHITECTURE.md#7-the-in-memory-lake-delta-tables-that-never-touch-a-disk)): the `mem://` memory stores (Parquet files in off-heap chunks under a hard cap; registered with `drishti-lakeio` as the `mem` storage provider), the tables and their replenish jobs, the eviction ladder, automated compaction, the owner node's binding, the never-on-disk guard and the host checks. The server keeps only its Spring wiring (`server.memlake`: settings binding, beans, the Admin, Lakes controller). | `MemoryLake`, `MemoryLakeSettings`, `Retention`, `MemoryBinding`, `store.MemoryStores`, `store.MemoryStorage` |
+| `drishti-lakeload` | `lakeload` | The parallel lake loader: JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([DATA_ARCHITECTURE.md section 11](../architecture/DATA_ARCHITECTURE.md#11-the-parallel-lake-loader-drishti-lakeload)). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
 | `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance, and one sub-package per feature area (`admin`, `ai`, `alerts`, `bi`, `calc`, `cli`, `collab`, `connectors`, `deploy`, `design`, `dist`, `embed`, `explain`, `governance`, `layout`, `loads`, `notify`, `pivot`, `registry`, `reports`). `bi` is Rūpaka, the BI engine (section 4.4). | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance`, `bi.mq.MqService`, `bi.engine.QueryService` |
 | `drishti-it` | `it` | Repository-wide rules, as tests only. | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest`, `NoBlockingUnderSynchronizedTest` |
@@ -5478,7 +5478,7 @@ drishti:
 The default in the YAML and in the record must agree: the record's default applies when the key is absent (`SearchProperties` keys are
 not in the bundled file at all).
 
-**4. Document it** in [CONFIGURATION.md](../admin/CONFIGURATION.md), in the section for its prefix: key, default, meaning, and the
+**4. Document it** in [CONFIGURATION.md](../reference/CONFIGURATION.md), in the section for its prefix: key, default, meaning, and the
 environment variable (the console test `test_docs_settings.py` fails when a key of `application.yaml` is missing there).
 
 **5. Test it** where the behaviour is, with the property set in the test: `@SpringBootTest(properties = "drishti.notices.max-length=40")`,

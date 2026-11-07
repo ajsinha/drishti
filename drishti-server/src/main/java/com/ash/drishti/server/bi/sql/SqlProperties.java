@@ -19,7 +19,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Drishti SQL, {@code drishti.bi.sql.*} (docs/admin/CONFIGURATION.md).
+ * Drishti SQL, {@code drishti.bi.sql.*} (docs/reference/CONFIGURATION.md).
  *
  * @param enabled false: {@code /bi/sql} answers {@code 403 DRS-9006}
  * @param maxLeaves the most model queries one composite statement may ask (its {@code SELECT}s over the model's tables)

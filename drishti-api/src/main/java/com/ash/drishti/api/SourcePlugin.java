@@ -371,7 +371,7 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
-     * Whether this source's data is held in memory only, by contract (a lake at {@code mem://}, docs/architecture/IN_MEMORY_LAKE.md):
+     * Whether this source's data is held in memory only, by contract (a lake at {@code mem://}, docs/architecture/DATA_ARCHITECTURE.md section 7):
      * the server then keeps its documents off every disk (no disk caches, no saved rows, no reports or mail carrying them); only a user's
      * download may leave.
      */

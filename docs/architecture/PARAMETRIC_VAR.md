@@ -450,10 +450,10 @@ Mock-ups (self-contained HTML, dark by default, `#light` for the light theme; sy
 
 | File | Option |
 |---|---|
-| [mockups/parametric-var/A.html](../lenses/mockups/parametric-var/A.html) | **A (recommended default): beside historical on the existing explorer.** Tree columns *Parametric* and *Gap*, the three tiles, the curve on the P&L path with both markers and the gap bracket, the curve's hover card, the **?** open on the Rates desk's parametric cell |
-| [mockups/parametric-var/B.html](../lenses/mockups/parametric-var/B.html) | **B: a dedicated Parametric tab.** The large histogram with the curve, the left tail bin by bin (seen against expected), the fat-tail gap per desk with skew and kurtosis, a small histogram and curve per desk, the **?** open on the bank |
-| [mockups/parametric-var/C.html](../lenses/mockups/parametric-var/C.html) | **C: Euler components and correlations.** The contribution table with z·cov/σ, −μ, component, share, marginal per +1%, standalone and historical component; the build-up bar; the desk correlation heat map; the curve; the **?** open on the Rates component |
-| [mockups/parametric-var/phone.html](../lenses/mockups/parametric-var/phone.html) | **Phone (390 px):** tiles, the chart with the curve, the desks list, the tooltip as a bottom sheet |
+| [mockups/parametric-var/A.html](mockups/parametric-var/A.html) | **A (recommended default): beside historical on the existing explorer.** Tree columns *Parametric* and *Gap*, the three tiles, the curve on the P&L path with both markers and the gap bracket, the curve's hover card, the **?** open on the Rates desk's parametric cell |
+| [mockups/parametric-var/B.html](mockups/parametric-var/B.html) | **B: a dedicated Parametric tab.** The large histogram with the curve, the left tail bin by bin (seen against expected), the fat-tail gap per desk with skew and kurtosis, a small histogram and curve per desk, the **?** open on the bank |
+| [mockups/parametric-var/C.html](mockups/parametric-var/C.html) | **C: Euler components and correlations.** The contribution table with z·cov/σ, −μ, component, share, marginal per +1%, standalone and historical component; the build-up bar; the desk correlation heat map; the curve; the **?** open on the Rates component |
+| [mockups/parametric-var/phone.html](mockups/parametric-var/phone.html) | **Phone (390 px):** tiles, the chart with the curve, the desks list, the tooltip as a bottom sheet |
 
 **Decided (product review, 2026-11-04):** A's toggle, tiles, tree columns, curve and **?** on the existing explorer, with the
 components and the worked figures in the VaR Playground's Parametric tab; B (a dedicated tab) and C (components and the heat map on the

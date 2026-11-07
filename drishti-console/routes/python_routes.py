@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Python items in the console (docs/guides/BI_GUIDE.md › Python in BI): the page's calls, passed to the server, where every Python run happens (the
-compute pool ``python``, docs/architecture/PYTHON_COMPUTE.md section 19). The console runs no Python of anyone's and reads no rows for it: the server
+compute pool ``python``, docs/architecture/ARCHITECTURE.md section 24.19). The console runs no Python of anyone's and reads no rows for it: the server
 reads them as the signed-in person and runs the code in its strict sandbox. A failure is ``{code, detail}``, with the author's own ``traceback`` when
 the server gave one (it does only for authors)."""
 from __future__ import annotations

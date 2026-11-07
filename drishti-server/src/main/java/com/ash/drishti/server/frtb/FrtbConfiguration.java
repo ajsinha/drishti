@@ -64,7 +64,7 @@ public class FrtbConfiguration {
     }
 
     /**
-     * The position sensitivities as a compute engine (docs/architecture/COMPUTE_ENGINES.md): the SENS sums and the factor dictionary
+     * The position sensitivities as a compute engine (docs/architecture/ARCHITECTURE.md section 25): the SENS sums and the factor dictionary
      * (/api/v1/sensitivities, /api/v1/risk-factors), read by FRTB-SA and SIMM, which need it on the same node. Off: the dates read are released.
      */
     @Bean

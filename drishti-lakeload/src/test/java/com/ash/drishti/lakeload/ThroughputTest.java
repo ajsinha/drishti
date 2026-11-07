@@ -33,7 +33,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 /**
  * The loader at the local limit (10,000 positions, 510 scenarios each, in eight gzip files: about 60 MB of JSON Lines): the measured
- * throughput of each stage, printed for docs/architecture/PARALLEL_LOADER.md; the vector column written BYTE_STREAM_SPLIT and ZSTD; the
+ * throughput of each stage, printed for docs/architecture/DATA_ARCHITECTURE.md section 11; the vector column written BYTE_STREAM_SPLIT and ZSTD; the
  * load manifest's key ranges; and the same load under a 24 MB memory budget, which spills, gives the identical table.
  */
 class ThroughputTest {

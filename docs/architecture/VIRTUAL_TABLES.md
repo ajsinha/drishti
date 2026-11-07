@@ -56,7 +56,7 @@ Rachana and computed by the pivot engine (ONE_GRAMMAR.md: the one grammar and th
 | `config/bi/datasets/*.dataset.yaml` (tables with `path:`, `each:`, calculated columns) | **flat virtual tables** in the central catalogue; BI reads them |
 | `config/bi/models/*.model.yaml` (relationships, measures, MQ) | **models** in the central catalogue; BI's reports and visuals name them as today; MQ stays the query contract, answered by the layer |
 | BI's `cached` / `rollup` / `live` layers | the layer's **materialisation** of a virtual table or model (section 6), the same code moved |
-| the pivot's document fields and its "dataset column" route (PIVOT_ENGINE 6.7) | the pivot reads virtual tables and models as sources; its ad-hoc paths stay for exploring, and **Promote** offers *add as a column of a virtual table* |
+| the pivot's document fields and its "dataset column" route (ARCHITECTURE.md section 23.6.7) | the pivot reads virtual tables and models as sources; its ad-hoc paths stay for exploring, and **Promote** offers *add as a column of a virtual table* |
 | pack-generated datasets (BI_GUIDE section 23) | packs ship recommended virtual tables and models (the trading pack: `trade_legs`, `trade_cash_flows`, `trade_events`), copied into the catalogue once |
 
 BI's screens that edit datasets and models (the dataset editor, the Model view) become the layer's editors, reachable from BI and from
@@ -96,7 +96,7 @@ measures:
 ```
 
 Every virtual table has `business_date` (from its source, always) and its keys. A flat table's columns are scalar (never aggregates);
-aggregates are a model's measures, and the many-to-one and once-per-parent rules (PIVOT_ENGINE 6.7) keep them from counting twice.
+aggregates are a model's measures, and the many-to-one and once-per-parent rules (ARCHITECTURE.md section 23.6.7) keep them from counting twice.
 
 ## 5. How it is read
 
@@ -146,7 +146,7 @@ Flight reading it, the checks and preview, docs (a tables guide with real exampl
 | V5 | **Every consumer reads the layer**: BI, the pivot, Sutras, Arrow Flight, Flight SQL, the PostgreSQL protocol, Export data, alerts, the AI |
 | V6 | **Built in 2.9.11.e together with the DEL fold**: one migration tool, one parity proof, two drills |
 | V7 | **Many tables over one source.** Any number of virtual tables may be rooted in one connector and kind, each with its own columns, grain and filter (`trading.trade_summary` and `trading.trade_legs` both `from: { kind: trade }`). Within one request (a pivot view, a model query, a Flight read, a Sutra page), the reads of one source for one business date are shared: the source is read once and every table over it is computed from that one read |
-| V8 | **New tables from data loads are offered, never made automatically.** A table a data load creates (DATA_LOAD_RULES.md section 7) is offered a flat virtual table in one click, its columns suggested from a sample of the new rows (`drishti.py tables offer`); nothing is defined until someone accepts |
+| V8 | **New tables from data loads are offered, never made automatically.** A table a data load creates (DATA_ARCHITECTURE.md section 10.7) is offered a flat virtual table in one click, its columns suggested from a sample of the new rows (`drishti.py tables offer`); nothing is defined until someone accepts |
 | V9 | **Who edits, who reads.** Administrators and BI authors (today's power to edit BI datasets) define tables and models. Reading is always as the source: the reader's row rules and masks on the source kind apply, then the table's own rules and masks; nothing adds rights. Definitions are audited and versioned like BI items |
 | V10 | **Models across connectors.** A model may relate tables from different connectors (a lake kind and a PostgreSQL table); the engine joins them. The scan estimate warns when a side of such a join is larger than the threshold and unfiltered. **The threshold** (decided 2026-11-04): `drishti.tables.scan-warn-rows` for the installation (1,000,000), and a model may set its own with `scan-warn-rows:` in its `.model.yaml`, which wins for that model |
 | V10a | **Tables use look-ups; models join** (product owner, 2026-11-06). A virtual table enriches its rows with look-ups (`related(…)`, many to one) and never multiplies them; combining tables row by row (one to many, several facts, across connectors) is a semantic model's relationships. The table editor shows look-ups as rows; joins live in the model editor. |
@@ -164,13 +164,13 @@ The deeper design and the questions Q1 to Q30 it settled (2026-11-03) are in
 The editors move from BI (the dataset editor, the Model view) to the layer, reachable from Admin and from BI. Not built yet: the backend
 steps come first.
 
-**Tables.** Of the mock-ups [A](../lenses/mockups/virtual-tables/A.html), [B](../lenses/mockups/virtual-tables/B.html) and
-[C](../lenses/mockups/virtual-tables/C.html), the product owner chose **B and C with a switch**:
-[virtual-tables/BC.html](../lenses/mockups/virtual-tables/BC.html).
+**Tables.** Of the mock-ups [A](mockups/virtual-tables/A.html), [B](mockups/virtual-tables/B.html) and
+[C](mockups/virtual-tables/C.html), the product owner chose **B and C with a switch**:
+[virtual-tables/BC.html](mockups/virtual-tables/BC.html).
 
-**Models.** Of [model-A](../lenses/mockups/virtual-tables/model-A.html), [model-B](../lenses/mockups/virtual-tables/model-B.html) and
-[model-C](../lenses/mockups/virtual-tables/model-C.html), the product owner chose **B (the diagram with a live answer) and C (the
-measures-first sheet) behind one switch**, with a YAML view: [virtual-tables/model-BC.html](../lenses/mockups/virtual-tables/model-BC.html).
+**Models.** Of [model-A](mockups/virtual-tables/model-A.html), [model-B](mockups/virtual-tables/model-B.html) and
+[model-C](mockups/virtual-tables/model-C.html), the product owner chose **B (the diagram with a live answer) and C (the
+measures-first sheet) behind one switch**, with a YAML view: [virtual-tables/model-BC.html](mockups/virtual-tables/model-BC.html).
 A and the single-option mock-ups stay for the record.
 
 | Point | Decided (tables and models alike) |

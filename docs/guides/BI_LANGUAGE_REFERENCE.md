@@ -65,7 +65,7 @@ trades.MTM if trades.MTM > 0 else 0                               # a conditiona
 
 
 Related: [BI_GUIDE.md](BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) (datasets and their security), [BI_DESIGN.md §3.3](../architecture/BI_DESIGN.md#33-del-the-drishti-expression-language-python-like)
-(the design), [API_GUIDE.md](API_GUIDE.md#expressions-apiv1biexpr) (the endpoints), [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiexpr--the-expression-language)
+(the design), [API_GUIDE.md](API_GUIDE.md#expressions-apiv1biexpr) (the endpoints), [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibiexpr--the-expression-language)
 (`drishti.bi.expr.*`).
 
 ---
@@ -1735,7 +1735,7 @@ config/bi/datasets/trading-risk.dataset.yaml: would change (4 of 19 expressions)
 ```
 
 **Stored items convert themselves.** Items saved in workspaces before the old syntax was refused are converted by the server **at start**
-(`drishti.bi.migrate.on-start`, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibimigrate--migrations-of-stored-bi-items)): the draft and the
+(`drishti.bi.migrate.on-start`, [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibimigrate--migrations-of-stored-bi-items)): the draft and the
 published text of every item, with the same converter. The text before becomes a saved state of the item's *History* (so *Restore* brings it back), a
 published text that changes is published again as the next version (the old version stays in the list), a draft stays a draft, and each change is an
 event on the item and an audit record (`bi-expressions-migrated`). An item with an expression the converter cannot convert is **not changed at all**: it
@@ -2686,4 +2686,4 @@ DESK-STRUCT  382,608,464.96
 `POST /api/v1/bi/sql {model, sql, format: json|csv|jsonl|arrow}` and `POST /api/v1/bi/sql/validate {model, sql}`
 ([API_GUIDE.md](API_GUIDE.md#drishti-sql-apiv1bisql)); validate types each output column without reading data (`COUNT(*)`, a model measure that is a `count()` or
 `distinct()`: `integer`; another measure: `decimal`; a field: its column's type), which a SQL view dataset's wizard proposes as the column types. Every statement is audited (`bi-sql`, with its text). Settings: `drishti.bi.sql.*`
-([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibisql--drishti-sql)).
+([CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibisql--drishti-sql)).

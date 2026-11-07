@@ -29,7 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A request's scratch folder ({@code <data dir>/compute/scratch/<request id>/}, docs/architecture/PYTHON_COMPUTE.md section 7.3): the inputs
+ * A request's scratch folder ({@code <data dir>/compute/scratch/<request id>/}, docs/architecture/ARCHITECTURE.md section 24.7.3): the inputs
  * as Arrow files in {@code in/}, the worker's large results in {@code out/}. Readable only by the server's user, and removed when the request
  * ends, whatever happened; folders left by a crash of the server are removed by {@link #sweep} at start.
  */

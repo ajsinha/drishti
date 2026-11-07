@@ -163,7 +163,7 @@ def copy(delta: pathlib.Path, root: pathlib.Path, table_name: str, data: pathlib
         reader = threading.Thread(target=echo, daemon=True)
         reader.start()
         try:
-            # the load rules (DATA_LOAD_RULES.md): rows of several dates go as a tar of <table>/<YYYY-MM-DD>/ folders, each row
+            # the load rules (DATA_ARCHITECTURE.md section 10): rows of several dates go as a tar of <table>/<YYYY-MM-DD>/ folders, each row
             # in its Delta business date's folder
             out = feedfiles.RowsTarStream(proc.stdin.buffer)
             for line in rows(delta, table_name, newest, domain):

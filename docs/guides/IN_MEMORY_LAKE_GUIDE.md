@@ -21,7 +21,7 @@ fills each table from its feed; every page, search, BI dataset and Export data r
 guard refuses every way the data could reach a disk. Only a user's download leaves the server.
 
 This guide sets one up end to end, explains what the server does with it, and lists every setting. The design and its reasoning are in
-[IN_MEMORY_LAKE.md](../architecture/IN_MEMORY_LAKE.md); a worked example is [tutorial 31](../tutorials/31-news-in-memory-only.md).
+[DATA_ARCHITECTURE.md section 7](../architecture/DATA_ARCHITECTURE.md#7-the-in-memory-lake-delta-tables-that-never-touch-a-disk); a worked example is [tutorial 31](../tutorials/31-news-in-memory-only.md).
 
 ## Contents
 
@@ -244,7 +244,7 @@ On the other nodes the same configuration may be present: a store not named in t
 ## 10. Every setting
 
 All under `drishti.lake.memory` (environment `DRISHTI_LAKE_MEMORY_…`; command line `--drishti.lake.memory.…`); the full table is in
-[CONFIGURATION.md](../admin/CONFIGURATION.md).
+[CONFIGURATION.md](../reference/CONFIGURATION.md).
 
 | Setting | Default | Meaning |
 |---|---|---|

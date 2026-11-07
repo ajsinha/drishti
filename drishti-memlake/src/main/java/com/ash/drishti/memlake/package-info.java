@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /**
- * The in-memory lake (docs/architecture/IN_MEMORY_LAKE.md), plain Java with no Spring: the tables of the memory stores and their replenish
+ * The in-memory lake (docs/architecture/DATA_ARCHITECTURE.md section 7), plain Java with no Spring: the tables of the memory stores and their replenish
  * jobs ({@link com.ash.drishti.memlake.MemoryLake}, {@link com.ash.drishti.memlake.ReplenishSource}), the eviction ladder, automated
  * compaction ({@link com.ash.drishti.memlake.MemoryCompactor}), the expiry of old versions ({@link com.ash.drishti.memlake.MemoryUpkeep}),
  * the owner node's binding of the pack ({@link com.ash.drishti.memlake.MemoryBinding}), the never-on-disk guard

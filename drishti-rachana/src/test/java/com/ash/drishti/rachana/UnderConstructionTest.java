@@ -32,7 +32,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * The under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): every location it names exists in the packs' Sutras, and a matched
+ * The under-construction registry (docs/reference/UNDER_CONSTRUCTION.md): every location it names exists in the packs' Sutras, and a matched
  * Sutra honours each item's treatment: the value replaced by "Under construction" (tone uc), or left out.
  */
 class UnderConstructionTest {

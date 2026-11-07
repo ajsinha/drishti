@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The client side of the Python function workers (PIVOT_ENGINE.md section 8.5): the module never runs Python itself; the host (the server's
+ * The client side of the Python function workers (ARCHITECTURE.md section 23.8.5): the module never runs Python itself; the host (the server's
  * {@code pivot-fn} pool) implements this with sandboxed worker processes on the node that scanned the rows, batches sent as Arrow IPC in
  * memory (a pipe), never a file. A state is the worker's bytes, opaque to the engine, bounded by the function's declared size and validated
  * before it is merged or cached.

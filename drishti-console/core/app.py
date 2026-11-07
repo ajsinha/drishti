@@ -430,7 +430,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     app.state.editions = Editions(settings, WEB.parent, on_change=_branding_changed)
     from core import under_construction as _uc
-    app.state.under_construction = _uc.load(settings, WEB.parent)      # docs/admin/UNDER_CONSTRUCTION.md: menus and help pages
+    app.state.under_construction = _uc.load(settings, WEB.parent)      # docs/reference/UNDER_CONSTRUCTION.md: menus and help pages
     _branding_changed()                                  # the logo, favicon and touch icon from configuration (blank: the eye)
     templates.env.globals["edition_of"] = lambda request: getattr(request.state, "edition", None) or app.state.editions.instance
 
@@ -625,7 +625,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(datamap_routes.router)           # Data map: DATAMAP, the packs' kinds and joins, checked against the data (USER_GUIDE.md)
     app.include_router(data_routes.router)              # Export data: DATA, every dataset and a day as .jsonl.gz (DATA_GUIDE.md)
     app.include_router(compute_admin_routes.router)     # Admin -> Compute (docs/admin/OPERATIONS.md)
-    app.include_router(admin_engines_routes.router)     # Admin -> Engines: compute engines on or off per server (COMPUTE_ENGINES.md)
+    app.include_router(admin_engines_routes.router)     # Admin -> Engines: compute engines on or off per server (ARCHITECTURE.md section 25)
     app.include_router(data_out_routes.router)          # Admin -> Data out: Arrow Flight, the page and the map (FLIGHT_GUIDE.md)
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)

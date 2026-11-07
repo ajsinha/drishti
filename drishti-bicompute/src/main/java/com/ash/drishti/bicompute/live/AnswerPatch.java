@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * The difference between two answers of one view (PIVOT_ENGINE.md section 10, item 5), what a live pivot pushes:
+ * The difference between two answers of one view (ARCHITECTURE.md section 23.10, item 5), what a live pivot pushes:
  *
  * <ul>
  *   <li>{@code none}: no cell moved (the stream says {@code status} with the time it was checked);</li>

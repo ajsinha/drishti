@@ -558,7 +558,7 @@ The Python path stages each JSON line in Python (`tools/lake/stage.py`, `jsonstr
 `deltalake`) commits the table; that staging is one Python thread, hence the 9 times gap. Two routes close it:
 
 1. **Where a JVM exists** (the server's machine, the drill, AWS loaders): make `--engine java` (the parallel loader,
-   [PARALLEL_LOADER.md](PARALLEL_LOADER.md)) the default for large inputs; the knob exists (`--java-above-mb`). No new dependency.
+   [DATA_ARCHITECTURE.md section 11](DATA_ARCHITECTURE.md#11-the-parallel-lake-loader-drishti-lakeload)) the default for large inputs; the knob exists (`--java-above-mb`). No new dependency.
 2. **Where no JVM exists** (an analyst's Python environment): a Polars staging path. `pl.scan_ndjson` reads JSON Lines on every core into
    Arrow, the reject rules of `stage.py` become Polars expressions, and `deltalake.write_deltalake` commits the Arrow table. The rules must
    give exactly the same rows and rejects as `stage.py` (a parity test over the test data). Expected: within about 2 times of the Java
@@ -624,7 +624,7 @@ pure-Java half always runs. On Windows QA the native halves skip.
 
 ### 9.3 Settings
 
-The BLAS settings are built (section 6.3; [CONFIGURATION.md](../admin/CONFIGURATION.md)); the others are proposed. The pure-Java accelerations follow `drishti.native.mode`.
+The BLAS settings are built (section 6.3; [CONFIGURATION.md](../reference/CONFIGURATION.md)); the others are proposed. The pure-Java accelerations follow `drishti.native.mode`.
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -644,7 +644,7 @@ The BLAS settings are built (section 6.3; [CONFIGURATION.md](../admin/CONFIGURAT
 | `drishti.native.<library>.max-memory-mb` | per library | native memory a library may take, where it can be bounded |
 | `drishti.var.refusal-ttl-seconds` | 300 | how long a refused date is remembered (section 3) |
 
-Every setting is listed in [CONFIGURATION.md](../admin/CONFIGURATION.md) when built, and shown in the UI's configuration help.
+Every setting is listed in [CONFIGURATION.md](../reference/CONFIGURATION.md) when built, and shown in the UI's configuration help.
 
 ### 9.4 The admin view
 

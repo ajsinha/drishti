@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Every setting the code reads is in docs/admin/CONFIGURATION.md (DOC-16).
+"""Every setting the code reads is in docs/reference/CONFIGURATION.md (DOC-16).
 
 Three sources are compared with the document: every key of the two application.yaml files, every setting a
 @ConfigurationProperties class of the server binds, and every console setting the Python code reads by name. A setting

@@ -27,7 +27,7 @@ searches, derived kinds, impact) is shared and explained there in
 [section 7](DELTA_CONNECTOR.md#7-searches-pick-lists-derived-kinds-and-impact-over-columns). The other stores with the same
 design are described in [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md) and [POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md);
 the JSON-lines files the loader reads are described in [FILE_CONNECTOR.md](FILE_CONNECTOR.md) and
-[DEMO_DATA.md](DEMO_DATA.md). Every setting is in [CONFIGURATION.md](../admin/CONFIGURATION.md).
+[DEMO_DATA.md](DEMO_DATA.md). Every setting is in [CONFIGURATION.md](../reference/CONFIGURATION.md).
 
 **About the numbers.** The measurements in this document were taken on 2026-10-01 with **10,000 trades a day over three
 business days** (plus the banking samples), on a shared workstation, with the Drishti server at `-Xmx2g`; the scale
@@ -252,7 +252,7 @@ writes the same layout as `IcebergLoader` (field ids 1 to 3, the identity partit
 columns `list<double>`) from JSON Lines in a folder or S3, every stage multi-threaded and memory bounded, one overwrite per business
 date, on a path-based table or through a REST catalog (`target.iceberg`). Sorted by `LEGAL_ENTITY`, `DESK`, id by default (the table
 then says so in `drishti.layout.sort-by`, which relayout respects): [TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader),
-[PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md).
+[DATA_ARCHITECTURE.md section 11](../architecture/DATA_ARCHITECTURE.md#11-the-parallel-lake-loader-drishti-lakeload).
 
 **The demo lakes, a source system in Iceberg.** `tools/build_demo_lakes.py --store calypso=iceberg` (or `all=iceberg`)
 puts a source system's trades in Iceberg beside the others in Delta: the system is built as Delta, then its rows (id, document, every
@@ -288,7 +288,7 @@ How the loader works:
   FILE.tar` writes the samples and `bulk_trades.py --jsonl FILE.tar` a generated book, each a tar of `<kind>/<YYYY-MM-DD>/rows.jsonl`
   folders; `tools/load-iceberg.sh` gives the loader the folder holding both, so each business day is written once. `-` reads
   standard input: one kind on one date.
-- **Each row is filed under a business date from outside it** (the load rules, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md), the same as `lake build`'s): a tar of `<kind>/<YYYY-MM-DD>/` folders files each row under its folder's date, and a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input) is one kind on one date: `--as-of`, else its `.ready` file's `business-date:`, else the date in its name, else the business today. The row's own `date` stays in the row as data; rows whose date differs are loaded under the file's date and counted (*N rows of trade.jsonl carried another date in date; loaded under 2026-09-30*). A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar (its folders name the dates). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it, in name order. Retention (`--keep-days`, `--ttl-days`, `--keep-months`) counts back from `--as-of`, else the business today.
+- **Each row is filed under a business date from outside it** (the load rules, [DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load), the same as `lake build`'s): a tar of `<kind>/<YYYY-MM-DD>/` folders files each row under its folder's date, and a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input) is one kind on one date: `--as-of`, else its `.ready` file's `business-date:`, else the date in its name, else the business today. The row's own `date` stays in the row as data; rows whose date differs are loaded under the file's date and counted (*N rows of trade.jsonl carried another date in date; loaded under 2026-09-30*). A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar (its folders name the dates). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it, in name order. Retention (`--keep-days`, `--ttl-days`, `--keep-months`) counts back from `--as-of`, else the business today.
 - **An external sort per day.** The generator's stream interleaves days and ids (it is not sorted: workers emit slices
   of trade numbers as they finish). Each business day of each kind gets a sorter (`SortedRuns`). At most `--buffer-mb`
   (1024) of rows are held; beyond it the largest day's buffer is sorted and written to a run file in `--spill-dir`, on a

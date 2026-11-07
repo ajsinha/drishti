@@ -282,7 +282,7 @@ that moved each day.
 ## Step 8 · Limits and errors
 
 A history reads one entity on many days, so the server bounds it. The settings (`drishti.history.*`, in
-[CONFIGURATION.md](../admin/CONFIGURATION.md)) are: at most `max-days` business days (366 by default; a pack's `max-days` can only lower
+[CONFIGURATION.md](../reference/CONFIGURATION.md)) are: at most `max-days` business days (366 by default; a pack's `max-days` can only lower
 it), `max-rows` rows and `timeout` for the whole request.
 
 | You see | Why | What to do |

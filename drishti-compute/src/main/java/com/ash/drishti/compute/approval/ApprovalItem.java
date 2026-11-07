@@ -16,7 +16,7 @@
 package com.ash.drishti.compute.approval;
 
 /**
- * One thing an administrator approves (docs/architecture/PYTHON_COMPUTE.md section 6): a Python package at a version with its hashes from a
+ * One thing an administrator approves (docs/architecture/ARCHITECTURE.md section 24.6): a Python package at a version with its hashes from a
  * source, a Java library with its sha256, or a plugin. A new package, version, hash or source is a new item and needs its own approval;
  * removing one needs none.
  *

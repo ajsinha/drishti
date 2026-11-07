@@ -19,7 +19,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The analytic engine's settings, {@code drishti.bi.query.*} (docs/admin/CONFIGURATION.md): limits per query and per server, the result cache,
+ * The analytic engine's settings, {@code drishti.bi.query.*} (docs/reference/CONFIGURATION.md): limits per query and per server, the result cache,
  * the layers and the embedded DuckDB. Every bound has a default here and can be changed without a build.
  *
  * @param storeDir where the columns and rollup layers are written (the BI store): default {@code <data dir>/bi-store}

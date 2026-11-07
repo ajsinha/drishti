@@ -42,7 +42,7 @@ while [[ $# -gt 0 ]]; do
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
-# loader rows by the load rules (docs/architecture/DATA_LOAD_RULES.md): tars of <kind>/<YYYY-MM-DD>/ folders, each row under its folder's date
+# loader rows by the load rules (docs/architecture/DATA_ARCHITECTURE.md section 10): tars of <kind>/<YYYY-MM-DD>/ folders, each row under its folder's date
 ROWS="$DATA/build/loader-rows"; rm -rf "$ROWS"; mkdir -p "$ROWS"
 uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$ROWS/banking.tar"
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-cassandra -am

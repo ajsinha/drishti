@@ -597,7 +597,7 @@ override: [OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protectio
 
 ### 5.8 The in-memory lake, measured
 
-Memory-only feeds ([IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md), [the guide](../guides/IN_MEMORY_LAKE_GUIDE.md)) are Delta tables held in
+Memory-only feeds ([DATA_ARCHITECTURE.md section 7](DATA_ARCHITECTURE.md#7-the-in-memory-lake-delta-tables-that-never-touch-a-disk), [the guide](../guides/IN_MEMORY_LAKE_GUIDE.md)) are Delta tables held in
 direct memory, outside the heap and outside the cache budget: each memory store is its own hard cap (an off-heap pool beside the heap
 pools of section 5.2; a gauge of its own in busy protection) and the JVM's direct-memory limit is 256 MB plus the stores' caps (section
 5.6). Measured on the demo tables (`MemoryRatiosTest`, at most 10,000 rows a table from `data/testdata`; the same rows sorted by key, one
@@ -1136,7 +1136,7 @@ days, M up to a week, L more.
 | 3h | D2, only if the histogram after D1 still shows it | 3g | S | VAR_GUIDE 27.1 |
 | 3i | D5 compact headers in every launcher, the GC per role | 2 | S | PERFORMANCE, OPERATIONS 7, the launcher test |
 | 3j | D7 fewer JSON passes and Arrow for large tables (after 1) | 1 | M | DATA_FORMATS 6, ARCHITECTURE 16.1 |
-| 3k | D8 cold loads | 2 | M | PARALLEL_LOADER, VAR_GUIDE 27 |
+| 3k | D8 cold loads | 2 | M | DATA_ARCHITECTURE.md section 11, VAR_GUIDE 27 |
 | 3l | D9 logging and rotation | — | S | OPERATIONS, the stack's README |
 | 3m | the fixed reduction order (6.7), if decided | 2 | S | VAR_GUIDE 25, VAR_SHARDING 12 |
 | 4 | the benchmark again: the figures marked to be measured, for both decks | 3 | M | BENCHMARK, this document 9.5 |

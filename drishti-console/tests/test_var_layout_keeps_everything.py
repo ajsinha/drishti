@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The VaR screen's layout (2.9.11.b, the approved mock-up docs/lenses/mockups/var-layout/A.html and A-drawer.html) changed two
+"""The VaR screen's layout (2.9.11.b, the approved mock-up docs/architecture/mockups/var-layout/A.html and A-drawer.html) changed two
 things only: the baskets left the left-hand column for two searchable drop-downs in a toolbar (System baskets: the bank's portfolios;
 My baskets: the saved baskets, mine and shared with me), and the right-hand "How this number was built" column became a drawer opened
 by How calculated (H). This file is the guard that nothing else went: the inventory below was taken from the page BEFORE the change

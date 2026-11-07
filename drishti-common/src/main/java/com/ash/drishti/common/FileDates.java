@@ -189,7 +189,7 @@ public final class FileDates {
 
     /**
      * Why the date part of a plain file's {@code name} is refused (not a calendar date, before 1900, in the future), null when it has
-     * none or a good one: such a name is refused, never filed under another date (DATA_LOAD_RULES.md section 2.1).
+     * none or a good one: such a name is refused, never filed under another date (DATA_ARCHITECTURE.md section 10.2.1).
      */
     public static String dateError(String name, LocalDate today) {
         String base = baseName(name);
@@ -240,7 +240,7 @@ public final class FileDates {
 
     /**
      * The business date a {@code .ready} file beside a local data file gives ({@code <file>.ready}, or its name without the data extension
-     * {@code .ready}; docs/architecture/DATA_LOAD_RULES.md section 5): its {@code business-date}, null without one. The inbox reads every
+     * {@code .ready}; docs/architecture/DATA_ARCHITECTURE.md section 10.5): its {@code business-date}, null without one. The inbox reads every
      * key of it (drishti-dataload {@code ReadyNote}); a command-line load takes the date from it, below its own {@code as-of}.
      */
     public static LocalDate readyDate(String path) {

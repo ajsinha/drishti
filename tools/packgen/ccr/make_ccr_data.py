@@ -25,7 +25,7 @@ The committed run covers eight netting sets (EXP.md section 9): the four of CP-A
 large positive set, a structured set), NS-HARBOURLINE-LDN-NY and NS-KESTREL-FRA (threshold-zero CSAs: fully margined, the second a
 negative SFT set), NS-AURORA-TKY (the wrong-way set: every trade one way on one factor) and NS-CASCADIA-TKY. Every other netting set has
 no exposure paths in the demo: its pages say so. No figure is written: every EE, PFE and EPE is the engine's, computed when asked.
-Each folder holds its date's files by the load rules (docs/architecture/DATA_LOAD_RULES.md section 10): simulation-run/
+Each folder holds its date's files by the load rules (docs/architecture/DATA_ARCHITECTURE.md section 10.10): simulation-run/
 simulation-run.<date>.jsonl.gz, exposure-path/exposure-path.tar (exposure-path/<date>/cob.part-NNN.jsonl.gz: the paths in files of
 about 1.2 MB). Deterministic (Python's Random seeded by text, gzip mtime 0): the same netting sets give the same files, byte for byte.
 

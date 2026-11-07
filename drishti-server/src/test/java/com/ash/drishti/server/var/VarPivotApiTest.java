@@ -42,7 +42,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 /**
- * The VaR vector provider through the pivot engine's SPI (PIVOT_ENGINE.md sections 6.3 and 20, ported from the paused MR cube's
+ * The VaR vector provider through the pivot engine's SPI (ARCHITECTURE.md sections 23.6.3 and 23.20, ported from the paused MR cube's
  * {@code VarCubeApiTest}), on the tiny lake of {@link VarLakeFixture}: every cell, every row and column total and the grand total of a pivot of
  * {@code var()} is the VaR engine's own answer for the cell's scope, to the cent ({@code /api/v1/var/scope} and the engine's unrounded
  * figure); the totals are the union's VaR, never sums (the desks' VaRs add up to more than the bank's 540, the gap shown as diversification);

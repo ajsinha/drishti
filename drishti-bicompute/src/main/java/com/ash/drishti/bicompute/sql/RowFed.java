@@ -34,7 +34,7 @@ import java.util.TreeMap;
 import java.util.function.Function;
 
 /**
- * Functions without an SQL form (PIVOT_ENGINE.md sections 8.1 and 8.5: Python functions, Java plug-ins that compute in Java) on the tabular
+ * Functions without an SQL form (ARCHITECTURE.md sections 23.8.1 and 23.8.5: Python functions, Java plug-ins that compute in Java) on the tabular
  * provider: the rows the plan reads (the person's row rules first, then the view's filters) are scanned once, each row dealt to the cells of
  * every set it belongs to, and each cell's declared input columns fed to {@code add} in columnar batches ({@code batchRows}); a holistic
  * function gets all of a cell's rows in one call, refused for that cell (never truncated) past {@code holisticMaxRows}. Every other

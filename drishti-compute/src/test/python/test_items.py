@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The one Python runtime (docs/architecture/PYTHON_COMPUTE.md section 19): ``drishti_compute.items`` in a real worker of the strict sandbox (a
+"""The one Python runtime (docs/architecture/ARCHITECTURE.md section 24.19): ``drishti_compute.items`` in a real worker of the strict sandbox (a
 network namespace, Landlock per request), driven over its protocol as the server's pool drives it. Every interface answers; a failure of the
 author's code is an answer with its own traceback; the sandbox refuses the network, files outside the request's folder (also from C++ code), other
 packages and processes; a limit stops a request alone. Linux with Landlock only (the strict sandbox's platform); elsewhere the tests skip."""

@@ -35,7 +35,7 @@ import java.util.stream.Stream;
  * <pre>
  * dump           [--dir D]                                every lake and table (environment references resolved)
  * table          [--dir D] --lake L --kind K [--domain X] [--table T]  one table, or the refusal a writer gets when the lake file lacks it
- * check          [--dir D] [--connectors C]               the checks of LAKE_CONFIG.md section 6
+ * check          [--dir D] [--connectors C]               the checks of DATA_ARCHITECTURE.md section 8.6
  * migrate-config [--dir D] --connectors C [--write]       lake files from old connector files; a dry run unless --write
  * add-entry      [--dir D] --lake L --pack P --kind K [--connector N]   a pack's recommended entry copied into the lake file once
  * </pre>

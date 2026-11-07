@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Unit tests of tools/ingest_jsonl.py: the files target (stdlib only) and, when deltalake is installed, the Delta target. Each file is one
-kind and one business date (docs/architecture/DATA_LOAD_RULES.md): --as-of, else its .ready business-date, else its name's date, else the
+kind and one business date (docs/architecture/DATA_ARCHITECTURE.md section 10): --as-of, else its .ready business-date, else its name's date, else the
 business today; a document's own date field never decides."""
 import json
 import pathlib

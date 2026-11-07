@@ -527,7 +527,7 @@ costs a log read, not a year of builds. A question too large to answer inline be
 ## Tuning knobs
 
 Set any of these in `application.local.yaml` next to the server jar, as an environment variable, or as a
-`--key=value` argument (precedence and syntax: [CONFIGURATION.md](CONFIGURATION.md)). Change one at a time and
+`--key=value` argument (precedence and syntax: [CONFIGURATION.md](../reference/CONFIGURATION.md)). Change one at a time and
 measure again with the methods above.
 
 | Key | Default | Raise it when | Lower it when |
@@ -684,7 +684,7 @@ through a key rotation, none refused.
 
 *About this page* (`GET /api/v1/views/{kind}/{id}/explain`) derives the view again for the caller, so masks and rights hold,
 and keeps the answer per user, page, business date and generation for `drishti.explain.cache-ttl` (60 s;
-[CONFIGURATION.md](CONFIGURATION.md#drishtiexplain--about-this-page)). Two ways it is asked for:
+[CONFIGURATION.md](../reference/CONFIGURATION.md#drishtiexplain--about-this-page)). Two ways it is asked for:
 
 | When | Cost | Setting |
 |---|---|---|

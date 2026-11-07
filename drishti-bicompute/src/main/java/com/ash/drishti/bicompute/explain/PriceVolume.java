@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.TreeSet;
 
 /**
- * The price and quantity effects of a value {@code Σ price × quantity} between two cells (PIVOT_ENGINE.md section 10, item 1): per member of
+ * The price and quantity effects of a value {@code Σ price × quantity} between two cells (ARCHITECTURE.md section 23.10, item 1): per member of
  * {@code by}, its quantity {@code q = Σ QUANTITY} and its price {@code p = Σ PRICE·QUANTITY / Σ QUANTITY} on each side, so {@code p·q} is the
  * member's value exactly. The difference is, in this fixed order: the price effect {@code Σ (p₁ − p₀)·q₀}, the quantity effect
  * {@code Σ p₀·(q₁ − q₀)}, the cross term {@code Σ (p₁ − p₀)·(q₁ − q₀)} (members on both sides), then members new in the second cell and

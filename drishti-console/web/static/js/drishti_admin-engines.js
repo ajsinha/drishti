@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Admin -> Engines (templates/admin/engines.html; docs/architecture/COMPUTE_ENGINES.md section 8, mock-up A). Flipping a switch only stages
+/* Admin -> Engines (templates/admin/engines.html; docs/architecture/ARCHITECTURE.md section 25.8, mock-up A). Flipping a switch only stages
    the change; the side panel shows the dependency check (refused changes say why and offer "Turn on both" / "Turn off all three"), what
    disappears for people (from the catalogue), what happens on the server (live, drain up to 30 s, or restart needed) and asks for the
    reason. Apply sends one batch; the server writes each engine's file (refusing a file changed by hand since the page read it) and the

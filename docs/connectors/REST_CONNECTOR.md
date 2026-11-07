@@ -24,7 +24,7 @@ setting exactly as the plugin (`plugins/drishti-plugin-rest`, `RestSourcePlugin`
 
 For a first setup see [the walk-through at the end of this document](#walk-through-step-by-step); the plugin
 reference is in [the configuration examples at the end of this document](#configuration-by-example) and the settings summary in
-[CONFIGURATION.md](../admin/CONFIGURATION.md#rest--an-httpjson-service). For stores that keep history see
+[CONFIGURATION.md](../reference/CONFIGURATION.md#rest--an-httpjson-service). For stores that keep history see
 [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md), [POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md) and
 [FILE_CONNECTOR.md](FILE_CONNECTOR.md).
 
@@ -161,7 +161,7 @@ What Drishti records (`GET /api/v1/entities/counterparty/CP-HARBOURVIEW/raw`, co
 
 ### 4.1 Site form
 
-The connector file `config/connectors/crm-api.yaml` (see [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtisources--where-data-comes-from) for the server-wide
+The connector file `config/connectors/crm-api.yaml` (see [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtisources--where-data-comes-from) for the server-wide
 `drishti.sources.fetch-timeout` and routes):
 
 ```yaml

@@ -38,7 +38,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * Compute workers wiring (docs/architecture/PYTHON_COMPUTE.md): reads {@code config/compute/compute.yaml} ({@code drishti.compute.file}) once
+ * Compute workers wiring (docs/architecture/ARCHITECTURE.md section 24): reads {@code config/compute/compute.yaml} ({@code drishti.compute.file}) once
  * at start, keeps approval requests and approved items in the Drishti database (memory without one), audits every decision, fans out over
  * Drishti*net members through {@link RunCluster}, and gates connectors whose files carry {@code requires:}. Off as shipped: no worker starts;
  * approvals still work, so requirements can be reviewed before compute is switched on.

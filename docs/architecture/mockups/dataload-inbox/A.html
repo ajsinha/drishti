@@ -15,7 +15,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 
   A screen mock-up (dataload-inbox/A.html), self-contained: system fonts, everything inline, nothing from a CDN.
-  Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/DATALOAD_INBOX.md (section 10, Admin → Data loads → Inbox).
+  Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/DATA_ARCHITECTURE.md (section 9.10, Admin → Data loads → Inbox).
 -->
 <html lang="en">
 <head>
@@ -274,7 +274,7 @@ Last run <span class="mono">20261103T144000Z-drishti-main</span> took 1 min 12 s
 <div class="why"><div class="card"><h3>How it feels</h3><ul><li>The columns are the folders: an administrator learns the hand-shake by looking.</li><li>One glance answers the three questions: is anything stuck, what is next, did it load.</li><li>The routing preview warns before a file fails (<i>no rule matches</i>).</li></ul></div>
 <div class="card"><h3>Trade-offs</h3><ul><li>History is short (the last cycles); the full list is the ledger link and the Loads tab.</li><li>Three columns need width: below 1000 px they stack (phone: rows that open).</li><li>Skipped cycles take room in a busy hour (two rows here).</li></ul></div>
 <div class="card"><h3>Build</h3><ul><li><span class="mono">GET /api/v1/admin/dataload</span> already gives the switch, owner, lock, next cycle, the run's start, waiting files with their state, failures, cycles and the ledger; it gains the run's files and tables, each waiting file's rule and the rules in effect.</li><li>Polls every 5 s while a run loads, 30 s when quiet.</li><li>Reuses the Loads tab's tables, pills and the engines switch.</li></ul></div></div>
-<footer>Mock-up. Design, not built: Admin → Data loads → Inbox (planned, DATALOAD_INBOX.md section 10). Every number is invented for the picture. The data comes from <span class="mono">GET /api/v1/admin/dataload</span>; Load now is <span class="mono">POST …/run</span>, Retry <span class="mono">POST …/retry</span> (both <span class="mono">loads:write</span>). On a node that is not the owner the tab names the owner and links to it. Phone width: columns stack, tables scroll in their frame, controls are touch sized. Open with #light for the light theme.</footer>
+<footer>Mock-up. Design, not built: Admin → Data loads → Inbox (planned, DATA_ARCHITECTURE.md section 9.10). Every number is invented for the picture. The data comes from <span class="mono">GET /api/v1/admin/dataload</span>; Load now is <span class="mono">POST …/run</span>, Retry <span class="mono">POST …/retry</span> (both <span class="mono">loads:write</span>). On a node that is not the owner the tab names the owner and links to it. Phone width: columns stack, tables scroll in their frame, controls are touch sized. Open with #light for the light theme.</footer>
 </div>
 </body>
 </html>

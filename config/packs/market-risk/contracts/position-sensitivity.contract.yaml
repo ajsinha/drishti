@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the position-sensitivity input (command SENS): docs/architecture/SENSITIVITIES_AND_FRTB_SA.md
-# section 2; the MR cube's D8 (docs/lenses/MR_CUBE_LENS.md section 7.9). Demo data: tools/packgen/sensitivity/make_sensitivity_data.py.
+# section 2; the MR cube's D8 (docs/architecture/LENSES.md section 6.7.9). Demo data: tools/packgen/sensitivity/make_sensitivity_data.py.
 kind: position-sensitivity
 mnemonic: SENS
 pack: market-risk

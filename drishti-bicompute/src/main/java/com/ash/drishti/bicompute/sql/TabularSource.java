@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A table the tabular provider pivots (PIVOT_ENGINE.md section 6.2), opened for one person on one date: its fields as that person may see
+ * A table the tabular provider pivots (ARCHITECTURE.md section 23.6.2), opened for one person on one date: its fields as that person may see
  * them (masked ones left out), and the relation DuckDB reads (a table staged in the executor from the connector's read, a Parquet scan, an
  * Arrow view of memory-only data), with the person's row rules as SQL applied before any grouping.
  */
@@ -57,7 +57,7 @@ public interface TabularSource {
 
     /**
      * The note that says whether user code (Python custom functions) may read the source's rows ({@code false} for memory-only data,
-     * PIVOT_ENGINE.md decision 4); absent: allowed.
+     * ARCHITECTURE.md section 23 decision 4); absent: allowed.
      */
     String USER_CODE = "userCode";
 

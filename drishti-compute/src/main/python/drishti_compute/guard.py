@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The worker's sandbox and limits (docs/architecture/PYTHON_COMPUTE.md sections 7.5 and 11).
+"""The worker's sandbox and limits (docs/architecture/ARCHITECTURE.md sections 24.7.5 and 24.11).
 
 - An audit hook (PEP 578) refuses sockets, new processes (``subprocess``, ``os.system``, ``os.exec*``, ``os.fork``) and any write, rename,
   removal or new folder outside the request's scratch folder. A hook cannot be removed once installed: in fork mode it is installed in the

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Compute engines in the console (docs/architecture/COMPUTE_ENGINES.md section 5.2): an engine that runs on no server of the cluster
+"""Compute engines in the console (docs/architecture/ARCHITECTURE.md section 25.5.2): an engine that runs on no server of the cluster
 disappears everywhere: its command words, menu items, Help pages, Home cards, pages and playgrounds. What runs is learned from the server's
 about answer (``engines``: ``[{id, title, here, cluster}]``, polled by core/backend_watch.py with the edition); what each engine brings to
 the screen is the engine catalogue (config/engines.yaml, the server's engines/catalogue.yaml byte for byte). Until the server has said

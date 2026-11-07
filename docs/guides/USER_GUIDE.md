@@ -259,7 +259,7 @@ several trades (`TRD MX-2000 30`) gives the pick list, and each of its rows open
 `MYBOOK 30` is `BOOK BOOK-RATES-1 30`.
 
 Mnemonics come from the packs that are switched on. Every command, with what it does and an example, is in
-[COMMAND_CATALOG.md](COMMAND_CATALOG.md); the packs themselves are in [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#the-packs-that-ship). The most used ones, from the seven default packs:
+[COMMANDS.md](../reference/COMMANDS.md); the packs themselves are in [PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#the-packs-that-ship). The most used ones, from the seven default packs:
 
 | Mnemonic | Kind | Example |
 |---|---|---|
@@ -360,7 +360,7 @@ server is set to 95%), and *How this number was built* says the scenario window 
 
 **The top of the tree.** The VaR tree's top node shows the hierarchy data's name (*Drishti Bank* in the demo); an administrator
 can set any name with `drishti.var.root-name` (or one per hierarchy with `drishti.var.root-names`), and the page, the command line and new
-captures follow it ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+captures follow it ([CONFIGURATION.md](../reference/CONFIGURATION.md)).
 
 **Hierarchies and limit letters.** The select above the tree lists the date's hierarchies by name: *Management*, *Legal
 entities* and, in the demo, *Limit letters*: the letter of authority each trade's VaR limit is granted under, then its desks. A letter
@@ -1489,7 +1489,7 @@ its pages (44 px rows, the command on the right), one engine at a time. Engines 
 **Who decides.** Every tier is configured, never coded: a panel kind has a default (tables and charts at a glance, provenance and notes
 under *More*, pivot grids on the desktop), a screen's author sets each panel's tier in its Sutra
 ([RACHANA_REFERENCE.md, phone](RACHANA_REFERENCE.md#phone-what-goes-to-a-phone)), and an administrator sets and caps tiers for the site
-and the edition ([CONFIGURATION.md](../admin/CONFIGURATION.md), `ui.phone`; [EDITIONS.md](../admin/EDITIONS.md), `phone:`). A cap
+and the edition ([CONFIGURATION.md](../reference/CONFIGURATION.md), `ui.phone`; [EDITIONS.md](../admin/EDITIONS.md), `phone:`). A cap
 wins: a site that says "never more than glance" for a heavy panel keeps it so, whatever a screen says.
 
 ## Keyboard
@@ -2272,7 +2272,7 @@ The palette among the round tools of the top bar offers ten themes (three of the
 three Terminal hues) for a trading floor, a wall screen or long sessions; a light one (Parchment, Blue, Green, Crimson) for a bright office,
 a projector or anything you print or capture for a document. Wall Street is for people who read Bloomberg all day. A desk that wants its
 screens told apart at a glance can give each its own Terminal hue. Your choice follows you (below); an administrator sets the default for
-everyone with `ui.default_theme` ([CONFIGURATION.md](../admin/CONFIGURATION.md)), and *My account → Settings → Theme* or
+everyone with `ui.default_theme` ([CONFIGURATION.md](../reference/CONFIGURATION.md)), and *My account → Settings → Theme* or
 `PATCH /api/v1/me/settings` (`"theme": "terminal-blue"`, [API_GUIDE.md](API_GUIDE.md)) set it too.
 
 Each theme's colours shade the page, the top bar, view and panel headers and accent buttons; panel
@@ -3263,7 +3263,7 @@ Speed beside native CPython 3.14 on the same machine (best of three):
 | Server `drishti.calc.max-snippet-chars` | `50000` | A saved snippet's code, at most (60,000 at most in any case) |
 | Console `labs.calc` | `false` (`DRISHTI_LABS_CALC`) | The Labs switch on the console: off, no view offers Calc, whatever packs and roles say |
 
-See [CONFIGURATION.md](../admin/CONFIGURATION.md#drishticalc--python-in-the-browser).
+See [CONFIGURATION.md](../reference/CONFIGURATION.md#drishticalc--python-in-the-browser).
 
 Server endpoints (under `/api/v1`, with a token as usual):
 
@@ -3692,7 +3692,7 @@ cell cannot widen access, and a saved notebook holds code, not data.
 
 ### 9. Settings, errors and routes
 
-The console's `bi.notebook.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)):
+The console's `bi.notebook.*` ([CONFIGURATION.md](../reference/CONFIGURATION.md)):
 
 | Setting | Default | Meaning |
 |---|---|---|

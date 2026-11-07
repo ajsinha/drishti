@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * A model's measures as pivot functions (PIVOT_ENGINE.md section 12.2: a measure defined once). A measure whose DEL is an expression of
+ * A model's measures as pivot functions (ARCHITECTURE.md section 23.12.2: a measure defined once). A measure whose DEL is an expression of
  * aggregates over one fact's rows ({@code sum}, {@code avg}, {@code min}, {@code max}, {@code count}, {@code distinct}, {@code percentile},
  * {@code ratio}, {@code where=} conditions, arithmetic, row functions, other measures by {@code measure('Name')}) becomes a formula of the
  * engine's built-ins: its kind, its states, its totals and whether it adds up come from the engine. A measure that reads beyond the rows of

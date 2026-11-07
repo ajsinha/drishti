@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 /**
- * Never on disk: the guard (docs/architecture/IN_MEMORY_LAKE.md section 8). A connector whose lake is in memory ({@code mem://}) is
+ * Never on disk: the guard (docs/architecture/DATA_ARCHITECTURE.md section 7.8). A connector whose lake is in memory ({@code mem://}) is
  * memory-only, and so is everything computed from it. One check, {@link #mayPersist}, sits in front of every place Drishti writes, and
  * refuses memory-only data unless the place is allowed: a user's download (streamed, audited) and another node of the cluster answering a
  * request over Drishti*net. Refusals say why, in words, with the contract.

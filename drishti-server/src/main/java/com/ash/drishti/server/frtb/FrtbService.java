@@ -137,7 +137,7 @@ public final class FrtbService {
         return drcBytes;
     }
 
-    /** The engine registry's word on FRTB-SA and on the position sensitivities (COMPUTE_ENGINES.md); unset: the old switch, and on. */
+    /** The engine registry's word on FRTB-SA and on the position sensitivities (ARCHITECTURE.md section 25); unset: the old switch, and on. */
     private volatile java.util.function.BooleanSupplier running;
     private volatile java.util.function.BooleanSupplier sensitivitiesRunning;
 

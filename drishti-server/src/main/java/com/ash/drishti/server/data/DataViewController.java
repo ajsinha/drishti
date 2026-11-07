@@ -177,7 +177,7 @@ public class DataViewController {
         if (gate != null) {                                            // busy protection: a new download may wait (nothing written yet)
             gate.admit(com.ash.drishti.server.admission.Work.DOWNLOAD, p.user(), "Download " + kind + (day == null ? "" : " " + day));
         }
-        // data held in memory only (IN_MEMORY_LAKE.md section 8): a user's download is the one way out, streamed from memory with no
+        // data held in memory only (DATA_ARCHITECTURE.md section 7.8): a user's download is the one way out, streamed from memory with no
         // temporary file, audited; its audit line keeps the selection's shape, never its values
         boolean memoryOnly = com.ash.drishti.memlake.Retention.current().memoryOnly(kind);
         com.ash.drishti.memlake.Retention.current().require(com.ash.drishti.memlake.Retention.Sink.DOWNLOAD, List.of(kind), "This download");

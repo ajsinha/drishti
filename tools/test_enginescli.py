@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Tests of `drishti.py server engines` and its alias `admin engines` (docs/architecture/COMPUTE_ENGINES.md section 10) against an
+"""Tests of `drishti.py server engines` and its alias `admin engines` (docs/architecture/ARCHITECTURE.md section 25.10) against an
 in-process stand-in for the server: the list, show with --sources, on and off with a reason and the flags, the refusal (exit 2) and an
 engine's command answering DRS-1020 (exit 3, the server's words)."""
 import json

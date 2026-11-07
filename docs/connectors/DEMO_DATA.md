@@ -63,7 +63,7 @@ and clears its stored BI columns and rollups; a running server also sees each re
 regenerated with `python3 tools/testdata/make_testdata.py` (deterministic, the same bytes on every Python version: `tools/testdata/test_testdata.py` and `test_deterministic.py` guard it).
 
 **The test data's files are a generator's format, not feed files.** Each sixty-day dataset is one file a business date named by the
-load rules (`trade_endur.2026-07-09.jsonl.gz`, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md) section 10), but only the first
+load rules (`trade_endur.2026-07-09.jsonl.gz`, [DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load) section 10), but only the first
 day's holds the whole table (the snapshot, `kind: snapshot` in `testdata.yaml`); each later day's holds only the documents new or
 changed that day. `lake demo` replays them, the snapshot with every change up to the day applied by key, and loads each day's whole
 table under its dated name. Loaded on its own (`lake build --from` one of them, or a folder of them), a later day's file is only that
@@ -280,7 +280,7 @@ drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder
 
 `--mode overwrite-dates` (default) replaces only the business dates present, so a re-run is idempotent; `append`; `replace`. Without
 `--pack`, give `--domain` and `--key` per kind. Each file goes under the date in its name (`trade.2026-11-03.jsonl`), or `--as-of`, else
-the business today ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)); `--date FIELD` only names a field whose differing rows are
+the business today ([DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load)); `--date FIELD` only names a field whose differing rows are
 counted. See
 [Generating a pack from JSON Lines](../guides/PACK_DEVELOPER_GUIDE.md#generating-a-pack-from-json-lines) and
 [CLI_GUIDE.md](../guides/CLI_GUIDE.md).
@@ -319,7 +319,7 @@ each value that **starts with** an old name followed by a comma (a branch keeps 
 So after an edit rebuild those two datasets (`--only core/legal-entity,market-risk/risk-hierarchy`, or a full `lake demo`). The
 packs' samples, served without a lake, follow the file when their generators are run again: `python3 tools/packgen/banking/make_data.py`
 (the core samples; the catalogue's subtitles too) and an example pack's `make.py`. The VaR tree's top node is named by a server setting
-of its own, the VaR root name (listed in [CONFIGURATION.md](../admin/CONFIGURATION.md) under the VaR
+of its own, the VaR root name (listed in [CONFIGURATION.md](../reference/CONFIGURATION.md) under the VaR
 engine): the VaR tree's top name is set there.
 
 ## The samples
@@ -393,7 +393,7 @@ Every loader except Delta Lake's reads the same JSON lines, one per entity per b
 ```
 
 `columns` carries the fields the pack promotes (the trading pack's `layout.trade.columns`), taken from the same document. Two
-generators write it, by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): rows of several kinds or days go
+generators write it, by the load rules ([DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load)): rows of several kinds or days go
 in a tar of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders, each row in its own date's folder, and the loaders file each row under its
 folder's date (never the row's `date`, which stays in the row as data):
 

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin → Data loads → Inbox in a real browser (DATALOAD_INBOX.md section 10, mock-up A): the three columns (Waiting, Loading table by
+"""Admin → Data loads → Inbox in a real browser (DATA_ARCHITECTURE.md section 9.10, mock-up A): the three columns (Waiting, Loading table by
 table, Last cycles), Load now while a run loads (answered skipped, in words), Retry of a failed file (its reason shown, then gone from the
 board after the redraw), the board redrawn from the server, a 390 px phone (columns stacked, 44 px controls, no sideways scroll) and both
 themes. Runs Chromium through Playwright against a console with a stand-in server; skipped when Playwright or its Chromium is missing."""

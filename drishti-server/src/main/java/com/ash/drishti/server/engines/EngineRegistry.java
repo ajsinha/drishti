@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Every compute engine of this node and its state (docs/architecture/COMPUTE_ENGINES.md sections 5 to 8): the engines the beans register
+ * Every compute engine of this node and its state (docs/architecture/ARCHITECTURE.md sections 25.5 to 25.8): the engines the beans register
  * ({@link ComputeEngine}), each matched to its catalogue entry; started at start in the order of their needs (one whose need is off is
  * {@code blocked}, DRS-1022, and nothing else fails); turned on and off live with the dependencies enforced (DRS-1021), an off draining the
  * requests in flight (up to {@code drishti.engines.drain}) before it releases what it holds; the change written to the engine's file, kept in

@@ -522,7 +522,7 @@ CREATE TABLE IF NOT EXISTS drishti_content (
 );
 CREATE INDEX IF NOT EXISTS ix_content_updated ON drishti_content (updated_ms);
 
--- Compute requirements' approval (docs/architecture/PYTHON_COMPUTE.md section 6): requests to approve what a connector or pool requires,
+-- Compute requirements' approval (docs/architecture/ARCHITECTURE.md section 24.6): requests to approve what a connector or pool requires,
 -- and the approved items (one row per item per approving request; revoked_at set when revoked). Four eyes: requested_by never decides.
 CREATE TABLE IF NOT EXISTS drishti_compute_request (
     id            VARCHAR(64) PRIMARY KEY,

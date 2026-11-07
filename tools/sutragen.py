@@ -145,7 +145,7 @@ def array_elements(path: pathlib.Path, chunk: int = 1 << 20):
 
 def file_kind(f: pathlib.Path) -> str:
     """The kind a file's name gives: its table by the load rules (``trade.2026-11-03.jsonl.gz`` -> ``trade``,
-    docs/architecture/DATA_LOAD_RULES.md), else its stem (``x.jsonl.gz`` -> ``x``)."""
+    docs/architecture/DATA_ARCHITECTURE.md section 10), else its stem (``x.jsonl.gz`` -> ``x``)."""
     lake = str(pathlib.Path(__file__).resolve().parent / "lake")
     if lake not in sys.path:
         sys.path.insert(0, lake)

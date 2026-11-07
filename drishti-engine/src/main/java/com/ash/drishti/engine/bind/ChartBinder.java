@@ -444,7 +444,7 @@ final class ChartBinder {
 
     /**
      * A pivot panel (Rachana {@code kind: pivot}): its rows grouped by {@code by} (nested when a list) and {@code across}, every cell,
-     * subtotal and total computed by the pivot engine (drishti-bicompute; PIVOT_ENGINE.md section 13: nothing else aggregates) over the
+     * subtotal and total computed by the pivot engine (drishti-bicompute; ARCHITECTURE.md section 23.13: nothing else aggregates) over the
      * rows held in memory, each from its own rows. {@code by}, {@code across} and {@code value} take field names or Rachana paths over
      * the row ({@code "@.BOOK"}, {@code upper(@.DESK)}); {@code value} may be an aggregate of the engine written in Rachana
      * ({@code sum(@.MTM)}, {@code percentile(@.PNL, 0.99)}), which then replaces {@code agg}. The groups keep the order the rows first

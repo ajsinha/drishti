@@ -168,7 +168,7 @@ def kind_of(rows: list[dict]) -> str:
 def lake_build(path: Path, kind: str, lake: str, mode: str, signal: str | None, token: str | None, say) -> int:
     """Writes a JSONL file to the lake through the existing lake build (Drishti's Java writer when the jar is there, else deltalake),
     then raises the data-load signal when ``signal`` names a server. The file is named by the load rules, <kind>.<YYYY-MM-DD>.jsonl
-    (docs/architecture/DATA_LOAD_RULES.md): its business date is its name's; ``mode`` is said (replace: overwrite-dates, or append)."""
+    (docs/architecture/DATA_ARCHITECTURE.md section 10): its business date is its name's; ``mode`` is said (replace: overwrite-dates, or append)."""
     cmd = [sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "build", "--from", str(path), "--pack", str(PACK), "--connector",
            "risk-store", "--kind", kind, "--key", KEYS[kind], "--mode", mode, "--lake", lake, "-q"]
     if signal:

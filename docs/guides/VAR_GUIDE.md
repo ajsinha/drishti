@@ -31,7 +31,7 @@ Drishti's implementation and the regulatory side; other documents link here. Any
 one table what Drishti receives, what it computes, what it keeps only as a cache and what it records officially. The rest of the guide
 keeps to those four words.
 
-**Related documents:** [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md) (the regulatory reports that need VaR) and [OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md) (what market risk oversight needs, why VaR moved, the proposed Oversight lens). For the proposed market risk cube on this engine (a pivot with correct non-additive totals, sensitivities, FRTB SA and IMA, pre-deal pricing, every data contract), see the design: [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md).
+**Related documents:** [REGULATORY_VAR_REPORTING.md](REGULATORY_VAR_REPORTING.md) (the regulatory reports that need VaR) and [LENSES.md section 5](../architecture/LENSES.md#5-market-risk-oversight-what-the-second-line-needs-from-drishti-and-a-drishti-oversight-lens) (what market risk oversight needs, why VaR moved, the proposed Oversight lens). For the proposed market risk cube on this engine (a pivot with correct non-additive totals, sensitivities, FRTB SA and IMA, pre-deal pricing, every data contract), see the design: [LENSES.md section 6](../architecture/LENSES.md#6-the-mr-cube-a-market-risk-cube-lens-that-answers-what-fis-adaptivs-artiq-answers-and-shows-why).
 
 On 2026-10-26 this guide replaced five documents (this guide's first version, the explorer's page, the data contract `VAR.md`, the
 engine design and the data model); they were deleted (in git at tag v2.9.5). Where a design said otherwise,
@@ -340,7 +340,7 @@ set says so in place of the figures.
 
 ### 3.2 The screen
 
-Two columns and a toolbar, as the approved mock-up (`docs/lenses/mockups/var-layout/A.html`, and `A-drawer.html` with the drawer open):
+Two columns and a toolbar, as the approved mock-up (`docs/architecture/mockups/var-layout/A.html`, and `A-drawer.html` with the drawer open):
 
 - **The toolbar** (under the status line): two searchable drop-downs for the baskets, **+ New basket**, **Backtest ›** and **How calculated ›**.
   - **Backtest ›** opens the regulatory backtest of the scope in view, on the date in view (the same page as `VAR <scope> BACKTEST`,
@@ -786,7 +786,7 @@ From the command line: `drishti.py var playground <scope> [--ids ...] [--xlsx FI
 VaR moved from one business date to the next; **Why it moved** says why, in causes that **add up exactly** to the change, and who drove
 each one. It is a tab of the VaR page beside the others (`VAR EXPLAIN <scope> <GO>`, or `VAR <scope> EXPLAIN`), it answers any scope the
 page answers (a node, a portfolio, a basket, an ad-hoc scope), and by default it compares the business date before the newest with the
-newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../lenses/OVERSIGHT_LENS.md#41-ro1-var-change-explanation).
+newest. The design and its reasoning are in [LENSES.md section 5.4.1](../architecture/LENSES.md#541-ro1-var-change-explanation).
 
 **In plain words.** Drishti moves **one thing at a time** from yesterday's state to today's (the corrections to yesterday's data, the
 books that moved, the trades that left, the oldest day leaving the scenario window, the market, the newest day entering it, the new
@@ -1478,7 +1478,7 @@ systems are built** (the subsection *Intraday updates* below).
 
 **Pricing over the scenario days.** The pricer receives the trade, the base market of the business date (assembled by the server as
 AI.md › Server-side pricing: the quant service (proposed), section 7 describes) and the scenario set's market moves, and returns the 509 P&Ls. QLRisk's
-`MarketRiskEngine.scenario_pnl` is the default path ([PYTHON_COMPUTE.md section 9.2](../architecture/PYTHON_COMPUTE.md#92-qlrisk-default-python)),
+`MarketRiskEngine.scenario_pnl` is the default path ([ARCHITECTURE.md section 24.9.2](../architecture/ARCHITECTURE.md#2492-qlrisk-default-python)),
 QuantLib-Java the Java alternative. The pricer's scenario moves must be the **same moves the batch used**; a **reprice check** proves it:
 for a sample of existing trades in the scope the engine reprices them and compares with their stored vectors, and shows the agreement on
 the what-if panel (*parity with the batch: 0.02%*); a scope whose check fails beyond tolerance shows its what-if numbers in amber with
@@ -2002,7 +2002,7 @@ example is in [section 26.7](#267-what-the-status-shows).
 
 ## 12. Settings
 
-`drishti.var.*` in the engine's own file, `config/engines/var.yaml` (its switch `drishti.engines.var.enabled`; [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)) ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtivar--the-var-engine)), bound
+`drishti.var.*` in the engine's own file, `config/engines/var.yaml` (its switch `drishti.engines.var.enabled`; [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)) ([CONFIGURATION.md](../reference/CONFIGURATION.md#drishtivar--the-var-engine)), bound
 by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var/status` shows the effective values.
 
 | Setting | application.yaml | Default when unset or invalid | Meaning |
@@ -2404,7 +2404,7 @@ this date* (`404`, `DRS-1001`); its normal VaR is unaffected.
 | The CLI | `drishti.py var show BANK --stressed`, `--stressed --horizon 10d --method sum`; `parts`, `path`, `history`, `tree` take `--stressed` too |
 | VRES | `VRES BANK~set=stressed` (`SET` in the result) |
 
-**Configuration** ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtivarstress)):
+**Configuration** ([CONFIGURATION.md](../reference/CONFIGURATION.md#drishtivarstress)):
 
 | Key | Default | What it does |
 |---|---|---|
@@ -2574,7 +2574,7 @@ A date without long-history rows answers `404` in words; a node without a row `4
 20 days or longer than the history `400`; a row whose dates and values differ in length, or whose dates do not increase, `400`. A date
 without a stress set still answers (no current window, said in `currentNote`).
 
-**Configuration** ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtivarstress-window)):
+**Configuration** ([CONFIGURATION.md](../reference/CONFIGURATION.md#drishtivarstress-window)):
 
 | Key | Default | What it does |
 |---|---|---|
@@ -2767,7 +2767,7 @@ the setting's other value. The stressed set, the window and the reporting curren
 Parametric tab: named `PMu`, `PSigma`, `PZ` = `NORM.S.INV(PConfidence)`, `PEsFactor`, `PVaR`, `PES` beside the engine's with checks, a row
 a scenario, a row a position; recalculated by LibreOffice it equals the engine to the cent).
 
-**Settings** (`drishti.var.parametric.*` in `config/engines/var.yaml`; [CONFIGURATION.md](../admin/CONFIGURATION.md)): `enabled` (true; off:
+**Settings** (`drishti.var.parametric.*` in `config/engines/var.yaml`; [CONFIGURATION.md](../reference/CONFIGURATION.md)): `enabled` (true; off:
 no block, the toggle shows a notice, the playground's Parametric tab and `parametric=true` are refused in words), `weighting` (`equal` or `ewma`), `lambda` (0.94),
 `horizon-rule` (`lens` or `square-root-of-time`), `curve-points` (121), `matrix-max-parts` (60), `show-curve` (true). Not in the official
 end-of-day records (a capture keeps it on demand).
@@ -2798,7 +2798,7 @@ as the viewer; packs stay declarative.
 **The compute boundary.** Base VaR is sums of stored vectors and measures over the sums, in the server's JVM on a bounded pool
 (`drishti.var.threads`). The heavy work that needs Python or a pricer (what-if pricing over the scenarios, intraday repricing:
 [section 8.4](#84-what-if-pricing-and-intraday-recomputes)) is a separate request of whole trades to price, which the compute
-workers of [PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md) serve: any number of workers (their count is configuration, never
+workers of [ARCHITECTURE.md section 24](../architecture/ARCHITECTURE.md#24-compute-workers-python-and-java-libraries-approved-pinned-and-isolated) serve: any number of workers (their count is configuration, never
 code), one trade or a batch each, the 509 values each returns joining as a vector. Nothing in the engine assumes one worker or calls
 one in its request path. Moving gigabytes of vectors into a Python worker for every query would be too slow; every VaR figure is the
 server's.
@@ -3616,7 +3616,7 @@ Everything in this list is **design, not built**; the plan row that builds it is
 | The lake layout at bank scale: the sort by hierarchy, the partition by scenario set, file and row-group sizes, `BYTE_STREAM_SPLIT` + ZSTD | open question 7, [section 29.2](#292-the-layout-the-design-chose-and-what-is-built) |
 | Age-weighted and filtered methods; ES backtests (Acerbi–Székely) | [section 18.3](#183-decomposition-of-a-scope-into-parts), [section 18.4](#184-history-and-backtest) |
 | The batch's due time and completeness rule; the load checks still not made | open question 4, [the VaR data contract, section 6.3](../contracts/VAR.md#63-what-the-load-checks) |
-| An optional *risk position* grouping for viewing; cubes and the overnight precomputation | [section 30](#30-the-design-record); the market risk cube in [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md) |
+| An optional *risk position* grouping for viewing; cubes and the overnight precomputation | [section 30](#30-the-design-record); the market risk cube in [LENSES.md section 6](../architecture/LENSES.md#6-the-mr-cube-a-market-risk-cube-lens-that-answers-what-fis-adaptivs-artiq-answers-and-shows-why) |
 | The common risk lake for every risk pack; the scope words `GROUP:` and `NSET:` | parked, [the VaR data contract, section 2.1](../contracts/VAR.md#21-where-they-live) |
 
 Built since this list was first written: regulatory backtesting, period statistics and the report framework with its pilot pack
@@ -3640,20 +3640,20 @@ annual report's trading VaR table (built); the US needs 10-day VaR and stressed 
 | Where | Status | What it shows of VaR |
 |---|---|---|
 | **The full product** (no edition) | built | the VaR explorer (`VAR BANK <GO>`, [section 3](#3-the-explorer-screen-by-screen)) with the Horizon, Confidence, ES and Reporting currency pickers; the position and portfolio pages; the computed kind `VRES` and the what-if under the basket's sheet; the scenario matrix `SMAT`; the official records (`VOFF`); BI's VaR datasets; the API and the CLI |
-| **Drishti Risk** (edition `risk`, risk managers) | built | the same engine and commands (`VAR`, `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`, `SMAT`); the three landings: the Risk desk's VaR and ES tiles, the backtest and VaR by desk with limit use; the command landing's VaR chips and baskets; the risk map's hierarchy with VaR and limit use per node ([EDITIONS.md](../admin/EDITIONS.md#7-drishti-risks-home-three-landings), [RISK_LENS.md](../lenses/RISK_LENS.md#31-var)) |
-| **Drishti Trading** (edition `trading`, traders and desk heads) | built | "my book's" VaR, path and contributions; VaR limits; `SMAT`; the **new-trade check** from one VaR what-if and one pre-deal check ([TRADING_LENS.md](../lenses/TRADING_LENS.md#44-the-new-trade-check)); no `SPV`, `FXS`, `SSET` or `VOFF` |
+| **Drishti Risk** (edition `risk`, risk managers) | built | the same engine and commands (`VAR`, `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`, `SMAT`); the three landings: the Risk desk's VaR and ES tiles, the backtest and VaR by desk with limit use; the command landing's VaR chips and baskets; the risk map's hierarchy with VaR and limit use per node ([EDITIONS.md](../admin/EDITIONS.md#7-drishti-risks-home-three-landings), [LENSES.md section 1](../architecture/LENSES.md#131-var)) |
+| **Drishti Trading** (edition `trading`, traders and desk heads) | built | "my book's" VaR, path and contributions; VaR limits; `SMAT`; the **new-trade check** from one VaR what-if and one pre-deal check ([LENSES.md section 2](../architecture/LENSES.md#244-the-new-trade-check)); no `SPV`, `FXS`, `SSET` or `VOFF` |
 | **Drishti Market** and **Drishti World** | built | no VaR (`VAR` and `SMAT` off) |
 | A phone | built | the explorer's phone layout ([section 3.8](#38-on-a-phone)); the configured phone tiers are a design ([MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md)) |
-| **Oversight**, **CRO** and **CIO** lenses; the **market risk cube** | design, not built | why VaR moved, breaches and escalation, the committee pack ([OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md)); the CRO's VaR against risk appetite ([CRO_LENS.md](../lenses/CRO_LENS.md)); the CIO's view of whether the risk data behind VaR is on time and trustworthy: the 7am risk-ready time, official captures, the hot files' disk ([CIO_LENS.md](../lenses/CIO_LENS.md)); a pivot with correct non-additive VaR totals ([MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md)) |
+| **Oversight**, **CRO** and **CIO** lenses; the **market risk cube** | design, not built | why VaR moved, breaches and escalation, the committee pack ([LENSES.md section 5](../architecture/LENSES.md#5-market-risk-oversight-what-the-second-line-needs-from-drishti-and-a-drishti-oversight-lens)); the CRO's VaR against risk appetite ([LENSES.md section 8](../architecture/LENSES.md#8-the-cro-lens-is-the-bank-within-its-risk-appetite-what-changed-overnight-and-what-must-the-chief-risk-officer-act-on)); the CIO's view of whether the risk data behind VaR is on time and trustworthy: the 7am risk-ready time, official captures, the hot files' disk ([LENSES.md section 9](../architecture/LENSES.md#9-the-cio-lens-is-the-risk-data-estate-healthy-trustworthy-on-time-secure-affordable-and-used)); a pivot with correct non-additive VaR totals ([LENSES.md section 6](../architecture/LENSES.md#6-the-mr-cube-a-market-risk-cube-lens-that-answers-what-fis-adaptivs-artiq-answers-and-shows-why)) |
 
 Under every edition the engine is the same: any scope, any currency, intraday, official records, the what-if, the API and the CLI. The
 lens gaps that concern VaR (stressed VaR on the landings, horizon and confidence there, backtesting on the bank's P&L, why it moved) are
-listed in [RISK_LENS.md section 5](../lenses/RISK_LENS.md#5-gaps-with-design-sketches) and
-[TRADING_LENS.md section 5](../lenses/TRADING_LENS.md#5-gaps-with-design-sketches).
+listed in [LENSES.md section 1.5](../architecture/LENSES.md#15-gaps-with-design-sketches) and
+[LENSES.md section 2.5](../architecture/LENSES.md#25-gaps-with-design-sketches).
 
 ## 34. Configuration keys
 
-Every key is in the one configuration document, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtivar--the-var-engine) (generated and
+Every key is in the one configuration document, [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtivar--the-var-engine) (generated and
 checked; also in the console under Help → Configuration); [section 12](#12-settings) of this guide explains each with its effect on
 the figures. By purpose:
 

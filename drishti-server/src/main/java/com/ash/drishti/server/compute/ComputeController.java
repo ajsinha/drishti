@@ -43,7 +43,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Compute workers' REST face (docs/architecture/PYTHON_COMPUTE.md section 15). Administrators: {@code GET /api/v1/admin/compute} (Admin →
+ * Compute workers' REST face (docs/architecture/ARCHITECTURE.md section 24.15). Administrators: {@code GET /api/v1/admin/compute} (Admin →
  * Compute: the switch, pools, workers, queues, environments, approval requests), approve, reject and revoke (four eyes: never the person
  * who asked; a reason always), build a pool's approved environment, test a pool with the sample engine, cancel a running request. Other
  * Drishti*net members: a pool's load and a fan-out chunk run here on behalf of its viewer (one hop: forwarded calls only).

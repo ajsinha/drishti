@@ -126,7 +126,7 @@ Other panels of the screen are not affected by one computed panel's state.
 5. **Cache and single flight**: a cached result is answered at once; a read of a key already being computed joins it (one computation,
    each reader answered under their own request id).
 6. **Admit**: an interactive read over `limits.max-inflight-per-user` of the person's computations is refused as *busy*; the compute
-   pool's own fair queue orders the rest by class and person (PYTHON_COMPUTE.md 7.7).
+   pool's own fair queue orders the rest by class and person (ARCHITECTURE.md section 24 7.7).
 7. **Read the inputs as the viewer** through the normal routing (kinds refused, field masks applied); more than `limits.max-input-rows`
    is refused before anything runs.
 8. **Compute** in the engine; **progress** goes to the request's events.
@@ -138,7 +138,7 @@ when every reader has gone (the page closed) and it is interactive.
 
 ## Engines
 
-**Python** (`engine.type: python`): an `Engine` of the worker SDK (PYTHON_COMPUTE.md section 8) in a compute pool. Inputs arrive as
+**Python** (`engine.type: python`): an `Engine` of the worker SDK (ARCHITECTURE.md section 24.8) in a compute pool. Inputs arrive as
 Arrow tables (`inputs.table("values")`): each top-level field a column, a list of numbers of one length a fixed-size vector (a P&L
 path). Its `Result(rows=…, tables=…)` comes back as `RESULTS` and `TABLES`. With `split`, the input is cut into chunks spread over every
 worker of the pool and of the other Drishti*net nodes that serve it, and `reduce` adds the chunks' answers up; the stamp's `ran` says

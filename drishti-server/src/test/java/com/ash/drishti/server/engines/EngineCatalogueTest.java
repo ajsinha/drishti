@@ -27,7 +27,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * The engine catalogue's build test (COMPUTE_ENGINES.md sections 2 and 3.1): every engine with its file in config/engines and the same bytes
+ * The engine catalogue's build test (ARCHITECTURE.md sections 25.2 and 25.3.1): every engine with its file in config/engines and the same bytes
  * inside the jar, the console's copy of the catalogue identical, no cycle of needs, every word a word, the API prefixes routed to the
  * right engine (the longest prefix: the sensitivities' endpoints are not FRTB-SA's).
  */

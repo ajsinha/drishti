@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Routing a file to a table (DATALOAD_INBOX.md section 5): the {@code .ready} file's keys first, then the first rule of
+ * Routing a file to a table (DATA_ARCHITECTURE.md section 9.5): the {@code .ready} file's keys first, then the first rule of
  * {@code config/dataload.yaml} whose glob matches the file's name. A route names a loaded pack and one of its kinds; the loader takes the
  * table from the route's lake file (config/lakes/, the pack's recommended entry copied there once), so nothing of a table is written here. A file no
  * rule matches is refused with the reason ({@code unmatched: fail}): never guessed. The rules are read again every cycle.
@@ -61,7 +61,7 @@ public final class Routes {
      * {@code auto}, a date at the end of a file's name (an archive member's own first: {@code FileDates}) is every row's business date, or
      * {@code field}, the rows' own; {@code nameDate} the date the file's name carries (what the Admin screen shows), {@code dateBy} where the
      * date comes from in words. {@code mode} is the load mode, {@code modeGiven} whether the {@code .ready} file gave it (else it is the
-     * inbox's default-mode, which a lake file's entry for the table overrides: DATA_LOAD_RULES.md section 3).
+     * inbox's default-mode, which a lake file's entry for the table overrides: DATA_ARCHITECTURE.md section 10.3).
      */
     public record Route(String pack, String kind, String connector, String table, String dateField, LocalDate asOf, String key, String lake,
             String format, String by, Path packDir, String dateFrom, LocalDate nameDate, String dateBy, String mode, String dataset, String newDomain,
@@ -259,7 +259,7 @@ public final class Routes {
     }
 
     /**
-     * Where {@code fileName} goes (docs/architecture/DATA_LOAD_RULES.md section 3): the pack and kind from its {@code .ready} file, else the
+     * Where {@code fileName} goes (docs/architecture/DATA_ARCHITECTURE.md section 10.3): the pack and kind from its {@code .ready} file, else the
      * first rule that matches, else the table its name carries (the pack that has a kind of that name, else a pack of that name with one
      * kind; unknown or ambiguous: refused with the candidates). The business date: the {@code .ready} file's {@code business-date}, else
      * the name's date, else the business today (the loader decides each file the same way, {@code FileDates.decide}); a rule's
@@ -347,7 +347,7 @@ public final class Routes {
     }
 
     /**
-     * A table no pack has, asked for ({@code new-table: true}; DATA_LOAD_RULES.md section 7): allowed only when the inbox allows new tables
+     * A table no pack has, asked for ({@code new-table: true}; DATA_ARCHITECTURE.md section 10.7): allowed only when the inbox allows new tables
      * ({@code new-tables}); written in the pack's lake domain (the pack the {@code .ready} file or a rule names) with the generic layout,
      * its id field {@code key:} else {@code id}.
      */
@@ -379,7 +379,7 @@ public final class Routes {
     }
 
     /**
-     * The routes of a tar archive (DATA_LOAD_RULES.md section 3.1), one per table folder: its pack from the {@code .ready} file's
+     * The routes of a tar archive (DATA_ARCHITECTURE.md section 10.3.1), one per table folder: its pack from the {@code .ready} file's
      * {@code folders:} (folder → pack), else the pack with a kind of that name, else a pack of that name with one kind; any folder that
      * resolves to none (or to two) refuses the whole archive, every one listed. {@code tables}: the archive's folders.
      */
@@ -413,7 +413,7 @@ public final class Routes {
     }
 
     /**
-     * The pack and kind of a table name (DATA_LOAD_RULES.md section 3): the pack given (its kind of that name, or the kind given); else the
+     * The pack and kind of a table name (DATA_ARCHITECTURE.md section 10.3): the pack given (its kind of that name, or the kind given); else the
      * one pack with a kind of that name; else a pack of that name with a single kind. None or several: refused, listing them.
      */
     private String[] byTable(String table, String givenPack, String givenKind) throws Unrouted {

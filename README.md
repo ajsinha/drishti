@@ -70,7 +70,7 @@ every screen, pivot, BI query and Flight read. Corrections and screen designs go
 switched on or off per node in **Admin → Engines** ([OPERATIONS.md section 21](docs/admin/OPERATIONS.md#21-compute-engines-on-or-off)).
 **Nothing unbuilt looks built**: a figure, panel or menu item that depends on unbuilt work is registered in
 `config/under-construction.yaml` and is either shown with an *Under construction* chip or hidden
-([UNDER_CONSTRUCTION.md](docs/admin/UNDER_CONSTRUCTION.md)). Today that covers the stored SA-CCR and xVA figures, credit limit usage and
+([UNDER_CONSTRUCTION.md](docs/reference/UNDER_CONSTRUCTION.md)). Today that covers the stored SA-CCR and xVA figures, credit limit usage and
 the pre-deal limit decision, among others.
 
 ## The platform
@@ -79,7 +79,7 @@ the pre-deal limit decision, among others.
 
 - **A keyboard-driven terminal**: type-ahead over every source, linked views of any entity, impact (F8), the raw document (F9), any past
   business day, history and compare, live views that tick ([USER_GUIDE.md](docs/guides/USER_GUIDE.md),
-  [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md), [tutorial 2](docs/tutorials/02-look-up-anything.md)).
+  [COMMANDS.md](docs/reference/COMMANDS.md), [tutorial 2](docs/tutorials/02-look-up-anything.md)).
 - **Search** by value (`TRD where QUANTITY > 200m order by QUANTITY desc`), in plain words parsed without any AI service, or with a
   form (`FORM <pack>`); monitors, alerts and workspaces ([tutorial 3](docs/tutorials/03-query-by-form.md)).
 - **The pivot engine** (`PIVOT`): any kind, search or measure as a pivot, every total computed from its own members, saved and shared
@@ -88,7 +88,7 @@ the pre-deal limit decision, among others.
   masks per reader ([BI_GUIDE.md](docs/guides/BI_GUIDE.md), [tutorial 10](docs/tutorials/10-first-bi-report.md)).
 - **One grammar.** Rachana paths and expressions are used everywhere: in Sutras, search, the pivot, BI and custom functions. The
   **function catalogue** lists every function with the rules each keeps (nulls, rounding, dates on the bank's calendars) and its Excel,
-  SAS and MATLAB counterparts ([FUNCTIONS.md](docs/guides/FUNCTIONS.md), [FUNCTION_CATALOGUE.md](docs/architecture/FUNCTION_CATALOGUE.md)).
+  SAS and MATLAB counterparts ([FUNCTIONS.md](docs/reference/FUNCTIONS.md), [FUNCTION_CATALOGUE.md](docs/architecture/FUNCTION_CATALOGUE.md)).
 
 ### Screens without code
 
@@ -115,10 +115,10 @@ the pre-deal limit decision, among others.
   (`<name>.<YYYY-MM-DD>.jsonl.gz`); a `.ready` control file says the file is complete and may override the name; a tar archive carries
   several tables and dates and loads all or nothing. Loads **append** by default, and every row carries its load id, so
   `drishti.py lake undo <load-id>` removes exactly one load. Nothing is guessed: a file that breaks a rule is refused with the reason
-  ([DATA_LOAD_RULES.md](docs/architecture/DATA_LOAD_RULES.md), [tutorial 7](docs/tutorials/07-load-data-daily.md)).
+  ([DATA_ARCHITECTURE.md section 10](docs/architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load), [tutorial 7](docs/tutorials/07-load-data-daily.md)).
 - **The data inbox** loads the files your ETL drops, by routing rules, with Admin → Data loads to watch, retry and undo
   ([tutorial 36](docs/tutorials/36-load-files-with-the-data-inbox.md)). For large loads, the parallel Java loader is multi-threaded and
-  memory-bounded ([PARALLEL_LOADER.md](docs/architecture/PARALLEL_LOADER.md)).
+  memory-bounded ([DATA_ARCHITECTURE.md section 11](docs/architecture/DATA_ARCHITECTURE.md#11-the-parallel-lake-loader-drishti-lakeload)).
 - **In-memory lakes** (`mem://`) for feeds that never touch disk, such as news ([IN_MEMORY_LAKE_GUIDE.md](docs/guides/IN_MEMORY_LAKE_GUIDE.md),
   [tutorial 31](docs/tutorials/31-news-in-memory-only.md)).
 - **Data contracts**: one per mnemonic, stating what the upstream engines deliver and what Drishti answers
@@ -163,7 +163,7 @@ Every view is built by the same pipeline: the command is parsed, the document is
 chosen date, the kind's Sutra is matched, the layout is taken from a cache keyed by Sutra version and data shape, links are fetched in
 parallel, and the panels are bound. The server sends the bound screen as one JSON **ViewModel**, and live updates are patches to it.
 A Sutra is interpreted, never compiled, and there is no screen per product
-([ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [VIEWMODEL.md](docs/architecture/VIEWMODEL.md)).
+([ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [VIEWMODEL.md](docs/reference/VIEWMODEL.md)).
 
 The server is one Spring Boot application on virtual threads, built from Maven modules that depend in one direction (the plugin SPI
 has no Spring). The console is a separate Python web application that computes nothing itself.
@@ -234,11 +234,11 @@ guides. Start from the door that fits:
 | use Drishti | [Use Drishti](docs/README.md#use-drishti): [USER_GUIDE.md](docs/guides/USER_GUIDE.md), [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), [EXPOSURE_GUIDE.md](docs/guides/EXPOSURE_GUIDE.md), [BI_GUIDE.md](docs/guides/BI_GUIDE.md) |
 | change how screens look | [Change how screens look](docs/README.md#change-how-screens-look): [SUTRA_DEVELOPER_GUIDE.md](docs/guides/SUTRA_DEVELOPER_GUIDE.md), [RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md) |
 | add an industry or data | [Add an industry or data](docs/README.md#add-an-industry-or-data): [PACK_DEVELOPER_GUIDE.md](docs/guides/PACK_DEVELOPER_GUIDE.md), [DATA_GUIDE.md](docs/guides/DATA_GUIDE.md), [LAKE_GUIDE.md](docs/guides/LAKE_GUIDE.md) |
-| run and administer it | [Run and administer it](docs/README.md#run-and-administer-it): [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md), [OPERATIONS.md](docs/admin/OPERATIONS.md), [CONFIGURATION.md](docs/admin/CONFIGURATION.md) |
+| run and administer it | [Run and administer it](docs/README.md#run-and-administer-it): [GETTING_STARTED.md](docs/guides/GETTING_STARTED.md), [OPERATIONS.md](docs/admin/OPERATIONS.md), [CONFIGURATION.md](docs/reference/CONFIGURATION.md) |
 | develop on it | [Develop on it](docs/README.md#develop-on-it): [PACK_DEVELOPER_GUIDE.md, Part VIII](docs/guides/PACK_DEVELOPER_GUIDE.md#part-viii-changing-drishtis-code-the-developer-guide), [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md), [API_GUIDE.md](docs/guides/API_GUIDE.md) |
 
 **Learn by doing**: [the tutorials](docs/tutorials/README.md) run on the shipped demo data and show the UI, the command line and the YAML
-at every step, with real screenshots. Every setting is in [CONFIGURATION.md](docs/admin/CONFIGURATION.md); the command line is
+at every step, with real screenshots. Every setting is in [CONFIGURATION.md](docs/reference/CONFIGURATION.md); the command line is
 [CLI_GUIDE.md](docs/guides/CLI_GUIDE.md).
 
 **Where it's going**: [IMPLEMENTATION_PLAN.md, The roadmap from 2.9.11.c](docs/architecture/IMPLEMENTATION_PLAN.md#the-roadmap-from-2911c-product-owner-2026-11-04-supersedes-every-later-release-table-in-this-file).

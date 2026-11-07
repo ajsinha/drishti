@@ -38,7 +38,7 @@ spring:
     # files read after this one: the engines' files (config/engines/<id>.yaml), application.local.yaml in the working directory, then the packs overlay Admin -> Packs writes
     # (DRISHTI_PACKS_OVERLAY, default <data dir>/packs/added.yaml)
     import:
-      # the engines' own files (docs/architecture/COMPUTE_ENGINES.md section 3): the jar's copy, then the site's, which wins key by key
+      # the engines' own files (docs/architecture/ARCHITECTURE.md section 25.3): the jar's copy, then the site's, which wins key by key
       - classpath:engines/var.yaml
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/var.yaml
       - classpath:engines/exposure.yaml
@@ -65,7 +65,7 @@ spring:
       # packs an administrator loaded from Admin → Packs (drishti.packs.added); written by the server, not by hand
       - optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}
 
-  # Email (docs/admin/CONFIGURATION.md, "Email"): set spring.mail.host (SPRING_MAIL_HOST) to switch the SMTP client on, with
+  # Email (docs/reference/CONFIGURATION.md, "Email"): set spring.mail.host (SPRING_MAIL_HOST) to switch the SMTP client on, with
   # port/username/password and properties.mail.smtp.* as for any Spring Boot application; leave host unset and no mail client exists.
   #   mail:
   #     host: smtp.example.com
@@ -196,7 +196,7 @@ drishti:
       canary-interval: 6h            # the self-test against Java is run again this often (0: only at start); a failure switches OpenBLAS off for the run
       gemm-min-sets: 32              # a 1,024-row tile of many-scope sums is one dgemm when at least this many sets share it (tuned on one machine: BENCHMARK.md section 17)
       gemm-min-density: 0.25         # ...and at least this share of its (set, row) pairs are members; sparser tiles are added in Java
-  engines:                           # compute engines on or off per node, each with its own file (docs/architecture/COMPUTE_ENGINES.md; Admin -> Engines)
+  engines:                           # compute engines on or off per node, each with its own file (docs/architecture/ARCHITECTURE.md section 25; Admin -> Engines)
     dir: ${DRISHTI_ENGINES_DIR:./config/engines}   # the folder of the engines' files Admin -> Engines writes (the imports above name the same folder)
     drain: 30s                       # an engine turned off live: requests in flight finish within this, then are cancelled
     watch-seconds: 5                 # how often the engine files are compared with what was read (an edit by hand takes effect as from the page)
@@ -699,7 +699,7 @@ drishti:
       views-per-minute: 600                   # calls per host application (the default for a new registration)
       views-per-user-per-minute: 60           # calls per user (the default for a new registration)
       searches-per-user-per-minute: 30        # searches per user and application through <drishti-search>, on top of the call rates
-    apps: []                                  # host applications declared here (GitOps): read-only in Admin → Embedding ("from config"), see docs/admin/CONFIGURATION.md
+    apps: []                                  # host applications declared here (GitOps): read-only in Admin → Embedding ("from config"), see docs/reference/CONFIGURATION.md
   retry:                             # what failed is tried again by itself (docs/admin/OPERATIONS.md, "Retries"): packs refused, connectors, AI providers, MCP servers
     enabled: true  # retry at all; false leaves a failure to the next file change or an administrator's Retry now
     initial: 5s                      # wait before the first retry
@@ -859,7 +859,7 @@ drishti:
     usage-days: 30                   # days of views counted as usage
     recent: 12                       # rows under Recent, Certified and Shared on Home
     list-limit: 200                  # most rows one catalogue or workspace page returns
-    query:                           # Rupaka phase 2: the dataset query engine (embedded DuckDB) and its layers; docs/admin/CONFIGURATION.md, drishti.bi.query
+    query:                           # Rupaka phase 2: the dataset query engine (embedded DuckDB) and its layers; docs/reference/CONFIGURATION.md, drishti.bi.query
       store-dir: ${DRISHTI_BI_STORE:${drishti.data.dir:./data}/bi-store}   # the BI store: typed Parquet layers (columns, rollups) written here; never under the repository
       store-max-gb: 50               # the most disk the layers take; beyond it the least recently built dates go (never a table's newest)
       store-max-dates: 260           # the most business dates a table keeps in its layer (the oldest beyond go); checked at start and every 10 min
@@ -883,7 +883,7 @@ drishti:
       live-ttl: 5s                   # how long a live table's snapshot is served
       infer-sample: 5000             # values of a column the relationship finder looks at
       infer-min-match: 0.8           # the share of values found among the other table's ids for a relationship to be proposed
-    transform:                       # Python Transforms behind Python datasets and tables, and the size of a composed dataset's sources (docs/admin/CONFIGURATION.md, drishti.bi.transform)
+    transform:                       # Python Transforms behind Python datasets and tables, and the size of a composed dataset's sources (docs/reference/CONFIGURATION.md, drishti.bi.transform)
       enabled: true                  # false: every Python run (Transforms, Python measures and visuals, Notebook cells) answers DRS-9074; the code runs on the compute pool python (config/compute/compute.yaml)
       cache-ttl: 30m                 # a Transform's result is kept for the reader it was made for this long (and until the inputs change)
       cache-entries: 20              # results kept per derived dataset; the oldest go first
@@ -894,7 +894,7 @@ drishti:
       max-concurrent: 2              # Transforms running at once
       queue-wait: 5s                 # how long a run waits for a place before DRS-9074
       compose-source-max-rows: 50000 # most rows one source of a composed dataset may answer (DRS-9022)
-    exec:                            # execution and scale (docs/admin/CONFIGURATION.md, drishti.bi.exec)
+    exec:                            # execution and scale (docs/reference/CONFIGURATION.md, drishti.bi.exec)
       per-model-share: 0.5           # the share of drishti.bi.query.max-concurrent one model may hold at once (work classes: interactive, standing, background)
       queue: 2s                      # how long a source fragment waits for its connector's pool before DRS-9025
       interactive: 30s               # longest an interactive query runs (DRS-9024)
@@ -909,18 +909,18 @@ drishti:
       fragments-share: 0.5           # the most of a connector's max-fragments the layer builds of background runs hold at once
     runs:
       file: ${DRISHTI_BI_RUNS_FILE:./config/runs/runs.yaml}   # BI runs (docs/architecture/BI_DESIGN.md); ready-made in config/runs.examples/
-    plan:                            # the logical plan: result cache and guards (docs/admin/CONFIGURATION.md, drishti.bi.plan)
+    plan:                            # the logical plan: result cache and guards (docs/reference/CONFIGURATION.md, drishti.bi.plan)
       cache-entries: 2000            # answers cached by plan hash, security signature and data generation (0: off)
       cache-ttl: 15m                 # an answer for the current state is asked again after this; as-of answers have no ttl
       cache-idle: 1h                 # an answer nobody asked for this long is dropped
       guards: refuse                 # refuse (the default) or warn: sums across currencies (DRS-9158), balances added across dates (DRS-9159)
-    sql:                             # Drishti SQL over models (docs/guides/BI_LANGUAGE_REFERENCE.md; docs/admin/CONFIGURATION.md, drishti.bi.sql)
+    sql:                             # Drishti SQL over models (docs/guides/BI_LANGUAGE_REFERENCE.md; docs/reference/CONFIGURATION.md, drishti.bi.sql)
       enabled: true                  # false: /bi/sql answers DRS-9006 and SQL view datasets cannot be read
       max-leaves: 8                  # model queries one composite statement may ask
       composite-memory: 256MB        # memory of the in-memory engine a composite statement's outer query runs in
       composite-timeout: 30s         # longest the outer query of a composite statement may run
       max-rows: 100000               # most rows a composite statement answers
-    expr:                            # the Drishti expression language, DEL v2 (docs/guides/BI_LANGUAGE_REFERENCE.md; docs/admin/CONFIGURATION.md, drishti.bi.expr)
+    expr:                            # the Drishti expression language, DEL v2 (docs/guides/BI_LANGUAGE_REFERENCE.md; docs/reference/CONFIGURATION.md, drishti.bi.expr)
       legacy: refuse                 # the old expression syntax: refuse (DRS-9100 with the DEL v2 text as the fix; the default) or warn (read with DRS-9100)
       parse-cache: 10000             # parsed expressions kept (0: off)
     migrate:                         # migrations of STORED BI items (docs/architecture/BI_DESIGN.md 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems")
@@ -1089,7 +1089,7 @@ drishti:
     lookback-days: 3              # business days before today still checked for missing data
     default-notify-roles: [admin] # told when a pack names no roles or users
     smoke-max: 20                 # most sample entities a pack may ask to be opened
-  under-construction:                # the under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): what depends on unbuilt work and how it shows
+  under-construction:                # the under-construction registry (docs/reference/UNDER_CONSTRUCTION.md): what depends on unbuilt work and how it shows
     file: ${DRISHTI_UNDER_CONSTRUCTION_FILE:./config/under-construction.yaml}   # absent: under-construction.yaml beside the packs folder, else nothing registered; none: nothing
   packs:
     # Domain packs (config/packs/<name>/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples.
@@ -1147,7 +1147,7 @@ drishti:
     batch-rows: 8192                 # rows a column read hands over at a time while a download streams
     list-limit: 200000               # most entities read from a source that cannot read a day in one pass (it lists them, then reads 500 at a time)
     read-budget: PT30S               # one listing, or one chunk of 500 entities, from such a source
-  datamap:                           # the data map, DATAMAP (docs/admin/CONFIGURATION.md "drishti.datamap"): counts and joins checked in the background
+  datamap:                           # the data map, DATAMAP (docs/reference/CONFIGURATION.md "drishti.datamap"): counts and joins checked in the background
     max-rows: 20000                  # rows of one kind read to count it and check its joins
     ttl: PT15M                       # a built map is read again after this
     read-budget: PT30S               # one listing or column read

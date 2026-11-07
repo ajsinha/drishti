@@ -152,7 +152,7 @@ class Decided:
 
 def date_error(name, today: date | None = None) -> str | None:
     """Why the date part of a plain file's ``name`` is refused (not a calendar date, before 1900, in the future), None when it has none
-    or a good one: such a name is refused, never filed under another date (DATA_LOAD_RULES.md section 2.1)."""
+    or a good one: such a name is refused, never filed under another date (DATA_ARCHITECTURE.md section 10.2.1)."""
     base = base_name(name)
     if is_tar(base):
         return None

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Our own feed files, written and read by the load rules (docs/architecture/DATA_LOAD_RULES.md, section 10): the one place the
+"""Our own feed files, written and read by the load rules (docs/architecture/DATA_ARCHITECTURE.md, section 10.10): the one place the
 generators (tools/testdata, tools/packgen, tools/publicdata) write a table's dated files, and the demo lake builder, the tests and the
 benchmarks read them back.
 

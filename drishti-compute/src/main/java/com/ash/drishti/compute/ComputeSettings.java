@@ -29,7 +29,7 @@ import java.util.Map;
 import java.util.function.UnaryOperator;
 
 /**
- * The compute settings ({@code config/compute/compute.yaml}, docs/architecture/PYTHON_COMPUTE.md section 13), read once at start. Off as
+ * The compute settings ({@code config/compute/compute.yaml}, docs/architecture/ARCHITECTURE.md section 24.13), read once at start. Off as
  * shipped. Everything the workers write goes under {@code <data dir>/compute/}: environments, wheels, the extracted SDK and every
  * request's scratch folder.
  *

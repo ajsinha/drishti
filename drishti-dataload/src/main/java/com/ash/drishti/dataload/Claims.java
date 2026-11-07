@@ -34,7 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The in-process folder and the folder lock (DATALOAD_INBOX.md sections 4.1 and 4.4). A run's files are renamed into {@code inprocess/<run>/} (one
+ * The in-process folder and the folder lock (DATA_ARCHITECTURE.md sections 9.4.1 and 9.4.4). A run's files are renamed into {@code inprocess/<run>/} (one
  * file system: a rename is atomic, so a file is either in the inbox or claimed, never both). {@code inbox.lock} is created atomically and
  * holds the run, the node, the process and a heartbeat the holder refreshes while it runs; a lock whose heartbeat is older than three intervals,
  * or whose process on this same node has ended, is taken over (and the takeover logged), so two servers on one shared folder never both run.

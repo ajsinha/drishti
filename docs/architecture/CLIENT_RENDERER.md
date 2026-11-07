@@ -20,7 +20,7 @@ This library draws **embeds** (Elements 2.x, the embed API v2) and **`<drishti-r
 console's own client-drawn mode (a client mode, phase 2's `drishti_view-render.js`) and the versions 0.1.0 to 1.1.0 are retired. Both
 phases are built. The decision:
 [ADR-022](adr/022-one-renderer-in-the-browser.md), which supersedes the rendering part of
-[ADR-021](adr/021-embedding-is-html-over-the-wire.md). The contract it draws: [VIEWMODEL.md](VIEWMODEL.md) (its own reference, [section 22](#22-the-viewmodel-contract-its-own-reference)).
+[ADR-021](adr/021-embedding-is-html-over-the-wire.md). The contract it draws: [VIEWMODEL.md](../reference/VIEWMODEL.md) (its own reference, [section 22](#22-the-viewmodel-contract-its-own-reference)).
 This one document also holds the **Drishti Elements developer guide** ([section 19](#19-drishti-elements-developer-guide); its
 renderer chapter is ["Client-side renderer and Elements 2.0"](#client-side-renderer-and-elements-20)), **the Elements design**
 ([section 20](#20-drishti-elements-the-design)) and **GenUI**, design, not built ([section 21](#21-genui-screens-composed-for-an-ai-agent-design-not-built)).
@@ -354,7 +354,7 @@ the server did not. Proposed for the ViewModel's next minor: `openText`, `highTe
 
 ### 7.1 The kinds
 
-All 22 kinds of [VIEWMODEL.md section 4](VIEWMODEL.md#4-panels) are ported, each from its macro in `_macros/panels.html`:
+All 22 kinds of [VIEWMODEL.md section 4](../reference/VIEWMODEL.md#4-panels) are ported, each from its macro in `_macros/panels.html`:
 
 | Kind | Macro | Library (`m/`) | Drawn by |
 |---|---|---|---|
@@ -521,7 +521,7 @@ render(el, { kind: 'trade', id: '1000008' }, { auth: 'popup', server: 'https://d
 8. **Audit:** the sign-in is a single sign-on like any (`login-sso`); the window's token is `embed-sign-in-window` with the page's origin,
    the user, the application and the time (renewals marked `(renewed)`); a refusal is `embed-sign-in-window-refused` with its reason.
 9. **Settings:** console `embed.sign_in` (`enabled`, `redirect_uri`, `refresh`, `max_hours`), server `drishti.embed.sign-in-window`
-   (default on), both needing single sign-on ([CONFIGURATION.md](../admin/CONFIGURATION.md)); the provider's client lists
+   (default on), both needing single sign-on ([CONFIGURATION.md](../reference/CONFIGURATION.md)); the provider's client lists
    `<console>/embed/v2/sign-in/callback` as a redirect URI ([USER_MANAGEMENT.md section 5](../admin/USER_MANAGEMENT.md#the-sign-in-window-for-pages-that-embed-views)).
 
 **Live frames** with `render()` and `auth: 'popup'`: off unless the host asks (`live`), since the console's `/api/stream` is a session
@@ -899,11 +899,11 @@ masked field masked. There are five elements, one library, and one contract for 
 | `<drishti-search>` | **search across Drishti** from your page: a box and the entities that match, masked for the signed-in user |
 
 This is the developer's reference and cookbook. The design and its history are in [section 20](#20-drishti-elements-the-design) and [ADR-021](adr/021-embedding-is-html-over-the-wire.md); the administrator's side (registering a host application) is [Admin → Embedding](../guides/USER_GUIDE.md) and
-[API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application); the settings are in [CONFIGURATION.md](../admin/CONFIGURATION.md).
+[API_GUIDE.md](../guides/API_GUIDE.md#embedding-views-in-another-web-application); the settings are in [CONFIGURATION.md](../reference/CONFIGURATION.md).
 
 ### Five minutes: a static page
 
-1. **Switch embedding on** (it is off by default): the server needs `drishti.embed.enabled=true` and `drishti.security.enabled=true`, and the console `embed.enabled=true` ([CONFIGURATION.md](../admin/CONFIGURATION.md#console-embed--the-consoles-side-of-embedded-views)).
+1. **Switch embedding on** (it is off by default): the server needs `drishti.embed.enabled=true` and `drishti.security.enabled=true`, and the console `embed.enabled=true` ([CONFIGURATION.md](../reference/CONFIGURATION.md#console-embed--the-consoles-side-of-embedded-views)).
 2. **Register your application** in *Admin → Embedding* (or `POST /api/v1/admin/embed/apps`): an id, its **exact origins** (`https://crm.bank.example`, no path), how it signs in (a client secret shown **once**, a public key, or both), the **scopes** it may use (`embed:view` for views and panels,
    `embed:about` for the About text and `<drishti-about>`, `embed:report` for BI reports, `embed:search` for `<drishti-search>`) and the **kinds and reports** it may show (`trade`, `counterparty`, `report:<id>`, `report:*`; empty: everything the user's roles open).
 3. **Give your page a token provider** that asks *your own backend* for a token (section 2), and add the one script line and an element:
@@ -1575,7 +1575,7 @@ the host page (it is the host's user looking at it), and the host must trust the
 
 #### Why not a second renderer (and what we give up)
 
-A JavaScript renderer for the ViewModel (the JSON `/api/v1/views/{kind}/{id}` returns, defined in [VIEWMODEL.md](VIEWMODEL.md)) would make the element
+A JavaScript renderer for the ViewModel (the JSON `/api/v1/views/{kind}/{id}` returns, defined in [VIEWMODEL.md](../reference/VIEWMODEL.md)) would make the element
 independent of the console. We do not do it:
 
 - **Twenty-two panel kinds, tree rows, pivots, tabs, gauges, surfaces** are rendered by one set of Jinja macros
@@ -2446,7 +2446,7 @@ console it talks to.
   keep navigation in the host (`drishti:navigate`), a host live indicator from `drishti:state`, two views side by side
   (one connection), dark host theme, a past business date, React/Angular/Vue recipes, a panel in a card
   (`<drishti-panel>`, phase 2), testing a host page that embeds Drishti.
-- **`docs/admin/CONFIGURATION.md`**: `drishti.embed.*`, console `embed.*`, Admin → Embedding.
+- **`docs/reference/CONFIGURATION.md`**: `drishti.embed.*`, console `embed.*`, Admin → Embedding.
 - **`docs/guides/API_GUIDE.md`**: `/api/v1/embed/token`, `/api/v1/embed/jwks`, the new DRS codes; the console's
   `/embed/v1/**` with payloads.
 - **This document** stays the design record; an ADR (`adr/021-embedding-is-html-over-the-wire.md`) records Decision 1.
@@ -3638,7 +3638,7 @@ not turn it on.
 | `docs/guides/RACHANA_REFERENCE.md` | the `form` panel |
 | `docs/architecture/CLIENT_RENDERER.md`, [section 19](#20-drishti-elements-the-design) | `<drishti-genui>`, the `genui:` channel key, `embed:genui` |
 | `docs/guides/API_GUIDE.md` | section 13.1; the `genui:compose` token scope |
-| `docs/admin/CONFIGURATION.md` | section 12 |
+| `docs/reference/CONFIGURATION.md` | section 12 |
 | [AI.md](../admin/AI.md#1-model-providers), [AI.md](../admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy) | feature `genui`; the server's own MCP endpoint |
 | `docs/guides/CLI_GUIDE.md` | `drishti.py genui` (planned) |
 | `docs/guides/USER_GUIDE.md` | opening a composed screen, promoting it |
@@ -3675,6 +3675,6 @@ not turn it on.
 The renderer, the console, Drishti Elements, a script, a notebook and a golden test all read the same JSON: the **ViewModel**, the
 screen already laid out and bound. It is a public contract that other teams code against and version against (its top level, the
 common types, every panel's shape, the live patches, masks in a view, compatibility rules and the JSON Schema), so it stays **its own
-reference**, [VIEWMODEL.md](VIEWMODEL.md), like the data contracts and the API references, rather than a section of this design: a
+reference**, [VIEWMODEL.md](../reference/VIEWMODEL.md), like the data contracts and the API references, rather than a section of this design: a
 change to it is a contract change, reviewed and versioned on its own. This document says how the renderer draws it
 ([section 7](#7-how-every-panel-kind-maps), [section 10](#10-data-identity-and-live-patches)); VIEWMODEL.md says what it is.

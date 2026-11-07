@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Branding from configuration only (docs/admin/CONFIGURATION.md, ``ui``): no template or script writes the product's name; it comes from
+"""Branding from configuration only (docs/reference/CONFIGURATION.md, ``ui``): no template or script writes the product's name; it comes from
 ``ui.product`` ({{ PRODUCT }} in a template, ``<body data-product>`` in a script), and its features follow it ("<product> SQL",
 "<product> Elements", "<product>*net"). Allowed: the licence header, comments, code identifiers (``window.Drishti.Channel``,
 the scripts' namespace (``window.Drishti.Channel``), ``drishti-`` ids, ``DRISHTI_`` variables, ``data-drishti`` attributes), header names (``X-Drishti-…``) and paths."""

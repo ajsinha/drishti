@@ -188,7 +188,7 @@ def problem_error(status: int, raw: bytes, headers, reason: str = "") -> ApiErro
         err.retry_after = max(1, int((headers or {}).get("Retry-After") or j.get("retryAfterSeconds") or 0))
     except (TypeError, ValueError):
         err.retry_after = 30
-    if code == "DRS-1020":                                       # a compute engine running nowhere (COMPUTE_ENGINES.md): exit 3, the server's words
+    if code == "DRS-1020":                                       # a compute engine running nowhere (ARCHITECTURE.md section 25): exit 3, the server's words
         err.args = ((detail or "").split(code + " ", 1)[-1] + f" ({code})",)
         err.code = 3
     if status == 503 and (j.get("busy") or BUSY_CODE.match(str(code or ""))):

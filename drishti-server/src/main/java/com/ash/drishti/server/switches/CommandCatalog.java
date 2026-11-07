@@ -31,7 +31,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Every command of the loaded packs with what it does, the same source as docs/guides/COMMAND_CATALOG.md (tools/command_catalog.py): the
+ * Every command of the loaded packs with what it does, the same source as docs/reference/COMMANDS.md (tools/command_catalog.py): the
  * pack's mnemonic and label, the one-line {@code description} of the kind's data contract ({@code contracts/<kind>.contract.yaml} in the
  * pack), and an example (the pack's own example command for it, else the mnemonic with the example id its contract records). Read once per
  * set of loaded packs.

@@ -30,7 +30,7 @@
   .\tools\windows\start-server.ps1 -Stop
 .EXAMPLE
   powershell -ExecutionPolicy Bypass -File tools\windows\start-server.ps1 -DemoLakes
-  The offline demo of docs\qa\windows-custom-data.md: what the IntelliJ run configuration
+  The offline demo of docs\qa\TEST_HARNESS.md section 9: what the IntelliJ run configuration
   'Drishti server (demo lakes)' sets (the ten packs of the demo lakes: the seven of the server's default, us-equities, gleif and funds; samples off, offline mode, sign-in on with the
   drishti-dev-admin account, a 4 GB heap), without IntelliJ.
 #>
@@ -143,7 +143,7 @@ $javaArgs = @("-Djava.io.tmpdir=$tmpDir", "-Xmx$Heap", '-XX:MaxDirectMemorySize=
     '-Djdk.nio.maxCachedBufferSize=262144', '-XX:NativeMemoryTracking=summary', '-XX:+HeapDumpOnOutOfMemoryError', "-XX:HeapDumpPath=$dumps",
     '-Xlog:gc*:file=data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m', '-jar', $Jar)
 if ($major -ge 25) { $javaArgs = @('-XX:+UseCompactObjectHeaders') + $javaArgs }
-# direct memory (IN_MEMORY_LAKE.md section 3a; FLIGHT_GUIDE.md section 10): the in-memory lake's stores and Arrow's buffers (the compute
+# direct memory (DATA_ARCHITECTURE.md section 7.3a; FLIGHT_GUIDE.md section 10): the in-memory lake's stores and Arrow's buffers (the compute
 # exchange, BI answers as Arrow, Arrow Flight when its engine is on) live there, so the limit is 256 MB plus both, from the one place that
 # sizes them (tools\lake\memory_caps.py; DRISHTI_LAKE_MEMORY_MB and DRISHTI_ARROW_MB, when set, are used as they are); the later flag
 # wins, and Arrow's own cap (-Ddrishti.arrow.max-bytes) is set to its share. Admin -> Health turns red when short.

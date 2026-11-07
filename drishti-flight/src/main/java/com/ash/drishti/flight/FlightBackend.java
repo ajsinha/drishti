@@ -25,7 +25,7 @@ import org.apache.arrow.vector.types.pojo.Schema;
 /**
  * What the Flight service needs from the server, and all it gets: the server implements this over its existing token services,
  * entitlements, masks, busy protection, audit and query layer (kinds, BI models, the pivot engine, the measures, the in-memory lake), so
- * Flight is a transport only and nothing is written twice (docs/architecture/ARROW_FLIGHT.md, decided 1). Every method may throw
+ * Flight is a transport only and nothing is written twice (docs/architecture/DATA_ARCHITECTURE.md section 12, decided 1). Every method may throw
  * {@link FlightRefusal} with the reason.
  */
 public interface FlightBackend {

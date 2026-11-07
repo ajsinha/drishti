@@ -30,7 +30,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Currencies and units (PIVOT_ENGINE.md sections 5.4 and 20, CurrencyAndUnitsTest): a money total over several currencies is refused in
+ * Currencies and units (ARCHITECTURE.md sections 23.5.4 and 23.20, CurrencyAndUnitsTest): a money total over several currencies is refused in
  * words (never added raw) while a cell in one currency shows its figure and its currency; with an explicit conversion every money figure
  * equals the converted rows' own figure and the header carries the report currency; a sum of a percentage is refused; counts stay counts.
  */

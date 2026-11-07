@@ -12,11 +12,11 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The catalog of every command: docs/guides/COMMAND_CATALOG.md, generated from the packs (codes, mnemonics, examples), their data
+"""The catalog of every command: docs/reference/COMMANDS.md, generated from the packs (codes, mnemonics, examples), their data
 contracts (what each kind is, its class, and whether it moves to the compute model) and tools/commands.builtin.yaml (the command line's
 own words and forms).
 
-    python3 tools/command_catalog.py            write docs/guides/COMMAND_CATALOG.md
+    python3 tools/command_catalog.py            write docs/reference/COMMANDS.md
     python3 tools/command_catalog.py --check    fail when it differs from what would be written
 """
 from __future__ import annotations
@@ -31,7 +31,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 PACKS = ROOT / "config" / "packs"
 BUILTIN = Path(__file__).resolve().parent / "commands.builtin.yaml"
-OUT = ROOT / "docs" / "guides" / "COMMAND_CATALOG.md"
+OUT = ROOT / "docs" / "reference" / "COMMANDS.md"
 CLASSES = {"fundamental": "fundamental", "input": "engine input", "drishti-owned": "Drishti's own", "computed": "computed"}
 
 
@@ -103,7 +103,7 @@ def render() -> str:
            "# The command catalog", "",
            f"Every command of the command line: its own words and forms, the {len(all_packs)} packs' codes, and the {len(rows)} mnemonics "
            "the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on "
-           "([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).", "",
+           "([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)); how to type them is in [USER_GUIDE.md](../guides/USER_GUIDE.md).", "",
            "**Data** says what kind of data a command shows ([the data contracts](../contracts/README.md#3-four-kinds-of-data)): "
            "*fundamental* (masters, terms, market and public data, kept as delivered), *engine input* (what upstream engines deliver for "
            "the computed measures), *Drishti's own* (made by Drishti) and *computed* (worked out when asked). **Change** says when a "
@@ -141,7 +141,7 @@ def _anchor(title: str, name: str) -> str:
 
 
 def main(argv: list[str]) -> int:
-    p = argparse.ArgumentParser(description="Write or check docs/guides/COMMAND_CATALOG.md.")
+    p = argparse.ArgumentParser(description="Write or check docs/reference/COMMANDS.md.")
     p.add_argument("--check", action="store_true", help="fail when the catalog differs from what would be written")
     args = p.parse_args(argv)
     text = render()

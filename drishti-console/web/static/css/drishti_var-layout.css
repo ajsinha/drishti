@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The VaR screen's layout (2.9.11.b, drishti_var-layout.js; the approved mock-up docs/lenses/mockups/var-layout/A.html and A-drawer.html):
+/* The VaR screen's layout (2.9.11.b, drishti_var-layout.js; the approved mock-up docs/architecture/mockups/var-layout/A.html and A-drawer.html):
    the toolbar with the two basket drop-downs, + New basket and How calculated; the drawer over the right of the screen (a bottom sheet
    on a phone). The theme's tokens for every colour (drishti_tokens.css), so the dark and the light themes both read. */
 .vx-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 10px; padding: 6px 10px; background: var(--d-surface);

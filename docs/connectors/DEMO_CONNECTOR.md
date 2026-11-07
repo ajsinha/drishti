@@ -512,11 +512,11 @@ Under `drishti.sources.plugins.demo`:
 | `settings.dirs` | filled by the packs: every enabled pack's samples folder, most general first | comma-separated folders, each with `catalog.jsonl` and `<kind>.jsonl` (or `<kind>/<id>.json`); blank entries are skipped; empty means no samples |
 | `settings.ticking` | `true` | `false`: no tick task; documents never move |
 | `settings.tick-ms` | `400` | milliseconds between ticks (fixed rate) |
-| `settings.stale-after` | none | the engine's staleness warning; see [CONFIGURATION.md](../admin/CONFIGURATION.md#connector-settings-plugin-by-plugin) |
+| `settings.stale-after` | none | the engine's staleness warning; see [CONFIGURATION.md](../reference/CONFIGURATION.md#connector-settings-plugin-by-plugin) |
 
 The connector reads no `source-name` (provenance carries each sample's `_meta.source`) and no `kinds` (it serves every kind). The
 server-wide `drishti.sources.default-route` (`demo`) decides its place in the order. Every key is also in
-[CONFIGURATION.md](../admin/CONFIGURATION.md#demo--sample-data).
+[CONFIGURATION.md](../reference/CONFIGURATION.md#demo--sample-data).
 
 ## 15. Checklist for production
 

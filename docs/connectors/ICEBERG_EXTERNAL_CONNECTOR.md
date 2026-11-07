@@ -22,7 +22,7 @@ runs on Windows too, and it **never writes**: the tables' owners maintain them w
 
 For tables Drishti's own loader writes (an `id`, a `doc` column, `business_date`, promoted columns, sorted by id) use the `iceberg`
 connector ([ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md)): it reads that layout faster. Why there are two is section 15 of
-[DATA_ARCHITECTURE.md › drishti-iceberg: Drishti's own Apache Iceberg engine](../architecture/DATA_ARCHITECTURE.md#15-two-connectors-drishti-tables-and-external-tables); this page is the one reference of `iceberg-external`. Every setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md#iceberg-external--iceberg-tables-drishti-does-not-write).
+[DATA_ARCHITECTURE.md › drishti-iceberg: Drishti's own Apache Iceberg engine](../architecture/DATA_ARCHITECTURE.md#15-two-connectors-drishti-tables-and-external-tables); this page is the one reference of `iceberg-external`. Every setting is also in [CONFIGURATION.md](../reference/CONFIGURATION.md#iceberg-external--iceberg-tables-drishti-does-not-write).
 
 ## Contents
 

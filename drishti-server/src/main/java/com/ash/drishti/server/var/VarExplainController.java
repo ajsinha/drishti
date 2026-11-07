@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 /**
- * Why VaR moved (VAR_GUIDE.md section 3.11; OVERSIGHT_LENS.md section 4.1, RO1), as the person (the same entitlements as the scope's VaR:
+ * Why VaR moved (VAR_GUIDE.md section 3.11; LENSES.md section 5.4.1, RO1), as the person (the same entitlements as the scope's VaR:
  * a scope is resolved as the caller on each date). Reads only: every endpoint is a GET.
  * <pre>
  *   GET /api/v1/var/explain?scope=&amp;from=&amp;to=&amp;confidence=     the states, the steps with their drivers, the VaR scenario of each state,

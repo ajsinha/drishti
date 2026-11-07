@@ -43,7 +43,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /**
- * Custom functions (PIVOT_ENGINE.md sections 8.2 to 8.7): saved only when the harness passes, versions, private until someone other than
+ * Custom functions (ARCHITECTURE.md sections 23.8.2 to 23.8.7): saved only when the harness passes, versions, private until someone other than
  * the author approves them, withdrawn in the cell, never in an official run, a macro rewritten into states when it is a formula, and a
  * function without an SQL form fed in batches by the tabular provider with the same figures as SQL.
  */

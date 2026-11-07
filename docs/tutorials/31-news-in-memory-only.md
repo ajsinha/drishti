@@ -243,12 +243,12 @@ Restart. `NEWS Apple` reads the disk lake; Admin → Lakes no longer shows *Held
 
 You held a whole pack in memory only, filled by server jobs from its feed, read through the same connector, guarded at every place
 Drishti writes, measured and compacted by itself, and went back. The reference is the
-[in-memory lake guide](../guides/IN_MEMORY_LAKE_GUIDE.md); the design is [IN_MEMORY_LAKE.md](../architecture/IN_MEMORY_LAKE.md).
+[in-memory lake guide](../guides/IN_MEMORY_LAKE_GUIDE.md); the design is [DATA_ARCHITECTURE.md section 7](../architecture/DATA_ARCHITECTURE.md#7-the-in-memory-lake-delta-tables-that-never-touch-a-disk).
 
 ## Next steps
 
 - The [in-memory lake guide](../guides/IN_MEMORY_LAKE_GUIDE.md): every setting, the replenish sources and the guard.
-- The design: [IN_MEMORY_LAKE.md](../architecture/IN_MEMORY_LAKE.md).
+- The design: [DATA_ARCHITECTURE.md section 7](../architecture/DATA_ARCHITECTURE.md#7-the-in-memory-lake-delta-tables-that-never-touch-a-disk).
 
 ## When something goes wrong
 

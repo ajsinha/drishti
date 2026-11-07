@@ -16,7 +16,7 @@ pattern every pack follows: the documents live in data/testdata/<pack>/<kind>/, 
 builds them into the Delta (or Iceberg) lake, and the pack's own Delta connector serves them. Never the demo connector.
 
     data/testdata/us-equities/us-company/us-company.2026-10-24.jsonl.gz   one gzipped JSON Lines file per kind, named by the load rules
-    data/testdata/gleif/lei-entity/lei-entity.2026-10-25.jsonl.gz         (<table>.<YYYY-MM-DD>, docs/architecture/DATA_LOAD_RULES.md):
+    data/testdata/gleif/lei-entity/lei-entity.2026-10-25.jsonl.gz         (<table>.<YYYY-MM-DD>, docs/architecture/DATA_ARCHITECTURE.md section 10):
                                                                           the published data as retrieved on that date (real: never re-dated)
     data/testdata/funds/fund/fund.tar                                     a large kind: a tar of fund/<YYYY-MM-DD>/snapshot.part-NN.jsonl.gz
 

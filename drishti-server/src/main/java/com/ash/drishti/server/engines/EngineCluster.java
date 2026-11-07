@@ -32,7 +32,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * The engines across Drishti*net (docs/architecture/COMPUTE_ENGINES.md section 9): this node publishes its engines in its capability digest
+ * The engines across Drishti*net (docs/architecture/ARCHITECTURE.md section 25.9): this node publishes its engines in its capability digest
  * (the service {@code engines}: {@code var:running,frtb-sa:off,...}; a change raises the digest's hash, so peers pull it within a gossip round),
  * and reads the peers' to route an engine's requests to a node that runs it (the least loaded; one that is starting or stopping is not
  * routed to) and to say what people see: an engine is available when any reachable node runs it.

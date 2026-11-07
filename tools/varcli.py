@@ -443,7 +443,7 @@ def move_dates(rows: list[dict], day: str) -> list[dict]:
 
 def load_intraday(path: str, lake: str, day: str | None, signal: str | None, token: str | None, dry_run: bool, say) -> int:
     """Appends an intraday file (JSONL, one kind) to the lake with lake build --mode append, then raises its data-load signal. Its
-    business date by the load rules (docs/architecture/DATA_LOAD_RULES.md): ``day`` (--date, the rows' own dates moved to it), else the
+    business date by the load rules (docs/architecture/DATA_ARCHITECTURE.md section 10): ``day`` (--date, the rows' own dates moved to it), else the
     file's name (<kind>.<YYYY-MM-DD>.jsonl), else the business today; given to lake build as --as-of, never read from a row."""
     import os
     import subprocess

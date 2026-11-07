@@ -32,7 +32,7 @@ import java.util.Map;
  * @param tls mutual TLS settings ({@code tls.keystore.path}, ...), flattened; empty for none
  * @param gossipPort the port of the node's own gossip connector (2.6.7): {@link #GOSSIP_AUTO} (0, the default: a free port chosen when the
  *     node joins, advertised through gossip), {@link #GOSSIP_OFF} (-1: gossip on the server's port, as before 2.6.7) or a port number
- * @param memoryStores the in-memory lake's stores this node owns (docs/architecture/IN_MEMORY_LAKE.md section 9): it fills them and binds
+ * @param memoryStores the in-memory lake's stores this node owns (docs/architecture/DATA_ARCHITECTURE.md section 7.9): it fills them and binds
  *     their packs; the other nodes forward the packs' requests here. Empty: each store's own {@code owner} setting decides
  */
 public record NodeSettings(boolean enabled, String nodeId, String advertiseUrl, List<String> tags, List<String> peerOnlyPacks, String secret,

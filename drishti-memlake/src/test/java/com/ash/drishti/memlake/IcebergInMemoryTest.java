@@ -33,7 +33,7 @@ import java.util.Map;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-/** An Iceberg data file in a memory warehouse (docs/architecture/IN_MEMORY_LAKE.md section 7): written and read through the same Storage. */
+/** An Iceberg data file in a memory warehouse (docs/architecture/DATA_ARCHITECTURE.md section 7.7): written and read through the same Storage. */
 class IcebergInMemoryTest {
 
     private static final Schema SCHEMA = new Schema(0, List.of(NestedField.required(1, "id", Type.Primitive.STRING),

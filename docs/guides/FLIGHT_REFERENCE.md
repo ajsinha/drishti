@@ -103,7 +103,7 @@ or `data:read:var`. A stream (`var.scenarios` only) sends the vector again after
 {"form": "lake", "request": {"lake": "feeds", "kind": "news.headlines", "paths": ["SEQ", "HEADLINE"], "cursor": "SEQ"}, "stream": true, "resume": 1200}
 ```
 
-The table is found in the lake configuration ([LAKE_CONFIG.md](../architecture/LAKE_CONFIG.md)) by lake and kind, never through a
+The table is found in the lake configuration ([DATA_ARCHITECTURE.md section 8](../architecture/DATA_ARCHITECTURE.md#8-the-lake-configuration-one-place-that-says-what-the-lake-is)) by lake and kind, never through a
 connector's settings; it is then read as its kind (section 3.1's keys and checks). A table of the in-memory lake is answered by the node
 that owns its store. `cursor` (a stream): a whole-number column that grows with each append; the sequence of a batch is its largest
 cursor value. Scope: `data:read` or `data:read:<lake>`.

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The command line's own words and forms, which no pack defines (docs/guides/USER_GUIDE.md, "The command line"). Read by
-# tools/command_catalog.py for docs/guides/COMMAND_CATALOG.md; the pack mnemonics come from the packs and their contracts.
+# tools/command_catalog.py for docs/reference/COMMANDS.md; the pack mnemonics come from the packs and their contracts.
 
 forms:
   - form: "<MNEMONIC> <id>"

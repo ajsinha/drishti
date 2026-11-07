@@ -14,7 +14,7 @@
 
 # config/engines/exposure.yaml: the exposure engine (docs/guides/EXPOSURE_GUIDE.md). Read at start, imported by application.yaml after the jar's copy of this
 # file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
-# (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
+# (docs/architecture/ARCHITECTURE.md section 25.3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
 drishti:
   engines:
     exposure:

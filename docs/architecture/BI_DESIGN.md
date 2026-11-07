@@ -543,7 +543,7 @@ do not exist and masked ones are typed as masked). Then:
 3. **Sandbox** (PYTHON_BI §7, kept and hardened): isolated interpreter, empty environment, no network (namespace +
    Landlock and audit hook), its own folder only, CPU/memory/time/output limits, pinned package allow-list. Every Python run is the
    server's, on the compute pool `python`: a pre-imported pandas/NumPy worker that forks one child per call, keeping
-   one-process-per-call isolation while removing interpreter start-up from latency ([PYTHON_COMPUTE.md section 19](PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)).
+   one-process-per-call isolation while removing interpreter start-up from latency ([ARCHITECTURE.md section 24.19](ARCHITECTURE.md#2419-the-python-runtime-for-code-people-write)).
 4. **No browser Python.** Report and Analyse Python run on the console backend (B). A personal browser console is
    future work and, if ever built, will receive only MQ answers like any other consumer.
 
@@ -4037,7 +4037,7 @@ an administrator can restrict which workspaces and roles may use each hook.
 
 ### 17. Architecture
 
-**No new server processes unless they are needed.** The BI code runs inside the existing Drishti server (one package, `com.ash.drishti.server.bi`, with DuckDB embedded) and the console (its BI routes, templates and scripts); the only extra processes are the compute pool `python`'s workers and their sandboxed fork children (one per call: [PYTHON_COMPUTE.md section 19](PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)). When measured load calls for it (section 18), the scale-out is more Drishti servers (each with its pool `python`) behind a load balancer (PERFORMANCE.md, "Scaling out"). The target architecture is [section 4](#4-query-architecture) and [section 3.5](#35-python-sandboxed-workers-on-the-console-backend). The 2.1 diagram (Perspective, DuckDB-Wasm, Graphic Walker, the module names `drishti-bi-core`, `-query`, `-live`, `-ai`) was replaced and deleted (RUPAKA_2_1_ENGINE.md, in git at tag v2.9.5).
+**No new server processes unless they are needed.** The BI code runs inside the existing Drishti server (one package, `com.ash.drishti.server.bi`, with DuckDB embedded) and the console (its BI routes, templates and scripts); the only extra processes are the compute pool `python`'s workers and their sandboxed fork children (one per call: [ARCHITECTURE.md section 24.19](ARCHITECTURE.md#2419-the-python-runtime-for-code-people-write)). When measured load calls for it (section 18), the scale-out is more Drishti servers (each with its pool `python`) behind a load balancer (PERFORMANCE.md, "Scaling out"). The target architecture is [section 4](#4-query-architecture) and [section 3.5](#35-python-sandboxed-workers-on-the-console-backend). The 2.1 diagram (Perspective, DuckDB-Wasm, Graphic Walker, the module names `drishti-bi-core`, `-query`, `-live`, `-ai`) was replaced and deleted (RUPAKA_2_1_ENGINE.md, in git at tag v2.9.5).
 
 ### 18. Performance targets
 
@@ -4099,7 +4099,7 @@ since the server started and only the current body is kept. (Phases 2 to 5, belo
 #### 20.2 Phase 2
 
 Phase 2 (datasets and the query engine) is built; the references are [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) (the YAML, the expression language, security), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 13, the walk-through
-[tutorial 10](../tutorials/10-first-bi-report.md), [API_GUIDE.md](../guides/API_GUIDE.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md) (`drishti.bi.query`). Measurements were in the proof of concept's notes, RUPAKA_POC.md section 11, since deleted (in git at tag v2.9.5).
+[tutorial 10](../tutorials/10-first-bi-report.md), [API_GUIDE.md](../guides/API_GUIDE.md) and [CONFIGURATION.md](../reference/CONFIGURATION.md) (`drishti.bi.query`). Measurements were in the proof of concept's notes, RUPAKA_POC.md section 11, since deleted (in git at tag v2.9.5).
 
 **Built.**
 
@@ -4130,7 +4130,7 @@ and reports (built in phase 3, section 20.3). The columns layer is **per dataset
 #### 20.3 Phase 3
 
 Phase 3 (reports, the visual catalogue, filters and interactions, the designer, the Model view) is built; the reference is [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave), the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) sections 14 to 16, the walk-through
-is [tutorial 10](../tutorials/10-first-bi-report.md), the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.report.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md).
+is [tutorial 10](../tutorials/10-first-bi-report.md), the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.report.*` in [CONFIGURATION.md](../reference/CONFIGURATION.md).
 
 **Built.**
 
@@ -4167,7 +4167,7 @@ relationships used by a measure (the engine joins as written, 20.2); several fac
 
 #### 20.4 Phase 4
 
-Phase 4 (publishing and governance) is built; the reference is [BI_GUIDE.md](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments), the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) section 17, the walk-through is [tutorial 13](../tutorials/13-govern-bi.md), the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.governance.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md). It extends the phase 1 publish-with-review rather than replacing it.
+Phase 4 (publishing and governance) is built; the reference is [BI_GUIDE.md](../guides/BI_GUIDE.md#32-publishing-and-governance-versions-review-certification-lineage-impact-environments), the pages are [BI_GUIDE.md](../guides/BI_GUIDE.md) section 17, the walk-through is [tutorial 13](../tutorials/13-govern-bi.md), the API is [API_GUIDE.md](../guides/API_GUIDE.md) and the settings are `drishti.bi.governance.*` in [CONFIGURATION.md](../reference/CONFIGURATION.md). It extends the phase 1 publish-with-review rather than replacing it.
 
 **Built (sections 10 and 11).**
 
@@ -4183,7 +4183,7 @@ Phase 4 (publishing and governance) is built; the reference is [BI_GUIDE.md](../
 #### 20.5 Phase 5
 
 Phase 5 (streaming BI) is built; the references are [BI_GUIDE.md 7.1](../guides/BI_GUIDE.md#71-live-tables-phase-5), [BI_GUIDE.md 13](../guides/BI_GUIDE.md#13-live-visuals), [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#live-bi-a-reports-live-tables),
-[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18, the walk-through [tutorial 12](../tutorials/12-live-bi-and-boards.md), the API [API_GUIDE.md](../guides/API_GUIDE.md), the settings `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds` in [CONFIGURATION.md](../admin/CONFIGURATION.md),
+[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18, the walk-through [tutorial 12](../tutorials/12-live-bi-and-boards.md), the API [API_GUIDE.md](../guides/API_GUIDE.md), the settings `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds` in [CONFIGURATION.md](../reference/CONFIGURATION.md),
 and the Perspective retest, in RUPAKA_POC.md section 12, since deleted (in git at tag v2.9.5). Codes `DRS-9050` to `9053`.
 
 **Built.**
@@ -4214,7 +4214,7 @@ and the Perspective retest, in RUPAKA_POC.md section 12, since deleted (in git a
 
 Phase 7 (distribution) is built in parts. Part 1 is **export and subscriptions**; part 2, **alerts and board notifications**, follows below it; the references are [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 19, the walk-through
 [tutorial 11](../tutorials/11-bi-that-runs-itself.md), the API [API_GUIDE.md](../guides/API_GUIDE.md#export-and-subscriptions-apiv1), the settings `drishti.distribution.*` and the retry area
-`drishti.retry.distribution.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md). Codes `DRS-9060` and `DRS-9061`.
+`drishti.retry.distribution.*` in [CONFIGURATION.md](../reference/CONFIGURATION.md). Codes `DRS-9060` and `DRS-9061`.
 
 **Built.**
 
@@ -4240,7 +4240,7 @@ Phase 7 (distribution) is built in parts. Part 1 is **export and subscriptions**
 
 References: [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](../guides/BI_GUIDE.md#4-alerts-on-numbers), [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#notifications-a-tile-tells-people-when-it-turns-red), the walk-through
 [tutorial 11](../tutorials/11-bi-that-runs-itself.md), the API [API_GUIDE.md](../guides/API_GUIDE.md#alerts-on-numbers-apiv1), the settings `drishti.alerts.measure.*` in
-[CONFIGURATION.md](../admin/CONFIGURATION.md#drishtialertsmeasure--alerts-on-numbers-and-board-notifications). Code `DRS-9062`; `DRS-9053` now refuses only `notifications` and `subscriptions`.
+[CONFIGURATION.md](../reference/CONFIGURATION.md#drishtialertsmeasure--alerts-on-numbers-and-board-notifications). Code `DRS-9062`; `DRS-9053` now refuses only `notifications` and `subscriptions`.
 
 **Built.**
 
@@ -4268,7 +4268,7 @@ References: [BI_GUIDE.md › Distribution: scheduled reports, export, subscripti
 
 References: [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 5](../guides/BI_GUIDE.md#5-embedding-a-report-in-another-web-application) (embedding), [BI_GUIDE.md](../guides/BI_GUIDE.md#14-phone-and-tablet-layouts) (`layouts.phone`), [CLIENT_RENDERER.md › Drishti Elements: the design, section 18](CLIENT_RENDERER.md#18-drishti-report-a-published-report-in-another-web-application)
 (the element), the developer guide [CLIENT_RENDERER.md of the guides](CLIENT_RENDERER.md#19-drishti-elements-developer-guide), the walk-through [tutorial 16](../tutorials/16-embed-drishti.md), the API [API_GUIDE.md](../guides/API_GUIDE.md#embedding-a-report-embedv1reports),
-the settings `drishti.embed.scopes` (`[embed:report]`) and the console's `embed.lifecycle` in [CONFIGURATION.md](../admin/CONFIGURATION.md). No new code: a refused report is `DRS-8005`, a retired API `DRS-8006`.
+the settings `drishti.embed.scopes` (`[embed:report]`) and the console's `embed.lifecycle` in [CONFIGURATION.md](../reference/CONFIGURATION.md). No new code: a refused report is `DRS-8005`, a retired API `DRS-8006`.
 
 **Built.**
 
@@ -4296,7 +4296,7 @@ the settings `drishti.embed.scopes` (`[embed:report]`) and the console's `embed.
 #### 20.7 BI essentials (wave 3)
 
 References: [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) (section 4.1 time intelligence, 7.2 scheduled refresh), [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) (3.1 the new visuals, 3.2 true totals), [BI_GUIDE.md](../guides/BI_GUIDE.md) sections 13 and 15, [tutorial 10](../tutorials/10-first-bi-report.md),
-[API_GUIDE.md](../guides/API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2), the settings `drishti.bi.refresh.*`, `drishti.bi.report.distribution-rows` and `totals-max-rows` in [CONFIGURATION.md](../admin/CONFIGURATION.md). It moves five items from "not built" to built.
+[API_GUIDE.md](../guides/API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2), the settings `drishti.bi.refresh.*`, `drishti.bi.report.distribution-rows` and `totals-max-rows` in [CONFIGURATION.md](../reference/CONFIGURATION.md). It moves five items from "not built" to built.
 
 **Built.**
 
@@ -4309,7 +4309,7 @@ References: [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-express
 * **Visuals** (8). `map` (countries shaded by an ISO country code, or points at a latitude and longitude; the country file is **vendored**, Natural Earth 1:110m, countries only, 177 features, 176 KB: no tiles, no CDN, no outside request; served to `<drishti-report>` at `/embed/v1/world-countries.json`), `funnel`, `histogram`, `box`, `bubble`. The histogram and box plot ask the engine for the measure of **every member** of the axis
   (`drishti.bi.report.distribution-rows`) and the server bins or summarises it (equal-width bands; quartiles by linear interpolation, whiskers at 1.5 interquartile ranges, outliers), so the screen, the export (PDF, PNG, Excel, CSV: bars for a funnel, a histogram and a map by country, tables for the rest) and a subscription show one set of numbers. In the visual catalogue (`GET /bi/reports/catalogue`), the designer
   (Charts group, Build wells, Format **Bars**), the viewer and the element; masks apply (a masked measure is blank). A value the map does not hold is named under it.
-* **True totals** (8: "true subtotals for measures that do not add up"). Every total and subtotal of a matrix and a table with `totals: true` comes with the answer (`totals`: one entry per level, as the reader, under the same filters), computed by the pivot engine in one grouping-sets statement over the model's rows for every measure that is a pivot function ([PIVOT_ENGINE.md section 12](PIVOT_ENGINE.md#12-bi-on-the-pivot-engine)); the page adds nothing up.
+* **True totals** (8: "true subtotals for measures that do not add up"). Every total and subtotal of a matrix and a table with `totals: true` comes with the answer (`totals`: one entry per level, as the reader, under the same filters), computed by the pivot engine in one grouping-sets statement over the model's rows for every measure that is a pivot function ([ARCHITECTURE.md section 23.12](ARCHITECTURE.md#2312-bi-on-the-pivot-engine)); the page adds nothing up.
 * **The sample.** *Counterparty risk* gains a map of the exposure by country, a year-to-date MTM card (`MTM ytd` in `trading-risk`) and a histogram of the trades' MTM.
 
 **Not built, and not faked.** Regions below the country, a tile map or a map service, a choropleth by anything but a country code or name; a histogram with bands of your own; a refresh of an earlier date than the current business date by schedule. (The window functions, the refresh state across a restart and the Refresh now button are built: 20.11.)
@@ -4317,7 +4317,7 @@ References: [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-express
 #### 20.8 Python in BI (phase 6)
 
 References: [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) (the reference), [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) section 4.2, [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 3.3, [tutorial 14](../tutorials/14-python-and-analyse.md),
-[API_GUIDE.md](../guides/API_GUIDE.md#reports-apiv1bireports-phase-3), the settings `drishti.bi.report.python-*` and `compute.pools.python` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `PythonBiTest`, `PythonBiApiTest`, `PythonRunsTest`, `test_items.py`,
+[API_GUIDE.md](../guides/API_GUIDE.md#reports-apiv1bireports-phase-3), the settings `drishti.bi.report.python-*` and `compute.pools.python` in [CONFIGURATION.md](../reference/CONFIGURATION.md); tests `PythonBiTest`, `PythonBiApiTest`, `PythonRunsTest`, `test_items.py`,
 `test_bi_python.py`, `test_bi_python_browser.py`.
 
 **Built.**
@@ -4388,7 +4388,7 @@ Reference: [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-fro
 #### 20.9 Analyse (phase 9, lean)
 
 References: [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) (the reference), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) section 16 (the console's `QuantEngine`), [BI_GUIDE.md](../guides/BI_GUIDE.md) section 21, [tutorial 14](../tutorials/14-python-and-analyse.md),
-the console's `bi.notebook.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md); tests `test_bi_explore.py` and `test_bi_explore_browser.py`.
+the console's `bi.notebook.*` in [CONFIGURATION.md](../reference/CONFIGURATION.md); tests `test_bi_explore.py` and `test_bi_explore_browser.py`.
 
 **Built (a lean slice of the phase).**
 
@@ -4411,7 +4411,7 @@ page itself still has no WebAssembly: only DuckDB's own worker compiles it. Pyth
 
 References: [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-expression-language-and-the-security-rules) section 11 (the reference), [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 13, [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 16, [USER_GUIDE.md](../guides/USER_GUIDE.md#the-notebook) section 2, [BI_GUIDE.md](../guides/BI_GUIDE.md) section 13,
 tutorials [10](../tutorials/10-first-bi-report.md) and [14](../tutorials/14-python-and-analyse.md), [API_GUIDE.md](../guides/API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2), the settings `drishti.bi.transform.*` and the console's `bi.notebook.max_extracts` in
-[CONFIGURATION.md](../admin/CONFIGURATION.md); tests `ComposedDatasetApiTest`, `TransformServiceTest`, `SampleDatasetsTest`, `test_items.py`, `test_bi_multi_dataset_browser.py`.
+[CONFIGURATION.md](../reference/CONFIGURATION.md); tests `ComposedDatasetApiTest`, `TransformServiceTest`, `SampleDatasetsTest`, `test_items.py`, `test_bi_multi_dataset_browser.py`.
 
 The question ("more than one dataset in BI, joined, even by Python") is answered at three levels, and the one rule that decides every design choice is **each source is asked as the reader, before anything is joined**.
 
@@ -5981,7 +5981,7 @@ It runs as `drishti-it` `BiRunsLoadIT` (excluded from the default build, run in 
 | [USER_GUIDE.md](../guides/USER_GUIDE.md) | the bell's run notices; `BI RUNS <GO>` |
 | [API_GUIDE.md](../guides/API_GUIDE.md) | the endpoints of 14.1, `Prefer: respond-async`, the run object, `DRS-9080`–`9089` in the error table |
 | [CLI_GUIDE.md](../guides/CLI_GUIDE.md) | `drishti.py bi runs …`, `bi mq --async` |
-| [CONFIGURATION.md](../admin/CONFIGURATION.md) | `config/runs/runs.yaml`, `drishti.bi.runs.file`, `drishti.bi.exec.background-share`, `standing-share`, `fragments-share` |
+| [CONFIGURATION.md](../reference/CONFIGURATION.md) | `config/runs/runs.yaml`, `drishti.bi.runs.file`, `drishti.bi.exec.background-share`, `standing-share`, `fragments-share` |
 | [TROUBLESHOOTING.md](../guides/TROUBLESHOOTING.md) | every new code; "my run says unknown estimate"; "my run was started again"; "the result expired" |
 | [PERFORMANCE.md](../admin/PERFORMANCE.md), [PERFORMANCE.md, method 9](../admin/PERFORMANCE.md#9-many-users-soak-runs-and-memory-profiling) | the run engine's memory; the load test's numbers |
 | [OPERATIONS.md](../admin/OPERATIONS.md), [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one) | Admin → BI → Runs; runs in a cluster |

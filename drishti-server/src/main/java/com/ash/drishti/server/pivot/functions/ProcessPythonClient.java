@@ -44,7 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@code pivot-fn} pool (PIVOT_ENGINE.md section 8.5): sandboxed Python worker processes on this node ({@code python -I}, an empty
+ * The {@code pivot-fn} pool (ARCHITECTURE.md section 23.8.5): sandboxed Python worker processes on this node ({@code python -I}, an empty
  * environment, the compute SDK's {@code drishti_compute.pivot_fn}), each serving one call at a time and one function version only. Batches go to a worker as Arrow IPC
  * stream bytes over its pipe, never through a file, so memory-only data is never written; a state comes back as bytes. A call over its time
  * limit stops its worker (a new one starts on demand) and is refused in words; a worker that dies is replaced.

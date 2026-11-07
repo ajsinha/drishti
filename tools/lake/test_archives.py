@@ -117,7 +117,7 @@ def feed_tar(path, members: dict) -> None:
 
 
 def test_a_feed_zip_is_one_table_and_a_feed_tar_names_its_tables_and_dates(tmp_path):
-    """A loader's feed (docs/architecture/DATA_LOAD_RULES.md): a zip holds loose files only; a tar holds <table>/<YYYY-MM-DD>/ folders."""
+    """A loader's feed (docs/architecture/DATA_ARCHITECTURE.md section 10): a zip holds loose files only; a tar holds <table>/<YYYY-MM-DD>/ folders."""
     with pytest.raises(A.ArchiveError, match="a .zip is one table and one business date"):
         jsonstream.input_files([FIX / "bundle.zip"], table="trade")
     with pytest.raises(A.ArchiveError, match="refused, nothing was loaded"):
@@ -145,7 +145,7 @@ def lake_row(table, id_, day, domain="fixture"):
 
 
 def test_load_rows_loads_each_folder_as_its_table_under_its_date(tmp_path):
-    """Lake rows by the load rules (DATA_LOAD_RULES.md): a tar's <table>/<date>/ folders decide each row's table and business date;
+    """Lake rows by the load rules (DATA_ARCHITECTURE.md section 10): a tar's <table>/<date>/ folders decide each row's table and business date;
     a row whose own date differs is kept as it is and counted, never moved."""
     pytest.importorskip("deltalake")
     from samplegen import load_rows

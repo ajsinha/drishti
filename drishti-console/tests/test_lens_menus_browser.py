@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The lens menus in a real browser (docs/lenses/README.md, mock-up menus/A): with an edition's subject menus the top bar's controls
+"""The lens menus in a real browser (docs/architecture/LENSES.md, mock-up menus/A): with an edition's subject menus the top bar's controls
 never overlap at desktop widths and the page never scrolls sideways; an item to finish (Engines -> Exposure -> A counterparty) puts its words in
 the command line, the menu closed, instead of opening a page. Skipped when Playwright or Chromium is missing."""
 import threading

@@ -15,7 +15,7 @@ and its [Playgrounds](IMPLEMENTATION_PLAN.md#playgrounds-one-per-metric-in-the-m
 Related: [VAR_GUIDE.md section 18](../guides/VAR_GUIDE.md#18-the-computation) (the formulas the engine uses, which the workbook mirrors
 cell for cell), [VAR.md section 2.9](../contracts/VAR.md#29-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency) (P&L
 from scenario PVs and the scenario FX), [section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)
-(horizons and confidences), [COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md) (compute, never store), [CONFIGURATION.md](../admin/CONFIGURATION.md)
+(horizons and confidences), [COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md) (compute, never store), [CONFIGURATION.md](../reference/CONFIGURATION.md)
 (branding and every setting). The word *playground* here means a metric's worked calculation; it is not the client renderer's
 `/render/demo` page.
 
@@ -335,7 +335,7 @@ open it (section 3).
 | `drishti.var.playground.export-default` | `500` | the choice selected first |
 | `drishti.var.playground.export-max-cells` | `20000000` | the most cells one export holds on the server; larger is refused in words |
 
-Each is in [CONFIGURATION.md](../admin/CONFIGURATION.md) through the settings catalogue.
+Each is in [CONFIGURATION.md](../reference/CONFIGURATION.md) through the settings catalogue.
 
 - **Command:** `PLAY VAR <scope>` in the VaR explorer's words, with its lens and `IN <currency>`, and `PLAY VAR <id> <id> …` (positions
   or trades); `PLAY` is checked free against every pack's mnemonics and is an edition word (`commands.words.PLAY`, on in Drishti Risk and

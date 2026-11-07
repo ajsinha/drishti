@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""docs/admin/UNDER_CONSTRUCTION.md from config/under-construction.yaml (the under-construction registry), and its checks.
+"""docs/reference/UNDER_CONSTRUCTION.md from config/under-construction.yaml (the under-construction registry), and its checks.
 
     python3 tools/under_construction.py            write the document
     python3 tools/under_construction.py --check    fail on a stale document, or a location the registry names that does not exist
@@ -32,7 +32,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY = ROOT / "config" / "under-construction.yaml"
-DOC = ROOT / "docs" / "admin" / "UNDER_CONSTRUCTION.md"
+DOC = ROOT / "docs" / "reference" / "UNDER_CONSTRUCTION.md"
 
 HEADER = """<!--
   Project Drishti · Any data. Any domain. One grammar.
@@ -150,7 +150,7 @@ def _doc_slug(p: Path) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(description="Write or check docs/admin/UNDER_CONSTRUCTION.md from config/under-construction.yaml.")
+    ap = argparse.ArgumentParser(description="Write or check docs/reference/UNDER_CONSTRUCTION.md from config/under-construction.yaml.")
     ap.add_argument("--check", action="store_true", help="fail on a stale document or a location that does not exist")
     a = ap.parse_args(argv)
     items = load()

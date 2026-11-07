@@ -24,7 +24,7 @@ A row (one JSON object a line, UTF-8):
 
 `table` is the table's folder under the domain (default: the kind). The row is kept as it is: its document is stored unchanged.
 
-**Its business date follows the load rules** (docs/architecture/DATA_LOAD_RULES.md), never the row's ``date``:
+**Its business date follows the load rules** (docs/architecture/DATA_ARCHITECTURE.md section 10), never the row's ``date``:
 
 * a **tar** (.tar, .tgz, .tar.gz, .tar.zip) holds ``<table>/<YYYY-MM-DD>/<file>.jsonl[.gz]``: each file's rows go under its folder's
   date, and every row must name its folder's table (a row naming another is refused); --as-of is refused for a tar;
@@ -55,7 +55,7 @@ import feedroute  # noqa: E402  (a file's .ready file)
 import filedate  # noqa: E402  (the load rules: a name's table and date, a tar's layout)
 from samplegen.layout import Layout, layouts_for_domain, write_days, write_partition  # noqa: E402
 
-SEND_A_TAR = "a file is one table and one business date (docs/architecture/DATA_LOAD_RULES.md): send a tar of <table>/<YYYY-MM-DD>/ folders"
+SEND_A_TAR = "a file is one table and one business date (docs/architecture/DATA_ARCHITECTURE.md section 10): send a tar of <table>/<YYYY-MM-DD>/ folders"
 
 
 def read(path: pathlib.Path, as_of: date | None = None, report: dict | None = None):

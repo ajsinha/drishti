@@ -37,7 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The data inbox as the server runs it (DATALOAD_INBOX.md sections 4, 6 and 10): a cycle every {@code interval} on its own thread
+ * The data inbox as the server runs it (DATA_ARCHITECTURE.md sections 9.4, 9.6 and 9.10): a cycle every {@code interval} on its own thread
  * ({@code dataload-cycle}), one at a time; Load now; Retry; and the status Admin and {@code drishti.py dataload status} show (the files
  * waiting, the last cycles, the failures with their reasons, the lock's holder, the next cycle's time). The server makes one, wires its
  * signal, packs and busy check, and starts and stops it with the engine's switch.

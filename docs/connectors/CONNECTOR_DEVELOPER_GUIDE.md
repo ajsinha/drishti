@@ -721,7 +721,7 @@ reverse lookups and search for other kinds answer nothing) `description` (free t
 String>`; `source-name` defaults to the connector's name, so documents say which connector they came from). The old definition under `drishti.sources.connectors.<name>` in
 `application.yaml` still works but is deprecated. **The
 settings of each shipped plugin, with defaults, are in that connector's own document** (the table in
-[CONFIGURATION.md](../admin/CONFIGURATION.md#connector-settings-plugin-by-plugin) lists the plugin names a connector
+[CONFIGURATION.md](../reference/CONFIGURATION.md#connector-settings-plugin-by-plugin) lists the plugin names a connector
 can name); a plugin of yours documents its own.
 
 Rules worth knowing when you write a plugin:

@@ -20,7 +20,7 @@
 # (a branch: "Drishti Bank plc, Singapore Branch"), keeping the suffix. The committed data is never rewritten. LEIs and BICs stay as
 # they are (they are identifiers, derived from the default names). The packs' samples follow the file when their generators are run
 # again (tools/packgen/banking/make_data.py, and the example packs' make.py). The VaR tree's top node is named by a server setting of
-# its own (the VaR root name, under the VaR engine in docs/admin/CONFIGURATION.md).
+# its own (the VaR root name, under the VaR engine in docs/reference/CONFIGURATION.md).
 #
 # Leave a name as it is to keep it; the defaults change nothing.
 

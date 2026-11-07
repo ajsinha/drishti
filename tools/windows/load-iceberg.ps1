@@ -76,7 +76,7 @@ function Invoke-Tool([string[]]$withs, [string[]]$toolArgs) {
 }
 
 # the loader's input: a folder of the samples' tar and the book's, <kind>/<YYYY-MM-DD>/ folders (the load rules,
-# docs/architecture/DATA_LOAD_RULES.md), read in one load, so each business day of a table is written once and holds both
+# docs/architecture/DATA_ARCHITECTURE.md section 10), read in one load, so each business day of a table is written once and holds both
 # (a second load of the same days would replace them: QA2-05)
 $jsonl = Join-Path $data 'build\loader-rows'
 if (Test-Path $jsonl) { Remove-Item $jsonl -Recurse -Force }

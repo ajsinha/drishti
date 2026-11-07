@@ -45,7 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The rollups of partial states (PIVOT_ENGINE.md section 9.6): their definitions, the rollups built per date, kept in memory and on disk
+ * The rollups of partial states (ARCHITECTURE.md section 23.9.6): their definitions, the rollups built per date, kept in memory and on disk
  * (one file per rollup and date under the folder given, written whole and renamed), and their <b>incremental refresh</b>: a new data
  * version with parts (files) only added merges the new parts' states into their partitions; a partition that lost a part (a restatement,
  * a delete) is rebuilt from its current parts alone; a source that is not parted is rebuilt whole. Refreshes run one at a time, off the

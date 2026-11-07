@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The lens menus (docs/lenses/README.md, mock-up menus/A): each edition's own subject menus in the top bar, named by its menus.top in
+"""The lens menus (docs/architecture/LENSES.md, mock-up menus/A): each edition's own subject menus in the top bar, named by its menus.top in
 order; a full Drishti keeps Views, Engines, BI, Build, Admin and Help (the Engines menu in place of the old VaR and Exposure menus,
 2.9.11.a); an item shows only when the edition keeps its command."""
 from __future__ import annotations

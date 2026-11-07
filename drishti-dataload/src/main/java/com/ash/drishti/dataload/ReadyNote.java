@@ -28,7 +28,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * What a {@code .ready} file may say (docs/architecture/DATA_LOAD_RULES.md section 5; all optional, an empty file is fine): the overrides of
+ * What a {@code .ready} file may say (docs/architecture/DATA_ARCHITECTURE.md section 10.5; all optional, an empty file is fine): the overrides of
  * the name ({@code business-date}, {@code table}; refused for a tar), the pack ({@code pack}, {@code kind}, {@code connector}; a tar's
  * {@code folders}: folder → pack), {@code mode} ({@code append}, the default, or {@code replace}), {@code new-table}, {@code key}, the checks
  * made before loading ({@code sha256}, {@code rows}) and {@code hold}. An unknown key is refused.

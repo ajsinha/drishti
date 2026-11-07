@@ -26,7 +26,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 /**
- * Crash safety (DATALOAD_INBOX.md section 7): the server stops after each step of a cycle, then starts again and runs a cycle. Nothing is
+ * Crash safety (DATA_ARCHITECTURE.md section 9.7): the server stops after each step of a cycle, then starts again and runs a cycle. Nothing is
  * lost, nothing is loaded twice, every file ends in the outbox with its marker and report, and the server is told of each date once
  * (signals are idempotent per batch; a signal sent again carries the same batch).
  */

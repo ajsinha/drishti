@@ -25,7 +25,7 @@ large book in one file and wants searches over a whole day without running Postg
 if you run Drishti on DuckDB, load a DuckDB file for Drishti, or change the connector. The same design for the other
 stores is in [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md) (whose section 7 explains how the engine uses a day's columns)
 and [POSTGRES_CONNECTOR.md](POSTGRES_CONNECTOR.md), whose table mode this connector mirrors setting for setting. Every
-setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md). To build demo data of any size, see
+setting is also in [CONFIGURATION.md](../reference/CONFIGURATION.md). To build demo data of any size, see
 [DEMO_DATA.md](DEMO_DATA.md).
 
 **About the numbers.** Every measurement here was taken on 2026-10-01 with **10,000 trades a day over three business
@@ -73,7 +73,7 @@ columns, read without touching the documents. DuckDB adds three constraints of i
 
 `DuckDbLoader` (in the plugin) writes, and the connector reads, one DuckDB file (for example
 `data/duckdb/drishti.duckdb`) with a schema per data domain. Its input is loader rows (`{"domain", "kind", "id", "date", "doc",
-"columns"}`), filed by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): a tar of `<kind>/<YYYY-MM-DD>/`
+"columns"}`), filed by the load rules ([DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load)): a tar of `<kind>/<YYYY-MM-DD>/`
 folders (what `make_data.py --jsonl FILE.tar` and `bulk_trades.py --jsonl FILE.tar` write) files each row under its folder's date;
 a plain file (`<kind>.<YYYY-MM-DD>.jsonl`, or `-`) is one kind on one date: `--as-of`, else its `.ready` file's, else its name's,
 else the business today. A row's own `date` stays in its document; rows whose date differs are counted. A plain file of two

@@ -107,7 +107,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     private final Map<String, List<String>> vectorCols = new ConcurrentHashMap<>();
     /** Id maps and documents on disk, kept across restarts ({@code id-map-disk.enabled}, {@code doc-disk-cache.enabled}). */
     private IcebergDiskCaches disk;
-    /** The warehouse is in memory ({@code mem://}): nothing of it is written to a disk by this connector (IN_MEMORY_LAKE.md section 8). */
+    /** The warehouse is in memory ({@code mem://}): nothing of it is written to a disk by this connector (DATA_ARCHITECTURE.md section 7.8). */
     private volatile boolean memoryOnly;
     /** Set when a data-load signal found a new snapshot: the next refresh rebuilds type-ahead. */
     private volatile boolean reindexDue;
@@ -982,7 +982,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     /**
-     * The date's Parquet data files and the promoted columns, for the pivot engine's direct lake route (docs/architecture/PIVOT_ENGINE.md
+     * The date's Parquet data files and the promoted columns, for the pivot engine's direct lake route (docs/architecture/ARCHITECTURE.md section 23
      * section 6.2): only a snapshot table on a local disk whose date has no delete files (a reader of the bare files would see deleted
      * rows). No data file is read: the plan is the cached one.
      */

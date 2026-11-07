@@ -282,7 +282,7 @@ remeasurement, FX, closing, by stage) is a regrouping of the same steps.
 The contracts follow the [contract rules](../contracts/README.md) (types, dates and as-of, restatements, delivery, rejects, entitlements)
 and are written as YAML files of a new pack `credit-risk` when it is built, each with its generated reference page. All data is JSON Lines
 (`data/testdata/credit-risk/<kind>/*.jsonl.gz` for the demo, loaded into Delta or Iceberg, read by the lake connector). Keys are
-UPPER_SNAKE. A loan book may be a memory-only source ([IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md)) when a bank's contract forbids storing it.
+UPPER_SNAKE. A loan book may be a memory-only source ([DATA_ARCHITECTURE.md section 7](DATA_ARCHITECTURE.md#7-the-in-memory-lake-delta-tables-that-never-touch-a-disk)) when a bank's contract forbids storing it.
 
 ### 12.1 `credit-facility` (one record per facility and business date)
 

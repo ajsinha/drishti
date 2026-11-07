@@ -41,7 +41,7 @@ Written by `tools/testdata/make_testdata.py` (deterministic; `--check` says whet
 ([below](#the-market-snapshot-news-and-markets-offline)), kept as it is by `make_testdata.py`; so are the us-equities and gleif
 packs' public data ([below](#public-data-us-equities-and-gleif)), written by their own generators.
 
-**File names.** Every file follows the load rules ([DATA_LOAD_RULES.md](../../docs/architecture/DATA_LOAD_RULES.md), section 10):
+**File names.** Every file follows the load rules ([DATA_ARCHITECTURE.md section 10](../../docs/architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load)):
 `<table>.<YYYY-MM-DD>.jsonl.gz`, the table the dataset's connector reads (`trade_endur`, `counterparty`, `pnl-vector` ...) and the
 business date, so `drishti.py lake build --from <file>` loads it with no date given; or a plain tar of `<table>/<YYYY-MM-DD>/` folders
 where a date is several files or one run writes many dates (the P&L vectors and scenario PVs one tar a date, the exposure paths, the
@@ -54,7 +54,7 @@ whoever writes the production query that must emit the same JSON Lines: [docs/co
 
 ## Quick start: five steps
 
-On Windows, offline, with your own ENDUR files: [How to QA in Windows Environment using Custom Data](../../docs/qa/windows-custom-data.md).
+On Windows, offline, with your own ENDUR files: [QA on Windows with your own data](../../docs/architecture/TEST_HARNESS.md#9-qa-on-windows-offline-with-your-own-endur-data).
 
 1. **Clone** the repository (`git clone …`, then `cd drishti`).
 2. **Install** once: the console's Python with its requirements (PyYAML, deltalake and pyarrow among them),
@@ -304,7 +304,7 @@ those same connectors, which the pack serves from the demo lake when the live co
   re-dated); the pack's `news-store` connector serves them beside the topics and companies.
 - **Offline mode.** `DRISHTI_OFFLINE=true` (set by the run configuration **Drishti server (demo lakes)**) keeps the `news`, `yfinance`
   and `feed` connectors from starting, whatever their files say: nothing tries the network, and Admin → Connectors shows them
-  **off (offline mode)** with `news-store` RUNNING ([CONFIGURATION](../../docs/admin/CONFIGURATION.md#drishtioffline--offline-mode-no-internet)).
+  **off (offline mode)** with `news-store` RUNNING ([CONFIGURATION](../../docs/reference/CONFIGURATION.md#drishtioffline--offline-mode-no-internet)).
   The company page (`/v/listed-company/CO-AAPL`: quote, closing-price chart, headlines), the topic pages (`/v/news-topic/TOPIC-FED`),
   `QUOTE QUOTE-MSFT`, `NEWS NEWS-Federal_Reserve` and search look as they do live. A name or ticker outside the snapshot (`NEWS-Anything`)
   is *not found* offline.

@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.migrate;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The BI migrations, {@code drishti.bi.migrate.*} (docs/admin/CONFIGURATION.md): at start-up, stored items in the old expression syntax are converted to DEL
+ * The BI migrations, {@code drishti.bi.migrate.*} (docs/reference/CONFIGURATION.md): at start-up, stored items in the old expression syntax are converted to DEL
  * v2 and {@code rachana: 1} datasets to datasets and models (docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 8.3), audited, the text before kept in each item's
  * history.
  *

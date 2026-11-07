@@ -69,7 +69,7 @@ public class BiQueryConfiguration {
         return q;
     }
 
-    /** The one Python runtime (PYTHON_COMPUTE.md section 19): every Python run of BI, tables and the Notebook, on the compute pool {@code python}; also the Transform runner. */
+    /** The one Python runtime (ARCHITECTURE.md section 24.19): every Python run of BI, tables and the Notebook, on the compute pool {@code python}; also the Transform runner. */
     @Bean
     public com.ash.drishti.server.bi.python.PythonRuns pythonRuns(com.ash.drishti.compute.ComputeService compute, BiReportProperties report,
             com.ash.drishti.server.bi.transform.TransformProperties props, org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.AuditLog> audit) {

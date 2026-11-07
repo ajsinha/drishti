@@ -113,7 +113,7 @@ To find idle plugins (not failures, see above):
 journalctl -u drishti-server --since today | grep "it stays idle"
 ```
 
-Connector settings are listed per plugin in [CONFIGURATION.md](../CONFIGURATION.md).
+Connector settings are listed per plugin in [CONFIGURATION.md](../../reference/CONFIGURATION.md).
 
 ### Step 3. Is it down, or only slow?
 

@@ -71,7 +71,7 @@ def _holds(request, edition: Edition, need: str, ctx: dict) -> bool:
         return edition.typed_shown(value)
     if kind == "route":
         return _has_route(request, value)
-    if kind == "engine":                                         # requires: engine:frtb-sa (COMPUTE_ENGINES.md 5.2)
+    if kind == "engine":                                         # requires: engine:frtb-sa (ARCHITECTURE.md section 25 5.2)
         return engines.engine_available(value)
     return True
 
@@ -239,7 +239,7 @@ def _items(request, edition: Edition, mid: str, col: dict, ctx: dict, fill: dict
             continue
         if not edition.menu_shown(mid, str(it.get("id") or "")) or engines.menu_hidden(str(it.get("id") or "")):
             continue
-        uc = under_construction.of(request)                        # docs/admin/UNDER_CONSTRUCTION.md: hidden, or with the chip
+        uc = under_construction.of(request)                        # docs/reference/UNDER_CONSTRUCTION.md: hidden, or with the chip
         if uc.menu_hidden(str(it.get("id") or "")):
             continue
         items.append((_href(it), it.get("icon"), uc.menu_label(str(it.get("id") or ""), _text(it.get("label"), fill)), _text(it.get("desc"), fill),
@@ -305,7 +305,7 @@ def top_bar(request, ctx: dict) -> list:
 
 
 def lens_menu(request, menus: list, product: str = "") -> dict | None:
-    """The lens menus' phone form (LX1 option C, docs/lenses/README.md): on a phone the edition's (or lens's) subject menus fold into one
+    """The lens menus' phone form (LX1 option C, docs/architecture/LENSES.md): on a phone the edition's (or lens's) subject menus fold into one
     menu named after the lens, a column per subject, so the bar keeps a few finger-sized buttons; on a wider screen the subject menus
     stand in the bar as before (static/css/drishti_phone.css switches them at 640 px). ``menus`` is :func:`top_bar`'s answer; None without
     subject menus. ``{"label", "subjects": [labels], "columns": [(title, items)]}``."""

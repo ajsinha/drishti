@@ -78,7 +78,7 @@ Mock-up: [g4-python.html](mockups/editors/g4-python.html), option **A** as the e
 - **Where it runs.** The sample run, the Notebook's cells and the table's rows when read all run on the server's compute pool `python`, in
   its strict sandbox: the inputs read as the person running it (row rules and masks), pinned libraries, the code's time and memory limits, no
   network (an approved source is read by the server and handed in as an input), files only in its own folder, every run audited; the rows are
-  checked against the contract and a mismatch is refused in words ([PYTHON_COMPUTE.md section 19](PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)).
+  checked against the contract and a mismatch is refused in words ([ARCHITECTURE.md section 24.19](ARCHITECTURE.md#2419-the-python-runtime-for-code-people-write)).
   Where the server cannot run Python safely (compute off, Windows) the buttons are off and say why.
 
 ## 5. People and access
@@ -109,7 +109,7 @@ Mock-up: [g6-apikeys.html](mockups/editors/g6-apikeys.html); all three options.
 - **One entitlement service**: row rules and masks are enforced on the server for every reader (BI, Pivot, VaR, Flight, the API).
 - **Computed on the server**: previews, totals and Python runs happen on the server; the console only displays.
 - **Under construction**: an editor or a part of one that depends on unbuilt work is hidden or marked from the registry
-  ([UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md)).
+  ([UNDER_CONSTRUCTION.md](../reference/UNDER_CONSTRUCTION.md)).
 
 ## 8. Build checklist
 

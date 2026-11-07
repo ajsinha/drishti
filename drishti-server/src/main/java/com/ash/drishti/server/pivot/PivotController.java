@@ -232,7 +232,7 @@ public class PivotController {
     }
 
     /**
-     * The document paths people typed on a source, most used first, with how each becomes a column read (PIVOT_ENGINE.md section 6.7):
+     * The document paths people typed on a source, most used first, with how each becomes a column read (ARCHITECTURE.md section 23.6.7):
      * an administrator's suggestions to promote a path in the connector's layout or to add it to a BI dataset.
      */
     @GetMapping("/paths")

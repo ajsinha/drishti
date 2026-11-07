@@ -21,7 +21,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * Execution, connectors and scale, {@code drishti.bi.exec.*} (wave B, docs/architecture/BI_DESIGN.md sections 6.3, 6.5, 6.6 and 6.7;
- * docs/admin/CONFIGURATION.md). The server's slots and a person's share are {@code drishti.bi.query.max-concurrent} and {@code max-concurrent-per-user}.
+ * docs/reference/CONFIGURATION.md). The server's slots and a person's share are {@code drishti.bi.query.max-concurrent} and {@code max-concurrent-per-user}.
  *
  * @param perModelShare the share of the slots one model may hold at once, 0 to 1
  * @param queue how long a source fragment waits for its connector's pool before {@code DRS-9025}

@@ -89,7 +89,7 @@ class ArchitectureRulesTest {
             .that().resideInAPackage("com.ash.drishti.memlake..")
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.server..", "org.springframework..");
 
-    /** The data inbox is plain Java and never names the server (DATALOAD_INBOX.md section 11): the server wires it in, server.dataload. */
+    /** The data inbox is plain Java and never names the server (DATA_ARCHITECTURE.md section 9.11): the server wires it in, server.dataload. */
     @ArchTest
     static final ArchRule dataInboxIsPlainJava = noClasses()
             .that().resideInAPackage("com.ash.drishti.dataload..")

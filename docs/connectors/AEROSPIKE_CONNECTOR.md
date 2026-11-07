@@ -23,7 +23,7 @@ limits.
 
 Read it if you run Drishti on Aerospike, load Aerospike for Drishti, or change the connector. For a first setup see
 [the walk-through at the end of this document](#walk-through-step-by-step); every setting is in
-[CONFIGURATION.md](../admin/CONFIGURATION.md#aerospike). The same design for Delta Lake is in
+[CONFIGURATION.md](../reference/CONFIGURATION.md#aerospike). The same design for Delta Lake is in
 [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md); the two share the engine side (columns, searches, derived kinds, impact), which
 is explained there in [section 7](DELTA_CONNECTOR.md#7-searches-pick-lists-derived-kinds-and-impact-over-columns).
 
@@ -173,7 +173,7 @@ How the loader works:
   value}}`. `make_data.py --jsonl FILE.tar` writes the samples and `bulk_trades.py --jsonl FILE.tar` a generated book, each a tar
   of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders read member by member (`AerospikeLoader -` reads standard input: one kind on one
   date). The `columns` are the fields the pack promotes, taken from the same document.
-- **Each row is filed under a business date from outside it** (the load rules, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md), the same as `lake build`'s): a tar of `<kind>/<YYYY-MM-DD>/` folders files each row under its folder's date, and a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input) is one kind on one date: `--as-of`, else its `.ready` file's `business-date:`, else the date in its name, else the business today. The row's own `date` stays in the row as data; rows whose date differs are loaded under the file's date and counted (*N rows of trade.jsonl carried another date in date; loaded under 2026-09-30*). A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar (its folders name the dates). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it, in name order. Retention (`--keep-days`, `--ttl-days`, `--keep-months`) counts back from `--as-of`, else the business today.
+- **Each row is filed under a business date from outside it** (the load rules, [DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load), the same as `lake build`'s): a tar of `<kind>/<YYYY-MM-DD>/` folders files each row under its folder's date, and a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input) is one kind on one date: `--as-of`, else its `.ready` file's `business-date:`, else the date in its name, else the business today. The row's own `date` stays in the row as data; rows whose date differs are loaded under the file's date and counted (*N rows of trade.jsonl carried another date in date; loaded under 2026-09-30*). A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar (its folders name the dates). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it, in name order. Retention (`--keep-days`, `--ttl-days`, `--keep-months`) counts back from `--as-of`, else the business today.
 - **Each line becomes two writes**: the day's record (a put of all its bins) and the entity's index record (an
   operation that sets `kind` and `id` and appends the date to `dates`, sorted and unique). Each kind's dates record is
   written once at the end.

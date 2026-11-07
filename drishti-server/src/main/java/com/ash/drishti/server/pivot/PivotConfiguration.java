@@ -182,7 +182,7 @@ public class PivotConfiguration {
     }
 
     /**
-     * The pivot engine as a compute engine (docs/architecture/COMPUTE_ENGINES.md, {@code config/engines/pivot.yaml}): off, its API answers
+     * The pivot engine as a compute engine (docs/architecture/ARCHITECTURE.md section 25, {@code config/engines/pivot.yaml}): off, its API answers
      * 404 DRS-1020, the PIVOT word, the menu entry, Help pages and the CLI's pivot commands are gone, and its partial states and staged
      * tables are released.
      */

@@ -20,7 +20,7 @@ design to build. The product owner decided every open point on 2026-11-02 ([sect
 Companion to [SACCR.md](../contracts/SACCR.md) (the SA-CCR contract this document narrows to a build), [NSET.md](../contracts/NSET.md)
 (netting sets and CSAs), [COLL.md](../contracts/COLL.md) (collateral values), [CVA.md](../contracts/CVA.md) (the xVA formulas, FVA among
 them), [LIM.md](../contracts/LIM.md) (limits), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine, built),
-[CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md) (the CCR cube: landing A with tabs B and C, decided) and the
+[LENSES.md section 7](LENSES.md#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why) (the CCR cube: landing A with tabs B and C, decided) and the
 [VaR Playground](VAR_PLAYGROUND.md) (the playground frame every metric here reuses).
 
 Drishti computes counterparty figures the way it computes VaR: **from trade-grain inputs, when asked, for any scope, never stored as a
@@ -54,7 +54,7 @@ results over counterparties, groups, desks and tenors.
 | SA-CCR playground (`PLAY SACCR`) | one netting set's EAD worked trade by trade and hedging set by hedging set, every derived cell a formula | the VaR Playground's frame |
 | Exposure playground (`PLAY EXP`) | one netting set's EE, ENE, EEE, PFE at a quantile, EPE, EEPE, CE, informational IMM EAD: the simulated paths as data, every step after them a formula | Basel CRE50 (definitions), CRE53 (effective EE, effective EPE, alpha) |
 | FVA engine and playground (`PLAY FVA`) | funding cost (FCA) on EE and funding benefit (FBA) on ENE, discounted, by the funding spread | market practice (IFRS 13 fair value; Gregory, *The xVA Challenge*) |
-| CCR cube core | the CCR cube on the shared cube core: the limit board (counterparty × tenor bucket), the treemap, the PFE fan with the limit line, allocated exposure by desk, the group roll-up over the legal tree, the netting-set drill, the pre-deal overlay | [CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md) sections 6 to 8 and 12 |
+| CCR cube core | the CCR cube on the shared cube core: the limit board (counterparty × tenor bucket), the treemap, the PFE fan with the limit line, allocated exposure by desk, the group roll-up over the legal tree, the netting-set drill, the pre-deal overlay | [LENSES.md section 7](LENSES.md#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why) sections 6 to 8 and 12 |
 
 **Principles.**
 
@@ -339,9 +339,9 @@ carrying a second copy ([CVA.md section 16](../contracts/CVA.md#16-open-question
 
 ## 6. The CCR cube core: data flow
 
-The CCR cube is the shared cube core ([MR_CUBE_LENS.md section 4](../lenses/MR_CUBE_LENS.md#4-the-shared-cube-core-mr-and-ccr), MC2 and
+The CCR cube is the shared cube core ([LENSES.md section 6.4](LENSES.md#64-the-shared-cube-core-mr-and-ccr), MC2 and
 MCP1) with CCR measures. The layouts are decided: **landing A (limit board) with tabs B (netting-set drill) and C (pre-deal and XVA)**
-([CCR_CUBE_LENS.md section 6.7](../lenses/CCR_CUBE_LENS.md#67-mock-ups-the-screens-to-build)).
+([LENSES.md section 7.6.7](LENSES.md#767-mock-ups-the-screens-to-build)).
 
 ### 6.1 The flow of a date
 
@@ -396,7 +396,7 @@ members' peaks (section 9, case X2).
 CCP1 (the endpoints above), CCP2 (`credit_limits.py`, `legal_tree.py`), CCP3 (the lens `ccrcube`, `/ccube`, landing A with tabs B and C),
 CCP4 (the pre-deal overlay over the built `addon` and `paths` what-if), CCP5 (tests: allocation adds up as a property test, group sums per
 path, board buckets, browser), CCP6 (the exposure guide's cube chapter, a tutorial, screenshots, the demo script), as
-[CCR_CUBE_LENS.md section 12](../lenses/CCR_CUBE_LENS.md#12-lens-design-and-proof-of-concept-poc). With SA-CCR computed in the same
+[LENSES.md section 7.12](LENSES.md#712-lens-design-and-proof-of-concept-poc). With SA-CCR computed in the same
 release, the lens control A3's measure **EAD SA-CCR** is live (not greyed), the kind `saccr-result` is no longer hidden in the lens, and
 C1's **Incremental EAD (SA-CCR)** tile is answered by SA-CCR's what-if.
 
@@ -878,18 +878,18 @@ drishti.ccr.saccr.playground:
 
 ## 12. Mock-ups: the screens to build
 
-Decided already: the CCR cube's landing A with tabs B and C ([CCR_CUBE_LENS.md section 6.7](../lenses/CCR_CUBE_LENS.md#67-mock-ups-the-screens-to-build)),
+Decided already: the CCR cube's landing A with tabs B and C ([LENSES.md section 7.6.7](LENSES.md#767-mock-ups-the-screens-to-build)),
 and the playgrounds' frame ([VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND.md#16-mock-ups-the-screens-to-build)). **Still to make before
 the build (mock-ups first):** the SA-CCR page that replaces the stored Sutra (three options: the EAD waterfall from RC and add-ons by class
 with the hedging-set table; the netting-set list with the selected set's breakdown; the counterparty's sets side by side), and the FVA
 figures on the netting-set and counterparty pages (the term bars per date beside CVA's future bars). Each option self-contained HTML, dark
-by default and light with `#light`, copied to `docs/lenses/mockups/<screen>/` with its build checklist.
+by default and light with `#light`, copied to `docs/architecture/mockups/<screen>/` with its build checklist.
 
 **Drawn and decided (product owner, 2026-11-03; the general rule: every option built, A the default, as views of one screen over one API):**
-SA-CCR ([A](../lenses/mockups/saccr/A.html) the EAD waterfall, the default; [B](../lenses/mockups/saccr/B.html) the netting-set list with
-the selected set's breakdown; [C](../lenses/mockups/saccr/C.html) a counterparty's sets side by side) and FVA
-([A](../lenses/mockups/fva/A.html) the FVA section of the netting-set page with term bars beside CVA's, the default;
-[B](../lenses/mockups/fva/B.html) the netting sets by FVA; [C](../lenses/mockups/fva/C.html) the counterparty page). The CCR cube's A, B
+SA-CCR ([A](mockups/saccr/A.html) the EAD waterfall, the default; [B](mockups/saccr/B.html) the netting-set list with
+the selected set's breakdown; [C](mockups/saccr/C.html) a counterparty's sets side by side) and FVA
+([A](mockups/fva/A.html) the FVA section of the netting-set page with term bars beside CVA's, the default;
+[B](mockups/fva/B.html) the netting sets by FVA; [C](mockups/fva/C.html) the counterparty page). The CCR cube's A, B
 and C are all built too, A the landing.
 
 ## 13. The playgrounds' explanations

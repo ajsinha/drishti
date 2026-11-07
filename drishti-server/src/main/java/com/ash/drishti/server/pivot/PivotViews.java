@@ -31,7 +31,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
- * Saved pivot views (PIVOT_ENGINE.md section 7, kept from the cube core's saved views), in the content store
+ * Saved pivot views (ARCHITECTURE.md section 23.7, kept from the cube core's saved views), in the content store
  * ({@code pivot/views/<owner>/<name>.json}) so a view follows its owner across a cluster and every version is kept. A view keeps its
  * definition (source, rows, columns, values, filters, open nodes, sorts, top N), never the numbers: private to its owner or shared read-only
  * with named people or roles ({@code role:risk}); a reader opens it with their own entitlements and masks. Opened by id

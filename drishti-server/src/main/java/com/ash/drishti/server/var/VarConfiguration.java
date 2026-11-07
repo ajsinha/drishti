@@ -93,7 +93,7 @@ public class VarConfiguration {
     }
 
     /**
-     * The VaR engine as a compute engine (docs/architecture/COMPUTE_ENGINES.md): the registry turns it on and off; off, its dates, answers,
+     * The VaR engine as a compute engine (docs/architecture/ARCHITECTURE.md section 25): the registry turns it on and off; off, its dates, answers,
      * views and refusals are released (as Admin, Caches' purge of var) and every request answers 404 DRS-1020. Regulatory VaR is part of it.
      */
     @Bean

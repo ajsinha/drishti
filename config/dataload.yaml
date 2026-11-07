@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/dataload.yaml: the data inbox's routing rules (docs/architecture/DATALOAD_INBOX.md section 5; docs/guides/DATA_GUIDE.md,
+# config/dataload.yaml: the data inbox's routing rules (docs/architecture/DATA_ARCHITECTURE.md section 9.5; docs/guides/DATA_GUIDE.md,
 # "The data inbox"). Named by drishti.dataload.rules-file; read again at every cycle, so a change needs no restart.
 # A file in the inbox goes where its .ready file says (pack:, kind:, ...), else where the FIRST rule whose match: fits its name says.
 # The loader takes the table, its layout, its key and its date field from the pack: a rule only names the pack and the kind.
@@ -48,7 +48,7 @@ dataload:
 #   kind        one of the pack's kinds
 #   connector   the pack's Delta or Iceberg connector whose table is written (default: the first that serves the kind)
 #   table       the table's folder, over the connector's (rare)
-#   date-from   the business date of a file (docs/architecture/DATA_LOAD_RULES.md; a .ready file's business-date: wins):
+#   date-from   the business date of a file (docs/architecture/DATA_ARCHITECTURE.md section 10; a .ready file's business-date: wins):
 #               auto (default): the name's date (<table>.<YYYY-MM-DD>.jsonl.gz), else the business today; name: a name without a
 #               date is refused into failed/. A row's own date never decides.
 #   date-field  the rows' own date field (only counted when it differs from the file's date)

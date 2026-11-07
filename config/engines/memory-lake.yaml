@@ -14,7 +14,7 @@
 
 # config/engines/memory-lake.yaml: the in-memory lake (docs/guides/IN_MEMORY_LAKE_GUIDE.md). Read at start, imported by application.yaml after the jar's copy of this
 # file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
-# (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
+# (docs/architecture/ARCHITECTURE.md section 25.3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
 drishti:
   engines:
     memory-lake:
@@ -26,7 +26,7 @@ drishti:
       tables: []                     # the tables and their replenish jobs: name, store, folder, source { connector, kind, file, url, headers, ids, ids-from }, mode (replace, append, merge), key, sort-by, business-date, columns, every or cron, signal, warm-up, pin, keep-versions (2), codec (zstd)
       history-keep: 50               # the runs kept per table for Admin -> Lakes and drishti.py lake memory jobs (in memory)
       job-threads: 2                 # replenish jobs that may run at once (one per table at most)
-      compaction:                    # automated compaction: the memory optimizes itself (IN_MEMORY_LAKE.md section 13a)
+      compaction:                    # automated compaction: the memory optimizes itself (DATA_ARCHITECTURE.md section 7.13a)
         enabled: true                # rewrite a table when it would save memory: small files merged, replaced rows dropped, appends re-sorted
         idle-only: false             # true: only while no request is being answered
         idle-seconds: 30             # the quiet that counts as idle

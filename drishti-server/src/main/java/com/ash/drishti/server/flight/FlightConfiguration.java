@@ -120,7 +120,7 @@ public class FlightConfiguration {
         if (dv != null) {
             KindFlightForm kinds = new KindFlightForm(dv);
             forms.add(kinds);
-            forms.add(new LakeFlightForm(com.ash.drishti.lakeconfig.Lakes::current, kinds, dv, memory.getIfAvailable()));   // the lake files (LAKE_CONFIG.md)
+            forms.add(new LakeFlightForm(com.ash.drishti.lakeconfig.Lakes::current, kinds, dv, memory.getIfAvailable()));   // the lake files (DATA_ARCHITECTURE.md section 8)
         }
         if (catalog.getIfAvailable() != null && mq.getIfAvailable() != null && bi.getIfAvailable() != null) {
             forms.add(new AnswerFlightForms.Model(catalog.getObject(), mq.getObject(), bi.getObject(), sql.getIfAvailable()));
@@ -144,7 +144,7 @@ public class FlightConfiguration {
         return service;
     }
 
-    /** Arrow Flight as a compute engine (COMPUTE_ENGINES.md): off stops the port live; on needs a restart. */
+    /** Arrow Flight as a compute engine (ARCHITECTURE.md section 25): off stops the port live; on needs a restart. */
     @Bean
     public BasicEngine flightComputeEngine(FlightService service) {
         return new BasicEngine("flight").onStop(service::close).memory(() -> service.memory()[0]).threads("flight-");

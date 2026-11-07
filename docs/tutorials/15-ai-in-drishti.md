@@ -406,7 +406,7 @@ edit. Asked of a version 1 dataset by its id, the helper still answers in that d
 ## Next steps
 
 - [Tutorial 16](16-embed-drishti.md): put a view or a report on another web page.
-- [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number), [AI.md](../admin/AI.md#1-model-providers) and the policy settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#ai-and-mcp-policy-settings).
+- [BI_GUIDE.md section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number), [AI.md](../admin/AI.md#1-model-providers) and the policy settings in [CONFIGURATION.md](../reference/CONFIGURATION.md#ai-and-mcp-policy-settings).
 
 ## If something goes wrong
 

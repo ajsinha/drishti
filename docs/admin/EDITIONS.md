@@ -52,7 +52,7 @@ how to troubleshoot. The design is [section 13](#13-the-design) of this document
 
 ## 1. Run an instance as Drishti Risk
 
-*The product view of Drishti Risk (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [RISK_LENS.md](../lenses/RISK_LENS.md).*
+*The product view of Drishti Risk (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [LENSES.md section 1](../architecture/LENSES.md#1-drishti-risk-what-risk-managers-near-the-desks-need-what-the-lens-gives-them-today-and-what-comes-next).*
 
 The setting is `drishti.edition` (environment variable `DRISHTI_EDITION`). It names `config/editions/risk.yaml` in the folder
 `drishti.editions.dir` (`DRISHTI_EDITIONS_DIR`, default `./config/editions` relative to the server's working folder). Set it **on the
@@ -169,7 +169,7 @@ how roles are managed for it is not decided yet.
 
 ## 5. The lens: Drishti Risk (or World, Market, Trading) for one person on a full instance
 
-*One product document per lens, in [docs/lenses/](../lenses/README.md): [Risk](../lenses/RISK_LENS.md), [Trading](../lenses/TRADING_LENS.md), [Market](../lenses/MARKET_LENS.md), [World](../lenses/WORLD_LENS.md), and the proposed **Drishti Oversight** lens for market risk oversight, the second line ([OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md); not built), and the two proposed risk-cube lenses on one shared core, the **MR Cube** for market risk ([MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md)) and the **CCR Cube** for counterparty credit risk ([CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md)); the proposed **CRO lens** for the Chief Risk Officer, risk appetite first ([CRO_LENS.md](../lenses/CRO_LENS.md), lens id `cro`, its layouts decided); and the proposed **CIO lens** for the Chief Information Officer, the risk data estate and BCBS 239 ([CIO_LENS.md](../lenses/CIO_LENS.md), lens id `cio`, its layouts decided); not built, each to be a lens file like the others when built.*
+*One product document per lens, in [docs/lenses/](../architecture/LENSES.md): [Risk](../architecture/LENSES.md#1-drishti-risk-what-risk-managers-near-the-desks-need-what-the-lens-gives-them-today-and-what-comes-next), [Trading](../architecture/LENSES.md#2-drishti-trading-what-traders-and-desk-heads-need-what-the-lens-gives-them-today-and-what-comes-next), [Market](../architecture/LENSES.md#3-drishti-market-what-the-market-data-team-needs-what-the-lens-gives-it-today-and-what-comes-next), [World](../architecture/LENSES.md#4-drishti-world-what-macro-research-and-context-users-need-what-the-lens-gives-them-today-and-what-comes-next), and the proposed **Drishti Oversight** lens for market risk oversight, the second line ([LENSES.md section 5](../architecture/LENSES.md#5-market-risk-oversight-what-the-second-line-needs-from-drishti-and-a-drishti-oversight-lens); not built), and the two proposed risk-cube lenses on one shared core, the **MR Cube** for market risk ([LENSES.md section 6](../architecture/LENSES.md#6-the-mr-cube-a-market-risk-cube-lens-that-answers-what-fis-adaptivs-artiq-answers-and-shows-why)) and the **CCR Cube** for counterparty credit risk ([LENSES.md section 7](../architecture/LENSES.md#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why)); the proposed **CRO lens** for the Chief Risk Officer, risk appetite first ([LENSES.md section 8](../architecture/LENSES.md#8-the-cro-lens-is-the-bank-within-its-risk-appetite-what-changed-overnight-and-what-must-the-chief-risk-officer-act-on), lens id `cro`, its layouts decided); and the proposed **CIO lens** for the Chief Information Officer, the risk data estate and BCBS 239 ([LENSES.md section 9](../architecture/LENSES.md#9-the-cio-lens-is-the-risk-data-estate-healthy-trustworthy-on-time-secure-affordable-and-used), lens id `cio`, its layouts decided); not built, each to be a lens file like the others when built.*
 
 On an instance **without** an edition you can offer Drishti Risk as a *lens*: a link that focuses one person's view, with no restart and
 every pack still loaded. Turn it on in the server's configuration and restart the server:
@@ -328,7 +328,7 @@ VaR sharding, the exposure engine and every other cluster service work the same 
 
 ## 10. Drishti World
 
-*The product view of Drishti World (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [WORLD_LENS.md](../lenses/WORLD_LENS.md).*
+*The product view of Drishti World (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [LENSES.md section 4](../architecture/LENSES.md#4-drishti-world-what-macro-research-and-context-users-need-what-the-lens-gives-them-today-and-what-comes-next).*
 
 **Drishti World** (`world`, `config/editions/world.yaml`) is the public-data packs in one product: economies and regions (world-economy),
 news and quotes (news-and-markets), US companies and filings (us-equities), legal entities (gleif), funds and ETFs (funds). Run it as
@@ -378,7 +378,7 @@ your own that names no template gets Drishti Risk's page.
 
 ## 11. Drishti Market
 
-*The product view of Drishti Market (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [MARKET_LENS.md](../lenses/MARKET_LENS.md).*
+*The product view of Drishti Market (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [LENSES.md section 3](../architecture/LENSES.md#3-drishti-market-what-the-market-data-team-needs-what-the-lens-gives-it-today-and-what-comes-next).*
 
 **Drishti Market** (`market`, `config/editions/market.yaml`) is the bank's own market data in one product: curves, repo, fixings, FX
 spot, forwards and vols, swaption and cap vols, credit curves, bonds, equities, indexes, dividends, inflation, commodities and correlations
@@ -426,7 +426,7 @@ edition:
 
 ## 12. Drishti Trading
 
-*The product view of Drishti Trading (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [TRADING_LENS.md](../lenses/TRADING_LENS.md).*
+*The product view of Drishti Trading (who uses it, their questions by day, month and year, what the lens answers today, the gaps and the proposals): [LENSES.md section 2](../architecture/LENSES.md#2-drishti-trading-what-traders-and-desk-heads-need-what-the-lens-gives-them-today-and-what-comes-next).*
 
 **Drishti Trading** (`trading`, `config/editions/trading.yaml`) is for traders and desk heads: my books, my P&L today, my VaR and limits,
 today's trades, my counterparties, and whether a new trade fits. It loads the same five packs as Drishti Risk (core, market-data, trading,
@@ -738,10 +738,10 @@ The same mechanism serves other focused products without new code: liquidity and
 exist; a **funds** edition (us-equities, gleif, funds) or a **data platform** edition (BI and Build without the risk packs) is one more file
 in `config/editions/`. Drishti World (section 12), Drishti Market (section 13) and Drishti Trading (section 14) were built exactly that way: one file, its landings, no
 change to the engines. The proposed **Drishti CRO** (a `cro` edition file in the editions folder, landings `appetite`, `brief` and `detail`, the command word `CRO`) is
-sketched in [CRO_LENS.md section 10](../lenses/CRO_LENS.md#10-the-lens-design); it needs new packs for the risk appetite catalogue,
+sketched in [LENSES.md section 8.10](../architecture/LENSES.md#810-the-lens-design); it needs new packs for the risk appetite catalogue,
 liquidity, capital and climate inputs, and the governance actions Oversight proposes. The proposed **Drishti CIO** (a `cio` edition
 file, landings `status`, `brief` and `detail`, the command word `CIO`) is sketched in
-[CIO_LENS.md section 11](../lenses/CIO_LENS.md#11-the-lens-design); it needs one new `platform` pack of captured records (feed status,
+[LENSES.md section 9.11](../architecture/LENSES.md#911-the-lens-design); it needs one new `platform` pack of captured records (feed status,
 data-quality results, platform metrics, usage, entitlements, changes, the BCBS 239 assessment) over the load, audit and access records
 Drishti keeps today.
 

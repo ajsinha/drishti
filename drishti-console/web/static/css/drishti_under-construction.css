@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* "Under construction" (docs/admin/UNDER_CONSTRUCTION.md): one chip for every figure, menu item and help page that depends on unbuilt work.
+/* "Under construction" (docs/reference/UNDER_CONSTRUCTION.md): one chip for every figure, menu item and help page that depends on unbuilt work.
    A page's figure carries the tone uc (the server's rewrite of its Sutra); a menu item or help page carries .drishti_uc-chip. Theme tokens
    only, so it reads in the light and the dark theme. */
 .drishti_uc-chip, .t-uc {

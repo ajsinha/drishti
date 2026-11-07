@@ -34,7 +34,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * An engine switched off and on over the API, on a whole server (COMPUTE_ENGINES.md sections 5, 6, 8 and 11): the engines' files are the
+ * An engine switched off and on over the API, on a whole server (ARCHITECTURE.md sections 25.5, 25.6, 25.8 and 25.11): the engines' files are the
  * jar's copies (no site folder in the test's working directory), so a change is live; off, the engine's API answers 404 DRS-1020 naming it
  * and the about answer says it runs nowhere; a dependency refuses with words (409 DRS-1021); only an administrator may change an engine;
  * the change is written to the engine's file in the engines folder and kept in History.

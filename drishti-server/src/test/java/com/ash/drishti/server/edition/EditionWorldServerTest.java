@@ -116,7 +116,7 @@ class EditionWorldServerTest {
 
     @Autowired com.ash.drishti.server.engines.EngineRegistry engines;
 
-    /** The edition's features var: off and exposure: off preset the engines' switches (config/engines/, COMPUTE_ENGINES.md section 4). */
+    /** The edition's features var: off and exposure: off preset the engines' switches (config/engines/, ARCHITECTURE.md section 25.4). */
     @Test
     void theEditionsFeaturesTurnTheVarAndExposureEnginesOff() {
         assertThat(engines.state("var")).isEqualTo(com.ash.drishti.server.engines.EngineRegistry.State.OFF);

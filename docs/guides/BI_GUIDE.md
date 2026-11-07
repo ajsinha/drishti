@@ -37,7 +37,7 @@ Rūpaka is Drishti's business-intelligence layer, called **BI** in the top bar a
 | Show a report in another web application | [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#19-drishti-elements-developer-guide) (`<drishti-report>`, with `<drishti-search>` and `<drishti-about>`), [tutorial 16](../tutorials/16-embed-drishti.md) |
 | Publish, review, certify, trace lineage, move content between servers | [section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments) |
 | See what ships in `config/bi` and how the folder is read | [config/bi/README.md](../../config/bi/README.md) |
-| Grant the powers, set the limits | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#bi-powers-rupaka), [CONFIGURATION.md](../admin/CONFIGURATION.md) |
+| Grant the powers, set the limits | [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#bi-powers-rupaka), [CONFIGURATION.md](../reference/CONFIGURATION.md) |
 | Call it from a program or the command line | [API_GUIDE.md](API_GUIDE.md#business-intelligence-rupaka-apiv1bi), [CLI_GUIDE.md](CLI_GUIDE.md#bi-workspaces-and-the-catalogue-rupaka) |
 | Understand the design and what each phase built | [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) (section 20: every phase and wave as built, ending in the one list of what is not built), [BI_DESIGN.md](../architecture/BI_DESIGN.md) (the target design), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#results-computed-by-a-streaming-producer) (heavy continuous aggregation belongs in a producer), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) (server-side pricing, proposed) |
 | Fix a problem | section 12 here, [TROUBLESHOOTING.md](TROUBLESHOOTING.md) |
@@ -447,7 +447,7 @@ to that cached table.
   role-definition API as you). A change reaches everyone who holds the role at once, on every worker of the console (the shared user stamp): their BI
   menu and their access to `/bi` follow at their next page, as does a role changed in Admin, Roles.
 
-**Settings** (all in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibi--rupaka-business-intelligence-phase-1-the-shell-and-the-catalogue)): `drishti.bi.enabled`,
+**Settings** (all in [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibi--rupaka-business-intelligence-phase-1-the-shell-and-the-catalogue)): `drishti.bi.enabled`,
 `dir`, `watch`, `folder-refresh`, `workspace-creation`, `max-body-bytes`, `versions-keep`, `usage-days`, `recent`, `list-limit`; the
 console's `bi.enabled` (`DRISHTI_BI_ENABLED`). Each later phase has a group of its own: `drishti.bi.query.*` (the query engine, [section 30](#8-the-query)),
 `drishti.bi.report.*` ([section 31, its section 11](#11-settings)), `drishti.bi.governance.*` ([section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments)) and `drishti.bi.live.*` with the console's `bi.live.*` and `bi.board.rotate_seconds` ([section 31, its section 8](#238-settings)).
@@ -557,7 +557,7 @@ columns, and the layers on disk) and a **query preview**: choose fields, measure
 * **Publishing** a dataset checks it: an invalid dataset (`DRS-9010` to `9013`) is refused with the first error. Drafts in your own workspace can be queried by you only; shipped and published
   datasets by everyone who may read them.
 * **Refresh.** Layers are rebuilt per business date when a data-load signal names the date ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)); an author can also clear and rebuild the current date from the API
-  (`POST /api/v1/bi/datasets/{id}/refresh`). Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
+  (`POST /api/v1/bi/datasets/{id}/refresh`). Settings: [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
 * **API.** [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2). Problems: DRS-9010 to 9017 (the dataset, composed and derived datasets included) and 9020 to 9027 (the query) in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
 **Several datasets in BI.** *(Facts from several packs sit in one model with several fact tables, and a Transform feeds a Python dataset, [section 30, its section 11.5](#115-the-samples-converted); composed and derived datasets do not run.)* A dataset written in the older shape need not come from a connector: it may be **composed** of other datasets (`from:` and `join:`: each source is asked as the person reading, with *its own* row rules and masks, and the answers are joined, with measures of the dataset's own over the joined columns) or **derived** by a **Python Transform** that receives the sources' answers as masked pandas frames and returns the table. Either is used wherever a dataset is (reports, alerts, subscriptions, refresh, the Notebook); its page lists **Built from other datasets** and the Model view draws the sources, the join and the table. A **report** may name a dataset per visual and link fields across datasets, so a slicer on one filters the visuals of another ([section 31, its section 16](#16-reports-over-several-datasets)); the **Notebook** loads several extracts in one notebook, joins them in pandas, and promotes the join to a Transform. A join on a column a source masks for you is refused, and so is a YAML join that would repeat rows (`DRS-9015`: aggregate the many side by the key, swap the ends, or accept it with `allow-repeat: true` on the join, which Check then shows as a warning). The sample *Desk P&L vs counterparty exposure* is built both ways. Reference: [section 30, its section 11](#11-composed-and-derived-datasets); tutorials [10](../tutorials/10-first-bi-report.md) and [14](../tutorials/14-python-and-analyse.md).
@@ -740,7 +740,7 @@ under it. **Kiosk** (button, `k`, or `?kiosk=1`) hides the menus, fills the scre
 **Who may do what.** Opening needs the `bi` power and the right to read the report; each tile is its report's answer **to you** (your rows, your masks). A board is designed in the report designer (a page's *Layout: board*, the *tile* visual); publishing checks its tiles.
 
 **Admin.** *Admin, BI settings* is unchanged; the engine page counts live tables and rows (`GET /api/v1/bi/engine`); a dataset's page says how each live table is doing (state, rows, entities that push, last change). Settings: the server's `drishti.bi.live.*` and the console's `bi.live.*`, `bi.board.rotate_seconds`
-([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+([CONFIGURATION.md](../reference/CONFIGURATION.md)).
 
 **Not built, and not faked.** Interaction between tiles; a history of every update of a live table (a bounded, sampled history of its measures is built: [section 30, its section 7.1](#71-live-tables-phase-5); the rolling chart's
 points live in the browser from the moment the page opened); live tables over arrays and in `direct` queries (boards travel in bundles and appear in lineage and impact, as the reports they are). If a live table's feed is quiet, the page says **Stale** only when the source
@@ -1015,7 +1015,7 @@ measures and perspective from its YAML), `POST /bi/model-api/compose` with `base
 ## 25. Live answers and standing queries
 
 The design is [BI_DESIGN.md §4.5 and §4.6](../architecture/BI_DESIGN.md#46-standing-queries-and-incremental-maintenance); the endpoints are in
-[API_GUIDE.md](API_GUIDE.md#models-and-the-model-query-language-apiv1bi); the settings are `drishti.bi.mq.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+[API_GUIDE.md](API_GUIDE.md#models-and-the-model-query-language-apiv1bi); the settings are `drishti.bi.mq.*` ([CONFIGURATION.md](../reference/CONFIGURATION.md)).
 
 **Three times, one plan.** Every question is asked at a time, bound per dataset of the model:
 
@@ -1500,9 +1500,9 @@ models:
 DRISHTI_AI_ENABLED=true  DRISHTI_AI_DEFAULT_MODEL=mock/m
 ```
 
-Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.bi.ai`](../admin/CONFIGURATION.md#drishtibiai) (also at Help → Configuration in the console).
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.bi.ai`](../reference/CONFIGURATION.md#drishtibiai) (also at Help → Configuration in the console).
 
-The policy settings are the AI layer's (`drishti.ai.policy.*`, [CONFIGURATION.md](../admin/CONFIGURATION.md#ai-and-mcp-policy-settings)). The features are named **`bi-draft`**, **`bi-ask`**
+The policy settings are the AI layer's (`drishti.ai.policy.*`, [CONFIGURATION.md](../reference/CONFIGURATION.md#ai-and-mcp-policy-settings)). The features are named **`bi-draft`**, **`bi-ask`**
 and **`bi-explain`**, and for the helpers of sections 9 to 11 **`subscription-narrative`**, **`bi-suggest`**, **`bi-explain-checks`** and **`bi-helper`**, so `drishti.ai.policy.features."[bi-ask]": {roles: [analyst], per-user-per-minute: 10}` limits who asks and how often.
 
 ### 29.2 Who may
@@ -1743,7 +1743,7 @@ tools itself (the MCP client exists; no BI hook uses it).
 Reference for the **dataset** of Drishti Rūpaka (BI) (live tables are section 7.1; window functions 4.3; several facts 3.1). For the walk-through see [tutorial 10](../tutorials/10-first-bi-report.md) (step 1, [section 17](#17-worked-examples-the-shipped-models-row-rules-and-the-model-view) for the stored datasets, and [tutorial 12](../tutorials/12-live-bi-and-boards.md) for a live table); for the pages that show a dataset see this document sections 13 and 16; for datasets built from other datasets (composed and derived are replaced: several facts are one model, a Transform is a Python dataset) see
 [section 11](#11-composed-and-derived-datasets); for the design see [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) sections 6 and 7, 20.2 and 20.10; for the HTTP API see
 [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2); for the settings see
-[CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
+[CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
 
 A dataset is a YAML document: the **model** reports sit on. Tables come from pack kinds through connectors (by their logical names), relationships
 join them, measures compute over them, row rules and masks decide who sees what. It is **stored** as a BI item of kind `dataset` (a draft in a
@@ -2198,7 +2198,7 @@ GET  /api/v1/bi/datasets/file:dataset:nv-demo/refresh          (the demo lake ho
 
 **The state survives a restart.** The state and the last `drishti.bi.refresh.history` (25) runs of every job are kept in `<BI store>/refresh/state.json` (written after each run and each planned time, atomically). After a restart the page shows the same last run, status, rows, duration and history; a run that was in progress when the server stopped shows as `interrupted`; a time that passed while the server was down is run once at start-up (`trigger: schedule (catch-up)`). A file that cannot be read is ignored (a warning in the log) and the jobs start as `never`.
 
-**Refresh now, last and next run, history.** The **Refresh** section has a **Refresh now** button for people with the `bi-author` power (it is `POST /datasets/{id}/refresh`, audited as `bi-dataset-refresh`; the page then asks for the state once a second until the run is no longer `running`), a line *Last refresh ... · Next ...* and **Recent refreshes**, newest first: when, started by (`schedule`, `after-load trade`, `retry`, `manual (<person>)`), result, date, rows, time and the error of a failed run. `GET /datasets/{id}/refresh` carries the same in `dataset.history`. Settings: `drishti.bi.refresh.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibirefresh--scheduled-dataset-refresh)). The refresh is audited (`bi-dataset-refresh`).
+**Refresh now, last and next run, history.** The **Refresh** section has a **Refresh now** button for people with the `bi-author` power (it is `POST /datasets/{id}/refresh`, audited as `bi-dataset-refresh`; the page then asks for the state once a second until the run is no longer `running`), a line *Last refresh ... · Next ...* and **Recent refreshes**, newest first: when, started by (`schedule`, `after-load trade`, `retry`, `manual (<person>)`), result, date, rows, time and the error of a failed run. `GET /datasets/{id}/refresh` carries the same in `dataset.history`. Settings: `drishti.bi.refresh.*` ([CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibirefresh--scheduled-dataset-refresh)). The refresh is audited (`bi-dataset-refresh`).
 
 **A dataset of the model layer (`rachana: 2`, 2.2).** `POST /datasets/{id}/refresh` refreshes it through the models that read it: its kept Python
 Transform results are dropped (the next question runs the Transform again, as its reader), and in every published model that reads it, and in its
@@ -2341,7 +2341,7 @@ A sample is stamped to the second.
 
 **What cannot be live:** a table over an array (`each`): it follows whole entities (`DRS-9050`). A live table cannot be a `direct` table's neighbour in one query (the same rule as for cached tables).
 
-**Limits and settings:** `drishti.bi.live.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibilive--streaming-bi-phase-5).
+**Limits and settings:** `drishti.bi.live.*` in [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibilive--streaming-bi-phase-5).
 
 ### 8. The query
 
@@ -2349,7 +2349,7 @@ A dataset is asked through its model: `POST /api/v1/bi/mq` ([BI_DESIGN.md](../ar
 `POST /api/v1/bi/datasets/{id}/query` with the body of [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2): `fields`, `measures`, `filters` (`eq ne in not-in lt le gt ge between contains
 starts-with is-null not-null`; a filter whose field is a measure name filters the aggregate), `dates` (`from`, `to`; one date or a range, at most 400 days, at most 31 not-yet-built dates read per query),
 `orderBy`, `limit`, `layer` (`auto`, `columns`, `rollup`). Every name is checked against the model and quoted; **every value is a bound parameter**; a value of the wrong type for its column is refused
-(`DRS-9020`), never cast into SQL. Limits and their codes are in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
+(`DRS-9020`), never cast into SQL. Limits and their codes are in [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
 
 #### 8.1 Expected values: `tests:`
 
@@ -3660,7 +3660,7 @@ colour with a contrast ratio under 3 against the theme's background), `LAYOUT` (
 
 ### 11. Settings
 
-`drishti.bi.report.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibireport--reports-phase-3)): `chart-rows` (500), `table-rows` (1000), `slicer-values` (1000), `show-rows` (1000),
+`drishti.bi.report.*` ([CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibireport--reports-phase-3)): `chart-rows` (500), `table-rows` (1000), `slicer-values` (1000), `show-rows` (1000),
 `top-candidates` (10000), `perspective-rows` (20000: the most rows a 2.1 `perspective-*` visual's grid is sent), `distribution-rows` (20000: the most members a histogram or box plot reads), `totals-max-rows` (2000: rows of one level of true totals), `python-rows` (10000: the most rows a python visual hands to Python), `python-packages`, `python-max-seconds` and `python-max-memory-mb` (what a Python manifest may list and ask for: [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 9). The query limits are `drishti.bi.query.*`; the live ones `drishti.bi.live.*`; the console's `bi.live.min_interval_ms` and `bi.live.stale_seconds` (section 13).
 
 **Never cut silently.** A visual whose rows reach its limit says so: its footer reads *first 500 of 2,340* (with *more than*
@@ -4363,8 +4363,8 @@ The report's checks (`POST /api/v1/bi/reports/validate`, the designer's Check an
 |---|---|---|
 | console `bi.board.rotate_seconds` (`DRISHTI_BI_BOARD_ROTATE_SECONDS`) | 30 | kiosk page time when the report sets no `board.rotate` (3 to 3600) |
 | console `bi.live.min_interval_ms`, `bi.live.stale_seconds` | 250, 30 | how often tiles redraw at most, and when the indicator says "Stale" |
-| server `drishti.bi.live.*` | | the live tables and streams the tiles' reports use ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibilive--streaming-bi-phase-5)) |
-| server `drishti.alerts.measure.*` | | notifications from tiles: the load delay, the live debounce, the cooldown, the audience limit, email and chat on or off ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtialertsmeasure--alerts-on-numbers-and-board-notifications)) |
+| server `drishti.bi.live.*` | | the live tables and streams the tiles' reports use ([CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibilive--streaming-bi-phase-5)) |
+| server `drishti.alerts.measure.*` | | notifications from tiles: the load delay, the live debounce, the cooldown, the audience limit, email and chat on or off ([CONFIGURATION.md](../reference/CONFIGURATION.md#drishtialertsmeasure--alerts-on-numbers-and-board-notifications)) |
 | server `drishti.bi.migrate.on-start` | `true` | stored 2.3 boards become reports at start (section 12) |
 
 #### 23.9 API
@@ -4672,7 +4672,7 @@ The report schema checks a statement when it is validated, saved, proposed and p
 
 #### 24.9 Settings
 
-`drishti.distribution.statements.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)): `max-pages` (500: a longer statement is refused), `max-rows` (10,000 rows
+`drishti.distribution.statements.*` ([CONFIGURATION.md](../reference/CONFIGURATION.md)): `max-pages` (500: a longer statement is refused), `max-rows` (10,000 rows
 of one table band, all read even past `drishti.bi.query.json-max-rows`; past it the band says so above itself), `paper` (`A4`: the paper of a statement that names none), `band-queries` (2: the bands of one statement asked
 at the same time, each as the reader, within the query limits). A statement is an export: `drishti.distribution.export.timeout` and `max-bytes` apply.
 
@@ -4689,7 +4689,7 @@ own orientation inside one statement (the paper is the report's); recipients out
 
 ## 32. Publishing and governance: versions, review, certification, lineage, impact, environments
 
-This is the reference for Rūpaka publishing and governance (phase 4, extended by rename detection, import rollback, BI inside pack archives and lineage past the connector). A dataset or report is not just a file: it is saved, reviewed, certified, and moved between servers, and a change to a dataset can break the reports built on it. This page says exactly how each of those works, what each person sees, which refusal comes back, and what is **not built**. For the pages see this document section 17; for the walk-through with pictures see [tutorial 13](../tutorials/13-govern-bi.md); the design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) sections 10 and 11 and what is built is its section 20.4. The settings are `drishti.bi.governance.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibigovernance--publishing-and-governance-phase-4): `revisions-keep`, `preview-rows`, `refuse-breaking`, `revoke-certification`, `bundle-max-bytes` and `tell-people` (the inbox notices; off, the audit log and the history still record everything).
+This is the reference for Rūpaka publishing and governance (phase 4, extended by rename detection, import rollback, BI inside pack archives and lineage past the connector). A dataset or report is not just a file: it is saved, reviewed, certified, and moved between servers, and a change to a dataset can break the reports built on it. This page says exactly how each of those works, what each person sees, which refusal comes back, and what is **not built**. For the pages see this document section 17; for the walk-through with pictures see [tutorial 13](../tutorials/13-govern-bi.md); the design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase) sections 10 and 11 and what is built is its section 20.4. The settings are `drishti.bi.governance.*` in [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibigovernance--publishing-and-governance-phase-4): `revisions-keep`, `preview-rows`, `refuse-breaking`, `revoke-certification`, `bundle-max-bytes` and `tell-people` (the inbox notices; off, the audit log and the history still record everything).
 
 ### 1. Saved states and published versions
 
@@ -5151,7 +5151,7 @@ The PDF is 2938 bytes on 2 pages. A view's file is named by its title and date, 
 
 #### Limits (settings)
 
-`drishti.distribution.export.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtidistribution-export-and-subscriptions)): rows per table in Excel and CSV (`max-rows`, 50,000: a table or matrix is read whole up to
+`drishti.distribution.export.*` ([CONFIGURATION.md](../reference/CONFIGURATION.md#drishtidistribution-export-and-subscriptions)): rows per table in Excel and CSV (`max-rows`, 50,000: a table or matrix is read whole up to
 there, past the 5,000 rows one answer to the screen holds; a table is cut there and its sheet says so, and any other visual the engine cut says *The first
 N of M rows*), rows drawn per table in a PDF or PNG (`pdf-max-rows`, 500: the picture is for reading, Excel holds the rest; the table under a chart is cut at `pdf-chart-rows`, 15, with a line saying how many more rows are in the Excel/CSV export. A **line or area chart** is drawn as lines over the whole series, sampled to 200 points; the other chart types are drawn as bars of their first 12 rows), the largest file (`max-bytes`, 25 MB), the longest export (`timeout`, 60 s),
 visuals per export (`max-visuals`, 40), the layout width, orientation and the tallest PNG. Over a limit the answer is `422 DRS-9060` and says which setting.
@@ -5471,7 +5471,7 @@ An alert is **evaluated as the person it is for**: for your own alert, you. The 
 | **Email** | one mail to **the address on your account**, `Drishti alert: <title>` | users only: an alert cannot name an address. No address, no mail (the history says `skipped: no email address on file`). **A send that fails is tried again** by the shared retry policy (`drishti.retry.alerts.*`; `drishti.alerts.measure.max-attempts`, 4 in all): the history says `retrying: attempt 1 of 4 failed (connection refused); next try in 5 s`, then `sent (attempt 3 of 4)` or `failed after 4 attempts: …` (and `emailAttempts: 3`); a refused address is `failed (permanent): … (not retried)`. A pending retry is in memory, so a restart drops it. Off for the server with `drishti.alerts.measure.email` |
 | **Webhook** (`delivery.webhooks: [name]`) | a signed JSON post to a webhook an administrator defined | section 6. One post per alert per cooldown (a minute at least), not one per person; it names the alert, its severity, what it watches and the condition and where it opens, **never a number**. Retried like the email; `webhook:NAME` in the history |
 | **Text** (`delivery.sms: true`) | a text to **your own** number | section 6. The title, severity and a link; a figure only if the administrator set `sms.include-values`. Retried like the email; `sms` in the history |
-| **Chat bridges** | a post to every bridge whose route lists the event `alert` and covers the kind: a Sutra kind for a field alert, `bi` for everything else | the post names the alert, what it watches and the condition, the owner and a link, **never a number**, because a bridge is a room, not a person. At most one post per alert per cooldown (a minute at least), however many people it fired for. Configure with `events: [alert]` in a route ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishticollab--share-with-a-note-and-the-inbox)); off with `drishti.alerts.measure.bridges` |
+| **Chat bridges** | a post to every bridge whose route lists the event `alert` and covers the kind: a Sutra kind for a field alert, `bi` for everything else | the post names the alert, what it watches and the condition, the owner and a link, **never a number**, because a bridge is a room, not a person. At most one post per alert per cooldown (a minute at least), however many people it fired for. Configure with `events: [alert]` in a route ([CONFIGURATION.md](../reference/CONFIGURATION.md#drishticollab--share-with-a-note-and-the-inbox)); off with `drishti.alerts.measure.bridges` |
 
 The **history** (on the edit page; the last `keep-history`, 50) has an entry for each firing, clearing, held breach and skipped reason, with the time, what triggered it (`saved`, `schedule`, `load`, `live`, `by hand`,
 `resumed`), the number, the message, and what each channel did:
@@ -5765,7 +5765,7 @@ The full list is in [BI_DESIGN.md › Rūpaka: the original design and every pha
 ### 6. Webhooks and text messages
 
 Alerts and subscriptions can also **post to a webhook** and **send a text**. Both are set up by an administrator (`drishti.notify.*`,
-[CONFIGURATION.md](../admin/CONFIGURATION.md#drishtinotify--webhooks-and-text-messages-for-alerts-and-subscriptions)); a person only picks from what exists. Nothing is on until it is defined.
+[CONFIGURATION.md](../reference/CONFIGURATION.md#drishtinotify--webhooks-and-text-messages-for-alerts-and-subscriptions)); a person only picks from what exists. Nothing is on until it is defined.
 
 **Webhooks.** An administrator defines a webhook by a **name**, a URL and a secret (`drishti.notify.webhooks.<name>.*`) and lists the hosts webhooks may reach (`drishti.notify.webhook.allowed-hosts`, exact names or `*.suffix`; empty means
 none is sent, and the host is checked at every send). A person ticks the names on the alert or Subscribe form (`delivery.webhooks`, `webhooks`); they cannot type a URL. A post is `POST` JSON with
@@ -5987,7 +5987,7 @@ parameters (*Run on* is gone); the canvas shows a placeholder, since Python runs
 
 **The server's compute pool.** Every Python run in Drishti is the server's: a python visual (`POST /api/v1/bi/python/visual`), a Python measure of a model
 query or an alert, a Transform, a Python-driven table, a Notebook cell, the Transform editor's step-by-step run, a profile and an item's tests. The server
-reads the rows **as the person running it**, then hands them with the item to the compute pool `python` ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)):
+reads the rows **as the person running it**, then hands them with the item to the compute pool `python` ([ARCHITECTURE.md section 24.19](../architecture/ARCHITECTURE.md#2419-the-python-runtime-for-code-people-write)):
 its workers have pandas, NumPy, pyarrow and SciPy loaded once and fork a **fresh child per request**, which runs the function under the item's limits and
 answers a small JSON answer (a Transform also a Parquet file). Nothing is kept between requests; the pool's queue, its fair share between people and its
 workers (`compute.pools.python.workers.max`, 4 as shipped) bound how many run at once, and a full queue answers `DRS-9074`. The console runs no Python of
@@ -6036,9 +6036,9 @@ Run and the table editor's Sample run are off and say why. Nothing falls back to
 
 ### 9. Settings
 
-**Server** (`drishti.bi.report.*`, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibireport--reports-phase-3)): `python-rows` (10,000), `python-packages` (the manifest allow-list; only what the lock pins is offered), `python-max-seconds` (60), `python-max-memory-mb` (1024); `drishti.bi.transform.enabled` switches every Python run off.
+**Server** (`drishti.bi.report.*`, [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibireport--reports-phase-3)): `python-rows` (10,000), `python-packages` (the manifest allow-list; only what the lock pins is offered), `python-max-seconds` (60), `python-max-memory-mb` (1024); `drishti.bi.transform.enabled` switches every Python run off.
 
-**The compute pool** (`compute.pools.python` in `config/compute/compute.yaml`, [CONFIGURATION.md](../admin/CONFIGURATION.md)): `compute.enabled` (off as shipped: Python runs once it is on), the pool's `workers`, `memory`, `cpu-seconds`, `timeout`, `isolation: strict` and `environment`; the pins in `config/compute/locks/python.lock` (written by `tools/python_lock.py` from `python.in`). The console has no Python setting.
+**The compute pool** (`compute.pools.python` in `config/compute/compute.yaml`, [CONFIGURATION.md](../reference/CONFIGURATION.md)): `compute.enabled` (off as shipped: Python runs once it is on), the pool's `workers`, `memory`, `cpu-seconds`, `timeout`, `isolation: strict` and `environment`; the pins in `config/compute/locks/python.lock` (written by `tools/python_lock.py` from `python.in`). The console has no Python setting.
 
 ### 10. Errors: DRS-9070 to DRS-9077
 
@@ -6139,7 +6139,7 @@ Python Transform pnl-vs-exposure: 18 rows in 218 ms (first run); the same reader
 
 ![The sample's Python dataset: made by the Python Transform pnl-vs-exposure, keyed by counterparty, and the columns its Transform returns](../tutorials/img/t14/12-python-dataset.jpg)
 
-Settings: `drishti.bi.transform.*` in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets). The sample is `config/bi/python/pnl-vs-exposure.python.yaml` with the Python dataset `desk-pnl-vs-exposure-py-result` and the model `desk-pnl-vs-exposure-py` over it ([tutorial 14, step 8](../tutorials/14-python-and-analyse.md#step-8--two-models-a-python-transform-and-a-join-in-the-notebook)).
+Settings: `drishti.bi.transform.*` in [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets). The sample is `config/bi/python/pnl-vs-exposure.python.yaml` with the Python dataset `desk-pnl-vs-exposure-py-result` and the model `desk-pnl-vs-exposure-py` over it ([tutorial 14, step 8](../tutorials/14-python-and-analyse.md#step-8--two-models-a-python-transform-and-a-join-in-the-notebook)).
 
 ### 14. Vega-Lite output
 
@@ -6427,7 +6427,7 @@ its own limits, Landlock rule, audit hook and scratch folder.
 
 #### 17.8 Settings
 
-Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `bi.transform`](../admin/CONFIGURATION.md#bitransform) (also at Help → Configuration in the console).
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `bi.transform`](../reference/CONFIGURATION.md#bitransform) (also at Help → Configuration in the console).
 
 The server's `drishti.bi.transform.max-input-rows` (50,000) caps an input, in the editor and in a run.
 

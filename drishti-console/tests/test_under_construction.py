@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The under-construction registry (docs/admin/UNDER_CONSTRUCTION.md, config/under-construction.yaml): every place it names exists and the
+"""The under-construction registry (docs/reference/UNDER_CONSTRUCTION.md, config/under-construction.yaml): every place it names exists and the
 document is current (tools/under_construction.py --check); the console honours each treatment for menu items and help pages (hidden, or
 the chip); a page's figure under construction is the server's (tone uc), drawn as the same chip. The Sutra side (every bind and panel
 exists, every matched Sutra honours its treatment) is drishti-rachana's UnderConstructionTest."""

@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The MR lens of the pivot screen (MCUBE; _mr_lens.html, _mr_panes.html, drishti_mr-lens.js): landing A and tabs B and C of the decided mock-ups
-   (docs/lenses/mockups/mr-cube/) around the pivot engine's own grid. The theme's tokens only; losses carry a sign as well as a colour. */
+   (docs/architecture/mockups/mr-cube/) around the pivot engine's own grid. The theme's tokens only; losses carry a sign as well as a colour. */
 .mr { --mr-blue: var(--d-link); --mr-amber: var(--d-warn); --mr-red: var(--d-bad); --mr-green: var(--d-ok); position: relative; }
 .mr .up { color: var(--mr-red); }
 .mr .down { color: var(--mr-green); }

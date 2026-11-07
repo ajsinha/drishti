@@ -338,7 +338,7 @@ edit:
 
 Restart the server. The start logs `write-back: on; edit log sqlite (auto: this node is alone), 64 lanes, node local`. Give the people
 who edit a role with the edit power (Admin → Roles → *Submit edits*), and the people who approve a role with the approve power (or
-name `policy.approver-roles`). Every setting is in [CONFIGURATION.md](../admin/CONFIGURATION.md#write-back-configedit).
+name `policy.approver-roles`). Every setting is in [CONFIGURATION.md](../reference/CONFIGURATION.md#write-back-configedit).
 
 ## 9. Where a change goes
 

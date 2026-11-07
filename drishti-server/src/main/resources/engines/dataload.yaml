@@ -12,15 +12,15 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/engines/dataload.yaml: the data inbox (docs/architecture/DATALOAD_INBOX.md; docs/guides/DATA_GUIDE.md, "The data inbox"). Read at start, imported by application.yaml after
+# config/engines/dataload.yaml: the data inbox (docs/architecture/DATA_ARCHITECTURE.md section 9; docs/guides/DATA_GUIDE.md, "The data inbox"). Read at start, imported by application.yaml after
 # the jar's copy of this file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
-# (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
+# (docs/architecture/ARCHITECTURE.md section 25.3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
 drishti:
   engines:
     dataload:
       enabled: ${DRISHTI_DATALOAD_ENABLED:false}   # run the data inbox on this node: files dropped in <dir>/inbox with a .ready marker are loaded into the lake every interval; off as shipped
       changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
-  dataload:                          # the data inbox (DATALOAD_INBOX.md): files found, claimed, routed, loaded by the parallel lake loader in a child Java process, moved to the outbox, the server told
+  dataload:                          # the data inbox (DATA_ARCHITECTURE.md section 9): files found, claimed, routed, loaded by the parallel lake loader in a child Java process, moved to the outbox, the server told
     owner: ${DRISHTI_DATALOAD_OWNER:true}   # this node runs the inbox's cycles; in a cluster set it true on one node only (the folder lock also keeps a second runner out)
     dir: ${DRISHTI_DATALOAD_DIR:${drishti.data.dir:./data}/dataload}   # the inbox's folder: inbox/, inprocess/, outbox/, failed/, ledger/ and inbox.lock, all on one file system
     interval: 10m                    # how often a cycle runs; a cycle due while a run still loads is skipped (runs never overlap); Load now starts one at once

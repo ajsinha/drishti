@@ -24,7 +24,7 @@ settings:
 - 'reactive.spec'
 - 'source-name'
 auth: None of its own; it reads its inputs through the server's routing as the requesting viewer, and its workers hold no credentials.
-licence: Part of Drishti (drishti-compute); no client library. Python engines run in the compute workers (PYTHON_COMPUTE.md).
+licence: Part of Drishti (drishti-compute); no client library. Python engines run in the compute workers (ARCHITECTURE.md section 24).
 windows: Works the same on Windows; Python pools run in warm mode there (no fork). Java engines run in the server.
 doc: docs/connectors/REACTIVE_CONNECTOR.md
 ---
@@ -68,7 +68,7 @@ the plugin as the one setting `reactive.spec` (the block as JSON). Admin → Con
 | `limits.wait` | `150ms` | How long a read waits for the result before answering *computing* (keep it under `drishti.graph.link-budget`) |
 | `limits.max-inflight-per-user`, `limits.event-queue`, `limits.max-input-rows`, `limits.dedupe-window` | `4`, `10000`, `1000000`, `24h` | Fairness and bounds |
 | `history.dated` | `true` | A picked business date computes on that date's inputs |
-| `requires` | none | The libraries it needs; nothing runs until an administrator approves (PYTHON_COMPUTE.md) |
+| `requires` | none | The libraries it needs; nothing runs until an administrator approves (ARCHITECTURE.md section 24) |
 | `source-name` (setting) | the connector's name | The name in provenance and Health |
 
 ## Data structure
@@ -141,5 +141,5 @@ values, chunk-rows: 20, reduce: { sum: [ROWS, SUM], tables: { total: [PNL] }, th
 ## See also
 
 - [The reactive connector](../../REACTIVE_CONNECTOR.md): the file, the request lifecycle, triggers, sandboxes and the HTTP API, in full.
-- [Reactive connectors, the design](../../../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) and [compute workers](../../../architecture/PYTHON_COMPUTE.md).
+- [Reactive connectors, the design](../../../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) and [compute workers](../../../architecture/ARCHITECTURE.md#24-compute-workers-python-and-java-libraries-approved-pinned-and-isolated).
 - [Operating compute](../../../admin/OPERATIONS.md#19-compute-workers) and [tutorial 23: computed panels](../../../tutorials/23-computed-panels.md).

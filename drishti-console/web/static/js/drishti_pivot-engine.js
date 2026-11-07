@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The browser's handle on the pivot engine (docs/guides/PIVOT_GUIDE.md; docs/architecture/PIVOT_ENGINE.md section 13): it never adds up a
+/* The browser's handle on the pivot engine (docs/guides/PIVOT_GUIDE.md; docs/architecture/ARCHITECTURE.md section 23.13): it never adds up a
    figure. It asks the server's engine (drishti-bicompute, through the console's /api/pivot/...) for the cells of an arrangement
    ({rows, columns, values}) over a source (query) or over rows the page already holds (inline: a chart of a table's shown rows),
    and lays the answer out as the CUBE the chart engine draws: the leaf row and column keys and one cell per pair of key prefixes

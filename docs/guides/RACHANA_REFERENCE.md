@@ -3070,7 +3070,7 @@ clamp, …`, in alphabetical order), and so is a wrong number of arguments (`siz
 argument(s), got 4`). The schema lists them with their argument counts (`x-rachana-functions`; an old spelling carries
 `oldSpellingOf`, and the editor checks it but never offers it). The whole catalogue, with each
 function's Excel and SAS equivalents and what is still to come, is [FUNCTION_CATALOGUE.md](../architecture/FUNCTION_CATALOGUE.md);
-the list generated from the registries, every function once with where it runs, is [FUNCTIONS.md](FUNCTIONS.md) (Help → Functions).
+the list generated from the registries, every function once with where it runs, is [FUNCTIONS.md](../reference/FUNCTIONS.md) (Help → Functions).
 
 **Aggregates come from the pivot engine.** Rachana's own functions are scalars (one value from values). Every aggregate is the pivot
 engine's (`drishti-bicompute`), registered into Rachana's one table when it starts ([ONE_GRAMMAR.md](../architecture/ONE_GRAMMAR.md)
@@ -3225,7 +3225,7 @@ the document); `reduce` also binds `@acc`, the value so far.
 So an analyst coming from Excel, SAS or MATLAB rarely misses a function, Rachana has the families below, each function under one name
 (Excel's, SAS's and MATLAB's names are in [FUNCTION_CATALOGUE.md](../architecture/FUNCTION_CATALOGUE.md) section 12, with what is not
 added and why). Each function's arguments, rules and an example are in the catalogue's sections 1 to 9; the generated list is
-[FUNCTIONS.md](FUNCTIONS.md).
+[FUNCTIONS.md](../reference/FUNCTIONS.md).
 
 | Family | Functions | Example on the demo trade |
 |---|---|---|
@@ -3740,7 +3740,7 @@ Each kind below says what is special to it. These hold for all of them.
 - **Phone.** Below 640 px every panel takes the whole width, one per row; tables scroll sideways inside their panel, charts resize, and a chart's numbers are in a collapsed **Data** section under it.
 - **Accessibility.** Charts are `role="img"` with a label that says what they show; colour is never alone (a tone always has a sign or a word); tables take the keyboard (arrows, PgUp/PgDn, Home/End, Enter). Contrast is checked for every theme by `drishti-console/tests/test_contrast.py`.
 - **Download.** The ↓ in a panel's heading opens a small menu: **CSV** (numbers as numbers) or **JSON Lines** (one row a line, [DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)); each kind lists its columns below. One button, so a zoomed panel's heading stays on one line on a phone. A table's Pivot has its own CSV and Excel buttons.
-- **Limits.** Long lists are bounded by `drishti.panels` (nodes, events, points, pivot rows, tree depth): see [CONFIGURATION.md](../admin/CONFIGURATION.md).
+- **Limits.** Long lists are bounded by `drishti.panels` (nodes, events, points, pivot rows, tree depth): see [CONFIGURATION.md](../reference/CONFIGURATION.md).
 - **Keys every panel takes** (`id`, `kind`, `title`, `description`, `key`, `code`, `area`, `span`, `height`, `infer`): [Keys every panel takes](#keys-every-panel-takes).
 
 ### Common mistakes and their problem codes
@@ -4123,7 +4123,7 @@ What to notice, because each is a rule for your own binder:
 - **`pathOf(expr)`** gives the cell its `path` (for `$.mtm` it is `mtm`): live patches, notes and history address a cell
   by it. Set it for every cell that comes from one field.
 - **Do not hard-code** a pack name, a field name or a threshold. A limit or a default is configuration
-  (`drishti.panels`, see [CONFIGURATION.md](../admin/CONFIGURATION.md)); a kind that computes over a list takes its
+  (`drishti.panels`, see [CONFIGURATION.md](../reference/CONFIGURATION.md)); a kind that computes over a list takes its
   limit from `PanelLimits`.
 - **Computing over a list** (bins, running totals, aggregates, graphs) belongs in `ChartBinder.java`, beside
   `waterfall`..`pivot`, which reads at most the `PanelLimits` it is given and records what it dropped (`more`,
@@ -5348,7 +5348,7 @@ panels:
 - **The site and the edition** set and cap tiers over every Sutra (`ui.phone` in the console's configuration, `phone:` in an edition
   file); a cap (`max: glance`) wins. A page always has a must panel: with none, the first panel is.
 - `phone.order` replaces `layout.phone` for the phone page (which is still read when `phone.order` is absent).
-- The ViewModel carries what the Sutra says as `phone` ([VIEWMODEL.md](../architecture/VIEWMODEL.md)); the console resolves each
+- The ViewModel carries what the Sutra says as `phone` ([VIEWMODEL.md](../reference/VIEWMODEL.md)); the console resolves each
   panel's tier and draws the phone page.
 
 ### 14. Lint: what is checked
@@ -6097,7 +6097,7 @@ mode edits the same thing: a Sutra (the YAML that lays out a screen, see [Sutra 
 **your own design**. The pack's Sutra is never changed, and nobody else sees your version until you share it.
 
 It is switched on by an administrator: `ui.designer: true` in the console's `application.yaml` (or `DRISHTI_UI_DESIGNER=true`;
-[CONFIGURATION.md](../admin/CONFIGURATION.md)). Off (the default), pages and the Build workbench are unchanged.
+[CONFIGURATION.md](../reference/CONFIGURATION.md)). Off (the default), pages and the Build workbench are unchanged.
 
 #### Customize this page
 
@@ -8169,7 +8169,7 @@ A user whose role masks `MTM` and a row-level rule on one desk:
 | this document, [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) | the `chart` kind's options; promotion from the popup |
 | `config/help.yaml` | the context help card `table-chart: user-guide#chart-any-table`, and the popup's `?` links it |
 | [Tutorial 21](../tutorials/21-an-entity-over-time.md) and the tables tutorial | a section *Chart it* with UI, keys and the resulting YAML of a promoted chart panel, with screenshots (desktop and phone) |
-| [CONFIGURATION.md](../admin/CONFIGURATION.md) | the planned `drishti.charts.*` (with C2; none was built yet) |
+| [CONFIGURATION.md](../reference/CONFIGURATION.md) | the planned `drishti.charts.*` (with C2; none was built yet) |
 | [API_GUIDE.md](API_GUIDE.md) | `for=chart`, `/api/v1/me/charts`, `bi/drafts/from-chart` |
 | [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) N7 | `charts` among the replicated namespaces |
 | this document | implementation notes; status to *built* |
@@ -8965,7 +8965,7 @@ Where each part is changed is section 7; the design, the open decisions and the 
 | [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one) | `provenance`: points to *About this page* for the full story; anchors unchanged |
 | [USER_GUIDE.md › About this page](USER_GUIDE.md#about-this-page) | *About this page*: keys, layers, panel and field help |
 | [Screen designer and the Build workbench](#screen-designer-and-the-build-workbench) | the workbench *About* tab |
-| [CONFIGURATION.md](../admin/CONFIGURATION.md) | `drishti.explain.*`, `drishti.about.*` |
+| [CONFIGURATION.md](../reference/CONFIGURATION.md) | `drishti.explain.*`, `drishti.about.*` |
 | [TROUBLESHOOTING.md](TROUBLESHOOTING.md) | error-code table rows; "the About drawer says a field has no explanation" |
 | HOW_IT_FITS.md (deleted, in git at tag v2.9.5; the section now lives [here](#about-this-page-end-to-end)) | a full section, not a line: *About this page, end to end*, worked on the same trade MX-20000001 as example A (the `?` press → `GET …/explain` → the view re-run for the caller → `MatchTrace`, emptiness reasons, provenance and health → `about.yaml` from the pack (with `extends`) rendered over the redacted document → the glossary → the drawer), the same for the genomics variant in example B in a few lines, `about.yaml` added to §1's picture and §2's pieces, and §7 *Where to change what* rows (about text, glossary, drawer, explain) |
 

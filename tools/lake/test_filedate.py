@@ -274,7 +274,7 @@ class LakeBuildTest(unittest.TestCase):
 
     def test_a_wrong_date_in_a_name_is_refused_never_today(self):
         """A plain name whose date part is not a calendar date, or is in the future, is refused with the reason, also when the table is
-        given (--kind) and when --as-of is: never filed under the business today or another date (DATA_LOAD_RULES.md section 2.1)."""
+        given (--kind) and when --as-of is: never filed under the business today or another date (DATA_ARCHITECTURE.md section 10.2.1)."""
         bad = self.root / "bad"
         bad.mkdir()
         for name, why in (("deal.2026-13-03.jsonl", "2026-13-03 is not a calendar date"), ("deal.2999-01-04.jsonl", "2999-01-04 is in the future")):

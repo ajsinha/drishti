@@ -15,7 +15,7 @@
  */
 /** Drishti Render 1.1.0: the client-side renderer, and Elements 2.1 (drishti-elements.js). docs/architecture/CLIENT_RENDERER.md, docs/guides/ELEMENTS.md. */
 
-/** A ViewModel as GET /api/v1/views/{kind}/{id} answers it (docs/architecture/VIEWMODEL.md); unknown fields are ignored. */
+/** A ViewModel as GET /api/v1/views/{kind}/{id} answers it (docs/reference/VIEWMODEL.md); unknown fields are ignored. */
 export interface ViewModel {
   contract?: string;
   ref: { kind: string; id: string };

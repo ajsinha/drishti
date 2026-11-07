@@ -20,7 +20,7 @@ and other code can use it too"; "I want to ensure we are not coding the same fun
 we have". The design below is the recommendation the product owner accepted. Status: parts 1 to 3 and 5 **built** in 2.9.11.b (as
 built: section 8); part 4 designed, built in a release of its own after 2.9.11.c (2.9.11.e), [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).*
 
-**Read with:** [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) (the grammar), [PIVOT_ENGINE.md](PIVOT_ENGINE.md) (the engine,
+**Read with:** [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) (the grammar), [ARCHITECTURE.md section 23](ARCHITECTURE.md#23-the-pivot-engine) (the engine,
 section 6.7 for paths into documents), [BI_DESIGN.md](BI_DESIGN.md) (section 3.3, DEL).
 
 ## 1. What existed before 2.9.11.b, and why it must become one
@@ -81,7 +81,7 @@ a second expression syntax, and Python is the open-ended escape, sandboxed. Size
   engine's SPI as the only way), and no module other than `drishti-rachana` parses an expression.
 - A console check: no console Python or JavaScript sums, averages or groups risk or BI figures (the server computes; the console
   displays), listed exceptions only for layout arithmetic.
-- The function catalogue is one generated page (Help → Functions, [FUNCTIONS.md](../guides/FUNCTIONS.md)), listing each function once
+- The function catalogue is one generated page (Help → Functions, [FUNCTIONS.md](../reference/FUNCTIONS.md)), listing each function once
   with where it runs. (`FUNC` stays the command directory it already was.)
 
 ## 6. The order of work
@@ -233,7 +233,7 @@ share; the market landing's CDS median, its move, each move's sigma and the Expl
 pivot chart's diversification bar is the engine's gap of the charted column (`diversificationByColumn` on each open row, beside
 `diversification` at the column total). `ConsoleFiguresTest` (drishti-bicompute) proves each on the console tests' fixtures. The
 function catalogue page is generated from the registries
-(`FunctionCataloguePage`, [FUNCTIONS.md](../guides/FUNCTIONS.md)) and checked against [FUNCTION_CATALOGUE.md](FUNCTION_CATALOGUE.md)'s
+(`FunctionCataloguePage`, [FUNCTIONS.md](../reference/FUNCTIONS.md)) and checked against [FUNCTION_CATALOGUE.md](FUNCTION_CATALOGUE.md)'s
 names (`FunctionCataloguePageTest`).
 
 **Tier 1 in the engine, front-loaded.** The statistics of [FUNCTION_CATALOGUE.md](FUNCTION_CATALOGUE.md) section 4 (`nmiss`, `range`,

@@ -50,7 +50,7 @@ import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 
 /**
- * The VaR provider of the pivot engine (PIVOT_ENGINE.md section 6.3, MR_CUBE_GUIDE.md), source {@code var}: the VaR engine's book of a
+ * The VaR provider of the pivot engine (ARCHITECTURE.md section 23.6.3, MR_CUBE_GUIDE.md), source {@code var}: the VaR engine's book of a
  * business date as the person sees it. Members are the date's trades; a cell is the view's scope ({@code options.scope}) under its filters
  * with each coordinate, its members found from per-trade dimension codes ({@link VarPivotCodes}); every cell's and total's vector is summed
  * in <b>one</b> batch for the whole plan ({@code VarBook.vectors}: on a sharded date one call per remote shard for all the sets) and its
@@ -109,7 +109,7 @@ public final class VarPivotProvider implements PivotProvider {
         this(svc, () -> true);
     }
 
-    /** {@code on}: whether the VaR engine runs here (COMPUTE_ENGINES.md: the pivot engine uses var); off, the source is not offered. */
+    /** {@code on}: whether the VaR engine runs here (ARCHITECTURE.md section 25: the pivot engine uses var); off, the source is not offered. */
     public VarPivotProvider(VarService svc, BooleanSupplier on) {
         this(svc, on, () -> false, MrCubeProperties.defaults(), () -> null);
     }
@@ -308,7 +308,7 @@ public final class VarPivotProvider implements PivotProvider {
     }
 
     /**
-     * The MR cube's landing view (layout A, MR_CUBE_LENS.md section 6.7): rows the management hierarchy's desks (then books, positions and
+     * The MR cube's landing view (layout A, LENSES.md section 6.6.7): rows the management hierarchy's desks (then books, positions and
      * trades as each node is opened), columns the risk class, the VaR; the bank as the scope.
      */
     Map<String, Object> defaultView(VarPivotLens o) {

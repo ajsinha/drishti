@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * The syntax tree of a pivot formula (PIVOT_ENGINE.md section 8.2, "Formula of built-ins (DEL)"): DEL's expression syntax (the accepted
+ * The syntax tree of a pivot formula (ARCHITECTURE.md section 23.8.2, "Formula of built-ins (DEL)"): DEL's expression syntax (the accepted
  * subset of Python's expression grammar, BI_DESIGN.md section 3.3.2) restricted to what a measure needs: numbers, strings, fields, arithmetic,
  * comparisons, {@code and}/{@code or}/{@code not}, {@code x if c else y}, scalar calls ({@code abs}, {@code sqrt}, ...) and aggregate calls
  * of the built-ins with an optional {@code where=} condition. Immutable.

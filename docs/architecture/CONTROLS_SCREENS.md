@@ -60,7 +60,7 @@ Mock-up: [f3-honesty.html](mockups/controls/f3-honesty.html), mixed by context.
 - The Explain drawer's first line states the status, with the source and the time.
 - The server sends each figure's status; the console only displays it; a guard test fails if a figure is drawn without one.
 - Exports carry a status column. A stored figure whose computation is under construction keeps the registry's chip
-  ([UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md)).
+  ([UNDER_CONSTRUCTION.md](../reference/UNDER_CONSTRUCTION.md)).
 
 ## 4. Build checklist
 

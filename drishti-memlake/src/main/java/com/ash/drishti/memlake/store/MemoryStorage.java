@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * A lake held in memory, never on a disk: the paths of one store, {@code mem://<store>/<path>}, answered from a {@link ChunkPool} of
- * direct buffers under a hard cap (docs/architecture/IN_MEMORY_LAKE.md, section 3). The {@link Storage} contract is met exactly: sorted
+ * direct buffers under a hard cap (docs/architecture/DATA_ARCHITECTURE.md, section 7.3). The {@link Storage} contract is met exactly: sorted
  * listings, status, positional reads over the chunks, whole-file creates visible when closed, a <b>truly exclusive</b>
  * {@link #createIfAbsent} (of two commits of one Delta version exactly one wins) and deletes.
  *

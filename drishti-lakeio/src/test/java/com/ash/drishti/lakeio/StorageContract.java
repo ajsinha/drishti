@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * The {@link Storage} contract every lake storage meets, as the Delta and Iceberg engines rely on it: one suite run on local disk and on
- * {@code mem://} (docs/architecture/IN_MEMORY_LAKE.md, section 3), so the memory store answers exactly as a disk does.
+ * {@code mem://} (docs/architecture/DATA_ARCHITECTURE.md, section 7.3), so the memory store answers exactly as a disk does.
  */
 public abstract class StorageContract {
 

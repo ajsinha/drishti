@@ -264,7 +264,7 @@ export DRISHTI_CONSOLE_URL=https://drishti.example.com                  # where 
 export DRISHTI_MAIL_FROM=drishti@example.com
 ```
 
-(The same keys as `spring.mail.host` and so on in the server's `application.yml`; [OPERATIONS.md](../admin/OPERATIONS.md) and [CONFIGURATION.md](../admin/CONFIGURATION.md#email-springmail-and-the-outbox) have all of them.) To try it **without sending anything anywhere**, use the catcher that ships with this
+(The same keys as `spring.mail.host` and so on in the server's `application.yml`; [OPERATIONS.md](../admin/OPERATIONS.md) and [CONFIGURATION.md](../reference/CONFIGURATION.md#email-springmail-and-the-outbox) have all of them.) To try it **without sending anything anywhere**, use the catcher that ships with this
 tutorial: a small program that accepts any mail on your machine and writes each message to a file.
 
 ```bash
@@ -552,7 +552,7 @@ Four small things make what leaves Drishti more useful; none changes how you wor
 
 **A written summary.** On the Subscribe form (step 2) tick *Open the email with a short written summary*. It needs the AI layer ([tutorial 15](15-ai-in-drishti.md)) and **`drishti.bi.ai.values: aggregates`**; each recipient's email then opens with two or three sentences that word *their own* figures, never a masked one. With anything else the mail goes without it and the run's history says why.
 
-**A webhook and a text.** An administrator defines webhooks and one text gateway (`drishti.notify.*`, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtinotify--webhooks-and-text-messages-for-alerts-and-subscriptions)); the form then offers them by name, plus a field for your own mobile number:
+**A webhook and a text.** An administrator defines webhooks and one text gateway (`drishti.notify.*`, [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtinotify--webhooks-and-text-messages-for-alerts-and-subscriptions)); the form then offers them by name, plus a field for your own mobile number:
 
 You should see a webhook per defined name and, once a gateway is set up, *Text each recipient who has given a number a link to it* (the picture is in [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](../guides/BI_GUIDE.md#6-webhooks-and-text-messages)). A webhook post is signed (`X-Drishti-Signature`) and holds the title and a link, never a figure; so does a text. The alert form has the same two boxes. In the subscription's YAML they are `webhooks: [ops]` and `sms: true`. [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 6](../guides/BI_GUIDE.md#6-webhooks-and-text-messages).
 

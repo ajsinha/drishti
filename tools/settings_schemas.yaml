@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The schemas of the files that are content rather than commented settings, and the environment variables no settings file names
-# (read by tools/settings_catalogue.py; docs/admin/CONFIGURATION.md, "Every setting"). Each schema lists every key its files may
+# (read by tools/settings_catalogue.py; docs/reference/CONFIGURATION.md, "Every setting"). Each schema lists every key its files may
 # use: `key` (a list's items are key[], a name the site chooses is <name>, a trailing .* covers everything under it), type, default,
 # meaning, and where it differs from the schema's own: change (restart or live), applies. --check fails when a shipped file uses a key
 # its schema does not list. `maps` names the mappings whose keys are names (each becomes <name>).

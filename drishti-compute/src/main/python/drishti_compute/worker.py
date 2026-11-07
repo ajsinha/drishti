@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""A compute worker process (docs/architecture/PYTHON_COMPUTE.md section 7.2), started and watched by the server's supervisor.
+"""A compute worker process (docs/architecture/ARCHITECTURE.md section 24.7.2), started and watched by the server's supervisor.
 
 Control is JSON lines: requests arrive on standard input, and progress, results and errors leave on the worker's protocol channel (the
 original standard output; ``print`` in an engine goes to standard error, which the server logs, so it cannot corrupt the protocol).

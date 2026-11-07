@@ -39,7 +39,7 @@ import java.util.TreeSet;
 import java.util.function.Function;
 
 /**
- * BI's totals and subtotals on the pivot engine (PIVOT_ENGINE.md section 12; BI_DESIGN.md, totals): every level a matrix, a table or a
+ * BI's totals and subtotals on the pivot engine (ARCHITECTURE.md section 23.12; BI_DESIGN.md, totals): every level a matrix, a table or a
  * model query asks for, for every measure that is a pivot function, in <b>one</b> grouping-sets statement of the engine's
  * function states over the model's rows as the reader may see them. The rows are the model's own detail query (row rules, masks, joins,
  * layers and dates applied by BI's compiler), never run on its own: it is the FROM item of the engine's statement, which runs in BI's

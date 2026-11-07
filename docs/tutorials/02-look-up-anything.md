@@ -150,7 +150,7 @@ keyboard: the bar at the bottom lists them, and **F7** opens **Counterparty trad
 ![The netting set view: exposure profile, member trades, net MTM by asset class and linked entities](img/t02/07-netting-set.jpg)
 
 You should see the netting set `NS-MERIDIAN-RE-NY` with its strip (270 trades, net MTM `+400,908,419`, collateral after haircut `+284,354,426`, the exposure engine's
-EPE `28.3m` and peak PFE 95 `212.7m`, limit `1.7bn`, and CVA *Under construction*: a stored figure, not yet computed by an engine, shown as the chip ([UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md))), its exposure profile and how it was computed, the member trades, net MTM split by asset class and,
+EPE `28.3m` and peak PFE 95 `212.7m`, limit `1.7bn`, and CVA *Under construction*: a stored figure, not yet computed by an engine, shown as the chip ([UNDER_CONSTRUCTION.md](../reference/UNDER_CONSTRUCTION.md))), its exposure profile and how it was computed, the member trades, net MTM split by asset class and,
 further down, the figures computed from the trade valuations beside the stored ones (the strip shows no stored utilisation).
 **Alt+←** takes you back. Links, impact (**F8**) and search all follow the date in the top
 bar, which is the next step.

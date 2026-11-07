@@ -102,7 +102,7 @@ The server captures every node of every hierarchy officially when a date loads, 
 Delta is the default; Iceberg is one setting. **A table keeps the format it was created in**, so give the Iceberg table a root of its
 own; the Iceberg root of step 1 is the natural one.
 
-**The YAML** (`application.local.yaml` in the server's working folder; [CONFIGURATION.md](../admin/CONFIGURATION.md)):
+**The YAML** (`application.local.yaml` in the server's working folder; [CONFIGURATION.md](../reference/CONFIGURATION.md)):
 
 ```yaml
 drishti:

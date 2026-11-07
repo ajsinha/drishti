@@ -297,7 +297,7 @@ public final class QueryService implements AutoCloseable {
     }
 
     /**
-     * The aggregation the pivot engine asks over a model's rows (PIVOT_ENGINE.md section 12): {@code detail} is a query of shape rows (no
+     * The aggregation the pivot engine asks over a model's rows (ARCHITECTURE.md section 23.12): {@code detail} is a query of shape rows (no
      * measures) whose SQL, compiled as the reader (row rules, masks, joins, layers, dates) but not run, becomes the FROM item of the
      * statement {@code outer} writes (one grouping-sets statement of the engine's function states). The statement runs here, in the
      * engine that holds the model's layers, so no row leaves it; the answer is the statement's columns.

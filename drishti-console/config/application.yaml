@@ -63,7 +63,7 @@ collab:
   # (drishti.collab.bridges.timeout, default 10 s). Keep it longer than that.
   bridge_test_timeout_seconds: 30
 # Several servers (ADR-016): list them and people pick one, then sign in to it. Without this list, backend.url is the
-# one server. See docs/admin/CONFIGURATION.md, "servers".
+# one server. See docs/reference/CONFIGURATION.md, "servers".
 # servers:
 #   - { id: open, name: Drishti, url: "http://127.0.0.1:18480", color: "#2a9d8f" }
 #   - { id: rates-desk, name: Rates desk, url: "http://127.0.0.1:18481", token_secret: "${DRISHTI_TOKEN_SECRET_RATES:}" }
@@ -219,7 +219,7 @@ live:                        # live updates (docs/architecture/DATA_ARCHITECTURE
     port: ${DRISHTI_CONSOLE_RELAY_PORT:17490}  # across hosts, worker n listens on port + n (port .. port + server.workers - 1): open these between the consoles; 0 = any free port
     timeout_seconds: 3  # how long a worker waits for the holder of a channel to answer
     window_seconds: 30  # a relay message is accepted this long after it was signed (allow for the hosts' clock difference); each only once
-under_construction:          # the under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): menu items and help pages that depend on unbuilt work
+under_construction:          # the under-construction registry (docs/reference/UNDER_CONSTRUCTION.md): menu items and help pages that depend on unbuilt work
   file: ${DRISHTI_UNDER_CONSTRUCTION_FILE:../config/under-construction.yaml}   # the same file the server reads; absent: nothing registered
 editions:                    # editions and lenses (docs/admin/EDITIONS.md): the console learns the server's from its about answer
   dir: ${DRISHTI_EDITIONS_DIR:../config/editions}   # the same folder the server reads (config/editions/<name>.yaml, features.yaml)
@@ -309,7 +309,7 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
   board:
     rotate_seconds: ${DRISHTI_BI_BOARD_ROTATE_SECONDS:30}     # a board in kiosk mode turns to its next page after this long, unless the board sets rotate:; 3 to 3600
   # The Notebook (docs/guides/USER_GUIDE.md › The Notebook). Every Python run (python visuals and measures, Notebook cells, the Transform editor's steps) is the
-  # server's, on its compute pool python (config/compute/compute.yaml; docs/architecture/PYTHON_COMPUTE.md section 19): the console runs no Python of anyone's.
+  # server's, on its compute pool python (config/compute/compute.yaml; docs/architecture/ARCHITECTURE.md section 24.19): the console runs no Python of anyone's.
   notebook:
     max_rows: ${DRISHTI_BI_NOTEBOOK_MAX_ROWS:10000}            # most rows of an extract (the reader's rows, cut here); 10 to 100000
     max_fields: 60                                              # most columns of an extract

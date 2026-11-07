@@ -31,7 +31,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 /**
- * The approval of compute requirements (docs/architecture/PYTHON_COMPUTE.md section 6). Nothing a connector or pool requires is fetched,
+ * The approval of compute requirements (docs/architecture/ARCHITECTURE.md section 24.6). Nothing a connector or pool requires is fetched,
  * built or run until every item of it is approved. A subject whose items are not all approved files a request; an administrator approves it
  * (with a reason) or rejects it; an approval can be revoked, after which new requests are refused at once and in-flight ones finish.
  * <b>Four eyes:</b> the person who asked can neither approve nor reject their own request. Every step is an audit entry (who, when, what,

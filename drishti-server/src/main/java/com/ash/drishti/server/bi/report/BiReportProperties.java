@@ -18,7 +18,7 @@ package com.ash.drishti.server.bi.report;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Reports, {@code drishti.bi.report.*} (docs/admin/CONFIGURATION.md): how many rows each kind of visual asks the engine for. The engine's own limits
+ * Reports, {@code drishti.bi.report.*} (docs/reference/CONFIGURATION.md): how many rows each kind of visual asks the engine for. The engine's own limits
  * ({@code drishti.bi.query.*}) still apply on top.
  *
  * @param chartRows most categories one chart draws (a chart asks for this many and says when it was cut)

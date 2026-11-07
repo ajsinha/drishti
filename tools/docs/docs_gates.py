@@ -218,11 +218,11 @@ def gate_one_home(docs: list[Path]) -> list[str]:
         for i, line, fence in lines:
             if fence is not None:
                 continue
-            if SETTING_ROW.match(line) and not rel.endswith("admin/CONFIGURATION.md"):
+            if SETTING_ROW.match(line) and not rel.endswith("reference/CONFIGURATION.md"):
                 out.append(f"{rel}:{i}: a settings row: settings belong to CONFIGURATION.md")
             elif ENDPOINT_ROW.match(line) and not rel.endswith(("guides/API_GUIDE.md", "reference/API_REFERENCE.md")):
                 out.append(f"{rel}:{i}: an endpoint row: endpoints belong to the API reference")
-            elif FUNCTION_ROW.match(line) and not rel.endswith(("guides/FUNCTIONS.md", "reference/FUNCTIONS.md")):
+            elif FUNCTION_ROW.match(line) and not rel.endswith(("reference/FUNCTIONS.md", "reference/FUNCTIONS.md")):
                 out.append(f"{rel}:{i}: a function row: functions belong to FUNCTIONS.md")
     return out
 

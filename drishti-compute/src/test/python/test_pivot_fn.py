@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Python custom pivot functions (PIVOT_ENGINE.md sections 8.1 and 8.5): the four steps over Arrow batches, split-and-merge equal to one
+"""Python custom pivot functions (ARCHITECTURE.md sections 23.8.1 and 23.8.5): the four steps over Arrow batches, split-and-merge equal to one
 pass, states that round-trip, restricted imports and built-ins, and the worker process's frames and sandbox."""
 import io
 import math

@@ -46,7 +46,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 /**
- * The server's wiring of the data inbox (docs/architecture/DATALOAD_INBOX.md; the inbox itself is the plain-Java module
+ * The server's wiring of the data inbox (docs/architecture/DATA_ARCHITECTURE.md section 9; the inbox itself is the plain-Java module
  * {@code drishti-dataload}): {@code drishti.dataload.*} bound onto {@link DataLoadSettings}, the loaded packs for routing, busy protection
  * for the busy check, the bridge to {@link LoadService} for the signal (the same service method the HTTP data-load signal calls), and the
  * inbox as a compute engine ({@code config/engines/dataload.yaml}, off as shipped); in a cluster each signal is passed on to the other
@@ -73,7 +73,7 @@ public class DataLoadConfiguration {
                 signal(loads, new LoadForwarding(peers.getIfAvailable()), LoadForwarding.node(node)), busy(gate));
     }
 
-    /** The inbox as a compute engine (COMPUTE_ENGINES.md): live on and off; its thread is {@code dataload-cycle}. */
+    /** The inbox as a compute engine (ARCHITECTURE.md section 25): live on and off; its thread is {@code dataload-cycle}. */
     @Bean
     public BasicEngine dataloadComputeEngine(DataInbox inbox) {
         return new BasicEngine("dataload").onStart(inbox::start).onStop(inbox::stop).threads("dataload-");

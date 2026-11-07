@@ -430,7 +430,7 @@ days.**
   `sharding:` block each date is cut into legal-entity and desk ranges, owned by two members each (rendezvous hashing, no consensus
   protocol); every member keeps every node's aggregate, so bank and desk totals answer even with a shard's owners down; other scopes sum
   one partial per shard, never a partial VaR (`DRS-5215`); handover and drain for scale-in. Equal to one server to the cent.
-- **The parallel lake loader** ([PARALLEL_LOADER](docs/architecture/PARALLEL_LOADER.md), [TOOLS 4.13](docs/guides/TOOLS.md)): a
+- **The parallel lake loader** ([PARALLEL_LOADER](docs/architecture/DATA_ARCHITECTURE.md#11-the-parallel-lake-loader-drishti-lakeload), [TOOLS 4.13](docs/guides/TOOLS.md)): a
   config-driven, multi-threaded Java loader of JSON Lines from a folder or S3 into Delta or Iceberg, memory bounded, one commit per
   date. `lake build` keeps the Python path as the default; `--engine java` asks for the loader. Both follow one duplicate-record rule:
   the latest `COMPUTED_AT` wins (else the last read), the others counted, never a failure.
@@ -441,7 +441,7 @@ days.**
 - **Fixes:** an intraday batch can no longer bring back a date a reload dropped (published only over the date it was built on);
   reporting currencies always carry the current intraday layer; batches listed in a stable order; cluster changes queued for suspected
   members; the browser tests ignore a checkout's own connector and cluster files.
-- **Documents:** the ViewModel contract and its JSON Schema ([VIEWMODEL](docs/architecture/VIEWMODEL.md),
+- **Documents:** the ViewModel contract and its JSON Schema ([VIEWMODEL](docs/reference/VIEWMODEL.md),
   `GET /api/v1/viewmodel/schema`); how a screen is made, generic not bespoke (ARCHITECTURE section 7a); a worked example of every data
   type, field by field (data samples (docs/contracts/samples/, since folded into the contract pages)), with every input contract audited against all its rows and a
   drift test; the computed-attributes analysis of the market-risk and counterparty-risk packs, with its decisions
@@ -639,7 +639,7 @@ designs kept ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md#
 - **Data contracts** ([docs/contracts](docs/contracts/README.md)): the shared rules (keys, types, dates, signs, vectors, delivery,
   validation, entitlements, versioning, retirement); a machine-readable contract for every command
   (`config/packs/<pack>/contracts/<kind>.contract.yaml`, `drishti.py contract`), generated pages, and the **command catalog**
-  ([COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md)): every command with what it does and an example. The detailed VaR contract is
+  ([COMMAND_CATALOG.md](docs/reference/COMMANDS.md)): every command with what it does and an example. The detailed VaR contract is
   [VAR.md](docs/contracts/VAR.md#1-the-contract-at-a-glance); the parked measures' contracts (FRTB, SIMM, SA-CCR, EXP, CVA, stress, P&L explain …) are kept as designs.
 - **VaR, complete** ([VAR_GUIDE.md](docs/guides/VAR_GUIDE.md), tutorial 25):
   - the stored `var` and `var-node` kinds are **retired**: `VAR-*` ids and links open the explorer; positions, portfolios and desks
@@ -899,7 +899,7 @@ demo you can run from a fresh clone in minutes.** (Wave B of [BI_DESIGN.md](docs
   2026-10-18) that `lake demo` builds into the lake. World economy data was already offline.
 - **Ids are text everywhere:** a numeric `TRADE_ID` in a file is read as its exact text; ids may hold letters, dashes and
   underscores; nothing expects a prefix. Older lakes with numeric id columns still read.
-- **[How to QA in Windows Environment using Custom Data](docs/qa/windows-custom-data.md):** an offline
+- **[How to QA in Windows Environment using Custom Data](docs/architecture/TEST_HARNESS.md#9-qa-on-windows-offline-with-your-own-endur-data):** an offline
   Windows demo with your own ENDUR files replacing the synthetic ENDUR trades, with screenshots; a *Load ENDUR file into
   the lake* run configuration; every Python run configuration uses the project interpreter (works on Windows).
 - **Security fix:** field masks match whatever the case or naming style (a camelCase mask masks the UPPER_SNAKE field);

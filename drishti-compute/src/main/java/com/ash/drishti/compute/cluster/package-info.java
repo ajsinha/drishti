@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /**
- * Python compute across the cluster's nodes (docs/architecture/PYTHON_COMPUTE.md section 7.6): the other nodes serving a pool as
+ * Python compute across the cluster's nodes (docs/architecture/ARCHITECTURE.md section 24.7.6): the other nodes serving a pool as
  * fan-out sees them ({@link com.ash.drishti.compute.cluster.PeerTransport}) and one request split into chunks run on every worker there is
  * ({@link com.ash.drishti.compute.cluster.FanOut}).
  */

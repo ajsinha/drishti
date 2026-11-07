@@ -19,7 +19,7 @@ Status: built for position sensitivities (SENS), the factor dictionary (RFAC) an
 (FRSA), the FRTB-SA Playground (PLAY FRTB) and its workbook ([FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md)); built for SIMM per netting
 set, collect and post, with the SIMM screen, the SIMM Playground (PLAY SIMM) and its workbook (sections 8 and 12.2;
 [SIMM_GUIDE.md](../guides/SIMM_GUIDE.md), whose section 12 lists what SIMM still lacks); design, not built, for the sensitivity-VaR
-consistency check (section 2.4), the bank's limit grids (section 3.3) and the official FRTB-SA and SIMM captures. Companion to [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md) (sections 7.9, 7.10 and 8.3),
+consistency check (section 2.4), the bank's limit grids (section 3.3) and the official FRTB-SA and SIMM captures. Companion to [LENSES.md section 6](LENSES.md#6-the-mr-cube-a-market-risk-cube-lens-that-answers-what-fis-adaptivs-artiq-answers-and-shows-why) (sections 7.9, 7.10 and 8.3),
 [FRTB.md](../contracts/FRTB.md) and [SIMM.md](../contracts/SIMM.md) (the earlier contract designs this document narrows), and the
 [VaR Playground](VAR_PLAYGROUND.md) (the playground frame every metric here reuses).
 
@@ -528,7 +528,7 @@ Built for sensitivities and FRTB-SA (the commands `FRSA <scope>`, `PLAY FRTB <sc
 of class `computed`; the stored `frtb-sensitivity` and `simm` kinds retire when these are built.
 
 **Screens:** the FRTB-SA capital screen, the SIMM screen and the factor dictionary screen (mock-ups in section 15); the MR cube's SBM
-measure and its sensitivity ladders and heat maps (decided mock-ups, [MR_CUBE_LENS.md section 6.7](../lenses/MR_CUBE_LENS.md#67-mock-ups-the-screens-to-build)).
+measure and its sensitivity ladders and heat maps (decided mock-ups, [LENSES.md section 6.6.7](LENSES.md#667-mock-ups-the-screens-to-build)).
 
 ## 12. The playgrounds
 
@@ -711,7 +711,7 @@ never an edit of the one in force: an official capture always names the paramete
 
 ## 15. Mock-ups: the screens to build
 
-Decided already: the MR cube's landing A with tabs B and C ([MR_CUBE_LENS.md section 6.7](../lenses/MR_CUBE_LENS.md#67-mock-ups-the-screens-to-build));
+Decided already: the MR cube's landing A with tabs B and C ([LENSES.md section 6.6.7](LENSES.md#667-mock-ups-the-screens-to-build));
 the playgrounds use the VaR Playground's chosen frame ([VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND.md#16-mock-ups-the-screens-to-build)).
 Chosen (product owner, 2026-11-01): **FRTB-SA = B** (the capital stack) with A's three scenarios as a second tab; **SIMM = A** (the
 netting-set list) with C (margin against the counterparty) as a second tab; **risk factors = A** (the dictionary) with B (the load's
@@ -719,9 +719,9 @@ quality) as a second tab. The options, three each, self-contained HTML with the 
 
 | Screen | A | B | C |
 |---|---|---|---|
-| FRTB-SA capital | [scenarios first](../lenses/mockups/frtb-sa/A.html): the three scenarios side by side by risk class, the binding one marked, then DRC and RRAO | [the capital stack](../lenses/mockups/frtb-sa/B.html): one waterfall from delta to the total with the class × measure grid below and the bucket drill on the right | [desk by class pivot](../lenses/mockups/frtb-sa/C.html): the MR cube's pivot with the SBM measure, the explain panel walking a cell's buckets |
-| SIMM | [netting-set list](../lenses/mockups/simm/A.html): every netting set with IM collect and post, the selected one's breakdown beside | [one netting set](../lenses/mockups/simm/B.html): the product-class tree with the risk-class bars and the concentration factors | [margin against the counterparty](../lenses/mockups/simm/C.html): Drishti's SIMM beside the counterparty's call, the differences by risk class to explain a dispute |
-| Factor dictionary and sensitivity quality | [the dictionary](../lenses/mockups/risk-factors/A.html): a searchable table of factors with their FRTB and SIMM mapping and source names | [the load's quality](../lenses/mockups/risk-factors/B.html): coverage by desk, refusals by reason, unmapped source names to add | [the factor's page](../lenses/mockups/risk-factors/C.html): one factor with its mapping, its exposure by desk, its move against VaR |
+| FRTB-SA capital | [scenarios first](mockups/frtb-sa/A.html): the three scenarios side by side by risk class, the binding one marked, then DRC and RRAO | [the capital stack](mockups/frtb-sa/B.html): one waterfall from delta to the total with the class × measure grid below and the bucket drill on the right | [desk by class pivot](mockups/frtb-sa/C.html): the MR cube's pivot with the SBM measure, the explain panel walking a cell's buckets |
+| SIMM | [netting-set list](mockups/simm/A.html): every netting set with IM collect and post, the selected one's breakdown beside | [one netting set](mockups/simm/B.html): the product-class tree with the risk-class bars and the concentration factors | [margin against the counterparty](mockups/simm/C.html): Drishti's SIMM beside the counterparty's call, the differences by risk class to explain a dispute |
+| Factor dictionary and sensitivity quality | [the dictionary](mockups/risk-factors/A.html): a searchable table of factors with their FRTB and SIMM mapping and source names | [the load's quality](mockups/risk-factors/B.html): coverage by desk, refusals by reason, unmapped source names to add | [the factor's page](mockups/risk-factors/C.html): one factor with its mapping, its exposure by desk, its move against VaR |
 
 The numbers on the mock-ups come from the demo sensitivities through a sketch of the engine (synthetic, illustrative; the CSR sector
 correlation and the DRC inputs are placeholders until the engine is built).

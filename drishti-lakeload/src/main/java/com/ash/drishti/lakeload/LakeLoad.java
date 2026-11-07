@@ -67,7 +67,7 @@ public final class LakeLoad {
     }
 
     /**
-     * The tables and dates a tar feed holds ({@code <table>/<YYYY-MM-DD>/}; DATA_LOAD_RULES.md section 3.1), checked as the loader checks
+     * The tables and dates a tar feed holds ({@code <table>/<YYYY-MM-DD>/}; DATA_ARCHITECTURE.md section 10.3.1), checked as the loader checks
      * it (every problem refuses it, an {@link java.io.IOException} saying them all); a local file.
      */
     public static Map<String, java.util.SortedSet<java.time.LocalDate>> tarTables(String path) throws java.io.IOException {
@@ -133,7 +133,7 @@ public final class LakeLoad {
                     case "--no-run-log" -> sets.add("report.run-log=false");
                     case "--dry-run" -> sets.add("report.dry-run=true");
                     case "--dataset" -> sets.add("source.dataset=" + next(args, ++i, a));
-                    // the options of every loader (docs/architecture/DATA_LOAD_RULES.md section 8), over the configuration file
+                    // the options of every loader (docs/architecture/DATA_ARCHITECTURE.md section 10.8), over the configuration file
                     case "--as-of" -> sets.add("source.as-of=" + next(args, ++i, a));
                     case "--table" -> sets.add("target.table=" + next(args, ++i, a).toLowerCase(java.util.Locale.ROOT));
                     case "--pack" -> sets.add("source.pack=" + next(args, ++i, a));
@@ -149,7 +149,7 @@ public final class LakeLoad {
                         out.println("usage: LakeLoad --config FILE [--set key.path=value ...] [--as-of YYYY-MM-DD] [--table T] [--pack DIR] "
                                 + "[--kind K] [--mode append|replace] [--key FIELD] [--date-from auto|name] [--plan] [--summary FILE] [--progress FILE] "
                                 + "[--no-lock] [--no-run-log] [--dry-run] [--dataset NAME] [--json] [-q]   (docs/guides/TOOLS.md section 4.13, "
-                                + "docs/architecture/DATA_LOAD_RULES.md)");
+                                + "docs/architecture/DATA_ARCHITECTURE.md section 10)");
                         return OK;
                     }
                     default -> throw new IllegalArgumentException("unknown argument " + a + " (--help)");

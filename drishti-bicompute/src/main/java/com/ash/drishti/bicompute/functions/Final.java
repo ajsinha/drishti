@@ -22,7 +22,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
- * A holistic figure a provider finished itself (PIVOT_ENGINE.md section 6.1: "a provider may also answer final figures for functions only it
+ * A holistic figure a provider finished itself (ARCHITECTURE.md section 23.6.1: "a provider may also answer final figures for functions only it
  * can finish"): an exact median DuckDB computed for one grouping set from its own rows, or a cell's VaR from its own members' summed vector.
  * It is never merged with another cell's: a total is its own set's figure.
  *

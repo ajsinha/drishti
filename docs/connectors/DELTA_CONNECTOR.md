@@ -24,7 +24,7 @@ written and kept in shape, how much memory the server needs, what was measured, 
 Read it if you run Drishti over a large lake, if you load such a lake (your ETL writes what is described here), or if
 you change the connector. For setting the connector up the first time, start with
 [the walk-through at the end of this document](#walk-through-step-by-step); every setting is in
-[CONFIGURATION.md](../admin/CONFIGURATION.md#delta--delta-lake). The Aerospike connector follows the same design with its own
+[CONFIGURATION.md](../reference/CONFIGURATION.md#delta--delta-lake). The Aerospike connector follows the same design with its own
 storage: [AEROSPIKE_CONNECTOR.md](AEROSPIKE_CONNECTOR.md).
 
 Reading tables Databricks (or any Spark job) already writes, with or without Unity Catalog: [Using Drishti with Databricks Delta Lake or Apache Iceberg](../guides/DATA_GUIDE.md#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg).
@@ -221,7 +221,7 @@ This is the one statement of the row-group size; other documents link here.
 | Writer | Row group | Set by |
 |---|---|---|
 | `drishti.py lake build`, `lake demo`, `build_demo_lakes.py` and the parallel lake loader, into **Delta** (the Java writer, `LakeWriter` and `DeltaTarget`) | **256 KB** in bytes, pages of 64 KB | `DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB` (`DRISHTI_LAKE_ROW_GROUP_MB` is still read). The AWS deployment sets 1 MB (`LAKE_ROW_GROUP_KB=1024` in `deploy/aws/env`; [CLUSTER_DEPLOYMENT.md › A high-performance Delta lake on AWS, past 200 TB, section 7.1](../architecture/CLUSTER_DEPLOYMENT.md#71-the-numbers)) |
-| the parallel lake loader into **Iceberg** | 1 MB, unless the load's layout sets `rowGroupBytes` | the loader's configuration ([PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md)) |
+| the parallel lake loader into **Iceberg** | 1 MB, unless the load's layout sets `rowGroupBytes` | the loader's configuration ([DATA_ARCHITECTURE.md section 11](../architecture/DATA_ARCHITECTURE.md#11-the-parallel-lake-loader-drishti-lakeload)) |
 | the Python writers built on `tools/samplegen/layout.py` (`ingest_jsonl.py`, `samplegen/lake.py`, the banking `make_data.py`, `maintain.py relayout`) | `layout.<kind>.row-group-rows` **rows** (default 10,000; the trading pack sets 1,000) | the pack's layout |
 
 `row-group-rows` in a pack's layout therefore does **not** change what `lake build` writes; the byte size does. 256 KB holds a few
@@ -254,7 +254,7 @@ Drishti only reads the lake. Whatever writes it must follow the layout. The repo
 | Writer | What it writes |
 |---|---|
 | `drishti.py lake build --from <file> --pack <pack> --connector <name>` | a day of a source system's documents into its table, in the pack's layout ([TOOLS.md](../guides/TOOLS.md)): rows sorted by id, row groups of 256 KB and pages of 64 KB (`DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB`), the pack's `ingest.<kind>.flatten` fields added as plain fields and promoted columns |
-| `drishti.py lake build --engine java …`, or the parallel lake loader on its own | millions of JSON Lines rows (the scenario PVs of 2.3M positions) from a folder or S3, parsed and written on every core with memory bounded by `memory.budget-mb`, one Delta version per business date replacing it; the same table as `lake build` (documents byte for byte, columns, `list<double>` vectors), each date sorted by `LEGAL_ENTITY`, `DESK`, id by default so a file's statistics name its legal entities and desks, the vector column BYTE_STREAM_SPLIT + ZSTD ([TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader), [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md)) |
+| `drishti.py lake build --engine java …`, or the parallel lake loader on its own | millions of JSON Lines rows (the scenario PVs of 2.3M positions) from a folder or S3, parsed and written on every core with memory bounded by `memory.budget-mb`, one Delta version per business date replacing it; the same table as `lake build` (documents byte for byte, columns, `list<double>` vectors), each date sorted by `LEGAL_ENTITY`, `DESK`, id by default so a file's statistics name its legal entities and desks, the vector column BYTE_STREAM_SPLIT + ZSTD ([TOOLS.md section 4.13](../guides/TOOLS.md#413-the-parallel-lake-loader), [DATA_ARCHITECTURE.md section 11](../architecture/DATA_ARCHITECTURE.md#11-the-parallel-lake-loader-drishti-lakeload)) |
 | `tools/packgen/banking/make_data.py --lake data/delta` | the banking packs' sample documents, 10 business days, every domain, the trade tables in their layout: written as JSON Lines rows (`data/build/lake-rows/banking-history.tar`, `banking-restated.tar`: tars of `<table>/<YYYY-MM-DD>/rows.jsonl`, the load rules' form), then loaded by `load_rows.py` (`--no-load` stops after the rows) |
 | `tools/samplegen/lake.py --samples <dir> --root data/delta --domain <d> --days 10` | one pack's samples into one domain, the same two steps; it prints `<table>: <n> entities x 10 business days` per table and writes the newest date twice (the restated file is a second commit, restating one document per kind), so *known at* before that commit shows the original; local disk only |
 | `tools/samplegen/load_rows.py --rows <history.tar> --restated <restated.tar> --root data/delta` | the loader of those rows: one JSON object a line, `{"domain", "kind", "table", "id", "date", "doc"}` ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)); each row stored under its tar folder's date (a plain file: `--as-of`, its `.ready` date, its name's, or the business today), never its own `date`, which is only counted when it differs; a plain file of several tables is refused (send a tar) |
@@ -491,7 +491,7 @@ The result is kept per business day until the data changes: every `version-check
 sources for their data's version, and a new version (a load) rebuilds it in the background while the old pages serve.
 Pages on disk are kept across restarts (a `pages.json` beside them) and served at once while their data is unchanged.
 Desk P&L of every desk from a million trades: **327 ms** the first time, **48 ms** after. The derived connector's
-settings are in [CONFIGURATION.md](../admin/CONFIGURATION.md#derived--kinds-computed-from-other-kinds).
+settings are in [CONFIGURATION.md](../reference/CONFIGURATION.md#derived--kinds-computed-from-other-kinds).
 
 ### 7.3 Impact (F8)
 

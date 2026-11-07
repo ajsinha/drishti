@@ -67,7 +67,7 @@ repository root. Scratch output (`lake`, `lake2`, `build/...`) goes into the clo
 | Run VaR's many-scope sums on the bundled OpenBLAS or on the pure-Java path, live | Admin → **Engines** → Linear algebra: OpenBLAS | `drishti.py server blas status`, `server blas java --reason ...`, `server blas native --reason ...` (also as `admin blas`; [OPERATIONS.md section 2.1](../admin/OPERATIONS.md#21-server-requirements-native-libraries-blas)) |
 | Make, check or remove the AWS side of the S3 Tables or Delta Lake on S3 connector (bucket, namespace or prefix, IAM policy) | | `deploy/aws/s3-tables/s3-tables.sh`, `deploy/aws/delta-s3/delta-s3.sh` (`.ps1` on Windows; section 4.14) |
 | See or check the shape of a command's data (its data contract), or draft the contract of a new kind | | `drishti.py contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` |
-| Pin the Python libraries code people write may use on the server's compute pool `python` (every file's sha256, for `pip --require-hashes`) | | `python tools/python_lock.py config/compute/locks/python.in --out config/compute/locks/python.lock` ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)) |
+| Pin the Python libraries code people write may use on the server's compute pool `python` (every file's sha256, for `pip --require-hashes`) | | `python tools/python_lock.py config/compute/locks/python.in --out config/compute/locks/python.lock` ([ARCHITECTURE.md section 24.19](../architecture/ARCHITECTURE.md#2419-the-python-runtime-for-code-people-write)) |
 
 Use the page for a one-off file, a first look at new data, or when you want to see each choice before it is made. Use the command
 line for anything that repeats, runs at night, or lives in a pipeline: it has exit codes, a lock, a log line and a JSON summary,
@@ -106,7 +106,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `pack` | `pack make`, `pack new`, `pack regenerate`, `pack diff`, `pack catalogue`, `pack i18n`, `pack check`, `pack about-check`, `pack bundle`, `pack verify`, `pack deploy`, `pack rollback`, `pack publish`, `pack keygen`, `pack install` | [5.2](#52-pack) |
 | `data` | `data profile`, `data ingest`, `data load`, `data landed`, `data loads`, `data get` (a dataset as `.jsonl.gz`, Export data) | [5.3](#53-data) |
 | `dataload` | `dataload status`, `dataload run`, `dataload retry` (the data inbox: files dropped in a folder, loaded by the server) | [5.3a](#53a-dataload) |
-| `lake` | `lake build`, `lake publish`, `lake scan`, `lake status`, `lake demo`, `lake maintain`, `lake undo` (one load's rows removed by its load id, [DATA_LOAD_RULES.md section 6.3](../architecture/DATA_LOAD_RULES.md)), `lake memory` (the in-memory lake's stores, jobs and refills, [IN_MEMORY_LAKE_GUIDE](IN_MEMORY_LAKE_GUIDE.md)) | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
+| `lake` | `lake build`, `lake publish`, `lake scan`, `lake status`, `lake demo`, `lake maintain`, `lake undo` (one load's rows removed by its load id, [DATA_ARCHITECTURE.md section 10.6.3](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load)), `lake memory` (the in-memory lake's stores, jobs and refills, [IN_MEMORY_LAKE_GUIDE](IN_MEMORY_LAKE_GUIDE.md)) | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
 | `server` | `server health`, `server caches`, `server packs`, `server commands`, `server smoke`, `server engines` (`admin engines` is the same: the compute engines on or off, [OPERATIONS section 21](../admin/OPERATIONS.md)) | [5.4](#54-server-and-doctor) |
 | `connector` | `connector list`, `connector get`, `connector apply`, `connector delete`, `connector test`, `connector plugins`, `connector enable`, `connector disable`, `connector reset`, `connector history` | [5.5](#55-connector) |
 | `net` | `net list`, `net check`, `net add-peer`, `net set`, `net members` | [5.9](#59-net) |
@@ -192,7 +192,7 @@ suggested --key TRADE_ID   --partition-by: PRODUCT_TYPE, PRODUCT_SUB_TYPE, PORTF
 
 `(456)` is a blank value counted 456 times. The id is a field present in (nearly) every document with every value different;
 the rows' date field ranks names such as *business*, *cob*, *as of* and *snapshot* first, and is only reported: a load takes its
-business date from outside the rows ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)), the file's name
+business date from outside the rows ([DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load)), the file's name
 (`trade_endur.2026-07-08`) or `--as-of`; the classifiers are text fields rarely blank with 2 to 40 values, *product* and *type* first.
 The walk-through below uses `--as-of` for another day, 2026-09-22.
 
@@ -701,7 +701,7 @@ For a load too large for the Python path (the bank's scenario PVs: 2.3 million p
 on every core, memory bounded by `memory.budget-mb` whatever the input's size (rows that do not fit are sorted and spilled to disk), Delta
 or Iceberg, from a folder or `s3://`, **one commit per business date**. It writes exactly the tables `lake build` writes (the same
 documents byte for byte, columns and vectors; the connectors and the VaR loader read them unchanged). The design, the memory model and
-the 2.3M sizing: [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md). `tools/lake/javaload.py` is `lake build`'s side of it.
+the 2.3M sizing: [DATA_ARCHITECTURE.md section 11](../architecture/DATA_ARCHITECTURE.md#11-the-parallel-lake-loader-drishti-lakeload). `tools/lake/javaload.py` is `lake build`'s side of it.
 
 **Through lake build** (the lock, the run log, the summary, the signal as always):
 
@@ -793,7 +793,7 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 | `rejects.max-pct` | `100` | more of the documents rejected than this: nothing is written, exit 1 |
 | `rejects.keep` | `50` | rejects kept in the summary |
 | `report.summary` | `<lake>/_drishti-lake/runs/<run>.json` | the JSON summary (lake build's keys, plus `throughput` per stage and `memory`) |
-| `report.manifest` | beside the summary | the load manifest: per date and file, rows and the first and last sort key (PARALLEL_LOADER.md section 7) |
+| `report.manifest` | beside the summary | the load manifest: per date and file, rows and the first and last sort key (DATA_ARCHITECTURE.md section 11.7) |
 | `report.progress` | none | a JSON file rewritten twice a second (phase, bytes, documents, rejects, dates) |
 | `report.run-log`, `report.dry-run`, `lock` | `true`, `false`, `true` | as `--no-run-log`, `--dry-run`, `--no-lock` |
 
@@ -839,7 +839,7 @@ memory: {budget-mb: 8192, spill-dir: /scratch}
 warehouse: '<account id>', catalog.rest.signing-name: glue}` (the domain is the namespace).
 
 **An archive with a folder per dataset** (`bundle.tar.gz` holding `trade/2026-10-28/…jsonl.gz` and `position/2026-10-28/…jsonl`: each
-table folder its own table, each date folder its business date ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md) section 2);
+table folder its own table, each date folder its business date ([DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load) section 2);
 every dataset read and checked before the first commit; a folder not listed under `datasets:` refuses the run):
 
 ```yaml
@@ -878,7 +878,7 @@ memory: {budget-mb: 4096, spill-dir: 'C:\drishti\data\tmp\spill'}
 
 What it prints: the market-risk pack's scenario PVs of `data/testdata` (three gzip files, 1,339 positions), the first config above
 pointed at them and at a scratch lake, `-Xmx2g`, `budget-mb: 512`, captured 2026-10-28 (a cold JVM: a load this small is mostly start-up;
-warm rates are in PARALLEL_LOADER.md section 11). `-q` leaves only the last line.
+warm rates are in DATA_ARCHITECTURE.md section 11.11). `-q` leaves only the last line.
 
 ```
 loader: delta table /scratch/demo/lake/risk/scenario-pv
@@ -1329,7 +1329,7 @@ python3 tools/drishti.py contract bootstrap my-kind --write && python3 tools/dri
 ```
 
 
-**The command catalog.** `python3 tools/command_catalog.py` writes [COMMAND_CATALOG.md](COMMAND_CATALOG.md): every command of the command
+**The command catalog.** `python3 tools/command_catalog.py` writes [COMMANDS.md](../reference/COMMANDS.md): every command of the command
 line with what it does and an example, from the packs, their contracts and `tools/commands.builtin.yaml` (the command line's own words and
 forms). `--check` fails when it is stale; a console test runs the same check.
 
@@ -1564,7 +1564,7 @@ drishti-console/.venv/bin/python tools/drishti.py data load --store files --trad
 **Dates.** The scripts' generators write loader rows as tars of `<kind>/<YYYY-MM-DD>/` folders under `<data folder>/build/loader-rows/`
 (removed after the load), and every loader files each row under its folder's date, or a plain file's (`--as-of`, its `.ready` file,
 its name, the business today), never the row's own `date`, which it only counts when it differs: the load rules of
-[DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md), the same as `lake build`'s.
+[DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load), the same as `lake build`'s.
 
 **Scheduling.** The loaders guard dates (a tar folder dated in the future refuses the archive; a business date after tomorrow is not loaded and the run fails naming it), replace each day
 they reach in one step, and refuse to drop more than half a table (`--max-drop-share`, `--force-drop`), so a nightly cron entry
@@ -1712,9 +1712,9 @@ of Parquet.
 | `deploy/bin/drishti-node.sh` (`deploy/bin/drishti-node.ps1`) | one server's drain before a stop and its readiness (CD1, CD2): `drain [--wait S]`, `undrain`, `status`, `wait-ready`, and `run COMMAND` (the server images' entry: drains on SIGTERM, then passes it on); the systemd unit's `ExecStop` ([OPERATIONS.md section 7.2](../admin/OPERATIONS.md#72-the-server)) |
 | `tools/windows/publicdata-funds.ps1`, `publicdata-gleif.ps1`, `publicdata-market-data.ps1`, `publicdata-news-and-markets.ps1`, `publicdata-us-equities.ps1`, `publicdata-world-economy.ps1` | the public-data refreshes of those packs on Windows: each runs `tools/publicdata/<pack>.py` with the console's Python (`status`, or `refresh` with the same options) |
 | `tools/smoke.py` | the engine of `drishti.py server smoke` |
-| `tools/javacmd.py` | `java_cmd()`: the one helper every Python launcher of a JVM uses, so each java it starts gets `-Djava.io.tmpdir=` (native libraries unpack in Drishti's own temp folder, not `/tmp`); a guard test fails on a tool that starts java without it ([CONFIGURATION.md](../admin/CONFIGURATION.md)) |
-| `tools/settings_catalogue.py`, `tools/settings_sources.py` | the one configuration document: `settings_catalogue.py` writes every setting of every kind into [CONFIGURATION.md](../admin/CONFIGURATION.md) (and the console's Help → Configuration) from the files themselves, with `tools/settings_schemas.yaml` for the content files; `--check` (in the drill) fails when the document is not current or a key has no meaning; `settings_sources.py` holds its readers (a commented YAML's keys and comments, the connector settings catalogue, the shared `tls.*` and `proxy.*` specs) |
-| `tools/under_construction.py` | the under-construction registry's document: writes [UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md) from `config/under-construction.yaml` (what depends on unbuilt work, where it shows, the release that builds it, hidden or *Under construction*, the screenshots to retake); `--check` fails when the document is stale or a place it names does not exist |
+| `tools/javacmd.py` | `java_cmd()`: the one helper every Python launcher of a JVM uses, so each java it starts gets `-Djava.io.tmpdir=` (native libraries unpack in Drishti's own temp folder, not `/tmp`); a guard test fails on a tool that starts java without it ([CONFIGURATION.md](../reference/CONFIGURATION.md)) |
+| `tools/settings_catalogue.py`, `tools/settings_sources.py` | the one configuration document: `settings_catalogue.py` writes every setting of every kind into [CONFIGURATION.md](../reference/CONFIGURATION.md) (and the console's Help → Configuration) from the files themselves, with `tools/settings_schemas.yaml` for the content files; `--check` (in the drill) fails when the document is not current or a key has no meaning; `settings_sources.py` holds its readers (a commented YAML's keys and comments, the connector settings catalogue, the shared `tls.*` and `proxy.*` specs) |
+| `tools/under_construction.py` | the under-construction registry's document: writes [UNDER_CONSTRUCTION.md](../reference/UNDER_CONSTRUCTION.md) from `config/under-construction.yaml` (what depends on unbuilt work, where it shows, the release that builds it, hidden or *Under construction*, the screenshots to retake); `--check` fails when the document is stale or a place it names does not exist |
 | `tools/docs/guide_data.py` (with `tools/docs/guide_data.yaml`) | the guides' data sections (VaR, exposure, FRTB-SA, SIMM, the market-risk cube, funds, groupings and analytics, pivot): a short table of every kind the feature reads, whether it is needed, what for, and a link to its data contract (the one home of the fields and the example record); the measure's own contract page when it has one. Written between `<!-- guide-data:begin <id> -->` and `<!-- guide-data:end -->`; text outside the markers is never touched. `--check` (a static test, so in the drill's gate checks) fails when a section is stale or a kind has no contract. To change a section, edit the spec and run `python3 tools/docs/guide_data.py` |
 | `tools/docs/examples.py` | one example record per kind for the contract pages (`tools/contracts.py docs`): the most complete record of the newest business date of `data/testdata` (or the pack's samples), formatted, long arrays shortened `/* … N more … */` |
 | `tools/docs/connector_reference.py` | the connector reference, `docs/reference/CONNECTORS.md`, generated from the plugin READMEs' front matter (summary, capabilities, setting keys, authentication, licence, Windows); `--check` fails when it is stale |
@@ -1798,7 +1798,7 @@ from its Delta log alone (no data file is opened, so it opens at once on a table
 2. **Id, business date and classifiers.** The console scans the file as a stream (the first `lakes.scan_docs`, 20,000, documents)
    and lists every field with how often it is present, how many values it has and the most frequent ones. The suggested id and first
    classifier are selected. **Business date** says the date the rows go under, by the load rules
-   ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): the date in the file's name (`book.2026-10-16.json`), else the business
+   ([DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load)): the date in the file's name (`book.2026-10-16.json`), else the business
    today; never a field of the rows. *Another business date for the whole file* gives one (the build's `--as-of`). Tick **Classifier**
    for the partition columns and **Promote** for the real columns.
 3. **Where it goes.** A new lake (a root from `lakes.roots`, a domain, a kind) or an existing table (its partitioning is then
@@ -1812,7 +1812,7 @@ from its Delta log alone (no data file is opened, so it opens at once on a table
 
 The process never holds a token: binding and announcing are done by the console as the administrator, after the build. The
 recent runs of every root are listed at the bottom. Settings: `lakes.*` in the console's `application.yaml`
-([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+([CONFIGURATION.md](../reference/CONFIGURATION.md)).
 
 ### 10.3 Admin → Connectors (`/admin/connectors`)
 
@@ -1884,6 +1884,6 @@ What grows with the input, and what does not:
 * **Millions of documents**: the parallel lake loader (section 4.13, `--engine java`, picked by `auto` from 1 GB of JSON Lines)
   parses and writes on every core with memory set by `memory.budget-mb`; 10,000 positions of 510 scenarios (54 MB of JSON) load in about
   0.2 s warm on 24 cores, and 2.3 million are estimated at a few minutes on a 16 to 32 vCPU server (an estimate, with its basis and the
-  spill-disk and heap sizing: [PARALLEL_LOADER.md section 11](../architecture/PARALLEL_LOADER.md#11-measured-and-the-23m-estimate)).
+  spill-disk and heap sizing: [DATA_ARCHITECTURE.md section 11.11](../architecture/DATA_ARCHITECTURE.md#1111-measured-and-the-23m-estimate)).
 
 **Also in `tools/`:** `lake/s3sim.py` starts the S3 simulators (moto, MinIO) for the S3 tests (section 4.12).

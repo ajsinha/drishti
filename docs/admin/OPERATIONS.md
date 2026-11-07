@@ -152,7 +152,7 @@ same (within a relative 1e-12; many-scope sums are exact on Java), only the many
 | a 32-bit Java on any system | Java (Drishti needs a **64-bit Java 21**) |
 | Linux with musl (Alpine images) | Java (the bundled build needs glibc; the shipped images, `eclipse-temurin:21-jre`, have it) |
 
-**Settings** (`application.yaml`, all listed in [CONFIGURATION.md](CONFIGURATION.md)):
+**Settings** (`application.yaml`, all listed in [CONFIGURATION.md](../reference/CONFIGURATION.md)):
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -591,7 +591,7 @@ tools/load-aerospike.sh localhost:3000 test --trades 1000000 --days 3 --ttl-days
 ```
 
 `--trades N --days D` has `bulk_trades.py` write the book as a tar of `trade/<YYYY-MM-DD>/` folders under
-`<data folder>/build/loader-rows/` (the load rules, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)), loads it and removes it. `--ttl-days N` gives
+`<data folder>/build/loader-rows/` (the load rules, [DATA_ARCHITECTURE.md section 10](../architecture/DATA_ARCHITECTURE.md#10-data-load-rules-table-pack-business-date-and-mode-of-every-load)), loads it and removes it. `--ttl-days N` gives
 every record written a time to live of N days, so Aerospike expires old business dates by itself: there is no
 maintenance job, unlike the lake ([section 11](#11-the-lake-where-it-lives-and-keeping-it-bounded)). Without it,
 records never expire. In the generated book a day record takes about 7 KB of namespace storage and an index record
@@ -778,7 +778,7 @@ LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG           # log level for Drishti's own clas
 Or pass `--drishti.live.max-streams=40000` on the command line. Console settings follow
 `DRISHTI_CONSOLE__<SECTION>__<KEY>`, for example `DRISHTI_CONSOLE__BACKEND__TIMEOUT_SECONDS=30`, or
 `--backend.timeout_seconds=30`. The order of precedence and every setting are in
-[CONFIGURATION.md](CONFIGURATION.md).
+[CONFIGURATION.md](../reference/CONFIGURATION.md).
 
 ## 7. Running as services (systemd)
 
@@ -1007,7 +1007,7 @@ Work through this list for every shared installation. Each item says how to chec
    [USER_MANAGEMENT.md](USER_MANAGEMENT.md).
 5. **Roles.** Review `drishti.security.roles` and what the packs add. Keep `drishti.security.redact` listing the
    fields that roles without raw access must not see: they read `•••` everywhere (raw JSON, search, views, Impact,
-   type-ahead, alerts; [CONFIGURATION.md](CONFIGURATION.md#field-masks)). List every field that holds the value,
+   type-ahead, alerts; [CONFIGURATION.md](../reference/CONFIGURATION.md#field-masks)). List every field that holds the value,
    since a mask hides only the field it names.
 6. **Authoring.** `DRISHTI_STUDIO_SAVE=false` except in an authoring environment. Keep `DRISHTI_SUTRA_REVIEW=true`
    and `DRISHTI_SUTRA_FOUR_EYES=true` so every change is approved by a second person.
@@ -1276,7 +1276,7 @@ dropped and counted; Admin → Access shows the count. To keep it longer, export
 
 ### Ask about this page and your data
 
-*Ask about this page* ([CONFIGURATION.md](CONFIGURATION.md)) is off by default. Turning it on sends text to the model endpoint
+*Ask about this page* ([CONFIGURATION.md](../reference/CONFIGURATION.md)) is off by default. Turning it on sends text to the model endpoint
 you configure, so decide what may leave the server:
 
 - With `values: labels-only` (the default) the prompt holds the page's labels, the glossary, the pack's guide text and the user's
@@ -1605,7 +1605,7 @@ being parsed, and a later view reads that one message back by its offset.
 
 ### 12.1 Temporary folders
 
-The server's temporary files (DuckDB spill, native libraries, atomic-save scratch, Python transform runs) live in `drishti-<pid>` under `DRISHTI_TMP_DIR` (default `<data dir>/tmp/server`; the console's `<data dir>/tmp/console`); the console's (uploads, exports, the static-file cache, Python runner scratch) in `drishti-console-<pid>` under `DRISHTI_CONSOLE_TMP_DIR`. Each is removed on a clean stop. A `kill -9` or a power cut leaves one: the next start leaves it alone (removing them automatically is disabled) and Health lists it for you to delete. Put the base on a disk with room when DuckDB spills big queries: `DRISHTI_TMP_DIR=/var/tmp/drishti`. **Start Java with `-Djava.io.tmpdir=<that base>`** (every start command in this guide does; `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=…` works too): since JDK 17 only the command line moves the folder where DuckDB (60 MB), RocksDB and CatBoost unpack their native libraries, so without it every server killed without a clean stop leaves them in `/tmp`, whose quota fills. The server warns in its log and on Admin, Health when the flag is missing, and at start removes stale copies from its own base (never from `/tmp`). Admin, Health lists both with their size, so a growing folder is seen before the disk fills. Details: [CONFIGURATION.md](CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir).
+The server's temporary files (DuckDB spill, native libraries, atomic-save scratch, Python transform runs) live in `drishti-<pid>` under `DRISHTI_TMP_DIR` (default `<data dir>/tmp/server`; the console's `<data dir>/tmp/console`); the console's (uploads, exports, the static-file cache, Python runner scratch) in `drishti-console-<pid>` under `DRISHTI_CONSOLE_TMP_DIR`. Each is removed on a clean stop. A `kill -9` or a power cut leaves one: the next start leaves it alone (removing them automatically is disabled) and Health lists it for you to delete. Put the base on a disk with room when DuckDB spills big queries: `DRISHTI_TMP_DIR=/var/tmp/drishti`. **Start Java with `-Djava.io.tmpdir=<that base>`** (every start command in this guide does; `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=…` works too): since JDK 17 only the command line moves the folder where DuckDB (60 MB), RocksDB and CatBoost unpack their native libraries, so without it every server killed without a clean stop leaves them in `/tmp`, whose quota fills. The server warns in its log and on Admin, Health when the flag is missing, and at start removes stale copies from its own base (never from `/tmp`). Admin, Health lists both with their size, so a growing folder is seen before the disk fills. Details: [CONFIGURATION.md](../reference/CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir).
 
 ### 12.1a Direct memory, and the diagnostics of a long run
 
@@ -1667,7 +1667,7 @@ Java.
 
 ### 12.2 Sizing the multi-day type-ahead index
 
-Each connector with `index.days` above 1 (see [CONFIGURATION.md](CONFIGURATION.md#drishtiindex--the-multi-day-type-ahead-index))
+Each connector with `index.days` above 1 (see [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtiindex--the-multi-day-type-ahead-index))
 holds, per kind, one dictionary of its distinct ids and one bitmap per kept day.
 
 - **Heap.** About 150 bytes per distinct id (the id twice, its hit and the sort order) plus one bit per id per kept day.
@@ -1996,7 +1996,7 @@ script: `PUT /api/v1/admin/busy/override` with `{"mode": "hold", "reason": "plan
 personal token: an administrator in the console).
 
 **The settings**, `drishti.admission.*` in the server's `application.yaml` (every one in
-[CONFIGURATION.md](CONFIGURATION.md#drishtiadmission)):
+[CONFIGURATION.md](../reference/CONFIGURATION.md#drishtiadmission)):
 
 ```yaml
 drishti:
@@ -2362,7 +2362,7 @@ curl -s -H "Authorization: Bearer $ADMIN_TOKEN" localhost:18480/api/v1/admin/ale
 server not answering the scrape. Alerting from Prometheus as well as in the product is safe (the server's own alerts reach only its
 inbox); a site that wants one channel sets `notify-roles` blank and keeps Health's list.
 
-Settings: `drishti.metrics.*` ([CONFIGURATION.md](CONFIGURATION.md)); `drishti.metrics.enabled: false` stops the sampling and the rules.
+Settings: `drishti.metrics.*` ([CONFIGURATION.md](../reference/CONFIGURATION.md)); `drishti.metrics.enabled: false` stops the sampling and the rules.
 
 ### Connection pools in the monitoring
 
@@ -2390,7 +2390,7 @@ or an MCP server comes back when its endpoint does. One mechanism serves all fou
 about 5 s, 10 s, 20 s, 40 s, 80 s, 160 s, 300 s, 300 s, ... A failure that waiting cannot fix (bad settings, credentials refused) is first tried like any other; when
 the same kind of error comes `permanent-after` (3) times in a row it is classed **permanent** and slowed to one try every `max`. Pressing Retry now, or saving the file, starts again.
 `drishti.retry.enabled: false` turns the timer off; a per-area key (`drishti.retry.mcp.max: 1m`) overrides the general one. All keys:
-[CONFIGURATION.md](CONFIGURATION.md#retry-settings).
+[CONFIGURATION.md](../reference/CONFIGURATION.md#retry-settings).
 
 **What you see.** Admin → Packs, Connectors and AI and the Health page show on the row of anything that is failing: *failed — next retry in 8 s
 (attempt 3)* and the last error. Health lists them all, and the API returns the same (excerpt of a real server whose database was not up and whose pack clashed with another):
@@ -2547,7 +2547,7 @@ Measured on a developer workstation; see [PERFORMANCE.md](PERFORMANCE.md) for ho
 ### Sizing the database connection pools
 
 Every database connector, and the identity database on PostgreSQL, has its own pool of up to `pool-size` connections (20 by default,
-[CONFIGURATION.md](CONFIGURATION.md#drishtidbpool--database-connection-pools)). The database must be able to accept all of them at once:
+[CONFIGURATION.md](../reference/CONFIGURATION.md#drishtidbpool--database-connection-pools)). The database must be able to accept all of them at once:
 
 ```
 max_connections  >=  (sum of the pool sizes of every connector that points at it  +  the identity pool  +  loaders  +  your own clients)  x  server instances
@@ -2564,7 +2564,7 @@ SQLite and DuckDB are embedded files and need no sizing.
 
 ### BI scale
 
-**Settings** (`drishti.bi.*`, [CONFIGURATION.md](CONFIGURATION.md#drishtibiexec--execution-connectors-and-scale)):
+**Settings** (`drishti.bi.*`, [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibiexec--execution-connectors-and-scale)):
 
 | What | Setting | Start with |
 |---|---|---|
@@ -2592,7 +2592,7 @@ Several servers can still serve BI together through **Drishti*net**: a report's 
 read, and its answer comes back unchanged ([section 18](#18-drishtinet-running-several-servers-as-one), section 7).
 
 **Python on the compute pool** (the plan's tier `python`: `PyTransform`, `PyAggregate`, `PyColumn`; Notebook cells, python visuals, Python-driven tables). Every
-Python run is the server's, on the pool `python` ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)): each worker has imported pandas, NumPy and pyarrow once and forks one child per
+Python run is the server's, on the pool `python` ([ARCHITECTURE.md section 24.19](../architecture/ARCHITECTURE.md#2419-the-python-runtime-for-code-people-write)): each worker has imported pandas, NumPy and pyarrow once and forks one child per
 request, held by the strict sandbox (no network, Landlock, the item's limits), so a call costs a fork (milliseconds), not an interpreter start. To run Python:
 
 ```
@@ -2785,7 +2785,7 @@ In the in-process test of three servers (`NetMembershipTest`), the three list ea
 
 Drishti*net is configured the way connectors are ([CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md)): one folder of small YAML files,
 watched, each checked against its schema before it is used. `application.yaml` holds only where the folder is and how it is watched
-([CONFIGURATION.md](CONFIGURATION.md#drishtinet--drishtinet-the-cluster-folder)):
+([CONFIGURATION.md](../reference/CONFIGURATION.md#drishtinet--drishtinet-the-cluster-folder)):
 
 ```yaml
 drishti:
@@ -2805,7 +2805,7 @@ Ready-made files, with every setting explained, are in [config/net.examples/](..
 
 #### node.yaml: this node
 
-Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `node.yaml`](CONFIGURATION.md#nodeyaml) (also at Help → Configuration in the console).
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `node.yaml`](../reference/CONFIGURATION.md#nodeyaml) (also at Help → Configuration in the console).
 
 #### peers/&lt;name&gt;.yaml: the seeds
 
@@ -2820,7 +2820,7 @@ no longer a seed, but gossip may still know the node.
 
 #### gossip.yaml: the protocol's timings
 
-Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `gossip.yaml`](CONFIGURATION.md#gossipyaml) (also at Help → Configuration in the console).
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `gossip.yaml`](../reference/CONFIGURATION.md#gossipyaml) (also at Help → Configuration in the console).
 
 Applied on the next round.
 
@@ -3094,7 +3094,7 @@ Routing's traffic, and in the metrics `drishti_net_forwarded_total{peer,kind,out
 
 `routing.yaml`:
 
-Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `routing.yaml`](CONFIGURATION.md#routingyaml) (also at Help → Configuration in the console).
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `routing.yaml`](../reference/CONFIGURATION.md#routingyaml) (also at Help → Configuration in the console).
 
 **HTTP/2 between nodes.** The server's port speaks HTTP/2 as well as HTTP/1.1 (`server.http2.enabled: true` in `application.yaml`,
 `DRISHTI_HTTP2`; a peer may have 1,000 streams open and executing on one connection). The first call to a peer, and the first after 30 s of
@@ -3114,7 +3114,7 @@ it returns: re-run them on another node.
 ### 8. The console and several servers
 
 With the cluster on, give the console several servers instead of one, so it always has one to fall back to
-([CONFIGURATION.md](CONFIGURATION.md#the-console-and-several-servers-drishtinet)):
+([CONFIGURATION.md](../reference/CONFIGURATION.md#the-console-and-several-servers-drishtinet)):
 
 ```yaml
 # drishti-console/config/application.yaml
@@ -3326,14 +3326,14 @@ run for hours: how to run a two-hour soak, and what its report holds, is in
 
 Compute workers run Python computations for connectors outside the server's JVM: a pool of worker processes per kind of work, data
 handed to them as Arrow files already read and masked as the person who asked, from a locked environment of libraries an administrator
-approved. The design, with the reasons behind each choice, is [PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md); the module is
+approved. The design, with the reasons behind each choice, is [ARCHITECTURE.md section 24](../architecture/ARCHITECTURE.md#24-compute-workers-python-and-java-libraries-approved-pinned-and-isolated); the module is
 `drishti-compute` ([its README](../../drishti-compute/README.md)).
 
 **It is off as shipped.** With `compute.enabled: false` (the default in `config/compute/compute.yaml`) no worker starts and every compute
 request is refused with `DRS-9201`. Approvals work either way, so requirements can be reviewed before compute is switched on.
 
 **Python for code people write runs here too**, on the pool `python` (Python items and visuals, Python-driven tables and models, Notebook
-cells: [PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)), so with compute off
+cells: [ARCHITECTURE.md section 24.19](../architecture/ARCHITECTURE.md#2419-the-python-runtime-for-code-people-write)), so with compute off
 none of it runs and each says so. That pool is `isolation: strict`: Linux only (user namespaces and Landlock, kernel 5.13 or later; check
 with `unshare --user --map-root-user --net true`), fork mode; its interpreter must carry exactly the versions of
 `config/compute/locks/python.lock` (or build its locked environment from that lock). To change the libraries, edit `locks/python.in`, run
@@ -3385,7 +3385,7 @@ compute:
         risk: { workers: { max: 64 } }
 ```
 
-Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, Compute workers: `config/compute/compute.yaml`](CONFIGURATION.md#compute-workers-configcomputecomputeyaml) (also at Help → Configuration in the console).
+Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, Compute workers: `config/compute/compute.yaml`](../reference/CONFIGURATION.md#compute-workers-configcomputecomputeyaml) (also at Help → Configuration in the console).
 
 **One request per worker at a time.** Concurrency is the number of workers. A worker never holds two people's data at once, and a result
 goes only to the request id that asked for it.
@@ -3819,7 +3819,7 @@ The page calls the console's own API. These endpoints are for administrators onl
 | `POST` | `/schedules/pause`, `/schedules/delete` | `{root, name[, paused]}` |
 | `POST` | `/command` | `{tables, dryRun}` gives the equivalent `lake maintain` line |
 
-Console settings ([CONFIGURATION.md](CONFIGURATION.md)):
+Console settings ([CONFIGURATION.md](../reference/CONFIGURATION.md)):
 
 - `lakes.data_dir` (`DRISHTI_DATA_DIR`, default `../data`): where the file and the history live.
 - `lakes.maintenance_schedules` (`DRISHTI_LAKE_MAINTENANCE_SCHEDULES`, default `true`): whether the console runs the schedules.
@@ -3886,8 +3886,8 @@ A **compute engine** is the part of the server that computes risk figures when a
 sensitivities, FRTB-SA, SIMM, the in-memory lake, and later SA-CCR, FVA and the two cubes. Not every server runs every engine: a
 market-risk node has no use for exposure, a small console node needs none. Each engine has **its own file**, `config/engines/<engine>.yaml`,
 with its switch and every one of its settings, and **one switch with one meaning**: off, the engine does not exist on that server. The
-design and its reasons are in [COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md); every key of every file is in
-[CONFIGURATION.md, Compute engines](CONFIGURATION.md#compute-engines-configenginesyaml).
+design and its reasons are in [ARCHITECTURE.md section 25](../architecture/ARCHITECTURE.md#25-compute-engines-on-or-off-each-with-its-own-configuration-file); every key of every file is in
+[CONFIGURATION.md, Compute engines](../reference/CONFIGURATION.md#compute-engines-configenginesyaml).
 
 ### 21.1 The files
 

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The engine contract (docs/architecture/PYTHON_COMPUTE.md section 8): what an approved engine implements and what it is handed.
+"""The engine contract (docs/architecture/ARCHITECTURE.md section 24.8): what an approved engine implements and what it is handed.
 
 An engine is a class with ``kinds`` (what it can compute) and ``compute(req, inputs, progress) -> Result``. It is
 

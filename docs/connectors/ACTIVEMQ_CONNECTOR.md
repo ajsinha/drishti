@@ -29,7 +29,7 @@ ActiveMQ-specific (message shapes, the state store, the memory cache, search, li
 ([RABBITMQ_CONNECTOR.md](RABBITMQ_CONNECTOR.md)). For a Kafka topic, which keeps its own history, see
 [KAFKA_CONNECTOR.md](KAFKA_CONNECTOR.md). A first walk-through is in
 [the walk-through at the end of this document](#walk-through-step-by-step); the settings summary is in
-[CONFIGURATION.md](../admin/CONFIGURATION.md#activemq-and-rabbitmq--message-queues).
+[CONFIGURATION.md](../reference/CONFIGURATION.md#activemq-and-rabbitmq--message-queues).
 
 ## Contents
 
@@ -406,7 +406,7 @@ The connector declares `SourceCapabilities(live = true, reverseLookup = false, s
 | type-ahead | the in-memory `HitIndex` of every id received: id prefix first (binary search over sorted ids), then substring | memory only; subtitle `<kind> · <source-name>` |
 | a picked business date | not dated: ignores the date and returns the current document; dated connectors serving the kind are asked first | the console shows *No data held for <date>: the current data of …, a source that keeps no dates* |
 | *known at* | not supported | — |
-| structured search (`LIM where utilisation > 0.9`) and pick lists | no columns: the engine lists the kind's ids from the type-ahead index and reads documents, at most `drishti.search.max-scan` (20,000) within `budget` (3 s); beyond that the result says `partial: true` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtisearch--structured-search)) | one read per entity, mostly from memory |
+| structured search (`LIM where utilisation > 0.9`) and pick lists | no columns: the engine lists the kind's ids from the type-ahead index and reads documents, at most `drishti.search.max-scan` (20,000) within `budget` (3 s); beyond that the result says `partial: true` ([CONFIGURATION.md](../reference/CONFIGURATION.md#drishtisearch--structured-search)) | one read per entity, mostly from memory |
 | derived kinds, impact (F8) over a kind served here | through the routing, document by document, as for searches | as above |
 | reverse lookups (*Linked entities*) | not supported: another connector must provide them | — |
 | live updates | pushed on every message ([section 9](#9-live-push)) | one call per open view of that entity |
@@ -567,7 +567,7 @@ broker).
 | `UP (state store over its budget: X of Y GB; nothing is dropped: raise state.max-gb or add disk)` | connected, and the store is past `state.max-gb` with `state.when-full: warn` |
 
 Health starting with `UP` counts as up in Admin → Health. With `stale-after` set (an engine setting on every
-connector, [CONFIGURATION.md](../admin/CONFIGURATION.md#connector-settings-plugin-by-plugin)), a connector that has
+connector, [CONFIGURATION.md](../reference/CONFIGURATION.md#connector-settings-plugin-by-plugin)), a connector that has
 received nothing for that long is reported stale and the overall status `DEGRADED`; `lastUpdate` is the time of the
 last message received, rejected messages included.
 
@@ -804,7 +804,7 @@ Every setting of `activemq`, with its type, default and meaning, is in the plugi
 
 On the connector entry, beside `settings`: `plugin`, `enabled`, `kinds`. Under `settings` the engine also reads
 `stale-after`, a duration (`15m`, `2h`), as for every connector
-([CONFIGURATION.md](../admin/CONFIGURATION.md#connector-settings-plugin-by-plugin)).
+([CONFIGURATION.md](../reference/CONFIGURATION.md#connector-settings-plugin-by-plugin)).
 
 The plugin is built against `activemq-client` 6.3.2 (Jakarta JMS) and tested against ActiveMQ Classic 6.1.7 in Docker
 (`ActiveMqSourcePluginTest`, `ActiveMqOutageTest`, skipped where Docker is not reachable).

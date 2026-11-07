@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * The parser of a pivot formula (PIVOT_ENGINE.md section 8.2): DEL's syntax (BI_DESIGN.md section 3.3.2; every text it accepts is a valid
+ * The parser of a pivot formula (ARCHITECTURE.md section 23.8.2): DEL's syntax (BI_DESIGN.md section 3.3.2; every text it accepts is a valid
  * Python expression) for the measures of a pivot: arithmetic over aggregate calls of the built-ins, each aggregating a row expression with
  * an optional {@code where=} condition.
  *

@@ -160,7 +160,7 @@ class Edition:
         return {str(c).strip().upper() for c in allow if str(c).strip()}
 
     def command_shown(self, code: str | None) -> bool:
-        if code and _engines.word_hidden(code):                  # a word of a compute engine that runs nowhere (COMPUTE_ENGINES.md 5.2)
+        if code and _engines.word_hidden(code):                  # a word of a compute engine that runs nowhere (ARCHITECTURE.md section 25 5.2)
             return False
         allow = self.commands() if self.active else set()
         return not allow or not code or code.strip().upper() in allow
@@ -340,7 +340,7 @@ class Editions:
         name = str((about.get("edition") or {}).get("name") or "")
         lenses = [str(n) for n in about.get("lenses") or []] if not name else []
         brand = {k: about.get(k) for k in ("product", "tagline") if about.get(k)}
-        engines_changed = _engines.learn(about.get("engines"), self.engines)   # the engines running in the cluster (COMPUTE_ENGINES.md 5.2)
+        engines_changed = _engines.learn(about.get("engines"), self.engines)   # the engines running in the cluster (ARCHITECTURE.md section 25 5.2)
         changed = name != self.instance.name or sorted(lenses) != sorted(self.lenses) or brand != self._server_brand
         if not changed:
             if engines_changed and self.on_change is not None:

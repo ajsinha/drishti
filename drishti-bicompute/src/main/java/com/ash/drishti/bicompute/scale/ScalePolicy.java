@@ -28,7 +28,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * Exact or ≈ for distinct counts and percentiles (PIVOT_ENGINE.md sections 5.2 and 5.3; FUNCTION_CATALOGUE.md section 4). A function has
+ * Exact or ≈ for distinct counts and percentiles (ARCHITECTURE.md sections 23.5.2 and 23.5.3; FUNCTION_CATALOGUE.md section 4). A function has
  * one name ({@code distinct}, {@code median}, {@code percentile}); its sketch is how it is computed, never a second name:
  *
  * <ul>

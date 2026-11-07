@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # Data contract of the risk-factor dictionary (command RFAC): docs/architecture/SENSITIVITIES_AND_FRTB_SA.md section 3;
-# the MR cube's D9 (docs/lenses/MR_CUBE_LENS.md section 7.10). Demo data: tools/packgen/sensitivity/factor_dictionary.py.
+# the MR cube's D9 (docs/architecture/LENSES.md section 6.7.10). Demo data: tools/packgen/sensitivity/factor_dictionary.py.
 kind: risk-factor
 mnemonic: RFAC
 pack: market-risk

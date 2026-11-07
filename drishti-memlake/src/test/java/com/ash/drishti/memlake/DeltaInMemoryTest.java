@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Delta tables in memory (docs/architecture/IN_MEMORY_LAKE.md): written by the lake writer from rows held in memory (no staged file),
+ * Delta tables in memory (docs/architecture/DATA_ARCHITECTURE.md section 7): written by the lake writer from rows held in memory (no staged file),
  * read by the native engine unchanged, equal to the same table on disk, never a byte on the disk.
  */
 class DeltaInMemoryTest {

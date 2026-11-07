@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A panel's rows as a pivot source (PIVOT_ENGINE.md section 2: "the Pivot tab on a table or ladder becomes a pivot view over the panel's
+ * A panel's rows as a pivot source (ARCHITECTURE.md section 23.2: "the Pivot tab on a table or ladder becomes a pivot view over the panel's
  * rows"): a table or ladder whose Sutra says {@code pivot:} offers <b>Pivot</b>, which opens the pivot screen on the source
  * {@code panel/<kind>/<panel>/<id>}. The rows are the view's own (the same document, Sutra and business date), read by the view pipeline as
  * the person may see them; a field masked for them is left out (never a dimension or an input); the Sutra's arrangement is the view the

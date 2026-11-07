@@ -89,7 +89,7 @@ defaults are not a compliance programme.
 
 The contracts follow the [contract rules](../contracts/README.md) and are YAML files of a new pack `financial-crime` when built. All data
 is JSON Lines. Names are UPPER_SNAKE. Personal data fields are marked `pii: true` in the contract, which drives masking (section 14).
-Any of these sources may be memory-only ([IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md)) when the bank's data agreement forbids a copy at rest.
+Any of these sources may be memory-only ([DATA_ARCHITECTURE.md section 7](DATA_ARCHITECTURE.md#7-the-in-memory-lake-delta-tables-that-never-touch-a-disk)) when the bank's data agreement forbids a copy at rest.
 
 ### 2.1 `fcu-customer` (KYC)
 
@@ -504,7 +504,7 @@ SR 11-7 for US entities). Drishti supplies the evidence; the validation and appr
 | **Entitlements on alerts and cases** | by the FCU team, region and legal entity; a case may be restricted further to named investigators (an employee or a high-profile customer); access to a restricted case is logged and reviewed |
 | **PII masking** | contract fields marked `pii: true` are masked for every role without the field's grant (Drishti's masking); tuning and effectiveness views use de-identified ids; exports carry the masks |
 | **Tipping off** | the PCMLTFA (section 8) forbids disclosing that an STR was made, or its contents, with intent to prejudice a criminal investigation; Drishti enforces a stricter design rule: FCU records never appear outside FCU roles: not in customer or account pages, relationship-manager screens, search, AI, shares, comments, notifications or exports; an exit recommendation reaches the business without its reason |
-| **Memory-only sources** | a source the bank must not store at rest is a memory-only table ([IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md)); alerts and cases keep only the fields the policy lists |
+| **Memory-only sources** | a source the bank must not store at rest is a memory-only table ([DATA_ARCHITECTURE.md section 7](DATA_ARCHITECTURE.md#7-the-in-memory-lake-delta-tables-that-never-touch-a-disk)); alerts and cases keep only the fields the policy lists |
 | **AI** | off for FCU data by default; when on, only through the same entitlements and masks, and never for a decision |
 | **Retention** | records the PCMLTFA requires kept for at least 5 years (FINTRAC record keeping); cases, alerts and reports 5 years after closing by default, configurable longer; BTL events and tuning data 2 years; legal hold suspends deletion; deletion is logged |
 | **Audit** | every view, search, export and decision, signed as the write-back log is |

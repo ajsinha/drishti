@@ -27,7 +27,7 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 /**
- * The architecture rule of the pivot engine (PIVOT_ENGINE.md section 13.1): no module but {@code drishti-bicompute} re-implements
+ * The architecture rule of the pivot engine (ARCHITECTURE.md section 23.13.1): no module but {@code drishti-bicompute} re-implements
  * aggregation for a pivot. A source scan of every main Java file: no class outside the module implements the function SPI
  * ({@code implements AggFunction}, {@code new AggFunction<}), no class outside it writes {@code GROUPING SETS}, and nothing in the server's
  * pivot code or the console's pivot screen writes a {@code GROUP BY} or adds up figures itself (the console only draws).
@@ -60,6 +60,6 @@ class AggregationOwnerTest {
                 found.add(rel + ": writes GROUP BY in pivot code (ask the engine)");
             }
         }
-        assertThat(found).as("PIVOT_ENGINE.md section 13.1: no other module re-implements aggregation").isEmpty();
+        assertThat(found).as("ARCHITECTURE.md section 23.13.1: no other module re-implements aggregation").isEmpty();
     }
 }

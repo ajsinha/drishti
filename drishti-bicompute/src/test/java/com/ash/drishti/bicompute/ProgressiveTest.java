@@ -31,7 +31,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * Progressive answers and estimates (PIVOT_ENGINE.md sections 9.7, 9.8, decision 7): the first answer from a sample marks every figure ≈,
+ * Progressive answers and estimates (ARCHITECTURE.md sections 23.9.7, 23.9.8, decision 7): the first answer from a sample marks every figure ≈,
  * scales sums and counts with an interval that holds the exact figure, says "computing" for what a sample cannot state honestly (min, a
  * distinct count), is never cached (the exact answer after it is the table's); a view with a holistic measure is never sampled; an estimate
  * over {@code after-ms} gets the pair, the exact one last; the estimate lists the options and, once a scan is measured, the measured rate.

@@ -33,7 +33,7 @@ AS_OF or the headlines' FETCHED_AT end in "(snapshot ...)"), then written, sorte
     data/testdata/news-and-markets/quote/quote.<UTC date>.jsonl.gz
     data/testdata/news-and-markets/news/news.<UTC date>.jsonl.gz
 
-(named by the load rules, <table>.<YYYY-MM-DD>: docs/architecture/DATA_LOAD_RULES.md)
+(named by the load rules, <table>.<YYYY-MM-DD>: docs/architecture/DATA_ARCHITECTURE.md section 10)
 
 (an older snapshot in those folders is replaced) and data/testdata/testdata.yaml lists them, so `drishti.py lake demo` builds the
 news/quote and news/news tables the pack's news-store connector serves when the live connectors are off or the server runs with

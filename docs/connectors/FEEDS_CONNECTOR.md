@@ -23,7 +23,7 @@ happens when the internet or the publisher is unavailable, how to run the feeds 
 
 For a first setup see [the walk-through at the end of this document](#walk-through-step-by-step); the short reference is
 [the configuration examples at the end of this document](#configuration-by-example) and
-[CONFIGURATION.md](../admin/CONFIGURATION.md#feed--public-data-feeds). For long history next to the feeds see
+[CONFIGURATION.md](../reference/CONFIGURATION.md#feed--public-data-feeds). For long history next to the feeds see
 [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md); the demo lakes (`drishti.py lake demo`) already hold sixty business days of the market-data pack's own
 fixings, curves and FX (`FIX-SOFR`, `CRV-USD-OIS`, `FX-EURUSD`), which the feeds sit beside.
 

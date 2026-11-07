@@ -36,7 +36,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The settings in effect on this server and where each came from (docs/admin/CONFIGURATION.md, 2.9.7 C3): Help → Configuration shows
+ * The settings in effect on this server and where each came from (docs/reference/CONFIGURATION.md, 2.9.7 C3): Help → Configuration shows
  * them beside the documented defaults, for administrators only. Every key of the {@code drishti}, {@code server}, {@code spring},
  * {@code management}, {@code logging} and {@code springdoc} trees any configuration file, argument or pack contributes, with its value
  * and its origin: {@code file} (which one), {@code env} (the variable), {@code argument}, {@code system-property}, {@code pack} or
@@ -181,7 +181,7 @@ public class EffectiveSettingsController {
         if (m.find()) {
             String f = m.group(1).replace('\\', '/');
             String base = f.substring(f.lastIndexOf('/') + 1);
-            return f.endsWith("engines/" + base) ? "engines/" + base : base;   // a compute engine's file (COMPUTE_ENGINES.md) keeps its folder
+            return f.endsWith("engines/" + base) ? "engines/" + base : base;   // a compute engine's file (ARCHITECTURE.md section 25) keeps its folder
         }
         return null;
     }

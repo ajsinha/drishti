@@ -20,7 +20,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * The in-memory lake, {@code drishti.lake.memory.*} (docs/architecture/IN_MEMORY_LAKE.md section 11; docs/guides/IN_MEMORY_LAKE_GUIDE.md):
+ * The in-memory lake, {@code drishti.lake.memory.*} (docs/architecture/DATA_ARCHITECTURE.md section 7.11; docs/guides/IN_MEMORY_LAKE_GUIDE.md):
  * the memory stores (each a hard cap of off-heap memory), the tables their replenish jobs fill, and the automated compaction. Plain values:
  * the server binds {@code drishti.lake.memory.*} onto this record ({@code MemoryLakeConfiguration}); this module reads no configuration.
  *

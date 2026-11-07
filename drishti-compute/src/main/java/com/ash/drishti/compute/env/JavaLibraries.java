@@ -35,7 +35,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * Java libraries a connector requires (docs/architecture/PYTHON_COMPUTE.md sections 4 and 10): found by Maven coordinates in the shipped
+ * Java libraries a connector requires (docs/architecture/ARCHITECTURE.md sections 24.4 and 24.10): found by Maven coordinates in the shipped
  * folder or the bank's Maven repository (a folder or an HTTP URL in Maven layout, {@code compute.java-repository}), checked against their
  * sha256, scanned for native code, and staged read-only under {@code <data dir>/compute/jars/<sha256>/}. A jar that carries a native library
  * ({@code .so}, {@code .dll}, {@code .dylib}, {@code .jnilib}) without saying {@code native: true} is refused; one that says it may only run in

@@ -16,7 +16,7 @@
 
   A screen mock-up (engines/C.html), self-contained: system fonts, everything inline, nothing from a CDN.
   Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/IMPLEMENTATION_PLAN.md (2.9.11 row 14, compute engines on or off;
-  the design: docs/architecture/COMPUTE_ENGINES.md).
+  the design: docs/architecture/ARCHITECTURE.md section 25).
 -->
 <html lang="en">
 <head>
@@ -226,7 +226,7 @@ CVA DESK-RATES &lt;GO&gt;
 <div class="scene"><div class="lbl"><b>3</b>A node going down</div><div class="msg"><h4>var-1 is not answering (suspect since 10:41:07)</h4>FRTB-SA runs only on var-1: its words disappear for people within the failure detector's time and come back when var-1 returns. VaR is still available (drishti-main, var-2).</div></div>
 </div>
 <div class="why"><div class="card"><h3>How it feels</h3><ul><li>The whole cluster on one screen: which node runs what, and how much memory each spends.</li><li>The last column answers the question people care about: can I use it?</li><li>Change any node's engine from any node.</li></ul></div><div class="card"><h3>Why not recommended as the page</h3><ul><li>Most installs are one server: a matrix of one column is an awkward page.</li><li>No room in a cell for needs, used by, what it hides or where the switch is set.</li><li>Best kept as A's Cluster tab, where it is shown when Drishti*net is on.</li></ul></div><div class="card"><h3>Worth keeping</h3><ul><li>The matrix itself, as A's Cluster tab.</li><li>'Available to people' with the nodes that serve it.</li><li>The staged-change bar for a change on another node.</li></ul></div></div>
-<footer>Mock-up. Design, not built (docs/architecture/COMPUTE_ENGINES.md). Names, numbers, nodes and the reference codes (DRS-1020 to DRS-1024) are illustrative; the codes are assigned when it is built. A change writes the engine's file config/engines/&lt;id&gt;.yaml, is audited with who, when and why, and is the same from <span class="mono">drishti.py server engines</span>.</footer>
+<footer>Mock-up. Design, not built (docs/architecture/ARCHITECTURE.md section 25). Names, numbers, nodes and the reference codes (DRS-1020 to DRS-1024) are illustrative; the codes are assigned when it is built. A change writes the engine's file config/engines/&lt;id&gt;.yaml, is audited with who, when and why, and is the same from <span class="mono">drishti.py server engines</span>.</footer>
 </div>
 </body>
 </html>

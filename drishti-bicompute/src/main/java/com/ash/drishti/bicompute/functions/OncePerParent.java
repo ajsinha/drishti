@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * A coarser figure in a finer view, counted once per parent (PIVOT_ENGINE.md section 6.7, rule 2): {@code sum_once(x, p)},
+ * A coarser figure in a finer view, counted once per parent (ARCHITECTURE.md section 23.6.7, rule 2): {@code sum_once(x, p)},
  * {@code count_once(x, p)} and {@code avg_once(x, p)}. In a leg-grain view a trade's {@code QUANTITY} repeats on each of its legs; these
  * take each parent's ({@code p}, the trade's id) value once per cell, so a trade with three legs adds its quantity once. Holistic: the
  * state is the cell's parents and their values, exact from the cell's own rows. The pivot engine writes them when a view asks

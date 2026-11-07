@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Every setting of every kind, in one document: the generated half of docs/admin/CONFIGURATION.md (2.9.7, IMPLEMENTATION_PLAN C1-C2).
+"""Every setting of every kind, in one document: the generated half of docs/reference/CONFIGURATION.md (2.9.7, IMPLEMENTATION_PLAN C1-C2).
 
 The explanation at the top of CONFIGURATION.md is written by hand. Everything between ``<!-- generated: settings begin -->`` and
 ``<!-- generated: settings end -->`` is written by this tool from the sources, in one row shape everywhere (key, type, default,
@@ -46,7 +46,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import settings_sources as S  # noqa: E402
 
-DOC = ROOT / "docs" / "admin" / "CONFIGURATION.md"
+DOC = ROOT / "docs" / "reference" / "CONFIGURATION.md"
 SCHEMAS = ROOT / "tools" / "settings_schemas.yaml"
 CATALOGUE = ROOT / "drishti-engine" / "src" / "main" / "resources" / "drishti" / "plugin-settings.yaml"
 TLS = ROOT / "drishti-api" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "api" / "tls" / "TlsSettings.java"
@@ -92,7 +92,7 @@ AREAS = [
          "its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. "
          "`application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and "
          "`drishti.py server engines` write only the switch and `changed`; every other key is edited in the file "
-         "([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md), [OPERATIONS.md](OPERATIONS.md#21-compute-engines-on-or-off)). "
+         "([ARCHITECTURE.md section 25](../architecture/ARCHITECTURE.md#25-compute-engines-on-or-off-each-with-its-own-configuration-file), [OPERATIONS.md](../admin/OPERATIONS.md#21-compute-engines-on-or-off)). "
          "The old switch names are listed last: they still work, with a warning at start (`DRS-1024`)."),
     Area("console", "The console: `application.yaml`",
          "`drishti-console/config/application.yaml`. Override a key in `config/application.local.yaml`, with the variable named, with "
@@ -114,7 +114,7 @@ AREAS = [
          "An edition file (`config/editions/<name>.yaml`), the feature presets (`features.yaml`) and the default packs "
          "(`default-packs.yaml`), read by the server (`Editions.java`) and the console (`core/edition.py`). The site's own configuration "
          "wins over any key: `drishti.edition-spec.<key>` on the server, `edition.<key>` in the console "
-         "([EDITIONS.md](EDITIONS.md))."),
+         "([EDITIONS.md](../admin/EDITIONS.md))."),
     Area("store", "The content store: `config/store/store.yaml`",
          "Where user content is kept so every node of a cluster reaches it ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)); "
          "`drishti.store.file` names the file."),
@@ -125,12 +125,12 @@ AREAS = [
          "Write-back's four files ([WRITE_BACK.md](../guides/WRITE_BACK.md): the administrator's guide and, in its section 16, "
          "the design); `drishti.edit.file` names `edit.yaml`, the others sit beside it."),
     Area("compute", "Compute workers: `config/compute/compute.yaml`",
-         "The supervisor, the Python pools and their environments ([OPERATIONS.md](OPERATIONS.md#19-compute-workers))."),
+         "The supervisor, the Python pools and their environments ([OPERATIONS.md](../admin/OPERATIONS.md#19-compute-workers))."),
     Area("net", "Drishti*net: `config/net/`",
-         "The cluster folder (`drishti.net.dir`), watched while the server runs ([OPERATIONS.md](OPERATIONS.md#18-drishtinet-running-several-servers-as-one)); the shipped examples are in "
+         "The cluster folder (`drishti.net.dir`), watched while the server runs ([OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)); the shipped examples are in "
          "`config/net.examples/`."),
     Area("alerts", "Platform alert rules: `config/alerts/platform-alerts.yaml`",
-         "The rules each server evaluates against its own metrics ([OPERATIONS.md](OPERATIONS.md#136-platform-metrics-and-alerts)); "
+         "The rules each server evaluates against its own metrics ([OPERATIONS.md](../admin/OPERATIONS.md#136-platform-metrics-and-alerts)); "
          "`drishti.metrics.alerts.file` names the file, read again when it changes. A rule's name is the site's own."),
     Area("reports", "Report definitions: `config/reports/`",
          "One YAML per regulatory report (`drishti.regulatory.reports-dir`), read when a run is made: its rows, columns, checks, outputs "
@@ -142,14 +142,14 @@ AREAS = [
     Area("dataload", "The data inbox's routing rules: `config/dataload.yaml`",
          "Where a file dropped in the data inbox goes: a file-name pattern to a pack and kind (`drishti.dataload.rules-file`), read again "
          "at every cycle ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load), "
-         "[DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md)). The inbox's own settings are in `config/engines/dataload.yaml`."),
+         "[DATA_ARCHITECTURE.md section 9](../architecture/DATA_ARCHITECTURE.md#9-the-data-inbox-files-dropped-in-a-folder-loaded-into-the-lake)). The inbox's own settings are in `config/engines/dataload.yaml`."),
     Area("ui-kit", "The UI kit: `config/ui-kit/brand.yaml`",
          "The site's brand for pages built with the Drishti UI kit (`drishti.ui-kit.dir`)."),
     Area("ai", "AI providers and MCP servers: `config/ai/`, `config/mcp/`",
          "One YAML per provider in `config/ai/` and per MCP server in `config/mcp/`, for the server (`drishti.ai.dir`, `drishti.mcp.dir`) "
          "and the console (`ai.dir`, `mcp.dir`); the folders are looked at every few seconds, so a changed file needs no restart. Every key "
-         "a shipped example (`*.yaml.example`) uses ([AI.md › Model providers](AI.md#1-model-providers), "
-         "[AI.md › The MCP client](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy))."),
+         "a shipped example (`*.yaml.example`) uses ([AI.md › Model providers](../admin/AI.md#1-model-providers), "
+         "[AI.md › The MCP client](../admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy))."),
 ]
 AREA_IDS = {a.id for a in AREAS}
 
@@ -648,7 +648,7 @@ def splice(doc: str, block: str) -> str:
 
 
 def main(argv: list[str]) -> int:
-    p = argparse.ArgumentParser(description="Write or check the generated settings of docs/admin/CONFIGURATION.md.")
+    p = argparse.ArgumentParser(description="Write or check the generated settings of docs/reference/CONFIGURATION.md.")
     p.add_argument("--check", action="store_true", help="fail on a key without a meaning, an unindexed variable or a stale document")
     p.add_argument("--missing", action="store_true", help="list what --check would fail on, without writing")
     args = p.parse_args(argv)

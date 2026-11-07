@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * The contract of every entity screen for clients: {@code GET /api/v1/viewmodel/schema} is the JSON Schema of the ViewModel,
- * its panels' {@code data} and the live stream's frames (docs/architecture/VIEWMODEL.md). Read only; generated from the records.
+ * its panels' {@code data} and the live stream's frames (docs/reference/VIEWMODEL.md). Read only; generated from the records.
  */
 @RestController
 @RequestMapping("/api/v1/viewmodel")

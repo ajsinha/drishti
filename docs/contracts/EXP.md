@@ -76,7 +76,7 @@ internal model), and traders (what a new trade does to a counterparty's PFE befo
 
 **Methodology.** Monte Carlo exposure simulation post-processing as in Basel CRE53 (internal models method: EE, effective EE, EEPE,
 alpha 1.4) and the industry's PFE practice for limits. Drishti does **not** simulate markets or price trades: the paths are inputs
-(the contracts' README.md section 3). QLRisk may later produce them ([PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md)).
+(the contracts' README.md section 3). QLRisk may later produce them ([ARCHITECTURE.md section 24](../architecture/ARCHITECTURE.md#24-compute-workers-python-and-java-libraries-approved-pinned-and-isolated)).
 
 ## 2. Inputs from upstream engines
 
@@ -344,7 +344,7 @@ limits: { timeout: 30s, wait: 100ms, max-inflight-per-user: 2 }
 requires: { python: { version: "3.12", lock: requires/drishti-ccr.lock } }
 ```
 
-The engine interface (worker SDK, [PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md) [exposure guide section 8](../guides/EXPOSURE_GUIDE.md#8-exposure-as-a-kind)), as proposed in a package `compute/drishti-ccr`:
+The engine interface (worker SDK, [ARCHITECTURE.md section 24](../architecture/ARCHITECTURE.md#24-compute-workers-python-and-java-libraries-approved-pinned-and-isolated) [exposure guide section 8](../guides/EXPOSURE_GUIDE.md#8-exposure-as-a-kind)), as proposed in a package `compute/drishti-ccr`:
 
 ```python
 # compute/drishti-ccr/src/drishti_ccr/exposure.py               (drishti_compute/exposure/whatif.py)
@@ -509,7 +509,7 @@ input or fundamental kind carries `EPE`, `EEPE`, `PFE_PEAK`, `EE_PEAK`.
   paths for the netting set NS-… on <date>". The badge of a netting set is its net MtM. `LIMIT` and `CVA` stay stored (no stored `UTILISATION`: its formula is unknown)
   (LIM and CVA are parked); the stored CVA, the SA-CCR figures, a credit limit's stored used amount and utilisation and the
   counterparty's stored net MtM show *Under construction* in their place until their engines are built
-  ([UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md)); the walks of the live demo do not move exposure figures.
+  ([UNDER_CONSTRUCTION.md](../reference/UNDER_CONSTRUCTION.md)); the walks of the live demo do not move exposure figures.
 - **Computed attributes** ([COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) [exposure guide section 13](../guides/EXPOSURE_GUIDE.md#13-troubleshooting)): beside the stored figures the netting-set page
   shows the totals derived from the trade valuations (derived kind `nset-mtm`: net MtM, live trades, gross positive and negative,
   netting benefit, net-to-gross, uncollateralised CE, MtM by product group, the live-status trades past their maturity date) with the

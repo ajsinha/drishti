@@ -25,7 +25,7 @@ import java.util.TreeMap;
 
 /**
  * A Space-Saving summary of the most frequent values (Metwally, Agrawal and El Abbadi, 2005; merged as in Agarwal and others, "Mergeable
- * summaries", 2012; PIVOT_ENGINE.md section 9.5): at most {@code capacity} counters, each an over-estimate of its value's count by at most
+ * summaries", 2012; ARCHITECTURE.md section 23.9.5): at most {@code capacity} counters, each an over-estimate of its value's count by at most
  * its own error; {@code floor} bounds the count of every value not listed. Capacity 0 is unbounded: every value is counted exactly (the
  * exact form, "exact on request").
  *

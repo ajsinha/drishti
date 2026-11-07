@@ -126,7 +126,7 @@ class LakeFileLoadTest {
     }
 
     /**
-     * The mode (DATA_LOAD_RULES.md section 3): the lake file's entry is the table's default, below an explicit target.mode and above
+     * The mode (DATA_ARCHITECTURE.md section 10.3): the lake file's entry is the table's default, below an explicit target.mode and above
      * target.default-mode (the inbox's); without a batch id an append is not guarded, each run's rows carry their load id.
      */
     @Test

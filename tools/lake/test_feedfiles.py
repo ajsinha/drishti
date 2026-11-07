@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""feedfiles.py: our own feed files by the load rules (DATA_LOAD_RULES.md section 10), written deterministically and read back the way
+"""feedfiles.py: our own feed files by the load rules (DATA_ARCHITECTURE.md section 10.10), written deterministically and read back the way
 lake build reads them."""
 import sys
 import tempfile

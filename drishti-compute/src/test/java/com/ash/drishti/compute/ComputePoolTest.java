@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * Step C1's acceptance (docs/architecture/PYTHON_COMPUTE.md section 16): an engine computes over a million Arrow rows in a worker; a crashing
+ * Step C1's acceptance (docs/architecture/ARCHITECTURE.md section 24.16): an engine computes over a million Arrow rows in a worker; a crashing
  * or looping engine is stopped and the pool carries on; the scratch folder is gone after every request; requests never share a process or
  * see each other's state; limits and the sandbox refuse with clear errors. Fork mode (the Linux default).
  */

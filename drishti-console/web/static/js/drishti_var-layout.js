@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The VaR screen's layout (docs/guides/VAR_GUIDE.md section 3.1; the approved mock-up docs/lenses/mockups/var-layout/A.html and
+/* The VaR screen's layout (docs/guides/VAR_GUIDE.md section 3.1; the approved mock-up docs/architecture/mockups/var-layout/A.html and
    A-drawer.html). Two things, nothing else:
 
    - the baskets in two searchable drop-downs in the toolbar: System baskets (the bank's portfolios, from the market-risk pack's

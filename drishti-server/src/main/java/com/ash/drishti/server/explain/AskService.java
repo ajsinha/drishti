@@ -83,7 +83,7 @@ public final class AskService {
         if (q.length() > cfg.maxQuestionChars()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "the question is longer than " + cfg.maxQuestionChars() + " characters");
         }
-        // a page of data held in memory only never goes to an outside AI provider (IN_MEMORY_LAKE.md section 8)
+        // a page of data held in memory only never goes to an outside AI provider (DATA_ARCHITECTURE.md section 7.8)
         com.ash.drishti.memlake.Retention.current().require(com.ash.drishti.memlake.Retention.Sink.AI_PROVIDER, List.of(ref.kind()),
                 "This page");
         PageContext ctx = explain.explain(ref, asOf, caller, null, null, locales);   // the caller's own explanation: masks and rights applied

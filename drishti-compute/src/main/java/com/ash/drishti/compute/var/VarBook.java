@@ -913,7 +913,7 @@ public final class VarBook {
 
     /**
      * The vectors of many sets, each the one {@link #vector} gives (to the bit): on a sharded date every set is planned first and the rows
-     * the plans add and take away are asked of each remote shard's owner in <b>one</b> batch for all the sets (MR_CUBE_LENS.md section 4.11,
+     * the plans add and take away are asked of each remote shard's owner in <b>one</b> batch for all the sets (LENSES.md section 6.4.11,
      * a cube view's cells and totals) instead of one round trip per set; elsewhere each set is summed as {@link #vector} sums it.
      */
     public List<double[]> vectors(List<OrdinalSet> sets, ParallelSums sums) {

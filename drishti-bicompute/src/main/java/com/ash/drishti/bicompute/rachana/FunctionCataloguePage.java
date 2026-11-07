@@ -27,14 +27,14 @@ import java.util.Map;
 /**
  * The one function catalogue page (Help → Functions; ONE_GRAMMAR.md section 5), generated from the two registries: Rachana's function
  * table ({@link Functions#catalogue()}) and the pivot engine's functions registered into it ({@link EngineFunctions}). Written to
- * {@code docs/guides/FUNCTIONS.md}; {@code FunctionCataloguePageTest} fails when the committed page differs from what the registries
+ * {@code docs/reference/FUNCTIONS.md}; {@code FunctionCataloguePageTest} fails when the committed page differs from what the registries
  * give (regenerate it with {@code -Ddrishti.functions.write=true} on that test, or by running this class with the file's path), and
  * when a function is missing from FUNCTION_CATALOGUE.md, the reviewed catalogue with each function's example and Excel and SAS names.
  */
 public final class FunctionCataloguePage {
 
     /** The page, from the repository's root. */
-    public static final String FILE = "docs/guides/FUNCTIONS.md";
+    public static final String FILE = "docs/reference/FUNCTIONS.md";
 
     static final Map<String, String> FAMILIES = new LinkedHashMap<>();
 
@@ -62,7 +62,7 @@ public final class FunctionCataloguePage {
                 .append("`FunctionCataloguePage`; do not edit by hand. ").append(all.size()).append(" functions, each under its one name. ")
                 .append("Each function's example, its Excel and SAS equivalents and its rules are in ")
                 .append("[FUNCTION_CATALOGUE.md](../architecture/FUNCTION_CATALOGUE.md); the grammar is in ")
-                .append("[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#functions).*\n\n");
+                .append("[RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#functions).*\n\n");
         b.append("**Runs:** **R** Rachana (a scalar, one value from values); **E** the pivot engine (`drishti-bicompute`), the same ")
                 .append("implementation a pivot cell runs. Where the engine is not on the class path an **E** function is refused with ")
                 .append("the reason, never computed another way. **Form:** *mergeable* (a total combines partial results exactly), ")

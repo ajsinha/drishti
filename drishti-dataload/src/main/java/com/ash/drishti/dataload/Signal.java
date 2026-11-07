@@ -19,7 +19,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Telling the server that data has moved (DATALOAD_INBOX.md section 4.9): one data-load signal per pack, kind, business date and load,
+ * Telling the server that data has moved (DATA_ARCHITECTURE.md section 9.4.9): one data-load signal per pack, kind, business date and load,
  * {@code ready}. The server answers it with the steps of any data-load signal (its {@code LoadService}: refresh, verify, alerts, smoke,
  * notices, the Data loads page). Signals are idempotent per pack, kind, date and batch, so one sent again after a restart is recorded once.
  */

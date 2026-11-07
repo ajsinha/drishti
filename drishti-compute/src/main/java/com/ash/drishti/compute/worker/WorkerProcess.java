@@ -40,7 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * One worker process and its JSON-lines control channel (docs/architecture/PYTHON_COMPUTE.md section 7.3). It runs one request at a time:
+ * One worker process and its JSON-lines control channel (docs/architecture/ARCHITECTURE.md section 24.7.3). It runs one request at a time:
  * {@link #run} writes the request, relays progress, waits for the result or error and for {@code done} (the worker is free again), and
  * enforces the wall-time budget and cancellation from outside: in fork mode only the request's child is killed and the worker stays; in
  * warm mode the whole worker goes. Standard error is drained into the server's log under the worker's id.

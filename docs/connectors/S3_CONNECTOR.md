@@ -23,7 +23,7 @@ it costs in S3 requests, how far it scales, how it fails and recovers, its secur
 `S3SourcePlugin` (`plugins/drishti-plugin-s3`) implements them.
 
 For a first setup see [the walk-through at the end of this document](#walk-through-step-by-step); the settings in
-brief are in [CONFIGURATION.md](../admin/CONFIGURATION.md#s3--documents-in-s3-or-an-s3-compatible-store). For a book
+brief are in [CONFIGURATION.md](../reference/CONFIGURATION.md#s3--documents-in-s3-or-an-s3-compatible-store). For a book
 of a million entities a day in object storage use Delta Lake on `s3a://` instead ([DELTA_CONNECTOR.md](DELTA_CONNECTOR.md));
 for files on local disk see [FILE_CONNECTOR.md](FILE_CONNECTOR.md).
 

@@ -19,7 +19,7 @@ import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * Streaming BI, {@code drishti.bi.live.*} (docs/admin/CONFIGURATION.md): the live tables kept in memory by the engine and the streams that tell browsers
+ * Streaming BI, {@code drishti.bi.live.*} (docs/reference/CONFIGURATION.md): the live tables kept in memory by the engine and the streams that tell browsers
  * they changed. Every bound has a default and can be changed without a build.
  *
  * @param enabled false: a live table is the short-lived snapshot of phase 2 ({@code drishti.bi.query.live-ttl}), nothing is kept or streamed

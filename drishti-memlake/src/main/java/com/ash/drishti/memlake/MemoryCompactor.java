@@ -38,7 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Automated compaction (IN_MEMORY_LAKE.md section 13a): the memory optimizes itself. Every minute and after every commit, each store's
+ * Automated compaction (DATA_ARCHITECTURE.md section 7.13a): the memory optimizes itself. Every minute and after every commit, each store's
  * tables are scored by the memory a rewrite would save; the best one is rewritten (one at a time per store, as one atomic commit; readers
  * on the old version finish on it), and only when the store has room for its new files beside the old ({@code headroom-mb} and the table's
  * size free under the cap), so compaction never pushes a store into eviction. What triggers a rewrite: many small files, rows replaced past

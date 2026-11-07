@@ -21,7 +21,7 @@ import java.util.Map;
 
 /**
  * {@code 404 DRS-1020}: the engine is not running on this server, and no other server of the cluster runs it
- * (docs/architecture/COMPUTE_ENGINES.md section 5.1). Not 403: nothing is forbidden, the thing is not here. The answer names the engine:
+ * (docs/architecture/ARCHITECTURE.md section 25.5.1). Not 403: nothing is forbidden, the thing is not here. The answer names the engine:
  * {@code {"code": "DRS-1020", "engine": "frtb-sa", "detail": "FRTB-SA is not running on this server, ..."}}.
  */
 public final class EngineOffException extends DrishtiException {

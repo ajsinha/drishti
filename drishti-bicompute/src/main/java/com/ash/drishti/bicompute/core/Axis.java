@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * One axis of a view (rows or columns) as a tree of nodes opened lazily (PIVOT_ENGINE.md section 11): the root is the axis total; a node's
+ * One axis of a view (rows or columns) as a tree of nodes opened lazily (ARCHITECTURE.md section 23.11): the root is the axis total; a node's
  * children are the members of one dimension (the axis's next, or the one it is expanded by) within it. A {@link Group} is "the children of
  * one node by one dimension": one declarative cell set, never a list of members, so it can be planned before its members are known.
  */

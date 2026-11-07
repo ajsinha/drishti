@@ -290,7 +290,7 @@ file's or the site's; the proxy must allow `CONNECT` to the vendor's host.
 ### Too many retry lines in the log
 
 The log gets the first failure and failures number 2, 4, 8, ... of each thing, never one line per try. To retry less often, raise `drishti.retry.max`
-(per area: `drishti.retry.connectors.max`); to stop retrying, set `drishti.retry.enabled: false` ([CONFIGURATION.md](../admin/CONFIGURATION.md#retry-settings)).
+(per area: `drishti.retry.connectors.max`); to stop retrying, set `drishti.retry.enabled: false` ([CONFIGURATION.md](../reference/CONFIGURATION.md#retry-settings)).
 
 ## Signing in
 
@@ -504,7 +504,7 @@ An alert that never fires, fires twice, or tells too much. Work down; each row i
 | `delivered.sms` says `skipped: no phone number on file` | The owner has not given a number | `PUT /api/v1/me/phone` or type it in the alert or Subscribe form; the alert cannot be saved with texts on and no number |
 | `delivered.sms` says `failed (permanent): the SMS gateway answered HTTP 401` | The gateway refused the credential in `sms.header.*` | Check the `${ENV}` credential; `drishti.notify.sms.*` |
 | A text is cut off | `sms.max-chars` (160) | Raise it if the gateway takes more; a text holds only a title and a link |
-| `delivered.bridge` says `skipped: no bridge route lists the alert event` | No route has `events: [alert]` (or its `kinds` exclude the alert's: a Sutra kind for a field alert, `bi` for the rest) | [CONFIGURATION.md](../admin/CONFIGURATION.md#drishticollab--share-with-a-note-and-the-inbox) |
+| `delivered.bridge` says `skipped: no bridge route lists the alert event` | No route has `events: [alert]` (or its `kinds` exclude the alert's: a Sutra kind for a field alert, `bi` for the rest) | [CONFIGURATION.md](../reference/CONFIGURATION.md#drishticollab--share-with-a-note-and-the-inbox) |
 | `delivered.bridge` says `skipped: already posted for this alert within its cooldown` | One post per alert per cooldown (a minute at least) | By design: a bridge is a room |
 | A board tile never notifies | `notify` needs a threshold of its level (`crit` needs `crit`), the board is not **published**, the trigger waits for a load, or **nobody can read it** | Validate the board (`POST /api/v1/bi/boards/validate`); see `/alerts/all` for the tile, who is alerted now and its history |
 | The history of a board tile says `this tile would tell 412 people, more than 300` | More readers than `max-audience` | Narrow the board's audience, or raise the setting |
@@ -610,7 +610,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Cause (missing):** Ask is off by default. It appears only when `drishti.explain.ask.enabled=true` **and** the page's pack is in `drishti.explain.ask.packs`.
 - **Cause (unavailable, `DRS-4008`):** the model endpoint is down, slow (`timeout`), refused the key, or `endpoint`/`api`/`model` do not match what it speaks.
 - **Check:** `GET /api/v1/views/{kind}/{id}/explain` shows `ask.enabled`; the server log line `ask failed for …` says why; the access log shows each question with its outcome.
-- **Fix:** correct the settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiexplainask--ask-about-this-page-optional-off-by-default). The rest of the drawer never depends on Ask.
+- **Fix:** correct the settings in [CONFIGURATION.md](../reference/CONFIGURATION.md#drishtiexplainask--ask-about-this-page-optional-off-by-default). The rest of the drawer never depends on Ask.
 
 ### A linked entity shows `pending` or `missing` instead of a badge
 
@@ -646,7 +646,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 - **Cause:** a single read took longer than `drishti.sources.fetch-timeout` (10 s). On a large lake the first read of a date reads that date's ids first; files written with large row groups, a lake on a network share or far object storage, or an antivirus scanning every file read (Windows) make it slower. In the console the same code comes with "the server did not answer in time".
 - **Check:** Admin → Health, the connector's `p99Ms`; Admin → Health → Pages for the kind's p95; the server log for `… loaded, N ids in F files (T ms)`.
-- **Fix:** open it again (the id map is then in memory, and with `id-map-disk.enabled`, the default, on disk for the next start); load the lake with `lake build` (256 KB row groups); keep the data folder on a local SSD, excluded from real-time scanning; or raise `drishti.sources.fetch-timeout`, keeping the console's `backend.timeout_seconds` (15) longer than it ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+- **Fix:** open it again (the id map is then in memory, and with `id-map-disk.enabled`, the default, on disk for the next start); load the lake with `lake build` (256 KB row groups); keep the data folder on a local SSD, excluded from real-time scanning; or raise `drishti.sources.fetch-timeout`, keeping the console's `backend.timeout_seconds` (15) longer than it ([CONFIGURATION.md](../reference/CONFIGURATION.md)).
 
 ### A counterparty, portfolio, legal entity or index page (`CTRD`, `PTRD`, `LTRD`, `ITRD`) is slow or times out
 
@@ -853,7 +853,7 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 - **Cause:** the scan stopped short: more than 20,000 entities of that kind (`drishti.search.max-scan`), or a
   source slower than 3 seconds (`drishti.search.budget`). The API answer has `"partial": true`.
-- **Fix:** narrow the search, or raise the limits ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+- **Fix:** narrow the search, or raise the limits ([CONFIGURATION.md](../reference/CONFIGURATION.md)).
 
 ### "Incomplete: 1 source could not be read …"
 
@@ -1380,7 +1380,7 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 | Lineage shows the connector but dots for its table or path | lineage past the connector is masked for people who are not administrators | by design |
 | The report designer says a board tile "names a report or visual you cannot open" | the report is not one you may read, was renamed, or lost the visual | pick the tile's report and visual again (Add a tile), or fix the YAML |
 | A tile with a hysteresis stays red after the number is normal | it drops only when the number is back inside the threshold by the hysteresis | lower `hysteresis`, or wait for the number to move further |
-| A temp folder `drishti-<pid>` or `drishti-console-<pid>` is left in the temp base (`<data dir>/tmp` for the server) | the process was killed (`kill -9`, a power cut) | it is kept (never deleted automatically) and listed on Admin, Health: delete it by hand when no such process runs ([CONFIGURATION.md](../admin/CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir)) |
+| A temp folder `drishti-<pid>` or `drishti-console-<pid>` is left in the temp base (`<data dir>/tmp` for the server) | the process was killed (`kill -9`, a power cut) | it is kept (never deleted automatically) and listed on Admin, Health: delete it by hand when no such process runs ([CONFIGURATION.md](../reference/CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir)) |
 | The temp base (`<data dir>/tmp`, or `/tmp` with an older server) fills up while DuckDB works on a big query | its spill files are in the server's temp folder | point `DRISHTI_TMP_DIR` at a disk with room and restart; Admin, Health shows the folder's size |
 
 ## BI: Studio, board pages and data prep
@@ -1398,7 +1398,7 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 ## BI: after an upgrade (migrations of stored items)
 
 The old expression syntax is refused (`DRS-9100`), so the server converts the items it stores at start (`drishti.bi.migrate.on-start`,
-[CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibimigrate--migrations-of-stored-bi-items)). Each change is audited and the text before is a saved
+[CONFIGURATION.md](../reference/CONFIGURATION.md#drishtibimigrate--migrations-of-stored-bi-items)). Each change is audited and the text before is a saved
 state of the item; an item it cannot convert is never changed.
 
 | Symptom | Cause | Check and fix |

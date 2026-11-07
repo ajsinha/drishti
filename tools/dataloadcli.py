@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""`drishti.py dataload status|run|retry`: the data inbox from the command line (docs/architecture/DATALOAD_INBOX.md; docs/guides/DATA_GUIDE.md,
+"""`drishti.py dataload status|run|retry`: the data inbox from the command line (docs/architecture/DATA_ARCHITECTURE.md section 9; docs/guides/DATA_GUIDE.md,
 "The data inbox"; the API: /api/v1/admin/dataload, administrators, or a token with loads:write for run and retry).
 
     status [--json]          the files waiting and why, the last cycles, the failures with their reasons, the lock, the next cycle

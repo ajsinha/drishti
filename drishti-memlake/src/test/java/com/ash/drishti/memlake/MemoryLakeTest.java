@@ -33,7 +33,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * The in-memory lake's jobs (IN_MEMORY_LAKE.md sections 4, 6 and 13a), without Spring: a vendor feed served over HTTP fills tables in memory
+ * The in-memory lake's jobs (DATA_ARCHITECTURE.md sections 7.4, 7.6 and 7.13a), without Spring: a vendor feed served over HTTP fills tables in memory
  * (replace, append, merge), the eviction ladder gives up whole unpinned tables least recently read first and queues their refill, a full
  * store refuses and the table stays whole, compaction merges small files and saves memory.
  */

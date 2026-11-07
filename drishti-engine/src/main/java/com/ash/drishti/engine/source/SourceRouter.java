@@ -910,7 +910,7 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      */
     /**
      * The kind's data files on a date when one source holds the whole kind and can hand them over (the pivot engine's direct lake route,
-     * docs/architecture/PIVOT_ENGINE.md section 6.2); empty otherwise. Reads no data file.
+     * docs/architecture/ARCHITECTURE.md section 23.6.2); empty otherwise. Reads no data file.
      */
     public Optional<com.ash.drishti.api.LakeFiles> lakeFiles(String kind, AsOf asOf) {
         List<SourcePlugin> sources = wholeKindSources(kind, asOf);

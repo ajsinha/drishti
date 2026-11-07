@@ -16,7 +16,7 @@
 """lake scan: what a large export holds, read as a stream: every field (dotted paths, up to depth 3; arrays are counted, not
 entered), how often it is present, its types, its most frequent values, and suggestions for ``lake build``: the id (--key) and
 classifiers (--partition-by: text fields with few distinct values), and the field the rows carry their date in (counted only: the business
-date comes from the file's name or --as-of, docs/architecture/DATA_LOAD_RULES.md).
+date comes from the file's name or --as-of, docs/architecture/DATA_ARCHITECTURE.md section 10).
 
     python3 tools/drishti.py lake scan exports/book.json --limit 5000
 

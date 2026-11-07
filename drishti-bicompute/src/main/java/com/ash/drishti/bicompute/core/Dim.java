@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * A dimension of a view (PIVOT_ENGINE.md section 4.2): a field, and optionally how it is grouped (a date by day, week, month, quarter or
+ * A dimension of a view (ARCHITECTURE.md section 23.4.2): a field, and optionally how it is grouped (a date by day, week, month, quarter or
  * year; a number into buckets of a width). Written {@code TRADE_DATE:month} or {@code NOTIONAL_USD:width=1000000}; its id is that text.
  *
  * @param field the source's column

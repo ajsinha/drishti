@@ -60,7 +60,7 @@ public class RachanaConfiguration {
     }
 
     /**
-     * The under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): {@code drishti.under-construction.file}, else
+     * The under-construction registry (docs/reference/UNDER_CONSTRUCTION.md): {@code drishti.under-construction.file}, else
      * {@code under-construction.yaml} beside the packs folder; none when neither exists, or when the setting is {@code none}.
      */
     @Bean

@@ -36,7 +36,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * A pivot over rows held in memory (PIVOT_ENGINE.md section 13: every component that aggregates calls the engine): a Sutra's {@code pivot}
+ * A pivot over rows held in memory (ARCHITECTURE.md section 23.13: every component that aggregates calls the engine): a Sutra's {@code pivot}
  * panel over its document's rows, a chart of a table's shown rows. The rows are grouped by each cell set here and every function's state is
  * made by its own {@code add} over a columnar batch of the cell's rows, so the figures are the built-ins' (the same functions the tabular
  * provider computes in SQL). Small by nature (a panel's rows, a page of a table); one provider holds one table.
