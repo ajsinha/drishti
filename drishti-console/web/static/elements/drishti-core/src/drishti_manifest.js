@@ -22,8 +22,8 @@ export const MANIFEST = Object.freeze({
   "elements": "1.0.0",
   "libraries": {
     "drishti-core": {
-      "version": "1.0.0",
-      "title": "Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts",
+      "version": "1.1.0",
+      "title": "Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker, reading typed numbers, loading vendored engines",
       "bundle": "drishti-core/drishti_core.js",
       "entry": "drishti-core/src/drishti_index.js",
       "global": "core",
@@ -34,8 +34,8 @@ export const MANIFEST = Object.freeze({
       ]
     },
     "drishti-grid": {
-      "version": "0.2.0",
-      "title": "The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and <drishti-grid> in three layouts and three densities)",
+      "version": "0.3.0",
+      "title": "The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and <drishti-grid> in three layouts and three densities), cell editing with undo, paste, write-back and four eyes",
       "bundle": "drishti-grid/drishti_grid.js",
       "entry": "drishti-grid/src/drishti_index.js",
       "global": "grid",

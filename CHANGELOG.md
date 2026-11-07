@@ -62,6 +62,33 @@
   switcher. Nothing inline: it runs under a strict CSP. A static fixture harness (`drishti_harness.html`, synthetic data, no server) in
   every layout, density and theme; 12 more Node tests and one browser test file against the harness (`test_elements_grid_browser.py`).
   The engine's pivot header rows (an open group's label line, subtotals below) no longer repeat the subtotal's figures.
+- **drishti-inputs 0.1.0** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  business-date pickers keyed by holiday calendars (rules with weekend rolls, n-th weekdays and Easter, or the server's dates; unions
+  such as US+UK; T-1, month-end, typed `T-3`, `ME`, `6 Nov 2026`; non-business days refused in words), a date-range picker with twelve
+  presets that move with the business date, a tree picker (compact partial selection, children from the server with loading and
+  Retry, search), a multi-select (search, chips, select-all, a limit), a combobox with server type-ahead (debounced, aborted, cached,
+  in order), forms from a JSON-schema-like description (validation in words, conditional fields, repeatable groups, the server's
+  checks, a four-eyes submit that files a proposal and waits), a filter bar that emits the filter model on a bus for grids and charts,
+  and the code editor over the vendored CodeMirror (Rachana, YAML and Python; completion from the function catalogue through a hook;
+  lint marks and a problems list; read-only; a side-by-side or unified diff). Each a class and a web component.
+- **drishti-data 0.1.0**: one data-source contract for grids and charts (in memory, REST pages, Drishti's server-side rows, Arrow,
+  live; any source is the grid's datasource as it is), the live client over Server-Sent Events or a WebSocket (reconnect with a
+  jittered back-off, a heartbeat, resume from the last event id, states for a status line), backpressure into the grid's
+  `applyTransactionAsync` (one batch at a time, the rest folded by row id), and the Arrow client (Flight over HTTP where a server
+  offers it, else Arrow over HTTP, else JSON; columns read without a copy where they can be, rows as views, column types for a grid).
+  The grid's own SSE and WebSocket feeds are gone: the live client is the one connection.
+- **drishti-grid 0.3.0, cell editing**: editors per type (text, a number in the grid's locale read loosely, a date through
+  drishti-inputs' business-date picker, a select, a checkbox), started by Enter, F2, a double click or typing, saved by Enter or Tab,
+  Escape to cancel; validation in words (required, min, max, length, options, the column's rule); each change one edit transaction
+  (`cellValueChanged`, `editTransaction`) with undo and redo; a paste of a range from Excel (quoted cells, one value filling a range);
+  Delete over a range; a write-back hook (applied, refused with the old values back, or proposed) and four eyes (cells marked until a
+  proposal is decided). `grid.followFilters(bus)` follows a filter bar.
+- **drishti-core 1.1.0**: the sort and filter model moved in from the grid as the contract every library shares (with
+  `FILTER_CHANNEL` and `filterRows`), the element maker and placements, reading typed and pasted numbers in a locale, and loading a
+  library's vendored engine (`loadScript`, `loadStyle`, `staticUrl`). One static harness page for inputs, data and editing
+  (`drishti-inputs/drishti_harness.html`), 23 more Node tests (`inputs`, `data`, `grid-edit`) and one browser test file
+  (`test_elements_inputs_browser.py`). The console's pickers, forms, editors, live connections and Arrow reader that move onto these
+  later are listed in ELEMENTS.md 8.2.
 
 ## 2.9.11.d (unreleased)
 

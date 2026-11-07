@@ -16,7 +16,7 @@
 
 # Drishti Elements: the console's JavaScript as eight reusable libraries
 
-**Status: design, not built** (release 2.9.11.e, product owner 2026-11-07; mock-ups g1 to g4 below, all decided). The internal design:
+**Status: being built** (release 2.9.11.e, product owner 2026-11-07; mock-ups g1 to g4 below, all decided; as built: 8.1 and 8.2). The internal design:
 what each library is, what it takes over from today's code, the grid's pivot, the AG Grid-style adapter, the chart spec and the maps,
 packaging and licensing, the documentation of every library, the gallery, the guards, the order in which Drishti's screens move, the
 risks and the product owner's decisions. The renderer, the embed API and Elements 2.x (`<drishti-view>`) are designed in
@@ -406,7 +406,8 @@ library with its module: an unlicensed module's library is not served, its kinds
 - **Events and live data** (`drishti_grid-live.js`, `drishti_live.js`). Typed events (`GRID_EVENTS`) on the bus and, on the web
   component's host, as DOM events `drishti:<kebab-name>`; transactions by row id, batched (`applyTransactionAsync`, a row's last update
   wins) and applied in place: a row whose sort or filter values changed is merged back where it belongs, ties keep their order; each
-  changed cell's direction for its flash; a feed message is `{type: transaction | dataChanged | rows}` over SSE or a WebSocket; a
+  changed cell's direction for its flash; a feed message is `{type: transaction | dataChanged | rows}` from any object with
+  `subscribe` (the connection itself, SSE or a WebSocket, is drishti-data's `LiveClient`, 8.2); a
   server's data-changed notice invalidates blocks, a level, the blocks holding some rows, or everything. Group and local pivot totals
   change by difference (sums, counts, averages; the others from their members); non-additive ones are asked of the server again
   (`serverGroupTotals`, `serverPivot`), debounced.
@@ -444,6 +445,121 @@ library with its module: an unlicensed module's library is not served, its kinds
   (`tests/test_elements_grid_browser.py`: every layout and density in both themes, drag between wells, every menu item, button and
   function key, ranges and the status bar, the keys and roles, the flash, server blocks, 100,000 virtual rows, a phone); screens that
   move onto it (section 12) test only their wiring.
+
+### 8.2 As built: drishti-inputs, drishti-data and the grid's cell editing
+
+- **One home for what all of them share** (moved into drishti-core): the sort and filter model and their tests of a row
+  (`drishti_filters.js`, from the grid: `passes`, `rowFilter`, `compareRows`, `filterWords`, and `filterRows` for a chart or a source),
+  `FILTER_CHANNEL` (the bus event a filter bar emits and grids and charts follow), the element maker and the placements (`h`,
+  `placeAt`, `placeUnder`, `drishti_dom.js`), reading typed and pasted numbers in a locale (`parseNumberText`, `numberEditText`,
+  `drishti_parse.js`: grouping, the true minus, brackets, k, m, bn, percentages; de-DE's marks), and `loadScript`, `loadStyle` and
+  `staticUrl` for the vendored engines a library wraps.
+- **drishti-inputs 0.1.0** (`static/elements/drishti-inputs/`; every component a class, `new X(element, options)`, and a web component,
+  events on its own bus and as `drishti:<name>` DOM events, no shadow root, nothing inline):
+  - **Business dates** (`drishti_calendar.js`, pure): `HolidayCalendar` from rules (a fixed day with its weekend roll, the n-th or
+    last weekday of a month, the weekday before a day, Easter offsets) or from the server's dates, any weekend, unions (`US+UK`); the
+    bundled US, UK, TARGET and CA rules are illustrative and a site's `defineCalendar` wins. T-1 and T-n, month-, quarter- and
+    year-end, the previous month-end, business days between; twelve range presets (Today, T-1, WTD, MTD, QTD, YTD, the last 5 and 20
+    business days, the previous month, quarter and year, the last 12 months); typed dates (`T-3`, `T+2`, `ME`, `QE`, `YE`, `PME`,
+    ISO, `6 Nov 2026`, `Nov 6, 2026`).
+  - **`DatePicker`, `<drishti-date>`**: a field that reads typed dates and a calendar (the WAI-ARIA date grid: arrows, Page Up and Down,
+    Shift for a year, Home and End); weekends dimmed, holidays named, days that are not business days refused in words ("a holiday
+    (Thanksgiving): the business day before is 25 Nov 2026"), min and max, the shortcuts business date, T-1 and month-end.
+    **`DateRangePicker`, `<drishti-date-range>`**: the presets beside two months, the ends as typed fields, a range shaded as the pointer
+    or the keys move, Apply and Cancel, a preset kept as its id so it moves with the business date (`setAsOf`), a longest range.
+  - **`TreePicker`, `<drishti-tree-picker>`** over `TreeModel`: a selection kept compact (a node stands for everything under it; a branch
+    never loaded can be checked whole), checked, mixed and unchecked (`aria-checked`), unchecking under a checked parent, children from
+    the server the first time a node opens (a loading row, an error row with Retry), search of the loaded levels or through a server
+    hook, the tree view's keys and type-to-jump, inline or in a panel, single or multiple.
+  - **`MultiSelect`, `<drishti-multiselect>`**: chips (a "+N" past `maxChips`), a search field in the control, grouped options, Select
+    all (the matching ones) and Clear, a limit, Backspace takes the last chip; thousands of options (the best 300 drawn, "N more").
+  - **`Combobox`, `<drishti-combobox>`** over `TypeAhead`: a list or a server search, debounced, a minimum length, the request it
+    replaces aborted, a late answer dropped, recent answers cached, the server's error in words, free text when allowed.
+  - **`Form`, `<drishti-form>`** from a JSON-schema-like description (`drishti_schema.js`, pure): string, number and integer (read
+    loosely, shown formatted), boolean, date, date range, enum (radios up to three, else a select), arrays of an enum (the multi-select),
+    arrays of objects (repeatable groups: add, remove, move), objects (fieldsets), a combobox, a tree, the code editor; conditions
+    (`when`: equals, in, more than, true; all, any, not) show and hide fields as people type, and a hidden field is neither validated
+    nor submitted; validation in words per field once touched and for all at submit, with a summary whose items lead to their fields;
+    cross-field dates (`after`, `before`); the server's checks (`check` hook, problems by path). **Four eyes**: the submit lists what
+    changed, asks why (required) and who approves, files the proposal through the hook and waits read-only with its number until
+    `resolveProposal('approved' | 'rejected')`.
+  - **`FilterBar`, `<drishti-filter-bar>`** over `FilterModelBar`: chips in words, + Filter with a field search, editors per type
+    (members with search and select-all, from the server when given; a condition and a value read loosely; a date preset or two typed
+    ends), a quick search, Clear all. It emits drishti-core's filter model on a bus under `FILTER_CHANNEL`; `grid.followFilters(bus)`
+    follows it (its own columns only), and a chart filters its rows with `filterRows(rows, model)`.
+  - **`CodeEditor`, `<drishti-code>`**: the vendored CodeMirror 5, loaded the first time an editor is made (a text area holds the text
+    until then); the modes Rachana (functions, `[fields]`, `$paths`, `@names`, numbers with units, comments), Rachana YAML and the
+    vendored Python, loaded when asked; completion from the function catalogue through a hook (as a name is typed, or Ctrl+Space; the
+    arrows, Enter or Tab, Escape; a function's parentheses with the cursor inside); lint markers from a hook (a mark under the text, a
+    sign in the gutter, the problems listed under the editor as links to their lines); read-only. **`CodeDiff`, `<drishti-code-diff>`**:
+    a line diff (Myers), side by side or unified, highlighted by the same modes without CodeMirror.
+- **drishti-data 0.1.0** (`static/elements/drishti-data/`):
+  - **The data source**, one contract for a grid and a chart (`drishti_sources.js`): `getRows(request)` answers a window for the grid's
+    own block request (rows, sort and filter models, quick filter, row groups and the level, values, an AbortSignal), so any source is
+    drishti-grid's server-side `datasource` as it is; `memorySource` (filter, sort, groups with counts and sums, windows),
+    `restSource` (the request POSTed, or offset, limit, sort and filter as query parameters), `serverSideSource` (Drishti's own),
+    `arrowSource` (an Arrow table fetched once and served as row views, or Arrow pages), `liveSource` (any source with a feed);
+    `readAll` reads every matching row a page at a time up to a limit (a chart). Each says what it can do (`capabilities`).
+  - **The live client** (`LiveClient`): Server-Sent Events or a WebSocket, open with the first subscriber and closed with the last;
+    reconnect after an exponential, capped, jittered back-off (at once when the browser comes back online); a heartbeat watchdog (no
+    message, ping or `heartbeat` event for `heartbeatMs`: opened again; on a WebSocket the client pings); resume from the last event
+    id (SSE: a `lastEventId` parameter on the new address; WebSocket: a `resume` message first); states and counts for a status line.
+    It is itself a feed: `grid.connectLive(client)`.
+  - **Backpressure** (`TransactionSink`, `pipeToGrid(feed, grid)`): at most `maxInFlight` batches in the grid's
+    `applyTransactionAsync`; everything that arrives meanwhile is folded by row id (the last update wins; an add then a remove is
+    nothing; an update then a remove is a remove); a `rows` message replaces everything pending, a `dataChanged` notice follows the
+    rows before it. In Node, 5,000 ticks on two rows reach a grid in at most three batches with the last value of each row.
+  - **The Arrow client** (`ArrowClient`, `fetchFrame`, `DataFrame`): the vendored Arrow JS, loaded when first needed; columns read without
+    a copy where they can be (a 64-bit float column with no nulls is the Arrow buffer; a dictionary decoded once per word); the
+    console's type rules (64-bit integers past 2^53 as exact text, decimals as exact text, dates ISO, timestamps ISO with Z when
+    zoned); rows as views (each holds its row number; `toObject()` copies, the grid's edits copy only the row they change);
+    `toGrid()` gives column definitions from the types. **Flight over HTTP** when the server's capabilities name a `do-get` address (the
+    ticket POSTed, an Arrow stream back); else **Arrow over HTTP**; else JSON, read into the same frame. The Drishti server answers
+    Arrow over HTTP today; its Flight service is gRPC ([ARROW_FLIGHT.md](ARROW_FLIGHT.md)), which browsers cannot speak, so the
+    Flight path serves servers or gateways that offer it over HTTP.
+  - The grid's own SSE and WebSocket feeds (`eventSourceFeed`, `webSocketFeed`) are gone: the connection has one home, `LiveClient`.
+- **Cell editing in drishti-grid 0.3.0** (`drishti_grid-edit.js`, the model; `drishti_grid-editors.js`, the editors): a leaf's cell
+  of a column with `editable` (true or a function of the row) may change; never a pivot's figure, a group, a server-side row or a
+  computed column. Editors per type (`editor`, else by type): text; a number shown with every digit in the grid's `locale` and read
+  back loosely; a date through drishti-inputs' business-date picker when that library is on the page (the column's `calendar` and
+  `businessOnly`), else the browser's date field; a select of the column's `options`; a checkbox that turns at once. Started by Enter,
+  F2 (Explain on a cell that cannot be edited), a double click or typing (the key replaces the value); Enter saves and moves down,
+  Shift+Enter up, Tab right, Shift+Tab left, Escape cancels, leaving saves. Validation: `required`, `min`, `max`, `maxLength`, the
+  options and the column's `validate(value, row)`; a problem keeps the editor open with the words under it (role alert). Every change
+  is one **edit transaction** (`cellValueChanged` per cell, `editTransaction` once; rows updated by id, re-sorted and re-filtered in
+  place, totals by difference) and is undone and redone as one (Ctrl+Z, Ctrl+Y or Ctrl+Shift+Z; the context menu). **Paste from
+  Excel**: tab-separated text (quoted cells with tabs, new lines and quotes) from the focus, one value filling a selected range, cells
+  that cannot change skipped and values that do not read listed; one transaction. Delete empties a range's editable cells.
+  **Write-back**: `editing.writeBack(tx)` hears each transaction and answers applied, refused (the old values come back, with the
+  server's words) or proposed; with `editing.fourEyes` every transaction is a **proposal**: its cells are marked and cannot change
+  again until `grid.resolveProposal(id, 'approved' | 'rejected')`. Events `cellEditStarted`, `cellEditStopped`, `editTransaction`,
+  `editUndone`, `editRedone`, `proposalResolved`.
+- **Harness and tests.** `static/elements/drishti-inputs/drishti_harness.html` draws every input, an editable grid following a filter
+  bar (with `?fourEyes=1`), the form with four eyes, the code editors and diff, a grid fed by `LiveClient` through stand-in
+  EventSource and WebSocket classes, and an Arrow grid; no server (the Arrow part reads a fixture the browser test serves). Node:
+  `tests/elements/inputs.test.mjs`, `data.test.mjs`, `grid-edit.test.mjs`; one browser file, `tests/test_elements_inputs_browser.py`.
+- **Screens that move onto them later** (section 12, steps 2 and 6; none folded yet: each needs its page to load the library and its
+  screen tests run, which is the screen's migration, not this build):
+
+  | Today (file, lines) | Moves onto | Note |
+  |---|---|---|
+  | `drishti_cm-yaml.js` (21–43) | the code editor's YAML mode | the same mode, now in drishti-inputs; two design pages load the old one |
+  | `drishti_studio-yaml.js` (28–241), `drishti_studio-assist.js` (54–372) | `CodeEditor` lint and completion hooks | Studio's own YAML reading and hint box |
+  | `drishti_bi-expr-editor.js` (33–375), `drishti_editor-formula.js` (27–100), `build/drishti_expr.js` (28–106) | `CodeEditor` completion, a `Combobox` | three completions of formulas and paths |
+  | `drishti_bi-design.js` (602), `drishti_calc.js` (71), `build/drishti_yamltab.js` (29), `build/drishti_about.js` (39) | `CodeEditor` | four `CodeMirror.fromTextArea` |
+  | `drishti_multiselect.js` (44–105) | `MultiSelect` | on every page through `base.html` (`.qf-enum[data-ms]`) |
+  | `drishti_people.js` (37–103), `drishti_discussion-compose.js` (34–126) | `Combobox` | people type-ahead (four screens), @-mentions |
+  | `drishti_controls.js` (87–262, 274–311) | `DatePicker`, `DateRangePicker`, `MultiSelect`, `FilterBar` | a Sutra's controls and their filter model |
+  | `drishti_app.js` (51–100), `terminal/_topbar.html` (54) | `DatePicker` | the as-of date with holidays (every page) |
+  | `drishti_history-page.js` (159–215) | `DateRangePicker` presets | 1M, 3M, 6M, 1Y, YTD |
+  | raw date fields: `terminal/compare`, `form`, `var`, `search`; `bi/report`, `notebook`; six admin pages; `drishti_bi-design-panes.js` (446), `drishti_bi-statement.js` (110), `drishti_bi-report.js` (279, 519–527) | `DatePicker`, `DateRangePicker` | |
+  | `drishti_form.js` (39–125), `drishti_form-expr.js` (27–212), `build/drishti_forms.js` (29–184), `drishti_bi-format-pane.js` (41–171), `drishti_editor-table.js` (54–263), `drishti_subscribe-when.js` (28–76) | `Form` | dependent fields, conditions, schema-driven editing |
+  | `drishti_record-forms.js` (883 lines) | `Form` with four eyes, grid editing | edit in cells, drafts and review |
+  | `drishti_var-basket-sheet.js` (40–290) | grid editing | its cell editor (200) and paste (210–248) |
+  | `drishti_live-hub.js` (40–316), `drishti_channel.js` (60–163), `drishti_live.js` (34–155), `drishti_monitor.js` (32–49), `drishti_bi-consume.js` (158–216), the renderer's `m/net.js` (55–105) and `m/elements.js` (85–256) | `LiveClient` | one connection, reconnect and resync; the channel's leader election stays a page concern |
+  | `drishti_table.js` (39–242) | `ArrowClient`, `DataFrame` | the VaR explorer and the scenario matrix |
+  | `drishti_pivot-engine.js` (81–125), `drishti_refresh.js` (42–191), `drishti_bi-live.js` (40–123) | data sources | fetch, polling and staleness |
+  | `drishti_table-chart-engine.js` (342–388) | `HolidayCalendar` | business days for chart gaps (drishti-chart) |
 
 ## 9. The documentation of every library
 
@@ -541,14 +657,16 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [ ] The domain-module platform's five deliverables (section 8) in place
 - [ ] `static/elements/` layout, integrity records, release train, import map
 - [ ] drishti-core: formats with the server's rounding, tokens and densities, API client, events, keymap, dialogs, menus, resize; its gallery pages
-- [ ] drishti-data: sources (local, REST, Drishti pivot and rows), Arrow, live
-- [ ] drishti-grid: virtual rows and columns, columns and menus, ranges and the status bar, filters, tree, editing, export, conditional formats, accessibility
+- [x] drishti-data: sources (local, REST, Drishti pivot and rows), Arrow, live (8.2)
+- [x] drishti-grid: virtual rows and columns, columns and menus, ranges and the status bar, filters, editing (8.2), export, conditional formats, accessibility
+- [ ] drishti-grid: tree data (a path per row, with the AG Grid-style adapter's tree data, O5)
 - [x] drishti-grid pivot: the three layouts `wells`, `panel` and `terminal` (VaR screens default to `terminal`, others to `wells`), aggregation pickers, value filters, collapsible pivot result columns, totals, server-side model with the request of 5.3, non-additive totals from the server
 - [ ] The AG Grid-style adapter with the table of section 6 as code, and its unknown-option report
 - [ ] drishti-chart: the spec, the general kinds, the data-table alternative, export, Explain; the chart card's modes `card` (default) and `studio` (g2 A and B); maps with per-country loading and the modes `ranking` (default) and `table` (g3 A and B)
 - [ ] Vega retired (O1): Vega-Lite visuals translated to the spec, Python visuals return a spec, the vendored Vega deleted
 - [x] The phone behaviour of the grid and the pivot (O2); the standalone Excel writer (O4)
-- [ ] drishti-inputs, drishti-insight, drishti-renderer 2.0.0, drishti-risk (in the banking plugin, licensed)
+- [x] drishti-inputs: pickers, forms with four eyes, the filter bar, the code editor (8.2); the formula input and people picker as their screens move
+- [ ] drishti-insight, drishti-renderer 2.0.0, drishti-risk (in the banking plugin, licensed)
 - [ ] The gallery in both modes, `playground` (default) and `docs` (g4 A and B), every example a test in both themes and three densities, axe clean
 - [ ] Documentation per library (section 9): guide, generated API reference with `--check`, tutorial, gallery, the AG Grid migration guide, theming and accessibility guides, changelogs, versioning policy; Help entries
 - [ ] The guards of section 11, the allow list

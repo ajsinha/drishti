@@ -22,12 +22,14 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 
 | Library | Version | What it is |
 |---|---|---|
-| [drishti-core](#drishti-core) | 1.0.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts |
-| [drishti-grid](#drishti-grid) | 0.2.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities) |
+| [drishti-core](#drishti-core) | 1.1.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker, reading typed numbers, loading vendored engines |
+| [drishti-grid](#drishti-grid) | 0.3.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes |
+| [drishti-inputs](#drishti-inputs) | 0.1.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead, forms from a schema with four eyes, the filter bar, the code editor over CodeMirror |
+| [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
 
 ## drishti-core
 
-Version 1.0.0. Bundle `static/elements/drishti-core/drishti_core.js`, global `Drishti.elements.core`.
+Version 1.1.0. Bundle `static/elements/drishti-core/drishti_core.js`, global `Drishti.elements.core`.
 
 ### drishti_format.js
 
@@ -995,6 +997,197 @@ Returns `Promise&lt;(Object\|Object[])&gt;`.
 Drishti.elements.core.load('drishti-grid').then((grid) => grid.createGridModel({...}))
 ```
 
+#### `staticUrl(path)`
+
+The address of a file under the static root (the vendored engines: "vendor/codemirror/codemirror.js").
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `string` | relative to the static root |
+
+Returns `string`.
+
+#### `loadScript(src)`
+
+Loads a classic script into the page once (a vendored engine a library wraps: CodeMirror, Arrow JS); resolves when it has run.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `src` | `string` | its address (staticUrl for a vendored file) |
+
+Returns `Promise&lt;void&gt;`.
+
+#### `loadStyle(href)`
+
+Adds a style sheet to the page once (a vendored engine's).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `href` | `string` |  |
+
+Returns `void`.
+
+### drishti_filters.js
+
+#### `isBlank(v)`
+
+Whether a value is blank (null, undefined, '' or NaN).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `boolean`.
+
+#### `compareValues(a, b)`
+
+The natural order of two values (blanks are not handled here: see compareRows).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `a` | `*` |  |
+| `b` | `*` |  |
+
+Returns `number`.
+
+#### `compareRows(model, column, value)`
+
+A comparator of rows by a sort model: each item in turn, blanks last whatever the direction, the column's own comparator when it has one.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `model` | `SortItem[]` |  |
+| `column` | `function(string): Object` | the column of an id |
+| `value` | `function(Object, Object): *` | a row's value in a column |
+
+Returns `?function(Object, Object): number`: null when the model is empty.
+
+#### `cycleSort(model, colId, multi)`
+
+The next sort of a column when its header is clicked: none, ascending, descending, none; with multi (Shift) the column is added to the model, else it replaces it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `model` | `SortItem[]` |  |
+| `colId` | `string` |  |
+| `[multi]` | `boolean` |  |
+
+Returns `SortItem[]`.
+
+#### `passes(v, f)`
+
+Whether a value passes a column's filter.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+| `f` | `ColumnFilter` |  |
+
+Returns `boolean`.
+
+#### `rowFilter(model, quick, columns, value)`
+
+A test of rows by a filter model and a quick filter, or null when nothing filters.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `model` | `Object&lt;string, ColumnFilter&gt;` | column id to its filter |
+| `quick` | `string` | words every one of which must appear in one of the columns |
+| `columns` | `Object[]` | the columns the quick filter looks in (and the model's) |
+| `value` | `function(Object, Object): *` |  |
+
+Returns `?function(Object): boolean`.
+
+#### `filterWords(model, header)`
+
+A filter model in words, for the line above a grid ("Desk in RATES, FX; Notional &gt; 1000000").
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `model` | `Object&lt;string, ColumnFilter&gt;` |  |
+| `[header]` | `function(string): string` | a column's heading |
+
+Returns `string`.
+
+#### `FILTER_CHANNEL`
+
+The bus event a filter bar emits and grids and charts listen to; its payload is {model, quickFilter, source}.
+
+#### `filterRows(rows, model, o)`
+
+The rows that pass a filter model (and a quick filter), each filter's column read as the row's property of that name unless a value function says otherwise: what a chart, an in-memory source or a page without a grid uses.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+| `model` | `Object&lt;string, ColumnFilter&gt;` |  |
+| `[o]` | `{quickFilter: string, columns: Array&lt;{id: string, field: string}&gt;, value: function(Object, Object): *}` | columns: where the quick filter looks (default: the model's columns); value: a row's value in a column (default: row[column.field or column.id]) |
+
+Returns `Object[]`.
+
+### drishti_dom.js
+
+#### `h(doc, tag, p, children)`
+
+Makes an element: classes, text, attributes, data, CSSOM styles (never a style attribute), listeners and children.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `tag` | `string` |  |
+| `[p]` | `{cls: string, text: string, attrs: Object&lt;string, string&gt;, data: Object&lt;string, string&gt;, style: Object&lt;string, string&gt;, on: Object&lt;string, function(Event): void&gt;}` |  |
+| `[children]` | `Array&lt;(Node\|string\|null)&gt;` |  |
+
+Returns `HTMLElement`.
+
+#### `placeAt(el, x, y)`
+
+Keeps a floating element inside the window: at (x, y), moved left or up when it would leave it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` |  |
+| `x` | `number` |  |
+| `y` | `number` |  |
+
+Returns `void`.
+
+#### `placeUnder(el, anchor, o)`
+
+Places a floating element (position: fixed) under an anchor, or above it when there is no room below, inside the window.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `HTMLElement` |  |
+| `anchor` | `Element` |  |
+| `[o]` | `{gap: number, matchWidth: boolean}` | gap default 4 px; matchWidth: at least as wide as the anchor |
+
+Returns `void`.
+
+### drishti_parse.js
+
+#### `parseNumberText(text, locale)`
+
+A number from typed or pasted text: 1,250,000.5; −1.5; (2,000); 1.25m, 300k, 2bn; 12.5%; in a locale whose marks differ (de-DE: 1.250.000,5). Null when it does not read.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+| `[locale]` | `string` |  |
+
+Returns `?number`.
+
+#### `numberEditText(v, locale)`
+
+A number as an editor shows it for changing: no grouping, every digit, the locale's decimal mark and the true minus.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+| `[locale]` | `string` |  |
+
+Returns `string`.
+
 ### drishti_index.js
 
 #### `install(root)`
@@ -1020,7 +1213,7 @@ A listener: the event's payload and its name.
 
 ## drishti-grid
 
-Version 0.2.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core.
+Version 0.3.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core.
 
 ### drishti_columns.js
 
@@ -1179,88 +1372,6 @@ Gives back a kept state (columns it does not name keep theirs, after the named o
 | `state` | `Array&lt;{id: string, width: number, pinned: ?string, hidden: boolean}&gt;` |  |
 
 Returns `void`.
-
-### drishti_sort-filter.js
-
-#### `isBlank(v)`
-
-Whether a value is blank (null, undefined, '' or NaN).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` |  |
-
-Returns `boolean`.
-
-#### `compareValues(a, b)`
-
-The natural order of two values (blanks are not handled here: see compareRows).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `a` | `*` |  |
-| `b` | `*` |  |
-
-Returns `number`.
-
-#### `compareRows(model, column, value)`
-
-A comparator of rows by a sort model: each item in turn, blanks last whatever the direction, the column's own comparator when it has one.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `model` | `SortItem[]` |  |
-| `column` | `function(string): Object` | the column of an id |
-| `value` | `function(Object, Object): *` | a row's value in a column |
-
-Returns `?function(Object, Object): number`: null when the model is empty.
-
-#### `cycleSort(model, colId, multi)`
-
-The next sort of a column when its header is clicked: none, ascending, descending, none; with multi (Shift) the column is added to the model, else it replaces it.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `model` | `SortItem[]` |  |
-| `colId` | `string` |  |
-| `[multi]` | `boolean` |  |
-
-Returns `SortItem[]`.
-
-#### `passes(v, f)`
-
-Whether a value passes a column's filter.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `v` | `*` |  |
-| `f` | `ColumnFilter` |  |
-
-Returns `boolean`.
-
-#### `rowFilter(model, quick, columns, value)`
-
-A test of rows by a filter model and a quick filter, or null when nothing filters.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `model` | `Object&lt;string, ColumnFilter&gt;` | column id to its filter |
-| `quick` | `string` | words every one of which must appear in one of the columns |
-| `columns` | `Object[]` | the columns the quick filter looks in (and the model's) |
-| `value` | `function(Object, Object): *` |  |
-
-Returns `?function(Object): boolean`.
-
-#### `filterWords(model, header)`
-
-A filter model in words, for the line above a grid ("Desk in RATES, FX; Notional &gt; 1000000").
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `model` | `Object&lt;string, ColumnFilter&gt;` |  |
-| `[header]` | `function(string): string` | a column's heading |
-
-Returns `string`.
 
 ### drishti_aggregate.js
 
@@ -2443,6 +2554,17 @@ Filters by words across the shown columns.
 
 Returns `void`.
 
+##### `GridModel.followFilters(bus, o)`
+
+Follows a filter bar (drishti-inputs) or any page part that emits the filter model on a bus under FILTER_CHANNEL: each payload's filters on this grid's columns (by id or field) become its filter model, and its quick filter the grid's; filters on fields this grid has not are left out.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `bus` | `EventBus` | drishti-core's bus (the page's shared bus, or the filter bar's) |
+| `[o]` | `{channel: string, source: string}` | channel default FILTER_CHANNEL; source: follow only the bar of this id |
+
+Returns `function(): void`: stops following.
+
 ##### `GridModel.setRowGroups(colIds)`
 
 Groups rows (grid mode).
@@ -2629,7 +2751,7 @@ Returns `void`.
 
 ##### `GridModel.setCellValue(r, c, value)`
 
-An edit: a leaf's value of an editable column set (the row replaced by id, as a transaction) and cellValueChanged.
+An edit: a leaf's value of an editable column set, validated, as an edit transaction (rows updated by id, cellValueChanged and editTransaction told, kept for undo); the write-back hook, when there is one, hears it.
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -2637,7 +2759,7 @@ An edit: a leaf's value of an editable column set (the row replaced by id, as a 
 | `c` | `number` |  |
 | `value` | `*` |  |
 
-Returns `boolean`: whether the value was set.
+Returns `boolean`: whether the value was set (false: the cell may not be edited, or the value is not valid).
 
 ##### `GridModel.applyTransaction(tx)`
 
@@ -2879,29 +3001,225 @@ Connects a live feed (drishti_live.js): transactions are batched into the rows i
 
 Returns `function(): void`: disconnects.
 
+### drishti_grid-edit.js
+
+#### `EDITORS`
+
+The editors a column may name; a column without one gets its type's.
+
+#### `editorOf(col)`
+
+A column's editor: its editor, else checkbox for a boolean, date for a date, number for a number, select when it has options, text.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `col` | `Object` | a normalized column |
+
+Returns `string`.
+
+#### `parseCellText(col, text, o)`
+
+Text read as a column's value: {value} or {error} in words.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `col` | `Object` |  |
+| `text` | `string` |  |
+| `[o]` | `{locale: string}` |  |
+
+Returns `{value: *, error: ?string}`.
+
+#### `validateCell(col, v, row)`
+
+A value's problem in words for a column, or null: required, min, max, maxLength, options, and the column's validate(value, row) (which answers a message, true or null for fine, false for "is not valid").
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `col` | `Object` |  |
+| `v` | `*` |  |
+| `row` | `Object` | the row as it would be |
+
+Returns `?string`.
+
+#### `parseTsv(text)`
+
+Tab-separated text (what Excel and the grid copy) as rows of cells: quoted cells may hold tabs, new lines and doubled quotes; a final line break is not an empty row.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `string[][]`.
+
+#### class `GridEditing`
+
+The editing of a grid model: what may change, transactions, undo and redo, paste, write-back and four eyes.
+
+##### `new GridEditing(grid, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `grid` | `Object` | the GridModel |
+| `[o]` | `{writeBack: function(EditTransaction): Promise&lt;{status: string, proposalId: string, message: string}&gt;, fourEyes: boolean, locale: string, undoLimit: number}` | writeBack: the server hears each transaction (applied, refused, or proposed); fourEyes: every transaction is a proposal until resolveProposal; undoLimit default 100 |
+
+##### `GridEditing.canEdit(r, c)`
+
+Whether a shown cell may be edited.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `number` |  |
+| `c` | `number` |  |
+
+Returns `boolean`.
+
+##### `GridEditing.markOf(rowId, colId)`
+
+A cell's mark: edited (changed here), proposed (waiting for a second person), or null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rowId` | `string` |  |
+| `colId` | `string` |  |
+
+Returns `?string`.
+
+##### `GridEditing.plan(cells)`
+
+The edits of shown cells as a transaction's cells, validated: {edits, problems}.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `cells` | `Array&lt;{r: number, c: number, value: *}&gt;` |  |
+
+Returns `{edits: CellEdit[], problems: Array&lt;{r: number, c: number, message: string}&gt;}`.
+
+##### `GridEditing.commit(cells, source)`
+
+Applies cell edits as one transaction (validated first: any problem refuses them all), tells the write-back hook.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `cells` | `Array&lt;{r: number, c: number, value: *}&gt;` |  |
+| `[source='edit']` | `string` |  |
+
+Returns `Promise&lt;EditTransaction&gt;`: rejects with .problems when a cell is not valid, or the server's refusal.
+
+##### `GridEditing.apply(edits, source)`
+
+Applies prepared edits (by row and column id) as one transaction.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `edits` | `CellEdit[]` |  |
+| `source` | `string` |  |
+
+Returns `Promise&lt;EditTransaction&gt;`.
+
+##### `GridEditing.undo()`
+
+Takes the last transaction back (a new transaction, source undo).
+
+Returns `Promise&lt;?EditTransaction&gt;`.
+
+##### `GridEditing.redo()`
+
+Does the last undone transaction again.
+
+Returns `Promise&lt;?EditTransaction&gt;`.
+
+##### `GridEditing.history()`
+
+Whether there is something to undo and to redo.
+
+Returns `{undo: number, redo: number}`.
+
+##### `GridEditing.resolveProposal(proposalId, decision)`
+
+A four-eyes proposal decided: approved keeps the values (marked edited), rejected puts the old ones back.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `proposalId` | `string` |  |
+| `decision` | `('approved'\|'rejected')` |  |
+
+Returns `boolean`: whether there was such a proposal.
+
+##### `GridEditing.paste(text, at)`
+
+Pasted text (tab-separated) from a cell down and right; one value over a larger range fills it. Cells that cannot be edited are skipped; values that do not read or are not valid are left out and listed. One transaction.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+| `at` | `{r: number, c: number, r2: number, c2: number}` | the focus or the range (r2, c2: its far corner) |
+
+Returns `Promise&lt;{transaction: ?EditTransaction, pasted: number, skipped: number, problems: Array&lt;{r: number, c: number, message: string}&gt;}&gt;`.
+
+##### `GridEditing.clear(range)`
+
+Empties the editable cells of a range (Delete); a required cell is left as it is and listed.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `range` | `{r1: number, c1: number, r2: number, c2: number}` |  |
+
+Returns `Promise&lt;{transaction: ?EditTransaction, problems: Array}&gt;`.
+
+### drishti_grid-editors.js
+
+#### class `CellEditor`
+
+The floating cell editor of a drawn grid.
+
+##### `new CellEditor(view)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `view` | `Object` | the Grid (drishti_grid-view.js) |
+
+##### `CellEditor.isActive()`
+
+Whether a cell is being edited.
+
+Returns `boolean`.
+
+##### `CellEditor.start(r, c, o)`
+
+Starts editing a cell (when it may be edited); a checkbox turns at once.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `number` |  |
+| `c` | `number` |  |
+| `[o]` | `{initial: string}` | initial: a typed character that replaces the value |
+
+Returns `boolean`: whether editing started (or the checkbox turned).
+
+##### `CellEditor.place()`
+
+Puts the editor over its cell again (after the rows were drawn or scrolled); hidden while the cell is out of view.
+
+Returns `void`.
+
+##### `CellEditor.commit(move, leaving)`
+
+Saves the editor's value (validated; a problem keeps the editor open) and moves the focus.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `move` | `?{dr: number, dc: number}` | where the focus goes after (null: it stays) |
+| `[leaving]` | `boolean` | the focus left: a value that is not valid is given up, not kept open |
+
+Returns `Promise&lt;boolean&gt;`: whether it was saved.
+
+##### `CellEditor.cancel()`
+
+Leaves the cell as it was.
+
+Returns `void`.
+
 ### drishti_live.js
-
-#### `eventSourceFeed(url, o)`
-
-A feed over Server-Sent Events: each event's data is a message (event name: message, or opts.event).
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `url` | `string` |  |
-| `[o]` | `{event: string, withCredentials: boolean, EventSource: Function, onError: function(Error): void}` | EventSource: for tests or a polyfill |
-
-Returns `LiveFeed`.
-
-#### `webSocketFeed(url, o)`
-
-A feed over a WebSocket: each text frame is a message.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `url` | `string` |  |
-| `[o]` | `{WebSocket: Function, protocols: string[], onError: function(Error): void}` |  |
-
-Returns `LiveFeed`.
 
 #### `manualFeed()`
 
@@ -3230,31 +3548,6 @@ Forgets every figure (a new pivot, new columns).
 Returns `void`.
 
 ### drishti_grid-dom.js
-
-#### `h(doc, tag, p, children)`
-
-Makes an element: classes, text, attributes, data, CSSOM styles (never a style attribute), listeners and children.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `doc` | `Document` |  |
-| `tag` | `string` |  |
-| `[p]` | `{cls: string, text: string, attrs: Object&lt;string, string&gt;, data: Object&lt;string, string&gt;, style: Object&lt;string, string&gt;, on: Object&lt;string, function(Event): void&gt;}` |  |
-| `[children]` | `Array&lt;(Node\|string\|null)&gt;` |  |
-
-Returns `HTMLElement`.
-
-#### `placeAt(el, x, y)`
-
-Keeps a floating element inside the window: at (x, y), moved left or up when it would leave it.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `el` | `HTMLElement` |  |
-| `x` | `number` |  |
-| `y` | `number` |  |
-
-Returns `void`.
 
 #### class `Menu`
 
@@ -3690,6 +3983,72 @@ Runs one of the view's actions by id (a toolbar button, a function key, a menu i
 
 Returns `*`.
 
+##### `Grid.startEditing(r, c, o)`
+
+Starts editing a cell (Enter, F2, a double click or typing do it); a checkbox turns at once.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `number` |  |
+| `c` | `number` |  |
+| `[o]` | `{initial: string}` | a typed character that replaces the value |
+
+Returns `boolean`: whether editing started.
+
+##### `Grid.stopEditing(cancel)`
+
+Stops editing: saves the value (cancel false) or leaves the cell as it was.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[cancel]` | `boolean` |  |
+
+Returns `Promise&lt;boolean&gt;`: whether a value was saved.
+
+##### `Grid.undo()`
+
+Takes the last edit transaction back.
+
+Returns `Promise&lt;?Object&gt;`.
+
+##### `Grid.redo()`
+
+Does the last undone edit transaction again.
+
+Returns `Promise&lt;?Object&gt;`.
+
+##### `Grid.pasteText(text)`
+
+Pastes tab-separated text (from Excel) at the focus, or fills the selected range with one value; one transaction.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `Promise&lt;Object&gt;} {transaction, pasted, skipped, problems`.
+
+##### `Grid.resolveProposal(proposalId, decision)`
+
+A four-eyes proposal of an edit was decided: approved keeps the values, rejected puts them back.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `proposalId` | `string` |  |
+| `decision` | `('approved'\|'rejected')` |  |
+
+Returns `boolean`.
+
+##### `Grid.followFilters(bus, o)`
+
+Follows a filter bar's filter model on a bus (GridModel.followFilters).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `bus` | `Object` | drishti-core's EventBus |
+| `[o]` | `{channel: string, source: string}` |  |
+
+Returns `function(): void`: stops following.
+
 ##### `Grid.setLayout(layout)`
 
 Changes the layout: 'wells', 'panel' or 'terminal'.
@@ -3863,3 +4222,2155 @@ Starts drishti-grid in a page (the bundle calls it when it loads; nothing happen
 | `root` | `Window` |  |
 
 Returns `void`.
+
+## drishti-inputs
+
+Version 0.1.0. Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
+
+### drishti_calendar.js
+
+#### `CALENDAR_RULES`
+
+The bundled market calendars as rules (illustrative; a site's own calendars replace them through defineCalendar).
+
+#### `easterSunday(y)`
+
+Easter Sunday of a year (the Gregorian computus).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `y` | `number` |  |
+
+Returns `string`: ISO date.
+
+#### `ruleDate(r, y)`
+
+The day a rule falls on in a year (null when it does not hold that year).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `HolidayRule` |  |
+| `y` | `number` |  |
+
+Returns `?string`: ISO date.
+
+#### class `HolidayCalendar`
+
+A business calendar: its weekend, its holidays (from rules and from dates), and the business dates asked of it.
+
+##### `new HolidayCalendar(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{name: string, rules: HolidayRule[], dates: Array&lt;(string\|{date: string, name: string})&gt;, weekend: number[]}` | weekend: the days that are never business days (default [0, 6], Sunday and Saturday); dates: holidays as given (the server's list) |
+
+##### `HolidayCalendar.holidays(y)`
+
+The holidays of a year in order, each with its name.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `y` | `number` |  |
+
+Returns `Array&lt;{date: string, name: string}&gt;`.
+
+##### `HolidayCalendar.holidayName(v)`
+
+A holiday's name, or null when the day is not a holiday (weekends are not holidays).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` | a date |
+
+Returns `?string`.
+
+##### `HolidayCalendar.isBusinessDay(v)`
+
+Whether a day is a business day: not a weekend day and not a holiday.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `boolean`.
+
+##### `HolidayCalendar.isWeekend(v)`
+
+Whether a day is a weekend day of this calendar.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `boolean`.
+
+##### `HolidayCalendar.addBusinessDays(v, n)`
+
+The business date n business days away (n negative goes back; 0 rolls a holiday forward to the next business day).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+| `n` | `number` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.tMinus(v, n)`
+
+T-n: the n-th business day before a date (T-1 is the previous close).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` | the day T (default today) |
+| `[n=1]` | `number` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.onOrBefore(v)`
+
+The business day on or before a date (a date that is not a business day rolls back).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.onOrAfter(v)`
+
+The business day on or after a date.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.monthEnd(v)`
+
+The last business day of the month a date is in (month-end).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.monthStart(v)`
+
+The first business day of the month a date is in.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.quarterEnd(v)`
+
+The last business day of the quarter a date is in.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.yearEnd(v)`
+
+The last business day of the year a date is in.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.previousMonthEnd(v)`
+
+The last month-end before a date (the latest month-end that has happened by it, the date itself when it is one).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+##### `HolidayCalendar.businessDaysBetween(from, to)`
+
+Business days after from, up to and including to (negative when to is earlier).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `from` | `*` |  |
+| `to` | `*` |  |
+
+Returns `number`.
+
+#### `defineCalendar(name, spec)`
+
+Defines (or replaces) a named calendar: rules, the server's dates, a weekend.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `spec` | `{rules: HolidayRule[], dates: Array&lt;(string\|{date: string, name: string})&gt;, weekend: number[]}` |  |
+
+Returns `HolidayCalendar`.
+
+#### `calendar(name)`
+
+A calendar by name ("US", "UK", "TARGET", "CA", a defined one, "weekends", or a union "US+UK": a day is a holiday in the union when it is one in any), or the calendar itself when one is given.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[name='weekends']` | `(string\|HolidayCalendar)` |  |
+
+Returns `HolidayCalendar`.
+
+#### `DATE_PRESETS` : `Array&lt;{id: string, label: string}&gt;`
+
+The date-range presets, in the order a picker shows them.
+
+#### `resolvePreset(id, o)`
+
+A preset as dates, from a business date and a calendar: {from, to, label}.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` | one of DATE_PRESETS |
+| `[o]` | `{asOf: string, calendar: (string\|HolidayCalendar)}` | asOf: the business date (default today, rolled back to a business day) |
+
+Returns `{from: string, to: string, label: string}`.
+
+#### `parseDateInput(text, o)`
+
+Reads what a person typed as a business date: ISO (2026-11-06), "6 Nov 2026", "Nov 6 2026", T (the business date), T-3 or T+2 (business days), ME, QE, YE (this month's, quarter's, year's last business day), PME (the previous month-end). Null when it does not read.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+| `[o]` | `{asOf: string, calendar: (string\|HolidayCalendar)}` |  |
+
+Returns `?string`: ISO date.
+
+#### `monthGrid(y, m, weekStart)`
+
+The days a month view shows: six weeks of seven days from the week the month starts in.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `y` | `number` |  |
+| `m` | `number` | 1 to 12 |
+| `[weekStart=1]` | `number` | 0 Sunday, 1 Monday |
+
+Returns `Array&lt;Array&lt;{iso: string, day: number, inMonth: boolean, weekday: number}&gt;&gt;`.
+
+#### `shiftDate(v, n, unit)`
+
+A date moved by whole days, months or years (a month that is shorter keeps its last day: 31 Jan + 1 month is 28 or 29 Feb).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+| `n` | `number` |  |
+| `unit` | `('day'\|'month'\|'year')` |  |
+
+Returns `string`.
+
+### drishti_inputs-dom.js
+
+#### `uid(prefix)`
+
+A new id for an element of a component ("di-&lt;prefix&gt;-&lt;n&gt;").
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `prefix` | `string` |  |
+
+Returns `string`.
+
+#### `debounce(fn, ms)`
+
+A function that runs fn once calls stop for ms milliseconds (the last call's arguments); .cancel() drops a pending call, .flush() runs it now.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `fn` | `function(...*): void` |  |
+| `ms` | `number` |  |
+
+Returns `function(...*): void`.
+
+#### class `InputBase`
+
+The base of every input component: the host element, the options, typed events on a bus and on the element.
+
+##### `new InputBase(host, options, cls)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` | the element the component fills |
+| `options` | `Object` |  |
+| `cls` | `string` | the component's class on the host (di-date, di-multiselect ...) |
+
+##### `InputBase.on(name, fn)`
+
+Listens to one of the component's events.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object, string): void` |  |
+
+Returns `function(): void`: stops listening.
+
+##### `InputBase.emit(name, detail)`
+
+Emits an event on the bus and as a DOM event drishti:&lt;kebab-name&gt; on the host (bubbling).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `[detail]` | `Object` |  |
+
+Returns `void`.
+
+##### `InputBase.el(tag, p, children)`
+
+Makes an element of this document.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tag` | `string` |  |
+| `[p]` | `Object` | as drishti-core's h |
+| `[children]` | `Array` |  |
+
+Returns `HTMLElement`.
+
+##### `InputBase.destroy()`
+
+Takes the component out of its element.
+
+Returns `void`.
+
+#### class `Popover`
+
+A floating panel under an anchor (position fixed, in the page's body): a click outside and Escape close it; focus goes back to where it was.
+
+##### `new Popover(doc, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `[o]` | `{cls: string, label: string, role: string, onClose: function(): void, theme: Element}` | theme: the element whose density the panel copies |
+
+##### `Popover.isOpen()`
+
+Whether it is open.
+
+Returns `boolean`.
+
+##### `Popover.open(anchor, content, o)`
+
+Opens the panel under an anchor with its content.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `anchor` | `Element` |  |
+| `content` | `Node` |  |
+| `[o]` | `{focus: boolean}` | focus: keep the focus where it is (a combobox's field keeps it) |
+
+Returns `HTMLElement`.
+
+##### `Popover.place()`
+
+Places the panel again (its content changed size).
+
+Returns `void`.
+
+##### `Popover.close(refocus)`
+
+Closes the panel.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[refocus]` | `boolean` | give the focus back to what had it |
+
+Returns `void`.
+
+#### class `Listbox`
+
+Options in a list (role listbox): drawn up to a cap, the active one kept by aria-activedescendant on the element that keeps the focus.
+
+##### `new Listbox(doc, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `o` | `{multiple: boolean, cap: number, label: string, render: function(Object, HTMLElement): void, onPick: function(Object, Event): void}` | cap: options drawn at most (default 300); render: draws an option's content into its element (default: its label and detail) |
+
+##### `Listbox.render(items, selected, o)`
+
+Draws options.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `items` | `Array&lt;{value: *, label: string, detail: string, disabled: boolean, group: string}&gt;` |  |
+| `selected` | `function(Object): boolean` | whether an option is selected |
+| `[o]` | `{more: number, empty: string}` | more: how many matched beyond these; empty: the words when there are none |
+
+Returns `void`.
+
+##### `Listbox.setActive(i, owner)`
+
+Makes an option the active one (scrolled into view) and tells the focused element.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `i` | `number` |  |
+| `[owner]` | `Element` | the element with the focus (its aria-activedescendant) |
+
+Returns `void`.
+
+##### `Listbox.key(e, owner)`
+
+A key from the element with the focus: moves the active option or picks it. Returns whether the key was the list's.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `e` | `KeyboardEvent` |  |
+| `owner` | `Element` |  |
+
+Returns `boolean`.
+
+#### `normalizeOptions(list)`
+
+Options as the components take them: strings, numbers, or {value, label, detail, disabled, group}.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `list` | `Array&lt;(string\|number\|Object)&gt;` |  |
+
+Returns `Array&lt;{value: *, label: string, detail: string, disabled: boolean, group: string}&gt;`.
+
+#### `searchOptions(items, q)`
+
+Options that match a search, best first: the label starting with it, then a word of it starting with it, then containing it; the detail last. Every word of the search must match.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `items` | `Array&lt;{label: string, detail: string}&gt;` |  |
+| `q` | `string` |  |
+
+Returns `Array&lt;Object&gt;`.
+
+### drishti_date-picker.js
+
+#### class `CalendarView`
+
+One or more months of days as a grid (role grid), keyed by the business calendar: what the pickers draw in their popovers.
+
+##### `new CalendarView(doc, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `doc` | `Document` |  |
+| `o` | `{calendar: Object, months: number, weekStart: number, businessOnly: boolean, min: string, max: string, focus: string, range: function(): {from: ?string, to: ?string, hover: ?string}, selected: function(string): boolean, onPick: function(string): void, onHover: function(string): void}` | months: how many months side by side (default 1); range: the range to shade (range picker) |
+
+##### `CalendarView.refusal(d)`
+
+Why a day may not be picked, or null when it may.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `d` | `string` |  |
+
+Returns `?string`.
+
+##### `CalendarView.render()`
+
+Draws the months from the focused day's.
+
+Returns `void`.
+
+##### `CalendarView.move(n, unit)`
+
+Moves the focused day (and the months shown) and focuses its button.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `number` |  |
+| `unit` | `('day'\|'month'\|'year')` |  |
+
+Returns `void`.
+
+##### `CalendarView.focusDay()`
+
+Puts the keyboard focus on the focused day's button.
+
+Returns `void`.
+
+#### class `DatePicker`
+
+A business-date picker: a field and a calendar. Events: change {value}, invalid {text, reason}, open, close.
+
+##### `new DatePicker(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `[options]` | `DatePickerOptions` |  |
+
+##### `DatePicker.refusal(d)`
+
+Why a date may not be picked, or null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `d` | `string` | ISO |
+
+Returns `?string`.
+
+##### `DatePicker.open()`
+
+Opens the calendar on the value (or the business date).
+
+Returns `void`.
+
+##### `DatePicker.close()`
+
+Closes the calendar.
+
+Returns `void`.
+
+##### `DatePicker.getValue()`
+
+The date (ISO), or null.
+
+Returns `?string`.
+
+##### `DatePicker.setValue(v, emit)`
+
+Sets the date (ISO, a Date or null); change is emitted when a person changed it (or when emit is true).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+| `[emit]` | `boolean` |  |
+
+Returns `void`.
+
+##### `DatePicker.validate()`
+
+Whether the field holds a date that may be picked (and one when it is required).
+
+Returns `boolean`.
+
+##### `DatePicker.focus()`
+
+Puts the keyboard focus in the field.
+
+Returns `void`.
+
+### drishti_date-range.js
+
+#### class `DateRangePicker`
+
+A date-range picker with presets. Events: change {from, to, preset}, invalid {reason}, open, close.
+
+##### `new DateRangePicker(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `[options]` | `DateRangeOptions` |  |
+
+##### `DateRangePicker.presets()`
+
+The presets this picker offers.
+
+Returns `Array&lt;{id: string, label: string}&gt;`.
+
+##### `DateRangePicker.text()`
+
+The range in words: "3–7 Nov 2026 · Month to date".
+
+Returns `string`.
+
+##### `DateRangePicker.refusal(from, to)`
+
+Why a range may not be kept, or null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `from` | `?string` |  |
+| `to` | `?string` |  |
+
+Returns `?string`.
+
+##### `DateRangePicker.open()`
+
+Opens the panel: presets, two months, the two ends.
+
+Returns `void`.
+
+##### `DateRangePicker.apply()`
+
+Keeps the panel's range (when it may be kept) and closes it.
+
+Returns `boolean`: whether it was kept.
+
+##### `DateRangePicker.close()`
+
+Closes the panel without keeping it.
+
+Returns `void`.
+
+##### `DateRangePicker.getValue()`
+
+The range ({from, to, preset}); a preset's dates as of the business date.
+
+Returns `DateRange`.
+
+##### `DateRangePicker.setValue(v, emit)`
+
+Sets the range: {from, to}, or {preset} (its dates from the business date), or a preset's id.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `(DateRange\|string)` |  |
+| `[emit]` | `boolean` | tell listeners (change) |
+
+Returns `void`.
+
+##### `DateRangePicker.setAsOf(asOf)`
+
+Moves the business date: a preset's dates follow it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `asOf` | `string` |  |
+
+Returns `void`.
+
+### drishti_tree.js
+
+#### class `TreeModel`
+
+A tree with lazy children, tri-state checks and search.
+
+##### `new TreeModel(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `{nodes: TreeNode[], loadChildren: function(TreeNode): Promise&lt;TreeNode[]&gt;, multiple: boolean, value: string[]}` | multiple default true (false: one node is picked) |
+
+##### `TreeModel.setNodes(nodes)`
+
+Replaces the roots (and everything under them).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `TreeNode[]` |  |
+
+Returns `void`.
+
+##### `TreeModel.node(id)`
+
+A node by id.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?TreeNode`.
+
+##### `TreeModel.isBranch(n)`
+
+Whether a node has, or may have, children.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `TreeNode` |  |
+
+Returns `boolean`.
+
+##### `TreeModel.ancestors(id)`
+
+The ids from the root down to a node's parent.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `string[]`.
+
+##### `TreeModel.pathLabel(id)`
+
+The path of labels to a node ("Rates › Swaps").
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `string`.
+
+##### `TreeModel.toggle(id, open)`
+
+Opens or closes a node; opening an unloaded branch asks the loader for its children.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[open]` | `boolean` | default: the other way |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `TreeModel.ensureChildren(n)`
+
+Loads a node's children when they are not known yet.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `n` | `TreeNode` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `TreeModel.stateOf(id)`
+
+A node's state: checked (it or an ancestor is), mixed (something under it is), unchecked.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `('checked'\|'mixed'\|'unchecked')`.
+
+##### `TreeModel.check(id, on)`
+
+Checks or unchecks a node (single: picks it alone). The selection stays compact: a parent whose children are all checked becomes the parent; unchecking under a checked parent checks the parent's other children instead.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[on]` | `boolean` | default: the other way (a mixed node becomes checked) |
+
+Returns `void`.
+
+##### `TreeModel.checkAll(on)`
+
+Checks every root (everything), or nothing.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `void`.
+
+##### `TreeModel.getValue(o)`
+
+The selection: compact (a checked node stands for everything under it; the default) or the loaded leaves under it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{mode: ('compact'\|'leaves')}` |  |
+
+Returns `string[]`.
+
+##### `TreeModel.setValue(ids)`
+
+Sets the selection (ids; ids not loaded yet are kept and apply when they load).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+
+Returns `void`.
+
+##### `TreeModel.search(q, server)`
+
+Searches: the loaded nodes whose label or detail holds every word, with their ancestors opened. With a server hook, its answer (nodes with their paths) is merged in first.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `q` | `string` |  |
+| `[server]` | `function(string): Promise&lt;Array&lt;{node: TreeNode, path: TreeNode[]}&gt;&gt;` |  |
+
+Returns `Promise&lt;number&gt;`: how many matched.
+
+##### `TreeModel.rows()`
+
+The visible rows, in order: the roots and the children of open nodes (only the search's matches and their ancestors while searching).
+
+Returns `TreeRow[]`.
+
+##### `TreeModel.summary(o)`
+
+The selection in words: "Rates, FX › Spot" or "3 selected" past a few; "Everything" when every root is checked.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{max: number, none: string}` | max: names shown before a count (default 2) |
+
+Returns `string`.
+
+### drishti_tree-picker.js
+
+#### class `TreePicker`
+
+A tree picker. Events: change {value, leaves}, open, close, loadFailed {id, error}.
+
+##### `new TreePicker(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `TreePickerOptions` |  |
+
+##### `TreePicker.open()`
+
+Opens the panel (focus in the search field).
+
+Returns `void`.
+
+##### `TreePicker.close()`
+
+Closes the panel.
+
+Returns `void`.
+
+##### `TreePicker.render()`
+
+Draws the tree, the count and the button's words.
+
+Returns `void`.
+
+##### `TreePicker.expand(id, open)`
+
+Opens or closes a node (children from the server the first time).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[open]` | `boolean` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `TreePicker.checkAll(on)`
+
+Checks everything or nothing.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `void`.
+
+##### `TreePicker.getValue(o)`
+
+The checked ids (compact), or the loaded leaves under them.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{mode: ('compact'\|'leaves')}` |  |
+
+Returns `string[]`.
+
+##### `TreePicker.setValue(ids)`
+
+Sets the checked ids.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `string[]` |  |
+
+Returns `void`.
+
+##### `TreePicker.setNodes(nodes)`
+
+Replaces the roots.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `nodes` | `import('./drishti_tree.js').TreeNode[]` |  |
+
+Returns `void`.
+
+### drishti_multiselect.js
+
+#### class `MultiSelect`
+
+A multi-select with search, chips and select-all. Events: change {value, added, removed}, open, close.
+
+##### `new MultiSelect(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `MultiSelectOptions` |  |
+
+##### `MultiSelect.open()`
+
+Opens the list.
+
+Returns `void`.
+
+##### `MultiSelect.close()`
+
+Closes the list.
+
+Returns `void`.
+
+##### `MultiSelect.toggle(v)`
+
+Picks or unpicks one value.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `void`.
+
+##### `MultiSelect.selectAll(on)`
+
+Picks every option the search matches (or every option), or none (Clear: every pick, matching or not).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `void`.
+
+##### `MultiSelect.render()`
+
+Draws the chips.
+
+Returns `void`.
+
+##### `MultiSelect.getValue()`
+
+The picked values, in the options' order.
+
+Returns `Array&lt;*&gt;`.
+
+##### `MultiSelect.setValue(values)`
+
+Sets the picked values.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `values` | `Array&lt;*&gt;` |  |
+
+Returns `void`.
+
+##### `MultiSelect.setOptions(options)`
+
+Replaces the options (picks that are no longer options are dropped).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `options` | `Array` |  |
+
+Returns `void`.
+
+##### `MultiSelect.focus()`
+
+Puts the keyboard focus in the field.
+
+Returns `void`.
+
+### drishti_combobox.js
+
+#### class `TypeAhead`
+
+Options from a source as a person types: debounced, cached, aborted and in order.
+
+##### `new TypeAhead(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `{source: (Array\|function(string, AbortSignal): Promise&lt;Array&gt;), debounceMs: number, minChars: number, cacheSize: number, onResult: function({query: string, options: Array, error: ?Error, loading: boolean}): void}` | debounceMs default 200 (0 for a list); minChars default 1 (0 for a list); cacheSize default 50 queries |
+
+##### `TypeAhead.query(q)`
+
+Asks for the options of a query (after the debounce); the answer goes to onResult.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `q` | `string` |  |
+
+Returns `void`.
+
+##### `TypeAhead.abort()`
+
+Aborts the request in flight.
+
+Returns `void`.
+
+##### `TypeAhead.cancel()`
+
+Stops: no answer is given after this.
+
+Returns `void`.
+
+#### class `Combobox`
+
+A combobox with type-ahead. Events: change {value, option}, search {query}, error {error}.
+
+##### `new Combobox(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `ComboboxOptions` |  |
+
+##### `Combobox.pick(it)`
+
+Picks an option.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `it` | `{value: *, label: string}` |  |
+
+Returns `void`.
+
+##### `Combobox.getValue()`
+
+The value ({value, label}) or null.
+
+Returns `?{value: *, label: string}`.
+
+##### `Combobox.setValue(v, emit, option)`
+
+Sets the value.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `?{value: *, label: string}` |  |
+| `[emit]` | `boolean` |  |
+| `[option]` | `Object` | the option picked (passed on in change) |
+
+Returns `void`.
+
+##### `Combobox.focus()`
+
+Puts the keyboard focus in the field.
+
+Returns `void`.
+
+##### `Combobox.destroy()`
+
+Stops the type-ahead and takes the combobox out.
+
+Returns `void`.
+
+### drishti_schema.js
+
+#### `words(key)`
+
+A key in words: tradeDate and TRADE_DATE read "Trade date".
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `key` | `string` |  |
+
+Returns `string`.
+
+#### `pathParts(path)`
+
+A path's parts: "legs[1].notional" is ['legs', 1, 'notional'].
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `string` |  |
+
+Returns `Array&lt;(string\|number)&gt;`.
+
+#### `getPath(obj, path)`
+
+The value at a path.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `obj` | `Object` |  |
+| `path` | `string` |  |
+
+Returns `*`.
+
+#### `setPath(obj, path, value)`
+
+A copy of obj with the value at a path set (objects and arrays on the way are copied, never changed).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `obj` | `Object` |  |
+| `path` | `string` |  |
+| `value` | `*` |  |
+
+Returns `Object`.
+
+#### `conditionHolds(cond, values, path)`
+
+Whether a condition holds for a field at a path: {field, equals \| notEquals \| in \| notIn \| gt \| gte \| lt \| lte \| truthy \| falsy \| empty}, {all: [...]}, {any: [...]}, {not: {...}}. field is a sibling's key, or "/path" from the root.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `cond` | `Object` |  |
+| `values` | `Object` | the whole form's value |
+| `path` | `string` | the field the condition belongs to |
+
+Returns `boolean`.
+
+#### `fieldsOf(schema, base)`
+
+The fields of an object schema in order, each with its key, path, label and whether it is required.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `schema` | `FieldSchema` | an object schema |
+| `[base]` | `string` | the object's path |
+
+Returns `Array&lt;{key: string, path: string, field: FieldSchema, label: string, required: boolean}&gt;`.
+
+#### `defaults(schema)`
+
+A schema's starting value: every default, objects filled in, arrays at their minItems.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `schema` | `FieldSchema` |  |
+
+Returns `*`.
+
+#### `fieldProblem(field, v, c)`
+
+One field's problem in words, or null (its own rules; not the fields inside it).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `FieldSchema` |  |
+| `v` | `*` |  |
+| `c` | `{label: string, required: boolean, values: Object, path: string, labelOf: function(string): string}` |  |
+
+Returns `?string`.
+
+#### `validate(schema, values)`
+
+Validates a value against a schema: every shown field's problem, by path.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `schema` | `FieldSchema` | the form's object schema |
+| `values` | `Object` |  |
+
+Returns `{ok: boolean, errors: Object&lt;string, string&gt;}`.
+
+#### `visibleValue(schema, values)`
+
+The value without the fields that are hidden (what a form submits).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `schema` | `FieldSchema` |  |
+| `values` | `Object` |  |
+
+Returns `Object`.
+
+#### `changes(before, after, base)`
+
+What changed between two values, leaf by leaf (a four-eyes proposal's diff).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `before` | `*` |  |
+| `after` | `*` |  |
+| `[base]` | `string` |  |
+
+Returns `Array&lt;{path: string, old: *, value: *}&gt;`.
+
+#### `parseField(field, text, label)`
+
+Reads typed text as a field's value: numbers with grouping, a true minus, k, m and bn, percentages; integers; booleans; dates (ISO). Returns {value} or {error} in words.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `FieldSchema` |  |
+| `text` | `string` |  |
+| `[label]` | `string` |  |
+
+Returns `{value: *, error: ?string}`.
+
+### drishti_form.js
+
+#### class `Form`
+
+A form from a schema. Events: change {path, value, values}, invalid {errors}, submitted {values, result}, proposed {proposal, result}, reset.
+
+##### `new Form(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `FormOptions` |  |
+
+##### `Form.render()`
+
+Draws the form again (after an array changed shape); the focus goes back to the field that had it.
+
+Returns `void`.
+
+##### `Form.refresh()`
+
+Shows and hides fields by their conditions, and shows each touched field's problem.
+
+Returns `void`.
+
+##### `Form.focusField(path)`
+
+Puts the focus on a field.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `string` |  |
+
+Returns `void`.
+
+##### `Form.validate()`
+
+Validates every shown field (and shows every problem).
+
+Returns `{ok: boolean, errors: Object&lt;string, string&gt;}`.
+
+##### `Form.submit()`
+
+Submits: validates, asks the server's checks, then hands the value to onSubmit, or files a proposal when the form has four eyes.
+
+Returns `Promise&lt;boolean&gt;`: whether it was submitted (or proposed).
+
+##### `Form.resolveProposal(decision, note)`
+
+The proposal's decision came back: approved keeps the value as the new start; rejected puts the start back. Either way the form is editable again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `decision` | `('approved'\|'rejected')` |  |
+| `[note]` | `string` |  |
+
+Returns `void`.
+
+##### `Form.getValue()`
+
+The value: the shown fields only.
+
+Returns `Object`.
+
+##### `Form.setValue(v)`
+
+Replaces the value (and the start Reset goes back to).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `Object` |  |
+
+Returns `void`.
+
+##### `Form.reset()`
+
+Puts the start value back.
+
+Returns `void`.
+
+##### `Form.setErrors(errors)`
+
+Problems from elsewhere (a server's answer), by path.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `errors` | `Object&lt;string, string&gt;` |  |
+
+Returns `void`.
+
+### drishti_filter-bar.js
+
+#### class `FilterModelBar`
+
+The filter bar's model: fields, the filter model, the chips' words and every edit.
+
+##### `new FilterModelBar(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `{fields: FilterField[], model: Object, quickFilter: string}` |  |
+
+##### `FilterModelBar.field(id)`
+
+A field by id.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?FilterField`.
+
+##### `FilterModelBar.chips()`
+
+The chips: each filtered field and its words.
+
+Returns `Array&lt;{id: string, label: string, text: string}&gt;`.
+
+##### `FilterModelBar.set(id, filter)`
+
+Sets one field's filter (null takes it away).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `filter` | `?Object` | a ColumnFilter |
+
+Returns `void`.
+
+##### `FilterModelBar.setMembers(id, values)`
+
+Keeps a set's members (none: the filter goes).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `values` | `Array` |  |
+
+Returns `void`.
+
+##### `FilterModelBar.setCondition(id, op, text, textTo)`
+
+A number or text condition; a value that does not read takes nothing and says why.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `op` | `string` |  |
+| `text` | `string` |  |
+| `[textTo]` | `string` | between's upper end |
+
+Returns `?string`: the problem in words, or null.
+
+##### `FilterModelBar.setDates(id, r)`
+
+A date range: a preset (it moves with the business date) or two ends as typed.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `r` | `{preset: string, from: string, to: string, asOf: string, calendar: string}` |  |
+
+Returns `?string`: the problem in words, or null.
+
+##### `FilterModelBar.clear()`
+
+Takes every filter away (and the quick filter).
+
+Returns `void`.
+
+##### `FilterModelBar.payload()`
+
+What the bar emits: the model (a copy), the quick filter.
+
+Returns `{model: Object, quickFilter: string}`.
+
+#### class `FilterBar`
+
+The filter bar. Events: change {model, quickFilter}; the same payload on the bus under the channel.
+
+##### `new FilterBar(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `options` | `FilterBarOptions` |  |
+
+##### `FilterBar.render()`
+
+Draws the chips.
+
+Returns `void`.
+
+##### `FilterBar.edit(id, anchor)`
+
+Opens a field's editor under an anchor.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[anchor]` | `Element` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `FilterBar.getValue()`
+
+The filter model and the quick filter.
+
+Returns `{model: Object, quickFilter: string}`.
+
+##### `FilterBar.setValue(v)`
+
+Sets the filters (and tells the bus).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `{model: Object, quickFilter: string}` |  |
+
+Returns `void`.
+
+### drishti_code-modes.js
+
+#### `rachanaMode()`
+
+The Rachana expression mode.
+
+Returns `{startState: function(): Object, token: function(Object, Object): ?string, lineComment: string}`.
+
+#### `yamlMode()`
+
+The Rachana YAML mode: comments, keys, quoted strings, numbers, booleans, the Rachana-EL markers ($, @, #index), F1 to F12.
+
+Returns `{startState: function(): Object, token: function(Object, Object): ?string, lineComment: string}`.
+
+#### `MODES`
+
+The languages by name: the CodeMirror mode each is, and whether it is ours (defined here) or vendored (loaded).
+
+#### `defineModes(CM)`
+
+Defines our modes on a CodeMirror (once each).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `CM` | `Object` | the CodeMirror global |
+
+Returns `void`.
+
+#### class `MiniStream`
+
+A stream over one line with CodeMirror's StringStream methods (what a mode's token reads).
+
+##### `new MiniStream(line)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `line` | `string` |  |
+
+##### `MiniStream.sol()`
+
+At the line's start.
+
+Returns `boolean`.
+
+##### `MiniStream.eol()`
+
+At the line's end.
+
+Returns `boolean`.
+
+##### `MiniStream.peek()`
+
+The next character, not taken.
+
+Returns `?string`.
+
+##### `MiniStream.next()`
+
+Takes the next character.
+
+Returns `?string`.
+
+##### `MiniStream.eatSpace()`
+
+Takes white space.
+
+Returns `boolean`: whether any was taken.
+
+##### `MiniStream.skipToEnd()`
+
+Takes the rest of the line.
+
+Returns `void`.
+
+##### `MiniStream.match(pattern, consume)`
+
+Takes text that matches (a string or a regular expression anchored with ^), unless consume is false.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `pattern` | `(string\|RegExp)` |  |
+| `[consume=true]` | `boolean` |  |
+
+Returns `*`: the match, or false/null.
+
+##### `MiniStream.current()`
+
+The text taken since the token started.
+
+Returns `string`.
+
+#### `tokens(lang, text)`
+
+Text as tokens by one of our modes, line by line: [{text, style}] per line (style null for plain text).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `lang` | `string` | rachana or yaml (python and text come back plain) |
+| `text` | `string` |  |
+
+Returns `Array&lt;Array&lt;{text: string, style: ?string}&gt;&gt;`.
+
+### drishti_code-text.js
+
+#### `wordAt(line, ch)`
+
+The word at a cursor: letters, digits, _, . and a leading $ or @ (a Rachana path); from and to are its columns.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `line` | `string` |  |
+| `ch` | `number` | the cursor's column |
+
+Returns `{word: string, from: number, to: number}`.
+
+#### `completions(catalogue, word, limit)`
+
+What completes a word, best first (at most limit): the name starting with it, then a dotted or camel-case part starting with it, then the name containing it; ties by name. The word is matched without case.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `catalogue` | `CatalogueEntry[]` |  |
+| `word` | `string` |  |
+| `[limit=50]` | `number` |  |
+
+Returns `CatalogueEntry[]`.
+
+#### `insertText(e)`
+
+The text an entry puts in: its insert, or its name with "()" for a function (the cursor goes between them: caret is its place).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `e` | `CatalogueEntry` |  |
+
+Returns `{text: string, caret: number}`.
+
+#### `lineDiff(a, b)`
+
+The lines that changed from a to b (Myers): equal, delete (a line of a only) and insert (a line of b only), in order.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `a` | `string` | the original text |
+| `b` | `string` | the new text |
+
+Returns `Array&lt;{op: ('equal'\|'delete'\|'insert'), a: ?number, b: ?number, text: string}&gt;`: a and b are 1-based line numbers.
+
+#### `sideBySide(ops)`
+
+A diff as side-by-side rows: equal lines on both sides, a run of deletions paired with the insertions after it (a changed line), the rest alone. Each side {n, text, kind} or null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ops` | `Array&lt;{op: string, a: ?number, b: ?number, text: string}&gt;` | lineDiff's answer |
+
+Returns `Array&lt;{left: ?{n: number, text: string, kind: string}, right: ?{n: number, text: string, kind: string}}&gt;`.
+
+#### `diffStats(ops)`
+
+How many lines a diff adds, removes and keeps.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ops` | `Array&lt;{op: string}&gt;` |  |
+
+Returns `{added: number, removed: number, same: number}`.
+
+### drishti_code-editor.js
+
+#### `ensureCodeMirror(given)`
+
+CodeMirror on the page: the one given, the page's, or the vendored one loaded now (with its style sheet).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[given]` | `Object` | a CodeMirror to use |
+
+Returns `Promise&lt;Object&gt;`.
+
+#### class `CodeEditor`
+
+The code editor. Events: change {value}, ready, lint {problems}, completed {entry}.
+
+##### `new CodeEditor(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `[options]` | `CodeEditorOptions` |  |
+
+##### `CodeEditor.complete(forced)`
+
+Opens the completions at the cursor (forced: even for an empty word).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[forced]` | `boolean` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `CodeEditor.accept(entry)`
+
+Puts a completion in place of the word at the cursor.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `entry` | `import('./drishti_code-text.js').CatalogueEntry` |  |
+
+Returns `void`.
+
+##### `CodeEditor.runLint()`
+
+Asks the lint hook now and draws its problems.
+
+Returns `Promise&lt;LintProblem[]&gt;`.
+
+##### `CodeEditor.setProblems(problems)`
+
+Draws problems: marks under the text, signs in the gutter, the list under the editor.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `problems` | `LintProblem[]` |  |
+
+Returns `void`.
+
+##### `CodeEditor.goTo(line, ch)`
+
+Puts the cursor at a line (1-based) and column.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `line` | `number` |  |
+| `[ch]` | `number` |  |
+
+Returns `void`.
+
+##### `CodeEditor.getValue()`
+
+The text.
+
+Returns `string`.
+
+##### `CodeEditor.setValue(text)`
+
+Replaces the text.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+
+Returns `void`.
+
+##### `CodeEditor.setReadOnly(on)`
+
+Makes it read-only, or editable.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `void`.
+
+##### `CodeEditor.focus()`
+
+Puts the keyboard focus in the editor.
+
+Returns `void`.
+
+##### `CodeEditor.destroy()`
+
+Takes the editor out.
+
+Returns `void`.
+
+#### class `CodeDiff`
+
+A diff of two texts, side by side or unified, highlighted by the language; no CodeMirror needed. Events: none (read-only).
+
+##### `new CodeDiff(host, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `o` | `{original: string, value: string, mode: string, layout: ('side'\|'unified'), labels: string[]}` | labels: the two sides' names (default Before, After) |
+
+##### `CodeDiff.render()`
+
+Draws the diff again (after setTexts or a layout change).
+
+Returns `void`.
+
+##### `CodeDiff.setTexts(original, value)`
+
+Shows two other texts.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `original` | `string` |  |
+| `value` | `string` |  |
+
+Returns `void`.
+
+##### `CodeDiff.stats()`
+
+How many lines were added, removed and kept.
+
+Returns `{added: number, removed: number, same: number}`.
+
+### drishti_inputs-element.js
+
+#### `INPUT_ELEMENTS`
+
+Every element of drishti-inputs and the class it draws.
+
+#### `defineInputElements(registry, win)`
+
+Defines the elements (once each) on a registry.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `registry` | `CustomElementRegistry` |  |
+| `win` | `Window` |  |
+
+Returns `void`.
+
+### drishti_index.js
+
+#### `install(root)`
+
+Starts drishti-inputs in a page (the bundle calls it when it loads; nothing happens without a document): defines its elements.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `root` | `Window` |  |
+
+Returns `void`.
+
+## drishti-data
+
+Version 0.1.0. Bundle `static/elements/drishti-data/drishti_data.js`, global `Drishti.elements.data`; requires drishti-core.
+
+### drishti_backoff.js
+
+#### class `Backoff`
+
+Exponential back-off with full jitter: attempt n waits a random time up to min(max, base * factor^n).
+
+##### `new Backoff(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{baseMs: number, maxMs: number, factor: number, jitter: boolean, random: function(): number}` | baseMs default 500; maxMs default 30,000; factor default 2; jitter default true; random: for tests |
+
+##### `Backoff.next()`
+
+The wait before the next attempt (and the attempt counted).
+
+Returns `number`: ms.
+
+##### `Backoff.reset()`
+
+A connection held: the next wait starts small again.
+
+Returns `void`.
+
+#### class `Heartbeat`
+
+A watchdog: beat() on every message; when none comes for timeoutMs, onTimeout runs (once until the next beat).
+
+##### `new Heartbeat(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `{timeoutMs: number, onTimeout: function(): void, setTimeout: Function, clearTimeout: Function}` | the timer functions: for tests |
+
+##### `Heartbeat.beat()`
+
+A sign of life: the watch starts again.
+
+Returns `void`.
+
+##### `Heartbeat.stop()`
+
+Stops watching.
+
+Returns `void`.
+
+### drishti_backpressure.js
+
+#### class `TransactionSink`
+
+Feeds a grid from a live feed with backpressure.
+
+##### `new TransactionSink(target, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `target` | `{applyTransactionAsync: function(Object): Promise, setRows: function(Object[]): void, dataChanged: function(Object): void}` | a drishti-grid Grid or GridModel (or anything with those methods) |
+| `[o]` | `{getRowId: function(Object): string, maxInFlight: number, highWater: number, onStats: function(Object): void}` | getRowId default row.id; maxInFlight default 1; highWater: pending rows past which the sink says it is behind (default 10,000) |
+
+##### `TransactionSink.push(msg)`
+
+One message of the feed: {type: transaction, add, update, remove} \| {type: rows, rows} \| {type: dataChanged, ...}.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `msg` | `Object` |  |
+
+Returns `void`.
+
+##### `TransactionSink.drained()`
+
+Resolves when everything received has reached the grid.
+
+Returns `Promise&lt;void&gt;`.
+
+#### `pipeToGrid(feed, grid, o)`
+
+Wires a feed (a LiveClient, or any {subscribe}) into a grid through a TransactionSink.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `feed` | `{subscribe: function(function(Object): void): function(): void}` |  |
+| `grid` | `Object` | a drishti-grid Grid or GridModel |
+| `[o]` | `{getRowId: function(Object): string, maxInFlight: number, highWater: number, onStats: function(Object): void}` |  |
+
+Returns `{sink: TransactionSink, stop: function(): void}`.
+
+### drishti_live-client.js
+
+#### `LIVE_STATES`
+
+The client's states.
+
+#### class `LiveClient`
+
+A live connection with reconnect, heartbeat and resume.
+
+##### `new LiveClient(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `LiveClientOptions` |  |
+
+##### `LiveClient.on(name, fn)`
+
+Listens to the client's own events: state, error, message.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object, string): void` |  |
+
+Returns `function(): void`.
+
+##### `LiveClient.subscribe(fn)`
+
+Receives every message (the connection opens with the first subscriber and closes with the last).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `fn` | `function(Object): void` |  |
+
+Returns `function(): void`: unsubscribes.
+
+##### `LiveClient.open()`
+
+Opens the connection (subscribe does it).
+
+Returns `void`.
+
+##### `LiveClient.reconnect()`
+
+Opens again now (a person pressed Reconnect).
+
+Returns `void`.
+
+##### `LiveClient.close()`
+
+Closes the connection and stops trying.
+
+Returns `void`.
+
+##### `LiveClient.destroy()`
+
+Closes and forgets the page's online listener.
+
+Returns `void`.
+
+### drishti_arrow.js
+
+#### `ARROW_MEDIA`
+
+The media type of an Arrow IPC stream.
+
+#### `ARROW_VENDOR`
+
+The vendored Arrow JS, relative to the static root.
+
+#### `arrowLib(given)`
+
+Arrow JS: the one given, the page's, or the vendored one loaded now.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[given]` | `Object` |  |
+
+Returns `Promise&lt;Object&gt;`.
+
+#### `readColumn(vec, field, A)`
+
+One Arrow vector as a column: data (the Arrow buffer where it can be: a Float64Array with no nulls), get(i) (the JSON value), and its type for a grid (number, text, date, boolean).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `vec` | `Object` | an Arrow Vector |
+| `field` | `Object` | its Field |
+| `A` | `Object` | Arrow JS |
+
+Returns `{data: (Array\|Float64Array), get: function(number): *, type: string, copied: boolean}`.
+
+#### class `DataFrame`
+
+A table, column by column, from Arrow or from JSON: the same API either way.
+
+##### `new DataFrame(p)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `p` | `{format: string, names: string[], length: number, columns: Object&lt;string, {data: *, get: function(number): *, type: string}&gt;, meta: Object, bytes: number}` |  |
+
+##### `DataFrame.column(name)`
+
+A column's data (a typed array for numbers where it can be).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+
+Returns `*`.
+
+##### `DataFrame.value(name, i)`
+
+One cell, as JSON would have it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `i` | `number` |  |
+
+Returns `*`.
+
+##### `DataFrame.fields()`
+
+The columns' types for a grid.
+
+Returns `Array&lt;{name: string, type: string}&gt;`.
+
+##### `DataFrame.rows()`
+
+The rows as views: each holds its row number and reads the columns when a property is asked (row.MTM); toObject() makes a plain copy.
+
+Returns `Object[]`.
+
+##### `DataFrame.objects()`
+
+The rows as plain objects (a copy).
+
+Returns `Object[]`.
+
+##### `DataFrame.toGrid(o)`
+
+What a drishti-grid needs: column definitions from the types and the row views.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{id: string, formats: Object&lt;string, string&gt;, headers: Object&lt;string, string&gt;}` | id: the column that identifies a row |
+
+Returns `{columns: Object[], rows: Object[], getRowId: ?function(Object): string}`.
+
+#### `fromArrow(buf, A)`
+
+A frame from Arrow IPC bytes (the metadata drishti.answer, when the server wrote one, is its meta).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `buf` | `(ArrayBuffer\|Uint8Array)` |  |
+| `A` | `Object` | Arrow JS |
+
+Returns `DataFrame`.
+
+#### `fromArrowTable(tb, A, bytes)`
+
+A frame from an Arrow Table.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tb` | `Object` |  |
+| `A` | `Object` |  |
+| `[bytes]` | `number` |  |
+
+Returns `DataFrame`.
+
+#### `fromJson(json, bytes)`
+
+A frame from JSON rows: records ([{a: 1}]) or a {columns, rows} answer.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `json` | `(Object[]\|{columns: Array, rows: Array})` |  |
+| `[bytes]` | `number` |  |
+
+Returns `DataFrame`.
+
+#### `readResponse(r, o)`
+
+Reads a fetch Response as a frame: Arrow when it is Arrow (batch by batch to onBatch when asked), JSON otherwise; a problem (status 400 and up) rejects with the server's words (.status, .code, .detail).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `Response` |  |
+| `[o]` | `{Arrow: Object, onBatch: function(number, number): void}` | onBatch(rowsSoFar, batches) |
+
+Returns `Promise&lt;DataFrame&gt;`.
+
+#### `fetchFrame(url, o)`
+
+Fetches a table: Arrow over HTTP where the server can, JSON where it cannot.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `url` | `string` |  |
+| `[o]` | `{method: string, body: Object, headers: Object, fetch: Function, Arrow: Object, signal: AbortSignal, onBatch: function(number, number): void}` |  |
+
+Returns `Promise&lt;DataFrame&gt;`.
+
+#### class `ArrowClient`
+
+A server's data, read the best way it offers: Flight over HTTP (a ticket POSTed to its do-get address) when its capabilities say so, Arrow over HTTP otherwise.
+
+##### `new ArrowClient(o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[o]` | `{capabilitiesUrl: string, flight: (boolean\|{doGet: string}), fetch: Function, Arrow: Object, headers: Object}` | capabilitiesUrl: where the server says what it offers ({flightHttp: {doGet: url}}); flight: false never asks, an object names it |
+
+##### `ArrowClient.capabilities()`
+
+What the server offers: {flightHttp: ?{doGet: string}} (asked once; a server that does not answer offers Arrow over HTTP only).
+
+Returns `Promise&lt;{flightHttp: ?{doGet: string}}&gt;`.
+
+##### `ArrowClient.read(req)`
+
+Reads a request: {ticket} through Flight over HTTP when offered, else {url} (and body) as Arrow over HTTP.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `req` | `{ticket: Object, url: string, method: string, body: Object, onBatch: function(number, number): void, signal: AbortSignal}` |  |
+
+Returns `Promise&lt;DataFrame & {via: string}&gt;`.
+
+### drishti_sources.js
+
+#### `rowRequest(r)`
+
+A request with every default filled in.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[r]` | `Object` |  |
+
+Returns `RowRequest`.
+
+#### `memorySource(rows, o)`
+
+Rows in the page as a source: filtered, sorted, grouped (a level's members with their counts and sums) and windowed here.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+| `[o]` | `{delay: number, columns: Array&lt;{id: string, field: string, comparator: Function}&gt;}` | delay: ms before answering (a fixture that behaves like a server); columns: what the quick filter searches (default every property of the first row) |
+
+Returns `DataSource & {calls: RowRequest[], setRows: function(Object[]): void}`.
+
+#### `restSource(url, o)`
+
+A REST service as a source, a page at a time.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `url` | `string` |  |
+| `[o]` | `{method: ('POST'\|'GET'), fetch: Function, headers: Object, map: function(Object, RowRequest): {rows: Object[], rowCount: number}}` | POST (default): the request as JSON; GET: offset, limit, sort (colId:asc,colId:desc) and filter (JSON) as query parameters; map: the answer to {rows, rowCount} (default: {rows, rowCount} or {items, total}) |
+
+Returns `DataSource`.
+
+#### `serverSideSource(url, o)`
+
+Drishti's server-side rows as a source: the grid's request POSTed as it is, {rows, rowCount} back (groups and pivots on the server).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `url` | `string` |  |
+| `[o]` | `{fetch: Function, headers: Object}` |  |
+
+Returns `DataSource`.
+
+#### `arrowSource(src, o)`
+
+An Arrow table as a source: fetched once (or given as a DataFrame) and served from memory as row views; with paged, each window is its own request (offset and limit parameters) answered as Arrow.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `src` | `(string\|Object)` | a url or a DataFrame |
+| `[o]` | `{paged: boolean, fetch: Function, Arrow: Object, rowCount: function(Object): number}` | rowCount: from a page's frame (default its meta.rowCount) |
+
+Returns `DataSource & {frame: function(): Promise&lt;Object&gt;}`.
+
+#### `liveSource(source, feed)`
+
+A source with a live feed: getRows from the source, subscribe from the feed (a LiveClient), so a grid connects both.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `source` | `DataSource` |  |
+| `feed` | `{subscribe: function(function(Object): void): function(): void}` |  |
+
+Returns `DataSource`.
+
+#### `readAll(source, req, o)`
+
+Every row a request matches, a page at a time up to a limit (what a chart reads from a source).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `source` | `DataSource` |  |
+| `[req]` | `Object` | the sort, filter and groups (startRow and endRow are set here) |
+| `[o]` | `{pageSize: number, limit: number}` | pageSize default 5,000; limit default 100,000 rows |
+
+Returns `Promise&lt;{rows: Object[], rowCount: number, truncated: boolean}&gt;`.
+
+### drishti_index.js
+
+#### `live(o)`
+
+A live client (new LiveClient(o)).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `o` | `import('./drishti_live-client.js').LiveClientOptions` |  |
+
+Returns `import('./drishti_live-client.js').LiveClient`.
