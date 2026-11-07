@@ -161,11 +161,14 @@ def test_the_usage_page_for_a_bi_administrator():
         async def bi(self, method, path, ident, body=None, **params):
             if path == "/engine":
                 return {"engine": "duckdb", "live": {}}
+            if path == "/python/runtime":
+                return {"runs": False, "why": "compute is off", "pool": "python", "isolation": "strict", "pins": {"pandas": "3.0.6"}, "calls": 0, "failures": 0}
             return await super().bi(method, path, ident, body, **params)
 
     c = app_with(Backend())
     page = c.get("/admin/bi/usage")
-    assert page.status_code == 200 and 'data-usage-model="trades-basic@1"' in page.text and "100.0 %" in page.text and "Fork-server" in page.text
+    assert page.status_code == 200 and 'data-usage-model="trades-basic@1"' in page.text and "100.0 %" in page.text
+    assert "compute pool <b>python</b>" in page.text and "compute is off" in page.text and "pandas 3.0.6" in page.text   # Python is the server's
     assert "data-usage-link" in c.get("/admin/bi").text
     reader = app_with(BiBackend(("bi",)))
     assert reader.get("/admin/bi/usage").status_code == 403

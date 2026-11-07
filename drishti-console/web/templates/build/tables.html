@@ -24,7 +24,7 @@
 {% block head %}<link rel="stylesheet" href="/static/css/drishti_editors.css?v={{ ASSET_V }}">{% endblock %}
 {% block content %}
 <div class="ed" data-editors data-kind="{{ kind }}" data-name="{{ name }}" data-item="{{ item }}" data-new="{{ new }}"
-     data-runs-uc="{{ 'true' if python_runs_marked else 'false' }}" data-user="{{ me.user if me else '' }}">
+     data-python-runs="{{ 'true' if python_runs else 'false' }}" data-python-why="{{ python_why }}" data-user="{{ me.user if me else '' }}">
   <header class="ed-head" aria-label="The object being edited">
     <div class="ed-title">
       <nav class="ed-crumb" aria-label="Where you are"><span>Build</span> › <a href="/build/tables">Tables &amp; models</a> › <span data-crumb-group>Choose an object</span></nav>

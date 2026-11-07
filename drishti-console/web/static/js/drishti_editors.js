@@ -550,7 +550,8 @@
     if (!root) { return; }
     E.root = root;
     E.prefs = { mode: 'both', yamlOpen: true };
-    E.runsUnderConstruction = root.getAttribute('data-runs-uc') === 'true';
+    E.pythonRuns = root.getAttribute('data-python-runs') === 'true';           // the server runs authored Python safely (else data-python-why says why)
+    E.pythonWhy = root.getAttribute('data-python-why') || '';
     root.querySelectorAll('[data-mode]').forEach(function (b) { b.addEventListener('click', function () { setMode(b.getAttribute('data-mode')); }); });
     q('[data-yaml-toggle]').addEventListener('click', toggleYaml);
     q('[data-ed-search]').addEventListener('input', drawObjects);

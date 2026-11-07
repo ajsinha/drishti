@@ -27,13 +27,33 @@
   and leaves the old files to be removed. Shipped content is migrated already.
 - **Pivot formulas:** `x == None` and `x != None` now test for a missing value (as Rachana's `x == null` does); before they were never true.
 
+## Upgrade: one Python runtime (Python runs on the server's compute pool)
+
+- **Every Python run is the server's** (python visuals and measures, Python datasets and tables, Notebook cells, the Transform editor), on the
+  compute pool `python` in `config/compute/compute.yaml`. To keep Python working: switch compute on (`DRISHTI_COMPUTE_ENABLED=true`; it stays
+  off as shipped) and point the pool at an interpreter that carries **exactly** the versions pinned in `config/compute/locks/python.lock`
+  (`DRISHTI_PYTHON=...`), or build its locked environment from that lock (Admin → Compute → Build). Until then each Python run answers
+  `DRS-9074` and says why (`GET /api/v1/bi/python/runtime`).
+- **Linux only.** The pool runs code people write only in its strict sandbox (user namespaces and Landlock, kernel 5.13 or later). On a
+  **Windows** server Python stays off, with that reason.
+- **Removed settings:** the console's whole `bi.python.*` block (`DRISHTI_BI_PYTHON_*`, `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN`), and the server's
+  `drishti.bi.transform.python`, `runner`, `work-dir`, `console-url`, `console-token` (`DRISHTI_BI_TRANSFORM_PYTHON`, `DRISHTI_BI_TRANSFORM_RUNNER`,
+  `DRISHTI_BI_TRANSFORM_CONSOLE_URL`): remove them. The console no longer needs pandas or NumPy for BI.
+- **Packages:** an item may list the packages of `drishti.bi.report.python-packages` that the lock pins (`pandas`, `numpy`, `pyarrow`, `scipy`);
+  `statsmodels` is no longer offered. To add a library, pin it in `config/compute/locks/python.in` and run `tools/python_lock.py`.
+- **Publishing a Python item runs its tests** on the server whichever way it is asked (before, only through the console).
+- **The quant stand-in is gone** (`quant` in a Notebook cell); explain's Python tier is named `python` (was `console`).
+- **Refusals become answers** (approved by the product owner, 2026-11-07): with the pool on, the Python model `desk-pnl-vs-exposure-py`
+  answers each reader from their own inputs, and the python visuals (the report `python-desk-risk`, the board `python-wall`) draw on the
+  server. Before, the model refused (`DRS-9026`) and the visuals were the console's. With compute off they still refuse, in words. The BI
+  foundation parity record keeps the compute-off answers: they are its baseline, and nothing in it changed.
+
 ## Upgrade: removed and renamed pages (one analysis path)
 
 - **Analyse is the Notebook.** `/bi/explore` opens `/bi/notebook` (a notebook's `?item=` is kept). Its **Slice** tab is removed: slice and total a
   table in the **Pivot** (`PIVOT <GO>`, *Pivot* on the BI rail). A **SQL cell over the extract** (`FROM extract`, SQLite on the console) no longer
   runs: write it in Drishti SQL over the model (the server runs it as you). A saved notebook's `slice` cell is left out when it opens, with a note.
-  **Python cells** run on the server's compute pool; running them is *Under construction* until one Python runtime (write, save and promote them
-  meanwhile). Settings: rename `bi.explore.*` to `bi.notebook.*` and `DRISHTI_BI_EXPLORE_MAX_ROWS` to `DRISHTI_BI_NOTEBOOK_MAX_ROWS`;
+  **Python cells** run on the server's compute pool (see *one Python runtime* above). Settings: rename `bi.explore.*` to `bi.notebook.*` and `DRISHTI_BI_EXPLORE_MAX_ROWS` to `DRISHTI_BI_NOTEBOOK_MAX_ROWS`;
   `bi.explore.sql_max_seconds` and `bi.explore.quant_engine` are gone.
 - **The browser Python console is removed.** `/pyconsole` opens the Notebook; `bi.pyconsole.*`, `DRISHTI_BI_PYCONSOLE_ENABLED`,
   `DRISHTI_BI_PYCONSOLE_MAX_ROWS` and the edition feature `pyconsole` are no longer read (remove `pyconsole:` from your edition files).

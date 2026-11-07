@@ -71,10 +71,12 @@ class LanguagesApiTest {
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
+    @Autowired com.ash.drishti.server.bi.python.PythonRuns pythonRuns;
     final ObjectMapper json = new ObjectMapper();
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
+        com.ash.drishti.server.bi.python.PythonPoolForTests.register(r);   // compute on with the pool python, where an interpreter has pandas and pyarrow
         root = com.ash.drishti.server.TestRun.temp("drishti-lang-api-lake");
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < 24; i++) {
@@ -410,8 +412,8 @@ class LanguagesApiTest {
 
     @Test @Order(22)
     void aPythonColumnIsComputedOverTheReadersRowsAndTheLineageReachesThePackKind() throws Exception {
-        org.junit.jupiter.api.Assumptions.assumeTrue(Files.isExecutable(Path.of("..", "drishti-console", ".venv", "bin", "python").toAbsolutePath()),
-                "the console's Python environment (drishti-console/.venv, with pandas and pyarrow) is needed");   // as ProcessMeasureRunnerTest
+        java.util.Optional<String> why = pythonRuns.unavailable();      // the server's own answer: Linux with Landlock and the pinned interpreter (PythonPoolForTests)
+        org.junit.jupiter.api.Assumptions.assumeTrue(why.isEmpty(), () -> "Python does not run here: " + why.orElse(""));
         Map<String, Object> q = Map.of("mq", 1, "model", "lang-bucket-view@1", "select", Map.of("fields", List.of("trades.bucket"), "measures", List.of("Trades", "K")), "time",
                 Map.of("as-of", DAY));
         JsonNode rita = ok(call("POST", "/api/v1/bi/mq", reader("rita"), q));

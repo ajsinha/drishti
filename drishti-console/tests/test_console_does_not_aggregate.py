@@ -76,13 +76,6 @@ KNOWN = {
     "core/schemakit/related.py: doc[name] = _clean(sum(x for x in (_num(v) for v in vals) if x is not ":
         "OWN: a pack draft's sample documents for a related page (the pack maker's fixtures, made offline too by tools/packmake.py; "
         "never a figure people read: the server's derived connector computes the pages)",
-    "core/quant/standin.py: return sum(c / (1 + i) ** k for k in range(1, n + 1)) + face / (1 + i)":
-        "OWN: the stand-in pricer a person's own Python cell calls as `quant` in its sandbox (a coupon's discounting, not a total of "
-        "figures; QLRisk replaces it on the server, docs/admin/AI.md section 16)",
-    'core/quant/standin.py: return sum(_num({"x": f}, "x") / (1 + r) ** t for t, f in enumerate(fl': "OWN: the same pricer's NPV",
-    "core/pyrunner_worker.py: groups = df.groupby(by, sort=True, dropna=False) if by else [((), df)]":
-        "OWN: a person's own Python cell, sandboxed (ONE_GRAMMAR.md part 4: Python stays the open-ended escape)",
-    "core/pyrunner_worker.py: nulls = int(s.isna().sum())": "OWN: nulls in a person's own Python cell's frame",
 }
 
 

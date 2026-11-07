@@ -36,20 +36,22 @@ base VaR is additions and sorts over stored vectors, so it needs no worker; what
 | `…compute.var` | `VarBook` (one business date: trade vectors in hierarchy order, positions and books as runs, columnar attributes, node aggregates, a planner), `ScopeExpr` and `ScopeResolver` (the scope grammar to ordinals), `PositionRule` (rules over positions' columns), `VarMath` and `VarCalc` (VaR, ES, components, incremental and marginal VaR, histograms), `Backtest` (exceptions, Basel light, Kupiec, Christoffersen), `Columns`; `VarScaleBenchmark` in the tests (opt-in) |
 | `…compute.approval` | `Approvals` (request, approve, reject, revoke; four eyes; audit), `ApprovalStore` (memory, or the Drishti database's `drishti_compute_request` and `drishti_compute_approval`) |
 | `…compute.reactive` | the built-in connector plugin `reactive` (R1 to R4, [REACTIVE_CONNECTOR.md](../docs/connectors/REACTIVE_CONNECTOR.md)): `ReactiveSourcePlugin`, `ReactiveConnector` (authorise, parameters, pin, key with the view signature, cache, single flight, admission, inputs read as the viewer, engine, validate, stamp, audit), `ReactiveSpec` and `ParamSpec` (the connector file's computation), `PythonRunner` (a pool, with fan-out and `Reduce`) and `JavaRunner` (a `ComputeEngine` in the server), `Triggers`, `Coalescer`, `SeenEvents`, `Watermark`, `ResultCache`, `Sandboxes`, `RequestEvents` (a request's events to its owner only), `ReactiveHub` and `ReactiveHost` (what the server provides); `samples.VectorSumEngine` (the Java twin of the sample `sum-vectors`) |
-| `src/main/python/drishti_compute` | the worker SDK, pure Python (standard library only): `engine` (the contract: `Engine`, `Request`, `Inputs`, `Progress`, `Result`, `ComputeError`, `register_cache`), `arrow` (the Arrow stream format in pure Python, zero-copy reads), `guard` (the audit-hook sandbox and limits), `worker` (the loop the supervisor starts), `samples.vectors` (echo, sum, sum of vectors), `samples.paths` (`PathSumEngine`: the sample reactive connector's sum of P&L paths, the shape of its Java twin) |
+| `src/main/python/drishti_compute` | the worker SDK, pure Python (standard library only): `engine` (the contract: `Engine`, `Request`, `Inputs`, `Progress`, `Result`, `ComputeError`, `register_cache`), `arrow` (the Arrow stream format in pure Python, zero-copy reads), `guard` (the audit-hook sandbox and limits, and the strict sandbox: a network namespace for the worker and a Landlock rule per request), `worker` (the loop the supervisor starts), `items` (the pool `python`'s engine: code people write, Python items, Python-driven tables, Notebook cells, in the strict sandbox: [PYTHON_COMPUTE.md section 19](../docs/architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)), `samples.vectors` (echo, sum, sum of vectors), `samples.paths` (`PathSumEngine`: the sample reactive connector's sum of P&L paths, the shape of its Java twin) |
 
 ## The worker protocol
 
 The supervisor starts `python -s -B -m drishti_compute.worker --engines <module:Class,...> --mode fork|warm --memory <bytes>
---cpu-seconds <n> --worker <id>` with an empty environment (no credentials) and the SDK on `PYTHONPATH`. One JSON object per line:
+--cpu-seconds <n> --worker <id> --isolate standard|strict` with an empty environment (no credentials) and the SDK on `PYTHONPATH`. With
+`--isolate strict` (a pool's `isolation: strict`; Linux, fork mode) the worker leaves the network at start and each request's child is held by
+Landlock to its scratch folder and the Python installation; where that cannot be had, the worker says why and does not start. One JSON object per line:
 
 | Direction | Message |
 |---|---|
-| worker → server | `ready` (pid, mode, Python, SDK version, each engine's kinds), once |
-| server → worker | `run` (`id`, `engine`, `kind`, `params`, `user`, `roles`, `viewSignature`, `cls`, `seed`, `scratch`, `inputs`: name → `in/<name>.arrows`, `chunk`, `cpuSeconds`) |
+| worker → server | `ready` (pid, mode, Python, SDK version, its isolation, each engine's kinds), once |
+| server → worker | `run` (`id`, `engine`, `kind`, `params`, `user`, `roles`, `viewSignature`, `cls`, `seed`, `scratch`, `inputs`: name → `in/<name>.arrows`, or `in/<name>` for a file handed over as it is, `chunk`, `cpuSeconds`) |
 | worker → server | `started` (the pid running it: the fork child, which the supervisor kills alone at a timeout or cancel) |
 | worker → server | `progress` (`data`: the engine's partial result), any number |
-| worker → server | `result` (`rows`, `tables`: name → `out/<name>.arrows`, `meta`) or `error` (`code`: `engine`, `limit` or `failed`; `message`) |
+| worker → server | `result` (`rows`, `tables`: name → `out/<name>.arrows`, `files`: name → `out/<name>` handed back as it is, `meta`) or `error` (`code`: `engine`, `limit` or `failed`; `message`) |
 | worker → server | `done` (the worker is free again; in fork mode with the child's exit code or signal) |
 | server → worker | `shutdown` |
 

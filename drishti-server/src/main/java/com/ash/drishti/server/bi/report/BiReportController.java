@@ -154,7 +154,7 @@ public class BiReportController {
     }
 
     /**
-     * Body {@code {page, visual}}: what the console's Python runner runs for one python visual (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8): the Python item, the measure it shows,
+     * Body {@code {page, visual}}: what the compute pool python runs for one python visual (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8): the Python item, the measure it shows,
      * its parameters and where it may run. The rows come from {@code /query?format=arrow}.
      */
     @PostMapping("/{id}/python")

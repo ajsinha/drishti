@@ -14,8 +14,8 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The Notebook (docs/guides/USER_GUIDE.md › The Notebook): the SQL and Python cells of the page. SQL is Drishti SQL, run by the server over the model
-   as the reader. A Python cell runs on the server's compute pool; until the one Python runtime is built its Run is under construction (the cell is
-   written, saved and promoted all the same). Nothing runs in the console or the browser. Output is data drawn as text, a table, a chart (ECharts,
+   as the reader. A Python cell runs on the server's compute pool (POST /bi/notebook/python: the server reads the extracts as the reader and runs the
+   cell in its strict sandbox); where the server cannot run Python safely, Run is off and says why. Nothing runs in the console or the browser. Output is data drawn as text, a table, a chart (ECharts,
    formatter strings removed) or an image; never markup. */
 (function () {
   'use strict';
@@ -51,9 +51,9 @@
       bar.appendChild(run);
       if (kind === 'python') {
         bar.appendChild(h('small', { class: 'text-muted-d', 'data-runs-on': 'server', text: "Runs on the server's compute pool" }));
-        if (!X.pythonRuns) {                                                                        // config/under-construction.yaml python-table-runs
-          run.disabled = true; run.title = "Under construction: Python cells run on the server's compute pool";
-          bar.appendChild(h('span', { class: 'drishti_uc-chip', 'data-uc': 'python-table-runs', text: 'Under construction' }));
+        if (!X.pythonRuns) {                                                                        // the server cannot run Python safely: it says why
+          run.disabled = true; run.title = 'Python does not run on this server: ' + (X.pythonWhy || 'see Help');
+          bar.appendChild(h('small', { class: 'text-muted-d', 'data-python-off': '', text: 'Off: ' + (X.pythonWhy || 'Python does not run on this server') }));
         }
         [['measure', 'Promote to a measure'], ['visual', 'Promote to a visual'], ['transform', 'Promote to a Transform']].forEach(function (p) {
           var b = h('button', { type: 'button', class: 'btn-pill btn-ghost', 'data-promote': p[0], text: p[1] });
@@ -82,12 +82,35 @@
 
   function note(out, text, bad) { clear(out).appendChild(h('p', { class: bad ? 'bi-msg bi-bad' : 'text-muted-d', role: bad ? 'alert' : 'status', text: text })); }
 
+  /** One Python cell on the server: what it printed, then its result (a table, a chart option, an SVG or PNG picture, or a value). */
+  function runPython(cell) {
+    if (!X.pythonRuns) { note(cell.out, 'Python does not run on this server: ' + (X.pythonWhy || ''), true); return Promise.resolve(); }
+    note(cell.out, 'Running on the server…');
+    return X.post('/bi/notebook/python', { extract: spec(), extracts: X.extras, source: cell.source }).then(function (r) {
+      clear(cell.out);
+      cell.out.appendChild(h('p', { class: 'bi-result-meta', 'data-engine': 'python', 'data-target': r.target,
+        text: 'Ran on the server\'s compute pool in ' + r.ms + ' ms over ' + r.inputRows + ' rows' + (r.truncatedInput ? ' (cut to the extract limit)' : '') + (r.masked && r.masked.length ? ' · masked: ' + r.masked.join(', ') : '') }));
+      if (r.stdout) { cell.out.appendChild(h('pre', { class: 'bx-stdout', 'data-stdout': '', text: r.stdout })); }
+      var host = h('div', { class: 'bx-result', 'data-result': '' });
+      cell.out.appendChild(host);
+      if (r.table) {
+        X.table(host, r.table.columns, r.table.rows, 200);
+      } else if (r.option) {
+        B.python.draw(host, { title: 'Cell result' }, { t: {} }, { kind: 'echarts', option: r.option });
+      } else if (r.svg || r.png) {
+        B.python.draw(host, { title: 'Cell result' }, { t: {} }, r.svg ? { kind: 'svg', svg: r.svg } : { kind: 'png', png: r.png });
+      } else if (r.value !== undefined) {
+        host.appendChild(h('pre', { class: 'bx-stdout', 'data-value': '', text: JSON.stringify(r.value, null, 1) }));
+      }
+    }).catch(function (e) {
+      note(cell.out, e.message, true);
+      if (e.traceback) { cell.out.appendChild(h('pre', { class: 'bx-stdout', 'data-traceback': '', text: e.traceback })); }
+    });
+  }
+
   function runCell(kind, cell) {
     if (!X.ex) { note(cell.out, 'Open an extract first.', true); return Promise.resolve(); }
-    if (kind === 'python') {                                                                      // Python runs on the server's compute pool, never here
-      note(cell.out, "Under construction: Python cells run on the server's compute pool, which comes with one Python runtime. Save the notebook or promote the cell meanwhile.", false);
-      return Promise.resolve();
-    }
+    if (kind === 'python') { return runPython(cell); }                                            // Python runs on the server's compute pool, never here
     note(cell.out, 'Running…');
     return X.post('/bi/notebook/sql', { extract: spec(), sql: cell.source }).then(function (r) {
       clear(cell.out);
@@ -116,7 +139,7 @@
 
   ['sql', 'python'].forEach(function (kind) {
     q('[data-add=' + kind + ']', root).addEventListener('click', function () { X.cells[kind].push(newCell(kind)); draw(kind); });
-    q('[data-run-all=' + kind + ']', root).addEventListener('click', function () { runAll(kind); });   // Python's is disabled while its running is under construction
+    q('[data-run-all=' + kind + ']', root).addEventListener('click', function () { runAll(kind); });   // Python's is off where the server cannot run it safely
   });
   document.addEventListener('drishti:bx-extras', function () { draw('python'); });                        // a cell that reads extract(...) can be promoted to a Transform
   document.addEventListener('drishti:bx-extract', function () {

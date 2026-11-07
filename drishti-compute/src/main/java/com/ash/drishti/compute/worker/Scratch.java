@@ -81,6 +81,44 @@ public final class Scratch implements AutoCloseable {
         return out;
     }
 
+    /** Writes the files handed over as they are in {@code in/}; returns name to relative path. */
+    public Map<String, String> writeFiles(Map<String, byte[]> files) {
+        Map<String, String> out = new LinkedHashMap<>();
+        for (Map.Entry<String, byte[]> e : files.entrySet()) {
+            String rel = "in/" + e.getKey();
+            try {
+                Files.write(dir.resolve(rel), e.getValue());
+            } catch (IOException ex) {
+                throw new UncheckedIOException("could not write file " + e.getKey(), ex);
+            }
+            out.put(e.getKey(), rel);
+        }
+        return out;
+    }
+
+    /** Reads the files the worker named as they are: each a file under {@code out/} (the worker's answer is untrusted), no bigger than {@code maxBytes}. */
+    public Map<String, byte[]> readFiles(Map<String, String> files, long maxBytes) {
+        Map<String, byte[]> out = new LinkedHashMap<>();
+        Path outDir = dir.resolve("out").normalize();
+        for (Map.Entry<String, String> e : files.entrySet()) {
+            Path p = dir.resolve(e.getValue()).normalize();
+            if (!p.startsWith(outDir) || Files.isSymbolicLink(p) || !Files.isRegularFile(p)) {
+                throw new ComputeException(ComputeException.Code.INVALID, "the worker named a result file outside its out folder: " + e.getValue());
+            }
+            try {
+                long size = Files.size(p);
+                if (size > maxBytes) {
+                    throw new ComputeException(ComputeException.Code.INVALID, "result " + e.getKey() + " is " + size + " bytes, over the limit of "
+                            + maxBytes + " (compute.limits.max-result-bytes)");
+                }
+                out.put(e.getKey(), Files.readAllBytes(p));
+            } catch (IOException ex) {
+                throw new ComputeException(ComputeException.Code.INVALID, "result " + e.getKey() + " could not be read: " + ex.getMessage());
+            }
+        }
+        return out;
+    }
+
     /**
      * Reads the result tables the worker named. Each path must be a file under {@code out/} (never elsewhere: the worker's answer is
      * untrusted) and no bigger than {@code maxBytes}.

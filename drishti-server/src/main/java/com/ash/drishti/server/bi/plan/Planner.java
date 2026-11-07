@@ -99,7 +99,7 @@ public final class Planner {
                 aggregates.addAll(ContextNodes.of(ds, m, scans, in.rowConditions().stream().filter(c -> p.tables().contains(alias(c.field()))).toList(), p.fact(), fields));
             }
         }
-        for (String m : python) {                                               // wave B (R8): a Python measure is a PyAggregate on the console
+        for (String m : python) {                                               // wave B (R8): a Python measure is a PyAggregate on the python pool
             Dataset.Measure pm = ds.measures().get(m);
             java.util.Set<String> tables = new LinkedHashSet<>();
             fields.forEach(f -> tables.add(alias(f)));

@@ -24,8 +24,8 @@ stand-in (C4), QLRisk (C5, and **design only** until its author declares its API
 connectors that send work to the pools (DATA_ARCHITECTURE.md R1 to R6), the planned `drishti.py compute`, the pre-approval file and per-pool OS
 users. Each section says what differs from the build where it does. Related: [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#4-reactive-connectors) (the connectors that use these workers),
 [VAR_GUIDE.md Part III](../guides/VAR_GUIDE.md#24-where-the-engine-lives) (the first user), [AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed) (the earlier pricing-service proposal,
-reconciled in [section 14](#14-how-this-fits-with-what-exists)), [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) (the console's Python runner,
-built).
+reconciled in [section 14](#14-how-this-fits-with-what-exists)), [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) (Python items, run on the pool
+`python`: [section 19](#19-the-python-runtime-for-code-people-write)).
 
 ## Contents
 
@@ -47,6 +47,7 @@ built).
 16. [Build plan](#16-build-plan)
 17. [Tests](#17-tests)
 18. [Open questions for the product owner](#18-open-questions-for-the-product-owner)
+19. [The Python runtime for code people write](#19-the-python-runtime-for-code-people-write)
 
 ---
 
@@ -149,7 +150,7 @@ qlrisk==2.4.0          --hash=sha256:1e5f…      # from the author's wheel (qlr
 | **Offline and exact** | `python -m venv`, then `pip install --require-hashes --no-deps --only-binary=:all:` from the approved sources; no source builds, no resolution, no network beyond the named index |
 | **Read-only once built** | the environment folder is made read-only; a worker cannot install into it; a changed file is detected by a manifest of hashes checked at worker start |
 | **Never changed in place** | a new lock is a new environment; the old one stays until no approved connector uses it, then is removed by `drishti.py compute gc` (planned; `Environments.gc` is built) |
-| **The interpreter** | the site's Python (`compute.python`, a path; the console's Python by default). Drishti does not download interpreters. |
+| **The interpreter** | the site's Python (`compute.python`, a path; `python3` by default). Drishti does not download interpreters. |
 
 Building an environment is an administrator action (or automatic after approval, `compute.build: on-approval`), shown with its log in
 Admin → Compute. *Implementation (C2):* environments of **pools** (`pools.<p>.environment`) are built and verified at every worker start; a
@@ -196,7 +197,7 @@ A **pool** is a set of worker processes of one type and environment, configured 
 # config/compute/compute.yaml                                  (built)
 compute:
   enabled: false                    # off as shipped: no worker starts, reactive connectors say "compute is off"
-  python: ${DRISHTI_PYTHON:}        # the interpreter; empty: the console's Python
+  python: ${DRISHTI_PYTHON:}        # the interpreter; empty: python3
   pools:
     risk:
       type: python
@@ -225,7 +226,7 @@ the same pool, each with its own count, and one request can be spread over all o
 ### 7.2 Process model
 
 - **One request at a time per worker.** Concurrency comes from the number of workers. A worker never holds two users' data at once.
-- **Linux: fork-server.** As the console's Python runner already does ([BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python)), a parent imports the
+- **Linux: fork-server.** A parent imports the
   environment's heavy modules once (numpy, pyarrow, QuantLib) and **forks one child per request**; the child runs the request and exits.
   Start-up cost is paid once; isolation between requests is total (a fresh address space). *Implementation:* each worker is such a parent (N
   workers, N parents, each forking one child at a time), so a request's child can be killed alone at a timeout or cancel and the worker
@@ -388,8 +389,8 @@ A connector may use a Java library (a vendor pricer, an in-house risk library) b
 - **No credentials, no network.** Workers start with an empty environment (only what the engine needs: `PYTHONHASHSEED`, `QLRISK_TMP_DIR`,
   thread limits), no tokens, and no network ([section 7.5](#75-limits)).
 - **Read-only code.** The environment and the extracted native libraries are read-only and checked against their manifest at start.
-- **No code from requests.** A request carries parameters, never code; the only code that runs is the approved engine. (Ad-hoc
-  Python written by a person remains the console's Python runner, with its own guard, [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python).)
+- **No code from requests.** A request carries parameters, never code; the only code that runs is the approved engine. The one exception
+  is the pool `python`, whose engine runs code people write, and only in the strict sandbox ([section 19](#19-the-python-runtime-for-code-people-write)).
 - **Outputs are untrusted.** The server validates each result against the kind's schema and size limits before it is cached or shown;
   text in results is escaped like any data.
 - **Supply chain.** Hash-pinned wheels and jars, approved sources only, a vulnerability feed shown at approval, a native-code flag per
@@ -407,7 +408,7 @@ Python venv (pip packages) are allowed.
 | Locked environments | work: built from `win_amd64` wheels with `pip --require-hashes`, under the data folder; the lock lists both platforms |
 | QuantLib for Python, QLRisk | QuantLib's Python wheel is a pip package (it contains a compiled extension); whether this counts as allowed on the QA machine is **an open question** ([section 18](#18-open-questions-for-the-product-owner)); until answered, QLRisk-based tests on Windows skip with a reason, and the stand-in pricer covers the flow |
 | QuantLib-SWIG Java | not built for Windows; its tests skip with the reason *native QuantLib library: no native binaries on the Windows QA machine* |
-| Network isolation | no namespace: the audit hook alone refuses sockets |
+| Network isolation | no namespace: the audit hook alone refuses sockets, so the pool `python` (code people write, strict isolation) does not run on Windows ([section 19](#19-the-python-runtime-for-code-people-write)) |
 | Paths | everything under the data folder; no `C:\Temp`, no `%TEMP%` |
 
 ## 13. Configuration
@@ -438,8 +439,7 @@ Folders under the data folder: `compute/envs/`, `compute/shipped/`, `compute/jar
 
 | Exists today | Relation |
 |---|---|
-| **The console's Python runner** (`drishti-console/core/pyrunner.py`, built; a fork-server, an audit hook, an import guard, Arrow in and JSON out) | It runs **people's ad-hoc code** in BI and Analyse. Compute workers run **approved engines** for connectors. They share ideas and, where possible, code (the audit hook and the limits), but they are separate: different trust (an author's snippet vs an approved package), different owner (the console vs the server's supervisor) and different environments (the console's allow-list vs a locked environment per connector). |
-| **The console's `QuantEngine` slot** (`drishti-console/core/quant/`, built, with a stand-in) | It stays the Analyse cell's `quant.price(...)`. When QLRisk is stable, its adapter (AI.md › Server-side pricing: the quant service (proposed), section 16.4) and the compute pricer SPI share the pack's pricer mappings. |
+| **Code people write** (Python items, Python-driven tables, Notebook cells) | Runs on these pools too: the pool `python` and its engine `drishti_compute.items`, in the strict sandbox with pinned libraries ([section 19](#19-the-python-runtime-for-code-people-write)). Different trust from an approved engine, so a stricter sandbox; the same supervisor, queue, limits and audit. |
 | **Arrow to the browser** (`ArrowAnswers` and `core/arrow_answer.py`) | The same Arrow IPC stream format as the workers' transport, used where it was measured to pay: the VaR explorer's contribution tables by position and by trade; the P&L path, BI grids and search stay JSON or HTML. Where Arrow is used and where it is not, with the numbers: [DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](../guides/DATA_GUIDE.md#6-arrow-to-the-browser-where-it-pays) |
 | **The pricing-service proposal** ([AI.md](../admin/AI.md#4-server-side-pricing-the-quant-service-proposed), ADR-019) | Superseded in its **deployment shape**: instead of a separate HTTP service, pricing runs in compute workers supervised by the server. Its other decisions stand: pricing outside the server's JVM, the `quant` power, pack pricer mappings, market data assembled by the server for a business date, caching by trade version and date. A remote pool (workers on other machines, reached over the network) is a later option and would look much like that service. |
 
@@ -498,3 +498,50 @@ offline build from a local wheel, a tampered wheel, a tampered environment, Java
 5. **Pre-approval file.** Should automated deployments be allowed to pre-approve requirements in the planned `config/compute/approved.yaml`, or
    must every approval be made in Admin → Compute?
 6. **Vulnerability feed.** Does the bank have a scanner feed (for example an OSV mirror) Drishti should show at approval time?
+
+
+## 19. The Python runtime for code people write
+
+Every Python run in Drishti is the server's, on the compute pool **`python`**: python visuals and Python measures of reports, boards and
+alerts, Transforms behind Python datasets, Python-driven tables and models (their sample run in the editor and their rows when read), the
+Notebook's Python cells, the Transform editor's step-by-step run, the profile of a frame and the tests an item ships with. The console runs
+none, imports no compute library (a static test holds it: `drishti-console/tests/test_console_runs_no_compute.py`), and the server never calls
+the console to run Python. One way per job: one runtime, one sandbox, one set of pinned libraries.
+
+**The engine.** The pool loads `drishti_compute.items:ItemsEngine` (`drishti-compute/src/main/python/drishti_compute/items.py`): kinds `run`
+(an item: its manifest with the source, its parameters, the input files and limits), `check` (the source parsed, its entry and imports checked;
+nothing runs) and `about` (the interpreter's versions, for the pin check). A request carries the rows as **files** (Arrow IPC streams in `in/`,
+handed over as they are, since a BI frame holds dates and decimals the SDK's own codec does not read) and a Transform's table comes back as a
+file (`out/result.parquet`); `ComputeRequest.files` and `ComputeResult.files` carry them, also between Drishti*net members. A failure of the
+author's code is an **answer** (`ok: false`, its kind and the author's own traceback), never a crash of the worker.
+
+**The server's side.** `PythonRuns` (drishti-server, `bi/python`) is the one door: it refuses in words while code cannot run safely (below),
+checks the item's packages against the pinned allow-list and the input size, caps the item's time and memory
+(`drishti.bi.report.python-max-seconds`, `python-max-memory-mb`), submits to the pool **as the person** (their viewer, for fairness and the
+audit), maps the answer to `DRS-9070` to `9074` (the traceback for authors only) and writes one audit line per run (`python-run`: who, what,
+the pool, the outcome, the time, the bytes). `PythonFrames` reads the rows a run needs **as the person running it** (a model query, a dataset's
+fields, a Transform input, a visual's rows): their row rules and masks apply before anything reaches Python. A Transform's result is checked
+against its **output contract** (the columns and types the dataset or table declares; a Python-driven table's sample run also checks its keys
+and never-empty columns) and refused in words when it does not match. Dates reach Python as ISO text, so a text column that the contract
+declares a `date` or a `timestamp` is read as one on the pool before the check. A value that does not read leaves the column as text, and
+the check refuses it.
+
+**The strict sandbox** (`isolation: strict` on the pool; [section 11](#11-security-and-sandboxing) is the standard one):
+
+| Part | How | Where it cannot be had |
+|---|---|---|
+| No network | the worker moves itself into a user and network namespace of its own at start (no interface; Landlock also refuses TCP from ABI 4) | the worker does not start and says why |
+| Files | each request's fork child is held by **Landlock** to reading the Python installation, the module path, the system libraries and its scratch folder, and to writing that folder only, before the request's code runs (so C and C++ code is held too) | as above |
+| Processes, loader | the engine's audit hook refuses `subprocess`, `os.system`, `exec*`, `spawn*`, `fork`, `ctypes`; `exec`, `eval`, `compile` are not given | |
+| Imports | only the manifest's packages (each on the pinned allow-list) and safe standard-library modules | |
+| Time, memory | `RLIMIT_CPU` and `RLIMIT_AS` of the item's own (lowered from the pool's), the pool's wall-time budget | |
+| Pinned libraries | `config/compute/locks/python.lock` (hashes of every file, from `python.in` by `tools/python_lock.py`): a locked environment installs exactly those; with `environment: system` the server asks the pool for its versions first and refuses every run while one differs | |
+| Audit | one line per run | |
+
+**Where it cannot be safe, it does not run.** The strict sandbox needs Linux (fork mode, user namespaces, Landlock 5.13+). On Windows, where
+neither a network namespace nor Landlock exists and no `.exe` may be placed, Python runs are off: every run answers `DRS-9074` with the
+reason, and the Notebook's Run and the editor's Sample run are off and say why. Approved network sources are read by the server and handed
+in as inputs; the code itself never reaches a network.
+
+**Configuration.** `compute.enabled` (off as shipped), `compute.pools.python` (`config/compute/compute.yaml`: workers, memory, CPU seconds,
+timeouts, `isolation: strict`, `environment`), `drishti.bi.report.python-*`, `drishti.bi.transform.*`. Status: `GET /api/v1/bi/python/runtime`.

@@ -75,6 +75,11 @@ Mock-up: [g4-python.html](mockups/editors/g4-python.html), option **A** as the e
 - **Notebook → Turn into table**: cells explored on the server become a build function, and the contract is filled in.
 - **Templates** (join and derive, resample, statistics per group, a file or feed from an approved source) write the Python and show it.
 - A Python **model** is the same, with its measures declared in the contract.
+- **Where it runs.** The sample run, the Notebook's cells and the table's rows when read all run on the server's compute pool `python`, in
+  its strict sandbox: the inputs read as the person running it (row rules and masks), pinned libraries, the code's time and memory limits, no
+  network (an approved source is read by the server and handed in as an input), files only in its own folder, every run audited; the rows are
+  checked against the contract and a mismatch is refused in words ([PYTHON_COMPUTE.md section 19](PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)).
+  Where the server cannot run Python safely (compute off, Windows) the buttons are off and say why.
 
 ## 5. People and access
 
@@ -116,6 +121,6 @@ its help entry.
 | 1 | The three-pane shell, the Visual / YAML / Both toggle, the header, + New steps | BI foundation | ☑ |
 | 2 | Tables and virtual tables (grid, Text toggle, cross-connector cost) | BI foundation | ☑ |
 | 3 | Semantic models (tabs, Overview, measure cards, Access matrix) | BI foundation | ☑ |
-| 4 | Python-driven tables and models (code and contract, Notebook → table, templates) | BI foundation | ☑ (the sample run on the compute pool: under construction) |
+| 4 | Python-driven tables and models (code and contract, Notebook → table, templates, the sample run on the compute pool) | BI foundation | ☑ |
 | 5 | People & access (People, Roles, Check access) | Trust, RBAC and security | ☐ |
 | 6 | API keys (My keys, + New key, Admin overview) | Trust, RBAC and security | ☐ |

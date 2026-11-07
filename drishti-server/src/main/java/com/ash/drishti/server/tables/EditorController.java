@@ -147,6 +147,29 @@ public class EditorController {
         return PythonDrafts.fromNotebook(cells);
     }
 
+    /** {@code {yaml, source, date?, timeout?, memory?}}: a Python-driven table's sample run on the compute pool, checked against its contract. */
+    @PostMapping("/python/run")
+    public Map<String, Object> runPython(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {
+        int timeout = body.get("timeout") instanceof Number n ? n.intValue() : 60;
+        int memory = body.get("memory") instanceof Number n ? n.intValue() : 512;
+        Map<String, Object> inputs = new LinkedHashMap<>();
+        if (body.get("inputs") instanceof Map<?, ?> m) {
+            m.forEach((k, v) -> inputs.put(String.valueOf(k), v));
+        }
+        return editors.samplePython(p, text(body, "yaml"), text(body, "source"), opt(body, "date"), timeout, memory, inputs);
+    }
+
+    /** Whether the sample run and the Notebook's cells run here, and why not. */
+    @GetMapping("/python/runtime")
+    public Map<String, Object> pythonRuntime(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        editors.requireRead(p);
+        java.util.Optional<String> why = editors.pythonUnavailable();
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("runs", why.isEmpty());
+        out.put("why", why.orElse(null));
+        return out;
+    }
+
     /** {@code {source, columns: {NAME: type}}}: the output contract proposed from the code. */
     @PostMapping("/python/contract")
     public Map<String, Object> contract(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {

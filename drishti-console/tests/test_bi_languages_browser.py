@@ -36,9 +36,10 @@ from bi_stack import listening  # noqa: E402
 
 PORTS = w1.worker_ports(18916, 17916)       # this file's own ports (plus the pytest-xdist worker offset): the stack fixture switches w1 to them
 CONSOLE_URL = f"http://127.0.0.1:{PORTS[1]}"
-# the server runs a Python column through the console's sandboxed runner, started with this Python (it has pandas)
-os.environ.setdefault("DRISHTI_BI_TRANSFORM_PYTHON", sys.executable)
-os.environ.setdefault("DRISHTI_BI_TRANSFORM_RUNNER", str(Path(__file__).resolve().parents[1] / "core" / "transform_cli.py"))
+# the server runs Python on its compute pool python, in this Python (it carries the pinned libraries)
+os.environ.setdefault("DRISHTI_COMPUTE_ENABLED", "true")
+os.environ.setdefault("DRISHTI_PYTHON", sys.executable)
+os.environ.setdefault("DRISHTI_COMPUTE_FILE", str(Path(__file__).resolve().parents[2] / "config" / "compute" / "compute.yaml"))
 CAPTURES = os.environ.get("DRISHTI_CAPTURES", "")                 # a folder: the texts the guides quote (YAML written, SQL shown) are kept there
 SHOTS = os.environ.get("DRISHTI_SHOTS", "")                       # a folder: the documentation's pictures are taken there too (docs/guides/BI_LANGUAGE_REFERENCE.md)
 sign_in, clean, fetch = w1.sign_in, w1.clean, w1.fetch

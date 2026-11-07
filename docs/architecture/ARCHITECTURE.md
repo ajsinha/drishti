@@ -88,8 +88,8 @@ it is a retired example pack):
 
 Two things sit beside this picture. With **Drishti\*net** switched on (section 13a), several such servers gossip with each
 other, each with its own sources, and any of them answers any request; the console is given one server and learns the
-others. And BI's Python (Transforms, python visuals) runs in the **console's sandboxed runner**, which the
-server's planner may call (`drishti.bi.transform.console-url`).
+others. And every Python run (Transforms, python visuals, Python-driven tables, Notebook cells) is the server's, on its compute pool `python`
+in a strict sandbox ([PYTHON_COMPUTE.md section 19](PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)); the console runs none.
 
 **Deployment model — a departure from Pravaha.** The Drishti backend is always a
 **Spring Boot application**; it is never shipped as an embeddable library. The Maven

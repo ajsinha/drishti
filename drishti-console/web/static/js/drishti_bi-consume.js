@@ -24,7 +24,7 @@
                                             `mq:<id>`): nothing polls. o.onAnswer gets {rows | diff | value, cursor, mode}; o.onState the state.
      B.consume.chip(frame)                  the state chip under a visual: Live, Throttled, Every few seconds (tick), Stale, Reconnecting, Not updating, or As of a date. Words and an
                                             icon, never colour alone.
-     B.consume.explain(frame, mq)           the Explain panel under a visual: the plan's tiers (source, Java, console), each scan's layer, the timings and the plan as
+     B.consume.explain(frame, mq)           the Explain panel under a visual: the plan's tiers (source, Java, python), each scan's layer, the timings and the plan as
                                             text, from the server's options.explain (masked predicates and other readers' rules are never shown).
 
    The browser computes nothing here: it asks, follows and draws. Everything is built with DOM calls and textContent. */
@@ -233,7 +233,7 @@
   };
 
   // ---- explain -----------------------------------------------------------------------------------------------------------------
-  const TIER = { source: 'the data store', java: 'the server (Java)', console: 'the console (Python)' };
+  const TIER = { source: 'the data store', java: 'the server (Java)', python: 'the server (Python pool)' };
   function nodeRows(n, depth, out) {
     if (!n) { return out; }
     out.push(h('tr', { 'data-explain-op': n.op || '' }, h('td', { class: 'mono', text: ' '.repeat(depth * 2) + (n.op || '') + (n.table ? ' ' + n.table : n.alias ? ' ' + n.alias : '') }),
@@ -260,7 +260,7 @@
       const close = h('button', { type: 'button', class: 'btn-pill btn-ghost bi-small', 'data-explain-close': '', text: 'Close' });
       close.addEventListener('click', () => panel.remove());
       panel.append(h('div', { class: 'bi-plan-head' }, h('h3', { text: 'How this was answered' }), close),
-        h('p', { class: 'bi-explain-tiers', 'data-explain-tiers': Object.keys(tiers).join(' ') }, Object.keys(tiers).map((k) => h('span', { class: 'bi-chip', 'data-tier': k }, B.icon(k === 'console' ? 'filetype-py' : k === 'source' ? 'database' : 'cpu'), ' ' + (TIER[k] || k) + ': ' + tiers[k] + ' step' + (tiers[k] > 1 ? 's' : '')))),
+        h('p', { class: 'bi-explain-tiers', 'data-explain-tiers': Object.keys(tiers).join(' ') }, Object.keys(tiers).map((k) => h('span', { class: 'bi-chip', 'data-tier': k }, B.icon(k === 'python' ? 'filetype-py' : k === 'source' ? 'database' : 'cpu'), ' ' + (TIER[k] || k) + ': ' + tiers[k] + ' step' + (tiers[k] > 1 ? 's' : '')))),
         h('p', { class: 'bi-explain-times', 'data-explain-times': '' }, [
           'Plan ' + String(m.plan || '').slice(0, 12), m.cached ? 'from the cache' : 'worked out', t.layer ? 'layer ' + t.layer : '', t.engineMillis != null ? 'engine ' + t.engineMillis + ' ms' : '',
           t.pythonMillis ? 'Python ' + t.pythonMillis + ' ms' : '', m.millis != null ? 'in all ' + m.millis + ' ms' : '', a.rowCount != null ? a.rowCount + ' rows' : ''].filter(Boolean).join(' · ')),

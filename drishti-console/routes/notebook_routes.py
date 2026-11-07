@@ -15,8 +15,8 @@
 """The Notebook (``/bi/notebook``; docs/guides/USER_GUIDE.md › The Notebook) and the console's routes behind it: the one place for code over data.
 
 A person opens a model (or one report visual's data) as a **masked extract**: the rows the server lets *them* see, cut to ``bi.notebook.max_rows``.
-**SQL cells** are Drishti SQL, run by the server over the model as that person; **Python cells** run on the server's compute pool (registered as under
-construction until the one Python runtime is built: config/under-construction.yaml ``python-table-runs``). The console runs no code of the person's and
+**SQL cells** are Drishti SQL, run by the server over the model as that person; **Python cells** run on the server's compute pool (``POST
+/api/v1/bi/python/cell``: the server reads the extracts as that person and runs the cell in its strict sandbox). The console runs no code of the person's and
 no SQL: it builds the extract, profiles it (no author code), keeps the notebook body and writes promotion drafts. Slicing is the Pivot's
 (``/pivot``); the Analyse page's Slice, its SQL over the extract in SQLite and the browser Python console were cut, and their addresses lead here.
 Nothing is kept between calls: every call rebuilds the extract for the person asking, so a mask or a row rule changed on the server applies on the
@@ -31,20 +31,17 @@ from urllib.parse import quote, urlencode
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import under_construction
 from core.backend import BackendError
 from core.csrf import json_body
 from core.notebook import (NotebookError, Extract, Limits, check_extracts, check_fields, dsql_answer, dsql_request, from_arrow, from_json, model_ref,
                            parse_notebook, model_of, mq_rows, promote_python, promote_transform)
 from core.promote_report import add_to_report, sql_to_slice, visual_for
-from core.pyrunner import PyError
 from routes.bi_routes import QUERY_WAIT_SECONDS, _page
 from routes.common import ident
+from routes.python_routes import RUN_WAIT_SECONDS, problem
 
 router = APIRouter(include_in_schema=False)
 CONSOLE = Path(__file__).resolve().parent.parent
-#: The under-construction registry's item for running Python cells on the server's compute pool (config/under-construction.yaml).
-PYTHON_RUNS = "python-table-runs"
 NO_STORE = {"Cache-Control": "no-store"}
 
 
@@ -52,20 +49,22 @@ def _limits(request: Request) -> Limits:
     return request.app.state.notebook_limits
 
 
-def _fail(e: BackendError | NotebookError | PyError, author: bool = False) -> JSONResponse:
-    out = {"code": e.code, "detail": e.detail}
-    if isinstance(e, PyError) and e.traceback and author:
-        out["traceback"] = e.traceback
-    return JSONResponse(out, status_code=e.page_status if isinstance(e, BackendError) else e.status, headers=NO_STORE)
+def _fail(e: BackendError | NotebookError) -> JSONResponse:
+    if isinstance(e, BackendError):
+        return problem(e)
+    return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status, headers=NO_STORE)
 
 
 def _powers(request: Request) -> list[str]:
     return list((getattr(request.state, "bi_me", None) or {}).get("powers") or [])
 
 
-def _python_runs(request: Request) -> bool:
-    """True once Python cells can run on the server's compute pool (the registry no longer marks them under construction)."""
-    return not under_construction.of(request).marked(PYTHON_RUNS)
+async def _python(request: Request) -> dict:
+    """The server's Python runtime: ``{runs, why, packages, ...}`` (runs false, with why, when it cannot run code safely or cannot be asked)."""
+    try:
+        return await request.app.state.backend.bi("GET", "/python/runtime", ident(request))
+    except BackendError as e:
+        return {"runs": False, "why": e.detail, "packages": []}
 
 
 async def extract_for(request: Request, spec: dict, max_rows: int | None = None) -> Extract:
@@ -103,7 +102,9 @@ async def extract_for(request: Request, spec: dict, max_rows: int | None = None)
 @router.get("/bi/notebook")
 async def page(request: Request):
     limits = _limits(request)
-    return _page(request, "bi/notebook.html", "notebook", limits=limits, may_python="bi-author" in _powers(request), python_runs=_python_runs(request))
+    py = await _python(request)
+    return _page(request, "bi/notebook.html", "notebook", limits=limits, may_python="bi-author" in _powers(request), python_runs=bool(py.get("runs")),
+                 python_why=py.get("why") or "")
 
 
 @router.get("/bi/explore")
@@ -124,7 +125,8 @@ async def status(request: Request):
     """What the Notebook offers this person: its limits and whether Python cells run (on the server's compute pool) for them."""
     limits = _limits(request)
     return JSONResponse({"limits": {k: v for k, v in vars(limits).items()},
-                         "python": {"runs": _python_runs(request), "where": "server", "mayRun": "bi-author" in _powers(request)}}, headers=NO_STORE)
+                         "python": {**{k: v for k, v in (await _python(request)).items() if k in ("runs", "why", "packages")}, "where": "server",
+                                    "mayRun": "bi-author" in _powers(request)}}, headers=NO_STORE)
 
 
 @router.post("/bi/notebook/extract")
@@ -142,14 +144,35 @@ async def profile(request: Request):
     """Body ``{extract: {...}}``: the profile of the reader's extract (per column its type, what its text looks like, nulls, distinct values, a key hint, min
     and max, the most common values, a histogram), no author code; the same panel the Transform editor shows. ``{kind: profile, rows, columns, inputRows, masked}``."""
     body = await json_body(request)
+    spec = body.get("extract") if isinstance(body.get("extract"), dict) else {}
     try:
-        ex = await extract_for(request, body.get("extract") if isinstance(body.get("extract"), dict) else {})
-        if ex.arrow is None:
-            raise NotebookError("DRS-9074", 503, "the profile needs pyarrow on the console (pip install -r drishti-console/requirements.txt)")
-        out = await request.app.state.pyrunner.profile(ex.arrow)
-    except (BackendError, NotebookError, PyError) as e:
+        out = await request.app.state.backend.bi("POST", "/python/profile", ident(request), {"extract": spec, "limit": _limits(request).max_rows}, wait=RUN_WAIT_SECONDS)
+    except BackendError as e:
         return _fail(e)
-    return JSONResponse({**out, "inputRows": len(ex.rows), "masked": ex.masked, "truncatedInput": ex.truncated}, headers=NO_STORE)
+    return JSONResponse(out, headers=NO_STORE)
+
+
+@router.post("/bi/notebook/python")
+async def python(request: Request):
+    """Body ``{extract, extracts?, source, params?}``: one Python cell, run on the server's compute pool over ``df`` (the extract, read there as the signed-in
+    person) and ``extract("<name>")`` (the notebook's other extracts). Answers ``{kind: cell, stdout, table|option|svg|png|value, ms, inputRows, masked}``;
+    a failure is ``{code, detail, traceback}`` (the traceback is the author's own code only). Needs bi-author (the server decides)."""
+    body = await json_body(request)
+    limits = _limits(request)
+    source = str(body.get("source", ""))
+    if not source.strip() or len(source) > limits.cell_max_chars:
+        return _fail(NotebookError("DRS-9072", 413, f"a cell holds 1 to {limits.cell_max_chars:,} characters (bi.notebook.cell_max_chars)"))
+    try:
+        extras = check_extracts(body.get("extracts") or [], limits)
+    except NotebookError as e:
+        return _fail(e)
+    ask = {"source": source, "extract": body.get("extract") if isinstance(body.get("extract"), dict) else {}, "extracts": extras, "limit": limits.max_rows,
+           "timeout": limits.cell_timeout, "memory": limits.cell_memory, "params": body.get("params") if isinstance(body.get("params"), dict) else {}}
+    try:
+        out = await request.app.state.backend.bi("POST", "/python/cell", ident(request), ask, wait=RUN_WAIT_SECONDS)
+    except BackendError as e:
+        return _fail(e)
+    return JSONResponse(out, headers=NO_STORE)
 
 
 def _sql_name(request: Request) -> str:
@@ -174,6 +197,11 @@ async def sql(request: Request):
     except (BackendError, NotebookError) as e:
         return _fail(e)
     return JSONResponse({**dsql_answer(out, limits, round((time.monotonic() - t0) * 1000)), "model": ref}, headers=NO_STORE)
+
+
+async def _packages(request: Request) -> list[str]:
+    """The packages a Python item may list: the server's pinned allow-list (pandas alone when the server cannot be asked)."""
+    return list((await _python(request)).get("packages") or ["pandas"])
 
 
 def cell_packages(source: str, allowed: list[str]) -> list[str]:
@@ -223,7 +251,7 @@ async def promote(request: Request):
             if not source.strip() or len(source) > limits.cell_max_chars:
                 raise NotebookError("DRS-9070", 422, "the cell is empty or too long to promote")
             cols = [str(c) for c in body.get("columns") or []][:limits.max_fields]
-            text = promote_python(source, name, to, cols, cell_packages(source, request.app.state.pyrunner.packages))
+            text = promote_python(source, name, to, cols, cell_packages(source, await _packages(request)))
             notes = ["The cell's df became the function's table; a measure must return one number and a visual an ECharts option, SVG or PNG.",
                      "Check it (Check the Python on the item page), then publish. A measure also needs a dataset measure that names it."]
             return JSONResponse({"kind": "python", "title": name, "yaml": text, "notes": notes}, headers=NO_STORE)
@@ -231,7 +259,7 @@ async def promote(request: Request):
             source = str(body.get("source", ""))
             if not source.strip() or len(source) > limits.cell_max_chars:
                 raise NotebookError("DRS-9070", 422, "the cell is empty or too long to promote")
-            text = promote_transform(source, name, check_extracts(body.get("extracts") or [], limits), cell_packages(source, request.app.state.pyrunner.packages))
+            text = promote_transform(source, name, check_extracts(body.get("extracts") or [], limits), cell_packages(source, await _packages(request)))
             notes = ["Each extract(\"name\") became a parameter of run(); the cell's result is returned and must be a pandas DataFrame with usable column names.",
                      "Check it (Check the Python on the item page) and publish it, then make a dataset of its table: source: { python: <this item>, inputs: { <name>: <a model query> } }, "
                      "one input per parameter of run(), in this order (the dataset wizard's source A Python Transform; docs/architecture/BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2)."]

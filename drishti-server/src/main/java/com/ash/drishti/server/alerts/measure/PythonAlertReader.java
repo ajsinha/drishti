@@ -138,7 +138,7 @@ public final class PythonAlertReader {
         }
         JsonNode out;
         try {
-            out = runner.measure(manifest, params, groupBy, names, rows);
+            out = runner.measure(who, manifest, params, groupBy, names, rows);
         } catch (DrishtiException e) {
             return Reading.error(e.getMessage());
         }

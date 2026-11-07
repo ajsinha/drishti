@@ -74,10 +74,12 @@ def test_the_editor_api_is_passed_on_as_an_allow_list():
     assert client.post("/build/tables/api/check", content=b"x", headers={"Content-Type": "text/plain"}).status_code == 415
 
 
-def test_the_python_run_follows_the_registry_and_the_menu_and_rail_link_here():
-    client, _ = make()
-    page = client.get("/build/tables").text
-    registered = under_construction.of(client.app).marked("python-table-runs")
-    assert ('data-runs-uc="true"' in page) == registered
+def test_the_python_run_follows_the_servers_runtime_and_the_menu_and_rail_link_here():
+    client, backend = make()
+    page = client.get("/build/tables").text                                   # the fake server answers {ok: true}: no runs key, so Python is off here
+    assert 'data-python-runs="false"' in page and "/tables/editor/python/runtime" in [p for _, p, _, _ in backend.sent]
+    assert "python-table-runs" not in (CONSOLE.parent / "config/under-construction.yaml").read_text(encoding="utf-8")
+    run = client.post("/build/tables/api/python/run", json={"yaml": "table: a.b\n", "source": "def build(inputs, params):\n    return None\n"})
+    assert run.status_code == 200 and backend.sent[-1][1] == "/tables/editor/python/run"
     assert 'href="/build/tables"' in client.get("/bi").text
     assert under_construction.Registry([{"id": "x"}]).marked("x") and not under_construction.Registry([]).marked("x")

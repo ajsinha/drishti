@@ -152,7 +152,7 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
     - [14. Vega-Lite output](#14-vega-lite-output)
     - [15. Tests shipped with an item](#15-tests-shipped-with-an-item)
     - [16. Python in alerts and on boards](#16-python-in-alerts-and-on-boards)
-    - [One runner on the console, the Py-node endpoint, columns](#one-runner-on-the-console-the-py-node-endpoint-columns)
+    - [One runtime on the server, grouped measures, columns](#one-runtime-on-the-server-grouped-measures-columns)
     - [17. Data prep: the Transform editor](#17-data-prep-the-transform-editor)
 
 ## 1. What BI is, and is not
@@ -512,7 +512,7 @@ and the sample *Region economics* drills from the world map to Australian and US
 
 **Models, languages, live BI and authoring.** Datasets and data models rooted in packs, the Python-like expression language (DEL) and read-only Drishti SQL in one query plan (section 24, [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del), [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)); calculations with filter context, time and balances, standing queries pushed from the server, and the servers computing every number (section 25); **BI Studio**, report schema v2 (typed formats, conditional formatting, themes, the interactions matrix, sync groups, tooltip pages, small multiples, the matrix at every level), **boards as a report layout**, Python data prep step by step with **BI → Transforms**, and the **Notebook** (section 26, [section 34, its section 17](#17-data-prep-the-transform-editor), [USER_GUIDE.md › The Notebook](USER_GUIDE.md#the-notebook)).
 
-**Not built (and not faked).** The consolidated list is [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.15](../architecture/BI_DESIGN.md#2015-what-is-built-and-what-is-still-not-built): the Python Source interface and a pool of pre-forked Python children (the fork-server is warm: [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 12); a Data tab, Notes and million-row extracts in the Notebook; escalation of alerts; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses.
+**Not built (and not faked).** The consolidated list is [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.15](../architecture/BI_DESIGN.md#2015-what-is-built-and-what-is-still-not-built): the Python Source interface ([section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 12); a Data tab, Notes and million-row extracts in the Notebook; escalation of alerts; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses.
 
 ## 12. Problems
 
@@ -778,7 +778,7 @@ The rail's **Notebook** (`/bi/notebook`) opens a model as an **extract**: the ro
 
 * **SQL**: Drishti SQL over the model the extract reads, one read-only `SELECT`, run by the server as you (true totals, the same plan as a visual);
 * **Python**: pandas cells over `df` (and `extract("name")` for any further extract of the notebook), with charts in `result`; they run on the server's
-  compute pool, never in the console or the browser (running them is **Under construction** until one Python runtime), and need the `bi-author` power.
+  compute pool in its strict sandbox, never in the console or the browser, and need the `bi-author` power.
 
 A **Profile** tab shows every column of the extract. **Save as a notebook** keeps the extract's definition and the cells as a BI item of kind `notebook`
 (versions, review and publishing like any item; *Open in the Notebook* on its page reopens it, rebuilt for whoever opens it). **Promote** turns a SQL cell
@@ -1103,7 +1103,7 @@ and the plan as text. It shows that a security rule applied, never another reade
 by the server on its own trigger.
 
 **The browser computes nothing** (design principle P3). A Notebook SQL cell is Drishti SQL run by the server, a Notebook Python cell runs on the
-server's compute pool, and Python visuals run in the console's sandbox; no BI page
+server's compute pool, and so do Python visuals and measures; no BI page
 loads WebAssembly, Pyodide or DuckDB-Wasm, and none has `'wasm-unsafe-eval'` in its policy. A 2.1 report's Perspective grid is drawn as Drishti's grid of
 the rows the server sends; the live desk sample's pivot is a matrix and its chart a stacked column.
 
@@ -1895,7 +1895,7 @@ measures:
   MTM per 1m: { expr: "ratio(sum(trades.MTM), sum(trades.NOTIONAL)) * 1_000_000" }
   Share:      { expr: "measure('MTM') / measure('Notional')" }   # measure('Name') uses another measure
   Open MTM:   { expr: "sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)" }   # a condition inside the aggregate
-  Vol:        { python: desk-pnl-volatility, inputs: [trades.PNL_1D], by: [trades.DESK] }   # a PYTHON measure: run by the console's runner, shown by a python visual (4.2)
+  Vol:        { python: desk-pnl-volatility, inputs: [trades.PNL_1D], by: [trades.DESK] }   # a PYTHON measure: run on the server's compute pool, shown by a python visual (4.2)
 ```
 
 The expression language is **Rachana's** ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), checked mode): safe and side-effect free, with
@@ -2063,7 +2063,7 @@ measures:
 ```
 
 The SQL engine **cannot run it**: a query that names a Python measure is refused (`DRS-9013`), and the model says so as a warning when it is checked. A **python visual** shows it
-(`wells: { values: [Desk P&L volatility] }`): the server hands the console the rows of `by` and `inputs` that this person may see, and the console's sandboxed runner (or the browser's Pyodide) calls the
+(`wells: { values: [Desk P&L volatility] }`): the server reads the rows of `by` and `inputs` that this person may see, and its compute pool `python` calls the
 item once per group. Checks: the item is named, `inputs` is not empty, every name is a column, all of one table (`DRS-9012`); `expr` and `python` together are `DRS-9010`. The dataset is checked
 **without** looking the item up (an item can be published after the dataset), so a wrong item name appears when a report runs it (`DRS-9001`/`9070`). Reference: [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python).
 
@@ -4249,7 +4249,7 @@ A tile whose report the reader may not open, or that has lost its visual, shows 
 
 ##### Python tiles
 
-A tile may show a **python visual** of its report: a Python measure shown as bars, a Python visual that returns a chart, or one that returns a Vega-Lite specification. The tile runs the item for the person looking, exactly as the report does (the console's sandbox; [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python)), and shows the line *Python · item · target · ms · rows* under it. The sample `python-wall` ([config/bi/reports/python-wall.report.yaml](../../config/bi/reports/python-wall.report.yaml)) has three:
+A tile may show a **python visual** of its report: a Python measure shown as bars, a Python visual that returns a chart, or one that returns a Vega-Lite specification. The tile runs the item for the person looking, exactly as the report does (the server's compute pool; [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python)), and shows the line *Python · item · target · ms · rows* under it. The sample `python-wall` ([config/bi/reports/python-wall.report.yaml](../../config/bi/reports/python-wall.report.yaml)) has three:
 
 ```yaml
 - { id: vol,   type: tile, title: Desk P&L volatility, from: { report: python-desk-risk, visual: volatility }, at: { x: 0, y: 0, w: 6, h: 6 } }
@@ -5394,10 +5394,10 @@ field, with its path. A number that is a **metric tile** or a cell of the view's
 
 ##### Python measures in alerts
 
-The `measure` of a dataset source may be a **Python measure** (a dataset measure written `{ python: <item>, inputs, by }`: [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python)); so may the visual of a visual source, when it is a **python visual** that shows one. It is read **for each person it is judged for**, in the console's sandbox, on the alert's schedule, after a load or by hand, like any other number:
+The `measure` of a dataset source may be a **Python measure** (a dataset measure written `{ python: <item>, inputs, by }`: [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python)); so may the visual of a visual source, when it is a **python visual** that shows one. It is read **for each person it is judged for**, on the server's compute pool, on the alert's schedule, after a load or by hand, like any other number:
 
 1. the server builds **that person's rows** (their row rules and masks applied by the engine) for the measure's `inputs` and `by` columns, up to `drishti.bi.report.python-rows`;
-2. it writes the Python item and the rows to a scratch folder and starts the console's runner (`transform_cli.py`, in `measure` mode: the same sandbox as a report's Python: no network, a scratch folder, CPU, memory and time limits), the way it runs a Transform (`drishti.bi.transform.python`, `.runner`, `.timeout`, `.work-dir`; [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets));
+2. it hands the Python item and the rows to the compute pool `python` (the same strict sandbox as a report's Python: no network, its own folder, CPU, memory and time limits: section 34, section 7), the way it runs a Transform;
 3. the item's number for each group comes back and is reduced to **one number**: for a dataset source the whole input is one group (no grouping); for a visual source `reduce` (`first` by default; `sum`, `min`, `max`, `avg`, `last`, `count`) is applied to the groups, as for any visual with many rows.
 
 * A column **masked for the person** makes the reading *masked*: nothing is run and no figure is shown. The alert never judges a figure the person cannot see.
@@ -5812,7 +5812,7 @@ Both channels are in the history: an alert's `delivered` has `webhook:NAME` and 
 Drishti Rūpaka runs **typed Python** where the expression language and the visual catalogue stop: a **Measure** is a Python function that turns the rows of a group into a number
 (a desk's P&L volatility, a percentile no aggregate gives, a fitted slope), and a **Visual** is a Python function that turns rows into a chart (a histogram with your own bins, a
 regression plot). Authors do not paste scripts into a visual: a Python function is a **BI item** of its own, with a manifest, versions, review and publishing like a dataset or a
-report, and a report names it. It runs **sandboxed on the console** (never in the browser), always on **the rows the person looking may see**.
+report, and a report names it. It runs **on the server's compute pool** `python`, in a strict sandbox (never in the console or the browser), always on **the rows the person looking may see**, read on the server as that person.
 
 A third interface, the **Transform**, turns the answers of several model queries into a table that a **Python dataset** publishes (section 13): it is how Python joins models.
 
@@ -5822,11 +5822,11 @@ Python in the *terminal* (Calc) is a different thing: [USER_GUIDE.md](USER_GUIDE
 ### 1. At a glance
 
 ```
- report visual (type: python) ──asks──▶ console ──▶ server: what to run (item + manifest), and the rows this person may see (masked Arrow)
-                                          │
-                                          │
-                       the console's sandbox: a child of its fork-server per call
-                (no network, scratch folder, CPU, memory, time and output limits)
+ report visual (type: python) ──asks──▶ console ──▶ server: the item to run, and the rows this person may see (read as them, masked)
+                                                         │
+                                                         ▼
+                              the compute pool python: a fresh fork child per call, in the strict sandbox
+                    (no network at all, files held by the kernel to its own folder, CPU, memory, time and output limits)
                                           │
                    a number per group, or a chart (data, never HTML)
 ```
@@ -5856,7 +5856,7 @@ title: Desk P&L volatility
 interface: measure
 inputs: [pnl1d]                  # the columns the function reads, as the table names them
 packages: [pandas]
-target: server                   # always the console (browser and both run there too)
+target: server                   # the server's compute pool (browser and both run there too)
 timeout: 10                      # seconds
 memory: 256                      # megabytes
 params: { min_trades: 2 }
@@ -5906,17 +5906,18 @@ The body of a `python` item is YAML:
 | `source` | yes | the code; up to 65,536 characters; it must define the entry function |
 | `entry` | no | the function's name: `compute` for a measure, `render` for a visual, `run` for a transform (a top-level function, or a method of a class `Transform`) |
 | `inputs` | measure: yes; transform: yes | a measure: the columns the function reads, as the table names them (`pnl1d`, not `trade.pnl1d`); a transform: the **datasets** it reads, in the order its function receives their frames (section 13) |
-| `packages` | no | what the source imports; each must be on the allow-list (`drishti.bi.report.python-packages`, console `bi.python.packages`) |
-| `target` | no | `server` (default). `browser` and `both` are read and run on the console like `server` |
+| `packages` | no | what the source imports; each must be on the allow-list (`drishti.bi.report.python-packages`) **and pinned** in `config/compute/locks/python.lock` |
+| `target` | no | `server` (default). `browser` and `both` are read and run on the server's pool like `server` |
 | `timeout` | no | seconds, 1 to `drishti.bi.report.python-max-seconds` (60); default 10 |
 | `memory` | no | megabytes the code may add to what Python needs to start, 32 to `python-max-memory-mb` (1024); default 256 |
 | `output` | visual | `echarts` (default), `vega-lite` (section 14), `svg` or `png`; a measure's output is `number`, a transform's `frame` |
 | `params` | no | defaults the function reads from `params`; a visual of a report overrides them in `format.params` |
-| `tests` | no | examples the item must pass: run by Check, and a failing one refuses a publish through the console (section 15) |
+| `tests` | no | examples the item must pass: run by Check, and a failing one refuses a publish (section 15) |
 | `title`, `description`, `owner`, `tags`, `endorsement`, `audience`, `sample`, `version` | no | the catalogue's keys, as for any item |
 
-Anything else is refused with `DRS-9070` and the path of the key. The server checks the manifest ( `POST /api/v1/bi/python/validate`, and on every publish); the **console** adds the checks
-that need Python: the source parses, defines its entry, and imports only what it lists or the safe standard library (`POST /bi/python/check`, the **Check the Python** button on the item page):
+Anything else is refused with `DRS-9070` and the path of the key. The server checks the manifest (`POST /api/v1/bi/python/validate`, and on every publish); **Check** adds the checks
+that need Python's own parser, made on the compute pool without running anything: the source parses, defines its entry, and imports only what it lists or the safe standard library
+(`POST /api/v1/bi/python/check`; in the console `POST /bi/python/check`, the **Check the Python** button on the item page):
 
 ![An item page with its Check](img/bi-python/item-check.png)
 
@@ -5970,7 +5971,7 @@ refused**: the SQL engine cannot run Python, so the measure is shown by a python
 | `wells.columns` | the columns handed to a Python item named in `format.python` (any number of fields of one table) |
 | `format.python` | the item; required unless the values well holds a Python measure. With a measure item and no dataset measure, the groups are the columns that are not `inputs` |
 | `format.params` | overrides the item's `params` |
-| `format.run` | `auto` (default), `server` or `browser` (section 6): every value runs on the console; the key is read so 2.2 reports keep working |
+| `format.run` | `auto` (default), `server` or `browser` (section 6): every value runs on the server's compute pool; the key is read so 2.2 reports keep working |
 
 The rows are the table's own rows (not grouped), under the page's slicers, filters and business date, at most `drishti.bi.report.python-rows` (10,000). The report **check** (`DRS-9030` to `9035`)
 refuses a python visual with neither an item nor a Python measure, with a values well that is not a Python measure, or without columns. In the designer the visual is under *Python*; its Format pane takes the item and the
@@ -5980,59 +5981,64 @@ parameters (*Run on* is gone); the canvas shows a placeholder, since Python runs
 
 | `format.run` | What happens |
 |---|---|
-| `server` | the console's runner (below) |
-| `browser` | the console's runner, as `server` |
-| `auto` | (the default) the console's runner; a run the server cannot place answers `DRS-9074` |
+| `server` | the server's compute pool `python` (below) |
+| `browser` | the same pool, as `server` |
+| `auto` | (the default) the same pool; a server that cannot run Python safely answers `DRS-9074` and says why |
 
-**Server.** The console starts a **worker subprocess per call** (`python -I core/pyrunner_worker.py`), at most `bi.python.workers` (2) at once; a call waits `bi.python.queue_seconds` (5) for a place,
-then `DRS-9074`. The worker reads the Arrow stream the server built for this person, runs the function, and writes a small JSON answer, size-limited. Nothing is kept between calls: no worker idles,
-and there is no state to leak between people. Nothing extra is deployed: it is the console's own Python, with `pandas`, `numpy` and `pyarrow` installed (`requirements.txt`).
+**The server's compute pool.** Every Python run in Drishti is the server's: a python visual (`POST /api/v1/bi/python/visual`), a Python measure of a model
+query or an alert, a Transform, a Python-driven table, a Notebook cell, the Transform editor's step-by-step run, a profile and an item's tests. The server
+reads the rows **as the person running it**, then hands them with the item to the compute pool `python` ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)):
+its workers have pandas, NumPy, pyarrow and SciPy loaded once and fork a **fresh child per request**, which runs the function under the item's limits and
+answers a small JSON answer (a Transform also a Parquet file). Nothing is kept between requests; the pool's queue, its fair share between people and its
+workers (`compute.pools.python.workers.max`, 4 as shipped) bound how many run at once, and a full queue answers `DRS-9074`. The console runs no Python of
+anyone's and imports no compute library (a test holds it to that).
 
 **The browser.** The servers compute and
 the browser only draw ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): no report, board or Notebook page loads Pyodide or WebAssembly, and a visual
 that says `browser` runs on the console. Pyodide stays for **Calc** only ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)), Python you write yourself on a view.
 
-The line under each visual says the console ran it
+The line under each visual says the server ran it
 (`Python · desk-pnl-volatility v1 · server · 240 ms · 60 rows`).
 
 ![The same report, an older picture: run in the browser](img/bi-python/report-browser.png)
 
 ### 7. The sandbox, exactly
 
-The server target is **defence in depth, not a kernel sandbox**; the author is a reviewed colleague, the code is published through review, and the boundary stops the common ways to hurt or leak. What is enforced:
+Code people write runs only in the pool's **strict sandbox** (`isolation: strict`), and only where every part of it can be had: the walls the kernel
+holds come first, Python's own guards are the second line. What is enforced:
 
 | What | How | Test |
 |---|---|---|
-| a separate process | `python -I` (isolated mode), a new session so a timeout kills the whole group, an **empty environment** (no tokens, no proxies; only `PATH`, a scratch `HOME` and thread limits) | `test_pyrunner.py` |
-| no network | the worker runs in a **network namespace with no interfaces** when the machine allows it (`unshare --user --net`; `network_namespace: auto`, `require` refuses to run without it), and an **audit hook** refuses every `socket.*` event whatever the namespace says | `test_no_network`, `test_a_socket_is_refused_even_through_a_library` |
-| a scratch folder only | the working directory is a fresh temporary folder, removed afterwards; the audit hook refuses a **write** anywhere else, and a **read** outside the Python installation and that folder (so not `/etc/passwd`, not the console's files) | `test_files_outside_the_scratch_folder_are_refused` |
-| no processes, no loader | the audit hook refuses `subprocess`, `os.system`, `exec*`, `spawn*`, `fork`, `ctypes` loading | `test_processes_and_other_packages_are_refused` |
-| CPU time | `RLIMIT_CPU` = `timeout` seconds (after start-up), and the parent kills the group at `timeout + 3` s wall clock: `DRS-9072` (HTTP 504) | `test_wall_clock_and_cpu_limits_kill_the_worker` |
-| memory | `RLIMIT_AS` = what Python needs to start + `memory` MB: allocation fails or the process dies: `DRS-9072` (413) | `test_memory_limit` |
-| output | the answer is at most `bi.python.max_output_bytes` (1,000,000), files at most four times that: `DRS-9072` (413); the input at most `max_input_bytes` | `test_output_limit`, `test_input_limit_and_busy_pool_and_switched_off` |
-| packages | the manifest's `packages` must be on the console's allow-list (and installed) **before a worker starts**; the author's own `import` goes through a guard that allows only those and a short list of safe standard-library modules (`math`, `statistics`, `json`, `datetime`, `re`, `collections`, `itertools`, `functools`, `typing`, `decimal`, `fractions`, `random`, ...); `exec`, `eval`, `compile` are not given | `test_package_allow_list_is_enforced_before_a_worker_starts` |
-| the input is what the reader may see | the worker receives only the Arrow stream the server built for this person, and the function only the columns of `inputs` | `test_the_function_sees_only_the_declared_columns` |
-| a pool | `bi.python.workers` at once, a bounded wait, `DRS-9074` when full | `test_input_limit_and_busy_pool_and_switched_off` |
+| no network | the pool's worker leaves the network when it starts: a **user and network namespace of its own with no interface**, so nothing it or a library runs (Python, C or C++) can connect anywhere; Landlock also refuses TCP. An audit hook refuses `socket.*` in words | `test_the_worker_has_no_network_and_landlock`, `test_the_sandbox_refuses_in_words` |
+| files only in its own folder | each request's child is held by the kernel (**Landlock**) to reading the Python installation, the module path, the system libraries and its own scratch folder, and to writing that folder only, before any of its code runs; so C++ code that opens a file itself (`pyarrow.fs`) is refused too. The audit hook says it in words | `test_the_kernel_holds_code_the_audit_hook_cannot_see` |
+| a separate process | a fresh fork child per request, from a worker started with an **empty environment** (no tokens, no proxies); nothing it leaves reaches the next request | `test_sdk.py` |
+| no processes, no loader | the audit hook refuses `subprocess`, `os.system`, `exec*`, `spawn*`, `fork`, `ctypes` loading | `test_the_sandbox_refuses_in_words` |
+| CPU time and wall time | `RLIMIT_CPU` = the item's `timeout` seconds; the pool stops a request past its time budget: `DRS-9072` | `test_a_limit_stops_the_request_alone` |
+| memory | `RLIMIT_AS` = what is loaded + the item's `memory` MB (never more than the pool's `memory`): `DRS-9072` | |
+| output | an answer at most 4 MB, a Transform's file at most `drishti.bi.transform.max-bytes`: `DRS-9072`; the input at most 256 MB | |
+| **pinned libraries** | the packages an item may list are the allow-list (`drishti.bi.report.python-packages`) that `config/compute/locks/python.lock` pins; before any run the server asks the pool for its interpreter's versions and refuses every run, naming each package, while one differs from its pin. A locked environment (`environment: { lock: locks/python.lock }`) installs exactly those files by hash | `PythonRunsTest` |
+| imports | the author's own `import` goes through a guard that allows only the listed packages and a short list of safe standard-library modules (`math`, `statistics`, `json`, `datetime`, `re`, `collections`, `itertools`, `functools`, `typing`, `decimal`, `fractions`, `random`, ...); `exec`, `eval`, `compile` are not given | `test_the_sandbox_refuses_in_words` |
+| the input is what the reader may see | the server reads the rows as the person running it (row rules and masks) and the function gets only the columns of `inputs` | `test_bi_python.py`, `PythonRunsTest` |
+| every run audited | the audit log has one line per run: who, what ran, on which pool, the outcome, the time and the bytes handed over (`python-run`) | `PythonRunsTest` |
 
-Honestly: pure-Python guards (the import guard, the audit hook) can be got round by determined hostile code (the tests include one that reaches `__import__` through a library's own builtins and is still
-stopped by the hook). That is why review before publish matters, why the process has nothing to steal (no environment, no network, no files), and why a site that wants a harder wall runs the console in a
-container with the usual limits. `GET /bi/python/status` says which isolation is on (`network namespace + audit hook`, or `audit hook`).
+**Where it cannot be safe, it does not run.** The strict sandbox needs Linux with Landlock (5.13 or later) and user namespaces. On **Windows** (no
+network namespace, no Landlock) and on a Linux without them, no code people write runs: every run answers `DRS-9074` with the reason, the Notebook's
+Run and the table editor's Sample run are off and say why. Nothing falls back to a weaker sandbox. `GET /api/v1/bi/python/runtime` (console
+`GET /bi/python/status`) says whether Python runs and why not.
 
 ### 8. Who sees what
 
 * The rows are the server's answer for **this person**: their row rules, their masks, their business date. A masked column arrives masked (`X-Bi-Masked` lists it; the visual's line says *masked*); Python never receives the real value, so it
   cannot reveal it. The result is derived from those rows only.
 * A **traceback** is shown to people with the `bi-author` power; everyone else sees the code and the message (`DRS-9071 ZeroDivisionError: division by zero`) without the source lines.
-* Which item runs is decided by the **server** (the report's own dataset and item resolution, as the dataset is); the console passes on the person's identity and decides nothing about access.
+* Which item runs, and which rows it reads, are decided by the **server** (the report's own dataset and item resolution, as the dataset is, and the rows read as the person); the console passes on the person's identity and decides nothing about access.
 * Every non-GET call takes JSON from this console's own pages only (same-origin check and `application/json`, `DRS-5002` / `DRS-5001`): [API_GUIDE.md](API_GUIDE.md).
 
 ### 9. Settings
 
-**Server** (`drishti.bi.report.*`, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibireport--reports-phase-3)): `python-rows` (10,000), `python-packages` (the manifest allow-list), `python-max-seconds` (60), `python-max-memory-mb` (1024).
+**Server** (`drishti.bi.report.*`, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibireport--reports-phase-3)): `python-rows` (10,000), `python-packages` (the manifest allow-list; only what the lock pins is offered), `python-max-seconds` (60), `python-max-memory-mb` (1024); `drishti.bi.transform.enabled` switches every Python run off.
 
-**Console** (`bi.python.*` in `application.yaml`, [CONFIGURATION.md](../admin/CONFIGURATION.md)):
-
-Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `bi.python`](../admin/CONFIGURATION.md#bipython) (also at Help → Configuration in the console).
+**The compute pool** (`compute.pools.python` in `config/compute/compute.yaml`, [CONFIGURATION.md](../admin/CONFIGURATION.md)): `compute.enabled` (off as shipped: Python runs once it is on), the pool's `workers`, `memory`, `cpu-seconds`, `timeout`, `isolation: strict` and `environment`; the pins in `config/compute/locks/python.lock` (written by `tools/python_lock.py` from `python.in`). The console has no Python setting.
 
 ### 10. Errors: DRS-9070 to DRS-9077
 
@@ -6043,51 +6049,49 @@ Every setting of this part, with its type, default, environment variable, meanin
 | `DRS-9072` | 413 or 504 | a limit stopped it | over `timeout` (504), over `memory`, input or output size (413) |
 | `DRS-9073` | 403 | the sandbox refused something | an `import` that is not on the list, the network, a file outside the scratch folder, a process |
 | `DRS-9075` | 422 | a Transform's result is not usable | a column the derived dataset declares is missing from the frame, or the Transform's `inputs` are not the derived dataset's inputs (a Transform only: section 13) |
-| `DRS-9074` | 503 | no runner | all workers busy for `queue_seconds`, the runner switched off, `pandas` or `pyarrow` not installed in the console's environment, a package not installed |
-| `DRS-9076` | 422 | a test the item ships with fails, so it is not published | `POST /bi/api/items/<id>/publish` (or `approve`) of a Python item whose `tests:` do not all pass; a bi-admin may publish with `force: true` (section 15) |
+| `DRS-9074` | 503 | Python does not run here now | compute off, the pool `python` missing or not strict, the strict sandbox not available on this platform (Windows), the interpreter not carrying the pinned versions, the pool's queue full |
+| `DRS-9076` | 422 | a test the item ships with fails, so it is not published | a publish (or approve) of a Python item whose `tests:` do not all pass; a bi-admin may publish with `force: true` (section 15) |
 | `DRS-9077` | 422 | a Vega-Lite specification could not be drawn (shown in the visual's frame; no HTTP call) | a `url` or `loader` in the specification, a library that did not load, an invalid specification (section 14) |
 
-Real output (a measure on 60 trades, then the failures, from `core/pyrunner.py`):
+Real answers of the pool's engine in its strict sandbox (a measure on three rows, then a read the hook refuses and one only the kernel can, from the
+SDK's tests, `drishti-compute/src/test/python/test_items.py`):
 
 ```
-{"kind": "measure", "by": ["desk"], "rows": [["DESK-EQD", 0.0], ["DESK-FI", 2043.0156738209967], ["DESK-FX", 2043.0156738209967]], "ms": 213}
-DRS-9071 422 ZeroDivisionError: division by zero
-  File "<python-item>", line 2, in compute
-DRS-9072 504 'desk-pnl-volatility' used more than its 1 s of CPU time and was stopped
-DRS-9073 403 Denied: import of 'socket' is not allowed here (this item may use: __future__, bisect, ..., pandas, ...); list the package in the manifest's packages
+{"ok": true, "kind": "measure", "by": ["desk"], "rows": [["A", 3.0], ["B", 5.0]], "ms": 18}
+{"ok": false, "kind": "sandbox", "error": "Denied: reading /etc/hostname is not allowed", "traceback": "  File \"<python-item>\", line 2, in render ..."}
+{"ok": false, "kind": "sandbox", "error": "PermissionError: [Errno 13] Failed to open local file '/home/.../.bashrc'. Detail: [errno 13] Permission denied"}
 ```
 
-`GET /bi/python/status`:
+The server answers them as `DRS-9071` to `9073` (the traceback for authors only). `GET /api/v1/bi/python/runtime` says whether Python runs, and why not:
 
 ```
-{"enabled": true, "ready": true, "missing": [], "workers": 2, "running": 0, "packages": ["pandas", "numpy", "pyarrow", "scipy", "statsmodels"],
- "installed": ["pandas", "numpy", "pyarrow", "scipy"], "calls": 0, "failures": 0, "isolation": "network namespace + audit hook", ...}
+{"runs": false, "why": "Python runs on the server's compute pool, and compute is off (compute.enabled in config/compute/compute.yaml)", "where": "server",
+ "pool": "python", "packages": ["pandas", "numpy", "pyarrow", "scipy"], "pins": {"numpy": "2.5.3", "pandas": "3.0.6", ...}, "calls": 0, "failures": 0}
 ```
 
 More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
 ### 11. Measured
 
-On the development machine (a laptop, Python 3.14, pandas 3, 60 rows): a **server call takes about 220 to 320 ms** (a process start and the `pandas` import dominate; the first is the slowest), 214 to 250 ms warm. The design target was
-under 50 ms: **not met** by these figures, taken when each call started a worker. The fork-server and its warm workers take the start off each call (section 17.7; there is no browser run: the fork-server
-takes the worker start off each call, see the end of this guide). The Chromium test ([test_bi_python_browser.py](../../drishti-console/tests/test_bi_python_browser.py)) checks the sample report's figures against a computation from the same trades.
+On the development machine (Python 3.13, pandas 3, a handful of rows): the engine answers a measure, a Transform, a cell or a profile in **11 to 24 ms**
+inside a fork child of a warm worker (strict sandbox included); the first request of an idle pool also pays for the worker's start, about 0.2 s plus the
+imports. The Chromium test ([test_bi_python_browser.py](../../drishti-console/tests/test_bi_python_browser.py)) checks the sample report's figures against a computation from the same trades.
 
 ### 12. Built and not built
 
 Built: the Measure and Visual interfaces; Python items as BI items (versions, review, publish, shipped files, bundles); the manifest and its checks (server and console); Python measures in datasets; the
-`python` visual in reports and the designer; the sandboxed server runner with a pool; the shipped samples. There is no browser target.
+`python` visual in reports and the designer; the server's compute pool `python` in the strict sandbox, with pinned libraries and every run audited; the shipped samples. There is no browser target.
 
 Built with several datasets (section 13): the **Transform** interface, run on the server over the reader's answers and published as a **Python dataset** (`source.python`, each input a model query; [BI_DESIGN.md › The model layer: the specification, section 1.2](../architecture/BI_DESIGN.md#12-sources)), kept per reader and version of the inputs; the Notebook promotes a join cell to one.
 
 Also built (section 17): a Transform's input may be a **pack kind read straight through a connector**, as the reader; the **Transform editor**
-(step by step, a preview and a profile after each step, a tested snippets library, no YAML to type); the **profile** of a frame (the editor, the Notebook); **warm
-workers** (the fork-server starts with the console).
+(step by step, a preview and a profile after each step, a tested snippets library, no YAML to type); the **profile** of a frame (the editor, the Notebook).
 
 Not built, and not faked: the **Source** interface (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 13.1; rows from a Python-only source such as an API: a kind through a connector is
 built, section 17.1, a Python-only source is not); a Python measure **inside** a SQL query or a bar chart's measures (a query that names one is `DRS-9013`);
-Python in **subscriptions** and **embedded** reports (an export of a python visual is the table of rows handed to Python; an embedded report does not draw Vega-Lite or Python visuals); a
-**pool of pre-forked children** (the fork-server forks one per call, from a warm parent: section 17.7) and a **separate runner service** (`bi.python.runner-url`: BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 17); a **kernel-level** sandbox (seccomp, containers: use the platform's); **PygWalker** and Graphic Walker, and notebooks in Calc; **R**; `scikit-learn` and `polars` in the
-allow-list (add them to `bi.python.packages` and the server's `python-packages` when installed).
+Python in **subscriptions** and **embedded** reports (an export of a python visual is the table of rows handed to Python; an embedded report does not draw Vega-Lite or Python visuals); Python on a
+**Windows** server (no strict sandbox there: off, with the reason); approved network sources for a build function (a file or feed is read by the server and handed in as an input: the code itself never
+reaches a network); **PygWalker** and Graphic Walker, and notebooks in Calc; **R**; `statsmodels`, `scikit-learn` and `polars` (add them to `python.in`, run `tools/python_lock.py`, and list them in `python-packages`).
 
 
 ### 13. Transforms: a table in, a table out
@@ -6123,13 +6127,13 @@ source: |
 | `inputs` (manifest) | the names of the Python dataset's inputs (2.1: datasets), not columns: the dataset's `source.inputs` must name the same in the same order (`DRS-9075` otherwise) |
 | `target` | `server` only: the browser has no business making a table the server keeps |
 
-**Where it runs, and who sees what.** The server asks each input as the reader, writes the answers as Arrow files and starts the console's runner (`drishti-console/core/transform_cli.py`, which uses `core/pyrunner.py` exactly as a Python measure does): `python -I`, an empty environment, a scratch folder, no network, CPU, memory, wall-clock and output limits, an audit hook, the import guard. The frame comes back as a Parquet file the server keeps for **that reader** and the version of the inputs (`drishti.bi.transform.cache-ttl`, `cache-entries`). The code never sees anything the reader may not, and the result is derived only from it; another reader gets their own run. Real output of the sample's first and second run (an author who may read every row):
+**Where it runs, and who sees what.** The server asks each input as the reader and hands the answers to its compute pool `python`, exactly as a Python measure (section 7: the strict sandbox, the item's limits, the import guard). The frame comes back as a Parquet file, is checked against the columns and types the dataset or table declares (its **contract**: a column missing, or `string` where `decimal` is declared, is `DRS-9075` in words), and the server keeps it for **that reader** and the version of the inputs (`drishti.bi.transform.cache-ttl`, `cache-entries`). The code never sees anything the reader may not, and the result is derived only from it; another reader gets their own run. Real output of the sample's first and second run (an author who may read every row):
 
 ```
 Python Transform pnl-vs-exposure: 18 rows in 218 ms (first run); the same reader again: kept, 0 ms
 ```
 
-**Checks.** The server checks the manifest on validate and publish (`DRS-9070`): `interface` is `measure`, `visual` or `transform`; a transform needs `inputs` naming datasets, defines `run` (a top-level function or the method of a class `Transform`), and `target` is `server`. The console adds the source checks (`POST /bi/python/check`: it parses, defines its entry, imports only what it lists). `DRS-9071` to `9074` are the run's, as for any Python item (section 10); `DRS-9075` is a frame that lacks a column the derived dataset declares or inputs that do not match.
+**Checks.** The server checks the manifest on validate and publish (`DRS-9070`): `interface` is `measure`, `visual` or `transform`; a transform needs `inputs` naming datasets, defines `run` (a top-level function or the method of a class `Transform`), and `target` is `server`. Check adds the source checks on the pool (`POST /api/v1/bi/python/check`: it parses, defines its entry, imports only what it lists; nothing runs). `DRS-9071` to `9074` are the run's, as for any Python item (section 10); `DRS-9075` is a frame that lacks a column the derived dataset declares or inputs that do not match.
 
 **From the Notebook.** A notebook that joins several extracts in pandas ([USER_GUIDE.md › The Notebook, section 2](USER_GUIDE.md#2-the-extract)) can **Promote to a Transform**: each `extract("name")` becomes a parameter of `run`, the cell's `result` is returned; the draft is then checked and published, and a Python dataset is written over it (the dataset wizard's source *A Python Transform*), one model query per parameter of `run`.
 
@@ -6158,12 +6162,12 @@ What comes back from the worker is data, as with ECharts: `{"kind": "vega-lite",
 * **The data is inside the specification** (`data.values`). A `url` or a `loader` anywhere in it is refused, in the sandbox (`DRS-9073`: "a Vega-Lite specification may not load anything from a URL or name a loader") and again in the page. The page draws it with the vendored Vega, Vega-Lite, vega-embed and **vega-interpreter**
   ([VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md)): the interpreter walks the expression tree instead of compiling it to a function, so an expression such as `datum.MTM < 0` is evaluated **without `eval`** and the page keeps the strict content security policy (no `unsafe-eval`, no inline style: vega-embed is told not to write its own `<style>`). The loader refuses every URL, there is no actions menu, no editor link and no tooltip plug-in.
 * The page puts the theme's colours and the report's palette under whatever the specification's own `config` says, sizes the chart to its frame (`width` and `height` as `container`) and draws it on a canvas.
-* The size limit is `bi.python.max_output_bytes`. (`target: browser` items run on the console and answer the same.)
+* The answer is at most 4 MB. (`target: browser` items run on the server's pool and answer the same.)
 * A **report** can also hold a Vega-Lite visual with **no Python at all**: `type: vega-lite` ([section 31](#35-vega-lite-visuals)).
 
 ### 15. Tests shipped with an item
 
-A Python item may carry `tests:`: examples of what its function must return. **Check** runs them in the console's sandbox, one worker each (the same as a report's run), and shows each as passed, failed or could not run; a **publish** through the console is refused while one fails.
+A Python item may carry `tests:`: examples of what its function must return. **Check** runs them on the server's compute pool, one request each (the same as a report's run), and shows each as passed, failed or could not run; a **publish** is refused while one fails.
 
 ```yaml
 tests:
@@ -6190,12 +6194,12 @@ A test may read rows of a dataset instead of a frame it carries: `sample: { data
 | `expect` | a **measure**: a number (no `by`) or a number for each group (`by`: no group may be missing and none may be extra). A **visual**: `{kind: echarts \| vega-lite \| svg \| png, has: {<dotted path>: <value>}}`, for example `{kind: vega-lite, has: {layer.0.mark.type: circle}}` (a path steps through keys and list indexes). A **transform**: `{columns: [...], rows: <count>}` |
 | `tolerance` | absolute, default `1e-9`; for numbers in `expect` and in `has` |
 
-The server reads the **shape** of `tests:` when the item is validated or published (`DRS-9070`, with the path of the key: `tests[0].expect`); it does not run them, because it has no Python. The console runs them, so:
+The server reads the **shape** of `tests:` when the item is validated or published (`DRS-9070`, with the path of the key: `tests[0].expect`) and runs them on its compute pool:
 
-* **Check** (`POST /bi/python/check`, the item page's *Check the Python*) shows them, each with its result: `passed`, `FAILED` (with what it expected and got) or `could not run` (the code failed, a package is off the list, the runner is switched off: the message has the `DRS` code). Body `{yaml, tests: false}` skips them.
-* **Publish and approve** through the console (`POST /bi/api/items/<id>/publish` and `/approve`) run them first; a failing or unrunnable one answers `DRS-9076` with the first three: `'Vol' cannot be published: 1 of its 3 tests fails (bad: expected 9.0, got 1.0). Fix the item or the test; a bi-admin may publish it anyway with force.` A **bi-admin** may send `{"force": true}`. A call made straight to the server's API is not run through the console, so it is **not gated**: the gate is the console's, which is the only place with Python.
+* **Check** (`POST /api/v1/bi/python/check`; the console's `POST /bi/python/check`, the item page's *Check the Python*) shows them, each with its result: `passed`, `FAILED` (with what it expected and got) or `could not run` (the code failed, a package is off the list, Python does not run on this server: the message has the `DRS` code). Body `{yaml, tests: false}` skips them.
+* **Publish and approve** run them first, whichever way they are asked (the console, the API, the command line); a failing or unrunnable one refuses the publish with the first three: `'Vol' cannot be published: 1 of its 3 tests fails (bad: expected 9.0, got 1.0). Fix the item or the expected value; a bi-admin may publish it with force.` A **bi-admin** may send `{"force": true}`.
 
-Real output of Check on the two samples that ship tests (the results the console returned):
+Real output of Check on the two samples that ship tests:
 
 ```
 desk-pnl-volatility  3 tests: passed 3
@@ -6211,13 +6215,13 @@ pnl-vega             2 tests: passed 2
 
 ### 16. Python in alerts and on boards
 
-**Boards.** A board tile may be a **python visual** (a Python measure shown as bars, or a Python visual that returns a chart or a Vega-Lite specification): the tile runs it for the person looking, as the report does, on the console's runner. The sample board `python-wall` has three. A Python tile has no threshold alert of its own (the colour rule of a tile reads numbers the query returns); to be told when a Python measure crosses a limit, make an **alert** on it. See [section 31, its section 23](#python-tiles).
+**Boards.** A board tile may be a **python visual** (a Python measure shown as bars, or a Python visual that returns a chart or a Vega-Lite specification): the tile runs it for the person looking, as the report does, on the server's compute pool. The sample board `python-wall` has three. A Python tile has no threshold alert of its own (the colour rule of a tile reads numbers the query returns); to be told when a Python measure crosses a limit, make an **alert** on it. See [section 31, its section 23](#python-tiles).
 
-**Alerts.** An alert's source may be a **Python measure**: a dataset source whose measure is one (`type: dataset`, `measure: Desk P&L volatility`), or a visual source whose visual is a python visual that shows one. The server has no Python, so it does what a Transform does: it **builds the rows the person may see** (their row rules and masks applied by the engine, up to `drishti.bi.report.python-rows`), writes the item and the rows to a scratch folder and starts the console's runner (`drishti-console/core/transform_cli.py`, in `measure` mode), which runs the item in the same sandbox and answers a number for each group; the alert reduces the groups to one number (a dataset source: the whole input is one group; a visual source: the alert's `reduce`, `first` by default). It is read **for each person**, on the alert's schedule or after a load, like any other. What follows from that:
+**Alerts.** An alert's source may be a **Python measure**: a dataset source whose measure is one (`type: dataset`, `measure: Desk P&L volatility`), or a visual source whose visual is a python visual that shows one. It does what a Transform does: the server **builds the rows the person may see** (their row rules and masks applied by the engine, up to `drishti.bi.report.python-rows`) and hands the item and the rows to its compute pool, which runs the item in the same strict sandbox and answers a number for each group; the alert reduces the groups to one number (a dataset source: the whole input is one group; a visual source: the alert's `reduce`, `first` by default). It is read **for each person**, on the alert's schedule or after a load, like any other. What follows from that:
 
 * a column **masked for the person** makes the reading *masked*: nothing is run and no figure is shown;
-* a run that fails (the code, a limit, the sandbox, no Python installed on the server's side) is an *error reading* with the DRS code and words; it never fires and never clears;
-* the runner is the one the Transforms use: `drishti.bi.transform.enabled`, `python` (the interpreter that has pandas and pyarrow) and `runner` (`transform_cli.py`), `timeout` and `work-dir` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibitransform--python-transforms-and-composed-datasets)); the package list and limits are the server's `drishti.bi.report.python-*`;
+* a run that fails (the code, a limit, the sandbox, Python not running on this server) is an *error reading* with the DRS code and words; it never fires and never clears;
+* the pool is the one every Python run uses (section 7); the package list and limits are the server's `drishti.bi.report.python-*`;
 * a **python visual that draws a chart** has no number: such an alert reads as an error saying to watch a Python measure.
 
 ```
@@ -6226,16 +6230,12 @@ PUT /api/v1/me/measure-alerts/Vol
  "condition": {"type": "threshold", "op": "above", "value": 5000}, "trigger": {"mode": "after-load"}}
 ```
 
-The reader is tested against the real runner ([ProcessMeasureRunnerTest](../../drishti-server/src/test/java/com/ash/drishti/server/bi/transform/ProcessMeasureRunnerTest.java)) and with a stand-in ([PythonAlertReaderTest](../../drishti-server/src/test/java/com/ash/drishti/server/alerts/measure/PythonAlertReaderTest.java): what the runner is handed, a masked column, a failing run).
+The reader is tested against the real pool ([PythonRunsTest](../../drishti-server/src/test/java/com/ash/drishti/server/bi/python/PythonRunsTest.java)) and with a stand-in ([PythonAlertReaderTest](../../drishti-server/src/test/java/com/ash/drishti/server/alerts/measure/PythonAlertReaderTest.java): what the runner is handed, a masked column, a failing run).
 
-### One runner on the console, the Py-node endpoint, columns
+### One runtime on the server, grouped measures, columns
 
-* **No browser target.** No BI page loads Pyodide; `target: browser` and `both` run on the console. The designer has no *Run on* setting
-  for a visual.
-* **The fork-server.** Each console runs one parent that imported pandas, numpy and pyarrow once and forks a child per call; the child gets its own session,
-  limits, audit hook and scratch folder, exactly as a fresh process did (`bi.python.fork_server`, [OPERATIONS.md](../admin/OPERATIONS.md#bi-scale)).
-* **The L4 result cache.** An answer is kept by the item's code, its parameters and the exact input bytes (`bi.python.cache_entries`, `cache_seconds`): the
-  same masked rows give the same answer without a call; another reader's masked rows are other bytes, so never their answer.
+* **No browser target, no console runtime.** No BI page loads Pyodide and the console runs no Python; `target: browser` and `both` run on the server's
+  pool. The designer has no *Run on* setting for a visual. The plan's Python nodes (`PyAggregate`, `PyColumn`) are placed on the tier `python`.
 * **`compute_groups(frame, by, params)`.** A measure may define it instead of `compute`: one vectorised call over every group's rows that returns a
   DataFrame of the group columns and one value column (`value`, else the last). Faster for many groups:
 
@@ -6247,17 +6247,14 @@ def compute_groups(frame, by, params):
 
 * **The `column` interface.** `derive(frame, params)` returns one value per row (a Series, an array or a list), for a dataset's `derive: { python: … }`
   (plan node `PyColumn`).
-* **The Py-node endpoint.** The server's planner places Python nodes on the console tier and calls `POST /internal/py/transform`, `/measure` and
-  `/column` on the console with `X-Drishti-Runner-Token` ([API_GUIDE.md](API_GUIDE.md); `drishti.bi.transform.console-url` and `console-token` on the
-  server, the same `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` on the console). Without it the server runs `transform_cli.py` itself.
 
 <a id="17-data-prep-the-transform-editor-240"></a>
 ### 17. Data prep: the Transform editor
 
 The Transform editor makes the
 Python path the data-prep tool a Power Query author expects, without a step language: **raw rows straight from a connector**, a **step-by-step run with a
-preview and a profile after every step**, a **tested snippets library** for the common reshapes, and **warm workers**. The steps are still lines of
-pandas, run in the same sandbox as every Python item (section 7), on the rows the person looking may see.
+preview and a profile after every step** and a **tested snippets library** for the common reshapes. The steps are still lines of
+pandas, run on the server's compute pool in the same sandbox as every Python item (section 7), on the rows the person looking may see.
 
 #### 17.1 Inputs straight from a connector
 
@@ -6361,7 +6358,7 @@ Running the steps needs the **bi-author** power (it runs Python); without it the
 `drishti-console/config/prep-snippets.yaml` holds 21 snippets, each one step over `df` with parameters filled in a form. **A value is always written as a
 Python literal** (`repr`): a column called `x"]; import os` is a column of that odd name, never code; an *input* parameter must be one of the Transform's
 inputs and an *operator* one of its options (`DRS-9070` otherwise). Every snippet carries an **example** (frames in, parameters, the frame expected out)
-that `tests/test_transform_editor.py` runs in plain pandas **and** in the sandbox, so a snippet is correct out of the box.
+that `tests/test_transform_editor.py` runs in plain pandas **and** as a step of the pool's step-by-step run, so a snippet is correct out of the box.
 
 | Group | Snippets |
 |---|---|
@@ -6377,8 +6374,8 @@ More snippets: a file of the same shape named by `bi.transform.snippets_file`. O
 
 #### 17.4 The step-by-step run
 
-`POST /bi/transform/steps` (the console) with the page's spec: each input is asked of the server **as you** (section 17.1, at most
-`bi.transform.preview_rows`, 1,000), then `run` runs **once** in the sandbox (a child of the fork-server, its usual limits) with a mark after each step.
+`POST /bi/transform/steps` (the console) passes the page's inputs and code to the server (`POST /api/v1/bi/python/steps`): each input is read **as you**
+(section 17.1, at most `bi.transform.preview_rows`, 1,000), then `run` runs **once** on the compute pool (its usual sandbox and limits) with a mark after each step.
 The steps are the statements after each `# step: <label>` comment of `run`'s body, or each top-level statement when there is none. After each step the
 worker describes the frame that step made (the last DataFrame it assigned, else `df`; after the last step, what `run` returned): its rows, columns and
 types, its first 20 rows and its profile. The answer also profiles each input and gives the key hints between them. A step that raises stops the run:
@@ -6389,13 +6386,13 @@ The run is never kept: an author runs it as they edit. The Python dataset itself
 
 #### 17.5 Profiling
 
-The **profile** of a frame, worked out in the sandbox over the reader's rows, is one card per column: its type; **what its text looks like** (numbers or
+The **profile** of a frame, worked out on the compute pool over the reader's rows, is one card per column: its type; **what its text looks like** (numbers or
 dates kept as text, with *Fix the type*, which adds the right type-fix step; digits in a column named like an identifier, `TRADE_ID` or `..._CODE`, are
 not offered a number type: ids are text by design); empty values (count and %, with a bar); distinct values; **key?** when every
 row has its own value; min and max (and the mean of a number); the five most common values; a histogram of a number. Between inputs, *looks like a key
 of* names a column whose values (90% or more) are the values of another input's unique column, with how many match: the *Join* snippet joins them.
 
-The same panel is the Notebook's **Profile** tab ([USER_GUIDE.md › The Notebook, section 7](USER_GUIDE.md#7-profile)), `POST /bi/notebook/profile`. No author code runs to profile.
+The same panel is the Notebook's **Profile** tab ([USER_GUIDE.md › The Notebook, section 7](USER_GUIDE.md#7-profile)), `POST /bi/notebook/profile` (the server's `POST /api/v1/bi/python/profile`). No author code runs to profile.
 
 #### 17.6 On the command line
 
@@ -6424,10 +6421,9 @@ See [CLI_GUIDE.md](CLI_GUIDE.md#bi-transform-a-transforms-inputs-as-you-and-the-
 
 #### 17.7 Warm workers
 
-Every call is a child of the fork-server, a parent that imported pandas, numpy and pyarrow once. The console **starts the
-fork-server when it starts** (`bi.python.warm`, default on), so the first call of the day, a report's python visual or a Transform's step run, does not pay
-for the interpreter and the imports either; `GET /bi/python/status` says `forkServer.warm` and `warmedMs`. Isolation is unchanged: one child per call,
-its own session, limits, audit hook and scratch folder.
+Every call is a fork child of a worker of the pool `python`, which imported pandas, NumPy and pyarrow once. Keep workers warm with the pool's
+`workers.min` (0 as shipped: the first call after an idle spell starts one, about 0.2 s plus the imports); isolation is unchanged: one child per call,
+its own limits, Landlock rule, audit hook and scratch folder.
 
 #### 17.8 Settings
 

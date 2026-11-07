@@ -126,9 +126,3 @@ items:
     menus: [ccr-cube]
     contracts: ["docs/guides/PIVOT_GUIDE.md#28-presets-the-risk-cubes", "docs/architecture/PIVOT_ENGINE.md#65-the-ccr-provider-later"]
 
-  - id: python-table-runs
-    what: panel
-    about: "The Python-driven table editor's sample run, its Notebook cells and the Notebook page's Python cells (/bi/notebook) run on the server's compute pool: the editor, its output contract, inputs, schedule, limits, templates, Notebook → Turn into table, and the Notebook page's cells, saving and promotion are built; running authored code on the pool comes with one Python runtime (the console never runs it)"
-    release: 2.9.11.d
-    treatment: under-construction
-    contracts: ["docs/guides/TABLES_GUIDE.md#114-python-driven-tables-and-models"]

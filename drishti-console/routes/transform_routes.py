@@ -16,12 +16,11 @@
 
 A person builds a Python Transform step by step without typing YAML: inputs (a pack kind read through a connector, or a model query), then steps picked
 from the snippets library or written by hand. After every change the page asks ``POST /bi/transform/steps``: the console asks the server for each input
-**as that person** (``POST /api/v1/bi/python/input``: their kind entitlements, row rules and masks; cut to ``bi.transform.preview_rows``), runs ``run`` in the
-sandbox once with the frame after each step described (rows, columns, first rows, a profile) and answers it. Saving writes two drafts in the person's
+**as that person** (their kind entitlements, row rules and masks; cut to ``bi.transform.preview_rows``) and runs ``run`` on its compute pool (``POST
+/api/v1/bi/python/steps``) once with the frame after each step described (rows, columns, first rows, a profile) and answers it. Saving writes two drafts in the person's
 workspace (the Python item and the Python dataset that runs it); nothing is published. Running steps needs ``bi-author``, as any Python of a person's own."""
 from __future__ import annotations
 
-import time
 from pathlib import Path
 
 from fastapi import APIRouter, Request
@@ -30,10 +29,10 @@ from fastapi.responses import JSONResponse
 from core.backend import BackendError
 from core.csrf import json_body
 from core.prep_snippets import SnippetError, SnippetLibrary
-from core.pyrunner import PyError
 from core.transform_editor import EditorError, compose, parse
 from routes.bi_routes import _page
 from routes.common import ident
+from routes.python_routes import RUN_WAIT_SECONDS, problem
 
 router = APIRouter(include_in_schema=False)
 CONSOLE = Path(__file__).resolve().parent.parent
@@ -117,8 +116,8 @@ async def parse_route(request: Request):
 
 @router.post("/bi/transform/steps")
 async def steps(request: Request):
-    """Body ``{spec, asOf?}``: the step-by-step run. Each input is asked of the server as the signed-in person (masked, cut to the preview rows), then ``run``
-    runs once in the sandbox. Answers the runner's ``{inputs, keys, steps, planned, complete, failed?}`` with each input's ``masked`` and ``asOf`` and the
+    """Body ``{spec, asOf?}``: the step-by-step run, on the server: each input read there as the signed-in person (masked, cut to the preview rows), then
+    ``run`` runs once on the compute pool. Answers ``{inputs, keys, steps, planned, complete, failed?}`` with each input's ``masked`` and ``asOf`` and the
     times. A step's own error is in ``failed`` (with its traceback for authors); a refusal before any step is ``{code, detail}``."""
     if not _author(request):
         return _refuse("DRS-9073", 403, "running a Transform's steps runs Python: it needs the bi-author power")
@@ -129,35 +128,13 @@ async def steps(request: Request):
     except EditorError as x:
         return _refuse("DRS-9070", 422, str(x))
     spec = c["spec"]
-    backend, me = request.app.state.backend, ident(request)
-    arrows, names, read = [], [], []
-    t0 = time.monotonic()
-    for i in spec["inputs"]:
-        ask = {"input": i["input"], "limit": e.preview_rows}
-        if body.get("asOf"):
-            ask["asOf"] = str(body["asOf"])[:10]
-        try:
-            content, headers = await backend.bi_arrow("/python/input", me, ask, format="arrow")
-        except BackendError as x:
-            return _refuse(x.code, x.page_status, f"the input '{i['name']}': {x.detail}", input=i["name"])
-        low = {str(k).lower(): v for k, v in headers.items()}
-        arrows.append(content)
-        names.append(i["name"])
-        read.append({"name": i["name"], "rows": int(low.get("x-bi-rows") or 0), "masked": [m for m in (low.get("x-bi-masked") or "").split(",") if m],
-                     "model": low.get("x-bi-model") or "", "asOf": low.get("x-bi-as-of") or "", "cut": int(low.get("x-bi-rows") or 0) >= e.preview_rows})
-    asked_ms = round((time.monotonic() - t0) * 1000)
-    m = {"name": spec["name"], "interface": "transform", "entry": "run", "inputs": names, "packages": ["pandas", "numpy"], "target": "server",
-         "timeout": e.timeout, "memory": e.memory, "params": spec["params"], "source": c["source"]}
+    ask = {"name": spec["name"], "source": c["source"], "params": spec["params"], "limit": e.preview_rows, "timeout": e.timeout, "memory": e.memory,
+           "inputs": [{"name": i["name"], "input": i["input"]} for i in spec["inputs"]]}
+    if body.get("asOf"):
+        ask["asOf"] = str(body["asOf"])[:10]
     try:
-        answer = await request.app.state.pyrunner.run_steps(m, arrows, names, params=spec["params"])
-    except PyError as x:
-        out = {"code": x.code, "detail": x.detail}
-        if x.traceback:
-            out["traceback"] = x.traceback
-        return JSONResponse(out, status_code=x.status, headers={"Cache-Control": "no-store"})
-    for inp, info in zip(answer.get("inputs") or [], read):
-        inp.update({k: info[k] for k in ("masked", "model", "asOf", "cut")})
-    answer["askedMs"] = asked_ms
-    answer["previewRows"] = e.preview_rows
+        answer = await request.app.state.backend.bi("POST", "/python/steps", ident(request), ask, wait=RUN_WAIT_SECONDS)
+    except BackendError as x:
+        return problem(x)
     answer["source"] = c["source"]
     return JSONResponse(answer, headers={"Cache-Control": "no-store"})

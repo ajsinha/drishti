@@ -112,6 +112,11 @@ public final class TestRun {
         if (!Files.exists(p)) {
             return;
         }
+        try {
+            com.ash.drishti.compute.worker.ReadOnly.undo(p);           // the compute SDK and locked environments are made read-only where they are extracted
+        } catch (IOException | UncheckedIOException e) {
+            // what stays read-only stays: mvn clean reports it
+        }
         try (Stream<Path> s = Files.walk(p)) {
             s.sorted(Comparator.reverseOrder()).forEach(f -> {
                 try {

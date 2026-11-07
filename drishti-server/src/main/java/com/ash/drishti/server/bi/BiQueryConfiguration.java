@@ -69,13 +69,11 @@ public class BiQueryConfiguration {
         return q;
     }
 
+    /** The one Python runtime (PYTHON_COMPUTE.md section 19): every Python run of BI, tables and the Notebook, on the compute pool {@code python}; also the Transform runner. */
     @Bean
-    public com.ash.drishti.server.bi.transform.TransformRunner transformRunner(com.ash.drishti.server.bi.transform.TransformProperties props, QueryProperties query, BiReportProperties report) {
-        if (!props.consoleUrl().isBlank()) {                                   // wave B: the Py nodes run on the console backend
-            return new com.ash.drishti.server.bi.transform.ConsolePythonRunner(props, props.consoleUrl(), props.consoleToken());
-        }
-        java.nio.file.Path scratch = props.workDir().isBlank() ? java.nio.file.Path.of(query.storeDir()).toAbsolutePath().resolve("transform-tmp") : java.nio.file.Path.of(props.workDir());
-        return new com.ash.drishti.server.bi.transform.ProcessTransformRunner(props, scratch, report.pythonPackages(), report.pythonMaxSeconds(), report.pythonMaxMemoryMb());
+    public com.ash.drishti.server.bi.python.PythonRuns pythonRuns(com.ash.drishti.compute.ComputeService compute, BiReportProperties report,
+            com.ash.drishti.server.bi.transform.TransformProperties props, org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.AuditLog> audit) {
+        return new com.ash.drishti.server.bi.python.PythonRuns(compute, report, props, audit.getIfAvailable());
     }
 
     @Bean(destroyMethod = "close")
@@ -132,8 +130,24 @@ public class BiQueryConfiguration {
     }
 
     @Bean
-    public com.ash.drishti.server.bi.python.PythonController pythonController(com.ash.drishti.server.bi.python.PythonItems items) {
-        return new com.ash.drishti.server.bi.python.PythonController(items);
+    public com.ash.drishti.server.bi.python.PythonFrames pythonFrames(com.ash.drishti.server.bi.mq.ModelCatalog catalog, com.ash.drishti.server.bi.mq.MqService mq,
+            BiReportService reports) {
+        return new com.ash.drishti.server.bi.python.PythonFrames(catalog, mq, reports);
+    }
+
+    @Bean
+    public com.ash.drishti.server.bi.python.PythonTestRuns pythonTestRuns(com.ash.drishti.server.bi.python.PythonRuns runs, com.ash.drishti.server.bi.python.PythonFrames frames,
+            com.ash.drishti.server.bi.python.PythonItems items, BiService bi) {
+        com.ash.drishti.server.bi.python.PythonTestRuns tests = new com.ash.drishti.server.bi.python.PythonTestRuns(runs, frames);
+        bi.pythonTestGate((p, item) -> items.failingTests(p, item, tests));     // publishing a Python item runs its own tests on the pool
+        return tests;
+    }
+
+    @Bean
+    public com.ash.drishti.server.bi.python.PythonController pythonController(com.ash.drishti.server.bi.python.PythonItems items, com.ash.drishti.server.bi.python.PythonRuns runs,
+            com.ash.drishti.server.bi.python.PythonFrames frames, com.ash.drishti.server.bi.python.PythonTestRuns tests, BiService bi, BiReportService reports,
+            com.ash.drishti.server.bi.transform.TransformProperties transform) {
+        return new com.ash.drishti.server.bi.python.PythonController(items, runs, frames, tests, bi, reports, transform);
     }
 
     @Bean

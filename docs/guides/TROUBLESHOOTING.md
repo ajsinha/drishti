@@ -1263,8 +1263,8 @@ Every setting of a connector is in its plugin's README and its own document ([CO
 
 ### A python visual says `DRS-9074`, or never draws
 
-- **Cause:** the console has no free worker (`bi.python.workers`, waits `bi.python.queue_seconds`), the runner is off (`bi.python.enabled: false`), `pandas` or `pyarrow` is not installed in the console's Python (`GET /bi/python/status` says `ready: false` and lists `missing`), the item lists a package that is allowed but not installed, or a browser run has no Pyodide (`tools/fetch-pyodide.sh`).
-- **Fix:** read `GET /bi/python/status` (`enabled`, `ready`, `missing`, `installed`, `running`, `isolation`); `pip install -r drishti-console/requirements.txt` in the console's environment; raise `workers`; for the browser target run `tools/fetch-pyodide.sh`. With `network_namespace: require` the machine must allow `unshare --user --net`, else use `auto`.
+- **Cause:** Python does not run on this server now, and the message says why: compute is off (`compute.enabled` in `config/compute/compute.yaml`), the pool `python` is missing or not `isolation: strict`, the strict sandbox is not available on this machine (Windows, or a Linux without user namespaces or Landlock), the pool's interpreter does not carry the pinned versions of `config/compute/locks/python.lock` (each package is named, with what is installed and what is pinned), or the pool's queue is full.
+- **Fix:** read `GET /api/v1/bi/python/runtime` (the console's `GET /bi/python/status`: `runs`, `why`, `pins`); switch compute on (`DRISHTI_COMPUTE_ENABLED=true`), point `compute.python` (`DRISHTI_PYTHON`) at an interpreter that carries exactly the pinned versions or build the pool's locked environment from the lock (Admin → Compute → Build), and raise the pool's `workers.max` when the queue is full. On Windows Python does not run: use a Linux server.
 
 
 ### A Vega-Lite visual is empty, says it could not draw, or a Python visual's Vega-Lite is refused
@@ -1289,8 +1289,7 @@ Every setting of a connector is in its plugin's README and its own document ([CO
 
 * **Nothing of yours runs in the console or the browser.** A SQL cell is Drishti SQL run by the server over the model (the line under it says *run by the
   server ... as you*); a Python cell runs on the server's compute pool. Slicing is the Pivot's (`PIVOT <GO>`).
-* **A Python cell's Run is greyed with *Under construction*.** Python cells run on the server's compute pool, which comes with one Python runtime
-  ([UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md), `python-table-runs`). Write, save and promote the cell meanwhile.
+* **A Python cell's Run is greyed and says *Off: ...*.** The server cannot run Python safely now; the words are its reason (see *A python visual says `DRS-9074`* above). Write, save and promote the cell meanwhile.
 * **"Promote ... the target is not a report draft you can edit" (`DRS-9070`).** The target must be a report item in a workspace you contribute to (not a shipped sample and not another kind). Comments in its YAML are not kept when the visual is added.
 * **A notebook opens with "cell N was a slice ... left out".** The notebook held a `slice` cell; slicing is the Pivot's, so the cell is left out and the rest opens.
 
@@ -1312,7 +1311,7 @@ Every setting of a connector is in its plugin's README and its own document ([CO
 ### A python visual says `DRS-9071`, `DRS-9072` or `DRS-9073`
 
 - **Cause:** `9071`: the code raised (the message names the exception; people with `bi-author` also see the traceback, whose line numbers are the item's source) or returned the wrong thing (a measure: one number per group; a visual: an ECharts option, SVG text or PNG bytes). `9072`: it ran over its `timeout` (504) or its `memory`, or the rows in or the answer out were too big (413). `9073`: it imported a package it did not list, or tried the network, a file outside its scratch folder, or a process.
-- **Fix:** open the item, press **Check the Python**, and read the traceback as an author; raise `timeout` or `memory` in the manifest (up to `python-max-seconds` and `python-max-memory-mb`), or hand Python fewer rows (`limit`, filters, a narrower `columns` well; `python-rows`); list the package in `packages`, and add it to `bi.python.packages` and the server's `drishti.bi.report.python-packages` if it is not allowed.
+- **Fix:** open the item, press **Check the Python**, and read the traceback as an author; raise `timeout` or `memory` in the manifest (up to `python-max-seconds` and `python-max-memory-mb`), or hand Python fewer rows (`limit`, filters, a narrower `columns` well; `python-rows`); list the package in `packages`; a package that is not allowed must be pinned (`config/compute/locks/python.in`, then `tools/python_lock.py`) and added to the server's `drishti.bi.report.python-packages`.
 
 ### A window function reads `null`, or a rank is not what I expected
 
@@ -1336,7 +1335,7 @@ The state of every refresh is kept in `<BI store>/refresh/state.json`. `interrup
 
 ### A Python dataset's Transform will not run
 
-* **A Python dataset (`source.python`) answers `DRS-9074`.** The server starts the console's runner itself: set `drishti.bi.transform.python` to the Python with pandas and pyarrow (the console's `.venv/bin/python`) and `drishti.bi.transform.runner` to the console's `core/transform_cli.py`; with neither set it looks for `drishti-console/` from the working directory upwards. `DRS-9071`/`9072`/`9073` are the sandbox's, as for any Python item ([BI_GUIDE.md](BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 10); `DRS-9075` is a frame that lacks a declared column.
+* **A Python dataset (`source.python`) answers `DRS-9074`.** Python does not run on this server now: the message says why (see *A python visual says `DRS-9074`* above). `DRS-9071`/`9072`/`9073` are the Transform's own failure, limit or refusal; `DRS-9075` is a frame that does not match the columns and types the dataset declares (its contract), said column by column.
 * **The Transform runs again for every person.** Its result is kept per reader and version of the inputs (`drishti.bi.transform.cache-ttl`, `cache-entries`): a different person has different rows and masks, so a different frame. After a data load the inputs' version changes and the next reader runs it again.
 * **A dataset with `from:` or `derived:` says `DRS-9190`.** It is a 2.1 composed or derived dataset, removed in 2.2: `drishti.py bi migrate --models` converts it (see the migration rows further down). The 2.1 entries for them were replaced and deleted (DATASETS_2_1_COMPOSED_DERIVED.md, in git at tag v2.9.5).
 
@@ -1552,7 +1551,7 @@ Every code, with its HTTP status and what it means, is in one table: [API guide,
 | `DRS-9031` | a report names a field, measure, hierarchy, page, bookmark or slicer that its dataset or the report does not have (HTTP 422); the message lists what exists. A dataset that changed under a report is the usual cause |
 | `DRS-9040` | publishing the dataset would break published reports (HTTP 409): a field, measure or hierarchy they use is removed or renamed. The message lists the reports and what each uses. Fix the reports first, publish the dataset with the names kept (add the new name beside the old), or have a `bi-admin` publish with `force` ([BI_GUIDE.md](BI_GUIDE.md#6-impact-what-breaks-if-i-change-this)) |
 | `DRS-9043` | publishing a report or dataset is refused (HTTP 409) because its expected values (`tests:`) fail or cannot run. The message names the first three: *expected 100 +- 1%, got 750*, or why one could not run (a masked figure, an answer of several rows that needs a `row:`, a role you do not hold). Run them yourself with **Check** (the designer) or *Run the tests* (the dataset page) as the role the test names, fix the item or the expected value and publish again; a `bi-admin` may publish with `force`, which the audit log records (`FORCED over N failing test(s)`). `drishti.bi.governance.refuse-failing-tests: false` turns the gate off. |
-| `DRS-9074` | the Python runner is not available (HTTP 503): all workers busy, switched off, `pandas` or `pyarrow` missing in the console, a package not installed, or no Pyodide for a browser run; for a derived dataset also `drishti.bi.transform.enabled: false`, the console's `core/transform_cli.py` or its Python not found (`drishti.bi.transform.runner`, `python`), or `drishti.bi.transform.max-concurrent` runs already going |
+| `DRS-9074` | Python does not run on this server now (HTTP 503), and the message says why: compute off, the pool `python` missing or not strict, the strict sandbox not available here (Windows, no Landlock), the interpreter not carrying the pinned versions, the pool's queue full, or `drishti.bi.transform.enabled: false` |
 | `DRS-9076` | a Python item's own tests failed, so it is not published (HTTP 422, raised by the console): Check shows each test (`passed`, `FAILED` with expected and got, or `could not run` with the DRS code); fix the item or the `expect:`, or a bi-admin publishes with `force`. A call made straight to the server is not gated |
 | `DRS-9077` | a Vega-Lite specification could not be drawn (shown in the visual's frame): it names a `url` or a `loader` (the data is the rows of the wells, or `data.values`), or the library did not load (check `/static/vendor/vega/6.4.0/` answers) |
 | `DRS-9080` | no such BI run, or not one you may see (HTTP 404): check the id; a run shared with you needs its share ([BI_DESIGN.md](../architecture/BI_DESIGN.md#16-error-codes)) |

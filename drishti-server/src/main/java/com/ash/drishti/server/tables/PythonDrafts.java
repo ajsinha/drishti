@@ -34,8 +34,8 @@ import java.util.regex.Pattern;
  * The Python-driven table editor's text work (EDITORS.md section 4), none of which runs Python: the build function's item (a BI Python item,
  * {@code interface: transform}, {@code entry: build}, on the server) written from the editor's fields and read back; the templates for common
  * cases; a notebook's cells turned into a build function; and the output contract proposed from the code (the columns it assigns and
- * selects, typed from its inputs' columns where it keeps them). The sample run itself needs the server's Python pool for authored code, which is
- * registered under construction (config/under-construction.yaml, {@code python-table-runs}).
+ * selects, typed from its inputs' columns where it keeps them). The sample run itself is a run on the server's compute pool
+ * {@code python} through {@code PythonRuns}.
  */
 public final class PythonDrafts {
 
