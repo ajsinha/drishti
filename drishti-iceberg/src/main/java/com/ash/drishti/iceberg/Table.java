@@ -101,7 +101,8 @@ public final class Table {
 
     /** The data files of a snapshot that may hold rows matching {@code filter}, with their deletes. */
     public List<FileTask> plan(Snapshot snapshot, Expr filter, ExecutorService pool) {
-        return Planner.plan(metadata(), snapshot, filter, io(), pool);
+        TableOps.Loaded s = state;
+        return ops.plan(s, snapshot, filter, pool).orElseGet(() -> Planner.plan(s.metadata(), snapshot, filter, ops.io(s), pool));
     }
 
     /**

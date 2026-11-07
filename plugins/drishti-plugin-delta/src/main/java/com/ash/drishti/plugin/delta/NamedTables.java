@@ -71,6 +71,11 @@ record NamedTables(LakeStore lake, Map<String, String> names) implements LakeSto
     }
 
     @Override
+    public Engine engine(String kind) {
+        return lake.engine(names.getOrDefault(kind, kind));
+    }
+
+    @Override
     public String engineName() {
         return lake.engineName();
     }

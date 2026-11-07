@@ -80,8 +80,11 @@ import java.util.concurrent.locks.ReentrantLock;
  * {@code iceberg} connector's (section 15.4); {@code decimals: number|string}, {@code binary: base64|omit},
  * {@code refresh-seconds} (10), {@code lookback-days} (10), {@code doc-cache-mb} (256), {@code columns-cache-mb} (1024),
  * {@code max-concurrent-reads} (16), {@code source-name} ({@code iceberg-external}).
+ *
+ * <p>The same reader serves plain Delta tables ({@code delta-external}) and Delta Sharing shares ({@code delta-sharing}): drishti-lakehouse
+ * shows those tables as Iceberg tables, and those connectors only open their catalogs ({@link #openCatalog}) and check their settings.
  */
-public final class IcebergExternalPlugin implements SourcePlugin {
+public class IcebergExternalPlugin implements SourcePlugin {
 
     private record SnapKey(String kind, long snapshotId) {}
 
@@ -122,7 +125,7 @@ public final class IcebergExternalPlugin implements SourcePlugin {
 
     @Override
     public PluginManifest manifest() {
-        return new PluginManifest(sourceName == null ? "iceberg-external" : sourceName, "1.0", tables.keySet(), new SourceCapabilities(false, true, true, true));
+        return new PluginManifest(sourceName == null ? defaultName() : sourceName, "1.0", tables.keySet(), new SourceCapabilities(false, true, true, true));
     }
 
     @Override
@@ -130,8 +133,13 @@ public final class IcebergExternalPlugin implements SourcePlugin {
         return true;
     }
 
-    @Override
-    public void start(SourceContext ctx) throws IOException {
+    /** The connector's plugin name (and its default {@code source-name}). */
+    protected String defaultName() {
+        return "iceberg-external";
+    }
+
+    /** Refuses settings that cannot work, before anything opens. */
+    protected void checkSettings(SourceContext ctx) {
         if (S3Tables.named(ctx.settings()) && S3Tables.arnOf(ctx.settings()).isEmpty()) {
             throw new com.ash.drishti.api.PluginNotConfigured("iceberg-external with catalog: s3tables needs settings.table-bucket-arn");
         }
@@ -147,9 +155,28 @@ public final class IcebergExternalPlugin implements SourcePlugin {
         if (!engine.equals("native") && !engine.equals("auto")) {
             throw new IllegalArgumentException("unknown Iceberg engine '" + engine + "': use native or auto");
         }
+    }
+
+    /**
+     * The catalog of one namespace, from the connector's settings ({@code s}: a copy the caller may change): Iceberg's catalogs here
+     * (REST: the namespace; path-based: the folder {@code <root>/<levels…>}).
+     */
+    protected Catalog openCatalog(Map<String, String> s, List<String> ns) {
+        s.remove("domain");
+        if ("rest".equalsIgnoreCase(s.getOrDefault("catalog", "")) || S3Tables.named(s)) {      // S3 Tables is a REST catalog
+            s.put("namespace", String.join(".", ns));
+        } else {
+            s.put("domain", String.join("/", ns));
+        }
+        return Catalogs.open(s);
+    }
+
+    @Override
+    public void start(SourceContext ctx) throws IOException {
+        checkSettings(ctx);
         this.context = ctx;
         this.settings = Map.copyOf(ctx.settings());
-        this.sourceName = ctx.setting("source-name", "iceberg-external");
+        this.sourceName = ctx.setting("source-name", defaultName());
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         this.maxIndexRows = Long.parseLong(ctx.setting("max-index-rows", "10000000"));
         this.warnRows = Long.parseLong(ctx.setting("id-index-warn-rows", "5000000"));
@@ -160,7 +187,7 @@ public final class IcebergExternalPlugin implements SourcePlugin {
         this.columnSets = Caffeine.newBuilder().executor(loaders).maximumWeight(mb("columns-cache-mb", "1024"))
                 .weigher((String k, Columns v) -> (int) Math.min(Integer.MAX_VALUE, v.bytes())).buildAsync();
         this.docs = Caffeine.newBuilder().maximumWeight(mb("doc-cache-mb", "256")).weigher((String k, String v) -> 2 * (k.length() + v.length()) + 64).build();
-        this.reads = new com.ash.drishti.api.ReadSlots("document reads of " + ctx.setting("source-name", "iceberg-external"),
+        this.reads = new com.ash.drishti.api.ReadSlots("document reads of " + sourceName,
                 Integer.parseInt(ctx.setting("max-concurrent-reads", "16")), Integer.parseInt(ctx.setting("max-queued-reads", "4096")));
         refresh();
         long every = Long.parseLong(ctx.setting("refresh-seconds", "10"));
@@ -171,18 +198,9 @@ public final class IcebergExternalPlugin implements SourcePlugin {
         return Long.parseLong(context.setting(key, fallback)) * 1024 * 1024;
     }
 
-    /** The catalog of one namespace (REST: the namespace; path-based: the folder {@code <root>/<levels…>}). */
+    /** The catalog of one namespace, opened once ({@link #openCatalog}). */
     private Catalog catalog(List<String> namespace) {
-        return catalogs.computeIfAbsent(namespace, ns -> {
-            Map<String, String> s = new HashMap<>(settings);
-            s.remove("domain");
-            if ("rest".equalsIgnoreCase(s.getOrDefault("catalog", "")) || S3Tables.named(s)) {      // S3 Tables is a REST catalog
-                s.put("namespace", String.join(".", ns));
-            } else {
-                s.put("domain", String.join("/", ns));
-            }
-            return Catalogs.open(s);
-        });
+        return catalogs.computeIfAbsent(namespace, ns -> openCatalog(new HashMap<>(settings), ns));
     }
 
     /** The kinds configured, and (tables: auto) the namespace's tables. */

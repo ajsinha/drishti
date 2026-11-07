@@ -74,6 +74,14 @@ public final class NativeEngine implements Engine, AutoCloseable {
 
     /** An engine for the connector settings {@code settings} (see the class comment). */
     public static NativeEngine create(Map<String, String> settings) {
+        return create(S3Settings.from(settings), settings);
+    }
+
+    /**
+     * An engine reaching S3 with {@code s3} rather than the settings' {@code s3.*} keys (a catalog's vended credentials, which renew
+     * themselves), the settings giving the rest ({@code hadoop.*}, {@code kernel.*}, {@code lz4-decoder}).
+     */
+    public static NativeEngine create(S3Settings s3, Map<String, String> settings) {
         Map<String, String> conf = new HashMap<>();
         settings.forEach((k, v) -> {
             if (k.startsWith("hadoop.")) {
@@ -89,7 +97,7 @@ public final class NativeEngine implements Engine, AutoCloseable {
         if (lz4 != null) {
             conf.put(NativeCodecs.LZ4_DECODER, lz4);
         }
-        return new NativeEngine(new NativeFileIO(S3Settings.from(settings), conf));
+        return new NativeEngine(new NativeFileIO(s3, conf));
     }
 
     /** The TLS material of the S3 endpoint ({@code tls.*}), or null. */

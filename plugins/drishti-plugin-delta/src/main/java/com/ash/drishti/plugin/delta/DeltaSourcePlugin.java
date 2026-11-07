@@ -29,7 +29,6 @@ import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
 import com.github.benmanes.caffeine.cache.AsyncCache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-import io.delta.kernel.engine.Engine;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -94,7 +93,6 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     // concurrent: a reindex adds tables that appeared in the lake while reads go on
     final Map<String, DeltaTable> tables = new java.util.concurrent.ConcurrentHashMap<>();
     final Map<String, String> modes = new java.util.concurrent.ConcurrentHashMap<>();
-    private Engine engine;
     private String idColumn;
     private String docColumn;
     private String dateColumn;
@@ -283,7 +281,6 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         // no id-map files, no document cache on disk, no index segments on disk (the memory caches still apply)
         this.memoryOnly = com.ash.drishti.lakeio.StorageProviders.memoryOnly(root);
         this.lake = LakeStore.of(root, ctx.setting("domain", ""), ctx.settings());
-        this.engine = lake.engine();
         this.idColumn = ctx.setting("id-column", "id");
         this.docColumn = ctx.setting("doc-column", "doc");
         this.dateColumn = ctx.setting("date-column", "business_date");
@@ -399,7 +396,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
 
     private void add(String kind) {
         modes.put(kind, context.setting("mode." + kind, "snapshot"));
-        tables.putIfAbsent(kind, new DeltaTable(engine, lake.table(kind), idColumn, docColumn, dateColumn));
+        tables.putIfAbsent(kind, new DeltaTable(lake.engine(kind), lake.table(kind), idColumn, docColumn, dateColumn));
     }
 
     /** New tables in the domain (a kind loaded after start), served without a restart ({@link NewTables}); true when one was found. */

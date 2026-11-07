@@ -52,6 +52,8 @@
     <!-- the data inbox (dataload/inbox): the server keeps only its wiring (server.dataload) -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-dataload</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg-external</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta-external</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta-sharing</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-duckdb</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-feeds</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-news</artifactId></dependency>

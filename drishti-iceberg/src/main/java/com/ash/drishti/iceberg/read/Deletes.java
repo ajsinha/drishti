@@ -136,8 +136,27 @@ public final class Deletes {
         return new Deletes(all, eq);
     }
 
+    /** The deletion-vector formats on the class path, by {@link DataFile#format()} (drishti-lakehouse's Delta vectors). */
+    private static final class Vectors {
+        static final Map<String, DeletionVectors> BY_FORMAT = load();
+
+        private static Map<String, DeletionVectors> load() {
+            Map<String, DeletionVectors> out = new HashMap<>();
+            java.util.ServiceLoader.load(DeletionVectors.class, Deletes.class.getClassLoader()).forEach(v -> out.put(v.format(), v));
+            return Map.copyOf(out);
+        }
+    }
+
     /** A position delete file: per data file it names, the sorted positions. */
     private static Map<String, long[]> positions(DataFile d, FileAccess io) {
+        DeletionVectors dv = Vectors.BY_FORMAT.get(d.format());
+        if (dv != null) {                                        // a deletion vector of one data file, read by its format's reader
+            try {
+                return Map.of(d.referencedDataFile(), dv.positions(d, io));
+            } catch (IOException e) {
+                throw new UncheckedIOException("reading the deletion vector of " + d.referencedDataFile(), e);
+            }
+        }
         List<NestedField> cols = List.of(NestedField.required(Planner.DELETE_FILE_PATH, "file_path", Type.Primitive.STRING),
                 NestedField.required(Planner.DELETE_POS, "pos", Type.Primitive.LONG));
         Map<String, List<Long>> byFile = new HashMap<>();

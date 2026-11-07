@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>com.ash.drishti</groupId>
+    <artifactId>drishti-parent</artifactId>
+    <version>2.9.11.c</version>
+    <relativePath>../../pom.xml</relativePath>
+  </parent>
+  <artifactId>drishti-plugin-delta-external</artifactId>
+  <name>drishti-plugin-delta-external</name>
+  <description>Plain Delta tables (Spark, Databricks, delta-rs, Trino; any columns, no id/doc shape) served as Drishti kinds, by folder under a root or by name in Unity Catalog with vended credentials; the iceberg-external reader over drishti-lakehouse; read-only</description>
+  <dependencies>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg-external</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakehouse</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
+    <!-- the Spark-shaped Delta table and the mock Unity Catalog and Delta Sharing servers -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakehouse</artifactId><version>${project.version}</version><type>test-jar</type><scope>test</scope></dependency>
+  </dependencies>
+</project>

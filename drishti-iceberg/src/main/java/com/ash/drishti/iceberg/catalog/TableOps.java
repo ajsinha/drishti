@@ -15,11 +15,16 @@
  */
 package com.ash.drishti.iceberg.catalog;
 
+import com.ash.drishti.iceberg.expr.Expr;
 import com.ash.drishti.iceberg.io.FileAccess;
+import com.ash.drishti.iceberg.meta.Snapshot;
 import com.ash.drishti.iceberg.meta.TableMetadata;
 import com.ash.drishti.iceberg.meta.TableUpdate;
+import com.ash.drishti.iceberg.scan.FileTask;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
 /**
  * How one table's metadata is found and changed, per catalog: a path-based table's {@code version-hint.text}, a
@@ -46,6 +51,14 @@ public interface TableOps {
 
     /** The files of this table (a REST catalog may vend the table its own S3 credentials). */
     FileAccess io(Loaded current);
+
+    /**
+     * The data files of {@code snapshot} that may hold rows matching {@code filter}, when this table lists its files itself rather than
+     * through Iceberg manifests (a Delta table or a Delta Sharing share seen as Iceberg, drishti-lakehouse); empty: plan the manifests.
+     */
+    default Optional<List<FileTask>> plan(Loaded current, Snapshot snapshot, Expr filter, ExecutorService pool) {
+        return Optional.empty();
+    }
 
     /** Whether commits are safe with several writers (false: an S3 store without conditional writes). */
     default boolean exclusiveCommits() {

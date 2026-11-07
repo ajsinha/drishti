@@ -95,6 +95,14 @@ public final class S3Storage implements Storage, AutoCloseable {
             b.endpointOverride(URI.create(s.endpoint()));
         }
         b.forcePathStyle(s.pathStyle());
+        if (s.vended() != null) {                               // asked on every request: the source renews before expiry
+            CredentialSource src = s.vended();
+            b.credentialsProvider(() -> {
+                CredentialSource.Key k = src.current();
+                return software.amazon.awssdk.auth.credentials.AwsSessionCredentials.create(k.accessKey(), k.secretKey(), k.sessionToken());
+            });
+            return b.build();
+        }
         b.credentialsProvider(s.accessKey().isEmpty() ? DefaultCredentialsProvider.builder().build()
                 : StaticCredentialsProvider.create(s.sessionToken() == null || s.sessionToken().isEmpty() ? AwsBasicCredentials.create(s.accessKey(), s.secretKey())
                         : software.amazon.awssdk.auth.credentials.AwsSessionCredentials.create(s.accessKey(), s.secretKey(), s.sessionToken())));

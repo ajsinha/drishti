@@ -37,9 +37,22 @@ import java.util.Map;
  * @param tls the shared TLS material ({@code tls.*}: a private CA, a client certificate) for an {@code https://} endpoint, or null
  * @param proxy the outbound proxy ({@code proxy.*} or the site default), {@link ProxySettings#none()} when the store is reached directly
  * @param sessionToken a session token with temporary keys (a REST catalog's vended credentials), or blank
+ * @param vended temporary credentials that renew themselves (Unity Catalog's credential vending), asked on every request; null when the
+ *     keys above (or the AWS chain) are used
  */
 public record S3Settings(String endpoint, String accessKey, String secretKey, String region, boolean pathStyle, int readBlockBytes,
-        TlsMaterial tls, ProxySettings proxy, String sessionToken) {
+        TlsMaterial tls, ProxySettings proxy, String sessionToken, CredentialSource vended) {
+
+    /** With fixed keys, temporary ones when {@code sessionToken} is not blank (or the AWS chain). */
+    public S3Settings(String endpoint, String accessKey, String secretKey, String region, boolean pathStyle, int readBlockBytes,
+            TlsMaterial tls, ProxySettings proxy, String sessionToken) {
+        this(endpoint, accessKey, secretKey, region, pathStyle, readBlockBytes, tls, proxy, sessionToken, null);
+    }
+
+    /** The same store reached with credentials that renew themselves before they expire (each request asks {@code source}). */
+    public S3Settings withVended(CredentialSource source) {
+        return new S3Settings(endpoint, "", "", region, pathStyle, readBlockBytes, tls, proxy, "", source);
+    }
 
     /** With long-lived keys (or the AWS chain). */
     public S3Settings(String endpoint, String accessKey, String secretKey, String region, boolean pathStyle, int readBlockBytes,
@@ -54,7 +67,7 @@ public record S3Settings(String endpoint, String accessKey, String secretKey, St
 
     /** The same credentials against another endpoint, region and addressing (what a REST catalog says the table's store is). */
     public S3Settings withStore(String newEndpoint, String newRegion, boolean newPathStyle) {
-        return new S3Settings(newEndpoint, accessKey, secretKey, newRegion, newPathStyle, readBlockBytes, tls, proxy, sessionToken);
+        return new S3Settings(newEndpoint, accessKey, secretKey, newRegion, newPathStyle, readBlockBytes, tls, proxy, sessionToken, vended);
     }
 
     /** Without TLS material: the JVM's trust, as before. */
@@ -109,6 +122,6 @@ public record S3Settings(String endpoint, String accessKey, String secretKey, St
     @Override
     public String toString() {                                   // never the secret
         return "S3Settings[endpoint=" + endpoint + ", region=" + region + ", pathStyle=" + pathStyle + ", keys="
-                + (accessKey.isEmpty() ? "chain" : "static") + "]";
+                + (vended != null ? "vended" : accessKey.isEmpty() ? "chain" : "static") + "]";
     }
 }

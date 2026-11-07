@@ -31,6 +31,8 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <!-- the Hadoop-free engine (engine: native, the default); Hadoop's stays for engine: hadoop and abfs:// or gs:// lakes -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId></dependency>
+    <!-- Unity Catalog: tables by name, their storage location and vended credentials -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakehouse</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId></dependency>
     <dependency><groupId>io.delta</groupId><artifactId>delta-kernel-api</artifactId><version>${delta-kernel.version}</version></dependency>
     <dependency>

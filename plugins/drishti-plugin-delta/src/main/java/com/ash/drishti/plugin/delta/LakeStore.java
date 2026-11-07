@@ -47,6 +47,11 @@ public interface LakeStore extends AutoCloseable {
     /** The Kernel engine that reads this lake, shared by every read. */
     Engine engine();
 
+    /** The engine that reads the kind's table: the lake's, unless each table has credentials of its own (Unity Catalog's vending). */
+    default Engine engine(String kind) {
+        return engine();
+    }
+
     /** {@code native} or {@code hadoop}, for Health. */
     String engineName();
 
@@ -86,6 +91,9 @@ public interface LakeStore extends AutoCloseable {
         if (engine == EngineKind.HADOOP && com.ash.drishti.api.tls.TlsSettings.anyGiven(settings, "tls.")) {
             throw new com.ash.drishti.api.tls.TlsException("tls.* is read by the native engine only: Hadoop's S3A has no setting for a private CA. "
                     + "Set engine: native, or import the CA into the JVM's truststore (-Djavax.net.ssl.trustStore=...)");
+        }
+        if (com.ash.drishti.lakehouse.unity.UnityTables.configured(settings)) {
+            return UnityLake.open(settings, engine);                     // tables named in Unity Catalog: table.<kind> is catalog.schema.table
         }
         LakeStore lake = engine == EngineKind.NATIVE ? NativeLake.open(root, domain, settings) : HadoopLake.open(root, domain, settings);
         Map<String, String> names = NamedTables.of(settings);

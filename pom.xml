@@ -52,6 +52,7 @@
     <module>drishti-lakeio</module>
     <module>drishti-deltalake</module>
     <module>drishti-iceberg</module>
+    <module>drishti-lakehouse</module>
     <module>drishti-memlake</module>
     <module>drishti-lakeload</module>
     <module>drishti-dataload</module>
@@ -71,6 +72,8 @@
     <module>plugins/drishti-plugin-mongodb</module>
     <module>plugins/drishti-plugin-iceberg</module>
     <module>plugins/drishti-plugin-iceberg-external</module>
+    <module>plugins/drishti-plugin-delta-external</module>
+    <module>plugins/drishti-plugin-delta-sharing</module>
     <module>plugins/drishti-plugin-duckdb</module>
     <module>plugins/drishti-plugin-feeds</module>
     <module>plugins/drishti-plugin-news</module>
@@ -182,6 +185,8 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-mongodb</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg-external</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta-external</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-delta-sharing</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-duckdb</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>org.duckdb</groupId><artifactId>duckdb_jdbc</artifactId><version>${duckdb.version}</version></dependency>
       <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-format</artifactId><version>${arrow.version}</version></dependency>
@@ -205,6 +210,7 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeconfig</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-iceberg</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakehouse</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-memlake</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeload</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-dataload</artifactId><version>${project.version}</version></dependency>
