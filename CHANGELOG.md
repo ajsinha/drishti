@@ -396,6 +396,31 @@
   `pinnedCellClicked`, a tree node's own row in its cell context), drishti-chart 0.2.0 (the histogram of a server's bins). A
   before-and-after comparison of sixteen screens and tabs (`tests/screen_figures.py`, `tests/test_var_family_figures_browser.py`, run on
   demand) and every family browser file on the new selectors with its assertions kept.
+- **The console's CSS on design tokens, the look unchanged** ([ELEMENTS.md 4.1, Design tokens](docs/architecture/ELEMENTS.md#design-tokens)):
+  `drishti_tokens.css` is the one home of every colour and scale. Each hard-coded colour became a token whose value in every theme is
+  what its rule drew: fixed colours (white labels on coloured fills, the navigation band, scrims, the theme menu's swatches, FRTB-SA's
+  Terminal colours), the landings' and Capacity's hues per theme, elevations, and the print palette (last in the file, with no
+  `!important`). The type scale (53 steps in rem named by their px, 7 relative, 10 fluid display sizes), spacing (51 steps up to 2rem),
+  radii, layers (14 `--d-z-*`), breakpoints (24 `--d-bp-*`) and the Elements' densities are tokens of exactly the values in use;
+  grid and chart take their density sizes from them. Gone: rules of removed screens (the old Studio, the BI model designer and layer
+  wizard, the browser Python console, the top bar's clock and desk name, the exposure sparkline, unused tone and text utilities), the
+  `[hidden]` rules of console-only sheets that Bootstrap's own covers, rules repeated twice, the theme button's hidden label, and
+  fallbacks of tokens that never existed (`--d-text`, `--d-fg`, `--d-mono`, `--d-border-strong`: the value they drew is written).
+  `!important` removed where specificity or order does it; the rest is on an allow-list with a reason each. The embedded view, report
+  and renderer sheets write the fixed tokens into their rules, so their size is unchanged. Numbers (90 sheets): lines 9,404 → 9,256;
+  distinct hex colours outside the token file 75 → 0 and `rgb()` 15 → 0 (194 distinct hex in all the CSS; 5 and 1 remain in
+  `drishti_record-forms.css`, being rewritten by the forms work); literal font sizes 69 → 0 (12 remain in the three sheets the forms
+  work is rewriting); `!important` 149 → 98; `@media` widths 25 → 24 breakpoints.
+  - **Proof the look did not change** (`tools/dev/css_visual_check.py`, [TEST_HARNESS.md 3.14](docs/architecture/TEST_HARNESS.md#314-the-css-visual-check)):
+    landing, the VaR explorer, Pivot, a BI report, Build home, Admin and Help at 1440 px and landing, VaR and Help at 390 px, in all ten
+    themes, before and after against one server, compared pixel by pixel: 100 pictures, 76 identical, 23 within the anti-aliasing
+    tolerance (the VaR charts' edges, as between two runs of the same tree), 1 different (a BI report's timing footer, whose width
+    follows a measured time; identical when taken again); no picture differs because of the CSS.
+  - **Guards** (`test_css_tokens.py`, a quick file check): no colour literal outside the token file, font sizes only from the type scale,
+    `@media` widths only from the breakpoints, no undefined `--d-*`, and `!important` only on its allow-list, which only shrinks.
+  - **Left for the forms work's merge**: `drishti_form.css`, `drishti_record-forms.css` and `drishti_controls.css` (colours, font sizes,
+    their `!important`), and the stacked-label rules repeated in eighteen forms with the seven checkbox-row classes that escape them
+    with `!important`: one form-label convention.
 
 ## 2.9.11.d (2026-11-07)
 - **Six lake folders kept in git, their content never** (DATA_LAKE_GUIDE.md section 1): `data/delta/demo`, `risklake`, `newslake` (news), `worldlake` (World Bank, IMF, UN), `regulators` (SEC, Federal Reserve, OSFI, central banks) and `capitalmarket` (prices, curves, vols, funds), each with only its README.md; the test data's `.jsonl.gz` files stay in git to build the demo lake. The five new lakes ship as lake files with no tables (`config/lakes/<lake>.yaml` and their jar copies), and **nothing shipped points at them**: every connector, rule and setting reads `demo` (guarded by `tools/test_empty_lakes.py`); a site points at them itself. The demo lake's one-time move and `build_demo_lakes` treat a folder holding only its README.md as empty.
