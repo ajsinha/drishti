@@ -329,15 +329,15 @@ def main(argv: list[str] | None = None) -> int:
         token = (a.token_file.expanduser().read_text(encoding="utf-8").strip() if a.token_file else None) or os.environ.get("DRISHTI_TOKEN")
     as_of = a.as_of or (files[-1][0] if files else "today")
     lake = (a.lake.expanduser() if a.lake else Path(stores.lakeconfig.root("demo"))).resolve()   # unset: config/lakes/demo.yaml's root
-    older = stores.older_layout(lake)
-    if older:
-        print("build_demo_lakes: " + stores.older_layout_words(lake, older), file=sys.stderr)
-        return 1
-    try:
+    try:                                              # the arguments are checked first: a wrong --store is refused whatever the lake holds
         systems, domains = stores.split_domains(a.store)
         named = stores.parse(systems)
     except ValueError as e:
         ap.error(str(e))
+    older = stores.older_layout(lake)
+    if older:
+        print("build_demo_lakes: " + stores.older_layout_words(lake, older), file=sys.stderr)
+        return 1
     if not a.files_only and not a.only:                     # a full build: every domain in Delta unless named (as the systems)
         for d in stores.DOMAIN_STORES:
             if d not in domains and stores.current_domain(stores.connectors_dir(a.connectors_dir), d) == "iceberg":
