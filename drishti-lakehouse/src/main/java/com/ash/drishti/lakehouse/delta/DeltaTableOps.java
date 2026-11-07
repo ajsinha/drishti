@@ -64,7 +64,8 @@ public final class DeltaTableOps implements TableOps, AutoCloseable {
     private final FileAccess io;
     private final int history;
     private final String key = UUID.randomUUID().toString();
-    private final Cache<Long, List<FileTask>> plans = Caffeine.newBuilder().maximumSize(8).build();
+    private final Cache<Long, List<FileTask>> plans = Caffeine.newBuilder().maximumWeight(64L << 20)
+            .weigher((Long v, List<FileTask> t) -> (int) Math.min(Integer.MAX_VALUE, 1024L + 1024L * t.size())).build();   // about 1 KB a planned file
     private volatile DeltaView view;
 
     /**
@@ -203,7 +204,7 @@ public final class DeltaTableOps implements TableOps, AutoCloseable {
 
     @Override
     public Loaded commit(Loaded base, TableUpdate update) {
-        throw new UnsupportedOperationException("a Delta table (" + name + ") is read, never written, by Drishti");
+        throw new UnsupportedOperationException("a Delta table (" + name + ") is read, never written, by this connector");
     }
 
     @Override

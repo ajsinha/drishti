@@ -218,7 +218,7 @@ public final class UnityClient {
                     + "external data access, and the principal needs EXTERNAL USE SCHEMA on the table's schema" + said);
         }
         if (a.status() == 403 || code.equals("PERMISSION_DENIED")) {
-            return new UnityException(UnityException.Reason.NO_GRANT, "no grant: the principal Drishti signs in as may not read " + what
+            return new UnityException(UnityException.Reason.NO_GRANT, "no grant: the principal the connector signs in as may not read " + what
                     + "; an owner grants USE CATALOG, USE SCHEMA and SELECT" + (vending ? " (and EXTERNAL USE SCHEMA, for credential vending)" : "")
                     + said);
         }

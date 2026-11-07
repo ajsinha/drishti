@@ -84,7 +84,7 @@ public record SharingProfile(String endpoint, String token, Instant expiresAt) {
         Matcher m = ENV.matcher(raw);
         if (!m.matches()) {
             throw new IllegalArgumentException("the Delta Sharing profile " + file + " holds the bearer token itself: a secret is never written "
-                    + "in a file Drishti reads; replace it with \"${AN_ENVIRONMENT_VARIABLE}\" and set that variable to the token");
+                    + "in a file the server reads; replace it with \"${AN_ENVIRONMENT_VARIABLE}\" and set that variable to the token");
         }
         String token = env.apply(m.group(1));
         if (token == null || token.isBlank()) {
