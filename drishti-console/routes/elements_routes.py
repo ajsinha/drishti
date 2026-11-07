@@ -14,7 +14,7 @@
 """The Drishti Elements gallery (docs/architecture/ELEMENTS.md section 10): ``/elements`` (and ``/elements/gallery``) open the static
 gallery page, ``static/gallery/drishti_gallery.html``, with the address's query kept (``?mode=docs&c=pivot&tab=api``). The page is the
 same file a developer opens from the file system: it needs no server. ``/elements`` is a Build page: the edition gate answers 404 when the
-build feature is off for the person (core/edition.py FEATURE_PATHS), and Build → Learn lists it (config/menus.yaml)."""
+build feature is off for the person (core/edition.py FEATURE_PATHS), and Build → Learn lists it (config/sitemap.yaml)."""
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse
 

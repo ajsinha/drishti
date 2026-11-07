@@ -41,7 +41,7 @@ def test_the_routes_open_the_static_gallery_with_the_query_kept():
 
 def test_it_is_a_build_page_listed_under_build_learn():
     assert "/elements" in FEATURE_PATHS["build"]
-    menus = yaml.safe_load((CONSOLE / "config" / "menus.yaml").read_text(encoding="utf-8"))
+    menus = yaml.safe_load((CONSOLE / "config" / "sitemap.yaml").read_text(encoding="utf-8"))
     items = [i for m in menus["menus"] for col in m.get("columns") or [] for i in col.get("items") or []]
     item = next(i for i in items if i.get("id") == "elements-gallery")
     assert item["href"] == "/elements" and item["requires"] == ["feature:build"]
