@@ -55,7 +55,7 @@
     if (numeric(f)) {
       var n = X.typed(f, v);
       if (isNaN(n)) { return String(v); }
-      var s = n.toLocaleString('en-US', { maximumFractionDigits: /0$/.test(f.fmt || '') ? 0 : f.type === 'money' ? 2 : 6 }), c = f.type === 'money' && vals ? ccy(f, vals) : '';
+      var s = window.Drishti.elements.core.formatNumber(n, { maxDecimals: /0$/.test(f.fmt || '') ? 0 : f.type === 'money' ? 2 : 6, minus: '-' }), c = f.type === 'money' && vals ? ccy(f, vals) : '';
       return c ? s + ' ' + c : s;
     }
     if (f.type === 'datetime') { return String(v).replace('T', ' ').slice(0, 16) + ' ' + (f.tz || 'UTC'); }
@@ -776,7 +776,7 @@
       sync(st);
     }
     function touched(fid) { return fid && !X.empty(values[fid]); }
-    function nf(v) { var n = X.num(v); return n === null ? String(v) : n.toLocaleString('en-US', { maximumFractionDigits: 0 }); }
+    function nf(v) { var n = X.num(v); return n === null ? String(v) : window.Drishti.elements.core.formatNumber(n, { minus: '-' }); }
     render();
   }
   function closeDrawer(st) {

@@ -40,7 +40,7 @@
   function load(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
   function status(text, bad) { statusEl.textContent = text; statusEl.classList.toggle('t-bad', !!bad); }
   function say(text, bad) { msg.textContent = text || ''; msg.classList.toggle('t-bad', !!bad); }
-  function secs(ms) { return ms >= 1000 ? (ms / 1000).toFixed(1) + ' s' : Math.round(ms) + ' ms'; }
+  function secs(ms) { return window.Drishti.elements.core.formatDuration(ms); }
   function code() { return editor ? editor.getValue() : ta.value; }
   function setCode(text) { if (editor) { editor.setValue(text); editor.focus(); } else { ta.value = text; } }
   function json(r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, status: r.status, b: b }; }); }
@@ -251,7 +251,7 @@
     if (typeof v === 'number') {
       if (!isFinite(v)) { return ''; }
       var a = Math.abs(v);
-      return v.toLocaleString('en-US', { maximumFractionDigits: a >= 1e5 ? 0 : a >= 1 ? 4 : 6 }).replace('-', '−');
+      return window.Drishti.elements.core.formatNumber(v, { maxDecimals: a >= 1e5 ? 0 : a >= 1 ? 4 : 6 });
     }
     if (typeof v === 'boolean') { return v ? 'true' : 'false'; }
     return String(v);
@@ -273,7 +273,7 @@
       body.appendChild(r);
     });
     t.appendChild(body); wrap.appendChild(t);
-    var foot = el('p', 'calc-foot text-muted-d', item.total.toLocaleString('en-US') + (item.total === 1 ? ' row' : ' rows'));
+    var foot = el('p', 'calc-foot text-muted-d', window.Drishti.elements.core.formatNumber(item.total) + (item.total === 1 ? ' row' : ' rows'));
     out.appendChild(wrap); out.appendChild(foot);
   }
   function tokens() {

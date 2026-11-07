@@ -52,11 +52,11 @@
     });
   }
   function num(v) { return v === null || v === undefined || v === "" || isNaN(v) ? null : Number(v); }
-  function pct(v, d) { v = num(v); return v === null ? "—" : v.toFixed(d === undefined ? 1 : d) + "%"; }
+  function pct(v, d) { return F.formatNumber(num(v), { decimals: d === undefined ? 1 : d, grouping: false, minus: "-", suffix: "%" }); }
   function signed(v, unit) {
     v = num(v);
     if (v === null) return "—";
-    var t = Math.abs(v).toFixed(1);
+    var t = F.formatNumber(Math.abs(v), { decimals: 1, grouping: false });
     return (Number(t) === 0 ? "" : v > 0 ? "+" : "−") + t + (unit || "");
   }
   function money(v) {                                                // a size, never signed: "$1.2tn" (drishti-core's compact)
@@ -111,7 +111,7 @@
       var v = $("[data-wl-mover]");
       v.textContent = (m.SYMBOL || m._id) + " ";
       v.appendChild(tone(el("small", "", signed(m.CHANGE_PCT, "%")), m.CHANGE_PCT));
-      text("[data-wl-mover-s]", (m.NAME || "") + " · " + (num(m.PRICE) === null ? "" : "price " + Number(m.PRICE).toFixed(2)));
+      text("[data-wl-mover-s]", (m.NAME || "") + " · " + (num(m.PRICE) === null ? "" : "price " + F.formatNumber(Number(m.PRICE), { decimals: 2, grouping: false })));
       var t = $("[data-wl-tile=mover]");
       if (t) t.href = go("QUOTE " + (m.SYMBOL || m._id));
     }).catch(function (e) { text("[data-wl-breadth]", "—"); text("[data-wl-breadth-s]", e.message); text("[data-wl-mover]", "—"); });
@@ -272,7 +272,7 @@
         var r = link(go("USEQ where SECTOR = '" + s.replace(/'/g, "") + "' order by REVENUE desc"), "", "wl-bar");
         r.appendChild(el("span", "wl-bar-l", s));
         var track = el("span", "wl-track"), fill = el("span", "wl-fill");
-        fill.style.width = (by[s] / max * 100).toFixed(1) + "%";
+        fill.style.width = Math.round(by[s] / max * 1000) / 10 + "%";
         track.appendChild(fill);
         r.appendChild(track);
         r.appendChild(el("span", "wl-bar-v mono", Math.round(by[s] / total * 100) + "%"));

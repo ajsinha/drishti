@@ -99,7 +99,7 @@
     out.textContent = text;
     out.classList.toggle('t-bad', !!bad);
   }
-  function number(v) { return typeof v === 'number' ? v.toLocaleString(undefined, { maximumFractionDigits: 4 }) : String(v); }
+  function number(v) { return typeof v === 'number' ? window.Drishti.elements.core.formatNumber(v, { maxDecimals: 4 }) : String(v); }
   button.addEventListener('click', function () {
     say('Reading…');
     fetch('/alerts/preview', { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify(fields()) })

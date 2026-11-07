@@ -751,7 +751,7 @@ table.tbl tr.tbl-filter th::after { content: none; }
 .hist-tools { display: inline-flex; gap: .5rem; align-items: center; }
 .hist-tools select { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; }
 .hist-msg { margin: .5rem .9rem 0; font-size: .82rem; }
-.hist-chart { height: 260px; margin: .3rem .6rem; }
+.hist-chart { margin: .3rem .6rem; }                                         /* drishti-chart's card, 220 px */
 .hist-tbl { max-height: 220px; overflow: auto; margin: 0 .9rem .9rem; }
 .srch-vs { display: inline-flex; align-items: center; gap: .35rem; font-size: .8rem; color: var(--d-muted); }
 .srch-vs input { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; padding: .15rem .3rem; }

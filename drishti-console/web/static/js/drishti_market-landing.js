@@ -38,11 +38,13 @@
     });
   }
   function num(v) { return v === null || v === undefined || v === "" || isNaN(v) ? null : Number(v); }
-  function fixed(v, d) { v = num(v); return v === null ? "—" : v.toFixed(d); }
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
+  function fixed(v, d) { return F.formatNumber(num(v), { decimals: d, grouping: false, minus: "-" }); }
+  function at(v) { return Math.round(v * 10) / 10; }                          // an SVG coordinate (geometry, not a figure)
   function signed(v, d, unit) {
     v = num(v);
     if (v === null) return "";
-    var t = Math.abs(v).toFixed(d);
+    var t = F.formatNumber(Math.abs(v), { decimals: d, grouping: false });
     return (Number(t) === 0 ? "±" : v > 0 ? "+" : "−") + t + (unit || "");
   }
   function text(sel, v) { $$(sel).forEach(function (e) { e.textContent = v; }); }
@@ -58,7 +60,7 @@
     else target.appendChild(el(target.tagName === "UL" ? "li" : "p", "ml-muted", msg));
   }
   function cell(tr, content, cls) { var td = el("td", cls || ""); if (content && content.nodeType) td.appendChild(content); else td.textContent = content; tr.appendChild(td); }
-  function count(v) { v = num(v); return v === null ? "—" : Math.round(v).toLocaleString("en-US"); }
+  function count(v) { v = num(v); return v === null ? "—" : F.formatNumber(Math.round(v)); }
   function short(d) { return d ? String(d).slice(5) : ""; }
 
   // ---- A · Market desk ------------------------------------------------------------------------------------------------------------
@@ -106,7 +108,7 @@
     for (var g = 0; g <= 3; g++) {
       var r = lo + (hi - lo) * g / 3, yy = yv(r);
       add("line", { x1: L, y1: yy, x2: R, y2: yy }, "grid");
-      add("text", { x: 2, y: yy + 3 }, "lbl", r.toFixed(2));
+      add("text", { x: 2, y: yy + 3 }, "lbl", fixed(r, 2));
     }
     ["1M", "2Y", "10Y", "30Y"].forEach(function (t) {
       var p = ois.concat(proj).filter(function (q) { return q.tenor === t; })[0];
@@ -114,7 +116,7 @@
     });
     function line(pts, cls) {
       if (!pts.length) return;
-      add("polyline", { points: pts.map(function (p) { return x(p.years).toFixed(1) + "," + yv(p.rate).toFixed(1); }).join(" ") }, cls);
+      add("polyline", { points: pts.map(function (p) { return at(x(p.years)) + "," + at(yv(p.rate)); }).join(" ") }, cls);
     }
     if (ago) line(ago.points, "ago");
     line(proj, "proj");
@@ -170,7 +172,7 @@
         name.appendChild(document.createTextNode(" " + it.field));
         cell(tr, name);
         cell(tr, tone(el("span", "", signed(it.move, it.unit === "%" ? 2 : 1, it.unit)), it.move), "n");
-        cell(tr, sigma ? (it.sigma === null ? "—" : it.sigma.toFixed(1)) : short(it.since), "n");
+        cell(tr, sigma ? (it.sigma === null ? "—" : fixed(it.sigma, 1)) : short(it.since), "n");
         var tag = el("td");
         if (sigma && it.sigma !== null && it.sigma >= 3) tag.appendChild(el("span", "ml-pill w", "jump"));
         tr.appendChild(tag);
@@ -229,7 +231,7 @@
       text("[data-ml-warnings]", count(warn.length));
       text("[data-ml-critical-s]", crit.length ? summary(crit) : "none");
       text("[data-ml-warnings-s]", warn.length ? summary(warn) : "none");
-      text("[data-ml-clean]", q.cleanPct === null || q.cleanPct === undefined ? "—" : (q.cleanPct >= 99.95 || q.cleanPct === 0 ? q.cleanPct.toFixed(0) : q.cleanPct.toFixed(1)) + "%");
+      text("[data-ml-clean]", q.cleanPct === null || q.cleanPct === undefined ? "—" : (q.cleanPct >= 99.95 || q.cleanPct === 0 ? fixed(q.cleanPct, 0) : fixed(q.cleanPct, 1)) + "%");
       text("[data-ml-clean-s]", "of " + count(q.checked) + " items checked");
       body.textContent = "";
       if (!crit.length && !warn.length) said(body, "No exceptions: every item checked is clean.", 4);

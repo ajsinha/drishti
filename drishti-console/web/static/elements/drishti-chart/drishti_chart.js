@@ -1419,7 +1419,8 @@
     var MapView = __m["src/drishti_map-view.js"].MapView;
     var Studio = __m["src/drishti_chart-studio.js"].Studio;
     const CHART_EVENTS = Object.freeze(['rendered', 'markClicked', 'selectionChanged', 'legendToggled', 'zoomChanged', 'explainOpened', 'explainShown', 'exported',
-      'tableToggled', 'dataUpdated', 'modeChanged', 'densityChanged', 'kindChanged', 'levelChanged', 'metricChanged', 'placeSelected', 'error']);
+      'tableToggled', 'dataUpdated', 'modeChanged', 'densityChanged', 'kindChanged', 'levelChanged', 'metricChanged', 'placeSelected', 'pointerMoved',
+      'error']);
     const CHART_MODES = Object.freeze(['card', 'studio']);
     const SELECTION_EVENT = 'drishti:selection';
     class Chart {
@@ -1486,7 +1487,17 @@
         this.engine.getZr().on('click', (e) => { if (!e.target && this.selected.size && !this.map) { this.setSelection([]); } });
         this.engine.on('datazoom', () => { const z = this.engine.getOption().dataZoom; const d = z && z[0]; this.zoomReset.hidden = !d || (d.start <= 0 && d.end >= 100); this.emit('zoomChanged', d ? { start: d.start, end: d.end } : {}); });
         dragBrush(this.engine, () => this.zooms && !this.map, 'rgba(127, 127, 127, 0.18)');
-        this.ro = new this.win.ResizeObserver(() => { if (this.engine) { this.engine.resize(); } });
+        this.engine.on('updateAxisPointer', (ev) => {
+          let i = ev.dataIndex;
+          if ((i === null || i === undefined) && ev.axesInfo && ev.axesInfo.length) { i = ev.axesInfo[0].value; }
+          if (i !== null && i !== undefined && i !== this.pointed) { this.pointed = i; this.emit('pointerMoved', { index: i, row: this.rows[i] }); }
+        });
+        this.ro = new this.win.ResizeObserver(() => {
+          if (!this.engine) { return; }
+          this.engine.dispatchAction({ type: 'hideTip' });
+          this.engine.resize();
+          if (this.pinned !== undefined) { this.pointAt(this.pinned); }
+        });
         this.ro.observe(this.canvas);
         if (this.spec.kind === 'map') { this.map = this.map ? this.map.remount() : new MapView(this); } else { this.map = null; }
       }
@@ -1706,6 +1717,10 @@
         if (this.timer) { return; }
         const ms = this.spec.live && this.spec.live.throttleMs !== undefined ? this.spec.live.throttleMs : 250;
         this.timer = this.win.setTimeout(() => { this.timer = 0; this.draw(); }, ms);
+      }
+      pointAt(index) {
+        this.pinned = index;
+        if (this.engine && index >= 0) { this.engine.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: index }); }
       }
       setMode(mode) {
         if (CHART_MODES.indexOf(mode) < 0 || mode === this.mode) { return; }

@@ -325,6 +325,43 @@ export function formatter(kind, options) {
   }
 }
 
+/** The binary sizes of formatBytes, largest first: a kibibyte is 1,024 bytes, as the server and the operating system count files. */
+export const BYTE_UNITS = Object.freeze([[' TB', 1099511627776], [' GB', 1073741824], [' MB', 1048576], [' KB', 1024]]);
+
+/**
+ * A size in bytes in few characters: "512 bytes", "12 KB", "3.4 MB", "1.2 GB" (kilobytes whole, larger units with one decimal, half up).
+ * @param {*} v the size in bytes
+ * @param {{decimals: (number|function(number, string): number), small: string, empty: string}} [o] decimals: of MB and up (default 1;
+ *   a function of the size and the unit); small: the word after a size under a kilobyte (default " bytes"); empty: for no size (default —)
+ * @returns {string}
+ * @example formatBytes(3565158)   // "3.4 MB"
+ */
+export function formatBytes(v, o) {
+  o = o || {};
+  const n = v === null || v === undefined || v === '' ? NaN : Number(v);
+  if (!isFinite(n)) { return o.empty !== undefined ? o.empty : EMPTY; }
+  if (Math.abs(n) < 1024) { return formatNumber(n, { decimals: 0 }) + (o.small !== undefined ? o.small : ' bytes'); }
+  const dec = o.decimals === undefined ? 1 : o.decimals;
+  return formatCompact(n, { units: BYTE_UNITS, decimals: (a, unit) => unit === ' KB' ? 0 : typeof dec === 'function' ? dec(a, unit) : dec });
+}
+
+/**
+ * A duration in words a person reads at a glance: under a second in milliseconds ("640 ms"), else seconds with one decimal ("2.4 s"),
+ * from a minute minutes and seconds ("3 min 05 s").
+ * @param {*} ms the duration in milliseconds
+ * @param {{empty: string}} [o]
+ * @returns {string}
+ * @example formatDuration(2400)   // "2.4 s"
+ */
+export function formatDuration(ms, o) {
+  const n = ms === null || ms === undefined || ms === '' ? NaN : Number(ms);
+  if (!isFinite(n)) { return o && o.empty !== undefined ? o.empty : EMPTY; }
+  if (Math.abs(n) < 1000) { return formatNumber(n, { decimals: 0 }) + ' ms'; }
+  if (Math.abs(n) < 60000) { return formatNumber(n / 1000, { decimals: 1 }) + ' s'; }
+  const s = Math.round(Math.abs(n) / 1000);
+  return (n < 0 ? MINUS : '') + Math.floor(s / 60) + ' min ' + String(s % 60).padStart(2, '0') + ' s';
+}
+
 /**
  * Python's str() of a float, as the server's templates print a raw number: "74.0" for a whole number, exponents from 1e16 and below
  * 1e-4 as Python writes them ("1e+17", "1e-05"). Only for a number the server sent without its text (an older server's candles).

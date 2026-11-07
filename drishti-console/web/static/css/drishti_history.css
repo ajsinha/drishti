@@ -62,7 +62,7 @@
 .hx-v.t-pos, .hx .t-pos { color: var(--d-pos); }
 .hx-v.t-neg, .hx .t-neg { color: var(--d-neg); }
 .hx-chart-box { border: 1px solid var(--d-border); border-radius: 6px; background: var(--d-surface); padding: .4rem .5rem .2rem; margin-bottom: .6rem; min-width: 0; overflow: hidden; }   /* the hover label never widens the page (QA1-14) */
-.hx-chart { width: 100%; height: 300px; }
+.hx-chart { width: 100%; }                                                   /* drishti-chart's card: 300 px, 220 on a phone */
 .hx-cross { margin: 0 .3rem .2rem; min-height: 1.2em; color: var(--d-muted); font-size: .78rem; text-align: right; }
 
 /* the table */
@@ -140,7 +140,6 @@
   .hx-rform input { width: 100%; }
   .hx-chg li { grid-template-columns: 1fr auto auto auto; }
   .hx-path, .hx-dl { display: none; }
-  .hx-chart { height: 220px; }
 }
 @media (prefers-reduced-motion: reduce) { .hx * { transition: none !important; } }
 

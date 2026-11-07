@@ -39,7 +39,8 @@
     if (text !== undefined && text !== null) { e.textContent = String(text); }
     return e;
   }
-  function pt(rad, a) { return (CX + rad * Math.sin(a)).toFixed(2) + ',' + (CY - rad * Math.cos(a)).toFixed(2); }
+  function at(v, places) { var k = Math.pow(10, places || 1); return Math.round(v * k) / k; }   // an SVG coordinate (geometry, not a figure)
+  function pt(rad, a) { return at(CX + rad * Math.sin(a), 2) + ',' + at(CY - rad * Math.cos(a), 2); }
   /** A ring segment from angle a0 to a1 (radians, 0 at the top, clockwise) between radii r0 (inner) and r1 (outer). */
   function segment(a0, a1, r0, r1) {
     var large = a1 - a0 > Math.PI ? 1 : 0;
@@ -104,10 +105,10 @@
       var lx = CX + (R + BAND + 16) * Math.sin(mid), ly = CY - (R + BAND + 16) * Math.cos(mid);
       var anchor = Math.sin(mid) > 0.15 ? 'start' : Math.sin(mid) < -0.15 ? 'end' : 'middle';
       var dy = Math.cos(mid) > 0.6 ? -16 : Math.cos(mid) < -0.6 ? 10 : -4;
-      var label = s('text', { 'class': 'net-arc-label', x: lx.toFixed(1), y: (ly + dy).toFixed(1), 'text-anchor': anchor });
+      var label = s('text', { 'class': 'net-arc-label', x: at(lx), y: at(ly + dy), 'text-anchor': anchor });
       label.appendChild(s('tspan', { 'class': 'net-arc-id' }, m.nodeId + (m.self ? ' ●' : '')));
       var sum = short(m.packs) || (kinds.length ? kinds.length + (kinds.length === 1 ? ' kind' : ' kinds') : 'no data');
-      if (sum && members.length <= 10) { label.appendChild(s('tspan', { x: lx.toFixed(1), dy: '17', 'class': 'net-arc-sum' }, sum)); }
+      if (sum && members.length <= 10) { label.appendChild(s('tspan', { x: at(lx), dy: '17', 'class': 'net-arc-sum' }, sum)); }
       g.appendChild(label);
       arcs.appendChild(g);
     });

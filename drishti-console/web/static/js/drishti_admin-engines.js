@@ -36,7 +36,7 @@
   function mb(bytes) {
     var n = Number(bytes || 0);
     if (n <= 0) { return '-'; }
-    if (n >= 1 << 30) { return (n / (1 << 30)).toFixed(1) + ' GB'; }
+    if (n >= 1 << 30) { return window.Drishti.elements.core.formatBytes(n); }
     return Math.max(1, Math.round(n / (1 << 20))) + ' MB';
   }
   function byId(id) { return (view.engines || []).filter(function (e) { return e.id === id; })[0]; }

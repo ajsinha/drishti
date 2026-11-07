@@ -43,8 +43,9 @@
       });
     });
   }
-  function fmt(n) { return n === null || n === undefined ? '–' : Number(n).toLocaleString(); }
-  function mb(n) { return n === null || n === undefined ? '–' : (Number(n) < 1 ? (Number(n) * 1024).toFixed(1) + ' KB' : Number(n).toFixed(2) + ' MB'); }
+  var F = window.Drishti.elements.core;                                         // counts and sizes by drishti-core
+  function fmt(n) { return F.formatNumber(n, { maxDecimals: 3, empty: '–' }); }
+  function mb(n) { return n === null || n === undefined ? '–' : F.formatBytes(Number(n) * 1048576, { decimals: 2 }); }
 
   // the selection ------------------------------------------------------------------------------------------------
   function picks() { return $$('[data-mt-pick]'); }
@@ -300,7 +301,7 @@
     });
   }
   function settingsText(s) {
-    return (s['keep-business-days'] === null ? 'keep all dates' : Number(s['keep-business-days']).toLocaleString() + ' business days') + ' · ' + s['target-file-mb'] + ' MB files · ' +
+    return (s['keep-business-days'] === null ? 'keep all dates' : fmt(s['keep-business-days']) + ' business days') + ' · ' + s['target-file-mb'] + ' MB files · ' +
       (s.checkpoint ? 'checkpoint' : 'no checkpoint') + ' · ' + (s['vacuum-hours'] === null ? 'no vacuum' : 'vacuum ' + s['vacuum-hours'] + ' h');
   }
   function refresh() {

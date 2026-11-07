@@ -70,7 +70,7 @@
     if (same) { return shown; }
     var m = /^(\D*?)([-+]?\d[\d,]*)(?:\.(\d+))?(\D*)$/.exec(shown), n = Number(raw);
     if (!m || !isFinite(n) || raw.trim() === '') { return raw; }
-    var out = Math.abs(n).toLocaleString('en-US', { useGrouping: m[2].indexOf(',') >= 0, minimumFractionDigits: (m[3] || '').length, maximumFractionDigits: (m[3] || '').length });
+    var out = window.Drishti.elements.core.formatNumber(Math.abs(n), { grouping: m[2].indexOf(',') >= 0, decimals: (m[3] || '').length });
     return m[1].replace(/[-+]$/, '') + (n < 0 ? '-' : '') + out + m[4];
   }
 

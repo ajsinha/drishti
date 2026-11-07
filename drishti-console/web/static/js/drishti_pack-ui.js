@@ -45,8 +45,8 @@
 
   function say(node, text, bad) { node.textContent = text; node.classList.toggle('bad', !!bad); }
 
-  function bytes(n) { return n >= MB ? (n / MB).toFixed(1) + ' MB' : n >= 1024 ? Math.round(n / 1024) + ' KB' : n + ' bytes'; }
-  function num(n) { return Number(n).toLocaleString('en-US'); }
+  function bytes(n) { return window.Drishti.elements.core.formatBytes(n); }            // sizes and counts by drishti-core
+  function num(n) { return window.Drishti.elements.core.formatNumber(Number(n)); }
   function plural(n, one, many) { return n + ' ' + (n === 1 ? one : (many || one + 's')); }
 
   /** A <select> from [{value, label}] with `current` selected. */

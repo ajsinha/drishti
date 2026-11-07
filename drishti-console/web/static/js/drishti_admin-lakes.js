@@ -37,8 +37,8 @@
     sel.appendChild(o);
   }
   function show(step) { $('[data-step="' + step + '"]').hidden = false; }
-  function fmt(n) { return Number(n || 0).toLocaleString(); }
-  function mb(n) { return (n / 1048576).toFixed(1) + ' MB'; }
+  function fmt(n) { return window.Drishti.elements.core.formatNumber(Number(n || 0), { maxDecimals: 3 }); }
+  function mb(n) { return window.Drishti.elements.core.formatBytes(n); }
   function api(method, url, body) {
     return fetch(url, { method: method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json', 'Accept': 'application/json' } : { 'Accept': 'application/json' },
       body: body ? JSON.stringify(body) : undefined }).then(function (r) {
