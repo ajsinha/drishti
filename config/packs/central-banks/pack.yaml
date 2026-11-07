@@ -1,0 +1,62 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Central banks · the public-sector module's policy-rate pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): policy rates and market series from
+# FRED and the Bank of Canada's Valet API, filled daily by the central-banks feed (config/feeds/central-banks.yaml) into worldlake.
+pack: central-banks
+domain: publicsector
+version: 1.0.0
+code: CBNK
+title: Central banks
+description: >-
+  Policy rates and the market series around them: the Federal Reserve's target range and effective rate, Treasury yields, the curve's
+  slope, US inflation, unemployment and the Fed's balance sheet (FRED, Federal Reserve Bank of St. Louis), and the Bank of Canada's
+  target rate, CORRA, Government of Canada yields and USD/CAD (Bank of Canada Valet). A bank's page shows its policy rate, its last
+  move and its series; each series shows two years of history. Filled daily by the central-banks feed into the worldlake lake; FRED needs
+  a free key in DRISHTI_FRED_API_KEY.
+kinds: [central-bank, rate-series]
+sutras: sutras
+mnemonics:
+  CBANK: { kind: central-bank, label: Central bank }
+  CBSER: { kind: rate-series, label: Central bank series }
+graph:
+  id-patterns:
+    - { pattern: "^CBANK-", kind: central-bank }
+    - { pattern: "^CBSER-", kind: rate-series }
+  fields:
+    CENTRAL_BANK:  { kind: central-bank, label: Central bank }
+    POLICY_SERIES: { kind: rate-series, label: Policy rate series }
+    RATE_SERIES:   { kind: rate-series, label: Series }
+    PRESS:         { kind: release-source, label: Press releases }
+  badges:
+    central-bank: "fmt($.POLICY_RATE, 'price2') + '% policy rate'"
+    rate-series: "fmt($.LATEST, 'price2') + ' ' + $.UNIT"
+connectors:
+  centralbank-store:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds: [central-bank, rate-series]
+    settings:
+      lake: worldlake
+      lake-tables: centralbank.central-bank,centralbank.rate-series
+routes:                # the connector that answers each kind
+  central-bank: centralbank-store
+  rate-series: centralbank-store
+console:
+  examples:
+    - ["CBANK CBANK-FED", "The Federal Reserve · the target range, its last move, the Treasury curve and the balance sheet"]
+    - ["CBANK CBANK-BOC", "The Bank of Canada · the target rate, CORRA, Canada's yields and USD/CAD"]
+    - ["CBSER CBSER-FRED-DGS10", "The US 10-year Treasury yield · two years of daily history"]
+    - ["CBSER CBSER-BOC-V39079", "The Bank of Canada's target for the overnight rate"]
+  help: config/help.yaml

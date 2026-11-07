@@ -1,0 +1,214 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the oecd-series kind (command OECDS): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap oecd-series`; owned by people from then on: confirm the review points, then remove them.
+kind: oecd-series
+mnemonic: OECDS
+pack: oecd
+version: '1.0'
+class: fundamental
+status: active
+title: OECD series
+description: 'One OECD measure of one member by period: the history, the latest value and the change.'
+source: 'public data: OECD, pulled by the oecd feed (config/feeds/oecd.yaml, tools/feeds/publicsector/)'
+grain: One row per oecd series, keyed by SERIES_ID.
+key:
+- SERIES_ID
+id-pattern:
+- ^OECDS-
+dated-by: snapshot
+cadence:
+  frequency: daily
+  due: the oecd feed's schedule (0 12 * * * UTC); a pull with nothing new writes nothing and the lake keeps its latest date
+storage:
+  connector: oecd-store
+  plugin: delta
+  domain: oecd
+  table: <root>/oecd/oecd-series/
+  test-data:
+  - config/packs/oecd/samples
+fields:
+- name: SERIES_ID
+  type: id
+  presence: required
+  description: OECDS-, the member's ISO alpha-3 code and the measure's id.
+  example: OECDS-USA-CLI
+  pattern: ^OECDS-
+- name: NAME
+  type: text
+  presence: required
+  description: The member and the measure, as one name.
+  example: United States · Composite leading indicator
+- name: OECD_COUNTRY
+  type: id
+  presence: required
+  description: The member's oecd-country page (OECD-<ISO3>).
+  example: OECD-USA
+  pattern: ^OECD-
+  link: oecd-country
+- name: ISO3
+  type: text
+  presence: required
+  description: The member's ISO 3166-1 alpha-3 code.
+  example: USA
+- name: COUNTRY_NAME
+  type: text
+  presence: optional
+  description: The member's name as the OECD writes it.
+  example: United States
+- name: MEASURE
+  type: text
+  presence: required
+  description: The measure's id in the feed's YAML.
+  example: CLI
+- name: TITLE
+  type: text
+  presence: required
+  description: The measure's title in the feed's YAML.
+  example: Composite leading indicator
+- name: UNIT
+  type: text
+  presence: required
+  description: What the measure is in.
+  example: index, long-term average = 100
+- name: DATAFLOW
+  type: text
+  presence: required
+  description: The OECD dataflow (agency, id, version) the series is read from.
+  example: OECD.SDD.STES,DSD_STES@DF_CLI,
+- name: FREQUENCY
+  type: text
+  presence: optional
+  description: Monthly or quarterly, from the feed's YAML.
+  example: monthly
+- name: LATEST
+  type: amount
+  presence: required
+  description: The latest value, in the unit shown.
+  example: 100.9993
+  unit: the record's UNIT
+- name: LATEST_PERIOD
+  type: text
+  presence: required
+  description: The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter).
+  example: 2026-09
+- name: PREVIOUS
+  type: amount
+  presence: optional
+  description: The previous period's value.
+  example: 100.9464
+  unit: the record's UNIT
+- name: PREVIOUS_PERIOD
+  type: text
+  presence: optional
+  description: The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter).
+  example: 2026-08
+- name: CHANGE
+  type: amount
+  presence: optional
+  description: The latest value less the previous one.
+  example: 0.0529
+  unit: the record's UNIT
+- name: HISTORY
+  type: record list
+  presence: required
+  description: The value by period, oldest first, over the feed's history-periods (PERIOD, VALUE).
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY.'
+nested:
+  HISTORY[]:
+  - name: PERIOD
+    type: text
+    presence: required
+    description: The SDMX time period of the value (2026-09 a month, 2026-Q2 a quarter).
+    example: 2024-01
+  - name: VALUE
+    type: amount
+    presence: required
+    description: The value for that period, in the unit shown.
+    example: 99.09195
+    unit: the record's UNIT
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: The organisation whose published data the record holds.
+    example: OECD
+  - name: DATASET
+    type: text
+    presence: required
+    description: The OECD dataflow the record was built from.
+    example: OECD DSD_STES@DF_CLI
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    description: The business date of the feed's pull that wrote the record.
+    example: '2026-11-06'
+  - name: LICENCE
+    type: text
+    presence: required
+    description: The terms under which the source allows reuse, as recorded in the feed's YAML.
+    example: 'OECD terms and conditions: data may be extracted, copied an…'
+  - name: ATTRIBUTION
+    type: text
+    presence: required
+    description: The credit line to repeat when the data is shown or republished.
+    example: 'Source: OECD Data Explorer (CC BY 4.0).'
+  - name: URL
+    type: text
+    presence: required
+    description: The OECD Data Explorer's page for the dataflow.
+    example: https://data-explorer.oecd.org/?lc=en&df[ds]=dsDisseminateF…
+  - name: INTERNAL_ONLY
+    type: boolean
+    presence: required
+    description: True when the source's terms forbid redistribution outside the organisation (Export data refuses the record).
+    example: false
+links:
+- field: OECD_COUNTRY
+  kind: oecd-country
+validation:
+- rule: required
+  fields:
+  - SERIES_ID
+  - NAME
+  - OECD_COUNTRY
+  - ISO3
+  - MEASURE
+  - TITLE
+  - UNIT
+  - DATAFLOW
+  - LATEST
+  - LATEST_PERIOD
+  - HISTORY
+  - PROVENANCE
+- rule: unique
+  key:
+  - SERIES_ID
+  per: snapshot
+- rule: pattern
+  field: SERIES_ID
+  pattern: ^OECDS-
+- rule: link
+  field: OECD_COUNTRY
+  kind: oecd-country
+notes:
+- Stored in the worldlake lake (config/lakes/worldlake.yaml), table <data>/delta/worldlake/oecd/oecd-series/, one JSONL.gz a business date loaded with mode
+  replace (a rerun of a day is idempotent).
+- 'Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256
+  and row count (DATA_LAKE_GUIDE.md section 4).'
+review: []

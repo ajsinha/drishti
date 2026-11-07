@@ -39,3 +39,15 @@ modules:
     contributes:
       packs: [us-equities, funds]
       functions: [USEQ, IDX, SIC, EDGAR, FILING, FACT, PXH, FUND, HELD, TRACK, CRV, REPO, FX, FXF, FXV, IRV, CPV, EQ, EQX, DIV, EQV, CDS, INF, INFC, CMD, CMDC, CMDV, FIX, BND, CORR, CORRC, EQB]
+  # the public sector (the owner, 2026-11-07): the first new domain, a module from day one. Government and official data and free news,
+  # each pack filled daily by its feed (config/feeds/<pack>.yaml) into worldlake or newslake (docs/guides/PUBLIC_SECTOR_GUIDE.md).
+  - id: publicsector
+    domain: publicsector
+    title: Public sector
+    about: "Government and official data and free news: World Bank development indicators, central banks' rates (FRED, Bank of Canada), Statistics Canada, the OECD, official press releases and GDELT world events"
+    code: false
+    feature: publicsector
+    enabled: true
+    contributes:
+      packs: [world-development, central-banks, national-statistics, oecd, official-news, gdelt-events]
+      functions: [WDI, WDIS, CBANK, CBSER, NSTAT, OECD, OECDS, PRESS, PREL, GDELT]

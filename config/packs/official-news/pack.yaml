@@ -1,0 +1,61 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Official news · the public-sector module's free news pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): press releases and notices of central
+# banks, regulators and governments from their own feeds, filled daily by the official-news feed (config/feeds/official-news.yaml) into
+# the newslake lake.
+pack: official-news
+domain: publicsector
+version: 1.0.0
+code: ONEWS
+title: Official news
+description: >-
+  Press releases and notices from the publishers' own feeds: the Federal Reserve, the European Central Bank, the Bank of Canada, the Bank
+  of England, the SEC, OSFI, the US Federal Register and the Canada Gazette. A publisher's page lists its latest releases newest first,
+  each a link to the original, with its terms; a release's page gives its title, date, summary and link. Each publisher's terms are
+  recorded: the Bank of England, OSFI and the Canada Gazette allow no commercial reuse, so their releases are internal only. Filled daily
+  by the official-news feed into the newslake lake.
+kinds: [release-source, press-release]
+sutras: sutras
+mnemonics:
+  PRESS: { kind: release-source, label: Official press releases }
+  PREL:  { kind: press-release, label: Press release }
+graph:
+  id-patterns:
+    - { pattern: "^PRESS-", kind: release-source }
+    - { pattern: "^PREL-", kind: press-release }
+  fields:
+    RELEASE_SOURCE: { kind: release-source, label: Publisher }
+    PRESS_RELEASE:  { kind: press-release, label: Release }
+  badges:
+    release-source: "$.RELEASES + ' releases'"
+    press-release: "$.DATE"
+connectors:
+  officialnews-store:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds: [release-source, press-release]
+    settings:
+      lake: newslake
+      lake-tables: officialnews.release-source,officialnews.press-release
+routes:                # the connector that answers each kind
+  release-source: officialnews-store
+  press-release: officialnews-store
+console:
+  examples:
+    - ["PRESS PRESS-FED", "The Federal Reserve Board's latest press releases, each a link to the original"]
+    - ["PRESS PRESS-ECB", "The European Central Bank"]
+    - ["PRESS PRESS-FEDREG", "The US Federal Register's newest documents"]
+    - ["PRESS PRESS-BOE", "The Bank of England (internal only: its terms allow no commercial reuse)"]
+  help: config/help.yaml

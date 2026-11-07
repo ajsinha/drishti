@@ -1,0 +1,20 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/modules/publicsector.yaml: the public-sector module at this site (docs/architecture/ACCESS_MODEL.md, docs/guides/PUBLIC_SECTOR_GUIDE.md):
+# content only (the world-development, central-banks, national-statistics, oecd, official-news and gdelt-events packs, their functions and
+# the Public sector lens), shipped with the core server. This file holds the administrator's switch; the setting
+# drishti.modules.publicsector.enabled (DRISHTI_MODULES_PUBLICSECTOR_ENABLED) wins over it. A change takes effect at the next start: off,
+# its packs and connectors do not load, its functions (WDI, CBANK, PRESS, GDELT ...) are gone and its lens is not offered.
+enabled: true

@@ -83,7 +83,7 @@ class Oecd(PublicFeed):
                 last_periods.append((iso3, hist[-1]["PERIOD"], hist[-4]["PERIOD"] if len(hist) > 3 else hist[0]["PERIOD"]))
                 sid = f"OECDS-{iso3}-{ident(m['id'])}"
                 latest, prev = hist[-1], (hist[-2] if len(hist) > 1 else None)
-                series.append({"SERIES_ID": sid, "NAME": f"{c['name']} · {m['title']}", "COUNTRY": f"OECD-{iso3}", "ISO3": iso3,
+                series.append({"SERIES_ID": sid, "NAME": f"{c['name']} · {m['title']}", "OECD_COUNTRY": f"OECD-{iso3}", "ISO3": iso3,
                                "COUNTRY_NAME": c["name"], "MEASURE": m["id"], "TITLE": m["title"], "UNIT": m.get("unit"),
                                "DATAFLOW": m["dataflow"], "FREQUENCY": m.get("frequency"), "LATEST": latest["VALUE"],
                                "LATEST_PERIOD": latest["PERIOD"], "PREVIOUS": prev["VALUE"] if prev else None,
@@ -96,7 +96,7 @@ class Oecd(PublicFeed):
                 p[m["field"] + "_PERIOD"] = latest["PERIOD"]
                 p["MEASURES"].append({"MEASURE": m["id"], "TITLE": m["title"], "UNIT": m.get("unit"), "LATEST": latest["VALUE"],
                                       "PERIOD": latest["PERIOD"], "CHANGE": change(latest["VALUE"], prev["VALUE"] if prev else None),
-                                      "SERIES": sid})
+                                      "OECD_SERIES": sid})
             if last_periods:
                 known[m["id"]] = {"last": {i: p for i, p, _ in last_periods}, "restart": min(r for _, _, r in last_periods)}
         if not series:

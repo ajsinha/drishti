@@ -326,7 +326,7 @@ schemas:
       - { key: pack, type: string, meaning: "Required: the pack's name, equal to its folder's name (else the pack is refused)" }
       - { key: version, type: string, default: "0", meaning: "X.Y.Z, shown in About, Admin -> Health and Admin -> Packs and checked by deploys and the registry" }
       - { key: code, type: string, default: none, meaning: "The pack's short code: typed alone it opens the pack's overview (/p/<pack>); must not equal a mnemonic" }
-      - { key: domain, type: string, default: core, meaning: "The domain it serves (core, banking, economy, capitalmarkets): a pack of a domain loads only while a module of that domain is on (docs/architecture/ACCESS_MODEL.md)" }
+      - { key: domain, type: string, default: core, meaning: "The domain it serves (core, banking, economy, capitalmarkets, publicsector): a pack of a domain loads only while a module of that domain is on (docs/architecture/ACCESS_MODEL.md)" }
       - { key: title, type: string, default: "the pack's name", meaning: "Its name in menus, help and admin pages" }
       - { key: description, type: string, default: "", meaning: "One paragraph for About and the help centre" }
       - { key: sample, type: boolean, default: "false", meaning: "A demonstration pack: drishti.packs.samples can hide it from business users" }

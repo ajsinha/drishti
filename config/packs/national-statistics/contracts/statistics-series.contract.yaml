@@ -1,0 +1,232 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the statistics-series kind (command NSTAT): docs/contracts/README.md section 16.
+# Drafted by `drishti.py contract bootstrap statistics-series`; owned by people from then on: confirm the review points, then remove them.
+kind: statistics-series
+mnemonic: NSTAT
+pack: national-statistics
+version: '1.0'
+class: fundamental
+status: active
+title: National statistic
+description: 'One Statistics Canada series by vector: the latest value, the change on the period and the year, the history.'
+source: 'public data: Statistics Canada, pulled by the national-statistics feed (config/feeds/national-statistics.yaml, tools/feeds/publicsector/)'
+grain: One row per national statistic, keyed by SERIES_ID.
+key:
+- SERIES_ID
+id-pattern:
+- ^NSTAT-
+dated-by: snapshot
+cadence:
+  frequency: daily
+  due: the national-statistics feed's schedule (0 14 * * 1-5 UTC); a pull with nothing new writes nothing and the lake keeps its latest date
+storage:
+  connector: statistics-store
+  plugin: delta
+  domain: statistics
+  table: <root>/statistics/statistics-series/
+  test-data:
+  - config/packs/national-statistics/samples
+fields:
+- name: SERIES_ID
+  type: id
+  presence: required
+  description: NSTAT-V and the Statistics Canada vector number.
+  example: NSTAT-V1
+  pattern: ^NSTAT-
+- name: NAME
+  type: text
+  presence: required
+  description: The series' title in the feed's YAML, as NAME for search.
+  example: Population of Canada
+- name: VECTOR
+  type: text
+  presence: required
+  description: 'The Statistics Canada vector id (v and a number): one series of one table.'
+  example: v1
+- name: TITLE
+  type: text
+  presence: required
+  description: The series' title in the feed's YAML.
+  example: Population of Canada
+- name: MEMBERS
+  type: text
+  presence: optional
+  description: The table's dimension members that make the series, as Statistics Canada names them (Canada;All-items).
+  example: Canada
+- name: GEOGRAPHY
+  type: text
+  presence: optional
+  description: 'The series'' first member: its geography.'
+  example: Canada
+- name: TABLE_ID
+  type: id
+  presence: optional
+  description: The Statistics Canada table number (18-10-0004-01).
+  example: 17-10-0009-01
+- name: TABLE_TITLE
+  type: text
+  presence: optional
+  description: The table's title in the feed's YAML.
+  example: Population estimates, quarterly
+- name: TOPIC
+  type: text
+  presence: optional
+  description: The theme the feed's YAML gives the series (Prices, Labour, Output, Population, Housing, Money markets).
+  example: Population
+- name: FREQUENCY
+  type: text
+  presence: optional
+  description: How often the series is published (Statistics Canada's frequency code, or the feed's YAML when it says).
+  example: quarterly
+- name: UNIT
+  type: text
+  presence: required
+  description: What the value measures, from the feed's YAML (an index, %, CAD, persons, units).
+  example: persons
+- name: SCALE
+  type: text
+  presence: required
+  description: The scalar factor the values carry (units, thousands, millions).
+  example: units
+- name: LATEST
+  type: amount
+  presence: required
+  description: The latest published value, in the unit and scale shown.
+  example: 41798407.0
+  unit: the record's UNIT
+- name: LATEST_PERIOD
+  type: date
+  presence: required
+  description: The reference period of the latest value (its first day).
+  example: '2026-07-01'
+- name: PREVIOUS
+  type: amount
+  presence: optional
+  description: The value of the period before.
+  example: 41718064.0
+  unit: the record's UNIT
+- name: PREVIOUS_PERIOD
+  type: date
+  presence: optional
+  description: The reference period of the previous value.
+  example: '2026-04-01'
+- name: CHANGE
+  type: amount
+  presence: optional
+  description: The latest value less the previous one.
+  example: 80343.0
+  unit: the record's UNIT
+- name: CHANGE_PCT
+  type: rate
+  presence: optional
+  unit: '%'
+  description: The change on the period in per cent.
+  example: 0.1926
+- name: YEAR_ON_YEAR_PCT
+  type: rate
+  presence: optional
+  unit: '%'
+  description: The change on the same period a year before, in per cent; empty when the history is shorter.
+  example: 0.4553
+- name: RELEASED
+  type: timestamp
+  presence: optional
+  description: When Statistics Canada released the latest value (Eastern time).
+  example: 2026-09-23T08:30
+- name: HISTORY
+  type: record list
+  presence: required
+  description: The value by reference period, oldest first, over the feed's history-periods (PERIOD, VALUE).
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'Where the record comes from, one object: SOURCE, DATASET, RETRIEVED_AT, LICENCE, ATTRIBUTION, URL and INTERNAL_ONLY.'
+nested:
+  HISTORY[]:
+  - name: PERIOD
+    type: date
+    presence: required
+    description: The reference period (its first day).
+    example: '2020-10-01'
+  - name: VALUE
+    type: amount
+    presence: required
+    description: The published value for that period.
+    example: 38027406.0
+    unit: the record's UNIT
+  PROVENANCE:
+  - name: SOURCE
+    type: text
+    presence: required
+    description: The organisation whose published data the record holds.
+    example: Statistics Canada
+  - name: DATASET
+    type: text
+    presence: required
+    description: The Statistics Canada table and vector the record was built from.
+    example: Statistics Canada table 17-10-0009-01, vector v1
+  - name: RETRIEVED_AT
+    type: date
+    presence: required
+    description: The business date of the feed's pull that wrote the record.
+    example: '2026-11-06'
+  - name: LICENCE
+    type: text
+    presence: required
+    description: The terms under which the source allows reuse, as recorded in the feed's YAML.
+    example: Statistics Canada Open Licence
+  - name: ATTRIBUTION
+    type: text
+    presence: required
+    description: The credit line to repeat when the data is shown or republished.
+    example: 'Source: Statistics Canada, <table>. Reproduced and distribu…'
+  - name: URL
+    type: text
+    presence: required
+    description: The table's page on the Statistics Canada website.
+    example: https://www150.statcan.gc.ca/t1/tbl1/en/tv.action?pid=17100…
+  - name: INTERNAL_ONLY
+    type: boolean
+    presence: required
+    description: True when the source's terms forbid redistribution outside the organisation (Export data refuses the record).
+    example: false
+links: []
+validation:
+- rule: required
+  fields:
+  - SERIES_ID
+  - NAME
+  - VECTOR
+  - TITLE
+  - UNIT
+  - SCALE
+  - LATEST
+  - LATEST_PERIOD
+  - HISTORY
+  - PROVENANCE
+- rule: unique
+  key:
+  - SERIES_ID
+  per: snapshot
+- rule: pattern
+  field: SERIES_ID
+  pattern: ^NSTAT-
+notes:
+- Stored in the worldlake lake (config/lakes/worldlake.yaml), table <data>/delta/worldlake/statistics/statistics-series/, one JSONL.gz a business date loaded
+  with mode replace (a rerun of a day is idempotent).
+- 'Delivered as JSON Lines: one document a line, UTF-8, gzipped, with a .ready file naming the lake, pack, kind, connector, business date, mode, key, sha256
+  and row count (DATA_LAKE_GUIDE.md section 4).'
+review: []

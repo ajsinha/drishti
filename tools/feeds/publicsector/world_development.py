@@ -55,7 +55,7 @@ class WorldDevelopment(PublicFeed):
                 latest, prev = hist[-1], (hist[-2] if len(hist) > 1 else None)
                 sid = f"WDIS-{iso3}-{ident(ind['code'])}"
                 series.append({
-                    "SERIES_ID": sid, "NAME": f"{c['name']} · {meta['name']}", "PROFILE": f"WDI-{iso3}", "ISO3": iso3,
+                    "SERIES_ID": sid, "NAME": f"{c['name']} · {meta['name']}", "WDI_PROFILE": f"WDI-{iso3}", "ISO3": iso3,
                     "COUNTRY_NAME": c["name"], "INDICATOR_CODE": ind["code"], "INDICATOR": meta["name"], "UNIT": ind.get("unit") or meta["unit"],
                     "DEFINITION": meta["note"], "LATEST": latest["VALUE"], "LATEST_YEAR": latest["YEAR"],
                     "PREVIOUS": prev["VALUE"] if prev else None, "PREVIOUS_YEAR": prev["YEAR"] if prev else None,
@@ -65,7 +65,7 @@ class WorldDevelopment(PublicFeed):
                 p = profiles.setdefault(iso3, self._profile(c, updated))
                 p[ind["field"]] = latest["VALUE"]
                 p["INDICATORS"].append({"INDICATOR": meta["name"], "UNIT": ind.get("unit") or meta["unit"], "LATEST": latest["VALUE"],
-                                        "YEAR": latest["YEAR"], "CODE": ind["code"], "SERIES": sid})
+                                        "YEAR": latest["YEAR"], "CODE": ind["code"], "WDI_SERIES": sid})
         if not series:
             raise FeedError("the World Bank answered no observation for the selection: check config/feeds/world-development.yaml")
         for p in profiles.values():

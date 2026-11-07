@@ -128,7 +128,7 @@ class CentralBanks(PublicFeed):
         values = [h["VALUE"] for h in hist]
         src = self.source(s["source"])
         title = s.get("title") or meta.get("title") or s["code"]
-        return {"SERIES_ID": sid, "NAME": title, "SOURCE": src.get("title"), "CODE": s["code"], "BANK": f"CBANK-{s['bank']}",
+        return {"SERIES_ID": sid, "NAME": title, "SOURCE": src.get("title"), "CODE": s["code"], "CENTRAL_BANK": f"CBANK-{s['bank']}",
                 "TITLE": title, "DESCRIPTION": meta.get("description"), "UNIT": s.get("unit") or meta.get("unit"),
                 "FREQUENCY": meta.get("frequency"), "LATEST": latest["VALUE"], "LATEST_DATE": latest["DATE"],
                 "PREVIOUS": prev["VALUE"] if prev else None, "PREVIOUS_DATE": prev["DATE"] if prev else None,
@@ -138,7 +138,7 @@ class CentralBanks(PublicFeed):
                 "PROVENANCE": self.provenance(s["source"], dataset=f"{src.get('title')}: {s['code']}", url=meta.get("url"))}
 
     def _bank_doc(self, b: dict, docs: list[dict]) -> dict:
-        mine = [d for d in docs if d["BANK"] == f"CBANK-{b['id']}"]
+        mine = [d for d in docs if d["CENTRAL_BANK"] == f"CBANK-{b['id']}"]
         src, code = b["policy-series"].split(":", 1)
         policy = next((d for d in mine if d["SERIES_ID"] == f"CBSER-{src.upper()}-{ident(code)}"), None)
         move_date = move = None
@@ -153,7 +153,7 @@ class CentralBanks(PublicFeed):
                 "POLICY_RATE": policy["LATEST"] if policy else None, "POLICY_RATE_DATE": policy["LATEST_DATE"] if policy else None,
                 "POLICY_SERIES": policy["SERIES_ID"] if policy else None, "LAST_MOVE_DATE": move_date, "LAST_MOVE_BP": move,
                 "POLICY_HISTORY": policy["HISTORY"] if policy else [],
-                "SERIES": [{"SERIES_ID": d["SERIES_ID"], "TITLE": d["TITLE"], "LATEST": d["LATEST"], "DATE": d["LATEST_DATE"],
+                "SERIES": [{"RATE_SERIES": d["SERIES_ID"], "TITLE": d["TITLE"], "LATEST": d["LATEST"], "DATE": d["LATEST_DATE"],
                             "CHANGE": d["CHANGE"], "UNIT": d["UNIT"]} for d in mine],
                 "PRESS": b.get("press"),
                 "PROVENANCE": self.provenance(src, dataset=f"{b['name']}: policy rate and market series", url=b.get("website"))}

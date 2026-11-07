@@ -1,0 +1,58 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# OECD · the public-sector module's OECD pack (docs/guides/PUBLIC_SECTOR_GUIDE.md): the cycle, jobs, prices and growth of the OECD
+# members from the OECD Data Explorer (SDMX), filled daily by the oecd feed (config/feeds/oecd.yaml) into worldlake.
+pack: oecd
+domain: publicsector
+version: 1.0.0
+code: OECDP
+title: OECD
+description: >-
+  The OECD members' business cycle, jobs, prices and growth from the OECD Data Explorer's SDMX API: the composite leading indicator, the
+  harmonised unemployment rate, consumer price inflation and real GDP growth. A country's page shows the latest of each measure and the
+  members on a map shaded by inflation; each series shows its monthly or quarterly history. Filled daily by the oecd feed into the
+  worldlake lake.
+kinds: [oecd-country, oecd-series]
+sutras: sutras
+mnemonics:
+  OECD:  { kind: oecd-country, label: OECD country }
+  OECDS: { kind: oecd-series, label: OECD series }
+graph:
+  id-patterns:
+    - { pattern: "^OECD-", kind: oecd-country }
+    - { pattern: "^OECDS-", kind: oecd-series }
+  fields:
+    OECD_COUNTRY: { kind: oecd-country, label: OECD country }
+    OECD_SERIES:  { kind: oecd-series, label: Series }
+  badges:
+    oecd-country: "fmt($.INFLATION, 'price2') + '% inflation'"
+    oecd-series: "fmt($.LATEST, 'price2') + ' ' + $.UNIT"
+connectors:
+  oecd-store:
+    plugin: delta
+    enabled: ${DRISHTI_LAKE_ENABLED:true}
+    kinds: [oecd-country, oecd-series]
+    settings:
+      lake: worldlake
+      lake-tables: oecd.oecd-country,oecd.oecd-series
+routes:                # the connector that answers each kind
+  oecd-country: oecd-store
+  oecd-series: oecd-store
+console:
+  examples:
+    - ["OECD OECD-CAN", "Canada · leading indicator, unemployment, inflation, growth; the members on a map"]
+    - ["OECD OECD-JPN", "Japan"]
+    - ["OECDS OECDS-USA-CLI", "The US composite leading indicator, month by month"]
+  help: config/help.yaml

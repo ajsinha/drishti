@@ -156,7 +156,7 @@ class OfficialNews(PublicFeed):
     def _release(self, s: dict, it: dict) -> dict:
         return {"RELEASE_ID": release_id(s["id"], it["link"]), "TITLE": it["title"], "PUBLISHED": it["published"],
                 "DATE": (it["published"] or "")[:10] or None, "URL": it["link"], "SUMMARY": it["summary"], "CATEGORY": it["category"],
-                "PUBLISHER": f"PRESS-{s['id']}", "PUBLISHER_NAME": s["title"], "PUBLISHER_TYPE": s["type"], "COUNTRY": s["country"],
+                "RELEASE_SOURCE": f"PRESS-{s['id']}", "PUBLISHER_NAME": s["title"], "PUBLISHER_TYPE": s["type"], "COUNTRY": s["country"],
                 "INTERNAL_ONLY": bool(s.get("internal-only")),
                 "PROVENANCE": self.provenance(s["id"], dataset=f"{s['title']}: {s.get('feed-title') or 'press releases'}", url=it["link"])}
 
@@ -171,6 +171,6 @@ class OfficialNews(PublicFeed):
                 "RELEASES": len(mine), "LAST_PUBLISHED": mine[0].get("PUBLISHED") if mine else None,
                 "LAST_PULL": "failed: kept releases shown" if failed else "ok",
                 "LATEST": [{"PUBLISHED": r["PUBLISHED"], "TITLE": r["TITLE"], "URL": r["URL"], "CATEGORY": r.get("CATEGORY"),
-                            "RELEASE": r["RELEASE_ID"]} for r in mine[:25]],
+                            "PRESS_RELEASE": r["RELEASE_ID"]} for r in mine[:25]],
                 "BY_CATEGORY": [{"CATEGORY": k, "COUNT": v} for k, v in sorted(cats.items(), key=lambda kv: -kv[1])][:12],
                 "PROVENANCE": self.provenance(s["id"], dataset=f"{s['title']}: {s.get('feed-title') or 'press releases'}", url=s.get("url"))}
