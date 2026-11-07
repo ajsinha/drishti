@@ -21,8 +21,8 @@ picks one from the links on Home and the choice is kept in their settings (``hom
 ``home.landing-by-role`` ({role: landing}) is read and, when configured, wins over the person's choice: the hook for role-based access
 later; Drishti Trading's ``trading.landing-by-role`` (the same shape, for the person's trading role) picks the first landing below their
 choice. ``/api/home/search`` is the landings' one read: the server's search grammar, for a command the edition shows; Drishti Market's
-figures (``/api/home/market/{desk,moves,quality}``) and Drishti Trading's are the banking module's (core/market_landing.py and
-core/trading_landing.py, served by routes/trading_routes.py, with its landing rule registered in core/plugins.py).
+figures (``/api/home/market/{desk,moves,quality}``) and Drishti Trading's are the banking module's (plugins/banking/market_landing.py and
+plugins/banking/trading_landing.py, served by plugins/banking/routes/trading_routes.py, with its landing rule registered in core/plugins.py).
 
 The lens: ``/lens/<name>`` opens an edition the server offers as a lens (``drishti.lenses``, one or more) for this person; opening another
 while in one switches; ``/lens/leave`` closes it. Kept in the person's settings (``lens``), so every server of a cluster and every console

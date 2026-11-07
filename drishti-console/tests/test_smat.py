@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The scenario matrix in the console (SMAT, routes/smat_routes.py; VAR_GUIDE.md section 3.9): the command and its spaced forms, the
+"""The scenario matrix in the console (SMAT, plugins/banking/routes/smat_routes.py; VAR_GUIDE.md section 3.9): the command and its spaced forms, the
 page and its JSON, Arrow, CSV and Arrow file read from the server as the person, gaps said in the export (never zeros), the links on the
 entity pages and the VaR page offered only where the word is (Drishti Risk and Trading; not Market or World, DRS-4023), FUNC and the
 type-ahead. The server's own logic (the values against the stored vectors, PV to P&L, ranks, gaps, masks) is VarMatrixApiTest's."""

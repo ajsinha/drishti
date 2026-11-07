@@ -543,8 +543,8 @@ names the candidate row that would build it. The gaps (on a mock-up, not in the 
 
 [Open the mock-up](mockups/risk/risk-landing.html). **Chosen:** all three, as the person's choice of Home (`home.landings: [desk, command,
 map]`, `desk` the default) ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)). The mock-up's footer
-proposed "pick one or combine"; the product owner kept all three. **Code:** [`risk_landing.html`](../../drishti-console/web/templates/home/risk_landing.html),
-[`drishti_risk-landing.js`](../../drishti-console/web/static/js/drishti_risk-landing.js), [`drishti_risk-landing.css`](../../drishti-console/web/static/css/drishti_risk-landing.css),
+proposed "pick one or combine"; the product owner kept all three. **Code:** [`risk_landing.html`](../../drishti-console/plugins/banking/templates/home/risk_landing.html),
+[`drishti_risk-landing.js`](../../drishti-console/plugins/banking/static/js/drishti_risk-landing.js), [`drishti_risk-landing.css`](../../drishti-console/plugins/banking/static/css/drishti_risk-landing.css),
 [`risk.yaml`](../../config/editions/risk.yaml) `home`. Figures on the mock-up are the demo's on 2026-09-30 where the guides quote them
 (VaR 112.04m, ES, the limit letter `LL-0003` 16.07m, EPE 945.58m); the rest are illustrative.
 
@@ -559,7 +559,7 @@ under it.
 failed answer says `Not available: <reason>` in place of that panel (the others carry on); a tile shows `—` and the reason in its subline.
 *Empty:* "No desks in MGMT", "No counterparty exposure on this date", "No limits set in MGMT", "Nothing yet today", "No baskets yet: build
 one on the VaR page", "No monitors yet: make one"; a node without a limit says "no limit". **Phone** (600 px and below): one column, the
-tiles two to a row, the big command line 46 px high ([`drishti_risk-landing.css`](../../drishti-console/web/static/css/drishti_risk-landing.css)); the
+tiles two to a row, the big command line 46 px high ([`drishti_risk-landing.css`](../../drishti-console/plugins/banking/static/css/drishti_risk-landing.css)); the
 mock-up drew no phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md section 8](../architecture/MOBILE_DISPLAY.md#8-beyond-sutra-pages)): the command line, the tiles and the first card in full, the other tables at a glance (five rows, *Show all*), charts, maps and the quick links under *More on this page*.
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
@@ -602,9 +602,9 @@ mock-up drew no phone form; on a phone the landing takes the phone tiers ([MOBIL
 
 [Open the mock-up](mockups/risk/scenario-matrix-B.html). **Chosen:** option B, *matrix with a chart of the selected scenario* (product
 owner, 2026-10-31); only option B was kept in the mock-ups folder. In Drishti Risk and Drishti Trading
-(`commands.words.SMAT: on`); refused in Market and World. **Code:** [`smat.html`](../../drishti-console/web/templates/terminal/smat.html),
-[`drishti_scenario-matrix.js`](../../drishti-console/web/static/js/drishti_scenario-matrix.js), [`drishti_scenario-matrix.css`](../../drishti-console/web/static/css/drishti_scenario-matrix.css),
-[`smat_routes.py`](../../drishti-console/routes/smat_routes.py). **Guide:** [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat).
+(`commands.words.SMAT: on`); refused in Market and World. **Code:** [`smat.html`](../../drishti-console/plugins/banking/templates/terminal/smat.html),
+[`drishti_scenario-matrix.js`](../../drishti-console/plugins/banking/static/js/drishti_scenario-matrix.js), [`drishti_scenario-matrix.css`](../../drishti-console/plugins/banking/static/css/drishti_scenario-matrix.css),
+[`smat_routes.py`](../../drishti-console/plugins/banking/routes/smat_routes.py). **Guide:** [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat).
 On the Risk landings themselves `SMAT` is not yet a chip (RL13).
 
 **Interactions.** `SMAT <id> [N] <GO>` (N business dates, 20 by default, at most 60) or `/smat?id=…&days=N`; a *Scenario matrix* link on
@@ -640,9 +640,9 @@ count, a scenario picker and the details; the matrix on a larger screen (the moc
 
 [Open the mock-up](mockups/risk/var-horizon-picker.html). **Chosen:** the design shown (three states of the VaR page header; its
 alternatives for small spaces, a menu and a full-width phone control, were "considered"); approved for the 10-day VaR work, to which the product
-owner added a **Confidence** picker (and ES's own) on 2026-10-30. **Code:** [`var.html`](../../drishti-console/web/templates/terminal/var.html)
-(the header strip), [`drishti_var-explorer.js`](../../drishti-console/web/static/js/drishti_var-explorer.js) (tiles, the method strip, the lens),
-[`drishti_var.css`](../../drishti-console/web/static/css/drishti_var.css). **Guide:** [VAR_GUIDE section 3.1](../guides/VAR_GUIDE.md#31-open-it) (*Horizon
+owner added a **Confidence** picker (and ES's own) on 2026-10-30. **Code:** [`var.html`](../../drishti-console/plugins/banking/templates/terminal/var.html)
+(the header strip), [`drishti_var-explorer.js`](../../drishti-console/plugins/banking/static/js/drishti_var-explorer.js) (tiles, the method strip, the lens),
+[`drishti_var.css`](../../drishti-console/plugins/banking/static/css/drishti_var.css). **Guide:** [VAR_GUIDE section 3.1](../guides/VAR_GUIDE.md#31-open-it) (*Horizon
 and Confidence*) and [section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen).
 The mock-up's figures: 1-day 112.04m (the demo's), √10 354.31m (exact), the 10-day sum 331.7m (illustrative; the demo's is 274.5m).
 
@@ -704,9 +704,9 @@ On a phone (below 640 px) the Engines menu opens as a drawer: a row per running 
 [Open the mock-up](mockups/var-layout/A.html) and [its second state](mockups/var-layout/A-drawer.html). **Chosen:** option A (the product
 owner: "cleaner and better"); the earlier alternatives of the idea were not kept. Two changes to the VaR explorer and nothing else: the
 baskets leave the left-hand column for two drop-downs, and the right-hand explanation column becomes a drawer. The mock-up's figures are
-made up; the panels under the toolbar are the explorer's own, unchanged. **Code:** [`var.html`](../../drishti-console/web/templates/terminal/var.html)
-(the toolbar, the drawer), [`drishti_var-layout.js`](../../drishti-console/web/static/js/drishti_var-layout.js) (the drop-downs, the keys, the drawer),
-[`drishti_var-explorer.js`](../../drishti-console/web/static/js/drishti_var-explorer.js) (the rows and their actions), [`drishti_var-layout.css`](../../drishti-console/web/static/css/drishti_var-layout.css).
+made up; the panels under the toolbar are the explorer's own, unchanged. **Code:** [`var.html`](../../drishti-console/plugins/banking/templates/terminal/var.html)
+(the toolbar, the drawer), [`drishti_var-layout.js`](../../drishti-console/plugins/banking/static/js/drishti_var-layout.js) (the drop-downs, the keys, the drawer),
+[`drishti_var-explorer.js`](../../drishti-console/plugins/banking/static/js/drishti_var-explorer.js) (the rows and their actions), [`drishti_var-layout.css`](../../drishti-console/plugins/banking/static/css/drishti_var-layout.css).
 **Guide:** [VAR_GUIDE section 3.2](../guides/VAR_GUIDE.md#32-the-screen) and [section 3.6](../guides/VAR_GUIDE.md#36-how-this-number-was-built).
 **Guard:** `drishti-console/tests/test_var_layout_keeps_everything.py` (every part of the screen as it was, still there).
 

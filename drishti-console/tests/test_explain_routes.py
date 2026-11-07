@@ -61,7 +61,7 @@ def test_the_old_panels_scripts_and_addresses_are_gone(client):
     assert not (WEB / "static" / "js" / "drishti_var-explain.js").exists()
     for name in ("drishti_var-layout.js", "drishti_var-explorer.js", "drishti_var-parametric.js", "drishti_exposure-explorer.js",
                  "drishti_mr-lens.js"):
-        text = (WEB / "static" / "js" / name).read_text(encoding="utf-8")
+        text = (WEB.parent / "plugins" / "banking" / "static" / "js" / name).read_text(encoding="utf-8")
         for old in ("renderProv", "openHow", "closeHow", "vp-pop", "/explain?", "varExplain"):
             assert old not in text, f"{name} still has {old}"
     assert client.get("/api/var/explain?scope=BANK").status_code == 404

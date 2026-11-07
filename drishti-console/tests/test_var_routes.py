@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The VaR explorer's command words (routes/var_routes.py): VAR <word> <rest> opens /var on the scope it means; an id of the retired
+"""The VaR explorer's command words (plugins/banking/routes/var_routes.py): VAR <word> <rest> opens /var on the scope it means; an id of the retired
 stored VaR (VAR VAR-COMM, /v/var/VAR-COMM, /v/var-node/VN-<node>) opens the explorer at the matching scope with a notice; the page and
 its JSON need no server to answer a bad path."""
 from plugins.banking.routes.var_routes import retired_link, var_command
@@ -159,7 +159,7 @@ def test_no_confidence_is_hard_coded_the_labels_follow_the_answer(client):
     from pathlib import Path
     html = client.get("/var?scope=BANK").text
     assert "VaR 99%" not in html and "ES 97.5%" not in html
-    js = Path(__file__).resolve().parents[1] / "web" / "static" / "js"
+    js = Path(__file__).resolve().parents[1] / "plugins" / "banking" / "static" / "js"
     for f in ("drishti_var-explorer.js", "drishti_var-basket.js"):
         text = (js / f).read_text(encoding="utf-8")
         assert "99%" not in text and "97.5%" not in text, f

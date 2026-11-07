@@ -20,7 +20,7 @@
 * ``/var/reports`` and ``/var/reports/<report>?period=FY2026``: the report runs and their review and sign-off
   (``VAR REPORT annual-report-var FY2026``).
 
-Each page is a shell: web/static/js/drishti_var-backtesting.js and drishti_var-reports.js fill it from the same-origin JSON below, which asks the
+Each page is a shell: plugins/banking/static/js/drishti_var-backtesting.js and drishti_var-reports.js fill it from the same-origin JSON below, which asks the
 server (``/api/v1/risk/var/backtesting``, ``/statistics``, ``/reports``) as the person. Behind the edition's ``VAR`` word, as the explorer."""
 from __future__ import annotations
 

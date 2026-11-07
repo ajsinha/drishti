@@ -16,7 +16,7 @@
 
 Every kind of thing a person may build (a connector, a table, a Sutra, a report, ...) is one :class:`ObjectType`, registered by the domain
 that owns it: the core's in ``core/build_types.py``, a module's in the file its plugin.yaml lists under ``registers:`` (banking's:
-``core/build_types_banking.py``, which moves with the rest of banking); a type of a module that is off is not offered. A type says its
+``plugins/banking/build_types.py``, which moves with the rest of banking); a type of a module that is off is not offered. A type says its
 rail group (Data, Screens, Analysis, Work), its first-visit task tile (bring, shape, show, package), who may see it (``requires``, the sitemap's words), where + New starts one, and how to list what exists
 (``source``, an async function of the request answering :class:`Item` rows). The Work group's types are *derived*: they list rows of the
 other types (my drafts, waiting for review, recently changed).

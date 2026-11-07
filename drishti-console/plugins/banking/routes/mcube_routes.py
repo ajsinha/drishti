@@ -14,7 +14,7 @@
 
 """The MR cube in the console (docs/guides/MR_CUBE_GUIDE.md): a Pivot preset (config/pivot-presets.yaml ``mr``; the screen is
 ``/pivot?preset=mr``, terminal/pivot.html on source ``var`` with the MR lens: the headline strip, the lens controls, the time-travel slider and tabs
-A, B and C drawn by web/static/js/drishti_mr-lens.js). This module is its word and its lens's API, not a page: ``MCUBE <GO>`` opens the preset's
+A, B and C drawn by plugins/banking/static/js/drishti_mr-lens.js). This module is its word and its lens's API, not a page: ``MCUBE <GO>`` opens the preset's
 landing (the source's defaultView: desks by risk class, VaR); ``MCUBE <scope> [BY rows[,columns]] [MEASURE m,...] [DATE d] [SORT desc] <GO>``
 lays what was typed over it (the preset form of the PIVOT grammar); ``MCUBE @owner/name <GO>`` opens a saved pivot view; ``/mcube`` is the older
 address of the preset. The lens's own answers are the server's ``/api/v1/risk/mr/...``,

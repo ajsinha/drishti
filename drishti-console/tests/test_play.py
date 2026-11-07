@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The VaR Playground in the console (PLAY VAR, routes/play_routes.py; VAR_GUIDE.md section 3.10): the command and its forms (a scope in
+"""The VaR Playground in the console (PLAY VAR, plugins/banking/routes/play_routes.py; VAR_GUIDE.md section 3.10): the command and its forms (a scope in
 the VaR explorer's words with its lens and currency, or ids), the page and its grid read from the server as the person, the export and
 the empty workbook streamed through, the VaR page's link, FUNC and the type-ahead, and the word only where the edition has it (Drishti
 Risk and Trading; not Market or World, DRS-4023). The workbook's own figures against the engine are VarPlaygroundWorkbookTest's and
@@ -153,6 +153,6 @@ def test_market_has_no_playground(backend, monkeypatch):
 
 def test_the_var_page_link_carries_the_pages_date_and_settings():
     """The VaR page's Playground link opens the same view: the page's date (asOf), currency, horizon, measure, confidences and set."""
-    js = (CONSOLE / "web" / "static" / "js" / "drishti_play-link.js").read_text(encoding="utf-8")
+    js = (CONSOLE / "plugins" / "banking" / "static" / "js" / "drishti_play-link.js").read_text(encoding="utf-8")
     for k in ("asOf", "ccy", "h", "m", "q", "esq", "set"):
         assert f'"{k}"' in js, k

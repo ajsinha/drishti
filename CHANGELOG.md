@@ -425,7 +425,7 @@
   a rail grouped Data · Screens · Analysis · Work with a count per kind, lists with lineage both ways (what an item uses, what uses it,
   inverted across every kind gathered for the person), first-visit task tiles (Bring data in, Shape it, Show it, Package it; hidden per
   browser), one search across every kind, + New per kind. Built from one registry of object types (`core/build_registry.py`): the core's
-  types in `core/build_types.py`, banking's (VaR baskets) in `core/build_types_banking.py`, so the domain split moves banking's entries as
+  types in `core/build_types.py`, banking's (VaR baskets) in `plugins/banking/build_types.py`, so the domain split moves banking's entries as
   one file; every source runs at once with a time limit and a failing one leaves its kind without a count. Folded and deleted: *My
   designs* (`build/designs.html`, now the home's *My drafts* partial with its actions; `drishti_build-designs.js` is
   `drishti_build-home.js`), Studio's bare start page (`/studio` redirects to `/build`); **BI Studio's own home is folded in**: `/bi` redirects to `/build`,
@@ -2911,7 +2911,7 @@
   masked for a role without raw, said); P&L against VaR from the official history (left out, with a note, without one); overnight
   movers. **Explorer**: the command line, chips, grouped commands, recent Trading commands. Read-only routes
   `/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}` and `POST /api/home/trading/check` (`DRS-4023` unless the
-  edition or lens shows the commands), `core/trading_landing.py` (EDITIONS.md section 14).
+  edition or lens shows the commands), `plugins/banking/trading_landing.py` (EDITIONS.md section 14).
 - **Four lenses by default**: `drishti.lenses` is `risk,world,market,trading` (server `application.yaml`, the stack, Docker, the AWS
   example); Open, Leave and Switch to across all four; no design link inside the Trading lens.
 - **Tests**: `EditionTradingServerTest` (the lens through the real settings API, its commands, `ECON`, `SCN`, `COLL`, `FRTB` refused with
@@ -2964,7 +2964,7 @@
   and `EXP` off), no trades and no VaR, the Market data Knowledge page, branding "Drishti Market". The pack ships no BI dataset yet: BI is
   kept to `market-data-*` names, so it offers no VaR, exposure or world item.
 - **Its Home**: the three approved mock-ups, Market desk (default), Explorer and Quality, in the terminal look with a violet accent. The
-  figures are worked out by `core/market_landing.py` from the pack's own answers (search, raw documents, the business date, one field's
+  figures are worked out by `plugins/banking/market_landing.py` from the pack's own answers (search, raw documents, the business date, one field's
   history) and served read-only by `/api/home/market/desk`, `/moves` and `/quality` (`DRS-4023` unless the edition or lens shows `CRV`).
   Desk: USD OIS 10Y, USD 2s10s, EUR/USD 1M ATM vol, the CDS 5Y median and the data exceptions, with a day-over-day change only when both
   days hold real data; the USD curves against a week ago (else OIS against projection); the biggest moves in σ of each item's own history

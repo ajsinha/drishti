@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""FRTB-SA in the console (routes/frtb_routes.py; docs/guides/FRTB_SA_GUIDE.md sections 7 and 8): FRSA <scope>, PLAY FRTB <scope> and
+"""FRTB-SA in the console (plugins/banking/routes/frtb_routes.py; docs/guides/FRTB_SA_GUIDE.md sections 7 and 8): FRSA <scope>, PLAY FRTB <scope> and
 PLAY FRTB RUN <id>, the pages as shells, every figure read from the server as the person with the switches and overrides passed through,
 the recipe saved and replayed, the workbook streamed. The figures themselves are the engine's tests (FrtbHandBuiltCasesTest,
 FrtbPlaygroundWorkbookTest, FrtbApiTest)."""

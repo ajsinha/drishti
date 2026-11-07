@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The VaR explorer (docs/guides/VAR_GUIDE.md section 3): ``VAR DESK RATES <GO>`` opens
-``/var?scope=DESK:RATES``. The page is a shell; web/static/js/drishti_var-explorer.js fills its panels from the same-origin JSON below, which
+``/var?scope=DESK:RATES``. The page is a shell; plugins/banking/static/js/drishti_var-explorer.js fills its panels from the same-origin JSON below, which
 asks the server's VaR engine (/api/v1/risk/var) with the user's own identity, so entitlements by node and masks apply as on every screen.
 
 Command words after VAR (``VAR BANK``, ``VAR LE LE-NY``, ``VAR DIV MARKETS``, ``VAR DESK RATES``, ``VAR BOOK BOOK-RATES-1``,

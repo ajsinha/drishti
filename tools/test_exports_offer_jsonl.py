@@ -93,10 +93,10 @@ class Console(unittest.TestCase):
           "web/templates/terminal/history.html": 'data-hx-export="jsonl"',
           "web/templates/terminal/search.html": "/export/search.jsonl",
           "web/templates/terminal/form.html": "/export/search.jsonl",
-          "web/static/js/drishti_exposure-explorer.js": 'format: "jsonl"',
-          "web/templates/terminal/exposure.html": "data-xx-jsonl",
-          "web/static/js/drishti_var-explorer.js": '"/jsonl"',
-          "web/templates/terminal/var.html": "data-vx-jsonl-path",
+          "plugins/banking/static/js/drishti_exposure-explorer.js": 'format: "jsonl"',
+          "plugins/banking/templates/terminal/exposure.html": "data-xx-jsonl",
+          "plugins/banking/static/js/drishti_var-explorer.js": '"/jsonl"',
+          "plugins/banking/templates/terminal/var.html": "data-vx-jsonl-path",
           "web/templates/subscribe.html": 'value="jsonl"',
           "web/templates/reports.html": 'value="jsonl"'}
 

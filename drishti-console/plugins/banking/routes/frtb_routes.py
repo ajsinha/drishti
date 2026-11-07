@@ -17,7 +17,7 @@ mock-up B, the capital stack with the class × measure grid and the bucket drill
 <scope> <GO>`` opens the FRTB-SA Playground (the grid of weighted sensitivities with its formula bar and the explanation beside it, the
 Choices panel with every method switch, a switch compared side by side with the difference explained by step, Save recipe and Export to
 Excel); ``PLAY FRTB RUN <id> <GO>`` replays a saved recipe and says whether it reproduced to the cent. Every figure is the server's
-(``/api/v1/risk/frtb/...``, as the person); the pages are shells that web/static/js/drishti_frtb-sa.js fills. The scope words are the VaR explorer's;
+(``/api/v1/risk/frtb/...``, as the person); the pages are shells that plugins/banking/static/js/drishti_frtb-sa.js fills. The scope words are the VaR explorer's;
 ``EXAMPLE`` runs the design's hand-built cases."""
 from __future__ import annotations
 

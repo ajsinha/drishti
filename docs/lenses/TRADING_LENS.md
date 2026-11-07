@@ -206,7 +206,7 @@ draws a trading menu or hides a trading command. The panel's changes are made th
 ## 4. The landings
 
 One template, `home/trading_landing.html`, with `drishti_trading-landing.js` and `drishti_trading-landing.css`, a **green accent**; figures worked out by
-`drishti-console/core/trading_landing.py` and served read-only by `drishti-console/routes/trading_routes.py`
+`drishti-console/plugins/banking/trading_landing.py` and served read-only by `drishti-console/plugins/banking/routes/trading_routes.py`
 (`/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}` and `POST /api/home/trading/check`; `404 DRS-4023` unless the
 person's edition or lens shows `TRD`), cached two minutes per person, date and scope ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)).
 
@@ -604,9 +604,9 @@ row. The scenario matrix (`SMAT`, on in Trading too) and the VaR horizon picker 
 [Open the mock-up](mockups/trading/trading-landing.html). **Chosen:** the footer's proposal, adopted: A the default for traders, B for desk
 heads (`trading.landing-by-role: {desk-head: desk, trader: trader}`, below the person's own choice), C behind the landing switch
 ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)). A green accent on the terminal look.
-**Code:** [`trading_landing.html`](../../drishti-console/web/templates/home/trading_landing.html),
-[`drishti_trading-landing.js`](../../drishti-console/web/static/js/drishti_trading-landing.js), [`drishti_trading-landing.css`](../../drishti-console/web/static/css/drishti_trading-landing.css),
-[`trading_landing.py`](../../drishti-console/core/trading_landing.py), [`trading_routes.py`](../../drishti-console/routes/trading_routes.py)
+**Code:** [`trading_landing.html`](../../drishti-console/plugins/banking/templates/home/trading_landing.html),
+[`drishti_trading-landing.js`](../../drishti-console/plugins/banking/static/js/drishti_trading-landing.js), [`drishti_trading-landing.css`](../../drishti-console/plugins/banking/static/css/drishti_trading-landing.css),
+[`trading_landing.py`](../../drishti-console/plugins/banking/trading_landing.py), [`trading_routes.py`](../../drishti-console/plugins/banking/routes/trading_routes.py)
 (`/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}`, `POST /api/home/trading/check`), [`trading.yaml`](../../config/editions/trading.yaml).
 The mock-up's names, desks, books and counterparties are the demo's; its figures are illustrative.
 
@@ -618,7 +618,7 @@ above every landing. **States.** *Loading:* `…` in every figure. *Error:* `Not
 tile. *Empty or not given by the data*, each said in place: "no valuations on <date>: no change to show", "MtM is masked for your role",
 "no book above its limit", "No trade's MtM moved", "Nothing yet: type a command above"; the DV01 tile hidden when no trade holds a DV01; a
 scope above `trading.max-rows` says **partial** ([section 4.5](#45-what-the-data-does-not-give-as-the-builder-reported)). **Phone**
-(600 px and below): one column ([`drishti_trading-landing.css`](../../drishti-console/web/static/css/drishti_trading-landing.css)); the mock-up drew no
+(600 px and below): one column ([`drishti_trading-landing.css`](../../drishti-console/plugins/banking/static/css/drishti_trading-landing.css)); the mock-up drew no
 phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md section 8](../architecture/MOBILE_DISPLAY.md#8-beyond-sutra-pages)): the command line, the tiles and the first card in full, the other tables at a glance (five rows, *Show all*), charts, maps and the quick links under *More on this page*.
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |

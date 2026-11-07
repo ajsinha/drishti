@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Drishti Trading's landings (docs/admin/EDITIONS.md › The design as built, section 14): the read-only figures of the Trader desk and Desk head, worked out
-by core/trading_landing.py from the servers' own answers as the person, and their "View as" choice.
+by plugins/banking/trading_landing.py from the servers' own answers as the person, and their "View as" choice.
 
 ``GET /api/home/trading/{part}``: ``me`` (who "my" is, and the picker's choices when the person may pick), ``valuations`` (P&L today, by
 book and trader, movers, DV01, the largest counterparty share), ``blotter`` (today's trades), ``risk`` (VaR, limits, positions),
@@ -23,7 +23,7 @@ book and trader, movers, DV01, the largest counterparty share), ``blotter`` (tod
 check also the words ``VAR`` and ``EXP``, whose engines answer the VaR and exposure what-ifs); else ``404 DRS-4023``. ``GET /home/trading/view-as?as=trader:<id>|desk:<id>`` keeps the person's
 choice in their settings (``tradingView``) when they may pick (no mapping, or an administrator); ``as=`` empty forgets it.
 
-Drishti Market's figures (``GET /api/home/market/{desk,moves,quality}``, core/market_landing.py) are served here too: the banking module's
+Drishti Market's figures (``GET /api/home/market/{desk,moves,quality}``, plugins/banking/market_landing.py) are served here too: the banking module's
 landings, never the core's. The trading role's landing rule is registered with the core (core/plugins.py, DOMAIN_MODULES.md C6)."""
 from __future__ import annotations
 
@@ -139,7 +139,7 @@ async def view_as(request: Request):
 async def market_figures(request: Request, part: str):
     """Drishti Market's landings: ``desk`` (A's tiles and USD curves), ``moves`` (A's biggest moves) and ``quality`` (C's checks), worked
     out from the market-data pack's own answers with this person's identity, lens and date box, read-only and cached briefly
-    (core/market_landing.py). For a signed-in person whose edition (or lens) shows the curves (CRV); else 404 DRS-4023."""
+    (plugins/banking/market_landing.py). For a signed-in person whose edition (or lens) shows the curves (CRV); else 404 DRS-4023."""
     ed = edition_of(request)
     if getattr(request.state, "identity", None) is None:
         return JSONResponse({"detail": "sign in first"}, status_code=401)

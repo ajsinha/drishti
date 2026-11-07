@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""ISDA SIMM in the console (routes/simm_routes.py; docs/guides/SIMM_GUIDE.md sections 7 and 8): SIMM [<netting set> | CPTY <id>], PLAY SIMM
+"""ISDA SIMM in the console (plugins/banking/routes/simm_routes.py; docs/guides/SIMM_GUIDE.md sections 7 and 8): SIMM [<netting set> | CPTY <id>], PLAY SIMM
 <netting set> and PLAY SIMM RUN <id>, the pages as shells, every figure read from the server as the person with the switches, side and
 overrides passed through, the recipe saved and replayed, the workbook streamed. The figures themselves are the engine's tests
 (SimmHandBuiltCasesTest, SimmPlaygroundWorkbookTest, SimmApiTest)."""
