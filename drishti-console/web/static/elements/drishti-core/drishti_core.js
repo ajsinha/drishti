@@ -341,6 +341,19 @@
   })();
   /* ---- src/drishti_dom.js ---- */
   __m["src/drishti_dom.js"] = (function () {
+    const SAFE_ATTRS = new Set(('class id role title href target rel type name value placeholder for colspan rowspan scope tabindex hidden disabled '
+      + 'open datetime lang dir aria-label aria-hidden maxlength autocomplete').split(' '));
+    const SAFE_URL = /^(?:\/(?!\/)|#|\?|\.\/|https?:\/\/)/i;
+    function attrAllowed(name) {
+      const n = String(name).toLowerCase();
+      if (n.startsWith('on') || n === 'style' || n === 'srcdoc' || n === 'src' || n === 'formaction' || n === 'xlink:href') { return false; }
+      return SAFE_ATTRS.has(n) || /^data-[a-z0-9-]+$/.test(n) || /^aria-[a-z]+$/.test(n);
+    }
+    function safeUrl(u) {
+      if (u === null || u === undefined) { return null; }
+      const s = String(u);
+      return SAFE_URL.test(s.replace(/[\u0000- ]/g, '')) ? s : null;
+    }
     function h(doc, tag, p, children) {
       const el = doc.createElement(tag);
       p = p || {};
@@ -366,7 +379,7 @@
       const below = a.bottom + gap + r.height <= win.innerHeight - 4 || a.top - gap - r.height < 4;
       placeAt(el, a.left, below ? a.bottom + gap : a.top - gap - r.height);
     }
-    return { "h": h, "placeAt": placeAt, "placeUnder": placeUnder };
+    return { "attrAllowed": attrAllowed, "safeUrl": safeUrl, "h": h, "placeAt": placeAt, "placeUnder": placeUnder };
   })();
   /* ---- src/drishti_events.js ---- */
   __m["src/drishti_events.js"] = (function () {
@@ -748,7 +761,16 @@
         default: throw new Error('formatter: no kind ' + kind + ' (number, percent, bp, compact, currency)');
       }
     }
-    return { "MINUS": MINUS, "EMPTY": EMPTY, "MASK": MASK, "plainDigits": plainDigits, "roundHalfUp": roundHalfUp, "group": group, "formatNumber": formatNumber, "formatPercent": formatPercent, "formatBasisPoints": formatBasisPoints, "formatCurrency": formatCurrency, "COMPACT_UNITS": COMPACT_UNITS, "formatCompact": formatCompact, "defineFormats": defineFormats, "hasFormat": hasFormat, "namedFormat": namedFormat, "formatNames": formatNames, "formatSpec": formatSpec, "formatNamed": formatNamed, "formatter": formatter };
+    function formatPythonFloat(x) {
+      if (typeof x !== 'number') { return x === null || x === undefined ? '' : String(x); }
+      if (!isFinite(x)) { return isNaN(x) ? 'nan' : (x > 0 ? 'inf' : '-inf'); }
+      if (x === 0) { return Object.is(x, -0) ? '-0.0' : '0.0'; }
+      const a = Math.abs(x);
+      if (a >= 1e16 || a < 1e-4) { return x.toExponential().replace(/e([+-])(\d)$/, 'e$10$2'); }
+      const s = String(x);
+      return /[.e]/.test(s) ? s : s + '.0';
+    }
+    return { "MINUS": MINUS, "EMPTY": EMPTY, "MASK": MASK, "plainDigits": plainDigits, "roundHalfUp": roundHalfUp, "group": group, "formatNumber": formatNumber, "formatPercent": formatPercent, "formatBasisPoints": formatBasisPoints, "formatCurrency": formatCurrency, "COMPACT_UNITS": COMPACT_UNITS, "formatCompact": formatCompact, "defineFormats": defineFormats, "hasFormat": hasFormat, "namedFormat": namedFormat, "formatNames": formatNames, "formatSpec": formatSpec, "formatNamed": formatNamed, "formatter": formatter, "formatPythonFloat": formatPythonFloat };
   })();
   /* ---- src/drishti_files.js ---- */
   __m["src/drishti_files.js"] = (function () {
@@ -906,7 +928,21 @@
       const test = rowFilter(model, o.quickFilter || '', columns, o.value || ((row, c) => row[c.field || c.id]));
       return test ? rows.filter(test) : rows.slice();
     }
-    return { "isBlank": isBlank, "compareValues": compareValues, "compareRows": compareRows, "cycleSort": cycleSort, "passes": passes, "rowFilter": rowFilter, "filterWords": filterWords, "FILTER_CHANNEL": FILTER_CHANNEL, "filterRows": filterRows };
+    const TEXT_MULT = { k: 1e3, m: 1e6, mm: 1e6, b: 1e9, bn: 1e9, tn: 1e12 };
+    function textSortKey(text) {
+      const t = String(text).replace(/[−–]/g, '-').replace(/,/g, '').replace(/\s/g, '');
+      const m = t.match(/^([+-]?)(\d+(?:\.\d+)?)(k|m|mm|bn|b|tn)?(%|bp)?$/i);
+      if (m) { const n = parseFloat(m[2]) * (m[3] ? TEXT_MULT[m[3].toLowerCase()] : 1); return { n: m[1] === '-' ? -n : n }; }
+      if (/^\d{4}-\d{2}-\d{2}/.test(t) && !isNaN(Date.parse(t.slice(0, 10)))) { return { n: Date.parse(t.slice(0, 10)) }; }
+      return { s: String(text).toLowerCase() };
+    }
+    function compareTextKeys(a, b) {
+      if (a.n != null && b.n != null) { return a.n - b.n; }
+      if (a.n != null) { return -1; }
+      if (b.n != null) { return 1; }
+      return a.s < b.s ? -1 : a.s > b.s ? 1 : 0;
+    }
+    return { "isBlank": isBlank, "compareValues": compareValues, "compareRows": compareRows, "cycleSort": cycleSort, "passes": passes, "rowFilter": rowFilter, "filterWords": filterWords, "FILTER_CHANNEL": FILTER_CHANNEL, "filterRows": filterRows, "textSortKey": textSortKey, "compareTextKeys": compareTextKeys };
   })();
   /* ---- src/drishti_resize.js ---- */
   __m["src/drishti_resize.js"] = (function () {
@@ -1351,6 +1387,23 @@
             "drishti-chart"
           ],
           "css": [],
+          "scripts": []
+        },
+        "drishti-renderer": {
+          "version": "2.0.0",
+          "title": "The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js",
+          "bundle": "drishti-renderer/drishti_renderer.js",
+          "entry": "drishti-renderer/src/drishti_index.js",
+          "global": "renderer",
+          "requires": [
+            "drishti-core",
+            "drishti-grid",
+            "drishti-chart",
+            "drishti-data"
+          ],
+          "css": [
+            "elements/drishti-grid/drishti_grid.css"
+          ],
           "scripts": []
         }
       }
@@ -2036,7 +2089,7 @@
       D.elements.load = load;
       if (root.document && root.requestAnimationFrame) { installResize(root); }
     }
-    return { "install": install, "MINUS": __m["src/drishti_format.js"].MINUS, "EMPTY": __m["src/drishti_format.js"].EMPTY, "MASK": __m["src/drishti_format.js"].MASK, "COMPACT_UNITS": __m["src/drishti_format.js"].COMPACT_UNITS, "plainDigits": __m["src/drishti_format.js"].plainDigits, "roundHalfUp": __m["src/drishti_format.js"].roundHalfUp, "group": __m["src/drishti_format.js"].group, "formatNumber": __m["src/drishti_format.js"].formatNumber, "formatPercent": __m["src/drishti_format.js"].formatPercent, "formatBasisPoints": __m["src/drishti_format.js"].formatBasisPoints, "formatCurrency": __m["src/drishti_format.js"].formatCurrency, "formatCompact": __m["src/drishti_format.js"].formatCompact, "defineFormats": __m["src/drishti_format.js"].defineFormats, "hasFormat": __m["src/drishti_format.js"].hasFormat, "namedFormat": __m["src/drishti_format.js"].namedFormat, "formatNames": __m["src/drishti_format.js"].formatNames, "formatSpec": __m["src/drishti_format.js"].formatSpec, "formatNamed": __m["src/drishti_format.js"].formatNamed, "formatter": __m["src/drishti_format.js"].formatter, "parseDate": __m["src/drishti_dates.js"].parseDate, "daysInMonth": __m["src/drishti_dates.js"].daysInMonth, "isoDate": __m["src/drishti_dates.js"].isoDate, "today": __m["src/drishti_dates.js"].today, "formatDate": __m["src/drishti_dates.js"].formatDate, "formatDateRange": __m["src/drishti_dates.js"].formatDateRange, "isBusinessDay": __m["src/drishti_dates.js"].isBusinessDay, "addBusinessDays": __m["src/drishti_dates.js"].addBusinessDays, "previousBusinessDay": __m["src/drishti_dates.js"].previousBusinessDay, "businessDaysBetween": __m["src/drishti_dates.js"].businessDaysBetween, "DEFAULT_THEME": __m["src/drishti_theme.js"].DEFAULT_THEME, "THEME_STORAGE_KEY": __m["src/drishti_theme.js"].THEME_STORAGE_KEY, "TEXT_TOKENS": __m["src/drishti_theme.js"].TEXT_TOKENS, "GROUND_TOKENS": __m["src/drishti_theme.js"].GROUND_TOKENS, "themes": __m["src/drishti_theme.js"].themes, "scheme": __m["src/drishti_theme.js"].scheme, "currentTheme": __m["src/drishti_theme.js"].currentTheme, "setTheme": __m["src/drishti_theme.js"].setTheme, "token": __m["src/drishti_theme.js"].token, "tokens": __m["src/drishti_theme.js"].tokens, "parseColor": __m["src/drishti_theme.js"].parseColor, "luminance": __m["src/drishti_theme.js"].luminance, "contrastRatio": __m["src/drishti_theme.js"].contrastRatio, "readableOn": __m["src/drishti_theme.js"].readableOn, "contrastProblems": __m["src/drishti_theme.js"].contrastProblems, "AS_OF_HEADER": __m["src/drishti_api.js"].AS_OF_HEADER, "ApiError": __m["src/drishti_api.js"].ApiError, "errorWords": __m["src/drishti_api.js"].errorWords, "ApiClient": __m["src/drishti_api.js"].ApiClient, "createClient": __m["src/drishti_api.js"].createClient, "api": __m["src/drishti_api.js"].api, "call": __m["src/drishti_api.js"].call, "EventBus": __m["src/drishti_events.js"].EventBus, "createBus": __m["src/drishti_events.js"].createBus, "bus": __m["src/drishti_events.js"].bus, "FOCUSABLE": __m["src/drishti_a11y.js"].FOCUSABLE, "focusable": __m["src/drishti_a11y.js"].focusable, "trapFocus": __m["src/drishti_a11y.js"].trapFocus, "announce": __m["src/drishti_a11y.js"].announce, "rovingIndex": __m["src/drishti_a11y.js"].rovingIndex, "rovingTabindex": __m["src/drishti_a11y.js"].rovingTabindex, "installResize": __m["src/drishti_resize.js"].installResize, "scanResize": __m["src/drishti_resize.js"].scanResize, "resizeHandle": __m["src/drishti_resize.js"].resizeHandle, "resetResize": __m["src/drishti_resize.js"].resetResize, "WORKBENCH": __m["src/drishti_keys.js"].WORKBENCH, "LAYOUT": __m["src/drishti_keys.js"].LAYOUT, "interpretPanelKey": __m["src/drishti_keys.js"].interpretPanelKey, "GridKeys": __m["src/drishti_keys.js"].GridKeys, "keyName": __m["src/drishti_keys.js"].keyName, "normalizeKey": __m["src/drishti_keys.js"].normalizeKey, "keymap": __m["src/drishti_keys.js"].keymap, "openDialog": __m["src/drishti_overlay.js"].openDialog, "closeDialog": __m["src/drishti_overlay.js"].closeDialog, "openDrawer": __m["src/drishti_overlay.js"].openDrawer, "ToastTray": __m["src/drishti_overlay.js"].ToastTray, "toast": __m["src/drishti_overlay.js"].toast, "configure": __m["src/drishti_loader.js"].configure, "manifest": __m["src/drishti_loader.js"].manifest, "libraryVersion": __m["src/drishti_loader.js"].libraryVersion, "requirements": __m["src/drishti_loader.js"].requirements, "loaded": __m["src/drishti_loader.js"].loaded, "load": __m["src/drishti_loader.js"].load, "staticUrl": __m["src/drishti_loader.js"].staticUrl, "loadScript": __m["src/drishti_loader.js"].loadScript, "loadStyle": __m["src/drishti_loader.js"].loadStyle, "isBlank": __m["src/drishti_filters.js"].isBlank, "compareValues": __m["src/drishti_filters.js"].compareValues, "compareRows": __m["src/drishti_filters.js"].compareRows, "cycleSort": __m["src/drishti_filters.js"].cycleSort, "passes": __m["src/drishti_filters.js"].passes, "rowFilter": __m["src/drishti_filters.js"].rowFilter, "filterWords": __m["src/drishti_filters.js"].filterWords, "FILTER_CHANNEL": __m["src/drishti_filters.js"].FILTER_CHANNEL, "filterRows": __m["src/drishti_filters.js"].filterRows, "h": __m["src/drishti_dom.js"].h, "placeAt": __m["src/drishti_dom.js"].placeAt, "placeUnder": __m["src/drishti_dom.js"].placeUnder, "parseNumberText": __m["src/drishti_parse.js"].parseNumberText, "numberEditText": __m["src/drishti_parse.js"].numberEditText, "toCsv": __m["src/drishti_files.js"].toCsv, "download": __m["src/drishti_files.js"].download, "sparkline": __m["src/drishti_explain.js"].sparkline, "renderExplain": __m["src/drishti_explain.js"].renderExplain };
+    return { "install": install, "MINUS": __m["src/drishti_format.js"].MINUS, "EMPTY": __m["src/drishti_format.js"].EMPTY, "MASK": __m["src/drishti_format.js"].MASK, "COMPACT_UNITS": __m["src/drishti_format.js"].COMPACT_UNITS, "plainDigits": __m["src/drishti_format.js"].plainDigits, "roundHalfUp": __m["src/drishti_format.js"].roundHalfUp, "group": __m["src/drishti_format.js"].group, "formatNumber": __m["src/drishti_format.js"].formatNumber, "formatPercent": __m["src/drishti_format.js"].formatPercent, "formatBasisPoints": __m["src/drishti_format.js"].formatBasisPoints, "formatCurrency": __m["src/drishti_format.js"].formatCurrency, "formatCompact": __m["src/drishti_format.js"].formatCompact, "defineFormats": __m["src/drishti_format.js"].defineFormats, "hasFormat": __m["src/drishti_format.js"].hasFormat, "namedFormat": __m["src/drishti_format.js"].namedFormat, "formatNames": __m["src/drishti_format.js"].formatNames, "formatSpec": __m["src/drishti_format.js"].formatSpec, "formatNamed": __m["src/drishti_format.js"].formatNamed, "formatter": __m["src/drishti_format.js"].formatter, "formatPythonFloat": __m["src/drishti_format.js"].formatPythonFloat, "parseDate": __m["src/drishti_dates.js"].parseDate, "daysInMonth": __m["src/drishti_dates.js"].daysInMonth, "isoDate": __m["src/drishti_dates.js"].isoDate, "today": __m["src/drishti_dates.js"].today, "formatDate": __m["src/drishti_dates.js"].formatDate, "formatDateRange": __m["src/drishti_dates.js"].formatDateRange, "isBusinessDay": __m["src/drishti_dates.js"].isBusinessDay, "addBusinessDays": __m["src/drishti_dates.js"].addBusinessDays, "previousBusinessDay": __m["src/drishti_dates.js"].previousBusinessDay, "businessDaysBetween": __m["src/drishti_dates.js"].businessDaysBetween, "DEFAULT_THEME": __m["src/drishti_theme.js"].DEFAULT_THEME, "THEME_STORAGE_KEY": __m["src/drishti_theme.js"].THEME_STORAGE_KEY, "TEXT_TOKENS": __m["src/drishti_theme.js"].TEXT_TOKENS, "GROUND_TOKENS": __m["src/drishti_theme.js"].GROUND_TOKENS, "themes": __m["src/drishti_theme.js"].themes, "scheme": __m["src/drishti_theme.js"].scheme, "currentTheme": __m["src/drishti_theme.js"].currentTheme, "setTheme": __m["src/drishti_theme.js"].setTheme, "token": __m["src/drishti_theme.js"].token, "tokens": __m["src/drishti_theme.js"].tokens, "parseColor": __m["src/drishti_theme.js"].parseColor, "luminance": __m["src/drishti_theme.js"].luminance, "contrastRatio": __m["src/drishti_theme.js"].contrastRatio, "readableOn": __m["src/drishti_theme.js"].readableOn, "contrastProblems": __m["src/drishti_theme.js"].contrastProblems, "AS_OF_HEADER": __m["src/drishti_api.js"].AS_OF_HEADER, "ApiError": __m["src/drishti_api.js"].ApiError, "errorWords": __m["src/drishti_api.js"].errorWords, "ApiClient": __m["src/drishti_api.js"].ApiClient, "createClient": __m["src/drishti_api.js"].createClient, "api": __m["src/drishti_api.js"].api, "call": __m["src/drishti_api.js"].call, "EventBus": __m["src/drishti_events.js"].EventBus, "createBus": __m["src/drishti_events.js"].createBus, "bus": __m["src/drishti_events.js"].bus, "FOCUSABLE": __m["src/drishti_a11y.js"].FOCUSABLE, "focusable": __m["src/drishti_a11y.js"].focusable, "trapFocus": __m["src/drishti_a11y.js"].trapFocus, "announce": __m["src/drishti_a11y.js"].announce, "rovingIndex": __m["src/drishti_a11y.js"].rovingIndex, "rovingTabindex": __m["src/drishti_a11y.js"].rovingTabindex, "installResize": __m["src/drishti_resize.js"].installResize, "scanResize": __m["src/drishti_resize.js"].scanResize, "resizeHandle": __m["src/drishti_resize.js"].resizeHandle, "resetResize": __m["src/drishti_resize.js"].resetResize, "WORKBENCH": __m["src/drishti_keys.js"].WORKBENCH, "LAYOUT": __m["src/drishti_keys.js"].LAYOUT, "interpretPanelKey": __m["src/drishti_keys.js"].interpretPanelKey, "GridKeys": __m["src/drishti_keys.js"].GridKeys, "keyName": __m["src/drishti_keys.js"].keyName, "normalizeKey": __m["src/drishti_keys.js"].normalizeKey, "keymap": __m["src/drishti_keys.js"].keymap, "openDialog": __m["src/drishti_overlay.js"].openDialog, "closeDialog": __m["src/drishti_overlay.js"].closeDialog, "openDrawer": __m["src/drishti_overlay.js"].openDrawer, "ToastTray": __m["src/drishti_overlay.js"].ToastTray, "toast": __m["src/drishti_overlay.js"].toast, "configure": __m["src/drishti_loader.js"].configure, "manifest": __m["src/drishti_loader.js"].manifest, "libraryVersion": __m["src/drishti_loader.js"].libraryVersion, "requirements": __m["src/drishti_loader.js"].requirements, "loaded": __m["src/drishti_loader.js"].loaded, "load": __m["src/drishti_loader.js"].load, "staticUrl": __m["src/drishti_loader.js"].staticUrl, "loadScript": __m["src/drishti_loader.js"].loadScript, "loadStyle": __m["src/drishti_loader.js"].loadStyle, "isBlank": __m["src/drishti_filters.js"].isBlank, "compareValues": __m["src/drishti_filters.js"].compareValues, "compareRows": __m["src/drishti_filters.js"].compareRows, "cycleSort": __m["src/drishti_filters.js"].cycleSort, "passes": __m["src/drishti_filters.js"].passes, "rowFilter": __m["src/drishti_filters.js"].rowFilter, "filterWords": __m["src/drishti_filters.js"].filterWords, "FILTER_CHANNEL": __m["src/drishti_filters.js"].FILTER_CHANNEL, "filterRows": __m["src/drishti_filters.js"].filterRows, "textSortKey": __m["src/drishti_filters.js"].textSortKey, "compareTextKeys": __m["src/drishti_filters.js"].compareTextKeys, "h": __m["src/drishti_dom.js"].h, "placeAt": __m["src/drishti_dom.js"].placeAt, "placeUnder": __m["src/drishti_dom.js"].placeUnder, "attrAllowed": __m["src/drishti_dom.js"].attrAllowed, "safeUrl": __m["src/drishti_dom.js"].safeUrl, "parseNumberText": __m["src/drishti_parse.js"].parseNumberText, "numberEditText": __m["src/drishti_parse.js"].numberEditText, "toCsv": __m["src/drishti_files.js"].toCsv, "download": __m["src/drishti_files.js"].download, "sparkline": __m["src/drishti_explain.js"].sparkline, "renderExplain": __m["src/drishti_explain.js"].renderExplain };
   })();
   return Object.freeze(Object.assign({ library: "drishti-core", version: "1.1.0" }, __m["src/drishti_index.js"]));
 });

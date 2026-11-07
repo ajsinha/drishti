@@ -22,7 +22,7 @@ import { GridKeys } from './drishti_keys.js';
 import { load } from './drishti_loader.js';
 
 export { MINUS, EMPTY, MASK, COMPACT_UNITS, plainDigits, roundHalfUp, group, formatNumber, formatPercent, formatBasisPoints, formatCurrency,
-  formatCompact, defineFormats, hasFormat, namedFormat, formatNames, formatSpec, formatNamed, formatter } from './drishti_format.js';
+  formatCompact, defineFormats, hasFormat, namedFormat, formatNames, formatSpec, formatNamed, formatter, formatPythonFloat } from './drishti_format.js';
 export { parseDate, daysInMonth, isoDate, today, formatDate, formatDateRange, isBusinessDay, addBusinessDays, previousBusinessDay,
   businessDaysBetween } from './drishti_dates.js';
 export { DEFAULT_THEME, THEME_STORAGE_KEY, TEXT_TOKENS, GROUND_TOKENS, themes, scheme, currentTheme, setTheme, token, tokens, parseColor,
@@ -34,8 +34,9 @@ export { installResize, scanResize, resizeHandle, resetResize } from './drishti_
 export { WORKBENCH, LAYOUT, interpretPanelKey, GridKeys, keyName, normalizeKey, keymap } from './drishti_keys.js';
 export { openDialog, closeDialog, openDrawer, ToastTray, toast } from './drishti_overlay.js';
 export { configure, manifest, libraryVersion, requirements, loaded, load, staticUrl, loadScript, loadStyle } from './drishti_loader.js';
-export { isBlank, compareValues, compareRows, cycleSort, passes, rowFilter, filterWords, FILTER_CHANNEL, filterRows } from './drishti_filters.js';
-export { h, placeAt, placeUnder } from './drishti_dom.js';
+export { isBlank, compareValues, compareRows, cycleSort, passes, rowFilter, filterWords, FILTER_CHANNEL, filterRows, textSortKey,
+  compareTextKeys } from './drishti_filters.js';
+export { h, placeAt, placeUnder, attrAllowed, safeUrl } from './drishti_dom.js';
 export { parseNumberText, numberEditText } from './drishti_parse.js';
 export { toCsv, download } from './drishti_files.js';
 export { sparkline, renderExplain } from './drishti_explain.js';

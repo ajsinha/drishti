@@ -41,6 +41,8 @@ export { MAP_MODES, geoLoader, MapView } from './drishti_map-view.js';
 export { Studio } from './drishti_chart-studio.js';
 export { CHART_EVENTS, CHART_MODES, SELECTION_EVENT, Chart } from './drishti_chart-view.js';
 export { linkGrid, publishSelection } from './drishti_chart-link.js';
+export { PANEL_KINDS, escapeTip, panelCompact, panelLineCompact, panelTokens, labelFit, panelOption } from './drishti_chart-panels.js';
+export { drawMap, PanelCharts } from './drishti_chart-panel-draw.js';
 export { CHART_ELEMENT, defineChartElement } from './drishti_chart-element.js';
 
 registerAxisKinds();

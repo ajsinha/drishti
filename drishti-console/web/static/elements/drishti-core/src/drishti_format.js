@@ -324,3 +324,19 @@ export function formatter(kind, options) {
     default: throw new Error('formatter: no kind ' + kind + ' (number, percent, bp, compact, currency)');
   }
 }
+
+/**
+ * Python's str() of a float, as the server's templates print a raw number: "74.0" for a whole number, exponents from 1e16 and below
+ * 1e-4 as Python writes them ("1e+17", "1e-05"). Only for a number the server sent without its text (an older server's candles).
+ * @param {*} x
+ * @returns {string}
+ */
+export function formatPythonFloat(x) {
+  if (typeof x !== 'number') { return x === null || x === undefined ? '' : String(x); }
+  if (!isFinite(x)) { return isNaN(x) ? 'nan' : (x > 0 ? 'inf' : '-inf'); }
+  if (x === 0) { return Object.is(x, -0) ? '-0.0' : '0.0'; }
+  const a = Math.abs(x);
+  if (a >= 1e16 || a < 1e-4) { return x.toExponential().replace(/e([+-])(\d)$/, 'e$10$2'); }
+  const s = String(x);
+  return /[.e]/.test(s) ? s : s + '.0';
+}

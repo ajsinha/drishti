@@ -23,6 +23,7 @@ import { getValue } from './drishti_columns.js';
 import { compareRows, compareValues, rowFilter, isBlank } from '../../drishti-core/src/drishti_index.js';
 import { aggFunc } from './drishti_aggregate.js';
 import { memberText, SEP } from './drishti_pivot.js';
+import { buildTree, flattenTree, treeRow } from './drishti_tree-data.js';
 
 /**
  * A row as the grid sees it at a display index.
@@ -46,8 +47,10 @@ import { memberText, SEP } from './drishti_pivot.js';
  */
 export class ClientRowModel {
   /**
-   * @param {{columns: import('./drishti_columns.js').ColumnModel, rows: Object[], getRowId: function(Object, number): string, clientAggregation: boolean}} o
-   *   clientAggregation false: no group figure is computed here, every one is left for the server (the console's policy)
+   * @param {{columns: import('./drishti_columns.js').ColumnModel, rows: Object[], getRowId: function(Object, number): string, clientAggregation: boolean,
+   *   treeData: boolean, getDataPath: function(Object): string[], groupDefaultExpanded: number}} o
+   *   clientAggregation false: no group figure is computed here, every one is left for the server (the console's policy); treeData: the
+   *   rows make a tree by their paths (drishti_tree-data.js); groupDefaultExpanded: open groups and tree nodes down to this level
    */
   constructor(o) {
     this.columns = o.columns;
@@ -60,7 +63,11 @@ export class ClientRowModel {
     this.quickFilter = '';
     this.groupBy = [];
     this.expanded = new Set();
-    this.expandLevel = 0;
+    this.expandLevel = o.groupDefaultExpanded === -1 ? Infinity : (o.groupDefaultExpanded || 0);
+    this.treeData = !!o.treeData;
+    if (this.treeData && typeof o.getDataPath !== 'function') { throw new Error('tree data needs getDataPath(row), the row\'s path from the top'); }
+    this.getDataPath = o.getDataPath;
+    this.tree = null;
     this.setRows(o.rows || []);
   }
 
@@ -131,6 +138,7 @@ export class ClientRowModel {
 
   /** @private updates in place; returns the paths of the groups whose non-additive figures the server must give again */
   updateInPlace(touched) {
+    if (this.treeData) { this.refresh('transaction'); return this.serverGroupColumns().map((g) => g.path); }
     const changed = new Set();
     touched.forEach((x) => Object.keys(x.cells).forEach((k) => changed.add(k)));
     if (this.groupBy.some((g) => changed.has(g))) { this.refresh('transaction'); return this.groupNodes ? this.groupNodes.map((g) => g.path) : []; }
@@ -281,6 +289,7 @@ export class ClientRowModel {
     const cols = this.columns.all();
     const test = rowFilter(this.filterModel, this.quickFilter, this.quickFilter ? this.columns.visible() : cols, (r, c) => this.value(r, c));
     const n = this.rows.length;
+    if (this.treeData) { this.refreshTree(test); this.events.emit('rowsChanged', { reason: reason || 'refresh' }); return; }
     let idx = new Uint32Array(n), k = 0;
     for (let i = 0; i < n; i++) { if (!test || test(this.rows[i])) { idx[k++] = i; } }
     if (k < n) { idx = idx.slice(0, k); }
@@ -290,6 +299,20 @@ export class ClientRowModel {
     this.buildGroups();
     this.flatten();
     this.events.emit('rowsChanged', { reason: reason || 'refresh' });
+  }
+
+  /** @private tree data: every row sorted, the tree built over them, the filter keeping ancestors */
+  refreshTree(test) {
+    let idx = new Uint32Array(this.rows.length);
+    for (let i = 0; i < idx.length; i++) { idx[i] = i; }
+    const sort = (this.sortModel || []).filter((s) => this.columns.get(s.colId));
+    if (sort.length) { idx = this.sorted(idx, sort); }
+    this.tree = buildTree(this, idx, test);
+    this.view = this.tree.view;
+    this.groupNodes = this.tree.nodes.filter((x) => x.keep && x.row < 0 && x.children.length);
+    this.groupByKey = new Map(this.groupNodes.map((x) => [x.path.join(SEP), x]));
+    this.groupRoot = null;
+    this.flatten();
   }
 
   /** @private one typed key per row and sort column: numbers as they are, anything else as its rank among the column's distinct values
@@ -376,6 +399,7 @@ export class ClientRowModel {
 
   /** @private the display codes: a row number (>= 0) or a group (-(id + 1)) */
   flatten() {
+    if (this.treeData) { this.display = this.tree ? flattenTree(this) : new Int32Array(0); return; }
     if (!this.groupRoot) { this.display = null; return; }
     const out = [];
     const walk = (g) => {
@@ -409,6 +433,7 @@ export class ClientRowModel {
   rowAt(i) {
     if (i < 0 || i >= this.rowCount()) { return null; }
     const code = this.display ? this.display[i] : this.view[i];
+    if (this.treeData) { return treeRow(this, this.tree.nodes[-code - 1]); }
     if (code < 0) {
       const g = this.groupNodes[-code - 1];
       return { kind: 'group', id: 'group:' + g.path.join(SEP), depth: g.depth, row: null, field: g.field, value: g.value, path: g.path, count: g.count,
@@ -426,6 +451,7 @@ export class ClientRowModel {
     const n = this.idIndex.get(id);
     if (n === undefined) { return -1; }
     const a = this.display || this.view;
+    if (this.treeData) { for (let i = 0; i < a.length; i++) { if (this.tree.nodes[-a[i] - 1].row === n) { return i; } } return -1; }
     for (let i = 0; i < a.length; i++) { if (a[i] === n) { return i; } }
     return -1;
   }

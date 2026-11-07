@@ -75,7 +75,7 @@ export class GridBase {
    * Whether rows are grouped (grid mode): the first column then holds the tree.
    * @returns {boolean}
    */
-  grouped() { const r = this.model.rowModel; return !!((r.groupBy && r.groupBy.length) || (r.rowGroupCols && r.rowGroupCols.length)); }
+  grouped() { const r = this.model.rowModel; return !!((r.groupBy && r.groupBy.length) || (r.rowGroupCols && r.rowGroupCols.length) || r.treeData); }
 
   /**
    * Whether the rows carry checkboxes.

@@ -263,7 +263,7 @@ export class GridBody {
     if (flash.active()) { this.view.doc.defaultView.setTimeout(() => this.schedule(), 120); }
     // the grid's names for a reader
     const s = this.scroller;
-    s.setAttribute('role', m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length) ? 'treegrid' : 'grid');
+    s.setAttribute('role', m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length) || m.rowModel.treeData ? 'treegrid' : 'grid');
     s.setAttribute('aria-rowcount', String(m.rowCount() + sp.levels));
     s.setAttribute('aria-colcount', String(m.shownColumns().length));
     const fid = focus ? this.uid + '-r' + focus.row + '-c' + focus.col : null;
@@ -338,7 +338,7 @@ export class GridBody {
     const selected = id !== null && m.selection.isSelected(id);
     const cls = 'dg-row dg-k-' + kind + (expandable ? ' dg-parent' : '') + (selected ? ' dg-selected' : '') + (r % 2 ? ' dg-odd' : '');
     const row = h(doc, 'div', { cls: cls, attrs: { role: 'row', 'aria-rowindex': String(r + levels + 1), 'aria-selected': id !== null ? String(selected) : null,
-      'aria-level': m.pivotMode || x.kind === 'group' || x.depth ? String((x.depth || 0) + 1) : null, 'aria-expanded': expandable ? String(expanded) : null },
+      'aria-level': m.pivotMode || x.kind === 'group' || x.tree || x.depth ? String((x.depth || 0) + 1) : null, 'aria-expanded': expandable ? String(expanded) : null },
     style: { height: m.viewport.rowHeight + 'px' } });
     const rowKey = e ? 'p:' + e.key : x.kind === 'group' ? 'g:' + (x.path || x.keys || []).join('\u001f') : 'l:' + (x.id !== undefined ? x.id : r);
     const first = disp.all[0];
@@ -397,7 +397,7 @@ export class GridBody {
         cell.appendChild(box);
       }
       if (k.expandable) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw', text: k.expanded ? '−' : '+', attrs: { 'aria-hidden': 'true' }, data: { r: String(r) } })); }
-      else if (m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length)) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw dg-tw-none', attrs: { 'aria-hidden': 'true' } })); }
+      else if (m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length) || m.rowModel.treeData) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw dg-tw-none', attrs: { 'aria-hidden': 'true' } })); }
     }
     cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text }));
     return cell;

@@ -580,6 +580,71 @@
     }
     return { "SEP": SEP, "BLANK": BLANK, "memberText": memberText, "valueLabel": valueLabel, "normalizeView": normalizeView, "serverRequest": serverRequest, "memberFilters": memberFilters, "PivotState": PivotState, "pivotLocal": pivotLocal, "pivotApplyUpdates": pivotApplyUpdates, "mergeAnswer": mergeAnswer, "applyValueFilters": applyValueFilters, "resultColumns": resultColumns, "cellValue": cellValue };
   })();
+  /* ---- src/drishti_tree-data.js ---- */
+  __m["src/drishti_tree-data.js"] = (function () {
+    var aggFunc = __m["src/drishti_aggregate.js"].aggFunc;
+    var SEP = __m["src/drishti_pivot.js"].SEP;
+    function buildTree(model, order, test) {
+      const nodes = [], byKey = new Map(), root = { id: -1, path: [], depth: -1, row: -1, children: [], keep: false };
+      const node = (path) => {
+        const key = path.join(SEP);
+        let n = byKey.get(key);
+        if (n) { return n; }
+        const parent = path.length > 1 ? node(path.slice(0, -1)) : root;
+        n = { id: nodes.length, path: path, depth: path.length - 1, row: -1, children: [], keep: false, aggregates: {}, serverCols: [], pendingServer: [] };
+        nodes.push(n);
+        byKey.set(key, n);
+        parent.children.push(n);
+        return n;
+      };
+      for (let i = 0; i < order.length; i++) {
+        const r = order[i], p = model.getDataPath(model.rows[r]);
+        if (!Array.isArray(p) || !p.length) { throw new Error('tree data: getDataPath gave no path for row ' + r); }
+        const n = node(p.map(String));
+        if (n.row >= 0) { throw new Error('tree data: two rows have the path ' + p.join(' / ')); }
+        n.row = r;
+      }
+      const keep = (n) => { let k = n.row >= 0 && (!test || test(model.rows[n.row])); n.children.forEach((c) => { if (keep(c)) { k = true; } }); n.keep = k; return k; };
+      root.children.forEach(keep);
+      const prune = (n) => { n.children = n.children.filter((c) => c.keep); n.children.forEach(prune); };
+      prune(root);
+      const view = [];
+      const walk = (n) => { if (n.row >= 0) { view.push(n.row); } n.children.forEach(walk); };
+      root.children.forEach(walk);
+      figures(model, nodes.filter((n) => n.keep));
+      return { nodes: nodes, root: root, byKey: byKey, view: Uint32Array.from(view) };
+    }
+    function figures(model, nodes) {
+      const valueCols = model.columns.all().filter((c) => c.aggFunc && c.type === 'number');
+      const rowsUnder = (n, out) => { if (n.row >= 0) { out.push(n.row); } n.children.forEach((c) => rowsUnder(c, out)); return out; };
+      nodes.forEach((n) => {
+        if (n.row >= 0 || !n.children.length) { return; }
+        const rows = [];
+        n.children.forEach((c) => rowsUnder(c, rows));
+        valueCols.forEach((c) => {
+          const f = aggFunc(c.aggFunc);
+          if (c.additive === false || !f || !model.clientAggregation) { n.aggregates[c.id] = null; n.serverCols.push(c.id); return; }
+          let st = f.init();
+          for (let j = 0; j < rows.length; j++) { st = f.add(st, model.value(model.rows[rows[j]], c)); }
+          n.aggregates[c.id] = f.result(st);
+        });
+        n.pendingServer = n.serverCols.slice();
+      });
+    }
+    function flattenTree(model) {
+      const out = [];
+      const walk = (n) => { out.push(-(n.id + 1)); if (n.children.length && model.isExpanded(n.path)) { n.children.forEach(walk); } };
+      model.tree.root.children.forEach(walk);
+      return Int32Array.from(out);
+    }
+    function treeRow(model, n) {
+      const row = n.row >= 0 ? model.rows[n.row] : null, key = n.path[n.path.length - 1];
+      if (!n.children.length) { return { kind: 'leaf', tree: true, treeKey: key, id: model.getRowId(row, n.row), depth: n.depth, row: row, index: n.row, path: n.path }; }
+      return { kind: 'group', tree: true, treeKey: key, id: row ? model.getRowId(row, n.row) : 'group:' + n.path.join(SEP), depth: n.depth, row: row, index: n.row >= 0 ? n.row : undefined,
+        field: null, value: key, path: n.path, expanded: model.isExpanded(n.path), aggregates: row ? null : n.aggregates, pendingServer: row ? [] : n.pendingServer };
+    }
+    return { "buildTree": buildTree, "flattenTree": flattenTree, "treeRow": treeRow };
+  })();
   /* ---- src/drishti_client-rows.js ---- */
   __m["src/drishti_client-rows.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus;
@@ -587,6 +652,7 @@
     var compareRows = __lib("drishti-core").compareRows, compareValues = __lib("drishti-core").compareValues, rowFilter = __lib("drishti-core").rowFilter, isBlank = __lib("drishti-core").isBlank;
     var aggFunc = __m["src/drishti_aggregate.js"].aggFunc;
     var memberText = __m["src/drishti_pivot.js"].memberText, SEP = __m["src/drishti_pivot.js"].SEP;
+    var buildTree = __m["src/drishti_tree-data.js"].buildTree, flattenTree = __m["src/drishti_tree-data.js"].flattenTree, treeRow = __m["src/drishti_tree-data.js"].treeRow;
     class ClientRowModel {
       constructor(o) {
         this.columns = o.columns;
@@ -598,7 +664,11 @@
         this.quickFilter = '';
         this.groupBy = [];
         this.expanded = new Set();
-        this.expandLevel = 0;
+        this.expandLevel = o.groupDefaultExpanded === -1 ? Infinity : (o.groupDefaultExpanded || 0);
+        this.treeData = !!o.treeData;
+        if (this.treeData && typeof o.getDataPath !== 'function') { throw new Error('tree data needs getDataPath(row), the row\'s path from the top'); }
+        this.getDataPath = o.getDataPath;
+        this.tree = null;
         this.setRows(o.rows || []);
       }
       setRows(rows) {
@@ -644,6 +714,7 @@
         return { added: added, updated: updated, removed: removed, changes: changes, staleGroups: staleGroups };
       }
       updateInPlace(touched) {
+        if (this.treeData) { this.refresh('transaction'); return this.serverGroupColumns().map((g) => g.path); }
         const changed = new Set();
         touched.forEach((x) => Object.keys(x.cells).forEach((k) => changed.add(k)));
         if (this.groupBy.some((g) => changed.has(g))) { this.refresh('transaction'); return this.groupNodes ? this.groupNodes.map((g) => g.path) : []; }
@@ -739,6 +810,7 @@
         const cols = this.columns.all();
         const test = rowFilter(this.filterModel, this.quickFilter, this.quickFilter ? this.columns.visible() : cols, (r, c) => this.value(r, c));
         const n = this.rows.length;
+        if (this.treeData) { this.refreshTree(test); this.events.emit('rowsChanged', { reason: reason || 'refresh' }); return; }
         let idx = new Uint32Array(n), k = 0;
         for (let i = 0; i < n; i++) { if (!test || test(this.rows[i])) { idx[k++] = i; } }
         if (k < n) { idx = idx.slice(0, k); }
@@ -748,6 +820,18 @@
         this.buildGroups();
         this.flatten();
         this.events.emit('rowsChanged', { reason: reason || 'refresh' });
+      }
+      refreshTree(test) {
+        let idx = new Uint32Array(this.rows.length);
+        for (let i = 0; i < idx.length; i++) { idx[i] = i; }
+        const sort = (this.sortModel || []).filter((s) => this.columns.get(s.colId));
+        if (sort.length) { idx = this.sorted(idx, sort); }
+        this.tree = buildTree(this, idx, test);
+        this.view = this.tree.view;
+        this.groupNodes = this.tree.nodes.filter((x) => x.keep && x.row < 0 && x.children.length);
+        this.groupByKey = new Map(this.groupNodes.map((x) => [x.path.join(SEP), x]));
+        this.groupRoot = null;
+        this.flatten();
       }
       sortKeys(idx, col) {
         const rows = this.rows, keys = new Float64Array(rows.length);
@@ -824,6 +908,7 @@
         this.groupRoot = root;
       }
       flatten() {
+        if (this.treeData) { this.display = this.tree ? flattenTree(this) : new Int32Array(0); return; }
         if (!this.groupRoot) { this.display = null; return; }
         const out = [];
         const walk = (g) => {
@@ -841,6 +926,7 @@
       rowAt(i) {
         if (i < 0 || i >= this.rowCount()) { return null; }
         const code = this.display ? this.display[i] : this.view[i];
+        if (this.treeData) { return treeRow(this, this.tree.nodes[-code - 1]); }
         if (code < 0) {
           const g = this.groupNodes[-code - 1];
           return { kind: 'group', id: 'group:' + g.path.join(SEP), depth: g.depth, row: null, field: g.field, value: g.value, path: g.path, count: g.count,
@@ -852,6 +938,7 @@
         const n = this.idIndex.get(id);
         if (n === undefined) { return -1; }
         const a = this.display || this.view;
+        if (this.treeData) { for (let i = 0; i < a.length; i++) { if (this.tree.nodes[-a[i] - 1].row === n) { return i; } } return -1; }
         for (let i = 0; i < a.length; i++) { if (a[i] === n) { return i; } }
         return -1;
       }
@@ -869,6 +956,319 @@
       }
     }
     return { "ClientRowModel": ClientRowModel };
+  })();
+  /* ---- src/drishti_doc-behave.js ---- */
+  __m["src/drishti_doc-behave.js"] = (function () {
+    var textSortKey = __lib("drishti-core").textSortKey, compareTextKeys = __lib("drishti-core").compareTextKeys;
+    function treeVisibility(depths, opens, matches) {
+      const n = depths.length, q = !!matches, hit = q ? matches.slice() : [];
+      if (q) {
+        for (let i = 0; i < n; i++) {
+          if (!matches[i]) { continue; }
+          for (let j = i - 1, need = depths[i] - 1; j >= 0 && need >= 0; j--) { if (depths[j] === need) { hit[j] = true; need--; } }
+        }
+      }
+      const visible = [], open = [], parentOpen = [true];
+      for (let i = 0; i < n; i++) {
+        const d = depths[i], vis = q ? !!hit[i] : (d === 0 || parentOpen[d - 1] === true);
+        let o = !!opens[i];
+        if (q) { o = false; for (let j = i + 1; j < n && depths[j] > d; j++) { if (hit[j]) { o = true; break; } } }
+        parentOpen[d] = vis && o;
+        visible.push(vis);
+        open.push(o);
+      }
+      return { visible, open };
+    }
+    function pageInfo(total, page, size) {
+      const pages = Math.max(1, Math.ceil(total / size)), p = Math.max(0, Math.min(page, pages - 1));
+      const first = p * size, last = Math.min(total, first + size);
+      return { page: p, pages, first, last, text: total ? (first + 1) + '–' + last + ' of ' + total : 'No rows match' };
+    }
+    const mark = (x) => { if (x.__dgDoc) { return false; } x.__dgDoc = true; return true; };
+    const cellText = (r, i) => (r.cells[i] ? r.cells[i].textContent.replace(/[▸▾]/g, '').replace(/\s+/g, ' ').trim() : '');
+    function make(doc, tag, cls, text) { const e = doc.createElement(tag); if (cls) { e.className = cls; } if (text !== undefined && text !== null) { e.textContent = text; } return e; }
+    function searchBox(doc, cls) {
+      const box = make(doc, 'input', cls);
+      box.type = 'search'; box.placeholder = 'Filter rows'; box.setAttribute('aria-label', 'Filter rows');
+      return box;
+    }
+    function tree(t, o) {
+      const body = t.tBodies[0];
+      if (!body || !mark(t)) { return; }
+      const doc = t.ownerDocument, rows = Array.prototype.slice.call(body.rows);
+      rows.forEach((r) => {
+        r.__depth = +r.getAttribute('data-depth');
+        const b = r.querySelector('.tr-tog');
+        r.__open = !!b && b.getAttribute('aria-expanded') === 'true';
+        r.__text = r.textContent.replace(/[▸▾]/g, '').replace(/\s+/g, ' ').toLowerCase();
+      });
+      let q = '';
+      function paint() {
+        const st = treeVisibility(rows.map((r) => r.__depth), rows.map((r) => r.__open), q ? rows.map((r) => r.__text.includes(q)) : null);
+        rows.forEach((r, i) => {
+          r.hidden = !st.visible[i];
+          const b = r.querySelector('.tr-tog'), open = st.open[i];
+          if (b) {
+            b.setAttribute('aria-expanded', open ? 'true' : 'false');
+            b.setAttribute('aria-label', (open ? 'Collapse ' : 'Expand ') + b.getAttribute('aria-label').replace(/^(Collapse|Expand) /, ''));
+            b.textContent = open ? '▾' : '▸';
+          }
+        });
+      }
+      body.addEventListener('click', (e) => {
+        const b = e.target.closest && e.target.closest('.tr-tog');
+        if (!b || q) { return; }
+        const r = b.closest('tr');
+        r.__open = !r.__open;
+        paint();
+        const again = r.querySelector('.tr-tog');
+        if (again) { again.focus(); }
+      });
+      if (o.tables !== false && !t.hasAttribute('data-no-search')) {
+        const wrap = t.closest('.tbl-wrap') || t.parentNode, bar = make(doc, 'div', 'tr-bar'), box = searchBox(doc, 'tbl-q tr-q');
+        box.addEventListener('input', () => { q = box.value.trim().toLowerCase(); paint(); });
+        bar.appendChild(box);
+        wrap.parentNode.insertBefore(bar, wrap);
+      }
+      paint();
+    }
+    function sortable(t, o) {
+      if (t.hasAttribute('data-plain') || !t.tBodies.length || !mark(t)) { return; }
+      const doc = t.ownerDocument, size = o.pageSize || 25;
+      const body = t.tBodies[0], original = Array.prototype.slice.call(body.rows), heads = t.tHead && t.tHead.rows.length ? Array.prototype.slice.call(t.tHead.rows[0].cells) : [];
+      const st = { col: -1, dir: 0, q: '', page: 0 };
+      let pager = null, info = null, prev = null, next = null;
+      function apply() {
+        const rows = original.slice();
+        if (st.col >= 0 && st.dir) { rows.sort((a, b) => compareTextKeys(textSortKey(cellText(a, st.col)), textSortKey(cellText(b, st.col))) * st.dir); }
+        rows.forEach((r) => body.appendChild(r));
+        const shown = rows.filter((r) => !st.q || r.textContent.toLowerCase().includes(st.q));
+        const pi = pageInfo(shown.length, st.page, size);
+        st.page = pi.page;
+        rows.forEach((r) => { r.hidden = true; });
+        shown.slice(pi.first, pi.first + size).forEach((r) => { r.hidden = false; });
+        heads.forEach((th, i) => { th.setAttribute('aria-sort', i === st.col && st.dir ? (st.dir > 0 ? 'ascending' : 'descending') : 'none'); });
+        if (pager) {
+          pager.hidden = shown.length <= size && !st.q;
+          info.textContent = pi.text;
+          prev.disabled = pi.page === 0;
+          next.disabled = pi.page >= pi.pages - 1;
+        }
+      }
+      heads.forEach((th, i) => {
+        const b = make(doc, 'button', 'tbl-sort');
+        b.type = 'button';
+        while (th.firstChild) { b.appendChild(th.firstChild); }
+        b.title = 'Sort by ' + b.textContent.trim();
+        th.appendChild(b);
+        b.addEventListener('click', () => {
+          if (st.col !== i) { st.col = i; st.dir = 1; } else { st.dir = st.dir === 1 ? -1 : st.dir === -1 ? 0 : 1; if (!st.dir) { st.col = -1; } }
+          apply();
+        });
+      });
+      if (original.length > size || !t.hasAttribute('data-no-search')) {
+        pager = make(doc, 'div', 'tbl-bar');
+        if (!t.hasAttribute('data-no-search')) {
+          const q = searchBox(doc, 'tbl-q');
+          q.addEventListener('input', () => { st.q = q.value.trim().toLowerCase(); st.page = 0; apply(); });
+          pager.appendChild(q);
+        }
+        prev = make(doc, 'button', 'fk tbl-pg-b', '‹'); prev.type = 'button'; prev.setAttribute('aria-label', 'Previous page');
+        next = make(doc, 'button', 'fk tbl-pg-b', '›'); next.type = 'button'; next.setAttribute('aria-label', 'Next page');
+        info = make(doc, 'span', 'tbl-pg-i mono'); info.setAttribute('aria-live', 'polite');
+        prev.addEventListener('click', () => { st.page--; apply(); });
+        next.addEventListener('click', () => { st.page++; apply(); });
+        pager.appendChild(prev); pager.appendChild(info); pager.appendChild(next);
+        const wrap = t.closest('.tbl-wrap') || t;
+        wrap.parentNode.insertBefore(pager, wrap);
+      }
+      apply();
+    }
+    function drillDown(root) {
+      if (!mark(root)) { return; }
+      const doc = root.ownerDocument, crumbs = root.querySelector('[data-dr-crumbs]'), up = root.querySelector('[data-dr-up]');
+      const levels = Array.prototype.filter.call(root.children, (x) => x.classList.contains('dr-lv'));
+      function show(path) {
+        levels.forEach((lv) => { const on = lv.getAttribute('data-dr-path') === path; lv.hidden = !on; lv.classList.toggle('on', on); });
+        while (crumbs.firstChild) { crumbs.removeChild(crumbs.firstChild); }
+        const parts = path ? path.split('.') : [];
+        const steps = [{ path: '', label: root.getAttribute('data-dr-root') }];
+        parts.forEach((_, i) => {
+          const p = parts.slice(0, i + 1).join('.'), lv = levels.find((x) => x.getAttribute('data-dr-path') === p);
+          steps.push({ path: p, label: lv ? lv.getAttribute('data-dr-crumb') : p });
+        });
+        steps.forEach((s, i) => {
+          const li = make(doc, 'li');
+          if (i === steps.length - 1) { li.setAttribute('aria-current', 'location'); li.textContent = s.label; }
+          else { const b = make(doc, 'button', 'dr-step', s.label); b.type = 'button'; b.addEventListener('click', () => show(s.path)); li.appendChild(b); }
+          crumbs.appendChild(li);
+        });
+        up.hidden = !path;
+        root.__path = path;
+      }
+      root.addEventListener('click', (e) => {
+        const a = e.target.closest && e.target.closest('[data-dr-open]');
+        if (!a || !root.contains(a)) { return; }
+        e.preventDefault();
+        e.stopPropagation();
+        show(a.getAttribute('data-dr-open'));
+      });
+      up.addEventListener('click', () => { const p = root.__path || ''; show(p.includes('.') ? p.slice(0, p.lastIndexOf('.')) : ''); });
+      root.addEventListener('keydown', (e) => {
+        if ((e.key === 'Escape' || e.key === 'Backspace') && root.__path && !/input|textarea/i.test(e.target.tagName)) { e.preventDefault(); up.click(); }
+      });
+    }
+    function enhanceDocTables(scope, o) {
+      o = o || {};
+      scope.querySelectorAll('table.tbl-tree').forEach((t) => tree(t, o));
+      scope.querySelectorAll('.drill').forEach(drillDown);
+      if (o.tables !== false && o.sort !== false) { scope.querySelectorAll('table.tbl:not(.tbl-tree):not(.dr-tbl):not(.pivot)').forEach((t) => sortable(t, o)); }
+    }
+    return { "treeVisibility": treeVisibility, "pageInfo": pageInfo, "enhanceDocTables": enhanceDocTables };
+  })();
+  /* ---- src/drishti_doc-table.js ---- */
+  __m["src/drishti_doc-table.js"] = (function () {
+    var h = __lib("drishti-core").h, roundHalfUp = __lib("drishti-core").roundHalfUp;
+    const str = (v) => (v === null || v === undefined ? '' : String(v));
+    const defTone = (c) => (c && c.tone ? ' t-' + c.tone : '');
+    function flat(out, c) {
+      if (c === null || c === undefined || c === false) { return out; }
+      if (Array.isArray(c)) { c.forEach((x) => flat(out, x)); return out; }
+      out.push(typeof c === 'object' && c.nodeType ? c : String(c));
+      return out;
+    }
+    function mk(doc) {
+      return (tag, attrs, ...children) => h(doc, tag, { attrs: attrs || null }, flat([], children));
+    }
+    function ctx(doc, hooks) {
+      const hk = hooks || {};
+      return { e: mk(doc), content: hk.content || ((c) => str(c && c.text)), tone: hk.tone || defTone, rowAttrs: hk.rowAttrs || null };
+    }
+    const num = (numeric, i) => !!(numeric || [])[i];
+    const tdCls = (k, numeric, i, c) => 'mono' + (num(numeric, i) ? ' num' : '') + k.tone(c);
+    function head(k, columns, numeric) {
+      return k.e('thead', null, k.e('tr', null, (columns || []).map((c, i) => k.e('th', { class: num(numeric, i) ? 'num' : null }, str(c)))));
+    }
+    function foot(k, d) {
+      if (!d.total && !d.more) { return null; }
+      return k.e('tfoot', null,
+        d.total ? k.e('tr', { class: 'total' }, (d.total.cells || []).map((c, i) => k.e('td', { class: tdCls(k, d.numeric, i, c) }, str(c.text)))) : null,
+        d.more ? k.e('tr', { class: 'more' }, k.e('td', { colspan: String((d.columns || []).length) }, str(d.more))) : null);
+    }
+    function treeRows(k, d, rows, depth, out) {
+      for (const r of rows || []) {
+        const kids = r.children || [], open = depth + 1 < d.expand;
+        out.push(k.e('tr', { class: 'tr-node' + (r.highlight ? ' hl' : ''), 'data-depth': String(depth), 'data-kids': kids.length ? true : null,
+          hidden: depth >= d.expand ? true : null, 'data-path': r.path || null },
+        (r.cells || []).map((c, i) => k.e('td', { class: tdCls(k, d.numeric, i, c), 'data-path': c.path || null },
+          i === 0 ? k.e('span', { class: 'tr-ind tr-d' + Math.min(depth, 24) }, kids.length
+            ? k.e('button', { type: 'button', class: 'tr-tog', 'aria-expanded': open ? 'true' : 'false', 'aria-label': (open ? 'Collapse ' : 'Expand ') + str(c.text) }, open ? '▾' : '▸')
+            : k.e('span', { class: 'tr-sp', 'aria-hidden': 'true' })) : null,
+          k.content(c)))));
+        treeRows(k, d, kids, depth + 1, out);
+      }
+      return out;
+    }
+    function docTable(doc, d, hooks) {
+      const k = ctx(doc, hooks);
+      if (d.expand) {
+        return k.e('div', { class: 'tbl-wrap' }, k.e('table', { class: 'tbl tbl-tree', 'data-plain': true, 'data-tree': true, 'data-no-search': d.search === false ? true : null },
+          head(k, d.columns, d.numeric), k.e('tbody', null, treeRows(k, d, d.rows, 0, [])), foot(k, d)));
+      }
+      return k.e('div', { class: 'tbl-wrap' }, k.e('table', { class: 'tbl', 'data-no-search': d.search === false ? true : null },
+        head(k, d.columns, d.numeric),
+        k.e('tbody', null, (d.rows || []).map((r, ri) => k.e('tr', Object.assign({ class: r.highlight ? 'hl' : null, 'data-path': r.path || null, 'data-pick': r.pick || null,
+          'data-ev': r.ev || null, tabindex: r.ev ? '0' : null, 'aria-selected': r.ev ? 'false' : null }, k.rowAttrs ? k.rowAttrs(r, ri) : null),
+        (r.cells || []).map((c, i) => k.e('td', { class: tdCls(k, d.numeric, i, c), 'data-path': c.path || null }, k.content(c)))))),
+        foot(k, d)));
+    }
+    function docPivotable(doc, panel, hooks) {
+      const src = panel.data.pivot && panel.data.pivot.source;
+      if (!src) { return docTable(doc, panel.data, hooks); }
+      const e = mk(doc), title = panel.title || panel.id;
+      return [docTable(doc, panel.data, hooks), e('p', { class: 'pv-open' }, e('a', { class: 'btn btn-sm btn-outline-secondary', href: '/pivot?source=' + encodeURIComponent(src).replace(/%2F/g, '/'),
+        title: 'Pivot ' + title + ': rows, columns, values and filters, every total from its own rows (PIVOT_GUIDE.md)' }, 'Pivot'))];
+    }
+    function drRows(k, pid, rows, numeric, prefix, deeper, noun) {
+      return k.e('tbody', null, (rows || []).map((r, ri) => {
+        const path = prefix + ri, kids = r.children || [];
+        return k.e('tr', { class: r.highlight ? 'hl' : null, 'data-path': r.path || null, 'data-dr-row': path },
+          (r.cells || []).map((c, i) => k.e('td', { class: tdCls(k, numeric, i, c) }, i === 0 && deeper
+            ? k.e('a', { class: 'dr-open', href: '?dr.' + pid + '=' + path, 'data-dr-open': path, title: 'Open ' + str(r.crumb) + ': ' + kids.length + ' ' + noun,
+              'aria-label': 'Open ' + str(r.crumb) + ': ' + kids.length + ' ' + noun }, (c.text !== null && c.text !== undefined && c.text !== '') ? str(c.text) : str(r.crumb),
+            k.e('span', { class: 'dr-n', 'aria-hidden': 'true' }, kids.length + ' ▸'))
+            : k.content(c))));
+      }));
+    }
+    function drFoot(k, total, numeric) {
+      return total ? k.e('tfoot', null, k.e('tr', { class: 'total' }, (total.cells || []).map((c, i) => k.e('td', { class: tdCls(k, numeric, i, c) }, str(c.text))))) : null;
+    }
+    function drLevels(k, pid, d, rows, prefix, depth, out) {
+      const lv = d.levels[depth], ph = depth === 0 ? d.columns : d.levels[depth - 1].columns;
+      const deeper = depth + 1 < d.levels.length, noun = deeper ? String(d.levels[depth + 1].title || 'rows').toLowerCase() : '';
+      (rows || []).forEach((r, ri) => {
+        const path = prefix + ri, kids = r.children || [];
+        out.push(k.e('div', { class: 'dr-lv', 'data-dr-path': path, 'data-dr-crumb': str(r.crumb), 'data-dr-depth': String(depth + 1), hidden: true },
+          k.e('dl', { class: 'dr-parent', 'aria-label': str(r.crumb) }, (r.cells || []).map((c, i) => (c.text === null || c.text === undefined || c.text === '') ? null
+            : k.e('div', null, k.e('dt', null, str((ph || [])[i])), k.e('dd', { class: 'mono' + k.tone(c) }, k.content(c))))),
+          kids.length
+            ? k.e('div', { class: 'tbl-wrap' }, k.e('table', { class: 'tbl dr-tbl', 'aria-label': (lv.title || 'Rows') + ' of ' + str(r.crumb) },
+              k.e('caption', { class: 'dr-cap' }, (lv.title || 'Rows') + ' ', k.e('span', { class: 'dr-count' }, String(kids.length))),
+              head(k, lv.columns, lv.numeric), drRows(k, pid, kids, lv.numeric, path + '.', deeper, noun), drFoot(k, r.kidsTotal, lv.numeric)))
+            : k.e('p', { class: 'pnl-empty', role: 'status' }, k.e('i', { class: 'bi bi-inbox', 'aria-hidden': 'true' }), ' No ' + String(lv.title || 'rows').toLowerCase())));
+        if (deeper && kids.length) { drLevels(k, pid, d, kids, path + '.', depth + 1, out); }
+      });
+      return out;
+    }
+    function docDrill(doc, panel, hooks) {
+      const k = ctx(doc, hooks), p = panel, d = p.data, noun = String(d.levels[0].title || 'rows').toLowerCase(), root = d.root || p.title || '';
+      return k.e('div', { class: 'drill', 'data-drill': p.id, 'data-dr-root': root },
+        k.e('nav', { class: 'dr-crumbs', 'aria-label': 'Where you are in ' + (p.title || p.id) },
+          k.e('ol', { 'data-dr-crumbs': true }, k.e('li', { 'aria-current': 'location' }, root)),
+          k.e('button', { type: 'button', class: 'fk dr-up', 'data-dr-up': true, hidden: true, title: 'Up one level (Esc)', 'aria-label': 'Up one level' }, k.e('b', null, 'Esc'), ' Up')),
+        k.e('div', { class: 'dr-lv on', 'data-dr-path': '', 'data-dr-depth': '0' },
+          k.e('div', { class: 'tbl-wrap' }, k.e('table', { class: 'tbl dr-tbl', 'data-no-search': d.search === false ? true : null, 'aria-label': p.title || p.id },
+            k.e('caption', { class: 'dr-cap' }, (p.title || '') + ' ', k.e('span', { class: 'dr-count' }, String((d.rows || []).length))),
+            head(k, d.columns, d.numeric), drRows(k, p.id, d.rows, d.numeric, '', true, noun), drFoot(k, d.total, d.numeric),
+            d.more ? k.e('tfoot', null, k.e('tr', { class: 'more' }, k.e('td', { colspan: String((d.columns || []).length) }, str(d.more)))) : null))),
+        drLevels(k, p.id, d, d.rows, '', 0, []));
+    }
+    function heatBucket(v, lo, hi) {
+      const span = (typeof lo === 'number' && typeof hi === 'number' && hi > lo) ? hi - lo : 0;
+      return span ? Math.trunc(Number(roundHalfUp((v - lo) / span * 9, 0))) : 5;
+    }
+    function docPivot(doc, d, hooks) {
+      const k = ctx(doc, hooks), t = pivotTable(k, d);
+      return d.levels ? k.e('div', { class: 'pv-tree-host', 'data-pv-tree': JSON.stringify(d) }, t) : t;
+    }
+    function pivotTable(k, d) {
+      const by = d.by || '', cols = d.columns || [], lo = d.min, hi = d.max;
+      return k.e('div', { class: 'tbl-wrap' }, k.e('table', { class: 'tbl pivot' + (d.heat ? ' heat' : '') },
+        k.e('thead', null, k.e('tr', null, k.e('th', { scope: 'col' }, by.slice(0, 1).toUpperCase() + by.slice(1)),
+          cols.map((c) => k.e('th', { scope: 'col', class: 'num' }, str(c))), d.totals ? k.e('th', { scope: 'col', class: 'num' }, 'Total') : null)),
+        k.e('tbody', null, (d.rows || []).map((r) => k.e('tr', null,
+          k.e('th', { scope: 'row', class: r.path ? 'pv-i' + r.path.length : null }, r.group ? k.e('b', null, str(r.label)) : str(r.label)),
+          (r.cells || []).map((c, i) => {
+            const v = (r.values || [])[i];
+            return k.e('td', { class: 'mono num' + k.tone(c) + (d.heat && typeof v === 'number' ? ' heat-' + heatBucket(v, lo, hi) : '') }, str(c.text));
+          }),
+          r.total ? k.e('td', { class: 'mono num pv-total' + k.tone(r.total) }, str(r.total.text)) : null))),
+        (d.totals || d.more) ? k.e('tfoot', null,
+          d.totals ? k.e('tr', { class: 'total' }, k.e('th', { scope: 'row' }, 'Total'), d.totals.map((c) => k.e('td', { class: 'mono num' + k.tone(c) }, str(c.text)))) : null,
+          d.more ? k.e('tr', { class: 'more' }, k.e('td', { colspan: String(cols.length + 2) }, d.more + ' more rows')) : null) : null));
+    }
+    function docPlainTable(doc, headRow, rows, o) {
+      o = o || {};
+      const e = mk(doc);
+      const head0 = (c, ri) => (o.rowHeader ? o.rowHeader(c, ri) : (c && typeof c === 'object' && c.nodeType ? c : str(c)));
+      const th = (x, i) => (x && typeof x === 'object' ? e('th', { scope: 'col', class: x.num ? 'num' : null }, str(x.text)) : e('th', { scope: 'col', class: i ? 'num' : null }, str(x)));
+      const td = (c) => (c && typeof c === 'object' && !c.nodeType && 'content' in c ? e('td', { class: c.cls === undefined ? 'mono num' : c.cls }, c.content) : e('td', { class: 'mono num' }, typeof c === 'object' && c && c.nodeType ? c : str(c)));
+      const wrap = e('div', { class: 'tbl-wrap' }, e('table', { class: 'tbl', 'data-plain': true },
+        e('thead', null, e('tr', null, headRow.map(th))),
+        e('tbody', null, rows.map((r, ri) => e('tr', null, r.map((c, i) => (i === 0 ? e('th', { scope: 'row' }, head0(c, ri)) : td(c))))))));
+      return o.details === false ? wrap : e('details', { class: 'xchart-data' }, e('summary', null, o.summary || 'Data'), wrap);
+    }
+    return { "docTable": docTable, "docPivotable": docPivotable, "docDrill": docDrill, "heatBucket": heatBucket, "docPivot": docPivot, "docPlainTable": docPlainTable };
   })();
   /* ---- src/drishti_export.js ---- */
   __m["src/drishti_export.js"] = (function () {
@@ -2141,7 +2541,8 @@
         this.layout = LAYOUTS.indexOf(o.layout) >= 0 ? o.layout : 'wells';
         this.density = DENSITIES[o.density] ? o.density : 'compact';
         this.rowModel = o.datasource ? new ServerRowModel({ datasource: o.datasource, blockSize: o.blockSize, getRowId: o.getRowId })
-          : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId, clientAggregation: o.clientAggregation });
+          : new ClientRowModel({ columns: this.columns, rows: o.rows || [], getRowId: o.getRowId, clientAggregation: o.clientAggregation, treeData: o.treeData,
+            getDataPath: o.getDataPath, groupDefaultExpanded: o.groupDefaultExpanded });
         this.serverSide = !!o.datasource;
         this.viewport = new Viewport({ rowHeight: DENSITIES[this.density] });
         this.selection = new SelectionModel({ mode: o.rowSelection });
@@ -2210,8 +2611,10 @@
           if (row.entry.kind === 'header') { return null; }
           return cellValue(this.answer, row.entry.key, col.colKey, col.measure).value;
         }
+        if (row.tree && c === 0) { return row.treeKey; }
         if (row.kind === 'group') {
           if (c === 0) { return row.value; }
+          if (row.tree && row.row) { return getValue(row.row, col); }
           const agg = row.aggregates || (row.row || {});
           return agg[col.id] !== undefined ? agg[col.id] : null;
         }
@@ -2845,7 +3248,7 @@
         if (m.pivotMode && !m.answer) { return 'Computing the pivot…'; }
         return m.rowCount() ? null : 'No rows to show.';
       }
-      grouped() { const r = this.model.rowModel; return !!((r.groupBy && r.groupBy.length) || (r.rowGroupCols && r.rowGroupCols.length)); }
+      grouped() { const r = this.model.rowModel; return !!((r.groupBy && r.groupBy.length) || (r.rowGroupCols && r.rowGroupCols.length) || r.treeData); }
       checkboxes() { return this.o.checkboxes !== false && this.model.selection.mode !== 'none'; }
       sortOf(d) {
         const m = this.model, col = d.col;
@@ -3152,7 +3555,7 @@
         flash.settle();
         if (flash.active()) { this.view.doc.defaultView.setTimeout(() => this.schedule(), 120); }
         const s = this.scroller;
-        s.setAttribute('role', m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length) ? 'treegrid' : 'grid');
+        s.setAttribute('role', m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length) || m.rowModel.treeData ? 'treegrid' : 'grid');
         s.setAttribute('aria-rowcount', String(m.rowCount() + sp.levels));
         s.setAttribute('aria-colcount', String(m.shownColumns().length));
         const fid = focus ? this.uid + '-r' + focus.row + '-c' + focus.col : null;
@@ -3221,7 +3624,7 @@
         const selected = id !== null && m.selection.isSelected(id);
         const cls = 'dg-row dg-k-' + kind + (expandable ? ' dg-parent' : '') + (selected ? ' dg-selected' : '') + (r % 2 ? ' dg-odd' : '');
         const row = h(doc, 'div', { cls: cls, attrs: { role: 'row', 'aria-rowindex': String(r + levels + 1), 'aria-selected': id !== null ? String(selected) : null,
-          'aria-level': m.pivotMode || x.kind === 'group' || x.depth ? String((x.depth || 0) + 1) : null, 'aria-expanded': expandable ? String(expanded) : null },
+          'aria-level': m.pivotMode || x.kind === 'group' || x.tree || x.depth ? String((x.depth || 0) + 1) : null, 'aria-expanded': expandable ? String(expanded) : null },
         style: { height: m.viewport.rowHeight + 'px' } });
         const rowKey = e ? 'p:' + e.key : x.kind === 'group' ? 'g:' + (x.path || x.keys || []).join('\u001f') : 'l:' + (x.id !== undefined ? x.id : r);
         const first = disp.all[0];
@@ -3278,7 +3681,7 @@
             cell.appendChild(box);
           }
           if (k.expandable) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw', text: k.expanded ? '−' : '+', attrs: { 'aria-hidden': 'true' }, data: { r: String(r) } })); }
-          else if (m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length)) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw dg-tw-none', attrs: { 'aria-hidden': 'true' } })); }
+          else if (m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length) || m.rowModel.treeData) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw dg-tw-none', attrs: { 'aria-hidden': 'true' } })); }
         }
         cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text }));
         return cell;
@@ -4333,7 +4736,7 @@
   __m["src/drishti_index.js"] = (function () {
     var defineGridElement = __m["src/drishti_grid-element.js"].defineGridElement;
     function install(root) { if (root && root.document && root.customElements) { defineGridElement(root.customElements, root); } }
-    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot.js"].resultColumns, "cellValue": __m["src/drishti_pivot.js"].cellValue, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "LAYOUTS": __m["src/drishti_grid.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid.js"].DENSITIES, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "EDITORS": __m["src/drishti_grid-edit.js"].EDITORS, "editorOf": __m["src/drishti_grid-edit.js"].editorOf, "parseCellText": __m["src/drishti_grid-edit.js"].parseCellText, "validateCell": __m["src/drishti_grid-edit.js"].validateCell, "parseTsv": __m["src/drishti_grid-edit.js"].parseTsv, "GridEditing": __m["src/drishti_grid-edit.js"].GridEditing, "CellEditor": __m["src/drishti_grid-editors.js"].CellEditor, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement };
+    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot.js"].resultColumns, "cellValue": __m["src/drishti_pivot.js"].cellValue, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "LAYOUTS": __m["src/drishti_grid.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid.js"].DENSITIES, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "EDITORS": __m["src/drishti_grid-edit.js"].EDITORS, "editorOf": __m["src/drishti_grid-edit.js"].editorOf, "parseCellText": __m["src/drishti_grid-edit.js"].parseCellText, "validateCell": __m["src/drishti_grid-edit.js"].validateCell, "parseTsv": __m["src/drishti_grid-edit.js"].parseTsv, "GridEditing": __m["src/drishti_grid-edit.js"].GridEditing, "CellEditor": __m["src/drishti_grid-editors.js"].CellEditor, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "docTable": __m["src/drishti_doc-table.js"].docTable, "docPivotable": __m["src/drishti_doc-table.js"].docPivotable, "docDrill": __m["src/drishti_doc-table.js"].docDrill, "heatBucket": __m["src/drishti_doc-table.js"].heatBucket, "docPivot": __m["src/drishti_doc-table.js"].docPivot, "docPlainTable": __m["src/drishti_doc-table.js"].docPlainTable, "treeVisibility": __m["src/drishti_doc-behave.js"].treeVisibility, "pageInfo": __m["src/drishti_doc-behave.js"].pageInfo, "enhanceDocTables": __m["src/drishti_doc-behave.js"].enhanceDocTables, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement };
   })();
   return Object.freeze(Object.assign({ library: "drishti-grid", version: "0.3.0" }, __m["src/drishti_index.js"]));
 });

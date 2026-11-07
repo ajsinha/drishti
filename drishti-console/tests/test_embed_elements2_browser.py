@@ -155,7 +155,7 @@ def test_the_versioned_paths_answer_and_the_bytes_match_the_record(stack):  # no
     status, _, body = get(E.CONSOLE_URL + "/embed/v2/render/9.9.9/drishti-render.js")
     assert status == 410 and json.loads(body)["code"] == "DRS-8006"
     record = json.loads((rd.ROOT / rd.VERSION / rd.RECORD).read_text())
-    for rel in ("drishti-render.js", "drishti-elements.js", "m/screen.js", "drishti-render.css"):
+    for rel in ("drishti-render.js", "drishti-elements.js", "drishti-render.d.ts", "drishti-render.css"):
         status, headers, body = get(E.CONSOLE_URL + f"/embed/v2/render/{rd.VERSION}/{rel}")
         assert status == 200 and rd.sri(body) == record["files"][rel]["integrity"], rel
         assert "immutable" in headers["Cache-Control"] and headers["Access-Control-Allow-Origin"] == E.HOST and headers["Drishti-Embed-Api"] == "2.0"
