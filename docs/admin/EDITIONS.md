@@ -457,7 +457,7 @@ or open it as a lens: it is the fourth of the default lenses (`drishti.lenses: r
 
 | Landing | Id | What leads |
 |---|---|---|
-| **Trader desk** (the default; traders) | `trader` | P&L today (MtM change since the business day before, over my books), my VaR (intraday when updated) and the highest limit use of my books, DV01 (when the valuations carry it), trades today (new, amended, cancelled); **Check a new trade**; today's blotter; top positions by VaR contribution; quick commands for my trader and book |
+| **Trader home** (the default; traders) | `trader` | the trader home ([SHARED_SCREENS.md section 4](../architecture/SHARED_SCREENS.md#4-the-trader-home); [USER_GUIDE.md](../guides/USER_GUIDE.md#the-trader-home)): five headline figures (P&L today, VaR against its limit, the biggest risk, breaches and near ones, approvals for me), my books, markets I watch, what changed and a live feed, ticking from the server; **Check a new trade**. Also at `/home/trader` (Risk › Trader home) |
 | **Desk head** (desk heads) | `desk` | desk P&L today, desk VaR and its limit use, breaches, books near their limit, the largest counterparty's share of the desk's positive MtM; limit use by book over the last 5 business dates (each cell prints its percentage); by trader (P&L, VaR, trades); P&L against VaR over 60 days (official history only); overnight movers |
 | **Explorer** | `explorer` | a big command line, chips (`home.chips`), the commands grouped (blotter, books and positions, risk on my book, counterparties, market data), your recent Trading commands |
 
@@ -927,7 +927,10 @@ Drawn in the terminal look with a **green accent** (`#4fd18b` on the dark themes
 `POST /api/home/trading/check` (`404 DRS-4023` unless the person's edition or lens shows `TRD`; the check also the word `VAR` and `XWIF`), cached
 two minutes per person, date and scope; two panels needing the same valuations wait for one read.
 
-- **A "trader", Trader desk** (the default; traders):
+- **A "trader", the trader home** (the default; traders): its own page (`home.templates: {trader: home/trader_home_landing.html}`), drawn by
+  drishti-risk's `TraderHome` from `GET /api/home/trading/home` (`core/trader_home.py`, which arranges the reads below) and ticking with the
+  server's `GET /api/v1/trading/home/live` ([USER_GUIDE.md, The trader home](../guides/USER_GUIDE.md#the-trader-home)). The figures it
+  shows are these:
   - **P&L today**: the MtM change of every trade of my books valued on both the business date and the business day before (`TVAL`, read on
     both dates; the person's date box moves both), summed. No valuations the day before: the tile says so and shows no number. The
     valuations' own `PNL_1D` is a different figure on the demo data (the pricing systems' explained P&L) and is not used.
@@ -949,9 +952,7 @@ two minutes per person, date and scope; two panels needing the same valuations w
     day against the business day before it, and the page says "the latest valuations are of …"; a day before that only carries the same
     data (its provenance's business date is earlier) counts as no valuations that day.
   - **Check a new trade**: product (the products of my live trades), side, notional (`250m`, `1.5bn`), counterparty and book in; one answer
-    (below). **Today's blotter** (newest first, each trade's notional from its valuation), **Top positions** by VaR contribution (the
-    engine's `/scope/contributions?by=position`, market value and component VaR), **Quick commands** (my trader, my book's VaR, my book,
-    my most traded counterparty, then the file's cards).
+    (below). The day's trades are the trader home's feed and *what changed*; the biggest VaR contribution is its *biggest risk*.
 - **B "desk", Desk head** (desk heads; a trader sees their own desk):
   - **Desk P&L today** (as above, over the desk, with the best book), **Desk VaR** and its limit use (`DESK:<id>`), **Breaches** (books
     above their limit), **Near limit** (books at `trading.near-limit`, 80%, or more), **Largest counterparty**: its share of the desk's

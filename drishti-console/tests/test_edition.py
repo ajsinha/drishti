@@ -576,8 +576,8 @@ def test_trading_home_offers_trader_desk_and_explorer_and_remembers_the_choice(t
     home = c.get("/").text
     assert 'data-trading-landing="trader"' in home and "data-market-landing" not in home and "data-risk-landing" not in home
     assert "/static/js/drishti_trading-landing.js" in home and "/static/css/drishti_trading-landing.css" in home
-    assert ">Trader desk<" in home and ">Desk head<" in home and ">Explorer<" in home
-    assert 'data-tl-tile="pnl"' in home and 'data-tl-check' in home and 'data-home-card="VAR BOOK BOOK-RATES-1"' in home
+    assert ">Trader home<" in home and ">Desk head<" in home and ">Explorer<" in home
+    assert 'data-trader-home' in home and 'data-tl-check' in home and "/static/js/drishti_trader-home.js" in home   # the trader home (SHARED_SCREENS 4)
     assert c.post("/home/landing/desk", follow_redirects=False).status_code == 303
     assert app.state.store["alice"]["homeLanding"] == "desk"
     desk = c.get("/").text

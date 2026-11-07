@@ -161,6 +161,13 @@ items:
     treatment: under-construction
     contracts: ["docs/architecture/SHARED_SCREENS.md#3-one-explain-for-every-number"]
 
+  - id: explain-trading-pnl
+    what: panel
+    about: "Explain for the trader home's P&L figures (P&L today, by book): the figure is the pivot engine's sum of each trade's MtM change; an explainer of the trading domain that lists those trades and their changes is not built (the VaR, limit and limit-use figures have their Explain)"
+    release: "2.9.11.k (risk engines II)"
+    treatment: under-construction
+    contracts: ["docs/architecture/SHARED_SCREENS.md#4-the-trader-home"]
+
   - id: explain-exposure-why
     what: panel
     about: "Explain › Why it moved for an exposure figure (peak PFE, EPE, EEPE, EE, CE, EAD): the attribution between two dates is not built; the formula, inputs, lineage and checks are"

@@ -1002,6 +1002,8 @@ shapes and reconnection rules are in [DATA_ARCHITECTURE.md](../architecture/DATA
 | `GET` | `/views/{kind}/{id}/stream` | as-of. `view` (the full ViewModel, id `0`), then `frame` (patches, id = sequence), both with the caller's [field masks](#field-masks). For a past date or a non-live source: one `view`, then the stream closes |
 | `GET` | `/me/monitors/{name}/stream` | as-of. `hello` `{rows}`, then one `row` event `{kind, id, patches, p99Ms}` per changed entity (strip patches only) |
 | `GET` | `/alerts/stream` | `hello` `{user}`, then `notice` events (an alert raised is an inbox row of type `alert`), `switches` and `edit` |
+| `GET` | `/trading/home/live` | the trader home's ticks (the trading domain; [USER_GUIDE.md, The trader home](USER_GUIDE.md#the-trader-home)): `hello` `{generation, at, kinds, changed}`, then `tick` when any kind of `drishti.trading.home.watch` (trades, valuations, VaR limits, P&L vectors, the watched market data) has a new data version, at most one per `drishti.trading.home.frame` (2 s), and `status` every `drishti.trading.home.status` (15 s) when nothing changed. A tick carries no data: ask the figures again as yourself. For a caller who may open trades; at most `max-streams-per-user` (8) at once, beyond it `429 DRS-9051` |
+| `GET` | `/trading/home/state` | not a stream: the same state once, with each watched kind's data version (`versions`) |
 | `GET` | `/health/live` | not a stream: `{streams, topics, frames, p50Ms, p99Ms}` for the whole server |
 
 All three send a comment line `:hb` when quiet (every `drishti.live.heartbeat`, default 15 s, for views;

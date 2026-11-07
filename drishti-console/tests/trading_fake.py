@@ -24,7 +24,10 @@ cancelled (A. Shah's books), MX-20000003 amended (K. Moreau's). VaR: BOOK-RATES-
 (113%, a breach); the desk 15m of 20m; the official record of 2026-09-25 is missing. CP-ALDERSHOT's peak PFE 401.5m of a 420m limit."""
 from __future__ import annotations
 
+import asyncio
+import json
 import re
+import threading
 
 from conftest import FakeBackend
 from core import asof
@@ -202,3 +205,81 @@ class TradingBackend(FakeBackend):
 
     async def command_history(self, ident=None):
         return ["TRD MX-20000001", "ECON CAN", "VAR BANK", "BOOK BOOK-RATES-1", "TRD MX-20000001", "SCN SCN-2008", "CTRD CP-ALDERSHOT"]
+
+
+class TraderHomeBackend(TradingBackend):
+    """The trader home's stand-in (test_trader_home.py, test_trader_home_browser.py): the trading answers above, the market data of
+    market_fake.py for the markets I watch, a VaR per book that a test may change (``book_var``), and the server's trader home ticks from a
+    manual feed: ``tick()`` (from any thread) sends one ``tick`` on every open ``/trading/home/live`` stream."""
+
+    def __init__(self, **kw):
+        from market_fake import MarketBackend
+        super().__init__(**kw)
+        self.market = MarketBackend()
+        self.book_var = dict(BOOK_VAR)
+        self.streams: list = []                    # (loop, queue) of each open stream
+        self.lock = threading.Lock()
+        self.live_paths: list[str] = []
+
+    async def search(self, q, ident=None):
+        if q.split()[0].upper() in ("CRV", "CDS", "FXV", "EQV", "INF"):
+            return await self.market.search(q, ident)
+        return await super().search(q, ident)
+
+    async def raw(self, kind, id_, ident=None):
+        if kind in ("ir-curve", "fx-vol-surface", "credit-curve", "equity-vol-surface", "inflation-index"):
+            return await self.market.raw(kind, id_, ident)
+        return await super().raw(kind, id_, ident)
+
+    async def series(self, kind, id_, path, days, ident=None):
+        return await self.market.series(kind, id_, path, days, ident)
+
+    async def var(self, method, path, ident, body=None, raw=False, accept="", **params):
+        scope = str(params.get("scope") or "")
+        if method == "GET" and path == "/scope" and scope.startswith("BOOK:") and " " not in scope:
+            v, lim = self.book_var[scope[5:]]
+            return {"scope": scope, "businessDate": "2026-09-30", "var": v, "es": int(v * 1.1), "limit": lim, "limitUse": v / lim,
+                    "confidence": 0.99, "trades": 4}
+        return await super().var(method, path, ident, body=body, raw=raw, accept=accept, **params)
+
+    async def explain_number(self, method, path, ident, body=None, **params):
+        """The one Explain of a VaR figure, shaped as the server's VarNumberExplainer answers, from this stand-in's own VaR."""
+        self.explained = getattr(self, "explained", []) + [dict(params)]
+        if path == "/kinds":
+            return {"kinds": [{"kind": "var", "title": "VaR", "measures": ["var", "es"]}], "underConstruction": []}
+        scope = str(params.get("scope") or "")
+        v = self.book_var[scope[5:]][0] if scope.startswith("BOOK:") and scope[5:] in self.book_var else 8_000_000
+        part = params.get("part", "all")
+        out = {"kind": "var", "measure": "var", "subject": scope, "title": "VaR 99%, 1 day, " + scope, "stored": False, "value": v,
+               "text": f"{v:,.0f}", "unit": "USD", "asOf": "2026-09-30", "origin": "computed by the VaR engine in the server for you",
+               "part": part, "preview": "the 6th worst of 509 scenario P&Ls", "facts": []}
+        if part in ("all", "formula"):
+            out["formula"] = {"lines": ["VaR = −(k-th worst of 509 scenario P&Ls)", f"VaR = {v:,.0f} USD"], "rachana": "var()"}
+        return out
+
+    def tick(self, changed=("trade-valuation",)) -> int:
+        """One tick on every open stream (the manual feed); how many streams heard it."""
+        with self.lock:
+            open_ = list(self.streams)
+        for loop, q in open_:
+            loop.call_soon_threadsafe(q.put_nowait, ("tick", json.dumps({"generation": "g2", "changed": list(changed)})))
+        return len(open_)
+
+    async def sse(self, path, ident=None, opened=None):
+        if not path.startswith("/trading/home/live"):
+            async for x in super().sse(path, ident, opened):
+                yield x
+            return
+        self.live_paths.append(path)
+        q: asyncio.Queue = asyncio.Queue()
+        entry = (asyncio.get_running_loop(), q)
+        with self.lock:
+            self.streams.append(entry)
+        try:
+            yield "hello", '{"generation": "g1", "changed": []}'
+            while True:
+                yield await q.get()
+        finally:
+            with self.lock:
+                if entry in self.streams:
+                    self.streams.remove(entry)

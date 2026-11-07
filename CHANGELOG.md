@@ -15,6 +15,23 @@
 -->
 # Changelog
 
+## 2.9.11.g (unreleased)
+
+- **The trader home** ([SHARED_SCREENS.md section 4](docs/architecture/SHARED_SCREENS.md#4-the-trader-home), option A with C's feed as a
+  column and B one click from a book; [USER_GUIDE.md, The trader home](docs/guides/USER_GUIDE.md#the-trader-home)): the Trading lens's
+  landing `trader` (and `/home/trader`, Risk › Trader home) replaces the Trader desk. Five headline figures (today's P&L, VaR against its
+  limit, the biggest risk, breaches and near ones, approvals for me), **my books** in drishti-grid at terminal density (P&L, VaR, limit,
+  limit use with its bar, a flash on change; a book opens its VaR position by position), **markets I watch**, **what changed** since this
+  morning or since my last visit, and a **live feed** (trades, limits approached or breached, approvals, alerts). Built on Drishti
+  Elements in the trading domain: drishti-risk 0.2.0's `TraderHome` (with `drishti_risk.css`); every VaR figure opens the one Explain.
+  The server computes every number: `GET /api/home/trading/home` arranges the engines' answers as the person (`core/trader_home.py`);
+  **new server endpoints** in the trading domain, `GET /api/v1/trading/home/live` (a tick when the trades, valuations, VaR limits, P&L
+  vectors or watched market data have new data versions; a tick carries no data) and `GET /api/v1/trading/home/state`, settings
+  `drishti.trading.home.*`; the console's one live channel carries it as `trading:home` (a domain registers its subscriptions,
+  `core.channel.register_upstream`, so the channel knows no domain). A person sees only their books; a tick reads again what was kept for
+  that person only. Removed: the Trader desk's tiles, blotter, top positions and quick commands (the trader home holds them); the
+  new-trade check stays on the home. Explain for P&L is under construction (`explain-trading-pnl`).
+
 ## 2.9.11.h (unreleased)
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.

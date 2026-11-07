@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Drishti Trading's three Home landings in a browser (EDITIONS.md › The design as built, section 14): the console with the stand-in server of trading_fake.py
+"""Drishti Trading's three Home landings in a browser (the trader landing is the trader home: test_trader_home_browser.py) (EDITIONS.md › The design as built, section 14): the console with the stand-in server of trading_fake.py
 (port 17980), the person mapped to A. Shah's books. Each landing fills its panels from those answers, fits a phone without sideways
 scrolling, passes the page-width audit, asks no host but the console (every library is vendored), and draws in every theme with its green
 accent; the new-trade check answers end to end; skipped when Playwright or its Chromium is missing."""
@@ -83,20 +83,10 @@ def test_each_trading_landing_fills_from_the_servers_answers_and_fits(browser, t
         page.wait_for_function("() => document.querySelector('[data-tl-who]').textContent.includes('A. Shah')"
                                if landing != "desk" else "() => document.querySelector('[data-tl-who]').textContent.includes('DESK-RATES')")
         assert page.locator("[data-tl-viewas]").is_visible()                           # the default user is an administrator: may pick
-        if landing == "trader":
-            page.wait_for_function("() => document.querySelector('[data-tl-date]').textContent === '2026-09-30'")
-            page.wait_for_function("() => document.querySelector('[data-tl-tile=limit] [data-tl-v]').textContent === '83%'")
-            page.wait_for_function("() => document.querySelectorAll('[data-tl-blotter] tr[data-tl-event]').length === 3")
-            assert _text(page, "[data-tl-tile=pnl] [data-tl-v]") == "+480k"
-            assert "since 2026-09-29" in _text(page, "[data-tl-tile=pnl] [data-tl-s]")
-            assert _text(page, "[data-tl-tile=var] [data-tl-v]") == "8.00m" and "intraday" in _text(page, "[data-tl-tile=var] [data-tl-s]")
-            assert _text(page, "[data-tl-tile=dv01] [data-tl-v]") == "−48k"                # the data has DV01: the tile shows
-            assert _text(page, "[data-tl-tile=trades] [data-tl-v]") == "3"
-            assert "1 new · 1 amended · 1 cancelled" in _text(page, "[data-tl-tile=trades] [data-tl-s]")
-            assert "BOOK-RATES-1" in _text(page, "[data-tl-tile=limit] [data-tl-s]")
-            assert page.locator("[data-tl-blotter] tr[data-tl-event=cancelled]").count() == 1
-            page.wait_for_function("() => document.querySelectorAll('[data-tl-positions] tr').length === 2")
-            page.wait_for_function("() => document.querySelector(\"[data-tl-quick] [data-home-card='TRDR TRDR-ASHAH']\") !== null")
+        if landing == "trader":                                                        # the trader home (test_trader_home_browser.py in depth)
+            page.wait_for_function("() => document.querySelector('[data-th-tile=pnl] [data-th-v]')?.textContent === '+480k'")
+            assert _text(page, "[data-th-tile=var] [data-th-v]") == "8.00m"
+            page.wait_for_function("() => document.querySelectorAll('[data-th-books-grid] [data-th-book]').length === 2")
         elif landing == "desk":
             page.wait_for_function("() => document.querySelectorAll('[data-tl-heat] [data-tl-cell]').length === 15")
             assert _text(page, "[data-tl-cell='BOOK-RATES-3@2026-09-30']") == "110%"
@@ -159,7 +149,9 @@ def test_each_trading_landing_draws_in_every_theme_with_its_green_accent(browser
         page.goto(f"{trading_console}/?landing={landing}", wait_until="load")
         page.locator(f"[data-trading-landing='{landing}']").wait_for()
         seen = set()
-        box = ".tl-tile" if landing != "explorer" else ".tl-q"
+        box = {"trader": ".th-tile", "desk": ".tl-tile"}.get(landing, ".tl-q")
+        if landing == "trader":
+            page.locator(box).first.wait_for()
         for theme in THEMES:
             page.evaluate(f"document.documentElement.setAttribute('data-theme', '{theme}')")
             colours = page.evaluate("""(box) => { const t = getComputedStyle(document.querySelector(box));

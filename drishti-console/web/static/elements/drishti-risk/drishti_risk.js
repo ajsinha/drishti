@@ -210,18 +210,19 @@
           columns: this.bookColumns(), rows: [], getRowId: (r) => r.book, layout: 'terminal', density: this.o.density, chrome: false, checkboxes: false,
           rowSelection: 'none', clientAggregation: false, label: 'My books', decorateCell: (c) => this.decorateBook(c), live: { flashMs: 1500 } });
         this.markets = new Grid(this.marketsBox, {
-          columns: [{ field: 'label', header: 'Market', width: 170, pinned: 'left' }, { field: 'last', header: 'Last', width: 110 },
+          columns: [{ field: 'label', header: 'Market', width: 170 }, { field: 'last', header: 'Last', width: 110 },
             { field: 'chg', header: 'Chg', width: 100 }],
           rows: [], getRowId: (r) => r.id, layout: 'terminal', density: this.o.density, chrome: false, checkboxes: false, rowSelection: 'none',
           clientAggregation: false, label: 'Markets I watch', decorateCell: (c) => this.decorateMarket(c), live: { flashMs: 1500 } });
-        this.booksBox.addEventListener('drishti:cell-clicked', (ev) => {
-          const d = ev.detail || {};
-          if (d.columnId === 'book' && d.data && this.o.openBook) { this.o.openBook(d.data.book); }
+        this.booksBox.addEventListener('keydown', (ev) => {              // Enter on a book's cell opens it, as a click on its name does
+          if (ev.key !== 'Enter' || !this.o.openBook) { return; }
+          const f = this.books.model.navigator.focus, x = f ? this.books.model.rowAt(f.row) : null;
+          if (x && x.kind === 'leaf' && x.row && x.row.book) { ev.preventDefault(); this.o.openBook(x.row.book); }
         });
       }
       bookColumns() {
         return [
-          { field: 'book', header: 'Book', width: 150, pinned: 'left' },
+          { field: 'book', header: 'Book', width: 150 },
           { field: 'pnl', header: 'P&L today', type: 'number', width: 110, format: (v) => money(v, true) },
           { field: 'var', header: 'VaR', type: 'number', width: 100, additive: false, format: (v) => money(v) },
           { field: 'limit', header: 'Limit', type: 'number', width: 100, additive: false, format: (v) => money(v) },
@@ -229,8 +230,7 @@
           { field: 'trades', header: 'Trades', type: 'number', width: 80, format: (v) => (v === null || v === undefined ? '—' : formatNumber(v, { decimals: 0 })) }];
       }
       decorateBook(c) {
-        const x = c.kind === 'leaf' && this.books ? this.books.model.rowAt(c.row) : null;
-        const r = (x && x.row) || {};
+        const r = c.data || {};
         const id = c.columnId;
         if (id === 'book') {
           return { content: this.el('a', { cls: 'th-book', text: c.text, attrs: { href: '#', 'data-th-book': c.text, role: 'link', title: 'Open the book position by position' },
@@ -253,8 +253,7 @@
       }
       decorateMarket(c) {
         if (c.columnId !== 'chg') { return c.columnId === 'last' ? { title: 'A stored figure: the market-data pack\'s, as loaded' } : null; }
-        const x = c.kind === 'leaf' && this.markets ? this.markets.model.rowAt(c.row) : null;
-        const m = x && x.row;
+        const m = c.data;
         return m && m.dir ? { cls: m.dir === 'up' ? 'th-up' : 'th-down' } : null;
       }
       start() {
@@ -357,7 +356,6 @@
           x.approvalsDueSoon ? x.approvalsDueSoon + ' due soon' : 'in the Approvals queue', { href: '/approvals', tone: x.approvals ? 'warn' : null, first: first });
       }
       paintBooks(rows, first) {
-        this.byBook = rows.slice();
         const data = rows.map((r) => Object.assign({}, r));
         if (first) { this.books.setRows(data); return; }
         const had = new Set((this.books.model.rowModel.rows || []).map((r) => r.book));
@@ -368,7 +366,6 @@
       paintMarkets(m, first) {
         const tiles = (m && m.tiles) || [];
         const rows = tiles.map((t) => { const x = marketText(t); return { id: t.id, label: t.label, last: x.last, chg: x.change, dir: x.dir, cmd: t.cmd }; });
-        this.byMarket = rows;
         if (first || !this.marketRows) { this.markets.setRows(rows); } else { this.markets.applyTransaction({ update: rows }); }
         this.marketRows = rows;
         this.marketsBox.setAttribute('data-th-markets', String(rows.length));
@@ -386,7 +383,7 @@
         if (c.untimed) { box.appendChild(e('p', { cls: 'th-muted', text: 'The trades gave no time of day: the day\'s events are shown.' })); }
         box.appendChild(e('p', {}, ['P&L today ', e('b', { text: money(c.pnl, true), cls: c.pnl > 0 ? 'th-up' : c.pnl < 0 ? 'th-down' : '' }),
           c.previousDate ? ' against ' + c.previousDate : '', ' · ',
-          e('a', { text: 'Why it moved ›', attrs: { href: '#', 'data-explain': varRequest(head.scope), 'data-explain-tab': 'why', 'data-th-why': '' },
+          e('a', { text: 'Why it moved ›', attrs: { href: '#', 'data-explain': varRequest(head.scope), 'data-explain-tab': 'why', 'data-explain-trigger': '', 'data-th-why': '' },
             on: { click: (ev) => ev.preventDefault() } })]));
         if ((c.movers || []).length) {
           box.appendChild(e('ul', { cls: 'th-movers', attrs: { 'aria-label': 'Biggest movers' } }, c.movers.map((m) => e('li', {}, [

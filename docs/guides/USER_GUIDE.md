@@ -178,7 +178,7 @@ it changes); a test holds every page of the console to an entry or to the page i
 | Edition or lens | Menus |
 |---|---|
 | Drishti Risk | Views · **Engines** · BI · Admin · Help |
-| Drishti Trading | Views · Engines · **Markets** (rates `CRV`, `REPO`, `FIX`; vols `IRV`, `CPV`, `FXV`; FX `FX`, `FXF`; credit `CDS`, `BND`; equities and commodities `EQ`, `EQX`, `CMD`, `CMDC`) · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `TVAL`, `PNLV`, `DPNL`, `PNL`, `SENS`) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `XWIF`, `EXP`) · Help. BI and Admin by command: `BI <GO>`, `ADMIN <GO>` (administrators; `ADMIN LOADS` opens that page) |
+| Drishti Trading | Views · Engines · **Markets** (rates `CRV`, `REPO`, `FIX`; vols `IRV`, `CPV`, `FXV`; FX `FX`, `FXF`; credit `CDS`, `BND`; equities and commodities `EQ`, `EQX`, `CMD`, `CMDC`) · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*Trader home*, *My VaR* `VAR`, `VLIM`, `TVAL`, `PNLV`, `DPNL`, `PNL`, `SENS`) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `XWIF`, `EXP`) · Help. BI and Admin by command: `BI <GO>`, `ADMIN <GO>` (administrators; `ADMIN LOADS` opens that page) |
 | Drishti Market | Views · **Curves** (`CRV`, `REPO`, `FIX`, `INF`) · **Volatility** (`IRV`, `CPV`, `FXV`, `EQV`, `CMDV`) · **FX** (`FX`, `FXF`, `FXV`) · **Credit** (`CDS`, `BND`) · BI · Admin · Help |
 | Drishti World | Views · **Economies** (*A country* `ECON …`, `MACRO`, `FCST`, `REGE`) · **Markets** (`NEWS`, `QUOTE`, `IDX`) · **Companies** (`USEQ`, `EDGAR`, `LEIC`, `FUND`) · BI · Admin · Help |
 
@@ -1805,6 +1805,51 @@ to the page, so Drishti copies from that field instead (and says *Select the lin
 **When there is nothing to show** the page says why and offers today's view: an unknown entity (`DRS-1001`), a kind that keeps no daily
 history here (`DRS-1012`), no data in the range (`DRS-1013`), a range larger than allowed (`DRS-4021`, with a link to the last 30 days)
 or one that cannot hold (`FROM` after `TO`).
+
+## The trader home
+
+In the Trading lens (Drishti Trading) Home opens on the **trader home**, your desk dashboard: also at `/home/trader` (**Risk › Trader
+home**) whichever landing you chose. What you see is your own books: the traders and desks named for you by your administrator
+(`trading.people`), else your trader record, else your **View as** choice (an administrator may always pick); everything is read as you,
+with your roles, row rules and masks.
+
+- **Five headline figures.** **P&L today** (the MtM change of your books' trades since the business day before), **VaR** of your books
+  together against its limit (never the sum of the books' VaRs: the VaR engine computes the union), the **biggest risk** (the position with
+  the largest VaR contribution), **breaches** (books over their own limit) and the ones near it (80% or more, `trading.near-limit`), and
+  **approvals for me** (a link to the Approvals queue).
+- **My books.** A grid at terminal density, one row per book: P&L today, VaR, limit and **limit use** with its bar (amber near the limit,
+  red over it). A figure that changes flashes up or down. Click a book (or press **Enter** on it) to open it position by position: its
+  VaR, contributions and P&L vectors.
+- **Markets I watch.** The headline prices and curves of the market data (USD OIS 10Y, the 2s10s slope, EUR/USD 1M vol, the CDS median)
+  with their change since the day before. They are stored figures, as loaded.
+- **What changed.** **Since this morning** (the business date) or **Since my last visit** (the time you last opened the home, kept in
+  your settings): the trades of your books that were booked, amended or cancelled, the day's P&L and the biggest movers. **Why it moved ›**
+  opens the Explain of your VaR on its *Why it moved* tab.
+- **The live feed.** Trades of your books, books approaching or over their limit, approvals waiting for you and alerts raised for you,
+  newest first; a new item is marked as it arrives and read out to a screen reader.
+- **Check a new trade.** The VaR what-if and the counterparty's pre-deal check in one answer, as before.
+
+**Live.** The page says **● live** while the server's ticks arrive (through the browser's one live connection, shared by every tab):
+when the trades, the valuations, the VaR limits, the P&L vectors or the watched market data change on the server, the figures are asked
+again for you and the ones that moved flash. **Reconnecting…** means the connection dropped; **Refresh** asks at once. Every number is
+computed on the server (the VaR engine, the pivot engine); the page computes nothing.
+
+**Explain.** Every VaR, limit and limit-use figure opens the one Explain (click it, or focus it and press **E**). Explain for the P&L
+figures is under construction (`explain-trading-pnl`).
+
+From the command line, `VAR BOOK <book>`, `BOOK <book>` and `TRD <trade>` open what the home links to. The
+settings are in [CONFIGURATION.md](../admin/CONFIGURATION.md) (`drishti.trading.home.*` on the server: the kinds watched, how often);
+the edition file names the landing (`config/editions/trading.yaml`):
+
+```yaml
+home:
+  landing: trader
+  landings: [trader, desk, explorer]
+  templates: { trader: home/trader_home_landing.html }   # the trader home
+trading:
+  people:
+    a.shah: { trader: TRDR-ASHAH }        # A. Shah's books
+```
 
 ## Explain: one for every number
 

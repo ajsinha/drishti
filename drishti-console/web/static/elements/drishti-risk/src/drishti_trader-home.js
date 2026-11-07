@@ -95,9 +95,10 @@ export class TraderHome {
     this.build();
   }
 
+  /** @private drishti-core's element maker in this page's document. */
   el(tag, p, kids) { return h(this.doc, tag, p, kids); }
 
-  /** The page's frame: the status line, the headline tiles, books and markets side by side, then what changed and the feed. */
+  /** @private The page's frame: the status line, the headline tiles, books and markets side by side, then what changed and the feed. */
   build() {
     const e = this.el.bind(this);
     this.status = e('span', { cls: 'th-live', attrs: { 'data-th-live': 'connecting', role: 'status' }, text: 'Connecting…' });
@@ -129,19 +130,21 @@ export class TraderHome {
       columns: this.bookColumns(), rows: [], getRowId: (r) => r.book, layout: 'terminal', density: this.o.density, chrome: false, checkboxes: false,
       rowSelection: 'none', clientAggregation: false, label: 'My books', decorateCell: (c) => this.decorateBook(c), live: { flashMs: 1500 } });
     this.markets = new Grid(this.marketsBox, {
-      columns: [{ field: 'label', header: 'Market', width: 170, pinned: 'left' }, { field: 'last', header: 'Last', width: 110 },
+      columns: [{ field: 'label', header: 'Market', width: 170 }, { field: 'last', header: 'Last', width: 110 },
         { field: 'chg', header: 'Chg', width: 100 }],
       rows: [], getRowId: (r) => r.id, layout: 'terminal', density: this.o.density, chrome: false, checkboxes: false, rowSelection: 'none',
       clientAggregation: false, label: 'Markets I watch', decorateCell: (c) => this.decorateMarket(c), live: { flashMs: 1500 } });
-    this.booksBox.addEventListener('drishti:cell-clicked', (ev) => {
-      const d = ev.detail || {};
-      if (d.columnId === 'book' && d.data && this.o.openBook) { this.o.openBook(d.data.book); }
+    this.booksBox.addEventListener('keydown', (ev) => {              // Enter on a book's cell opens it, as a click on its name does
+      if (ev.key !== 'Enter' || !this.o.openBook) { return; }
+      const f = this.books.model.navigator.focus, x = f ? this.books.model.rowAt(f.row) : null;
+      if (x && x.kind === 'leaf' && x.row && x.row.book) { ev.preventDefault(); this.o.openBook(x.row.book); }
     });
   }
 
+  /** @private The books grid's columns: book, P&L today, VaR, limit, limit use, trades (VaR and limits are not additive). */
   bookColumns() {
     return [
-      { field: 'book', header: 'Book', width: 150, pinned: 'left' },
+      { field: 'book', header: 'Book', width: 150 },
       { field: 'pnl', header: 'P&L today', type: 'number', width: 110, format: (v) => money(v, true) },
       { field: 'var', header: 'VaR', type: 'number', width: 100, additive: false, format: (v) => money(v) },
       { field: 'limit', header: 'Limit', type: 'number', width: 100, additive: false, format: (v) => money(v) },
@@ -149,10 +152,9 @@ export class TraderHome {
       { field: 'trades', header: 'Trades', type: 'number', width: 80, format: (v) => (v === null || v === undefined ? '—' : formatNumber(v, { decimals: 0 })) }];
   }
 
-  /** A book's cell: the book opens it; VaR, limit and limit use carry their Explain; the limit use draws its bar; P&L its tone. */
+  /** @private A book's cell: the book opens it; VaR, limit and limit use carry their Explain; the limit use draws its bar; P&L its tone. */
   decorateBook(c) {
-    const x = c.kind === 'leaf' && this.books ? this.books.model.rowAt(c.row) : null;
-    const r = (x && x.row) || {};
+    const r = c.data || {};
     const id = c.columnId;
     if (id === 'book') {
       return { content: this.el('a', { cls: 'th-book', text: c.text, attrs: { href: '#', 'data-th-book': c.text, role: 'link', title: 'Open the book position by position' },
@@ -174,14 +176,17 @@ export class TraderHome {
     return null;
   }
 
+  /** @private A market's cell: its change in the colour of its direction; a stored figure says it is stored. */
   decorateMarket(c) {
     if (c.columnId !== 'chg') { return c.columnId === 'last' ? { title: 'A stored figure: the market-data pack\'s, as loaded' } : null; }
-    const x = c.kind === 'leaf' && this.markets ? this.markets.model.rowAt(c.row) : null;
-    const m = x && x.row;
+    const m = c.data;
     return m && m.dir ? { cls: m.dir === 'up' ? 'th-up' : 'th-down' } : null;
   }
 
-  /** Starts: the first answer, then the server's ticks. */
+  /**
+   * Starts: the first answer, then the server's ticks.
+   * @returns {Promise<?Object>} the first answer drawn
+   */
   start() {
     const p = this.refresh();
     if (this.o.live && !this.off) {
@@ -190,7 +195,10 @@ export class TraderHome {
     return p;
   }
 
-  /** A tick from the server: ask again soon (ticks close together are one ask, never two asks at once). */
+  /**
+   * A tick from the server: ask again soon (ticks close together are one ask, never two asks at once).
+   * @returns {void}
+   */
   onTick() {
     this.ticks += 1;
     this.fresh = true;                                         // the server's data moved: what was kept for this person is read again
@@ -199,12 +207,22 @@ export class TraderHome {
     this.timer = this.doc.defaultView.setTimeout(() => this.refresh(), TICK_WAIT_MS);
   }
 
+  /**
+   * Says how the live connection is: live, connecting, reconnecting or off.
+   * @param {string} s
+   * @returns {void}
+   */
   liveState(s) {
     const words = { live: '● live', connecting: 'Connecting…', reconnecting: 'Reconnecting…', off: 'Not live: refresh to update' };
     this.status.setAttribute('data-th-live', s);
     this.status.textContent = words[s] || s;
   }
 
+  /**
+   * What changed since: 'morning' (the business date) or 'visit' (the person's last visit); asks the server again.
+   * @param {('morning'|'visit')} v
+   * @returns {Promise<?Object>} the answer drawn
+   */
   setSince(v) {
     if (v === this.since) { return Promise.resolve(this.answer); }
     this.since = v;
@@ -212,7 +230,10 @@ export class TraderHome {
     return this.refresh();
   }
 
-  /** Asks the server for the home and draws it; an ask while one runs is made once it ends. */
+  /**
+   * Asks the server for the home and draws it; an ask while one runs is made once it ends.
+   * @returns {Promise<?Object>} the answer drawn
+   */
   refresh() {
     if (this.asking) { this.again = true; return this.asking; }
     const fresh = this.fresh;
@@ -229,7 +250,11 @@ export class TraderHome {
     return this.asking;
   }
 
-  /** Draws an answer: the first one whole, the next ones as updates (changed figures flash, new feed items are marked and said). */
+  /**
+   * Draws an answer: the first one whole, the next ones as updates (changed figures flash, new feed items are marked and said).
+   * @param {Object} a the answer of GET /api/home/trading/home
+   * @returns {void}
+   */
   paint(a) {
     if (!a || a.available === false) {
       this.problemsLine.hidden = false;
@@ -252,6 +277,7 @@ export class TraderHome {
     if (this.o.onPainted) { this.o.onPainted(a); }
   }
 
+  /** @private One headline tile, made once and then updated (a changed value flashes). */
   tile(id, label, value, sub, o) {
     o = o || {};
     let t = this.tiles.querySelector('[data-th-tile="' + id + '"]');
@@ -275,6 +301,7 @@ export class TraderHome {
     }
   }
 
+  /** @private The five headline figures. */
   paintTiles(x, first) {
     const n = (v) => (v === null || v === undefined ? null : Number(v));
     const pnl = n(x.pnl);
@@ -292,8 +319,8 @@ export class TraderHome {
       x.approvalsDueSoon ? x.approvalsDueSoon + ' due soon' : 'in the Approvals queue', { href: '/approvals', tone: x.approvals ? 'warn' : null, first: first });
   }
 
+  /** @private My books: the first answer as the grid's rows, later ones as a transaction by book (changed figures flash). */
   paintBooks(rows, first) {
-    this.byBook = rows.slice();
     const data = rows.map((r) => Object.assign({}, r));
     if (first) { this.books.setRows(data); return; }
     const had = new Set((this.books.model.rowModel.rows || []).map((r) => r.book));
@@ -302,16 +329,17 @@ export class TraderHome {
       remove: Array.from(had).filter((b) => !now.has(b)).map((b) => ({ book: b })) });
   }
 
+  /** @private The markets I watch, from the market data's tiles. */
   paintMarkets(m, first) {
     const tiles = (m && m.tiles) || [];
     const rows = tiles.map((t) => { const x = marketText(t); return { id: t.id, label: t.label, last: x.last, chg: x.change, dir: x.dir, cmd: t.cmd }; });
-    this.byMarket = rows;
     if (first || !this.marketRows) { this.markets.setRows(rows); } else { this.markets.applyTransaction({ update: rows }); }
     this.marketRows = rows;
     this.marketsBox.setAttribute('data-th-markets', String(rows.length));
     if (!rows.length) { this.marketsBox.setAttribute('data-th-empty', m ? 'no market data' : 'markets are not part of this lens'); }
   }
 
+  /** @private What changed since the morning or the last visit. */
   paintChanges(c) {
     const e = this.el.bind(this), box = this.changesBox, k = c.counts || {};
     box.textContent = '';
@@ -324,7 +352,7 @@ export class TraderHome {
     if (c.untimed) { box.appendChild(e('p', { cls: 'th-muted', text: 'The trades gave no time of day: the day\'s events are shown.' })); }
     box.appendChild(e('p', {}, ['P&L today ', e('b', { text: money(c.pnl, true), cls: c.pnl > 0 ? 'th-up' : c.pnl < 0 ? 'th-down' : '' }),
       c.previousDate ? ' against ' + c.previousDate : '', ' · ',
-      e('a', { text: 'Why it moved ›', attrs: { href: '#', 'data-explain': varRequest(head.scope), 'data-explain-tab': 'why', 'data-th-why': '' },
+      e('a', { text: 'Why it moved ›', attrs: { href: '#', 'data-explain': varRequest(head.scope), 'data-explain-tab': 'why', 'data-explain-trigger': '', 'data-th-why': '' },
         on: { click: (ev) => ev.preventDefault() } })]));
     if ((c.movers || []).length) {
       box.appendChild(e('ul', { cls: 'th-movers', attrs: { 'aria-label': 'Biggest movers' } }, c.movers.map((m) => e('li', {}, [
@@ -334,6 +362,7 @@ export class TraderHome {
     if (c.available === false && c.reason) { box.appendChild(e('p', { cls: 'th-muted', text: 'Trades: ' + c.reason })); }
   }
 
+  /** @private The live feed, newest first; an item not seen before is marked and said. */
   paintFeed(items, first) {
     const e = this.el.bind(this);
     const fresh = [];
@@ -351,7 +380,10 @@ export class TraderHome {
     if (fresh.length) { announce(fresh.length === 1 ? 'New: ' + fresh[0].text : fresh.length + ' new items in the feed'); }
   }
 
-  /** Stops listening and lets the grids go. */
+  /**
+   * Stops listening and lets the grids go.
+   * @returns {void}
+   */
   destroy() {
     clearTimeout(this.timer);
     if (this.off) { this.off(); this.off = null; }

@@ -27,7 +27,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | [drishti-inputs](#drishti-inputs) | 0.1.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead, forms from a schema with four eyes, the filter bar, the code editor over CodeMirror |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
 | [drishti-chart](#drishti-chart) | 0.1.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
-| [drishti-risk](#drishti-risk) | 0.1.0 | The banking module's chart kinds on drishti-chart (licensed with the module): the P&L distribution with VaR and ES, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit |
+| [drishti-risk](#drishti-risk) | 0.2.0 | The banking module's chart kinds on drishti-chart (licensed with the module): the P&L distribution with VaR and ES, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit; and the trader home on drishti-grid (headline figures, my books, markets, what changed, the live feed) |
 | [drishti-renderer](#drishti-renderer) | 2.0.0 | The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js |
 
 ## drishti-core
@@ -9945,7 +9945,7 @@ The options of a chart (the spec says what to draw; these say how it lives in it
 
 ## drishti-risk
 
-Version 0.1.0. Bundle `static/elements/drishti-risk/drishti_risk.js`, global `Drishti.elements.risk`; requires drishti-core, drishti-chart.
+Version 0.2.0. Bundle `static/elements/drishti-risk/drishti_risk.js`, global `Drishti.elements.risk`; requires drishti-core, drishti-chart, drishti-grid.
 
 ### drishti_risk-kinds.js
 
@@ -10049,6 +10049,122 @@ Returns `Object`.
 Registers the risk kinds in drishti-chart's registry (the library does it when it loads, and only where the banking module is licensed: the console serves this library to no one else).
 
 Returns `string[]`: the kinds registered now.
+
+### drishti_trader-home.js
+
+#### `TRADER_HOME_PARTS`
+
+The parts of the home, in the page's order.
+
+#### `TICK_WAIT_MS`
+
+How long the home waits after a tick before it asks again (ticks within it are one ask).
+
+#### `money(v, signed)`
+
+An amount as a trader reads it: 1,840,000 → 1.84m, −142,000 → −142k (thousands without decimals), the sign always when asked.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+| `[signed]` | `boolean` |  |
+
+Returns `string`.
+
+#### `useText(v)`
+
+A limit use (a share: 0.83) as a percentage without decimals.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+
+Returns `string`.
+
+#### `marketText(t)`
+
+A market tile's value in its unit, and its change since the day before.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `t` | `{value: *, unit: string, change: ?{delta: number}}` |  |
+
+Returns `{last: string, change: string, dir: ?string}`.
+
+#### `limitWords(state)`
+
+The state of a limit in words a screen reader says and a colour repeats.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `state` | `string` | breach \| near \| ok \| none |
+
+Returns `string`.
+
+#### class `TraderHome`
+
+The trader home, drawn into an element.
+
+##### `new TraderHome(host, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` | the element the home fills |
+| `o` | `{load: function(string, {fresh: boolean}): Promise&lt;Object&gt;, live: ?function({tick: function(Object): void, state: function(string): void}): function(): void, openBook: ?function(string): void, since: ?string, density: ?string, onPainted: ?function(Object): void}` | load(since) answers the home (GET /api/home/trading/home?since=, fresh after a tick); live subscribes to the server's ticks and gives back how to stop; openBook opens a book |
+
+##### `TraderHome.start()`
+
+Starts: the first answer, then the server's ticks.
+
+Returns `Promise&lt;?Object&gt;`: the first answer drawn.
+
+##### `TraderHome.onTick()`
+
+A tick from the server: ask again soon (ticks close together are one ask, never two asks at once).
+
+Returns `void`.
+
+##### `TraderHome.liveState(s)`
+
+Says how the live connection is: live, connecting, reconnecting or off.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `s` | `string` |  |
+
+Returns `void`.
+
+##### `TraderHome.setSince(v)`
+
+What changed since: 'morning' (the business date) or 'visit' (the person's last visit); asks the server again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `('morning'\|'visit')` |  |
+
+Returns `Promise&lt;?Object&gt;`: the answer drawn.
+
+##### `TraderHome.refresh()`
+
+Asks the server for the home and draws it; an ask while one runs is made once it ends.
+
+Returns `Promise&lt;?Object&gt;`: the answer drawn.
+
+##### `TraderHome.paint(a)`
+
+Draws an answer: the first one whole, the next ones as updates (changed figures flash, new feed items are marked and said).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `a` | `Object` | the answer of GET /api/home/trading/home |
+
+Returns `void`.
+
+##### `TraderHome.destroy()`
+
+Stops listening and lets the grids go.
+
+Returns `void`.
 
 ### drishti_index.js
 
