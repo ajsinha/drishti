@@ -60,10 +60,11 @@ def test_every_plugin_names_files_that_exist():
     for p in modules.plugins():
         for name in p.routers + p.registers + p.code:
             assert (CONSOLE / (name.replace(".", "/") + ".py")).is_file(), f"{p.id}: {name}"
-        for t in p.templates:
-            assert (WEB / "templates" / t).is_file(), f"{p.id}: {t}"
+        for t in p.templates:                                   # a module's templates live in its own folder, never in the core's
+            assert (modules.PLUGINS / p.id / "templates" / t).is_file() and not (WEB / "templates" / t).exists(), f"{p.id}: {t}"
         for g in p.assets:
-            assert list((WEB / "static").glob(g)), f"{p.id}: no file matches {g}"
+            assert any(list(r.glob(g)) for r in [WEB / "static"] + modules.static_dirs()), f"{p.id}: no file matches {g}"
+            assert not g.startswith(("js/", "css/")) or not list((WEB / "static").glob(g)), f"{p.id}: {g} is in the core's web/static"
 
 
 def test_the_core_imports_no_module_code():
@@ -116,7 +117,8 @@ def test_no_core_template_includes_a_module_template_or_names_its_files():
 
 def test_no_core_script_or_style_names_a_module_file():
     globs = [g for p in modules.plugins() for g in p.assets]
-    names = {f.name for p in modules.plugins() for g in p.assets for f in (WEB / "static").glob(g) if f.is_file()}
+    names = {f.name for p in modules.plugins() for g in p.assets for r in [WEB / "static"] + modules.static_dirs() for f in r.glob(g)
+             if f.is_file()}
     bad = []
     for f in sorted(list((WEB / "static" / "js").glob("*.js")) + list((WEB / "static" / "css").glob("*.css"))):
         rel = f.relative_to(WEB / "static").as_posix()

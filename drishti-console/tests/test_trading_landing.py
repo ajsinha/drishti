@@ -23,7 +23,7 @@ from datetime import date
 
 import pytest
 
-from core import trading_landing as tl
+from plugins.banking import trading_landing as tl
 from core.auth import Identity
 from core.backend import BackendError
 from core.edition import Edition

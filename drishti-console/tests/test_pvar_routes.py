@@ -18,7 +18,7 @@ the toggle on, on the scope and lens VAR would read: no screen, view or menu ite
 the engine and nothing else."""
 import pathlib
 
-from routes.var_routes import pvar_command, var_command, var_suggestions
+from plugins.banking.routes.var_routes import pvar_command, var_command, var_suggestions
 import engine_fakes  # noqa: E402
 
 

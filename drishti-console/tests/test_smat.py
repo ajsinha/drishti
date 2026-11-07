@@ -29,7 +29,7 @@ from core import arrow_answer
 from core.app import create_app
 from core.auth import Identity
 from core.config import load_settings
-from routes.smat_routes import smat_command, to_csv
+from plugins.banking.routes.smat_routes import smat_command, to_csv
 import engine_fakes  # noqa: E402
 
 RISK_ABOUT = {"product": "Drishti Risk", "tagline": "VaR and exposure from your own pricing data", "edition": {"name": "risk", "title": "Drishti Risk"}}

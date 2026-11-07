@@ -20,8 +20,8 @@ from __future__ import annotations
 
 import pytest
 
-from routes.frtb_routes import frsa_command, play_frtb_command
-from routes.play_routes import play_command
+from plugins.banking.routes.frtb_routes import frsa_command, play_frtb_command
+from plugins.banking.routes.play_routes import play_command
 from test_play import RISK_ABOUT, _app, _Upstream
 import engine_fakes  # noqa: E402
 

@@ -16,18 +16,19 @@
 # (core/modules.py); the server's manifest (drishti-banking's META-INF/drishti/module.yaml) decides whether the module is on. While the
 # module is off for a person, everything listed here is gone for them: its routes and pages answer 404, its words are neither offered nor
 # run (typed anyway: "VAR is not available to you: ask your administrator"), its menus, Help pages, Build types, search hits, tiles and
-# lenses are not drawn, and its static assets are not served (nor to a person whose lens does not use the module). The screens themselves
-# still live in routes/, web/templates and web/static; they move into this folder in the split's second half.
+# lenses are not drawn, and its static assets are not served (nor to a person whose lens does not use the module). Its code, templates
+# (templates/, found by the console beside web/templates) and static files (static/, served at /static/... beside web/static) live here.
 module: banking
 title: Banking and risk
 
 # the routers the console includes for the module, in this order (where the core's routers were: before the terminal's)
-routers: [routes.trading_routes, routes.var_regulatory_routes, routes.var_routes, routes.smat_routes, routes.frtb_routes, routes.simm_routes,
-          routes.play_routes, routes.exposure_routes, routes.mcube_routes]
+routers: [plugins.banking.routes.trading_routes, plugins.banking.routes.var_regulatory_routes, plugins.banking.routes.var_routes,
+          plugins.banking.routes.smat_routes, plugins.banking.routes.frtb_routes, plugins.banking.routes.simm_routes,
+          plugins.banking.routes.play_routes, plugins.banking.routes.exposure_routes, plugins.banking.routes.mcube_routes]
 # files that fill the core's hooks on import (core/plugins.py): the Build home's types, the landings' figures
-registers: [core.build_types_banking, routes.trading_routes]
-# its other Python modules (the core imports none of them: tests/test_module_boundaries.py); they move into this folder in the second half
-code: [core.trading_landing, core.market_landing, plugins.banking.risk_api]
+registers: [plugins.banking.build_types, plugins.banking.routes.trading_routes]
+# its other Python modules (the core imports none of them: tests/test_module_boundaries.py)
+code: [plugins.banking.trading_landing, plugins.banking.market_landing, plugins.banking.risk_api]
 
 # its compute engines: their words, console pages, menus, Help pages, tiles and lenses are the engine catalogue's (config/engines.yaml)
 engines: [var, exposure, sensitivities, frtb-sa, simm, mr-cube]
@@ -36,7 +37,7 @@ words: [PLAY, "PLAY FRTB", "PLAY SIMM", CCUBE, FRSA, SIMM, MCUBE, SENS, RFAC]
 # its console pages and APIs beyond the engines' console paths
 paths: [/frtb, /api/frtb/, /play/frtb, /simm, /api/simm/, /play/simm, /play, /api/play/, /mcube, /api/pivot/mr/, /var/backtesting,
         /var/statistics, /var/reports, /api/var/, /var/stress-window, /api/home/trading/, /home/trading/, /api/home/market/, /admin/scopes]
-# its static files, globs under web/static
+# its static files, globs under the static root: this folder's static/, and its Elements library under web/static/elements
 assets:
   - js/drishti_var-*.js
   - css/drishti_var.css

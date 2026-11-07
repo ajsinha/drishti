@@ -20,7 +20,7 @@ from datetime import date
 
 import pytest
 
-from core import market_landing as ml
+from plugins.banking import market_landing as ml
 from market_fake import MarketBackend
 
 

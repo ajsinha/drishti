@@ -371,3 +371,13 @@ def allowed(items):
                 continue
         out.append(it)
     return out
+
+
+def template_dirs() -> list[Path]:
+    """Each module's templates folder (``plugins/<module>/templates``), searched after the core's ``web/templates``."""
+    return [PLUGINS / p.id / "templates" for p in plugins() if (PLUGINS / p.id / "templates").is_dir()]
+
+
+def static_dirs() -> list[Path]:
+    """Each module's static folder (``plugins/<module>/static``), served after the core's ``web/static`` at the same ``/static/...`` paths."""
+    return [PLUGINS / p.id / "static" for p in plugins() if (PLUGINS / p.id / "static").is_dir()]

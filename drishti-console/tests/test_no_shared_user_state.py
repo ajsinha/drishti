@@ -27,7 +27,7 @@ from conftest import CONSOLE
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
-DIRS = ("core", "routes")
+DIRS = ("core", "routes", "plugins")   # plugins: each domain module's console code (DOMAIN_MODULES.md)
 MUTABLE_CALLS = {"dict", "list", "set", "defaultdict", "OrderedDict", "deque", "Counter", "WeakValueDictionary", "WeakKeyDictionary", "LRU"}
 CHANGES = {"append", "add", "update", "pop", "popitem", "clear", "setdefault", "extend", "insert", "remove", "discard", "move_to_end",
            "appendleft", "__setitem__", "sort"}
@@ -46,9 +46,9 @@ ALLOWED = {
                                       "what a relay holds is per app (app.state.relay)",
     "routes/embed_routes.py:_cache": "the embed loader's script text by version: static assets, the same for everyone",
     "routes/designer_routes.py:_LOCKS": "one asyncio.Lock per draft id (a person's own draft; a lock holds no data)",
-    "core/trading_landing.py:_FLIGHT": "reads running now, by core.user_cache.user_key (server, user, roles, as-of): never served across people",
-    "core/trading_landing.py:_CACHE": "an LRU keyed by core.user_cache.user_key (server, user, roles, as-of and known-at, lens)",
-    "core/market_landing.py:_CACHE": "an LRU keyed by core.user_cache.cache_key (made by routes/edition_routes.py) or user_key",
+    "plugins/banking/trading_landing.py:_FLIGHT": "reads running now, by core.user_cache.user_key (server, user, roles, as-of): never served across people",
+    "plugins/banking/trading_landing.py:_CACHE": "an LRU keyed by core.user_cache.user_key (server, user, roles, as-of and known-at, lens)",
+    "plugins/banking/market_landing.py:_CACHE": "an LRU keyed by core.user_cache.cache_key (made by routes/edition_routes.py) or user_key",
     "core/ai/llm/registry.py:_PROVIDERS": "the provider classes registered at import (code, not data)",
     "core/ai/providers/__init__.py:FACTORIES": "the provider factories registered at import (code, not data)",
 }

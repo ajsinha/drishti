@@ -32,9 +32,10 @@ from urllib.parse import quote
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
-from core import asof, market_landing
+from core import asof
+from plugins.banking import market_landing
 from core import plugins as _plugins
-from core import trading_landing as tl
+from plugins.banking import trading_landing as tl
 from core.user_cache import cache_key
 from core.backend import BackendError
 from core.csrf import json_body

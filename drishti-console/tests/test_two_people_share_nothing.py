@@ -25,7 +25,8 @@ import httpx
 import pytest
 
 from conftest import CONSOLE, FakeBackend
-from core import servers, trading_landing
+from core import servers
+from plugins.banking import trading_landing
 from core.app import create_app
 from core.auth import Identity
 from core.config import load_settings

@@ -15,8 +15,8 @@
 """Regulatory VaR's screens (routes/var_regulatory_routes.py; VAR_GUIDE.md sections 18.10, 18.11 and 18.14): the commands VAR <scope> BACKTEST,
 VAR <scope> STATS <period> and VAR REPORT <report> <period> open their pages; the pages are shells; their JSON goes to the server's VaR
 engine as the person, with the parameters checked and nothing else passed on; a file comes back as the server made it."""
-from routes.var_routes import var_command
-from routes.var_regulatory_routes import regulatory_command
+from plugins.banking.routes.var_routes import var_command
+from plugins.banking.routes.var_regulatory_routes import regulatory_command
 import engine_fakes  # noqa: E402
 
 

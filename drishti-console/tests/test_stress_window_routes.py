@@ -14,7 +14,7 @@
 
 """The stress window selection (routes/var_routes.py; docs/guides/VAR_GUIDE.md section 18.9): SWIN opens /var/stress-window on the node
 it names; the page is a shell; its JSON (the analysis, the proposals, the decision) goes to the engine as the user, nothing else."""
-from routes.var_routes import swin_command
+from plugins.banking.routes.var_routes import swin_command
 import engine_fakes  # noqa: E402
 
 

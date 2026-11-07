@@ -33,7 +33,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 
 from core.backend import BackendError
 from core.workbook_stream import stream
-from routes import var_routes
+from plugins.banking.routes import var_routes
 from routes.common import ident, render
 from plugins.banking import risk_api
 from core import plugins as _plugins
@@ -59,10 +59,10 @@ def play_command(words: list[str], user: str) -> str | None:
         return "/play" if len(words) == 1 else None
     rest = words[2:]
     if words[1].upper() == "FRTB":                            # PLAY FRTB <scope>, PLAY FRTB RUN <id>: the FRTB-SA Playground
-        from routes.frtb_routes import play_frtb_command
+        from plugins.banking.routes.frtb_routes import play_frtb_command
         return play_frtb_command(rest)
     if words[1].upper() == "SIMM":                            # PLAY SIMM <netting set>, PLAY SIMM RUN <id>: the SIMM Playground
-        from routes.simm_routes import play_simm_command
+        from plugins.banking.routes.simm_routes import play_simm_command
         return play_simm_command(rest)
     if not rest:
         return "/play"

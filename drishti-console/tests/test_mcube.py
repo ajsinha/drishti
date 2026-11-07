@@ -23,7 +23,7 @@ from __future__ import annotations
 import pytest
 
 from core.backend import BackendError
-from routes.mcube_routes import mcube_command, parse
+from plugins.banking.routes.mcube_routes import mcube_command, parse
 from test_play import RISK_ABOUT, _app
 import engine_fakes  # noqa: E402
 

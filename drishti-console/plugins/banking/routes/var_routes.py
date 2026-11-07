@@ -138,7 +138,7 @@ def var_command(words: list[str], user: str) -> str | None:
         words = words[:-1]
     if (why := explain_command(words, user)) is not None:     # VAR EXPLAIN <scope> [from] [to]: the one Explain's page, Why it moved
         return why
-    from routes.var_regulatory_routes import regulatory_command      # VAR BANK BACKTEST, VAR BANK STATS FY2026, VAR REPORT <report> <period>
+    from plugins.banking.routes.var_regulatory_routes import regulatory_command      # VAR BANK BACKTEST, VAR BANK STATS FY2026, VAR REPORT <report> <period>
     if (reg := regulatory_command(words)) is not None:
         return reg
     words, ccy = split_currency(words)

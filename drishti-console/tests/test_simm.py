@@ -20,8 +20,8 @@ from __future__ import annotations
 
 import pytest
 
-from routes.play_routes import play_command
-from routes.simm_routes import play_simm_command, simm_command
+from plugins.banking.routes.play_routes import play_command
+from plugins.banking.routes.simm_routes import play_simm_command, simm_command
 from test_play import RISK_ABOUT, _app, _Upstream
 import engine_fakes  # noqa: E402
 

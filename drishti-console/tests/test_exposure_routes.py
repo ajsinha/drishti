@@ -15,7 +15,7 @@
 """Exposure commands (routes/exposure_routes.py): EXP opens the exposure explorer (/exposure) on the scope it means, as typed or spaced;
 an id or a link of the retired stored exposure profile (EXP EXP-ALDERSHOT-FRA, /v/exposure-profile/EXP-ALDERSHOT-FRA) opens the same
 netting set there with a notice (docs/guides/EXPOSURE_GUIDE.md section 3)."""
-from routes.exposure_routes import exp_command, retired_link
+from plugins.banking.routes.exposure_routes import exp_command, retired_link
 
 
 def test_every_exp_command_opens_the_explorer():

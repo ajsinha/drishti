@@ -173,7 +173,7 @@ def test_the_registrations_are_the_modules_and_the_core_names_none():
     """C1 to C6 (DOMAIN_MODULES.md section 5): the banking module's console code fills the core's hooks; plugin.yaml lists its routers."""
     plugins.load()
     banking = modules.plugin("banking")
-    assert banking is not None and "routes.var_routes" in banking.routers and "var" in banking.engines
+    assert banking is not None and "plugins.banking.routes.var_routes" in banking.routers and "var" in banking.engines
     assert plugins.preset_parser("mr") is not None and plugins.retired_link("var", "VAR-COMM") is not None
     assert modules.asset_module("elements/drishti-risk/drishti_risk.js").id == "banking"
     assert modules.asset_module("js/drishti_keys.js") is None

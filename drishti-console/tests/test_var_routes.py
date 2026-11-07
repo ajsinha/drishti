@@ -15,7 +15,7 @@
 """The VaR explorer's command words (routes/var_routes.py): VAR <word> <rest> opens /var on the scope it means; an id of the retired
 stored VaR (VAR VAR-COMM, /v/var/VAR-COMM, /v/var-node/VN-<node>) opens the explorer at the matching scope with a notice; the page and
 its JSON need no server to answer a bad path."""
-from routes.var_routes import retired_link, var_command
+from plugins.banking.routes.var_routes import retired_link, var_command
 import engine_fakes  # noqa: E402
 
 
@@ -198,7 +198,7 @@ def test_the_lens_in_a_command_opens_the_page_with_it():
 
 
 def test_the_type_ahead_offers_the_horizons_and_confidences_once_a_scope_is_typed():
-    from routes.var_routes import var_suggestions
+    from plugins.banking.routes.var_routes import var_suggestions
     got = [s["complete"] for s in var_suggestions("VAR BANK")]
     assert got[:3] == ["VAR BANK 10D", "VAR BANK 10D SUM", "VAR BANK 10D SQRT"] and "VAR BANK 95" in got and "VAR BANK ES 97.5" in got
     assert [s["complete"] for s in var_suggestions("VAR DESK DESK-RATES 10D")] == ["VAR DESK DESK-RATES 10D", "VAR DESK DESK-RATES 10D SUM",
@@ -235,7 +235,7 @@ def test_stressed_var_in_a_command_the_page_and_every_answer(client, backend, mo
     assert var_command("VAR BANK SVAR".split(), "asha") == "/var?scope=BANK&set=stressed"
     assert var_command("VAR BANK SVAR 10D SUM".split(), "asha") == "/var?scope=BANK&h=10d&m=sum&set=stressed"
     assert var_command("VAR DESK DESK-RATES 10D SQRT SVAR".split(), "asha") == "/var?scope=DESK%3ADESK-RATES&h=10d&m=sqrt10&set=stressed"
-    from routes.var_routes import var_suggestions
+    from plugins.banking.routes.var_routes import var_suggestions
     assert "VAR BANK SVAR" in [s["complete"] for s in var_suggestions("VAR BANK")]
     html = client.get("/var?scope=BANK&set=stressed").text
     assert 'data-set="stressed"' in html and 'aria-label="Normal or stressed VaR"' in html and '<option value="stressed" selected>' in html

@@ -21,7 +21,7 @@ import json
 from pathlib import Path
 
 from routes.functions_routes import CONSOLE_COMMANDS
-from routes.var_routes import explain_command, var_command, var_suggestions
+from plugins.banking.routes.var_routes import explain_command, var_command, var_suggestions
 
 WEB = Path(__file__).resolve().parents[1] / "web"
 

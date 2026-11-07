@@ -74,9 +74,12 @@ def asset_fingerprint() -> str:
     changed file at once instead of running a cached old one against a newer server."""
     import hashlib
 
+    from core import modules
+
     h = hashlib.sha1()
+    roots = [WEB / "static"] + modules.static_dirs()                          # the modules' own files count too
     for folder, pattern in (("js", "*"), ("css", "*"), ("calc", "*"), ("elements", "*/drishti_*.js")):     # elements: each library's bundle
-        for f in sorted((WEB / "static" / folder).glob(pattern)):
+        for f in sorted(x for r in roots for x in (r / folder).glob(pattern)):
             st = f.stat()
             h.update(f"{f.name}:{st.st_size}:{st.st_mtime_ns};".encode())
     return h.hexdigest()[:8]
@@ -408,7 +411,9 @@ def create_app(settings: Settings) -> FastAPI:
 
     app = FastAPI(title=f"{settings.get('ui.product', '')} console".strip(), docs_url=None, redoc_url=None, openapi_url=None, lifespan=lifespan)
     app.state.backend = None
-    templates = Jinja2Templates(directory=str(WEB / "templates"))
+    from core import modules as _plugin_dirs
+    # the core's templates, then each module's (plugins/<module>/templates): a module's page keeps its name (terminal/var.html)
+    templates = Jinja2Templates(directory=[str(WEB / "templates")] + [str(d) for d in _plugin_dirs.template_dirs()])
     templates.env.globals.update(
         drs_message=drs_message,
         drs_advice=lambda code, kind="", id_="": drs_advice(settings.get("ui.error_advice"), code, kind, id_),
@@ -623,6 +628,8 @@ def create_app(settings: Settings) -> FastAPI:
     static = CompressedStatic(directory=str(WEB / "static"), enabled=str(settings.get("static.compress", True)).lower() in ("true", "1", "yes", "on"),
                               min_bytes=int(settings.get("static.compress_min_bytes", 1024)), cache_dir=str(settings.get("static.cache_dir", "") or ""),
                               brotli_quality=int(settings.get("static.brotli_quality", 5)))
+    for d in _plugin_dirs.static_dirs():                     # each module's static files, at the same /static/... paths (gated by module)
+        static.all_directories.append(d)
     app.state.static = static
     app.mount("/static", static, name="static")
     from core.calc import Calc
