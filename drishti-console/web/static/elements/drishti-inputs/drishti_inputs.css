@@ -39,7 +39,7 @@
 .di-btn { background: transparent; border: 1px solid var(--d-border); border-radius: 7px; padding: 3px 10px; cursor: pointer; color: var(--d-muted); white-space: nowrap; }
 .di-btn:hover { color: var(--d-ink); border-color: var(--d-faint); }
 .di-btn[disabled] { opacity: 0.5; cursor: default; }
-.di-btn.di-primary { background: var(--d-accent); border-color: var(--d-accent); color: var(--d-on-accent); }
+.di-btn.di-primary { background: var(--d-fill); border-color: var(--d-fill); color: var(--d-on-fill); }
 .di-link { background: none; border: 0; padding: 0; color: var(--d-link); cursor: pointer; text-align: left; }
 .di-count { color: var(--d-faint); font-size: 0.9em; }
 
