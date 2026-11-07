@@ -18,3 +18,4 @@
 # here with why it cannot be split yet. A file whose tests are spread one by one has no file budget.
 drishti-console/tests/test_mr_cube_browser.py  # four tests on one server over a VaR demo lake built for the file (about 3 minutes to build)
 drishti-console/tests/test_embed_elements_browser.py  # 35 tests on one host, console and server, run once per browser engine (module params)
+drishti-console/tests/test_var_currency_browser.py  # four tests (under 15 s together) on one server over the shared VaR demo lake: the file's time is the lake it waits for under a busy lane and its server's start; a split part would wait for the same lake and start its own server (TEST_HARNESS.md 3.12)
