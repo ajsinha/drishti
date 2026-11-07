@@ -95,3 +95,10 @@
 .dist-when legend { font-size: .85rem; color: var(--d-muted); padding: 0 .35rem; }
 .dist-when .wide { grid-column: 1 / -1; }
 @media (max-width: 640px) { .al-filter { grid-template-columns: minmax(0, 1fr); } .al-filter .btn-pill, .dist-when .studio-in, .dist-when .studio-select { min-height: 44px; } }
+
+/* the alerts raised for you (Alerts page): acknowledge, snooze, resolve, assign side by side, wrapping; full-size targets on a phone */
+[data-raised-list] .rpt-actions form { display: inline-flex; flex-wrap: wrap; gap: .25rem; align-items: center; margin: 0 .25rem .25rem 0; }
+[data-raised-list] .rpt-actions .studio-in { max-width: 9rem; }
+@media (max-width: 640px), (pointer: coarse) {
+  [data-raised-list] .rpt-actions select, [data-raised-list] .rpt-actions input { min-height: 44px; font-size: 16px; }
+}

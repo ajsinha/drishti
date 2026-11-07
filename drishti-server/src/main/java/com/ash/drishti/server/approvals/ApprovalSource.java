@@ -74,7 +74,7 @@ public interface ApprovalSource {
      * @param status {@code pending} while it waits; otherwise the source's own word ({@code approved}, {@code rejected}, {@code withdrawn}, ...)
      * @param reason the maker's reason or note
      * @param due a date it must be decided by, or null
-     * @param mayDecide the person may approve or reject it now (never the maker)
+     * @param mayDecide the person may approve or reject it now (the kind's rules: never the maker while four eyes apply)
      * @param mine the person is its maker
      * @param mayWithdraw the person may withdraw it
      * @param link the console address of the feature page that owns it
@@ -126,7 +126,7 @@ public interface ApprovalSource {
     /** The actions a person has on an item: approve and reject while it waits for them, withdraw for its maker. */
     static List<String> actions(Item i) {
         List<String> a = new ArrayList<>();
-        if (i.pending() && i.mayDecide() && !i.mine()) {
+        if (i.pending() && i.mayDecide()) {                              // the kind says no for the maker (four eyes), unless its policy allows
             a.add("approve");
             a.add("reject");
         }

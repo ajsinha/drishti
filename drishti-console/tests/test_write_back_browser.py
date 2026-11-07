@@ -82,7 +82,7 @@ def test_a_correction_is_submitted_approved_applied_and_seen_by_another_browser(
     assert "Waiting for an approver" in sheet.inner_text()
 
     queue = browser.new_page(viewport={"width": 1500, "height": 950})
-    queue.goto(stack + "/approvals?kind=change")                                       # the one Approvals queue
+    queue.goto(stack + "/approvals?box=all&kind=change")                               # the one Approvals queue (all: the submitter sees it in Mine sent)
     queue.locator(f"[data-ap-row='change/{change}']").wait_for()
     queue.screenshot(path=str(IMG / "review-changes.jpg"), type="jpeg", quality=84, clip={"x": 0, "y": 0, "width": 1500, "height": 700})
     queue.close()

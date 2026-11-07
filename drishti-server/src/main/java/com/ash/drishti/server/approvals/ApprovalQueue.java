@@ -156,8 +156,9 @@ public final class ApprovalQueue {
         return Map.of("inbox", inbox, "dueSoon", soon);
     }
 
+    /** Waiting for this person to decide: the kind says whether the maker may (four eyes says no; a policy without it, or sign-in off, may say yes). */
     private static boolean inInbox(ApprovalSource.Item i) {
-        return i.pending() && i.mayDecide() && !i.mine();
+        return i.pending() && i.mayDecide();
     }
 
     /** Due soon first (nearest due first), then the newest. */

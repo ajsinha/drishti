@@ -65,7 +65,7 @@ def test_design_to_live_with_the_evidence_and_a_share_link(live_ship_console, pa
     assert "every sample renders without errors" in text and "a.json" in text and "b.json" in text and "terms" in text
     assert "CONFIDENTIAL-BOOK" not in page.content()
     page.get_by_role("button", name="Approve", exact=True).click()
-    page.get_by_text("approved").first.wait_for()
+    wait(page, "document.querySelector('[data-ap-said]').textContent === 'Approved.'")
 
     # approval made the design live(v1): My designs and the workbench say so
     page.goto(f"{base}/build")

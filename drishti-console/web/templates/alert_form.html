@@ -80,7 +80,7 @@
           <option value="threshold"{% if f.condition_type == 'threshold' %} selected{% endif %}>crosses a limit</option>
           <option value="change"{% if f.condition_type == 'change' %} selected{% endif %}>changes by too much</option>
           <option value="nodata"{% if f.condition_type == 'nodata' %} selected{% endif %}>has no data by a time</option>
-          <option value="rule"{% if f.condition_type == 'rule' %} selected{% endif %}>holds (a rule on a field: the expression is true)</option></select></label>
+          <option value="rule"{% if f.condition_type == 'rule' %} selected{% endif %}>holds (a rule)</option></select></label>
         <div class="al-grp" data-group="cond" data-when="rule">
           <p class="text-muted-d wide">For a field source: its <b>Field or expression</b> is a Rachana-EL predicate over the entity, for example <code>$.utilisation &gt; 0.8</code>.
             The alert is raised once when it becomes true, and is armed again when it turns false.</p>
