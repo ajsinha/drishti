@@ -102,9 +102,6 @@ button.bi-tab { background: none; font: inherit; cursor: pointer; }
 .bi-feditor { display: flex; flex-direction: column; gap: .3rem; border: 1px solid var(--d-accent); border-radius: 6px; padding: .45rem; margin-top: .25rem; }
 .bi-picklist { max-height: 9rem; overflow: auto; border: 1px solid var(--d-border); border-radius: 6px; padding: .2rem .3rem; margin-top: .25rem; }
 .bi-picklist label { display: flex; align-items: center; gap: .4rem; font-size: .8rem; }
-.bi-suggestions { display: flex; flex-wrap: wrap; gap: .25rem; margin: 0 0 .4rem; min-height: 1.8rem; }
-.bi-suggest { background: var(--d-surface-2); border: 1px solid var(--d-border); border-radius: 999px; color: var(--d-ink); font-family: var(--d-font-mono); font-size: .75rem; padding: .1rem .55rem; cursor: pointer; }
-.bi-suggest:hover { border-color: var(--d-accent); }
 .bi-problem { list-style: disc; margin-bottom: .2rem; font-size: .85rem; color: var(--d-ink); }
 .bi-problem-error strong { color: var(--d-bad); }
 .bi-problem-warning strong { color: var(--d-warn); }

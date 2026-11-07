@@ -13,20 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The editors' shell and editors (docs/architecture/EDITORS.md): three panes, the live YAML below the editor, the preview with checks.
-   Colours only from the theme tokens (light, dark and every theme); the panes' widths from the shared resize component (--ed-left,
-   --ed-right); one column below 640 px. */
-.ed { display: flex; flex-direction: column; gap: 8px; padding: 10px 14px; color: var(--d-ink); min-height: calc(100vh - 60px); }
-.ed-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius, 6px); padding: 8px 12px; position: relative; }
-.ed-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px; flex: 1 1 320px; min-width: 0; }
-.ed-title h1 { font-size: 17px; margin: 0; overflow-wrap: anywhere; }
-.ed-crumb { width: 100%; font-size: 12px; color: var(--d-muted); }
-.ed-crumb a { color: var(--d-link); }
-.ed-versions { font-size: 12px; color: var(--d-muted); }
-.ed-pill { font-size: 11px; padding: 2px 8px; border-radius: 10px; border: 1px solid var(--d-warn); color: var(--d-warn); }
-.ed-pill.ed-published { border-color: var(--d-ok); color: var(--d-ok); }
-.ed-pill.ed-shipped { border-color: var(--d-muted); color: var(--d-muted); }
-.ed-pill.ed-proposed { border-color: var(--d-link); color: var(--d-link); }
+/* The editors of the table layer (docs/architecture/EDITORS.md): what each editor draws inside drishti-designer's shell (the shell, its
+   panes, the YAML pane and the dialog are the kit's, drishti_designer.css). Colours only from the theme tokens (light, dark and every theme). */
 .ed-modes { display: inline-flex; border: 1px solid var(--d-border); border-radius: 4px; overflow: hidden; }
 .ed-mode { background: var(--d-surface-2); color: var(--d-ink); border: 0; padding: 4px 10px; font-size: 12px; cursor: pointer; }
 .ed-mode[aria-pressed="true"] { background: var(--d-fill-strong); color: var(--d-on-fill); font-weight: 700; }
@@ -34,32 +22,16 @@
 .ed-btn { background: var(--d-surface-2); border: 1px solid var(--d-border); color: var(--d-ink); border-radius: 4px; padding: 4px 10px; font-size: 12px; cursor: pointer; }
 .ed-btn:disabled { opacity: .5; cursor: not-allowed; }
 .ed-btn.ed-primary { background: var(--d-fill); border-color: var(--d-fill); color: var(--d-on-fill); font-weight: 700; }
-.ed-btn:focus-visible, .ed-mode:focus-visible, .ed-obj:focus-visible, .ed-linkbtn:focus-visible, .ed-in:focus-visible, [role="tab"]:focus-visible { outline: 2px solid var(--d-link); outline-offset: 1px; }
+.ed-btn:focus-visible, .ed-mode:focus-visible, .ed-linkbtn:focus-visible, .ed-in:focus-visible, [role="tab"]:focus-visible { outline: 2px solid var(--d-link); outline-offset: 1px; }
 .ed-linkbtn { background: none; border: 0; color: var(--d-link); cursor: pointer; padding: 0 2px; font-size: 12px; text-decoration: underline; }
-.ed-newmenu { position: absolute; right: 0; top: 100%; z-index: 30; display: flex; flex-direction: column; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 4px; box-shadow: var(--d-shadow); min-width: 220px; }
-.ed-newmenu button { background: none; border: 0; text-align: left; padding: 8px 12px; color: var(--d-ink); cursor: pointer; }
-.ed-newmenu button:hover, .ed-newmenu button:focus { background: var(--d-surface-2); }
-.ed-msg { margin: 0; min-height: 1.2em; font-size: 13px; color: var(--d-muted); }
-.ed-msg.ed-bad, .ed-bad { color: var(--d-bad); }
 .ed-good { color: var(--d-ok); }
 .ed-warn { color: var(--d-warn); }
 .ed-muted { color: var(--d-muted); }
 .ed-small { font-size: 12px; }
-.ed-grid { display: grid; grid-template-columns: var(--ed-left, 240px) minmax(0, 1fr) var(--ed-right, 360px); gap: 10px; align-items: start; flex: 1; }
-.ed-objects, .ed-side { position: relative; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius, 6px); padding: 8px; min-width: 0; max-height: calc(100vh - 150px); overflow: auto; }
-.ed-main { min-width: 0; display: flex; flex-direction: column; gap: 10px; }
 .ed-in { background: var(--d-bg-2, var(--d-bg)); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; padding: 4px 7px; font-size: 13px; width: 100%; max-width: 100%; }
 .ed-narrow { width: auto; min-width: 7em; }
-.ed-code, .ed-ytext { font-family: var(--d-font-mono, ui-monospace, monospace); font-size: 12px; line-height: 18px; }
-.ed-search { margin-bottom: 8px; }
-.ed-group h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--d-muted); margin: 10px 0 4px; }
-.ed-list { list-style: none; margin: 0; padding: 0; }
-.ed-obj { display: block; width: 100%; text-align: left; background: none; border: 0; border-left: 3px solid transparent; color: var(--d-ink); padding: 5px 7px; border-radius: 3px; cursor: pointer; }
-.ed-obj small { display: block; color: var(--d-muted); font-size: 11px; }
-.ed-obj-n { font-size: 12px; overflow-wrap: anywhere; }
-.ed-obj.ed-on, .ed-obj:hover { background: var(--d-surface-2); border-left-color: var(--d-accent); }
+.ed-code { font-family: var(--d-font-mono, ui-monospace, monospace); font-size: 12px; line-height: 18px; }
 .ed-empty { padding: 30px 10px; color: var(--d-muted); }
-.ed-ro { padding: 6px 10px; border: 1px dashed var(--d-border); border-radius: 4px; font-size: 13px; color: var(--d-muted); }
 .ed-card { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius, 6px); padding: 10px 12px; margin-top: 8px; min-width: 0; }
 .ed-card h3, .ed-preview h3 { margin: 0 0 8px; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--d-muted); }
 .ed-row2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
@@ -85,25 +57,6 @@
 .ed-c-ok { color: var(--d-ok); }
 .ed-c-warning, .ed-c-info { color: var(--d-warn); }
 .ed-c-error { color: var(--d-bad); }
-/* the live YAML panel */
-.ed-yaml { background: var(--d-bg-2, var(--d-bg)); border: 1px solid var(--d-border); border-radius: var(--d-radius, 6px); padding: 6px 10px; }
-.ed-yh { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--d-muted); }
-.ed-ytoggle { background: none; border: 0; color: var(--d-ink); font-weight: 700; cursor: pointer; padding: 2px 0; }
-.ed-ybody { display: grid; grid-template-columns: auto minmax(0, 1fr); margin-top: 6px; max-height: 340px; }
-.ed-yfull .ed-ybody { max-height: calc(100vh - 260px); }
-.ed-gutter { text-align: right; padding: 6px 6px 6px 0; color: var(--d-faint, var(--d-muted)); font: 12px/18px var(--d-font-mono, ui-monospace, monospace); overflow: hidden; user-select: none; min-width: 2.5em; }
-.ed-gutter .ed-g-error { color: var(--d-bad); font-weight: 700; }
-.ed-gutter .ed-g-warning { color: var(--d-warn); }
-.ed-gutter .ed-g-on { color: var(--d-accent); font-weight: 700; }
-.ed-ywrap { position: relative; min-width: 0; }
-.ed-yhl { position: absolute; left: 0; right: 0; background: var(--d-accent-tint, rgba(232, 163, 58, .18)); pointer-events: none; }
-.ed-ytext { position: relative; display: block; width: 100%; min-height: 220px; height: 100%; resize: vertical; background: transparent; color: var(--d-ink); border: 0; padding: 6px; white-space: pre; overflow: auto; tab-size: 2; }
-.ed-yfull .ed-ytext { min-height: calc(100vh - 300px); }
-.ed-ytext:focus { outline: 1px solid var(--d-link); }
-.ed-problems { list-style: none; margin: 6px 0 0; padding: 0; font-size: 12px; }
-.ed-p-error { color: var(--d-bad); }
-.ed-p-warning, .ed-p-info { color: var(--d-warn); }
-.ed-problems code { color: var(--d-muted); }
 /* type-ahead */
 .ed-fx { position: absolute; z-index: 40; list-style: none; margin: 2px 0 0; padding: 2px 0; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 4px; box-shadow: var(--d-shadow); max-width: 520px; max-height: 260px; overflow: auto; }
 .ed-fx li { padding: 3px 8px; font-size: 12px; cursor: pointer; }
@@ -132,21 +85,6 @@ td, .ed-field, .ed-form label { position: relative; }
 .ed-codecard textarea { min-height: 300px; }
 .ed-templates { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .ed-cells { display: flex; flex-direction: column; gap: 6px; }
-/* dialog */
-.ed-dialog { background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 8px; max-width: min(760px, 94vw); width: 100%; }
-.ed-dialog::backdrop { background: rgba(0, 0, 0, .45); }
-.ed-dialog h2 { font-size: 16px; margin: 0 0 10px; }
-.ed-dlg-actions { text-align: right; margin: 10px 0 0; }
-/* phones: one column, the panes stacked; the resize handles are off (the component hides them) */
-@media (max-width: 639.98px) {
-  .ed { padding: 6px; }
-  .ed-grid { grid-template-columns: minmax(0, 1fr); }
-  .ed-objects, .ed-side { max-height: none; }
-  .ed-row2, .ed-row3, .ed-four, .ed-pygrid { grid-template-columns: minmax(0, 1fr); }
-  .ed-actions { width: 100%; }
-}
-@media (min-width: 640px) and (max-width: 1100px) {
-  .ed-grid { grid-template-columns: var(--ed-left, 200px) minmax(0, 1fr); }
-  .ed-side { grid-column: 1 / -1; max-height: none; }
-  .ed-pygrid { grid-template-columns: minmax(0, 1fr); }
-}
+/* phones: one column (the shell's panes stack: drishti_designer.css) */
+@media (max-width: 639.98px) { .ed-row2, .ed-row3, .ed-four { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 1100px) { .ed-pygrid { grid-template-columns: minmax(0, 1fr); } }

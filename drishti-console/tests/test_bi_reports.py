@@ -51,7 +51,8 @@ def test_the_designer_start_and_one_draft_and_the_model_view_are_real_pages():
     for hook in ("data-canvas-grid", "data-fields-tree", "data-types", "data-build", "data-format", "data-filters", "data-yaml", "data-undo", "data-redo", "data-check", "data-save", "data-preview"):
         assert hook in d.text, hook
     scripts = re.findall(r"/static/js/drishti_([a-z-]+)\.js", d.text)
-    assert scripts.index("bi-design") < scripts.index("bi-design-canvas") < scripts.index("bi-design-panes") and "cm-yaml" in scripts
+    assert scripts.index("bi-design") < scripts.index("bi-design-canvas") < scripts.index("bi-design-panes") and "cm-yaml" not in scripts
+    assert "/static/elements/drishti-designer/drishti_designer.js" in d.text           # the canvas, the undo history and the YAML editor are the designer kit's
 
 
 def test_the_designer_is_in_the_rail_without_a_phase_label():

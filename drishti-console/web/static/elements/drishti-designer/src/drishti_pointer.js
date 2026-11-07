@@ -119,9 +119,10 @@ export class DragHub {
    * @returns {function(): void} stops it
    */
   draggable(el, o) {
+    el.style.touchAction = 'none';
     const down = (e) => {
-      if ((e.pointerType === 'mouse' && e.button !== 0) || (o.handle && !e.target.closest(o.handle))) { return; }
-      if (e.target.closest('input, select, textarea, [contenteditable]')) { return; }
+      if (this.active || (e.pointerType === 'mouse' && e.button !== 0) || (o.handle && !e.target.closest(o.handle))) { return; }
+      if (e.target.closest('input, select, textarea, [contenteditable]') || (e.target !== el && e.target.closest('button, a') && !o.handle)) { return; }
       const payload = o.payload(e);
       if (payload) { this.start(e, payload, o.label ? o.label(payload) : ''); }
     };
@@ -142,6 +143,7 @@ export class DragHub {
     const setOver = (t) => { if (over && over !== t && over.leave) { over.leave(); } over = t; };
     this.active = trackPointer(e, {
       start: () => {
+        if (doc.defaultView.getSelection) { doc.defaultView.getSelection().removeAllRanges(); }
         ghost = doc.createElement('div');
         ghost.className = 'dd-ghost';
         ghost.setAttribute('aria-hidden', 'true');
@@ -151,6 +153,8 @@ export class DragHub {
       },
       move: (ev) => {
         ghost.style.transform = 'translate(' + (ev.clientX + 14) + 'px,' + (ev.clientY + 14) + 'px)';
+        const win = doc.defaultView;                                           // near the window's top or bottom edge the page scrolls
+        if (ev.clientY < 48) { win.scrollBy(0, -12); } else if (ev.clientY > win.innerHeight - 48) { win.scrollBy(0, 12); }
         const t = this.hit(ev.clientX, ev.clientY, payload, doc);
         setOver(t);
         if (t && t.over) { t.over(ev.clientX, ev.clientY, payload); }

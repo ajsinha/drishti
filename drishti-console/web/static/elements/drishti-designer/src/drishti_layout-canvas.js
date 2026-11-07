@@ -32,6 +32,7 @@ import { flowHit, showFlowDrop, clearFlowDrop } from './drishti_layout-flow.js';
  * @property {import('./drishti_selection.js').Selection} selection
  * @property {function(Object): HTMLElement} [createItem] grid: the element of a new item (default: a frame with a heading)
  * @property {function(Object, HTMLElement): void} [updateItem] grid: refreshes an item's element after a change
+ * @property {function(string, HTMLElement): void} [removeItem] grid: an item's element leaves the canvas (the host lets go of what it drew)
  * @property {function(Object): string} [label] what an item is called (default: item.label or its id)
  * @property {string} [handle] a selector inside an item that moves it (default: the whole item)
  * @property {number} [rowPx=56] grid: a row's height
@@ -43,7 +44,8 @@ import { flowHit, showFlowDrop, clearFlowDrop } from './drishti_layout-flow.js';
  * @property {import('./drishti_pointer.js').DragHub} [hub] the palette's drags land here
  * @property {string} [dropType] a type of HTML5 drag the canvas takes (its data is JSON)
  * @property {Object<string, HTMLElement>} [areas] flow: the area elements by name
- * @property {function(string, Object): (boolean|void)} [onAction] a key's action before the canvas does it; true: the host did it
+ * @property {function(string, Object): (boolean|void)} [onAction] a key's action before the canvas does it; true: the host did it,
+ *   false: the key is the page's (not taken), nothing: the canvas does it
  */
 
 /**
@@ -114,7 +116,7 @@ export class LayoutCanvas {
   render() {
     const items = this.model.list(), ids = new Set(items.map((i) => i.id));
     if (!this.flow) {
-      this.els.forEach((e, id) => { if (!ids.has(id)) { e.remove(); this.els.delete(id); } });
+      this.els.forEach((e, id) => { if (!ids.has(id)) { this.forget(id); } });
       items.forEach((it) => {
         let e = this.els.get(it.id);
         if (!e) { e = this.o.createItem ? this.o.createItem(it) : this.defaultItem(it); this.els.set(it.id, e); this.el.appendChild(e); }
@@ -126,6 +128,19 @@ export class LayoutCanvas {
     this.sel.prune((id) => ids.has(id));
     this.mark();
     this.events.emit('rendered', { ids: [...ids] });
+  }
+
+  /**
+   * Grid: lets go of an item's element (it is made again by the next render: the host's look of it changed).
+   * @param {string} id
+   * @returns {void}
+   */
+  forget(id) {
+    const e = this.els.get(id);
+    if (!e) { return; }
+    this.els.delete(id);
+    if (this.o.removeItem) { this.o.removeItem(id, e); }
+    e.remove();
   }
 
   /** @private a plain frame: a heading (the handle) and a body */
@@ -341,7 +356,9 @@ export class LayoutCanvas {
     if (itemEl && t !== itemEl) { return; }
     const a = this.key(e);
     if (!a) { return; }
-    if (this.o.onAction && this.o.onAction(a.type, a) === true) { e.preventDefault(); e.stopPropagation(); return; }
+    const took = this.o.onAction ? this.o.onAction(a.type, a) : undefined;
+    if (took === true) { e.preventDefault(); e.stopPropagation(); return; }
+    if (took === false) { return; }                                         // the host leaves this key to the page
     const ids = this.sel.list(), one = this.sel.primary(), m = this.model;
     const needs = ['move', 'size', 'delete', 'copy', 'cut', 'duplicate', 'group', 'ungroup', 'zorder', 'open', 'natural', 'column'];
     if (needs.indexOf(a.type) >= 0 && !ids.length) { if (a.type !== 'open') { announce('Select an item first.'); } return; }

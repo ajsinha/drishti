@@ -16,7 +16,7 @@
 approved proposal's review page that still shows what it changed."""
 from pathlib import Path
 
-JS = (Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "build" / "drishti_yamltab.js").read_text()
+JS = (Path(__file__).resolve().parents[1] / "web" / "static" / "elements" / "drishti-inputs" / "src" / "drishti_code-editor.js").read_text()   # the YAML tab is drishti-inputs' CodeEditor
 
 OLD = "rachana: 1\nsutra: s-test\nversion: 3\nmatch: { kind: trade }\npanels:\n  - id: legs\n    kind: kv\n"
 
@@ -28,7 +28,7 @@ def test_the_workbench_has_one_h1(client):
 
 
 def test_the_code_editors_own_input_is_labelled():
-    assert "getInputField().setAttribute('aria-label'" in JS
+    assert "cm.getInputField()" in JS and "ta.setAttribute('aria-label'" in JS
 
 
 def test_an_approved_new_version_still_shows_its_diff(client, backend, monkeypatch):

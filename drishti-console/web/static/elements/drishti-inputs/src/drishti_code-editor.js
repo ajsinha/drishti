@@ -27,6 +27,21 @@ import { InputBase, Listbox, Popover, debounce } from './drishti_inputs-dom.js';
 let cmReady = null;
 
 /**
+ * The indentation of a new YAML line after the text before the cursor: the line's own, a list item's content column, two more after a
+ * key that opens a block ("key:", "key: |").
+ * @param {string} before
+ * @returns {number}
+ */
+export function yamlIndentAfter(before) {
+  before = String(before).replace(/\s+#.*$/, '');
+  const m = before.match(/^(\s*)((?:-\s+)*)/), rest = before.slice(m[0].length);
+  let n = m[1].length + m[2].length;
+  if (m[2] && (/^[{["']/.test(rest) || !/^[^\s#][^:#]*:(\s|$)/.test(rest))) { n = m[1].length; }
+  if (/^\s*(?:-\s+)*[^\s#][^:#]*:\s*([|>][-+0-9]*)?\s*$/.test(before) && !/[{[]/.test(before)) { n += 2; }
+  return n;
+}
+
+/**
  * CodeMirror on the page: the one given, the page's, or the vendored one loaded now (with its style sheet).
  * @param {Object} [given] a CodeMirror to use
  * @returns {Promise<Object>}
@@ -72,6 +87,7 @@ export function ensureCodeMirror(given) {
  * @property {function(string): boolean} [completeAfter] also opens the completions when the text before the cursor passes this test
  *   (a YAML key's "kind: ", a path's "$.")
  * @property {boolean} [lineWrapping=false]
+ * @property {boolean} [tabLeaves=false] Tab and Shift+Tab move the focus out of the editor (a small box in a form) instead of indenting
  */
 
 /**
@@ -143,6 +159,8 @@ export class CodeEditor extends InputBase {
     const unit = ' '.repeat(this.o.indentUnit), keys = { 'Ctrl-Space': () => this.complete(true), 'Cmd-Space': () => this.complete(true),
       Tab: (cm) => { if (cm.somethingSelected()) { cm.indentSelection('add'); } else { cm.replaceSelection(unit, 'end'); } },
       'Shift-Tab': (cm) => { cm.indentSelection('subtract'); } };
+    if (this.o.tabLeaves) { keys.Tab = false; keys['Shift-Tab'] = false; }
+    if (this.o.mode === 'yaml') { keys.Enter = (cm) => { const c = cm.getCursor(); cm.replaceSelection('\n' + ' '.repeat(yamlIndentAfter(cm.getLine(c.line).slice(0, c.ch))), 'end', '+input'); }; }
     Object.keys(this.o.keys || {}).forEach((k) => { keys[k] = () => this.o.keys[k](); });
     return keys;
   }
@@ -171,7 +189,7 @@ export class CodeEditor extends InputBase {
     if (!forced && w.word.replace(/^[$@]/, '').length < 1) { this.pop.close(); return Promise.resolve(); }
     this.asked = (this.asked || 0) + 1;
     const ask = this.asked;
-    const ctx = { word: w.word, line: line, ch: cur.ch, mode: this.o.mode, lineNo: cur.line, text: this.cm.getValue() };
+    const ctx = { word: w.word, line: line, ch: cur.ch, mode: this.o.mode, lineNo: cur.line, text: this.cm.getValue(), forced: !!forced };
     return Promise.resolve(this.o.complete ? this.o.complete(ctx) : completions(this.o.catalogue, w.word)).then((list) => {
       if (ask !== this.asked) { return; }
       list = (list || []).slice(0, 50);

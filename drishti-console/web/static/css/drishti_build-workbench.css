@@ -66,7 +66,7 @@
 .wb-kind-t small { color: var(--d-muted); font-size: .74rem; line-height: 1.2; }
 .wb-kind-add { padding: .1rem .5rem; font-size: .75rem; }
 .wb-field-row { cursor: grab; }
-body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select: none; }
+body.dd-dragging, body.dd-dragging * { cursor: grabbing !important; user-select: none; }
 
 /* the canvas: the real preview, decorated */
 .wb-canvas { position: relative; }
@@ -79,12 +79,13 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wb-frame .pnl, .wb-frame .vtitle, .wb-frame dl.strip { position: relative; outline: 2px solid transparent; outline-offset: 1px; border-radius: 6px; }
 .wb-frame .pnl-h.wb-grab { cursor: grab; }
 .wb-frame .wb-hover { outline-color: var(--d-accent-strong, var(--d-accent)); outline-style: dashed; }
-.wb-frame .wb-sel { outline: 3px solid var(--d-accent); outline-style: solid; }
-.wb-frame .wb-sel:focus-visible { outline-offset: 2px; }
-.wb-frame .pnl.dragging { opacity: .45; }
-.wb-frame .pnl .lh-e, .wb-frame .pnl .lh-s { display: none; position: absolute; z-index: 6; touch-action: none; }
-.wb-frame .pnl:hover > .lh-e, .wb-frame .pnl:hover > .lh-s, .wb-frame .pnl.wb-sel > .lh-e, .wb-frame .pnl.wb-sel > .lh-s { display: block; }
-.wb-frame .pnl:hover > .lay-size, .wb-frame .pnl.wb-sel > .lay-size, .wb-frame .pnl.resizing > .lay-size { display: block; }
+.wb-frame .wb-sel, .wb-frame .pnl.dd-selected { outline: 3px solid var(--d-accent); outline-style: solid; box-shadow: none; }
+.wb-frame .wb-sel:focus-visible, .wb-frame .pnl.dd-selected:focus-visible { outline-offset: 2px; }
+.wb-frame .pnl.dd-dragging { opacity: .45; }
+.wb-frame .pnl:hover { outline: 1px dashed var(--d-accent-strong, var(--d-accent)); }
+.wb-frame .pnl > .dd-edge-e, .wb-frame .pnl > .dd-edge-s { display: none; z-index: 6; touch-action: none; }
+.wb-frame .pnl:hover > .dd-edge-e, .wb-frame .pnl:hover > .dd-edge-s, .wb-frame .pnl.dd-selected > .dd-edge-e, .wb-frame .pnl.dd-selected > .dd-edge-s { display: block; }
+.wb-frame .pnl:hover > .lay-size, .wb-frame .pnl.dd-selected > .lay-size, .wb-frame .pnl.resizing > .lay-size { display: block; }
 .wb-frame .pnl .lay-size { position: absolute; right: .5rem; bottom: .35rem; z-index: 5; padding: 0 .35rem; border-radius: 3px; background: var(--d-accent); color: var(--d-on-accent); font-size: .72rem; }
 .wb-frame .wb-drop-on { outline: 3px dashed var(--d-pos); background: var(--d-accent-tint); }
 .wb-drop { position: fixed; z-index: 1300; left: var(--l); top: var(--t); width: var(--w); height: var(--h); background: var(--d-accent); border-radius: 2px; pointer-events: none; }
@@ -165,7 +166,7 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wb-sec > summary { cursor: pointer; }
 .wb-palette { max-height: 15rem; overflow: auto; padding-right: .2rem; }
 .wb-left .bs-tree { max-height: 22rem; overflow: auto; }
-.wb-kind, .wb-field-row, .wb-frame .pnl-h, .wb-frame .lh-e, .wb-frame .lh-s { user-select: none; -webkit-user-select: none; }
+.wb-kind, .wb-field-row, .wb-frame .pnl-h, .wb-frame .dd-edge { user-select: none; -webkit-user-select: none; }
 
 /* the YAML editor wears the console's colours, as Studio's does (drishti_terminal.css scopes those rules to Studio's own pane) */
 #wbPaneYaml .CodeMirror { background: var(--d-bg-2); color: var(--d-ink); font: .82rem/1.5 var(--d-font-mono); }
@@ -215,20 +216,20 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wb-grip { margin-right: .3rem; opacity: .7; cursor: grab; }
 .wb-frame .wb-new { animation: wb-arrive 1.6s ease-out; }
 @keyframes wb-arrive { 0% { box-shadow: 0 0 0 6px var(--d-accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
-.wb-frame .pnl.wb-sel > .lh-e, .wb-frame .pnl.wb-sel > .lh-s { background: var(--d-accent); opacity: .85; }
+.wb-frame .pnl.dd-selected > .dd-edge-e, .wb-frame .pnl.dd-selected > .dd-edge-s { background: var(--d-accent); opacity: .85; }
 .wb-first { display: flex; justify-content: center; padding: 3rem 1rem; }
 .wb-first-b { font-size: 1.15rem; padding: .7rem 1.6rem; }
 
 /* Removing a panel: a trash button in the heading, a toast with Undo */
 .wb-frame .pnl-h { position: relative; }
 .wb-trash { margin-left: auto; background: none; border: 0; color: inherit; padding: 0 .3rem; cursor: pointer; opacity: 0; min-width: 24px; min-height: 24px; }
-.wb-frame .pnl:hover .wb-trash, .wb-frame .pnl:focus-within .wb-trash, .wb-frame .pnl.wb-sel .wb-trash, .wb-trash:focus-visible { opacity: 1; }
+.wb-frame .pnl:hover .wb-trash, .wb-frame .pnl:focus-within .wb-trash, .wb-frame .pnl.dd-selected .wb-trash, .wb-trash:focus-visible { opacity: 1; }
 .wb-toast { position: fixed; left: 50%; bottom: 1.2rem; transform: translateX(-50%); z-index: 3000; background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-accent); border-radius: 8px; padding: .5rem .9rem; box-shadow: 0 4px 18px rgba(0,0,0,.35); display: flex; gap: .5rem; align-items: center; }
 
 /* Removing a panel: a trash button in the heading, a toast with Undo */
 .wb-frame .pnl-h { position: relative; }
 .wb-trash { margin-left: auto; background: none; border: 0; color: inherit; padding: 0 .3rem; cursor: pointer; opacity: 0; min-width: 24px; min-height: 24px; }
-.wb-frame .pnl:hover .wb-trash, .wb-frame .pnl:focus-within .wb-trash, .wb-frame .pnl.wb-sel .wb-trash, .wb-trash:focus-visible { opacity: 1; }
+.wb-frame .pnl:hover .wb-trash, .wb-frame .pnl:focus-within .wb-trash, .wb-frame .pnl.dd-selected .wb-trash, .wb-trash:focus-visible { opacity: 1; }
 .wb-toast { position: fixed; left: 50%; bottom: 1.2rem; transform: translateX(-50%); z-index: 3000; background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-accent); border-radius: 8px; padding: .5rem .9rem; box-shadow: 0 4px 18px rgba(0,0,0,.35); display: flex; gap: .5rem; align-items: center; }
 
 /* Dialogs in the page (instead of confirm()/prompt()) */

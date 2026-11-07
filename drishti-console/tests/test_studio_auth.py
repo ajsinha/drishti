@@ -29,7 +29,7 @@ from core.config import Settings, load_settings  # noqa: E402
 def test_studio_page_and_preview(client):
     r = client.post("/studio", data={"sutra": "irs-vanilla@3", "sutra_given": "1"})
     assert r.status_code == 200 and "data-workbench" in r.text and "sutra: irs-vanilla" in r.text            # followed into the workbench
-    assert "codemirror.js" in r.text and "drishti_cm-yaml.js" in r.text
+    assert "codemirror.js" in r.text and "drishti_designer.js" in r.text and "drishti_cm-yaml.js" not in r.text   # the YAML mode is drishti-inputs'
     ok = client.post("/studio/preview", json={"yaml": "sutra: x", "kind": "trade", "id": "IRS-48213"})
     assert ok.status_code == 200 and 'id="p-cashflows"' in ok.text and "Sutra irs-vanilla v3 + inference" in ok.text
     bad = client.post("/studio/preview", json={"yaml": "BROKEN", "kind": "trade", "id": "IRS-48213"})
@@ -151,9 +151,9 @@ def test_non_admins_do_not_see_admin_pages(backend):
 
 def test_the_workbench_yaml_tab_is_a_yaml_editor(client):
     page = client.post("/studio", data={"sutra": "", "sutra_given": "1"}).text            # followed: a blank new Sutra in the workbench
-    for marker in ("data-field-help", 'data-tab="summary"', 'data-tab="yaml"', "drishti_studio-yaml.js", "drishti_studio-assist.js", "data-yaml-src"):
+    for marker in ("data-field-help", 'data-tab="summary"', 'data-tab="yaml"', "drishti_designer.js", "drishti_yamltab.js", "data-yaml-src"):
         assert marker in page
-    for gone in ("data-md=", 'data-tab="doc"', "cm-sutra-md.js", "md-editor.js", "data-studio "):
+    for gone in ("data-md=", 'data-tab="doc"', "cm-sutra-md.js", "md-editor.js", "data-studio ", "drishti_studio-yaml.js", "drishti_studio-assist.js"):
         assert gone not in page
     assert "rachana: 1\nsutra: my-layout\nversion: 1" in page and "```" not in page  # the new-Sutra skeleton is YAML
     assert client.get("/static/js/cm-sutra-md.js").status_code == 404 and client.get("/static/js/md-editor.js").status_code == 404

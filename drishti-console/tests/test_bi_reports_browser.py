@@ -609,7 +609,8 @@ def test_designer_filters_advanced_and_top_n_the_suggestions_and_conditional_col
     # the YAML tab offers what fits the cursor
     page.click('[data-tab="yaml"]')
     page.evaluate("""() => { const cm = document.querySelector('.CodeMirror').CodeMirror; cm.focus(); const n = cm.lineCount(); cm.setCursor({line: n - 1, ch: 0}); cm.replaceRange('      - { type: ', {line: n - 1, ch: cm.getLine(n - 1).length}); cm.setCursor({line: cm.lineCount() - 1, ch: 100}); }""")
-    page.wait_for_function("() => [...document.querySelectorAll('[data-suggest] .bi-suggest')].some(b => b.textContent === 'waterfall')", timeout=10000)
+    page.keyboard.press("Control+Space")                                                   # the editor's completion (drishti-inputs' CodeEditor)
+    page.wait_for_function("() => [...document.querySelectorAll('.di-complete-pop .di-option-label')].some(b => b.textContent === 'waterfall')", timeout=10000)
     clean(page)
 
 
