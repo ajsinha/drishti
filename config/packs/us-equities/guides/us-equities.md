@@ -121,7 +121,7 @@ python3 tools/packgen/us_equities/make.py --check                              #
 
 `fetch.py` keeps what it downloaded (delete a file to fetch it again) and reduces each company's XBRL facts to the annual values of the
 seven concepts, so the cache stays small. Prices are never part of a refresh into the pack: the script's `prices` source writes a
-snapshot to the data folder only (internal use only). Set `DRISHTI_SEC_USER_AGENT` to your own name and contact before running it.
+snapshot to the data folder only (internal use only). Set `DRISHTI_FEEDS_USER_AGENT` to your own name and contact before running it.
 
 After a refresh, rebuild the lake so the server reads the new snapshot: `python3 tools/drishti.py lake demo` (or
 `python3 tools/build_demo_lakes.py`), then restart the server or let it pick the tables up at its next refresh.

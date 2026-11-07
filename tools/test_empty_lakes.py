@@ -12,16 +12,17 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The lakes shipped empty (risklake, newslake, worldlake, regulators, capitalmarket) are definitions only: nothing shipped points at them.
+"""The lakes shipped empty (risklake, newslake, worldlake, regulators, capitalmarket, referencelake) are definitions only: nothing shipped points at them.
 Every shipped connector, routing rule, engine setting and pack reads the demo lake; a site points at another lake itself (the product
-owner, 2026-11-07: "do not point anything to any of these lakes except the demo lake")."""
+owner, 2026-11-07: "do not point anything to any of these lakes except the demo lake"). The data feeds (config/feeds/*.yaml) are the
+one exception by design: a feed names the lake it loads, and the owner placed them (GLEIF in referencelake, 2026-11-07)."""
 import pathlib
 import re
 
 import yaml
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-EMPTY = ("risklake", "newslake", "worldlake", "regulators", "capitalmarket")
+EMPTY = ("risklake", "newslake", "worldlake", "regulators", "capitalmarket", "referencelake")
 NAMED = re.compile(r"\b(" + "|".join(EMPTY) + r")\b")
 
 

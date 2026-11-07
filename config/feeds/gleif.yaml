@@ -1,0 +1,47 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/feeds/gleif.yaml: the GLEIF feed (docs/guides/FEEDS_GUIDE.md; every key in its section "The feed file").
+#   python3 tools/drishti.py feed run gleif                 pull, write data/feeds/gleif/<date>/, load into referencelake
+#   python3 tools/drishti.py feed run gleif --snapshot      refresh the committed pack and data/testdata/gleif instead (no load)
+#   python3 tools/drishti.py feed run gleif -- --scope GROUP:784F5XWPLTWKTBV3E584   arguments after -- go to the source
+feed: gleif
+title: GLEIF legal entities, ownership and identifier mappings
+description: >-
+  The Global LEI Foundation's golden copy (level 2 relationships and reporting exceptions), the LEI records of the pack's universe from
+  the LEI API, and the ISIN/BIC-to-LEI mapping files: core reference data for every counterparty.
+class: gleif.GleifFeed                 # tools/feeds/sources/gleif.py
+source:
+  provider: GLEIF
+  url: https://www.gleif.org
+  pause: 1.0                           # at most one API call a second (GLEIF asks for restraint)
+  retries: 3
+  cache-hours: 20
+lake: referencelake
+load: java
+schedule: {at: "05:30", days: daily}   # GLEIF publishes its golden copy three times a day; the 00:00 UTC file is there by then
+licence:
+  name: CC0 1.0 (attribution appreciated)
+  url: https://www.gleif.org/en/meta/lei-data-terms-of-use
+  redistribution: allowed
+  internal-only: false
+  attribution: "Contains LEI data from the Global Legal Entity Identifier Foundation (GLEIF), CC0 1.0"
+datasets:
+  lei-entity:       {pack: gleif, kind: lei-entity, key: LEI, description: "one legal entity: name, addresses, legal form, status, renewal"}
+  lei-relationship: {pack: gleif, kind: lei-relationship, key: RELATIONSHIP_ID, description: "a direct or ultimate parent relationship (level 2)"}
+  lei-mapping:      {pack: gleif, kind: lei-mapping, key: IDENTIFIER, description: "an ISIN or BIC mapped to its LEI"}
+options:
+  args: []                             # given to the source before the command line's (e.g. [--scope, "NAME:allianz,CAP:200"])
+snapshot:
+  note: refreshes config/packs/gleif (samples, guide) and data/testdata/gleif, as the pack's generator writes them

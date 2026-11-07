@@ -51,7 +51,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CACHE = ROOT / "data" / "cache" / "gleif"
-USER_AGENT = os.environ.get("DRISHTI_GLEIF_USER_AGENT", "Drishti research ajsinha@gmail.com")
+USER_AGENT = os.environ.get("DRISHTI_FEEDS_USER_AGENT") or "Drishti-feeds/1.0 (Drishti data feeds)"   # the one User-Agent of every feed (docs/guides/FEEDS_GUIDE.md)
 API = "https://api.gleif.org/api/v1"
 GOLDEN = "https://goldencopy.gleif.org/api/v2/golden-copies/publishes/latest"
 MAPPING = "https://mapping.gleif.org/api/v2/{name}/latest"
