@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.server.var;
 
-import static com.ash.drishti.server.explain.ExplainPanels.cell;
 import static com.ash.drishti.server.explain.ExplainPanels.change;
 import static com.ash.drishti.server.explain.ExplainPanels.riseTone;
 import static com.ash.drishti.server.explain.ExplainPanels.row;
