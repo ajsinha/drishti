@@ -365,7 +365,7 @@ VaR's model with `drishti.pnl.access`, gate kinds `valuation` and `sensitivity`.
 
 | Item | Plan |
 |---|---|
-| Dates | the pair 2026-09-29 → 2026-09-30 (sensitivities at 2026-09-29 from FRTB.md §13.1, valuations at both from TVAL.md §13.1) |
+| Dates | the pair 2026-09-29 → 2026-09-30 (sensitivities at 2026-09-29 from FRTB.md §13, valuations at both from TVAL.md §13.1) |
 | `market-move` | `tools/packgen/risk/moves.py` (proposed): each factor's move = the VaR factor model's move of 2026-09-30 (the 510th element of `factors.py`'s paths), in the factor's unit |
 | Consistency | the valuation generator moves each trade's MtM by its own day P&L (VaR path element 510) = delta × move + the nonlinear remainder + a small idiosyncratic term, so the explain is close and the unexplained realistic (and larger for options) |
 | `pnl-event` | a few new trades on 2026-09-30 (with upfront and fees), five amendments (with both PVs), the trades that mature on 2026-09-30 (final cash), fees on 1% of trades |

@@ -64,7 +64,7 @@ also served as the computed kind `var-result` through a reactive connector; the 
 | API `/api/v1/var`, baskets and captures in the content store, entitlements by node, field masks, audit | Built | [VaR guide §11](../guides/VAR_GUIDE.md#11-the-api), [VaR guide §9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) |
 | Retire the stored `var` kind: `VAR-*` ids and `/v/var/<id>` open the explorer at the matching scope | Built | §7 |
 | Retire the stored `var-node` kind: a node's history is the engine's **official end-of-day captures** | Built | §5, §7 |
-| No computed column on `position`, `portfolio` or the core pack's `desk`: their pages show the engine's figures, computed as they open (`VAR_ENGINE`) | Built | [VaR guide §3.7](../guides/VAR_GUIDE.md#37-the-portfolio-and-position-pages), §7.3 |
+| No computed column on `position`, `portfolio` or the core pack's `desk`: their pages show the engine's figures, computed as they open (`VAR_ENGINE`) | Built | [VaR guide §3.7](../guides/VAR_GUIDE.md#37-the-portfolio-and-position-pages), §7 |
 | Official end-of-day captures of every node of MGMT and LEGAL, published to `risk-results/var-official` | Built | §5 |
 | The data-load signal reloads the date and captures it (decided, open question 5) | Built | §2.8 |
 | 7 years of vectors and their time travel (Delta log and removed files; lake maintenance never goes below) | Built | §2.1 |

@@ -32,7 +32,7 @@
 # Full drill, in two stages (docs/guides/TOOLS.md, "The release drill"):
 # 1. The gate, a few minutes, every job at once; the first failure stops the drill with the list:
 #    licence headers; the generated documents and data that must be current (settings catalogue, data contracts and their pages,
-#    data samples, the packs' generated content, the Python API reference); the docs and help console tests; the repository rules
+#    the packs' generated content, the Python API reference); the docs and help console tests; the repository rules
 #    (no hidden names); the quick file checks (every test marked static: they read files and start no server, console or browser,
 #    such as the Java launch guard, the asset names, the branding guard, the browser-test rules); and one Java 21 build of the working tree (-P api-docs: Javadoc with doclint; Spotless) that runs only the
 #    rule tests: every drishti-it test (architecture, file size, caches, locks, branding, licence, connections, schemas), the

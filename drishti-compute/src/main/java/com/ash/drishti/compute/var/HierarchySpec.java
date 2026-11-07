@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * One hierarchy of the VaR and exposure engines (VAR_GUIDE.md section 16, 2.9.5): its id ({@code MGMT}, {@code LEGAL}, {@code LL}), its
+ * One hierarchy of the VaR and exposure engines (docs/contracts/VAR.md section 2.14): its id ({@code MGMT}, {@code LEGAL}, {@code LL}), its
  * title, where its nodes come from, and the scope word that names its nodes.
  *
  * <ul>

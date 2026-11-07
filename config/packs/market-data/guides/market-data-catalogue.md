@@ -172,7 +172,7 @@ A listed bond: terms, price, yield, spreads and analytics.
 
 ## Correlation matrix (`correlation-matrix`)
 
-A set of factors whose pairwise correlations basket, quanto and spread products use: the correlations are computed from the factors' price history when asked (since 2.9.2).
+A set of factors whose pairwise correlations basket, quanto and spread products use: the correlations are computed from the factors' price history when asked.
 
 **Mnemonic:** `CORR` · **Identifiers:** `CORR-…` · **Id field:** `MATRIX_ID`
 

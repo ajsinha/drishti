@@ -236,7 +236,7 @@ wide canvas. The terminal's F-key footer is not shown (F1 opens help for BI).
 | Datasets | the datasets, their pages and the Model view | built (phases 2 and 3) |
 | Designer | your report drafts, a new report on a dataset, and the designer | built (phase 3) |
 | Environments | download a workspace as a bundle; import one with a dry run | built (phase 4) |
-| Notebook | open a model as your masked extract; SQL cells run by the server, Python cells on its compute pool; notebooks | `/bi/notebook` ([USER_GUIDE.md](USER_GUIDE.md#the-notebook), section 21) |
+| Notebook | open a model as your masked extract; SQL cells run by the server, Python cells on its compute pool; notebooks | `/bi/notebook` ([USER_GUIDE.md](USER_GUIDE.md#the-notebook)) |
 | Transforms | prepare data in Python step by step: inputs, snippets, a preview and a profile after each step | `/bi/transform` ([section 34, its section 17](#17-data-prep-the-transform-editor)) |
 
 **Keys** (shown by `?`): `/` search the catalogue (from another BI page it takes you to the catalogue with the search focused),

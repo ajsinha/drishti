@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * The hierarchies the VaR and exposure engines build (VAR_GUIDE.md section 16, 2.9.5), shared by both: the {@code drishti.var.hierarchies}
+ * The hierarchies the VaR and exposure engines build (docs/contracts/VAR.md section 2.14), shared by both: the {@code drishti.var.hierarchies}
  * setting when set, else the first loaded pack's {@code hierarchies:} block (the market-risk pack's), else MGMT and LEGAL from the
  * {@code risk-hierarchy} rows, as before 2.9.5. A hierarchy of the {@code risk-hierarchy} rows that none of them names is still built
  * (book-based, its id as its title): the data decides, as before.

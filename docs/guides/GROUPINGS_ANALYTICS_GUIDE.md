@@ -44,7 +44,7 @@ its inputs come from.
 ## Contents
 
 - **Part I · Using them**
-  - [1. What changed for you](#1-what-changed-for-you)
+  - [1. What each page shows](#1-what-each-page-shows)
   - [2. LEIG: an ownership group](#2-leig-an-ownership-group)
   - [3. LEIC: a country](#3-leic-a-country)
   - [4. SIC: a sector](#4-sic-a-sector)
@@ -76,20 +76,15 @@ its inputs come from.
 
 # Part I · Using them
 
-## 1. What changed for you
+## 1. What each page shows
 
-Very little on the screen, a lot underneath:
-
-- **The commands, ids and links are the same.** `LEIG 8I5DZWZKVSZI1NUHU748`, `LEIC GB`, `SIC 3674`, `ECG ECG-SAS` and `CORR CORR-EU-EQ` open as
-  before; a bookmark, a link from another page, an export or a BI dataset that names one of them reads the computed page. The `ALL`
-  directories (`LEIG ALL`, `LEIC ALL`, `SIC ALL`) are computed too.
-- **No cap.** A group lists every member the lake holds, a country every entity (the stored country page listed the first 400).
+- **The commands, ids and links.** `LEIG 8I5DZWZKVSZI1NUHU748`, `LEIC GB`, `SIC 3674`, `ECG ECG-SAS` and `CORR CORR-EU-EQ` open the
+  computed page; a bookmark, a link from another page, an export or a BI dataset that names one of them reads it. The `ALL` directories
+  (`LEIG ALL`, `LEIC ALL`, `SIC ALL`) are computed too.
+- **No cap.** A group lists every member the lake holds, a country every entity.
 - **The pill says computed.** Each page's title pill ends in *(computed)*, and an explainer on the right says how.
-- **New figures** that the stored pages could not have: LEIG's lapsed registrations and each member's level, SIC's net margin and the
-  number of filers not reporting in USD, ECG's median inflation and every member economy, CORR's window and estimator, PXH's returns,
-  volatility and beta.
-- **Gone:** the stored figures themselves (the `lei-group`, `lei-country` and `sic-sector` snapshots, the stored country groups, the
-  stored correlation pairs and the stored ratios). [Section 18](#18-reconciliation-stored-against-computed) explains every difference.
+- **The figures:** LEIG's lapsed registrations and each member's level, SIC's net margin and the number of filers not reporting in USD,
+  ECG's median inflation and every member economy, CORR's window and estimator, PXH's returns, volatility and beta.
 
 The pages are computed **once per business date** and shared by every reader (a refresh of 60 seconds, rebuilt when the lake loads), so
 opening one is fast. A date picked in the top bar computes that date's pages from that date's entities.

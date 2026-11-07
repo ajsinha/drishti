@@ -45,7 +45,7 @@ The concepts are `REVENUE`, `NET-INCOME`, `ASSETS`, `LIABILITIES`, `EQUITY`, `EP
 |---|---|---|
 | `us-company` | 586 | CIK, ticker, exchange and listing market, SIC with its description and division, state of incorporation, fiscal year end, LEI, headquarters, founded, website, index memberships, the latest year's figures, ten years of financials, the latest 20 filings |
 | `index-membership` | 6 | the members of the S&P 500, Nasdaq-100 and Dow as their tracking ETF (SPY, QQQ, DIA) reports holding them, and the bank lists, with their sector and latest revenue; members by sector |
-| `sic-sector` | computed (194 codes and `ALL`) | the companies of one SIC code ranked by revenue; `ALL` lists every code. Computed from the companies when asked by the derived connector `us-equities-groupings` (since 2.9.2): nothing is stored |
+| `sic-sector` | computed (194 codes and `ALL`) | the companies of one SIC code ranked by revenue; `ALL` lists every code. Computed from the companies when asked by the derived connector `us-equities-groupings`: nothing is stored |
 | `filing-feed` | 6 | the latest 300 filings of the companies, all forms or one |
 | `filing` | 11,691 | one filing: form, filing and report dates, document, 8-K items, links to the document and its EDGAR index |
 | `financial-fact` | 4,026 | one concept of one company: up to ten annual values with the change, the XBRL tag and the filing each came from |

@@ -2929,7 +2929,7 @@ A value is one of: empty (missing or `null`; the two behave the same), a boolean
 - **`+`** adds when **both** sides are numbers; otherwise it joins their text: `'Leg ' + 1` → `Leg 1`, `$.MISSING + 'x'` → `x`. A number
   inside quotes is text: `'1' + 1` → `11`.
 - **Null in, null out.** Arithmetic on an empty value is empty: `$.MISSING * 2`, `1 - $.MISSING`, `-$.MISSING` and `$.MISSING + 1`
-  are empty (since 2.9.11.e, as SQL computes it; they showed `NaN`); `+` still joins a text with an empty value (`'x' + $.MISSING` →
+  are empty (as SQL computes it); `+` still joins a text with an empty value (`'x' + $.MISSING` →
   `x`). So are the text and date functions given an empty value: `upper($.MISSING)`, `len($.MISSING)`, `year($.MISSING)`.
 - **`-`, `*`, `/`, `%`, unary `-`** convert both sides to numbers (text that is a number counts; `true` is 1). A text that is not a
   number makes the result NaN, which shows as `NaN`. Two dates (ISO text) subtract to the days between them:

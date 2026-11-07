@@ -102,7 +102,7 @@ KINDS = [
          [P("kv", "terms", "Terms", "$.terms", key="F2"), P("table", "coupons", "Coupons", "$.coupons", [("Date", "@.date", "date", None, False), ("Coupon", "@.amount", "amount2", None, False)], key="F3"),
           P("line", "history", "Price, last 30 days", "$.history", x="date", y="price", fmt="price2", area="right")],
          links={"issuer": ("issuer", "Issuer"), "benchmarkCurve": ("ir-curve", "Benchmark curve")}, badge="fmt($.price, 'price2')", live={"price": 0.05}),
-    Kind("correlation-matrix", "CORR", "CORR-", "Correlation matrix", G, "A set of factors whose pairwise correlations basket, quanto and spread products use: the correlations are computed from the factors' price history when asked (since 2.9.2).", "matrixId",
+    Kind("correlation-matrix", "CORR", "CORR-", "Correlation matrix", G, "A set of factors whose pairwise correlations basket, quanto and spread products use: the correlations are computed from the factors' price history when asked.", "matrixId",
          [("Name", "$.name", None, None, True), ("Size", "size($.factors)", None, None, False)],
          [], links={"equityIds": ("equity", "Equity"), "fxIds": ("fx-spot", "FX spot")}),
     Kind("calendar", "CAL", "CAL-", "Holiday calendar", G, "Business-day calendar (USNY, TARGET, GBLO, JPTO…).", "calendarId",

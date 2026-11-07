@@ -80,7 +80,7 @@ Load real data into each domain's folder, or point a domain at a database instea
 | `commodity-vol-surface` | Commodity volatility surface | `CMDV` | `CMDV-…` | `SURFACE_ID` | Implied vols by delivery month and moneyness. |
 | `rate-fixing` | Rate index fixings | `FIX` | `FIX-…` | `INDEX_ID` | Published overnight and term rate fixings (SOFR, €STR, SONIA…). |
 | `bond` | Bond (security master) | `BND` | `BND-…` | `ISIN` | A listed bond: terms, price, yield, spreads and analytics. |
-| `correlation-matrix` | Correlation matrix | `CORR` | `CORR-…` | `MATRIX_ID` | A set of factors whose pairwise correlations basket, quanto and spread products use: the correlations are computed from the factors' price history when asked (since 2.9.2). |
+| `correlation-matrix` | Correlation matrix | `CORR` | `CORR-…` | `MATRIX_ID` | A set of factors whose pairwise correlations basket, quanto and spread products use: the correlations are computed from the factors' price history when asked. |
 
 ### Interest rate curve (`ir-curve`)
 
@@ -224,7 +224,7 @@ A listed bond: terms, price, yield, spreads and analytics.
 
 ### Correlation matrix (`correlation-matrix`)
 
-A set of factors whose pairwise correlations basket, quanto and spread products use: the correlations are computed from the factors' price history when asked (since 2.9.2).
+A set of factors whose pairwise correlations basket, quanto and spread products use: the correlations are computed from the factors' price history when asked.
 
 **Fields its Sutra reads:** `NAME`, `FACTORS`.
 

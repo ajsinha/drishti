@@ -283,7 +283,7 @@ within `hot-dates` (plus the date asked), the hot files within `disk-dates`, the
 hot folder mapped (`/proc/self/maps`), and the heap after a collection not growing with the rounds (under 64 MB of growth); it also
 proves the version watch on a real lake (a date restated with no signal reloaded within the interval, a request meanwhile warned). The
 short form (3 versions) runs in every build; the long form is `-Dsoak.versions=60` through Maven's `argLine`. The 24-hour soak
-of RESOURCES_AND_SCALE.md section 10.4 at 200K positions stays a run by hand on a server (below).
+of RESOURCES_AND_SCALE.md section 10 at 200K positions stays a run by hand on a server (below).
 
 The method behind the numbers for many users at once, long runs and memory (from the load and memory strategy of 2026-10-08, LOAD_AND_MEMORY.md, whose principles and build plan were deleted: in git at tag v2.9.5). Items marked **(to build)** are not built yet.
 

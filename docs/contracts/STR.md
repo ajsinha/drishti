@@ -427,7 +427,7 @@ scopes of more than 10,000 trades, `stress-scenario-save` (user scenarios), `str
 
 | Item | Plan |
 |---|---|
-| `scenario-pnl` | `tools/packgen/risk/stress.py` (proposed): for each live trade (≤ 10,000) and each of the 8 scenarios, the full P&L = the sensitivity-based P&L (from the trade's generated sensitivities, FRTB.md §13.1, and the scenario's translated shocks) **plus** a deterministic nonlinear remainder for options (the factor model's short-gamma term at the shock size), so `method=both` shows a realistic approximation error |
+| `scenario-pnl` | `tools/packgen/risk/stress.py` (proposed): for each live trade (≤ 10,000) and each of the 8 scenarios, the full P&L = the sensitivity-based P&L (from the trade's generated sensitivities, FRTB.md §13, and the scenario's translated shocks) **plus** a deterministic nonlinear remainder for options (the factor model's short-gamma term at the shock size), so `method=both` shows a realistic approximation error |
 | `stress-scenario` | the 8 scenarios with `VERSION` 1 and the structured shocks of §3.3 (generator: `SCENARIOS` in `data_results.py`, extended) |
 | `risk-limit` | one `STR` limit per desk (any scenario) and a few per scenario; positive amounts |
 | Dates | 2026-09-30 only (one date) |

@@ -75,7 +75,7 @@ CVA has **no input table of its own**. It reads:
 
 | Input | Contract | What |
 |---|---|---|
-| `exposure-path`, `simulation-run` | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) section 15 | EE, ENE per netting set and primary date (through `exposure-result`); the run should be `RISK_NEUTRAL` (EXPOSURE_GUIDE.md open question 4) |
+| `exposure-path`, `simulation-run` | [EXP.md section 2.3](EXP.md#23-exposure-path-every-trades-mtm-on-every-path-the-large-input) | EE, ENE per netting set and primary date (through `exposure-result`); the run should be `RISK_NEUTRAL` (EXPOSURE_GUIDE.md open question 4) |
 | `saccr-trade` and its result | [SACCR.md](SACCR.md) | EAD and effective maturity per netting set for BA-CVA |
 | `credit-curve` (market-data pack) | the pack's contract | `POINTS[]` (`TENOR`, `SPREAD` in bp, `HAZARD`, `SURVIVAL`), `RECOVERY`, `CURRENCY` |
 | `ir-curve` (market-data pack) | the pack's contract | the USD OIS discount curve (`POINTS[]`) |

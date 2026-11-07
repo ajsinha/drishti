@@ -323,7 +323,7 @@ A bare LEI (twenty characters) opens its entity.
 |---|---|---|
 | `lei-entity` | {entities} | legal name and other names, legal form (ELF), category, jurisdiction, legal and headquarters addresses, entity and registration status, created, first registered, last updated, next renewal (late renewals flagged), the managing LOU, BICs, the ISIN count, OpenCorporates id, the direct and ultimate parent, the parents chain, the direct children, reporting exceptions |
 | `lei-relationship` | {rels} | one consolidation relationship of an entity to its direct parent (or, when none is in the pack, its ultimate parent): status, relationship and accounting periods, accounting standard, the record's registration and renewal |
-| `lei-group` | computed ({groups} and `ALL`) | an ultimate parent with its tree (a tree table), every member, counts by country and legal form; `ALL` lists the groups. Computed from the entities when asked by the derived connector `gleif-groupings` (since 2.9.2): nothing is stored |
+| `lei-group` | computed ({groups} and `ALL`) | an ultimate parent with its tree (a tree table), every member, counts by country and legal form; `ALL` lists the groups. Computed from the entities when asked by the derived connector `gleif-groupings`: nothing is stored |
 | `lei-country` | computed ({countries} and `ALL`) | the entities of one legal-address country, the groups present, legal forms and cities; `ALL` lists the countries. Computed like the groups |
 | `lei-mapping` | {mappings} | an identifier and its LEI: every BIC and MIC of the entities, and up to {isin_sample} ISINs of each seed entity |
 

@@ -37,7 +37,7 @@ import java.util.Map;
  */
 final class VarPublisher {
 
-    /** The contract version the rows carry (VAR.md section 23.4, the change table). */
+    /** The contract version the rows carry (docs/contracts/VAR.md; its history is the CHANGELOG). */
     static final String CONTRACT_VERSION = "1.5";                   // 1.4: HORIZON and METHOD; 1.5: SVAR, SES and STRESS_SET_ID
     static final String FOLDER = "risk-results";
     static final String TABLE = "var-official";

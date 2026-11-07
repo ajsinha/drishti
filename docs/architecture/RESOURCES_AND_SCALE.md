@@ -129,7 +129,7 @@ caches the answer on the heap.
 
 The reference bank of the decks: **2.3 million positions**, **1,518 values a position** (509 for 1-day VaR, 509 sized for 10-day, 250
 each for stressed 1-day and 10-day), **15,000 portfolios**, 5,700 nodes, two dates open, four listed currencies, 60 hot dates on disk.
-The constants are the measured 100,000-trade benchmark of [VAR_GUIDE.md section 27.3](../guides/VAR_GUIDE.md#273-the-tiered-store-measured-and-extrapolated)
+The constants are the measured 100,000-trade benchmark of [VAR_GUIDE.md section 27](../guides/VAR_GUIDE.md#273-the-tiered-store-measured-and-extrapolated)
 scaled by K = 23 (footnote 1).
 
 | Item | Per position | At 2.3M, 1-day (509) | At 2.3M, 1,518 values | Where |
