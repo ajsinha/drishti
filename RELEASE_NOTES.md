@@ -18,7 +18,10 @@
 *Released 2026-11-07.* **BI on the table layer with its editors; one analysis path, Pivot → Report, and the Notebook; one Python runtime
 on the server; every lake in its own folder, real data beside the demo and never over it; resizable panels and columns everywhere.**
 
-VaR check against 2.9.11.c: <result>
+**VaR check against 2.9.11.c:** 7,414,817 figures and 7,101,824 text fields equal bit for bit at both scenario windows (509 and
+250): 3 business dates, the MGMT, LEGAL and LL hierarchies and 28 portfolios, 1-day and 10-day, normal and stressed; VaR, ES,
+diversification, limits, component, incremental, standalone and parametric figures; the official record and exposure equal too.
+The run moved the demo lake into `data/delta/demo` on first start and every answer stayed equal.
 
 ## What changes for VaR users
 
@@ -120,6 +123,8 @@ VaR check against 2.9.11.c: <result>
   --lake data/delta/demo` list the tables; a view, a VaR and a BI page answer as before. Scripts that name `data/delta` for the demo lake
   name `data/delta/demo` now (`lake build --lake`, `lake maintain --root`, your copy of `deploy/lake-maintenance.yaml`). A site that sets
   `DRISHTI_DELTA_ROOT` keeps its root and nothing moves. `drishti.lakes.relocate-on-start: false` leaves the move to the command.
+  After the move, the data-version ids in the answers' provenance change (they follow the lake's location), so caches keyed on
+  them rebuild once; the figures are unchanged.
 - **Your connector files.** Each connector file the server once generated with the demo lake's old root
   (`root: "${DRISHTI_DELTA_ROOT:./data/delta}"`, `domain: ...`) is rewritten at the first start after the move to `lake: demo` and
   `lake-tables: <domain>.<table>`, every reading setting kept, the file before kept beside it as `<name>.yaml.before-lake-<time>.bak`; the
