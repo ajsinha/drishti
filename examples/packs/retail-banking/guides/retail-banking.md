@@ -41,7 +41,7 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 
 | Connector | Folder | Kinds |
 |---|---|---|
-| `retail-store` | `data/delta/retail/` | `customer`, `deposit-account`, `mortgage`, `card-account`, `personal-loan`, `branch`, `collections-case`, `retail-portfolio` |
+| `retail-store` | `data/delta/demo/retail/` | `customer`, `deposit-account`, `mortgage`, `card-account`, `personal-loan`, `branch`, `collections-case`, `retail-portfolio` |
 
 ## Kinds
 
