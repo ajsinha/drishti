@@ -79,7 +79,19 @@ public class EngineConfiguration {
 
     @Bean(destroyMethod = "close")
     public SourceRegistry sourceRegistry(SourcesProperties props, JsonCodec codec, org.springframework.core.env.Environment env) {
-        return new SourceRegistry(new PluginDiscovery().discover(props.pluginDir()), props, codec, com.ash.drishti.common.RetryPolicy.of(env::getProperty, "connectors"),
+        // a connector plugin of a module that is off is not offered (docs/architecture/ACCESS_MODEL.md: module off = gone everywhere)
+        java.lang.ref.WeakReference<org.springframework.core.env.Environment> ref = new java.lang.ref.WeakReference<>(env);
+        com.ash.drishti.registry.AccessRegistry access = com.ash.drishti.registry.AccessRegistries.shared(env, k -> {
+            org.springframework.core.env.Environment e = ref.get();
+            try {
+                return e == null ? null : e.getProperty(k);
+            } catch (IllegalArgumentException ex) {
+                return null;
+            }
+        }, EngineConfiguration.class.getClassLoader());
+        java.util.List<com.ash.drishti.api.SourcePlugin> plugins = new PluginDiscovery().discover(props.pluginDir()).stream()
+                .filter(pl -> access.classOn(pl.getClass().getName())).toList();
+        return new SourceRegistry(plugins, props, codec, com.ash.drishti.common.RetryPolicy.of(env::getProperty, "connectors"),
                 com.ash.drishti.engine.source.OfflineMode.of(env::getProperty));
     }
 

@@ -14,32 +14,30 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The Notebook (docs/guides/USER_GUIDE.md). Theme variables only; the page keeps the strict CSP (no inline style). */
-.bx { display: flex; flex-direction: column; gap: .8rem; min-width: 0; }
+.bx { display: flex; flex-direction: column; gap: var(--d-sp-12_8); min-width: 0; }
 .bx .bi-form { max-width: none; }
-.bx-fields { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .5rem .8rem; }
-.bx-table { display: flex; flex-wrap: wrap; gap: .2rem .9rem; align-items: center; margin: .2rem 0; }
-.bx-check { flex-direction: row !important; align-items: center; gap: .3rem !important; }
-.bx-inline { flex-direction: row !important; align-items: center; gap: .4rem !important; }
-.bx-info { margin: 0; color: var(--d-muted); font-size: .9rem; }
-.bx-tabs { display: flex; gap: .4rem; flex-wrap: wrap; }
-.bx-cell { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .5rem; margin: .5rem 0; display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
-.bx-code { width: 100%; box-sizing: border-box; font-size: .85rem; }
-.bx-bar { display: flex; gap: .4rem; flex-wrap: wrap; align-items: center; }
+.bx-fields { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: var(--d-sp-8) var(--d-sp-12_8); }
+.bx-table { display: flex; flex-wrap: wrap; gap: var(--d-sp-3_2) var(--d-sp-14_4); align-items: center; margin: var(--d-sp-3_2) 0; }
+.bx-check { flex-direction: row !important; align-items: center; gap: var(--d-sp-4_8) !important; }
+.bx-inline { flex-direction: row !important; align-items: center; gap: var(--d-sp-6_4) !important; }
+.bx-info { margin: 0; color: var(--d-muted); font-size: var(--d-fs-14_4); }
+.bx-tabs { display: flex; gap: var(--d-sp-6_4); flex-wrap: wrap; }
+.bx-cell { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: var(--d-sp-8); margin: var(--d-sp-8) 0; display: flex; flex-direction: column; gap: var(--d-sp-6_4); min-width: 0; }
+.bx-code { width: 100%; box-sizing: border-box; font-size: var(--d-fs-13_6); }
+.bx-bar { display: flex; gap: var(--d-sp-6_4); flex-wrap: wrap; align-items: center; }
 .bx-out { min-width: 0; overflow-x: auto; }
-.bx-pre { margin: .2rem 0; padding: .4rem .6rem; background: var(--d-surface); border-radius: var(--d-radius); overflow-x: auto; font-size: .82rem; white-space: pre-wrap; }
-.bx-chart { height: 18rem; min-width: 0; }
-.bx-chart .bi-chart { height: 100%; }
+.bx-pre { margin: var(--d-sp-3_2) 0; padding: var(--d-sp-6_4) var(--d-sp-9_6); background: var(--d-surface); border-radius: var(--d-radius); overflow-x: auto; font-size: var(--d-fs-13_12); white-space: pre-wrap; }
 @media (max-width: 600px) { .bx-bar > * { flex: 1 1 auto; } }
 /* long titles in the Notebook and Promote-to selects wrap inside the page instead of widening it */
 .bx select, .bx .studio-select { max-width: 100%; min-width: 0; }
-.bx-promote { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .9rem; margin: 0; }
+.bx-promote { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-6_4) var(--d-sp-14_4); margin: 0; }
 .bx-promote > label, .bx-inline, .bx-engine label { min-width: 0; max-width: 100%; }
 @media (max-width: 600px) {
   .bx-promote > label, .bx-inline, .bx-engine label { flex-wrap: wrap; width: 100%; }
   .bx-promote select, .bx-inline select, .bx-engine select, .bx-promote input { flex: 1 1 100%; width: 100%; }
 }
-.bx-more { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: .4rem .8rem; }
+.bx-more { border: 1px solid var(--d-border); border-radius: var(--d-radius); padding: var(--d-sp-6_4) var(--d-sp-12_8); }
 .bx-more summary { cursor: pointer; font-weight: 600; }
-.bx-extras { list-style: none; margin: .4rem 0; padding: 0; display: flex; flex-direction: column; gap: .25rem; }
-.bx-extra { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
-.bx-small { min-height: 1.8rem; padding: .1rem .5rem; }
+.bx-extras { list-style: none; margin: var(--d-sp-6_4) 0; padding: 0; display: flex; flex-direction: column; gap: var(--d-sp-4); }
+.bx-extra { display: flex; align-items: center; gap: var(--d-sp-6_4); flex-wrap: wrap; }
+.bx-small { min-height: 1.8rem; padding: var(--d-sp-1_6) var(--d-sp-8); }

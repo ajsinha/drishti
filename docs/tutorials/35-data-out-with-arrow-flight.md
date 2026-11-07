@@ -210,7 +210,7 @@ for seq, batch in f.stream(req):
     print(seq, batch.num_rows)
 ```
 
-In another window apply an intraday batch (VaR → Intraday → Apply, `POST /api/v1/var/intraday/streams/{name}/apply`, or, without a PV
+In another window apply an intraday batch (VaR → Intraday → Apply, `POST /api/v1/risk/var/intraday/streams/{name}/apply`, or, without a PV
 topic, the stand-in pricing system `tools/pvgen/intraday.py --batches 1 --lake … --server …`): a new batch arrives with a higher sequence.
 Stop the loop, then `f.stream(req, resume=seq)`.
 

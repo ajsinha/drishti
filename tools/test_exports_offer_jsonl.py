@@ -30,6 +30,7 @@ pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it
 
 ROOT = Path(__file__).resolve().parents[1]
 SERVER = ROOT / "drishti-server" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "server"
+BANKING = ROOT / "drishti-banking" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "banking"   # the banking module's (DOMAIN_MODULES.md)
 CONSOLE = ROOT / "drishti-console"
 
 
@@ -46,15 +47,15 @@ class Server(unittest.TestCase):
             "dist/StatementController.java": 'format.equals("jsonl")',
             "dist/SubscriptionService.java": '"html", "pdf", "xlsx", "jsonl"',
             "reports/ReportService.java": 'format.equals("jsonl")',
-            "exposure/ExposureController.java": '"/captures/{id}/jsonl"',
-            "var/VarController.java": '"/captures/{id}/jsonl"',
+            "banking:exposure/ExposureController.java": '"/captures/{id}/jsonl"',
+            "banking:var/VarController.java": '"/captures/{id}/jsonl"',
             "net/ViewForwardFilter.java": 'Set.of("csv", "jsonl", "compare")'}
 
     def test_every_server_export_offers_jsonl(self):
         for rel, proof in self.WANT.items():
             with self.subTest(rel):
-                self.assertIn(proof, text(SERVER / rel))
-        self.assertIn('"jsonl".equalsIgnoreCase(format)', text(SERVER / "exposure/ExposureController.java"))      # the profile's format=
+                self.assertIn(proof, text(BANKING / rel[8:] if rel.startswith("banking:") else SERVER / rel))
+        self.assertIn('"jsonl".equalsIgnoreCase(format)', text(BANKING / "exposure/ExposureController.java"))      # the profile's format=
         self.assertIn('"jsonl".equalsIgnoreCase(format)', text(SERVER / "bi/runs/RunsController.java"))           # a stored result
 
     def test_the_compliance_export_is_jsonl(self):

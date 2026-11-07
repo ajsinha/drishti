@@ -178,7 +178,7 @@ it changes); a test holds every page of the console to an entry or to the page i
 | Edition or lens | Menus |
 |---|---|
 | Drishti Risk | Views · **Engines** · BI · Admin · Help |
-| Drishti Trading | Views · Engines · **Markets** (rates `CRV`, `REPO`, `FIX`; vols `IRV`, `CPV`, `FXV`; FX `FX`, `FXF`; credit `CDS`, `BND`; equities and commodities `EQ`, `EQX`, `CMD`, `CMDC`) · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `TVAL`, `PNLV`, `DPNL`, `PNL`, `SENS`) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `XWIF`, `EXP`) · Help. BI and Admin by command: `BI <GO>`, `ADMIN <GO>` (administrators; `ADMIN LOADS` opens that page) |
+| Drishti Trading | Views · Engines · **Markets** (rates `CRV`, `REPO`, `FIX`; vols `IRV`, `CPV`, `FXV`; FX `FX`, `FXF`; credit `CDS`, `BND`; equities and commodities `EQ`, `EQX`, `CMD`, `CMDC`) · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `TVAL`, `PNLV`, `DPNL`, `PNL`, `SENS`) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `PREDEAL`, `EXP`) · Help. BI and Admin by command: `BI <GO>`, `ADMIN <GO>` (administrators; `ADMIN LOADS` opens that page) |
 | Drishti Market | Views · **Curves** (`CRV`, `REPO`, `FIX`, `INF`) · **Volatility** (`IRV`, `CPV`, `FXV`, `EQV`, `CMDV`) · **FX** (`FX`, `FXF`, `FXV`) · **Credit** (`CDS`, `BND`) · BI · Admin · Help |
 | Drishti World | Views · **Economies** (*A country* `ECON …`, `MACRO`, `FCST`, `REGE`) · **Markets** (`NEWS`, `QUOTE`, `IDX`) · **Companies** (`USEQ`, `EDGAR`, `LEIC`, `FUND`) · BI · Admin · Help |
 

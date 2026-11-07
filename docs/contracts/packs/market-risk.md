@@ -1281,7 +1281,7 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | Contract | [var-result.contract.yaml](../../../config/packs/market-risk/contracts/var-result.contract.yaml) · version 1.3 |
 | Class | computed |
 | Status | active |
-| Source | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.server.var.VarResultEngine) |
+| Source | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.banking.var.VarResultEngine) |
 | Grain | One answer per question (the scope asked for and the business date), computed when asked. |
 | Key | — |
 | Id pattern | — |

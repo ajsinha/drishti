@@ -914,7 +914,7 @@ one input the pack adds; it is a small fundamental kind the bank or the risk off
 own `pages:`, `layout:` and `style:`.
 
 **Command, CLI and API (the framework's).** `VAR REPORT board-pack 2026-Q3` opens the run on the framework's review and sign-off
-screen; `drishti.py var report run board-pack 2026-Q3` generates it; `GET /api/v1/var/reports/board-pack/runs/2026-Q3/file?format=pdf`
+screen; `drishti.py var report run board-pack 2026-Q3` generates it; `GET /api/v1/risk/var/reports/board-pack/runs/2026-Q3/file?format=pdf`
 downloads a signed run (before the last approval, a draft titled *DRAFT, not signed off*).
 
 **Phone.** Generating, reviewing and signing are **desk**; the signed PDF opens in the phone's own viewer from the CRO phone's button,
@@ -1369,7 +1369,7 @@ beside the sequence (the **Sentences** view). One tab, one answer, three views. 
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
-| E1 | Header and pickers | *VaR · why it moved*, `VAR EXPLAIN BANK`; From (yesterday, month-end, last board, a date), To (official, now), Sequence or Shapley, horizon, confidence, hierarchy; Export xlsx, Copy link | `GET /api/v1/var/explain` | change a picker: every panel redraws | built: From, To, Download the working (.xlsx), the view switch; the order is the setting; Shapley planned; 1-day at the configured confidence (`confidence` on the API) |
+| E1 | Header and pickers | *VaR · why it moved*, `VAR EXPLAIN BANK`; From (yesterday, month-end, last board, a date), To (official, now), Sequence or Shapley, horizon, confidence, hierarchy; Export xlsx, Copy link | `GET /api/v1/risk/var/explain` | change a picker: every panel redraws | built: From, To, Download the working (.xlsx), the view switch; the order is the setting; Shapley planned; 1-day at the configured confidence (`confidence` on the API) |
 | E2 | Tiles | VaR 2026-09-29, VaR 2026-09-30 (112,041,646), the change (−0.60m, *the steps add up exactly*), limit use 75.1% → 74.7%, the VaR scenario's date before and after | the explanation's states and limit line | — | built |
 | E3 | Tab | *Why it moved* beside the VaR page's tabs, drawn with the standard panel kinds | the VaR page | — | built |
 | E3a | View switch | **Waterfall · Matrix · Sentences** above the panels; Waterfall the default | `view=` in the address; the person's settings | switch: redraw from the same answer | built |

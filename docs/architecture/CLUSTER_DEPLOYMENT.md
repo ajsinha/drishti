@@ -236,7 +236,7 @@ work, not for correctness.
 | **Console** | `drishti-console`, 4 workers | `DRISHTI_CONSOLE_WORKERS=4`, `backend.urls`, `discover: true`, same `DRISHTI_SESSION_SECRET` and token secret | 2 / 3 / 4–6 (2–3 after `D6`) | a coordinator (pilot only) | shard owners, loaders |
 | **VaR coordinator** | full packs or the `risk` edition; VaR sharding on, `coordinator-only: true` | `drishti.var.sharding.coordinator-only`, `drishti.var.threads` half the cores when BI also runs | 0 (all-in-one) / 2 / 3 | exposure coordinator | loaders |
 | **VaR shard owner** | `market-risk` (and what it needs); `peer-only-packs: [market-risk]` optional | sharding block, `zone-tag: az`, `drishti.var.threads: 0` (every core), BI off | 3 / 6 / 16 | nothing heavy | BI, loaders, consoles |
-| **Exposure server** (today) / **owner** (PLANNED `CD10`) | `counterparty-risk` | `drishti.ccr.exposure.*`, compute pool `exposure` | 1 / 1 → 4 / 8 | its compute pool | VaR owners (page cache) |
+| **Exposure server** (today) / **owner** (PLANNED `CD10`) | `counterparty-risk` | `drishti.ccr.exposure.*` | 1 / 1 → 4 / 8 | none | VaR owners (page cache) |
 | **BI and reporting** | Rūpaka, BI runs, scheduled reports | `config/runs/runs.yaml` workers, `drishti.bi.query.*` | 0 / 2 / 3 | data-serving | VaR owners |
 | **Data-serving** | entity pages, search, type-ahead, data map, World, Market packs | connector caches, `index.max-disk` | 0 / 2 / 3 | BI | VaR owners |
 | **Loader** | `drishti-lakeload` jobs (batch), `lake maintain` | `memory.budget-mb`, `parallel.writers`, spill on NVMe | 1 / 1 + standby / 2 + standby | nothing during the load window | any server |
@@ -522,8 +522,8 @@ So **a shard in use always has a ready holder**: the release waits for the succe
 version of a shard is released once the newer has been ready here for the grace period; a shard of a replaced cut once the grace has
 passed. A date put together again is swapped in whole only when complete (`VarService.swap`); until then the loaded date answers.
 
-**Drain.** `POST /api/v1/var/shards/drain {"on": true}` or `drishti.py var shards --drain` (administrators): the member leaves every view at
-once, keeps answering and serving its shards until each is handed over, then `GET /api/v1/var/shards` reports `"safeToStop": true`. A
+**Drain.** `POST /api/v1/risk/var/shards/drain {"on": true}` or `drishti.py var shards --drain` (administrators): the member leaves every view at
+once, keeps answering and serving its shards until each is handed over, then `GET /api/v1/risk/var/shards` reports `"safeToStop": true`. A
 member started with `drishti.var.sharding.drain: true` takes no shard. The drain flag is in memory: a restart without the setting takes
 shards again. Drishti\*net's own drain (`POST /api/v1/net/drain`, the member's `drained` flag) is separate: it stops forwarded work and makes
 the member non-routable, which also takes it out of the shard view.
@@ -566,7 +566,7 @@ its own.
 
 **Scatter-gather** (`ShardGather`, VAR_SHARDING section 6): a scope's rows are split by shard; each shard's part goes to **one** member in
 this order: owners that announced it ready at the data version the date was put together from (first owner first), any other member that
-announced it so (an old owner mid-handover), then owners not yet ready (they build from the lake). `POST /api/v1/var/partial`, signed, one
+announced it so (an old owner mid-handover), then owners not yet ready (they build from the lake). `POST /api/v1/risk/var/partial`, signed, one
 hop, with the caller's on-behalf-of token; the answer is labelled with shard, map digest, data digest and row count and refused if any
 differs. **Exactly one answer per shard**, added in shard order; a shard nobody answers fails the whole scope with `503 DRS-5215` naming
 it; a member at another data version answers `409 DRS-5216` and the next is asked. **Never a partial VaR.**
@@ -771,7 +771,7 @@ scope that cuts a set (a desk inside a counterparty) is recomputed by the set's 
 
 Replicas, zones, handover, drain and failure behave exactly as VaR's (sections 4.5 to 4.8): the same `ShardOwners`, `ShardHandover`,
 `ShardMembership`, `ShardPeers` under the digest service of its own (proposed `exp-shards`). **Pre-deal what-ifs** (`method: paths`) go to
-the candidate's counterparty's owner, whose Python `exposure` pool reads the touched sets' matrices locally; a candidate without a netting
+the candidate's counterparty's owner, whose exposure engine reads the touched sets' matrices locally; a candidate without a netting
 set is its own set and may go to any owner.
 
 ### 6.5 Tests and the plug-in
@@ -807,7 +807,7 @@ set is its own set and may go to any owner.
 | Node answers | from aggregates, under 1 ms | from per-counterparty statistics or a sum of its sets |
 | Load | per owner, its key ranges | per owner, its sets, one at a time |
 | Intraday | file batches and Kafka windows | none (a new run reloads) |
-| What-if | the basket's vector through the same path | to the counterparty's owner (Python pool) |
+| What-if | the basket's vector through the same path | to the counterparty's owner (its exposure engine) |
 
 ---
 
@@ -1090,7 +1090,7 @@ skeletons are available. Whole-cluster stop: in reverse.
 | Role | Look at | Alert |
 |---|---|---|
 | every server | Admin → Health (net, disk, direct memory), Admin → Caches, `/actuator/prometheus` | heap after GC > 85% for 10 min; disk red; direct > 80% |
-| owners | `GET /api/v1/var/shards` (`drishti.py var shards`): shards held and ready, refusals | any `DRS-5215` in 5 min; a shard with one ready owner for more than 10 min |
+| owners | `GET /api/v1/risk/var/shards` (`drishti.py var shards`): shards held and ready, refusals | any `DRS-5215` in 5 min; a shard with one ready owner for more than 10 min |
 | cluster | Admin → Net, `drishti_net_members{state}`, `drishti_net_forwarded_total` | `suspect` > 0 for 5 min; `dead` > 0 |
 | consoles | `/readyz`, CPU, pages a second | p95 page > 300 ms |
 | loader | job exit code, the manifest | missed expectation (Data loads page) |
@@ -1139,7 +1139,7 @@ A runbook and a twice-yearly exercise are PLANNED (`CD11`).
 | `con-1..3` | 3 | 4 / 8 GB / 20 GB | `DRISHTI_CONSOLE_WORKERS=4`, `DRISHTI_BACKEND_URLS=https://coord-1:18480,https://coord-2:18480`, `DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS=true`, one `DRISHTI_CONSOLE_RELAY_KEY`, ports 17490–17493 open between the consoles |
 | `coord-1..2` | 2 | 16 / 64 GB / 100 GB | `-Xmx36g`, `drishti.var.sharding.coordinator-only=true`, tags `az:dc1-a` / `az:dc1-b` |
 | `var-1..6` | 6 | 16 / 128 GB / 800 GB NVMe | `-Xmx36g`, `drishti.var.threads=0`, tags split over two racks or halls |
-| `exp-1` (then `exp-1..4` with `CD10`) | 1 → 4 | 16 / 128 GB / 2 TB NVMe | counterparty-risk; compute pool `exposure` |
+| `exp-1` (then `exp-1..4` with `CD10`) | 1 → 4 | 16 / 128 GB / 2 TB NVMe | counterparty-risk |
 | `bi-1..2` | 2 | 16 / 64 GB / 500 GB | Rūpaka, `config/runs/runs.yaml` workers 2–4 |
 | `data-1..2` | 2 | 16 / 64 GB / 1 TB NVMe | entity pages, search, World, Market |
 | `load-1` (+ standby) | 1 + 1 | 32 / 64 GB / 100 GB NVMe | `drishti-lakeload`, cron or the bank's scheduler |
@@ -1687,7 +1687,7 @@ gossip changes:
 | `sources` per kind | connector name, type, **table identity** (a Delta table's id and location; section 10), `earliestDate` and `latestDate` (the oldest and newest business dates it holds; a node that goes down counts only for the dates between them, section 7), `dataVersion` of the latest date, whether columnar |
 | `load` | requests a second over the last minute (from `RequestActivity`) and p95 latency, for choosing between peers |
 | `calendar` | the business calendar (`DRISHTI_CALENDAR`): the as-of of a forwarded request must mean the same date |
-| `services.engines` | the compute engines of this node and their state (`var:running,frtb-sa:off,...`; [COMPUTE_ENGINES.md section 9](COMPUTE_ENGINES.md#9-in-a-cluster-each-node-runs-its-own-engines)): a request for an engine's API (`/api/v1/frtb/**`) arriving at a node that does not run it is forwarded to the least loaded node that does, signed for the caller (the answer carries `X-Drishti-Engine-Node`); none does: `404 DRS-1020`; the console offers an engine when any reachable node runs it |
+| `services.engines` | the compute engines of this node and their state (`var:running,frtb-sa:off,...`; [COMPUTE_ENGINES.md section 9](COMPUTE_ENGINES.md#9-in-a-cluster-each-node-runs-its-own-engines)): a request for an engine's API (`/api/v1/risk/frtb/**`) arriving at a node that does not run it is forwarded to the least loaded node that does, signed for the caller (the answer carries `X-Drishti-Engine-Node`); none does: `404 DRS-1020`; the console offers an engine when any reachable node runs it |
 
 A pack listed in `peer-only-packs` (`node.yaml`) is loaded and served to peers (view and data forwarding, search shares) but hidden from
 this node's own users: not in its catalog, forms home, type-ahead or command line, and a direct request for its kinds from
@@ -2206,7 +2206,7 @@ Each phase as it was built, with anything that differs from the design above. Th
 Drishti*net as it is: membership and liveness from the member table; **readiness in the capability digest**, a new optional field
 `services` (name to compact text; the VaR engine publishes `var-shards`: on, owner, draining, per date the shard map and the shards ready
 with their data digest), so a change raises the digest's hash, gossip carries it and peers pull it within a round; the coordinator's calls
-(`POST /api/v1/var/partial`, `GET /api/v1/var/shards/skeleton`) are signed one-hop calls, a partial with the caller's on-behalf-of token so
+(`POST /api/v1/risk/var/partial`, `GET /api/v1/risk/var/shards/skeleton`) are signed one-hop calls, a partial with the caller's on-behalf-of token so
 the owner applies the caller's rights too (masks and entitlements on both sides), the endpoints refusing an unsigned call (`401
 DRS-5051`). `drishti-net` itself gained only the `services` field (no Spring, no engine). The machinery is measure-agnostic
 (`com.ash.drishti.compute.shard`, `com.ash.drishti.server.shard`); VaR is its first measure.

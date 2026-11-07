@@ -47,10 +47,10 @@ class EngineCatalogueTest {
         assertThat(c.neededBy("exposure")).isEmpty();
         assertThat(c.get("memory-lake").orElseThrow().liveOn()).isFalse();
         assertThat(c.all().stream().filter(e -> !e.installed()).map(EngineCatalogue.Entry::id)).isEmpty();   // every listed engine ships
-        assertThat(c.forPath("/api/v1/frtb/sa").orElseThrow().id()).isEqualTo("frtb-sa");
-        assertThat(c.forPath("/api/v1/sensitivities").orElseThrow().id()).isEqualTo("sensitivities");
+        assertThat(c.forPath("/api/v1/risk/frtb/sa").orElseThrow().id()).isEqualTo("frtb-sa");
+        assertThat(c.forPath("/api/v1/risk/sensitivities").orElseThrow().id()).isEqualTo("sensitivities");
         assertThat(c.forPath("/api/v1/variance")).isEmpty();
-        assertThat(c.forPath("/api/v1/var/explain").orElseThrow().id()).isEqualTo("var");
+        assertThat(c.forPath("/api/v1/risk/var/explain").orElseThrow().id()).isEqualTo("var");
         for (EngineCatalogue.Entry e : c.all()) {
             assertThat(e.list("words")).allMatch(w -> w.matches("[A-Z][A-Z0-9]*( [A-Z0-9]+)?"));
             assertThat(e.switchKey()).isEqualTo("drishti.engines." + e.id() + ".enabled");
