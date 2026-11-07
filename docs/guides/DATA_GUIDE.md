@@ -1393,7 +1393,7 @@ data/delta/
 ```
 
 `lake: risklake` in a `.ready` file (or a rule's `lake:`) sends the file there. A lake that has no file yet is **created** by its first
-load: `config/lakes/risklake.yaml`, format delta, root `${drishti.data.dir:./data}/delta/risklake`, with the recommended entry of each
+load: `config/lakes/<lake>.yaml` (here risklake.yaml), format delta, root `${drishti.data.dir:./data}/delta/risklake`, with the recommended entry of each
 table that lands in it (the pack's layout, copied once; edit it there from then on). Loading real data this way never touches the demo
 lake or its data. To test with real data:
 
