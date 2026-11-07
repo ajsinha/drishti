@@ -77,7 +77,7 @@ sources:
   licence: CC BY 3.0 IGO
   internal-only: false
   used-for: social indicators
-refresh: tools/publicdata/world_economy.py
+refresh: tools/drishti.py feed run world-economy
 generated-by: tools/packgen/world/make.py
 ---
 # The world-economy pack
@@ -657,7 +657,7 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
-`python3 tools/publicdata/world_economy.py status` lists the external sources, their licences and when each was last refreshed (offline); `refresh --dry-run` shows what a refresh would fetch and write, changing nothing; `refresh` fetches, writes and checks. The External data help page (docs/guides/EXTERNAL_DATA.md) has worked examples for Linux and Windows.
+The data feed `world-economy` (config/feeds/world-economy.yaml) pulls `economy`, `macro-indicator`, `economic-forecast`, `labour-market`, `fiscal-position`, `region-economy`, `jurisdiction`, `party`, `office-holder`, `election`, `region`, `social-indicator`: `python3 tools/drishti.py feed run world-economy` fetches them daily into `data/feeds/world-economy/<date>/` and loads them into the lake `worldlake` (internal use only); `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/world/make.py`; its `--check` fails when the committed files differ from what it would write.
 

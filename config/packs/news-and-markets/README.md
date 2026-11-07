@@ -64,7 +64,7 @@ sources:
   licence: As above; committed for the offline demo machine by the owner's choice
   internal-only: true
   used-for: the offline demo lake
-refresh: tools/publicdata/news_and_markets.py
+refresh: tools/drishti.py feed run news-and-markets
 generated-by: tools/packgen/readme.py news-and-markets
 ---
 # The news-and-markets pack
@@ -227,7 +227,7 @@ Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`, `D
 The topics and companies are written by `config/packs/news-and-markets/tools/make_samples.py`; the offline snapshot by
 `tools/publicdata/news_and_markets.py`.
 
-`python3 tools/publicdata/news_and_markets.py status` lists the external sources, their licences and when each was last refreshed (offline); `refresh --dry-run` shows what a refresh would fetch and write, changing nothing; `refresh` fetches, writes and checks. The External data help page (docs/guides/EXTERNAL_DATA.md) has worked examples for Linux and Windows.
+The data feed `news-and-markets` (config/feeds/news-and-markets.yaml) pulls `quote`, `news`: `python3 tools/drishti.py feed run news-and-markets` fetches them daily into `data/feeds/news-and-markets/<date>/` and loads them into the lake `newslake` (internal use only); `--dry-run` says what it would fetch, changing nothing; `--snapshot` refreshes the committed snapshot in data/testdata instead; `feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries for Linux and Windows.
 
 The pack's files are written by `tools/packgen/readme.py news-and-markets`; its `--check` fails when the committed files differ from what it would write.
 

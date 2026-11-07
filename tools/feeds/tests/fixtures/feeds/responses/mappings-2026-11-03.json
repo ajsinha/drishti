@@ -1,0 +1,17 @@
+{
+ "date": "2026-11-03",
+ "data": [
+  {
+   "id": "WABTUS3WXXX",
+   "type": "BIC",
+   "lei": "06BTX5UWZD0GQ5N5Y745",
+   "name": "WESTINGHOUSE AIR BRAKE TECHNOLOGIES CORPORATION"
+  },
+  {
+   "id": "US0378331005",
+   "type": "ISIN",
+   "lei": "HWUPKR0MPOU8FGXBT394",
+   "name": "APPLE INC."
+  }
+ ]
+}

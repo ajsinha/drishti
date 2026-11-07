@@ -15,7 +15,7 @@
 """Download the us-equities pack's public data into a cache folder (the network; make.py then builds the pack offline).
 
 Sources, all openly licensed (docs/guides/packs/US_EQUITIES.md, Data sources and licences):
-  SEC Form N-PORT        the index members: the stocks the tracking ETFs SPY (S&P 500), QQQ (Nasdaq-100) and DIA (Dow) report
+  SEC Form N-PORT        the index members: the stocks the tracking ETFs SPY (S&P 500), QQQ (Nasdaq-100), DIA (Dow) and IWM (Russell 2000) report
   (US public domain)      holding (trackers.py, from the funds pack's cache; no download here)
   Wikidata (CC0)          CIK, ticker, LEI, headquarters, founded, website; its index members too (often out of date), whose
                           companies stay in the pack when an index has dropped them
@@ -48,7 +48,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
 DEFAULT_CACHE = ROOT / "data" / "cache" / "us-equities"
-USER_AGENT = os.environ.get("DRISHTI_SEC_USER_AGENT", "Drishti research ajsinha@gmail.com")
+USER_AGENT = os.environ.get("DRISHTI_FEEDS_USER_AGENT") or "Drishti-feeds/1.0 (Drishti data feeds)"   # the one User-Agent of every feed (docs/guides/FEEDS_GUIDE.md)
 INDEXES = {"DJIA": "Q180816", "NDX": "Q507306", "SP500": "Q242345"}
 # curated lists, kept here (not in Wikidata): code -> (name, tickers as the SEC ticker file lists them). Only SEC filers can be in this
 # pack; banks with no SEC filings (National Bank of Canada, Standard Chartered, Nationwide...) are in the gleif pack's bank groups.

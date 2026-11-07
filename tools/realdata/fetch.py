@@ -22,6 +22,7 @@ Cache layout:  wb_country.json  wb/<code>.json  imf/<code>.json  imf_indicators.
 from __future__ import annotations
 
 import json
+import os
 import time
 import urllib.error
 import urllib.parse
@@ -29,7 +30,7 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-UA = "drishti-realdata/1.0 (public-data demo loader; contact ajsinha@gmail.com)"
+UA = os.environ.get("DRISHTI_FEEDS_USER_AGENT") or "Drishti-feeds/1.0 (Drishti data feeds)"
 
 
 class Fetcher:

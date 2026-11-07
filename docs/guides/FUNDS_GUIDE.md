@@ -564,7 +564,7 @@ the bar chart's calendar-year returns as XBRL facts per share class, so the pack
 summary in the four quarters read; a few fund families file the bar chart under a custom tag and show no returns). The pack also reads
 the committed us-equities snapshot (companies, their SIC divisions, LEIs and shares outstanding; index members). SEC asks for a
 descriptive User-Agent with a contact and at most 10 requests a second: the refresh script uses exactly the us-equities pack's setting
-(`DRISHTI_SEC_USER_AGENT`, else the default in `tools/packgen/us_equities/fetch.py`) and one request at a time. The External data page,
+(`DRISHTI_FEEDS_USER_AGENT`, else the default in `tools/packgen/us_equities/fetch.py`) and one request at a time. The External data page,
 [EXTERNAL_DATA.md](EXTERNAL_DATA.md#funds), lists every source of every pack.
 
 ## 13. How the 200 are chosen

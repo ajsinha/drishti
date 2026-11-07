@@ -549,8 +549,7 @@ env:
   - { name: DRISHTI_MINIO_SHA256, by: tools, default: ~, sets: "S3 simulator tests", meaning: "Its expected SHA-256" }
   - { name: DRISHTI_PACKS_OUT, by: tools, default: ~, sets: "pack generators", meaning: "Where the pack generators write" }
   - { name: DRISHTI_ABOUT_DIR, by: tools, default: ~, sets: "pack generators", meaning: "Where the pack generators write the About files" }
-  - { name: DRISHTI_GLEIF_USER_AGENT, by: tools, default: ~, sets: "gleif fetch", meaning: "The User-Agent sent to GLEIF by the gleif refresh script" }
-  - { name: DRISHTI_SEC_USER_AGENT, by: tools, default: ~, sets: "SEC fetch", meaning: "The User-Agent (with a contact) the SEC requires of the us-equities refresh script" }
+  - { name: DRISHTI_FEEDS_USER_AGENT, by: tools, default: "Drishti-feeds/1.0 (Drishti data feeds)", sets: "drishti.py feed", meaning: "The User-Agent every data feed sends (the SEC asks for a contact in it: your organisation and a team mailbox)" }
   - { name: DRISHTI_DOCTOR_PORTS, by: tools, default: ~, sets: "drishti.py doctor", meaning: "The ports doctor checks" }
   - { name: DRISHTI_JAR_DIR, by: tools, default: drishti-server/target, sets: "screenshot tools", meaning: "Where the screenshot tools find the server jar" }
   - { name: DRISHTI_SHOTS_WORK, by: tools, default: ~, sets: "screenshot tools", meaning: "The screenshot tools' working folder" }

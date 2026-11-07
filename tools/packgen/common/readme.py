@@ -147,8 +147,18 @@ def problems_connector(path: Path) -> list[str]:
 
 # -- pack READMEs ----------------------------------------------------------------------------------------------------------
 
-# A pack whose public-data refresh script is not named after it (tools/publicdata/<pack with underscores>.py).
-PUBLICDATA = {"market-data": "official_market_data.py"}
+def pack_feeds(pack: str) -> list[dict]:
+    """The data feeds (config/feeds/*.yaml, docs/guides/FEEDS_GUIDE.md) that load a pack's kinds: [{feed, lake, internal, kinds,
+    snapshot}]."""
+    out = []
+    for f in sorted((ROOT / "config" / "feeds").glob("*.yaml")):
+        doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        if any((d or {}).get("pack") == pack for d in (doc.get("datasets") or {}).values()):
+            lic = doc.get("licence") or {}
+            kinds = [d.get("kind") for d in (doc.get("datasets") or {}).values() if (d or {}).get("pack") == pack]
+            out.append({"feed": doc.get("feed"), "lake": doc.get("lake"), "internal": bool(lic.get("internal-only")), "kinds": kinds,
+                        "snapshot": bool(doc.get("snapshot"))})
+    return out
 
 
 def find_intro(pack: str) -> Path | None:
@@ -397,8 +407,8 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     connectors = m.get("connectors") or {}
     routes = m.get("routes") or {}
     notes = imeta.get("fields") or {}
-    publicdata = ROOT / "tools" / "publicdata" / (PUBLICDATA.get(name) or name.replace("-", "_") + ".py")
-    refresh = imeta.get("refresh") or (str(publicdata.relative_to(ROOT)) if publicdata.is_file() else generator)
+    feeds = pack_feeds(name)
+    refresh = imeta.get("refresh") or ("tools/drishti.py feed run " + feeds[0]["feed"] if feeds else generator)
     packs = [p for p in (m.get("extends") or []) + (m.get("requires") or []) if p]
     own = set(connectors)
     settings = _env(yaml.safe_dump(connectors))
@@ -561,10 +571,14 @@ def render_pack(pack_dir: Path, generator: str | None = None, files: dict | None
     out += ["## Refreshing the data", ""]
     if isec.get("Refreshing the data"):
         out += [isec["Refreshing the data"], ""]
-    if publicdata.is_file():
-        out += [f"`python3 {publicdata.relative_to(ROOT)} status` lists the external sources, their licences and when each was last refreshed "
-                "(offline); `refresh --dry-run` shows what a refresh would fetch and write, changing nothing; `refresh` fetches, writes and "
-                "checks. The External data help page (docs/guides/EXTERNAL_DATA.md) has worked examples for Linux and Windows.", ""]
+    for fd in feeds:
+        kinds = ", ".join(f"`{k}`" for k in fd["kinds"])
+        out += [f"The data feed `{fd['feed']}` (config/feeds/{fd['feed']}.yaml) pulls {kinds}: `python3 tools/drishti.py feed run {fd['feed']}` "
+                f"fetches them daily into `data/feeds/{fd['feed']}/<date>/` and loads them into the lake `{fd['lake']}`"
+                + (" (internal use only)" if fd["internal"] else "") + "; `--dry-run` says what it would fetch, changing nothing; "
+                + ("`--snapshot` refreshes the committed snapshot in data/testdata instead; " if fd["snapshot"] else "")
+                + "`feed status` shows the last runs. The External data feeds guide (docs/guides/FEEDS_GUIDE.md) has the schedule entries "
+                "for Linux and Windows.", ""]
     out += [f"The pack's files are written by `{generator}`; its `--check` fails when the committed files differ from what it would write.", ""]
     # -- see also
     out += ["## See also", ""]

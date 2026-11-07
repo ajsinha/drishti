@@ -12,19 +12,19 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The named lakes besides the demo lake (risklake, newslake, worldlake, regulators, capitalmarket) ship as definitions: nothing shipped
-points at them (the product owner, 2026-11-07: "do not point anything to any of these lakes except the demo lake"), with one exception
-by design: the public-sector module's packs read worldlake and newslake, which their daily feeds fill (docs/guides/PUBLIC_SECTOR_GUIDE.md).
-So those two lake files hold exactly those packs' tables, only those packs' connectors (and their feeds) name them, and the other three
-lakes ship empty."""
+"""The named lakes besides the demo lake (risklake, newslake, worldlake, regulators, capitalmarket, referencelake) ship as definitions:
+nothing shipped points at them (the product owner, 2026-11-07: "do not point anything to any of these lakes except the demo lake"), with two
+exceptions by design: the data feeds (config/feeds/*.yaml) name the lake they load (the owner placed them, GLEIF in referencelake), and the
+public-sector module's packs read worldlake and newslake, which their daily feeds fill (docs/guides/PUBLIC_SECTOR_GUIDE.md). So those two
+lake files hold exactly those packs' tables, only those packs' connectors (and the feeds) name them, and the other lakes ship empty."""
 import pathlib
 import re
 
 import yaml
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-NAMED = ("risklake", "newslake", "worldlake", "regulators", "capitalmarket")
-EMPTY = ("risklake", "regulators", "capitalmarket")
+NAMED = ("risklake", "newslake", "worldlake", "regulators", "capitalmarket", "referencelake")
+EMPTY = ("risklake", "regulators", "capitalmarket", "referencelake")
 WORD = re.compile(r"\b(" + "|".join(NAMED) + r")\b")
 # the public-sector packs and the lake each one's connector reads (config/packs/<pack>/pack.yaml)
 PUBLIC_SECTOR = {"world-development": "worldlake", "central-banks": "worldlake", "national-statistics": "worldlake", "oecd": "worldlake",

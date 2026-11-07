@@ -67,7 +67,7 @@ connector `funds-store` serves them; nothing is served by the demo connector. `s
 | GLEIF golden copy, level 2 relationships | managed by, sub-fund of, feeder to | CC0 1.0 |
 
 The SEC asks for a descriptive User-Agent with a contact and at most 10 requests a second; the refresh script uses the same setting
-as the us-equities pack (`DRISHTI_SEC_USER_AGENT`). **Not included:** index weights (proprietary to the index providers; the index tab
+as the us-equities pack (`DRISHTI_FEEDS_USER_AGENT`). **Not included:** index weights (proprietary to the index providers; the index tab
 computes market-cap weights from SEC data and says so), prices and NAV history, non-US funds and money market funds (they file Form
 N-MFP, not N-PORT).
 
