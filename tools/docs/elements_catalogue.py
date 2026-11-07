@@ -18,7 +18,7 @@ What it holds, per library of the manifest: its version, title, requirements and
 its Node tests and browser file, each module's opening words, every public symbol (functions, classes with their methods, constants),
 every typedef with its properties (an option's name, type, default, whether optional, its words: the options panel is made from them),
 the string lists the code exports frozen (events, layouts, modes) and the library's lines of the product CHANGELOG. Besides: the
-libraries ELEMENTS.md section 2 plans that are not built yet, and the AG Grid adapter's mapping (ELEMENTS.md section 6) with whether the
+libraries ELEMENTS.md section 2 plans that are not built yet, and the AG Grid-style adapter's mapping (its home: drishti_grid-ag-map.js) with whether the
 adapter is built. The file is a classic script (it runs from file:// too) and a CommonJS module under Node."""
 from __future__ import annotations
 
@@ -159,15 +159,34 @@ def planned(design: str, built: set[str]) -> list[dict]:
     return out
 
 
-def ag_mapping(design: str, grid_src: Path) -> dict:
-    """The AG Grid adapter's mapping, ELEMENTS.md section 6's table (the adapter's own table once it is built), and what v1 leaves out."""
-    s6 = section(design, "6")
-    rows = [{"ag": plain(r[0]), "drishti": plain(r[1])} for r in table_rows(s6) if len(r) == 2]
-    left = re.search(r"\*\*Not covered in version 1\*\*(.*?)(?:\n\n|$)", s6, re.S)
-    index = grid_src / "drishti_index.js"
-    built = index.is_file() and re.search(r"\bagGrid\b", index.read_text(encoding="utf-8")) is not None
+AG_ROW = re.compile(r"^\s*row\('((?:[^'\\]|\\.)*)',\s*'([\w-]+)',\s*'((?:[^'\\]|\\.)*)'\)", re.M)
+AG_LEFT = re.compile(r"^export\s+const\s+AG_NOT_COVERED\s*=\s*(.*?);\s*$", re.M | re.S)
+
+
+def unquote(s: str) -> str:
+    """A single-quoted JavaScript string's text."""
+    return re.sub(r"\\(.)", r"\1", s)
+
+
+def ag_mapping(grid_src: Path) -> dict:
+    """The AG Grid-style adapter's mapping: its one home is the code (drishti_grid-ag-map.js: AG_MAPPING and AG_NOT_COVERED), read here
+    for the gallery and the migration guide's generated table; built when the grid's entry exports createGridFromAgOptions."""
+    index, code = grid_src / "drishti_index.js", grid_src / "drishti_grid-ag-map.js"
+    built = index.is_file() and re.search(r"\bcreateGridFromAgOptions\b", index.read_text(encoding="utf-8")) is not None
+    text = code.read_text(encoding="utf-8") if code.is_file() else ""
+    rows = [{"ag": unquote(m.group(1)), "state": m.group(2), "drishti": unquote(m.group(3))} for m in AG_ROW.finditer(text)]
+    left = AG_LEFT.search(text)
     return {"built": built, "scope": "pivot, row grouping, the server-side row model and tree data (O5)", "mapping": rows,
-            "notCovered": plain(left.group(1)) if left else ""}
+            "notCovered": "".join(unquote(s) for s in STRING.findall(left.group(1))) if left else ""}
+
+
+def ag_guide_table(ag: dict) -> str:
+    """The migration guide's option table (generated, never written by hand) from the adapter's mapping."""
+    def esc(s: str) -> str:
+        return s.replace("|", "\\|")
+    out = ["| AG Grid Enterprise option (public API shape) | State | drishti-grid |", "|---|---|---|"]
+    out += [f"| {esc(r['ag'])} | {r['state']} | {esc(r['drishti'])} |" for r in ag["mapping"]]
+    return "\n".join(out) + "\n\nNot covered in version 1: " + ag["notCovered"] + "\n"
 
 
 def catalogue(root: Path, manifest: dict, libs: list[tuple[str, dict, list[dict], list[dict]]]) -> dict:
@@ -197,7 +216,7 @@ def catalogue(root: Path, manifest: dict, libs: list[tuple[str, dict, list[dict]
             "changelog": logs.get(name, []),
         })
     return {"elements": manifest.get("elements"), "libraries": out, "planned": planned(design, {n for n, *_ in libs}),
-            "agGrid": ag_mapping(design, elements / "drishti-grid" / "src")}
+            "agGrid": ag_mapping(elements / "drishti-grid" / "src")}
 
 
 def script(cat: dict, header: str) -> str:

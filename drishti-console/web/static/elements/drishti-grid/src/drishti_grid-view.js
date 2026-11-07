@@ -44,6 +44,8 @@ let seq = 0;
  * @property {{rows: string[], columns: string[], values: Array<{colId: string, aggFunc: string}>, filters: Array}} [pivot] start as a pivot of these wells
  * @property {Object} [pivotOptions] the view's other parts at the start (sort, top, valueFilters, subtotals)
  * @property {boolean} [pinTotals=true] the pivot's grand total columns pinned on the right
+ * @property {boolean} [grandColumn=true] the pivot's grand total column (the total of each row across the column members)
+ * @property {boolean} [columnGroupTotals=true] the total column of each open pivot column group
  * @property {import('./drishti_grid-ui.js').ConditionalFormat[]} [conditionalFormats] colour scales and data bars
  * @property {boolean} [checkboxes=true] row checkboxes (when rows may be selected)
  * @property {function(Object): (Promise<Object[]>|Object[])} [drillThrough] the rows behind a cell (default: the rows in the page that
@@ -74,7 +76,8 @@ export class Grid extends GridBase {
     this.model = o.model || new GridModel(o);
     this.model.setEventTarget(host);
     this.formats = (o.conditionalFormats || []).slice();
-    this.ui = { pinTotals: o.pinTotals !== false, hidden: new Set(), widths: {}, grandColumn: true, phoneMeasure: null, fieldsOpen: false };
+    this.ui = { pinTotals: o.pinTotals !== false, hidden: new Set(), widths: {}, grandColumn: o.grandColumn !== false, groupTotals: o.columnGroupTotals !== false,
+      phoneMeasure: null, fieldsOpen: false };
     this.flash = new FlashTracker({ flashMs: (o.live && o.live.flashMs) || 1000 });
     this.draft = null;
     this.draftDirty = false;
@@ -427,7 +430,7 @@ export class Grid extends GridBase {
    */
   getState() {
     return Object.assign(this.model.getState(), { view: { pinTotals: this.ui.pinTotals, hidden: Array.from(this.ui.hidden), widths: Object.assign({}, this.ui.widths),
-      grandColumn: this.ui.grandColumn, formats: this.formats.slice() } });
+      grandColumn: this.ui.grandColumn, groupTotals: this.ui.groupTotals, formats: this.formats.slice() } });
   }
 
   /**
@@ -441,6 +444,7 @@ export class Grid extends GridBase {
       this.ui.hidden = new Set(s.view.hidden || []);
       this.ui.widths = Object.assign({}, s.view.widths);
       this.ui.grandColumn = s.view.grandColumn !== false;
+      this.ui.groupTotals = s.view.groupTotals !== false;
       if (s.view.formats) { this.formats = s.view.formats.slice(); }
     }
     const layout = s.layout && s.layout !== this.model.layout ? s.layout : null;

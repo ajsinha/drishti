@@ -37,7 +37,7 @@ export class GridBase {
       pin: piv ? (col.rowHeader ? 'left' : col.kind === 'grand' && ui.pinTotals ? 'right' : null) : col.pinned || null }));
     if (piv) {
       const others = list.some((d) => !d.col.rowHeader && d.col.kind !== 'grand');
-      list = list.filter((d) => !ui.hidden.has(d.col.id) && (ui.grandColumn || !others || d.col.kind !== 'grand'));
+      list = list.filter((d) => !ui.hidden.has(d.col.id) && (ui.grandColumn || !others || d.col.kind !== 'grand') && (ui.groupTotals !== false || d.col.kind !== 'total'));
     }
     if (this.phone) {
       list = phoneColumns(list, piv, ui.phoneMeasure);

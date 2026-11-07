@@ -128,16 +128,19 @@
     return { element: element, js: js };
   }
 
-  /* ---- the AG Grid option shapes of a grid's options (the adapter's mapping, ELEMENTS.md section 6) ---- */
+  /* ---- the AG Grid option shapes of a grid's options (the adapter: drishti_grid-ag-map.js holds its mapping) ---- */
 
   /**
-   * The AG Grid Enterprise options an application would pass the adapter to get this grid: columnDefs with rowGroup, pivot and aggFunc,
-   * pivotMode, the server-side row model, totals.
+   * The AG Grid Enterprise-shaped options an application passes the adapter (createGridFromAgOptions) to get this grid: columnDefs with
+   * rowGroup, pivot and aggFunc ('drishti:server' for a non-additive measure), pivotMode, the totals, the server-side row model, sideBar
+   * for the panel layout; the grid's hooks under drishti. Real functions, so the gallery mounts the grid from it.
    * @param {Object} o the grid's options
-   * @param {Map<*, string>} [names]
-   * @returns {string}
+   * @param {Map<*, string>} [names] values written by name
+   * @param {Object} [extra] more AG options (a demo's controls)
+   * @returns {{options: Object, names: Map<*, string>}}
    */
-  function agOptions(o, names) {
+  function agShape(o, names, extra) {
+    const nm = new Map(names || []);
     const p = o.pivot || null;
     const rows = p ? p.rows || [] : [], cols = p ? p.columns || [] : [];
     const vals = {};
@@ -148,20 +151,45 @@
       if (c.width) { d.width = c.width; }
       if (rows.indexOf(c.field) >= 0) { d.rowGroup = true; d.rowGroupIndex = rows.indexOf(c.field); d.hide = true; }
       if (cols.indexOf(c.field) >= 0) { d.pivot = true; d.pivotIndex = cols.indexOf(c.field); }
-      if (vals[c.field]) { d.aggFunc = c.additive === false ? 'drishti:server' : vals[c.field]; }
-      if (c.type === 'number') { d.enableValue = true; } else if (c.enableRowGroup !== false) { d.enableRowGroup = true; d.enablePivot = true; }
+      if (vals[c.field]) { d.aggFunc = c.additive === false ? 'drishti:server' + (c.measure ? ':' + c.measure : '') : vals[c.field]; }
+      if (c.type === 'number') { d.cellDataType = 'number'; d.enableValue = true; } else if (c.enableRowGroup !== false) { d.enableRowGroup = true; d.enablePivot = true; }
       if (c.editable) { d.editable = true; }
+      if (c.type !== 'number' && c.filterable !== false) { d.filter = true; }
       return d;
     });
     const ag = { columnDefs: defs };
     if (p) { ag.pivotMode = true; ag.groupDefaultExpanded = 1; ag.grandTotalRow = 'bottom'; ag.pivotRowTotals = o.pinTotals === false ? undefined : 'after'; }
-    if (o.datasource) { ag.rowModelType = 'serverSide'; ag.serverSideDatasource = { getRows: 'params => … params.success({ rowData, rowCount })' }; } else if (o.rows) { ag.rowData = o.rows; }
-    if (o.rowSelection) { ag.rowSelection = { mode: o.rowSelection === 'single' ? 'singleRow' : 'multiRow' }; }
+    if (o.datasource) {
+      ag.rowModelType = 'serverSide';
+      const ds = { getRows: (params) => params.fail() };
+      nm.set(ds, '{ getRows: (params) => yourServer(params.request).then((a) => params.success({ rowData: a.rows, rowCount: a.count })) }');
+      ag.serverSideDatasource = ds;
+    } else if (o.rows) { ag.rowData = o.rows; }
+    if (o.getRowId) { const f = (prm) => o.getRowId(prm.data, 0); nm.set(f, '(params) => ' + (nm.get(o.getRowId) || 'getRowId') + '(params.data)'); ag.getRowId = f; }
+    if (o.rowSelection && o.rowSelection !== 'none') { ag.rowSelection = { mode: o.rowSelection === 'single' ? 'singleRow' : 'multiRow' }; }
     if (o.layout === 'panel') { ag.sideBar = ['columns', 'filters']; }
-    return "// AG Grid Enterprise's option shapes, as an application written for it passes them; the adapter (planned, scope O5) builds the\n" +
-      '// drishti-grid on the left from them. Written from the public documentation only (clean room, ELEMENTS.md section 6).\n' +
-      "import { agGrid } from '/static/elements/drishti-grid/src/drishti_index.js';   // planned\n\n" +
-      "const handle = agGrid(document.getElementById('grid'), " + literal(ag, names) + ');';
+    Object.assign(ag, extra || {});
+    const dx = {};
+    ['serverPivot', 'explain', 'download', 'title', 'density'].forEach((k) => { if (o[k] !== undefined) { dx[k] = o[k]; } });
+    if (o.layout && o.layout !== 'panel') { dx.layout = o.layout; }
+    if (Object.keys(dx).length) { ag.drishti = dx; }
+    return { options: ag, names: nm };
+  }
+
+  /**
+   * The AG Grid-shaped options of a grid as the code an application writes (createGridFromAgOptions).
+   * @param {Object} o the grid's options
+   * @param {Map<*, string>} [names]
+   * @param {Object} [extra] more AG options
+   * @returns {string}
+   */
+  function agOptions(o, names, extra) {
+    const s = agShape(o, names, extra);
+    return "// AG Grid Enterprise's option shapes, as an application written for it passes them: the adapter builds this drishti-grid from\n" +
+      "// them (no AG Grid anywhere; written from its public documentation). The keys under drishti are drishti-grid's own.\n" +
+      "import { createGridFromAgOptions } from '/static/elements/drishti-grid/src/drishti_index.js';\n\n" +
+      "const api = createGridFromAgOptions(document.getElementById('grid'), " + literal(s.options, s.names) + ');\n' +
+      "api.reportUnsupported();   // every option not taken in full, with drishti-grid's way";
   }
 
   /* ---- the keyboard and ARIA smoke check ---- */
@@ -283,7 +311,7 @@
    */
   function sizeText(n) { return n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : (n / 1024).toFixed(1) + ' KB'; }
 
-  const api = { controlOf: controlOf, optionsOf: optionsOf, defaultValue: defaultValue, literal: literal, elementCode: elementCode, agOptions: agOptions,
+  const api = { controlOf: controlOf, optionsOf: optionsOf, defaultValue: defaultValue, literal: literal, elementCode: elementCode, agShape: agShape, agOptions: agOptions,
     audit: audit, nameOf: nameOf, codeSpans: codeSpans, sizeText: sizeText };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; }
   if (root && root.document) { root.Drishti = root.Drishti || {}; root.Drishti.gallery = root.Drishti.gallery || {}; root.Drishti.gallery.code = api; }

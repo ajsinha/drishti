@@ -272,37 +272,53 @@ when ready) from the engine, cancellation when the view changes; the browser hol
 ## 6. The AG Grid-style adapter
 
 **Purpose.** An application written for AG Grid Enterprise's pivoting moves to drishti-grid by keeping its configuration:
-`Drishti.agGrid(el, gridOptions)` takes the **option shapes** of AG Grid's row grouping, pivoting and server-side row model and builds a
-drishti-grid. **Clean room: written from AG Grid's public documentation only, never its source code, styling, class names or look.**
-The result looks and behaves like drishti-grid. Unknown options are reported once in the console (named, with the nearest Drishti
-option); the adapter never fails silently.
+`createGridFromAgOptions(el, gridOptions)` takes the **option shapes** of AG Grid's row grouping, pivoting, server-side row model and
+tree data (O5) and builds a drishti-grid. **Drishti never uses AG Grid**: no AG Grid code, package, CSS or look anywhere. **Clean room:
+written from AG Grid's public documentation only, never its source code, type files, styling, class names or examples.** The result
+looks and behaves like drishti-grid. Every option not taken in full is reported once in the console (named, with drishti-grid's way) and
+by `reportUnsupported()`; the adapter never fails silently.
 
-| AG Grid Enterprise option (public API shape) | drishti-grid |
-|---|---|
-| `pivotMode: true` | `pivot` on |
-| `columnDefs[].rowGroup`, `rowGroupIndex`, `enableRowGroup` | `pivot.rows` (order), field allowed in Rows |
-| `columnDefs[].pivot`, `pivotIndex`, `enablePivot` | `pivot.columns` (order), field allowed in Columns |
-| `columnDefs[].aggFunc` (`sum`, `min`, `max`, `count`, `avg`, `first`, `last`, a registered name), `enableValue`, `allowedAggFuncs`, `defaultAggFunc` | `pivot.values[].agg`, the aggregation picker's list; `aggFunc: 'drishti:server'` marks a non-additive measure |
-| `aggFuncs` (custom functions) | `aggregations.register(name, fn)` (client-side model) |
-| `groupDisplayType` (`singleColumn`, `multipleColumns`, `groupRows`), `autoGroupColumnDef` | `groupColumn: 'single' \| 'multiple' \| 'rows'`, the group column's definition |
-| `groupDefaultExpanded`, `pivotDefaultExpanded` | `expanded: { rows: n, columns: n }` |
-| `grandTotalRow`, `groupTotalRow` | `totals.grand`, `totals.rows` (`before` or `after`) |
-| `pivotRowTotals`, `pivotColumnGroupTotals` | `totals.columns`, collapsible column groups |
-| `suppressAggFuncInHeader`, `removePivotHeaderRowWhenSingleValueColumn` | `header.showAggregation`, `header.singleValueRow` |
-| `processPivotResultColDef`, `processPivotResultColGroupDef` | `pivot.columnDef(fn)`, `pivot.columnGroupDef(fn)` hooks |
-| `sideBar` (columns and filters tool panels), `rowGroupPanelShow`, `pivotPanelShow` | `layout: 'panel'` (g1 B); without a `sideBar`, the host's chosen layout |
-| `rowModelType: 'serverSide'`, `serverSideDatasource.getRows(params)` | a drishti-data source wrapping the host's function |
-| `params.request`: `startRow`, `endRow`, `rowGroupCols`, `valueCols`, `pivotCols`, `pivotMode`, `groupKeys`, `filterModel`, `sortModel` | translated to and from the request of 5.3 (window, view, groupKeys, filters, sort) |
-| `params.success({ rowData, rowCount, pivotResultFields })`, `params.fail()` | the answer: rows, row count, pivot result column keys |
-| `serverSidePivotResultFieldSeparator` | the key separator of pivot result columns |
-| `treeData`, `getDataPath`, `isServerSideGroup`, `getServerSideGroupKey` | `tree: { path }`, lazy tree groups |
-| `columnDefs[]`: `field`, `headerName`, `pinned`, `hide`, `width`, `sort`, `valueFormatter`, `cellClassRules`, `filter` | the column definition: field, header, pin, hidden, width, sort, format, rules, filter |
-| `cellSelection` (cell ranges), `statusBar`, `getContextMenuItems`, `getMainMenuItems` | ranges and the status bar, the context and column menus (extendable) |
-| API: `setGridOption('pivotMode', …)`, `applyColumnState`, `setRowGroupColumns`, `setPivotColumns`, `setValueColumns`, `getPivotResultColumns`, `expandAll`, `collapseAll`, `exportDataAsCsv`, `exportDataAsExcel`, `refreshServerSide` | the same calls on the adapter's handle, forwarded to the grid's API |
+**As built** (2.9.11.e, drishti-grid 0.4.0; the migration guide: [AG_GRID_MIGRATION_GUIDE.md](../guides/AG_GRID_MIGRATION_GUIDE.md)):
+
+- **The mapping's one home is the code**: `AG_MAPPING` and `AG_NOT_COVERED` in `drishti_grid-ag-map.js`, each row an option group with
+  its state (mapped, partial, unsupported, no-op) and its drishti-grid form. The gallery's AG Grid tab and the migration guide's option
+  table are generated from it (`tools/docs/elements_api.py`, `--check`); a Node test keeps the run-time option lists (`AG_GRID_OPTIONS`,
+  `AG_COLUMN_KEYS`, `AG_UNSUPPORTED`, `AG_NO_OP`, `AG_EVENTS`) in step with it.
+- **The translation** (`drishti_grid-ag.js`, `translateAgOptions`): column definitions with `defaultColDef`, `columnTypes` and column
+  groups become drishti-grid's columns (`valueGetter`, `valueFormatter`, `comparator`, `cellClass`, `cellClassRules` and `cellStyle` as
+  functions; the type from `cellDataType`, `numericColumn` or the first row); `rowGroup`, `pivot` and `aggFunc` with their indexes become
+  the wells; `aggFunc` functions and `aggFuncs` names are registered (`registerAggFunc`, forgotten with the grid), and
+  `'drishti:server'` (or `'drishti:server:var(99, 1d)'`) marks a non-additive measure whose every total is the server's; the totals
+  (`grandTotalRow`, `groupTotalRow`, `pivotRowTotals`, `pivotColumnGroupTotals`), the open levels (`groupDefaultExpanded`,
+  `pivotDefaultExpanded`), `suppressAggFuncInHeader`, `rowSelection`, `sideBar` (the `panel` layout), `rowHeight` (the nearest density)
+  and `domLayout: 'autoHeight'`. Rows that group get the adapter's group column, headed by `autoGroupColumnDef` (a `system` column: never
+  in the field list). drishti-grid's own options go under the one added key `drishti`.
+- **The server side** (`drishti_grid-ag-server.js`): `serverSideDatasource.getRows(params)` becomes the `ServerRowModel`'s datasource
+  (the request with AG's column objects and filter model; `success`, `fail` and the older callbacks; abort); in pivot mode it is also
+  the grid's `serverPivot`: each open level asked whole, the rows and `pivotResultFields` (split by
+  `serverSidePivotResultFieldSeparator`) made into the pivot answer, the grand total and the row totals asked of the server too, so a
+  non-additive measure is right at every level. `rowModelType: 'infinite'` maps onto the same model without groups.
+- **The handle** (`drishti_grid-ag-api.js`, `AgGridApi`; its filter, column and pivot calls in `drishti_grid-ag-columns.js`, its events in `drishti_grid-ag-events.js`): `setGridOption`,
+  `updateGridOptions`, `getGridOption`, `applyTransaction(Async)`, `getSelectedRows` and nodes, `forEachNode` and its kin,
+  `getDisplayedRowAtIndex`, `getRowNode`, CSV and Excel (`exportDataAs…`, `getDataAs…`), `setFilterModel` and `getFilterModel` (translated
+  both ways), `applyColumnState` and `getColumnState`, `sizeColumnsToFit` (with `flex`), `autoSizeAllColumns`, `expandAll`,
+  `collapseAll`, `refreshCells`, the row group, pivot and value columns, `getPivotResultColumns`, `refreshServerSide`, focus, ranges and
+  editing; AG-named events (`AG_EVENTS`: `gridReady`, `firstDataRendered`, `cellClicked`, `selectionChanged`, `sortChanged`,
+  `filterChanged`, `columnPivotChanged`, `columnRowGroupChanged`, `rowGroupOpened` …) raised from drishti-grid's typed events with
+  AG-shaped parameters. Without an element (Node, tests) the handle holds the model alone.
+- **What drishti-grid gained for it**: `registerAggFunc` and `unregisterAggFunc`; a column's `cellClass`, `cellStyle` (safe properties
+  only) and `system`; the pivot's `grandTotalRow` option (`top`, `bottom`, `none`: `placeGrandRow`); the view's `grandColumn` and
+  `columnGroupTotals`.
+- **Tests.** Node (`tests/elements/ag-adapter.test.mjs`): the option mapping, a pivot from AG options equal to drishti-grid's own pivot
+  of the same data, custom and non-additive aggregations, totals and levels, the server-side request and a server pivot from
+  `pivotResultFields`, tree data, the events, the API, the filter models both ways, the unsupported report; the gallery's AG shapes
+  given to the adapter make the stage's pivot (`gallery.test.mjs`). Browser: the static harness `drishti_ag-harness.html`
+  (`?mode=pivot|server|tree`), a grid configured purely with AG-shaped options (`test_elements_grid_browser.py`).
 
 **Not covered in version 1** (named in the console when used): integrated charts (use drishti-chart on a range), master-detail rows,
-sparkline cell renderers, row dragging between grids, AG Grid's theming API and CSS classes (Drishti's theme applies), the
-viewport row model. The migration guide (section 9) lists each with its Drishti way.
+sparkline cell renderers, row dragging between grids, AG Grid's theming API and CSS classes (Drishti's theme applies), the viewport row
+model, pagination, custom cell renderers, editors and header components, server-side tree data. The migration guide lists each with its
+Drishti way.
 
 ## 7. drishti-chart: one spec, the kinds, the maps
 
@@ -667,7 +683,7 @@ library with its module: an unlicensed module's library is not served, its kinds
   switch, `number` and `string` inputs, anything else "set in code"), the string lists the code exports frozen (`GRID_EVENTS`,
   `CHART_EVENTS`, `LAYOUTS`, `MAP_MODES` …: the event log listens to exactly these) and the library's lines of the product CHANGELOG;
   besides, the libraries section 2 plans that the manifest does not hold yet (listed as "Not built yet" with their badge) and the AG Grid
-  adapter's mapping (section 6's table) with whether the adapter is built.
+  adapter's mapping (its one home: `drishti_grid-ag-map.js`, section 6) with each row's state.
 - **The demos** (`drishti_gallery-demos.js` for drishti-core and drishti-grid, `-demos-chart.js` for drishti-chart, the maps and
   drishti-risk, `-demos-inputs.js` for drishti-inputs and drishti-data): a demo names its library, the typedefs of its options, its event
   lists, its modules and its examples. An element demo's `build(values)` is **the object the gallery mounts and prints**: the web
@@ -675,15 +691,18 @@ library with its module: an unlicensed module's library is not served, its kinds
   source, not a copy. A demo is shown only when its library is in the manifest. On this build: core (formats, theme tokens with contrast,
   the event bus, dialogs, drawers and toasts, Explain, the API client against a stand-in, the accessibility helpers), grid (the grid in
   three layouts and three densities, the pivot with the stand-in server's VaR and ES, the nine layouts × densities at once, server-side
-  rows at 100,000, live updates from a manual feed, editing through `setCellValue`, CSV and Excel), chart (every general kind and the
+  rows at 100,000, live updates from a manual feed, editing through `setCellValue`, CSV and Excel, a pivot made by the AG Grid-style
+  adapter from AG-shaped options), chart (every general kind and the
   studio, the map in both modes from the world to a country's regions, a grid and a chart linked, a live chart, Vega-Lite translated)
   and the four risk kinds; inputs and data (every input, the filter bar with a grid following it, data sources, the live client over a
   manual feed, frames) come in with their libraries. The sample data and the stand-in server are the fixture harnesses' synthetic
   figures (`drishti_gallery-data.js`).
-- **The AG Grid tab** (grid and pivot): the adapter is not built, so the tab is marked "planned": it shows the AG Grid Enterprise option
-  shapes an application would pass for the grid on the stage (`columnDefs` with `rowGroup`, `pivot`, `aggFunc`, `'drishti:server'` for a
-  non-additive measure, `pivotMode`, `rowModelType: 'serverSide'`, `sideBar` for the panel layout) and section 6's mapping with the
-  version 1 scope (O5) and what it leaves out. The Sutra tab shows the panel (`table`, `pivot`, `line`, `hbar` …) where a panel kind
+- **The AG Grid tab** (every grid demo): live. It shows the AG Grid Enterprise-shaped options an application passes
+  `createGridFromAgOptions` for the grid on the stage (`columnDefs` with `rowGroup`, `pivot`, `aggFunc`, `'drishti:server'` for a
+  non-additive measure, `pivotMode`, the totals, `rowModelType: 'serverSide'`, `sideBar` for the panel layout, the hooks under
+  `drishti`; `agShape` in `drishti_gallery-code.js`, real functions), and the adapter's mapping with each row's state, the version 1
+  scope (O5) and what it leaves out. The **AG Grid adapter** demo mounts its pivot through the adapter from exactly those options (its
+  controls: the wells, `grandTotalRow`, `groupTotalRow`, `sideBar`). The Sutra tab shows the panel (`table`, `pivot`, `line`, `hbar` …) where a panel kind
   draws the component, and says so where none does yet.
 - **Accessibility.** No axe is vendored: every demo gets the gallery's keyboard and ARIA smoke check (`audit` in
   `drishti_gallery-code.js`): controls named, roles and ARIA attributes valid, every id an ARIA attribute names present, ids unique, no
@@ -716,7 +735,7 @@ other libraries gained for it:
   rows into a tree of their paths; intermediate nodes are made, a row may itself be a node, nodes open by path or `groupDefaultExpanded`,
   siblings follow the sort, a filter keeps a match's ancestors; a node no row names carries its figures as a group does, the server's
   when they are non-additive or `clientAggregation` is off (`serverGroupColumns`, `setGroupServerValues` by path); the body draws a
-  `treegrid` with `aria-level` and `aria-expanded`. Not yet: tree data on server-side rows, the AG-style adapter's mapping.
+  `treegrid` with `aria-level` and `aria-expanded`; the AG Grid-style adapter maps `treeData`, `getDataPath` and `autoGroupColumnDef` onto it (section 6). Not yet: tree data on server-side rows.
 - **drishti-chart, the panel charts** (`drishti_chart-panels.js`, `drishti_chart-panel-draw.js`, moved from the renderer's `m/charts.js`
   and `m/draw.js`): `panelOption(kind, data, tokens, size, view)` builds the console's own options for line, area, waterfall, histogram,
   scatter, candlestick, graph, donut and the surface (heatmap or 3D), series for series the frozen 1.2.0 builders' (a Node test compares
@@ -782,7 +801,7 @@ generated, never written twice) every library has:
 | **API reference** (every option, event, method, type and CSS custom property) | library | Help → Developer → Elements, and the gallery's API tab | **generated** from typed JSDoc by `tools/elements/api_ref.py`; `--check` fails the build when a public member has no description or a type is missing |
 | **Tutorial** (one task end to end: a pivot over your own data, a chart with Explain, a world map with drill) | library | `docs/tutorials/`, numbered with the others | written, with screenshots from the gallery |
 | **Live gallery** (runnable examples) | component | `/elements/gallery/<library>/<component>` | the examples are files the tests also run (section 10) |
-| **Migration guide from AG Grid Enterprise (pivot)** | drishti-grid | `docs/guides/elements/grid-from-ag-grid.md` | written (planned); its option table is **generated** from the adapter's mapping table (the code's table is the one home of section 6's table) |
+| **Migration guide from AG Grid Enterprise (pivot)** | drishti-grid | [`docs/guides/AG_GRID_MIGRATION_GUIDE.md`](../guides/AG_GRID_MIGRATION_GUIDE.md) | written; its option table is **generated** from the adapter's mapping (`AG_MAPPING` in `drishti_grid-ag-map.js`, the one home) by `tools/docs/elements_api.py` |
 | **Theming guide** | the family | `docs/guides/elements/theming.md` | written (planned); the list of tokens is generated from drishti-core's token file |
 | **Accessibility guide** | the family | `docs/guides/elements/accessibility.md` | written (planned); each component's keyboard table is generated from its keymap registration |
 | **Changelog** | library | `static/elements/<library>/CHANGELOG.md`, shown on the gallery's Changelog tab | written per release; the product `CHANGELOG.md` links it rather than repeating it |
@@ -895,7 +914,7 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [x] drishti-grid: virtual rows and columns, columns and menus, ranges and the status bar, filters, editing (8.2), export, conditional formats, accessibility
 - [x] drishti-grid: tree data (a path per row, 8.5); the AG Grid-style adapter's tree data (O5) with the adapter
 - [x] drishti-grid pivot: the three layouts `wells`, `panel` and `terminal` (VaR screens default to `terminal`, others to `wells`), aggregation pickers, value filters, collapsible pivot result columns, totals, server-side model with the request of 5.3, non-additive totals from the server
-- [ ] The AG Grid-style adapter with the table of section 6 as code, and its unknown-option report
+- [x] The AG Grid-style adapter with the table of section 6 as code, and its unknown-option report (section 6, as built); the migration guide
 - [x] drishti-chart: the spec, the general kinds, the data-table alternative, export, Explain; the chart card's modes `card` (default) and `studio` (g2 A and B); maps with per-country loading and the modes `ranking` (default) and `table` (g3 A and B); drishti-risk's four kinds (8.3)
 - [ ] Vega retired (O1): Vega-Lite visuals translated to the spec (the translator is built, 8.3), Python visuals return a spec, the vendored Vega deleted
 - [x] The phone behaviour of the grid and the pivot (O2); the standalone Excel writer (O4)

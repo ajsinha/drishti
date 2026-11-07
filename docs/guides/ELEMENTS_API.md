@@ -23,7 +23,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | Library | Version | What it is |
 |---|---|---|
 | [drishti-core](#drishti-core) | 1.1.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines |
-| [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes |
+| [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
 | [drishti-inputs](#drishti-inputs) | 0.1.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead, forms from a schema with four eyes, the filter bar, the code editor over CodeMirror |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
 | [drishti-chart](#drishti-chart) | 0.1.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
@@ -1665,13 +1665,35 @@ The functions by name.
 
 #### `aggFunc(name)`
 
-A function by its name or a usual alias (average, distinct), or null when the browser does not compute it.
+A function by its name or a usual alias (average, distinct), or a registered one; null when the browser does not compute it.
 
 | Parameter | Type | Meaning |
 |---|---|---|
 | `name` | `string` |  |
 
 Returns `?AggFunc`.
+
+#### `registerAggFunc(name, fn, o)`
+
+Registers a host's own aggregation for client-side rows (the AG Grid-style adapter's aggFuncs): it is given every member's value of a cell or total and answers the figure; the state is the list of values, so a total is still made from its own members, never from other cells' figures. A built-in name cannot be replaced. The name must be a plain word (it goes into a measure's text, name(FIELD)).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Array&lt;*&gt;): *` | the figure of the members' values |
+| `[o]` | `{label: string, numeric: boolean}` |  |
+
+Returns `AggFunc`.
+
+#### `unregisterAggFunc(name)`
+
+Forgets a registered aggregation (a grid that registered it is gone).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+
+Returns `boolean`: whether it was registered.
 
 #### `parseMeasure(measure)`
 
@@ -3079,6 +3101,17 @@ The layouts a grid is drawn in (the visual shell; the model is the same).
 
 The densities, with their row heights in px.
 
+#### `placeGrandRow(answer, where)`
+
+Puts a pivot answer's grand total row where a view asks (its pivotOptions' grandTotalRow): 'top', 'bottom', or 'none' (left out); anything else keeps the answer's own place (with the subtotals: below them at the bottom, above them at the top).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `answer` | `?Object` | a pivot answer (its rows changed in place) |
+| `[where]` | `('top'\|'bottom'\|'none')` |  |
+
+Returns `void`.
+
 #### class `GridModelBase`
 
 The pivot, the export and the kept state of a grid model; GridModel adds the rest (rows, columns, selection, keys, editing).
@@ -3964,6 +3997,18 @@ The status bar's figures of a range, as words: count, sum, average, min and max 
 
 Returns `Array&lt;{label: string, value: string, warn: boolean}&gt;`.
 
+#### `cellLook(col, value, row)`
+
+A row cell's own classes and style from its column's cellClass and cellStyle (ColumnDef): class names of letters, digits, - and _ only, and only the safe style properties (colour, background, font weight and style, alignment, decoration; no url(), no expression).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `col` | `Object` | a normalized column |
+| `value` | `*` |  |
+| `row` | `Object` |  |
+
+Returns `{cls: string, style: Object&lt;string, string&gt;}`.
+
 #### class `FlashTracker`
 
 Remembers the figures drawn and tells which changed after live data came in: up or down, while the change is younger than flashMs.
@@ -4673,6 +4718,931 @@ Defines &lt;drishti-grid&gt; in a registry (once; the bundle does it when it loa
 
 Returns `boolean`: whether it was defined now (false: no registry, or defined already).
 
+### drishti_grid-ag-map.js
+
+#### `AG_MAPPING`
+
+The adapter's mapping, one row per group of AG Grid Enterprise options (public API shapes): its state (mapped, partial, unsupported) and its drishti-grid form.
+
+#### `AG_NOT_COVERED`
+
+What version 1 leaves out, in words (ELEMENTS.md section 6, the migration guide).
+
+#### `AG_GRID_OPTIONS`
+
+Grid options the adapter takes (translated or carried): any other name is reported.
+
+#### `AG_COLUMN_KEYS`
+
+Column definition keys the adapter takes.
+
+#### `AG_UNSUPPORTED`
+
+Options the adapter does not cover, each with its drishti-grid way (a warning names both).
+
+#### `AG_NO_OP`
+
+Options that need nothing in drishti-grid (said once, as information).
+
+#### `AG_EVENTS`
+
+The AG Grid events the adapter raises (onXxx options and addEventListener), each from drishti-grid's typed events.
+
+#### `agFilterToDrishti(f, colType, warn)`
+
+One column's AG Grid-shaped filter as drishti-grid's ColumnFilter (text, number, date, set; blank). A filter with two conditions keeps the first; what cannot be kept is said through warn.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `f` | `Object` | the AG-shaped filter ({filterType, type, filter, filterTo, dateFrom, dateTo, values, operator, conditions}) |
+| `[colType]` | `string` | the column's type, when the filter does not say its kind |
+| `[warn]` | `function(string): void` |  |
+
+Returns `?Object`: the drishti filter, or null when there is none.
+
+#### `drishtiFilterToAg(f)`
+
+One drishti ColumnFilter in AG Grid's shape (what getFilterModel and a server-side request carry).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `f` | `Object` |  |
+
+Returns `?Object`.
+
+#### `translateFilterModel(model, toDrishti, typeOf, warn)`
+
+A whole filter model translated: AG Grid's shape to drishti-grid's (toDrishti true) or back.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `model` | `Object&lt;string, Object&gt;` | column id to a filter |
+| `toDrishti` | `boolean` |  |
+| `[typeOf]` | `function(string): ?string` | a column's type by id |
+| `[warn]` | `function(string): void` |  |
+
+Returns `Object&lt;string, Object&gt;`.
+
+### drishti_grid-ag.js
+
+#### `AG_GROUP_COLUMN`
+
+The adapter's group column (added when rows may be grouped or make a tree): its id.
+
+#### class `AgReport`
+
+The adapter's report: each option said once in the console (a warning, or information for one that needs nothing) and kept.
+
+##### `new AgReport(out)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[out]` | `{warn: function(string): void, info: function(string): void}` | default: the console |
+
+##### `AgReport.add(option, state, words)`
+
+Says and keeps one item (once per option and state).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `option` | `string` |  |
+| `state` | `('partial'\|'unsupported'\|'no-op'\|'unknown')` |  |
+| `words` | `string` |  |
+
+Returns `void`.
+
+#### `agAggFunc(agg, id, ctx)`
+
+An aggregation as the AG option names it, as drishti-grid's: a built-in name, a function or an aggFuncs name (registered), a non-additive server measure ('drishti:server', 'drishti:server:var(99, 1d)'), or another name (the server's measure).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `agg` | `*` | the colDef's aggFunc |
+| `id` | `string` | the column's id |
+| `ctx` | `Object` | the translation's context (aggFuncs, registered names, the report) |
+
+Returns `{aggFunc: ?string, additive: (boolean\|undefined), measure: (string\|undefined), agName: (string\|undefined)}`.
+
+#### `translateAgOptions(go, o)`
+
+The translation: AG Grid-shaped grid options as drishti-grid's options, the pivot's wells, the start state and the report.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `go` | `Object` | the AG Grid-shaped grid options |
+| `[o]` | `{report: AgReport, api: Object}` | report: where options not covered are said; api: the handle (params.api) |
+
+Returns `{options: Object, wells: Object, rowGroups: string[], sort: Array, flex: Object&lt;string, number&gt;, expand: {rows: number, columns: number}, autoHeight: boolean, events: Object&lt;string, function&gt;, aggNames: Object&lt;string, string&gt;, registered: string[], report: AgReport}`.
+
+### drishti_grid-ag-server.js
+
+#### `callGetRows(ds, request, ctx, signal, parentNode)`
+
+Calls an AG-style getRows once and answers a promise: success({rowData, rowCount, pivotResultFields}) or the older successCallback(rows, lastRow) resolve it; fail() or failCallback() reject it. An abort rejects it at once.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ds` | `{getRows: function(Object): void}` |  |
+| `request` | `Object` | the AG-shaped request |
+| `ctx` | `AgServerContext` |  |
+| `[signal]` | `AbortSignal` |  |
+| `[parentNode]` | `Object` |  |
+
+Returns `Promise&lt;{rows: Object[], rowCount: ?number, pivotResultFields: ?string[]}&gt;`.
+
+#### `agRequest(req, ctx)`
+
+The AG-shaped request of a drishti block request (columns as objects, the filter model in AG's shape).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `req` | `import('./drishti_server-rows.js').BlockRequest` |  |
+| `ctx` | `AgServerContext` |  |
+
+Returns `Object`.
+
+#### `agDatasource(ds, ctx)`
+
+drishti-grid's Datasource over an application's serverSideDatasource (or an infinite model's datasource).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ds` | `{getRows: function(Object): void}` |  |
+| `ctx` | `AgServerContext` |  |
+
+Returns `import('./drishti_server-rows.js').Datasource & {calls: Object[]}`.
+
+#### `parseResultField(field, valueIds, sep, depth)`
+
+A pivot result field's keys: the field less its value column (and the separator before it), split by the separator.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `string` | e.g. "EMEA_EUR_MTM" |
+| `valueIds` | `string[]` | the value columns' ids |
+| `sep` | `string` |  |
+| `depth` | `number` | how many pivot columns |
+
+Returns `?{keys: string[], valueId: string}`.
+
+#### `agServerPivot(ds, ctx)`
+
+drishti-grid's serverPivot over an application's serverSideDatasource: the view's top level, each open row node's level and, when asked, the grand total row and the rows' totals, each one getRows call in pivot mode; the answer in the pivot answer's shape.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ds` | `{getRows: function(Object): void}` |  |
+| `ctx` | `AgServerContext` |  |
+
+Returns `function({view: Object}, AbortSignal): Promise&lt;Object&gt;`.
+
+### drishti_grid-ag-events.js
+
+#### class `AgEvents`
+
+The events, nodes, columns and widths of an AgGridApi.
+
+##### `new AgEvents(api)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `api` | `Object` | the AgGridApi |
+
+##### `AgEvents.start()`
+
+Starts raising events: drishti-grid's own, the wells', pivot mode; then gridReady and, when the first rows are in, firstDataRendered.
+
+Returns `void`.
+
+##### `AgEvents.stop()`
+
+Stops raising events.
+
+Returns `void`.
+
+##### `AgEvents.setHandler(name, fn)`
+
+Sets an onXxx handler (setGridOption).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` | the event's name |
+| `fn` | `?function(Object): void` |  |
+
+Returns `void`.
+
+##### `AgEvents.add(type, fn)`
+
+Adds a listener of an AG-named event.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `type` | `string` |  |
+| `fn` | `function(Object): void` |  |
+
+Returns `void`.
+
+##### `AgEvents.remove(type, fn)`
+
+Removes a listener.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `type` | `string` |  |
+| `fn` | `function(Object): void` |  |
+
+Returns `void`.
+
+##### `AgEvents.fire(type, params)`
+
+Raises an AG-named event: its handler (onXxx) and its listeners, given {type, api, context} and the event's own parameters.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `type` | `string` |  |
+| `params` | `Object` |  |
+
+Returns `void`.
+
+##### `AgEvents.nodeOf(data, id, x, rowIndex)`
+
+A row node as an application reads it: id, data, group, key, level, expanded, rowIndex, setSelected and isSelected.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `data` | `?Object` |  |
+| `id` | `?string` |  |
+| `[x]` | `Object` | the display row (a group's key and level) |
+| `[rowIndex]` | `number` |  |
+
+Returns `Object`.
+
+##### `AgEvents.nodeAt(i)`
+
+The row node at a display index (a leaf, a group, a pivot row).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `i` | `number` |  |
+
+Returns `?Object`.
+
+##### `AgEvents.leaves(filtered)`
+
+The leaf nodes: every row of the data, or (filtered) those that pass the filters in display order.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `filtered` | `boolean` |  |
+
+Returns `Object[]`.
+
+##### `AgEvents.columnOf(c)`
+
+A column as an application reads it: {colId, colDef, getColId, isVisible, getActualWidth, pinned}.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `c` | `?Object` | a drishti column |
+
+Returns `?Object`.
+
+##### `AgEvents.columnState()`
+
+Each column's state.
+
+Returns `Array&lt;Object&gt;`.
+
+##### `AgEvents.applyColumnState(p)`
+
+Gives back column states (see AgGridApi.applyColumnState).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `p` | `{state: Array&lt;Object&gt;, applyOrder: boolean, defaultState: Object}` |  |
+
+Returns `boolean`: whether every state named a column.
+
+##### `AgEvents.sizeToFit()`
+
+Shares the element's width among the shown columns: by flex where given (a flex column takes its share of what the others leave), else every column in proportion to its width.
+
+Returns `void`.
+
+##### `AgEvents.fitHeight()`
+
+domLayout autoHeight: the element's height follows the rows shown (heading and status bar included), now and as rows change.
+
+Returns `void`.
+
+##### `AgEvents.download(name, data, type)`
+
+Hands the person a file: the host's drishti.download hook, else a link clicked (with an element).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `data` | `(string\|Uint8Array)` |  |
+| `type` | `string` |  |
+
+Returns `void`.
+
+### drishti_grid-ag-columns.js
+
+#### class `AgColumnsApi`
+
+The filter, column, grouping and pivot calls of the adapter's handle (it holds go, t, report, model, grid and events).
+
+##### `AgColumnsApi.setFilterModel(model)`
+
+Filters by an AG-shaped filter model (null clears).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `model` | `?Object` |  |
+
+Returns `void`.
+
+##### `AgColumnsApi.getFilterModel()`
+
+The filter model in AG's shape.
+
+Returns `Object`.
+
+##### `AgColumnsApi.isAnyFilterPresent()`
+
+Whether any column is filtered (or the quick filter).
+
+Returns `boolean`.
+
+##### `AgColumnsApi.getColumnState()`
+
+Each column's state: width, hidden, pinned, sort, row group, pivot and aggregation.
+
+Returns `Array&lt;Object&gt;`.
+
+##### `AgColumnsApi.applyColumnState(p)`
+
+Gives back column states (by colId): width, hide, pinned, sort and sortIndex, rowGroup and rowGroupIndex, pivot and pivotIndex, aggFunc; applyOrder moves the columns to the state's order; defaultState applies to the columns not named.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `p` | `{state: Array&lt;Object&gt;, applyOrder: boolean, defaultState: Object}` |  |
+
+Returns `boolean`.
+
+##### `AgColumnsApi.resetColumnState()`
+
+The column state the grid was made with.
+
+Returns `void`.
+
+##### `AgColumnsApi.sizeColumnsToFit()`
+
+Shares the element's width among the shown columns (by flex where given, else by width).
+
+Returns `void`.
+
+##### `AgColumnsApi.autoSizeAllColumns()`
+
+Sizes every shown column to its content.
+
+Returns `void`.
+
+##### `AgColumnsApi.autoSizeColumns(keys)`
+
+Sizes some columns to their content.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `keys` | `string[]` | column ids |
+
+Returns `void`.
+
+##### `AgColumnsApi.setColumnsVisible(keys, visible)`
+
+Shows or hides columns.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `keys` | `string[]` |  |
+| `visible` | `boolean` |  |
+
+Returns `void`.
+
+##### `AgColumnsApi.setColumnsPinned(keys, pinned)`
+
+Pins columns left or right, or unpins them.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `keys` | `string[]` |  |
+| `pinned` | `?string` |  |
+
+Returns `void`.
+
+##### `AgColumnsApi.setColumnWidths(list)`
+
+Sets columns' widths.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `list` | `Array&lt;{key: string, newWidth: number}&gt;` |  |
+
+Returns `void`.
+
+##### `AgColumnsApi.moveColumns(keys, toIndex)`
+
+Moves columns to a place in the order.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `keys` | `string[]` |  |
+| `toIndex` | `number` |  |
+
+Returns `void`.
+
+##### `AgColumnsApi.getColumnDefs()`
+
+The column definitions as the application gave them.
+
+Returns `Object[]`.
+
+##### `AgColumnsApi.getColumns()`
+
+The columns (not the adapter's group column) as {colId, colDef, visible, pinned}.
+
+Returns `Object[]`.
+
+##### `AgColumnsApi.setPivotMode(on)`
+
+Turns pivot mode on or off.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `on` | `boolean` |  |
+
+Returns `Promise&lt;void&gt;`.
+
+##### `AgColumnsApi.isPivotMode()`
+
+Whether the grid is a pivot.
+
+Returns `boolean`.
+
+##### `AgColumnsApi.setRowGroupColumns(keys)`
+
+Sets the row group columns, in order.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `keys` | `string[]` |  |
+
+Returns `void`.
+
+##### `AgColumnsApi.addRowGroupColumns(keys)`
+
+Adds row group columns at the end.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `keys` | `string[]` |  |
+
+Returns `void`.
+
+##### `AgColumnsApi.removeRowGroupColumns(keys)`
+
+Takes columns out of the row groups.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `keys` | `string[]` |  |
+
+Returns `void`.
+
+##### `AgColumnsApi.getRowGroupColumns()`
+
+The row group columns.
+
+Returns `Object[]`.
+
+##### `AgColumnsApi.setPivotColumns(keys)`
+
+Sets the pivot columns, in order.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `keys` | `string[]` |  |
+
+Returns `void`.
+
+##### `AgColumnsApi.getPivotColumns()`
+
+The pivot columns.
+
+Returns `Object[]`.
+
+##### `AgColumnsApi.setValueColumns(keys)`
+
+Sets the value columns (ids take their column's aggFunc; {colId, aggFunc} sets it).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `keys` | `Array&lt;(string\|{colId: string, aggFunc: string})&gt;` |  |
+
+Returns `void`.
+
+##### `AgColumnsApi.getValueColumns()`
+
+The value columns.
+
+Returns `Object[]`.
+
+##### `AgColumnsApi.getPivotResultColumns()`
+
+The pivot's result columns: {colId, colDef: {headerName, pivotKeys, pivotValueColumn}}.
+
+Returns `?Object[]`.
+
+##### `AgColumnsApi.expandAll()`
+
+Opens every group (and every pivot column group).
+
+Returns `Promise&lt;void&gt;`.
+
+##### `AgColumnsApi.collapseAll()`
+
+Closes every group.
+
+Returns `Promise&lt;void&gt;`.
+
+##### `AgColumnsApi.refreshServerSide(p)`
+
+Asks the server again: every level (or the route's level and those under it); purge forgets the row counts too. A server pivot is computed again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[p]` | `{route: string[], purge: boolean}` |  |
+
+Returns `void`.
+
+##### `AgColumnsApi.purgeServerSideCache()`
+
+Forgets every server-side block and asks again (the older name of refreshServerSide({purge: true})).
+
+Returns `void`.
+
+### drishti_grid-ag-api.js
+
+#### class `AgGridApi`
+
+The handle an application calls as it called AG Grid's api: the common calls, the events, and reportUnsupported().
+
+##### `new AgGridApi(el, gridOptions, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `?HTMLElement` | the element to draw in (null: the model alone) |
+| `gridOptions` | `Object` | the AG Grid-shaped options |
+| `[o]` | `{out: {warn: function(string): void, info: function(string): void}}` | out: where options not covered are said (default: the console) |
+
+##### `AgGridApi.getGridOption(key)`
+
+An option as the application last set it.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `key` | `string` |  |
+
+Returns `*`.
+
+##### `AgGridApi.setGridOption(key, value)`
+
+Changes one option at run time (rowData, pivotMode, quickFilterText, columnDefs, groupDefaultExpanded, the totals, sideBar, serverSideDatasource, domLayout, context and the onXxx events); any other is reported.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `key` | `string` |  |
+| `value` | `*` |  |
+
+Returns `void`.
+
+##### `AgGridApi.updateGridOptions(options)`
+
+Changes several options at once.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `options` | `Object` |  |
+
+Returns `void`.
+
+##### `AgGridApi.setRowData(rows)`
+
+The older name of setGridOption('rowData', rows).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `Object[]` |  |
+
+Returns `void`.
+
+##### `AgGridApi.applyTransaction(t)`
+
+Adds, updates and removes rows by id (client-side rows).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `t` | `{add: Object[], update: Object[], remove: Object[]}` |  |
+
+Returns `{add: Object[], update: Object[], remove: Object[]}`: the row nodes.
+
+##### `AgGridApi.applyTransactionAsync(t, callback)`
+
+Queues a transaction with the others of the next few milliseconds (one refresh for a live feed); the callback hears its nodes.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `t` | `{add: Object[], update: Object[], remove: Object[]}` |  |
+| `[callback]` | `function(Object): void` |  |
+
+Returns `Promise&lt;Object&gt;`.
+
+##### `AgGridApi.flushAsyncTransactions()`
+
+Applies the queued transactions now.
+
+Returns `void`.
+
+##### `AgGridApi.getSelectedRows()`
+
+The selected rows' data.
+
+Returns `Object[]`.
+
+##### `AgGridApi.getSelectedNodes()`
+
+The selected row nodes.
+
+Returns `Object[]`.
+
+##### `AgGridApi.selectAll()`
+
+Selects every row that passes the filters.
+
+Returns `void`.
+
+##### `AgGridApi.deselectAll()`
+
+Clears the row selection.
+
+Returns `void`.
+
+##### `AgGridApi.forEachNode(fn)`
+
+Calls back with every row node of the data (client-side rows; the loaded rows on the server side).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `fn` | `function(Object, number): void` |  |
+
+Returns `void`.
+
+##### `AgGridApi.forEachNodeAfterFilter(fn)`
+
+Every row node that passes the filters, in the data's order.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `fn` | `function(Object, number): void` |  |
+
+Returns `void`.
+
+##### `AgGridApi.forEachNodeAfterFilterAndSort(fn)`
+
+Every row node that passes the filters, in the sort's order.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `fn` | `function(Object, number): void` |  |
+
+Returns `void`.
+
+##### `AgGridApi.forEachLeafNode(fn)`
+
+Every leaf row node (no groups).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `fn` | `function(Object, number): void` |  |
+
+Returns `void`.
+
+##### `AgGridApi.getDisplayedRowCount()`
+
+How many rows are shown (groups and pivot rows included).
+
+Returns `number`.
+
+##### `AgGridApi.getDisplayedRowAtIndex(i)`
+
+The row node at a display index.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `i` | `number` |  |
+
+Returns `?Object`.
+
+##### `AgGridApi.getRowNode(id)`
+
+A row node by its id.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `?Object`.
+
+##### `AgGridApi.getDataAsCsv(p)`
+
+The grid as shown as CSV text.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[p]` | `{columnSeparator: string}` |  |
+
+Returns `string`.
+
+##### `AgGridApi.getDataAsExcel(p)`
+
+The grid as shown as an Excel workbook's bytes.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[p]` | `{sheetName: string}` |  |
+
+Returns `Uint8Array`.
+
+##### `AgGridApi.exportDataAsCsv(p)`
+
+Hands the person a CSV file of the grid as shown (drishti.download, else a link clicked).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[p]` | `{fileName: string, columnSeparator: string}` |  |
+
+Returns `void`.
+
+##### `AgGridApi.exportDataAsExcel(p)`
+
+Hands the person an Excel workbook of the grid as shown (values and outline).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[p]` | `{fileName: string, sheetName: string}` |  |
+
+Returns `void`.
+
+##### `AgGridApi.refreshCells()`
+
+Draws the cells again.
+
+Returns `void`.
+
+##### `AgGridApi.redrawRows()`
+
+Draws the rows again.
+
+Returns `void`.
+
+##### `AgGridApi.ensureIndexVisible(i)`
+
+Scrolls a display row into view.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `i` | `number` |  |
+
+Returns `void`.
+
+##### `AgGridApi.setFocusedCell(rowIndex, colKey)`
+
+Focuses a cell.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rowIndex` | `number` |  |
+| `colKey` | `string` |  |
+
+Returns `void`.
+
+##### `AgGridApi.getFocusedCell()`
+
+The focused cell, or null.
+
+Returns `?{rowIndex: number, column: Object}`.
+
+##### `AgGridApi.getCellRanges()`
+
+The cell ranges selected.
+
+Returns `Array&lt;Object&gt;`.
+
+##### `AgGridApi.clearCellSelection()`
+
+Clears the cell ranges.
+
+Returns `void`.
+
+##### `AgGridApi.startEditingCell(p)`
+
+Starts editing a cell (with an element).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `p` | `{rowIndex: number, colKey: string}` |  |
+
+Returns `void`.
+
+##### `AgGridApi.stopEditing(cancel)`
+
+Stops editing (cancel: the value is not kept).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `[cancel]` | `boolean` |  |
+
+Returns `void`.
+
+##### `AgGridApi.undoCellEditing()`
+
+Undoes the last edit.
+
+Returns `void`.
+
+##### `AgGridApi.redoCellEditing()`
+
+Redoes the last edit undone.
+
+Returns `void`.
+
+##### `AgGridApi.addEventListener(type, fn)`
+
+Listens to an AG-named event (AG_EVENTS).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `type` | `string` |  |
+| `fn` | `function(Object): void` |  |
+
+Returns `void`.
+
+##### `AgGridApi.removeEventListener(type, fn)`
+
+Stops listening.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `type` | `string` |  |
+| `fn` | `function(Object): void` |  |
+
+Returns `void`.
+
+##### `AgGridApi.reportUnsupported()`
+
+Every option the adapter did not take in full: its name, its state (partial, unsupported, no-op, unknown) and drishti-grid's way.
+
+Returns `import('./drishti_grid-ag.js').AgReportItem[]`.
+
+##### `AgGridApi.destroy()`
+
+Takes the grid away (its element emptied, its aggregations forgotten).
+
+Returns `void`.
+
+##### `AgGridApi.isDestroyed()`
+
+Whether destroy() was called.
+
+Returns `boolean`.
+
+#### `createGridFromAgOptions(el, gridOptions, o)`
+
+A drishti-grid from AG Grid Enterprise-shaped grid options: draws it in the element (or, without one, holds the model alone) and answers the handle an application calls as it called AG Grid's api.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `?HTMLElement` |  |
+| `gridOptions` | `Object` |  |
+| `[o]` | `{out: {warn: function(string): void, info: function(string): void}}` |  |
+
+Returns `AgGridApi`.
+
+```js
+const api = createGridFromAgOptions(document.getElementById('grid'), { columnDefs, rowData, pivotMode: true, sideBar: true });
+```
+
 ### drishti_index.js
 
 #### `install(root)`
@@ -4747,6 +5717,9 @@ A row as the grid sees it at a display index.
 | `[enableValue]` | `boolean` | may be a value (default: numbers) |
 | `[group]` | `string` | a heading above several columns |
 | `[description]` | `string` | words for the field list |
+| `[cellClass]` | `(string\|function(*, Object): (string\|string[]))` | classes on a row's cell (letters, digits, - and _ only; others are dropped): a name, or a function of the value and the row |
+| `[cellStyle]` | `(Object\|function(*, Object): Object)` | a row's cell's style, limited to colour, background, font weight and style, text alignment and decoration (anything else is dropped): an object, or a function of the value and the row |
+| `[system=false]` | `boolean` | a column the grid adds (the AG Grid-style adapter's group column): never in the field list |
 
 #### `DocTableHooks` : `Object`
 
@@ -4759,6 +5732,30 @@ What the host draws in a document table: a cell's content, its tone class, a row
 | `[rowAttrs]` | `function(Object, number): Object` | extra attributes on a plain table's row (null and false are left out) |
 
 #### `ExportTable` : `import('../../drishti-core/src/drishti_files.js').ExportTable`
+
+#### `AgServerContext` : `Object`
+
+| Name | Type | Meaning |
+|---|---|---|
+| `column` | `function(string): ?Object` | a drishti column by id |
+| `aggOf` | `function(string): ?string` | the AG aggFunc name of a value column (what the application gave) |
+| `[api]` | `Object` | the adapter's handle (params.api) |
+| `[context]` | `*` | the application's context (params.context) |
+| `[separator='_']` | `string` | serverSidePivotResultFieldSeparator |
+| `[levelLimit=100000]` | `number` | rows asked of one pivot level |
+| `[grandRow=false]` | `boolean` | ask the grand total row |
+| `[rowTotals=false]` | `boolean` | ask each row's total across the pivot columns |
+| `[infinite=false]` | `boolean` | the infinite row model's datasource: getRows({startRow, endRow, sortModel, filterModel, successCallback, failCallback}) |
+
+#### `AgReportItem` : `Object`
+
+What the adapter did with one option: mapped in part, not supported, nothing to do, or a name it does not know.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `option` | `string` | the option's name (a column's as columnDefs[ID].name) |
+| `state` | `('partial'\|'unsupported'\|'no-op'\|'unknown')` |  |
+| `words` | `string` | what happens instead (drishti-grid's way) |
 
 #### `CellEdit` : `Object`
 
@@ -4851,6 +5848,8 @@ Everything GridModel takes (columns, rows or datasource, serverPivot, explain, c
 | `[pivot]` | `{rows: string[], columns: string[], values: Array&lt;{colId: string, aggFunc: string}&gt;, filters: Array}` | start as a pivot of these wells |
 | `[pivotOptions]` | `Object` | the view's other parts at the start (sort, top, valueFilters, subtotals) |
 | `[pinTotals=true]` | `boolean` | the pivot's grand total columns pinned on the right |
+| `[grandColumn=true]` | `boolean` | the pivot's grand total column (the total of each row across the column members) |
+| `[columnGroupTotals=true]` | `boolean` | the total column of each open pivot column group |
 | `[conditionalFormats]` | `import('./drishti_grid-ui.js').ConditionalFormat[]` | colour scales and data bars |
 | `[checkboxes=true]` | `boolean` | row checkboxes (when rows may be selected) |
 | `[drillThrough]` | `function(Object): (Promise&lt;Object[]&gt;\|Object[])` | the rows behind a cell (default: the rows in the page that match the cell's members) |

@@ -275,7 +275,7 @@
       const out = { element: c.element || '// a function of ' + d.library + ': see the JavaScript tab', js: c.js || '' };
       const s = d.sutra ? d.sutra(v, this.ctx) : null;
       out.sutra = s || '# No Sutra panel kind draws this yet: use the web component or the JavaScript in a page.';
-      if (d.ag) { const b = d.build(v, this.ctx); out.ag = this.code.agOptions(Object.assign({}, b.options, b.jsOptions), b.names); }
+      if (d.ag) { const b = d.build(v, this.ctx); out.ag = this.code.agOptions(Object.assign({}, b.options, b.jsOptions), b.names, d.agExtra ? d.agExtra(v) : null); }
       return out;
     }
 
@@ -301,10 +301,10 @@
 
     agTable() {
       const doc = this.doc, h = this.h, ag = this.cat.agGrid;
-      return h(doc, 'details', { cls: 'gx-ag', attrs: { open: true } }, [h(doc, 'summary', { text: (ag.built ? 'The adapter\'s mapping' : 'Planned: the adapter is not built yet. Its mapping (ELEMENTS.md section 6)') + ', version 1 scope: ' + ag.scope }),
-        h(doc, 'table', { cls: 'gx-table' }, [h(doc, 'thead', {}, [h(doc, 'tr', {}, [h(doc, 'th', { text: 'AG Grid Enterprise option (public API shape)', attrs: { scope: 'col' } }), h(doc, 'th', { text: 'drishti-grid', attrs: { scope: 'col' } })])]),
-          h(doc, 'tbody', {}, ag.mapping.map((r) => h(doc, 'tr', {}, [h(doc, 'td', {}, [this.prose(r.ag)]), h(doc, 'td', {}, [this.prose(r.drishti)])])))]),
-        ag.notCovered ? h(doc, 'p', { cls: 'gx-note' }, ['Not covered in version 1 ', this.prose(ag.notCovered)]) : null]);
+      return h(doc, 'details', { cls: 'gx-ag', attrs: { open: true } }, [h(doc, 'summary', { text: (ag.built ? 'The adapter\'s mapping (drishti_grid-ag-map.js; the migration guide: AG_GRID_MIGRATION_GUIDE.md)' : 'Planned: the adapter is not built yet. Its mapping (ELEMENTS.md section 6)') + ', version 1 scope: ' + ag.scope }),
+        h(doc, 'table', { cls: 'gx-table' }, [h(doc, 'thead', {}, [h(doc, 'tr', {}, [h(doc, 'th', { text: 'AG Grid Enterprise option (public API shape)', attrs: { scope: 'col' } }), h(doc, 'th', { text: 'State', attrs: { scope: 'col' } }), h(doc, 'th', { text: 'drishti-grid', attrs: { scope: 'col' } })])]),
+          h(doc, 'tbody', {}, ag.mapping.map((r) => h(doc, 'tr', {}, [h(doc, 'td', {}, [this.prose(r.ag)]), h(doc, 'td', { text: r.state || '' }), h(doc, 'td', {}, [this.prose(r.drishti)])])))]),
+        ag.notCovered ? h(doc, 'p', { cls: 'gx-note' }, ['Not covered in version 1 (named in the console when used): ', this.prose(ag.notCovered)]) : null]);
     }
 
     copy(text) {

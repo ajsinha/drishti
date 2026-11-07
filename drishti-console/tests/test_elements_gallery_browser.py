@@ -109,11 +109,12 @@ def test_the_playground_draws_every_component_with_clean_aria_and_its_code(brows
             assert re.search(r"bundle [\d.]+ KB, [\d,]+ lines", status) and "tests: " in status and "no problems" in status, (d["id"], status)
             tabs = await pg.eval_on_selector_all(".gx-codebox [role=tab]", "els => els.map((e) => e.textContent)")
             assert tabs[:3] == ["Web component", "JavaScript", "Sutra"], d["id"]
-            assert ("AG Grid adapter (planned)" in tabs) == d["ag"], d["id"]
+            assert ("AG Grid adapter" in tabs) == d["ag"], d["id"]
             await pg.click(".gx-codebox [data-tab=js]")
             js = await pg.text_content("#gx-code-panel")
             assert "import {" in js or "Drishti.elements" in js, (d["id"], js[:200])
             tag = {"drishti-grid": "drishti-grid", "drishti-chart": "drishti-chart", "drishti-risk": "drishti-chart"}.get(d["library"])
+            tag = ".gx-ag-grid.dg" if d["id"] == "ag-adapter" else tag                       # the adapter draws into a plain element
             if tag and d["kind"] == "element":
                 assert await pg.locator(".gx-stage " + tag).count() >= 1, d["id"]
             await pg.click(".gx-codebox [data-tab=element]")
@@ -170,10 +171,21 @@ def test_the_pivot_ag_grid_tab_sutra_and_live_feed(browsers):
     async def body(pg):
         await pg.click("[data-tab=ag]")
         ag = await pg.text_content("#gx-code-panel")
-        assert "pivotMode: true" in ag and "rowGroup: true" in ag and "aggFunc: 'drishti:server'" in ag and "planned" in ag
+        assert "pivotMode: true" in ag and "rowGroup: true" in ag and "aggFunc: 'drishti:server" in ag and "createGridFromAgOptions(" in ag
+        assert "planned" not in ag
         rows = await pg.locator(".gx-ag tbody tr").count()
         assert rows == await pg.evaluate("window.__gallery.cat.agGrid.mapping.length") and rows >= 15
-        assert "Planned" in await pg.text_content(".gx-ag summary")
+        assert "The adapter's mapping" in await pg.text_content(".gx-ag summary")
+        assert await pg.locator(".gx-ag thead th").count() == 3                                   # the option, its state, drishti-grid's way
+        # the adapter's own demo: the pivot on the stage made from the AG-shaped options it prints
+        await pg.click(".gx-nav-item[data-c=ag-adapter]")
+        await audited(pg, "ag-adapter")
+        assert await pg.locator(".gx-stage .gx-ag-grid.dg .dg-side").count() == 1               # sideBar: the panel layout
+        assert "createGridFromAgOptions(" in await pg.text_content("#gx-code-panel")
+        assert await pg.evaluate("() => document.querySelector('.gx-ag-grid').agApi.isPivotMode()")
+        await pg.click(".gx-nav-item[data-c=pivot]")
+        await audited(pg, "pivot")
+        await pg.click("[data-tab=ag]")
         await shot(pg, "drishti-gallery-pivot-ag.png")
         await pg.click("[data-tab=sutra]")
         assert "kind: pivot" in await pg.text_content("#gx-code-panel")

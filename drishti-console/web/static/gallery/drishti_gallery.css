@@ -62,8 +62,8 @@ html, body { margin: 0; background: var(--d-bg); color: var(--d-ink); font: 13px
 .gx-prose code { background: var(--d-surface-2); padding: 0 3px; border-radius: 3px; }
 
 .gx-stage { border: 1px solid var(--d-border); border-radius: 10px; background: var(--d-surface); padding: 10px; min-height: 120px; }
-.gx-stage drishti-grid { display: block; height: 470px; }
-.gx-stage-ex drishti-grid { height: 440px; }
+.gx-stage drishti-grid, .gx-stage .gx-ag-grid { display: block; height: 470px; }
+.gx-stage-ex drishti-grid, .gx-stage-ex .gx-ag-grid { height: 440px; }
 .gx-matrix { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .gx-matrix-cell h3 { margin: 0 0 4px; font-size: 12px; color: var(--d-muted); font-weight: 600; }
 .gx-matrix-cell drishti-grid { height: 300px; }

@@ -14,7 +14,7 @@
     },
     "drishti-grid": {
       "version": "0.4.0",
-      "title": "The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and <drishti-grid> in three layouts and three densities), cell editing with undo, paste, write-back and four eyes",
+      "title": "The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and <drishti-grid> in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions)",
       "entry": "src/drishti_index.js",
       "requires": [
         "drishti-core"
@@ -56,6 +56,26 @@
       "scripts": [
         "vendor/echarts/echarts.min.js"
       ]
+    },
+    "drishti-inputs": {
+      "version": "0.1.0",
+      "title": "Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead, forms from a schema with four eyes, the filter bar, the code editor over CodeMirror",
+      "entry": "src/drishti_index.js",
+      "requires": [
+        "drishti-core"
+      ],
+      "css": [
+        "elements/drishti-inputs/drishti_inputs.css"
+      ]
+    },
+    "drishti-data": {
+      "version": "0.1.0",
+      "title": "Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client",
+      "entry": "src/drishti_index.js",
+      "requires": [
+        "drishti-core"
+      ],
+      "css": []
     },
     "drishti-risk": {
       "version": "0.1.0",

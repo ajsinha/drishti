@@ -60,13 +60,39 @@ export const AGG_FUNCS = Object.freeze({
 });
 
 const ALIASES = { average: 'avg', mean: 'avg', distinct: 'count_distinct', countDistinct: 'count_distinct' };
+const CUSTOM = new Map();
 
 /**
- * A function by its name or a usual alias (average, distinct), or null when the browser does not compute it.
+ * A function by its name or a usual alias (average, distinct), or a registered one; null when the browser does not compute it.
  * @param {string} name
  * @returns {?AggFunc}
  */
-export function aggFunc(name) { return AGG_FUNCS[ALIASES[name] || name] || null; }
+export function aggFunc(name) { return AGG_FUNCS[ALIASES[name] || name] || CUSTOM.get(name) || null; }
+
+/**
+ * Registers a host's own aggregation for client-side rows (the AG Grid-style adapter's aggFuncs): it is given every member's value of a
+ * cell or total and answers the figure; the state is the list of values, so a total is still made from its own members, never from
+ * other cells' figures. A built-in name cannot be replaced. The name must be a plain word (it goes into a measure's text, name(FIELD)).
+ * @param {string} name
+ * @param {function(Array<*>): *} fn the figure of the members' values
+ * @param {{label: string, numeric: boolean}} [o]
+ * @returns {AggFunc}
+ */
+export function registerAggFunc(name, fn, o) {
+  if (!/^[A-Za-z_]\w*$/.test(String(name)) || AGG_FUNCS[name] || ALIASES[name]) { throw new Error('an aggregation needs a new plain name (letters, digits, _): ' + name); }
+  if (typeof fn !== 'function') { throw new Error('aggregation ' + name + ': give a function of the values'); }
+  const f = { name: name, label: (o && o.label) || name, numeric: !!(o && o.numeric), init: () => [], add: (st, v) => { st.push(v); return st; },
+    merge: (a, b) => a.concat(b), result: (st) => fn(st.slice()), custom: true };
+  CUSTOM.set(name, f);
+  return f;
+}
+
+/**
+ * Forgets a registered aggregation (a grid that registered it is gone).
+ * @param {string} name
+ * @returns {boolean} whether it was registered
+ */
+export function unregisterAggFunc(name) { return CUSTOM.delete(name); }
 
 /**
  * A measure's text read: func(field), or count() for the members; null when it is not that simple form (var(99, 1d), ratio(...)).

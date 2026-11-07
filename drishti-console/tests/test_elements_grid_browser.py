@@ -22,7 +22,8 @@ tested here once and deeply; screens test only their wiring (ELEMENTS.md section
 * ranges by drag and Shift+click with the status bar (count, sum, average, min, max; no sum of VaR), the non-additive hover note;
 * the keys (arrows, Enter, E and F2, Ctrl+C, Escape, Shift+F10), the grid's roles and announcements;
 * live data: the flash up and down, reduced motion, server-side blocks with loading placeholders, virtual rows at 100,000 rows;
-* a phone: the first column pinned, a pivot as one value column with its measure switcher.
+* a phone: the first column pinned, a pivot as one value column with its measure switcher;
+* the AG Grid-style adapter (drishti_ag-harness.html): a pivot, server-side rows and tree data made purely from AG-shaped options.
 
 DRISHTI_GRID_SHOTS names a folder for screenshots of the three layouts (none are taken otherwise)."""
 import asyncio
@@ -464,5 +465,60 @@ def test_a_phone_pins_the_first_column_and_switches_the_pivot_measure(browsers):
             await settle(pg)
             box = await pg.locator(".dg-row .dg-cell >> nth=0").bounding_box()
             assert box["x"] < 20                                                              # still at the left edge
+            assert pg.errors == [] and await pg.evaluate("window.__csp") == []
+    browsers.run(go(), timeout=120)
+
+
+AG_PAGE = "/static/elements/drishti-grid/drishti_ag-harness.html"
+AG_READY = ("() => window.__ag && window.__ag.ready && document.querySelector('.dg-row') && !document.querySelector('.dg-pending')"
+            " && !document.querySelector('.dg-loading')")
+
+
+def test_the_ag_grid_adapter_draws_a_pivot_from_ag_shaped_options_only(browsers):
+    """drishti_ag-harness.html: a pivot, server-side rows and tree data, each made purely from AG Grid Enterprise-shaped options by
+    createGridFromAgOptions; the AG-named events, sideBar as the panel layout, the server's non-additive totals, the API."""
+    async def go():
+        async with browsers.page(1360, 860, route=route) as pg:
+            await pg.goto(ORIGIN + AG_PAGE)
+            await pg.wait_for_function(AG_READY)
+            await pg.wait_for_function("() => window.__ag.events.some((e) => e.type === 'firstDataRendered')")
+            assert [e["type"] for e in await pg.evaluate("window.__ag.events")][:2] == ["gridReady", "firstDataRendered"]
+            assert await pg.locator(".dg-side .dg-wells-panel").count() == 1                         # sideBar: the panel layout
+            heads = await pg.eval_on_selector_all(".dg-hcell", "els => els.map((e) => e.textContent)")
+            assert any("EMEA" in h for h in heads) and any("Grand total" in h for h in heads)
+            assert any(h.strip().startswith("VaR 99% 1d") for h in heads)                            # suppressAggFuncInHeader
+            assert await pg.locator(".dg-cell.dg-nadd").count() > 0                                  # VaR's totals: the server's
+            assert await pg.evaluate("window.__ag.asked") >= 1
+            rows = await pg.evaluate("() => { const m = window.__ag.api.model; const out = []; for (let r = 0; r < m.rowCount(); r++) { out.push(m.cellText(r, 0)); } return out; }")
+            assert rows == ["Credit", "Equities", "FX", "Rates", "Grand total"]
+            await pg.click(cell(1, 1))
+            clicked = [e for e in await pg.evaluate("window.__ag.events") if e["type"] == "cellClicked"]
+            assert clicked and clicked[-1]["rowIndex"] == 1
+            await pg.evaluate("() => window.__ag.api.expandAll()")
+            await pg.wait_for_function("() => window.__ag.api.getDisplayedRowCount() > 5 && !document.querySelector('.dg-pending')")
+            await pg.evaluate("() => window.__ag.api.setGridOption('pivotMode', false)")
+            await pg.wait_for_function("() => !window.__ag.api.isPivotMode() && document.querySelector('.dg-row')")
+            assert "columnPivotModeChanged" in [e["type"] for e in await pg.evaluate("window.__ag.events")]
+            assert await pg.evaluate("() => window.__ag.api.getDataAsCsv().split('\\r\\n')[0]") != ""
+            await pg.evaluate("() => window.__ag.api.exportDataAsExcel({ fileName: 'risk.xlsx' })")
+            assert (await pg.evaluate("window.__ag.download"))["name"] == "risk.xlsx"
+            report = await pg.evaluate("() => window.__ag.api.reportUnsupported()")
+            assert {"option": "animateRows", "state": "no-op"} in [{"option": r["option"], "state": r["state"]} for r in report]
+            assert pg.errors == [] and await pg.evaluate("window.__csp") == []
+            # the server-side row model from an AG-shaped datasource
+            await pg.goto(ORIGIN + AG_PAGE + "?mode=server")
+            await pg.wait_for_function(AG_READY)
+            req = (await pg.evaluate("window.__ag.requests"))[0]
+            assert req["rowGroupCols"] == [{"id": "desk", "displayName": "Desk", "field": "desk"}]
+            assert {"id": "var", "displayName": "VaR 99% 1d", "field": "var", "aggFunc": "drishti:server:var(99, 1d)"} in req["valueCols"]
+            assert req["startRow"] == 0 and req["endRow"] == 50 and req["groupKeys"] == []
+            await pg.click(".dg-row .dg-tw >> nth=0")
+            await pg.wait_for_function("() => window.__ag.requests.some((r) => r.groupKeys.length === 1) && !document.querySelector('.dg-loading')")
+            assert await pg.evaluate("() => window.__ag.api.getDisplayedRowCount()") > 4
+            # tree data
+            await pg.goto(ORIGIN + AG_PAGE + "?mode=tree")
+            await pg.wait_for_function(AG_READY)
+            assert "Organisation" in await pg.text_content(".dg-hcell >> nth=0")
+            assert await pg.get_attribute(".dg-scroll", "role") == "treegrid"
             assert pg.errors == [] and await pg.evaluate("window.__csp") == []
     browsers.run(go(), timeout=120)
