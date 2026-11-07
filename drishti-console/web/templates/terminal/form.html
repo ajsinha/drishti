@@ -39,49 +39,10 @@
     <div class="qf-body" id="qfBody" data-qf-collapse="{{ 'on' if collapse else 'off' }}"{{ ' hidden' if folded }}>
     {% if info.form.inferred %}<p class="qf-note text-muted-d">{{ info.pack }} does not declare a form for {{ info.kind | replace('-', ' ') }}, so these fields are inferred from its search columns and Sutra.</p>{% endif %}
     {% if not any_indexed %}<p class="qf-note text-muted-d">No field of this kind is kept as an indexed column: every search reads the documents.</p>{% endif %}
-    {% for g in view.groups %}
-    <fieldset class="qf-group"{% if g.name %} aria-label="{{ g.name }}"{% endif %}>{% if g.name %}<legend>{{ g.name }}</legend>{% endif %}
-      <div class="qf-fields">{% for f in g.fields %}
-      <div class="qf-field qf-t-{{ f.type }}" data-field="{{ f.path }}" data-type="{{ f.type }}">
-        <label class="qf-label" for="{{ f.id }}">{{ f.label }}{% if f.required %} <span class="qf-req" title="Required" aria-hidden="true">*</span>{% endif %}
-          {% if any_indexed and not f.indexed %}<span class="qf-slow" title="Not an indexed column: the documents are read to answer this">slower: not indexed</span>{% endif %}</label>
-        <div class="qf-in">
-        {% if f.operators | length > 1 %}
-          <select class="qf-op" name="op.{{ f.path }}" aria-label="{{ f.label }}: how to compare">{% for o in f.operators %}
-            <option value="{{ o }}"{{ ' selected' if o == f.op }}>{{ OPS.get(o, o) }}</option>{% endfor %}</select>
-        {% else %}<input type="hidden" name="op.{{ f.path }}" value="{{ f.operators[0] }}">{% endif %}
-        {% if f.type == 'text' %}
-          <input id="{{ f.id }}" class="qf-v mono" type="text" name="v.{{ f.path }}" value="{{ f.held[0] if f.held }}" spellcheck="false"{{ ' required' if f.required }}>
-          <label class="qf-case"><input type="checkbox" name="cs.{{ f.path }}" value="1"{{ ' checked' if f.cs }}> Match case</label>
-        {% elif f.type in ('number', 'amount') %}
-          <input id="{{ f.id }}" class="qf-v mono" type="text" inputmode="decimal" name="v.{{ f.path }}" value="{{ f.held[0] if f.held }}" placeholder="{{ '250k, 1.5m, 2bn' if f.type == 'amount' else '' }}" spellcheck="false"{{ ' required' if f.required }}>
-          <input class="qf-v2 mono" type="text" inputmode="decimal" name="v2.{{ f.path }}" value="{{ f.held2 }}" placeholder="and" aria-label="{{ f.label }}: upper bound" spellcheck="false"{{ ' hidden' if f.op != 'between' }}>
-        {% elif f.type == 'date' %}
-          {# the date is drishti-inputs' business-date picker (drishti_app.js upgrades it in place); "relative" takes words instead (last 5 business days) #}
-          <input id="{{ f.id }}" class="qf-v mono" type="date" name="v.{{ f.path }}" value="{{ f.held[0] if f.held and f.op != 'relative' }}"{{ ' required' if f.required }}{{ ' hidden disabled' if f.op == 'relative' }}>
-          <input class="qf-vrel mono" type="text" name="v.{{ f.path }}" value="{{ f.held[0] if f.held and f.op == 'relative' }}" list="qf-presets" placeholder="last 5 business days" aria-label="{{ f.label }}: a relative range" spellcheck="false"{{ ' hidden disabled' if f.op != 'relative' }}>
-          <input class="qf-v2 mono" type="date" name="v2.{{ f.path }}" value="{{ f.held2 }}" aria-label="{{ f.label }}: end date"{{ ' hidden' if f.op != 'between' }}>
-        {% elif f.type == 'enum' and not f.depends and f['values']|length > 300 %}
-          {# a long list (10,000 counterparties): the values chosen, and a box that finds the others as you type (drishti_form.js), not one checkbox each #}
-          <div id="{{ f.id }}" class="qf-enum qf-big" role="group" aria-label="{{ f.label }}" data-big-url="/form/{{ info.pack | urlencode }}/values?kind={{ info.kind | urlencode }}&amp;path={{ f.path | urlencode }}">{% for v in f.held %}
-            <label class="qf-chk"><input type="checkbox" name="v.{{ f.path }}" value="{{ v }}" checked> <span>{{ v }}</span></label>{% endfor %}
-            <input type="search" class="qf-big-q mono" data-big-q autocomplete="off" placeholder="Type to find among {{ '{:,}'.format(f['values']|length) }}" aria-label="Find a {{ f.label }}">
-            <div class="qf-big-found" data-big-found role="group" aria-label="{{ f.label }}: matches" aria-live="polite"></div></div>
-        {% elif f.type == 'enum' %}
-          <div id="{{ f.id }}" class="qf-enum" role="group" aria-label="{{ f.label }}"{% if f['values']|length > 3 %} data-multiselect{% endif %}{% if f.depends %} data-depends="{{ f.depends }}"{% endif %}>{% for v in f['values'] %}
-            <label class="qf-chk"{% if f.depends and (f.parents or {}).get(v) %} data-parents="{{ (f.parents or {}).get(v) | join('|') }}"{% endif %}><input type="checkbox" name="v.{{ f.path }}" value="{{ v }}"{{ ' checked' if v in f.held }}> <span>{{ v }}</span></label>{% endfor %}
-            {% if not f['values'] %}<span class="text-muted-d">no values known yet</span>{% endif %}</div>
-        {% elif f.type == 'id' %}
-          <textarea id="{{ f.id }}" class="qf-v mono" name="v.{{ f.path }}" rows="2" placeholder="one or many: paste a list (spaces, commas or lines); MX-2* is any id starting MX-2" spellcheck="false">{{ f.held | join('\n') }}</textarea>
-        {% elif f.type == 'bool' %}
-          <div id="{{ f.id }}" class="qf-bool" role="radiogroup" aria-label="{{ f.label }}">{% for val, text in [('any', 'Any'), ('true', 'Yes'), ('false', 'No')] %}
-            <label class="qf-chk"><input type="radio" name="v.{{ f.path }}" value="{{ val }}"{{ ' checked' if (f.held[0] if f.held else 'any') == val }}> <span>{{ text }}</span></label>{% endfor %}</div>
-        {% endif %}
-        </div>
-        {% if f.help %}<p class="qf-fhelp text-muted-d">{{ f.help }}</p>{% endif %}
-      </div>{% endfor %}</div>
-    </fieldset>{% endfor %}
-    <datalist id="qf-presets">{% for p in presets %}<option value="{{ p }}">{% endfor %}</datalist>
+    {# the fields: drishti-inputs' Form, live inside this GET form (drishti_form.js); each control carries the address's own name (op., v., v2., cs.) #}
+    <div class="qf-fields-host" data-qf-fields></div>
+    <script type="application/json" data-qf-schema>{{ qf | tojson }}</script>
+    <noscript><p class="qf-note">This form is drawn by the browser: with scripts off, type the search in the command line (FORM {{ info.pack }} shows its words).</p></noscript>
     <div class="qf-result-opts">
       <label class="qf-ro">Sort by <select name="order"><option value="">the source's order</option>{% for f in sortable %}
         <option value="{{ f.path }}"{{ ' selected' if q.get('order') == f.path }}>{{ f.label }}</option>{% endfor %}</select></label>

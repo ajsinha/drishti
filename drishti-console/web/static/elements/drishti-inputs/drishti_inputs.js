@@ -2185,7 +2185,7 @@
     function applyHook(el, hook) {
       if (!el || !hook) { return; }
       if (typeof hook === 'string') { el.setAttribute(hook.indexOf('data-') === 0 ? hook : 'data-' + hook, ''); return; }
-      Object.keys(hook).forEach((k) => el.setAttribute(k, hook[k] === true ? '' : String(hook[k])));
+      Object.keys(hook).forEach((k) => { if (k === 'class') { String(hook[k]).split(/\s+/).filter(Boolean).forEach((c) => el.classList.add(c)); } else { el.setAttribute(k, hook[k] === true ? '' : String(hook[k])); } });
     }
     function drawField(form, f) {
       const fs = f.field, id = form.id + '-' + f.path.replace(/[^\w]/g, '_'), ro = form.state !== 'editing' || !!fs.readOnly;
@@ -2204,6 +2204,7 @@
         const box = form.el('fieldset', { cls: 'di-fieldset' }, [form.el('legend', { text: f.label })]);
         if (help) { box.appendChild(help); }
         fieldsOf(fs, f.path).forEach((sub) => box.appendChild(drawField(form, sub)));
+        applyHook(box, fs.hook);
         wrap.appendChild(box);
         return wrap;
       }
