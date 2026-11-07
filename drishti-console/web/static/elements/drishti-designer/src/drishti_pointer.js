@@ -82,6 +82,9 @@ export function trackPointer(e, h, o) {
  * its own hub.
  */
 export class DragHub {
+  /**
+   * A hub with no targets yet.
+   */
   constructor() {
     /** @type {DropTarget[]} */
     this.targets = [];

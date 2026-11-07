@@ -22,6 +22,9 @@ import { EventBus } from '../../drishti-core/src/drishti_index.js';
  * The selected ids. Events: change {ids, primary, source}.
  */
 export class Selection {
+  /**
+   * An empty selection.
+   */
   constructor() {
     /** @type {string[]} */
     this.ids = [];
@@ -29,6 +32,7 @@ export class Selection {
   }
 
   /**
+   * Listens to one of its events; answers the function that stops listening.
    * @param {string} name
    * @param {function(Object): void} fn
    * @returns {function(): void}
@@ -42,15 +46,22 @@ export class Selection {
   primary() { return this.ids.length ? this.ids[this.ids.length - 1] : null; }
 
   /**
+   * Whether an id is selected.
    * @param {string} id
    * @returns {boolean}
    */
   has(id) { return this.ids.indexOf(id) >= 0; }
 
-  /** @returns {number} */
+  /**
+   * How many are selected.
+   * @returns {number}
+   */
   size() { return this.ids.length; }
 
-  /** @returns {string[]} a copy, in picking order */
+  /**
+   * The selected ids, in picking order.
+   * @returns {string[]} a copy, in picking order
+   */
   list() { return this.ids.slice(); }
 
   /**
@@ -85,6 +96,9 @@ export class Selection {
    */
   prune(exists) { const keep = this.ids.filter(exists); if (keep.length !== this.ids.length) { this.set(keep, 'prune'); } }
 
-  /** @returns {void} */
+  /**
+   * Selects nothing.
+   * @returns {void}
+   */
   clear() { this.set([]); }
 }

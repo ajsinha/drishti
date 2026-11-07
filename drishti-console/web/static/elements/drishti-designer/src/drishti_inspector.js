@@ -88,6 +88,7 @@ export class Inspector {
   }
 
   /**
+   * Listens to one of its events; answers the function that stops listening.
    * @param {string} name
    * @param {function(Object): void} fn
    * @returns {function(): void}

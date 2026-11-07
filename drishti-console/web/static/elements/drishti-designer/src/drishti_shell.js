@@ -96,6 +96,7 @@ export class DesignerShell {
   }
 
   /**
+   * Listens to one of its events; answers the function that stops listening.
    * @param {string} name
    * @param {function(Object): void} fn
    * @returns {function(): void}
@@ -472,7 +473,10 @@ export class DesignerShell {
     return openDialog(this.dlg, { within: this.dlgBody });
   }
 
-  /** @returns {void} */
+  /**
+   * Closes the dialog (the focus goes back where it was).
+   * @returns {void}
+   */
   closeDialog() { closeDialog(this.dlg); }
 
   /**

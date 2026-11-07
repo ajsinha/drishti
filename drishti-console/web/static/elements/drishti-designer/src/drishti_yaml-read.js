@@ -15,9 +15,9 @@
  */
 /* A forgiving reader for the YAML designs are written in (block maps and lists, one-line flow maps and lists, quoted and plain
    scalars, block scalars, comments). It never throws: half-typed lines are skipped, so an editor can ask it about the document while
-   the author types. parse(text) gives a tree of {t: 'map'|'seq'|'scalar', line, entries|items|v} with each key's line and column;
-   context(lines, line, ch) says where the cursor is (the key path, '[]' for a list item; a key or a value being typed, its prefix and
-   where it starts); plain(node) the plain values; chain(root, path, line) the nodes along a path. (Moved here from Sutra Studio.) */
+   the author types. parseYamlTree(text) gives a tree of {t: 'map'|'seq'|'scalar', line, entries|items|v} with each key's line and column;
+   yamlContext(lines, line, ch) says where the cursor is (the key path, '[]' for a list item; a key or a value being typed, its prefix and
+   where it starts); yamlPlain(node) the plain values; yamlChain(root, path, line) the nodes along a path. (Moved here from Sutra Studio.) */
 const KEY = /^("(?:[^"\\]|\\.)*"|'(?:[^']|'')*'|[^\s:#{}[\],"'][^:#{}[\],]*?)\s*:(?=\s|$)/;
 
 /**
@@ -25,7 +25,7 @@ const KEY = /^("(?:[^"\\]|\\.)*"|'(?:[^']|'')*'|[^\s:#{}[\],"'][^:#{}[\],]*?)\s*
  * @param {string} s
  * @returns {string}
  */
-export function unquote(s) {
+export function yamlUnquote(s) {
   s = s.trim();
   if (s.length > 1 && s[0] === '"' && s[s.length - 1] === '"') { try { return JSON.parse(s); } catch (e) { return s.slice(1, -1); } }
   if (s.length > 1 && s[0] === "'" && s[s.length - 1] === "'") { return s.slice(1, -1).replace(/''/g, "'"); }
@@ -42,7 +42,7 @@ function stripComment(s) {
   return s;
 }
 function scalar(text, line, ch) {
-  var raw = text.trim(), v = unquote(raw);
+  var raw = text.trim(), v = yamlUnquote(raw);
   if (raw === v) {
     if (/^(true|false)$/.test(raw)) { v = raw === 'true'; }
     else if (/^-?\d+(\.\d+)?$/.test(raw)) { v = +raw; }
@@ -76,7 +76,7 @@ function flow(s, pos, line, base) {
       if (s[i] === ',') { i++; continue; }
       var ks = i, kend = (s[i] === '"' || s[i] === "'") ? quoted() : plainEnd(':,}');
       i = Math.min(kend, s.length);
-      var key = unquote(s.slice(ks, i));
+      var key = yamlUnquote(s.slice(ks, i));
       ws();
       var entry = { key: key, line: line, ch: base + ks, value: null };
       node.entries.push(entry);
@@ -119,7 +119,7 @@ function flowDepth(s) {
  * @param {string} text
  * @returns {Object} the root map node; root.tabs: the lines indented with tabs
  */
-export function parse(text) {
+export function parseYamlTree(text) {
   var src = text.split('\n'), lines = [], tabs = [];
   for (var n = 0; n < src.length; n++) {
     var body = stripComment(src[n]).replace(/\s+$/, '');
@@ -175,7 +175,7 @@ export function parse(text) {
         m.entries.push({ key: t.trim(), line: l.n, ch: ind, value: null, partial: true }); p++; continue;
       }
       p++;
-      var entry = { key: unquote(k[1]), line: l.n, ch: ind, value: null };
+      var entry = { key: yamlUnquote(k[1]), line: l.n, ch: ind, value: null };
       m.entries.push(entry);
       entry.value = entryValue(t.slice(k[0].length), l, ind + k[0].length, ind);
     }
@@ -216,7 +216,7 @@ export function parse(text) {
  * @param {string} key
  * @returns {(Object|null|undefined)}
  */
-export function get(m, key) {
+export function yamlGet(m, key) {
   if (!m || m.t !== 'map') { return undefined; }
   for (var i = 0; i < m.entries.length; i++) { if (m.entries[i].key === key) { return m.entries[i].value; } }
   return undefined;
@@ -226,12 +226,12 @@ export function get(m, key) {
  * @param {Object} n
  * @returns {*}
  */
-export function plain(n) {
+export function yamlPlain(n) {
   if (!n) { return null; }
   if (n.t === 'scalar') { return n.v; }
-  if (n.t === 'seq') { return n.items.map(plain); }
+  if (n.t === 'seq') { return n.items.map(yamlPlain); }
   var o = {};
-  n.entries.forEach(function (e) { o[e.key] = plain(e.value); });
+  n.entries.forEach(function (e) { o[e.key] = yamlPlain(e.value); });
   return o;
 }
 /**
@@ -241,7 +241,7 @@ export function plain(n) {
  * @param {number} line
  * @returns {Object[]}
  */
-export function chain(root, path, line) {
+export function yamlChain(root, path, line) {
   var out = [root], cur = root;
   for (var i = 0; i < path.length && cur; i++) {
     var seg = path[i];
@@ -251,7 +251,7 @@ export function chain(root, path, line) {
       cur.items.forEach(function (it) { if (it && it.line <= line) { pick = it; } });
       cur = pick;
     } else {
-      cur = get(cur, seg);
+      cur = yamlGet(cur, seg);
     }
     if (cur) { out.push(cur); }
   }
@@ -263,7 +263,7 @@ function shape(text) {
   var body = stripComment(text).replace(/\s+$/, ''), ind = body.length - body.replace(/^ +/, '').length, dashes = [], i = ind;
   while (body[i] === '-' && (body[i + 1] === ' ' || i + 1 === body.length)) { dashes.push(i); i++; while (body[i] === ' ') { i++; } }
   var rest = body.slice(i), k = rest.match(KEY);
-  return { blank: !body.trim(), ind: ind, dashes: dashes, col: i, key: k ? unquote(k[1]) : null, value: k ? rest.slice(k[0].length).trim() : null };
+  return { blank: !body.trim(), ind: ind, dashes: dashes, col: i, key: k ? yamlUnquote(k[1]) : null, value: k ? rest.slice(k[0].length).trim() : null };
 }
 
 /**
@@ -273,7 +273,7 @@ function shape(text) {
  * @param {number} ch
  * @returns {Object} {path, mode, key, prefix, from, flow, quoted, comment, scalar}
  */
-export function context(lines, line, ch) {
+export function yamlContext(lines, line, ch) {
   var cur = lines[line] || '', before = cur.slice(0, ch), path = [];
   // the current line: its list markers, then any flow collections up to the cursor
   var ind = before.length - before.replace(/^ +/, '').length, i = ind, need;
@@ -320,7 +320,7 @@ export function context(lines, line, ch) {
     if ((c === '}' || c === ']') && frames.length > 1) { frames.pop(); frames[frames.length - 1].closed = true; continue; }
     if (c === ',' && f.flow) { f.inValue = false; f.keyStart = j + 1; f.valStart = j + 1; continue; }
     if (c === ':' && f.map && !f.inValue && (j + 1 === before.length || /\s/.test(before[j + 1]))) {
-      f.key = unquote(before.slice(f.keyStart, j)); f.inValue = true; f.valStart = j + 1;
+      f.key = yamlUnquote(before.slice(f.keyStart, j)); f.inValue = true; f.valStart = j + 1;
     }
   }
   for (var k = 1; k < frames.length; k++) { if (frames[k].seg) { path.push(frames[k].seg); } }

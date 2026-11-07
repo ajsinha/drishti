@@ -100,6 +100,7 @@ export class Palette {
   }
 
   /**
+   * Listens to one of its events; answers the function that stops listening.
    * @param {string} name
    * @param {function(Object): void} fn
    * @returns {function(): void}
@@ -119,7 +120,10 @@ export class Palette {
   /** @private */
   payload(en) { return Object.assign({ palette: en.id, label: en.label }, en.payload); }
 
-  /** @returns {PaletteEntry[]} the entries the search shows */
+  /**
+   * The entries the search shows.
+   * @returns {PaletteEntry[]} the entries the search shows
+   */
   shown() { return searchPalette(this.o.entries, this.query); }
 
   /**

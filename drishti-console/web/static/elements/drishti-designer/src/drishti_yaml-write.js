@@ -17,7 +17,7 @@
    lines as a | block), and the lines each path of a YAML text spans, read from its tree (drishti_yaml-read.js), so a designer can
    highlight the selected item's lines and say which item a line belongs to. A path is written as drishti-inputs writes one:
    pages[0].visuals[2].title. A host whose server writes the YAML uses only the ranges; one without a server writes it here. */
-import { parse } from './drishti_yaml-read.js';
+import { parseYamlTree } from './drishti_yaml-read.js';
 
 const PLAIN = /^[A-Za-z_/$@(][^\n#{}[\],"'`]*$/;
 const RESERVED = /^(true|false|null|yes|no|on|off|~|-?\d+(\.\d+)?([eE][-+]?\d+)?)$/i;
@@ -77,7 +77,7 @@ export function dumpYaml(value, o) {
  * @returns {Map<string, [number, number]>} path -> [first line, last line]
  */
 export function yamlRanges(text) {
-  const lines = String(text || '').split('\n'), root = parse(text), out = new Map();
+  const lines = String(text || '').split('\n'), root = parseYamlTree(text), out = new Map();
   let last = lines.length - 1;
   while (last > 0 && !lines[last].trim()) { last--; }
   const startOf = (n) => (n && n.line !== undefined ? n.line : null);

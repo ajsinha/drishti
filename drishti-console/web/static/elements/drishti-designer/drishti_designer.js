@@ -1029,7 +1029,7 @@
   /* ---- src/drishti_yaml-read.js ---- */
   __m["src/drishti_yaml-read.js"] = (function () {
     const KEY = /^("(?:[^"\\]|\\.)*"|'(?:[^']|'')*'|[^\s:#{}[\],"'][^:#{}[\],]*?)\s*:(?=\s|$)/;
-    function unquote(s) {
+    function yamlUnquote(s) {
       s = s.trim();
       if (s.length > 1 && s[0] === '"' && s[s.length - 1] === '"') { try { return JSON.parse(s); } catch (e) { return s.slice(1, -1); } }
       if (s.length > 1 && s[0] === "'" && s[s.length - 1] === "'") { return s.slice(1, -1).replace(/''/g, "'"); }
@@ -1046,7 +1046,7 @@
       return s;
     }
     function scalar(text, line, ch) {
-      var raw = text.trim(), v = unquote(raw);
+      var raw = text.trim(), v = yamlUnquote(raw);
       if (raw === v) {
         if (/^(true|false)$/.test(raw)) { v = raw === 'true'; }
         else if (/^-?\d+(\.\d+)?$/.test(raw)) { v = +raw; }
@@ -1078,7 +1078,7 @@
           if (s[i] === ',') { i++; continue; }
           var ks = i, kend = (s[i] === '"' || s[i] === "'") ? quoted() : plainEnd(':,}');
           i = Math.min(kend, s.length);
-          var key = unquote(s.slice(ks, i));
+          var key = yamlUnquote(s.slice(ks, i));
           ws();
           var entry = { key: key, line: line, ch: base + ks, value: null };
           node.entries.push(entry);
@@ -1112,7 +1112,7 @@
       }
       return d;
     }
-    function parse(text) {
+    function parseYamlTree(text) {
       var src = text.split('\n'), lines = [], tabs = [];
       for (var n = 0; n < src.length; n++) {
         var body = stripComment(src[n]).replace(/\s+$/, '');
@@ -1165,7 +1165,7 @@
             m.entries.push({ key: t.trim(), line: l.n, ch: ind, value: null, partial: true }); p++; continue;
           }
           p++;
-          var entry = { key: unquote(k[1]), line: l.n, ch: ind, value: null };
+          var entry = { key: yamlUnquote(k[1]), line: l.n, ch: ind, value: null };
           m.entries.push(entry);
           entry.value = entryValue(t.slice(k[0].length), l, ind + k[0].length, ind);
         }
@@ -1198,20 +1198,20 @@
       root.tabs = tabs;
       return root;
     }
-    function get(m, key) {
+    function yamlGet(m, key) {
       if (!m || m.t !== 'map') { return undefined; }
       for (var i = 0; i < m.entries.length; i++) { if (m.entries[i].key === key) { return m.entries[i].value; } }
       return undefined;
     }
-    function plain(n) {
+    function yamlPlain(n) {
       if (!n) { return null; }
       if (n.t === 'scalar') { return n.v; }
-      if (n.t === 'seq') { return n.items.map(plain); }
+      if (n.t === 'seq') { return n.items.map(yamlPlain); }
       var o = {};
-      n.entries.forEach(function (e) { o[e.key] = plain(e.value); });
+      n.entries.forEach(function (e) { o[e.key] = yamlPlain(e.value); });
       return o;
     }
-    function chain(root, path, line) {
+    function yamlChain(root, path, line) {
       var out = [root], cur = root;
       for (var i = 0; i < path.length && cur; i++) {
         var seg = path[i];
@@ -1221,7 +1221,7 @@
           cur.items.forEach(function (it) { if (it && it.line <= line) { pick = it; } });
           cur = pick;
         } else {
-          cur = get(cur, seg);
+          cur = yamlGet(cur, seg);
         }
         if (cur) { out.push(cur); }
       }
@@ -1231,9 +1231,9 @@
       var body = stripComment(text).replace(/\s+$/, ''), ind = body.length - body.replace(/^ +/, '').length, dashes = [], i = ind;
       while (body[i] === '-' && (body[i + 1] === ' ' || i + 1 === body.length)) { dashes.push(i); i++; while (body[i] === ' ') { i++; } }
       var rest = body.slice(i), k = rest.match(KEY);
-      return { blank: !body.trim(), ind: ind, dashes: dashes, col: i, key: k ? unquote(k[1]) : null, value: k ? rest.slice(k[0].length).trim() : null };
+      return { blank: !body.trim(), ind: ind, dashes: dashes, col: i, key: k ? yamlUnquote(k[1]) : null, value: k ? rest.slice(k[0].length).trim() : null };
     }
-    function context(lines, line, ch) {
+    function yamlContext(lines, line, ch) {
       var cur = lines[line] || '', before = cur.slice(0, ch), path = [];
       var ind = before.length - before.replace(/^ +/, '').length, i = ind, need;
       var dashes = [];
@@ -1277,7 +1277,7 @@
         if ((c === '}' || c === ']') && frames.length > 1) { frames.pop(); frames[frames.length - 1].closed = true; continue; }
         if (c === ',' && f.flow) { f.inValue = false; f.keyStart = j + 1; f.valStart = j + 1; continue; }
         if (c === ':' && f.map && !f.inValue && (j + 1 === before.length || /\s/.test(before[j + 1]))) {
-          f.key = unquote(before.slice(f.keyStart, j)); f.inValue = true; f.valStart = j + 1;
+          f.key = yamlUnquote(before.slice(f.keyStart, j)); f.inValue = true; f.valStart = j + 1;
         }
       }
       for (var k = 1; k < frames.length; k++) { if (frames[k].seg) { path.push(frames[k].seg); } }
@@ -1293,11 +1293,11 @@
       }
       return res;
     }
-    return { "unquote": unquote, "parse": parse, "get": get, "plain": plain, "chain": chain, "context": context };
+    return { "yamlUnquote": yamlUnquote, "parseYamlTree": parseYamlTree, "yamlGet": yamlGet, "yamlPlain": yamlPlain, "yamlChain": yamlChain, "yamlContext": yamlContext };
   })();
   /* ---- src/drishti_yaml-write.js ---- */
   __m["src/drishti_yaml-write.js"] = (function () {
-    var parse = __m["src/drishti_yaml-read.js"].parse;
+    var parseYamlTree = __m["src/drishti_yaml-read.js"].parseYamlTree;
     const PLAIN = /^[A-Za-z_/$@(][^\n#{}[\],"'`]*$/;
     const RESERVED = /^(true|false|null|yes|no|on|off|~|-?\d+(\.\d+)?([eE][-+]?\d+)?)$/i;
     function yamlScalar(v) {
@@ -1337,7 +1337,7 @@
       return out.join('\n') + '\n';
     }
     function yamlRanges(text) {
-      const lines = String(text || '').split('\n'), root = parse(text), out = new Map();
+      const lines = String(text || '').split('\n'), root = parseYamlTree(text), out = new Map();
       let last = lines.length - 1;
       while (last > 0 && !lines[last].trim()) { last--; }
       const startOf = (n) => (n && n.line !== undefined ? n.line : null);
@@ -1373,10 +1373,10 @@
   __m["src/drishti_yaml-pane.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus, announce = __lib("drishti-core").announce, h = __lib("drishti-core").h;
     var CodeEditor = __lib("drishti-inputs").CodeEditor, debounce = __lib("drishti-inputs").debounce;
-    var parse = __m["src/drishti_yaml-read.js"].parse, plain = __m["src/drishti_yaml-read.js"].plain;
+    var parseYamlTree = __m["src/drishti_yaml-read.js"].parseYamlTree, yamlPlain = __m["src/drishti_yaml-read.js"].yamlPlain;
     var dumpYaml = __m["src/drishti_yaml-write.js"].dumpYaml, yamlRanges = __m["src/drishti_yaml-write.js"].yamlRanges, pathAtLine = __m["src/drishti_yaml-write.js"].pathAtLine;
     function readYaml(text) {
-      const tree = parse(text), problems = [];
+      const tree = parseYamlTree(text), problems = [];
       (tree.tabs || []).forEach((n) => problems.push({ line: n + 1, message: 'line ' + (n + 1) + ' is indented with a tab: YAML allows only spaces' }));
       const visit = (n) => {
         if (!n) { return; }
@@ -1385,7 +1385,7 @@
         if (n.open) { problems.push({ line: n.line + 1, message: 'a { or [ is not closed' }); }
       };
       visit(tree);
-      return { value: plain(tree), problems };
+      return { value: yamlPlain(tree), problems };
     }
     class YamlPane {
       constructor(el, o) {
@@ -2047,7 +2047,7 @@
   })();
   /* ---- src/drishti_yaml-assist.js ---- */
   __m["src/drishti_yaml-assist.js"] = (function () {
-    var parse = __m["src/drishti_yaml-read.js"].parse, context = __m["src/drishti_yaml-read.js"].context, chain = __m["src/drishti_yaml-read.js"].chain, get = __m["src/drishti_yaml-read.js"].get;
+    var parseYamlTree = __m["src/drishti_yaml-read.js"].parseYamlTree, yamlContext = __m["src/drishti_yaml-read.js"].yamlContext, yamlChain = __m["src/drishti_yaml-read.js"].yamlChain, yamlGet = __m["src/drishti_yaml-read.js"].yamlGet;
     const BASE_KEYS = ['id', 'kind', 'title', 'description', 'key', 'code', 'area', 'span', 'height', 'infer', 'columns', 'body'];
     const RACHANA_FUNCTION_ARGS = Object.freeze( {
       abs: ['number'], coalesce: ['a', 'b', '…'], contains: ['textOrList', 'value'], first: ['list'], fmt: ['value', "'format'"],
@@ -2134,7 +2134,7 @@
       let maps = nodes.filter((n) => n && n.t === 'map');
       if (skipLast) { maps = maps.slice(0, -1); }
       for (let i = maps.length - 1; i >= 0; i--) {
-        const src = get(maps[i], 'rows') || get(maps[i], 'each');
+        const src = yamlGet(maps[i], 'rows') || yamlGet(maps[i], 'each');
         if (src && src.t === 'scalar' && typeof src.v === 'string') {
           const m = src.v.trim().match(/^([$@])((?:\.[A-Za-z_$][\w$-]*|\[\d+\])*)$/);
           if (!m) { return undefined; }
@@ -2151,13 +2151,13 @@
       return s.length > 40 ? s.slice(0, 39) + '…' : s;
     }
     function yamlPlace(schema, text, line, ch) {
-      const ls = text.split('\n'), c = context(ls, line, ch);
-      c.tree = parse(text);
-      c.chain = chain(c.tree, c.path || [], line);
+      const ls = text.split('\n'), c = yamlContext(ls, line, ch);
+      c.tree = parseYamlTree(text);
+      c.chain = yamlChain(c.tree, c.path || [], line);
       c.resolved = c.chain.length === (c.path || []).length + 1;
       c.map = c.resolved && c.chain[c.chain.length - 1].t === 'map' ? c.chain[c.chain.length - 1] : null;
       c.node = schema ? schema.at(c.path || []) : null;
-      let kind = c.map && get(c.map, 'kind');
+      let kind = c.map && yamlGet(c.map, 'kind');
       if (c.flow && !kind) { const mk = (ls[line] || '').match(/[{,]\s*kind:\s*([\w-]+)/); kind = mk ? { v: mk[1] } : null; }
       c.kind = kind && typeof kind.v === 'string' ? kind.v : '';
       c.lines = ls;
@@ -2209,13 +2209,13 @@
       return items;
     }
     function yamlCheck(schema, text, validKinds) {
-      const tree = parse(text), out = [], tabbed = {};
+      const tree = parseYamlTree(text), out = [], tabbed = {};
       (tree.tabs || []).forEach((n) => { tabbed[n] = true; });
       const add = (node, len, msg) => out.push({ line: node.line + 1, from: node.ch || 0, to: (node.ch || 0) + Math.max(1, len), severity: 'error', message: msg });
       function visit(node, s, label, key) {
         s = schema.resolve(s);
         if (!s || !node) { return; }
-        if (schema.isSwitched(s) && node.t === 'map' && get(node, 'use') && s['x-rachana-use']) { s = schema.resolve(s['x-rachana-use']); }
+        if (schema.isSwitched(s) && node.t === 'map' && yamlGet(node, 'use') && s['x-rachana-use']) { s = schema.resolve(s['x-rachana-use']); }
         if (s.const !== undefined && node.t === 'scalar' && node.v !== s.const) { add(node, String(node.raw).length, label + ' must be ' + s.const); }
         if (s.enum && node.t === 'scalar' && node.v !== '' && node.v !== null && s.enum.indexOf(node.v) < 0 && !(label === 'match.kind' && (validKinds || []).indexOf(node.v) >= 0) && !/\$\{/.test(String(node.v))) {
           add(node, String(node.raw).length, '"' + node.v + '" is not a ' + (key === 'kind' && label.indexOf('match') < 0 ? 'panel kind' : 'valid ' + key) + (s.enum.length <= 16 ? ' (' + s.enum.join(', ') + ')' : ''));
@@ -2230,7 +2230,7 @@
         if (node.t === 'seq') { node.items.forEach((it, i) => visit(it, s.items, label + '[' + i + ']', key)); return; }
         if (!s.properties) { return; }
         if (node.t !== 'map') { if (s.type === 'object') { add(node, String(node.raw || '').length || 1, label + ' is a map of keys'); } return; }
-        const kn = get(node, 'kind'), kind = schema.isSwitched(s) && kn && kn.t === 'scalar' ? kn.v : '';
+        const kn = yamlGet(node, 'kind'), kind = schema.isSwitched(s) && kn && kn.t === 'scalar' ? kn.v : '';
         const allowed = schema.keys(s, schema.byKind[kind] ? kind : ''), present = {};
         node.entries.forEach((e) => {
           if (present[e.key] && !e.partial) { add(e, e.key.length, 'duplicate key "' + e.key + '"' + (label ? ' in ' + label : '')); }
@@ -2272,14 +2272,14 @@
   /* ---- src/drishti_index.js ---- */
   __m["src/drishti_index.js"] = (function () {
     var defineDesignerElements = __m["src/drishti_designer-element.js"].defineDesignerElements;
-    var parse = __m["src/drishti_yaml-read.js"].parse, get = __m["src/drishti_yaml-read.js"].get, plain = __m["src/drishti_yaml-read.js"].plain, chain = __m["src/drishti_yaml-read.js"].chain, context = __m["src/drishti_yaml-read.js"].context, unquote = __m["src/drishti_yaml-read.js"].unquote;
+    var parseYamlTree = __m["src/drishti_yaml-read.js"].parseYamlTree, yamlGet = __m["src/drishti_yaml-read.js"].yamlGet, yamlPlain = __m["src/drishti_yaml-read.js"].yamlPlain, yamlChain = __m["src/drishti_yaml-read.js"].yamlChain, yamlContext = __m["src/drishti_yaml-read.js"].yamlContext, yamlUnquote = __m["src/drishti_yaml-read.js"].yamlUnquote;
     function install(root) {
       if (!root) { return; }
       const D = root.Drishti = root.Drishti || {};
-      D.yaml = { parse, context, chain, get, plain, unquote };
+      D.yaml = { parse: parseYamlTree, context: yamlContext, chain: yamlChain, get: yamlGet, plain: yamlPlain, unquote: yamlUnquote };
       if (root.document && root.customElements) { defineDesignerElements(root.customElements, root); }
     }
-    return { "install": install, "CommandStack": __m["src/drishti_commands.js"].CommandStack, "SnapshotHistory": __m["src/drishti_commands.js"].SnapshotHistory, "Selection": __m["src/drishti_selection.js"].Selection, "GRID": __m["src/drishti_layout-rules.js"].GRID, "MAX_H": __m["src/drishti_layout-rules.js"].MAX_H, "DEFAULT_MIN_SPAN": __m["src/drishti_layout-rules.js"].DEFAULT_MIN_SPAN, "clamp": __m["src/drishti_layout-rules.js"].clamp, "clampSpan": __m["src/drishti_layout-rules.js"].clampSpan, "clampHeight": __m["src/drishti_layout-rules.js"].clampHeight, "hideRefused": __m["src/drishti_layout-rules.js"].hideRefused, "sizeText": __m["src/drishti_layout-rules.js"].sizeText, "rowsFromPixels": __m["src/drishti_layout-rules.js"].rowsFromPixels, "snap": __m["src/drishti_layout-rules.js"].snap, "clampRect": __m["src/drishti_layout-rules.js"].clampRect, "overlaps": __m["src/drishti_layout-rules.js"].overlaps, "settle": __m["src/drishti_layout-rules.js"].settle, "bounds": __m["src/drishti_layout-rules.js"].bounds, "ALIGN_EDGES": __m["src/drishti_layout-rules.js"].ALIGN_EDGES, "alignRects": __m["src/drishti_layout-rules.js"].alignRects, "distributeRects": __m["src/drishti_layout-rules.js"].distributeRects, "LayoutModel": __m["src/drishti_layout-model.js"].LayoutModel, "KEY_SCHEMES": __m["src/drishti_keymap.js"].KEY_SCHEMES, "designerBindings": __m["src/drishti_keymap.js"].designerBindings, "designerKeys": __m["src/drishti_keymap.js"].designerKeys, "keyHelp": __m["src/drishti_keymap.js"].keyHelp, "trackPointer": __m["src/drishti_pointer.js"].trackPointer, "DragHub": __m["src/drishti_pointer.js"].DragHub, "flowHit": __m["src/drishti_layout-flow.js"].flowHit, "showFlowDrop": __m["src/drishti_layout-flow.js"].showFlowDrop, "clearFlowDrop": __m["src/drishti_layout-flow.js"].clearFlowDrop, "LayoutCanvas": __m["src/drishti_layout-canvas.js"].LayoutCanvas, "searchPalette": __m["src/drishti_palette.js"].searchPalette, "paletteGroups": __m["src/drishti_palette.js"].paletteGroups, "Palette": __m["src/drishti_palette.js"].Palette, "commonValues": __m["src/drishti_inspector.js"].commonValues, "sharedSchema": __m["src/drishti_inspector.js"].sharedSchema, "Inspector": __m["src/drishti_inspector.js"].Inspector, "flattenTree": __m["src/drishti_outline.js"].flattenTree, "findNode": __m["src/drishti_outline.js"].findNode, "isWithin": __m["src/drishti_outline.js"].isWithin, "moveNode": __m["src/drishti_outline.js"].moveNode, "Outline": __m["src/drishti_outline.js"].Outline, "unquote": __m["src/drishti_yaml-read.js"].unquote, "parseYamlTree": __m["src/drishti_yaml-read.js"].parse, "yamlGet": __m["src/drishti_yaml-read.js"].get, "yamlPlain": __m["src/drishti_yaml-read.js"].plain, "yamlChain": __m["src/drishti_yaml-read.js"].chain, "yamlContext": __m["src/drishti_yaml-read.js"].context, "yamlScalar": __m["src/drishti_yaml-write.js"].yamlScalar, "dumpYaml": __m["src/drishti_yaml-write.js"].dumpYaml, "yamlRanges": __m["src/drishti_yaml-write.js"].yamlRanges, "pathAtLine": __m["src/drishti_yaml-write.js"].pathAtLine, "RACHANA_FUNCTION_ARGS": __m["src/drishti_yaml-assist.js"].RACHANA_FUNCTION_ARGS, "RACHANA_FUNCTION_HELP": __m["src/drishti_yaml-assist.js"].RACHANA_FUNCTION_HELP, "YamlSchema": __m["src/drishti_yaml-assist.js"].YamlSchema, "yamlPlace": __m["src/drishti_yaml-assist.js"].yamlPlace, "yamlCompletions": __m["src/drishti_yaml-assist.js"].yamlCompletions, "yamlCheck": __m["src/drishti_yaml-assist.js"].yamlCheck, "yamlHelp": __m["src/drishti_yaml-assist.js"].yamlHelp, "readYaml": __m["src/drishti_yaml-pane.js"].readYaml, "YamlPane": __m["src/drishti_yaml-pane.js"].YamlPane, "SHELL_ACTIONS": __m["src/drishti_shell.js"].SHELL_ACTIONS, "SHELL_MODES": __m["src/drishti_shell.js"].SHELL_MODES, "SHELL_LAYOUTS": __m["src/drishti_shell.js"].SHELL_LAYOUTS, "SHELL_FKEYS": __m["src/drishti_shell.js"].SHELL_FKEYS, "statusWords": __m["src/drishti_shell.js"].statusWords, "DesignerShell": __m["src/drishti_shell.js"].DesignerShell, "DESIGNER_ELEMENTS": __m["src/drishti_designer-element.js"].DESIGNER_ELEMENTS, "defineDesignerElements": __m["src/drishti_designer-element.js"].defineDesignerElements };
+    return { "install": install, "CommandStack": __m["src/drishti_commands.js"].CommandStack, "SnapshotHistory": __m["src/drishti_commands.js"].SnapshotHistory, "Selection": __m["src/drishti_selection.js"].Selection, "GRID": __m["src/drishti_layout-rules.js"].GRID, "MAX_H": __m["src/drishti_layout-rules.js"].MAX_H, "DEFAULT_MIN_SPAN": __m["src/drishti_layout-rules.js"].DEFAULT_MIN_SPAN, "clamp": __m["src/drishti_layout-rules.js"].clamp, "clampSpan": __m["src/drishti_layout-rules.js"].clampSpan, "clampHeight": __m["src/drishti_layout-rules.js"].clampHeight, "hideRefused": __m["src/drishti_layout-rules.js"].hideRefused, "sizeText": __m["src/drishti_layout-rules.js"].sizeText, "rowsFromPixels": __m["src/drishti_layout-rules.js"].rowsFromPixels, "snap": __m["src/drishti_layout-rules.js"].snap, "clampRect": __m["src/drishti_layout-rules.js"].clampRect, "overlaps": __m["src/drishti_layout-rules.js"].overlaps, "settle": __m["src/drishti_layout-rules.js"].settle, "bounds": __m["src/drishti_layout-rules.js"].bounds, "ALIGN_EDGES": __m["src/drishti_layout-rules.js"].ALIGN_EDGES, "alignRects": __m["src/drishti_layout-rules.js"].alignRects, "distributeRects": __m["src/drishti_layout-rules.js"].distributeRects, "LayoutModel": __m["src/drishti_layout-model.js"].LayoutModel, "KEY_SCHEMES": __m["src/drishti_keymap.js"].KEY_SCHEMES, "designerBindings": __m["src/drishti_keymap.js"].designerBindings, "designerKeys": __m["src/drishti_keymap.js"].designerKeys, "keyHelp": __m["src/drishti_keymap.js"].keyHelp, "trackPointer": __m["src/drishti_pointer.js"].trackPointer, "DragHub": __m["src/drishti_pointer.js"].DragHub, "flowHit": __m["src/drishti_layout-flow.js"].flowHit, "showFlowDrop": __m["src/drishti_layout-flow.js"].showFlowDrop, "clearFlowDrop": __m["src/drishti_layout-flow.js"].clearFlowDrop, "LayoutCanvas": __m["src/drishti_layout-canvas.js"].LayoutCanvas, "searchPalette": __m["src/drishti_palette.js"].searchPalette, "paletteGroups": __m["src/drishti_palette.js"].paletteGroups, "Palette": __m["src/drishti_palette.js"].Palette, "commonValues": __m["src/drishti_inspector.js"].commonValues, "sharedSchema": __m["src/drishti_inspector.js"].sharedSchema, "Inspector": __m["src/drishti_inspector.js"].Inspector, "flattenTree": __m["src/drishti_outline.js"].flattenTree, "findNode": __m["src/drishti_outline.js"].findNode, "isWithin": __m["src/drishti_outline.js"].isWithin, "moveNode": __m["src/drishti_outline.js"].moveNode, "Outline": __m["src/drishti_outline.js"].Outline, "yamlUnquote": __m["src/drishti_yaml-read.js"].yamlUnquote, "parseYamlTree": __m["src/drishti_yaml-read.js"].parseYamlTree, "yamlGet": __m["src/drishti_yaml-read.js"].yamlGet, "yamlPlain": __m["src/drishti_yaml-read.js"].yamlPlain, "yamlChain": __m["src/drishti_yaml-read.js"].yamlChain, "yamlContext": __m["src/drishti_yaml-read.js"].yamlContext, "yamlScalar": __m["src/drishti_yaml-write.js"].yamlScalar, "dumpYaml": __m["src/drishti_yaml-write.js"].dumpYaml, "yamlRanges": __m["src/drishti_yaml-write.js"].yamlRanges, "pathAtLine": __m["src/drishti_yaml-write.js"].pathAtLine, "RACHANA_FUNCTION_ARGS": __m["src/drishti_yaml-assist.js"].RACHANA_FUNCTION_ARGS, "RACHANA_FUNCTION_HELP": __m["src/drishti_yaml-assist.js"].RACHANA_FUNCTION_HELP, "YamlSchema": __m["src/drishti_yaml-assist.js"].YamlSchema, "yamlPlace": __m["src/drishti_yaml-assist.js"].yamlPlace, "yamlCompletions": __m["src/drishti_yaml-assist.js"].yamlCompletions, "yamlCheck": __m["src/drishti_yaml-assist.js"].yamlCheck, "yamlHelp": __m["src/drishti_yaml-assist.js"].yamlHelp, "readYaml": __m["src/drishti_yaml-pane.js"].readYaml, "YamlPane": __m["src/drishti_yaml-pane.js"].YamlPane, "SHELL_ACTIONS": __m["src/drishti_shell.js"].SHELL_ACTIONS, "SHELL_MODES": __m["src/drishti_shell.js"].SHELL_MODES, "SHELL_LAYOUTS": __m["src/drishti_shell.js"].SHELL_LAYOUTS, "SHELL_FKEYS": __m["src/drishti_shell.js"].SHELL_FKEYS, "statusWords": __m["src/drishti_shell.js"].statusWords, "DesignerShell": __m["src/drishti_shell.js"].DesignerShell, "DESIGNER_ELEMENTS": __m["src/drishti_designer-element.js"].DESIGNER_ELEMENTS, "defineDesignerElements": __m["src/drishti_designer-element.js"].defineDesignerElements };
   })();
   return Object.freeze(Object.assign({ library: "drishti-designer", version: "0.1.0" }, __m["src/drishti_index.js"]));
 });

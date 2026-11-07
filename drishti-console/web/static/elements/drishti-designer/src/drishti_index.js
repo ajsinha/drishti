@@ -32,14 +32,14 @@ export { LayoutCanvas } from './drishti_layout-canvas.js';
 export { searchPalette, paletteGroups, Palette } from './drishti_palette.js';
 export { commonValues, sharedSchema, Inspector } from './drishti_inspector.js';
 export { flattenTree, findNode, isWithin, moveNode, Outline } from './drishti_outline.js';
-export { unquote, parse as parseYamlTree, get as yamlGet, plain as yamlPlain, chain as yamlChain, context as yamlContext } from './drishti_yaml-read.js';
+export { yamlUnquote, parseYamlTree, yamlGet, yamlPlain, yamlChain, yamlContext } from './drishti_yaml-read.js';
 export { yamlScalar, dumpYaml, yamlRanges, pathAtLine } from './drishti_yaml-write.js';
 export { RACHANA_FUNCTION_ARGS, RACHANA_FUNCTION_HELP, YamlSchema, yamlPlace, yamlCompletions, yamlCheck, yamlHelp } from './drishti_yaml-assist.js';
 export { readYaml, YamlPane } from './drishti_yaml-pane.js';
 export { SHELL_ACTIONS, SHELL_MODES, SHELL_LAYOUTS, SHELL_FKEYS, statusWords, DesignerShell } from './drishti_shell.js';
 export { DESIGNER_ELEMENTS, defineDesignerElements } from './drishti_designer-element.js';
 import { defineDesignerElements } from './drishti_designer-element.js';
-import { parse, get, plain, chain, context, unquote } from './drishti_yaml-read.js';
+import { parseYamlTree, yamlGet, yamlPlain, yamlChain, yamlContext, yamlUnquote } from './drishti_yaml-read.js';
 
 /**
  * Starts drishti-designer in a page (the bundle calls it when it loads): defines its elements, and keeps the console's name of the YAML
@@ -50,6 +50,6 @@ import { parse, get, plain, chain, context, unquote } from './drishti_yaml-read.
 export function install(root) {
   if (!root) { return; }
   const D = root.Drishti = root.Drishti || {};
-  D.yaml = { parse, context, chain, get, plain, unquote };
+  D.yaml = { parse: parseYamlTree, context: yamlContext, chain: yamlChain, get: yamlGet, plain: yamlPlain, unquote: yamlUnquote };
   if (root.document && root.customElements) { defineDesignerElements(root.customElements, root); }
 }

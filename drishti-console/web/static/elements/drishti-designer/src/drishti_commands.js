@@ -107,10 +107,16 @@ export class CommandStack {
     return out;
   }
 
-  /** @returns {boolean} */
+  /**
+   * Whether there is a step to take back.
+   * @returns {boolean}
+   */
   canUndo() { return this.done.length > 0; }
 
-  /** @returns {boolean} */
+  /**
+   * Whether there is a step to do again.
+   * @returns {boolean}
+   */
   canRedo() { return this.undone.length > 0; }
 
   /**
@@ -229,18 +235,33 @@ export class SnapshotHistory {
     this.stack.push({ label, mergeKey: o && o.mergeKey, redo: () => this.o.set(JSON.parse(after), 'redo'), undo: () => this.o.set(JSON.parse(before), 'undo') });
   }
 
-  /** @returns {?Command} */
+  /**
+   * Takes back the last step.
+   * @returns {?Command}
+   */
   undo() { return this.stack.undo(); }
 
-  /** @returns {?Command} */
+  /**
+   * Does again the last step undo took back.
+   * @returns {?Command}
+   */
   redo() { return this.stack.redo(); }
 
-  /** @returns {boolean} */
+  /**
+   * Whether there is a step to take back.
+   * @returns {boolean}
+   */
   canUndo() { return this.stack.canUndo(); }
 
-  /** @returns {boolean} */
+  /**
+   * Whether there is a step to do again.
+   * @returns {boolean}
+   */
   canRedo() { return this.stack.canRedo(); }
 
-  /** @returns {void} */
+  /**
+   * Forgets every step.
+   * @returns {void}
+   */
   clear() { this.stack.clear(); }
 }

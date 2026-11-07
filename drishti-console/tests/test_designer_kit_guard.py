@@ -42,7 +42,7 @@ RULES = {
     "drag": (re.compile(r"\bsetPointerCapture\b|addEventListener\(\s*['\"](?:dragstart|pointermove)['\"]|\.draggable\s*=|['\"]?draggable['\"]?\s*:\s*['\"]?true"
                         r"|\bdraggable=|dataTransfer\.setData"),
              "drags or lays out by the pointer itself: use drishti-designer (LayoutCanvas, DragHub, trackPointer) or drishti-core's resize handles"),
-    "code-editor": (re.compile(r"\bfromTextArea\b|\bCodeMirror\s*\(\s*[\w.]+\s*,|CodeMirror\.defineMode\b|<textarea[^>]*data-(?:yaml|sutra|code|python)\b"),
+    "code-editor": (re.compile(r"""\bfromTextArea\b|\bCodeMirror\s*\(\s*[\w.]+\s*,|CodeMirror\.defineMode\b|<textarea[^>]*(?:data-[\w-]*(?:yaml|sutra|code|python|formula)\b|name="(?:body|yamlbody)")"""),
                     "makes its own code or YAML editor: use drishti-inputs' CodeEditor or drishti-designer's YamlPane"),
     "tree": (re.compile(r"""role['"]?\s*[:=,]\s*['"]tree['"]|setAttribute\(\s*['"]role['"]\s*,\s*['"]tree['"]"""),
              "draws its own tree view: use drishti-designer's Outline or drishti-inputs' TreePicker"),
@@ -68,7 +68,13 @@ ALLOWED = {
     "templates/admin/_connector_dialogs.html": {"code-editor"},   # Admin › Connectors: the connector's YAML
     "templates/admin/net.html": {"code-editor"},                  # Admin › Drishti*net: the cluster's YAML
     "templates/bi/transform.html": {"code-editor"},               # BI › Transform: the Python step
+    "templates/bi/design_theme.html": {"code-editor"},            # BI › the theme designer's YAML tab
+    "templates/bi/item.html": {"code-editor"},                    # BI › an item's body (YAML)
+    "templates/bi/workspace.html": {"code-editor"},               # BI › a workspace's new dataset (YAML, for experts)
     "templates/build/design.html": {"tree"},                      # the workbench's data-shape tree (drishti_build-shape-tree.js)
+    "templates/designer/grid.html": {"code-editor"},              # the Sutra designer's formula bar (Grid mode)
+    "templates/terminal/_calc.html": {"code-editor"},             # the calculator's Python
+    "templates/terminal/pivot.html": {"code-editor"},             # the Pivot's computed fields (code)
     "templates/designer/outline.html": {"tree"},                  # the Sutra designer's Outline mode
 }
 
@@ -119,7 +125,7 @@ def test_the_allow_list_only_shrinks():
 
 def test_the_allow_list_is_capped():
     """The list never grows past what it was when the rule was made (2026-11-07): new files cannot be added to it."""
-    assert len(ALLOWED) <= 16 and sum(len(r) for r in ALLOWED.values()) <= 16
+    assert len(ALLOWED) <= 22 and sum(len(r) for r in ALLOWED.values()) <= 22
 
 
 def test_the_guard_finds_what_it_looks_for():

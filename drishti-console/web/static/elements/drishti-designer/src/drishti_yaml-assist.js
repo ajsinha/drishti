@@ -18,7 +18,7 @@
    grammar's functions with their signatures, field paths of a sample document after "$." and "@."), the light check of a document
    (unknown keys, missing required keys, options its kind does not take, values outside an enum, a whole number, a tab), and the help
    of the key under the cursor. The YamlPane hands these to drishti-inputs' CodeEditor as its completion and lint hooks. */
-import { parse, context, chain, get } from './drishti_yaml-read.js';
+import { parseYamlTree, yamlContext, yamlChain, yamlGet } from './drishti_yaml-read.js';
 
 /** The keys every object of a kind-switched schema has before its kind's options (Rachana's panels). */
 const BASE_KEYS = ['id', 'kind', 'title', 'description', 'key', 'code', 'area', 'span', 'height', 'infer', 'columns', 'body'];
@@ -87,7 +87,11 @@ export class YamlSchema {
    */
   at(path) { let n = this.resolve(this.raw); for (let i = 0; i < path.length && n; i++) { n = this.resolve(path[i] === '[]' ? n.items : (n.properties || {})[path[i]]); } return n; }
 
-  /** @param {Object} n @returns {boolean} whether it is the kind-switched object */
+  /**
+   * Whether a schema is the kind-switched object.
+   * @param {Object} n
+   * @returns {boolean} whether it is the kind-switched object
+   */
   isSwitched(n) { return !!n && n === this.defs[this.o.switched]; }
 
   /**
@@ -102,10 +106,19 @@ export class YamlSchema {
     return Object.keys(n.properties);
   }
 
-  /** @param {Object} n @param {string} key @returns {?Object} */
+  /**
+   * A key's schema inside an object's.
+   * @param {Object} n
+   * @param {string} key
+   * @returns {?Object}
+   */
   child(n, key) { return n && n.properties ? this.resolve(n.properties[key]) : null; }
 
-  /** @param {Object} n @returns {boolean} whether its value is an expression of the grammar */
+  /**
+   * Whether a value is an expression of the grammar.
+   * @param {Object} n
+   * @returns {boolean} whether its value is an expression of the grammar
+   */
   isExpr(n) { return !!n && /Rachana-EL/.test(n.description || ''); }
 
   /**
@@ -161,7 +174,7 @@ function rowOf(nodes, doc, skipLast) {
   let maps = nodes.filter((n) => n && n.t === 'map');
   if (skipLast) { maps = maps.slice(0, -1); }
   for (let i = maps.length - 1; i >= 0; i--) {
-    const src = get(maps[i], 'rows') || get(maps[i], 'each');
+    const src = yamlGet(maps[i], 'rows') || yamlGet(maps[i], 'each');
     if (src && src.t === 'scalar' && typeof src.v === 'string') {
       const m = src.v.trim().match(/^([$@])((?:\.[A-Za-z_$][\w$-]*|\[\d+\])*)$/);
       if (!m) { return undefined; }
@@ -187,13 +200,13 @@ function preview(v) {
  * @returns {Object}
  */
 export function yamlPlace(schema, text, line, ch) {
-  const ls = text.split('\n'), c = context(ls, line, ch);
-  c.tree = parse(text);
-  c.chain = chain(c.tree, c.path || [], line);
+  const ls = text.split('\n'), c = yamlContext(ls, line, ch);
+  c.tree = parseYamlTree(text);
+  c.chain = yamlChain(c.tree, c.path || [], line);
   c.resolved = c.chain.length === (c.path || []).length + 1;
   c.map = c.resolved && c.chain[c.chain.length - 1].t === 'map' ? c.chain[c.chain.length - 1] : null;
   c.node = schema ? schema.at(c.path || []) : null;
-  let kind = c.map && get(c.map, 'kind');
+  let kind = c.map && yamlGet(c.map, 'kind');
   if (c.flow && !kind) { const mk = (ls[line] || '').match(/[{,]\s*kind:\s*([\w-]+)/); kind = mk ? { v: mk[1] } : null; }
   c.kind = kind && typeof kind.v === 'string' ? kind.v : '';
   c.lines = ls;
@@ -263,13 +276,13 @@ export function yamlCompletions(schema, text, line, ch, o) {
  * @returns {Array<{line: number, from: number, to: number, severity: string, message: string}>}
  */
 export function yamlCheck(schema, text, validKinds) {
-  const tree = parse(text), out = [], tabbed = {};
+  const tree = parseYamlTree(text), out = [], tabbed = {};
   (tree.tabs || []).forEach((n) => { tabbed[n] = true; });
   const add = (node, len, msg) => out.push({ line: node.line + 1, from: node.ch || 0, to: (node.ch || 0) + Math.max(1, len), severity: 'error', message: msg });
   function visit(node, s, label, key) {
     s = schema.resolve(s);
     if (!s || !node) { return; }
-    if (schema.isSwitched(s) && node.t === 'map' && get(node, 'use') && s['x-rachana-use']) { s = schema.resolve(s['x-rachana-use']); }
+    if (schema.isSwitched(s) && node.t === 'map' && yamlGet(node, 'use') && s['x-rachana-use']) { s = schema.resolve(s['x-rachana-use']); }
     if (s.const !== undefined && node.t === 'scalar' && node.v !== s.const) { add(node, String(node.raw).length, label + ' must be ' + s.const); }
     if (s.enum && node.t === 'scalar' && node.v !== '' && node.v !== null && s.enum.indexOf(node.v) < 0 && !(label === 'match.kind' && (validKinds || []).indexOf(node.v) >= 0) && !/\$\{/.test(String(node.v))) {
       add(node, String(node.raw).length, '"' + node.v + '" is not a ' + (key === 'kind' && label.indexOf('match') < 0 ? 'panel kind' : 'valid ' + key) + (s.enum.length <= 16 ? ' (' + s.enum.join(', ') + ')' : ''));
@@ -284,7 +297,7 @@ export function yamlCheck(schema, text, validKinds) {
     if (node.t === 'seq') { node.items.forEach((it, i) => visit(it, s.items, label + '[' + i + ']', key)); return; }
     if (!s.properties) { return; }
     if (node.t !== 'map') { if (s.type === 'object') { add(node, String(node.raw || '').length || 1, label + ' is a map of keys'); } return; }
-    const kn = get(node, 'kind'), kind = schema.isSwitched(s) && kn && kn.t === 'scalar' ? kn.v : '';
+    const kn = yamlGet(node, 'kind'), kind = schema.isSwitched(s) && kn && kn.t === 'scalar' ? kn.v : '';
     const allowed = schema.keys(s, schema.byKind[kind] ? kind : ''), present = {};
     node.entries.forEach((e) => {
       if (present[e.key] && !e.partial) { add(e, e.key.length, 'duplicate key "' + e.key + '"' + (label ? ' in ' + label : '')); }

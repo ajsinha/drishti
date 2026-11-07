@@ -73,6 +73,7 @@ export class LayoutModel {
   }
 
   /**
+   * Listens to one of its events; answers the function that stops listening.
    * @param {string} name
    * @param {function(Object): void} fn
    * @returns {function(): void}
@@ -104,12 +105,16 @@ export class LayoutModel {
   }
 
   /**
+   * An item by its id, or null.
    * @param {string} id
    * @returns {?LayoutItem}
    */
   get(id) { return this.state.items.find((i) => i.id === id) || null; }
 
-  /** @returns {string[]} */
+  /**
+   * The ids in reading order.
+   * @returns {string[]}
+   */
   ids() { return this.list().map((i) => i.id); }
 
   /**
@@ -187,7 +192,10 @@ export class LayoutModel {
     });
   }
 
-  /** @returns {number} the first free row under everything (grid) */
+  /**
+   * The first free row under every item (grid).
+   * @returns {number} the first free row under everything (grid)
+   */
   bottom() { return this.state.items.reduce((m, i) => Math.max(m, (i.y || 0) + (i.h || 0)), 0); }
 
   /** @private */

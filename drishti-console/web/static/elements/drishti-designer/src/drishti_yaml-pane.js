@@ -20,7 +20,7 @@
    item the line belongs to. Completion and the lint come from hooks (the YAML assistant over a JSON Schema, a validator). */
 import { EventBus, announce, h } from '../../drishti-core/src/drishti_index.js';
 import { CodeEditor, debounce } from '../../drishti-inputs/src/drishti_index.js';
-import { parse, plain } from './drishti_yaml-read.js';
+import { parseYamlTree, yamlPlain } from './drishti_yaml-read.js';
 import { dumpYaml, yamlRanges, pathAtLine } from './drishti_yaml-write.js';
 
 /**
@@ -29,7 +29,7 @@ import { dumpYaml, yamlRanges, pathAtLine } from './drishti_yaml-write.js';
  * @returns {{value: *, problems: Array<{line: number, message: string}>}}
  */
 export function readYaml(text) {
-  const tree = parse(text), problems = [];
+  const tree = parseYamlTree(text), problems = [];
   (tree.tabs || []).forEach((n) => problems.push({ line: n + 1, message: 'line ' + (n + 1) + ' is indented with a tab: YAML allows only spaces' }));
   const visit = (n) => {
     if (!n) { return; }
@@ -38,7 +38,7 @@ export function readYaml(text) {
     if (n.open) { problems.push({ line: n.line + 1, message: 'a { or [ is not closed' }); }
   };
   visit(tree);
-  return { value: plain(tree), problems };
+  return { value: yamlPlain(tree), problems };
 }
 
 /**
@@ -94,6 +94,7 @@ export class YamlPane {
   }
 
   /**
+   * Listens to one of its events; answers the function that stops listening.
    * @param {string} name
    * @param {function(Object): void} fn
    * @returns {function(): void}
@@ -134,7 +135,10 @@ export class YamlPane {
     if (this.o.selection) { this.highlight(this.o.selection.primary(), false); }
   }
 
-  /** @returns {string} the text */
+  /**
+   * The text as it stands.
+   * @returns {string} the text
+   */
   getText() { return this.editor.getValue(); }
 
   /**
@@ -196,6 +200,7 @@ export class YamlPane {
   refresh() { this.editor.refresh(); }
 
   /**
+   * Takes the pane out (the editor, the listeners).
    * @returns {void}
    */
   destroy() { if (this.off) { this.off(); } this.readSoon.cancel(); this.editor.destroy(); this.events.clear(); }
