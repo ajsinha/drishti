@@ -54,12 +54,12 @@ class FakeApi:
 
     def json(self, method, path, body=None):
         FakeApi.calls.append((method, path, body))
-        if path.startswith("/api/v1/exposure/scope?"):
+        if path.startswith("/api/v1/risk/exposure/scope?"):
             return HEAD
-        if path.startswith("/api/v1/exposure/scope/contributions"):
+        if path.startswith("/api/v1/risk/exposure/scope/contributions"):
             return {"canonical": "CPTY:CP-ALDERSHOT", "by": "netting-set", "figure": "PFE", "total": 10, "date": "2028-09-29",
                     "rows": [{"label": "NS-ALDERSHOT-NY · Aldershot", "value": 8, "pct": 0.8, "incremental": 5}]}
-        if path.startswith("/api/v1/exposure/what-if"):
+        if path.startswith("/api/v1/risk/exposure/what-if"):
             return {"canonical": "CPTY:CP-ALDERSHOT", "method": "paths", "flags": [], "runId": "XR-1", "base": {"peakPfe": 10, "epe": 2},
                     "with": {"peakPfe": 12, "epe": 3}, "incremental": {"peakPfe": 2, "epe": 1}}
         return {"ok": True}
@@ -93,12 +93,12 @@ class ExposureCli(unittest.TestCase):
 
     def test_each_command_reaches_its_path(self):
         run("show", "CPTY:CP-ALDERSHOT", "--date", "2026-09-30", "--q", "0.99", "--json")
-        self.assertEqual(self.query(), ("GET", "/api/v1/exposure/scope", {"scope": "CPTY:CP-ALDERSHOT", "asOf": "2026-09-30", "q": "0.99"}, None))
+        self.assertEqual(self.query(), ("GET", "/api/v1/risk/exposure/scope", {"scope": "CPTY:CP-ALDERSHOT", "asOf": "2026-09-30", "q": "0.99"}, None))
         run("parts", "NSET:NS-ALDERSHOT-NY", "--by", "trade", "--figure", "EE", "--at", "1Y", "--json")
-        self.assertEqual(self.query()[1:3], ("/api/v1/exposure/scope/contributions",
+        self.assertEqual(self.query()[1:3], ("/api/v1/risk/exposure/scope/contributions",
                                              {"scope": "NSET:NS-ALDERSHOT-NY", "by": "trade", "figure": "EE", "date": "1Y"}))
         run("tree", "--json")
-        self.assertEqual(self.query()[1], "/api/v1/exposure/tree")
+        self.assertEqual(self.query()[1], "/api/v1/risk/exposure/tree")
         run("profile", "NSET:NS-X", "--csv")
         self.assertEqual(self.query()[2], {"scope": "NSET:NS-X", "format": "csv"})
         run("profile", "NSET:NS-X", "--jsonl")                                  # 2.9.4: the server's JSON Lines
@@ -110,12 +110,12 @@ class ExposureCli(unittest.TestCase):
         run("compare", "XCAP-20260930-1")
         self.assertEqual(self.query()[2], {"a": "XCAP-20260930-1", "b": "now"})
         run("official", "--capture", "--date", "2026-09-30")
-        self.assertEqual(self.query()[0:3], ("POST", "/api/v1/exposure/official", {"asOf": "2026-09-30"}))
-        for c, path in (("status", "/api/v1/exposure/status"), ("retention", "/api/v1/exposure/retention"), ("reload", "/api/v1/exposure/reload")):
+        self.assertEqual(self.query()[0:3], ("POST", "/api/v1/risk/exposure/official", {"asOf": "2026-09-30"}))
+        for c, path in (("status", "/api/v1/risk/exposure/status"), ("retention", "/api/v1/risk/exposure/retention"), ("reload", "/api/v1/risk/exposure/reload")):
             run(c)
             self.assertEqual(FakeApi.calls[-1][1], path)
         run("reload", "--date", "2026-09-29")                           # 2.9.7 (O3): one date only
-        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/exposure/reload?date=2026-09-29")
+        self.assertEqual(FakeApi.calls[-1][1], "/api/v1/risk/exposure/reload?date=2026-09-29")
 
     def test_a_headline_and_its_parts_print_in_a_few_lines(self):
         out = []
@@ -124,7 +124,7 @@ class ExposureCli(unittest.TestCase):
         self.assertIn("  peak PFE 95%   353,330,000 USD at 2Y (2028-09-29)   PFE 99% 410,000,000", out)
         self.assertTrue(any(line.startswith("Tenor") for line in out))
         rows = []
-        X.render_parts(FakeApi().json("GET", "/api/v1/exposure/scope/contributions?scope=x"), 10, rows.append)
+        X.render_parts(FakeApi().json("GET", "/api/v1/risk/exposure/scope/contributions?scope=x"), 10, rows.append)
         self.assertIn("NS-ALDERSHOT-NY", rows[3])
 
     def test_a_whatif_copies_a_trade_or_reads_candidates(self):
@@ -133,7 +133,7 @@ class ExposureCli(unittest.TestCase):
         self.assertEqual(body["method"], "paths")
         self.assertEqual(body["candidates"][0]["paths"], {"copyOf": "CLY-4003028", "factor": -1.0})
         self.assertEqual(body["candidates"][0]["nettingSet"], "NS-ALDERSHOT-FRA")
-        self.assertEqual(FakeApi.calls[-2][1].split("?")[0], "/api/v1/exposure/scope/contributions")    # the trade's terms, for the addon proxy
+        self.assertEqual(FakeApi.calls[-2][1].split("?")[0], "/api/v1/risk/exposure/scope/contributions")    # the trade's terms, for the addon proxy
         self.assertIn("delta", body["candidates"][0])
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / "c.json"
@@ -145,8 +145,26 @@ class ExposureCli(unittest.TestCase):
         with self.assertRaises(Err):
             run("whatif", "CPTY:CP-ALDERSHOT")
         out = []
-        X.render_whatif(FakeApi().json("POST", "/api/v1/exposure/what-if"), out.append)
+        X.render_whatif(FakeApi().json("POST", "/api/v1/risk/exposure/what-if"), out.append)
         self.assertTrue(any(line.startswith("Peak PFE") and line.rstrip().endswith("2") for line in out))
+
+    def test_predeal_sends_the_command_as_typed(self):
+        self.assertEqual(run("predeal", "PREDEAL CP-ALDERSHOT LIKE CLY-4003028 250M", "--date", "2026-09-30"), 0)
+        method, url, body = FakeApi.calls[-1][0], FakeApi.calls[-1][1], FakeApi.calls[-1][2]
+        self.assertEqual((method, url.split("?")[0]), ("POST", "/api/v1/risk/exposure/predeal"))
+        self.assertIn("asOf=2026-09-30", url)
+        self.assertEqual(body, {"command": "PREDEAL CP-ALDERSHOT LIKE CLY-4003028 250M"})
+        run("predeal", "CP-ALDERSHOT", "RATES", "250M", "5Y")                          # the word PREDEAL may be left out
+        self.assertEqual(FakeApi.calls[-1][2], {"command": "PREDEAL CP-ALDERSHOT RATES 250M 5Y"})
+        out = []
+        X.render_predeal({"decision": "refer", "command": "PREDEAL CP-1 RATES 10M 1Y", "reasons": ["a proxy answer only refers"],
+                          "method": {"id": "addon", "exact": False, "text": "proxy"}, "template": {"assetClass": "RATES"},
+                          "limit": {"id": "LIM-1", "limit": 1e9, "before": 1e6, "after": 2e6, "useAfter": 0.002,
+                                    "buckets": [{"bucket": "0-1Y", "status": "within", "limit": 1e9, "useAfter": 0.001}]},
+                          "saCcr": {"status": "under-construction", "release": "2.9.11.k"}}, out.append)
+        self.assertTrue(out[0].startswith("REFER"))
+        self.assertTrue(any("0-1Y" in line for line in out))
+        self.assertTrue(any("under-construction" in line for line in out))
 
 
 if __name__ == "__main__":

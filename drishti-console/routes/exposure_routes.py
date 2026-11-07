@@ -146,3 +146,18 @@ def redirect_for(typed: str) -> RedirectResponse | None:
     """The terminal's ``/go`` asks here: an exposure command (the explorer), or None."""
     where = exp_command(typed.split())
     return RedirectResponse(where, status_code=303) if where else None
+
+
+#: what ``PREDEAL`` typed says until the Counterparties → Pre-deal check screen is built on the Drishti Elements libraries (registry item
+#: ``pre-deal-screen``); the check itself is the server's and answers now
+PREDEAL_PENDING = ("PREDEAL: the Counterparties → Pre-deal check screen is under construction (it is built on the Drishti Elements "
+                   "libraries); the check answers now from POST /api/v1/exposure/predeal and drishti.py exposure predeal \"PREDEAL "
+                   "<counterparty> LIKE <trade> <notional>\" (EXPOSURE_GUIDE.md section 18.9)")
+
+
+def predeal_redirect(typed: str) -> RedirectResponse | None:
+    """``PREDEAL …`` typed: said, in words, until its screen is built (the server's pre-deal service answers the API and the CLI)."""
+    words = typed.split()
+    if not words or words[0].upper() != "PREDEAL":
+        return None
+    return RedirectResponse(f"/t?error={quote(PREDEAL_PENDING)}", status_code=303)

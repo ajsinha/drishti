@@ -78,8 +78,25 @@ public final class PackEnvironmentPostProcessor implements EnvironmentPostProces
         java.util.Set<String> suppressed = new java.util.LinkedHashSet<>();
         if (samples.hidden()) {                                                          // ... and the connectors only they use do not start
             suppressed.addAll(SamplePolicy.sampleOnlyConnectors(dirs, loader));
-            packs.forEach(p -> suppressed.removeAll(p.connectorRefs()));
         }
+        // a pack of a module that is off is not loaded, and neither the connectors only such packs use nor the module's own start
+        // (docs/architecture/ACCESS_MODEL.md: module off = gone everywhere)
+        com.ash.drishti.registry.AccessRegistry access = Modules.of(env);
+        List<Pack> offPacks = packs.stream().filter(p -> !access.packOn(p.name(), p.domain())).toList();
+        if (!offPacks.isEmpty()) {
+            System.getLogger(PackEnvironmentPostProcessor.class.getName()).log(System.Logger.Level.INFO,
+                    "not loading {0}: their module is off (Admin -> Modules)", offPacks.stream().map(Pack::name).toList());
+            packs = new java.util.ArrayList<>(packs);
+            packs.removeAll(offPacks);
+            offPacks.forEach(p -> suppressed.addAll(p.connectorRefs()));
+        }
+        for (com.ash.drishti.registry.ModuleState m : access.modules()) {
+            if (!m.on()) {
+                access.manifest(m.id()).ifPresent(man -> suppressed.addAll(man.connectors()));
+            }
+        }
+        List<Pack> loaded = packs;
+        loaded.forEach(p -> suppressed.removeAll(p.connectorRefs()));
         // connector files: migrate old per-pack overrides once, write files from the packs' templates where none exist
         ConnectorBootstrap.Result boot = ConnectorBootstrap.run(packs, files, overrides,
                 Boolean.parseBoolean(env.getProperty("drishti.sources.connectors-generate", "true")), officialReaders(env));

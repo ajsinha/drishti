@@ -75,6 +75,7 @@
 .tl-verdict .ok { color: var(--d-ok); }
 .tl-verdict .near { color: var(--d-warn, #c98a12); }
 .tl-verdict .breach { color: var(--d-bad); }
+.tl-verdict .refer { color: var(--d-warn, #c98a12); }
 .tl-heat { display: grid; grid-template-columns: minmax(90px, 130px) repeat(var(--tl-days, 5), minmax(0, 1fr)); gap: 4px; font-size: 12px;
   align-items: center; }
 .tl-heat .h { color: var(--d-muted); text-align: center; white-space: nowrap; }

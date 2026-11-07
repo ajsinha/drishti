@@ -1417,7 +1417,7 @@ The pairwise correlations of a correlation set's factors, computed when asked fr
 | Contract | [correlation-result.contract.yaml](../../../config/packs/market-data/contracts/correlation-result.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
-| Source | computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.compute.reactive.analytics.CorrelationEngine) |
+| Source | computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.banking.compute.analytics.CorrelationEngine) |
 | Grain | One answer per question (the correlation set asked for, its window and estimator, and the business date), computed when asked. |
 | Key | — |
 | Id pattern | — |
@@ -1479,7 +1479,7 @@ An equity's beta, alpha, correlation and R squared against its index (EQUITY_IND
 | Contract | [equity-beta.contract.yaml](../../../config/packs/market-data/contracts/equity-beta.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
-| Source | computed by Drishti: the reactive connector equity-analytics (java engine com.ash.drishti.compute.reactive.analytics.BetaEngine) |
+| Source | computed by Drishti: the reactive connector equity-analytics (java engine com.ash.drishti.banking.compute.analytics.BetaEngine) |
 | Grain | One answer per question (the equity asked for, its window and the business date), computed when asked. |
 | Key | — |
 | Id pattern | — |

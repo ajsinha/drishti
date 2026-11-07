@@ -23,7 +23,7 @@ status: active
 title: Correlations of a factor set (computed from price history)
 description: The pairwise correlations of a correlation set's factors, computed when asked from their daily closes in the lake (log returns
   over a window, Pearson or Ledoit-Wolf) by the server's Java engine, as the person asking; never stored.
-source: 'computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.compute.reactive.analytics.CorrelationEngine)'
+source: 'computed by Drishti: the reactive connector correlation-engine (java engine com.ash.drishti.banking.compute.analytics.CorrelationEngine)'
 grain: One answer per question (the correlation set asked for, its window and estimator, and the business date), computed when asked.
 key: []
 dated-by: on request

@@ -276,11 +276,14 @@ def test_the_check_is_one_var_what_if_and_one_pre_deal_check():
     assert v["scope"] == "BOOK:BOOK-RATES-1" and v["before"] == 6_120_000 and v["after"] == 6_300_000 and v["state"] == "near"
     assert v["useAfter"] == pytest.approx(6_300_000 / 7_400_000)
     assert x["scope"] == "CPTY:CP-ALDERSHOT" and x["method"] == "paths" and x["nettingSet"] == "NS-ALDERSHOT-NY" and not x["proxy"]
-    assert x["state"] == "near" and x["useAfter"] == pytest.approx(409_200_000 / 420_000_000) and x["confidence"] == 0.95
+    assert x["state"] == "near" and x["decision"] == "approve" and x["useAfter"] == pytest.approx(409_200_000 / 420_000_000)
+    assert x["confidence"] == 0.95 and x["checkId"] == "PDC-TEST"
     calls = [a for a in b.asked if isinstance(a, tuple) and a[0] in ("var", "exposure") and a[1] == "POST"]
     assert len(calls) == 2                                                               # one call each
     whatif = calls[0][4] if calls[0][0] == "var" else calls[1][4]
     assert whatif["items"][0]["copyOf"] == "MX-20000010"
+    predeal = [c for c in calls if c[0] == "exposure"][0]
+    assert predeal[2] == "/predeal" and predeal[4]["like"] == "MX-20000010" and predeal[4]["side"] == "same"   # the server's pre-deal service
     sold = asyncio.run(tl.check(b, me, s, {}, {"product": "IR_SWAP", "notional": "250m", "counterparty": "CP-ALDERSHOT", "side": "B"}))
     assert sold["factor"] < 0                                                            # the other side: the copy's unwind direction
 
@@ -288,9 +291,10 @@ def test_the_check_is_one_var_what_if_and_one_pre_deal_check():
 def test_the_check_falls_back_to_the_engines_proxy_and_says_so():
     b, me, s = _scope(backend=TradingBackend(paths=False))
     c = asyncio.run(tl.check(b, me, s, {}, {"product": "SWAPTION", "notional": "75m", "counterparty": "CP-ALDERSHOT"}))
-    assert c["exposure"]["proxy"] and c["exposure"]["method"] == "addon" and "DRS-5446" in c["exposure"]["fallback"]
+    assert c["exposure"]["proxy"] and c["exposure"]["method"] == "addon" and "DRS-1001" in c["exposure"]["fallback"]
+    assert c["exposure"]["state"] == "refer" and c["exposure"]["decision"] == "refer"       # a proxy only refers, never approves
     n = asyncio.run(tl.check(b, me, s, {}, {"product": "IR_SWAP", "notional": "10m", "counterparty": "CP-NORTHPLAINS"}))
-    assert n["exposure"]["state"] == "none" and n["exposure"]["proxy"]                     # no limit, no netting set: the add-on, said
+    assert n["exposure"]["state"] == "refer" and "no credit limit" in " ".join(n["exposure"]["reasons"])   # no limit: refer, said
     bad = asyncio.run(tl.check(b, me, s, {}, {"product": "IR_SWAP", "notional": "lots", "counterparty": "CP-ALDERSHOT"}))
     assert not bad["ok"] and "notional" in bad["reason"]
     none = asyncio.run(tl.check(b, me, s, {}, {"product": "CAP", "notional": "10m", "counterparty": "CP-ALDERSHOT"}))

@@ -54,7 +54,7 @@ DRS-5333 no SIMM version is installed …*.
 
 ```bash
 mkdir -p config/simm
-cp drishti-compute/src/test/resources/simm/simm-toy.yaml config/simm/
+cp drishti-compute-banking/src/test/resources/simm/simm-toy.yaml config/simm/
 python3 tools/drishti.py simm versions
 ```
 
@@ -225,7 +225,7 @@ python3 tools/drishti.py play simm NS-ALDERSHOT-LDN --side post --xlsx aldershot
 ```
 
 **The YAML.** The template the workbook is built from is a setting (blank: the built-in one); its explanation is
-`drishti-server/src/main/resources/playground/simm/template/explain.txt`:
+`drishti-banking/src/main/resources/playground/simm/template/explain.txt`:
 
 ```yaml
 drishti:
