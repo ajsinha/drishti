@@ -112,10 +112,10 @@ export class Combobox extends InputBase {
     const o = this.o;
     this.value = o.value ? { value: o.value.value, label: String(o.value.label !== undefined ? o.value.label : o.value.value) } : null;
     this.list = new Listbox(this.doc, { label: o.label || 'Suggestions', render: o.renderOption, onPick: (it) => this.pick(it) });
-    this.pop = new Popover(this.doc, { cls: 'di-combo-pop', role: 'presentation', theme: host, onClose: () => { this.input.setAttribute('aria-expanded', 'false'); this.input.removeAttribute('aria-activedescendant'); } });
+    this.pop = new Popover(this.doc, { cls: 'di-combo-pop', role: 'presentation', theme: host, onClose: () => { this.input.setAttribute('aria-expanded', 'false'); this.input.removeAttribute('aria-activedescendant'); this.input.removeAttribute('aria-controls'); } });
     this.status = this.el('div', { cls: 'di-combo-status', attrs: { role: 'status', 'aria-live': 'polite' } });
     this.panel = this.el('div', { cls: 'di-combo-panel' }, [this.list.el, this.status]);
-    this.input = this.el('input', { cls: 'di-field', attrs: { type: 'text', role: 'combobox', 'aria-expanded': 'false', 'aria-autocomplete': 'list', 'aria-controls': this.list.id,
+    this.input = this.el('input', { cls: 'di-field', attrs: { type: 'text', role: 'combobox', 'aria-expanded': 'false', 'aria-autocomplete': 'list',
       'aria-label': o.label || 'Search', placeholder: o.placeholder || 'Type to search', autocomplete: 'off', spellcheck: 'false', id: uid('combo') } });
     this.control = this.el('div', { cls: 'di-control' }, [this.input]);
     host.appendChild(this.control);
@@ -144,7 +144,7 @@ export class Combobox extends InputBase {
   }
 
   /** @private */
-  openPanel() { if (!this.pop.isOpen()) { this.pop.open(this.control, this.panel, { focus: false }); this.input.setAttribute('aria-expanded', 'true'); } else { this.pop.place(); } }
+  openPanel() { if (!this.pop.isOpen()) { this.pop.open(this.control, this.panel, { focus: false }); this.input.setAttribute('aria-controls', this.list.id); this.input.setAttribute('aria-expanded', 'true'); } else { this.pop.place(); } }
 
   /** @private */
   onKey(e) {

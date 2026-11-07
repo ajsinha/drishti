@@ -47,9 +47,9 @@ export class MultiSelect extends InputBase {
     (o.value || []).forEach((v) => this.picked.add(this.key(v)));
     this.matches = this.options;
     this.list = new Listbox(this.doc, { multiple: true, label: o.label || 'Options', onPick: (it) => this.toggle(it.value) });
-    this.pop = new Popover(this.doc, { cls: 'di-ms-pop', role: 'presentation', theme: host, onClose: () => { this.input.setAttribute('aria-expanded', 'false'); this.input.removeAttribute('aria-activedescendant'); this.emit('close'); } });
+    this.pop = new Popover(this.doc, { cls: 'di-ms-pop', role: 'presentation', theme: host, onClose: () => { this.input.setAttribute('aria-expanded', 'false'); this.input.removeAttribute('aria-activedescendant'); this.input.removeAttribute('aria-controls'); this.emit('close'); } });
     this.chips = this.el('span', { cls: 'di-chips' });
-    this.input = this.el('input', { cls: 'di-inline-field', attrs: { type: 'text', role: 'combobox', 'aria-expanded': 'false', 'aria-autocomplete': 'list', 'aria-controls': this.list.id,
+    this.input = this.el('input', { cls: 'di-inline-field', attrs: { type: 'text', role: 'combobox', 'aria-expanded': 'false', 'aria-autocomplete': 'list',
       'aria-label': o.label || 'Choose', autocomplete: 'off', spellcheck: 'false', id: uid('ms') } });
     this.control = this.el('div', { cls: 'di-control di-ms-control' }, [this.chips, this.input, this.el('span', { cls: 'di-caret', text: '▾', attrs: { 'aria-hidden': 'true' } })]);
     host.appendChild(this.control);
@@ -85,6 +85,7 @@ export class MultiSelect extends InputBase {
   open() {
     this.filter();
     this.pop.open(this.control, this.panel, { focus: false });
+    this.input.setAttribute('aria-controls', this.list.id);              // only while the listbox is in the page (a closed one is not)
     this.input.setAttribute('aria-expanded', 'true');
     this.emit('open');
   }
