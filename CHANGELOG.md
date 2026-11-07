@@ -37,6 +37,12 @@
   (UI, command line and YAML at every step), with `docs/tutorials/data/risklake/make_day.py` (a deterministic synthetic day). Help: the
   guide and the tutorial listed, `moved:` for the three folded pages; the docs map; DOCS_PLAN.md splits B1 into B1 Connect and B1b Data
   lake & data load; every link re-pointed.
+- **Tutorial 45 done for real, with its pictures**: its steps run on a scratch server (its own config copy and a demo lake of the
+  trades) by `tools/docs/shots/t45.py` (`screenshots.py --guide t45`, reproducible): the lake file, the routing rules, three files
+  waiting (one held), the load with its *no connector reads it* notices, Data loads → Loads, the connector pointed at risklake after a
+  restart, `TRD 7000001` from risklake, and a repeat skipped as a duplicate; every step says what you should see, from the captured
+  output. The Inbox screen's Undo works on the inbox's own lake, so the tutorial undoes a risklake load with `lake undo --lake`. Tutorial
+  45 is in the tutorial test's inventory.
 - **`drishti.py lake undo` with the server's exec jar**: the Delta undo's JSON is read after any library log lines on standard output
   (before, the command failed with `lake undo (Delta): } ]`).
 - **Every lake in its own folder; real data loads beside the demo, never over it** (product owner, 2026-11-07; DATA_LAKE_GUIDE.md sections 1, 4 and 7,

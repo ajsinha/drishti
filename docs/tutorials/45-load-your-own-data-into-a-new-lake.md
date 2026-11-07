@@ -111,7 +111,11 @@ a fifth partition column, `business_date` in `partition-by`, a misspelt key (*un
 **The UI.** Admin → Lakes lists `risklake` with its format, root and three tables, read-only from the file. No table exists yet: the
 first load creates each one exactly as the file says.
 
-**You should see** `risklake` beside `demo`, at `data/delta/risklake`.
+![Admin → Lakes: risklake opened, at ./data/delta/risklake, with its three tables, their partitions, promoted columns, vector and ids](img/t45/01-lake-file.jpg)
+
+**You should see** `risklake` beside `demo`, at `./data/delta/risklake`, with three tables: `trading.trade_endur` partitioned by
+`business_date, PRODUCT_TYPE` (18 promoted), `risk.scenario-pv` with the vector `SCENARIO_PV` (24 promoted) and `risk.risk-hierarchy`
+(5 promoted), each *replace each date*.
 
 ## Step 2 · Route the files to it
 
@@ -143,10 +147,17 @@ dataload:
 
 The rules are read again at every cycle: no restart.
 
-**The command line.** `python3 tools/drishti.py dataload status` lists the rules in effect at its end, each with its pack, kind, lake and
-where the business date comes from.
+**The command line.** `python3 tools/drishti.py dataload status --json` gives the rules in effect under `rules`, each with its pack,
+kind, lake and where the business date comes from (`"lake": "risklake"`, `"date": "from the name (required)"`).
 
 **The UI.** Admin → Data loads → Inbox → **Routing rules in effect** shows the same three rules, read-only.
+
+![The Inbox screen: the three routing rules in effect, with the pack and kind, the table and where the business date comes from](img/t45/02-rules.jpg)
+
+**You should see** three rules: `trade_endur.*.jsonl.gz` to *trading / trade*, table `trade-endur`, the date *from the name
+(required)*; `scenario_pv.*.jsonl.gz` and `risk_hierarchy.*` to *market-risk*, the pack's table, the date *from the .ready file, else
+the name, else today*; and a last line, *anything else: unmatched: fail*. The screen does not show the lake; `dataload status --json`
+does.
 
 ## Step 3 · Make a day of data
 
@@ -173,6 +184,9 @@ from the name, never from a row. One line of each:
 ```
 
 (The scenario-PV line is shortened: it carries 509 numbers and the rest of the fields.)
+
+**You should see** the three files in `data/tmp/drop/` with exactly the rows and checksums above: 2,000 trades, 300 scenario-PV
+rows, 26 hierarchy nodes.
 
 ## Step 4 · Drop the files with their `.ready` files
 
@@ -217,13 +231,34 @@ python3 tools/drishti.py dataload status
 **The UI.** Admin → Data loads → Inbox → **Waiting**: the trades and the hierarchy *ready* once stable for 30 seconds, each with the rule
 that routes it and *2026-11-06 from the name*; the scenario PVs **held**.
 
-**You should see** two files ready, one held.
+![The Inbox screen: three files waiting, the hierarchy and the trades ready with their rules, the scenario PVs held](img/t45/03-waiting.jpg)
+
+**You should see** **Waiting 3**: `risk_hierarchy.2026-11-06.jsonl` and `trade_endur.2026-11-06.jsonl.gz` *ready* (*stable 40 s · marker
+with keys*, *rule 3 → market-risk / risk-hierarchy* and *rule 1 → trading / trade · trade-endur*, *2026-11-06 from the name*, *taken at
+the next cycle*), and `scenario_pv.2026-11-06.jsonl.gz` *held: its .ready file says hold: true (remove the key to release it)*.
+`dataload status` says the same:
+
+```text
+waiting (3):
+  risk_hierarchy.2026-11-06.jsonl                 3.6 KB  ready: the next cycle takes it
+                                                          business date: 2026-11-06 from the name
+  trade_endur.2026-11-06.jsonl.gz                50.8 KB  ready: the next cycle takes it
+                                                          business date: 2026-11-06 from the name
+  scenario_pv.2026-11-06.jsonl.gz               729.9 KB  held: its .ready file says hold: true (remove the key to release it)
+                                                          business date: 2026-11-06 from the name
+```
 
 ## Step 5 · Load, and release the held file
 
 **The UI.** Press **Load now** (or wait for the next cycle). **Loading** shows the run table by table (the hierarchy, then the trades),
 each with its date's version and rows while it commits; **Last cycles** then shows the cycle as loaded, with its two files, two tables,
 one date and 2,026 rows. Each table was created in `data/delta/risklake/` as the lake file says.
+
+![The Inbox screen after Load now: the cycle loaded, 2 files, 2 tables, 2,026 rows, with the two notices that no connector reads risklake; the scenario PVs still held](img/t45/04-loaded.jpg)
+
+The cycle carries two notices, one per pack: *loaded into risklake, but no connector reads it: point market-risk's connectors at it
+(lake: risklake) and restart*, and the same for trading. (A scheduled cycle that falls due while a run loads is shown *skipped: run …
+still loading*: runs never overlap.)
 
 Now remove the `hold: true` line from the scenario PVs' `.ready` file and press **Load now** again: it loads. The position rows carry
 509 scenario PVs each, kept as a vector column.
@@ -241,8 +276,14 @@ The table's folder has one subfolder per `PRODUCT_TYPE` (fifteen here: `PRODUCT_
 each file, its `.ready` and its `<file>.loaded.json` report (the route, each date's version and rows), and `loads/` the loader's own
 log and summary.
 
+Admin → Data loads → **Loads** lists every load by pack, as the packs were told of them:
+
+![Admin → Data loads → Loads: trading's trade 2026-11-06 ready with 2,000 rows; market risk's scenario-pv and risk-hierarchy ready, not found](img/t45/05-loads.jpg)
+
 **You should see**, on Admin → Data loads → Inbox and in each report, the warning *loaded into risklake, but no connector reads it:
-point trading's connectors at it (lake: risklake) and restart*. The rows are in the lake; no page shows them yet. That is the next step.
+point trading's connectors at it (lake: risklake) and restart*; on **Loads**, *trade 2026-11-06 · ready · 2,000 rows* for Trading and,
+for Market risk, *scenario-pv 2026-11-06 · ready, not found · 300 rows* and *risk-hierarchy 2026-11-06 · ready, not found · 26 rows*:
+the rows are in the lake, but no connector of the pack reads it, so no page shows them yet. That is the next step.
 
 ## Step 6 · Point the connectors at risklake
 
@@ -284,10 +325,24 @@ lake check: 4 lakes, 0 errors
 (each demo table not built on this machine is a *note*; an error is a connector naming a table its lake lacks, or a table on disk that
 differs from its file).
 
-**The UI.** After the restart, open a trade: `TRD 7000001 <GO>` shows the synthetic trade from risklake. Admin → Connectors shows
-`trade-endur` and `risk-store` reading `risklake`. The demo's ENDUR trades (`1000001` …) are no longer found: **demo and real data never
-mix** for a kind. The CALYPSO and MUREX connectors still read the demo, because they still say `lake: demo`; point them too, or switch
-them off, for a server that shows only your data.
+**The UI.** After the restart, Admin → Connectors → `trade-endur` shows the connector's page: the kinds it serves, the packs that use
+it, its settings in effect (`lake: risklake`, `lake-tables: trading.trade_endur`) and its file.
+
+![Admin → Connectors → trade-endur after the restart: its kinds, packs, settings in effect with lake risklake, and its file](img/t45/06-connector.jpg)
+
+Now open a trade: `TRD 7000001 <GO>` shows the synthetic trade from risklake.
+
+![TRD 7000001: the synthetic TRS from risklake, VALIDATED, BUY, JPY 444,000, with its desk, book, legal entity and trader linked](img/t45/07-trade.jpg)
+
+`trade-endur` now reads risklake only; a connector never reads two lakes at once. The other trade connectors still serve the demo's
+trades: `trade-calypso` and `trade-murex` still say `lake: demo`, and `trading-stream` is the Kafka feed. On the run behind these
+pictures the demo ComSwap `TRD 1000001` still opened after the restart, so do not take a demo trade's absence as the check: open one of
+your own, as above. For a server that shows only your data, point the other trade connectors at risklake too, or switch them off.
+
+**You should see** `lake check: 4 lakes, 0 errors`; after the restart, `trade-endur` *running* with `lake: risklake` in its settings;
+and `TRD 7000001` as the trade above: *Trade status VALIDATED*, *Product type TRS*, *BUY*, *JPY*, *Quantity 444,000*, *Trade date
+2026-10-04*, *Maturity date 2036-08-15*, source `trade-endur`, linked to `DESK-CREDIT`, `BOOK-CREDIT-2`, `LE-NY` and `TR-105`. Its VaR
+and P&L-vector notes say the VaR engine has not loaded the day's vectors yet: this tutorial loads scenario PVs, not the VaR run.
 
 ## Step 7 · Check a load, undo it, and go back to the demo
 
@@ -296,22 +351,31 @@ gives the same as JSON; the ledger `data/dataload/ledger/ledger-<yyyy-MM>.jsonl`
 `trade_endur.2026-11-06.jsonl.gz` again with an empty `.ready`: the next cycle moves it straight to the outbox, *already loaded in run
 …*. A file is never loaded twice.
 
-**Undo.** A load's id is in its report (`loads` in the loader's summary) and on every row (`_load_id`).
+![The Inbox screen: the repeat a duplicate, moved to the outbox and not loaded again, under Last cycles and Duplicates today](img/t45/08-duplicate.jpg)
 
-**The UI.** Admin → Data loads → Inbox → **Undo a load**: paste the id, **Check** (it says what it would remove), type the id again,
-confirm.
+**Undo.** A load's id is in its report (`loads` in the loader's summary, `loaderRun` in `dataload status --json`, plus `.1` for its
+first load) and on every row (`_load_id`).
 
-**The command line** (*captured* on a scratch copy of this lake):
+**The command line.** Check first, on risklake's folder:
 
 ```bash
-python3 tools/drishti.py lake undo 20261107T080233.594-1791776.1 --lake data/delta/risklake --dry-run
+python3 tools/drishti.py lake undo 20261107T101740.754-2543825.1 --lake data/delta/risklake --dry-run
 ```
 
 ```text
-would undo risk/risk-hierarchy 2026-11-06: 26 rows of load 20261107T080233.594-1791776.1 removed, 26 rows of the date before it restored
+would undo risk/risk-hierarchy 2026-11-06: 26 rows of load 20261107T101740.754-2543825.1 removed
 ```
 
-Run it again without `--dry-run` (it asks for the id once more; `--yes` in a script). An undone replace restores the date as it was.
+Your id differs (it carries the time of your load). Run it again without `--dry-run` (it asks for the id once more; `--yes` in a
+script). The hierarchy was appended (its `.ready` names no mode, and the inbox's `default-mode` is `append`), so its rows simply go; an
+undone replace restores the date as it was.
+
+**The UI.** Admin → Data loads → Inbox → **Undo a load** (paste the id, **Check**, type the id again, confirm) works on the inbox's own
+lake, `lake:` in `config/engines/dataload.yaml` (`demo` as shipped): for a load into risklake it answers *no row of load … in demo*.
+Use the command line above for risklake, or make risklake the inbox's lake (`DRISHTI_DATALOAD_LAKE=risklake`).
+
+**You should see** **Duplicates today 1**: `trade_endur.2026-11-06.jsonl.gz`, *moved to the outbox, not loaded again*, *already loaded
+in run … (the same SHA-256)*, and **Last cycles** *duplicate · 1 file · already loaded*; then the dry run's one line, *26 rows … removed*.
 
 **Go back to the demo.** Set `lake: demo` back in both connector files (for `risk-store`, its full list of kinds and `lake-tables`, or
 delete the file: the pack writes its template again at the next start) and restart. Neither lake changes: risklake stays in
