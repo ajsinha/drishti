@@ -130,9 +130,44 @@
 .dt-tag { margin-left: 6px; font-size: 0.85em; color: var(--d-link); }
 .dt-tag.dt-shared { color: var(--d-accent); }
 .dt-wait { color: var(--d-faint); }
+.dt-wait.dt-failed { color: var(--d-bad); }
 .dt-barcell { display: inline-flex; align-items: center; gap: 6px; }
 .dt-bar { display: inline-block; width: 64px; height: 7px; border-radius: 4px; background: var(--d-border); overflow: hidden; }
 .dt-bar i { display: block; height: 100%; }
 .dt-editing .dt-view [data-r], .dt-editing .dt-box { cursor: grab; }
+
+/* chrome: false, the view alone (a screen with its own toolbar and panels), no frame; a tree grid with fitRows as tall as its rows */
+.dt-bare > .dt-shell { border: 0; border-radius: 0; background: transparent; }
+.dt-bare .dt-tb, .dt-bare .dt-editbar, .dt-bare .dt-crumbs, .dt-bare .dt-side, .dt-bare .dt-status { display: none; }
+.dt-bare .dt-body { grid-template-columns: minmax(0, 1fr); }
+.dt-view.dt-fitted, .dt-fitted > .dt-gridbox { height: auto; }
+
+/* a table tree (drishti_tree-panel.js): a server's tree table as the tree grid or the org chart; the server's table hidden, printed */
+.dt-tp { margin: 0 0 6px; }
+.dt-tp-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 0 0 6px; }
+.dt-tp .dt-search { width: 200px; max-width: 100%; }
+.dt-tp-view { position: relative; min-width: 0; }
+.dt-tp[data-mode="org"] .dt-tp-view { overflow: auto; max-height: 560px; border: 1px solid var(--d-border); border-radius: var(--d-radius, 10px); background: var(--d-bg-2); }
+.dt-tp-org { padding: 4px; }
+.dt-tp .dg-row.dt-tp-hl .dg-cell { background: var(--d-highlight); }
+.dt-tp-foot { display: flex; flex-direction: column; gap: 2px; padding: 4px 2px 0; color: var(--d-muted); font-family: var(--d-font-mono); font-size: 0.95em; }
+@media print { .dt-tp { display: none; } .dt-tp-src[hidden] { display: block !important; } }
+
+/* the outline (drishti_tree-outline.js): a tree grid in a narrow panel; marks after a node's label; the detail under it */
+.dt-outline { display: block; min-width: 0; }
+.dt-outline .dt-shell { border-radius: 6px; }
+.dt-oline { display: inline-flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.dt-oname { font-family: var(--d-font-mono); font-weight: 600; }
+.dt-mark { font-size: 0.9em; color: var(--d-muted); }
+.dt-mark.dt-badge { border: 1px solid currentColor; border-radius: 999px; padding: 0 7px; font-size: 0.82em; font-weight: 600; }
+.dt-mark.dt-mono { font-family: var(--d-font-mono); }
+.dt-mark.dt-clip { max-width: 18em; overflow: hidden; text-overflow: ellipsis; }
+.dt-tone-accent { color: var(--d-accent); }
+.dt-tone-link { color: var(--d-link); }
+.dt-tone-good { color: var(--d-ok); }
+.dt-tone-warn { color: var(--d-warn); }
+.dt-tone-bad { color: var(--d-bad); }
+.dt-detail { margin-top: 6px; padding: 5px 9px; border-left: 3px solid var(--d-accent); background: var(--d-surface); color: var(--d-ink); font-size: 0.95em; overflow-wrap: anywhere; }
+.dt-detail .dt-line { margin: 2px 0; }
 
 @media (max-width: 760px) { .dt-body { grid-template-columns: minmax(0, 1fr); } .dt-side { border-left: 0; border-top: 1px solid var(--d-border); } }

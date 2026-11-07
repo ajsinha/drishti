@@ -31,21 +31,8 @@
 .bs-bar input { min-width: 16rem; }
 .bs-keys { font-size: var(--d-fs-12_48); margin: 0 0 var(--d-sp-6_4); }
 .bs-list { margin: 0 0 var(--d-sp-12_8); padding-left: var(--d-sp-17_6); font-size: var(--d-fs-13_76); }
-.bs-tree, .bs-tree ul { list-style: none; margin: 0; padding: 0; }
-.bs-tree ul { margin-left: var(--d-sp-18_4); border-left: 1px solid var(--d-border); }
-.bs-tree [role="treeitem"] { outline: none; }
-.bs-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--d-sp-8); padding: var(--d-sp-3_52) var(--d-sp-6_4); border-radius: var(--d-radius-4); cursor: default; }
-.bs-tree [role="treeitem"]:focus > .bs-row { outline: 2px solid var(--d-accent); outline-offset: -2px; background: var(--d-highlight); }
-.bs-row:hover { background: var(--d-highlight); }
-.bs-twist { display: inline-block; width: 1rem; color: var(--d-muted); font-size: var(--d-fs-12); }
-.bs-name { font-weight: 600; }
-.bs-type, .bs-pres, .bs-ex { color: var(--d-muted); font-size: var(--d-fs-12_8); }
-.bs-ex { max-width: 40ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bs-pres.rare { color: var(--d-warn); }
 .bs-role { display: inline-block; border: 1px solid var(--d-border); border-radius: var(--d-radius-pill); padding: 0 var(--d-sp-8); font-size: var(--d-fs-11_52); font-weight: 600; color: var(--d-accent); border-color: var(--d-accent); }
 .bs-role.conflict { color: var(--d-neg); border-color: var(--d-neg); }
-.bs-detail { margin: 0 0 var(--d-sp-4_8) var(--d-sp-25_6); padding: var(--d-sp-4_8) var(--d-sp-9_6); font-size: var(--d-fs-13_12); border-left: 3px solid var(--d-accent); background: var(--d-surface); color: var(--d-ink); }
-.bs-detail div { margin: var(--d-sp-1_6) 0; }
 .bs-h2 { font-size: var(--d-fs-14_4); font-weight: 700; margin: var(--d-sp-14_4) 0 var(--d-sp-5_6); }
 .bs-yaml { max-height: 22rem; overflow: auto; margin: 0; padding: var(--d-sp-9_6) var(--d-sp-12_8); font-size: var(--d-fs-12_48); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); background: var(--d-surface); color: var(--d-ink); white-space: pre; }
 .bs-preview { border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-8); overflow: auto; }

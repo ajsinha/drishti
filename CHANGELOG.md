@@ -117,6 +117,31 @@
   and the server's layout code are gone) and Build › New pack's graph of kinds and links. The same nodes and edges as before (the data
   map's are checked against the server's model in the browser test). linkGrid, the selection event and the shared colour theme
   (`visualTheme`) moved from drishti-chart into drishti-core, where every component uses them.
+- **The VaR explorer's scope tree is drishti-tree** (drishti-risk's `varHierarchyTree` preset, the tree grid in the terminal density;
+  ELEMENTS.md section 8.8): the same rows and figures (VaR, ES, the limit use bar or *no limit* / *n/c*, Parametric and Gap when on),
+  every figure the server's (nothing summed in the browser), a book's positions and a position's trades asked when the row opens
+  (*computing…* until then), *+ basket* and the direction chip, the current scope marked, what is open and the column widths kept;
+  the explorer's own riskGrid tree code is deleted. drishti-tree gains generic hooks for it: `chrome: false` (the view alone),
+  `grid` (the node's cell, a measure's `column`, more columns, a row's class and data, widths given and kept, `fitRows`), lazy
+  children (`loadChildren`, `lazyText`, `HierarchyModel.addChildren`) and a quiet `select`.
+
+- **The Build workbench's shape tree is drishti-tree** (no bespoke UI in an authoring tool): a Design's Shape section draws its fields
+  with drishti-tree's new **outline** (`TreeOutline`, `drishti_tree-outline.js`: a `Tree` in grid mode without chrome for a narrow
+  panel; marks after a node's label (type, role badge with its reason, conflict, presence, examples), a row class, a filter that keeps
+  the matches and the nodes above them, a tree's keys on the rows (Home/End, Right/Left to open, close and go up, Enter or Space to
+  open a branch or show a leaf's detail), the detail under the tree with the host's buttons, the host's keys first; `outlineFilter`
+  and `outlineKey` pure and tested in Node). Same nodes, counts, conflicts and rare fields, filter, Expand and Collapse, Enter for a
+  field's reason, `S` and `B`, a field dragged onto the canvas. The hand-built `role=tree` list and its CSS (`.bs-tree`, `.bs-row`,
+  `.bs-detail` and the rest) are deleted; `window.Drishti.ShapeTree` keeps its `show(report)` and gains `fieldAt(element)`.
+- **Tables with children are drishti-tree** (RACHANA_REFERENCE.md › Tree rows in the browser): a Sutra table or ladder with
+  `children:` is drawn by drishti-tree's new **table tree** (`treeTables`, `TreePanel`, `drishti_tree-panel.js`) in the console, the
+  client renderer and the embed (`elements-tree`), from the server's rows (texts, tones, links; nothing summed): the **tree grid** on
+  drishti-grid's tree data (+/−, a filter keeping the ancestors of a match, the grid's column menus) or the **org chart** of the same
+  rows, a tree that is one chain opening as it; mode, open rows and filter survive a live patch; the server's table stays hidden for
+  print and pages without scripts. Deleted: the console's hand-built toggles, filter and funnels on trees (`drishti_tree-rows.js`
+  part 1), drishti-grid's `tree` and `treeVisibility`, `.tr-q`, `.tr-bar`, `.tr-count`. The renderer requires drishti-tree; the embed v2
+  serves drishti-graph's and drishti-tree's modules. **GLEIF**: an entity's parents chain (`PAR`) is now a tree from the ultimate parent
+  down to the entity (highlighted), opening as an org chart; a group's tree (`TREE`) opens as the tree grid with the org chart a click away.
 
 - **Proposed for the owner's choice: drishti-graph, drishti-tree and the designer kit** (ELEMENTS.md section 16; mock-ups
   docs/architecture/mockups/elements/g5-graph.html, g6-tree.html and g7-designer-kit.html, three options each, synthetic data): a

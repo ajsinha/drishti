@@ -35,6 +35,8 @@ import { EventBus } from '../../drishti-core/src/drishti_index.js';
  *   of the measure: the gap is the diversification)
  * @property {{bands: Array<{to: number, tone: string}>, max: number}} [bar] draw the figure as a bar (a ratio such as a limit's use):
  *   its tone by the first band whose `to` it stays under; max the full bar (default 1)
+ * @property {Object} [column] drishti-grid ColumnDef properties for its column in the tree grid (header, width, format (value, row),
+ *   cellClass, cellRenderer: drawn where the tree draws nothing of its own, the waiting mark and the bar)
  */
 
 /**
@@ -50,6 +52,8 @@ import { EventBus } from '../../drishti-core/src/drishti_index.js';
  * @property {Object<string, *>} values the measures' figures by field (the data's, the host's answers and the roll-ups)
  * @property {Object} data the row it was read from
  * @property {boolean} moved part of the draft proposal
+ * @property {boolean} lazy its children come later, from the host (TreeOptions.loadChildren), the first time it opens
+ * @property {?string} lazyError why its children did not come (shown in their place)
  */
 
 /**
@@ -64,6 +68,7 @@ import { EventBus } from '../../drishti-core/src/drishti_index.js';
  * @property {string} [childrenField='children']
  * @property {string} [alsoField='also'] further parents' ids (a DAG)
  * @property {function(Object): string[]} [getPath] a row's path of ids or names from the top (instead of parentField)
+ * @property {string} [lazyField='lazy'] a row's field that is true when the node has children the host gives later (addChildren)
  * @property {TreeMeasure[]} [measures]
  */
 
@@ -75,7 +80,7 @@ const SEP = '\u001f';
 export class HierarchyModel {
   /** @param {HierarchySource} o */
   constructor(o) {
-    this.o = Object.assign({ idField: 'id', parentField: 'parent', labelField: 'label', kindField: 'kind', childrenField: 'children', alsoField: 'also' }, o);
+    this.o = Object.assign({ idField: 'id', parentField: 'parent', labelField: 'label', kindField: 'kind', childrenField: 'children', alsoField: 'also', lazyField: 'lazy' }, o);
     /** @type {EventBus} changed {what: 'data'|'open'|'values'|'draft'} */
     this.events = new EventBus();
     this.measures = (o.measures || []).map((m) => Object.assign({ label: m.field, additive: true, rollup: true, childSum: false }, m));
@@ -92,14 +97,7 @@ export class HierarchyModel {
    */
   load(src) {
     const o = this.o, byId = new Map(), roots = [];
-    const make = (row, id, name) => {
-      const n = { id: String(id), label: String(row[o.labelField] != null ? row[o.labelField] : (name !== undefined ? name : id)), kind: row[o.kindField] != null ? String(row[o.kindField]) : '',
-        parent: null, children: [], also: (row[o.alsoField] || []).map(String), depth: 0, values: {}, data: row, moved: false };
-      this.measures.forEach((m) => { if (row[m.field] !== undefined && row[m.field] !== null) { n.values[m.field] = row[m.field]; } });
-      if (byId.has(n.id)) { throw new Error('tree: two nodes have the id ' + n.id); }
-      byId.set(n.id, n);
-      return n;
-    };
+    const make = (row, id, name) => this.makeNode(byId, row, id, name);
     if (src.root) {
       const walk = (row, parent) => {
         const n = make(row, row[o.idField]);
@@ -146,6 +144,57 @@ export class HierarchyModel {
     if (!keep.size) { roots.forEach((r) => this.open.add(r.id)); }
     this.events.emit('changed', { what: 'data' });
   }
+
+  /** @private a node read from its row, kept by its id */
+  makeNode(byId, row, id, name) {
+    const o = this.o;
+    const n = { id: String(id), label: String(row[o.labelField] != null ? row[o.labelField] : (name !== undefined ? name : id)), kind: row[o.kindField] != null ? String(row[o.kindField]) : '',
+      parent: null, children: [], also: (row[o.alsoField] || []).map(String), depth: 0, values: {}, data: row, moved: false, lazy: !!row[o.lazyField], lazyError: null };
+    this.measures.forEach((m) => { if (row[m.field] !== undefined && row[m.field] !== null) { n.values[m.field] = row[m.field]; } });
+    if (byId.has(n.id)) { throw new Error('tree: two nodes have the id ' + n.id); }
+    byId.set(n.id, n);
+    return n;
+  }
+
+  /**
+   * The children the host gave for a node read as lazy (lazyField): rows with their ids, each under the node or under another of
+   * these rows named by its parent field; a row may be lazy in turn. The open state is kept.
+   * @param {string} id
+   * @param {Object[]} rows
+   * @returns {number} how many nodes were added
+   */
+  addChildren(id, rows) {
+    const p = this.node(id), o = this.o;
+    if (!p) { return 0; }
+    const fresh = new Map();
+    (rows || []).forEach((row) => { const n = this.makeNode(this.byId, row, row[o.idField]); fresh.set(n.id, n); });
+    (rows || []).forEach((row) => {
+      const n = fresh.get(String(row[o.idField])), q = fresh.get(String(row[o.parentField])) || p;
+      n.parent = q;
+      q.children.push(n);
+      q.lazy = false;                                  // a row given with its children has none to come
+    });
+    p.lazy = false;
+    p.lazyError = null;
+    this.reindex();
+    this.events.emit('changed', { what: 'data', id: p.id });
+    return fresh.size;
+  }
+
+  /**
+   * The host could not give a lazy node's children: the words shown in their place (not asked again until the data is read again).
+   * @param {string} id
+   * @param {string} why
+   * @returns {void}
+   */
+  childrenFailed(id, why) { const n = this.node(id); if (n) { n.lazyError = String(why || 'failed'); this.events.emit('changed', { what: 'data', id: n.id }); } }
+
+  /**
+   * Whether a node has children, or children to come (lazy).
+   * @param {string} id
+   * @returns {boolean}
+   */
+  hasChildren(id) { const n = this.node(id); return !!n && (n.children.length > 0 || n.lazy); }
 
   /** @private depths and the roll-ups again */
   reindex() {

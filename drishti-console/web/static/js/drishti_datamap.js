@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The data map, DATAMAP (docs/guides/USER_GUIDE.md "The data map"; routes/datamap_routes.py). One page, two views sharing one state:
    the view (Map or Cards), the selected kind or domain, the domain chip, Find and the map's layout, all kept in the address (view, kind,
    domain, chip, find, layout) so a link or a reload opens the same picture. The Map is drishti-graph (Drishti Elements): each kind a

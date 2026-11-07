@@ -101,7 +101,7 @@ def test_new_folder_of_examples_then_auto_design(console_url, browser):
     page.wait_for_url("**/build/d/*")
     assert page.locator("[data-sample]").count() >= 10
     assert "sutra: sample-auto" in page.evaluate("window.Drishti.workbench.store.state.yaml")
-    page.locator("[data-tree] [role=treeitem]").first.wait_for()
+    page.locator("[data-tree] [role=row][aria-level]").first.wait_for()
     page.locator("[data-preview] .studio-view").wait_for()
     page.locator("[data-next]").click()                                                       # the status bar's sample switcher
     assert page.evaluate("document.querySelector('[data-sample-pos]').textContent.startsWith('sample 2/')")
@@ -123,14 +123,16 @@ def test_upload_tree_filter_download_and_reload(console_url, browser, tmp_path):
     page.locator("[name=start][value=empty]").check()
     page.get_by_role("button", name="Create design").click()
     page.wait_for_url("**/build/d/*")
-    items = page.locator("[data-tree] [role=treeitem]")
+    items = page.locator("[data-tree] [role=row][aria-level]")                              # drishti-tree's outline: a tree grid
     items.first.wait_for()
     assert items.count() == 3 and page.locator("[data-counts]").inner_text() == "3 paths"
-    items.first.focus()
+    page.locator("[data-tree] [role=treegrid]").focus()
     page.keyboard.press("ArrowDown")
-    assert "book" in page.evaluate("document.activeElement.textContent")
+    page.wait_for_function("() => { const a = document.activeElement.getAttribute('aria-activedescendant'), c = a && document.getElementById(a); "
+                           "return !!c && c.textContent.indexOf('book') >= 0; }", timeout=5000)   # the grid draws its focus on the next frame
     page.keyboard.press("Enter")                                                              # a leaf's reason, files and examples
-    assert page.locator("[data-tree] .bs-detail:visible").count() == 1
+    assert page.locator("[data-tree] .dt-detail:visible").count() == 1
+    assert "Path: $.book" in page.locator("[data-tree] .dt-detail").inner_text()
     page.fill("[data-filter]", "tradeid")
     assert page.locator("[data-counts]").inner_text() == "1 of 3 paths match"
     with page.expect_download() as d:
@@ -138,8 +140,8 @@ def test_upload_tree_filter_download_and_reload(console_url, browser, tmp_path):
     assert json.loads(open(d.value.path()).read())["properties"]["tradeId"] == {"type": "string"}
     url = page.url
     page.reload()                                                                             # kept on the server
-    page.locator("[data-tree] [role=treeitem]").first.wait_for()
-    assert page.url == url and page.locator("[data-tree] [role=treeitem]").count() == 3
+    page.locator("[data-tree] [role=row][aria-level]").first.wait_for()
+    assert page.url == url and page.locator("[data-tree] [role=row][aria-level]").count() == 3
     page.close()
 
 

@@ -40,7 +40,7 @@
     const SEP = '\u001f';
     class HierarchyModel {
       constructor(o) {
-        this.o = Object.assign({ idField: 'id', parentField: 'parent', labelField: 'label', kindField: 'kind', childrenField: 'children', alsoField: 'also' }, o);
+        this.o = Object.assign({ idField: 'id', parentField: 'parent', labelField: 'label', kindField: 'kind', childrenField: 'children', alsoField: 'also', lazyField: 'lazy' }, o);
         this.events = new EventBus();
         this.measures = (o.measures || []).map((m) => Object.assign({ label: m.field, additive: true, rollup: true, childSum: false }, m));
         this.open = new Set();
@@ -49,14 +49,7 @@
       }
       load(src) {
         const o = this.o, byId = new Map(), roots = [];
-        const make = (row, id, name) => {
-          const n = { id: String(id), label: String(row[o.labelField] != null ? row[o.labelField] : (name !== undefined ? name : id)), kind: row[o.kindField] != null ? String(row[o.kindField]) : '',
-            parent: null, children: [], also: (row[o.alsoField] || []).map(String), depth: 0, values: {}, data: row, moved: false };
-          this.measures.forEach((m) => { if (row[m.field] !== undefined && row[m.field] !== null) { n.values[m.field] = row[m.field]; } });
-          if (byId.has(n.id)) { throw new Error('tree: two nodes have the id ' + n.id); }
-          byId.set(n.id, n);
-          return n;
-        };
+        const make = (row, id, name) => this.makeNode(byId, row, id, name);
         if (src.root) {
           const walk = (row, parent) => {
             const n = make(row, row[o.idField]);
@@ -103,6 +96,34 @@
         if (!keep.size) { roots.forEach((r) => this.open.add(r.id)); }
         this.events.emit('changed', { what: 'data' });
       }
+      makeNode(byId, row, id, name) {
+        const o = this.o;
+        const n = { id: String(id), label: String(row[o.labelField] != null ? row[o.labelField] : (name !== undefined ? name : id)), kind: row[o.kindField] != null ? String(row[o.kindField]) : '',
+          parent: null, children: [], also: (row[o.alsoField] || []).map(String), depth: 0, values: {}, data: row, moved: false, lazy: !!row[o.lazyField], lazyError: null };
+        this.measures.forEach((m) => { if (row[m.field] !== undefined && row[m.field] !== null) { n.values[m.field] = row[m.field]; } });
+        if (byId.has(n.id)) { throw new Error('tree: two nodes have the id ' + n.id); }
+        byId.set(n.id, n);
+        return n;
+      }
+      addChildren(id, rows) {
+        const p = this.node(id), o = this.o;
+        if (!p) { return 0; }
+        const fresh = new Map();
+        (rows || []).forEach((row) => { const n = this.makeNode(this.byId, row, row[o.idField]); fresh.set(n.id, n); });
+        (rows || []).forEach((row) => {
+          const n = fresh.get(String(row[o.idField])), q = fresh.get(String(row[o.parentField])) || p;
+          n.parent = q;
+          q.children.push(n);
+          q.lazy = false;                                  // a row given with its children has none to come
+        });
+        p.lazy = false;
+        p.lazyError = null;
+        this.reindex();
+        this.events.emit('changed', { what: 'data', id: p.id });
+        return fresh.size;
+      }
+      childrenFailed(id, why) { const n = this.node(id); if (n) { n.lazyError = String(why || 'failed'); this.events.emit('changed', { what: 'data', id: n.id }); } }
+      hasChildren(id) { const n = this.node(id); return !!n && (n.children.length > 0 || n.lazy); }
       reindex() {
         const walk = (n, d) => { n.depth = d; n.children.forEach((c) => walk(c, d + 1)); };
         this.roots.forEach((r) => walk(r, 0));
@@ -438,7 +459,8 @@
     var Grid = __lib("drishti-grid").Grid;
     var bandTone = __m["src/drishti_tree-layout.js"].bandTone;
     const LABEL = '__label';
-    function gridRows(model) {
+    const WAIT = '\u0000wait:';
+    function gridRows(model, o) {
       const rows = [], idByKeys = new Map(), keysById = new Map();
       const walk = (n, parentKeys) => {
         const sib = n.parent ? n.parent.children : model.roots;
@@ -446,13 +468,14 @@
         const keys = parentKeys.concat([twin ? n.label + ' · ' + n.id : n.label]);
         keysById.set(n.id, keys);
         idByKeys.set(keys.join('\u001f'), n.id);
-        const row = { __id: n.id, __keys: keys, __label: n.label, __kind: n.kind, __moved: n.moved };
+        const row = Object.assign({}, n.data, { __id: n.id, __keys: keys, __label: n.label, __kind: n.kind, __moved: n.moved });
         model.measures.forEach((m) => {
           row[m.field] = n.values[m.field] === undefined ? null : n.values[m.field];
           if (m.childSum) { row['__sum_' + m.field] = model.childSum(n.id, m.field); }
         });
         rows.push(row);
         n.children.forEach((c) => walk(c, keys));
+        if (n.lazy) { rows.push({ __id: null, __wait: n.id, __keys: keys.concat(['…']), __label: n.lazyError || (o && o.lazyText) || 'loading…', __error: !!n.lazyError }); }
       };
       model.roots.forEach((r) => walk(r, []));
       return { rows: rows, idByKeys: idByKeys, keysById: keysById };
@@ -463,29 +486,37 @@
         this.host = host;
         this.doc = host.ownerDocument;
         this.syncing = false;
-        const model = tree.model, o = tree.o;
-        this.data = gridRows(model);
-        const cols = [{ id: LABEL, field: LABEL, header: o.title || 'Node', width: o.labelWidth || 300, sortable: true }];
+        const model = tree.model, o = tree.o, hk = o.grid || {};
+        this.data = gridRows(model, o);
+        const lc = hk.labelColumn || {};
+        const cols = [Object.assign({ id: LABEL, field: LABEL, header: o.title || 'Node', width: o.labelWidth || 300, sortable: true }, lc, { id: LABEL, field: LABEL,
+          cellRenderer: (p) => (p.row && p.row.__wait ? h(p.doc, 'span', { cls: 'dg-text dt-wait' + (p.row.__error ? ' dt-failed' : ''), text: p.row.__label }) : lc.cellRenderer ? lc.cellRenderer(p) : null) })];
         model.measures.forEach((m) => {
-          cols.push({ id: m.field, field: m.field, header: m.label, type: 'number', additive: m.additive !== false, width: m.bar ? 150 : 112,
+          const mc = m.column || {};
+          cols.push(waitless(Object.assign({ id: m.field, field: m.field, header: m.label, type: 'number', additive: m.additive !== false, width: m.bar ? 150 : 112,
             description: m.additive === false ? 'not additive: a parent\'s figure is the server\'s, never the sum of its children' : undefined,
-            format: (v) => tree.text(m.field, v), cellRenderer: (p) => this.cell(m, p) });
+            format: (v) => tree.text(m.field, v) }, mc, { id: m.field, field: m.field, cellRenderer: (p) => this.cell(m, p) || (mc.cellRenderer ? mc.cellRenderer(p) : null) })));
           if (m.childSum) {
             cols.push({ id: '__sum_' + m.field, field: '__sum_' + m.field, header: 'Σ children', type: 'number', width: 112, additive: true,
-              description: 'the children\'s ' + m.label + ' added up: not a ' + m.label + ' (the gap is the diversification)', format: (v) => tree.text(m.field, v), cellClass: () => 'dt-dim' });
+              description: 'the children\'s ' + m.label + ' added up: not a ' + m.label + ' (the gap is the diversification)', format: (v, r) => (r && r.__wait ? '' : tree.text(m.field, v)), cellClass: () => 'dt-dim' });
           }
         });
+        (hk.columns || []).forEach((c) => cols.push(waitless(Object.assign({}, c))));
+        if (hk.widths) { cols.forEach((c) => { const w = hk.widths[c.id || c.field]; if (w > 0) { c.width = w; } }); }
         this.grid = new Grid(host, {
-          columns: cols, rows: this.data.rows, treeData: true, getDataPath: (r) => r.__keys, getRowId: (r) => r.__id, clientAggregation: false,
+          columns: cols, rows: this.data.rows, treeData: true, getDataPath: (r) => r.__keys, getRowId: (r) => (r.__wait ? WAIT + r.__wait : r.__id), clientAggregation: false,
           layout: o.gridLayout || 'wells', density: tree.density, chrome: false, checkboxes: false, rowSelection: 'single', label: o.label || o.title || 'Hierarchy',
-          explain: (ctx) => tree.explainNode(this.idOfRow(ctx.row), ctx.columnId && ctx.columnId !== LABEL ? ctx.columnId.replace(/^__sum_/, '') : null, true),
-          decorateCell: (ctx) => this.decorate(ctx)
+          explain: o.explain || o.chrome !== false ? (ctx) => tree.explainNode(this.idOfRow(ctx.row), ctx.columnId && ctx.columnId !== LABEL ? ctx.columnId.replace(/^__sum_/, '') : null, true) : undefined,
+          decorateCell: (ctx) => this.decorate(ctx), fitRows: hk.fitRows, phoneWidth: hk.phoneWidth,
+          getRowClass: hk.rowClass ? (r) => (r.__wait ? null : hk.rowClass(r)) : undefined, getRowData: hk.rowData ? (r) => (r.__wait ? null : hk.rowData(r)) : undefined
         });
         this.offs = [
           this.grid.model.on('rowExpanded', (p) => this.opened(p.path, true)),
           this.grid.model.on('rowCollapsed', (p) => this.opened(p.path, false)),
           this.grid.model.on('cellClicked', (p) => { const id = this.idOfRow(p.row); if (id && !this.syncing) { tree.select(id, { from: 'grid' }); } })
         ];
+        if (hk.onResize) { this.offs.push(this.grid.on('columnResized', () => { const w = {}; this.grid.model.columns.all().forEach((c) => { w[c.id] = c.width; }); hk.onResize(w); })); }
+        if (tree.view) { tree.view.classList.toggle('dt-fitted', !!hk.fitRows); }
         this.syncOpen();
         this.onDown = (e) => this.dragStart(e);
         this.onUp = (e) => this.dragEnd(e);
@@ -521,13 +552,13 @@
           const rm = this.grid.model.rowModel, m = this.tree.model;
           rm.expanded.clear();
           rm.expandLevel = 0;
-          m.open.forEach((id) => { const n = m.node(id), k = this.data.keysById.get(id); if (n && n.children.length && k) { rm.expanded.add(k.join('\u001f')); } });
+          m.open.forEach((id) => { const k = this.data.keysById.get(id); if (m.hasChildren(id) && k) { rm.expanded.add(k.join('\u001f')); } });
           rm.flatten();
           rm.events.emit('rowsChanged', { reason: 'expand' });
         } finally { this.syncing = false; }
       }
       refresh() {
-        this.data = gridRows(this.tree.model);
+        this.data = gridRows(this.tree.model, this.tree.o);
         this.grid.setRows(this.data.rows);
         this.syncOpen();
       }
@@ -561,7 +592,15 @@
         this.host.removeEventListener('pointerdown', this.onDown);
         this.host.removeEventListener('pointerup', this.onUp);
         this.grid.destroy();
+        if (this.tree.view) { this.tree.view.classList.remove('dt-fitted'); }
       }
+    }
+    function waitless(c) {
+      const f = c.format, r = c.cellRenderer, k = c.cellClass;
+      if (typeof f === 'function') { c.format = (v, row) => (row && row.__wait ? '' : f(v, row)); }
+      if (r) { c.cellRenderer = (p) => (p.row && p.row.__wait ? '' : r(p)); }
+      if (typeof k === 'function') { c.cellClass = (v, row) => (row && row.__wait ? null : k(v, row)); }
+      return c;
     }
     return { "gridRows": gridRows, "TreeGrid": TreeGrid };
   })();
@@ -727,6 +766,26 @@
     }
     return { "TREE_EXPORTS": TREE_EXPORTS, "svgText": svgText, "pngOf": pngOf, "dataText": dataText, "keyMove": keyMove, "exportTree": exportTree };
   })();
+  /* ---- src/drishti_tree-hooks.js ---- */
+  __m["src/drishti_tree-hooks.js"] = (function () {
+    function loadOpenChildren(tree) {
+      const m = tree.model, ask = tree.o.loadChildren;
+      if (!ask) { return 0; }
+      const out = tree.asking || (tree.asking = new Map());
+      let k = 0;
+      m.open.forEach((id) => {
+        const n = m.node(id);
+        if (!n || !n.lazy || n.lazyError || out.get(id) === n) { return; }
+        out.set(id, n);
+        k++;
+        const done = () => { if (out.get(id) === n) { out.delete(id); } return m.node(id) === n; };
+        Promise.resolve().then(() => ask({ id: n.id, label: n.label, kind: n.kind, path: m.pathOf(n.id).map((x) => x.id), data: n.data }))
+          .then((rows) => { if (done()) { m.addChildren(id, rows || []); } }, (e) => { if (done()) { m.childrenFailed(id, e && e.message ? e.message : e); } });
+      });
+      return k;
+    }
+    return { "loadOpenChildren": loadOpenChildren };
+  })();
   /* ---- src/drishti_tree-view.js ---- */
   __m["src/drishti_tree-view.js"] = (function () {
     var h = __lib("drishti-core").h, EventBus = __lib("drishti-core").EventBus, sharedBus = __lib("drishti-core").bus, SELECTION_EVENT = __lib("drishti-core").SELECTION_EVENT, visualTheme = __lib("drishti-core").visualTheme, formatterFor = __lib("drishti-core").formatterFor, renderExplain = __lib("drishti-core").renderExplain, announce = __lib("drishti-core").announce, DENSITIES = __lib("drishti-core").DENSITIES;
@@ -735,6 +794,7 @@
     var TreeGrid = __m["src/drishti_tree-grid.js"].TreeGrid;
     var sideContent = __m["src/drishti_tree-side.js"].sideContent, statusParts = __m["src/drishti_tree-side.js"].statusParts;
     var exportTree = __m["src/drishti_tree-io.js"].exportTree, keyMove = __m["src/drishti_tree-io.js"].keyMove;
+    var loadOpenChildren = __m["src/drishti_tree-hooks.js"].loadOpenChildren;
     const TREE_MODES = Object.freeze(['grid', 'org', 'sunburst', 'icicle']);
     const TREE_EVENTS = Object.freeze(['selectionChanged', 'nodeExpanded', 'nodeCollapsed', 'searched', 'modeChanged', 'densityChanged', 'explainOpened',
       'explainShown', 'valuesRequested', 'valuesUpdated', 'valuesFailed', 'proposal', 'proposalSubmitted', 'proposalApplied', 'proposalDiscarded', 'moveRefused', 'exported']);
@@ -769,6 +829,7 @@
         this.model.measures.forEach((m) => { this.fmt[m.field] = formatterFor(m.format); });
         this.build();
         this.offModel = this.model.events.on('changed', (p) => this.modelChanged(p));
+        loadOpenChildren(this);
         if (o.link) { this.offLink = this.bus.on(SELECTION_EVENT, (p) => { if (p && p.source !== this && p.channel === o.link.channel) { const id = (p.ids || []).find((x) => this.model.node(x)); this.select(id || null, { silent: true }); } }); }
         if (this.win.MutationObserver) { this.watch = new this.win.MutationObserver(() => this.draw()); this.watch.observe(this.doc.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] }); }
         this.draw();
@@ -783,6 +844,7 @@
       build() {
         const doc = this.doc, o = this.o, b = (act, text, title) => h(doc, 'button', { cls: 'dt-btn', text: text, attrs: { type: 'button', title: title || null }, data: { act: act } });
         this.host.classList.add('dt');
+        this.host.classList.toggle('dt-bare', o.chrome === false);
         this.host.textContent = '';
         this.search = h(doc, 'input', { cls: 'dt-input dt-search', attrs: { type: 'search', placeholder: 'Search the tree…', 'aria-label': 'Search the tree' }, data: { ctl: 'search' } });
         this.found = h(doc, 'span', { cls: 'dt-lbl', attrs: { 'aria-live': 'polite' } });
@@ -887,6 +949,7 @@
       }
       modelChanged(p) {
         if (p.what === 'open' && p.id) { this.emit(p.open ? 'nodeExpanded' : 'nodeCollapsed', { id: p.id, path: this.model.breadcrumbs(p.id) }); }
+        if (p.what === 'open' || p.what === 'data') { loadOpenChildren(this); }
         if (this.quiet) { return; }
         if (this.mode === 'grid' && this.grid && p.what === 'open') { this.grid.syncOpen(); this.drawSide(); return; }
         this.draw();
@@ -920,6 +983,7 @@
       select(id, o) {
         const n = id ? this.model.node(id) : null;
         this.selected = n ? n.id : null;
+        if (o && o.quiet) { if (this.grid) { this.grid.repaint(); } else { this.draw(); } return; }
         this.active = this.selected || this.active;
         this.explainBox.hidden = true;
         if (n && this.mode !== 'sunburst' && this.mode !== 'icicle' && n.parent && !this.model.pathOf(n.id).slice(0, -1).every((x) => this.model.isOpen(x.id))) {
@@ -1106,11 +1170,398 @@
     }
     return { "TREE_ELEMENT": TREE_ELEMENT, "defineTreeElement": defineTreeElement };
   })();
+  /* ---- src/drishti_tree-panel.js ---- */
+  __m["src/drishti_tree-panel.js"] = (function () {
+    var h = __lib("drishti-core").h, visualTheme = __lib("drishti-core").visualTheme, announce = __lib("drishti-core").announce, textSortKey = __lib("drishti-core").textSortKey;
+    var Grid = __lib("drishti-grid").Grid;
+    var HierarchyModel = __m["src/drishti_tree-model.js"].HierarchyModel;
+    var drawOrg = __m["src/drishti_tree-draw.js"].drawOrg;
+    var keyMove = __m["src/drishti_tree-io.js"].keyMove;
+    const PANEL_MODES = Object.freeze(['grid', 'org']);
+    const NAMES = { grid: 'Tree grid', org: 'Org chart' };
+    const SEP = '\u001f';
+    const clean = (s) => String(s || '').replace(/[▸▾]/g, '').replace(/\s+/g, ' ').trim();
+    function readTableTree(table) {
+      const heads = table.tHead && table.tHead.rows.length ? Array.prototype.slice.call(table.tHead.rows[0].cells) : [];
+      const body = table.tBodies[0], stack = [], rows = [];
+      Array.prototype.slice.call(body ? body.rows : []).forEach((tr, i) => {
+        const depth = Math.max(0, parseInt(tr.getAttribute('data-depth'), 10) || 0), tog = tr.querySelector('.tr-tog');
+        stack.length = depth;
+        const cells = Array.prototype.slice.call(tr.cells);
+        rows.push({ id: 'r' + i, parent: depth > 0 && stack[depth - 1] ? stack[depth - 1] : null, depth: depth, label: cells.length ? clean(cells[0].textContent) : '',
+          texts: cells.map((c) => clean(c.textContent)), tones: cells.map((c) => ((' ' + c.className + ' ').match(/ (t-[a-z0-9-]+) /) || [])[1] || null), cells: cells,
+          kids: tr.hasAttribute('data-kids') || !!tog, open: !!tog && tog.getAttribute('aria-expanded') === 'true', highlight: tr.classList.contains('hl') });
+        stack[depth] = 'r' + i;
+      });
+      const foot = table.tFoot ? Array.prototype.slice.call(table.tFoot.rows).map((r) => Array.prototype.slice.call(r.cells).map((c) => clean(c.textContent)).filter(Boolean).join(' · ')).filter(Boolean) : [];
+      return { headers: heads.map((c) => clean(c.textContent)), numeric: heads.map((c) => c.classList.contains('num')), rows: rows, foot: foot };
+    }
+    function isChain(rows) {
+      if (rows.length < 2 || rows.filter((r) => r.parent === null).length !== 1) { return false; }
+      const under = new Map();
+      rows.forEach((r) => { if (r.parent !== null) { under.set(r.parent, (under.get(r.parent) || 0) + 1); } });
+      return Array.from(under.values()).every((n) => n === 1);
+    }
+    function figure(text) { const k = textSortKey(text); return k && typeof k.n === 'number' && !isNaN(k.n) ? k.n : null; }
+    class TreePanel {
+      constructor(host, options) {
+        const o = this.o = Object.assign({ search: true, density: 'compact', fitRows: 30 }, options);
+        this.host = host;
+        this.doc = host.ownerDocument;
+        this.tree = o.tree;
+        const st = o.state || {};
+        this.mode = PANEL_MODES.indexOf(st.mode) >= 0 ? st.mode : PANEL_MODES.indexOf(o.mode) >= 0 ? o.mode : (isChain(this.tree.rows) ? 'org' : 'grid');
+        this.q = st.q || '';
+        this.open = new Set(st.open || this.tree.rows.filter((r) => r.open).map((r) => r.id));
+        this.byId = new Map(this.tree.rows.map((r) => [r.id, r]));
+        this.paths = new Map();                                // each row's path of keys: its label, made unique among its siblings (invisibly)
+        this.idByPath = new Map();
+        const seen = new Map();
+        this.tree.rows.forEach((r) => {
+          const k = (r.parent || '') + SEP + r.label, n = seen.get(k) || 0, path = (r.parent ? this.paths.get(r.parent) : []).concat([r.label + '\u200b'.repeat(n)]);
+          seen.set(k, n + 1);
+          this.paths.set(r.id, path);
+          this.idByPath.set(path.join(SEP), r.id);
+        });
+        this.selected = null;
+        this.build();
+        this.draw();
+      }
+      build() {
+        const doc = this.doc, o = this.o;
+        this.host.classList.add('dt', 'dt-tp');
+        this.host.setAttribute('data-density', o.density);
+        this.host.textContent = '';
+        this.box = o.search ? h(doc, 'input', { cls: 'dt-input dt-search dt-tp-q', attrs: { type: 'search', placeholder: 'Filter rows', 'aria-label': 'Filter rows' } }) : null;
+        if (this.box) { this.box.value = this.q; this.box.addEventListener('input', () => this.filter(this.box.value)); }
+        this.count = h(doc, 'span', { cls: 'dt-lbl', attrs: { 'aria-live': 'polite' } });
+        this.seg = h(doc, 'span', { cls: 'dt-seg', attrs: { role: 'group', 'aria-label': 'Show as' } }, PANEL_MODES.map((m) => h(doc, 'button', { text: NAMES[m], attrs: { type: 'button', 'aria-pressed': 'false' }, data: { mode: m } })));
+        this.seg.addEventListener('click', (e) => { const b = e.target.closest && e.target.closest('[data-mode]'); if (b) { this.setMode(b.getAttribute('data-mode')); } });
+        this.view = h(doc, 'div', { cls: 'dt-tp-view' });
+        this.view.addEventListener('click', (e) => this.clicked(e));
+        this.view.addEventListener('dblclick', (e) => { const n = e.target.closest && e.target.closest('[data-id]'); if (n && this.mode === 'org') { this.follow(n.getAttribute('data-id')); } });
+        this.view.addEventListener('keydown', (e) => this.key(e));
+        const foot = this.tree.foot.length ? h(doc, 'div', { cls: 'dt-tp-foot' }, this.tree.foot.map((t) => h(doc, 'div', { text: t }))) : null;
+        this.host.appendChild(h(doc, 'div', { cls: 'dt-tp-bar' }, [this.box, this.count, h(doc, 'span', { cls: 'dt-sp' }), this.seg]));
+        this.host.appendChild(this.view);
+        if (foot) { this.host.appendChild(foot); }
+      }
+      draw() {
+        this.host.setAttribute('data-mode', this.mode);
+        this.seg.querySelectorAll('[data-mode]').forEach((b) => b.setAttribute('aria-pressed', String(b.getAttribute('data-mode') === this.mode)));
+        if (this.mode === 'grid') { this.drawGrid(); } else { this.drawOrgChart(); }
+      }
+      drawGrid() {
+        if (this.grid) { return; }
+        const doc = this.doc, t = this.tree;
+        this.view.textContent = '';
+        const box = h(doc, 'div', { cls: 'dt-tp-grid' });
+        this.view.appendChild(box);
+        const content = (row, i) => {
+          const src = row.cells[i];
+          if (!src || !src.querySelector('a, span:not(.tr-ind):not(.tr-sp), b, i, button:not(.tr-tog)')) { return null; }
+          const out = h(doc, 'span', { cls: 'dg-text' });
+          Array.prototype.forEach.call(src.childNodes, (n) => { if (!(n.classList && n.classList.contains('tr-ind'))) { out.appendChild(n.cloneNode(true)); } });
+          return out;
+        };
+        const cols = t.headers.map((head, i) => ({ id: 'c' + i, header: head || ' ', type: t.numeric[i] && i > 0 ? 'number' : 'text', width: i === 0 ? 260 : 130, additive: false,
+          valueGetter: (r) => (t.numeric[i] && i > 0 ? figure(r.texts[i]) : r.texts[i]), format: (v, r) => (r && r.texts ? r.texts[i] || '' : (v == null ? '' : String(v))),
+          cellClass: (v, r) => (r && r.tones && r.tones[i]) || null, cellRenderer: (p) => content(p.row, i) }));
+        this.grid = new Grid(box, { columns: cols, rows: t.rows, getRowId: (r) => r.id, treeData: true, getDataPath: (r) => this.paths.get(r.id), clientAggregation: false,
+          groupDefaultExpanded: 0, layout: 'wells', density: this.o.density, chrome: false, checkboxes: false, rowSelection: 'none', fitRows: this.o.fitRows,
+          label: this.o.label || t.headers[0] || 'Rows', getRowClass: (r) => (r.highlight ? 'dt-tp-hl' : null) });
+        this.offs = [this.grid.model.on('rowExpanded', (p) => this.opened(p.path, true)), this.grid.model.on('rowCollapsed', (p) => this.opened(p.path, false))];
+        this.syncGrid();
+        if (this.q) { this.grid.model.setQuickFilter(this.q); }
+        this.counted();
+      }
+      syncGrid() {
+        const rm = this.grid.model.rowModel;
+        rm.expandLevel = 0;
+        rm.expanded.clear();
+        this.open.forEach((id) => { const p = this.paths.get(id); if (p && this.byId.get(id).kids) { rm.expanded.add(p.join(SEP)); } });
+        rm.flatten();
+        rm.events.emit('rowsChanged', { reason: 'expand' });
+        this.grid.refresh();
+      }
+      opened(path, open) {
+        const id = path && this.idByPath.get(path.join(SEP));
+        if (!id) { return; }
+        if (open) { this.open.add(id); } else { this.open.delete(id); }
+        this.saveState();
+      }
+      drawOrgChart() {
+        if (this.grid) { this.offs.forEach((off) => off()); this.grid.destroy(); this.grid = null; }
+        const doc = this.doc, t = this.tree;
+        const shown = t.headers.map((x, i) => i).filter((i) => i > 0).slice(0, 2);
+        const model = this.model || (this.model = new HierarchyModel({ rows: t.rows.map((r) => { const x = { id: r.id, parent: r.parent, label: r.label, kind: '' }; shown.forEach((i) => { x['c' + i] = r.texts[i] || null; }); return x; }),
+          measures: shown.map((i) => ({ field: 'c' + i, label: t.headers[i], rollup: false })) }));
+        model.open = new Set(Array.from(this.open).filter((id) => model.node(id)));
+        const hits = new Set(this.q ? model.search(this.q, { open: true }).map((m) => m.id) : []);
+        this.open = new Set(model.open);
+        const theme = visualTheme({ element: this.host, density: this.o.density });
+        const d = drawOrg(doc, { model: model, theme: theme, text: (f, v) => String(v), selected: this.selected, hits: hits, colourBy: null, shown: shown.map((i) => 'c' + i),
+          sizeBy: null, focus: null, editing: false });
+        const vw = this.view.getBoundingClientRect().width || this.host.getBoundingClientRect().width || d.width;
+        const zoom = Math.max(0.5, Math.min(1, (vw - 8) / d.width));
+        d.svg.setAttribute('width', String(Math.round(d.width * zoom)));
+        d.svg.setAttribute('height', String(Math.round(d.height * zoom)));
+        d.svg.setAttribute('aria-label', (this.o.label || t.headers[0] || 'Rows') + ' as an org chart');
+        this.view.textContent = '';
+        this.view.appendChild(h(doc, 'div', { cls: 'dt-canvas dt-tp-org' }, [d.svg]));
+        const at = this.view.querySelector('[data-id="' + (this.active || '') + '"]') || this.view.querySelector('[data-id]');
+        if (at) { at.setAttribute('tabindex', '0'); }
+        this.hits = hits;
+        this.counted();
+      }
+      counted() {
+        if (!this.q) { this.count.textContent = ''; return; }
+        const words = this.q.toLowerCase().split(/\s+/).filter(Boolean);       // as the grid's filter: every word in some cell of the row
+        const n = this.mode === 'org' ? (this.hits ? this.hits.size : 0) : this.tree.rows.filter((r) => words.every((w) => r.texts.some((t) => t.toLowerCase().indexOf(w) >= 0))).length;
+        this.count.textContent = n + ' of ' + this.tree.rows.length + ' rows (filtered)';
+      }
+      setMode(mode) {
+        if (PANEL_MODES.indexOf(mode) < 0 || mode === this.mode) { return; }
+        this.mode = mode;
+        this.draw();
+        announce('Shown as ' + NAMES[mode].toLowerCase());
+        this.saveState();
+      }
+      filter(q) {
+        this.q = String(q || '').trim();
+        if (this.box && this.box.value.trim() !== this.q) { this.box.value = this.q; }
+        if (this.mode === 'grid' && this.grid) { this.grid.model.setQuickFilter(this.q); this.counted(); } else { this.drawOrgChart(); }
+        this.saveState();
+      }
+      toggle(id, open) {
+        const now = open === undefined ? !this.open.has(id) : !!open;
+        if (now) { this.open.add(id); } else { this.open.delete(id); }
+        if (this.grid) { this.syncGrid(); } else { this.drawOrgChart(); }
+        this.saveState();
+      }
+      clicked(e) {
+        if (this.mode !== 'org' || !e.target.closest) { return; }
+        const tog = e.target.closest('[data-toggle]'), node = e.target.closest('[data-id]');
+        if (tog) { this.active = tog.getAttribute('data-toggle'); this.toggle(this.active); return; }
+        if (node) { this.active = this.selected = node.getAttribute('data-id'); this.drawOrgChart(); const r = this.byId.get(this.selected); if (r) { announce(r.texts.filter(Boolean).join(', ')); } }
+      }
+      follow(id) {
+        const r = this.byId.get(id), a = r && r.cells.map((c) => c && c.querySelector('a[href]')).find(Boolean);
+        if (a) { a.click(); }
+      }
+      key(e) {
+        if (this.mode !== 'org' || e.ctrlKey || e.metaKey || e.altKey || !this.model) { return; }
+        const order = this.model.visible().map((n) => n.id), mv = keyMove(e.key, this.model, order, this.active || order[0], true);
+        if (!mv) { return; }
+        e.preventDefault();
+        this.active = mv.to;
+        if (mv.act === 'open' || mv.act === 'close') { this.toggle(mv.to, mv.act === 'open'); } else if (mv.act === 'explain') { this.follow(mv.to); return; } else if (mv.act === 'select') { this.selected = mv.to; this.drawOrgChart(); }
+        const el = this.view.querySelector('[data-id="' + mv.to + '"]');
+        if (el) { this.view.querySelectorAll('[data-id][tabindex="0"]').forEach((x) => x.setAttribute('tabindex', '-1')); el.setAttribute('tabindex', '0'); el.focus(); }
+      }
+      getState() { return { mode: this.mode, q: this.q, open: Array.from(this.open) }; }
+      saveState() { if (this.o.onState) { this.o.onState(this.getState()); } }
+      destroy() {
+        if (this.grid) { this.offs.forEach((off) => off()); this.grid.destroy(); this.grid = null; }
+        this.host.textContent = '';
+      }
+    }
+    function treeTables(scope, options) {
+      const o = options || {}, memory = o.memory || {}, live = (o.live || []).filter((p) => { if (p.host.isConnected) { return true; } p.destroy(); return false; });
+      const tables = Array.prototype.slice.call(scope.querySelectorAll ? scope.querySelectorAll('table.tbl-tree:not([data-tree-ready])') : []);
+      if (scope.matches && scope.matches('table.tbl-tree:not([data-tree-ready])')) { tables.push(scope); }
+      tables.forEach((t) => {
+        t.setAttribute('data-tree-ready', '');
+        const tree = readTableTree(t);
+        if (!tree.rows.length) { return; }
+        const pnl = t.closest('[data-panel], section[id], .pnl'), pid = pnl ? (pnl.getAttribute('data-panel') || pnl.id || 'tree') : 'tree';
+        const key = (o.scope || '') + '|' + pid + '|' + (pnl ? Array.prototype.indexOf.call(pnl.querySelectorAll('table.tbl-tree'), t) : 0);
+        const wrap = t.closest('.tbl-wrap') || t, doc = t.ownerDocument;
+        const host = h(doc, 'div', {});
+        wrap.parentNode.insertBefore(host, wrap);
+        wrap.classList.add('dt-tp-src');
+        wrap.hidden = true;
+        const title = pnl ? clean((pnl.querySelector('h2, h3') || {}).textContent) : '';
+        try {
+          live.push(new TreePanel(host, { tree: tree, label: title || tree.headers[0], search: !t.hasAttribute('data-no-search'), density: o.density,
+            state: memory[key], onState: (s) => { memory[key] = s; } }));
+        } catch (e) {
+          host.remove();
+          wrap.hidden = false;                                  // the server's table stays as drawn
+          if (doc.defaultView && doc.defaultView.console) { doc.defaultView.console.warn('drishti-tree: a tree table could not be drawn', e); }
+        }
+      });
+      return live;
+    }
+    return { "PANEL_MODES": PANEL_MODES, "readTableTree": readTableTree, "isChain": isChain, "TreePanel": TreePanel, "treeTables": treeTables };
+  })();
+  /* ---- src/drishti_tree-outline.js ---- */
+  __m["src/drishti_tree-outline.js"] = (function () {
+    var h = __lib("drishti-core").h, announce = __lib("drishti-core").announce;
+    var HierarchyModel = __m["src/drishti_tree-model.js"].HierarchyModel;
+    var keyMove = __m["src/drishti_tree-io.js"].keyMove;
+    var Tree = __m["src/drishti_tree-view.js"].Tree;
+    const OUTLINE_TONES = Object.freeze(['muted', 'accent', 'link', 'good', 'warn', 'bad']);
+    function outlineFilter(model, q, textOf) {
+      const words = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
+      if (!words.length) { return { hits: [], keep: null }; }
+      const wordsOf = textOf || ((n) => n.label + ' ' + n.id + ' ' + n.kind), hits = [], keep = new Set();
+      model.all().forEach((n) => {
+        const hay = String(wordsOf(n) || '').toLowerCase();
+        if (!words.every((w) => hay.indexOf(w) >= 0)) { return; }
+        hits.push(n.id);
+        for (let p = n; p && !keep.has(p.id); p = p.parent) { keep.add(p.id); }
+      });
+      return { hits: hits, keep: keep };
+    }
+    function outlineKey(key, model, order, at) {
+      if (['ArrowDown', 'ArrowUp', 'Home', 'End', 'ArrowRight', 'ArrowLeft', 'Enter', ' '].indexOf(key) < 0) { return null; }
+      const mv = keyMove(key, model, order, at, true);
+      if (!mv) { return null; }
+      if (key !== 'Enter' && key !== ' ') { return mv; }
+      const n = model.node(mv.to);
+      return n && n.children.length ? { to: n.id, act: model.isOpen(n.id) ? 'close' : 'open' } : { to: mv.to, act: 'detail' };
+    }
+    const OID = '__oid', OPARENT = '__oparent', OLABEL = '__olabel', OKIND = '__okind';
+    class TreeOutline {
+      constructor(host, options) {
+        if (!host || !host.ownerDocument) { throw new Error('an outline needs an element to fill'); }
+        const o = this.o = Object.assign({ title: 'Node', labelWidth: 480, openDepth: -1, fitRows: 24 }, options);
+        if (!o.data) { throw new Error('an outline needs data (rows, root or getPath)'); }
+        this.host = host;
+        this.doc = host.ownerDocument;
+        this.full = new HierarchyModel(o.data);
+        this.keep = null;
+        this.query = '';
+        this.memory = new Set();
+        this.detailOf = null;
+        host.classList.add('dt-outline');
+        host.textContent = '';
+        this.treeBox = h(this.doc, 'div', { cls: 'dt-outline-tree' });
+        this.detailBox = h(this.doc, 'div', { cls: 'dt-detail', attrs: { hidden: true, role: 'region', 'aria-label': 'Details', 'aria-live': 'polite' } });
+        host.appendChild(this.treeBox);
+        host.appendChild(this.detailBox);
+        this.tree = new Tree(this.treeBox, { data: this.source(), chrome: false, modes: ['grid'], title: o.title, label: o.label || o.title, density: o.density,
+          openDepth: o.openDepth, grid: { fitRows: o.fitRows, phoneWidth: 1, labelColumn: { width: o.labelWidth, cellRenderer: (p) => this.labelCell(p) },
+            rowClass: o.rowClass ? (r) => { const n = this.full.node(r.__id); return n ? o.rowClass(n) : null; } : undefined } });
+        this.offSel = this.tree.on('selectionChanged', (p) => { if (p.ids && p.ids.length) { this.showDetail(p.ids[0]); } });
+        this.onKeyDown = (e) => this.key(e);
+        host.addEventListener('keydown', this.onKeyDown, true);
+      }
+      source() {
+        const keep = this.keep;
+        return { idField: OID, parentField: OPARENT, labelField: OLABEL, kindField: OKIND, alsoField: '__oalso', lazyField: '__olazy',
+          rows: this.full.all().filter((n) => !keep || keep.has(n.id)).map((n) => {
+            const r = Object.assign({}, n.data);
+            r[OID] = n.id; r[OPARENT] = n.parent ? n.parent.id : null; r[OLABEL] = n.label; r[OKIND] = n.kind;
+            return r;
+          }) };
+      }
+      labelCell(p) {
+        const n = p.row ? this.full.node(p.row.__id) : null;
+        if (!n) { return null; }
+        const marks = this.o.marks ? this.o.marks(n) || [] : [];
+        return h(p.doc, 'span', { cls: 'dg-text dt-oline' }, [h(p.doc, 'span', { cls: 'dt-oname', text: n.label })].concat(marks.map((m) => h(p.doc, 'span', {
+          cls: 'dt-mark dt-tone-' + (OUTLINE_TONES.indexOf(m.tone) >= 0 ? m.tone : 'muted') + (m.badge ? ' dt-badge' : '') + (m.mono ? ' dt-mono' : '') + (m.clip ? ' dt-clip' : ''),
+          text: String(m.text), attrs: { title: m.title || null } }))));
+      }
+      reload(fresh) {
+        const t = this.tree;
+        t.model.all().forEach((n) => this.memory.delete(n.id));
+        t.model.open.forEach((id) => this.memory.add(id));
+        t.setData(this.source());
+        const m = t.model;
+        m.open.clear();
+        this.memory.forEach((id) => { if (m.node(id)) { m.open.add(id); } });
+        if (fresh && !m.open.size && this.o.openDepth !== 0) { m.expandAll({ depth: this.o.openDepth < 0 ? Infinity : this.o.openDepth }); }
+        else { m.events.emit('changed', { what: 'open' }); }
+      }
+      setData(data) {
+        const known = new Set(this.full.all().map((n) => n.id)), d = this.o.openDepth < 0 ? Infinity : this.o.openDepth;
+        this.full.load(data);
+        if (this.detailOf && !this.full.node(this.detailOf)) { this.closeDetail(); }
+        this.memory.forEach((id) => { if (!this.full.node(id)) { this.memory.delete(id); } });
+        this.full.all().forEach((n) => { if (!known.has(n.id) && n.children.length && n.depth < d) { this.memory.add(n.id); } });   // a new branch opens as at the start
+        const f = outlineFilter(this.full, this.query, this.o.text);
+        this.keep = f.keep;
+        this.tree.hits = new Set(f.hits);
+        this.reload(true);
+      }
+      filter(q) {
+        this.query = String(q || '').trim();
+        const f = outlineFilter(this.full, this.query, this.o.text);
+        this.keep = f.keep;
+        this.tree.model.open.forEach((id) => this.memory.add(id));
+        f.hits.forEach((id) => this.full.pathOf(id).slice(0, -1).forEach((n) => this.memory.add(n.id)));
+        this.tree.hits = new Set(f.hits);
+        this.reload(false);
+        return f.hits;
+      }
+      expandAll() { this.tree.expandAll(); }
+      collapseAll() { this.memory.clear(); this.tree.model.open.clear(); this.tree.model.events.emit('changed', { what: 'open' }); }
+      nodeAt(el) {
+        const c = el && el.closest ? el.closest('[data-r]') : null;
+        return c && this.treeBox.contains(c) && this.tree.grid ? this.full.node(this.tree.grid.idOfRow(Number(c.getAttribute('data-r')))) : null;
+      }
+      shownIds() {
+        const g = this.tree.grid, out = [];
+        if (!g) { return out; }
+        for (let r = 0, n = g.grid.model.rowCount(); r < n; r++) { const id = g.idOfRow(r); if (id) { out.push(id); } }
+        return out;
+      }
+      focusedId() { const g = this.tree.grid, f = g ? g.grid.model.navigator.focus : null; return f ? g.idOfRow(f.row) : null; }
+      focusNode(id) {
+        const g = this.tree.grid, n = this.tree.model.node(id);
+        if (!g || !n) { return; }
+        const i = g.grid.model.rowModel.indexOfId(id);
+        if (i < 0) { return; }
+        g.grid.model.navigator.setFocus(i, 0);
+        g.grid.afterFocus(true);
+        announce(n.label + ', level ' + (n.depth + 1));
+      }
+      showDetail(id) {
+        const n = this.full.node(id), box = this.detailBox;
+        if (!n || !this.o.detail) { return false; }
+        box.textContent = '';
+        const lines = this.o.detail(n, box), own = Array.prototype.slice.call(box.childNodes);
+        (Array.isArray(lines) ? lines : []).forEach((t) => box.insertBefore(h(this.doc, 'div', { cls: 'dt-line', text: String(t) }), own[0] || null));
+        if (!box.firstChild) { this.closeDetail(); return false; }
+        box.hidden = false;
+        box.setAttribute('data-node', n.id);
+        this.detailOf = n.id;
+        return true;
+      }
+      closeDetail() { this.detailBox.hidden = true; this.detailBox.textContent = ''; this.detailBox.removeAttribute('data-node'); this.detailOf = null; }
+      key(e) {
+        const g = this.tree.grid;
+        if (e.ctrlKey || e.metaKey || e.altKey || !g || !g.grid.body.scroller.contains(e.target)) { return; }
+        const order = this.shownIds(), at = this.focusedId() || order[0];
+        if (!at) { return; }
+        const stop = () => { e.preventDefault(); e.stopPropagation(); };
+        if (this.o.onKey && this.o.onKey(this.full.node(at), e) === true) { stop(); return; }
+        if (e.key === 'Escape' && this.detailOf) { stop(); this.closeDetail(); return; }
+        const mv = outlineKey(e.key, this.tree.model, order, at);
+        if (!mv) { return; }
+        stop();
+        if (mv.act === 'open' || mv.act === 'close') { this.tree.toggle(mv.to, mv.act === 'open'); }
+        if (mv.act === 'detail') { if (this.detailOf === mv.to) { this.closeDetail(); } else { this.tree.select(mv.to, { from: 'grid' }); } }
+        this.focusNode(mv.to);
+      }
+      destroy() {
+        this.offSel();
+        this.host.removeEventListener('keydown', this.onKeyDown, true);
+        this.tree.destroy();
+        this.host.textContent = '';
+        this.host.classList.remove('dt-outline');
+      }
+    }
+    return { "OUTLINE_TONES": OUTLINE_TONES, "outlineFilter": outlineFilter, "outlineKey": outlineKey, "TreeOutline": TreeOutline };
+  })();
   /* ---- src/drishti_index.js ---- */
   __m["src/drishti_index.js"] = (function () {
     var defineTreeElement = __m["src/drishti_tree-element.js"].defineTreeElement;
     function install(root) { if (root && root.document && root.customElements) { defineTreeElement(root.customElements, root); } }
-    return { "install": install, "PATH_SEP": __m["src/drishti_tree-model.js"].PATH_SEP, "HierarchyModel": __m["src/drishti_tree-model.js"].HierarchyModel, "orgLayout": __m["src/drishti_tree-layout.js"].orgLayout, "partition": __m["src/drishti_tree-layout.js"].partition, "arcPath": __m["src/drishti_tree-layout.js"].arcPath, "bandTone": __m["src/drishti_tree-layout.js"].bandTone, "svg": __m["src/drishti_tree-draw.js"].svg, "nodeColour": __m["src/drishti_tree-draw.js"].nodeColour, "drawOrg": __m["src/drishti_tree-draw.js"].drawOrg, "drawPartition": __m["src/drishti_tree-draw.js"].drawPartition, "partitionTable": __m["src/drishti_tree-draw.js"].partitionTable, "gridRows": __m["src/drishti_tree-grid.js"].gridRows, "TreeGrid": __m["src/drishti_tree-grid.js"].TreeGrid, "sideContent": __m["src/drishti_tree-side.js"].sideContent, "statusParts": __m["src/drishti_tree-side.js"].statusParts, "TREE_EXPORTS": __m["src/drishti_tree-io.js"].TREE_EXPORTS, "svgText": __m["src/drishti_tree-io.js"].svgText, "pngOf": __m["src/drishti_tree-io.js"].pngOf, "dataText": __m["src/drishti_tree-io.js"].dataText, "keyMove": __m["src/drishti_tree-io.js"].keyMove, "exportTree": __m["src/drishti_tree-io.js"].exportTree, "TREE_MODES": __m["src/drishti_tree-view.js"].TREE_MODES, "TREE_EVENTS": __m["src/drishti_tree-view.js"].TREE_EVENTS, "Tree": __m["src/drishti_tree-view.js"].Tree, "TREE_ELEMENT": __m["src/drishti_tree-element.js"].TREE_ELEMENT, "defineTreeElement": __m["src/drishti_tree-element.js"].defineTreeElement };
+    return { "install": install, "PATH_SEP": __m["src/drishti_tree-model.js"].PATH_SEP, "HierarchyModel": __m["src/drishti_tree-model.js"].HierarchyModel, "orgLayout": __m["src/drishti_tree-layout.js"].orgLayout, "partition": __m["src/drishti_tree-layout.js"].partition, "arcPath": __m["src/drishti_tree-layout.js"].arcPath, "bandTone": __m["src/drishti_tree-layout.js"].bandTone, "svg": __m["src/drishti_tree-draw.js"].svg, "nodeColour": __m["src/drishti_tree-draw.js"].nodeColour, "drawOrg": __m["src/drishti_tree-draw.js"].drawOrg, "drawPartition": __m["src/drishti_tree-draw.js"].drawPartition, "partitionTable": __m["src/drishti_tree-draw.js"].partitionTable, "gridRows": __m["src/drishti_tree-grid.js"].gridRows, "TreeGrid": __m["src/drishti_tree-grid.js"].TreeGrid, "loadOpenChildren": __m["src/drishti_tree-hooks.js"].loadOpenChildren, "sideContent": __m["src/drishti_tree-side.js"].sideContent, "statusParts": __m["src/drishti_tree-side.js"].statusParts, "TREE_EXPORTS": __m["src/drishti_tree-io.js"].TREE_EXPORTS, "svgText": __m["src/drishti_tree-io.js"].svgText, "pngOf": __m["src/drishti_tree-io.js"].pngOf, "dataText": __m["src/drishti_tree-io.js"].dataText, "keyMove": __m["src/drishti_tree-io.js"].keyMove, "exportTree": __m["src/drishti_tree-io.js"].exportTree, "TREE_MODES": __m["src/drishti_tree-view.js"].TREE_MODES, "TREE_EVENTS": __m["src/drishti_tree-view.js"].TREE_EVENTS, "Tree": __m["src/drishti_tree-view.js"].Tree, "PANEL_MODES": __m["src/drishti_tree-panel.js"].PANEL_MODES, "readTableTree": __m["src/drishti_tree-panel.js"].readTableTree, "isChain": __m["src/drishti_tree-panel.js"].isChain, "TreePanel": __m["src/drishti_tree-panel.js"].TreePanel, "treeTables": __m["src/drishti_tree-panel.js"].treeTables, "OUTLINE_TONES": __m["src/drishti_tree-outline.js"].OUTLINE_TONES, "outlineFilter": __m["src/drishti_tree-outline.js"].outlineFilter, "outlineKey": __m["src/drishti_tree-outline.js"].outlineKey, "TreeOutline": __m["src/drishti_tree-outline.js"].TreeOutline, "TREE_ELEMENT": __m["src/drishti_tree-element.js"].TREE_ELEMENT, "defineTreeElement": __m["src/drishti_tree-element.js"].defineTreeElement };
   })();
   return Object.freeze(Object.assign({ library: "drishti-tree", version: "0.1.0" }, __m["src/drishti_index.js"]));
 });

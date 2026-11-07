@@ -18,19 +18,25 @@
    own, so the grid shows each node's figures as the hierarchy model holds them (an additive roll-up, or a non-additive figure the host
    gave) and never aggregates (clientAggregation off); a non-additive figure still waiting shows "…". The columns: the node, one per
    measure (drishti-grid marks a non-additive one ◆), "Σ children" beside a measure that asks for it, and a bar for a ratio. Open state follows the
-   model both ways; a click selects; in the edit mode a row dragged onto another proposes the move. */
+   model both ways; a click selects; in the edit mode a row dragged onto another proposes the move. A host may add its own look
+   (TreeOptions.grid, drishti_tree-hooks.js: the node's cell, a measure's column, more columns, a row's class and data, the widths kept)
+   and children that come later: a lazy node has a waiting row under it ("loading…", or why they did not come) until they do. Each row
+   carries its node's own row's fields, so a host's columns read them as they would in a plain grid. */
 import { h, toneColour } from '../../drishti-core/src/drishti_index.js';
 import { Grid } from '../../drishti-grid/src/drishti_index.js';
 import { bandTone } from './drishti_tree-layout.js';
 
 const LABEL = '__label';
+const WAIT = '\u0000wait:';
 
 /**
- * The rows of the grid: one per node, its path of keys (labels, made unique among siblings), its figures and its children's sums.
+ * The rows of the grid: one per node (its own row's fields, its path of keys (labels, made unique among siblings), its figures and its
+ * children's sums), and a waiting row under a lazy node (__wait: the node's id; its label the words given or why the children failed).
  * @param {import('./drishti_tree-model.js').HierarchyModel} model
+ * @param {{lazyText: string}} [o] the waiting row's words (default "loading…")
  * @returns {{rows: Object[], idByKeys: Map<string, string>, keysById: Map<string, string[]>}}
  */
-export function gridRows(model) {
+export function gridRows(model, o) {
   const rows = [], idByKeys = new Map(), keysById = new Map();
   const walk = (n, parentKeys) => {
     const sib = n.parent ? n.parent.children : model.roots;
@@ -38,13 +44,14 @@ export function gridRows(model) {
     const keys = parentKeys.concat([twin ? n.label + ' · ' + n.id : n.label]);
     keysById.set(n.id, keys);
     idByKeys.set(keys.join('\u001f'), n.id);
-    const row = { __id: n.id, __keys: keys, __label: n.label, __kind: n.kind, __moved: n.moved };
+    const row = Object.assign({}, n.data, { __id: n.id, __keys: keys, __label: n.label, __kind: n.kind, __moved: n.moved });
     model.measures.forEach((m) => {
       row[m.field] = n.values[m.field] === undefined ? null : n.values[m.field];
       if (m.childSum) { row['__sum_' + m.field] = model.childSum(n.id, m.field); }
     });
     rows.push(row);
     n.children.forEach((c) => walk(c, keys));
+    if (n.lazy) { rows.push({ __id: null, __wait: n.id, __keys: keys.concat(['…']), __label: n.lazyError || (o && o.lazyText) || 'loading…', __error: !!n.lazyError }); }
   };
   model.roots.forEach((r) => walk(r, []));
   return { rows: rows, idByKeys: idByKeys, keysById: keysById };
@@ -63,29 +70,37 @@ export class TreeGrid {
     this.host = host;
     this.doc = host.ownerDocument;
     this.syncing = false;
-    const model = tree.model, o = tree.o;
-    this.data = gridRows(model);
-    const cols = [{ id: LABEL, field: LABEL, header: o.title || 'Node', width: o.labelWidth || 300, sortable: true }];
+    const model = tree.model, o = tree.o, hk = o.grid || {};
+    this.data = gridRows(model, o);
+    const lc = hk.labelColumn || {};
+    const cols = [Object.assign({ id: LABEL, field: LABEL, header: o.title || 'Node', width: o.labelWidth || 300, sortable: true }, lc, { id: LABEL, field: LABEL,
+      cellRenderer: (p) => (p.row && p.row.__wait ? h(p.doc, 'span', { cls: 'dg-text dt-wait' + (p.row.__error ? ' dt-failed' : ''), text: p.row.__label }) : lc.cellRenderer ? lc.cellRenderer(p) : null) })];
     model.measures.forEach((m) => {
-      cols.push({ id: m.field, field: m.field, header: m.label, type: 'number', additive: m.additive !== false, width: m.bar ? 150 : 112,
+      const mc = m.column || {};
+      cols.push(waitless(Object.assign({ id: m.field, field: m.field, header: m.label, type: 'number', additive: m.additive !== false, width: m.bar ? 150 : 112,
         description: m.additive === false ? 'not additive: a parent\'s figure is the server\'s, never the sum of its children' : undefined,
-        format: (v) => tree.text(m.field, v), cellRenderer: (p) => this.cell(m, p) });
+        format: (v) => tree.text(m.field, v) }, mc, { id: m.field, field: m.field, cellRenderer: (p) => this.cell(m, p) || (mc.cellRenderer ? mc.cellRenderer(p) : null) })));
       if (m.childSum) {
         cols.push({ id: '__sum_' + m.field, field: '__sum_' + m.field, header: 'Σ children', type: 'number', width: 112, additive: true,
-          description: 'the children\'s ' + m.label + ' added up: not a ' + m.label + ' (the gap is the diversification)', format: (v) => tree.text(m.field, v), cellClass: () => 'dt-dim' });
+          description: 'the children\'s ' + m.label + ' added up: not a ' + m.label + ' (the gap is the diversification)', format: (v, r) => (r && r.__wait ? '' : tree.text(m.field, v)), cellClass: () => 'dt-dim' });
       }
     });
+    (hk.columns || []).forEach((c) => cols.push(waitless(Object.assign({}, c))));
+    if (hk.widths) { cols.forEach((c) => { const w = hk.widths[c.id || c.field]; if (w > 0) { c.width = w; } }); }
     this.grid = new Grid(host, {
-      columns: cols, rows: this.data.rows, treeData: true, getDataPath: (r) => r.__keys, getRowId: (r) => r.__id, clientAggregation: false,
+      columns: cols, rows: this.data.rows, treeData: true, getDataPath: (r) => r.__keys, getRowId: (r) => (r.__wait ? WAIT + r.__wait : r.__id), clientAggregation: false,
       layout: o.gridLayout || 'wells', density: tree.density, chrome: false, checkboxes: false, rowSelection: 'single', label: o.label || o.title || 'Hierarchy',
-      explain: (ctx) => tree.explainNode(this.idOfRow(ctx.row), ctx.columnId && ctx.columnId !== LABEL ? ctx.columnId.replace(/^__sum_/, '') : null, true),
-      decorateCell: (ctx) => this.decorate(ctx)
+      explain: o.explain || o.chrome !== false ? (ctx) => tree.explainNode(this.idOfRow(ctx.row), ctx.columnId && ctx.columnId !== LABEL ? ctx.columnId.replace(/^__sum_/, '') : null, true) : undefined,
+      decorateCell: (ctx) => this.decorate(ctx), fitRows: hk.fitRows, phoneWidth: hk.phoneWidth,
+      getRowClass: hk.rowClass ? (r) => (r.__wait ? null : hk.rowClass(r)) : undefined, getRowData: hk.rowData ? (r) => (r.__wait ? null : hk.rowData(r)) : undefined
     });
     this.offs = [
       this.grid.model.on('rowExpanded', (p) => this.opened(p.path, true)),
       this.grid.model.on('rowCollapsed', (p) => this.opened(p.path, false)),
       this.grid.model.on('cellClicked', (p) => { const id = this.idOfRow(p.row); if (id && !this.syncing) { tree.select(id, { from: 'grid' }); } })
     ];
+    if (hk.onResize) { this.offs.push(this.grid.on('columnResized', () => { const w = {}; this.grid.model.columns.all().forEach((c) => { w[c.id] = c.width; }); hk.onResize(w); })); }
+    if (tree.view) { tree.view.classList.toggle('dt-fitted', !!hk.fitRows); }
     this.syncOpen();
     this.onDown = (e) => this.dragStart(e);
     this.onUp = (e) => this.dragEnd(e);
@@ -135,7 +150,7 @@ export class TreeGrid {
       const rm = this.grid.model.rowModel, m = this.tree.model;
       rm.expanded.clear();
       rm.expandLevel = 0;
-      m.open.forEach((id) => { const n = m.node(id), k = this.data.keysById.get(id); if (n && n.children.length && k) { rm.expanded.add(k.join('\u001f')); } });
+      m.open.forEach((id) => { const k = this.data.keysById.get(id); if (m.hasChildren(id) && k) { rm.expanded.add(k.join('\u001f')); } });
       rm.flatten();
       rm.events.emit('rowsChanged', { reason: 'expand' });
     } finally { this.syncing = false; }
@@ -143,7 +158,7 @@ export class TreeGrid {
 
   /** The figures, the shape (a move) or the marks changed: the rows again. @returns {void} */
   refresh() {
-    this.data = gridRows(this.tree.model);
+    this.data = gridRows(this.tree.model, this.tree.o);
     this.grid.setRows(this.data.rows);
     this.syncOpen();
   }
@@ -197,5 +212,15 @@ export class TreeGrid {
     this.host.removeEventListener('pointerdown', this.onDown);
     this.host.removeEventListener('pointerup', this.onUp);
     this.grid.destroy();
+    if (this.tree.view) { this.tree.view.classList.remove('dt-fitted'); }
   }
+}
+
+/** @private a host's column: its format, look and drawing left out on a waiting row */
+function waitless(c) {
+  const f = c.format, r = c.cellRenderer, k = c.cellClass;
+  if (typeof f === 'function') { c.format = (v, row) => (row && row.__wait ? '' : f(v, row)); }
+  if (r) { c.cellRenderer = (p) => (p.row && p.row.__wait ? '' : r(p)); }
+  if (typeof k === 'function') { c.cellClass = (v, row) => (row && row.__wait ? null : k(v, row)); }
+  return c;
 }

@@ -26,6 +26,7 @@ import { drawOrg, drawPartition, partitionTable } from './drishti_tree-draw.js';
 import { TreeGrid } from './drishti_tree-grid.js';
 import { sideContent, statusParts } from './drishti_tree-side.js';
 import { exportTree, keyMove } from './drishti_tree-io.js';
+import { loadOpenChildren } from './drishti_tree-hooks.js';
 
 /** The modes of one tree: grid (g6 B, the default), org (A), sunburst and icicle (C). */
 export const TREE_MODES = Object.freeze(['grid', 'org', 'sunburst', 'icicle']);
@@ -60,6 +61,11 @@ const MODE_NAMES = { grid: 'Tree grid', org: 'Org chart', sunburst: 'Sunburst', 
  * @property {string[]} [status] more words for the status line (the business date)
  * @property {string} [emptyText] the side panel's words when nothing is selected
  * @property {function(string, (string|Blob), string): void} [download] saves an export (default: drishti-core's download)
+ * @property {boolean} [chrome=true] false: the view alone (no toolbar, breadcrumbs, side panel or status line), for a screen with its own
+ * @property {import('./drishti_tree-hooks.js').TreeGridHooks} [grid] the host's look in the tree grid (its columns, a row's class, widths)
+ * @property {function(import('./drishti_tree-hooks.js').TreeChildrenRequest): Promise<Object[]>} [loadChildren] a lazy node's children
+ *   (rows, read as the data's), asked the first time it is open
+ * @property {string} [lazyText='loading…'] the waiting row's words while a lazy node's children are asked
  */
 
 /**
@@ -99,18 +105,14 @@ export class Tree {
     this.model.measures.forEach((m) => { this.fmt[m.field] = formatterFor(m.format); });
     this.build();
     this.offModel = this.model.events.on('changed', (p) => this.modelChanged(p));
+    loadOpenChildren(this);
     if (o.link) { this.offLink = this.bus.on(SELECTION_EVENT, (p) => { if (p && p.source !== this && p.channel === o.link.channel) { const id = (p.ids || []).find((x) => this.model.node(x)); this.select(id || null, { silent: true }); } }); }
     if (this.win.MutationObserver) { this.watch = new this.win.MutationObserver(() => this.draw()); this.watch.observe(this.doc.documentElement, { attributes: true, attributeFilter: ['data-theme', 'class'] }); }
     this.draw();
     this.askSoon();
   }
 
-  /**
-   * A measure's figure as text, by its format.
-   * @param {string} field
-   * @param {*} v
-   * @returns {string}
-   */
+  /** A measure's figure as text, by its format. @param {string} field @param {*} v @returns {string} */
   text(field, v) { return (this.fmt[field] || formatterFor())(v); }
 
   /** @private emits on the bus and as a DOM event */
@@ -133,6 +135,7 @@ export class Tree {
   build() {
     const doc = this.doc, o = this.o, b = (act, text, title) => h(doc, 'button', { cls: 'dt-btn', text: text, attrs: { type: 'button', title: title || null }, data: { act: act } });
     this.host.classList.add('dt');
+    this.host.classList.toggle('dt-bare', o.chrome === false);
     this.host.textContent = '';
     this.search = h(doc, 'input', { cls: 'dt-input dt-search', attrs: { type: 'search', placeholder: 'Search the tree…', 'aria-label': 'Search the tree' }, data: { ctl: 'search' } });
     this.found = h(doc, 'span', { cls: 'dt-lbl', attrs: { 'aria-live': 'polite' } });
@@ -247,6 +250,7 @@ export class Tree {
   /** @private */
   modelChanged(p) {
     if (p.what === 'open' && p.id) { this.emit(p.open ? 'nodeExpanded' : 'nodeCollapsed', { id: p.id, path: this.model.breadcrumbs(p.id) }); }
+    if (p.what === 'open' || p.what === 'data') { loadOpenChildren(this); }
     if (this.quiet) { return; }
     if (this.mode === 'grid' && this.grid && p.what === 'open') { this.grid.syncOpen(); this.drawSide(); return; }
     this.draw();
@@ -290,12 +294,14 @@ export class Tree {
   /**
    * Selects a node (null: none), shows it and its breadcrumbs, shares it on the link's channel.
    * @param {?string} id
-   * @param {{silent: boolean, from: string}} [o] silent: not published on the bus
+   * @param {{silent: boolean, quiet: boolean, from: string}} [o] silent: not published on the bus; quiet: only marked (the host's own
+   *   selection followed: nothing opened, no event, nothing announced)
    * @returns {void}
    */
   select(id, o) {
     const n = id ? this.model.node(id) : null;
     this.selected = n ? n.id : null;
+    if (o && o.quiet) { if (this.grid) { this.grid.repaint(); } else { this.draw(); } return; }
     this.active = this.selected || this.active;
     this.explainBox.hidden = true;
     if (n && this.mode !== 'sunburst' && this.mode !== 'icicle' && n.parent && !this.model.pathOf(n.id).slice(0, -1).every((x) => this.model.isOpen(x.id))) {
@@ -372,12 +378,7 @@ export class Tree {
     this.emit('densityChanged', { density: d });
   }
 
-  /**
-   * Opens or closes a node.
-   * @param {string} id
-   * @param {boolean} [open]
-   * @returns {void}
-   */
+  /** Opens or closes a node. @param {string} id @param {boolean} [open] @returns {void} */
   toggle(id, open) { this.model.toggle(id, open); }
 
   /** Opens every node. @returns {void} */

@@ -188,7 +188,7 @@ def test_dependencies_resolve_deepest_first_each_once():
     assert TRAIN.resolve(["grid"]) == ["drishti-core", "drishti-grid"]
     assert TRAIN.resolve(["chart", "drishti-grid", "core"]) == ["drishti-core", "drishti-chart", "drishti-grid"]
     r = TRAIN.resolve(["renderer"])
-    assert r[-1] == "drishti-renderer" and set(r) == {"drishti-core", "drishti-grid", "drishti-chart", "drishti-data", "drishti-graph", "drishti-renderer"}
+    assert r[-1] == "drishti-renderer" and set(r) == {"drishti-core", "drishti-grid", "drishti-chart", "drishti-data", "drishti-graph", "drishti-tree", "drishti-renderer"}
     assert r.index("drishti-core") == 0
     assert TRAIN.resolve(["all"]) == GENERAL
     with pytest.raises(dist.DistError, match="no library insight"):

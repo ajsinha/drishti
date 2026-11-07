@@ -177,6 +177,27 @@ test('the keys of the drawn modes', () => {
   assert.equal(T.keyMove('x', m, order(), 'B'), null);
 });
 
+test('the outline: a filter keeps the matches and the nodes above them; Enter opens a node with children and shows a leaf\'s detail', () => {
+  const m = model();
+  const words = (n) => n.label + ' ' + (n.data.n === undefined ? '' : 'count ' + n.data.n);
+  assert.deepEqual(T.outlineFilter(m, '', words), { hits: [], keep: null });                   // an empty query keeps everything
+  const f = T.outlineFilter(m, 'COUNT 5', words);                                               // every word, any case
+  assert.deepEqual(f.hits, ['K2']);
+  assert.deepEqual([...f.keep].sort(), ['B', 'D1', 'K2']);
+  assert.deepEqual(T.outlineFilter(m, 'nowhere').hits, []);
+  assert.deepEqual(T.outlineFilter(m, 'desk').hits, ['K1', 'K2', 'K3']);                        // default words: label, id and kind
+  m.expandAll();
+  const order = m.visible().map((n) => n.id);
+  assert.deepEqual(T.outlineKey('Enter', m, order, 'D1'), { to: 'D1', act: 'close' });
+  m.toggle('D1', false);
+  assert.deepEqual(T.outlineKey(' ', m, m.visible().map((n) => n.id), 'D1'), { to: 'D1', act: 'open' });
+  assert.deepEqual(T.outlineKey('Enter', m, order, 'K3'), { to: 'K3', act: 'detail' });
+  assert.deepEqual(T.outlineKey('Home', m, order, 'K3'), { to: 'B', act: 'focus' });
+  assert.deepEqual(T.outlineKey('ArrowLeft', m, order, 'K3'), { to: 'D2', act: 'focus' });     // a leaf: up to its parent
+  assert.equal(T.outlineKey('e', m, order, 'K3'), null);                                        // not the outline's: the host's or the grid's
+  assert.ok(Object.isFrozen(T.OUTLINE_TONES) && T.OUTLINE_TONES.includes('warn'));
+});
+
 test('the lists the gallery reads, and the bundle registers the same API', () => {
   assert.deepEqual(T.TREE_MODES, ['grid', 'org', 'sunburst', 'icicle']);
   assert.ok(Object.isFrozen(T.TREE_EVENTS) && T.TREE_EVENTS.includes('proposal') && T.TREE_EVENTS.includes('selectionChanged'));
@@ -202,4 +223,53 @@ test('drishti-risk\'s VaR hierarchy: VaR, ES, limit and its use never summed; po
   assert.deepEqual(R.limitBreaches(rows), ['B1']);
   assert.throws(() => T.partition(m, { sizeBy: 'VAR' }), /not additive/);
   assert.equal(T.partition(m, { sizeBy: o.sizeBy }).length, 4);
+});
+
+test('lazy children: a waiting row until the host answers, then nodes of their own; a failure said in the waiting row', async () => {
+  const rows = ROWS().map((r) => (r.id === 'K1' || r.id === 'K2' ? Object.assign({ lazy: true, code: r.id.toLowerCase() }, r) : r));
+  const m = new T.HierarchyModel({ rows: rows, measures: MEASURES });
+  assert.equal(m.hasChildren('K1'), true);
+  assert.equal(m.hasChildren('K3'), false);
+  let g = T.gridRows(m, { lazyText: 'computing…' });
+  const wait = g.rows.find((r) => r.__wait === 'K1');
+  assert.deepEqual(wait.__keys, ['Bank', 'Markets', 'Rates', '…']);
+  assert.equal(wait.__label, 'computing…');
+  assert.equal(g.rows.find((r) => r.__id === 'K1').code, 'k1');                // the node's own row's fields, for a host's columns
+  const asked = [];
+  const tree = { model: m, o: { loadChildren: (req) => { asked.push(req); return req.id === 'K1' ? Promise.resolve([{ id: 'P1', label: 'Pos 1', v: 2, lazy: true }, { id: 'T1', parent: 'P1', label: 'Trade 1', v: 1 }]) : Promise.reject(new Error('no answer')); } } };
+  assert.equal(T.loadOpenChildren(tree), 0);                                   // nothing open: nothing asked
+  m.toggle('D1', true); m.toggle('K1', true); m.toggle('K2', true);
+  assert.equal(T.loadOpenChildren(tree), 2);
+  assert.equal(T.loadOpenChildren(tree), 0);                                   // asked once while out
+  await new Promise((r) => setTimeout(r, 0));
+  assert.deepEqual(asked.map((r) => [r.id, r.path.join('>'), r.data.code]), [['K1', 'B>D1>K1', 'k1'], ['K2', 'B>D1>K2', 'k2']]);
+  assert.deepEqual(m.node('K1').children.map((n) => n.id), ['P1']);
+  assert.equal(m.node('T1').parent.id, 'P1');                                  // a row under another of the answer
+  assert.equal(m.node('P1').lazy, false);
+  assert.equal(m.node('K1').lazy, false);
+  assert.equal(m.value('K1', 'v'), 4);                                         // the server's figure kept, never the children's sum
+  assert.equal(m.node('K2').lazyError, 'no answer');
+  g = T.gridRows(m);
+  assert.equal(g.rows.find((r) => r.__wait === 'K2').__label, 'no answer');
+  assert.equal(g.rows.some((r) => r.__wait === 'K1'), false);
+  assert.equal(T.loadOpenChildren(tree), 0);                                   // a failure is not asked again until the data is read again
+  assert.throws(() => m.addChildren('K3', [{ id: 'P1' }]), /two nodes have the id P1/);
+});
+
+test('drishti-risk\'s VaR hierarchy for a screen: its fields in order, its labels and columns, the limit use in words', () => {
+  const o = R.varHierarchyTree([{ ID: 'BANK', LABEL: 'Bank' }], { fields: ['VAR', 'ES', 'LIMIT_USE'], measures: { VAR: { label: 'VaR EUR', childSum: false, column: { width: 86 } } }, chrome: false });
+  assert.deepEqual(o.data.measures.map((m) => m.field), ['VAR', 'ES', 'LIMIT_USE']);
+  assert.equal(o.data.measures[0].label, 'VaR EUR');
+  assert.equal(o.data.measures[0].childSum, false);
+  assert.equal(o.data.measures[0].column.width, 86);
+  assert.equal(o.data.measures[0].additive, false);
+  assert.equal(o.chrome, false);
+  assert.equal(o.gridLayout, 'terminal');
+  assert.equal(o.fields, undefined);
+  assert.equal(o.sizeBy, undefined);
+  assert.equal(R.limitUseText(0.854), '85%');
+  assert.equal(R.limitUseText(null, { LIMIT_NOTE: 'n/c' }), 'n/c');
+  assert.equal(R.limitUseText(undefined, {}), 'no limit');
+  assert.equal(R.VAR_TREE_MEASURES[0].format(1234567), R.riskMoney(1234567));
+  assert.throws(() => R.varHierarchyTree([], { fields: ['PNL'] }), /no measure PNL/);
 });

@@ -965,11 +965,37 @@ Drishti screen draws that many today.
 - **The edit mode** (`editable`): a node dragged onto a new parent (or "Move to" from the keyboard) is a proposed move; a move under
   its own descendant is refused; the moves collect into **one proposal** (`proposal` event, `drishti:proposal`) the host submits to the
   Approvals API for four eyes; nothing changes until the host calls `applyProposal` (or `discardProposal`).
+- **A screen's own tree** (`drishti_tree-hooks.js`): `chrome: false` draws the view alone inside the screen's panels; `grid`
+  (`TreeGridHooks`) gives the node's cell (`labelColumn`), more columns reading the node's own row (every grid row carries its node's
+  fields), a row's class and data-* attributes, the widths given and every resize handed back to keep, and `fitRows`; a measure's
+  `column` changes its column (header, width, format, look; the tree's waiting mark and bar still draw first). **Lazy children**: a row
+  with `lazy` (the model's `lazyField`) has a waiting row under it (`lazyText`, or why they did not come) and `loadChildren` is asked
+  the first time it is open; the answer joins the model as nodes (`addChildren`; a row in it may be lazy in turn), an answer for nodes
+  read again since is dropped and asked again. `select(id, {quiet: true})` follows the screen's own selection: marked, nothing opened,
+  no event.
+- **The outline** (`TreeOutline`, `drishti_tree-outline.js`): a `Tree` in grid mode with `chrome: false` for a narrow panel of an
+  authoring screen with its own filter box and buttons. `marks(node)` draws words after a node's label (`OutlineMark`: a tone, a badge,
+  a title, mono, clipped), `rowClass(node)` a row's class; `filter(q)` keeps the matching nodes and the nodes above them (the rest
+  leave the tree, their open state remembered; `outlineFilter`); the rows answer a tree's keys (`outlineKey` on `keyMove`: Home and
+  End, Right and Left to open, close and go up, Enter or Space opens a branch or shows a leaf's detail); `detail(node, box)` fills the
+  box under the tree (Enter or a click; Enter again or Escape closes it); `onKey(node, event)` is the host's keys first; `nodeAt(el)`
+  names the node under a pointer for the host's drag.
+- **The table tree** (`TreePanel`, `treeTables`, `readTableTree`, `isChain`; `drishti_tree-panel.js`): a server's table with rows
+  nested under rows (`table.tbl-tree`, a Sutra table or ladder with `children:`) read from its DOM (each row's depth, the server's open
+  state, every cell's text, tone class and content: links and badges kept as drawn; the footer's lines) and drawn in two modes:
+  `grid` (drishti-grid's tree data, a column per heading, a figure's text ordered by drishti-core's `textSortKey`, never summed; the
+  highlighted row a class) and `org` (the org chart's drawing over a `HierarchyModel` of the same rows, the first two other columns in
+  each box; Enter or a double click follows the row's link). A tree that is one chain (`isChain`) opens as `org`, any other as `grid`;
+  a switch changes it. The filter keeps a row whose cells hold every word and its ancestors (the grid's tree filter; the org chart
+  marks the matches and opens their branches). The server's table stays in the page, hidden, for print and pages without scripts.
+  `treeTables(scope, {memory, scope, live})` draws every tree table under a scope once and keeps each one's mode, open rows and filter
+  by key in the host's `memory`, so a live patch that draws the panel again keeps them.
 
 **drishti-risk's presets** (options only: a page loads drishti-graph or drishti-tree itself): `counterpartyStructureGraph(rows, links)`
 (groups → legal entities → netting sets → CSAs, layered top-down by level, sized by EAD; EAD, MTM and collateral add up, PFE does not)
 and `varHierarchyTree(rows)` (bank → divisions → desks → books with VaR, ES, the limit and its use as ◆ figures, positions and
-notional additive; the grid mode in the terminal density, as the VaR screens).
+notional additive; the grid mode in the terminal density and layout, as the VaR screens; the figures in `riskMoney`, a node without a
+limit use saying why, `LIMIT_NOTE`, *no limit* by default; a screen picks its `fields` and changes a measure's label or column).
 
 **What moved onto them, and what was deleted:**
 
@@ -978,9 +1004,16 @@ notional additive; the grid mode in the terminal density, as the VaR screens).
 | the view's `kind: graph` panel (the counterparty hierarchy F3 HIER, the `relationships` and showcase examples), drawn with ECharts' graph series in drishti-chart | drishti-graph's view panel, in the console, the renderer and the embed; the same nodes and edges (the panel's data unchanged), the Entities list under it kept | drishti-chart's graph option and its layer placement (`drishti_chart-panels.js`) |
 | the data map (`/datamap`, `DATAMAP`): a server-placed SVG of domain boxes, kind nodes and join lines | drishti-graph in the grouped layout (domains as frames), **Layered** the lineage DAG of the joins; selection, chips, Find (a highlight) and the layout in the address; the browser test checks the drawn kinds and joins equal the server's model | the template's SVG, its CSS, the server's layout (`_layout` and the coordinates in `core/datamap.py`) |
 | Build › New pack's kinds-and-links graph (a hand-drawn SVG) | drishti-graph, circular, the field on each arrow | the SVG drawing and its CSS |
+| the VaR explorer's scope tree (drishti-risk's `riskGrid` with drishti-grid's tree data, the rows, lazy parts and open state kept by the screen) | drishti-tree through `varHierarchyTree`, `chrome: false`: the same rows and server figures (VaR, ES, the limit use bar, Parametric and Gap), positions and trades through `loadChildren`, *+ basket* and the chip in the node's cell, the current scope a row class | the explorer's tree columns, its rows' paths, its own lazy loading and open-state bookkeeping, its limit bar (`ubar`, `.vx-ubar`) |
+| the Build workbench's shape tree (a hand-built `role=tree` list: conflicts and rare fields, the fields with type, role, presence, examples, a filter, Expand and Collapse, Enter for a field's reason, `S` and `B`, drag a field onto the canvas) | drishti-tree's outline (`TreeOutline`): the same nodes and marks, the filter hiding what does not match, the detail with the workbench's buttons under the tree, `window.Drishti.ShapeTree` kept (`show`, `fieldAt`) | the list's DOM, keys and filter code and its CSS (`.bs-tree`, `.bs-row`, `.bs-twist`, `.bs-name`, `.bs-type`, `.bs-pres`, `.bs-ex`, `.bs-detail`) |
 
-The GLEIF Sutras (`lei-entity`, `lei-group`, `lei-relationship`) draw their ownership as tables, not a graph, and the Build home's
-lineage is a column of links: neither had a graph to move.
+| a table or ladder with `children:` (`table.tbl-tree`): ▸/▾ buttons, the filter box keeping ancestors and the column funnels of the console (`drishti_tree-rows.js`), and the renderer's own copy (drishti-grid's `tree` and `treeVisibility`) | drishti-tree's table tree (`treeTables`): the tree grid, or the org chart for one chain, in the console, the renderer and the embed (`elements-tree`; its sheet in `<drishti-view>`'s and the renderer's); the same rows, texts, tones and links; the mode, open rows and filter kept across live patches | the console's hand-built toggles and filter (`treeTable`, its address state), drishti-grid's `tree` and `treeVisibility`, their CSS (`.tr-q`, `.tr-bar`, `.tr-count`) |
+| the GLEIF entity's parents chain (`lei-entity` `PAR`): a flat table, direct parent first | the same panel as a tree from the ultimate parent down to the entity (Rachana `take`, `let` and the document; no engine change), opening as the org chart; the group tree (`lei-group` `TREE`) the tree grid with the org chart a click away | the flat chain's order |
+
+The GLEIF relationship (`lei-relationship`) is one child and one parent (a key-value panel and the two entities' cards): no chain to
+draw. The Build home's lineage is a column of links: no graph to move. Still hand-built, to move next: the Drishti Risk home's VaR
+hierarchy list (`drishti_risk-landing.js`, `rl-tree`), the exposure explorer's counterparty tree (`drishti_exposure-explorer.js`,
+`xx-tree`) and the raw-record viewer's JSON tree (`drishti_raw-viewer.js`, `jt`).
 
 **Tests.** Node: `tests/elements/graph.test.mjs` (13: the model, paths, layers, every layout and the timings, the scene, encodings,
 hit testing, export, the terminal's commands and completion, the lineage, the panel options, the bundle) and
@@ -1068,7 +1101,7 @@ old code is gone and its tests run against the new DOM with the same assertions.
 | MR cube (`MCUBE`) and CCR cube presets | the Pivot screen; the lens's sparklines and the switches' comments as `decorateCell`; live patches flashed by the grid | **moved** | the lens's and switches' writes into the old grid's cells | `test_mr_cube_browser.py` (every cell the VaR engine's scope VaR, a total never the sum of its rows) |
 | Pivot functions' cards (why, what-if, functions) | drishti-inputs `DatePicker` for the two dates; the results stay plain tables (no sort, filter or paging) | **moved** | the two text date fields | `test_pivot_functions_browser.py` |
 | Tree rows, the nested pivot (`drishti_tree-rows.js`) | drishti-grid pivot mode, `chrome: false`, the panel's own answer | **moved** | the call into the old grid | `test_tree_rows.py` (in Chromium), `test_render_behaviours_browser.py` |
-| Tree rows, the table with children (`table.tbl-tree`) | drishti-grid tree data (a path per row) | **waits** for the grid's tree data (section 15) | | |
+| Tree rows, the table with children (`table.tbl-tree`) | drishti-tree's table tree (`treeTables`: the tree grid on drishti-grid's tree data, the org chart for one chain) | **moved** (2.9.11.e) | the console's toggles, filter and funnels on trees, drishti-grid's `tree` and `treeVisibility` | `test_tree_rows.py`, `tests/elements/tree-panel.test.mjs`, `test_colfilter_browser.py`, `test_render_library_browser.py`, `test_render_parity_browser.py` |
 | BI table, perspective grid, a report's rows and as-table views (`drishti_bi-grids.js`) | drishti-grid, `chrome: false`, conditional formats and terminal links as `decorateCell`, data bars, the engine's totals under the grid | **moved** | the table's own `<table>` and sort code, `.bi-sorthead` | `test_bi_reports_browser.py`, `test_bi_new_visuals_browser.py` (the engine's totals), `test_bi_wave_b_browser.py`, `test_bi_live_browser.py` (masks), `test_embed_report_browser.py` |
 | Notebook result tables (`drishti_bi-notebook.js`) | drishti-grid | **moved** | the `<table>` | `test_bi_notebook_browser.py`, `test_bi_wave_c_browser.py` |
 | Chart any table, View as table (`drishti_table-chart.js`) | drishti-grid | **moved** | the `<table>` | `test_table_chart_browser.py` (every row in the CSV) |

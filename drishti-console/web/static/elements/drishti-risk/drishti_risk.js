@@ -227,26 +227,52 @@
     }
     return { "riskChart": riskChart };
   })();
+  /* ---- src/drishti_risk-format.js ---- */
+  __m["src/drishti_risk-format.js"] = (function () {
+    var formatter = __lib("drishti-core").formatter;
+    const compact = formatter('compact', { decimals: (a, u) => (u === 'k' || !u ? 0 : 2), minus: '-' });
+    function riskMoney(v) { return v === null || v === undefined || Number.isNaN(v) ? '—' : compact(v); }
+    function riskSigned(v) { return v === null || v === undefined || Number.isNaN(v) ? '—' : (v > 0 ? '+' : '') + compact(v); }
+    function riskInt(v) { return v === null || v === undefined || Number.isNaN(v) ? '—' : Math.round(v).toLocaleString('en-US'); }
+    function riskPct(v) { return v === null || v === undefined || Number.isNaN(v) ? '—' : (v * 100).toFixed(1) + '%'; }
+    return { "riskMoney": riskMoney, "riskSigned": riskSigned, "riskInt": riskInt, "riskPct": riskPct };
+  })();
   /* ---- src/drishti_risk-tree.js ---- */
   __m["src/drishti_risk-tree.js"] = (function () {
+    var riskMoney = __m["src/drishti_risk-format.js"].riskMoney;
+    var TONES = __m["src/drishti_risk-grid.js"].TONES;
     const LIMIT_USE_BANDS = Object.freeze([{ to: 0.75, tone: 'good' }, { to: 0.9, tone: 'accent' }, { to: 1, tone: 'warn' }, { to: Infinity, tone: 'bad' }]);
+    function limitUseText(v, row) { return typeof v === 'number' ? Math.round(v * 100) + '%' : (row && row.LIMIT_NOTE) || 'no limit'; }
     const VAR_TREE_MEASURES = Object.freeze([
-      Object.freeze({ field: 'VAR', label: 'VaR 99% 1d', format: 'money', additive: false, childSum: true }),
-      Object.freeze({ field: 'ES', label: 'ES 97.5%', format: 'money', additive: false }),
-      Object.freeze({ field: 'LIMIT', label: 'Limit', format: 'money', additive: false }),
-      Object.freeze({ field: 'LIMIT_USE', label: 'Limit use', format: 'percent', additive: false, bar: Object.freeze({ max: 1, bands: LIMIT_USE_BANDS }) }),
+      Object.freeze({ field: 'VAR', label: 'VaR 99% 1d', format: riskMoney, additive: false, childSum: true }),
+      Object.freeze({ field: 'ES', label: 'ES 97.5%', format: riskMoney, additive: false }),
+      Object.freeze({ field: 'LIMIT', label: 'Limit', format: riskMoney, additive: false }),
+      Object.freeze({ field: 'LIMIT_USE', label: 'Limit use', format: 'percent', additive: false, bar: Object.freeze({ max: 1, bands: LIMIT_USE_BANDS }),
+        column: Object.freeze({ format: limitUseText, cellClass: (v) => (typeof v === 'number' ? null : TONES.muted) }) }),
       Object.freeze({ field: 'POSITIONS', label: 'Positions', format: 'integer' }),
-      Object.freeze({ field: 'NOTIONAL', label: 'Notional', format: 'money' })
+      Object.freeze({ field: 'NOTIONAL', label: 'Notional', format: riskMoney })
     ]);
     function varHierarchyTree(rows, o) {
       o = o || {};
-      return Object.assign({ mode: 'grid', density: 'terminal', title: 'VaR hierarchy', openDepth: 2, sizeBy: 'POSITIONS', colourBy: 'LIMIT_USE', shown: ['VAR', 'ES'],
-        emptyText: 'Select a node to see its VaR, ES and limit use, its place in the hierarchy and Explain. Over the limit: red; near it: amber.' }, o, {
-        data: { rows: rows, idField: 'ID', parentField: 'PARENT', labelField: 'LABEL', kindField: 'LEVEL', measures: VAR_TREE_MEASURES.map((m) => Object.assign({}, m)) }
+      const per = o.measures || {}, fields = o.fields || VAR_TREE_MEASURES.map((m) => m.field);
+      const measures = fields.map((f) => {
+        const m = VAR_TREE_MEASURES.find((x) => x.field === f);
+        if (!m) { throw new Error('a VaR hierarchy has no measure ' + f); }
+        const own = per[f] || {};
+        return Object.assign({}, m, own, { column: Object.assign({}, m.column, own.column) });
       });
+      const opts = Object.assign({ mode: 'grid', density: 'terminal', gridLayout: 'terminal', title: 'VaR hierarchy', openDepth: 2, colourBy: 'LIMIT_USE', shown: ['VAR', 'ES'],
+        emptyText: 'Select a node to see its VaR, ES and limit use, its place in the hierarchy and Explain. Over the limit: red; near it: amber.' }, o, {
+        data: { rows: rows, idField: 'ID', parentField: 'PARENT', labelField: 'LABEL', kindField: 'LEVEL', measures: measures }
+      });
+      if (!opts.sizeBy && fields.indexOf('POSITIONS') >= 0) { opts.sizeBy = 'POSITIONS'; }
+      if (fields.indexOf(opts.colourBy) < 0) { delete opts.colourBy; }
+      delete opts.fields;
+      delete opts.measures;
+      return opts;
     }
     function limitBreaches(rows) { return (rows || []).filter((r) => typeof r.LIMIT_USE === 'number' && r.LIMIT_USE >= 1).map((r) => String(r.ID)); }
-    return { "LIMIT_USE_BANDS": LIMIT_USE_BANDS, "VAR_TREE_MEASURES": VAR_TREE_MEASURES, "varHierarchyTree": varHierarchyTree, "limitBreaches": limitBreaches };
+    return { "LIMIT_USE_BANDS": LIMIT_USE_BANDS, "limitUseText": limitUseText, "VAR_TREE_MEASURES": VAR_TREE_MEASURES, "varHierarchyTree": varHierarchyTree, "limitBreaches": limitBreaches };
   })();
   /* ---- src/drishti_risk-graph.js ---- */
   __m["src/drishti_risk-graph.js"] = (function () {
@@ -298,23 +324,13 @@
     }
     return { "textColumn": textColumn, "moneyColumn": moneyColumn };
   })();
-  /* ---- src/drishti_risk-format.js ---- */
-  __m["src/drishti_risk-format.js"] = (function () {
-    var formatter = __lib("drishti-core").formatter;
-    const compact = formatter('compact', { decimals: (a, u) => (u === 'k' || !u ? 0 : 2), minus: '-' });
-    function riskMoney(v) { return v === null || v === undefined || Number.isNaN(v) ? '—' : compact(v); }
-    function riskSigned(v) { return v === null || v === undefined || Number.isNaN(v) ? '—' : (v > 0 ? '+' : '') + compact(v); }
-    function riskInt(v) { return v === null || v === undefined || Number.isNaN(v) ? '—' : Math.round(v).toLocaleString('en-US'); }
-    function riskPct(v) { return v === null || v === undefined || Number.isNaN(v) ? '—' : (v * 100).toFixed(1) + '%'; }
-    return { "riskMoney": riskMoney, "riskSigned": riskSigned, "riskInt": riskInt, "riskPct": riskPct };
-  })();
   /* ---- src/drishti_index.js ---- */
   __m["src/drishti_index.js"] = (function () {
     var registerRiskKinds = __m["src/drishti_risk-kinds.js"].registerRiskKinds;
     const RISK_KINDS = Object.freeze(['risk.pnl-distribution', 'risk.backtest', 'risk.exposure-profile', 'risk.var-change']);
     registerRiskKinds();
     function install(root) { if (root) { registerRiskKinds(); } }
-    return { "RISK_KINDS": RISK_KINDS, "install": install, "TRAFFIC_LIGHT": __m["src/drishti_risk-kinds.js"].TRAFFIC_LIGHT, "trafficLight": __m["src/drishti_risk-kinds.js"].trafficLight, "tailFigures": __m["src/drishti_risk-kinds.js"].tailFigures, "tenorText": __m["src/drishti_risk-kinds.js"].tenorText, "eepeOf": __m["src/drishti_risk-kinds.js"].eepeOf, "buildPnlDistribution": __m["src/drishti_risk-kinds.js"].buildPnlDistribution, "buildBacktest": __m["src/drishti_risk-kinds.js"].buildBacktest, "buildExposureProfile": __m["src/drishti_risk-kinds.js"].buildExposureProfile, "buildVarChange": __m["src/drishti_risk-kinds.js"].buildVarChange, "registerRiskKinds": __m["src/drishti_risk-kinds.js"].registerRiskKinds, "RISK_GRID_DEFAULTS": __m["src/drishti_risk-grid.js"].RISK_GRID_DEFAULTS, "TONES": __m["src/drishti_risk-grid.js"].TONES, "figureColumn": __m["src/drishti_risk-grid.js"].figureColumn, "riskGrid": __m["src/drishti_risk-grid.js"].riskGrid, "riskChart": __m["src/drishti_risk-chart.js"].riskChart, "LIMIT_USE_BANDS": __m["src/drishti_risk-tree.js"].LIMIT_USE_BANDS, "VAR_TREE_MEASURES": __m["src/drishti_risk-tree.js"].VAR_TREE_MEASURES, "varHierarchyTree": __m["src/drishti_risk-tree.js"].varHierarchyTree, "limitBreaches": __m["src/drishti_risk-tree.js"].limitBreaches, "COUNTERPARTY_LEVELS": __m["src/drishti_risk-graph.js"].COUNTERPARTY_LEVELS, "COUNTERPARTY_MEASURES": __m["src/drishti_risk-graph.js"].COUNTERPARTY_MEASURES, "counterpartyStructureGraph": __m["src/drishti_risk-graph.js"].counterpartyStructureGraph, "textColumn": __m["src/drishti_risk-columns.js"].textColumn, "moneyColumn": __m["src/drishti_risk-columns.js"].moneyColumn, "riskMoney": __m["src/drishti_risk-format.js"].riskMoney, "riskSigned": __m["src/drishti_risk-format.js"].riskSigned, "riskInt": __m["src/drishti_risk-format.js"].riskInt, "riskPct": __m["src/drishti_risk-format.js"].riskPct };
+    return { "RISK_KINDS": RISK_KINDS, "install": install, "TRAFFIC_LIGHT": __m["src/drishti_risk-kinds.js"].TRAFFIC_LIGHT, "trafficLight": __m["src/drishti_risk-kinds.js"].trafficLight, "tailFigures": __m["src/drishti_risk-kinds.js"].tailFigures, "tenorText": __m["src/drishti_risk-kinds.js"].tenorText, "eepeOf": __m["src/drishti_risk-kinds.js"].eepeOf, "buildPnlDistribution": __m["src/drishti_risk-kinds.js"].buildPnlDistribution, "buildBacktest": __m["src/drishti_risk-kinds.js"].buildBacktest, "buildExposureProfile": __m["src/drishti_risk-kinds.js"].buildExposureProfile, "buildVarChange": __m["src/drishti_risk-kinds.js"].buildVarChange, "registerRiskKinds": __m["src/drishti_risk-kinds.js"].registerRiskKinds, "RISK_GRID_DEFAULTS": __m["src/drishti_risk-grid.js"].RISK_GRID_DEFAULTS, "TONES": __m["src/drishti_risk-grid.js"].TONES, "figureColumn": __m["src/drishti_risk-grid.js"].figureColumn, "riskGrid": __m["src/drishti_risk-grid.js"].riskGrid, "riskChart": __m["src/drishti_risk-chart.js"].riskChart, "LIMIT_USE_BANDS": __m["src/drishti_risk-tree.js"].LIMIT_USE_BANDS, "VAR_TREE_MEASURES": __m["src/drishti_risk-tree.js"].VAR_TREE_MEASURES, "limitUseText": __m["src/drishti_risk-tree.js"].limitUseText, "varHierarchyTree": __m["src/drishti_risk-tree.js"].varHierarchyTree, "limitBreaches": __m["src/drishti_risk-tree.js"].limitBreaches, "COUNTERPARTY_LEVELS": __m["src/drishti_risk-graph.js"].COUNTERPARTY_LEVELS, "COUNTERPARTY_MEASURES": __m["src/drishti_risk-graph.js"].COUNTERPARTY_MEASURES, "counterpartyStructureGraph": __m["src/drishti_risk-graph.js"].counterpartyStructureGraph, "textColumn": __m["src/drishti_risk-columns.js"].textColumn, "moneyColumn": __m["src/drishti_risk-columns.js"].moneyColumn, "riskMoney": __m["src/drishti_risk-format.js"].riskMoney, "riskSigned": __m["src/drishti_risk-format.js"].riskSigned, "riskInt": __m["src/drishti_risk-format.js"].riskInt, "riskPct": __m["src/drishti_risk-format.js"].riskPct };
   })();
   return Object.freeze(Object.assign({ library: "drishti-risk", version: "0.2.0" }, __m["src/drishti_index.js"]));
 });

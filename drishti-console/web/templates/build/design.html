@@ -19,7 +19,7 @@
 {% block title %}{{ design.name or 'Untitled design' if design else 'Design not found' }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}build{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_build-workbench.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pivot.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_drill.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_form.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/vendor/codemirror/codemirror.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-tree/drishti_tree.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_build.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_build-workbench.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pivot.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_drill.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_form.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {% if not design %}
@@ -93,7 +93,7 @@
             <span class="text-muted-d" data-counts aria-live="polite"></span>
             <button type="button" class="btn-pill btn-ghost" data-expand-all>Expand</button><button type="button" class="btn-pill btn-ghost" data-collapse-all>Collapse</button></div>
           <p class="text-muted-d bs-keys">Drag a field onto the canvas. Or: arrows move, Enter opens a field, S suggests panels, B binds it to the selected panel.</p>
-          <ul class="bs-tree" role="tree" aria-label="Shape of the samples" data-tree></ul>
+          <div data-tree></div>
         </div>
       </details>
     </aside>
@@ -231,7 +231,7 @@
 <script src="/static/js/drishti_drill.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_layout-rules.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_build-files.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_build-shape-tree.js?v={{ ASSET_V }}"></script>
+<script src="/static/elements/drishti-tree/drishti_tree.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_build-shape-tree.js?v={{ ASSET_V }}"></script>
 {% for f in ["ops", "yamlmodel", "drag", "menus", "palette", "expr", "forms", "actions", "canvas", "inspector", "data", "notes", "yamltab", "problems", "about", "form-tab", "controls-tab", "tests", "draft", "versions", "ship", "saving", "commands", "workbench"] %}
 <script src="/static/js/build/drishti_{{ f }}.js?v={{ ASSET_V }}"></script>
 {% endfor %}

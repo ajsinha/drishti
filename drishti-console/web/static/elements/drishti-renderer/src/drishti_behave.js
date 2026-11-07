@@ -14,10 +14,12 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* What a rendered view does (CLIENT_RENDERER.md section 7.4): bar and gauge widths, tabs (click, arrows, Home, End), and clicks on rows
-   and bars that carry an event, which become drishti:row-click and drishti:select events. The tables' own behaviours (tree rows that open
-   and close, drill-down levels with their breadcrumb, and unless the host turns them off (tables: false) sorting, a filter box and
-   paging) are drishti-grid's (enhanceDocTables). Everything happens inside the container: no address change, no new window. */
+   and bars that carry an event, which become drishti:row-click and drishti:select events. The tables' own behaviours (drill-down levels
+   with their breadcrumb, and unless the host turns them off (tables: false) sorting, a filter box and paging) are drishti-grid's
+   (enhanceDocTables); a table with rows nested under rows is drishti-tree's (treeTables: the tree grid or the org chart, its mode, open
+   rows and filter kept across live patches by the screen). Everything happens inside the container: no address change, no new window. */
 import { enhanceDocTables } from '../../drishti-grid/src/drishti_index.js';
+import { treeTables } from '../../drishti-tree/src/drishti_index.js';
 
 /**
  * Widths from data-w (the CSP forbids style attributes; CSSOM is allowed).
@@ -73,7 +75,7 @@ function events(scope, R) {
 
 /**
  * Everything above on a freshly rendered scope (a whole view, or one panel a patch replaced), by the behaviours the host chose:
- *   'library' (the default) and 'console': tabs, the tables' behaviours (drishti-grid: trees, drills, and sorting, a filter box and paging
+ *   'library' (the default) and 'console': tabs, the tables' behaviours (drishti-tree: trees; drishti-grid: drills, and sorting, a filter box and paging
  *           unless tables: false; in 'console' the console's column funnels and Chart any table come on top, console.js), the events;
  *   'host': none but the widths: the host page's own scripts enhance the DOM.
  * @param {ParentNode} scope
@@ -84,7 +86,9 @@ export function enhance(scope, R) {
   widths(scope);
   if (R.behaviours === 'host') { return; }
   tabs(scope);
-  // in 'console' the console's funnels sort and filter the plain tables (drishti_tables.js): the grid keeps the trees and drills
+  // in 'console' the console's funnels sort and filter the plain tables (drishti_tables.js): the grid keeps the drills, drishti-tree the trees
   enhanceDocTables(scope, { tables: R.tables !== false, sort: R.behaviours !== 'console' });
+  const trees = R.trees || (R.trees = { memory: {}, live: [] });
+  try { trees.live = treeTables(scope, { memory: trees.memory, live: trees.live }); } catch (e) { /* the server's tree table stays as drawn */ }
   events(scope, R);
 }

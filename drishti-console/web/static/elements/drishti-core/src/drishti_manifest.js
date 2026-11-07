@@ -138,7 +138,7 @@ export const MANIFEST = Object.freeze({
     },
     "drishti-renderer": {
       "version": "2.0.0",
-      "title": "The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-graph, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js",
+      "title": "The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-graph, drishti-tree, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js",
       "bundle": "drishti-renderer/drishti_renderer.js",
       "entry": "drishti-renderer/src/drishti_index.js",
       "global": "renderer",
@@ -147,11 +147,13 @@ export const MANIFEST = Object.freeze({
         "drishti-grid",
         "drishti-chart",
         "drishti-data",
-        "drishti-graph"
+        "drishti-graph",
+        "drishti-tree"
       ],
       "css": [
         "elements/drishti-grid/drishti_grid.css",
-        "elements/drishti-graph/drishti_graph.css"
+        "elements/drishti-graph/drishti_graph.css",
+        "elements/drishti-tree/drishti_tree.css"
       ],
       "scripts": []
     }

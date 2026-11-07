@@ -30,7 +30,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | [drishti-graph](#drishti-graph) | 0.1.0 | The graph: networks cyclic or acyclic on a canvas for thousands of nodes; force (seeded), layered (DAG), radial, circular and grouped layouts; zoom, pan, minimap and fit; neighbours expanded on demand; the shortest path; groups collapsed by an attribute and filters by type; size and colour by a measure with a legend; pin, multi-select and lasso; a selection panel with Explain; linked selection; export (PNG, SVG, data); keyboard and an adjacency table; live updates; the lineage preset; the view's graph panel |
 | [drishti-tree](#drishti-tree) | 0.1.0 | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, export, keyboard and ARIA |
 | [drishti-risk](#drishti-risk) | 0.2.0 | The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser), and the presets for drishti-graph and drishti-tree (the counterparty structure graph; the VaR hierarchy tree): options only, so a page loads the graph or the tree library itself |
-| [drishti-renderer](#drishti-renderer) | 2.0.0 | The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-graph, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js |
+| [drishti-renderer](#drishti-renderer) | 2.0.0 | The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-graph, drishti-tree, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js |
 
 ## drishti-core
 
@@ -3825,18 +3825,6 @@ The plain Data table a chart keeps (nothing is only in the picture): in a detail
 Returns `HTMLElement`: details.xchart-data (or div.tbl-wrap).
 
 ### drishti_doc-behave.js
-
-#### `treeVisibility(depths, opens, matches)`
-
-What a tree table shows: per row, whether it is visible and whether it is drawn open. With a query (matches given) a row shows when it or a row under it matches, and a row is open when a row under it matches; without one, a row shows when its parent is shown and open.
-
-| Parameter | Type | Meaning |
-|---|---|---|
-| `depths` | `number[]` | each row's depth, rows in document order (a row's children follow it) |
-| `opens` | `boolean[]` | whether each row is open (by the person) |
-| `matches` | `?boolean[]` | whether each row matches the query, or null when there is no query |
-
-Returns `{visible: boolean[], open: boolean[]}`.
 
 #### `pageInfo(total, page, size)`
 
@@ -11532,6 +11520,38 @@ Reads the hierarchy again (the open state is kept for the ids still there).
 
 Returns `void`.
 
+##### `HierarchyModel.addChildren(id, rows)`
+
+The children the host gave for a node read as lazy (lazyField): rows with their ids, each under the node or under another of these rows named by its parent field; a row may be lazy in turn. The open state is kept.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `rows` | `Object[]` |  |
+
+Returns `number`: how many nodes were added.
+
+##### `HierarchyModel.childrenFailed(id, why)`
+
+The host could not give a lazy node's children: the words shown in their place (not asked again until the data is read again).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `why` | `string` |  |
+
+Returns `void`.
+
+##### `HierarchyModel.hasChildren(id)`
+
+Whether a node has children, or children to come (lazy).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `boolean`.
+
 ##### `HierarchyModel.node(id)`
 
 A node by its id.
@@ -11894,13 +11914,14 @@ Returns `HTMLTableElement`.
 
 ### drishti_tree-grid.js
 
-#### `gridRows(model)`
+#### `gridRows(model, o)`
 
-The rows of the grid: one per node, its path of keys (labels, made unique among siblings), its figures and its children's sums.
+The rows of the grid: one per node (its own row's fields, its path of keys (labels, made unique among siblings), its figures and its children's sums), and a waiting row under a lazy node (__wait: the node's id; its label the words given or why the children failed).
 
 | Parameter | Type | Meaning |
 |---|---|---|
 | `model` | `import('./drishti_tree-model.js').HierarchyModel` |  |
+| `[o]` | `{lazyText: string}` | the waiting row's words (default "loading…") |
 
 Returns `{rows: Object[], idByKeys: Map&lt;string, string&gt;, keysById: Map&lt;string, string[]&gt;}`.
 
@@ -11968,6 +11989,18 @@ Returns `void`.
 Takes the grid down.
 
 Returns `void`.
+
+### drishti_tree-hooks.js
+
+#### `loadOpenChildren(tree)`
+
+Asks the host for the children of every open lazy node not asked yet (TreeOptions.loadChildren); each answer joins the model, a failure is shown in the waiting row. A node read again (new data) while its answer is out is asked again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tree` | `Object` | the Tree (its model, o.loadChildren and the map of the answers out) |
+
+Returns `number`: how many were asked now.
 
 ### drishti_tree-side.js
 
@@ -12111,7 +12144,7 @@ Selects a node (null: none), shows it and its breadcrumbs, shares it on the link
 | Parameter | Type | Meaning |
 |---|---|---|
 | `id` | `?string` |  |
-| `[o]` | `{silent: boolean, from: string}` | silent: not published on the bus |
+| `[o]` | `{silent: boolean, quiet: boolean, from: string}` | silent: not published on the bus; quiet: only marked (the host's own selection followed: nothing opened, no event, nothing announced) |
 
 Returns `void`.
 
@@ -12251,6 +12284,225 @@ Takes the tree down.
 
 Returns `void`.
 
+### drishti_tree-panel.js
+
+#### `PANEL_MODES`
+
+The modes of a table tree: the tree grid (the default) and the org chart.
+
+#### `readTableTree(table)`
+
+Reads a server's tree table (table.tbl-tree: tr[data-depth] rows; the first cell's toggle, .tr-tog, says whether it is open).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `table` | `HTMLTableElement` |  |
+
+Returns `TableTree`.
+
+#### `isChain(rows)`
+
+Whether a tree is one chain: one top row and every row with at most one row under it (an org chart reads it better than a table).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rows` | `TableTreeRow[]` |  |
+
+Returns `boolean`.
+
+#### class `TreePanel`
+
+A table tree: the tree grid or the org chart of a server's tree table, with the mode switch and the filter box.
+
+##### `new TreePanel(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` | the element the panel fills |
+| `options` | `{tree: TableTree, mode: string, label: string, search: boolean, density: string, fitRows: number, state: TreePanelState, onState: function(TreePanelState): void}` | mode: grid, org, or auto (the default: org for a chain); search default true |
+
+##### `TreePanel.setMode(mode)`
+
+Draws the rows in another mode (the open rows and the filter stay).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `mode` | `('grid'\|'org')` |  |
+
+Returns `void`.
+
+##### `TreePanel.filter(q)`
+
+Keeps the rows that match the words and their ancestors (empty: every row).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `q` | `string` |  |
+
+Returns `void`.
+
+##### `TreePanel.toggle(id, open)`
+
+Opens or closes a row.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+| `[open]` | `boolean` | default: the other state |
+
+Returns `void`.
+
+##### `TreePanel.getState()`
+
+What the panel keeps for the next drawing of the same table.
+
+Returns `TreePanelState`.
+
+##### `TreePanel.destroy()`
+
+Takes the panel down.
+
+Returns `void`.
+
+#### `treeTables(scope, options)`
+
+Draws every server tree table under a scope (table.tbl-tree not yet drawn) as a table tree: the panel goes before the table's wrapper, which stays in the page hidden (print, no scripts). Panels whose table left the page are taken down on the next call.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `scope` | `ParentNode` | a view, a panel a live patch replaced, a shadow root |
+| `[options]` | `{memory: Object&lt;string, TreePanelState&gt;, scope: string, density: string, live: TreePanel[]}` | memory: the state by table (kept by the host across calls, so a live patch keeps the mode, the open rows and the filter); scope: a prefix of the keys (the page's address); live: the panels drawn before (those whose table left the page are destroyed) |
+
+Returns `TreePanel[]`: the panels drawn now and still in the page.
+
+### drishti_tree-outline.js
+
+#### `OUTLINE_TONES`
+
+The tones a mark may take.
+
+#### `outlineFilter(model, q, textOf)`
+
+The filter of an outline: the nodes whose words hold every word of the query (any case), and the nodes to keep (those and every node above them). An empty query keeps everything (keep null).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `model` | `HierarchyModel` |  |
+| `q` | `string` |  |
+| `[textOf]` | `function(import('./drishti_tree-model.js').TreeNode): string` | default: label, id and kind |
+
+Returns `{hits: string[], keep: ?Set&lt;string&gt;}`.
+
+#### `outlineKey(key, model, order, at)`
+
+What a key does on an outline's focused node: keyMove's tree keys, with Enter and Space opening or closing a node with children and showing the detail of one without.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `key` | `string` |  |
+| `model` | `HierarchyModel` |  |
+| `order` | `string[]` | the ids of the rows shown, top to bottom |
+| `at` | `string` | the focused node |
+
+Returns `?{to: string, act: ('focus'\|'open'\|'close'\|'detail')}`.
+
+#### class `TreeOutline`
+
+The outline: a hierarchy as a compact tree grid (a Tree without its chrome), with marks, a hiding filter, a tree's keys and a detail.
+
+##### `new TreeOutline(host, options)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` | the element the outline fills |
+| `options` | `OutlineOptions` |  |
+
+##### `TreeOutline.setData(data)`
+
+New data: the open state kept for the nodes still there (opened by openDepth when none is), the filter applied again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `data` | `import('./drishti_tree-model.js').HierarchySource` |  |
+
+Returns `void`.
+
+##### `TreeOutline.filter(q)`
+
+Keeps the nodes whose words hold the query and the nodes above them (an empty query: every node); their branches open.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `q` | `string` |  |
+
+Returns `string[]`: the ids of the matching nodes.
+
+##### `TreeOutline.expandAll()`
+
+Opens every node.
+
+Returns `void`.
+
+##### `TreeOutline.collapseAll()`
+
+Closes every node: the top level shows.
+
+Returns `void`.
+
+##### `TreeOutline.nodeAt(el)`
+
+The node of an element inside the outline (a row's cell, its marks), for a host's drag or menu.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `?Element` |  |
+
+Returns `?import('./drishti_tree-model.js').TreeNode`.
+
+##### `TreeOutline.shownIds()`
+
+The ids of the rows shown, top to bottom.
+
+Returns `string[]`.
+
+##### `TreeOutline.focusedId()`
+
+The focused node's id (the grid's focus), or null.
+
+Returns `?string`.
+
+##### `TreeOutline.focusNode(id)`
+
+Moves the grid's focus to a node's row.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `void`.
+
+##### `TreeOutline.showDetail(id)`
+
+Shows a node's detail under the tree (the detail option); nothing when the node has none.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `id` | `string` |  |
+
+Returns `boolean`: whether a detail shows.
+
+##### `TreeOutline.closeDetail()`
+
+Closes the detail.
+
+Returns `void`.
+
+##### `TreeOutline.destroy()`
+
+Takes the outline down.
+
+Returns `void`.
+
 ### drishti_tree-element.js
 
 #### `TREE_ELEMENT`
@@ -12300,6 +12552,33 @@ What a drawing needs: the model, the theme, the formatter of each measure, the v
 | `editing` | `boolean` |  |
 | `[sizes]` | `Object` | OrgSizes |
 
+#### `TreeGridHooks` : `Object`
+
+The tree grid's hooks for a host (TreeOptions.grid).
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[labelColumn]` | `Object` | drishti-grid ColumnDef properties for the node's column (header, width, pinned, cellRenderer given {value, text, row, doc}: the row carries the node's own row's fields) |
+| `[columns]` | `Object[]` | more drishti-grid ColumnDefs after the measures', reading the node's own row's fields (valueGetter, format (value, row), cellClass, cellRenderer); left empty on a waiting row |
+| `[rowClass]` | `function(Object): ?string` | more classes for a node's row, from the node's own row (and __id, the node's id) |
+| `[rowData]` | `function(Object): ?Object&lt;string, *&gt;` | data-* attributes for a node's row ({key: 'A-1'}: data-key) |
+| `[widths]` | `Object&lt;string, number&gt;` | column widths by column id (the node's column is __label, a measure's its field) |
+| `[onResize]` | `function(Object&lt;string, number&gt;): void` | a column was resized: every column's width by id (for the host to keep) |
+| `[fitRows]` | `number` | the grid as tall as its rows, up to this many (then it scrolls) |
+| `[phoneWidth]` | `number` | below this width the grid is drawn for a phone (drishti-grid's; 1: never, a narrow panel is not a phone) |
+
+#### `TreeChildrenRequest` : `Object`
+
+What the host's loadChildren hook is given.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` | the node's id |
+| `label` | `string` |  |
+| `kind` | `string` |  |
+| `path` | `string[]` | the ids from the top |
+| `data` | `Object` | the node's own row |
+
 #### `OrgSizes` : `Object`
 
 The org chart's sizes.
@@ -12336,6 +12615,7 @@ A measure of the nodes.
 | `[rollup=true]` | `boolean` | an additive measure: a node with no figure of its own shows its children's sum |
 | `[childSum=false]` | `boolean` | a non-additive measure: show the children's figures added up beside it (Σ children, not a figure of the measure: the gap is the diversification) |
 | `[bar]` | `{bands: Array&lt;{to: number, tone: string}&gt;, max: number}` | draw the figure as a bar (a ratio such as a limit's use): its tone by the first band whose `to` it stays under; max the full bar (default 1) |
+| `[column]` | `Object` | drishti-grid ColumnDef properties for its column in the tree grid (header, width, format (value, row), cellClass, cellRenderer: drawn where the tree draws nothing of its own, the waiting mark and the bar) |
 
 #### `TreeNode` : `Object`
 
@@ -12353,6 +12633,8 @@ A node of the hierarchy.
 | `values` | `Object&lt;string, *&gt;` | the measures' figures by field (the data's, the host's answers and the roll-ups) |
 | `data` | `Object` | the row it was read from |
 | `moved` | `boolean` | part of the draft proposal |
+| `lazy` | `boolean` | its children come later, from the host (TreeOptions.loadChildren), the first time it opens |
+| `lazyError` | `?string` | why its children did not come (shown in their place) |
 
 #### `HierarchySource` : `Object`
 
@@ -12369,7 +12651,78 @@ How a hierarchy is read.
 | `[childrenField='children']` | `string` |  |
 | `[alsoField='also']` | `string` | further parents' ids (a DAG) |
 | `[getPath]` | `function(Object): string[]` | a row's path of ids or names from the top (instead of parentField) |
+| `[lazyField='lazy']` | `string` | a row's field that is true when the node has children the host gives later (addChildren) |
 | `[measures]` | `TreeMeasure[]` |  |
+
+#### `OutlineMark` : `Object`
+
+A mark after a node's label.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `text` | `string` |  |
+| `[tone='muted']` | `('muted'\|'accent'\|'link'\|'good'\|'warn'\|'bad')` |  |
+| `[badge=false]` | `boolean` | drawn as a pill (a role, a state) rather than plain words |
+| `[title]` | `string` | the words on hover (the reason, the whole text of a clipped mark) |
+| `[mono=false]` | `boolean` | in the monospace face (a type, an example value) |
+| `[clip=false]` | `boolean` | long text cut with an ellipsis |
+
+#### `OutlineOptions` : `Object`
+
+The options of an outline.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `data` | `import('./drishti_tree-model.js').HierarchySource` | the hierarchy (rows with parents, a nested root, or paths) |
+| `[title='Node']` | `string` | the grid's heading |
+| `[label]` | `string` | its name for a screen reader (default: the title) |
+| `[density='compact']` | `('comfortable'\|'compact'\|'terminal')` |  |
+| `[labelWidth=480]` | `number` | the width of the node's column (its marks included); a narrower panel scrolls across |
+| `[openDepth=-1]` | `number` | nodes open down to this depth at the start (-1: all) |
+| `[fitRows=24]` | `number` | the tree as tall as its rows, up to this many (then it scrolls) |
+| `[marks]` | `function(import('./drishti_tree-model.js').TreeNode): OutlineMark[]` | the marks after a node's label |
+| `[rowClass]` | `function(import('./drishti_tree-model.js').TreeNode): ?string` | more classes on a node's row |
+| `[text]` | `function(import('./drishti_tree-model.js').TreeNode): string` | the words a filter looks in (default: label, id, kind) |
+| `[detail]` | `function(import('./drishti_tree-model.js').TreeNode, HTMLElement): (string[]\|void)` | a node's detail: lines of text to show, or nothing after filling the box itself; no lines and an empty box: the node has no detail |
+| `[onKey]` | `function(import('./drishti_tree-model.js').TreeNode, KeyboardEvent): boolean` | the host's keys on the focused node, before the outline's (true: handled) |
+
+#### `TableTreeRow` : `Object`
+
+One row of a server's tree table.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `id` | `string` | its place in the table's order (r0, r1 ...) |
+| `parent` | `?string` | the id of the row it is nested under (null at the top) |
+| `depth` | `number` | 0 at the top |
+| `label` | `string` | the first cell's text |
+| `texts` | `string[]` | each cell's text |
+| `tones` | `Array&lt;?string&gt;` | each cell's tone class (t-...), or null |
+| `cells` | `Array&lt;?Element&gt;` | the server's cells: their content (links, badges) is shown as it is |
+| `kids` | `boolean` | whether rows are nested under it |
+| `open` | `boolean` | whether the server showed it open (its expand) |
+| `highlight` | `boolean` | the row the server marked (hl) |
+
+#### `TableTree` : `Object`
+
+A server's tree table, read.
+
+| Name | Type | Meaning |
+|---|---|---|
+| `headers` | `string[]` | the column headings |
+| `numeric` | `boolean[]` | which columns hold figures (right aligned, ordered as numbers) |
+| `rows` | `TableTreeRow[]` | in the table's order, each after the row it is nested under |
+| `foot` | `string[]` | the footer's rows as text (a total, "n more") |
+
+#### `TreePanelState` : `Object`
+
+What a table tree keeps between two drawings of the same table (a live patch).
+
+| Name | Type | Meaning |
+|---|---|---|
+| `[mode]` | `string` | 'grid' or 'org' |
+| `[q]` | `string` | the filter's words |
+| `[open]` | `string[]` | the ids of the open rows |
 
 #### `TreeOptions` : `Object`
 
@@ -12396,6 +12749,10 @@ The options of a tree.
 | `[status]` | `string[]` | more words for the status line (the business date) |
 | `[emptyText]` | `string` | the side panel's words when nothing is selected |
 | `[download]` | `function(string, (string\|Blob), string): void` | saves an export (default: drishti-core's download) |
+| `[chrome=true]` | `boolean` | false: the view alone (no toolbar, breadcrumbs, side panel or status line), for a screen with its own |
+| `[grid]` | `import('./drishti_tree-hooks.js').TreeGridHooks` | the host's look in the tree grid (its columns, a row's class, widths) |
+| `[loadChildren]` | `function(import('./drishti_tree-hooks.js').TreeChildrenRequest): Promise&lt;Object[]&gt;` | a lazy node's children (rows, read as the data's), asked the first time it is open |
+| `[lazyText='loading…']` | `string` | the waiting row's words while a lazy node's children are asked |
 
 ## drishti-risk
 
@@ -12561,14 +12918,25 @@ The VaR limit's use bands (the colours of the bar and of the nodes).
 
 The measures of a VaR hierarchy, in the order the tree grid shows them.
 
+#### `limitUseText(v, row)`
+
+A node's limit use in words: its share of the limit, or why it has none (its LIMIT_NOTE: "n/c" for a limit of another horizon or confidence; "no limit" by default).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `?number` | the server's use (1 = at the limit) |
+| `[row]` | `Object` | the node's row |
+
+Returns `string`.
+
 #### `varHierarchyTree(rows, o)`
 
 The options of a VaR hierarchy tree.
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `rows` | `Object[]` | the nodes: {ID, PARENT, LABEL, LEVEL} and any figures the server sent with them (VAR, ES, LIMIT, LIMIT_USE, POSITIONS, NOTIONAL); the books' POSITIONS and NOTIONAL roll up, the risk figures never do |
-| `[o]` | `Object` | serverMeasures (the non-additive figures of the nodes that lack them), explain, link, editable, proposalNote, mode (default grid), density (default terminal), title, status, and any TreeOptions |
+| `rows` | `Object[]` | the nodes: {ID, PARENT, LABEL, LEVEL} and any figures the server sent with them (VAR, ES, LIMIT, LIMIT_USE, POSITIONS, NOTIONAL), LIMIT_NOTE (why a node has no limit use), lazy (its children come later, loadChildren) and any field of the screen's own; the books' POSITIONS and NOTIONAL roll up, the risk figures never do |
+| `[o]` | `Object` | serverMeasures (the non-additive figures of the nodes that lack them), explain, link, editable, proposalNote, mode (default grid), density (default terminal), title, status; fields (the measures shown, in order: default all), measures (by field, what a screen changes of one: its label, childSum, its column); and any TreeOptions (chrome, grid, loadChildren ...) |
 
 Returns `Object`: TreeOptions (drishti-tree).
 
@@ -12691,7 +13059,7 @@ Returns `void`.
 
 ## drishti-renderer
 
-Version 2.0.0. Bundle `static/elements/drishti-renderer/drishti_renderer.js`, global `Drishti.elements.renderer`; requires drishti-core, drishti-grid, drishti-chart, drishti-data, drishti-graph.
+Version 2.0.0. Bundle `static/elements/drishti-renderer/drishti_renderer.js`, global `Drishti.elements.renderer`; requires drishti-core, drishti-grid, drishti-chart, drishti-data, drishti-graph, drishti-tree.
 
 ### drishti_render.js
 

@@ -31,8 +31,8 @@ The pack is **off by default**: add it to the packs a server loads, `DRISHTI_PAC
 
 | Type | Opens | Examples |
 |---|---|---|
-| `LEI <code>` | an entity: key facts, addresses, registration and renewal (late renewal flagged), its parents chain, its children (a click opens the child's summary beside), BICs and ISINs, the us-equities company | `LEI 8I5DZWZKVSZI1NUHU748`, `LEI HWUPKR0MPOU8FGXBT394` |
-| `LEIG <code>` | a group, computed from the entities when asked: the ultimate parent with its whole tree, counts by country and legal form, no member cap; a click on a member opens it beside | `LEIG 8I5DZWZKVSZI1NUHU748`; `LEIG ALL` lists every group and searches the entities |
+| `LEI <code>` | an entity: key facts, addresses, registration and renewal (late renewal flagged), its parents chain (an org chart from the ultimate parent down to it), its children (a click opens the child's summary beside), BICs and ISINs, the us-equities company | `LEI 8I5DZWZKVSZI1NUHU748`, `LEI HWUPKR0MPOU8FGXBT394` |
+| `LEIG <code>` | a group, computed from the entities when asked: the ultimate parent with its whole tree (a tree grid, or an org chart), counts by country and legal form, no member cap; a click on a member opens it beside | `LEIG 8I5DZWZKVSZI1NUHU748`; `LEIG ALL` lists every group and searches the entities |
 | `LEIC <country>` | a country, computed from the entities when asked: every entity of the pack there, the groups present, legal forms and cities | `LEIC US`, `LEIC GB`; `LEIC ALL` lists every country |
 | `LEIR <id>` | one relationship: child, parent, direct or ultimate, status, periods, accounting standard | `LEIR LEIREL-<child LEI>-DIRECT`, from an entity |
 | `LEIM <identifier>` | an ISIN, BIC or MIC and the LEI it maps to | a BIC or ISIN from an entity page |
@@ -57,6 +57,12 @@ consolidation relationships only (`IS_DIRECTLY_CONSOLIDATED_BY`, `IS_ULTIMATELY_
 and branch relationships are not ownership and are left out. A member whose direct parent is not reported hangs under the ultimate
 parent in the tree. An entity with no reported parent may carry a reporting exception (controlled by natural persons, not
 consolidated, no known person) which its page shows.
+
+**The ownership trees.** Both hierarchies are drawn by drishti-tree (Drishti Elements), from the server's rows, every name a link.
+An entity's **parents chain** (`PAR`, F2) is one chain: the ultimate parent at the top, each parent over the one below it, the entity
+itself at the foot (highlighted), so it opens as an **org chart**; **Tree grid** shows the same rows as a table with the relationship,
+the level and the LEI. A group's **tree** (`TREE`, F2) branches, so it opens as the **tree grid** (two levels open, a filter that keeps
+the ancestors of a match), with **Org chart** a click away. A relationship (`LEIR`) is one child and one parent, shown as the pair.
 
 **Late renewal.** An LEI must be renewed every year. A registration whose next renewal date has passed, or which GLEIF lists as
 `LAPSED`, is flagged *Late* on its page, in its group and in its country; 2,288 of the pack's entities are late today.

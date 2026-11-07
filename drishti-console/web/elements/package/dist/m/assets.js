@@ -59,8 +59,8 @@ const script = (url) => memo('script:' + url, () => new Promise((resolve, reject
 }));
 
 // the console's own scripts, in order: Drishti Elements' drishti-core, drishti-grid (every table's sort, filter and pages; tree rows draw nested
-// pivots with it), drishti-chart (the panel charts) and drishti-graph (a graph panel), the table engine (served from the allow-list in routes/embed_routes.py)
-export const ENHANCERS = ['elements-core', 'elements-grid', 'elements-chart', 'elements-graph', 'pivot-engine', 'view', 'geomap', 'charts', 'colfilter', 'tables', 'tree-rows', 'about', 'about-hints', 'zoom', 'multiselect', 'controls'];
+// pivots with it), drishti-chart (the panel charts), drishti-graph (a graph panel) and drishti-tree (a table with children), the table engine (served from the allow-list in routes/embed_routes.py)
+export const ENHANCERS = ['elements-core', 'elements-grid', 'elements-chart', 'elements-graph', 'elements-tree', 'pivot-engine', 'view', 'geomap', 'charts', 'colfilter', 'tables', 'tree-rows', 'about', 'about-hints', 'zoom', 'multiselect', 'controls'];
 export const chartLibs = (server) => memo('charts:' + server, async () => {
   await script(server + API + '/echarts.js');
   quietDispose();
