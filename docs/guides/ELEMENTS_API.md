@@ -23,7 +23,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | Library | Version | What it is |
 |---|---|---|
 | [drishti-core](#drishti-core) | 1.1.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines |
-| [drishti-grid](#drishti-grid) | 0.3.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes |
+| [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes |
 | [drishti-inputs](#drishti-inputs) | 0.1.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead, forms from a schema with four eyes, the filter bar, the code editor over CodeMirror |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
 | [drishti-chart](#drishti-chart) | 0.1.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
@@ -1463,7 +1463,7 @@ A table to export.
 
 ## drishti-grid
 
-Version 0.3.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core.
+Version 0.4.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core.
 
 ### drishti_columns.js
 
@@ -1859,6 +1859,27 @@ A cell's figure in an answer.
 
 Returns `{value: *, note: ?string, members: number}`.
 
+#### `measureText(v, m)`
+
+A server answer's figure as the pivot shows it, by the answer's own measure fields (it formats, never computes): a text answer (string_agg, the mode of names) as its text; percentages for a pct show-as; whole numbers for a rank, an ntile bucket and a measure whose unit is count; bn and m for large figures; two decimals otherwise. A grid takes it as its pivotFormat (answerFormat).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `*` |  |
+| `[m]` | `{id: string, unit: ?string, showAs: ?string}` | the answer's measure |
+
+Returns `string`.
+
+#### `answerFormat(m)`
+
+The format of an answer's measure for GridOptions.pivotFormat: measureText bound to the measure.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `m` | `{id: string, unit: ?string, showAs: ?string}` |  |
+
+Returns `function(*): string`.
+
 ### drishti_wells.js
 
 #### `WELLS`
@@ -1879,6 +1900,22 @@ The wells of a pivot.
 |---|---|---|
 | `columns` | `import('./drishti_columns.js').ColumnModel` |  |
 | `[initial]` | `{rows: string[], columns: string[], values: WellValue[], filters: Array&lt;{colId: string, filter: Object}&gt;}` |  |
+
+##### `WellsModel.funcs()`
+
+The aggregations a value may take: the browser's (VALUE_FUNCS), then the server's own (GridOptions.serverFuncs).
+
+Returns `Array&lt;{name: string, label: string, server: boolean}&gt;`.
+
+##### `WellsModel.funcLabel(name)`
+
+An aggregation's label (Sum, Median), or its name when it is not known.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+
+Returns `string`.
 
 ##### `WellsModel.fieldList(search)`
 
@@ -3043,6 +3080,27 @@ Returns `Object`.
 Computes the pivot: in the browser for client-side rows (the non-additive measures then asked of the server, when serverPivot is given), else asked of the server. A value filter is applied either way.
 
 Returns `Promise&lt;void&gt;`.
+
+##### `GridModelBase.showAnswer(answer, o)`
+
+Shows a pivot answer the host fetched itself (a progressive answer's first, approximate one; a live patch; an answer a page holds), in the server's PivotAnswer shape. A request in flight is left alone when `o.keepAsking` (a progressive answer's exact one follows). With `o.patched` only figures moved: they flash, the open state and the columns stay.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `answer` | `Object` |  |
+| `[o]` | `{patched: boolean, keepAsking: boolean}` |  |
+
+Returns `void`.
+
+##### `GridModelBase.setOpenState(view)`
+
+Sets the pivot's open state from a view (its expanded nodes and expandTo), without computing: a saved view given back.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `view` | `{expanded: Array, expandTo: Object}` |  |
+
+Returns `void`.
 
 ##### `GridModelBase.togglePivotNode(axis, path, open)`
 
@@ -4752,6 +4810,7 @@ Everything GridModel takes (columns, rows or datasource, serverPivot, explain, c
 | `[members]` | `function(string): (Promise&lt;Array&lt;{text: string, count: number}&gt;&gt;\|Array)` | a field's members for its filter (default: the rows in the page) |
 | `[phoneWidth=640]` | `number` | below this width the grid is drawn for a phone |
 | `[model]` | `GridModel` | draw this model rather than make one |
+| `[chrome=true]` | `boolean` | false: the grid alone, without toolbar, wells, status bar or Explain drawer (a panel inside a page that has its own; the keys, menus and Explain hook still work) |
 
 #### `GridOptions` : `Object`
 
@@ -4772,6 +4831,10 @@ Everything GridModel takes (columns, rows or datasource, serverPivot, explain, c
 | `[live]` | `{asyncWaitMs: number, flashMs: number, serverDebounceMs: number}` | the live data's timings (drishti_grid-live.js) |
 | `[editing]` | `{writeBack: function(Object): Promise&lt;Object&gt;, fourEyes: boolean, undoLimit: number}` | cell editing (drishti_grid-edit.js): the server's write-back hook (each edit transaction; it answers applied, refused or proposed), four eyes |
 | `[locale]` | `string` | how typed and pasted numbers are read (de-DE: 1.250,5) |
+| `[serverFuncs]` | `Array&lt;(string\|{name: string, label: string})&gt;` | aggregations only the server computes (median, var_samp, stddev_samp), offered in the wells and menus beside the browser's; a value with one is always asked of the server |
+| `[valueFuncs]` | `string[]` | the browser's aggregations offered in the wells and menus (default: every one of VALUE_FUNCS; a server pivot offers those its server knows) |
+| `[pivotFormat]` | `function(Object): ?(string\|Object\|function(*, Object): string)` | a pivot measure's format, given the answer's measure ({label, id, kind, unit, showAs}); default: its value column's |
+| `[decorateCell]` | `function(Object): ?{cls: string, title: string, style: Object&lt;string, string&gt;, before: Node, content: Node, after: (string\|Node)}` | a host's marks on a cell, given its context (cellContext with value and text): classes (a comment, a change since a date), a hover note, colours (color, background-color, font-weight, font-style: a conditional format), a node before the figure (an icon), a node in its place (a link holding the same text), and a node or words after it (a sparkline, a delta); it shows, it never changes a figure |
 | `[treeData=false]` | `boolean` | the rows make a tree by their paths (getDataPath): nodes open and close, a node no row names carries its figures as a group (the server's when clientAggregation is false); the first shown column holds the node's key |
 | `[getDataPath]` | `function(Object): string[]` | a row's path from the top (tree data) |
 | `[groupDefaultExpanded=0]` | `number` | groups and tree nodes open down to this level (-1: all) |
@@ -4893,6 +4956,7 @@ A tree node.
 | `colId` | `string` |  |
 | `aggFunc` | `string` |  |
 | `[as]` | `string` | its label |
+| `[showAs]` | `string` | how the server shows it (pct-grand, rank, diff:1:MONTH) |
 
 ## drishti-inputs
 

@@ -13,12 +13,13 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Rupaka phase 3 (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 8): the table, the matrix, the slicers and the static visuals (text, image, button) of a report, plus the generic
    data table every visual can be shown as. A table sorts by a column header and can open a row's entity in the terminal; a matrix groups its rows by the row
    fields, spreads one field across its columns, and adds subtotals (collapsible) and totals. A total of a measure that adds up (sum, count) is the sum of the
    figures shown; a total of one that does not (ratio, average, distinct count, percentile, min, max) is the engine's own, worked out over the rows of the whole
    group and sent with the answer (`totals`); a table with `format.totals` ends with such a row too. Slicers: a list, a dropdown (the shared multi-select), a range, or tiles.
-   The matrix itself is in drishti_bi-matrix.js. */
+   The matrix itself is in drishti_bi-matrix.js. A table is drawn by drishti-grid (Drishti Elements), every figure the engine's as it came. */
 (function () {
   'use strict';
   const B = window.drishtiBi;
@@ -56,71 +57,114 @@
 
   // ---- table ---------------------------------------------------------------------------------------------------------
 
-  /** A table of the visual's columns in the order its well lists them (or of every column of the result when `all` is set). */
+  /** The grid a visual's table is drawn with (drishti-grid, Drishti Elements), once the page holds it; a page without it says so. */
+  function gridLib(host, again) {
+    const E = window.Drishti && window.Drishti.elements;
+    if (E && E.grid) { return E.grid; }
+    if (E && E.load) {
+      host.__gridWait = again;
+      E.load('drishti-grid').then(() => { if (host.__gridWait === again) { host.__gridWait = null; again(); } },
+        (e) => { B.clear(host).appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'The table could not be drawn: ' + (e && e.message ? e.message : e) })); });
+      B.clear(host).appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'Loading the table…' }));
+      return null;
+    }
+    B.clear(host).appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'The table needs Drishti Elements (drishti-grid), which this page did not load.' }));
+    return null;
+  }
+
+  /**
+   * A table of the visual's columns in the order its well lists them (or of every column of the result when `all` is set), drawn by
+   * drishti-grid: sorted by a heading, the first column pinned, every figure the engine's as it came (the grid sums nothing:
+   * clientAggregation false), conditional formats and data bars, a link to an entity in the terminal, a row's actions on a click, and
+   * the engine's own totals under it (worked out over all the rows, never added up from the rows shown).
+   */
   V.dataTable = function (host, spec, ctx, res, all) {
+    const G = gridLib(host, () => V.dataTable(host, spec, ctx, res, all));
+    if (!G) { return NONE; }
     const tb = V.table(res);
     const names = all ? tb.names : (spec.wells.columns || []).filter((n) => tb.at(n) >= 0);
-    const bars = new Set((spec.format && spec.format.dataBars) || []);
-    const sort = host.__sort || (host.__sort = { by: null, desc: false });
-    let rows = tb.rows.map((r) => r);
-    if (sort.by) {
-      const i = tb.at(sort.by);
-      rows.sort((a, b) => { const x = a[i], y = b[i]; const c = x == null ? -1 : y == null ? 1 : typeof x === 'number' && typeof y === 'number' ? x - y : String(x).localeCompare(String(y)); return sort.desc ? -c : c; });
-    }
-    const max = {};
-    names.forEach((n) => { if (bars.has(n)) { max[n] = Math.max(1e-9, ...rows.map((r) => Math.abs(Number(r[tb.at(n)]) || 0))); } });
-    const head = h('tr', {}, names.map((n) => {
-      const isNum = !!ctx.index.measures[n];
-      const btn = h('button', { type: 'button', class: 'bi-sorthead', 'data-sort': n }, B.label(n), sort.by === n ? h('i', { class: 'bi bi-' + (sort.desc ? 'caret-down-fill' : 'caret-up-fill'), 'aria-hidden': 'true' }) : null);
-      btn.addEventListener('click', () => { sort.desc = sort.by === n ? !sort.desc : isNum; sort.by = n; V.dataTable(host, spec, ctx, res, all); });
-      return h('th', { scope: 'col', class: isNum ? 'num' : '', 'aria-sort': sort.by === n ? (sort.desc ? 'descending' : 'ascending') : 'none' }, btn);
-    }));
-    const firstField = names.find((n) => !ctx.index.measures[n]);
-    const styler = all ? null : V.styler(spec, tb, ctx);
     const f = spec.format || {};
-    const body = h('tbody', {});
-    rows.forEach((r, ri) => {
-      const tr = h('tr', { 'data-row': '', class: f.rowBanding && ri % 2 === 1 ? 'bi-band' : '' });
-      names.forEach((n) => {
-        const i = tb.at(n), v = r[i], isMeasure = !!ctx.index.measures[n];
-        const td = h('td', { class: isMeasure || typeof v === 'number' ? 'num' : '' });
-        const link = !isMeasure && ctx.interactive ? terminalLink(ctx, n, v) : null;
-        if (link) { td.appendChild(link); } else if (bars.has(n) && typeof v === 'number') {
-          const w = h('span', { class: 'bi-bar' });
-          w.style.width = Math.round(100 * Math.abs(v) / max[n]) + '%';
-          td.appendChild(h('span', { class: 'bi-barcell' }, w, h('span', { class: 'bi-bartext', text: cellText(v, spec, ctx, n, tb.isMasked(n)) })));
-        } else { td.textContent = cellText(v, spec, ctx, n, tb.isMasked(n)); }
-        if (styler) { V.paintCell(td, styler.cell(n, v, r)); }                // conditional formatting (2.4.0): a rule, a colour scale, icons, a colour per value
-        tr.appendChild(td);
-      });
-      if (ctx.interactive && firstField && ctx.onMark && !all) {
-        tr.tabIndex = 0;
-        tr.setAttribute('aria-label', 'Row ' + String(r[tb.at(firstField)]) + ': open the actions for it');
-        const act = (e) => { const rc = tr.getBoundingClientRect(); ctx.onMark({ visual: spec.id, field: firstField, value: r[tb.at(firstField)], label: String(r[tb.at(firstField)]), row: true }, { x: e.clientX || rc.left + 20, y: e.clientY || rc.bottom, el: tr }); };
-        tr.addEventListener('click', (e) => { if (!e.target.closest('a,button')) { act(e); } });
-        tr.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target === tr) { e.preventDefault(); act(e); } });
+    const bars = (f.dataBars || []).filter((n) => names.indexOf(n) >= 0);
+    const styler = all ? null : V.styler(spec, tb, ctx);
+    const firstField = names.find((n) => !ctx.index.measures[n]);
+    const ids = names.map((n, i) => 'c' + i);
+    const numeric = names.map((n) => !!ctx.index.measures[n] || tb.rows.some((r) => typeof r[tb.at(n)] === 'number'));
+    const columns = names.map((n, i) => ({
+      id: ids[i], field: ids[i], header: B.label(n), type: numeric[i] ? 'number' : 'text', pinned: i === 0 ? 'left' : null, width: numeric[i] ? 120 : 160,
+      enableRowGroup: false, enablePivot: false, enableValue: false, additive: false, description: n,
+      format: (v) => cellText(v, spec, ctx, n, tb.isMasked(n))
+    }));
+    const rows = tb.rows.map((r, k) => { const o = { __k: String(k), __r: r }; names.forEach((n, i) => { o[ids[i]] = r[tb.at(n)]; }); return o; });
+    const key = names.join('\u0001') + '|' + (all ? 1 : 0);
+    const old = host.__grid;
+    if (old && old.key === key && host.contains(old.box)) {            // a live redraw of the same columns: the rows in place (sort and scroll kept)
+      old.spec = spec; old.ctx = ctx;
+      old.grid.setRows(rows);
+      foot(host, old.box, spec, ctx, res, tb, names, all, rows.length);
+      return old.handle;
+    }
+    if (old) { old.grid.destroy(); }
+    const box = h('div', { class: 'bi-grid-box' + (f.wrap ? ' bi-wrap' : '') + (f.rowBanding ? ' bi-banded' : ''), 'data-grid': '' });
+    if (typeof f.fontSize === 'number') { box.style.fontSize = f.fontSize + 'px'; }
+    B.clear(host).appendChild(box);
+    const st = host.__grid = { key, box, spec, ctx, grid: null, handle: null };
+    const decorate = (c) => {
+      if (c.kind !== 'leaf' || !c.data) { return null; }
+      const i = ids.indexOf(c.columnId), n = names[i], v = c.value;
+      const out = {};
+      const link = !ctx.index.measures[n] && st.ctx.interactive ? terminalLink(st.ctx, n, v) : null;
+      if (link) { out.content = link; }
+      const style = styler && !all ? styler.cell(n, v, c.data.__r) : null;  // conditional formatting (2.4.0): a rule, a colour scale, icons, a colour per value
+      if (style) {
+        out.style = { color: style.colour || null, 'background-color': style.background || null, 'font-weight': style.colour ? '600' : null };
+        if (style.background) { out.cls = 'bi-cf-bg'; }
+        if (style.icon) {
+          const ic = h('i', { class: 'bi bi-' + style.icon.name + ' bi-cf-icon', 'aria-hidden': 'true', 'data-cf-icon': style.icon.name });
+          ic.style.color = style.icon.colour;
+          out.before = h('span', { class: 'bi-cf-mark' }, ic, h('span', { class: 'visually-hidden', text: style.icon.words + ': ' }));
+          out.title = style.icon.words;
+        }
       }
-      body.appendChild(tr);
+      return out.content || out.style || out.before ? out : null;
+    };
+    const grid = st.grid = new G.Grid(box, {
+      columns, rows, getRowId: (r) => r.__k, layout: 'wells', density: 'compact', chrome: false, checkboxes: false, rowSelection: 'none',
+      clientAggregation: false, label: spec.title || 'Table', decorateCell: decorate,
+      conditionalFormats: bars.map((n) => ({ column: ids[names.indexOf(n)], type: 'dataBar' }))
     });
-    let foot = null;
+    if (ctx.interactive && firstField && ctx.onMark && !all) {            // a click on a row, or Enter on it: the actions for its first field's member
+      const fi = ids[names.indexOf(firstField)];
+      const act = (data) => {
+        const at = box.querySelector('.dg-cell.dg-focus') || box;
+        const rc = at.getBoundingClientRect(), v = data[fi];
+        st.ctx.onMark({ visual: spec.id, field: firstField, value: v, label: String(v), row: true }, { x: rc.left + 20, y: rc.bottom, el: at });
+      };
+      box.addEventListener('drishti:cell-clicked', (e) => { const d = e.detail || {}; if (d.kind === 'leaf' && d.data) { act(d.data); } });
+      box.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' || e.altKey || e.ctrlKey || e.metaKey) { return; }
+        const f = grid.model.navigator.focus, x = f ? grid.model.rowAt(f.row) : null;
+        if (x && x.kind === 'leaf') { e.preventDefault(); e.stopPropagation(); act(x.row); }
+      }, true);
+    }
+    foot(host, box, spec, ctx, res, tb, names, all, rows.length);
+    st.handle = { dispose() { grid.destroy(); if (host.__grid === st) { host.__grid = null; } }, resize() { grid.refresh(); } };
+    return st.handle;
+  };
+
+  /** Under a table: the engine's own totals (format.totals), or a word when no row is left. */
+  function foot(host, box, spec, ctx, res, tb, names, all, count) {
+    host.querySelectorAll('.bi-grid-foot, .bi-vis-empty').forEach((x) => x.remove());
     const tt = V.trueTotals(res);
-    if (spec.format && spec.format.totals && tt.any && !all && rows.length) {
-      foot = h('tfoot', {}, h('tr', { class: 'bi-grandtotal', 'data-total-row': '' }, names.map((n, k) => {
-        if (!ctx.index.measures[n]) { return h('th', { scope: 'row' }, k === 0 ? 'Total' : ''); }
+    if (spec.format && spec.format.totals && tt.any && !all && count) {
+      host.appendChild(h('div', { class: 'bi-grid-foot bi-grandtotal', 'data-total-row': '', role: 'group', 'aria-label': 'Totals, worked out over all the rows' }, names.map((n, k) => {
+        if (!ctx.index.measures[n]) { return h('span', { class: 'bi-total-label', text: k === 0 ? 'Total' : '' }); }
         const v = tt.find([], [], n);
-        const td = h('td', { class: 'num bi-total', 'data-measure': n, 'data-true-total': '' });
-        td.textContent = v === undefined ? '–' : B.fmt(v, V.numFmt(spec, ctx, n), tb.isMasked(n));
-        td.title = 'Worked out over all the rows, not added up from the rows shown';
-        return td;
+        return h('span', { class: 'num bi-total', 'data-measure': n, 'data-true-total': '', title: 'Worked out over all the rows, not added up from the rows shown' },
+          h('span', { class: 'bi-total-name', text: B.label(n) + ' ' }), h('b', { text: v === undefined ? '–' : B.fmt(v, V.numFmt(spec, ctx, n), tb.isMasked(n)) }));
       })));
     }
-    const table = h('table', { class: 'tbl bi-tbl bi-vgrid bi-vis-table' + (f.wrap ? ' bi-wrap' : ''), 'data-plain': true,
-      'data-resize': 'columns', 'data-resize-key': 'bi.' + location.pathname + '|' + (spec.id || spec.title || 'table') }, h('caption', { class: 'visually-hidden', text: spec.title || 'Table' }), h('thead', {}, head), body, foot);
-    if (typeof f.fontSize === 'number') { table.style.fontSize = f.fontSize + 'px'; }
-    B.clear(host).appendChild(h('div', { class: 'tbl-wrap bi-vis-scroll' }, table));
-    if (!rows.length) { host.appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'No rows for this selection.' })); }
-    return NONE;
-  };
+    if (!count) { host.appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text: 'No rows for this selection.' })); }
+  }
 
   // the matrix is drishti_bi-matrix.js (2.4.0: every level of the rows, stepped or tabular, values on rows, Expand all and Collapse all)
 

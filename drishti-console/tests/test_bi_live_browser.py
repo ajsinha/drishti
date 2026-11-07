@@ -264,12 +264,12 @@ def test_the_perspective_grid_and_pivot_are_drishtis_grid_under_the_strict_polic
     csp = resp.headers["content-security-policy"]
     assert "wasm" not in csp and "'unsafe-eval'" not in csp and "'unsafe-inline'" not in csp
     page.wait_for_selector("[data-ready=yes]", state="attached", timeout=30000)
-    page.wait_for_selector('[data-visual="all-trades"] tbody tr', timeout=60000)
-    heads = page.locator('[data-visual="all-trades"] thead th').all_inner_texts()
-    assert len(heads) >= 3 and page.locator('[data-visual="all-trades"] tbody tr').count() >= 20
+    page.wait_for_selector('[data-visual="all-trades"] .dg-row', timeout=60000)                   # the table, drawn by drishti-grid
+    heads = page.locator('[data-visual="all-trades"] .dg-hcell .dg-hlabel').all_inner_texts()
+    assert len(heads) >= 3 and int(page.locator('[data-visual="all-trades"] [aria-rowcount]').get_attribute("aria-rowcount")) - 1 >= 20
     page.goto(f"{CONSOLE_URL}/bi/r/{REPORT}/pivot")
     page.wait_for_selector("[data-ready=yes]", state="attached", timeout=30000)
-    page.wait_for_selector(".bi-vis tbody tr", timeout=60000)
+    page.wait_for_selector(".bi-vis .dg-row, .bi-vis tbody tr", timeout=60000)
     assert wasm == [], wasm
     clean(page)
 
@@ -277,8 +277,9 @@ def test_the_perspective_grid_and_pivot_are_drishtis_grid_under_the_strict_polic
 def test_the_mask_reads_the_same_in_the_grid_and_the_cards_for_a_reader_without_raw(stack, browser):
     page = sign_in(browser, "ann")
     open_report(page, REPORT, "")
-    page.wait_for_selector('[data-visual="movers"] tbody tr')
-    assert set(page.locator('[data-visual="movers"] tbody tr td:nth-child(3)').all_inner_texts()) == {"•••"}
+    page.wait_for_selector('[data-visual="movers"] .dg-row')
+    third = page.eval_on_selector_all('[data-visual="movers"] .dg-row', "rows => rows.map(r => r.querySelectorAll('.dg-cell')[2].textContent.trim())")
+    assert set(third) == {"•••"}
     clean(page)
 
 

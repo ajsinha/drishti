@@ -92,9 +92,9 @@ def test_the_overview_opens_and_every_figure_adds_up(stack, browser):
     assert dict(zip(bar["categories"], bar["series"][0]["values"])) == want
     assert list(bar["series"][0]["values"]) == sorted(want.values(), reverse=True)                   # ranked by the measure, largest first
     assert chart(page, "by-date")["categories"] == [DAY]
-    table = page.locator('[data-visual="rows"] tbody tr')
+    table = page.locator('[data-visual="rows"] .dg-row')                                           # the table, drawn by drishti-grid
     expect(table).to_have_count(3)
-    assert [t.inner_text().split("\t")[0] for t in table.all()] == sorted(want)
+    assert [r[0] for r in page.eval_on_selector_all('[data-visual="rows"] .dg-row', "rows => rows.map(r => [...r.querySelectorAll('.dg-cell')].map(c => c.textContent.trim()))")] == sorted(want)
     expect(page.locator('[data-visual="currency"] [data-slicer-value]')).to_have_count(3)
     foot = page.locator('[data-visual="by-desk"] .bi-vis-foot').inner_text()
     assert re.search(r"3 rows · [\d.]+ ms|3 rows · from the cache", foot) and "columns" in foot          # the query time and the layer are under every visual
@@ -112,7 +112,7 @@ def test_clicking_a_bar_filters_the_other_visuals_and_clearing_restores_them(sta
     assert card_value(page, "trades") == 20
     assert card_value(page, "mtm") == sum(t["mtm"] for t in fx)
     assert card_value(page, "notional") == sum(t["notional"] for t in fx)
-    expect(page.locator('[data-visual="rows"] tbody tr')).to_have_count(1)
+    expect(page.locator('[data-visual="rows"] .dg-row')).to_have_count(1)
     bar = chart(page, "by-desk")
     assert bar["series"][0]["opacity"].count(0.35) == 2 and bar["series"][0]["opacity"].count(1) == 1       # the other bars are dimmed, the chosen one is not
     page.click('[data-visual="by-desk"] [data-act="clear"]')
@@ -184,14 +184,17 @@ def test_show_the_rows_and_show_as_a_table(stack, browser):
     expect(page.locator('[data-chip="selection"]')).to_contain_text("DESK-EQD")                      # the selection is made and the visuals answered it
     settled(page)
     page.click('[data-visual="by-desk"] [data-act="rows"]')
-    page.wait_for_selector('[data-visual="by-desk"] table tbody tr')
-    expect(page.locator('[data-visual="by-desk"] table tbody tr')).to_have_count(20)                     # the 20 trades of that desk, every column of the table
-    head = page.locator('[data-visual="by-desk"] thead th').all_inner_texts()
+    page.wait_for_selector('[data-visual="by-desk"] .dg-row')
+    expect(page.locator('[data-visual="by-desk"] [aria-rowcount="21"]')).to_have_count(1)                # the 20 trades of that desk (and the heading), every column of the table
+    head = page.locator('[data-visual="by-desk"] .dg-hcell .dg-hlabel').all_inner_texts()
+    page.eval_on_selector('[data-visual="by-desk"] .dg-scroll', "e => { e.scrollLeft = e.scrollWidth; }")    # the grid draws the columns in view
+    page.wait_for_timeout(300)
+    head += page.locator('[data-visual="by-desk"] .dg-hcell .dg-hlabel').all_inner_texts()
     assert "TRADE_ID" in " ".join(head) and "DESK" in " ".join(head) and "MTM_IN_MILLIONS" in " ".join(head)
     page.click('[data-visual="by-desk"] [data-act="rows"]')
     page.wait_for_selector('[data-visual="by-desk"] .bi-chart')
     page.click('[data-visual="by-date"] [data-act="as-table"]')
-    expect(page.locator('[data-visual="by-date"] table tbody tr')).to_have_count(1)
+    expect(page.locator('[data-visual="by-date"] .dg-row')).to_have_count(1)
     page.click('[data-visual="by-date"] [data-act="as-table"]')
     page.wait_for_selector('[data-visual="by-date"] .bi-chart')
     clean(page)
@@ -235,8 +238,9 @@ def test_the_keyboard_selects_a_mark_clears_it_and_switches_to_the_table(stack, 
     page.keyboard.press("Escape")
     expect(page.locator('[data-chip="selection"]')).to_have_count(0)
     page.keyboard.press("t")
-    page.wait_for_selector('[data-visual="by-desk"] table')
-    page.locator('[data-visual="rows"] tbody tr').first.focus()
+    page.wait_for_selector('[data-visual="by-desk"] .dg-row')
+    page.locator('[data-visual="rows"] .dg-scroll').focus()                                           # the grid by the keyboard: the first row, Enter
+    page.keyboard.press("ArrowDown")
     page.keyboard.press("Enter")
     expect(page.locator('[data-chip="selection"]')).to_have_count(1)                                       # a table row selects too
     clean(page)
@@ -537,7 +541,7 @@ def test_every_visual_type_draws_with_data(stack, browser):
     assert float(page.locator('[data-visual="gauge"] .bi-chart').count()) == 1
     assert "▲" in page.locator('[data-visual="kpi"]').inner_text() or "▼" in page.locator('[data-visual="kpi"]').inner_text()     # the KPI says how it stands against its target
     assert page.locator('[data-visual="multi"] [role=listitem]').count() == 3
-    assert page.locator('[data-visual="table"] tbody tr').count() == 5
+    assert page.locator('[data-visual="table"] [aria-rowcount]').get_attribute("aria-rowcount") == "6"           # 5 rows and the heading
     expect(page.locator('[data-visual="matrix"] tr[data-subtotal]')).to_have_count(3)                # a subtotal per desk, collapsible
     page.click('[data-visual="matrix"] [data-group="DESK-FX"]')
     expect(page.locator('[data-visual="matrix"] tr[data-row^="DESK-FX"]')).to_have_count(0)

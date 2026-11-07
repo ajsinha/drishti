@@ -104,6 +104,33 @@ export class GridModelBase {
   }
 
   /**
+   * Shows a pivot answer the host fetched itself (a progressive answer's first, approximate one; a live patch; an answer a page holds),
+   * in the server's PivotAnswer shape. A request in flight is left alone when `o.keepAsking` (a progressive answer's exact one follows).
+   * With `o.patched` only figures moved: they flash, the open state and the columns stay.
+   * @param {Object} answer
+   * @param {{patched: boolean, keepAsking: boolean}} [o]
+   * @returns {void}
+   */
+  showAnswer(answer, o) {
+    o = o || {};
+    if (this.pivotAbort && !o.keepAsking && !o.patched) { this.pivotAbort.abort(); this.pivotAbort = null; }
+    this.pivotMode = true;
+    this.answer = answer;
+    this._pivotCols = null;
+    this.viewport.setRowCount(this.rowCount());
+    if (o.patched) { this.live.emit('serverTotalsUpdated', { pivotCells: Object.keys(answer.cells || {}).length }); }
+    this.events.emit('changed', { what: 'pivot' });
+    if (!o.patched) { this.live.emit('pivotChanged', { view: this.pivotView(), rows: answer ? answer.rows.length : 0 }); }
+  }
+
+  /**
+   * Sets the pivot's open state from a view (its expanded nodes and expandTo), without computing: a saved view given back.
+   * @param {{expanded: Array, expandTo: Object}} view
+   * @returns {void}
+   */
+  setOpenState(view) { this.pivotState = new PivotState(view || {}); }
+
+  /**
    * Opens or closes a pivot row or column group, and computes again.
    * @param {('rows'|'columns')} axis
    * @param {Array<Array<string>>} path the node's (dimension, value) pairs

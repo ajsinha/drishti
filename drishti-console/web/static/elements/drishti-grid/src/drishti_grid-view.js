@@ -52,6 +52,8 @@ let seq = 0;
  *   the rows in the page)
  * @property {number} [phoneWidth=640] below this width the grid is drawn for a phone
  * @property {GridModel} [model] draw this model rather than make one
+ * @property {boolean} [chrome=true] false: the grid alone, without toolbar, wells, status bar or Explain drawer (a panel inside a page
+ *   that has its own; the keys, menus and Explain hook still work)
  */
 
 /**
@@ -84,6 +86,7 @@ export class Grid extends GridBase {
     host.classList.add('dg');
     host.setAttribute('data-layout', this.model.layout);
     host.setAttribute('data-density', this.model.density);
+    if (o.chrome === false) { host.setAttribute('data-chrome', 'none'); }
     this.notes = new Notes(host, this.uid);
     this.wells = new WellsView(this);
     this.body = new GridBody(this);

@@ -803,6 +803,30 @@ the screen's tests and screenshots are unchanged or deliberately updated.
    SIMM and the MR lens; moved into the banking plugin.
 10. **The allow list empty**; the guard strict; the inventory regenerated into section 2.
 
+### 12.1 The migration checklist
+
+One line per screen or part: what it is drawn with now, what was deleted, and how its numbers were checked. A screen is moved when its
+old code is gone and its tests run against the new DOM with the same assertions.
+
+| Screen or part | Moved onto | Status | Deleted | Numbers checked by |
+|---|---|---|---|---|
+| Pivot screen (`drishti_pivot.js`, `terminal/pivot.html`) | drishti-grid, `layout: 'wells'`, `clientAggregation: false`, `serverPivot` (/api/pivot/query, progressive, compare), Explain = provenance | **moved** (2.9.11.e) | `drishti_pivot-grid.js` (the renderer 1.2.0 keeps the name as a loader of the grid), the field list and zones, their CSS | `test_pivot_screen_browser.py`, `test_pivot_switches_browser.py`, `test_pivot_functions_browser.py`, `test_pivot_expand_browser.py` (grand totals per column against the sample), `test_pivot_grid_fmt.py` (`measureText`), a one-off old-against-new parity on the VaR demo |
+| MR cube (`MCUBE`) and CCR cube presets | the Pivot screen; the lens's sparklines and the switches' comments as `decorateCell`; live patches flashed by the grid | **moved** | the lens's and switches' writes into the old grid's cells | `test_mr_cube_browser.py` (every cell the VaR engine's scope VaR, a total never the sum of its rows) |
+| Pivot functions' cards (why, what-if, functions) | drishti-inputs `DatePicker` for the two dates; the results stay plain tables (no sort, filter or paging) | **moved** | the two text date fields | `test_pivot_functions_browser.py` |
+| Tree rows, the nested pivot (`drishti_tree-rows.js`) | drishti-grid pivot mode, `chrome: false`, the panel's own answer | **moved** | the call into the old grid | `test_tree_rows.py` (in Chromium), `test_render_behaviours_browser.py` |
+| Tree rows, the table with children (`table.tbl-tree`) | drishti-grid tree data (a path per row) | **waits** for the grid's tree data (section 15) | | |
+| BI table, perspective grid, a report's rows and as-table views (`drishti_bi-grids.js`) | drishti-grid, `chrome: false`, conditional formats and terminal links as `decorateCell`, data bars, the engine's totals under the grid | **moved** | the table's own `<table>` and sort code, `.bi-sorthead` | `test_bi_reports_browser.py`, `test_bi_new_visuals_browser.py` (the engine's totals), `test_bi_wave_b_browser.py`, `test_bi_live_browser.py` (masks), `test_embed_report_browser.py` |
+| Notebook result tables (`drishti_bi-notebook.js`) | drishti-grid | **moved** | the `<table>` | `test_bi_notebook_browser.py`, `test_bi_wave_c_browser.py` |
+| Chart any table, View as table (`drishti_table-chart.js`) | drishti-grid | **moved** | the `<table>` | `test_table_chart_browser.py` (every row in the CSV) |
+| BI matrix (`drishti_bi-matrix.js`) | drishti-grid pivot mode | **waits**: values on rows and the tabular layout (one column per row level) in drishti-grid first | | |
+| The Pivot's chart of a selection | drishti-chart (`kind: 'bar'`, the diversification and the total beside the parts) | **moved** | its ECharts calls | `test_pivot_screen_browser.py` (the engine's gap, never one added up) |
+| BI's visuals, Chart any table's chart | drishti-chart | **waits** for the chart migration (step 5) | | |
+| BI date and time controls (`bi/report.html`, `notebook.html`) | drishti-inputs `DatePicker`, `DateRangePicker` | **waits** (step 6) | | |
+| The pivot engine's key texts and formats (`drishti_pivot-engine.js`) | drishti-core formats | **waits** for the renderer 2.0.0 (it loads the file into host pages) | | |
+
+The embed (Elements 1.4.5) loads drishti-core and drishti-grid with the console's scripts, and its view sheet carries the grid's style, so
+an embedded view or report draws the same grid.
+
 ## 13. Risks
 
 | Risk | Mitigation |
@@ -849,5 +873,5 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [ ] axe vendored for the gallery's check; every example in both themes and three densities
 - [ ] Documentation per library (section 9): guide, generated API reference with `--check`, tutorial, gallery, the AG Grid migration guide, theming and accessibility guides, changelogs, versioning policy; Help entries
 - [ ] The guards of section 11, the allow list
-- [ ] Every screen moved (section 12) and the old code deleted; the allow list empty
+- [ ] Every screen moved (section 12) and the old code deleted; the allow list empty (the BI and Pivot family: 12.1)
 - [ ] `tools/elements/inventory.py` (planned) regenerates section 2's figures; README and CHANGELOG updated; two drills

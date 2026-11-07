@@ -24,8 +24,8 @@
   var root = document.querySelector("[data-pivot-screen]");
   if (!root || !window.Drishti.PivotScreen) { return; }
   var S = window.Drishti.PivotScreen;
-  var esc = window.Drishti.PivotCore.esc;
-  var gridFmt = window.Drishti.PivotCore.fmt;
+  var esc = S.esc;
+  var gridFmt = S.fmt;
   /** A figure of these cards: as the grid formats it from 1 up; below 1, four significant digits (0.007, 0.006429), never rounded to
       0.01 or 0.00: a return or a rate is often that small. */
   var fmt = function (v) {
@@ -104,6 +104,15 @@
     }
   }
 
+  // the two dates of "Why did it move?": drishti-inputs' date pickers (typed T-1, ME or 6 Nov 2026, or a calendar), any day of the source
+  var dates = {from: null, to: null};
+  (function () {
+    var I = window.Drishti.elements && window.Drishti.elements.inputs;
+    if (!I) { return; }
+    dates.from = new I.DatePicker($("[data-pf-from-date]"), {label: "First date", businessOnly: false, shortcuts: true, placeholder: "the view's date"});
+    dates.to = new I.DatePicker($("[data-pf-to-date]"), {label: "Second date", businessOnly: false, shortcuts: true, placeholder: "the same date"});
+  })();
+
   /** The one Explain (drishti_explain.js, SHARED_SCREENS.md section 3) of the difference between the two cells or dates, at Why it moved:
       the server's pivot explainer (kind pivot) answers with the steps that add up, drawn by the one renderer; this card only asks. */
   function explain() {
@@ -112,8 +121,8 @@
     var body = {view: v, from: coords($("[data-pf-from]").value), by: $("[data-pf-by]").value, order: $("[data-pf-order]").value};
     var to = $("[data-pf-to]").value.trim();
     if (to) { body.to = coords(to); }
-    var fd = $("[data-pf-from-date]").value.trim();
-    var td = $("[data-pf-to-date]").value.trim();
+    var fd = dates.from ? dates.from.getValue() || "" : "";
+    var td = dates.to ? dates.to.getValue() || "" : "";
     if (fd) { body.fromDate = fd; }
     if (td) { body.toDate = td; }
     if (!window.Drishti.Explain) { return fail(new Error("Explain is not on this page")); }

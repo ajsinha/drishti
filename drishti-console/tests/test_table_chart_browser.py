@@ -221,9 +221,9 @@ def test_view_as_table_export_and_point_navigation_by_keyboard(ctx, stack):
     page.keyboard.press("End")
     page.wait_for_function("/\\((\\d+) of \\1\\)/.test(document.querySelector('[data-tc-live]').textContent)")
     page.keyboard.press("t")
-    page.wait_for_selector(".tc-table table tbody tr")
+    page.wait_for_selector(".tc-table .dg-row")                                       # the chart's data, drawn by drishti-grid
     assert page.locator('[data-tc-act="table"]').get_attribute("aria-pressed") == "true"
-    rows = page.locator(".tc-table tbody tr").count()
+    rows = int(page.locator(".tc-table [aria-rowcount]").get_attribute("aria-rowcount")) - 1   # every row, not only those drawn
     with page.expect_download() as dl:
         page.click('[data-tc-act="csv"]')
     text = open(dl.value.path(), encoding="utf-8-sig").read().strip().splitlines()

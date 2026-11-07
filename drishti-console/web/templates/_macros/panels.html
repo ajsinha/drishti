@@ -305,7 +305,7 @@
 {%- endmacro %}
 
 {# A pivot by several fields (Sutra by: [a, b]): the rows nest; every figure is the pivot engine's (ChartBinder). static/js/drishti_tree-rows.js
-   draws them with the pivot grid (drishti_pivot-grid.js: + and − on the groups, subtotals) from data-pv-tree, and this plain table stays for pages without it. #}
+   draws them with drishti-grid (Drishti Elements: + and − on the groups, subtotals) from data-pv-tree, and this plain table stays for pages without it. #}
 {% macro pivot(d) -%}
 {% if d.levels %}<div class="pv-tree-host" data-pv-tree="{{ d | tojson | forceescape }}">{{ pivot_table(d) }}</div>{% else %}{{ pivot_table(d) }}{% endif %}
 {%- endmacro %}

@@ -13,19 +13,20 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# The pivot screen, PIVOT [table | @owner/name] <GO> (PIVOT_GUIDE.md; mock-up A of PIVOT_ENGINE.md section 25): Excel-familiar, the field
-   list and its four zones (Filters, Columns, Rows, Values) on the right; the grid with nested rows opened lazily with + and −, ≈ and exact
-   markers, the provenance popover of a cell; the scan-estimate bar above; a chart of the selection below (a non-additive measure is never
-   stacked); the Export menu (Excel with outline and formulas only where a measure adds up, CSV, Arrow, the definition). A shell:
-   drishti_pivot-grid.js (the grid) and drishti_pivot.js (the screen) fill it from /api/pivot/...; every figure is the server's. With lens "mr" (MCUBE, the
-   MR cube: MR_CUBE_GUIDE.md) the same screen on source var carries the MR lens: the headline strip, the lens controls, the time-travel
-   slider and tabs A (the pivot with sparklines and a right rail of tail, explain and provenance), B (components, waterfall, histogram, heat
-   map) and C (ladder, what-if, explain), drawn by drishti_mr-lens.js from /api/pivot/mr/...; one pivot engine, no second grid. #}
+{# The pivot screen, PIVOT [table | @owner/name] <GO> (PIVOT_GUIDE.md; mock-up A of PIVOT_ENGINE.md section 25): drawn by drishti-grid
+   (Drishti Elements) in its wells layout: the ribbon of wells (Rows, Columns, Values, Filters) and the field list above the grid, nested
+   rows opened with + and − (each asked of the server), ≈ and ◆ marks, a figure's Explain (its provenance) in the drawer; the
+   scan-estimate bar above; slicers and paths; a chart of the selection below (a non-additive measure is never stacked); the Export menu
+   (Excel with outline and formulas only where a measure adds up, CSV, Arrow, the definition). drishti_pivot.js fills it from
+   /api/pivot/...; every figure is the server's (clientAggregation: false). With lens "mr" (MCUBE, the MR cube: MR_CUBE_GUIDE.md) the
+   same screen on source var carries the MR lens: the headline strip, the lens controls, the time-travel slider and tabs A (the pivot with
+   sparklines and a right rail of tail, explain and provenance), B (components, waterfall, histogram, heat map) and C (ladder, what-if,
+   explain), drawn by drishti_mr-lens.js from /api/pivot/mr/...; one pivot engine, one grid. #}
 {% extends "base.html" %}
 {% block title %}{% if cube %}{{ cube.title }}{% else %}Pivot{% if source %} · {{ source }}{% endif %}{% endif %} · {{ PRODUCT }}{% endblock %}
 {% block screen %}pivot{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_pivot-screen.css?v={{ ASSET_V }}">{% if lens == 'mr' %}<link rel="stylesheet" href="/static/css/drishti_mr-lens.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-inputs/drishti_inputs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-chart/drishti_chart.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pivot-screen.css?v={{ ASSET_V }}">{% if lens == 'mr' %}<link rel="stylesheet" href="/static/css/drishti_mr-lens.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="pv{% if lens == 'mr' %} mr{% endif %}" data-pivot-screen{% if cube %} data-preset-name="{{ cube.name }}"{% endif %} data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}"{% if lens %} data-lens="{{ lens }}"{% endif %}{% if preset %} data-preset="{{ preset }}"{% endif %}>
@@ -70,42 +71,30 @@
   <div class="pv-main">
     <section class="pv-card pv-gridcard" aria-labelledby="pvGridTitle">
       <h2 id="pvGridTitle"><span data-pv-grid-title>Pivot</span> <span class="pv-sub" data-pv-grid-sub></span></h2>
-      <div class="pv-scroll" data-pv-grid tabindex="0" aria-label="The pivot: arrows move, right arrow opens a row, left closes it, Shift+right opens every level below, Enter shows the rows"></div>
-      <p class="pv-keys"><kbd>→</kbd> expand · <kbd>←</kbd> collapse · <kbd>Shift</kbd>+<kbd>→</kbd> all below · <kbd>1</kbd>–<kbd>9</kbd> to level · <kbd>E</kbd> expand by… · <kbd>Enter</kbd> rows · <kbd>G</kbd> chart · <kbd>X</kbd> export · <kbd>L</kbd> live · <kbd>M</kbd> comment (in a cell's popover)</p>
-      <div class="pv-pop" data-pv-pop role="dialog" aria-label="Cell provenance" hidden></div>
+      <div class="pv-grid" data-pv-grid></div>
+      <p class="pv-keys"><kbd>→</kbd> expand · <kbd>←</kbd> collapse · <kbd>Shift</kbd>+<kbd>→</kbd> all below · <kbd>1</kbd>–<kbd>9</kbd> to level · <kbd>E</kbd> explain a figure (its provenance) · <kbd>Shift</kbd>+<kbd>E</kbd> expand by… · <kbd>G</kbd> chart · <kbd>X</kbd> export · <kbd>L</kbd> live · <kbd>M</kbd> comment (in a figure's Explain)</p>
+      <div class="pv-paths">
+        <label class="pv-chip">Path <input class="pv-input mono" data-pv-path placeholder="$.LEGS[0].CURRENCY" aria-label="A path read from each document, added to Rows"></label>
+        <button type="button" class="pv-btn" data-pv-path-add>Add to Rows</button>
+        <label class="pv-chip">Slicer <select data-pv-slicer-add aria-label="Add a slicer"><option value="">Add a slicer…</option></select></label>
+        <span data-pv-paths></span>
+      </div>
     </section>
-    <aside class="pv-side">
-      <div data-resize="panel" data-resize-key="pivot.fields" data-resize-var="--pv-side" data-resize-min="220" data-resize-max="640" data-resize-edge="left" aria-label="Resize the Fields panel"></div>
-      <section class="pv-card" aria-labelledby="pvFieldsTitle">
-        <h2 id="pvFieldsTitle">Fields <span class="pv-sub" data-pv-fields-sub></span></h2>
-        <input class="pv-input" type="search" data-pv-field-search placeholder="Search fields…" aria-label="Search fields">
-        <div class="pv-fields" data-pv-fields></div>
-        <div class="pv-zones">
-          <div class="pv-zone" data-pv-zone="filters"><h3>Filters</h3><div data-pv-zone-items></div></div>
-          <div class="pv-zone" data-pv-zone="columns"><h3>Columns</h3><div data-pv-zone-items></div></div>
-          <div class="pv-zone" data-pv-zone="rows"><h3>Rows</h3><div data-pv-zone-items></div></div>
-          <div class="pv-zone" data-pv-zone="values"><h3>Values</h3><div data-pv-zone-items></div></div>
-          <div class="pv-zone pv-zone-wide" data-pv-zone="slicers"><h3>Slicers</h3><div data-pv-zone-items></div></div>
-        </div>
-        <p class="pv-hint">Drag a field to a zone, or select it and press <kbd>R</kbd>, <kbd>C</kbd>, <kbd>V</kbd>, <kbd>F</kbd> or <kbd>S</kbd> (a slicer). A value's
-          format (colour scale, data bars) is drawn from its figures and kept with the view.</p>
-      </section>
-      <section class="pv-card pv-export" data-pv-export hidden aria-labelledby="pvExportTitle">
-        <h2 id="pvExportTitle">Export <span class="pv-sub">as you see it, masks applied</span></h2>
-        <fieldset class="pv-radio"><legend class="pv-sub">What</legend>
-          <label><input type="radio" name="pvWhat" value="pivot" checked> The pivot as shown (outline, subtotals)</label>
-          <label><input type="radio" name="pvWhat" value="rows"> The underlying rows of the selected cell</label>
-          <label><input type="radio" name="pvWhat" value="definition"> The view definition (YAML)</label>
-        </fieldset>
-        <div class="pv-formats">
-          <button type="button" class="pv-btn primary" data-pv-export="xlsx">Excel</button>
-          <button type="button" class="pv-btn" data-pv-export="csv">CSV</button>
-          <button type="button" class="pv-btn" data-pv-export="jsonl">JSON Lines</button>
-          <button type="button" class="pv-btn" data-pv-export="arrow">Arrow</button>
-        </div>
-        <p class="pv-sub">Excel: values with formats, outline levels, SUM formulas only where a figure adds up, a Provenance sheet. Every export is audited.</p>
-      </section>
-    </aside>
+    <section class="pv-card pv-export" data-pv-export hidden aria-labelledby="pvExportTitle">
+      <h2 id="pvExportTitle">Export <span class="pv-sub">as you see it, masks applied</span></h2>
+      <fieldset class="pv-radio"><legend class="pv-sub">What</legend>
+        <label><input type="radio" name="pvWhat" value="pivot" checked> The pivot as shown (outline, subtotals)</label>
+        <label><input type="radio" name="pvWhat" value="rows"> The underlying rows of the selected cell</label>
+        <label><input type="radio" name="pvWhat" value="definition"> The view definition (YAML)</label>
+      </fieldset>
+      <div class="pv-formats">
+        <button type="button" class="pv-btn primary" data-pv-export="xlsx">Excel</button>
+        <button type="button" class="pv-btn" data-pv-export="csv">CSV</button>
+        <button type="button" class="pv-btn" data-pv-export="jsonl">JSON Lines</button>
+        <button type="button" class="pv-btn" data-pv-export="arrow">Arrow</button>
+      </div>
+      <p class="pv-sub">Excel: values with formats, outline levels, SUM formulas only where a figure adds up, a Provenance sheet. Every export is audited.</p>
+    </section>
   </div>
   {% if lens == 'mr' %}{% include "terminal/_mr_panes.html" %}{% endif %}
   <section class="pv-card pf-card" data-pf-card="explain" hidden aria-labelledby="pfExplainTitle">
@@ -113,8 +102,8 @@
     <div class="pf-form">
       <label>First cell <input class="pv-input" data-pf-from placeholder="DESK=EMEA (blank: the grand total)" aria-label="First cell"></label>
       <label>Second cell <input class="pv-input" data-pf-to placeholder="the same cell" aria-label="Second cell"></label>
-      <label>First date <input class="pv-input" data-pf-from-date placeholder="YYYY-MM-DD" aria-label="First date"></label>
-      <label>Second date <input class="pv-input" data-pf-to-date placeholder="YYYY-MM-DD" aria-label="Second date"></label>
+      <div class="pf-date"><span class="pv-sub">First date</span><span data-pf-from-date></span></div>
+      <div class="pf-date"><span class="pv-sub">Second date</span><span data-pf-to-date></span></div>
       <label>Split by <select data-pf-by aria-label="Split the difference by"></select></label>
       <label>Order <select data-pf-order aria-label="Order of the steps"><option value="member">by member</option><option value="size">largest first</option></select></label>
       <button type="button" class="pv-btn primary" data-pf-explain title="Opens the one Explain at Why it moved: the steps that add up">Explain ›</button>
@@ -159,4 +148,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-grid.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-switches.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-functions.js?v={{ ASSET_V }}"></script>{% if lens == 'mr' %}<script src="/static/js/drishti_mr-lens.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-grid/drishti_grid.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-inputs/drishti_inputs.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-chart/drishti_chart.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-switches.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-functions.js?v={{ ASSET_V }}"></script>{% if lens == 'mr' %}<script src="/static/js/drishti_mr-lens.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}

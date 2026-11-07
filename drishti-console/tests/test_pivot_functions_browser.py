@@ -50,7 +50,7 @@ def page(stack, browser):
     pg.errors = []
     pg.on("pageerror", lambda e: pg.errors.append(str(e)))
     pg.goto(stack[0] + "/pivot?source=trade", wait_until="load")
-    pg.wait_for_selector("[data-pv-grid] table.pv-table td.pv-c")
+    pg.wait_for_selector("[data-pv-grid] .dg-cell[data-cell]")
     yield pg
     ctx.close()
 

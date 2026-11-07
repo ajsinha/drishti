@@ -27,6 +27,12 @@ const CF_SCAN = 100000;
 /**
  * The drawn grid: headings, rows, cells and their pointer work, for a view (drishti_grid-view.js).
  */
+/** @private the styles a host's decoration may set on a cell (a conditional format's colours), through the CSSOM */
+const DECO_STYLES = ['color', 'background-color', 'font-weight', 'font-style'];
+
+/** @private class names a host or the server gave, kept to plain words (no markup, no selectors) */
+function safeClasses(text) { return String(text).split(/\s+/).filter((t) => /^[A-Za-z][\w-]*$/.test(t)).join(' '); }
+
 export class GridBody {
   /**
    * @param {Object} view the Grid (drishti_grid-view.js): its model, its display columns, its menus and its Explain
@@ -219,7 +225,8 @@ export class GridBody {
   render() {
     const m = this.model, v = this.view, vp = m.viewport, doc = this.doc;
     const disp = v.displayColumns();
-    const rh = vp.rowHeight, hrh = rh + 4;
+    const win = doc.defaultView, touch = !!(win && win.matchMedia && win.matchMedia('(pointer: coarse)').matches);
+    const rh = vp.rowHeight, hrh = touch ? Math.max(44, rh + 4) : rh + 4;   // a heading is a target a finger can hit on a touch screen (44 px)
     const sp = this.paneSpans(disp);
     const headH = sp.levels * hrh;
     const W = disp.leftW + disp.centerW + disp.rightW;
@@ -375,6 +382,20 @@ export class GridBody {
       if (m.editing.canEdit(r, c)) { cls += ' dg-editable'; }
       if (mark) { cls += ' dg-' + mark; note = mark === 'proposed' ? 'Waiting for a second person to approve' : 'Changed here'; }
     }
+    let deco = null;
+    if (x.kind === 'pivot' && !col.rowHeader && m.answer) {
+      const pc = m.answer.cells[x.entry.key + '|' + col.colKey];
+      if (pc && pc.tones && pc.tones[col.measure]) { cls += ' ' + safeClasses(pc.tones[col.measure]); }
+      if (pc && pc.notes && pc.notes[col.measure]) { note = String(pc.notes[col.measure]); }
+    }
+    if (this.view.o.decorateCell && !loading) {
+      deco = this.view.o.decorateCell({ row: r, col: c, columnId: col.id, column: col, value: value, text: text, kind: x.kind, entry: x.kind === 'pivot' ? x.entry : null,
+        measure: col.measure || null, colKey: col.colKey || null, cell: x.kind === 'pivot' && m.answer ? m.answer.cells[x.entry.key + '|' + col.colKey] || null : null,
+        data: x.kind === 'leaf' ? x.row : null, rowHeader: !!col.rowHeader });
+      if (deco && deco.cls) { cls += ' ' + safeClasses(deco.cls); }
+      if (deco && deco.title) { note = note ? note + '\n' + deco.title : String(deco.title); }
+      if (deco && deco.style) { Object.keys(deco.style).forEach((k) => { if (DECO_STYLES.indexOf(k) >= 0 && deco.style[k]) { style[k] = String(deco.style[k]); } }); }
+    }
     const focused = k.focus && k.focus.row === r && k.focus.col === c;
     if (focused) { cls += ' dg-focus'; }
     if (num && typeof value === 'number' && !total && !loading) {
@@ -387,7 +408,7 @@ export class GridBody {
     }
     const cell = h(doc, 'div', { cls: cls, attrs: { role: col.rowHeader ? 'rowheader' : 'gridcell', id: this.uid + '-r' + r + '-c' + c, 'aria-colindex': String(c + 1),
       'aria-selected': k.selected || m.selection.inRange(r, c) ? 'true' : null, 'aria-readonly': x.kind === 'leaf' && col.editable && !m.editing.canEdit(r, c) ? 'true' : null,
-      title: note }, data: { r: String(r), c: String(c) }, style: style });
+      title: note }, data: x.kind === 'pivot' && !col.rowHeader ? { r: String(r), c: String(c), cell: x.entry.key + '|' + col.colKey } : { r: String(r), c: String(c) }, style: style });
     if (k.first && !loading) {
       const depth = x.depth || 0;
       if (depth) { cell.style.paddingLeft = (8 + depth * 16) + 'px'; }
@@ -399,7 +420,15 @@ export class GridBody {
       if (k.expandable) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw', text: k.expanded ? '−' : '+', attrs: { 'aria-hidden': 'true' }, data: { r: String(r) } })); }
       else if (m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length) || m.rowModel.treeData) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw dg-tw-none', attrs: { 'aria-hidden': 'true' } })); }
     }
-    cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text }));
+    if (deco && deco.before && typeof deco.before === 'object' && deco.before.nodeType) { cell.appendChild(deco.before); }
+    if (deco && deco.content && typeof deco.content === 'object' && deco.content.nodeType) {
+      const box = h(doc, 'span', { cls: 'dg-text' });
+      box.appendChild(deco.content);
+      cell.appendChild(box);
+    } else { cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text })); }
+    if (deco && deco.after !== undefined && deco.after !== null && deco.after !== '') {
+      cell.appendChild(typeof deco.after === 'object' && deco.after.nodeType ? deco.after : h(doc, 'span', { cls: 'dg-after', text: String(deco.after) }));
+    }
     return cell;
   }
 

@@ -277,6 +277,35 @@
 - **Settings tiers, one home** (`tools/settings_schemas.yaml` `tiers`): everyday by area:key (18), expert by pattern in the areas that
   hold internals (413), admin by area (1,720); CONFIGURATION.md gains a *Tier* column; `settings_catalogue.py --check` fails when an area has
   no tier or a listed key or pattern matches nothing (`test_settings_catalogue.py`).
+- **The BI and Pivot family moved onto drishti-grid** ([ELEMENTS.md section 12.1](docs/architecture/ELEMENTS.md#121-the-migration-checklist)):
+  - **The Pivot screen** (`PIVOT`, and its presets the MR cube `MCUBE` and the CCR cube) is drawn by drishti-grid in its `wells`
+    layout: the catalogue's fields, a document's paths by their grain and the engine's measures are the grid's fields; the wells, the
+    member filters, + and −, a level (1 to 9), Shift+→ and the aggregation menus build the view, and every answer is the server's
+    through the grid's `serverPivot` hook (`clientAggregation: false`: VaR and ES are never summed in the browser; ◆ marks a
+    non-additive total). A figure's **Explain is its provenance** (the rows behind it, its reference, its comments) in the grid's
+    drawer; the scan estimate, compare (the change shown after each figure), slicers, a typed path, the chart of the selection (now drishti-chart),
+    export, save and share, the switches (exact, ≈, progressive, rollups, live) and saved views keep working, labels included. The
+    live pivot's patches flash through the grid; comments and the MR cube's sparklines are the grid's cell decorations. Keys: **E now
+    explains a figure** (the grid's key); expand by another field moved to **Shift+E**. The two dates of *Why did it move?* are
+    drishti-inputs' date pickers.
+  - **Tree rows**: a Sutra's nested pivot panel is drawn by drishti-grid (+ and − in the page, the server's text and tones).
+  - **BI**: the table visual, a perspective grid, a report's *rows behind* and *as a table* views, and the Notebook's result tables
+    are drishti-grid (sort by a heading, the first column pinned, conditional formats with their icons, data bars, links to the
+    terminal, a row's actions by a click or Enter; the engine's totals under the table, never added up from the rows shown).
+  - **Chart any table**: *View as table* is drishti-grid.
+  - **Deleted**: the pivot grid `drishti_pivot-grid.js` (186 lines; its name stays as a 36-line loader only because the frozen
+    renderer 1.2.0 asks for it), the Pivot screen's field list and zones, the BI table's own `<table>` with its sort code, the
+    Notebook's and Chart any table's tables, and their CSS (`drishti_pivot.css` 194 → 56 lines, the screen's sheet 153 → 101).
+  - **drishti-grid 0.4.0**: aggregations only the server computes (`serverFuncs`) and the browser's offered ones (`valueFuncs`), a
+    pivot's figures shown by the answer's own fields (`measureText`, `answerFormat`: units, show-as, the server's text and tones, ≈),
+    `showAnswer` (a host's answer or live patch), `setOpenState`, `decorateCell` (classes, notes, colours, an icon, a node in place or
+    after the figure), `chrome: false` (the grid alone in a panel), each pivot cell's key as `data-cell`; a value's label that was only
+    its measure follows a new function.
+  - **Elements 1.4.5** (the embed): `<drishti-view>` and `<drishti-report>` load drishti-core and drishti-grid with the console's
+    scripts (`/embed/v1/js/elements-core.js`, `elements-grid.js`; `/embed/v1|v2/elements/<library>/<file>`); the view sheet carries
+    the grid's style (its budget raised on purpose to 27 KB gzip).
+  - Not moved yet (listed in ELEMENTS.md 12.1): BI's matrix (needs values on rows and the tabular layout in drishti-grid), the
+    other charts (BI's visuals, Chart any table: the chart migration), BI's date and time controls.
 
 ## 2.9.11.d (2026-11-07)
 - **Six lake folders kept in git, their content never** (DATA_LAKE_GUIDE.md section 1): `data/delta/demo`, `risklake`, `newslake` (news), `worldlake` (World Bank, IMF, UN), `regulators` (SEC, Federal Reserve, OSFI, central banks) and `capitalmarket` (prices, curves, vols, funds), each with only its README.md; the test data's `.jsonl.gz` files stay in git to build the demo lake. The five new lakes ship as lake files with no tables (`config/lakes/<lake>.yaml` and their jar copies), and **nothing shipped points at them**: every connector, rule and setting reads `demo` (guarded by `tools/test_empty_lakes.py`); a site points at them itself. The demo lake's one-time move and `build_demo_lakes` treat a folder holding only its README.md as empty.

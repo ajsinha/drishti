@@ -75,7 +75,7 @@ def scope_var(pg, scope):
 
 def opened(pg):
     """Waits for the MR cube's landing: the grid's cells and the headline's VaR drawn."""
-    wait(pg, "document.querySelectorAll('[data-pv-grid] td[data-cell]').length > 0", 120)
+    wait(pg, "document.querySelectorAll('[data-pv-grid] .dg-cell[data-cell]').length > 0", 120)
     wait(pg, "!!document.querySelector('[data-mr-tiles] .mr-tile .mr-tv')", 120)
 
 
@@ -147,11 +147,11 @@ def test_the_doors_open_the_same_preset_the_var_explorer_link_and_the_older_addr
 
 def test_a_cell_fills_the_rail_lists_its_trades_and_a_desk_opens_by_its_books(stack, browser):
     pg = open_cube(browser, str(stack))
-    first = pg.locator("[data-pv-grid] td[data-cell]").first
+    first = pg.locator("[data-pv-grid] .dg-cell[data-cell]").first
     key = first.get_attribute("data-cell")
     first.click()
     wait(pg, "!!document.querySelector('[data-mr-tail] svg.mr-histo')", 60)
-    wait(pg, "!document.querySelector('[data-pv-pop]').hidden", 30)
+    wait(pg, "!!document.querySelector('[data-pv-grid] [data-pv-pop]')", 30)
     a = fetch(pg, "POST", "/api/pivot/query", {"view": view(pg)})["body"]
     cell = a["cells"][key]
     if cell.get("scope"):

@@ -116,7 +116,7 @@ export function openColumnMenu(v, c, anchor) {
   const m = v.model, col = m.shownColumns()[c];
   if (!col) { return; }
   const piv = m.pivotMode, vi = piv ? valueIndex(v, col.measure) : -1;
-  const aggs = (piv ? vi >= 0 : v.grouped() && col.type === 'number') ? VALUE_FUNCS.map((f) => ({ name: f, label: aggFunc(f).label })) : null;
+  const aggs = piv ? (vi >= 0 ? v.activeWells().funcs() : null) : v.grouped() && col.type === 'number' ? VALUE_FUNCS.map((f) => ({ name: f, label: aggFunc(f).label })) : null;
   const items = columnMenuItems({ header: col.headerPath ? col.headerPath.filter(Boolean).join(' · ') : col.header, pivot: piv, sort: v.sortOf({ col: col }),
     numeric: col.type === 'number', additive: col.additive, aggs: aggs, aggFunc: piv ? (vi >= 0 ? v.activeWells().state.values[vi].aggFunc : null) : col.aggFunc,
     pinned: col.pinned, pinTotals: v.ui.pinTotals, explain: !!v.o.explain, rowHeader: !!col.rowHeader });
@@ -164,7 +164,7 @@ function columnAction(v, c, id, val, anchor) {
   if (id === 'clear-filter') { if (piv) { v.setPivotOptions({ valueFilters: [], top: {} }, 'Filters cleared'); } else { m.setFilterModel({}); m.setQuickFilter(''); v.say('Filters cleared'); } return; }
   if (id.indexOf('agg:') === 0) {
     const f = id.slice(4);
-    if (piv) { const r = v.activeWells().setAggregation(valueIndex(v, col.measure), f); if (!r.ok) { v.say(r.why); } else { v.wellsChanged(col.measure + ': ' + aggFunc(f).label); } return; }
+    if (piv) { const r = v.activeWells().setAggregation(valueIndex(v, col.measure), f); if (!r.ok) { v.say(r.why); } else { v.wellsChanged(col.measure + ': ' + v.activeWells().funcLabel(f)); } return; }
     col.aggFunc = f;
     m.setRowGroups(m.rowModel.groupBy ? m.rowModel.groupBy.slice() : []);
     return;

@@ -53,7 +53,7 @@ API = "2.0"
 BASE = "/embed/v2"
 ELEMENTS = {"2.2.0": "1.2.0", "2.3.0": "2.0.0"}   # Elements 2.x by its own version -> the renderer version that carries its drishti-elements.js (2.0.0 and 2.1.0 retired with renderers 1.0.0 and 1.1.0)
 # The Elements libraries renderer 2.0.0 imports from beside the console's static root (/embed/v2/elements/<library>/src/<module>.js)
-LIBRARY_FILE = re.compile(r"drishti-(core|grid|chart|data|renderer)/(src/drishti_[a-z0-9-]+\.js|drishti_[a-z]+\.css)")
+LIBRARY_FILE = re.compile(r"drishti-(core|grid|chart|data|renderer)/(src/drishti_[a-z0-9-]+\.js|drishti_[a-z]+\.(css|js))")
 # What the renderer loads from beside itself (its folder is /embed/v2/render/<v>/, so /embed/v2/ stands for the console's /static/)
 SCRIPTS = {"pivot-engine", "pivot-grid", "colfilter", "tables", "tree-rows", "drill", "zoom", "multiselect", "controls", "geomap",
            "table-chart", "table-chart-engine", "table-chart-sources"}
