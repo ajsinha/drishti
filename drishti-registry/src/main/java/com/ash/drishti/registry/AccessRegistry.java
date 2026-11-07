@@ -109,6 +109,9 @@ public interface AccessRegistry {
     /** The lenses offered here: those whose modules are all on. */
     List<Lens> lenses();
 
+    /** True when the model declares the lens (offered or not: its modules may be off). */
+    boolean lensDeclared(String id);
+
     /** True when the lens is offered here. */
     boolean lensOffered(String id);
 

@@ -79,6 +79,7 @@ handbook stays the reference for one server and its console.
     - [7. The file, the API and the settings](#7-the-file-the-api-and-the-settings)
     - [8. Iceberg lakes](#8-iceberg-lakes)
 21. [Compute engines on or off](#21-compute-engines-on-or-off)
+22. [Modules on or off](#22-modules-on-or-off)
 
 ---
 
@@ -4060,3 +4061,40 @@ var already running; frtb-sa on (live). Written to config/engines/frtb-sa.yaml.
 switch comes from), `on <id>... [--with-needs]`, `off <id>... [--with-dependents]` (both need `--reason`; `--node` changes another node),
 `history`. `drishti.py admin engines` is the same command. Exit codes: 0 done, 2 refused, 3 not running anywhere. The API behind them is
 in [API_GUIDE.md](../guides/API_GUIDE.md) (`/api/v1/admin/engines`, and the codes `DRS-1020` to `DRS-1024` in its error code table).
+
+## 22. Modules on or off
+
+Drishti runs as a core plus **modules** ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md),
+[DOMAIN_MODULES.md](../architecture/DOMAIN_MODULES.md)): **banking** (VaR and ES, exposure and CCR, FRTB-SA, SIMM, sensitivities, the MR
+cube, the official results, and the trading, market-data, market-risk and counterparty-risk packs) and **economy** (content only: the
+world-economy, news-and-markets, us-equities, gleif and funds packs and the World lens). A module is **on** when it is installed (its jar
+is in the server), licensed and enabled, and every module it needs is on. The core is always on.
+
+| Where | What |
+|---|---|
+| `config/modules/<module>.yaml` | `enabled: true` or `false`: the administrator's switch (Admin → Modules writes it) |
+| `drishti.modules.<module>.enabled`, `DRISHTI_MODULES_<MODULE>_ENABLED` | wins over the file (the command line, the environment) |
+| `config/access/licence.yaml` | the licence: `customer`, `modules` (or `*`), `limits`, `valid-from`, `valid-to`. **None: the development licence, every module** (unsigned until 2.9.11.i) |
+| `config/access/lenses.yaml`, `roles.yaml`, `assignments.yaml` | lenses of the site's own (or replacing a shipped one); roles and who holds them (read now, enforced per lens and function in 2.9.11.i) |
+| `DRISHTI_MODULES_DIR`, `DRISHTI_ACCESS_DIR` | the two folders (default `./config/modules`, `./config/access`) |
+
+**A change takes effect at the next start**: a module's beans, engines, scheduled jobs and API are loaded when the server starts, so
+Admin → Modules says *restart needed* until then. A module that is off is gone on the server: its API answers `404 DRS-1025` (*the module
+'banking' is not on here: switched off (config/modules/banking.yaml)*), its engines show *not installed* with the reason on Admin →
+Engines, its packs and connectors do not load, and its functions (VAR, EXP, TRD ...) are off.
+
+**Functions** (command words) belong to one module each; a word no module declares is the core's. Admin → Commands' switches still turn a
+single function off for everyone; the access registry decides, so a function is on only when its module is on and no administrator turned
+it off. Its API then answers `404 DRS-1026`.
+
+```bash
+curl -s -H "Authorization: Bearer $TOKEN" http://localhost:18080/api/v1/admin/modules | jq '.modules[] | {id, on, reason, loaded}'
+curl -s -X POST -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' http://localhost:18080/api/v1/admin/modules \
+  -d '{"module": "banking", "enabled": false, "reason": "a site without risk"}'
+DRISHTI_MODULES_BANKING_ENABLED=false java -jar drishti-server/target/drishti-server-*-exec.jar     # off for one run
+```
+
+The banking API is under `/api/v1/risk/…` (`/api/v1/risk/var`, `/risk/exposure`, `/risk/frtb`, `/risk/simm`, `/risk/sensitivities`,
+`/risk/risk-factors`, `/risk/mr`). The old paths are answered as the new ones for this release, with a `Deprecation: true` header and a
+`Link` to the new path; move scripts to the new paths. Connector files that name the engine classes by their old names
+(`com.ash.drishti.server.var.VarResultEngine` ...) keep working for this release.

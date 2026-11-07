@@ -208,6 +208,12 @@ public final class EmbeddedAccessRegistry implements AccessRegistry, AutoCloseab
     }
 
     @Override
+    public boolean lensDeclared(String id) {
+        String n = ModuleManifest.norm(id);
+        return snapshot.model.lenses().stream().anyMatch(l -> l.id().equals(n));
+    }
+
+    @Override
     public boolean lensOffered(String id) {
         String n = ModuleManifest.norm(id);
         return snapshot.lenses.stream().anyMatch(l -> l.id().equals(n));

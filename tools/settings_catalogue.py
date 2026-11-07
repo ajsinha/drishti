@@ -94,6 +94,11 @@ AREAS = [
          "`drishti.py server engines` write only the switch and `changed`; every other key is edited in the file "
          "([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md), [OPERATIONS.md](OPERATIONS.md#21-compute-engines-on-or-off)). "
          "The old switch names are listed last: they still work, with a warning at start (`DRS-1024`)."),
+    Area("modules", "Modules: `config/modules/*.yaml`",
+         "One file per module (banking, economy), `config/modules/<module>.yaml` (`DRISHTI_MODULES_DIR`): the administrator's switch only; the "
+         "module's manifest ships in its jar and the access registry reads both ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md), "
+         "[OPERATIONS.md](OPERATIONS.md)). `drishti.modules.<module>.enabled` (`DRISHTI_MODULES_<MODULE>_ENABLED`) wins over the file. A module "
+         "is on when installed, licensed and enabled; a change takes effect at the next start."),
     Area("console", "The console: `application.yaml`",
          "`drishti-console/config/application.yaml`. Override a key in `config/application.local.yaml`, with the variable named, with "
          "`DRISHTI_CONSOLE__SECTION__KEY` or a `--section.key=value` argument."),
