@@ -4099,8 +4099,9 @@ in [API_GUIDE.md](../guides/API_GUIDE.md) (`/api/v1/admin/engines`, and the code
 
 Drishti runs as a core plus **modules** ([ACCESS_MODEL.md](../architecture/ACCESS_MODEL.md),
 [DOMAIN_MODULES.md](../architecture/DOMAIN_MODULES.md)): **banking** (VaR and ES, exposure and CCR, FRTB-SA, SIMM, sensitivities, the MR
-cube, the official results, and the trading, market-data, market-risk and counterparty-risk packs) and **economy** (content only: the
-world-economy, news-and-markets, us-equities, gleif and funds packs and the World lens). A module is **on** when it is installed (its jar
+cube, the official results, and the trading, market-data, market-risk and counterparty-risk packs), **capitalmarkets** (content only: the
+us-equities and funds packs and the market data's functions such as CRV, FX, EQV) and **economy** (content only: the world-economy and
+news-and-markets packs and the World lens). GLEIF's legal entities are core reference data. A module is **on** when it is installed (its jar
 is in the server), licensed and enabled, and every module it needs is on. The core is always on.
 
 | Where | What |
@@ -4130,4 +4131,4 @@ DRISHTI_MODULES_BANKING_ENABLED=false java -jar drishti-server/target/drishti-se
 The banking API is under `/api/v1/risk/…` (`/api/v1/risk/var`, `/risk/exposure`, `/risk/frtb`, `/risk/simm`, `/risk/sensitivities`,
 `/risk/risk-factors`, `/risk/mr`). The old paths are answered as the new ones for this release, with a `Deprecation: true` header and a
 `Link` to the new path; move scripts to the new paths. Connector files that name the engine classes by their old names
-(`com.ash.drishti.server.var.VarResultEngine` ...) keep working for this release.
+(`com.ash.drishti.banking.var.VarResultEngine` ...) keep working for this release.

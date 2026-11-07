@@ -21,18 +21,18 @@ lenses:
     modules: [banking]
     home: home/risk_landing.html
     functions: [CPTY, GRP, LE, BOOK, DESK, TRDR, CCP, TRD, CTRD, PTRD, LTRD, FX, HIER, PORT, POS, PNLV, SPV, FXS, SSET, VLIM, VRES, VOFF, AGR, CSA,
-      NSET, LIM, COLL, MC, XRUN, XPATH, EXP, XWIF, XOFC, NSMTM, CPMTM, VAR, PVAR, SMAT, SWIN, FRSA, SIMM, MCUBE]
+      NSET, LIM, COLL, MC, XRUN, XPATH, EXP, PREDEAL, XOFC, NSMTM, CPMTM, VAR, PVAR, SMAT, SWIN, FRSA, SIMM, MCUBE]
   - id: trading
     title: Trading
     modules: [banking]
     home: home/trading_landing.html
     functions: [TRD, CTRD, PTRD, LTRD, ITRD, BOOK, DESK, TRDR, POS, VLIM, VRES, TVAL, PNLV, HIER, PORT, DPNL, PNL, SENS, CPTY, GRP, NSET, NSMTM,
-      CPMTM, LIM, XWIF, EXP, CRV, REPO, FIX, IRV, CPV, FX, FXF, FXV, EQ, EQX, CMD, CMDC, BND, CDS, VAR]
+      CPMTM, LIM, PREDEAL, EXP, CRV, REPO, FIX, IRV, CPV, FX, FXF, FXV, EQ, EQX, CMD, CMDC, BND, CDS, VAR]
   - id: market
     title: Market
-    modules: [banking]
+    modules: [capitalmarkets, banking]   # capital markets' functions over the market-data pack (the banking module's while its engines read it)
     home: home/market_landing.html
-    functions: [CRV, REPO, IRV, CPV, FIX, INF, INFC, FX, FXF, FXV, CDS, BND, EQ, EQX, DIV, EQV, CMD, CMDC, CMDV, CORR, CORRC, EQB]
+    functions: [CRV, REPO, IRV, CPV, FIX, INF, INFC, FX, FXF, FXV, CDS, BND, EQ, EQX, DIV, EQV, CMD, CMDC, CMDV, CORR, CORRC, EQB, USEQ, IDX, SIC, EDGAR, FILING, FACT, PXH, FUND, HELD, TRACK]
   - id: cro
     title: Chief risk officer
     modules: [banking]
@@ -44,4 +44,4 @@ lenses:
   - id: ccr-cube
     title: CCR cube
     modules: [banking]
-    functions: [EXP, XWIF, NSET, CPTY, CSA, COLL, SIMM]
+    functions: [EXP, PREDEAL, NSET, CPTY, CSA, COLL, SIMM]

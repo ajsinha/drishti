@@ -59,6 +59,14 @@ final class ExposureLakeFixture {
 
     /** One business date; every value times {@code factor} (a restated run). */
     static Path write(Path root, LocalDate day, double factor) throws Exception {
+        return write(root, day, factor, null);
+    }
+
+    /**
+     * One business date, and with {@code copyOfA} a fourth trade {@code N} booked in NS-X: trade A's paths on every grid date (its
+     * look-back values too) times {@code copyOfA}, as the pre-deal check's copy of A would add them (the what-if against the recompute).
+     */
+    static Path write(Path root, LocalDate day, double factor, Double copyOfA) throws Exception {
         Path work = Files.createDirectories(root.resolve("_work"));
         String run = "XR-" + day + "-01";
         String batch = "XB-" + day + "-01";
@@ -81,8 +89,8 @@ final class ExposureLakeFixture {
         r.put("VALUE_BASIS", "FUTURE");
         r.put("CURRENCY", "USD");
         r.put("PRECISION", "float64");
-        r.put("TRADES", 3);
-        r.put("ROWS", 18);
+        r.put("TRADES", copyOfA == null ? 3 : 4);
+        r.put("ROWS", copyOfA == null ? 18 : 24);
         r.put("BATCH_ID", batch);
         r.put("COMPUTED_AT", day + "T23:40:00Z");
         r.put("STATUS", "complete");
@@ -94,6 +102,9 @@ final class ExposureLakeFixture {
             rows.add(path(day, run, batch, "A", "NS-X", "CP-1", "LE-A", "DESK-A", "BOOK-A", k, scale(primary ? A[i] : L[i], factor * M)));
             rows.add(path(day, run, batch, "B", "NS-X", "CP-1", "LE-A", "DESK-B", "BOOK-B", k, scale(primary ? B[i] : new double[P], factor * M)));
             rows.add(path(day, run, batch, "C", "NS-Y", "CP-1", "LE-A", "DESK-A", "BOOK-A", k, scale(primary ? C[i] : new double[P], factor * M)));
+            if (copyOfA != null) {
+                rows.add(path(day, run, batch, "N", "NS-X", "CP-1", "LE-A", "DESK-A", "BOOK-A", k, scale(primary ? A[i] : L[i], copyOfA * factor * M)));
+            }
         }
         rows.add(path(day, "XR-" + day + "-00", batch, "A", "NS-X", "CP-1", "LE-A", "DESK-A", "BOOK-A", 1, scale(A[0], 1000 * M)));
         Map<String, Object> shortRow = path(day, run, batch, "C", "NS-Y", "CP-1", "LE-A", "DESK-A", "BOOK-A", 1, new double[P - 1]);
@@ -102,7 +113,8 @@ final class ExposureLakeFixture {
         table(root, work, "exposure-path", "PATH_ROW_ID", rows, List.of("TRADE_ID", "NETTING_SET", "COUNTERPARTY", "LEGAL_ENTITY", "DESK", "TT_BOOK",
                 "ASSET_CLASS", "PRODUCT", "SOURCE_SYSTEM", "MATURITY_DATE", "NOTIONAL", "GRID_INDEX", "GRID_DATE", "RUN_ID", "BATCH_ID", "STATUS"), "MTM");
         List<Map<String, Object>> sets = List.of(
-                set(day, "NS-X", "CP-1", "LE-A", "CSA-1", "COLL-X", List.of(member("A", 0), member("B", 0))),
+                set(day, "NS-X", "CP-1", "LE-A", "CSA-1", "COLL-X", copyOfA == null ? List.of(member("A", 0), member("B", 0))
+                        : List.of(member("A", 0), member("B", 0), member("N", 0))),
                 set(day, "NS-Y", "CP-1", "LE-A", null, null, List.of(member("C", 0))),
                 set(day, "NS-Z", "CP-2", "LE-A", null, null, List.of(member("D", 5 * M))));
         table(root, work, "netting-set", "NETTING_SET_ID", sets, List.of(), null);
@@ -116,6 +128,24 @@ final class ExposureLakeFixture {
         table(root, work, "counterparty-group", "GROUP_ID", List.of(Map.of("GROUP_ID", "GRP-1", "BUSINESS_DATE", day.toString(), "MEMBERS",
                 List.of(Map.of("ID", "CP-1")))), List.of(), null);
         return root;
+    }
+
+    /**
+     * CP-1's credit limit on {@code day} ({@code credit-limit}, as the limits system stores it): {@code limit} on {@code measure}, and
+     * tenor buckets {@code name -> limit} (empty: none).
+     */
+    static void limit(Path root, LocalDate day, double limit, String measure, Map<String, Double> buckets) throws Exception {
+        Path work = Files.createDirectories(root.resolve("_work"));
+        Map<String, Object> l = new LinkedHashMap<>();
+        l.put("LIMIT_ID", "LIM-1");
+        l.put("BUSINESS_DATE", day.toString());
+        l.put("COUNTERPARTY", "CP-1");
+        l.put("MEASURE", measure);
+        l.put("LIMIT", limit);
+        List<Map<String, Object>> bs = new ArrayList<>();
+        buckets.forEach((name, v) -> bs.add(Map.of("BUCKET", name, "LIMIT", v)));
+        l.put("BUCKETS", bs);
+        table(root, work, "credit-limit", "LIMIT_ID", List.of(l), List.of(), null);
     }
 
     private static Map<String, Object> member(String id, double mtm) {

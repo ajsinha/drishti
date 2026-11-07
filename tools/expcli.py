@@ -16,7 +16,8 @@
 token's user sees it: a scope's figures and profile (show), its contributions (parts), the tree of legal entities, counterparties and
 netting sets (tree), the profile as CSV (profile), the exposure distribution at a date with the path fan (distribution), the engine's
 state (status), captures (capture, captures, compare), the official end-of-day record (official), the retention plan (retention), a
-reload (administrators) and a pre-deal what-if (whatif: exact through the Python engine, or the conservative proxy).
+reload (administrators), a what-if (whatif: exact on the run's paths, or the conservative proxy, both the server's exposure engine) and the
+pre-deal check (predeal: the command PREDEAL as typed; the server's decision approve, refer or decline, with the method and the template).
 Exit codes: 0, 1 (the server said no), 2 (usage)."""
 from __future__ import annotations
 
@@ -30,7 +31,9 @@ EPILOG = ("examples:\n  drishti.py exposure show NSET:NS-ALDERSHOT-NY\n  drishti
           "  drishti.py exposure distribution NSET:NS-ALDERSHOT-NY --at 1Y\n  drishti.py exposure status\n"
           "  drishti.py exposure capture CPTY:CP-ALDERSHOT --note 'before the unwind'\n  drishti.py exposure compare XCAP-20260930-1 now\n"
           "  drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA\n"
-          "  drishti.py exposure whatif CPTY:CP-ALDERSHOT --candidates new-swap.json --method addon")
+          "  drishti.py exposure whatif CPTY:CP-ALDERSHOT --candidates new-swap.json --method addon\n"
+          "  drishti.py exposure predeal \"PREDEAL CP-ALDERSHOT LIKE CLY-4003028 250M\"\n"
+          "  drishti.py exposure predeal \"PREDEAL CP-ALDERSHOT RATES 250M 5Y\" --date 2026-09-30")
 
 
 def money(v) -> str:
@@ -111,6 +114,32 @@ def render_whatif(w: dict, say) -> None:
         say("  " + w["note"])
 
 
+def render_predeal(c: dict, say) -> None:
+    """The pre-deal check's answer: the decision and why, the method, the template, the limit (and its buckets) before and after."""
+    say(f"{str(c.get('decision') or '').upper()}  {c.get('command')}  (check {c.get('checkId')}, {c.get('businessDate')}, run {c.get('runId')})")
+    for r in c.get("reasons") or []:
+        say("  " + r)
+    m, t = c.get("method") or {}, c.get("template") or {}
+    say(f"method   {m.get('id')} ({'exact' if m.get('exact') else 'proxy'}): {m.get('text')}")
+    if t.get("tradeId"):
+        say(f"template {t.get('tradeId')} {t.get('product') or ''} {t.get('assetClass') or ''} notional {money(t.get('notional'))} x {t.get('factor')}"
+            f" ({t.get('side')}), netting set {(c.get('nettingSet') or {}).get('id') or 'its own'}")
+    else:
+        say(f"template described: {t.get('assetClass')} notional {money(t.get('candidateNotional'))} to {t.get('maturity')} ({t.get('side')})")
+    lim = c.get("limit")
+    if lim:
+        rows = [["Limit", "Measure", "Limit", "Before", "After", "Use after"],
+                [str(lim.get("id")), str(lim.get("measure")), money(lim.get("limit")), money(lim.get("before")), money(lim.get("after")),
+                 f"{100 * (lim.get('useAfter') or 0):.1f}%"]]
+        for b in lim.get("buckets") or []:
+            rows.append(["  " + str(b.get("bucket")), str(b.get("status")), money(b.get("limit")), money(b.get("before")), money(b.get("after")),
+                         "" if b.get("useAfter") is None else f"{100 * b['useAfter']:.1f}%"])
+        table(rows, say)
+    sa = c.get("saCcr") or {}
+    if sa:
+        say(f"SA-CCR incremental EAD: {sa.get('status')} ({sa.get('release')})")
+
+
 def like_candidate(api, trade: str, factor: float, nset: str | None) -> dict:
     """A candidate copying a booked trade, scaled by ``factor``: its paths (the ``paths`` method) and, as the explorer's pre-deal form
     sends them, its asset class, notional, maturity and MtM scaled the same way (the ``addon`` proxy needs them)."""
@@ -137,7 +166,7 @@ def candidates_of(path: str, err) -> list[dict]:
 
 
 def register(groups, srv, ctx: dict) -> None:
-    """Adds ``exposure show|parts|tree|profile|distribution|status|capture|captures|compare|official|retention|reload|whatif``."""
+    """Adds ``exposure show|parts|tree|profile|distribution|status|capture|captures|compare|official|retention|reload|whatif|predeal``."""
     import argparse
 
     Api, CliError, say_json = ctx["Api"], ctx["CliError"], ctx["say_json"]
@@ -220,6 +249,12 @@ def register(groups, srv, ctx: dict) -> None:
                 body["collateral"] = a.collateral
             res = api.json("POST", "/api/v1/risk/exposure/what-if?" + enc(asked(a, {})), body)
             say_json(res) if a.json else render_whatif(res, print)
+        elif c == "predeal":
+            typed = " ".join(a.words)
+            if not typed.upper().startswith("PREDEAL"):
+                typed = "PREDEAL " + typed
+            res = api.json("POST", "/api/v1/risk/exposure/predeal?" + enc(asked(a, {})), {"command": typed})
+            say_json(res) if a.json else render_predeal(res, print)
         return 0
 
     p = groups.add_parser("exposure", help="exposure: the exposure engine as you see it (show, parts, tree, profile, distribution, captures, what-if)",
@@ -262,11 +297,16 @@ def register(groups, srv, ctx: dict) -> None:
     sub.add_parser("retention", help="what the retention keeps of each date held, and the dates whose trade paths are beyond it", parents=[srv])
     rl = sub.add_parser("reload", help="drop the loaded dates (administrators): the next request maps the hot file again or reads the lake", parents=[srv])
     rl.add_argument("--date", metavar="YYYY-MM-DD", help="drop only this business date (2.9.7); the others stay open")
-    w = scoped("whatif", "a scope's exposure before and after candidate trades: exact (paths, the Python engine) or the proxy (addon)")
+    w = scoped("whatif", "a scope's exposure before and after candidate trades: exact (paths) or the proxy (addon)")
     w.add_argument("--like", metavar="TRADE", help="a candidate copying a booked trade's paths on the run")
     w.add_argument("--factor", type=float, default=1.0, help="the copy's scale (-1: the trade's unwind; default 1)")
     w.add_argument("--set", metavar="NETTING_SET", help="the netting set the candidate joins (default none: a netting set of its own)")
     w.add_argument("--candidates", metavar="FILE.json", help="candidates: [{tradeId, nettingSet, paths: {copyOf, factor} or {runId, mtm}, "
                                                              "assetClass, notional, maturityDate, mtm}]")
     w.add_argument("--method", default="paths", choices=["paths", "addon"])
+    pd = sub.add_parser("predeal", help="the pre-deal check: does a new trade fit the counterparty's credit limit (approve, refer, decline)",
+                        parents=[srv])
+    pd.add_argument("words", nargs="+", help="the command: PREDEAL <counterparty> LIKE <trade> [<notional>] [REVERSE] [IN <netting set>], or "
+                                             "PREDEAL <counterparty> <RATES|FX|CREDIT|EQUITY|COMMODITY> <notional> <maturity> [MTM <amount>]")
+    pd.add_argument("--date", metavar="YYYY-MM-DD", help="the business date (default the newest with paths)")
     p.set_defaults(func=cmd, cmd=None)

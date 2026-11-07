@@ -46,8 +46,8 @@ import org.springframework.test.web.servlet.MockMvc;
  * USD millions, t = 0.2, 0.4, 1.0): a netting set's profile and figures with lagged CSA collateral, a counterparty's two sets summed per
  * path (EE additive, PFE not), a group, a desk cutting a set, a trade alone, contributions adding up, the distribution, a set the run
  * does not cover (said so), entitlements by counterparty and the name mask, captures and compare, CSV, the official record and its
- * published tables, the what-if proxy and the paths method's refusal, the hot file reopened, the computed kind exposure-result and the
- * netting-set page's figures.
+ * published tables, the what-if proxy and the exact paths method (an unwind, a copy of its own, a set outside the scope refused), the hot
+ * file reopened, the computed kind exposure-result and the netting-set page's figures.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=finance",
         "drishti.sources.plugins.demo.enabled=false", "drishti.sources.connectors.finance-lake.enabled=false",
@@ -295,7 +295,7 @@ class ExposureApiTest {
         assertThat(lake.resolve("risk-results/exposure-official-cpty/_delta_log")).exists();
         assertThat(lake.resolve("risk-results/exposure-official/_delta_log")).exists();
         mvc.perform(post("/api/v1/risk/exposure/official").header("Authorization", as("rita", "risk"))).andExpect(status().isForbidden());
-        // the what-if proxy: a candidate of its own, uncollateralised; the paths method is the Python engine's
+        // the what-if proxy: a candidate of its own, uncollateralised; the exact paths method in the same engine
         String body = "{\"scope\": \"CPTY:CP-1\", \"method\": \"addon\", \"q\": 0.95, \"candidates\": [{\"tradeId\": \"NEW-1\", \"assetClass\": \"FX\","
                 + " \"notional\": 10000000, \"maturityDate\": \"2027-09-30\", \"mtm\": 0}]}";
         JsonNode w = json.readTree(mvc.perform(post("/api/v1/risk/exposure/what-if").header("Authorization", as("rita", "risk")).param("asOf",
@@ -304,9 +304,36 @@ class ExposureApiTest {
         assertThat(w.get("flags").toString()).contains("proxy");
         // at 1Y: 1.645 x 0.04 x 10m x sqrt(1) = 658k more PFE at that date
         assertThat(w.at("/incremental/profile/2/incrementalPfe").asLong()).isBetween(657_000L, 659_000L);
-        mvc.perform(post("/api/v1/risk/exposure/what-if").header("Authorization", as("rita", "risk")).contentType(MediaType.APPLICATION_JSON)
-                .content(body.replace("addon", "paths").replace("\"mtm\": 0}", "\"mtm\": 0, \"nettingSet\": \"NS-X\", \"paths\": {\"copyOf\": \"B\"}}")))
-                .andExpect(status().is(503)).andExpect(jsonPath("$.code").value("DRS-5446"));      // no Python engine (exposure-whatif) here
+        // paths: unwinding both of NS-X's trades leaves the set worth nothing on every path (EPE 0.95m before, nothing after)
+        String unwind = "{\"scope\": \"NSET:NS-X\", \"method\": \"paths\", \"q\": 0.75, \"candidates\": ["
+                + "{\"tradeId\": \"UNWIND-A\", \"nettingSet\": \"NS-X\", \"paths\": {\"copyOf\": \"A\", \"factor\": -1}},"
+                + "{\"tradeId\": \"UNWIND-B\", \"nettingSet\": \"X\", \"paths\": {\"copyOf\": \"B\", \"factor\": -1}}]}";
+        JsonNode u = json.readTree(mvc.perform(post("/api/v1/risk/exposure/what-if").header("Authorization", as("rita", "risk")).param("asOf",
+                ExposureLakeFixture.DAY.toString()).contentType(MediaType.APPLICATION_JSON).content(unwind)).andExpect(status().isOk()).andReturn()
+                .getResponse().getContentAsString());
+        assertThat(u.get("method").asText()).isEqualTo("paths");
+        assertThat(u.get("flags").toString()).isEqualTo("[\"exact\"]");
+        assertThat(u.at("/base/epe").asLong()).as(u.toString()).isEqualTo(950_000L);
+        assertThat(u.at("/base/peakPfe").asLong()).isEqualTo(2_000_000L);
+        assertThat(u.at("/with/epe").asLong()).isZero();
+        assertThat(u.at("/with/peakPfe").asLong()).isZero();
+        assertThat(u.at("/incremental/epe").asLong()).isEqualTo(-950_000L);
+        assertThat(u.at("/incremental/profile")).hasSize(3);
+        assertThat(u.at("/incremental/profile/1/incrementalEe").asLong()).isEqualTo(-1_500_000L);
+        assertThat(u.get("items")).hasSize(2);
+        assertThat(u.at("/items/1/nettingSet").asText()).isEqualTo("NS-X");
+        // a copy of B as a netting set of its own on the counterparty: B alone, uncollateralised, peaks at 2m (95%: the largest of 4 paths)
+        String own = body.replace("addon", "paths").replace("\"mtm\": 0}", "\"mtm\": 0, \"paths\": {\"copyOf\": \"B\"}}");
+        JsonNode o = json.readTree(mvc.perform(post("/api/v1/risk/exposure/what-if").header("Authorization", as("rita", "risk")).param("asOf",
+                ExposureLakeFixture.DAY.toString()).contentType(MediaType.APPLICATION_JSON).content(own)).andExpect(status().isOk()).andReturn()
+                .getResponse().getContentAsString());
+        assertThat(o.at("/items/0/peakPfeAlone").asLong()).as(o.toString()).isEqualTo(2_000_000L);
+        assertThat(o.at("/items/0/nettingSet").asText()).isEmpty();
+        assertThat(o.at("/incremental/peakPfe").asLong()).isEqualTo(o.at("/with/peakPfe").asLong() - o.at("/base/peakPfe").asLong());
+        // a netting set the scope does not cover: refused in words
+        mvc.perform(post("/api/v1/risk/exposure/what-if").header("Authorization", as("rita", "risk")).param("asOf", ExposureLakeFixture.DAY.toString())
+                .contentType(MediaType.APPLICATION_JSON).content(own.replace("\"paths\": {", "\"nettingSet\": \"NS-Z\", \"paths\": {")))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("DRS-5440"));
         mvc.perform(post("/api/v1/risk/exposure/what-if").header("Authorization", as("rita", "risk")).contentType(MediaType.APPLICATION_JSON)
                 .content(body.replace("\"mtm\": 0}", "\"mtm\": 0, \"paths\": {\"runId\": \"XR-OTHER\"}}"))).andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("DRS-5442"));
@@ -435,43 +462,6 @@ class ExposureApiTest {
         JsonNode d = get("/api/v1/risk/exposure/scope/distribution", as("rita", "risk"), "scope", "NSET:NS-X", "bands", "true");
         assertThat(d.get("bands")).hasSize(3);
         assertThat(d.at("/bands/1/q95").asLong()).isEqualTo(3_000_000L);
-        // the Python engine's inputs through exposure-result with detail
-        connectors.write("exposure-engine", """
-                plugin: reactive
-                mode: reactive
-                kinds:
-                  exposure-result:
-                    compute: exposure-result
-                    params:
-                      q: { type: decimal, default: 0.95, min: 0.5, max: 0.9999 }
-                      collateral: { type: enum, options: [lagged, current, none], default: lagged }
-                      run: { type: text, default: "" }
-                      detail: { type: enum, options: [none, whatif, set], default: none }
-                      sets: { type: text, default: "" }
-                    result: { required: [SCOPE, STATUS, PROFILE] }
-                engine: { type: java, class: com.ash.drishti.banking.exposure.ExposureResultEngine, version: "1.0" }
-                limits: { wait: 5s }
-                """);
-        manager.scan();
-        try {
-            String body = "{\"id\": \"CPTY:CP-1\", \"asOf\": \"" + ExposureLakeFixture.DAY + "\", \"params\": {\"q\": 0.75, \"detail\": \"whatif\"},"
-                    + " \"wait\": 10000}";
-            JsonNode a = json.readTree(mvc.perform(post("/api/v1/compute/exposure-engine/exposure-result").header("Authorization", as("rita", "risk"))
-                    .contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
-            JsonNode r = a.get("result");
-            assertThat(r.get("E_SCOPE")).as(a.toString()).hasSize(3 * ExposureLakeFixture.P);
-            assertThat(r.get("PRIMARY")).hasSize(6);
-            assertThat(r.get("WHATIF_SETS").toString()).contains("NSET:NS-X~collateral=lagged~detail=set").contains("NSET:NS-Y");
-            JsonNode s = json.readTree(mvc.perform(post("/api/v1/compute/exposure-engine/exposure-result").header("Authorization", as("rita", "risk"))
-                    .contentType(MediaType.APPLICATION_JSON).content(body.replace("CPTY:CP-1", "NSET:NS-X").replace("whatif", "set")))
-                    .andReturn().getResponse().getContentAsString()).get("result");
-            assertThat(s.get("V")).hasSize(6 * ExposureLakeFixture.P);
-            assertThat(s.get("TH_THEM").asDouble()).isEqualTo(1_000_000.0);
-            assertThat(s.get("E_SET")).hasSize(3 * ExposureLakeFixture.P);
-        } finally {
-            connectors.delete("exposure-engine");
-            manager.scan();
-        }
     }
 
     /**

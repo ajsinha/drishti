@@ -163,14 +163,20 @@ public final class EmbeddedAccessRegistry implements AccessRegistry, AutoCloseab
 
     @Override
     public Optional<String> functionOfApi(String path) {
+        // the most specific function wins: /api/v1/risk/exposure/predeal is PREDEAL's, the rest of /api/v1/risk/exposure EXP's
+        String best = null;
+        int longest = -1;
         for (ModuleManifest m : snapshot.model.modules()) {
             for (FunctionSpec f : m.functions()) {
-                if (f.ownsApi(path)) {
-                    return Optional.of(f.word());
+                for (String prefix : f.api()) {
+                    if (prefix.length() > longest && ModuleManifest.under(path, List.of(prefix))) {
+                        best = f.word();
+                        longest = prefix.length();
+                    }
                 }
             }
         }
-        return Optional.empty();
+        return Optional.ofNullable(best);
     }
 
     @Override

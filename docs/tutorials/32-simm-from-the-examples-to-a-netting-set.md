@@ -54,7 +54,7 @@ DRS-5333 no SIMM version is installed …*.
 
 ```bash
 mkdir -p config/simm
-cp drishti-compute/src/test/resources/simm/simm-toy.yaml config/simm/
+cp drishti-compute-banking/src/test/resources/simm/simm-toy.yaml config/simm/
 python3 tools/drishti.py simm versions
 ```
 

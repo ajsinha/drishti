@@ -155,6 +155,19 @@ public final class ExposureMath {
         return out;
     }
 
+    /** {@code min(V, 0)} at the primary dates: the negative exposure without collateral, {@code G_primary x P}. */
+    public static double[] negative(double[] v, ExposureGrid grid, int p) {
+        int gp = grid.primaryCount();
+        double[] out = new double[gp * p];
+        for (int i = 0; i < gp; i++) {
+            int k = grid.primaryAt(i);
+            for (int j = 0; j < p; j++) {
+                out[i * p + j] = Math.min(v[k * p + j], 0);
+            }
+        }
+        return out;
+    }
+
     /** {@code acc += m}, element by element. */
     public static void addInto(double[] acc, double[] m) {
         for (int i = 0; i < acc.length; i++) {

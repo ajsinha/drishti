@@ -437,7 +437,17 @@ final class ExposureLoader {
             String cp = text(l, "COUNTERPARTY");
             double amount = l.get("LIMIT").asDouble();
             if (cp != null && !Double.isNaN(amount) && amount > 0) {
-                r.limits.putIfAbsent(cp, new ExposureDate.Limit(e.getKey(), amount, text(l, "MEASURE")));
+                List<ExposureDate.Bucket> buckets = new ArrayList<>();      // the tenor buckets (the pre-deal check holds each to its own limit)
+                DataNode bs = l.get("BUCKETS");
+                for (int i = 0; bs != null && !bs.isMissing() && !bs.isNull() && i < bs.size(); i++) {
+                    DataNode bl = bs.get(i).get("LIMIT");
+                    double v = bl == null || bl.isMissing() || bl.isNull() ? Double.NaN : bl.asDouble();
+                    ExposureDate.Bucket b = Double.isNaN(v) || v <= 0 ? null : ExposureDate.Bucket.of(text(bs.get(i), "BUCKET"), v);
+                    if (b != null) {
+                        buckets.add(b);
+                    }
+                }
+                r.limits.putIfAbsent(cp, new ExposureDate.Limit(e.getKey(), amount, text(l, "MEASURE"), buckets));
             }
         }
         return r;

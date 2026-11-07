@@ -66,6 +66,7 @@ class AccessRegistryTest {
                     functions:
                       - {word: VAR, api: [/api/v1/risk/var]}
                       - {word: EXP, api: [/api/v1/risk/exposure]}
+                      - {word: PREDEAL, api: [/api/v1/risk/exposure/predeal]}
                 """);
         write(jar.resolve(YamlAccessStore.LENSES), """
                 lenses:
@@ -96,7 +97,7 @@ class AccessRegistryTest {
         assertThat(r.moduleOn("economy")).isTrue();
         assertThat(r.modules()).extracting(ModuleState::id).containsExactly("core", "banking", "economy");
         assertThat(r.lenses()).extracting(Lens::id).containsExactly("risk", "world", "cio");
-        assertThat(r.words()).containsExactlyInAnyOrder("VAR", "EXP");
+        assertThat(r.words()).containsExactlyInAnyOrder("VAR", "EXP", "PREDEAL");
         assertThat(r.warnings()).isEmpty();
     }
 
@@ -253,6 +254,7 @@ class AccessRegistryTest {
         assertThat(r.moduleOfFunction("BI")).isEmpty();                       // a word no module declares is the core's
         assertThat(r.functionOfApi("/api/v1/risk/var/explorer")).contains("VAR");
         assertThat(r.functionOfApi("/api/v1/risk/exposure.xlsx")).contains("EXP");
+        assertThat(r.functionOfApi("/api/v1/risk/exposure/predeal")).contains("PREDEAL");   // the most specific function wins
         assertThat(r.functionOfApi("/api/v1/pivot/query")).isEmpty();
         assertThat(r.functionOn("VAR")).isTrue();
         assertThat(r.lenses().get(0).functions()).containsExactly("VAR", "EXP", "TRD");
