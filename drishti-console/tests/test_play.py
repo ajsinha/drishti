@@ -116,7 +116,7 @@ def test_the_page_grid_and_export_are_read_as_the_person(backend, monkeypatch):
     assert x.status_code == 200 and x.content == b"PK\x03\x04workbook" and "var-playground_" in x.headers["content-disposition"]
     assert sent[-1][0] == "STREAM" and sent[-1][1].startswith("/risk/var/playground.xlsx?") and "count=all" in sent[-1][1]
     t = c.get("/api/play/template.xlsx", params={"positions": 5})
-    assert t.status_code == 200 and sent[-1][1] == "/var/playground/template?positions=5&scenarios=509"
+    assert t.status_code == 200 and sent[-1][1] == "/risk/var/playground/template?positions=5&scenarios=509"
     e = c.get("/api/play/estimate", params={"scope": "BANK", "view": "pnl"})
     assert e.status_code == 200 and sent[-1][1] == "/playground/estimate" and sent[-1][3] == {"scope": "BANK"}
     empty = c.get("/play").text

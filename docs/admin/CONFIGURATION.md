@@ -19,8 +19,9 @@ This is the one document for configuring Drishti, and the only one: every settin
 connector plugin, packs, editions, the content store, BI runs, write-back, compute, Drishti*net, the UI kit, the AI provider and MCP
 server files), the environment variables that feed them, and how the layers combine. Other documents explain a feature and link
 here for its settings. The console shows the same document at **Help → Configuration** (`/help/configuration`), searchable by key,
-environment variable or words, and an administrator sees there the value in effect on the server and the console beside each
-default, and where it came from.
+environment variable or words. **Admin → Configuration** (`/admin/configuration`) shows every setting by tier (everyday, admin,
+expert: the *Tier* column below) with the value in effect on the server and the console, where it came from, and a change proposed
+for a second administrator to approve ([OPERATIONS.md, The configuration editor](OPERATIONS.md#the-configuration-editor)).
 
 The first half is written by hand: how configuration works, placeholders, value formats, recipes, and notes area by area with
 examples. The second half, [Every setting](#every-setting), is generated from the files themselves by `tools/settings_catalogue.py`
@@ -137,7 +138,7 @@ easier to write in YAML than as environment variables. Put them in `application.
 
 ### Seeing what is in effect
 
-There is no endpoint that dumps the configuration, but most settings show up somewhere you can read:
+Admin → Configuration shows the value in effect of every key of the server's and the console's `application.yaml` (and of the engines' files) and where it came from (`GET /api/v1/admin/settings` is its answer for the server). Most settings also show up somewhere you can read:
 
 | To check | Ask | Look for |
 |---|---|---|
@@ -413,6 +414,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_EXPOSURE_HOT_DIR` | `drishti.ccr.exposure.hot-folder` | `./data/ccr/hot` | The exposure hot files' folder (one folder per business date); under the data folder unless set. |
 | `DRISHTI_EXPOSURE_TIER` | `drishti.ccr.exposure.tier` | `mapped` | Where a loaded date's matrices live: `mapped` (a memory-mapped float32 hot file per date) or `heap` (float64 on the heap). |
 | `DRISHTI_EXPOSURE_OFFICIAL` | `drishti.ccr.exposure.official.enabled` | `true` | Capture every netting set, counterparty, group and hierarchy node officially at the end of each loaded date, and publish to `risk-results/exposure-official` and `exposure-official-cpty`. |
+| `DRISHTI_COMPUTE_EXPOSURE_WORKERS` | `compute.pools.exposure.workers.max` (`config/compute/compute.yaml`) | `4` | Python workers of the compute pool `exposure` (the Python exposure engine: the exact pre-deal what-if, method `paths`) on this node; the compute workers run only with `DRISHTI_COMPUTE_ENABLED=true`, else the exact what-if answers `503 DRS-5446`. |
 | `DRISHTI_COMPUTE_PYTHON_WORKERS` | `compute.pools.python.workers.max` (`config/compute/compute.yaml`) | `4` | Python workers of the compute pool `python` on this node: every Python run of code people write (Python items and visuals, Python-driven tables, Notebook cells), in the strict sandbox ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)). |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled` | `true` | Allow personal layouts. |
 | `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | Allow the Pivot tab. |
@@ -570,7 +572,7 @@ area: `drishti.retry.<area>.<key>` on the server (areas `packs`, `connectors`, `
 | `drishti.retry.jitter` | `retry.jitter` | `0.2` | Each wait varies by up to this fraction either way (`0` = none), so many failing things do not retry together |
 | `drishti.retry.permanent-after` | `retry.permanent_after` | `3` | A failure waiting cannot fix (refused credentials, a setting that is wrong) seen this many times in a row is treated as permanent and retried only every `max` |
 | `drishti.retry.<area>.<key>` | `retry.<area>.<key>` | the general value | Per-area override of any key above |
-| `drishti.retry.alerts.*` | (none) | the general value | The retries of an alert's email, webhook and text; how many tries is `drishti.alerts.measure.max-attempts` (below). A pending retry is kept in memory: a restart drops it and the alert's history keeps the last text it was given |
+| `drishti.retry.alerts.*` | (none) | the general value | The retries of an alert's email, webhook and text; how many tries is `drishti.alerts.max-attempts` (below). A pending retry is kept in memory: a restart drops it and the alert's history keeps the last text it was given |
 | (none) | `ai.poll_seconds` | `5` | How often the console looks at `config/ai` and `config/mcp` for a changed file and for a retry that is due |
 
 ### `drishti.db.pool` — database connection pools
@@ -1031,7 +1033,7 @@ role-based access to the lens link (read, not wired). Its own feature switches, 
 `features.datamap`, `features.data` (Export data, `DATA`), `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
 `features.collaboration` (Admin → Collaboration). `/studio` (the Build workbench's entry) follows `features.build`. A page whose switch is off answers 404.
 
-Branding keys of the console beside `ui.product`: `ui.placeholder` (the command line's placeholder; blank: `config/menus.yaml`'s),
+Branding keys of the console beside `ui.product`: `ui.placeholder` (the command line's placeholder; blank: `config/sitemap.yaml`'s),
 `ui.logo` (an image under `/static/`, or a `data:` URL, drawn instead of the eye mark), `ui.favicon` and `ui.apple_touch_icon` (the
 browser and home-screen icons; the generated `/manifest.webmanifest` follows them). The console takes the server's product name and
 tagline from its about answer unless its own `ui.product` is set. The advice for `DRS-1017` and `DRS-4023` is in `ui.error_advice`.
@@ -1347,7 +1349,7 @@ with `413 DRS-5005` before it is all parsed.
 
 ### `drishti.builder.designs` — the Build workbench's Designs
 
-A Design (`/api/v1/builder/designs`, **Build → My designs**) keeps a user's samples, Sutra and notes on the server, so work
+A Design (`/api/v1/builder/designs`, **Build → Build home → My drafts**) keeps a user's samples, Sutra and notes on the server, so work
 survives a console restart and shows on every console. Only its owner can reach it (anyone else gets `404 DRS-5006`).
 Sample documents are never logged; deleting a Design deletes its samples at once. A limit answers `413 DRS-5005`.
 
@@ -1612,8 +1614,10 @@ confidence, EPE, EEPE, the peaks, CE, EAD under the internal model) of any count
 per path, each CSA's collateral per path with the margin period of risk, as the caller, when asked. Nothing it answers is stored except
 captures: the ones people make, and the official end-of-day captures of every netting set, counterparty, group and hierarchy node, which
 it also publishes to `risk-results/exposure-official` and `exposure-official-cpty`. The netting-set and counterparty pages show its
-figures as they open. The pre-deal what-if, exact (method `paths`) or the conservative `addon` proxy, is the same engine's: no compute
-pool, no setting of its own.
+figures as they open. The exact pre-deal what-if (method `paths`) runs in the Python exposure engine, the compute pool `exposure` of
+`config/compute/compute.yaml` (`drishti_compute.exposure.whatif:ExposureWhatIfEngine`, standard library only, up to
+`DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers of 2 GB, timeout 60 s), behind the reactive connector `exposure-whatif`; it needs the
+compute workers on (`DRISHTI_COMPUTE_ENABLED=true`), otherwise that method answers `503 DRS-5446` and the `addon` proxy still works.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -1981,10 +1985,12 @@ Under `drishti.distribution.statements` (statement pages: [BI_GUIDE.md › Repor
 | `paper` | `A4` | The paper of a statement whose `statement:` names none (`A4`, `A3`, `A5`, `Letter`, `Legal`) |
 | `band-queries` | `2` | How many bands of one statement are asked at the same time (1 to 8), each as the reader, within the query limits |
 
-### `drishti.alerts.measure` — alerts on numbers and board notifications
+### `drishti.alerts` — the one alert engine
 
-Alerts on a visual, a dataset measure or a Sutra field, and notifications from board tiles (phase 7, part 2: [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](../guides/BI_GUIDE.md#4-alerts-on-numbers)). Every key has a default;
-change one in `application.yaml` or with `DRISHTI_ALERTS_MEASURE_*`.
+Every alert rule (a visual, a dataset or model measure, a Sutra field, a Rachana-EL rule on one entity), the notifications from board tiles,
+and the lifecycle of every alert raised (raised, acknowledged, resolved; snooze; owners), the platform alerts included
+([USER_GUIDE.md › Alerts](../guides/USER_GUIDE.md#alerts); [BI_GUIDE.md, section 4](../guides/BI_GUIDE.md#4-alerts-on-numbers)). Every key has a
+default; change one in `application.yaml` or with `DRISHTI_ALERTS_*`.
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -2143,11 +2149,10 @@ pack expects and who is told is the pack's `loads:` section and the administrato
 The token scope that opens `POST /api/v1/packs/{pack}/loads` to a personal API token is `loads:write` (`drishti.security.token-scopes`); the
 user still needs a role that opens the kind. The expectation settings (`/api/v1/admin/loads/**`) are never open to a token.
 
-### `drishti.alerts` — alert history
+### `drishti.approvals` — the one Approvals queue
 
-| Key | Default | Meaning |
-|---|---|---|
-| `keep` | `1000` | Fired alerts kept per user, in the identity database (`drishti_alert`), so they survive restarts. Older ones are pruned as new ones arrive. |
+Every four-eyes item in one inbox ([USER_GUIDE.md › Approvals](../guides/USER_GUIDE.md#approvals)): how near a due date pins an item on
+top, how long after its period a report run is due, and the size of the question threads. The keys are in the generated table below.
 
 ### `drishti.access-log` — who looked at what
 
