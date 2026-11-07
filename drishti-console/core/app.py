@@ -39,7 +39,7 @@ WEB = Path(__file__).resolve().parent.parent / "web"
 _PAGE_KINDS = ("", "share", "datamap", "data", "form", "functions", "pack")      # missing.html for a console page, not an entity
 
 
-ASSET_VERSION = "2.9.11.c"
+ASSET_VERSION = "2.9.11.d"
 
 
 def _bounded(value, low: int, high: int, default: int) -> int:

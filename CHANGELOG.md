@@ -278,7 +278,7 @@
   hold internals (413), admin by area (1,720); CONFIGURATION.md gains a *Tier* column; `settings_catalogue.py --check` fails when an area has
   no tier or a listed key or pattern matches nothing (`test_settings_catalogue.py`).
 
-## 2.9.11.d (unreleased)
+## 2.9.11.d (2026-11-07)
 - **Six lake folders kept in git, their content never** (DATA_LAKE_GUIDE.md section 1): `data/delta/demo`, `risklake`, `newslake` (news), `worldlake` (World Bank, IMF, UN), `regulators` (SEC, Federal Reserve, OSFI, central banks) and `capitalmarket` (prices, curves, vols, funds), each with only its README.md; the test data's `.jsonl.gz` files stay in git to build the demo lake. The five new lakes ship as lake files with no tables (`config/lakes/<lake>.yaml` and their jar copies), and **nothing shipped points at them**: every connector, rule and setting reads `demo` (guarded by `tools/test_empty_lakes.py`); a site points at them itself. The demo lake's one-time move and `build_demo_lakes` treat a folder holding only its README.md as empty.
 
 - **Demo and real data never mix** (DATA_LAKE_GUIDE.md section 6; found on tutorial 45's real run, where the demo ComSwap `TRD 1000001`
@@ -555,6 +555,17 @@
 - Tests: the five VaR browser files over the 300 s per-file budget (currency, lens, explain, parts shown, Arrow) spent nearly all their time building the VaR demo lake each for itself; `var_stack.py` now builds each lake once per test run for every worker and starts a server per file over it (its own VaR hot folder and official-results root, so the shared lake is only read). Same tests and assertions (TEST_HARNESS section 3.12).
 
 - Decks refreshed for 2.9.11–2.9.11.c
+
+- **Decks refreshed for 2.9.11.d** (docs/publications; chapters, no release numbers, pills only on what is not built): a new slide
+  *One table layer* (BI on tables and models in Rachana, Build › Tables & models with live YAML, Pivot → Report, the Notebook, one
+  Python runtime, resizable panels) in the Design-and-Evidence deck's Analyse chapter; a new slide *A lake of your own* (every lake in
+  its own folder, the demo lake's one-time move, the empty lakes shipped, `lake:` in `.ready`, the no-connector warning, demo and real
+  never mixed, undo in the load's lake) in the Data in chapters of the VaR Engine and Design-and-Evidence decks; the AWS deck's lake
+  file and load rules slide with a lake of its own and `dataload undo`, the demo lake's paths under `data/delta/demo`; the VaR deck's
+  scenario window as shipped (250); the BI model architecture in tables; *Export data* for the Data view; the under-construction
+  registry with the P&L explain waterfall and the CCR cube; the roadmap with the BI foundation and a lake of your own built and the
+  next steps in the agreed order (JavaScript libraries, domain modules, one Build home, docs, trust and controls, memory and speed,
+  counterparty engines and stress, collateral and margin, CVA, hardening).
 
 ### Tests and the drill
 
