@@ -77,8 +77,8 @@
 
   const money = (p) => (p.value === null || p.value === undefined ? '' : (p.value / 1e6).toFixed(2) + 'm');
   const columnDefs = [
-    { field: 'desk', headerName: 'Desk', rowGroup: mode !== 'tree', enableRowGroup: true, filter: true },
-    { field: 'book', headerName: 'Book', enableRowGroup: true },
+    { field: 'desk', headerName: 'Desk', rowGroup: mode !== 'tree', rowGroupIndex: mode === 'pivot' ? 0 : null, enableRowGroup: true, filter: true },
+    { field: 'book', headerName: 'Book', enableRowGroup: true, rowGroup: mode === 'pivot', rowGroupIndex: mode === 'pivot' ? 1 : null },
     { field: 'region', headerName: 'Region', pivot: mode === 'pivot', enablePivot: true, filter: 'agSetColumnFilter' },
     { field: 'mtm', headerName: 'MTM', aggFunc: 'sum', enableValue: true, valueFormatter: money, cellClassRules: { 'hx-neg': (p) => p.value < 0 } },
     { field: 'var', headerName: 'VaR 99% 1d', aggFunc: 'drishti:server:var(99, 1d)', enableValue: true, valueFormatter: money }
