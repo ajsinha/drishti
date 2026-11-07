@@ -311,7 +311,8 @@ async function advance(ms) {
 class FakeES {
   constructor(url) { this.url = url; this.on = {}; this.closed = false; this.readyState = 0; FakeES.all.push(this); }
   addEventListener(t, fn) { (this.on[t] = this.on[t] || []).push(fn); }
-  emit(t, ch, d) { (this.on[t] || []).forEach(fn => fn({ data: JSON.stringify({ ch, d }) })); }
+  removeEventListener(t, fn) { this.on[t] = (this.on[t] || []).filter(f => f !== fn); }
+  emit(t, ch, d) { (this.on[t] || []).forEach(fn => fn({ type: t, data: JSON.stringify({ ch, d }) })); }
   close() { this.closed = true; }
 }
 FakeES.all = [];
