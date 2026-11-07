@@ -382,8 +382,10 @@ is served from `/static/banking/elements/risk/<version>/` behind the entitlement
 release ahead. A **release train** file (`elements.json`) names the versions that go together for a Drishti release, so a host pins
 one train or single libraries. Elements 2.x and the renderer's 1.x keep working one release beside renderer 2.0.0.
 
-**Outside Drishti.** Libraries 1 to 5 are copied into a host application's own vendored folder (never a CDN); an npm package per
-library (`@drishti/core`, `@drishti/grid`, …) is documented, not published (as the renderer's package).
+**Outside Drishti** (as built: 8.7). Never a public CDN or registry. An application takes two packed files
+(`drishti.py elements pack`), the release archive `drishti-elements-<version>.zip`, the npm tarballs `@drishti/elements-<name>` from
+an internal registry, or the WebJar from an internal Maven repository; the guide is
+[ELEMENTS_IN_YOUR_APP.md](../guides/ELEMENTS_IN_YOUR_APP.md).
 
 **Licensing.** Libraries 1 to 7 ship with the product. **drishti-risk is licensed with the banking module** and every later domain
 library with its module: an unlicensed module's library is not served, its kinds are not registered, and its gallery pages are hidden.
@@ -790,6 +792,51 @@ raw date fields (→ `DatePicker`, `DateRangePicker`), the controls (`drishti_co
 (`drishti_refresh.js` → a data source), and inside drishti-grid the renderer's simpler document tables (`enhanceDocTables`' sort and
 pager) fold into `consoleTables`.
 
+### 8.7 As built: the distribution
+
+Other applications take the libraries as files kept inside the organisation; nothing is published to a public registry or CDN (the
+owner's decision of 2026-11-07). How to use them: [ELEMENTS_IN_YOUR_APP.md](../guides/ELEMENTS_IN_YOUR_APP.md). How they are made:
+
+- **One code path, three forms** (`tools/elements/dist.py`, offline, Python only). A library's files are laid out as the console's
+  static root: `elements/<library>/src/*.js` (the ES modules), its bundle, its own sheets from the manifest's `css`, the vendored
+  engine of its `scripts` with that folder's LICENSE and NOTICE, the folders of its `assets` (a new manifest key, not read by the
+  loader: `vendor/echarts/maps/` for drishti-chart, `vendor/codemirror/` for drishti-inputs), `drishti-<name>.d.ts`, a README and a
+  licence notice; drishti-core adds `css/drishti_tokens.css` and `themes/drishti-theme-<name>.css`. The whole tree adds
+  `elements/drishti_elements.json` (the train, without the libraries left out), `CHANGELOG.md` (each library's lines of the product
+  CHANGELOG, `elements_catalogue.changelog`), `LICENSE-NOTICE.txt`, `README.md` and `drishti-elements.json`: the libraries, the themes,
+  the libraries excluded and every file's bytes and SHA-384 integrity hash. Because the layout is the console's, drishti-core's loader
+  works in it unchanged.
+- **The zip** `drishti-elements-<train>.zip` is that tree under `drishti-elements-<train>/` (with a domain included:
+  `drishti-elements-<train>+banking.zip`). **The npm tarballs** `@drishti/elements-<name>` (`npm/drishti-elements-<name>-<version>.tgz`,
+  `npm pack`'s layout, written with `tarfile`) hold one library flattened: its folder and `css/` at the package root, `vendor/` and
+  `themes/` kept; imports of another library rewritten to its package name (`../../drishti-core/src/drishti_index.js` →
+  `@drishti/elements-core`, a JSDoc `import('…')` to `@drishti/elements-core/src/…`), the bundle's Node requirements likewise;
+  `package.json` (`exports`: `import` the ES entry, `require` the bundle, `types`; `src/package.json` marks the modules as ES modules,
+  the root stays CommonJS for the bundle; `sideEffects` only the entry, the bundle and the sheets; `dependencies` the required libraries
+  at `^version`; no registry is named) and `integrity.json`. **The WebJar** is Maven's: the module `drishti-elements` (in the root pom's
+  profile `elements`, versioned with the train, not the product) runs `tools/elements/cli.py webjar-tree` at `generate-resources`, which
+  writes the tree under `META-INF/resources/webjars/drishti-elements/<train>/` and refuses a module version that is not the train's.
+  All three are reproducible: fixed timestamps (npm's 1985-10-26 for the tarballs, 1980-01-01 in the zip), sorted entries, mode 644.
+- **The declarations** (`tools/elements/dts.py`) are written from the same parse as the API reference (`tools/docs/elements_api.py`):
+  every name the entry exports (functions with their parameters, classes with their documented methods, constants), every `@typedef`
+  as an interface or type and every `@callback` as a function type; JSDoc types are read into TypeScript (unions, `?T`, `Object<K, V>`,
+  records, `function(A): R`, literals); a type of another library is `import('<that library>').Name`; what cannot be read is `any`.
+- **The themes** are read from `drishti_tokens.css` by its blocks: a block whose selector is only `:root` and `[data-theme]` is a theme
+  (the one that also holds the bare `:root` is the default), the no-theme `prefers-color-scheme` fallback is dropped, every other block
+  (the fixed colours, the scales, print) is kept. A theme sheet is the default's tokens overlaid by the theme's, on `:root`, then the
+  shared blocks; `dark` and `light` name the default dark and the first light theme.
+- **The pack** (`tools/elements/pack.py`, `drishti.py elements pack`): the named libraries and what they require, deepest first, each
+  once; a library with a `module` refused unless that domain is included; one JavaScript file (the licence once, a comment naming every
+  library and version, a prelude setting `Drishti.elements.base` to `<the file's folder>/elements/` so lazily read files come from
+  beside it, the vendored engines unless `--no-engines`, then the bundles) and one sheet (the tokens, every theme or one, then each
+  library's sheets), each library's own licence header removed; `drishti-elements-pack.json` records what is inside with SRI hashes.
+- **The server** keeps serving the same files: `/static/elements/…` on its origin and `/embed/v2/elements/<library>/…` to registered
+  host applications.
+- **Tests.** `tests/test_elements_dist.py`: the zip, tarballs and WebJar hold what their manifests say with matching hashes, the same
+  bytes in all three, reproducibly; the Maven profile builds the jar (offline; skipped without Java or the exec plugin in the local
+  repository); dependency resolution and the banking exclusion; themes; every export declared. `tests/test_elements_pack_browser.py`
+  (about 3 s): a static page with only the two packed files draws a grid and a chart under a strict CSP and asks for nothing else.
+
 ## 9. The documentation of every library
 
 The owner asked for documentation as rich as a commercial product's. Within the lean-docs rule (one home per fact; references are
@@ -962,6 +1009,9 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [x] drishti-inputs: pickers, forms with four eyes, the filter bar, the code editor (8.2); the formula input and people picker as their screens move
 - [x] drishti-renderer 2.0.0 on the libraries (8.5; the console's controls, funnels and Zoom still its scripts until their screens move)
 - [ ] drishti-insight, drishti-risk (in the banking plugin, licensed)
+- [x] The distribution (8.7): per-library packages with `.d.ts`, themes, `drishti.py elements pack` with the banking exclusion, the
+  zip with SRI hashes, npm tarballs for an internal registry, the WebJar (`-P elements`); the guide ELEMENTS_IN_YOUR_APP.md
+- [ ] The licence check (2.9.11.i) replaces `--include-domain` as the gate on drishti-risk
 - [x] The gallery in both modes, `playground` (default) and `docs` (g4 A and B), every component and example run in its browser file, the grid in both themes and three densities, a keyboard/ARIA smoke check on every demo (8.4)
 - [ ] axe vendored for the gallery's check; every example in both themes and three densities
 - [ ] Documentation per library (section 9): guide, generated API reference with `--check`, tutorial, gallery, the AG Grid migration guide, theming and accessibility guides, changelogs, versioning policy; Help entries
