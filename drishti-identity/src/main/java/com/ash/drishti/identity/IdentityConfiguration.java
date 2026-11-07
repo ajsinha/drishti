@@ -322,13 +322,6 @@ public class IdentityConfiguration {
         return new NoteStore(notes, identityTransactions, auditLog);
     }
 
-    /** Fired alerts, the newest {@code drishti.alerts.keep} (1000) per user. */
-    @Bean
-    public AlertHistory alertHistory(IdentityRepositories.Alerts alerts, TransactionTemplate identityTransactions,
-            org.springframework.core.env.Environment env) {
-        return new AlertHistory(alerts, identityTransactions, Integer.parseInt(env.getProperty("drishti.alerts.keep", "1000")));
-    }
-
     /**
      * The administrators' switches of commands and packs (docs/admin/USER_MANAGEMENT.md): this database is their system of record; Drishti*net
      * spreads them (the server wires the gossip and names the node).

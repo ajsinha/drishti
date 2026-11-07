@@ -861,15 +861,15 @@ class FakeBackend:
         link = {"visual": f"/bi/r/{s.get('report')}/{s.get('page')}", "dataset": f"/bi/i/{s.get('dataset')}", "field": f"/v/{s.get('kind')}/{s.get('id')}"}.get(s.get("type"), "/")
         return label, say, link
 
-    async def measure_alerts(self, ident):
+    async def alert_rules(self, ident):
         return [a for a in self.alerts_kept.values() if a["owner"] == ident.user]
 
-    async def measure_alert(self, name, ident):
+    async def alert_rule(self, name, ident):
         if name not in self.alerts_kept:
             raise BackendError(404, "DRS-1001", f"no alert '{name}'")
         return self.alerts_kept[name]
 
-    async def save_measure_alert(self, name, body, ident):
+    async def save_alert_rule(self, name, body, ident):
         if body.get("condition", {}).get("op") == "under":
             raise BackendError(422, "DRS-9062", "condition.op is above, below, between or outside")
         if body.get("condition", {}).get("type") == "threshold" and "value" not in body.get("condition", {}):
@@ -882,21 +882,21 @@ class FakeBackend:
                                   "state": {}, "history": old.get("history", [])}
         return self.alerts_kept[name]
 
-    async def delete_measure_alert(self, name, ident):
+    async def delete_alert_rule(self, name, ident):
         self.alerts_kept.pop(name, None)
 
-    async def check_measure_alert(self, name, ident):
+    async def check_alert_rule(self, name, ident):
         a = self.alerts_kept[name]
         a["state"] = {ident.user: {"active": True}}
         a["history"].insert(0, {"id": 7, "at": "2026-10-11T15:00:00Z", "user": ident.user, "action": "fired", "severity": "warn", "message": f"{a['title']}: now 1,200 ({a['describe']})",
                                  "delivered": {"inbox": "ok", "email": "off", "bridge": "off"}})
         return a
 
-    async def pause_measure_alert(self, name, resume, ident):
+    async def pause_alert_rule(self, name, resume, ident):
         self.alerts_kept[name]["enabled"] = resume
         return self.alerts_kept[name]
 
-    async def preview_measure_alert(self, body, ident):
+    async def preview_alert_rule(self, body, ident):
         if body["source"].get("measure") == "secret":
             return {"status": "masked", "value": None, "asOf": None, "note": "secret", "condition": "above 1", "live": False}
         return {"status": "ok", "value": 1234.5, "asOf": "2026-10-09", "note": "", "condition": "above 1000", "holds": True, "live": True}
@@ -913,10 +913,10 @@ class FakeBackend:
                  "describe": "reaches crit", "delivery": {"inbox": True, "email": True, "bridge": False}, "trigger": {"mode": "live", "debounce": "10s"}, "activeFor": 2,
                  "link": "/bi/b/desk-wall", "history": [{"at": "2026-10-11T15:00:00Z", "user": "bob", "action": "fired", "message": "Desk wall · Net exposure — is now red"}]}]
 
-    async def admin_pause_measure_alert(self, owner, name, resume, ident):
+    async def admin_pause_alert_rule(self, owner, name, resume, ident):
         self.alerts_kept[name]["enabled"] = resume
 
-    async def admin_delete_measure_alert(self, owner, name, ident):
+    async def admin_delete_alert_rule(self, owner, name, ident):
         self.alerts_kept.pop(name, None)
 
     notes_kept = []

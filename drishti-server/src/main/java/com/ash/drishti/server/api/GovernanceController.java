@@ -66,21 +66,6 @@ public class GovernanceController {
         return out;
     }
 
-    @PostMapping("/proposals/{id}/approve")
-    public Map<String, Object> approve(@PathVariable String id, @RequestBody(required = false) Decision d, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return summary(governance.approve(id, d == null ? null : d.comment(), p), p);
-    }
-
-    @PostMapping("/proposals/{id}/reject")
-    public Map<String, Object> reject(@PathVariable String id, @RequestBody(required = false) Decision d, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return summary(governance.reject(id, d == null ? null : d.comment(), p), p);
-    }
-
-    @PostMapping("/proposals/{id}/withdraw")
-    public Map<String, Object> withdraw(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return summary(governance.withdraw(id, p), p);
-    }
-
     /** Every decided proposal for a Sutra, newest first: who proposed and who approved each version. */
     @GetMapping("/{name}/history")
     public List<Map<String, Object>> history(@PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {

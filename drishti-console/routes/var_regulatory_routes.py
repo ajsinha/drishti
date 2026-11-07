@@ -176,17 +176,17 @@ async def api_run(request: Request, report: str, period: str):
         return _problem(e)
 
 
-@router.post("/api/var/reports/{report}/runs/{period}/signoff")
-async def api_signoff(request: Request, report: str, period: str):
+@router.post("/api/var/reports/{report}/runs/{period}/narrative")
+async def api_narrative(request: Request, report: str, period: str):
+    """The maker's narrative; the sign-off itself is made in the one Approvals queue."""
     if (bad := _checked(report, period)) is not None:
         return bad
     body = await json_body(request)
-    keep = {k: body.get(k) for k in ("version", "action", "step", "comment", "narrative") if body.get(k) is not None}
-    for k in ("comment", "narrative"):
-        if isinstance(keep.get(k), str):
-            keep[k] = keep[k][:4000]
+    keep = {k: body.get(k) for k in ("version", "narrative") if body.get(k) is not None}
+    if isinstance(keep.get("narrative"), str):
+        keep["narrative"] = keep["narrative"][:4000]
     try:
-        return await request.app.state.backend.var("POST", f"/reports/{report}/runs/{quote(period)}/signoff", ident(request), body=keep)
+        return await request.app.state.backend.var("POST", f"/reports/{report}/runs/{quote(period)}/narrative", ident(request), body=keep)
     except BackendError as e:
         return _problem(e)
 

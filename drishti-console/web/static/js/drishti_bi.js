@@ -554,9 +554,8 @@
         box.appendChild(h('p', { class: 'bi-approvers', 'data-approvers': '' }, h('strong', { text: 'Waiting for review. ' }), 'Frozen until decided or withdrawn. Who can approve: ' + (it.approveRule || 'a reviewer') + (it.approvers && it.approvers.length ? '. Told by notification: ' + it.approvers.join(', ') : '. Nobody is eligible yet: ask a steward, or give a member of the workspace a role with the approve power') + '.'));
       }
       if (c.withdraw) { box.appendChild(act('Withdraw proposal', function (b) { post('withdraw', null, 'Withdrawn: a draft again.', b); })); }
-      if (c.approve) {
-        box.appendChild(act('Approve and publish', function (b) { post('approve', { note: note.value }, 'Approved and published.', b); }, 'btn-accent'));
-        box.appendChild(act('Reject', function (b) { post('reject', { reason: note.value }, 'Rejected: a draft again.', b); }));
+      if (c.approve) {                                    // decided in the one Approvals queue: what changes, its effect, the rules and questions
+        box.appendChild(h('a', { class: 'btn-pill btn-accent', 'data-bi-approvals': '', href: '/approvals/bi/' + encodeURIComponent(it.id).replace(/%3A/g, ':') }, 'Decide in Approvals'));
       }
       if (c.promote && it.endorsement !== 'certified') { box.appendChild(act(it.endorsement === 'promoted' ? 'Remove promotion' : 'Promote', function (b) { post('endorse', { level: it.endorsement === 'promoted' ? 'none' : 'promoted' }, it.endorsement === 'promoted' ? 'Promotion removed.' : 'Promoted: it is listed first for others.', b); })); }
       if (c.certify) { box.appendChild(act(it.endorsement === 'certified' ? 'Remove certification' : 'Certify', function (b) { post('endorse', { level: it.endorsement === 'certified' ? 'none' : 'certified' }, it.endorsement === 'certified' ? 'Certification removed.' : 'Certified.', b); })); }

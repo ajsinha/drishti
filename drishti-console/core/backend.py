@@ -672,39 +672,45 @@ class BackendClient:
     async def admin_delete_subscription(self, owner: str, name: str, ident) -> None:
         return await self._send("DELETE", f"/admin/subscriptions/{quote(owner)}/{quote(name)}", ident)
 
-    # -- alerts on measures, fields and board tiles -------------------------------------------------------------
-    async def measure_alerts(self, ident) -> list:
-        return await self._get("/me/measure-alerts", ident)
+    # -- the one alert engine: rules, the alerts raised, administrators -------------------------------------------------------------
+    async def alert_rules(self, ident) -> list:
+        return await self._get("/alerts/rules", ident)
 
-    async def measure_alert(self, name: str, ident) -> dict:
-        return await self._get(f"/me/measure-alerts/{quote(name)}", ident)
+    async def alert_rule(self, name: str, ident) -> dict:
+        return await self._get(f"/alerts/rules/{quote(name)}", ident)
 
-    async def save_measure_alert(self, name: str, body: dict, ident) -> dict:
-        return await self._send("PUT", f"/me/measure-alerts/{quote(name)}", ident, json=body)
+    async def save_alert_rule(self, name: str, body: dict, ident) -> dict:
+        return await self._send("PUT", f"/alerts/rules/{quote(name)}", ident, json=body)
 
-    async def delete_measure_alert(self, name: str, ident) -> None:
-        return await self._send("DELETE", f"/me/measure-alerts/{quote(name)}", ident)
+    async def delete_alert_rule(self, name: str, ident) -> None:
+        return await self._send("DELETE", f"/alerts/rules/{quote(name)}", ident)
 
-    async def check_measure_alert(self, name: str, ident) -> dict:
-        return await self._send("POST", f"/me/measure-alerts/{quote(name)}/check", ident, timeout=120.0)
+    async def check_alert_rule(self, name: str, ident) -> dict:
+        return await self._send("POST", f"/alerts/rules/{quote(name)}/check", ident, timeout=120.0)
 
-    async def pause_measure_alert(self, name: str, resume: bool, ident) -> dict:
-        return await self._send("POST", f"/me/measure-alerts/{quote(name)}/{'resume' if resume else 'pause'}", ident)
+    async def pause_alert_rule(self, name: str, resume: bool, ident) -> dict:
+        return await self._send("POST", f"/alerts/rules/{quote(name)}/{'resume' if resume else 'pause'}", ident)
 
-    async def preview_measure_alert(self, body: dict, ident) -> dict:
-        return await self._send("POST", "/me/measure-alerts/preview", ident, json=body, timeout=120.0)
+    async def preview_alert_rule(self, body: dict, ident) -> dict:
+        return await self._send("POST", "/alerts/rules/preview", ident, json=body, timeout=120.0)
 
-    async def all_measure_alerts(self, ident) -> list:
-        return await self._get("/admin/measure-alerts", ident)
+    async def admin_alerts(self, ident) -> dict:
+        """``{rules, boards, platform}``: everyone's rules, the board tiles that notify, the platform alerts (administrators)."""
+        return await self._get("/admin/alerts", ident)
 
-    async def board_alerts(self, ident) -> list:
-        return await self._get("/admin/measure-alerts/boards", ident)
+    async def raised_alerts(self, ident, stage: str = "open") -> list:
+        """The alerts raised for the person (and, for an administrator, the platform's), newest first."""
+        return await self._send("GET", f"/alerts?stage={quote(stage)}", ident)
 
-    async def admin_pause_measure_alert(self, owner: str, name: str, resume: bool, ident) -> dict:
-        return await self._send("POST", f"/admin/measure-alerts/{quote(owner)}/{quote(name)}/{'resume' if resume else 'pause'}", ident)
+    async def act_on_alert(self, action: str, body: dict, ident) -> dict:
+        """acknowledge, resolve, snooze or assign one raised alert: ``{id, note, for, to}``."""
+        return await self._send("POST", f"/alerts/{action}", ident, json=body)
 
-    async def admin_delete_measure_alert(self, owner: str, name: str, ident) -> None:
-        return await self._send("DELETE", f"/admin/measure-alerts/{quote(owner)}/{quote(name)}", ident)
+    async def admin_pause_alert_rule(self, owner: str, name: str, resume: bool, ident) -> dict:
+        return await self._send("POST", f"/admin/alerts/rules/{quote(owner)}/{quote(name)}/{'resume' if resume else 'pause'}", ident)
+
+    async def admin_delete_alert_rule(self, owner: str, name: str, ident) -> None:
+        return await self._send("DELETE", f"/admin/alerts/rules/{quote(owner)}/{quote(name)}", ident)
 
     # -- monitors and alerts ----------------------------------------------------------------------
     async def mine(self, method: str, path: str, ident, body=None, **params):

@@ -12,17 +12,17 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Monitors (live watchlists) and alerts (rules evaluated by the server, with a notification stream)."""
+"""Monitors (live watchlists) and the page of the one alert engine (the alerts raised for me, my alert rules), with the notification stream."""
 from __future__ import annotations
 
 import json
-from urllib.parse import quote
+from urllib.parse import parse_qs, quote
 
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 
 from core.csrf import json_body
-from core.backend import BackendError
+from core.backend import BackendError, drs_message
 from routes.alert_routes import decorate
 from routes.common import ident, packs, render
 
@@ -110,31 +110,58 @@ async def monitor_stream(request: Request, name: str):
 
 @router.get("/api/alerts/stream")
 async def alerts_stream(request: Request):
-    return _relay(request, "/me/alerts/stream")
+    return _relay(request, "/alerts/stream")
 
 
 @router.get("/alerts")
-async def alerts(request: Request, kind: str = "", id: str = "", msg: str = ""):
+async def alerts(request: Request, kind: str = "", id: str = "", msg: str = "", stage: str = "open"):
+    """The one alert engine's page: the alerts raised for me (acknowledge, snooze, resolve; an administrator also sees the platform's), my
+    alert rules, a new rule on one entity (a pack may suggest one), and the recent firings."""
     backend, me = request.app.state.backend, ident(request)
     try:
-        events = await backend.mine("GET", "/alerts", me, limit=100)
-        rules = await backend.mine("GET", "/alerts/rules", me)
+        raised = await backend.raised_alerts(me, "all" if stage == "all" else "open")
     except BackendError:
-        events, rules = [], []
+        raised = []
     try:
-        measure = decorate(await backend.measure_alerts(me), getattr(me, "user", ""))
+        rules = decorate(await backend.alert_rules(me), getattr(me, "user", ""))
     except BackendError:
-        measure = []
-    recent = sorted((dict(e, alert=a["name"]) for a in measure for e in (a.get("history") or []) if e.get("action") == "fired"), key=lambda e: e.get("at", ""), reverse=True)[:20]
+        rules = []
+    recent = sorted((dict(e, alert=a["name"]) for a in rules for e in (a.get("history") or []) if e.get("action") == "fired"), key=lambda e: e.get("at", ""), reverse=True)[:20]
     suggestions = [s for p in await packs(request) for s in p["alerts"] if not kind or s.get("kind") == kind]
-    return render(request, "alerts.html", events=events, rules=rules, suggestions=suggestions, kind=kind, id=id, msg=msg, measure=measure, recent=recent, screen="alerts")
+    return render(request, "alerts.html", raised=raised, stage=stage, measure=rules, recent=recent, suggestions=suggestions, kind=kind, id=id, msg=msg, screen="alerts")
+
+
+@router.post("/alerts/raised/{action}")
+async def act_on_raised(request: Request, action: str):
+    """Acknowledge, snooze, resolve or assign one raised alert (a form on the page)."""
+    if action not in ("acknowledge", "snooze", "resolve", "assign"):
+        return RedirectResponse("/alerts", status_code=303)
+    form = {k: v[0] for k, v in parse_qs((await request.body()).decode("utf-8", "replace"), keep_blank_values=True).items()}
+    body = {"id": form.get("id", ""), "note": form.get("note", "")[:500], "for": form.get("for", ""), "to": form.get("to", "")}
+    try:
+        await request.app.state.backend.act_on_alert(action, body, ident(request))
+    except BackendError as e:
+        return RedirectResponse(f"/alerts?msg={quote(drs_message(e.code, e.detail, ' '))}", status_code=303)
+    done = {"acknowledge": "Acknowledged: it is yours.", "snooze": "Snoozed.", "resolve": "Resolved.", "assign": "Assigned."}[action]
+    return RedirectResponse(f"/alerts?msg={quote(done)}", status_code=303)
+
+
+def rule_body(body: dict) -> dict:
+    """A rule on one entity (the page's form, or a pack's suggestion: kind, id, when, severity, message) as an alert of the one engine: a field
+    source whose field is the Rachana-EL predicate, the condition rule, looked at after each load of the kind (live when it pushes changes:
+    choose it on the edit page), told in the inbox. The message, when given, is the title."""
+    kind = str(body.get("kind") or "").strip()
+    message = str(body.get("message") or "").strip()
+    return {"title": message, "severity": body.get("severity") or "warn",
+            "source": {"type": "field", "kind": kind, "id": str(body.get("id") or "").strip(), "field": str(body.get("when") or "").strip()},
+            "condition": {"type": "rule"}, "trigger": {"mode": "after-load", "kind": kind}, "delivery": {"inbox": True}}
 
 
 @router.post("/alerts/api/{name}")
 async def save_rule(request: Request, name: str):
     body = await json_body(request)
     try:
-        return await request.app.state.backend.mine("PUT", f"/alerts/rules/{quote(name)}", ident(request), body)
+        return await request.app.state.backend.save_alert_rule(name, rule_body(body), ident(request))
     except BackendError as e:
         return _problem(e)
 
@@ -142,7 +169,7 @@ async def save_rule(request: Request, name: str):
 @router.post("/alerts/api/{name}/delete")
 async def delete_rule(request: Request, name: str):
     try:
-        await request.app.state.backend.mine("DELETE", f"/alerts/rules/{quote(name)}", ident(request))
+        await request.app.state.backend.delete_alert_rule(name, ident(request))
         return {"ok": True}
     except BackendError as e:
         return _problem(e)

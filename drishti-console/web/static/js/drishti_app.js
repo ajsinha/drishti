@@ -156,17 +156,23 @@ document.addEventListener('click', function (e) {
   });
 })();
 
-/* Build → Govern → Reviews shows how many proposals wait; asked when the menu opens, once (not on every page load). */
+/* The Approvals count (SHARED_SCREENS.md section 2): the items waiting for the signed-in person, on the top bar and in the menu entry; asked
+   once a page, after the page has drawn. */
 (function () {
   'use strict';
-  var asked = false;
-  document.addEventListener('show.bs.dropdown', function (e) {
-    var menu = e.target && e.target.closest ? e.target.closest('.tbar-menu') : null;
-    var badge = menu && menu.querySelector('[data-review-count]');
-    if (!badge || asked) { return; }
-    asked = true;
-    fetch('/build/review-count', { headers: { Accept: 'application/json' } }).then(function (r) { return r.ok ? r.json() : null; }).then(function (j) {
-      if (j && j.pending > 0) { badge.textContent = String(j.pending); badge.hidden = false; badge.setAttribute('aria-label', j.pending + ' waiting'); }
-    }).catch(function () { asked = false; });
-  });
+  var top = document.querySelector('[data-approvals-top]');
+  if (!top) { return; }
+  var show = function (j) {
+    if (!j || !(j.inbox > 0)) { return; }
+    var n = String(j.inbox), soon = j.dueSoon > 0 ? ', ' + j.dueSoon + ' due soon' : '';
+    top.textContent = n; top.hidden = false;
+    var tool = top.closest('[data-approvals-tool]');
+    if (tool) { tool.setAttribute('aria-label', n + ' approvals waiting for you' + soon); tool.classList.toggle('due', j.dueSoon > 0); }
+    document.querySelectorAll('[data-approvals-count]').forEach(function (b) { b.textContent = n; b.hidden = false; b.setAttribute('aria-label', n + ' waiting'); });
+  };
+  var ask = function () {
+    fetch('/approvals/api/count', { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : null; }).then(show).catch(function () { /* the count is a hint: no count, no badge */ });
+  };
+  if (document.readyState === 'complete') { setTimeout(ask, 300); } else { window.addEventListener('load', function () { setTimeout(ask, 300); }); }
 })();

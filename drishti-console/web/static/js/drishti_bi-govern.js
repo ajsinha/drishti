@@ -292,16 +292,23 @@
     box.hidden = !w.length;
     if (w.length) { box.appendChild(h('h2', { text: 'Heads up' })); box.appendChild(h('ul', {}, w.map(function (x) { return h('li', { 'data-warning': /^Not migrated/.test(x) ? 'migration' : '', text: x }); }))); }
   }
+  /** An approval goes through the one Approvals queue (the BI item is its kind bi); publishing stays the item's own. */
+  function send(sub, note, extra) {
+    if (sub !== 'approve') { return B.api('POST', path() + '/' + sub, Object.assign({ note: note }, extra)); }
+    return fetch('/approvals/api/item/bi/' + encodeURIComponent(item.id).replace(/%3A/g, ':') + '/approve', { method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' }, body: JSON.stringify({ comment: note, params: extra }) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { var e = new Error(j.detail || ('HTTP ' + r.status)); e.code = j.code; throw e; } return j; }); });
+  }
   /** Publishes the dataset and rewrites the reports that use its renamed fields and measures to the new names, in one step. */
   function publishRenamed(sub) {
     var note = q('.bi-note');
-    B.api('POST', path() + '/' + sub, { note: note ? note.value : '', applyRenames: true }).then(function (n) {
+    send(sub, note ? note.value : '', { applyRenames: true }).then(function (n) {
       say('Published, and the reports that used the old names now use the new ones.'); document.dispatchEvent(new CustomEvent('drishti:bi-reload', { detail: n }));
     }).catch(fail);
   }
   function force(sub) {
     var note = q('.bi-note');
-    B.api('POST', path() + '/' + sub, { note: note ? note.value : '', force: true }).then(function (n) {
+    send(sub, note ? note.value : '', { force: true }).then(function (n) {
       say('Published over the warning (forced).'); document.dispatchEvent(new CustomEvent('drishti:bi-reload', { detail: n }));
     }).catch(fail);
   }

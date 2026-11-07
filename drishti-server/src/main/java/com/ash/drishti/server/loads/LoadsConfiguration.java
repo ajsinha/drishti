@@ -23,7 +23,6 @@ import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.UserService;
 import com.ash.drishti.identity.collab.CollabProperties;
 import com.ash.drishti.packs.PackRegistry;
-import com.ash.drishti.server.alerts.AlertEngine;
 import com.ash.drishti.server.collab.InboxHub;
 import com.ash.drishti.server.collab.InboxService;
 import com.ash.drishti.server.collab.Principals;
@@ -64,8 +63,8 @@ public class LoadsConfiguration {
     @Bean
     @SuppressWarnings("java:S107")
     public LoadService loadService(PackRegistry packs, LoadStore store, LoadsConfig.Overrides configs, LoadsProperties props, SourceRegistry sources,
-            SourceRouter router, ViewPipeline pipeline, AlertEngine alerts, LoadNotifier notifier, BusinessDates dates, AuditLog audit) {
-        return new LoadService(packs, store, configs, props, sources, router, pipeline, alerts, notifier, dates, audit, Clock.systemUTC());
+            SourceRouter router, ViewPipeline pipeline, LoadNotifier notifier, BusinessDates dates, AuditLog audit) {
+        return new LoadService(packs, store, configs, props, sources, router, pipeline, notifier, dates, audit, Clock.systemUTC());
     }
 
     @Bean(destroyMethod = "close")

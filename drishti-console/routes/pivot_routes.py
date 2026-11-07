@@ -181,7 +181,7 @@ async def function_get(request: Request, owner: str, name: str, version: str = "
 
 @router.post("/api/pivot/functions/{owner}/{ref}/{op}")
 async def function_op(request: Request, owner: str, ref: str, op: str):
-    if op not in ("submit", "approve", "revoke"):
+    if op not in ("submit", "revoke"):                  # approving is done in the one Approvals queue (/approvals/function/<owner:name@v>)
         return JSONResponse({"detail": "no such function action"}, status_code=404)
     return await _call(request, "POST", f"/functions/{owner}/{ref}/{op}", await _body(request))
 

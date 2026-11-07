@@ -187,13 +187,6 @@ public class PivotFunctionsController {
         return functions.submit(pivot.on(p), owner, nv[0], Integer.parseInt(nv[1]), str(body, "note")).toMap();
     }
 
-    @PostMapping("/functions/{owner}/{ref}/approve")
-    public Map<String, Object> approve(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @PathVariable String owner, @PathVariable String ref,
-            @RequestBody Map<String, Object> body) {
-        String[] nv = ref(ref);
-        return functions.approve(pivot.on(p), owner, nv[0], Integer.parseInt(nv[1]), str(body, "scope"), str(body, "reason")).toMap();
-    }
-
     @PostMapping("/functions/{owner}/{ref}/revoke")
     public Map<String, Object> revoke(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @PathVariable String owner, @PathVariable String ref,
             @RequestBody(required = false) Map<String, Object> body) {

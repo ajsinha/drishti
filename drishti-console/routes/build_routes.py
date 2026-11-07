@@ -28,7 +28,6 @@ from core import builder, controls, designs, partial, sutra_diff
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes.common import ident, render
-from routes.review_routes import pending_count
 
 router = APIRouter(prefix="/build", include_in_schema=False)
 LOG = logging.getLogger("drishti.console.build")
@@ -110,8 +109,8 @@ async def design_page(request: Request, id_: str, tab: str = "", sample: str = "
             design = await request.app.state.backend.designs("POST", f"/{id_}/samples", ident(request), {"pack": True})
         except BackendError as e:
             LOG.info("design %s: no pack sample for %s (%s)", id_, design.get("base"), e.code)
-    review, pending = await pending_count(request)
     settings = await request.app.state.backend.studio_settings(ident(request))
+    review = bool(settings.get("review"))
     try:
         binding = await request.app.state.backend.designs("GET", "/binding", ident(request))
     except BackendError:
@@ -122,7 +121,7 @@ async def design_page(request: Request, id_: str, tab: str = "", sample: str = "
             "tab": tab if tab in ("design", "yaml", "summary", "notes", "split") else "", "sample": sample, "canSave": bool(settings.get("save")), "review": review,
             "notice": notice[:300], "base": design.get("base") or "", "notes": design.get("notes") or "", "about": design.get("about") or "", "form": design.get("form") or ""}
     return render(request, "build/design.html", design=design, init=init, error=None, screen="build", limits=request.app.state.builder_limits.as_dict(),
-                  examples=request.app.state.examples.names(), pending=pending)
+                  examples=request.app.state.examples.names())
 
 
 # ---- designs -------------------------------------------------------------------------------------------------------------

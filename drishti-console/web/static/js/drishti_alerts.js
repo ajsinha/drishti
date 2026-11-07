@@ -28,7 +28,7 @@
   document.body.appendChild(tray);
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function show() { badge.textContent = String(count); badge.hidden = count <= 0; }
-  window.Drishti.Channel.subscribe('alerts', { hello: onHello, alert: onAlert, notice: onNotice, switches: onSwitches, edit: onEdit });   // on the tab's one live connection (drishti_channel.js)
+  window.Drishti.Channel.subscribe('alerts', { hello: onHello, notice: onNotice, switches: onSwitches, edit: onEdit });   // on the tab's one live connection (drishti_channel.js)
   // the server's first event on the feed: from here on alerts, notices and write-back edits reach this tab (the bell says so to tests and tools)
   function onHello() { bell.setAttribute('data-alerts-live', ''); }
   fetch('/api/inbox/count', { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
@@ -115,21 +115,13 @@
   }
   function onNotice(n) {
     count++; show();
-    var alertPath = n.type === 'alert' && typeof n.id === 'string' && n.id.charAt(0) === '/' && n.id.charAt(1) !== '/' ? n.id : '';       // an alert on a number: the path it opens
+    var alertPath = (n.type === 'alert' || n.type === 'notice') && typeof n.id === 'string' && n.id.charAt(0) === '/' && n.id.charAt(1) !== '/' ? n.id : '';       // an alert on a number: the path it opens
     var run = n.type === 'bi-run' ? String(n.entityId || n.id || '') : '';                 // a BI run finished (BI_DESIGN.md 3.5): it opens where its result is drawn
     var href = run ? '/bi/run/' + encodeURIComponent(run) : alertPath ? alertPath : n.shareId ? '/share/' + encodeURIComponent(n.shareId) : (n.access && n.kind && n.id ? '/v/' + encodeURIComponent(n.kind) + '/' + encodeURIComponent(n.id) : '/inbox');
     var label = run ? (/^Run\b/.test(n.title || '') ? '' : 'Run') : n.type || 'notice';       // "Run finished: …" needs no second "Run"
     toast('toast-a sev-info notice', href, (label ? '<b>' + esc(label) + '</b> ' : '') + esc(n.title) + (n.excerpt ? ' <span class="toast-x">\u201c' + esc(n.excerpt) + '\u201d</span>' : ''));
     if (window.Notification && Notification.permission === 'granted') {
       try { new Notification((document.body.getAttribute('data-product') || document.title) + ' \u00b7 ' + (n.type || 'notice'), { body: n.title }); } catch (err) { /* not available */ }
-    }
-  }
-  function onAlert(a) {
-    count++; show();
-    toast('toast-a sev-' + a.severity, '/v/' + encodeURIComponent(a.kind) + '/' + encodeURIComponent(a.id),
-      '<b>' + esc(a.severity) + '</b> <span class="mono">' + esc(a.id) + '</span> ' + esc(a.message));
-    if (window.Notification && Notification.permission === 'granted') {
-      try { new Notification((document.body.getAttribute('data-product') || document.title) + ' · ' + a.severity, { body: a.id + ': ' + a.message }); } catch (err) { /* not available */ }
     }
   }
   document.addEventListener('keydown', function (e) {           // Alt+I: the inbox (ignored while typing in a field)

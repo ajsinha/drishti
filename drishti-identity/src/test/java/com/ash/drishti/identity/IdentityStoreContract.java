@@ -294,28 +294,6 @@ abstract class IdentityStoreContract {
     }
 
     @Test
-    void firedAlertsAreKeptNewestFirstAndPrunedPerUser() {
-        AlertHistory h = bean(AlertHistory.class);
-        Instant t = Instant.parse("2026-09-30T14:00:00Z");
-        AlertHistory.Alert first = h.record(t, "al", "big-mtm", "trade", "T-1", "warn", "MTM above 1m", 7);
-        AlertHistory.Alert second = h.record(t.plusSeconds(1), "al", "big-mtm", "trade", "T-2", "critical", "MTM above 5m", 8);
-        assertThat(second.seq()).isGreaterThan(first.seq());
-        assertThat(h.recent("al", 10)).extracting(AlertHistory.Alert::id).containsExactly("T-2", "T-1");
-        assertThat(h.recent("al", 1).get(0).severity()).isEqualTo("critical");
-        assertThat(h.recent("nobody", 10)).isEmpty();
-
-        for (int i = 0; i < 120; i++) {
-            h.record(t.plusSeconds(10 + i), "bo", "r", "trade", "T-" + i, "info", "m" + i, i);
-        }
-        List<AlertHistory.Alert> kept = h.recent("bo", 1000);
-        assertThat(kept.size()).isBetween(60, 60 + 49);                           // pruned to the newest 60 every 50 inserts
-        assertThat(kept.get(0).message()).isEqualTo("m119");
-        h.forget("bo");
-        assertThat(h.recent("bo", 10)).isEmpty();
-        assertThat(h.recent("al", 10)).hasSize(2);
-    }
-
-    @Test
     void apiTokensKeepOnlyAHashAndStopWhenRevoked() {
         ApiTokenStore t = bean(ApiTokenStore.class);
         ApiTokenStore.Created c = t.create("tess", "Notebook", 7);

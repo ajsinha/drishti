@@ -43,7 +43,7 @@
         <td class="mono">{{ d.kind }}</td>
         <td>{{ d.samples | length }}{% if d.samples | selectattr('synthetic') | list | length %} <span class="bs-role" title="Generated from a schema">synthetic</span>{% endif %}</td>
         <td>{% if d.rev %}rev {{ d.rev }}{% else %}none yet{% endif %} ·
-          <span data-status-cell="{{ d.status }}">{% if d.status.startswith('proposed(') %}proposed <a class="lnk" href="/build/reviews/{{ d.status[9:-1] }}">{{ d.status[9:-1] }}</a>{% elif d.status.startswith('live(') %}<b>live {{ d.status[5:-1] }}</b>{% else %}{{ d.status }}{% endif %}</span>
+          <span data-status-cell="{{ d.status }}">{% if d.status.startswith('proposed(') %}proposed <a class="lnk" href="/approvals/sutra/{{ d.status[9:-1] }}">{{ d.status[9:-1] }}</a>{% elif d.status.startswith('live(') %}<b>live {{ d.status[5:-1] }}</b>{% else %}{{ d.status }}{% endif %}</span>
           {% if d.boundFile %}<span class="bs-role" title="Saving writes this file">file {{ d.boundFile }}</span>{% endif %}
           {% if d.shared %}<span class="bs-role" title="A read-only link is active">shared</span>{% endif %}</td>
         <td><time data-ms="{{ d.updated }}"></time></td>

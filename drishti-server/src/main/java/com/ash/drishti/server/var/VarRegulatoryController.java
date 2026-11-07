@@ -48,7 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
  *   GET  /api/v1/var/reports                                    the report definitions and their newest runs
  *   POST /api/v1/var/reports/{report}/runs?period=              generate and freeze the next run of a period
  *   GET  /api/v1/var/reports/{report}/runs/{period}?version=    a run with its checks, lineage and sign-off record
- *   POST /api/v1/var/reports/{report}/runs/{period}/signoff     {version, action: approve|return|narrative, step, comment, narrative}
+ *   POST /api/v1/var/reports/{report}/runs/{period}/narrative   {version, narrative}: the maker's text (the sign-off is in /api/v1/approvals)
  *   GET  /api/v1/var/reports/{report}/runs/{period}/file?format=xlsx|csv|pdf&amp;version=&amp;draft=
  *   POST /api/v1/var/official/synthetic-history?days=           a demo server's synthetic official history (administrators)
  * </pre>
@@ -191,16 +191,18 @@ public class VarRegulatoryController {
         return signoff.view(reports.run(report, period, version));
     }
 
-    @PostMapping("/reports/{report}/runs/{period}/signoff")
-    public Map<String, Object> sign(@PathVariable String report, @PathVariable String period, @RequestBody Map<String, Object> body,
+    /**
+     * The maker's narrative, written before the maker signs. The sign-off itself (approve a step, send the run back) is made in the one
+     * Approvals queue ({@code /api/v1/approvals}, kind {@code var-report}).
+     */
+    @PostMapping("/reports/{report}/runs/{period}/narrative")
+    public Map<String, Object> narrative(@PathVariable String report, @PathVariable String period, @RequestBody Map<String, Object> body,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         seesAll(p);
         Long version = body.get("version") instanceof Number n ? n.longValue() : null;
         Map<String, Object> run = reports.run(report, period, version);
-        Map<String, Object> rec = signoff.act(run, p.user(), str(body.get("action")), str(body.get("step")), str(body.get("comment")),
-                str(body.get("narrative")));
-        svc.audit(p.user(), "var-report-signoff", report, "period=" + period + " version=" + run.get("version") + " action=" + body.get("action")
-                + " state=" + rec.get("state"));
+        Map<String, Object> rec = signoff.act(run, p.user(), "narrative", null, null, str(body.get("narrative")));
+        svc.audit(p.user(), "var-report-signoff", report, "period=" + period + " version=" + run.get("version") + " action=narrative state=" + rec.get("state"));
         return signoff.view(run);
     }
 

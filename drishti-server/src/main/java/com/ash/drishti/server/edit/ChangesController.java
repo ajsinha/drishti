@@ -90,24 +90,6 @@ public class ChangesController {
         return edits.get(p, id);
     }
 
-    @PostMapping("/changes/{id}/approve")
-    public Map<String, Object> approve(@PathVariable String id, @RequestBody(required = false) JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        requireOn();
-        return edits.approve(p, id, body == null ? null : body.path("note").asText(null));
-    }
-
-    @PostMapping("/changes/{id}/reject")
-    public Map<String, Object> reject(@PathVariable String id, @RequestBody(required = false) JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        requireOn();
-        return edits.reject(p, id, body == null ? null : body.path("reason").asText(null));
-    }
-
-    @PostMapping("/changes/{id}/withdraw")
-    public Map<String, Object> withdraw(@PathVariable String id, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        requireOn();
-        return edits.withdraw(p, id);
-    }
-
     /** A record's changes from the edit log, newest first, and its version (what a form opens on). */
     @GetMapping("/entities/{kind}/{id}/history")
     public Map<String, Object> history(@PathVariable String kind, @PathVariable String id, @RequestParam(defaultValue = "50") int limit,

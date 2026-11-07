@@ -46,7 +46,7 @@
         if (r.ok && r.body.proposal) {
           var p = r.body.proposal;
           say('Submitted for review as ' + p.id + ': ' + p.name + ' v' + p.version + ', with the check matrix, sample names and notes. An approver makes it live.');
-          var a = WB.el('a', 'lnk', ' Open the review', { href: '/build/reviews/' + encodeURIComponent(p.id) });
+          var a = WB.el('a', 'lnk', ' Open the review', { href: '/approvals/sutra/' + encodeURIComponent(p.id) });
           document.querySelector('[data-say]').appendChild(a);
           return true;
         }

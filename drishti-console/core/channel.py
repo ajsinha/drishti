@@ -130,7 +130,7 @@ class ChannelSession:
             more = {"controls": ctl} if ctl else {}
             return self.backend.stream(kind, id_, self.me, opened=responses, **more), ("vm" if sub.startswith("vm:") else True)
         if sub == "alerts":
-            return self.backend.sse("/me/alerts/stream", self.me, opened=responses), False
+            return self.backend.sse("/alerts/stream", self.me, opened=responses), False
         if sub.startswith("bilive:"):                        # Rupaka phase 5: a report's live tables changed (tick), how they are doing (status); no data
             return self.backend.sse(f"/bi/reports/{quote(sub[7:], safe='')}/live", self.me, opened=responses), False
         if sub.startswith("mq:") and len(sub) > 3:              # wave B: a standing query's pushed answers (answer) and its state (status)
