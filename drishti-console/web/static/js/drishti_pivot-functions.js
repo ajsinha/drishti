@@ -104,14 +104,23 @@
     }
   }
 
+  // the two dates of "Why did it move?": drishti-inputs' date pickers (typed T-1, ME or 6 Nov 2026, or a calendar), any day of the source
+  var dates = {from: null, to: null};
+  (function () {
+    var I = window.Drishti.elements && window.Drishti.elements.inputs;
+    if (!I) { return; }
+    dates.from = new I.DatePicker($("[data-pf-from-date]"), {label: "First date", businessOnly: false, shortcuts: true, placeholder: "the view's date"});
+    dates.to = new I.DatePicker($("[data-pf-to-date]"), {label: "Second date", businessOnly: false, shortcuts: true, placeholder: "the same date"});
+  })();
+
   function explain() {
     var v = S.view();
     if (!v) { return fail(new Error("build a view first")); }
     var body = {view: v, from: coords($("[data-pf-from]").value), by: $("[data-pf-by]").value, order: $("[data-pf-order]").value};
     var to = $("[data-pf-to]").value.trim();
     if (to) { body.to = coords(to); }
-    var fd = $("[data-pf-from-date]").value.trim();
-    var td = $("[data-pf-to-date]").value.trim();
+    var fd = dates.from ? dates.from.getValue() || "" : "";
+    var td = dates.to ? dates.to.getValue() || "" : "";
     if (fd) { body.fromDate = fd; }
     if (td) { body.toDate = td; }
     call("POST", "/explain", body).then(drawWaterfall).catch(fail);

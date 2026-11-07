@@ -26,7 +26,7 @@
 {% block title %}{% if cube %}{{ cube.title }}{% else %}Pivot{% if source %} · {{ source }}{% endif %}{% endif %} · {{ PRODUCT }}{% endblock %}
 {% block screen %}pivot{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pivot-screen.css?v={{ ASSET_V }}">{% if lens == 'mr' %}<link rel="stylesheet" href="/static/css/drishti_mr-lens.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/elements/drishti-grid/drishti_grid.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/elements/drishti-inputs/drishti_inputs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_pivot-screen.css?v={{ ASSET_V }}">{% if lens == 'mr' %}<link rel="stylesheet" href="/static/css/drishti_mr-lens.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="pv{% if lens == 'mr' %} mr{% endif %}" data-pivot-screen{% if cube %} data-preset-name="{{ cube.name }}"{% endif %} data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}"{% if lens %} data-lens="{{ lens }}"{% endif %}{% if preset %} data-preset="{{ preset }}"{% endif %}>
@@ -102,8 +102,8 @@
     <div class="pf-form">
       <label>First cell <input class="pv-input" data-pf-from placeholder="DESK=EMEA (blank: the grand total)" aria-label="First cell"></label>
       <label>Second cell <input class="pv-input" data-pf-to placeholder="the same cell" aria-label="Second cell"></label>
-      <label>First date <input class="pv-input" data-pf-from-date placeholder="YYYY-MM-DD" aria-label="First date"></label>
-      <label>Second date <input class="pv-input" data-pf-to-date placeholder="YYYY-MM-DD" aria-label="Second date"></label>
+      <div class="pf-date"><span class="pv-sub">First date</span><span data-pf-from-date></span></div>
+      <div class="pf-date"><span class="pv-sub">Second date</span><span data-pf-to-date></span></div>
       <label>Split by <select data-pf-by aria-label="Split the difference by"></select></label>
       <label>Order <select data-pf-order aria-label="Order of the steps"><option value="member">by member</option><option value="size">largest first</option></select></label>
       <button type="button" class="pv-btn primary" data-pf-explain>Explain</button>
@@ -150,4 +150,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-grid/drishti_grid.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-switches.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-functions.js?v={{ ASSET_V }}"></script>{% if lens == 'mr' %}<script src="/static/js/drishti_mr-lens.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-grid/drishti_grid.js?v={{ ASSET_V }}"></script><script src="/static/elements/drishti-inputs/drishti_inputs.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-switches.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_pivot-functions.js?v={{ ASSET_V }}"></script>{% if lens == 'mr' %}<script src="/static/js/drishti_mr-lens.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}

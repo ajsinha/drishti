@@ -71,6 +71,7 @@
 .pf-form { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: flex-end; }
 .pf-form label { display: flex; flex-direction: column; gap: 2px; font-size: 12px; }
 .pf-form .pf-wide { flex-basis: 100%; }
+.pf-date { display: flex; flex-direction: column; gap: 2px; font-size: 12px; min-width: 11rem; }
 .pf-code { font-family: monospace; width: 100%; min-height: 4em; }
 .pf-words { font-size: 13px; margin: 8px 0; }
 .pf-waterfall { display: grid; grid-template-columns: minmax(8em, 16em) 6em 1fr 9em; gap: 2px 8px; font-size: 12px; align-items: center; }
