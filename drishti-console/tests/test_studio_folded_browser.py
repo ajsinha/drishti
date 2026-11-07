@@ -39,7 +39,7 @@ def say(page):
 
 
 def test_an_old_studio_address_lands_on_the_split_view_of_a_new_design(live_console, page):
-    page.goto(f"{live_console}/studio")
+    page.goto(f"{live_console}/studio?example=all-panels-showcase")   # a bare /studio is the Build home now (2.9.11.e)
     page.locator("[data-start-go]").click()                  # opening the address only asks; the button starts the design
     page.locator("[data-workbench]").wait_for()
     assert re.search(r"/build/d/\w+\?tab=split", page.url)

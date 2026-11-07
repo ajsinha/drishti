@@ -22,7 +22,7 @@
 {% block title %}{{ PRODUCT }}{% endblock %}
 {% block screen %}home{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_risk-landing.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_risk-landing.css?v={{ ASSET_V }}">{% include "terminal/_risk_elements_css.html" %}{% endblock %}
 {% block content %}
 {% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
 {{ back(request) }}
@@ -87,13 +87,11 @@
     {% else %}
     <section class="rl-card" aria-labelledby="rlDeskH"{{ part(PP, 'card-1') }}>
       <h2 id="rlDeskH">VaR by desk<small>limit use, worst first</small></h2>
-      <table class="rl-table"><thead><tr><th scope="col">Desk</th><th scope="col" class="n">VaR</th><th scope="col">Limit use</th></tr></thead>
-        <tbody data-rl-desks><tr><td colspan="3" class="rl-muted">…</td></tr></tbody></table>
+      <div class="rl-gridhost" data-rl-desks><p class="rl-muted">…</p></div>
     </section>
     <section class="rl-card" aria-labelledby="rlCptyH"{{ part(PP, 'table') }}>
       <h2 id="rlCptyH">Exposure by counterparty<small>PFE peak against limit</small></h2>
-      <table class="rl-table"><thead><tr><th scope="col">Counterparty</th><th scope="col" class="n">EPE</th><th scope="col">Limit use</th></tr></thead>
-        <tbody data-rl-cptys><tr><td colspan="3" class="rl-muted">…</td></tr></tbody></table>
+      <div class="rl-gridhost" data-rl-cptys><p class="rl-muted">…</p></div>
     </section>
     {% endif %}
   </div>
@@ -107,4 +105,4 @@
   {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_risk-landing.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% include "terminal/_risk_elements.html" %}<script src="/static/js/drishti_risk-landing.js?v={{ ASSET_V }}"></script>{% endblock %}

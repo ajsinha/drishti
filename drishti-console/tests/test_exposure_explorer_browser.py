@@ -118,11 +118,11 @@ def test_from_the_bank_to_a_trade_in_place_and_back(stack, browser):
     assert pg.locator('.xx-tree .xx-row[data-scope^="LE:"]').count() >= 1
     # the counterparty board, sorted by peak PFE
     assert pg.get_attribute("[data-exposure]", "data-tab-painted") == "board"
-    wait(pg, "document.querySelectorAll('[data-xx-pane] tbody tr[data-scope^=\"CPTY:\"]').length > 1")
+    wait(pg, "document.querySelectorAll('[data-xx-pane] drishti-grid .dg-row[data-scope^=\"CPTY:\"]').length > 1")    # drishti-grid, terminal layout
     assert pg.locator(".xx-tile").count() == 5
     bank_peak = head(pg, "peakPfe")
 
-    pg.locator(f'[data-xx-pane] tbody tr[data-scope="{CPTY}"]').click()
+    pg.locator(f'[data-xx-pane] drishti-grid .dg-row[data-scope="{CPTY}"] .dg-cell').first.click()
     painted(pg, CPTY)
     crumb = pg.locator("[data-xx-crumb]").text_content()
     assert "Bank" in crumb and "Back" in crumb
@@ -132,11 +132,11 @@ def test_from_the_bank_to_a_trade_in_place_and_back(stack, browser):
 
     # Netting sets: their contributions add up to the counterparty's peak; a click opens the set's workbench
     assert pg.get_attribute("[data-exposure]", "data-tab-painted") == "sets"
-    rows = pg.locator('[data-xx-pane] tbody tr[data-scope^="NSET:"]')
+    rows = pg.locator('[data-xx-pane] drishti-grid .dg-row[data-scope^="NSET:"]')
     assert rows.count() >= 2
-    total = pg.evaluate("Number(document.querySelector('[data-xx-pane] tr.xx-total td:nth-child(6)').textContent.replace(/[^0-9.\\-]/g, ''))")
+    total = pg.evaluate("Number(document.querySelector('[data-xx-pane] .dg-row.xx-total .dg-cell[aria-colindex=\"6\"]').textContent.replace(/[^0-9.\\-]/g, ''))")
     assert total > 0
-    pg.locator(f'[data-xx-pane] tbody tr[data-scope="{SET}"]').click()
+    pg.locator(f'[data-xx-pane] drishti-grid .dg-row[data-scope="{SET}"] .dg-cell').first.click()
     painted(pg, SET)
     assert pg.get_attribute("[data-exposure]", "data-tab-painted") == "coll"
     pane = pg.locator("[data-xx-pane]").text_content()
@@ -149,10 +149,10 @@ def test_from_the_bank_to_a_trade_in_place_and_back(stack, browser):
 
     # Trades: all the set's trades by EE contribution (read from the lake); a row opens the trade in its netting set
     tab(pg, "trades")
-    wait(pg, "document.querySelectorAll('[data-xx-pane] tbody tr[data-scope^=\"TRD:\"]').length > 0")
-    first = pg.locator('[data-xx-pane] tbody tr[data-scope^="TRD:"]').first
+    wait(pg, "document.querySelectorAll('[data-xx-pane] drishti-grid .dg-row[data-scope^=\"TRD:\"]').length > 0")
+    first = pg.locator('[data-xx-pane] drishti-grid .dg-row[data-scope^="TRD:"]').first
     trd = first.get_attribute("data-scope")
-    first.locator("td").nth(1).click()                                       # not the id (it links to the trade's page)
+    first.locator(".dg-cell").nth(1).click()                                       # not the id (it links to the trade's page)
     painted(pg, trd)
     assert pg.get_attribute("[data-exposure]", "data-tab-painted") == "inset"
     assert pg.locator('.xx-tab[data-tab="inset"]').text_content() == "In its netting set"
@@ -171,11 +171,16 @@ def test_from_the_bank_to_a_trade_in_place_and_back(stack, browser):
 def test_by_tenor_and_the_switches_change_the_figures(stack, browser):
     pg = open_exp(browser, str(stack), "/exposure?scope=" + SET)
     painted(pg, SET)
+    # the profile is drishti-risk's exposure profile: EEPE is the server's figure, drawn as given (never computed in the page)
+    wait(pg, "(function () { var c = document.querySelector('[data-xx-chart] drishti-chart'); return c && c.chart && c.chart.built; })()", PAINT_S)
+    figures = pg.evaluate("document.querySelector('[data-xx-chart] drishti-chart').chart.built.figures")
+    assert figures["eepe"] == head(pg, "eepe") and figures["computedHere"] is False
     tab(pg, "tenor")
     tenors = len(head(pg, "profile"))
     assert tenors >= 10
-    assert pg.locator("[data-xx-pane] thead th").count() == tenors + 1
-    assert pg.locator("[data-xx-pane] tbody tr").count() == 6               # EE, ENE, EEE, PFE q, PFE 99%, EE uncollateralised
+    grid = "document.querySelector('[data-xx-pane] drishti-grid').grid.model"
+    assert pg.evaluate(grid + ".shownColumns().length") == tenors + 1
+    assert pg.evaluate(grid + ".rowCount()") == 6                         # EE, ENE, EEE, PFE q, PFE 99%, EE uncollateralised
     p95 = head(pg, "peakPfe")
 
     pg.locator('[data-xx-q="0.99"]').click()
@@ -209,7 +214,7 @@ def test_the_pre_deal_what_if_by_the_proxy_and_by_the_paths(stack, browser):
     wait(pg, "document.querySelector('[data-exposure]').dataset.whatif === 'addon'", PAINT_S)
     out = pg.locator("[data-xx-whatif-out]").text_content()
     assert "Peak PFE after" in out and "proxy" in out
-    assert pg.locator("[data-xx-whatif-out] tbody tr").count() == len(head(pg, "profile"))
+    assert pg.evaluate("document.querySelector('[data-xx-whatif-out] drishti-grid').grid.model.rowCount()") == len(head(pg, "profile"))
 
     # the exact method: the candidate's paths netted and collateralised with the set by the Python exposure engine (compute is on)
     pg.evaluate("delete document.querySelector('[data-exposure]').dataset.whatif")

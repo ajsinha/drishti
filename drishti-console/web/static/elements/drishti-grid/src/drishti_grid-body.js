@@ -20,6 +20,8 @@
    live change. Pointer work: click and Shift+click, drag a range, the context menu, header sort, the column menu, a group's toggle,
    resize and autosize by the handle, the row checkboxes. */
 import { h } from '../../drishti-core/src/drishti_index.js';
+import { GridPointer } from './drishti_grid-pointer.js';
+import { getValue, formatValue } from './drishti_columns.js';
 import { headerSpans, pivotColumnLabels, markGroups, isTotalCell, nonAdditiveNote, cfBackground, figureRange, ruleFor, cellLook } from './drishti_grid-ui.js';
 
 const CF_SCAN = 100000;
@@ -33,11 +35,12 @@ const DECO_STYLES = ['color', 'background-color', 'font-weight', 'font-style'];
 /** @private class names a host or the server gave, kept to plain words (no markup, no selectors) */
 function safeClasses(text) { return String(text).split(/\s+/).filter((t) => /^[A-Za-z][\w-]*$/.test(t)).join(' '); }
 
-export class GridBody {
+export class GridBody extends GridPointer {
   /**
    * @param {Object} view the Grid (drishti_grid-view.js): its model, its display columns, its menus and its Explain
    */
   constructor(view) {
+    super();
     this.view = view;
     this.model = view.model;
     const doc = this.doc = view.doc;
@@ -91,98 +94,8 @@ export class GridBody {
   /** @private the cell (r, display entry) under an event */
   cellOf(e) {
     const c = e.target.closest ? e.target.closest('.dg-cell') : null;
-    if (!c || !this.scroller.contains(c)) { return null; }
+    if (!c || c.dataset.pinned !== undefined || !this.scroller.contains(c)) { return null; }
     return { el: c, r: +c.dataset.r, c: +c.dataset.c };
-  }
-
-  /** @private */
-  down(e) {
-    if (e.button !== 0) { return; }
-    const t = e.target;
-    if (t.closest('.dg-tw, input, button, select, .dg-resize, .dg-hcell, .dg-editor')) { return; }
-    const x = this.cellOf(e);
-    if (!x) { return; }
-    e.preventDefault();
-    this.scroller.focus({ preventScroll: true });
-    this.model.cellClicked(x.r, x.c, { shift: e.shiftKey, ctrl: e.ctrlKey || e.metaKey });
-    this.drag = { r: x.r, c: x.c };
-    this.view.afterFocus(false);
-  }
-
-  /** @private */
-  over(e) {
-    const x = this.cellOf(e);
-    if (this.drag && x && (x.r !== this.drag.r || x.c !== this.drag.c)) {
-      this.drag = { r: x.r, c: x.c };
-      this.model.selection.extendRange(x.r, x.c);
-    }
-    if (x && x.el.classList.contains('dg-nadd') && !this.drag) {
-      const col = this.model.shownColumns()[x.c];
-      this.view.notes.showTip(nonAdditiveNote(col.measure || col.header, x.el.textContent), x.el);
-    } else { this.view.notes.hideTip(); }
-  }
-
-  /** @private */
-  click(e) {
-    const t = e.target, v = this.view, m = this.model;
-    const tw = t.closest('.dg-tw');
-    if (tw) { e.stopPropagation(); m.toggleRow(+tw.dataset.r); v.announceRow(+tw.dataset.r); return; }
-    if (t.matches('input.dg-check')) {
-      const r = +t.dataset.r;
-      if (t.dataset.all !== undefined) {
-        const ids = [];
-        if (t.checked && m.pivotMode) { for (let i = 0; i < m.rowCount(); i++) { const id = m.idAt(i); if (id !== null) { ids.push(id); } } }
-        if (t.checked && !m.pivotMode) { m.selectAll(); } else { m.selection.selectAll(ids); }
-      }
-      else { m.selection.clickRow(r, (i) => m.idAt(i), { ctrl: true }); }
-      return;
-    }
-    const ct = t.closest('.dg-ctoggle');
-    if (ct) { const sp = this.groupAt(ct); if (sp) { m.togglePivotNode('columns', sp.group.path); v.say((sp.group.open ? 'Collapsed ' : 'Expanded ') + sp.label); } return; }
-    const menu = t.closest('.dg-hmenu');
-    if (menu) { e.stopPropagation(); v.openColumnMenu(+menu.dataset.c, menu); return; }
-    if (t.closest('.dg-resize')) { return; }
-    const hc = t.closest('.dg-hcell.dg-leaf');
-    if (hc && !this.resized) { v.sortColumn(+hc.dataset.c, e.shiftKey); }
-    this.resized = false;
-  }
-
-  /** @private */
-  dbl(e) {
-    const rz = e.target.closest('.dg-resize');
-    if (rz) { this.view.autosize(+rz.dataset.c); return; }
-    const x = this.cellOf(e);
-    if (!x) { return; }
-    this.model.cellDoubleClicked(x.r, x.c);
-    if (this.model.editing.canEdit(x.r, x.c)) { this.view.startEditing(x.r, x.c); return; }
-    if (this.model.navigator.grid.isGroup(x.r)) { this.model.toggleRow(x.r); this.view.announceRow(x.r); }
-  }
-
-  /** @private */
-  context(e) {
-    const x = this.cellOf(e);
-    if (!x) { return; }
-    e.preventDefault();
-    if (!this.model.selection.inRange(x.r, x.c)) { this.model.cellClicked(x.r, x.c, {}); this.view.afterFocus(false); }
-    this.view.openCellMenu(x.r, x.c, { x: e.clientX, y: e.clientY });
-  }
-
-  /** @private a column's resize by its handle */
-  resizeStart(e, d) {
-    e.preventDefault();
-    e.stopPropagation();
-    const x0 = e.clientX, w0 = d.width, win = this.doc.defaultView;
-    const move = (ev) => { this.view.setColumnWidth(d, Math.max(40, w0 + ev.clientX - x0)); this.resized = true; };
-    const up = () => { win.removeEventListener('pointermove', move); win.removeEventListener('pointerup', up); };
-    win.addEventListener('pointermove', move);
-    win.addEventListener('pointerup', up);
-  }
-
-  /** @private the span of a column-group toggle */
-  groupAt(btn) {
-    const lv = +btn.dataset.level, key = btn.dataset.key;
-    const row = this.spans && this.spans[lv];
-    return row ? row.find((s) => s.key === key && s.group) || null : null;
   }
 
   // ---- drawing ---------------------------------------------------------------------------------------------------------------------------
@@ -219,6 +132,18 @@ export class GridBody {
   }
 
   /**
+   * @private the option fitRows: the host as tall as its rows (up to fitRows of them, then it scrolls), the chrome kept; a small table
+   * on a screen takes the room it needs and no more
+   */
+  fit(headH, rh, W) {
+    const host = this.view.host, sc = this.scroller;
+    const n = Math.max(1, Math.min(this.model.rowCount(), this.view.o.fitRows));
+    const bar = W > sc.clientWidth + 1 ? sc.offsetHeight - sc.clientHeight || 12 : 0;
+    const want = Math.ceil(host.offsetHeight - sc.clientHeight + headH + n * rh + bar + 2);
+    if (want > 0 && Math.abs(host.offsetHeight - want) > 1) { host.style.height = want + 'px'; }
+  }
+
+  /**
    * Draws the headings and the rows in view.
    * @returns {void}
    */
@@ -228,8 +153,10 @@ export class GridBody {
     const win = doc.defaultView, touch = !!(win && win.matchMedia && win.matchMedia('(pointer: coarse)').matches);
     const rh = vp.rowHeight, hrh = touch ? Math.max(44, rh + 4) : rh + 4;   // a heading is a target a finger can hit on a touch screen (44 px)
     const sp = this.paneSpans(disp);
-    const headH = sp.levels * hrh;
+    const pinned = v.o.pinnedTopRows || [];
+    const headH = sp.levels * hrh + pinned.length * rh;
     const W = disp.leftW + disp.centerW + disp.rightW;
+    if (v.o.fitRows) { this.fit(headH, rh, W); }
     vp.resize(Math.max(1, this.scroller.clientWidth), Math.max(rh, this.scroller.clientHeight - headH));
     vp.setRowCount(m.rowCount());
     vp.scrollTo(this.scroller.scrollTop, this.scroller.scrollLeft);
@@ -255,6 +182,8 @@ export class GridBody {
       this.headPane(row, sp.out.right[lv] || [], disp, 'right', lv, leaf);
       this.head.appendChild(row);
     }
+    // rows pinned under the headings (pinnedTopRows: a spreadsheet's header rows), kept in view as the rows scroll
+    pinned.forEach((data, k) => this.head.appendChild(this.pinnedRowEl(data, k, disp, centerShown, lead, trail, rh)));
     // rows
     this.rows.textContent = '';
     this.rows.style.top = rows.offset + 'px';
@@ -334,6 +263,34 @@ export class GridBody {
     cell.appendChild(box);
   }
 
+  /** @private a pinned top row: its cells drawn from its data by each column's format, class and renderer (not part of the rows) */
+  pinnedRowEl(data, k, disp, centerShown, lead, trail, rh) {
+    const doc = this.doc;
+    const row = h(doc, 'div', { cls: 'dg-row dg-pinned-top', attrs: { role: 'row' }, data: { pinned: String(k) }, style: { height: rh + 'px' } });
+    const cellOf = (d) => {
+      const col = d.col, value = getValue(data, col), text = formatValue(value, col, data);
+      const style = { width: d.width + 'px' };
+      if (d.pane === 'left') { style.left = disp.leftOffset[d.i] + 'px'; }
+      if (d.pane === 'right') { style.right = disp.rightOffset[d.i] + 'px'; }
+      const extra = col.cellClass ? col.cellClass(value, data) : null;
+      const cell = h(doc, 'div', { cls: 'dg-cell dg-' + d.pane + (col.type === 'number' ? ' dg-num' : '') + (extra ? ' ' + extra : ''),
+        attrs: { role: 'gridcell', 'aria-colindex': String(d.i + 1) }, data: { pinned: String(k), c: String(d.i) }, style: style });
+      const drawn = col.cellRenderer ? col.cellRenderer({ value: value, text: text, row: data, doc: doc, pinned: k }) : null;
+      cell.appendChild(drawn !== null && drawn !== undefined && drawn !== '' ? (typeof drawn === 'string' ? h(doc, 'span', { cls: 'dg-text', text: drawn }) : drawn) : h(doc, 'span', { cls: 'dg-text', text: text }));
+      return cell;
+    };
+    disp.left.forEach((d) => row.appendChild(cellOf(d)));
+    if (lead) { row.appendChild(h(doc, 'div', { cls: 'dg-gap', attrs: { role: 'presentation' }, style: { width: lead + 'px' } })); }
+    centerShown.forEach((d) => row.appendChild(cellOf(d)));
+    if (trail > 0) { row.appendChild(h(doc, 'div', { cls: 'dg-gap', attrs: { role: 'presentation' }, style: { width: trail + 'px' } })); }
+    disp.right.forEach((d) => row.appendChild(cellOf(d)));
+    row.addEventListener('pointerdown', (e) => {
+      const c = e.target.closest('.dg-cell');
+      if (c) { this.model.live.emit('pinnedCellClicked', { pinned: k, col: +c.dataset.c, columnId: this.model.shownColumns()[+c.dataset.c].id, data: data }); }
+    });
+    return row;
+  }
+
   /** @private a row's element */
   rowEl(r, x, disp, centerShown, lead, trail, focus, flash, levels) {
     const doc = this.doc, m = this.model;
@@ -347,6 +304,13 @@ export class GridBody {
     const row = h(doc, 'div', { cls: cls, attrs: { role: 'row', 'aria-rowindex': String(r + levels + 1), 'aria-selected': id !== null ? String(selected) : null,
       'aria-level': m.pivotMode || x.kind === 'group' || x.tree || x.depth ? String((x.depth || 0) + 1) : null, 'aria-expanded': expandable ? String(expanded) : null },
     style: { height: m.viewport.rowHeight + 'px' } });
+    const o = this.view.o;
+    if (x.row && (x.kind === 'leaf' || x.tree) && (o.getRowClass || o.getRowData)) {
+      // a host's class and data-* attributes for a leaf's row (a row it highlights; the key a row stands for)
+      const rc = o.getRowClass ? o.getRowClass(x.row) : null, rd = o.getRowData ? o.getRowData(x.row) : null;
+      if (rc) { row.className += ' ' + rc; }
+      if (rd) { Object.keys(rd).forEach((k) => { if (rd[k] !== null && rd[k] !== undefined) { row.dataset[k] = String(rd[k]); } }); }
+    }
     const rowKey = e ? 'p:' + e.key : x.kind === 'group' ? 'g:' + (x.path || x.keys || []).join('\u001f') : 'l:' + (x.id !== undefined ? x.id : r);
     const first = disp.all[0];
     const add = (d) => row.appendChild(this.cellEl(r, x, d, { kind: kind, expandable: expandable, expanded: expanded, first: d === first, focus: focus, flash: flash, rowKey: rowKey, selected: selected }, disp));
@@ -398,7 +362,7 @@ export class GridBody {
     }
     const focused = k.focus && k.focus.row === r && k.focus.col === c;
     if (focused) { cls += ' dg-focus'; }
-    if ((col.cellClass || col.cellStyle) && !loading && (x.kind === 'leaf' || x.kind === 'group')) {
+    if ((col.cellClass || col.cellStyle) && !loading && (x.kind === 'leaf' || x.kind === 'group' || x.tree)) {
       const look = cellLook(col, value, x.row || {});
       if (look.cls) { cls += ' ' + look.cls; }
       Object.assign(style, look.style);
@@ -425,11 +389,15 @@ export class GridBody {
       if (k.expandable) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw', text: k.expanded ? '−' : '+', attrs: { 'aria-hidden': 'true' }, data: { r: String(r) } })); }
       else if (m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length) || m.rowModel.treeData) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw dg-tw-none', attrs: { 'aria-hidden': 'true' } })); }
     }
+    const leafRow = !loading && x.row && (x.kind === 'leaf' || x.tree) ? x.row : null;   // a leaf's row, or a tree node's own
+    const drawn = leafRow && col.cellRenderer && !(deco && deco.content) ? col.cellRenderer({ value: value, text: text, row: leafRow, doc: doc }) : null;
     if (deco && deco.before && typeof deco.before === 'object' && deco.before.nodeType) { cell.appendChild(deco.before); }
     if (deco && deco.content && typeof deco.content === 'object' && deco.content.nodeType) {
       const box = h(doc, 'span', { cls: 'dg-text' });
       box.appendChild(deco.content);
       cell.appendChild(box);
+    } else if (drawn !== null && drawn !== undefined && drawn !== '') {
+      cell.appendChild(typeof drawn === 'string' ? h(doc, 'span', { cls: 'dg-text', text: drawn }) : drawn);
     } else { cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text })); }
     if (deco && deco.after !== undefined && deco.after !== null && deco.after !== '') {
       cell.appendChild(typeof deco.after === 'object' && deco.after.nodeType ? deco.after : h(doc, 'span', { cls: 'dg-after', text: String(deco.after) }));

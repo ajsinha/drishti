@@ -94,6 +94,21 @@ def shot(pg, name):
         pg.screenshot(path=str(Path(SHOTS) / f"{name}.png"), full_page=True)
 
 
+#: the rows a <drishti-grid> under a host holds (it draws only those in view: counted from its model)
+ROWS_JS = "((document.querySelector('{0} drishti-grid') || {{}}).grid ? document.querySelector('{0} drishti-grid').grid.model.rowCount() : 0)"
+
+
+def rows(pg, host):
+    return pg.evaluate(ROWS_JS.format(host))
+
+
+def bars(pg, host):
+    """The first series of the <drishti-chart> under a host, as drawn (its values: a bar's height, a bin's count)."""
+    wait(pg, "!!(document.querySelector('%s drishti-chart') || {}).chart && !!document.querySelector('%s drishti-chart').chart.built" % (host, host))
+    return pg.evaluate("document.querySelector('%s drishti-chart').chart.built.option.series[0].data"
+                       ".map((d) => Array.isArray(d.value) ? d.value[d.value.length - 1] : (d && d.value !== undefined ? d.value : d))" % host)
+
+
 def painted(pg, scope):
     wait(pg, "document.querySelector('[data-var]').dataset.painted === %r" % scope)
     return int(pg.get_attribute("[data-var]", "data-paint-ms"))
@@ -112,25 +127,25 @@ def test_the_command_opens_the_desk_and_a_drill_from_bank_to_trade_stays_in_plac
     assert pg.locator(".vx-tile").count() == 6
     assert pg.locator(".vx-crumb .cur").inner_text().startswith("Rates")
     pg.evaluate("window.__marker = 1")                                       # survives only while the page is not reloaded
-    wait(pg, "document.querySelectorAll('.vx-tree .vx-row[data-scope]').length > 5")
+    wait(pg, "document.querySelectorAll('.vx-tree .dg-row[data-scope]').length > 5")
 
-    pg.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~BANK"]').click()
+    pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~BANK"]').click()
     painted(pg, "NODE:MGMT~BANK")
     bank_var = pg.locator('.vx-tile[data-tile="0"] .v').inner_text()
     # a desk the page has not fetched ahead (the bank's children are its divisions): the whole round trip
-    pg.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DESK-INFL"]').click()
+    pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DESK-INFL"]').click()
     cold = painted(pg, "NODE:MGMT~DESK-INFL")
-    pg.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DIV-MARKETS"]').click()
+    pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DIV-MARKETS"]').click()
     painted(pg, "NODE:MGMT~DIV-MARKETS")
     # the desk, timed from the click (its children were fetched ahead while the division was read)
     pg.wait_for_timeout(300)
     ms = []
     for _ in range(3):
-        pg.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DESK-COMM"]').click()
+        pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DESK-COMM"]').click()
         ms.append(painted(pg, "NODE:MGMT~DESK-COMM"))
-        pg.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DIV-MARKETS"]').click()
+        pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DIV-MARKETS"]').click()
         painted(pg, "NODE:MGMT~DIV-MARKETS")
-    pg.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DESK-RATES"]').click()
+    pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DESK-RATES"]').click()
     first = painted(pg, "NODE:MGMT~DESK-RATES")
     print(f"\nVaR explorer, click to painted for a desk: not fetched ahead {cold} ms; fetched ahead (DESK-RATES) {first} ms; "
           f"again {ms} ms")
@@ -140,21 +155,21 @@ def test_the_command_opens_the_desk_and_a_drill_from_bank_to_trade_stays_in_plac
 
     # contributions: the desk's books add up to its VaR; drill into the first book, its first position, its first trade
     pg.locator('.vx-tab[data-tab="contrib"]').click()
-    wait(pg, "document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope]').length > 0")
-    book = pg.locator("[data-vx-ctable] tbody tr[data-scope]").first.get_attribute("data-scope")
+    wait(pg, "document.querySelectorAll('[data-vx-ctable] .dg-row[data-scope]').length > 0")
+    book = pg.locator("[data-vx-ctable] .dg-row[data-scope]").first.get_attribute("data-scope")
     assert book.startswith("NODE:MGMT~BOOK-")
     shot(pg, "explorer-desk-contributions")
-    pg.locator("[data-vx-ctable] tbody tr[data-scope]").first.click()
+    pg.locator("[data-vx-ctable] .dg-row[data-scope]").first.click()
     painted(pg, book)
-    wait(pg, "document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"POS:\"]').length > 0")
-    pos = pg.locator('[data-vx-ctable] tbody tr[data-scope^="POS:"]').first.get_attribute("data-scope")
-    assert pg.locator('[data-vx-ctable] tbody tr[data-scope^="POS:"] .vx-chip').first.inner_text() in ("LONG", "SHORT")
-    pg.locator('[data-vx-ctable] tbody tr[data-scope^="POS:"]').first.click()
+    wait(pg, "document.querySelectorAll('[data-vx-ctable] .dg-row[data-scope^=\"POS:\"]').length > 0")
+    pos = pg.locator('[data-vx-ctable] .dg-row[data-scope^="POS:"]').first.get_attribute("data-scope")
+    assert pg.locator('[data-vx-ctable] .dg-row[data-scope^="POS:"] .vx-chip').first.inner_text() in ("LONG", "SHORT")
+    pg.locator('[data-vx-ctable] .dg-row[data-scope^="POS:"]').first.click()
     painted(pg, pos)
     assert "BOOK-" in pg.locator(".vx-crumb").inner_text()
-    wait(pg, "document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"TRD:\"]').length > 0")
-    trd = pg.locator('[data-vx-ctable] tbody tr[data-scope^="TRD:"]').first.get_attribute("data-scope")
-    pg.locator('[data-vx-ctable] tbody tr[data-scope^="TRD:"]').first.click()
+    wait(pg, "document.querySelectorAll('[data-vx-ctable] .dg-row[data-scope^=\"TRD:\"]').length > 0")
+    trd = pg.locator('[data-vx-ctable] .dg-row[data-scope^="TRD:"]').first.get_attribute("data-scope")
+    pg.locator('[data-vx-ctable] .dg-row[data-scope^="TRD:"]').first.click()
     painted(pg, trd)
     shot(pg, "explorer-trade")
     # the breadcrumb goes back up; the browser's Back too; never a page load
@@ -176,28 +191,28 @@ def test_the_limit_letters_tree_a_letter_its_desk_and_a_trade(stack, browser):
     titles = pg.locator("[data-vx-hierarchy] option").all_inner_texts()
     assert {"Management", "Legal entities", "Limit letters"} <= set(titles)
     pg.select_option("[data-vx-hierarchy]", "LL")
-    wait(pg, "document.querySelectorAll('.vx-tree .vx-row[data-scope^=\"NODE:LL~LL-\"]').length > 3")
+    wait(pg, "document.querySelectorAll('.vx-tree .dg-row[data-scope^=\"NODE:LL~LL-\"]').length > 3")
     assert "hierarchy=LL" in pg.url
-    letter = pg.locator('.vx-tree .vx-row[data-scope^="NODE:LL~LL-"]').first.get_attribute("data-scope")
+    letter = pg.locator('.vx-tree .dg-row[data-scope^="NODE:LL~LL-"]').first.get_attribute("data-scope")
     assert "/" not in letter
-    assert pg.locator('.vx-tree .vx-row[data-scope="%s"] .lim .vx-ubar, .vx-tree .vx-row[data-scope="%s"] .lim svg' % (letter, letter)).count() + \
-        pg.locator('.vx-tree .vx-row[data-scope="%s"] .lim *' % letter).count() > 0
-    pg.locator('.vx-tree .vx-row[data-scope="%s"]' % letter).click()
+    assert pg.locator('.vx-tree .dg-row[data-scope="%s"] .dg-cell[aria-colindex="4"] .vx-ubar' % letter).count() + \
+        pg.locator('.vx-tree .dg-row[data-scope="%s"] .dg-cell[aria-colindex="4"] *' % letter).count() > 0
+    pg.locator('.vx-tree .dg-row[data-scope="%s"]' % letter).click()
     painted(pg, letter)
     shot(pg, "explorer-limit-letter")
     pg.locator('.vx-tab[data-tab="contrib"]').click()
-    wait(pg, "document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope]').length > 0")
-    desk = pg.locator("[data-vx-ctable] tbody tr[data-scope]").first.get_attribute("data-scope")
+    wait(pg, "document.querySelectorAll('[data-vx-ctable] .dg-row[data-scope]').length > 0")
+    desk = pg.locator("[data-vx-ctable] .dg-row[data-scope]").first.get_attribute("data-scope")
     assert desk.startswith(letter + "/DESK-")
-    pg.locator("[data-vx-ctable] tbody tr[data-scope]").first.click()
+    pg.locator("[data-vx-ctable] .dg-row[data-scope]").first.click()
     painted(pg, desk)
-    wait(pg, "document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"POS:\"]').length > 0")
-    pos = pg.locator('[data-vx-ctable] tbody tr[data-scope^="POS:"]').first.get_attribute("data-scope")
-    pg.locator('[data-vx-ctable] tbody tr[data-scope^="POS:"]').first.click()
+    wait(pg, "document.querySelectorAll('[data-vx-ctable] .dg-row[data-scope^=\"POS:\"]').length > 0")
+    pos = pg.locator('[data-vx-ctable] .dg-row[data-scope^="POS:"]').first.get_attribute("data-scope")
+    pg.locator('[data-vx-ctable] .dg-row[data-scope^="POS:"]').first.click()
     painted(pg, pos)
-    wait(pg, "document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"TRD:\"]').length > 0")
-    trd = pg.locator('[data-vx-ctable] tbody tr[data-scope^="TRD:"]').first.get_attribute("data-scope")
-    pg.locator('[data-vx-ctable] tbody tr[data-scope^="TRD:"]').first.click()
+    wait(pg, "document.querySelectorAll('[data-vx-ctable] .dg-row[data-scope^=\"TRD:\"]').length > 0")
+    trd = pg.locator('[data-vx-ctable] .dg-row[data-scope^="TRD:"]').first.get_attribute("data-scope")
+    pg.locator('[data-vx-ctable] .dg-row[data-scope^="TRD:"]').first.click()
     painted(pg, trd)
     pg.close()
     # the scope word: LL:<letter> is the letter's node (its VaR the tree's)
@@ -211,29 +226,31 @@ def test_the_limit_letters_tree_a_letter_its_desk_and_a_trade(stack, browser):
 def test_the_tabs_path_history_and_contributions(stack, browser):
     pg = open_var(browser, str(stack), "/var?scope=DESK:DESK-FX")
     painted(pg, "DESK:DESK-FX")
-    assert pg.locator("[data-vx-histo] svg rect.vx-bar").count() > 10
-    assert pg.locator("[data-vx-tail] svg rect.vx-bar").count() == 25
-    assert pg.locator("[data-vx-series] svg rect.vx-bar").count() == 509
-    assert pg.locator("[data-vx-pathtable] tbody tr").count() == 60
-    assert pg.locator("[data-vx-pathtable] tbody tr.hl td").first.inner_text() == "6"       # the VaR scenario
+    assert len([c for c in bars(pg, "[data-vx-histo]") if c]) > 10                        # the server's bins with a count
+    assert len(bars(pg, "[data-vx-tail]")) == 25
+    assert len(bars(pg, "[data-vx-series]")) == 509
+    assert rows(pg, "[data-vx-pathtable]") == 60
+    assert pg.locator("[data-vx-pathtable] .dg-row.vx-hl .dg-cell").first.inner_text() == "6"   # the VaR scenario
     pg.locator("[data-vx-more]").click()
-    wait(pg, "document.querySelectorAll('[data-vx-pathtable] tbody tr').length === 120")
-    pg.locator("[data-vx-pathtable] tbody tr td").first.click()                             # the worst scenario's contributors
+    wait(pg, "%s === 120" % ROWS_JS.format("[data-vx-pathtable]"))
+    pg.locator("[data-vx-pathtable] .dg-row .dg-cell").first.click()                        # the worst scenario's contributors
     wait(pg, "document.querySelector('[data-vx-drill]') && !document.querySelector('[data-vx-drill]').hidden"
-             " && document.querySelectorAll('[data-vx-drill] tbody tr').length > 0")
+             " && document.querySelectorAll('[data-vx-drill] .dg-row').length > 0")
     pg.locator('.vx-tab[data-tab="hist"]').click()
     wait(pg, "document.querySelector('[data-var]').dataset.tabPainted === 'hist'")
-    assert pg.locator("[data-vx-histtable] tbody tr").count() >= 200                        # today's members over 250 scenario days
+    assert rows(pg, "[data-vx-histtable]") >= 200                                           # today's members over 250 scenario days
     assert "Replay" in pg.locator("[data-vx-hist-note]").inner_text()                       # one official date so far: no official series
-    assert pg.locator("[data-vx-hline] svg path.vx-line").count() == 2
+    wait(pg, "!!(document.querySelector('[data-vx-hline] drishti-chart') || {}).chart && !!document.querySelector('[data-vx-hline] drishti-chart').chart.built")
+    assert pg.evaluate("document.querySelector('[data-vx-hline] drishti-chart').chart.built.option.series"
+                       ".filter((x) => x.name === '−VaR' || x.name === '−ES').length") == 2
     shot(pg, "explorer-history")
     pg.locator('.vx-tab[data-tab="contrib"]').click()
     wait(pg, "document.querySelector('[data-var]').dataset.tabPainted === 'contrib'")
-    total = pg.evaluate("Number(document.querySelector('[data-vx-ctable] tr.vx-total td:nth-child(4)').textContent.replace(/,/g, ''))")
+    total = pg.evaluate("Number(document.querySelector('[data-vx-ctotal] [data-sum-component]').textContent.replace(/,/g, ''))")
     var = pg.evaluate("window.Drishti.VarExplorer.state.head.var")
-    assert abs(total - var) <= len(pg.locator("[data-vx-ctable] tbody tr[data-scope]").all())   # rounded each: within a unit a row
+    assert abs(total - var) <= rows(pg, "[data-vx-ctable]")                                # rounded each: within a unit a row
     pg.locator('.vx-segb[data-by="trade"]').click()
-    wait(pg, "document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"TRD:\"]').length > 0")
+    wait(pg, "document.querySelectorAll('[data-vx-ctable] .dg-row[data-scope^=\"TRD:\"]').length > 0")
     pg.close()
 
 
@@ -276,9 +293,9 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     assert pg.locator("[data-vx-basket]").is_hidden()                       # a node, an empty sheet: no strip
     # "+ basket" on a contribution row: the sheet opens with the position in its column
     pg.locator('.vx-tab[data-tab="contrib"]').click()
-    wait(pg, "document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"POS:\"]').length > 1")
-    pos = pg.locator('[data-vx-ctable] tbody tr[data-scope^="POS:"]').first.get_attribute("data-scope")
-    pg.locator(f'[data-vx-ctable] tbody tr[data-scope="{pos}"] [data-vx-add]').click()
+    wait(pg, "document.querySelectorAll('[data-vx-ctable] .dg-row[data-scope^=\"POS:\"]').length > 1")
+    pos = pg.locator('[data-vx-ctable] .dg-row[data-scope^="POS:"]').first.get_attribute("data-scope")
+    pg.locator(f'[data-vx-ctable] .dg-row[data-scope="{pos}"] [data-vx-add]').click()
     wait(pg, "!document.querySelector('[data-vx-basket]').hidden && !!document.querySelector('[data-vb-cell=\"POS:0\"]')"
              " && document.querySelector('[data-vb-cell=\"POS:0\"]').textContent === %r" % pos[4:])
     assert pg.evaluate("document.querySelector('[data-var]').dataset.painted") == "BOOK:BOOK-RATES-1"   # the row's click did not drill
@@ -290,7 +307,7 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     assert port == "PORT:PF-USD-RATES"
     wait(pg, "(document.querySelector('[data-vb-cell=\"PORT:0\"]') || {}).textContent === 'PF-USD-RATES'")
     # "+ basket" on a tree row: the FX desk lands in the Desk column
-    pg.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DESK-FX"] [data-vx-add]').click(force=True)
+    pg.locator('.vx-tree .dg-row[data-scope="NODE:MGMT~DESK-FX"] [data-vx-add]').click(force=True)
     wait(pg, "(document.querySelector('[data-vb-cell=\"DESK:0\"]') || {}).textContent === 'DESK-FX'")
     # columns pasted from Excel: three trades of the portfolio (the third taken away by its leading "-") and one that is not live
     trades = pg.evaluate("fetch('/api/var/scope/contributions?scope=PORT:PF-USD-RATES&by=trade').then(r => r.json()).then(d => d.rows.slice(0, 3).map(r => r.key))")
@@ -359,9 +376,9 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     pg.locator('.vx-tab[data-tab="captures"]').click()
     pg.locator("[data-vx-cap-note]").fill("before the unwind")
     pg.locator("[data-vx-capture]").click()
-    wait(pg, "document.querySelector('[data-var]').dataset.lastCapture && document.querySelectorAll('[data-vx-captable] tbody tr[data-capture]').length > 0")
+    wait(pg, "document.querySelector('[data-var]').dataset.lastCapture && document.querySelectorAll('[data-vx-captable] .dg-row[data-capture]').length > 0")
     cap = pg.get_attribute("[data-var]", "data-last-capture")
-    pg.locator(f'[data-vx-captable] tr[data-capture="{cap}"] button', has_text="Reopen").click()
+    pg.locator(f'[data-vx-captable] .dg-row[data-capture="{cap}"] button', has_text="Reopen").click()
     wait(pg, "document.querySelector('[data-vx-compare]').dataset.reopened === %r" % cap)
     assert float(pg.get_attribute("[data-vx-compare]", "data-var")) == sel_var
     pg.close()
@@ -522,9 +539,9 @@ def test_the_scopes_panel_and_the_tree_columns_resize_and_are_kept(stack, browse
     """The Scopes panel's splitter and the tree's columns (drishti-core's resize): dragged, kept after a reload, Home resets."""
     pg = open_var(browser, str(stack), "/var?scope=BANK")
     painted(pg, "BANK")
-    wait(pg, "document.querySelector('.vx-tree .vx-row.hdr .rz-col') && document.querySelector('.vx-layout > [data-resize=\"panel\"]')")
+    wait(pg, "document.querySelector('.vx-tree .dg-hcell.dg-leaf[aria-colindex=\"2\"] .dg-resize') && document.querySelector('.vx-layout > [data-resize=\"panel\"]')")
     side = lambda: pg.evaluate("document.querySelector('.vx-tree-panel').getBoundingClientRect().width")  # noqa: E731
-    var_col = lambda: pg.evaluate("document.querySelector('.vx-tree .vx-row[data-scope] > :nth-child(2)').getBoundingClientRect().width")  # noqa: E731
+    var_col = lambda: pg.evaluate("document.querySelector('.vx-tree .dg-row[data-scope] > .dg-cell[aria-colindex=\"2\"]').getBoundingClientRect().width")  # noqa: E731
     w0, c0 = side(), var_col()
 
     def drag(sel, dx):
@@ -536,11 +553,11 @@ def test_the_scopes_panel_and_the_tree_columns_resize_and_are_kept(stack, browse
         pg.mouse.up()
     drag('.vx-layout > [data-resize="panel"]', 120)
     assert abs(side() - (w0 + 120)) <= 3
-    drag('.vx-tree .vx-row.hdr > :nth-child(2) > .rz-col', 30)
+    drag('.vx-tree .dg-hcell.dg-leaf[aria-colindex="2"] .dg-resize', 30)
     assert abs(var_col() - (c0 + 30)) <= 3                                        # the rows follow the header
     pg.reload()
     painted(pg, "BANK")
-    wait(pg, "document.querySelector('.vx-tree .vx-row.hdr .rz-col')")
+    wait(pg, "document.querySelector('.vx-tree .dg-hcell.dg-leaf[aria-colindex=\"2\"] .dg-resize')")
     assert abs(side() - (w0 + 120)) <= 3 and abs(var_col() - (c0 + 30)) <= 3       # kept for this person, in this mode
     pg.focus('.vx-layout > [data-resize="panel"]')
     pg.keyboard.press("Home")

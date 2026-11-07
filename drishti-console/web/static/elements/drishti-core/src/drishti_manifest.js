@@ -49,7 +49,7 @@ export const MANIFEST = Object.freeze({
       "scripts": []
     },
     "drishti-inputs": {
-      "version": "0.1.0",
+      "version": "0.2.0",
       "title": "Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema with four eyes, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place",
       "bundle": "drishti-inputs/drishti_inputs.js",
       "entry": "drishti-inputs/src/drishti_index.js",
@@ -75,7 +75,7 @@ export const MANIFEST = Object.freeze({
       "scripts": []
     },
     "drishti-chart": {
-      "version": "0.1.0",
+      "version": "0.2.0",
       "title": "The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec",
       "bundle": "drishti-chart/drishti_chart.js",
       "entry": "drishti-chart/src/drishti_index.js",
@@ -91,13 +91,14 @@ export const MANIFEST = Object.freeze({
       ]
     },
     "drishti-risk": {
-      "version": "0.1.0",
-      "title": "The banking module's chart kinds on drishti-chart (licensed with the module): the P&L distribution with VaR and ES, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit",
+      "version": "0.2.0",
+      "title": "The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser)",
       "bundle": "drishti-risk/drishti_risk.js",
       "entry": "drishti-risk/src/drishti_index.js",
       "global": "risk",
       "requires": [
         "drishti-core",
+        "drishti-grid",
         "drishti-chart"
       ],
       "css": [],

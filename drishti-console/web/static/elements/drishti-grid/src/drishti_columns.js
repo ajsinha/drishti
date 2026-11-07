@@ -54,6 +54,8 @@ export const ADDITIVE_FUNCS = Object.freeze(['sum', 'count']);
  * @property {(Object|function(*, Object): Object)} [cellStyle] a row's cell's style, limited to colour, background, font weight and style,
  *   text alignment and decoration (anything else is dropped): an object, or a function of the value and the row
  * @property {boolean} [system=false] a column the grid adds (the AG Grid-style adapter's group column): never in the field list
+ * @property {function({value: *, text: string, row: Object, doc: Document}): (Node|string|null)} [cellRenderer] a leaf's cell content
+ *   drawn by the host (a link, a button); null keeps the formatted text. Copy, export and sort still use the value and its text.
  */
 
 /**
@@ -71,7 +73,7 @@ export function normalizeColumn(def, index) {
     id: id, field: def.field || id, header: def.header || def.field || id, type: type, width: 120, minWidth: 40, maxWidth: null,
     pinned: null, hidden: false, sortable: true, filterable: true, resizable: true, editable: false, aggFunc: num ? 'sum' : null,
     additive: num, enableRowGroup: !num, enablePivot: !num, enableValue: num, group: null, description: '', format: null,
-    valueGetter: null, comparator: null, measure: null, cellClass: null, cellStyle: null, system: false
+    valueGetter: null, comparator: null, measure: null, cellClass: null, cellStyle: null, cellRenderer: null, system: false
   }, def, { id: id, type: type }, def.aggregate === 'server' ? { additive: false } : {});
 }
 

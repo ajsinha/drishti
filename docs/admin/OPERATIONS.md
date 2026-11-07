@@ -579,7 +579,17 @@ the server moves them into `data/delta/demo/`, once, before any connector opens 
 - then each connector file that still reads the demo lake by its old default root (`root: ${DRISHTI_DELTA_ROOT:./data/delta}`, as the
   server generated them from the packs' templates before the lake form) is rewritten to `lake: demo` with `lake-tables:`, every reading
   setting kept and the file before kept beside it (`<name>.yaml.before-lake-<time>.bak`); a connector with a root of its own (another
-  folder, `s3://...`) is left as it is.
+  folder, `s3://...`), and a reader of the official results (`risk-results`: tables of the `var-official` or `ccr-official` lake), are
+  left as they are.
+
+**What the move changes, and what it never does.** It changes the demo lake's folders (above) and the connector files in
+`config/connectors` that read it by the old root: those are the site's own files, never part of the shipped tree. It does not change
+the shipped lake files: `config/lakes/demo.yaml` holds an entry for every table a shipped pack's connector reads (a test checks it), so
+after the move `git status` shows nothing in `config/lakes`. Only when a site's own connector reads a table the file has no entry for
+(an older or edited connector file naming a kind the packs no longer have) is that entry added, at the end of the file's `tables:`, in
+its compact style, every other line kept byte for byte; the log names the file. The same holds for the data inbox's first load into a
+table a lake file lacks (the empty lakes `risklake`, `newslake`, `worldlake`, `regulators`, `capitalmarket`): only that entry is
+added. A start that finds nothing to add writes nothing. To see what a site's start added: `git diff config/lakes`.
 
 By hand (stop the server first: its connectors hold the tables open), or to see what it would do:
 

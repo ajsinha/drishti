@@ -14,24 +14,25 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The VaR Playground (terminal/play.html; docs/architecture/VAR_PLAYGROUND.md, option A with option B's Rest of scope). The grid is drawn
-   in windows: only the cells in view are in the page, the header rows and the scenario column kept in place while scrolling, so 500
-   positions by 509 scenarios stay light. Selecting a cell shows its formula as the workbook writes it (the server's templates) and moves
+/* The VaR Playground (terminal/play.html; docs/architecture/VAR_PLAYGROUND.md, option A with option B's Rest of scope). The grid is
+   drishti-grid (drishti-risk's terminal preset): only the cells in view are in the page, the header rows and the scenario column kept in
+   place while scrolling, so 500 positions by 509 scenarios stay light. Selecting a cell shows its formula as the workbook writes it (the server's templates) and moves
    the explanation to the step that produced it, with the real numbers. The pickers ask again; Export to Excel downloads the workbook of the
    count chosen, its size, recalculation time and the applications that open it stated first. This file is the frame's screen: a later
    metric's playground gives its own columns, rows and steps. */
 (function () {
   "use strict";
   var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
+  var R = window.Drishti.elements.risk;                                       // the grid preset (drishti-risk)
   var root = document.querySelector("[data-play]");
-  if (!root || !root.querySelector("[data-pg-scroll]")) { return; }
-  var RH = 22, W0 = 168, CW = 118, HEAD = 6;
+  if (!root || !root.querySelector("[data-pg-grid]")) { return; }
+  var W0 = 168, CW = 118, HEAD = 6;
   var HEAD_ROWS = ["Position", "Kind", "Currency", "Base PV", "Base FX (USD per unit)", "Input form"];
   var RES_ROWS = [["standaloneVar", "Standalone VaR"], ["componentVar", "Component VaR"], ["pct", "% of VaR"], ["incrementalVar", "Incremental VaR"],
     ["componentEs", "Component ES"], ["standaloneEs", "Standalone ES"], ["component10", "Component VaR, 10-day sum"]];
-  var S = { data: null, view: "pnl", sel: { r: HEAD, c: 1 }, cols: [] };
+  var S = { data: null, view: "pnl", sel: { r: HEAD, c: 1 }, cols: [], grid: null };
   function $(s) { return root.querySelector(s); }
-  var scroll = $("[data-pg-scroll]"), canvas = $("[data-pg-canvas]"), explain = $("[data-pg-explain]");
+  var grid = $("[data-pg-grid]"), explain = $("[data-pg-explain]");
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function money(v) { return v == null || isNaN(v) ? "—" : F.formatNumber(v, { decimals: 2 }); }
@@ -55,7 +56,8 @@
     var q = params();
     q.set("view", S.view);
     $("[data-pg-meta]").textContent = "loading…";
-    canvas.innerHTML = "";
+    grid.textContent = "";
+    S.grid = null;
     return fetch("/api/play/grid?" + q.toString(), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) {
         if (!r.ok) { throw new Error(b.detail || ("HTTP " + r.status)); }
@@ -75,6 +77,9 @@
   }
 
   // ------------------------------------------------------------------------------------------------------------ the columns
+  // The grid is drishti-grid in drishti-risk's terminal layout (ELEMENTS.md section 12): positions across as columns lettered as the
+  // workbook's, scenarios and results down as rows; the six header rows (Position, Kind ... Input form) pinned under the letters and the
+  // label column pinned on the left, so they stay in view as 500 positions by 509 scenarios scroll (only the cells in view are drawn).
   function build() {
     var d = S.data, cols = [];
     d.positions.forEach(function (p, i) { cols.push({ kind: "pos", i: i, p: p }); });
@@ -82,7 +87,7 @@
     cols.push({ kind: "portfolio" }, { kind: "rank" }, { kind: "mark" });
     S.cols = cols;
     S.rows = HEAD + d.scenarios.length + RES_ROWS.length;
-    var lens = d.lens, f = d.figures;
+    var lens = d.lens;
     var h = lens.horizon === "1D" ? "1-day" : lens.method === "SUM" ? "10-day sum" : "10-day √10";
     $("[data-pg-path]").textContent = d.label + (d.label !== d.canonical ? "  (" + d.canonical + ")" : "");
     $("[data-pg-meta]").textContent = d.businessDate + " · " + d.currency + " · " + h + " " + confPct(lens.confidence) + " · " + d.scenarios.length
@@ -93,14 +98,12 @@
       : d.rest ? "Every position shown; Rest of scope holds no positions, only the difference between the scope's figure (summed from the rows as read) and its positions' stored rows." : "");
     pickers();
     exportChoices();
-    canvas.style.width = (W0 + cols.length * CW) + "px";
-    canvas.style.height = ((S.rows + 1) * RH) + "px";
     var v = d.figures.varScenario;
     S.sel = { r: HEAD + Math.max(0, v), c: 1 };
     draw();
     if (d.parametric) { parametric(d); }
-    scrollToSel(true);
     select(S.sel.r, S.sel.c);
+    focusSel();
   }
 
   function value(col, r) {
@@ -124,7 +127,7 @@
     var k = RES_ROWS[j - n];
     if (!k || !(col.kind === "pos" || col.kind === "rest")) {
       if (k && col.kind === "portfolio") {
-        return { standaloneVar: money(d.figures.var), componentVar: money(d.figures.sumComponentVar), pct: "100.0%", componentEs: money(d.figures.es) }[k[0]] || "";
+        return { standaloneVar: money(d.figures["var"]), componentVar: money(d.figures.sumComponentVar), pct: "100.0%", componentEs: money(d.figures.es) }[k[0]] || "";
       }
       return "";
     }
@@ -148,73 +151,53 @@
     return c;
   }
 
-  var raf = 0;
-  function draw() {
-    raf = 0;
-    if (!S.data) { return; }
-    var st = scroll.scrollTop, sl = scroll.scrollLeft, h = scroll.clientHeight, w = scroll.clientWidth;
-    var r0 = Math.max(HEAD, Math.floor(st / RH) + HEAD - 1), r1 = Math.min(S.rows - 1, Math.ceil((st + h) / RH) + 1);
-    var c0 = Math.max(0, Math.floor((sl - W0) / CW) - 1), c1 = Math.min(S.cols.length - 1, Math.ceil((sl + w - W0) / CW) + 1);
-    var out = [];
-    function cell(r, ci, top, left, frozenTop, frozenLeft) {
-      var col = S.cols[ci], sel = S.sel.r === r && S.sel.c === ci + 1;
-      out.push('<div class="' + cellClass(col, r) + (sel ? " pg-sel" : "") + (frozenTop ? " pg-ft" : "") + (frozenLeft ? " pg-fl" : "") + '" data-r="' + r
-        + '" data-c="' + (ci + 1) + '" data-t="' + top + '" data-l="' + left + '">' + esc(value(col, r)) + "</div>");
-    }
-    function label(r, top, frozenTop) {
-      var d = S.data, j = r - HEAD, n = d.scenarios.length;
-      var t = r < HEAD ? HEAD_ROWS[r] : j < n ? (j + 1) + " · " + d.scenarios[j] : RES_ROWS[j - n][1]
-        + (RES_ROWS[j - n][0].indexOf("Var") > 0 && RES_ROWS[j - n][0] !== "incrementalVar" && j - n < 2 ? " " + confPct(d.lens.confidence) : "")
-        + (RES_ROWS[j - n][0].indexOf("Es") > 0 ? " " + confPct(d.lens.esConfidence) : "");
-      var sel = S.sel.r === r && S.sel.c === 0;
-      out.push('<div class="pg-c pg-lbl' + (r < HEAD ? " pg-hd" : j >= n ? " pg-res" : "") + (sel ? " pg-sel" : "") + (frozenTop ? " pg-ft" : "")
-        + ' pg-fl" data-r="' + r + '" data-c="0" data-t="' + top + '" data-l="' + sl + '"><span class="pg-rn">' + (r + 1) + "</span>" + esc(t) + "</div>");
-    }
-    for (var r = r0; r <= r1; r++) {
-      var top = RH + r * RH;
-      for (var ci = c0; ci <= c1; ci++) { cell(r, ci, top, W0 + ci * CW, false, false); }
-      label(r, top, false);
-    }
-    for (var hr = 0; hr < HEAD; hr++) {                                // the header rows, kept in view
-      var ht = st + RH + hr * RH;
-      for (var hc = c0; hc <= c1; hc++) { cell(hr, hc, ht, W0 + hc * CW, true, false); }
-      label(hr, ht, true);
-    }
-    for (var lc = c0; lc <= c1; lc++) {                                // the column letters
-      out.push('<div class="pg-c pg-letter pg-ft" data-t="' + st + '" data-l="' + (W0 + lc * CW) + '">' + letter(lc + 1) + "</div>");
-    }
-    out.push('<div class="pg-c pg-letter pg-ft pg-fl" data-t="' + st + '" data-l="' + sl + '">A</div>');
-    canvas.innerHTML = out.join("");
-    var kids = canvas.children;                                        // placed through the CSSOM (the page's policy allows no inline styles)
-    for (var k = 0; k < kids.length; k++) {
-      kids[k].style.top = kids[k].getAttribute("data-t") + "px";
-      kids[k].style.left = kids[k].getAttribute("data-l") + "px";
-    }
+  /** The label of a row (column A): a header row's name, a scenario's number and date, a result's name with its confidence. */
+  function label(r) {
+    var d = S.data, j = r - HEAD, n = d.scenarios.length;
+    return r < HEAD ? HEAD_ROWS[r] : j < n ? (j + 1) + " · " + d.scenarios[j] : RES_ROWS[j - n][1]
+      + (RES_ROWS[j - n][0].indexOf("Var") > 0 && RES_ROWS[j - n][0] !== "incrementalVar" && j - n < 2 ? " " + confPct(d.lens.confidence) : "")
+      + (RES_ROWS[j - n][0].indexOf("Es") > 0 ? " " + confPct(d.lens.esConfidence) : "");
   }
-  scroll.addEventListener("scroll", function () { if (!raf) { raf = window.requestAnimationFrame(draw); } }, { passive: true });
-  window.addEventListener("resize", function () { if (!raf) { raf = window.requestAnimationFrame(draw); } });
 
-  canvas.addEventListener("click", function (e) {
-    var t = e.target.closest("[data-r]");
-    if (t) { select(+t.dataset.r, +t.dataset.c); draw(); }
-  });
-  scroll.addEventListener("keydown", function (e) {
-    var m = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] }[e.key];
-    if (!m || !S.data) { return; }
-    e.preventDefault();
-    var r = Math.max(0, Math.min(S.rows - 1, S.sel.r + m[0])), c = Math.max(0, Math.min(S.cols.length, S.sel.c + m[1]));
-    select(r, c);
-    scrollToSel(false);
-    draw();
-  });
-  function scrollToSel(center) {
-    var top = RH + S.sel.r * RH, left = W0 + (S.sel.c - 1) * CW;
-    var hdr = RH * (HEAD + 1);
-    if (center) { scroll.scrollTop = Math.max(0, top - scroll.clientHeight / 2); return; }
-    if (top - scroll.scrollTop < hdr) { scroll.scrollTop = Math.max(0, top - hdr); }
-    if (top + RH > scroll.scrollTop + scroll.clientHeight) { scroll.scrollTop = top + RH - scroll.clientHeight; }
-    if (S.sel.c > 0 && left - scroll.scrollLeft < W0) { scroll.scrollLeft = Math.max(0, left - W0); }
-    if (S.sel.c > 0 && left + CW > scroll.scrollLeft + scroll.clientWidth) { scroll.scrollLeft = left + CW - scroll.clientWidth; }
+  /** A cell as the workbook's: its text, its tint, its place (data-r, data-c) and the selection. */
+  function drawn(ci) {
+    return function (x) {
+      var r = x.row.r, sp = document.createElement("span");
+      sp.className = ci === 0 ? "pg-c pg-lbl" + (r < HEAD ? " pg-hd" : r - HEAD >= S.data.scenarios.length ? " pg-res" : "") : cellClass(S.cols[ci - 1], r);
+      if (x.pinned !== undefined) sp.className += " pg-ft";
+      if (ci === 0) sp.className += " pg-fl";
+      if (S.sel.r === r && S.sel.c === ci) sp.className += " pg-sel";
+      sp.dataset.r = String(r);
+      sp.dataset.c = String(ci);
+      if (ci === 0) { var rn = document.createElement("span"); rn.className = "pg-rn"; rn.textContent = String(r + 1); sp.appendChild(rn); }
+      sp.appendChild(document.createTextNode(x.text));
+      return sp;
+    };
+  }
+
+  function draw() {
+    if (!S.data) { return; }
+    var columns = [{ id: "c0", header: "A", width: W0, pinned: "left", sortable: false, filterable: false, valueGetter: function (row) { return label(row.r); }, cellRenderer: drawn(0) }]
+      .concat(S.cols.map(function (col, i) {
+        return { id: "c" + (i + 1), header: letter(i + 1), width: CW, sortable: false, filterable: false, type: "text",
+          valueGetter: function (row) { return value(col, row.r); }, cellRenderer: drawn(i + 1) };
+      }));
+    var rows = [];
+    for (var r = HEAD; r < S.rows; r++) { rows.push({ r: r }); }
+    var head = [];
+    for (var k = 0; k < HEAD; k++) { head.push({ r: k }); }
+    S.grid = R.riskGrid(grid, { title: "The playground grid", label: "The playground grid: positions across, scenarios down, results below", columns: columns,
+      rows: rows, pinnedTopRows: head, getRowId: function (x) { return String(x.r); }, rowSelection: "none", fitRows: 0 });
+    var moved = function (f) { if (f && f.row !== undefined && f.row !== null && f.row >= 0) { select(HEAD + f.row, f.col); S.grid.refresh(); } };
+    S.grid.on("focusChanged", moved);                                  // the keys
+    S.grid.on("cellClicked", moved);                                   // a click
+    S.grid.on("pinnedCellClicked", function (p) { select(p.pinned, p.col); S.grid.refresh(); });
+  }
+
+  /** The selection's cell focused in the grid (scrolled into view; a header row is always in view). */
+  function focusSel() {
+    if (!S.grid || S.sel.r < HEAD) { return; }
+    S.grid.focusCell(S.sel.r - HEAD, S.sel.c);
   }
 
   // ------------------------------------------------------------------------------------------------------------ the formula bar
@@ -326,20 +309,19 @@
     var rows = [["n", num(p.n, 0)], ["Weighting", p.weighting + (p.lambda ? ", λ " + p.lambda : "")], ["μ", money(p.mu)], ["σ", money(p.sigma)],
       ["z", num(p.z, 6)], ["φ(z_ES)/(1 − c)", num(p.esFactor, 6)], ["Parametric VaR = z·σ − μ", money(p["var"])], ["Parametric ES", money(p.es)],
       ["Σ components", money(p.sumComponent)]];
-    f.innerHTML = '<table class="pg-param-table">' + rows.map(function (r) { return "<tr><th>" + esc(r[0]) + '</th><td class="num">' + esc(r[1]) + "</td></tr>"; }).join("") + "</table>";
+    R.riskGrid(f, { title: "Parametric figures", rows: rows.map(function (r, i) { return { i: i, what: r[0], value: r[1] }; }), getRowId: function (r) { return String(r.i); },
+      columns: [{ field: "what", header: "Figure", width: 200 }, { field: "value", header: "Value", width: 150, cellClass: function () { return "dg-num"; } }] });
     $("[data-pg-param-steps]").innerHTML = (p.steps || []).map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("");
-    $("[data-pg-param-positions]").innerHTML = "<thead><tr><th>Position</th><th>μᵢ</th><th>σᵢ</th><th>cov(Pᵢ, P)</th><th>ρᵢ</th><th>Component VaR</th><th>Component ES</th><th>Standalone VaR</th></tr></thead><tbody>"
-      + p.positions.map(function (r) {
-        return "<tr><td>" + esc(r.id) + '</td><td class="num">' + money(r.mu) + '</td><td class="num">' + money(r.sigma) + '</td><td class="num">'
-          + Number(r.cov).toExponential(4) + '</td><td class="num">' + num(r.rho, 4) + '</td><td class="num">' + money(r.componentVar) + '</td><td class="num">'
-          + money(r.componentEs) + '</td><td class="num">' + money(r.standaloneVar) + "</td></tr>";
-      }).join("") + "</tbody>";
+    var fig = function (field, header, fmt, w) { return R.figureColumn(field, header, { format: fmt, width: w || 120 }); };
+    R.riskGrid($("[data-pg-param-positions]"), { title: "Each position", rows: p.positions, getRowId: function (r) { return r.id; }, fitRows: 14,
+      columns: [{ field: "id", header: "Position", width: 140, pinned: "left" }, fig("mu", "μᵢ", money), fig("sigma", "σᵢ", money),
+        fig("cov", "cov(Pᵢ, P)", function (v) { return Number(v).toExponential(4); }), fig("rho", "ρᵢ", function (v) { return num(v, 4); }, 80),
+        fig("componentVar", "Component VaR", money), fig("componentEs", "Component ES", money), fig("standaloneVar", "Standalone VaR", money)] });
     var c = p.columns, sc = d.scenarios;
-    $("[data-pg-param-scenarios]").innerHTML = "<thead><tr><th>#</th><th>Date</th><th>wⱼ</th><th>vⱼ − μ</th><th>(vⱼ − μ)²</th></tr></thead><tbody>"
-      + c.w.map(function (w, j) {
-        return "<tr><td>" + (j + 1) + "</td><td>" + esc(sc[j]) + '</td><td class="num">' + num(w, 8) + '</td><td class="num">' + money(c.dev[j])
-          + '</td><td class="num">' + Number(c.sq[j]).toExponential(4) + "</td></tr>";
-      }).join("") + "</tbody>";
+    R.riskGrid($("[data-pg-param-scenarios]"), { title: "Each scenario", fitRows: 10, getRowId: function (r) { return String(r.j); },
+      rows: c.w.map(function (w, j) { return { j: j, n: j + 1, date: sc[j], w: w, dev: c.dev[j], sq: c.sq[j] }; }),
+      columns: [fig("n", "#", function (v) { return String(v); }, 60), { field: "date", header: "Date", width: 110 }, fig("w", "wⱼ", function (v) { return num(v, 8); }),
+        fig("dev", "vⱼ − μ", money), fig("sq", "(vⱼ − μ)²", function (v) { return Number(v).toExponential(4); })] });
   }
 
   function ordinal(k) { var s = ["th", "st", "nd", "rd"], v = k % 100; return k + (s[(v - 20) % 10] || s[v] || s[0]); }

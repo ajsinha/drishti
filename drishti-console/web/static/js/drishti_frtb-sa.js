@@ -17,12 +17,14 @@
 /* FRTB-SA (terminal/frtb.html; docs/guides/FRTB_SA_GUIDE.md sections 7 and 8). The capital screen (FRSA): the stack, the class × measure
    grid and the bucket drill, the three scenarios and the contributions. The playground (PLAY FRTB): the Choices panel, a switch compared
    side by side with the difference explained by step, the grid of weighted sensitivities with its formula bar and the explanation, Save
-   recipe and Export to Excel; PLAY FRTB RUN <id> replays a recipe. Every figure is the server's: this file only draws. */
+   recipe and Export to Excel; PLAY FRTB RUN <id> replays a recipe. Every figure is the server's: this file only draws, with Drishti
+   Elements: every table a <drishti-grid> in the terminal layout (drishti-risk's preset), the stack a drishti-chart bar chart. */
 (function () {
   "use strict";
   var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
+  var R = window.Drishti.elements.risk;                                       // the grid preset and charts (drishti-risk)
   var root = document.querySelector("[data-frtb]");
-  if (!root) { return; }
+  if (!root || !R) { return; }
   var mode = root.dataset.mode, scope = root.dataset.scope, recipe = root.dataset.recipe;
   if (!scope && !recipe) { return; }
   function $(s) { return root.querySelector(s); }
@@ -32,6 +34,12 @@
   var CLASS = { GIRR: "GIRR", CSR_NS: "CSR", EQ: "Equity", COMM: "Commodity", FX: "FX" };
   var SC = ["low", "medium", "high"];
   var state = { choices: {}, overrides: [], data: null };
+
+  // ---- the tables: drishti-grid through drishti-risk's preset; a capital charge in money with two decimals, as the server rounds
+  function grid(sel, o) { return R.riskGrid(typeof sel === "string" ? $(sel) : sel, o); }
+  function fig(field, header, o) { return R.moneyColumn(field, header, money, o); }      // drishti-risk's money column, this screen's rule
+  var txt = R.textColumn;
+  function box(cls) { var d = document.createElement("div"); if (cls) { d.className = cls; } return d; }
 
   function query(extra) {
     var q = new URLSearchParams();
@@ -67,69 +75,87 @@
   }
 
   // -------------------------------------------------------------------------------------------------------- the capital screen
+  /** The capital stack (delta, vega, curvature, DRC, RRAO, the total) as drishti-chart's horizontal bars; a part not computed says so. */
   function stack(a) {
-    var max = Math.max.apply(null, a.stack.map(function (s) { return Math.abs(s.value || 0); }).concat([1]));
-    var widths = [];
-    $("[data-fr-stack]").innerHTML = a.stack.map(function (s) {
-      widths.push(s.value == null ? 0 : Math.max(1, Math.abs(s.value) / max * 100));
-      return '<div class="fr-bar' + (s.label === "Total" ? " total" : "") + '"><span class="fr-bl">' + esc(s.label) + '</span><span class="fr-bt"><i></i></span>'
-        + '<span class="fr-bv mono">' + (s.value == null ? "not computed" : money(s.value)) + "</span></div>";
-    }).join("");
-    // each bar's length through the CSSOM: a style attribute in markup is blocked by the console's CSP (style-src 'self')
-    root.querySelectorAll("[data-fr-stack] .fr-bt i").forEach(function (i, n) { i.style.width = widths[n] + "%"; });
-  }
-  function classesGrid(a) {
-    var rep = SC.indexOf(a.reported), rows = {};
-    a.classes.forEach(function (c) { (rows[c.class] = rows[c.class] || {})[c.measure] = c; });
-    var h = '<thead><tr><th class="l">Class (' + esc(a.reported) + ")</th><th>Delta</th><th>Vega</th><th>Curvature</th><th>Total</th></tr></thead><tbody>";
-    Object.keys(rows).forEach(function (cls) {
-      var t = 0;
-      h += '<tr><td class="l">' + esc(CLASS[cls] || cls) + "</td>";
-      ["DELTA", "VEGA", "CURVATURE"].forEach(function (m) {
-        var c = rows[cls][m], v = c ? c[a.reported] : null;
-        t += v || 0;
-        h += '<td class="mono' + (c ? " fr-cell" : "") + '" data-cls="' + cls + '" data-m="' + m + '" tabindex="' + (c ? 0 : -1) + '">' + (c ? money(v) : "—") + "</td>";
-      });
-      h += '<td class="mono">' + money(t) + "</td></tr>";
+    var rows = a.stack.map(function (s, i) {
+      return { id: String(i), label: s.label + (s.value == null ? " (not computed)" : ""), value: s.value == null ? null : s.value, total: s.label === "Total" ? 1 : 0 };
     });
-    h += '<tr class="tot"><td class="l">SBM</td><td colspan="3"></td><td class="mono">' + money(a.SBM) + "</td></tr>";
-    $("[data-fr-classes]").innerHTML = h + "</tbody>";
-    void rep;
+    R.riskChart($("[data-fr-stack]"), { kind: "bar", orient: "horizontal", title: "Capital stack", data: { rows: rows }, id: "id", x: { field: "label", order: rows.map(function (r) { return r.label; }) },
+      y: { field: "value", format: "amount2" }, labels: true, legend: "none", tone: "link", colourWhen: [{ when: "total > 0", tone: "warn" }], height: 40 + rows.length * 26 }, { height: 130 + rows.length * 26 });
+  }
+  /** Class × measure in the reported scenario; a measure's cell opens its buckets. The class total is the sum of its three charges
+   *  (the SBM adds them within a class); SBM itself is the server's. */
+  function classesGrid(a) {
+    var rows = {}, out = [];
+    a.classes.forEach(function (c) { (rows[c.class] = rows[c.class] || { id: c.class, cls: c.class, label: CLASS[c.class] || c.class })[c.measure] = c[a.reported]; });
+    // a class's own total is not drawn: the browser sums no figure (the server sends the classes' measures and the SBM, not a class total)
+    Object.keys(rows).forEach(function (k) { var r = rows[k]; r.isClass = true; out.push(r); });
+    out.push({ id: "SBM", label: "SBM", total: a.SBM, sbm: true });
+    var cell = function (m) {
+      return fig(m, m.charAt(0) + m.slice(1).toLowerCase(), { format: function (v, r) { return r && r.sbm ? "" : v === undefined ? "—" : money(v); },
+        cellClass: function (v, r) { return r && r.isClass && v !== undefined ? "fr-cell" : null; } });
+    };
+    grid("[data-fr-classes]", { title: "Charge by class and measure (" + a.reported + ")", rows: out,
+      getRowClass: function (r) { return r.sbm ? "tot" : null; },
+      columns: [txt("label", "Class (" + a.reported + ")", { pinned: "left" }), cell("DELTA"), cell("VEGA"), cell("CURVATURE"), fig("total", "SBM", { format: function (v) { return v === undefined ? "" : money(v); } })],
+      onRow: function (r, e) {
+        var col = e && e.detail && e.detail.columnId;
+        if (r.isClass && /^(DELTA|VEGA|CURVATURE)$/.test(col || "") && r[col] !== undefined) { drill(r.cls, col); }
+      } });
   }
   function scenarios(a) {
-    var h = '<thead><tr><th class="l">Class</th><th class="l">Measure</th>' + SC.map(function (s) { return "<th" + (s === a.binding ? ' class="bind"' : "") + ">" + s + "</th>"; }).join("")
-      + "</tr></thead><tbody>";
-    a.classes.forEach(function (c) {
-      h += '<tr><td class="l">' + esc(CLASS[c.class] || c.class) + '</td><td class="l">' + esc(c.measure.toLowerCase()) + "</td>" + SC.map(function (s, i) {
-        return '<td class="mono' + (s === a.binding ? " bind" : "") + '">' + money(c[s]) + (c.alternative[i] ? ' <span class="pill" title="the alternative specification applied (MAR21.4(5)(b))">alt</span>' : "") + "</td>";
-      }).join("") + "</tr>";
+    var rows = a.classes.map(function (c, i) {
+      var r = { id: String(i), label: CLASS[c.class] || c.class, measure: c.measure.toLowerCase(), alt: c.alternative };
+      SC.forEach(function (s) { r[s] = c[s]; });
+      return r;
     });
-    h += '<tr class="tot"><td class="l" colspan="2">SBM</td>' + SC.map(function (s) { return '<td class="mono' + (s === a.binding ? " bind" : "") + '">' + money(a.sbm[s]) + "</td>"; }).join("") + "</tr>";
-    $("[data-fr-scen]").innerHTML = h + "</tbody>";
+    var tot = { id: "SBM", label: "SBM", measure: "", total: true };
+    SC.forEach(function (s) { tot[s] = a.sbm[s]; });
+    rows.push(tot);
+    grid("[data-fr-scen]", { title: "The three correlation scenarios", rows: rows, getRowClass: function (r) { return r.total ? "tot" : null; },
+      columns: [txt("label", "Class", { pinned: "left" }), txt("measure", "Measure", { width: 100 })].concat(SC.map(function (s, i) {
+        return fig(s, s + (s === a.binding ? " (binding)" : ""), { cellClass: function () { return s === a.binding ? "bind" : null; },
+          cellRenderer: function (c) {
+            if (!c.row.alt || !c.row.alt[i]) { return null; }
+            var span = document.createElement("span");
+            span.textContent = c.text + " ";
+            var pill = document.createElement("span");
+            pill.className = "pill";
+            pill.title = "the alternative specification applied (MAR21.4(5)(b))";
+            pill.textContent = "alt";
+            span.appendChild(pill);
+            return span;
+          } });
+      })) });
   }
+  /** A measure's buckets (K_b and S_b per scenario, the side) and their factors: two grids in the drill pane. */
   function drill(cls, m) {
     var d = $("[data-fr-drill]");
     d.innerHTML = "<p class=\"muted\">loading " + esc(cls) + "…</p>";
     getJson("/api/frtb/explain?" + query({ "class": cls }).toString()).then(function (x) {
       var c = (x.classes || []).filter(function (y) { return y.measure === m; })[0];
       if (!c) { d.innerHTML = "<p>No " + esc(m.toLowerCase()) + " in " + esc(cls) + ".</p>"; return; }
-      var h = "<h3>" + esc(CLASS[cls] || cls) + " " + esc(m.toLowerCase()) + "</h3><p class=\"mono\">" + SC.map(function (s, i) { return s + " " + money(c.charge[i]); }).join(" · ") + "</p>";
-      c.buckets.forEach(function (b) {
-        h += "<details><summary>Bucket " + esc(b.bucket) + " · K " + money(b.K[1]) + " · S " + money(b.S[1]) + (b.side ? " · side " + esc(b.side[1]) : "") + "</summary><table class=\"fr-mini\">";
-        b.factors.forEach(function (f) {
-          h += "<tr><td class=\"l mono\">" + esc(f.factor) + "</td><td class=\"mono\">" + (f.ws != null ? "WS " + money(f.ws) : "CVR+ " + money(f.cvrUp) + " / CVR− " + money(f.cvrDown)) + "</td></tr>";
-        });
-        h += "</table></details>";
-      });
-      d.innerHTML = h;
+      d.innerHTML = "<h3>" + esc(CLASS[cls] || cls) + " " + esc(m.toLowerCase()) + "</h3><p class=\"mono\">" + SC.map(function (s, i) { return s + " " + money(c.charge[i]); }).join(" · ") + "</p>";
+      var b1 = box("fr-drill-grid"), b2 = box("fr-drill-grid");
+      d.appendChild(b1);
+      d.appendChild(b2);
+      grid(b1, { title: "Buckets", rows: c.buckets.map(function (b) { return { id: String(b.bucket), bucket: b.bucket, K: b.K[1], S: b.S[1], side: b.side ? b.side[1] : "" }; }),
+        columns: [txt("bucket", "Bucket", { width: 80 }), fig("K", "K (medium)"), fig("S", "S (medium)"), txt("side", "Side", { width: 70 })] });
+      var factors = [];
+      c.buckets.forEach(function (b) { b.factors.forEach(function (f, i) { factors.push({ id: b.bucket + "|" + i, bucket: b.bucket, factor: f.factor,
+        value: f.ws != null ? "WS " + money(f.ws) : "CVR+ " + money(f.cvrUp) + " / CVR− " + money(f.cvrDown) }); }); });
+      grid(b2, { title: "Factors", rows: factors, fitRows: 18,
+        columns: [txt("bucket", "Bucket", { width: 70 }), txt("factor", "Factor", { width: 140 }), txt("value", "WS / CVR", { width: 200 })] });
     }).catch(function (e) { d.innerHTML = "<p class=\"bad\">" + esc(e.message) + "</p>"; });
   }
   function contrib() {
     var by = $("[data-fr-by]").value;
     getJson("/api/frtb/contributions?" + query({ by: by }).toString()).then(function (c) {
-      $("[data-fr-contrib]").innerHTML = '<thead><tr><th class="l">' + esc(c.by) + "</th><th>Contribution</th><th>Share</th></tr></thead><tbody>" + c.rows.slice(0, 200).map(function (r) {
-        return '<tr><td class="l mono">' + esc(r.key) + '</td><td class="mono">' + money(r.contribution) + '</td><td class="mono">' + (r.share == null ? "—" : (r.share * 100).toFixed(1) + "%") + "</td></tr>";
-      }).join("") + '<tr class="tot"><td class="l">Sum (' + (c.addsUp ? "adds up to the total" : "does not add up") + ')</td><td class="mono">' + money(c.sum) + "</td><td></td></tr></tbody>";
+      var rows = c.rows.slice(0, 200).map(function (r, i) { return { id: String(i), key: r.key, contribution: r.contribution, share: r.share }; });
+      rows.push({ id: "SUM", key: "Sum (" + (c.addsUp ? "adds up to the total" : "does not add up") + ")", contribution: c.sum, total: true });   // the server's sum
+      grid("[data-fr-contrib]", { title: "Contributions by " + c.by, rows: rows, getRowClass: function (r) { return r.total ? "tot" : null; },
+        columns: [txt("key", c.by, { width: 220, pinned: "left" }), fig("contribution", "Contribution", { additive: true }),
+          R.figureColumn("share", "Share", { width: 80, format: function (v) { return v == null ? (v === undefined ? "" : "—") : (v * 100).toFixed(1) + "%"; } })] });
     }).catch(function (e) { notice(e.message, true); });
   }
   function capital() {
@@ -141,8 +167,6 @@
       scenarios(a);
     }).catch(function (e) { $("[data-fr-meta]").textContent = ""; notice(e.message, true); });
     root.addEventListener("click", function (ev) {
-      var cell = ev.target.closest(".fr-cell");
-      if (cell) { drill(cell.dataset.cls, cell.dataset.m); }
       var tab = ev.target.closest("[data-fr-tab]");
       if (tab) {
         root.querySelectorAll("[data-fr-tab]").forEach(function (t) { t.setAttribute("aria-selected", String(t === tab)); });
@@ -167,38 +191,42 @@
     cmp.value = keep;
   }
   function diff(d, alt) {
-    var box = $("[data-fr-diff]");
-    if (!d) { box.hidden = true; return; }
-    box.hidden = false;
-    box.innerHTML = "<h3>" + esc(d.label) + "</h3><p>" + esc(d.words) + "</p><div class=\"fr-side\"><div><b>This run</b><span class=\"mono\">" + money(d.base) + "</span><small>binding " + esc(d.baseScenario)
+    var pane = $("[data-fr-diff]");
+    if (!d) { pane.hidden = true; return; }
+    pane.hidden = false;
+    pane.innerHTML = "<h3>" + esc(d.label) + "</h3><p>" + esc(d.words) + "</p><div class=\"fr-side\"><div><b>This run</b><span class=\"mono\">" + money(d.base) + "</span><small>binding " + esc(d.baseScenario)
       + "</small></div><div><b>With the switch</b><span class=\"mono\">" + money(d.alternative) + "</span><small>binding " + esc(d.alternativeScenario) + "</small></div><div><b>Difference</b><span class=\"mono\">"
-      + money(d.difference) + "</span></div></div><table class=\"fr-mini\"><tr><th class=\"l\">Class</th><th>This run</th><th>With the switch</th><th>Difference</th><th class=\"l\">Bucket</th><th class=\"l\">Where it arises</th></tr>"
-      + d.lines.map(function (l) {
-        return '<tr><td class="l">' + esc((CLASS[l["class"]] || l["class"]) + " " + l.measure.toLowerCase()) + '</td><td class="mono">' + money(l.base) + '</td><td class="mono">' + money(l.alternative)
-          + '</td><td class="mono">' + money(l.difference) + '</td><td class="l">' + esc(l.bucket || "") + '</td><td class="l">' + esc(l.step) + (l.detail ? ": " + esc(l.detail) : "") + "</td></tr>";
-      }).join("") + "</table>";
+      + money(d.difference) + "</span></div></div>";
+    var lines = box("fr-diff-grid");
+    pane.appendChild(lines);
+    grid(lines, { title: "Where the difference arises", rows: d.lines.map(function (l, i) {
+      return { id: String(i), label: (CLASS[l["class"]] || l["class"]) + " " + l.measure.toLowerCase(), base: l.base, alternative: l.alternative, difference: l.difference,
+        bucket: l.bucket || "", step: l.step + (l.detail ? ": " + l.detail : "") };
+    }), columns: [txt("label", "Class", { width: 150, pinned: "left" }), fig("base", "This run"), fig("alternative", "With the switch", { width: 130 }), fig("difference", "Difference"),
+      txt("bucket", "Bucket", { width: 80 }), txt("step", "Where it arises", { width: 320 })] });
     void alt;
   }
   var STEP = { DELTA: 2, VEGA: 8, CURVATURE: 9 };     // the Explain steps 3, 9 and 10
-  function grid(a) {
-    var rows = a.grid || [];
-    var h = '<thead><tr><th class="l">Class</th><th class="l">Measure</th><th class="l">Bucket</th><th class="l">Factor</th><th>s</th><th>RW</th><th>WS / CVR+</th><th>K low</th><th>K medium</th><th>K high</th></tr></thead><tbody>';
-    rows.forEach(function (r, i) {
-      h += '<tr data-i="' + i + '" tabindex="0"><td class="l">' + esc(CLASS[r["class"]] || r["class"]) + '</td><td class="l">' + esc(r.measure.toLowerCase()) + '</td><td class="l">' + esc(r.bucket)
-        + '</td><td class="l mono">' + esc(r.factor) + '</td><td class="mono">' + money(r.s) + '</td><td class="mono">' + num(r.rw, 6) + '</td><td class="mono">' + money(r.ws != null ? r.ws : r.cvrUp)
-        + "</td>" + r.K.map(function (k) { return '<td class="mono">' + money(k) + "</td>"; }).join("") + "</tr>";
+  /** The weighted sensitivities and curvature risks, bucket by bucket: a row selects its formula and its step of the explanation. */
+  function wsGrid(a) {
+    var rows = (a.grid || []).map(function (r, i) {
+      return { id: String(i), i: i, label: CLASS[r["class"]] || r["class"], measure: r.measure.toLowerCase(), bucket: r.bucket, factor: r.factor, s: r.s, rw: r.rw,
+        ws: r.ws != null ? r.ws : r.cvrUp, Klow: r.K[0], Kmedium: r.K[1], Khigh: r.K[2] };
     });
-    if ((a.factors || 0) > rows.length) { h += '<tr><td class="l" colspan="10">' + (a.factors - rows.length) + " more factors: export a desk or a set of positions, or see the workbook</td></tr>"; }
-    $("[data-fr-ws]").innerHTML = h + "</tbody>";
+    var g = grid("[data-fr-ws]", { title: "Weighted sensitivities", rows: rows, fitRows: 30, getRowData: function (r) { return { i: r.i }; },
+      columns: [txt("label", "Class", { width: 100, pinned: "left" }), txt("measure", "Measure", { width: 90 }), txt("bucket", "Bucket", { width: 70 }),
+        txt("factor", "Factor", { width: 160 }), fig("s", "s"), R.figureColumn("rw", "RW", { width: 90, format: function (v) { return num(v, 6); } }),
+        fig("ws", "WS / CVR+"), fig("Klow", "K low"), fig("Kmedium", "K medium"), fig("Khigh", "K high")],
+      onRow: function (r) { select(r.i); } });
+    // the keys walk the rows (the grid's own arrows) and the formula bar follows the focus
+    if (g) { g.on("focusChanged", function (f) { var x = f && g.model.rowAt(f.row); if (x && x.kind === "leaf") { select(x.row.i); } }); }
+    $("[data-fr-more]").textContent = (a.factors || 0) > rows.length ? (a.factors - rows.length) + " more factors: export a desk or a set of positions, or see the workbook" : "";
     var ex = $("[data-fr-explain]");
     ex.innerHTML = (a.explainSteps || []).map(function (s, i) { return '<details data-step="' + i + '"><summary>' + esc(s.title) + "</summary><p>" + esc(s.text) + "</p></details>"; }).join("");
   }
   function select(i) {
     var r = (state.data.grid || [])[i];
     if (!r) { return; }
-    root.querySelectorAll("[data-fr-ws] tr.sel").forEach(function (t) { t.classList.remove("sel"); });
-    var tr = root.querySelector('[data-fr-ws] tr[data-i="' + i + '"]');
-    if (tr) { tr.classList.add("sel"); }
     $("[data-fr-ref]").textContent = r.factor;
     $("[data-fr-formula]").textContent = r.formula;
     var steps = root.querySelectorAll("[data-fr-explain] details");
@@ -219,7 +247,7 @@
       if (recipe) { notice(a.reproduced + (a.recipe ? " (recipe " + a.recipe.id + ", saved " + a.recipe.created + ")" : ""), !/^reproduced/.test(a.reproduced)); }
       choices(a.choices || []);
       diff(a.compare, a.compareAnswer);
-      grid(a);
+      wsGrid(a);
     }).catch(function (e) { $("[data-fr-meta]").textContent = ""; notice(e.message, true); });
   }
   function playground() {
@@ -228,14 +256,6 @@
       var sw = ev.target.closest("[data-fr-sw]");
       if (sw) { state.choices[sw.dataset.frSw] = sw.value; recipe = ""; play(); }
       if (ev.target.matches("[data-fr-compare]")) { recipe = ""; play(); }
-    });
-    root.addEventListener("click", function (ev) {
-      var tr = ev.target.closest("[data-fr-ws] tr[data-i]");
-      if (tr) { select(+tr.dataset.i); }
-    });
-    root.addEventListener("keydown", function (ev) {
-      var tr = ev.target.closest && ev.target.closest("[data-fr-ws] tr[data-i]");
-      if (tr && ev.key === "Enter") { select(+tr.dataset.i); }
     });
     $("[data-fr-save]").addEventListener("click", function () {
       getJson("/api/frtb/recipes?" + query().toString(), { method: "POST" }).then(function (r) {

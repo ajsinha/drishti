@@ -39,7 +39,7 @@
 .pg-actions { display: inline-flex; flex-wrap: wrap; gap: 8px; margin-left: auto; align-items: center; }
 .pg-btn { background: var(--d-surface-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 3px; padding: 4px 12px; font-size: 12.5px; text-decoration: none; }
 .pg-btn.primary { background: var(--d-fill); color: var(--d-on-fill); border-color: var(--d-fill); font-weight: 600; }
-.pg-segb:focus-visible, .pg-btn:focus-visible, .pg-scroll:focus-visible { outline: 2px solid var(--d-link); outline-offset: 1px; }
+.pg-segb:focus-visible, .pg-btn:focus-visible { outline: 2px solid var(--d-link); outline-offset: 1px; }
 .pg-estimate { margin: 0; color: var(--d-muted); font-size: 12px; text-align: right; }
 .pg-notice { margin: 0; padding: 6px 10px; border: 1px solid var(--d-warn); border-radius: 4px; background: var(--d-surface); font-size: 12.5px; }
 .pg-notice[hidden] { display: none; }
@@ -49,17 +49,14 @@
 .pg-formula { padding: 5px 8px; font-size: 12px; color: var(--d-ink); white-space: nowrap; overflow-x: auto; flex: 1; background: none; }
 .pg-body { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 12px; align-items: start; }
 .pg-gridcard { min-width: 0; }
-.pg-scroll { position: relative; overflow: auto; height: min(70vh, 720px); border: 1px solid var(--d-border); border-radius: 4px; background: var(--d-bg); }
-.pg-canvas { position: relative; }
-.pg-c { position: absolute; height: 22px; width: 118px; box-sizing: border-box; padding: 0 6px; line-height: 22px; font-size: 11.5px; text-align: right;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-right: 1px solid var(--d-border); border-bottom: 1px solid var(--d-border);
-  background: var(--d-bg); cursor: cell; }
-.pg-lbl { width: 168px; text-align: left; color: var(--d-ink); background: var(--d-surface-2); z-index: 2; }
+/* the grid is drishti-grid (drishti-risk's terminal preset): each cell's content a span in the workbook's tints, filling its cell */
+.pg-grid { height: min(70vh, 720px); min-width: 0; }
+.pg-grid > drishti-grid { display: block; height: 100%; }
+.pg-grid .dg-cell { padding: 0; }
+.pg-c { display: block; height: 100%; box-sizing: border-box; padding: 0 6px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-size: 11.5px; cursor: cell; }
+.pg-lbl { text-align: left; color: var(--d-ink); background: var(--d-surface-2); }
 .pg-rn { display: inline-block; min-width: 30px; color: var(--d-muted); font-size: 10.5px; }
-.pg-letter { text-align: center; color: var(--d-muted); background: var(--d-surface-2); font-size: 10.5px; z-index: 3; cursor: default; }
-.pg-letter.pg-fl { width: 168px; z-index: 5; }
-.pg-ft { z-index: 3; }
-.pg-ft.pg-fl { z-index: 4; }
 .pg-hd { background: var(--d-surface); color: var(--d-muted); }
 .pg-hd.pg-id { color: var(--d-ink); font-weight: 600; }
 .pg-in { background: color-mix(in srgb, var(--d-warn) 12%, var(--d-bg)); color: var(--d-link); }
@@ -70,7 +67,7 @@
 .pg-mk { text-align: center; color: var(--d-on-fill); font-weight: 700; }
 .pg-mk::first-letter { background: var(--d-warn); padding: 0 4px; border-radius: 2px; }
 .pg-res { background: var(--d-surface); font-weight: 600; }
-.pg-sel { outline: 2px solid var(--d-link); outline-offset: -2px; z-index: 6; }
+.pg-sel { outline: 2px solid var(--d-link); outline-offset: -2px; }
 .pg-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--d-muted); font-size: 11.5px; padding: 6px 2px; }
 .pg-legend .sw { display: inline-block; width: 12px; height: 10px; margin-right: 5px; border: 1px solid var(--d-border); vertical-align: -1px; }
 .pg-legend .sw-input { background: color-mix(in srgb, var(--d-warn) 25%, transparent); }
@@ -110,9 +107,5 @@
 .pg-param-note { font-size: 11px; color: var(--d-muted); font-weight: normal; }
 .pg-param-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 12px; }
 .pg-param-steps { margin: 0; padding-left: 18px; font-size: 12px; }
-.pg-param-table { border-collapse: collapse; font-size: 12px; }
-.pg-param-table th, .pg-param-table td { padding: 2px 8px; border-bottom: 1px solid var(--d-border); text-align: left; }
-.pg-param-table td.num { text-align: right; font-family: var(--d-font-mono); }
-.pg-param-scroll { max-height: 320px; overflow: auto; }
-.pg-param-scroll.short { max-height: 220px; }
+.pg-param-grid-host { min-width: 0; }
 @media (max-width: 600px) { .pg-param-grid { grid-template-columns: minmax(0, 1fr); } }

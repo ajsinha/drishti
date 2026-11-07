@@ -65,7 +65,8 @@ export function tailFigures(pnl, varConf, esConf) {
 
 /**
  * The P&L distribution with VaR and ES.
- * @param {Object} spec value (the P&L field), var and es (the server's figures), confidence {var, es}, bins
+ * @param {Object} spec value (the P&L field), var and es (the server's figures), confidence {var, es}, bins, binned (the server's bins
+ *   {edges, counts}: then var and es are the server's too), parametric {var, curve: {x, y}, gap, gapPct, describe} (the server's fitted normal)
  * @param {Object[]} rows
  * @param {Object} env
  * @returns {Object}
@@ -78,19 +79,32 @@ export function buildPnlDistribution(spec, rows, env) {
   const s = Object.assign({}, spec, { value: Object.assign({ field: vf, title: 'P&L' }, spec.value), bins: spec.bins || 36,
     tail: { below: -v, tone: 'bad', label: 'beyond VaR' },
     annotations: [{ type: 'line', axis: 'x', value: -v, label: 'VaR ' + pct(conf.var), tone: 'bad', style: 'solid' }, { type: 'line', axis: 'x', value: -es, label: 'ES ' + pct(conf.es), tone: 'accent' }].concat(spec.annotations || []) });
+  const p = spec.parametric;
+  if (p && num(p.var) !== null) {
+    // the fitted normal (PARAMETRIC_VAR.md section 8): the server's curve on the bars' scale and its VaR, drawn as given
+    s.annotations = s.annotations.concat([{ type: 'line', axis: 'x', value: -num(p.var), label: 'parametric ' + env.fmt(num(p.var)), tone: 'warn', style: 'dashed', showValue: false }]);
+  }
   const b = buildHistogram(s, rows, env);
+  if (p && p.curve && p.curve.x && p.curve.x.length) {
+    b.option.series.push({ type: 'line', name: 'fitted normal', smooth: true, symbol: 'none', silent: false, data: p.curve.x.map((x, i) => [num(x), num(p.curve.y[i])]),
+      lineStyle: { color: toneColour(env.theme, 'warn'), width: 1.5 }, tooltip: { formatter: () => (p.describe || []).join('<br>') || 'fitted normal' } });
+    b.legend.push({ name: 'fitted normal · parametric ' + env.fmt(num(p.var)), colour: toneColour(env.theme, 'warn'), style: 'dash' });
+    if (num(p.gap) !== null) { b.figures = { fatTailGap: num(p.gap), fatTailGapPct: num(p.gapPct) }; }
+  }
   b.legend.push({ name: 'VaR ' + pct(conf.var) + ' ' + env.fmt(v), colour: toneColour(env.theme, 'bad'), style: 'line' }, { name: 'ES ' + pct(conf.es) + ' ' + env.fmt(es), colour: toneColour(env.theme, 'accent'), style: 'dash' });
   b.legendStatic = true;
-  b.figures = { var: v, es: es, computedHere: computed };
+  b.figures = Object.assign({ var: v, es: es, computedHere: computed }, b.figures);
   if (computed) { b.badge = { tone: 'muted', text: 'computed here (no server)' }; }
-  b.summary = 'P&L distribution of ' + rows.length + ' scenarios: VaR ' + pct(conf.var) + ' ' + env.fmt(v) + ', ES ' + pct(conf.es) + ' ' + env.fmt(es);
+  const n = spec.binned ? spec.binned.counts.reduce((t, c) => t + (num(c) || 0), 0) : rows.length;
+  b.summary = 'P&L distribution of ' + n + ' scenarios: VaR ' + pct(conf.var) + ' ' + env.fmt(v) + ', ES ' + pct(conf.es) + ' ' + env.fmt(es);
   return b;
 }
 
 /**
  * The backtest: P&L against minus VaR, exceptions marked, the traffic light on the card.
  * @param {Object} spec x (the date field), pnl (default hypothetical), var (the VaR field; drawn negated), actual (another P&L field),
- *   window (default 250)
+ *   window (default 250), light (the server's {exceptions, zone, plus, multiplier}: shown as given; figures.counted is the page's own
+ *   count of the rows, for a check), marks (more marks: another P&L's exceptions)
  * @param {Object[]} rows
  * @param {Object} env
  * @returns {Object}
@@ -98,15 +112,19 @@ export function buildPnlDistribution(spec, rows, env) {
 export function buildBacktest(spec, rows, env) {
   const pf = fieldOf(spec.pnl) || 'hypothetical', vf = fieldOf(spec.var) || 'var99', xf = fieldOf(spec.x) || 'date', af = fieldOf(spec.actual);
   const window = spec.window || 250, last = rows.slice(-window);
-  const n = last.filter((r) => num(r[pf]) !== null && num(r[vf]) !== null && num(r[pf]) < -num(r[vf])).length, tl = trafficLight(n);
+  const counted = last.filter((r) => num(r[pf]) !== null && num(r[vf]) !== null && num(r[pf]) < -num(r[vf])).length;
+  // the server's count and zone when it gives them (spec.light: {exceptions, zone, multiplier}); the page counts only without a server
+  const lt = spec.light || null, n = lt && num(lt.exceptions) !== null ? num(lt.exceptions) : counted;
+  const tl = lt && lt.zone ? { zone: String(lt.zone).toLowerCase(), plus: num(lt.plus) !== null ? num(lt.plus) : trafficLight(n).plus } : trafficLight(n);
   const series = [{ field: pf, name: (spec.pnlTitle || 'Hypothetical P&L') }].concat(af ? [{ field: af, name: spec.actualTitle || 'Actual P&L', opacity: 0.9 }] : [])
     .concat([{ field: vf, name: '−VaR ' + (spec.confidence ? Math.round(spec.confidence * 100) + '%' : '99%') + ' (day before)', negate: true, style: 'dashed', tone: 'bad' }]);
   const s = Object.assign({}, spec, { kind: 'line', x: Object.assign({ field: xf, type: 'time' }, typeof spec.x === 'object' ? spec.x : {}), y: Object.assign({ format: 'money' }, spec.y),
-    series: series, marks: [{ when: pf + ' < -' + vf, as: 'point', tone: 'bad', field: pf, name: 'Exception (' + n + ')' }],
+    series: series, marks: [{ when: pf + ' < -' + vf, as: 'point', tone: 'bad', field: pf, name: 'Exception (' + n + ')' }].concat(spec.marks || []),
     annotations: [{ type: 'line', axis: 'y', value: 0, tone: 'faint', style: 'solid', showValue: false }].concat(spec.annotations || []) });
   const b = buildSeriesChart(s, rows, env);
-  b.badge = { tone: tl.zone === 'green' ? 'good' : tl.zone === 'amber' ? 'warn' : 'bad', text: tl.zone + ' · ' + n + ' exceptions · plus ' + tl.plus.toFixed(2), zone: tl.zone };
-  b.figures = { exceptions: n, zone: tl.zone, plus: tl.plus, window: last.length };
+  const tail = lt && num(lt.multiplier) !== null ? 'multiplier ' + num(lt.multiplier).toFixed(2) : 'plus ' + tl.plus.toFixed(2);
+  b.badge = { tone: tl.zone === 'green' ? 'good' : tl.zone === 'amber' ? 'warn' : 'bad', text: tl.zone + ' · ' + n + ' exceptions · ' + tail, zone: tl.zone };
+  b.figures = { exceptions: n, zone: tl.zone, plus: tl.plus, window: last.length, counted: counted, fromServer: !!lt };
   b.summary = 'Backtest over ' + last.length + ' days: ' + n + ' exceptions, the ' + tl.zone + ' zone, plus factor ' + tl.plus.toFixed(2);
   return b;
 }
@@ -142,7 +160,8 @@ export function eepeOf(tenors, ee) {
 
 /**
  * The exposure profile: EE and PFE over the tenors (a log axis by default), EEPE over the first year, the limit, a breach of it marked.
- * @param {Object} spec x (tenor in years), ee, pfe, eepe (the server's), limit, log (default true)
+ * @param {Object} spec x (tenor in years), ee, pfe, eepe (the server's), limit, log (default true), more (further series drawn as given:
+ *   the uncollateralised EE, the paths' fan)
  * @param {Object[]} rows
  * @param {Object} env
  * @returns {Object}
@@ -154,7 +173,7 @@ export function buildExposureProfile(spec, rows, env) {
   if (eepe === null) { eepe = eepeOf(sorted.map((r) => num(r[xf])), sorted.map((r) => r[ef])); computed = true; }
   const limit = given(spec.limit, sorted), log = spec.log !== false;
   const s = Object.assign({}, spec, { kind: 'area', x: { field: xf, type: log ? 'log' : 'value', title: 'tenor', format: tenorText }, y: Object.assign({ format: 'money' }, spec.y),
-    series: [{ field: ef, name: 'EE', tone: 'link', opacity: 0.16 }, { field: pf, name: spec.pfeTitle || 'PFE 95%', tone: 'accent', opacity: 0.1 }],
+    series: [{ field: ef, name: 'EE', tone: 'link', opacity: 0.16 }, { field: pf, name: spec.pfeTitle || 'PFE 95%', tone: 'accent', opacity: 0.1 }].concat(spec.more || []),
     marks: limit !== null ? [{ when: pf + ' > ' + limit, field: pf, tone: 'bad', name: 'over the limit' }] : [],
     annotations: (limit !== null ? [{ type: 'line', axis: 'y', value: limit, label: 'limit', tone: 'bad' }] : []).concat(spec.annotations || []) });
   const b = buildSeriesChart(s, sorted, env);

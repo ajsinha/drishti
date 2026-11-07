@@ -84,3 +84,20 @@ def clean(page):
 
 def card_value(page, vis):
     return int(float(page.locator(f'[data-visual="{vis}"] .bi-card-value').get_attribute("data-value")))
+
+
+GRID_ROWS = """(vis) => {
+  const root = document.querySelector('[data-visual="' + vis + '"]');
+  if (!root) { return null; }
+  const host = [root].concat(Array.from(root.querySelectorAll('*'))).find((e) => e.__grid && e.__grid.grid);
+  if (!host) { return null; }
+  const m = host.__grid.grid.model, cols = m.shownColumns().length, out = [];
+  for (let r = 0; r < m.rowCount(); r++) { const row = []; for (let c = 0; c < cols; c++) { row.push(m.cellText(r, c)); } out.push(row); }
+  return out;
+}"""
+
+
+def grid_rows(page, vis):
+    """A table visual's rows as its grid shows them (drishti-grid: every row, drawn or scrolled away), each a list of cell texts."""
+    page.wait_for_function("(v) => (" + GRID_ROWS + ")(v) !== null", arg=vis)
+    return page.evaluate(GRID_ROWS, vis)

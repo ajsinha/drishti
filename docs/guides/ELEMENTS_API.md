@@ -24,10 +24,10 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 |---|---|---|
 | [drishti-core](#drishti-core) | 1.1.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines |
 | [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions) |
-| [drishti-inputs](#drishti-inputs) | 0.1.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema with four eyes, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
+| [drishti-inputs](#drishti-inputs) | 0.2.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema with four eyes, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
-| [drishti-chart](#drishti-chart) | 0.1.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
-| [drishti-risk](#drishti-risk) | 0.1.0 | The banking module's chart kinds on drishti-chart (licensed with the module): the P&L distribution with VaR and ES, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit |
+| [drishti-chart](#drishti-chart) | 0.2.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
+| [drishti-risk](#drishti-risk) | 0.2.0 | The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser) |
 | [drishti-renderer](#drishti-renderer) | 2.0.0 | The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js |
 
 ## drishti-core
@@ -5722,6 +5722,7 @@ A row as the grid sees it at a display index.
 | `[cellClass]` | `(string\|function(*, Object): (string\|string[]))` | classes on a row's cell (letters, digits, - and _ only; others are dropped): a name, or a function of the value and the row |
 | `[cellStyle]` | `(Object\|function(*, Object): Object)` | a row's cell's style, limited to colour, background, font weight and style, text alignment and decoration (anything else is dropped): an object, or a function of the value and the row |
 | `[system=false]` | `boolean` | a column the grid adds (the AG Grid-style adapter's group column): never in the field list |
+| `[cellRenderer]` | `function({value: *, text: string, row: Object, doc: Document}): (Node\|string\|null)` | a leaf's cell content drawn by the host (a link, a button); null keeps the formatted text. Copy, export and sort still use the value and its text. |
 
 #### `DocTableHooks` : `Object`
 
@@ -5857,6 +5858,11 @@ Everything GridModel takes (columns, rows or datasource, serverPivot, explain, c
 | `[drillThrough]` | `function(Object): (Promise&lt;Object[]&gt;\|Object[])` | the rows behind a cell (default: the rows in the page that match the cell's members) |
 | `[members]` | `function(string): (Promise&lt;Array&lt;{text: string, count: number}&gt;&gt;\|Array)` | a field's members for its filter (default: the rows in the page) |
 | `[phoneWidth=640]` | `number` | below this width the grid is drawn for a phone |
+| `[fitRows]` | `number` | the host as tall as its rows, up to this many (then it scrolls): a screen's small table |
+| `[pinnedTopRows]` | `Object[]` | rows kept under the headings as the others scroll (a spreadsheet's header rows): drawn by the columns' formats, classes and renderers, not sorted, filtered or counted; a click is pinnedCellClicked |
+| `[getRowClass]` | `function(Object): ?string` | more classes for a leaf's row from its data |
+| `[getRowData]` | `function(Object): ?Object&lt;string, *&gt;` | data-* attributes for a leaf's row ({key: 'A-1'}: data-key) |
+| `[chrome=true]` | `boolean` | false: the grid without its layout's chrome (no command line, toolbar, wells or function keys; the status bar and Explain stay), for a small table inside a screen that has its own command line and keys |
 | `[model]` | `GridModel` | draw this model rather than make one |
 | `[chrome=true]` | `boolean` | false: the grid alone, without toolbar, wells, status bar or Explain drawer (a panel inside a page that has its own; the keys, menus and Explain hook still work) |
 
@@ -6008,7 +6014,7 @@ A tree node.
 
 ## drishti-inputs
 
-Version 0.1.0. Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
+Version 0.2.0. Bundle `static/elements/drishti-inputs/drishti_inputs.js`, global `Drishti.elements.inputs`; requires drishti-core.
 
 ### drishti_calendar.js
 
@@ -8553,7 +8559,7 @@ A data source.
 
 ## drishti-chart
 
-Version 0.1.0. Bundle `static/elements/drishti-chart/drishti_chart.js`, global `Drishti.elements.chart`; requires drishti-core.
+Version 0.2.0. Bundle `static/elements/drishti-chart/drishti_chart.js`, global `Drishti.elements.chart`; requires drishti-core.
 
 ### drishti_chart-spec.js
 
@@ -8915,7 +8921,7 @@ Histogram: the values of a field in equal bins (a value axis, so lines at a valu
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `spec` | `Object` | bins (a count or "auto"), tail {below\|above: a number or a field of the first row, tone} |
+| `spec` | `Object` | bins (a count or "auto"), binned (the server's bins {edges, counts}: drawn as they are, no rows needed), tail {below\|above: a number or a field of the first row, tone} |
 | `rows` | `Object[]` |  |
 | `env` | `Object` |  |
 
@@ -10025,7 +10031,7 @@ The options of a chart (the spec says what to draw; these say how it lives in it
 
 ## drishti-risk
 
-Version 0.1.0. Bundle `static/elements/drishti-risk/drishti_risk.js`, global `Drishti.elements.risk`; requires drishti-core, drishti-chart.
+Version 0.2.0. Bundle `static/elements/drishti-risk/drishti_risk.js`, global `Drishti.elements.risk`; requires drishti-core, drishti-grid, drishti-chart.
 
 ### drishti_risk-kinds.js
 
@@ -10082,7 +10088,7 @@ The P&L distribution with VaR and ES.
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `spec` | `Object` | value (the P&L field), var and es (the server's figures), confidence {var, es}, bins |
+| `spec` | `Object` | value (the P&L field), var and es (the server's figures), confidence {var, es}, bins, binned (the server's bins {edges, counts}: then var and es are the server's too), parametric {var, curve: {x, y}, gap, gapPct, describe} (the server's fitted normal) |
 | `rows` | `Object[]` |  |
 | `env` | `Object` |  |
 
@@ -10094,7 +10100,7 @@ The backtest: P&L against minus VaR, exceptions marked, the traffic light on the
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `spec` | `Object` | x (the date field), pnl (default hypothetical), var (the VaR field; drawn negated), actual (another P&L field), window (default 250) |
+| `spec` | `Object` | x (the date field), pnl (default hypothetical), var (the VaR field; drawn negated), actual (another P&L field), window (default 250), light (the server's {exceptions, zone, plus, multiplier}: shown as given; figures.counted is the page's own count of the rows, for a check), marks (more marks: another P&L's exceptions) |
 | `rows` | `Object[]` |  |
 | `env` | `Object` |  |
 
@@ -10106,7 +10112,7 @@ The exposure profile: EE and PFE over the tenors (a log axis by default), EEPE o
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `spec` | `Object` | x (tenor in years), ee, pfe, eepe (the server's), limit, log (default true) |
+| `spec` | `Object` | x (tenor in years), ee, pfe, eepe (the server's), limit, log (default true), more (further series drawn as given: the uncollateralised EE, the paths' fan) |
 | `rows` | `Object[]` |  |
 | `env` | `Object` |  |
 
@@ -10129,6 +10135,122 @@ Returns `Object`.
 Registers the risk kinds in drishti-chart's registry (the library does it when it loads, and only where the banking module is licensed: the console serves this library to no one else).
 
 Returns `string[]`: the kinds registered now.
+
+### drishti_risk-grid.js
+
+#### `RISK_GRID_DEFAULTS`
+
+What every risk table starts from.
+
+#### `TONES`
+
+The tones a column's cellClass gives: a loss or a breach is bad, a gain good (the console's tone classes in the grid).
+
+#### `figureColumn(field, header, o)`
+
+A number column of a risk figure: right-aligned, formatted by name, never summed in the browser when it is a VaR or an ES.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `string` |  |
+| `header` | `string` |  |
+| `[o]` | `Object` | format (default 'compact'), additive (default false: VaR, ES, a limit use), width, tone (a function of the value giving a key of TONES), and any other ColumnDef property |
+
+Returns `Object`: a ColumnDef.
+
+#### `riskGrid(host, options)`
+
+Draws a risk table: a &lt;drishti-grid&gt; in host (made once and kept: a second call gives it new columns and rows).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` | the element the grid fills |
+| `options` | `Object` | columns, rows, title, subtitle, getRowId, fitRows (rows shown before it scrolls), onRow(row, event), explain, and anything a Grid takes (chrome: true for the terminal's command line and keys) |
+
+Returns `Object`: the Grid (its plain API: setRows, on, getState ...).
+
+### drishti_risk-chart.js
+
+#### `riskChart(host, spec, o)`
+
+Draws a risk chart in host.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `spec` | `Object` | a drishti-chart spec (a risk kind or any other) |
+| `[o]` | `Object` | onPick(row, ctx), height (the drawing's, px, default 220), density (default terminal), explain, and any Chart option |
+
+Returns `Object`: the Chart.
+
+### drishti_risk-columns.js
+
+#### `textColumn(field, header, o)`
+
+A label column.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `string` |  |
+| `header` | `string` |  |
+| `[o]` | `Object` | any ColumnDef property (width, pinned, cellRenderer ...) |
+
+Returns `Object`: a ColumnDef.
+
+#### `moneyColumn(field, header, fmt, o)`
+
+A money column: the server's figure written by the screen's rule; an empty figure of a total row is left empty.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `string` |  |
+| `header` | `string` |  |
+| `fmt` | `function(*): string` | the screen's money rule |
+| `[o]` | `Object` | figureColumn's options (additive, tone, width ...); a format here wins |
+
+Returns `Object`: a ColumnDef.
+
+### drishti_risk-format.js
+
+#### `riskMoney(v)`
+
+Compact money: 1.23m, -412k, 950; an em dash for no figure.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `?number` |  |
+
+Returns `string`.
+
+#### `riskSigned(v)`
+
+Compact money with its sign: +1.23m, -412k.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `?number` |  |
+
+Returns `string`.
+
+#### `riskInt(v)`
+
+Whole units with grouping: 1,234,567 and -12,000; an em dash for no figure.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `?number` |  |
+
+Returns `string`.
+
+#### `riskPct(v)`
+
+A share with one decimal: 0.4567 is 45.7%; an em dash for no figure.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `v` | `?number` |  |
+
+Returns `string`.
 
 ### drishti_index.js
 

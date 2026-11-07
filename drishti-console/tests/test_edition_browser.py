@@ -85,13 +85,13 @@ def test_each_landing_fills_from_the_engines_and_fits(browser, risk_console, lan
         root.wait_for()
         page.wait_for_function("() => !document.querySelector('[data-rl-date]') || document.querySelector('[data-rl-date]').textContent !== '…'")
         if landing == "desk":
-            page.wait_for_function("() => document.querySelectorAll('[data-rl-desks] tr').length >= 3")
+            page.wait_for_function("() => document.querySelectorAll('[data-rl-desks] .dg-row').length >= 3")
             assert page.locator("[data-rl-var]").first.inner_text() == "112.04m"
             assert page.locator("[data-rl-epe]").first.inner_text() == "947.20m"
             assert page.locator("[data-rl-backtest]").first.inner_text() == "amber · 5"
             page.wait_for_function("() => document.querySelector('[data-rl-breaches]').textContent === '2'")   # one VaR, one credit
-            assert "DESK-COMM" in page.locator("[data-rl-desks] tr").first.inner_text()
-            assert "Aldershot" in page.locator("[data-rl-cptys] tr").first.inner_text()
+            assert "DESK-COMM" in page.locator("[data-rl-desks] .dg-row").first.inner_text()
+            assert "Aldershot" in page.locator("[data-rl-cptys] .dg-row").first.inner_text()
         elif landing == "command":
             assert page.locator("#rlCmd").is_visible()
             assert page.locator(".rl-chip", has_text="VAR BANK").count() == 1
@@ -112,7 +112,7 @@ def test_the_desk_landing_draws_in_every_theme(browser, risk_console):
     page = ctx.new_page()
     try:
         page.goto(f"{risk_console}/?landing=desk", wait_until="load")
-        page.wait_for_function("() => document.querySelectorAll('[data-rl-desks] tr').length >= 3")
+        page.wait_for_function("() => document.querySelectorAll('[data-rl-desks] .dg-row').length >= 3")
         seen = set()
         for theme in THEMES:
             page.evaluate(f"document.documentElement.setAttribute('data-theme', '{theme}')")

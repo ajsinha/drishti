@@ -45,14 +45,14 @@ def test_limited_rows_say_how_many_of_how_many_are_shown(stack, browser):
     painted(pg, "DESK:DESK-RATES")
     pg.locator('.vx-tab[data-tab="contrib"]').click()
     pg.locator('.vx-segb[data-by="position"]').click()
-    wait(pg, "document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"POS:\"]').length === %d" % MAX_PARTS)
+    wait(pg, "(((document.querySelector('[data-vx-ctable] drishti-grid') || {}).grid || null) ? ((document.querySelector('[data-vx-ctable] drishti-grid') || {}).grid || null).model.rowModel.rows.filter((r) => /^POS:/.test(r.scope)).length : 0) === %d" % MAX_PARTS)
     line = pg.locator("[data-vx-ctable-shown]")
     wait(pg, "!document.querySelector('[data-vx-ctable-shown]').hidden")
     text = line.inner_text()
     n = f"{total:,}"
     assert text == f"{MAX_PARTS} of {n} positions shown (the largest by gross size); totals are over all {n}.", text
     assert line.is_visible()
-    total_row = pg.locator("[data-vx-ctable] tbody tr.vx-total").inner_text()
+    total_row = pg.locator("[data-vx-ctotal]").inner_text()                       # the server's totals, under the grid
     assert f"{round(d['sumComponent']):,}" in total_row and f"{round(d['sumStandalone']):,}" in total_row
     # the desk's own children (its books) are fewer than max-parts: no line
     pg.locator('.vx-segb[data-by="child"]').click()
