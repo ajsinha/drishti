@@ -407,6 +407,7 @@ def _camel(s: str) -> str:
 @functools.lru_cache(maxsize=None)
 def server_keys() -> frozenset[str]:
     rels = [p for p in tracked() if p.startswith("drishti-server/src/main/resources/application") and p.endswith(".yaml")]
+    rels.append("config/db/database.yaml")   # the Drishti database's settings: their own file, imported by application.yaml
     return yaml_keys(*rels)
 
 

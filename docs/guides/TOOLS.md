@@ -1538,6 +1538,18 @@ drishti-console/.venv/bin/python tools/drishti.py tables check
 drishti-console/.venv/bin/python tools/drishti.py tables migrate --dry-run
 ```
 
+### 5.18 db
+
+The Drishti database (`tools/dbcli.py`; [OPERATIONS.md section 10.3](../admin/OPERATIONS.md#103-upgrading-the-drishti-database),
+[CLI_GUIDE.md, db](CLI_GUIDE.md#db-the-drishti-database)). `db copy --from SETTINGS.yaml --to SETTINGS.yaml [--check] [--drop-columns]
+[--json]` copies every table Drishti owns into a fresh database built from the complete schema and verifies every row count: the
+schema upgrade (there are no migrations) and the SQLite ↔ PostgreSQL switch. It runs in Java from the server's exec jar without
+starting a server; stop the servers that use the source first. Exit 0 copied and verified, 1 failed, 2 refused or a usage error.
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py db copy --from config/db/database.yaml --to new-database.yaml --check
+```
+
 ## 6. Store loaders: `tools/load-*.sh`
 
 Each loader writes the banking packs' demo data (1,791 sample documents x 10 business days, and with `--trades N --days D` a
