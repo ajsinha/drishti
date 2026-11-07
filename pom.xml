@@ -48,6 +48,7 @@
     <module>drishti-testkit</module>
     <module>drishti-diskcache</module>
     <module>drishti-messaging</module>
+    <module>drishti-registry</module>
     <module>drishti-lakeconfig</module>
     <module>drishti-lakeio</module>
     <module>drishti-deltalake</module>
@@ -203,6 +204,7 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-messaging</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-deltalake</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeconfig</artifactId><version>${project.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-registry</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-iceberg</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-memlake</artifactId><version>${project.version}</version></dependency>
