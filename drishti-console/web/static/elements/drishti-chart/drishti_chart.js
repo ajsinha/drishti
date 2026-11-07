@@ -2273,7 +2273,11 @@
         await Promise.all(els.map((el) => this.drawOne(E, el, t)));
         const win = this.win();
         if (!this.ro && win.ResizeObserver) {
-          this.ro = new win.ResizeObserver(() => win.requestAnimationFrame(() => { this.live().forEach((c) => c.resize()); if (this.o.relayout) { this.draw(this.root); } }));
+          let first = true;                                   // an observer reports the size it starts with: not a change
+          this.ro = new win.ResizeObserver(() => {
+            if (first) { first = false; return; }
+            win.requestAnimationFrame(() => { this.live().forEach((c) => c.resize()); if (this.o.relayout) { this.draw(this.root); } });
+          });
           this.ro.observe(this.root.host || this.root.firstElementChild || win.document.body);
         }
       }
