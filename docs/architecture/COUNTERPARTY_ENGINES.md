@@ -335,7 +335,7 @@ FCA, FBA and FVA are linear in EE and ENE, which add across netting sets, so FVA
 load from the per-set profile, a scope is a sum. A partial scope uses its partial profile. The computation runs in the Python engine
 `drishti_ccr.xva:XvaEngine` (planned; the CVA family later adds CVA and DVA to the same engine) on the `risk` pool; the computed kind is
 `fva-result` with `/api/v1/fva` (decision 9). When CVA is built, `cva-result` reads FVA by reference to `fva-result` rather than
-carrying a second copy ([CVA.md section 16](../contracts/CVA.md#16-open-questions-and-the-change-table)).
+carrying a second copy ([CVA.md section 16](../contracts/CVA.md#16-open-questions)).
 
 ## 6. The CCR cube core: data flow
 

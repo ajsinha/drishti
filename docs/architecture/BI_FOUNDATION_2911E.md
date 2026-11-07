@@ -815,7 +815,7 @@ editors and the layer's settings (the store folder) come with it.
 
 ## 11. As built (part C): the switch
 
-Step 5 of 7.3, in two commits: the switch itself, then (after the mid-way critique of PRODUCT_CRITIQUE_BRIEF.md, area 3) the deletion of
+Step 5 of 7.3, in two commits: the switch itself, then (after the mid-way critique, area 3) the deletion of
 the old code.
 
 | Part | Built | Where |

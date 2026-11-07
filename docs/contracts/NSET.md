@@ -10,7 +10,7 @@
 [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
-may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
+may change before the release, and each change will be recorded in [section 16](#16-open-questions).
 
 This is the data contract of the **netting set**: the terms Drishti keeps (the agreement, the CSA, which trades belong to which
 netting set) and the figures it computes when asked (net MtM, collateral, exposure peaks, limit use, CVA). It is the first of nine
@@ -53,7 +53,7 @@ provenance, entitlements, the reactive connector), this page refers to [VAR.md](
 13. [Test data and generators](#13-test-data-and-generators)
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
-16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+16. [Open questions](#16-open-questions)
 
 ## 1. Summary
 
@@ -616,7 +616,7 @@ One counterparty `CP-X`, two netting sets, USD. Set `NS-X-NY` is margined (CSA: 
 A partial scope, `CPTY:CP-X & TRD:T1,T4` (*what if only these two*): T1 alone in `NS-X-NY` gives `CE_UNCOLL` 9.0m, T4 alone in `NS-X-LDN`
 gives 0; `PARTIAL_SETS` = 2 and, with `partial-collateral: none`, `CE` = 9.0m.
 
-## 16. Open questions and the change table
+## 16. Open questions
 
 ### 16.1 Open questions
 
@@ -631,12 +631,6 @@ gives 0; `PARTIAL_SETS` = 2 and, with `partial-collateral: none`, `CE` = 9.0m.
 | 7 | Retention: inputs 7 years (decided); captures of NSET answers the same? | §3.7 |
 | 8 | Published counterparty-level official results: a separate restricted `<measure>-official-cpty` table (proposed) or counterparty rows in the one `<measure>-official` table; and which levels (netting set, counterparty, group) | §9.5 |
 | 9 | TVAL and SIMM read membership from `netting-set.TRADE_IDS`; move both to `netting-set-member` (proposed), or keep `TRADE_IDS` on the netting-set record as a derived list? | §3.6 |
-
-### 16.2 The change table
-
-| Version | Date | Change |
-|---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED: terms and membership kept, figures computed; product owner's decisions of 2026-10-25 applied (load signal reloads the engines, inputs kept 7 years, `LE:` from the trade's booking legal entity, published official results with a restricted counterparty-level table) |
 
 ---
 

@@ -13,7 +13,7 @@ contract until its engine is built.
 SA-CCR (for BA-CVA): [SACCR.md](SACCR.md) · Wrong-way risk: [WWR.md](WWR.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
-may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
+may change before the release, and each change will be recorded in [section 16](#16-open-questions).
 
 This is the contract of Drishti's **CVA engine**: CVA (unilateral and bilateral), DVA, FVA (funding cost and benefit), the CS01 to the
 counterparty's spread, hooks for KVA and MVA, and the regulatory **BA-CVA** capital (reduced version), computed when asked for any
@@ -37,7 +37,7 @@ own: everything it needs is EXP's paths, market data and configuration.
 13. [Test data and generators](#13-test-data-and-generators)
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
-16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+16. [Open questions](#16-open-questions)
 
 ## 1. Summary
 
@@ -390,7 +390,7 @@ hazard λ_C = 2%, LGD_C = 60%; the bank: λ_B = 1%, LGD_B = 60%; **no discountin
 4,184,144) and M = 4 years: DF = (1 − e^(−0.2)) / 0.2 = 0.906346; SCVA = (1/1.4) × 0.05 × 4 × 4,184,144 × 0.906346 = **541,755**; with a single
 counterparty K_reduced = SCVA × √(0.25 + 0.75) = 541,755; **K_BA-CVA = 0.65 × 541,755 = 352,141**.
 
-## 16. Open questions and the change table
+## 16. Open questions
 
 ### 16.1 Open questions
 
@@ -402,13 +402,6 @@ counterparty K_reduced = SCVA × √(0.25 + 0.75) = 541,755; **K_BA-CVA = 0.65 �
 | 4 | BA-CVA effective maturity M: notional-weighted remaining maturity (proposed) or the IMM formula for approved banks | §6.6 |
 | 5 | The discount curve: the USD OIS curve id in the market-data pack; multi-currency CSAs (discounting at the CSA rate) | §9.4 |
 | 6 | KVA and MVA: show as hooks (off by default, proposed) or leave out until capital projection and an IM profile exist? | §6.3 |
-
-### 16.2 The change table
-
-| Version | Date | Change |
-|---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
-| 1.1 | 2026-11-02 | Product owner's decisions of 2026-11-02 applied ([COUNTERPARTY_ENGINES.md section 14](../architecture/COUNTERPARTY_ENGINES.md#14-decisions)): FVA computed first into its own kind `fva-result` (`/api/v1/fva`) and read by reference by `cva-result`; FVA on the collateralised profile, symmetric, not survival-weighted; the demo funding curve is a synthetic, labelled curve |
 
 ---
 

@@ -14,7 +14,7 @@ portfolio or book (PTRD), booked by one of the bank's legal entities (LTRD), or 
 summaries made by a `derived` connector over the trade master, capped at 1,000 member trades. When built they are **one computed page
 over the scope engine**: every trade, paged, sorted and filtered on the server, for any business date, with the scope's valuation
 (TVAL) and VaR beside it. Everything here is a **proposal**; names may change, and each change will be recorded in
-[section 16](#16-open-questions-and-the-change-table). The shared rules are in [README.md](README.md); the scope grammar, captures,
+[section 16](#16-open-questions). The shared rules are in [README.md](README.md); the scope grammar, captures,
 baskets and entitlements are VaR's ([VAR.md](VAR.md#1-the-contract-at-a-glance)).
 
 **Sources read for this contract (2026-10-25):** `config/packs/trading/pack.yaml` (the connector `trade-pages`, its four kinds'
@@ -39,7 +39,7 @@ the Sutras `config/packs/trading/sutras/pages/*-trades.v1.sutra.yaml`, the trade
 13. [Test data and generators](#13-test-data-and-generators)
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
-16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+16. [Open questions](#16-open-questions)
 
 ## 1. Summary
 
@@ -420,7 +420,7 @@ Business date 2026-09-30. Five trades of counterparty `CP-A` (FX close: EUR → 
 
 With the filter `status=VALIDATED,AMENDED,NEW` the list shows T1, T2, T5 (`total` 3), and `BY_STATUS` still shows all five counts.
 
-## 16. Open questions and the change table
+## 16. Open questions
 
 ### 16.1 Open questions
 
@@ -433,12 +433,6 @@ With the filter `status=VALIDATED,AMENDED,NEW` the list shows T1, T2, T5 (`total
 | 5 | Trade ids that repeat across source systems: is (`SOURCE_SYSTEM`, `TRADE_ID`) the key everywhere, or are ids globally unique? | §10 |
 | 6 | One common access setting for every measure (`drishti.measures.access`) instead of one per measure? | §11 |
 | 7 | Should the default status filter be *live* (risk view) rather than *all* (today's operations view)? | §5 |
-
-### 16.2 The change table
-
-| Version | Date | Change |
-|---|---|---|
-| 1.0 | 2026-10-25 | First version (PLANNED): the trade-scope page over the scope engine, the words `INDEX:`, `TRDR:`, `STATUS:`, the retirement of CTRD, PTRD, LTRD, ITRD and `trade-pages` |
 
 ---
 

@@ -300,7 +300,7 @@ engine answers.
 
 ## 13. Versioning a contract
 
-- Each contract has a version (`1.0`, `1.1`, …) at its top and a change table at its end.
+- Each contract has a version (`1.0`, `1.1`, …) at its top; what changed, and when, is in the CHANGELOG, not on the page.
 - **Additive changes** (a new optional column) are a minor version. Engines may send it before Drishti reads it, and Drishti ignores
   columns it does not know.
 - **Breaking changes** (a renamed or removed column, a changed unit, sign or order) are a major version. Both versions are read during
@@ -347,7 +347,7 @@ Each contract in this folder has the same sections, in this order, so any two ca
 13. **Test data and generators:** what the repository ships and how it is made.
 14. **Retiring the stored version:** what is removed, how old ids map, and the reconciliation.
 15. **A worked example:** small numbers, end to end, that a reader can check by hand.
-16. **Open questions and the change table.**
+16. **Open questions.**
 
 
 ## 16. Contracts of every command

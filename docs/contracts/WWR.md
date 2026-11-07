@@ -13,7 +13,7 @@ contract until its engine is built.
 CVA: [CVA.md](CVA.md) · Groups: [GRP.md](GRP.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
-may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
+may change before the release, and each change will be recorded in [section 16](#16-open-questions).
 
 This is the contract of **wrong-way risk**, a new measure: exposure that rises as the counterparty's credit quality falls. **Specific**
 wrong-way risk comes from the trades themselves (protection bought from a counterparty on its own name or its group's, collateral issued
@@ -39,7 +39,7 @@ optional shared input, `credit-path`.
 13. [Test data and generators](#13-test-data-and-generators)
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
-16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+16. [Open questions](#16-open-questions)
 
 ## 1. Summary
 
@@ -373,7 +373,7 @@ hazard). The paths with high exposure (1 and 3) are the paths where the counterp
 protection bought, notional 10m, recovery 40%, MtM +0.2m. Flag **SPECIFIC**, matched by `group`; JTD = 10m × (1 − 0.4) − 0 = **6.0m**; the
 CDS leaves the netting set and is its own set with exposure 6.0m in default (SA-CCR treatment: open question 2).
 
-## 16. Open questions and the change table
+## 16. Open questions
 
 ### 16.1 Open questions
 
@@ -384,12 +384,6 @@ CDS leaves the netting set and is its own set with exposure 6.0m in default (SA-
 | 3 | Thresholds for the `GENERAL` flag (ratio 1.2, ρ 0.3) and who reviews the flags (credit committee, a monthly report) | §6.1 |
 | 4 | Sovereign–bank wrong-way risk (a domestic bank's collateral in its sovereign's bonds): flag only, or a haircut add-on in COLL? | §6.1 |
 | 5 | WWR-adjusted CVA as the official CVA, or a monitoring figure beside it (proposed)? | §6.3, CVA.md |
-
-### 16.2 The change table
-
-| Version | Date | Change |
-|---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years with EXP's retention question, published official results) |
 
 ---
 

@@ -13,7 +13,7 @@ contract until its engine is built.
 [NSET.md](NSET.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
-may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
+may change before the release, and each change will be recorded in [section 16](#16-open-questions).
 
 This is the contract of **collateral valuation**: Drishti keeps the collateral **holdings** (what asset, how much, held or posted, under
 which CSA and netting set, as variation or initial margin) and computes their **values** when asked (market value from market data, FX
@@ -37,7 +37,7 @@ NICA), MC (the collateral balance a call is measured against) and EXP (today's I
 13. [Test data and generators](#13-test-data-and-generators)
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
-16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+16. [Open questions](#16-open-questions)
 
 ## 1. Summary
 
@@ -350,7 +350,7 @@ CSA in USD; MPOR 10 days; schedule: USD/EUR/GBP cash 0%, G7 government bonds 1�
 - With a 25% concentration limit per issuer, the Treasury (4,826,500 of 7,026,500 = 69%) would keep only 25% × 7,026,500 = 1,756,625:
   `CONCENTRATION_EXCESS` 3,069,875 (the schedule above has no limit, so it does not apply here).
 
-## 16. Open questions and the change table
+## 16. Open questions
 
 ### 16.1 Open questions
 
@@ -361,12 +361,6 @@ CSA in USD; MPOR 10 days; schedule: USD/EUR/GBP cash 0%, G7 government bonds 1�
 | 3 | Regulatory haircuts: the supervisory table (CRE22) or the bank's own estimates; FX-mismatch haircut on the contractual value? | §6.1 |
 | 4 | Concentration limits per issuer only, or also per asset type, country and currency? | §6.4 |
 | 5 | Tri-party collateral: allocations by the agent as holdings rows (proposed), or a schedule-level balance? | §3.3 |
-
-### 16.2 The change table
-
-| Version | Date | Change |
-|---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
 
 ---
 

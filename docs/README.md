@@ -31,7 +31,7 @@ If you will change the code, continue with [PACK_DEVELOPER_GUIDE.md, Part VIII: 
 | **Operate** | [Configuration](admin/CONFIGURATION.md) · [Editions: run Drishti Risk](admin/EDITIONS.md) · [Lenses: Risk, Trading, Market, World, Oversight, the risk cubes, the CRO and the CIO](lenses/README.md) · [Users and roles](admin/USER_MANAGEMENT.md) · [AI: model providers and MCP servers](admin/AI.md) · [Operations](admin/OPERATIONS.md) · [Cluster deployment: clusters, AWS and scale](architecture/CLUSTER_DEPLOYMENT.md) · [Deploy, promote and roll back](guides/OPERATIONALISING.md) · [Benchmark: every measurement and how to run it](admin/BENCHMARK.md) · [Troubleshooting](guides/TROUBLESHOOTING.md) |
 | **Reference** | [API](guides/API_GUIDE.md) · Developer: API references · [ViewModel contract](architecture/VIEWMODEL.md) · [Rachana reference](guides/RACHANA_REFERENCE.md) · [Functions](guides/FUNCTIONS.md) · [Command line](guides/CLI_GUIDE.md) · [Tools](guides/TOOLS.md) · [Release notes](../RELEASE_NOTES.md) · [Connector reference](reference/CONNECTORS.md) |
 | **Knowledge** | [Knowledge home and glossary](knowledge/README.md) · [Market risk](knowledge/market-risk.md) · [Counterparty credit risk](knowledge/counterparty-credit-risk.md) · [Trades and products](knowledge/trades-and-products.md) · [Entities and ownership](knowledge/entities-and-ownership.md) · [Market data](knowledge/market-data.md) · [Data and contracts](knowledge/data-and-contracts.md) · [Companies, funds and ETFs](knowledge/companies-funds-and-etfs.md) · [Economies](knowledge/economies.md) |
-| In the repository only | [architecture/](architecture/ARCHITECTURE.md) (design notes and [decision records](architecture/adr/README.md)), the per-plugin [connector documents](connectors/), the [runbooks](admin/runbooks/source-down.md), the [QA history](qa/QA_HISTORY.md) |
+| In the repository only | [architecture/](architecture/ARCHITECTURE.md) (design notes and [decision records](architecture/adr/README.md)), the per-plugin [connector documents](connectors/), the [runbooks](admin/runbooks/source-down.md), the [Windows QA script](qa/windows-custom-data.md) |
 ## How these documents are organised
 
 | Folder | What is in it |
@@ -43,7 +43,7 @@ If you will change the code, continue with [PACK_DEVELOPER_GUIDE.md, Part VIII: 
 | [contracts/](contracts/README.md) | the data contracts: the shared rules (keys, types, dates, signs, vectors, validation), the computed measures' contracts, and [the contract of every command](contracts/README.md#every-kind-a-to-z) (one YAML file per mnemonic beside its pack) |
 | [admin/](admin/) | running Drishti: operations (with Drishti\*net, compute workers and lake maintenance), configuration, users and roles, editions, AI (model providers and MCP), performance, and the runbooks |
 | [lenses/](lenses/README.md) | one product document per lens: Drishti Risk, Trading, Market and World (built), the proposed Drishti Oversight for market risk oversight, the proposed MR Cube and CCR Cube (risk cubes on one shared core, with their data contracts) the proposed CRO lens (the Chief Risk Officer's appetite view, with its mock-ups and build checklist) and the proposed CIO lens (the risk data estate and BCBS 239, with its mock-ups and build checklist); who uses each, their questions, what it answers today, the gaps and the proposals |
-| [qa/](qa/QA_HISTORY.md) | quality assurance: the history of every run (findings, fixes, commits) and the Windows QA script |
+| [qa/](qa/windows-custom-data.md) | quality assurance: the Windows QA script (the history of every run is in the CHANGELOG) |
 | [architecture/](architecture/) | how Drishti is built: the architecture, the BI design (with the W1 model specification, Rūpaka and BI runs), the data architecture (live updates, history queries, Iceberg, reactive connectors, the content store, the database), the client renderer (with Elements and GenUI), the ViewModel contract, collaboration, VaR sharding, resources and scale, cluster deployment (with Drishti\*net, AWS, the Delta lake in S3 and super scale), the implementation plan, [high-performance native integration and Java 25](architecture/HIGH_PERFORMANCE_NATIVE.md) (the roadmap: BLAS, the Vector API, native libraries, embedded columnar engines), the [scale strategy](architecture/CLUSTER_DEPLOYMENT.md#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap) (millions of trades a day, a year of history) and the decision records (ADRs) |
 | [requirements/](requirements/), [publications/](publications/) | the reference mockups and logo; the design-and-evidence presentation |
 
@@ -485,7 +485,6 @@ scripts are in the repository's history. The Windows QA script is a live procedu
 
 | Document | What it holds |
 |---|---|
-| [qa/QA_HISTORY.md](qa/QA_HISTORY.md) | every QA round, soak and documentation verification (2026-10-01 to 2026-10-21): when, on what, what it found and what was fixed, with the commits; the round reports are in git |
 | [qa/windows-custom-data.md](qa/windows-custom-data.md) | the QA and demo script for an offline Windows machine with your own ENDUR files |
 
 ### Records

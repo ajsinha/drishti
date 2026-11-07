@@ -13,7 +13,7 @@ contract until its engine is built.
 Usage measures: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md), [SACCR.md](SACCR.md) · Groups: [GRP.md](GRP.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
-may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
+may change before the release, and each change will be recorded in [section 16](#16-open-questions).
 
 This is the contract of **credit limits**: Drishti keeps the limits the credit committee approves (the amount, the measure, the tenor
 buckets, the approval and review) and computes their **usage** when asked (from EXP's PFE profile, SA-CCR's EAD, the netting sets' MtM or
@@ -36,7 +36,7 @@ settlement flows), the utilisation, the status, the headroom, and the **pre-deal
 13. [Test data and generators](#13-test-data-and-generators)
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
-16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+16. [Open questions](#16-open-questions)
 
 ## 1. Summary
 
@@ -359,7 +359,7 @@ Limit status **WARNING**, binding bucket 0–6M (equal headroom 0.5 in both; the
 6M–1Y 1.1348 (0.757, `OK`). No breach, but a bucket in `WARNING` → **REFER** (`refer-on-warning`). Maximum notional before the 0–6M
 bucket breaches: headroom 0.5 / (0.674 × 0.04 × √0.5) = **26.2**.
 
-## 16. Open questions and the change table
+## 16. Open questions
 
 ### 16.1 Open questions
 
@@ -371,12 +371,6 @@ bucket breaches: headroom 0.5 / (0.674 × 0.04 × √0.5) = **26.2**.
 | 4 | Pre-deal detail by role (decision only for sales) | §11 |
 | 5 | Bucket membership of a grid date: (FROM, TO] (proposed) or [FROM, TO)? | §3.2 |
 | 6 | Credit limits as rows of the one `risk-limit` table (STR.md section 3.5, proposed here) or a `credit-limit` table of their own? | §3.2 |
-
-### 16.2 The change table
-
-| Version | Date | Change |
-|---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
 
 ---
 

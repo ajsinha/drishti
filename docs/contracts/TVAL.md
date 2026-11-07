@@ -11,7 +11,7 @@
 
 This is the planned data contract of **TVAL**: the valuation of any set of trades, summed and broken down when asked, from one
 valuation row per trade that an upstream engine delivers. It replaces the stored kind `trade-valuation`. Everything here is a
-**proposal**: names may still change, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
+**proposal**: names may still change, and each change will be recorded in [section 16](#16-open-questions).
 The shared rules (the common risk lake, keys, types, dates, signs, delivery, validation, answers, entitlements, versioning, retirement)
 are in [README.md](README.md); the scope grammar, captures, baskets, official end-of-day captures and the entitlement model are VaR's
 ([VAR.md](VAR.md#1-the-contract-at-a-glance)) and are referred to, not repeated.
@@ -38,7 +38,7 @@ are in [README.md](README.md); the scope grammar, captures, baskets, official en
 13. [Test data and generators](#13-test-data-and-generators)
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
-16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+16. [Open questions](#16-open-questions)
 
 ## 1. Summary
 
@@ -530,7 +530,7 @@ new on 2026-09-30.
 | GONE | −(−5,000) | 5,000 |
 | MTM_CHANGE | 191,300 − 125,000 | **66,300** = 11,300 + 50,000 + 5,000 |
 
-## 16. Open questions and the change table
+## 16. Open questions
 
 ### 16.1 Open questions
 
@@ -545,12 +545,6 @@ new on 2026-09-30.
 | 7 | How many business dates of valuations the test data ships (5 proposed: about 0.5 MB compressed a date) | §13.1 |
 | 8 | Keep the input table's old name `trade-valuation` (class `input`) instead of `valuation`? The rule (README section 14) forbids a retired kind returning; the new name avoids ambiguity | §3, §14 |
 | 9 | Is `CS01` and `ACCRUED` delivered by every engine, or optional per source system? | §3.2 |
-
-### 16.2 The change table
-
-| Version | Date | Change |
-|---|---|---|
-| 1.0 | 2026-10-25 | First version (PLANNED): the `valuation` input table, totals and breakdowns over any scope, the retirement of `trade-valuation` |
 
 ---
 

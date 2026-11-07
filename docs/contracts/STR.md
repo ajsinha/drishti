@@ -17,7 +17,7 @@ This is the planned data contract of **STR**: the P&L of any set of trades under
 scenario's shocks to the trades' sensitivities**, for any scenario, including one a user defines on the spot. It replaces the stored
 kind `stress-result`. The scenario definitions (SCN, `stress-scenario`) stay **fundamental**; this contract extends their shocks so a
 machine can apply them. Everything here is a **proposal**; each change will be recorded in
-[section 16](#16-open-questions-and-the-change-table).
+[section 16](#16-open-questions).
 
 **Sources read (2026-10-25):** `config/packs/market-risk/contracts/{stress-result,stress-scenario}.contract.yaml`, the samples
 `stress-result.jsonl` (80) and `stress-scenario.jsonl` (8), `data/testdata/market-risk/{stress-result,stress-scenario}/` (snapshot of
@@ -41,7 +41,7 @@ machine can apply them. Everything here is a **proposal**; each change will be r
 13. [Test data and generators](#13-test-data-and-generators)
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
-16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+16. [Open questions](#16-open-questions)
 
 ## 1. Summary
 
@@ -515,7 +515,7 @@ scenario.
 **What is kept per node:** the book's full-revaluation vector over the programme ({SCN-X: 775,000, …}), its sensitivity vector over the
 defined scenarios ({SCN-X: 810,000, …}), and its net sensitivities (for any other scenario).
 
-## 16. Open questions and the change table
+## 16. Open questions
 
 ### 16.1 Open questions
 
@@ -528,12 +528,6 @@ defined scenarios ({SCN-X: 810,000, …}), and its net sensitivities (for any ot
 | 5 | Should simple user scenarios run in Java (no Python worker) for speed? | §6.3 |
 | 6 | Cadence of the full-revaluation programme (daily for all scenarios?) and its due time | §3.2 |
 | 7 | Reverse stress testing (the scenario that breaches a limit) and multi-step scenarios: out of scope? | §2 |
-
-### 16.2 The change table
-
-| Version | Date | Change |
-|---|---|---|
-| 1.0 | 2026-10-25 | First version (PLANNED): `scenario-pnl`, structured shocks on `stress-scenario`, user scenarios, `risk-limit`, full and sensitivity methods, the published `stress-official` table, the retirement of `stress-result` |
 
 ---
 

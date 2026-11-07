@@ -10,7 +10,7 @@
 [NSET.md](NSET.md) · Exposure: [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) · Limits: [LIM.md](LIM.md) · GLEIF: [packs/gleif.md](packs/gleif.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
-may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
+may change before the release, and each change will be recorded in [section 16](#16-open-questions).
 
 This is the contract of **counterparty groups**: Drishti keeps the groups the credit function maintains (their members and why each is a
 member) and resolves the **connected group** of any counterparty when asked, from those members and from GLEIF's parent relationships;
@@ -33,7 +33,7 @@ then every counterparty measure answers for the group as a scope (`GROUP:<id>`),
 13. [Test data and generators](#13-test-data-and-generators)
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
-16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+16. [Open questions](#16-open-questions)
 
 ## 1. Summary
 
@@ -307,7 +307,7 @@ netting sets:
 EE and EAD add; the group's PFE (2) is **twice the sum of the members' PFEs** (1 + 0 = 1): S2's exposure is zero on three paths, so its
 own 75% PFE is 0, but on path 2 it lifts the group. A group limit of 2.2 is therefore at 91% (`WARNING`), although each member looks small.
 
-## 16. Open questions and the change table
+## 16. Open questions
 
 ### 16.1 Open questions
 
@@ -318,12 +318,6 @@ own 75% PFE is 0, but on path 2 it lifts the group. A group limit of 2.2 is ther
 | 3 | Economic interdependence (LEX30) is manual: does it come from the credit file (the `counterparty-group` feed) only? | §3.2 |
 | 4 | Group CVA: members' defaults are correlated; ignore (proposed, CVA per member) or model a group-level default? | §6.3 |
 | 5 | Members a viewer does not cover: exclude and mark partial (proposed), or refuse the group answer? | §11 |
-
-### 16.2 The change table
-
-| Version | Date | Change |
-|---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results in the restricted table) |
 
 ---
 

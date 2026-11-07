@@ -13,7 +13,7 @@ This is the planned data contract of **PNL**, P&L explain: the day-over-day P&L 
 valuations, attributed to market moves through the trades' sensitivities (delta, gamma, vega), to time (theta and carry), to new,
 amended and ended trades, and to fees, with the **unexplained** remainder and a tolerance. It is computed when asked for any scope and
 any pair of business dates. It replaces the stored kind `pnl-explain`. Everything here is a **proposal**; each
-change will be recorded in [section 16](#16-open-questions-and-the-change-table).
+change will be recorded in [section 16](#16-open-questions).
 
 **Sources read (2026-10-25):** `config/packs/market-risk/contracts/pnl-explain.contract.yaml`, the sample `pnl-explain.jsonl` (30
 books), `data/testdata/market-risk/pnl-explain/` (snapshot of 2026-07-08, every later file empty), `tools/packgen/banking/data_results.py`
@@ -37,7 +37,7 @@ valuations (TVAL.md §13.4) and the Calc snippets `pnl_explain_quality.py`, `pnl
 13. [Test data and generators](#13-test-data-and-generators)
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
-16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+16. [Open questions](#16-open-questions)
 
 ## 1. Summary
 
@@ -441,7 +441,7 @@ max(10,000, 10% × 29,700) = 10,000 ≥ 1,178: **within**. **Hypothetical P&L** 
 31,000 − 15,000 + 200 + (12,000 − 10,000) = 18,200. **TVAL's bridge:** MTM_CHANGE = (1,031,000 + 185,000 + 12,000 + 312,000) − (1,000,000 +
 200,000 + 50,000 + 300,000) = −10,000 = ACTUAL 29,700 − cash received 50,200 + cash paid 10,500 = −10,000. ✓
 
-## 16. Open questions and the change table
+## 16. Open questions
 
 ### 16.1 Open questions
 
@@ -455,12 +455,6 @@ max(10,000, 10% × 29,700) = 10,000 ≥ 1,178: **within**. **Hypothetical P&L** 
 | 6 | The FRTB IMA P&L attribution test (Spearman, KS over 250 days): in scope of a later release? It needs the risk-theoretical P&L per desk per day | §6.4 |
 | 7 | Should P&L explain's hypothetical P&L become VaR's official backtest input (replacing the stand-in `HYPO_PNL` of VaR's official captures)? | §6.5 |
 | 8 | Revaluation-based (step-wise) explain from upstream steps (T−1 market and T time, then each risk class moved), beside the risk-based one? | §2 |
-
-### 16.2 The change table
-
-| Version | Date | Change |
-|---|---|---|
-| 1.0 | 2026-10-25 | First version (PLANNED): `market-move` and `pnl-event`, per-trade attribution with additive node sums, tolerance, hypothetical P&L, the published `pnl-official` table, the retirement of `pnl-explain` |
 
 ---
 

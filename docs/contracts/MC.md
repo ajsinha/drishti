@@ -13,7 +13,7 @@ contract until its engine is built.
 [NSET.md](NSET.md) · Collateral values: [COLL.md](COLL.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
-may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
+may change before the release, and each change will be recorded in [section 16](#16-open-questions).
 
 This is the contract of **margin calls**: Drishti keeps the **actual calls** and their events (a workflow the collateral system owns)
 and computes the **expected call** of each CSA from the netting set's MtM, the collateral balance and the CSA's terms, shown beside the
@@ -37,7 +37,7 @@ actual call with the difference explained. Variation margin is computed here; in
 13. [Test data and generators](#13-test-data-and-generators)
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
-16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+16. [Open questions](#16-open-questions)
 
 ## 1. Summary
 
@@ -331,7 +331,7 @@ held (contractual value).
 **IM:** SIMM IM the counterparty must post 60,000,000, IM threshold 50,000,000 → required 10,000,000; IM held 8,200,000 → expected **we
 call 1,800,000** (rounded up: 1,800,000).
 
-## 16. Open questions and the change table
+## 16. Open questions
 
 ### 16.1 Open questions
 
@@ -341,12 +341,6 @@ call 1,800,000** (rounded up: 1,800,000).
 | 2 | Valuation lag: calls on D value at D − 1 (proposed) for every CSA, or per CSA (`VALUATION_DATE` on the call)? | §5 |
 | 3 | Combined VM + IM MTA under the uncleared-margin rules: per CSA flag or a setting? | §6.1 |
 | 4 | Should a `NOT_CALLED` or `DIRECTION_MISMATCH` raise an alert (ALERTS) to collateral operations? | §6.4 |
-
-### 16.2 The change table
-
-| Version | Date | Change |
-|---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
 
 ---
 

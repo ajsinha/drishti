@@ -13,7 +13,7 @@ contract until its engine is built.
 membership: [NSET.md](NSET.md) · Collateral: [COLL.md](COLL.md)*
 
 **Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
-may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
+may change before the release, and each change will be recorded in [section 16](#16-open-questions).
 
 This is the contract of Drishti's **SA-CCR engine**: the exposure at default (EAD) of derivative netting sets under the Basel standardised
 approach for counterparty credit risk (BCBS 279, consolidated as CRE52), computed when asked for any scope (a netting set, a counterparty,
@@ -36,7 +36,7 @@ a legal entity, the bank), with incremental EAD before dealing. It defines the s
 13. [Test data and generators](#13-test-data-and-generators)
 14. [Retiring the stored version](#14-retiring-the-stored-version)
 15. [A worked example](#15-a-worked-example)
-16. [Open questions and the change table](#16-open-questions-and-the-change-table)
+16. [Open questions](#16-open-questions)
 
 ## 1. Summary
 
@@ -547,7 +547,7 @@ index, Σ D = −300m → AddOn_I = 0.38% × (−300m) = −1.14m (ρ 0.8).
 AddOn_credit = √((0.5 × 1.08 − 0.8 × 1.14)² + (1 − 0.25) × 1.08² + (1 − 0.64) × 1.14²) = √(0.138384 + 0.8748 + 0.467856) = √1.48104 =
 **1.21698m** (the hedge of the single name by the index offsets through the systematic term only).
 
-## 16. Open questions and the change table
+## 16. Open questions
 
 ### 16.1 Open questions
 
@@ -560,13 +560,6 @@ AddOn_credit = √((0.5 × 1.08 − 0.8 × 1.14)² + (1 − 0.25) × 1.08² + (1
 | 5 | Risk weights for the RWA hook: from configuration (standardised, by type and rating), from an upstream capital engine per counterparty, or not shown? | §6.7 |
 | 6 | Specific wrong-way risk trades (WWR.md) as separate netting sets in SA-CCR: by `SPECIFIC_WWR` on the membership row? | WWR.md. **Decided 2026-11-02:** yes, each flagged trade in its own set, no netting benefit (`specific-wwr: own-set`) |
 | 7 | Cleared trades: the CCP exposure (trade exposure and default fund contribution, CRE54) is out of this contract; needed? | |
-
-### 16.2 The change table
-
-| Version | Date | Change |
-|---|---|---|
-| 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
-| 1.1 | 2026-11-02 | Product owner's decisions of 2026-11-02 applied ([COUNTERPARTY_ENGINES.md section 14](../architecture/COUNTERPARTY_ENGINES.md#14-decisions)): C and NICA at supervisory haircuts; MPOR as written with `MPOR_DAYS` excluding the remargining period; `unclassified` (exclude by default, a conservative stand-in as a setting); OSFI CAR next; `SPECIFIC_WWR` trades in their own set |
 
 ---
 
