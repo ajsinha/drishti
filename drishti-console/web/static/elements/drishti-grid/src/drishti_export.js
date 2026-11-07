@@ -17,40 +17,11 @@
    workbook (.xlsx) written here, with no library and no server: numbers stay numbers with the column's number format (amount0 is
    #,##0, pct2 is 0.00%), dates are dates, the heading row is bold and frozen, and group rows keep Excel's outline levels (+ and -).
    The console's server-side workbooks (the VaR, SIMM and FRTB exports, made in Java) stay where they are: this is for a grid's own rows,
-   with or without a Drishti server. */
-import { namedFormat, formatNamed, hasFormat, isoDate } from '../../drishti-core/src/drishti_index.js';
+   with or without a Drishti server. The CSV writer is drishti-core's (the chart's data exports the same way). */
+import { namedFormat, isoDate } from '../../drishti-core/src/drishti_index.js';
 
-/**
- * A table to export.
- * @typedef {Object} ExportTable
- * @property {Array<{header: string, type: string, format: *, width: number}>} columns
- * @property {Array<Array<*>>} rows raw values, one array per row, in the columns' order
- * @property {number[]} [levels] each row's outline level (0: none), for group rows and their members
- * @property {boolean[]} [bold] rows drawn bold (group rows and totals)
- */
+/** @typedef {import('../../drishti-core/src/drishti_files.js').ExportTable} ExportTable */
 
-/**
- * The table as CSV text.
- * @param {ExportTable} t
- * @param {{formatted: boolean, separator: string, bom: boolean}} [o] formatted: values as shown (named formats), else raw (default);
- *   separator default ","; bom default true
- * @returns {string}
- */
-export function toCsv(t, o) {
-  o = o || {};
-  const sep = o.separator || ',';
-  const cell = (v, c) => {
-    let s;
-    if (v === null || v === undefined) { s = ''; }
-    else if (o.formatted && c && typeof c.format === 'string' && hasFormat(c.format)) { s = formatNamed(c.format, v); }
-    else if (v instanceof Date) { s = isoDate(v); }
-    else { s = String(v); }
-    return s.indexOf(sep) >= 0 || /["\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
-  };
-  const lines = [t.columns.map((c) => cell(c.header)).join(sep)];
-  t.rows.forEach((r) => lines.push(r.map((v, i) => cell(v, t.columns[i])).join(sep)));
-  return (o.bom === false ? '' : '﻿') + lines.join('\r\n') + '\r\n';
-}
 
 // ---- the zip (stored, no compression: every reader opens it) -----------------------------------------------------------------------
 const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) { c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; } t[n] = c >>> 0; } return t; })();

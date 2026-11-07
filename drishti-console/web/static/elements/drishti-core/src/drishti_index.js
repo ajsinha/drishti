@@ -14,8 +14,8 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* drishti-core: what every other library and every page builds on. Formats (the server's rules), business dates, theme tokens, the API
-   client, the event bus, accessibility helpers, resize handles, keys, dialogs, drawers and toasts, and the loader of the other
-   libraries. In a page the bundle (drishti_core.js) registers it as window.Drishti.elements.core and runs install(): the resize
+   client, the event bus, accessibility helpers, resize handles, keys, dialogs, drawers and toasts, the element maker, Explain as every
+   component draws it, and the loader of the other libraries. In a page the bundle (drishti_core.js) registers it as window.Drishti.elements.core and runs install(): the resize
    component starts, and the console's older names (Drishti.resize, Drishti.GridKeys) point here. */
 import { installResize } from './drishti_resize.js';
 import { GridKeys } from './drishti_keys.js';
@@ -37,6 +37,8 @@ export { configure, manifest, libraryVersion, requirements, loaded, load, static
 export { isBlank, compareValues, compareRows, cycleSort, passes, rowFilter, filterWords, FILTER_CHANNEL, filterRows } from './drishti_filters.js';
 export { h, placeAt, placeUnder } from './drishti_dom.js';
 export { parseNumberText, numberEditText } from './drishti_parse.js';
+export { toCsv, download } from './drishti_files.js';
+export { sparkline, renderExplain } from './drishti_explain.js';
 
 /**
  * Starts drishti-core in a page (the bundle calls it when it loads; nothing happens without a document): the resize component, and

@@ -405,126 +405,78 @@
     const bus = new EventBus();
     return { "EventBus": EventBus, "createBus": createBus, "bus": bus };
   })();
-  /* ---- src/drishti_filters.js ---- */
-  __m["src/drishti_filters.js"] = (function () {
-    const collator = typeof Intl !== 'undefined' ? new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }) : null;
-    function isBlank(v) { return v === null || v === undefined || v === '' || (typeof v === 'number' && isNaN(v)); }
-    function compareValues(a, b) {
-      if (typeof a === 'number' && typeof b === 'number') { return a - b; }
-      if (typeof a === 'boolean' && typeof b === 'boolean') { return (a ? 1 : 0) - (b ? 1 : 0); }
-      if (a instanceof Date && b instanceof Date) { return a.getTime() - b.getTime(); }
-      const sa = String(a), sb = String(b);
-      return collator ? collator.compare(sa, sb) : sa < sb ? -1 : sa > sb ? 1 : 0;
-    }
-    function compareRows(model, column, value) {
-      if (!model || !model.length) { return null; }
-      const items = model.map((s) => ({ col: column(s.colId), dir: s.sort === 'desc' ? -1 : 1 }));
-      return (ra, rb) => {
-        for (const it of items) {
-          const a = value(ra, it.col), b = value(rb, it.col);
-          const ba = isBlank(a), bb = isBlank(b);
-          if (ba || bb) { if (ba && bb) { continue; } return ba ? 1 : -1; }
-          const c = it.col.comparator ? it.col.comparator(a, b) : compareValues(a, b);
-          if (c) { return c * it.dir; }
-        }
-        return 0;
-      };
-    }
-    function cycleSort(model, colId, multi) {
-      const cur = (model || []).find((s) => s.colId === colId);
-      const next = !cur ? 'asc' : cur.sort === 'asc' ? 'desc' : null;
-      const rest = multi ? (model || []).filter((s) => s.colId !== colId) : [];
-      if (!next) { return rest; }
-      if (multi && cur) { return (model || []).map((s) => (s.colId === colId ? { colId: colId, sort: next } : s)); }
-      return rest.concat([{ colId: colId, sort: next }]);
-    }
-    function asNumber(v) { return typeof v === 'number' ? v : v === null || v === undefined || v === '' ? NaN : Number(v); }
-    function asDateText(v) { if (v instanceof Date) { return v.toISOString().slice(0, 10); } return v === null || v === undefined ? '' : String(v).slice(0, 10); }
-    function fold(s) { return String(s).toLowerCase(); }
-    function passes(v, f) {
-      if (!f) { return true; }
-      const op = f.op;
-      switch (f.type) {
-        case 'blank': return op === 'notBlank' ? !isBlank(v) : isBlank(v);
-        case 'set': {
-          const key = isBlank(v) ? null : typeof v === 'number' ? v : String(v);
-          if (f.values) { return f.values.some((x) => (x === null ? key === null : key !== null && String(x) === String(key))); }
-          if (f.excluded) { return !f.excluded.some((x) => (x === null ? key === null : key !== null && String(x) === String(key))); }
-          return true;
-        }
-        case 'number':
-        case 'date': {
-          if (op === 'blank') { return isBlank(v); }
-          if (op === 'notBlank') { return !isBlank(v); }
-          if (isBlank(v)) { return op === 'notEquals'; }
-          const conv = f.type === 'number' ? asNumber : asDateText;
-          const x = conv(v), a = conv(f.value), b = conv(f.valueTo);
-          switch (op || 'equals') {
-            case 'equals': return x === a;
-            case 'notEquals': return x !== a;
-            case 'lt': return x < a;
-            case 'lte': return x <= a;
-            case 'gt': return x > a;
-            case 'gte': return x >= a;
-            case 'between': return x >= a && x <= b;
-            default: throw new Error('no number or date filter ' + op);
-          }
-        }
-        default: {
-          if (op === 'blank') { return isBlank(v); }
-          if (op === 'notBlank') { return !isBlank(v); }
-          const t = isBlank(v) ? '' : fold(v), q = fold(f.value === undefined || f.value === null ? '' : f.value);
-          switch (op || 'contains') {
-            case 'contains': return t.indexOf(q) >= 0;
-            case 'notContains': return t.indexOf(q) < 0;
-            case 'equals': return t === q;
-            case 'notEquals': return t !== q;
-            case 'startsWith': return t.indexOf(q) === 0;
-            case 'endsWith': return t.length >= q.length && t.slice(t.length - q.length) === q;
-            default: throw new Error('no text filter ' + op);
-          }
-        }
+  /* ---- src/drishti_explain.js ---- */
+  __m["src/drishti_explain.js"] = (function () {
+    var h = __m["src/drishti_dom.js"].h;
+    const SVG = 'http://www.w3.org/2000/svg';
+    function sparkline(doc, values, limit, prefix) {
+      const P = prefix || 'dx';
+      const w = 280, ht = 90, svg = doc.createElementNS(SVG, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + ht);
+      svg.setAttribute('class', P + '-spark');
+      svg.setAttribute('role', 'img');
+      svg.setAttribute('aria-label', 'trend of ' + values.length + ' points, last ' + (values.length ? values[values.length - 1] : ''));
+      const all = values.concat(typeof limit === 'number' ? [limit] : []);
+      const lo = Math.min.apply(null, all), hi = Math.max.apply(null, all), span = hi - lo || 1;
+      const y = (v) => (ht - 8 - (ht - 16) * (v - lo) / span).toFixed(1);
+      const pts = values.map((v, i) => (values.length > 1 ? (i * (w - 4) / (values.length - 1) + 2) : w / 2).toFixed(1) + ',' + y(v)).join(' ');
+      const line = doc.createElementNS(SVG, 'polyline');
+      line.setAttribute('points', pts);
+      line.setAttribute('class', P + '-spark-line');
+      svg.appendChild(line);
+      if (typeof limit === 'number') {
+        const l = doc.createElementNS(SVG, 'line');
+        [['x1', 0], ['x2', w], ['y1', y(limit)], ['y2', y(limit)]].forEach(([k, v]) => l.setAttribute(k, String(v)));
+        l.setAttribute('class', P + '-spark-limit');
+        svg.appendChild(l);
       }
+      return svg;
     }
-    function rowFilter(model, quick, columns, value) {
-      const byId = {};
-      columns.forEach((c) => { byId[c.id] = c; });
-      const parts = Object.keys(model || {}).filter((k) => model[k]).map((k) => {
-        if (!byId[k]) { throw new Error('a filter on ' + k + ', which is not a column'); }
-        return [byId[k], model[k]];
-      });
-      const words = String(quick || '').toLowerCase().split(/\s+/).filter(Boolean);
-      if (!parts.length && !words.length) { return null; }
-      return (row) => {
-        for (const [c, f] of parts) { if (!passes(value(row, c), f)) { return false; } }
-        if (words.length) {
-          const hay = columns.map((c) => { const v = value(row, c); return isBlank(v) ? '' : String(v).toLowerCase(); }).join('\u0001');
-          for (const w of words) { if (hay.indexOf(w) < 0) { return false; } }
-        }
-        return true;
-      };
+    function main(doc, r, P) {
+      const out = h(doc, 'div', { cls: P + '-ex-main' });
+      out.appendChild(h(doc, 'h3', { cls: P + '-ex-title', text: 'Explain' + (r.title ? ' · ' + r.title : '') }));
+      if (r.value) { out.appendChild(h(doc, 'div', { cls: P + '-ex-value', text: r.value })); }
+      if (r.scope) { out.appendChild(h(doc, 'div', { cls: P + '-ex-scope', text: r.scope })); }
+      if (r.steps && r.steps.length) {
+        out.appendChild(h(doc, 'ol', { cls: P + '-ex-steps' }, r.steps.map((s) => h(doc, 'li', {}, [h(doc, 'span', { text: s.label }), h(doc, 'span', { cls: P + '-ex-fig', text: s.value || '' })]))));
+      }
+      if (r.parts && r.parts.length) {
+        const mx = Math.max.apply(null, r.parts.map((p) => Math.abs(p.value || 0)).concat([1e-9]));
+        out.appendChild(h(doc, 'div', { cls: P + '-ex-sub', text: r.partsTitle || 'Made of' }));
+        out.appendChild(h(doc, 'div', { cls: P + '-ex-bars' }, r.parts.slice(0, 8).map((p) => h(doc, 'div', { cls: P + '-ex-bar' }, [
+          h(doc, 'span', { text: p.label }),
+          h(doc, 'span', { cls: P + '-ex-track' }, [h(doc, 'span', { cls: P + '-ex-fill' + ((p.value || 0) < 0 ? ' ' + P + '-neg' : ''), style: { width: Math.round(100 * Math.abs(p.value || 0) / mx) + '%' } })]),
+          h(doc, 'span', { cls: P + '-ex-fig', text: p.text || String(p.value) })]))));
+      }
+      if (r.note) { out.appendChild(h(doc, 'p', { cls: P + '-ex-note', text: r.note })); }
+      if (r.links && r.links.length) { out.appendChild(h(doc, 'div', { cls: P + '-ex-links' }, r.links.map((l) => h(doc, 'a', { text: l.label, attrs: { href: l.href || '#' } })))); }
+      return out;
     }
-    function filterWords(model, header) {
-      const h = header || ((id) => id);
-      const sym = { equals: '=', notEquals: '≠', lt: '<', lte: '≤', gt: '>', gte: '≥' };
-      return Object.keys(model || {}).filter((k) => model[k]).map((k) => {
-        const f = model[k];
-        if (f.type === 'set') { return f.values ? h(k) + ' in ' + f.values.map((x) => (x === null ? '(blank)' : x)).join(', ') : h(k) + ' not ' + (f.excluded || []).join(', '); }
-        if (f.type === 'blank' || f.op === 'blank' || f.op === 'notBlank') { return h(k) + (f.op === 'notBlank' ? ' is not blank' : ' is blank'); }
-        if (f.op === 'between') { return h(k) + ' ' + f.value + ' to ' + f.valueTo; }
-        if (sym[f.op]) { return h(k) + ' ' + sym[f.op] + ' ' + f.value; }
-        return h(k) + ' ' + (f.op || 'contains').replace(/[A-Z]/g, (c) => ' ' + c.toLowerCase()) + ' "' + f.value + '"';
-      }).join('; ');
-    }
-    const FILTER_CHANNEL = 'filters:changed';
-    function filterRows(rows, model, o) {
+    function renderExplain(el, st, mode, o) {
+      const doc = el.ownerDocument;
       o = o || {};
-      const columns = (o.columns || []).slice();
-      Object.keys(model || {}).forEach((id) => { if (!columns.some((c) => c.id === id)) { columns.push({ id: id }); } });
-      const test = rowFilter(model, o.quickFilter || '', columns, o.value || ((row, c) => row[c.field || c.id]));
-      return test ? rows.filter(test) : rows.slice();
+      const P = o.prefix || 'dx';
+      el.textContent = '';
+      if (o.onClose && st) { el.appendChild(h(doc, 'button', { cls: P + '-ex-close', text: '×', attrs: { type: 'button', 'aria-label': 'Close Explain' }, on: { click: o.onClose } })); }
+      if (!st) {
+        el.appendChild(h(doc, 'div', { cls: P + '-ex-main' }, [h(doc, 'h3', { cls: P + '-ex-title', text: 'Explain' }),
+          h(doc, 'p', { cls: P + '-ex-hint', text: o.hint || (o.explainable === false ? 'There is no Explain hook here.' : 'Select a figure and press ' + (mode === 'split' ? 'F2' : 'E') + ': how it was made, its scope and what drives it.') })]));
+        return;
+      }
+      if (st.loading) { el.appendChild(h(doc, 'div', { cls: P + '-ex-main ' + P + '-ex-loading', attrs: { 'aria-busy': 'true' } }, [h(doc, 'h3', { cls: P + '-ex-title', text: 'Explain' }), h(doc, 'p', { text: 'Asking how this figure was made…' })])); return; }
+      if (st.error) { el.appendChild(h(doc, 'div', { cls: P + '-ex-main' }, [h(doc, 'h3', { cls: P + '-ex-title', text: 'Explain' }), h(doc, 'p', { cls: P + '-ex-error', text: String(st.error.message || st.error) })])); return; }
+      const r = st.result;
+      if (r && typeof r === 'object' && typeof r.nodeType === 'number') { el.appendChild(r); return; }
+      const res = typeof r === 'string' ? { note: r } : (r || {});
+      if (mode !== 'split') { el.appendChild(main(doc, res, P)); return; }
+      const worst = h(doc, 'div', { cls: P + '-ex-pane' }, [h(doc, 'h3', { cls: P + '-ex-title', text: 'Worst scenarios' })]);
+      (res.scenarios || []).slice(0, 10).forEach((s, i) => worst.appendChild(h(doc, 'div', { cls: P + '-ex-row' }, [h(doc, 'i', { text: String(i + 1) }), h(doc, 'span', { text: s.label }), h(doc, 'span', { cls: P + '-ex-fig ' + P + '-neg', text: s.value })])));
+      if (!(res.scenarios || []).length) { worst.appendChild(h(doc, 'p', { cls: P + '-ex-hint', text: 'No scenarios for this figure.' })); }
+      const trend = h(doc, 'div', { cls: P + '-ex-pane' }, [h(doc, 'h3', { cls: P + '-ex-title', text: 'Trend' })]);
+      if (res.trend && res.trend.length) { trend.appendChild(sparkline(doc, res.trend, res.limit, P)); } else { trend.appendChild(h(doc, 'p', { cls: P + '-ex-hint', text: 'No history for this figure.' })); }
+      el.append(h(doc, 'div', { cls: P + '-ex-pane' }, [main(doc, res, P)]), worst, trend);
     }
-    return { "isBlank": isBlank, "compareValues": compareValues, "compareRows": compareRows, "cycleSort": cycleSort, "passes": passes, "rowFilter": rowFilter, "filterWords": filterWords, "FILTER_CHANNEL": FILTER_CHANNEL, "filterRows": filterRows };
+    return { "sparkline": sparkline, "renderExplain": renderExplain };
   })();
   /* ---- src/drishti_formats-table.js ---- */
   __m["src/drishti_formats-table.js"] = (function () {
@@ -797,6 +749,164 @@
       }
     }
     return { "MINUS": MINUS, "EMPTY": EMPTY, "MASK": MASK, "plainDigits": plainDigits, "roundHalfUp": roundHalfUp, "group": group, "formatNumber": formatNumber, "formatPercent": formatPercent, "formatBasisPoints": formatBasisPoints, "formatCurrency": formatCurrency, "COMPACT_UNITS": COMPACT_UNITS, "formatCompact": formatCompact, "defineFormats": defineFormats, "hasFormat": hasFormat, "namedFormat": namedFormat, "formatNames": formatNames, "formatSpec": formatSpec, "formatNamed": formatNamed, "formatter": formatter };
+  })();
+  /* ---- src/drishti_files.js ---- */
+  __m["src/drishti_files.js"] = (function () {
+    var formatNamed = __m["src/drishti_format.js"].formatNamed, hasFormat = __m["src/drishti_format.js"].hasFormat;
+    var isoDate = __m["src/drishti_dates.js"].isoDate;
+    function toCsv(t, o) {
+      o = o || {};
+      const sep = o.separator || ',';
+      const cell = (v, c) => {
+        let s;
+        if (v === null || v === undefined) { s = ''; }
+        else if (o.formatted && c && typeof c.format === 'string' && hasFormat(c.format)) { s = formatNamed(c.format, v); }
+        else if (v instanceof Date) { s = isoDate(v); }
+        else { s = String(v); }
+        return s.indexOf(sep) >= 0 || /["\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+      };
+      const lines = [t.columns.map((c) => cell(c.header)).join(sep)];
+      t.rows.forEach((r) => lines.push(r.map((v, i) => cell(v, t.columns[i])).join(sep)));
+      return (o.bom === false ? '' : '﻿') + lines.join('\r\n') + '\r\n';
+    }
+    function download(doc, name, content, type) {
+      const win = doc.defaultView;
+      const a = doc.createElement('a');
+      let url = null;
+      if (typeof content === 'string' && content.indexOf('data:') === 0) { a.href = content; } else {
+        const blob = content instanceof win.Blob ? content : new win.Blob([content], { type: type || 'text/plain' });
+        url = win.URL.createObjectURL(blob);
+        a.href = url;
+      }
+      a.download = name;
+      a.hidden = true;
+      doc.body.appendChild(a);
+      a.click();
+      a.remove();
+      if (url) { win.setTimeout(() => win.URL.revokeObjectURL(url), 1000); }
+    }
+    return { "toCsv": toCsv, "download": download };
+  })();
+  /* ---- src/drishti_filters.js ---- */
+  __m["src/drishti_filters.js"] = (function () {
+    const collator = typeof Intl !== 'undefined' ? new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }) : null;
+    function isBlank(v) { return v === null || v === undefined || v === '' || (typeof v === 'number' && isNaN(v)); }
+    function compareValues(a, b) {
+      if (typeof a === 'number' && typeof b === 'number') { return a - b; }
+      if (typeof a === 'boolean' && typeof b === 'boolean') { return (a ? 1 : 0) - (b ? 1 : 0); }
+      if (a instanceof Date && b instanceof Date) { return a.getTime() - b.getTime(); }
+      const sa = String(a), sb = String(b);
+      return collator ? collator.compare(sa, sb) : sa < sb ? -1 : sa > sb ? 1 : 0;
+    }
+    function compareRows(model, column, value) {
+      if (!model || !model.length) { return null; }
+      const items = model.map((s) => ({ col: column(s.colId), dir: s.sort === 'desc' ? -1 : 1 }));
+      return (ra, rb) => {
+        for (const it of items) {
+          const a = value(ra, it.col), b = value(rb, it.col);
+          const ba = isBlank(a), bb = isBlank(b);
+          if (ba || bb) { if (ba && bb) { continue; } return ba ? 1 : -1; }
+          const c = it.col.comparator ? it.col.comparator(a, b) : compareValues(a, b);
+          if (c) { return c * it.dir; }
+        }
+        return 0;
+      };
+    }
+    function cycleSort(model, colId, multi) {
+      const cur = (model || []).find((s) => s.colId === colId);
+      const next = !cur ? 'asc' : cur.sort === 'asc' ? 'desc' : null;
+      const rest = multi ? (model || []).filter((s) => s.colId !== colId) : [];
+      if (!next) { return rest; }
+      if (multi && cur) { return (model || []).map((s) => (s.colId === colId ? { colId: colId, sort: next } : s)); }
+      return rest.concat([{ colId: colId, sort: next }]);
+    }
+    function asNumber(v) { return typeof v === 'number' ? v : v === null || v === undefined || v === '' ? NaN : Number(v); }
+    function asDateText(v) { if (v instanceof Date) { return v.toISOString().slice(0, 10); } return v === null || v === undefined ? '' : String(v).slice(0, 10); }
+    function fold(s) { return String(s).toLowerCase(); }
+    function passes(v, f) {
+      if (!f) { return true; }
+      const op = f.op;
+      switch (f.type) {
+        case 'blank': return op === 'notBlank' ? !isBlank(v) : isBlank(v);
+        case 'set': {
+          const key = isBlank(v) ? null : typeof v === 'number' ? v : String(v);
+          if (f.values) { return f.values.some((x) => (x === null ? key === null : key !== null && String(x) === String(key))); }
+          if (f.excluded) { return !f.excluded.some((x) => (x === null ? key === null : key !== null && String(x) === String(key))); }
+          return true;
+        }
+        case 'number':
+        case 'date': {
+          if (op === 'blank') { return isBlank(v); }
+          if (op === 'notBlank') { return !isBlank(v); }
+          if (isBlank(v)) { return op === 'notEquals'; }
+          const conv = f.type === 'number' ? asNumber : asDateText;
+          const x = conv(v), a = conv(f.value), b = conv(f.valueTo);
+          switch (op || 'equals') {
+            case 'equals': return x === a;
+            case 'notEquals': return x !== a;
+            case 'lt': return x < a;
+            case 'lte': return x <= a;
+            case 'gt': return x > a;
+            case 'gte': return x >= a;
+            case 'between': return x >= a && x <= b;
+            default: throw new Error('no number or date filter ' + op);
+          }
+        }
+        default: {
+          if (op === 'blank') { return isBlank(v); }
+          if (op === 'notBlank') { return !isBlank(v); }
+          const t = isBlank(v) ? '' : fold(v), q = fold(f.value === undefined || f.value === null ? '' : f.value);
+          switch (op || 'contains') {
+            case 'contains': return t.indexOf(q) >= 0;
+            case 'notContains': return t.indexOf(q) < 0;
+            case 'equals': return t === q;
+            case 'notEquals': return t !== q;
+            case 'startsWith': return t.indexOf(q) === 0;
+            case 'endsWith': return t.length >= q.length && t.slice(t.length - q.length) === q;
+            default: throw new Error('no text filter ' + op);
+          }
+        }
+      }
+    }
+    function rowFilter(model, quick, columns, value) {
+      const byId = {};
+      columns.forEach((c) => { byId[c.id] = c; });
+      const parts = Object.keys(model || {}).filter((k) => model[k]).map((k) => {
+        if (!byId[k]) { throw new Error('a filter on ' + k + ', which is not a column'); }
+        return [byId[k], model[k]];
+      });
+      const words = String(quick || '').toLowerCase().split(/\s+/).filter(Boolean);
+      if (!parts.length && !words.length) { return null; }
+      return (row) => {
+        for (const [c, f] of parts) { if (!passes(value(row, c), f)) { return false; } }
+        if (words.length) {
+          const hay = columns.map((c) => { const v = value(row, c); return isBlank(v) ? '' : String(v).toLowerCase(); }).join('\u0001');
+          for (const w of words) { if (hay.indexOf(w) < 0) { return false; } }
+        }
+        return true;
+      };
+    }
+    function filterWords(model, header) {
+      const h = header || ((id) => id);
+      const sym = { equals: '=', notEquals: '≠', lt: '<', lte: '≤', gt: '>', gte: '≥' };
+      return Object.keys(model || {}).filter((k) => model[k]).map((k) => {
+        const f = model[k];
+        if (f.type === 'set') { return f.values ? h(k) + ' in ' + f.values.map((x) => (x === null ? '(blank)' : x)).join(', ') : h(k) + ' not ' + (f.excluded || []).join(', '); }
+        if (f.type === 'blank' || f.op === 'blank' || f.op === 'notBlank') { return h(k) + (f.op === 'notBlank' ? ' is not blank' : ' is blank'); }
+        if (f.op === 'between') { return h(k) + ' ' + f.value + ' to ' + f.valueTo; }
+        if (sym[f.op]) { return h(k) + ' ' + sym[f.op] + ' ' + f.value; }
+        return h(k) + ' ' + (f.op || 'contains').replace(/[A-Z]/g, (c) => ' ' + c.toLowerCase()) + ' "' + f.value + '"';
+      }).join('; ');
+    }
+    const FILTER_CHANNEL = 'filters:changed';
+    function filterRows(rows, model, o) {
+      o = o || {};
+      const columns = (o.columns || []).slice();
+      Object.keys(model || {}).forEach((id) => { if (!columns.some((c) => c.id === id)) { columns.push({ id: id }); } });
+      const test = rowFilter(model, o.quickFilter || '', columns, o.value || ((row, c) => row[c.field || c.id]));
+      return test ? rows.filter(test) : rows.slice();
+    }
+    return { "isBlank": isBlank, "compareValues": compareValues, "compareRows": compareRows, "cycleSort": cycleSort, "passes": passes, "rowFilter": rowFilter, "filterWords": filterWords, "FILTER_CHANNEL": FILTER_CHANNEL, "filterRows": filterRows };
   })();
   /* ---- src/drishti_resize.js ---- */
   __m["src/drishti_resize.js"] = (function () {
@@ -1163,7 +1273,7 @@
       "libraries": {
         "drishti-core": {
           "version": "1.1.0",
-          "title": "Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker, reading typed numbers, loading vendored engines",
+          "title": "Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines",
           "bundle": "drishti-core/drishti_core.js",
           "entry": "drishti-core/src/drishti_index.js",
           "global": "core",
@@ -1171,7 +1281,8 @@
           "css": [
             "css/drishti_tokens.css",
             "css/drishti_resize.css"
-          ]
+          ],
+          "scripts": []
         },
         "drishti-grid": {
           "version": "0.3.0",
@@ -1184,6 +1295,23 @@
           ],
           "css": [
             "elements/drishti-grid/drishti_grid.css"
+          ],
+          "scripts": []
+        },
+        "drishti-chart": {
+          "version": "0.1.0",
+          "title": "The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec",
+          "bundle": "drishti-chart/drishti_chart.js",
+          "entry": "drishti-chart/src/drishti_index.js",
+          "global": "chart",
+          "requires": [
+            "drishti-core"
+          ],
+          "css": [
+            "elements/drishti-chart/drishti_chart.css"
+          ],
+          "scripts": [
+            "vendor/echarts/echarts.min.js"
           ]
         },
         "drishti-inputs": {
@@ -1197,7 +1325,8 @@
           ],
           "css": [
             "elements/drishti-inputs/drishti_inputs.css"
-          ]
+          ],
+          "scripts": []
         },
         "drishti-data": {
           "version": "0.1.0",
@@ -1208,7 +1337,21 @@
           "requires": [
             "drishti-core"
           ],
-          "css": []
+          "css": [],
+          "scripts": []
+        },
+        "drishti-risk": {
+          "version": "0.1.0",
+          "title": "The banking module's chart kinds on drishti-chart (licensed with the module): the P&L distribution with VaR and ES, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit",
+          "bundle": "drishti-risk/drishti_risk.js",
+          "entry": "drishti-risk/src/drishti_index.js",
+          "global": "risk",
+          "requires": [
+            "drishti-core",
+            "drishti-chart"
+          ],
+          "css": [],
+          "scripts": []
         }
       }
     });
@@ -1263,7 +1406,8 @@
       const doc = r.document;
       if (!doc) { return Promise.reject(new Error('load: ' + name + ' is not loaded, and there is no page to load it into (under Node: require its bundle)')); }
       l.css.forEach((c) => addCss(doc, staticBase() + c + '?v=' + l.version));
-      state.pending[name] = new Promise((resolve, reject) => {
+      const engine = (l.scripts || []).reduce((p, src) => p.then(() => loadScript(staticBase() + src)), Promise.resolve());
+      state.pending[name] = engine.then(() => new Promise((resolve, reject) => {
         const s = doc.createElement('script');
         s.src = base() + l.bundle + '?v=' + l.version;
         s.async = false;
@@ -1271,7 +1415,8 @@
         s.onload = () => { delete state.pending[name]; const api = loaded(name); if (api) { resolve(api); } else { reject(new Error(name + ' loaded but did not register itself')); } };
         s.onerror = () => { delete state.pending[name]; reject(new Error('Could not load ' + name + ' ' + l.version + ' from ' + s.src)); };
         doc.head.appendChild(s);
-      });
+      }));
+      state.pending[name].catch(() => { delete state.pending[name]; });
       return state.pending[name];
     }
     function staticUrl(path) { return staticBase() + String(path).replace(/^\//, ''); }
@@ -1280,11 +1425,13 @@
       if (scripts[src]) { return scripts[src]; }
       const doc = root().document;
       if (!doc) { return Promise.reject(new Error('loadScript: there is no page to load ' + src + ' into')); }
-      if (Array.prototype.some.call(doc.scripts, (s) => (s.getAttribute('src') || '').split('?')[0] === src.split('?')[0] && s.dataset.loaded === '1')) { return Promise.resolve(); }
+      const plain = src.split('?')[0];
+      if (Array.prototype.some.call(doc.scripts, (s) => (s.getAttribute('src') || '').split('?')[0] === plain && (s.dataset.loaded === '1' || !s.hasAttribute('data-drishti-script')))) { return Promise.resolve(); }
       scripts[src] = new Promise((resolve, reject) => {
         const s = doc.createElement('script');
         s.src = src;
         s.async = false;
+        s.setAttribute('data-drishti-script', '');
         s.onload = () => { s.dataset.loaded = '1'; resolve(); };
         s.onerror = () => { delete scripts[src]; reject(new Error('Could not load ' + src)); };
         doc.head.appendChild(s);
@@ -1889,7 +2036,7 @@
       D.elements.load = load;
       if (root.document && root.requestAnimationFrame) { installResize(root); }
     }
-    return { "install": install, "MINUS": __m["src/drishti_format.js"].MINUS, "EMPTY": __m["src/drishti_format.js"].EMPTY, "MASK": __m["src/drishti_format.js"].MASK, "COMPACT_UNITS": __m["src/drishti_format.js"].COMPACT_UNITS, "plainDigits": __m["src/drishti_format.js"].plainDigits, "roundHalfUp": __m["src/drishti_format.js"].roundHalfUp, "group": __m["src/drishti_format.js"].group, "formatNumber": __m["src/drishti_format.js"].formatNumber, "formatPercent": __m["src/drishti_format.js"].formatPercent, "formatBasisPoints": __m["src/drishti_format.js"].formatBasisPoints, "formatCurrency": __m["src/drishti_format.js"].formatCurrency, "formatCompact": __m["src/drishti_format.js"].formatCompact, "defineFormats": __m["src/drishti_format.js"].defineFormats, "hasFormat": __m["src/drishti_format.js"].hasFormat, "namedFormat": __m["src/drishti_format.js"].namedFormat, "formatNames": __m["src/drishti_format.js"].formatNames, "formatSpec": __m["src/drishti_format.js"].formatSpec, "formatNamed": __m["src/drishti_format.js"].formatNamed, "formatter": __m["src/drishti_format.js"].formatter, "parseDate": __m["src/drishti_dates.js"].parseDate, "daysInMonth": __m["src/drishti_dates.js"].daysInMonth, "isoDate": __m["src/drishti_dates.js"].isoDate, "today": __m["src/drishti_dates.js"].today, "formatDate": __m["src/drishti_dates.js"].formatDate, "formatDateRange": __m["src/drishti_dates.js"].formatDateRange, "isBusinessDay": __m["src/drishti_dates.js"].isBusinessDay, "addBusinessDays": __m["src/drishti_dates.js"].addBusinessDays, "previousBusinessDay": __m["src/drishti_dates.js"].previousBusinessDay, "businessDaysBetween": __m["src/drishti_dates.js"].businessDaysBetween, "DEFAULT_THEME": __m["src/drishti_theme.js"].DEFAULT_THEME, "THEME_STORAGE_KEY": __m["src/drishti_theme.js"].THEME_STORAGE_KEY, "TEXT_TOKENS": __m["src/drishti_theme.js"].TEXT_TOKENS, "GROUND_TOKENS": __m["src/drishti_theme.js"].GROUND_TOKENS, "themes": __m["src/drishti_theme.js"].themes, "scheme": __m["src/drishti_theme.js"].scheme, "currentTheme": __m["src/drishti_theme.js"].currentTheme, "setTheme": __m["src/drishti_theme.js"].setTheme, "token": __m["src/drishti_theme.js"].token, "tokens": __m["src/drishti_theme.js"].tokens, "parseColor": __m["src/drishti_theme.js"].parseColor, "luminance": __m["src/drishti_theme.js"].luminance, "contrastRatio": __m["src/drishti_theme.js"].contrastRatio, "readableOn": __m["src/drishti_theme.js"].readableOn, "contrastProblems": __m["src/drishti_theme.js"].contrastProblems, "AS_OF_HEADER": __m["src/drishti_api.js"].AS_OF_HEADER, "ApiError": __m["src/drishti_api.js"].ApiError, "errorWords": __m["src/drishti_api.js"].errorWords, "ApiClient": __m["src/drishti_api.js"].ApiClient, "createClient": __m["src/drishti_api.js"].createClient, "api": __m["src/drishti_api.js"].api, "call": __m["src/drishti_api.js"].call, "EventBus": __m["src/drishti_events.js"].EventBus, "createBus": __m["src/drishti_events.js"].createBus, "bus": __m["src/drishti_events.js"].bus, "FOCUSABLE": __m["src/drishti_a11y.js"].FOCUSABLE, "focusable": __m["src/drishti_a11y.js"].focusable, "trapFocus": __m["src/drishti_a11y.js"].trapFocus, "announce": __m["src/drishti_a11y.js"].announce, "rovingIndex": __m["src/drishti_a11y.js"].rovingIndex, "rovingTabindex": __m["src/drishti_a11y.js"].rovingTabindex, "installResize": __m["src/drishti_resize.js"].installResize, "scanResize": __m["src/drishti_resize.js"].scanResize, "resizeHandle": __m["src/drishti_resize.js"].resizeHandle, "resetResize": __m["src/drishti_resize.js"].resetResize, "WORKBENCH": __m["src/drishti_keys.js"].WORKBENCH, "LAYOUT": __m["src/drishti_keys.js"].LAYOUT, "interpretPanelKey": __m["src/drishti_keys.js"].interpretPanelKey, "GridKeys": __m["src/drishti_keys.js"].GridKeys, "keyName": __m["src/drishti_keys.js"].keyName, "normalizeKey": __m["src/drishti_keys.js"].normalizeKey, "keymap": __m["src/drishti_keys.js"].keymap, "openDialog": __m["src/drishti_overlay.js"].openDialog, "closeDialog": __m["src/drishti_overlay.js"].closeDialog, "openDrawer": __m["src/drishti_overlay.js"].openDrawer, "ToastTray": __m["src/drishti_overlay.js"].ToastTray, "toast": __m["src/drishti_overlay.js"].toast, "configure": __m["src/drishti_loader.js"].configure, "manifest": __m["src/drishti_loader.js"].manifest, "libraryVersion": __m["src/drishti_loader.js"].libraryVersion, "requirements": __m["src/drishti_loader.js"].requirements, "loaded": __m["src/drishti_loader.js"].loaded, "load": __m["src/drishti_loader.js"].load, "staticUrl": __m["src/drishti_loader.js"].staticUrl, "loadScript": __m["src/drishti_loader.js"].loadScript, "loadStyle": __m["src/drishti_loader.js"].loadStyle, "isBlank": __m["src/drishti_filters.js"].isBlank, "compareValues": __m["src/drishti_filters.js"].compareValues, "compareRows": __m["src/drishti_filters.js"].compareRows, "cycleSort": __m["src/drishti_filters.js"].cycleSort, "passes": __m["src/drishti_filters.js"].passes, "rowFilter": __m["src/drishti_filters.js"].rowFilter, "filterWords": __m["src/drishti_filters.js"].filterWords, "FILTER_CHANNEL": __m["src/drishti_filters.js"].FILTER_CHANNEL, "filterRows": __m["src/drishti_filters.js"].filterRows, "h": __m["src/drishti_dom.js"].h, "placeAt": __m["src/drishti_dom.js"].placeAt, "placeUnder": __m["src/drishti_dom.js"].placeUnder, "parseNumberText": __m["src/drishti_parse.js"].parseNumberText, "numberEditText": __m["src/drishti_parse.js"].numberEditText };
+    return { "install": install, "MINUS": __m["src/drishti_format.js"].MINUS, "EMPTY": __m["src/drishti_format.js"].EMPTY, "MASK": __m["src/drishti_format.js"].MASK, "COMPACT_UNITS": __m["src/drishti_format.js"].COMPACT_UNITS, "plainDigits": __m["src/drishti_format.js"].plainDigits, "roundHalfUp": __m["src/drishti_format.js"].roundHalfUp, "group": __m["src/drishti_format.js"].group, "formatNumber": __m["src/drishti_format.js"].formatNumber, "formatPercent": __m["src/drishti_format.js"].formatPercent, "formatBasisPoints": __m["src/drishti_format.js"].formatBasisPoints, "formatCurrency": __m["src/drishti_format.js"].formatCurrency, "formatCompact": __m["src/drishti_format.js"].formatCompact, "defineFormats": __m["src/drishti_format.js"].defineFormats, "hasFormat": __m["src/drishti_format.js"].hasFormat, "namedFormat": __m["src/drishti_format.js"].namedFormat, "formatNames": __m["src/drishti_format.js"].formatNames, "formatSpec": __m["src/drishti_format.js"].formatSpec, "formatNamed": __m["src/drishti_format.js"].formatNamed, "formatter": __m["src/drishti_format.js"].formatter, "parseDate": __m["src/drishti_dates.js"].parseDate, "daysInMonth": __m["src/drishti_dates.js"].daysInMonth, "isoDate": __m["src/drishti_dates.js"].isoDate, "today": __m["src/drishti_dates.js"].today, "formatDate": __m["src/drishti_dates.js"].formatDate, "formatDateRange": __m["src/drishti_dates.js"].formatDateRange, "isBusinessDay": __m["src/drishti_dates.js"].isBusinessDay, "addBusinessDays": __m["src/drishti_dates.js"].addBusinessDays, "previousBusinessDay": __m["src/drishti_dates.js"].previousBusinessDay, "businessDaysBetween": __m["src/drishti_dates.js"].businessDaysBetween, "DEFAULT_THEME": __m["src/drishti_theme.js"].DEFAULT_THEME, "THEME_STORAGE_KEY": __m["src/drishti_theme.js"].THEME_STORAGE_KEY, "TEXT_TOKENS": __m["src/drishti_theme.js"].TEXT_TOKENS, "GROUND_TOKENS": __m["src/drishti_theme.js"].GROUND_TOKENS, "themes": __m["src/drishti_theme.js"].themes, "scheme": __m["src/drishti_theme.js"].scheme, "currentTheme": __m["src/drishti_theme.js"].currentTheme, "setTheme": __m["src/drishti_theme.js"].setTheme, "token": __m["src/drishti_theme.js"].token, "tokens": __m["src/drishti_theme.js"].tokens, "parseColor": __m["src/drishti_theme.js"].parseColor, "luminance": __m["src/drishti_theme.js"].luminance, "contrastRatio": __m["src/drishti_theme.js"].contrastRatio, "readableOn": __m["src/drishti_theme.js"].readableOn, "contrastProblems": __m["src/drishti_theme.js"].contrastProblems, "AS_OF_HEADER": __m["src/drishti_api.js"].AS_OF_HEADER, "ApiError": __m["src/drishti_api.js"].ApiError, "errorWords": __m["src/drishti_api.js"].errorWords, "ApiClient": __m["src/drishti_api.js"].ApiClient, "createClient": __m["src/drishti_api.js"].createClient, "api": __m["src/drishti_api.js"].api, "call": __m["src/drishti_api.js"].call, "EventBus": __m["src/drishti_events.js"].EventBus, "createBus": __m["src/drishti_events.js"].createBus, "bus": __m["src/drishti_events.js"].bus, "FOCUSABLE": __m["src/drishti_a11y.js"].FOCUSABLE, "focusable": __m["src/drishti_a11y.js"].focusable, "trapFocus": __m["src/drishti_a11y.js"].trapFocus, "announce": __m["src/drishti_a11y.js"].announce, "rovingIndex": __m["src/drishti_a11y.js"].rovingIndex, "rovingTabindex": __m["src/drishti_a11y.js"].rovingTabindex, "installResize": __m["src/drishti_resize.js"].installResize, "scanResize": __m["src/drishti_resize.js"].scanResize, "resizeHandle": __m["src/drishti_resize.js"].resizeHandle, "resetResize": __m["src/drishti_resize.js"].resetResize, "WORKBENCH": __m["src/drishti_keys.js"].WORKBENCH, "LAYOUT": __m["src/drishti_keys.js"].LAYOUT, "interpretPanelKey": __m["src/drishti_keys.js"].interpretPanelKey, "GridKeys": __m["src/drishti_keys.js"].GridKeys, "keyName": __m["src/drishti_keys.js"].keyName, "normalizeKey": __m["src/drishti_keys.js"].normalizeKey, "keymap": __m["src/drishti_keys.js"].keymap, "openDialog": __m["src/drishti_overlay.js"].openDialog, "closeDialog": __m["src/drishti_overlay.js"].closeDialog, "openDrawer": __m["src/drishti_overlay.js"].openDrawer, "ToastTray": __m["src/drishti_overlay.js"].ToastTray, "toast": __m["src/drishti_overlay.js"].toast, "configure": __m["src/drishti_loader.js"].configure, "manifest": __m["src/drishti_loader.js"].manifest, "libraryVersion": __m["src/drishti_loader.js"].libraryVersion, "requirements": __m["src/drishti_loader.js"].requirements, "loaded": __m["src/drishti_loader.js"].loaded, "load": __m["src/drishti_loader.js"].load, "staticUrl": __m["src/drishti_loader.js"].staticUrl, "loadScript": __m["src/drishti_loader.js"].loadScript, "loadStyle": __m["src/drishti_loader.js"].loadStyle, "isBlank": __m["src/drishti_filters.js"].isBlank, "compareValues": __m["src/drishti_filters.js"].compareValues, "compareRows": __m["src/drishti_filters.js"].compareRows, "cycleSort": __m["src/drishti_filters.js"].cycleSort, "passes": __m["src/drishti_filters.js"].passes, "rowFilter": __m["src/drishti_filters.js"].rowFilter, "filterWords": __m["src/drishti_filters.js"].filterWords, "FILTER_CHANNEL": __m["src/drishti_filters.js"].FILTER_CHANNEL, "filterRows": __m["src/drishti_filters.js"].filterRows, "h": __m["src/drishti_dom.js"].h, "placeAt": __m["src/drishti_dom.js"].placeAt, "placeUnder": __m["src/drishti_dom.js"].placeUnder, "parseNumberText": __m["src/drishti_parse.js"].parseNumberText, "numberEditText": __m["src/drishti_parse.js"].numberEditText, "toCsv": __m["src/drishti_files.js"].toCsv, "download": __m["src/drishti_files.js"].download, "sparkline": __m["src/drishti_explain.js"].sparkline, "renderExplain": __m["src/drishti_explain.js"].renderExplain };
   })();
   return Object.freeze(Object.assign({ library: "drishti-core", version: "1.1.0" }, __m["src/drishti_index.js"]));
 });
