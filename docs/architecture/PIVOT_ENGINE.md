@@ -1012,7 +1012,7 @@ Product owner (2026-11-02): "And pick and choose charting as well."
    so the chart shows the parts beside the total with **diversification as its own segment**, or refuses stacking in words; ≈ values are
    drawn hatched with their error bars; axes carry units and currency; mixed currencies are refused unless converted.
 5. **Several charts** from one pivot pinned beside it, saved in the view, shared with it, **embedded in BI reports and Sutra pages**
-   (they are BI visuals over the pivot's answer, drawn with the vendored ECharts and Vega-Lite libraries, nothing from a CDN), exported to
+   (they are BI visuals over the pivot's answer, drawn with drishti-chart over the vendored ECharts, nothing from a CDN), exported to
    Excel as **native charts bound to the PivotTable** (P4) and to PNG and SVG.
 6. **Keyboard**: select with `Shift` and the arrows, `G` charts, `Shift+G` cycles the suggestions, `P` pins.
 

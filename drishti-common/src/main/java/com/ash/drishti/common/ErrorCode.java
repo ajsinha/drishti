@@ -443,7 +443,7 @@ public enum ErrorCode {
     TRANSFORM_FAILED("DRS-9075", 422),
     /** Python in BI: a test shipped with a Python item failed, so the item is not published (a bi-admin may force it). */
     PYTHON_TESTS("DRS-9076", 422),
-    /** BI: a Vega-Lite specification could not be drawn (a url or loader in it, a library that did not load); raised by the page, in the visual's frame, and listed here so the code has one home. */
+    /** BI: a Vega-Lite specification was not drawn (a url or loader in it, or a feature drishti-chart does not translate, named with what to use instead); raised by the page, in the visual's frame, and listed here so the code has one home. */
     VEGA_FAILED("DRS-9077", 422),
     /** BI runs (docs/architecture/BI_DESIGN.md): no such run, or not one the caller may see. */
     RUN_NOT_FOUND("DRS-9080", 404),

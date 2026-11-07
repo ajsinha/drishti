@@ -29,6 +29,23 @@
   nothing modified in `config/lakes`.
 
 
+## Upgrade: Vega-Lite specifications are translated (Vega is retired)
+
+- **One drawing engine.** A report's `vega-lite` visual and a Python visual's `output: vega-lite` are now translated by drishti-chart
+  (`fromVegaLite`) and drawn by drishti-chart, like every other chart: the theme's colours, its tooltip, data table, export and Explain.
+  The vendored Vega, Vega-Lite, vega-embed and vega-interpreter are deleted (about 0.85 MB less per first draw). The shipped
+  specifications (the `python-desk-risk` report's *Net MTM by desk* and the `pnl-vega` Python sample) draw the same data and encodings.
+- **What translates:** marks bar, line, area, point, circle, square, tick, rule, rect, arc and boxplot; encodings x, y, color (field,
+  value or condition), size, theta, tooltip, opacity; aggregate, bin, sort, stack, scale (log, zero, domain), axis titles and d3 formats;
+  inline data; layers; filter and calculate transforms; titles. `width` and `height` are ignored (the chart fills its frame).
+- **Not translated, so refused in words (never drawn wrong):** facets, `row` and `column`; `repeat` and `concat`; `params` and
+  `selection`; `projection` and `geoshape`; other transforms (aggregate, window, fold, pivot, lookup, ...); `text` marks and encodings
+  and the other channels (`shape`, `detail`, `href`, ...); `resolve`. The visual's frame names each feature with what to use instead
+  (a split well, one visual per chart, the report's cross-filtering, the map, a calculated column or measure, a table or card).
+  Check a report with such a visual after upgrading: [BI_GUIDE.md](docs/guides/BI_GUIDE.md#35-vega-lite-visuals).
+- **New, and the preferred form for Python:** a Python visual whose manifest says `output: drishti-chart` returns a drishti-chart spec
+  with its rows inline, drawn as it is, every kind the library has ([BI_GUIDE.md](docs/guides/BI_GUIDE.md#14-vega-lite-output)).
+
 ## Upgrade: one search (the console's `/api/suggest` is removed)
 
 - **BI's keys** are the keymap's: `?` (and the rail's Keys button) lists them with the rest of the screen's, and BI's own keys dialog is

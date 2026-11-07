@@ -49,6 +49,7 @@
 .dc-canvas { width: 100%; min-height: 160px; }
 .dc-loading { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--d-muted); background: color-mix(in srgb, var(--d-surface) 70%, transparent); }
 .dc-loading.dc-error { color: var(--d-bad); padding: 20px; text-align: center; }
+.dc-refused { margin: 0; padding: 12px 14px; color: var(--d-muted); font-size: 12.5px; line-height: 1.45; border-left: 3px solid var(--d-accent, var(--d-muted)); }
 .dc-legend-host[data-at="none"] { display: none; }
 .dc-legend { display: flex; gap: 4px 12px; flex-wrap: wrap; padding: 0 10px 8px; color: var(--d-muted); font-size: 0.92em; }
 .dc[data-density="terminal"] .dc-legend { padding: 0 8px 4px; }

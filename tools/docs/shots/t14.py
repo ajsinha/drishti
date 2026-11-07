@@ -169,11 +169,11 @@ def vega_visuals(c: Ctx):
     quiet_inbox(c)
     c.page.set_viewport_size({"width": 1280, "height": 900})
     c.page.goto(f"{c.base}/bi/r/{PY_REPORT}/vega")
-    c.page.wait_for_selector('[data-visual="mtm-by-desk"] .bi-vega[data-ready="1"] canvas', timeout=90000)
+    c.page.wait_for_selector('[data-visual="mtm-by-desk"] [data-chart-from="vega-lite"][data-ready="1"] canvas', timeout=90000)
     c.page.wait_for_timeout(800)
     elem_shot(c, "16-vega-lite.jpg", '[data-visual="mtm-by-desk"]', pad=8)
     c.page.goto(f"{c.base}/bi/r/{PY_REPORT}/risk")
-    c.page.wait_for_selector('[data-visual="strip"] .bi-vega[data-ready="1"] canvas', timeout=120000)
+    c.page.wait_for_selector('[data-visual="strip"] [data-chart-from="vega-lite"][data-ready="1"] canvas', timeout=120000)
     c.page.wait_for_timeout(800)
     elem_shot(c, "17-python-vega.jpg", '[data-visual="strip"]', pad=8)
 

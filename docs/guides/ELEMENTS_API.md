@@ -9213,7 +9213,39 @@ A Vega-Lite specification as a drishti-chart spec, with every part that did not 
 | `vl` | `Object` | the Vega-Lite specification (data inline; a url is refused) |
 | `[o]` | `{rows: Object[], title: string}` | rows: the data when the specification has none (a BI visual's own rows) |
 
-Returns `{spec: ?Object, unsupported: string[], refused: ?string}`: refused: why nothing was drawn (a url, nothing to draw).
+Returns `{spec: ?Object, unsupported: string[], refused: ?string}`: refused: why nothing is drawn (a url, nothing to draw, or the features that do not translate, each with what to use instead); a spec is only given when the whole specification translated.
+
+#### `vegaLiteAlternative(path)`
+
+What to use instead of an unsupported Vega-Lite feature, from its path in the specification.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `string` | a path fromVegaLite listed ("$.facet", "$.layer[1].encoding.text", "$.transform[0]", "$.mark (text)") |
+
+Returns `string`: the alternative, in words.
+
+#### `vegaLiteRefusal(unsupported)`
+
+The sentence a refused specification shows: each unsupported feature with what to use instead.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `unsupported` | `string[]` | the paths fromVegaLite listed |
+
+Returns `string`.
+
+#### `vegaLiteIn(host, vl, o)`
+
+A Vega-Lite specification drawn in a host by drishti-chart, or refused there in words (each unsupported feature with what to use instead): never drawn wrong. The refusal is a status paragraph (class dc-refused, data-refused holding the unsupported paths).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `vl` | `Object` | the Vega-Lite specification |
+| `[o]` | `Object` | rows (the data when the specification has none), title, and chartIn's options |
+
+Returns `{chart: ?Object, refused: ?string, unsupported: string[], spec: ?Object}`.
 
 ### drishti_chart-parts.js
 
@@ -9845,6 +9877,18 @@ Defines &lt;drishti-chart&gt; in a registry (once; the bundle does it when it lo
 | `[win]` | `Window` | the window whose HTMLElement the element extends |
 
 Returns `boolean`: whether it was defined now.
+
+#### `chartIn(host, spec, o)`
+
+A chart in a host element: a &lt;drishti-chart&gt; made there once (the host's content replaced), its spec set, and set again on the next call. What a page that draws a spec it was given (a report visual, a Python answer) calls instead of building a chart itself.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` |  |
+| `spec` | `Object` | a drishti-chart spec |
+| `[o]` | `Object` | density (default compact), height (px; default: the host's height less the card's chrome, at least 140), and any Chart option |
+
+Returns `Object`: the Chart (el.chart), its ready promise as chart.ready.
 
 ### drishti_index.js
 
