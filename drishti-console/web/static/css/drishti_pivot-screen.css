@@ -96,3 +96,15 @@
   .pv-seg label, .pv-switches .pv-chip { min-height: 36px; padding: 6px 12px; }
   .pv-computed { flex-basis: 100%; }
 }
+/* the cards, the chips' selects (at most 220 px, inside a phone), the chart's box and the comments */
+.pv-chip select { background: transparent; color: var(--d-ink); border: 0; font-size: 12.5px; max-width: 220px; }
+.pv-chip select option { background: var(--d-surface); color: var(--d-ink); }
+.pv-card { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; padding: 10px; min-width: 0; position: relative; }
+.pv-card h2 { margin: 0 0 8px; font-size: 13.5px; font-weight: 600; }
+.pv-card h3 { margin: 8px 0 4px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--d-accent); }
+.pv-chart { width: 100%; min-height: 280px; }
+.pv-cms { list-style: none; margin: 0 0 6px; padding: 0; max-height: 180px; overflow: auto; }
+.pv-cm { padding: 4px 0; border-bottom: 1px solid var(--d-border); font-size: 12.5px; }
+.pv-cm.resolved { color: var(--d-muted); }
+.pv-cm .pv-btn { padding: 2px 8px; font-size: 11.5px; margin-top: 3px; }
+.pv-chip { max-width: 100%; }
