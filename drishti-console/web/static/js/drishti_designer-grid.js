@@ -132,7 +132,7 @@
         sel = { r: x.r, c: x.c, kid: null }; select(true);
       });
       cell.addEventListener('dblclick', function () { edit(); });
-      if (x.panels.length) { hub.draggable(cell, { payload: function (e) { return e.target.closest('.gd-kid') ? null : { ref: x.ref }; }, label: function () { return x.range; } }); }   // drishti-designer's one drag
+      if (x.panels.length) { hub.draggable(cell, { payload: function () { return { ref: x.ref }; }, label: function () { return x.range; } }); }   // drishti-designer's one drag
       hub.target({ el: cell, accepts: function (d) { return !!d.ref; }, over: function () { cell.classList.add('gd-over'); }, leave: function () { cell.classList.remove('gd-over'); },
         drop: function (px, py, d) { cell.classList.remove('gd-over'); if (d.ref !== x.ref) { sel = { r: x.r, c: x.c, kid: null }; step({ op: 'move', from: d.ref, to: x.ref }); } } });
       sheet.appendChild(cell);
