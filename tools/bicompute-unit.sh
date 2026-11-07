@@ -60,7 +60,7 @@ if [ "${1:-}" = "--server" ]; then
   "${java_bin}javac" -J-Xmx768m -nowarn -proc:none -encoding UTF-8 --release 21 -d "$work/server" \
     -cp "$work/main:$plain_jar:$libs:$(jar com/ash/drishti/drishti-common/$ver)" \
     $(find "$here/drishti-server/src/main/java/com/ash/drishti/server/pivot" -name '*.java') \
-    "$here/drishti-server/src/main/java/com/ash/drishti/server/var/VarPivotProvider.java" \
+    "$here/drishti-banking/src/main/java/com/ash/drishti/banking/var/VarPivotProvider.java" \
     "$here/drishti-server/src/main/java/com/ash/drishti/server/net/PeerCalls.java" || { echo "server pivot package: javac failed ($?)"; exit 1; }
   echo "server pivot package: compiled"
 fi

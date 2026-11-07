@@ -126,7 +126,7 @@ CONNECTORS = {
                        "as the viewer: VRES <scope> <GO>",
         "kinds": {"var-result": {"compute": "var-result", "params": {**_CCY, **_LENS},
                                  "result": {"required": ["VAR", "ES", "PNL"], "types": {"VAR": "number", "ES": "number"}}}},
-        "engine": {"type": "java", "class": "com.ash.drishti.server.var.VarResultEngine", "version": "1.0"},
+        "engine": {"type": "java", "class": "com.ash.drishti.banking.var.VarResultEngine", "version": "1.0"},
         "triggers": [{"on": "data-version", "kinds": _INPUTS, "affects": "all"}],
         "coalesce": {"quiet": "250ms", "max-wait": "2s"},
         "cache": {"results": 2000, "ttl": "1h"},

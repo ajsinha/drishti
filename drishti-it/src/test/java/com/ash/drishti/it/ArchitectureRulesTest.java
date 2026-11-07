@@ -123,9 +123,54 @@ class ArchitectureRulesTest {
 
     @ArchTest
     static final ArchRule controllersOnlyInServer = noClasses()
-            .that().resideOutsideOfPackage("com.ash.drishti.server..")
+            .that().resideOutsideOfPackages("com.ash.drishti.server..", "com.ash.drishti.banking..")
             .should().beAnnotatedWith("org.springframework.web.bind.annotation.RestController")
             .allowEmptyShould(true);
+
+    // ------------------------------------------------------------------------------------------------ domain modules (DOMAIN_MODULES.md section 4)
+
+    /** The core never imports a domain: nothing outside a domain's packages depends on one inside them (the SPIs go the other way). */
+    @ArchTest
+    static final ArchRule coreNeverImportsADomain = noClasses()
+            .that().resideOutsideOfPackages("com.ash.drishti.banking..", "com.ash.drishti.economy..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.banking..", "com.ash.drishti.economy..")
+            .because("the core knows no industry: a domain registers with the core through its SPIs (docs/architecture/DOMAIN_MODULES.md)");
+
+    /** Domains never import each other. */
+    @ArchTest
+    static final ArchRule bankingDoesNotSeeAnotherDomain = noClasses()
+            .that().resideInAPackage("com.ash.drishti.banking..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.economy..")
+            .allowEmptyShould(true);
+
+    @ArchTest
+    static final ArchRule economyDoesNotSeeAnotherDomain = noClasses()
+            .that().resideInAPackage("com.ash.drishti.economy..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.banking..")
+            .allowEmptyShould(true);
+
+    /** A domain's compute is pure maths: no Spring, nothing of the server or of the domain's services (drishti-compute-banking). */
+    @ArchTest
+    static final ArchRule domainComputeIsPlainJava = noClasses()
+            .that().resideInAPackage("com.ash.drishti.banking.compute..")
+            .should().dependOnClassesThat().resideInAnyPackage("org.springframework..", "com.ash.drishti.server..", "com.ash.drishti.banking.var..",
+                    "com.ash.drishti.banking.exposure..", "com.ash.drishti.banking.frtb..", "com.ash.drishti.banking.simm..", "com.ash.drishti.banking.official..");
+
+    /** Only drishti-registry reads the access model (ACCESS_MODEL.md section 6): every other class asks the AccessRegistry. */
+    @ArchTest
+    static final ArchRule onlyTheRegistryReadsTheAccessModel = noClasses()
+            .that().resideOutsideOfPackage("com.ash.drishti.registry..")
+            .should().dependOnClassesThat().haveFullyQualifiedName("com.ash.drishti.registry.YamlAccessStore")
+            .orShould().dependOnClassesThat().haveFullyQualifiedName("com.ash.drishti.registry.AccessModel")
+            .because("the access model (module manifests, config/modules, config/access) has one reader: a database store and a remote registry "
+                    + "replace it behind the same interfaces");
+
+    /** The registry is plain Java: nothing of Drishti, no Spring (it becomes a service of its own later). */
+    @ArchTest
+    static final ArchRule registryIsPlainJava = noClasses()
+            .that().resideInAPackage("com.ash.drishti.registry..")
+            .should().dependOnClassesThat().resideInAnyPackage("org.springframework..", "com.ash.drishti.server..", "com.ash.drishti.common..",
+                    "com.ash.drishti.engine..", "com.ash.drishti.packs..");
 
     @ArchTest
     static final ArchRule noFieldInjection = fields()

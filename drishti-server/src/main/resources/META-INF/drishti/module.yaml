@@ -1,0 +1,29 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The content modules the core server ships (docs/architecture/ACCESS_MODEL.md): modules without code of their own (packs, lenses, reports),
+# switched, licensed and decided like any other. The core itself is not a module here: it is always on. A word no module declares is a core
+# function (BI, PIVOT, FORM, CAL, LE, BOOK ...).
+modules:
+  - id: economy
+    domain: economy
+    title: Economy and markets
+    about: "Public economic and market data: the IMF economy, news and markets, US equities (SEC EDGAR), GLEIF legal entities, funds and ETFs"
+    code: false
+    feature: economy
+    enabled: true
+    contributes:
+      packs: [world-economy, news-and-markets, us-equities, gleif, funds]
+      functions: [ECON, MACRO, FCST, LABR, FISC, ECG, REGE, JUR, PARTY, OFFC, ELEC, REGN, SOCI, TOPIC, NEWS, CO, QUOTE, USEQ, IDX, SIC, EDGAR, FILING,
+        FACT, PXH, LEI, LEIG, LEIR, LEIC, LEIM, FUND, HELD, TRACK]

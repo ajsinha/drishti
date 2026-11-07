@@ -466,7 +466,7 @@ and correlation are empty and the rest is shown.
 
 `EQB` (and the equity page's Beta panel): the regression of the equity's daily log returns on its index's (`EQUITY_INDEX`), on the
 dates both histories have, over the last `window` returns (parameter `window`, default 0: every return). Engine
-`com.ash.drishti.compute.reactive.analytics.BetaEngine`, connector `equity-analytics` (reads `equity` `{id}` and `equity-index`
+`com.ash.drishti.banking.compute.analytics.BetaEngine`, connector `equity-analytics` (reads `equity` `{id}` and `equity-index`
 `{inputs.equity.EQUITY_INDEX}`).
 
 | Field | Type | Formula |
@@ -574,7 +574,7 @@ correlation-engine:
     - { kind: correlation-matrix, as: set, id: "{id}" }
     - { kind: equity, as: equities, ids: "{inputs.set.EQUITY_IDS}", limit: 200 }
     - { kind: fx-spot, as: fx, ids: "{inputs.set.FX_IDS}", limit: 200 }
-  engine: { type: java, class: com.ash.drishti.compute.reactive.analytics.CorrelationEngine }
+  engine: { type: java, class: com.ash.drishti.banking.compute.analytics.CorrelationEngine }
   triggers: [{ on: data-version, kinds: [correlation-matrix, equity, fx-spot], affects: all }]
 ```
 

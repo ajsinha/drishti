@@ -861,7 +861,7 @@ The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) a
 | Contract | [exposure-result.contract.yaml](../../../config/packs/counterparty-risk/contracts/exposure-result.contract.yaml) · version 1.0 |
 | Class | computed |
 | Status | active |
-| Source | computed by Drishti: the reactive connector exposure-engine (java engine com.ash.drishti.server.exposure.ExposureResultEngine) |
+| Source | computed by Drishti: the reactive connector exposure-engine (java engine com.ash.drishti.banking.exposure.ExposureResultEngine) |
 | Grain | One answer per question (the scope asked for, its parameters q, collateral and run, and the business date), computed when asked. |
 | Key | — |
 | Id pattern | — |

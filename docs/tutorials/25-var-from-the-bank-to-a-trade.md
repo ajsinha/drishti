@@ -499,7 +499,7 @@ var-engine:
     var-result:
       compute: var-result
       result: { required: [VAR, ES, PNL], types: { VAR: number, ES: number } }
-  engine: { type: java, class: com.ash.drishti.server.var.VarResultEngine, version: "1.0" }
+  engine: { type: java, class: com.ash.drishti.banking.var.VarResultEngine, version: "1.0" }
   triggers:
     - { on: data-version, kinds: [pnl-vector, risk-hierarchy, scenario-set, portfolio], affects: all }
 ```

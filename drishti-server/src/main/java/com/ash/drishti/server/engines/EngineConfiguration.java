@@ -53,7 +53,8 @@ public class EngineConfiguration {
 
     @Bean(destroyMethod = "close")
     public EngineRegistry engineRegistry(EngineCatalogue catalogue, EngineSwitches switches, ConfigurableEnvironment env,
-            ObjectProvider<ComputeEngine> engines, ObjectProvider<AuditLog> audit, ObjectProvider<NetService> net) {
+            ObjectProvider<ComputeEngine> engines, ObjectProvider<AuditLog> audit, ObjectProvider<NetService> net,
+            ObjectProvider<com.ash.drishti.registry.AccessRegistry> modules) {
         EngineFiles files = new EngineFiles(Path.of(env.getProperty("drishti.engines.dir", "./config/engines")), System::getenv);
         EngineHistory history = new EngineHistory(Path.of(env.getProperty("drishti.data.dir", "./data"), "engines", "history.jsonl"));
         Duration drain = env.getProperty("drishti.engines.drain", Duration.class, Duration.ofSeconds(30));
@@ -63,6 +64,13 @@ public class EngineConfiguration {
             return id == null || id.isBlank() ? "this server" : id;
         }, drain, engines.orderedStream().toList());
         r.watch(Duration.ofSeconds(env.getProperty("drishti.engines.watch-seconds", Integer.class, 5)));
+        com.ash.drishti.registry.AccessRegistry access = modules.getIfAvailable();
+        if (access != null) {                        // an engine of a module that is off: not installed, and why
+            for (EngineCatalogue.Entry e : catalogue.all()) {
+                access.moduleOfEngine(e.id()).filter(m -> !access.moduleOn(m)).ifPresent(m -> r.notInstalledBecause(e.id(),
+                        "the module '" + m + "' is off: " + access.module(m).map(com.ash.drishti.registry.ModuleState::reason).orElse("") + " (Admin -> Modules)"));
+            }
+        }
         return r;
     }
 

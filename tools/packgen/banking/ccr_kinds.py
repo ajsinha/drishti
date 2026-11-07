@@ -138,7 +138,7 @@ CONNECTORS = {
                                                  "sets": {"type": "text", "default": ""}},
                                       "result": {"required": ["SCOPE", "STATUS", "PROFILE"],
                                                  "types": {"EPE": "number", "PEAK_PFE": "number"}}}},
-        "engine": {"type": "java", "class": "com.ash.drishti.server.exposure.ExposureResultEngine", "version": "1.0"},
+        "engine": {"type": "java", "class": "com.ash.drishti.banking.exposure.ExposureResultEngine", "version": "1.0"},
         "triggers": [{"on": "data-version", "kinds": _INPUTS, "affects": "all"}],
         "coalesce": {"quiet": "1s", "max-wait": "10s"},
         "cache": {"results": 1000, "ttl": "1h"},

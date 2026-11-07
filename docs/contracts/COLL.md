@@ -193,7 +193,7 @@ applied per CSA first).
 
 ### 6.6 Where it runs
 
-Java (`com.ash.drishti.compute.ccr.CollateralEngine`, planned), at date load: a few hundred thousand holdings, priced once. A
+Java (`com.ash.drishti.banking.compute.ccr.CollateralEngine`, planned), at date load: a few hundred thousand holdings, priced once. A
 **substitution what-if** (replace or add holdings, see the new values and the CSA's eligibility) runs in the Python engine on the
 holdings of one CSA (§9.4).
 
@@ -264,7 +264,7 @@ reads:
   - { kind: fx-spot, as: fx, all: true }
 engine:
   type: java
-  entry: com.ash.drishti.compute.ccr.CollateralEngine
+  entry: com.ash.drishti.banking.compute.ccr.CollateralEngine
   version: "1.0"
 triggers:
   - { on: data-version, kinds: [collateral-holding, collateral-balance, csa, bond, fx-spot], affects: all }

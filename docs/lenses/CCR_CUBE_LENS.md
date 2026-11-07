@@ -200,7 +200,7 @@ combine (CLUSTER_DEPLOYMENT section 6.3). A group across owners is summed by the
 | Exposure sharding | **Planned** (CD10), designed | [CLUSTER_DEPLOYMENT section 6](../architecture/CLUSTER_DEPLOYMENT.md#6-exposure-sharding-in-depth-planned) |
 | Explorer with tree, tiles, profile, path fan, collateral, trades, pre-deal tabs; phone layout | **Built** | [EXPOSURE_GUIDE section 3](../guides/EXPOSURE_GUIDE.md#3-the-explorer-screen-by-screen) |
 
-**Verified in code (2026-10-31):** `drishti-server/src/main/java/com/ash/drishti/server/exposure/` holds `ExposureService`,
+**Verified in code (2026-10-31):** `drishti-banking/src/main/java/com/ash/drishti/banking/exposure/` holds `ExposureService`,
 `ExposureWhatIf`, `ExposureWhatIfPaths`, `ExposureExplorer`, `ExposureOfficial`, `ExposureLoader`, `ExposureTier`; there is no CVA,
 SA-CCR, SIMM, WWR or sharding class there (the exposure guide's section 18.8: "Fan-out across nodes is PLANNED").
 

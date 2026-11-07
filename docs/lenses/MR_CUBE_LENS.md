@@ -302,7 +302,7 @@ corrections, streaming, export, embedding, permissions, scatter-gather and cachi
 | Client renderer, embedding | **Built** | [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md) |
 | Phone tiers | **Design** | [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) |
 
-**Verified in code (2026-10-31):** `drishti-server/src/main/java/com/ash/drishti/server/var/` holds `VarService`, `VarWhatIf`,
+**Verified in code (2026-10-31):** `drishti-banking/src/main/java/com/ash/drishti/banking/var/` holds `VarService`, `VarWhatIf`,
 `VarPvStream` (the Kafka window), `VarShardBooks` and `VarSharding` (shards), `VarMatrix` (SMAT), `VarOfficial`, `VarCaches`; no class
 in `drishti-server` or `drishti-compute` reads sensitivities by risk factor (the only matches for "sensitivit" are outside those
 packages), and there is no FRTB or IMA calculator.

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Drishti's Python exposure engine (docs/guides/EXPOSURE_GUIDE.md section 19.5): the exposure measures by the Java engine's rules
-(``com.ash.drishti.compute.ccr.ExposureMath``: collateral called at the look-back point, E and N, EE, PFE, EEE, EPE, EEPE, the peaks), and
+(``com.ash.drishti.banking.compute.ccr.ExposureMath``: collateral called at the look-back point, E and N, EE, PFE, EEE, EPE, EEPE, the peaks), and
 the what-if engine of the reactive connector ``exposure-whatif``: the exact ``paths`` method, candidates' paths on the date's run added to
 their netting sets path by path, collateral and exposure computed again. Java keeps the additive aggregation (a scope's exposure summed
 over the hot file); Python receives the scope's matrix and the few netting sets the candidates join. Standard library only: it runs on

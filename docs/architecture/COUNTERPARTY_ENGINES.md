@@ -232,7 +232,7 @@ never shown as a decomposition.
 
 | Work | Where |
 |---|---|
-| per trade: S, E, M, T, SD, δ, both MFs, both D; per set and (asset class, hedging set, sub-key): Σ D margined and unmargined | Java at date load (`com.ash.drishti.compute.ccr.SaccrAggregates`, planned): additive sums, 64 bytes an aggregate row |
+| per trade: S, E, M, T, SD, δ, both MFs, both D; per set and (asset class, hedging set, sub-key): Σ D margined and unmargined | Java at date load (`com.ash.drishti.banking.compute.ccr.SaccrAggregates`, planned): additive sums, 64 bytes an aggregate row |
 | RC, EN, add-ons, multiplier, PFE, EAD, the cap; what-if; standalone | Python `drishti_ccr.saccr:SaccrEngine` on the `risk` pool, Arrow in and out, split by netting set (sums reduce) |
 | the reference implementation for tests | `tools/packgen/ccr/ccrmath.py` (the exposure maths already there; SA-CCR added), parity-tested against both |
 
