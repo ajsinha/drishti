@@ -201,6 +201,22 @@ test('risk: the traffic light, the tail figures, the backtest badge, the exposur
   assert.deepEqual(R.RISK_KINDS.map((k) => C.kindOf(k).family), ['risk', 'risk', 'risk', 'risk']);
 });
 
+test('risk: the server\'s bins drawn as given, its VaR and ES and fitted normal; the grid preset\'s columns never summed', () => {
+  const binned = { edges: [-50, -30, -10, 10, 30], counts: [2, 5, 9, 4] };
+  const d = build({ kind: 'risk.pnl-distribution', data: { rows: [] }, binned: binned, var: 30, es: 42,
+    parametric: { var: 25, curve: { x: [-50, 0, 30], y: [0.5, 8, 1] }, gap: 5, gapPct: 0.2, describe: ['a normal fitted to the 20 scenarios'] } });
+  assert.deepEqual(d.option.series[0].data.map((x) => x.value), [[-50, -30, 2], [-30, -10, 5], [-10, 10, 9], [10, 30, 4]]);
+  assert.deepEqual(d.table.rows, [[-50, -30, 2], [-30, -10, 5], [-10, 10, 9], [10, 30, 4]]);
+  assert.deepEqual(d.option.series[0].markLine.data.map((l) => l.xAxis), [-30, -42, -25]);
+  assert.deepEqual([d.figures.var, d.figures.es, d.figures.computedHere, d.figures.fatTailGap], [30, 42, false, 5]);
+  assert.equal(d.option.series[d.option.series.length - 1].data.length, 3);
+  assert.match(d.summary, /^P&L distribution of 20 scenarios/);
+  const c = R.figureColumn('VAR', 'VaR', { tone: (v) => (v > 10 ? 'bad' : null) });
+  assert.deepEqual([c.type, c.additive, c.format, c.cellClass(11, {}), c.cellClass(1, {})], ['number', false, 'compact', 'dg-tone-bad', null]);
+  assert.equal(R.figureColumn('PV', 'PV', { additive: true }).additive, true);
+  assert.deepEqual([R.RISK_GRID_DEFAULTS.layout, R.RISK_GRID_DEFAULTS.clientAggregation], ['terminal', false]);
+});
+
 test('Vega-Lite: the report\'s bar and the Python sample\'s layers translate whole and draw', () => {
   const bar = C.fromVegaLite({ mark: { type: 'bar', cornerRadiusEnd: 3 }, encoding: { x: { field: 'DESK', type: 'nominal', sort: '-y', title: 'Desk' }, y: { field: 'MTM', type: 'quantitative', title: 'Net MTM' },
     color: { condition: { test: 'datum.MTM < 0', value: '#b3261e' }, value: '#4f7cff' }, tooltip: [{ field: 'DESK' }, { field: 'MTM', format: ',.0f' }] } }, { rows: [{ DESK: 'FX', MTM: -3 }, { DESK: 'Rates', MTM: 5 }] });

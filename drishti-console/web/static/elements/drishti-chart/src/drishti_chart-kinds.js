@@ -265,14 +265,18 @@ export function buildScatter(spec, rows, env) {
 /**
  * Histogram: the values of a field in equal bins (a value axis, so lines at a value, VaR's for one, sit where they belong), with the
  * tail beyond a value in its own tone.
- * @param {Object} spec bins (a count or "auto"), tail {below|above: a number or a field of the first row, tone}
+ * @param {Object} spec bins (a count or "auto"), binned (the server's bins {edges, counts}: drawn as they are, no rows needed), tail
+ *   {below|above: a number or a field of the first row, tone}
  * @param {Object[]} rows
  * @param {Object} env
  * @returns {import('./drishti_chart-spec.js').BuiltChart}
  */
 export function buildHistogram(spec, rows, env) {
-  const th = env.theme, vf = fieldOf(spec.value) || fieldOf(spec.x), values = rows.map((r) => r[vf]);
-  const bins = bin(values, { bins: spec.bins || 'auto', extent: spec.extent });
+  const th = env.theme, vf = fieldOf(spec.value) || fieldOf(spec.x), pre = spec.binned;
+  const values = pre ? [] : rows.map((r) => r[vf]);
+  // the server's bins ({edges, counts}: the server sends a summary, never the vector) or bins of the rows' values
+  const bins = pre ? pre.counts.map((c, i) => ({ x0: num(pre.edges[i]), x1: num(pre.edges[i + 1]), count: num(c) || 0 })) : bin(values, { bins: spec.bins || 'auto', extent: spec.extent });
+  if (pre) { rows = []; }
   const tail = spec.tail || null, cut = tail ? num(annValue(tail, tail.below !== undefined ? 'below' : 'above', rows)) : null;
   const inTail = (b) => cut !== null && (tail.below !== undefined ? b.x1 <= cut + 1e-9 : b.x0 >= cut - 1e-9);
   const base = toneColour(th, spec.tone || 'link'), tailColour = toneColour(th, tail && tail.tone || 'bad');
@@ -290,7 +294,7 @@ export function buildHistogram(spec, rows, env) {
   const legend = [{ name: series[0].name, colour: base, style: 'box' }].concat(tail ? [{ name: tail.label || 'tail', colour: tailColour, style: 'box' }] : []);
   return { option: option, legend: legend, table: { columns: [{ header: 'from', format: spec.value && spec.value.format }, { header: 'to', format: spec.value && spec.value.format }, { header: 'count' }],
     rows: bins.map((b) => [b.x0, b.x1, b.count]) },
-  summary: 'Histogram' + (spec.title ? ' of ' + spec.title : '') + ', ' + values.length + ' values in ' + bins.length + ' bins' + (tail ? ', ' + data.filter((d, i) => inTail(bins[i])).reduce((s, d) => s + d.value[2], 0) + ' in the tail' : '') };
+  summary: 'Histogram' + (spec.title ? ' of ' + spec.title : '') + ', ' + (pre ? bins.reduce((t, b) => t + b.count, 0) : values.length) + ' values in ' + bins.length + ' bins' + (tail ? ', ' + data.filter((d, i) => inTail(bins[i])).reduce((s, d) => s + d.value[2], 0) + ' in the tail' : '') };
 }
 
 /**

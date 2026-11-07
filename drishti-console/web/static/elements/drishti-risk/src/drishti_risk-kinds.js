@@ -65,7 +65,8 @@ export function tailFigures(pnl, varConf, esConf) {
 
 /**
  * The P&L distribution with VaR and ES.
- * @param {Object} spec value (the P&L field), var and es (the server's figures), confidence {var, es}, bins
+ * @param {Object} spec value (the P&L field), var and es (the server's figures), confidence {var, es}, bins, binned (the server's bins
+ *   {edges, counts}: then var and es are the server's too), parametric {var, curve: {x, y}, gap, gapPct, describe} (the server's fitted normal)
  * @param {Object[]} rows
  * @param {Object} env
  * @returns {Object}
@@ -78,12 +79,24 @@ export function buildPnlDistribution(spec, rows, env) {
   const s = Object.assign({}, spec, { value: Object.assign({ field: vf, title: 'P&L' }, spec.value), bins: spec.bins || 36,
     tail: { below: -v, tone: 'bad', label: 'beyond VaR' },
     annotations: [{ type: 'line', axis: 'x', value: -v, label: 'VaR ' + pct(conf.var), tone: 'bad', style: 'solid' }, { type: 'line', axis: 'x', value: -es, label: 'ES ' + pct(conf.es), tone: 'accent' }].concat(spec.annotations || []) });
+  const p = spec.parametric;
+  if (p && num(p.var) !== null) {
+    // the fitted normal (PARAMETRIC_VAR.md section 8): the server's curve on the bars' scale and its VaR, drawn as given
+    s.annotations = s.annotations.concat([{ type: 'line', axis: 'x', value: -num(p.var), label: 'parametric ' + env.fmt(num(p.var)), tone: 'warn', style: 'dashed' }]);
+  }
   const b = buildHistogram(s, rows, env);
+  if (p && p.curve && p.curve.x && p.curve.x.length) {
+    b.option.series.push({ type: 'line', name: 'fitted normal', smooth: true, symbol: 'none', silent: false, data: p.curve.x.map((x, i) => [num(x), num(p.curve.y[i])]),
+      lineStyle: { color: toneColour(env.theme, 'warn'), width: 1.5 }, tooltip: { formatter: () => (p.describe || []).join('<br>') || 'fitted normal' } });
+    b.legend.push({ name: 'fitted normal · parametric ' + env.fmt(num(p.var)), colour: toneColour(env.theme, 'warn'), style: 'dash' });
+    if (num(p.gap) !== null) { b.figures = { fatTailGap: num(p.gap), fatTailGapPct: num(p.gapPct) }; }
+  }
   b.legend.push({ name: 'VaR ' + pct(conf.var) + ' ' + env.fmt(v), colour: toneColour(env.theme, 'bad'), style: 'line' }, { name: 'ES ' + pct(conf.es) + ' ' + env.fmt(es), colour: toneColour(env.theme, 'accent'), style: 'dash' });
   b.legendStatic = true;
-  b.figures = { var: v, es: es, computedHere: computed };
+  b.figures = Object.assign({ var: v, es: es, computedHere: computed }, b.figures);
   if (computed) { b.badge = { tone: 'muted', text: 'computed here (no server)' }; }
-  b.summary = 'P&L distribution of ' + rows.length + ' scenarios: VaR ' + pct(conf.var) + ' ' + env.fmt(v) + ', ES ' + pct(conf.es) + ' ' + env.fmt(es);
+  const n = spec.binned ? spec.binned.counts.reduce((t, c) => t + (num(c) || 0), 0) : rows.length;
+  b.summary = 'P&L distribution of ' + n + ' scenarios: VaR ' + pct(conf.var) + ' ' + env.fmt(v) + ', ES ' + pct(conf.es) + ' ' + env.fmt(es);
   return b;
 }
 

@@ -1321,7 +1321,7 @@
           "scripts": []
         },
         "drishti-grid": {
-          "version": "0.3.0",
+          "version": "0.4.0",
           "title": "The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and <drishti-grid> in three layouts and three densities), cell editing with undo, paste, write-back and four eyes",
           "bundle": "drishti-grid/drishti_grid.js",
           "entry": "drishti-grid/src/drishti_index.js",
@@ -1361,7 +1361,7 @@
           "scripts": []
         },
         "drishti-chart": {
-          "version": "0.1.0",
+          "version": "0.2.0",
           "title": "The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec",
           "bundle": "drishti-chart/drishti_chart.js",
           "entry": "drishti-chart/src/drishti_index.js",
@@ -1377,13 +1377,14 @@
           ]
         },
         "drishti-risk": {
-          "version": "0.1.0",
-          "title": "The banking module's chart kinds on drishti-chart (licensed with the module): the P&L distribution with VaR and ES, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit",
+          "version": "0.2.0",
+          "title": "The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser)",
           "bundle": "drishti-risk/drishti_risk.js",
           "entry": "drishti-risk/src/drishti_index.js",
           "global": "risk",
           "requires": [
             "drishti-core",
+            "drishti-grid",
             "drishti-chart"
           ],
           "css": [],

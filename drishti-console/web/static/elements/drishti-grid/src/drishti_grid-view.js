@@ -50,6 +50,9 @@ let seq = 0;
  * @property {function(string): (Promise<Array<{text: string, count: number}>>|Array)} [members] a field's members for its filter (default:
  *   the rows in the page)
  * @property {number} [phoneWidth=640] below this width the grid is drawn for a phone
+ * @property {number} [fitRows] the host as tall as its rows, up to this many (then it scrolls): a screen's small table
+ * @property {boolean} [chrome=true] false: the grid without its layout's chrome (no command line, toolbar, wells or function keys; the
+ *   status bar and Explain stay), for a small table inside a screen that has its own command line and keys
  * @property {GridModel} [model] draw this model rather than make one
  */
 

@@ -49,6 +49,10 @@ export const ADDITIVE_FUNCS = Object.freeze(['sum', 'count']);
  * @property {boolean} [enableValue] may be a value (default: numbers)
  * @property {string} [group] a heading above several columns
  * @property {string} [description] words for the field list
+ * @property {function(*, Object): ?string} [cellClass] more classes for a leaf's cell from its value and row (a tone: dg-tone-bad,
+ *   dg-tone-good, dg-tone-warn, dg-tone-muted; a host's own class)
+ * @property {function({value: *, text: string, row: Object, doc: Document}): (Node|string|null)} [cellRenderer] a leaf's cell content
+ *   drawn by the host (a link, a button); null keeps the formatted text. Copy, export and sort still use the value and its text.
  */
 
 /**
@@ -66,7 +70,7 @@ export function normalizeColumn(def, index) {
     id: id, field: def.field || id, header: def.header || def.field || id, type: type, width: 120, minWidth: 40, maxWidth: null,
     pinned: null, hidden: false, sortable: true, filterable: true, resizable: true, editable: false, aggFunc: num ? 'sum' : null,
     additive: num, enableRowGroup: !num, enablePivot: !num, enableValue: num, group: null, description: '', format: null,
-    valueGetter: null, comparator: null, measure: null
+    valueGetter: null, comparator: null, measure: null, cellClass: null, cellRenderer: null
   }, def, { id: id, type: type }, def.aggregate === 'server' ? { additive: false } : {});
 }
 

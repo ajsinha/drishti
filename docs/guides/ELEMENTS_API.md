@@ -23,11 +23,11 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | Library | Version | What it is |
 |---|---|---|
 | [drishti-core](#drishti-core) | 1.1.0 | Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines |
-| [drishti-grid](#drishti-grid) | 0.3.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes |
+| [drishti-grid](#drishti-grid) | 0.4.0 | The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and &lt;drishti-grid&gt; in three layouts and three densities), cell editing with undo, paste, write-back and four eyes |
 | [drishti-inputs](#drishti-inputs) | 0.1.0 | Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead, forms from a schema with four eyes, the filter bar, the code editor over CodeMirror |
 | [drishti-data](#drishti-data) | 0.1.0 | Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client |
-| [drishti-chart](#drishti-chart) | 0.1.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
-| [drishti-risk](#drishti-risk) | 0.1.0 | The banking module's chart kinds on drishti-chart (licensed with the module): the P&L distribution with VaR and ES, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit |
+| [drishti-chart](#drishti-chart) | 0.2.0 | The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec |
+| [drishti-risk](#drishti-risk) | 0.2.0 | The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser) |
 | [drishti-renderer](#drishti-renderer) | 2.0.0 | The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js |
 
 ## drishti-core
@@ -1321,7 +1321,7 @@ A listener: the event's payload and its name.
 
 ## drishti-grid
 
-Version 0.3.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core.
+Version 0.4.0. Bundle `static/elements/drishti-grid/drishti_grid.js`, global `Drishti.elements.grid`; requires drishti-core.
 
 ### drishti_columns.js
 
@@ -6596,7 +6596,7 @@ Returns `import('./drishti_live-client.js').LiveClient`.
 
 ## drishti-chart
 
-Version 0.1.0. Bundle `static/elements/drishti-chart/drishti_chart.js`, global `Drishti.elements.chart`; requires drishti-core.
+Version 0.2.0. Bundle `static/elements/drishti-chart/drishti_chart.js`, global `Drishti.elements.chart`; requires drishti-core.
 
 ### drishti_chart-spec.js
 
@@ -6958,7 +6958,7 @@ Histogram: the values of a field in equal bins (a value axis, so lines at a valu
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `spec` | `Object` | bins (a count or "auto"), tail {below\|above: a number or a field of the first row, tone} |
+| `spec` | `Object` | bins (a count or "auto"), binned (the server's bins {edges, counts}: drawn as they are, no rows needed), tail {below\|above: a number or a field of the first row, tone} |
 | `rows` | `Object[]` |  |
 | `env` | `Object` |  |
 
@@ -7941,7 +7941,7 @@ Returns `void`.
 
 ## drishti-risk
 
-Version 0.1.0. Bundle `static/elements/drishti-risk/drishti_risk.js`, global `Drishti.elements.risk`; requires drishti-core, drishti-chart.
+Version 0.2.0. Bundle `static/elements/drishti-risk/drishti_risk.js`, global `Drishti.elements.risk`; requires drishti-core, drishti-grid, drishti-chart.
 
 ### drishti_risk-kinds.js
 
@@ -7998,7 +7998,7 @@ The P&L distribution with VaR and ES.
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `spec` | `Object` | value (the P&L field), var and es (the server's figures), confidence {var, es}, bins |
+| `spec` | `Object` | value (the P&L field), var and es (the server's figures), confidence {var, es}, bins, binned (the server's bins {edges, counts}: then var and es are the server's too), parametric {var, curve: {x, y}, gap, gapPct, describe} (the server's fitted normal) |
 | `rows` | `Object[]` |  |
 | `env` | `Object` |  |
 
@@ -8045,6 +8045,39 @@ Returns `Object`.
 Registers the risk kinds in drishti-chart's registry (the library does it when it loads, and only where the banking module is licensed: the console serves this library to no one else).
 
 Returns `string[]`: the kinds registered now.
+
+### drishti_risk-grid.js
+
+#### `RISK_GRID_DEFAULTS`
+
+What every risk table starts from.
+
+#### `TONES`
+
+The tones a column's cellClass gives: a loss or a breach is bad, a gain good (the console's tone classes in the grid).
+
+#### `figureColumn(field, header, o)`
+
+A number column of a risk figure: right-aligned, formatted by name, never summed in the browser when it is a VaR or an ES.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `field` | `string` |  |
+| `header` | `string` |  |
+| `[o]` | `Object` | format (default 'compact'), additive (default false: VaR, ES, a limit use), width, tone (a function of the value giving a key of TONES), and any other ColumnDef property |
+
+Returns `Object`: a ColumnDef.
+
+#### `riskGrid(host, options)`
+
+Draws a risk table: a &lt;drishti-grid&gt; in host (made once and kept: a second call gives it new columns and rows).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `host` | `HTMLElement` | the element the grid fills |
+| `options` | `Object` | columns, rows, title, subtitle, getRowId, fitRows (rows shown before it scrolls), onRow(row, event), explain, and anything a Grid takes (chrome: true for the terminal's command line and keys) |
+
+Returns `Object`: the Grid (its plain API: setRows, on, getState ...).
 
 ### drishti_index.js
 

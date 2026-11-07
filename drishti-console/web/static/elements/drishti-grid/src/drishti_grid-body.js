@@ -93,7 +93,7 @@ export class GridBody {
   down(e) {
     if (e.button !== 0) { return; }
     const t = e.target;
-    if (t.closest('.dg-tw, input, button, select, .dg-resize, .dg-hcell, .dg-editor')) { return; }
+    if (t.closest('.dg-tw, input, button, select, a[href], .dg-resize, .dg-hcell, .dg-editor')) { return; }
     const x = this.cellOf(e);
     if (!x) { return; }
     e.preventDefault();
@@ -213,6 +213,18 @@ export class GridBody {
   }
 
   /**
+   * @private the option fitRows: the host as tall as its rows (up to fitRows of them, then it scrolls), the chrome kept; a small table
+   * on a screen takes the room it needs and no more
+   */
+  fit(headH, rh, W) {
+    const host = this.view.host, sc = this.scroller;
+    const n = Math.max(1, Math.min(this.model.rowCount(), this.view.o.fitRows));
+    const bar = W > sc.clientWidth + 1 ? sc.offsetHeight - sc.clientHeight || 12 : 0;
+    const want = Math.ceil(host.offsetHeight - sc.clientHeight + headH + n * rh + bar + 2);
+    if (want > 0 && Math.abs(host.offsetHeight - want) > 1) { host.style.height = want + 'px'; }
+  }
+
+  /**
    * Draws the headings and the rows in view.
    * @returns {void}
    */
@@ -223,6 +235,7 @@ export class GridBody {
     const sp = this.paneSpans(disp);
     const headH = sp.levels * hrh;
     const W = disp.leftW + disp.centerW + disp.rightW;
+    if (v.o.fitRows) { this.fit(headH, rh, W); }
     vp.resize(Math.max(1, this.scroller.clientWidth), Math.max(rh, this.scroller.clientHeight - headH));
     vp.setRowCount(m.rowCount());
     vp.scrollTo(this.scroller.scrollTop, this.scroller.scrollLeft);
@@ -399,7 +412,11 @@ export class GridBody {
       if (k.expandable) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw', text: k.expanded ? '−' : '+', attrs: { 'aria-hidden': 'true' }, data: { r: String(r) } })); }
       else if (m.pivotMode || (m.rowModel.groupBy && m.rowModel.groupBy.length) || m.rowModel.treeData) { cell.appendChild(h(doc, 'span', { cls: 'dg-tw dg-tw-none', attrs: { 'aria-hidden': 'true' } })); }
     }
-    cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text }));
+    const leafRow = x.kind === 'leaf' && !loading ? x.row : null;
+    if (leafRow && col.cellClass) { const extra = col.cellClass(value, leafRow); if (extra) { cell.className += ' ' + extra; } }
+    const drawn = leafRow && col.cellRenderer ? col.cellRenderer({ value: value, text: text, row: leafRow, doc: doc }) : null;
+    if (drawn !== null && drawn !== undefined && drawn !== '') { cell.appendChild(typeof drawn === 'string' ? h(doc, 'span', { cls: 'dg-text', text: drawn }) : drawn); }
+    else { cell.appendChild(h(doc, 'span', { cls: 'dg-text', text: text })); }
     return cell;
   }
 
