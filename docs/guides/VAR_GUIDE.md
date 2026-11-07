@@ -3408,7 +3408,7 @@ window).
 | Top candidates | the windows apart from one another, by stressed VaR: the window, its VaR, the change against the current, *worst* and *current* tags, the worst day in it; click a row to select it |
 | By node | each node's VaR in the current window, its own worst window and when it starts, the gap |
 | Current against proposed | window, stressed VaR 1-day and 10-day √10, scenarios, the worst day in each; who approved the current window |
-| Proposals | the frozen analyses, newest first: id, node, window, VaR, status, who proposed and who decided; **Approve** and **Reject** for another person |
+| Proposals | the frozen analyses, newest first: id, node, window, VaR, status, who proposed and who decided; **Decide in Approvals** for another person (approved or rejected in the one Approvals queue) |
 
 The page needs a role that sees every node of the VaR hierarchies (the history is node-level P&L of the whole bank); another role is
 refused in words. The page lives under the `VAR` command word: an edition or a lens without `VAR` does not offer it.

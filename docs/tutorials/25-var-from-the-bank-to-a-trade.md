@@ -892,7 +892,7 @@ $ drishti.py approvals approve var-report annual-report-var:FY2026:v1 --param st
 **In the UI.** `VAR BANK BACKTEST <GO>`: the chart of the 250 days (actual P&L bars, −VaR 99% and 97.5% of the day before, the
 exceptions marked), the zone card (three lamps, the counts, the multiplier), every desk with its own counts, and the exceptions with the
 desks that drove them. Then `VAR REPORT annual-report-var FY2026 <GO>`: *Generate FY2026*, read the checks, click a cell for its
-lineage (the official record, its date and result version), write the narrative, *Approve as Maker*. A second person approves as
+lineage (the official record, its date and result version), write the narrative, *Sign as Maker in Approvals*, then **Approve**. A second person approves as
 checker, a third as CRO; the xlsx, csv and PDF are released after the last approval (before it, a draft marked so).
 
 **What it means.** The backtest counts the days the bank's actual (and hypothetical) P&L lost more than the official VaR of the day

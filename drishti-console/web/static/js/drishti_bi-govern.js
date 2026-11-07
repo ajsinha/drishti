@@ -172,7 +172,7 @@
       }
       body.appendChild(h('h3', { text: 'Data preview' }));
       body.appendChild(previewTable(r.preview));
-      body.appendChild(h('p', { class: 'text-muted-d', text: 'Write your comment in the note box above, then Approve and publish or Reject. The author cannot approve their own request.' }));
+      body.appendChild(h('p', { class: 'text-muted-d', text: 'Decide in the Approvals queue (Decide in Approvals, above): approve, or reject with a reason. The author cannot approve their own request.' }));
     }).catch(function (e) { if (mine !== seq) { return; } sec.hidden = true; if (e.status !== 403 && e.status !== 404) { fail(e); } });
   }
 

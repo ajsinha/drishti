@@ -111,11 +111,13 @@ drishti-console/.venv/bin/python tools/drishti.py change propose --kind trade --
 
 ## Step 4 · Approve it as someone else
 
-The change waits in **Review → Changes** (Build → Govern → Changes). You submitted it, so you see it without Approve or Reject:
+The change waits in the one **Approvals** queue (Views → Approvals, kind *Correction*). You submitted it, so it is under *Mine sent*, with
+**Withdraw** and no Approve or Reject:
 
-![Review → Changes: the change waiting, with its field, reason and state](img/t24/review-changes.jpg)
+![The Approvals queue: the change waiting, with its field, reason and state](img/t24/review-changes.jpg)
 
-**You should see** *0 of 1 approval*. An approver (another person) presses **Approve**, or from the command line:
+**You should see** *0 of 1 approvals*. An approver (another person) opens it in **Approvals**, reads what changes and its effect, and
+presses **Approve**, or from the command line:
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py approvals approve change chg-01M5V881D3K33Z45TWEND1RJAM --comment "checked against ticket 4411" --user kim

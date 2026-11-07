@@ -4240,7 +4240,7 @@ Phase 7 (distribution) is built in parts. Part 1 is **export and subscriptions**
 
 References: [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](../guides/BI_GUIDE.md#4-alerts-on-numbers), [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#notifications-a-tile-tells-people-when-it-turns-red), the walk-through
 [tutorial 11](../tutorials/11-bi-that-runs-itself.md), the API [API_GUIDE.md](../guides/API_GUIDE.md#alerts-apiv1), the settings `drishti.alerts.*` in
-[CONFIGURATION.md](../admin/CONFIGURATION.md#drishtialertsmeasure--alerts-on-numbers-and-board-notifications). Code `DRS-9062`; `DRS-9053` now refuses only `notifications` and `subscriptions`.
+[CONFIGURATION.md](../admin/CONFIGURATION.md#drishtialerts--the-one-alert-engine). Code `DRS-9062`; `DRS-9053` now refuses only `notifications` and `subscriptions`.
 
 **Built.**
 

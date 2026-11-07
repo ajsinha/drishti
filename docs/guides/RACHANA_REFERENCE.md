@@ -5973,7 +5973,7 @@ This is the whole road in one go. It assumes you have the author right and Studi
 
    ![The reviewer's evidence: every panel on every sample, the sample names, the author's notes](img/designer/42-review-evidence.jpg)
 
-6. **Approve.** *Approve and publish* writes the Sutra to the registry as the next version. Your design's status becomes **live v1** (the version number), on the workbench and on *My designs*. Views of that kind use it from the next request. *Reject* needs a reason, the design returns to *draft*, and the reviewer's comment is on the proposal.
+6. **Approve.** *Approve* in the Approvals queue writes the Sutra to the registry as the next version. Your design's status becomes **live v1** (the version number), on the workbench and on *My designs*. Views of that kind use it from the next request. *Reject* needs a reason, the design returns to *draft*, and the reviewer's comment is on the proposal.
 
    ![My designs: the design is live v1](img/designer/43-live-status.jpg)
 

@@ -573,8 +573,8 @@ When an action is applied, the breach service reads the `edit.applied` event of 
 Three small additions are needed, none of them a new panel kind: **reference lines on `line` and `area`** (`markers:`, as `histogram`
 has: the near level beside the limit on Q6); **a new record's field defaulting from the record the page shows** (a form `default:` reads
 the form's own fields today; an action's record needs the breach id, `default: "$.BREACH_ID"`); and **the pending request's decision in
-place** (Approve, Approve with conditions, Reject on Q9: the same decision as Review → Changes, with the same four-eyes checks, drawn on
-the record's screen; until it exists, Q9 links to Review → Changes). The new pack fragment is `breach-detail@1` (the opened breach's
+place** (Approve, Approve with conditions, Reject on Q9: the same decision as the Approvals queue, with the same four-eyes checks, drawn on
+the record's screen; until it exists, Q9 links to the Approvals queue). The new pack fragment is `breach-detail@1` (the opened breach's
 panels, used by the Queue, the Board's drawer and the record's own page).
 
 **How each figure is computed.**

@@ -972,7 +972,7 @@ contracts and the proposed `market-data-usage` and `market-data-quality`. The ne
 
 **Grammar the rows add (no new panel kind).** Reference lines on `line` and `area` (`markers:`, as `histogram` has: the near level on
 RO2's use chart, ±4σ and ±6σ on Market's jump evidence); a form field defaulting from the record the page shows (RO2's action records
-carry the breach id); a pending change's decision drawn in place on the record's screen (RO2's temporary increase; Review → Changes until
+carry the breach id); a pending change's decision drawn in place on the record's screen (RO2's temporary increase; the Approvals queue until
 then); the report framework's `pack` type with `pages:`, `layout:` and `style:` and the PDF writer's chart and image bands (the board
 pack). New pack fragments: `breach-detail@1`, `quality-exception@1`. New computed kind: `market-data-at-stake` (RO2's panel reads
 2.9.10's `var-explain`).

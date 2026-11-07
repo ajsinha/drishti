@@ -211,8 +211,8 @@ Sign in as **sue** and open the item.
 You should see the **Review** section: who asked and the note, **what changed** against what is published (here all 37 lines are new: nothing is
 published yet), `Check passed: nothing to fix` (the server's Check of the model: its datasets, relationships, measures and the security safeguard), and
 *Data preview*, which a model leaves to its designer (*there is no data to preview for a model*: the designer's Query panel and the Notebook ask it).
-Write `looks right` and press **Approve and publish**. On the command line the same decision is
-`curl -X POST .../api/v1/approvals/bi/<id>/approve -d '{"note":"looks right"}'` with sue's token.
+Press **Decide in Approvals**: the item opens in the one Approvals queue. Write `looks right` and press **Approve**. On the command line the
+same decision is `curl -X POST .../api/v1/approvals/bi/<id>/approve -d '{"comment":"looks right"}'` with sue's token.
 
 ![The item after approval: published, version 1](img/t13/06-approved.jpg)
 
@@ -307,7 +307,7 @@ contract:
 ```
 
 Leave the model as it is (do not save) and try the other way to lose the field: drop the `PORTFOLIO` column from the **dataset**. As ann, edit **Rates
-trades**, delete the line `  PORTFOLIO:    { type: string }`, save and propose; as sue, press **Approve and publish**.
+trades**, delete the line `  PORTFOLIO:    { type: string }`, save and propose; as sue, press **Decide in Approvals**, then **Approve**.
 
 ![The dataset's publish refused: DRS-9126, a breaking change needs a new major version (not 1.0.0): the column PORTFOLIO is removed](img/t13/12-dataset-refused.jpg)
 

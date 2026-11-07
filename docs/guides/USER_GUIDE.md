@@ -1343,7 +1343,7 @@ Newer screens (every pack screen is built from the same parts) can do more than 
   desk's trades do), **Submit…** opens a sheet: what you saw, what is there now and your change; where it goes (a correction kept beside
   the booking system's value, or an amendment sent to it); who approves (never you); what it recomputes; and the reason. After **Confirm**
   the sheet follows it: waiting for an approver, applied (everyone viewing the trade sees the new value at once, *How this view was built*
-  says *Edited here*), or conflicted if the trade moved since you opened it (your draft is kept). Approvers decide in **Review → Changes**
+  says *Edited here*), or conflicted if the trade moved since you opened it (your draft is kept). Approvers decide in the **Approvals** queue
   (Build → Govern → Changes). Someone else's change to the record you are viewing shows *Changed by … just now*.
   The reference is [WRITE_BACK.md section 4a](WRITE_BACK.md#4a-submitting-a-change-write-back); a walk-through is
   [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
@@ -2434,7 +2434,7 @@ The maker never approves their own. **Ask a question**: a thread on the item; th
 same place, and whoever asked is told of the answer. Every decision and every question is in the audit log.
 
 From the command line: `drishti.py approvals list`, `approvals show KIND ID`, `approvals approve|reject|withdraw KIND ID --comment ...`,
-`approvals ask KIND ID "..."` ([CLI_GUIDE.md](CLI_GUIDE.md)). The API: [API_GUIDE.md › Approvals](API_GUIDE.md#approvals).
+`approvals ask KIND ID "..."` ([CLI_GUIDE.md](CLI_GUIDE.md)). The API: [API_GUIDE.md › Approvals](API_GUIDE.md#approvals-apiv1approvals).
 
 ## Administration
 

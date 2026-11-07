@@ -329,7 +329,7 @@ An **item** has a kind (`dataset`, `report`, `board`, `notebook`, `python`), a t
 - Editing a **published** item makes the item a draft again; the published version stays what viewers see, and the page shows
   "draft changes not published".
 - **Publish** (member, `bi-author`, shared workspace, no review required) writes the next version and makes the item `published`.
-- **Propose for review** (contributor) freezes the item; **Approve and publish** needs a **`bi-steward`** (in any workspace), or a workspace `member` who holds the
+- **Propose for review** (contributor) freezes the item; **Approve** (in the one Approvals queue: *Decide in Approvals*) needs a **`bi-steward`** (in any workspace), or a workspace `member` who holds the
   **`approve`** power (the same one that approves Sutras) and is not the proposer when four-eyes is on
   (`drishti.governance.four-eyes`, `DRS-9005` otherwise). **Reject** needs a reason and returns the item to draft; the proposer
   may **withdraw**.
@@ -714,7 +714,7 @@ The Model view calls the dataset checks (`POST /api/v1/bi/datasets/validate`, wh
 The reference is [section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments); the walk-through is [tutorial 13](../tutorials/13-govern-bi.md). On an item's page (`/bi/i/<id>`) four sections are new, and the rail has **Environments**.
 
 * **History** (people who may edit the item). Every save of the body is a saved state with who, when and the message you wrote in *What changed* in the Edit form. Pick two (or press *Compare with draft*) and *Show the differences* for the side-by-side diff; *Restore as draft* makes a state the draft again as a new state, so nothing is lost. Below the table is the review record: requests, decisions with their comments, certifications, revocations, imports.
-* **Review** (shown while an item is proposed, to the people who may decide, including any bi-steward). The request and its note, what changed, Check, what it does to reports, and a data preview answered with the reviewer's own rows and masks. Write your comment in the note box above and press *Approve and publish* or *Reject*. The author is told in the inbox; four-eyes still applies.
+* **Review** (shown while an item is proposed, to the people who may decide, including any bi-steward). The request and its note, what changed, Check, what it does to reports, and a data preview answered with the reviewer's own rows and masks. Press *Decide in Approvals*: the item opens in the one Approvals queue with the same diff, its effect and the rules; write your comment and press *Approve* or *Reject*. The author is told in the inbox; four-eyes still applies.
 * **Impact on reports** (datasets, for editors). What publishing the draft would break, and a box *What breaks if I remove ...*. A publish that breaks published reports is refused with `DRS-9040` and the callout lists the reports; a **bi-admin** sees *Publish anyway* and, after it, a *Heads up* list that includes any certification that fell.
 * **Lineage** (everyone who opens the item). Where a dataset comes from (table, kind, packs, connector) and which reports read it; a report's dataset, what it uses, and the tables behind it.
 * **Certified** and **promoted** badges are in the catalogue and search (certified first), on Home and on the item; only a bi-steward certifies, and certification falls on its own when a dataset changes incompatibly.
@@ -4364,7 +4364,7 @@ The report's checks (`POST /api/v1/bi/reports/validate`, the designer's Check an
 | console `bi.board.rotate_seconds` (`DRISHTI_BI_BOARD_ROTATE_SECONDS`) | 30 | kiosk page time when the report sets no `board.rotate` (3 to 3600) |
 | console `bi.live.min_interval_ms`, `bi.live.stale_seconds` | 250, 30 | how often tiles redraw at most, and when the indicator says "Stale" |
 | server `drishti.bi.live.*` | | the live tables and streams the tiles' reports use ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibilive--streaming-bi-phase-5)) |
-| server `drishti.alerts.*` | | notifications from tiles: the load delay, the live debounce, the cooldown, the audience limit, email and chat on or off ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtialertsmeasure--alerts-on-numbers-and-board-notifications)) |
+| server `drishti.alerts.*` | | notifications from tiles: the load delay, the live debounce, the cooldown, the audience limit, email and chat on or off ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtialerts--the-one-alert-engine)) |
 | server `drishti.bi.migrate.on-start` | `true` | stored 2.3 boards become reports at start (section 12) |
 
 #### 23.9 API
@@ -4744,7 +4744,7 @@ Review extends the phase 1 flow; it does not replace it. A workspace may *requir
 
 1. **Request.** The author proposes, with a note. The item is frozen (no edits until it is withdrawn). The **reviewers are told** in the inbox (the bell): every bi-steward, and every member of the workspace who holds the `approve` power, except the author.
 2. **The review page.** A reviewer opens the item and sees, under *Review*: who asked and what they wrote; **what changed** (the draft against the published version, side by side); **Check** (the dataset's or report's problems, with DRS code and path; a report is checked against its dataset); **what it does to reports** (the impact of section 6, for a dataset); and a **data preview**: for a dataset the first `drishti.bi.governance.preview-rows` (20) rows of its first table and two measures read from the **draft**, for a report a sample of the data it reads. The preview is answered as the reviewer: their row rules and masks apply, so a reviewer never sees through a mask. When the source cannot be read the preview says why instead of failing the review.
-3. **Decide.** *Approve and publish* (with a note) publishes the draft as the next version; *Reject* needs a reason and returns the item to draft. Both are recorded with the comment in the item's **review record**, shown under History, and the author is told in the inbox.
+3. **Decide**, in the one Approvals queue (*Decide in Approvals*). *Approve* (with a comment) publishes the draft as the next version; *Reject* needs a reason and returns the item to draft. Both are recorded with the comment in the item's **review record**, shown under History, and the author is told in the inbox.
 
 **Who may decide.** A **bi-steward** may, in any workspace (a steward reads what is proposed for review, in any shared workspace; what is published stays behind its audience, so to certify an item a steward must be in its audience or its workspace). A workspace **member** may if their role holds the **`approve` power**: it is a flag of the role itself, like the built-in `approver` role has, and not an entry of the role's `bi:` list (`bi: [approve]` is not valid: that list holds `bi-author`, `bi-steward` and `bi-admin`). **Four-eyes** (`drishti.governance.four-eyes`, with security on): the person who proposed may not approve or reject (`DRS-9005`); they may withdraw. An approval that would break published reports is refused like any publish (section 6), and a bi-admin may force it.
 
@@ -6230,7 +6230,7 @@ PUT /api/v1/alerts/rules/Vol
  "condition": {"type": "threshold", "op": "above", "value": 5000}, "trigger": {"mode": "after-load"}}
 ```
 
-The reader is tested against the real pool ([PythonRunsTest](../../drishti-server/src/test/java/com/ash/drishti/server/bi/python/PythonRunsTest.java)) and with a stand-in ([PythonAlertReaderTest](../../drishti-server/src/test/java/com/ash/drishti/server/alerts/measure/PythonAlertReaderTest.java): what the runner is handed, a masked column, a failing run).
+The reader is tested against the real pool ([PythonRunsTest](../../drishti-server/src/test/java/com/ash/drishti/server/bi/python/PythonRunsTest.java)) and with a stand-in ([PythonAlertReaderTest](../../drishti-server/src/test/java/com/ash/drishti/server/alerts/PythonAlertReaderTest.java): what the runner is handed, a masked column, a failing run).
 
 ### One runtime on the server, grouped measures, columns
 

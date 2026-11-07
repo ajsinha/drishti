@@ -265,7 +265,7 @@ to edit again). A toast says it too when the sheet is closed.
 
 Who may submit: editing must be on (`config/edit/edit.yaml`), the person needs the **edit** power (Admin → Roles: *Submit edits*), and
 every field they change must be editable for them (not masked, not read-only, their role in `editable-by`). An approver is never the
-person who submitted (four eyes); they decide in **Review → Changes** (Build → Govern → Changes). The server checks everything again, and
+person who submitted (four eyes); they decide in the **Approvals** queue (Views → Approvals). The server checks everything again, and
 the lane owner checks it once more when it applies the change, against the record as it is then: a field that moved is *conflicted*,
 never written over. A new record from the drawer can be submitted only to `owned` or `source` (with `create:`), never as a correction.
 People who watch the record see the new value at once on its page (masked for them), with *Changed by … just now*.
@@ -357,7 +357,7 @@ The lake is never written per edit: the next lake build folds approved overlays 
 `config/edit/policy.yaml`: approvals per target (`overlay: none`, `owned: none`, `source: one` as shipped; `two` for four eyes twice),
 `approver-roles` (empty: the approve power or an administrator), `self-approval: false` (nobody approves their own change), the
 `restate` role for a past business date and the `override` role for *Apply mine anyway*. A change that needs approval waits in
-**Review → Changes** (top bar: Build → Govern → Changes); it takes its place in its record's lane only when approved, and is checked
+the **Approvals** queue (top bar: Views → Approvals); it takes its place in its record's lane only when approved, and is checked
 against the record then.
 
 ## 11. The edit log, lanes and the cluster
@@ -778,7 +778,7 @@ Together, **queue + version check** give: no two writes to a record at once, and
   barred).
 - An approval-needing change waits in **awaiting approval** (not in the queue); on approval it is enqueued and the version check runs
   *then*, against the data at apply time.
-- **Review → Changes** lists what awaits you, with the diff, the reason and the entity page beside it; approve, reject with a reason,
+- **Approvals** (the one queue) lists what awaits you, with the diff, the reason and the entity page beside it; approve, reject with a reason,
   or ask for a change. It reuses the BI review and proposal machinery (Review → AI drafts already lists drafts the same way).
 - A recommended default: overlays `none`, owned `none`, source `one`.
 
@@ -941,7 +941,7 @@ Overlay and owned targets need the first and third levels only; a source target 
 |---|---|---|
 | W0 | **The one Drishti database** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)): one pool and `config/db/database.yaml` (planned), two complete schema files with a parity test, the schema version stamp, `drishti.py db copy` | a 2.6.5 data folder starts with its users and settings; SQLite → PostgreSQL → SQLite keeps every row; a mismatched stamp refuses to start and names `db copy` |
 | W1 | `edit:` in the Sutra schema and lint; Change API; the off-by-default switches and the roles (section 12); **the edit log on a single node with SQLite**: `drishti_edit_lane` and `drishti_edit_log` in both schema files, acknowledgement after commit, replay from `applied_seq`, the epoch checks (trivially one owner); lanes and handler; **owned** kinds and **overlays** as rows in the same transaction (corrections and notes first, section 16), overlays laid over the document at read time; version check; retention; inline edit and the pending bar | two users editing the same field: the second is conflicted with a diff, never silently overwritten; 100,000 concurrent changes over 1,000,000 entities on 64 lanes apply in per-entity order with no lost update (property test); a server killed after an acknowledgement applies the change once after restart; a fresh install is read-only |
-| W2 | Approval (four eyes), Review → Changes, history, CLI | a change needing approval cannot apply without it; self-approval refused |
+| W2 | Approval (four eyes), the Approvals queue, history, CLI | a change needing approval cannot apply without it; self-approval refused |
 | W3 | **The cluster:** lane ownership by conditional UPDATE (the ring suggests), **fencing** by epoch on every append and apply, forwarding from any node, failover by lease; the **PostgreSQL** shared log, the **S3** log (lease by ETag, fences), the **edit primary** fallback, `edit.log: auto` and its rule, Admin → Edits (store, owners, warnings); the loader folding approved overlays into the next day's lake build (section 16) | the three cluster acceptance tests of section 15 pass on PostgreSQL and on S3; an approved overlay appears in the next lake build and in BI |
 | W4 | `SourcePlugin.write` and **connector `writes:`** (validated at load), **source commands through the outbox** (pending, sent, confirmed; resend by the new owner with the same change id): the one real-amendment pilot (one field of one kind on one connector, JDBC first); pending at source | a source command applied twice by a retry changes the source once; a command without a guard or idempotency clause is refused at load; a command pending when its owner dies is sent once by the new owner |
 | W5 | Form mode, bulk edit, phone, docs and a tutorial (UI, CLI, YAML) | a tutorial edits, approves and sees the change tick on another browser |
@@ -1153,7 +1153,7 @@ VaR use is step V5 of [VAR_GUIDE.md section 30](VAR_GUIDE.md#30-the-design-recor
 ### 19. Implementation
 
 W1 to W7 are built, and built, in `drishti-server` (`com.ash.drishti.server.edit`), with the JDBC plugin's writes, the router's overlay
-layer in `drishti-engine`, `form.save` in `drishti-rachana`, the console's Submit, Review → Changes and Admin → Edits, and
+layer in `drishti-engine`, `form.save` in `drishti-rachana`, the console's Submit, the Approvals queue and Admin → Edits, and
 `drishti.py change` / `edits`. The administrator's guide is [the section for administrators](#for-administrators-write-back-is-off-as-shipped); the author's is
 [section 4a](#4a-submitting-a-change-write-back); a worked example is
 [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
@@ -1161,7 +1161,7 @@ layer in `drishti-engine`, `form.save` in `drishti-rachana`, the console's Submi
 | Wave | Status | Implementation |
 |---|---|---|
 | W1 | **built** | `drishti_edit_lane`, `drishti_edit_log` (and `drishti_edit_request`, `drishti_overlay`, `drishti_owned`, `drishti_edit_version`, `drishti_edit_cursor`) in both schema files (the parity test holds); `EditLog`: append fenced by the epoch and acknowledged after commit, ordered by seq, a retry with the same change id not appended twice, `Busy` past `max-lane-depth`; `Lanes`: `murmur3(key) mod P`, one virtual-thread worker per owned lane woken by an append, replay from `applied_seq`; `EditHandler`: re-checks at apply (the switch, the edit power, the kind, masks, the form's roles and read-only fields, restate and override roles), field-level conflict, the form's rules over the record as it is now, overlay or owned rows and the version in the apply's transaction; overlays laid over every document the router reads (`DocumentLayer`), *How this view was built* says *Edited here*; the Change API; the `edit` power and the `edit` token scope; off by default (`config/edit/`); retention (7 years) |
-| W2 | **built** | four-eyes approval (`drishti_edit_request`, compare-and-set decisions, never your own, the policy's approver roles), Review → Changes, a record's history (`GET /entities/{kind}/{id}/history`), `drishti.py change ...` |
+| W2 | **built** | four-eyes approval (`drishti_edit_request`, compare-and-set decisions, never your own, the policy's approver roles), the Approvals queue, a record's history (`GET /entities/{kind}/{id}/history`), `drishti.py change ...` |
 | W3 | **built** (PostgreSQL and the edit primary; S3 not built) | lane ownership by conditional UPDATE with a lease taken on the database's clock, the ring (rendezvous hashing over the alive members) suggesting who tries, renewal every lease/3 and a lane stopped at once when renewal fails, every append, apply and command fenced by the epoch; a change submitted on any node forwarded to its lane's owner (signed, on behalf of the person: `POST /net/edits/append`); applied changes broadcast to the other members (caches dropped, viewers and consoles told); `edit.log: auto` with its rule and the explicit values checked; the edit primary: the other nodes forward the whole write-back API to it (`EditForwardFilter`) and copy its overlays (`edit.follow`), *Edits are paused* while it is unreachable; Admin → Edits with the store, lanes and warnings |
 | W4 | **built** (JDBC) | `SourcePlugin.writeKey/checkWrite/write`; connector files' `writes:` parsed, kept by the form and template updates, validated at load (guard and idempotency required, unknown `:param` refused: a warning on `writes.<command>`, the connector read-only for it); writes switched on per connector by an administrator (audited, the switch ledger); the outbox: `command: pending` in the apply's transaction, sent in seq order, one in flight per record, `sent`/`applied`/`refused` fenced, `reply` and `next-load` confirmation, resend with the same change id after a failover; a refusal withdraws the pending overlay and fires the triggers again. File, Delta and Iceberg connectors never write (the lake is not written per edit); every other plugin is refused at load |
 | W5 | **built** (forms) | Submit on a form beside the table, on the cells' review and on the New drawer's last step; the phone width shows the sheet full-screen; the forms guide, the API and tools guides, the admin guide and tutorial 24 |

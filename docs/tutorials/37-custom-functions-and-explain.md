@@ -131,8 +131,9 @@ each cell's figure is computed by DuckDB from its own rows) and the harness runs
 
 ## Step 4 · Save, approve, use
 
-**UI.** Back to `wret` (formula), **Save version**: `fn:you/wret@1`, private. As the second user, open **Functions**, find
-`fn:you/wret@1` and press **Approve**, giving the reason "reviewed: a weighted mean". As yourself, in Values add
+**UI.** Back to `wret` (formula), **Save version**: `fn:you/wret@1`, private. As yourself, **submit** it for sharing; as the second user, open
+**Views → Approvals**, choose `fn:you/wret@1` (or *In Approvals* beside it in **Functions**) and press **Approve**, with the comment
+"reviewed: a weighted mean". As yourself, in Values add
 `fn:you/wret@1(PRICE, NOTIONAL)` (the trades' price and notional): the column header is the call itself, `fn:ravi/wret@1(PRICE, NOTIONAL)`
 for the author `ravi`.
 

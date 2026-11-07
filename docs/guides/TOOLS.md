@@ -111,6 +111,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `connector` | `connector list`, `connector get`, `connector apply`, `connector delete`, `connector test`, `connector plugins`, `connector enable`, `connector disable`, `connector reset`, `connector history` | [5.5](#55-connector) |
 | `net` | `net list`, `net check`, `net add-peer`, `net set`, `net members` | [5.9](#59-net) |
 | `design` | `design list`, `design create`, `design get`, `design save`, `design check`, `design propose`, `design proposals`, `design export`, `design import`, `design bind`, `design autodesign`, `design delete` | [5.6](#56-design) |
+| `approvals` | `approvals list`, `approvals show`, `approvals approve`, `approvals reject`, `approvals withdraw`, `approvals ask` (the one Approvals queue) | [5.10b](#510b-approvals) |
 | `docs` | `docs shots` | [9](#9-developer-tools) |
 | `doctor` | `drishti.py doctor` | [5.4](#54-server-and-doctor) |
 | `bi` | `bi workspace`, `bi catalogue`, `bi expr`, `bi migrate`, `bi sql`, `bi model`, `bi mq`, `bi item`, `bi dataset`, `bi transform`, `bi statement` | [5.7](#57-bi) |
@@ -128,7 +129,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/packform.py` (the `form:` section a pack check reads), `tools/schemapack.py` (`--schema`), `tools/sutragen.py` (`sutra gen`),
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
 `tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/build_demo_lakes.py` (every demo lake start to finish: `lake demo` over all sixty days, then your own ENDUR files one per date, `--store calypso=iceberg` for a source system in Iceberg, `--dry-run` to look first; the Windows QA guide's step 3.0), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
-`tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), `tools/varcli.py` (`var`), `tools/datacli.py` (`data get`), `tools/expcli.py` (`exposure`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
+`tools/approvalscli.py` (`approvals`), `tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), `tools/varcli.py` (`var`), `tools/datacli.py` (`data get`), `tools/expcli.py` (`exposure`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
 `tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/icebergwrite.py` (`lake build --format iceberg`, §4.4b), `tools/lake/demo.py` (`lake demo`), `tools/lake/undo.py` (`lake undo`), `tools/lake/filedate.py` (a file name's table and business date, the Python half of drishti-common's `FileDates`), `tools/lake/feedroute.py` (a feed file paired with its `.ready` file and routed to a pack and kind), `tools/lake/feedfiles.py` (our own generators' dated feed files, by the load rules), `tools/lake/memory_cli.py` (`lake memory status|jobs|refill`), `tools/enginescli.py` (`server engines list|show|on|off|history`), `tools/dataloadcli.py` (`dataload status|run|retry`), `tools/lake/memory_caps.py` (the launchers' direct-memory limit from the stores' caps), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists). `tools/connector_upgrade_fixture.py` is not a `drishti.py` group: it writes the connector files an older release's server generated, the fixture of the connector upgrade drill (`ConnectorUpgradeTest`, [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) "Upgrades").
 
 ## 4. lake build: a large JSON export into a Delta lake
@@ -1303,6 +1304,29 @@ drishti-console/.venv/bin/python tools/drishti.py change propose --kind trade --
 drishti-console/.venv/bin/python tools/drishti.py change list --state awaiting
 drishti-console/.venv/bin/python tools/drishti.py approvals approve change chg-01M5V6GM7NCKSR506RQ86M7YVV --comment "ticket 4411"
 drishti-console/.venv/bin/python tools/drishti.py edits status
+```
+
+### 5.10b approvals
+
+The one Approvals queue from the terminal (`tools/approvalscli.py`; [USER_GUIDE.md › Approvals](USER_GUIDE.md#approvals), the API
+[API_GUIDE.md › Approvals](API_GUIDE.md#approvals-apiv1approvals)), as the caller: every four-eyes kind is decided here (`sutra`,
+`change`, `bi`, `compute`, `function`, `stress-window`, `var-report`). A token needs the kind's scope (`edit`, `design:approve`, `bi:approve`,
+`pivot:approve`) or `approve`; report sign-offs, stress windows, compute packages and questions are a person's, never a token's.
+- `approvals list [--box inbox|sent|done|all] [--group data|screens|risk|access] [--kind KIND]`: waiting for you (the default), sent by you,
+  decided, or everything; due-soon items first (marked `!`), then the newest.
+- `approvals show KIND ID`: what changes, its effect if approved, the rules, the questions and what you may do.
+- `approvals approve|reject|withdraw KIND ID [--comment TEXT] [--param NAME=VALUE ...]`: decide (a reason is required to reject; never your
+  own) or withdraw your own. `--param` carries what a kind needs: `scope=group:rates` (a pivot function), `step=checker` (a report run),
+  `force=true` or `applyRenames=true` (a BI item).
+- `approvals ask KIND ID TEXT`: a question on the item (or an answer); the maker is told.
+
+Exit codes are `0`, `1` (the server said no) and `2` (usage).
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py approvals list
+drishti-console/.venv/bin/python tools/drishti.py approvals show sutra P-000042
+drishti-console/.venv/bin/python tools/drishti.py approvals approve function asha:wret@1 --comment reviewed --param scope=group:rates
+drishti-console/.venv/bin/python tools/drishti.py approvals ask change chg-01M5V6GM7NCKSR506RQ86M7YVV "Which ticket?"
 ```
 
 ### 5.11 contract
