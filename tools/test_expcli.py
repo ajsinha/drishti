@@ -148,6 +148,24 @@ class ExposureCli(unittest.TestCase):
         X.render_whatif(FakeApi().json("POST", "/api/v1/risk/exposure/what-if"), out.append)
         self.assertTrue(any(line.startswith("Peak PFE") and line.rstrip().endswith("2") for line in out))
 
+    def test_predeal_sends_the_command_as_typed(self):
+        self.assertEqual(run("predeal", "PREDEAL CP-ALDERSHOT LIKE CLY-4003028 250M", "--date", "2026-09-30"), 0)
+        method, url, body = FakeApi.calls[-1][0], FakeApi.calls[-1][1], FakeApi.calls[-1][2]
+        self.assertEqual((method, url.split("?")[0]), ("POST", "/api/v1/risk/exposure/predeal"))
+        self.assertIn("asOf=2026-09-30", url)
+        self.assertEqual(body, {"command": "PREDEAL CP-ALDERSHOT LIKE CLY-4003028 250M"})
+        run("predeal", "CP-ALDERSHOT", "RATES", "250M", "5Y")                          # the word PREDEAL may be left out
+        self.assertEqual(FakeApi.calls[-1][2], {"command": "PREDEAL CP-ALDERSHOT RATES 250M 5Y"})
+        out = []
+        X.render_predeal({"decision": "refer", "command": "PREDEAL CP-1 RATES 10M 1Y", "reasons": ["a proxy answer only refers"],
+                          "method": {"id": "addon", "exact": False, "text": "proxy"}, "template": {"assetClass": "RATES"},
+                          "limit": {"id": "LIM-1", "limit": 1e9, "before": 1e6, "after": 2e6, "useAfter": 0.002,
+                                    "buckets": [{"bucket": "0-1Y", "status": "within", "limit": 1e9, "useAfter": 0.001}]},
+                          "saCcr": {"status": "under-construction", "release": "2.9.11.k"}}, out.append)
+        self.assertTrue(out[0].startswith("REFER"))
+        self.assertTrue(any("0-1Y" in line for line in out))
+        self.assertTrue(any("under-construction" in line for line in out))
+
 
 if __name__ == "__main__":
     unittest.main()

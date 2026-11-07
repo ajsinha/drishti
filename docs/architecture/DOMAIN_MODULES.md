@@ -30,7 +30,8 @@ that exist today and the order of the move. The native libraries' module, which 
 |---|---|---|
 | **Core** | everything generic: entities, packs and the pack loader, Sutras and Rachana, Pivot, BI, tables and models, lakes, loaders and the data inbox, connectors, search, Explain, approvals and changes, collaboration, security, the cluster, Flight, AI, the console shell, the generic compute (Python workers, the vector store, parallel and many-set sums, sharding, fan-out), `drishti-native` | it would serve a hospital, a utility or a ministry unchanged |
 | **Banking** (the risk and banking domain) | VaR and ES (historical, parametric), the VaR playground content, backtesting, regulatory VaR reporting, the scenario matrix, stress windows, baskets; exposure and CCR (PFE, EEPE, what-if); FRTB-SA and sensitivities; ISDA SIMM; SA-CCR and CVA (planned); the MR and CCR cubes; the risk, trading, market and CRO lenses; the official risk results; equity analytics (beta, correlation); the trading, market-data, market-risk and counterparty-risk packs | it names a trade, a position, a risk factor, a desk or a regulation |
-| **Economy** (no code of its own: a content module shipped with the core) | the world-economy, news-and-markets, us-equities, gleif and funds packs, the world lens and its landing, the IMF-based BI reports | public economic and market data |
+| **Economy** (no code of its own: a content module shipped with the core) | the world-economy and news-and-markets packs (and the public-sector data to come), the world lens and its landing, the IMF-based BI reports | public economic and public-sector data |
+| **Capital markets** (no code of its own yet: a content module shipped with the core; the owner's choice, 2026-11-07) | the us-equities and funds packs; the market data's functions (curves, FX, vols, equities, bonds: `CRV` ... `EQV`); the market lens with banking | listed companies, funds, prices and market data |
 
 ## 2. The boundary list
 
@@ -96,7 +97,7 @@ Everything else (the shell, BI, Pivot, Build, designer, admin, Help, embed, phon
 
 | Kind | Banking | Economy |
 |---|---|---|
-| Packs (`config/packs`) | `trading`, `market-data`, `market-risk`, `counterparty-risk` | `world-economy`, `news-and-markets`, `us-equities`, `gleif`, `funds` (public data, the World lens's packs: decided in the build, see section 7) |
+| Packs (`config/packs`) | `trading`, `market-data` (its commands are capital markets' functions; the pack stays banking's while the engines read it), `market-risk`, `counterparty-risk` | economy: `world-economy`, `news-and-markets`; capital markets: `us-equities`, `funds`; core reference data: `gleif` (section 7, D6) |
 | Engines (`config/engines`) | `var`, `exposure`, `frtb-sa`, `simm`, `mr-cube`, `sensitivities` (core: `dataload`, `flight`, `memory-lake`, `openblas`, `pivot`) | |
 | Editions | `risk`, `trading`, `market` | `world` |
 | Lakes | `lakes/var-official.yaml`, `lakes/ccr-official.yaml` | |
@@ -203,7 +204,7 @@ folders, 8, 9 and 10 are phase 2 (section 8).
 | D3 | Package root for domains | **as built**: `com.ash.drishti.banking` (`.compute` for its maths); `com.ash.drishti.economy` when it has code |
 | D4 | Tutorials' location | stay in `docs/tutorials/` with their numbers; Help lists them by module (no broken link) |
 | D5 | Old API paths | **as built**: answered as the new paths for one release (a rewrite with `Deprecation` and `Link`, section 3), then deleted |
-| D6 | The us-equities, gleif and funds packs | **as built**: economy (they are the World lens's public-data packs and lead into no banking pack); open to revisit with the owner |
+| D6 | The us-equities, gleif and funds packs | **decided (owner, 2026-11-07)**: us-equities and funds are the **capitalmarkets** module's (later also the market data's prices, curves and vols); **gleif** is core reference data (legal entities every domain uses); economy keeps world-economy, news-and-markets and the public-sector data. The market-data pack stays banking's while the banking engines read it (it moves when banking can require capital markets); its commands are capital markets' functions already. The editions' pack lists are unchanged in phase 1 (the World edition still opens us-equities and funds: their functions follow capital markets): they change with the console's lens work (phase 2) |
 
 ## 8. Phase 1 as built, and what phase 2 must do
 
@@ -238,7 +239,7 @@ the VaR and exposure lakes; package `com.ash.drishti.server.connectors` kept, in
    notebooks into the banking folders.
 8. **The thin jar and the plugins folder** (step 9): `drishti-app` builds the core jar alone, and a site's `plugins/` (already on the
    launcher's `loader.path` pattern) holds the module jars; the registry's *installed* follows the jar.
-9. **Editions folded**: the editions risk, trading, market and world are lenses now (the registry's lenses, the edition files still read
+9. **Editions folded** (and their pack lists by module: World without us-equities and funds, Market with them, once the World landing's cards and the console's tests move): the editions risk, trading, market and world are lenses now (the registry's lenses, the edition files still read
    for their home, cards and BI lists); folding the instance editions (`drishti.edition`, `var-engine`, `default-packs`, `features`) into
    modules and lenses, and removing `config/editions/`, needs the console's lens and home code (phase 2).
 10. **Python worker code** of the banking maths (`drishti-compute/src/main/python/drishti_compute/{var,exposure}`) into a banking worker

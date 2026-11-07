@@ -120,7 +120,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var matrix`, `var stress-window`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var basket-delete`, `var official`, `var backtest`, `var stats`, `var report`, `var reload`, `var intraday`, `var convert`, `var whatif`, `var playground`, `var explain` | [5.12](#512-var) |
 | `sens`, `frtb`, `play` | `sens show`, `sens factors`, `frtb sa`, `frtb explain`, `frtb contributions`, `play frtb` | [5.14](#514-sens-frtb-and-play-frtb) |
 | `simm`, `play` | `simm show`, `simm list`, `simm explain`, `simm against`, `simm versions`, `play simm` | [5.15](#515-simm-and-play-simm) |
-| `exposure` | `exposure show`, `exposure parts`, `exposure tree`, `exposure profile`, `exposure distribution`, `exposure status`, `exposure capture`, `exposure captures`, `exposure compare`, `exposure official`, `exposure retention`, `exposure reload`, `exposure whatif` | [5.13](#513-exposure) |
+| `exposure` | `exposure show`, `exposure parts`, `exposure tree`, `exposure profile`, `exposure distribution`, `exposure status`, `exposure capture`, `exposure captures`, `exposure compare`, `exposure official`, `exposure retention`, `exposure reload`, `exposure whatif`, `exposure predeal` | [5.13](#513-exposure) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
 The group modules live beside it and are not run on their own: `tools/authoring.py` (`data profile`, `pack regenerate|diff|catalogue|i18n`),
@@ -1411,9 +1411,12 @@ paths), `--q Q` (the PFE confidence, default 0.95) and `--collateral lagged|curr
 - `exposure whatif SCOPE [--like TRADE] [--factor F] [--set NETTING_SET] [--candidates FILE.json] [--method paths|addon]`: the
   scope's exposure before and after candidate trades. `--like` copies a booked trade's paths on the run (`--factor -1` is its unwind),
   `--set` the netting set it joins (default a set of its own); `--candidates` is a JSON list of `{tradeId, nettingSet, paths:
-  {copyOf, factor} or {runId, mtm}, assetClass, notional, maturityDate, mtm}`. `paths` (the default) is exact, by the Python exposure
-  engine (`exposure-whatif`; the compute workers must be on, `DRISHTI_COMPUTE_ENABLED=true`, else `DRS-5446`); `addon` is the
-  conservative proxy computed by the server.
+  {copyOf, factor} or {runId, mtm}, assetClass, notional, maturityDate, mtm}`. `paths` (the default) is exact, the candidates' paths
+  added to their netting sets path by path; `addon` is the conservative proxy; both computed by the server's exposure engine.
+- `exposure predeal WORDS… [--date D]`: the pre-deal check, the command as typed (`PREDEAL <counterparty> LIKE <trade> [<notional>]
+  [REVERSE] [IN <netting set>]`, or `PREDEAL <counterparty> <asset class> <notional> <maturity> [MTM <amount>]`; the word `PREDEAL` may
+  be left out): the server's decision approve, refer or decline with its reasons, the method, the template, the limit and its tenor
+  buckets before and after ([EXPOSURE_GUIDE.md section 18.9](EXPOSURE_GUIDE.md#189-the-pre-deal-check)).
 
 Exit codes are `0`, `1` (the server said no) and `2` (usage).
 
@@ -1421,7 +1424,14 @@ Exit codes are `0`, `1` (the server said no) and `2` (usage).
 drishti-console/.venv/bin/python tools/drishti.py exposure show CPTY:CP-ALDERSHOT
 drishti-console/.venv/bin/python tools/drishti.py exposure parts NSET:NS-ALDERSHOT-NY --by trade --figure EE --top 10
 drishti-console/.venv/bin/python tools/drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA
+drishti-console/.venv/bin/python tools/drishti.py exposure predeal "PREDEAL CP-ALDERSHOT LIKE CLY-4003028 250M"
 ```
+
+The what-if's parity tools (`tools/ccr/`, standard library only): `record_whatif_parity.py <out.json>` wrote the reference answers of
+`ExposureWhatIfMathTest` (`ccr/whatif-parity.json`) from the earlier Python engine (run it with a 2.9.11.a checkout's
+`drishti-compute/src/main/python` on `PYTHONPATH`); `whatif_api_parity.py record --repo . --server <url> --user rita --out before.json`
+records the API's what-if answers on the demo's CP-ALDERSHOT from one server, and `check ... --against before.json` asks another server
+the same and compares every field (±1 USD, `engine` and `note` aside); exit 0 when equal.
 
 ### 5.14 sens, frtb and play frtb
 

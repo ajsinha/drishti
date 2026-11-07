@@ -52,7 +52,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 class EditionTradingServerTest {
 
     static final List<String> TRADING_COMMANDS = List.of("TRD", "CTRD", "PTRD", "LTRD", "ITRD", "BOOK", "DESK", "TRDR", "POS", "VLIM",
-            "VRES", "TVAL", "PNLV", "HIER", "PORT", "DPNL", "PNL", "SENS", "CPTY", "GRP", "NSET", "NSMTM", "CPMTM", "LIM", "XWIF", "EXP", "CRV",
+            "VRES", "TVAL", "PNLV", "HIER", "PORT", "DPNL", "PNL", "SENS", "CPTY", "GRP", "NSET", "NSMTM", "CPMTM", "LIM", "EXP", "CRV",
             "REPO", "FIX", "IRV", "CPV", "FX", "FXF", "FXV", "EQ", "EQX", "CMD", "CMDC", "BND", "CDS");
 
     @Autowired MockMvc mvc;

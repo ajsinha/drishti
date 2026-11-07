@@ -17,7 +17,7 @@
 lenses:
   - id: world
     title: World
-    modules: [economy]
+    modules: [economy]                 # the World edition also opens us-equities and funds: capital markets' functions, on while that module is
     home: home/world_landing.html
     functions: [ECON, MACRO, FCST, LABR, FISC, ECG, REGE, JUR, PARTY, OFFC, ELEC, REGN, SOCI, TOPIC, NEWS, CO, QUOTE, USEQ, IDX, SIC, EDGAR, FILING,
       FACT, PXH, LEI, LEIG, LEIR, LEIC, LEIM, FUND, HELD, TRACK]

@@ -2255,12 +2255,14 @@ drishti.py exposure compare XCAP-20260930-1 now
 drishti.py exposure official --date 2026-09-30                       the official end-of-day record (--capture: administrators)
 drishti.py exposure retention                                        what is kept of each date held
 drishti.py exposure reload [--date D]                                drop the loaded dates, or one date (administrators)
-drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA   exact, the Python engine
+drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA   exact, the paths method
 drishti.py exposure whatif CPTY:CP-ALDERSHOT --candidates new-swap.json --method addon               the conservative proxy
+drishti.py exposure predeal "PREDEAL CP-ALDERSHOT LIKE CLY-4003028 250M"   the pre-deal check: approve, refer or decline (EXPOSURE_GUIDE.md 18.9)
+drishti.py exposure predeal "PREDEAL CP-ALDERSHOT RATES 250M 5Y"           described, the proxy: it only refers
 ```
 
-Exit codes: 0; 1 when the server said no (the code and its message on standard error); 2 for usage. The exact what-if (`--method
-paths`, the default) needs the compute workers (`DRISHTI_COMPUTE_ENABLED=true`); without them it is `DRS-5446`.
+Exit codes: 0; 1 when the server said no (the code and its message on standard error); 2 for usage. Both what-if methods (`--method
+paths`, the default and exact, and `addon`) are the server's exposure engine's.
 [Tutorial 26](../tutorials/26-exposure-from-the-bank-to-a-trade.md) walks through them with the test data.
 
 ### `server packs deploy`, `history`, `rollback` and `datasource`

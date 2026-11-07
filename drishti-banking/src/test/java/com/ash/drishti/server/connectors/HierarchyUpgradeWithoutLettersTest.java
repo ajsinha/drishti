@@ -121,12 +121,12 @@ class HierarchyUpgradeWithoutLettersTest {
         JsonNode x = compute("exposure-engine", "exposure-result", "{\"id\": \"NSET:NS-X\", \"asOf\": \"" + DAY + "\", \"wait\": 20000}");
         assertThat(x.get("state").asText()).as(x.toString()).isEqualTo("ready");
         // the VaR answer says why LL is not there, with the fix
-        JsonNode desk = json.readTree(mvc.perform(get("/api/v1/var/scope").param("scope", "DESK:DESK-X").param("asOf", DAY.toString()))
+        JsonNode desk = json.readTree(mvc.perform(get("/api/v1/risk/var/scope").param("scope", "DESK:DESK-X").param("asOf", DAY.toString()))
                 .andReturn().getResponse().getContentAsString());
         assertThat(desk.get("var").asDouble()).as(desk.toString()).isEqualTo(390);       // MGMT as before (VarApiTest's figure)
         assertThat(desk.at("/provenance/warnings").toString()).contains("DRS-5211").contains("hierarchy LL").contains("LIMIT_LETTER")
                 .contains("layout.pnl-vector.columns");
-        JsonNode set = json.readTree(mvc.perform(get("/api/v1/exposure/scope").param("scope", "NSET:NS-X").param("asOf", DAY.toString()))
+        JsonNode set = json.readTree(mvc.perform(get("/api/v1/risk/exposure/scope").param("scope", "NSET:NS-X").param("asOf", DAY.toString()))
                 .andReturn().getResponse().getContentAsString());
         assertThat(set.at("/provenance/warnings").toString()).contains("DRS-5211").contains("layout.exposure-path.columns");
         assertThat(com.ash.drishti.banking.var.Hierarchies.skipped()).containsKeys("var LL", "exposure LL");

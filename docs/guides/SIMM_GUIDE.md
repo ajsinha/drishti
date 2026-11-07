@@ -135,7 +135,7 @@ thresholds in millions: multiply by 1,000,000.
 
 **Licence.** The parameter values appear only in the bank's own answers, exports and recipes, never in a shared template, a sample or the
 repository; the playground's export says it is confidential. The repository's tests use a **toy** file
-(`drishti-compute/src/test/resources/simm/simm-toy.yaml`, round illustrative numbers, not ISDA's): it proves the formulas, never the
+(`drishti-compute-banking/src/test/resources/simm/simm-toy.yaml`, round illustrative numbers, not ISDA's): it proves the formulas, never the
 licensed values.
 
 ## 5. The method

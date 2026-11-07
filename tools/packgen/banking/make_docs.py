@@ -163,8 +163,8 @@ def overview(name: str, docs: dict) -> str:
                   "open. Each loaded date lives in a memory-mapped hot file under the data folder (`drishti.ccr.exposure`); the official "
                   "end-of-day figures are published to `risk-results/exposure-official` and `exposure-official-cpty`. The explorer opens with "
                   "`EXP <scope> <GO>` (the bank, a legal entity's counterparty board, a counterparty's netting sets, a set's collateral and "
-                  "trades, a trade alone and in its set, captures and compare, the pre-deal what-if); a what-if by the exact `paths` method is "
-                  "`XWIF` (`exposure-whatif`, the Python engine, compute on). The API is `/api/v1/risk/exposure`; from the command line: "
+                  "trades, a trade alone and in its set, captures and compare, the pre-deal what-if, exact by the `paths` method or the `addon` "
+                  "proxy, both in the same engine). The API is `/api/v1/risk/exposure`; from the command line: "
                   "`drishti.py exposure show CPTY:CP-ALDERSHOT`.", "",
                   "The exposure guide (`docs/guides/EXPOSURE_GUIDE.md`) explains every number with worked examples, the explorer, scopes, "
                   "collateral, captures, the what-if, entitlements, the CLI, the API and the settings; tutorial 26 "

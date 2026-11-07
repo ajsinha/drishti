@@ -249,13 +249,16 @@
   function verdictExp(box, x, cp) {
     box.textContent = "";
     if (x.state === "unavailable") { box.appendChild(el("b", "", "Pre-deal check not available")); box.appendChild(el("br")); box.appendChild(el("span", "tl-muted", x.reason || "")); return; }
-    var head = x.state === "none" ? cp + " has no credit limit" : "Counterparty " + WORDS[x.state] + (x.state === "near" ? " its limit" : x.state === "breach" ? " its limit" : "");
+    var head = x.state === "refer" ? "Refer to credit" : x.state === "none" ? cp + " has no credit limit" :
+      x.state === "breach" ? "Declined: over the limit" : "Counterparty " + WORDS[x.state] + (x.state === "near" ? " its limit" : "");
     box.appendChild(el("b", x.state === "none" ? "" : x.state, head));
     box.appendChild(el("br"));
     var q = num(x.confidence);
     box.appendChild(document.createTextNode(cp + " peak PFE" + (q ? " " + Math.round(q * 100) + "%" : "") + " " + money(x.before) + " → " + money(x.after) +
       (x.limit ? " · " + pct(x.useAfter) + " of limit " + money(x.limit) : "")));
-    if (x.proxy) box.appendChild(el("span", "tl-muted", " · proxy (add-on: " + (x.fallback ? "the paths engine is not running" : "no netting set to deal into") + ")"));
+    if (x.proxy) box.appendChild(el("span", "tl-muted", " · proxy (add-on" + (x.fallback ? ": the copy has no paths on the run" : "") + ")"));
+    if (x.state === "refer" || x.state === "breach") { box.appendChild(el("br")); box.appendChild(el("span", "tl-muted", x.reason || "")); }
+    if (x.command) box.title = x.command + (x.checkId ? " · check " + x.checkId : "");
     box.setAttribute("data-tl-state", x.state);
   }
 

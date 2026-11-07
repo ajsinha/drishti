@@ -42,36 +42,36 @@ public class BankingAutoConfiguration {
 
     @Bean
     ApiAlias bankingVarPath() {
-        return new ApiAlias("/api/v1/var", "/api/v1/risk/var");
+        return new ApiAlias("/api/v1/risk/var", "/api/v1/risk/var");
     }
 
     @Bean
     ApiAlias bankingExposurePath() {
-        return new ApiAlias("/api/v1/exposure", "/api/v1/risk/exposure");
+        return new ApiAlias("/api/v1/risk/exposure", "/api/v1/risk/exposure");
     }
 
     @Bean
     ApiAlias bankingFrtbPath() {
-        return new ApiAlias("/api/v1/frtb", "/api/v1/risk/frtb");
+        return new ApiAlias("/api/v1/risk/frtb", "/api/v1/risk/frtb");
     }
 
     @Bean
     ApiAlias bankingSimmPath() {
-        return new ApiAlias("/api/v1/simm", "/api/v1/risk/simm");
+        return new ApiAlias("/api/v1/risk/simm", "/api/v1/risk/simm");
     }
 
     @Bean
     ApiAlias bankingSensitivitiesPath() {
-        return new ApiAlias("/api/v1/sensitivities", "/api/v1/risk/sensitivities");
+        return new ApiAlias("/api/v1/risk/sensitivities", "/api/v1/risk/sensitivities");
     }
 
     @Bean
     ApiAlias bankingRiskFactorsPath() {
-        return new ApiAlias("/api/v1/risk-factors", "/api/v1/risk/risk-factors");
+        return new ApiAlias("/api/v1/risk/risk-factors", "/api/v1/risk/risk-factors");
     }
 
     @Bean
     ApiAlias bankingMrCubePath() {
-        return new ApiAlias("/api/v1/pivot/mr", "/api/v1/risk/mr");
+        return new ApiAlias("/api/v1/risk/mr", "/api/v1/risk/mr");
     }
 }

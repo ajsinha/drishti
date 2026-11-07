@@ -15,103 +15,111 @@
  */
 package com.ash.drishti.banking.exposure;
 
-import com.ash.drishti.api.AsOf;
-import com.ash.drishti.api.compute.ComputeRef;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
-import com.ash.drishti.compute.RequestClass;
 import com.ash.drishti.compute.arrow.ArrowIpc;
 import com.ash.drishti.compute.arrow.ArrowTable;
 import com.ash.drishti.banking.compute.ccr.ExposureBook;
-import com.ash.drishti.compute.reactive.Answer;
-import com.ash.drishti.compute.reactive.ReactiveConnector;
-import com.ash.drishti.compute.reactive.ReactiveHub;
-import com.ash.drishti.compute.reactive.Sandboxes;
-import com.ash.drishti.server.compute.Viewers;
+import com.ash.drishti.banking.compute.ccr.ExposureCalc;
+import com.ash.drishti.banking.compute.ccr.ExposureGrid;
+import com.ash.drishti.banking.compute.ccr.ExposureMath;
+import com.ash.drishti.banking.compute.ccr.ExposureWhatIfMath;
 import com.ash.drishti.server.security.Principal;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 /**
- * The exact what-if (EXPOSURE_GUIDE.md section 18.7, method {@code paths}): each candidate's MtM on every path of the date's run at every grid date
- * is added to its netting set's value, the set's collateral and exposure computed again, then the scope's figures; incremental = with
- * - without, per figure and per primary date. Asked here, answered by the Python exposure engine: the candidates go into a private
- * sandbox of the asker, the reactive connector {@code exposure-whatif} is asked as them (it reads the scope's and the touched sets'
- * matrices from {@code exposure-result} with {@code detail}, ExposureWhatIfInputs), the sandbox is deleted after.
+ * The exact what-if (EXPOSURE_GUIDE.md section 18.7, method {@code paths}), computed here in the Java exposure engine by
+ * {@link ExposureWhatIfMath}: each candidate's MtM on every path of the date's run at every grid date is added to its netting set's value,
+ * the set's collateral and exposure computed again, then the scope's figures; incremental = with - without, per figure and per primary
+ * date. The scope and each netting set a candidate joins are read as the asker sees them (their entitlements apply); a candidate joins a
+ * netting set the scope covers whole, or none (a netting set of its own, uncollateralised).
  *
  * <p>A candidate's paths: {@code {copyOf: <trade>, factor}} (a booked trade's paths on the run, scaled: {@code factor -1} its
  * unwind), {@code {runId, mtm}} ({@code G} lists of {@code P} numbers, or one list of {@code G x P}, grid-date-major), or
  * {@code {runId, arrow}} (base64 Arrow IPC: {@code GRID_INDEX} and {@code MTM} as a fixed-size list of P). Paths of another run, or of
- * another length, are refused (DRS-5442); without the Python engine the answer is DRS-5446 (503).
+ * another length, are refused (DRS-5442). A copy is made only of a trade the asker sees trade by trade (else 403).
  */
 final class ExposureWhatIfPaths {
 
-    static final String CONNECTOR = "exposure-whatif";
-    static final String KIND = "exposure-whatif";
-    private static final Duration WAIT = Duration.ofSeconds(30);
+    /** The most netting sets one what-if's candidates join (each read whole, its value on every path). */
+    static final int MAX_SETS = 50;
     private final ExposureService svc;
 
     ExposureWhatIfPaths(ExposureService svc) {
         this.svc = svc;
     }
 
-    @SuppressWarnings("unchecked")
     Map<String, Object> whatIf(Principal p, String scope, ExposureService.Scoped base, ExposureService.Ask ask, List<Map<String, Object>> cands,
-            LocalDate date) {
-        ReactiveHub hub = ReactiveHub.get();
-        ReactiveConnector c = hub.connector(CONNECTOR).orElseThrow(() -> new DrishtiException(ErrorCode.EXPOSURE_METHOD_UNAVAILABLE,
-                "the exact what-if (method paths) runs in the Python exposure engine, the reactive connector " + CONNECTOR + " of the "
-                        + "counterparty-risk pack, which is not running on this server (its compute pool exposure); ask method addon for the "
-                        + "conservative proxy"));
+            LocalDate date, boolean audited) {
         ExposureDate d = base.date();
         ExposureBook b = d.book();
-        List<Map<String, Object>> items = new ArrayList<>();
-        Set<String> sets = new LinkedHashSet<>();
+        ExposureGrid g = b.grid();
+        List<ExposureWhatIfMath.Candidate> items = new ArrayList<>();
+        Map<String, ExposureWhatIfMath.NettingSet> sets = new LinkedHashMap<>();
         for (Map<String, Object> cand : cands) {
-            Map<String, Object> it = item(cand, d, items.size() + 1);
+            ExposureWhatIfMath.Candidate it = item(cand, d, base.view(), items.size() + 1);
             items.add(it);
-            if (!String.valueOf(it.get("NETTING_SET")).isEmpty()) {
-                sets.add(String.valueOf(it.get("NETTING_SET")));
+            if (!it.set().isEmpty() && !sets.containsKey(it.set())) {
+                if (sets.size() >= MAX_SETS) {
+                    throw new DrishtiException(ErrorCode.EXPOSURE_BATCH_JOB, "a what-if's candidates join at most " + MAX_SETS + " netting sets");
+                }
+                sets.put(it.set(), set(p, base, it.set(), date, ask));
             }
         }
-        Sandboxes.Sandbox box;
+        ExposureMath.Model model = ExposureMath.Model.of(ask.collateral());
+        ExposureCalc.Result r = base.result();
+        ExposureWhatIfMath.Result w;
         try {
-            box = hub.sandboxes().create(p.user(), CONNECTOR, "exposure what-if on " + scope, items);
+            w = ExposureWhatIfMath.of(new ExposureWhatIfMath.Scope(r.e, r.n, r.stats.ce, life(b, r)), sets, items, g, b.paths(), ExposureCalc.times(g),
+                    ask.q(), model, svc.props().rule(), base.res().canonical());
         } catch (IllegalArgumentException e) {
             throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, e.getMessage());
         }
-        try {
-            Map<String, Object> params = new LinkedHashMap<>();
-            params.put("sandbox", box.id());
-            params.put("q", ask.q());
-            params.put("collateral", ask.collateral());
-            params.put("sets", String.join(",", sets));
-            String ref = ComputeRef.format(base.res().canonical(), params);
-            Answer a = c.answer(new ReactiveConnector.Ask(KIND, ref, AsOf.of(d.date()), Viewers.of(p), RequestClass.INTERACTIVE, WAIT));
-            if (!a.ready() || a.document() == null) {
-                // failed: the engine said why (a candidate's paths, a netting set outside the scope); refused or still computing: not available
-                throw new DrishtiException(a.state().equals(Answer.FAILED) ? ErrorCode.EXPOSURE_BAD_PARAMETER : ErrorCode.EXPOSURE_METHOD_UNAVAILABLE, "the Python exposure engine " + (a.state().equals(Answer.COMPUTING)
-                        ? "did not answer within " + WAIT.toSeconds() + " s" : "answered " + a.state()) + (a.message() == null ? "" : ": " + a.message()));
-            }
-            Map<String, Object> out = answer(a.document(), base, scope, b, items.size());
-            svc.audit(p, "ccr-whatif", base, "method=paths candidates=" + items.size() + " sets=" + sets);
-            return out;
-        } finally {
-            hub.sandboxes().delete(p.user(), box.id());
+        Map<String, Object> out = answer(w, base, scope, b, model);
+        if (audited) {
+            svc.audit(p, "ccr-whatif", base, "method=paths candidates=" + items.size() + " sets=" + sets.keySet());
         }
+        return out;
     }
 
-    /** One candidate as a sandbox item: its id, label, netting set (empty: a netting set of its own), paths, MtM today, life. */
-    private Map<String, Object> item(Map<String, Object> cand, ExposureDate d, int n) {
+    /** A netting set a candidate joins: one the scope covers whole, read as the asker sees it. */
+    private ExposureWhatIfMath.NettingSet set(Principal p, ExposureService.Scoped base, String id, LocalDate date, ExposureService.Ask ask) {
+        ExposureBook b = base.date().book();
+        boolean whole = base.result().pieces.stream().anyMatch(pc -> pc.whole && b.set(pc.set).id().equals(id));
+        if (!whole) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "the netting set " + id + " is not one the scope " + base.res().canonical()
+                    + " covers whole: a candidate joins a netting set of the scope (or none: a netting set of its own)");
+        }
+        ExposureService.Scoped s = svc.scoped(p, "NSET:" + id, date, ask);
+        if (s.result().pieces.size() != 1 || !s.result().pieces.get(0).whole) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "the netting set " + id + " is not seen whole: a candidate joins a netting "
+                    + "set you see whole (or none: a netting set of its own)");
+        }
+        ExposureCalc.Piece pc = s.result().pieces.get(0);
+        ExposureBook.SetInfo si = b.set(pc.set);
+        return new ExposureWhatIfMath.NettingSet(si.id(), b.value(pc.set), s.result().e, s.result().n, si.csa(), si.v0(), pc.ce);
+    }
+
+    /** The longest remaining life of the scope's trades, in years. */
+    private static double life(ExposureBook b, ExposureCalc.Result r) {
+        double life = 0;
+        for (ExposureCalc.Piece pc : r.pieces) {
+            for (int t : pc.trades) {
+                life = Math.max(life, b.trade(t).lifeYears());
+            }
+        }
+        return life;
+    }
+
+    /** One candidate: its id, label, netting set (empty: a netting set of its own), paths, MtM today (NaN: the paths' mean), life. */
+    private ExposureWhatIfMath.Candidate item(Map<String, Object> cand, ExposureDate d, ExposureAccess.View view, int n) {
         ExposureBook b = d.book();
         int len = b.grid().size() * b.paths();
         String id = cand.get("tradeId") == null ? "CANDIDATE-" + n : String.valueOf(cand.get("tradeId"));
@@ -127,6 +135,10 @@ final class ExposureWhatIfPaths {
             int t = b.tradeOrdinal(from);
             if (t < 0) {
                 throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no exposure paths for the trade " + from + " on " + d.date() + " (run " + b.runId() + ")");
+            }
+            if (!view.seesTrades(com.ash.drishti.compute.vector.OrdinalSet.of(t))) {       // a copy shows the trade's paths: only for who sees it
+                throw new DrishtiException(ErrorCode.FORBIDDEN, "the trade " + from + " is not one you see trade by trade: a copy is made of a trade "
+                        + "you see");
             }
             double f = pm.get("factor") instanceof Number x ? x.doubleValue() : 1.0;
             double[] src = svc.paths(d).read(List.of(b.trade(t).id())).get(b.trade(t).id());
@@ -157,19 +169,9 @@ final class ExposureWhatIfPaths {
         if (!set.isEmpty() && !set.startsWith("NS-")) {
             set = "NS-" + set;
         }
-        Map<String, Object> it = new LinkedHashMap<>();
-        it.put("TRADE_ID", id);
-        it.put("LABEL", cand.get("label") == null ? id : String.valueOf(cand.get("label")));
-        it.put("NETTING_SET", set);
-        List<Double> v = new ArrayList<>(m.length);
-        for (double x : m) {
-            v.add(x);
-        }
-        it.put("MTM", v);
-        it.put("MTM0", mtm0 instanceof Number x ? x.doubleValue() : null);
-        it.put("LIFE_YEARS", life);
-        it.put("RUN_ID", b.runId());
-        return it;
+        String label = cand.get("label") == null ? id : String.valueOf(cand.get("label"));
+        double today = mtm0 instanceof Number x && Double.isFinite(x.doubleValue()) ? x.doubleValue() : Double.NaN;
+        return new ExposureWhatIfMath.Candidate(id, label, set, m, today, life);
     }
 
     private static double[] numbers(Object o) {
@@ -228,50 +230,49 @@ final class ExposureWhatIfPaths {
         }
     }
 
-    /** The Python engine's answer in the API's shape (the addon method's: base, with, incremental with the profile). */
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> answer(Map<String, Object> doc, ExposureService.Scoped base, String scope, ExposureBook b, int n) {
+    /** The answer in the API's shape (the addon method's: base, with, incremental with the profile; and each candidate's figures). */
+    private static Map<String, Object> answer(ExposureWhatIfMath.Result w, ExposureService.Scoped base, String scope, ExposureBook b,
+            ExposureMath.Model model) {
+        ExposureGrid g = b.grid();
+        ExposureMath.Stats s0 = w.before();
+        ExposureMath.Stats s1 = w.after();
         Map<String, Object> fBase = new LinkedHashMap<>();
         Map<String, Object> fWith = new LinkedHashMap<>();
         Map<String, Object> inc = new LinkedHashMap<>();
-        for (String[] f : new String[][] {{"epe", "EPE"}, {"eepe", "EEPE"}, {"peakPfe", "PEAK_PFE"}, {"peakEe", "PEAK_EE"}, {"ce", "CE"}}) {
-            fBase.put(f[0], round(doc.get("BEFORE_" + f[1])));
-            fWith.put(f[0], round(doc.get("AFTER_" + f[1])));
-            inc.put(f[0], round(doc.get("CHANGE_" + f[1])));
+        double[][] figures = {{s0.epe, s1.epe}, {s0.eepe, s1.eepe}, {s0.peakPfe[0], s1.peakPfe[0]}, {s0.peakEe, s1.peakEe}, {s0.ce, s1.ce}};
+        String[] names = {"epe", "eepe", "peakPfe", "peakEe", "ce"};
+        for (int f = 0; f < names.length; f++) {
+            fBase.put(names[f], Math.round(figures[f][0]));
+            fWith.put(names[f], Math.round(figures[f][1]));
+            inc.put(names[f], Math.round(figures[f][1] - figures[f][0]));
         }
-        fBase.put("peakPfeTenor", doc.get("BEFORE_PEAK_PFE_TENOR"));
-        fWith.put("peakPfeTenor", doc.get("AFTER_PEAK_PFE_TENOR"));
-        Map<String, Object> tables = doc.get("TABLES") instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
+        fBase.put("peakPfeTenor", tenor(g, s0.peakAt[0]));
+        fWith.put("peakPfeTenor", tenor(g, s1.peakAt[0]));
+        double[] times = ExposureCalc.times(g);
         List<Map<String, Object>> profile = new ArrayList<>();
-        if (tables.get("profile") instanceof List<?> rows) {
-            for (Object o : rows) {
-                Map<String, Object> r = (Map<String, Object>) o;
-                Map<String, Object> x = new LinkedHashMap<>();
-                x.put("tenor", r.get("TENOR"));
-                x.put("date", r.get("DATE"));
-                x.put("t", r.get("T"));
-                x.put("eeBase", round(r.get("EE_BASE")));
-                x.put("ee", round(r.get("EE")));
-                x.put("pfeBase", round(r.get("PFE_BASE")));
-                x.put("pfe", round(r.get("PFE")));
-                x.put("incrementalEe", round(r.get("INCREMENTAL_EE")));
-                x.put("incrementalPfe", round(r.get("INCREMENTAL_PFE")));
-                profile.add(x);
-            }
+        for (int i = 0; i < times.length; i++) {
+            Map<String, Object> x = new LinkedHashMap<>();
+            x.put("tenor", g.tenor(g.primaryAt(i)));
+            x.put("date", g.date(g.primaryAt(i)).toString());
+            x.put("t", times[i]);
+            x.put("eeBase", Math.round(s0.ee[i]));
+            x.put("ee", Math.round(s1.ee[i]));
+            x.put("pfeBase", Math.round(s0.pfe[0][i]));
+            x.put("pfe", Math.round(s1.pfe[0][i]));
+            x.put("incrementalEe", Math.round(s1.ee[i] - s0.ee[i]));
+            x.put("incrementalPfe", Math.round(s1.pfe[0][i] - s0.pfe[0][i]));
+            profile.add(x);
         }
         inc.put("profile", profile);
         List<Map<String, Object>> items = new ArrayList<>();
-        if (tables.get("items") instanceof List<?> rows) {
-            for (Object o : rows) {
-                Map<String, Object> r = (Map<String, Object>) o;
-                Map<String, Object> x = new LinkedHashMap<>();
-                x.put("tradeId", r.get("TRADE_ID"));
-                x.put("label", r.get("LABEL"));
-                x.put("nettingSet", r.get("NETTING_SET"));
-                x.put("peakPfeAlone", round(r.get("PEAK_PFE_ALONE")));
-                x.put("incrementalPeakPfe", round(r.get("INCREMENTAL_PEAK_PFE")));
-                items.add(x);
-            }
+        for (ExposureWhatIfMath.Item it : w.items()) {
+            Map<String, Object> x = new LinkedHashMap<>();
+            x.put("tradeId", it.id());
+            x.put("label", it.label());
+            x.put("nettingSet", it.set());
+            x.put("peakPfeAlone", Math.round(it.peakPfeAlone()));
+            x.put("incrementalPeakPfe", Math.round(it.incrementalPeakPfe()));
+            items.add(x);
         }
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("scope", scope);
@@ -283,16 +284,16 @@ final class ExposureWhatIfPaths {
         out.put("base", fBase);
         out.put("with", fWith);
         out.put("incremental", inc);
-        out.put("candidates", n);
+        out.put("candidates", w.items().size());
         out.put("items", items);
-        out.put("flags", doc.get("FLAGS") instanceof List<?> l ? l : List.of());
-        out.put("note", "exact: each candidate's paths on the run " + b.runId() + " added to its netting set path by path, collateral and exposure "
-                + "computed again by the Python exposure engine (exposure-whatif)");
-        out.put("engine", doc.get("ENGINE"));
+        out.put("flags", List.of("exact"));
+        out.put("note", "exact: each candidate's paths on the run " + b.runId() + " added to its netting set path by path, collateral (" + model.text()
+                + ") and exposure computed again by the Java exposure engine");
+        out.put("engine", "exposure (Java)");
         return out;
     }
 
-    private static Long round(Object o) {
-        return o instanceof Number x && Double.isFinite(x.doubleValue()) ? Math.round(x.doubleValue()) : null;
+    private static String tenor(ExposureGrid g, int i) {
+        return i >= 0 && i < g.primaryCount() ? g.tenor(g.primaryAt(i)) : null;
     }
 }
