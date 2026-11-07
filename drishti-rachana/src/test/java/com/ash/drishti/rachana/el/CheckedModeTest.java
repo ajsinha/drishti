@@ -179,7 +179,7 @@ class CheckedModeTest {
     @Test
     void everyCatalogueExampleChecks() {
         Signatures cat = Signatures.get();
-        assertThat(cat.all()).hasSize(64);
+        assertThat(cat.all()).hasSize(65);
         for (Signatures.Signature f : cat.all()) {
             assertThat(f.examples()).as(f.name()).hasSizeGreaterThanOrEqualTo(2);
             assertThat(f.description()).as(f.name()).isNotBlank();

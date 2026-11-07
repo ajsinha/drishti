@@ -320,6 +320,23 @@ functions:
   - {expr: related(counterparty.sector), says: the counterparty's sector as a column of the trade dataset}
   edge-cases: {nulls: null when the reference is empty or points at nothing., masked: A masked column of the referenced kind arrives masked., types: Exactly one hop;
       related(related(...)) is DRS-9127.}
+- name: related_rows
+  family: lookup
+  runs: E
+  signature: related_rows('alias')
+  params:
+  - {name: alias, type: string-literal}
+  returns: boolean
+  scopes: [rule]
+  description: 'A row rule that limits a table to the rows related to the rows of another table of the model that the reader sees: the
+    keys both tables share (a dimension both reference, or a reference from one to the other) must appear among the reader''s rows of
+    that table. A desk head limited to her desks'' trades sees the exposure of the counterparties her desks trade with.'
+  examples:
+  - {expr: related_rows('trades'), says: 'the rows that share a key with a trade the reader sees (a rule on another fact of the model)'}
+  - {expr: 'related_rows(''netting_sets'')', says: 'the exposure of the netting sets the reader sees'}
+  edge-cases: {missing: 'Refused when the model has no table of that alias, or the two tables share no key: the question is refused rather than
+      answered without the rule.', elsewhere: 'Outside BI''s engine (a table read on its own through the table layer) the rule lets no row
+      through.'}
 - name: sum
   family: aggregate
   runs: E
@@ -382,18 +399,20 @@ functions:
 - name: count
   family: aggregate
   runs: E
-  signature: count(alias | x, where = null)
+  signature: count([alias | x], where = null)
   params:
-  - {name: x, type: table-or-any}
+  - {name: x, type: table-or-any, default: 'null'}
   - {name: where, type: boolean, default: 'null', keyword-only: true}
   returns: integer
   scopes: [aggregate]
-  description: count(trades) counts the rows of a dataset alias; count(x) counts the rows where x is not None.
+  description: count() counts the rows (of a pivot cell, or of the one table a measure reads); count(trades) the rows of a table alias; count(x) the rows where x is not null.
   examples:
+  - {expr: count(), says: 'how many rows (a pivot formula: the cell''s rows)'}
+  - {expr: 'count(where = PNL < 0) / count()', says: 'the share of losing rows (a pivot formula)'}
   - {expr: count(trades), says: how many trades}
   - {expr: 'count(trades, where = trades.MTM < 0)', says: how many trades lose money}
   - {expr: count(trades.PORTFOLIO), says: trades with a book}
-  edge-cases: {nulls: count(x) skips null; count(alias) counts every row., empty: 0 over no rows (never null).}
+  edge-cases: {nulls: count(x) skips null; count() and count(alias) count every row., empty: 0 over no rows (never null).}
 - name: distinct
   family: aggregate
   runs: E

@@ -19,8 +19,6 @@ import com.ash.drishti.rachana.el.check.Scope;
 import com.ash.drishti.rachana.el.check.Signatures;
 import com.ash.drishti.server.bi.BiAccess;
 import com.ash.drishti.server.bi.BiService;
-import com.ash.drishti.server.bi.expr.DelException;
-import com.ash.drishti.server.bi.expr.ExpressionMigrator;
 import com.ash.drishti.server.bi.mq.ModelCatalog;
 import com.ash.drishti.server.bi.mq.MqException;
 import com.ash.drishti.server.security.Principal;
@@ -36,10 +34,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * The Drishti expression language over HTTP (docs/guides/API_GUIDE.md "Expressions", docs/guides/BI_LANGUAGE_REFERENCE.md): the function catalogue the expression
+ * Rachana, BI's expression language, over HTTP (docs/guides/API_GUIDE.md "Expressions", docs/guides/RACHANA_REFERENCE.md): the function catalogue the expression
  * editor completes from ({@code GET /bi/expr/functions}), checking one expression in its scope against a model as the caller sees it
- * ({@code POST /bi/expr/validate}: problems with code, fix and position, the type, what it uses), and the converter from the old syntax
- * ({@code POST /bi/expr/convert}: one expression, or a whole item's YAML with comments kept). Nothing here reads data or stores anything.
+ * ({@code POST /bi/expr/validate}: problems with code, fix and position, the type, what it uses). Nothing here reads data or stores anything;
+ * a text in an older syntax is migrated by {@code drishti.py tables migrate}.
  */
 @RestController
 @RequestMapping("/api/v1/bi/expr")
@@ -96,43 +94,6 @@ public class ExprController {
             return catalog.validateExpressionDraft(p, expr, scope, draft, text(body, "alias"));       // the designer's unsaved model or dataset
         }
         return catalog.validateExpression(p, expr, scope, text(body, "model"), text(body, "alias"));
-    }
-
-    /**
-     * Body {@code {expr}}: the expression in DEL v2 ({@code changed} false when it already was); or {@code {yaml}}: the item with every expression converted
-     * and {@code expressions: 2} set, comments and layout kept, with the list of changes and of expressions that could not be converted.
-     */
-    @PostMapping("/convert")
-    public Map<String, Object> convert(@RequestBody Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        bi.requirePower(p, BiAccess.BI);
-        String yaml = text(body, "yaml");
-        Map<String, Object> m = new LinkedHashMap<>();
-        if (yaml != null) {
-            ExpressionMigrator.Result r = ExpressionMigrator.migrate(yaml);
-            m.put("yaml", r.yaml());
-            m.put("expressions", r.expressions());
-            m.put("changed", r.changed());
-            m.put("changes", r.changes().stream().map(ExpressionMigrator.Change::toMap).toList());
-            m.put("problems", r.problems().stream().map(ExpressionMigrator.Change::toMap).toList());
-            return m;
-        }
-        String expr = text(body, "expr");
-        if (expr == null) {
-            throw new MqException(MqException.Problem.of("DRS-9127", "expr", "the expression to convert (expr), or an item's YAML (yaml)"));
-        }
-        try {
-            ExpressionMigrator.Converted c = ExpressionMigrator.toRachana(expr);
-            m.put("expr", c.from());
-            m.put("converted", c.to());
-            m.put("changed", c.changed());
-            m.put("problems", List.of());
-        } catch (DelException e) {
-            m.put("expr", expr);
-            m.put("converted", null);
-            m.put("changed", false);
-            m.put("problems", List.of(e.problem().toMap()));
-        }
-        return m;
     }
 
     private static String text(Map<String, Object> body, String key) {

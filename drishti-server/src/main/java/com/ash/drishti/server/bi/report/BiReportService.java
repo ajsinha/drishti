@@ -101,7 +101,7 @@ public final class BiReportService {
         }
         try {
             BiStore.Item mine = bi.readableItem(p, ref);
-            if ("dataset".equals(mine.kind())) {
+            if ("dataset".equals(mine.kind()) || "table".equals(mine.kind())) {
                 return mine;
             }
         } catch (DrishtiException e) {
@@ -392,7 +392,7 @@ public final class BiReportService {
             }
         }
         String body = bi.bodyFor(p, found);
-        if (com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(body)) {
+        if (com.ash.drishti.server.bi.layer.DatasetDefParser.isTable(body)) {
             com.ash.drishti.server.bi.layer.DatasetDef d = com.ash.drishti.server.bi.layer.DatasetDefParser.parse(body).dataset();
             if (d != null) {
                 return datasets.describeModel(p, com.ash.drishti.server.bi.layer.ImplicitModels.QUERY_PREFIX + d.name());

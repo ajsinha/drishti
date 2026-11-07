@@ -23,7 +23,6 @@ import com.ash.drishti.identity.User;
 import com.ash.drishti.identity.UserService;
 import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.packs.PackRegistry;
-import com.ash.drishti.server.bi.dataset.LegacySources;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
@@ -608,9 +607,6 @@ public final class DatasetService {
 
     private DatasetParser.Result parse(String id, String body) {
         String h = hash(body);
-        if (LegacySources.dependsOnOthers(body)) {
-            return DatasetParser.parse(body);                      // its model depends on the datasets it is made of, which may have changed: never served from the cache
-        }
         Parsed p = parsed.get(id);
         if (p == null || !p.hash().equals(h)) {
             p = new Parsed(h, DatasetParser.parse(body));
@@ -728,7 +724,11 @@ public final class DatasetService {
         m.put("engine", d.engine());
         m.putAll(shape(p, d));
         Set<String> mine = Set.copyOf(p.roles());
-        m.put("security", Map.of("rows", d.security().rows().stream().map(x -> Map.of("role", x.role(), "where", x.where(), "appliesToYou", mine.contains(x.role()))).toList(),
+        List<Map<String, Object>> ruleRows = new ArrayList<>();                 // a version-1 dataset's rules, then each table's (the layer binds them per table)
+        d.security().rows().forEach(x -> ruleRows.add(Map.of("role", x.role(), "where", x.where(), "appliesToYou", mine.contains(x.role()))));
+        d.security().tables().forEach((t, s) -> s.layers().forEach(l -> l.forEach(x -> ruleRows.add(Map.of("table", t, "role", x.role(), "where", x.where(),
+                "appliesToYou", mine.contains(x.role()))))));
+        m.put("security", Map.of("rows", ruleRows,
                 "masked", d.security().masked(), "rowRulesEnforced", security.enabled()));
         m.put("rollups", d.rollups().stream().map(x -> Map.of("name", x.name(), "table", x.table(), "by", x.by(), "measures", x.measures())).toList());
         if (r.ok() && refresher != null) {
@@ -811,7 +811,7 @@ public final class DatasetService {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("kind", d.composed() ? "composed" : "derived");
         List<Map<String, Object>> sources = new ArrayList<>();
-        for (Dataset.Input in : LegacySources.sources(d)) {
+        for (Dataset.Input in : d.inputs()) {
             Map<String, Object> s = new LinkedHashMap<>();
             s.put("alias", in.alias());
             s.put("dataset", in.dataset());
@@ -1086,7 +1086,7 @@ public final class DatasetService {
     /** The name of a {@code rachana: 2} dataset item (one of the model layer), or null for a version 1 dataset. */
     private String layerDatasetName(Principal p, BiStore.Item item) {
         String body = bi.bodyFor(p, item);
-        if (!com.ash.drishti.server.bi.layer.DatasetDefParser.isVersion2(body)) {
+        if (!com.ash.drishti.server.bi.layer.DatasetDefParser.isTable(body)) {
             return null;
         }
         com.ash.drishti.server.bi.layer.DatasetDef d = com.ash.drishti.server.bi.layer.DatasetDefParser.parse(body).dataset();

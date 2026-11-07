@@ -122,19 +122,15 @@ async def datasets(request: Request):
 
 @router.get("/bi/d/{item:path}")
 async def dataset(request: Request, item: str):
-    """One 2.1 dataset (a live sample until wave W3): its model (tables, relationships, measures, row rules) and a query preview, drawn by ``drishti_bi-dataset.js``.
-    A ``rachana: 2`` dataset has its own page since 2.2 (grain, keys, columns with meanings, time mode, security): an old link is sent there."""
-    import re
+    """An old dataset link: every dataset is a table of the table layer now, with its own page (grain, keys, columns with meanings, time mode,
+    security)."""
     from fastapi.responses import RedirectResponse
     try:
         got = await request.app.state.backend.bi("GET", "/layer-datasets/" + quote(item, safe=":"), ident(request))
-        text = str((got or {}).get("yaml") or "")
-        name = re.search(r"^(dataset|table):\s*([A-Za-z0-9_.-]+)", text, flags=re.M)
-        if re.search(r"^rachana:\s*[23]\b", text, flags=re.M) and name:          # a model-layer dataset, or a table of the table layer
-            return RedirectResponse("/bi/ds/" + quote(str(got.get("id") or item), safe=":"), status_code=307)
+        item = str((got or {}).get("id") or item)
     except BackendError:
-        pass                                                        # not a dataset of the model layer (or not readable): the 2.1 page says what it can
-    return _page(request, "bi/dataset.html", "datasets", item=item)
+        pass                                                        # not readable: the table's page says so
+    return RedirectResponse("/bi/ds/" + quote(item, safe=":"), status_code=307)
 
 
 @router.get("/bi/r/{item}")
@@ -183,8 +179,9 @@ async def design(request: Request, draft: str):
 
 @router.get("/bi/m/{item:path}")
 async def model_view(request: Request, item: str):
-    """The Model view of a dataset item: tables as boxes, relationships as lines, the YAML beside them (two views of one draft)."""
-    return _page(request, "bi/model.html", "datasets", item=item)
+    """The old Model view's address (a 2.1 dataset's boxes and lines): the table's page; tables and models are written in Build › Tables & models."""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse("/bi/ds/" + quote(item, safe=":"), status_code=301)
 
 
 @router.get("/admin/bi/usage")

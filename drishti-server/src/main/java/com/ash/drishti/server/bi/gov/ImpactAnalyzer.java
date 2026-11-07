@@ -19,7 +19,6 @@ import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.bi.BiStore;
 import com.ash.drishti.server.bi.BiFolder;
-import com.ash.drishti.server.bi.dataset.LegacySources;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.report.Report;
@@ -109,9 +108,10 @@ public final class ImpactAnalyzer implements AutoCloseable {
         return d == null ? Surface.Offer.empty() : Surface.Offer.of(d);
     }
 
-    /** The declared {@code dataset:} name of a dataset body, or an empty string. */
+    /** The name of a table's body, or an empty string. */
     public static String declaredName(String body) {
-        return LegacySources.declaredName(body);
+        com.ash.drishti.server.bi.layer.DatasetDef d = body == null || body.isBlank() ? null : com.ash.drishti.server.bi.layer.DatasetDefParser.parse(body).dataset();
+        return d == null ? "" : d.name();
     }
 
     /** The text readers see: the published version of a stored item, the file of a shipped one; null when the item is not published. */
@@ -127,7 +127,7 @@ public final class ImpactAnalyzer implements AutoCloseable {
         if (ref == null || ref.isBlank()) {
             return false;
         }
-        return dataset.id().equals(ref) || dataset.id().equals("file:dataset:" + ref) || dataset.title().equalsIgnoreCase(ref)
+        return dataset.id().equals(ref) || dataset.id().equals("file:dataset:" + ref) || dataset.id().equals("file:table:" + ref) || dataset.title().equalsIgnoreCase(ref)
                 || ref.equals(declaredName(dataset.body()));
     }
 
@@ -148,10 +148,13 @@ public final class ImpactAnalyzer implements AutoCloseable {
     }
 
     /** Every dataset item, stored and shipped. */
+    /** The item kinds a report reads as its one-table dataset: a table of the layer (and a stored dataset item holding one). */
+    private static final java.util.Set<String> TABLE_KINDS = java.util.Set.of("table", "dataset");
+
     public List<BiStore.Item> datasets() {
         List<BiStore.Item> all = new ArrayList<>();
-        store.items().stream().filter(i -> "dataset".equals(i.kind())).forEach(all::add);
-        folder.items().stream().filter(i -> "dataset".equals(i.kind())).forEach(all::add);
+        store.items().stream().filter(i -> TABLE_KINDS.contains(i.kind())).forEach(all::add);
+        folder.items().stream().filter(i -> TABLE_KINDS.contains(i.kind())).forEach(all::add);
         return all;
     }
 
@@ -316,7 +319,7 @@ public final class ImpactAnalyzer implements AutoCloseable {
                 continue;
             }
             String body = publishedBody(d) != null ? publishedBody(d) : d.body();
-            if (LegacySources.dependsOnOthers(body) && readsFrom(body, dataset) || !body.equals(d.body()) && LegacySources.dependsOnOthers(d.body()) && readsFrom(d.body(), dataset)) {
+            if (readsFrom(body, dataset) || !body.equals(d.body()) && readsFrom(d.body(), dataset)) {
                 out.add(d);
             }
         }
@@ -325,15 +328,12 @@ public final class ImpactAnalyzer implements AutoCloseable {
 
     private boolean readsFrom(String body, BiStore.Item dataset) {
         Dataset parsed = DatasetParser.parse(body).dataset();
-        return parsed != null && LegacySources.sources(parsed).stream().anyMatch(in -> refersTo(in.dataset(), dataset));
+        return parsed != null && parsed.inputs().stream().anyMatch(in -> refersTo(in.dataset(), dataset));
     }
 
     private List<String> brokenSource(String body, BiStore.Item dataset, Set<String> tables, Surface.Change change) {
-        if (!LegacySources.dependsOnOthers(body)) {
-            return null;
-        }
         Dataset parsed = DatasetParser.parse(body).dataset();
-        if (parsed == null || LegacySources.sources(parsed).stream().noneMatch(in -> refersTo(in.dataset(), dataset))) {
+        if (parsed == null || parsed.inputs().stream().noneMatch(in -> refersTo(in.dataset(), dataset))) {
             return null;
         }
         return Surface.broken(Surface.refs(parsed, ref -> refersTo(ref, dataset), tables), change);

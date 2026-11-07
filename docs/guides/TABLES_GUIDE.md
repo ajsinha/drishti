@@ -203,6 +203,14 @@ states per date. The store's folder is a setting of the layer (planned: `drishti
 
 `$.DESK in user.desks` is strict: a desk-head with no desks sees no trades.
 
+A rule on one fact also limits another fact of a model through `related_rows('alias')`: `- { role: desk-head, where: "related_rows('trades')" }`
+on the exposure table keeps the exposure rows that share a key (a dimension both reference, such as the counterparty, or a reference
+between the two) with the trades the desk head sees, so she sees the exposure of the counterparties her desks trade with and nothing
+more. BI's engine works it out over the other table with that table's own rules; a model where the two share no key refuses the question,
+and a table with such a rule read on its own shows that role no rows. `tables migrate` writes it wherever an old dataset's rule named
+another table (nobody sees more data after the upgrade; BI_DESIGN.md 8.5). A live table's history follows its table's rules the same way,
+on its group columns.
+
 Before the table's own rules, a read is a read of the source as the reader: their row rules and masks on the source kind apply to every
 document. A table hidden from a role (`hidden-for`) gives that role no rows; a column hidden from a role is left out of what they read.
 Administrators and BI authors (the power to edit BI datasets) define tables and models; definitions are audited and versioned like BI's

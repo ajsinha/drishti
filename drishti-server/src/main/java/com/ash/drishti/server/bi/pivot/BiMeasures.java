@@ -16,7 +16,7 @@
 package com.ash.drishti.server.bi.pivot;
 
 import com.ash.drishti.bicompute.formula.FormulaFunction;
-import com.ash.drishti.bicompute.formula.FormulaParser;
+import com.ash.drishti.bicompute.formula.FormulaLowering;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.rachana.el.Expr;
 import com.ash.drishti.rachana.el.Functions;
@@ -30,7 +30,7 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * A model's measures as pivot functions (PIVOT_ENGINE.md section 12.2: a measure defined once). A measure whose DEL is an expression of
+ * A model's measures as pivot functions (PIVOT_ENGINE.md section 12.2: a measure defined once). A measure that is an expression of
  * aggregates over one fact's rows ({@code sum}, {@code avg}, {@code min}, {@code max}, {@code count}, {@code distinct}, {@code percentile},
  * {@code ratio}, {@code where=} conditions, arithmetic, row functions, other measures by {@code measure('Name')}) becomes a formula of the
  * engine's built-ins: its kind, its states, its totals and whether it adds up come from the engine. A measure that reads beyond the rows of
@@ -39,7 +39,7 @@ import java.util.Set;
  */
 public final class BiMeasures {
 
-    /** DEL aggregates and their pivot spelling. */
+    /** The model's aggregates and their pivot spelling. */
     private static final Map<String, String> AGGREGATES = Map.of("sum", "sum", "avg", "avg", "min", "min", "max", "max", "count", "count",
             "distinct", "distinct", "percentile", "percentile", "median", "median");
 
@@ -98,7 +98,7 @@ public final class BiMeasures {
         try {
             FormulaFunction f = FormulaFunction.of(measure, formula, new ArrayList<>(fields));
             return new Translated(measure, formula, fields, tables, f.plainSum());
-        } catch (FormulaParser.FormulaException e) {
+        } catch (FormulaLowering.FormulaException e) {
             throw new NotPivot(measure + ": " + e.getMessage());
         }
     }
@@ -128,20 +128,20 @@ public final class BiMeasures {
 
     private static String print(Dataset ds, Expr n, Set<String> fields, Set<String> tables, List<String> path, boolean inAgg) {
         return switch (n) {
-            case Expr.Lit x when x.value() == null -> "None";
-            case Expr.Lit x when x.value() instanceof Boolean b -> b ? "True" : "False";
+            case Expr.Lit x when x.value() == null -> "null";
+            case Expr.Lit x when x.value() instanceof Boolean b -> b ? "true" : "false";
             case Expr.Lit x when x.value() instanceof String v -> "'" + v.replace("\\", "\\\\").replace("'", "\\'") + "'";
             case Expr.Lit x -> x.value() instanceof Double d ? Double.toString(d) : String.valueOf(x.value());
             case Expr.ListLit l -> "[" + String.join(", ", l.items().stream().map(i -> print(ds, i, fields, tables, path, inAgg)).toList()) + "]";
             case Expr.Field f -> field(ds, f, fields, tables, inAgg);
-            case Expr.Not u -> "(not " + print(ds, u.e(), fields, tables, path, inAgg) + ")";
+            case Expr.Not u -> "(!" + print(ds, u.e(), fields, tables, path, inAgg) + ")";
             case Expr.Neg u -> "(-" + print(ds, u.e(), fields, tables, path, inAgg) + ")";
-            case Expr.And a -> "(" + print(ds, a.l(), fields, tables, path, inAgg) + " and " + print(ds, a.r(), fields, tables, path, inAgg) + ")";
-            case Expr.Or o -> "(" + print(ds, o.l(), fields, tables, path, inAgg) + " or " + print(ds, o.r(), fields, tables, path, inAgg) + ")";
+            case Expr.And a -> "(" + print(ds, a.l(), fields, tables, path, inAgg) + " && " + print(ds, a.r(), fields, tables, path, inAgg) + ")";
+            case Expr.Or o -> "(" + print(ds, o.l(), fields, tables, path, inAgg) + " || " + print(ds, o.r(), fields, tables, path, inAgg) + ")";
             case Expr.Binary b -> "(" + print(ds, b.l(), fields, tables, path, inAgg) + " " + b.op() + " " + print(ds, b.r(), fields, tables, path, inAgg) + ")";
             case Expr.In i -> "(" + print(ds, i.value(), fields, tables, path, inAgg) + (i.negated() ? " not in " : " in ") + print(ds, i.list(), fields, tables, path, inAgg) + ")";
-            case Expr.Ternary t -> "(" + print(ds, t.then(), fields, tables, path, inAgg) + " if " + print(ds, t.cond(), fields, tables, path, inAgg)
-                    + " else " + print(ds, t.otherwise(), fields, tables, path, inAgg) + ")";
+            case Expr.Ternary t -> "(" + print(ds, t.cond(), fields, tables, path, inAgg) + " ? " + print(ds, t.then(), fields, tables, path, inAgg)
+                    + " : " + print(ds, t.otherwise(), fields, tables, path, inAgg) + ")";
             case Expr.Call c -> call(ds, c, fields, tables, path, inAgg);
             default -> throw new NotPivot(com.ash.drishti.rachana.el.Printer.print(n) + " is not a pivot input");
         };
@@ -205,11 +205,11 @@ public final class BiMeasures {
                 if (!k.getKey().equals("where")) {
                     throw new NotPivot(name + "(" + k.getKey() + "=...) reads beyond its group's rows (a filter context or a time window)");
                 }
-                args.add("where=" + print(ds, k.getValue(), fields, tables, path, true));
+                args.add("where = " + print(ds, k.getValue(), fields, tables, path, true));
             }
             return agg + "(" + String.join(", ", args) + ")";
         }
-        if (FormulaParser.SCALARS.containsKey(name)) {
+        if (FormulaLowering.SCALARS.containsKey(name)) {
             List<String> args = new ArrayList<>();
             for (Expr a : positional) {
                 args.add(print(ds, a, fields, tables, path, inAgg));

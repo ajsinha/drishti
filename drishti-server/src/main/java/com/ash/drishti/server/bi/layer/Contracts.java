@@ -161,7 +161,7 @@ public final class Contracts {
             return false;
         }
         try {
-            return com.ash.drishti.server.bi.expr.Expressions.parse(a).equals(com.ash.drishti.server.bi.expr.Expressions.parse(b));
+            return com.ash.drishti.server.bi.expr.Expressions.node(a).equals(com.ash.drishti.server.bi.expr.Expressions.node(b));
         } catch (RuntimeException e) {
             return false;
         }

@@ -92,6 +92,51 @@ def as_mq(model: str, body: dict) -> dict:
     return mq
 
 
+def migrate_folder(bi_dir: Path, tmp: Path | None = None) -> None:
+    """A stack's own BI files in BI's old forms (``datasets/``, ``models/``) moved onto the table layer the way an installation is: the built
+    server's ``tables migrate`` (offline: no engine, no Spring) writes the tables and models under the sibling ``tables/`` folder (the server's
+    ``drishti.tables.root`` from the stack's folder), rewrites the reports that named a dataset and moves the old files aside. A refusal fails
+    the stack with the migration's report, as it would stop an installation."""
+    import glob
+    import os
+    import subprocess
+    from java_launch import java_cmd
+    bi_dir = Path(bi_dir)
+    if not any((bi_dir / d).is_dir() and any((bi_dir / d).glob("*.yaml")) for d in ("datasets", "models")):
+        return
+    jars = sorted(glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")), key=os.path.getmtime, reverse=True)
+    if not jars:
+        raise FileNotFoundError("needs the built server: ./mvnw -o -q package -DskipTests -pl drishti-server -am")
+    java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
+    config = bi_dir.parent
+    tmp = Path(tmp) if tmp else config.parent / "migrate-tmp"
+    tmp.mkdir(parents=True, exist_ok=True)
+    cmd = java_cmd(java, ["-jar", jars[0], "tables", "migrate", "--bi", str(bi_dir), "--root", str(config / "tables"),
+                          "--moved-to", str(config.parent / "bi-migrated")], tmp=tmp)
+    done = subprocess.run(cmd, cwd=config.parent, capture_output=True, text=True, timeout=300)
+    if done.returncode != 0:
+        raise RuntimeError(f"tables migrate refused the stack's BI files ({done.returncode}):\n{done.stdout}\n{done.stderr}")
+
+
+def migrate_texts(files: dict, tmp: Path) -> dict:
+    """BI texts in the old forms (``{"datasets/x.dataset.yaml": text, "reports/r.report.yaml": text}``) as ``tables migrate`` writes them: the
+    layer's tables and models by file name (``bi/x.table.yaml``, ``bi/x.model.yaml``) and the reports rewritten (``reports/r.report.yaml``),
+    for a test that seeds its items through the API (an item in an old form is refused, ``DRS-9196``)."""
+    tmp = Path(tmp)
+    bi_dir = tmp / "config" / "bi"
+    for rel, text in files.items():
+        (bi_dir / rel).parent.mkdir(parents=True, exist_ok=True)
+        (bi_dir / rel).write_text(text)
+    migrate_folder(bi_dir, tmp / "migrate-tmp")
+    out = {}
+    tables = tmp / "config" / "tables"
+    for f in sorted(tables.rglob("*.yaml")):
+        out[str(f.relative_to(tables))] = f.read_text()
+    for f in sorted((bi_dir / "reports").glob("*.yaml")) if (bi_dir / "reports").is_dir() else []:
+        out["reports/" + f.name] = f.read_text()
+    return out
+
+
 def sample_text(name: str) -> str:
     """A shipped sample's model text, to derive a test's own item from it."""
     return (TABLES / "bi" / f"{name}.model.yaml").read_text()

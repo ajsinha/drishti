@@ -50,7 +50,6 @@ files:
   css/bi-statement.css: css/drishti_bi-statement.css
   css/bi-studio.css: css/drishti_bi-studio.css
   css/bi-transform.css: css/drishti_bi-transform.css
-  css/bi-wizard.css: css/drishti_bi-wizard.css
   css/bi.css: css/drishti_bi.css
   css/build-pack.css: css/drishti_build-pack.css
   css/build-workbench.css: css/drishti_build-workbench.css
@@ -167,8 +166,6 @@ files:
   js/artifact-uninstall.js: js/drishti_artifact-uninstall.js
   js/bi-ai.js: js/drishti_bi-ai.js
   js/bi-consume.js: js/drishti_bi-consume.js
-  js/bi-dataset-layer.js: js/drishti_bi-dataset-layer.js
-  js/bi-dataset-steps.js: js/drishti_bi-dataset-steps.js
   js/bi-dataset.js: js/drishti_bi-dataset.js
   js/bi-design-canvas.js: js/drishti_bi-design-canvas.js
   js/bi-design-copilot.js: js/drishti_bi-design-copilot.js
@@ -196,12 +193,6 @@ files:
   js/bi-lib.js: js/drishti_bi-lib.js
   js/bi-live.js: js/drishti_bi-live.js
   js/bi-matrix.js: js/drishti_bi-matrix.js
-  js/bi-model-ai.js: js/drishti_bi-model-ai.js
-  js/bi-model-calc.js: js/drishti_bi-model-calc.js
-  js/bi-model-designer.js: js/drishti_bi-model-designer.js
-  js/bi-model-fields.js: js/drishti_bi-model-fields.js
-  js/bi-model-tabs.js: js/drishti_bi-model-tabs.js
-  js/bi-model.js: js/drishti_bi-model.js
   js/bi-models.js: js/drishti_bi-models.js
   js/bi-multiples.js: js/drishti_bi-multiples.js
   js/bi-phone.js: js/drishti_bi-phone.js
@@ -221,8 +212,6 @@ files:
   js/bi-vega.js: js/drishti_bi-vega.js
   js/bi-visuals-format.js: js/drishti_bi-visuals-format.js
   js/bi-visuals.js: js/drishti_bi-visuals.js
-  js/bi-wizard-steps.js: js/drishti_bi-wizard-steps.js
-  js/bi-wizard.js: js/drishti_bi-wizard.js
   js/bi.js: js/drishti_bi.js
   js/build-designs.js: js/drishti_build-designs.js
   js/build-files.js: js/drishti_build-files.js

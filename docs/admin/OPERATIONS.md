@@ -380,7 +380,7 @@ itself (see *Retries* in section 13).
 ### Taking a pack, a connector or a BI file out safely
 
 **Admin → Artifacts** (`/admin/artifacts`; [OPERATIONALISING.md section 18](../guides/OPERATIONALISING.md#18-admin--artifacts-install-and-uninstall-safely)) is the careful way to remove something. *Uninstall…* asks what depends on it (packs that extend it,
-connectors only it uses, BI datasets, reports and boards, saved searches, monitors, alert rules, subscriptions, shares, workspaces, embed hosts), refuses while
+connectors only it uses, BI tables, models, reports and boards, saved searches, monitors, alert rules, subscriptions, shares, workspaces, embed hosts), refuses while
 anything does (`DRS-5041`) and offers *Disable instead*, and otherwise **moves** the folder or file to `data/uninstalled/<time>-<kind>-<name>/`
 (`drishti.admin.uninstalled-dir`); the watchers then unload or stop it as if you had deleted it. Archives are kept `drishti.admin.uninstalled-keep` (30 days) and pruned
 once a day, so **back up `data/uninstalled` with `data/`** if you want longer. A pack named in `DRISHTI_PACKS` is not uninstalled here (take it out of the setting and
@@ -1354,7 +1354,8 @@ working directory unless you changed them.
 | `data/cache/<connector>/` | the Kafka connectors' disk cache | no | rebuilt from the topic; cleared every night anyway |
 | `data/delta/` (`DRISHTI_DELTA_ROOT`) | the lake | by its owner | Drishti only reads it; back it up with your data platform's policy |
 | `data/feeds/` (`DRISHTI_FEEDS`) | files for the file connector | by whoever writes them | |
-| `config/bi/` (`DRISHTI_BI_DIR`) | Rūpaka datasets, reports, boards and python files; what people publish from the BI pages is saved here too, and the identity database holds drafts, workspaces and history | **yes**, preferably in version control | version control, or copy |
+| `config/tables/` (`drishti.tables.root`) | the table layer's tables and models (`<domain>/<name>.table.yaml`, `.model.yaml`), which BI's reports read | **yes**, preferably in version control | version control, or copy |
+| `config/bi/` (`DRISHTI_BI_DIR`) | Rūpaka reports, boards, notebooks and python files; what people publish from the BI pages is saved here too, and the identity database holds drafts, workspaces and history | **yes**, preferably in version control | version control, or copy |
 | `data/bi/imports/` (`drishti.bi.governance.imports-dir`) | what each BI import replaced, one JSON file per import (the newest 20), so *Roll back this import* works | **yes**, with `data/identity/` | copy the directory |
 | `data/bi-store/` (`DRISHTI_BI_STORE`) | the BI engine's Parquet layers (columns and rollups) | no | rebuilt from the sources for the business date asked for; may be deleted while the server is stopped |
 | `config/ai/`, `config/mcp/` (`DRISHTI_AI_DIR`, `DRISHTI_MCP_DIR`) | one YAML file per AI provider and per MCP server; no key is written in a file (`${ENV}` references) | yes, with the connector files | copy |
@@ -1376,7 +1377,7 @@ if [ -f data/identity/drishti.db ]; then                      # a consistent cop
   sqlite3 data/identity/drishti.db ".backup 'data/identity/backup.db'"
 fi
 keep=()                                                         # only what exists here: a server that never wrote data/designs has none
-for p in data/fstore data/identity data/governance data/packs data/loads data/designs data/collab sutras config/connectors config/bi config/ai config/mcp application.local.yaml; do
+for p in data/fstore data/identity data/governance data/packs data/loads data/designs data/collab sutras config/connectors config/tables config/bi config/ai config/mcp application.local.yaml; do
   [ -e "$p" ] && keep+=("$p")
 done
 tar czf /backup/drishti/drishti-$stamp.tgz --exclude=data/identity/drishti.db* "${keep[@]}"

@@ -53,7 +53,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.database.sqlite.file=${drishti.test.dir}/stmt-rows-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/stmt-rows-overlay/added.yaml",
-        "drishti.bi.dir=${drishti.test.dir}/stmt-rows-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/stmt-rows-store/${random.uuid}",
+        "drishti.bi.dir=${drishti.test.dir}/stmt-rows-folder", "drishti.tables.root=${drishti.test.dir}/stmt-rows-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/stmt-rows-store/${random.uuid}",
         "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/stmt-rows-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.rows-lake.plugin=file", "drishti.sources.connectors.rows-lake.kinds[0]=trade",
@@ -144,6 +144,7 @@ class StatementRowsTest {
                       Trades:   { expr: "count(trade)" }
                     """);
             Files.writeString(reports.resolve("rows-statement.report.yaml"), STATEMENT);
+            com.ash.drishti.server.bi.TablesFolder.migrate(folder);     // tables migrate: the datasets and models become the layer's, the reports rebound
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }

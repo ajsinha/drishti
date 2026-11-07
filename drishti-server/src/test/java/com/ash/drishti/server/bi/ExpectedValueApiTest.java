@@ -56,8 +56,9 @@ import org.springframework.test.web.servlet.ResultActions;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class ExpectedValueApiTest {
 
-    private static final String DATASET = "dataset: tested-ds\ntitle: Tested\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: string, b: string }\n"
-            + "measures:\n  N: { expr: \"count(t)\" }\n";
+    /** A table of the layer: its tests aggregate it ({@code agg: count}); a report on it reads its default measure {@code Count of t}. */
+    private static final String DATASET = "rachana: 3\ntable: tst.t\nversion: 1.0.0\ntitle: Tested\nfrom: { kind: trade }\ncolumns:\n"
+            + "  a: { path: \"$.a\", type: string }\n  b: { path: \"$.b\", type: string }\n";
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
@@ -127,9 +128,9 @@ class ExpectedValueApiTest {
                             "packs", List.of("finance"), "password", "long-enough-pass-1")))).andExpect(status().isCreated());
         }
         ws = ok(call("POST", "/api/v1/bi/workspaces", ann(), Map.of("name", "Tests Desk"))).path("id").asText();
-        ds = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "dataset", "title", "Tested", "body", DATASET, "audienceRoles", List.of("steward", "reader")))).path("id").asText();
+        ds = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "table", "title", "Tested", "body", DATASET, "audienceRoles", List.of("steward", "reader")))).path("id").asText();
         // the count the tests expect, as the dataset's own test runner sees it (the 2.1 dataset query route answers 410 since 2.2)
-        call("PUT", itemPath(ds), ann(), Map.of("body", withTests("  - { name: probe, measure: N, expect: -1 }\n"))).andExpect(status().isOk());
+        call("PUT", itemPath(ds), ann(), Map.of("body", withTests("  - { name: probe, agg: count, expect: -1 }\n"))).andExpect(status().isOk());
         JsonNode probe = ok(call("POST", itemPath(ds) + "/tests", ann(), Map.of()));
         count = probe.path("results").get(0).path("actual").asLong();
         assertThat(count).as(probe.toString()).isPositive();
@@ -146,12 +147,12 @@ class ExpectedValueApiTest {
 
     @Test @Order(1)
     void aDatasetsTestsPassFailOrCannotRunAndEachSaysWhy() throws Exception {
-        String tests = "  - { name: exact, measure: N, expect: " + count + " }\n"
-                + "  - { name: wrong, measure: N, expect: " + (count + 1000) + " }\n"
-                + "  - { name: range, measure: N, expect: { min: " + (count - 1) + ", max: " + (count + 1) + " } }\n"
-                + "  - { name: near by amount, measure: N, expect: " + (count + 3) + ", tolerance: 5 }\n"
-                + "  - { name: near by percent, measure: N, expect: " + (count * 1.004) + ", tolerance: 1% }\n"
-                + "  - { name: needs a row, measure: N, by: [t.a], expect: 1 }\n";
+        String tests = "  - { name: exact, agg: count, expect: " + count + " }\n"
+                + "  - { name: wrong, agg: count, expect: " + (count + 1000) + " }\n"
+                + "  - { name: range, agg: count, expect: { min: " + (count - 1) + ", max: " + (count + 1) + " } }\n"
+                + "  - { name: near by amount, agg: count, expect: " + (count + 3) + ", tolerance: 5 }\n"
+                + "  - { name: near by percent, agg: count, expect: " + (count * 1.004) + ", tolerance: 1% }\n"
+                + "  - { name: needs a row, agg: count, by: [a], expect: 1 }\n";
         call("PUT", itemPath(ds), ann(), Map.of("body", withTests(tests))).andExpect(status().isOk());
         JsonNode r = ok(call("POST", itemPath(ds) + "/tests", ann(), Map.of()));
         assertThat(r.path("total").asInt()).isEqualTo(6);
@@ -173,10 +174,10 @@ class ExpectedValueApiTest {
     }
 
     @Test @Order(2)
-    void aTestNamingAMeasureTheDatasetDoesNotHaveIsAProblemWhereYouCheckIt() throws Exception {
-        JsonNode v = ok(call("POST", "/api/v1/bi/datasets/validate", ann(), Map.of("yaml", withTests("  - { measure: Nope, expect: 1 }\n  - { measure: N }\n  - { measure: N, expect: 1, tolerance: lots }\n"))));
+    void aTestTheTableCannotRunIsAProblemWhereYouCheckIt() throws Exception {
+        JsonNode v = ok(call("POST", "/api/v1/bi/datasets/validate", ann(), Map.of("yaml", withTests("  - { agg: nope, expect: 1 }\n  - { agg: count }\n  - { agg: count, expect: 1, tolerance: lots }\n"))));
         assertThat(v.path("valid").asBoolean()).isFalse();
-        assertThat(v.path("problems").toString()).contains("tests[0].measure").contains("tests[1].expect").contains("tests[2].tolerance");
+        assertThat(v.path("problems").toString()).contains("tests[0].agg").contains("tests[1].expect").contains("tests[2].tolerance");
     }
 
     @Test @Order(3)
@@ -187,7 +188,7 @@ class ExpectedValueApiTest {
         JsonNode forced = ok(call("POST", itemPath(ds) + "/publish", admin(), Map.of("note", "on purpose", "force", true)));
         assertThat(forced.path("publishedVersion").asInt()).isEqualTo(1);
         // mend the expectation: the next publish needs no force
-        String mended = withTests("  - { name: exact, measure: N, expect: " + count + " }\n");
+        String mended = withTests("  - { name: exact, agg: count, expect: " + count + " }\n");
         call("PUT", itemPath(ds), ann(), Map.of("body", mended)).andExpect(status().isOk());
         JsonNode second = ok(call("POST", itemPath(ds) + "/publish", ann(), Map.of("note", "mended")));
         assertThat(second.path("publishedVersion").asInt()).isEqualTo(2);
@@ -196,11 +197,11 @@ class ExpectedValueApiTest {
     @Test @Order(4)
     void aReportsTestsAskAVisualOrAMeasureAndRunAsTheCallerOrARoleTheyHold() throws Exception {
         String report = "report: tested-rep\ndataset: " + ds + "\npages:\n  - id: main\n    title: Main\n    visuals:\n"
-                + "      - { id: n, type: card, title: N, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [N] } }\n"
+                + "      - { id: n, type: card, title: N, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Count of t] } }\n"
                 + "tests:\n"
                 + "  - { name: card shows the count, visual: n, expect: " + count + " }\n"
                 + "  - { name: card is wrong, visual: n, expect: 1 }\n"
-                + "  - { name: measure through the report, measure: N, expect: { min: 1 } }\n";
+                + "  - { name: measure through the report, measure: Count of t, expect: { min: 1 } }\n";
         rep = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", ann(), Map.of("kind", "report", "title", "Tested report", "body", report))).path("id").asText();
         JsonNode r = ok(call("POST", itemPath(rep) + "/tests", ann(), Map.of()));
         Map<String, String> got = new java.util.LinkedHashMap<>();
@@ -228,7 +229,7 @@ class ExpectedValueApiTest {
     void aReaderMayNotRunThemAndTheyAreAuditedAndTheReportKeepsThemThroughTheDesignersWriter() throws Exception {
         call("POST", itemPath(rep) + "/tests", cat(), Map.of()).andExpect(status().is4xxClientError());
         JsonNode f = ok(call("POST", "/api/v1/bi/reports/format", ann(), Map.of("report", ok(call("POST", "/api/v1/bi/reports/validate", ann(),
-                Map.of("yaml", "report: r\ndataset: " + ds + "\npages:\n  - id: main\n    title: Main\n    visuals:\n      - { id: n, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [N] } }\ntests:\n  - { name: x, visual: n, expect: 7, tolerance: 1% }\n"))).path("report"))));
+                Map.of("yaml", "report: r\ndataset: " + ds + "\npages:\n  - id: main\n    title: Main\n    visuals:\n      - { id: n, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Count of t] } }\ntests:\n  - { name: x, visual: n, expect: 7, tolerance: 1% }\n"))).path("report"))));
         assertThat(f.path("yaml").asText()).contains("tests:").contains("visual: \"n\"").contains("tolerance: \"1%\"");
         JsonNode events = ok(call("GET", "/api/v1/admin/audit?limit=200", admin(), null));
         assertThat(events.toString()).contains("bi-tests-run");

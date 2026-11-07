@@ -15,9 +15,9 @@
  */
 package com.ash.drishti.server.bi.engine;
 
+import com.ash.drishti.server.bi.Layered;
 import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.file.Path;
@@ -62,7 +62,7 @@ public final class BiFoundationLive {
         try (QueryService service = new QueryService(props, live, new DuckDbEngine(props), lake, clock)) {
             String yaml = TestLake.yaml().replace("source: { connector: trading-lake, kind: trade }", "source: { connector: trading-lake, kind: trade }\n    mode: live");
             QueryService.Loaded ds = new QueryService.Loaded("file:dataset:live-foundation", Layers.key("file:dataset:live-foundation"),
-                    DatasetParser.parse(yaml).dataset(), "h1");
+                    Layered.dataset(yaml).dataset(), "h1");
             Map<String, QueryService.Caller> persons = new TreeMap<>();
             persons.put("risk", caller("rita", true, "", "risk"));
             persons.put("desk-head", caller("hana", true, "DESK-A", "desk-head"));

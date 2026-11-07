@@ -43,7 +43,7 @@ import org.springframework.beans.factory.ObjectProvider;
 
 /**
  * What would stop working if an artifact went (docs/guides/OPERATIONALISING.md, "Impact"). One question, asked of a pack, a connector or a
- * shipped BI file: which packs, connectors, BI datasets, reports and boards, saved searches, monitors, alert rules, measure alerts,
+ * shipped BI file: which packs, connectors, BI tables, models, reports and boards, saved searches, monitors, alert rules, measure alerts,
  * subscriptions, shares, workspaces and embed hosts name it. It reads the stores directly and decides nothing about who may see what:
  * the caller is an administrator, who sees everything. The answer is counts plus the first {@link #NAMED} names of each kind.
  *
@@ -60,7 +60,7 @@ public final class ArtifactImpact {
     private static final int SHARE_SCAN = 20_000;
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
     private static final Set<String> KIND_KEYS = Set.of("kind", "kinds", "entity", "ref", "path", "url", "link");
-    private static final Set<String> BI_KEYS = Set.of("dataset", "report", "board", "notebook", "python", "transform", "visual", "target", "item", "id",
+    private static final Set<String> BI_KEYS = Set.of("table", "model", "dataset", "report", "board", "notebook", "python", "transform", "visual", "target", "item", "id",
             "path", "url", "link", "ref", "source");
     private static final Map<String, String> NAMESPACES = Map.of("monitors", "monitors", "alerts", "alerts", "measure-alerts", "measure-alerts",
             "subscriptions", "subscriptions", "workspaces", "workspaces", "pivots", "saved-views", "layouts", "saved-views", "reports", "saved-views");
@@ -70,7 +70,8 @@ public final class ArtifactImpact {
         LABELS.put("packs", "Packs that extend it");
         LABELS.put("connectors", "Connectors only it uses");
         LABELS.put("packs-reading", "Packs that read it");
-        LABELS.put("datasets", "BI datasets");
+        LABELS.put("tables", "BI tables");
+        LABELS.put("models", "BI models");
         LABELS.put("reports", "BI reports");
         LABELS.put("boards", "BI boards");
         LABELS.put("notebooks", "BI notebooks");
@@ -168,14 +169,14 @@ public final class ArtifactImpact {
             }
         }
         if (!kinds.isEmpty()) {
-            Set<String> datasets = new LinkedHashSet<>();
+            Set<String> datasets = new LinkedHashSet<>();                     // the tables that read it
             for (BiRow r : biRows()) {
-                if ("dataset".equals(r.subtype()) && r.pairs().stream().anyMatch(p -> "kind".equals(p[0]) && kinds.contains(p[1].toLowerCase(Locale.ROOT)))) {
-                    add(found, "datasets", r.name(), r.owner(), "reads a kind of " + name + r.state());
+                if ("table".equals(r.subtype()) && r.pairs().stream().anyMatch(p -> "kind".equals(p[0]) && kinds.contains(p[1].toLowerCase(Locale.ROOT)))) {
+                    add(found, "tables", r.name(), r.owner(), "reads a kind of " + name + r.state());
                     datasets.add(r.name());
                 }
             }
-            addBiDependants(found, datasets, "dataset");
+            addBiDependants(found, datasets, "table");
             scanPrefs(found, kindMatcher(kinds), KIND_KEYS);
             scanShares(found, kinds);
             scanEmbeds(found, kinds);
@@ -191,14 +192,14 @@ public final class ArtifactImpact {
     public Impact ofKind(String command, String kind) {
         Map<String, List<Item>> found = new LinkedHashMap<>();
         Set<String> kinds = Set.of(kind.toLowerCase(Locale.ROOT));
-        Set<String> datasets = new LinkedHashSet<>();
+        Set<String> datasets = new LinkedHashSet<>();                     // the tables that read it
         for (BiRow r : biRows()) {
-            if ("dataset".equals(r.subtype()) && r.pairs().stream().anyMatch(p -> "kind".equals(p[0]) && kinds.contains(p[1].toLowerCase(Locale.ROOT)))) {
-                add(found, "datasets", r.name(), r.owner(), "reads " + kind + r.state());
+            if ("table".equals(r.subtype()) && r.pairs().stream().anyMatch(p -> "kind".equals(p[0]) && kinds.contains(p[1].toLowerCase(Locale.ROOT)))) {
+                add(found, "tables", r.name(), r.owner(), "reads " + kind + r.state());
                 datasets.add(r.name());
             }
         }
-        addBiDependants(found, datasets, "dataset");
+        addBiDependants(found, datasets, "table");
         scanPrefs(found, kindMatcher(kinds), KIND_KEYS);
         scanShares(found, kinds);
         scanEmbeds(found, kinds);
@@ -221,14 +222,14 @@ public final class ArtifactImpact {
         if (own instanceof List<?> l) {
             l.forEach(x -> kinds.add(String.valueOf(x).toLowerCase(Locale.ROOT)));
         }
-        Set<String> datasets = new LinkedHashSet<>();
+        Set<String> datasets = new LinkedHashSet<>();                     // the tables that read it
         for (BiRow r : biRows()) {
-            if ("dataset".equals(r.subtype()) && r.pairs().stream().anyMatch(p -> "connector".equals(p[0]) && p[1].equals(name))) {
-                add(found, "datasets", r.name(), r.owner(), "scans the connector" + r.state());
+            if ("table".equals(r.subtype()) && r.pairs().stream().anyMatch(p -> "connector".equals(p[0]) && p[1].equals(name))) {
+                add(found, "tables", r.name(), r.owner(), "scans the connector" + r.state());
                 datasets.add(r.name());
             }
         }
-        addBiDependants(found, datasets, "dataset");
+        addBiDependants(found, datasets, "table");
         if (!kinds.isEmpty()) {
             scanPrefs(found, kindMatcher(kinds), KIND_KEYS);
             scanShares(found, kinds);
@@ -393,12 +394,15 @@ public final class ArtifactImpact {
     }
 
     private static String bare(String ref) {
-        return ref.startsWith("file:") ? ref.substring(ref.lastIndexOf(':') + 1) : ref;
+        String r = ref.startsWith("file:") ? ref.substring(ref.lastIndexOf(':') + 1) : ref;
+        int at = r.indexOf('@');                                      // a model named with its major: trading-risk@1
+        return at > 0 ? r.substring(0, at) : r;
     }
 
     private static String category(String subtype) {
         return switch (subtype) {
-            case "dataset" -> "datasets";
+            case "table" -> "tables";
+            case "model" -> "models";
             case "report" -> "reports";
             case "board" -> "boards";
             case "notebook" -> "notebooks";

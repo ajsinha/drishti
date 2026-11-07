@@ -32,7 +32,7 @@ there" ([section 10](#10-beyond-anything-out-there)).
 
 **Read with:** [MR_CUBE_LENS.md section 4](../lenses/MR_CUBE_LENS.md#4-the-shared-cube-core-mr-and-ccr) (the shared cube core this
 engine grows from), [CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md) (the second cube on it), [BI_GUIDE.md](../guides/BI_GUIDE.md) (the BI
-query engine on DuckDB, rollups, true totals, run cards, Python measures), [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md)
+query engine on DuckDB, rollups, true totals, run cards, Python measures), [RACHANA_REFERENCE.md › Rachana-EL expressions](../guides/RACHANA_REFERENCE.md#rachana-el-expressions)
 (DEL, the expression language), [PYTHON_COMPUTE.md](PYTHON_COMPUTE.md) (the compute worker pools), [VAR_SHARDING.md](VAR_SHARDING.md)
 (scatter and gather of partial sums across Drishti\*net), [COMPUTE_ENGINES.md](COMPUTE_ENGINES.md) (one file and one switch per engine),
 [IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md) (data that may never touch a disk), [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md) (memory

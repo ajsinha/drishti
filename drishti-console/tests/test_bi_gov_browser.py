@@ -102,8 +102,8 @@ def edit_body(page, change, message):
 def test_an_author_saves_twice_compares_and_restores(stack, browser):
     page = sign_in(browser, "ann")
     open_item(page, stack.ids["positions"])
-    edit_body(page, lambda t: t.replace("      book: string\n", "      book: string\n      currency: string\n"), "add the currency column")
-    edit_body(page, lambda t: t.replace("  Trades: { expr", "  Deals: { expr"), "rename the count measure")
+    edit_body(page, lambda t: t.replace("measures:\n", "measures:\n  Books: { expr: \"distinct(trade.book)\" }\n", 1), "add the books measure")
+    edit_body(page, lambda t: re.sub(r"^  Trades:(\s*)\{", r"  Deals:\1{", t, flags=re.M), "rename the count measure")
     rows = page.locator("[data-history] tbody tr")
     expect(rows).to_have_count(3)                                                       # the first cut and the two saves
     expect(rows.first).to_contain_text("rename the count measure")
@@ -113,12 +113,12 @@ def test_an_author_saves_twice_compares_and_restores(stack, browser):
     page.click("[data-diff-form] button[type=submit]")
     diff = page.locator("[data-diff-out] table.bi-diff")
     expect(diff).to_be_visible()
-    expect(page.locator("[data-diff-out] .bi-diff-added").first).to_contain_text("currency: string")
+    expect(page.locator("[data-diff-out] .bi-diff-added").first).to_contain_text("Books")
     expect(page.locator("[data-diff-out] .bi-diff-changed").first).to_contain_text("Trades")
     expect(page.locator("[data-diff-out] .bi-result-meta")).to_contain_text("1 changed, 1 added")
     page.locator('[data-history] tr[data-seq="2"] button:has-text("Restore as draft")').click()
     expect(page.locator("[data-msg]")).to_contain_text("Saved state 2 is the draft again")
-    expect(page.locator("[data-body]")).to_contain_text("currency: string")
+    expect(page.locator("[data-body]")).to_contain_text("Books")
     expect(page.locator("[data-body]")).not_to_contain_text("Deals")
     expect(page.locator("[data-history] tbody tr")).to_have_count(4)                  # the restore is a new saved state: nothing was lost
     expect(page.locator("[data-history] tbody tr").first).to_contain_text("restored saved state 2")
@@ -148,8 +148,8 @@ def test_a_steward_reviews_with_the_diff_check_and_preview_and_approves(stack, b
     expect(sue.locator("[data-sec-review]")).to_be_hidden()
     # the author is told through the inbox; bob may not approve his own request (four-eyes)
     ann.goto(CONSOLE_URL + "/inbox")
-    expect(ann.locator("body")).to_contain_text("approved dataset")
-    status, bob_item = bi_gov_stack.call("POST", "/bi/workspaces/rates-desk/items", "bob", ["bi-reviewer"], {"kind": "dataset", "title": "Bob's model", "body": "dataset: bobs\ntables:\n  t:\n    source: { kind: trade }\n    columns: { a: string }\n"})
+    expect(ann.locator("body")).to_contain_text("approved model")
+    status, bob_item = bi_gov_stack.call("POST", "/bi/workspaces/rates-desk/items", "bob", ["bi-reviewer"], {"kind": "model", "title": "Bob's model", "body": "rachana: 3\nmodel: bobs\nversion: 1.0.0\ntables:\n  t: { table: bi.positions_model_trade, role: fact }\nmeasures:\n  Rows: { expr: \"count(t)\" }\n"})
     assert status == 201
     bi_gov_stack.call("POST", f"/bi/items/{bob_item['id']}/propose", "bob", ["bi-reviewer"], {})
     bob = sign_in(browser, "bob")
@@ -163,7 +163,7 @@ def test_a_steward_reviews_with_the_diff_check_and_preview_and_approves(stack, b
 def test_the_certified_badge_shows_in_the_catalogue_and_search(stack, browser):
     cat = sign_in(browser, "cat")
     cat.goto(CONSOLE_URL + "/bi/catalogue?kind=all")                                   # the All tab: every kind (the catalogue is split by kind)
-    expect(cat.locator(".bi-card")).to_have_count(3)
+    expect(cat.locator(".bi-card")).to_have_count(5)                                    # the two tables, the two models and the report
     expect(cat.locator(".bi-card").first.locator(".bi-certified")).to_be_visible()      # certified items are pinned first
     cat.select_option("select[name=endorsement]", "certified")
     cards = cat.locator(".bi-card")
@@ -186,48 +186,24 @@ def test_lineage_shows_where_a_dataset_comes_from_and_who_reads_it(stack, browse
     lin.locator("[data-downstream] a").click()
     page.wait_for_url("**/bi/i/*")
     lin = page.locator("[data-sec-lineage]")
-    expect(lin.locator("[data-dataset]")).to_contain_text("Trades model")
+    expect(lin.locator("[data-model]")).to_contain_text("gov-trades")
     expect(lin.locator("[data-uses]")).to_contain_text("trade.DESK")
     expect(lin.locator("[data-uses]")).to_contain_text("Notional")
     clean(page)
 
 
-def test_a_dataset_change_that_breaks_a_report_is_refused_and_an_admin_can_force_it(stack, browser):
+def test_a_model_change_that_breaks_its_contract_needs_a_new_major_version(stack, browser):
+    """A model's consumers rely on what it exposes: taking a measure away in a minor version is refused (DRS-9126); a new major is published and the
+    readers pinned to the old one keep it."""
     ann = sign_in(browser, "ann")
     open_item(ann, stack.ids["model"])
-
-    def drop_book(t):
-        return re.sub(r"^      PORTFOLIO: .*\n", "", t, flags=re.M).replace("Desk and book: [trade.DESK, trade.PORTFOLIO]", "Desk: [trade.DESK]")
-
-    edit_body(ann, drop_book, "drop the book column")
-    imp = ann.locator("[data-impact-draft]")
-    expect(imp).to_contain_text("Trades report")
-    expect(imp).to_contain_text("the publish is refused")
-    expect(imp).to_contain_text("Certification would be revoked")
-    ann.get_by_role("button", name="Publish", exact=True).click()
-    force = ann.locator("[data-force]")
-    expect(force).to_contain_text("DRS-9040")
-    expect(force).to_contain_text("Trades report")
-    expect(force.get_by_role("button", name="Publish anyway (bi-admin)")).to_have_count(0)      # ann may not force it
-    ann.fill("[data-sec-impact] [name=remove]", "trade.DESK, Notional")
-    ann.click("[data-impact-form] button[type=submit]")
-    expect(ann.locator("[data-impact-what]")).to_contain_text("Trades report")
-    admin = sign_in(browser, "root")
-    open_item(admin, stack.ids["model"])
-    admin.get_by_role("button", name="Publish", exact=True).click()
-    expect(admin.locator("[data-force]")).to_contain_text("DRS-9040")
-    admin.get_by_role("button", name="Publish anyway (bi-admin)").click()
-    expect(admin.locator("[data-msg]")).to_contain_text("forced")
-    warn = admin.locator("[data-warnings]")
-    expect(warn).to_contain_text("Certification of 'Trades model' was revoked")
-    expect(warn).to_contain_text("Certification of 'Trades report' was revoked")
-    expect(warn).to_contain_text("is broken")
-    expect(admin.locator("[data-badges] .bi-certified")).to_have_count(0)
-    sue = sign_in(browser, "sue")
-    sue.goto(CONSOLE_URL + "/inbox")
-    expect(sue.locator("body")).to_contain_text("Certification of report 'Trades report' was revoked")
-    for p in (ann, admin, sue):
-        clean(p)
+    edit_body(ann, lambda t: re.sub(r"^  Notional:.*\n", "", t, flags=re.M), "drop the Notional measure")
+    status, r = bi_gov_stack.call("POST", f"/bi/items/{stack.ids['model']}/publish", "ann", ["bi-writer"], {"note": "drop Notional"})
+    assert status == 409 and r["code"] == "DRS-9126" and "Notional" in r["detail"], r
+    edit_body(ann, lambda t: re.sub(r"^version: .*$", "version: 2.0.0", t, flags=re.M), "a new major")
+    status, r = bi_gov_stack.call("POST", f"/bi/items/{stack.ids['model']}/publish", "ann", ["bi-writer"], {"note": "version 2"})
+    assert status == 200, r
+    clean(ann)
 
 
 def test_a_bundle_is_exported_and_imported_with_a_dry_run_first(stack, browser, tmp_path):

@@ -143,7 +143,7 @@ public final class TableRules {
             if (s == null) {
                 continue;
             }
-            s.filters().forEach(f -> all.add(com.ash.drishti.server.bi.expr.Expressions.parse(f)));
+            s.filters().forEach(f -> all.add(com.ash.drishti.server.bi.expr.Expressions.node(f)));
             if (!reader.enforceRows()) {
                 continue;
             }
@@ -154,7 +154,7 @@ public final class TableRules {
                 Node or = null;
                 for (Dataset.RowRule r : layer) {
                     if (reader.roles().contains(r.role())) {
-                        Node n = com.ash.drishti.server.bi.expr.Expressions.parse(r.where());
+                        Node n = RelatedRows.on(com.ash.drishti.server.bi.expr.Expressions.node(r.where()), t);
                         or = or == null ? n : new Node.Bin("||", or, n);
                     }
                 }

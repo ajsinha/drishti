@@ -16,7 +16,7 @@
 # Arrow Flight SQL from JDBC tools (DBeaver, DataGrip, any JDBC program)
 
 The guide: [FLIGHT_GUIDE.md](../FLIGHT_GUIDE.md) (section 12, Flight SQL); every call: [FLIGHT_REFERENCE.md](../FLIGHT_REFERENCE.md) (section 6).
-SQL here is read-only SQL over the BI models (DSQL, [BI_LANGUAGE_REFERENCE.md](../BI_LANGUAGE_REFERENCE.md)), answered by the same path
+SQL here is read-only SQL over the BI models (DSQL, [API_GUIDE.md › Drishti SQL](../API_GUIDE.md#drishti-sql-apiv1bisql)), answered by the same path
 as the BI SQL console.
 
 ## Install

@@ -14,15 +14,15 @@
 
 """Wave A of the BI design, console lane, in Chromium (docs/architecture/BI_DESIGN.md section 12.2) over the real server and console on scratch ports
 18916 and 17916 (the W1 model stack of tests/test_w1_model_designer_browser.py: security on, the trading and core packs, a small file lake of
-trades and desks). Checked: the dataset wizard makes a dataset with a column subset, a filter, an explicit grain with a de-duplication, a formula column
-and a grouping without typing YAML (the ExpressionEditor completing the columns); the ExpressionEditor in the model designer completes fields, measures
-(writing measure('...')) and functions, shows the call's card and the server's problems; field properties, perspectives and Preview as a role in the
-model designer; the Query panel's MQ and SQL views; a save on a published model makes a draft and Publish follows; a phone width without sideways scroll.
+trades and desks). Checked, on a table and a model of the table layer seeded through the API (the dataset wizard and the model designer are
+gone: Build › Tables & models writes them): a report's own measure in the ExpressionEditor and the Query panel's MQ and SQL views; a report's
+Fields pane inherits the model's field properties and perspectives.
 
 Skipped when Playwright, Chromium or the built server jar is missing, or a scratch port is in use. Each pytest-xdist worker adds 100 to the ports (tests/scratch_ports.py)."""
 from __future__ import annotations
 
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -41,7 +41,7 @@ os.environ.setdefault("DRISHTI_COMPUTE_ENABLED", "true")
 os.environ.setdefault("DRISHTI_PYTHON", sys.executable)
 os.environ.setdefault("DRISHTI_COMPUTE_FILE", str(Path(__file__).resolve().parents[2] / "config" / "compute" / "compute.yaml"))
 CAPTURES = os.environ.get("DRISHTI_CAPTURES", "")                 # a folder: the texts the guides quote (YAML written, SQL shown) are kept there
-SHOTS = os.environ.get("DRISHTI_SHOTS", "")                       # a folder: the documentation's pictures are taken there too (docs/guides/BI_LANGUAGE_REFERENCE.md)
+SHOTS = os.environ.get("DRISHTI_SHOTS", "")                       # a folder: the documentation's pictures are taken there too (docs/guides/RACHANA_REFERENCE.md)
 sign_in, clean, fetch = w1.sign_in, w1.clean, w1.fetch
 
 
@@ -85,245 +85,32 @@ def browser(stack):
         b.close()
 
 
-def wizard(page):
-    page.goto(CONSOLE_URL + "/bi/datasets/new-layer")
-    expect(page.locator('[data-lw-root][data-ready="yes"]')).to_have_count(1, timeout=30000)
-
-
-def next_step(page, step):
-    page.click("[data-next]")
-    expect(page.locator(f'[data-step="{step}"]')).to_be_visible(timeout=15000)
-
-
-def test_the_dataset_wizard_makes_a_derived_dataset_without_yaml(browser):
-    page = sign_in(browser, "wes")
-    page.evaluate("window.sessionStorage.clear()")
-    wizard(page)
-    page.select_option("[data-src-extends]", "pack.trading.trade")
-    expect(page.locator('[data-src="extends"]')).to_be_checked()
-    next_step(page, "columns")
-    expect(page.locator("[data-keep-col]")).not_to_have_count(0, timeout=15000)
-    page.uncheck('[data-keep-col="PORTFOLIO"]')
-    next_step(page, "filter")
-    where = page.locator("[data-where]")
-    where.click()
-    where.type("TRADE_ST")
-    expect(page.locator('[data-xe-opt="TRADE_STATUS"]')).to_be_visible(timeout=5000)                 # the ExpressionEditor completes the table's columns
-    shoot(page, '[data-step="filter"]', "wizard-filter-completion")
-    page.keyboard.press("Enter")
-    where.type(" == 'VALIDATED'")
-    assert where.input_value() == "TRADE_STATUS == 'VALIDATED'"
-    where.press("Tab")
-    expect(page.locator('[data-step="filter"] [data-xe-ok]')).to_be_visible(timeout=10000)    # the server checks it against the base dataset
-    next_step(page, "grain")
-    page.check('[data-dedup="latest"]')
-    page.select_option("[data-dedup-by]", "TRADE_DATE")
-    shoot(page, '[data-step="grain"]', "wizard-grain")
-    next_step(page, "derive")
-    page.click('[data-derive-add="expr"]')
-    page.fill('[data-derive-name="0"]', "notionalM")
-    page.locator('[data-derive-name="0"]').press("Tab")
-    ex = page.locator('[data-derive-expr="0"]')
-    ex.fill("NOTIONAL / 1000000")
-    ex.press("Tab")
-    shoot(page, '[data-step="derive"]', "wizard-derive")
-    next_step(page, "group")
-    page.check("[data-group-on]")
-    page.click('[data-group-key="DESK"]')
-    page.select_option('[data-group-agg="MTM"]', "sum")
-    page.fill("[data-group-count]", "trades")
-    page.locator("[data-group-count]").press("Tab")
-    shoot(page, '[data-step="group"]', "wizard-group")
-    next_step(page, "preview")
-    next_step(page, "save")
-    page.fill("[data-title]", "Live trades by desk")
-    page.locator("[data-title]").press("Tab")
-    page.click("details:has([data-yaml]) summary")
-    # the server's check of the saved form answers first (under a loaded machine it takes seconds), then the YAML shows the name the title gave
-    expect(page.locator("[data-problems-save] .bi-ok")).to_contain_text("Checks clean", timeout=45000)        # the server reads every derivation key
-    expect(page.locator("[data-yaml]")).to_contain_text("dataset: live-trades-by-desk", timeout=30000)        # the name follows the title until it is typed
-    shoot(page, '[data-step="save"]', "wizard-save")
-    text = page.locator("[data-yaml]").text_content()
-    capture("wizard.yaml", text)
-    for line in ("dataset: live-trades-by-desk", "extends: pack.trading.trade@^1", "where: TRADE_STATUS == 'VALIDATED'", "keep: latest by TRADE_DATE", "notionalM: {", "group:", "trades: count"):
-        assert line in text, (line, text)
-    assert "PORTFOLIO" not in text.split("where:")[0]                                               # the unticked column is not in the subset
-    page.click("[data-save]")
-    expect(page.locator("[data-after-open]")).to_be_visible(timeout=20000)
-    clean(page)
-    page.context.close()
-
-
-def new_model(page, title):
-    """A shared workspace (a private one cannot publish) and a model over trades and desks in it; the designer opened on it."""
+def new_model(page, title, extra=""):
+    """A shared workspace (a private one cannot publish), a table of the trades and a model over it, both published (tables and models are written in
+    Build › Tables & models; here they are seeded through the API), and a report started on the model, open in the designer. Returns the model's name."""
     ws = fetch(page, "POST", "/bi/api/workspaces", {"name": title + " desk", "description": ""})
     assert ws["status"] in (200, 201), ws
-    made = fetch(page, "POST", "/bi/model-api/new", {"title": title, "workspace": ws["body"]["id"], "datasets": ["pack.trading.trade", "pack.core.desk"]})
-    assert made["status"] == 200, made
-    page.goto(CONSOLE_URL + made["body"]["href"])
-    expect(page.locator('[data-md-root][data-ready="yes"]')).to_have_count(1, timeout=30000)
-    page.locator('[data-suggestion="trade.DESK->desk.id"] [data-accept]').click()
-    expect(page.locator('[data-rel="trade.DESK → desk.id"]')).to_be_visible(timeout=15000)
-    return made["body"]["id"]
-
-
-def test_the_model_designer_writes_expressions_field_properties_and_perspectives(browser):
-    page = sign_in(browser, "wes")
-    new_model(page, "Languages model")
-    page.click('[data-tab="measures"]')
-    page.select_option("[data-nm-alias]", "trade")
-    page.select_option("[data-nm-column]", "MTM")
-    page.click("[data-nm-add]")
-    expect(page.locator('[data-measure="Sum of MTM"]')).to_be_visible(timeout=15000)
-    # the ExpressionEditor: a field, then a measure written as measure('…'), then the chips
-    page.click("[data-nf] summary")
-    page.fill("[data-nf-name]", "MTM per trade")
-    ed = page.locator("[data-nf-expr]")
-    ed.click()
-    ed.type("Sum")
-    expect(page.locator('[data-xe-opt="Sum of MTM"]')).to_be_visible(timeout=5000)
-    page.keyboard.press("Enter")
-    assert ed.input_value() == "measure('Sum of MTM')"
-    ed.type(" / count(trade.TRA")
-    expect(page.locator('[data-xe-opt="trade.TRADE_ID"]')).to_be_visible(timeout=5000)
-    page.click('[data-xe-opt="trade.TRADE_ID"]')
-    ed.type(")")
-    assert ed.input_value() == "measure('Sum of MTM') / count(trade.TRADE_ID)"
-    expect(page.locator('[data-xe-chip="Sum of MTM"]')).to_be_visible()
-    shoot(page, "[data-nf]", "expr-editor-measure")
-    page.click("[data-nf-add]")
-    expect(page.locator('[data-measure="MTM per trade"]')).to_be_visible(timeout=15000)
-    # field properties and a perspective
-    page.click('[data-tab="fields"]')
-    row = page.locator('[data-field-row="trade.MTM"]')
-    row.locator('[data-fp="description"]').fill("Mark to market, in the trade's currency")
-    row.locator('[data-fp="description"]').press("Tab")
-    row.locator('[data-fp="folder"]').fill("Risk")
-    row.locator('[data-fp="folder"]').press("Tab")
-    page.locator('[data-field-row="trade.PORTFOLIO"] [data-fp="hidden"]').check()
-    page.fill("[data-persp-new]", "Desk view")
-    page.click("[data-persp-add]")
-    expect(page.locator('[data-perspective="desk-view"]')).to_be_visible(timeout=15000)
-    page.locator('[data-persp-pick="desk-view:trade.DESK"]').check()
-    page.locator('[data-persp-pick="desk-view:Sum of MTM"]').check()
-    shoot(page, "[data-fields-pane]", "model-fields-tab")
-    page.wait_for_function("() => window.Drishti.model.yaml.indexOf('measures: [Sum of MTM]') >= 0", timeout=10000)          # the YAML follows each edit once Check has run
-    text = w1.yaml_tab(page)
-    capture("model-fields.yaml", text)
-    for line in ("trade.MTM: {description:", "folder: Risk", "trade.PORTFOLIO: {hidden: true}", "desk-view: {title: Desk view, fields: [trade.DESK], measures: [Sum of MTM]}",
-                 "MTM per trade: {expr: measure('Sum of MTM') / count(trade.TRADE_ID)}"):
-        assert line in text, (line, text)
-    # Security: a field that does not exist for a role (hidden-for), checked clean by the server; Preview as asks the server, never shows yours
-    page.click('[data-tab="security"]')
-    page.fill("[data-hidden-roles]", "desk-head")
-    page.locator('[data-hidden-pick="trade.NOTIONAL"]').check()
-    page.click("[data-hidden-add]")
-    expect(page.locator('[data-hidden-entry="0"]')).to_contain_text("desk-head", timeout=15000)
-    page.wait_for_function("() => window.Drishti.model.yaml.indexOf('hidden-for') >= 0", timeout=10000)
-    assert "hidden-for: [{roles: [desk-head], fields: [trade.NOTIONAL]}]" in page.evaluate("window.Drishti.model.yaml"), page.evaluate("window.Drishti.model.yaml")
-    expect(page.locator("[data-valid]")).to_have_text("Valid", timeout=15000)
-    shoot(page, "[data-hidden-for]", "model-hidden-for")
-    page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
-    page.select_option("[data-preview-role]", "desk-head")
-    page.click("[data-preview-as]")
-    expect(page.locator("[data-preview-as-error], [data-previewed-as]").first).to_be_visible(timeout=15000)
-    clean(page)
-    page.context.close()
-
-
-def test_the_editor_offers_functions_and_keywords_and_fixes_what_the_server_finds(browser):
-    page = sign_in(browser, "wes")
-    new_model(page, "Editor model")
-    page.click('[data-tab="measures"]')
-    page.select_option("[data-nm-alias]", "trade")
-    page.select_option("[data-nm-column]", "MTM")
-    page.click("[data-nm-add]")
-    expect(page.locator('[data-measure="Sum of MTM"]')).to_be_visible(timeout=15000)
-    page.click("[data-save]")                                                                   # the server checks names against the saved draft
-    expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
-    page.click("[data-nf] summary")
-    ed = page.locator("[data-nf-expr]")
-    # a function from the server's catalogue, then its card and its keyword arguments
-    ed.click()
-    ed.type("su")
-    expect(page.locator('[data-xe-opt="sum"]')).to_be_visible(timeout=10000)
-    page.click('[data-xe-opt="sum"]')
-    expect(page.locator('[data-xe-card="sum"]')).to_contain_text("sum(x, where = null)", timeout=5000)
-    ed.type("trade.MTM, wh")
-    expect(page.locator('[data-xe-opt="where="]')).to_be_visible(timeout=5000)
-    shoot(page, "[data-nf]", "expr-editor-keyword", 420)
-    page.click('[data-xe-opt="where="]')
-    ed.type("trade.TRADE_STATUS == 'VALIDATED')")
-    assert ed.input_value() == "sum(trade.MTM, where=trade.TRADE_STATUS == 'VALIDATED')"
-    expect(page.locator("[data-xe-ok]")).to_be_visible(timeout=10000)                          # the server's check: clean
-    shoot(page, "[data-nf]", "expr-editor-clean")
-    # a bare column in a measure: the server says wrap it, and the fix is a button
-    ed.fill("trade.MTM * 2")
-    expect(page.locator('[data-xe-problem="DRS-9127"]')).to_be_visible(timeout=10000)
-    shoot(page, "[data-nf]", "expr-editor-problem")
-    page.locator('[data-xe-problem="DRS-9127"] [data-xe-fix]').click()
-    assert ed.input_value() == "sum(trade.MTM) * 2", ed.input_value()
-    # another syntax is not read: the place it stops is marked (tables migrate rewrites old definitions)
-    ed.fill("[Sum of MTM] * 2")
-    expect(page.locator('[data-xe-problem="DRS-9127"]')).to_be_visible(timeout=10000)
-    ed.fill("measure('Sum of MTM') * 2")
-    expect(page.locator("[data-xe-ok]")).to_be_visible(timeout=10000)                          # Rachana: clean
-    # Try it: the server's answer on the saved draft, by a suggested field
-    page.click("[data-nf] [data-xe-try]")
-    expect(page.locator("[data-nf] [data-xe-tried]")).to_be_visible(timeout=15000)
-    shoot(page, "[data-nf]", "expr-editor-try")
-    clean(page)
-    page.context.close()
-
-
-def test_a_save_on_a_published_model_makes_a_draft_and_publish_follows(browser):
-    page = sign_in(browser, "wes")
-    new_model(page, "Contract model")
-    page.click('[data-tab="measures"]')
-    page.select_option("[data-nm-alias]", "trade")
-    page.select_option("[data-nm-column]", "MTM")
-    page.click("[data-nm-add]")
-    expect(page.locator('[data-measure="Sum of MTM"]')).to_be_visible(timeout=15000)
-    page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
-    expect(page.locator("[data-publish]")).to_be_enabled(timeout=15000)
-    page.click("[data-publish]")
-    expect(page.locator("[data-state]")).to_have_text("Published", timeout=120000)     # publishing runs the model's Check and safeguard: over a minute while the drill's Java stages run beside it
-    # change what the measure computes: the save makes a draft beside the published version; Publish is offered again
-    expr = page.locator('[data-m-expr="Sum of MTM"]')
-    expr.fill("sum(trade.PNL_1D)")
-    expr.press("Enter")
-    expect(page.locator("[data-state]")).to_have_text("Unsaved changes", timeout=15000)
-    page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Draft changes (v1 published)", timeout=15000)
-    expect(page.locator("[data-publish]")).to_be_visible()
-    expect(page.locator("[data-publish]")).to_be_enabled()
-    # the contract tab names the breaking change and proposes the major version
-    page.click('[data-tab="contract"]')
-    expect(page.locator('[data-change-level="major"]').first).to_contain_text("changes what Sum of MTM computes", timeout=15000)
-    page.click('[data-contract-use="2.0.0"]')
-    expect(page.locator("[data-version]")).to_have_text("v2.0.0", timeout=15000)
-    expect(page.locator("[data-contract-bump]")).to_contain_text("2.0.0 is right", timeout=15000)
-    shoot(page, "[data-contract-pane]", "model-contract-diff")
-    clean(page)
-    page.context.close()
+    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")
+    table = (f"rachana: 3\ntable: bi.{slug.replace('-', '_')}_trade\nversion: 1.0.0\ntitle: {title} trades\nfrom: {{ kind: trade }}\nkeys: [id]\ncolumns:\n"
+             '  DESK:      { path: "$.DESK", type: string }\n  PORTFOLIO: { path: "$.PORTFOLIO", type: string }\n'
+             '  CURRENCY:  { path: "$.CURRENCY", type: string }\n  MTM:       { path: "$.MTM", type: decimal }\n')
+    model = (f"rachana: 3\nmodel: {slug}\nversion: 1.0.0\ntitle: {title}\ntables:\n  trade: {{ table: bi.{slug.replace('-', '_')}_trade, role: fact }}\n"
+             'measures:\n  Sum of MTM: { expr: "sum(trade.MTM)" }\n' + extra)
+    for kind, body in (("table", table), ("model", model)):
+        it = fetch(page, "POST", "/bi/api/workspaces/" + ws["body"]["id"] + "/items", {"kind": kind, "title": title + " " + kind, "description": "", "body": body})
+        assert it["status"] in (200, 201), it
+        pub = fetch(page, "POST", "/bi/api/items/" + it["body"]["id"] + "/publish", {"note": "first"})
+        assert pub["status"] == 200, pub
+    rep = fetch(page, "POST", "/bi/model-api/report", {"model": slug + "@1", "title": title + " report", "workspace": ws["body"]["id"]})
+    assert rep["status"] == 200, rep
+    page.goto(CONSOLE_URL + rep["body"]["href"])
+    page.wait_for_url("**/bi/design/**", timeout=20000)
+    return slug
 
 
 def test_a_report_on_a_model_has_its_own_measures_and_the_query_as_mq_or_sql(browser):
     page = sign_in(browser, "wes")
-    new_model(page, "Query model")
-    page.click('[data-tab="measures"]')
-    page.select_option("[data-nm-alias]", "trade")
-    page.select_option("[data-nm-column]", "MTM")
-    page.click("[data-nm-add]")
-    expect(page.locator('[data-measure="Sum of MTM"]')).to_be_visible(timeout=15000)
-    page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
-    name = page.evaluate("window.Drishti.model.doc.model")
-    page.click("[data-report]")
-    page.click("[data-ask-go]")
-    page.wait_for_url("**/bi/design/**", timeout=20000)
+    name = new_model(page, "Query model")
     expect(page.locator('[data-model-header="model"]')).to_be_visible(timeout=30000)
     # a measure of this report only, in the ExpressionEditor over the model's measures
     page.click("[data-local-measure] summary")
@@ -368,80 +155,10 @@ def test_a_report_on_a_model_has_its_own_measures_and_the_query_as_mq_or_sql(bro
     page.context.close()
 
 
-def test_an_sql_view_dataset_in_the_wizard_and_an_analyse_cell_on_the_server(browser):
-    page = sign_in(browser, "wes")
-    new_model(page, "SQL model")
-    page.click('[data-tab="measures"]')
-    page.select_option("[data-nm-alias]", "trade")
-    page.select_option("[data-nm-column]", "MTM")
-    page.click("[data-nm-add]")
-    expect(page.locator('[data-measure="Sum of MTM"]')).to_be_visible(timeout=15000)
-    page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
-    ref = page.evaluate("window.Drishti.model.doc.model") + "@1"
-    # the wizard: an SQL view over the model, checked by the server, previewed, saved
-    page.evaluate("window.sessionStorage.clear()")
-    wizard(page)
-    page.check('[data-src="sql"]')
-    page.select_option("[data-src-sql-model]", ref)
-    page.fill("[data-src-sql]", "SELECT desk.NAME AS desk, MEASURE('Sum of MTM') AS mtm FROM trade JOIN desk GROUP BY desk.NAME")
-    page.click("[data-sql-check]")
-    expect(page.locator("[data-sql-ok]")).to_contain_text("desk", timeout=15000)
-    shoot(page, '[data-step="root"]', "wizard-sql-view")
-    next_step(page, "preview")
-    page.click("[data-preview-go]")
-    expect(page.locator("[data-preview-table] tbody tr")).to_have_count(3, timeout=20000)
-    shoot(page, '[data-step="preview"]', "wizard-sql-preview")
-    next_step(page, "save")
-    page.fill("[data-title]", "Desk MTM")
-    page.locator("[data-title]").press("Tab")
-    expect(page.locator("[data-yaml]")).to_contain_text("source: {sql:", timeout=10000)
-    capture("wizard-sql.yaml", page.locator("[data-yaml]").text_content())
-    page.click("[data-save]")
-    expect(page.locator("[data-after-open]")).to_be_visible(timeout=20000)
-    # Analyse: an extract of the model; a new SQL cell is Drishti SQL over it, run by the server
-    page.goto(CONSOLE_URL + "/bi/notebook")
-    page.wait_for_function("() => document.querySelectorAll('[data-dataset] option').length > 1", timeout=30000)
-    page.select_option("[data-dataset]", "mq:" + ref)
-    page.wait_for_selector("[data-fields] input[name=f]", timeout=30000)
-    page.click("[data-open-go]")
-    page.wait_for_function("() => /rows,/.test(document.querySelector('[data-info]').textContent)", timeout=60000)
-    page.click("#bxT-sql")
-    cell = page.locator("[data-cells=sql] textarea").first
-    expect(page.locator("[data-cells=sql] [data-sql-engine]").first).to_have_attribute("data-sql-engine", "server")
-    assert cell.input_value().startswith("SELECT ") and "MEASURE('Sum of MTM')" in cell.input_value(), cell.input_value()
-    capture("analyse-starter.sql", cell.input_value())
-    page.click("[data-cells=sql] [data-run]")
-    expect(page.locator('[data-cells=sql] [data-engine="dsql"]')).to_contain_text("Drishti SQL, run by the server over " + ref, timeout=20000)
-    shoot(page, "[data-cells=sql] .bx-cell", "analyse-dsql-cell")
-    clean(page)
-    page.context.close()
-
-
 def test_a_reports_fields_pane_inherits_the_models_properties_and_perspectives(browser):
     page = sign_in(browser, "wes")
-    new_model(page, "Inherit model")
-    page.click('[data-tab="measures"]')
-    page.select_option("[data-nm-alias]", "trade")
-    page.select_option("[data-nm-column]", "MTM")
-    page.click("[data-nm-add]")
-    expect(page.locator('[data-measure="Sum of MTM"]')).to_be_visible(timeout=15000)
-    page.click('[data-tab="fields"]')
-    page.locator('[data-field-row="trade.DESK"] [data-fp="display"]').fill("Trading desk")
-    page.locator('[data-field-row="trade.DESK"] [data-fp="display"]').press("Tab")
-    page.locator('[data-field-row="trade.MTM"] [data-fp="folder"]').fill("Risk")
-    page.locator('[data-field-row="trade.MTM"] [data-fp="folder"]').press("Tab")
-    page.locator('[data-field-row="trade.PORTFOLIO"] [data-fp="hidden"]').check()
-    page.fill("[data-persp-new]", "Desk view")
-    page.click("[data-persp-add]")
-    page.locator('[data-persp-pick="desk-view:trade.DESK"]').check()
-    page.locator('[data-persp-pick="desk-view:Sum of MTM"]').check()
-    page.wait_for_function("() => window.Drishti.model.yaml.indexOf('measures: [Sum of MTM]') >= 0", timeout=10000)
-    page.click("[data-save]")
-    expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
-    page.click("[data-report]")
-    page.click("[data-ask-go]")
-    page.wait_for_url("**/bi/design/**", timeout=20000)
+    new_model(page, "Inherit model", "fields:\n  trade.DESK: { display: Trading desk }\n  trade.MTM: { folder: Risk }\n  trade.PORTFOLIO: { hidden: true }\n"
+                                      "perspectives:\n  desk-view: { title: Desk view, fields: [trade.DESK], measures: [Sum of MTM] }\n")
     expect(page.locator('[data-model-header="model"]')).to_be_visible(timeout=30000)
     expect(page.locator('[data-field="trade.DESK"]')).to_contain_text("Trading desk")              # the model's display name, not re-declared
     expect(page.locator('[data-folder="Risk"] [data-field="trade.MTM"]')).to_be_visible()
@@ -451,58 +168,6 @@ def test_a_reports_fields_pane_inherits_the_models_properties_and_perspectives(b
     expect(page.locator('[data-field="trade.DESK"]')).to_be_visible()
     expect(page.locator('[data-field="Sum of MTM"]')).to_be_visible()
     shoot(page, ".bi-pane-fields", "report-fields-perspective")
-    clean(page)
-    page.context.close()
-
-
-def test_the_wizards_preview_answers_a_filtered_grouped_dataset(browser):
-    page = sign_in(browser, "wes")
-    page.evaluate("window.sessionStorage.clear()")
-    wizard(page)
-    page.select_option("[data-src-extends]", "pack.trading.trade")
-    next_step(page, "columns")
-    expect(page.locator("[data-keep-col]")).not_to_have_count(0, timeout=15000)
-    next_step(page, "filter")
-    page.fill("[data-where]", "TRADE_STATUS == 'VALIDATED'")
-    page.locator("[data-where]").press("Tab")
-    next_step(page, "grain")
-    next_step(page, "derive")
-    next_step(page, "group")
-    page.check("[data-group-on]")
-    page.click('[data-group-key="DESK"]')
-    next_step(page, "preview")
-    page.click("[data-preview-go]")                                                              # the draft saved, then its first rows from the server
-    page.click("[data-confirm-go]")                                                            # the server previews a saved draft: asked first
-    expect(page.locator("[data-preview-table] tbody tr")).to_have_count(3, timeout=20000)       # grouped by desk: three desks
-    shoot(page, '[data-step="preview"]', "wizard-preview")
-    clean(page)
-    page.context.close()
-
-
-def test_the_wizards_preview_answers_a_grouped_dataset_with_a_worked_out_column(browser):
-    page = sign_in(browser, "wes")
-    page.evaluate("window.sessionStorage.clear()")
-    wizard(page)
-    page.select_option("[data-src-extends]", "pack.trading.trade")
-    next_step(page, "columns")
-    expect(page.locator("[data-keep-col]")).not_to_have_count(0, timeout=15000)
-    next_step(page, "filter")
-    next_step(page, "grain")
-    next_step(page, "derive")
-    page.click('[data-derive-add="expr"]')
-    page.fill('[data-derive-name="0"]', "notionalM")
-    page.locator('[data-derive-name="0"]').press("Tab")
-    page.fill('[data-derive-expr="0"]', "NOTIONAL / 1000000")
-    page.locator('[data-derive-expr="0"]').press("Tab")
-    next_step(page, "group")
-    page.check("[data-group-on]")
-    page.click('[data-group-key="DESK"]')
-    next_step(page, "preview")
-    page.click("[data-preview-go]")
-    page.click("[data-confirm-go]")                                                            # the server previews a saved draft: asked first
-    expect(page.locator("[data-preview-table] tbody tr")).to_have_count(3, timeout=20000)
-    expect(page.locator("[data-preview-table] thead")).to_contain_text("notionalM")
-    shoot(page, '[data-step="preview"]', "wizard-preview-grouped")
     clean(page)
     page.context.close()
 
@@ -524,73 +189,6 @@ source: |
 """
 
 
-def test_the_wizard_adds_a_python_column(browser):
-    page = sign_in(browser, "wes")
-    ws = fetch(page, "POST", "/bi/api/workspaces", {"name": "Python columns desk", "description": ""})["body"]["id"]
-    item = fetch(page, "POST", f"/bi/api/workspaces/{ws}/items", {"kind": "python", "title": "Notional size", "description": "", "body": BUCKET})["body"]
-    assert fetch(page, "POST", f"/bi/api/items/{item['id']}/publish", {"note": "test"})["status"] == 200
-    page.evaluate("window.sessionStorage.clear()")
-    wizard(page)
-    page.select_option("[data-src-extends]", "pack.trading.trade")
-    next_step(page, "columns")
-    expect(page.locator("[data-keep-col]")).not_to_have_count(0, timeout=15000)
-    next_step(page, "filter")
-    next_step(page, "grain")
-    next_step(page, "derive")
-    page.click('[data-derive-add="python"]')
-    page.fill('[data-derive-name="0"]', "size")
-    page.locator('[data-derive-name="0"]').press("Tab")
-    page.select_option('[data-derive-python="0"]', label="Notional size")
-    page.locator('[data-derive-input="NOTIONAL"]').check()
-    shoot(page, '[data-step="derive"]', "wizard-python-column")
-    next_step(page, "group")
-    next_step(page, "preview")
-    page.click("[data-preview-go]")
-    page.click("[data-confirm-go]")                                                            # the server previews a saved draft: asked first
-    expect(page.locator("[data-preview-table] thead")).to_contain_text("size", timeout=30000)
-    cells = page.eval_on_selector_all("[data-preview-table] tbody tr", "rows => rows.map(r => [...r.children].map(c => c.textContent))")
-    heads = page.eval_on_selector_all("[data-preview-table] thead th", "hs => hs.map(h => h.textContent)")
-    col = [i for i, h in enumerate(heads) if h == "size" or h.endswith(".size")][0]                  # the column as the dataset names it
-    assert {r[col] for r in cells} <= {"big", "small"} and cells, (heads, cells[:3])
-    clean(page)
-    page.context.close()
-
-
 SMALL_TARGETS = """(sel) => [...document.querySelectorAll(sel)].filter(e => { const r = e.getBoundingClientRect(); return r.width > 0 && r.height > 0 && r.height < 43.5; })
     .map(e => (e.getAttribute('data-xe-opt') || e.getAttribute('data-tab') || e.textContent || e.tagName).trim().slice(0, 30) + ' ' + Math.round(e.getBoundingClientRect().height))"""
 
-
-def test_the_new_designer_parts_fit_a_phone(browser):
-    page = sign_in(browser, "wes", width=390)
-    new_model(page, "Phone model")
-    for tab in ("measures", "fields", "security", "contract"):
-        page.click(f'[data-tab="{tab}"]')
-        page.wait_for_timeout(400)
-        wide = page.evaluate("document.documentElement.scrollWidth - window.innerWidth")
-        assert wide <= 1, f"the {tab} tab scrolls sideways by {wide} px"
-    page.click('[data-tab="measures"]')
-    page.click("[data-nf] summary")
-    ed = page.locator("[data-nf-expr]")
-    ed.click()
-    ed.type("trade.")
-    expect(page.locator(".bi-xe-opt").first).to_be_visible(timeout=10000)
-    small = page.evaluate(SMALL_TARGETS, "[data-nf] .bi-xe-opt, [data-nf] .bi-xe-help, [data-nf] .bi-xe-try, [data-nf] button")
-    assert not small, small
-    page.keyboard.press("Escape")
-    page.click('[data-tab="fields"]')
-    small = page.evaluate(SMALL_TARGETS, "[data-fields-pane] input:not([type=checkbox]), [data-fields-pane] select, [data-fields-pane] summary, [data-fields-pane] button")
-    assert not small, small
-    clean(page)
-    page.context.close()
-
-
-def test_the_wizard_fits_a_phone(browser):
-    page = sign_in(browser, "wes", width=390)
-    page.evaluate("window.sessionStorage.clear()")
-    wizard(page)
-    assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "the page scrolls sideways"
-    for sel in ("[data-next]", ".bi-lw-stepbtn"):
-        box = page.locator(sel).first.bounding_box()
-        assert box and box["height"] >= 43.5, (sel, box)
-    clean(page)
-    page.context.close()

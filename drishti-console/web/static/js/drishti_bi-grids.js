@@ -262,7 +262,7 @@
   V.entityView = function (host, spec, ctx) {
     const field = spec.wells.key && spec.wells.key[0];
     const col = field ? B.column(ctx.index, field) : null;
-    const kind = (spec.format && spec.format.kind) || (col && col.kind) || '';
+    const kind = (spec.format && spec.format.kind) || (col && (col.entity || col.kind)) || '';          // a model's table: the kind of entity its rows are
     const note = (text) => B.clear(host).appendChild(h('div', { class: 'bi-vis-note bi-entity-note', role: 'status', 'data-entity': 'none' }, h('p', { text })));
     if (!ctx.entity) { note('Shows the ' + (kind || 'entity') + ' view of the ' + (field ? B.label(field) : 'key') + ' selected in another visual, in the report viewer.'); return NONE; }
     if (!field || !kind) { note('Name the key field of an entity (a table\'s id column) in the key well.'); return NONE; }

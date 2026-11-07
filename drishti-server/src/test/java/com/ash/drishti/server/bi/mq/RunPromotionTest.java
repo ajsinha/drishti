@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.mq;
 
+import com.ash.drishti.server.bi.Layered;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -122,7 +123,7 @@ class RunPromotionTest {
         for (String cpty : List.of("CP-0", "CP-1", "CP-2", "CP-3")) {
             assertThat(file).doesNotContain("\"" + cpty + "\"");
         }
-        DatasetDefParser.Result parsed = DatasetDefParser.parse(p.yaml());
+        DatasetDefParser.Result parsed = Layered.tableDef(p.yaml());
         assertThat(parsed.ok()).as(p.yaml() + parsed.problems()).isTrue();
         DatasetDef d = parsed.dataset();
         assertThat(d.source().type()).isEqualTo(DatasetDef.Source.RUN);
@@ -131,7 +132,7 @@ class RunPromotionTest {
         assertThat(d.security().masked()).containsExactly("cpty");                 // masked for the promoter: masked always
         assertThat(p.yaml()).contains("computedAs: \"ann\"");
         // read as the dataset it was promoted to: the promoter's rows, the mask where she saw the mask
-        ModelCatalog.Snapshot s = promotion.read("cpty-snapshot", "cpty-snapshot", "1", d.source().runToken());
+        ModelCatalog.Snapshot s = promotion.read(d.name(), "cpty-snapshot", "1", d.source().runToken());
         ArrowIpcWriter.Column cpty = s.result().columns().get(0);
         assertThat(s.result().rows()).isPositive();
         assertThat(cpty.values()).allSatisfy(v -> assertThat(v).isIn(DataNode.MASK, null));
@@ -142,9 +143,9 @@ class RunPromotionTest {
     void anUnmaskedPromoterKeepsTheValuesAndNothingIsDeclaredMasked() throws Exception {
         Run r = ran(MqHarness.RITA);
         RunPromotion.Promoted p = promotion.promote(r, new Principal("rita", MqHarness.RITA.roles()), "cpty-raw", "Raw", "report");
-        DatasetDef d = DatasetDefParser.parse(p.yaml()).dataset();
+        DatasetDef d = Layered.tableDef(p.yaml()).dataset();
         assertThat(d.security().masked()).isEmpty();
-        ModelCatalog.Snapshot s = promotion.read("cpty-raw", "cpty-raw", "latest", d.source().runToken());
+        ModelCatalog.Snapshot s = promotion.read(d.name(), "cpty-raw", "latest", d.source().runToken());
         assertThat(s.result().columns().get(0).values()).noneMatch(DataNode.MASK::equals);
         assertThat(p.reportItem()).isNotNull();
         assertThat(drafts.get(drafts.size() - 1)).contains("type: table").contains("cpty_raw.cpty");
@@ -154,7 +155,7 @@ class RunPromotionTest {
     void onlyTheDatasetItWasPromotedToReadsASnapshot() throws Exception {
         Run r = ran(MqHarness.RITA);
         RunPromotion.Promoted p = promotion.promote(r, new Principal("rita", MqHarness.RITA.roles()), "rita-book", null, "dataset");
-        String token = DatasetDefParser.parse(p.yaml()).dataset().source().runToken();
+        String token = Layered.tableDef(p.yaml()).dataset().source().runToken();
         // another author's dataset pointing at it: without the token, or under another name, it is refused
         assertThatThrownBy(() -> promotion.read("rita-book", "rita-book", "1", "guess")).isInstanceOf(MqException.class).hasMessageContaining("may not read it");
         assertThatThrownBy(() -> promotion.read("my-copy", "rita-book", "1", token)).isInstanceOf(MqException.class).hasMessageContaining("may not read it");

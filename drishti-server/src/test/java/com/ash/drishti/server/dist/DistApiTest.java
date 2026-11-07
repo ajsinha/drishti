@@ -66,7 +66,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.database.sqlite.file=${drishti.test.dir}/dist-api-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/dist-api-overlay/added.yaml",
-        "drishti.bi.dir=${drishti.test.dir}/dist-api-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/dist-api-store/${random.uuid}",
+        "drishti.bi.dir=${drishti.test.dir}/dist-api-folder", "drishti.tables.root=${drishti.test.dir}/dist-api-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/dist-api-store/${random.uuid}",
         "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/dist-api-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.dist-lake.plugin=file", "drishti.sources.connectors.dist-lake.kinds[0]=trade",
@@ -169,6 +169,7 @@ class DistApiTest {
                         title: Other
                         visuals: []
                     """);
+            com.ash.drishti.server.bi.TablesFolder.migrate(datasets.getParent());     // tables migrate: the datasets and models become the layer's, the reports rebound
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }

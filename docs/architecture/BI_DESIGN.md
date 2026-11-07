@@ -356,7 +356,7 @@ stable id and the server rewrites the text.
 | types | integer with decimal gives decimal; `date - date` gives integer days; text with number is `DRS-9127` (no implicit casts); `in [...]` items must match the field's type |
 | booleans | `and`, `or`, `not` and `… if c else …` take booleans only (no truthiness of numbers or text) |
 
-#### 3.3.4 Function catalogue (summary; the full reference is BI_LANGUAGE_REFERENCE.md)
+#### 3.3.4 Function catalogue (summary; the full reference is RACHANA_REFERENCE.md)
 
 | Family | Signatures | Scope | Status |
 |---|---|---|---|
@@ -445,7 +445,7 @@ comments, sets `expressions: 2`, and is reversible from saved states. The old sy
 
 #### 3.3.8 Documentation and in-product help (a deliverable of every wave that touches DEL)
 
-* **`docs/guides/BI_LANGUAGE_REFERENCE.md`** (created in A, grown each wave): the grammar of 3.3.2; the scopes; **every
+* **`docs/guides/RACHANA_REFERENCE.md`** (created in A, grown each wave): the grammar of 3.3.2; the scopes; **every
   function** with signature, description, return type, two or more examples and its edge cases (nulls, masked values,
   currencies, empty sets, types); filter-context rules with before/after tables; every `DRS` code an expression can
   raise with cause and fix; a **cookbook of 40+ finance and risk recipes** (MTM and P&L by desk, open vs matured,
@@ -459,7 +459,7 @@ comments, sets `expressions: 2`, and is reversible from saved states. The old sy
   arguments; hovering shows the function's card; problems appear inline with the fix as a button; a *Try it* strip
   shows the value for the current selection (a server answer, as the author).
 * **One catalogue**: `bi/expr/functions.yaml` on the server (name, signature, scopes, description, examples, edge
-  cases, since-wave) feeds validation, completion, `describe` for AI and the function tables of BI_LANGUAGE_REFERENCE.md (a
+  cases, since-wave) feeds validation, completion, `describe` for AI and the function tables of RACHANA_REFERENCE.md (a
   test fails when the guide and the catalogue disagree).
 
 ### 3.4 Drishti SQL (DSQL): read-only SQL over models
@@ -1192,8 +1192,8 @@ against them.
    selectable only until B).
 5. **Fields everywhere from `describe`** (`drishti_bi-design.js`, `drishti_bi-report.js`): one field list with inherited properties and
    perspective filter; YAML round trip on a concrete syntax tree (comments and order kept) in `core/model_layer.py`.
-6. **Docs** (with the server lane's input): `docs/guides/BI_LANGUAGE_REFERENCE.md` (3.3.8: grammar, every function, error codes,
-   40+ recipes, Python/DAX differences), `BI_LANGUAGE_REFERENCE.md` (DSQL reference), BI_GUIDE.md v2, MODELS.md, API guide; tutorials
+6. **Docs** (with the server lane's input): `docs/guides/RACHANA_REFERENCE.md` (3.3.8: grammar, every function, error codes,
+   40+ recipes, Python/DAX differences), `API_GUIDE.md, Drishti SQL` (DSQL reference), BI_GUIDE.md v2, MODELS.md, API guide; tutorials
    10–18 migrated (UI, CLI, YAML).
 
 **Accepted when:** (1) every shipped sample, test and tutorial 10–18 runs on datasets and models in the UI alone; the
@@ -1202,7 +1202,7 @@ same question as a visual, an MQ and a DSQL statement gives one plan hash, one a
 signature; (3) a dataset with subset, filter, explicit grain, an expression column, a Python column and grouping, and an
 SQL view dataset, are made in the wizard without typing YAML; (4) a hidden column is absent from `describe`, DSQL and
 AI; a report-only reader is refused outside the envelope; (5) the plan's security property tests pass; (6) a test
-fails if BI_LANGUAGE_REFERENCE.md and `functions.yaml` disagree, and all 40+ recipes run as tests on the demo lake; (7) the QA
+fails if RACHANA_REFERENCE.md and `functions.yaml` disagree, and all 40+ recipes run as tests on the demo lake; (7) the QA
 round's findings are fixed before the drill.
 
 #### Wave B — Calculation, live and scale
@@ -1237,7 +1237,7 @@ round's findings are fixed before the drill.
 4. **Live everywhere.** Reports, boards and alerts use pushed `/mq/stream`; state chips (live, throttled, stale);
    a time picker (now, as of, window) in every consumer.
 5. **Explain and usage.** The explain panel under each visual; the shipped *Admin BI usage* report.
-6. **Docs:** BI_LANGUAGE_REFERENCE.md filter-context and balance chapters and recipes; a live and standing-queries guide; an
+6. **Docs:** RACHANA_REFERENCE.md filter-context and balance chapters and recipes; a live and standing-queries guide; an
    operations guide for scale settings and metrics; tutorials updated.
 
 **Accepted when:** (1) % of total, ignore-a-slicer, a YTD calculation group over ten measures and a what-if shock equal
@@ -2670,7 +2670,9 @@ having: [{ measure: Trades, op: gt, value: 0 }]
 `P&L per exposure` is `[P&L 1d] / [Exposure (EE peak)]`, each side at its own grain, then divided. As `rita`: 18
 counterparties, P&L 2,671,113 and EE 1,447,544,943 in total (BI_GUIDE.md 11.3). The `having` keeps the old left join's
 meaning (only counterparties with trades the reader sees), so `hana` gets 17 counterparties, P&L 1,060,102 and EE
-1,356,300,321, as today. Without it she would see exposure for all 18 (8.5).
+1,356,300,321, as today. Her row rule on the trades also limits the exposure to the counterparties her desks trade with
+wherever a model gives the exposure tables `related_rows('trades')` for her role (8.5): the same 17. The shipped `trading-risk` says
+`may-see-all` for its exposure and netting-set tables, as it did before the upgrade, so there the `having` is what keeps her to 17.
 
 **9. A live desk, subscribed** (*live-trading-desk* `by-desk`).
 
@@ -2841,7 +2843,7 @@ datasets until W3, the boards are unchanged (they name reports), and the noteboo
    the bi-admin running it (audited `bi-migrated`), drafts stay drafts. Stable ids are generated and written.
 6. **Idempotent**: a `rachana: 2` item is skipped; a second run changes nothing. Comments in old YAML files are kept
    where the key survives (the converter edits a YAML tree that keeps comments), and dropped with the key otherwise.
-7. Refuses (`DRS-9190`) an item whose old form is invalid, and (`DRS-9191`) a composed join it cannot express as
+7. Refuses (`DRS-9190`) an item whose old form is invalid, and (the migration's refusal) a composed join it cannot express as
    relationships (a join on non-key columns of both sides): the report lists it with the Python-dataset alternative.
 
 ##### 8.3.1 Implementation (task 6)
@@ -2872,7 +2874,7 @@ Decisions taken while building it, against the plan above:
   measure the host lacks move into the host (renamed `<name> (<source>)` when the name means something else there); consumers bind to the host with the
   frame's names renamed (`joined.name` to `counterparties.name`, `Desk P&L` to `P&L 1d`); a visual that read another source of the composed dataset reads
   the host too, so the report's `links:` go. A `left` (or `inner`) join adds the report filter `{ field: <left count measure>, op: gt, value: 0 }`.
-  No host: `DRS-9191`.
+  No host: refused by the migration.
 * **Derived** datasets become a Python dataset `<old>-result` (`source.python`, each input a model query `{ model, select }` on the converted input's
   model) and a model of the old name over it under the alias `result`, so its measures and `result.*` fields keep their meaning. The Transform now
   receives each column named by the last part of its field or measure name (`counterparties.id` is `id`, `P&L 1d`), not the `as` names: a manual step (the shipped `pnl-vs-exposure` accepts both).
@@ -2932,7 +2934,7 @@ silently when an old file is read.
 
 | Change | Who notices | Mitigation |
 |---|---|---|
-| Security binds to the dataset: a row rule on one fact no longer refuses queries about another fact (desk-head and exposure) | a desk-head sees exposure for every counterparty where today the question was refused (`trading-risk`) or limited by a left join (composed sample) | the converter adds `having: Trades > 0` where the composed sample relied on the join; a model that must hide another fact adds its own rule on it |
+| Security binds to the table, and **nobody sees more data after the upgrade** (the owner's decision, 2026-11-07): a row rule on one fact also limits the related rows of another fact of the model (desk-head and exposure) | a desk-head whose question about another fact was refused now gets the rows related to the rows she sees: the limits of her desks, the exposure of the counterparties her desks trade with, the samples of her desks in a live history; never every row | `tables migrate` writes `related_rows('<fact>')` on each other table of a `rachana: 1` dataset for the role whose rule named that fact (a rule naming several tables gives `false`: no rows); a live table's history follows its table's rules on its group columns, and a history without groups refuses. A model that already said `may-see-all` for a role keeps it (it showed every row before the upgrade too); the guard test checks every shipped sample as `rita`, `hana` and `ann` |
 | Composed datasets are gone; `joined.*` fields are renamed | reports, alerts, bookmarks over `desk-pnl-vs-exposure` | the converter rewrites them; stable ids prevent it next time |
 | `POST /datasets/{id}/query` body | API scripts | translated until W4, then `410` with the MQ equivalent in the message |
 | visual `dataset:` and same-owner `links:` | reports over two datasets | the converter merges into one model |

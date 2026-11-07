@@ -75,12 +75,13 @@ def row(page, name):
 
 def test_the_list_shows_packs_connectors_and_bi_files_with_state_and_origin(stack, browser):
     page = open_page(browser)
-    for name in ("lab-core", "lab-base", "lab-child", "lab-solo", "lab-files", "scratch-conn", "lab-items", "lab-overview", "lab-spare"):
+    for name in ("lab-core", "lab-base", "lab-child", "lab-solo", "lab-files", "scratch-conn", "lab.items", "lab-items", "lab-overview", "lab-spare"):
         expect(row(page, name)).to_have_count(1)
     expect(row(page, "lab-core").locator("td").nth(2)).to_contain_text("shipped")          # a pack of the packs folder
     expect(row(page, "lab-base").locator("td").nth(2)).to_contain_text("archive")          # deployed from an archive
     expect(row(page, "lab-base").locator("td").nth(1)).to_contain_text("on")
-    expect(row(page, "lab-items").locator("td").first).to_contain_text("dataset")
+    expect(row(page, "lab.items").locator("td").first).to_contain_text("table")               # a table of the table layer
+    expect(row(page, "lab-items").locator("td").first).to_contain_text("model")
     expect(row(page, "lab-files").locator("td").nth(2)).to_contain_text("file")
     # the filter narrows the list; kind and status filters work together
     page.fill("[data-filter]", "lab-s")
@@ -98,8 +99,9 @@ def test_uninstalling_a_pack_with_dependants_is_refused_and_disabling_is_the_way
     expect(dlg).to_be_visible()
     expect(dlg.locator("[data-art-text]")).to_contain_text("is in use")
     expect(dlg.locator("[data-group='packs']")).to_contain_text("lab-child")                 # the pack that extends it
-    expect(dlg.locator("[data-group='datasets']")).to_contain_text("lab-items")               # the dataset over its kind
-    expect(dlg.locator("[data-group='reports']")).to_contain_text("lab-overview")             # and the report on that dataset
+    expect(dlg.locator("[data-group='tables']")).to_contain_text("lab.items")                 # the table over its kind
+    expect(dlg.locator("[data-group='models']")).to_contain_text("lab-items")                 # the model that joins it
+    expect(dlg.locator("[data-group='reports']")).to_contain_text("lab-overview")             # and the report on that model
     expect(dlg.locator("[data-art-go]")).to_be_hidden()                                       # plain Uninstall is not offered while it is in use
     expect(dlg.locator("[data-art-disable]")).to_be_visible()
     # taking the dependants along needs the name typed
@@ -178,19 +180,26 @@ def test_a_wrongly_typed_name_deletes_nothing_and_the_right_one_does(stack, brow
 
 def test_a_bi_file_is_checked_before_it_is_placed(stack, browser, tmp_path):
     page = open_page(browser)
-    good = tmp_path / "lab-more.dataset.yaml"
-    good.write_text("dataset: lab-more\ntitle: Lab more\ntables:\n  item:\n    source: { connector: lab-files, kind: lab-item }\n    columns:\n      itemId: { type: string, key: true }\n", encoding="utf-8")
+    good = tmp_path / "more.table.yaml"
+    good.write_text('rachana: 3\ntable: lab.more\nversion: 1.0.0\ntitle: Lab more\nfrom: { connector: lab-files, kind: lab-item }\nkeys: [itemId]\n'
+                    'columns:\n  itemId: { path: "$.itemId", type: string, key: true }\n', encoding="utf-8")
     page.set_input_files("[data-bi-file]", str(good))
-    expect(page.locator("[data-bi-result]")).to_contain_text("Valid dataset lab-more")
-    assert not (stack.work / "bi" / "datasets" / "lab-more.dataset.yaml").exists()           # a check writes nothing
+    expect(page.locator("[data-bi-result]")).to_contain_text("Valid table lab.more")
+    target = stack.work / "config" / "tables" / "lab" / "more.table.yaml"
+    assert not target.exists()                                                                 # a check writes nothing
     page.click("[data-bi-place]")
-    page.wait_for_selector("[data-msg]:has-text('Placed lab-more.dataset.yaml')")
-    assert (stack.work / "bi" / "datasets" / "lab-more.dataset.yaml").exists()
-    expect(row(page, "lab-more")).to_have_count(1)
-    bad = tmp_path / "lab-bad.dataset.yaml"
-    bad.write_text("dataset: other\n", encoding="utf-8")
-    page.set_input_files("[data-bi-file]", str(bad))
-    expect(page.locator("[data-bi-result]")).to_contain_text("rename the file")
+    page.wait_for_selector("[data-msg]:has-text('Placed more.table.yaml')")
+    assert target.exists()
+    expect(row(page, "lab.more")).to_have_count(1)
+    other = tmp_path / "more2.table.yaml"
+    other.write_text(good.read_text(encoding="utf-8").replace("lab.more", "lab.other"), encoding="utf-8")
+    page.set_input_files("[data-bi-file]", str(other))
+    expect(page.locator("[data-bi-result]")).to_contain_text("other.table.yaml")              # the file of lab.other is other.table.yaml
+    expect(page.locator("[data-bi-place]")).to_be_hidden()
+    old = tmp_path / "lab-bad.dataset.yaml"                                                    # BI's old dataset form: refused with the migration's command
+    old.write_text("dataset: lab-bad\n", encoding="utf-8")
+    page.set_input_files("[data-bi-file]", str(old))
+    expect(page.locator("[data-bi-result]")).to_contain_text("DRS-9196")
     expect(page.locator("[data-bi-place]")).to_be_hidden()
 
 

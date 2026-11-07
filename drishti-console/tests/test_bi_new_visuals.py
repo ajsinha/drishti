@@ -113,8 +113,6 @@ def test_the_new_scripts_carry_no_cdn_url_inline_code_or_markup_strings():
         text = (STATIC / rel).read_text(encoding="utf-8")
         assert "https://" not in text and "innerHTML" not in text and "eval(" not in text, rel
         assert len(text.splitlines()) < 1500, rel
-    html = (WEB / "templates/bi/dataset.html").read_text(encoding="utf-8")
-    assert "data-refresh-sec" in html and not re.search(r"<script(?![^>]*\bsrc=)", html) and " style=" not in html
 
 
 def test_the_new_visuals_stay_inside_the_phone_rules():

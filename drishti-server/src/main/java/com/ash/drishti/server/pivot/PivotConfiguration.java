@@ -205,8 +205,21 @@ public class PivotConfiguration {
     }
 
     @Bean
-    public PivotViews pivotViews(ContentStore store) {
+    public PivotViews pivotViews(ContentStore store, PivotFormulaMigration formulas) {
         return new PivotViews(store);
+    }
+
+    /** Saved pivot formulas in the old syntax written in Rachana, once at start, before a saved view is read (PivotFormulaMigration). */
+    @Bean
+    public PivotFormulaMigration pivotFormulaMigration(ContentStore store, com.ash.drishti.identity.AuditLog audit) {
+        PivotFormulaMigration m = new PivotFormulaMigration(store, audit);
+        try {
+            m.run(false);
+        } catch (RuntimeException e) {
+            org.slf4j.LoggerFactory.getLogger(PivotFormulaMigration.class).error("the migration of saved pivot formulas failed; saved formulas are unchanged "
+                    + "where it stopped: {}", e.toString(), e);
+        }
+        return m;
     }
 
     /** Cell comments, kept with a saved view's versions. */

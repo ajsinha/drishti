@@ -20,7 +20,7 @@ import java.util.List;
 /**
  * The syntax tree of a DEL v2 expression (docs/architecture/BI_DESIGN.md section 3.3.2): the accepted subset of Python's expression grammar, as
  * {@link DelParser} reads it. Every node knows where it was written ({@code start}, {@code end}: character offsets in the text) so a problem can point at it.
- * Nothing here evaluates; {@link DelChecker} types and scopes the tree and {@link DelLowering} turns it into the compiler's tree. Immutable.
+ * Nothing here evaluates: the migration maps the tree to Rachana's ({@link DelToRachana}). Immutable.
  */
 public sealed interface DelAst {
 

@@ -49,7 +49,8 @@ PASSWORD = "long-enough-pass-1"
 ROLES = {"bi-reader": (["bi"], False), "bi-writer": (["bi", "bi-author"], False), "bi-reviewer": (["bi", "bi-author"], True), "bi-steward": (["bi", "bi-steward"], False), "bi-none": ([], False)}
 USERS = {"ann": "bi-writer", "bob": "bi-reviewer", "cat": "bi-reader", "sue": "bi-steward", "nobi": "bi-none", "root": "admin"}
 
-POSITIONS = """dataset: positions-model
+POSITIONS = """rachana: 1
+dataset: positions-model
 title: Positions model
 tables:
   trade:
@@ -106,7 +107,7 @@ def dataset_body() -> str:
     return re.sub(r"[ ]+# .*$", "", text, flags=re.M)
 
 
-def seed() -> dict:
+def seed(tmp: Path) -> dict:
     """Roles, users and the content described at the top; returns the item ids."""
     for role, (bi, approve) in ROLES.items():
         s, r = admin("PUT", f"/admin/role-definitions/{role}", {"kinds": ["*"], "raw": True, "approve": approve, "bi": bi})
@@ -121,9 +122,20 @@ def seed() -> dict:
     assert s == 201, ws
     ann("PUT", "/bi/workspaces/rates-desk/members/bob", {"role": "member"})
     ann("PUT", "/bi/workspaces/rates-desk/members/cat", {"role": "viewer"})
+    # BI reads the table layer: the desk's old-form files are migrated as an installation's are, then seeded as tables, models and a report
+    from bi_samples import migrate_texts
+    texts = migrate_texts({"datasets/gov-trades.dataset.yaml": dataset_body(), "datasets/positions-model.dataset.yaml": POSITIONS,
+                           "reports/trades-report.report.yaml": REPORT}, tmp)
     ids = {}
-    for key, kind, title, body, publish in (("model", "dataset", "Trades model", dataset_body(), True), ("report", "report", "Trades report", REPORT, True), ("positions", "dataset", "Positions model", POSITIONS, False)):
-        s, it = ann("POST", "/bi/workspaces/rates-desk/items", {"kind": kind, "title": title, "description": f"{title} for the desk", "body": body, "message": "first cut", "tags": ["rates"], "audienceRoles": ["bi-steward", "bi-reader", "bi-writer", "bi-reviewer"]})
+    audience = ["bi-steward", "bi-reader", "bi-writer", "bi-reviewer"]
+    plan = [("table", "table", "Trades table", texts["bi/gov_trades_trade.table.yaml"], True),
+            ("positions-table", "table", "Positions table", texts["bi/positions_model_trade.table.yaml"], True),
+            ("model", "model", "Trades model", texts["bi/gov-trades.model.yaml"], True),
+            ("report", "report", "Trades report", texts["reports/trades-report.report.yaml"], True),
+            ("positions", "model", "Positions model", texts["bi/positions-model.model.yaml"], False)]
+    for key, kind, title, body, publish in plan:
+        s, it = ann("POST", "/bi/workspaces/rates-desk/items", {"kind": kind, "title": title, "description": f"{title} for the desk", "body": body, "message": "first cut",
+                                                                "tags": ["rates"], "audienceRoles": audience})
         assert s == 201, it
         ids[key] = it["id"]
         if publish:
@@ -165,7 +177,7 @@ class Stack:
         self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
                                                  f"--drishti.bi.query.store-dir={self.tmp / 'store'}"], tmp=self.tmp / "jvm-tmp"), cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
         wait(SERVER + "/actuator/health", proc=self.procs["server"])
-        self.ids = seed()
+        self.ids = seed(self.tmp / "migrate")
         cenv = dict(os.environ, DRISHTI_AUTH_ENABLED="true", DRISHTI_SESSION_SECRET="s" * 40, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_SECURE_COOKIE="false",
                     DRISHTI_SESSION_RECHECK_SECONDS="1")
         self.procs["console"] = subprocess.Popen([sys.executable, str(CONSOLE / "run_drishti_web.py"), f"--server.port={CONSOLE_PORT}", f"--backend.url={SERVER}"], env=cenv,

@@ -52,8 +52,8 @@ def _pages(views: list[str] | None = None) -> list[str]:
              "/help", "/help/search?q=pivot", "/about", "/help/competitive-analysis",
              # the newer pages: data loads (all, and one pack's), collaboration admin, the inbox, a share nobody may open, the landing page's way back
              "/bi", "/bi/catalogue", "/bi/workspaces", "/bi/w/me", "/bi/datasets", "/bi/designer", "/bi/notebook", "/admin/bi",
-             # Rupaka phase 3: the report viewer (a page and a drill-through page), the designer on a draft, the Model view (their shells: no data behind the stand-in server)
-             "/bi/r/file:report:trades-overview", "/bi/r/file:report:counterparty-risk/counterparty", "/bi/design/bi-draft", "/bi/m/file:dataset:trades-basic",
+             # Rupaka phase 3: the report viewer (a page and a drill-through page), the designer on a draft (their shells: no data behind the stand-in server)
+             "/bi/r/file:report:trades-overview", "/bi/r/file:report:counterparty-risk/counterparty", "/bi/design/bi-draft",
              # Rupaka phase 5: a live report (and its Perspective pages) and a board, in kiosk too (their shells: no data behind the stand-in server)
              "/bi/r/file:report:live-trading-desk", "/bi/r/file:report:live-trading-desk/grid", "/bi/b/file:board:desk-wall", "/bi/b/file:board:desk-wall?kiosk=1",
              "/admin/loads", f"/admin/packs/{PACK}/loads", f"/admin/packs/{PACK}", "/admin/connectors", "/admin/connectors/trade-endur", "/admin/artifacts", "/admin/collab", "/admin/embedding", "/inbox", "/inbox?tab=mentions&unread=1", f"/share/{NO_SHARE}",

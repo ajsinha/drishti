@@ -27,16 +27,14 @@ def test_the_datasets_page_is_a_real_page_now_not_a_placeholder():
     client, _ = make()
     r = client.get("/bi/datasets")
     assert r.status_code == 200
-    assert "Start a model from the packs" in r.text and "drishti_bi-dataset.js" in r.text and "Not built yet" not in r.text
+    assert "/build/tables?new=table" in r.text and "drishti_bi-dataset.js" in r.text and "Not built yet" not in r.text
     assert 'aria-current="page"' in r.text and "phase 2" not in r.text          # the rail says so no more
 
 
-def test_one_dataset_has_its_own_page_with_the_preview_form():
+def test_an_old_dataset_link_opens_the_tables_page():
     client, _ = make()
-    r = client.get("/bi/d/" + DATASET)
-    assert r.status_code == 200
-    assert f'data-item="{DATASET}"' in r.text and "data-preview" in r.text and "data-relationships" in r.text and "data-rules" in r.text
-    assert "drishti_bi-dataset.js" in r.text and "drishti_bi.js" in r.text
+    r = client.get("/bi/d/" + DATASET, follow_redirects=False)
+    assert r.status_code == 307 and r.headers["location"].startswith("/bi/ds/")
 
 
 def test_the_pages_need_the_bi_power():
@@ -78,6 +76,6 @@ def test_the_servers_refusals_come_back_with_their_codes():
 def test_the_script_draws_with_the_dom_only_and_the_pages_carry_no_inline_code():
     js = (WEB / "static" / "js" / "drishti_bi-dataset.js").read_text(encoding="utf-8")
     assert "innerHTML" not in js and "eval(" not in js and "document.write" not in js
-    for name in ("datasets.html", "dataset.html"):
+    for name in ("datasets.html",):
         html = (WEB / "templates" / "bi" / name).read_text(encoding="utf-8")
         assert " style=" not in html and " onclick=" not in html and "<script>" not in html

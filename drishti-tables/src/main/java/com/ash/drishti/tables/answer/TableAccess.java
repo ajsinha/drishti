@@ -39,6 +39,8 @@ import java.util.Set;
  */
 public final class TableAccess {
 
+    private static final java.util.regex.Pattern RELATED_ROWS = java.util.regex.Pattern.compile("\\brelated_rows\\s*\\(");
+
     private final TableDef table;
     private final List<Expr> rules;
     private final boolean all;
@@ -72,7 +74,8 @@ public final class TableAccess {
         for (TableDef.Rule r : t.rules()) {
             if (!Collections.disjoint(r.roles(), who.roles())) {
                 named = true;
-                rules.add(onColumns(Trees.parse(r.where()), t));
+                // related_rows('alias') reads another table of a model: only BI's engine can honour it, so read here it lets no row through
+                rules.add(onColumns(Trees.parse(RELATED_ROWS.matcher(r.where()).find() ? "false" : r.where()), t));
             }
         }
         boolean hiddenTable = !Collections.disjoint(t.hiddenFor(), who.roles());

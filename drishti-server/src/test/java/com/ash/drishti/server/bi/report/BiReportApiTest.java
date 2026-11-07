@@ -55,7 +55,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
         "drishti.database.sqlite.file=${drishti.test.dir}/bi-report-${random.uuid}/identity.db", "drishti.packs.overlay=${drishti.test.dir}/bi-report-overlay/added.yaml",
-        "drishti.bi.dir=${drishti.test.dir}/bi-report-folder", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-report-store/${random.uuid}",
+        "drishti.bi.dir=${drishti.test.dir}/bi-report-folder", "drishti.tables.root=${drishti.test.dir}/bi-report-folder/tables", "drishti.bi.folder-refresh=1s", "drishti.bi.query.store-dir=${drishti.test.dir}/bi-report-store/${random.uuid}",
         "drishti.packs.samples=developers", "drishti.sources.connectors-dir=${drishti.test.dir}/bi-report-connectors", "drishti.sources.plugins.file.enabled=false",
         "drishti.sources.connectors.finance-lake.enabled=false",
         "drishti.sources.connectors.rep-lake.plugin=file", "drishti.sources.connectors.rep-lake.kinds[0]=trade",
@@ -162,6 +162,7 @@ class BiReportApiTest {
                     + "      - { id: good, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Notional] } }\n"
                     + "      - { id: bad, type: card, at: { x: 3, y: 0, w: 3, h: 2 }, wells: { values: [NoSuchMeasure] } }\n");
             Files.writeString(reports.resolve("broken.report.yaml"), "report: broken\ndataset: no-such-dataset\npages:\n  - { id: p, visuals: [] }\n");
+            com.ash.drishti.server.bi.TablesFolder.migrate(datasets.getParent());     // tables migrate: the datasets become tables and models, the reports rebound
         } catch (java.io.IOException e) {
             throw new java.io.UncheckedIOException(e);
         }
@@ -209,7 +210,20 @@ class BiReportApiTest {
     }
 
     JsonNode ok(ResultActions r) throws Exception {
-        return json.readTree(r.andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString());
+        var res = r.andReturn().getResponse();
+        assertThat(res.getStatus()).as(res.getContentAsString()).isBetween(200, 299);
+        return json.readTree(res.getContentAsString());
+    }
+
+    /** The measures a model declares (its implicit ones, such as Count of trades, left out). */
+    static List<JsonNode> declared(JsonNode measures) {
+        List<JsonNode> out = new ArrayList<>();
+        measures.forEach(m -> {
+            if (!m.path("implicit").asBoolean()) {
+                out.add(m);
+            }
+        });
+        return out;
     }
 
     void refused(ResultActions r, int status, String code) throws Exception {
@@ -272,8 +286,8 @@ class BiReportApiTest {
         assertThat(r.path("valid").asBoolean()).isTrue();
         assertThat(r.path("report").path("pages")).hasSize(2);
         assertThat(r.path("report").path("pages").get(0).path("visuals").get(2).path("hierarchy").asText()).isEqualTo("Desk and book");
-        assertThat(r.path("dataset").path("tables").get(0).path("name").asText()).isEqualTo("trades");
-        assertThat(r.path("dataset").path("measures")).hasSize(6);
+        assertThat(r.path("dataset").path("datasets").get(0).path("alias").asText()).isEqualTo("trades");      // the report's model: its tables by alias
+        assertThat(declared(r.path("dataset").path("measures"))).hasSize(6);
         assertThat(r.path("dataset").has("security")).as("a reader is not told the row rules of the dataset through the report").isFalse();
         refused(call("GET", "/api/v1/bi/reports/" + REPORT, nobi(), null), 403, "DRS-9002");
         refused(call("GET", "/api/v1/bi/reports/file:dataset:lake-report", rita(), null), 404, "DRS-9001");        // a dataset is not a report
@@ -344,7 +358,7 @@ class BiReportApiTest {
     void anAuthorChecksDraftYamlFormatsItAndPreviewsAVisualButAReaderMayNot() throws Exception {
         String yaml = """
                 report: draft
-                dataset: lake-report
+                model: lake-report@1
                 pages:
                   - id: p
                     visuals:
@@ -368,7 +382,7 @@ class BiReportApiTest {
         JsonNode cat = ok(call("GET", "/api/v1/bi/reports/catalogue", rita(), null));
         assertThat(cat.path("visuals").has("waterfall")).isTrue();
         assertThat(cat.path("reserved").toString()).contains("shape").doesNotContain("python").doesNotContain("entity-view");
-        assertThat(ok(call("GET", "/api/v1/bi/reports/dataset?ref=lake-report", wes(), null)).path("measures")).hasSize(6);
+        assertThat(declared(ok(call("GET", "/api/v1/bi/reports/dataset?ref=lake-report", wes(), null)).path("measures"))).hasSize(6);
         refused(call("GET", "/api/v1/bi/reports/dataset?ref=lake-report", rita(), null), 403, "DRS-9002");
         refused(call("GET", "/api/v1/bi/reports/dataset?ref=nope", wes(), null), 422, "DRS-9034");
     }
@@ -379,7 +393,7 @@ class BiReportApiTest {
         JsonNode viaReport = ok(call("POST", "/api/v1/bi/reports/file:report:uses-restricted/query", ann(),
                 "{\"page\":\"p\",\"visual\":\"n\",\"state\":{\"dates\":{\"from\":\"2026-10-08\",\"to\":\"2026-10-08\"}}}"));
         assertThat(viaReport.path("rows").get(0).get(0).asInt()).isEqualTo(24);
-        refused(call("GET", "/api/v1/bi/datasets/file:dataset:restricted", ann(), null), 404, "DRS-9001");
+        refused(call("GET", "/api/v1/bi/datasets/file:table:bi.restricted_trades", ann(), null), 404, "DRS-9001");
         // a draft naming it, from an author who may not read it, does not find it
         String draft = "report: d\ndataset: restricted\npages:\n  - id: p\n    visuals: []\n";
         assertThat(ok(call("POST", "/api/v1/bi/reports/validate", wes(), Map.of("yaml", draft))).path("problems").toString()).contains("DRS-9034").contains("no dataset 'restricted'");
@@ -388,7 +402,7 @@ class BiReportApiTest {
 
     @Test @Order(7)
     void aReportDraftIsPrivateAndPublishingChecksItsStructure() throws Exception {
-        String yaml = "report: mine\ndataset: lake-report\npages:\n  - id: p\n    visuals:\n      - { id: a, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n";
+        String yaml = "report: mine\nmodel: lake-report@1\npages:\n  - id: p\n    visuals:\n      - { id: a, type: card, at: { x: 0, y: 0, w: 3, h: 2 }, wells: { values: [Trades] } }\n";
         JsonNode item = ok(call("POST", "/api/v1/bi/workspaces/me/items", wes(), Map.of("kind", "report", "title", "My report", "body", yaml)));
         String id = item.path("id").asText();
         refused(call("POST", "/api/v1/bi/reports/" + id + "/query", rita(), "{\"page\":\"p\",\"visual\":\"a\"}"), 404, "DRS-9001");
@@ -403,7 +417,7 @@ class BiReportApiTest {
 
     // ---- the visuals of wave 3: true totals, distributions, the map ----------------------------------------------------
 
-    static final String DRAFT_HEAD = "report: d\ndataset: lake-report\npages:\n  - id: p\n    visuals:\n";
+    static final String DRAFT_HEAD = "report: d\nmodel: lake-report@1\npages:\n  - id: p\n    visuals:\n";
 
     JsonNode draft(String who, String visualYaml, String visual, String state) throws Exception {
         Map<String, Object> body = Map.of("yaml", DRAFT_HEAD + "      - " + visualYaml + "\n", "page", "p", "visual", visual, "state", json.readTree(state));
@@ -491,9 +505,9 @@ class BiReportApiTest {
     void aTimeIntelligenceMeasureAnswersThroughAVisualAsOfTheEndOfTheDates() throws Exception {
         JsonNode card = draft(wes(), "{ id: c, type: card" + AT + ", wells: { values: [Notional ytd] } }", "c", DAY);
         assertThat(card.path("rows").get(0).get(0).asDouble()).isEqualTo(notional(i -> true, 1));               // every trade is dated this year, up to the 8th
-        JsonNode ds = ok(call("GET", "/api/v1/bi/datasets/file:dataset:lake-report", wes(), null));
+        JsonNode ds = ok(call("GET", "/api/v1/bi/datasets/file:table:bi.lake_report_trades", wes(), null));
         assertThat(ds.path("refresh").path("scheduled").asBoolean()).isFalse();
         assertThat(ds.path("refresh").path("calendar").asText()).isNotEmpty();
-        assertThat(ok(call("GET", "/api/v1/bi/datasets/file:dataset:lake-report/refresh", rita(), null)).path("scheduled").asBoolean()).isFalse();
+        assertThat(ok(call("GET", "/api/v1/bi/datasets/file:table:bi.lake_report_trades/refresh", rita(), null)).path("scheduled").asBoolean()).isFalse();
     }
 }
