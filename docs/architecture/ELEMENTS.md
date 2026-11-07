@@ -403,6 +403,10 @@ library with its module: an unlicensed module's library is not served, its kinds
   request maps onto it, and value filters are applied by the grid. A column with `additive: false` (or `aggregate: 'server'`) is never
   summed in the browser: its cells wait for the server, which is asked for exactly those. `clientAggregation: false` is the console's
   policy. The layout (`wells`, `panel`, `terminal`) and the density are state the engine keeps and gives back; it draws nothing.
+- **Ready for the renderer.** Every module is a plain ES module with no console global: the renderer imports
+  `drishti-core/src/drishti_index.js` and `drishti-grid/src/drishti_index.js` directly (a page touches `window` only through
+  `install()`, which the bundle runs). One difference to settle when the renderer moves: its `m/format.js` rounds as Python does
+  (half to even, for parity with the console's Python-drawn panels), drishti-core as the server's `FormatSpec` (half up); one rule wins.
 - **Reference and tests.** [ELEMENTS_API.md](../guides/ELEMENTS_API.md) is generated from the typed JSDoc by
   `tools/docs/elements_api.py` (`--check` refuses a public symbol without types); the unit tests run in Node (`tests/elements/`,
   `node --test`) from `tests/test_elements.py`, a quick file check of the gate; the engine at a million rows is in
