@@ -414,6 +414,7 @@
       if (type === 'category') { base.data = cats; base.boundaryGap = spec.kind !== 'line' && spec.kind !== 'area'; }
       if (type === 'value' || type === 'log') { base.scale = x.zero !== true; base.min = x.min; base.max = x.max; }
       const ax = axisOf(env.theme, base, env.xfmt);
+      if (type === 'category' || type === 'time') { ax.axisPointer = { label: { show: false } }; }   // the tooltip names the category: no second label over the axis's own
       if (type === 'category' && x.format) { ax.axisLabel.formatter = (v) => env.xfmt(v); }
       if (type === 'time') { ax.axisLabel.formatter = x.format ? (v) => env.xfmt(new Date(v).toISOString().slice(0, 10)) : (v) => new Date(v).toISOString().slice(0, 10); ax.splitLine = { show: false }; }
       return ax;
