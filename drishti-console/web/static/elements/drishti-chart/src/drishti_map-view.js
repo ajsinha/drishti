@@ -118,7 +118,8 @@ export class MapView {
     c.loadingEl.textContent = level === 'world' ? 'Loading the world…' : 'Loading regions/' + level + '.json…';
     const shapes = level === 'world' ? this.loader.world() : this.loader.regions(level);
     const rows = level !== 'world' && c.o.placeData && !this.levelRows[level] ? Promise.resolve(c.o.placeData(level)).then((r) => { this.levelRows[level] = rowsOf(r); }) : Promise.resolve();
-    return Promise.all([shapes, rows]).then((got) => {
+    const names = level === 'world' ? null : this.loader.world().then((w) => { this.worldGeo = w; }, () => null);   // a country's name and the inset need the world
+    return Promise.all([shapes, rows, names]).then((got) => {
       const geo = got[0], name = 'dc-' + geo.level.toLowerCase();
       if (!geo.registered) {
         const frames = geo.frames.map((f) => ({ type: 'Feature', properties: { name: '__frame_' + f.code }, geometry: { type: 'Polygon', coordinates: [[[f.box[0], f.box[1]], [f.box[2], f.box[1]], [f.box[2], f.box[3]], [f.box[0], f.box[3]], [f.box[0], f.box[1]]]] } }));

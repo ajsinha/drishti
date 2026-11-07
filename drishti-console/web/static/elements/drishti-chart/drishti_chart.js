@@ -1084,7 +1084,8 @@
         c.loadingEl.textContent = level === 'world' ? 'Loading the world…' : 'Loading regions/' + level + '.json…';
         const shapes = level === 'world' ? this.loader.world() : this.loader.regions(level);
         const rows = level !== 'world' && c.o.placeData && !this.levelRows[level] ? Promise.resolve(c.o.placeData(level)).then((r) => { this.levelRows[level] = rowsOf(r); }) : Promise.resolve();
-        return Promise.all([shapes, rows]).then((got) => {
+        const names = level === 'world' ? null : this.loader.world().then((w) => { this.worldGeo = w; }, () => null);   // a country's name and the inset need the world
+        return Promise.all([shapes, rows, names]).then((got) => {
           const geo = got[0], name = 'dc-' + geo.level.toLowerCase();
           if (!geo.registered) {
             const frames = geo.frames.map((f) => ({ type: 'Feature', properties: { name: '__frame_' + f.code }, geometry: { type: 'Polygon', coordinates: [[[f.box[0], f.box[1]], [f.box[2], f.box[1]], [f.box[2], f.box[3]], [f.box[0], f.box[3]], [f.box[0], f.box[1]]]] } }));
@@ -1331,7 +1332,7 @@
         kinds.forEach((k) => { (groups[k.family] = groups[k.family] || []).push(k); });
         const words = { general: 'General · drishti-chart', map: 'Maps · drishti-chart', risk: 'Risk · drishti-risk' };
         this.rail.textContent = '';
-        Object.keys(groups).sort((a, b) => ['general', 'map'].indexOf(b) - ['general', 'map'].indexOf(a)).forEach((f) => {
+        ['general', 'map'].filter((f) => groups[f]).concat(Object.keys(groups).filter((f) => f !== 'general' && f !== 'map')).forEach((f) => {
           this.rail.appendChild(h(doc, 'div', { cls: 'dc-rail-g', text: words[f] || f }));
           groups[f].forEach((k) => this.rail.appendChild(h(doc, 'button', { cls: 'dc-rail-k' + (c.spec.kind === k.name ? ' dc-on' : ''), text: k.label,
             attrs: { type: 'button', 'data-kind': k.name, 'aria-current': c.spec.kind === k.name ? 'true' : 'false' }, on: { click: () => this.pick(k.name) } })));

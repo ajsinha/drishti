@@ -27,6 +27,7 @@ inline), the per-worker browser only. The component is tested here once and deep
 
 DRISHTI_CHART_SHOTS names a folder for screenshots (none are taken otherwise)."""
 import os
+import re
 from pathlib import Path
 
 import pytest
@@ -104,7 +105,7 @@ def test_the_board_draws_every_kind_in_both_themes_and_three_densities(browsers)
         assert await pg.locator(".dc-error").count() == 0
         labels = await pg.eval_on_selector_all(".dc-canvas", "els => els.map((e) => e.getAttribute('aria-label'))")
         assert all(labels) and len(set(labels)) == n                                  # every chart described for a screen reader
-        assert "amber" in await pg.text_content("#c-risk-backtest .dc-badge") or "green" in await pg.text_content("#c-risk-backtest .dc-badge")
+        assert re.search(r"(green|amber|red) · \d+ exceptions · plus \d\.\d\d", await pg.text_content("#c-risk-backtest .dc-badge"))
         assert "computed here" in await pg.text_content("#c-risk-pnl-distribution .dc-badge")
         assert "PFE over the limit" in await pg.text_content("#c-risk-exposure-profile .dc-badge")
         assert await pg.text_content("#c-vega-bar .dc-status b") == "Vega-Lite, translated"
@@ -159,7 +160,7 @@ def test_tooltips_legend_zoom_keys_explain_selection_table_export_and_live(brows
         await pg.wait_for_selector("#c-bar .dc-explain:not([hidden]) .dc-ex-value")
         await pg.keyboard.press("Escape")
         # a click on a mark: Explain (the hook's answer, the grid's drawing) and its rows selected (outlined)
-        x, y = await at(pg, "waterfall", {"xAxisIndex": 0, "yAxisIndex": 0}, ["Rates", 3.2e6])
+        x, y = await at(pg, "waterfall", {"xAxisIndex": 0, "yAxisIndex": 0}, ["Rates", 4.0e6])
         await pg.mouse.click(x, y)
         await pg.wait_for_selector("#c-waterfall .dc-explain:not([hidden]) .dc-ex-steps")
         assert "Rates" in await pg.text_content("#c-waterfall .dc-ex-title")
@@ -224,7 +225,7 @@ def test_the_studio_rail_spec_and_options(browsers):
         assert await pg.evaluate("() => window.__harness.charts.studio.engine.getOption().xAxis[0].type") == "value"
         await pg.click(".dc-rail-k[data-kind='map']")
         await pg.wait_for_function("() => window.__harness.charts.studio.map && window.__harness.charts.studio.map.geo")
-        assert await ev(pg, "kindChanged") == 5
+        assert await ev(pg, "kindChanged") == 6                                          # bar, stack, bars, exposure, log x, map
     run(browsers, body, "view=studio")
 
 
@@ -238,7 +239,7 @@ def test_the_world_map_ranking_drill_into_the_states_and_canada_and_back(browser
         places = await pg.evaluate("() => window.__harness.charts.map.map.built.places.length")
         assert len(classes) == 5 and sum(classes) + nodata == places                      # the counts add up
         assert await pg.locator(".dc-rank-row").count() == 10
-        assert await pg.text_content(".dc-rank-row >> nth=0") == "1United States10.32bn" or "United States" in await pg.text_content(".dc-rank-row >> nth=0")
+        assert "United States" in await pg.text_content(".dc-rank-row >> nth=0")
         await pg.click(".dc-lgq[data-class='4']")
         assert await pg.get_attribute(".dc-lgq[data-class='4']", "aria-pressed") == "true"
         await pg.click(".dc-lgq[data-class='4']")
@@ -259,7 +260,7 @@ def test_the_world_map_ranking_drill_into_the_states_and_canada_and_back(browser
         await shot(pg, "drishti-chart-map-usa.png")
         # the metric picker
         await pg.select_option(".dc-metric", index=2)
-        assert "Counterparties" in await pg.text_content(".dc-title")
+        assert (await pg.get_attribute("#c-map .dc-canvas", "aria-label")).startswith("Map of Counterparties by region")
         assert await ev(pg, "metricChanged") == 1
         # back, then Canada by a double-click on the map
         await pg.click(".dc-crumb [data-go='world']")
@@ -290,9 +291,11 @@ def test_the_map_table_mode(browsers):
         assert await pg.locator(".dc-inset[data-go='world']").count() == 1
         rows = await pg.locator(".dc-sortable tbody tr").count()
         assert rows == await pg.evaluate("() => window.__harness.charts.map.map.geo.list.length")
-        await pg.click(".dc-sortable [data-sort='n']")
-        names = await pg.eval_on_selector_all(".dc-sortable tbody th", "els => els.map((e) => e.textContent)")
-        assert names == sorted(names, reverse=True)
+        await pg.click(".dc-sortable [data-sort='c']")
+        codes = await pg.eval_on_selector_all(".dc-sortable tbody tr td:first-child", "els => els.map((e) => e.textContent)")
+        assert codes == sorted(codes, reverse=True)
+        await pg.click(".dc-sortable [data-sort='c']")
+        assert await pg.get_attribute(".dc-sortable [data-sort='c'] >> xpath=..", "aria-sort") == "ascending"
         await pg.click(".dc-sortable tbody tr >> nth=0")
         await pg.wait_for_selector(".dc-float-card")
         await shot(pg, "drishti-chart-map-table.png")

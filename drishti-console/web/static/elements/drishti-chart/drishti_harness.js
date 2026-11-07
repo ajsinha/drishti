@@ -177,7 +177,6 @@
     card(box, 'link', S.scatter, { link: { channel: 'trades' } });
   }
 
-  stage.addEventListener('drishti:rendered', () => {}, true);
   C.CHART_EVENTS.forEach((name) => stage.addEventListener('drishti:' + name.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase()), (e) => {
     if (name !== 'rendered') { H.events.push(name); }
     document.getElementById('hx-log').textContent = H.events.length + ' events · last ' + name + (e.detail && e.detail.kind ? ' (' + e.detail.kind + ')' : '');
