@@ -1805,7 +1805,7 @@ Drishti Bank                     112,041,646  160,143,809      74.7%    9572
 ### 11.1 The endpoints
 
 Base `/api/v1/risk/var`, JSON, as the caller (security on: the token's user or the console's session;
-[API_GUIDE.md](API_GUIDE.md#var-engine-apiv1var)). Every scope endpoint takes `scope` and the platform's `asOf=YYYY-MM-DD` (or the
+[API_GUIDE.md](API_GUIDE.md#var-engine-apiv1riskvar)). Every scope endpoint takes `scope` and the platform's `asOf=YYYY-MM-DD` (or the
 `X-Drishti-As-Of` header; default, and when later than the newest date with vectors: the newest; a date that is not one run answers
 the date before it, with a warning). Errors are RFC 7807 problems with a `code` ([section 20](#20-validation-errors-and-data-quality)).
 
@@ -4054,9 +4054,9 @@ as the viewer; packs stay declarative.
 |---|---|
 | the pack | the **market-risk** pack: the kinds `position`, `portfolio`, `pnl-vector`, `scenario-set`, `risk-hierarchy` (`tools/packgen/banking/var_kinds.py`, written into `pack.yaml` by `make_packs.py`), routed to `risk-store`, and `position` to the `var-positions` connector (the engine's derived positions); the computed kind `var-result` on the reactive connector `var-engine`; mnemonics `POS`, `PORT`, `PNLV`, `SSET`, `HIER`, `VRES`; Sutras for `portfolio` and `position` |
 | the stored data | `risk-store` (Delta), the vectors in a `list<double>` column (`layout.<kind>.vectors: [PNL]`); demo data from `tools/packgen/var/make_var_data.py` |
-| the engine | **in the server, in Java**: the generic vector store, ordinal sets, parallel sums and the VaR maths in the module `drishti-compute` beside the compute workers (`com.ash.drishti.compute.vector`, `com.ash.drishti.banking.compute.var`); loading, entitlements, baskets, captures, official records and the API in `drishti-server` (`com.ash.drishti.banking.var`). Base VaR is additions and sorts, which Java does next to the data without moving vectors to a worker |
+| the engine | **in the server, in Java**: the generic vector store, ordinal sets, parallel sums and the VaR maths in the module `drishti-compute` beside the compute workers (`com.ash.drishti.compute.vector`, `com.ash.drishti.banking.compute.var`); loading, entitlements, baskets, captures, official records and the API in `drishti-banking` (`com.ash.drishti.banking.var`). Base VaR is additions and sorts, which Java does next to the data without moving vectors to a worker |
 | the what-if | `VarWhatIf` (`drishti-server`) over `VarWhatIfMath` (`drishti-compute`): copies of booked trades or scopes and vectors priced elsewhere added to a scope, before and after ([section 8.2](#82-the-what-if-the-java-engine)) |
-| the explorer | a console page (`/var`, `drishti-console/routes/var_routes.py`, `web/static/js/drishti_var-explorer.js` on drishti-risk's grid and chart presets, `web/static/css/drishti_var.css`) over `/api/v1/var`, not a Sutra: a Sutra's `source:` reads a kind, and the parametrised sources a VaR panel needs came with reactive connectors. The portfolio and position pages are Sutras, with the UI kit fragment `pnl-distribution@1` |
+| the explorer | a console page (`/var`, `drishti-console/routes/var_routes.py`, `web/static/js/drishti_var-explorer.js` on drishti-risk's grid and chart presets, `web/static/css/drishti_var.css`) over `/api/v1/risk/var`, not a Sutra: a Sutra's `source:` reads a kind, and the parametrised sources a VaR panel needs came with reactive connectors. The portfolio and position pages are Sutras, with the UI kit fragment `pnl-distribution@1` |
 
 **The compute boundary.** Base VaR is sums of stored vectors and measures over the sums, in the server's JVM on a bounded pool
 (`drishti.var.threads`). The heavy work that needs Python or a pricer (what-if pricing over the scenarios, intraday repricing:

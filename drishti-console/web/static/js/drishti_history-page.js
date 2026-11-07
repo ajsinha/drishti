@@ -115,6 +115,38 @@
     rinput.addEventListener('keydown', function (e) { if (e.key === 'Escape') { rinput.blur(); e.stopPropagation(); } });
   }
 
+  // The range as drishti-inputs' date-range picker: its presets are the server's ranges (10, 30, 90 days, 1M, 3M, 6M, YTD, 1Y: each opens its
+  // link, so the address keeps the server's own words and the server counts the days; the dates beside a preset are a hint from the
+  // window's end), two months to pick any FROM … TO, and the ends typed (T-5, ME, 6 Nov 2026). The links stay for a page without scripts.
+  (function dates() {
+    var host = root.querySelector('[data-hx-range-pick]'), links = root.querySelector('[data-hx-range-links]');
+    var I = window.Drishti.elements && window.Drishti.elements.inputs;
+    if (!host || !links || !I) { return; }
+    var end = host.getAttribute('data-to') || null, on = null;
+    function back(n, unit) { return I.shiftDate(I.shiftDate(end, -n, unit), 1, 'day'); }
+    var presets = Array.prototype.map.call(links.querySelectorAll('[data-hx-range-btn]'), function (a) {
+      var id = a.getAttribute('data-hx-range-btn'), m = /^(\d+)([MY])?$/.exec(id), from = null;
+      if (end) {
+        if (id === 'YTD') { from = end.slice(0, 4) + '-01-01'; }
+        else if (m && !m[2]) { from = I.shiftDate(end, -(+m[1] - 1), 'day'); }
+        else if (m) { from = back(+m[1], m[2] === 'Y' ? 'year' : 'month'); }
+      }
+      if (a.classList.contains('on')) { on = id; }
+      return { id: id, label: id, from: from, to: end, href: a.href };
+    }).filter(function (p) { return p.from && p.to; });
+    var picker = new I.DateRangePicker(host, { presets: presets, label: 'Range', value: { from: host.getAttribute('data-from') || null, to: host.getAttribute('data-to') || null, preset: on } });
+    picker.on('change', function (r) {
+      var p = presets.filter(function (x) { return x.id === r.preset; })[0];
+      if (p) { window.location.href = p.href; return; }
+      var q = new URLSearchParams(window.location.search);
+      ['days', 'range', 'from', 'to'].forEach(function (k) { q.delete(k); });
+      if (r.from) { q.set('from', r.from); }
+      if (r.to) { q.set('to', r.to); }
+      window.location.href = window.location.pathname + '?' + q.toString();
+    });
+    links.hidden = true;
+  })();
+
   // a link to these rows, the end pinned, with "changes only" when it is on. The link is always shown in a field under the toolbar,
   // selected; it is copied with the Clipboard API where the page may use it (https, localhost), else with execCommand('copy') from that
   // field: a console on a plain-http LAN address is not a secure context and has no navigator.clipboard (QA1-07)

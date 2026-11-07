@@ -253,7 +253,7 @@ engine answers.
   [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)). It opens by command (`VAR DESK DESK-RATES <GO>`), by link
   (`/v/<kind>/<scope>`), by API, by CLI, by search, and to AI tools, with the same entitlements everywhere. Its id is the scope text.
 - **An API per measure** for programs and the explorer, under `/api/v1/<measure>` (VaR: `/api/v1/var`,
-  [API_GUIDE.md](../guides/API_GUIDE.md#var-engine-apiv1var)). Every answer carries a **provenance** block: business date, the input
+  [API_GUIDE.md](../guides/API_GUIDE.md#var-engine-apiv1riskvar)). Every answer carries a **provenance** block: business date, the input
   tables' versions and batch ids, the scenario or parameter set, the rows read, unmapped rows, the computation time, and cache hit or miss.
 - **Captures:** a user may capture any answer as an immutable record (who, when, scope, note, the inputs' versions, the figures and the
   vectors needed to reproduce it). It is kept in the Drishti database or content store, reopened by id (`CAPTURE:<id>` as a scope), and

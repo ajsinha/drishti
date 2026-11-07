@@ -64,27 +64,17 @@ document.addEventListener('click', function (e) {
       window.location.assign(url);
     });
   }
+  // The page's own date fields and long checkbox lists are drishti-inputs' pickers (upgraded in place: the field keeps its name and
+  // value, so forms submit as before); the as-of date is a business-date picker keyed by the server's holidays (data-holidays), from the
+  // oldest kept date to the current business date, with T-1 and month-end: a weekend or holiday is refused in words, naming the
+  // business day before it. A picked date shows that day's data as a static snapshot.
+  var I = window.Drishti.elements && window.Drishti.elements.inputs;
   var asof = document.querySelector('form[data-asof]');
-  var box = asof ? asof.querySelector('input[type="date"]') : null;
+  var box = asof ? asof.querySelector('#asofDate') : null;
+  if (box && !box.max) { var now = new Date(); box.max = box.getAttribute('data-current') || now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0'); }
+  if (I) { I.upgradeFields(document, { offClass: 'qf-dep-off' }); }
   if (asof && box) {
-    var holidays = (box.getAttribute('data-holidays') || '').split(',');
-    var now = new Date();
-    var today = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0') + '-' + String(now.getDate()).padStart(2, '0');
-    if (!box.max || box.max > today) { box.max = box.getAttribute('data-current') || today; }   // never a day after today: the picker greys it out
-    box.addEventListener('change', function () {
-      if (!box.value) { return; }
-      if (box.max && box.value > box.max) {                                  // typed past the end: said, and nothing is asked
-        box.setCustomValidity('Pick ' + box.max + ' or earlier: there is no data after today.');
-        box.reportValidity();
-        return;
-      }
-      box.setCustomValidity('');
-      var d = new Date(box.value + 'T12:00:00Z').getUTCDay();
-      if (d === 0 || d === 6 || holidays.indexOf(box.value) >= 0) {
-        box.title = box.value + ' is not a business day: showing the business day before it';
-      }
-      asof.submit();
-    });
+    box.addEventListener('change', function () { if (box.value) { asof.submit(); } });
     // Known at (a picked date only): what the date looked like at that time; a restatement shows as a difference.
     var known = asof.querySelector('[data-asof-known]');
     if (known) { known.addEventListener('change', function () { asof.submit(); }); }

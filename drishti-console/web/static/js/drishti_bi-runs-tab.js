@@ -440,9 +440,8 @@
       x.addEventListener('click', () => { picked.splice(picked.indexOf(who), 1); li.remove(); });
       chips.appendChild(li);
     };
-    const input = h('input', { name: 'to', class: 'studio-in', autocomplete: 'off', placeholder: 'a name, or role:risk-team', role: 'combobox', 'aria-autocomplete': 'list', 'aria-expanded': 'false', 'aria-controls': 'runSharePick', 'aria-describedby': 'runShareHint' });
-    const pick = h('ul', { id: 'runSharePick', class: 'shr-list bi-run-pick', role: 'listbox', hidden: true, 'aria-label': 'People and roles' });
-    const f = inlineForm(anchor, 'Share this run', [h('span', { class: 'bi-run-picker' }, h('label', {}, 'With ', input), pick), chips,
+    const input = h('input', { name: 'to', class: 'studio-in', autocomplete: 'off', placeholder: 'a name, or role:risk-team', 'aria-describedby': 'runShareHint' });
+    const f = inlineForm(anchor, 'Share this run', [h('span', { class: 'bi-run-picker' }, h('label', {}, 'With ', input)), chips,
       h('small', { id: 'runShareHint', class: 'text-muted-d', text: 'Each person gets what their own rights allow: the same result, your result re-masked for them, or the question recomputed as them. The server decides and says which.' })], 'Share', (form, b) => {
       input.value.split(',').map((x) => x.trim()).filter(Boolean).forEach(addChip);
       input.value = '';
@@ -456,8 +455,8 @@
         return B.api('GET', '/runs/' + encodeURIComponent(r.id)).then(refresh);
       }).catch(failed(b)));
     });
-    if (window.Drishti.People) { window.Drishti.People.attach(input, pick, { minQuery: 1, onPick: (e) => addChip(e.type === 'role' ? 'role:' + e.name : e.name), taken: () => { const t = {}; picked.forEach((p) => { t[p.indexOf('role:') === 0 ? 'role:' + p.slice(5) : 'user:' + p] = true; }); return t; } }); }
-    input.addEventListener('keydown', (e) => { if (e.key === ',' || (e.key === 'Enter' && input.value.trim() && pick.hidden)) { e.preventDefault(); addChip(input.value.replace(/,$/, '').trim()); input.value = ''; } });
+    const people = window.Drishti.People ? window.Drishti.People.attach(input, { minQuery: 1, onPick: (e) => addChip(e.type === 'role' ? 'role:' + e.name : e.name), taken: () => { const t = {}; picked.forEach((p) => { t[p.indexOf('role:') === 0 ? 'role:' + p.slice(5) : 'user:' + p] = true; }); return t; } }) : null;
+    input.addEventListener('keydown', (e) => { if (e.key === ',' || (e.key === 'Enter' && input.value.trim() && !(people && people.isOpen()))) { e.preventDefault(); addChip(input.value.replace(/,$/, '').trim()); input.value = ''; } });
     f.setAttribute('data-run-share-form', '');
   }
   function scheduleForm(r, anchor, sc) {

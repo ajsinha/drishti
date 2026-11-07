@@ -190,19 +190,13 @@ def forms(name: str, kinds: list[str], specs: dict) -> dict:
     return out
 
 
-def domain_line(name: str) -> str:
-    """The pack's ``domain:`` (docs/architecture/ACCESS_MODEL.md): core for the core pack, banking for the others, with what it means."""
-    if name == "core":
-        return "domain: core   # the domain it serves (docs/architecture/ACCESS_MODEL.md): the core, always loaded when enabled"
-    return "domain: banking   # the domain it serves (docs/architecture/ACCESS_MODEL.md): it loads only while a module of the domain is on"
-
-
 def manifest(name: str) -> dict:
     p = layout.PACKS[name]
     kinds = [k for ks in p["kinds"].values() for k in ks]
     specs = {k.kind: k for k in T.KINDS + [T.TRADE]}
     fields = {f: {"kind": kind, "label": label} for f, (kind, label) in T.graph_fields().items() if kind in kinds}
-    m = {"pack": name, "version": "1.0.0", "code": CODES[name], "title": p["title"], "description": p["description"], "extends": p["requires"],
+    # the domain each pack serves (docs/architecture/ACCESS_MODEL.md): the core pack is the core's, the others the banking module's
+    m = {"pack": name, "domain": "core" if name == "core" else "banking", "version": "1.0.0", "code": CODES[name], "title": p["title"], "description": p["description"], "extends": p["requires"],
          "kinds": kinds, "sutras": "sutras", "formats": "config/formats.yaml",
          **({"semantics": "config/semantics.yaml"} if name == "core" else {}),
          "mnemonics": {specs[k].mnemonic: {"kind": k, "label": specs[k].label} for k in kinds},
@@ -351,7 +345,6 @@ def files() -> dict[Path, str]:
     for name in layout.PACKS:
         body = yaml.dump(packlake.lake_form(manifest(name), partitions=PARTITIONS), Dumper=_Plain, sort_keys=False, allow_unicode=True,
                          width=140)
-        body = body.replace(f"pack: {name}\n", f"pack: {name}\n{domain_line(name)}\n", 1)
         out[PACKS / name / "pack.yaml"] = f"{HEADER}\n\n{GENERATED}\n# {layout.PACKS[name]['title']} pack for Drishti.\n{body}{kept(name)}"
         out[PACKS / name / "config" / "formats.yaml"] = (f"{HEADER}\n\n{GENERATED}\n# Number formats the banking packs share.\n"
                                                          + yaml.safe_dump({"formats": FORMATS}, sort_keys=False))

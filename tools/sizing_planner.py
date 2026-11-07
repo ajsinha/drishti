@@ -46,7 +46,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs" / "architecture" / "Drishti-Sizing-Planner.xlsx"
-TEMPLATE = ROOT / "drishti-server" / "src" / "main" / "resources" / "playground" / "var" / "template"
+TEMPLATE = ROOT / "drishti-banking" / "src" / "main" / "resources" / "playground" / "var" / "template"
 MB = "BytesPerMB"
 
 

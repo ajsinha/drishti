@@ -1354,8 +1354,8 @@
           "module": "core"
         },
         "drishti-inputs": {
-          "version": "0.1.0",
-          "title": "Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead, forms from a schema with four eyes, the filter bar, the code editor over CodeMirror",
+          "version": "0.2.0",
+          "title": "Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema with four eyes, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place",
           "bundle": "drishti-inputs/drishti_inputs.js",
           "entry": "drishti-inputs/src/drishti_index.js",
           "global": "inputs",
@@ -1364,6 +1364,22 @@
           ],
           "css": [
             "elements/drishti-inputs/drishti_inputs.css"
+          ],
+          "scripts": [],
+          "module": "core"
+        },
+        "drishti-designer": {
+          "version": "0.1.0",
+          "title": "The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review)",
+          "bundle": "drishti-designer/drishti_designer.js",
+          "entry": "drishti-designer/src/drishti_index.js",
+          "global": "designer",
+          "requires": [
+            "drishti-core",
+            "drishti-inputs"
+          ],
+          "css": [
+            "elements/drishti-designer/drishti_designer.css"
           ],
           "scripts": [],
           "module": "core"
@@ -1577,7 +1593,12 @@
           "--d-shadow": "0 10px 40px rgba(0, 0, 0, .35)",
           "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
           "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-          "--d-radius": "10px"
+          "--d-radius": "10px",
+          "--d-market-violet": "#a78bfa",
+          "--d-trading-green": "#4fd18b",
+          "--d-world-teal": "#4cc9b8",
+          "--d-cap-violet": "#c792ea",
+          "--d-cap-teal": "#4fc1c9"
         }
       },
       "light": {
@@ -1613,7 +1634,12 @@
           "--d-shadow": "0 10px 30px rgba(23, 36, 64, .10)",
           "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
           "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-          "--d-radius": "10px"
+          "--d-radius": "10px",
+          "--d-market-violet": "#6d28d9",
+          "--d-trading-green": "#1a7f4b",
+          "--d-world-teal": "#0b7468",
+          "--d-cap-violet": "#7a45a8",
+          "--d-cap-teal": "#11808a"
         }
       },
       "blue": {
@@ -1649,7 +1675,15 @@
           "--d-shadow": "0 10px 30px rgba(0, 121, 193, .12)",
           "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
           "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-          "--d-radius": "10px"
+          "--d-radius": "10px",
+          "--d-market-violet": "#6d28d9",
+          "--d-trading-green": "#1a7f4b",
+          "--d-world-teal": "#0b7468",
+          "--d-cap-violet": "#c792ea",
+          "--d-cap-teal": "#4fc1c9",
+          "--d-nav-from": "#002654",
+          "--d-nav-via": "#0079c1",
+          "--d-nav-to": "#003168"
         }
       },
       "green": {
@@ -1685,7 +1719,15 @@
           "--d-shadow": "0 10px 30px rgba(0, 96, 57, .12)",
           "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
           "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-          "--d-radius": "10px"
+          "--d-radius": "10px",
+          "--d-market-violet": "#6d28d9",
+          "--d-trading-green": "#1a7f4b",
+          "--d-world-teal": "#0b7468",
+          "--d-cap-violet": "#c792ea",
+          "--d-cap-teal": "#4fc1c9",
+          "--d-nav-from": "#00261a",
+          "--d-nav-via": "#006039",
+          "--d-nav-to": "#1c3a2e"
         }
       },
       "wallstreet": {
@@ -1721,7 +1763,12 @@
           "--d-shadow": "0 10px 40px rgba(0, 0, 0, .6)",
           "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
           "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-          "--d-radius": "10px"
+          "--d-radius": "10px",
+          "--d-market-violet": "#a78bfa",
+          "--d-trading-green": "#4fd18b",
+          "--d-world-teal": "#4cc9b8",
+          "--d-cap-violet": "#c792ea",
+          "--d-cap-teal": "#4fc1c9"
         }
       },
       "crimson": {
@@ -1757,7 +1804,15 @@
           "--d-shadow": "0 10px 30px rgba(41, 51, 82, .12)",
           "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
           "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-          "--d-radius": "10px"
+          "--d-radius": "10px",
+          "--d-market-violet": "#6d28d9",
+          "--d-trading-green": "#1a7f4b",
+          "--d-world-teal": "#0b7468",
+          "--d-cap-violet": "#c792ea",
+          "--d-cap-teal": "#4fc1c9",
+          "--d-nav-from": "#5c0e1b",
+          "--d-nav-via": "#a51c30",
+          "--d-nav-to": "#293352"
         }
       },
       "crimson-dark": {
@@ -1793,7 +1848,16 @@
           "--d-shadow": "0 10px 40px rgba(0, 0, 0, .5)",
           "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
           "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-          "--d-radius": "10px"
+          "--d-radius": "10px",
+          "--d-market-violet": "#a78bfa",
+          "--d-trading-green": "#4fd18b",
+          "--d-world-teal": "#4cc9b8",
+          "--d-cap-violet": "#c792ea",
+          "--d-cap-teal": "#4fc1c9",
+          "--d-nav-from": "#2e0810",
+          "--d-nav-via": "#6e1120",
+          "--d-nav-to": "#1b2138",
+          "--d-band-button-ink": "#6e1120"
         }
       },
       "terminal-green": {
@@ -1829,7 +1893,12 @@
           "--d-shadow": "0 10px 40px rgba(0, 0, 0, .45)",
           "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
           "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-          "--d-radius": "10px"
+          "--d-radius": "10px",
+          "--d-market-violet": "#a78bfa",
+          "--d-trading-green": "#4fd18b",
+          "--d-world-teal": "#4cc9b8",
+          "--d-cap-violet": "#c792ea",
+          "--d-cap-teal": "#4fc1c9"
         }
       },
       "terminal-crimson": {
@@ -1865,7 +1934,12 @@
           "--d-shadow": "0 10px 40px rgba(0, 0, 0, .5)",
           "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
           "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-          "--d-radius": "10px"
+          "--d-radius": "10px",
+          "--d-market-violet": "#a78bfa",
+          "--d-trading-green": "#4fd18b",
+          "--d-world-teal": "#4cc9b8",
+          "--d-cap-violet": "#c792ea",
+          "--d-cap-teal": "#4fc1c9"
         }
       },
       "terminal-blue": {
@@ -1901,7 +1975,12 @@
           "--d-shadow": "0 10px 40px rgba(0, 0, 0, .45)",
           "--d-font-sans": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
           "--d-font-mono": "ui-monospace, SFMono-Regular, \"JetBrains Mono\", Menlo, Consolas, monospace",
-          "--d-radius": "10px"
+          "--d-radius": "10px",
+          "--d-market-violet": "#a78bfa",
+          "--d-trading-green": "#4fd18b",
+          "--d-world-teal": "#4cc9b8",
+          "--d-cap-violet": "#c792ea",
+          "--d-cap-teal": "#4fc1c9"
         }
       }
     });

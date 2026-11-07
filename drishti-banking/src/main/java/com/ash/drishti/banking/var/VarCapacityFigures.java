@@ -41,6 +41,9 @@ public final class VarCapacityFigures implements CapacityFigures {
     @SuppressWarnings("unchecked")
     public Map<String, Object> figures(Principal p, Map<String, Object> inputs) {
         Map<String, Object> v = null;
+        if (vc == null) {
+            return null;                                  // no VaR controller here (a test that makes the figures itself): null, never guessed
+        }
         try {
             Map<String, Object> st = vc.status(p);
             v = new LinkedHashMap<>();
@@ -88,6 +91,9 @@ public final class VarCapacityFigures implements CapacityFigures {
 
     @Override
     public List<Object[]> rows(Map<String, Object> v) {
+        if (v == null) {
+            return List.of();
+        }
         return List.of(new Object[] {"VaR dates open", v.get("openDates"), "dates"}, new Object[] {"Open dates' heap", v.get("openHeapMb"), "MB"},
                 new Object[] {"Safety net (open-heap limit)", v.get("openHeapLimitMb"), "MB"}, new Object[] {"Mapped hot files", v.get("mappedMb"), "MB"});
     }

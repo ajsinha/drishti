@@ -14,16 +14,16 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* Admin → Compute. Colours come from the theme tokens (light, dark, high contrast); every state also has its word. */
-.cmp-h { font-size: 1.05rem; margin: 1.2rem 0 .4rem; }
+.cmp-h { font-size: var(--d-fs-16_8); margin: var(--d-sp-19_2) 0 var(--d-sp-6_4); }
 .adm-tbl th.cmp-name { text-align: left; font-weight: 400; }
 .cmp-engines, .cmp-pkgs { overflow-wrap: anywhere; max-width: 28rem; }
 .cmp-why { max-width: 22rem; white-space: normal; color: var(--d-muted); }
-.cmp-hash { max-width: 14rem; overflow-wrap: anywhere; font-size: .8rem; }
-.cmp-items { margin-top: .4rem; border-collapse: collapse; font-size: .85rem; }
-.cmp-items th, .cmp-items td { padding: .15rem .4rem; border-bottom: 1px solid var(--d-border); text-align: left; }
+.cmp-hash { max-width: 14rem; overflow-wrap: anywhere; font-size: var(--d-fs-12_8); }
+.cmp-items { margin-top: var(--d-sp-6_4); border-collapse: collapse; font-size: var(--d-fs-13_6); }
+.cmp-items th, .cmp-items td { padding: var(--d-sp-2_4) var(--d-sp-6_4); border-bottom: 1px solid var(--d-border); text-align: left; }
 .cmp-danger { color: var(--d-bad) !important; }
 .cmp-dialog { width: min(560px, 94vw); max-height: 92vh; overflow: auto; }
 .cmp-dialog textarea { box-sizing: border-box; max-width: 100%; width: 100%; }
 @media (max-width: 640px) {
-  .cmp-dialog textarea { font-size: 16px; }
+  .cmp-dialog textarea { font-size: var(--d-fs-16); }
 }

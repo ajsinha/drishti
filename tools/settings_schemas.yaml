@@ -52,7 +52,7 @@ tiers:
            "*warm*", "*squeeze*", "*pinned*", "*page-size*", "*bytes*", "*-mb", "*_mb", "*max-rows*", "*interval*",
            "*poll*", "*debounce*", "*coalesce*", "*jvm*", "*duckdb*", "*kafka.*"]
   expert-in: [server, engines, console, connectors, store, runs, edit, compute, net, ai, dataload]
-  areas: { server: admin, engines: admin, console: admin, console-files: admin, connectors: admin, packs: admin, editions: admin,
+  areas: { server: admin, engines: admin, modules: admin, console: admin, console-files: admin, connectors: admin, packs: admin, editions: admin,
            store: admin, runs: admin, edit: admin, compute: admin, net: admin, alerts: admin, reports: admin, simm: admin,
            dataload: admin, ui-kit: admin, ai: admin, modules: admin }
 schemas:

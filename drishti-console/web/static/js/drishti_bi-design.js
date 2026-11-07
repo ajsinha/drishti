@@ -121,7 +121,8 @@
   D.dirty = false;
   D.readOnly = false;
   D.problems = [];
-  const undo = [], redo = [];
+  const hist = new window.Drishti.elements.designer.SnapshotHistory({ get: () => D.model, limit: 100,       // the undo history: drishti-designer's (snapshots of the draft)
+    set: (m, how) => { D.model = m; if (how === 'refused') { return; } D.dirty = true; afterChange(how); say(how === 'undo' ? 'Undone.' : 'Redone.'); } });
   const listeners = {};
   D.on = (ev, fn) => { (listeners[ev] = listeners[ev] || []).push(fn); };
   D.emit = (ev, arg) => { (listeners[ev] || []).forEach((fn) => fn(arg)); };
@@ -134,12 +135,7 @@
   /** Changes the draft: `fn` edits D.model; the change is one step of the undo history, and everything redraws. */
   D.change = function (label, fn) {
     if (D.readOnly) { say('This is read-only: save a copy to change it, or withdraw the proposal.', true); return false; }
-    const before = JSON.stringify(D.model);
-    fn(D.model);
-    if (before === JSON.stringify(D.model)) { return false; }
-    undo.push(before);
-    if (undo.length > 100) { undo.shift(); }
-    redo.length = 0;
+    if (!hist.change(label, (m) => { fn(m); })) { return false; }
     D.dirty = true;
     afterChange(label);
     return true;
@@ -156,22 +152,8 @@
     ((model && model.pages) || []).forEach((p) => (p.visuals || []).forEach((v) => { if (!v.wells) { v.wells = {}; } }));
     return model;
   };
-  D.undo = function () {
-    if (!undo.length) { return; }
-    redo.push(JSON.stringify(D.model));
-    D.model = JSON.parse(undo.pop());
-    D.dirty = true;
-    afterChange('undo');
-    say('Undone.');
-  };
-  D.redo = function () {
-    if (!redo.length) { return; }
-    undo.push(JSON.stringify(D.model));
-    D.model = JSON.parse(redo.pop());
-    D.dirty = true;
-    afterChange('redo');
-    say('Redone.');
-  };
+  D.undo = function () { hist.undo(); };
+  D.redo = function () { hist.redo(); };
   D.select = function (id) { D.selected = id; D.emit('select', id); };
   D.setPage = function (id) { D.pageId = id; D.selected = null; D.emit('page', id); D.emit('select', null); renderTabs(); };
 
@@ -207,14 +189,11 @@
   };
 
   /** Moves others down so nothing overlaps `moved` (and, in turn, each other). */
+  /** What `moved` overlaps goes down below it, and so on (drishti-designer's settle, as the canvas does it). */
   D.settle = function (page, moved) {
-    const hit = (a, b) => a.at.x < b.at.x + b.at.w && b.at.x < a.at.x + a.at.w && a.at.y < b.at.y + b.at.h && b.at.y < a.at.y + a.at.h;
-    const queue = [moved];
-    let guard = 0;
-    while (queue.length && guard++ < 500) {
-      const a = queue.shift();
-      page.visuals.filter((b) => b !== a && hit(a, b)).sort((p, r) => p.at.y - r.at.y).forEach((b) => { b.at.y = a.at.y + a.at.h; queue.push(b); });
-    }
+    const items = page.visuals.map((v) => ({ id: v.id, x: v.at.x, y: v.at.y, w: v.at.w, h: v.at.h, v }));
+    window.Drishti.elements.designer.settle(items, items.find((i) => i.v === moved));
+    items.forEach((i) => { i.v.at.y = i.y; });
   };
 
   D.firstFreeY = (page) => page.visuals.reduce((m, v) => Math.max(m, v.at.y + v.at.h), 0);
@@ -261,8 +240,8 @@
 
   // ---- wiring: the modules --------------------------------------------------------------------------------------------
   function updateButtons() {
-    q('[data-undo]').disabled = !undo.length;
-    q('[data-redo]').disabled = !redo.length;
+    q('[data-undo]').disabled = !hist.canUndo();
+    q('[data-redo]').disabled = !hist.canRedo();
     q('[data-save]').disabled = D.readOnly;
     q('[data-state]').textContent = D.readOnly ? (D.item && D.item.status === 'proposed' ? 'Read-only (proposed)' : 'Read-only') : D.dirty ? 'Unsaved changes' : 'Saved';
   }
@@ -310,7 +289,8 @@
 
   // ---- the YAML tab --------------------------------------------------------------------------------------------------
   let editor = null, ignoreChange = false, yamlTimer = null, textTimer = null, yamlStale = false;
-  const ta = q('[data-yaml]');
+  const ta = q('[data-yaml]');                        // where the code editor is drawn
+  let pendingText = '';
   /** Whether the tab's text is behind the draft (a change's text still on its way): the YAML view says so (data-yaml-current yes/no), so a reader waits for it. */
   function stale(on) {
     yamlStale = on;
@@ -320,10 +300,11 @@
 
   function setYamlText(text) {
     ignoreChange = true;
-    if (editor) { editor.setValue(text); } else { ta.value = text; }
+    if (editor) { editor.setValue(text); } else { pendingText = text; }
     ignoreChange = false;
   }
-  D.yamlText = () => (editor ? editor.getValue() : ta.value);
+  D.yamlText = () => (editor ? editor.getValue() : pendingText);
+  D.yamlEditor = () => editor;
 
   // yamlRev counts the draft's changes; yamlShown is the change the tab's text was written from. Two writes may cross (a change made while the
   // previous one's text is on its way): an older answer never replaces a newer one, and the tab stays stale until the newest change's text is in,
@@ -366,9 +347,8 @@
   function onYamlApply(r, text) {
     if (!B.same(r.report, D.model)) {
       const before = JSON.stringify(D.model);
-      undo.push(before);
-      redo.length = 0;
       D.model = D.normalize(r.report);
+      hist.record('Edit the YAML', before, JSON.stringify(D.model));
       D.dirty = true;
       stale(false);
       yamlShown = yamlRev;                                          // the text typed is the draft now: an older answer on its way is dropped
@@ -413,31 +393,22 @@
     });
   }
 
-  /** What the cursor is in, for the suggestions strip: type names after `type:`, fields and measures inside wells, keys elsewhere. */
+  /** What completes the cursor's place in the YAML tab (drishti-inputs' completion): type names after `type:`, fields and measures inside wells, keys elsewhere. */
   const KEYS = ['report', 'title', 'description', 'dataset', 'theme', 'dates', 'filters', 'bookmarks', 'layouts', 'pages', 'id', 'at', 'wells', 'sort', 'limit', 'hierarchy', 'drillthrough', 'format', 'text', 'alt', 'interacts', 'action', 'visuals'];
-  function suggest() {
-    const strip = B.clear(q('[data-suggest]'));
-    if (!editor || !D.idx) { return; }
-    const cur = editor.getCursor(), line = editor.getLine(cur.line).slice(0, cur.ch);
+  function suggest(c) {
+    if (!D.idx) { return []; }
+    const line = c.line.slice(0, c.ch);
     const m = /([A-Za-z0-9_.' -]*)$/.exec(line);
     const word = m ? m[1].replace(/^[ '-]+/, '') : '';
-    let pool = [];
+    let pool = [], kind = 'keyword';
     if (/type:\s*[\w-]*$/.test(line)) { pool = Object.keys(D.catalogue.visuals); } else if (/op:\s*[\w-]*$/.test(line)) { pool = ['in', 'not-in', 'eq', 'ne', 'lt', 'le', 'gt', 'ge', 'between', 'contains', 'starts-with', 'is-null', 'not-null', 'top']; }
     else if (/mode:\s*[\w-]*$/.test(line)) { pool = D.catalogue.slicerModes; } else if (/hierarchy:\s*[\w ]*$/.test(line)) { pool = Object.keys(D.idx.hierarchies); }
     else if (/(page|navigate):\s*[\w-]*$/.test(line)) { pool = D.model.pages.map((p) => p.id); }
-    else if (/(axis|legend|values|columns|rows|secondary|x|y|size|details|target|field|by)\s*:\s*[[{]?[^\]}]*$/.test(line) || /^\s*-\s/.test(line)) { pool = Object.keys(D.idx.columns).concat(Object.keys(D.idx.measures)); }
+    else if (/(axis|legend|values|columns|rows|secondary|x|y|size|details|target|field|by)\s*:\s*[[{]?[^\]}]*$/.test(line) || /^\s*-\s/.test(line)) { pool = Object.keys(D.idx.columns).concat(Object.keys(D.idx.measures)); kind = 'field'; }
     else { pool = KEYS; }
     const w = word.toLowerCase();
-    pool.filter((x) => !w || x.toLowerCase().indexOf(w) >= 0).slice(0, 14).forEach((x) => {
-      const b = h('button', { type: 'button', class: 'bi-suggest', text: x });
-      b.addEventListener('mousedown', (e) => e.preventDefault());
-      b.addEventListener('click', () => {
-        const from = { line: cur.line, ch: cur.ch - word.length };
-        editor.replaceRange(/\s/.test(x) || /[,:[\]{}#]/.test(x) ? JSON.stringify(x) : x, from, cur);
-        editor.focus();
-      });
-      strip.appendChild(b);
-    });
+    return pool.filter((x) => !w || x.toLowerCase().indexOf(w) >= 0).slice(0, 30)
+      .map((x) => ({ name: x, kind, insert: /\s/.test(x) || /[,:[\]{}#]/.test(x) ? JSON.stringify(x) : x, from: c.ch - word.length, to: c.ch }));
   }
 
   let tabNow = 'canvas';
@@ -471,7 +442,7 @@
       if (tab) { tab.setAttribute('aria-selected', t === name ? 'true' : 'false'); }
     });
     if (name !== 'paper') { D.emit('paper', 'hide'); }
-    if (name === 'yaml') { D.flushYaml().then(() => { if (editor) { editor.refresh(); editor.focus(); } else { ta.focus(); } suggest(); }); } else if (name === 'phone' || name === 'tablet' || name === 'paper') { D.emit(name, 'show'); } else { D.emit('model', 'show'); }
+    if (name === 'yaml') { D.flushYaml().then(() => { if (editor) { editor.refresh(); editor.focus(); } }); } else if (name === 'phone' || name === 'tablet' || name === 'paper') { D.emit(name, 'show'); } else { D.emit('model', 'show'); }
   }
 
   // ---- Check, Save ---------------------------------------------------------------------------------------------------
@@ -609,11 +580,11 @@
     K.describe({ id: 'bi.design.delete', keys: ['Delete', 'Ctrl+D'], scope: 'panel', area: 'bi-design-canvas', group: 'Designer', description: 'On a visual: delete it; duplicate it' });
     K.describe({ id: 'bi.design.format', keys: ['Enter'], scope: 'panel', area: 'bi-design-canvas', group: 'Designer', description: 'On a visual: go to its title in Format' });
     window.addEventListener('beforeunload', (e) => { if (D.dirty) { e.preventDefault(); e.returnValue = ''; } });
-    if (window.CodeMirror) {
-      editor = window.CodeMirror.fromTextArea(ta, { mode: 'rachana-yaml', lineNumbers: true, lineWrapping: true, indentUnit: 2, tabSize: 2, viewportMargin: Infinity, extraKeys: { Tab: (cm) => cm.replaceSelection('  ') } });
-      editor.on('change', onYamlEdit);
-      editor.on('cursorActivity', suggest);
-    } else { ta.addEventListener('input', onYamlEdit); }
+    {                                                  // the YAML tab: drishti-inputs' code editor in YAML mode, completing from the report's catalogue
+      editor = new window.Drishti.elements.inputs.CodeEditor(ta, { mode: 'yaml', label: 'Report YAML', lineWrapping: true, height: 560, complete: suggest, value: pendingText,
+        completeAfter: (before) => /(type|op|mode|hierarchy|page|navigate):\s$/.test(before) });
+      editor.on('change', () => { if (!ignoreChange) { onYamlEdit(); } });
+    }
   }
 
   /** A report draft that names no dataset has nothing to draw: ask for one (the datasets the person may read) and write `dataset:` into the draft. */

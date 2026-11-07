@@ -187,7 +187,7 @@ folders, 8, 9 and 10 are phase 2 (section 8).
    `/api/v1/risk/…` with `308` redirects from the old prefixes (one controller listing them, deleted in the next release); the CLIs,
    the console client and the examples switched to the new paths. The server and integration suites, the drill.
 6. **The banking console plugin**: `git mv` the routes, templates, JavaScript, CSS, landings and their tests into
-   `drishti-console/plugins/banking/`; static assets served from the plugin's folder behind the entitlement check; Help's `risk`
+   the console's plugins/banking folder (planned); static assets served from the plugin's folder behind the entitlement check; Help's `risk`
    section and the engine catalogue entries moved into the plugin's files.
 7. **Packs by domain**: `git mv` into `config/packs/core|banking|economy/`; the pack loader reads one level of domain folders and each
    pack's `domain:`; Admin → Packs, Help and the Build home group by it; editions unchanged (they name pack ids).

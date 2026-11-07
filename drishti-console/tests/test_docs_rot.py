@@ -363,7 +363,8 @@ CODE_SUFFIXES = (".java", ".py", ".js", ".ts", ".yaml", ".yml", ".sh", ".ps1", "
                  ".json", ".xml", ".env", ".service", ".tf", ".txt", ".cfg", ".conf", ".mjs", ".kts")
 # Variables a document makes up for the reader: a CI secret, the placeholder form of the console's variables.
 ENV_EXAMPLES = {"DRISHTI_PG_PASSWORD", "DRISHTI_CI_TOKEN", "DRISHTI_CONSOLE__SECTION__KEY",
-                "DRISHTI_CONSOLE"}   # tutorial 15: a shell variable holding the console's address, beside DRISHTI_SERVER
+                "DRISHTI_CONSOLE",   # tutorial 15: a shell variable holding the console's address, beside DRISHTI_SERVER
+                "DRISHTI_FIGURES_OUT", "DRISHTI_FIGURES_BASELINE"}   # read only by tests/test_var_family_figures_browser.py (ELEMENTS.md 12.2)
 # Dotted words that look like console keys and are not: a report's YAML path quoted in an error message (BI_GUIDE.md).
 NOT_SETTINGS = {"layouts.phone.desk.order"}
 

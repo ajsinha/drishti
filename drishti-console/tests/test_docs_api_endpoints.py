@@ -34,7 +34,8 @@ NOT_DOCUMENTED = set()
 
 def _endpoints() -> set[tuple[str, str]]:
     found: set[tuple[str, str]] = set()
-    for path in ROOT.glob("drishti-server/src/main/java/**/*.java"):
+    # the core server and the domain modules (docs/architecture/DOMAIN_MODULES.md): every controller of the product's API
+    for path in [*ROOT.glob("drishti-server/src/main/java/**/*.java"), *ROOT.glob("drishti-banking/src/main/java/**/*.java")]:
         text = path.read_text(encoding="utf-8")
         if not re.search(r"@(Rest)?Controller", text):
             continue

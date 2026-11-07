@@ -95,7 +95,7 @@ EXPLORER_INVENTORY = [
 ]
 
 #: every line of How this number was built, now the server's Inputs & lineage (VarNumberExplainer.java), as the box labelled them
-EXPLAINER = Path(__file__).resolve().parents[2] / "drishti-server/src/main/java/com/ash/drishti/server/var/VarNumberExplainer.java"
+EXPLAINER = Path(__file__).resolve().parents[2] / "drishti-banking/src/main/java/com/ash/drishti/banking/var/VarNumberExplainer.java"
 EXPLAINER_INVENTORY = ['"Scope"', '"Reporting currency"', '"Input"', '"By source system"', '"Intraday"', '"Scenario FX"', '"Cross rates"',
                        '"Resolved"', '"Positions"', '"Trades"', '"Outside your view"', '"Unknown ids"', '"Warnings"', '"Rows left out"',
                        '"Vectors"', '"Scenario set"', '"Method"', '"ES"', '"Components"', '"Positions by"', '"Engine"', '"View"', '"Members"',

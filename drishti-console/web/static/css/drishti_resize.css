@@ -20,7 +20,7 @@
 .rz-handle { touch-action: none; user-select: none; -webkit-user-select: none; background: transparent; border: 0; padding: 0;
   cursor: col-resize; z-index: 6; }
 .rz-handle.rz-y { cursor: row-resize; }
-.rz-handle::after { content: ""; position: absolute; background: var(--d-border); opacity: 0; border-radius: 2px; transition: opacity .15s, background-color .15s; }
+.rz-handle::after { content: ""; position: absolute; background: var(--d-border); opacity: 0; border-radius: var(--d-radius-2); transition: opacity .15s, background-color .15s; }
 .rz-handle:not(.rz-y)::after { top: 0; bottom: 0; left: calc(50% - 1px); width: 2px; }
 .rz-handle.rz-y::after { left: 0; right: 0; top: calc(50% - 1px); height: 2px; }
 .rz-handle:hover::after, .rz-handle:focus-visible::after, .rz-handle.rz-dragging::after { opacity: 1; background: var(--d-accent); }

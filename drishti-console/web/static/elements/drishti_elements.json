@@ -1,6 +1,6 @@
 {
   "elements": "1.0.0",
-  "about": "Drishti Elements: the console's JavaScript as reusable libraries. Each library: ES modules under src/ and one bundled file written by tools/elements/build.py. css and scripts (a vendored engine) paths are relative to the static root; module: the domain module a library is licensed with.",
+  "about": "Drishti Elements: the console's JavaScript as reusable libraries. Each library: ES modules under src/ and one bundled file written by tools/elements/build.py. css and scripts (a vendored engine) paths are relative to the static root; module: the domain module a library is licensed with. assets: folders under the static root a library reads at run time (map shapes, the code editor's engine), shipped with it by the distribution (tools/elements/dist.py).",
   "libraries": {
     "drishti-core": {
       "version": "1.1.0",
@@ -24,14 +24,29 @@
       ]
     },
     "drishti-inputs": {
-      "version": "0.1.0",
-      "title": "Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead, forms from a schema with four eyes, the filter bar, the code editor over CodeMirror",
+      "version": "0.2.0",
+      "title": "Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead (on its own field or a page's), forms from a schema with four eyes, the filter bar, the code editor over CodeMirror, and a page's own date fields and checkbox lists upgraded in place",
       "entry": "src/drishti_index.js",
       "requires": [
         "drishti-core"
       ],
       "css": [
         "elements/drishti-inputs/drishti_inputs.css"
+      ],
+      "assets": [
+        "vendor/codemirror/"
+      ]
+    },
+    "drishti-designer": {
+      "version": "0.1.0",
+      "title": "The designer kit: the layout canvas over a layout model (grid or flow: place, move, resize with snap, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys, undo and redo on one command stack), the palette, the inspector (a form from a schema), the outline (drag to re-order or re-parent), the YAML pane kept in step with the model both ways (completion and lint from a JSON Schema) and the designer shell (three panes, Visual / YAML / Both, versions, Validate, Preview, History, Impact, Propose for review)",
+      "entry": "src/drishti_index.js",
+      "requires": [
+        "drishti-core",
+        "drishti-inputs"
+      ],
+      "css": [
+        "elements/drishti-designer/drishti_designer.css"
       ]
     },
     "drishti-data": {
@@ -55,6 +70,9 @@
       ],
       "scripts": [
         "vendor/echarts/echarts.min.js"
+      ],
+      "assets": [
+        "vendor/echarts/maps/"
       ]
     },
     "drishti-risk": {

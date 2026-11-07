@@ -402,7 +402,7 @@ C1's **Incremental EAD (SA-CCR)** tile is answered by SA-CCR's what-if.
 
 **As built: the exposure what-if in Java** (IMPLEMENTATION_PLAN 2.9.12 row 5). The `addon` and `paths` what-if that CCP4 overlays are
 both the server's exposure engine's: `POST /api/v1/risk/exposure/what-if` computes the exact method with `ExposureWhatIfMath`
-(`drishti-compute`, `com.ash.drishti.banking.compute.ccr`) over `ExposureMath`'s collateral and statistics, the scope and each joined netting set
+(`drishti-compute-banking`, `com.ash.drishti.banking.compute.ccr`) over `ExposureMath`'s collateral and statistics, the scope and each joined netting set
 read as the asker, no sandbox, no compute pool, no Python ([EXPOSURE_GUIDE.md section 19.5](../guides/EXPOSURE_GUIDE.md#195-the-exact-what-if-in-the-java-engine)).
 The request and the answer are unchanged; reference answers on four netting sets under the three collateral models and both rank rules
 are given to the cent (`ExposureWhatIfMathTest`). The pre-deal check is the word `EXP`'s (the explorer's Pre-deal tab, the Trading

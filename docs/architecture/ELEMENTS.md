@@ -16,7 +16,7 @@
 
 # Drishti Elements: the console's JavaScript as eight reusable libraries
 
-**Status: being built** (release 2.9.11.e, product owner 2026-11-07; mock-ups g1 to g4 below, all decided; as built: 8.1 to 8.6). The internal design:
+**Status: being built** (release 2.9.11.e, product owner 2026-11-07; mock-ups g1 to g4 below, all decided; as built: 8.1 to 8.8). The internal design:
 what each library is, what it takes over from today's code, the grid's pivot, the AG Grid-style adapter, the chart spec and the maps,
 packaging and licensing, the documentation of every library, the gallery, the guards, the order in which Drishti's screens move, the
 risks and the product owner's decisions. The renderer, the embed API and Elements 2.x (`<drishti-view>`) are designed in
@@ -69,6 +69,7 @@ with heavy pivoting, and libraries 1 to 5 must serve them without a Drishti serv
 | 6 | **drishti-insight** | Explain, search, approvals, workbook export | a Drishti server | 9 files (6 whole, 3 in part), about 1,380 lines | 1,000; about 1,300 |
 | 7 | **drishti-renderer** | Drishti screens from a (streamed) ViewModel, `<drishti-view>`, the layout grid | a Drishti server | 21 files (14 whole, 7 in part), about 4,250 lines | 3,600; about 3,000 once it draws with libraries 1 to 5 |
 | 8 | **drishti-risk** | the banking module's chart kinds and panels (P&L distribution, backtest, exposure profile, VaR panels) | a Drishti server with the banking module; **licensed** | 8 files (2 whole, 6 in part), about 1,060 lines | 600; about 1,100 |
+| 9 | **drishti-designer** | the designer kit (added 2026-11-07, section 8.8): the layout canvas over a layout model, the palette, the inspector, the outline, the YAML pane, undo and redo, the designer shell | not needed | the three canvases, the inspectors and panes, the two YAML editors, the outlines and the editor shell of every designer: about 8,800 lines | about 3,900 (as built: 4,750 lines of modules with their JSDoc) |
 | | **All eight** | | | **116 files touched, about 21,000 lines folded** (17,800 from the console's scripts, 3,200 from the renderer) | **about 13,100 deduplicated; about 23,500 with the commercial feature set** |
 
 How the numbers were taken: every `drishti_*.js` and renderer module was read and assigned to a library, wholly or in part (a share
@@ -93,6 +94,18 @@ drishti-core ◄── inputs, grid, chart, data            (1 to 5: no server n
 drishti-public-sector, drishti-aml. A domain library may use libraries 1 to 7 and never another domain's.
 
 ## 3. The rules every library keeps
+
+### 3.1 Standing rule: no bespoke UI
+
+**The product owner, 2026-11-07, standing.** No screen, designer, editor or authoring tool uses bespoke UI code. Everything a person
+uses to create or change an artefact (Sutras, reports, boards, forms, tables, models, Python items, functions, alerts and rules, packs,
+connectors, lake files, lenses, editions, settings, Notebook cells, workflows, approvals' change views) is assembled from Drishti
+Elements. A need the libraries do not meet is met by **extending a library** (generic in the generic libraries, domain-specific in the
+domain's library), never by code in the screen. `test_designer_kit_guard.py` holds it for what designers and editors are made of (a
+drag or pointer layout, a code or YAML editor, a tree view, an undo history), with an allow-list of the files still being moved that
+only shrinks and is capped; section 12.3 lists every authoring screen and its state.
+
+### 3.2 What every library keeps
 
 - **No framework required.** Each component is a **web component** (`<drishti-grid>`, `<drishti-chart>`, …) and a **plain JavaScript
   class** with the same options (`new Grid(el, options)`); React, Angular and Vue use them as they use any custom element (the samples of
@@ -127,6 +140,31 @@ keys.register('grid', { 'E': explainCell, 'Ctrl+C': copyRange });
 const ok = await dialog.confirm({ title: 'Delete the basket?', danger: true });
 ```
 
+#### Design tokens
+
+drishti-core's tokens are one file, `static/css/drishti_tokens.css`, the only home of every colour and scale the console and the
+libraries draw with. `tools/elements/build.py` generates the themes' table (`drishti_theme-table.js`) from it, and the embedded view,
+report and renderer sheets (`tools/elements_sheet.py`, `tools/render_sheet.py`) write its fixed values into their rules.
+
+| Family | Tokens | What they hold |
+|---|---|---|
+| Theme colours | `--d-bg` … `--d-bad`, `--d-fill`, `--d-grad-*`, `--d-nav-*` | one block per theme (`data-theme` on `<html>`: terminal, light, blue, green, wallstreet, crimson, crimson-dark, terminal-green, terminal-crimson, terminal-blue), the light fallback, and the print palette last; text colours read at 4.5:1 on every ground (`test_contrast.py`) |
+| Semantic hues | `--d-market-violet`, `--d-trading-green`, `--d-world-teal`, `--d-cap-*` | a screen's own hue, with a dark and a light value per theme |
+| Fixed colours | `--d-on-color`, `--d-paper`, `--d-on-band`, `--d-band-*`, `--d-scrim*`, `--d-swatch-*`, … | the same in every theme: white labels on coloured fills, the navigation band, scrims under dialogs, the theme menu's swatches |
+| Elevation | `--d-shadow` (per theme), `--d-elev-*` | shadows by role: paper, raised, bar, pop, toast, panel, list, menu, sheet, dialog, drawer, mega menu |
+| Type | `--d-fs-<px>`, `--d-fs-em-<percent>`, `--d-fs-display-<n>` | absolute steps named by their size in px at the default 16px and written in rem (so the console follows the reader's font size); relative steps; fluid display sizes |
+| Spacing | `--d-sp-<px>` | padding, margin and gap steps up to 2rem; larger offsets are layout |
+| Radius | `--d-radius` (cards and panels), `--d-radius-<px>`, `--d-radius-pill` | corner radii |
+| Layers | `--d-z-bar` … `--d-z-confirm` | the stacking order of what floats over the page (a z-index under 100 orders things inside one component) |
+| Breakpoints | `--d-bp-*` | the only widths an `@media` may use (a media query cannot read a custom property, so it repeats the number) |
+| Densities | `--d-density-data-*`, `--d-density-control-*` | the base text of the three densities (comfortable, compact, terminal) for data (grid, chart) and controls (inputs) |
+
+The steps are the sizes the screens use; two are folded into one only under the visual check (`tools/dev/css_visual_check.py`:
+screenshots of a set of screens in every theme, before and after, compared pixel by pixel). `test_css_tokens.py` keeps the console's CSS
+on the tokens: no colour literal outside this file, font sizes only from the type scale, `@media` widths only from the breakpoints, no
+undefined token, and `!important` only on an allow-list that gives each one its reason (print, reduced motion, a position a script
+writes inline, utilities) and only shrinks.
+
 Takes over: `drishti_app.js`, `drishti_theme-init.js`, `drishti_resize.js`, `drishti_settled.js`, `drishti_pack-ui.js`,
 `build/drishti_drag.js`, `build/drishti_menus.js`, the renderer's `m/dom.js`, `m/format.js`, `m/net.js`, `m/signin.js`, `m/assets.js`;
 the formats and JSON calls of `drishti_bi-lib.js`, and the dialogs of `drishti_busy.js`, `drishti_scope-delete.js`,
@@ -139,8 +177,8 @@ from a JSON schema, rules evaluated as people type, drafts), `<drishti-filter-ba
 SQL and Rachana modes, completion from a schema), `<drishti-formula>` (Rachana with completion and the red part of a formula that does
 not read).
 
-Takes over: `drishti_multiselect.js`, `drishti_people.js`, `drishti_controls.js`, `drishti_form-expr.js`, `drishti_cm-yaml.js`,
-`drishti_studio-yaml.js`, `drishti_studio-assist.js`, `drishti_editor-formula.js`, `drishti_bi-expr-editor.js`, `build/drishti_expr.js`,
+Takes over: `drishti_multiselect.js`, `drishti_people.js`, `drishti_controls.js`, `drishti_form-expr.js`, `drishti_editor-formula.js`,
+`drishti_bi-expr-editor.js`, `build/drishti_expr.js` (the YAML editors went to drishti-designer's YamlPane over this library's CodeEditor, 8.8),
 `build/drishti_forms.js`; the inputs of `drishti_form.js`, `drishti_bi-format-pane.js`, `drishti_subscribe-when.js`,
 `drishti_discussion-compose.js`.
 
@@ -382,8 +420,10 @@ is served from `/static/banking/elements/risk/<version>/` behind the entitlement
 release ahead. A **release train** file (`elements.json`) names the versions that go together for a Drishti release, so a host pins
 one train or single libraries. Elements 2.x and the renderer's 1.x keep working one release beside renderer 2.0.0.
 
-**Outside Drishti.** Libraries 1 to 5 are copied into a host application's own vendored folder (never a CDN); an npm package per
-library (`@drishti/core`, `@drishti/grid`, …) is documented, not published (as the renderer's package).
+**Outside Drishti** (as built: 8.7). Never a public CDN or registry. An application takes two packed files
+(`drishti.py elements pack`), the release archive `drishti-elements-<version>.zip`, the npm tarballs `@drishti/elements-<name>` from
+an internal registry, or the WebJar from an internal Maven repository; the guide is
+[ELEMENTS_IN_YOUR_APP.md](../guides/ELEMENTS_IN_YOUR_APP.md).
 
 **Licensing.** Libraries 1 to 7 ship with the product. **drishti-risk is licensed with the banking module** and every later domain
 library with its module: an unlicensed module's library is not served, its kinds are not registered, and its gallery pages are hidden.
@@ -554,8 +594,29 @@ library with its module: an unlicensed module's library is not served, its kinds
   bar (with `?fourEyes=1`), the form with four eyes, the code editors and diff, a grid fed by `LiveClient` through stand-in
   EventSource and WebSocket classes, and an Arrow grid; no server (the Arrow part reads a fixture the browser test serves). Node:
   `tests/elements/inputs.test.mjs`, `data.test.mjs`, `grid-edit.test.mjs`; one browser file, `tests/test_elements_inputs_browser.py`.
-- **Screens that move onto them later** (section 12, steps 2 and 6; none folded yet: each needs its page to load the library and its
-  screen tests run, which is the screen's migration, not this build):
+- **drishti-inputs 0.2.0, the console's pickers** (`drishti_native.js`, and options on two components): `upgradeDateInput(input)`
+  turns a page's `<input type="date">` into the date picker in place (the input becomes a hidden input with its name, id and value;
+  its `value` setter moves the picker, the picker's changes come back as `input` and `change` events; `hidden`, `disabled`, `min` and
+  `max` are followed; a required or unreadable date stops its form's submit with the words beside it; `data-holidays`, `data-calendar`,
+  `data-current` and `data-business` choose the calendar, the business date and business days only); `upgradeCheckboxes(group)` puts
+  the multi-select over a group of checkboxes that stay in the form (ticked with a `change` each; a label with the `offClass` is not
+  offered, so a dependent list follows); `upgradeFields(root)` does both for a page. `Combobox` takes a page's own `input` and a
+  `suggest` mode (the text stays the page's; Enter and Escape with the list closed reach the page). `DateRangePicker` takes presets
+  given whole (`{id, label, from, to}`: a server's own) and `openEnded`. Every field, option and button is 44 px high on a touch screen.
+  The console loads drishti-inputs on every page (`base.html`); `drishti_app.js` upgrades the page's fields once.
+- **Moved onto them** (2.9.11.e, wip/e-inputs-convert):
+
+  | Was | Now | Deleted |
+  |---|---|---|
+  | `drishti_multiselect.js` (106 lines, every query form, the controls, BI's slicer) | `upgradeCheckboxes` (query forms, `data-multiselect`), `MultiSelect` (controls, BI's drop-down slicer) | the file is a 40-line loader of drishti-inputs for the frozen renderer 1.2.0; `.ms-*` and `.ctl-pop` CSS |
+  | `drishti_controls.js`: the multi-select, the date, the date range | `MultiSelect`, `DatePicker`, `DateRangePicker` (the server's presets, open-ended) | the details/summary multi-select and the native date fields; the number range stays two number fields |
+  | the as-of date (`drishti_app.js`, `terminal/_topbar.html`) | `DatePicker` keyed by the server's holidays, T-1 and month-end; non-business days refused in words | the native date handling and its validity messages |
+  | raw date fields: `terminal/compare`, `form`, `search`; `bi/report`, `notebook`; `admin/caches`, `collab`, `lakes`, `access`, `loads`, `pack_detail`; `drishti_bi-design-panes.js`, `drishti_bi-statement.js`, `drishti_bi-grids.js` (range slicer), `drishti_explain.js`, `drishti_record-forms.js` (fields and cells) | `upgradeDateInput` (`upgradeFields` on every page) | the query form's date that turned into text: a separate relative field (`.qf-vrel`) |
+  | `drishti_history-page.js` range presets | `DateRangePicker` whose presets open the server's ranges | the links stay only for a page without scripts |
+  | `drishti_people.js` (four screens), `drishti_discussion-compose.js` (`@`, `{`) | `Combobox` (suggest mode, on the page's field); the comment box with the combobox's `TypeAhead`, `Listbox` and `Popover` | the hand-made listboxes, their `<ul>`s in five templates and scripts, `.shr-list` CSS |
+  | `drishti_record-forms.js` entity field | `Combobox` over the page's field with the server's lookup | the hand-made list, its search ordering, `.fm-entity-list` CSS |
+
+- **Still to move** (each a later branch; none is drawn twice):
 
   | Today (file, lines) | Moves onto | Note |
   |---|---|---|
@@ -563,14 +624,11 @@ library with its module: an unlicensed module's library is not served, its kinds
   | `drishti_studio-yaml.js` (28–241), `drishti_studio-assist.js` (54–372) | `CodeEditor` lint and completion hooks | Studio's own YAML reading and hint box |
   | `drishti_bi-expr-editor.js` (33–375), `drishti_editor-formula.js` (27–100), `build/drishti_expr.js` (28–106) | `CodeEditor` completion, a `Combobox` | three completions of formulas and paths |
   | `drishti_bi-design.js` (602), `drishti_calc.js` (71), `build/drishti_yamltab.js` (29), `build/drishti_about.js` (39) | `CodeEditor` | four `CodeMirror.fromTextArea` |
-  | `drishti_multiselect.js` (44–105) | `MultiSelect` | on every page through `base.html` (`.qf-enum[data-ms]`) |
-  | `drishti_people.js` (37–103), `drishti_discussion-compose.js` (34–126) | `Combobox` | people type-ahead (four screens), @-mentions |
-  | `drishti_controls.js` (87–262, 274–311) | `DatePicker`, `DateRangePicker`, `MultiSelect`, `FilterBar` | a Sutra's controls and their filter model |
-  | `drishti_app.js` (51–100), `terminal/_topbar.html` (54) | `DatePicker` | the as-of date with holidays (every page) |
-  | `drishti_history-page.js` (159–215) | `DateRangePicker` presets | 1M, 3M, 6M, 1Y, YTD |
-  | raw date fields: `terminal/compare`, `form`, `var`, `search`; `bi/report`, `notebook`; six admin pages; `drishti_bi-design-panes.js` (446), `drishti_bi-statement.js` (110), `drishti_bi-report.js` (279, 519–527) | `DatePicker`, `DateRangePicker` | |
-  | `drishti_form.js` (39–125), `drishti_form-expr.js` (27–212), `build/drishti_forms.js` (29–184), `drishti_bi-format-pane.js` (41–171), `drishti_editor-table.js` (54–263), `drishti_subscribe-when.js` (28–76) | `Form` | dependent fields, conditions, schema-driven editing |
-  | `drishti_record-forms.js` (883 lines) | `Form` with four eyes, grid editing | edit in cells, drafts and review |
+  | `drishti_controls.js` (the filter model) | `FilterBar` | the controls' values are the server's (`ctl.*`, panels asked again); a filter bar emits a browser-side filter model, so it waits for a Sutra whose panels filter in the browser |
+  | `drishti_form.js` (the query form, server-drawn GET), `build/drishti_forms.js` (29–184), `drishti_bi-format-pane.js` (41–171), `drishti_editor-table.js` (54–263), `drishti_subscribe-when.js` (28–76) | `Form` | `Form` draws its own `<form>` with Save and Reset and validates at submit; these are live property panes or parts of a server form. They need a **live mode** (no form element, a change per field), **custom widgets** (colour, rules, swatches, the format pane's `x-control`s), **per-field hooks** (`data-*` names the tutorials and tests use) and a **time** type (the subscription's "At") first |
+  | `drishti_form-expr.js` (27–212) | stays | the browser's copy of the server's form expressions (`FormExpr.java`): a language, not a form; `Form`'s `when` conditions are a different, smaller one |
+  | `drishti_record-forms.js` (the rest: beside, cells, the drawer's steps, drafts, review) | `Form` with four eyes, grid editing | the entity field and every date moved (above); the beside form, the cells and the stepped drawer need `Form` steps, money and datetime types with their adornments, and the server's drafts as the four-eyes hook |
+  | `<input type="datetime-local">` (the top bar's *Known at*, compare, the record forms' datetime) | a date-and-time picker | drishti-inputs has no time yet |
   | `drishti_var-basket-sheet.js` (40–290) | grid editing | its cell editor (200) and paste (210–248) |
   | `drishti_live-hub.js` (40–316), `drishti_channel.js` (60–163), `drishti_live.js` (34–155), `drishti_monitor.js` (32–49), `drishti_bi-consume.js` (158–216), the renderer's `m/net.js` (55–105) and `m/elements.js` (85–256) | `LiveClient` | one connection, reconnect and resync; the channel's leader election stays a page concern |
   | `drishti_table.js` (39–242) | `ArrowClient`, `DataFrame` | the VaR explorer and the scenario matrix |
@@ -781,14 +839,124 @@ drishti-risk) behind a generic hook. The chart studio's options for the risk kin
 ['log', 'zoom']` when it registers). Comments, the harness pages and the generated manifest's titles are documentation; a threshold
 (`limit`) is a generic hook.
 
-**Still to move** (each needs its screens' browser files run, and the multi-select and the pickers are on every page): the multi-select
-(`drishti_multiselect.js` → `MultiSelect`, with the query forms' dependent lists and the embed's controls), the as-of date and the
-raw date fields (→ `DatePicker`, `DateRangePicker`), the controls (`drishti_controls.js`), the forms (`drishti_form*.js`,
-`drishti_record-forms.js`, `drishti_editor-table.js`, `drishti_subscribe-when.js` → `Form`), the Build and Studio editors
-(`drishti_yamltab.js`, `build/drishti_about.js`, `drishti_studio-yaml.js`, `drishti_studio-assist.js`, `drishti_editor-formula.js`,
-`build/drishti_expr.js` → `CodeEditor` hooks; `drishti_cm-yaml.js` goes when the BI designer's editor moves too), polling and staleness
+The multi-select, the as-of date, the raw date fields, the controls' pickers, the history range and the people pickers moved in
+2.9.11.e (8.2, "Moved onto them"); the YAML editors moved onto the designer kit (8.8). **Still to move**: the forms (`drishti_form.js`,
+`build/drishti_forms.js`, `drishti_bi-format-pane.js`, `drishti_editor-table.js`, `drishti_subscribe-when.js`, the rest of
+`drishti_record-forms.js` → `Form`, which first needs custom widgets, per-field hooks and a time type; 8.2), the formula inputs
+(`drishti_editor-formula.js`, `build/drishti_expr.js` → `CodeEditor` hooks), polling and staleness
 (`drishti_refresh.js` → a data source), and inside drishti-grid the renderer's simpler document tables (`enhanceDocTables`' sort and
 pager) fold into `consoleTables`.
+
+### 8.7 As built: the distribution
+
+Other applications take the libraries as files kept inside the organisation; nothing is published to a public registry or CDN (the
+owner's decision of 2026-11-07). How to use them: [ELEMENTS_IN_YOUR_APP.md](../guides/ELEMENTS_IN_YOUR_APP.md). How they are made:
+
+- **One code path, three forms** (`tools/elements/dist.py`, offline, Python only). A library's files are laid out as the console's
+  static root: `elements/<library>/src/*.js` (the ES modules), its bundle, its own sheets from the manifest's `css`, the vendored
+  engine of its `scripts` with that folder's LICENSE and NOTICE, the folders of its `assets` (a new manifest key, not read by the
+  loader: `vendor/echarts/maps/` for drishti-chart, `vendor/codemirror/` for drishti-inputs), `drishti-<name>.d.ts`, a README and a
+  licence notice; drishti-core adds `css/drishti_tokens.css` and `themes/drishti-theme-<name>.css`. The whole tree adds
+  `elements/drishti_elements.json` (the train, without the libraries left out), `CHANGELOG.md` (each library's lines of the product
+  CHANGELOG, `elements_catalogue.changelog`), `LICENSE-NOTICE.txt`, `README.md` and `drishti-elements.json`: the libraries, the themes,
+  the libraries excluded and every file's bytes and SHA-384 integrity hash. Because the layout is the console's, drishti-core's loader
+  works in it unchanged.
+- **The zip** `drishti-elements-<train>.zip` is that tree under `drishti-elements-<train>/` (with a domain included:
+  `drishti-elements-<train>+banking.zip`). **The npm tarballs** `@drishti/elements-<name>` (`npm/drishti-elements-<name>-<version>.tgz`,
+  `npm pack`'s layout, written with `tarfile`) hold one library flattened: its folder and `css/` at the package root, `vendor/` and
+  `themes/` kept; imports of another library rewritten to its package name (`../../drishti-core/src/drishti_index.js` →
+  `@drishti/elements-core`, a JSDoc `import('…')` to `@drishti/elements-core/src/…`), the bundle's Node requirements likewise;
+  `package.json` (`exports`: `import` the ES entry, `require` the bundle, `types`; `src/package.json` marks the modules as ES modules,
+  the root stays CommonJS for the bundle; `sideEffects` only the entry, the bundle and the sheets; `dependencies` the required libraries
+  at `^version`; no registry is named) and `integrity.json`. **The WebJar** is Maven's: the module `drishti-elements` (in the root pom's
+  profile `elements`, versioned with the train, not the product) runs `tools/elements/cli.py webjar-tree` at `generate-resources`, which
+  writes the tree under `META-INF/resources/webjars/drishti-elements/<train>/` and refuses a module version that is not the train's.
+  All three are reproducible: fixed timestamps (npm's 1985-10-26 for the tarballs, 1980-01-01 in the zip), sorted entries, mode 644.
+- **The declarations** (`tools/elements/dts.py`) are written from the same parse as the API reference (`tools/docs/elements_api.py`):
+  every name the entry exports (functions with their parameters, classes with their documented methods, constants), every `@typedef`
+  as an interface or type and every `@callback` as a function type; JSDoc types are read into TypeScript (unions, `?T`, `Object<K, V>`,
+  records, `function(A): R`, literals); a type of another library is `import('<that library>').Name`; what cannot be read is `any`.
+- **The themes** are read from `drishti_tokens.css` by its blocks: a block whose selector is only `:root` and `[data-theme]` is a theme
+  (the one that also holds the bare `:root` is the default), the no-theme `prefers-color-scheme` fallback is dropped, every other block
+  (the fixed colours, the scales, print) is kept. A theme sheet is the default's tokens overlaid by the theme's, on `:root`, then the
+  shared blocks; `dark` and `light` name the default dark and the first light theme.
+- **The pack** (`tools/elements/pack.py`, `drishti.py elements pack`): the named libraries and what they require, deepest first, each
+  once; a library with a `module` refused unless that domain is included; one JavaScript file (the licence once, a comment naming every
+  library and version, a prelude setting `Drishti.elements.base` to `<the file's folder>/elements/` so lazily read files come from
+  beside it, the vendored engines unless `--no-engines`, then the bundles) and one sheet (the tokens, every theme or one, then each
+  library's sheets), each library's own licence header removed; `drishti-elements-pack.json` records what is inside with SRI hashes.
+- **The server** keeps serving the same files: `/static/elements/…` on its origin and `/embed/v2/elements/<library>/…` to registered
+  host applications.
+- **Tests.** `tests/test_elements_dist.py`: the zip, tarballs and WebJar hold what their manifests say with matching hashes, the same
+  bytes in all three, reproducibly; the Maven profile builds the jar (offline; skipped without Java or the exec plugin in the local
+  repository); dependency resolution and the banking exclusion; themes; every export declared. `tests/test_elements_pack_browser.py`
+  (about 3 s): a static page with only the two packed files draws a grid and a chart under a strict CSP and asks for nothing else.
+
+### 8.8 As built: drishti-designer, the designer kit
+
+The product owner (2026-11-07): "let us build the designer kit, duplicated code will make the system unmaintainable." Every designer and
+editor is built on it; mock-up g7 (all three options taken: the docked studio the default, side by side and the terminal as layouts of
+one shell) is its look. `static/elements/drishti-designer/` (version 0.1.0; requires drishti-core and drishti-inputs only; ES modules
+under 530 lines each, typed JSDoc, the bundle by `tools/elements/build.py`, `Drishti.elements.designer`):
+
+- **The engine, without a page** (Node-tested). `CommandStack` (undo and redo, steps grouped as one, merging by a key within 800 ms,
+  saved and dirty) and `SnapshotHistory` (the same over before and after copies of one JSON document: a host that edits its model in
+  place gets undo without inverse operations; the BI report designer's). `Selection` (one per designer page, never global; the primary
+  is the last picked; a pick replaces, Shift or Ctrl adds or toggles; each change says its source so a pane ignores its own echo).
+  `drishti_layout-rules.js`: the grid's geometry (snap, clamp, overlap, **settle** as a report page settles, align on six edges,
+  distribute, bounds) and the 12-column panel rules (span, height or the content's, the sentence a screen reader hears; the old
+  `drishti_layout-rules.js` of the console keeps its name for layout mode until it moves). `LayoutModel`: a **grid** layout ({x, y, w,
+  h}, z-order, groups that move, copy and delete together, copy and paste with new ids, duplicate) or a **flow** layout (items in order
+  inside named areas, a span and a height), and **breakpoints** (a phone's own order, hidden items and heights; arranging back removes
+  the entry). Every change is one step on its stack, or, with `stack: null`, a "commit" event for a host that keeps its own undo (the
+  Build workbench sends operations to the server; the BI designer keeps snapshots). `designerKeys`: the keymap (the "move" scheme of a
+  report page and the "select" scheme of the workbench: arrows select, Alt+arrows move; the common keys: undo, redo, copy, cut, paste,
+  duplicate, delete, select all, group, z-order, Enter, Escape), on drishti-core's `keymap`.
+- **The YAML, both ways.** `drishti_yaml-read.js` is Sutra Studio's forgiving reader, moved here (it never throws; the cursor's place);
+  `drishti_yaml-write.js` writes plain values as block YAML and says which lines each path spans (`yamlRanges`, `pathAtLine`), so the
+  selected item is highlighted and a click in the YAML selects its item. `drishti_yaml-assist.js` is Studio's assistant over a JSON
+  Schema, moved here and pure: completion of keys (an object's options by its kind), values, Rachana's functions with their signatures
+  and the sample's field paths; the light check (unknown keys, missing required keys, options a kind does not take, values outside an
+  enum, whole numbers, tabs); the help of the key under the cursor.
+- **The components** (each a class and a web component, no shadow root, nothing inline). `LayoutCanvas` draws a grid model (its items
+  placed on a CSS grid through the CSSOM; the host's `createItem`, `updateItem`, `removeItem`) or decorates a flow layout the host
+  drew (`adopt`); a pointer drag by the item's handle moves it, snapped to the grid and shown live, a corner (grid) or the right and
+  bottom edges (flow) resize it; Shift or Ctrl selects more; the keys; drops from the palette through a `DragHub` (one Pointer Events
+  drag for every designer: Escape cancels, a click still clicks, the page scrolls at its edges) or HTML5 drops of the host's type;
+  `onAction` lets a host do a key itself (true), leave it to the page (false), or let the canvas do it. `sortableList`: a list whose
+  rows are re-ordered by dragging (the workbench's form and controls cards, the BI designer's device orders). `Palette` (categories, search, a
+  disabled entry says why, drag or Enter). `Inspector` (drishti-inputs' `Form` from the schema the host gives for the selection, live:
+  each valid edit is a "change"; several items show the fields they share, a field whose values differ marked mixed). `Outline` (the
+  structure as a tree: the tree view's keys, a drag before, after or into another item, Alt+arrows; the host's `canDrop` says why not).
+  `YamlPane` (drishti-inputs' `CodeEditor` in YAML mode: written again when the model changes, the cursor and scroll kept; read after
+  a pause through the host's `fromYaml`, the server's or `readYaml`; a problem said at its line while the design keeps its last good
+  version; lint and completion hooks). `DesignerShell` (EDITORS.md section 1): the header (where you are, the name, the status with
+  versions, Validate, Preview, History, Impact, Save draft, Propose for review, + New), Visual / YAML / Both, the left rail's tabs
+  (objects with search, palette, outline), the inspector pane, the preview with checks, a status bar, a dialog, and Propose for review
+  (a note, the host's submit to the Approvals queue: four eyes). Its **layouts** (`layout`, remembered per person by the host): **studio**
+  (g7 A, the default: rail | canvas with the YAML docked under it | inspector | preview), **side-by-side** (B: the outline over the
+  palette, the canvas and the YAML side by side, the preview always on, the inspector a card by the selection) and **terminal** (C:
+  dense and monospace, a `DESIGN>` command line on Ctrl+K, the outline as a property grid, F3 Validate, F4 YAML, F5 Preview, F7 History,
+  F8 Impact, F9 Propose).
+- **drishti-inputs extended for it** (no code in the screens): `CodeEditor.updateValue` (the cursor and the scroll kept), `highlight`
+  (the selected item's lines), `cursor` and its event, `completeAfter` (a YAML key's "kind: ", a path's "$."), entries that say where
+  their word starts, `lineWrapping`, `tabLeaves` (a small box Tab leaves), YAML's Enter keeping its indentation (`yamlIndentAfter`);
+  `Form`'s `live` (no Save or Reset: an inspector).
+- **Moved onto it, the old code deleted**: the Build workbench's canvas (`build/drishti_canvas.js`: a flow `LayoutCanvas`; the trash,
+  grip and size badge are its decoration), its drags (`build/drishti_drag.js`: the kit's `DragHub` and `trackPointer`), its YAML tab
+  (`build/drishti_yamltab.js`: `YamlPane` with the schema assistant) and its about box (`CodeEditor`); the BI report designer's canvas
+  (`drishti_bi-design-canvas.js`: a grid `LayoutCanvas`, moves and resizes one step of the designer's undo), its undo
+  (`SnapshotHistory`), its settle (the kit's) and its YAML tab (`CodeEditor` completing from the report's catalogue, in place of the
+  suggestion strip); the table, model and Python editors' shell (`drishti_editors.js` on `DesignerShell`, its YAML on `YamlPane`: the
+  hand-made gutter and highlight gone). Deleted whole: `drishti_studio-yaml.js`, `drishti_studio-assist.js`, `drishti_cm-yaml.js`
+  (`window.Drishti.yaml` points to the kit's reader).
+- **Harness and tests.** `drishti_harness.html` (a report designer built only from the kit, in any layout with `?layout=`; a flow
+  canvas; a stand-in approvals queue); Node: `tests/elements/designer.test.mjs` (the stack, snapshots, selection, the grid rules, the
+  model in grid and flow, commits, breakpoints, the keymap, YAML both ways and its ranges, the assistant, the inspector's shared
+  schema, the outline's moves, the palette, the shell's words); the browser: `tests/test_elements_designer_browser.py` (every layout,
+  pointer moves snapped to the grid, the corner, the keys, multi-select, align, group, undo, the inspector's conditional field, the
+  outline, YAML both ways and a broken line, Propose for review, a flow canvas's drag and keys, a phone). The gallery has a designer in
+  each layout and a flow canvas.
 
 ## 9. The documentation of every library
 
@@ -834,6 +1002,8 @@ is the example's source, not a copy).
 | **Licence** | drishti-risk served, or its kinds registered, without the banking module's licence |
 | **Docs** | `api_ref.py --check`, a gallery example that does not run, a hand-written option table |
 | **Size budget** | a library's gzip size over its budget (set from the first release, raised only on purpose) |
+| **No bespoke UI in a designer or editor** (`test_designer_kit_guard.py`, the standing rule of 3.1) | a script or page with its own pointer drag or drag and drop, its own code or YAML editor (CodeMirror by hand, a code text area), and in an authoring screen its own tree view or undo history; an allow-list of the files still being moved (section 12.3) that only shrinks and is capped |
+| **Design tokens** (`test_css_tokens.py`) | a colour literal in a console sheet outside `drishti_tokens.css`, a font size off the type scale, an `@media` width that is not a breakpoint, an undefined `--d-*`, an `!important` not on its allow-list ([4.1, Design tokens](#design-tokens)) |
 
 ## 12. Moving Drishti's screens onto the libraries
 
@@ -925,6 +1095,32 @@ DRISHTI_FIGURES_BASELINE=data/figures/before drishti-console/.venv/bin/python -m
 selects (drishti-inputs has no single-choice select); the scenario matrix's date headings lose their hover note (in the column
 description instead); the screens' scripts move into the banking plugin with the module platform (section 8).
 
+### 12.3 Every designer, editor and authoring tool on the kit (the standing rule of 3.1)
+
+The survey of 2026-11-07 (grep for drags, inspectors, palettes, outlines, code and YAML editors, then each authoring screen read). The
+old dataset wizard and model designer were deleted in 2.9.11.d; nothing of them survives (the Datasets page's "New table" opens the
+table editor, `/build/tables?new=table`; "the model designer" in two notes means the model editor).
+
+| Screen (files) | On the kit | Still its own (moving next) |
+|---|---|---|
+| Build workbench (`build/drishti_*.js`) | canvas (flow `LayoutCanvas`), drags (`DragHub`), YAML tab (`YamlPane`, schema assistant), about box (`CodeEditor`), the form and controls tabs' re-ordering (`sortableList`); undo stays the server's operation log | the inspector (`build/drishti_inspector.js` → `Inspector` from the Rachana schema), the palette (`build/drishti_palette.js` → `Palette`), the data-shape tree (`drishti_build-shape-tree.js` → `Outline`), the expression input (`build/drishti_expr.js` → `CodeEditor`) |
+| BI report designer (`drishti_bi-design*.js`) | canvas (grid `LayoutCanvas`), undo (`SnapshotHistory`), settle, YAML tab (`CodeEditor` with completion), the Phone and Tablet order's drag (`sortableList`) | the Fields and Visualizations panes (→ `Palette`), the Format pane (→ `Inspector`), the device orders' model (→ `LayoutModel` breakpoints), the expression editor (`drishti_bi-expr-editor.js` → `CodeEditor`) |
+| Dataset designer: the table editor, virtual tables (`drishti_editor-table.js`) | the shell (`DesignerShell`), the YAML (`YamlPane`) | the source and look-up rows, the columns checklist and computed columns (→ `Form`, drishti-grid editing), the formula input (`drishti_editor-formula.js` → `CodeEditor`) |
+| Model designer: the semantic model editor (`drishti_editor-model.js`) | the shell, the YAML | the tabs, measure cards and the access matrix (→ `Form`, drishti-grid), relationships |
+| Python table and model editor (`drishti_editor-python.js`) | the shell, the YAML | the code beside its contract (→ `CodeEditor` Python), the templates |
+| + New steps (`drishti_editor-new.js`) | the shell | the guided steps (→ `Form`) |
+| Sutra screen designer: Customize, Grid, Outline, Describe (`drishti_designer*.js`, `templates/designer/`) | | the panel handles and drags (→ `LayoutCanvas` flow), the Grid's cells and formula bar (→ `LayoutCanvas` grid, `CodeEditor`), the outline (→ `Outline`), the settings and forms panels (→ `Inspector`) |
+| Form designer (the workbench's Form and Controls tabs) | the cards' order by drag (`sortableList`) | their fields (→ `Inspector`) |
+| BI Studio shell and theme designer (`drishti_bi-studio.js`, `drishti_bi-theme-designer.js`) | | the explorer, tabs and dock (→ `DesignerShell`), the theme YAML (→ `YamlPane`) |
+| BI items, workspaces, transforms (`templates/bi/item.html`, `workspace.html`, `transform.html`) | | the YAML and Python text areas (→ `CodeEditor`) |
+| The Notebook's cells (`drishti_bi-notebook*.js`) | | its cells' code (→ `CodeEditor` Python) |
+| Calculator, Pivot computed fields (`terminal/_calc.html`, `terminal/pivot.html`) | | their code areas (→ `CodeEditor`) |
+| Admin › Connectors, Drishti*net (`templates/admin/_connector_dialogs.html`, `net.html`) | | the YAML areas (→ `YamlPane`) |
+| Reader layout mode, arranging a screen, workspaces (`drishti_layout.js`, `drishti_screen-grid.js`, `drishti_workspace.js`) | | the pointer moves (→ `LayoutCanvas`, `trackPointer`) |
+| Forms, record forms, alerts, subscriptions (`drishti_form*.js`, `drishti_record-forms.js`, `drishti_alert-form.js`, `drishti_subscribe-when.js`) | | `Form` (wip/e-inputs-convert moves the forms) |
+| Packs, lake files, lenses, editions, engines, settings (`drishti_pack-new.js`, `drishti_admin-*.js`) | | their forms (→ `Form` with four eyes) |
+| Approvals' change views (`drishti_approvals.js`, `build/_diff.html`) | | the diffs (→ drishti-inputs' `CodeDiff`) |
+
 ## 13. Risks
 
 | Risk | Mitigation |
@@ -967,11 +1163,15 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [x] drishti-inputs: pickers, forms with four eyes, the filter bar, the code editor (8.2); the formula input and people picker as their screens move
 - [x] drishti-renderer 2.0.0 on the libraries (8.5; the console's controls, funnels and Zoom still its scripts until their screens move)
 - [ ] drishti-insight, drishti-risk (in the banking plugin, licensed)
+- [x] The distribution (8.7): per-library packages with `.d.ts`, themes, `drishti.py elements pack` with the banking exclusion, the
+  zip with SRI hashes, npm tarballs for an internal registry, the WebJar (`-P elements`); the guide ELEMENTS_IN_YOUR_APP.md
+- [ ] The licence check (2.9.11.i) replaces `--include-domain` as the gate on drishti-risk
 - [x] The gallery in both modes, `playground` (default) and `docs` (g4 A and B), every component and example run in its browser file, the grid in both themes and three densities, a keyboard/ARIA smoke check on every demo (8.4)
 - [ ] axe vendored for the gallery's check; every example in both themes and three densities
 - [ ] Documentation per library (section 9): guide, generated API reference with `--check`, tutorial, gallery, the AG Grid migration guide, theming and accessibility guides, changelogs, versioning policy; Help entries
 - [x] The guards of section 11, the allow list (8.6: `test_elements_guards.py`; the allow-list holds only the BI, Pivot, VaR and exposure screens still moving)
 - [x] The general screens' tables, panel charts, history charts, Calc, the live connection and their numbers on the libraries (8.6)
-- [ ] The general screens' multi-select, pickers, controls, forms and Build editors (8.6, still to move)
+- [x] The general screens' multi-select, the as-of date and every date field, the controls' pickers, the history range, the people pickers and the comment box's lists on drishti-inputs 0.2.0 (8.2)
+- [ ] The forms on `Form` (needs its live mode, custom widgets, per-field hooks and a time type) and the Build and Studio editors (8.2, 8.6)
 - [ ] Every screen moved (section 12) and the old code deleted; the allow list empty (the BI and Pivot family: 12.1)
 - [ ] `tools/elements/inventory.py` (planned) regenerates section 2's figures; README and CHANGELOG updated; two drills

@@ -15,7 +15,7 @@
  */
 /* Admin -> Caches (2.9.7): the actions cell, a date to purge, the drill-down of a cache's dates, the whole-cluster switch */
 .cache-actions { white-space: nowrap; }
-.cache-actions .btn-pill { margin: .1rem .2rem .1rem 0; }
-.cache-date { display: inline-flex; gap: .3rem; align-items: center; margin-right: .3rem; }
-.cache-date input[type=date] { font-size: .8rem; padding: .15rem .3rem; min-height: 2rem; }
-.adm-check { display: inline-flex; gap: .35rem; align-items: center; margin-right: .6rem; font-size: .85rem; }
+.cache-actions .btn-pill { margin: var(--d-sp-1_6) var(--d-sp-3_2) var(--d-sp-1_6) 0; }
+.cache-date { display: inline-flex; gap: var(--d-sp-4_8); align-items: center; margin-right: var(--d-sp-4_8); }
+.cache-date input[type=date] { font-size: var(--d-fs-12_8); padding: var(--d-sp-2_4) var(--d-sp-4_8); min-height: 2rem; }
+.adm-check { display: inline-flex; gap: var(--d-sp-5_6); align-items: center; margin-right: var(--d-sp-9_6); font-size: var(--d-fs-13_6); }
