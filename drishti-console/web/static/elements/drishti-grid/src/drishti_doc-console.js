@@ -36,9 +36,9 @@ const NO_FILTERS = { attach: () => ({ prepare: () => {}, pass: () => true, activ
  * The console's table behaviours on every table.tbl under a root (the document or a ShadowRoot), now and as panels are swapped in.
  * @param {(Document|ShadowRoot)} root
  * @param {{scope: string, chart: boolean, openChart: function(HTMLTableElement, {visible: function(): HTMLTableRowElement[], filtered: boolean}, HTMLElement): void,
- *   columnFilters: Object, keys: Object, storageKey: string}} [options] scope: the page for remembered state (default the path); chart: offer
+ *   columnFilters: Object, storageKey: string}} [options] scope: the page for remembered state (default the path); chart: offer
  *   Chart any table inside a shadow root too; openChart: opens a table as a chart (none: no chart button); columnFilters: the funnels
- *   ({attach, say, close}); keys: the page's keymap, told the tables' keys; storageKey: where the rows per page are remembered
+ *   ({attach, say, close}); storageKey: where the rows per page are remembered
  * @returns {{scan: function(Node): void, dispose: function(): void}}
  */
 export function consoleTables(root, options) {
@@ -409,15 +409,6 @@ export function consoleTables(root, options) {
     Array.prototype.forEach.call((p || root).querySelectorAll('table.tbl'), function (x) { if (x.__tblClear) { x.__tblClear(); } });
   }
   root.addEventListener('keydown', onClearKey);
-  // the table's keys are its own (bound on the table and on root, so a host page's keys are untouched); on a console page the keymap lists them
-  if (root === document && options.keys && root.querySelector('table.tbl')) {
-    var KD = options.keys;
-    KD.describe({ id: 'table.walk', keys: ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Home', 'End', 'Enter'], scope: 'panel', area: 'table', group: 'Tables',
-      label: '↑ ↓ · PgUp PgDn · Home End · Enter', description: 'In a selected table: move the selected row, a page, to the first or last; open it' });
-    KD.describe({ id: 'table.chart', keys: ['K'], scope: 'panel', area: 'table', group: 'Tables', description: 'On a focused table: chart it' });
-    KD.describe({ id: 'table.filters.clear', keys: ['Alt+Shift+X'], scope: 'panel', area: 'panel', group: 'Tables',
-      description: 'Clear all column filters (and the filter box) of the panel that has the focus' });
-  }
   zoomFit = !!zoomedPanel();                      // zoomed from the link before this ran
   scan(root);
   if (zoomFit) { fitAll(true); }

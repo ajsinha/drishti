@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Drishti Market's Home (home/market_landing.html; EDITIONS.md › The design as built, section 13): paints the landing's panels from the console's answers, which
    core/market_landing.py works out from the market-data pack's own data: /api/home/market/desk (the tiles and the USD curves),
    /api/home/market/moves (the biggest moves, in sigma of each item's own history, or the largest moves, or none) and

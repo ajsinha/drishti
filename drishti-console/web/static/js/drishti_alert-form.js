@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The alert form (alert_form.html): shows only the fields that belong to the chosen source, condition and trigger (without this file all of them show),
    and "Check now" asks the server what the alert would read for you right now, without saving it. The answer is your own number, read with your masks:
    a masked number is reported as masked, never shown. */

@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Admin -> Engines (templates/admin/engines.html; docs/architecture/COMPUTE_ENGINES.md section 8, mock-up A). Flipping a switch only stages
    the change; the side panel shows the dependency check (refused changes say why and offer "Turn on both" / "Turn off all three"), what
    disappears for people (from the catalogue), what happens on the server (live, drain up to 30 s, or restart needed) and asks for the

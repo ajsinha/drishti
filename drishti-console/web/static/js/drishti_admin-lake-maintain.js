@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Admin → Lakes → Maintain: pick tables (all, by domain, one by one), dry run or maintain now with progress per table and cancel, settings per
    table, schedules (a day-and-time picker that writes the cron text, or after every build) and the history. Everything goes through
    /admin/api/lakes/maintain/... (routes/lake_maint_routes.py); the engine is tools/lake/maintain.py, the same as `drishti.py lake maintain`. */

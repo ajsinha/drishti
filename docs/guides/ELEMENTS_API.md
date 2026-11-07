@@ -3511,7 +3511,7 @@ The console's table behaviours on every table.tbl under a root (the document or 
 | Parameter | Type | Meaning |
 |---|---|---|
 | `root` | `(Document\|ShadowRoot)` |  |
-| `[options]` | `{scope: string, chart: boolean, openChart: function(HTMLTableElement, {visible: function(): HTMLTableRowElement[], filtered: boolean}, HTMLElement): void, columnFilters: Object, keys: Object, storageKey: string}` | scope: the page for remembered state (default the path); chart: offer Chart any table inside a shadow root too; openChart: opens a table as a chart (none: no chart button); columnFilters: the funnels ({attach, say, close}); keys: the page's keymap, told the tables' keys; storageKey: where the rows per page are remembered |
+| `[options]` | `{scope: string, chart: boolean, openChart: function(HTMLTableElement, {visible: function(): HTMLTableRowElement[], filtered: boolean}, HTMLElement): void, columnFilters: Object, storageKey: string}` | scope: the page for remembered state (default the path); chart: offer Chart any table inside a shadow root too; openChart: opens a table as a chart (none: no chart button); columnFilters: the funnels ({attach, say, close}); storageKey: where the rows per page are remembered |
 
 Returns `{scan: function(Node): void, dispose: function(): void}`.
 

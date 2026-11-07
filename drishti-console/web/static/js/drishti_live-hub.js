@@ -305,7 +305,7 @@
       root.importScripts(base + 'elements/drishti-core/drishti_core.js' + (v ? '?v=' + v[1] : ''), base + 'elements/drishti-data/drishti_data.js' + (v ? '?v=' + v[1] : ''));
       return root.Drishti.elements.data;
     }
-    throw new Error('the live hub needs drishti-data (Drishti Elements): load it first');
+    throw new Error('the live hub needs drishti-data: load it first');
   }
 
   (root.Drishti = root.Drishti || {}).LiveHub = Hub;

@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Admin -> Data out (templates/admin/data_out.html; FLIGHT_GUIDE.md section 9; mock-ups A and B of docs/architecture/mockups/data-out/).
    One answer (GET /admin/api/data-out), two views switched by the toggle (the choice kept in the address, ?view=map): the page (A) and the
    map (B). The shared parts (the service bar, a node card, a read's detail with Stop) are drawn by the same functions in both views. The
