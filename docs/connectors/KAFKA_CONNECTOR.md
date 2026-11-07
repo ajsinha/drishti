@@ -1035,7 +1035,7 @@ latest per trade, fewer rows in the lake. The window and the early flush are the
 |---|---|---|
 | `bootstrap-servers` | `${DRISHTI_KAFKA_BOOTSTRAP:localhost:9092}` | The brokers. |
 | `topic` | `${DRISHTI_VAR_PV_TOPIC:drishti.risk.pv-updates}` | The PV topic. |
-| `lake` | `${DRISHTI_DELTA_ROOT:./data/delta}` | The risk lake's root (tables `<lake>/risk/scenario-pv`, `<lake>/risk/pnl-vector`). |
+| `lake` | `${DRISHTI_DELTA_ROOT:./data/delta/demo}` | The risk lake's root (tables `<lake>/risk/scenario-pv`, `<lake>/risk/pnl-vector`). |
 | `poll-ms` | `200` | The poll timeout. |
 
 **The publisher.** `tools/pvgen/publish-kafka.sh` (`tools\windows\pvgen-publish-kafka.ps1`), a stand-in pricing system: it sends

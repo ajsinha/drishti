@@ -26,7 +26,7 @@ Nobody else holds a root, a table path, a partition column or a promoted column.
 ```yaml
 lake: main                                  # its name: the file's name; connectors and loads refer to it
 format: delta                               # delta | iceberg; a table may say otherwise
-root: s3://${DRISHTI_LAKE_BUCKET}/delta     # a local folder, s3://bucket/prefix, or mem://<store> for an in-memory store
+root: s3://${DRISHTI_LAKE_BUCKET}/delta     # a local folder, s3://bucket/prefix, or mem://<store>; none: <data>/delta/<lake>
 storage:                                    # how to reach it: the platform's role, or ${ENV} references; never a secret written here
   region: ${AWS_REGION:us-east-1}
 catalog: none                               # Iceberg: none (path tables) | rest | glue | s3tables, with its settings
@@ -71,8 +71,22 @@ secret written as a value (`secret-key: abc`), or a `lake:` that differs from th
 The lake folder is `config/lakes/` (the system property `drishti.lakes.dir` or the variable `DRISHTI_LAKES_DIR` say otherwise). A server
 may know several lakes: a shared lake, a Murex lake, an in-memory store. The demo lake's file also ships inside the server (a copy of
 `config/lakes/demo.yaml`), so a server started in another working folder, a container or a cluster node knows it; a `demo.yaml` in the lake
-folder wins. A reference may nest and may name a server setting: `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}` is the
-variable, else the data folder's `delta` (`drishti.data.dir` as a system property or as `DRISHTI_DATA_DIR`).
+folder wins. A reference may nest and may name a server setting: `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}` is the
+variable, else the data folder's `delta/demo` (`drishti.data.dir` as a system property or as `DRISHTI_DATA_DIR`).
+
+**Every lake is a folder of its own.** A lake file without `root:` (and without a catalog that says where its tables are) is at
+`<data>/delta/<lake>`, its tables at `<data>/delta/<lake>/<domain>/<table>`:
+
+```text
+data/delta/
+  demo/            the demo lake: demo/trading/trade_endur, demo/risk/scenario-pv, ... (DRISHTI_DELTA_ROOT, when a site sets it, names it instead)
+  risklake/        a lake the data inbox created for a load that named it (lake: risklake)
+  risk-results/    the official results: their own lakes' root is the publisher's setting, <data>/delta by default
+```
+
+A lake file may still name any root (another disk, `s3://...`). A demo lake built in the older layout, its tables directly in
+`<data>/delta/<domain>`, is moved into `<data>/delta/demo` once, safely, at the server's start or with `drishti.py lake relocate demo`
+([OPERATIONS.md, the lakes' folders](../admin/OPERATIONS.md#the-lakes-folders)).
 
 Example lake files for every example connector are in `config/lakes.examples/` (Delta in S3, Iceberg path tables, AWS S3 Tables, a REST
 catalog behind a private CA, an in-memory store), each beside its connectors in `config/connectors.examples/`.
@@ -81,10 +95,10 @@ catalog behind a private CA, an in-memory store), each beside its connectors in 
 
 | Who | How |
 |---|---|
-| Delta and Iceberg connectors | `lake: main` in the connector's settings, and its kinds. Root, table folders, storage, catalog, promoted columns and vectors come from the lake file; the connector file keeps only reading concerns (caches, refresh, warm dates, the source name). Where a kind has several tables, `lake-tables: trading.trade_endur` names the entries |
+| Delta and Iceberg connectors | Two forms, both permanent. **By lake:** `lake: main` in the connector's settings, and its kinds. Root, table folders, storage, catalog, promoted columns and vectors come from the lake file; the connector file keeps only reading concerns (caches, refresh, warm dates, the source name). Where a kind has several tables, `lake-tables: trading.trade_endur` names the entries. Switching a pack to another lake is one word: `lake: risklake`. **By path:** `root:` (a folder, `s3://bucket/prefix`) with `domain`, `table.<kind>` and `layout.<kind>.*`, for tables no lake file describes (a vendor's Delta table on S3); no warning. A connector that gives both: its own `root:` (or domain, table, layout) wins over the lake file's, and Admin → Connectors says so on the field |
 | The parallel loader (`LoadConfig`) | `target.lake: main` and `target.kind` (and `target.table` when a kind has several). Partitioning, promoted columns, vectors, id, date, latest-by, file layout and load mode come from the lake file. A key of the load file that says otherwise (`source.partition-by: [DESK]` against `[PRODUCT_TYPE]`) is refused with both named |
 | `drishti.py lake build` | `--lake main` (a name). `--lake-root DIR` writes the same layout under another folder (a scratch or test lake). `--partition-by`, `--promote`, `--vector` and `--key` must agree with the lake file or the run is refused |
-| The data inbox | a rule's `lake:` (or the inbox's `lake:`, `demo` as shipped) names a lake. A kind the lake file has no entry for gets its pack's recommended entry copied into the file first, said in the log; the table is then created exactly as the file says |
+| The data inbox | a `.ready` file's `lake:`, else a rule's `lake:`, else the inbox's `lake:` (`demo` as shipped) names a lake. A lake with no file yet is created (`config/lakes/<lake>.yaml`, format delta, its own folder `<data>/delta/<lake>`); a kind the lake file has no entry for gets its pack's recommended entry copied into the file first, said in the log; the table is then created exactly as the file says. A load into a lake no connector reads says so (DATA_LOAD_RULES.md section 5) |
 | The demo lakes | `config/lakes/demo.yaml` describes the demo lake like any other: `drishti.py lake demo` and `tools/build_demo_lakes.py` write through it (`--lake demo --lake-root <folder>`) |
 | The in-memory lake | a lake whose root is `mem://<store>` (section 6) |
 | Admin → Lakes | lists every lake and table from the files, read-only |
@@ -99,7 +113,7 @@ tables it has.
 ```yaml
 lake: demo
 format: delta
-root: ${DRISHTI_DELTA_ROOT:./data/delta}
+root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
 defaults: {load-mode: replace}
 tables:
   trading.trade_endur:
@@ -247,10 +261,14 @@ Iceberg the server makes the reader an Iceberg connector, nothing else.
 A connector file written from an older template keeps working (the older form, one warning); a template update never adds `lake:` to it
 (with `root` and `layout` beside it the connector would be refused): `drishti.py lake migrate-config` moves it.
 
-## 8. Migrating an older installation
+## 8. Moving connectors to the lake form
 
-An installation whose connector files carry `root`, `domain`, `table.<kind>` or `layout.<kind>.*` keeps working: those connectors start
-as before, with one warning naming the tool. To move:
+A connector that names its tables by path (`root`, `domain`, `table.<kind>`, `layout.<kind>.*`) is a form of its own and keeps working,
+with no warning. The connector files a server generated from a pack's template before the lake form, with the demo lake's old default
+root (`root: ${DRISHTI_DELTA_ROOT:./data/delta}` and its variants), are moved to `lake: demo` by the server once the demo lake is in its
+own folder (OPERATIONS.md, *The lakes' folders*): each file kept beside it first (`<name>.yaml.before-lake-<time>.bak`), its tables
+named by `lake-tables:`, a table the demo lake file lacks added to it from the connector's layout. To move other connectors to a lake of
+their own:
 
 1. **See what would change** (nothing is written):
 
@@ -262,9 +280,10 @@ as before, with one warning naming the tool. To move:
    `delta`) and each connector file rewritten to `lake: <name>` (and `lake-tables:` where a table is not named after its kind).
 2. **Write them**: `python3 tools/drishti.py lake migrate-config --write`. A lake file that exists already is never overwritten.
 3. **Check**: `python3 tools/drishti.py lake check` compares each lake file with the tables on disk.
-4. **Restart** the server (or let it reload the connector files). The warning is gone.
+4. **Restart** the server (or let it reload the connector files).
 
-Nothing under the data folder changes: tables keep their files and partitions. The old keys are read for one more release, then removed.
+Nothing under the data folder changes: tables keep their files and partitions. Connectors that read the demo lake by its old root become
+`lake: demo` (above); every other root becomes a lake file named after the root's last folder.
 
 ## 9. Maintenance from the lake file
 

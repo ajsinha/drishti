@@ -132,7 +132,7 @@ def manifest(spec: PackSpec, known_fields: dict[str, tuple[str, str]]) -> dict:
         m["graph"]["impact"] = spec.impact
     for d, ks in spec.domains.items():
         ks = [k for k in ks if k.kind not in spec.computed_kinds]
-        settings = {"root": "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", "domain": d}
+        settings = {"root": packlake.DEMO_ROOT, "domain": d}
         if d in spec.effective_domains:
             settings.update({f"mode.{k.kind}": "effective" for k in ks})
         laid = {k.kind: {"columns": list(spec.layouts[k.kind])} for k in ks if spec.layouts.get(k.kind)}
@@ -172,7 +172,7 @@ def overview(spec: PackSpec, docs: dict) -> str:
     first = spec.kinds[0]
     lines += MD.finding(first.mnemonic, first.label, first.prefix, pack=spec.name, code=spec.code)
     lines += ["## Where the data comes from", ""]
-    lines += t(["Connector", "Folder", "Kinds"], [[f"`{d}-store`", f"`data/delta/{d}/`", ", ".join(f"`{k.kind}`" for k in ks if k.kind not in spec.computed_kinds)]
+    lines += t(["Connector", "Folder", "Kinds"], [[f"`{d}-store`", f"`data/delta/demo/{d}/`", ", ".join(f"`{k.kind}`" for k in ks if k.kind not in spec.computed_kinds)]
                                                   for d, ks in spec.domains.items()]
                + [[f"`{n}`", "computed when asked (plugin `derived`)", ", ".join(f"`{k}`" for k in c["kinds"])] for n, c in spec.derived.items()])
     lines += ["## Kinds", ""]

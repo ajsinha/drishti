@@ -27,8 +27,18 @@ Exit codes: 0, 1 (the server said no), 2 (usage)."""
 from __future__ import annotations
 
 import json
+import os
 import sys
 import urllib.parse
+
+
+def _demo_root() -> str:
+    """The demo lake's root (config/lakes/demo.yaml): where intraday PVs are appended unless --lake says otherwise."""
+    p = str(__import__("pathlib").Path(__file__).resolve().parent / "lake")
+    if p not in sys.path:
+        sys.path.insert(0, p)
+    import lakeconfig
+    return lakeconfig.root("demo")
 
 EPILOG = ("examples:\n  drishti.py var show 'DESK:RATES'\n  drishti.py var show 'BANK - DESK:CREDIT' --date 2026-09-30\n"
           "  drishti.py var show BANK --ccy EUR\n"
@@ -650,7 +660,7 @@ def register(groups, srv, ctx: dict) -> None:
             say_json(res) if a.json else render_shards(res, print)
         elif c == "intraday":
             if a.load:
-                return load_intraday(a.load, a.lake, a.date, None if a.no_signal else api.base, api.token, a.dry_run, print)
+                return load_intraday(a.load, a.lake or _demo_root(), a.date, None if a.no_signal else api.base, api.token, a.dry_run, print)
             st = api.json("GET", "/api/v1/var/status")
             rows = [d for d in st.get("loaded") or [] if not d.get("currency") and (not a.date or d.get("businessDate") == a.date)]
             if a.json:
@@ -878,7 +888,7 @@ def register(groups, srv, ctx: dict) -> None:
                         "to the lake and signals it", parents=[srv])
     it.add_argument("--date", metavar="YYYY-MM-DD", help="one date; with --load, the business date the file's rows are moved to")
     it.add_argument("--load", metavar="FILE.jsonl", help="an intraday batch file (scenario PVs or P&L vectors, RUN_KIND INTRADAY)")
-    it.add_argument("--lake", default="data/delta", help="the Delta root to append to (default data/delta, the demo lake)")
+    it.add_argument("--lake", help="the Delta root to append to (default the demo lake's root, config/lakes/demo.yaml: <data>/delta/demo)")
     it.add_argument("--no-signal", action="store_true", help="append only; no data-load signal")
     it.add_argument("--dry-run", action="store_true", help="read and say what would be appended; write nothing")
     cv = sub.add_parser("convert", help="add the fields every PV record says what it is with (VALUE_TYPE, GRAIN, CURRENCY, ...) to an "

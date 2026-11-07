@@ -93,7 +93,7 @@ async def table_page(request: Request, root: str = "", table: str = ""):
     if not me.is_admin:
         return render(request, "admin/forbidden.html", status_code=403)
     lakes = _lakes(request)
-    roots = {str(r): r for r in lakes.cfg.roots}
+    roots = {str(r): r for r in lakes.cfg.lake_roots()}
     parts = table.split("/")
     path = roots[root] / parts[0] / parts[1] if root in roots and len(parts) == 2 and all(p and p not in (".", "..") for p in parts) else None
     if path is None or not (path / "_delta_log").is_dir():
@@ -186,7 +186,7 @@ async def targets(request: Request):
                                    "packs": [u.get("pack") for u in c.get("usedBy") or [] if isinstance(u, dict)] or ([c["template"]] if c.get("template") else [])})
     except BackendError as e:
         return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
-    return {"roots": [str(r) for r in lakes.cfg.roots], "tables": tables, "connectors": connectors, "runs": lakes.runs(10), "config": lakes.cfg.as_dict()}
+    return {"roots": [str(r) for r in lakes.cfg.lake_roots()], "tables": tables, "connectors": connectors, "runs": lakes.runs(10), "config": lakes.cfg.as_dict()}
 
 
 @router.post("/api/lakes/upload")

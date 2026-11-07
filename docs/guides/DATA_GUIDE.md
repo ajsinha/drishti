@@ -956,10 +956,10 @@ and `max-members` in its load file.
 ```bash
 # a day's trades as one archive (trade_endur/2026-10-28/*.jsonl), into the table its folder names
 drishti-console/.venv/bin/python tools/drishti.py lake build --from /landing/2026-10-28/trades.tar.gz \
-    --pack config/packs/trading --connector trade-endur --key TRADE_ID --lake data/delta
+    --pack config/packs/trading --connector trade-endur --key TRADE_ID --lake data/delta/demo
 
 # an archive of lake rows, a <table>/<YYYY-MM-DD>/ folder per table and date
-drishti-console/.venv/bin/python tools/samplegen/load_rows.py --rows /landing/bank-history.tar.gz --root data/delta
+drishti-console/.venv/bin/python tools/samplegen/load_rows.py --rows /landing/bank-history.tar.gz --root data/delta/demo
 
 # what is inside, as JSON Lines: bundle/trade.jsonl and bundle/position.jsonl
 drishti-console/.venv/bin/python tools/drishti.py convert bundle.zip
@@ -1364,7 +1364,8 @@ touch data/dataload/inbox/trade_endur.2026-11-03.ready            # or trade_end
 ```
 
 The `.ready` file is named after its data file in full or without the data extension; a short name that could release two files releases
-neither. It may stay empty, or say (YAML or JSON) how to load this one file ([DATA_LOAD_RULES.md section 5](../architecture/DATA_LOAD_RULES.md)):
+neither. It may stay empty, or say (YAML or JSON) how to load this one file ([DATA_LOAD_RULES.md section 5](../architecture/DATA_LOAD_RULES.md)).
+Every key, all optional:
 
 ```yaml
 business-date: 2026-11-03   # every row's business date, over the name's (refused for a tar)
@@ -1373,9 +1374,34 @@ pack: trading               # the pack, and its kind and connector when the tabl
 kind: trade
 connector: trade-endur
 mode: replace               # append (the default) or replace
+new-table: false            # true: this load may create a table no pack has (when the inbox allows new tables)
+key: TRADE_ID               # the id field (a new table needs it; default: the pack's key)
+folders: {trade_endur: trading}   # a tar only: table folder -> pack
 sha256: 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08   # checked before loading: a file cut short is refused
 rows: 48213                 # the documents the file holds: checked by the loader before anything is written
+hold: false                 # true: the file waits until released
+lake: risklake              # the lake the file goes to, over a rule's lake: and the inbox's default (demo)
 ```
+
+**Lakes are folders.** Every lake has its own folder under `<data>/delta`, its tables below it by domain:
+
+```text
+data/delta/
+  demo/                      the demo lake (config/lakes/demo.yaml): demo/trading/trade_endur, demo/risk/scenario-pv, ...
+  risklake/                  a lake of your own: risklake/trading/trade_endur, risklake/risk/scenario-pv
+  risk-results/              the official VaR and exposure results the server publishes (config/lakes/var-official.yaml, ccr-official.yaml)
+```
+
+`lake: risklake` in a `.ready` file (or a rule's `lake:`) sends the file there. A lake that has no file yet is **created** by its first
+load: `config/lakes/<lake>.yaml` (here risklake.yaml), format delta, root `${drishti.data.dir:./data}/delta/risklake`, with the recommended entry of each
+table that lands in it (the pack's layout, copied once; edit it there from then on). Loading real data this way never touches the demo
+lake or its data. To test with real data:
+
+1. Drop the files with `lake: risklake` in each `.ready` file (or one rule with `lake: risklake`).
+2. The load report, Admin → Data loads → Inbox and `drishti.py dataload status` say *loaded into risklake, but no connector reads it:
+   point market-risk's connectors at it (lake: risklake) and restart*: the rows are in the lake, and nothing shows them yet.
+3. Point the pack's connectors at the lake (`lake: risklake` in each connector's file, `config/connectors/<name>.yaml`, or Admin →
+   Connectors) and restart the server. The demo lake stays as it is; point the connectors back at `lake: demo` to see it again.
 
 ### 3. Routing: which table a file goes to
 

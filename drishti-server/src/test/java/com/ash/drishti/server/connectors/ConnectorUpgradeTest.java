@@ -59,6 +59,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.packs.enabled=market-risk,counterparty-risk",
         "drishti.sources.plugins.demo.enabled=false",
         "drishti.sources.connectors-dir=target/connector-upgrade/connectors", "drishti.data.dir=target/connector-upgrade/data",
+        "DRISHTI_DELTA_ROOT=target/connector-upgrade/data/delta/demo",      // the 2.9.4 files' root and the demo lake's: one folder
         "drishti.var.official.on-start=false", "drishti.ccr.exposure.official.on-start=false", "drishti.ccr.exposure.close-grace-seconds=0",
         "drishti.var.threads=2", "drishti.var.tier.close-grace-seconds=0",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
@@ -90,7 +91,7 @@ class ConnectorUpgradeTest {
         }
         copy(FIXTURE.resolve("connectors"), BASE.resolve("connectors"));
         copy(FIXTURE.resolve("generated"), BASE.resolve("data/connectors/generated"));
-        Path delta = Files.createDirectories(BASE.resolve("data/delta"));
+        Path delta = Files.createDirectories(BASE.resolve("data/delta/demo"));       // the demo lake's own folder (config/lakes/demo.yaml)
         // the VaR inputs as the current pack expects them: with LIMIT_LETTER, which its demo hierarchy LL is built from (2.9.5)
         fixture("com.ash.drishti.server.var.VarHierarchyFixture", delta);
         Path ccr = Files.createDirectories(BASE.resolve("ccr"));

@@ -26,6 +26,7 @@ import subprocess
 import sys
 
 from _tut import PASSWORD, SERVER_ENV, login
+from shotlib import DEMO_ROOT_ENV
 from shotlib import ROOT, Ctx, register
 from shotlib import start_servers as _start
 
@@ -45,7 +46,7 @@ def start_servers(work) -> list:
                        capture_output=True, text=True, cwd=ROOT, timeout=900)
     if r.returncode != 0:
         sys.exit("could not build the demo lake: " + (r.stderr or r.stdout)[-600:])
-    return _start(work, {**SERVER_ENV, "DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true"})
+    return _start(work, {**SERVER_ENV, DEMO_ROOT_ENV: str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true"})
 
 
 def _post(c: Ctx, path: str, body: dict) -> dict:

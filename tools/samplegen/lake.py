@@ -18,7 +18,7 @@ market-sensitive numbers with a deterministic random walk, so moving the date in
 loading are separate steps (docs/guides/DATA_GUIDE.md): this writes JSONL; tools/samplegen/load_rows.py loads it.
 
     uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \\
-        --samples examples/packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30] [--rows DIR] [--no-load]
+        --samples examples/packs/finance/samples --root data/delta/demo --domain finance --days 10 [--as-of 2026-09-30] [--rows DIR] [--no-load]
 
 Rows (--rows DIR, default <root>/../build/lake-rows), by the load rules (docs/architecture/DATA_LOAD_RULES.md: a file is one table and
 one date, a tar holds several): <name>-history.tar, every business date of every kind as <table>/<YYYY-MM-DD>/rows.jsonl, and
@@ -156,8 +156,10 @@ def write_rows(out: pathlib.Path, name: str, tables, end: date, days: int, cal: 
 
 
 def rows_dir(root: pathlib.Path) -> pathlib.Path:
-    """Where the lake's loader rows go by default: <root>/../build/lake-rows (data/delta -> data/build/lake-rows)."""
-    return root.resolve().parent / "build" / "lake-rows"
+    """Where the lake's loader rows go by default: <data>/build/lake-rows (data/delta/demo or data/delta -> data/build/lake-rows)."""
+    root = root.resolve()
+    data = root.parent.parent if root.parent.name == "delta" and root.name != "delta" else root.parent
+    return data / "build" / "lake-rows"
 
 
 def write_tables(out: pathlib.Path, kinds: dict[str, dict[str, dict]], end: date, days: int, cal: Calendar,

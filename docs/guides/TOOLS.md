@@ -106,7 +106,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `pack` | `pack make`, `pack new`, `pack regenerate`, `pack diff`, `pack catalogue`, `pack i18n`, `pack check`, `pack about-check`, `pack bundle`, `pack verify`, `pack deploy`, `pack rollback`, `pack publish`, `pack keygen`, `pack install` | [5.2](#52-pack) |
 | `data` | `data profile`, `data ingest`, `data load`, `data landed`, `data loads`, `data get` (a dataset as `.jsonl.gz`, Export data) | [5.3](#53-data) |
 | `dataload` | `dataload status`, `dataload run`, `dataload retry` (the data inbox: files dropped in a folder, loaded by the server) | [5.3a](#53a-dataload) |
-| `lake` | `lake build`, `lake publish`, `lake scan`, `lake status`, `lake demo`, `lake maintain`, `lake undo` (one load's rows removed by its load id, [DATA_LOAD_RULES.md section 6.3](../architecture/DATA_LOAD_RULES.md)), `lake memory` (the in-memory lake's stores, jobs and refills, [IN_MEMORY_LAKE_GUIDE](IN_MEMORY_LAKE_GUIDE.md)) | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
+| `lake` | `lake build`, `lake publish`, `lake scan`, `lake status`, `lake demo`, `lake maintain`, `lake relocate` (a lake built in the older layout moved into its own folder once, [OPERATIONS.md](../admin/OPERATIONS.md#the-lakes-folders)), `lake undo` (one load's rows removed by its load id, [DATA_LOAD_RULES.md section 6.3](../architecture/DATA_LOAD_RULES.md)), `lake memory` (the in-memory lake's stores, jobs and refills, [IN_MEMORY_LAKE_GUIDE](IN_MEMORY_LAKE_GUIDE.md)) | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
 | `server` | `server health`, `server caches`, `server packs`, `server commands`, `server smoke`, `server engines` (`admin engines` is the same: the compute engines on or off, [OPERATIONS section 21](../admin/OPERATIONS.md)) | [5.4](#54-server-and-doctor) |
 | `connector` | `connector list`, `connector get`, `connector apply`, `connector delete`, `connector test`, `connector plugins`, `connector enable`, `connector disable`, `connector reset`, `connector history` | [5.5](#55-connector) |
 | `net` | `net list`, `net check`, `net add-peer`, `net set`, `net members` | [5.9](#59-net) |
@@ -129,7 +129,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
 `tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/build_demo_lakes.py` (every demo lake start to finish: `lake demo` over all sixty days, then your own ENDUR files one per date, `--store calypso=iceberg` for a source system in Iceberg, `--dry-run` to look first; the Windows QA guide's step 3.0), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
 `tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), `tools/varcli.py` (`var`), `tools/datacli.py` (`data get`), `tools/expcli.py` (`exposure`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
-`tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/icebergwrite.py` (`lake build --format iceberg`, §4.4b), `tools/lake/demo.py` (`lake demo`), `tools/lake/undo.py` (`lake undo`), `tools/lake/filedate.py` (a file name's table and business date, the Python half of drishti-common's `FileDates`), `tools/lake/feedroute.py` (a feed file paired with its `.ready` file and routed to a pack and kind), `tools/lake/feedfiles.py` (our own generators' dated feed files, by the load rules), `tools/lake/memory_cli.py` (`lake memory status|jobs|refill`), `tools/enginescli.py` (`server engines list|show|on|off|history`), `tools/dataloadcli.py` (`dataload status|run|retry`), `tools/lake/memory_caps.py` (the launchers' direct-memory limit from the stores' caps), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists). `tools/connector_upgrade_fixture.py` is not a `drishti.py` group: it writes the connector files an older release's server generated, the fixture of the connector upgrade drill (`ConnectorUpgradeTest`, [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) "Upgrades").
+`tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/icebergwrite.py` (`lake build --format iceberg`, §4.4b), `tools/lake/demo.py` (`lake demo`), `tools/lake/undo.py` (`lake undo`), `tools/lake/relocate.py` (`lake relocate`), `tools/lake/filedate.py` (a file name's table and business date, the Python half of drishti-common's `FileDates`), `tools/lake/feedroute.py` (a feed file paired with its `.ready` file and routed to a pack and kind), `tools/lake/feedfiles.py` (our own generators' dated feed files, by the load rules), `tools/lake/memory_cli.py` (`lake memory status|jobs|refill`), `tools/enginescli.py` (`server engines list|show|on|off|history`), `tools/dataloadcli.py` (`dataload status|run|retry`), `tools/lake/memory_caps.py` (the launchers' direct-memory limit from the stores' caps), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists). `tools/connector_upgrade_fixture.py` is not a `drishti.py` group: it writes the connector files an older release's server generated, the fixture of the connector upgrade drill (`ConnectorUpgradeTest`, [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) "Upgrades").
 
 ## 4. lake build: a large JSON export into a Delta lake
 
@@ -477,7 +477,7 @@ connectors:
     plugin: delta
     kinds: [trade]
     settings:
-      root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
+      root: "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}"
       domain: trading
       table.trade: trade_endur
       layout.trade.columns: "TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,...,COUNTERPARTY,LEGAL_ENTITY,PORTFOLIO,TRADER_ID"
@@ -534,13 +534,13 @@ the page, then binds the lake to the pack's connector and sends the signal as th
 ### 4.9 The demo lakes: lake demo
 
 `drishti.py lake demo` (run configuration **Build demo lakes**) is `lake build` run for every dataset and business day of the
-committed test data, `data/testdata`: the seven packs' tables under `data/delta` in about 15 minutes (943 s measured, about 3.4 GB), the sixty days moved to end on today's
+committed test data, `data/testdata`: the seven packs' tables under `data/delta/demo` (the demo lake's own folder) in about 15 minutes (943 s measured, about 3.4 GB), the sixty days moved to end on today's
 business date (`--as-of data` keeps the files' own dates), the connector files checked, the next steps printed. `--only PREFIX` builds
 some datasets, `--keep-other-dates` keeps a dated table's other business dates (each date written is replaced) instead of
 rebuilding the table (the VaR data's three dates are 2026-09-28 to 2026-09-30; `--as-of 2026-09-25 --keep-other-dates --only market-risk/...`
 adds them again moved back, as 2026-09-23 to 2026-09-25, the scenario window moved with it: [tutorial 25, step 16](../tutorials/25-var-from-the-bank-to-a-trade.md#step-16--the-scenario-matrix-scenarios-across-the-days)), `--lake DIR` another folder (the connector files then point there), `--with-real FILE[,FILE]` adds real extracts to the
 local lake only. The sample feed the `file` connector serves (`feeds/`) and the staging go to the server's data folder: `--data-dir DIR`, else
-`DRISHTI_DATA_DIR`, else the folder holding `--lake` when that is a `delta/` folder (`--lake /srv/data/delta`: `/srv/data`), else `data/`, so a
+`DRISHTI_DATA_DIR`, else the folder holding the lakes' `delta/` folder (`--lake /srv/data/delta/demo`: `/srv/data`), else `data/`, so a
 server on another data folder finds its feeds (`make_data.py --data-dir DIR` does the same). It then tells the server the lakes changed: the data-load signal for every table and date to `--server` (default
 `DRISHTI_SERVER`, then `http://localhost:18480`; a token with `loads:write` from `--token-file` or `DRISHTI_TOKEN`), or, with no server
 there, the stamp of section 4.7; `--no-signal` does neither, and `--signal-once` tells each table once, for its newest date, instead of
@@ -1546,7 +1546,7 @@ generated trade book) into one store, **in the layout that store's connector rea
 
 | Script | Store and layout | Retention |
 |---|---|---|
-| `tools/load-delta.sh` | Delta Lake under `data/delta`, the pack's layout (`tools/windows/load-delta.ps1` on Windows) | `drishti.py lake maintain` |
+| `tools/load-delta.sh` | Delta Lake under `data/delta/demo` (the demo lake), the pack's layout (`tools/windows/load-delta.ps1` on Windows) | `drishti.py lake maintain` |
 | `tools/load-files.sh` | the File connector's JSON Lines, `<root>/<domain>/<yyyy-MM-dd>/<kind>.jsonl`, each file replaced whole | delete old day folders |
 | `tools/load-postgres.sh` | PostgreSQL, `<domain>.entities` partitioned by month, promoted columns | `--keep-months N` |
 | `tools/load-duckdb.sh` | one DuckDB file, written beside and renamed over the old one | `--keep-days N` |

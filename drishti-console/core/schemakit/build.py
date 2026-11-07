@@ -172,6 +172,16 @@ def drafts_ok(items: list[Item], drafts: dict) -> list[str]:
 
 # ----------------------------------------------------------------------------------------------- pack.yaml
 
+def _demo_root_ref() -> str:
+    """The demo lake's root as a connector names it (tools/lake/lakeconfig.py: the one place it is spelled)."""
+    import importlib
+    import sys
+    p = str(pathlib.Path(__file__).resolve().parents[3] / "tools" / "lake")
+    if p not in sys.path:
+        sys.path.insert(0, p)
+    return importlib.import_module("lakeconfig").DEMO_ROOT_REF
+
+
 def connector_block(pack: str, kinds: list, store: str, plan_cols: dict) -> dict:
     """A connector for kinds that share a logical name: the file or delta plugin on the usual root, one layout per kind."""
     if store == "file":
@@ -186,7 +196,7 @@ def connector_block(pack: str, kinds: list, store: str, plan_cols: dict) -> dict
                 "settings": {"root": "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}", "domain": pack, "id-field": "id",
                              "layout": layout}}
     return {"plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": sorted(k.kind for k in kinds),
-            "settings": {"root": "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", "domain": pack,
+            "settings": {"root": _demo_root_ref(), "domain": pack,
                          "layout": {k.kind: {"columns": plan_cols[k.kind], "sort-by": "id", "file-rows": 250000, "row-group-rows": 1000} for k in kinds}}}
 
 

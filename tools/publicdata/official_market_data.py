@@ -246,6 +246,16 @@ class Estr(MarketSource):
 
 SOURCES = [EcbFx(), UsTreasury(), Sofr(), Estr()]
 KEYS = {"fx-spot": "PAIR", "ir-curve": "CURVE_ID", "rate-fixing": "INDEX_ID"}
+
+def _demo_root() -> str:
+    """The demo lake's root (config/lakes/demo.yaml), where the load goes."""
+    p = str(Path(__file__).resolve().parents[1] / "lake")
+    if p not in sys.path:
+        sys.path.insert(0, p)
+    import lakeconfig
+    return lakeconfig.root("demo")
+
+
 LOAD = ("uv run --with deltalake --with pyarrow --with pyyaml python tools/ingest_jsonl.py --from {out} --domain market "
         "--key fx-spot=PAIR,ir-curve=CURVE_ID,rate-fixing=INDEX_ID --lake {lake}")      # each file under its name's date
 
@@ -328,7 +338,7 @@ def refresh(a, log=print) -> int:
     for f in files:
         log(f"wrote {f}")
     if files:
-        log("load: " + LOAD.format(out=out, lake=B.data_dir() / "delta"))
+        log("load: " + LOAD.format(out=out, lake=_demo_root()))
     return 1 if not files else 2 if (problems or run.http.failed or len(done) < len(selected)) else 0
 
 

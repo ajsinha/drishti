@@ -467,7 +467,7 @@ for all of them.
 To keep more than the window (years of SOFR fixings, every Treasury curve), archive the feed's documents into a dated store under the
 **same ids**, for example a daily job that reads `GET /api/v1/entities/rate-fixing/FIX-SOFR-NYFED/raw?asOf=<date>` and writes the
 document as a row for that business date into the market domain of the lake: `drishti.py lake build --from <the day's JSON Lines>
---pack config/packs/market-data --kind rate-fixing --connector market-store --key INDEX_ID --as-of <date> --lake data/delta` (the
+--pack config/packs/market-data --kind rate-fixing --connector market-store --key INDEX_ID --as-of <date> --lake data/delta/demo` (the
 `lake build` command, [TOOLS.md](../guides/TOOLS.md); give the key the field name the archived document uses, `indexId` for a feed
 document today, see the known gap).
 

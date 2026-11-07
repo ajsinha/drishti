@@ -130,7 +130,7 @@ def domain_kinds(domain: str) -> list[str]:
 
 
 def connector(domain: str) -> dict:
-    settings = {"root": "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", "domain": domain}
+    settings = {"root": packlake.DEMO_ROOT, "domain": domain}
     if domain in EFFECTIVE_DOMAINS:
         settings.update({f"mode.{k}": "effective" for k in domain_kinds(domain)})
     if domain in LAYOUTS:

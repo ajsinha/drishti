@@ -15,10 +15,12 @@
 # config/lakes/demo.yaml: the demo lake (docs/guides/LAKE_GUIDE.md section 3). The demo lake is a lake like any other: drishti.py lake
 # demo, tools/build_demo_lakes.py, the data inbox and the demo's connectors all write and read through this file. Every table is
 # partitioned by business_date first, always; partition-by names only what comes after it. A table's entry is the truth: an administrator
-# edits it here, never in a connector file or on a command line (a --partition-by that disagrees is refused, naming both).
+# edits it here, never in a connector file or on a command line (a --partition-by that disagrees is refused, naming both). Like every lake
+# it has its own folder, <data>/delta/demo (DRISHTI_DELTA_ROOT, when a site sets it, names the root instead); a demo lake built in the older
+# layout, directly in <data>/delta, is moved into it once, safely, at start (drishti.py lake relocate demo; docs/admin/OPERATIONS.md).
 lake: demo
 format: delta
-root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
+root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
 defaults: {load-mode: replace}
 tables:
   compute-demo.path-book:

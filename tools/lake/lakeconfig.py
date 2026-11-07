@@ -152,6 +152,60 @@ def dump(folder: pathlib.Path | None = None) -> dict:
     return run(["dump"], folder)
 
 
+# ---- where lakes are ---------------------------------------------------------------------------------------------------------------------
+# The one place the tools know the lakes' folders (LAKE_GUIDE.md section 1): every lake in its own folder, <data>/delta/<lake> (an Iceberg
+# lake <data>/iceberg/<lake>), unless its lake file names a root; the demo lake's root may be named by DEMO_ROOT_ENV, as config/lakes/demo.yaml
+# says. A tool that needs a lake's folder asks root(); nothing else spells data/delta.
+
+#: the environment variable that names the demo lake's root (config/lakes/demo.yaml: ${DRISHTI_DELTA_ROOT:<data>/delta/demo})
+DEMO_ROOT_ENV = "DRISHTI_DELTA_ROOT"
+#: the demo lake's root as config/lakes/demo.yaml writes it (a connector or a lake file that names the demo lake's folder)
+DEMO_ROOT_REF = "${" + DEMO_ROOT_ENV + ":${drishti.data.dir:./data}/delta/demo}"
+#: the official results' root as config/lakes/var-official.yaml and ccr-official.yaml write it (the publisher's default)
+OFFICIAL_ROOT_REF = "${" + DEMO_ROOT_ENV + ":${drishti.data.dir:./data}/delta}"
+
+
+def data_dir() -> pathlib.Path:
+    """The data folder: DRISHTI_DATA_DIR, else this checkout's data/."""
+    return pathlib.Path(os.environ.get("DRISHTI_DATA_DIR") or (ROOT / "data"))
+
+
+def lakes_parent(data: pathlib.Path | None = None, fmt: str = "delta") -> pathlib.Path:
+    """The folder every lake's own folder is in: <data>/delta (<data>/iceberg for an Iceberg lake)."""
+    return pathlib.Path(data or data_dir()) / ("iceberg" if fmt == "iceberg" else "delta")
+
+
+def default_root(name: str, data: pathlib.Path | None = None, fmt: str = "delta") -> pathlib.Path:
+    """A lake's folder when its lake file names no root: <data>/delta/<name> (the demo lake: DEMO_ROOT_ENV when set)."""
+    if name == "demo" and os.environ.get(DEMO_ROOT_ENV):
+        return pathlib.Path(os.environ[DEMO_ROOT_ENV])
+    return lakes_parent(data, fmt) / name
+
+
+def root(name: str = "demo", folder: pathlib.Path | None = None) -> str:
+    """Lake ``name``'s root as its lake file says, read by the one reader (a folder, s3://bucket/prefix or mem://store); a relative folder is
+    this checkout's. Without Java to read the lake files, the documented default (default_root)."""
+    try:
+        for lake in dump(folder).get("lakes") or []:
+            if lake.get("lake") == name:
+                r = str(lake.get("root") or "")
+                if "://" in r or not r:
+                    return r
+                p = pathlib.Path(r)
+                return str(p if p.is_absolute() else (ROOT / p).resolve())
+        raise LakeConfigError(f"no lake named {name} in {folder or lakes_dir()}")
+    except LakeConfigError:
+        if (folder or lakes_dir()).joinpath(f"{name}.yaml").is_file() or name == "demo":
+            return str(default_root(name))
+        raise
+
+
+def demo_root() -> pathlib.Path:
+    """The demo lake's folder (config/lakes/demo.yaml): DEMO_ROOT_ENV, else <data>/delta/demo."""
+    r = root("demo")
+    return pathlib.Path(r)
+
+
 def disagree(what: str, given, lakes, entry: dict) -> None:
     """A command-line value the lake file also decides: the same, or the run is refused naming both."""
     if not given:

@@ -37,17 +37,17 @@ Every kind has a mnemonic (see *Kinds*). Type it with an identifier, the start o
 
 ## Where the data comes from
 
-Each kind is read from the Delta Lake folder of its **data domain** (`data/delta/<domain>/<kind>/`, partitioned by business date). Pick a date in the top bar to see that day; **Live** reads the streaming source first.
+Each kind is read from the Delta Lake folder of its **data domain** (`data/delta/demo/<domain>/<kind>/`, partitioned by business date). Pick a date in the top bar to see that day; **Live** reads the streaming source first.
 
 | Connector | Folder | Domain | Tables | Kinds |
 |---|---|---|---|---|
-| `trade-endur` | `data/delta/trading/trade_endur/` | Trades booked in ENDUR | snapshot (every business date), a union with the other two | `trade` |
-| `trade-calypso` | `data/delta/trading/trade_calypso/` | Trades booked in CALYPSO | snapshot (every business date), a union with the other two | `trade` |
-| `trade-murex` | `data/delta/trading/trade_murex/` | Trades booked in MUREX | snapshot (every business date), a union with the other two | `trade` |
+| `trade-endur` | `data/delta/demo/trading/trade_endur/` | Trades booked in ENDUR | snapshot (every business date), a union with the other two | `trade` |
+| `trade-calypso` | `data/delta/demo/trading/trade_calypso/` | Trades booked in CALYPSO | snapshot (every business date), a union with the other two | `trade` |
+| `trade-murex` | `data/delta/demo/trading/trade_murex/` | Trades booked in MUREX | snapshot (every business date), a union with the other two | `trade` |
 
 ### One trade view, three source systems
 
-Each booking system lands in a table of its own and is read by its own connector; the three serve the kind `trade` together (`union: true`): a trade opens from whichever system holds it, and a search, a type-ahead, the search form's drop-downs and a BI table read all three, each row saying its `SOURCE_SYSTEM`. Build the three tables, with a week of business days and the day's amendments, with `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/trades/make_trades.py --trades 3000 --days 7 --lake data/delta`.
+Each booking system lands in a table of its own and is read by its own connector; the three serve the kind `trade` together (`union: true`): a trade opens from whichever system holds it, and a search, a type-ahead, the search form's drop-downs and a BI table read all three, each row saying its `SOURCE_SYSTEM`. Build the three tables, with a week of business days and the day's amendments, with `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/trades/make_trades.py --trades 3000 --days 7 --lake data/delta/demo`.
 
 ### Live trades and pages over many trades
 
@@ -61,7 +61,7 @@ Every screen of the pack is built from fragments: the Drishti UI kit's (`config/
 
 Every deal screen (Endur, Calypso and Murex) has a **Risk** group, the UI kit's `risk-links@1` (panel code `RISK`): the trade's **P&L vector** (`PNLV PV-<trade>-HS-509`, the market-risk pack's `pnl-vector`), its **VaR** (`VRES TRD:<trade>`; `VAR TRD <trade>` opens it in the VaR explorer) and its **exposure** (`EXP TRD:<trade>`). They are real links: the VaR and exposure engines set `PNL_VECTOR_ID`, `VAR_RESULT_ID` and `EXPOSURE_RESULT_ID` on the view of the trade when the day's vectors and the exposure run hold it, so the linked entities list them too; when they do not, the row says why (*not live on <date>: its status is CANCELLED; no P&L vector*, *no exposure paths on <date>*). The Sutras get it from the generator (`tools/packgen/trades/sutras.py`); a picture is in the [VaR guide, section 3.7](../../../../docs/guides/VAR_GUIDE.md#37-the-portfolio-and-position-pages).
 
-Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
+Load real data into each domain's folder, or point a domain at a database instead by overriding its connector in the site configuration. For a demonstration lake built from the generated samples, run `uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/banking/make_data.py --lake data/delta/demo`: it writes the history as JSON Lines rows (`data/build/lake-rows`), then loads them (generating and loading are separate steps, [Data formats](../../../../docs/guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
 
 ## Kinds
 

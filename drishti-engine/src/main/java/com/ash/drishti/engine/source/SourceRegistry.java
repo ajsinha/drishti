@@ -654,6 +654,44 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         }).sorted().toList();
     }
 
+    /**
+     * The lakes the switched-on Delta and Iceberg connectors read: each one's {@code lake:}, and for a connector that still names its
+     * {@code root} itself, the lake of that root (docs/guides/LAKE_GUIDE.md). The data inbox warns of a load into a lake not in it.
+     */
+    public java.util.Set<String> lakesRead() {
+        java.util.Set<String> out = new java.util.TreeSet<>();
+        java.util.Map<String, String> byRoot = new java.util.HashMap<>();
+        try {
+            com.ash.drishti.lakeconfig.Lakes.current().all().values().forEach(l -> byRoot.putIfAbsent(normal(l.root()), l.name()));
+        } catch (IllegalArgumentException | java.io.UncheckedIOException e) {
+            LOG.debug("the lakes cannot be read for the connectors' lakes: {}", e.getMessage());
+        }
+        applied.forEach((name, c) -> {
+            if (c == null || !com.ash.drishti.lakeconfig.ConnectorLake.PLUGINS.contains(c.plugin()) || Boolean.FALSE.equals(c.enabled())
+                    || c.settings() == null) {
+                return;
+            }
+            String lake = c.settings().get(com.ash.drishti.lakeconfig.ConnectorLake.LAKE);
+            if (lake != null && !lake.isBlank()) {
+                out.add(lake.strip());
+            } else if (c.settings().get("root") != null && byRoot.containsKey(normal(c.settings().get("root")))) {
+                out.add(byRoot.get(normal(c.settings().get("root"))));
+            }
+        });
+        return out;
+    }
+
+    private static String normal(String root) {
+        if (root == null || root.contains("://")) {
+            return root == null ? "" : root.replaceAll("/+$", "");
+        }
+        try {
+            return java.nio.file.Path.of(root).toAbsolutePath().normalize().toString();
+        } catch (RuntimeException e) {
+            return root;
+        }
+    }
+
     /** Offline mode as the server started with it. */
     public OfflineMode offline() {
         return offline;

@@ -21,6 +21,51 @@
 
 ## 2.9.11.d (unreleased)
 
+- **Every lake in its own folder; real data loads beside the demo, never over it** (product owner, 2026-11-07; LAKE_GUIDE.md section 1,
+  DATA_LOAD_RULES.md section 5, OPERATIONS.md *The lakes' folders*):
+  - **A lake's root defaults to `<data>/delta/<lake>`** (`Lakes.defaultRoot`): a lake file without `root:` is in its own folder, and a lake
+    file may still name any root. The demo lake is `data/delta/demo` (`config/lakes/demo.yaml`: `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}`;
+    `DRISHTI_DELTA_ROOT`, when a site sets it, still names its root). The official results stay at `<data>/delta/risk-results`.
+  - **The one-time move** of a demo lake built in the older layout (`data/delta/<domain>/<table>`) into `data/delta/demo/`
+    (`LakeRelocate`, drishti-lakeload): at the server's start before any connector opens a table (`drishti.lakes.relocate-on-start`,
+    on), or `drishti.py lake relocate demo [--dry-run]`. Only the lake's known folders and `_drishti-lake` move, by a rename on one file
+    system; every Delta table is measured before and after (version, data files, rows, every data file present); any difference or error
+    moves everything back; it refuses, saying why, when the target exists, when anything there belongs to no lake, across file systems,
+    for an Iceberg table, for a table that does not open, or while a build or load holds the lake's lock; it never deletes; it runs once,
+    recorded in `data/delta/demo/_drishti-lake/relocated.json`.
+  - **`lake:` in a `.ready` file** names the lake a file goes to, over a rule's `lake:` and the inbox's default; a lake with no file yet is
+    **created** by the load (`config/lakes/<lake>.yaml`: format delta, root `${drishti.data.dir:./data}/delta/<lake>`, the routed pack's
+    recommended entry), its tables at `data/delta/<lake>/<domain>/<table>` (`risklake/trading/trade_endur`, `risklake/risk/scenario-pv`).
+    The Data loads page, the load report (`warning`) and `drishti.py dataload status` say *loaded into risklake, but no connector reads
+    it: point market-risk's connectors at it (lake: risklake) and restart* (`SourceRegistry.lakesRead`).
+  - **Connectors: two forms, both permanent** (product owner, 2026-11-07): `lake: <name>` (the lake file's root: a folder, `s3://...` or
+    `mem://...`) or an explicit `root:` path or URI with `domain`, `table.<kind>` and `layout.<kind>.*` (tables no lake file describes, a
+    vendor's Delta table on S3), with no warning. A connector that gives both uses its own values over the lake file's, said in the log,
+    by `lake check` and on Admin → Connectors (a warning on the field). Before: such a connector was refused, and the path form warned.
+  - **The connectors generated with the demo lake's old root follow it:** once the demo lake is moved, the server rewrites each connector
+    file whose `root:` is the demo lake's old default (`${DRISHTI_DELTA_ROOT:./data/delta}` and its variants) to `lake: demo` with
+    `lake-tables:` (`LakeFiles.adoptDemo`, also the first step of `lake migrate-config`), the file kept beside it
+    (`<name>.yaml.before-lake-<time>.bak`), a table the demo lake file lacks added from the connector's layout; a `var-pv-stream`
+    connector's `lake:` folder of that form becomes `lake: demo` (the plugin takes a lake's name; the market-risk pack's `pv-updates`
+    ships `lake: demo`). A Delta connector with neither `root` nor `lake` reads `<data>/delta/demo`. An Iceberg lake file without a root is
+    at `<data>/iceberg/<lake>`.
+  - **One place spells where lakes are:** drishti-lakeconfig (`Lakes.defaultRoot`, `Lakes.DEMO_ROOT_ENV`) and `tools/lake/lakeconfig.py`
+    (`root()`, `DEMO_ROOT_ENV`, `DEMO_ROOT_REF`); `lake demo`, `build_demo_lakes.py`, `bulk_trades.py`, `varcli`, `packmake`, the pack
+    generators, the doc-shot and bench harnesses, `drishti-stack` and `schemakit` resolve through it. The guard `tools/test_lake_paths.py`
+    fails on a lake folder or the demo root's variable spelled in code (Java, Python, JavaScript) outside the lake configuration.
+  - **The command-line loaders read `lake:` too** (`tools/lake/feedroute.py`, `lake build`): a `.ready` file's `lake:` names a lake of
+    `config/lakes/` (`--lake` on the command line wins); its keys are the inbox's, one list (`test_feedroute.py` compares them with
+    `ReadyNote.KEYS`).
+  - **Fixed:** an archive's rollback undid the load in the folder named like the inbox's lake (`demo`) rather than the lake's root.
+  - **Tools follow:** `build_demo_lakes.py`, `lake demo`, `load-delta.sh`/`.ps1`, `bulk_trades.py`, `varcli` and `start-server.ps1` default
+    to `data/delta/demo` (and refuse to build there while the older layout still holds the demo lake: move it first); the Iceberg demo
+    store stays `data/iceberg`; Admin → Lakes lists every lake folder under `data/delta` at every ask; the packs' guides, the docs, the
+    Windows CI and `deploy/lake-maintenance.yaml` name `data/delta/demo`.
+  - Tests: `LakeRelocateTest` (the move, a dry run, each refusal, a held lock, a rollback at each step, the command line),
+    `LakeRelocateOnStartTest`, `LakeRoutingTest` (a `.ready` lake over the rule and the default, a new lake created with its tables in its
+    folder by the real loader, the warning and when it is not said), `LakesTest` (the default root, a new lake file written once), the
+    console's lake roots.
+
 - **One Python runtime: every Python run on the server's compute pools** (SYNTHESIS A11, Brief 3; PYTHON_COMPUTE.md section 19; lean & streamlined):
   - **The pool `python`** (`config/compute/compute.yaml`) runs code people write: python visuals and Python measures of reports, boards and alerts,
     Transforms behind Python datasets, Python-driven tables and models, the Notebook's Python cells, the Transform editor's step-by-step run, a frame's

@@ -25,7 +25,7 @@
 .EXAMPLE
   .\tools\windows\pvgen-intraday.ps1 --batches 5 --dry-run
 .EXAMPLE
-  .\tools\windows\pvgen-intraday.ps1 --date 2026-10-27 --lake data/delta --server http://127.0.0.1:18480 --every 30s
+  .\tools\windows\pvgen-intraday.ps1 --date 2026-10-27 --lake data/delta/demo --server http://127.0.0.1:18480 --every 30s
 .EXAMPLE
   .\tools\windows\pvgen-intraday.ps1 --help
 #>

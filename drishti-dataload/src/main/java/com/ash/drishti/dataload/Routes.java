@@ -52,6 +52,14 @@ public final class Routes {
         default List<String> names() {
             return List.of();
         }
+
+        /**
+         * The lakes the server's Delta and Iceberg connectors read ({@code lake:} of each running connector): a load into any other lake is
+         * told that nothing reads it yet. Null: not known (no warning).
+         */
+        default java.util.Set<String> lakesRead() {
+            return null;
+        }
     }
 
     /**
@@ -240,6 +248,7 @@ public final class Routes {
             m.put("table", tableText(r.connector(), r.table()));
             m.put("date", r.dateBy());
             m.put("nameDate", r.nameDate() == null ? null : r.nameDate().toString());
+            m.put("lake", r.lake());
             m.put("text", (byNote ? "the .ready file" : "rule " + n) + " → " + r.pack() + " / " + r.kind() + " · " + m.get("table") + " · " + m.get("date"));
         } catch (Unrouted e) {
             m.put("error", e.getMessage());
@@ -342,7 +351,7 @@ public final class Routes {
         String mode = n.mode() != null ? n.mode() : defaultMode;
         return new Route(pack, kind, n.connector() != null ? n.connector() : rule == null ? null : rule.connector(),
                 rule == null ? null : rule.table(), rule == null ? null : rule.dateField(), asOf,
-                n.key() != null ? n.key() : rule == null ? null : rule.key(), rule == null || rule.lake() == null ? defaultLake : rule.lake(),
+                n.key() != null ? n.key() : rule == null ? null : rule.key(), lake(n, rule),
                 rule == null ? "delta" : rule.format(), by, info.dir(), dateFrom, nameDate, dateBy, mode, null, null, n.mode() != null);
     }
 
@@ -373,7 +382,7 @@ public final class Routes {
         LocalDate asOf = n.businessDate();
         String dateBy = asOf != null ? asOf + " from the .ready file" : nameDate != null ? nameDate + " from the name"
                 : FileDates.businessToday() + " (today: no date in the name)";
-        return new Route(pack, table, null, table, null, asOf, n.key() != null ? n.key() : "id", rule == null || rule.lake() == null ? defaultLake : rule.lake(),
+        return new Route(pack, table, null, table, null, asOf, n.key() != null ? n.key() : "id", lake(n, rule),
                 rule == null ? "delta" : rule.format(), "a new table " + table + " (new-table: true)", info.dir(), "auto", nameDate, dateBy,
                 n.mode() != null ? n.mode() : defaultMode, null, domain, n.mode() != null);
     }
@@ -389,7 +398,7 @@ public final class Routes {
             throw new Unrouted(fileName + ": a .tar archive names its own tables and dates (its <table>/<YYYY-MM-DD>/ folders): its .ready file's "
                     + "business-date: and table: are refused");
         }
-        ReadyNote modeOnly = new ReadyNote(null, null, null, null, null, n.mode(), n.sha256(), n.rows(), n.newTable(), n.key(), n.folders(), n.hold());
+        ReadyNote modeOnly = new ReadyNote(null, null, null, null, null, n.mode(), n.sha256(), n.rows(), n.newTable(), n.key(), n.folders(), n.hold(), n.lake());
         Route base = route(fileName, modeOnly, true);           // the rule's (or the defaults') mode, lake, format and key
         List<Route> out = new ArrayList<>();
         List<String> problems = new ArrayList<>();
@@ -447,6 +456,14 @@ public final class Routes {
         }
         known.sort(String.CASE_INSENSITIVE_ORDER);
         throw new Unrouted(table + ": no pack, kind or table of that name (known: " + (known.isEmpty() ? "none" : String.join(", ", known)) + ")");
+    }
+
+    /** The lake a file goes to (DATA_LOAD_RULES.md section 5): the {@code .ready} file's {@code lake:}, else the rule's, else the inbox's. */
+    private String lake(ReadyNote n, Rule rule) {
+        if (n.lake() != null) {
+            return n.lake();
+        }
+        return rule == null || rule.lake() == null ? defaultLake : rule.lake();
     }
 
     private static String text(JsonNode n, String key) {

@@ -19,6 +19,27 @@
 
 ## Upgrade
 
+- **The demo lake moves into its own folder, `data/delta/demo`, once, at the first start.** Every lake now has its own folder under
+  `data/delta` (a lake you load real data into, `data/delta/risklake`, sits beside the demo, never over it). At its first start the server
+  moves a demo lake built in the older layout (`data/delta/trading`, `data/delta/risk`, ...) into `data/delta/demo/` by a rename on the
+  same disk, measures every table before and after, moves everything back on any difference, and never deletes. **Before the upgrade:**
+  stop any `lake build` or loader that writes the demo lake; if `data/delta` holds a folder of your own that no lake file describes, move
+  it out or describe it in a lake file (the move refuses otherwise). `python3 tools/drishti.py lake relocate demo --dry-run` says what
+  would move. **After the first start, check:** the log says *the one-time move into its own folder is done* (or why it refused: nothing
+  moved then); `data/delta/demo/_drishti-lake/relocated.json` lists every table with its rows; Admin → Lakes and `drishti.py lake status
+  --lake data/delta/demo` list the tables; a view, a VaR and a BI page answer as before. Scripts that name `data/delta` for the demo lake
+  name `data/delta/demo` now (`lake build --lake`, `lake maintain --root`, your copy of `deploy/lake-maintenance.yaml`). A site that sets
+  `DRISHTI_DELTA_ROOT` keeps its root and nothing moves. `drishti.lakes.relocate-on-start: false` leaves the move to the command.
+- **Your connector files.** Each connector file the server once generated with the demo lake's old root
+  (`root: "${DRISHTI_DELTA_ROOT:./data/delta}"`, `domain: ...`) is rewritten at the first start after the move to `lake: demo` and
+  `lake-tables: <domain>.<table>`, every reading setting kept, the file before kept beside it as `<name>.yaml.before-lake-<time>.bak`; the
+  log names each one. A connector with a root of its own (another folder, `s3://...`) is left as it is: naming tables by path is a
+  permanent form, with no warning. If you prefer to do it by hand: replace `root:`, `domain:`, `table.<kind>:` and `layout.<kind>.*` with
+  `lake: demo` and `lake-tables: <domain>.<table>` (the entries of `config/lakes/demo.yaml`). A connector that names a lake and also a
+  `root:` now reads the root (it was refused before), and Admin → Connectors says so.
+- **Real data into a lake of its own.** `lake: risklake` in a `.ready` file (or a rule's `lake:`) loads the file into that lake, creating
+  `config/lakes/risklake.yaml` the first time; the load says when no connector reads the lake yet. Point a pack's connectors at it
+  (`lake: risklake`) and restart (DATA_GUIDE.md section 7.2).
 - **BI reads the table layer.** BI's datasets and models are now tables and models of the table layer (`config/tables/<domain>/`,
   `rachana: 3`), and every expression is Rachana (`&&`, `||`, `!`, `c ? a : b`, `null`, `true`, `x == null`; named arguments
   `sum(x, where = c)`). An installation with **its own datasets or models** in `config/bi/datasets` or `config/bi/models` migrates them

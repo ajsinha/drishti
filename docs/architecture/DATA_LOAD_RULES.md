@@ -79,6 +79,7 @@ First match wins.
 | **Table** | `--table` | `.ready` `table:` | an inbox rule's `table:` | the name's table | (no table: refused) |
 | **Pack** (its lake, domain and layout) | `--pack` | `.ready` `pack:` | an inbox rule's `pack:` and `kind:` | the pack that already has a table of that name | a pack of that name with a single table |
 | **Mode** | `--mode` | `.ready` `mode:` | the table's entry in its lake file (`load-mode:`, the table's default) | the inbox's `default-mode` | **append** |
+| **Lake** (the data inbox) | | `.ready` `lake:` | an inbox rule's `lake:` | the inbox's `drishti.dataload.lake` | **demo** |
 
 An inbox rule (`config/dataload.yaml`: a glob on the file name to a pack, kind and table) applies when no `.ready` or command-line
 value is given, before the name's table is looked up.
@@ -155,7 +156,18 @@ folders: {trades: core, deals: trading}   # a tar only: table folder -> pack
 sha256: 9f2c...                # checked before loading
 rows: 1250000                  # checked before loading (a tar: the total of every file)
 hold: true                     # do not load yet: the file waits until released (Admin, or the key removed)
+lake: risklake                 # the data inbox: the lake the file goes to (over a rule's lake: and the inbox's default)
 ```
+
+- **The lake.** Every lake is a folder of its own under `<data>/delta`: `<data>/delta/<lake>/<domain>/<table>` (the demo lake is
+  `<data>/delta/demo`; a lake file may name another root). `lake:` names it, as a lake's name: lower-case letters, digits, `-` and
+  `_` (`[a-z0-9][a-z0-9_-]*`). A lake that has no file yet is **created** by the load: `config/lakes/<lake>.yaml`, format delta, root
+  `${drishti.data.dir:./data}/delta/<lake>`, with the pack's recommended entry for the table; each later table of another pack or kind
+  adds its own entry once (decision L2). The tables then land at `<data>/delta/<lake>/<domain>/<table>`
+  (`risklake/trading/trade_endur`, `risklake/risk/scenario-pv`). The demo lake's data is never touched by a load into another lake.
+- **A lake nothing reads yet.** The rows are in the lake, but no page shows them until a pack's connectors name it. The load report,
+  the Data loads page and `drishti.py dataload status` then say *loaded into risklake, but no connector reads it: point market-risk's
+  connectors at it (lake: risklake) and restart*.
 
 - **An unknown key is refused**, so a typo never goes unnoticed.
 - **Pairing.** A `.ready` file is named after its data file in full (`trades.2026-11-03.jsonl.gz.ready`) or without the data

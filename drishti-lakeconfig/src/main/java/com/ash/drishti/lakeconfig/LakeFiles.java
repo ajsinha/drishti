@@ -64,6 +64,41 @@ public final class LakeFiles {
         return true;
     }
 
+    /**
+     * Creates {@code <lakesDir>/<name>.yaml} for a lake a load names that has no file yet (the data inbox, DATA_LOAD_RULES.md section 5): a
+     * Delta lake in its own folder, {@code root: ${drishti.data.dir:./data}/delta/<name>}, with {@code tables} (the routed packs' recommended
+     * entries). A file that exists is never touched (false); the name must be a lake's name ({@link Lakes#NAME}).
+     *
+     * @return true when the file was created
+     */
+    public static boolean create(Path lakesDir, String name, List<LakeTable> tables, String why) throws IOException {
+        if (!Lakes.validName(name)) {
+            throw new IllegalArgumentException("lake " + name + ": a lake's name is lower-case letters, digits, '-' and '_' ([a-z0-9][a-z0-9_-]*)");
+        }
+        Path file = lakesDir.resolve(name + ".yaml");
+        if (Files.exists(file)) {
+            return false;
+        }
+        ObjectNode root = JsonNodeFactory.instance.objectNode();
+        root.put("lake", name);
+        root.put("format", "delta");
+        root.put("root", Lakes.defaultRoot(name));
+        ObjectNode ts = root.putObject("tables");
+        for (LakeTable t : tables) {
+            ts.set(t.name(), entry(t));
+        }
+        Files.createDirectories(lakesDir);
+        String text = header(lakesDir) + "# config/lakes/" + name + ".yaml: the lake " + name + ", created by " + why + " (docs/guides/LAKE_GUIDE.md).\n"
+                + "# Its tables are folders under its root, <data>/delta/" + name + "/<domain>/<table>; edit the entries here from now on, and\n"
+                + "# point a pack's connectors at it with lake: " + name + " (then restart).\n" + YAML.writeValueAsString(root);
+        try {
+            Files.writeString(file, text, java.nio.file.StandardOpenOption.CREATE_NEW, java.nio.file.StandardOpenOption.WRITE);
+        } catch (java.nio.file.FileAlreadyExistsException e) {
+            return false;                                       // another writer made it a moment ago: its file is the truth
+        }
+        return true;
+    }
+
     /** One table's entry as a lake file writes it (only what differs from the defaults). */
     static ObjectNode entry(LakeTable t) {
         ObjectNode e = JsonNodeFactory.instance.objectNode();
@@ -114,9 +149,10 @@ public final class LakeFiles {
      * gets another name. With {@code write} false nothing is written.
      */
     public static Migration migrate(Path connectorsDir, Path lakesDir, boolean write) throws IOException {
-        Map<Path, String> lakes = new LinkedHashMap<>();
+        Migration demo = adoptDemo(connectorsDir, lakesDir, write);          // the demo lake's old default root: lake: demo
+        Map<Path, String> lakes = new LinkedHashMap<>(demo.lakeFiles());
         Map<Path, String> connectors = new LinkedHashMap<>();
-        List<String> notes = new ArrayList<>();
+        List<String> notes = new ArrayList<>(demo.notes());
         Map<String, ObjectNode> byRoot = new LinkedHashMap<>();
         Map<String, String> names = new LinkedHashMap<>();
         List<Path> files;
@@ -130,6 +166,10 @@ public final class LakeFiles {
             }
             ObjectNode settings = c.path("settings") instanceof ObjectNode o ? o : JsonNodeFactory.instance.objectNode();
             Map<String, String> flat = flat(settings);
+            if (demo.connectorFiles().containsKey(f)) {
+                connectors.put(f, demo.connectorFiles().get(f));
+                continue;
+            }
             if (flat.containsKey(ConnectorLake.LAKE) || !flat.containsKey("root")) {
                 notes.add(f.getFileName() + ": " + (flat.containsKey(ConnectorLake.LAKE) ? "names lake " + flat.get(ConnectorLake.LAKE)
                         + " already" : "no root: the plugin's default lake; left as it is"));
@@ -230,6 +270,137 @@ public final class LakeFiles {
             }
         }
         return new Migration(lakes, connectors, notes);
+    }
+
+    /**
+     * The roots a connector generated before every lake had its own folder names for the demo lake: {@code ${DRISHTI_DELTA_ROOT:./data/delta}},
+     * {@code ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}}, {@code ./data/delta}. Such a connector meant "the demo lake".
+     */
+    static final java.util.regex.Pattern DEMO_ROOTS = java.util.regex.Pattern.compile(
+            "\\$\\{DRISHTI_DELTA_ROOT(:-?(\\./)?data/delta/?|:\\$\\{drishti\\.data\\.dir(:-?\\./data)?}/delta/?)?}|(\\./)?data/delta/?");
+
+    /** Whether a connector's root (as written) is the demo lake's old default ({@link #DEMO_ROOTS}). */
+    public static boolean demoRoot(String raw) {
+        return raw != null && DEMO_ROOTS.matcher(raw.strip()).matches();
+    }
+
+    /**
+     * Moves the connectors that read the demo lake by its old default root ({@link #demoRoot}: generated from a pack's template before the
+     * lake form) to {@code lake: demo}, so they follow the demo lake into its own folder ({@code <data>/delta/demo}): each one's tables named
+     * by {@code lake-tables:} (its {@code domain} and {@code table.<kind>}, else its kinds), a table the demo lake file lacks added to it from
+     * the connector's layout, every reading setting kept. A {@code var-pv-stream} connector's {@code lake:} folder in that form becomes the
+     * name {@code demo}. A connector that names its root otherwise (a path or URI of its own) is left as it is: that form is permanent.
+     * With {@code write}, each file is kept beside it first ({@code <name>.yaml.before-lake-<time>.bak}).
+     */
+    public static Migration adoptDemo(Path connectorsDir, Path lakesDir, boolean write) throws IOException {
+        Map<Path, String> lakeFiles = new LinkedHashMap<>();
+        Map<Path, String> connectors = new LinkedHashMap<>();
+        List<String> notes = new ArrayList<>();
+        if (connectorsDir == null || !Files.isDirectory(connectorsDir)) {
+            return new Migration(lakeFiles, connectors, notes);
+        }
+        Path demoFile = lakesDir.resolve("demo.yaml");
+        ObjectNode demo;
+        if (Files.isRegularFile(demoFile)) {
+            demo = (ObjectNode) YAML.readTree(Files.readString(demoFile));
+        } else {
+            try (java.io.InputStream in = LakeFiles.class.getClassLoader().getResourceAsStream("drishti/lakes/demo.yaml")) {
+                if (in == null) {
+                    return new Migration(lakeFiles, connectors, notes);
+                }
+                demo = (ObjectNode) YAML.readTree(in);
+            }
+        }
+        ObjectNode tables = demo.with("tables");
+        boolean grew = false;
+        List<Path> files;
+        try (Stream<Path> s = Files.list(connectorsDir)) {
+            files = s.filter(p -> p.getFileName().toString().endsWith(".yaml")).sorted().toList();
+        }
+        for (Path f : files) {
+            JsonNode c = YAML.readTree(Files.readString(f));
+            if (c == null || !c.isObject() || !(c.path("settings") instanceof ObjectNode settings)) {
+                continue;
+            }
+            String plugin = c.path("plugin").asText();
+            Map<String, String> flat = flat(settings);
+            ObjectNode rewritten = ((ObjectNode) c).deepCopy();
+            if (plugin.equals("var-pv-stream") && demoRoot(flat.get(ConnectorLake.LAKE))) {
+                ((ObjectNode) rewritten.get("settings")).put(ConnectorLake.LAKE, "demo");
+                connectors.put(f, comments(f) + YAML.writeValueAsString(rewritten));
+                notes.add(f.getFileName() + ": writes into the demo lake by name now (lake: demo)");
+                continue;
+            }
+            if (!ConnectorLake.PLUGINS.contains(plugin) || flat.containsKey(ConnectorLake.LAKE) || !demoRoot(flat.get("root"))) {
+                continue;
+            }
+            String domain = flat.getOrDefault("domain", "");
+            List<String> kinds = new ArrayList<>();
+            c.path("kinds").forEach(k -> kinds.add(k.asText()));
+            List<String> mine = new ArrayList<>();
+            if (kinds.isEmpty()) {
+                tables.fieldNames().forEachRemaining(n -> {
+                    if (n.startsWith(domain + ".")) {
+                        mine.add(n);
+                    }
+                });
+            }
+            for (String kind : kinds) {
+                String folder = flat.getOrDefault("table." + kind, kind);
+                String tname = (domain.isEmpty() ? plugin : domain) + "." + folder;
+                mine.add(tname);
+                if (tables.has(tname)) {
+                    continue;
+                }
+                ObjectNode e = tables.putObject(tname);
+                grew = true;
+                if (!folder.equals(kind)) {
+                    e.put("kind", kind);
+                }
+                listText(e, "promote", flat.get("layout." + kind + ".columns"));
+                listText(e, "vectors", flat.get("layout." + kind + ".vectors"));
+                listText(e, "sort-by", flat.get("layout." + kind + ".sort-by"));
+                for (String n : List.of("file-rows", "row-group-rows")) {
+                    String v = flat.get("layout." + kind + "." + n);
+                    if (v != null && v.matches("\\d+")) {
+                        e.put(n, Long.parseLong(v));
+                    }
+                }
+            }
+            ObjectNode ns = JsonNodeFactory.instance.objectNode();
+            ns.put(ConnectorLake.LAKE, "demo");
+            if (!mine.isEmpty()) {
+                ns.put(ConnectorLake.TABLES, String.join(",", mine));
+            }
+            flat.forEach((k, v) -> {
+                if (!ConnectorLake.lakeKey(k)) {
+                    ns.put(k, v);
+                }
+            });
+            rewritten.set("settings", ns);
+            connectors.put(f, comments(f) + YAML.writeValueAsString(rewritten));
+            notes.add(f.getFileName() + ": reads the demo lake by name now (lake: demo, " + mine.size() + " tables), so it follows the lake's folder");
+        }
+        if (grew) {
+            lakeFiles.put(demoFile, header(demoFile) + YAML.writeValueAsString(demo));
+        }
+        if (write) {
+            String at = java.time.LocalDateTime.now(java.time.ZoneOffset.UTC).format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"));
+            for (var e : lakeFiles.entrySet()) {
+                Files.createDirectories(e.getKey().getParent());
+                Files.writeString(e.getKey(), e.getValue());
+            }
+            for (var e : connectors.entrySet()) {
+                Path bak = e.getKey().resolveSibling(e.getKey().getFileName() + ".before-lake-" + at + ".bak");
+                if (!Files.exists(bak)) {
+                    Files.copy(e.getKey(), bak);
+                }
+                Path tmp = e.getKey().resolveSibling(e.getKey().getFileName() + ".writing");
+                Files.writeString(tmp, e.getValue());
+                Files.move(tmp, e.getKey(), java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            }
+        }
+        return new Migration(lakeFiles, connectors, notes);
     }
 
     /** A lake's name from its root: the last folder, lower case ({@code ./data/delta} is {@code delta}). */

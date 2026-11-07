@@ -31,6 +31,10 @@ import pathlib
 import re
 import shutil
 import stat
+import sys
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent / "lake"))
+import lakeconfig  # noqa: E402  (where the lakes are)
 
 ISO_DATE = re.compile(r"^\d{4}-\d{2}-\d{2}(?:$|[T ])")
 NAME_RE = re.compile(r"[a-z0-9][a-z0-9-]*")
@@ -129,7 +133,7 @@ def tree_files(root: pathlib.Path) -> list[pathlib.Path]:
 
 
 def write_scripts(out: pathlib.Path, name: str, store: str) -> None:
-    root_var = "DRISHTI_DELTA_ROOT" if store == "delta" else "DRISHTI_FILES_ROOT"
+    root_var = lakeconfig.DEMO_ROOT_ENV if store == "delta" else "DRISHTI_FILES_ROOT"
     sub = "delta" if store == "delta" else "files"
     sh = f"""#!/usr/bin/env bash
 # Starts the Drishti server on this folder alone: the pack from ./pack, the data from ./data/{sub}.
@@ -177,7 +181,7 @@ Set-Location $here
 
 
 def write_site_yaml(out: pathlib.Path, name: str, store: str) -> None:
-    root_var = "DRISHTI_DELTA_ROOT" if store == "delta" else "DRISHTI_FILES_ROOT"
+    root_var = lakeconfig.DEMO_ROOT_ENV if store == "delta" else "DRISHTI_FILES_ROOT"
     sub = "delta" if store == "delta" else "files"
     (out / "config").mkdir(exist_ok=True)
     (out / "config" / "drishti-site.yaml").write_text(f"""# A server configuration overlay for this folder (README.txt, step 3). run-server.sh passes it as
@@ -197,7 +201,7 @@ drishti:
 
 def readme_text(v: dict) -> str:
     n, kind, store = v["name"], v["kind"], v["store"]
-    root_var = "DRISHTI_DELTA_ROOT" if store == "delta" else "DRISHTI_FILES_ROOT"
+    root_var = lakeconfig.DEMO_ROOT_ENV if store == "delta" else "DRISHTI_FILES_ROOT"
     sub = "delta" if store == "delta" else "files"
     ids = v["sample_ids"]
     d1, d2 = v["dates"][0], v["dates"][-1]
@@ -272,7 +276,7 @@ def readme_text(v: dict) -> str:
             w(f"      <{root_var}>/{n}/{kind}/_delta_log/            (the log decides what is visible; never copy it half-way)")
             w(f"  Here: data/delta/{n}/{kind}/business_date={d1}/ ... business_date={d2}/   (the {v['date_field']} of each document is its partition)")
             w(f"  How the server reads it.  The pack names the connector '{n}-store' and suggests its definition (pack/{n}/pack.yaml: connectors: lists the name, connector-templates: holds the definition): the 'delta' plugin")
-            w(f"  with root ${{DRISHTI_DELTA_ROOT:${{drishti.data.dir:./data}}/delta}} and domain {n}. At the first start the server writes that suggestion to config/connectors/{n}-store.yaml and never")
+            w(f"  with root {lakeconfig.DEMO_ROOT_REF} and domain {n}. At the first start the server writes that suggestion to config/connectors/{n}-store.yaml and never")
             w("  overwrites it: edit that file (or Admin -> Connectors) to point the pack at a real lake; a saved change restarts only that connector.")
             w("  A view asks for (kind, id, asOf): the connector takes the newest business_date <= asOf that holds the id.")
             w("  The reader is the Delta Kernel; DRISHTI_DELTA_ENGINE chooses its file access: 'native' (default; local disk and s3:// / s3a://, works on Windows)")

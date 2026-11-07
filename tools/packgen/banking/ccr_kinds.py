@@ -26,6 +26,12 @@ the server's ExposurePublisher, EXPOSURE_GUIDE.md section 20) are the read-only 
 exposure-results, for BI and other readers only: no engine reads it (tools/test_contracts.py)."""
 from __future__ import annotations
 
+import sys as _sys
+from pathlib import Path as _Path
+
+_sys.path.insert(0, str(_Path(__file__).resolve().parents[2]))
+from packlake import OFFICIAL_ROOT as _OFFICIAL_ROOT  # noqa: E402  (the publisher's root: tools/lake/lakeconfig.py)
+
 #: kind -> (mnemonic, label, id pattern, id field)
 KINDS = {
     "simulation-run": ("XRUN", "Exposure simulation run", "^XR-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]+$", "RUN_ID"),
@@ -85,7 +91,7 @@ DERIVED = {
         "sort": {"NETTING_SETS": "value desc", "TRADES": "MTM desc"},
     },
 }
-_ROOT = "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
+_ROOT = _OFFICIAL_ROOT       # the publisher's root (packlake.lake_form names the lakes)
 #: the connectors the kinds are served by
 SERVED_BY = {"simulation-run": "exposure-store", "exposure-path": "exposure-store", "exposure-result": "exposure-engine",
              "exposure-whatif": "exposure-whatif", "exposure-official-cpty": "exposure-results", "nset-mtm": "ccr-derived",
