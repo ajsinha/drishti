@@ -193,7 +193,7 @@ def test_saving_rights_open_design_gated_save_and_review(app_client, backend, mo
     monkeypatch.setattr(backend, "proposals", waiting, raising=False)
     monkeypatch.setattr(backend, "save_sutra", propose, raising=False)
     page = page_for()
-    assert "Submit for review" in page and 'id="wbNote"' in page and '<span class="bell-count">1</span>' in page
+    assert "Submit for review" in page and 'id="wbNote"' in page and 'href="/approvals?kind=sutra"' in page      # decided in the Approvals queue
     assert app_client.post(f"/build/designs/{d['id']}/propose", json={"note": "please"}).json()["proposal"]["id"] == "P-9" and saved["note"] == "please"
 
 

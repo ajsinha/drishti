@@ -182,7 +182,7 @@ the tutorials planned but not written.
 - **Commands**: `data get`, `data landed`, `data loads`.
 - **Command words**: `DATA`.
 - **Menus and pages**: Admin → Audit, Admin → Health.
-- **API calls**: 4 distinct, e.g. `/api/v1/admin/loads/trading/config`, `/api/v1/me/measure-alerts/preview`, `/api/v1/me/measure-alerts/{name}`, `/api/v1/packs/trading/loads`.
+- **API calls**: 4 distinct, e.g. `/api/v1/admin/loads/trading/config`, `/api/v1/alerts/rules/preview`, `/api/v1/alerts/rules/{name}`, `/api/v1/packs/trading/loads`.
 - **Stale or changed**: none found (`--date` here is `data landed`'s own option, still valid).
 - **Overlap**: 36 (the inbox loads files itself; 7 is for an ETL that loads).
 - **Verdict**: KEEP: the other way data arrives; cross-linked with 36.
@@ -262,7 +262,7 @@ the tutorials planned but not written.
 - **Commands**: `bi catalogue`, `bi item`, `bi model`, `bi mq`, `bi sql`, `bi transform`.
 - **Command words**: `ORDER`.
 - **Menus and pages**: BI → Python, BI → Transforms.
-- **API calls**: 1 distinct, e.g. `/api/v1/me/measure-alerts/Desk`.
+- **API calls**: 1 distinct, e.g. `/api/v1/alerts/rules/Desk`.
 - **Stale or changed**: none found.
 - **Overlap**: 23 (Python compute), 37 (functions).
 - **Verdict**: KEEP (rewrite after 2.9.11.d): 70 minutes and 13 steps, the longest BI tutorial; 2.9.11.d's one Python runtime and Pivot → Report path replace much of it: split or rewrite then.
@@ -371,7 +371,7 @@ the tutorials planned but not written.
 
 - **Teaches**: editing on, a form that saves, a correction with its review sheet, four eyes in Review → Changes, a stale change conflicted, `drishti.py change`.
 - **Size**: 7 steps, 174 lines, 5 pictures. **Last produced**: text 2026-10-31, pictures (`img/t24`) 2026-10-26.
-- **Commands**: `change approve`, `change history`, `change propose`, `change show`, `edits status`.
+- **Commands**: `approvals approve`, `change history`, `change propose`, `change show`, `edits status`.
 - **Command words**: `PTRD`.
 - **Menus and pages**: Admin → Edits, Build → Govern, My → API, Review → Changes.
 - **Stale or changed**: none found.

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Sutra Studio, folded into the Build workbench (docs/guides/RACHANA_REFERENCE.md › The Build workbench: the design, step 7). The page is gone: every
-``/studio`` address is a 302 into the workbench (``/build/d/{id}``) or the review pages (``/build/reviews``). What stays here is
+``/studio`` address is a 302 into the workbench (``/build/d/{id}``) or the Approvals queue (``/approvals``). What stays here is
 the JSON the workbench still asks of this prefix: preview, test, summary, schema, source, inference, save, an example, and the
 test entities Studio kept (read once, when a Design starts from a Sutra)."""
 from __future__ import annotations

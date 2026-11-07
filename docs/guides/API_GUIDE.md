@@ -61,20 +61,22 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 11. [Datasets and the query engine: `/api/v1/bi` (phase 2)](#datasets-and-the-query-engine-apiv1bi-phase-2)
 12. [Reports: `/api/v1/bi/reports` (phase 3)](#reports-apiv1bireports-phase-3)
 13. [Boards: `/api/v1/bi/boards` (2.3 board files and the converter)](#boards-apiv1biboards-23-board-files-and-the-converter)
-14. [Publishing and governance: `/api/v1/bi` (phase 4)](#publishing-and-governance-apiv1bi-phase-4)
-15. [AI and MCP: `/api/v1/ai` and `/api/v1/admin/ai`](#ai-and-mcp-apiv1ai-and-apiv1adminai)
-16. [Embedding views in another web application](#embedding-views-in-another-web-application)
-17. [The console's own JSON routes](#the-consoles-own-json-routes)
-18. [Scripting recipes](#scripting-recipes)
-19. [Personal API tokens](#personal-api-tokens)
-20. [A field over time](#a-field-over-time)
-21. [How fresh a view is](#how-fresh-a-view-is)
-22. [Share with a note, the directory and the inbox](#share-with-a-note-the-directory-and-the-inbox)
-23. [Comment threads](#comment-threads)
-24. [Shared workspaces](#shared-workspaces)
-25. [Scheduled reports](#scheduled-reports)
-26. [The access log (administrators)](#the-access-log-administrators)
-27. [A phrase as a search](#a-phrase-as-a-search)
+14. [Approvals: `/api/v1/approvals`](#approvals-apiv1approvals)
+15. [Alerts: `/api/v1`](#alerts-apiv1)
+16. [Publishing and governance: `/api/v1/bi` (phase 4)](#publishing-and-governance-apiv1bi-phase-4)
+17. [AI and MCP: `/api/v1/ai` and `/api/v1/admin/ai`](#ai-and-mcp-apiv1ai-and-apiv1adminai)
+18. [Embedding views in another web application](#embedding-views-in-another-web-application)
+19. [The console's own JSON routes](#the-consoles-own-json-routes)
+20. [Scripting recipes](#scripting-recipes)
+21. [Personal API tokens](#personal-api-tokens)
+22. [A field over time](#a-field-over-time)
+23. [How fresh a view is](#how-fresh-a-view-is)
+24. [Share with a note, the directory and the inbox](#share-with-a-note-the-directory-and-the-inbox)
+25. [Comment threads](#comment-threads)
+26. [Shared workspaces](#shared-workspaces)
+27. [Scheduled reports](#scheduled-reports)
+28. [The access log (administrators)](#the-access-log-administrators)
+29. [A phrase as a search](#a-phrase-as-a-search)
 
 ## Before you start
 
@@ -194,6 +196,7 @@ that job (the table in section 1); see "Personal API tokens" in [CLI_GUIDE.md](C
 |---|---|---|
 | `read` (always) | read what its owner may read | |
 | `design:write` | create, edit, check, propose and share Designs; save Sutras as proposals | the author role |
+| `approve` | `POST /approvals/{kind}/{id}/approve`, `/reject` and `/withdraw`: every kind your roles let you decide in the one queue (report sign-offs, stress windows, compute packages and questions stay a person's, in the console) | the kind's own rules (never your own) |
 | `design:approve` | approve or reject proposed Sutras | the approver or admin role |
 | `packs:admin` | load, unload, deploy and roll back packs; create, change, test and delete connectors; Retry now | the admin role |
 | `risk:write` | save and delete your VaR baskets, capture VaR results, keep sandboxes, cancel your own computations | any user who can open the scope |
@@ -998,7 +1001,7 @@ shapes and reconnection rules are in [DATA_ARCHITECTURE.md](../architecture/DATA
 |---|---|---|
 | `GET` | `/views/{kind}/{id}/stream` | as-of. `view` (the full ViewModel, id `0`), then `frame` (patches, id = sequence), both with the caller's [field masks](#field-masks). For a past date or a non-live source: one `view`, then the stream closes |
 | `GET` | `/me/monitors/{name}/stream` | as-of. `hello` `{rows}`, then one `row` event `{kind, id, patches, p99Ms}` per changed entity (strip patches only) |
-| `GET` | `/me/alerts/stream` | `hello` `{user}`, then `alert` events (id = sequence) |
+| `GET` | `/alerts/stream` | `hello` `{user}`, then `notice` events (an alert raised is an inbox row of type `alert`), `switches` and `edit` |
 | `GET` | `/health/live` | not a stream: `{streams, topics, frames, p50Ms, p99Ms}` for the whole server |
 
 All three send a comment line `:hb` when quiet (every `drishti.live.heartbeat`, default 15 s, for views;
@@ -1093,9 +1096,7 @@ passes these through as `/api/changes`.
 | `POST` | `/changes/preview` | the same body: the review and confirm sheet (per change the difference `diff: [{field, saw, now, wanted, moved}]`, `where`, `approvals`, `approvers`, `recompute`, `reasonRequired`); writes nothing (a read for a token) |
 | `GET` | `/changes?state=&kind=&entity=&mine=&limit=` | changes newest first: `awaiting` (the approval queue, with `mayDecide`), `queued`, `applied`, `refused`, `conflicted`, `rejected`, `withdrawn` |
 | `GET` | `/changes/{id}` | one change as the caller may see it (a masked field's values masked), with its state, lane and seq, the reason it was refused or conflicted, and a source command's state |
-| `POST` | `/changes/{id}/approve` | `{note?}`: an approval (the policy's approver roles, else the approve power or an administrator; never the submitter: `403 DRS-9302`); the last approval needed puts it in its lane |
-| `POST` | `/changes/{id}/reject` | `{reason}` (required): the change ends rejected; its draft is kept, marked |
-| `POST` | `/changes/{id}/withdraw` | the submitter withdraws a change that still awaits approval |
+| `POST` | `/approvals/change/{id}/approve` · `/reject` · `/withdraw` | a change is decided in the one [Approvals](#approvals-apiv1approvals) queue: `{comment}`; an approver of changes (the policy's roles, else the approve power or an administrator), never the submitter (`403 DRS-9302`); the last approval needed puts it in its lane; a reject needs a reason; the submitter withdraws their own |
 | `GET` | `/entities/{kind}/{id}/history` | the record's changes from the edit log, newest first, and its `version` (what a form opens on) |
 
 What happens to a submitted change: it is checked as the person (masks: a change can never carry a masked field; the field's roles; a
@@ -1114,7 +1115,7 @@ curl -s -X POST "$DRISHTI/api/v1/changes" -H "Authorization: Bearer $TOKEN" -H '
   "kind": "trade", "entity": "MX-20000012", "reason": "booking typo",
   "items": [{ "field": "NOTIONAL", "from": 28000000, "to": 28001250 }] }'
 # {"changes":[{"id":"chg-01M5V6GM7NCKSR506RQ86M7YVV","kind":"trade","entity":"MX-20000012","target":"overlay","state":"awaiting","needed":1}]}
-curl -s -X POST "$DRISHTI/api/v1/changes/chg-01M5V6GM7NCKSR506RQ86M7YVV/approve" -H "Authorization: Bearer $CHECKER" -H 'Content-Type: application/json' -d '{"note":"ticket 4411"}'
+curl -s -X POST "$DRISHTI/api/v1/approvals/change/chg-01M5V6GM7NCKSR506RQ86M7YVV/approve" -H "Authorization: Bearer $CHECKER" -H \'Content-Type: application/json\' -d \'{"comment":"ticket 4411"}\'
 ```
 
 Administrators (Admin → Edits; the switches never for a token):
@@ -1168,10 +1169,7 @@ It is kept on the server, so it follows the user to any browser.
 | `GET` | `/me/monitors` | names of saved monitors (watchlists) |
 | `PUT` · `DELETE` | `/me/monitors/{name}` | body `{"entities": [{"kind","id"}, …]}`, 1 to 50 entities; `DELETE` answers `204` |
 | `GET` | `/me/monitors/{name}` | as-of. One row per entity: `{ref, mnemonic, title, strip, live}` or `{ref, error}` |
-| `GET` | `/me/alerts/rules` | the caller's alert rules |
-| `PUT` · `DELETE` | `/me/alerts/rules/{name}` | body `{kind, id, when, severity, message, enabled}`; `kind`, `id`, `when` required; `severity` defaults to `warn`; `enabled` to `true`; `DELETE` answers `204` |
-| `GET` | `/me/alerts?limit=50` | alerts that fired for the caller, newest first |
-| `GET` | `/me/alerts/suggestions/{kind}` | rules the installed packs suggest for a kind |
+| | `/alerts/**` | the caller's alert rules and the alerts raised for them: [Alerts](#alerts-apiv1) |
 
 **Settings.** The values allowed:
 
@@ -1238,17 +1236,9 @@ curl -s -H "X-Drishti-User: ash" $B/me/monitors/swaps | jq -c '.[] | {ref, mnemo
 Each row is the entity's title and strip; a row that cannot be built carries `error` (a string that starts with
 the error code, for example `DRS-1001` for an entity no source holds) and the other rows are unaffected.
 
-**Alerts.** `when` and `message` are Rachana-EL, checked when the rule is saved (`422 DRS-2101` if `when`
-does not parse). `severity` is `info`, `warn` or `critical`.
+**Alerts.** A rule on one entity is an alert rule of the one engine with a field source and the condition `rule`: see
+[Alerts](#alerts-apiv1).
 
-```bash
-curl -s -X PUT -H "X-Drishti-User: ash" -H 'Content-Type: application/json' $B/me/alerts/rules/mtm-drop \
-  -d '{"kind": "trade", "id": "MX-20000001", "when": "$.mtm < 1500000", "severity": "warn",
-       "message": "${$.tradeId}: MTM ${fmt($.mtm, '"'"'signed0'"'"')}"}'
-curl -s -H "X-Drishti-User: ash" "$B/me/alerts?limit=5"
-```
-
-A fired alert looks like `{"seq", "at", "user", "rule", "kind", "id", "severity", "message", "generation"}`.
 Suggestions come from the `alerts:` list in installed packs' `pack.yaml`; none of the shipped packs declares one, so the answer is `[]`
 for every kind until your pack does. An entry has the shape of a rule, for instance (from the retired example pack `examples/packs/finance`):
 `{"kind":"trade","name":"MTM below −450k","when":"$.mtm < -450000","severity":"warn","message":"${$.tradeId}: MTM ${fmt($.mtm, 'signed0')}"}`.
@@ -1361,9 +1351,7 @@ line of a Sutra to get completion and checking as you type. The Build workbench'
 | `POST` | `/sutras?note=` | body: the Sutra YAML, `Content-Type: text/yaml` (or `application/yaml`, `text/plain`). It is saved as `<domain>/<name>.v<N>.sutra.yaml`. Needs `drishti.rachana.studio-save: true` and an `author` role (`403` otherwise). With governance on: `202 {"proposal": {id, name, version, status}}`; off: `200` with the saved Sutra's `{name, latest, versions, …}` |
 | `GET` | `/sutras/proposals?status=&name=` | `{enabled, proposals: [...]}` visible to the caller |
 | `GET` | `/sutras/proposals/{id}` | one proposal plus `text` (proposed), `baseText` (what it was based on) and `liveText` (live now); `404 DRS-2005` |
-| `POST` | `/sutras/proposals/{id}/approve` | body `{"comment": "..."}` optional. Publishes the Sutra. `403 DRS-2007` for your own proposal (four eyes); `409 DRS-2006` if already decided or the live Sutra changed since |
-| `POST` | `/sutras/proposals/{id}/reject` | body `{"comment": "..."}` — comment required |
-| `POST` | `/sutras/proposals/{id}/withdraw` | the author withdraws a pending proposal |
+| `POST` | `/approvals/sutra/{id}/approve` · `/reject` · `/withdraw` | a proposal is decided in the one [Approvals](#approvals-apiv1approvals) queue: `{comment}` (required to reject). `403 DRS-2007` for your own proposal (four eyes); `409 DRS-2006` if already decided or the live Sutra changed since |
 | `GET` | `/sutras/{name}/history` | every proposal for a Sutra, newest first |
 
 A proposal summary: `{id, name, version, note, author, createdAt, status, reviewer, reviewedAt, comment,
@@ -1393,7 +1381,7 @@ You should see the draft begin with `# Started from what inference makes of trad
 `rachana: 1`, `sutra: my-swap`, `version: 1`, a `description:` line and `match: { kind: trade, priority: 1 }`;
 then the preview's title and panel ids.
 
-Propose it (with governance on, an approver then approves it in **Build → Govern → Reviews**):
+Propose it (with governance on, an approver then approves it in **Views → Approvals**):
 
 ```bash
 curl -s -X POST "$B/sutras?note=first%20draft" -H 'Content-Type: text/yaml' --data-binary @my-swap.v1.sutra.yaml
@@ -1751,7 +1739,7 @@ until curl -s -H "Authorization: Bearer $DRISHTI_DRAIN_TOKEN" $B/admin/node | jq
 | `GET` | `/admin/health` | admin. Everything Drishti depends on, in one answer, including `disk` (`{path, totalBytes, freeBytes, guardBytes, state (ok, amber, red), folders: [{name, path, usedBytes, limitBytes, state, oldest}]}`; red makes the status `DEGRADED`), `tmp` (`{base, path, bytes, files}`: the server's temp folder `drishti-<pid>`, [CONFIGURATION.md](../admin/CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir)). `server` carries `rssMb`, the process's resident memory (`VmRSS` of `/proc/self/status`; null off Linux). Cheap enough to poll every few seconds |
 | `GET` | `/admin/busy` | admin. Busy protection ([OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over)): `{enabled, state (fine, getting full, new heavy work waits, new sign-ins wait, everything let through, off), waitingSince, override: {mode, reason, by, since, until, minutesLeft, maxMinutes}, gauges: [{id (memory, loads, requests, disk), label, value, warn, refuse, state (ok, warn, wait), words, note, ...}], refusals: {last15Minutes, people, sinceStart, rows: [{at, who, what, why, code, retryAfterSeconds}]}}`; the same is `busy` in `/admin/health` |
 | `PUT` | `/admin/busy/override` | admin, never a token. `{mode: automatic \| open \| hold, reason, minutes}`: let everything through or hold all new heavy work for 1 to `drishti.admission.override-max-minutes` minutes (a reason is required; `400 DRS-5001` without one), or back to automatic at once; audited as `busy-override`; answers as `GET /admin/busy` |
-| `GET` | `/admin/alerts` | admin. The platform alert rules (from `config/alerts/platform-alerts.yaml`, with any rule that could not be read and why), the open alerts (rule, severity, value, threshold, since) and the recent closed ones; the same alerts appear on Admin → Health and in administrators' inboxes ([OPERATIONS.md](../admin/OPERATIONS.md)) |
+| `GET` | `/admin/alerts` | admin. Everyone's alert rules (`rules`), the board tiles that notify (`boards`) and, under `platform`, the platform alert rules (from `config/alerts/platform-alerts.yaml`, with any rule that could not be read and why), the open alerts (rule, severity, value, threshold, since) and the recent closed ones; the same alerts appear on Admin → Health and in administrators' inboxes ([OPERATIONS.md](../admin/OPERATIONS.md)) |
 | `GET` | `/admin/caches` | admin. `{memory, disk, caches}`. `memory`: the cache budget (`budgetBytes`, `usedBytes`, `cacheShare`, `pools`) and the heap (`heapMaxBytes`, `heapUsedBytes`); `disk`: `freeBytes`, `guardBytes`, `state` and each folder's `usedBytes` against `limitBytes`; `caches`: one row each, `{name, owner, type, where (heap, mapped, disk), path, sizeBytes, limitBytes, entries, limitEntries, ttlSeconds, oldestAgeSeconds, hits, misses, freshness, dates, lastPurge {at, by, date}, stats}` (a value it cannot say is null): `engine`, `history`, `memory-budget`, every connector that caches, `var.answers`, `var.dates`, `var.hot-files`, `var.views`, `var.shard-books`, `exposure.answers`, `exposure.trade-paths`, `exposure.dates`, `exposure.hot-files`, `exposure.views`, `bi.results`, `bi.layers`, `security.pack-access`, `connectors.id-maps`. |
 | `GET` | `/admin/lakes/files?check=false` | admin. Every lake of the lake files (`config/lakes/`, [LAKE_GUIDE.md](LAKE_GUIDE.md)) and its tables, read-only, as Admin → Lakes lists them: `{dir, lakes: [...], error?}`; a lake file the reader refuses gives `lakes: []` and the refusal in `error`, so the page always opens; `check=true` adds `findings`, each local table compared with its lake file (format, partition columns, promoted columns); `drishti.py lake show`, `lake check` |
 | `GET` | `/admin/lakes/memory` | admin. The in-memory lake ([IN_MEMORY_LAKE_GUIDE.md](IN_MEMORY_LAKE_GUIDE.md)): `{stores: [{name, owner, contract, format, capBytes, usedBytes, allocatedBytes, releasedBytes, files, refusals, lastRefusal, directLimitProblem}], tables: [{name, store, path, source, mode, state (empty, refilling, ready, evicted, failed, refused, remote), stateWords, since, words, bytes, fileBytes, files, decodedBytes, ratio, rows, version, lastRefill, nextRefill, pinned, evictions, refusals, compactions, savedTodayBytes, savedTotalBytes, contract}], warm, compaction: {enabled, idleOnly, rewrites, savedTotalBytes, waitedForRoom, lastRun}, health: {state, problems, host, directLimitBytes, directNeededBytes}, guard: {refusals, downloads}}`; ids and counts only, never a value of the data; `drishti.py lake memory status` |
@@ -2224,7 +2212,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9053 | 501 | Board not built | a board uses a reserved setting (HTTP 501): `notify`, `notifications`, `subscriptions`. Notifications arrive with distribution (phase 7); a tile only changes colour |
 | DRS-9060 | 422 | Export failed | an export could not be made (HTTP 422): exports are off (`drishti.distribution.export.enabled`), the format is not `pdf`, `png`, `xlsx` or `csv`, the report or view cannot be read, the file is over `max-bytes` (export one page or visual, or narrow the filters), or it took longer than `timeout`. The message names the setting |
 | DRS-9061 | 422 | Subscription not valid | a subscription is not valid (HTTP 422): a schedule that is not one of `daily`, `weekdays`, `business-days`, `weekly mon HH:MM`, `monthly 1\|last HH:MM` (add `business`), `hourly`, `cron`, `after-load`; a format other than `html`, `pdf`, `xlsx`, `jsonl`; an email address (outside addresses are refused, whatever the settings); a role or another person when you are not a BI author; a target you cannot open yourself; or more than `per-user` subscriptions |
-| DRS-9062 | 422 | Alert not valid | an alert on a number is not valid (HTTP 422): a source that is not `visual`, `dataset` or `field` or lacks its keys; a condition with an `op` that is not `above`, `below`, `between` or `outside` (or `rises`, `falls`, `moves` for a change), a limit that is not a number, a `high` that is not above `value`, a change of zero or less, a `by` that is not `HH:MM`; a trigger with a schedule that is not one of the subscription words, or a `debounce` under `min-debounce`; a severity other than `info`, `warn`, `critical`; a negative hysteresis; **a source you cannot open yourself**; `live` on a source with no live table; email asked and no address on your account (or `drishti.alerts.measure.email` off); more than `per-user` alerts; or alerts off |
+| DRS-9062 | 422 | Alert not valid | an alert on a number is not valid (HTTP 422): a source that is not `visual`, `dataset` or `field` or lacks its keys; a condition with an `op` that is not `above`, `below`, `between` or `outside` (or `rises`, `falls`, `moves` for a change), a limit that is not a number, a `high` that is not above `value`, a change of zero or less, a `by` that is not `HH:MM`; a trigger with a schedule that is not one of the subscription words, or a `debounce` under `min-debounce`; a severity other than `info`, `warn`, `critical`; a negative hysteresis; **a source you cannot open yourself**; `live` on a source with no live table; email asked and no address on your account (or `drishti.alerts.email` off); more than `per-user` alerts; or alerts off |
 | DRS-9070 | 422 | Python item not valid | a Python item or its use is not valid (HTTP 422): an unknown manifest key, an `interface` that is not `measure` or `visual`, a package off the allow-list, no entry function in the source, a `target: browser` item that needs a package Pyodide lacks, a `timeout` or `memory` over the settings; a python visual with neither `format.python` nor a Python measure; an item for the browser only asked to run on the server. Publishing a Python item with such a manifest is refused with it |
 | DRS-9071 | 422 | Python code failed | the Python code failed (HTTP 422): an exception, a measure that did not return one number per group, a visual that returned neither an ECharts option, SVG nor PNG. The traceback is shown to `bi-author` only |
 | DRS-9072 | 413 or 504 | Python limit | The call ran over its `timeout` (504), memory, or the size of its input or output (413) |
@@ -2351,7 +2339,7 @@ Item ids are `bi-<10 hex>` (shipped files: `file:<kind>:<name>`); `me` stands fo
 | `GET` `POST` | `/bi/workspaces/{id}/items` | the items the caller may see in it; `POST {kind: dataset\|report\|board\|notebook, title, description?, tags?, body?, audienceRoles?, audienceUsers?, audiencePacks?}` creates a draft (`201`; contributor and `bi-author`) |
 | `GET` `PUT` `DELETE` | `/bi/items/{id}` | the item card with `body` (the draft for contributors and above, else the published version), `bodyIs`, `draftChanges` and `can{edit, propose, publish, approve, withdraw, promote, certify, delete, move}`; `PUT` takes any of the create fields; `DELETE` is `204` |
 | `POST` | `/bi/items/{id}/open` | as `GET`, and counts a view and a Recent entry (published items) |
-| `POST` | `/bi/items/{id}/propose` `/withdraw` `/approve` `/reject` | review: `{note}` or `{reason}` (required to reject); approve needs a workspace member with the `approve` power |
+| `POST` | `/bi/items/{id}/propose` `/withdraw` | review: `{note}`; the decision is made in the one [Approvals](#approvals-apiv1approvals) queue (`/approvals/bi/{id}/approve` · `/reject`, `{comment, params: {force, applyRenames}}`): a bi-steward, or a workspace member with the `approve` power |
 | `POST` | `/bi/items/{id}/publish` | `{note?, force?, applyRenames?}`: the next version; not in a personal workspace, not when the workspace requires review. `applyRenames` (a dataset whose draft renames fields or measures the same way, [BI_GUIDE.md › Publishing and governance: versions, review, certification, lineage, impact, environments, section 6](BI_GUIDE.md#renames)) rewrites the stored reports that use the old names, in the same step |
 | `POST` | `/bi/items/{id}/move` | `{workspace}`: move to another workspace (`me` for personal) |
 | `POST` | `/bi/items/{id}/endorse` | `{level: none\|promoted\|certified}` on a published item |
@@ -2910,7 +2898,7 @@ The server never runs Python; these calls tell the console's runner what to run,
 | `GET /bi/python/status` (console) | signed in | the server's `GET /api/v1/bi/python/runtime` | the console's own route: session cookie, no token |
 | `POST /bi/python/run` (console) | signed in; the server decides access | body `{report, page, visual, state}`: passed to `POST /api/v1/bi/python/visual`, which runs the visual's Python item on the server's pool, on the rows the server reads for this person; answers `{kind: measure, by, rows}`, `{kind: echarts, option}`, `{kind: svg, svg}` or `{kind: png, png}` plus `ms`, `inputRows`, `masked`, `item`, `version`, `measure`, `target`; a failure is `{code, detail}` (+ `traceback` for `bi-author`) with `422 DRS-9071`, `403 DRS-9073`, `413`/`504 DRS-9072`, `503 DRS-9074` | JSON from the console's own pages only: `Origin`/`Referer` same-origin and `application/json`, else `403 DRS-5002` / `DRS-5001`; no personal token (the console's session cookie) |
 | `POST /bi/python/check` (console) | signed in; the server decides access | body `{yaml[, tests]}`: passed to `POST /api/v1/bi/python/check`: the manifest's checks, the source's, and **the item's `tests:` run on the pool** (`tests: false` skips them): `{valid, problems, manifest, tests: {total, passed, failed, errors, ok, results[{name, status: pass \| fail \| error, message}]}}` | as `/bi/python/run` |
-| `POST /api/v1/bi/items/{id}/publish`, `.../approve` | as for any item | an item of kind `python` that carries `tests:` has them run on the compute pool first (whoever asks: the console, a token, the command line): one that fails or cannot run refuses the publish with `DRS-9076`-style words (`422`); a bi-admin may send `{"force": true}` | as publish |
+| `POST /api/v1/bi/items/{id}/publish`, `/api/v1/approvals/bi/{id}/approve` | as for any item | an item of kind `python` that carries `tests:` has them run on the compute pool first (whoever asks: the console, a token, the command line): one that fails or cannot run refuses the publish with `DRS-9076`-style words (`422`); a bi-admin may send `{"force": true}` | as publish |
 | `GET /bi/notebook` (console) | signed in with the `bi` power | the Notebook ([USER_GUIDE.md › The Notebook](USER_GUIDE.md#the-notebook)); `?item=<notebook id>` opens a saved notebook; `/bi/explore` and `/pyconsole` lead here (308) | GET: a page |
 | `GET /bi/notebook/status` (console) | signed in | `{limits, python{runs, why, packages, where: server, mayRun}}` (`runs` false, with `why`, where the server cannot run Python safely) | GET: read |
 | `POST /bi/notebook/python` (console) | signed in with `bi-author` (the server decides) | body `{extract, extracts?, source, params?}`: passed to `POST /api/v1/bi/python/cell` with the notebook's limits: the server reads the extracts as you and runs the cell on its compute pool | as `/bi/notebook/extract` |
@@ -2990,45 +2978,87 @@ POST /api/v1/export/xlsx  {"type":"report","id":"file:report:trades-overview","p
      6362 bytes, sheets: About, Trades, Notional, Mark to market, Average MTM per trade, MTM by desk (click a bar to fil, Notional by trade date, Trades by desk and currency
 ```
 
-## Alerts on numbers: `/api/v1`
+## Approvals: `/api/v1/approvals`
 
-Phase 7, part 2 ([BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](BI_GUIDE.md#4-alerts-on-numbers) is the reference). An alert watches one number and is **evaluated as its owner**: their row rules and masks apply to every reading, and a number masked for
-them is never judged or put in a message. Errors are `422 DRS-9062`; an alert that does not exist is `404 DRS-1001`. These calls are **never open to a personal API token** (`/me/**` and `/admin/measure-alerts/**` are in `token-never`).
+The one queue of every four-eyes item ([USER_GUIDE.md › Approvals](USER_GUIDE.md#approvals)). Each kind keeps its own rules (who may
+decide, four eyes, what a decision does); this is the only API that decides. Kinds: `sutra`, `change`, `bi`, `compute`, `function`,
+`stress-window`, `var-report`; groups `data`, `screens`, `risk`, `access`. Nothing is kept per person: every answer is computed for the
+caller, and a question thread is shown only to someone the item's kind shows the item to.
 
 | Method | Path | What it does |
 |---|---|---|
-| `GET` | `/me/measure-alerts` | your alerts: the stored alert (below) plus `describe` (the condition in words), `label` (what it watches) and `link` (the console path that opens it) |
-| `GET` | `/me/measure-alerts/{name}` | one |
-| `PUT` | `/me/measure-alerts/{name}` | save (create, or change: an edited alert is armed afresh and keeps its history): `{title?, severity?: info\|warn\|critical, enabled?, source: {type: visual, report, page, visual, measure?, reduce?: first\|last\|sum\|min\|max\|avg\|count, state?} \| {type: dataset, dataset, measure, filters?: [{field, op, values}]} \| {type: model, model, query: <a model query that selects one measure; `model` may be left out>, reduce?} \| {type: field, kind, id, field}, condition: {type: threshold, op: above\|below\|between\|outside, value, high?} \| {type: change, mode: pct\|abs, op: rises\|falls\|moves, value, against: previous-run\|previous-day} \| {type: nodata, by: "HH:MM"}, trigger: {mode: schedule, schedule} \| {mode: after-load, kind?} \| {mode: live, debounce?}, hysteresis?, cooldown?, delivery?: {inbox, email, bridge, webhooks?: [name], sms?: bool}}`. `webhooks` are names an administrator defined (`GET /notify/options`; at most 5; an unknown one is `422 DRS-9062`), `sms` needs a gateway and your own number on file (`PUT /me/phone`). A failed email, webhook or text is tried again by the shared retry policy (`drishti.retry.alerts.*`, `drishti.alerts.measure.max-attempts`); each history entry's `delivered` says what happened per channel (`email: "sent (attempt 3 of 4)"`, `emailAttempts: 3`, `webhook:ops: "sent"`, `sms: "failed after 4 attempts: ..."`). The alert is looked at once as you save it |
-| `DELETE` | `/me/measure-alerts/{name}` | delete (`204`) |
-| `POST` | `/me/measure-alerts/{name}/check` | look now, as you; answers the alert with its new state and history |
-| `POST` | `/me/measure-alerts/{name}/pause` · `/me/measure-alerts/{name}/resume` | pause, or resume (armed afresh, and looked at once) |
-| `POST` | `/me/measure-alerts/preview` | the same body as a save: `{status: ok\|masked\|no_data\|error, value, asOf, note, condition, holds?, live}` for **you, now**; saves and sends nothing |
-| `GET` | `/admin/measure-alerts` | everyone's alerts (administrators) |
-| `GET` | `/admin/measure-alerts/boards` | the board tiles that notify (administrators): the tile, its colour rule, `activeFor` (how many people are alerted now) and the history |
-| `POST` | `/admin/measure-alerts/{owner}/{name}/pause` · `/admin/measure-alerts/{owner}/{name}/resume` | administrators |
-| `DELETE` | `/admin/measure-alerts/{owner}/{name}` | administrators (`204`) |
+| `GET` | `/approvals?box=inbox\|sent\|done\|all&group=&kind=&limit=200` | `{items: [{item, label, group, dueSoon, questions}], inbox, dueSoon, kinds, unavailable}`: due-soon items first (nearest due date first), then the newest. `inbox` = waiting for the caller to decide (never their own) |
+| `GET` | `/approvals/count` | `{inbox, dueSoon}`: the top bar's count |
+| `GET` | `/approvals/{kind}/{id}` | `{detail: {item, diff, effect, rules, facts}, label, group, dueSoon, questions, actions}`. `diff` is `{format: lines, rows: [{op, left, right}]}` or `{format: fields, rows: [{field, before, after}]}`; `effect` and `rules` are lines; `actions` a subset of `approve`, `reject`, `withdraw`, `ask` |
+| `POST` | `/approvals/{kind}/{id}/approve` · `/reject` · `/withdraw` | `{comment, params}`: the kind decides (a reason is required to reject; `403` for the maker's own; `409` when it is no longer waiting). `params`: `scope` (a pivot function), `step` (a report run), `force` and `applyRenames` (a BI item). Answers the item as it now stands; audited `approval.<action>` |
+| `POST` | `/approvals/{kind}/{id}/questions` | `{text}`: a question on the item (or an answer); answers the thread. The maker is told when someone else asks, and the others who wrote are told when the maker answers: an inbox row of type `notice`, `kind: approval`, `id` the console path, never the text |
 
-A stored alert is `{name, owner, title, severity, enabled, source, condition, trigger, hysteresis, cooldown, delivery, createdAt, state, history}`: `state` maps a user to `{active, firedAt?, lastValue?, lastEval, note?}`; a `history`
-entry is `{at, user, action: fired\|cleared\|held\|skipped, severity, trigger: saved\|schedule\|load\|live\|by hand\|resumed, value?, asOf?, reference?, delta?, message, id?, delivered?: {inbox, email, bridge}}` (newest first; `delivered` says `ok`, `sent`,
-`queued for 1 bridge`, `skipped: …`, `failed: …` or `off`). An alert's firing is an inbox row of type `alert` (`kind: alert`, `id` the console path it opens, `title` the one line), read from `GET /me/inbox?type=alert` ([the inbox](#share-with-a-note-the-directory-and-the-inbox)).
-A board tile with `notify` is an alert whose key is `board:<board id>/<page>/<tile>`; its state and history are under `/admin/measure-alerts/boards`.
+An item is `{kind, id, title, maker, at, status, reason, due, mayDecide, mine, mayWithdraw, link, decidedBy, decidedAt, stage}`; `status` is
+`pending` while it waits, else the kind's word (`approved`, `rejected`, `withdrawn`, `signed`, ...). Ids with several parts are written with
+colons: a pivot function `owner:name@version`, a report run `report:period:vN`. A personal API token decides with the scope of the kind
+(`edit`, `design:approve`, `bi:approve`, `pivot:approve`) or `approve`; report sign-offs, stress windows, compute packages and questions are
+never a token's.
 
-From the console: `/alerts` (the list, beside the older rules), `/alerts/new` (the form: `?source=visual&report=&page=&visual=&state=`, `?source=dataset&dataset=&measure=`, `?source=field&kind=&id=&field=`), `/alerts/measure/<name>` (edit and history),
-`/alerts/all` (administrators) and `POST /alerts/preview` (the form's *Check now*).
+```
+GET  /api/v1/approvals?box=inbox
+200  {"items": [{"item": {"kind": "var-report", "id": "annual-report-var:FY2026:v1", "title": "Annual VaR FY2026 v1", "maker": "rao", "status": "pending",
+                 "due": "2026-11-09", "mayDecide": true, "mine": false, "stage": "with checker", ...}, "label": "Report sign-off", "group": "risk",
+                 "dueSoon": true, "questions": 0}, ...], "inbox": 4, "dueSoon": 1, "kinds": [...], "unavailable": []}
+POST /api/v1/approvals/change/chg-01M5V6GM7NCKSR506RQ86M7YVV/reject  {"comment": "wrong ticket"}
+200  {"kind": "change", "id": "chg-01M5V6GM7NCKSR506RQ86M7YVV", "status": "rejected", ...}
+```
+
+## Alerts: `/api/v1`
+
+The one alert engine ([USER_GUIDE.md › Alerts](USER_GUIDE.md#alerts); [BI_GUIDE.md section 4](BI_GUIDE.md#4-alerts-on-numbers) for numbers
+of BI). An alert rule watches one number (or one entity's Rachana-EL rule) and is **evaluated as its owner**: their row rules and masks; a
+number masked for them is never judged or put in a message. Errors are `422 DRS-9062` (a rule's expression that does not parse:
+`422 DRS-2101`); an alert that does not exist is `404 DRS-1001`. These calls are **never open to a personal API token** (`/alerts/**` and
+`/admin/alerts/rules/**` are in `token-never`).
+
+| Method | Path | What it does |
+|---|---|---|
+| `GET` | `/alerts?stage=open\|all` | the alerts raised for you, newest first (an administrator also gets the platform alerts): `{id, source: alert\|board\|platform, rule, title, severity, stage: raised\|acknowledged\|resolved, message, raisedAt, ackBy, ackAt, assignee, snoozedUntil, resolvedAt, resolvedBy, how: cleared\|by hand, note, link}` |
+| `POST` | `/alerts/acknowledge` · `/resolve` · `/snooze` · `/assign` | `{id, note?, for?, to?}`: acknowledge (you own it), resolve by hand (with a note), snooze (`for`: 15m, 1h, 1d, at most 30d; `0` ends it; a breach while snoozed fires when it ends), assign (platform alerts, to a user). Only your own cases; audited `alert.<action>` |
+| `GET` | `/alerts/rules` | your rules: the stored rule (below) plus `describe` (the condition in words), `label` (what it watches) and `link` (the console path that opens it) |
+| `GET` | `/alerts/rules/{name}` | one |
+| `PUT` | `/alerts/rules/{name}` | save (create, or change: an edited rule is armed afresh and keeps its history): `{title?, severity?: info\|warn\|critical, enabled?, source: {type: visual, report, page, visual, measure?, reduce?: first\|last\|sum\|min\|max\|avg\|count, state?} \| {type: dataset, dataset, measure, filters?} \| {type: model, model, query, reduce?} \| {type: field, kind, id, field}, condition: {type: threshold, op: above\|below\|between\|outside, value, high?} \| {type: change, mode: pct\|abs, op: rises\|falls\|moves, value, against: previous-run\|previous-day} \| {type: nodata, by: HH:MM} \| {type: rule} (a field source whose field is a Rachana-EL predicate), trigger: {mode: schedule, schedule} \| {mode: after-load, kind?} \| {mode: live, debounce?}, hysteresis?, cooldown?, delivery?: {inbox, email, bridge, webhooks, sms}}` |
+| `DELETE` | `/alerts/rules/{name}` | delete (`204`) |
+| `POST` | `/alerts/rules/{name}/check` | look now, as you; answers the rule with its new state and history |
+| `POST` | `/alerts/rules/{name}/pause` · `/alerts/rules/{name}/resume` | pause, or resume (armed afresh, and looked at once) |
+| `POST` | `/alerts/rules/preview` | the same body as a save: `{status: ok\|masked\|no_data\|error, value, asOf, note, condition, holds?, live}` for **you, now**; saves and sends nothing |
+| `GET` | `/alerts/suggestions/{kind}` | rules the installed packs suggest for a kind (`alerts:` in `pack.yaml`) |
+| `GET` | `/alerts/stream` | your notifications (server-sent events): `notice`, `switches`, `edit` |
+| `GET` | `/admin/alerts` | administrators: `{rules: everyone's, boards: the board tiles that notify (the tile, its colour rule, activeFor, history), platform: the platform alert rules, open and recent}` |
+| `POST` | `/admin/alerts/rules/{owner}/{name}/pause` · `/resume` | administrators |
+| `DELETE` | `/admin/alerts/rules/{owner}/{name}` | administrators (`204`) |
+
+A stored rule is `{name, owner, title, severity, enabled, source, condition, trigger, hysteresis, cooldown, delivery, createdAt, state, cases, history}`:
+`state` maps a user to `{active, firedAt?, lastValue?, lastEval, note?}`; `cases` maps a user to the alert raised for them
+`{stage, raisedAt, message, ackBy?, ackAt?, assignee?, snoozedUntil?, resolvedAt?, resolvedBy?, how?, note?}`; a `history` entry is `{at, user, action:
+fired\|cleared\|held\|skipped, severity, trigger: saved\|schedule\|load\|live\|by hand\|resumed, value?, asOf?, reference?, delta?, message, id?,
+delivered?: {inbox, email, bridge}}` (newest first; `delivered` says `ok`, `queued for 1 bridge`, `skipped: …`, `failed: …` or `off`). A firing is an
+inbox row of type `alert` (`kind: alert`, `id` the console path it opens, `title` the one line), read from `GET /me/inbox?type=alert`.
+A board tile with `notify` is a rule whose key is `board:<board id>/<page>/<tile>`; its state and history are under `/admin/alerts` (`boards`).
+Rules on one entity kept in the earlier form (`{ref, when, severity, message}` in the `alerts` preference namespace) are converted at
+start, once, into rules with a field source and the condition `rule`.
+
+From the console: `/alerts` (the alerts raised for you and your rules), `/alerts/new` (the form: `?source=visual&report=&page=&visual=&state=`,
+`?source=dataset&dataset=&measure=`, `?source=field&kind=&id=&field=`), `/alerts/measure/<name>` (edit and history), `/alerts/all`
+(administrators) and `POST /alerts/preview` (the form's *Check now*).
 
 Captured from a real server. *Check now* for the MTM card, before and after ten losing trades and a data load:
 
 ```
-POST /api/v1/me/measure-alerts/preview  {"source":{"type":"visual","report":"file:report:trades-overview","page":"overview","visual":"mtm"},"condition":{"type":"threshold","op":"below","value":-300000},"trigger":{"mode":"after-load"}}
+POST /api/v1/alerts/rules/preview  {"source":{"type":"visual","report":"file:report:trades-overview","page":"overview","visual":"mtm"},"condition":{"type":"threshold","op":"below","value":-300000},"trigger":{"mode":"after-load"}}
 200  {"status": "ok", "value": -725000.0, "asOf": "2026-10-08", "note": "", "condition": "below -300,000", "holds": true, "live": false}
 ```
 
 and a refusal:
 
 ```
-PUT /api/v1/me/measure-alerts/Bad  {"source":{"type":"visual","report":"file:report:trades-overview","visual":"mtm"},"condition":{"type":"threshold","op":"over","value":1},"trigger":{"mode":"schedule"}}
-422  {"type": "about:blank", "title": "alert invalid", "status": 422, "detail": "DRS-9062 condition.op is above, below, between or outside", "instance": "/api/v1/me/measure-alerts/Bad", "code": "DRS-9062"}
+PUT /api/v1/alerts/rules/Bad  {"source":{"type":"visual","report":"file:report:trades-overview","visual":"mtm"},"condition":{"type":"threshold","op":"over","value":1},"trigger":{"mode":"schedule"}}
+422  {"type": "about:blank", "title": "alert invalid", "status": 422, "detail": "DRS-9062 condition.op is above, below, between or outside", "instance": "/api/v1/alerts/rules/Bad", "code": "DRS-9062"}
 ```
 
 ## Publishing and governance: `/api/v1/bi` (phase 4)
@@ -3047,13 +3077,13 @@ Phase 4 of Rūpaka ([BI_GUIDE.md](BI_GUIDE.md#32-publishing-and-governance-versi
 | `POST` | `/bi/items/{id}/impact` | the same for `{yaml}` not yet saved |
 | `GET` | `/bi/items/{id}/dependants` | what depends on an item, for a delete confirmation: `{id, kind, count, dependants: [{id, kind, title, status}]}`. A dataset has the reports that read it and the composed or derived datasets built on it; a report has the boards that show it; other kinds have none. Only items the caller may read are counted and named. Any token that may read the item (no write scope); `403 DRS-9002` / `404 DRS-9001` as everywhere in BI |
 | `POST` | `/bi/items/{id}/tests` | `{role?, yaml?}`: runs the expected values (`tests:`) of a report or dataset ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 17](BI_GUIDE.md#17-expected-values-tests)) as you, or as a role you hold (a `bi-steward` as any); `yaml` is a report draft not yet saved (needs `bi-author`). Answers `{item, kind, role, total, passed, failed, errors, ok, results: [{name, kind, target, expect, actual, status: pass\|fail\|error, message, role}]}`; queries only, stores nothing, audited `bi-tests-run`. Token: on `token-read-posts` (a read: a personal token may call it) |
-| `POST` | `/bi/items/{id}/publish`, `/approve` | `{note, force, applyRenames}`: `applyRenames` rewrites the reports that use renamed names; `force` publishes over broken reports or over failing tests and needs `bi-admin`; the item plus `warnings` (what broke, which certification was revoked); `409 DRS-9040` without it for a dataset that breaks published reports, `409 DRS-9043` without it when a report's or dataset's expected values fail or cannot run |
+| `POST` | `/bi/items/{id}/publish` (and `/approvals/bi/{id}/approve` with `params`) | `{note, force, applyRenames}`: `applyRenames` rewrites the reports that use renamed names; `force` publishes over broken reports or over failing tests and needs `bi-admin`; the item plus `warnings` (what broke, which certification was revoked); `409 DRS-9040` without it for a dataset that breaks published reports, `409 DRS-9043` without it when a report's or dataset's expected values fail or cannot run |
 | `GET` | `/bi/bundle?items=a,b&workspace=w&dependencies=true` | a bundle (`drishti-bi-bundle`, format 1): items with published versions, sample flags, owner, audience and checksums, plus `skipped`; needs `bi-author` and the contributor role |
 | `POST` | `/bi/bundle/import` | `{bundle, dryRun (default true), overwrite, force, workspace, workspaces: {from: to}, owners: {from: to}}`; needs `bi-steward`; `{dryRun, ok, applied, counts, items: [{id, action, workspace, owner, reasons, warnings, blocks}]}`; `422 DRS-9041`, `409 DRS-9042` |
 | `GET` | `/bi/imports`, `/bi/imports/{id}` | needs `bi-steward`: the imports whose replaced states are kept (`{id, at, by, source, items, created, replaced, rolledBack}`, newest first); one with its `entries` (`{id, title, kind, created, restoresVersion, changedSince}`). `source` is `bundle` or `pack <name> <version>` |
 | `POST` | `/bi/imports/{id}/rollback` | `{force}` (optional; `force` needs `bi-admin`): puts back what the import replaced and removes what it created; `{id, restored, removed, forced}`; `409 DRS-9004` when an item was edited or published since (unless forced) or the import was rolled back already |
 
-Review notices reach the inbox ([the inbox](#share-with-a-note-the-directory-and-the-inbox)) as rows of type `bi-review` (to reviewers), `bi-decision` (to the author) and `bi-certification` (to the owner and the certifier); `kind` is `bi`, `id` the item and `title` a one-line summary. Alerts on numbers arrive as rows of type `alert` ([Alerts on numbers](#alerts-on-numbers-apiv1)). Refusals: `DRS-9040`, `9041`, `9042` and the phase 1 codes (`DRS-9001` to `9005`).
+Review notices reach the inbox ([the inbox](#share-with-a-note-the-directory-and-the-inbox)) as rows of type `bi-review` (to reviewers), `bi-decision` (to the author) and `bi-certification` (to the owner and the certifier); `kind` is `bi`, `id` the item and `title` a one-line summary. Alerts on numbers arrive as rows of type `alert` ([Alerts](#alerts-apiv1)). Refusals: `DRS-9040`, `9041`, `9042` and the phase 1 codes (`DRS-9001` to `9005`).
 
 ## AI and MCP: `/api/v1/ai` and `/api/v1/admin/ai`
 
@@ -3094,8 +3124,7 @@ Administrators only ([OPERATIONS.md](../admin/OPERATIONS.md#19-compute-workers))
 | Method and path | What it does |
 |---|---|
 | `GET /api/v1/admin/compute` | the switch, settings origin and data folder; per pool its workers (busy, idle, starting, on other nodes), queues by class, served, crashed, recycled, failures, latency and readiness; workers busy now; recent requests; environments; approval requests with their items |
-| `POST /api/v1/admin/compute/requests/{id}/approve` | `{reason}`: approves a pending request; refused (`DRS-9202`) for the person who asked (four eyes) or without a reason; `compute.approval.roles` may narrow who decides |
-| `POST /api/v1/admin/compute/requests/{id}/reject` | `{reason}`: the same rules |
+| `POST /api/v1/approvals/compute/{id}/approve` · `/reject` | `{comment}` (the reason, required): decided in the one [Approvals](#approvals-apiv1approvals) queue; refused (`DRS-9202`) for the person who asked (four eyes); `compute.approval.roles` may narrow who decides |
 | `POST /api/v1/admin/compute/requests/{id}/revoke` | `{reason}`: the approval stops covering its items; connectors needing them stop |
 | `POST /api/v1/admin/compute/pools/{pool}/build` | builds the pool's approved locked environment (offline, by hash) and answers its id and log; `DRS-9202` when not approved or the build fails |
 | `POST /api/v1/admin/compute/pools/{pool}/test` | runs the sample engine on the pool as the caller: the worker that answered and the times |
@@ -3231,7 +3260,7 @@ For example `GET /api/v1/var/scope?scope=DESK:DESK-RATES&asOf=2026-09-30` answer
 | `GET /api/v1/var/stress-window?scope=&hierarchy=&length=&confidence=&asOf=` | the **stress window selection** (`SWIN`): every window of `length` days (250) of the node's long-history P&L (`pnl-history`) valued as a stressed VaR: `node`, `nodes`, `hierarchies`, `history` (first and last day, days, `synthetic`, `dataVersion`), `rank`, `stressSet`, `current` (the stress set's window), `worst`, `today` (the VaR of the last days of the normal set's length), `alert` (`raised`, `gap`, `threshold`), `candidates` (apart from one another; the current always listed), `series` (`starts`, `var`), `byNode`, `approval`; a role that does not see every node `403`; no rows on the date `404` ([VAR_GUIDE.md section 18.9](VAR_GUIDE.md#189-choosing-the-stress-window)) |
 | `POST /api/v1/var/stress-window/proposals` | freezes the analysis of a node and proposes a window: `{"scope", "hierarchy", "date", "length", "confidence", "first", "note"}` (`first` none: the worst window); answers the record (`SWP-000001`, `status` `PROPOSED`, the inputs and the history's data version) |
 | `GET /api/v1/var/stress-window/proposals?limit=` and `GET /api/v1/var/stress-window/proposals/{id}` | the proposals, newest first; one proposal |
-| `POST /api/v1/var/stress-window/proposals/{id}/decision` | `{"decision": "approve" \| "reject", "note"}` by a person other than the proposer (`403 DRS-2007` for the proposer; `409 DRS-2006` once decided) |
+| `POST /api/v1/approvals/stress-window/{id}/approve` · `/reject` | `{comment}` (required to reject), decided in the one [Approvals](#approvals-apiv1approvals) queue by a person other than the proposer (`403 DRS-2007` for the proposer; `409 DRS-2006` once decided) |
 | `POST /api/v1/var/official?asOf=` | administrators: captures the date officially now (the data-load signal of an input does it by itself): `{status: captured, restated, unchanged or skipped, resultVersion, nodes, published}` |
 | `POST /api/v1/var/official/synthetic-history?days=` | administrators, on a demo server (`drishti.regulatory.synthetic-history`): seeds synthetic official records before the oldest one, each marked `synthetic` and never published ([VAR_GUIDE.md section 18.10](VAR_GUIDE.md#1810-period-statistics)) |
 | `GET /api/v1/var/backtesting?scope=&asOf=&format=` | the regulatory backtest of a node: the official VaR of the day before at 99% and 97.5% against the bank's actual and hypothetical P&L (`desk-pnl`) and the risk-theoretical P&L over 250 days; counts, zone, multiplier, rows, exceptions with the desks that drove them, the desks below; `format=xlsx` a workbook ([VAR_GUIDE.md section 18.11](VAR_GUIDE.md#1811-backtesting-for-regulation)) |
@@ -3239,7 +3268,8 @@ For example `GET /api/v1/var/scope?scope=DESK:DESK-RATES&asOf=2026-09-30` answer
 | `GET /api/v1/var/reports` | the report definitions (`config/reports/`) and each one's newest run of its current period ([VAR_GUIDE.md section 18.14](VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off)) |
 | `POST /api/v1/var/reports/{report}/runs?period=` | generates and freezes the next run of a period: cells with their lineage, checks, facts |
 | `GET /api/v1/var/reports/{report}/runs/{period}?version=` | a run with its sign-off record |
-| `POST /api/v1/var/reports/{report}/runs/{period}/signoff` | `{version, action: approve, return or narrative, step, comment, narrative}`: one sign-off action; refused (`409`) in words when the rules say no |
+| `POST /api/v1/var/reports/{report}/runs/{period}/narrative` | `{version, narrative}`: the maker's text, before the maker signs |
+| `POST /api/v1/approvals/var-report/{report}:{period}:v{n}/approve` · `/reject` | a sign-off step in the one [Approvals](#approvals-apiv1approvals) queue: `{comment, params: {step}}`; reject sends the run back to the maker (a reason is required); refused (`409`) in words when the rules say no |
 | `GET /api/v1/var/reports/{report}/runs/{period}/file?format=&version=&draft=` | the run as xlsx, csv or PDF: released after the last approval, a marked draft before it on request |
 
 **VaR as a computed kind** ([VAR_GUIDE.md section 8](VAR_GUIDE.md#8-what-if-and-var-as-a-kind)). The market-risk pack's
@@ -3431,7 +3461,7 @@ that add up (section 20) and what-if overlays (section 21). A view uses a functi
 | `POST /api/v1/pivot/functions/test` | a read (`token-read-posts`): `{name, language: formula\|sql\|python\|java, code, entry, inputs: [name \| {name, type: number\|text}], kind, params, tolerance, stateBytes, sketchError, description, sample: [{...}] \| {columns, rows}, group, parts, projectRows, nodes}` → `{definition, harness: {passed, firstFailure, checks, runs, worst, onePass, nsPerRow, stateBytes}, playground: {steps, onePass, final, same, cost, pivot}}`; nothing saved; audited |
 | `POST /api/v1/pivot/functions` | token scope `pivot:write`; the same body: a new version after the harness passes (`DRS-5711` with the first failure otherwise, `DRS-5710` a definition refused, `DRS-5713` a language off, `DRS-5715` an official measure's name); private |
 | `POST /api/v1/pivot/functions/{owner}/{ref}/submit` | token scope `pivot:write`; `{ref}` is `name@version` (`wret@1`); `{note}`: the author asks for sharing (`DRS-5712` when the caller is not the author, `DRS-5704` no such version) |
-| `POST /api/v1/pivot/functions/{owner}/{ref}/approve` | token scope `pivot:approve`; `{scope: everyone\|group:<name>, reason}`: an approver who is not the author (a Java plug-in: an administrator, its jar's SHA-256 pinned); `DRS-5712` the author, someone who is not an approver, no reason or a jar changed; `DRS-5711` no passed harness report |
+| `POST /api/v1/approvals/function/{owner}:{name}@{version}/approve` | decided in the one [Approvals](#approvals-apiv1approvals) queue; token scope `pivot:approve` or `approve`; `{comment, params: {scope: everyone\|group:<name>}}`: an approver who is not the author (a Java plug-in: an administrator, its jar's SHA-256 pinned); `DRS-5712` the author, someone who is not an approver, no reason or a jar changed; `DRS-5711` no passed harness report |
 | `POST /api/v1/pivot/functions/{owner}/{ref}/revoke` | token scope `pivot:approve`; `{reason}`: withdrawn by an approver, an administrator or the author; its cells say so (`DRS-5712` anyone else) |
 | `POST /api/v1/pivot/explain` | a read (`token-read-posts`); `DRS-5716` what cannot be explained as asked: `{view, measure, from: {DIM: V}, to: {DIM: V}, fromDate, toDate, by, order: member\|size, price, quantity}` → `{measure, kind, by, from, to, difference, method, order, steps: [{member, cause: new\|gone\|changed\|residual\|price\|quantity\|cross, from, to, step, cumulative}], residual: {value, name}, addsUp, words}` |
 | `POST /api/v1/pivot/whatif` | a read (`token-read-posts`; nothing is written); `DRS-5716` an empty overlay, a field that is not a number, a VaR source: `{view, whatIf: {exclude: {FIELD: [values]}, changes: [{field, scale \| set, where: {FIELD: [values]}}], add: [{FIELD: value}]}}` → `{whatIf, original, diff, overlay, note}` (per cell of `diff`: `delta` per measure, what-if minus original, or `status`) |
@@ -3604,8 +3634,8 @@ they are not a public API and have no stability promise, but a script that must 
 |---|---|---|
 | `GET /api/suggest`, `POST /api/resolve`, `GET /api/history`, `PUT /api/aliases` | the command line: type-ahead, run a command, recent commands, aliases | `/command/suggest`, `/command`, `/command/history`, `/command/aliases` |
 | `GET /api/view/{kind}/{id}`, `GET /api/raw/{kind}/{id}`, `GET /api/series/{kind}/{id}` | a view, the raw document, a field over time | `/views/{kind}/{id}`, `/entities/{kind}/{id}/raw`, `/history/{kind}/{id}/series` |
-| `GET /api/stream/{kind}/{id}`, `GET /api/channel`, `GET /api/channel/who`, `POST /api/channel/{cid}` | live updates: one stream per browser (the channel) to which views subscribe | `/views/{kind}/{id}/stream`, `/me/alerts/stream`, `/me/monitors/{name}/stream` |
-| `GET /api/monitor-stream/{name}`, `GET /api/alerts/stream` | a monitor's and the user's alert stream | `/me/monitors/{name}/stream`, `/me/alerts/stream` |
+| `GET /api/stream/{kind}/{id}`, `GET /api/channel`, `GET /api/channel/who`, `POST /api/channel/{cid}` | live updates: one stream per browser (the channel) to which views subscribe | `/views/{kind}/{id}/stream`, `/alerts/stream`, `/me/monitors/{name}/stream` |
+| `GET /api/monitor-stream/{name}`, `GET /api/alerts/stream` | a monitor's and the user's notification stream | `/me/monitors/{name}/stream`, `/alerts/stream` |
 | `PATCH /api/settings`, `POST /api/packs`, `POST /api/tokens`, `DELETE /api/tokens/{id}` | the user's settings, active packs and personal API tokens | `/me/settings`, `/me/packs`, `/me/tokens` |
 | `GET` and `POST /api/notes/{kind}/{id}`, `PUT` and `DELETE /api/notes/{noteId}` | notes (deprecated) | `/notes/...` |
 | `PUT` and `DELETE /api/layout/{sutra}/{kind}`, `GET` and `POST .../promotion` | personal layouts and promoting one to a Sutra | `/me/layouts/...` |
@@ -3617,7 +3647,9 @@ they are not a public API and have no stability promise, but a script that must 
 | `GET /bi/python/status`, `POST /bi/python/run`, `POST /bi/python/check` | Python in BI, run on the server's compute pool: its state, a python visual, checking a Python item | `/bi/python/runtime`, `/bi/python/visual`, `/bi/python/check` |
 | `/admin/api/...`, `/admin/connectors/api/...`, `/admin/collab/api/...`, `/admin/embedding/api/...`, `/admin/ai/api/overview` | the Admin pages' actions: users, roles, packs (load, unload, deploy, roll back, registry, sample mode), loads configuration, token revoke, cache purge, retry now, connectors, collaboration compliance, embedded applications | the matching `/admin/...` endpoints; administrators only |
 | `/build/pack/api/...` | New pack from schemas (plan, jobs, drafts, preview, bundle) | none: the console builds the pack and hands it to the Build workbench or Deploy |
-| `POST /m/api/{name}`, `/m/api/{name}/delete`, `POST /alerts/api/{name}`, `/alerts/api/{name}/delete`, `POST /w/api/{name}`, `/w/api/{name}/share`, `/w/api/{name}/delete` | save and delete monitors, alert rules and workspaces | `/me/monitors/...`, `/me/alerts/rules/...`, `/me/workspaces/...` |
+| `POST /m/api/{name}`, `/m/api/{name}/delete`, `POST /alerts/api/{name}`, `/alerts/api/{name}/delete`, `POST /w/api/{name}`, `/w/api/{name}/share`, `/w/api/{name}/delete` | save and delete monitors, rules on one entity and workspaces | `/me/monitors/...`, `/alerts/rules/...`, `/me/workspaces/...` |
+| `POST /alerts/raised/{acknowledge\|snooze\|resolve\|assign}` | act on an alert raised (a form on the Alerts page) | `/alerts/{action}` |
+| `GET /approvals/api/list`, `/approvals/api/count`, `/approvals/api/item/{kind}/{id}`, `POST /approvals/api/item/{kind}/{id}/{approve\|reject\|withdraw\|questions}`, `GET /approvals/api/view/sutra/{id}` | the Approvals queue (the last: a Sutra proposal's diff with its moved panels and its evidence, as HTML) | `/approvals/...` |
 
 The BI, Build, Studio, Forms, Reports and Export pages have JSON routes of their own beside their pages (under `/bi/`, `/build/`, `/studio/`, `/forms/`, `/reports/` and `/export/`);
 they follow the same rules and each maps to one endpoint of the BI, Designs, Sutra or search sections above.
@@ -3692,21 +3724,21 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | Scope | Opens | The user must also hold |
 |---|---|---|
 | `read` | `GET`, `HEAD` and the read-only `POST`s (the default; what tokens always had) | - |
-| `design:write` | `POST/PUT/PATCH/DELETE /builder/**` (Designs, shape, suggest, edit, check, propose, share, bind, import), `POST /studio/**`, `POST /sutras`, `POST /sutras/proposals/{id}/withdraw` | `author` |
-| `design:approve` | `POST /sutras/proposals/{id}/approve` and `/reject` | `approve` or admin (not your own proposal, four-eyes) |
+| `design:write` | `POST/PUT/PATCH/DELETE /builder/**` (Designs, shape, suggest, edit, check, propose, share, bind, import), `POST /studio/**`, `POST /sutras`, `POST /approvals/sutra/{id}/withdraw` | `author` |
+| `design:approve` | `POST /approvals/sutra/{id}/approve` and `/reject` | `approve` or admin (not your own proposal, four-eyes) |
 | `loads:write` | `POST /packs/{pack}/loads` (announce that a batch landed or failed; [DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)) | the roles that open the kind (an administrator needs no more) |
 | `bi:write` | Business intelligence: `POST /bi/datasets/{id}/refresh`, `POST /bi/workspaces`, `POST /bi/workspaces/{id}/items`, `POST /bi/items/{id}/open`, `/move`, `/propose`, `/withdraw`, `/publish`, `/versions/{n}/restore`, `/history/{seq}/restore`, `/impact`, `PUT /bi/items/{id}` and `/favourite`, `DELETE /bi/items/{id}` | the BI power and workspace role each call needs (`bi-author`, contributor or member) |
-| `bi:approve` | `POST /bi/items/{id}/approve`, `/reject` and `/endorse`, `POST /bi/bundle/import` and `POST /bi/imports/{id}/rollback` | `approve` and workspace member for approving (never your own proposal, four-eyes); promote: owner or member; certify: `bi-steward` |
+| `bi:approve` | `POST /approvals/bi/{id}/approve` and `/reject`, `POST /bi/items/{id}/endorse`, `POST /bi/bundle/import` and `POST /bi/imports/{id}/rollback` | `approve` and workspace member for approving (never your own proposal, four-eyes); promote: owner or member; certify: `bi-steward` |
 | `bi:admin` | `PUT` and `DELETE /bi/workspaces/{id}`, `PUT` and `DELETE /bi/workspaces/{id}/members/{user}`, `PUT /bi/settings` | workspace admin, or `bi-admin` |
 | `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**` (install and roll back), `POST /admin/connectors/**`, deploy an archive (`POST /admin/packs/deploy`, `POST` and `DELETE /admin/packs/deploy/{id}`), `POST /admin/packs/{name}/rollback`, **Load data** (`POST /admin/packs/{name}/data`), the create-connectors step of a deploy (`POST /admin/packs/deploy/{id}/connectors`), and every write under `/admin/connectors` (`PUT`, `DELETE`, `.../enabled`, `.../reset`, `.../test`, `.../restore/{id}`), and **Retry now** (`POST /admin/retry/{area}`) | `admin` |
 | `ai:use` | `POST /ai/chat`, `POST /ai/mcp/{server}/tools/{tool}` ([AI](#ai-and-mcp-apiv1ai-and-apiv1adminai)) and the BI hooks `POST /bi/ai/draft`, `/bi/ai/ask`, `/bi/ai/explain`, `/bi/ai/suggest`, `/bi/ai/explain-checks`, `/bi/ai/dataset-helper` ([BI with AI](#bi-with-ai-apiv1biai)) | any signed-in user, under the AI policy (and the BI power each hook needs) |
 | `ai:admin` | `POST /admin/ai/test` | `admin` |
 | `pivot:write` | `DELETE /pivot/live/{id}`, `POST /pivot/functions` and `POST /pivot/functions/{owner}/{ref}/submit` ([custom functions](#pivot-custom-functions-explain-and-what-if)) | the author to save and submit; any user of the pivot engine to end their live pivot |
 | `pivot:comment` | `POST /pivot/views/{owner}/{name}/comments`, `POST /pivot/views/{owner}/{name}/comments/{id}/resolve` and `/reopen`, `DELETE /pivot/views/{owner}/{name}/comments/{id}` | anyone who may open the view; the author or the view's owner to resolve, reopen and delete |
-| `pivot:approve` | `POST /pivot/functions/{owner}/{ref}/approve` and `/revoke` | an approver who is not the author (`pivot-approver` or admin) |
+| `pivot:approve` | `POST /approvals/function/{id}/approve` and `/reject`, `POST /pivot/functions/{owner}/{ref}/revoke` | an approver who is not the author (`pivot-approver` or admin) |
 | `pivot:admin` | `POST /pivot/rollups`, `DELETE /pivot/rollups/{id}`, `POST /pivot/rollups/{id}/refresh` | `admin` |
 | `node:drain` | `POST /admin/node/drain` (the drain before a stop, [node readiness and drain](#administration-node-readiness-and-the-drain-before-a-stop)); give the stop hooks' token this scope alone | `admin` |
-| `edit` | Write-back ([changes](#write-back-changes)): `POST /changes`, `POST /changes/{id}/approve`, `/reject` and `/withdraw`. No token has it unless chosen; another write scope never implies it; Admin → Edits' switches are never open to a token | the `edit` power (and, to approve, an approver role, never your own change), the field's roles; editing must be on |
+| `edit` | Write-back ([changes](#write-back-changes)): `POST /changes`, `POST /approvals/change/{id}/approve`, `/reject` and `/withdraw`. No token has it unless chosen; another write scope never implies it; Admin → Edits' switches are never open to a token | the `edit` power (and, to approve, an approver role, never your own change), the field's roles; editing must be on |
 
 There is no `admin` scope and no `data:admin`: the server has no data-loading endpoint (data is loaded by your ETL, or staged by
 `drishti.py data`; `loads:write` only *announces* that a batch landed), and users, roles, tokens, sign-in, caches, installing and uninstalling artifacts (`/admin/artifacts`), the audit log, shares, comments, notes, your console workspaces (`/me/workspaces`; BI workspaces are opened by `bi:write` and
@@ -3763,7 +3795,7 @@ what a person receives is computed for that person, when they look, from what th
 | `GET` | `/me/inbox?type=&unread=false&limit=50&before=` | your notices, newest first, rendered now for your rights: `[{seq, at, type, actor, actorName, kind, id, panel, shareId, threadId, commentId, read, access, title, excerpt}]`. When you can no longer open the kind, `access` is `false`, `id`, `panel` and `excerpt` are `null` and `title` reads `(no access) Ann shared a trade view` |
 | `GET` | `/me/inbox/count` | `{unread}`, for the bell at page load |
 | `POST` | `/me/inbox/read` | `{"seqs": [12, 13]}` or `{"upTo": 40}`; answers `{changed, unread}` |
-| `GET` | `/me/alerts/stream` | the one live stream (SSE): beside `alert` it carries `notice`, one inbox row as `GET /me/inbox` renders it, the moment it is written (from another server within `inbox.poll`) |
+| `GET` | `/alerts/stream` | the one live stream (SSE): it carries `notice`, one inbox row as `GET /me/inbox` renders it, the moment it is written (from another server within `inbox.poll`) |
 
 **Sending.** The sender must open the kind (and a shared panel's `gateKind`: `403 DRS-5002` otherwise). `to.users` must be in your
 directory scope and `to.roles` mentionable (`DRS-7002` otherwise: an unknown user and one outside your packs look the same); at

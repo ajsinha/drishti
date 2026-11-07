@@ -124,9 +124,9 @@ def register(groups, srv, ctx: dict) -> None:
     for name, what in (("show", "one item: what changes, its effect, the rules, the questions"),
                        ("approve", "approve an item (never your own)"), ("reject", "reject an item, with a reason"),
                        ("withdraw", "withdraw an item you sent"), ("ask", "ask a question on an item (or answer one)")):
-        s = sub.add_parser(name, help=what, parents=[srv])
-        s.add_argument("kind_", metavar="KIND", choices=KINDS)
-        s.add_argument("id_", metavar="ID")
+        s = sub.add_parser(name, help=what, description=f"approvals {name}: {what}", parents=[srv])
+        s.add_argument("kind_", metavar="KIND", choices=KINDS, help="the kind: " + ", ".join(KINDS))
+        s.add_argument("id_", metavar="ID", help="the item's id within its kind (approvals list shows it)")
         if name == "ask":
             s.add_argument("text")
         elif name != "show":

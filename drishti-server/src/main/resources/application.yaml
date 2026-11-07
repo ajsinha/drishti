@@ -440,6 +440,10 @@ drishti:
           - POST /api/v1/approvals/change/*/approve
           - POST /api/v1/approvals/change/*/reject
           - POST /api/v1/approvals/change/*/withdraw
+      "[approve]":
+        description: "Approve, reject or withdraw items in the one Approvals queue (/api/v1/approvals), of every kind your roles let you decide; never your own (four eyes). Report sign-offs, stress windows, compute packages and questions stay a person's, in the console."
+        allow:
+          - POST /api/v1/approvals/*/*/*
       "[design:write]":
         description: "Create, edit, check, propose, share and bind Designs, save Sutras from Studio (a save is a proposal with governance on), withdraw your own proposals. Needs the author role."
         allow:

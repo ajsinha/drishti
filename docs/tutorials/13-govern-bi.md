@@ -200,8 +200,8 @@ Write `ready for a look` in the note box and press **Propose for review**.
 You should see the badge `proposed` and `proposed by ann`; the item is frozen (no edits unless withdrawn). **The reviewers are told**: every steward, and every workspace member holding the `approve` power on a role, except the author. Ann cannot approve her own proposal (she has no approve power; even a steward who proposed may not, with four-eyes on, `DRS-9005`):
 
 ```text
-$ curl -s -X POST -H "Authorization: Bearer $ANN_TOKEN" -H 'Content-Type: application/json' -d '{"note":"me"}' $DRISHTI_SERVER/api/v1/bi/items/bi-614d1ef4d3/approve
-{"type":"about:blank","title":"bi forbidden","status":403,"detail":"DRS-9002 approving needs the bi-steward power, or a member of the workspace with the approve power on a role","instance":"/api/v1/bi/items/bi-614d1ef4d3/approve","code":"DRS-9002"}
+$ curl -s -X POST -H "Authorization: Bearer $ANN_TOKEN" -H 'Content-Type: application/json' -d '{"note":"me"}' $DRISHTI_SERVER/api/v1/approvals/bi/bi-614d1ef4d3/approve
+{"type":"about:blank","title":"bi forbidden","status":403,"detail":"DRS-9002 approving needs the bi-steward power, or a member of the workspace with the approve power on a role","instance":"/api/v1/approvals/bi/bi-614d1ef4d3/approve","code":"DRS-9002"}
 ```
 
 Sign in as **sue** and open the item.
@@ -212,7 +212,7 @@ You should see the **Review** section: who asked and the note, **what changed** 
 published yet), `Check passed: nothing to fix` (the server's Check of the model: its datasets, relationships, measures and the security safeguard), and
 *Data preview*, which a model leaves to its designer (*there is no data to preview for a model*: the designer's Query panel and the Notebook ask it).
 Write `looks right` and press **Approve and publish**. On the command line the same decision is
-`curl -X POST .../api/v1/bi/items/<id>/approve -d '{"note":"looks right"}'` with sue's token.
+`curl -X POST .../api/v1/approvals/bi/<id>/approve -d '{"note":"looks right"}'` with sue's token.
 
 ![The item after approval: published, version 1](img/t13/06-approved.jpg)
 
@@ -317,8 +317,8 @@ from the command line (sue's token):
 
 ```text
 $ curl -s -X POST -H "Authorization: Bearer $SUE_TOKEN" -H 'Content-Type: application/json' -d '{"note":"x"}' \
-    $DRISHTI_SERVER/api/v1/bi/items/bi-ba201206d6/approve
-{"type":"about:blank","title":"layer model breaking","status":409,"detail":"DRS-9126 'Rates trades' cannot be published: a breaking change needs a new major version (not 1.0.0): the column 'PORTFOLIO' is removed","instance":"/api/v1/bi/items/bi-ba201206d6/approve","code":"DRS-9126"}
+    $DRISHTI_SERVER/api/v1/approvals/bi/bi-ba201206d6/approve
+{"type":"about:blank","title":"layer model breaking","status":409,"detail":"DRS-9126 'Rates trades' cannot be published: a breaking change needs a new major version (not 1.0.0): the column 'PORTFOLIO' is removed","instance":"/api/v1/approvals/bi/bi-ba201206d6/approve","code":"DRS-9126"}
 ```
 
 The right ways out are to keep the column, or to publish the change as `version: 2.0.0` once the reports that read `trade.PORTFOLIO` have been changed

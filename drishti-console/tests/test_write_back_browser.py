@@ -51,7 +51,7 @@ def row_under_limit(pg):
 
 
 def approve_as(stack, change, user):
-    req = urllib.request.Request(stack.server + "/api/v1/changes/" + change + "/approve", data=json.dumps({"note": "checked against the ticket"}).encode(),
+    req = urllib.request.Request(stack.server + "/api/v1/approvals/change/" + change + "/approve", data=json.dumps({"comment": "checked against the ticket"}).encode(),
                                  headers={"Content-Type": "application/json", "X-Drishti-User": user}, method="POST")
     return json.loads(urllib.request.urlopen(req, timeout=20).read())
 
@@ -82,8 +82,8 @@ def test_a_correction_is_submitted_approved_applied_and_seen_by_another_browser(
     assert "Waiting for an approver" in sheet.inner_text()
 
     queue = browser.new_page(viewport={"width": 1500, "height": 950})
-    queue.goto(stack + "/review/changes")
-    queue.locator(f"[data-change='{change}']").wait_for()
+    queue.goto(stack + "/approvals?kind=change")                                       # the one Approvals queue
+    queue.locator(f"[data-ap-row='change/{change}']").wait_for()
     queue.screenshot(path=str(IMG / "review-changes.jpg"), type="jpeg", quality=84, clip={"x": 0, "y": 0, "width": 1500, "height": 700})
     queue.close()
 
@@ -93,7 +93,7 @@ def test_a_correction_is_submitted_approved_applied_and_seen_by_another_browser(
     # load, then read the new page. Polling the old page across the reload failed whenever an evaluate landed while the page navigated
     # ("Execution context was destroyed"), which is most of the time under the drill's load
     with other.expect_navigation(wait_until="load", timeout=BROWSER_WAIT_MS):
-        assert approve_as(stack, change, "kim")["state"] in ("queued", "applied")
+        assert approve_as(stack, change, "kim")["status"] in ("queued", "applied")
         wait(pg, f"(document.querySelector('[data-wb-id=\"{change}\"] [data-wb-state]') || {{}}).textContent.startsWith('Applied')")
     pg.screenshot(path=str(IMG / "applied.jpg"), type="jpeg", quality=84)
     shown = f"{wanted:,}"

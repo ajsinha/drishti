@@ -805,8 +805,8 @@ Structured products        394,244,806.24
 warning: connector 'reference-store' cannot scan desk as columns for table desk: reading documents one by one (slow for a large table; promote the columns in the connector's layout, or fewer columns)
 ```
 
-The alert is made in the console only (`/me/measure-alerts` is never open to a personal API token); what **Alerts → New** writes, as
-`PUT /api/v1/me/measure-alerts/<name>` with title, severity, trigger and delivery around it:
+The alert is made in the console only (`/alerts/rules` is never open to a personal API token); what **Alerts → New** writes, as
+`PUT /api/v1/alerts/rules/<name>` with title, severity, trigger and delivery around it:
 
 ```yaml
 source:

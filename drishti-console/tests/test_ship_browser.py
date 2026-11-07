@@ -58,13 +58,13 @@ def test_design_to_live_with_the_evidence_and_a_share_link(live_ship_console, pa
     wait(page, "document.querySelector('[data-status-chip]').textContent.indexOf('proposed') >= 0")
 
     # the reviewer sees the matrix, the sample names and no sample contents
-    page.goto(f"{base}/build/reviews/{pid}")
+    page.goto(f"{base}/approvals/sutra/{pid}")
     ev = page.locator("[data-evidence]")
     ev.wait_for()
     text = ev.inner_text()
     assert "every sample renders without errors" in text and "a.json" in text and "b.json" in text and "terms" in text
     assert "CONFIDENTIAL-BOOK" not in page.content()
-    page.get_by_role("button", name=re.compile("Approve")).click()
+    page.get_by_role("button", name="Approve", exact=True).click()
     page.get_by_text("approved").first.wait_for()
 
     # approval made the design live(v1): My designs and the workbench say so

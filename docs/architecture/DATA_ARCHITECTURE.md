@@ -304,10 +304,10 @@ A monitor is a saved list of 1 to 50 entities shown as rows. Its stream is **one
 
 Rows whose entity is missing, not live, or not visible to you simply never tick.
 
-#### Server: alerts (`GET /api/v1/me/alerts/stream`)
+#### Server: alerts (`GET /api/v1/alerts/stream`)
 
 ```bash
-curl -N http://localhost:18480/api/v1/me/alerts/stream
+curl -N http://localhost:18480/api/v1/alerts/stream
 ```
 
 ```text
@@ -316,12 +316,12 @@ data:{"user":"anonymous"}
 ```
 
 With security off and no `X-Drishti-User` header the user is `anonymous`; the console sends
-`X-Drishti-User: ash` (or the signed-in user). When one of your rules fires you receive:
+`X-Drishti-User: ash` (or the signed-in user). When one of your rules raises an alert you receive it as an inbox row:
 
 ```text
-event:alert
+event:notice
 id:12
-data:{"seq":12,"at":"2026-09-30T14:02:11.120Z","user":"ash","rule":"mtm-limit","kind":"trade","id":"END-1000008","severity":"warn","message":"MTM above 2.1m","generation":31}
+data:{"seq":12,"at":"2026-09-30T14:02:11.120Z","type":"alert","kind":"alert","id":"/alerts/measure/mtm-limit","title":"mtm-limit — holds (trade/END-1000008 · $.mtm > 2100000)", ...}
 ```
 
 The alerts stream does not count against `drishti.live.max-streams`.
@@ -639,53 +639,38 @@ off; `X-Drishti-User` says whose monitor it is (with security on, your token doe
 2. Keep a stream open in a second terminal, so you see the alert arrive:
 
    ```bash
-   curl -N -H 'X-Drishti-User: ash' http://localhost:18480/api/v1/me/alerts/stream
+   curl -N -H 'X-Drishti-User: ash' http://localhost:18480/api/v1/alerts/stream
    ```
 
    You should see `event:hello` with `{"user":"ash"}`.
-3. Save a rule (`PUT /api/v1/me/alerts/rules/{name}`). `when` is a Rachana-EL condition over the entity's
-   document; `message` is a template:
+3. Save a rule (`PUT /api/v1/alerts/rules/{name}`): a field source whose field is a Rachana-EL condition over the entity's document,
+   and the condition `rule`, looked at live (the demo source pushes its ticks):
 
    ```bash
-   curl -s -X PUT http://localhost:18480/api/v1/me/alerts/rules/mtm-above-2-1m \
+   curl -s -X PUT http://localhost:18480/api/v1/alerts/rules/mtm-above-2-1m \
         -H 'Content-Type: application/json' -H 'X-Drishti-User: ash' \
-        -d '{"kind": "trade", "id": "END-1000008", "when": "$.mtm > 2100000", "severity": "warn",
-             "message": "${$.tradeId}: MTM ${fmt($.mtm, '"'"'signed0'"'"')}"}'
+        -d '{"title": "END-1000008 MTM above 2.1m", "severity": "warn",
+             "source": {"type": "field", "kind": "trade", "id": "END-1000008", "field": "$.mtm > 2100000"},
+             "condition": {"type": "rule"}, "trigger": {"mode": "live"}}'
    ```
 
-   You should see the rule echoed back. Saving checks the condition and the message (`DRS-2101` for a typo,
-   `DRS-5001 severity must be one of […]` for anything but `info`, `warn` or `critical`), then evaluates the rule **at once** against the
-   current document.
-4. If MTM is already above 2.1 m, the alert fires immediately; otherwise it fires on the first tick that crosses
-   the line. In the second terminal you should see:
-
-   ```text
-   event:alert
-   id:1
-   data:{"seq":1,"at":"2026-10-01T01:50:12.301Z","user":"ash","rule":"mtm-above-2-1m","kind":"trade","id":"END-1000008","severity":"warn","message":"END-1000008: MTM +2,104,880","generation":41}
-   ```
-
-   It does not fire again while MTM stays above 2.1 m. When MTM falls below and rises above again, it fires again.
-5. Recent alerts (the newest `drishti.alerts.keep`, 1,000, per user, kept in the identity database across restarts) are listed by
-   `curl -s -H 'X-Drishti-User: ash' 'http://localhost:18480/api/v1/me/alerts?limit=10'`; the bell in the console
-   shows the same. Delete the rule with `curl -s -X DELETE -H 'X-Drishti-User: ash' http://localhost:18480/api/v1/me/alerts/rules/mtm-above-2-1m`.
+   You should see the rule echoed back with `"describe": "holds: $.mtm > 2100000"`. Saving checks the condition (`DRS-2101` for a typo,
+   `DRS-9062` for anything else wrong, such as a severity other than `info`, `warn` or `critical`), then looks **at once** at the current
+   document.
+4. If MTM is already above 2.1 m, an alert is raised immediately; otherwise on the first tick that crosses the line (after the rule's
+   quiet time, `trigger.debounce`). In the second terminal you should see an `event:notice` of type `alert`. It is not raised again while
+   MTM stays above 2.1 m; when MTM falls below and rises above again, it is raised again.
+5. The alerts raised for you are listed by `curl -s -H 'X-Drishti-User: ash' 'http://localhost:18480/api/v1/alerts'` (stage `raised`,
+   then `acknowledged` or `resolved`: `POST /api/v1/alerts/acknowledge {"id": ...}`); the bell in the console shows the same. Delete the
+   rule with `curl -s -X DELETE -H 'X-Drishti-User: ash' http://localhost:18480/api/v1/alerts/rules/mtm-above-2-1m`.
 
 Packs can suggest rules for a kind (`alerts:` in `pack.yaml`), which the console offers when you create one:
-`GET /api/v1/me/alerts/suggestions/netting-set` returns, with the retired example pack `finance` enabled,
+`GET /api/v1/alerts/suggestions/netting-set` returns, with the retired example pack `finance` enabled,
 `{"kind": "netting-set", "name": "PFE near limit", "when": "$.utilisation > 0.8", "severity": "warn", …}`. With the
-banking packs enabled, no pack suggests rules for `trade`, so `GET /api/v1/me/alerts/suggestions/trade` returns `[]`.
+banking packs enabled, no pack suggests rules for `trade`, so `GET /api/v1/alerts/suggestions/trade` returns `[]`.
 
-A rule is saved with `PUT /api/v1/me/alerts/rules/{name}`; it needs `kind`, `id` and `when`, and takes an
-optional `severity` (`info`, `warn` (default) or `critical`), `message` and `enabled`. For example, to be
-told when END-1000008's MTM rises above 2.1 million:
-
-```json
-{"kind": "trade", "id": "END-1000008", "when": "$.mtm > 2100000", "severity": "warn",
- "message": "MTM ${fmt($.mtm, 'signed0')}"}
-```
-
-Because it fires on the false → true edge, you get one alert when MTM crosses 2.1 m, not one per tick while it
-stays above. Users normally create rules from the console's alerts page; see [USER_GUIDE.md](../guides/USER_GUIDE.md).
+Because a rule raises on the false → true edge, you get one alert when MTM crosses 2.1 m, not one per tick while it stays above. Users
+normally create rules from the console's Alerts page; see [USER_GUIDE.md](../guides/USER_GUIDE.md#alerts).
 
 ### Live BI: a report's live tables
 

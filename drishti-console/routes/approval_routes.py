@@ -68,14 +68,6 @@ async def approvals(request: Request, box: str = "inbox", group: str = "", kind:
     return _page(request, box, group, kind)
 
 
-@router.get("/approvals/{kind}/{id_}")
-async def approval(request: Request, kind: str, id_: str):
-    """The queue with one item open (the address a notice, a feature page or an old review page links to)."""
-    if not KIND.match(kind) or not ITEM.match(id_):
-        return RedirectResponse("/approvals", status_code=303)
-    return _page(request, "all", "", "", kind, id_)
-
-
 # ---- the JSON the page reads and writes ---------------------------------------------------------------------------------------------
 
 @router.get("/approvals/api/list")
@@ -140,3 +132,13 @@ async def old_review(id_: str):
 @router.get("/review/changes")
 async def old_changes():
     return RedirectResponse("/approvals?kind=change", status_code=301)
+
+
+# ---- one item's page: last, so that /approvals/api/... is never taken for a kind and an id ------------------------------------------
+
+@router.get("/approvals/{kind}/{id_}")
+async def approval(request: Request, kind: str, id_: str):
+    """The queue with one item open (the address a notice, a feature page or an old review page links to)."""
+    if not KIND.match(kind) or not ITEM.match(id_):
+        return RedirectResponse("/approvals", status_code=303)
+    return _page(request, "all", "", "", kind, id_)

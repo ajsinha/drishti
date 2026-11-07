@@ -54,6 +54,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Export, print and share](#export-print-and-share) | CSV, JSON Lines, JSON, PDF and links |
 | [Share a view with a note](#share-a-view-with-a-note), [Your inbox](#your-inbox) | Send a view to colleagues; what they sent you |
 | [Monitors](#monitors), [Alerts](#alerts), [Workspaces](#workspaces) | Watching many entities at once |
+| [Approvals](#approvals) | Everything waiting for your four eyes, in one queue |
 | [Your settings](#your-settings), [Themes](#themes), [Domain packs](#domain-packs-choosing-what-you-see) | Making the console yours |
 | [The workbench](#the-workbench-changing-how-a-screen-looks) | Changing how a screen looks |
 | [Administration](#administration) | Users, roles, packs, audit, health, caches, capacity |
@@ -79,7 +80,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | Inbox | `/inbox` | Views and comments sent to you ([Your inbox](#your-inbox)) |
 | Reports | `/reports` | Saved searches delivered as CSV on a schedule, and your subscriptions ([Scheduled reports](#scheduled-reports), [Export, and subscriptions](BI_GUIDE.md#export-and-subscriptions)) |
 | BI | `/bi`, `/bi/catalogue`, `/bi/w/me`, `/bi/r/<id>`, `/bi/models`, `/bi/datasets`, `/bi/designer`, `/bi/notebook`, `/bi/transform` | Rūpaka business intelligence, for people with the `bi` power: reports (a board is a report page; `/bi/b/<id>` opens it), BI Studio's designers, the Notebook and the Transform editor ([BI_GUIDE.md](BI_GUIDE.md)) |
-| Build | `/build`, `/build/new`, `/build/pack/new`, `/build/reviews` | Design layouts (Sutras) in the workbench, make a pack from schemas, approve proposed Sutras |
+| Build | `/build`, `/build/new`, `/build/pack/new` | Design layouts (Sutras) in the workbench, make a pack from schemas (proposed Sutras are approved in [Approvals](#approvals)) |
 | Tables & models | `/build/tables` | The editors of virtual tables, semantic models and Python-driven tables, for people with the `bi` power ([Tables and models: the editors](#tables-and-models-the-editors)) |
 | My account | `/account` | Your profile, settings and password |
 | Servers | `/servers` | The Drishti servers this console may talk to ([Working with several servers](#working-with-several-servers)) |
@@ -148,11 +149,10 @@ you are on is highlighted.
 | Menu | Column | Entries |
 |---|---|---|
 | **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Data* (`/data`, also `EXPORT <GO>`: every dataset and its dates, a simple selection, a day downloaded as `.jsonl.gz`, [Export data](#export-data)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
-| | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`) |
+| | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`), *Approvals* (`/approvals`: [the one queue](#approvals), with the number waiting) |
 | **Engines** (a role that opens an engine) | a column per engine running, its command word in the head | **VaR** `VAR`: *VaR explorer* `VAR BANK`, *Why it moved* `VAR BANK EXPLAIN`, *VaR Playground* `PLAY VAR`, *Scenario matrix* `SMAT`, *Regulatory reports*, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Hierarchies and limit letters* `HIER` · **Exposure** `EXP`: *Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …` (the pre-deal check `XWIF` is under **Counterparties**) · **FRTB-SA** `FRSA`: *FRTB-SA capital* `FRSA BANK`, *FRTB-SA Playground* `PLAY FRTB EXAMPLE` · **SIMM** `SIMM`: *Netting sets* `SIMM`, *SIMM Playground* `PLAY SIMM EXAMPLE`; administrators also see *Admin → Engines* and, at the foot, the engines not running on any server (greyed, never links) |
 | **BI** (people with the `bi` power) | Rupaka: business intelligence | *BI home* (`/bi`), *My workspace* (`/bi/w/me`), *Catalogue* (`/bi/catalogue`), then *Recent*: the three items you opened last. Administrators with `bi-admin` also see *BI settings* ([BI_GUIDE.md](BI_GUIDE.md)) |
 | **Build** | Create | *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](SCHEMA_TO_PACK_GUIDE.md)), *My designs* (`/build`), *Examples* |
-| | Govern | *Reviews* (`/build/reviews`, with the number waiting) |
 | | Learn | *Knowledge* (`/what`, also `WHAT <GO>`: [Knowledge](#knowledge-what-the-words-mean)), *Tutorials*, *Schema to pack*, *Screen designer guide*, *Sutra developer guide*, *Panel kinds*, *Rachana reference*, *Pack developer guide* |
 | **Admin** (admins only) | People & access | *Users*, *Roles*, *Audit log* |
 | | Operations | *Packs*, *Connectors*, *Artifacts*, *Commands* (opens Functions with the switches), *Data loads*, *Lakes*, *Collaboration*, *Embedding*, *Net* (Drishti\*net: [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)), *Health*, *Caches*, *Capacity* (today against the plan; the single-node planner: [OPERATIONS.md 12.4](../admin/OPERATIONS.md#124-admin--capacity-today-against-the-plan)) |
@@ -2022,27 +2022,46 @@ A report is a search that runs on its own, on a schedule, and delivers its resul
 
 ## Alerts
 
-An alert rule watches **one entity** and tells you when a condition becomes true. (To be told when a **number** in a BI report, a dataset or a view crosses a limit, moves too far or does not arrive, see [Alerts on numbers](#alerts-on-numbers) at the end of this section; both are on the same **Alerts** page.)
+One alert engine watches everything you ask it to, on the server, whether or not anyone has Drishti open. An **alert rule** watches a
+number (a visual of a BI report, a measure of a dataset or a model, a field of an entity) or a **rule on one entity** (a Rachana-EL
+condition such as `$.TRADE_COUNT > 100`). When it breaks, an **alert is raised** for you; you acknowledge it, snooze it or resolve it, and it
+resolves itself when the number comes back. Everything is on **Views → Alerts** (`/alerts`).
 
-- The **server** checks every rule on every change of its entity, even when nobody has Drishti open.
-- A rule alerts **once** when its condition becomes true, and re-arms when it turns false again.
-- A rule that is already true when you save it alerts straight away.
-- A rule sees the entity as you may see it: a condition on a [masked field](#masked-fields) never becomes true, and a
-  message shows a masked value as `•••`.
-- New alerts show as a **toast** and a count on the **bell** among the round tools of the top bar, on every
-  page. Click the bell to see them all, and to allow browser notifications. *Views → Alerts* opens the same page.
+- The **server** looks at a rule on its schedule, after a data load of its kind, or live when its source changes.
+- A rule raises an alert **once** when its condition becomes true, and re-arms when it turns false again (by the *hysteresis* you set);
+  it does not raise again within its *cooldown* (30 minutes by default).
+- A rule that is already true when you save it raises an alert straight away.
+- A rule reads its number or its entity **as you**: with your row rules and your masks. A condition on a
+  [masked field](#masked-fields) never becomes true, and no message ever carries a masked value.
+- A raised alert shows as a **toast** and a count on the **bell** among the round tools of the top bar, on every page, and is in the
+  **Alerts** tab of your [inbox](#your-inbox); the rule may also send it by email, to a chat bridge, to a webhook or by text.
   At most three toasts show at once; a burst adds one more toast, *+N more on the bell*, which opens the inbox. Only notices
   written after the page opened toast: older ones wait in the inbox and on the bell's count.
 
-Worked example:
+**The alerts raised for you.** *Raised for you*, at the top of the Alerts page, lists every alert raised and not yet resolved: its
+severity, its **stage** and what it said.
+
+| Stage | What it means | What you can do |
+|---|---|---|
+| raised | the condition broke; nobody has taken it | **Acknowledge** (it is yours now: you are its owner), **Snooze**, **Resolve** |
+| acknowledged | someone owns it | **Snooze**, **Resolve** |
+| resolved | the number came back by itself (*cleared*), or someone resolved it by hand (with a note) | nothing: *Show resolved too* lists it |
+
+**Snooze** keeps an alert quiet for 1 hour, 4 hours or a day: a breach while it is snoozed is held, and raised when the snooze ends if it
+still holds. *No longer* ends a snooze. Resolving by hand does not make a condition that still holds raise again: it raises again only
+after the number comes back and breaks again. An administrator also sees the **platform alerts** (the server's own health: memory, disk,
+sources down; [OPERATIONS.md section 13.6](../admin/OPERATIONS.md)) in the same list, and may **Assign** one to a colleague.
+
+Worked example, a rule on one entity:
 
 1. Open `NSET NS-SUMMIT-NY` and click **Alert** in the title line. The *Alerts* page opens with
-   **Kind** `netting-set` and **Id** `NS-SUMMIT-NY` filled in.
-2. Fill in **Name** `Summit size`, **When** `$.TRADE_COUNT > 100`, **Severity** `warn`, and
-   **Message** `${$.NETTING_SET_ID}: ${$.TRADE_COUNT} trades`.
-3. Click **Save rule**. The set already holds 1,274 trades on the demo lakes, so you should at once see a toast, the
-   bell showing `1`, and under *Recent alerts* a line `warn NS-SUMMIT-NY NS-SUMMIT-NY: 1274 trades`.
-4. *Your rules* lists the rule; **Delete** removes it.
+   **Kind** `netting-set` and **Id** `NS-SUMMIT-NY` filled in under *New rule on one entity*.
+2. Fill in **Name** `Summit size`, **When** `$.TRADE_COUNT > 100`, **Severity** `warn`, and **Message** `Summit is big` (the alert's title).
+3. Click **Save rule**. It is an alert rule like any other (a field source whose field is your condition, the condition *holds*), looked
+   at after each load of `netting-set`. The set already holds 1,274 trades on the demo lakes, so an alert is raised at once: a toast,
+   the bell showing `1`, and a line under *Raised for you*.
+4. Click **Acknowledge**, then **Resolve** with a note. *Your alert rules* lists the rule; **Edit and history** changes it (choose
+   *when it changes* to watch it live, if its source pushes changes), **Delete** removes it.
 
 ### Writing conditions
 
@@ -2057,19 +2076,16 @@ $.STATUS == 'Early warning'                    a credit limit's status
 ```
 
 In a rule (unlike a search) write `==` for equality, `&&` for and, `||` for or, and full numbers
-(`1500000`, not `1.5m`). The message is a template: `${…}` holds an expression, and `fmt(value, 'pct0')`,
-`fmt(value, 'signed0')` or `fmt(value, 'compact')` format numbers. The full language is in
-[RACHANA_REFERENCE.md](RACHANA_REFERENCE.md).
+(`1500000`, not `1.5m`). The full language is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md). On the alert form the same rule is a
+**Field** source with the condition **holds**.
 
 A pack may suggest rules for its kinds (`alerts:` in its `pack.yaml`; none of the shipped packs does, the retired example pack
 `finance` suggests *PFE near limit* and *MTM below −450k*); they appear on the Alerts page and fill the form when clicked.
 
-> **Tip:** a condition that cannot be evaluated (a misspelled field, say) is skipped, not alerted.
+> **Tip:** a condition that cannot be evaluated (a misspelled field, say) is skipped, not raised; the rule's history says why.
 > Check a field's exact name with `F9` first.
 
-Rules are kept with your account, and so are the alerts they fire: the newest 1,000 per user
-(`drishti.alerts.keep`) are kept in the identity database, so they are still there after a server restart. More in the
-[Monitors and alerts guide](#monitors).
+Your rules, their state and their history are kept with your account. More in the [Monitors and alerts guide](#monitors).
 
 ### Alerts on numbers
 
@@ -2078,8 +2094,9 @@ Click **Alert me** (the bell in the corner of a visual of a BI report) or click 
 after a data load, or when it changes), and how to tell you: your **inbox** and the bell, **email** to the address on your account, the **chat bridges** your administrator set up. *Check now* shows what it reads for you right now.
 
 **It is your number.** The alert reads the number as you: with your row rules and your masks. If a number is masked for you the alert never judges it and never shows it. Once it fires it stays quiet until the number is back
-inside the limit (by the *hysteresis* you set, if any) and does not fire again within the *cooldown* (30 minutes by default). Your alerts are on the **Alerts** page (also **Reports**, *My alerts*): *Look now*, *Pause*, *Resume*,
-*Edit and history* (what every look did, and what was sent where) and *Delete*. What fired is in the **Alerts** tab of your inbox. If a board's author has made a tile notify, you are told when it turns red, on your own number.
+inside the limit (by the *hysteresis* you set, if any) and does not fire again within the *cooldown* (30 minutes by default). Your rules are on the **Alerts** page (also **Reports**, *My alerts*): *Look now*, *Pause*, *Resume*,
+*Edit and history* (what every look did, and what was sent where) and *Delete*; what they raised is under *Raised for you* and in the
+**Alerts** tab of your inbox. If a board's author has made a tile notify, you are told when it turns red, on your own number.
 Reference: [BI_GUIDE.md › Distribution: scheduled reports, export, subscriptions, alerts and embedding, section 4](BI_GUIDE.md#4-alerts-on-numbers); walk-through: [tutorial 11](../tutorials/11-bi-that-runs-itself.md).
 
 ## Workspaces
@@ -2380,17 +2397,44 @@ The [screen designer guide](RACHANA_REFERENCE.md#screen-designer-and-the-build-w
 ### Reviews: approving a Sutra
 
 With review on (the default), a save from the workbench is a **proposal**. Nothing changes for anyone until an
-approver approves it.
-
-1. Open **Build → Govern → Reviews** (`/build/reviews`; the menu shows how many wait). *Pending* proposals are listed with their Sutra,
-   note, author and time.
-2. Click one. You see *Changes against the live Sutra* (or *New version: the whole Sutra*) as a diff.
-3. Add a **Comment** and click **Approve and publish**: the Sutra goes live, and the next view uses it.
-   Or give a **Reason** and click **Reject**. The author can **Withdraw** their own.
+approver approves it, in the one [Approvals](#approvals) queue: open **Views → Approvals** (or **Approvals** in the workbench's toolbar),
+choose the Sutra, read *What changes* (the diff, with the panels that moved named, and the workbench's evidence), then **Approve**,
+or **Reject…** with a reason. The author can **Withdraw** their own.
 
 Rules: approvers are users with the `approver` or `admin` role; with sign-in on, nobody approves their
 own proposal (four eyes); a proposal whose live Sutra changed since it was made cannot be approved
 (reject it and propose again); every step is in the audit log.
+
+## Approvals
+
+Everything that waits for a second person is in **one queue**: **Views → Approvals** (`/approvals`), with a count on the top bar's
+approvals tool (the badge beside the bell). The kinds:
+
+| Kind | Area | Who decides | Where it is made |
+|---|---|---|---|
+| Sutra | Screens | an approver (four eyes) | a workbench save, a designed screen, a terminal layout promoted |
+| Correction | Data | an approver of changes (the policy may ask for several) | a form's Submit, `drishti.py change propose` ([write-back](WRITE_BACK.md)) |
+| BI item | Data | a bi-steward, or a member of the workspace with the approve power | *Propose for review* on a dataset, model, report or board |
+| Pivot function | Data | an approver (a Java plug-in: an administrator); with a sharing scope | `pivot functions submit` |
+| Stress window | Risk | someone who sees every node, never the proposer | *Freeze and propose* on `SWIN` |
+| Report sign-off | Risk | the next step of the chain (maker, checker, approver); one person signs one step | `VAR REPORT <report> <period>`, *Generate* |
+| Compute package | Access | an administrator (and the roles `compute.approval.roles` names) | a connector or pool that needs packages |
+
+**The list.** *Waiting for me* is the inbox: everything you may decide now, never your own. Items with a due date near (a report run's
+filing date: `drishti.approvals.due-days`, pinned within `due-soon-days`) are **pinned on top** under *Due soon*; the rest are newest first.
+Filter by area (*Data · Screens · Risk · Access*) or by kind; *Mine sent* lists what you asked for; *Done* what was decided.
+
+**The item.** Click one: **What changes** (a diff, with the maker's reason), **Effect if approved** (what changes downstream: the
+records and views that read a corrected record, the published reports a BI change breaks, a node's stressed VaR under each window, the
+files a signed run releases), the **Rules** that let you decide, and *More facts* (checks, evidence, history).
+
+**Decide.** **Approve** (a pivot function: say who may use it, *everyone* or `group:<name>`; a BI dataset change: update the reports that
+use renamed names, or, as a bi-admin, approve over a breaking change), **Reject…** with a reason in the comment box, or **Withdraw** your own.
+The maker never approves their own. **Ask a question**: a thread on the item; the maker is told (without the text) and answers in the
+same place, and whoever asked is told of the answer. Every decision and every question is in the audit log.
+
+From the command line: `drishti.py approvals list`, `approvals show KIND ID`, `approvals approve|reject|withdraw KIND ID --comment ...`,
+`approvals ask KIND ID "..."` ([CLI_GUIDE.md](CLI_GUIDE.md)). The API: [API_GUIDE.md › Approvals](API_GUIDE.md#approvals).
 
 ## Administration
 

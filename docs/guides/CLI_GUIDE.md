@@ -250,7 +250,8 @@ must expire: 90 days at most by default) and copy the secret once:
 |---|---|---|
 | `read` (always) | everything you may read | nothing |
 | `design:write` | `design create\|save\|check\|autodesign\|import\|delete\|bind\|propose` (the Designs and Studio writes) | a role with `author` |
-| `design:approve` | `design approve\|reject` | a role with `approve` (or admin), and never your own proposal with four-eyes on |
+| `design:approve` | `approvals approve\|reject sutra` | a role with `approve` (or admin), and never your own proposal with four-eyes on |
+| `approve` | `approvals approve\|reject\|withdraw` for every kind your roles let you decide (report sign-offs, stress windows and compute packages stay a person's) | the kind's own rules |
 | `packs:admin` | `server packs load\|unload\|on\|off`, `pack install` | the admin role |
 | `loads:write` | `data landed` | a role that opens the kind (or the admin role) |
 
@@ -275,7 +276,8 @@ could do there and nothing more:
 |---|---|
 | `design list|create|get|save|check|autodesign|export|import|delete` | any user (your own designs) |
 | `design propose` | a user who may save: a role with `author`, and the server's `drishti.rachana.studio-save: true` (`DRISHTI_STUDIO_SAVE`) |
-| `design proposals` | any user; `design approve|reject`: a role with `approve` (or an administrator); with sign-in on and four-eyes on (the default) not your own proposal |
+| `design proposals` | any user |
+| `approvals approve|reject sutra` | a role with `approve` (or an administrator); with sign-in on and four-eyes on (the default) not your own proposal |
 | `design bind` | a user, when the server has file binding on (a development directory per user) |
 | `server health`, `server packs ...`, `pack install` | an administrator |
 
@@ -2182,7 +2184,7 @@ drishti.py var history 'DESK:RATES'                                VaR history, 
 drishti.py var tree --hierarchy LEGAL                              every node with its VaR, ES and limit use
 drishti.py var stress-window BANK                                 the stress window selection (SWIN): the worst 250-day window against the current, the candidates
 drishti.py var stress-window BANK --propose --first 2007-11-30     freeze the analysis and propose that window; another person decides it
-drishti.py var stress-window --decide SWP-000001 --decision approve   approve a proposal (not its proposer)
+drishti.py approvals approve stress-window SWP-000001   approve a proposal (not its proposer)
 drishti.py var matrix 'DESK:RATES' --days 20                       the scenario matrix (SMAT): each date's VaR, ES, source and gap, the worst scenarios
 drishti.py var matrix POS-BOOK-1~SEC-A --by trade                  a position's trades under the newest VaR scenario, across the dates
 drishti.py var matrix MX-30000121 --days 30 --csv > t.csv          the whole matrix as CSV (a gap's cells empty, never 0)
@@ -2887,7 +2889,7 @@ screens do about review is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#22-sav
 | `design autodesign ID` | drafts a Sutra from the samples | `POST /designs/{id}/autodesign` |
 | `design propose ID` | sends it for review (governance on), or saves it (off) | `POST /designs/{id}/propose` |
 | `design proposals` | proposals, `--status pending` | `GET /api/v1/sutras/proposals` |
-| `design approve|reject PROPOSAL` | decides it (`--comment`; a rejection needs one) | `POST /api/v1/sutras/proposals/{id}/approve|reject` |
+| `approvals approve|reject sutra PROPOSAL` | decides it in the one queue (`--comment`; a rejection needs one) | `POST /api/v1/approvals/sutra/{id}/approve|reject` |
 | `design export ID -o f.zip` | the design as a pack-fragment zip | `GET /designs/{id}/export` |
 | `design import f.zip` | zip of a pack folder (or Sutras, tests, samples) as designs | `POST /designs/import` |
 | `design bind [ID]` | with no id: is file binding on; with `--file F` / `--sync` / `--save` / `--unbind` | `GET /designs/binding`, `POST /designs/{id}/bind|sync|save-file`, `DELETE .../bind` |
@@ -2938,7 +2940,7 @@ python3 tools/drishti.py design list
 python3 tools/drishti.py design check bdc51fed0ce7
 python3 tools/drishti.py design propose bdc51fed0ce7 --note "first cut"
 python3 tools/drishti.py design proposals
-python3 tools/drishti.py design reject P-000002 --comment "not this time"      # or: design approve P-000002 --comment "looks right"
+python3 tools/drishti.py approvals reject sutra P-000002 --comment "not this time"      # or: approvals approve sutra P-000002 --comment "looks right"
 ```
 
 ```text
@@ -2950,11 +2952,11 @@ check of rev 1: all samples ok
 proposed: proposal P-000002 for trade-auto v1 is pending; an approver decides it
 P-000002  trade-auto v1  pending  by drishti-dev-admin
 P-000001  counterparty-mine v1  withdrawn  by drishti-dev-admin
-reject: proposal P-000002: trade-auto v1 is rejected
+sutra P-000002  REJECTED
 ```
 
 `design list` also lists your other designs (the drafts of **Build → New pack** are designs too); the ids and proposal numbers are your
-own. `design approve` answers the same way (`approve: proposal P-000002: trade-auto v1 is approved`) and puts the Sutra live: on a
+own. `approvals approve sutra` answers the same way (`sutra P-000002  APPROVED`) and puts the Sutra live: on a
 shared server, reject or delete what you only tried (`design delete bdc51fed0ce7`).
 
 (`design check` exits 1 and lists each failing sample when something does not render.)
@@ -2988,25 +2990,29 @@ server connection:
   --timeout TIMEOUT     seconds to wait for the server (default 60)
 ```
 
-**`drishti.py design approve --help`**
+**`drishti.py approvals approve --help`** (the one Approvals queue decides every four-eyes kind: [USER_GUIDE.md › Approvals](USER_GUIDE.md#approvals))
 
 ```text
-usage: drishti.py design approve [-h] [--server SERVER]
-                                 [--token-file TOKEN_FILE] [--user USER]
-                                 [--timeout TIMEOUT] [--json]
-                                 [--comment COMMENT]
-                                 proposal
+usage: drishti.py approvals approve [-h] [--server SERVER]
+                                    [--token-file TOKEN_FILE] [--user USER]
+                                    [--timeout TIMEOUT] [--json]
+                                    [--comment COMMENT] [--param NAME=VALUE]
+                                    KIND ID
 
-design approve: approve a proposal (approver role)
+approvals approve: approve an item (never your own)
 
 positional arguments:
-  proposal              the proposal id (from `design proposals` or `design
-                        propose`)
+  KIND                  the kind: sutra, change, bi, compute, function,
+                        stress-window, var-report
+  ID                    the item's id within its kind (approvals list shows
+                        it)
 
 options:
   -h, --help            show this help message and exit
   --json                machine-readable output
-  --comment COMMENT     the reason (a rejection needs one)
+  --comment COMMENT     a note, or the reason (required to reject)
+  --param NAME=VALUE    what a kind needs besides: scope (a pivot function),
+                        step (a report run), force or applyRenames (a BI item)
 
 server connection:
   --server SERVER       the server's base URL (default: DRISHTI_SERVER, then
@@ -3019,11 +3025,11 @@ server connection:
   --timeout TIMEOUT     seconds to wait for the server (default 60)
 ```
 
-A rejection without a comment is refused by the server, and the refusal is what you see:
+A rejection without a comment is refused before it is sent (and the server would refuse it too):
 
 ```text
-$ python3 tools/drishti.py design reject P-000001
-drishti: the server said 400 DRS-5001: DRS-5001 say why the proposal is rejected      (exit 1)
+$ python3 tools/drishti.py approvals reject sutra P-000001
+drishti: say why it is rejected: --comment "..."      (exit 2)
 ```
 
 **Ship a design as a pack fragment** and take it somewhere else:
@@ -3205,7 +3211,7 @@ python3 tools/drishti.py design propose "$(cat /tmp/design-id)" --note "swap str
 
 # the approver (a role with `approve`; with four-eyes on, not the author)
 python3 tools/drishti.py design proposals --status pending
-python3 tools/drishti.py design approve P-000042 --comment "checked against 5 samples"
+python3 tools/drishti.py approvals approve sutra P-000042 --comment "checked against 5 samples"
 ```
 
 With review off (`drishti.governance.enabled: false`) `design propose` saves the Sutra live straight away.

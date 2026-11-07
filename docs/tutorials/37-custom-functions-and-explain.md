@@ -140,7 +140,7 @@ for the author `ravi`.
 
 ```
 drishti.py pivot functions save wret.yaml --sample rows.csv
-drishti.py pivot functions approve you/wret@1 --reason "reviewed: a weighted mean"      # as the approver
+drishti.py approvals approve function you:wret@1 --comment "reviewed: a weighted mean"      # as the approver
 drishti.py pivot run --source trade --rows PRODUCT_TYPE --values "fn:you/wret@1(PRICE, NOTIONAL)"
 ```
 
@@ -152,7 +152,7 @@ fn:ravi/wret@1: approved
 
 The refusal is the author's own `approve`; the approval is the second user's (`vera`, with her own token).
 
-**JSON.** `POST /api/v1/pivot/functions/you/wret@1/approve` with `{"scope": "everyone", "reason": "reviewed: a weighted mean"}`; the view's
+**JSON.** `POST /api/v1/approvals/function/you:wret@1/approve` with `{"comment": "reviewed: a weighted mean", "params": {"scope": "everyone"}}`; the view's
 value is `{"measure": "fn:you/wret@1(PRICE, NOTIONAL)"}`.
 
 ```text

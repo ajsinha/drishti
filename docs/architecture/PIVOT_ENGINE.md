@@ -1156,7 +1156,7 @@ a per-store allowance is a later step. Every key is in [CONFIGURATION.md](../adm
 | `GET /api/v1/pivot/catalogue?source=` | dimensions, measures and functions a source offers this person |
 | `GET, POST /api/v1/pivot/functions[/{owner}/{name}[@{v}]]` | custom functions: create, new version, list |
 | `POST /api/v1/pivot/functions/test` | run the harness on sample rows: states, one-pass versus split-and-merge, cost |
-| `POST /api/v1/pivot/functions/{owner}/{name}@{v}/approve` | approval (an approver, never the author), audited; `.../revoke` |
+| `POST /api/v1/approvals/function/{owner}:{name}@{v}/approve` | approval in the one Approvals queue (an approver, never the author), audited; `POST /api/v1/pivot/functions/{owner}/{name}@{v}/revoke` |
 | `POST /api/v1/pivot/export` | an export: what (pivot, rows, chart, definition), format, options ([section 15](#15-export)) |
 | `/api/v1/cube/{cube}` | the MR and CCR cubes' address, kept; answered by the pivot engine |
 

@@ -68,7 +68,7 @@
     b.appendChild(h('span', { class: 'ap-kindtag' }, e.label));
     b.appendChild(h('span', { class: 'ap-row-title' }, i.title));
     b.appendChild(h('span', { class: 'ap-row-meta' }, (i.maker || '') + ' · ' + (e.dueSoon && i.due ? 'due ' + i.due : when(i.at))
-      + (i.stage ? ' · ' + i.stage : '') + (i.pending ? '' : ' · ' + i.status) + (e.questions ? ' · ' + e.questions + ' question' + (e.questions === 1 ? '' : 's') : '')));
+      + (i.stage ? ' · ' + i.stage : '') + (i.status === 'pending' ? '' : ' · ' + i.status) + (e.questions ? ' · ' + e.questions + ' question' + (e.questions === 1 ? '' : 's') : '')));
     b.addEventListener('click', function () { open(i.kind, i.id); });
     li.appendChild(b);
     return li;
@@ -186,8 +186,8 @@
     $('[data-ap-item]').hidden = false;
     $('[data-ap-item-title]').textContent = o.label + ': ' + it.title;
     var st = $('[data-ap-item-status]');
-    st.textContent = it.pending ? (o.dueSoon && it.due ? 'waiting · due ' + it.due : 'waiting') + (it.stage ? ' · ' + it.stage : '') : it.status;
-    st.className = 'ap-status ' + (it.pending ? 'wait' : it.status === 'approved' || it.status === 'signed' ? 'ok' : 'no');
+    st.textContent = it.status === 'pending' ? (o.dueSoon && it.due ? 'waiting · due ' + it.due : 'waiting') + (it.stage ? ' · ' + it.stage : '') : it.status;
+    st.className = 'ap-status ' + (it.status === 'pending' ? 'wait' : it.status === 'approved' || it.status === 'signed' ? 'ok' : 'no');
     var link = $('[data-ap-item-link]'); link.href = it.link || '#'; link.hidden = !it.link;
     $('[data-ap-item-facts]').textContent = 'Asked by ' + (it.maker || '?') + ' ' + when(it.at) + (it.reason ? ': “' + it.reason + '”' : '')
       + (it.decidedBy ? ' · decided by ' + it.decidedBy + ' ' + when(it.decidedAt) : '');

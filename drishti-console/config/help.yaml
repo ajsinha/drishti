@@ -479,6 +479,7 @@ contextual:
   workspace: user-guide#workspaces
   monitor: user-guide#monitors
   alerts: user-guide#alerts
+  approvals: user-guide#approvals   # the one Approvals queue (F1, the ? on its page)
   inbox: sharing-and-discussion
   impact: user-guide#f8--impact
   form: user-guide#query-by-form

@@ -141,9 +141,12 @@ def test_a_steward_reviews_with_the_diff_check_and_preview_and_approves(stack, b
     expect(review).to_contain_text("Check passed")
     expect(review.locator("table.bi-grid tbody tr").first).to_be_visible()              # a data preview, with the reviewer's own rules
     assert review.locator("table.bi-grid tbody tr").count() >= 3
-    sue.fill(".bi-note", "looks right")
-    sue.get_by_role("button", name="Approve and publish").click()
-    expect(sue.locator("[data-msg]")).to_contain_text("Approved and published")
+    sue.get_by_role("link", name="Decide in Approvals").click()                       # decided in the one Approvals queue
+    sue.locator("[data-ap-item]:not([hidden])").wait_for()
+    sue.fill("[data-ap-comment]", "looks right")
+    sue.get_by_role("button", name="Approve", exact=True).click()
+    expect(sue.locator("[data-ap-said]")).to_have_text("Approved.")
+    open_item(sue, stack.ids["positions"])
     expect(sue.locator("[data-badges]")).to_contain_text("published")
     expect(sue.locator("[data-sec-review]")).to_be_hidden()
     # the author is told through the inbox; bob may not approve his own request (four-eyes)
@@ -154,7 +157,7 @@ def test_a_steward_reviews_with_the_diff_check_and_preview_and_approves(stack, b
     bi_gov_stack.call("POST", f"/bi/items/{bob_item['id']}/propose", "bob", ["bi-reviewer"], {})
     bob = sign_in(browser, "bob")
     open_item(bob, bob_item["id"])
-    expect(bob.get_by_role("button", name="Approve and publish")).to_have_count(0)
+    expect(bob.get_by_role("link", name="Decide in Approvals")).to_have_count(0)
     expect(bob.get_by_role("button", name="Withdraw proposal")).to_be_visible()
     for p in (ann, sue, bob):
         clean(p)

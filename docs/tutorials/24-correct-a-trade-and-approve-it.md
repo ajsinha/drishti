@@ -118,7 +118,7 @@ The change waits in **Review → Changes** (Build → Govern → Changes). You s
 **You should see** *0 of 1 approval*. An approver (another person) presses **Approve**, or from the command line:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py change approve chg-01M5V881D3K33Z45TWEND1RJAM --note "checked against ticket 4411" --user kim
+drishti-console/.venv/bin/python tools/drishti.py approvals approve change chg-01M5V881D3K33Z45TWEND1RJAM --comment "checked against ticket 4411" --user kim
 ```
 
 Approving your own change answers `403 DRS-9302` *you submitted this change: someone else approves it (four eyes)*.
@@ -149,7 +149,7 @@ Propose another change that still says you saw 28,000,000:
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py change propose --kind trade --id MX-20000012 \
   --set NOTIONAL=28000500 --from NOTIONAL=28000000 --reason "late correction" --user kim
-drishti-console/.venv/bin/python tools/drishti.py change approve <its id> --user ada
+drishti-console/.venv/bin/python tools/drishti.py approvals approve change <its id> --user ada
 drishti-console/.venv/bin/python tools/drishti.py change show <its id> --user kim
 # chg-…  trade MX-20000012  CONFLICTED  (overlay, by kim)
 #   NOTIONAL: you saw 28000000, it is now 28001250, you wanted 28000500

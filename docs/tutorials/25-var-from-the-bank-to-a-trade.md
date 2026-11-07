@@ -886,7 +886,7 @@ MGMT~BANK VAR FY2026 (2025-11-01 to 2026-10-31): 228 official records, 227 synth
   period end 112,041,646 (2026-09-30)   average 151,812,526
   high 167,372,692 (2026-01-13)   low 87,874,268 (2025-12-10)
 $ drishti.py var report run annual-report-var FY2026
-$ drishti.py var report sign annual-report-var FY2026 --step maker --comment "Credit up on the new book"
+$ drishti.py approvals approve var-report annual-report-var:FY2026:v1 --param step=maker --comment "Credit up on the new book"
 ```
 
 **In the UI.** `VAR BANK BACKTEST <GO>`: the chart of the 250 days (actual P&L bars, −VaR 99% and 97.5% of the day before, the

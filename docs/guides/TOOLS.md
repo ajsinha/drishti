@@ -110,7 +110,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `server` | `server health`, `server caches`, `server packs`, `server commands`, `server smoke`, `server engines` (`admin engines` is the same: the compute engines on or off, [OPERATIONS section 21](../admin/OPERATIONS.md)) | [5.4](#54-server-and-doctor) |
 | `connector` | `connector list`, `connector get`, `connector apply`, `connector delete`, `connector test`, `connector plugins`, `connector enable`, `connector disable`, `connector reset`, `connector history` | [5.5](#55-connector) |
 | `net` | `net list`, `net check`, `net add-peer`, `net set`, `net members` | [5.9](#59-net) |
-| `design` | `design list`, `design create`, `design get`, `design save`, `design check`, `design propose`, `design approve`, `design reject`, `design proposals`, `design export`, `design import`, `design bind`, `design autodesign`, `design delete` | [5.6](#56-design) |
+| `design` | `design list`, `design create`, `design get`, `design save`, `design check`, `design propose`, `design proposals`, `design export`, `design import`, `design bind`, `design autodesign`, `design delete` | [5.6](#56-design) |
 | `docs` | `docs shots` | [9](#9-developer-tools) |
 | `doctor` | `drishti.py doctor` | [5.4](#54-server-and-doctor) |
 | `bi` | `bi workspace`, `bi catalogue`, `bi expr`, `bi migrate`, `bi sql`, `bi model`, `bi mq`, `bi item`, `bi dataset`, `bi transform`, `bi statement` | [5.7](#57-bi) |
@@ -1190,7 +1190,7 @@ More output: [CLI_GUIDE.md section 7](CLI_GUIDE.md).
 ### 5.6 design
 
 The Screen Designer over REST: `design create` from samples or a Sutra file, `design save`, `design check` (exit `1` on
-problems), `design propose`, `design approve` / `design reject` (an approver), `design proposals`, `design export` /
+problems), `design propose`, `design proposals`, `design export` /
 `design import` (a pack fragment), `design bind` (a file in your development directory), `design autodesign`, `design get`,
 `design list`, `design delete`. The GitOps recipe (create, propose, approve from a pipeline) is in
 [CLI_GUIDE.md section 8](CLI_GUIDE.md); the page is Build → My designs ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench)).
@@ -1290,7 +1290,7 @@ Write-back from the terminal (`tools/changecli.py`, [WRITE_BACK.md](WRITE_BACK.m
 - `change submit DRAFT [--reason TEXT]` submits one of your form drafts (`d-...`): one change per record.
 - `change list [--state awaiting|queued|applied|refused|conflicted|rejected|withdrawn] [--kind] [--entity] [--mine]` lists changes, newest first.
 - `change show CHANGE` shows one change (exit `1` when it was refused, conflicted or rejected).
-- `change approve CHANGE [--note TEXT]`, `change reject CHANGE --reason TEXT`, `change withdraw CHANGE`: decide (an approver, never your own
+- `approvals approve change CHANGE [--comment TEXT]`, `approvals reject change CHANGE --comment TEXT`, `approvals withdraw change CHANGE`: decide (an approver, never your own
   change) or withdraw your own while it awaits approval.
 - `change history KIND ID` lists a record's changes from the edit log and its version.
 - `edits status` shows Admin → Edits: where the edit log lives and why, the lanes, warnings, unconfirmed source commands and each
@@ -1301,7 +1301,7 @@ Exit codes are `0`, `1` (refused, conflicted, or the server said no) and `2` (us
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py change propose --kind trade --id MX-20000012 --set NOTIONAL=28001250 --from NOTIONAL=28000000 --reason "booking typo"
 drishti-console/.venv/bin/python tools/drishti.py change list --state awaiting
-drishti-console/.venv/bin/python tools/drishti.py change approve chg-01M5V6GM7NCKSR506RQ86M7YVV --note "ticket 4411"
+drishti-console/.venv/bin/python tools/drishti.py approvals approve change chg-01M5V6GM7NCKSR506RQ86M7YVV --comment "ticket 4411"
 drishti-console/.venv/bin/python tools/drishti.py edits status
 ```
 
@@ -1346,7 +1346,7 @@ picks the business date (default the newest with vectors); `--json` prints the s
 - `var history SCOPE` prints the history and backtest (the official record for a node, else the replay of today's vector) with the
   traffic light, Kupiec and Christoffersen.
 - `var tree [--hierarchy MGMT|LEGAL]` prints every node with its VaR, ES and limit use, indented.
-- `var stress-window [SCOPE] [--hierarchy H] [--date D] [--length DAYS] [--confidence Q] [--propose [--first D] [--note T]] [--proposals] [--decide SWP-ID --decision approve|reject]`: the stress window selection ([VAR_GUIDE.md section 18.9](VAR_GUIDE.md#189-choosing-the-stress-window)): every window of the node's long-history P&L as a stressed VaR, the current and the worst, the alert, the candidates and every node's own worst window; `--propose` freezes it and proposes a window, `--decide` approves or rejects a proposal (another person than its proposer).
+- `var stress-window [SCOPE] [--hierarchy H] [--date D] [--length DAYS] [--confidence Q] [--propose [--first D] [--note T]] [--proposals]`: the stress window selection ([VAR_GUIDE.md section 18.9](VAR_GUIDE.md#189-choosing-the-stress-window)): every window of the node's long-history P&L as a stressed VaR, the current and the worst, the alert, the candidates and every node's own worst window; `--propose` freezes it and proposes a window, `--decide` approves or rejects a proposal (another person than its proposer).
 - `var matrix ID [--days N] [--by trade [--scenario D]] [--confidence Q] [--es-confidence Q] [--window N] [--top N] [--csv]`: the
   scenario matrix of a trade, a position, a P&L vector's or scenario PV's id, or a scope over its last N business dates (20; at most 60):
   each date's source (`open`, `lake`, `official`, `engine`), VaR with its rank, ES, base PV and gap, then the scenarios worst on the

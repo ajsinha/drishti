@@ -925,10 +925,10 @@ Overlay and owned targets need the first and third levels only; a source target 
 ### 13. APIs, CLI and configuration
 
 - **API:** `POST /api/v1/changes` (submit), `GET /api/v1/changes?state=&kind=&entity=` (list), `GET /api/v1/changes/{id}`,
-  `POST /api/v1/changes/{id}/approve|reject|withdraw`, `GET /api/v1/entities/{kind}/{id}/history`. A token needs the `edit` scope
+  `POST /api/v1/approvals/change/{id}/approve|reject|withdraw`, `GET /api/v1/entities/{kind}/{id}/history`. A token needs the `edit` scope
   (section 12).
 - **CLI:** `drishti.py change propose --kind trade --id MX-50000001 --set TRADER_ID=TRDR-AKHAN --reason "..."`, `change list`,
-  `change approve <id>`, `change history trade MX-50000001`.
+  `approvals approve change <id>`, `change history trade MX-50000001`.
 - **Configuration**, like connectors and Drishti*net, in its own folder `config/edit/`: `edit.yaml` (`enabled: false` as shipped,
   `log: auto`, `primary:`, `s3:`, `follow:`; section 11), `policy.yaml` (defaults per kind and target, approval, the restate role),
   `lanes.yaml` (lanes, max-lane-depth, lane-warn, lane-lease, timeouts), `retention.yaml` (the edit log, section 16). The edit-log

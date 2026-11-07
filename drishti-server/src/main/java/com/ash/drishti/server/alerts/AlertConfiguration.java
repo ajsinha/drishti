@@ -114,7 +114,8 @@ public class AlertConfiguration {
                 .or(() -> security.enabled() ? Optional.empty() : Optional.of(new Person(name, name, "", true, principals.of(name))));
         AlertService s = new AlertService(store, reader, sources, people, sources, boards, channels, audit, props, dates, Clock.systemUTC(), true);
         s.retryWith(com.ash.drishti.common.RetryPolicy.of(env::getProperty, "alerts"));       // drishti.retry.alerts.*
-        loads.alertsOnLoad(s::onLoad);                                                  // the data-load signal: a ready, verified load's alerts step
+        loads.onReady(r -> s.onLoad(r.kind(), r.businessDate()));                      // the data-load signal: every ready load
+        loads.alertsOnLoad(s::onLoad);                                                  // and a verified load's alerts step says how many look (the same, idempotent)
         int converted = s.convertOldRules();                                            // the retired entity-rule engine's rules, once
         if (converted > 0) {
             org.slf4j.LoggerFactory.getLogger(AlertConfiguration.class).info("alerts: {} entity rule(s) converted to alerts with the condition rule", converted);

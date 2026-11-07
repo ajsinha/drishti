@@ -13,6 +13,36 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.f — release notes (draft)
+
+*Not released yet.*
+
+## Upgrade: one Approvals queue and one alert engine
+
+- **Approvals.** Every four-eyes decision is made in one queue: **Views → Approvals** (`/approvals`) and `/api/v1/approvals`. The old pages
+  redirect: `/build/reviews` and `/build/reviews/{id}` to `/approvals?kind=sutra` and `/approvals/sutra/{id}`, `/review/changes` to
+  `/approvals?kind=change`. **Removed endpoints** (scripts and tools that call them move to the queue's `POST /api/v1/approvals/{kind}/{id}/
+  approve|reject|withdraw` with `{comment, params}`):
+  - `POST /api/v1/sutras/proposals/{id}/approve|reject|withdraw` → kind `sutra`;
+  - `POST /api/v1/changes/{id}/approve|reject|withdraw` → kind `change` (the body's `note` or `reason` is now `comment`);
+  - `POST /api/v1/bi/items/{id}/approve|reject` → kind `bi` (`force` and `applyRenames` go in `params`);
+  - `POST /api/v1/admin/compute/requests/{id}/approve|reject` → kind `compute` (`reason` is `comment`; revoke stays on Admin → Compute);
+  - `POST /api/v1/pivot/functions/{owner}/{ref}/approve` → kind `function`, id `owner:name@version` (`scope` in `params`, `reason` is `comment`);
+  - `POST /api/v1/var/stress-window/proposals/{id}/decision` → kind `stress-window`, `/approve` or `/reject`;
+  - `POST /api/v1/var/reports/{report}/runs/{period}/signoff` → kind `var-report`, id `report:period:vN` (`step` in `params`; `return` is
+    `/reject`); the maker's narrative is `POST .../runs/{period}/narrative`.
+- **CLI.** `drishti.py approvals list|show|approve|reject|withdraw|ask` replaces `design approve|reject`, `change approve|reject|withdraw`,
+  `pivot functions approve`, `var stress-window --decide` and `var report sign` (`var report narrative` writes the maker's text).
+- **Tokens.** A token decides with the scope of the kind (`edit`, `design:approve`, `bi:approve`, `pivot:approve`) or the new scope `approve`;
+  report sign-offs, stress windows, compute packages and questions are never a token's.
+- **Alerts.** The settings `drishti.alerts.measure.*` are now `drishti.alerts.*` (`DRISHTI_ALERTS_MEASURE_*` → `DRISHTI_ALERTS_*`); remove
+  `drishti.alerts.keep`. Rules on one entity are converted into alert rules at the first start, by themselves; the alerts they fired before
+  (the identity table `drishti_alert`) are no longer read (no migration: drop the table when you like). **Removed endpoints:**
+  `/api/v1/me/alerts` and `/api/v1/me/alerts/rules/**` (use `/api/v1/alerts` and `/api/v1/alerts/rules/**`), `/api/v1/me/measure-alerts/**`
+  (→ `/api/v1/alerts/rules/**`), `/api/v1/admin/measure-alerts/**` (→ `/api/v1/admin/alerts` and `/api/v1/admin/alerts/rules/**`); the
+  platform alerts are under `platform` of `GET /api/v1/admin/alerts`. The stream is `/api/v1/alerts/stream`, and an alert raised arrives as a
+  `notice` event of type `alert` (the `alert` event is gone).
+
 # Drishti 2.9.11.d — release notes (draft)
 
 *Not released yet.*
