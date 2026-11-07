@@ -54,6 +54,7 @@ class FieldMaskingTest {
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
+    @Autowired com.ash.drishti.identity.UserService users;
     @Autowired com.ash.drishti.server.security.MaskCoverage coverage;
     private final ObjectMapper json = new ObjectMapper();
 
@@ -228,6 +229,10 @@ class FieldMaskingTest {
 
     @Test
     void alertsAndPhrasesCannotProbeAMaskedField() throws Exception {
+        if (users.find("u-masked").isEmpty()) {                   // an alert rule is evaluated as its owner: a person of the directory
+            users.create("test", "u-masked", new com.ash.drishti.identity.UserService.Profile("u-masked", "", "", java.util.Set.of("masked"), true),
+                    "Str0ng-Passw0rd-masked", false);
+        }
         String probe = "{\"severity\":\"info\",\"source\":{\"type\":\"field\",\"kind\":\"trade\",\"id\":\"MX-20000001\",\"field\":\"%s\"},"
                 + "\"condition\":{\"type\":\"rule\"},\"trigger\":{\"mode\":\"after-load\",\"kind\":\"trade\"}}";
         mvc.perform(put("/api/v1/alerts/rules/Probe").header("Authorization", as("masked")).contentType(MediaType.APPLICATION_JSON)

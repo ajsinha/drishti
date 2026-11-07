@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component;
  * Administrators decide, and when {@code compute.approval.roles} names roles only administrators holding one of them; never the person who
  * asked (four eyes); a reason is always given. Revoking an approval stays on Admin → Compute.
  */
-@Component
+@Component("computeApprovalSource")                 // computeApprovals is the compute engine's own register (ComputeConfiguration)
 public class ComputeApprovals implements ApprovalSource {
 
     private final ObjectProvider<ComputeService> compute;

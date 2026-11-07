@@ -152,7 +152,8 @@
   }
   function facts(f) {
     var dl = $('[data-ap-more-list]'); clear(dl);
-    var keys = Object.keys(f || {}).filter(function (k) { return f[k] !== null && f[k] !== undefined && f[k] !== ''; });
+    var drawn = state.open && state.open.kind === 'sutra' ? ['before', 'after', 'evidence', 'newVersion', 'stale'] : [];     // the Sutra view draws these
+    var keys = Object.keys(f || {}).filter(function (k) { return f[k] !== null && f[k] !== undefined && f[k] !== '' && drawn.indexOf(k) < 0; });
     keys.forEach(function (k) {
       dl.appendChild(h('dt', {}, k));
       var v = f[k], dd = h('dd', k === 'evidence' ? { 'data-ap-fact': k, 'data-evidence': '' } : { 'data-ap-fact': k });
@@ -194,6 +195,16 @@
     $('[data-ap-comment]').hidden = !o.actions.some(function (a) { return a !== 'ask'; });
     params(o.actions.indexOf('approve') >= 0 ? it.kind : '');
     diff(o.detail.diff);
+    if (it.kind === 'sutra') {                              // a Sutra: its diff with the moved panels, and the workbench's evidence (the console draws them)
+      fetch('/approvals/api/view/sutra/' + enc(it.id), { credentials: 'same-origin', headers: { Accept: 'text/html' } })
+        .then(function (r) { return r.ok ? r.text() : null; })
+        .then(function (html) {
+          if (html && state.open && state.open.kind === 'sutra' && state.open.id === it.id) {
+            var box = $('[data-ap-diff]'); clear(box);
+            box.appendChild(document.createRange().createContextualFragment(html));
+          }
+        }).catch(function () { /* the plain line diff stays */ });
+    }
     lines('[data-ap-effect]', o.detail.effect);
     lines('[data-ap-rules]', o.detail.rules);
     facts(o.detail.facts);

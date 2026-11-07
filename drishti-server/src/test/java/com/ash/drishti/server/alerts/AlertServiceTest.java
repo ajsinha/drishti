@@ -706,12 +706,12 @@ class AlertServiceTest {
 
     @Test
     void theRulesOfTheRetiredEntityRuleEngineAreConvertedOnceIntoRulesOfThisEngine() {
-        store.put("alice", AlertService.OLD_RULES_NS, "Deep MTM!", body("{\"ref\":{\"kind\":\"trade\",\"id\":\"IRS-48213\"},\"when\":\"$.mtm < 0\","
+        store.put("alice", AlertService.OLD_RULES_NS, "Deep MTM", body("{\"ref\":{\"kind\":\"trade\",\"id\":\"IRS-48213\"},\"when\":\"$.mtm < 0\","
                 + "\"severity\":\"critical\",\"message\":\"MTM below zero\",\"enabled\":true}"));
         store.put("alice", AlertService.OLD_RULES_NS, "junk", body("{\"note\":\"not a rule\"}"));
         assertThat(service.convertOldRules()).isEqualTo(1);
         assertThat(store.keys("alice", AlertService.OLD_RULES_NS)).containsExactly("junk");              // converted ones leave the old place
-        JsonNode a = service.get("alice", "Deep MTM-").orElseThrow();
+        JsonNode a = service.get("alice", "Deep MTM").orElseThrow();
         assertThat(a.path("title").asText()).isEqualTo("MTM below zero");
         assertThat(a.path("severity").asText()).isEqualTo("critical");
         assertThat(a.path("source").path("type").asText()).isEqualTo("field");

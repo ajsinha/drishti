@@ -48,7 +48,6 @@ def test_the_cards_and_their_calls_are_the_persons(backend, monkeypatch):
     assert c.post("/api/pivot/functions/test", json={"name": "wret"}).status_code == 200 and sent[-1][1] == "/functions/test"
     c.get("/api/pivot/functions/asha/wret", params={"version": "2"})
     assert sent[-1][1] == "/functions/asha/wret" and sent[-1][4] == {"version": "2"}
-    no = c.post("/api/pivot/functions/asha/wret@1/approve", json={"reason": "mine", "scope": "everyone"})
-    assert no.status_code == 403 and no.json()["code"] == "DRS-5712"
+    assert c.post("/api/pivot/functions/asha/wret@1/approve", json={"reason": "mine", "scope": "everyone"}).status_code == 404   # in Approvals now
     assert c.post("/api/pivot/functions/asha/wret@1/revoke", json={"reason": "x"}).status_code == 200
     assert c.post("/api/pivot/functions/asha/wret@1/delete", json={}).status_code == 404

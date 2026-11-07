@@ -469,15 +469,6 @@ class BackendClient:
         return await self._send("POST", "/sutras", ident, content=yaml_text.encode(), headers={"Content-Type": "text/yaml"},
                                 params={"note": note} if note else None)
 
-    async def proposals(self, ident=None, status: str = "", name: str = "") -> dict:
-        return await self._get("/sutras/proposals", ident, **{k: v for k, v in {"status": status, "name": name}.items() if v})
-
-    async def proposal(self, id_: str, ident=None) -> dict:
-        return await self._get(f"/sutras/proposals/{id_}", ident)
-
-    async def decide(self, id_: str, action: str, ident=None, comment: str = "") -> dict:
-        return await self._send("POST", f"/sutras/proposals/{id_}/{action}", ident, json={"comment": comment})
-
     async def impact(self, kind: str, id_: str, ident=None) -> dict:
         where, q = entity_path(kind, id_)
         return await self._get(f"/impact/{where}", ident, **q)
@@ -693,6 +684,21 @@ class BackendClient:
 
     async def preview_alert_rule(self, body: dict, ident) -> dict:
         return await self._send("POST", "/alerts/rules/preview", ident, json=body, timeout=120.0)
+
+    # -- the one Approvals queue -------------------------------------------------------------------------------
+    async def approvals_list(self, ident, box: str = "inbox", group: str = "", kind: str = "") -> dict:
+        q = {"box": box, "limit": "300", **({"group": group} if group else {}), **({"kind": kind} if kind else {})}
+        return await self._send("GET", "/approvals?" + "&".join(f"{k}={quote(v)}" for k, v in q.items()), ident)
+
+    async def approvals_count(self, ident) -> dict:
+        return await self._send("GET", "/approvals/count", ident)
+
+    async def approvals_item(self, kind: str, id_: str, ident) -> dict:
+        return await self._send("GET", f"/approvals/{quote(kind)}/{quote(id_, safe=':@~+')}", ident)
+
+    async def approvals_act(self, kind: str, id_: str, action: str, body: dict, ident):
+        """approve, reject, withdraw, or questions (ask)."""
+        return await self._send("POST", f"/approvals/{quote(kind)}/{quote(id_, safe=':@~+')}/{action}", ident, json=body)
 
     async def admin_alerts(self, ident) -> dict:
         """``{rules, boards, platform}``: everyone's rules, the board tiles that notify, the platform alerts (administrators)."""

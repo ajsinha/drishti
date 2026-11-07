@@ -166,7 +166,7 @@ def test_promotion_shows_the_diff_and_proposes_through_review(client, backend, l
     js = client.get("/static/js/drishti_layout.js").text
     assert "data-promote-moves" in js and "data-promote-full-diff" in js and "res.b.edits" in js
     r = client.post("/api/layout/irs-vanilla/trade/promotion", json={"note": "cashflows first", "dropHidden": True}).json()
-    assert r["proposal"]["id"] == "P-000042" and r["href"] == "/build/reviews/P-000042"
+    assert r["proposal"]["id"] == "P-000042" and r["href"] == "/approvals/sutra/P-000042"
     assert ("promote", "irs-vanilla", "trade", "cashflows first", True) in backend.calls
     backend.layout_promote = False
     r = client.get("/api/layout/irs-vanilla/trade/promotion")
@@ -183,12 +183,7 @@ def test_admin_roles_has_the_layout_power_on_by_default(client, backend):
 
 
 def test_a_new_version_is_reviewed_against_the_version_before_it(client, backend, monkeypatch):
-    async def proposal(id_, ident=None):
-        return {"id": id_, "name": "irs-vanilla", "version": 4, "note": "", "author": "ana", "createdAt": "2026-10-01T09:00:00Z",
-                "status": "pending", "newVersion": True, "stale": False, "mayApprove": True, "mayWithdraw": False,
-                "text": "sutra: irs-vanilla\nversion: 4\n", "baseText": "", "liveText": "", "previousText": "sutra: irs-vanilla\nversion: 3\n"}
-    monkeypatch.setattr(backend, "proposal", proposal, raising=False)
-    html = client.get("/build/reviews/P-000042").text
+    html = _sutra_view(client, backend, monkeypatch, "sutra: irs-vanilla\nversion: 3\n", "sutra: irs-vanilla\nversion: 4\n")
     assert "changes against the latest earlier version" in html
     assert '<span class="d-del">-version: 3</span>' in html and '<span class="d-add">+version: 4</span>' in html
 
@@ -201,3 +196,12 @@ def test_workspaces_keep_where_their_dividers_were_dragged(client, backend):
     html = client.get("/w/Sized").text
     assert "&#34;sizes&#34;: {&#34;cols&#34;: [1.5, 0.5]}" in html or '"sizes": {"cols": [1.5, 0.5]}' in html.replace("&#34;", '"')
     assert "/static/js/drishti_workspace.js" in html
+
+
+def _sutra_view(client, backend, monkeypatch, before, after, evidence=None, new_version=True):
+    """The Approvals queue's Sutra view (the diff with its moves, the evidence) of a proposal whose texts the server gives as facts."""
+    async def approvals_item(kind, id_, ident=None):
+        return {"detail": {"item": {"kind": kind, "id": id_}, "facts": {"before": before, "after": after, "evidence": evidence, "newVersion": new_version}},
+                "actions": ["ask"]}
+    monkeypatch.setattr(backend, "approvals_item", approvals_item, raising=False)
+    return client.get("/approvals/api/view/sutra/P-000042").text

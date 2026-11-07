@@ -89,7 +89,7 @@ public class SutraApprovals implements ApprovalSource {
     @Override
     public Detail detail(String id, Principal p) {
         Proposal x = governance.get(id, p);
-        String before = governance.liveText(x).isEmpty() ? governance.previousText(x) : x.baseText();
+        String before = governance.comparedWith(x);
         List<String> effect = new ArrayList<>();
         effect.add(x.baseText() == null || x.baseText().isEmpty() ? "Version " + x.version() + " of " + x.name() + " becomes live: views of it use it"
                 : "The live version " + x.version() + " of " + x.name() + " is replaced: every view drawn from it changes at once");
@@ -107,6 +107,9 @@ public class SutraApprovals implements ApprovalSource {
                 "A reason is required to reject");
         Map<String, Object> facts = new LinkedHashMap<>();
         facts.put("version", x.version());
+        facts.put("newVersion", x.baseText() == null || x.baseText().isEmpty());
+        facts.put("before", before);                                         // the two texts: the console draws the Sutra diff with its moves
+        facts.put("after", x.text());
         facts.put("stale", governance.stale(x));
         facts.put("evidence", governance.evidenceFor(x, p));
         if (x.comment() != null && !x.pending()) {

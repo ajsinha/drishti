@@ -114,7 +114,7 @@ class LoadsApiTest {
         JsonNode load = body(first);
         List<String> steps = load.path("steps").findValuesAsText("name");
         assertThat(steps).containsExactly("record", "refresh", "verify", "alerts", "smoke", "notices");
-        assertThat(load.path("summary").asText()).startsWith("trade for 2026-09-29 loaded: 48,213 rows, 12 rejected; ").endsWith(" fired");
+        assertThat(load.path("summary").asText()).startsWith("trade for 2026-09-29 loaded: 48,213 rows, 12 rejected; ").endsWith(" to look");
         assertThat(load.path("notices").asInt()).isGreaterThanOrEqualTo(1);       // the dev admin holds the default notify role
 
         // the same announcement again changes nothing: 200, the same record, no second run

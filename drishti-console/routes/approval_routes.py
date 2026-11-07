@@ -21,11 +21,12 @@ The per-kind review pages it replaced redirect here: Build → Reviews (Sutra pr
 from __future__ import annotations
 
 import re
-from urllib.parse import quote, urlencode
+from urllib.parse import quote
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
+from core import sutra_diff
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes.common import ident, render
@@ -47,10 +48,9 @@ def _bad(detail: str) -> JSONResponse:
     return JSONResponse({"code": "DRS-5001", "detail": detail}, status_code=400)
 
 
-async def _call(request: Request, method: str, path: str, body=None):
-    kw = {"json": body} if body is not None else {}
+async def _answer(call):
     try:
-        got = await request.app.state.backend._send(method, path, ident(request), **kw)
+        got = await call
     except BackendError as e:
         return _problem(e)
     return JSONResponse(got if got is not None else {})
@@ -82,25 +82,20 @@ async def approval(request: Request, kind: str, id_: str):
 async def api_list(request: Request, box: str = "inbox", group: str = "", kind: str = ""):
     if box not in BOXES or group not in GROUPS or kind and not KIND.match(kind):
         return _bad("box is inbox, sent, done or all; group is data, screens, risk or access")
-    q = {"box": box, "limit": "300"}
-    if group:
-        q["group"] = group
-    if kind:
-        q["kind"] = kind
-    return await _call(request, "GET", "/approvals?" + urlencode(q))
+    return await _answer(request.app.state.backend.approvals_list(ident(request), box, group, kind))
 
 
 @router.get("/approvals/api/count")
 async def api_count(request: Request):
     """``{inbox, dueSoon}``: the number the top bar shows."""
-    return await _call(request, "GET", "/approvals/count")
+    return await _answer(request.app.state.backend.approvals_count(ident(request)))
 
 
 @router.get("/approvals/api/item/{kind}/{id_}")
 async def api_item(request: Request, kind: str, id_: str):
     if not KIND.match(kind) or not ITEM.match(id_):
         return _bad("an item is named by its kind and id")
-    return await _call(request, "GET", f"/approvals/{kind}/{quote(id_, safe=':@~+')}")
+    return await _answer(request.app.state.backend.approvals_item(kind, id_, ident(request)))
 
 
 @router.post("/approvals/api/item/{kind}/{id_}/{action}")
@@ -112,7 +107,22 @@ async def api_act(request: Request, kind: str, id_: str, action: str):
         body = await json_body(request, limit=LIMIT)
     except BodyError as e:
         return _bad(str(e))
-    return await _call(request, "POST", f"/approvals/{kind}/{quote(id_, safe=':@~+')}/{action}", body or {})
+    return await _answer(request.app.state.backend.approvals_act(kind, id_, action, body or {}, ident(request)))
+
+
+@router.get("/approvals/api/view/sutra/{id_}")
+async def sutra_view(request: Request, id_: str):
+    """A Sutra proposal's diff with its moved panels and its evidence, as an HTML fragment for the item's "what changes"."""
+    if not ITEM.match(id_):
+        return _bad("a proposal is named by its id")
+    try:
+        opened = await request.app.state.backend.approvals_item("sutra", id_, ident(request))
+    except BackendError as e:
+        return _problem(e)
+    facts = (opened.get("detail") or {}).get("facts") or {}
+    before, after = facts.get("before") or "", facts.get("after") or ""
+    return render(request, "approvals_sutra.html", diff=sutra_diff.review(before, after), before=before, new_version=facts.get("newVersion", True),
+                  stale=facts.get("stale", False), p={"evidence": facts.get("evidence")})
 
 
 # ---- the pages it replaced ------------------------------------------------------------------------------------------------------------
