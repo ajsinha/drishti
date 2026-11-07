@@ -16,8 +16,14 @@
 /* The one Approvals queue (templates/approvals.html; SHARED_SCREENS.md section 2): reads /approvals/api/list, draws the due-soon items
    pinned on top and the rest newest first, opens an item (/approvals/api/item/<kind>/<id>) with its diff, effect, rules and questions, and
    posts the decision or a question. The server decides who may do what: the buttons drawn are the actions it answers. */
-(function () {
-  'use strict';
+/**
+ * Starts the one Approvals queue when the page holds it ([data-approvals]); on any other page it does nothing.
+ * @param {Window} win the page's window
+ * @returns {void}
+ */
+export function startApprovals(win) {
+  const window = win, document = win.document;
+  window.Drishti = window.Drishti || {};
   var root = document.querySelector('[data-approvals]');
   if (!root) { return; }
   var $ = function (s, el) { return (el || root).querySelector(s); };
@@ -255,4 +261,4 @@
     var k = root.getAttribute('data-item-kind'), id = root.getAttribute('data-item-id');
     if (k && id) { open(k, id); }
   });
-})();
+}

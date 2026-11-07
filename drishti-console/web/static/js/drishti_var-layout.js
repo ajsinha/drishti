@@ -21,7 +21,7 @@
      combobox (type to search the name and the description) over a listbox: ↑↓ move, Enter opens the scope, Esc closes; B and M open
      them from anywhere on the page. The rows and their actions (+ basket, Edit, Edit a copy, Delete) are the explorer's own
      (drishti_var-explorer.js hands them over with setItems); a choice moves the explorer (Drishti.VarExplorer.select).
-   How a number was built is the one Explain's (drishti_explain.js: Explain ›, E, or a click on a tile). */
+   How a number was built is the one Explain's (drishti-insight: Explain ›, E, or a click on a tile). */
 (function () {
   "use strict";
   var root = document.querySelector("[data-var]");

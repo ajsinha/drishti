@@ -14,34 +14,34 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* Controls of a Sutra (drishti_controls.js; BI_DESIGN.md 8.1): the bar under the strip, the bar at the side, and the controls in a panel's header. */
-.ctl-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .5rem .9rem; padding: .35rem 0 .1rem; }
+.ctl-bar { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--d-sp-8) var(--d-sp-14_4); padding: var(--d-sp-5_6) 0 var(--d-sp-1_6); }
 .ctl-bar:empty { display: none; }
-.ctl-side { flex-direction: column; align-items: stretch; align-self: start; padding: .6rem; border: 1px solid var(--d-border); border-radius: 8px; background: var(--d-surface); }
+.ctl-side { flex-direction: column; align-items: stretch; align-self: start; padding: var(--d-sp-9_6); border: 1px solid var(--d-border); border-radius: var(--d-radius-8); background: var(--d-surface); }
 .vgrid.ctl-has-side { grid-template-columns: minmax(10rem, 14rem) minmax(0, 2fr) minmax(0, 1fr); }
 @media (max-width: 900px) { .vgrid.ctl-has-side { grid-template-columns: 1fr; } }
-.ctl { display: inline-flex; flex-direction: column; gap: .15rem; min-width: 0; font-size: .85rem; }
+.ctl { display: inline-flex; flex-direction: column; gap: var(--d-sp-2_4); min-width: 0; font-size: var(--d-fs-13_6); }
 .ctl-side .ctl { display: flex; }
-.ctl-l { color: var(--d-muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
-.ctl-in { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; padding: .2rem .4rem; font: inherit; min-height: 30px; max-width: 100%; }
+.ctl-l { color: var(--d-muted); font-size: var(--d-fs-11_52); text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
+.ctl-in { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); padding: var(--d-sp-3_2) var(--d-sp-6_4); font: inherit; min-height: 30px; max-width: 100%; }
 .ctl-in:hover { border-color: var(--d-accent); }
-.ctl-date-range, .ctl-number-range { flex-direction: row; flex-wrap: wrap; align-items: center; gap: .25rem; }
+.ctl-date-range, .ctl-number-range { flex-direction: row; flex-wrap: wrap; align-items: center; gap: var(--d-sp-4); }
 .ctl-date-range > .ctl-l, .ctl-number-range > .ctl-l { flex: 1 0 100%; }
 .ctl-number-range .ctl-in { width: 7.5rem; }
 .ctl-dash { color: var(--d-muted); }
-.ctl-note { color: var(--d-muted); font-size: .72rem; }
-.ctl-act { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 4px; padding: .1rem .55rem; cursor: pointer; font: inherit; min-height: 26px; }
+.ctl-note { color: var(--d-muted); font-size: var(--d-fs-11_52); }
+.ctl-act { background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); padding: var(--d-sp-1_6) var(--d-sp-8_8); cursor: pointer; font: inherit; min-height: 26px; }
 .ctl-act:hover { border-color: var(--d-accent); }
-.ctl-seg { display: inline-flex; border: 1px solid var(--d-border); border-radius: 5px; overflow: hidden; }
-.ctl-seg-b { background: var(--d-bg-2); color: var(--d-ink); border: 0; border-right: 1px solid var(--d-border); padding: .2rem .7rem; cursor: pointer; font: inherit; min-height: 30px; }
+.ctl-seg { display: inline-flex; border: 1px solid var(--d-border); border-radius: var(--d-radius-5); overflow: hidden; }
+.ctl-seg-b { background: var(--d-bg-2); color: var(--d-ink); border: 0; border-right: 1px solid var(--d-border); padding: var(--d-sp-3_2) var(--d-sp-11_2); cursor: pointer; font: inherit; min-height: 30px; }
 .ctl-seg-b:last-child { border-right: 0; }
 .ctl-seg-b[aria-checked="true"] { background: var(--d-fill); color: var(--d-on-fill); }
-.ctl-switch { display: inline-flex; align-items: center; gap: .4rem; background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 999px; padding: .15rem .75rem; cursor: pointer; font: inherit; min-height: 30px; }
+.ctl-switch { display: inline-flex; align-items: center; gap: var(--d-sp-6_4); background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-pill); padding: var(--d-sp-2_4) var(--d-sp-12); cursor: pointer; font: inherit; min-height: 30px; }
 .ctl-switch[aria-checked="true"] { border-color: var(--d-accent); color: var(--d-accent); }
 .ctl button:focus-visible, .ctl input:focus-visible, .ctl select:focus-visible, .ctl summary:focus-visible, .ctl-pick:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
-.ctl-head { display: inline-flex; flex-wrap: wrap; align-items: center; gap: .3rem .6rem; margin-left: auto; margin-right: .6rem; font-weight: 400; }
+.ctl-head { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-4_8) var(--d-sp-9_6); margin-left: auto; margin-right: var(--d-sp-9_6); font-weight: 400; }
 .pnl-h:has(.ctl-head) { flex-wrap: wrap; }
-.ctl-head .ctl { flex-direction: row; align-items: center; gap: .3rem; }
-.ctl-head .ctl-l { text-transform: none; letter-spacing: 0; font-size: .75rem; }
+.ctl-head .ctl { flex-direction: row; align-items: center; gap: var(--d-sp-4_8); }
+.ctl-head .ctl-l { text-transform: none; letter-spacing: 0; font-size: var(--d-fs-12); }
 .ctl-head .ctl-date-range, .ctl-head .ctl-number-range { flex-wrap: nowrap; }
 .ctl-head .ctl-date-range > .ctl-l, .ctl-head .ctl-number-range > .ctl-l { flex: 0 0 auto; }
 .ctl-pick { cursor: pointer; }
@@ -50,7 +50,7 @@
 [aria-busy="true"] [data-panel] { opacity: .85; }
 @media (pointer: coarse) {
   .ctl-in, .ctl-seg-b, .ctl-switch, .ctl-act { min-height: 44px; }
-  .ctl-bar { gap: .6rem; }
+  .ctl-bar { gap: var(--d-sp-9_6); }
   .ctl-bar > .ctl, .ctl-head > .ctl { flex: 1 1 100%; }
   .ctl-number-range .ctl-in { flex: 1 1 8rem; width: auto; }
   .ctl-head { margin-left: 0; width: 100%; }
@@ -58,7 +58,7 @@
 }
 @media (max-width: 640px) {
   .ctl-in, .ctl-seg-b, .ctl-switch, .ctl-act { min-height: 44px; }
-  .ctl-bar { gap: .6rem; }
+  .ctl-bar { gap: var(--d-sp-9_6); }
   .ctl-bar > .ctl, .ctl-head > .ctl { flex: 1 1 100%; }
   .ctl-number-range .ctl-in { flex: 1 1 8rem; width: auto; }
   .ctl-head { margin-left: 0; width: 100%; }
@@ -72,15 +72,15 @@
 
 /* the slider (drishti_controls.js): a track with one thumb or two; the positions are --ctl-pos / --ctl-from / --ctl-to set from script */
 .ctl-slider { min-width: 11rem; }
-.ctl-sl-track { position: relative; height: 6px; margin: 11px 11px 5px; border-radius: 3px; background: var(--d-border); touch-action: none; cursor: pointer; }
-.ctl-sl-fill { position: absolute; top: 0; bottom: 0; left: var(--ctl-from, 0%); right: calc(100% - var(--ctl-to, 0%)); border-radius: 3px; background: var(--d-accent); pointer-events: none; }
+.ctl-sl-track { position: relative; height: 6px; margin: var(--d-sp-11) var(--d-sp-11) var(--d-sp-5); border-radius: var(--d-radius-3); background: var(--d-border); touch-action: none; cursor: pointer; }
+.ctl-sl-fill { position: absolute; top: 0; bottom: 0; left: var(--ctl-from, 0%); right: calc(100% - var(--ctl-to, 0%)); border-radius: var(--d-radius-3); background: var(--d-accent); pointer-events: none; }
 .ctl-sl-thumb { position: absolute; top: 50%; left: var(--ctl-pos, 0%); width: 22px; height: 22px; margin: -11px 0 0 -11px; box-sizing: border-box; border-radius: 50%;
   background: var(--d-surface); border: 2px solid var(--d-accent); box-shadow: var(--d-shadow); cursor: grab; touch-action: none; }
 .ctl-sl-thumb:active { cursor: grabbing; }
 .ctl-sl-thumb:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
 .ctl-sl-thumb[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
-.ctl-sl-out { font-size: .8rem; color: var(--d-muted); font-variant-numeric: tabular-nums; }
+.ctl-sl-out { font-size: var(--d-fs-12_8); color: var(--d-muted); font-variant-numeric: tabular-nums; }
 @media (pointer: coarse) {
   .ctl-sl-thumb { width: 44px; height: 44px; margin: -22px 0 0 -22px; }
-  .ctl-sl-track { margin: 22px 22px 10px; }
+  .ctl-sl-track { margin: var(--d-sp-22) var(--d-sp-22) var(--d-sp-10); }
 }

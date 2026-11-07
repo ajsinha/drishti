@@ -365,7 +365,7 @@ drishti:
       - /api/v1/tables/editor/python/notebook
       - /api/v1/tables/editor/python/contract
       - /api/v1/pivot/live               # a live pivot: the same answer kept current for the caller (ended by DELETE, or when no stream reads it)
-      - /api/v1/pivot/explain            # the difference between two cells in steps, computed as the caller, stored nowhere
+      - /api/v1/pivot/explain            # DEPRECATED alias of /api/v1/explain (kind pivot) for one release: computed as the caller, stored nowhere
       - /api/v1/pivot/whatif             # a view with an overlay beside the original, computed as the caller, stored nowhere
       - /api/v1/pivot/functions/test     # the custom-function playground: the harness on a sample, nothing saved
       - /api/v1/risk/mr/headline        # the MR cube's lens (MR_CUBE_GUIDE.md): a view's headline, a cell's detail and history and the

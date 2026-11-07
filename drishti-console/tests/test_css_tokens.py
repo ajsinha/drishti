@@ -24,8 +24,8 @@ pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it
 
 CSS = Path(__file__).resolve().parent.parent / "web" / "static" / "css"
 TOKENS = CSS / "drishti_tokens.css"
-# Sheets wip/e-inputs-convert is rewriting (forms, pickers, multi-selects, record forms): tokenised after it merges. Only shrinks.
-PENDING = {"drishti_form.css", "drishti_record-forms.css", "drishti_controls.css"}
+# Sheets left out of the token checks while another branch rewrites them (none now). Only shrinks.
+PENDING: set = set()
 COLOUR = re.compile(r"#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch)\(")
 LENGTH = re.compile(r"(?<![\w.#-])\d*\.?\d+(?:px|rem|em|pt|%|vw|vh|cqi|cqw)(?![\w-])")
 
@@ -113,7 +113,7 @@ _HIDDEN_CHK = "[hidden] over .chk, whose display is itself !important"
 _CHECKROW = ("a checkbox row inside a form whose labels stack (the .X label rules, one per form): to be folded into one form-label "
              "convention after wip/e-inputs-convert merges")
 _BOOTSTRAP = "Bootstrap's own rule is more specific (.dropdown-menu[data-bs-popper] margin)"
-_PENDING = "in a sheet wip/e-inputs-convert is rewriting"
+_INVALID = "an invalid field's border over the field's own focus and state borders (the record forms, being converted on wip/e-forms)"
 _LAYOUT = "layout mode: shows the switched-off panels over .pnl-off, itself a hide utility"
 _GRID = "the phone's one column over the screen grid's placements, which come in several specificities"
 _TONE = "the timeline's text stays ink under its tone class (.t-ok and the rest are !important utilities)"
@@ -178,7 +178,7 @@ IMPORTANT_ALLOW = {
     "drishti_nav.css|@media (max-width: 640px) .tbar-tools .dropdown-menu|transform": _INLINE + " (Popper)",
     "drishti_phone.css|[data-phone-tier=\"more\"]:not(.ph-open)|display": _HIDE,
     "drishti_pivot.css|@media print .tr-tog|display": _PRINT,
-    "drishti_record-forms.css|.fm-bad .fm-in|border-color": _PENDING,
+    "drishti_record-forms.css|.fm-bad .fm-in|border-color": _INVALID,
     "drishti_resize.css|html[data-rz-dragging=\"x\"]|cursor": _DRAG,
     "drishti_resize.css|html[data-rz-dragging=\"y\"]|cursor": _DRAG,
     "drishti_screen-grid.css|@media (max-width: 640px) .sg-area > .sg-cells > .pnl|grid-column": _GRID,

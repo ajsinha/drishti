@@ -482,7 +482,7 @@ The answer has `rows` and `columns` in display order (each with `key`, `kind` no
 | `POST /api/v1/pivot/functions/test` | a definition and sample rows: the harness and the playground; nothing saved |
 | `POST /api/v1/pivot/functions` | save a new version after its harness passes |
 | `POST /api/v1/pivot/functions/{owner}/{name}@{v}/submit`, `/approve`, `/revoke` | sharing: approval by someone who is not the author, withdrawal |
-| `POST /api/v1/pivot/explain` | `{view, from, to, fromDate, toDate, by, order, price, quantity}`: the difference in steps that add up (section 20) |
+| `POST /api/v1/explain` `{kind: pivot, measure: cell, view, from, to, fromDate, toDate, by, order, price, quantity}` | the one Explain of a cell: the difference in steps that add up (section 20); `POST /api/v1/pivot/explain` is its deprecated alias for one release |
 | `POST /api/v1/pivot/whatif` | `{view, whatIf: {exclude, changes, add}}`: the view with the overlay beside the original (section 21) |
 | `GET /api/v1/pivot/views/{owner}/{name}/versions`, `/versions/{n}`, `/diff?from=&to=`; `POST /views/{name}/restore` `{version}` | a saved view's versions (every save kept), one version, what changed between two, an old one restored as the next version |
 | `POST /api/v1/pivot/query` with `"exact": true` or `false` | exact on request, or ≈ by the sketches at any size ([section 23.1](#231-sketches-with-a-stated-error-and-exact-on-request)) |

@@ -105,6 +105,21 @@ export const MANIFEST = Object.freeze({
         "vendor/echarts/echarts.min.js"
       ]
     },
+    "drishti-insight": {
+      "version": "0.1.0",
+      "title": "Insight on a Drishti server: the one Explain (preview, drawer, full page, keys), the one search box (command line, Help, Alt+K), the one Approvals queue and the workbook export",
+      "bundle": "drishti-insight/drishti_insight.js",
+      "entry": "drishti-insight/src/drishti_index.js",
+      "global": "insight",
+      "requires": [
+        "drishti-core"
+      ],
+      "css": [
+        "css/drishti_explain.css",
+        "css/drishti_approvals.css"
+      ],
+      "scripts": []
+    },
     "drishti-risk": {
       "version": "0.2.0",
       "title": "The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser)",

@@ -223,7 +223,7 @@
     }).catch(function (e) { note($("[data-mr-tail]"), e.message); });
     explain("[data-mr-explain]", "[data-mr-explain-dates]", cell.scope);
   }
-  /** Explain the move (A7, C4): the one Explain of the cell's VaR (drishti_explain.js; SHARED_SCREENS.md section 3) at Why it moved, the
+  /** Explain the move (A7, C4): the one Explain of the cell's VaR (drishti-insight; SHARED_SCREENS.md section 3) at Why it moved, the
       compare date (or the date before) to the view's: the card names it, hover previews it, a click opens the drawer. */
   function explain(target, datesEl, scope) {
     if (!scope) { $(target).innerHTML = '<p class="pv-sub">No scope text names this cell: explain asks the engine of a scope.</p>'; return; }

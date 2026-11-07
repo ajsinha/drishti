@@ -81,3 +81,6 @@ net-key
 # the Java and Python API references (tools/api_docs.py build; IMPLEMENTATION_PLAN row 2g): generated at build time, never committed;
 # the console serves them at Help -> Developer
 drishti-console/web/apidocs/
+
+# test scratch (TMPDIR and --basetemp of local runs, under the worktree)
+drishti-console/test-tmp/

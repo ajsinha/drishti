@@ -521,7 +521,7 @@ the tutorials planned but not written.
 - **Commands**: `pivot explain`, `pivot functions`, `pivot run`, `pivot whatif`.
 - **Command words**: `PIVOT`.
 - **Menus and pages**: Admin → Audit, Admin → Roles.
-- **API calls**: 4 distinct, e.g. `/api/v1/pivot/explain`, `/api/v1/pivot/functions/test`, `/api/v1/pivot/functions/you/wret`, `/api/v1/pivot/whatif`.
+- **API calls**: 4 distinct, e.g. `/api/v1/explain`, `/api/v1/pivot/functions/test`, `/api/v1/pivot/functions/you/wret`, `/api/v1/pivot/whatif`.
 - **Stale or changed**: none (run for real 2026-11-04).
 - **Overlap**: 33.
 - **Verdict**: KEEP: the pivot engine's extension; current.

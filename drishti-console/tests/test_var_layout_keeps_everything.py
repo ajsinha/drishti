@@ -20,7 +20,7 @@ by How calculated (H). This file is the guard that nothing else went: the invent
 figure and every line of the explanation. The server-rendered page and the scripts are checked here; the drawn page in Chromium
 (a stand-in engine, the console in-process) at the end of the file. Skipped without Playwright or Chromium (the browser part only).
 
-2.9.11.e folded the drawer and the Why it moved tab into the one Explain (SHARED_SCREENS.md section 3, drishti_explain.js): every line
+2.9.11.e folded the drawer and the Why it moved tab into the one Explain (SHARED_SCREENS.md section 3, drishti-insight): every line
 of How this number was built is now the server's (VarNumberExplainer.java, checked below row for row), the tab is the drawer's Why it
 moved, and Explain › (E) opens it; the drawer's What-if moved to the toolbar."""
 import os
@@ -39,9 +39,9 @@ PAGE_INVENTORY = [
     # the status strip
     ("the command echo", "data-vx-cmd"), ("the business date", "data-vx-date"), ("the scenario set", "data-vx-set"),
     ("the data version", "data-vx-version"), ("the intraday badge", "data-vx-intraday"), ("the paint timing", "data-vx-timing"),
-    ("F1 help: the VaR guide", 'href="/help/context/var"'), ("the reporting currency", 'aria-label="Reporting currency"'),
+    ("F1 help: the VaR guide", 'href="/help/context/var"'), ("the reporting currency", ' label="Reporting currency"'),
     ("Normal or stressed", "data-vx-scenarios"), ("the horizon", "data-vx-horizon"), ("the VaR confidence", "data-vx-conf"),
-    ("the ES confidence", "data-vx-esconf"), ("the ES confidence's label", 'aria-label="ES confidence"'),
+    ("the ES confidence", "data-vx-esconf"), ("the ES confidence's label", ' label="ES confidence"'),
     # notices and the basket's sheet (collapsed until asked)
     ("the notice", "data-vx-notice"), ("the notices", "data-vx-notices"), ("the basket's sheet", "data-vx-basket hidden"),
     ("the sheet's opener (Alt+B)", 'aria-keyshortcuts="Alt+B"'), ("the basket's count", "data-basket-count"),
@@ -81,7 +81,7 @@ PAGE_INVENTORY = [
 ]
 
 #: the scripts the page loads, in order
-SCRIPTS = ["drishti_explain.js", "drishti_risk.js", "Arrow.es2015.min.js", "drishti_table.js", "drishti_var-basket-sheet.js", "drishti_var-basket.js", "drishti_scope-delete.js",
+SCRIPTS = ["drishti_insight.js", "drishti_risk.js", "Arrow.es2015.min.js", "drishti_table.js", "drishti_var-basket-sheet.js", "drishti_var-basket.js", "drishti_scope-delete.js",
            "drishti_var-explorer.js"]
 
 #: what the scripts draw (drishti_var-explorer.js): the six tiles, the tree's columns, the actions, the Explain requests

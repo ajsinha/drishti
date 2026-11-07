@@ -26,7 +26,7 @@
 .sw-chip { background: none; border: 0; padding: var(--d-sp-4) var(--d-sp-11); font-size: var(--d-fs-12_5); color: var(--d-muted); cursor: pointer; }
 .sw-chip[aria-pressed="true"] { background: var(--d-surface-2); color: var(--d-ink); font-weight: 600; }
 .sw-pick { font-size: var(--d-fs-12_5); color: var(--d-muted); display: inline-flex; gap: var(--d-sp-4); align-items: center; }
-.sw-pick select { font-size: var(--d-fs-12_5); }
+.sw-pick drishti-select { font-size: var(--d-fs-12_5); }          /* drishti-inputs' Select: its look is the library's */
 .sw-spacer { flex: 1 1 auto; }
 .sw-btn { font-size: var(--d-fs-12_5); padding: var(--d-sp-5) var(--d-sp-12); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); background: var(--d-surface-2); color: var(--d-ink); cursor: pointer; }
 .sw-btn.primary { background: var(--d-fill); border-color: var(--d-fill); color: var(--d-on-fill); font-weight: 600; }

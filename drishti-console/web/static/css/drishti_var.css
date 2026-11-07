@@ -33,9 +33,7 @@
 .vx-what { font-size: var(--d-fs-em-85); white-space: nowrap; }
 /* the reporting currency (mock-up A, 2.9.4): one select in the header strip; the whole page follows it */
 .vx-ccy { display: inline-flex; align-items: center; gap: var(--d-sp-6); white-space: nowrap; color: var(--d-muted); }
-.vx-ccy-select { border-color: var(--d-accent); color: var(--d-ink); font-weight: 600; font-size: var(--d-fs-12_5); min-height: 26px; padding: var(--d-sp-2) var(--d-sp-8);
-  min-width: 96px; }
-.vx-ccy-select:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
+.vx-ccy-select { font-weight: 600; font-size: var(--d-fs-12_5); min-width: 96px; }        /* a <drishti-select> (drishti-inputs): its look is the library's */
 /* the lens (2.9.7, mock-up var-horizon-picker): Horizon, Confidence and ES beside the currency, in the same select style; the method strip */
 .vx-lens-es .vx-ccy-select { min-width: 72px; }
 .vx-method { display: flex; flex-wrap: wrap; gap: var(--d-sp-4) var(--d-sp-12); align-items: baseline; margin: 0 0 var(--d-sp-10); padding: var(--d-sp-6) var(--d-sp-10); font-size: var(--d-fs-12);
@@ -57,7 +55,7 @@
 .vx-fresh.computing { color: var(--d-link); }
 .vx-fresh.stale { color: var(--d-warn); }
 .vx-pb { padding: var(--d-sp-10); min-width: 0; }
-.vx-select, .vx-input { background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-3); padding: var(--d-sp-3) var(--d-sp-6); font-size: var(--d-fs-12); }
+.vx-input { background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-3); padding: var(--d-sp-3) var(--d-sp-6); font-size: var(--d-fs-12); }
 .vx-input { width: 100%; }
 .vx-btn { background: var(--d-surface-2); color: var(--d-ink); border: 1px solid var(--d-border); padding: var(--d-sp-3) var(--d-sp-9); font-size: var(--d-fs-11_5); }
 .vx-btn:hover { border-color: var(--d-muted); color: var(--d-ink); }
@@ -158,5 +156,5 @@
 @media (max-width: 1100px) { .vx-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 800px) { .vx-layout { grid-template-columns: minmax(0, 1fr); } .vx-charts, .vx-hist2 { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 560px) { .vx-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } .vx-tile .v { font-size: var(--d-fs-17); } .vx { padding: var(--d-sp-10); }
-  .vx-ccy { flex: 1 1 100%; justify-content: space-between; } .vx-ccy-select { min-height: 40px; flex: 1 1 auto; max-width: 60%; font-size: var(--d-fs-14); } }
+  .vx-ccy { flex: 1 1 100%; justify-content: space-between; } .vx-ccy-select { flex: 1 1 auto; max-width: 60%; font-size: var(--d-fs-14); } .vx-ccy-select .di-select-control { min-height: 40px; } }
 

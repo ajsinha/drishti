@@ -72,3 +72,32 @@ export function defineChartElement(registry, win) {
   reg.define(CHART_ELEMENT, DrishtiChartElement);
   return true;
 }
+
+/**
+ * A chart in a host element: a <drishti-chart> made there once (the host's content replaced), its spec set, and set again on the
+ * next call. What a page that draws a spec it was given (a report visual, a Python answer) calls instead of building a chart itself.
+ * @param {HTMLElement} host
+ * @param {Object} spec a drishti-chart spec
+ * @param {Object} [o] density (default compact), height (px; default: the host's height less the card's chrome, at least 140),
+ *   and any Chart option
+ * @returns {Object} the Chart (el.chart), its ready promise as chart.ready
+ */
+export function chartIn(host, spec, o) {
+  o = Object.assign({}, o);
+  const doc = host.ownerDocument, win = doc.defaultView;
+  if (win && win.customElements) { defineChartElement(win.customElements, win); }
+  let el = host.querySelector(':scope > ' + CHART_ELEMENT);
+  if (!el) {
+    host.textContent = '';
+    el = doc.createElement(CHART_ELEMENT);
+    el.setAttribute('density', o.density || 'compact');
+    el.style.display = 'block';
+    host.appendChild(el);
+  }
+  if (!o.height) { o.height = Math.max(140, (host.clientHeight || 0) - 64); }
+  delete o.density;
+  el.options = o;
+  el.spec = spec;
+  return el.chart;
+}
+

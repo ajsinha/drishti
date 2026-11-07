@@ -296,9 +296,13 @@
   }
   function watch(e, start) {
     moving = start;
-    moving.x = e.clientX; moving.y = e.clientY; moving.id = e.pointerId; moving.on = false;
-    // the pointer will cross panes (other documents): capture it here so every move and the release come to this page
-    try { root.setPointerCapture(e.pointerId); } catch (err) { /* a pointer that has gone already */ }
+    moving.on = false;
+    // drishti-core's tracked pointer, captured here: it crosses panes (other documents) and every move and the release still come to this page
+    window.Drishti.elements.core.trackPointer(e, {
+      start: function (ev) { if (window.Drishti.command && moving.from < 0) { window.Drishti.command.close(); } begin(moving.ref, moving.label, ev, moving.from); },
+      move: function (ev) { if (moving && moving.on) { follow(ev); } },
+      end: function (ev, committed, moved) { if (moving) { finish(ev, moved ? committed : true); } }        // no move: a click (open it)
+    }, { threshold: 6, capture: root });
   }
   document.addEventListener('pointerdown', function (e) {
     if (e.pointerType === 'mouse' && e.button !== 0) { return; }
@@ -319,17 +323,6 @@
       watch(e, { ref: { kind: p.ref.kind, id: p.ref.id }, label: p.ref.id, from: from });
     }
   }, true);
-  document.addEventListener('pointermove', function (e) {
-    if (!moving || e.pointerId !== moving.id) { return; }
-    if (!moving.on && Math.abs(e.clientX - moving.x) + Math.abs(e.clientY - moving.y) > 6) {
-      if (window.Drishti.command && moving.from < 0) { window.Drishti.command.close(); }
-      begin(moving.ref, moving.label, e, moving.from);
-    } else if (moving.on) { follow(e); }
-  });
-  document.addEventListener('pointerup', function (e) { if (moving && e.pointerId === moving.id) { finish(e, true); } });
-  document.addEventListener('pointercancel', function (e) { if (moving && e.pointerId === moving.id) { finish(e, false); } });
-  window.Drishti.keys.register({ id: 'workspace.drag.cancel', keys: ['Escape'], scope: 'dialog', area: 'workspace-drag', description: 'Cancel the drag', typing: true,
-    keepDefault: true, open: function () { return !!moving; }, run: function (e) { finish(e, false); } });
 
   render();
 })();

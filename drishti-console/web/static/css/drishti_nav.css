@@ -216,6 +216,6 @@
 /* the as-of date: drishti-inputs' business-date picker (drishti_app.js upgrades #asofDate); its refusal floats under the bar */
 .tbar .asof .di-upgraded { position: relative; min-width: 9.5rem; width: 9.5rem; }
 .tbar .asof .di-control { min-height: 28px; }
-.tbar .asof .di-field { font-family: var(--d-font-mono, monospace); font-size: var(--d-fs-13_12); padding: .15rem .4rem; }
-.tbar .asof .di-msg { position: absolute; top: 100%; left: 0; z-index: 50; white-space: nowrap; background: var(--d-surface); border: 1px solid var(--d-bad); border-radius: 4px; padding: 2px 6px; }
+.tbar .asof .di-field { font-family: var(--d-font-mono, monospace); font-size: var(--d-fs-13_12); padding: var(--d-sp-2_4) var(--d-sp-6_4); }
+.tbar .asof .di-msg { position: absolute; top: 100%; left: 0; z-index: 50; white-space: nowrap; background: var(--d-surface); border: 1px solid var(--d-bad); border-radius: var(--d-radius-4); padding: var(--d-sp-2) var(--d-sp-6); }
 @media (pointer: coarse) { .tbar .asof .di-control { min-height: 44px; } }

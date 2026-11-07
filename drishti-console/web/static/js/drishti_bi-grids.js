@@ -319,6 +319,50 @@
     return NONE;
   };
 
+  // ---- specs drawn by drishti-chart: a vega-lite visual, a Python visual's Vega-Lite or drishti-chart answer (O1: Vega is retired) ----
+  /** The rows of a query result as objects. A field keeps the name after the table (`trades.desk` is `desk`); the table is put back (`trades_desk`) when two share a name. */
+  V.records = function (res) {
+    const names = res.columns.map((c) => c.name);
+    const short = names.map((n) => n.slice(n.lastIndexOf('.') + 1));
+    const keys = names.map((n, i) => (short.indexOf(short[i]) !== short.lastIndexOf(short[i]) ? n.replace(/\./g, '_') : short[i]));
+    return res.rows.map((r) => { const o = {}; keys.forEach((k, i) => { o[k] = r[i]; }); return o; });
+  };
+
+  const chartLib = () => window.Drishti && window.Drishti.elements && window.Drishti.elements.chart;
+  const chartNote = (host, text) => { B.clear(host).appendChild(h('p', { class: 'bi-vis-empty', role: 'status', text })); return NONE; };
+  /** The handle a frame disposes, for a drishti-chart drawn in host (chart.ready marks the host's data-ready). */
+  function chartHandle(host, chart, from) {
+    host.setAttribute('data-chart-from', from);
+    if (chart && chart.ready) { chart.ready.then(() => host.setAttribute('data-ready', '1')); }
+    return { dispose() { B.clear(host); host.removeAttribute('data-ready'); }, resize() { if (chart && chart.engine) { chart.engine.resize(); } } };
+  }
+
+  /** A drishti-chart spec (a Python visual's `output: drishti-chart`) drawn by drishti-chart; a spec the library would draw wrong is refused with its problems. */
+  V.drishtiChart = function (host, cs, spec) {
+    const C = chartLib();
+    if (!C) { return chartNote(host, 'drishti-chart did not load.'); }
+    const problems = C.checkSpec(cs);
+    if (problems.length) { return chartNote(host, 'Not drawn: the drishti-chart spec has problems: ' + problems.map((p) => p.path + ' ' + p.message).join('; ') + '.'); }
+    if (cs.data && cs.data.source) { return chartNote(host, 'Not drawn: a Python chart carries its rows (data.rows); it loads nothing from an address (' + cs.data.source + ').'); }
+    const copy = Object.assign({ title: undefined }, cs);
+    return chartHandle(host, C.chartIn(host, copy, { density: 'compact' }), 'drishti-chart');
+  };
+
+  /** A Vega-Lite specification (its data inline or `rows`) translated and drawn by drishti-chart, or refused in words with the alternative: never drawn wrong. */
+  V.vegaLite = function (host, vl, spec, rows) {
+    const C = chartLib();
+    if (!C) { return chartNote(host, 'drishti-chart did not load.'); }
+    const got = C.vegaLiteIn(host, vl, { rows: rows, density: 'compact' });
+    return got.chart ? chartHandle(host, got.chart, 'vega-lite') : NONE;
+  };
+
+  /** A `type: vega-lite` visual: the specification of `format.spec`, its data the rows of the visual's query (the wells). */
+  V.vegaLiteVisual = function (host, spec, ctx, res) {
+    const vl = spec.format && spec.format.spec;
+    if (!vl || typeof vl !== 'object') { return chartNote(host, 'This visual has no Vega-Lite specification (format: { spec: ... }).'); }
+    return V.vegaLite(host, vl, spec, V.records(res));
+  };
+
   /** Draws any visual: a chart or a card (drishti_bi-visuals.js), else the table, the matrix, the slicer or a static one; `res` is null for static visuals. */
   V.draw = function (host, spec, ctx, res) {
     if (res && res.wells) { spec = Object.assign({}, spec, { wells: res.wells }); }       // a field parameter (param.<name>) drawn as the field or measure chosen (2.6.0)
@@ -328,7 +372,7 @@
     if (spec.type === 'matrix') { return V.matrix(host, spec, ctx, res); }
     if (spec.type === 'slicer') { return V.slicer(host, spec, ctx, res); }
     if (spec.type.indexOf('perspective-') === 0) { return V.perspectiveGrid(host, spec, ctx, res); }
-    if (spec.type === 'vega-lite' && B.vega) { return B.vega.draw(host, spec, ctx, res); }
+    if (spec.type === 'vega-lite') { return V.vegaLiteVisual(host, spec, ctx, res); }
     return V.drawChartOrCard(host, spec, ctx, res) || NONE;
   };
 })();

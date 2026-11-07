@@ -14,57 +14,60 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* Query by form (FORM <pack>). Theme tokens only; the phone layout stacks every field and keeps touch targets at 44px. */
-.qf-help { margin-left: .4rem; font-size: .9em; color: var(--d-muted); }
+.qf-help { margin-left: var(--d-sp-6_4); font-size: var(--d-fs-em-90); color: var(--d-muted); }
 .qf-help:hover { color: var(--d-accent); }
-.qf-kinds { display: flex; flex-wrap: wrap; gap: .4rem; margin: .5rem 0; }
+.qf-kinds { display: flex; flex-wrap: wrap; gap: var(--d-sp-6_4); margin: var(--d-sp-8) 0; }
 .qf-kind-on { border-color: var(--d-accent); color: var(--d-accent); }
-.qf { margin: .6rem 0 1rem; }
-.qf-bar { display: flex; flex-wrap: wrap; gap: .5rem .8rem; align-items: center; margin: 0 0 .6rem; }
+.qf { margin: var(--d-sp-9_6) 0 var(--d-sp-16); }
+.qf-bar { display: flex; flex-wrap: wrap; gap: var(--d-sp-8) var(--d-sp-12_8); align-items: center; margin: 0 0 var(--d-sp-9_6); }
 .qf-toggle { min-height: 32px; }
-.qf-summary { flex: 1 1 14rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: .3rem .6rem; border: 1px solid var(--d-border); border-radius: 6px;
-  background: var(--d-bg-2); color: var(--d-ink); text-decoration: none; font-size: .85rem; }
+.qf-summary { flex: 1 1 14rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: var(--d-sp-4_8) var(--d-sp-9_6); border: 1px solid var(--d-border); border-radius: var(--d-radius-6);
+  background: var(--d-bg-2); color: var(--d-ink); text-decoration: none; font-size: var(--d-fs-13_6); }
 .qf-summary:hover { border-color: var(--d-accent); color: var(--d-accent); }
 .qf-summary:focus-visible, .qf-toggle:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
 .qf-summary[hidden], .qf-body[hidden] { display: none; }
-.qf-note { font-size: .82rem; margin: .2rem 0 .5rem; }
-.qf-group { border: 1px solid var(--d-border); border-radius: 8px; padding: .5rem .8rem .8rem; margin: 0 0 .8rem; background: var(--d-surface); }
-.qf-group legend { font-size: .8rem; letter-spacing: .04em; text-transform: uppercase; color: var(--d-muted); width: auto; padding: 0 .4rem; margin: 0; float: none; }
+.qf-note { font-size: var(--d-fs-13_12); margin: var(--d-sp-3_2) 0 var(--d-sp-8); }
+.qf-group { border: 1px solid var(--d-border); border-radius: var(--d-radius-8); padding: var(--d-sp-8) var(--d-sp-12_8) var(--d-sp-12_8); margin: 0 0 var(--d-sp-12_8); background: var(--d-surface); }
+.qf-group legend { font-size: var(--d-fs-12_8); letter-spacing: .04em; text-transform: uppercase; color: var(--d-muted); width: auto; padding: 0 var(--d-sp-6_4); margin: 0; float: none; }
 /* the fields: drishti-inputs' Form (drishti_form.js); a group and each field a fieldset, laid out in columns that fold to one on a phone */
 .qf-fields-host .di-form-el { max-width: none; }
-.qf-fields-host .qf-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(21rem, 100%), 1fr)); gap: .7rem 1.2rem; }
+.qf-fields-host .qf-group { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(21rem, 100%), 1fr)); gap: var(--d-sp-11_2) var(--d-sp-19_2); }
 .qf-fields-host .qf-group > legend { grid-column: 1 / -1; }
 .qf-fields-host .qf-field { min-width: 0; margin: 0; }
-.qf-fields-host .qf-field > .di-form-body, .qf-fields-host .qf-field { display: flex; flex-wrap: wrap; gap: .35rem .6rem; align-items: flex-end; }
-.qf-fields-host .qf-field > legend { flex: 1 1 100%; font-size: .82rem; font-weight: 600; }
+.qf-fields-host .qf-field > .di-form-body, .qf-fields-host .qf-field { display: flex; flex-wrap: wrap; gap: var(--d-sp-5_6) var(--d-sp-9_6); align-items: flex-end; }
+.qf-fields-host .qf-field > legend { flex: 1 1 100%; font-size: var(--d-fs-13_12); font-weight: 600; }
 .qf-fields-host .qf-field .di-form-field { flex: 1 1 9rem; min-width: 0; }
 .qf-fields-host .qf-field .di-t-array, .qf-fields-host .qf-t-id .di-form-field { flex: 1 1 100%; }
-.qf-chk { display: inline-flex; align-items: center; gap: .35rem; font-size: .82rem; font-weight: 400; margin: 0; cursor: pointer; }
-.qf-big-chips { list-style: none; display: flex; flex-wrap: wrap; gap: .3rem; margin: 0 0 .3rem; padding: 0; }
-.qf-result-opts { display: flex; flex-wrap: wrap; gap: .6rem 1.2rem; align-items: center; margin: .4rem 0; font-size: .85rem; }
-.qf-ro { display: inline-flex; align-items: center; gap: .4rem; margin: 0; }
-.qf-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .6rem 0; }
-.qf-keys { font-size: .75rem; }
-.qf-command { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .4rem 0 .8rem; padding: .5rem .7rem; border: 1px solid var(--d-border); border-radius: 8px; background: var(--d-bg-2); }
-.qf-cmd-l { font-size: .75rem; letter-spacing: .04em; text-transform: uppercase; color: var(--d-muted); }
+.qf-chk { display: inline-flex; align-items: center; gap: var(--d-sp-5_6); font-size: var(--d-fs-13_12); font-weight: 400; margin: 0; cursor: pointer; }
+.qf-big-chips { list-style: none; display: flex; flex-wrap: wrap; gap: var(--d-sp-4_8); margin: 0 0 var(--d-sp-4_8); padding: 0; }
+.qf-result-opts select {
+  background: var(--d-bg-2); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-4_8) var(--d-sp-8); min-height: 32px; font: inherit; }
+.qf-result-opts select:focus { outline: 2px solid var(--d-accent); outline-offset: 1px; }
+.qf-result-opts { display: flex; flex-wrap: wrap; gap: var(--d-sp-9_6) var(--d-sp-19_2); align-items: center; margin: var(--d-sp-6_4) 0; font-size: var(--d-fs-13_6); }
+.qf-ro { display: inline-flex; align-items: center; gap: var(--d-sp-6_4); margin: 0; }
+.qf-actions { display: flex; flex-wrap: wrap; gap: var(--d-sp-8); align-items: center; margin: var(--d-sp-9_6) 0; }
+.qf-keys { font-size: var(--d-fs-12); }
+.qf-command { display: flex; flex-wrap: wrap; gap: var(--d-sp-8); align-items: center; margin: var(--d-sp-6_4) 0 var(--d-sp-12_8); padding: var(--d-sp-8) var(--d-sp-11_2); border: 1px solid var(--d-border); border-radius: var(--d-radius-8); background: var(--d-bg-2); }
+.qf-cmd-l { font-size: var(--d-fs-12); letter-spacing: .04em; text-transform: uppercase; color: var(--d-muted); }
 .qf-cmd { flex: 1 1 20rem; overflow-wrap: anywhere; color: var(--d-ink); background: transparent; padding: 0; }
-.qf-keep { display: flex; flex-wrap: wrap; gap: .6rem; align-items: center; margin: .8rem 0; }
-.qf-saved, .qf-packs { padding-left: 1.1rem; } .qf-saved li, .qf-packs li { margin: .3rem 0; }
+.qf-keep { display: flex; flex-wrap: wrap; gap: var(--d-sp-9_6); align-items: center; margin: var(--d-sp-12_8) 0; }
+.qf-saved, .qf-packs { padding-left: var(--d-sp-17_6); } .qf-saved li, .qf-packs li { margin: var(--d-sp-4_8) 0; }
 @media (max-width: 600px) {
   .qf-result-opts select, .qf-actions .btn, .qf-keep .btn, .qf-keep input,
   .qf-case, .qf-chk, .qf-help, .qf-kinds .chip, .qf-toggle, .qf-summary { min-height: 44px; }
   .qf-summary { display: flex; align-items: center; }
-  .qf-chk, .qf-case { padding: .2rem .3rem; }
+  .qf-chk, .qf-case { padding: var(--d-sp-3_2) var(--d-sp-4_8); }
   .qf-chk input, .qf-case input { min-width: 22px; min-height: 22px; }
   .qf-keys { display: none; }
 }
 @media print { .qf, .qf-keep { display: none; } }
 
 /* the forms home */
-.qh-find { display: block; margin: .6rem 0 1rem; max-width: 28rem; }
+.qh-find { display: block; margin: var(--d-sp-9_6) 0 var(--d-sp-16); max-width: 28rem; }
 .qh-find input { width: 100%; min-height: 36px; }
-.qh-packs { display: grid; gap: .2rem 2rem; }
-.qh-kinds { list-style: none; display: flex; flex-wrap: wrap; gap: .4rem; margin: .3rem 0 1rem; padding: 0; }
+.qh-packs { display: grid; gap: var(--d-sp-3_2) var(--d-sp-32); }
+.qh-kinds { list-style: none; display: flex; flex-wrap: wrap; gap: var(--d-sp-6_4); margin: var(--d-sp-4_8) 0 var(--d-sp-16); padding: 0; }
 .qh-kinds li[hidden], .qh-pack[hidden], [data-forms-recent][hidden] { display: none; }
-.qh-kind { display: inline-flex; gap: .5rem; align-items: center; min-height: 36px; }
+.qh-kind { display: inline-flex; gap: var(--d-sp-8); align-items: center; min-height: 36px; }
 @media (max-width: 700px) { .qh-kind { min-height: 44px; } .qh-find input { min-height: 44px; } }
 

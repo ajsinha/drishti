@@ -35,7 +35,7 @@ export { buildPie, buildGauge, buildTreemap, buildSankey, registerOtherKinds } f
 export { equalEarth, albers, plateCarree, projectGeometry, bounds, coreExtent, countryProjection, US_INSETS, prepareRegions, prepareWorld, findPlace,
   createGeoLoader, holdAntimeridian, fitView } from './drishti_chart-geo.js';
 export { mapMetrics, placeValues, mapScale, ranking, buildMap, registerMapKind } from './drishti_chart-map.js';
-export { colourTone, d3Format, fromVegaLite } from './drishti_chart-vega.js';
+export { colourTone, d3Format, fromVegaLite, vegaLiteAlternative, vegaLiteRefusal, vegaLiteIn } from './drishti_chart-vega.js';
 export { valueText, tooltipElement, dataTable, legendElement, markSelection, addZoom, dragBrush, svgOf } from './drishti_chart-parts.js';
 export { MAP_MODES, geoLoader, MapView } from './drishti_map-view.js';
 export { Studio } from './drishti_chart-studio.js';
@@ -44,7 +44,7 @@ export { ChartIO } from './drishti_chart-io.js';
 export { linkGrid, publishSelection } from './drishti_chart-link.js';
 export { PANEL_KINDS, escapeTip, panelCompact, panelLineCompact, panelTokens, labelFit, panelOption } from './drishti_chart-panels.js';
 export { drawMap, PanelCharts } from './drishti_chart-panel-draw.js';
-export { CHART_ELEMENT, defineChartElement } from './drishti_chart-element.js';
+export { CHART_ELEMENT, defineChartElement, chartIn } from './drishti_chart-element.js';
 
 registerAxisKinds();
 registerOtherKinds();

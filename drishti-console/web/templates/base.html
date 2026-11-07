@@ -64,7 +64,7 @@
   {% block footer %}{% include "_footer.html" %}{% endblock %}
   <script src="/static/vendor/bootstrap/js/bootstrap.bundle.min.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_keys.js?v={{ ASSET_V }}"></script>{# the one keymap: every key registers here first #}
-  <script src="/static/js/drishti_search-box.js?v={{ ASSET_V }}"></script>{# the one search box: command line, Help, the global search #}
+  <script src="/static/elements/drishti-insight/drishti_insight.js?v={{ ASSET_V }}"{% if not me %} data-explain="off"{% endif %}></script>{# drishti-insight: the one search box (command line, Help, the global search), the one Explain (every number with data-explain, SHARED_SCREENS.md 3; for someone signed in), the Approvals queue on its page #}
   <script src="/static/js/drishti_server-watch.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_live-hub.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_channel.js?v={{ ASSET_V }}"></script>
@@ -77,7 +77,7 @@
   <script src="/static/js/drishti_phone.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_engines-menu.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_settled.js?v={{ ASSET_V }}"></script>{# Drishti.settled(): the page-settled signal browser tests wait on; inert until asked #}
-  {% if me %}<script src="/static/js/drishti_alerts.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_explain.js?v={{ ASSET_V }}"></script>{% endif %}{# Explain: every number with data-explain (SHARED_SCREENS.md 3) #}
+  {% if me %}<script src="/static/js/drishti_alerts.js?v={{ ASSET_V }}"></script>{% endif %}
   {% block scripts %}{% endblock %}
   {% if screen is defined and screen == 'var' and smat_on is defined and smat_on() %}<script src="/static/js/drishti_smat-link.js?v={{ ASSET_V }}"></script>{% endif %}{# the VaR page's "Scenario matrix" link (SMAT, VAR_GUIDE.md section 3.9) #}
   {% if screen is defined and screen == 'var' and play_on is defined and play_on() %}<script src="/static/js/drishti_play-link.js?v={{ ASSET_V }}"></script>{% endif %}{# the VaR page's "Playground" link (PLAY VAR, VAR_GUIDE.md section 3.10) #}

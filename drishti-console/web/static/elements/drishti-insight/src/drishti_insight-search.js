@@ -13,7 +13,6 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* One search box (2.9.11.e): the command line's type-ahead, Help's search and the global search (Alt+K) are this component over one
    endpoint, GET /api/search?in=command|help|all (core/search.py). It asks as you type (debounced, a stale answer aborted), shows the
    answer in an ARIA listbox (grouped by kind when asked), and is driven from the keyboard inside its own field: ↑ ↓ move, Enter opens,
@@ -21,8 +20,14 @@
 
      var box = Drishti.searchBox(input, { where: 'all', list: ul, grouped: true, row: fn(item, q) -> html, keys: fn(e, box) -> handled,
                                           go: fn(item, i, box), enter: fn(box) })                                            */
-(function () {
-  'use strict';
+/**
+ * Installs the one search box in a page (once): Drishti.searchBox, Drishti.find (Alt+K) and the top bar's search button.
+ * @param {Window} win the page's window
+ * @returns {void}
+ */
+export function installSearch(win) {
+  const window = win, document = win.document;
+  window.Drishti = window.Drishti || {};
   var D = window.Drishti;
   if (D.searchBox) { return; }
   var seq = 0;
@@ -192,4 +197,4 @@
     D.keys.register({ id: 'find.open', keys: ['Alt+K'], scope: 'global', group: 'Search', description: 'Search everything: entities, commands, screens, Help, what you can build',
       typing: true, run: function () { if (D.find.isOpen()) { closeFind(); } else { openFind(); } } });
   }
-}());
+}

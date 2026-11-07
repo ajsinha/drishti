@@ -165,7 +165,7 @@ def glyph_rules() -> dict[str, str]:
 # The scale and fixed-colour token families of drishti_tokens.css (the theme colours are not among them: scripts read those). In a
 # generated sheet each one that has a single value in every theme is written into the rules that use it, and its declaration goes
 # when no rule still uses it: the sheet stays as small as it was before the tokens, and draws the same.
-PRUNABLE = re.compile(r"--d-(?:fs|sp|radius|z|bp|density|elev|swatch|frtb|heat|band|scrim|cap|market|trading|on-trading|world|statement|calc|print|on-color|paper|on-band)(?:-[\w-]*)?")
+PRUNABLE = re.compile(r"--d-(?:fs|sp|radius|z|bp|density|elev|swatch|frtb|heat|band|scrim|cap|market|trading|on-trading|world|statement|calc|print|on-color|paper|on-band|form)(?:-[\w-]*)?")
 _DECL = re.compile(r"(--d-[\w-]+)\s*:\s*([^;{}]*);[ \t]*")
 _REF = re.compile(r"var\((--d-[\w-]+)\)")
 

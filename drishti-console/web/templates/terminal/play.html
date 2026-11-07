@@ -48,11 +48,11 @@
   </form>
   {% else %}
   <div class="pg-ctrls" role="toolbar" aria-label="Playground controls">
-    <label class="pg-chip">Horizon <select data-pg-horizon aria-label="Horizon">
-      <option value="1d">1-day</option><option value="10d-sqrt10">10-day √10</option><option value="10d-sum">10-day sum</option></select></label>
-    <label class="pg-chip">Confidence <select data-pg-q aria-label="VaR confidence"></select></label>
-    <label class="pg-chip">ES <select data-pg-esq aria-label="ES confidence"></select></label>
-    <label class="pg-chip">Currency <select data-pg-ccy aria-label="Reporting currency"></select></label>
+    <label class="pg-chip">Horizon <drishti-select data-pg-horizon label="Horizon">
+      <option value="1d">1-day</option><option value="10d-sqrt10">10-day √10</option><option value="10d-sum">10-day sum</option></drishti-select></label>
+    <label class="pg-chip">Confidence <drishti-select data-pg-q label="VaR confidence"></drishti-select></label>
+    <label class="pg-chip">ES <drishti-select data-pg-esq label="ES confidence"></drishti-select></label>
+    <label class="pg-chip">Currency <drishti-select data-pg-ccy label="Reporting currency"></drishti-select></label>
     <span class="pg-seg" role="group" aria-label="Scenario set">
       <button type="button" class="pg-segb" data-pg-set="normal" aria-pressed="true">Normal</button>
       <button type="button" class="pg-segb" data-pg-set="stressed" aria-pressed="false" title="Stressed VaR: today's positions under the date's stress window (USD)">Stressed</button>
@@ -65,7 +65,7 @@
     <span class="pg-actions">
       <a class="pg-btn" href="#" data-pg-smat title="The scenario matrix of the selected position, or of the scope (SMAT)">Open in SMAT</a>
       <button type="button" class="pg-btn" data-pg-copy title="Copy the selected cell's formula, as the workbook writes it">Copy formula</button>
-      <label class="pg-export">Positions <select data-pg-count aria-label="Positions in the workbook"></select></label>
+      <label class="pg-export">Positions <drishti-select data-pg-count label="Positions in the workbook"></drishti-select></label>
       <button type="button" class="pg-btn primary" data-pg-export>Export to Excel</button>
     </span>
   </div>

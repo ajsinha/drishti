@@ -68,7 +68,7 @@
 .rg dl.rg-kv dd { margin: 0; overflow-wrap: anywhere; }
 .rg-spark svg { width: 170px; height: 18px; display: block; }
 .rg-ask { display: flex; flex-wrap: wrap; gap: var(--d-sp-8); align-items: end; }
-.rg-ask input, .rg-ask select { background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); padding: var(--d-sp-4) var(--d-sp-8); }
+.rg-ask input { background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: var(--d-radius-4); padding: var(--d-sp-4) var(--d-sp-8); }
 @media (max-width: 1100px) { .rg-grid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 640px) {
   .rg-desk, .rg-exc, .rg-chart-card { display: none; }

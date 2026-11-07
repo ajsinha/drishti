@@ -25,7 +25,6 @@
   const D = B.design;
   if (!D) { return; }
   const h = B.h;
-  const MIME = 'application/x-drishti-field';
 
   D.modules.push(function () {
     const grid = D.q('[data-canvas-grid]');
@@ -272,8 +271,9 @@
     const K = window.Drishti.elements.designer;
     const layout = new K.LayoutModel({ cols: 12, maxH: 40, stack: null });
     const selection = new K.Selection();
+    D.hub = D.hub || new K.DragHub();                 // the panes' fields and visual types are dragged through it onto the canvas and the wells
     const vlabel = (it) => { const v = D.visual(it.id); return v ? (v.title || v.type) + ' (' + v.type + ')' : it.id; };
-    const canvas = new K.LayoutCanvas(grid, { model: layout, selection, rowPx: B.ROW_PX, gap: B.GAP_PX, handle: '.bi-dhandle', dropType: MIME, label: vlabel,
+    const canvas = new K.LayoutCanvas(grid, { model: layout, selection, rowPx: B.ROW_PX, gap: B.GAP_PX, handle: '.bi-dhandle', hub: D.hub, label: vlabel,
       createItem: (it) => {
         const v = D.visual(it.id), e = { frame: makeFrame(v), key: null, token: 0, page: D.pageId, type: v.type };
         frames.set(v.id, e);
@@ -350,6 +350,5 @@
     }
     D.removeVisual = remove;
 
-    D.MIME = MIME;
   });
 })();

@@ -22,7 +22,8 @@ The pictures, in the tutorial's order: the bank, a legal entity's counterparty b
 collateral and trades, a trade alone and in its set, a capture compared with now, a pre-deal what-if by paths and by the addon."""
 from __future__ import annotations
 
-from _exp import open_exp, painted, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
+from _exp import open_exp, painted, start_servers, tab
+from _var import choose  # noqa: F401 - start_servers is the driver's hook
 from _tut import OUT
 from shotlib import Ctx, register
 
@@ -103,7 +104,7 @@ def _whatif(c: Ctx, method: str, name: str):
     painted(c, SET)
     tab(c, "predeal")
     c.page.locator("[data-xx-factor]").fill("-1")
-    c.page.locator("[data-xx-method]").select_option(method)
+    choose(c, "[data-xx-method]", method)
     c.page.locator("[data-xx-whatif]").click()
     c.until("document.querySelector('[data-exposure]').dataset.whatif === %r" % method, 120)
     c.page.wait_for_timeout(600)

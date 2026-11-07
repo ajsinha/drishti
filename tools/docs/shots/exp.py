@@ -109,7 +109,7 @@ def predeal_counterparty(c: Ctx):
     open_exp(c, "/exposure?scope=CPTY:CP-ALDERSHOT")
     painted(c, "CPTY:CP-ALDERSHOT")
     tab(c, "predeal")
-    c.until("document.querySelectorAll('[data-xx-predeal-set] option').length > 0 && document.querySelectorAll('[data-xx-candidate] option').length > 0")
+    c.until("!!document.querySelector('[data-xx-predeal-set]') && document.querySelector('[data-xx-predeal-set]').component.options.length > 0 && document.querySelector('[data-xx-candidate]').component.options.length > 0")
     c.page.locator("[data-xx-factor]").fill("-1")
     c.page.locator("[data-xx-whatif]").click()
     c.until("document.querySelector('[data-exposure]').dataset.whatif !== undefined", 120)
