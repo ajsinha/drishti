@@ -41,7 +41,11 @@
     claim one key in one scope and area, ids are unique, no script binds keys on document or window outside the allow-list (and the
     allow-list has no stale entry), widget keys are described. **`test_keymap_browser.py`**: the `?` list (open, focus, Esc, the footer
     button, `?` typed in a field is a character) and the global search (Alt+K from anywhere, grouped answer, ↓ Enter opens, Esc twice).
-  - **Timings** (TIMINGS_PLACEHOLDER)
+  - **Timings** (the demo data, one real server, develop's console and this one side by side, requests interleaved, 21 each, median):
+    the command line's type-ahead is unchanged, the same answers in the same order (`/api/suggest` 3.4 to 7.2 ms, `/api/search?in=command`
+    3.5 to 7.3 ms over `TRD`, `TRD MX-2`, `CPTY north`, `VAR`, `MX-20000001`); Help's results page is unchanged (81 to 105 ms before,
+    83 to 114 ms after, over `keyboard`, `value at risk`, `connector`); Help's box (`in=help`) 37 to 60 ms; the new global search
+    (`in=all`) 92 to 96 ms, most of it Help's full-text scan (a word index for Help is the next step if it must be faster).
 - **Docs:** USER_GUIDE (Keyboard: the `?` list and the rules; *Search everything (Alt+K)*), API_GUIDE (`/api/search`; `/api/suggest`
   removed), RELEASE_NOTES (upgrade note), Help addresses `/help/keyboard` and `/help/global-search`.
 - **Candidates to fold later:** the embed element `<drishti-search>` and the server's `/api/v1/embed/search` are untouched; they search
