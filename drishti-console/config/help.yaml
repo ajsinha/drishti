@@ -235,7 +235,12 @@ sections:
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
 # the help centre at their path slug, so the old addresses keep working.
 moved:
-  data-samples: data-contracts   # the 90 test-data sample pages, folded into the contract pages (each kind's example)
+  data-samples: data-contracts   # the 90 test-data sample pages, folded into the contract pages (each kind's example), 2.9.11.g
+  docs-contracts-samples-readme: data-contracts                                   # the samples' index, the same fold
+  docs-contracts-packs-readme: data-contracts#every-kind-a-to-z                   # the index of every command, now the contracts index's A-Z block
+  docs-contracts-frtb-data-structures: docs-contracts-frtb#17-data-structures-frtb-and-simm   # folded into FRTB.md section 17
+  var-contract: docs-contracts-var                                                 # VaR's data contract, Part II of the VaR guide until 2.9.11.g
+  exposure-contract: docs-contracts-exp                                            # exposure's data contract, Part II of the exposure guide until 2.9.11.g
   docs-guides-public-data: external-data   # docs/guides/PUBLIC_DATA.md, now EXTERNAL_DATA.md, listed as External data (2.9.1, 2.9.7)
   fact-of-the-day: user-guide#home-the-fact-of-the-day   # Home's Did you know tile (2.9.3), a section of the user guide (the page cap stands)
   public-data: external-data
