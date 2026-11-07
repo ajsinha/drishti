@@ -49,6 +49,11 @@ export const ADDITIVE_FUNCS = Object.freeze(['sum', 'count']);
  * @property {boolean} [enableValue] may be a value (default: numbers)
  * @property {string} [group] a heading above several columns
  * @property {string} [description] words for the field list
+ * @property {(string|function(*, Object): (string|string[]))} [cellClass] classes on a row's cell (letters, digits, - and _ only; others are
+ *   dropped): a name, or a function of the value and the row
+ * @property {(Object|function(*, Object): Object)} [cellStyle] a row's cell's style, limited to colour, background, font weight and style,
+ *   text alignment and decoration (anything else is dropped): an object, or a function of the value and the row
+ * @property {boolean} [system=false] a column the grid adds (the AG Grid-style adapter's group column): never in the field list
  */
 
 /**
@@ -66,7 +71,7 @@ export function normalizeColumn(def, index) {
     id: id, field: def.field || id, header: def.header || def.field || id, type: type, width: 120, minWidth: 40, maxWidth: null,
     pinned: null, hidden: false, sortable: true, filterable: true, resizable: true, editable: false, aggFunc: num ? 'sum' : null,
     additive: num, enableRowGroup: !num, enablePivot: !num, enableValue: num, group: null, description: '', format: null,
-    valueGetter: null, comparator: null, measure: null
+    valueGetter: null, comparator: null, measure: null, cellClass: null, cellStyle: null, system: false
   }, def, { id: id, type: type }, def.aggregate === 'server' ? { additive: false } : {});
 }
 
@@ -227,6 +232,7 @@ export class ColumnModel {
     const fold = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
     const words = fold(search).split(/\s+/).filter(Boolean);
     return this.cols.filter((c) => {
+      if (c.system) { return false; }
       const hay = fold(c.header + ' ' + c.id + ' ' + c.description + ' ' + (c.group || ''));
       return words.every((w) => hay.indexOf(w) >= 0);
     }).map((c) => ({ id: c.id, header: c.header, type: c.type, group: c.group, rowGroup: !!c.enableRowGroup, pivot: !!c.enablePivot,

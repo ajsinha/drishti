@@ -20,7 +20,7 @@
    live change. Pointer work: click and Shift+click, drag a range, the context menu, header sort, the column menu, a group's toggle,
    resize and autosize by the handle, the row checkboxes. */
 import { h } from '../../drishti-core/src/drishti_index.js';
-import { headerSpans, pivotColumnLabels, markGroups, isTotalCell, nonAdditiveNote, cfBackground, figureRange, ruleFor } from './drishti_grid-ui.js';
+import { headerSpans, pivotColumnLabels, markGroups, isTotalCell, nonAdditiveNote, cfBackground, figureRange, ruleFor, cellLook } from './drishti_grid-ui.js';
 
 const CF_SCAN = 100000;
 
@@ -377,6 +377,11 @@ export class GridBody {
     }
     const focused = k.focus && k.focus.row === r && k.focus.col === c;
     if (focused) { cls += ' dg-focus'; }
+    if ((col.cellClass || col.cellStyle) && !loading && (x.kind === 'leaf' || x.kind === 'group')) {
+      const look = cellLook(col, value, x.row || {});
+      if (look.cls) { cls += ' ' + look.cls; }
+      Object.assign(style, look.style);
+    }
     if (num && typeof value === 'number' && !total && !loading) {
       const rule = ruleFor(this.view.formats, { id: col.id, measure: col.measure, source: this.view.sourceOf(col) });
       if (rule) { const bg = cfBackground(rule, value, this.cfRange(d)); if (bg) { style['background-image'] = bg; cls += ' dg-cf'; } }

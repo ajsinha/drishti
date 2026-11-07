@@ -83,6 +83,20 @@
   (`cellValueChanged`, `editTransaction`) with undo and redo; a paste of a range from Excel (quoted cells, one value filling a range);
   Delete over a range; a write-back hook (applied, refused with the old values back, or proposed) and four eyes (cells marked until a
   proposal is decided). `grid.followFilters(bus)` follows a filter bar.
+- **drishti-grid 0.4.0, the AG Grid-style adapter** ([ELEMENTS.md section 6](docs/architecture/ELEMENTS.md#6-the-ag-grid-style-adapter),
+  [the migration guide](docs/guides/AG_GRID_MIGRATION_GUIDE.md)): an application written for AG Grid Enterprise's pivoting moves to
+  drishti-grid by changing one call, `createGridFromAgOptions(el, gridOptions)`. Drishti never uses AG Grid; the adapter is written from
+  its public documentation only. Column definitions (defaults, types, groups, getters, formatters, comparators, classes and safe styles),
+  row grouping, pivoting (`rowGroup`, `pivot`, `aggFunc` with built-in, function and `aggFuncs` aggregations, `'drishti:server'` for a
+  non-additive measure whose every total is the server's), the totals and open levels, `sideBar` as the panel layout, the server-side
+  row model (`serverSideDatasource.getRows` with AG's request, in pivot mode each open level and `pivotResultFields` made into the
+  pivot), tree data, the common grid API calls (options at run time, transactions, selection, nodes, CSV and Excel, filter and column
+  state both ways, sizing, expand and collapse, the wells, `refreshServerSide`) and AG-named events from the grid's own. Every option not
+  taken in full is named once in the console with drishti-grid's way and listed by `reportUnsupported()`. The mapping's one home is the
+  code (`drishti_grid-ag-map.js`): the gallery's AG Grid tab (now live, with an adapter demo) and the guide's option table are
+  generated from it. The grid gained `registerAggFunc`, a column's `cellClass`, `cellStyle` and `system`, the pivot's `grandTotalRow`
+  and the view's `grandColumn` and `columnGroupTotals`. 12 Node tests (`ag-adapter.test.mjs`, one in `gallery.test.mjs`) and a browser
+  test against a static harness configured purely with AG-shaped options (`drishti_ag-harness.html`).
 - **drishti-core 1.1.0**: the sort and filter model moved in from the grid as the contract every library shares (with
   `FILTER_CHANNEL` and `filterRows`), the element maker and placements, reading typed and pasted numbers in a locale, and loading a
   library's vendored engine (`loadScript`, `loadStyle`, `staticUrl`). One static harness page for inputs, data and editing

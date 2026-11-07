@@ -1321,8 +1321,8 @@
           "scripts": []
         },
         "drishti-grid": {
-          "version": "0.3.0",
-          "title": "The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and <drishti-grid> in three layouts and three densities), cell editing with undo, paste, write-back and four eyes",
+          "version": "0.4.0",
+          "title": "The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and <drishti-grid> in three layouts and three densities), cell editing with undo, paste, write-back and four eyes, and the AG Grid-style adapter (createGridFromAgOptions)",
           "bundle": "drishti-grid/drishti_grid.js",
           "entry": "drishti-grid/src/drishti_index.js",
           "global": "grid",

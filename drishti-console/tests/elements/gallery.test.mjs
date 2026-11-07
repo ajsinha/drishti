@@ -130,6 +130,28 @@ test('the AG Grid shapes of a pivot: row groups, pivot columns, aggregations, th
   assert.match(ag, /pivotMode: true/);
   assert.match(ag, /sideBar: \['columns', 'filters'\]/);
   assert.match(code.agOptions({ columns: [], datasource: {} }), /rowModelType: 'serverSide'/);
+  assert.match(ag, /createGridFromAgOptions\(document\.getElementById\('grid'\)/);
+  assert.ok(ag.indexOf('planned') < 0);
+  assert.equal(cat.agGrid.built, true);
+  assert.ok(cat.agGrid.mapping.every((r) => ['mapped', 'partial', 'unsupported', 'no-op'].includes(r.state)));
+});
+
+test('the AG Grid tab is live: the shapes it prints, given to the adapter, make the same pivot as the grid on the stage', async () => {
+  const G = require(join(STATIC, 'elements', 'drishti' + '-grid', 'drishti_grid.js'));
+  const rows = [{ ID: 'T1', DESK: 'Rates', REGION: 'EMEA', MTM: 5 }, { ID: 'T2', DESK: 'Rates', REGION: 'APAC', MTM: 7 }, { ID: 'T3', DESK: 'FX', REGION: 'EMEA', MTM: -2 }];
+  const o = { columns: [{ field: 'ID' }, { field: 'DESK', header: 'Desk' }, { field: 'REGION', header: 'Region' }, { field: 'MTM', header: 'MTM', type: 'number' }], rows: rows,
+    getRowId: (r) => r.ID, pivot: { rows: ['DESK'], columns: ['REGION'], values: [{ colId: 'MTM', aggFunc: 'sum' }] }, layout: 'panel' };
+  const s = code.agShape(o, new Map(), { grandTotalRow: 'bottom' });
+  const api = G.createGridFromAgOptions(null, s.options, { out: { warn: () => {}, info: () => {} } });
+  await api.ready;
+  const own = G.createGridModel(o);
+  own.wells.setState(Object.assign({ filters: [] }, o.pivot));
+  own.pivotState.expandToLevel('rows', 2);
+  await own.setPivotMode(true);
+  assert.deepEqual(JSON.parse(JSON.stringify(api.model.answer.cells)), JSON.parse(JSON.stringify(own.answer.cells)));
+  assert.equal(api.model.layout, 'panel');
+  assert.equal(api.model.rowModel.getRowId(rows[1], 1), 'T2');
+  assert.deepEqual(api.reportUnsupported(), []);
 });
 
 test('every demo names what the catalogue holds: its library, typedefs, events and modules', () => {

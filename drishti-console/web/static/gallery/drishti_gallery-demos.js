@@ -124,6 +124,42 @@
   }));
 
   demos.push(gridDemo({
+    id: 'ag-adapter', title: 'AG Grid adapter', about: 'drishti_grid-ag.js', types: [], events: ['GRID_EVENTS'],
+    summary: 'A pivot made purely from AG Grid Enterprise-shaped options (columnDefs with rowGroup, pivot and aggFunc, pivotMode, the totals, sideBar) by createGridFromAgOptions: an application moves to drishti-grid by changing one call.',
+    extra: [{ name: 'wells', control: { kind: 'select', values: Object.keys(PIVOTS) }, desc: 'The rowGroup, pivot and aggFunc columns the options name.' },
+      { name: 'grandTotalRow', control: { kind: 'select', values: ['bottom', 'top', 'none'] }, desc: 'AG Grid\'s grandTotalRow.' },
+      { name: 'groupTotalRow', control: { kind: 'select', values: ['none', 'bottom'] }, desc: 'AG Grid\'s groupTotalRow (a total row below each open group).' },
+      { name: 'sideBar', control: { kind: 'select', values: ['true', 'false'] }, desc: 'AG Grid\'s sideBar: true gives the panel layout.' }],
+    values: { wells: Object.keys(PIVOTS)[1], grandTotalRow: 'bottom', groupTotalRow: 'none', sideBar: 'true' },
+    examples: [{ title: 'Desk × region, side bar', values: {} }, { title: 'Totals on top, footers below groups', values: { grandTotalRow: 'top', groupTotalRow: 'bottom' } },
+      { title: 'Without a side bar (the wells)', values: { sideBar: 'false', wells: Object.keys(PIVOTS)[0] } }],
+    agExtra: (values) => {
+      const x = { grandTotalRow: values.grandTotalRow === 'none' ? undefined : values.grandTotalRow, groupTotalRow: values.groupTotalRow === 'bottom' ? 'bottom' : undefined };
+      if (values.sideBar === 'false') { x.sideBar = undefined; }
+      return x;
+    },
+    build: function (values, ctx) {
+      const D = ctx.data, G = ctx.E.grid;
+      const rows = ctx.memo('trades:231', () => D.trades(231));
+      const serverPivot = ctx.memo('pivot:231', () => D.serverPivot(G, rows, 40));
+      return gridBuild({ rows: '231', layout: values.sideBar === 'false' ? 'wells' : 'panel', density: 'compact', title: 'Desk P&L and risk (from AG-shaped options)' }, ctx,
+        { options: { pivot: PIVOTS[values.wells] || PIVOTS['Desk × region'], serverPivot: serverPivot, rowSelection: 'multiple' }, names: new Map([[serverPivot, 'serverPivot']]) });
+    },
+    mount: function (host, values, ctx) {
+      const b = this.build(values, ctx), s = ctx.code.agShape(Object.assign({}, b.options, b.jsOptions), b.names, this.agExtra(values));
+      const el = ctx.h(host.ownerDocument, 'div', { cls: 'gx-ag-grid', attrs: { 'data-adapter': 'ag' } });
+      host.appendChild(el);
+      const api = ctx.E.grid.createGridFromAgOptions(el, s.options);
+      api.addEventListener('cellClicked', (e) => ctx.log('onCellClicked', { value: e.value, column: e.column && e.column.colId, rowIndex: e.rowIndex }));
+      api.addEventListener('columnPivotChanged', () => ctx.log('onColumnPivotChanged', { pivot: api.getPivotColumns().map((c) => c.colId) }));
+      el.agApi = api;
+      return { target: el, element: el, api: api, ready: api.ready, destroy: () => { api.destroy(); el.remove(); } };
+    },
+    code: function (values, ctx) { const b = this.build(values, ctx); return { js: ctx.code.agOptions(Object.assign({}, b.options, b.jsOptions), b.names, this.agExtra(values)) }; },
+    sutra: () => null
+  }));
+
+  demos.push(gridDemo({
     id: 'layouts', title: 'Layouts × densities', summary: 'The three layouts (wells, panel, terminal) in the three densities (comfortable, compact, terminal): nine grids of one component.',
     types: [], extra: [{ name: 'mode', control: { kind: 'select', values: ['pivot', 'flat'] }, desc: 'Each grid as a pivot or flat rows.' }],
     values: { mode: 'pivot' }, ag: false,

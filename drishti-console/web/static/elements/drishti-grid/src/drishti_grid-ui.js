@@ -200,6 +200,34 @@ export function ruleFor(rules, col) {
   return (rules || []).find((r) => (r.column && (r.column === col.id || r.column === col.source)) || (r.measure && r.measure === col.measure)) || null;
 }
 
+const SAFE_STYLE = Object.freeze(['color', 'background-color', 'font-weight', 'font-style', 'text-align', 'text-decoration']);
+const camel = (k) => k.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase());
+
+/**
+ * A row cell's own classes and style from its column's cellClass and cellStyle (ColumnDef): class names of letters, digits, - and _
+ * only, and only the safe style properties (colour, background, font weight and style, alignment, decoration; no url(), no expression).
+ * @param {Object} col a normalized column
+ * @param {*} value
+ * @param {Object} row
+ * @returns {{cls: string, style: Object<string, string>}}
+ */
+export function cellLook(col, value, row) {
+  const out = { cls: '', style: {} };
+  if (col.cellClass) {
+    let c = typeof col.cellClass === 'function' ? col.cellClass(value, row) : col.cellClass;
+    c = Array.isArray(c) ? c : String(c || '').split(/\s+/);
+    out.cls = c.filter((x) => /^[A-Za-z_][\w-]*$/.test(String(x))).join(' ');
+  }
+  if (col.cellStyle) {
+    const s = typeof col.cellStyle === 'function' ? col.cellStyle(value, row) : col.cellStyle;
+    Object.keys(s || {}).forEach((k) => {
+      const name = camel(k), v = String(s[k]);
+      if (SAFE_STYLE.indexOf(name) >= 0 && /^[\w#%.,() -]*$/.test(v) && !/url|expression/i.test(v)) { out.style[name] = v; }
+    });
+  }
+  return out;
+}
+
 /**
  * The columns a phone shows (ELEMENTS.md O2): a grid keeps every column with the first one pinned (it scrolls across); a pivot collapses
  * to its row headings and one value column, the grand total of the measure picked in the switcher.

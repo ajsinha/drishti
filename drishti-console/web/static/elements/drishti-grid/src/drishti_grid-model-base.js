@@ -26,6 +26,19 @@ export const LAYOUTS = Object.freeze(['wells', 'panel', 'terminal']);
 /** The densities, with their row heights in px. */
 export const DENSITIES = Object.freeze({ comfortable: 36, compact: 28, terminal: 22 });
 
+/**
+ * Puts a pivot answer's grand total row where a view asks (its pivotOptions' grandTotalRow): 'top', 'bottom', or 'none' (left out);
+ * anything else keeps the answer's own place (with the subtotals: below them at the bottom, above them at the top).
+ * @param {?Object} answer a pivot answer (its rows changed in place)
+ * @param {('top'|'bottom'|'none')} [where]
+ * @returns {void}
+ */
+export function placeGrandRow(answer, where) {
+  if (!answer || !answer.rows || ['top', 'bottom', 'none'].indexOf(where) < 0) { return; }
+  const grand = answer.rows.filter((r) => r.kind === 'grand'), rest = answer.rows.filter((r) => r.kind !== 'grand');
+  answer.rows = where === 'none' ? rest : where === 'top' ? grand.concat(rest) : rest.concat(grand);
+}
+
 /** The pivot, the export and the kept state of a grid model; GridModel adds the rest (rows, columns, selection, keys, editing). */
 export class GridModelBase {
   // ---- the pivot -----------------------------------------------------------------------------------------------------------------------
@@ -76,6 +89,7 @@ export class GridModelBase {
     this.pivotAbort = ctl;
     const done = (a) => {
       if (ctl && ctl.signal.aborted) { return; }
+      placeGrandRow(a, this.pivotExtra.grandTotalRow);
       this.answer = a;
       this._pivotCols = null;
       this.viewport.setRowCount(this.rowCount());
