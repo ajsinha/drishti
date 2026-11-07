@@ -3706,7 +3706,7 @@ Every dataset the feature reads: whether it is needed, what for, and its **data 
 `scenario-pv` row or a `pnl-vector` row. Everything else adds a feature: currencies, portfolios, limits, backtesting, the trade pages.
 <!-- guide-data:end -->
 
-### 36.14 From an input row to a position
+### 36.1 From an input row to a position
 
 An input row's id names **the row** (one trade, or one position its source sends whole, for one scenario set); it is never a position id.
 Positions are derived by Drishti from the rows' columns ([the VaR data contract, section 2.6](../contracts/VAR.md#26-positions-derived-by-drishti)):
@@ -3735,7 +3735,7 @@ hierarchy        BOOK-COMM-1 → DESK-COMM → DIV-MARKETS (MGMT) / LE-NY (LEGAL
   the membership (every position with its trades), so an official figure can be recomputed later. `POS <id> <GO>` opens one, linked to its
   trades; basket members (section 36.8) are position ids.
 
-### 36.15 What the engine computes and never stores
+### 36.2 What the engine computes and never stores
 
 None of these is an input, and none is written back to the lake (VAR_GUIDE [section 1](#contents) and [2.6](../contracts/VAR.md#26-positions-derived-by-drishti)):
 

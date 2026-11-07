@@ -84,7 +84,7 @@ also served as the computed kind `var-result` through a reactive connector; the 
 
 ## 2. Inputs from upstream engines
 
-Every dataset below, with one formatted sample record each and whether it is required: [section 36](../guides/VAR_GUIDE.md#36-var-data-every-dataset-the-engine-reads).
+Whether each dataset is required, and what for: [the VaR guide, section 36](../guides/VAR_GUIDE.md#36-var-data-every-dataset-the-engine-reads); each kind's fields and one example record: [the market-risk contracts](packs/market-risk.md).
 
 ### 2.1 Where they live
 
@@ -454,7 +454,7 @@ plus those below. Contract: `config/packs/market-risk/contracts/scenario-pv.cont
 
 | Column | JSON | Delta | Req. | Engine | Unit | Meaning | Example |
 |---|---|---|---|---|---|---|---|
-| `SCENARIO_PV_ID` | id | `id` STRING | required | – | | the lake key: `SPV-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>` (an intraday update adds `-<BATCH_ID>`); it names the input row, never a position ([section 36.14](../guides/VAR_GUIDE.md#3614-from-an-input-row-to-a-position)) | `SPV-1000054-HS-509` |
+| `SCENARIO_PV_ID` | id | `id` STRING | required | – | | the lake key: `SPV-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>` (an intraday update adds `-<BATCH_ID>`); it names the input row, never a position ([section 36.1](../guides/VAR_GUIDE.md#361-from-an-input-row-to-a-position)) | `SPV-1000054-HS-509` |
 | `TRADE_ID` … `TAGS` | | | | R | | the trade's terms, as in [section 2.2](#22-pnl-vector-one-pl-vector-per-trade) (`LEGAL_ENTITY`, `DESK` and `TT_BOOK` promoted) | |
 | `CURRENCY` | ccy | STRING | required | R | | the currency **both PVs** are in: the trade's own | `EUR` |
 | `BASE_PV` | amount | DOUBLE | required | R | `CURRENCY` | the trade's value on the business date, from the same run as the scenario PVs | `14997.44` |
