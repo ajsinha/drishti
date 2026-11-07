@@ -19,7 +19,7 @@
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
-## 2.9.11.e (unreleased)
+## 2.9.11.f (unreleased)
 
 - **`drishti-native`: every native library behind a Drishti interface with a Java fallback** (DRISHTI_NATIVE.md section 14):
   - **BLAS moved in**: `compute.linalg` is now `com.ash.drishti.nativ.linalg` in the new module `drishti-native` (the same classes and tests, the

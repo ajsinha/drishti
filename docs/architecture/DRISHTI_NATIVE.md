@@ -16,7 +16,7 @@
 
 # drishti-native: native libraries behind Drishti's own abstractions, with Java fallbacks
 
-**Status: partly built in 2.9.11.e (section 14); the rest designed (product owner, 2026-11-04); QuantLib parked (section 6).** One module holds every native integration of the server, each behind a
+**Status: partly built in 2.9.11.f (section 14); the rest designed (product owner, 2026-11-04); QuantLib parked (section 6).** One module holds every native integration of the server, each behind a
 Drishti interface with a pure-Java implementation that always works, so **Drishti runs on any environment**. It realises the seam of
 [HIGH_PERFORMANCE_NATIVE.md](HIGH_PERFORMANCE_NATIVE.md) section 2.8 on Java 21 (JNI through JavaCPP) and keeps room for the Java 25
 paths of that design (FFM, the Vector API) as further implementations of the same interfaces.
@@ -43,11 +43,11 @@ paths of that design (FFM, the Vector API) as further implementations of the sam
 
 | Capability | Interface (planned names) | Native | Java | Today |
 |---|---|---|---|---|
-| **Linear algebra, level 1–3** | `LinearAlgebra` (`dgemm`, `dgemv`, `ddot`, `daxpy`) | OpenBLAS (bytedeco) | Drishti's kernels (`JavaBlas`; `MultiSums` in `compute.vector` calls the interface) | **built**: `nativ.linalg` in `drishti-native` (moved from `compute.linalg` in 2.9.11.e); the server's wiring stays in `server.nativelib` |
+| **Linear algebra, level 1–3** | `LinearAlgebra` (`dgemm`, `dgemv`, `ddot`, `daxpy`) | OpenBLAS (bytedeco) | Drishti's kernels (`JavaBlas`; `MultiSums` in `compute.vector` calls the interface) | **built**: `nativ.linalg` in `drishti-native` (moved from `compute.linalg` in 2.9.11.f); the server's wiring stays in `server.nativelib` |
 | **Decompositions and solvers** | `Lapack` (Cholesky, LU, QR, symmetric eigen, SVD, least squares, solve) | LAPACK from the **same** OpenBLAS jar | Hipparchus | new |
 | **Statistics and optimisation** | `Stats`, `Optimise`, `Interpolate`, `Distributions` | none needed | Hipparchus (pure Java; SciPy's role) | new |
 | **Compression** | `Codecs` (zstd, Snappy, LZ4, gzip/deflate) | zstd-jni, snappy-java, lz4-java | aircompressor (pure Java, same formats) | natives used in five modules without a fallback |
-| **Key-value disk store** | `DiskStore` (the disk cache: get, put, remove, scan in key order) | RocksDB | **H2's MVStore** (pure Java, on disk, keys in order) | **built** in 2.9.11.e: `nativ.store` (`DiskStore`, `DiskStores`, `RocksDbStore`, `MvStore`); `drishti-diskcache` uses it |
+| **Key-value disk store** | `DiskStore` (the disk cache: get, put, remove, scan in key order) | RocksDB | **H2's MVStore** (pure Java, on disk, keys in order) | **built** in 2.9.11.f: `nativ.store` (`DiskStore`, `DiskStores`, `RocksDbStore`, `MvStore`); `drishti-diskcache` uses it |
 | **Embedded SQL engine** | `SqlEngine` (open a database or an in-memory engine, run a statement with its memory, thread and time limits, answer in Arrow) | DuckDB | **none, by decision** (section 2.1) | DuckDB used directly in `drishti-server` (BI engine, SQL service), `drishti-bicompute` (the pivot executor) and `plugin-duckdb` |
 
 ### 2.1 DuckDB: required, without a fallback
@@ -232,7 +232,7 @@ lean platform), with the optimisation release (2.9.11.j) or a release of its own
 Not taken: FAISS (Lucene's HNSW and hnswlib in pure Java suffice), CUDA/GPU (heavy, rarely present), a second SQL engine (DuckDB only),
 QuantLib (parked, a release of its own).
 
-## 14. As built in 2.9.11.e
+## 14. As built in 2.9.11.f
 
 | Part | As built |
 |---|---|
