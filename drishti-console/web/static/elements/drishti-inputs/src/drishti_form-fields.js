@@ -242,7 +242,7 @@ function drawRepeat(form, f, wrap, msg, help, ro) {
     fieldsOf(fs.items, p).forEach((sub) => group.appendChild(drawField(form, sub)));
     box.appendChild(group);
   });
-  if (!ro) { box.appendChild(form.el('button', { cls: 'di-btn', text: 'Add ' + (fs.items.title || words(f.key).replace(/s$/, '')).toLowerCase(), attrs: { type: 'button', disabled: (fs.maxItems && list.length >= fs.maxItems) || null }, data: { act: 'add' }, on: { click: () => form.addItem(f.path) } })); }
+  if (!ro) { box.appendChild(form.el('button', { cls: 'di-btn', text: fs.addLabel || 'Add ' + (fs.items.title || words(f.key).replace(/s$/, '')).toLowerCase(), attrs: { type: 'button', disabled: (fs.maxItems && list.length >= fs.maxItems) || null }, data: { act: 'add' }, on: { click: () => form.addItem(f.path) } })); }
   box.appendChild(msg);
   applyHook(box, fs.hook);
   wrap.appendChild(box);

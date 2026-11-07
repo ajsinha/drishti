@@ -2221,7 +2221,7 @@
         part.input = ret.input || null;
         part.names = fs.name ? form.el('span', { cls: 'di-names', attrs: { hidden: true } }) : null;
         applyHook(part.input || control, fs.hook);
-        wrap.append(part.input ? label(part.input.id || id) : label(null), control, help, msg);
+        wrap.append(fs.noLabel ? '' : part.input ? label(part.input.id || id) : label(null), control, help, msg);
         if (part.names) { wrap.appendChild(part.names); }
         return wrap;
       }
@@ -2282,7 +2282,7 @@
         case 'textarea': {
           const ta = part.input = named(form.el('textarea', { cls: 'di-field', attrs: { id: id, rows: String((fs.options && fs.options.rows) || 3), 'aria-describedby': described, readonly: ro || null, placeholder: fs.placeholder || null } }));
           ta.value = v === undefined || v === null ? '' : String(v);
-          ta.addEventListener('input', () => set(ta.value === '' ? undefined : ta.value));
+          ta.addEventListener(fs.lazy ? 'change' : 'input', () => set(ta.value === '' ? undefined : ta.value));
           ta.addEventListener('blur', touch);
           control = ta;
           break;
@@ -2293,7 +2293,7 @@
             'aria-describedby': described, readonly: ro || null, placeholder: fs.placeholder || (money ? '1.5m, 250k or 1,000,000' : null), 'aria-required': f.required ? 'true' : null, autocomplete: 'off' } }));
           const show = (x) => (x === undefined || x === null ? '' : numeric && typeof x === 'number' && !isNaN(x) ? formatNumber(x, { maxDecimals: money ? 2 : 10, minus: '-' }) : String(x));
           inp.value = show(v);
-          inp.addEventListener('input', () => {
+          inp.addEventListener(fs.lazy ? 'change' : 'input', () => {
             const r = parseField(fs, inp.value, f.label);
             part.parseError = r.error;
             set(r.error ? (numeric ? NaN : undefined) : r.value);
@@ -2333,7 +2333,7 @@
         fieldsOf(fs.items, p).forEach((sub) => group.appendChild(drawField(form, sub)));
         box.appendChild(group);
       });
-      if (!ro) { box.appendChild(form.el('button', { cls: 'di-btn', text: 'Add ' + (fs.items.title || words(f.key).replace(/s$/, '')).toLowerCase(), attrs: { type: 'button', disabled: (fs.maxItems && list.length >= fs.maxItems) || null }, data: { act: 'add' }, on: { click: () => form.addItem(f.path) } })); }
+      if (!ro) { box.appendChild(form.el('button', { cls: 'di-btn', text: fs.addLabel || 'Add ' + (fs.items.title || words(f.key).replace(/s$/, '')).toLowerCase(), attrs: { type: 'button', disabled: (fs.maxItems && list.length >= fs.maxItems) || null }, data: { act: 'add' }, on: { click: () => form.addItem(f.path) } })); }
       box.appendChild(msg);
       applyHook(box, fs.hook);
       wrap.appendChild(box);
