@@ -22,6 +22,25 @@
 ## 2.9.11.e (unreleased)
 
 - **Drishti Elements, the design, decided by the product owner** ([ELEMENTS.md](docs/architecture/ELEMENTS.md)): the console's JavaScript as eight libraries (drishti-core, -inputs, -grid, -chart, -data, -insight, -renderer, -risk; 1 to 5 without a Drishti server), the measured inventory (116 of 258 scripts and modules, about 21,000 lines, fold into them; about 10 grids and 22 chart scripts into one each), the grid's three layouts (wells, panel, terminal: VaR screens default to terminal) and its server-side pivot with non-additive totals from the server, an AG Grid-style adapter for the Enterprise pivot API from public documentation only, one chart spec over ECharts with the risk kinds and maps (world to every country's first-level regions), packaging and licensing per domain module, the documentation of every library (guide, generated API reference, tutorial, gallery, AG Grid migration guide), the guards and the migration order; the decisions (Vega retired, the grid on phones, a standalone Excel writer, the adapter's scope, both options of g2, g3 and g4 built as modes with A the default); mock-ups [g1](docs/architecture/mockups/elements/g1-pivot-grid.html), [g2](docs/architecture/mockups/elements/g2-charts.html), [g3](docs/architecture/mockups/elements/g3-maps.html) and [g4](docs/architecture/mockups/elements/g4-gallery.html).
+- **Drishti Elements, the foundation** ([ELEMENTS.md section 8.1](docs/architecture/ELEMENTS.md#81-as-built-the-foundation-drishti-core-and-the-grids-engine)):
+  `static/elements/` with a manifest of the libraries and their versions, ES modules per library and one bundled file each written by
+  an offline Python build (`tools/elements/build.py`, `--check`), a loader (`Drishti.elements.load('drishti-grid')`), and the API
+  reference generated from the typed JSDoc ([ELEMENTS_API.md](docs/guides/ELEMENTS_API.md), `tools/docs/elements_api.py --check`).
+- **drishti-core 1.0.0**: numbers by the server's rules (half up on the decimal value, the true minus, the named formats generated from
+  `formats.yaml`, compact, percent, basis points, currency, a locale's separators), business dates and ranges, the theme tokens
+  generated from `drishti_tokens.css` with WCAG contrast arithmetic, an API client (errors in words with their DRS code, GET retries,
+  abort, time limit, the as-of header), an event bus, a focus trap, a live region and a roving tab index, keys and key maps, dialogs,
+  drawers and toasts. Folded in and deleted: `drishti_resize.js` and `build/drishti_grid-keys.js` (`Drishti.resize` and
+  `Drishti.GridKeys` keep their names); the alerts' and the workbench's toasts, the table editors' dialog and the number helpers of
+  twelve screens now call drishti-core (a value that rounds to zero reads `0`, never `−0`).
+- **drishti-grid 0.1.0, the engine** (no look yet): columns and the searchable field list, sort and filter models, the client-side row
+  model (typed indexes, row groups with figures from their members) and the server-side one (block requests with sort, filter, group
+  keys, values and pivot, a cache, refresh, abort), virtual scrolling for a million rows, the pivot in the server's own view and answer
+  (row and column groups, totals and subtotals above or below, open and closed groups, top N with Others, member and value filters,
+  pivot result columns), non-additive measures never summed in the browser (asked of the server and merged by coordinates), the
+  wells, selection with range figures that warn on a non-additive column, copy as TSV, CSV and a standalone .xlsx writer, the keys,
+  the Explain hook and the layout-neutral state; 32 unit tests in Node (`tests/elements/`), and the 1,000,000-row figures in
+  [BENCHMARK.md](docs/admin/BENCHMARK.md).
 
 ## 2.9.11.d (unreleased)
 

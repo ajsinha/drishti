@@ -383,6 +383,31 @@ library with its module: an unlicensed module's library is not served, its kinds
 4. the architecture guard extended to JavaScript: core code never imports a domain library, domain libraries never import each other;
 5. the module licence check reachable from the console, so a library's folder is served or refused by it.
 
+### 8.1 As built: the foundation, drishti-core and the grid's engine
+
+- **Files.** `static/elements/drishti_elements.json` is the release train (each library's version, entry, requirements, style sheets).
+  A library is ES modules under `<library>/src/` (they run as served: `import` them) and one bundled file, `<library>/drishti_<name>.js`,
+  for hosts without modules and the console's classic pages: a classic script that registers `Drishti.elements.<name>` and is a CommonJS
+  module under Node. The bundle is written by `tools/elements/build.py` (Python, offline, no npm; `--check` refuses a stale bundle).
+  The per-version folders of this section come with the first released version.
+- **Loading.** drishti-core carries the loader: `Drishti.elements.load('drishti-grid')` adds what a library requires, its style sheets
+  and its bundle (`?v=<version>`), once each. `base.html` loads drishti-core on every page.
+- **One home for each fact.** The named formats are generated from the server's `formats.yaml` and the themes from `drishti_tokens.css`
+  into drishti-core; numbers are rounded half up on the decimal value with the true minus, as `FormatSpec` does.
+- **Moved into drishti-core:** the resize handles (`drishti_resize.js`), the panel keys (`build/drishti_grid-keys.js`; `Drishti.resize`
+  and `Drishti.GridKeys` keep their names), the alerts' and the workbench's toasts, the table editors' dialog, and the number helpers
+  of twelve screens. `drishti_charts.js`, `drishti_view.js` and `drishti_pivot-engine.js` keep their own until drishti-renderer: the
+  frozen renderer loads them into host pages that have no drishti-core.
+- **The grid's engine speaks the server's pivot.** The view and the answer are the pivot engine's own (`PivotView`, `PivotAnswer`:
+  `{measure, as}` values, `{in, notIn}` member filters, `expanded` paths, the row kinds grand, node, header, total, others); 5.3's
+  request maps onto it, and value filters are applied by the grid. A column with `additive: false` (or `aggregate: 'server'`) is never
+  summed in the browser: its cells wait for the server, which is asked for exactly those. `clientAggregation: false` is the console's
+  policy. The layout (`wells`, `panel`, `terminal`) and the density are state the engine keeps and gives back; it draws nothing.
+- **Reference and tests.** [ELEMENTS_API.md](../guides/ELEMENTS_API.md) is generated from the typed JSDoc by
+  `tools/docs/elements_api.py` (`--check` refuses a public symbol without types); the unit tests run in Node (`tests/elements/`,
+  `node --test`) from `tests/test_elements.py`, a quick file check of the gate; the engine at a million rows is in
+  [BENCHMARK.md](../admin/BENCHMARK.md).
+
 ## 9. The documentation of every library
 
 The owner asked for documentation as rich as a commercial product's. Within the lean-docs rule (one home per fact; references are
