@@ -414,6 +414,7 @@
       if (type === 'category') { base.data = cats; base.boundaryGap = spec.kind !== 'line' && spec.kind !== 'area'; }
       if (type === 'value' || type === 'log') { base.scale = x.zero !== true; base.min = x.min; base.max = x.max; }
       const ax = axisOf(env.theme, base, env.xfmt);
+      if (type === 'category' || type === 'time') { ax.axisPointer = { label: { show: false } }; }   // the tooltip names the category: no second label over the axis's own
       if (type === 'category' && x.format) { ax.axisLabel.formatter = (v) => env.xfmt(v); }
       if (type === 'time') { ax.axisLabel.formatter = x.format ? (v) => env.xfmt(new Date(v).toISOString().slice(0, 10)) : (v) => new Date(v).toISOString().slice(0, 10); ax.splitLine = { show: false }; }
       return ax;
@@ -1326,7 +1327,7 @@
   /* ---- src/drishti_chart-studio.js ---- */
   __m["src/drishti_chart-studio.js"] = (function () {
     var h = __lib("drishti-core").h;
-    var kindList = __m["src/drishti_chart-spec.js"].kindList, specText = __m["src/drishti_chart-spec.js"].specText;
+    var kindList = __m["src/drishti_chart-spec.js"].kindList, kindOf = __m["src/drishti_chart-spec.js"].kindOf, specText = __m["src/drishti_chart-spec.js"].specText;
     var dataTable = __m["src/drishti_chart-parts.js"].dataTable;
     function coloured(doc, text) {
       const out = doc.createDocumentFragment(), re = /("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d[\d.e+-]*|true|false|null)/g;
@@ -1395,8 +1396,9 @@
           row('Stack', select('stack', ['none', 'stacked', 'percent'], s.stack === 'percent' ? 'percent' : s.stack ? 'stacked' : 'none', (v) => change({ stack: v === 'none' ? undefined : v === 'percent' ? 'percent' : true })));
         }
         if (k === 'bar') { row('Bars', select('orient', ['vertical', 'horizontal'], s.orient === 'horizontal' ? 'horizontal' : 'vertical', (v) => change({ orient: v }))); }
-        if (k === 'risk.exposure-profile') { row('Log x', select('log', ['on', 'off'], s.log === false ? 'off' : 'on', (v) => change({ log: v === 'on' }))); }
-        if (c.spec.kind !== 'map' && ['line', 'area', 'bar', 'risk.backtest'].indexOf(k) >= 0) { row('Zoom', select('zoom', ['off', 'on'], s.zoom ? 'on' : 'off', (v) => change({ zoom: v === 'on' ? (s.zoom || true) : undefined }))); }
+        const offers = (kindOf(k) || {}).studio || [];                   // a domain library's kind says which of the studio's options it takes
+        if (offers.indexOf('log') >= 0) { row('Log x', select('log', ['on', 'off'], s.log === false ? 'off' : 'on', (v) => change({ log: v === 'on' }))); }
+        if (c.spec.kind !== 'map' && (['line', 'area', 'bar'].indexOf(k) >= 0 || offers.indexOf('zoom') >= 0)) { row('Zoom', select('zoom', ['off', 'on'], s.zoom ? 'on' : 'off', (v) => change({ zoom: v === 'on' ? (s.zoom || true) : undefined }))); }
         row('Density', select('density', ['comfortable', 'compact', 'terminal'], c.density, (v) => c.setDensity(v)));
       }
       pick(kind) {
@@ -1419,7 +1421,8 @@
     var MapView = __m["src/drishti_map-view.js"].MapView;
     var Studio = __m["src/drishti_chart-studio.js"].Studio;
     const CHART_EVENTS = Object.freeze(['rendered', 'markClicked', 'selectionChanged', 'legendToggled', 'zoomChanged', 'explainOpened', 'explainShown', 'exported',
-      'tableToggled', 'dataUpdated', 'modeChanged', 'densityChanged', 'kindChanged', 'levelChanged', 'metricChanged', 'placeSelected', 'error']);
+      'tableToggled', 'dataUpdated', 'modeChanged', 'densityChanged', 'kindChanged', 'levelChanged', 'metricChanged', 'placeSelected', 'pointerMoved',
+      'error']);
     const CHART_MODES = Object.freeze(['card', 'studio']);
     const SELECTION_EVENT = 'drishti:selection';
     class Chart {
@@ -1486,7 +1489,17 @@
         this.engine.getZr().on('click', (e) => { if (!e.target && this.selected.size && !this.map) { this.setSelection([]); } });
         this.engine.on('datazoom', () => { const z = this.engine.getOption().dataZoom; const d = z && z[0]; this.zoomReset.hidden = !d || (d.start <= 0 && d.end >= 100); this.emit('zoomChanged', d ? { start: d.start, end: d.end } : {}); });
         dragBrush(this.engine, () => this.zooms && !this.map, 'rgba(127, 127, 127, 0.18)');
-        this.ro = new this.win.ResizeObserver(() => { if (this.engine) { this.engine.resize(); } });
+        this.engine.on('updateAxisPointer', (ev) => {
+          let i = ev.dataIndex;
+          if ((i === null || i === undefined) && ev.axesInfo && ev.axesInfo.length) { i = ev.axesInfo[0].value; }
+          if (i !== null && i !== undefined && i !== this.pointed) { this.pointed = i; this.emit('pointerMoved', { index: i, row: this.rows[i] }); }
+        });
+        this.ro = new this.win.ResizeObserver(() => {
+          if (!this.engine) { return; }
+          this.engine.dispatchAction({ type: 'hideTip' });
+          this.engine.resize();
+          if (this.pinned !== undefined) { this.pointAt(this.pinned); }
+        });
         this.ro.observe(this.canvas);
         if (this.spec.kind === 'map') { this.map = this.map ? this.map.remount() : new MapView(this); } else { this.map = null; }
       }
@@ -1706,6 +1719,10 @@
         if (this.timer) { return; }
         const ms = this.spec.live && this.spec.live.throttleMs !== undefined ? this.spec.live.throttleMs : 250;
         this.timer = this.win.setTimeout(() => { this.timer = 0; this.draw(); }, ms);
+      }
+      pointAt(index) {
+        this.pinned = index;
+        if (this.engine && index >= 0) { this.engine.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: index }); }
       }
       setMode(mode) {
         if (CHART_MODES.indexOf(mode) < 0 || mode === this.mode) { return; }
@@ -2179,9 +2196,14 @@
       });
     }
     class PanelCharts {
+      static state(el) {
+        const E = el.ownerDocument.defaultView.echarts, c = E && E.getInstanceByDom(el);
+        if (!c || c.isDisposed()) { return 'none'; }
+        return c.getZr().animation.isFinished() ? 'drawn' : 'animating';
+      }
       constructor(root, o) {
         this.root = root;
-        this.o = Object.assign({ selector: '[data-r-chart]', specOf: (el) => el.__drishti || null }, o);
+        this.o = Object.assign({ selector: '[data-r-chart]', attr: 'data-r-chart', specOf: (el) => el.__drishti || null }, o);
         this.all = [];
         this.ro = null;
         this.onClick = (e) => this.surfaceButton(e);
@@ -2192,7 +2214,7 @@
       broken(E, el, words) {
         const c = E && E.getInstanceByDom(el);
         if (c) { c.dispose(); }
-        el.removeAttribute('data-r-chart');
+        el.removeAttribute(this.o.attr);
         el.className = 'pnl-empty';
         el.textContent = words || 'No data available';
       }
@@ -2252,16 +2274,27 @@
         await Promise.all(els.map((el) => this.drawOne(E, el, t)));
         const win = this.win();
         if (!this.ro && win.ResizeObserver) {
-          this.ro = new win.ResizeObserver(() => win.requestAnimationFrame(() => { this.live().forEach((c) => c.resize()); }));
+          let first = true;                                   // an observer reports the size it starts with: not a change
+          this.ro = new win.ResizeObserver(() => {
+            if (first) { first = false; return; }
+            win.requestAnimationFrame(() => { this.live().forEach((c) => c.resize()); if (this.o.relayout) { this.draw(this.root); } });
+          });
           this.ro.observe(this.root.host || this.root.firstElementChild || win.document.body);
         }
       }
       redraw() { return this.draw(this.root); }
+      async update(el) {
+        const spec = this.o.specOf(el);
+        if (!spec || spec.kind === 'map' || spec.kind === 'surface') { return this.draw(el.parentNode || this.root); }
+        const E = await this.o.engine(), c = E.getInstanceByDom(el);
+        if (!c) { return this.draw(el.parentNode || this.root); }
+        c.setOption(panelOption(spec.kind, spec.data || {}, this.tokens(), { width: el.clientWidth || 800, height: el.clientHeight || 360 }), false);
+      }
       instances() { return this.live().slice(); }
       surfaceButton(e) {
         const b = e.target.closest && e.target.closest('[data-surface-view]');
         if (!b) { return; }
-        const box = b.closest('.pnl-b'), el = box && box.querySelector('.surface[data-r-chart]');
+        const box = b.closest('.pnl-b'), el = box && box.querySelector('.surface[' + this.o.attr + ']');
         if (!el) { return; }
         box.querySelectorAll('[data-surface-view]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
         el.setAttribute('data-view', b.getAttribute('data-surface-view'));

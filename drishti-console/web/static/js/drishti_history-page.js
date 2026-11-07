@@ -17,7 +17,7 @@
 /* The history page (TRD 1000015 30 <GO>), keyboard first: ↑↓ (j k) move the selected day, ←→ the column, Enter opens the day's view
    as it was, C changes only, D diff, E export, Shift+K a chart of the days, R a new range, 1 3 6 Y T the market ranges, P the next chart field, Alt+S copies a
    link, ? the keys, Esc closes or goes back to today's view. Keys are ignored while typing in a field. The market shape draws its
-   chart with ECharts in the theme's own colours (read from the tokens at draw time); the chart's crosshair follows the selected row. */
+   chart with drishti-chart (Drishti Elements) in the theme's own colours; the chart's crosshair follows the selected row. */
 (function () {
   'use strict';
   var root = document.querySelector('[data-history]');
@@ -203,51 +203,31 @@
   hx('today', ['Escape'], 'Leave the column, else today\'s view', function () { if (col >= 0) { col = -1; markColumn(); } else if (today) { window.location.href = today; } else { return false; } });
   hx('share', ['Alt+S', 'Alt+Shift+S'], 'Copy a link to these rows', function () { share(); });
 
-  // ---- the market shape: the chart --------------------------------------------------------------------------------------------
+  // ---- the market shape: the chart (drishti-chart: its card, its tools, the theme's colours; the crosshair follows the selected row) ----
   var chartEl = root.querySelector('[data-hx-chart]'), seriesEl = chartEl, cross = root.querySelector('[data-hx-cross]');
-  function tokens() {
-    var s = getComputedStyle(document.documentElement), g = function (n) { return s.getPropertyValue(n).trim(); };
-    return { ink: g('--d-ink'), muted: g('--d-muted'), line: g('--d-accent'), link: g('--d-link'), grid: g('--d-border'),
-      surface: g('--d-surface'), pos: g('--d-pos'), neg: g('--d-neg'), mono: g('--d-font-mono') };
-  }
-  function fmt(v, places) { return v == null ? '—' : Number(v).toLocaleString(undefined, { minimumFractionDigits: places, maximumFractionDigits: places }); }
-  function draw() {
-    if (!chartEl || !window.echarts || !series.length) { return; }
-    var t = tokens(), s = series[field], places = s.places == null ? 2 : s.places;
-    var dates = s.points.map(function (p) { return p[0]; }), vals = s.points.map(function (p) { return p[1]; });
-    var nums = vals.filter(function (v) { return v != null; });
+  var F = window.Drishti.elements.core;
+  function fmt(v, places) { return F.formatNumber(v, { decimals: places, minus: '-' }); }
+  function spec(s) {
+    var places = s.places == null ? 2 : s.places;
+    var nums = s.points.map(function (p) { return p[1]; }).filter(function (v) { return v != null; });
     var up = nums.length > 1 && nums[nums.length - 1] >= nums[0];
-    var tone = up ? t.pos : t.neg;
-    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    var label = root.querySelector('[data-hx-field]');
+    return { kind: 'area', title: s.label, id: 'date', onClick: 'none', legend: 'none', tone: up ? 'good' : 'bad',
+      data: { rows: s.points.map(function (p) { return { date: p[0], value: p[1] }; }) },
+      x: { field: 'date', type: 'category' }, y: { field: 'value', format: { decimals: places, minus: '-' } },
+      annotations: nums.length ? [{ type: 'line', y: nums[0], tone: 'muted', style: 'dotted', showValue: false }] : [] };
+  }
+  function draw() {
+    var E = window.Drishti.elements.chart;
+    if (!chartEl || !E || !series.length) { return; }
+    var s = series[field], label = root.querySelector('[data-hx-field]');
     if (label) { label.textContent = s.label; }
-    chart = chart || window.echarts.init(chartEl, null, { renderer: 'canvas' });
-    chart.setOption({
-      animation: !reduced,
-      textStyle: { fontFamily: t.mono },
-      grid: { left: 56, right: 18, top: 14, bottom: 26 },
-      // confine: the hover label stays inside the chart, so it can never widen the page (QA1-14)
-      tooltip: { trigger: 'axis', confine: true, className: 'hx-tip', backgroundColor: t.surface, borderColor: t.grid, textStyle: { color: t.ink, fontFamily: t.mono, fontSize: 12 },
-        axisPointer: { type: 'cross', lineStyle: { color: t.muted, type: 'dashed' }, crossStyle: { color: t.muted },
-          label: { backgroundColor: t.grid, color: t.ink, fontFamily: t.mono } },
-        formatter: function (ps) { var p = ps[0]; return p ? p.axisValue + '  <b>' + fmt(p.value, places) + '</b>' : ''; } },
-      // the crosshair's date is in the hover label and the ⌖ line: no second date label on the axis over its own labels (QA1-15)
-      xAxis: { type: 'category', data: dates, boundaryGap: false, axisPointer: { label: { show: false } },
-        axisLabel: { color: t.muted, fontSize: 11, hideOverlap: true, formatter: function (v) { return v.slice(5); } },
-        axisLine: { lineStyle: { color: t.grid } }, axisTick: { show: false } },
-      yAxis: { type: 'value', scale: true, axisLabel: { color: t.muted, fontSize: 11 }, splitLine: { lineStyle: { color: t.grid, type: 'dashed' } } },
-      series: [{ type: 'line', name: s.label, data: vals, showSymbol: false, symbolSize: 7, connectNulls: false, smooth: false,
-        lineStyle: { color: tone, width: 2 }, itemStyle: { color: tone },
-        areaStyle: { color: new window.echarts.graphic.LinearGradient(0, 0, 0, 1, [{ offset: 0, color: tone }, { offset: 1, color: 'transparent' }]), opacity: 0.18 },
-        markLine: { silent: true, symbol: 'none', label: { show: false }, lineStyle: { color: t.muted, type: 'dotted' },
-          data: nums.length ? [{ yAxis: nums[0] }] : [] } }]
-    }, true);
-    chart.off('updateAxisPointer');
-    chart.on('updateAxisPointer', function (ev) {
-      var i = ev.dataIndex;
-      if (i == null && ev.axesInfo && ev.axesInfo.length) { i = ev.axesInfo[0].value; }
-      if (i != null && cross && dates[i]) { cross.textContent = '⌖ ' + dates[i] + '  ' + fmt(vals[i], places); }
-    });
+    if (chart) { chart.setSpec(spec(s)); } else {
+      chart = new E.Chart(chartEl, spec(s), { height: window.matchMedia && window.matchMedia('(max-width: 640px)').matches ? 220 : 300 });
+      chart.events.on('pointerMoved', function (ev) {
+        var p = series[field].points[ev.index];
+        if (p && cross) { cross.textContent = '⌖ ' + p[0] + '  ' + fmt(p[1], series[field].places == null ? 2 : series[field].places); }
+      });
+    }
     var r = selectedRow();
     if (r) { follow(r.getAttribute('data-date')); }
   }
@@ -256,26 +236,12 @@
     var s = series[field], i = -1;
     for (var k = 0; k < s.points.length; k++) { if (s.points[k][0] === date) { i = k; break; } }
     if (i < 0) { return; }
-    chart.dispatchAction({ type: 'showTip', seriesIndex: 0, dataIndex: i });
+    chart.pointAt(i);
     if (cross) { cross.textContent = '⌖ ' + date + '  ' + fmt(s.points[i][1], s.places == null ? 2 : s.places); }
   }
   if (seriesEl) {
     try { series = JSON.parse(seriesEl.getAttribute('data-hx-series')) || []; } catch (err) { series = []; }
-    draw();
-    // a resize (or a zoom, which narrows the page) hides the hover label, resizes, then puts it back at the selected row's new place: it
-    // never stays where the wider chart had it (QA1-14)
-    var resized = function () {
-      if (!chart) { return; }
-      chart.dispatchAction({ type: 'hideTip' });
-      chart.resize();
-      var r = selectedRow();
-      if (r) { follow(r.getAttribute('data-date')); }
-    };
-    window.addEventListener('resize', resized);
-    if (window.ResizeObserver) { new ResizeObserver(resized).observe(chartEl); }
-    // a theme switched while the page is open: redraw in its colours
-    new MutationObserver(function () { if (chart) { chart.dispose(); chart = null; draw(); } })
-      .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    draw();                                       // a resize or a theme is the chart's own: it redraws and keeps the crosshair at the row
   }
 
   if (rows().length) { select(0, false); }

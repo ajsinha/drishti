@@ -52,7 +52,7 @@
   E.clear = clear;
   E.num = function (v) {
     if (typeof v !== 'number') { return v === null || v === undefined ? '' : String(v); }
-    return Math.abs(v) >= 1000 || Number.isInteger(v) ? v.toLocaleString(undefined, { maximumFractionDigits: 2 }) : String(Math.round(v * 10000) / 10000);
+    return Math.abs(v) >= 1000 || Number.isInteger(v) ? window.Drishti.elements.core.formatNumber(v, { maxDecimals: 2, minus: '-' }) : String(Math.round(v * 10000) / 10000);
   };
 
   function api(method, path, body) {

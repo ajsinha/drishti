@@ -461,7 +461,7 @@
       if (!k.dates.length) { tb.appendChild(el('tr', {}, [el('td', { class: 'mono', text: k.kind }), el('td', { text: '—' }), el('td', { class: 'mono', text: '0' }), el('td', { text: k.note || '' })])); }
       k.dates.forEach(function (d) {
         tb.appendChild(el('tr', {}, [el('td', { class: 'mono', text: k.kind }), el('td', { class: 'mono', text: d.date || '(undated)' }),
-          el('td', { class: 'mono ds-num', text: (k.exact ? '' : '≥ ') + Number(d.rows).toLocaleString('en-US') }), el('td', { text: k.note || '' })]));
+          el('td', { class: 'mono ds-num', text: (k.exact ? '' : '≥ ') + window.Drishti.elements.core.formatNumber(Number(d.rows)) }), el('td', { text: k.note || '' })]));
       });
     });
     host.appendChild(el('div', { class: 'tbl-wrap' }, [el('table', { class: 'tbl adm-tbl', 'data-plain': true }, [el('caption', { class: 'visually-hidden', text: 'What the connector holds' }),

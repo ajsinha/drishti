@@ -48,7 +48,8 @@ ICON_SHEET = "vendor/bootstrap-icons/bootstrap-icons.css"
 GZIP_TARGET = 27 * 1024          # raised on purpose in 2.9.11.e (from 25 KB): drishti-grid's sheet, for the nested pivots tree rows draw with it
 # where a glyph can be named: the macros every embedded view is rendered with, and the scripts that run inside the element
 ICON_SOURCES = ("templates/_macros/panels.html", "templates/_macros/view.html", "static/js/drishti_tables.js", "static/js/drishti_colfilter.js", "static/js/drishti_tree-rows.js",
-                "static/js/drishti_view.js", "static/js/drishti_zoom.js", "static/js/drishti_charts.js", "embed/enhancers.js", "embed/element.js", "embed/assets.js")
+                "static/js/drishti_view.js", "static/js/drishti_zoom.js", "static/js/drishti_charts.js", "embed/enhancers.js", "embed/element.js", "embed/assets.js",
+                "static/elements/drishti-grid/src/drishti_doc-console.js")   # the tables' chart button (drishti-grid's console tables)
 ICON_NAME = re.compile(r"(?<![\w-])bi-([a-z0-9]+(?:-[a-z0-9]+)*)")
 BASE_ICON_CLASSES = {"bi"}          # the font's base rule is always kept
 _LICENCE = re.compile(r"\A/\*.*?\*/\s*", re.S)

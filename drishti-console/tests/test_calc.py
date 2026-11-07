@@ -54,7 +54,7 @@ def _deny(client, backend):
 def test_a_view_of_a_kind_whose_pack_enables_calc_has_the_panel_and_its_key(client, calc_on):
     html = client.get("/v/trade/IRS-48213").text
     assert 'id="calcDrawer"' in html and "data-calc-open" in html and "<b>Alt+C</b> Calc" in html
-    assert "/static/vendor/codemirror/mode/python/python.js" in html and "/static/js/drishti_calc.js" in html
+    assert "/static/elements/drishti-inputs/drishti_inputs.js" in html and "/static/js/drishti_calc.js" in html   # the code editor (Python on first use)
     assert 'data-worker="/static/js/drishti_calc-worker.js' in html and 'data-module="/static/calc/drishti.py' in html
 
 

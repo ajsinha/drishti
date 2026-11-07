@@ -16,7 +16,7 @@
 
 # Drishti Elements: the console's JavaScript as eight reusable libraries
 
-**Status: being built** (release 2.9.11.e, product owner 2026-11-07; mock-ups g1 to g4 below, all decided; as built: 8.1 to 8.5). The internal design:
+**Status: being built** (release 2.9.11.e, product owner 2026-11-07; mock-ups g1 to g4 below, all decided; as built: 8.1 to 8.6). The internal design:
 what each library is, what it takes over from today's code, the grid's pivot, the AG Grid-style adapter, the chart spec and the maps,
 packaging and licensing, the documentation of every library, the gallery, the guards, the order in which Drishti's screens move, the
 risks and the product owner's decisions. The renderer, the embed API and Elements 2.x (`<drishti-view>`) are designed in
@@ -738,6 +738,39 @@ other libraries gained for it:
   drishti-inputs yet. drishti-insight is not built: About takes its source from `options.insight.about`. The libraries 2.0.0 imports are
   not per-version folders yet (its integrity record covers its own modules). The engine's model keeps under 530 lines a module: its pivot, export and kept state are `drishti_grid-model-base.js` (`GridModelBase`, which `GridModel` extends).
 
+### 8.6 As built: the general screens moved (history, data, Admin, Help, landings, live)
+
+The screens outside BI, the Pivot, VaR and exposure (those move on their own branches) now draw with the libraries:
+
+| What | Was | Now |
+|---|---|---|
+| Every server table's sort, filter box, column funnels, pages, rows per page, keys (↑ ↓ PgUp PgDn Home End Enter K), a zoomed panel's fit, the state kept through a live repaint | `drishti_tables.js` (474 lines, on every page) | **drishti-grid's console tables** (`consoleTables`, `drishti_doc-console.js`); `drishti_tables.js` is their host (90 lines: the funnels, the keymap, Chart any table). Every page and the embed load drishti-grid |
+| A view's panel charts: line, area, waterfall, histogram, scatter, candlestick, graph, donut, the surface (heatmap or 3D) and the map | `drishti_charts.js` (421) and the charts of `drishti_view.js` (176 of its lines) | **drishti-chart's `PanelCharts`** (the client renderer's), hosted by `drishti_charts.js` (95: where the charts are, their data, what an entity click does). `PanelCharts` gained `attr`, `relayout` (a waterfall's labels fitted again to a new width), `update` (a live point merged, through `drishti:chart-data`) and `state` (the page-settled signal asks it, not the engine) |
+| The history page's chart (the crosshair follows the selected row) and a field's history in a view | ECharts called by `drishti_history-page.js` and `drishti_history.js` | **drishti-chart's `Chart`**: `pointAt(index)` and the `pointerMoved` event join it; a category or time axis shows no second label under the crosshair (QA1-15, now for every chart) |
+| Calc: the editor and its charts | `CodeMirror.fromTextArea` and `echarts.init` in `drishti_calc.js` | **drishti-inputs' `CodeEditor`** (Python; `keys`, `indentUnit` and `refresh` join it; the error line is a lint mark) and **drishti-chart** |
+| The browser's one live connection | the hub's own `EventSource`, retry and close (`drishti_live-hub.js`), and `drishti_server-watch.js` wrapping `window.EventSource` | **drishti-data's `LiveClient`** (the hub keeps the tabs, keys, replay and session checks; the SharedWorker loads drishti-core and drishti-data beside it; `LiveClient` takes the clock's timer functions); the server watch hears `drishti:live-error` from the channel |
+| Numbers on the admin, data, landing, history, form and build screens | `toFixed`, `toLocaleString`, `Intl.NumberFormat` (35 files) | **drishti-core**: `formatNumber`, and the new `formatBytes` and `formatDuration` (one home for sizes and timings); a hand-drawn SVG's coordinates are geometry, rounded, not formatted |
+
+**The guards** (section 11), `tests/test_elements_guards.py`, a quick file check of the gate: no console script calls ECharts or Vega
+itself, sorts a table by its headings (`aria-sort` in a script), formats numbers on its own (`Intl.NumberFormat`, `toFixed`,
+`toPrecision`, a number's `toLocaleString`; a date's is a date) or opens its own `EventSource` or `WebSocket`. The allow-list names
+only files the BI and Pivot branch (`wip/e-migrate-bi`) and the VaR and exposure branch (`wip/e-migrate-var`) are moving, each with its
+branch, and only shrinks: an entry whose file is gone or keeps the rule fails the check. **The generic libraries know no domain**
+(the product owner, 2026-11-07): drishti-core, -grid, -chart, -inputs and -data hold no domain word in their code (VaR, ES, EEPE,
+PFE, MTM, P&L, exposure, backtest, Basel, netting, counterparty, a `risk.` kind); a domain's logic lives in its library (risk:
+drishti-risk) behind a generic hook. The chart studio's options for the risk kinds became such a hook (a kind declares `studio:
+['log', 'zoom']` when it registers). Comments, the harness pages and the generated manifest's titles are documentation; a threshold
+(`limit`) is a generic hook.
+
+**Still to move** (each needs its screens' browser files run, and the multi-select and the pickers are on every page): the multi-select
+(`drishti_multiselect.js` → `MultiSelect`, with the query forms' dependent lists and the embed's controls), the as-of date and the
+raw date fields (→ `DatePicker`, `DateRangePicker`), the controls (`drishti_controls.js`), the forms (`drishti_form*.js`,
+`drishti_record-forms.js`, `drishti_editor-table.js`, `drishti_subscribe-when.js` → `Form`), the Build and Studio editors
+(`drishti_yamltab.js`, `build/drishti_about.js`, `drishti_studio-yaml.js`, `drishti_studio-assist.js`, `drishti_editor-formula.js`,
+`build/drishti_expr.js` → `CodeEditor` hooks; `drishti_cm-yaml.js` goes when the BI designer's editor moves too), polling and staleness
+(`drishti_refresh.js` → a data source), and inside drishti-grid the renderer's simpler document tables (`enhanceDocTables`' sort and
+pager) fold into `consoleTables`.
+
 ## 9. The documentation of every library
 
 The owner asked for documentation as rich as a commercial product's. Within the lean-docs rule (one home per fact; references are
@@ -872,6 +905,8 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [x] The gallery in both modes, `playground` (default) and `docs` (g4 A and B), every component and example run in its browser file, the grid in both themes and three densities, a keyboard/ARIA smoke check on every demo (8.4)
 - [ ] axe vendored for the gallery's check; every example in both themes and three densities
 - [ ] Documentation per library (section 9): guide, generated API reference with `--check`, tutorial, gallery, the AG Grid migration guide, theming and accessibility guides, changelogs, versioning policy; Help entries
-- [ ] The guards of section 11, the allow list
+- [x] The guards of section 11, the allow list (8.6: `test_elements_guards.py`; the allow-list holds only the BI, Pivot, VaR and exposure screens still moving)
+- [x] The general screens' tables, panel charts, history charts, Calc, the live connection and their numbers on the libraries (8.6)
+- [ ] The general screens' multi-select, pickers, controls, forms and Build editors (8.6, still to move)
 - [ ] Every screen moved (section 12) and the old code deleted; the allow list empty (the BI and Pivot family: 12.1)
 - [ ] `tools/elements/inventory.py` (planned) regenerates section 2's figures; README and CHANGELOG updated; two drills

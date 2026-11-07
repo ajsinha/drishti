@@ -306,6 +306,31 @@
     the grid's style (its budget raised on purpose to 27 KB gzip).
   - Not moved yet (listed in ELEMENTS.md 12.1): BI's matrix (needs values on rows and the tabular layout in drishti-grid), the
     other charts (BI's visuals, Chart any table: the chart migration), BI's date and time controls.
+- **Elements migration: the general screens** ([ELEMENTS.md section 8.6](docs/architecture/ELEMENTS.md#86-as-built-the-general-screens-moved-history-data-admin-help-landings-live)):
+  the history and data pages, Admin, Help, the landings and every view's tables, charts and live connection draw with the libraries
+  (BI, the Pivot, VaR and exposure move on their own branches).
+  - **Tables**: every server table's sort, filter box, column funnels, pages, rows per page, keys and a zoomed panel's fit are
+    drishti-grid's console tables (`consoleTables`); `drishti_tables.js` is their host (474 to 90 lines); the funnels read cells with
+    drishti-core's `textSortKey` (their own reading deleted). Every page and the embed load drishti-grid.
+  - **Charts**: a view's panel charts are drishti-chart's `PanelCharts` (the client renderer's), hosted by `drishti_charts.js` (421 to
+    95 lines; `drishti_view.js`'s line, area and surface code deleted); the history page's chart and a field's history are drishti-chart's
+    `Chart` (`pointAt`, `pointerMoved`: the crosshair follows the selected row); Calc's charts too. The page-settled signal asks
+    drishti-chart. A category or time axis shows no second label under the crosshair (QA1-15, now for every chart).
+  - **Live**: the browser's one live connection is drishti-data's `LiveClient` (the hub keeps the tabs, keys, replay and session
+    checks; its own EventSource, retry and close are deleted; `LiveClient` takes the clock's timer functions); the server watch hears the
+    channel's drop instead of wrapping `window.EventSource`. Every page loads drishti-data.
+  - **Code editor**: Calc's editor is drishti-inputs' `CodeEditor` (Python; `keys`, `indentUnit` and `refresh` join it; the error line is a
+    lint mark).
+  - **Numbers**: 35 files' `toFixed`, `toLocaleString` and `Intl.NumberFormat` are drishti-core's formats; `formatBytes` and
+    `formatDuration` join drishti-core (one home for sizes and timings).
+  - **Guards** (`tests/test_elements_guards.py`, a quick file check): no console script calls ECharts or Vega, sorts a table by its
+    headings, formats numbers on its own or opens its own EventSource or WebSocket; the allow-list holds only files `wip/e-migrate-bi` and
+    `wip/e-migrate-var` are moving, each with its branch, and only shrinks.
+  - **Browser times** (55 browser files these changes touch, six workers): the same files on the tree before the migration and
+    after, side by side on one machine, took 32.0 and 31.5 s for the tables and history files run alone (no change); in the full
+    sets the machine was shared with other runs and the sums varied by run (2,252 s before, 3,835 s after, 1,744 s in 2.9.11.d's
+    drill), so they say nothing either way. The thinner screen tests the owner asked for come with the component tests (the gallery).
+  - **Still to move** (ELEMENTS.md 8.6): the multi-select, the pickers, the controls, the forms and the Build and Studio editors.
 
 ## 2.9.11.d (2026-11-07)
 - **Six lake folders kept in git, their content never** (DATA_LAKE_GUIDE.md section 1): `data/delta/demo`, `risklake`, `newslake` (news), `worldlake` (World Bank, IMF, UN), `regulators` (SEC, Federal Reserve, OSFI, central banks) and `capitalmarket` (prices, curves, vols, funds), each with only its README.md; the test data's `.jsonl.gz` files stay in git to build the demo lake. The five new lakes ship as lake files with no tables (`config/lakes/<lake>.yaml` and their jar copies), and **nothing shipped points at them**: every connector, rule and setting reads `demo` (guarded by `tools/test_empty_lakes.py`); a site points at them itself. The demo lake's one-time move and `build_demo_lakes` treat a folder holding only its README.md as empty.

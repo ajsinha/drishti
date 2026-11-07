@@ -33,10 +33,13 @@
   var NUMBER = /^[+\-−]?[\d,]+(\.\d+)?\s*(%|bp|k|m|bn)?$/i;
   var dlg = null, chart = null, current = null;
 
-  function tokens() {
-    var s = getComputedStyle(document.documentElement);
-    return { ink: s.getPropertyValue('--d-ink').trim(), muted: s.getPropertyValue('--d-muted').trim(),
-      line: s.getPropertyValue('--d-link').trim(), grid: s.getPropertyValue('--d-border').trim() };
+  var F = window.Drishti.elements.core;                                       // numbers by drishti-core
+  function shown(v) { return v == null ? '—' : typeof v === 'number' ? F.formatNumber(v, { maxDecimals: 3, minus: '-' }) : v; }
+  /** drishti-chart, loaded with its engine the first time a history is opened (a page with numbers pays nothing until then) */
+  var chartLib = null;
+  function charts() {
+    if (!chartLib) { chartLib = F.load('drishti-chart'); chartLib.catch(function () { chartLib = null; }); }
+    return chartLib;
   }
   function build() {
     dlg = document.createElement('dialog');
@@ -64,7 +67,7 @@
       e.preventDefault();
       window.Drishti.Raw.open({ kind: kind, id: id, path: current.path, date: a.getAttribute('data-date') || null, opener: a });
     });
-    dlg.addEventListener('close', function () { if (chart) { chart.dispose(); chart = null; } });
+    dlg.addEventListener('close', function () { if (chart) { chart.destroy(); chart = null; } });
   }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 
@@ -78,7 +81,7 @@
         var pts = res.body.points || [], numeric = pts.filter(function (p) { return typeof p.value === 'number'; });
         var latest = pts[pts.length - 1] || {};
         dlg.querySelector('[data-origin]').innerHTML = latest.source
-          ? 'Where it comes from: <b class="mono">' + esc(latest.value == null ? '—' : typeof latest.value === 'number' ? latest.value.toLocaleString() : latest.value)
+          ? 'Where it comes from: <b class="mono">' + esc(shown(latest.value))
             + '</b> at <span class="mono">' + esc(res.body.path) + '</span> in ' + esc(kind) + ' <span class="mono">' + esc(id) + '</span>, from <b class="mono">'
             + esc(latest.source) + '</b>' + (latest.dataDate ? ', data for <span class="mono">' + esc(latest.dataDate) + '</span>' : ', undated (current data)')
             + (latest.generation != null ? ', generation <span class="mono">' + esc(latest.generation) + '</span>' : '') + '. '
@@ -88,19 +91,17 @@
           : 'No source keeps history for this entity: the value is today’s, the same every day.';
         dlg.querySelector('[data-rows]').innerHTML = pts.slice().reverse().map(function (p) {
           var carried = p.dataDate && p.dataDate !== p.date;
-          return '<tr><td class="mono">' + esc(p.date) + '</td><td class="num mono">' + esc(p.value == null ? '—' : typeof p.value === 'number' ? p.value.toLocaleString() : p.value)
+          return '<tr><td class="mono">' + esc(p.date) + '</td><td class="num mono">' + esc(shown(p.value))
             + '</td><td class="mono' + (carried ? ' t-warn' : '') + '">' + esc(p.dataDate || '—') + '</td><td class="mono">' + esc(p.source || '—') + '</td></tr>';
         }).join('');
-        if (!window.echarts || !numeric.length) { return; }
-        var t = tokens(), box = dlg.querySelector('[data-chart-box]');
-        chart = chart || window.echarts.init(box, null, { renderer: 'svg' });
-        chart.setOption({
-          grid: { left: 70, right: 16, top: 16, bottom: 28 }, tooltip: { trigger: 'axis' },
-          xAxis: { type: 'category', data: pts.map(function (p) { return p.date; }), axisLabel: { color: t.muted }, axisLine: { lineStyle: { color: t.grid } } },
-          yAxis: { type: 'value', scale: true, axisLabel: { color: t.muted }, splitLine: { lineStyle: { color: t.grid } } },
-          series: [{ type: 'line', data: pts.map(function (p) { return typeof p.value === 'number' ? p.value : null; }), connectNulls: false,
-            symbolSize: 5, lineStyle: { color: t.line, width: 2 }, itemStyle: { color: t.line } }]
-        }, true);
+        if (!numeric.length) { return; }
+        var spec = { kind: 'line', title: current.label.trim(), id: 'date', onClick: 'none', legend: 'none', tone: 'link',
+          data: { rows: pts.map(function (p) { return { date: p.date, value: typeof p.value === 'number' ? p.value : null }; }) },
+          x: { field: 'date', type: 'category' }, y: { field: 'value', format: 'number' } };
+        return charts().then(function (E) {
+          if (!dlg.open) { return; }
+          if (chart) { chart.setSpec(spec); } else { chart = new E.Chart(dlg.querySelector('[data-chart-box]'), spec, { height: 220 }); }
+        });
       })
       .catch(function (e) { msg.textContent = 'Could not read the history: ' + e; });
   }

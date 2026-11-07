@@ -94,20 +94,21 @@
     var w = 300;
     var h = 72;
     var step = vals.length > 1 ? w / (vals.length - 1) : w;
+    var at = function (v) { return Math.round(v * 10) / 10; };                // an SVG coordinate (geometry, not a figure)
     var svg = document.createElementNS(SVG, 'svg');
     svg.setAttribute('class', 'dyk-line');
     svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
     svg.setAttribute('preserveAspectRatio', 'none');
     svg.setAttribute('aria-hidden', 'true');
     var pts = [];
-    vals.forEach(function (v, i) { if (v !== null) { pts.push((i * step).toFixed(1) + ',' + (h - 4 - (v - lo) / span * (h - 8)).toFixed(1)); } });
+    vals.forEach(function (v, i) { if (v !== null) { pts.push(at(i * step) + ',' + at(h - 4 - (v - lo) / span * (h - 8))); } });
     var pl = document.createElementNS(SVG, 'polyline');
     pl.setAttribute('points', pts.join(' '));
     svg.appendChild(pl);
     if (typeof p.mark === 'number' && vals[p.mark] !== null && vals[p.mark] !== undefined) {
       var c = document.createElementNS(SVG, 'circle');
-      c.setAttribute('cx', (p.mark * step).toFixed(1));
-      c.setAttribute('cy', (h - 4 - (vals[p.mark] - lo) / span * (h - 8)).toFixed(1));
+      c.setAttribute('cx', String(at(p.mark * step)));
+      c.setAttribute('cy', String(at(h - 4 - (vals[p.mark] - lo) / span * (h - 8))));
       c.setAttribute('r', '4');
       svg.appendChild(c);
     }

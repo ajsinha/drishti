@@ -1140,6 +1140,361 @@
     }
     return { "treeVisibility": treeVisibility, "pageInfo": pageInfo, "enhanceDocTables": enhanceDocTables };
   })();
+  /* ---- src/drishti_doc-console.js ---- */
+  __m["src/drishti_doc-console.js"] = (function () {
+    var textSortKey = __lib("drishti-core").textSortKey, compareTextKeys = __lib("drishti-core").compareTextKeys;
+    var SIZES = [25, 50, 100, 250];
+    var MIN_FIT = 5;
+    const NO_FILTERS = { attach: () => ({ prepare: () => {}, pass: () => true, active: () => false, clear: () => {} }), say: () => {}, close: () => {} };
+    function consoleTables(root, options) {
+      options = options || {};
+      const doc = root.ownerDocument || root, win = doc.defaultView;
+      const CF = options.columnFilters || NO_FILTERS, KEY = options.storageKey || 'drishti.tableRows';
+      const document = doc, location = win.location, getComputedStyle = win.getComputedStyle.bind(win);
+      const setTimeout = win.setTimeout.bind(win), clearTimeout = win.clearTimeout.bind(win), requestAnimationFrame = win.requestAnimationFrame.bind(win);
+      const CustomEvent = win.CustomEvent, MutationObserver = win.MutationObserver, ResizeObserver = win.ResizeObserver;
+      const localStorage = { getItem: (k) => win.localStorage.getItem(k), setItem: (k, v) => win.localStorage.setItem(k, v) };
+      var scope = options.scope || location.pathname;
+      var inDoc = root === document;
+      var state = {};                      // a table's key -> its view state, so a re-rendered table keeps its place
+      function size() {
+        try { var n = parseInt(localStorage.getItem(KEY), 10); return SIZES.indexOf(n) >= 0 ? n : 25; } catch (e) { return 25; }
+      }
+      function keyOf(t) {
+        var panel = t.closest('[data-panel], section[id], .pnl');
+        return scope + '|' + (panel && (panel.getAttribute('data-panel') || panel.id) || '') + '|' +
+          Array.prototype.indexOf.call(root.querySelectorAll('table.tbl'), t);
+      }
+      function urlKey(t) {
+        var panel = t.closest('[data-panel], section[id], .pnl');
+        var id = panel && (panel.getAttribute('data-panel') || panel.id);
+        if (!id) { return 't' + Array.prototype.indexOf.call(root.querySelectorAll('table.tbl'), t); }
+        var n = Array.prototype.indexOf.call(panel.querySelectorAll('table.tbl'), t);
+        return id + (n > 0 ? '~' + (n + 1) : '');
+      }
+      function el(tag, cls, text) { var e = document.createElement(tag); if (cls) { e.className = cls; } if (text != null) { e.textContent = text; } return e; }
+      function button(label, title, fn) {
+        var b = el('button', 'fk tbl-pg-b', label);
+        b.type = 'button'; b.title = title; b.setAttribute('aria-label', title);
+        b.addEventListener('click', fn);
+        return b;
+      }
+      function cellText(r, i) { var c = r.cells[i]; return c ? c.textContent.replace(/\s+/g, ' ').trim() : ''; }
+      var value = textSortKey, compare = compareTextKeys;
+      function passes(text, q) {
+        var m = q.match(/^\s*(>=|<=|>|<|=)\s*(.+)$/);
+        if (m) {
+          var v = value(text), w = value(m[2]);
+          if (v.n == null || w.n == null) { return false; }
+          return m[1] === '>' ? v.n > w.n : m[1] === '<' ? v.n < w.n : m[1] === '>=' ? v.n >= w.n : m[1] === '<=' ? v.n <= w.n : v.n === w.n;
+        }
+        return text.toLowerCase().indexOf(q.toLowerCase()) >= 0;
+      }
+      function enhance(t) {
+        if (t.__paged || !t.tBodies.length || t.hasAttribute('data-plain')) { return; }
+        t.__paged = true;
+        if (!t.hasAttribute('data-resize')) {                              // resizable columns, remembered per table (drishti-core's resize)
+          t.setAttribute('data-resize', 'columns'); t.setAttribute('data-resize-key', 'table.' + scope + '|' + urlKey(t));
+        }
+        var body = t.tBodies[0];
+        var original = Array.prototype.slice.call(body.rows);            // the server's order, restored on a third click
+        var heads = t.tHead && t.tHead.rows.length ? Array.prototype.slice.call(t.tHead.rows[0].cells) : [];
+        var k = keyOf(t);
+        var st = state[k] || (state[k] = { page: 0, sel: -1, col: -1, dir: 0, q: '', cols: {}, open: false, f: {} });
+        function all() { return Array.prototype.slice.call(body.rows); }
+        function visible() { return all().filter(function (r) { return !r.__out; }); }
+        function sort() {
+          var rows = original.slice();
+          if (st.col >= 0 && st.dir) {
+            var keyed = rows.map(function (r, i) { var t = cellText(r, st.col); return { r: r, v: value(t), i: i, blank: t === '' ? 1 : 0 }; });
+            keyed.sort(function (a, b) { return a.blank - b.blank || st.dir * compare(a.v, b.v) || a.i - b.i; });          // blank cells last, whichever way
+            rows = keyed.map(function (x) { return x.r; });
+          }
+          rows.forEach(function (r) { body.appendChild(r); });
+          heads.forEach(function (h, i) {
+            h.setAttribute('aria-sort', i === st.col && st.dir ? (st.dir > 0 ? 'ascending' : 'descending') : 'none');
+          });
+        }
+        heads.forEach(function (h, i) {
+          h.classList.add('tbl-sortable');
+          h.tabIndex = 0;
+          h.title = (h.title ? h.title + ' · ' : '') + 'Sort';
+          function cycle() {
+            if (st.col !== i) { st.col = i; st.dir = 1; } else { st.dir = st.dir === 1 ? -1 : st.dir === -1 ? 0 : 1; }
+            st.sel = -1; st.page = 0; sort(); render();
+          }
+          h.addEventListener('click', function (e) { if (!e.target.closest('.cf-btn')) { cycle(); } });
+          h.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && !e.target.closest('.cf-btn')) { e.preventDefault(); cycle(); } });
+        });
+        var filterRow = null;
+        function textOut(r) {                                  // the quick search and the per-column text boxes
+          if (st.q) {
+            var any = false;
+            for (var i = 0; i < r.cells.length; i++) { if (passes(cellText(r, i), st.q)) { any = true; break; } }
+            if (!any) { return true; }
+          }
+          return Object.keys(st.cols).some(function (c) { return st.cols[c] && !passes(cellText(r, +c), st.cols[c]); });
+        }
+        function filter() {
+          ctl.prepare();
+          all().forEach(function (r) { r.__out = textOut(r) || !ctl.pass(r); });
+        }
+        function filtered() { return !!st.q || ctl.active() || Object.keys(st.cols).some(function (c) { return st.cols[c]; }); }
+        var ctl = t.hasAttribute('data-no-search') ? { prepare: function () {}, pass: function () { return true; }, active: function () { return false; }, clear: function () {} } : CF.attach({
+          id: k, key: urlKey(t), table: t, root: root, heads: heads, state: st, useUrl: inDoc,
+          rows: all, text: cellText, base: function (r) { return !textOut(r); },
+          sort: function (i, dir) { st.col = i; st.dir = dir; st.sel = -1; st.page = 0; sort(); render(); },
+          sorted: function () { return { col: st.col, dir: st.dir }; },
+          onChange: function () { st.page = 0; st.sel = -1; filter(); render(true); }
+        });
+        t.__tblClear = function () {
+          st.q = ''; quick.value = ''; Object.keys(st.cols).forEach(function (c) { delete st.cols[c]; });
+          if (filterRow) { filterRow.querySelectorAll('input').forEach(function (x) { x.value = ''; }); }
+          ctl.clear(true); st.page = 0; st.sel = -1; filter(); render(true);
+        };
+        function columnFilters(show) {
+          st.open = show;
+          if (!show) { if (filterRow) { filterRow.remove(); filterRow = null; } return; }
+          if (filterRow || !t.tHead) { return; }
+          filterRow = el('tr', 'tbl-filter');
+          heads.forEach(function (h, i) {
+            var td = el('th'), inp = el('input', 'tbl-filter-in mono');
+            inp.type = 'search'; inp.placeholder = 'filter'; inp.value = st.cols[i] || '';
+            inp.setAttribute('aria-label', 'Filter ' + (h.textContent || 'column ' + (i + 1)).trim());
+            inp.addEventListener('input', function () { st.cols[i] = inp.value.trim(); st.page = 0; st.sel = -1; filter(); render(true); });
+            inp.addEventListener('click', function (e) { e.stopPropagation(); });
+            td.appendChild(inp); filterRow.appendChild(td);
+          });
+          t.tHead.appendChild(filterRow);
+        }
+        var bar = el('div', 'tbl-pg'), info = el('span', 'tbl-pg-info mono');
+        var quick = el('input', 'tbl-pg-q mono');
+        quick.type = 'search'; quick.placeholder = 'Filter rows'; quick.value = st.q;
+        quick.setAttribute('aria-label', 'Filter the rows of this table');
+        var funnel = button('⧩', 'Type a filter under each column heading (text, or >1m)', function () { columnFilters(!st.open); funnel.classList.toggle('on', st.open); });
+        var sizeSel = el('select', 'tbl-pg-size');
+        sizeSel.setAttribute('aria-label', 'Rows per page');
+        SIZES.forEach(function (n) { var o = el('option', null, n + ' rows'); o.value = n; sizeSel.appendChild(o); });
+        sizeSel.value = size();
+        var fitOn = false, fitN = null, picked = null;
+        function perPage() { return picked || fitN || size(); }
+        function pages() { return Math.max(1, Math.ceil(visible().length / perPage())); }
+        var clearBtn = null, lastLive = '';
+        function render(say) {
+          var vis = visible(), per = perPage(), n = pages();
+          st.page = Math.min(Math.max(0, st.page), n - 1);
+          all().forEach(function (r) { r.hidden = true; r.classList.remove('tbl-sel'); r.setAttribute('aria-selected', 'false'); });
+          vis.forEach(function (r, i) {
+            r.hidden = Math.floor(i / per) !== st.page;
+            if (i === st.sel) { r.classList.add('tbl-sel'); r.setAttribute('aria-selected', 'true'); }
+          });
+          var total = all().length, from = vis.length ? st.page * per + 1 : 0, to = Math.min(vis.length, (st.page + 1) * per);
+          var isF = filtered();
+          info.textContent = (isF ? vis.length + ' of ' + total + ' rows (filtered)' : from + '–' + to + ' of ' + vis.length)
+            + (n > 1 ? ' · page ' + (st.page + 1) + ' of ' + n : '');
+          if (clearBtn) { clearBtn.hidden = !isF; }
+          var live = isF ? vis.length + ' of ' + total + ' rows (filtered)' : total + ' rows';
+          if (say === true && live !== lastLive) { CF.say(root, live); }
+          lastLive = live;
+          bar.querySelectorAll('[data-pg=back]').forEach(function (b) { b.disabled = st.page === 0; });
+          bar.querySelectorAll('[data-pg=fwd]').forEach(function (b) { b.disabled = st.page >= n - 1; });
+        }
+        function go(p) { st.page = p; render(); }
+        function select(i, scroll) {
+          var vis = visible();
+          if (!vis.length) { return; }
+          st.sel = Math.min(Math.max(0, i), vis.length - 1);
+          st.page = Math.floor(st.sel / perPage());
+          render();
+          if (scroll && vis[st.sel].scrollIntoView) { vis[st.sel].scrollIntoView({ block: 'nearest' }); }
+        }
+        function open() {
+          var r = visible()[st.sel], a = r && (r.querySelector('a[data-dr-open]') || r.querySelector('a[href]'));   // a drill row opens its level
+          if (a) { a.click(); }
+        }
+        var first = button('«', 'First page', function () { go(0); }), prev = button('‹', 'Previous page', function () { go(st.page - 1); });
+        var next = button('›', 'Next page', function () { go(st.page + 1); }), last = button('»', 'Last page', function () { go(pages() - 1); });
+        var up = button('▲', 'Previous row (↑)', function () { select(st.sel < 0 ? 0 : st.sel - 1, true); t.focus(); });
+        var down = button('▼', 'Next row (↓)', function () { select(st.sel + 1, true); t.focus(); });
+        [first, prev].forEach(function (b) { b.setAttribute('data-pg', 'back'); });
+        [next, last].forEach(function (b) { b.setAttribute('data-pg', 'fwd'); });
+        var panel = t.closest('.pnl[data-kind]');
+        var searchable = !t.hasAttribute('data-no-search');           // every table, unless its Sutra says search: false
+        var nav = el('span', 'tbl-pg-nav');
+        [first, prev, info, next, last].forEach(function (x) { nav.appendChild(x); });
+        clearBtn = button('Clear filters', 'Clear all filters on this table (Alt+Shift+X)', function () { t.__tblClear(); });
+        clearBtn.classList.add('tbl-clear'); clearBtn.textContent = '✕ Clear filters'; clearBtn.hidden = true;
+        if (searchable) { bar.appendChild(quick); bar.appendChild(funnel); bar.appendChild(clearBtn); }
+        [nav, up, down, sizeSel].forEach(function (x) { bar.appendChild(x); });
+        var chartable = !!options.openChart && (inDoc || !!options.chart) && !t.hasAttribute('data-no-chart') && !t.closest('[data-no-chart], dialog, .pv-host') && heads.length > 0;   // the Pivot tab has its own chart
+        function chart() {
+          if (!chartable) { return; }
+          options.openChart(t, { visible: visible, filtered: filtered() }, chartBtn);
+        }
+        var chartBtn = null;
+        if (chartable) {
+          chartBtn = button('', 'Chart this table (K)', chart);
+          chartBtn.classList.add('tbl-chart-b'); chartBtn.setAttribute('aria-keyshortcuts', 'K'); chartBtn.setAttribute('data-table-chart', '');
+          var ci = el('i', 'bi bi-bar-chart-line'); ci.setAttribute('aria-hidden', 'true'); chartBtn.appendChild(ci);
+          bar.appendChild(chartBtn);
+        }
+        var wrap = t.closest('.tbl-wrap') || t;
+        var head = panel && panel.querySelector(':scope > .pnl-h');
+        if (head && panel.querySelectorAll('table.tbl').length === 1) {
+          var old = head.querySelector('.tbl-pg');
+          if (old) { old.remove(); }
+          bar.classList.add('in-head');
+          head.insertBefore(bar, head.querySelector('.pnl-code'));
+        } else if (wrap.parentNode) {                   // (a table repainted away before this ran is left alone)
+          wrap.parentNode.insertBefore(bar, wrap);      // a strip above the table (pick lists, admin lists, tabs)
+        }
+        quick.addEventListener('input', function () { st.q = quick.value.trim(); st.page = 0; st.sel = -1; filter(); render(true); });
+        sizeSel.addEventListener('change', function () {
+          if (fitOn) {                                        // zoomed: a pick holds until restore and is not remembered; "Fit" goes back to the measured size
+            reflow(function () { picked = sizeSel.value === 'fit' ? null : parseInt(sizeSel.value, 10); });
+            syncSel();
+            return;
+          }
+          try { localStorage.setItem(KEY, sizeSel.value); } catch (e) { /* private window: this page only */ }
+          root.querySelectorAll('.tbl-pg-size').forEach(function (s) { s.value = sizeSel.value; });
+          root.dispatchEvent(new CustomEvent('drishti:table-size'));
+        });
+        root.addEventListener('drishti:table-size', onSize);
+        function onSize() { if (!t.isConnected) { return; } st.page = st.sel >= 0 ? Math.floor(st.sel / perPage()) : 0; render(); syncSel(); }
+        var anchor = null, anchorPage = -1;                  // the top row when the fit began, kept while the reader has not paged since
+        function reflow(change) {
+          if (anchor == null || st.page !== anchorPage) { anchor = st.page * perPage(); }
+          change();
+          st.page = Math.floor(anchor / perPage());
+          render();
+          anchorPage = st.page;
+        }
+        function syncSel() {
+          var o = sizeSel.querySelector('option[value=fit]');
+          if (fitOn && fitN) {
+            if (!o) { o = el('option'); o.value = 'fit'; sizeSel.insertBefore(o, sizeSel.firstChild); }
+            o.textContent = 'Fit (' + fitN + ')';
+            sizeSel.value = picked ? picked : 'fit';
+          } else {
+            if (o) { o.remove(); }
+            sizeSel.value = size();
+          }
+        }
+        function room() {
+          var cont = t.closest('.pnl-b'), shown = all().filter(function (r) { return !r.hidden; });
+          if (!cont || !t.offsetParent || !shown.length) { return 0; }
+          var sum = shown.reduce(function (a, r) { return a + r.offsetHeight; }, 0);
+          if (!sum) { return 0; }
+          var cr = cont.getBoundingClientRect(), bottom = 0;
+          Array.prototype.forEach.call(cont.children, function (c) { if (c.offsetParent) { bottom = Math.max(bottom, c.getBoundingClientRect().bottom); } });
+          var content = bottom - cr.top + cont.scrollTop + (parseFloat(getComputedStyle(cont).paddingBottom) || 0);
+          return Math.max(MIN_FIT, Math.floor((cont.clientHeight - (content - sum)) / (sum / shown.length)));
+        }
+        t.__tblFit = function (on) {
+          if (!on) {
+            if (!fitOn) { return; }
+            reflow(function () { fitOn = false; fitN = null; picked = null; });
+            anchor = null;
+            syncSel();
+            return;
+          }
+          var n = room();
+          if (!n) { return; }
+          var cont = t.closest('.pnl-b');
+          fitOn = true;
+          if (n !== fitN) { reflow(function () { fitN = n; }); }
+          for (var i = 0; i < 3 && !picked && fitN > MIN_FIT && cont.scrollHeight > cont.clientHeight + 1; i++) {   // rows taller than the average: one fewer until nothing scrolls
+            reflow(function () { fitN -= 1; });
+          }
+          syncSel();
+        };
+        if (zoomFit) { scheduleFit(); }
+        t.tabIndex = 0;
+        t.setAttribute('aria-label', (t.getAttribute('aria-label') || 'Table') + ': ↑ ↓ to move, Enter to open' + (chartable ? ', K to chart' : '') + '; click a heading to sort');
+        t.addEventListener('click', function (e) {
+          var tr = e.target.closest('tbody tr');
+          if (tr) { st.sel = visible().indexOf(tr); render(); }
+        });
+        t.addEventListener('keydown', function (e) {
+          if (e.target !== t && e.target.closest('input, select, textarea, button, th')) { return; }
+          var per = perPage(), handled = true;
+          switch (e.key) {
+            case 'ArrowDown': select(st.sel + 1, true); break;
+            case 'ArrowUp': select(st.sel < 0 ? 0 : st.sel - 1, true); break;
+            case 'PageDown': select(st.sel < 0 ? per : st.sel + per, true); break;
+            case 'PageUp': select(st.sel - per, true); break;
+            case 'Home': select(0, true); break;
+            case 'End': select(visible().length - 1, true); break;
+            case 'Enter': if (st.sel >= 0) { open(); } else { handled = false; } break;
+            case 'k': case 'K': if (chartable && !e.altKey && !e.ctrlKey && !e.metaKey) { chart(); } else { handled = false; } break;
+            default: handled = false;
+          }
+          if (handled) { e.preventDefault(); }
+        });
+        if (st.open) { columnFilters(true); funnel.classList.add('on'); }
+        sort(); filter(); render();
+      }
+      function scan(node) {
+        (node.querySelectorAll ? node.querySelectorAll('table.tbl') : []).forEach(enhance);
+        if (node.matches && node.matches('table.tbl')) { enhance(node); }
+      }
+      var fitTimer = 0, fitRo = null, fitMo = null, fitSeen = null;
+      function zoomedPanel() { return root.querySelector('.pnl.pnl-zoom'); }
+      var zoomFit = false;
+      function fitAll(on) {
+        var p = on ? zoomedPanel() : root;
+        (p ? p.querySelectorAll('table.tbl') : []).forEach(function (x) { if (x.__tblFit) { x.__tblFit(on); } });
+        if (on && p) { watchFit(p); }
+      }
+      function fitting(on) { var p = zoomedPanel() || fitSeen; if (p) { if (on) { p.setAttribute('data-table-fitting', ''); } else { p.removeAttribute('data-table-fitting'); } } }
+      function scheduleFit() { if (!fitTimer && zoomFit) { fitting(true); fitTimer = setTimeout(function () { fitTimer = 0; if (zoomFit) { fitAll(true); } fitting(false); }, 100); } }
+      function watchFit(p) {
+        if (fitSeen === p) { return; }
+        unwatchFit();
+        fitSeen = p;
+        var body = p.querySelector(':scope > .pnl-b') || p;
+        if (ResizeObserver) { fitRo = new ResizeObserver(scheduleFit); fitRo.observe(body); }
+        fitMo = new MutationObserver(function (list) {          // a tab or pane shown, rows added or removed by a live patch; not our own paging
+          for (var i = 0; i < list.length; i++) {
+            var m = list[i], tg = m.target;
+            if (tg.nodeType !== 1 || (tg.closest && tg.closest('.tbl-pg')) || tg.tagName === 'TR') { continue; }
+            scheduleFit();
+            return;
+          }
+        });
+        fitMo.observe(p, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
+      }
+      function unwatchFit() {
+        if (fitRo) { fitRo.disconnect(); fitRo = null; }
+        if (fitMo) { fitMo.disconnect(); fitMo = null; }
+        fitSeen = null;
+      }
+      function onFit(e) {
+        var on = !!(e.detail && e.detail.on);
+        zoomFit = on;
+        if (!on) { if (fitTimer) { clearTimeout(fitTimer); fitTimer = 0; } root.querySelectorAll('[data-table-fitting]').forEach(function (x) { x.removeAttribute('data-table-fitting'); }); unwatchFit(); }
+        fitAll(on);
+      }
+      root.addEventListener('drishti:table-fit', onFit);
+      function onClearKey(e) {
+        if (!(e.altKey && e.shiftKey) || e.ctrlKey || e.metaKey || !(e.code === 'KeyX' || e.key === 'X' || e.key === 'x')) { return; }
+        var tg = (e.composedPath && e.composedPath()[0]) || e.target, p = tg && tg.closest && tg.closest('.pnl, section[data-panel]');
+        e.preventDefault();
+        CF.close();
+        Array.prototype.forEach.call((p || root).querySelectorAll('table.tbl'), function (x) { if (x.__tblClear) { x.__tblClear(); } });
+      }
+      root.addEventListener('keydown', onClearKey);
+      zoomFit = !!zoomedPanel();                      // zoomed from the link before this ran
+      scan(root);
+      if (zoomFit) { fitAll(true); }
+      var mo = new MutationObserver(function (list) {
+        list.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.nodeType === 1) { scan(n); } }); });
+      });
+      mo.observe(root === document ? document.body : root, { childList: true, subtree: true });
+      return { scan: scan, dispose: function () { mo.disconnect(); root.removeEventListener('drishti:table-fit', onFit); root.removeEventListener('keydown', onClearKey); CF.close(); unwatchFit(); if (fitTimer) { clearTimeout(fitTimer); } } };
+    }
+    return { "consoleTables": consoleTables };
+  })();
   /* ---- src/drishti_doc-table.js ---- */
   __m["src/drishti_doc-table.js"] = (function () {
     var h = __lib("drishti-core").h, roundHalfUp = __lib("drishti-core").roundHalfUp;
@@ -4821,7 +5176,7 @@
   __m["src/drishti_index.js"] = (function () {
     var defineGridElement = __m["src/drishti_grid-element.js"].defineGridElement;
     function install(root) { if (root && root.document && root.customElements) { defineGridElement(root.customElements, root); } }
-    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot.js"].resultColumns, "cellValue": __m["src/drishti_pivot.js"].cellValue, "measureText": __m["src/drishti_pivot.js"].measureText, "answerFormat": __m["src/drishti_pivot.js"].answerFormat, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "LAYOUTS": __m["src/drishti_grid-model-base.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid-model-base.js"].DENSITIES, "GridModelBase": __m["src/drishti_grid-model-base.js"].GridModelBase, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "EDITORS": __m["src/drishti_grid-edit.js"].EDITORS, "editorOf": __m["src/drishti_grid-edit.js"].editorOf, "parseCellText": __m["src/drishti_grid-edit.js"].parseCellText, "validateCell": __m["src/drishti_grid-edit.js"].validateCell, "parseTsv": __m["src/drishti_grid-edit.js"].parseTsv, "GridEditing": __m["src/drishti_grid-edit.js"].GridEditing, "CellEditor": __m["src/drishti_grid-editors.js"].CellEditor, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "docTable": __m["src/drishti_doc-table.js"].docTable, "docPivotable": __m["src/drishti_doc-table.js"].docPivotable, "docDrill": __m["src/drishti_doc-table.js"].docDrill, "heatBucket": __m["src/drishti_doc-table.js"].heatBucket, "docPivot": __m["src/drishti_doc-table.js"].docPivot, "docPlainTable": __m["src/drishti_doc-table.js"].docPlainTable, "treeVisibility": __m["src/drishti_doc-behave.js"].treeVisibility, "pageInfo": __m["src/drishti_doc-behave.js"].pageInfo, "enhanceDocTables": __m["src/drishti_doc-behave.js"].enhanceDocTables, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement };
+    return { "install": install, "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot.js"].resultColumns, "cellValue": __m["src/drishti_pivot.js"].cellValue, "measureText": __m["src/drishti_pivot.js"].measureText, "answerFormat": __m["src/drishti_pivot.js"].answerFormat, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "LAYOUTS": __m["src/drishti_grid-model-base.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid-model-base.js"].DENSITIES, "GridModelBase": __m["src/drishti_grid-model-base.js"].GridModelBase, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "EDITORS": __m["src/drishti_grid-edit.js"].EDITORS, "editorOf": __m["src/drishti_grid-edit.js"].editorOf, "parseCellText": __m["src/drishti_grid-edit.js"].parseCellText, "validateCell": __m["src/drishti_grid-edit.js"].validateCell, "parseTsv": __m["src/drishti_grid-edit.js"].parseTsv, "GridEditing": __m["src/drishti_grid-edit.js"].GridEditing, "CellEditor": __m["src/drishti_grid-editors.js"].CellEditor, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml, "docTable": __m["src/drishti_doc-table.js"].docTable, "docPivotable": __m["src/drishti_doc-table.js"].docPivotable, "docDrill": __m["src/drishti_doc-table.js"].docDrill, "heatBucket": __m["src/drishti_doc-table.js"].heatBucket, "docPivot": __m["src/drishti_doc-table.js"].docPivot, "docPlainTable": __m["src/drishti_doc-table.js"].docPlainTable, "treeVisibility": __m["src/drishti_doc-behave.js"].treeVisibility, "pageInfo": __m["src/drishti_doc-behave.js"].pageInfo, "enhanceDocTables": __m["src/drishti_doc-behave.js"].enhanceDocTables, "consoleTables": __m["src/drishti_doc-console.js"].consoleTables, "VIEW_EVENTS": __m["src/drishti_grid-ui.js"].VIEW_EVENTS, "PHONE_WIDTH": __m["src/drishti_grid-ui.js"].PHONE_WIDTH, "FUNCTION_KEYS": __m["src/drishti_grid-ui.js"].FUNCTION_KEYS, "CF_TYPES": __m["src/drishti_grid-ui.js"].CF_TYPES, "headerSpans": __m["src/drishti_grid-ui.js"].headerSpans, "pivotColumnLabels": __m["src/drishti_grid-ui.js"].pivotColumnLabels, "markGroups": __m["src/drishti_grid-ui.js"].markGroups, "isTotalCell": __m["src/drishti_grid-ui.js"].isTotalCell, "nonAdditiveNote": __m["src/drishti_grid-ui.js"].nonAdditiveNote, "colourScaleAlpha": __m["src/drishti_grid-ui.js"].colourScaleAlpha, "dataBarWidth": __m["src/drishti_grid-ui.js"].dataBarWidth, "cfBackground": __m["src/drishti_grid-ui.js"].cfBackground, "figureRange": __m["src/drishti_grid-ui.js"].figureRange, "ruleFor": __m["src/drishti_grid-ui.js"].ruleFor, "phoneColumns": __m["src/drishti_grid-ui.js"].phoneColumns, "pivotMeasures": __m["src/drishti_grid-ui.js"].pivotMeasures, "columnMenuItems": __m["src/drishti_grid-ui.js"].columnMenuItems, "cellMenuItems": __m["src/drishti_grid-ui.js"].cellMenuItems, "commandText": __m["src/drishti_grid-ui.js"].commandText, "parseCommand": __m["src/drishti_grid-ui.js"].parseCommand, "parseCondition": __m["src/drishti_grid-ui.js"].parseCondition, "conditionText": __m["src/drishti_grid-ui.js"].conditionText, "statusItems": __m["src/drishti_grid-ui.js"].statusItems, "FlashTracker": __m["src/drishti_grid-ui.js"].FlashTracker, "Menu": __m["src/drishti_grid-dom.js"].Menu, "Notes": __m["src/drishti_grid-dom.js"].Notes, "sparkline": __m["src/drishti_grid-explain.js"].sparkline, "renderExplain": __m["src/drishti_grid-explain.js"].renderExplain, "localDrill": __m["src/drishti_grid-actions.js"].localDrill, "GridBase": __m["src/drishti_grid-base.js"].GridBase, "Grid": __m["src/drishti_grid-view.js"].Grid, "ELEMENT_NAME": __m["src/drishti_grid-element.js"].ELEMENT_NAME, "defineGridElement": __m["src/drishti_grid-element.js"].defineGridElement };
   })();
   return Object.freeze(Object.assign({ library: "drishti-grid", version: "0.4.0" }, __m["src/drishti_index.js"]));
 });

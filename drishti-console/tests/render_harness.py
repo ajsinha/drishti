@@ -75,7 +75,8 @@ def console_html(vm: dict, theme: str = "", design_on: bool = True) -> str:
     view = (f'<div class="view" data-view data-kind="{ref.get("kind", "")}" data-id="{ref.get("id", "")}">'
             + str(parts.provenance_banners(vm, "live", {}, False, "")) + str(parts.vhead(vm)) + body + "</div>")
     links = "".join(f'<link rel="stylesheet" href="/static/{s.removeprefix("static/")}">' for s in CONSOLE_SHEETS)
-    scripts = "".join(f'<script src="{s}"></script>' for s in ("/render-test/csp.js", "/static/vendor/echarts/echarts.min.js", "/static/js/drishti_geomap.js", "/static/js/drishti_charts.js", "/static/js/drishti_view.js"))
+    scripts = "".join(f'<script src="{s}"></script>' for s in ("/render-test/csp.js", "/static/vendor/echarts/echarts.min.js", "/static/js/drishti_geomap.js", "/static/elements/drishti-chart/drishti_chart.js",
+                                                                     "/static/js/drishti_charts.js", "/static/js/drishti_view.js"))
     # the resize component (drishti-core) in the head: the grid's split is its handle (drishti_screen-grid.js)
     resize = '<link rel="stylesheet" href="/static/css/drishti_resize.css"><script src="/static/elements/drishti-core/drishti_core.js"></script>'
     t = f' data-theme="{theme}"' if theme else ""

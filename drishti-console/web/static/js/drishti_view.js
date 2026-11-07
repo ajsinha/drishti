@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* Entity views: function keys, tabs, bars, charts (ECharts, colours from tokens), the F9 raw drawer,
+/* Entity views: function keys, tabs, bars (the charts: drishti_charts.js, on drishti-chart), the F9 raw drawer,
    breadcrumbs (per browser tab) and the market clock. */
 (function () {
   'use strict';
@@ -33,12 +33,10 @@
     tick(); setInterval(tick, 1000);
   }
 
-  /** The parts of a view that are the same in the console and inside an element: bars, tabs, line and area charts, surfaces.
-      init(root, options): root is the document or a ShadowRoot; options.glUrl (null: no 3D). Returns {enhance, redraw, updateChart, dispose}. */
-  function init(root, options) {
-    options = options || {};
+  /** The parts of a view that are the same in the console and inside an element: bars and tabs (its charts are drishti_charts.js's).
+      init(root): root is the document or a ShadowRoot. Returns {enhance, redraw, updateChart, dispose}. */
+  function init(root) {
     var undo = [];
-    function on(t, type, fn) { t.addEventListener(type, fn); undo.push(function () { t.removeEventListener(type, fn); }); }
   // ---- bars and gauges: widths from data-w (the CSP forbids inline styles) ---------------------
   function widths(root) {
     root.querySelectorAll('[data-w]').forEach(function (el) {
@@ -61,177 +59,23 @@
     });
   }); }
 
-  // ---- charts ---------------------------------------------------------------------------------
-  var charts = [];
-  function tokens() {
-    var s = getComputedStyle(root.host || document.documentElement), t = {};
-    ['ink', 'muted', 'faint', 'border', 'link', 'accent', 'neg', 'pos', 'surface'].forEach(function (k) { t[k] = s.getPropertyValue('--d-' + k).trim(); });
-    t.mono = s.getPropertyValue('--d-font-mono').trim();
-    return t;
-  }
-  function option(el, t) {
-    var d = JSON.parse(el.getAttribute('data-chart')) || {}, area = el.getAttribute('data-kind') === 'area';
-    d.x = d.x || []; d.series = d.series || [];
-    var tone = function (n) { return t[n] || t.link; };
-    var series = d.series.map(function (s) {
-      s.values = (s.values || []).map(function (v) { return typeof v === 'number' && isFinite(v) ? v : null; });
-      var o = { type: 'line', name: s.label, data: s.values, connectNulls: false, smooth: false, symbol: 'circle', symbolSize: 5,
-        lineStyle: { width: 1.6, color: tone(s.tone) }, itemStyle: { color: tone(s.tone) } };
-      if (area) { o.areaStyle = { color: tone(s.tone), opacity: .12 }; o.symbol = 'none'; }
-      if (d.step) { o.step = 'end'; o.symbol = 'none'; }               // a schedule: a value holds until the next date
-      if (d.mark) {
-        var i = d.x.indexOf(d.mark);
-        if (i >= 0) { o.markPoint = { symbol: 'circle', symbolSize: 10, itemStyle: { color: t.accent }, label: { show: false }, data: [{ coord: [i, s.values[i]] }] }; }
-      }
-      return o;
-    });
-    if (d.limit != null && series.length) {
-      series[0].markLine = { symbol: 'none', silent: true, lineStyle: { type: 'dashed', color: t.neg },
-        label: { position: 'insideEndTop', formatter: (d.limitLabel || 'limit') + ' ' + compact(d.limit), color: t.neg, fontSize: 10 }, data: [{ yAxis: d.limit }] };
-    }
-    var axis = { axisLine: { lineStyle: { color: t.border } }, axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 10 }, splitLine: { lineStyle: { color: t.border, opacity: .5 } } };
-    var yAxis = Object.assign({ type: 'value', scale: !area, axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 10, formatter: compact } }, { axisLine: axis.axisLine, splitLine: axis.splitLine });
-    if (typeof d.limit === 'number' && isFinite(d.limit)) {
-      // the axis reaches the limit, so its dashed line shows even when every value stays below (or above) it
-      yAxis.max = function (v) { var m = Math.max(v.max, d.limit); return m + Math.abs(m - Math.min(v.min, d.limit)) * 0.05; };
-      yAxis.min = function (v) { var m = Math.min(v.min, d.limit); return area && m >= 0 ? 0 : m - Math.abs(Math.max(v.max, d.limit) - m) * 0.05; };
-    }
-    return {
-      animationDuration: 500, grid: { left: 44, right: 12, top: 12, bottom: 22 },
-      tooltip: { trigger: 'axis', backgroundColor: t.surface, borderColor: t.border, textStyle: { color: t.ink, fontFamily: t.mono, fontSize: 11 } },
-      xAxis: Object.assign({ type: 'category', data: d.x, boundaryGap: false }, axis),
-      yAxis: yAxis,
-      series: series
-    };
-  }
-  function compact(v) {
-    if (typeof v !== 'number' || !isFinite(v)) { return ''; }
-    var a = Math.abs(v);
-    if (a >= 1e9) { return (v / 1e9).toFixed(1) + 'bn'; }
-    if (a >= 1e6) { return (v / 1e6).toFixed(a >= 1e7 ? 0 : 1) + 'm'; }
-    if (a >= 1e5) { return (v / 1e3).toFixed(0) + 'k'; }
-    if (a >= 1e4) { return (v / 1e3).toFixed(1) + 'k'; }
-    return Math.round(v * 100) / 100;
-  }
-  function drawCharts(scope) {
-    if (!window.echarts) { return; }
-    var t = tokens();
-    var within = scope && scope.querySelectorAll ? scope : root;      // a panel swapped in (a refresh, a computed result landing), or the page
-    within.querySelectorAll('.chart[data-chart]').forEach(function (el) {
-      try {
-        var c = window.echarts.getInstanceByDom(el) || window.echarts.init(el, null, { renderer: 'svg' });
-        c.setOption(option(el, t), true);
-        if (charts.indexOf(c) < 0) { charts.push(c); }
-      } catch (e) {
-        // one chart whose data cannot be drawn must not stop the others or the page
-        el.removeAttribute('data-chart');
-        el.className = 'pnl-empty';
-        el.textContent = 'No data available';
-      }
-    });
-  }
-
-  // ---- surfaces: a heatmap, or a 3D surface that loads ECharts GL (vendored) only when first asked for ----------
-  function surfaceOption(d, t, view) {
-    var x = d.x || [], y = d.y || [], z = d.z || [], cells = [];
-    z.forEach(function (row, j) { (row || []).forEach(function (v, i) { if (typeof v === 'number' && isFinite(v)) { cells.push([i, j, v]); } }); });
-    var lo = d.min != null ? d.min : 0, hi = d.max != null ? d.max : 1;
-    var visual = { min: lo, max: hi, calculable: true, orient: 'horizontal', left: 'center', bottom: 0, itemHeight: 120, itemWidth: 10,
-      textStyle: { color: t.muted, fontFamily: t.mono, fontSize: 10 }, inRange: { color: [t.link, t.surface, t.accent] } };
-    if (view === '3d') {
-      var axis3 = function (name, labels) {
-        return { type: 'value', name: name, nameTextStyle: { color: t.muted }, min: 0, max: Math.max(labels.length - 1, 1), interval: 1,
-          axisLabel: { color: t.muted, fontSize: 9, formatter: function (v) { return labels[Math.round(v)] || ''; } } };
-      };
-      var pad = (hi - lo) * 0.15 || 1;
-      return { visualMap: Object.assign(visual, { show: false }),
-        xAxis3D: axis3('', x), yAxis3D: axis3('', y),
-        zAxis3D: { type: 'value', name: d.unit || '', min: Math.floor((lo - pad) * 100) / 100, max: Math.ceil((hi + pad) * 100) / 100,
-          nameTextStyle: { color: t.muted }, axisLabel: { color: t.muted, fontSize: 9 } },
-        grid3D: { viewControl: { alpha: 28, beta: 38, distance: 190 }, axisLine: { lineStyle: { color: t.border } },
-          splitLine: { lineStyle: { color: t.border, opacity: .4 } } },
-        series: [{ type: 'surface', wireframe: { show: true, lineStyle: { color: t.border, opacity: .6 } }, shading: 'color',
-          data: cells }] };
-    }
-    return { tooltip: { position: 'top', formatter: function (p) { return y[p.value[1]] + ' · ' + x[p.value[0]] + ': ' + p.value[2]; } },
-      grid: { left: 56, right: 12, top: 8, bottom: 70 },
-      xAxis: { type: 'category', data: x, splitArea: { show: true }, axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 10 } },
-      yAxis: { type: 'category', data: y, splitArea: { show: true }, axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 10 } },
-      visualMap: visual,
-      series: [{ type: 'heatmap', data: cells, label: { show: x.length * y.length <= 72, color: t.ink, fontFamily: t.mono, fontSize: 10,
-        formatter: function (p) { return Math.round(p.value[2] * 100) / 100; } } }] };
-  }
-  function loadGl(done) {
-    if (window.echarts && window.echarts.graphicGL) { done(); return; }
-    var s = document.createElement('script');
-    if (options.glUrl === null) { done(new Error('ECharts GL not offered here')); return; }
-    s.src = options.glUrl || '/static/vendor/echarts-gl/echarts-gl.min.js';
-    s.onload = function () { done(); };
-    s.onerror = function () { done(new Error('ECharts GL not available')); };
-    document.head.appendChild(s);
-  }
-  function drawSurface(el, view) {
-    if (!window.echarts) { return; }
-    var d;
-    try { d = JSON.parse(el.getAttribute('data-surface')) || {}; } catch (e) { return; }
-    var render = function (err) {
-      var t = tokens();
-      var existing = window.echarts.getInstanceByDom(el);
-      if (existing) { existing.dispose(); }
-      var draw = function (mode) {
-        var c = window.echarts.init(el, null, { renderer: mode === '3d' ? 'canvas' : 'svg' });
-        c.setOption(surfaceOption(d, t, mode), true);
-        charts.push(c);
-      };
-      try {
-        draw(err ? 'heatmap' : view);
-      } catch (e) {
-        // no WebGL, or a grid 3D cannot draw: the heatmap always can
-        el.setAttribute('data-error', String(e && e.message || e));
-        var broken = window.echarts.getInstanceByDom(el);
-        if (broken) { broken.dispose(); }
-        try { draw('heatmap'); } catch (e2) { el.textContent = 'No data available'; }
-      }
-    };
-    if (view === '3d') { loadGl(render); } else { render(); }
-  }
-  function surfacesIn(r) { r.querySelectorAll('.surface[data-surface]').forEach(function (el) { drawSurface(el, el.getAttribute('data-view') || 'heatmap'); }); }
-  widths(root); tabsIn(root); drawCharts(); surfacesIn(root);
-  on(root, 'drishti:theme', function () {
-    root.querySelectorAll('.surface[data-surface]').forEach(function (el) { drawSurface(el, el.getAttribute('data-view') || 'heatmap'); });
-  });
-  on(root, 'click', function (e) {
-    var b = e.target.closest('[data-surface-view]');
-    if (!b) { return; }
-    var panel = b.closest('.pnl-b'), el = panel && panel.querySelector('.surface[data-surface]');
-    if (!el) { return; }
-    panel.querySelectorAll('[data-surface-view]').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
-    el.setAttribute('data-view', b.getAttribute('data-surface-view'));
-    drawSurface(el, b.getAttribute('data-surface-view'));
-  });
-  // sizing: the window for the console; a ResizeObserver on the host for a shadow root (its box changes without the window)
-  if (root === document) { on(window, 'resize', function () { charts.forEach(function (c) { c.resize(); }); }); }
-  else if (window.ResizeObserver) {
-    var ro = new ResizeObserver(function () { requestAnimationFrame(function () { charts.forEach(function (c) { if (!c.isDisposed()) { c.resize(); } }); }); });
-    ro.observe(root.host); undo.push(function () { ro.disconnect(); });
-  }
-  on(root, 'drishti:theme', drawCharts);
+  // ---- charts: drawn by drishti_charts.js (drishti-chart's panel charts); a panel swapped in is drawn there too -----------------
+  widths(root); tabsIn(root);
 
   /** Hooks for drishti_live.js: re-enhance a replaced panel, and move a chart to new data without re-creating it. */
   var api = {
-    dispose: function () { undo.splice(0).forEach(function (f) { f(); }); charts.forEach(function (c) { if (!c.isDisposed()) { c.dispose(); } }); charts = []; },
+    dispose: function () { undo.splice(0).forEach(function (f) { f(); }); },
     enhance: function (r) {
-      widths(r); tabsIn(r); surfacesIn(r);
-      if (r && r.querySelector && r.querySelector('.chart[data-chart]')) { drawCharts(r); }
-      if (window.Drishti.charts) { window.Drishti.charts.draw(r); }
+      widths(r); tabsIn(r);
+      if (root === document && window.Drishti.charts && r && r.querySelector && r.querySelector('[data-chart], [data-xchart], [data-surface]')) { window.Drishti.charts.draw(r); }
     },
-    redraw: drawCharts,
+    redraw: function () { if (root === document && window.Drishti.charts) { window.Drishti.charts.draw(document); } },
     updateChart: function (id, data) {
       var el = (root.querySelector ? root : document).querySelector('#p-' + CSS.escape(id) + ' .chart[data-chart]');
-      if (!el || !window.echarts) { return; }
+      if (!el) { return; }
       el.setAttribute('data-chart', JSON.stringify(data));
-      var c = window.echarts.getInstanceByDom(el);
-      if (c) { c.setOption(option(el, tokens()), false); }
+      // the chart's host (drishti_charts.js, in the page or the element) moves it to the new data
+      el.dispatchEvent(new CustomEvent('drishti:chart-data', { bubbles: true, composed: false }));
       var foot = el.parentNode.querySelector('.chart-foot .mono');
       if (foot && data.markText) { foot.textContent = data.markText; }
     }

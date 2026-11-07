@@ -24,6 +24,8 @@ import * as assets from './drishti_assets.js';
 import { strip } from './drishti_view.js';
 import { personFetch } from './drishti_net.js';
 import { drawNestedPivots } from './drishti_nested.js';
+import { consoleTables } from '../../drishti-grid/src/drishti_index.js';
+import { textSortKey, compareTextKeys } from '../../drishti-core/src/drishti_index.js';
 
 /** The console's scripts still loaded, in the order they need each other (colfilter before tables). */
 export const SCRIPTS = ['colfilter', 'tables', 'zoom', 'multiselect', 'controls'];
@@ -52,7 +54,8 @@ export async function startBehaviours(s, view) {
   const scope = (o.server || location.origin) + '|' + ref.kind + '/' + ref.id;
   const mods = {};
   const start = (name, ...args) => { try { return reg[name] && reg[name].init(...args); } catch (e) { if (window.console) { console.warn('drishti-renderer: ' + name + ' not started', e); } return null; } };
-  mods.tables = start('tables', root, { scope, chart: true });
+  if (reg.colFilter && reg.colFilter.useSortKeys) { reg.colFilter.useSortKeys(textSortKey, compareTextKeys); }
+  mods.tables = start('tables', root, { scope, chart: true, grid: { consoleTables } });   // the tables are drishti-grid's; the console's host adds the funnels and the chart
   mods.zoom = start('zoom', root);
   if (view && (s.vm || {}).controls && (s.vm.controls || []).length && typeof o.panelsUrl === 'function') {
     view.setAttribute('data-controls', JSON.stringify(s.vm.controls)); view.setAttribute('data-selects', JSON.stringify(s.vm.selects || []));

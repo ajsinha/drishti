@@ -52,6 +52,8 @@ export const LIVE_STATES = Object.freeze(['idle', 'connecting', 'open', 'reconne
  * @property {Function} [EventSource] for tests or a polyfill
  * @property {Function} [WebSocket] for tests
  * @property {Object} [window] the window (online and offline events; default the page's)
+ * @property {Function} [setTimeout] the clock's timer functions (a fake clock in tests; default the page's or the worker's)
+ * @property {Function} [clearTimeout]
  */
 
 /**
@@ -70,7 +72,10 @@ export class LiveClient {
     /** @type {EventBus} state {state, attempt, waitMs}, error {error}, message {message} */
     this.events = new EventBus();
     this.backoff = new Backoff(this.o.backoff);
-    this.heart = new Heartbeat({ timeoutMs: this.o.heartbeatMs, onTimeout: () => this.dropped(new Error('no message or heartbeat for ' + Math.round(this.o.heartbeatMs / 1000) + ' s')) });
+    this.later = this.o.setTimeout || ((f, ms) => setTimeout(f, ms));
+    this.cancel = this.o.clearTimeout || ((t) => clearTimeout(t));
+    this.heart = new Heartbeat({ timeoutMs: this.o.heartbeatMs, setTimeout: this.later, clearTimeout: this.cancel,
+      onTimeout: () => this.dropped(new Error('no message or heartbeat for ' + Math.round(this.o.heartbeatMs / 1000) + ' s')) });
     this.subs = new Set();
     this.state = 'idle';
     this.lastEventId = null;
@@ -123,7 +128,7 @@ export class LiveClient {
 
   /** @private */
   connectNow() {
-    clearTimeout(this.retry);
+    this.cancel(this.retry);
     this.teardown();
     this.setState('connecting');
     this.stats.connects++;
@@ -133,9 +138,9 @@ export class LiveClient {
 
   /** @private */
   sse() {
-    const ES = this.o.EventSource || globalThis.EventSource;
-    if (!ES) { throw new Error('this page has no EventSource'); }
-    const es = new ES(this.address(), { withCredentials: !!this.o.withCredentials });
+    const Source = this.o.EventSource || globalThis.EventSource;
+    if (!Source) { throw new Error('this page has no EventSource'); }
+    const es = new Source(this.address(), { withCredentials: !!this.o.withCredentials });
     const onMsg = (e) => this.received(e.data, e.lastEventId, e.type);
     this.o.events.forEach((n) => es.addEventListener(n, onMsg));
     es.addEventListener('heartbeat', () => this.alive());
@@ -228,7 +233,7 @@ export class LiveClient {
     const offline = this.win && this.win.navigator && this.win.navigator.onLine === false;
     const wait = this.backoff.next();
     this.setState('reconnecting', { waitMs: offline ? null : wait, offline: !!offline, error: err.message });
-    if (!offline) { this.retry = setTimeout(() => this.connectNow(), wait); }
+    if (!offline) { this.retry = this.later(() => this.connectNow(), wait); }
   }
 
   /** @private */
@@ -246,7 +251,7 @@ export class LiveClient {
    */
   close() {
     this.stopped = true;
-    clearTimeout(this.retry);
+    this.cancel(this.retry);
     this.heart.stop();
     this.teardown();
     if (this.state !== 'idle') { this.setState('closed'); }

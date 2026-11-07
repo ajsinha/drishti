@@ -29,7 +29,7 @@
 
   function el(tag, cls, text) { var n = document.createElement(tag); if (cls) { n.className = cls; } if (text !== undefined) { n.textContent = text; } return n; }
   function btn(cls, text, on) { var b = el('button', cls, text); b.type = 'button'; if (on) { b.addEventListener('click', on); } return b; }
-  function show(v) { return v === null || v === undefined || v === '' ? '—' : typeof v === 'number' ? v.toLocaleString('en-US', { maximumFractionDigits: 6 }) : String(v); }
+  function show(v) { return v === null || v === undefined || v === '' ? '—' : typeof v === 'number' ? window.Drishti.elements.core.formatNumber(v, { maxDecimals: 6, minus: '-' }) : String(v); }
   function call(method, path, body) {
     return fetch('/api/changes' + (path || ''), { method: method, credentials: 'same-origin',
       headers: body ? { 'Content-Type': 'application/json', Accept: 'application/json' } : { Accept: 'application/json' }, body: body ? JSON.stringify(body) : undefined })

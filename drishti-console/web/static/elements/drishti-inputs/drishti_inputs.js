@@ -596,7 +596,7 @@
     class CodeEditor extends InputBase {
       constructor(host, options) {
         super(host, options, 'di-code');
-        const o = this.o = Object.assign({ mode: 'rachana', lineNumbers: true, height: 200, lintDelay: 400, value: '' }, this.o);
+        const o = this.o = Object.assign({ mode: 'rachana', lineNumbers: true, height: 200, lintDelay: 400, value: '', indentUnit: 2 }, this.o);
         if (!MODES[o.mode]) { throw new Error('no code mode ' + o.mode + ' (' + Object.keys(MODES).join(', ') + ')'); }
         this.value = String(o.value || '');
         this.problems = [];
@@ -605,6 +605,11 @@
         this.area.value = this.value;
         this.area.style.height = o.height + 'px';
         this.area.addEventListener('input', () => { this.value = this.area.value; this.changed(); });
+        this.area.addEventListener('keydown', (e) => {                                     // the page's keys before CodeMirror is in
+          const name = (e.ctrlKey ? 'Ctrl-' : '') + (e.metaKey ? 'Cmd-' : '') + (e.shiftKey ? 'Shift-' : '') + (e.key === 'Escape' ? 'Esc' : e.key);
+          const fn = o.keys && o.keys[name];
+          if (fn) { e.preventDefault(); fn(); }
+        });
         this.box = this.el('div', { cls: 'di-code-box' }, [this.area]);
         this.list = this.el('ul', { cls: 'di-problems', attrs: { 'aria-label': 'Problems', hidden: true } });
         host.append(this.box, this.list);
@@ -621,7 +626,7 @@
         const go = () => {
           this.area.remove();
           const cm = this.cm = CM(this.box, { value: this.value, mode: mode.cm, readOnly: o.readOnly ? true : false, lineNumbers: o.lineNumbers, gutters: ['di-lint-gutter', 'CodeMirror-linenumbers'],
-            indentUnit: 2, tabSize: 2, lineWrapping: false, screenReaderLabel: o.label || 'Code', extraKeys: { 'Ctrl-Space': () => this.complete(true), 'Cmd-Space': () => this.complete(true) } });
+            indentUnit: o.indentUnit, tabSize: o.indentUnit, indentWithTabs: false, lineWrapping: false, screenReaderLabel: o.label || 'Code', extraKeys: this.extraKeys() });
           cm.setSize(null, o.height);
           const ta = cm.getInputField();
           if (ta) { ta.setAttribute('aria-label', (o.label || 'Code') + (o.readOnly ? ' (read-only)' : '')); }
@@ -635,6 +640,14 @@
         if (mode.vendor && !(CM.modes && CM.modes[mode.cm])) { return loadScript(staticUrl(mode.vendor)).then(go); }
         return go();
       }
+      extraKeys() {
+        const unit = ' '.repeat(this.o.indentUnit), keys = { 'Ctrl-Space': () => this.complete(true), 'Cmd-Space': () => this.complete(true),
+          Tab: (cm) => { if (cm.somethingSelected()) { cm.indentSelection('add'); } else { cm.replaceSelection(unit, 'end'); } },
+          'Shift-Tab': (cm) => { cm.indentSelection('subtract'); } };
+        Object.keys(this.o.keys || {}).forEach((k) => { keys[k] = () => this.o.keys[k](); });
+        return keys;
+      }
+      refresh() { if (this.cm) { this.cm.refresh(); } }
       changed() { this.emit('change', { value: this.value }); if (this.o.lint) { this.lintSoon(); } }
       say(t) { this.host.setAttribute('data-note', t); announce(t); }
       complete(forced) {
