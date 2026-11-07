@@ -1,34 +1,72 @@
 {
   "elements": "1.0.0",
-  "about": "Drishti Elements: the console's JavaScript as reusable libraries. Each library: ES modules under src/ and one bundled file written by tools/elements/build.py. css paths are relative to the static root.",
+  "about": "Drishti Elements: the console's JavaScript as reusable libraries. Each library: ES modules under src/ and one bundled file written by tools/elements/build.py. css and scripts (a vendored engine) paths are relative to the static root; module: the domain module a library is licensed with.",
   "libraries": {
     "drishti-core": {
       "version": "1.1.0",
-      "title": "Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker, reading typed numbers, loading vendored engines",
+      "title": "Formats, theme, API client, events, accessibility, resize, keys, dialogs, drawers and toasts, the filter model every library shares, the element maker and placements, Explain's drawing, the CSV writer, reading typed numbers, loading vendored engines",
       "entry": "src/drishti_index.js",
       "requires": [],
-      "css": ["css/drishti_tokens.css", "css/drishti_resize.css"]
+      "css": [
+        "css/drishti_tokens.css",
+        "css/drishti_resize.css"
+      ]
     },
     "drishti-grid": {
       "version": "0.3.0",
       "title": "The grid: its engine (columns, row models, virtual scrolling, pivot, selection, export, keyboard) and its look (Grid and <drishti-grid> in three layouts and three densities), cell editing with undo, paste, write-back and four eyes",
       "entry": "src/drishti_index.js",
-      "requires": ["drishti-core"],
-      "css": ["elements/drishti-grid/drishti_grid.css"]
+      "requires": [
+        "drishti-core"
+      ],
+      "css": [
+        "elements/drishti-grid/drishti_grid.css"
+      ]
     },
     "drishti-inputs": {
       "version": "0.1.0",
       "title": "Inputs: business-date and range pickers with holiday calendars, the tree picker, the multi-select, the combobox with server type-ahead, forms from a schema with four eyes, the filter bar, the code editor over CodeMirror",
       "entry": "src/drishti_index.js",
-      "requires": ["drishti-core"],
-      "css": ["elements/drishti-inputs/drishti_inputs.css"]
+      "requires": [
+        "drishti-core"
+      ],
+      "css": [
+        "elements/drishti-inputs/drishti_inputs.css"
+      ]
     },
     "drishti-data": {
       "version": "0.1.0",
       "title": "Data: one data-source contract (in memory, REST pages, server-side rows, Arrow, live), the live client over SSE and WebSocket with reconnect, heartbeat, resume and backpressure, and the Arrow client",
       "entry": "src/drishti_index.js",
-      "requires": ["drishti-core"],
+      "requires": [
+        "drishti-core"
+      ],
       "css": []
+    },
+    "drishti-chart": {
+      "version": "0.1.0",
+      "title": "The chart: one engine-neutral spec over the vendored ECharts (the general kinds, the maps from world to every country's first-level regions, the card and studio modes, the map's ranking and table modes), Explain on any mark, the data table, export, linked selection and live updates; Vega-Lite translated into the spec",
+      "entry": "src/drishti_index.js",
+      "requires": [
+        "drishti-core"
+      ],
+      "css": [
+        "elements/drishti-chart/drishti_chart.css"
+      ],
+      "scripts": [
+        "vendor/echarts/echarts.min.js"
+      ]
+    },
+    "drishti-risk": {
+      "version": "0.1.0",
+      "title": "The banking module's chart kinds on drishti-chart (licensed with the module): the P&L distribution with VaR and ES, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit",
+      "entry": "src/drishti_index.js",
+      "requires": [
+        "drishti-core",
+        "drishti-chart"
+      ],
+      "css": [],
+      "module": "banking"
     }
   }
 }

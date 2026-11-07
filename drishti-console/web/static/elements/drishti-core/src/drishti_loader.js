@@ -14,7 +14,8 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The loader: a page (or a domain module) loads a library only when it needs it. drishti-core is on the page already (it carries the
-   loader); load('drishti-grid') adds the libraries it requires first, then its style sheets and its bundle (?v=<version>, so a new
+   loader); load('drishti-grid') adds the libraries it requires first, then its style sheets, its vendored engine's scripts (ECharts for
+   drishti-chart: once, and not when the page has them) and its bundle (?v=<version>, so a new
    version is never read from a stale cache), once each, and resolves with the library's API. Where the files are: the folder
    drishti-core's bundle was loaded from, or configure({base}). The manifest is generated from drishti_elements.json by the build. */
 import { MANIFEST } from './drishti_manifest.js';
@@ -99,7 +100,8 @@ function loadOne(name) {
   const doc = r.document;
   if (!doc) { return Promise.reject(new Error('load: ' + name + ' is not loaded, and there is no page to load it into (under Node: require its bundle)')); }
   l.css.forEach((c) => addCss(doc, staticBase() + c + '?v=' + l.version));
-  state.pending[name] = new Promise((resolve, reject) => {
+  const engine = (l.scripts || []).reduce((p, src) => p.then(() => loadScript(staticBase() + src)), Promise.resolve());
+  state.pending[name] = engine.then(() => new Promise((resolve, reject) => {
     const s = doc.createElement('script');
     s.src = base() + l.bundle + '?v=' + l.version;
     s.async = false;
@@ -107,7 +109,8 @@ function loadOne(name) {
     s.onload = () => { delete state.pending[name]; const api = loaded(name); if (api) { resolve(api); } else { reject(new Error(name + ' loaded but did not register itself')); } };
     s.onerror = () => { delete state.pending[name]; reject(new Error('Could not load ' + name + ' ' + l.version + ' from ' + s.src)); };
     doc.head.appendChild(s);
-  });
+  }));
+  state.pending[name].catch(() => { delete state.pending[name]; });
   return state.pending[name];
 }
 
@@ -121,24 +124,26 @@ export function staticUrl(path) { return staticBase() + String(path).replace(/^\
 const scripts = {};
 
 /**
- * Loads a classic script into the page once (a vendored engine a library wraps: CodeMirror, Arrow JS); resolves when it has run.
+ * Loads a classic script into the page once (a vendored engine a library wraps: ECharts, CodeMirror, Arrow JS); resolves when it has run.
+ * A script the page already has (the same address, the query aside) is not loaded again.
  * @param {string} src its address (staticUrl for a vendored file)
  * @returns {Promise<void>}
  */
 export function loadScript(src) {
-  if (scripts[src]) { return scripts[src]; }
+  const plain = String(src).split('?')[0];
+  if (scripts[plain]) { return scripts[plain]; }
   const doc = root().document;
   if (!doc) { return Promise.reject(new Error('loadScript: there is no page to load ' + src + ' into')); }
-  if (Array.prototype.some.call(doc.scripts, (s) => (s.getAttribute('src') || '').split('?')[0] === src.split('?')[0] && s.dataset.loaded === '1')) { return Promise.resolve(); }
-  scripts[src] = new Promise((resolve, reject) => {
+  if (Array.prototype.some.call(doc.querySelectorAll('script[src]'), (x) => (x.getAttribute('src') || '').split('?')[0] === plain)) { return (scripts[plain] = Promise.resolve()); }
+  scripts[plain] = new Promise((resolve, reject) => {
     const s = doc.createElement('script');
     s.src = src;
     s.async = false;
     s.onload = () => { s.dataset.loaded = '1'; resolve(); };
-    s.onerror = () => { delete scripts[src]; reject(new Error('Could not load ' + src)); };
+    s.onerror = () => { delete scripts[plain]; reject(new Error('Could not load ' + src)); };
     doc.head.appendChild(s);
   });
-  return scripts[src];
+  return scripts[plain];
 }
 
 /**

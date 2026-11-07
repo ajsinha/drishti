@@ -16,7 +16,7 @@
 
 # Drishti Elements: the console's JavaScript as eight reusable libraries
 
-**Status: being built** (release 2.9.11.e, product owner 2026-11-07; mock-ups g1 to g4 below, all decided; as built: 8.1 and 8.2). The internal design:
+**Status: being built** (release 2.9.11.e, product owner 2026-11-07; mock-ups g1 to g4 below, all decided; as built: 8.1 to 8.3). The internal design:
 what each library is, what it takes over from today's code, the grid's pivot, the AG Grid-style adapter, the chart spec and the maps,
 packaging and licensing, the documentation of every library, the gallery, the guards, the order in which Drishti's screens move, the
 risks and the product owner's decisions. The renderer, the embed API and Elements 2.x (`<drishti-view>`) are designed in
@@ -424,8 +424,8 @@ library with its module: an unlicensed module's library is not served, its kinds
   toolbar, ribbon, side panel, command line, function keys, status bar, the Explain drawer, card or split pane),
   `drishti_grid-wells-ui.js` (the field list and the wells: drag and drop, the chip menus, member filters, value filters, top N, the
   panel's switches and deferred update), `drishti_grid-actions.js` (the keys, the column, context and toolbar menus, copy, export,
-  chart the range, the rows behind a cell), `drishti_grid-explain.js` (what the Explain hook answers, drawn in the layout's place),
-  `drishti_grid-base.js` (the columns as drawn: panes, widths, a phone's subset), `drishti_grid-dom.js` (the element maker, the menu,
+  chart the range, the rows behind a cell), `drishti_grid-explain.js` (what the Explain hook answers, drawn by drishti-core in the layout's place),
+  `drishti_grid-base.js` (the columns as drawn: panes, widths, a phone's subset), `drishti_grid-dom.js` (the menu,
   the hover note) and `drishti_grid-ui.js` (the decisions without a page, tested in Node: heading spans, conditional formats, the
   phone's columns, menu items, the command line, value filter conditions, the status figures, the flash). The look is
   `drishti_grid.css`, every colour a drishti-core token; the densities set the row heights the engine uses (36, 28, 22 px).
@@ -561,6 +561,92 @@ library with its module: an unlicensed module's library is not served, its kinds
   | `drishti_pivot-engine.js` (81–125), `drishti_refresh.js` (42–191), `drishti_bi-live.js` (40–123) | data sources | fetch, polling and staleness |
   | `drishti_table-chart-engine.js` (342–388) | `HolidayCalendar` | business days for chart gaps (drishti-chart) |
 
+### 8.3 As built: drishti-chart, its maps and drishti-risk
+
+- **The spec** (`drishti_chart-spec.js`): `kind`, `title`, `subtitle`, `data` (rows inline as objects, `{values}`, a server's answer
+  `{columns, rows}`, or `{source}` read with the page's fetch), `id` (the field that names a row: selection and live updates follow it),
+  encodings `x`, `y`, `category`, `value`, `series` (a list of `{field, name, tone, style, negate, area, stack, axis}` or `{by: field}`, one
+  series per member), `size`, `colour`; formats by name through drishti-core (`money`, `compact`, `percent`, `amount0`, `pct2` …);
+  axes (`type` category, time, value or log; `title`, `order`, `domain`, `min`, `max`); `legend` (bottom, right, top, none);
+  `annotations` (lines, bands, points and texts on either axis); `marks` (points where a condition holds: `"hypothetical < -var99"`);
+  `colourWhen` (a mark's tone by a condition); `stack` (true or `percent`), `orient`, `sort`, `labels`, `zoom` (`{window: [150, 250]}`),
+  `onClick` (explain, select, none), `export`, `live` (`{throttleMs, keep}`). Conditions are read by a small parser (comparisons,
+  arithmetic, `&&`, `||`, `datum.x` as Vega-Lite writes it), never by `eval`. `checkSpec` names every problem with its path;
+  `normalizeSpec` fills the defaults; `specText` is the spec as the studio shows it. A kind is registered with `registerKind(name,
+  {build, label, family, cartesian})`; nothing in a spec names ECharts.
+- **The kinds**: line, area, bar (grouped, stacked, stacked to 100%, horizontal, sorted), scatter and bubble (value or category axes,
+  symbols), histogram (equal bins on a value axis, the tail beyond a value in its tone), waterfall (totals first and last or by a
+  field), box plot (whiskers at 1.5 IQR, outliers), heatmap (sequential, or diverging around a middle), candlestick, pie and donut (small
+  slices folded into Other), gauge (bands in tones), treemap (nested by levels), sankey (links summed), `layer` (several kinds over the
+  same axes, categories the union of every layer's) and `map`. Each builds the ECharts option, the data table, the legend and one
+  line a screen reader reads, without a page (`drishti_chart-kinds.js`, `drishti_chart-kinds2.js`); every data item carries the indexes
+  and ids of the rows it was made of.
+- **The card** (`new Chart(el, spec, options)`, `<drishti-chart>`; `drishti_chart-view.js`, `drishti_chart-parts.js`): the title, the
+  kind, a status badge (the backtest's zone), the tools ▦ ⤓ ? ⛶ and the zoom's reset, the legend as buttons that hide a series, the
+  status line (the source, the rows, the time to draw). The theme follows the page (a change of `data-theme` redraws), the three
+  densities are the grid's. Tooltips are elements built with the DOM (a strict CSP holds), with a crosshair on axes. **Click any mark:**
+  its rows are selected (ctrl or shift adds) and outlined, and the Explain hook (the grid's: a context of kind, series, field, value,
+  category, rows and ids) answers in a side sheet drawn by drishti-core's `renderExplain`, as the grid draws it. Zoom: the wheel, a drag
+  across the chart, and the overview window under it. The keyboard: arrows walk the first series' marks with an announcement, Enter
+  or E explains, T opens the table, Escape closes. Export: PNG at 2×, SVG drawn off screen by the engine's server-side renderer, CSV of
+  the data (drishti-core's writer), the spec. **Live**: `apply({add, update, remove})` by row id, `append`, `replace`, drawn once per
+  throttle window; `live.keep` caps the rows kept. **Studio** (`mode: 'studio'`, `drishti_chart-studio.js`): the registered kinds in a
+  rail grouped by family (general, maps, then each domain library's), the chart with its table under it, the spec beside it with options
+  (legend, labels, stack, bars, log x, zoom, density) that change the chart and the spec together.
+- **Linked selection** (`drishti_chart-link.js`): charts with `link: {channel}` and grids linked by `linkGrid(grid, {channel})` exchange
+  row ids on drishti-core's bus (`drishti:selection`); a selection that came from the bus is never sent back. drishti-chart does not
+  import drishti-grid: a grid is linked through its model's typed events and selection.
+- **Maps** (`drishti_chart-geo.js`, `drishti_chart-map.js`, `drishti_map-view.js`). The shapes are projected before the engine sees them
+  (an identity projection draws them): Equal Earth for the world (Antarctica left out; the countries too small for 1:110m as points),
+  Albers for the United States (the lower 48 and DC; Alaska and Hawaii in their own Albers, scaled into framed insets under the
+  south-west) and for Canada (Statistics Canada's parallels; ten provinces and three territories), and for every other country a conic
+  fitted to its core extent (the rings near its area-weighted centre, so France fits its mainland and its overseas regions stay
+  reachable by panning), or a plate carrée scaled at the middle latitude where a conic cannot fit. A country's `regions/<ISO3>.json` is
+  read the first time it is opened and kept for the session; a failed read is asked again next time. Places match by ISO alpha-3,
+  alpha-2, a region's ISO 3166-2 code with or without its country, or the English name; rows that match nothing are counted on the
+  status line. The choropleth: quantile classes (each with its range and count, and the no-data count) or a continuous ramp; no data
+  hatched; a legend class clicked keeps it bright; bubbles at places or at longitude and latitude; a metric picker; the wheel and drag,
+  and + − ⟲. Double-click a country (or "Drill into regions ›") for its regions, the breadcrumb back. A page gives a level's rows with
+  `placeData(iso3)`, or one set of rows holds every level. Modes (g3): `ranking` (the default: the legend, the top ten with bars, the
+  selected place with its rank and share, Explain and the drill) and `table` (a floating legend, a world inset once drilled, the selected
+  place in a floating card, a sortable table under the map).
+- **Vega-Lite translated** (O1; `fromVegaLite(vl, {rows})` gives `{spec, unsupported, refused}`). Drishti's Vega-Lite visuals today are the
+  report visual of `python-desk-risk` (a bar with a sort, a colour condition and a tooltip) and the Python sample `pnl-vega` (two layers:
+  dots and median ticks over a nominal axis); both translate whole. Coverage:
+
+  | Vega-Lite | Translated to |
+  |---|---|
+  | marks bar, line, area, point, circle, square, tick, rect, arc, boxplot | bar, line, area, scatter (or bubble with size), heatmap, pie or donut (innerRadius), boxplot |
+  | rule at a constant (`datum`), or a few rows' values | annotation lines |
+  | `layer` with data of its own or inherited | the `layer` kind |
+  | encodings x, y, color, fill, stroke, size, theta; tooltip and opacity | axes, `series: {by}`, `colour`, bubble size, the pie's value; Drishti's tooltip |
+  | types quantitative, nominal, ordinal, temporal | value, category (sorted as Vega-Lite sorts), time |
+  | `aggregate` sum, mean, average, count, min, max, median; `bin` with maxbins | rows aggregated in the translation; the histogram kind |
+  | `sort` -y, y, ascending, descending, an array; `stack` null, false, normalize | `sort`, the category order, `stack` (percent) |
+  | `scale` log, zero, domain; `axis` title and format (d3: `,.0f`, `.2%`, `~s`) | log axes, min and max, titles, drishti-core's named formats |
+  | color condition `{test, value}`, a fixed colour | `colourWhen` and tones (a red is bad, a green good, an orange accent, a grey muted) |
+  | transforms filter (an expression or a field predicate) and calculate | applied to the rows in the translation |
+  | `title` (text and subtitle); width, height, autosize, config, $schema | title and subtitle; the card sizes and themes the chart |
+
+  Facets, repeat and concat, params and selections, other transforms, text marks, projections and geoshape are listed in `unsupported`
+  (the visual is named and redrawn once); a `url` or a `loader` anywhere is refused, as before. The vendored Vega stays until the BI
+  visuals move (section 12, step 5), then it is deleted.
+- **drishti-risk** (`static/elements/drishti-risk/`, the banking module's; the manifest marks it `module: banking`; it moves into the
+  plugin's folder with the module platform of section 8): `risk.pnl-distribution` (the histogram of scenario P&L, the VaR and ES lines,
+  the tail beyond VaR in the bad tone), `risk.backtest` (P&L against minus the day-before VaR, exceptions marked, the Basel traffic light
+  with its plus factor on the card: green 0 to 4, amber 5 to 9, red 10 and more over 250 days), `risk.exposure-profile` (EE and PFE on a
+  log tenor axis, EEPE over the first year, the limit, a breach on the card) and `risk.var-change` (a waterfall where an increase is bad).
+  VaR, ES and EEPE are the server's (in the spec or the rows); only a page without a server computes them from the rows given, and the
+  card says "computed here".
+- **drishti-core** gained what the grid and the chart share: the element maker (`h`, `placeAt`), Explain's drawing (`renderExplain`,
+  `sparkline`, under each component's class prefix), the CSV writer and `download`. The loader loads a library's vendored engine (the
+  manifest's `scripts`: ECharts for drishti-chart) once, and not when the page has it.
+- **Tests.** Node (`tests/elements/chart.test.mjs`, `maps.test.mjs`): the spec and its checks, the condition language, the formats and
+  theme, every kind's option, table and legend, the risk figures, the translator on the two shipped specs and the subset, linked
+  selection, the bundles, the projections, the loader and every one of the 252 region files. The drawn chart is tested once, in
+  `tests/test_elements_chart_browser.py` against the fixture harness `static/elements/drishti-chart/drishti_harness.html` (synthetic
+  data, no server; `?view=board|studio|map|link`, `&mapMode=table`, `&level=USA`, `&density=…`, `&theme=light`).
+
 ## 9. The documentation of every library
 
 The owner asked for documentation as rich as a commercial product's. Within the lean-docs rule (one home per fact; references are
@@ -662,8 +748,8 @@ g1 was decided separately: the grid's three layouts (section 5.1).
 - [ ] drishti-grid: tree data (a path per row, with the AG Grid-style adapter's tree data, O5)
 - [x] drishti-grid pivot: the three layouts `wells`, `panel` and `terminal` (VaR screens default to `terminal`, others to `wells`), aggregation pickers, value filters, collapsible pivot result columns, totals, server-side model with the request of 5.3, non-additive totals from the server
 - [ ] The AG Grid-style adapter with the table of section 6 as code, and its unknown-option report
-- [ ] drishti-chart: the spec, the general kinds, the data-table alternative, export, Explain; the chart card's modes `card` (default) and `studio` (g2 A and B); maps with per-country loading and the modes `ranking` (default) and `table` (g3 A and B)
-- [ ] Vega retired (O1): Vega-Lite visuals translated to the spec, Python visuals return a spec, the vendored Vega deleted
+- [x] drishti-chart: the spec, the general kinds, the data-table alternative, export, Explain; the chart card's modes `card` (default) and `studio` (g2 A and B); maps with per-country loading and the modes `ranking` (default) and `table` (g3 A and B); drishti-risk's four kinds (8.3)
+- [ ] Vega retired (O1): Vega-Lite visuals translated to the spec (the translator is built, 8.3), Python visuals return a spec, the vendored Vega deleted
 - [x] The phone behaviour of the grid and the pivot (O2); the standalone Excel writer (O4)
 - [x] drishti-inputs: pickers, forms with four eyes, the filter bar, the code editor (8.2); the formula input and people picker as their screens move
 - [ ] drishti-insight, drishti-renderer 2.0.0, drishti-risk (in the banking plugin, licensed)

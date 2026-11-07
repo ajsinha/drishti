@@ -26,7 +26,7 @@ export { ClientRowModel } from './drishti_client-rows.js';
 export { ServerRowModel, memoryDatasource } from './drishti_server-rows.js';
 export { MAX_SCROLL_HEIGHT, columnAt, Viewport } from './drishti_viewport.js';
 export { SelectionModel, rangeStats, toTsv, rangeCells } from './drishti_selection.js';
-export { toCsv, crc32, zipStore, excelFormat, toXlsx, XLSX_TYPE } from './drishti_export.js';
+export { crc32, zipStore, excelFormat, toXlsx, XLSX_TYPE } from './drishti_export.js';
 export { GridNavigator, keyLabel } from './drishti_keyboard.js';
 export { LAYOUTS, DENSITIES, GridModel, createGridModel } from './drishti_grid.js';
 export { GRID_EVENTS, domEventName, GridLive } from './drishti_grid-live.js';
