@@ -77,5 +77,5 @@ definitions (hierarchy, rule, basket). Value at risk is never stored: the VaR ex
 [VAR_GUIDE.md section 3](../../../docs/guides/VAR_GUIDE.md#3-the-explorer-screen-by-screen)) computes VaR, ES and contributions for any set of these trades, the portfolio
 and position pages (`PORT <id>`, `POS <id>`) show the engine's figures computed as they open, and each business date's official figures
 are the engine's end-of-day captures. Positions are Drishti's: derived from the trades by this pack's `positions:` rules (securities by
-book and security, listed by book and contract, OTC one per trade) when a date loads ([VAR_GUIDE.md Part II](../../../docs/guides/VAR_GUIDE.md#14-the-contract-at-a-glance)).
+book and security, listed by book and contract, OTC one per trade) when a date loads ([VAR.md](../../../docs/contracts/VAR.md#1-the-contract-at-a-glance)).
 There is no stored `var` (VAR-<desk>) or `var-node` kind: `VAR VAR-COMM` opens the explorer at `DESK:COMM`.

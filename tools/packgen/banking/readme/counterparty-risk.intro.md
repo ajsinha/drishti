@@ -54,7 +54,7 @@ fields:
 Counterparty credit risk over the trading pack's trades: master agreements and CSAs, netting sets, credit limits, CVA, SA-CCR,
 collateral balances, margin calls and SIMM initial margin, and the **exposure engine's inputs**: an upstream simulation run
 (`simulation-run`) and every trade's mark to market on every path of its grid (`exposure-path`). Exposure is never stored: `EXP
-NSET:NS-ALDERSHOT-FRA <GO>` (the computed kind `exposure-result`, [EXPOSURE_GUIDE.md Part II](../../../docs/guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance)) nets the paths per
+NSET:NS-ALDERSHOT-FRA <GO>` (the computed kind `exposure-result`, [EXP.md](../../../docs/contracts/EXP.md#1-the-contract-at-a-glance)) nets the paths per
 netting set, applies each CSA's collateral path by path with the margin period of risk, and reads EE, ENE, EEE, PFE 95% and 99%, EPE
 and EEPE for any scope (`NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:`, `TRD:`); the netting-set and counterparty pages show the engine's
 figures computed as they open. There is no stored `exposure-profile` kind (`EXP-<cp>-<le>`): `EXP EXP-ALDERSHOT-FRA`

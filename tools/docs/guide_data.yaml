@@ -13,579 +13,240 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # The data section of each measure or feature guide: read by tools/docs/guide_data.py, which writes it between the guide's
-# <!-- guide-data:begin <id> --> and <!-- guide-data:end --> markers (docs/guides/TOOLS.md section 9).
+# <!-- guide-data:begin <id> --> and <!-- guide-data:end --> markers (docs/guides/TOOLS.md). The section is a short table: each kind the
+# feature reads, whether it is needed, what for, and a link to its data contract (the one home of its fields and its example record).
 #
-# Per guide:   id, file, number (the section's number: the table is <number>.1, the datasets <number>.2 …), note (after the table).
-# Per dataset: kind; contract (the contract's kind when it differs, null when the kind has none); label (instead of `kind`); title;
-#              sample (a glob under data/testdata: a .jsonl.gz, or a tar of <table>/<date>/*.jsonl.gz); pick (first | last, default
-#              last); member (a tar member glob); where (field: value); fields (the fields shown, in order); required; for (the table's
-#              one line); guide (a link to the guide's own field table); about (the explanation, by hand); sample_note and
-#              contract_note (said instead when there is no sample or no contract).
+# Per guide:   id, file, number (the section's number), contract_page (the measure's own contract, when it has one), note (after the table).
+# Per dataset: kind; contract (the contract's kind when it differs, null when the kind has none); label (instead of `kind`); required;
+#              for (the table's one line); contract_note (said instead of the link when there is no contract).
 
 guides:
-
-  # ------------------------------------------------------------------------------------------------------------------------------ VaR
-  - id: var
-    file: docs/guides/VAR_GUIDE.md
-    number: 36
-    note: |
-      **The minimum for a VaR number:** `scenario-set`, a `risk-hierarchy` (or hierarchy columns on the vectors), and for every trade either a
-      `scenario-pv` row or a `pnl-vector` row. Everything else adds a feature: currencies, portfolios, limits, backtesting, the trade pages.
-    datasets:
-      - kind: scenario-set
-        title: the scenario days
-        sample: market-risk/scenario-set/scenario-set.tar
-        required: "**yes**"
-        for: the ordered scenario days every vector lines up with
-        guide: "[15.3](#153-scenario-set-the-scenario-days)"
-        about: |
-          The ordered list of historical days the scenarios are taken from, the same for every trade on a business date: position *s* of every P&L
-          vector and every scenario PV is the market move of `SCENARIO_DATES[s]`. One row per set per business date. `SCENARIO_COUNT` is the set's
-          length (509 in the sample); the engine uses the newest `drishti.var.scenario-window` of them (250 as shipped).
-
-          - **`SCENARIO_DATES`:** strictly increasing; the newest N are the window. Every vector names its set in `SCENARIO_SET_ID`.
-      - kind: scenario-pv
-        title: scenario PVs per trade (preferred)
-        sample: market-risk/scenario-pv/scenario-pv-*.tar
-        required: "**one of the two**, per trade"
-        for: each trade's base PV and its PV under each scenario; Drishti computes the P&L
-        guide: "[15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)"
-        about: |
-          What a pricing system naturally produces: the trade's value today (`BASE_PV`) and its value under each scenario (`SCENARIO_PV`, one per
-          scenario day, in the trade's currency `CURRENCY`). Drishti computes the USD P&L at load: **P&L(s) = PV(s) × FX(s) − BASE_PV × FX(base)**.
-          The other columns place the trade in the hierarchies (legal entity, division, desk, book, limit letter, portfolio, product, counterparty),
-          so a trade's position is known without reading the trade itself.
-
-          - **`SCENARIO_PV_ID`:** `SPV-<trade>-<set>`, one per trade per date ([36.14](#3614-from-an-input-row-to-a-position)).
-          - **`STATUS`:** `ok`, or a pricing failure the completeness checks show.
-          - **`BATCH_ID`, `RESTATEMENT`, `RUN_KIND`:** which run produced it; a restatement replaces the earlier row.
-      - kind: pnl-vector
-        title: P&L vectors per trade (accepted)
-        sample: market-risk/pnl-vector/pnl-vector-*.tar
-        where: {SOURCE_SYSTEM: CALYPSO}
-        required: "**one of the two**, per trade"
-        for: each trade's scenario P&L, computed by the source
-        guide: "[15.2](#152-pnl-vector-one-pl-vector-per-trade)"
-        about: |
-          For a source that already computes scenario P&L: the trade's P&L on each scenario day (`PNL`, in `CURRENCY`, usually USD), used as it is.
-          Same placement columns as a scenario PV. A trade arrives in one form only; both forms may sit side by side on one date, and nothing
-          downstream knows which form a trade came in.
-
-          - **`VECTOR_ID`:** `PNL-<trade>-<set>`.
-          - **`GRAIN`:** `TRADE`, or a coarser grain (a position or a book) when the source aggregates ([15.13](#1513-inputs-any-form-any-grain)).
-          - **`PV`:** today's value, shown beside the P&L.
-      - kind: fx-scenario
-        title: scenario FX rates
-        sample: market-risk/fx-scenario/fx-scenario.tar
-        required: when scenario PVs are in other currencies (else derived from `fx-spot`)
-        for: each currency's rate on each scenario day, to convert scenario PVs to USD
-        guide: "[15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)"
-        about: |
-          One row per currency per business date: the currency's rate (`QUOTE`, USD per one unit) today (`RATE`) and on each scenario day
-          (`RATES`, in the scenario set's order). Used to turn scenario PVs in other currencies into USD P&L. When it is not sent, the engine
-          derives the same rates from `fx-spot` history of each scenario day.
-      - kind: fx-spot
-        title: FX history
-        sample: market-data/fx-spot/fx-spot.*.jsonl.gz
-        required: for other currencies
-        for: "FX history: today's rates, reporting currencies, scenario FX when not supplied"
-        guide: "[15.10](#1510-reporting-currency)"
-        about: |
-          Market data: each currency pair's quote today and its recent history (`HISTORY`). VaR reads it for reporting currencies (the page's
-          Reporting currency picker), for today's conversion, and to derive scenario FX when `fx-scenario` is not supplied. It is read, never
-          watched: a change during the day does not recompute VaR.
-      - kind: risk-hierarchy
-        title: the trees
-        sample: market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz
-        required: "**yes** (or built from the trades' columns)"
-        for: the trees (MGMT, LEGAL, limit letters…) that make the scopes
-        guide: "[15.4](#154-risk-hierarchy-the-trees-and-their-limits), [15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns)"
-        about: |
-          One row per node of each tree: the bank, its divisions or legal entities, desks and books (MGMT, LEGAL, LL for limit letters, or any
-          other hierarchy the bank defines). `CHILDREN` and `PARENT_ID` give the tree; `BOOKS` the books under the node, which is how positions
-          join it. These are the **Scopes** on the VaR screen.
-
-          - **`NODE_ID`:** `<hierarchy>~<id>`, valid from `VALID_FROM` to `VALID_TO` (open-ended when null).
-          - A hierarchy can instead be built from the trades' own columns ([15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns)).
-      - kind: portfolio
-        title: stored portfolios and baskets
-        sample: market-risk/portfolio/portfolio.*.jsonl.gz
-        required: optional
-        for: "stored portfolios: hierarchy, rule and basket portfolios"
-        guide: "[15.5](#155-portfolio-stored-portfolio-definitions)"
-        about: |
-          Named sets of positions beyond the trees: a **hierarchy** portfolio (a node), a **rule** portfolio (a filter, e.g. every swap over 5 years)
-          and a **basket** (an explicit member list, as here). They appear as Portfolios and System baskets on the VaR screen. `ROLLS_UP_TO` says
-          which node it belongs to for limits and reporting.
-      - kind: var-limit
-        title: VaR limits
-        sample: market-risk/var-limit/var-limit.*.jsonl.gz
-        required: optional
-        for: a node's VaR limit (the Limit column, limit use)
-        guide: "[15.15](#1515-var-limit-the-nodes-var-limits)"
-        about: |
-          A node's VaR limit with its horizon and confidence: the **Limit** column and limit use on the VaR screen. A limit is compared only at its
-          own horizon and confidence (the screen says *not comparable* otherwise).
-      - kind: desk-pnl
-        title: actual and hypothetical P&L for backtesting
-        sample: market-risk/desk-pnl/desk-pnl.tar
-        required: for backtesting
-        for: actual and hypothetical P&L of each desk, per day
-        guide: "[15.16](#1516-desk-pnl-the-banks-actual-and-hypothetical-pl)"
-        about: |
-          Each desk's real P&L per day, from finance: **actual** (with intraday trading and fees), **hypothetical** (today's positions held still)
-          and fees. The backtest compares each day's VaR with these to count exceptions and set the traffic-light zone (Backtest ›).
-      - kind: pnl-history
-        title: the long history of each node
-        sample: market-risk/pnl-history/pnl-history.*.jsonl.gz
-        required: for stressed VaR and long-history views
-        for: a node's P&L over many years
-        about: |
-          A node's P&L over many years (`HISTORY_DATES`, `PNL`), e.g. from 2007, so a stressed window (2008) can be found and long-history views
-          drawn. The sample's history is synthetic (`SYNTHETIC: true`), anchored to the stress set and HS-509.
-      - kind: trade-valuation
-        title: each trade's value today
-        sample: market-risk/trade-valuation/trade-valuation.*.jsonl.gz
-        required: optional (the position page, What-if)
-        for: each trade's MTM today and its attributes
-        about: |
-          The trade's MTM today with its attributes (desk, portfolio, counterparty, netting set, trader). Shown on a position's page and used by
-          What-if; not needed for the VaR number itself, which comes from the vectors.
-      - kind: trade_murex
-        contract: trade
-        label: The trades
-        title: "`trade_murex`, `trade_endur`, `trade_calypso`"
-        sample: trades/murex/trade_murex.*.jsonl.gz
-        pick: first
-        fields: [SOURCE_SYSTEM, TRADE_ID, TRADE_VERSION, TRADE_STATUS, TRADE_DATE, PRODUCT_GROUP, PRODUCT_TYPE, BUY_SELL_CODE, QUANTITY,
-                 PRICE, CURRENCY, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TT_BOOK, TRADER_ID, STRATEGY, START_DATE, MATURITY_DATE]
-        required: optional for the number, used by the screens
-        for: the trades themselves, linked from every position
-        about: |
-          The trades themselves (one kind per source system: `trade_murex`, `trade_endur`, `trade_calypso`, under
-          `data/testdata/trades/<system>/`), in the source system's names. VaR does not need them for the number (the vectors carry the placement
-          columns), but every position links to its trade, and hierarchies may be built from the trades' columns. The record below shows the main
-          fields; a real trade also carries its `LEGS` and `EVENTS` (cash flows, fixings).
-
-  # ------------------------------------------------------------------------------------------------------------------------- exposure
-  - id: exposure
-    file: docs/guides/EXPOSURE_GUIDE.md
-    number: 29
-    note: |
-      **The minimum for an exposure profile:** a `simulation-run`, its `exposure-path` rows and the `netting-set` rows that group the trades.
-      The kinds are the engine's `drishti.ccr.exposure.kinds.*` settings (`config/engines/exposure.yaml`); a bank names its own there.
-    datasets:
-      - kind: simulation-run
-        title: the run's identity and grid
-        sample: counterparty-risk/simulation-run/simulation-run.*.jsonl.gz
-        required: "**yes**"
-        for: the run, its time grid, the number of paths and the seed
-        guide: "[15.2](#152-simulation-run-the-runs-identity-and-grid-reference-row)"
-        about: |
-          One row per simulation run and business date: the grid dates (with their look-back dates), the number of paths, the model and the
-          seed. The paths of `exposure-path` are ordered by this row exactly as the P&L vectors are ordered by VaR's scenario set.
-      - kind: exposure-path
-        title: every trade's MtM on every path
-        sample: counterparty-risk/exposure-path/exposure-path.tar
-        required: "**yes**"
-        for: one row per trade and grid date, a vector of MtM over the paths
-        guide: "[15.3](#153-exposure-path-every-trades-mtm-on-every-path-the-large-input)"
-        about: |
-          The large input: one row per trade, grid date and run, `MTM` holding the trade's value on each path. Drishti sums a netting set's
-          trades per path and date; an absent row after maturity means the trade is worth 0 there.
-      - kind: netting-set
-        title: the netting sets and their trades
-        sample: counterparty-risk/netting-set/netting-set.*.jsonl.gz
-        required: "**yes**"
-        for: which trades net together, the counterparty and the CSA
-        guide: "[16](#16-reference-and-master-data-read)"
-        about: |
-          Each netting set with its counterparty, legal entity, agreement and CSA, and its trades: the engine sums the trades' paths of one set
-          before flooring at zero.
-      - kind: csa
-        title: the collateral terms
-        sample: counterparty-risk/csa/csa.*.jsonl.gz
-        required: for margined netting sets
-        for: thresholds, minimum transfer, independent amount, margin period of risk
-        guide: "[16](#16-reference-and-master-data-read)"
-        about: |
-          A credit support annex's terms: thresholds, minimum transfer amount, independent amount, rounding and the margin period of risk the
-          collateral on each path is computed with. A netting set without a CSA is unmargined.
-      - kind: collateral-balance
-        title: today's collateral
-        sample: counterparty-risk/collateral-balance/collateral-balance.*.jsonl.gz
-        required: optional (the `current` collateral model)
-        for: the collateral held and posted today per account
-        guide: "[16](#16-reference-and-master-data-read)"
-        about: |
-          The collateral account of a netting set today: what is held and posted. Read by the `current` collateral model and for independent
-          amounts and initial margin held.
-      - kind: counterparty
-        title: the counterparties
-        sample: core/counterparty/counterparty.*.jsonl.gz
-        required: for `CPTY:` scopes
-        for: names, ratings and groups of the counterparties
-        about: |
-          The core pack's counterparties: the `CPTY:` scope adds the exposures of a counterparty's netting sets per path; the name and rating
-          label the explorer.
-      - kind: counterparty-group
-        title: connected groups
-        sample: core/counterparty-group/counterparty-group.*.jsonl.gz
-        required: for `GROUP:` scopes
-        for: the connected groups of counterparties
-        about: |
-          A group of connected counterparties (a parent and its subsidiaries): the `GROUP:` scope.
-      - kind: risk-hierarchy
-        title: the trees
-        sample: market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz
-        required: for hierarchy scopes (`LE:` and the trees)
-        for: the legal entity and management trees, shared with VaR
-        about: |
-          The market-risk pack's trees, shared with VaR: a legal-entity or desk scope of exposure is a node of one of them.
-
-  # ---------------------------------------------------------------------------------------------------------------------------- FRTB
-  - id: frtb-sa
-    file: docs/guides/FRTB_SA_GUIDE.md
-    number: 13
-    datasets:
-      - kind: position-sensitivity
-        title: the sensitivities
-        sample: market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz
-        required: "**yes**"
-        for: each position's sensitivities, a sparse list per record
-        guide: "[3](#3-the-inputs-and-their-data-contract)"
-        about: |
-          One record per position (or trade), date and batch with a sparse `SENSITIVITIES[]` list: DV01, CS01, IE01 per bp; DELTA per 1%; VEGA with
-          `IMPLIED_VOL`; curvature up and down with `SHOCK_SIZE`. Each element names its factor by the standard name the factor dictionary
-          defines.
-      - kind: risk-factor
-        title: the factor dictionary
-        sample: market-risk/risk-factor/risk-factor.*.jsonl.gz
-        required: "**yes**"
-        for: each factor's class, type, buckets, tenor and the source systems' names
-        guide: "[3](#3-the-inputs-and-their-data-contract)"
-        about: |
-          One row per factor and date: the standard name, risk class, factor type, qualifier, curve and tenor, the FRTB and SIMM buckets,
-          seniority and liquidity horizon, and `SOURCE_NAMES` mapping each system's own name to it.
-      - kind: default-risk
-        title: the DRC inputs
-        required: for the default risk charge
-        for: obligor, seniority, credit quality and notional per position
-        guide: "[5](#5-the-default-risk-charge)"
-        about: |
-          The default risk charge's inputs per position and obligor. Without them the answer says *DRC not computed: no default-risk inputs*,
-          never 0.
-      - kind: residual-risk
-        title: the RRAO inputs
-        required: optional
-        for: the residual risk add-on's class and notional per trade
-        guide: "[6](#6-the-residual-risk-add-on)"
-        about: |
-          The residual risk add-on's class (exotic, other, none) and gross notional per trade. Without them the engine derives the class from
-          each position's `PRODUCT_TYPE` and its notional from the VaR book.
-
-  # ---------------------------------------------------------------------------------------------------------------------------- SIMM
-  - id: simm
-    file: docs/guides/SIMM_GUIDE.md
-    number: 13
-    datasets:
-      - kind: parameters
-        contract: null
-        label: The parameter file
-        title: ISDA's risk weights and correlations
-        required: "**yes** (the bank's licensed file)"
-        for: the risk weights, correlations and thresholds of the SIMM version
-        guide: "[4](#4-the-licensed-parameter-file)"
-        contract_note: not a dataset kind; a YAML file the engine reads (`docs/architecture/capital-parameters/simm.yaml`).
-        sample_note: |
-          none: the shipped file has every number empty, because ISDA's parameters are licensed; the bank installs its own
-          ([section 4](#4-the-licensed-parameter-file)).
-        about: |
-          The SIMM version's risk weights, correlations, concentration thresholds and the add-on settings. Drishti ships the file's shape only.
-      - kind: position-sensitivity
-        title: the sensitivities
-        sample: market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz
-        required: "**yes**"
-        for: the delta and vega elements of each trade or position
-        guide: "[3](#3-the-inputs-and-their-data-contract)"
-        about: |
-          The same records FRTB-SA reads: SIMM takes the elements with measures `DV01`, `IE01`, `CS01`, `DELTA`, `VEGA` and `BASE_CORR`;
-          curvature revaluations and gammas are FRTB's and left out, counted.
-      - kind: risk-factor
-        title: the factor dictionary
-        sample: market-risk/risk-factor/risk-factor.*.jsonl.gz
-        required: "**yes**"
-        for: each factor's SIMM risk class, bucket and labels
-        guide: "[3](#3-the-inputs-and-their-data-contract)"
-        about: |
-          Each factor's `SIMM_RISK_CLASS`, `FACTOR_TYPE`, `SIMM_BUCKET`, `QUALIFIER`, `SIMM_LABEL1`, `SIMM_LABEL2` and `SENIORITY`.
-      - kind: netting-set
-        title: the netting sets and their trades
-        sample: counterparty-risk/netting-set/netting-set.*.jsonl.gz
-        required: "**yes**"
-        for: which trades a netting set holds, its counterparty and CSA
-        guide: "[3.2](#32-the-netting-sets-trades-and-the-product-classes)"
-        about: |
-          A sensitivity record belongs to the netting set its trades lie in: `NETTING_SET_ID`, `TRADE_IDS` (else `TRADES[].TRADE_ID`),
-          `COUNTERPARTY` and `CSA`.
-      - kind: csa
-        title: the SIMM terms
-        sample: counterparty-risk/csa/csa.*.jsonl.gz
-        required: optional (the SIMM terms when present)
-        for: SIMM version, collect and post regimes, calculation currency, add-ons
-        guide: "[3](#3-the-inputs-and-their-data-contract)"
-        about: |
-          The CSA's SIMM terms when present: `SIMM_VERSION`, `IM_COLLECT_REGIMES`, `IM_POST_REGIMES`, `IM_CALCULATION_CURRENCY` (else
-          `CSA_CURRENCY`), `IM_MODEL`, the add-ons and the dispute tolerance.
-      - kind: simm-addon
-        contract: null
-        title: the notional add-on lines
-        required: optional
-        for: the notional add-on per trade
-        guide: "[3](#3-the-inputs-and-their-data-contract)"
-        contract_note: no data contract yet; the fields are listed in [SIMM.md](../contracts/SIMM.md).
-        about: |
-          `TRADE_ID`, `PRODUCT`, `NOTIONAL`, `CURRENCY`: the notional add-on lines. None served: no notional add-on.
-      - kind: crif-external
-        contract: null
-        title: the counterparty's call
-        required: optional
-        for: the counterparty's own SIMM, for the comparison
-        guide: "[3](#3-the-inputs-and-their-data-contract)"
-        contract_note: no data contract yet; the fields are listed in [SIMM.md](../contracts/SIMM.md).
-        about: |
-          `HEADER` rows with `NETTING_SET`, `DIRECTION`, `SOURCE`, `IM_TOTAL` and `IM_<RISKCLASS>`. None served: the comparison says *no call*.
-      - kind: simm
-        title: the stored figures
-        sample: counterparty-risk/simm/simm.*.jsonl.gz
-        required: optional
-        for: stored figures, shown *stored, not computed* for netting sets without sensitivities
-        about: |
-          A netting set's initial margin as a source stored it: shown labelled *stored, not computed* where the netting set has no sensitivities.
-      - kind: fx-spot
-        title: the date's FX
-        sample: market-data/fx-spot/fx-spot.*.jsonl.gz
-        required: for other currencies
-        for: converting sensitivities and thresholds to the calculation currency
-        about: |
-          Today's rates: sensitivities in other currencies and the parameter file's thresholds are converted to the calculation currency.
-
-  # ------------------------------------------------------------------------------------------------------------------------- MR cube
-  - id: mr-cube
-    file: docs/guides/MR_CUBE_GUIDE.md
-    number: 14
-    note: |
-      The cube adds no input of its own: these are the VaR engine's inputs and the FRTB-SA engine's sensitivities
-      ([section 3](#3-the-inputs-and-their-data-contract)).
-    datasets:
-      - kind: pnl-vector
-        title: P&L vectors per trade
-        sample: market-risk/pnl-vector/pnl-vector-*.tar
-        required: "**one of the two**, per trade"
-        for: every trade's vector; its columns as dimensions
-        guide: "[3](#3-the-inputs-and-their-data-contract)"
-        about: |
-          Each trade's scenario P&L; its columns (`LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `CURRENCY`,
-          `COUNTERPARTY`, …) are the cube's dimensions.
-      - kind: scenario-pv
-        title: scenario PVs per trade
-        sample: market-risk/scenario-pv/scenario-pv-*.tar
-        required: "**one of the two**, per trade"
-        for: the same, as PVs that VaR turns into P&L
-        guide: "[3](#3-the-inputs-and-their-data-contract)"
-        about: |
-          The trade's base PV and its PV under each scenario; VaR converts them to USD P&L (with `fx-scenario`) before the cube sees them.
-      - kind: scenario-set
-        title: the scenario days
-        sample: market-risk/scenario-set/scenario-set.tar
-        required: "**yes**"
-        for: the scenario days of the histogram and the explain
-        about: |
-          The ordered scenario days: the histogram's and the explain's dates.
-      - kind: risk-hierarchy
-        title: the trees
-        sample: market-risk/risk-hierarchy/risk-hierarchy.*.jsonl.gz
-        required: "**yes**"
-        for: the hierarchy levels as dimensions
-        about: |
-          The trees' levels are dimensions (`MGMT.DESK`, `LEGAL.LEGAL-ENTITY`, `LL.LIMIT_LETTER`).
-      - kind: var-limit
-        title: VaR limits
-        sample: market-risk/var-limit/var-limit.*.jsonl.gz
-        required: optional
-        for: "`limit()` and `limit_use()`"
-        about: |
-          A node's VaR limit: the `limit()` and `limit_use()` measures.
-      - kind: position-sensitivity
-        title: the sensitivities
-        sample: market-risk/position-sensitivity/position-sensitivity.*.jsonl.gz
-        required: for the sensitivity measures
-        for: "`dv01()`, `cs01()`, the ladder and the heat map"
-        guide: "[FRTB_SA_GUIDE.md 3](FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract)"
-        about: |
-          The FRTB-SA engine's position sensitivities: `dv01()`, `cs01()`, the ladder and the heat map of tab C.
-      - kind: risk-factor
-        title: the factor dictionary
-        sample: market-risk/risk-factor/risk-factor.*.jsonl.gz
-        required: for the sensitivity measures
-        for: each factor's class, tenor and curve for the ladder
-        about: |
-          The factor dictionary the sensitivities name their factors by.
-
-  # --------------------------------------------------------------------------------------------------------------------------- funds
-  - id: funds
-    file: docs/guides/FUNDS_GUIDE.md
-    number: 18
-    datasets:
-      - kind: fund
-        title: the fund's fact sheet and holdings
-        sample: funds/fund/fund.tar
-        fields: [TICKER, NAME, TYPE, SERIES_ID, CIK, REGISTRANT, LEI, IS_ETF, IS_INDEX, INDEX_ID, ADVISER, REPORT_DATE, TOTAL_ASSETS,
-                 NET_ASSETS, EXPENSE_RATIO, RETURN_LAST_YEAR, HOLDING_COUNT, TOP10_PCT, BY_SECTOR, HOLDINGS, VS_INDEX]
-        required: "**yes**"
-        for: the FUND page, its holdings and look-through
-        guide: "[8](#8-fund)"
-        about: |
-          One document per fund: its identity, share classes, fees, returns and its holdings, the FUND page and the Look-through holdings tab.
-      - kind: fund-holder
-        title: who holds a company
-        sample: funds/fund-holder/fund-holder.*.jsonl.gz
-        required: for HELD and the company page
-        for: the funds holding each issuer
-        guide: "[9](#9-fund-holder)"
-        about: |
-          One row per held company: the funds that hold it and how much, read by HELD and the company page's Held by funds panel.
-      - kind: index-funds
-        title: funds tracking an index
-        sample: funds/index-funds/index-funds.*.jsonl.gz
-        required: for TRACK and the index page
-        for: the funds tracking each index
-        guide: "[10](#10-index-funds)"
-        about: |
-          One row per index: the funds that track it, read by TRACK and the index page.
-
-  # ------------------------------------------------------------------------------------------------------------- groupings, analytics
-  - id: groupings
-    file: docs/guides/GROUPINGS_ANALYTICS_GUIDE.md
-    number: 25
-    note: |
-      These are the inputs; every grouping and analytic is computed from them when asked ([section 22](#22-where-the-inputs-come-from)).
-    datasets:
-      - kind: lei-entity
-        title: the legal entities
-        sample: gleif/lei-entity/lei-entity.*.jsonl.gz
-        required: for LEIG and LEIC
-        for: each entity's group, parent, country and status
-        guide: "[22](#22-where-the-inputs-come-from)"
-        about: |
-          GLEIF's legal entities: `LEI_GROUP`, `DIRECT_PARENT`, `LEI_COUNTRY`, `RENEWAL_LATE`, `REGISTRATION_STATUS` and `GLEIF_GROUP_SIZE` make
-          the ownership groups (LEIG) and the country pages (LEIC).
-      - kind: us-company
-        title: the US companies
-        sample: us-equities/us-company/us-company.*.jsonl.gz
-        fields: [TICKER, NAME, SIC, SIC_DESCRIPTION, CURRENCY, FISCAL_YEAR, REVENUE, NET_INCOME, FINANCIALS]
-        required: for SIC and the USEQ ratios
-        for: each company's sector and financials
-        guide: "[16](#16-the-useq-ratios)"
-        about: |
-          SEC EDGAR's companies: `SIC` makes the sectors (SIC); the financials (`REVENUE`, `NET_INCOME`, `FINANCIALS[]`) make the USEQ ratios.
-      - kind: economy
-        title: the economies
-        required: for ECG
-        for: each economy's region, income group, GDP and population
-        guide: "[14](#14-country-group)"
-        sample_note: |
-          no sample in the demo data (`data/testdata`); the world-economy pack ships its public data with the pack
-          (`config/packs/world-economy/samples/`).
-        about: |
-          `REGION_GROUP`, `INCOME_GROUP`, `GDP_USD_BN`, `POPULATION_M`, `GROWTH`, `INFLATION`, `YEAR` and `GDP_PATH`: the country groups (ECG).
-      - kind: correlation-matrix
-        title: the correlation sets
-        sample: market-data/correlation-matrix/correlation-matrix.*.jsonl.gz
-        required: for CORR
-        for: the factors of each correlation set
-        guide: "[15](#15-correlation-result)"
-        about: |
-          A correlation set's factors; the correlations themselves are computed from the factors' price histories.
-      - kind: equity
-        title: the equities' price history
-        sample: market-data/equity/equity.*.jsonl.gz
-        required: for CORR and EQB
-        for: each equity's quote and `HISTORY[]`
-        about: |
-          An equity's quote and its history (`HISTORY[]`): the returns of CORR and the beta of EQB.
-      - kind: equity-index
-        title: the indices' price history
-        sample: market-data/equity-index/equity-index.*.jsonl.gz
-        required: for EQB
-        for: each index's level and `HISTORY[]`
-        about: |
-          An index's level and history: the market leg of an equity's beta (EQB).
-      - kind: fx-spot
-        title: FX history
-        sample: market-data/fx-spot/fx-spot.*.jsonl.gz
-        required: for CORR
-        for: each currency pair's quote and `HISTORY[]`
-        about: |
-          A currency pair's quote and history: FX factors in a correlation set.
-      - kind: financial-fact
-        title: the reported facts
-        sample: us-equities/financial-fact/financial-fact.*.jsonl.gz
-        required: for FACT changes
-        for: a reported figure's `HISTORY[]`
-        about: |
-          One reported figure of one company with its `HISTORY[]`: the FACT page's changes.
-      - kind: index-membership
-        title: the index members
-        sample: us-equities/index-membership/index-membership.*.jsonl.gz
-        required: for IDX totals
-        for: an index's members, `ROWS[]`
-        about: |
-          An index's members (`ROWS[]`): the IDX page's totals.
-      - kind: price-history
-        title: live price history
-        required: for PXH (off as shipped)
-        for: a ticker's prices, read live
-        guide: "[17](#17-the-pxh-analytics)"
-        sample_note: none in the demo data; read live from Yahoo Finance's public chart endpoint (internal use only), off as shipped.
-        about: |
-          A ticker's daily prices, read live when PXH opens: the returns, volatility and beta of the PXH analytics.
-
-  # --------------------------------------------------------------------------------------------------------------------------- pivot
-  - id: pivot
-    file: docs/guides/PIVOT_GUIDE.md
-    number: 27
-    note: |
-      The pivot reads any stored kind through its connector ([section 3](#3-sources-and-fields)); these are the sources the guide's examples
-      use. A field's type and unit (money, rate) come from the kind's data contract.
-    datasets:
-      - kind: trade_murex
-        contract: trade
-        label: The trades
-        title: the examples' table
-        sample: trades/murex/trade_murex.*.jsonl.gz
-        pick: first
-        fields: [SOURCE_SYSTEM, TRADE_ID, TRADE_STATUS, TRADE_DATE, PRODUCT_GROUP, PRODUCT_TYPE, BUY_SELL_CODE, QUANTITY, CURRENCY,
-                 COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID, MATURITY_DATE]
-        required: for the table source `trade`
-        for: 'the rows of the guide''s examples (`"source": "trade"`)'
-        guide: "[3](#3-sources-and-fields)"
-        about: |
-          The trades (`trade_murex`, `trade_endur`, `trade_calypso` under `data/testdata/trades/<system>/`): a stored kind read as a table; its
-          text fields are the rows and columns, its numbers the measures. The record shows the fields a pivot of trades usually groups by.
-      - kind: scenario-pv
-        title: the VaR book's vectors
-        sample: market-risk/scenario-pv/scenario-pv-*.tar
-        required: for the source `var`
-        for: the positions' columns and vectors behind `var()`, `es()`, `pv()`
-        guide: "[3](#3-sources-and-fields)"
-        about: |
-          The source `var` is the VaR engine's book of the date, built from these rows (or `pnl-vector` rows, [VAR_GUIDE.md section
-          36](VAR_GUIDE.md#36-var-data-every-dataset-the-engine-reads)): its text columns (DESK, CURRENCY, PRODUCT_GROUP …) are the fields.
-      - kind: position
-        title: positions
-        required: optional (a table source)
-        for: a stored position table, when the bank delivers one
-        guide: "[3](#3-sources-and-fields)"
-        about: |
-          A stored position table, pivoted like any other kind. The demo derives its positions in the VaR engine instead.
+- id: var
+  file: docs/guides/VAR_GUIDE.md
+  number: 36
+  contract_page: docs/contracts/VAR.md
+  note: |
+    **The minimum for a VaR number:** `scenario-set`, a `risk-hierarchy` (or hierarchy columns on the vectors), and for every trade either a
+    `scenario-pv` row or a `pnl-vector` row. Everything else adds a feature: currencies, portfolios, limits, backtesting, the trade pages.
+  datasets:
+  - kind: scenario-set
+    required: '**yes**'
+    for: the ordered scenario days every vector lines up with
+  - kind: scenario-pv
+    required: '**one of the two**, per trade'
+    for: each trade's base PV and its PV under each scenario; Drishti computes the P&L
+  - kind: pnl-vector
+    required: '**one of the two**, per trade'
+    for: each trade's scenario P&L, computed by the source
+  - kind: fx-scenario
+    required: when scenario PVs are in other currencies (else derived from `fx-spot`)
+    for: each currency's rate on each scenario day, to convert scenario PVs to USD
+  - kind: fx-spot
+    required: for other currencies
+    for: 'FX history: today''s rates, reporting currencies, scenario FX when not supplied'
+  - kind: risk-hierarchy
+    required: '**yes** (or built from the trades'' columns)'
+    for: the trees (MGMT, LEGAL, limit letters…) that make the scopes
+  - kind: portfolio
+    required: optional
+    for: 'stored portfolios: hierarchy, rule and basket portfolios'
+  - kind: var-limit
+    required: optional
+    for: a node's VaR limit (the Limit column, limit use)
+  - kind: desk-pnl
+    required: for backtesting
+    for: actual and hypothetical P&L of each desk, per day
+  - kind: pnl-history
+    required: for stressed VaR and long-history views
+    for: a node's P&L over many years
+  - kind: trade-valuation
+    required: optional (the position page, What-if)
+    for: each trade's MTM today and its attributes
+  - kind: trade_murex
+    contract: trade
+    label: The trades
+    required: optional for the number, used by the screens
+    for: the trades themselves, linked from every position
+- id: exposure
+  file: docs/guides/EXPOSURE_GUIDE.md
+  number: 29
+  contract_page: docs/contracts/EXP.md
+  note: |
+    **The minimum for an exposure profile:** a `simulation-run`, its `exposure-path` rows and the `netting-set` rows that group the trades.
+    The kinds are the engine's `drishti.ccr.exposure.kinds.*` settings (`config/engines/exposure.yaml`); a bank names its own there.
+  datasets:
+  - kind: simulation-run
+    required: '**yes**'
+    for: the run, its time grid, the number of paths and the seed
+  - kind: exposure-path
+    required: '**yes**'
+    for: one row per trade and grid date, a vector of MtM over the paths
+  - kind: netting-set
+    required: '**yes**'
+    for: which trades net together, the counterparty and the CSA
+  - kind: csa
+    required: for margined netting sets
+    for: thresholds, minimum transfer, independent amount, margin period of risk
+  - kind: collateral-balance
+    required: optional (the `current` collateral model)
+    for: the collateral held and posted today per account
+  - kind: counterparty
+    required: for `CPTY:` scopes
+    for: names, ratings and groups of the counterparties
+  - kind: counterparty-group
+    required: for `GROUP:` scopes
+    for: the connected groups of counterparties
+  - kind: risk-hierarchy
+    required: for hierarchy scopes (`LE:` and the trees)
+    for: the legal entity and management trees, shared with VaR
+- id: frtb-sa
+  file: docs/guides/FRTB_SA_GUIDE.md
+  number: 13
+  contract_page: docs/contracts/FRTB.md
+  datasets:
+  - kind: position-sensitivity
+    required: '**yes**'
+    for: each position's sensitivities, a sparse list per record
+  - kind: risk-factor
+    required: '**yes**'
+    for: each factor's class, type, buckets, tenor and the source systems' names
+  - kind: default-risk
+    required: for the default risk charge
+    for: obligor, seniority, credit quality and notional per position
+  - kind: residual-risk
+    required: optional
+    for: the residual risk add-on's class and notional per trade
+- id: simm
+  file: docs/guides/SIMM_GUIDE.md
+  number: 13
+  contract_page: docs/contracts/SIMM.md
+  datasets:
+  - kind: parameters
+    contract: null
+    label: The parameter file
+    required: '**yes** (the bank''s licensed file)'
+    for: the risk weights, correlations and thresholds of the SIMM version
+    contract_note: not a dataset kind; a YAML file the engine reads (`docs/architecture/capital-parameters/simm.yaml`).
+  - kind: position-sensitivity
+    required: '**yes**'
+    for: the delta and vega elements of each trade or position
+  - kind: risk-factor
+    required: '**yes**'
+    for: each factor's SIMM risk class, bucket and labels
+  - kind: netting-set
+    required: '**yes**'
+    for: which trades a netting set holds, its counterparty and CSA
+  - kind: csa
+    required: optional (the SIMM terms when present)
+    for: SIMM version, collect and post regimes, calculation currency, add-ons
+  - kind: simm-addon
+    contract: null
+    required: optional
+    for: the notional add-on per trade
+    contract_note: no data contract yet; the fields are listed in [SIMM.md](../contracts/SIMM.md).
+  - kind: crif-external
+    contract: null
+    required: optional
+    for: the counterparty's own SIMM, for the comparison
+    contract_note: no data contract yet; the fields are listed in [SIMM.md](../contracts/SIMM.md).
+  - kind: simm
+    required: optional
+    for: stored figures, shown *stored, not computed* for netting sets without sensitivities
+  - kind: fx-spot
+    required: for other currencies
+    for: converting sensitivities and thresholds to the calculation currency
+- id: mr-cube
+  file: docs/guides/MR_CUBE_GUIDE.md
+  number: 14
+  note: |
+    The cube adds no input of its own: these are the VaR engine's inputs and the FRTB-SA engine's sensitivities
+    ([section 3](#3-the-inputs-and-their-data-contract)).
+  datasets:
+  - kind: pnl-vector
+    required: '**one of the two**, per trade'
+    for: every trade's vector; its columns as dimensions
+  - kind: scenario-pv
+    required: '**one of the two**, per trade'
+    for: the same, as PVs that VaR turns into P&L
+  - kind: scenario-set
+    required: '**yes**'
+    for: the scenario days of the histogram and the explain
+  - kind: risk-hierarchy
+    required: '**yes**'
+    for: the hierarchy levels as dimensions
+  - kind: var-limit
+    required: optional
+    for: '`limit()` and `limit_use()`'
+  - kind: position-sensitivity
+    required: for the sensitivity measures
+    for: '`dv01()`, `cs01()`, the ladder and the heat map'
+  - kind: risk-factor
+    required: for the sensitivity measures
+    for: each factor's class, tenor and curve for the ladder
+- id: funds
+  file: docs/guides/FUNDS_GUIDE.md
+  number: 18
+  datasets:
+  - kind: fund
+    required: '**yes**'
+    for: the FUND page, its holdings and look-through
+  - kind: fund-holder
+    required: for HELD and the company page
+    for: the funds holding each issuer
+  - kind: index-funds
+    required: for TRACK and the index page
+    for: the funds tracking each index
+- id: groupings
+  file: docs/guides/GROUPINGS_ANALYTICS_GUIDE.md
+  number: 25
+  note: |
+    These are the inputs; every grouping and analytic is computed from them when asked ([section 22](#22-where-the-inputs-come-from)).
+  datasets:
+  - kind: lei-entity
+    required: for LEIG and LEIC
+    for: each entity's group, parent, country and status
+  - kind: us-company
+    required: for SIC and the USEQ ratios
+    for: each company's sector and financials
+  - kind: economy
+    required: for ECG
+    for: each economy's region, income group, GDP and population
+  - kind: correlation-matrix
+    required: for CORR
+    for: the factors of each correlation set
+  - kind: equity
+    required: for CORR and EQB
+    for: each equity's quote and `HISTORY[]`
+  - kind: equity-index
+    required: for EQB
+    for: each index's level and `HISTORY[]`
+  - kind: fx-spot
+    required: for CORR
+    for: each currency pair's quote and `HISTORY[]`
+  - kind: financial-fact
+    required: for FACT changes
+    for: a reported figure's `HISTORY[]`
+  - kind: index-membership
+    required: for IDX totals
+    for: an index's members, `ROWS[]`
+  - kind: price-history
+    required: for PXH (off as shipped)
+    for: a ticker's prices, read live
+- id: pivot
+  file: docs/guides/PIVOT_GUIDE.md
+  number: 27
+  note: |
+    The pivot reads any stored kind through its connector ([section 3](#3-sources-and-fields)); these are the sources the guide's examples
+    use. A field's type and unit (money, rate) come from the kind's data contract.
+  datasets:
+  - kind: trade_murex
+    contract: trade
+    label: The trades
+    required: for the table source `trade`
+    for: 'the rows of the guide''s examples (`"source": "trade"`)'
+  - kind: scenario-pv
+    required: for the source `var`
+    for: the positions' columns and vectors behind `var()`, `es()`, `pv()`
+  - kind: position
+    required: optional (a table source)
+    for: a stored position table, when the bank delivers one
