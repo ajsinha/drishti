@@ -432,7 +432,7 @@ export function installExplain(win) {
   document.addEventListener("mouseout", function (ev) { if (target(ev)) clearTimeout(hoverTimer); });
   // the keys (the one keymap, drishti_keys.js): Escape closes the preview, then the drawer; E explains the focused number (else the
   // preview's, else the page's main one); ? on a focused number previews it (anywhere else ? is the keymap's list)
-  var K = window.Drishti.keys;
+  var K = window.Drishti.keys || { register: function () {} };          // a host page without the keymap: Explain has no keys there
   var focusedNumber = function () { return document.activeElement && document.activeElement.closest ? document.activeElement.closest("[data-explain]") : null; };
   K.register({ id: "explain.preview.close", keys: ["Escape"], scope: "dialog", area: "explain-preview", description: "Close the preview",
     typing: true, keepDefault: true, open: function () { return !!(pop && !pop.hidden); }, run: function () { closePreview(); } });

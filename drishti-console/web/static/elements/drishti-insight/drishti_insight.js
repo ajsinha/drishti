@@ -410,7 +410,7 @@
         hoverTimer = setTimeout(function () { var req = reqOf(el); if (req && req.kind && el.matches(":hover") && !(drawer && !drawer.hidden)) { lastAnchor = el; preview(el, req); } }, 350);
       });
       document.addEventListener("mouseout", function (ev) { if (target(ev)) clearTimeout(hoverTimer); });
-      var K = window.Drishti.keys;
+      var K = window.Drishti.keys || { register: function () {} };          // a host page without the keymap: Explain has no keys there
       var focusedNumber = function () { return document.activeElement && document.activeElement.closest ? document.activeElement.closest("[data-explain]") : null; };
       K.register({ id: "explain.preview.close", keys: ["Escape"], scope: "dialog", area: "explain-preview", description: "Close the preview",
         typing: true, keepDefault: true, open: function () { return !!(pop && !pop.hidden); }, run: function () { closePreview(); } });
