@@ -176,7 +176,7 @@ function enumLabel(field, v) { const i = (field.enum || []).indexOf(v); return f
  */
 export function fieldProblem(field, v, c) {
   const L = c.label;
-  if (blank(v) || (field.type === 'boolean' && v === false && c.required && field.widget === 'checkbox')) {
+  if ((blank(v) && !(Array.isArray(v) && field.minItems)) || (field.type === 'boolean' && v === false && c.required && field.widget === 'checkbox')) {
     if (!c.required) { return null; }
     return field.type === 'array' || field.widget === 'multiselect' ? 'Pick at least one for ' + L.toLowerCase() : field.enum || field.widget === 'combobox' || field.widget === 'tree' ? 'Pick ' + L.toLowerCase() : L + ' is required';
   }

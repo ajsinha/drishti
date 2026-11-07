@@ -29,7 +29,7 @@ import { PivotState, pivotLocal, pivotApplyUpdates, serverRequest, mergeAnswer, 
 import { GridLive } from './drishti_grid-live.js';
 import { GridEditing } from './drishti_grid-edit.js';
 import { toCsv, toXlsx } from './drishti_export.js';
-import { cycleSort } from '../../drishti-core/src/drishti_index.js';
+import { cycleSort, FILTER_CHANNEL } from '../../drishti-core/src/drishti_index.js';
 
 /** The layouts a grid is drawn in (the visual shell; the model is the same). */
 export const LAYOUTS = Object.freeze(['wells', 'panel', 'terminal']);
@@ -240,6 +240,25 @@ export class GridModel {
    * @returns {void}
    */
   setQuickFilter(q) { this.rowModel.setQuickFilter(q); this.live.emit('filterChanged', { quickFilter: q || '' }); }
+
+  /**
+   * Follows a filter bar (drishti-inputs) or any page part that emits the filter model on a bus under FILTER_CHANNEL: each payload's
+   * filters on this grid's columns (by id or field) become its filter model, and its quick filter the grid's; filters on fields this
+   * grid has not are left out.
+   * @param {EventBus} bus drishti-core's bus (the page's shared bus, or the filter bar's)
+   * @param {{channel: string, source: string}} [o] channel default FILTER_CHANNEL; source: follow only the bar of this id
+   * @returns {function(): void} stops following
+   */
+  followFilters(bus, o) {
+    o = o || {};
+    return bus.on(o.channel || FILTER_CHANNEL, (p) => {
+      if (!p || (o.source && p.source !== o.source)) { return; }
+      const known = {};
+      Object.keys(p.model || {}).forEach((k) => { const c = this.columns.get(k) || this.columns.all().find((x) => x.field === k); if (c) { known[c.id] = p.model[k]; } });
+      this.rowModel.setQuickFilter(p.quickFilter || '');
+      this.setFilterModel(known);
+    });
+  }
 
   /**
    * Groups rows (grid mode).

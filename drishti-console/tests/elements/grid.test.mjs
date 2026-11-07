@@ -21,6 +21,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
 import * as G from '../../web/static/elements/drishti-grid/src/drishti_index.js';
+import * as C from '../../web/static/elements/drishti-core/src/drishti_index.js';
 
 const require = createRequire(import.meta.url);
 const M = '−';
@@ -64,10 +65,10 @@ test('sort: blanks last both ways, numbers inside text in order, multi-column, t
   assert.deepEqual(m.filteredRows().map((r) => r.K), ['T1', 'T2', 'T10', null]);
   m.setSortModel([{ colId: 'N', sort: 'desc' }]);
   assert.deepEqual(m.filteredRows().map((r) => r.N), [3, 2, 1, null]);
-  assert.deepEqual(G.cycleSort([], 'K'), [{ colId: 'K', sort: 'asc' }]);
-  assert.deepEqual(G.cycleSort([{ colId: 'K', sort: 'asc' }], 'K'), [{ colId: 'K', sort: 'desc' }]);
-  assert.deepEqual(G.cycleSort([{ colId: 'K', sort: 'desc' }], 'K'), []);
-  assert.deepEqual(G.cycleSort([{ colId: 'K', sort: 'asc' }], 'N', true), [{ colId: 'K', sort: 'asc' }, { colId: 'N', sort: 'asc' }]);
+  assert.deepEqual(C.cycleSort([], 'K'), [{ colId: 'K', sort: 'asc' }]);
+  assert.deepEqual(C.cycleSort([{ colId: 'K', sort: 'asc' }], 'K'), [{ colId: 'K', sort: 'desc' }]);
+  assert.deepEqual(C.cycleSort([{ colId: 'K', sort: 'desc' }], 'K'), []);
+  assert.deepEqual(C.cycleSort([{ colId: 'K', sort: 'asc' }], 'N', true), [{ colId: 'K', sort: 'asc' }, { colId: 'N', sort: 'asc' }]);
 });
 
 test('filters: text, number, date, set (members kept or left out), blank, quick; in words', () => {
@@ -83,8 +84,8 @@ test('filters: text, number, date, set (members kept or left out), blank, quick;
   m.setFilterModel({});
   m.setQuickFilter('equity gbp');
   assert.ok(m.filteredCount() > 0 && m.filteredRows().every((r) => r.DESK === 'EQUITY' && r.CCY === 'GBP'));
-  assert.equal(G.passes(null, { type: 'blank', op: 'blank' }), true);
-  assert.equal(G.filterWords({ DESK: { type: 'set', values: ['RATES', 'FX'] }, NOTIONAL: { type: 'number', op: 'gt', value: 5 } }), 'DESK in RATES, FX; NOTIONAL > 5');
+  assert.equal(C.passes(null, { type: 'blank', op: 'blank' }), true);
+  assert.equal(C.filterWords({ DESK: { type: 'set', values: ['RATES', 'FX'] }, NOTIONAL: { type: 'number', op: 'gt', value: 5 } }), 'DESK in RATES, FX; NOTIONAL > 5');
 });
 
 test('row groups: figures from members, a non-additive column left for the server, open and close, ids follow rows', () => {

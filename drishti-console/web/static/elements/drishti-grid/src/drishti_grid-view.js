@@ -325,6 +325,14 @@ export class Grid extends GridBase {
    */
   resolveProposal(proposalId, decision) { const ok = this.model.editing.resolveProposal(proposalId, decision); if (ok) { this.say('Proposal ' + proposalId + ' ' + decision); } return ok; }
 
+  /**
+   * Follows a filter bar's filter model on a bus (GridModel.followFilters).
+   * @param {Object} bus drishti-core's EventBus
+   * @param {{channel: string, source: string}} [o]
+   * @returns {function(): void} stops following
+   */
+  followFilters(bus, o) { const off = this.model.followFilters(bus, o); this.listeners.push(off); return off; }
+
   // ---- the public API ---------------------------------------------------------------------------------------------------------------------
   /**
    * Changes the layout: 'wells', 'panel' or 'terminal'.

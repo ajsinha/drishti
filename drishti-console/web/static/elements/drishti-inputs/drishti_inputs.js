@@ -267,8 +267,8 @@
           if (stream.match(/^[$@][\w.[\]?-]*/)) { return 'variable-2'; }
           if (stream.match(/^-?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?(%|bp|k|m|bn)?\b/i)) { return 'number'; }
           if (stream.match(ATOMS)) { return 'atom'; }
-          if (stream.match(RACHANA_WORDS)) { return 'keyword'; }
           if (stream.match(/^[A-Za-z_][\w.]*(?=\s*\()/)) { return 'builtin'; }
+          if (stream.match(RACHANA_WORDS)) { return 'keyword'; }
           if (stream.match(/^[A-Za-z_][\w.]*/)) { return 'variable'; }
           if (stream.match(/^(<=|>=|<>|!=|==|&&|\|\||[-+*/^%=<>!])/)) { return 'operator'; }
           if (stream.match(/^[()[\]{},]/)) { return 'bracket'; }
@@ -1439,7 +1439,7 @@
     function enumLabel(field, v) { const i = (field.enum || []).indexOf(v); return field.enumLabels && i >= 0 ? field.enumLabels[i] : String(v); }
     function fieldProblem(field, v, c) {
       const L = c.label;
-      if (blank(v) || (field.type === 'boolean' && v === false && c.required && field.widget === 'checkbox')) {
+      if ((blank(v) && !(Array.isArray(v) && field.minItems)) || (field.type === 'boolean' && v === false && c.required && field.widget === 'checkbox')) {
         if (!c.required) { return null; }
         return field.type === 'array' || field.widget === 'multiselect' ? 'Pick at least one for ' + L.toLowerCase() : field.enum || field.widget === 'combobox' || field.widget === 'tree' ? 'Pick ' + L.toLowerCase() : L + ' is required';
       }
@@ -2204,7 +2204,7 @@
         const fe = this.o.fourEyes, diff = changes(visibleValue(this.schema, this.initial), values);
         return new Promise((resolve) => {
           const dlg = this.el('dialog', { cls: 'di-dialog di-four-eyes', attrs: { 'aria-label': 'Submit for approval' } });
-          const list = this.el('ul', { cls: 'di-diff' });
+          const list = this.el('ul', { cls: 'di-changes' });
           diff.forEach((c) => list.appendChild(this.el('li', {}, [this.el('b', { text: c.path }), ' ', this.el('del', { text: c.old === undefined ? '(none)' : JSON.stringify(c.old) }), ' → ', this.el('ins', { text: c.value === undefined ? '(none)' : JSON.stringify(c.value) })])));
           const comment = this.el('textarea', { cls: 'di-field', attrs: { rows: '3', 'aria-label': 'Why (the approver reads it)', placeholder: 'Why: the approver reads this' } });
           const who = this.el('div', { cls: 'di-form-widget' });

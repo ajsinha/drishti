@@ -17,7 +17,7 @@
    the layout keeps for it: the drawer beside the grid that follows the selection (wells), the card at the cell (panel), the split pane
    under the grid with the steps, the worst scenarios and the trend side by side (terminal). The figures are the hook's (the server's
    Explain inside Drishti); the grid computes none. */
-import { h } from './drishti_grid-dom.js';
+import { h } from '../../drishti-core/src/drishti_index.js';
 
 /**
  * @typedef {Object} ExplainResult

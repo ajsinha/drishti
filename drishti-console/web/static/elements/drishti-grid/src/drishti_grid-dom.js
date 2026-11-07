@@ -18,8 +18,6 @@
    the placement are drishti-core's (h, placeAt), the one home of both. */
 import { h, placeAt } from '../../drishti-core/src/drishti_index.js';
 
-export { h, placeAt };
-
 let menuSeq = 0;
 
 /**

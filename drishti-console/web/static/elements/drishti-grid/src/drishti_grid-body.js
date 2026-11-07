@@ -19,7 +19,7 @@
    (total, ◆ non-additive total, pending server figure, loading block), the range, the focus, conditional formats and the flash of a
    live change. Pointer work: click and Shift+click, drag a range, the context menu, header sort, the column menu, a group's toggle,
    resize and autosize by the handle, the row checkboxes. */
-import { h } from './drishti_grid-dom.js';
+import { h } from '../../drishti-core/src/drishti_index.js';
 import { headerSpans, pivotColumnLabels, markGroups, isTotalCell, nonAdditiveNote, cfBackground, figureRange, ruleFor } from './drishti_grid-ui.js';
 
 const CF_SCAN = 100000;

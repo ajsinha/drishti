@@ -347,7 +347,7 @@ export class Form extends InputBase {
     const fe = this.o.fourEyes, diff = changes(visibleValue(this.schema, this.initial), values);
     return new Promise((resolve) => {
       const dlg = this.el('dialog', { cls: 'di-dialog di-four-eyes', attrs: { 'aria-label': 'Submit for approval' } });
-      const list = this.el('ul', { cls: 'di-diff' });
+      const list = this.el('ul', { cls: 'di-changes' });
       diff.forEach((c) => list.appendChild(this.el('li', {}, [this.el('b', { text: c.path }), ' ', this.el('del', { text: c.old === undefined ? '(none)' : JSON.stringify(c.old) }), ' → ', this.el('ins', { text: c.value === undefined ? '(none)' : JSON.stringify(c.value) })])));
       const comment = this.el('textarea', { cls: 'di-field', attrs: { rows: '3', 'aria-label': 'Why (the approver reads it)', placeholder: 'Why: the approver reads this' } });
       const who = this.el('div', { cls: 'di-form-widget' });

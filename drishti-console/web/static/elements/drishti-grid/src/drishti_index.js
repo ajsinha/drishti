@@ -18,7 +18,6 @@
    page, server-side for the rest, non-additive totals always the server's), the wells, selection with range figures, CSV and Excel
    export, keyboard navigation and the Explain hook. The layouts (wells, panel, terminal) draw it; a plain renderer serves tests. */
 export { ADDITIVE_FUNCS, normalizeColumn, getValue, formatValue, ColumnModel } from './drishti_columns.js';
-export { isBlank, compareValues, compareRows, cycleSort, passes, rowFilter, filterWords } from '../../drishti-core/src/drishti_index.js';
 export { AGG_FUNCS, aggFunc, parseMeasure, isServerMeasure, aggregate } from './drishti_aggregate.js';
 export { SEP, BLANK, memberText, valueLabel, normalizeView, serverRequest, memberFilters, PivotState, pivotLocal, pivotApplyUpdates, mergeAnswer, applyValueFilters,
   resultColumns, cellValue } from './drishti_pivot.js';
@@ -38,7 +37,7 @@ export { renderWindow, renderText, renderHtml } from './drishti_plain-render.js'
 export { VIEW_EVENTS, PHONE_WIDTH, FUNCTION_KEYS, CF_TYPES, headerSpans, pivotColumnLabels, markGroups, isTotalCell, nonAdditiveNote, colourScaleAlpha,
   dataBarWidth, cfBackground, figureRange, ruleFor, phoneColumns, pivotMeasures, columnMenuItems, cellMenuItems, commandText, parseCommand,
   parseCondition, conditionText, statusItems, FlashTracker } from './drishti_grid-ui.js';
-export { h, placeAt, Menu, Notes } from './drishti_grid-dom.js';
+export { Menu, Notes } from './drishti_grid-dom.js';
 export { sparkline, renderExplain } from './drishti_grid-explain.js';
 export { localDrill } from './drishti_grid-actions.js';
 export { GridBase } from './drishti_grid-base.js';

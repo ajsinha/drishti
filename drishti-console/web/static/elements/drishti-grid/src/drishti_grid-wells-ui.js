@@ -18,7 +18,7 @@
    the side tool panel with a grouped field list, checkboxes and switches (layout panel), the lane under the terminal's command line
    (layout terminal). A chip's menu holds its aggregation (a non-additive value says the server computes it), a filter's members, the
    value filters and top N of the pivot, a move to another well and the removal. A drop that cannot be made says why. */
-import { h } from './drishti_grid-dom.js';
+import { h } from '../../drishti-core/src/drishti_index.js';
 import { VALUE_FUNCS } from './drishti_wells.js';
 import { aggFunc } from './drishti_aggregate.js';
 import { parseCondition, conditionText } from './drishti_grid-ui.js';

@@ -1,0 +1,30 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The inputs harness's page (not part of the library). */
+body { margin: 0; background: var(--d-bg); color: var(--d-ink); font-family: var(--d-font-sans); }
+.hx-top { display: flex; gap: 10px; align-items: center; padding: 8px 14px; border-bottom: 1px solid var(--d-border); background: var(--d-surface-2); }
+.hx-top button { background: transparent; border: 1px solid var(--d-border); color: var(--d-ink); border-radius: 7px; padding: 3px 10px; cursor: pointer; }
+.hx-log { color: var(--d-faint); font-size: 12px; }
+.hx-main { display: flex; flex-direction: column; gap: 14px; padding: 14px; }
+.hx-card { border: 1px solid var(--d-border); border-radius: 12px; background: var(--d-surface); padding: 10px 14px 14px; }
+.hx-card h2 { margin: 0 0 8px; font-size: 15px; }
+.hx-card h3 { margin: 8px 0 4px; font-size: 13px; color: var(--d-muted); }
+.hx-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-start; }
+.hx-l { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--d-muted); min-width: 200px; }
+.hx-grid { height: 330px; margin-top: 8px; }
+.hx-grid-small { height: 240px; }
+.hx-col { flex: 1; min-width: 320px; }
+.hx-pill { border: 1px solid var(--d-border); border-radius: 10px; padding: 0 8px; font-size: 12px; }

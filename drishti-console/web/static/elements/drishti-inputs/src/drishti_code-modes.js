@@ -42,8 +42,8 @@ export function rachanaMode() {
       if (stream.match(/^[$@][\w.[\]?-]*/)) { return 'variable-2'; }
       if (stream.match(/^-?(\d+\.?\d*|\.\d+)(e[-+]?\d+)?(%|bp|k|m|bn)?\b/i)) { return 'number'; }
       if (stream.match(ATOMS)) { return 'atom'; }
-      if (stream.match(RACHANA_WORDS)) { return 'keyword'; }
       if (stream.match(/^[A-Za-z_][\w.]*(?=\s*\()/)) { return 'builtin'; }
+      if (stream.match(RACHANA_WORDS)) { return 'keyword'; }
       if (stream.match(/^[A-Za-z_][\w.]*/)) { return 'variable'; }
       if (stream.match(/^(<=|>=|<>|!=|==|&&|\|\||[-+*/^%=<>!])/)) { return 'operator'; }
       if (stream.match(/^[()[\]{},]/)) { return 'bracket'; }
