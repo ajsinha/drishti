@@ -1,0 +1,580 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.banking.compute.var;
+
+import com.ash.drishti.compute.vector.OrdinalSet;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.function.Function;
+
+/**
+ * A date's intraday layer on its morning book (VAR_GUIDE.md section 8.4, as built in 2.9.4): the trades a pricing system re-sent during
+ * the day (amended, new or cancelled), each trade's current P&amp;L replacing its morning one. Applying a batch is incremental: each updated
+ * trade's difference (new − old) is added to its book and to every node above it in every hierarchy, and to the per-trade-currency
+ * totals; nothing else is recomputed (DATA_ARCHITECTURE.md › Reactive connectors, section 10.2). The morning store is never changed (the hot file is written
+ * once): an updated row is the stored row plus its difference ({@link OverlayVectors}), a new trade is appended after the morning's
+ * ordinals. Immutable: {@link #apply} returns a new book over the same morning book, so a request reading the previous one stays
+ * consistent; only the current P&amp;L per trade is kept, never the batches.
+ *
+ * <p>A trade amended into another book or position is its old ordinal cancelled and a new one added (its old book and position lose it,
+ * the new ones gain it). A new trade's position comes from the update's {@code POSITION_ID} (the server derives it by the position rules):
+ * an existing position takes it as a member, else it is a position of its own.
+ */
+public final class VarIntraday {
+
+    /**
+     * One trade's update, already in this book's currency.
+     *
+     * @param tradeId the trade
+     * @param pnl its P&amp;L under each scenario, or null: the trade is cancelled (its P&amp;L removed)
+     * @param pv its value today (the {@code PV} column), NaN when none
+     * @param texts its {@link VarBook#TRADE_TEXTS}, its position id and rule derived
+     * @param numbers its {@link VarBook#TRADE_NUMBERS} ({@code PV} as {@code pv})
+     * @param pvUsd its value today in USD (for the per-trade-currency totals; NaN: none)
+     * @param pnlUsd its USD P&amp;L (the totals; null when cancelled)
+     */
+    public record Update(String tradeId, double[] pnl, double pv, String[] texts, double[] numbers, double pvUsd, double[] pnlUsd) {}
+
+    /**
+     * What the layer holds, for the labels: the updates applied, the trades changed (amended, added, cancelled), the newest
+     * {@code COMPUTED_AT} and the batches (the newest 20, and how many). The batches are in one stable order whatever order they were
+     * applied in (one signal or several, a server or a member of Drishti*net): by each batch's newest {@code COMPUTED_AT}, then by batch
+     * id, oldest first ({@link #BATCH_ORDER}).
+     */
+    public record Info(int updates, int trades, int amended, int added, int cancelled, String lastAt, List<String> batches, int batchCount) {}
+
+    /** A morning trade's P&amp;L as its aggregates hold it (this book's currency): exactly as received for the USD book. */
+    public interface Morning {
+        double[] row(int ordinal);
+    }
+
+    private final VarBook morning;
+    private final int t0;
+    private final int p0;
+    /** Morning ordinal: current − stored row. */
+    private final NavigableMap<Integer, double[]> delta;
+    /** Every ordinal the layer changed or added: its current P&amp;L (zero once cancelled) and value today in USD and in this currency. */
+    private final Map<Integer, double[]> current;
+    private final Map<Integer, double[]> currentUsd;
+    private final Map<Integer, double[]> pvs;              // {pv here, pv USD}
+    private final Map<String, Integer> ordinalOf;          // the trades the layer touched: their live ordinal
+    private final BitSet cancelled;
+    private final List<String> addedIds;
+    private final List<double[]> addedRows;
+    private final List<String[]> addedTexts;
+    private final List<double[]> addedNumbers;
+    private final List<Integer> addedPosition;
+    private final Map<Integer, String[]> texts;            // morning ordinal: its texts now
+    private final Map<Integer, double[]> numbers;
+    private final Map<String, double[]> planner;           // the morning aggregates with the morning trades' changes (the plan reads them)
+    private final Map<String, double[]> added;             // per aggregate key, the added trades' current P&L
+    private final Map<String, Map<String, double[]>> totals; // per node and trade currency, the native change (N scenarios, then today)
+    private final Map<Integer, List<Integer>> extras;      // position: the added ordinals it gained
+    private final List<String> newPositions;
+    /** Every batch applied: its newest {@code COMPUTED_AT} (null: none stated). */
+    private final Map<String, String> batchAt;
+    private final Info info;
+
+    /** The order the batches are listed in: by their newest {@code COMPUTED_AT} (none first), then by id. */
+    public static final java.util.Comparator<Map.Entry<String, String>> BATCH_ORDER = java.util.Comparator
+            .<Map.Entry<String, String>, String>comparing(Map.Entry::getValue, java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder()))
+            .thenComparing(Map.Entry::getKey);
+
+    private VarIntraday(VarBook morning, NavigableMap<Integer, double[]> delta, Map<Integer, double[]> current, Map<Integer, double[]> currentUsd,
+            Map<Integer, double[]> pvs, Map<String, Integer> ordinalOf, BitSet cancelled, List<String> addedIds, List<double[]> addedRows,
+            List<String[]> addedTexts, List<double[]> addedNumbers, List<Integer> addedPosition, Map<Integer, String[]> texts,
+            Map<Integer, double[]> numbers, Map<String, double[]> planner, Map<String, double[]> added, Map<String, Map<String, double[]>> totals,
+            Map<Integer, List<Integer>> extras, List<String> newPositions, Map<String, String> batchAt, Info info) {
+        this.morning = morning;
+        this.t0 = morning.tradeCount();
+        this.p0 = morning.positionCount();
+        this.delta = delta;
+        this.current = current;
+        this.currentUsd = currentUsd;
+        this.pvs = pvs;
+        this.ordinalOf = ordinalOf;
+        this.cancelled = cancelled;
+        this.addedIds = addedIds;
+        this.addedRows = addedRows;
+        this.addedTexts = addedTexts;
+        this.addedNumbers = addedNumbers;
+        this.addedPosition = addedPosition;
+        this.texts = texts;
+        this.numbers = numbers;
+        this.planner = planner;
+        this.added = added;
+        this.totals = totals;
+        this.extras = extras;
+        this.newPositions = newPositions;
+        this.batchAt = batchAt;
+        this.info = info;
+    }
+
+    private static VarIntraday empty(VarBook m) {
+        return new VarIntraday(m, new TreeMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(), new BitSet(), new ArrayList<>(),
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new HashMap<>(), new HashMap<>(), new HashMap<>(),
+                new HashMap<>(), new HashMap<>(), new HashMap<>(), new ArrayList<>(), new HashMap<>(), new Info(0, 0, 0, 0, 0, null, List.of(), 0));
+    }
+
+    /** A copy to change (each map copied once; the vectors in it are replaced, never changed in place). */
+    private VarIntraday copy() {
+        Map<String, Map<String, double[]>> t = new HashMap<>();
+        totals.forEach((k, v) -> t.put(k, new HashMap<>(v)));
+        Map<Integer, List<Integer>> ex = new HashMap<>();
+        extras.forEach((k, v) -> ex.put(k, new ArrayList<>(v)));
+        return new VarIntraday(morning, new TreeMap<>(delta), new HashMap<>(current), new HashMap<>(currentUsd), new HashMap<>(pvs),
+                new HashMap<>(ordinalOf), (BitSet) cancelled.clone(), new ArrayList<>(addedIds), new ArrayList<>(addedRows), new ArrayList<>(addedTexts),
+                new ArrayList<>(addedNumbers), new ArrayList<>(addedPosition), new HashMap<>(texts), new HashMap<>(numbers), new HashMap<>(planner),
+                new HashMap<>(added), t, ex, new ArrayList<>(newPositions), new HashMap<>(batchAt), info);
+    }
+
+    public Info info() {
+        return info;
+    }
+
+    // ---------------------------------------------------------------------------------------------------------- what the book reads
+
+    boolean cancelled(int o) {
+        return cancelled.get(o);
+    }
+
+    BitSet cancelledSet() {
+        return cancelled;
+    }
+
+    OrdinalSet cancelledOrdinals() {
+        return OrdinalSet.of(cancelled.stream().toArray());
+    }
+
+    int added() {
+        return addedIds.size();
+    }
+
+    OrdinalSet addedOrdinals() {
+        return OrdinalSet.range(t0, t0 + addedIds.size());
+    }
+
+    /** A position's members: its morning run without the cancelled, with the trades added to it. */
+    OrdinalSet members(int p, OrdinalSet run) {
+        OrdinalSet m = p < p0 ? run : OrdinalSet.empty();
+        List<Integer> ex = extras.get(p);
+        if (ex != null) {
+            m = m.or(OrdinalSet.of(ex.stream().mapToInt(Integer::intValue).toArray()));
+        }
+        return cancelled.isEmpty() ? m : m.andNot(cancelledOrdinals());
+    }
+
+    /**
+     * The members of {@link #members(int, OrdinalSet)} one by one, in ascending order, without building a set as wide as the date
+     * (2.9.7): the morning run {@code [from, to)} when {@code p} is a morning position, merged with the trades added to it, the
+     * cancelled skipped.
+     */
+    void forEachMember(int p, int from, int to, java.util.function.IntConsumer f) {
+        int a = p < p0 ? from : 0;
+        int aEnd = p < p0 ? to : 0;
+        List<Integer> ex = extras.get(p);
+        int[] e = ex == null ? new int[0] : ex.stream().mapToInt(Integer::intValue).filter(o -> o >= 0).sorted().distinct().toArray();
+        int i = 0;
+        int last = -1;
+        while (a < aEnd || i < e.length) {
+            int o = i >= e.length || (a < aEnd && a <= e[i]) ? a++ : e[i++];
+            if (o != last && !cancelled.get(o)) {
+                f.accept(o);
+            }
+            last = o;
+        }
+    }
+
+    /** True when the position has a member ({@link #forEachMember}) at all. */
+    boolean hasMember(int p, int from, int to) {
+        boolean[] any = {false};
+        forEachMember(p, from, to, o -> any[0] = true);
+        return any[0];
+    }
+
+    /** An aggregate with the added trades' P&amp;L. */
+    double[] withAdded(String key, double[] planned) {
+        double[] a = added.get(key);
+        if (a == null) {
+            return planned;
+        }
+        double[] out = planned.clone();
+        VarMath.addInto(out, a);
+        return out;
+    }
+
+    /** A book's positions: its morning ones (in order), then those added in it. */
+    List<Integer> positionsOfBook(String book, int[] range) {
+        List<Integer> out = new ArrayList<>();
+        int last = -1;
+        if (range != null) {
+            for (int o = range[0]; o < range[1]; o++) {
+                int p = morning.positionOf(o);
+                if (p != last && hasMember(p, morning.positionFrom(p), morning.positionTo(p))) {
+                    out.add(p);
+                }
+                last = p;
+            }
+        }
+        for (int k = 0; k < newPositions.size(); k++) {
+            int p = p0 + k;
+            int o = extras.getOrDefault(p, List.of(-1)).get(0);
+            String[] at = o >= 0 ? addedTexts.get(o - t0) : null;
+            if (o >= 0 && (book.equals(at[VarBook.TRADE_TEXTS.indexOf("TT_BOOK")]) || book.equals(morning.cellOf(at)))
+                    && hasMember(p, 0, 0)) {
+                out.add(p);
+            }
+        }
+        return out;
+    }
+
+    // ---------------------------------------------------------------------------------------------------------- applying
+
+    /**
+     * Applies one batch of updates (each trade once: the latest of the batch) to {@code book} (a morning book, or one with a layer),
+     * returning the new book. {@code exact} gives a morning trade's P&amp;L as its aggregates hold it; {@code fx} a currency's rates (for
+     * the per-trade-currency totals; USD needs none); {@code batches} the batch ids the updates came in, {@code lastAt} their newest
+     * {@code COMPUTED_AT} (each batch taken as computed then: {@link #apply(VarBook, List, Morning, Function, Map, String)} says per batch).
+     */
+    public static VarBook apply(VarBook book, List<Update> updates, Morning exact, Function<String, ScenarioFx.Rates> fx, List<String> batches,
+            String lastAt) {
+        Map<String, String> at = new LinkedHashMap<>();
+        batches.forEach(b -> at.put(b, lastAt));
+        return apply(book, updates, exact, fx, at, lastAt);
+    }
+
+    /**
+     * {@link #apply(VarBook, List, Morning, Function, List, String)} with each batch's newest {@code COMPUTED_AT} ({@code batchAt}: batch id to
+     * its updates' newest {@code COMPUTED_AT}), which orders the batches listed ({@link #BATCH_ORDER}).
+     */
+    public static VarBook apply(VarBook book, List<Update> updates, Morning exact, Function<String, ScenarioFx.Rates> fx,
+            Map<String, String> batchAt, String lastAt) {
+        VarBook m = book.morning();
+        VarIntraday l = book.intraday() == null ? empty(m) : book.intraday().copy();
+        int w = m.width();
+        Map<String, List<String>> keysOfBook = keysOfBook(m);
+        int idxBook = VarBook.TRADE_TEXTS.indexOf("TT_BOOK");
+        int idxPos = VarBook.TRADE_TEXTS.indexOf("POSITION_ID");
+        int idxCcy = VarBook.TRADE_TEXTS.indexOf(CurrencyTotals.COLUMN);
+        int idxPv = VarBook.TRADE_NUMBERS.indexOf("PV");
+        Set<String> touched = new LinkedHashSet<>();
+        int amended = 0;
+        for (Update u0 : updates) {
+            Update u = u0;
+            if (!m.cellColumns().isEmpty() && u.texts() != null && u.texts()[idxPos] != null) {   // a split position: the part in its cell
+                String[] ut = u.texts().clone();
+                ut[idxPos] = m.positionIdFor(ut[idxPos], ut);
+                u = new Update(u.tradeId(), u.pnl(), u.pv(), ut, u.numbers(), u.pvUsd(), u.pnlUsd());
+            }
+            touched.add(u.tradeId());
+            Integer known = l.ordinalOf.get(u.tradeId());
+            int o = known != null ? known : m.tradeOrdinal(u.tradeId());
+            boolean live = o >= 0 && !l.cancelled.get(o);
+            if (u.pnl() == null) {                                     // a cancel: the trade's P&L removed
+                if (live) {
+                    l.change(o, null, Double.NaN, Double.NaN, null, null, exact, keysOfBook, fx, w);
+                    l.cancelled.set(o);
+                    l.ordinalOf.put(u.tradeId(), o);
+                }
+                continue;
+            }
+            String[] oldTexts = o < 0 ? null : l.textsOf(o);
+            // a trade moved to another book, position or cell (a limit letter changed) leaves its old one: cancelled there, added anew
+            boolean moved = o >= 0 && (!eq(oldTexts[idxBook], u.texts()[idxBook]) || !eq(oldTexts[idxPos], u.texts()[idxPos])
+                    || !eq(m.cellOf(oldTexts), m.cellOf(u.texts())));
+            if (o >= 0 && !moved) {                                    // amended in place (or revived after a cancel)
+                l.cancelled.clear(o);
+                l.change(o, u.pnl(), u.pv(), u.pvUsd(), u.pnlUsd(), u.texts(), exact, keysOfBook, fx, w);
+                l.setTexts(o, u.texts(), numbers(u, idxPv));
+                l.ordinalOf.put(u.tradeId(), o);
+                amended++;
+                continue;
+            }
+            if (live) {                                                 // moved to another book or position: the old one cancelled
+                l.change(o, null, Double.NaN, Double.NaN, null, null, exact, keysOfBook, fx, w);
+                l.cancelled.set(o);
+            }
+            int n = t0(l) + l.addedIds.size();                          // a new ordinal, after the morning's
+            l.addedIds.add(u.tradeId());
+            l.addedRows.add(new double[w]);
+            l.addedTexts.add(u.texts().clone());
+            l.addedNumbers.add(numbers(u, idxPv));
+            String pid = u.texts()[idxPos] == null ? "POS-" + u.tradeId() : u.texts()[idxPos];
+            int p = m.positionIndex(pid);
+            if (p < 0) {
+                int k = l.newPositions.indexOf(pid);
+                p = k >= 0 ? m.positionCount() + k : m.positionCount() + l.newPositions.size();
+                if (k < 0) {
+                    l.newPositions.add(pid);
+                }
+            }
+            l.addedPosition.add(p);
+            l.extras.computeIfAbsent(p, x -> new ArrayList<>()).add(n);
+            l.ordinalOf.put(u.tradeId(), n);
+            l.change(n, u.pnl(), u.pv(), u.pvUsd(), u.pnlUsd(), u.texts(), exact, keysOfBook, fx, w);
+        }
+        batchAt.forEach((b, when) -> l.batchAt.merge(b, when == null ? "" : when, (x, y) -> x.compareTo(y) >= 0 ? x : y));
+        List<String> bs = l.batchAt.entrySet().stream().sorted(BATCH_ORDER).map(Map.Entry::getKey).toList();   // none stated: ""
+        int count = l.batchAt.size();
+        Set<String> all = new LinkedHashSet<>(l.ordinalOf.keySet());
+        String at = l.info.lastAt() == null || lastAt != null && lastAt.compareTo(l.info.lastAt()) > 0 ? lastAt : l.info.lastAt();
+        VarIntraday done = new VarIntraday(m, l.delta, l.current, l.currentUsd, l.pvs, l.ordinalOf, l.cancelled, l.addedIds, l.addedRows,
+                l.addedTexts, l.addedNumbers, l.addedPosition, l.texts, l.numbers, l.planner, l.added, l.totals, l.extras, l.newPositions, l.batchAt,
+                new Info(l.info.updates() + updates.size(), all.size(), l.info.amended() + amended, l.addedIds.size(), l.cancelled.cardinality(), at,
+                        List.copyOf(bs.subList(Math.max(0, bs.size() - 20), bs.size())), count));
+        return done.book();
+    }
+
+    private static int t0(VarIntraday l) {
+        return l.t0;
+    }
+
+    private static boolean eq(String a, String b) {
+        return a == null ? b == null : a.equals(b);
+    }
+
+    private static double[] numbers(Update u, int idxPv) {
+        double[] n = u.numbers() == null ? new double[VarBook.TRADE_NUMBERS.size()] : u.numbers().clone();
+        n[idxPv] = u.pv();
+        return n;
+    }
+
+    private String[] textsOf(int o) {
+        if (o >= t0) {
+            return addedTexts.get(o - t0);
+        }
+        String[] t = texts.get(o);
+        return t != null ? t : morning.trades().textsOf(o);
+    }
+
+    private void setTexts(int o, String[] t, double[] n) {
+        if (o >= t0) {
+            addedTexts.set(o - t0, t.clone());
+            addedNumbers.set(o - t0, n);
+        } else {
+            texts.put(o, t.clone());
+            numbers.put(o, n);
+        }
+    }
+
+    /**
+     * Every aggregate key a trade with these texts is summed into: its book and the nodes holding it, and its cell and the nodes holding
+     * that (a column hierarchy's, {@link Cells}). A cell the morning did not have holds no node: the trade is summed as a leaf until the
+     * next load, as a new book is.
+     */
+    private List<String> keysOf(String[] t, Map<String, List<String>> keysOfBook) {
+        String book = t[VarBook.TRADE_TEXTS.indexOf("TT_BOOK")];
+        if (book == null) {
+            return List.of();
+        }
+        List<String> keys = new ArrayList<>(keysOfBook.getOrDefault(book, List.of(book)));
+        String cell = morning.cellOf(t);
+        if (cell != null && !cell.equals(book)) {
+            keys.addAll(keysOfBook.getOrDefault(cell, List.of()));
+        }
+        return keys;
+    }
+
+    /** Every aggregate key a book's (or a cell's) trades are summed into: the book, and each node holding it (every hierarchy). */
+    private static Map<String, List<String>> keysOfBook(VarBook m) {
+        Map<String, List<String>> out = new HashMap<>();
+        for (VarBook.Node n : m.morning().nodes().values()) {
+            for (String b : n.books()) {
+                out.computeIfAbsent(b, k -> new ArrayList<>(List.of(k))).add(n.id());
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Trade {@code o}'s P&amp;L becomes {@code pnl} (null: zero, cancelled): the difference goes into its book's and nodes' aggregates,
+     * its row, and (a USD book) the per-trade-currency totals.
+     */
+    private void change(int o, double[] pnl, double pv, double pvUsd, double[] pnlUsd, String[] newTexts, Morning exact,
+            Map<String, List<String>> keysOfBook, Function<String, ScenarioFx.Rates> fx, int w) {
+        boolean base = o < t0;
+        double[] old = current.containsKey(o) ? current.get(o) : base ? exact.row(o) : new double[w];
+        double[] now = pnl == null ? new double[w] : pnl.clone();
+        double[] diff = new double[w];
+        for (int s = 0; s < w; s++) {
+            diff[s] = now[s] - old[s];
+        }
+        List<String> keys = keysOf(textsOf(o), keysOfBook);
+        Map<String, double[]> into = base ? planner : added;
+        for (String k : keys) {
+            double[] a = base ? planner.getOrDefault(k, morning.morningAggregate(k)) : added.get(k);
+            if (a == null && base) {
+                continue;
+            }
+            double[] next = a == null ? new double[w] : a.clone();
+            VarMath.addInto(next, diff);
+            into.put(k, next);
+        }
+        if (base) {
+            double[] stored = new double[w];
+            morning.store().copy(o, stored);
+            double[] d = new double[w];
+            for (int s = 0; s < w; s++) {
+                d[s] = now[s] - stored[s];
+            }
+            delta.put(o, d);
+        } else {
+            addedRows.set(o - t0, now);
+        }
+        if (morning.currencyTotals() != null) {                      // the USD book: the per-trade-currency totals follow
+            double[] oldUsd = currentUsd.containsKey(o) ? currentUsd.get(o) : base ? old : new double[w];
+            double oldPv = pvs.containsKey(o) ? pvs.get(o)[1] : base ? morning.trades().number("PV", o) : Double.NaN;
+            String oldCcy = currencyOf(textsOf(o), fx);
+            double[] nowUsd = pnlUsd == null ? (pnl == null ? null : now) : pnlUsd;
+            String newCcy = newTexts == null ? oldCcy : currencyOf(newTexts, fx);   // a trade may change form (scenario PVs, a P&L vector)
+            for (String k : keys) {
+                if (morning.nodes().containsKey(k)) {
+                    addNative(k, oldCcy, oldUsd, oldPv, fx, -1, w);
+                    if (nowUsd != null) {
+                        addNative(k, newCcy, nowUsd, pvUsd, fx, 1, w);
+                    }
+                }
+            }
+            currentUsd.put(o, nowUsd == null ? new double[w] : nowUsd.clone());
+        }
+        current.put(o, now);
+        pvs.put(o, new double[] {pv, pvUsd});
+    }
+
+    private static String currencyOf(String[] texts, Function<String, ScenarioFx.Rates> fx) {
+        String c = texts[VarBook.TRADE_TEXTS.indexOf(CurrencyTotals.COLUMN)];
+        return c == null || c.isBlank() || !c.equals(ScenarioFx.USD) && fx.apply(c) == null ? ScenarioFx.USD : c;
+    }
+
+    /** {@code sign} × a trade's native PVs (from its USD P&amp;L and USD value today) into a node's change in currency {@code c}. */
+    private void addNative(String node, String c, double[] usd, double pvUsd, Function<String, ScenarioFx.Rates> fx, int sign, int w) {
+        double pv = Double.isNaN(pvUsd) ? 0 : pvUsd;
+        ScenarioFx.Rates r = c.equals(ScenarioFx.USD) ? null : fx.apply(c);
+        double[] acc = totals.computeIfAbsent(node, k -> new HashMap<>()).get(c);
+        double[] next = acc == null ? new double[w + 1] : acc.clone();
+        for (int s = 0; s < w; s++) {
+            next[s] += sign * (r == null ? pv + usd[s] : (pv + usd[s]) / r.scenarios()[s]);
+        }
+        next[w] += sign * (r == null ? pv : pv / r.base());
+        totals.get(node).put(c, next);
+    }
+
+    private static int[] ordinals(OrdinalSet set) {
+        int[] out = new int[set.size()];
+        int[] i = {0};
+        set.forEach(o -> out[i[0]++] = o);
+        return out;
+    }
+
+    // ---------------------------------------------------------------------------------------------------------- the book it makes
+
+    /** The morning book with this layer: the same morning arrays, the rows overlaid, the columns, positions and nodes with the changes. */
+    private VarBook book() {
+        VarBook m = morning;
+        int na = addedIds.size();
+        String[] tids = java.util.Arrays.copyOf(m.tradeIdsArray(), t0 + na);
+        for (int k = 0; k < na; k++) {
+            tids[t0 + k] = addedIds.get(k);
+        }
+        Columns tcols = m.trades().edited(texts, numbers, addedTexts, addedNumbers);
+        int np = newPositions.size();
+        int[] posOf = java.util.Arrays.copyOf(m.positionOfArray(), t0 + na);
+        for (int k = 0; k < na; k++) {
+            posOf[t0 + k] = addedPosition.get(k);
+        }
+        String[] pids = java.util.Arrays.copyOf(m.positionIdsArray(), p0 + np);
+        int[] from = java.util.Arrays.copyOf(m.posFromArray(), p0 + np);
+        int[] to = java.util.Arrays.copyOf(m.posToArray(), p0 + np);
+        for (int k = 0; k < np; k++) {
+            pids[p0 + k] = newPositions.get(k);
+            from[p0 + k] = 0;                                            // its members are its extras
+            to[p0 + k] = 0;
+        }
+        // positions whose members changed: derived again from their trades
+        Set<Integer> affected = new LinkedHashSet<>();
+        for (Integer o : current.keySet()) {
+            affected.add(o < t0 ? m.positionOf(o) : addedPosition.get(o - t0));
+        }
+        Map<Integer, String[]> ptexts = new HashMap<>();
+        Map<Integer, double[]> pnums = new HashMap<>();
+        List<String[]> addT = new ArrayList<>();
+        List<double[]> addN = new ArrayList<>();
+        for (int k = 0; k < np; k++) {
+            addT.add(null);
+            addN.add(null);
+        }
+        for (int p : affected) {
+            OrdinalSet run = p < p0 ? OrdinalSet.range(m.posFromArray()[p], m.posToArray()[p]) : OrdinalSet.empty();
+            int[] mem = ordinals(members(p, run));
+            if (mem.length == 0) {
+                mem = p < p0 ? new int[] {m.posFromArray()[p]} : new int[] {extras.get(p).get(0)};
+            }
+            Object[] row = VarBook.Builder.positionRow(tcols, mem);
+            if (p < p0) {
+                ptexts.put(p, (String[]) row[0]);
+                pnums.put(p, (double[]) row[1]);
+            } else {
+                addT.set(p - p0, (String[]) row[0]);
+                addN.set(p - p0, (double[]) row[1]);
+            }
+        }
+        Columns pcols = m.positions().edited(ptexts, pnums, addT, addN);
+        // the nodes: their members without the cancelled, with the trades added in their books
+        Map<String, List<Integer>> addedByBook = new HashMap<>();
+        for (int k = 0; k < na; k++) {
+            if (!cancelled.get(t0 + k)) {
+                String[] at = addedTexts.get(k);
+                String bk = String.valueOf(at[VarBook.TRADE_TEXTS.indexOf("TT_BOOK")]);
+                addedByBook.computeIfAbsent(bk, x -> new ArrayList<>()).add(t0 + k);
+                String cell = m.cellOf(at);
+                if (cell != null && !cell.equals(bk)) {
+                    addedByBook.computeIfAbsent(cell, x -> new ArrayList<>()).add(t0 + k);
+                }
+            }
+        }
+        OrdinalSet gone = cancelledOrdinals();
+        Map<String, VarBook.Node> nodes = new LinkedHashMap<>();
+        for (VarBook.Node n : m.nodes().values()) {
+            OrdinalSet mem = n.members().andNot(gone);
+            List<Integer> plus = new ArrayList<>();
+            for (String b : n.books()) {
+                plus.addAll(addedByBook.getOrDefault(b, List.of()));
+            }
+            if (!plus.isEmpty()) {
+                int[] pairs = new int[2 * plus.size()];          // runs, as the morning's members are: no bitmap of the date
+                for (int i = 0; i < plus.size(); i++) {
+                    pairs[2 * i] = plus.get(i);
+                    pairs[2 * i + 1] = plus.get(i) + 1;
+                }
+                mem = mem.or(OrdinalSet.ofRuns(pairs));
+            }
+            nodes.put(n.id(), new VarBook.Node(n.id(), n.hierarchy(), n.level(), n.name(), n.parent(), n.children(), n.books(), n.limit(), mem));
+        }
+        Map<String, double[]> agg = MappedAggregates.overlay(m.morningAggregates(), planner);   // the morning's stay mapped
+        CurrencyTotals ct = m.currencyTotals() == null ? null : m.currencyTotals().withChanges(totals);
+        return new VarBook(m.businessDate(), m.scenarioSet(), m.scenarioDates(), new OverlayVectors(m.store(), delta, addedRows), tids, tcols, posOf,
+                pids, from, to, pcols, nodes, m.bookRanges(), agg, m.failed(), m.loadMillis(), m.hot(), ct, m, this, m.cellColumns(),
+                m.splitPositions());
+    }
+}

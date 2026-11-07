@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """`drishti.py simm ...` and `drishti.py play simm ...`: ISDA SIMM from the command line (docs/guides/SIMM_GUIDE.md section 9; the API:
-/api/v1/simm), as the token's user sees it: a netting set's IM to collect and post (simm show), every netting set of the date (simm list),
+/api/v1/risk/simm), as the token's user sees it: a netting set's IM to collect and post (simm show), every netting set of the date (simm list),
 the steps (simm explain), the margin against the counterparty's call (simm against), the installed parameter versions (simm versions),
 and the playground: a comparison of one switch, the workbook of live formulas, a saved recipe and its replay to the cent (play simm).
 Exit codes: 0, 1 (the server said no, or a recipe did not reproduce), 2 (usage)."""
@@ -69,10 +69,10 @@ def register(groups, srv, ctx: dict) -> None:
         api = Api.from_args(a)
         c = a.simm_cmd
         if c == "show":
-            res = api.json("GET", "/api/v1/simm?" + enc(params(a, nettingSet=a.netting_set)))
+            res = api.json("GET", "/api/v1/risk/simm?" + enc(params(a, nettingSet=a.netting_set)))
             say_json(res) if a.json else render(res, print)
         elif c == "list":
-            res = api.json("GET", "/api/v1/simm/netting-sets?" + enc(params(a, counterparty=a.counterparty)))
+            res = api.json("GET", "/api/v1/risk/simm/netting-sets?" + enc(params(a, counterparty=a.counterparty)))
             if a.json:
                 say_json(res)
             else:
@@ -83,9 +83,9 @@ def register(groups, srv, ctx: dict) -> None:
                 if res.get("notice"):
                     print(res["notice"])
         elif c == "explain":
-            say_json(api.json("GET", "/api/v1/simm/explain?" + enc(params(a, nettingSet=a.netting_set, direction=a.direction, **{"class": a.cls}))))
+            say_json(api.json("GET", "/api/v1/risk/simm/explain?" + enc(params(a, nettingSet=a.netting_set, direction=a.direction, **{"class": a.cls}))))
         elif c == "against":
-            res = api.json("GET", "/api/v1/simm/against?" + enc(params(a, nettingSet=a.netting_set)))
+            res = api.json("GET", "/api/v1/risk/simm/against?" + enc(params(a, nettingSet=a.netting_set)))
             if a.json:
                 say_json(res)
             else:
@@ -94,7 +94,7 @@ def register(groups, srv, ctx: dict) -> None:
                 if res.get("note"):
                     print(res["note"])
         elif c == "versions":
-            res = api.json("GET", "/api/v1/simm/versions")
+            res = api.json("GET", "/api/v1/risk/simm/versions")
             if a.json:
                 say_json(res)
             else:
@@ -104,7 +104,7 @@ def register(groups, srv, ctx: dict) -> None:
                 print(res["licence"])
         elif c == "play":
             if a.recipe:
-                res = api.json("GET", "/api/v1/simm/playground/recipes/" + urllib.parse.quote(a.recipe))
+                res = api.json("GET", "/api/v1/risk/simm/playground/recipes/" + urllib.parse.quote(a.recipe))
                 if a.json:
                     say_json(res)
                 else:
@@ -114,16 +114,16 @@ def register(groups, srv, ctx: dict) -> None:
             if not a.netting_set:
                 raise CliError("give a netting set (NS-...), EXAMPLE or a scope, or --recipe SM-...", 2)
             if a.xlsx:
-                _, body = api.request("GET", "/api/v1/simm/playground.xlsx?" + enc(params(a, nettingSet=a.netting_set, side=a.side)))
+                _, body = api.request("GET", "/api/v1/risk/simm/playground.xlsx?" + enc(params(a, nettingSet=a.netting_set, side=a.side)))
                 with open(a.xlsx, "wb") as f:
                     f.write(body)
                 print(f"wrote {a.xlsx} ({len(body):,} bytes): the SIMM Playground workbook, every figure a formula, the switches and the side cells of "
                       "Config (a recipe was saved with it: its id is on Main and Provenance; the licensed parameters make it confidential)")
             elif a.save:
-                res = api.json("POST", "/api/v1/simm/playground/recipes?" + enc(params(a, nettingSet=a.netting_set)))
+                res = api.json("POST", "/api/v1/risk/simm/playground/recipes?" + enc(params(a, nettingSet=a.netting_set)))
                 say_json(res) if a.json else print(f"saved recipe {res['id']}: {res['command']} (inputs as known at {res['knownAt']})")
             else:
-                res = api.json("GET", "/api/v1/simm/playground?" + enc(params(a, nettingSet=a.netting_set, side=a.side, compare=a.compare)))
+                res = api.json("GET", "/api/v1/risk/simm/playground?" + enc(params(a, nettingSet=a.netting_set, side=a.side, compare=a.compare)))
                 if a.json:
                     say_json(res)
                 else:

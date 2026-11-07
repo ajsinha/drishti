@@ -19,7 +19,6 @@ import com.ash.drishti.server.api.ProcessResources;
 import com.ash.drishti.server.api.RequestActivity;
 import com.ash.drishti.server.disk.DiskBudget;
 import com.ash.drishti.server.security.Principal;
-import com.ash.drishti.server.var.VarController;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import java.lang.management.ManagementFactory;
@@ -46,16 +45,22 @@ public final class CapacityLive {
 
     static final long MB = 1_048_576L;
 
-    private final Supplier<VarController> var;
+    private final Supplier<List<CapacityFigures>> figures;
     private final Supplier<DiskBudget> disk;
     private final Supplier<RequestActivity> activity;
     private final Supplier<MeterRegistry> meters;
 
-    public CapacityLive(Supplier<VarController> var, Supplier<DiskBudget> disk, Supplier<RequestActivity> activity, Supplier<MeterRegistry> meters) {
-        this.var = var;
+    public CapacityLive(Supplier<List<CapacityFigures>> figures, Supplier<DiskBudget> disk, Supplier<RequestActivity> activity, Supplier<MeterRegistry> meters) {
+        this.figures = figures;
         this.disk = disk;
         this.activity = activity;
         this.meters = meters;
+    }
+
+    /** The engines' contributions (a module's), in order. */
+    public List<CapacityFigures> figures() {
+        List<CapacityFigures> f = figures.get();
+        return f == null ? List.of() : f;
     }
 
     /** The figures, measured now. */
@@ -79,53 +84,9 @@ public final class CapacityLive {
 
         Map<String, Object> inputs = new LinkedHashMap<>();
         inputs.put("JavaVersion", Runtime.version().feature());
-        VarController vc = var.get();
-        Map<String, Object> v = null;
-        if (vc != null) {
-            try {
-                Map<String, Object> st = vc.status(p);
-                v = new LinkedHashMap<>();
-                Map<String, Object> mem = st.get("memory") instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
-                Map<String, Object> newest = null;
-                int loaded = 0;
-                for (Object o : st.get("loaded") instanceof List<?> l ? l : List.of()) {
-                    if (o instanceof Map<?, ?> d && d.get("positions") != null) {
-                        loaded++;
-                        if (newest == null || String.valueOf(d.get("businessDate")).compareTo(String.valueOf(newest.get("businessDate"))) > 0) {
-                            newest = (Map<String, Object>) d;
-                        }
-                    }
-                }
-                v.put("enabled", st.get("enabled"));
-                v.put("datesLoaded", loaded);
-                v.put("newestDate", newest == null ? null : newest.get("businessDate"));
-                v.put("positions", newest == null ? null : newest.get("positions"));
-                v.put("trades", newest == null ? null : newest.get("trades"));
-                v.put("nodes", newest == null ? null : newest.get("nodes"));
-                v.put("dateHeapMb", newest == null || !(newest.get("heapBytes") instanceof Number h) ? null : h.longValue() / MB);
-                v.put("openDates", mem.get("openDates"));
-                v.put("hotDates", st.get("hotDates"));
-                v.put("protected", mem.get("protected"));
-                v.put("openHeapMb", mb(mem.get("openHeapBytes")));
-                v.put("openHeapLimitMb", mb(mem.get("openHeapLimitBytes")));
-                v.put("openHeapSetting", mem.get("openHeapMb"));
-                v.put("mappedMb", mb(mem.get("mappedBytes")));
-                if (newest != null) {
-                    inputs.put("Positions", newest.get("positions"));
-                    inputs.put("Trades", newest.get("trades"));
-                    inputs.put("Nodes", newest.get("nodes"));
-                }
-                if (st.get("hotDates") instanceof Number h) {
-                    inputs.put("HotDates", h);
-                }
-                if (st.get("currencies") instanceof Map<?, ?> c && c.get("listed") instanceof List<?> listed) {
-                    inputs.put("CcysAhead", (int) listed.stream().filter(x -> !"USD".equals(String.valueOf(x))).count());
-                }
-            } catch (RuntimeException e) {
-                v = Map.of("error", String.valueOf(e.getMessage()));
-            }
+        for (CapacityFigures f : figures()) {                     // each module's engine, under its own key (DOMAIN_MODULES.md J3)
+            out.put(f.key(), f.figures(p, inputs));
         }
-        out.put("var", v);
 
         DiskBudget d = disk.get();
         Map<String, Object> dk = null;
@@ -170,7 +131,7 @@ public final class CapacityLive {
         return out;
     }
 
-    private static Long mb(Object bytes) {
+    static Long mb(Object bytes) {
         return bytes instanceof Number n ? n.longValue() / MB : null;
     }
 

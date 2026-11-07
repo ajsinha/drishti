@@ -24,7 +24,7 @@ title: An equity's beta against its index (computed from price history)
 description: An equity's beta, alpha, correlation and R squared against its index (EQUITY_INDEX), the regression of their daily log returns
   over a window, computed when asked from both price histories by the server's Java engine, as the person asking; never stored. It replaces
   the security master's stored BETA (retired).
-source: 'computed by Drishti: the reactive connector equity-analytics (java engine com.ash.drishti.compute.reactive.analytics.BetaEngine)'
+source: 'computed by Drishti: the reactive connector equity-analytics (java engine com.ash.drishti.banking.compute.analytics.BetaEngine)'
 grain: One answer per question (the equity asked for, its window and the business date), computed when asked.
 key: []
 dated-by: on request

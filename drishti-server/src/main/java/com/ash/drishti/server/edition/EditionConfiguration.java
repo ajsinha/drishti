@@ -36,8 +36,12 @@ public class EditionConfiguration {
     }
 
     @Bean
-    public EditionContext editionContext(Edition edition, Environment env) {
-        return new EditionContext(edition, Editions.lenses(env));
+    public EditionContext editionContext(Edition edition, Environment env, com.ash.drishti.registry.AccessRegistry access) {
+        // a lens whose modules are off does not exist (ACCESS_MODEL.md): an edition opened as a lens is offered only when the registry
+        // offers the lens of that name; a site's own lens the registry does not know stays as it is
+        java.util.Map<String, Edition> lenses = new java.util.LinkedHashMap<>(Editions.lenses(env));
+        lenses.keySet().removeIf(name -> access.lensDeclared(name) && !access.lensOffered(name));
+        return new EditionContext(edition, lenses);
     }
 
     @Bean

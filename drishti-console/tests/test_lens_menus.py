@@ -72,7 +72,7 @@ def test_the_risk_edition_draws_one_engines_menu_in_place_of_var_and_exposure(ba
         assert c in cmds, c
     assert 'href="/go?q=SWIN%20BANK%20%3CGO%3E"' in eng and 'href="/smat"' in eng and 'href="/var"' in eng
     assert 'data-fill="EXP CPTY"' in eng and 'href="/t?cmd=EXP%20CPTY"' in eng
-    assert "XWIF" not in cmds                                     # one place: Counterparties → Pre-deal check (2.9.11.c)
+    assert "XWIF" not in cmds and "PREDEAL" not in cmds          # one place: Counterparties → Pre-deal check
 
 
 def test_an_item_for_a_page_this_build_lacks_is_not_drawn(backend, monkeypatch):
@@ -113,7 +113,7 @@ def test_a_lens_draws_its_own_subject_menus_for_that_person_only(backend, monkey
     page = alice.get("/t").text
     assert _commands(_panel(page, "Blotter")) == ["TRD", "CTRD", "PTRD", "LTRD"]
     assert _commands(_panel(page, "Risk")) == ["VAR", "VLIM", "TVAL", "PNLV", "DPNL", "PNL", "SENS"]
-    assert _commands(_panel(page, "Counterparties")) == ["CPTY", "NSET", "LIM", "XWIF", "EXP", "CCUBE"]   # CCUBE: the Pivot's preset ccr, under construction
+    assert _commands(_panel(page, "Counterparties")) == ["CPTY", "NSET", "LIM", "PREDEAL", "EXP", "CCUBE"]   # PREDEAL: its screen under construction   # CCUBE: the Pivot's preset ccr, under construction
 
 
 def test_the_trading_lens_has_one_markets_menu_and_no_bi_or_admin_menu(backend, monkeypatch):

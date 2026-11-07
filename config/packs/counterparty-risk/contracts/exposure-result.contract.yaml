@@ -24,7 +24,7 @@ title: Exposure profile of a scope (computed)
 description: The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) and the figures (CE, EPE, EEPE, peak EE and
   PFE, EAD under the internal model) of any counterparty scope (the scope grammar of EXPOSURE_GUIDE.md section 4), computed when asked by the server's
   exposure engine from the simulated paths, as the person asking; never stored.
-source: 'computed by Drishti: the reactive connector exposure-engine (java engine com.ash.drishti.server.exposure.ExposureResultEngine)'
+source: 'computed by Drishti: the reactive connector exposure-engine (java engine com.ash.drishti.banking.exposure.ExposureResultEngine)'
 grain: One answer per question (the scope asked for, its parameters q, collateral and run, and the business date), computed when asked.
 key: []
 dated-by: on request

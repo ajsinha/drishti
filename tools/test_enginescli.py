@@ -101,7 +101,7 @@ class Engines(unittest.TestCase):
         self.assertIn("give --reason", err)
 
     def test_an_engines_command_running_nowhere_exits_3(self):
-        FakeServer.routes[("GET", "/api/v1/frtb/sa")] = (404, {"code": "DRS-1020", "engine": "frtb-sa",
+        FakeServer.routes[("GET", "/api/v1/risk/frtb/sa")] = (404, {"code": "DRS-1020", "engine": "frtb-sa",
                                                               "detail": "DRS-1020 FRTB-SA is not running on this server, and no other server of this cluster runs it."})
         code, _, err = self.go("frtb", "sa", "EXAMPLE")
         self.assertEqual(3, code, err)

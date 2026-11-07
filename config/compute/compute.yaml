@@ -49,21 +49,6 @@ compute:
       idle-stop: 5m  # a worker idle this long is stopped (down to min)
       timeout: 30s                   # an interactive request's budget
       timeout-batch: 10m  # a batch request's budget
-    exposure:                        # the Python exposure engine (the exact what-if: candidates' paths added to their netting sets): docs/guides/EXPOSURE_GUIDE.md sections 7 and 19.5
-      type: python
-      engines: [drishti_compute.exposure.whatif:ExposureWhatIfEngine]
-      environment: system            # standard library only: no package to approve
-      workers:
-        min: 0
-        max: ${DRISHTI_COMPUTE_EXPOSURE_WORKERS:4}
-      mode: auto
-      memory: 2GB                    # a few netting sets' value matrices (G x P each) and the scope's exposure matrix
-      cpu-seconds: 300
-      recycle-after: 200
-      batch-share: 0.25
-      idle-stop: 5m
-      timeout: 60s
-      timeout-batch: 10m
     python:                          # code people write: Python items, Python-driven tables and models, Notebook cells (PYTHON_COMPUTE.md section 19)
       type: python
       engines: [drishti_compute.items:ItemsEngine]
