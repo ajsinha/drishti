@@ -1284,7 +1284,7 @@ What is open today. None blocks normal use; each is a candidate for a future wav
 
 ## Lens product candidates (not started)
 
-One product document per lens, in `docs/lenses/` (product owner, 2026-10-31: "We should have similar and fuller standalone document for
+The product view of every lens, now one internal document, [LENSES.md](LENSES.md) (product owner, 2026-10-31: "We should have similar and fuller standalone document for
 other lenses too"): who uses each lens, their questions, every need's status with its source, the landings as built, the gaps with design
 sketches, the data needed, the relationship between the lenses and the decisions: [LENSES.md section 1](LENSES.md#1-drishti-risk-what-risk-managers-near-the-desks-need-what-the-lens-gives-them-today-and-what-comes-next),
 [LENSES.md section 2](LENSES.md#2-drishti-trading-what-traders-and-desk-heads-need-what-the-lens-gives-them-today-and-what-comes-next), [LENSES.md section 3](LENSES.md#3-drishti-market-what-the-market-data-team-needs-what-the-lens-gives-it-today-and-what-comes-next), [LENSES.md section 4](LENSES.md#4-drishti-world-what-macro-research-and-context-users-need-what-the-lens-gives-them-today-and-what-comes-next). Every

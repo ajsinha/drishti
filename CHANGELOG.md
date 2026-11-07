@@ -472,7 +472,7 @@
   (`drishti.native.blas.gemm-min-sets`, `gemm-min-density`), tuned on one machine. The release's VaR regression check runs `java`
   (bit-exact against the previous release) and `auto` (within 1e-12, the same VaR dates): BENCHMARK.md section 17.
 - **Parametric VaR and ES beside historical** ([VAR_GUIDE.md sections 3.12 and 18.15](docs/guides/VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check),
-  [PARAMETRIC_VAR.md](docs/architecture/PARAMETRIC_VAR.md), tutorial 43): the normal fitted to a scope's own scenario P&L vector
+  [PARAMETRIC_VAR.md](docs/guides/VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check), tutorial 43): the normal fitted to a scope's own scenario P&L vector
   (z·σ − μ; ES σ·φ(z_ES)/(1 − c) − μ; equal weights or EWMA λ 0.94; the horizon follows the lens), a **cross-check, never official**.
   On the VaR explorer it is a **Parametric toggle** and **columns** (product review, 2026-11-04): the tiles, the tree's Parametric and Gap
   columns, the normal curve over the P&L histogram with both markers, shaded tails and the fat-tail gap bracket (the N toggle), and a **?**
@@ -1830,7 +1830,7 @@
 - **The 2.9.8 screen mock-ups, ready for the build** ([IMPLEMENTATION_PLAN.md, 2.9.8 mock-ups](docs/architecture/IMPLEMENTATION_PLAN.md#298-mock-ups-the-screens-to-build)).
   Documentation and mock-ups only. Three options each, self-contained HTML (system fonts, nothing from a CDN) with headless-Chrome
   pictures, dark and light: the VaR Playground and a picture of each of its seven workbook tabs
-  ([VAR_PLAYGROUND.md section 16](docs/architecture/VAR_PLAYGROUND.md#16-mock-ups-the-screens-to-build)); backtesting, the review and
+  ([VAR_PLAYGROUND.md section 16](docs/guides/VAR_GUIDE.md#310-the-var-playground-play-var)); backtesting, the review and
   sign-off of period statistics, the report and the pilot pack, and the stress window selection tool
   ([REGULATORY_VAR_REPORTING.md section 8.3](docs/guides/REGULATORY_VAR_REPORTING.md#67-screens)); the lens
   menus, LX1 (section 11 of each built lens's document); the Data view (`DATA`, with its checklist in the plan). Option A of each is
@@ -1870,7 +1870,7 @@
   drained owner hands its shards over, every answer unchanged, and is safe to stop), `tools/test_rolling.py`, `test_admin_net.py`.
 - **The 2.9.7 baseline benchmark with profiling (Drill B, B1)** ([BENCHMARK.md section 4](docs/admin/BENCHMARK.md#4-the-200000-position-var-and-cluster-run), [`tools/bench/results/2.9.7-baseline.jsonl`](tools/bench/results/2.9.7-baseline.jsonl)): 200,000 positions and 1,500 portfolios, one server against a three-node sharded cluster, 50, 100 and 200 users of the VaR and trades mixes, Java 21 and 25, G1 and generational ZGC, JFR, heap histograms, NMT and GC logs, the Python path against the Java loader (68 s against 7.7 s; the Python path needs `DRISHTI_LAKE_HEAP` above 1 GB). No product code changed. The profile finds the server CPU-bound at about 30 requests a second by the parts path (`VarViews.positionSize`: about 60% of CPU, 93% of allocation) and puts it before D1; the first open is single-threaded and read-bound (D8); a sharding bug is reported (a lake without `scenario-pv` is never cut). Harness: `tools/bench/vargen.py`, `var_bench.py` and `jfr_summary.py` (new), `users.py --var-share` and several servers, `report.py` skips other benchmarks' lines, `VarTierBenchmark` takes its histogram in process (an external `jcmd` hung on Java 25); TOOLS.md lists them.
 - **Plan: themed releases 2.9.8 to 2.9.14 and release rules; decisions of 2026-10-31 recorded; VaR Playground designed**
-  ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md), [VAR_PLAYGROUND.md](docs/architecture/VAR_PLAYGROUND.md)). The
+  ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md), [VAR_PLAYGROUND.md](docs/guides/VAR_GUIDE.md#310-the-var-playground-play-var)). The
   release rules (one theme per release, at most two large items, Drill A for features and Drill B for hardening, docs and screenshots
   with a benchmark when performance changes, design one release ahead, scope frozen at the start, a quick pre-check before every full
   drill, no builders during a drill or benchmark, never a big documentation restructure with features, every metric with its playground,
@@ -2510,7 +2510,7 @@ The product owner's decisions on [COMPUTED_ATTRIBUTES.md](docs/architecture/COMP
   official record) on three members in USD and EUR on Delta and Iceberg (`VarShardClusterTest`); `ShardMapTest`, `ShardOwnersTest`,
   `ShardGatherTest`, `ShardAssemblyTest`, `VarShardHandoverTest`, `VarShardingSettingsTest`, `VarShardSingleNodeTest`. The machinery
   (shard map, ownership, handover, gather with its completeness check, readiness) is measure-agnostic (`compute.shard`, `server.shard`,
-  `ShardedMeasure`), VaR its first measure. Docs: [VAR_SHARDING.md](docs/architecture/VAR_SHARDING.md), VAR_GUIDE.md section 28,
+  `ShardedMeasure`), VaR its first measure. Docs: [VAR_SHARDING.md](docs/architecture/CLUSTER_DEPLOYMENT.md#5-var-sharding-in-depth-built), VAR_GUIDE.md section 28,
   DRISHTI_NET.md, NET.md, CONFIGURATION.md, TROUBLESHOOTING.md, TOOLS.md, CLI_GUIDE.md. Open: an Admin → Health "Shards" panel (mock-ups
   first).
 - **Fixed (drill): a reporting currency could keep answering without the day's intraday updates.** The official capture reads every

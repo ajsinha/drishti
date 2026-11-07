@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The sensitivities-based method's aggregation (FRTB_SA_GUIDE.md sections 4.4 to 4.7; MAR21.4 to MAR21.7): within each bucket, across the
+ * The sensitivities-based method's aggregation (FRTB_SA_GUIDE.md section 4; MAR21.4 to MAR21.7): within each bucket, across the
  * buckets of each class, for delta, vega and curvature, in the three correlation scenarios; the SBM of a scenario the sum over the
  * classes, the capital the largest. With the gradient of the reported scenario's charge in every weighted sensitivity and every CVR, so
  * that each position's Euler contribution adds up to the charge (every step is homogeneous of degree one).

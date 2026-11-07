@@ -15,6 +15,8 @@
 -->
 # Lenses: the product view of each lens (internal)
 
+**Status: analysis and product description** (internal): the built parts are cited as built; everything else is a proposal.
+
 An **edition** turns a whole instance into a focused product (`drishti.edition`); a **lens** offers the same focus to one person on a
 full instance (`drishti.lenses`, *Open Drishti Risk* in Views and Home); how both are set up, switched and customised is
 [EDITIONS.md](../admin/EDITIONS.md) and is not repeated below. Each section is one lens's **product view**: who uses it, the questions
@@ -2464,7 +2466,7 @@ business risk managers.
 | VaR limits on stored portfolios | **Built** (hierarchy `PORTFOLIO` in `var-limit`) | [VAR.md section 2.15](../contracts/VAR.md#215-var-limit-the-nodes-var-limits) |
 | Limit letters as a hierarchy | **Built** (`LL`: `LIMIT_LETTER > DESK`) | [VAR.md section 2.14](../contracts/VAR.md#214-hierarchies-from-the-rows-or-from-the-trades-columns) |
 | Limit use only when comparable (horizon and confidence the limit's own) | **Planned** | |
-| Sensitivity limits: DV01 by tenor and currency, CS01 by rating and tenor, vega by underlying and expiry, FX delta by currency | **Not built**. Position sensitivities are loaded and summed by factor, bucket or grid (`SENS`, [section 5.7](#57-sensitivities-data)); no limit is checked against them | [SENSITIVITIES_AND_FRTB_SA.md section 2](SENSITIVITIES_AND_FRTB_SA.md#2-position-sensitivities-the-input) |
+| Sensitivity limits: DV01 by tenor and currency, CS01 by rating and tenor, vega by underlying and expiry, FX delta by currency | **Not built**. Position sensitivities are loaded and summed by factor, bucket or grid (`SENS`, [section 5.7](#57-sensitivities-data)); no limit is checked against them | [FRTB_SA_GUIDE.md section 3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract) |
 | Stop-loss (cumulative P&L, month-to-date, year-to-date) | **Not built**; needs the bank's P&L (planned) | |
 | Position and notional limits | **Not built**; positions are derived with quantity and market value | [VAR_GUIDE section 4](../guides/VAR_GUIDE.md#4-positions-derived-never-delivered) |
 | Stress limits | **Partly**: the stored stress result carries a positive `LIMIT` per desk; the derived per-scenario view shows each desk's limit use and breaches; the proposed `risk-limit` table | [VAR.md section 7.4](../contracts/VAR.md#74-the-banks-stress-pl-by-scenario-derived); [STR.md section 3.5](../contracts/STR.md#35-risk-limit-limits-by-measure-and-scope-fundamental) |
@@ -2873,7 +2875,7 @@ crafted limits of each type, both sides, the warning level, validity dates; a li
 
 **Computation.** Sensitivities are **additive**: a scope's DV01 by tenor and currency is the sum of its positions' rows, summed per
 arbitrary scope with entitlements by the server's summing engine (`SENS <scope>`, by factor, bucket or grid,
-[SENSITIVITIES_AND_FRTB_SA.md section 4](SENSITIVITIES_AND_FRTB_SA.md#4-the-aggregation-every-method-shares)). What RO4 adds is the limit:
+[FRTB_SA_GUIDE.md section 4](../guides/FRTB_SA_GUIDE.md#4-the-sensitivities-based-method)). What RO4 adds is the limit:
 each limit's bucket matched against its grid (DV01 by currency × tenor bucket, CS01 by rating × tenor, vega by underlying × expiry, FX delta
 by currency, equity delta by index or name) and its use against both sides.
 
@@ -3258,7 +3260,7 @@ started.
 Sensitivity limits (RO4), risk ladders, concentration of risk (RO8) and the factor-level reading of a VaR change (RO1) all need one
 input: **sensitivities per position (or trade), at risk-factor granularity**. The roadmap row is **RO15**
 ([section 5.6](#56-a-roadmap)), the prerequisite of RO4 and RO8. The input, its factor dictionary, naming standard, grids and load checks
-are now documented in one place, [SENSITIVITIES_AND_FRTB_SA.md sections 2 and 3](SENSITIVITIES_AND_FRTB_SA.md#2-position-sensitivities-the-input),
+are now documented in one place, [FRTB_SA_GUIDE.md section 3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract),
 and its fields in the [market-risk contracts](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity); this
 section keeps oversight's needs and decisions.
 
@@ -3303,12 +3305,12 @@ explain, stress by sensitivities and oversight read one table.
 and ids of the VaR inputs (one record per position or trade, date and batch, `RUN_KIND` `FULL` or `INTRADAY`, `STATUS` `ok`, `proxied`,
 `failed`, the placement columns); a sparse `SENSITIVITIES[]` of the non-zero factors only, each `VALUE` the P&L for the measure's standard
 move; **Drishti's risk-factor naming standard** with a mapping from the bank's names, an unmapped name refused, never guessed (decision
-10, [SENSITIVITIES_AND_FRTB_SA.md section 3.1](SENSITIVITIES_AND_FRTB_SA.md#31-the-naming-standard)); **configurable grids**, the FRTB
+10, [FRTB_SA_GUIDE.md section 3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract)); **configurable grids**, the FRTB
 buckets and the bank's own limit grids side by side, each limit naming its grid, a factor in exactly one bucket of each grid (decision 11,
-[section 3.3](SENSITIVITIES_AND_FRTB_SA.md#33-the-grids-frtb-simm-and-the-banks-own)); intraday batches carrying only the changed
+[section 3.3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract)); intraday batches carrying only the changed
 positions, a record replacing that position's record whole, as scenario PVs do; and the load's refusals and warnings, counted per source,
 with a completeness warning by desk (vectors without sensitivities, or the reverse) on the data-trust card (RO13)
-([section 2.4](SENSITIVITIES_AND_FRTB_SA.md#24-load-and-checks)).
+([section 2.4](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract)).
 
 #### 5.7.4 Volume
 
@@ -3346,7 +3348,7 @@ CPU per 5.4 KB position, itself extrapolated from 10K). To be measured on the 10
 **RO15, the roadmap row: "Position sensitivities (data contract, loader, ladders)".** The same row as MC1 of the risk cubes
 ([section 6.7.9](#679-d8-position-sensitivity-sens-new)). Its parts: the contract and its generated documents; synthetic demo data
 consistent with the demo's scenario PVs; the loader and its checks; the factor naming standard and the grids; the summing engine (all
-built, [SENSITIVITIES_AND_FRTB_SA.md section 2](SENSITIVITIES_AND_FRTB_SA.md#2-position-sensitivities-the-input)); and a first ladder (DV01
+built, [FRTB_SA_GUIDE.md section 3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract)); and a first ladder (DV01
 by currency and tenor). Size **M**. **Tests:** sums by bucket equal the sum of positions; a position under two hierarchies sums once per
 node; an intraday batch replaces a position whole; each refusal; the proxied share; overlapping buckets in a grid refused at start.
 
@@ -5549,7 +5551,7 @@ about six to eight weeks elapsed².
 
 The phases follow the plan's themed releases (product owner, 2026-10-31; reordered 2026-11-01), each **proposed** until it starts; a
 row without one is unscheduled. Every metric ships with its playground in the same phase
-([VAR_PLAYGROUND.md section 13](VAR_PLAYGROUND.md#13-the-playground-family-and-the-rule)).
+([VAR_GUIDE.md section 18.16](../guides/VAR_GUIDE.md#1816-the-var-playgrounds-workbook-formula-by-formula)).
 
 | Phase | Rows | Status | Depends on |
 |---|---|---|---|

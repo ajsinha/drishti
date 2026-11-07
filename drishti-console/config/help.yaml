@@ -557,3 +557,7 @@ contextual:
   docs-admin-under-construction: docs-reference-under-construction   # admin/UNDER_CONSTRUCTION.md moved to reference/
   docs-strategy-competitive-analysis: competitive-analysis   # strategy/COMPETITIVE_ANALYSIS.md moved to architecture/
   docs-architecture-adr-011-sutras-are-markdown-documents: docs-architecture-adr-017-sutras-are-yaml   # ADR-011 superseded by ADR-017 and deleted
+  docs-architecture-parametric-var: docs-guides-var-guide#1815-parametric-var-and-es-a-cross-check   # PARAMETRIC_VAR.md folded into VAR_GUIDE section 18.15
+  docs-architecture-var-playground: docs-guides-var-guide#310-the-var-playground-play-var   # VAR_PLAYGROUND.md folded into VAR_GUIDE sections 3.10 and 18.16
+  docs-architecture-var-sharding: cluster-deployment#5-var-sharding-in-depth-built   # VAR_SHARDING.md folded into CLUSTER_DEPLOYMENT section 5
+  docs-architecture-sensitivities-and-frtb-sa: docs-guides-frtb-sa-guide#4-the-sensitivities-based-method   # SENSITIVITIES_AND_FRTB_SA.md folded into FRTB_SA_GUIDE
