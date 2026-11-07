@@ -18,7 +18,7 @@
    a report or the AI produces), with options that change both. Picking a kind draws the studio's sample of it (options.samples, the
    gallery's), or the same spec under the other kind. */
 import { h } from '../../drishti-core/src/drishti_index.js';
-import { kindList, specText } from './drishti_chart-spec.js';
+import { kindList, kindOf, specText } from './drishti_chart-spec.js';
 import { dataTable } from './drishti_chart-parts.js';
 
 /** @private the spec's JSON with its keys, strings and numbers marked for the style sheet (elements, no markup strings) */
@@ -106,8 +106,9 @@ export class Studio {
       row('Stack', select('stack', ['none', 'stacked', 'percent'], s.stack === 'percent' ? 'percent' : s.stack ? 'stacked' : 'none', (v) => change({ stack: v === 'none' ? undefined : v === 'percent' ? 'percent' : true })));
     }
     if (k === 'bar') { row('Bars', select('orient', ['vertical', 'horizontal'], s.orient === 'horizontal' ? 'horizontal' : 'vertical', (v) => change({ orient: v }))); }
-    if (k === 'risk.exposure-profile') { row('Log x', select('log', ['on', 'off'], s.log === false ? 'off' : 'on', (v) => change({ log: v === 'on' }))); }
-    if (c.spec.kind !== 'map' && ['line', 'area', 'bar', 'risk.backtest'].indexOf(k) >= 0) { row('Zoom', select('zoom', ['off', 'on'], s.zoom ? 'on' : 'off', (v) => change({ zoom: v === 'on' ? (s.zoom || true) : undefined }))); }
+    const offers = (kindOf(k) || {}).studio || [];                   // a domain library's kind says which of the studio's options it takes
+    if (offers.indexOf('log') >= 0) { row('Log x', select('log', ['on', 'off'], s.log === false ? 'off' : 'on', (v) => change({ log: v === 'on' }))); }
+    if (c.spec.kind !== 'map' && (['line', 'area', 'bar'].indexOf(k) >= 0 || offers.indexOf('zoom') >= 0)) { row('Zoom', select('zoom', ['off', 'on'], s.zoom ? 'on' : 'off', (v) => change({ zoom: v === 'on' ? (s.zoom || true) : undefined }))); }
     row('Density', select('density', ['comfortable', 'compact', 'terminal'], c.density, (v) => c.setDensity(v)));
   }
 

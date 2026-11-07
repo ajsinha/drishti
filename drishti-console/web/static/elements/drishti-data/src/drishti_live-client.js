@@ -138,9 +138,9 @@ export class LiveClient {
 
   /** @private */
   sse() {
-    const ES = this.o.EventSource || globalThis.EventSource;
-    if (!ES) { throw new Error('this page has no EventSource'); }
-    const es = new ES(this.address(), { withCredentials: !!this.o.withCredentials });
+    const Source = this.o.EventSource || globalThis.EventSource;
+    if (!Source) { throw new Error('this page has no EventSource'); }
+    const es = new Source(this.address(), { withCredentials: !!this.o.withCredentials });
     const onMsg = (e) => this.received(e.data, e.lastEventId, e.type);
     this.o.events.forEach((n) => es.addEventListener(n, onMsg));
     es.addEventListener('heartbeat', () => this.alive());

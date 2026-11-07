@@ -705,7 +705,12 @@ The screens outside BI, the Pivot, VaR and exposure (those move on their own bra
 itself, sorts a table by its headings (`aria-sort` in a script), formats numbers on its own (`Intl.NumberFormat`, `toFixed`,
 `toPrecision`, a number's `toLocaleString`; a date's is a date) or opens its own `EventSource` or `WebSocket`. The allow-list names
 only files the BI and Pivot branch (`wip/e-migrate-bi`) and the VaR and exposure branch (`wip/e-migrate-var`) are moving, each with its
-branch, and only shrinks: an entry whose file is gone or keeps the rule fails the check.
+branch, and only shrinks: an entry whose file is gone or keeps the rule fails the check. **The generic libraries know no domain**
+(the product owner, 2026-11-07): drishti-core, -grid, -chart, -inputs and -data hold no domain word in their code (VaR, ES, EEPE,
+PFE, MTM, P&L, exposure, backtest, Basel, netting, counterparty, a `risk.` kind); a domain's logic lives in its library (risk:
+drishti-risk) behind a generic hook. The chart studio's options for the risk kinds became such a hook (a kind declares `studio:
+['log', 'zoom']` when it registers). Comments, the harness pages and the generated manifest's titles are documentation; a threshold
+(`limit`) is a generic hook.
 
 **Still to move** (each needs its screens' browser files run, and the multi-select and the pickers are on every page): the multi-select
 (`drishti_multiselect.js` → `MultiSelect`, with the query forms' dependent lists and the embed's controls), the as-of date and the

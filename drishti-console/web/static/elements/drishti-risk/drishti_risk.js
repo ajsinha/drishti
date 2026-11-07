@@ -133,10 +133,10 @@
     }
     function registerRiskKinds() {
       const out = [];
-      const add = (name, build, label, cartesian) => { if (!kindOf(name)) { registerKind(name, { build: build, label: label, family: 'risk', cartesian: cartesian }); out.push(name); } };
+      const add = (name, build, label, cartesian, studio) => { if (!kindOf(name)) { registerKind(name, { build: build, label: label, family: 'risk', cartesian: cartesian, studio: studio || [] }); out.push(name); } };
       add('risk.pnl-distribution', buildPnlDistribution, 'P&L distribution', true);
-      add('risk.backtest', buildBacktest, 'backtest', true);
-      add('risk.exposure-profile', buildExposureProfile, 'exposure profile', true);
+      add('risk.backtest', buildBacktest, 'backtest', true, ['zoom']);
+      add('risk.exposure-profile', buildExposureProfile, 'exposure profile', true, ['log']);
       add('risk.var-change', buildVarChange, 'VaR change', true);
       return out;
     }

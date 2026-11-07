@@ -153,3 +153,42 @@ def test_the_guard_finds_what_it_looks_for():
     assert set(_broken("var ws = new window.WebSocket(url);")) == {"live"}
     assert _broken("t.textContent = new Date(ms).toLocaleString();") == {}
     assert _broken("// echarts.init(el) is drishti-chart's\n/* new EventSource(u) */") == {}
+
+
+# ---- the generic libraries know no domain (the product owner, 2026-11-07) ----------------------------------------------------------
+# Domain logic stays in its domain's pack, backend module and JS library (risk: drishti-risk, the banking module's). drishti-core,
+# drishti-grid, drishti-chart, drishti-inputs and drishti-data carry generic hooks only (a tone, a threshold line, a server-computed
+# figure, a kind a domain library registers), never a domain's words in their code: a risk measure's name, a risk kind, a regulatory
+# rule. Comments and JSDoc are documentation and may use a domain's examples; so are the harness pages (the gallery's sample data). A
+# threshold (`limit`, a row cap or a line a caller draws) is a generic hook and is not listed.
+GENERIC = ("drishti-core", "drishti-grid", "drishti-chart", "drishti-inputs", "drishti-data")
+DOMAIN_WORDS = re.compile(r"\b(?:VaR|VAR|var\d\d|ES|EEPE|EPE|PFE|MTM|DV01|FRTB|SIMM|P&L|[Ee]xposures?|[Bb]acktest\w*|Basel|[Tt]raffic light"
+                          r"|[Nn]etting|[Cc]ounterpart(?:y|ies)|risk\.[a-z-]+)\b")
+# Documentation only: the generated manifest names every library with its title (drishti-risk's names its kinds).
+DOMAIN_DOCS = {"drishti-core/src/drishti_manifest.js"}
+
+
+def _domain_words(text):
+    code = COMMENT.sub(lambda m: "\n" * m.group(0).count("\n"), text)
+    return [f"{n}: {line.strip()[:120]}" for n, line in enumerate(code.splitlines(), 1) if DOMAIN_WORDS.search(line)]
+
+
+def test_the_generic_libraries_hold_no_domain_vocabulary():
+    elements = WEB / "static" / "elements"
+    bad = []
+    for lib in GENERIC:
+        for p in sorted((elements / lib / "src").glob("*.js")) + sorted((elements / lib).glob("drishti_*.css")):
+            rel = str(p.relative_to(elements))
+            if rel in DOMAIN_DOCS or "harness" in p.name:
+                continue
+            bad += [f"{rel}:{hit}" for hit in _domain_words(p.read_text(encoding="utf-8"))]
+    assert not bad, "domain words in a generic library: move the logic to the domain's library (risk: drishti-risk) behind a generic hook\n" + "\n".join(bad)
+
+
+def test_the_domain_words_check_finds_them_and_leaves_documentation_alone():
+    assert _domain_words("if (k === 'risk.backtest') { zoom(); }")
+    assert _domain_words("label: 'VaR 99%'")
+    assert _domain_words("const exposure = rows.map(peak);")
+    assert not _domain_words("/** The sum of VaR is not a VaR: a non-additive total is the server's. */\nconst total = server(cell);")
+    assert not _domain_words("const limit = o.limit || 2000; const Source = o.EventSource;")
+    assert all((WEB / "static" / "elements" / d).is_file() for d in DOMAIN_DOCS)

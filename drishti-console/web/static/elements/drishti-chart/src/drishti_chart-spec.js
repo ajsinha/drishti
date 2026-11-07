@@ -38,6 +38,7 @@ const registry = new Map();
  * @property {('general'|'risk'|'map'|string)} [family='general'] the rail's group (a domain library's name for its kinds)
  * @property {boolean} [cartesian] x and y axes (zoom and the crosshair apply)
  * @property {function(): Object} [sample] a small spec with data, for the studio and the gallery
+ * @property {string[]} [studio] the studio's own options the kind offers beyond the general ones: 'log' (a log x axis), 'zoom'
  */
 
 /**

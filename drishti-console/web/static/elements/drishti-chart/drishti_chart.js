@@ -1327,7 +1327,7 @@
   /* ---- src/drishti_chart-studio.js ---- */
   __m["src/drishti_chart-studio.js"] = (function () {
     var h = __lib("drishti-core").h;
-    var kindList = __m["src/drishti_chart-spec.js"].kindList, specText = __m["src/drishti_chart-spec.js"].specText;
+    var kindList = __m["src/drishti_chart-spec.js"].kindList, kindOf = __m["src/drishti_chart-spec.js"].kindOf, specText = __m["src/drishti_chart-spec.js"].specText;
     var dataTable = __m["src/drishti_chart-parts.js"].dataTable;
     function coloured(doc, text) {
       const out = doc.createDocumentFragment(), re = /("(?:[^"\\]|\\.)*")(\s*:)?|(-?\d[\d.e+-]*|true|false|null)/g;
@@ -1396,8 +1396,9 @@
           row('Stack', select('stack', ['none', 'stacked', 'percent'], s.stack === 'percent' ? 'percent' : s.stack ? 'stacked' : 'none', (v) => change({ stack: v === 'none' ? undefined : v === 'percent' ? 'percent' : true })));
         }
         if (k === 'bar') { row('Bars', select('orient', ['vertical', 'horizontal'], s.orient === 'horizontal' ? 'horizontal' : 'vertical', (v) => change({ orient: v }))); }
-        if (k === 'risk.exposure-profile') { row('Log x', select('log', ['on', 'off'], s.log === false ? 'off' : 'on', (v) => change({ log: v === 'on' }))); }
-        if (c.spec.kind !== 'map' && ['line', 'area', 'bar', 'risk.backtest'].indexOf(k) >= 0) { row('Zoom', select('zoom', ['off', 'on'], s.zoom ? 'on' : 'off', (v) => change({ zoom: v === 'on' ? (s.zoom || true) : undefined }))); }
+        const offers = (kindOf(k) || {}).studio || [];                   // a domain library's kind says which of the studio's options it takes
+        if (offers.indexOf('log') >= 0) { row('Log x', select('log', ['on', 'off'], s.log === false ? 'off' : 'on', (v) => change({ log: v === 'on' }))); }
+        if (c.spec.kind !== 'map' && (['line', 'area', 'bar'].indexOf(k) >= 0 || offers.indexOf('zoom') >= 0)) { row('Zoom', select('zoom', ['off', 'on'], s.zoom ? 'on' : 'off', (v) => change({ zoom: v === 'on' ? (s.zoom || true) : undefined }))); }
         row('Density', select('density', ['comfortable', 'compact', 'terminal'], c.density, (v) => c.setDensity(v)));
       }
       pick(kind) {
