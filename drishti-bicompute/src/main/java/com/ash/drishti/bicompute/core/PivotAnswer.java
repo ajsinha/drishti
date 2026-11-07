@@ -225,8 +225,8 @@ final class PivotAnswer {
         m.put("value", n.others ? null : n.value);
         m.put("path", n.pairs());
         m.put("coords", n.coords());
-        boolean canOpen = !n.others && !n.path.isEmpty() && (a.defaultChild(n) != null || hasOther(c, a, n));
-        m.put("expandable", canOpen);
+        // + opens the next level of the axis; a member on the last level is a leaf and has no + (another field is Expand by…, E)
+        m.put("expandable", !n.others && !n.path.isEmpty() && a.defaultChild(n) != null);
         m.put("expanded", n.open() && !n.children.isEmpty());
         m.put("by", n.childDim);
         if (n.others) {
@@ -236,11 +236,6 @@ final class PivotAnswer {
             }
         }
         return m;
-    }
-
-    /** True when a dimension of the source not on the node's path or the other axis could break it down (expand by…). */
-    private static boolean hasOther(PivotCore.Computation c, Axis a, Axis.Node n) {
-        return c.catalogue.fields().size() > n.depth() + (a == c.rows ? c.cols.dims.size() : c.rows.dims.size());
     }
 
     private static void emitRows(PivotCore.Computation c, Axis.Node n, List<Map<String, Object>> out, boolean above) {

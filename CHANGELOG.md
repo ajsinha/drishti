@@ -166,6 +166,14 @@
   and `doctor` outputs, and tutorial 17's, are marked to be re-run (the jar name was edited into older captures). The counts of tutorials
   in docs/README.md are no longer typed; the tutorial tests count from the files and check each tutorial is in exactly one track.
 
+### Fixes
+
+- **Pivot: a member on the last row level has no "+".** The engine marked a member openable when the next row level could open it *or*
+  any other field of the source could (Expand by…), so with one row level (Issuer ID by Equity, say) every member drew a "+" whose click
+  asked for the next level, found none and changed nothing. A member is now openable only when there is a next row level; a leaf draws no
+  "+" and → does nothing on it. **Expand by…** (`E`) still opens any member by another field. Tested in Chromium over the core pack's
+  issuers (no "+" on leaves, "+" opens each issuer's bonds, the Grand total right per column) and in the engine (`PivotCoreTest`).
+
 ### Fixes (flaky tests fixed at their cause)
 
 - **BI → Runs: "Run again as" keeps your choice when the drawer is drawn again.** The drawer is drawn from the list's row at once and again
