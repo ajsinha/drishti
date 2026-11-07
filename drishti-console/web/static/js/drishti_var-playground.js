@@ -21,6 +21,7 @@
    metric's playground gives its own columns, rows and steps. */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
   var root = document.querySelector("[data-play]");
   if (!root || !root.querySelector("[data-pg-scroll]")) { return; }
   var RH = 22, W0 = 168, CW = 118, HEAD = 6;
@@ -32,10 +33,7 @@
   var scroll = $("[data-pg-scroll]"), canvas = $("[data-pg-canvas]"), explain = $("[data-pg-explain]");
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
-  function money(v) {
-    if (v == null || isNaN(v)) { return "—"; }
-    return (v < 0 ? "−" : "") + Math.abs(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  }
+  function money(v) { return v == null || isNaN(v) ? "—" : F.formatNumber(v, { decimals: 2 }); }
   function num(v, d) { return v == null ? "—" : Number(v).toLocaleString("en-US", { maximumFractionDigits: d == null ? 6 : d }); }
   function pct(v) { return v == null ? "—" : (v * 100).toFixed(1) + "%"; }
   function letter(i) { var s = ""; for (var n = i; n >= 0; n = Math.floor(n / 26) - 1) { s = String.fromCharCode(65 + n % 26) + s; } return s; }

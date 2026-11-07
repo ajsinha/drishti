@@ -23,6 +23,7 @@
    Drishti.VarCharts.lines(host, keys, series, bars, {height})            -VaR and -ES lines over hypothetical P&L bars, exceptions marked */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
   var NS = "http://www.w3.org/2000/svg";
 
   function el(tag, attrs, parent) {
@@ -33,14 +34,7 @@
   }
 
   /** 1.23m, -412k, 950: the compact money the mock-up shows. */
-  function money(v) {
-    if (v === null || v === undefined || isNaN(v)) return "—";
-    var a = Math.abs(v), s = v < 0 ? "-" : "";
-    if (a >= 1e9) return s + (a / 1e9).toFixed(2) + "bn";
-    if (a >= 1e6) return s + (a / 1e6).toFixed(2) + "m";
-    if (a >= 1e3) return s + (a / 1e3).toFixed(0) + "k";
-    return s + a.toFixed(0);
-  }
+  var money = F.formatter("compact", { decimals: function (a, u) { return u === "k" || !u ? 0 : 2; }, minus: "-" });
 
   function signed(v) { return (v > 0 ? "+" : "") + money(v); }
 

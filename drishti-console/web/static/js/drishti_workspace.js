@@ -213,7 +213,7 @@
         d.setAttribute('data-axis', axis);
         d.setAttribute('data-k', String(k));
         d.title = 'Drag to resize (or use the arrow keys); double-click or Home: equal sizes';
-        window.Drishti.resize.handle(d, divider(axis, k));              // the shared resize handle (drishti_resize.js)
+        window.Drishti.resize.handle(d, divider(axis, k));              // the shared resize handle (drishti-core)
         place(d, axis, k, t);
         grid.appendChild(d);
       }

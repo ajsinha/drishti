@@ -19,6 +19,77 @@
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
+## 2.9.11.e (unreleased)
+
+- **Drishti Elements, the design, decided by the product owner** ([ELEMENTS.md](docs/architecture/ELEMENTS.md)): the console's JavaScript as eight libraries (drishti-core, -inputs, -grid, -chart, -data, -insight, -renderer, -risk; 1 to 5 without a Drishti server), the measured inventory (116 of 258 scripts and modules, about 21,000 lines, fold into them; about 10 grids and 22 chart scripts into one each), the grid's three layouts (wells, panel, terminal: VaR screens default to terminal) and its server-side pivot with non-additive totals from the server, an AG Grid-style adapter for the Enterprise pivot API from public documentation only, one chart spec over ECharts with the risk kinds and maps (world to every country's first-level regions), packaging and licensing per domain module, the documentation of every library (guide, generated API reference, tutorial, gallery, AG Grid migration guide), the guards and the migration order; the decisions (Vega retired, the grid on phones, a standalone Excel writer, the adapter's scope, both options of g2, g3 and g4 built as modes with A the default); mock-ups [g1](docs/architecture/mockups/elements/g1-pivot-grid.html), [g2](docs/architecture/mockups/elements/g2-charts.html), [g3](docs/architecture/mockups/elements/g3-maps.html) and [g4](docs/architecture/mockups/elements/g4-gallery.html).
+- **Drishti Elements, the foundation** ([ELEMENTS.md section 8.1](docs/architecture/ELEMENTS.md#81-as-built-the-foundation-drishti-core-and-the-grids-engine)):
+  `static/elements/` with a manifest of the libraries and their versions, ES modules per library and one bundled file each written by
+  an offline Python build (`tools/elements/build.py`, `--check`), a loader (`Drishti.elements.load('drishti-grid')`), and the API
+  reference generated from the typed JSDoc ([ELEMENTS_API.md](docs/guides/ELEMENTS_API.md), `tools/docs/elements_api.py --check`).
+- **drishti-core 1.0.0**: numbers by the server's rules (half up on the decimal value, the true minus, the named formats generated from
+  `formats.yaml`, compact, percent, basis points, currency, a locale's separators), business dates and ranges, the theme tokens
+  generated from `drishti_tokens.css` with WCAG contrast arithmetic, an API client (errors in words with their DRS code, GET retries,
+  abort, time limit, the as-of header), an event bus, a focus trap, a live region and a roving tab index, keys and key maps, dialogs,
+  drawers and toasts. Folded in and deleted: `drishti_resize.js` and `build/drishti_grid-keys.js` (`Drishti.resize` and
+  `Drishti.GridKeys` keep their names); the alerts' and the workbench's toasts, the table editors' dialog and the number helpers of
+  twelve screens now call drishti-core (a value that rounds to zero reads `0`, never `−0`).
+- **drishti-grid 0.1.0, the engine** (no look yet): columns and the searchable field list, sort and filter models, the client-side row
+  model (typed indexes, row groups with figures from their members) and the server-side one (block requests with sort, filter, group
+  keys, values and pivot, a cache, refresh, abort), virtual scrolling for a million rows, the pivot in the server's own view and answer
+  (row and column groups, totals and subtotals above or below, open and closed groups, top N with Others, member and value filters,
+  pivot result columns), non-additive measures never summed in the browser (asked of the server and merged by coordinates), the
+  wells, selection with range figures that warn on a non-additive column, copy as TSV, CSV and a standalone .xlsx writer, the keys,
+  the Explain hook and the layout-neutral state. **Events and live data**: typed events on the bus and as DOM events (cell click,
+  double-click and edit, selection, range, sort, filter, pivot, groups, expand and collapse, column move, resize, pin and hide, row data
+  updated, server blocks loaded or failed, Explain opened); transactions by row id applied in place with a stable order under sort and
+  filter, batched for high-frequency feeds, each changed cell's direction kept for its flash; live feeds over Server-Sent Events or a
+  WebSocket; the server-side model's invalidate, purge and data-changed notice; group and pivot totals changed by difference, and
+  non-additive ones asked of the server again, debounced. 40 unit tests in Node (`tests/elements/`), and the 1,000,000-row figures in
+  [BENCHMARK.md](docs/admin/BENCHMARK.md).
+- **drishti-grid 0.2.0, the visual layer** ([ELEMENTS.md section 8.1](docs/architecture/ELEMENTS.md#81-as-built-the-foundation-drishti-core-and-the-grids-engine)):
+  `new Grid(element, options)` and `<drishti-grid>` (no framework, no shadow root) draw the engine in the three layouts of g1, all
+  built: `wells` (the default: fields with search and the four wells above the grid, Explain in a drawer that follows the selection),
+  `panel` (a side tool panel with grouped fields, checkboxes, the wells two by two, pivot mode, grand total column, subtotals above and
+  deferred update) and `terminal` (a command line read both ways, one lane of wells, Explain in a split pane with the steps, the worst
+  scenarios and the trend, function keys F2 to F10); densities comfortable, compact and terminal apart from the layout; light and dark
+  from drishti-core's tokens. Drag chips between wells (or move them from a chip's menu by the keyboard), aggregation per value (the
+  server's for a non-additive one), member and value filters, top N, collapsible pivot column groups, the grand totals and any column
+  pinned, the column menu, the context menu (Explain, copy, copy with headers, CSV and Excel, chart the range, the rows behind a cell
+  in a dialog, group, pin), row checkboxes, ranges by drag or Shift+click with the status bar (count, sum, average, min, max; a sum of
+  VaR is refused with a warning), ◆ non-additive totals with a hover note, colour scales and data bars, Explain on E and F2, the full
+  keyboard with grid or treegrid roles and announcements, the flash of live changes (still under reduced motion), loading placeholders
+  for server blocks, virtual rows and columns; on a phone (O2) the first column pinned and a pivot as one value column with a measure
+  switcher. Nothing inline: it runs under a strict CSP. A static fixture harness (`drishti_harness.html`, synthetic data, no server) in
+  every layout, density and theme; 12 more Node tests and one browser test file against the harness (`test_elements_grid_browser.py`).
+  The engine's pivot header rows (an open group's label line, subtotals below) no longer repeat the subtotal's figures.
+- **drishti-inputs 0.1.0** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  business-date pickers keyed by holiday calendars (rules with weekend rolls, n-th weekdays and Easter, or the server's dates; unions
+  such as US+UK; T-1, month-end, typed `T-3`, `ME`, `6 Nov 2026`; non-business days refused in words), a date-range picker with twelve
+  presets that move with the business date, a tree picker (compact partial selection, children from the server with loading and
+  Retry, search), a multi-select (search, chips, select-all, a limit), a combobox with server type-ahead (debounced, aborted, cached,
+  in order), forms from a JSON-schema-like description (validation in words, conditional fields, repeatable groups, the server's
+  checks, a four-eyes submit that files a proposal and waits), a filter bar that emits the filter model on a bus for grids and charts,
+  and the code editor over the vendored CodeMirror (Rachana, YAML and Python; completion from the function catalogue through a hook;
+  lint marks and a problems list; read-only; a side-by-side or unified diff). Each a class and a web component.
+- **drishti-data 0.1.0**: one data-source contract for grids and charts (in memory, REST pages, Drishti's server-side rows, Arrow,
+  live; any source is the grid's datasource as it is), the live client over Server-Sent Events or a WebSocket (reconnect with a
+  jittered back-off, a heartbeat, resume from the last event id, states for a status line), backpressure into the grid's
+  `applyTransactionAsync` (one batch at a time, the rest folded by row id), and the Arrow client (Flight over HTTP where a server
+  offers it, else Arrow over HTTP, else JSON; columns read without a copy where they can be, rows as views, column types for a grid).
+  The grid's own SSE and WebSocket feeds are gone: the live client is the one connection.
+- **drishti-grid 0.3.0, cell editing**: editors per type (text, a number in the grid's locale read loosely, a date through
+  drishti-inputs' business-date picker, a select, a checkbox), started by Enter, F2, a double click or typing, saved by Enter or Tab,
+  Escape to cancel; validation in words (required, min, max, length, options, the column's rule); each change one edit transaction
+  (`cellValueChanged`, `editTransaction`) with undo and redo; a paste of a range from Excel (quoted cells, one value filling a range);
+  Delete over a range; a write-back hook (applied, refused with the old values back, or proposed) and four eyes (cells marked until a
+  proposal is decided). `grid.followFilters(bus)` follows a filter bar.
+- **drishti-core 1.1.0**: the sort and filter model moved in from the grid as the contract every library shares (with
+  `FILTER_CHANNEL` and `filterRows`), the element maker and placements, reading typed and pasted numbers in a locale, and loading a
+  library's vendored engine (`loadScript`, `loadStyle`, `staticUrl`). One static harness page for inputs, data and editing
+  (`drishti-inputs/drishti_harness.html`), 23 more Node tests (`inputs`, `data`, `grid-edit`) and one browser test file
+  (`test_elements_inputs_browser.py`). The console's pickers, forms, editors, live connections and Arrow reader that move onto these
+  later are listed in ELEMENTS.md 8.2.
+
 ## 2.9.11.d (unreleased)
 
 - **The data lake and data load guide, one home for lakes and loading** ([DATA_LAKE_GUIDE.md](docs/guides/DATA_LAKE_GUIDE.md); the

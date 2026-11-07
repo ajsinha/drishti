@@ -22,6 +22,7 @@
    through the CSSOM (the page's policy allows no inline style). */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
   var root = document.querySelector("[data-world-landing]");
   if (!root) return;
   var landing = root.getAttribute("data-world-landing");
@@ -57,16 +58,11 @@
     var t = Math.abs(v).toFixed(1);
     return (Number(t) === 0 ? "" : v > 0 ? "+" : "−") + t + (unit || "");
   }
-  function money(v) {
-    v = num(v);
-    if (v === null) return "—";
-    var a = Math.abs(v);
-    if (a >= 1e12) return "$" + (a / 1e12).toFixed(2) + "tn";
-    if (a >= 1e9) return "$" + (a / 1e9).toFixed(1) + "bn";
-    if (a >= 1e6) return "$" + (a / 1e6).toFixed(1) + "m";
-    return "$" + Math.round(a);
+  function money(v) {                                                // a size, never signed: "$1.2tn" (drishti-core's compact)
+    return F.formatCompact(num(v), { units: [["tn", 1e12], ["bn", 1e9], ["m", 1e6]], decimals: function (a, u) { return u === "tn" ? 2 : u ? 1 : 0; },
+      sign: "never", prefix: "$", smallGrouping: false });
   }
-  function count(v) { v = num(v); return v === null ? "—" : Math.round(v).toLocaleString("en-US"); }
+  function count(v) { return F.formatNumber(num(v), { minus: "-" }); }
   function text(sel, v) { $$(sel).forEach(function (e) { e.textContent = v; }); }
   function el(tag, cls, txt) { var e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
   function go(cmd) { return "/go?q=" + encodeURIComponent(cmd + " <GO>"); }

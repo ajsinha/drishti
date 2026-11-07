@@ -26,6 +26,7 @@
    scenario. Every request goes to this console's own host. */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
   var root = document.querySelector("[data-smat]");
   if (!root || !root.dataset.target) { return; }
   var $ = function (sel) { return root.querySelector(sel); };
@@ -47,12 +48,8 @@
   // ------------------------------------------------------------------------------------------------------------- formatting
 
   function fmt(v) {
-    if (v === null || v === undefined || isNaN(v)) { return "—"; }
-    var a = Math.abs(v), s = v < 0 ? "−" : (v > 0 ? "+" : "");
-    if (a >= 1e9) { return s + (a / 1e9).toFixed(2) + "bn"; }
-    if (a >= 1e6) { return s + (a / 1e6).toFixed(2) + "m"; }
-    if (a >= 1e4) { return s + (a / 1e3).toFixed(1) + "k"; }
-    return s + a.toLocaleString(undefined, { maximumFractionDigits: 2 });
+    return v === null || v === undefined || isNaN(v) ? "—" : F.formatCompact(v, { units: [["bn", 1e9], ["m", 1e6], ["k", 1e3, 1e4]], decimals: function (a, u) { return u === "k" ? 1 : 2; },
+      smallDecimals: 2, trim: "small", sign: "always" });
   }
   function full(v) {
     if (v === null || v === undefined || isNaN(v)) { return "—"; }

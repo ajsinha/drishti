@@ -232,7 +232,7 @@
 <script src="/static/js/drishti_layout-rules.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_build-files.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_build-shape-tree.js?v={{ ASSET_V }}"></script>
-{% for f in ["grid-keys", "ops", "yamlmodel", "drag", "menus", "palette", "expr", "forms", "actions", "canvas", "inspector", "data", "notes", "yamltab", "problems", "about", "form-tab", "controls-tab", "tests", "draft", "versions", "ship", "saving", "commands", "workbench"] %}
+{% for f in ["ops", "yamlmodel", "drag", "menus", "palette", "expr", "forms", "actions", "canvas", "inspector", "data", "notes", "yamltab", "problems", "about", "form-tab", "controls-tab", "tests", "draft", "versions", "ship", "saving", "commands", "workbench"] %}
 <script src="/static/js/build/drishti_{{ f }}.js?v={{ ASSET_V }}"></script>
 {% endfor %}
 {% endblock %}

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  The fixture harness of drishti-inputs, drishti-data and the grid's cell editing: no Drishti server (static files only; a stand-in
+  "server" in the page answers type-ahead, lazy tree levels, write-back and four eyes, and pushes a live feed through stand-in
+  EventSource and WebSocket classes). ?theme=light, ?density=compact|comfortable|terminal, ?fourEyes=1 (the grid's edits become
+  proposals). The Arrow part reads /hx-fixture/trades.arrow, which the browser test serves (tests/test_elements_inputs_browser.py).
+  Nothing inline: it runs under a strict CSP.
+-->
+<html lang="en" data-theme="terminal">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>drishti-inputs and drishti-data · fixture harness</title>
+<link rel="stylesheet" href="../../css/drishti_tokens.css">
+<link rel="stylesheet" href="../drishti-grid/drishti_grid.css">
+<link rel="stylesheet" href="drishti_inputs.css">
+<link rel="stylesheet" href="drishti_harness.css">
+</head>
+<body>
+<header class="hx-top">
+  <b class="hx-brand">drishti-inputs · drishti-data · grid editing</b>
+  <button type="button" id="hx-theme">Light / dark</button>
+  <span id="hx-log" class="hx-log" aria-live="off"></span>
+</header>
+<main class="hx-main" data-density="compact">
+  <section class="hx-card" aria-labelledby="hx-h-pickers">
+    <h2 id="hx-h-pickers">Pickers</h2>
+    <div class="hx-row">
+      <div class="hx-l"><span>Business date (US)</span><drishti-date id="hx-date" calendar="US" as-of="2026-11-06" label="Business date"></drishti-date></div>
+      <div class="hx-l"><span>Period</span><span id="hx-range"></span></div>
+      <div class="hx-l"><span>Books</span><span id="hx-tree"></span></div>
+      <div class="hx-l"><span>Currencies</span><span id="hx-ms"></span></div>
+      <div class="hx-l"><span>Counterparty</span><span id="hx-combo"></span></div>
+    </div>
+  </section>
+  <section class="hx-card" aria-labelledby="hx-h-filter">
+    <h2 id="hx-h-filter">Filter bar and an editable grid that follows it</h2>
+    <div id="hx-fbar"></div>
+    <div id="hx-grid" class="hx-grid"></div>
+  </section>
+  <section class="hx-card" aria-labelledby="hx-h-form">
+    <h2 id="hx-h-form">A form from a schema, with four eyes</h2>
+    <div id="hx-form"></div>
+  </section>
+  <section class="hx-card" aria-labelledby="hx-h-code">
+    <h2 id="hx-h-code">Code</h2>
+    <div class="hx-row hx-code-row">
+      <div class="hx-col"><h3>Rachana (completion, lint)</h3><div id="hx-code"></div></div>
+      <div class="hx-col"><h3>YAML, read-only</h3><div id="hx-yaml"></div><h3>Python</h3><div id="hx-py"></div></div>
+    </div>
+    <h3>Diff</h3>
+    <div id="hx-diff"></div>
+  </section>
+  <section class="hx-card" aria-labelledby="hx-h-data">
+    <h2 id="hx-h-data">Live and Arrow</h2>
+    <div class="hx-row"><span id="hx-live-state" class="hx-pill">idle</span><span id="hx-live-stats" class="hx-log"></span></div>
+    <div id="hx-live-grid" class="hx-grid hx-grid-small"></div>
+    <div class="hx-row"><span id="hx-arrow-state" class="hx-log">Arrow: not read</span></div>
+    <div id="hx-arrow-grid" class="hx-grid hx-grid-small"></div>
+  </section>
+</main>
+<script src="../drishti-core/drishti_core.js"></script>
+<script src="../drishti-grid/drishti_grid.js"></script>
+<script src="drishti_inputs.js"></script>
+<script src="../drishti-data/drishti_data.js"></script>
+<script src="drishti_harness.js"></script>
+</body>
+</html>

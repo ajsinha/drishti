@@ -33,6 +33,7 @@
   {% if FAVICON %}<link rel="icon" href="{{ FAVICON }}">{% else %}<link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
   <link rel="icon" type="image/svg+xml" href="/static/img/icons/drishti_favicon.svg?v={{ ASSET_V }}">{% endif %}
   <script src="/static/js/drishti_theme-init.js?v={{ ASSET_V }}"></script>
+  <script src="/static/elements/drishti-core/drishti_core.js?v={{ ASSET_V }}"></script>{# Drishti Elements' core, in the head so every script of the page finds it: formats, theme, API client, bus, a11y, resize handles (data-resize), keys, dialogs, toasts; the loader of the other libraries #}
   <link rel="stylesheet" href="/static/vendor/bootstrap/css/bootstrap.min.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/vendor/bootstrap-icons/bootstrap-icons.css?v={{ ASSET_V }}">
   <link rel="stylesheet" href="/static/css/drishti_tokens.css?v={{ ASSET_V }}">
@@ -67,7 +68,6 @@
   <script src="/static/js/drishti_colfilter.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_tables.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_phone.js?v={{ ASSET_V }}"></script>
-  <script src="/static/js/drishti_resize.js?v={{ ASSET_V }}"></script>{# resizable panels and columns: data-resize markup, one component #}
   <script src="/static/js/drishti_engines-menu.js?v={{ ASSET_V }}"></script>
   <script src="/static/js/drishti_settled.js?v={{ ASSET_V }}"></script>{# Drishti.settled(): the page-settled signal browser tests wait on; inert until asked #}
   {% if me %}<script src="/static/js/drishti_alerts.js?v={{ ASSET_V }}"></script>{% endif %}

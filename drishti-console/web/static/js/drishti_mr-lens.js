@@ -22,6 +22,7 @@
    (/api/pivot/... and /api/pivot/mr/...); this file only draws. Keys: H 1D/10D, [ and ] step the date, W the what-if tray. */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
   var S = window.Drishti.PivotScreen;
   if (!S || S.root.getAttribute("data-lens") !== "mr") { return; }
   var root = S.root;
@@ -31,12 +32,8 @@
 
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function isNum(v) { return typeof v === "number" && isFinite(v); }
-  function money(v) { return isNum(v) ? (v < 0 ? "−" : "") + Math.abs(v).toLocaleString("en-US", { maximumFractionDigits: 0 }) : "—"; }
-  function compact(v) {
-    if (!isNum(v)) { return "—"; }
-    var a = Math.abs(v), s = v < 0 ? "−" : "";
-    return a >= 1e9 ? s + (a / 1e9).toFixed(1) + "bn" : a >= 1e6 ? s + (a / 1e6).toFixed(1) + "m" : a >= 1e3 ? s + (a / 1e3).toFixed(1) + "k" : s + a.toFixed(0);
-  }
+  function money(v) { return isNum(v) ? F.formatNumber(v) : "—"; }
+  function compact(v) { return isNum(v) ? F.formatCompact(v, { decimals: 1, smallDecimals: 0 }) : "—"; }
   function pct(v, d) { return isNum(v) ? (v * 100).toFixed(d == null ? 1 : d) + "%" : "—"; }
   function mr(method, path, body) { return S.call(method, "/mr" + path, body); }
   function opts() { var v = S.view(); return (v && v.options) || {}; }

@@ -43,7 +43,7 @@ INTENTIONAL = {
     "unknown-kind": "a kind the client does not know says so (VIEWMODEL.md section 8); the macros draw an empty body",
     "header-role": "a panel header in a tabbed grid area: Chromium exposes it as a banner when the console's script turns the section into a "
                    "tabpanel after parsing; the renderer sets the role before the panel is in the page, and HTML-AAM says generic",
-    "resize-handles": "the console's resize handles are its chrome, bound by its own component (drishti_resize.js): a side column's "
+    "resize-handles": "the console's resize handles are its chrome, bound by its own component (drishti-core's resize): a side column's "
                       "splitter, a table's column handles and the screen grid's split (drag, arrows, Home or a double-click: as designed); "
                       "the library, for embeds and <drishti-report>, draws the grid's split with its own handle (1.2.0, unchanged)",
 }

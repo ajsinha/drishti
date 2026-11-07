@@ -19,6 +19,7 @@
    window Freeze and propose sends. */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
   var root = document.querySelector("[data-swin]");
   if (!root) return;
   var S = { scope: root.dataset.scope || "BANK", hierarchy: root.dataset.hierarchy || "MGMT", length: root.dataset.length || "",
@@ -36,14 +37,7 @@
     Object.keys(attrs || {}).forEach(function (k) { e.setAttribute(k, attrs[k]); });
     return e;
   }
-  function money(v) {
-    if (v === null || v === undefined || isNaN(v)) return "—";
-    var a = Math.abs(v), s = v < 0 ? "−" : "";
-    if (a >= 1e9) return s + (a / 1e9).toFixed(2) + "bn";
-    if (a >= 1e6) return s + (a / 1e6).toFixed(2) + "m";
-    if (a >= 1e3) return s + (a / 1e3).toFixed(1) + "k";
-    return s + Math.round(a);
-  }
+  var money = F.formatter("compact", { decimals: function (a, u) { return u === "k" ? 1 : !u ? 0 : 2; } });
   function whole(v) { return v === null || v === undefined || isNaN(v) ? "—" : Math.round(v).toLocaleString("en-US"); }
   function pct(v) { return v === null || v === undefined || isNaN(v) ? "—" : (v >= 0 ? "+" : "−") + Math.abs(v * 100).toFixed(1) + "%"; }
   function asOf() { var p = new URLSearchParams(location.search).get("asOf"); return p ? "&asOf=" + encodeURIComponent(p) : ""; }

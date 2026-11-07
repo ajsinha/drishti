@@ -13,7 +13,6 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /*
  * Resizable panels and columns: the one component every screen uses (no screen writes its own drag handle).
  *
@@ -43,7 +42,7 @@
  *   double-click reset it (the remembered width is forgotten). Below 640 px wide (phones) the handles are hidden and no remembered
  *   width is applied: the single-column layouts stay.
  *
- * Script API (window.Drishti.resize):
+ * Script API (window.Drishti.resize; the same as this module's exports once installResize has run in the page):
  *   scan(root)                         bind every data-resize element under root (done by itself on load and on DOM changes)
  *   handle(el, opts) -> el             the low-level handle the others are built on, for a screen with its own model of sizes
  *       opts: axis 'x' | 'y'; label; start(e) -> ctx; move(ctx, dx, dy, e); end(ctx); key(step, e) -> handled (step -1 / +1,
@@ -52,8 +51,20 @@
  *   reset(key)                         forget a remembered width set (all modes) and re-apply defaults
  *   phone()                            true when resizing is off (below 640 px)
  */
-(function () {
-  'use strict';
+
+let live = null;
+
+/**
+ * Starts the resize component in a page (drishti-core's bundle does it on load): binds every data-resize element now and as markup
+ * appears, re-applies widths on a mode change and on crossing the phone width, and sets window.Drishti.resize. Idempotent.
+ * @param {Window} window the page
+ * @returns {{scan: function(Element): void, handle: function(Element, Object): Element, reset: function(string): void, phone: function(): boolean}}
+ */
+export function installResize(window) {
+  if (live) { return live; }
+  const document = window.document;
+  const requestAnimationFrame = window.requestAnimationFrame.bind(window);
+  const getComputedStyle = window.getComputedStyle.bind(window);
   var NS = 'drishti.resize.', PHONE = '(max-width: 639.98px)', STEP = 16;
   var mq = window.matchMedia ? window.matchMedia(PHONE) : null;
   function phone() { return !!(mq && mq.matches); }
@@ -332,6 +343,32 @@
     }
     if (mq) { (mq.addEventListener ? mq.addEventListener.bind(mq, 'change') : mq.addListener.bind(mq))(reapply); }
   }
-  window.Drishti.resize = { scan: scan, handle: handle, reset: reset, phone: phone };
+  live = { scan: scan, handle: handle, reset: reset, phone: phone };
+  (window.Drishti = window.Drishti || {}).resize = live;
   if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', start); } else { start(); }
-})();
+  return live;
+}
+
+function need() {
+  if (!live) { throw new Error('resize: not installed in a page (installResize(window))'); }
+  return live;
+}
+/**
+ * Binds every data-resize element under root (done by itself on load and on DOM changes).
+ * @param {(Element|Document)} [root]
+ * @returns {void}
+ */
+export function scanResize(root) { need().scan(root); }
+/**
+ * The low-level handle the others are built on, for a screen with its own model of sizes.
+ * @param {Element} el
+ * @param {{axis: string, label: string, start: Function, move: Function, end: Function, key: Function, reset: Function, value: Function}} opts
+ * @returns {Element}
+ */
+export function resizeHandle(el, opts) { return need().handle(el, opts); }
+/**
+ * Forgets a remembered width set (all modes) and re-applies the defaults.
+ * @param {string} key the data-resize-key
+ * @returns {void}
+ */
+export function resetResize(key) { need().reset(key); }

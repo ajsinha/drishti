@@ -73,15 +73,9 @@ store.state.baseMoved = init.baseMoved || null;
   // ---- the parts ---------------------------------------------------------------------------------------------------------------
   var canvas, inspector, actions, data, versions, about, form, controls;
   var schemaP = fetch('/studio/schema').then(function (r) { return r.json(); });
-  var toastTimer = 0;
+  var toasts = new window.Drishti.elements.core.ToastTray({ bare: true, single: true, timeout: 8000 });     // one toast at a time, with its action (drishti-core)
   function toast(text, label, run) {
-    var old = $('[data-toast]'); if (old) { old.remove(); }
-    clearTimeout(toastTimer);
-    var t = WB.el('div', 'wb-toast', null, { 'data-toast': '' }), b = WB.el('button', 'btn-pill btn-accent', label, { type: 'button' });
-    t.appendChild(WB.el('span', null, text + ' · ')); t.appendChild(b);
-    b.addEventListener('click', function () { clearTimeout(toastTimer); t.remove(); run(); });
-    document.body.appendChild(t);
-    toastTimer = setTimeout(function () { t.remove(); }, 8000);
+    toasts.show({ className: 'wb-toast', attrs: { 'data-toast': '' }, text: text + ' · ', action: { label: label, className: 'btn-pill btn-accent', run: run } });
   }
   var ui = { toast: toast, design: function () { centre.show('design'); }, required: function (k) { return inspector ? inspector.required(k) : []; }, canvas: function () { return canvas; }, inspect: function (s, o) { if (s) { right.show('inspector'); } inspector.show(s, o); }, selection: function () { return canvas.selected(); } };
   actions = WB.Actions(store, ui);

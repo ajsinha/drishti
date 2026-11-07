@@ -474,12 +474,9 @@
     q('[data-dialog-title]').textContent = title;
     var host = clear(q('[data-dialog-body]'));
     host.appendChild(body);
-    if (!d.open) { d.showModal(); }
-    var f = host.querySelector('input, select, textarea, button');
-    if (f) { f.focus(); }
-    return d;
+    return window.Drishti.elements.core.openDialog(d, { within: host });        // modal, its first field focused, focus given back on close
   }
-  function closeDialog() { var d = q('[data-dialog]'); if (d.open) { d.close(); } }
+  function closeDialog() { window.Drishti.elements.core.closeDialog(q('[data-dialog]')); }
   E.closeDialog = closeDialog;
 
   function doHistory() {

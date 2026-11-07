@@ -23,6 +23,7 @@
    Drishti.ExposureCharts.money(v)            1.23m, 412k, 2.31bn */
 (function () {
   "use strict";
+  var F = window.Drishti.elements.core;                                       // numbers by the server's rules (drishti-core)
   var NS = "http://www.w3.org/2000/svg";
 
   function el(tag, attrs, parent) {
@@ -32,14 +33,7 @@
     return e;
   }
 
-  function money(v) {
-    if (v === null || v === undefined || isNaN(v)) return "—";
-    var a = Math.abs(v), s = v < 0 ? "-" : "";
-    if (a >= 1e9) return s + (a / 1e9).toFixed(2) + "bn";
-    if (a >= 1e6) return s + (a / 1e6).toFixed(1) + "m";
-    if (a >= 1e3) return s + (a / 1e3).toFixed(0) + "k";
-    return s + a.toFixed(0);
-  }
+  var money = F.formatter("compact", { decimals: function (a, u) { return u === "bn" ? 2 : u === "m" ? 1 : 0; }, minus: "-" });
 
   var tip = null;
   function showTip(text, ev) {
