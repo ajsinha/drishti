@@ -48,6 +48,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Pivot](#pivot-slice-a-table-your-way) | Rows, columns, values and filters over a table or a search's results, by drag or by key; totals, drill-down, chart, export |
 | [Tables and models](#tables-and-models-the-editors) | The editors of virtual tables, semantic models and Python-driven tables: live YAML, a preview as you, review before live |
 | [Keyboard](#keyboard) | Every key in one table |
+| [Search everything](#search-everything-altk) | `Alt+K`: one box over entities, commands, screens, Help and what you can build |
 | [Live updates](#live-updates), [Business dates](#business-dates-live-or-a-day-in-the-past), [Compare](#compare-what-changed) | Ticking values, past dates, what changed |
 | [Search by value](#search-by-value) | `where` searches, sorting and limits |
 | [Calc: Python on a view](#altc--calc-python-on-a-view) | `Alt+C`: Python in your browser on what you are looking at |
@@ -139,6 +140,7 @@ takes you back where you were; *Open the terminal* goes to the terminal instead.
 
 **Beside the brand** (click it to go back to `/`) are the [command line](#the-command-line), which takes the
 free space, and the [business date](#business-dates-live-or-a-day-in-the-past) box.
+The round **search button** after the command line (or `Alt+K` anywhere) opens [the global search](#search-everything-altk).
 Below 1100 pixels wide they move to a line of their own.
 
 **Then the menus**: **Views**, **Build** and **Help** for everyone, **Engines** where your role opens a compute engine, **BI** where you hold the `bi` power, **Admin** only for administrators: Views, Engines, BI, Build, Admin, Help for a risk administrator, and Views, BI, Build, Help for a role that opens no engine. Below 1280 pixels they show as icons only. Each opens a wide panel
@@ -1494,8 +1496,19 @@ wins: a site that says "never more than glance" for a heavy panel keeps it so, w
 
 ## Keyboard
 
+Press **`?`** on any screen (with the focus not in a text field) for **the keys of the screen you are on**, grouped: this screen's, those
+of a panel or field, those of an open dialog, and those that work everywhere. `Esc` (or `?` again) closes the list and gives the focus
+back. The **Keys** button in the footer opens the same list. On a view, `?` opens [About this page](#about-this-page) instead; its
+footer's Keys button still lists the keys.
+
+Every key belongs to one place, so two keys never fight: a dialog's own keys come first, then those of the panel or field that has the
+focus, then the screen's, then the keys that work everywhere. **Keys never act while you type** in a text field, a drop-down or an
+editor: typing `?` or `n` there types it (the few exceptions are named in the table, such as `Alt+K`, `Alt+C` and `Ctrl+S`).
+
 | Key | Does |
 |---|---|
+| `?` | The keys of this screen (on a view: [About this page](#about-this-page)) |
+| `Alt+K` | [Search everything](#search-everything-altk): entities, commands, screens, Help and what you can build; also from inside a field |
 | `/` | Focus the command line, from anywhere |
 | `↑` `↓` | In the command line: move through the suggestions. In a selected table: move the selected row |
 | `Tab` | Complete the highlighted suggestion |
@@ -1507,7 +1520,6 @@ wins: a site that says "never more than glance" for a heavy panel keeps it so, w
 | `Alt`+`Shift`+`X` | Clear all [column filters](#filter-a-table-like-excel) (and the filter box) of the panel that has the focus |
 | `K` | On a focused table: [chart it](#chart-any-table); `Shift`+`K` on a history page, where `k` is the previous day |
 | `F1` | Help for the page you are on. On a view it opens [About this page](#about-this-page); `F1` again goes to the guide |
-| `?` | On a view (focus not in a text field): open or close [About this page](#about-this-page) |
 | `F2`–`F6` | Jump to the panel that shows that key in its header |
 | `Alt`+`Shift`+`1`…`9`, `0` | The same as `F1`…`F9`, `F10` on a view. On Windows a laptop's F-keys are media keys unless `Fn` is held (or Fn Lock is on, often `Fn`+`Esc`), and Edge keeps `F9` for its Immersive Reader: these always work |
 | `F7` | Open the main linked entity (for a trade: its netting set) |
@@ -1526,6 +1538,24 @@ wins: a site that says "never more than glance" for a heavy panel keeps it so, w
 | `←` `→` `Home` | On a panel's or a column's resize line: move it (`Shift`: further), or reset it ([Resize panels and columns](#resize-panels-and-columns)) |
 
 The keys a view offers are also buttons along the bottom of the screen, so you can click them.
+
+### Search everything (Alt+K)
+
+`Alt+K` (`Option+K` on a Mac), or the round search button in the top bar, opens one search box over everything you may see. Type a
+few letters: the answer comes as you type, **grouped** by kind, the best group first and the best match first in each group:
+
+| Group | What it finds | Opens |
+|---|---|---|
+| **Entities** | Trades, counterparties, books and every other entity the server's type-ahead finds for you | The entity's view |
+| **Commands** | Mnemonics and reserved words | The command's page |
+| **Screens** | The pages of the top bar's menus that you see (`pick lists` finds *Views › Search & pick lists*) | The page |
+| **Help pages** | Guides and tutorials whose text holds every word | The Help page |
+| **Things you can build** | Published reports and boards, and your own designs | The report, board or design |
+
+`↓` `↑` move through the results, `Enter` opens the highlighted one, `Esc` closes the list and a second `Esc` the search (the focus goes
+back where it was). It shows only what you may open: your entitlements, your edition, your lens and the engines your role opens decide,
+as they do for the menus and the command line; two people searching for the same word can see different answers. The command line's
+suggestions and Help's search box are the same search, each over its own part (commands, Help pages).
 
 ### F9 · Raw JSON
 

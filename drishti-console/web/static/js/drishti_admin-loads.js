@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Admin → Packs → Data loads: the expectations settings dialog. The tables and filters are plain server-rendered HTML; this only
    saves and resets the settings (same-origin /admin/api/loads/...), and adds two keys: "/" focuses the kind filter, "e" opens settings. */
 (function () {

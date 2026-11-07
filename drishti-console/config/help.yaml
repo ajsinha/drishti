@@ -459,6 +459,8 @@ knowledge:
   fund: knowledge-companies-funds-and-etfs#term-look-through            # FUND (the fact sheet and its Look-through tab)
   fund-holder: knowledge-companies-funds-and-etfs#term-held-by-funds    # HELD
   index-funds: knowledge-companies-funds-and-etfs#term-index-fund       # TRACK
+  keyboard: user-guide#keyboard                                   # the ? list's link: every key of the console (drishti_keys.js)
+  global-search: user-guide#search-everything-altk                # the global search, Alt+K (drishti_search-box.js)
 
 # F1 opens the guide for the current screen.
 contextual:

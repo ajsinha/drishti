@@ -3602,7 +3602,7 @@ they are not a public API and have no stability promise, but a script that must 
 
 | Routes | What they do | Server calls behind them |
 |---|---|---|
-| `GET /api/suggest`, `POST /api/resolve`, `GET /api/history`, `PUT /api/aliases` | the command line: type-ahead, run a command, recent commands, aliases | `/command/suggest`, `/command`, `/command/history`, `/command/aliases` |
+| `GET /api/search?in=command\|help\|all&q=...`, `POST /api/resolve`, `GET /api/history`, `PUT /api/aliases` | the one search (below); run a command, recent commands, aliases | `/command/suggest` (entities and commands), the BI catalogue and `/designs` (what you can build), `/command`, `/command/history`, `/command/aliases` |
 | `GET /api/view/{kind}/{id}`, `GET /api/raw/{kind}/{id}`, `GET /api/series/{kind}/{id}` | a view, the raw document, a field over time | `/views/{kind}/{id}`, `/entities/{kind}/{id}/raw`, `/history/{kind}/{id}/series` |
 | `GET /api/stream/{kind}/{id}`, `GET /api/channel`, `GET /api/channel/who`, `POST /api/channel/{cid}` | live updates: one stream per browser (the channel) to which views subscribe | `/views/{kind}/{id}/stream`, `/me/alerts/stream`, `/me/monitors/{name}/stream` |
 | `GET /api/monitor-stream/{name}`, `GET /api/alerts/stream` | a monitor's and the user's alert stream | `/me/monitors/{name}/stream`, `/me/alerts/stream` |
@@ -3618,6 +3618,21 @@ they are not a public API and have no stability promise, but a script that must 
 | `/admin/api/...`, `/admin/connectors/api/...`, `/admin/collab/api/...`, `/admin/embedding/api/...`, `/admin/ai/api/overview` | the Admin pages' actions: users, roles, packs (load, unload, deploy, roll back, registry, sample mode), loads configuration, token revoke, cache purge, retry now, connectors, collaboration compliance, embedded applications | the matching `/admin/...` endpoints; administrators only |
 | `/build/pack/api/...` | New pack from schemas (plan, jobs, drafts, preview, bundle) | none: the console builds the pack and hands it to the Build workbench or Deploy |
 | `POST /m/api/{name}`, `/m/api/{name}/delete`, `POST /alerts/api/{name}`, `/alerts/api/{name}/delete`, `POST /w/api/{name}`, `/w/api/{name}/share`, `/w/api/{name}/delete` | save and delete monitors, alert rules and workspaces | `/me/monitors/...`, `/me/alerts/rules/...`, `/me/workspaces/...` |
+
+**The one search, `GET /api/search`.** The command line's type-ahead (`in=command`), Help's search box (`in=help`) and the global search
+(`in=all`, `Alt+K`) ask this one route. It answers `{query, where, groups: [{group, label, items}], items, failed, ms}`: `groups` are the kinds
+that found something (`entity`, `command`, `screen`, `help`, `build`), the best group first and each best first; `items` is the same results in
+that order, each with `group`, `title`, `subtitle` and, where it opens something, `href` (an entity also carries `mnemonic`, `kind`,
+`id` and `complete`; `in=all` and `in=help` rank by `score`). Only what the signed-in person may see is returned: the server's entitlements for entities, the menus' rules for screens,
+Help's own rule for its pages, the BI catalogue for reports and boards, and the edition, lens and engine switches throughout. A source that fails
+is named in `failed` and the others still answer; any other `in` is `400`. `in=command` keeps the server's own order (its ranking).
+
+```bash
+curl -s -b "drishti_session=$SID" 'http://localhost:17480/api/search?in=all&q=northbridge' | jq '.groups[] | {group, n: (.items | length)}'
+```
+
+There is no `GET /api/suggest` any more: ask `GET /api/search?in=command&q=...` and read `items`. The server's own
+`GET /api/v1/command/suggest` is unchanged.
 
 The BI, Build, Studio, Forms, Reports and Export pages have JSON routes of their own beside their pages (under `/bi/`, `/build/`, `/studio/`, `/forms/`, `/reports/` and `/export/`);
 they follow the same rules and each maps to one endpoint of the BI, Designs, Sutra or search sections above.

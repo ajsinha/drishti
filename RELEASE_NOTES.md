@@ -27,6 +27,15 @@
   and leaves the old files to be removed. Shipped content is migrated already.
 - **Pivot formulas:** `x == None` and `x != None` now test for a missing value (as Rachana's `x == null` does); before they were never true.
 
+## Upgrade: one search (the console's `/api/suggest` is removed)
+
+- **A script that called the console's `GET /api/suggest?q=...`** asks `GET /api/search?in=command&q=...` instead and reads `items`
+  (the same suggestions, in the same order, each now tagged with its `group`). `in=help` searches Help's pages and `in=all` everything
+  (entities, commands, screens, Help pages, things you can build), grouped ([API_GUIDE.md](docs/guides/API_GUIDE.md#the-consoles-own-json-routes)).
+  The server's `GET /api/v1/command/suggest` is unchanged.
+- **Keys:** `?` now lists the keys of the screen you are on (on a view it still opens About this page), and `Alt+K` opens the global
+  search. No key acts while you type in a field; the VaR screen's `B`, `M`, `H` and `N` keep their meaning.
+
 ## Upgrade: one Python runtime (Python runs on the server's compute pool)
 
 - **Every Python run is the server's** (python visuals and measures, Python datasets and tables, Notebook cells, the Transform editor), on the

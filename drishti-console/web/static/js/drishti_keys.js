@@ -175,7 +175,7 @@
     overlay.innerHTML = '<div class="drishti_keys-card" tabindex="-1"><header><h2 id="drishtiKeysTitle">Keys on this screen</h2>' +
       '<button type="button" class="btn-pill btn-ghost" data-keys-close aria-label="Close">Esc</button></header>' +
       '<div class="drishti_keys-body">' + draw() + '</div>' +
-      '<p class="drishti_keys-foot">Keys never act while you type in a field. Every key: Help → User guide → Keyboard.</p></div>';
+      '<p class="drishti_keys-foot">Keys never act while you type in a field. <a href="/help/keyboard">Every key of the console</a></p></div>';
     overlay.hidden = false;
     overlay.querySelector('.drishti_keys-card').focus();
   }

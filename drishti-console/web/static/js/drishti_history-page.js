@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* The history page (TRD 1000015 30 <GO>), keyboard first: ↑↓ (j k) move the selected day, ←→ the column, Enter opens the day's view
    as it was, C changes only, D diff, E export, Shift+K a chart of the days, R a new range, 1 3 6 Y T the market ranges, P the next chart field, Alt+S copies a
    link, ? the keys, Esc closes or goes back to today's view. Keys are ignored while typing in a field. The market shape draws its

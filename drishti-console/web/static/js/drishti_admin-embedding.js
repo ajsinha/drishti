@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Admin → Embedding. The list is server-rendered; this registers an application (New application dialog), shows a client secret once
    (after create and after rotate), enables, disables and deletes, filters the rows, and adds two keys: "n" opens the new-application
    dialog and "/" focuses the filter. Every call is same-origin JSON to /admin/embedding/api/...; the page is reloaded after a change,

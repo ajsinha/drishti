@@ -19,6 +19,34 @@
 
 - **The documentation plan, for approval** ([DOCS_PLAN.md](docs/architecture/DOCS_PLAN.md)): 22 major features, each with one guide and one tutorial; every existing document kept, merged, generated or deleted (337 → about 138 under `docs/`); the data contracts from 118 pages to 28 with generated JSON examples; the generated references and the docs gates; the order of work around 2.9.11.e and f; open questions.
 
+## 2.9.11.f (unreleased)
+
+- **One search** (lean & streamlined): `core/search.py` behind one console route, `GET /api/search?in=command|help|all`, answers the command
+  line's type-ahead (`in=command`, the server's order kept), Help's search box and results page and `/what` (`in=help`), and a new **global
+  search** (`in=all`): entities, commands, screens, Help pages and things you can build, grouped by kind, best group and best match first,
+  each source in parallel and a failing one named in `failed` while the rest answer. It follows entitlements (the server's), the menus'
+  rules (screens), Help's rule (pages), the BI catalogue (reports and boards), the edition, the lens and the engine switches.
+  **Removed:** the console's `GET /api/suggest`, the command line's own type-ahead in `api_routes.py` and `Library.search` (one search
+  instead of three). One client component, `drishti_search-box.js`, runs the command line, Help's box and the global search (`Alt+K`, or
+  the top bar's new search button): ARIA combobox and listbox, debounced, a stale request aborted. Tests: `test_search.py`; 14 test files
+  repointed to `/api/search`.
+- **One keymap**: `drishti_keys.js` holds every key a page answers, with its scope (dialog, panel, screen, global; the most specific
+  wins), its area, a description, and the rule that **a key never acts while you type** in a field. **`?` lists the keys of the screen
+  you are on** (and the footer's new **Keys** button; on a view `?` stays About this page), from the same registrations; History's own keys
+  dialog is replaced by it. Every page-level key handler moves into it (the VaR screen's B, M, H, N and Alt+B
+  included); left outside, each with its reason: the engines menu's filter box (widget-internal), the drill-down's fallback for a host
+  page without the keymap, and BI and the pivot (#biKeys: folded after wip/bi-delete merges). A table's, a panel's zoom and About this
+  page's own keys stay on their widgets and are described to the keymap so the list shows them.
+  - **`test_keymap.py`** (static, in the gate): every registration names a scope and an area, chords are written canonically, no two
+    claim one key in one scope and area, ids are unique, no script binds keys on document or window outside the allow-list (and the
+    allow-list has no stale entry), widget keys are described. **`test_keymap_browser.py`**: the `?` list (open, focus, Esc, the footer
+    button, `?` typed in a field is a character) and the global search (Alt+K from anywhere, grouped answer, ↓ Enter opens, Esc twice).
+  - **Timings** (TIMINGS_PLACEHOLDER)
+- **Docs:** USER_GUIDE (Keyboard: the `?` list and the rules; *Search everything (Alt+K)*), API_GUIDE (`/api/search`; `/api/suggest`
+  removed), RELEASE_NOTES (upgrade note), Help addresses `/help/keyboard` and `/help/global-search`.
+- **Candidates to fold later:** the embed element `<drishti-search>` and the server's `/api/v1/embed/search` are untouched; they search
+  for embedded hosts and could become `in=` modes of the one search.
+
 ## 2.9.11.d (unreleased)
 
 - **One Python runtime: every Python run on the server's compute pools** (SYNTHESIS A11, Brief 3; PYTHON_COMPUTE.md section 19; lean & streamlined):

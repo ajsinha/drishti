@@ -13,6 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Help centre (mock-up help-hub/A): an old address /help#cat-<id> opens its section's page; on a section's page the rows filter as you
    type (a group with none left folds away), falling back to a full-text search of the section; "all of Help" carries the words; code
    examples copy. */

@@ -271,21 +271,18 @@
   });
 
   // ---------------------------------------------------------------------------------------------------------------- keys B, M, H, Esc
-  function typing(t) {
-    return !!(t && t.closest && (t.closest("input, textarea, select, [contenteditable=''], [contenteditable=true], [data-var-basket], dialog")));
+  function aside(t) {                    // the basket's sheet and an open dialog keep their own keys (a text field's: the keymap's rule)
+    return !!(t && t.closest && t.closest("[data-var-basket], dialog"));
   }
-  document.addEventListener("keydown", function (ev) {
-    if (ev.defaultPrevented || ev.ctrlKey || ev.metaKey || ev.altKey || dialogOpen()) return;
-    if (ev.key === "Escape") {
-      if (isOpen() && !typing(ev.target)) { ev.preventDefault(); closeHow(); }
-      return;
-    }
-    if (typing(ev.target)) return;
-    var k = ev.key.toLowerCase();
-    if (k === "b" && P.system) { ev.preventDefault(); open("system"); }
-    else if (k === "m" && P.mine) { ev.preventDefault(); open("mine"); }
-    else if (k === "h" && drawer) { ev.preventDefault(); if (isOpen()) closeHow(); else openHow(); }
-  });
+  var K = window.Drishti.keys, free = function (ev) { return !dialogOpen() && !aside(ev.target); };
+  K.register({ id: "var.baskets.system", keys: ["B", "Shift+B"], scope: "screen", area: "var", group: "VaR", description: "System baskets: the bank's portfolios",
+    when: function (ev) { return free(ev) && !!P.system; }, run: function () { open("system"); } });
+  K.register({ id: "var.baskets.mine", keys: ["M", "Shift+M"], scope: "screen", area: "var", group: "VaR", description: "My baskets: saved, mine and shared with me",
+    when: function (ev) { return free(ev) && !!P.mine; }, run: function () { open("mine"); } });
+  K.register({ id: "var.how", keys: ["H", "Shift+H"], scope: "screen", area: "var", group: "VaR", description: "How it was calculated: open or close the drawer",
+    when: function (ev) { return free(ev) && !!drawer; }, run: function () { if (isOpen()) closeHow(); else openHow(); } });
+  K.register({ id: "var.how.close", keys: ["Escape"], scope: "dialog", area: "var-how", description: "Close How it was calculated",
+    open: function () { return isOpen(); }, when: free, run: function () { closeHow(); } });
 
   window.Drishti.VarLayout = { setItems: setItems, mark: markCurrent, open: open, close: close, openHow: openHow, closeHow: closeHow, isOpen: isOpen };
 })();
