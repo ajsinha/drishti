@@ -73,10 +73,11 @@
   }
   /** init(root, options): the console's tables under root (the document or a ShadowRoot), now and as panels are swapped in.
       options.scope names the page for remembered state (default: the path); options.chart offers Chart any table inside a shadow root
-      too (the client-side renderer's behaviours: 'console'; the dialog opens over the host's page). Returns {scan, dispose}. */
+      too (the client-side renderer's behaviours: 'console'; the dialog opens over the host's page); options.grid: drishti-grid, when the
+      host imports it rather than the page loading its bundle. Returns {scan, dispose}. */
   function init(root, options) {
-    var G = window.Drishti.elements && window.Drishti.elements.grid;
     options = options || {};
+    var G = options.grid || (window.Drishti.elements && window.Drishti.elements.grid);   // a host that imports drishti-grid gives it
     if (!G) { return { scan: function () {}, dispose: function () {} }; }
     // the table's keys are the grid's own (bound on the table and on root, so a host page's keys are untouched); on a console page the keymap lists them
     if (root === document && window.Drishti.keys && root.querySelector('table.tbl')) {

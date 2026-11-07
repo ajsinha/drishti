@@ -1026,6 +1026,8 @@
     var strip = __m["src/drishti_view.js"].strip;
     var personFetch = __m["src/drishti_net.js"].personFetch;
     var drawNestedPivots = __m["src/drishti_nested.js"].drawNestedPivots;
+    var consoleTables = __lib("drishti-grid").consoleTables;
+    var textSortKey = __lib("drishti-core").textSortKey, compareTextKeys = __lib("drishti-core").compareTextKeys;
     const SCRIPTS = ['colfilter', 'tables', 'zoom', 'multiselect', 'controls'];
     const loaded = () => assets.memoised('console-behaviours', async () => {
       for (const n of SCRIPTS) { await assets.script('js/drishti_' + n + '.js'); }
@@ -1043,7 +1045,8 @@
       const scope = (o.server || location.origin) + '|' + ref.kind + '/' + ref.id;
       const mods = {};
       const start = (name, ...args) => { try { return reg[name] && reg[name].init(...args); } catch (e) { if (window.console) { console.warn('drishti-renderer: ' + name + ' not started', e); } return null; } };
-      mods.tables = start('tables', root, { scope, chart: true });
+      if (reg.colFilter && reg.colFilter.useSortKeys) { reg.colFilter.useSortKeys(textSortKey, compareTextKeys); }
+      mods.tables = start('tables', root, { scope, chart: true, grid: { consoleTables } });   // the tables are drishti-grid's; the console's host adds the funnels and the chart
       mods.zoom = start('zoom', root);
       if (view && (s.vm || {}).controls && (s.vm.controls || []).length && typeof o.panelsUrl === 'function') {
         view.setAttribute('data-controls', JSON.stringify(s.vm.controls)); view.setAttribute('data-selects', JSON.stringify(s.vm.selects || []));
