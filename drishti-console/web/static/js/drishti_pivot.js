@@ -32,7 +32,10 @@
   var state = {catalogue: null, answer: null, diff: null, grid: null, selection: [], chart: null, savedView: null, slicers: [], force: false,
     how: null, decorators: [], fields: []};
   var sw = function () { return window.Drishti.PivotSwitches || null; };
-  var fmt = G ? G.measureText : function (v) { return v == null ? "" : String(v); };
+  // the grid's figure text by the answer's own fields; a source's measure of before units that counts trades reads as a count (the
+  // providers' knowledge stays here and in their packs, never in drishti-grid)
+  var unitOf = function (m) { return m && (m.unit === null || m.unit === undefined) && /^trades/.test(m.id || "") ? Object.assign({}, m, {unit: "count"}) : m; };
+  var fmt = G ? function (v, m) { return G.measureText(v, unitOf(m)); } : function (v) { return v == null ? "" : String(v); };
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return {"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]; });
@@ -488,7 +491,7 @@
     var gr = state.grid = new G.Grid(host, {
       columns: cols, layout: "wells", density: "compact", title: c.title || c.source, subtitle: c.masked ? c.masked + " masked for you" : "",
       label: "The pivot: arrows move, right arrow opens a row, left closes it, Shift+right opens every level below, E explains a figure",
-      clientAggregation: false, serverPivot: ask, serverFuncs: SERVER_FUNCS, valueFuncs: ["sum", "count", "avg", "min", "max", "count_distinct"], pivotFormat: G.answerFormat, explain: explain, decorateCell: decorate,
+      clientAggregation: false, serverPivot: ask, serverFuncs: SERVER_FUNCS, valueFuncs: ["sum", "count", "avg", "min", "max", "count_distinct"], pivotFormat: function (m) { return G.answerFormat(unitOf(m)); }, explain: explain, decorateCell: decorate,
       drillThrough: drillThrough, members: function (colId) { return membersOf(colId, filtersBut(colId)); },
       conditionalFormats: rulesOf(view.formats), rowSelection: "multiple"});
     // no expandTo (a view of before): the server's default, every column level open

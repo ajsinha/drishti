@@ -37,7 +37,7 @@ CASES = [
     (0.1234, {"id": "sum(NOTIONAL)", "unit": "money", "showAs": "pct-grand"}, "12.34%"),
     (0.5, {"id": "corr(A,B)", "unit": ""}, "0.50"),                                         # a pure number keeps its decimals
     (2.5e9, {"id": "sum(NOTIONAL)", "unit": "money"}, "2.50 bn"),
-    (7.0, {"id": "trades"}, "7"),                                                           # an answer without units
+    (7.0, {"id": "count(TRADE_ID)"}, "7"),                                                  # an answer without units: a count by its function
     (None, {"id": "mode(SYSTEM)", "unit": ""}, ""),
 ]
 

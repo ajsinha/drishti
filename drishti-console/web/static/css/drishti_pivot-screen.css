@@ -39,8 +39,12 @@
 .pv-grid .dg-cell.pv-commented { box-shadow: inset -6px 6px 0 -3px var(--d-accent); }
 .pv-grid .dg-cell.pv-commented.pv-resolved { box-shadow: inset -6px 6px 0 -3px var(--d-border); }
 .pv-paths { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; margin-top: 6px; font-size: 12px; }
-.pv-paths .pv-input { width: 16em; display: inline-block; }
-.pv-sugg { display: inline-flex; gap: 6px; align-items: center; overflow-wrap: anywhere; }
+.pv-paths { min-width: 0; }
+.pv-paths .pv-input { width: min(16em, 55vw); display: inline-block; }
+.pv-paths [data-pv-paths] { display: flex; flex-wrap: wrap; gap: 4px 10px; flex-basis: 100%; min-width: 0; }
+.pv-sugg { display: inline-flex; flex-wrap: wrap; gap: 6px; align-items: center; max-width: 100%; overflow-wrap: anywhere; }
+.pv-sugg .pv-btn { white-space: normal; overflow-wrap: anywhere; max-width: 100%; }
+.pv-grid, .pv-gridcard { min-width: 0; max-width: 100%; }
 .pv-x { background: none; border: 0; color: var(--d-muted); cursor: pointer; font-size: 14px; line-height: 1; }
 .pv-pop { font-size: 12px; }
 .pv-rows-t { border-collapse: collapse; font-size: 12px; }

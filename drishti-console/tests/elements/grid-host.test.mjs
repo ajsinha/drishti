@@ -80,7 +80,8 @@ test('measureText: units, show-as and text, never a computation', () => {
   assert.equal(G.measureText('a<b', {}), 'a<b');
   assert.equal(G.measureText(2.5e9, { unit: 'money' }), '2.50 bn');
   assert.equal(G.measureText(-4, { unit: 'count' }), '-4');
-  assert.equal(G.measureText(7, { id: 'trades' }), '7');
+  assert.equal(G.measureText(7, { id: 'count(TRADE_ID)' }), '7');
+  assert.equal(G.measureText(7, { id: 'trades' }), '7.00');            // a provider's own names are the host's to read (the Pivot screen)
   assert.equal(G.measureText(null, {}), '');
   assert.equal(G.answerFormat({ showAs: 'rank' })(2), '2');
 });

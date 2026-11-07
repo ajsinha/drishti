@@ -584,7 +584,7 @@
       const showAs = m && m.showAs ? String(m.showAs) : '';
       if (showAs.indexOf('pct') === 0) { return (v * 100).toFixed(2) + '%'; }
       const whole = showAs === 'rank' || showAs.indexOf('ntile:') === 0
-        || (m && (m.unit === 'count' || ((m.unit === null || m.unit === undefined) && /^count|^trades/.test(m.id || ''))));   // no unit: an answer of before units
+        || (m && (m.unit === 'count' || ((m.unit === null || m.unit === undefined) && /^count/.test(m.id || ''))));   // no unit: a count by its function
       if (whole) { return Math.round(v).toLocaleString('en-US'); }
       const a = Math.abs(v);
       if (a >= 1e9) { return (v / 1e9).toFixed(2) + ' bn'; }
