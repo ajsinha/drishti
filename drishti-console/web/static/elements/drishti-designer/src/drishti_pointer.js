@@ -173,3 +173,38 @@ export class DragHub {
     });
   }
 }
+
+/**
+ * A list whose rows a person re-orders by dragging (a card list, a device's order): one pointer drag per press on a row (not on its
+ * buttons and fields); the row under the pointer is marked; letting go calls onMove(from, to) with the rows' indexes. The keys that do
+ * the same (Alt+arrows, buttons) are the host's.
+ * @param {Element} list
+ * @param {{row: string, canDrag: function(Element): boolean, canDrop: function(Element): boolean, onMove: function(number, number): void,
+ *   dragClass: string, overClass: string}} o row: the rows' selector; dragClass and overClass: the moving row's and the target's classes
+ * @returns {function(): void} stops it
+ */
+export function sortableList(list, o) {
+  const rows = () => Array.prototype.filter.call(list.children, (x) => x.matches(o.row));
+  const down = (e) => {
+    const li = e.target.closest(o.row);
+    if (!li || li.parentNode !== list || (e.pointerType === 'mouse' && e.button !== 0) || e.target.closest('button, input, select, textarea, label, a')) { return; }
+    if (o.canDrag && !o.canDrag(li)) { return; }
+    let over = null;
+    const mark = (x) => { if (over && o.overClass) { over.classList.remove(o.overClass); } over = x; if (x && o.overClass) { x.classList.add(o.overClass); } };
+    trackPointer(e, {
+      start: () => { if (o.dragClass) { li.classList.add(o.dragClass); } },
+      move: (ev) => {
+        const t = list.ownerDocument.elementFromPoint(ev.clientX, ev.clientY), r = t && t.closest(o.row);
+        mark(r && r.parentNode === list && r !== li && (!o.canDrop || o.canDrop(r)) ? r : null);
+      },
+      end: (ev, committed) => {
+        if (o.dragClass) { li.classList.remove(o.dragClass); }
+        const all = rows(), from = all.indexOf(li), to = over ? all.indexOf(over) : -1;
+        mark(null);
+        if (committed && to >= 0 && to !== from) { o.onMove(from, to); }
+      }
+    });
+  };
+  list.addEventListener('pointerdown', down);
+  return () => list.removeEventListener('pointerdown', down);
+}

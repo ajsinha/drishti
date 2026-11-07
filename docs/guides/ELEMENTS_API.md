@@ -8894,6 +8894,17 @@ Starts dragging a payload from a press (a ghost follows the pointer; the target 
 
 Returns `void`.
 
+#### `sortableList(list, o)`
+
+A list whose rows a person re-orders by dragging (a card list, a device's order): one pointer drag per press on a row (not on its buttons and fields); the row under the pointer is marked; letting go calls onMove(from, to) with the rows' indexes. The keys that do the same (Alt+arrows, buttons) are the host's.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `list` | `Element` |  |
+| `o` | `{row: string, canDrag: function(Element): boolean, canDrop: function(Element): boolean, onMove: function(number, number): void, dragClass: string, overClass: string}` | row: the rows' selector; dragClass and overClass: the moving row's and the target's classes |
+
+Returns `function(): void`: stops it.
+
 ### drishti_layout-flow.js
 
 #### `flowHit(canvas, x, y)`

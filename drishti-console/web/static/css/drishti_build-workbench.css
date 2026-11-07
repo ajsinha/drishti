@@ -275,6 +275,7 @@ body.dd-dragging, body.dd-dragging * { cursor: grabbing !important; user-select:
 .wbf-card { border: 1px solid var(--d-border); border-radius: 8px; background: var(--d-surface); padding: .35rem .5rem; }
 .wbf-card:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
 .wbf-drag { opacity: .5; }
+.wbf-over { box-shadow: 0 -3px 0 var(--d-accent); }
 .wbf-head { display: flex; align-items: center; gap: .35rem; }
 .wbf-grip { cursor: grab; color: var(--d-muted); padding: 0 .2rem; }
 .wbf-path { flex: 1; min-width: 0; overflow-wrap: anywhere; }

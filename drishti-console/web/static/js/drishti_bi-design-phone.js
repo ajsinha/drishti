@@ -32,9 +32,12 @@
     const word = tablet ? 'a tablet' : 'a phone';
     const q = D.q;
     const list = q('[data-' + device + '-list]'), screen = q('[data-' + device + '-preview]');
-    let dragging = null, tidying = false;
+    let tidying = false;
 
     const layouts = () => (D.model.layouts && D.model.layouts[device]) || {};
+    const shownRow = (li) => !D.readOnly && li.getAttribute('data-hidden') === 'no';
+    window.Drishti.elements.designer.sortableList(list, { row: '.bi-phone-row', canDrag: shownRow, canDrop: shownRow, dragClass: 'bi-phone-drag', overClass: 'bi-phone-over',      // a row dragged to another place (drishti-designer)
+      onMove: (from, to) => move(rowsOf(), from, to, 'Reorder on ' + word) });
     const titleOf = (v) => v.title || v.id;
 
     /** The rows of the list: the shown visuals in the device's order, then the hidden ones. */
@@ -87,7 +90,7 @@
         const wide = tablet ? h('input', { type: 'checkbox', 'data-tablet-wide': v.id, 'aria-label': 'Whole width for ' + titleOf(v) + ' on a tablet' }) : null;
         if (wide) { wide.checked = r.wide; wide.disabled = r.hidden; }
         const span = h('input', { type: 'number', class: 'studio-in bi-phone-rows', min: '1', max: '40', ['data-' + device + '-rows']: v.id, placeholder: 'auto', 'aria-label': 'Height of ' + titleOf(v) + ' in rows', value: r.rows ? String(r.rows) : '' });
-        const li = h('li', { class: 'bi-phone-row' + (r.hidden ? ' bi-phone-hidden' : ''), draggable: D.readOnly ? false : true, ['data-' + device + '-visual']: v.id, 'data-hidden': r.hidden ? 'yes' : 'no' },
+        const li = h('li', { class: 'bi-phone-row' + (r.hidden ? ' bi-phone-hidden' : ''), ['data-' + device + '-visual']: v.id, 'data-hidden': r.hidden ? 'yes' : 'no' },
           h('span', { class: 'bi-phone-grip', 'aria-hidden': 'true' }, B.icon('grip-vertical')),
           h('span', { class: 'bi-phone-name' }, h('strong', { text: titleOf(v) }), ' ', h('span', { class: 'text-muted-d', text: v.type })),
           up, down, h('label', { class: 'bi-checkrow' }, hide, h('span', { text: 'Hide' })),
@@ -114,15 +117,6 @@
           const next = rows.slice();
           next[i] = { spec: r.spec, rows: n || null, hidden: r.hidden, wide: r.wide };
           commit(next, (tablet ? 'Tablet' : 'Phone') + ' height');
-        });
-        li.addEventListener('dragstart', (e) => { dragging = i; li.classList.add('bi-phone-drag'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', v.id); });
-        li.addEventListener('dragend', () => { dragging = null; li.classList.remove('bi-phone-drag'); });
-        li.addEventListener('dragover', (e) => { if (dragging != null && !r.hidden) { e.preventDefault(); li.classList.add('bi-phone-over'); } });
-        li.addEventListener('dragleave', () => li.classList.remove('bi-phone-over'));
-        li.addEventListener('drop', (e) => {
-          e.preventDefault();
-          li.classList.remove('bi-phone-over');
-          if (dragging != null && !r.hidden && dragging !== i) { const from = dragging; dragging = null; move(rows, from, i, 'Reorder on ' + word); }
         });
         list.appendChild(li);
       });

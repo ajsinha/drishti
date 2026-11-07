@@ -54,10 +54,7 @@ AUTHORING = re.compile(r"design|editor|build|studio|outline|form|notebook|pack-n
 AUTHORING_ONLY = {"tree", "undo"}
 # file (relative to drishti-console/web) -> the rules it still breaks (each the designer or editor still being moved onto the kit)
 ALLOWED = {
-    "static/js/build/drishti_controls-tab.js": {"drag"},          # the workbench's controls tab: its cards re-ordered by drag
-    "static/js/build/drishti_form-tab.js": {"drag"},              # the workbench's search-form tab: the same
     "static/js/drishti_bi-design-panes.js": {"drag"},             # the BI designer's Fields and Visualizations panes (drags onto the canvas)
-    "static/js/drishti_bi-design-phone.js": {"drag"},             # the BI designer's Phone and Tablet order (LayoutModel breakpoints)
     "static/js/drishti_controls.js": {"drag"},                    # a Sutra's controls (a range slider's thumbs)
     "static/js/drishti_designer-grid.js": {"drag"},               # the Sutra designer's Grid mode
     "static/js/drishti_designer-outline.js": {"drag"},            # the Sutra designer's Outline mode
@@ -125,7 +122,7 @@ def test_the_allow_list_only_shrinks():
 
 def test_the_allow_list_is_capped():
     """The list never grows past what it was when the rule was made (2026-11-07): new files cannot be added to it."""
-    assert len(ALLOWED) <= 22 and sum(len(r) for r in ALLOWED.values()) <= 22
+    assert len(ALLOWED) <= 19 and sum(len(r) for r in ALLOWED.values()) <= 19
 
 
 def test_the_guard_finds_what_it_looks_for():

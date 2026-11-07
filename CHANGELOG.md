@@ -21,6 +21,19 @@
 
 ## 2.9.11.e (unreleased)
 
+- **drishti-designer 0.1.0, the designer kit** (the product owner, 2026-11-07: "duplicated code will make the system unmaintainable";
+  [ELEMENTS.md section 8.8](docs/architecture/ELEMENTS.md#88-as-built-drishti-designer-the-designer-kit)): one layout canvas over a
+  layout model (grid or flow; snap, settle, multi-select, align, distribute, z-order, groups, copy and paste, a phone's order, the keys,
+  undo and redo on one command stack or by snapshots), the palette, the inspector (a drishti-inputs Form), the outline, the YAML pane kept
+  in step with the model both ways (Studio's reader and schema assistant moved into it) and the designer shell of EDITORS.md in the three
+  layouts of mock-up g7 (studio the default, side by side, terminal; remembered per person). Moved onto it, the old code deleted: the
+  Build workbench's canvas, drags, YAML tab and about box; the BI report designer's canvas, undo and YAML tab (completion in the editor
+  in place of the suggestion strip); the table, model and Python editors' shell and YAML. `drishti_studio-yaml.js`,
+  `drishti_studio-assist.js` and `drishti_cm-yaml.js` deleted. drishti-inputs extended for it (CodeEditor: updateValue, highlight,
+  cursor, completeAfter, tabLeaves, YAML's Enter; Form: live). The standing rule **no bespoke UI**
+  ([ELEMENTS.md section 3.1](docs/architecture/ELEMENTS.md#31-standing-rule-no-bespoke-ui)) and its guard `test_designer_kit_guard.py`
+  (an allow-list of the screens still moving that only shrinks; every authoring screen and its state in section 12.3). The gallery has a
+  designer in each layout and a flow canvas; ELEMENTS_API.md covers the kit.
 - **The demo lake's layout, the owner's decision** (`config/lakes/demo.yaml` and its jar copy; DATA_LAKE_GUIDE.md section 2): `risk.scenario-pv`
   partitioned by `SCENARIO_SET_ID, GRAIN` after the business date, sorted by `LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID`, zstd
   (vectors too), 256 MB files, 16 MB row groups, 30 days' time travel, maintenance (compaction to 256 MB, vacuum after 7 days,
