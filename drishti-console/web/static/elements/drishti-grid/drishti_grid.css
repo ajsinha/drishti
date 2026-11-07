@@ -17,9 +17,9 @@
    three layouts (data-layout wells, panel, terminal), the three densities (data-density comfortable, compact, terminal: the row heights
    are the engine's, 36, 28 and 22 px), the phone (data-phone, below 640 px). A flash fades unless the person asked for less motion. */
 
-.dg { display: block; position: relative; height: 100%; min-height: 240px; color: var(--d-ink); font-family: var(--d-font-sans); font-size: 12.5px; }
-.dg[data-density="comfortable"] { font-size: 13.5px; }
-.dg[data-density="terminal"] { font-size: 11.5px; }
+.dg { display: block; position: relative; height: 100%; min-height: 240px; color: var(--d-ink); font-family: var(--d-font-sans); font-size: var(--d-density-data-compact); }
+.dg[data-density="comfortable"] { font-size: var(--d-density-data-comfortable); }
+.dg[data-density="terminal"] { font-size: var(--d-density-data-terminal); }
 .dg *, .dg *::before, .dg *::after { box-sizing: border-box; }
 .dg button, .dg input, .dg select { font: inherit; color: inherit; }
 .dg-root { display: flex; flex-direction: column; height: 100%; min-height: 0; border: 1px solid var(--d-border); border-radius: var(--d-radius, 10px);

@@ -54,6 +54,11 @@
   --d-font-sans: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --d-font-mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, Consolas, monospace;
   --d-radius: 10px;
+  --d-market-violet: #a78bfa;   /* the market, trading and world landings' own hues (dark grounds; the light themes set theirs) */
+  --d-trading-green: #4fd18b;
+  --d-world-teal: #4cc9b8;
+  --d-cap-violet: #c792ea;      /* Admin › Capacity's 4th and 6th series (Parchment sets its own) */
+  --d-cap-teal: #4fc1c9;
   color-scheme: dark;
 }
 
@@ -83,6 +88,11 @@
   --d-grad-to: #1f5fc4;
   --d-nav: rgba(247, 245, 240, .9);
   --d-shadow: 0 10px 30px rgba(23, 36, 64, .10);
+  --d-market-violet: #6d28d9;   /* the market, trading and world landings' own hues, lighter grounds */
+  --d-trading-green: #1a7f4b;
+  --d-world-teal: #0b7468;
+  --d-cap-violet: #7a45a8;
+  --d-cap-teal: #11808a;
   color-scheme: light;
 }
 
@@ -113,6 +123,12 @@
   --d-grad-to: #003168;
   --d-nav: rgba(240, 245, 250, .92);
   --d-shadow: 0 10px 30px rgba(0, 121, 193, .12);
+  --d-market-violet: #6d28d9;   /* the market, trading and world landings' own hues, lighter grounds */
+  --d-trading-green: #1a7f4b;
+  --d-world-teal: #0b7468;
+  --d-nav-from: #002654;          /* the solid navigation band (top bar, public bar): from, via, to */
+  --d-nav-via: #0079c1;
+  --d-nav-to: #003168;
   color-scheme: light;
 }
 
@@ -143,6 +159,12 @@
   --d-grad-to: #1c3a2e;
   --d-nav: rgba(247, 245, 239, .92);
   --d-shadow: 0 10px 30px rgba(0, 96, 57, .12);
+  --d-market-violet: #6d28d9;   /* the market, trading and world landings' own hues, lighter grounds */
+  --d-trading-green: #1a7f4b;
+  --d-world-teal: #0b7468;
+  --d-nav-from: #00261a;          /* the solid navigation band (top bar, public bar): from, via, to */
+  --d-nav-via: #006039;
+  --d-nav-to: #1c3a2e;
   color-scheme: light;
 }
 
@@ -203,6 +225,12 @@
   --d-grad-to: #293352;
   --d-nav: rgba(247, 245, 242, .92);
   --d-shadow: 0 10px 30px rgba(41, 51, 82, .12);
+  --d-market-violet: #6d28d9;   /* the market, trading and world landings' own hues, lighter grounds */
+  --d-trading-green: #1a7f4b;
+  --d-world-teal: #0b7468;
+  --d-nav-from: #5c0e1b;          /* the solid navigation band (top bar, public bar): from, via, to */
+  --d-nav-via: #a51c30;
+  --d-nav-to: #293352;
   color-scheme: light;
 }
 
@@ -231,6 +259,10 @@
   --d-grad-to: #a9b6d6;
   --d-nav: rgba(21, 21, 23, .88);
   --d-shadow: 0 10px 40px rgba(0, 0, 0, .5);
+  --d-nav-from: #2e0810;          /* the solid navigation band (top bar, public bar): from, via, to */
+  --d-nav-via: #6e1120;
+  --d-nav-to: #1b2138;
+  --d-band-button-ink: #6e1120;  /* the accent button on the band: its accent is light pink, too faint on white */
   color-scheme: dark;
 }
 
@@ -327,12 +359,196 @@
   color-scheme: dark;
 }
 
+/* ---- Fixed colours: the same in every theme ----
+   Colours that do not follow the theme: a white label on a coloured fill, the navigation band's whites, scrims under dialogs, the
+   theme menu's swatches (each shows its own theme), print paper, and the few screens drawn in fixed colours. Each one is what its
+   rule rendered before it became a token. */
+:root {
+  --d-on-color: #ffffff;              /* a white label on a coloured fill: icon tiles, avatars, count badges, danger buttons */
+  --d-paper: #ffffff;                 /* paper: the statement sheet, a formula picture, print */
+  --d-on-band: #ffffff;               /* text and icons on the navigation band (crimson, crimson dark, blue, green) */
+  --d-band-hover: rgba(255, 255, 255, .16);
+  --d-band-pressed: rgba(255, 255, 255, .2);
+  --d-band-edge: rgba(255, 255, 255, .7);
+  --d-band-field-edge: rgba(255, 255, 255, .85);
+  --d-band-field-ink: #1b2433;        /* the business date's white field on the band */
+  --d-band-past-bg: #fff7d6;          /* ... and when the date is in the past */
+  --d-band-past-ink: #6b4a00;
+  --d-band-past-edge: #ffd34d;
+  --d-band-button-ink: var(--d-accent-strong);   /* the accent button on the band: white with the accent as its label */
+  --d-scrim: rgba(0, 0, 0, .45);      /* under a dialog */
+  --d-scrim-strong: rgba(0, 0, 0, .55);
+  --d-scrim-ink: rgba(5, 10, 15, .5);
+  --d-swatch-edge: rgba(128, 128, 128, .4);
+  --d-swatch-terminal-ground: #0e1628; --d-swatch-terminal-mark: #e8a33a;
+  --d-swatch-light-ground: #f7f5f0; --d-swatch-light-mark: #b86e0c;
+  --d-swatch-blue-ground: #f0f5fa; --d-swatch-blue-mark: #0079c1;
+  --d-swatch-wallstreet-ground: #000000; --d-swatch-wallstreet-mark: #fb8b1e;
+  --d-swatch-green-ground: #f7f5ef; --d-swatch-green-mark: #006039;
+  --d-swatch-crimson-ground: #f7f5f2; --d-swatch-crimson-mark: #a51c30;
+  --d-swatch-crimson-dark-ground: #151517; --d-swatch-crimson-dark-mark: #de6b81;
+  --d-swatch-terminal-green-ground: #06140e; --d-swatch-terminal-green-mark: #39e58c;
+  --d-swatch-terminal-crimson-ground: #14070b; --d-swatch-terminal-crimson-mark: #b3203a;
+  --d-swatch-terminal-blue-ground: #050f1e; --d-swatch-terminal-blue-mark: #3ab8ff;
+  --d-on-trading-green: #06210f;      /* the trading landing's button label and limit heat map */
+  --d-heat-ink: #0d1424;
+  --d-heat-ok: #6fd29a;
+  --d-heat-near: #f0b54a;
+  --d-heat-breach: #ff7a7a;
+  --d-frtb-line: #26345a;             /* FRTB-SA and SIMM: drawn in the Terminal colours in every theme */
+  --d-frtb-panel: #1b2744;
+  --d-frtb-link: #7fb2ff;
+  --d-frtb-amber: #e8a33a;
+  --d-frtb-hl: rgba(127, 178, 255, .10);
+  --d-frtb-muted: #93a0b8;
+  --d-frtb-bad: #ff7a7a;
+  --d-statement-focus: #2f6fde;       /* a statement preview's focus ring */
+  --d-calc-edge: #444444;             /* the calculation walker's frame */
+  --d-print-ink: #111111;
+  --d-print-edge: #c9ced6;
+
+  /* Elevation: the shadows that do not follow the theme (--d-shadow does) */
+  --d-elev-paper: 0 1px 4px rgba(0, 0, 0, .25);
+  --d-elev-raised: 0 2px 10px rgba(0, 0, 0, .18);
+  --d-elev-footer: 0 -4px 14px rgba(0, 0, 0, .06);
+  --d-elev-bar: 0 6px 18px rgba(0, 0, 0, .25);
+  --d-elev-pop: 0 6px 18px rgba(0, 0, 0, .35);
+  --d-elev-toast: 0 4px 18px rgba(0, 0, 0, .35);
+  --d-elev-panel: 0 6px 24px rgba(0, 0, 0, .25);
+  --d-elev-list: 0 8px 24px rgba(0, 0, 0, .25);
+  --d-elev-menu: 0 8px 24px rgba(0, 0, 0, .35);
+  --d-elev-sheet: 0 8px 28px rgba(0, 0, 0, .25);
+  --d-elev-dialog: 0 10px 40px rgba(0, 0, 0, .35);
+  --d-elev-drawer: -8px 0 20px rgba(0, 0, 0, .4);
+  --d-elev-mega: 0 24px 48px -20px rgba(0, 0, 0, .55);
+}
+
+/* ---- Scales: type, spacing, radius, layers, breakpoints, densities ----
+   One step per value in use, named by its size in px at the browser's default 16px (13_12 = 13.12px), written in rem so the console
+   follows the reader's own font size. The steps are exactly the sizes the screens had when they were tokenised (2.9.11.e): a
+   step is folded into its neighbour only under the visual check (tools/dev/css_visual_check.py), never by guesswork.
+   test_css_tokens.py holds the console's CSS to these: no colour literal outside this file, font sizes only from the type scale,
+   @media widths only from the breakpoints, !important only on its allow-list. */
+:root {
+  /* type: absolute steps (--d-fs-<px>) */
+  --d-fs-9: .5625rem; --d-fs-9_5: .59375rem; --d-fs-9_6: .6rem; --d-fs-9_92: .62rem;
+  --d-fs-10: .625rem; --d-fs-10_4: .65rem; --d-fs-10_5: .65625rem; --d-fs-10_88: .68rem;
+  --d-fs-11: .6875rem; --d-fs-11_2: .7rem; --d-fs-11_5: .71875rem; --d-fs-11_52: .72rem;
+  --d-fs-11_84: .74rem; --d-fs-12: .75rem; --d-fs-12_16: .76rem; --d-fs-12_48: .78rem;
+  --d-fs-12_5: .78125rem; --d-fs-12_8: .8rem; --d-fs-13: .8125rem; --d-fs-13_12: .82rem;
+  --d-fs-13_44: .84rem; --d-fs-13_5: .84375rem; --d-fs-13_6: .85rem; --d-fs-13_76: .86rem;
+  --d-fs-14: .875rem; --d-fs-14_08: .88rem; --d-fs-14_4: .9rem; --d-fs-14_72: .92rem;
+  --d-fs-15: .9375rem; --d-fs-15_2: .95rem; --d-fs-15_68: .98rem; --d-fs-16: 1rem;
+  --d-fs-16_32: 1.02rem; --d-fs-16_8: 1.05rem; --d-fs-17: 1.0625rem; --d-fs-17_28: 1.08rem;
+  --d-fs-17_6: 1.1rem; --d-fs-18: 1.125rem; --d-fs-18_4: 1.15rem; --d-fs-19_2: 1.2rem;
+  --d-fs-20: 1.25rem; --d-fs-20_8: 1.3rem; --d-fs-21: 1.3125rem; --d-fs-21_6: 1.35rem;
+  --d-fs-22: 1.375rem; --d-fs-22_4: 1.4rem; --d-fs-23_2: 1.45rem; --d-fs-24: 1.5rem;
+  --d-fs-25_6: 1.6rem; --d-fs-28_8: 1.8rem; --d-fs-30_4: 1.9rem; --d-fs-32: 2rem;
+  --d-fs-35_2: 2.2rem;
+  /* type: relative steps (a size inside its parent's text: --d-fs-em-<percent>) */
+  --d-fs-em-70: .7em; --d-fs-em-75: .75em; --d-fs-em-80: .8em; --d-fs-em-85: .85em;
+  --d-fs-em-88: .88em; --d-fs-em-90: .9em; --d-fs-em-105: 1.05em;
+  /* type: fluid display sizes (headings that follow the viewport or their container), largest first */
+  --d-fs-display-1: clamp(2.2rem, 5.5vw, 4.2rem);
+  --d-fs-display-2: clamp(2rem, 4.4vw, 3.4rem);
+  --d-fs-display-3: clamp(1.6rem, 12cqi, 3.4rem);
+  --d-fs-display-4: clamp(1.6rem, 3vw, 2.4rem);
+  --d-fs-display-5: clamp(1.1rem, 16cqi, 2.2rem);
+  --d-fs-display-6: clamp(1.1rem, 9cqi, 1.9rem);
+  --d-fs-display-7: clamp(1.1rem, 16cqi, 1.8rem);
+  --d-fs-display-8: clamp(1.3rem, 2.6vw, 1.75rem);
+  --d-fs-display-9: clamp(1.2rem, 2.6vw, 1.75rem);
+  --d-fs-display-10: clamp(1.15rem, 2vw, 1.4rem);
+
+  /* spacing: padding, margin and gap steps up to 2rem (--d-sp-<px>); larger offsets are layout, written where they are used */
+  --d-sp-0_32: .02rem; --d-sp-0_8: .05rem; --d-sp-1: .0625rem; --d-sp-1_6: .1rem; --d-sp-1_92: .12rem;
+  --d-sp-2: .125rem; --d-sp-2_24: .14rem; --d-sp-2_4: .15rem; --d-sp-2_88: .18rem; --d-sp-3: .1875rem;
+  --d-sp-3_2: .2rem; --d-sp-3_52: .22rem; --d-sp-4: .25rem; --d-sp-4_48: .28rem; --d-sp-4_8: .3rem;
+  --d-sp-5: .3125rem; --d-sp-5_6: .35rem; --d-sp-6: .375rem; --d-sp-6_08: .38rem; --d-sp-6_4: .4rem;
+  --d-sp-6_72: .42rem; --d-sp-7: .4375rem; --d-sp-7_2: .45rem; --d-sp-8: .5rem; --d-sp-8_8: .55rem;
+  --d-sp-9: .5625rem; --d-sp-9_6: .6rem; --d-sp-10: .625rem; --d-sp-10_4: .65rem; --d-sp-11: .6875rem;
+  --d-sp-11_2: .7rem; --d-sp-12: .75rem; --d-sp-12_8: .8rem; --d-sp-13_6: .85rem; --d-sp-14: .875rem;
+  --d-sp-14_4: .9rem; --d-sp-16: 1rem; --d-sp-17_6: 1.1rem; --d-sp-18: 1.125rem; --d-sp-18_4: 1.15rem;
+  --d-sp-19_2: 1.2rem; --d-sp-20: 1.25rem; --d-sp-20_8: 1.3rem; --d-sp-21_6: 1.35rem; --d-sp-22_4: 1.4rem;
+  --d-sp-24: 1.5rem; --d-sp-25_6: 1.6rem; --d-sp-26: 1.625rem; --d-sp-28_8: 1.8rem; --d-sp-30: 1.875rem;
+  --d-sp-32: 2rem;
+
+  /* radius (--d-radius stays the cards' and panels' radius) */
+  --d-radius-1: 1px; --d-radius-2: 2px; --d-radius-3: 3px; --d-radius-3_2: 3.2px; --d-radius-4: 4px; --d-radius-4_8: 4.8px;
+  --d-radius-5: 5px; --d-radius-6: 6px; --d-radius-8: 8px; --d-radius-9: 9px; --d-radius-9_6: 9.6px; --d-radius-10: 10px;
+  --d-radius-12: 12px; --d-radius-13: 13px; --d-radius-14: 14px; --d-radius-15: 15px; --d-radius-16: 16px; --d-radius-17: 17px;
+  --d-radius-18: 18px; --d-radius-22: 22px; --d-radius-26: 26px;
+  --d-radius-pill: 999px;
+
+  /* layers: the stacking order of everything that floats over the page (Bootstrap's sticky bar is 1030, its modal 1055);
+     a z-index under 100 orders things inside one component and stays a plain number */
+  --d-z-bar: 1030;
+  --d-z-sheet: 1040;
+  --d-z-drawer: 1050;
+  --d-z-shade: 1055;
+  --d-z-popover: 1060;
+  --d-z-dropdown: 1100;
+  --d-z-about: 1190;
+  --d-z-menu: 1200;
+  --d-z-float: 1300;
+  --d-z-float-menu: 1350;
+  --d-z-drag: 1400;
+  --d-z-overlay: 2000;
+  --d-z-toast: 3000;
+  --d-z-confirm: 3500;
+
+  /* breakpoints: a media query cannot read a custom property, so @media repeats the number; these are the only widths it may use
+     (the -up and below- steps are the exact edges of the step beside them). Scripts read them with getComputedStyle. */
+  --d-bp-xs: 480px; --d-bp-sm: 560px; --d-bp-bs-sm: 576px; --d-bp-narrow: 600px;
+  --d-bp-below-phone: 639.98px; --d-bp-phone: 640px; --d-bp-above-phone: 641px; --d-bp-tablet-s: 700px;
+  --d-bp-tablet: 720px; --d-bp-tablet-l: 760px; --d-bp-split: 800px; --d-bp-above-split: 800.02px;
+  --d-bp-above-split-px: 801px; --d-bp-laptop-s: 900px; --d-bp-laptop: 960px; --d-bp-laptop-l: 1000px;
+  --d-bp-desk: 1100px; --d-bp-above-desk: 1101px; --d-bp-wide: 1200px; --d-bp-wide-l: 1250px;
+  --d-bp-xl: 1400px; --d-bp-xl-l: 1500px; --d-bp-xxl: 1700px; --d-bp-xxl-l: 1750px;
+
+  /* densities: the three densities of the Elements libraries (data-density comfortable, compact, terminal on an ancestor): the base
+     text of data (drishti-grid, drishti-chart) and of controls (drishti-inputs) */
+  --d-density-data-comfortable: var(--d-fs-13_5); --d-density-data-compact: var(--d-fs-12_5); --d-density-data-terminal: var(--d-fs-11_5);
+  --d-density-control-comfortable: var(--d-fs-14); --d-density-control-compact: var(--d-fs-13); --d-density-control-terminal: var(--d-fs-12);
+}
+
 @media (prefers-color-scheme: light) {
   :root:not([data-theme]) {
     --d-bg: #f7f5f0; --d-bg-2: #efebe3; --d-surface: #ffffff; --d-surface-2: #faf8f4; --d-border: #e2dcd0;
     --d-ink: #172440; --d-muted: #55607a; --d-faint: #60697e; --d-accent: #985b0a; --d-on-accent: #ffffff; --d-link: #1f5fc4;
     --d-accent-strong: #7c4805; --d-ok: #1b784c; --d-warn: #8a6100; --d-bad: #b42323;
     --d-pos: #1f5fc4; --d-neg: #b4491a; --d-nav: rgba(247, 245, 240, .9);
+    --d-market-violet: #6d28d9; --d-trading-green: #1a7f4b; --d-world-teal: #0b7468;
+    color-scheme: light;
+  }
+}
+
+/* Print and "save as PDF": the view on paper, light whatever the theme. Last in the file and as specific as the theme blocks
+   (and the light fallback), so it wins by order, with no !important. */
+@media print {
+  :root[data-theme], :root:not([data-theme]) {
+    --d-bg: #fff;
+    --d-bg-2: #fff;
+    --d-surface: #fff;
+    --d-surface-2: #f6f7f9;
+    --d-border: #c9ced6;
+    --d-ink: #111;
+    --d-muted: #555;
+    --d-faint: #888;
+    --d-link: #1f5fc4;
+    --d-accent: #8a5a00;
+    --d-accent-strong: #6b4600;
+    --d-accent-tint: #fff4df;
+    --d-pos: #1f5fc4;
+    --d-neg: #b3261e;
+    --d-ok: #1b7a3a;
+    --d-warn: #8a5a00;
+    --d-bad: #b3261e;
+    --d-emph-bg: #f1f1f1;
+    --d-highlight: #fff4df;
+    --d-nav: #fff;
+    --d-shadow: none;
+    --d-glow: none;
     color-scheme: light;
   }
 }

@@ -16,24 +16,21 @@
 /* Help → Configuration (/help/configuration): the configuration document, searchable; on a phone every settings row is a card.
    Theme tokens only (--d-*), so every theme draws it. */
 .cfg-page { max-width: 1320px; }
-.cfg-head h1 { margin: .4rem 0 .3rem; }
+.cfg-head h1 { margin: var(--d-sp-6_4) 0 var(--d-sp-4_8); }
 .cfg-head .lead { color: var(--d-muted); max-width: 90ch; }
-.cfg-search { position: sticky; top: 58px; z-index: 6; display: flex; flex-wrap: wrap; gap: .5rem; align-items: center;
-  background: var(--d-bg); padding: .6rem 0; border-bottom: 1px solid var(--d-border); }
+.cfg-search { position: sticky; top: 58px; z-index: 6; display: flex; flex-wrap: wrap; gap: var(--d-sp-8); align-items: center;
+  background: var(--d-bg); padding: var(--d-sp-9_6) 0; border-bottom: 1px solid var(--d-border); }
 .cfg-search .bi-search { color: var(--d-muted); }
 .cfg-search input[type="search"] { flex: 1 1 18rem; min-width: 0; background: var(--d-surface); color: var(--d-ink);
-  border: 1px solid var(--d-border); border-radius: 6px; padding: .4rem .6rem; }
+  border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-6_4) var(--d-sp-9_6); }
 .cfg-search select { flex: 0 1 16rem; min-width: 0; max-width: 100%; background: var(--d-surface); color: var(--d-ink);
-  border: 1px solid var(--d-border); border-radius: 6px; padding: .35rem .5rem; }
-.cfg-count { color: var(--d-muted); font-size: .85rem; margin: .4rem 0 .8rem; }
-.cfg-warn { color: var(--d-warn); }
+  border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-5_6) var(--d-sp-8); }
+.cfg-count { color: var(--d-muted); font-size: var(--d-fs-13_6); margin: var(--d-sp-6_4) 0 var(--d-sp-12_8); }
 .cfg-page .help-article { min-width: 0; }
-.cfg-page .help-article [hidden] { display: none !important; }
 .cfg-ref.cfg-filtered .cfg-wrap[data-cfg-empty], .cfg-ref.cfg-filtered h4:has(+ .cfg-wrap[data-cfg-empty]) { display: none; }
 .cfg-tbl td { overflow-wrap: anywhere; vertical-align: top; }
 .cfg-tbl td:first-child code { white-space: normal; overflow-wrap: anywhere; }
 .cfg-tbl td:nth-child(6) { min-width: 18rem; }
-.cfg-hit { background: var(--d-highlight, var(--d-accent-tint)); }
 
 /* A phone: a row is a card, each cell under its column's name. */
 @media (max-width: 760px) {
@@ -42,9 +39,10 @@
   .cfg-wrap { overflow-x: visible; }
   .cfg-tbl, .cfg-tbl tbody, .cfg-tbl tr, .cfg-tbl td { display: block; width: 100%; }
   .cfg-tbl thead { display: none; }
-  .cfg-tbl tr { border: 1px solid var(--d-border); border-radius: 8px; margin: 0 0 .7rem; padding: .35rem .6rem; background: var(--d-surface); }
-  .cfg-tbl td { border: 0; padding: .15rem 0; min-width: 0 !important; }
-  .cfg-tbl td::before { content: attr(data-label); display: block; color: var(--d-muted); font-size: .72rem; text-transform: uppercase;
+  .cfg-tbl tr { border: 1px solid var(--d-border); border-radius: var(--d-radius-8); margin: 0 0 var(--d-sp-11_2); padding: var(--d-sp-5_6) var(--d-sp-9_6); background: var(--d-surface); }
+  .cfg-tbl td { border: 0; padding: var(--d-sp-2_4) 0; min-width: 0; }
+  .cfg-tbl td:nth-child(6) { min-width: 0; }   /* the wide column's 18rem goes too */
+  .cfg-tbl td::before { content: attr(data-label); display: block; color: var(--d-muted); font-size: var(--d-fs-11_52); text-transform: uppercase;
     letter-spacing: .04em; }
   .cfg-tbl td:empty { display: none; }
   .cfg-page .help-article .tbl-wrap { max-width: 100%; }

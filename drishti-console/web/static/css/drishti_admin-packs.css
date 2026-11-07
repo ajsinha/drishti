@@ -15,40 +15,35 @@
  */
 /* Admin → Packs: Deploy archive, history and the Data source panel. Colours come from the theme tokens, so light and dark both work;
    meaning is never carried by colour alone (every state has its word). */
-.dep { margin: .4rem 0 1rem; }
-.dep-drop { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem 1rem; border: 2px dashed var(--d-border); border-radius: 8px; padding: .8rem 1rem; }
+.dep { margin: var(--d-sp-6_4) 0 var(--d-sp-16); }
+.dep-drop { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-9_6) var(--d-sp-16); border: 2px dashed var(--d-border); border-radius: var(--d-radius-8); padding: var(--d-sp-12_8) var(--d-sp-16); }
 .dep-drop label { flex: 1 1 100%; color: var(--d-ink); }
 .dep-drop input[type="file"] { flex: 1 1 18rem; min-width: 0; color: var(--d-ink); }
 .dep-over { border-color: var(--d-accent); background: var(--d-emph-bg); }
-.dep-adv { margin: .5rem 0; }
-.dep-adv label { display: flex; flex-direction: column; gap: .2rem; color: var(--d-muted); font-size: .85rem; margin: .4rem 0; max-width: 34rem; }
-.dep-result { border: 1px solid var(--d-border); border-radius: 8px; padding: .4rem 1rem 1rem; margin-top: .6rem; background: var(--d-surface); }
-.dep-result h3 { font-size: 1rem; margin: .8rem 0 .3rem; }
+.dep-adv { margin: var(--d-sp-8) 0; }
+.dep-adv label { display: flex; flex-direction: column; gap: var(--d-sp-3_2); color: var(--d-muted); font-size: var(--d-fs-13_6); margin: var(--d-sp-6_4) 0; max-width: 34rem; }
+.dep-result { border: 1px solid var(--d-border); border-radius: var(--d-radius-8); padding: var(--d-sp-6_4) var(--d-sp-16) var(--d-sp-16); margin-top: var(--d-sp-9_6); background: var(--d-surface); }
+.dep-result h3 { font-size: var(--d-fs-16); margin: var(--d-sp-12_8) 0 var(--d-sp-4_8); }
 .dep-checks { list-style: none; margin: 0; padding: 0; }
-.dep-checks li { padding: .15rem 0; }
-.dep-mark { display: inline-block; min-width: 3.2rem; font-weight: 700; font-size: .75rem; letter-spacing: .03em; }
+.dep-checks li { padding: var(--d-sp-2_4) 0; }
+.dep-mark { display: inline-block; min-width: 3.2rem; font-weight: 700; font-size: var(--d-fs-12); letter-spacing: .03em; }
 .dep-ok .dep-mark { color: var(--d-ok); } .dep-warn .dep-mark { color: var(--d-warn); } .dep-fail .dep-mark { color: var(--d-bad); }
-.dep-lv { margin: .6rem 0; }
-.dep-lv h4 { font-size: .9rem; margin: .2rem 0; }
-.dep-lv-breaking { border: 2px solid var(--d-bad); border-radius: 8px; padding: .3rem .8rem .6rem; background: var(--d-emph-bg); }
+.dep-lv { margin: var(--d-sp-9_6) 0; }
+.dep-lv h4 { font-size: var(--d-fs-14_4); margin: var(--d-sp-3_2) 0; }
+.dep-lv-breaking { border: 2px solid var(--d-bad); border-radius: var(--d-radius-8); padding: var(--d-sp-4_8) var(--d-sp-12_8) var(--d-sp-9_6); background: var(--d-emph-bg); }
 .dep-lv-breaking h4 { color: var(--d-bad); }
-.dep-actions { margin-top: .8rem; }
+.dep-actions { margin-top: var(--d-sp-12_8); }
 .ds-dialog { width: min(980px, 96vw); max-height: 92vh; overflow: auto; }
-.ds-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; }
-.ds-head h2 { margin: 0; font-size: 1.2rem; }
-.ds-conn { border: 1px solid var(--d-border); border-radius: 8px; padding: .3rem .9rem .8rem; margin: .7rem 0; }
-.ds-conn h3 { font-size: 1rem; margin: .5rem 0 .2rem; }
+.ds-head { display: flex; justify-content: space-between; align-items: center; gap: var(--d-sp-16); }
+.ds-head h2 { margin: 0; font-size: var(--d-fs-19_2); }
 .ds-tbl td { vertical-align: middle; }
 .ds-tbl input { width: 100%; min-width: 12rem; }
-.ds-add { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: .5rem; }
-.ds-add input { flex: 1 1 12rem; min-width: 0; }
 .ds-num { text-align: right; }
-.ds-test { margin-top: .5rem; }
-.ds-actions { flex-wrap: wrap; position: sticky; bottom: 0; background: var(--d-surface); padding-top: .5rem; }
+.ds-actions { flex-wrap: wrap; position: sticky; bottom: 0; background: var(--d-surface); padding-top: var(--d-sp-8); }
 @media (max-width: 640px) {
   .dep-drop input[type="file"] { flex-basis: 100%; }
-  .ds-dialog { padding: .8rem; }
-  .ds-tbl input { min-width: 8rem; font-size: 16px; }
+  .ds-dialog { padding: var(--d-sp-12_8); }
+  .ds-tbl input { min-width: 8rem; font-size: var(--d-fs-16); }
   .ds-actions .btn-pill, .dep-actions .btn-pill { flex: 1 1 100%; min-height: 44px; }
 }
 /* The packs list: long text wraps so the actions column stays on screen (a 4,800 px row hid it past the right edge). */
@@ -57,7 +52,7 @@
 .adm-tbl[data-packs] td.mono { overflow-wrap: break-word; max-width: 14rem; }
 .adm-tbl[data-packs] .pk-name { min-width: 11rem; }
 .adm-tbl[data-packs] .adm-actions { white-space: normal; min-width: 9rem; }
-.adm-tbl[data-packs] .adm-actions .fk { display: inline-flex; margin: 0 .4rem .3rem 0; }
+.adm-tbl[data-packs] .adm-actions .fk { display: inline-flex; margin: 0 var(--d-sp-6_4) var(--d-sp-4_8) 0; }
 
 /* "About this page": the introduction of an Admin list. Open on a wide screen (its summary is hidden); folded on a phone (drishti_admin-cards.js). */
 .adm-about > summary { cursor: pointer; font-weight: 600; min-height: 44px; display: flex; align-items: center; }
@@ -66,18 +61,17 @@
 @media (max-width: 640px) {
   table[data-cards], table[data-cards] tbody, table[data-cards] tr, table[data-cards] td, table[data-cards] th { display: block; width: 100%; box-sizing: border-box; }
   table[data-cards] thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-  table[data-cards] tr { border: 1px solid var(--d-border); border-radius: 8px; margin: 0 0 .8rem; padding: .3rem .6rem; background: var(--d-surface); }
-  table[data-cards] td, table[data-cards] th { border: 0; padding: .3rem 0; white-space: normal; max-width: none; min-width: 0; overflow-wrap: anywhere; text-align: left; }
-  table[data-cards] td[data-label]::before, table[data-cards] th[data-label]::before { content: attr(data-label); display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .04em; color: var(--d-muted); }
-  table[data-cards] .adm-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+  table[data-cards] tr { border: 1px solid var(--d-border); border-radius: var(--d-radius-8); margin: 0 0 var(--d-sp-12_8); padding: var(--d-sp-4_8) var(--d-sp-9_6); background: var(--d-surface); }
+  table[data-cards] td, table[data-cards] th { border: 0; padding: var(--d-sp-4_8) 0; white-space: normal; max-width: none; min-width: 0; overflow-wrap: anywhere; text-align: left; }
+  table[data-cards] td[data-label]::before, table[data-cards] th[data-label]::before { content: attr(data-label); display: block; font-size: var(--d-fs-11_52); text-transform: uppercase; letter-spacing: .04em; color: var(--d-muted); }
+  table[data-cards] .adm-actions { display: flex; flex-wrap: wrap; gap: var(--d-sp-6_4); }
   table[data-cards] .adm-actions[data-label]::before { display: none; }
   table[data-cards] .adm-actions .fk, table[data-cards] .adm-actions a.fk { flex: 1 1 8rem; min-height: 44px; margin: 0; justify-content: center; text-align: center; }
   table[data-cards] a { display: inline-block; min-height: 44px; line-height: 44px; }
-  table[data-cards] .conn-name a, table[data-cards] .pk-name a { line-height: 1.4; min-height: 44px; padding: .7rem 0; box-sizing: border-box; }
+  table[data-cards] .conn-name a, table[data-cards] .pk-name a { line-height: 1.4; min-height: 44px; padding: var(--d-sp-11_2) 0; box-sizing: border-box; }
   table[data-cards] tr[data-none] td { border: 0; }
-  table[data-cards] tr[hidden], table[data-cards] [hidden] { display: none; }               /* the filter hides rows with the hidden attribute */
   .adm-tbl[data-packs] .pk-desc, .adm-tbl[data-packs] td.mono, .adm-tbl[data-packs] .pk-name { min-width: 0; max-width: none; }
   .dep-adv > summary { min-height: 44px; display: flex; align-items: center; }
-  .adm-changed { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+  .adm-changed { display: flex; flex-wrap: wrap; gap: var(--d-sp-8); align-items: center; }
   .adm-changed .fk { min-height: 44px; }
 }
