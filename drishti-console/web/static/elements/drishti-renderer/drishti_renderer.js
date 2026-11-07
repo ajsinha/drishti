@@ -660,7 +660,7 @@
       if (!(window.echarts && window.echarts.graphicGL)) { await script('vendor/echarts-gl/echarts-gl.min.js'); }
     }
     async function geo() {
-      if (!window.drishtiGeo) { await script('js/geomap.js'); }
+      if (!window.drishtiGeo) { await script('js/drishti_geomap.js'); }
       return window.drishtiGeo;
     }
     function sheet() {
@@ -1028,7 +1028,7 @@
     var drawNestedPivots = __m["src/drishti_nested.js"].drawNestedPivots;
     const SCRIPTS = ['colfilter', 'tables', 'zoom', 'multiselect', 'controls'];
     const loaded = () => assets.memoised('console-behaviours', async () => {
-      for (const n of SCRIPTS) { await assets.script('js/' + n + '.js'); }
+      for (const n of SCRIPTS) { await assets.script('js/drishti_' + n + '.js'); }
     });
     const enc = (s) => encodeURIComponent(String(s));
     const idPath = (id) => String(id).split('/').map(enc).join('/');

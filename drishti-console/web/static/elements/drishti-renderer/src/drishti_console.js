@@ -29,7 +29,7 @@ import { drawNestedPivots } from './drishti_nested.js';
 export const SCRIPTS = ['colfilter', 'tables', 'zoom', 'multiselect', 'controls'];
 
 const loaded = () => assets.memoised('console-behaviours', async () => {
-  for (const n of SCRIPTS) { await assets.script('js/' + n + '.js'); }
+  for (const n of SCRIPTS) { await assets.script('js/drishti_' + n + '.js'); }
 });
 
 const enc = (s) => encodeURIComponent(String(s));

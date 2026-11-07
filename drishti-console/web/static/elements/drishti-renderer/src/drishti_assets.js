@@ -114,7 +114,7 @@ export async function echartsGl() {
  * @returns {Promise<Object>}
  */
 export async function geo() {
-  if (!window.drishtiGeo) { await script('js/geomap.js'); }
+  if (!window.drishtiGeo) { await script('js/drishti_geomap.js'); }
   return window.drishtiGeo;
 }
 

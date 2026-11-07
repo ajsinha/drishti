@@ -152,6 +152,11 @@ def render_panel(panel: dict) -> str:
     """One panel view rendered by the console's own Jinja macro (_macros/panels.html), as the view page does on first paint."""
     import jinja2
     env = jinja2.Environment(loader=jinja2.FileSystemLoader(str(ROOT / "drishti-console" / "web" / "templates")), autoescape=True)
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("drishti_half_up", ROOT / "drishti-console" / "core" / "half_up.py")
+    hu = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(hu)
+    hu.install(env)                                    # the panel macros' rounding filter
     return env.from_string('{% from "_macros/panels.html" import panel %}{{ panel(p) }}').render(p=panel)
 
 

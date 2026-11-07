@@ -84,7 +84,7 @@ def test_the_first_view_is_live_drawn_from_the_view_model_under_the_host_s_csp(h
     h = host()
     before = len(json.loads(urllib.request.urlopen(E.HOST + "/api/csp-reports").read()))
     h.open()
-    assert h.js("window.DrishtiElements.version") == "2.2.0" and h.js("window.DrishtiElements.renderer") == rd.VERSION
+    assert h.js("window.DrishtiElements.version") == "2.3.0" and h.js("window.DrishtiElements.renderer") == rd.VERSION
     assert h.title() == E.MAIN_ID
     assert "MTM" in h.js("document.querySelector('#main').shadowRoot.querySelector('.strip').innerText")
     h.until(lambda: len(h.events("tick", "main")) >= 2, 25, "two ticks of the main view")
@@ -134,9 +134,9 @@ def test_the_console_s_behaviours_run_inside_the_element_and_about_comes_as_json
 
 
 def test_the_versioned_paths_answer_and_the_bytes_match_the_record(stack):  # noqa: F811 - the stack serves the paths
-    status, headers, _ = get(E.CONSOLE_URL + "/embed/v2/render/1/drishti-render.js")
+    status, headers, _ = get(E.CONSOLE_URL + "/embed/v2/render/2/drishti-render.js")
     assert status == 200 or status == 302
-    req = urllib.request.Request(E.CONSOLE_URL + "/embed/v2/render/1/drishti-render.js", headers={"Origin": E.HOST})
+    req = urllib.request.Request(E.CONSOLE_URL + "/embed/v2/render/2/drishti-render.js", headers={"Origin": E.HOST})
 
     class NoRedirect(urllib.request.HTTPRedirectHandler):
         def redirect_request(self, *a, **k):

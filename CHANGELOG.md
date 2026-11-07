@@ -115,6 +115,23 @@
   (`drishti-chart/drishti_harness.html`: every kind, mode and map level), 19 Node tests (`chart.test.mjs`, `maps.test.mjs`: the spec, the
   translator, the kinds, the risk figures, the map loader on every one of the 252 region files) and one browser test file
   (`test_elements_chart_browser.py`).
+- **drishti-renderer 2.0.0: the client renderer rebuilt on the Elements libraries** ([CLIENT_RENDERER.md section 3](docs/architecture/CLIENT_RENDERER.md#3-the-librarys-shape),
+  [ELEMENTS.md section 8.4](docs/architecture/ELEMENTS.md#84-as-built-drishti-renderer-200)). The product owner's rule: no renderer-private
+  grid, chart, format, live or input code; the console and the renderer draw panels with the same components. Tables, trees, drills, the
+  pivot kind and every chart's Data table are **drishti-grid's document table** (the server's table, element for element 1.2.0's markup,
+  with sort, filter, paging, trees and drills); the nested pivot in `behaviours: 'console'` is **drishti-grid's grid with tree data** (new:
+  `treeData`, `getDataPath`); every chart is **drishti-chart's panel charts** (the console's options, series for series; the only place an
+  engine is called); the element maker, the rules for untrusted data (`attrAllowed`, `safeUrl`), formats (half up) and the API client
+  are **drishti-core's**; streams and Elements' one connection per page are **drishti-data's `LiveClient`** (new: SSE over fetch so a
+  bearer travels, an address asked at each connect, the event name in each message, `parseSse`). The renderer's `m/format.js`,
+  `m/tables.js`, `m/charts.js`, `m/draw.js` and its stream and channel code are gone from the current version; **1.2.0 stays served,
+  frozen, for existing embedders** (Elements 2.2 still points at it; Elements 2.3 at 2.0.0). Public entry `static/render/2.0.0/drishti-render.js`
+  (the 1.x API unchanged, plus `insight` hooks for About); `/embed/v2/elements/<library>/…` serves the libraries to other origins.
+  **One rounding rule**: the panel macros' computed figures (a share, a progress, a width, a heat bucket) round half up as the server and
+  the renderer do (`core/half_up.py`). Parity against the console's macros: 476 pairs, no difference beyond the intentional ones (CLIENT_RENDERER.md 14.4). Tests: Node (`data.test.mjs` fetch transport;
+  `chart.test.mjs` panel series against the frozen 1.2.0 builders; `doc-table.test.mjs` markup against the frozen `tables.js`;
+  `tree.test.mjs`), the render browser files moved to the libraries, and a static harness (`drishti-renderer/drishti_harness.html`, the
+  parity suite's ViewModels from `tools/elements/renderer_fixtures.py`) with a four-test browser file (`test_elements_renderer_browser.py`, about 5 s).
 
 ## 2.9.11.d (unreleased)
 

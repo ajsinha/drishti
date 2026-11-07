@@ -90,8 +90,8 @@ def test_console_behaviours_draw_the_nested_pivot_with_drishti_grid(browsers):
         await opened(pg, "case=showcase&behaviours=console")
         await pg.wait_for_function(f"() => !!{ROOT}.querySelector('.pv-tree-host [role=treegrid] [aria-expanded]')", timeout=15000)
         before = await pg.evaluate(f"() => {ROOT}.querySelectorAll('.pv-tree-host .dg-row').length")
-        await pg.locator("#host .pv-tree-host [aria-expanded='true']").first.click()
-        await pg.wait_for_function(f"(n) => {ROOT}.querySelectorAll('.pv-tree-host .dg-row').length < n", arg=before, timeout=5000)
+        await pg.locator("#host .pv-tree-host [aria-expanded='false'] .dg-tw").first.click()             # the Sutra's expand: groups start closed
+        await pg.wait_for_function(f"(n) => {ROOT}.querySelectorAll('.pv-tree-host .dg-row').length > n", arg=before, timeout=5000)
         await pg.wait_for_function(f"() => {ROOT}.querySelectorAll('th .cf-btn').length > 0", timeout=15000)     # the console's funnels
         assert await pg.evaluate(f"() => {ROOT}.querySelectorAll('.tbl-sort').length") == 0                       # the funnels sort, not the grid
     run(browsers, body)

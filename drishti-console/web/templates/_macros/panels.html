@@ -199,7 +199,7 @@
 {% set mx = (ok | map(attribute='value') | map('abs') | max) or 1 %}
 <ul class="bars">
   {% for b in ok %}<li{% if b.ev %} data-ev="{{ b.ev }}" tabindex="0" role="button" aria-pressed="false"{% endif %}><span class="bl mono" title="{{ b.label }}">{{ b.label }}</span>
-    <span class="bt"><span class="bf bf-{{ b.tone or 'pos' }}" data-w="{{ ((b.value | abs) / mx * 100) | round(1) }}"></span></span>
+    <span class="bt"><span class="bf bf-{{ b.tone or 'pos' }}" data-w="{{ ((b.value | abs) / mx * 100) | half_up(1) }}"></span></span>
     <span class="bv mono t-{{ b.tone or 'pos' }}">{{ b.text }}</span></li>{% endfor %}
 </ul>
 {%- endmacro %}
@@ -212,7 +212,7 @@
 <div class="chart xchart xchart-donut" data-xchart="{{ d | tojson | forceescape }}" data-kind="donut" role="img"
      aria-label="{{ p.title or 'hbar' }}: {{ ok | length }} shares of {{ d.total or '' }}"></div>
 <ul class="legend donut-legend">{% for b in ok %}<li><span class="sw sw-{{ ['link', 'accent', 'ok', 'neg', 'warn', 'bad', 'muted', 'ink'][loop.index0 % 8] }}"></span>{{ b.label }}
-  <span class="mono">{{ b.text }} · {{ ((b.value | abs) / whole * 100) | round(1) }}%</span></li>{% endfor %}</ul>
+  <span class="mono">{{ b.text }} · {{ ((b.value | abs) / whole * 100) | half_up(1) }}%</span></li>{% endfor %}</ul>
 {%- endmacro %}
 
 {% macro links(d) -%}
@@ -315,7 +315,7 @@
 <div class="tbl-wrap"><table class="tbl pivot{% if d.heat %} heat{% endif %}">
   <thead><tr><th scope="col">{{ ((d.by or '')[:1] | upper) ~ (d.by or '')[1:] }}</th>{% for c in (d.columns or []) %}<th scope="col" class="num">{{ c }}</th>{% endfor %}{% if d.totals %}<th scope="col" class="num">Total</th>{% endif %}</tr></thead>
   <tbody>
-  {% for r in (d.rows or []) %}<tr><th scope="row"{% if r.path %} class="pv-i{{ r.path | length }}"{% endif %}>{% if r.group %}<b>{{ r.label }}</b>{% else %}{{ r.label }}{% endif %}</th>{% for c in (r.cells or []) %}{% set v = (r['values'] or [])[loop.index0] %}<td class="mono num{{ tone(c) }}{% if d.heat and v is number %} heat-{{ (((v - lo) / span * 9) | round | int) if span else 5 }}{% endif %}">{{ c.text }}</td>{% endfor %}
+  {% for r in (d.rows or []) %}<tr><th scope="row"{% if r.path %} class="pv-i{{ r.path | length }}"{% endif %}>{% if r.group %}<b>{{ r.label }}</b>{% else %}{{ r.label }}{% endif %}</th>{% for c in (r.cells or []) %}{% set v = (r['values'] or [])[loop.index0] %}<td class="mono num{{ tone(c) }}{% if d.heat and v is number %} heat-{{ (((v - lo) / span * 9) | half_up | int) if span else 5 }}{% endif %}">{{ c.text }}</td>{% endfor %}
     {% if r.total %}<td class="mono num pv-total{{ tone(r.total) }}">{{ r.total.text }}</td>{% endif %}</tr>{% endfor %}
   </tbody>
   {% if d.totals or d.more %}<tfoot>
@@ -359,7 +359,7 @@
   {% elif p.kind == 'map' %}{{ geomap(p) }}
   {% elif p.kind == 'pivot' %}{{ pivot(p.data) }}
   {% elif p.kind == 'metric' %}{% set m = p.data.value if p.data.value is mapping else {} %}{% set d = p.data.delta if p.data.delta is mapping else none %}<div class="metric" role="group" aria-label="{{ p.title or p.id }}: {{ m.text }}{% if p.data.unit %} {{ p.data.unit }}{% endif %}{% if d %}, change {{ d.text }}{% endif %}">{% if m.label %}<span class="metric-l">{{ m.label }}</span>{% endif %}<div class="metric-row"><span class="metric-v mono{{ tone(m) }}"{% if m.path %} data-path="{{ m.path }}"{% endif %}>{{ cell_text(m) }}</span>{% if p.data.unit %}<span class="metric-u">{{ p.data.unit }}</span>{% endif %}{% if d %}<span class="metric-d mono{{ tone(d) }}"{% if d.path %} data-path="{{ d.path }}"{% endif %}>{{ d.text }}</span>{% endif %}</div>{% if p.data.caption %}<span class="metric-c">{{ p.data.caption }}</span>{% endif %}</div>
-  {% elif p.kind == 'gauge' %}{% set gv, gm = p.data.value, p.data.max %}<div class="gauge"><span class="bf" data-w="{{ ((gv / (gm or 1)) * 100) | round(1) if gv is number and (gm is number or gm is none) else 0 }}"></span><span class="mono">{{ p.data.text }}</span></div>
+  {% elif p.kind == 'gauge' %}{% set gv, gm = p.data.value, p.data.max %}<div class="gauge"><span class="bf" data-w="{{ ((gv / (gm or 1)) * 100) | half_up(1) if gv is number and (gm is number or gm is none) else 0 }}"></span><span class="mono">{{ p.data.text }}</span></div>
   {% endif %}
 {%- endmacro %}
 
@@ -367,7 +367,7 @@
    (static/js/drishti_compute.js moves it from the live channel and fetches the panel again when the result lands), the last good result dimmed
    under it; stale: amber; failed or refused: why, with the connector named, over the last good result if there is one. #}
 {% macro compute_state(p) -%}
-{% set c = p.compute %}{% set pr = c.progress if c.progress is mapping else {} %}{% set pct = ((pr.done / pr.of * 100) | round | int) if (pr.done is number and pr.of is number and pr.of > 0) else none %}
+{% set c = p.compute %}{% set pr = c.progress if c.progress is mapping else {} %}{% set pct = ((pr.done / pr.of * 100) | half_up | int) if (pr.done is number and pr.of is number and pr.of > 0) else none %}
 {% if c.state == 'computing' %}<div class="cmp-state cmp-computing" role="status" aria-live="polite" data-compute-strip><span class="cmp-bar" aria-hidden="true"><span class="cmp-fill" data-compute-bar data-w="{{ pct if pct is not none else 0 }}"></span></span>
   <span class="cmp-t">Computing{% if pct is not none %} <span data-compute-pct>{{ pct }}%</span>{% else %} <span data-compute-pct></span>{% endif %} · {{ c.connector }}{% if c.hasResult %} · showing the last result{% endif %}</span></div>
 {% elif c.state == 'stale' %}<div class="cmp-state cmp-stale" role="status" data-compute-strip><i class="bi bi-hourglass-split" aria-hidden="true"></i> <span class="cmp-t">Stale · {{ c.message or (c.connector ~ ' is recomputing') }}</span></div>
