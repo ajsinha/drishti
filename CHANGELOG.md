@@ -278,6 +278,10 @@
   - **Guards** (`tests/test_elements_guards.py`, a quick file check): no console script calls ECharts or Vega, sorts a table by its
     headings, formats numbers on its own or opens its own EventSource or WebSocket; the allow-list holds only files `wip/e-migrate-bi` and
     `wip/e-migrate-var` are moving, each with its branch, and only shrinks.
+  - **Browser times** (55 browser files these changes touch, six workers): the same files on the tree before the migration and
+    after, side by side on one machine, took 32.0 and 31.5 s for the tables and history files run alone (no change); in the full
+    sets the machine was shared with other runs and the sums varied by run (2,252 s before, 3,835 s after, 1,744 s in 2.9.11.d's
+    drill), so they say nothing either way. The thinner screen tests the owner asked for come with the component tests (the gallery).
   - **Still to move** (ELEMENTS.md 8.5): the multi-select, the pickers, the controls, the forms and the Build and Studio editors.
 
 ## 2.9.11.d (unreleased)
