@@ -101,7 +101,7 @@ Knowledge primers and the release notes. Help listed entries: 79 → about 60 (e
 
 ## 3. Every existing document
 
-`docs/` paths. "→ X" means merge into X (live content moves, then `git rm`). New folder `docs/reference/` holds the references.
+`docs/` paths. "→ X" means merge into X (live content moves, then `git rm`). New folder `docs/reference/` (planned) holds the references.
 
 ### Guides (32 + 19)
 
@@ -231,7 +231,7 @@ Knowledge primers and the release notes. Help listed entries: 79 → about 60 (e
 | Feature guides | 32 | 23 (22 + regulatory) |
 | Guide sub-pages (examples, Flight clients) | 19 | 15 (example notes) |
 | Tutorials (+ index) | 39 + 1 | 22 + 1 (generated) |
-| Reference (`docs/reference/`) | 0 | 9 |
+| Reference (`docs/reference/` (planned)) | 0 | 9 |
 | Admin | 12 | 0 |
 | Connectors | 29 | 0 (19 plugin READMEs) |
 | Contracts | 118 | 28 |
@@ -273,7 +273,7 @@ everything internal.
 
 | Gate | Fails when |
 |---|---|
-| Feature register | `config/docs-features.yaml` (feature, guide, tutorial, domain, lenses, budget) and the files disagree; a feature without exactly one guide and one tutorial (or `tutorial: after <release>`) |
+| Feature register | `config/docs-features.yaml` (planned) (feature, guide, tutorial, domain, lenses, budget) and the files disagree; a feature without exactly one guide and one tutorial (or `tutorial: after <release>`) |
 | Count caps | guides > 24, tutorials > 23, reference > 10, contracts > 30, knowledge > 5, Help entries > 65 |
 | Page budgets | a guide or tutorial over its budget by more than 10% |
 | One home for data | a field table or JSON record of a contract kind outside `docs/contracts/` (tutorial outputs excepted) |
@@ -311,7 +311,7 @@ fail; root README; decks; the drills.
 
 ## 7. Open questions for the owner
 
-1. **Layout:** a new `docs/reference/`, and lenses, qa and strategy moved under `docs/architecture/` (internal)? Or keep the folders and
+1. **Layout:** a new `docs/reference/` (planned), and lenses, qa and strategy moved under `docs/architecture/` (internal)? Or keep the folders and
    only cut files?
 2. **Pack guides:** the 14 shipped pack guides fold into BANK_DATA_GUIDE and WORLD_DATA_GUIDE, packs keep only their README; agreed?
 3. **Where risk docs live after e:** in `docs/` tagged by domain (recommended; the licence hides them) or inside the banking module?
