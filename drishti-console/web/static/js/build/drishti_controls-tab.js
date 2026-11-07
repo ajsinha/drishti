@@ -55,7 +55,8 @@
     var $ = function (s) { return pane.querySelector(s); };
     var list = $('[data-ctl-list]'), src = $('[data-ctl-src]'), probBox = $('[data-ctl-problems]'), prev = $('[data-ctl-preview]'), statusEl = $('[data-ctl-status]');
     var base = '/build/designs/' + encodeURIComponent(store.state.id);
-    var items = [], saveT = 0, applying = false, dragFrom = -1, mine = 0, runtime = null, previewToken = 0, loaded = false;
+    var items = [], saveT = 0, applying = false, mine = 0, runtime = null, previewToken = 0, loaded = false;
+    window.Drishti.elements.designer.sortableList(list, { row: '.wbf-card', dragClass: 'wbf-drag', overClass: 'wbf-over', onMove: function (from, to) { reorder(from, to); } });   // a card dragged to another place (drishti-designer)
 
     // ---- the model and its YAML ---------------------------------------------------------------------------------------------------
     function q(v) { return JSON.stringify(v); }
@@ -116,7 +117,7 @@
       l.appendChild(k); l.appendChild(WB.el('span', null, text)); return l;
     }
     function card(c, i) {
-      var li = WB.el('li', 'wbf-card', null, { tabindex: '0', draggable: 'true', 'data-i': String(i), 'aria-label': (c.label || c.id || 'new control') + ', ' + (c.kind || 'dropdown') + ', control ' + (i + 1) + ' of ' + items.length });
+      var li = WB.el('li', 'wbf-card', null, { tabindex: '0', 'data-i': String(i), 'aria-label': (c.label || c.id || 'new control') + ', ' + (c.kind || 'dropdown') + ', control ' + (i + 1) + ' of ' + items.length });
       var head = WB.el('div', 'wbf-head');
       head.appendChild(WB.el('span', 'wbf-grip', '⠿', { 'aria-hidden': 'true', title: 'Drag to reorder' }));
       head.appendChild(WB.el('code', 'mono wbf-path', 'ctl.' + (c.id || '?')));
@@ -165,10 +166,6 @@
         li.querySelectorAll('[aria-label]').forEach(function (e) { var a = e.getAttribute('aria-label'); if (a.indexOf(was + ' ') === 0 || a.indexOf(' ' + was) > 0) { e.setAttribute('aria-label', a.split(was).join(now)); } });
         shown.textContent = 'ctl.' + (c.id || '?'); was = now;
       });
-      li.addEventListener('dragstart', function (e) { dragFrom = i; li.classList.add('wbf-drag'); if (e.dataTransfer) { e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', c.id || ''); } });
-      li.addEventListener('dragend', function () { dragFrom = -1; li.classList.remove('wbf-drag'); });
-      li.addEventListener('dragover', function (e) { if (dragFrom >= 0) { e.preventDefault(); } });
-      li.addEventListener('drop', function (e) { e.preventDefault(); if (dragFrom >= 0 && dragFrom !== i) { reorder(dragFrom, i); } dragFrom = -1; });
       li.addEventListener('keydown', function (e) {
         if (e.target !== li) { return; }
         if (e.altKey && e.key === 'ArrowUp') { e.preventDefault(); move(i, -1); } else if (e.altKey && e.key === 'ArrowDown') { e.preventDefault(); move(i, 1); }

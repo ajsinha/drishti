@@ -77,12 +77,13 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wb-frame .pnl, .wb-frame .vtitle, .wb-frame dl.strip { position: relative; outline: 2px solid transparent; outline-offset: 1px; border-radius: var(--d-radius-6); }
 .wb-frame .pnl-h.wb-grab { cursor: grab; }
 .wb-frame .wb-hover { outline-color: var(--d-accent-strong, var(--d-accent)); outline-style: dashed; }
-.wb-frame .wb-sel { outline: 3px solid var(--d-accent); outline-style: solid; }
-.wb-frame .wb-sel:focus-visible { outline-offset: 2px; }
-.wb-frame .pnl.dragging { opacity: .45; }
-.wb-frame .pnl .lh-e, .wb-frame .pnl .lh-s { display: none; position: absolute; z-index: 6; touch-action: none; }
-.wb-frame .pnl:hover > .lh-e, .wb-frame .pnl:hover > .lh-s, .wb-frame .pnl.wb-sel > .lh-e, .wb-frame .pnl.wb-sel > .lh-s { display: block; }
-.wb-frame .pnl:hover > .lay-size, .wb-frame .pnl.wb-sel > .lay-size, .wb-frame .pnl.resizing > .lay-size { display: block; }
+.wb-frame .wb-sel, .wb-frame .pnl.dd-selected { outline: 3px solid var(--d-accent); outline-style: solid; box-shadow: none; }
+.wb-frame .wb-sel:focus-visible, .wb-frame .pnl.dd-selected:focus-visible { outline-offset: 2px; }
+.wb-frame .pnl.dd-dragging { opacity: .45; }
+.wb-frame .pnl:hover { outline: 1px dashed var(--d-accent-strong, var(--d-accent)); }
+.wb-frame .pnl > .dd-edge-e, .wb-frame .pnl > .dd-edge-s { display: none; z-index: 6; touch-action: none; }
+.wb-frame .pnl:hover > .dd-edge-e, .wb-frame .pnl:hover > .dd-edge-s, .wb-frame .pnl.dd-selected > .dd-edge-e, .wb-frame .pnl.dd-selected > .dd-edge-s { display: block; }
+.wb-frame .pnl:hover > .lay-size, .wb-frame .pnl.dd-selected > .lay-size, .wb-frame .pnl.resizing > .lay-size { display: block; }
 .wb-frame .pnl .lay-size { position: absolute; right: .5rem; bottom: .35rem; z-index: 5; padding: 0 var(--d-sp-5_6); border-radius: var(--d-radius-3); background: var(--d-accent); color: var(--d-on-accent); font-size: var(--d-fs-11_52); }
 .wb-frame .wb-drop-on { outline: 3px dashed var(--d-pos); background: var(--d-accent-tint); }
 .wb-drop { position: fixed; z-index: var(--d-z-float); left: var(--l); top: var(--t); width: var(--w); height: var(--h); background: var(--d-accent); border-radius: var(--d-radius-2); pointer-events: none; }
@@ -162,7 +163,7 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wb-sec > summary { cursor: pointer; }
 .wb-palette { max-height: 15rem; overflow: auto; padding-right: var(--d-sp-3_2); }
 .wb-left .bs-tree { max-height: 22rem; overflow: auto; }
-.wb-kind, .wb-field-row, .wb-frame .pnl-h, .wb-frame .lh-e, .wb-frame .lh-s { user-select: none; -webkit-user-select: none; }
+.wb-kind, .wb-field-row, .wb-frame .pnl-h, .wb-frame .dd-edge { user-select: none; -webkit-user-select: none; }
 
 /* the YAML editor wears the console's colours, as Studio's does (drishti_terminal.css scopes those rules to Studio's own pane) */
 #wbPaneYaml .CodeMirror { background: var(--d-bg-2); color: var(--d-ink); font: var(--d-fs-13_12)/1.5 var(--d-font-mono); }
@@ -211,20 +212,20 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wb-grip { margin-right: var(--d-sp-4_8); opacity: .7; cursor: grab; }
 .wb-frame .wb-new { animation: wb-arrive 1.6s ease-out; }
 @keyframes wb-arrive { 0% { box-shadow: 0 0 0 6px var(--d-accent); } 100% { box-shadow: 0 0 0 0 transparent; } }
-.wb-frame .pnl.wb-sel > .lh-e, .wb-frame .pnl.wb-sel > .lh-s { background: var(--d-accent); opacity: .85; }
+.wb-frame .pnl.dd-selected > .dd-edge-e, .wb-frame .pnl.dd-selected > .dd-edge-s { background: var(--d-accent); opacity: .85; }
 .wb-first { display: flex; justify-content: center; padding: 3rem var(--d-sp-16); }
 .wb-first-b { font-size: var(--d-fs-18_4); padding: var(--d-sp-11_2) var(--d-sp-25_6); }
 
 /* Removing a panel: a trash button in the heading, a toast with Undo */
 .wb-frame .pnl-h { position: relative; }
 .wb-trash { margin-left: auto; background: none; border: 0; color: inherit; padding: 0 var(--d-sp-4_8); cursor: pointer; opacity: 0; min-width: 24px; min-height: 24px; }
-.wb-frame .pnl:hover .wb-trash, .wb-frame .pnl:focus-within .wb-trash, .wb-frame .pnl.wb-sel .wb-trash, .wb-trash:focus-visible { opacity: 1; }
+.wb-frame .pnl:hover .wb-trash, .wb-frame .pnl:focus-within .wb-trash, .wb-frame .pnl.dd-selected .wb-trash, .wb-trash:focus-visible { opacity: 1; }
 .wb-toast { position: fixed; left: 50%; bottom: 1.2rem; transform: translateX(-50%); z-index: var(--d-z-toast); background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-accent); border-radius: var(--d-radius-8); padding: var(--d-sp-8) var(--d-sp-14_4); box-shadow: var(--d-elev-toast); display: flex; gap: var(--d-sp-8); align-items: center; }
 
 /* Removing a panel: a trash button in the heading, a toast with Undo */
 .wb-frame .pnl-h { position: relative; }
 .wb-trash { margin-left: auto; background: none; border: 0; color: inherit; padding: 0 var(--d-sp-4_8); cursor: pointer; opacity: 0; min-width: 24px; min-height: 24px; }
-.wb-frame .pnl:hover .wb-trash, .wb-frame .pnl:focus-within .wb-trash, .wb-frame .pnl.wb-sel .wb-trash, .wb-trash:focus-visible { opacity: 1; }
+.wb-frame .pnl:hover .wb-trash, .wb-frame .pnl:focus-within .wb-trash, .wb-frame .pnl.dd-selected .wb-trash, .wb-trash:focus-visible { opacity: 1; }
 .wb-toast { position: fixed; left: 50%; bottom: 1.2rem; transform: translateX(-50%); z-index: var(--d-z-toast); background: var(--d-surface); color: var(--d-ink); border: 1px solid var(--d-accent); border-radius: var(--d-radius-8); padding: var(--d-sp-8) var(--d-sp-14_4); box-shadow: var(--d-elev-toast); display: flex; gap: var(--d-sp-8); align-items: center; }
 
 /* Dialogs in the page (instead of confirm()/prompt()) */
@@ -270,6 +271,7 @@ body.wb-dragging, body.wb-dragging * { cursor: grabbing !important; user-select:
 .wbf-card { border: 1px solid var(--d-border); border-radius: var(--d-radius-8); background: var(--d-surface); padding: var(--d-sp-5_6) var(--d-sp-8); }
 .wbf-card:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
 .wbf-drag { opacity: .5; }
+.wbf-over { box-shadow: 0 -3px 0 var(--d-accent); }
 .wbf-head { display: flex; align-items: center; gap: var(--d-sp-5_6); }
 .wbf-grip { cursor: grab; color: var(--d-muted); padding: 0 var(--d-sp-3_2); }
 .wbf-path { flex: 1; min-width: 0; overflow-wrap: anywhere; }

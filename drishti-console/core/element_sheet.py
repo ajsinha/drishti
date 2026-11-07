@@ -43,9 +43,9 @@ REPORT_NAMED_ICONS = ("table", "x-circle", "play-fill", "pause-fill", "caret-dow
                       "arrow-down-circle-fill", "arrow-right-circle-fill", "arrow-up-circle-fill", "circle-fill", "x-circle-fill", "exclamation-circle-fill", "check-circle-fill", "flag-fill")
 REPORT_ICON_CALL = re.compile(r"icon\('([a-z0-9]+(?:-[a-z0-9]+)*)'\)")
 # the console's own sheets, in the order base.html loads them (the icon sheet is handled apart: only its used glyphs go in)
-SHEETS = ("css/drishti_tokens.css", "css/drishti_theme.css", "css/drishti_terminal.css", "css/drishti_layout.css", "css/drishti_gradients.css", "css/drishti_pivot.css", "elements/drishti-grid/drishti_grid.css", "css/drishti_colfilter.css", "css/drishti_controls.css", "css/drishti_about.css", "css/drishti_touch.css")
+SHEETS = ("css/drishti_tokens.css", "css/drishti_theme.css", "css/drishti_terminal.css", "css/drishti_layout.css", "css/drishti_gradients.css", "css/drishti_pivot.css", "elements/drishti-grid/drishti_grid.css", "css/drishti_colfilter.css", "css/drishti_controls.css", "elements/drishti-inputs/drishti_inputs.css", "css/drishti_about.css", "css/drishti_touch.css")
 ICON_SHEET = "vendor/bootstrap-icons/bootstrap-icons.css"
-GZIP_TARGET = 27 * 1024          # raised on purpose in 2.9.11.e (from 25 KB): drishti-grid's sheet, for the nested pivots tree rows draw with it
+GZIP_TARGET = 29 * 1024          # raised on purpose in 2.9.11.e (from 25 KB): drishti-grid's sheet, for the nested pivots tree rows draw with it, and drishti-inputs' sheet, for the controls' multi-select and dates
 # where a glyph can be named: the macros every embedded view is rendered with, and the scripts that run inside the element
 ICON_SOURCES = ("templates/_macros/panels.html", "templates/_macros/view.html", "static/js/drishti_tables.js", "static/js/drishti_colfilter.js", "static/js/drishti_tree-rows.js",
                 "static/js/drishti_view.js", "static/js/drishti_zoom.js", "static/js/drishti_charts.js", "embed/enhancers.js", "embed/element.js", "embed/assets.js",
@@ -165,7 +165,7 @@ def glyph_rules() -> dict[str, str]:
 # The scale and fixed-colour token families of drishti_tokens.css (the theme colours are not among them: scripts read those). In a
 # generated sheet each one that has a single value in every theme is written into the rules that use it, and its declaration goes
 # when no rule still uses it: the sheet stays as small as it was before the tokens, and draws the same.
-PRUNABLE = re.compile(r"--d-(?:fs|sp|radius|z|bp|density|elev|swatch|frtb|heat|band|scrim|cap|market|trading|on-trading|world|statement|calc|print|on-color|paper|on-band)(?:-[\w-]*)?")
+PRUNABLE = re.compile(r"--d-(?:fs|sp|radius|z|bp|density|elev|swatch|frtb|heat|band|scrim|cap|market|trading|on-trading|world|statement|calc|print|on-color|paper|on-band|form)(?:-[\w-]*)?")
 _DECL = re.compile(r"(--d-[\w-]+)\s*:\s*([^;{}]*);[ \t]*")
 _REF = re.compile(r"var\((--d-[\w-]+)\)")
 

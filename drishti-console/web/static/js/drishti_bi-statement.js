@@ -116,6 +116,8 @@
     const files = h('span', { class: 'bi-st-files', 'data-st-files': '' });
     const sheet = h('div', { class: 'bi-st-stage', 'data-st-stage': '' });
     host.appendChild(h('div', { class: 'bi-st-bar' }, h('label', { class: 'bi-st-date' }, 'Statement date ', date), go, prev, where, next, files));
+    const I = window.Drishti.elements && window.Drishti.elements.inputs;
+    if (I) { I.upgradeDateInput(date); }                                    // drishti-inputs' date picker; the field keeps its value
     host.appendChild(sheet);
     go.addEventListener('click', () => preview());
     prev.addEventListener('click', () => { if (S.at > 0) { S.at--; draw(); } });

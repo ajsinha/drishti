@@ -17,7 +17,7 @@
 /* The About tab (docs/guides/RACHANA_REFERENCE.md › About this page: the design of context help, step 7): the design's About text (the pack's config/about.yaml: the page's text,
  * the panels' text and the glossary) written beside the Sutra, with the About card it makes for the sample being previewed.
  *
- *   edit      a small CodeMirror on the text. After a pause (600 ms) the card is asked for (POST /build/designs/{id}/about/preview, nothing
+ *   edit      drishti-inputs' code editor (YAML) on the text. After a pause (600 ms) the card is asked for (POST /build/designs/{id}/about/preview, nothing
  *             saved); after a longer one (1.5 s) or on leaving the box the text is kept as a step of the design's log (PUT .../about), so
  *             undo, redo and revisions cover it like a Sutra edit. A stale revision is a 409 and the design is reloaded, as for operations.
  *   card      layer 1 (page text, the Sutra's description, the panels' notes) and layer 2 (the glossary of the fields this preview shows),
@@ -36,15 +36,17 @@
   WB.About = function (pane, store) {
     var ta = pane.querySelector('[data-about-src]'), cardBox = pane.querySelector('[data-about-card]'), lintBox = pane.querySelector('[data-about-lint]'),
       statusEl = pane.querySelector('[data-about-status]'), starterB = pane.querySelector('[data-about-starter]');
-    var editor = window.CodeMirror ? window.CodeMirror.fromTextArea(ta, { mode: 'rachana-yaml', lineNumbers: true, lineWrapping: true, indentUnit: 2, tabSize: 2,
-      extraKeys: { Tab: false, 'Shift-Tab': false } }) : null;          // Tab leaves the box: the tab is reachable and left by keyboard alone
-    if (editor) { editor.getInputField().setAttribute('aria-label', 'About text (about.yaml)'); }
+    var host = document.createElement('div');                     // drishti-inputs' code editor (YAML); Tab leaves the box: the tab is reachable and left by keyboard alone
+    host.setAttribute('data-about-editor', '');
+    ta.hidden = true;
+    ta.after(host);
+    var editor = new window.Drishti.elements.inputs.CodeEditor(host, { mode: 'yaml', label: 'About text (about.yaml)', lineWrapping: true, height: 260, tabLeaves: true, value: ta.value });
     var base = '/build/designs/' + encodeURIComponent(store.state.id), previewT = 0, saveT = 0, token = 0, applying = false, loaded = false, last = null;
 
-    function value() { return editor ? editor.getValue() : ta.value; }
+    function value() { return editor.getValue(); }
     function set(text) {
       applying = true;
-      if (editor) { var cur = editor.getCursor(); editor.setValue(text); editor.setCursor({ line: Math.min(cur.line, editor.lineCount() - 1), ch: cur.ch }); } else { ta.value = text; }
+      editor.updateValue(text);
       applying = false;
     }
     function sampleName() { return store.state.sample || undefined; }
@@ -142,7 +144,8 @@
     }
     function pending() { return !!saveT; }
     function flush() { return saveT ? save() : Promise.resolve(); }
-    if (editor) { editor.on('change', changed); editor.on('blur', function () { if (saveT) { save(); } }); } else { ta.addEventListener('input', changed); }
+    editor.on('change', changed);
+    editor.ready.then(function () { if (editor.cm) { editor.cm.on('blur', function () { if (saveT) { save(); } }); } });
 
     store.on('doc', function (d) {
       if (typeof d.about === 'string' && d.about !== value() && !saveT) { set(d.about); }       // undo, redo or a reload moved the text
@@ -166,7 +169,7 @@
         // the skeleton is of what the preview shows with no text of its own: ask for that, then write it
         var put = function () {
           WB.call('POST', base + '/about/preview', { text: '', sample: sampleName() }).then(function (r) {
-            set(starter(r.ok ? r.body : null)); changed(); if (editor) { editor.focus(); }
+            set(starter(r.ok ? r.body : null)); changed(); editor.focus();
             store.emit('say', 'A starter was written for the kind, its panels and the fields shown without an entry.');
           });
         };
@@ -176,9 +179,9 @@
     }
 
     set(store.state.about || '');
-    function goto(l) { if (editor) { editor.focus(); if (l) { editor.setCursor({ line: Math.max(0, l - 1), ch: 0 }); editor.scrollIntoView(null, 60); } } else { ta.focus(); } }
+    function goto(l) { if (l) { editor.goTo(Math.max(1, l), 0); } else { editor.focus(); } }
     return {
-      show: function () { if (editor) { editor.refresh(); } if (!loaded || last === null) { refresh(); } },
+      show: function () { editor.refresh(); if (!loaded || last === null) { refresh(); } },
       later: function () { setTimeout(function () { if (!loaded) { refresh(); } }, 1200); },       // the Problems tab lists the warnings of a design with About text without the tab being opened
       goto: goto, flush: flush, pending: pending, value: value, refresh: refresh, editor: editor
     };

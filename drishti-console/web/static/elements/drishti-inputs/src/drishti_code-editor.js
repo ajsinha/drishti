@@ -27,6 +27,21 @@ import { InputBase, Listbox, Popover, debounce } from './drishti_inputs-dom.js';
 let cmReady = null;
 
 /**
+ * The indentation of a new YAML line after the text before the cursor: the line's own, a list item's content column, two more after a
+ * key that opens a block ("key:", "key: |").
+ * @param {string} before
+ * @returns {number}
+ */
+export function yamlIndentAfter(before) {
+  before = String(before).replace(/\s+#.*$/, '');
+  const m = before.match(/^(\s*)((?:-\s+)*)/), rest = before.slice(m[0].length);
+  let n = m[1].length + m[2].length;
+  if (m[2] && (/^[{["']/.test(rest) || !/^[^\s#][^:#]*:(\s|$)/.test(rest))) { n = m[1].length; }
+  if (/^\s*(?:-\s+)*[^\s#][^:#]*:\s*([|>][-+0-9]*)?\s*$/.test(before) && !/[{[]/.test(before)) { n += 2; }
+  return n;
+}
+
+/**
  * CodeMirror on the page: the one given, the page's, or the vendored one loaded now (with its style sheet).
  * @param {Object} [given] a CodeMirror to use
  * @returns {Promise<Object>}
@@ -69,10 +84,15 @@ export function ensureCodeMirror(given) {
  * @property {Object<string, function(): *>} [keys] the page's own keys in the editor, CodeMirror's names ('Ctrl-Enter': run, Esc: close);
  *   Tab and Shift-Tab indent and dedent a selection
  * @property {Object} [CodeMirror] a CodeMirror to use (default: the vendored one)
+ * @property {function(string): boolean} [completeAfter] also opens the completions when the text before the cursor passes this test
+ *   (a YAML key's "kind: ", a path's "$.")
+ * @property {boolean} [lineWrapping=false]
+ * @property {boolean} [tabLeaves=false] Tab and Shift+Tab move the focus out of the editor (a small box in a form) instead of indenting
  */
 
 /**
- * The code editor. Events: change {value}, ready, lint {problems}, completed {entry}.
+ * The code editor. Events: change {value, origin} (origin 'setValue' when the page set the text), ready, lint {problems}, completed {entry},
+ * cursor {line, ch} (0-based, as the cursor moves).
  */
 export class CodeEditor extends InputBase {
   /**
@@ -113,11 +133,17 @@ export class CodeEditor extends InputBase {
     const go = () => {
       this.area.remove();
       const cm = this.cm = CM(this.box, { value: this.value, mode: mode.cm, readOnly: o.readOnly ? true : false, lineNumbers: o.lineNumbers, gutters: ['di-lint-gutter', 'CodeMirror-linenumbers'],
-        indentUnit: o.indentUnit, tabSize: o.indentUnit, indentWithTabs: false, lineWrapping: false, screenReaderLabel: o.label || 'Code', extraKeys: this.extraKeys() });
+        indentUnit: o.indentUnit, tabSize: o.indentUnit, indentWithTabs: false, lineWrapping: !!o.lineWrapping, screenReaderLabel: o.label || 'Code', extraKeys: this.extraKeys() });
       cm.setSize(null, o.height);
       const ta = cm.getInputField();
       if (ta) { ta.setAttribute('aria-label', (o.label || 'Code') + (o.readOnly ? ' (read-only)' : '')); }
-      cm.on('change', (x, ch) => { this.value = cm.getValue(); this.changed(); if (ch.origin === '+input' && /[\w.$@]/.test(ch.text.join(''))) { this.complete(false); } else if (ch.origin !== 'complete') { this.pop.close(); } });
+      cm.on('change', (x, ch) => {
+        this.value = cm.getValue();
+        this.changed(ch.origin);
+        const before = ch.origin === '+input' && o.completeAfter ? cm.getLine(cm.getCursor().line).slice(0, cm.getCursor().ch) : '';
+        if (ch.origin === '+input' && (/[\w.$@]/.test(ch.text.join('')) || (before && o.completeAfter(before)))) { this.complete(!!(before && o.completeAfter(before))); } else if (ch.origin !== 'complete') { this.pop.close(); }
+      });
+      cm.on('cursorActivity', () => { const c = cm.getCursor(); this.emit('cursor', { line: c.line, ch: c.ch }); });
       cm.on('keydown', (x, e) => this.completionKey(e));
       cm.on('blur', () => this.doc.defaultView.setTimeout(() => { if (!this.cm.hasFocus()) { this.pop.close(); } }, 150));
       this.lintSoon();
@@ -133,6 +159,8 @@ export class CodeEditor extends InputBase {
     const unit = ' '.repeat(this.o.indentUnit), keys = { 'Ctrl-Space': () => this.complete(true), 'Cmd-Space': () => this.complete(true),
       Tab: (cm) => { if (cm.somethingSelected()) { cm.indentSelection('add'); } else { cm.replaceSelection(unit, 'end'); } },
       'Shift-Tab': (cm) => { cm.indentSelection('subtract'); } };
+    if (this.o.tabLeaves) { keys.Tab = false; keys['Shift-Tab'] = false; }
+    if (this.o.mode === 'yaml') { keys.Enter = (cm) => { const c = cm.getCursor(); cm.replaceSelection('\n' + ' '.repeat(yamlIndentAfter(cm.getLine(c.line).slice(0, c.ch))), 'end', '+input'); }; }
     Object.keys(this.o.keys || {}).forEach((k) => { keys[k] = () => this.o.keys[k](); });
     return keys;
   }
@@ -144,7 +172,7 @@ export class CodeEditor extends InputBase {
   refresh() { if (this.cm) { this.cm.refresh(); } }
 
   /** @private */
-  changed() { this.emit('change', { value: this.value }); if (this.o.lint) { this.lintSoon(); } }
+  changed(origin) { this.emit('change', { value: this.value, origin: origin || 'input' }); if (this.o.lint) { this.lintSoon(); } }
 
   /** @private */
   say(t) { this.host.setAttribute('data-note', t); announce(t); }
@@ -161,12 +189,13 @@ export class CodeEditor extends InputBase {
     if (!forced && w.word.replace(/^[$@]/, '').length < 1) { this.pop.close(); return Promise.resolve(); }
     this.asked = (this.asked || 0) + 1;
     const ask = this.asked;
-    const ctx = { word: w.word, line: line, ch: cur.ch, mode: this.o.mode };
+    const ctx = { word: w.word, line: line, ch: cur.ch, mode: this.o.mode, lineNo: cur.line, text: this.cm.getValue(), forced: !!forced };
     return Promise.resolve(this.o.complete ? this.o.complete(ctx) : completions(this.o.catalogue, w.word)).then((list) => {
       if (ask !== this.asked) { return; }
       list = (list || []).slice(0, 50);
       if (!list.length) { this.pop.close(); return; }
-      this.completing = { line: cur.line, from: w.from, to: cur.ch, list: list };
+      const from = list[0] && list[0].from !== undefined ? list[0].from : w.from;           // an entry may say where its word starts (a YAML key's '-')
+      this.completing = { line: cur.line, from: from, to: list[0] && list[0].to !== undefined ? list[0].to : cur.ch, list: list };
       this.listbox.render(list.map((e) => ({ value: e.name, label: e.name, detail: e.signature || e.description || e.kind || '', entry: e })), () => false);
       this.listbox.setActive(0);
       const at = this.cm.cursorCoords(true, 'window');
@@ -269,6 +298,48 @@ export class CodeEditor extends InputBase {
    * @returns {void}
    */
   setValue(text) { this.value = String(text || ''); if (this.cm) { this.cm.setValue(this.value); } else { this.area.value = this.value; } }
+
+  /**
+   * Replaces the text where it differs, keeping the cursor, the selection and the scroll (the document changed elsewhere: an undo,
+   * the visual side). Answers whether anything changed.
+   * @param {string} text
+   * @returns {boolean}
+   */
+  updateValue(text) {
+    text = String(text || '');
+    if (text === this.getValue()) { return false; }
+    if (!this.cm) { this.setValue(text); return true; }
+    const cm = this.cm, cur = cm.getCursor(), scroll = cm.getScrollInfo();
+    this.value = text;
+    cm.operation(() => { cm.setValue(text); cm.setCursor({ line: Math.min(cur.line, cm.lineCount() - 1), ch: cur.ch }); cm.scrollTo(scroll.left, scroll.top); });
+    return true;
+  }
+
+  /**
+   * Marks lines (0-based, inclusive) as the selected item's, and brings them into view; null clears the mark.
+   * @param {?number} from
+   * @param {number} [to]
+   * @param {{scroll: boolean}} [o] scroll: bring the lines into view (default true)
+   * @returns {void}
+   */
+  highlight(from, to, o) {
+    this.lit = this.lit || [];
+    if (this.cm) { this.lit.forEach((n) => this.cm.removeLineClass(n, 'background', 'di-code-hl')); }
+    this.lit = [];
+    this.host.removeAttribute('data-hl');
+    if (from === null || from === undefined) { return; }
+    to = to === undefined ? from : to;
+    this.host.setAttribute('data-hl', (from + 1) + '-' + (to + 1));
+    if (!this.cm) { return; }
+    for (let n = from; n <= to && n < this.cm.lineCount(); n++) { this.lit.push(this.cm.addLineClass(n, 'background', 'di-code-hl')); }
+    if (!o || o.scroll !== false) { this.cm.scrollIntoView({ from: { line: from, ch: 0 }, to: { line: Math.min(to, from + 12), ch: 0 } }, 24); }
+  }
+
+  /**
+   * The cursor (0-based line and column).
+   * @returns {{line: number, ch: number}}
+   */
+  cursor() { if (this.cm) { const c = this.cm.getCursor(); return { line: c.line, ch: c.ch }; } const before = this.area.value.slice(0, this.area.selectionStart).split('\n'); return { line: before.length - 1, ch: before[before.length - 1].length }; }
 
   /**
    * Makes it read-only, or editable.

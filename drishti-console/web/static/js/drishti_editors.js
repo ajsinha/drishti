@@ -14,9 +14,10 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis);
-/* The editor shell (docs/architecture/EDITORS.md section 1): three panes (the objects with search | the editor with the live YAML below it |
-   the live preview with checks), the Visual / YAML / Both toggle remembered per person (the server keeps it), and the header: the status
-   with versions, Validate, Preview, History, Impact, Save draft and Propose for review (four eyes). A visual edit sends the document and
+/* The editors of the table layer (docs/architecture/EDITORS.md sections 1 to 4) on drishti-designer's DesignerShell: the objects with
+   search | the editor with the live YAML (the kit's YamlPane over drishti-inputs' CodeEditor) below it | the live preview with checks, the
+   Visual / YAML / Both toggle and the layout remembered per person (the server keeps them), and the header: the status with versions,
+   Validate, Preview, History, Impact, Save draft and Propose for review (four eyes). A visual edit sends the document and
    the server writes the YAML back; a YAML edit sends the text and the server answers the document, so either side shows the other's
    edit. Every check, total and figure is the server's. The editors themselves (drishti_editor-table.js, -model.js, -python.js) register
    here; the + New steps are drishti_editor-new.js. One page's state lives in this closure, never in a shared global. */
@@ -69,13 +70,10 @@
   function q(sel) { return root.querySelector(sel); }
   function clone(o) { return o === undefined ? undefined : JSON.parse(JSON.stringify(o)); }
 
-  var root, S, checkTimer, previewTimer, yamlTimer, seqCheck = 0, seqPreview = 0;
+  var root, S, shell, pane, checkTimer, previewTimer, seqCheck = 0, seqPreview = 0;
+  var K = window.Drishti.elements.designer;
 
-  function say(text, bad) {
-    var m = q('[data-msg]');
-    m.textContent = text || '';
-    m.classList.toggle('ed-bad', !!bad);
-  }
+  function say(text, bad) { shell.say(text, bad); }
   E.say = function (t, bad) { say(t, bad); };
 
   /* ---- the context an editor draws with ------------------------------------------------------------------------------------- */
@@ -92,7 +90,7 @@
       if (path) { S.focusPath = path; }
       scheduleCheck({ doc: doc }, 120);
     },
-    focus: function (path) { S.focusPath = path; highlight(); },
+    focus: function (path) { S.focusPath = path; highlight(true); },
     names: function () { return names(); },
     dialog: dialog,
     redraw: function () { drawVisual(); },
@@ -126,86 +124,52 @@
 
   /* ---- the header ----------------------------------------------------------------------------------------------------------- */
   function status() {
-    var pill = q('[data-status]');
-    var title = q('[data-title]');
-    var group = q('[data-crumb-group]');
     if (!S) {
-      pill.hidden = true; title.textContent = 'Tables & models'; group.textContent = 'Choose an object';
-      q('[data-versions]').textContent = '';
+      shell.setStatus(null); shell.setTitle('Tables & models'); shell.setCrumbs(['Build', { label: 'Tables & models', href: '/build/tables' }, 'Choose an object']);
       buttons();
       return;
     }
-    title.textContent = S.name || 'New ' + (S.python ? 'Python-driven table' : S.kind);
-    group.textContent = S.python ? 'Python-driven tables' : S.kind === 'model' ? 'Semantic models' : 'Tables';
-    var word = S.origin === 'file' ? 'Shipped' : S.status === 'published' ? 'Approved' : S.status === 'proposed' ? 'Proposed' : 'Draft';
-    pill.hidden = false;
-    pill.className = 'ed-pill ed-' + (S.status || 'draft');
-    pill.textContent = word + (S.dirty ? ' · unsaved' : '');
-    q('[data-versions]').textContent = S.origin === 'item' ? (S.version ? 'approved v' + S.version : 'never approved') + (S.status === 'draft' && S.version ? ' · a draft after it' : '') : S.origin === 'file' ? 'from configuration' : '';
+    shell.setTitle(S.name || 'New ' + (S.python ? 'Python-driven table' : S.kind));
+    shell.setCrumbs(['Build', { label: 'Tables & models', href: '/build/tables' }, S.python ? 'Python-driven tables' : S.kind === 'model' ? 'Semantic models' : 'Tables']);
+    shell.setStatus({ status: S.origin === 'file' ? 'shipped' : S.status, version: S.version, origin: S.origin, dirty: S.dirty });
     buttons();
   }
   function buttons() {
     var has = !!S;
-    var set = function (act, on, why) { var b = q('[data-act="' + act + '"]'); b.disabled = !on; b.title = on ? b.getAttribute('data-title') || b.title : why; };
-    root.querySelectorAll('[data-act]').forEach(function (b) { if (!b.getAttribute('data-title')) { b.setAttribute('data-title', b.title); } });
-    set('validate', has, 'Open an object first');
-    set('preview', has, 'Open an object first');
-    set('impact', has && !!S.name, 'Name the object first');
-    set('history', has && !!S.item, 'History is kept once the object is saved as a draft');
-    set('save', has && !S.readOnly && E.canEdit, S && S.readOnly ? 'Read-only here: copy it as a draft to change it' : 'Saving needs the bi-author power');
-    set('propose', has && !!S.item && !S.dirty && S.status === 'draft' && E.canEdit,
-      !has ? 'Open an object first' : !S.item ? 'Save a draft first' : S.dirty ? 'Save your changes first' : S.status !== 'draft' ? 'Nothing to propose: it is ' + S.status : 'Proposing needs the bi-author power');
+    shell.setActions({
+      validate: has || 'Open an object first', preview: has || 'Open an object first',
+      impact: (has && !!S.name) || 'Name the object first',
+      history: (has && !!S.item) || 'History is kept once the object is saved as a draft',
+      save: (has && !S.readOnly && E.canEdit) || (S && S.readOnly ? 'Read-only here: copy it as a draft to change it' : 'Saving needs the bi-author power'),
+      propose: (has && !!S.item && !S.dirty && S.status === 'draft' && E.canEdit) ||
+        (!has ? 'Open an object first' : !S.item ? 'Save a draft first' : S.dirty ? 'Save your changes first' : S.status !== 'draft' ? 'Nothing to propose: it is ' + S.status : 'Proposing needs the bi-author power')
+    });
   }
 
-  /* ---- modes: Visual / YAML / Both, remembered per person on the server ------------------------------------------------------- */
+  /* ---- modes: Visual / YAML / Both and the layout, remembered per person on the server ------------------------------------------- */
   function applyMode() {
-    var mode = E.prefs.mode;
-    if (S && !S.ok && mode === 'visual') { mode = 'both'; }
-    root.querySelectorAll('[data-mode]').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-mode') === E.prefs.mode ? 'true' : 'false'); });
-    q('[data-visual]').hidden = mode === 'yaml' && !!S;
-    var panel = q('[data-yaml-panel]');
-    panel.hidden = !S || mode === 'visual';
-    panel.classList.toggle('ed-yfull', mode === 'yaml');
-    var open = mode === 'yaml' || E.prefs.yamlOpen;
-    q('[data-yaml-body]').hidden = !open;
-    q('[data-yaml-toggle]').setAttribute('aria-expanded', open ? 'true' : 'false');
-    q('[data-yaml-toggle]').textContent = (open ? '▾' : '▸') + ' YAML';
-  }
-  function setMode(mode) {
-    if (mode === 'visual' && S && !S.ok) { say('The visual view waits until the YAML reads: fix the line marked below.', true); return; }
-    E.prefs.mode = mode;
-    applyMode();
-    api('PUT', 'prefs', { mode: mode }).catch(function () { /* kept for this page only */ });
+    shell.setOpen(!!S);
+    if (shell.mode !== E.prefs.mode) { shell.setMode(E.prefs.mode); }
+    if (shell.yamlOpen !== (E.prefs.yamlOpen !== false)) { shell.toggleYaml(E.prefs.yamlOpen !== false); }
+    if (S && !S.ok && E.prefs.mode === 'visual') { shell.setMode('both'); }
+    pane.refresh();
   }
 
-  /* ---- the YAML panel -------------------------------------------------------------------------------------------------------- */
-  function lineHeight(ta) { var lh = parseFloat(getComputedStyle(ta).lineHeight); return isFinite(lh) ? lh : 18; }
+  /* ---- the YAML panel: drishti-designer's YamlPane; the server reads it, writes it and says each problem at its line ----------------- */
   function drawYaml(keepCaret) {
-    var ta = q('[data-yaml]');
-    if (!keepCaret || document.activeElement !== ta) { ta.value = S ? S.yaml || '' : ''; }
-    ta.readOnly = !S || S.readOnly;
-    var n = (ta.value.match(/\n/g) || []).length + 1;
-    var gutter = clear(q('[data-gutter]'));
-    var bad = {};
-    (S && S.problems || []).forEach(function (p) { if (p.line) { bad[p.line] = p.level; } });
-    for (var i = 1; i <= n; i++) { gutter.appendChild(h('div', { class: bad[i] ? 'ed-g-' + bad[i] : '', 'data-line': i, text: String(i) })); }
-    q('[data-yaml-state]').textContent = !S ? '' : S.readOnly ? 'read-only' : !S.ok ? 'not valid yet: the visual side keeps the last valid version' : S.valid ? 'live · valid' : 'live · with problems';
-    q('[data-yaml-state]').className = 'ed-ystate ' + (!S || !S.ok ? 'ed-bad' : S.valid ? 'ed-good' : 'ed-warn');
-    problems();
-    highlight();
+    if (!keepCaret || !pane.editor.cm || !pane.editor.cm.hasFocus()) { pane.setText(S ? S.yaml || '' : ''); }
+    pane.editor.setReadOnly(!S || S.readOnly);
+    shell.setYamlState(!S ? '' : S.readOnly ? 'read-only' : !S.ok ? 'not valid yet: the visual side keeps the last valid version' : S.valid ? 'live · valid' : 'live · with problems',
+      !S || !S.ok ? 'bad' : S.valid ? 'good' : 'warn');
+    pane.editor.setProblems((S && S.problems || []).map(function (p) {
+      return { line: p.line || 1, severity: p.level === 'error' ? 'error' : p.level === 'warning' ? 'warning' : 'info', message: (p.code ? p.code + ' ' : '') + p.message };
+    }));
+    highlight(false);
   }
-  function highlight() {
-    var ta = q('[data-yaml]'), hl = q('[data-yaml-hl]');
+  /** The line of the key being edited on the visual side, marked in the YAML (the server's line of each path, else its parent's). */
+  function highlight(scroll) {
     var line = S && S.focusPath && S.lines ? lineOf(S.lines, S.focusPath) : 0;
-    root.querySelectorAll('[data-gutter] .ed-g-on').forEach(function (x) { x.classList.remove('ed-g-on'); });
-    if (!line) { hl.hidden = true; return; }
-    hl.hidden = false;
-    var lh = lineHeight(ta);
-    hl.style.top = (6 + (line - 1) * lh - ta.scrollTop) + 'px';
-    hl.style.height = lh + 'px';
-    var g = q('[data-gutter] [data-line="' + line + '"]');
-    if (g) { g.classList.add('ed-g-on'); }
-    hl.setAttribute('data-line', String(line));
+    if (line) { pane.editor.highlight(line - 1, line - 1, { scroll: scroll !== false }); } else { pane.editor.highlight(null); }
   }
   function lineOf(lines, path) {
     var at = path;
@@ -216,36 +180,6 @@
     }
     return 0;
   }
-  function problems() {
-    var ul = clear(q('[data-problems]'));
-    (S && S.problems || []).forEach(function (p) {
-      ul.appendChild(h('li', { class: 'ed-p-' + p.level },
-        h('button', { type: 'button', class: 'ed-linkbtn', 'data-goto-line': p.line || '', on: { click: function () { gotoLine(p.line); } } }, p.line ? 'line ' + p.line : 'the definition'),
-        ' ', h('code', { text: p.code || '' }), ' ', p.message));
-    });
-  }
-  function gotoLine(line) {
-    if (!line) { return; }
-    var ta = q('[data-yaml]');
-    if (E.prefs.mode === 'visual') { setMode('both'); }
-    if (!E.prefs.yamlOpen && E.prefs.mode !== 'yaml') { toggleYaml(); }
-    var lines = ta.value.split('\n'), pos = 0;
-    for (var i = 0; i < line - 1 && i < lines.length; i++) { pos += lines[i].length + 1; }
-    ta.focus();
-    ta.setSelectionRange(pos, pos + (lines[line - 1] || '').length);
-    ta.scrollTop = Math.max(0, (line - 3) * lineHeight(ta));
-    S.focusPath = null;
-    var hl = q('[data-yaml-hl]');
-    hl.hidden = false;
-    hl.style.top = (6 + (line - 1) * lineHeight(ta) - ta.scrollTop) + 'px';
-  }
-  function toggleYaml() {
-    E.prefs.yamlOpen = !E.prefs.yamlOpen;
-    applyMode();
-    api('PUT', 'prefs', { yamlOpen: E.prefs.yamlOpen }).catch(function () { /* kept for this page only */ });
-  }
-  /** The line the caret is on, as a path: the key on that line (so the visual side can show where you are). */
-  function caretLine(ta) { return ta.value.slice(0, ta.selectionStart).split('\n').length; }
 
   /* ---- checking as typed ------------------------------------------------------------------------------------------------------ */
   function scheduleCheck(extra, wait) {
@@ -279,7 +213,7 @@
       }
       drawYaml(!fromDoc);
       status();
-      applyMode();
+      shell.setOpen(true);
       if (r.ok) { schedulePreview(500); }
     }).catch(function (e) { say(e.message, true); }).then(function () { if (mine === seqCheck) { root.setAttribute('aria-busy', 'false'); } });
   }
@@ -289,8 +223,8 @@
   function runPreview() {
     if (!S || !S.ok) { return Promise.resolve(); }
     var mine = ++seqPreview;
-    var pane = q('[data-preview]');
-    pane.setAttribute('aria-busy', 'true');
+    var prev = shell.preview;
+    prev.setAttribute('aria-busy', 'true');
     return api('POST', 'preview', { kind: S.kind, yaml: S.yaml, original: S.original || null, date: S.date || null }).then(function (r) {
       if (mine !== seqPreview) { return; }
       S.preview = r;
@@ -299,11 +233,11 @@
     }).catch(function (e) {
       if (mine !== seqPreview) { return; }
       S.preview = null;
-      clear(pane).appendChild(h('p', { class: 'ed-bad', 'data-preview-error': '' }, e.message));
-    }).then(function () { if (mine === seqPreview) { pane.setAttribute('aria-busy', 'false'); } });
+      clear(prev).appendChild(h('p', { class: 'ed-bad', 'data-preview-error': '' }, e.message));
+    }).then(function () { if (mine === seqPreview) { prev.setAttribute('aria-busy', 'false'); } });
   }
   function drawPreview() {
-    var pane = clear(q('[data-preview]'));
+    var pane = clear(shell.preview);
     var r = S.preview;
     if (!r) { return; }
     var ed = editors[S.python ? 'python' : S.kind];
@@ -354,22 +288,17 @@
 
   /* ---- drawing ---------------------------------------------------------------------------------------------------------------- */
   function drawVisual() {
-    var host = clear(q('[data-visual]'));
+    var host = clear(shell.visual);
     if (!S) { return; }
-    var ro = q('[data-readonly]');
-    ro.hidden = !S.readOnly;
-    clear(ro);
-    if (S.readOnly) {
-      ro.appendChild(h('span', {}, S.origin === 'file' ? 'Shipped with the installation (changed through configuration): read-only here. ' : 'You may read this, not change it. '));
-      if (E.canEdit) { ro.appendChild(h('button', { type: 'button', class: 'ed-btn', 'data-copy': '', on: { click: copyAsDraft } }, 'Copy as a draft')); }
-    }
+    shell.setReadOnly(S.readOnly ? { text: S.origin === 'file' ? 'Shipped with the installation (changed through configuration): read-only here.' : 'You may read this, not change it.',
+      button: E.canEdit ? { label: 'Copy as a draft', run: copyAsDraft } : null } : null);
     var ed = editors[S.python ? 'python' : S.kind];
     if (ed) { ed.render(ctx, host); }
     host.querySelectorAll('input, select, textarea, button[data-edit]').forEach(function (el) { if (S.readOnly && !el.hasAttribute('data-always')) { el.disabled = true; } });
   }
   function refreshVisual() {
     var ed = editors[S.python ? 'python' : S.kind];
-    if (ed && ed.refresh) { ed.refresh(ctx, q('[data-visual]')); }
+    if (ed && ed.refresh) { ed.refresh(ctx, shell.visual); }
   }
   function copyAsDraft() {
     var copy = clone(S.doc) || {};
@@ -380,22 +309,13 @@
 
   /* ---- objects ---------------------------------------------------------------------------------------------------------------- */
   function drawObjects() {
-    var host = clear(q('[data-objects]'));
     var o = E.objects || { tables: [], python: [], models: [] };
-    var term = (q('[data-ed-search]').value || '').toLowerCase();
-    [['tables', 'Tables'], ['python', 'Python-driven tables'], ['models', 'Semantic models']].forEach(function (g) {
-      var list = (o[g[0]] || []).filter(function (x) { return !term || (x.name + ' ' + x.title + ' ' + (x.form || '') + ' ' + (x.connector || '')).toLowerCase().indexOf(term) >= 0; });
-      var ul = h('ul', { class: 'ed-list', role: 'list' });
-      list.forEach(function (x) {
-        var current = S && S.name === x.name && (S.item || '') === (x.item || '');
-        ul.appendChild(h('li', {}, h('button', { type: 'button', class: 'ed-obj' + (current ? ' ed-on' : ''), 'aria-current': current ? 'true' : null,
-          'data-object': x.name, 'data-object-item': x.item || '', on: { click: function () { openObject(x.kind, x.name, x.item); } } },
-          h('span', { class: 'ed-obj-n', text: x.name }),
-          h('small', { text: (x.form === 'model' ? (x.tables || 0) + ' tables · ' + (x.measures || 0) + ' measures' : (x.form || '') + (x.connector ? ' · ' + x.connector : '')) + ' · ' + (x.status || '') }))));
-      });
-      host.appendChild(h('section', { class: 'ed-group', 'data-group': g[0] }, h('h2', {}, g[1] + ' ', h('small', { text: String(list.length) })),
-        list.length ? ul : h('p', { class: 'ed-muted ed-small', text: term ? 'none match' : 'none yet' })));
-    });
+    shell.setObjects([['tables', 'Tables'], ['python', 'Python-driven tables'], ['models', 'Semantic models']].map(function (g) {
+      return { id: g[0], label: g[1], items: (o[g[0]] || []).map(function (x) {
+        return { id: x.name, label: x.name, data: x, current: !!(S && S.name === x.name && (S.item || '') === (x.item || '')), search: x.title + ' ' + (x.form || '') + ' ' + (x.connector || ''),
+          detail: (x.form === 'model' ? (x.tables || 0) + ' tables · ' + (x.measures || 0) + ' measures' : (x.form || '') + (x.connector ? ' · ' + x.connector : '')) + ' · ' + (x.status || '') };
+      }) };
+    }));
   }
   function loadObjects() {
     return api('GET', 'objects').then(function (o) { E.objects = o; E.canEdit = !!o.canEdit; drawObjects(); buttons(); });
@@ -436,7 +356,6 @@
     }).catch(function (e) { say(e.message, true); }).then(function () { root.setAttribute('aria-busy', 'false'); });
   }
   function shown() {
-    q('[data-empty]') && q('[data-empty]').remove();
     drawVisual();
     drawYaml(false);
     status();
@@ -450,7 +369,7 @@
     var kind = S.kind;
     api('GET', 'impact?kind=' + encodeURIComponent(kind) + '&name=' + encodeURIComponent(S.name)).then(function (r) {
       S.impact = r.usedBy || [];
-      q('[data-impact-count]').textContent = '(' + S.impact.length + ')';
+      shell.setImpactCount(S.impact.length);
       if (S.preview) { drawPreview(); }
     }).catch(function () { /* impact is shown when it can be read */ });
   }
@@ -462,21 +381,14 @@
     S.doc = o.doc || null;
     S.yaml = o.yaml || '';
     history.replaceState(null, '', '/build/tables?new=' + (o.python ? 'python' : o.kind));
-    q('[data-empty]') && q('[data-empty]').remove();
     status();
     applyMode();
     return runCheck(o.doc ? { doc: o.doc } : {}).then(function () { drawVisual(); drawYaml(false); });
   }
 
   /* ---- dialogs ---------------------------------------------------------------------------------------------------------------- */
-  function dialog(title, body) {
-    var d = q('[data-dialog]');
-    q('[data-dialog-title]').textContent = title;
-    var host = clear(q('[data-dialog-body]'));
-    host.appendChild(body);
-    return window.Drishti.elements.core.openDialog(d, { within: host });        // modal, its first field focused, focus given back on close
-  }
-  function closeDialog() { window.Drishti.elements.core.closeDialog(q('[data-dialog]')); }
+  function dialog(title, body) { return shell.dialog(title, body); }       // modal, its first field focused, focus given back on close
+  function closeDialog() { shell.closeDialog(); }
   E.closeDialog = closeDialog;
 
   function doHistory() {
@@ -526,19 +438,14 @@
     }).catch(function (e) { say(e.message, true); throw e; });
   }
   function doPropose() {
-    var note = h('textarea', { class: 'ed-in', rows: '3', 'data-propose-note': '', 'aria-label': 'A note for the reviewer', placeholder: 'What to look at' });
-    var go = h('button', { type: 'button', class: 'ed-btn ed-primary', 'data-propose-go': '' }, 'Propose for review');
-    go.addEventListener('click', function () {
-      api('POST', 'propose', { item: S.item, note: note.value }).then(function (r) {
+    shell.propose(S.name, function (note) {
+      return api('POST', 'propose', { item: S.item, note: note }).then(function (r) {
         S.status = r.status;
-        closeDialog();
         say('Proposed for review: another person with the approve power approves it in BI › Reviews (four eyes).');
         status();
         loadObjects();
-      }).catch(function (e) { say(e.message, true); });
+      });
     });
-    dialog('Propose ' + S.name + ' for review', h('div', { class: 'ed-form' },
-      h('p', { class: 'ed-small', text: 'A second person approves it before it goes live; you may not approve your own proposal.' }), note, h('p', {}, go)));
   }
 
   /* ---- boot ------------------------------------------------------------------------------------------------------------------- */
@@ -546,53 +453,48 @@
     root = document.querySelector('[data-editors]');
     if (!root) { return; }
     E.root = root;
-    E.prefs = { mode: 'both', yamlOpen: true };
+    E.prefs = { mode: 'both', yamlOpen: true, layout: 'studio' };
     E.pythonRuns = root.getAttribute('data-python-runs') === 'true';           // the server runs authored Python safely (else data-python-why says why)
     E.pythonWhy = root.getAttribute('data-python-why') || '';
-    root.querySelectorAll('[data-mode]').forEach(function (b) { b.addEventListener('click', function () { setMode(b.getAttribute('data-mode')); }); });
-    q('[data-yaml-toggle]').addEventListener('click', toggleYaml);
-    q('[data-ed-search]').addEventListener('input', drawObjects);
-    var ta = q('[data-yaml]');
-    ta.addEventListener('input', function () {
-      if (!S || S.readOnly) { return; }
-      S.yaml = ta.value;
-      S.dirty = true;
-      S.focusPath = null;
-      status();
-      drawYaml(true);
-      scheduleCheck({}, 300);
-    });
-    ta.addEventListener('scroll', function () { q('[data-gutter]').scrollTop = ta.scrollTop; highlight(); });
-    ta.addEventListener('keyup', function () {
+    shell = E.shell = new K.DesignerShell(root, { crumbs: ['Build', { label: 'Tables & models', href: '/build/tables' }, 'Choose an object'], title: 'Tables & models',
+      search: 'Search tables and models', newItems: [{ id: 'table', label: 'Table or virtual table' }, { id: 'model', label: 'Semantic model' }, { id: 'python', label: 'Python-driven table' }],
+      canMode: function (m) { return m === 'visual' && S && !S.ok ? 'The visual view waits until the YAML reads: fix the line marked below.' : true; } });
+    root.classList.add('ed');
+    shell.visual.appendChild(h('div', { class: 'ed-empty', 'data-empty': '' }, h('h2', { text: 'Tables, virtual tables, models and Python-driven tables' }),
+      h('p', {}, 'Choose an object on the left, or ', h('strong', { text: '+ New' }), ' to make one in guided steps. Every change is a draft until another person approves it.')));
+    shell.preview.appendChild(h('p', { class: 'ed-muted', text: 'The preview is read on the server as you may see the data.' }));
+    var yhost = h('div', { 'data-yaml': '' });
+    shell.yamlBody.appendChild(yhost);
+    pane = new K.YamlPane(yhost, { label: 'YAML of the definition', height: 340, delay: 300,
+      fromYaml: function (text) {                      // the server reads the YAML (its problems at their lines); the visual side keeps the last valid version
+        if (!S || S.readOnly) { return text; }
+        S.yaml = text; S.dirty = true; S.focusPath = null;
+        status();
+        return runCheck({}).then(function () { return text; });
+      } });
+    E.yamlText = function () { return pane.getText(); };                     // the YAML as it stands (the page's own scripts, the tests)
+    pane.editor.on('cursor', function (c) {               // the line the caret is on, as a path: the key on that line is marked on the visual side
       if (!S || !S.lines) { return; }
-      var line = caretLine(ta), path = null;
+      var line = c.line + 1, path = null;
       Object.keys(S.lines).forEach(function (p) { if (S.lines[p] === line && (!path || p.length > path.length)) { path = p; } });
       root.querySelectorAll('.ed-at').forEach(function (x) { x.classList.remove('ed-at'); });
-      if (path) {
-        var el = root.querySelector('[data-path="' + path.replace(/"/g, '') + '"]');
-        if (el) { el.classList.add('ed-at'); }
-      }
+      if (path) { var el = root.querySelector('[data-path="' + path.replace(/"/g, '') + '"]'); if (el) { el.classList.add('ed-at'); } }
     });
-    q('[data-act="validate"]').addEventListener('click', function () { runCheck({}).then(function () { say(S.valid ? 'Valid: no problems.' : (S.problems.length + ' problem(s): each is marked at its line.'), !S.valid); }); });
-    q('[data-act="preview"]').addEventListener('click', function () { runPreview(); });
-    q('[data-act="history"]').addEventListener('click', doHistory);
-    q('[data-act="impact"]').addEventListener('click', doImpact);
-    q('[data-act="save"]').addEventListener('click', doSave);
-    q('[data-act="propose"]').addEventListener('click', doPropose);
-    var menu = q('[data-newmenu]'), nb = q('[data-act="new"]');
-    nb.addEventListener('click', function () { menu.hidden = !menu.hidden; nb.setAttribute('aria-expanded', menu.hidden ? 'false' : 'true'); if (!menu.hidden) { menu.querySelector('button').focus(); } });
-    menu.addEventListener('keydown', function (e) { if (e.key === 'Escape') { menu.hidden = true; nb.setAttribute('aria-expanded', 'false'); nb.focus(); } });
-    root.querySelectorAll('[data-new-kind]').forEach(function (b) {
-      b.addEventListener('click', function () { menu.hidden = true; nb.setAttribute('aria-expanded', 'false'); E.newSteps(ctx, b.getAttribute('data-new-kind')); });
-    });
-    q('[data-dialog-close]').addEventListener('click', closeDialog);
+    shell.on('mode', function (m) { E.prefs.mode = m.mode; pane.refresh(); api('PUT', 'prefs', { mode: m.mode }).catch(function () { /* kept for this page only */ }); });
+    shell.on('yaml', function (y) { E.prefs.yamlOpen = y.open; pane.refresh(); api('PUT', 'prefs', { yamlOpen: y.open }).catch(function () { /* kept for this page only */ }); });
+    shell.on('layout', function (l) { if (l.user) { E.prefs.layout = l.layout; api('PUT', 'prefs', { layout: l.layout }).catch(function () { /* kept for this page only */ }); } });
+    shell.on('open', function (o) { openObject(o.item.data.kind, o.item.data.name, o.item.data.item); });
+    shell.on('new', function (n) { E.newSteps(ctx, n.id); });
+    var acts = { validate: function () { runCheck({}).then(function () { say(S.valid ? 'Valid: no problems.' : (S.problems.length + ' problem(s): each is marked at its line.'), !S.valid); }); },
+      preview: function () { runPreview(); }, history: doHistory, impact: doImpact, save: doSave, propose: doPropose };
+    shell.on('action', function (a) { if (acts[a.id]) { acts[a.id](); } });
     window.Drishti.keys.register({ id: 'editors.save', keys: ['Ctrl+S', 'Meta+S'], scope: 'screen', area: 'editors', group: 'Editor', typing: true,
-      description: 'Save', run: function () { if (!S) { return false; } if (!q('[data-act="save"]').disabled) { doSave(); } } });
+      description: 'Save', run: function () { if (!S) { return false; } if (!shell.buttons.save.disabled) { doSave(); } } });
     window.Drishti.keys.register({ id: 'editors.check', keys: ['Ctrl+Enter', 'Meta+Enter'], scope: 'screen', area: 'editors', group: 'Editor', typing: true,
-      description: 'Check it', run: function () { if (!S) { return false; } q('[data-act="validate"]').click(); } });
+      description: 'Check it', run: function () { if (!S) { return false; } shell.buttons.validate.click(); } });
     root.setAttribute('aria-busy', 'true');
     Promise.all([
-      api('GET', 'prefs').then(function (p) { E.prefs = p; }).catch(function () { /* defaults */ }),
+      api('GET', 'prefs').then(function (p) { E.prefs = Object.assign(E.prefs, p); if (p.layout) { shell.setLayout(p.layout); } }).catch(function () { /* defaults */ }),
       api('GET', 'sources').then(function (s) { E.sourcesCache = s; E.functions = s.functions || []; }).catch(function () { E.sourcesCache = { kinds: [], tables: [], roles: [] }; }),
       loadObjects().catch(function (e) { say(e.message, true); })
     ]).then(function () {

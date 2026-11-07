@@ -150,6 +150,27 @@
   New endpoints `/api/v1/admin/settings/proposals` (list, propose, approve, reject, withdraw, applied); a new add-on admin page id
   `configuration` (editions that list `admin.pages` name it to keep it).
 
+## The pickers and fields have a new look
+
+The product owner approved (2026-11-07) that every form's look changes: the console's pickers are now **drishti-inputs**, the same
+components the gallery shows, on every page. What people see:
+
+- **The as-of date in the top bar** is a business-date picker: type `T-1`, `ME` or `6 Nov 2026`, or open the calendar (weekends dimmed,
+  the server's holidays named, the shortcuts *Business date*, *T-1* and *Month-end*). A weekend or a holiday is refused in words that
+  name the business day before it, instead of being rolled back after the page loads. *Known at* keeps the browser's date-and-time field.
+- **Every date field** (search, compare, the query forms, BI's report, notebook, statement and designer dates, the record forms and their
+  cells, Explain's two dates, the Admin pages for loads, lakes, caches, access, collaboration and pack data) is the same picker; the
+  field still sends `2026-11-06`, so links, bookmarks and scripts are unchanged.
+- **Long lists of values** (a query form's enum with more than six values, a Sutra's multi-select control, BI's drop-down slicer) are a
+  multi-select with chips and a search field: type to narrow, Enter or a click picks and keeps the list open, *Select all* takes what the
+  search matches, *Clear*, Backspace removes the last chip. The criteria in the address are unchanged (`v.productType=BOND&v.productType=REPO`).
+- **A Sutra's date-range control** opens the range picker: the server's presets (*This month*, *Next 90 days* …) beside two months, the
+  ends typed; one end may stay open. **The history page's range** has the same picker beside its keys (1, 3, 6, Y, T); a preset opens the
+  server's own range (`?range=3M`), a picked span `?from=…&to=…`.
+- **The people pickers** (Share, Subscribe, a workspace's members, sharing a run) and the comment box's `@` and `{` lists are the
+  combobox: the list floats over the page, names, ids and desks as before; typed names still work.
+- On a phone every field, option and button of these pickers is at least 44 px high.
+
 ## Upgrade: one Explain for every number
 
 Every computed number now has one **Explain** (USER_GUIDE.md, "Explain: one for every number"): hover a figure for a preview, click it

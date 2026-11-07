@@ -283,7 +283,7 @@
   function asOfNote(res) {
     const note = q('[data-asof-note]');
     if (!note || !res || !res.meta) { return; }
-    const top = document.querySelector('form[data-asof] input[type="date"]');
+    const top = document.getElementById('asofDate');
     const asked = state.dates ? '' : (state.time && state.time.mode === 'asof' && state.time.asOf) || (top && top.value) || '';
     const line = B.visuals.asOfLine(state.dates ? { dates: res.meta.dates } : res.meta, asked);   // a window of the report's own dates: the last day read
     if (line) { note.textContent = line; note.setAttribute('data-asof-aligned', String(!(res.meta.dataAsOf && res.meta.dataAsOf.aligned === false))); }
@@ -523,7 +523,7 @@
     if (picker) { picker.reset(); }
     if (pbar) { pbar.reset(); }
     q('[data-date]').value = '';
-    { const t = document.querySelector('form[data-asof] input[type="date"]'); if (t && t.value) { q('[data-date]').value = t.value; } }
+    { const t = document.getElementById('asofDate'); if (t && t.value) { q('[data-date]').value = t.value; } }
     Object.keys(state.drills).forEach((k) => { delete state.drills[k]; });
     refreshAll(null);
     drawGrid();
@@ -531,7 +531,7 @@
 
   function bar() {
     const date = q('[data-date]');
-    const topDate = document.querySelector('form[data-asof] input[type="date"]');
+    const topDate = document.getElementById('asofDate');
     if (topDate && topDate.value && !date.value) { date.value = topDate.value; date.setAttribute('data-from-topbar', ''); }          // the control shows the day the top bar has; it asks for nothing until it is changed
     date.addEventListener('change', () => date.removeAttribute('data-from-topbar'));
     picker = B.consume.timePicker(q('[data-time]'), (t) => { state.time = t; state.dates = B.consume.datesOf(t); syncChips(); refreshAll(null); });

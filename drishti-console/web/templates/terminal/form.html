@@ -57,7 +57,9 @@
           <input id="{{ f.id }}" class="qf-v mono" type="text" inputmode="decimal" name="v.{{ f.path }}" value="{{ f.held[0] if f.held }}" placeholder="{{ '250k, 1.5m, 2bn' if f.type == 'amount' else '' }}" spellcheck="false"{{ ' required' if f.required }}>
           <input class="qf-v2 mono" type="text" inputmode="decimal" name="v2.{{ f.path }}" value="{{ f.held2 }}" placeholder="and" aria-label="{{ f.label }}: upper bound" spellcheck="false"{{ ' hidden' if f.op != 'between' }}>
         {% elif f.type == 'date' %}
-          <input id="{{ f.id }}" class="qf-v mono" type="{{ 'text' if f.op == 'relative' else 'date' }}" name="v.{{ f.path }}" value="{{ f.held[0] if f.held }}" list="qf-presets"{{ ' required' if f.required }}>
+          {# the date is drishti-inputs' business-date picker (drishti_app.js upgrades it in place); "relative" takes words instead (last 5 business days) #}
+          <input id="{{ f.id }}" class="qf-v mono" type="date" name="v.{{ f.path }}" value="{{ f.held[0] if f.held and f.op != 'relative' }}"{{ ' required' if f.required }}{{ ' hidden disabled' if f.op == 'relative' }}>
+          <input class="qf-vrel mono" type="text" name="v.{{ f.path }}" value="{{ f.held[0] if f.held and f.op == 'relative' }}" list="qf-presets" placeholder="last 5 business days" aria-label="{{ f.label }}: a relative range" spellcheck="false"{{ ' hidden disabled' if f.op != 'relative' }}>
           <input class="qf-v2 mono" type="date" name="v2.{{ f.path }}" value="{{ f.held2 }}" aria-label="{{ f.label }}: end date"{{ ' hidden' if f.op != 'between' }}>
         {% elif f.type == 'enum' and not f.depends and f['values']|length > 300 %}
           {# a long list (10,000 counterparties): the values chosen, and a box that finds the others as you type (drishti_form.js), not one checkbox each #}
@@ -66,7 +68,7 @@
             <input type="search" class="qf-big-q mono" data-big-q autocomplete="off" placeholder="Type to find among {{ '{:,}'.format(f['values']|length) }}" aria-label="Find a {{ f.label }}">
             <div class="qf-big-found" data-big-found role="group" aria-label="{{ f.label }}: matches" aria-live="polite"></div></div>
         {% elif f.type == 'enum' %}
-          <div id="{{ f.id }}" class="qf-enum" role="group" aria-label="{{ f.label }}"{% if f['values']|length > 3 %} data-ms{% endif %}{% if f.depends %} data-depends="{{ f.depends }}"{% endif %}>{% for v in f['values'] %}
+          <div id="{{ f.id }}" class="qf-enum" role="group" aria-label="{{ f.label }}"{% if f['values']|length > 3 %} data-multiselect{% endif %}{% if f.depends %} data-depends="{{ f.depends }}"{% endif %}>{% for v in f['values'] %}
             <label class="qf-chk"{% if f.depends and (f.parents or {}).get(v) %} data-parents="{{ (f.parents or {}).get(v) | join('|') }}"{% endif %}><input type="checkbox" name="v.{{ f.path }}" value="{{ v }}"{{ ' checked' if v in f.held }}> <span>{{ v }}</span></label>{% endfor %}
             {% if not f['values'] %}<span class="text-muted-d">no values known yet</span>{% endif %}</div>
         {% elif f.type == 'id' %}
@@ -148,5 +150,4 @@
 </div>
 {% endblock %}
 {% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script>
-<script src="/static/js/drishti_multiselect.js?v={{ ASSET_V }}"></script>
 <script src="/static/js/drishti_form.js?v={{ ASSET_V }}"></script>{% endblock %}

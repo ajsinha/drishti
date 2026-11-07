@@ -282,7 +282,7 @@ def test_share_with_the_picker_shows_each_mode_unshare_and_the_recipients_view(c
     page = open_drawer(ctx, stack, run["id"])
     page.click('[data-run-act="share"]')
     page.fill("[data-run-share-form] input[name='to']", "car")
-    page.wait_for_selector("#runSharePick:not([hidden]) [role=option]", timeout=5000)
+    page.wait_for_selector(".di-combo-pop [role=option]", timeout=5000)
     page.keyboard.press("Enter")                                                   # the picker's choice becomes a chip
     page.wait_for_selector('[data-run-share-chip="carol"]')
     page.fill("[data-run-share-form] input[name='to']", "bob, eve")
