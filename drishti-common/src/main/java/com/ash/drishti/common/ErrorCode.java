@@ -61,6 +61,11 @@ public enum ErrorCode {
     ENGINE_FILE_CONFLICT("DRS-1023", 409),
     /** An old switch name still in use ({@code drishti.var.enabled} for {@code drishti.engines.var.enabled}): a warning at start, never an answer. */
     ENGINE_OLD_KEY("DRS-1024", 400),
+    /**
+     * A module is off here (docs/architecture/ACCESS_MODEL.md): not installed, not licensed or switched off by an administrator. Its API
+     * answers 404 in words, never 403 (nothing is forbidden; the module is not here).
+     */
+    MODULE_OFF("DRS-1025", 404),
     SUTRA_PARSE("DRS-2001", 422),
     SUTRA_INVALID("DRS-2002", 422),
     SUTRA_NOT_FOUND("DRS-2003", 404),

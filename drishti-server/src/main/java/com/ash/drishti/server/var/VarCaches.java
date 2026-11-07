@@ -26,7 +26,8 @@ import java.util.Map;
  * The VaR engine's caches as Admin, Caches shows them (2.9.7, O1, O2): the answers, the open dates (their skeleton on the heap, their rows
  * mapped), the hot files on disk, the viewers' views and the shard books; each purged whole or for one business date.
  */
-public final class VarCaches implements CacheReport.Owner {
+@org.springframework.core.annotation.Order(1)
+public final class VarCaches implements com.ash.drishti.server.caches.CacheGroup, CacheReport.Owner {
 
     static final String ANSWERS = "var.answers";
     static final String DATES = "var.dates";
@@ -45,6 +46,7 @@ public final class VarCaches implements CacheReport.Owner {
     }
 
     /** Joins the answers and the views to the one cache budget (D3): the answers to {@code engine.answers}, the views to {@code small}. */
+    @Override
     public void join(com.ash.drishti.server.caches.MemoryBudget b) {
         b.join("engine.answers", com.ash.drishti.server.caches.MemoryBudget.of("var.answers", svc.answers(), VarService.ANSWERS_BYTES));
         b.join("small", com.ash.drishti.server.caches.MemoryBudget.of("var.views", svc.access().cache(), (long) svc.props().viewCacheMb() << 20));

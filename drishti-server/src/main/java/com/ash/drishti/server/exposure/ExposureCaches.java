@@ -26,7 +26,8 @@ import java.util.Map;
  * The exposure engine's caches as Admin, Caches shows them (2.9.7, O1, O2): answers, trade paths, open dates, hot files and views; each
  * purged whole or for one business date.
  */
-public final class ExposureCaches implements CacheReport.Owner {
+@org.springframework.core.annotation.Order(2)
+public final class ExposureCaches implements com.ash.drishti.server.caches.CacheGroup, CacheReport.Owner {
 
     static final String ANSWERS = "exposure.answers";
     static final String PATHS = "exposure.trade-paths";
@@ -43,6 +44,7 @@ public final class ExposureCaches implements CacheReport.Owner {
     }
 
     /** Joins the answers and trade paths to {@code engine.answers}, the views to {@code small} (D3). */
+    @Override
     public void join(com.ash.drishti.server.caches.MemoryBudget b) {
         b.join("engine.answers", com.ash.drishti.server.caches.MemoryBudget.of("exposure.answers", svc.answers(), 64L << 20));
         b.join("engine.answers", com.ash.drishti.server.caches.MemoryBudget.of("exposure.trade-paths", svc.pathsCache(), 256L << 20));

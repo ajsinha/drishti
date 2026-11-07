@@ -1,0 +1,80 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server.modules;
+
+import com.ash.drishti.registry.AccessRegistry;
+import com.ash.drishti.server.security.RequestPaths;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Predicate;
+import org.springframework.web.filter.OncePerRequestFilter;
+
+/**
+ * The API of a module that is not loaded here answers {@code 404 DRS-1025} in words (docs/architecture/ACCESS_MODEL.md section 2: "404
+ * module not licensed" for a module that is off), never a bare 404 and never 403: nothing is forbidden, the module is not here. The
+ * module's prefixes come from its manifest; whether it was loaded is decided at start.
+ */
+public final class ModuleGateFilter extends OncePerRequestFilter {
+
+    private static final ObjectMapper JSON = new ObjectMapper();
+
+    private final AccessRegistry registry;
+    private final Predicate<String> loaded;
+
+    /**
+     * @param registry the access registry (which module answers a path, and why it is off)
+     * @param loaded   whether a module's code was loaded at this server's start
+     */
+    public ModuleGateFilter(AccessRegistry registry, Predicate<String> loaded) {
+        this.registry = registry;
+        this.loaded = loaded;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return !RequestPaths.routed(request).startsWith("/api/");
+    }
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain) throws ServletException, IOException {
+        Optional<String> module = registry.moduleOfApi(RequestPaths.routed(req));
+        if (module.isEmpty() || loaded.test(module.get())) {
+            chain.doFilter(req, res);
+            return;
+        }
+        String id = module.get();
+        String why = registry.module(id).map(s -> s.on() ? "it was off when this server started; it loads at the next start" : s.reason())
+                .orElse("it is not installed");
+        Map<String, Object> p = new LinkedHashMap<>();
+        p.put("type", "about:blank");
+        p.put("title", "module off");
+        p.put("status", 404);
+        p.put("detail", "DRS-1025 the module '" + id + "' is not on here: " + why + " (Admin -> Modules)");
+        p.put("code", "DRS-1025");
+        p.put("module", id);
+        res.setStatus(404);
+        res.setContentType("application/problem+json");
+        res.setCharacterEncoding("UTF-8");
+        res.getWriter().write(JSON.writeValueAsString(p));
+    }
+}

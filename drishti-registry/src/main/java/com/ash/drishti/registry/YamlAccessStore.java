@@ -77,15 +77,24 @@ public final class YamlAccessStore implements AccessStore {
         List<String> warnings = new ArrayList<>();
         Map<String, ModuleManifest> modules = new LinkedHashMap<>();
         for (Map.Entry<String, Map<String, Object>> e : shipped(MANIFEST, warnings).entrySet()) {
-            try {
-                ModuleManifest m = ModuleManifest.of(e.getValue(), true, "the jar " + e.getKey());
-                if (ModuleManifest.CORE.equals(m.id())) {
-                    warnings.add(e.getKey() + ": 'core' is the core's id, not a module's; skipped");
-                } else if (modules.putIfAbsent(m.id(), m) != null) {
-                    warnings.add(e.getKey() + ": a second manifest of the module '" + m.id() + "'; the first is kept");
+            // one module ({module: {...}}) or several ({modules: [...]}: a jar that ships content modules beside its code)
+            List<Map<String, Object>> each = new ArrayList<>();
+            if (e.getValue().get("modules") instanceof List<?> l) {
+                l.stream().filter(Map.class::isInstance).forEach(x -> each.add(cast((Map<?, ?>) x)));
+            } else {
+                each.add(e.getValue());
+            }
+            for (Map<String, Object> one : each) {
+                try {
+                    ModuleManifest m = ModuleManifest.of(one, true, "the jar " + e.getKey());
+                    if (ModuleManifest.CORE.equals(m.id())) {
+                        warnings.add(e.getKey() + ": 'core' is the core's id, not a module's; skipped");
+                    } else if (modules.putIfAbsent(m.id(), m) != null) {
+                        warnings.add(e.getKey() + ": a second manifest of the module '" + m.id() + "'; the first is kept");
+                    }
+                } catch (RuntimeException ex) {
+                    warnings.add(e.getKey() + ": " + ex.getMessage());
                 }
-            } catch (RuntimeException ex) {
-                warnings.add(e.getKey() + ": " + ex.getMessage());
             }
         }
         Map<String, Boolean> switches = new LinkedHashMap<>();

@@ -38,6 +38,7 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-memlake</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-identity</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-packs</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-registry</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-ai</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-demo</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-file</artifactId></dependency>

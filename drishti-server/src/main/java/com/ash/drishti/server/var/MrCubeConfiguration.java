@@ -38,6 +38,29 @@ public class MrCubeConfiguration {
                 .orElseThrow(() -> new IllegalStateException("the pivot engine has no VaR provider: the MR cube needs the VaR engine"));
     }
 
+    /**
+     * The VaR source of the pivot engine, with the MR cube's lens (DOMAIN_MODULES.md J1: the pivot engine asks every
+     * {@link com.ash.drishti.server.pivot.PivotSourceProvider}; it names no module's source).
+     */
+    @Bean
+    public com.ash.drishti.server.pivot.PivotSourceProvider varPivotSource(org.springframework.beans.factory.ObjectProvider<VarService> var,
+            org.springframework.beans.factory.ObjectProvider<MrCubeProperties> mr,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.frtb.FrtbService> frtb, org.springframework.core.env.Environment env,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines,
+            org.springframework.beans.factory.ObjectProvider<VarParametricProperties> parametric) {
+        return () -> {
+            VarService v = var.getIfAvailable();
+            if (v == null) {
+                return null;
+            }
+            boolean mrSwitch = env.getProperty("drishti.engines.mr-cube.enabled", Boolean.class, false);
+            return new VarPivotProvider(v, () -> com.ash.drishti.server.pivot.PivotConfiguration.running(engines, "var", true),
+                    () -> com.ash.drishti.server.pivot.PivotConfiguration.running(engines, "mr-cube", mrSwitch), mr.getIfAvailable(MrCubeProperties::defaults),
+                    () -> com.ash.drishti.server.pivot.PivotConfiguration.running(engines, "frtb-sa", true) ? MrCubeExtras.running(frtb.getIfAvailable()) : null)
+                    .parametric(parametric.getIfAvailable());
+        };
+    }
+
     @Bean
     public MrCubeExtras mrCubeExtras(VarService svc, VarExplain explain, PivotCore core) {
         return new MrCubeExtras(svc, explain, core, provider(core));
