@@ -278,7 +278,7 @@
     member filters, + and −, a level (1 to 9), Shift+→ and the aggregation menus build the view, and every answer is the server's
     through the grid's `serverPivot` hook (`clientAggregation: false`: VaR and ES are never summed in the browser; ◆ marks a
     non-additive total). A figure's **Explain is its provenance** (the rows behind it, its reference, its comments) in the grid's
-    drawer; the scan estimate, compare (the change shown after each figure), slicers, a typed path, the chart of the selection,
+    drawer; the scan estimate, compare (the change shown after each figure), slicers, a typed path, the chart of the selection (now drishti-chart),
     export, save and share, the switches (exact, ≈, progressive, rollups, live) and saved views keep working, labels included. The
     live pivot's patches flash through the grid; comments and the MR cube's sparklines are the grid's cell decorations. Keys: **E now
     explains a figure** (the grid's key); expand by another field moved to **Shift+E**. The two dates of *Why did it move?* are
@@ -300,7 +300,7 @@
     scripts (`/embed/v1/js/elements-core.js`, `elements-grid.js`; `/embed/v1|v2/elements/<library>/<file>`); the view sheet carries
     the grid's style (its budget raised on purpose to 27 KB gzip).
   - Not moved yet (listed in ELEMENTS.md 12.1): BI's matrix (needs values on rows and the tabular layout in drishti-grid), the
-    charts (drishti-chart is on its own branch), BI's date and time controls.
+    other charts (BI's visuals, Chart any table: the chart migration), BI's date and time controls.
 
 ## 2.9.11.d (unreleased)
 - **Six lake folders kept in git, their content never** (DATA_LAKE_GUIDE.md section 1): `data/delta/demo`, `risklake`, `newslake` (news), `worldlake` (World Bank, IMF, UN), `regulators` (SEC, Federal Reserve, OSFI, central banks) and `capitalmarket` (prices, curves, vols, funds), each with only its README.md; the test data's `.jsonl.gz` files stay in git to build the demo lake. The five new lakes ship as lake files with no tables (`config/lakes/<lake>.yaml` and their jar copies), and **nothing shipped points at them**: every connector, rule and setting reads `demo` (guarded by `tools/test_empty_lakes.py`); a site points at them itself. The demo lake's one-time move and `build_demo_lakes` treat a folder holding only its README.md as empty.

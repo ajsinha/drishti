@@ -819,7 +819,8 @@ old code is gone and its tests run against the new DOM with the same assertions.
 | Notebook result tables (`drishti_bi-notebook.js`) | drishti-grid | **moved** | the `<table>` | `test_bi_notebook_browser.py`, `test_bi_wave_c_browser.py` |
 | Chart any table, View as table (`drishti_table-chart.js`) | drishti-grid | **moved** | the `<table>` | `test_table_chart_browser.py` (every row in the CSV) |
 | BI matrix (`drishti_bi-matrix.js`) | drishti-grid pivot mode | **waits**: values on rows and the tabular layout (one column per row level) in drishti-grid first | | |
-| Charts of these screens (the pivot's chart of a selection, BI visuals, Chart any table) | drishti-chart | **waits** for drishti-chart on the integration branch | | |
+| The Pivot's chart of a selection | drishti-chart (`kind: 'bar'`, the diversification and the total beside the parts) | **moved** | its ECharts calls | `test_pivot_screen_browser.py` (the engine's gap, never one added up) |
+| BI's visuals, Chart any table's chart | drishti-chart | **waits** for the chart migration (step 5) | | |
 | BI date and time controls (`bi/report.html`, `notebook.html`) | drishti-inputs `DatePicker`, `DateRangePicker` | **waits** (step 6) | | |
 | The pivot engine's key texts and formats (`drishti_pivot-engine.js`) | drishti-core formats | **waits** for the renderer 2.0.0 (it loads the file into host pages) | | |
 
