@@ -21,6 +21,23 @@
 
 ## 2.9.11.e (unreleased)
 
+- **The console's pickers on drishti-inputs** ([ELEMENTS.md section 8.2](docs/architecture/ELEMENTS.md#82-as-built-drishti-inputs-drishti-data-and-the-grids-cell-editing)):
+  the as-of date in the top bar is a business-date picker keyed by the server's holidays (T-1, month-end, a weekend or holiday refused
+  in words); every date field of the terminal, BI and Admin pages (and the ones scripts make: BI's statement, designer and slicer
+  dates, the record forms and their cells, Explain's dates) is upgraded in place to the date picker and keeps sending its ISO date;
+  the query forms' long enums, a Sutra's multi-select and BI's drop-down slicer are `MultiSelect`; a Sutra's date control is
+  `DatePicker` and its date range `DateRangePicker` with the server's presets (open-ended allowed); the history page's range is a
+  `DateRangePicker` whose presets open the server's ranges; the people picker (`Drishti.People.attach(input, opts)`, four screens),
+  the comment box's `@` and `{` lists and the record forms' entity field are drishti-inputs' combobox. Deleted: the console's
+  multi-select (`drishti_multiselect.js`, 106 lines, now a 40-line loader for the frozen renderer 1.2.0), the hand-made listboxes of
+  the people picker, the comment box and the entity field, the native date handling of the top bar, and their CSS (`.ms-*`,
+  `.ctl-pop`, `.shr-list`, `.fm-entity-list`). **drishti-inputs 0.2.0**: `upgradeDateInput`, `upgradeCheckboxes` and `upgradeFields`
+  (a page's own fields upgraded in place: the field keeps its name, id and value, its `value` setter moves the picker, the picker's
+  changes come back as `input` and `change` events, `hidden`, `disabled`, `min` and `max` followed, a required or unreadable date stops
+  the submit); `Combobox` on a page's own field and in a `suggest` mode; `DateRangePicker` with presets given whole and `openEnded`;
+  44 px targets on touch screens. The renderer 2.0.0 and the embeds load drishti-inputs for the controls (its style sheet in the view
+  sheet, raised to 29 KB gzip on purpose). A guard fails a console script that draws its own multi-select or picker list.
+
 - **The demo lake's layout, the owner's decision** (`config/lakes/demo.yaml` and its jar copy; DATA_LAKE_GUIDE.md section 2): `risk.scenario-pv`
   partitioned by `SCENARIO_SET_ID, GRAIN` after the business date, sorted by `LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, TRADE_ID`, zstd
   (vectors too), 256 MB files, 16 MB row groups, 30 days' time travel, maintenance (compaction to 256 MB, vacuum after 7 days,

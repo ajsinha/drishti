@@ -18,9 +18,9 @@
    To box, so nobody has to remember how a name is spelt. Same-origin only; the To box stays plain text. */
 (function () {
   'use strict';
-  var find = document.querySelector('[data-find-people]'), list = document.querySelector('[data-find-list]'), to = document.querySelector('input[name=recipients]');
-  if (!find || !list || !to || !window.Drishti.People) { return; }
-  window.Drishti.People.attach(find, list, {
+  var find = document.querySelector('[data-find-people]'), to = document.querySelector('input[name=recipients]');
+  if (!find || !to || !window.Drishti.People) { return; }
+  window.Drishti.People.attach(find, {
     minQuery: 2,
     onPick: function (e) {
       var token = e.type === 'role' ? 'role:' + e.name : e.name;

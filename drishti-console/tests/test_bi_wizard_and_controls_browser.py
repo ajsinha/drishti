@@ -246,8 +246,8 @@ def test_a_member_is_found_by_typing_part_of_a_name(stack, page):
     page.wait_for_selector("[data-add-member]:not([hidden])")
     expect(page.locator("[data-member-user]")).to_be_visible()
     page.fill("[data-member-user]", "ri")
-    page.wait_for_selector("#wMemberList li", timeout=10000)
-    page.click("#wMemberList li:has-text('rita')")
+    page.wait_for_selector(".di-combo-pop [role=option]", timeout=10000)
+    page.click(".di-combo-pop [role=option]:has-text('rita')")
     assert page.input_value("[data-member-user]") == "rita"
     clean(page)
 

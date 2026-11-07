@@ -210,7 +210,7 @@
   }
 
   // ---- wiring ----------------------------------------------------------------------------------------------
-  picker = window.Drishti.People ? window.Drishti.People.attach(to, $('[data-shr-to]').parentNode.querySelector('.shr-list'), {
+  picker = window.Drishti.People ? window.Drishti.People.attach(to, {
     kind: view.getAttribute('data-kind'), minQuery: 2, taken: taken,
     onPick: function (e) { picked.push(e); drawChips(); say(''); to.focus(); }
   }) : null;

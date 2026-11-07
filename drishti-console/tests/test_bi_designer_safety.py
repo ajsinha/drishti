@@ -53,7 +53,7 @@ def test_the_report_designer_has_a_publish_action_pane_tabs_and_a_collapsible_fi
 def test_the_subscribe_page_searches_recipients_and_keeps_the_bi_links(client):
     page = client.get("/reports/subscribe?type=report&id=file:report:trades-overview&title=Trades")
     assert page.status_code == 200
-    for marker in ("data-find-people", "data-find-list", "dist-binav", "/bi/catalogue", "dist-check", "/static/js/drishti_subscribe-recipients.js", "/static/js/drishti_people.js"):
+    for marker in ("data-find-people", "dist-binav", "/bi/catalogue", "dist-check", "/static/js/drishti_subscribe-recipients.js", "/static/js/drishti_people.js"):
         assert marker in page.text, marker
 
 

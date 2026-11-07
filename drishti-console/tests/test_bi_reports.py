@@ -33,7 +33,7 @@ def test_the_viewer_is_a_shell_with_the_toolbar_and_the_scripts_in_order():
         assert hook in r.text, hook
     scripts = re.findall(r"/static/js/drishti_([a-z-]+)\.js", r.text)
     assert scripts.index("bi-lib") < scripts.index("bi-visuals") < scripts.index("bi-grids") < scripts.index("bi-frame") < scripts.index("bi-report")
-    assert "multiselect" in scripts and "/static/vendor/echarts/echarts.min.js" in r.text and "drishti_bi-report.css" in r.text
+    assert "/static/elements/drishti-inputs/drishti_inputs.js" in r.text and "/static/vendor/echarts/echarts.min.js" in r.text and "drishti_bi-report.css" in r.text
 
 
 def test_the_viewer_takes_a_page_after_the_id():

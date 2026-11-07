@@ -61,7 +61,9 @@
       {% if d.get('cache') %}<span class="hx-took mono" title="How the server answered: {{ d.cache }} cache{% if d.get('tookMs') is not none %}, {{ d.tookMs }} ms{% endif %}">{% if d.get('tookMs') is not none %}{{ d.tookMs }} ms{% endif %}</span>{% endif %}
     </div>
     <div class="hx-tools">
-      <nav class="hx-ranges" aria-label="Range">
+      {# the range: drishti-inputs' date-range picker (drishti_history-page.js), its presets the server's ranges; the links are the page without scripts #}
+      <div class="hx-range-pick" data-hx-range-pick data-from="{{ w.get('from') or '' }}" data-to="{{ w.get('to') or '' }}"></div>
+      <nav class="hx-ranges" aria-label="Range" data-hx-range-links>
         {% for label, href, on in ranges %}<a class="hx-rng{% if on %} on{% endif %}" href="{{ href }}"{% if on %} aria-current="true"{% endif %} data-hx-range-btn="{{ label }}">{{ label }}</a>{% endfor %}
       </nav>
       <form class="hx-rform" data-hx-rform role="search" aria-label="Type a range">

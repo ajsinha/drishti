@@ -1028,8 +1028,16 @@
     var drawNestedPivots = __m["src/drishti_nested.js"].drawNestedPivots;
     var consoleTables = __lib("drishti-grid").consoleTables;
     var textSortKey = __lib("drishti-core").textSortKey, compareTextKeys = __lib("drishti-core").compareTextKeys;
-    const SCRIPTS = ['colfilter', 'tables', 'zoom', 'multiselect', 'controls'];
+    const SCRIPTS = ['colfilter', 'tables', 'zoom', 'controls'];
+    const BUNDLES = ['drishti-core', 'drishti-inputs'];
     const loaded = () => assets.memoised('console-behaviours', async () => {
+      const E = (window.Drishti && window.Drishti.elements) || {};
+      if (!E.inputs) {
+        const link = document.createElement('link');
+        link.rel = 'stylesheet'; link.href = assets.statics('elements/drishti-inputs/drishti_inputs.css');
+        document.head.appendChild(link);
+        for (const b of BUNDLES) { if (!(E.libs && E.libs[b])) { await assets.script('elements/' + b + '/drishti_' + b.replace('drishti-', '') + '.js'); } }
+      }
       for (const n of SCRIPTS) { await assets.script('js/drishti_' + n + '.js'); }
     });
     const enc = (s) => encodeURIComponent(String(s));
@@ -1067,7 +1075,7 @@
       };
     }
     const embedRecords = (server, base) => (r) => server + base + '/views/' + enc(r.kind) + '/' + idPath(r.id) + '/panels/' + enc(r.panel) + '/records';
-    return { "SCRIPTS": SCRIPTS, "startBehaviours": startBehaviours, "embedRecords": embedRecords };
+    return { "SCRIPTS": SCRIPTS, "BUNDLES": BUNDLES, "startBehaviours": startBehaviours, "embedRecords": embedRecords };
   })();
   /* ---- src/drishti_signin.js ---- */
   __m["src/drishti_signin.js"] = (function () {
