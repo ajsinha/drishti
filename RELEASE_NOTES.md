@@ -30,6 +30,13 @@
   --lake data/delta/demo` list the tables; a view, a VaR and a BI page answer as before. Scripts that name `data/delta` for the demo lake
   name `data/delta/demo` now (`lake build --lake`, `lake maintain --root`, your copy of `deploy/lake-maintenance.yaml`). A site that sets
   `DRISHTI_DELTA_ROOT` keeps its root and nothing moves. `drishti.lakes.relocate-on-start: false` leaves the move to the command.
+- **Your connector files.** Each connector file the server once generated with the demo lake's old root
+  (`root: "${DRISHTI_DELTA_ROOT:./data/delta}"`, `domain: ...`) is rewritten at the first start after the move to `lake: demo` and
+  `lake-tables: <domain>.<table>`, every reading setting kept, the file before kept beside it as `<name>.yaml.before-lake-<time>.bak`; the
+  log names each one. A connector with a root of its own (another folder, `s3://...`) is left as it is: naming tables by path is a
+  permanent form, with no warning. If you prefer to do it by hand: replace `root:`, `domain:`, `table.<kind>:` and `layout.<kind>.*` with
+  `lake: demo` and `lake-tables: <domain>.<table>` (the entries of `config/lakes/demo.yaml`). A connector that names a lake and also a
+  `root:` now reads the root (it was refused before), and Admin → Connectors says so.
 - **Real data into a lake of its own.** `lake: risklake` in a `.ready` file (or a rule's `lake:`) loads the file into that lake, creating
   `config/lakes/risklake.yaml` the first time; the load says when no connector reads the lake yet. Point a pack's connectors at it
   (`lake: risklake`) and restart (DATA_GUIDE.md section 7.2).

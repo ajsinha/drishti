@@ -38,6 +38,21 @@
     recommended entry), its tables at `data/delta/<lake>/<domain>/<table>` (`risklake/trading/trade_endur`, `risklake/risk/scenario-pv`).
     The Data loads page, the load report (`warning`) and `drishti.py dataload status` say *loaded into risklake, but no connector reads
     it: point market-risk's connectors at it (lake: risklake) and restart* (`SourceRegistry.lakesRead`).
+  - **Connectors: two forms, both permanent** (product owner, 2026-11-07): `lake: <name>` (the lake file's root: a folder, `s3://...` or
+    `mem://...`) or an explicit `root:` path or URI with `domain`, `table.<kind>` and `layout.<kind>.*` (tables no lake file describes, a
+    vendor's Delta table on S3), with no warning. A connector that gives both uses its own values over the lake file's, said in the log,
+    by `lake check` and on Admin → Connectors (a warning on the field). Before: such a connector was refused, and the path form warned.
+  - **The connectors generated with the demo lake's old root follow it:** once the demo lake is moved, the server rewrites each connector
+    file whose `root:` is the demo lake's old default (`${DRISHTI_DELTA_ROOT:./data/delta}` and its variants) to `lake: demo` with
+    `lake-tables:` (`LakeFiles.adoptDemo`, also the first step of `lake migrate-config`), the file kept beside it
+    (`<name>.yaml.before-lake-<time>.bak`), a table the demo lake file lacks added from the connector's layout; a `var-pv-stream`
+    connector's `lake:` folder of that form becomes `lake: demo` (the plugin takes a lake's name; the market-risk pack's `pv-updates`
+    ships `lake: demo`). A Delta connector with neither `root` nor `lake` reads `<data>/delta/demo`. An Iceberg lake file without a root is
+    at `<data>/iceberg/<lake>`.
+  - **One place spells where lakes are:** drishti-lakeconfig (`Lakes.defaultRoot`, `Lakes.DEMO_ROOT_ENV`) and `tools/lake/lakeconfig.py`
+    (`root()`, `DEMO_ROOT_ENV`, `DEMO_ROOT_REF`); `lake demo`, `build_demo_lakes.py`, `bulk_trades.py`, `varcli`, `packmake`, the pack
+    generators, the doc-shot and bench harnesses, `drishti-stack` and `schemakit` resolve through it. The guard `tools/test_lake_paths.py`
+    fails on a lake folder or the demo root's variable spelled in code (Java, Python, JavaScript) outside the lake configuration.
   - **Fixed:** an archive's rollback undid the load in the folder named like the inbox's lake (`demo`) rather than the lake's root.
   - **Tools follow:** `build_demo_lakes.py`, `lake demo`, `load-delta.sh`/`.ps1`, `bulk_trades.py`, `varcli` and `start-server.ps1` default
     to `data/delta/demo` (and refuse to build there while the older layout still holds the demo lake: move it first); the Iceberg demo
