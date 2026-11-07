@@ -1458,8 +1458,17 @@ Upgrade by copying into a fresh database built from the new release's complete s
    ```bash
    python3 tools/drishti.py db copy --from config/db/database.yaml --to /opt/drishti/new-database.yaml
    ```
-   You should see every table with `verified` and a last line such as `61 tables, 18,240 rows, every count verified`. A column the new
-   schema dropped is named and the copy refused; run again with `--drop-columns` once you agree its values may go.
+   Every table is listed with `verified`, then the totals. The copy of a fresh server's database (only the first administrator) prints:
+   ```text
+   copied sqlite jdbc:sqlite:/opt/drishti/data/identity/drishti.db -> sqlite jdbc:sqlite:/opt/drishti/data/identity/drishti-v2.db (schema version 1)
+     drishti_user                        1 rows  verified
+     drishti_user_role                   1 rows  verified
+     drishti_user_pack                   0 rows  verified
+     ...
+     drishti_edit_cursor                 0 rows  verified
+   53 tables, 2 rows, every count verified
+   ```
+   A column the new schema dropped is named and the copy refused; run again with `--drop-columns` once you agree its values may go.
 5. Put the new settings in `config/db/database.yaml` (or replace it with the new file) and start the servers.
 
 The source is never changed: to go back, point `config/db/database.yaml` at it again. The target must be fresh: a SQLite file that does
