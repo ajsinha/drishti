@@ -44,6 +44,7 @@ import pytest
 from core.auth import mint_token
 from test_var_explorer_browser import ROOT, VAR_DATA
 from risk_elements import chart, chart_ready, grid_ready, grid_rows
+from select_helpers import choose, value  # <drishti-select>: drishti-inputs' Select
 from test_workbench_browser import browser, wait  # noqa: F401 - fixtures and helpers
 from wb_live import BROWSER_WAIT_MS, TOKEN_SECRET, _stack
 
@@ -277,6 +278,13 @@ def test_the_period_statistics_are_the_engines(stack, people, browser):
         assert f"{s['synthetic']} synthetic demo records" in meta                # the screens say so
     missing = pg.locator("[data-st-missing]").inner_text()
     assert missing == ("Missing official records: " + ", ".join(s["missing"]) if s.get("missing") else "No official record missing in the period.")
+    # the measure is drishti-inputs' Select in a plain form: its hidden input carries the pick
+    assert value(pg, "drishti-select[name=measure]") == "var"
+    choose(pg, "drishti-select[name=measure]", "es")
+    pg.locator(".rg-ask button[type=submit]").click()
+    pg.wait_for_url("**measure=es*")
+    wait(pg, "document.querySelectorAll('[data-st-tiles] .rg-tile').length >= 4")
+    assert value(pg, "drishti-select[name=measure]") == "es"
     clean(pg)
     f1_opens(pg, "44-period-statistics")
     pg.context.close()

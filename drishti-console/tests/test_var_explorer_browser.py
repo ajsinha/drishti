@@ -397,6 +397,12 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     assert cell(pg, "TRD", 2).inner_text() == "-" + trades[2] and cell(pg, "PORT", 0).inner_text() == "PF-USD-RATES"
     assert "saved basket · " + basket in pg.locator("[data-vb-state]").inner_text()
     assert pg.locator("[data-vb-name]").input_value() == "rates-mix"
+    # the sheet's saved-basket picker (drishti-inputs' Select, searchable) asks the server when it opens: the basket is listed
+    pg.locator("[data-vb-pick] .di-select-control").click()
+    wait(pg, "document.querySelector('[data-vb-pick]').component.options.some(o => o.value === 'BASKET:%s')" % basket)
+    assert pg.evaluate("document.activeElement.classList.contains('di-select-search')")
+    pg.keyboard.press("Escape")
+    assert pg.evaluate("document.querySelector('[data-vb-pick]').value") is None      # opening one does not change the sheet
     # Edit: a change, and Save keeps the name as a new version
     assert "Save as version 2" in pg.locator("[data-vb-save]").inner_text()
     cell(pg, "DESK", 0).click()

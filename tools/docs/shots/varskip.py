@@ -28,7 +28,7 @@ import time
 import urllib.error
 import urllib.request
 
-from _var import open_var, painted
+from _var import choose, open_var, painted
 from shotlib import DEMO_ROOT_ENV
 from shotlib import CONSOLE_PORT, ROOT, Ctx, register
 from shotlib import start_servers as _start
@@ -72,12 +72,12 @@ def start_servers(work) -> list:
 
 @shot("01-hierarchy-not-available.jpg")
 def not_available(c: Ctx):
-    """The hierarchy select opened as a list (a native select's popup is not drawn in a picture): Management, Legal entities and
-    Limit letters (not available), greyed; the provenance's DRS-5211 warning on the right."""
+    """The hierarchy select opened (drishti-inputs' Select): Management, Legal entities and Limit letters (not available), greyed with
+    the reason beside it; the provenance's DRS-5211 warning on the right."""
     open_var(c, "/var?scope=BANK")
     painted(c, "BANK")
-    c.until("Array.from(document.querySelectorAll('[data-vx-hierarchy] option')).some(o => o.disabled)", 60)
-    c.page.evaluate("(() => { const s = document.querySelector('[data-vx-hierarchy]'); s.size = s.options.length; s.style.height = 'auto'; })()")
+    c.until("document.querySelector('[data-vx-hierarchy]').component.options.some(o => o.disabled)", 60)
+    choose(c, "[data-vx-hierarchy]", "", keep_open=True)
     c.page.wait_for_timeout(500)
     c.save("01-hierarchy-not-available.jpg")
 
