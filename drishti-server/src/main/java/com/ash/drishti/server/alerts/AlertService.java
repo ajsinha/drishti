@@ -280,6 +280,9 @@ public final class AlertService implements AutoCloseable {
         try {
             checker.check(spec, me.principal());
         } catch (DrishtiException e) {
+            if (e.errorCode() == ErrorCode.EL_SYNTAX) {
+                throw e;                                                          // a rule's expression that does not compile says so, with its own code
+            }
             throw AlertSpec.invalid("you cannot use this source yourself, so it cannot be watched: " + e.getMessage());
         }
         watchable(spec, body, me.principal());

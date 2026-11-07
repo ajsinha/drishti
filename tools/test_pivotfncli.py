@@ -72,12 +72,9 @@ class PivotFunctions(unittest.TestCase):
         self.assertEqual(0.02, b["sample"][1]["r"])
         self.assertEqual("g", b["group"])
 
-    def test_approve_names_the_version_and_the_reason(self):
-        FakeServer.routes[("POST", "/api/v1/pivot/functions/asha/wret@1/approve")] = (200, {"ref": "fn:asha/wret@1", "status": "approved"})
-        code, out, _ = run("pivot", "functions", "approve", "asha/wret@1", "--reason", "reviewed", "--scope", "group:rates", env=self.env)
-        self.assertEqual(0, code)
-        self.assertIn("fn:asha/wret@1: approved", out)
-        self.assertEqual({"scope": "group:rates", "reason": "reviewed"}, self.body())
+    def test_approving_is_not_here_any_more(self):
+        code, _, _ = run("pivot", "functions", "approve", "asha/wret@1", "--reason", "reviewed", env=self.env)
+        self.assertEqual(2, code)                                         # it is `drishti.py approvals approve function asha:wret@1`
 
     def test_explain_prints_steps_that_add_up(self):
         FakeServer.routes[("POST", "/api/v1/pivot/explain")] = (200, EXPLAIN)

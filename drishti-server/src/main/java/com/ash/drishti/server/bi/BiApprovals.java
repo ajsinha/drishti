@@ -150,9 +150,15 @@ public class BiApprovals implements ApprovalSource {
             case "withdraw" -> s.withdraw(p, id);
             default -> throw new DrishtiException(ErrorCode.BAD_REQUEST, "a BI item is approved, rejected or withdrawn");
         }
-        Map<String, Object> now = s.item(p, id, false);
+        String status = "approve".equals(action) ? "approved" : "reject".equals(action) ? "rejected" : "withdrawn";
+        Map<String, Object> now;
+        try {
+            now = s.item(p, id, false);
+        } catch (DrishtiException e) {                                    // decided by someone outside the item's audience: done, though they may not read it now
+            return new Item(kind(), id, id, "", null, status, "", null, false, false, false, "/bi/items/" + id, p.user(), java.time.Instant.now(), null);
+        }
         Item it = item(now, p);
-        return new Item(it.kind(), it.id(), it.title(), it.maker(), it.at(), "approve".equals(action) ? "approved" : "reject".equals(action) ? "rejected" : "withdrawn",
-                it.reason(), null, false, it.mine(), false, it.link(), p.user(), java.time.Instant.now(), null);
+        return new Item(it.kind(), it.id(), it.title(), it.maker(), it.at(), status, it.reason(), null, false, it.mine(), false, it.link(), p.user(),
+                java.time.Instant.now(), null);
     }
 }

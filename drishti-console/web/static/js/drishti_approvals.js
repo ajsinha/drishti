@@ -155,11 +155,12 @@
     var keys = Object.keys(f || {}).filter(function (k) { return f[k] !== null && f[k] !== undefined && f[k] !== ''; });
     keys.forEach(function (k) {
       dl.appendChild(h('dt', {}, k));
-      var v = f[k], dd = h('dd', { 'data-ap-fact': k });
+      var v = f[k], dd = h('dd', k === 'evidence' ? { 'data-ap-fact': k, 'data-evidence': '' } : { 'data-ap-fact': k });
       if (typeof v === 'object') { dd.appendChild(h('pre', { class: 'ap-json' }, JSON.stringify(v, null, 2))); } else { dd.textContent = String(v); }
       dl.appendChild(dd);
     });
     $('[data-ap-more]').hidden = !keys.length;
+    $('[data-ap-more]').open = keys.indexOf('evidence') >= 0;           // a shipped design's evidence (its checks, the samples) is read first
   }
   function params(kind) {
     var box = $('[data-ap-params]'); clear(box);
@@ -167,6 +168,14 @@
       var l = h('label', { class: 'ap-param' }, 'For ');
       var s = h('input', { type: 'text', value: 'everyone', 'data-ap-param': 'scope', 'aria-label': 'Who may use it: everyone or group:<name>', size: '14' });
       l.appendChild(s); box.appendChild(l);
+    }
+    if (kind === 'bi') {                                    // a dataset change that renames, or one refused as breaking (a bi-admin may force it)
+      [['applyRenames', 'and update the reports that use renamed names'], ['force', 'anyway (bi-admin: over a breaking change)']].forEach(function (p) {
+        var lb = h('label', { class: 'ap-param' });
+        lb.appendChild(h('input', { type: 'checkbox', 'data-ap-flag': p[0] }));
+        lb.appendChild(document.createTextNode(' ' + p[1]));
+        box.appendChild(lb);
+      });
     }
   }
   function draw(o) {
@@ -205,6 +214,7 @@
     if (a === 'reject' && !comment) { say('Say why it is rejected (the comment box), then Reject.', true); $('[data-ap-comment]').focus(); return; }
     var p = {};
     $$('[data-ap-param]').forEach(function (i) { if (i.value.trim()) { p[i.getAttribute('data-ap-param')] = i.value.trim(); } });
+    $$('[data-ap-flag]').forEach(function (i) { if (i.checked) { p[i.getAttribute('data-ap-flag')] = true; } });
     var btn = $('[data-ap-act="' + a + '"]'); btn.disabled = true;
     post('item/' + state.open.kind + '/' + enc(state.open.id) + '/' + a, { comment: comment, params: p }).then(function (it) {
       $('[data-ap-comment]').value = '';

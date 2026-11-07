@@ -47,43 +47,43 @@ class AlertApiTest {
 
     @Test
     void aFieldAlertFiresIntoTheInboxAndCanBeManaged() throws Exception {
-        mvc.perform(put("/api/v1/me/measure-alerts/Deep MTM").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON).content(FIELD_ALERT))
+        mvc.perform(put("/api/v1/alerts/rules/Deep MTM").header("X-Drishti-User", "ash").contentType(MediaType.APPLICATION_JSON).content(FIELD_ALERT))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.describe").value("below 0")).andExpect(jsonPath("$.link").value("/v/trade/IRS-48213"));
         long deadline = System.currentTimeMillis() + 8000;
         String history = "";
         while (System.currentTimeMillis() < deadline) {
-            history = mvc.perform(get("/api/v1/me/measure-alerts/Deep MTM").header("X-Drishti-User", "ash")).andReturn().getResponse().getContentAsString();
+            history = mvc.perform(get("/api/v1/alerts/rules/Deep MTM").header("X-Drishti-User", "ash")).andReturn().getResponse().getContentAsString();
             if (history.contains("\"fired\"")) {
                 break;
             }
             Thread.sleep(100);
         }
-        mvc.perform(get("/api/v1/me/measure-alerts").header("X-Drishti-User", "ash")).andExpect(status().isOk()).andExpect(jsonPath("$[*].name").value(hasItem("Deep MTM")))
+        mvc.perform(get("/api/v1/alerts/rules").header("X-Drishti-User", "ash")).andExpect(status().isOk()).andExpect(jsonPath("$[*].name").value(hasItem("Deep MTM")))
                 .andExpect(jsonPath("$[0].history[0].action").value("fired")).andExpect(jsonPath("$[0].history[0].delivered.inbox").value("ok"));
         mvc.perform(get("/api/v1/me/inbox").header("X-Drishti-User", "ash")).andExpect(status().isOk()).andExpect(jsonPath("$[0].type").value("alert"))
                 .andExpect(jsonPath("$[0].id").value("/v/trade/IRS-48213")).andExpect(jsonPath("$[0].title").value(startsWith("Deep MTM")));
-        mvc.perform(post("/api/v1/me/measure-alerts/Deep MTM/check").header("X-Drishti-User", "ash")).andExpect(status().isOk()).andExpect(jsonPath("$.state.ash.active").value(true));
-        mvc.perform(post("/api/v1/me/measure-alerts/Deep MTM/pause").header("X-Drishti-User", "ash")).andExpect(jsonPath("$.enabled").value(false));
-        mvc.perform(post("/api/v1/me/measure-alerts/Deep MTM/resume").header("X-Drishti-User", "ash")).andExpect(jsonPath("$.enabled").value(true));
-        mvc.perform(delete("/api/v1/me/measure-alerts/Deep MTM").header("X-Drishti-User", "ash")).andExpect(status().isNoContent());
-        mvc.perform(delete("/api/v1/me/measure-alerts/Deep MTM").header("X-Drishti-User", "ash")).andExpect(status().isNotFound());
-        mvc.perform(get("/api/v1/me/measure-alerts/Deep MTM").header("X-Drishti-User", "ash")).andExpect(status().isNotFound());
+        mvc.perform(post("/api/v1/alerts/rules/Deep MTM/check").header("X-Drishti-User", "ash")).andExpect(status().isOk()).andExpect(jsonPath("$.state.ash.active").value(true));
+        mvc.perform(post("/api/v1/alerts/rules/Deep MTM/pause").header("X-Drishti-User", "ash")).andExpect(jsonPath("$.enabled").value(false));
+        mvc.perform(post("/api/v1/alerts/rules/Deep MTM/resume").header("X-Drishti-User", "ash")).andExpect(jsonPath("$.enabled").value(true));
+        mvc.perform(delete("/api/v1/alerts/rules/Deep MTM").header("X-Drishti-User", "ash")).andExpect(status().isNoContent());
+        mvc.perform(delete("/api/v1/alerts/rules/Deep MTM").header("X-Drishti-User", "ash")).andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/alerts/rules/Deep MTM").header("X-Drishti-User", "ash")).andExpect(status().isNotFound());
     }
 
     @Test
     void aPreviewReadsWithoutSavingAndABadAlertIsDrs9062() throws Exception {
-        mvc.perform(post("/api/v1/me/measure-alerts/preview").header("X-Drishti-User", "pia").contentType(MediaType.APPLICATION_JSON).content(FIELD_ALERT)).andExpect(status().isOk())
+        mvc.perform(post("/api/v1/alerts/rules/preview").header("X-Drishti-User", "pia").contentType(MediaType.APPLICATION_JSON).content(FIELD_ALERT)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("ok")).andExpect(jsonPath("$.value").isNumber()).andExpect(jsonPath("$.condition").value("below 0"));
-        mvc.perform(get("/api/v1/me/measure-alerts").header("X-Drishti-User", "pia")).andExpect(jsonPath("$").isEmpty());
-        mvc.perform(put("/api/v1/me/measure-alerts/Bad").header("X-Drishti-User", "pia").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(get("/api/v1/alerts/rules").header("X-Drishti-User", "pia")).andExpect(jsonPath("$").isEmpty());
+        mvc.perform(put("/api/v1/alerts/rules/Bad").header("X-Drishti-User", "pia").contentType(MediaType.APPLICATION_JSON)
                 .content(FIELD_ALERT.replace("\"below\"", "\"under\""))).andExpect(status().isUnprocessableEntity()).andExpect(jsonPath("$.code").value("DRS-9062"));
-        mvc.perform(put("/api/v1/me/measure-alerts/Bad2").header("X-Drishti-User", "pia").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(put("/api/v1/alerts/rules/Bad2").header("X-Drishti-User", "pia").contentType(MediaType.APPLICATION_JSON)
                 .content(FIELD_ALERT.replace("\"field\":\"mtm\"", "\"field\":\"mtm <\""))).andExpect(status().isUnprocessableEntity());
     }
 
     @Test
     void boardTilesAndEveryonesAlertsAreListedForAdministrators() throws Exception {
-        mvc.perform(get("/api/v1/admin/measure-alerts").header("X-Drishti-User", "ash")).andExpect(status().isOk());
-        mvc.perform(get("/api/v1/admin/measure-alerts/boards").header("X-Drishti-User", "ash")).andExpect(status().isOk()).andExpect(jsonPath("$").isArray());
+        mvc.perform(get("/api/v1/admin/alerts").header("X-Drishti-User", "ash")).andExpect(status().isOk()).andExpect(jsonPath("$.rules").isArray()).andExpect(jsonPath("$.platform").exists());
+        mvc.perform(get("/api/v1/admin/alerts").header("X-Drishti-User", "ash")).andExpect(status().isOk()).andExpect(jsonPath("$.boards").isArray());
     }
 }

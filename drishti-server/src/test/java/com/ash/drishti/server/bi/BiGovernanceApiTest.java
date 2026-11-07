@@ -199,10 +199,10 @@ class BiGovernanceApiTest {
         assertThat(r.path("mayDecide").asBoolean()).isTrue();
         refused(call("GET", itemPath(ds) + "/review", cat(), null), 404, "DRS-9001");
         // the author may not decide her own request
-        refused(call("POST", itemPath(ds) + "/approve", ann(), Map.of()), 403, "DRS-9002");           // ann has no approve power and is no steward
+        refused(call("POST", "/api/v1/approvals/bi/" + ds + "/approve", ann(), Map.of()), 403, "DRS-9002");           // ann has no approve power and is no steward
         // rejection needs a reason; the author is told
-        refused(call("POST", itemPath(ds) + "/reject", sue(), Map.of()), 422, "DRS-9003");
-        ok(call("POST", itemPath(ds) + "/reject", sue(), Map.of("reason", "name the columns")));
+        refused(call("POST", "/api/v1/approvals/bi/" + ds + "/reject", sue(), Map.of()), 422, "DRS-9003");
+        ok(call("POST", "/api/v1/approvals/bi/" + ds + "/reject", sue(), Map.of("comment", "name the columns")));
         assertThat(ok(call("GET", "/api/v1/me/inbox?limit=20", ann(), null)).toString()).contains("bi-decision").contains("name the columns");
         // four eyes: bob proposes, bob may not approve
         call("POST", itemPath(ds) + "/propose", ann(), Map.of()).andExpect(status().isOk());
@@ -215,10 +215,11 @@ class BiGovernanceApiTest {
         assertThat(ok(call("GET", itemPath(ds), ann(), null)).path("can").path("publish").asBoolean()).isFalse();
         JsonNode other = ok(call("POST", "/api/v1/bi/workspaces/" + ws + "/items", bob(), Map.of("kind", "dataset", "title", "Bob's", "body", DATASET.replace("gov-ds", "bobs"))));
         call("POST", itemPath(other.path("id").asText()) + "/propose", bob(), Map.of()).andExpect(status().isOk());
-        refused(call("POST", itemPath(other.path("id").asText()) + "/approve", bob(), Map.of()), 403, "DRS-9005");
+        refused(call("POST", "/api/v1/approvals/bi/" + other.path("id").asText() + "/approve", bob(), Map.of()), 403, "DRS-9005");
         call("POST", itemPath(other.path("id").asText()) + "/withdraw", bob(), Map.of()).andExpect(status().isOk());
         // the steward approves with a comment: published as version 1
-        JsonNode done = ok(call("POST", itemPath(ds) + "/approve", sue(), Map.of("note", "looks right")));
+        ok(call("POST", "/api/v1/approvals/bi/" + ds + "/approve", sue(), Map.of("comment", "looks right")));
+        JsonNode done = ok(call("GET", itemPath(ds), sue(), null));
         assertThat(done.path("status").asText()).isEqualTo("published");
         assertThat(done.path("publishedVersion").asInt()).isEqualTo(1);
         JsonNode events = ok(call("GET", itemPath(ds) + "/history", ann(), null)).path("events");

@@ -232,9 +232,20 @@ class VarRegulatoryApiTest {
         return json.readTree(a.andExpect(status().is(code)).andReturn().getResponse().getContentAsString());
     }
 
+    /** The maker's narrative on the report's own endpoint; a sign-off step (approve, or return: reject) in the one Approvals queue. */
     private ResultActions sign(String user, String period, Map<String, Object> body) throws Exception {
-        return mvc.perform(post("/api/v1/var/reports/annual-report-var/runs/" + period + "/signoff").header("Authorization", auth(user, "risk"))
-                .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(body)));
+        if ("narrative".equals(body.get("action"))) {
+            return mvc.perform(post("/api/v1/var/reports/annual-report-var/runs/" + period + "/narrative").header("Authorization", auth(user, "risk"))
+                    .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(Map.of("narrative", body.get("narrative")))));
+        }
+        Map<String, Object> decision = new java.util.LinkedHashMap<>();
+        decision.put("comment", body.getOrDefault("comment", ""));
+        if (body.get("step") != null) {
+            decision.put("params", Map.of("step", body.get("step")));
+        }
+        String action = "return".equals(body.get("action")) ? "reject" : "approve";
+        return mvc.perform(post("/api/v1/approvals/var-report/annual-report-var:" + period + ":v" + body.getOrDefault("version", 1) + "/" + action)
+                .header("Authorization", auth(user, "risk")).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsString(decision)));
     }
 
     /** The seeded VaR of a node on scenario day j: the 250 scenarios before it. */
@@ -337,7 +348,8 @@ class VarRegulatoryApiTest {
         ok(sign("rao", range, Map.of("action", "approve", "step", "maker", "comment", "prepared")));
         assertThat(refused(sign("rao", range, Map.of("action", "approve", "step", "checker")), 409).get("detail").asText()).contains("four eyes");
         ok(sign("chen", range, Map.of("action", "approve", "step", "checker", "comment", "checked")));
-        JsonNode done = ok(sign("cro", range, Map.of("action", "approve", "step", "approver")));
+        assertThat(ok(sign("cro", range, Map.of("action", "approve", "step", "approver"))).path("status").asText()).isEqualTo("signed");
+        JsonNode done = ok(mvc.perform(get("/api/v1/var/reports/annual-report-var/runs/" + range).header("Authorization", rita)));
         assertThat(done.at("/signoff/state").asText()).isEqualTo("signed");
         assertThat(done.at("/signoff/narrative").asText()).isEqualTo("The year in one line.");
         byte[] pdf = mvc.perform(get("/api/v1/var/reports/annual-report-var/runs/" + range + "/file").param("format", "pdf")

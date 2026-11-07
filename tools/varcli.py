@@ -548,14 +548,7 @@ def register(groups, srv, ctx: dict) -> None:
             res = api.json("GET", "/api/v1/var/scope/history?" + enc(lensed(a, dated(a, {"scope": a.scope}))))
             say_json(res) if a.json else render_history(res, print)
         elif c == "stress-window":
-            if a.decide:
-                if not a.decision:
-                    print("--decide needs --decision approve or reject", file=sys.stderr)
-                    return 2
-                res = api.json("POST", f"/api/v1/var/stress-window/proposals/{urllib.parse.quote(a.decide)}/decision",
-                               {"decision": a.decision, "note": a.note or ""})
-                say_json(res) if a.json else print(f"{res.get('id')}  {res.get('status')}  by {res.get('decidedBy')}")
-            elif a.proposals:
+            if a.proposals:
                 res = api.json("GET", "/api/v1/var/stress-window/proposals")
                 say_json(res) if a.json else render_proposals(res, print)
             elif a.propose:
@@ -799,7 +792,7 @@ def register(groups, srv, ctx: dict) -> None:
     ex.add_argument("--matrix", action="store_true", help="the scope and each child node, the steps across (the Matrix view)")
     ex.add_argument("--xlsx", metavar="FILE", help="write the explanation as a workbook of formulas to FILE")
     sw = sub.add_parser("stress-window", help="the stress window selection (SWIN): every window of a node's long-history P&L as a "
-                        "stressed VaR, the worst against the current, the candidates; --propose freezes it, --decide approves or rejects",
+                        "stressed VaR, the worst against the current, the candidates; --propose freezes it (it is decided in `approvals`)",
                         parents=[srv])
     sw.add_argument("scope", nargs="?", default="BANK", help="the node: BANK, DESK:DESK-RATES, MGMT~DESK-RATES (default BANK)")
     sw.add_argument("--hierarchy", default="MGMT")
@@ -808,10 +801,8 @@ def register(groups, srv, ctx: dict) -> None:
     sw.add_argument("--confidence", type=float, metavar="Q", help="the VaR confidence (default the engine's, 0.99)")
     sw.add_argument("--propose", action="store_true", help="freeze the analysis and propose a window (--first; default the worst)")
     sw.add_argument("--first", metavar="YYYY-MM-DD", help="with --propose: the proposed window's first day")
-    sw.add_argument("--note", help="with --propose or --decide: a note for the record")
+    sw.add_argument("--note", help="with --propose: a note for the record")
     sw.add_argument("--proposals", action="store_true", help="the proposals, newest first")
-    sw.add_argument("--decide", metavar="SWP-ID", help="approve or reject a proposal (another person than its proposer)")
-    sw.add_argument("--decision", choices=["approve", "reject"])
     t = sub.add_parser("tree", help="the hierarchy with every node's VaR, ES and limit use", parents=[srv])
     t.add_argument("--hierarchy", default="MGMT")
     t.add_argument("--date", metavar="YYYY-MM-DD")
@@ -862,15 +853,12 @@ def register(groups, srv, ctx: dict) -> None:
     st.add_argument("scope", nargs="?", default="BANK")
     st.add_argument("--period", help="FY2026 (default: the current fiscal year), FY2026Q1, or 2026-01-01..2026-03-31")
     st.add_argument("--measure", default="var", choices=["var", "es", "svar", "ses"])
-    rp = sub.add_parser("report", help="report runs: list, run, show, sign (approve, return, narrative) and file", parents=[srv])
-    rp.add_argument("action", choices=["list", "run", "show", "sign", "file"])
+    rp = sub.add_parser("report", help="report runs: list, run, show, narrative and file (each step is signed in `approvals`)", parents=[srv])
+    rp.add_argument("action", choices=["list", "run", "show", "narrative", "file"])
     rp.add_argument("report", nargs="?", help="the report's id (annual-report-var, var-backtesting-chart)")
     rp.add_argument("period", nargs="?", help="FY2026, FY2026Q1 or 2026-01-01..2026-03-31 (run: default the current fiscal year)")
     rp.add_argument("--version", type=int, help="a run's version (default the newest)")
-    rp.add_argument("--do", dest="sign_action", choices=["approve", "return", "narrative"], default="approve", help="sign: the action")
-    rp.add_argument("--step", help="sign: the step you sign (maker, checker, approver)")
-    rp.add_argument("--comment", help="sign: your comment (a note for a check that needs one; why, when sending back)")
-    rp.add_argument("--narrative", help="sign --do narrative: the maker's text")
+    rp.add_argument("--narrative", help="narrative: the maker's text, written before the maker signs")
     rp.add_argument("--format", default="xlsx", choices=["xlsx", "csv", "pdf"], help="file: the format")
     rp.add_argument("--out", metavar="FILE", help="file: where to write (default REPORT_PERIOD.FORMAT)")
     rp.add_argument("--draft", action="store_true", help="file: a draft before the last approval, marked so")
@@ -982,10 +970,9 @@ def report_cmd(api, a, say_json) -> int:
                 f.write(raw)
             print(f"wrote {out} ({len(raw):,} bytes)")
             return 0
-        if a.action == "sign":
-            body = {k: v for k, v in (("version", a.version), ("action", a.sign_action), ("step", a.step), ("comment", a.comment),
-                                      ("narrative", a.narrative)) if v is not None}
-            res = api.json("POST", base + "/signoff", body)
+        if a.action == "narrative":
+            body = {k: v for k, v in (("version", a.version), ("narrative", a.narrative)) if v is not None}
+            res = api.json("POST", base + "/narrative", body)
         else:
             res = api.json("GET", base + ("?" + enc({"version": a.version}) if a.version else ""))
     if a.json:

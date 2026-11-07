@@ -101,8 +101,8 @@ public class FunctionApprovals implements ApprovalSource {
         if (!m.matches()) {
             throw new DrishtiException(ErrorCode.PROPOSAL_NOT_FOUND, "a pivot function is named owner:name@version, not " + id);
         }
-        return f.reviewable(v).stream().filter(d -> d.owner().equals(m.group(1)) && d.name().equals(m.group(2)) && d.version() == Integer.parseInt(m.group(3)))
-                .findFirst().orElseThrow(() -> new DrishtiException(ErrorCode.PROPOSAL_NOT_FOUND, "no pivot function " + id + " waits for you"));
+        // the version as the caller may see it: their own, one approved for them, or (an approver) any version, submitted or not
+        return f.get(v, m.group(1), m.group(2), Integer.parseInt(m.group(3)));
     }
 
     @Override

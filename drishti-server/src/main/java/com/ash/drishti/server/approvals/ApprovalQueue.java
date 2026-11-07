@@ -218,10 +218,7 @@ public final class ApprovalQueue {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "the action is approve, reject or withdraw, not " + action);
         }
         String why = comment == null ? null : comment.strip();
-        if ("reject".equals(action) && (why == null || why.isEmpty())) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "say why it is rejected: a reason is required");
-        }
-        ApprovalSource s = source(kind);
+        ApprovalSource s = source(kind);                                       // a reject without a reason is refused by the kind, in its own words and code
         ApprovalSource.Item done;
         try {
             done = s.decide(id, action, why, params == null ? Map.of() : params, p);

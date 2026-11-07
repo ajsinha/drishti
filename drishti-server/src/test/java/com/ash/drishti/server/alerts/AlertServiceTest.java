@@ -648,4 +648,111 @@ class AlertServiceTest {
         assertThatThrownBy(() -> off.save("alice", "x", body(alert(ABOVE_100, HOURLY, "\"delivery\":{\"webhooks\":[\"ops\"]}")))).hasMessageContaining("webhook delivery is turned off");
         assertThatThrownBy(() -> off.save("alice", "y", body(alert(ABOVE_100, HOURLY, "\"delivery\":{\"sms\":true}")))).hasMessageContaining("text messages are not set up");
     }
+
+    // ---- the one lifecycle: raised, acknowledged, resolved; snooze; owners ------------------------------------------------------------
+
+    Map<String, Object> only(String user) {
+        List<Map<String, Object>> raised = service.raised(user, false, false);
+        assertThat(raised).hasSize(1);
+        return raised.get(0);
+    }
+
+    @Test
+    void aFiringIsRaisedForItsOwnerAcknowledgedAndResolvedByHandAndNobodyElseSeesIt() {
+        readings.put("alice", ok(120));
+        service.save("alice", "Exposure", body(alert(ABOVE_100, HOURLY, "")));
+        Map<String, Object> c = only("alice");
+        assertThat(c.get("stage")).isEqualTo("raised");
+        assertThat(c.get("message").toString()).contains("120");
+        String id = c.get("id").toString();
+        assertThat(service.raised("bob", false, false)).isEmpty();                                     // nothing of another person
+        assertThatThrownBy(() -> service.act("bob", false, id, "acknowledge", null, null, null)).isInstanceOf(DrishtiException.class);
+        assertThatThrownBy(() -> service.act("bob", true, id, "resolve", null, null, null)).isInstanceOf(DrishtiException.class);   // not even an administrator
+        Map<String, Object> ack = service.act("alice", false, id, "acknowledge", null, null, null);
+        assertThat(ack.get("stage")).isEqualTo("acknowledged");
+        assertThat(ack.get("assignee")).isEqualTo("alice");
+        assertThatThrownBy(() -> service.act("alice", false, id, "assign", null, null, "bob")).hasMessageContaining("platform");
+        Map<String, Object> done = service.act("alice", false, id, "resolve", "booked back", null, null);
+        assertThat(done.get("stage")).isEqualTo("resolved");
+        assertThat(done.get("how")).isEqualTo("by hand");
+        assertThat(service.raised("alice", false, true)).isEmpty();                                       // open only: resolved is history
+        assertThat(audit).contains("alice alert.acknowledge alert/alice/Exposure", "alice alert.resolve alert/alice/Exposure");
+        service.check("alice", "Exposure");                                                              // still above: no second raise
+        assertThat(inbox).hasSize(1);
+    }
+
+    @Test
+    void anAlertResolvesItselfWhenTheNumberComesBackAndASnoozeHoldsTheNextFiringUntilItEnds() {
+        readings.put("alice", ok(120));
+        service.save("alice", "Exposure", body(alert(ABOVE_100, HOURLY, "\"cooldown\":\"0\"")));
+        String id = only("alice").get("id").toString();
+        service.act("alice", false, id, "snooze", null, "1h", null);
+        readings.put("alice", ok(90));
+        service.check("alice", "Exposure");
+        Map<String, Object> c = service.raised("alice", false, false).get(0);
+        assertThat(c.get("stage")).isEqualTo("resolved");
+        assertThat(c.get("how")).isEqualTo("cleared");
+        readings.put("alice", ok(130));
+        clock.advance(Duration.ofMinutes(10));
+        service.check("alice", "Exposure");
+        assertThat(inbox).as("snoozed: held, not told").hasSize(1);
+        assertThat(history("alice", "Exposure").get(0).path("message").asText()).contains("snoozed until");
+        clock.advance(Duration.ofHours(1));
+        service.check("alice", "Exposure");
+        assertThat(inbox).as("the snooze ended and it still holds").hasSize(2);
+        assertThat(only("alice").get("stage")).isEqualTo("raised");
+        assertThatThrownBy(() -> service.act("alice", false, id, "snooze", null, "forever", null)).hasMessageContaining("15m, 1h or 1d");
+    }
+
+    @Test
+    void theRulesOfTheRetiredEntityRuleEngineAreConvertedOnceIntoRulesOfThisEngine() {
+        store.put("alice", AlertService.OLD_RULES_NS, "Deep MTM!", body("{\"ref\":{\"kind\":\"trade\",\"id\":\"IRS-48213\"},\"when\":\"$.mtm < 0\","
+                + "\"severity\":\"critical\",\"message\":\"MTM below zero\",\"enabled\":true}"));
+        store.put("alice", AlertService.OLD_RULES_NS, "junk", body("{\"note\":\"not a rule\"}"));
+        assertThat(service.convertOldRules()).isEqualTo(1);
+        assertThat(store.keys("alice", AlertService.OLD_RULES_NS)).containsExactly("junk");              // converted ones leave the old place
+        JsonNode a = service.get("alice", "Deep MTM-").orElseThrow();
+        assertThat(a.path("title").asText()).isEqualTo("MTM below zero");
+        assertThat(a.path("severity").asText()).isEqualTo("critical");
+        assertThat(a.path("source").path("type").asText()).isEqualTo("field");
+        assertThat(a.path("source").path("field").asText()).isEqualTo("$.mtm < 0");
+        assertThat(a.path("condition").path("type").asText()).isEqualTo("rule");
+        assertThat(a.path("trigger").path("mode").asText()).isEqualTo("after-load");                   // the test's source pushes nothing
+        assertThat(a.path("describe").asText()).isEqualTo("holds: $.mtm < 0");
+        assertThat(service.convertOldRules()).isZero();                                                   // once
+    }
+
+    @Test
+    void aRuleHoldsAtOneAndClearsAtZero() {
+        readings.put("alice", ok(1));
+        service.save("alice", "Rule", body("{\"source\":{\"type\":\"field\",\"kind\":\"trade\",\"id\":\"T-1\",\"field\":\"$.mtm < 0\"},"
+                + "\"condition\":{\"type\":\"rule\"},\"trigger\":{\"mode\":\"after-load\",\"kind\":\"trade\"}}"));
+        assertThat(inbox).hasSize(1);
+        assertThat(inbox.get(0)).contains("holds");
+        readings.put("alice", ok(0));
+        service.check("alice", "Rule");
+        assertThat(only("alice").get("stage")).isEqualTo("resolved");
+        assertThat(service.onLoad("trade", LocalDate.of(2026, 11, 25))).isEqualTo(1);                    // a load of its kind makes it look
+        assertThatThrownBy(() -> service.save("alice", "Bad", body(alert("{\"type\":\"rule\"}", HOURLY, ""))))
+                .hasMessageContaining("condition rule needs a field source");
+    }
+
+    @Test
+    void platformAlertsAreListedForAdministratorsOnlyAndASnoozeQuietsTheirSeries() {
+        Instant opened = clock.instant();
+        service.systemAlerts(() -> List.of(new AlertService.SystemAlert("disk-free|{}", "disk-free", "critical", "free disk under the guard", "node-a", opened, null)));
+        assertThat(service.raised("alice", false, false)).isEmpty();
+        List<Map<String, Object>> admin = service.raised("root", true, false);
+        assertThat(admin).hasSize(1);
+        assertThat(admin.get(0).get("source")).isEqualTo("platform");
+        String id = admin.get(0).get("id").toString();
+        assertThatThrownBy(() -> service.act("alice", false, id, "acknowledge", null, null, null)).isInstanceOf(DrishtiException.class);
+        assertThat(service.act("root", true, id, "assign", null, null, "ops-oncall").get("assignee")).isEqualTo("ops-oncall");
+        assertThat(service.systemSnoozed("disk-free|{}")).isFalse();
+        service.act("root", true, id, "snooze", null, "4h", null);
+        assertThat(service.systemSnoozed("disk-free|{}")).isTrue();
+        assertThat(service.raised("root", true, false).get(0).get("snoozedUntil")).isNotNull();
+        clock.advance(Duration.ofHours(5));
+        assertThat(service.systemSnoozed("disk-free|{}")).isFalse();
+    }
 }

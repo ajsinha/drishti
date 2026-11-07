@@ -60,7 +60,7 @@ class GovernanceTest {
     }
 
     private org.springframework.test.web.servlet.ResultActions decide(String id, String action, String by, String role, String comment) throws Exception {
-        return mvc.perform(post("/api/v1/sutras/proposals/" + id + "/" + action).contentType(MediaType.APPLICATION_JSON)
+        return mvc.perform(post("/api/v1/approvals/sutra/" + id + "/" + action).contentType(MediaType.APPLICATION_JSON)
                 .content(comment == null ? "{}" : "{\"comment\":\"" + comment + "\"}").header("Authorization", as(by, role)));
     }
 
@@ -74,7 +74,7 @@ class GovernanceTest {
         decide(id, "approve", "ana", "approver", null).andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-2007"));
         decide(id, "approve", "ana", "author", null).andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-5002"));
         decide(id, "approve", "rui", "approver", "looks right").andExpect(status().isOk()).andExpect(jsonPath("$.status").value("approved"))
-                .andExpect(jsonPath("$.reviewer").value("rui"));
+                .andExpect(jsonPath("$.decidedBy").value("rui"));
         mvc.perform(get("/api/v1/sutras/gov-a/1").header("Authorization", as("ana", "author"))).andExpect(status().isOk());
         decide(id, "approve", "rui", "approver", null).andExpect(status().isConflict());               // decided once
         mvc.perform(get("/api/v1/admin/audit").param("subject", "gov-a@1").header("Authorization", as("root", "admin")))

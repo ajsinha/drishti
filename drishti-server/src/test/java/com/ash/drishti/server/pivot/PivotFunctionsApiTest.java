@@ -92,12 +92,12 @@ class PivotFunctionsApiTest {
 
         JsonNode saved = call("asha", "analyst", post("/api/v1/pivot/functions"), definition(), 200);
         assertThat(saved.path("ref").asText()).isEqualTo("fn:asha/wret@1");
-        call("asha", "analyst", post("/api/v1/pivot/functions/asha/wret@1/approve"), Map.of("scope", "everyone", "reason", "mine"), 403);
+        call("asha", "analyst", post("/api/v1/approvals/function/asha:wret@1/approve"), Map.of("comment", "mine", "params", Map.of("scope", "everyone")), 403);
         String num = numberField("raj", "analyst");
         Map<String, Object> view = Map.of("source", "trade", "values", List.of(Map.of("measure", "fn:asha/wret@1(" + num + ", " + num + ")")));
         call("raj", "analyst", post("/api/v1/pivot/query"), view, 403);
-        call("anna", "pivot-approver", post("/api/v1/pivot/functions/asha/wret@1/approve"), Map.of("scope", "everyone", "reason",
-                "reviewed"), 200);
+        call("anna", "pivot-approver", post("/api/v1/approvals/function/asha:wret@1/approve"), Map.of("comment", "reviewed", "params",
+                Map.of("scope", "everyone")), 200);
         JsonNode a = call("raj", "analyst", post("/api/v1/pivot/query"), view, 200);
         assertThat(a.toString()).contains("fn:asha/wret@1");
         call("anna", "pivot-approver", post("/api/v1/pivot/functions/asha/wret@1/revoke"), Map.of("reason", "wrong weights"), 200);

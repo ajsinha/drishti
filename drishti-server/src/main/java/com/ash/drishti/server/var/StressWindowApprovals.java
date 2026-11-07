@@ -135,6 +135,9 @@ public class StressWindowApprovals implements ApprovalSource {
         if (!"approve".equals(action) && !"reject".equals(action)) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a stress window proposal is approved or rejected");
         }
+        if ("reject".equals(action) && (comment == null || comment.isBlank())) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "say why the proposal is rejected");
+        }
         return item(proposals().decide(p, id, action, comment), p);
     }
 }

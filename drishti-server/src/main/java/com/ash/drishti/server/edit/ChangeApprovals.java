@@ -63,8 +63,13 @@ public class ChangeApprovals implements ApprovalSource {
         return "Correction";
     }
 
+    /** Present whenever write-back is: with editing switched off it lists nothing and a decision says so (DRS-9301). */
     @Override
     public boolean enabled() {
+        return edits.getIfAvailable() != null;
+    }
+
+    private boolean on() {
         EditService e = edits.getIfAvailable();
         return e != null && e.settings().enabled();
     }
@@ -79,7 +84,7 @@ public class ChangeApprovals implements ApprovalSource {
 
     @Override
     public List<Item> items(Principal p, int limit) {
-        if (!enabled()) {
+        if (!on()) {
             return List.of();
         }
         List<Item> out = new ArrayList<>();
