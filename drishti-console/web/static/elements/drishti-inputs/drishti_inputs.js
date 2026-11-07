@@ -2189,7 +2189,7 @@
     }
     function drawField(form, f) {
       const fs = f.field, id = form.id + '-' + f.path.replace(/[^\w]/g, '_'), ro = form.state !== 'editing' || !!fs.readOnly;
-      const wrap = form.el('div', { cls: 'di-form-field di-t-' + fs.type, data: { path: f.path } });
+      const wrap = form.el('div', { cls: 'di-form-field di-t-' + fs.type, attrs: { 'data-form-path': f.path } });   // data-form-path: a page's own data-path hooks stay its own
       const part = { f: f, wrap: wrap, id: id, widget: null, input: null, custom: null, names: null };
       form.parts.set(f.path, part);
       const msg = form.el('div', { cls: 'di-msg', attrs: { id: id + '-msg', 'aria-live': 'polite' } });
@@ -2240,6 +2240,7 @@
           const chosen = (Array.isArray(v) ? v : []).map(String);
           opts().forEach((o, i) => {
             const c = named(form.el('input', { attrs: { type: 'checkbox', id: id + '-' + i, value: String(o.value), disabled: ro || null } }));
+            if (fs.optionHook) { c.setAttribute('data-' + fs.optionHook, String(o.value)); }
             c.checked = chosen.indexOf(String(o.value)) >= 0;
             c.addEventListener('change', () => { set(Array.from(control.querySelectorAll('input:checked')).map((x) => opts().find((y) => String(y.value) === x.value).value)); touch(); });
             control.appendChild(form.el('label', { cls: 'di-check-label', attrs: { for: id + '-' + i } }, [c, ' ' + o.label]));
@@ -2254,6 +2255,7 @@
             control = form.el('div', { cls: 'di-radios', attrs: { role: 'radiogroup', 'aria-labelledby': id + '-label', 'aria-describedby': described } });
             list.forEach((o, i) => {
               const r = form.el('input', { attrs: { type: 'radio', name: fs.name || id, id: id + '-' + i, value: String(o.value), disabled: ro || null } });
+              if (fs.optionHook) { r.setAttribute('data-' + fs.optionHook, String(o.value)); }
               r.checked = v === o.value;
               r.addEventListener('change', () => { if (r.checked) { set(o.value); touch(); } });
               control.appendChild(form.el('label', { cls: 'di-radio', attrs: { for: id + '-' + i } }, [r, ' ' + o.label]));
@@ -2378,8 +2380,8 @@
         this.render();
       }
       render() {
-        const had = this.doc.activeElement && this.form.contains(this.doc.activeElement) ? this.doc.activeElement.closest('[data-path]') : null;
-        const path = had ? had.dataset.path : null;
+        const had = this.doc.activeElement && this.form.contains(this.doc.activeElement) ? this.doc.activeElement.closest('[data-form-path]') : null;
+        const path = had ? had.getAttribute('data-form-path') : null;
         this.parts.forEach((p) => { if (p.widget && p.widget.destroy) { p.widget.destroy(); } });
         this.parts.clear();
         this.form.textContent = '';
@@ -2394,7 +2396,7 @@
         this.form.appendChild(body);
         this.form.appendChild(this.actions());
         this.refresh();
-        if (path) { const el = this.form.querySelector('[data-path="' + path + '"] input, [data-path="' + path + '"] button, [data-path="' + path + '"] select'); if (el) { el.focus(); } }
+        if (path) { const el = this.form.querySelector('[data-form-path="' + path + '"] input, [data-form-path="' + path + '"] button, [data-form-path="' + path + '"] select'); if (el) { el.focus(); } }
       }
       actions() {
         const bar = this.el('div', { cls: 'di-form-actions' });
@@ -2405,9 +2407,10 @@
         if (!last) { bar.appendChild(this.el('button', { cls: 'di-btn di-primary', text: 'Next', attrs: { type: 'button' }, data: { act: 'next' }, on: { click: () => this.next() } })); }
         else {
           this.submitBtn = this.el('button', { cls: 'di-btn di-primary', text: this.o.fourEyes ? 'Submit for approval' : (this.o.submitLabel || 'Save'), attrs: { type: 'submit' }, data: { act: 'submit' } });
+          if (this.o.submitHook) { this.submitBtn.setAttribute('data-' + this.o.submitHook, ''); }
           bar.appendChild(this.submitBtn);
         }
-        bar.appendChild(this.el('button', { cls: 'di-btn', text: 'Reset', attrs: { type: 'button' }, data: { act: 'reset' }, on: { click: () => this.reset() } }));
+        if (this.o.resetButton !== false) { bar.appendChild(this.el('button', { cls: 'di-btn', text: 'Reset', attrs: { type: 'button' }, data: { act: 'reset' }, on: { click: () => this.reset() } })); }
         return bar;
       }
       stepBar() {

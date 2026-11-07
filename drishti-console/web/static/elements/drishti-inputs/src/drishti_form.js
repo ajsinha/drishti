@@ -55,6 +55,8 @@ import { drawField, defaultWidget, writeNames } from './drishti_form-fields.js';
  *   Next checks the step's fields; the last step submits
  * @property {Object<string, import('./drishti_form-fields.js').WidgetFactory>} [widgets] custom widgets by name (a field's widget)
  * @property {string} [label] the form's name for a reader (default: the schema's title)
+ * @property {string} [submitHook] a data attribute on the submit button ("lookup-go" is data-lookup-go), for tutorials and tests
+ * @property {boolean} [resetButton=true] the Reset button
  */
 
 /**
@@ -92,8 +94,8 @@ export class Form extends InputBase {
    * @returns {void}
    */
   render() {
-    const had = this.doc.activeElement && this.form.contains(this.doc.activeElement) ? this.doc.activeElement.closest('[data-path]') : null;
-    const path = had ? had.dataset.path : null;
+    const had = this.doc.activeElement && this.form.contains(this.doc.activeElement) ? this.doc.activeElement.closest('[data-form-path]') : null;
+    const path = had ? had.getAttribute('data-form-path') : null;
     this.parts.forEach((p) => { if (p.widget && p.widget.destroy) { p.widget.destroy(); } });
     this.parts.clear();
     this.form.textContent = '';
@@ -108,7 +110,7 @@ export class Form extends InputBase {
     this.form.appendChild(body);
     this.form.appendChild(this.actions());
     this.refresh();
-    if (path) { const el = this.form.querySelector('[data-path="' + path + '"] input, [data-path="' + path + '"] button, [data-path="' + path + '"] select'); if (el) { el.focus(); } }
+    if (path) { const el = this.form.querySelector('[data-form-path="' + path + '"] input, [data-form-path="' + path + '"] button, [data-form-path="' + path + '"] select'); if (el) { el.focus(); } }
   }
 
   /** @private the buttons (Back and Next in a form with steps) */
@@ -121,9 +123,10 @@ export class Form extends InputBase {
     if (!last) { bar.appendChild(this.el('button', { cls: 'di-btn di-primary', text: 'Next', attrs: { type: 'button' }, data: { act: 'next' }, on: { click: () => this.next() } })); }
     else {
       this.submitBtn = this.el('button', { cls: 'di-btn di-primary', text: this.o.fourEyes ? 'Submit for approval' : (this.o.submitLabel || 'Save'), attrs: { type: 'submit' }, data: { act: 'submit' } });
+      if (this.o.submitHook) { this.submitBtn.setAttribute('data-' + this.o.submitHook, ''); }
       bar.appendChild(this.submitBtn);
     }
-    bar.appendChild(this.el('button', { cls: 'di-btn', text: 'Reset', attrs: { type: 'button' }, data: { act: 'reset' }, on: { click: () => this.reset() } }));
+    if (this.o.resetButton !== false) { bar.appendChild(this.el('button', { cls: 'di-btn', text: 'Reset', attrs: { type: 'button' }, data: { act: 'reset' }, on: { click: () => this.reset() } })); }
     return bar;
   }
 

@@ -169,7 +169,7 @@
       n = el('input', 'fm-check'); n.type = 'checkbox'; n.checked = value === true || value === 'true';
     } else {
       n = el('input', 'fm-in');
-      n.type = f.type === 'datetime' ? 'datetime-local' : 'text';         // a date is drishti-inputs' date picker (fieldBox upgrades it once it has a place)
+      n.type = 'text';                                       // a date or a date with a time: drishti-inputs' pickers (picker() upgrades it once it has a place)
       if (numeric(f)) { n.inputMode = 'decimal'; n.value = X.empty(value) ? '' : fmt(f, value); } else { n.value = X.empty(value) ? '' : String(value).slice(0, f.type === 'datetime' ? 16 : undefined); }
     }
     if (f.placeholder && 'placeholder' in n) { n.placeholder = f.placeholder; }
@@ -193,6 +193,15 @@
     return n;
   }
 
+  /* A date or a date-and-time field (once it is in the page): drishti-inputs' date picker, or its date-and-time picker (the zone stays the
+     field's own unit beside it); the field keeps its value, its input events and its focus(). Null for other fields. */
+  function picker(f, n, placeholder) {
+    var I = window.Drishti.elements.inputs;
+    if (f.type === 'date') { n.type = 'date'; return I.upgradeDateInput(n, { label: f.label || f.id, placeholder: placeholder }); }
+    if (f.type === 'datetime') { n.type = 'datetime-local'; return I.upgradeDateTimeInput(n, { label: f.label || f.id }); }
+    return null;
+  }
+
   function fieldBox(st, f, value, isNew, onChange) {
     var box = el('div', 'fm-field'); box.setAttribute('data-fm-field', f.id);
     var lab = el('label', 'fm-label', f.label);
@@ -214,7 +223,8 @@
     var n = input(st, f, value, onChange);
     lab.htmlFor = n.id;
     box.appendChild(n.fmWrap || n);
-    if (f.type === 'date') { n.type = 'date'; lab.htmlFor = window.Drishti.elements.inputs.upgradeDateInput(n, { label: f.label || f.id }).input.id; }
+    var pk = picker(f, n);
+    if (pk) { lab.htmlFor = pk.input.id; }
     var msg = el('div', 'fm-msgs'); msg.id = n.id + '-msg'; msg.setAttribute('data-msgs', f.id);
     n.setAttribute('aria-describedby', ((n.getAttribute('aria-describedby') || '') + ' ' + msg.id).trim());
     box.appendChild(msg);
@@ -489,9 +499,9 @@
     n.classList.add('fm-cell-in');
     n.setAttribute('aria-label', f.label);
     td.textContent = ''; td.appendChild(n.fmWrap || n);
-    var dp = null, keys = n;                                 // a date: drishti-inputs' date picker in the cell, its field takes the keys
-    if (f.type === 'date') { n.type = 'date'; dp = window.Drishti.elements.inputs.upgradeDateInput(n, { label: f.label || f.id, placeholder: '2026-11-06, T-1' }); keys = dp.input; }
-    keys.focus(); if (keys.select) { keys.select(); }
+    var dp = picker(f, n, '2026-11-06, T-1'), keys = dp ? dp.host : n;      // a date (and time): drishti-inputs' picker in the cell, its fields take the keys
+    var open = function () { return !!dp && !!dp.host.ownerDocument.querySelector('.di-pop'); };
+    (dp ? dp.input : n).focus(); if ((dp ? dp.input : n).select) { (dp ? dp.input : n).select(); }
     var done = false;
     function finish(keep, move) {
       if (done) { return; }
@@ -510,11 +520,14 @@
     }
     keys.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') { e.preventDefault(); finish(true, 0); }
-      else if (e.key === 'Escape') { if (dp && dp.pop.isOpen()) { return; } e.preventDefault(); e.stopPropagation(); finish(false, 0); }
-      else if (e.key === 'Tab') { e.preventDefault(); finish(true, e.shiftKey ? -1 : 1); }
+      else if (e.key === 'Escape') { if (open()) { return; } e.preventDefault(); e.stopPropagation(); finish(false, 0); }
+      else if (e.key === 'Tab') {
+        if (f.type === 'datetime' && !e.shiftKey && dp && dp.date && dp.date.input === e.target) { return; }   // from the date on to its time
+        e.preventDefault(); finish(true, e.shiftKey ? -1 : 1);
+      }
     });
-    keys.addEventListener('blur', function () { setTimeout(function () { if (!(dp && dp.pop.isOpen())) { finish(true, null); } }, 0); });
-    if (dp) { dp.on('change', function () { setTimeout(function () { if (!dp.pop.isOpen()) { finish(true, 0); } }, 0); }); }
+    keys.addEventListener('focusout', function (e) { if (dp && e.relatedTarget && keys.contains(e.relatedTarget)) { return; } setTimeout(function () { if (!open() && !(dp && keys.contains(keys.ownerDocument.activeElement))) { finish(true, null); } }, 0); });
+    if (dp && f.type === 'date') { dp.on('change', function () { setTimeout(function () { if (!open()) { finish(true, 0); } }, 0); }); }
   }
 
   function cellIssues(st, i) {

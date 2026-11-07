@@ -63,6 +63,11 @@ import { parseTime, parseDateTime } from './drishti_time-picker.js';
  * @property {string} [step] the step (of the form's steps) the field belongs to
  * @property {string} [dependsOn] enum lists: the field whose chosen values narrow the values offered (see parents)
  * @property {Object<string, string[]>} [parents] enum lists: for each value, the values of dependsOn it goes with
+ * @property {string} [optionHook] checkboxes and radios: each option's control gets data-<optionHook>="<value>"
+ * @property {boolean} [allowEmpty] select: false leaves out the empty choice
+ * @property {string} [emptyLabel] select: the words of the empty choice
+ * @property {boolean} [lazy] text and numbers: the value changes when the field is left or Enter is pressed, not at each key
+ * @property {boolean} [noLabel] a custom widget that draws its own label
  */
 
 /**

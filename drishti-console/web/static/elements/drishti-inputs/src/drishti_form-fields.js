@@ -96,7 +96,7 @@ export function applyHook(el, hook) {
  */
 export function drawField(form, f) {
   const fs = f.field, id = form.id + '-' + f.path.replace(/[^\w]/g, '_'), ro = form.state !== 'editing' || !!fs.readOnly;
-  const wrap = form.el('div', { cls: 'di-form-field di-t-' + fs.type, data: { path: f.path } });
+  const wrap = form.el('div', { cls: 'di-form-field di-t-' + fs.type, attrs: { 'data-form-path': f.path } });   // data-form-path: a page's own data-path hooks stay its own
   const part = { f: f, wrap: wrap, id: id, widget: null, input: null, custom: null, names: null };
   form.parts.set(f.path, part);
   const msg = form.el('div', { cls: 'di-msg', attrs: { id: id + '-msg', 'aria-live': 'polite' } });
@@ -128,7 +128,7 @@ export function drawField(form, f) {
     part.input = ret.input || null;
     part.names = fs.name ? form.el('span', { cls: 'di-names', attrs: { hidden: true } }) : null;
     applyHook(part.input || control, fs.hook);
-    wrap.append(part.input ? label(part.input.id || id) : label(null), control, help, msg);
+    wrap.append(fs.noLabel ? '' : part.input ? label(part.input.id || id) : label(null), control, help, msg);
     if (part.names) { wrap.appendChild(part.names); }
     return wrap;
   }
@@ -147,6 +147,7 @@ export function drawField(form, f) {
       const chosen = (Array.isArray(v) ? v : []).map(String);
       opts().forEach((o, i) => {
         const c = named(form.el('input', { attrs: { type: 'checkbox', id: id + '-' + i, value: String(o.value), disabled: ro || null } }));
+        if (fs.optionHook) { c.setAttribute('data-' + fs.optionHook, String(o.value)); }
         c.checked = chosen.indexOf(String(o.value)) >= 0;
         c.addEventListener('change', () => { set(Array.from(control.querySelectorAll('input:checked')).map((x) => opts().find((y) => String(y.value) === x.value).value)); touch(); });
         control.appendChild(form.el('label', { cls: 'di-check-label', attrs: { for: id + '-' + i } }, [c, ' ' + o.label]));
@@ -161,6 +162,7 @@ export function drawField(form, f) {
         control = form.el('div', { cls: 'di-radios', attrs: { role: 'radiogroup', 'aria-labelledby': id + '-label', 'aria-describedby': described } });
         list.forEach((o, i) => {
           const r = form.el('input', { attrs: { type: 'radio', name: fs.name || id, id: id + '-' + i, value: String(o.value), disabled: ro || null } });
+          if (fs.optionHook) { r.setAttribute('data-' + fs.optionHook, String(o.value)); }
           r.checked = v === o.value;
           r.addEventListener('change', () => { if (r.checked) { set(o.value); touch(); } });
           control.appendChild(form.el('label', { cls: 'di-radio', attrs: { for: id + '-' + i } }, [r, ' ' + o.label]));
@@ -187,7 +189,7 @@ export function drawField(form, f) {
     case 'textarea': {
       const ta = part.input = named(form.el('textarea', { cls: 'di-field', attrs: { id: id, rows: String((fs.options && fs.options.rows) || 3), 'aria-describedby': described, readonly: ro || null, placeholder: fs.placeholder || null } }));
       ta.value = v === undefined || v === null ? '' : String(v);
-      ta.addEventListener('input', () => set(ta.value === '' ? undefined : ta.value));
+      ta.addEventListener(fs.lazy ? 'change' : 'input', () => set(ta.value === '' ? undefined : ta.value));
       ta.addEventListener('blur', touch);
       control = ta;
       break;
@@ -198,7 +200,7 @@ export function drawField(form, f) {
         'aria-describedby': described, readonly: ro || null, placeholder: fs.placeholder || (money ? '1.5m, 250k or 1,000,000' : null), 'aria-required': f.required ? 'true' : null, autocomplete: 'off' } }));
       const show = (x) => (x === undefined || x === null ? '' : numeric && typeof x === 'number' && !isNaN(x) ? formatNumber(x, { maxDecimals: money ? 2 : 10, minus: '-' }) : String(x));
       inp.value = show(v);
-      inp.addEventListener('input', () => {
+      inp.addEventListener(fs.lazy ? 'change' : 'input', () => {
         const r = parseField(fs, inp.value, f.label);
         part.parseError = r.error;
         set(r.error ? (numeric ? NaN : undefined) : r.value);
