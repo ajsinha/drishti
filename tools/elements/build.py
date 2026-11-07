@@ -157,6 +157,11 @@ class Module:
         out.append(text[at:])
         body = "".join(out)
         body = re.sub(r"^/\*\n( \*[^\n]*\n)+? \*/\n", "", body, count=1)      # the licence header: once, at the bundle's top
+        # the bundle runs, the modules document: comments on lines of their own and blank lines are left out of it (the API reference
+        # and the modules keep them)
+        body = re.sub(r"(?ms)^[ \t]*/\*(?:(?!\*/).)*\*/[ \t]*\n", "", body)
+        body = re.sub(r"(?m)^[ \t]*//[^\n]*\n", "", body)
+        body = re.sub(r"\n[ \t]*\n+", "\n", body)
         return body.strip("\n")
 
 

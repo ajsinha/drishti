@@ -36,26 +36,7 @@
   var __m = {};
   /* ---- src/drishti_aggregate.js ---- */
   __m["src/drishti_aggregate.js"] = (function () {
-    /* The aggregation functions the browser computes, the server's names (PIVOT_ENGINE.md section 5.2). The rule is the server's: a cell or
-       a total is made from its members, never from other cells' figures. Each function keeps a small state that merges exactly (a sum; a
-       sum and a count; the extreme; the set of values), so a total is the merge of its members' states. A measure the browser does not
-       compute (VaR, ES, a ratio, a custom function) or a column marked non-additive is never added up here: it is asked of the server, for
-       every cell and every total (see isServerMeasure). */
-
-    /**
-     * @typedef {Object} AggFunc
-     * @property {string} name
-     * @property {string} label
-     * @property {function(): *} init
-     * @property {function(*, *): *} add the state with one more value (returns the state)
-     * @property {function(*, *): *} merge two states as one
-     * @property {function(*): *} result the figure
-     * @property {boolean} numeric whether the values are numbers
-     */
-
     function num(v) { return typeof v === 'number' ? (isFinite(v) ? v : null) : v === null || v === undefined || v === '' ? null : (isFinite(+v) ? +v : null); }
-
-    /** Kahan-compensated sums, as the server's sum. */
     const sum = {
       name: 'sum', label: 'Sum', numeric: true,
       init: () => ({ s: 0, c: 0, n: 0 }),
@@ -63,8 +44,6 @@
       merge: (a, b) => { const y = b.s - a.c - b.c, t = a.s + y; return { s: t, c: (t - a.s) - y, n: a.n + b.n }; },
       result: (st) => (st.n ? st.s : null)
     };
-
-    /** The functions by name. */
     const AGG_FUNCS = Object.freeze({
       sum: sum,
       count: { name: 'count', label: 'Count', numeric: false, init: () => 0, add: (st, v) => (v === undefined || v === null || v === '' ? st : st + 1), merge: (a, b) => a + b, result: (st) => st },
@@ -81,46 +60,18 @@
         add: (st, v) => { if (v !== null && v !== undefined && v !== '') { st.add(typeof v === 'number' ? v : String(v)); } return st; },
         merge: (a, b) => { const s = new Set(a); b.forEach((x) => s.add(x)); return s; }, result: (st) => st.size }
     });
-
     const ALIASES = { average: 'avg', mean: 'avg', distinct: 'count_distinct', countDistinct: 'count_distinct' };
-
-    /**
-     * A function by its name or a usual alias (average, distinct), or null when the browser does not compute it.
-     * @param {string} name
-     * @returns {?AggFunc}
-     */
     function aggFunc(name) { return AGG_FUNCS[ALIASES[name] || name] || null; }
-
-    /**
-     * A measure's text read: func(field), or count() for the members; null when it is not that simple form (var(99, 1d), ratio(...)).
-     * @param {string} measure for example "sum(NOTIONAL_USD)"
-     * @returns {?{func: string, field: ?string}}
-     */
     function parseMeasure(measure) {
       const m = /^\s*([A-Za-z_][\w]*)\s*\(\s*([A-Za-z_][\w.]*)?\s*\)\s*$/.exec(String(measure || ''));
       return m ? { func: m[1], field: m[2] || null } : null;
     }
-
-    /**
-     * Whether a measure must be asked of the server for every cell and total: the browser does not compute its function, or its field is
-     * marked non-additive (VaR, ES, a ratio: their totals are never sums of the parts).
-     * @param {string} measure
-     * @param {function(string): ?Object} [column] a field's column ({additive})
-     * @returns {boolean}
-     */
     function isServerMeasure(measure, column) {
       const p = parseMeasure(measure);
       if (!p || !aggFunc(p.func)) { return true; }
       if (p.field && column) { const c = column(p.field); if (c && c.additive === false) { return true; } }
       return false;
     }
-
-    /**
-     * The aggregate of some rows' values by a function (a one-off: a selection's figure, a group's).
-     * @param {Iterable<*>} values
-     * @param {string} func
-     * @returns {*}
-     */
     function aggregate(values, func) {
       const f = aggFunc(func);
       if (!f) { throw new Error('the browser does not compute ' + func + ': ask the server'); }
@@ -133,49 +84,7 @@
   /* ---- src/drishti_columns.js ---- */
   __m["src/drishti_columns.js"] = (function () {
     var formatNamed = __lib("drishti-core").formatNamed, hasFormat = __lib("drishti-core").hasFormat, formatNumber = __lib("drishti-core").formatNumber, formatDate = __lib("drishti-core").formatDate, EventBus = __lib("drishti-core").EventBus;
-    /* Columns: what each column is (its field, type, format, width, pinning, what it may be used for in a pivot, whether its figures add
-       up), their order, and the field list a person searches to build a view. Values are read the same way everywhere (getValue) and
-       shown the same way (formatValue: the server's named formats through drishti-core). */
-
-
-    /** Aggregation functions the browser computes from members (never from other totals). */
     const ADDITIVE_FUNCS = Object.freeze(['sum', 'count']);
-
-    /**
-     * @typedef {Object} ColumnDef
-     * @property {string} [id] the column's id (default: field)
-     * @property {string} [field] the row's property
-     * @property {string} [header] the heading (default: the field)
-     * @property {('text'|'number'|'date'|'boolean')} [type='text']
-     * @property {(string|Object|function(*, Object): string)} [format] a named format (amount0, pct2, compact, dmy), number options, or a function
-     * @property {function(Object): *} [valueGetter] the value from the row (default: row[field])
-     * @property {function(*, *): number} [comparator] the order of two values
-     * @property {number} [width=120]
-     * @property {number} [minWidth=40]
-     * @property {number} [maxWidth]
-     * @property {('left'|'right'|null)} [pinned]
-     * @property {boolean} [hidden=false]
-     * @property {boolean} [sortable=true]
-     * @property {boolean} [filterable=true]
-     * @property {boolean} [resizable=true]
-     * @property {string} [aggFunc] the aggregation of a value column (sum, count, min, max, avg, first, last, distinct, or a server measure)
-     * @property {boolean} [additive] whether its figures may be summed: false for VaR, ES, ratios (a total is asked of the server);
-     *   default: true for numbers
-     * @property {string} [aggregate] 'server': the same as additive false (ELEMENTS.md's name)
-     * @property {string} [measure] the server's measure text when it is not func(field) (var(99, 1d))
-     * @property {boolean} [enableRowGroup] may be a row group (default: text and date columns)
-     * @property {boolean} [enablePivot] may be a column pivot (default: text and date columns)
-     * @property {boolean} [enableValue] may be a value (default: numbers)
-     * @property {string} [group] a heading above several columns
-     * @property {string} [description] words for the field list
-     */
-
-    /**
-     * A column definition with every default filled in.
-     * @param {ColumnDef} def
-     * @param {number} [index]
-     * @returns {Object}
-     */
     function normalizeColumn(def, index) {
       const id = def.id || def.field;
       if (!id) { throw new Error('column ' + (index || 0) + ': give it an id or a field'); }
@@ -188,25 +97,10 @@
         valueGetter: null, comparator: null, measure: null
       }, def, { id: id, type: type }, def.aggregate === 'server' ? { additive: false } : {});
     }
-
-    /**
-     * A column's value in a row.
-     * @param {Object} row
-     * @param {Object} col a normalized column
-     * @returns {*}
-     */
     function getValue(row, col) {
       if (!row) { return undefined; }
       return col.valueGetter ? col.valueGetter(row) : row[col.field];
     }
-
-    /**
-     * A value as the column shows it.
-     * @param {*} v
-     * @param {Object} col a normalized column
-     * @param {Object} [row]
-     * @returns {string}
-     */
     function formatValue(v, col, row) {
       const f = col.format;
       if (typeof f === 'function') { return f(v, row); }
@@ -217,25 +111,11 @@
       if (col.type === 'date') { return formatDate(v, typeof f === 'string' ? f : 'yyyy-MM-dd'); }
       return String(v);
     }
-
-    /**
-     * The columns of a grid: their order, widths, pinning and visibility, and the field list.
-     */
     class ColumnModel {
-      /**
-       * @param {ColumnDef[]} defs
-       */
       constructor(defs) {
-        /** @type {EventBus} column events: changed {what, id} */
         this.events = new EventBus();
         this.setColumns(defs || []);
       }
-
-      /**
-       * Replaces every column.
-       * @param {ColumnDef[]} defs
-       * @returns {void}
-       */
       setColumns(defs) {
         const seen = {};
         /** @private */ this.cols = defs.map((d, i) => {
@@ -246,39 +126,14 @@
         });
         this.changed('columns');
       }
-
-      /** @private */
       changed(what, id) { this._layout = null; this.events.emit('changed', { what: what, id: id }); }
-
-      /**
-       * Every column, in order (hidden ones too).
-       * @returns {Object[]}
-       */
       all() { return this.cols.slice(); }
-
-      /**
-       * A column by id.
-       * @param {string} id
-       * @returns {?Object}
-       */
       get(id) { return this.cols.find((c) => c.id === id) || null; }
-
-      /** @private */
       need(id) { const c = this.get(id); if (!c) { throw new Error('no column ' + id); } return c; }
-
-      /**
-       * The shown columns in display order: pinned left, the middle, pinned right.
-       * @returns {Object[]}
-       */
       visible() {
         const v = this.cols.filter((c) => !c.hidden);
         return v.filter((c) => c.pinned === 'left').concat(v.filter((c) => !c.pinned), v.filter((c) => c.pinned === 'right'));
       }
-
-      /**
-       * Where each part of the shown columns sits: the pinned ones and the middle, each column's left edge within its part, and widths.
-       * @returns {{left: Object[], center: Object[], right: Object[], centerOffsets: Float64Array, centerWidth: number, leftWidth: number, rightWidth: number}}
-       */
       layout() {
         if (this._layout) { return this._layout; }
         const v = this.visible();
@@ -289,59 +144,24 @@
         this._layout = { left: left, center: center, right: right, centerOffsets: offs, centerWidth: offs[center.length], leftWidth: sum(left), rightWidth: sum(right) };
         return this._layout;
       }
-
-      /**
-       * Sets a column's width, within its least and most.
-       * @param {string} id
-       * @param {number} width px
-       * @returns {number} the width set
-       */
       setWidth(id, width) {
         const c = this.need(id);
         c.width = Math.max(c.minWidth, c.maxWidth ? Math.min(c.maxWidth, width) : width);
         this.changed('width', id);
         return c.width;
       }
-
-      /**
-       * Shows or hides a column.
-       * @param {string} id
-       * @param {boolean} shown
-       * @returns {void}
-       */
       setVisible(id, shown) { this.need(id).hidden = !shown; this.changed('visible', id); }
-
-      /**
-       * Pins a column left or right, or unpins it (null).
-       * @param {string} id
-       * @param {('left'|'right'|null)} side
-       * @returns {void}
-       */
       pin(id, side) {
         if (side !== null && side !== 'left' && side !== 'right') { throw new Error('pin: left, right or null'); }
         this.need(id).pinned = side;
         this.changed('pinned', id);
       }
-
-      /**
-       * Moves a column to a place in the order of all columns.
-       * @param {string} id
-       * @param {number} to the new index
-       * @returns {void}
-       */
       move(id, to) {
         const i = this.cols.indexOf(this.need(id));
         const [c] = this.cols.splice(i, 1);
         this.cols.splice(Math.max(0, Math.min(this.cols.length, to)), 0, c);
         this.changed('order', id);
       }
-
-      /**
-       * The field list a person picks from to build a view: every column with what it can be used for, filtered by words (all of them, in
-       * the header, the id or the description; case and accents ignored), grouped columns kept together.
-       * @param {string} [search]
-       * @returns {Array<{id: string, header: string, type: string, group: ?string, rowGroup: boolean, pivot: boolean, value: boolean, additive: boolean, description: string}>}
-       */
       fields(search) {
         const fold = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
         const words = fold(search).split(/\s+/).filter(Boolean);
@@ -351,18 +171,7 @@
         }).map((c) => ({ id: c.id, header: c.header, type: c.type, group: c.group, rowGroup: !!c.enableRowGroup, pivot: !!c.enablePivot,
           value: !!c.enableValue, additive: c.additive !== false, description: c.description }));
       }
-
-      /**
-       * The columns' state, to keep and give back (widths, order, pinning, visibility).
-       * @returns {Array<{id: string, width: number, pinned: ?string, hidden: boolean}>}
-       */
       getState() { return this.cols.map((c) => ({ id: c.id, width: c.width, pinned: c.pinned, hidden: c.hidden })); }
-
-      /**
-       * Gives back a kept state (columns it does not name keep theirs, after the named ones).
-       * @param {Array<{id: string, width: number, pinned: ?string, hidden: boolean}>} state
-       * @returns {void}
-       */
       setState(state) {
         const by = {};
         state.forEach((s, i) => { by[s.id] = Object.assign({ i: i }, s); });
@@ -375,43 +184,8 @@
   })();
   /* ---- src/drishti_sort-filter.js ---- */
   __m["src/drishti_sort-filter.js"] = (function () {
-    /* The sort model and the filter model: plain data, kept with a view and sent to a server as they are. Sorting: by several columns, blanks
-       last in either direction, numbers as numbers, text by the locale's collation with numbers inside it in order (T2 before T10), dates as
-       ISO text. Filters, per column: text (contains, equals, starts, ends, not), number and date (equals, less, greater, between), set
-       (members kept, or members left out: the member filter), blank or not; plus a quick filter across every shown column. */
-
-    /**
-     * @typedef {Object} SortItem
-     * @property {string} colId
-     * @property {('asc'|'desc')} sort
-     */
-
-    /**
-     * @typedef {Object} ColumnFilter
-     * @property {('text'|'number'|'date'|'set'|'blank')} type
-     * @property {string} [op] text: contains, notContains, equals, notEquals, startsWith, endsWith; number and date: equals, notEquals, lt,
-     *   lte, gt, gte, between; blank: blank, notBlank
-     * @property {*} [value]
-     * @property {*} [valueTo] the upper end of between (inclusive)
-     * @property {Array<*>} [values] set: the members kept
-     * @property {Array<*>} [excluded] set: the members left out
-     */
-
     const collator = typeof Intl !== 'undefined' ? new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' }) : null;
-
-    /**
-     * Whether a value is blank (null, undefined, '' or NaN).
-     * @param {*} v
-     * @returns {boolean}
-     */
     function isBlank(v) { return v === null || v === undefined || v === '' || (typeof v === 'number' && isNaN(v)); }
-
-    /**
-     * The natural order of two values (blanks are not handled here: see compareRows).
-     * @param {*} a
-     * @param {*} b
-     * @returns {number}
-     */
     function compareValues(a, b) {
       if (typeof a === 'number' && typeof b === 'number') { return a - b; }
       if (typeof a === 'boolean' && typeof b === 'boolean') { return (a ? 1 : 0) - (b ? 1 : 0); }
@@ -419,14 +193,6 @@
       const sa = String(a), sb = String(b);
       return collator ? collator.compare(sa, sb) : sa < sb ? -1 : sa > sb ? 1 : 0;
     }
-
-    /**
-     * A comparator of rows by a sort model: each item in turn, blanks last whatever the direction, the column's own comparator when it has one.
-     * @param {SortItem[]} model
-     * @param {function(string): Object} column the column of an id
-     * @param {function(Object, Object): *} value a row's value in a column
-     * @returns {?function(Object, Object): number} null when the model is empty
-     */
     function compareRows(model, column, value) {
       if (!model || !model.length) { return null; }
       const items = model.map((s) => ({ col: column(s.colId), dir: s.sort === 'desc' ? -1 : 1 }));
@@ -441,15 +207,6 @@
         return 0;
       };
     }
-
-    /**
-     * The next sort of a column when its header is clicked: none, ascending, descending, none; with multi (Shift) the column is added to the
-     * model, else it replaces it.
-     * @param {SortItem[]} model
-     * @param {string} colId
-     * @param {boolean} [multi]
-     * @returns {SortItem[]}
-     */
     function cycleSort(model, colId, multi) {
       const cur = (model || []).find((s) => s.colId === colId);
       const next = !cur ? 'asc' : cur.sort === 'asc' ? 'desc' : null;
@@ -458,17 +215,9 @@
       if (multi && cur) { return (model || []).map((s) => (s.colId === colId ? { colId: colId, sort: next } : s)); }
       return rest.concat([{ colId: colId, sort: next }]);
     }
-
     function asNumber(v) { return typeof v === 'number' ? v : v === null || v === undefined || v === '' ? NaN : Number(v); }
     function asDateText(v) { if (v instanceof Date) { return v.toISOString().slice(0, 10); } return v === null || v === undefined ? '' : String(v).slice(0, 10); }
     function fold(s) { return String(s).toLowerCase(); }
-
-    /**
-     * Whether a value passes a column's filter.
-     * @param {*} v
-     * @param {ColumnFilter} f
-     * @returns {boolean}
-     */
     function passes(v, f) {
       if (!f) { return true; }
       const op = f.op;
@@ -514,15 +263,6 @@
         }
       }
     }
-
-    /**
-     * A test of rows by a filter model and a quick filter, or null when nothing filters.
-     * @param {Object<string, ColumnFilter>} model column id to its filter
-     * @param {string} quick words every one of which must appear in one of the columns
-     * @param {Object[]} columns the columns the quick filter looks in (and the model's)
-     * @param {function(Object, Object): *} value
-     * @returns {?function(Object): boolean}
-     */
     function rowFilter(model, quick, columns, value) {
       const byId = {};
       columns.forEach((c) => { byId[c.id] = c; });
@@ -541,13 +281,6 @@
         return true;
       };
     }
-
-    /**
-     * A filter model in words, for the line above a grid ("Desk in RATES, FX; Notional > 1000000").
-     * @param {Object<string, ColumnFilter>} model
-     * @param {function(string): string} [header] a column's heading
-     * @returns {string}
-     */
     function filterWords(model, header) {
       const h = header || ((id) => id);
       const sym = { equals: '=', notEquals: '≠', lt: '<', lte: '≤', gt: '>', gte: '≥' };
@@ -566,30 +299,9 @@
   __m["src/drishti_pivot.js"] = (function () {
     var aggFunc = __m["src/drishti_aggregate.js"].aggFunc, parseMeasure = __m["src/drishti_aggregate.js"].parseMeasure, isServerMeasure = __m["src/drishti_aggregate.js"].isServerMeasure;
     var passes = __m["src/drishti_sort-filter.js"].passes;
-    /* The pivot model. One view and one answer, the server's (PIVOT_ENGINE.md section 4; PivotView and PivotAnswer in drishti-bicompute):
-       the browser builds the same view a server pivot request sends (rows, columns, values, member filters, open nodes, sort, top N,
-       subtotals above or below), and pivotLocal answers it for rows the page holds in the same shape the server answers it: the row and
-       column entries (grand, node, header, total, others) and one cell per pair, each with its figures by measure label and its members.
-       So a grid draws either answer the same way, and a non-additive measure (VaR, ES, a ratio) in a local pivot is left for the server:
-       its cells are null with a note and listed in `pending`; serverRequest() asks for exactly those and mergeAnswer() puts the server's
-       figures in, by coordinates, never a sum made in the browser.
-
-       Value filters (keep the members of a level whose figure passes, "Desk where Notional > 1m") are the browser's: locally the figures
-       are recomputed without the members left out; on a server answer the rows are hidden and the totals say they include them. */
-
-
-
-    /** The unit separator joining a path's values in a key. */
     const SEP = '\u001f';
-    /** A blank member's text, as the server writes it. */
     const BLANK = '(blank)';
-
     const PLAIN = typeof Intl !== 'undefined' ? new Intl.NumberFormat('en-US', { useGrouping: false, maximumSignificantDigits: 15 }) : null;
-    /**
-     * A value as a member: text; null, missing and empty text are "(blank)"; whole numbers without ".0" (the server's and the console's).
-     * @param {*} v
-     * @returns {string}
-     */
     function memberText(v) {
       if (v === null || v === undefined || v === '') { return BLANK; }
       if (typeof v === 'number') { return !isFinite(v) ? BLANK : v === 0 ? '0' : PLAIN ? PLAIN.format(v) : String(Number(v.toPrecision(15))); }
@@ -597,41 +309,7 @@
       if (v instanceof Date) { return v.toISOString().slice(0, 10); }
       return String(v);
     }
-
-    /**
-     * @typedef {Object} PivotValue
-     * @property {string} measure the function's text: sum(NOTIONAL), count(), var(99, 1d)
-     * @property {string} [as] its label (default: the text)
-     */
-
-    /**
-     * @typedef {Object} PivotView
-     * @property {string} [source] the server's source (a local pivot does not need it)
-     * @property {string[]} rows row dimensions, outermost first
-     * @property {string[]} columns column dimensions
-     * @property {PivotValue[]} values
-     * @property {Object<string, {in: string[], notIn: string[]}>} [filters] member filters
-     * @property {Array<{axis: string, path: Array<Array<string>>, by: ?string}>} [expanded] the open nodes
-     * @property {{rows: number, columns: number}} [expandTo] every node open down to this level (1: level one only)
-     * @property {Object<string, {by: string, desc: boolean}>} [sort] per dimension: by "label" or a measure's label
-     * @property {Object<string, {n: number, by: string}>} [top] per dimension: its top n, the rest in Others
-     * @property {('below'|'above')} [subtotals='below']
-     * @property {Array<{dim: string, by: string, op: string, value: *, valueTo: *}>} [valueFilters] keep a level's members whose figure passes
-     * @property {Object<string, string>} [options] the server provider's options
-     */
-
-    /**
-     * A value's label (its as, else the measure's text).
-     * @param {PivotValue} v
-     * @returns {string}
-     */
     function valueLabel(v) { return v.as || v.measure; }
-
-    /**
-     * A view with every default filled in, checked: rows and columns do not repeat a dimension, at least one value.
-     * @param {PivotView} view
-     * @returns {PivotView}
-     */
     function normalizeView(view) {
       const v = Object.assign({ rows: [], columns: [], values: [], filters: {}, expanded: [], expandTo: { rows: 1, columns: 1 }, sort: {}, top: {},
         subtotals: 'below', valueFilters: [] }, view);
@@ -642,14 +320,6 @@
       v.expandTo = { rows: Math.max(1, (v.expandTo && v.expandTo.rows) || 1), columns: Math.max(1, (v.expandTo && v.expandTo.columns) || 1) };
       return v;
     }
-
-    /**
-     * The body of a server pivot request (POST /api/pivot/query on the console): {view} in the server's PivotView shape. Only the server's
-     * fields go (valueFilters are the browser's).
-     * @param {PivotView} view
-     * @param {{only: string[]}} [o] only: the labels of the values to ask (the non-additive ones a local pivot left)
-     * @returns {{view: Object}}
-     */
     function serverRequest(view, o) {
       const v = normalizeView(view);
       const values = o && o.only ? v.values.filter((x) => o.only.indexOf(valueLabel(x)) >= 0) : v.values;
@@ -658,13 +328,6 @@
       ['source', 'date', 'asOf', 'options', 'currency', 'slicers'].forEach((k) => { if (v[k] !== undefined) { out[k] = v[k]; } });
       return { view: out };
     }
-
-    /**
-     * Translates a grid filter model into the server's member filters ({in, notIn} per dimension); a filter the server cannot take
-     * (text contains, number ranges) is listed in `unsupported`, in words, never dropped silently.
-     * @param {Object<string, Object>} model column id to a grid filter
-     * @returns {{filters: Object<string, {in: string[], notIn: string[]}>, unsupported: string[]}}
-     */
     function memberFilters(model) {
       const filters = {}, unsupported = [];
       Object.keys(model || {}).forEach((k) => {
@@ -678,10 +341,7 @@
       });
       return { filters: filters, unsupported: unsupported };
     }
-
     function keyOf(path) { return path.join(SEP); }
-
-    /** An axis's tree: nodes by key with children in order, from the members seen. */
     function Axis(dims) {
       this.dims = dims;
       this.nodes = new Map();
@@ -701,13 +361,7 @@
         parent = n;
       }
     };
-
-    /**
-     * The open state of a pivot's nodes, rows and columns: which members are expanded (by path), what level every node is opened to, and
-     * the change of either; toView() puts it in a view. A collapsed column group shows only its total.
-     */
     class PivotState {
-      /** @param {{expanded: Array, expandTo: Object}} [view] the state a view holds */
       constructor(view) {
         this.expandTo = { rows: 1, columns: 1 };
         this.open = { rows: new Map(), columns: new Map() };
@@ -717,27 +371,11 @@
           (view.expanded || []).forEach((e) => this.open[e.axis === 'columns' ? 'columns' : 'rows'].set(keyOf(e.path.map((p) => p[1])), e));
         }
       }
-
-      /**
-       * Whether a node is open.
-       * @param {('rows'|'columns')} axis
-       * @param {string[]} path the node's member values from the top
-       * @returns {boolean}
-       */
       isOpen(axis, path) {
         const k = keyOf(path);
         if (this.closed[axis].has(k)) { return false; }
         return path.length < this.expandTo[axis] || this.open[axis].has(k);
       }
-
-      /**
-       * Opens or closes a node.
-       * @param {('rows'|'columns')} axis
-       * @param {Array<Array<string>>} pairs the node's path as (dimension, value) pairs
-       * @param {boolean} [open] default: the other state
-       * @param {string} [by] expand by this dimension (expand by..., per member)
-       * @returns {boolean} the new state
-       */
       toggle(axis, pairs, open, by) {
         const path = pairs.map((p) => p[1]), k = keyOf(path);
         const now = open === undefined ? !this.isOpen(axis, path) : open;
@@ -750,25 +388,11 @@
         }
         return now;
       }
-
-      /**
-       * Opens every node of an axis down to a level (1: only level one shown), forgetting single opens and closes on that axis.
-       * @param {('rows'|'columns')} axis
-       * @param {number} level
-       * @returns {void}
-       */
       expandToLevel(axis, level) {
         this.expandTo[axis] = Math.max(1, level | 0);
         this.open[axis].clear();
         this.closed[axis].clear();
       }
-
-      /**
-       * The state in a view's terms (expanded, expandTo). A node closed below expandTo has no server form: the view opens to level one and
-       * names the open nodes it knows (from an answer's entries).
-       * @param {{rows: Array, columns: Array}} [known] the entries of the last answer, to name the nodes expandTo opened
-       * @returns {{expanded: Array, expandTo: {rows: number, columns: number}}}
-       */
       toView(known) {
         const expanded = [], expandTo = { rows: this.expandTo.rows, columns: this.expandTo.columns };
         ['rows', 'columns'].forEach((axis) => {
@@ -784,7 +408,6 @@
         return { expanded: expanded, expandTo: expandTo };
       }
     }
-
     function sortChildren(nodes, dim, view, figure) {
       const s = (view.sort || {})[dim];
       const byLabel = !s || !s.by || s.by === 'label';
@@ -801,17 +424,6 @@
         return s && s.desc ? -c : c;
       });
     }
-
-    /**
-     * A pivot of rows the page holds, answered in the server's shape.
-     * @param {Object[]} records the rows
-     * @param {PivotView} view
-     * @param {Object} [o]
-     * @param {function(Object, string): *} [o.value] a record's value of a field (default: record[field])
-     * @param {function(string): ?Object} [o.column] a field's column, for its additive flag
-     * @param {PivotState} [o.state] the open state (default: the view's)
-     * @returns {Object} {measures, rowDimensions, columnDimensions, rows, columns, cells, pending, computedBy: 'browser', notes}
-     */
     function pivotLocal(records, view, o) {
       o = o || {};
       const v = normalizeView(view);
@@ -829,7 +441,6 @@
         const t = memberText(val(r, d));
         return (!f.in || !f.in.length || f.in.indexOf(t) >= 0) && (!f.notIn || f.notIn.indexOf(t) < 0);
       });
-
       function run(excluded) {
         const rowsAxis = new Axis(v.rows), colsAxis = new Axis(v.columns);
         const cells = new Map();
@@ -856,14 +467,12 @@
         }
         return { rowsAxis: rowsAxis, colsAxis: colsAxis, cells: cells };
       }
-
       const figureOf = (cells, rowKey, colKey, label) => {
         const li = local.findIndex((m) => m.label === label);
         if (li < 0) { return null; }
         const c = cells.get(rowKey + '|' + colKey);
         return c ? local[li].func.result(c.states[li]) : null;
       };
-
       let comp = run(null);
       const notes = [];
       if (v.valueFilters.length) {
@@ -882,8 +491,6 @@
         }
       }
       const { rowsAxis, colsAxis, cells } = comp;
-
-      // top N per level: the rest merged into one Others member, its figures from its own members' states (exact for every browser function)
       const others = new Map();
       const applyTop = (axis, dims, axisName) => {
         axis.nodes.forEach((n) => {
@@ -903,7 +510,6 @@
           n.children = n.children.filter((c) => kept.has(c)).concat([o2]);
           others.set(okey, rest);
           axis.nodes.set(okey, o2);
-          // the Others cells: the merge of its members' cells, against every key of the other axis
           const otherKeys = new Set();
           cells.forEach((c, k) => {
             const [a, b] = k.split('|');
@@ -922,7 +528,6 @@
       };
       applyTop(rowsAxis, v.rows, 'rows');
       applyTop(colsAxis, v.columns, 'columns');
-
       const pairs = (dims, path) => path.map((x, i) => [dims[i], x.charAt(0) === '\u0000' ? null : x]);
       const coords = (dims, path) => { const c = {}; path.forEach((x, i) => { c[dims[i]] = x.charAt(0) === '\u0000' ? '*others*' : x; }); return c; };
       const entry = (axis, dims, n, kind, axisName) => {
@@ -957,7 +562,6 @@
       };
       emitRows(rowsAxis.root);
       emitCols(colsAxis.root);
-
       const out = {}, pending = [];
       rows.forEach((r) => {
         if (r.kind === 'header') { return; }
@@ -983,16 +587,7 @@
       return { measures: measures.map((m) => ({ index: m.index, id: m.id, label: m.label, kind: m.kind, plainSum: !!(m.func && m.func.name === 'sum'), exact: true, server: m.server })),
         rowDimensions: v.rows, columnDimensions: v.columns, rows: rows, columns: cols, cells: out, pending: pending, computedBy: 'browser', notes: notes };
     }
-
     function coordsId(c) { return Object.keys(c || {}).sort().map((k) => k + '=' + c[k]).join(SEP); }
-
-    /**
-     * Puts a server answer's figures into a local answer's pending cells, matched by coordinates; the cells the server did not answer keep
-     * their note. Returns how many figures came in.
-     * @param {Object} local pivotLocal's answer (changed in place)
-     * @param {Object} server the server's answer to serverRequest(view, {only: the pending labels})
-     * @returns {number}
-     */
     function mergeAnswer(local, server) {
       const by = new Map();
       Object.keys(server.cells || {}).forEach((k) => { const c = server.cells[k]; by.set(coordsId(c.coords), c); });
@@ -1010,14 +605,6 @@
       });
       return n;
     }
-
-    /**
-     * Hides the rows of a server answer whose members fail a value filter (with their children); the totals still include them and the
-     * answer's notes say so.
-     * @param {Object} answer a server answer (changed in place)
-     * @param {Array<{dim: string, by: string, op: string, value: *, valueTo: *}>} valueFilters
-     * @returns {number} how many rows were hidden
-     */
     function applyValueFilters(answer, valueFilters) {
       if (!valueFilters || !valueFilters.length) { return 0; }
       const grand = answer.columns.find((c) => c.kind === 'grand');
@@ -1037,14 +624,6 @@
       if (before > answer.rows.length) { (answer.notes = answer.notes || []).push('value filters hide ' + (before - answer.rows.length) + ' rows; the totals include them'); }
       return before - answer.rows.length;
     }
-
-    /**
-     * The grid's columns of a pivot answer: the row heading column, then one column per (column entry, value): a column member's figures,
-     * a collapsed group's total, the grand total; each with its heading path (the members from the top, then the value's label).
-     * @param {Object} answer
-     * @param {{hideTotals: boolean}} [o] hideTotals: leave out the subtotal and grand total columns
-     * @returns {Array<{id: string, colKey: string, measure: string, headerPath: string[], kind: string, depth: number, server: boolean}>}
-     */
     function resultColumns(answer, o) {
       const out = [];
       const server = {};
@@ -1060,15 +639,6 @@
       });
       return out;
     }
-
-    /**
-     * A cell's figure in an answer.
-     * @param {Object} answer
-     * @param {string} rowKey
-     * @param {string} colKey
-     * @param {string} measure the value's label
-     * @returns {{value: *, note: ?string, members: number}}
-     */
     function cellValue(answer, rowKey, colKey, measure) {
       const c = answer.cells[rowKey + '|' + colKey];
       if (!c) { return { value: null, note: null, members: 0 }; }
@@ -1083,47 +653,11 @@
     var compareRows = __m["src/drishti_sort-filter.js"].compareRows, compareValues = __m["src/drishti_sort-filter.js"].compareValues, rowFilter = __m["src/drishti_sort-filter.js"].rowFilter, isBlank = __m["src/drishti_sort-filter.js"].isBlank;
     var aggFunc = __m["src/drishti_aggregate.js"].aggFunc;
     var memberText = __m["src/drishti_pivot.js"].memberText, SEP = __m["src/drishti_pivot.js"].SEP;
-    /* The client-side row model: every row is in the page. Filtering and sorting make an index (a typed array of row numbers, so a million
-       rows cost four megabytes, not a million objects); row groups make a tree over it whose group rows carry their figures, each from its
-       own members by the aggregation of its column (a non-additive column's group figure is left to the server: null, and listed); the
-       display is one typed array of codes (a row number, or a group). Rows have ids (getRowId), so selection and transactions follow a row
-       wherever sorting moves it. */
-
-
-
-
-
-
-    /**
-     * A row as the grid sees it at a display index.
-     * @typedef {Object} DisplayRow
-     * @property {('leaf'|'group')} kind
-     * @property {string} id the row's id (a group's: "group:" and its path)
-     * @property {number} depth 0 for a row without groups; a group's level from 0; a leaf under groups: the number of groups
-     * @property {?Object} row the data (leaves)
-     * @property {number} [index] the row's number in the data
-     * @property {string} [field] a group's column
-     * @property {*} [value] a group's member
-     * @property {string[]} [path] a group's members from the top
-     * @property {number} [count] a group's rows
-     * @property {boolean} [expanded]
-     * @property {Object<string, *>} [aggregates] a group's figures by column id
-     * @property {string[]} [pendingServer] a group's non-additive columns, left for the server
-     */
-
-    /**
-     * The client-side row model.
-     */
     class ClientRowModel {
-      /**
-       * @param {{columns: import('./drishti_columns.js').ColumnModel, rows: Object[], getRowId: function(Object, number): string, clientAggregation: boolean}} o
-       *   clientAggregation false: no group figure is computed here, every one is left for the server (the console's policy)
-       */
       constructor(o) {
         this.columns = o.columns;
         this.clientAggregation = o.clientAggregation !== false;
         this.getRowId = o.getRowId || ((r, i) => (r && r.id !== undefined && r.id !== null ? String(r.id) : String(i)));
-        /** @type {EventBus} rowsChanged {reason} */
         this.events = new EventBus();
         this.sortModel = [];
         this.filterModel = {};
@@ -1133,29 +667,15 @@
         this.expandLevel = 0;
         this.setRows(o.rows || []);
       }
-
-      /**
-       * Replaces every row.
-       * @param {Object[]} rows
-       * @returns {void}
-       */
       setRows(rows) {
         this.rows = rows;
         this.reindexIds();
         this.refresh('rows');
       }
-
-      /** @private */
       reindexIds() {
         this.idIndex = new Map();
         for (let i = 0; i < this.rows.length; i++) { this.idIndex.set(this.getRowId(this.rows[i], i), i); }
       }
-
-      /**
-       * Adds, updates (by id) and removes (by id) rows, then refreshes.
-       * @param {{add: Object[], update: Object[], remove: Array<(Object|string)>}} t
-       * @returns {{added: number, updated: number, removed: number}}
-       */
       applyTransaction(t) {
         let added = 0, updated = 0, removed = 0;
         (t.update || []).forEach((r) => { const i = this.idIndex.get(this.getRowId(r, -1)); if (i !== undefined) { this.rows[i] = r; updated++; } });
@@ -1170,56 +690,19 @@
         this.refresh('transaction');
         return { added: added, updated: updated, removed: removed };
       }
-
-      /** Sorts by a sort model. @param {Array<{colId: string, sort: string}>} m @returns {void} */
       setSortModel(m) { this.sortModel = (m || []).slice(); this.refresh('sort'); }
-      /** Filters by a filter model (column id to its filter). @param {Object<string, Object>} m @returns {void} */
       setFilterModel(m) { this.filterModel = Object.assign({}, m); this.refresh('filter'); }
-      /** Filters by words across the shown columns. @param {string} q @returns {void} */
       setQuickFilter(q) { this.quickFilter = q || ''; this.refresh('filter'); }
-
-      /**
-       * Groups rows by columns (outermost first); [] for none.
-       * @param {string[]} colIds
-       * @returns {void}
-       */
       setGroupBy(colIds) { this.groupBy = (colIds || []).slice(); this.expanded.clear(); this.refresh('group'); }
-
-      /**
-       * Opens or closes a group.
-       * @param {string[]} path its members from the top
-       * @param {boolean} [open] default: the other state
-       * @returns {void}
-       */
       setExpanded(path, open) {
         const k = path.join(SEP), now = open === undefined ? !this.isExpanded(path) : open;
         if (now === (path.length <= this.expandLevel)) { this.expanded.delete(k); } else { this.expanded.add(k); }
         this.flatten();
         this.events.emit('rowsChanged', { reason: 'expand' });
       }
-
-      /**
-       * Whether a group is open.
-       * @param {string[]} path
-       * @returns {boolean}
-       */
       isExpanded(path) { const byLevel = path.length <= this.expandLevel; return this.expanded.has(path.join(SEP)) ? !byLevel : byLevel; }
-
-      /**
-       * Opens every group down to a level (0: all closed; Infinity: all open).
-       * @param {number} level
-       * @returns {void}
-       */
       expandToLevel(level) { this.expandLevel = level; this.expanded.clear(); this.flatten(); this.events.emit('rowsChanged', { reason: 'expand' }); }
-
-      /** @private */
       value(row, col) { return getValue(row, col); }
-
-      /**
-       * Filters, sorts, groups and flattens again.
-       * @param {string} [reason]
-       * @returns {void}
-       */
       refresh(reason) {
         const cols = this.columns.all();
         const test = rowFilter(this.filterModel, this.quickFilter, this.quickFilter ? this.columns.visible() : cols, (r, c) => this.value(r, c));
@@ -1234,9 +717,6 @@
         this.flatten();
         this.events.emit('rowsChanged', { reason: reason || 'refresh' });
       }
-
-      /** @private one typed key per row and sort column: numbers as they are, anything else as its rank among the column's distinct values
-       *  (ranked once by the general order, so a million rows compare numbers, not text); NaN is a blank */
       sortKeys(idx, col) {
         const rows = this.rows, keys = new Float64Array(rows.length);
         if (col.type === 'number') {
@@ -1250,8 +730,6 @@
         for (let i = 0; i < idx.length; i++) { const v = this.value(rows[idx[i]], col); keys[idx[i]] = isBlank(v) ? NaN : distinct.get(v); }
         return keys;
       }
-
-      /** @private sorts row numbers by typed keys (blanks last either way, ties in the rows' order); a column's own comparator: the general way */
       sorted(idx, sort) {
         const rows = this.rows, cols = sort.map((s) => this.columns.get(s.colId));
         if (cols.some((c) => c.comparator)) {
@@ -1268,8 +746,6 @@
           return a - b;
         });
       }
-
-      /** @private */
       buildGroups() {
         this.groupNodes = [];
         this.groupRoot = null;
@@ -1295,7 +771,6 @@
           }
           parent.rows.push(this.view[i]);
         }
-        // figures: each group's from its own rows, by its column's aggregation; a non-additive column is the server's
         const leavesOf = (g, out) => { g.rows.forEach((x) => out.push(x)); g.children.forEach((c) => leavesOf(c, out)); return out; };
         nodes.forEach((g) => {
           const leaves = leavesOf(g, []);
@@ -1311,8 +786,6 @@
         });
         this.groupRoot = root;
       }
-
-      /** @private the display codes: a row number (>= 0) or a group (-(id + 1)) */
       flatten() {
         if (!this.groupRoot) { this.display = null; return; }
         const out = [];
@@ -1326,24 +799,8 @@
         walk(this.groupRoot);
         this.display = Int32Array.from(out);
       }
-
-      /**
-       * How many rows are displayed (groups and the rows of open groups).
-       * @returns {number}
-       */
       rowCount() { return this.display ? this.display.length : this.view.length; }
-
-      /**
-       * How many data rows pass the filters.
-       * @returns {number}
-       */
       filteredCount() { return this.view.length; }
-
-      /**
-       * The row at a display index.
-       * @param {number} i
-       * @returns {?DisplayRow}
-       */
       rowAt(i) {
         if (i < 0 || i >= this.rowCount()) { return null; }
         const code = this.display ? this.display[i] : this.view[i];
@@ -1354,12 +811,6 @@
         }
         return { kind: 'leaf', id: this.getRowId(this.rows[code], code), depth: this.groupBy.length, row: this.rows[code], index: code };
       }
-
-      /**
-       * The display index of a row id (-1 when it is filtered out or in a closed group).
-       * @param {string} id
-       * @returns {number}
-       */
       indexOfId(id) {
         const n = this.idIndex.get(id);
         if (n === undefined) { return -1; }
@@ -1367,26 +818,8 @@
         for (let i = 0; i < a.length; i++) { if (a[i] === n) { return i; } }
         return -1;
       }
-
-      /**
-       * A row's data by its id.
-       * @param {string} id
-       * @returns {?Object}
-       */
       getRowById(id) { const n = this.idIndex.get(id); return n === undefined ? null : this.rows[n]; }
-
-      /**
-       * The rows passing the filters, in order (for export and selection of all).
-       * @returns {Object[]}
-       */
       filteredRows() { const out = new Array(this.view.length); for (let i = 0; i < this.view.length; i++) { out[i] = this.rows[this.view[i]]; } return out; }
-
-      /**
-       * The distinct members of a column among all rows (for a member filter's list), sorted, blanks last, with counts.
-       * @param {string} colId
-       * @param {number} [limit=10000]
-       * @returns {Array<{value: *, text: string, count: number}>}
-       */
       members(colId, limit) {
         const c = this.columns.get(colId), m = new Map();
         for (let i = 0; i < this.rows.length; i++) {
@@ -1403,29 +836,6 @@
   /* ---- src/drishti_export.js ---- */
   __m["src/drishti_export.js"] = (function () {
     var namedFormat = __lib("drishti-core").namedFormat, formatNamed = __lib("drishti-core").formatNamed, hasFormat = __lib("drishti-core").hasFormat, isoDate = __lib("drishti-core").isoDate;
-    /* Export: a table (columns and rows of values) as CSV (RFC 4180, UTF-8 with a byte-order mark so Excel reads the accents) or as an Excel
-       workbook (.xlsx) written here, with no library and no server: numbers stay numbers with the column's number format (amount0 is
-       #,##0, pct2 is 0.00%), dates are dates, the heading row is bold and frozen, and group rows keep Excel's outline levels (+ and -).
-       The console's server-side workbooks (the VaR, SIMM and FRTB exports, made in Java) stay where they are: this is for a grid's own rows,
-       with or without a Drishti server. */
-
-
-    /**
-     * A table to export.
-     * @typedef {Object} ExportTable
-     * @property {Array<{header: string, type: string, format: *, width: number}>} columns
-     * @property {Array<Array<*>>} rows raw values, one array per row, in the columns' order
-     * @property {number[]} [levels] each row's outline level (0: none), for group rows and their members
-     * @property {boolean[]} [bold] rows drawn bold (group rows and totals)
-     */
-
-    /**
-     * The table as CSV text.
-     * @param {ExportTable} t
-     * @param {{formatted: boolean, separator: string, bom: boolean}} [o] formatted: values as shown (named formats), else raw (default);
-     *   separator default ","; bom default true
-     * @returns {string}
-     */
     function toCsv(t, o) {
       o = o || {};
       const sep = o.separator || ',';
@@ -1441,24 +851,9 @@
       t.rows.forEach((r) => lines.push(r.map((v, i) => cell(v, t.columns[i])).join(sep)));
       return (o.bom === false ? '' : '﻿') + lines.join('\r\n') + '\r\n';
     }
-
-    // ---- the zip (stored, no compression: every reader opens it) -----------------------------------------------------------------------
     const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) { c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; } t[n] = c >>> 0; } return t; })();
-
-    /**
-     * CRC-32 of bytes (the zip's checksum).
-     * @param {Uint8Array} b
-     * @returns {number}
-     */
     function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) { c = CRC[(c ^ b[i]) & 0xFF] ^ (c >>> 8); } return (c ^ 0xFFFFFFFF) >>> 0; }
-
     const utf8 = (s) => new TextEncoder().encode(s);
-
-    /**
-     * A zip archive of files, stored (no compression).
-     * @param {Array<{name: string, data: (Uint8Array|string)}>} files
-     * @returns {Uint8Array}
-     */
     function zipStore(files) {
       const parts = [], central = [];
       let offset = 0;
@@ -1487,16 +882,8 @@
       all.forEach((p) => { out.set(p, at); at += p.length; });
       return out;
     }
-
-    // ---- the workbook --------------------------------------------------------------------------------------------------------------------
     const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
       .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '');
-
-    /**
-     * A column's Excel number format: from its named format (decimals, grouping, a sign always, a percentage), or its options.
-     * @param {{type: string, format: *}} c
-     * @returns {?string} null: General
-     */
     function excelFormat(c) {
       if (c.type === 'date') { return 'yyyy-mm-dd'; }
       if (c.type !== 'number') { return null; }
@@ -1509,21 +896,12 @@
       const suffix = f.suffix ? '"' + String(f.suffix).replace(/"/g, '') + '"' : '';
       return f.sign === 'always' ? '+' + body + suffix + ';-' + body + suffix + ';' + body + suffix : body + suffix;
     }
-
     function colName(i) { let s = ''; for (let n = i; n >= 0; n = Math.floor(n / 26) - 1) { s = String.fromCharCode(65 + (n % 26)) + s; } return s; }
     function serial(v) {
       const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(v instanceof Date ? isoDate(v) : String(v));
       if (!m) { return null; }
       return (Date.UTC(+m[1], +m[2] - 1, +m[3]) - Date.UTC(1899, 11, 30)) / 86400000;
     }
-
-    /**
-     * The table as an Excel workbook (.xlsx bytes).
-     * @param {ExportTable} t
-     * @param {{sheetName: string, title: string}} [o] sheetName default "Data"
-     * @returns {Uint8Array}
-     * @example const bytes = toXlsx(table); new Blob([bytes], {type: XLSX_TYPE})
-     */
     function toXlsx(t, o) {
       o = o || {};
       const sheetName = esc(String(o.sheetName || 'Data').replace(/[\\/?*[\]:]/g, ' ').slice(0, 31));
@@ -1597,8 +975,6 @@
         { name: 'xl/styles.xml', data: styles }
       ]);
     }
-
-    /** The media type of an .xlsx file. */
     const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
     return { "toCsv": toCsv, "crc32": crc32, "zipStore": zipStore, "excelFormat": excelFormat, "toXlsx": toXlsx, "XLSX_TYPE": XLSX_TYPE };
   })();
@@ -1606,58 +982,14 @@
   __m["src/drishti_server-rows.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus;
     var SEP = __m["src/drishti_pivot.js"].SEP;
-    /* The server-side row model: the rows stay on the server and come in blocks as they scroll into view. A block request names its rows
-       (startRow, endRow), the sort and filter models, the row groups and the group keys of the level it is under (a group row opens a
-       level of its own, with its own blocks), the values and the pivot (the request a pivot server answers), and carries an AbortSignal:
-       a sort or filter change aborts what is in flight and starts again. Blocks are cached (least recently used are dropped past
-       maxBlocks); refresh() drops them all (or one level) and asks again. A row not loaded yet is a placeholder (loading: true). */
-
-
-
-    /**
-     * @typedef {Object} BlockRequest
-     * @property {number} startRow the first row, inclusive
-     * @property {number} endRow the last, exclusive
-     * @property {Array<{colId: string, sort: string}>} sortModel
-     * @property {Object<string, Object>} filterModel
-     * @property {string} quickFilter
-     * @property {string[]} rowGroupCols the row group columns, outermost first
-     * @property {string[]} groupKeys the members of the level asked for (its parents' values); [] for the top
-     * @property {Array<{colId: string, aggFunc: string}>} valueCols
-     * @property {string[]} pivotCols
-     * @property {boolean} pivotMode
-     * @property {AbortSignal} [signal]
-     */
-
-    /**
-     * @typedef {Object} BlockAnswer
-     * @property {Object[]} rows the rows of the block (a group level's rows are its members: {[groupCol]: value, childCount, ...figures})
-     * @property {number} [rowCount] how many rows the level has, when known (else the model grows as blocks come back short)
-     */
-
-    /**
-     * A data source: the one function the model calls.
-     * @typedef {Object} Datasource
-     * @property {function(BlockRequest): Promise<BlockAnswer>} getRows
-     */
-
     function Level(keys) { this.keys = keys; this.blocks = new Map(); this.rowCount = null; this.knownEnd = 0; }
-
-    /**
-     * The server-side row model.
-     */
     class ServerRowModel {
-      /**
-       * @param {{datasource: Datasource, blockSize: number, maxBlocks: number, getRowId: function(Object, number, string[]): string}} o
-       *   blockSize default 100; maxBlocks default 50 (5,000 rows held)
-       */
       constructor(o) {
         if (!o || !o.datasource || typeof o.datasource.getRows !== 'function') { throw new Error('a server-side row model needs a datasource with getRows(request)'); }
         this.datasource = o.datasource;
         this.blockSize = o.blockSize || 100;
         this.maxBlocks = o.maxBlocks || 50;
         this.getRowId = o.getRowId || ((r, i, keys) => (r && r.id !== undefined ? String(r.id) : keys.concat([String(i)]).join(SEP)));
-        /** @type {EventBus} rowsChanged {reason}, blockLoaded {keys, block}, loadFailed {error, keys, block} */
         this.events = new EventBus();
         this.sortModel = [];
         this.filterModel = {};
@@ -1672,8 +1004,6 @@
         this.inFlight = new Map();
         this.reset();
       }
-
-      /** @private */
       reset() {
         this.inFlight.forEach((x) => x.ctl && x.ctl.abort());
         this.inFlight.clear();
@@ -1682,19 +1012,9 @@
         this.stamp++;
         this.display = null;
       }
-
-      /** Sorts by a sort model: what is in flight is aborted, the blocks asked again. @param {Array} m @returns {void} */
       setSortModel(m) { this.sortModel = (m || []).slice(); this.reset(); this.events.emit('rowsChanged', { reason: 'sort' }); }
-      /** Filters by a filter model: what is in flight is aborted, the blocks asked again. @param {Object} m @returns {void} */
       setFilterModel(m) { this.filterModel = Object.assign({}, m); this.reset(); this.events.emit('rowsChanged', { reason: 'filter' }); }
-      /** Filters by words (the server decides where it looks). @param {string} q @returns {void} */
       setQuickFilter(q) { this.quickFilter = q || ''; this.reset(); this.events.emit('rowsChanged', { reason: 'filter' }); }
-
-      /**
-       * Sets the row groups, values and pivot the requests carry.
-       * @param {{rowGroupCols: string[], valueCols: Array, pivotCols: string[], pivotMode: boolean}} s
-       * @returns {void}
-       */
       setGrouping(s) {
         this.rowGroupCols = (s.rowGroupCols || []).slice();
         this.valueCols = (s.valueCols || []).slice();
@@ -1704,25 +1024,12 @@
         this.reset();
         this.events.emit('rowsChanged', { reason: 'group' });
       }
-
-      /**
-       * Opens or closes a group row (its level loads when it comes into view).
-       * @param {string[]} keys the group's members from the top
-       * @param {boolean} [open]
-       * @returns {void}
-       */
       setExpanded(keys, open) {
         const k = keys.join(SEP), now = open === undefined ? !this.expanded.has(k) : open;
         if (now) { this.expanded.add(k); if (!this.levels.has(k)) { this.levels.set(k, new Level(keys.slice())); } } else { this.expanded.delete(k); }
         this.display = null;
         this.events.emit('rowsChanged', { reason: 'expand' });
       }
-
-      /**
-       * Drops cached blocks and asks again: every level, or one level and those under it.
-       * @param {{keys: string[], purge: boolean}} [o] keys: the level; purge default true (forget the row count too)
-       * @returns {void}
-       */
       refresh(o) {
         if (!o || !o.keys) { const exp = new Set(this.expanded); this.reset(); exp.forEach((k) => this.levels.set(k, new Level(k ? k.split(SEP) : []))); }
         else {
@@ -1738,11 +1045,7 @@
         }
         this.events.emit('rowsChanged', { reason: 'refresh' });
       }
-
-      /** @private how many rows a level shows: its count when known, else what is loaded plus one block to come */
       levelCount(lv) { return lv.rowCount !== null ? lv.rowCount : lv.knownEnd + this.blockSize; }
-
-      /** @private the display: [levelKey, row index in the level] pairs, groups opened inline */
       flatten() {
         if (this.display) { return this.display; }
         const out = [];
@@ -1763,29 +1066,14 @@
         this.display = out;
         return out;
       }
-
-      /** @private */
       blockRow(lv, i) {
         const b = lv.blocks.get(Math.floor(i / this.blockSize));
         if (!b) { return null; }
         const r = b.rows[i % this.blockSize];
         return r === undefined ? null : r;
       }
-
-      /**
-       * How many rows are displayed (an estimate while a level's count is not known).
-       * @returns {number}
-       */
       rowCount() { return this.expanded.size ? this.flatten().length : this.levelCount(this.levels.get('')); }
-
-      /** @private a display index as [level key, row in the level]: no open group, no flattening (a million rows cost nothing) */
       at(i) { return this.expanded.size ? this.flatten()[i] : ['', i]; }
-
-      /**
-       * The row at a display index: the data when its block is in, else a placeholder ({loading: true}); asks for the block.
-       * @param {number} i
-       * @returns {?Object} {kind: 'group'|'leaf'|'loading', id, depth, row, keys, expanded, loading}
-       */
       rowAt(i) {
         if (i < 0 || i >= this.rowCount()) { return null; }
         const [key, n] = this.at(i), lv = this.levels.get(key), depth = lv.keys.length;
@@ -1798,13 +1086,6 @@
         }
         return { kind: 'leaf', id: this.getRowId(r, n, lv.keys), depth: depth, row: r, keys: lv.keys };
       }
-
-      /**
-       * Asks for the blocks of a range of display rows (a renderer calls it with the viewport's rows).
-       * @param {number} first
-       * @param {number} last inclusive
-       * @returns {Promise<void>} when those blocks are in (or failed)
-       */
       ensureRange(first, last) {
         const count = this.rowCount(), waits = [];
         const seen = new Set();
@@ -1816,20 +1097,11 @@
         }
         return Promise.all(waits).then(() => undefined);
       }
-
-      /** @private */
       request(lv, block, signal) {
         return { startRow: block * this.blockSize, endRow: (block + 1) * this.blockSize, sortModel: this.sortModel.slice(), filterModel: Object.assign({}, this.filterModel),
           quickFilter: this.quickFilter, rowGroupCols: this.rowGroupCols.slice(), groupKeys: lv.keys.slice(), valueCols: this.valueCols.slice(),
           pivotCols: this.pivotCols.slice(), pivotMode: this.pivotMode, signal: signal };
       }
-
-      /**
-       * Loads one block of a level (once; a block in flight is shared).
-       * @param {string} levelKey the level's group keys joined
-       * @param {number} block
-       * @returns {Promise<void>}
-       */
       ensureBlock(levelKey, block) {
         const lv = this.levels.get(levelKey);
         if (!lv || lv.blocks.has(block)) { return Promise.resolve(); }
@@ -1856,8 +1128,6 @@
         this.inFlight.set(id, { p: p, ctl: ctl });
         return p;
       }
-
-      /** @private least recently used blocks dropped past maxBlocks */
       touch(level, block) {
         this.lru = this.lru.filter((x) => !(x.level === level && x.block === block));
         this.lru.push({ level: level, block: block });
@@ -1866,21 +1136,8 @@
           if (lv) { lv.blocks.delete(old.block); }
         }
       }
-
-      /**
-       * How many blocks are held, and how many are being asked for.
-       * @returns {{blocks: number, inFlight: number}}
-       */
       cacheStats() { return { blocks: this.lru.length, inFlight: this.inFlight.size }; }
     }
-
-    /**
-     * A data source over rows held in memory (tests, demos, and a page that wants the server-side model's paging over local data): sorts,
-     * filters and groups as a server would, with an optional delay.
-     * @param {Object[]} rows
-     * @param {{delay: number, columns: import('./drishti_columns.js').ColumnModel}} [o]
-     * @returns {Datasource & {calls: BlockRequest[]}}
-     */
     function memoryDatasource(rows, o) {
       o = o || {};
       const calls = [];
@@ -1915,20 +1172,7 @@
   })();
   /* ---- src/drishti_viewport.js ---- */
   __m["src/drishti_viewport.js"] = (function () {
-    /* Virtual scrolling: which rows and columns are drawn for a scroll position, so a grid of a million rows draws the forty on screen. Rows
-       have one height; the scrolled height is capped (browsers stop near 16 to 33 million pixels), and above the cap a scroll position is
-       mapped onto the rows in proportion, so the last row is always reachable. Columns: the pinned ones always, the middle ones whose
-       span meets the view, found by binary search over their left edges. Pure arithmetic: runs under Node. */
-
-    /** The tallest scrolled height used (px); Firefox's limit is near 17.9 million. */
     const MAX_SCROLL_HEIGHT = 15000000;
-
-    /**
-     * The first index whose left edge is past x (binary search of the edges, offsets[0] = 0, offsets[n] = the total).
-     * @param {(Float64Array|number[])} offsets n + 1 edges
-     * @param {number} x
-     * @returns {number} the column holding x
-     */
     function columnAt(offsets, x) {
       let lo = 0, hi = offsets.length - 2;
       if (hi < 0) { return -1; }
@@ -1938,15 +1182,7 @@
       }
       return lo;
     }
-
-    /**
-     * The scroll arithmetic of a grid's body.
-     */
     class Viewport {
-      /**
-       * @param {{rowHeight: number, height: number, width: number, overscanRows: number, overscanColumns: number, maxScrollHeight: number}} [o]
-       *   rowHeight default 28 (the design's densities pass theirs), overscan: rows and columns drawn beyond the view (default 6 and 2)
-       */
       constructor(o) {
         o = o || {};
         this.rowHeight = o.rowHeight || 28;
@@ -1959,53 +1195,20 @@
         this.scrollTop = 0;
         this.scrollLeft = 0;
       }
-
-      /**
-       * Sets the size of the view (px).
-       * @param {number} width
-       * @param {number} height
-       * @returns {void}
-       */
       resize(width, height) { this.width = width; this.height = height; }
-
-      /**
-       * Sets how many rows there are.
-       * @param {number} n
-       * @returns {void}
-       */
       setRowCount(n) { this.rowCount = Math.max(0, n | 0); this.scrollTop = Math.min(this.scrollTop, this.maxScrollTop()); }
-
-      /** The real height of every row (px). @returns {number} */
       contentHeight() { return this.rowCount * this.rowHeight; }
-
-      /** The height the scroller is given (the real one, capped). @returns {number} */
       scrollHeight() { return Math.min(this.contentHeight(), this.maxScrollHeight); }
-
-      /** The largest scroll position. @returns {number} px */
       maxScrollTop() { return Math.max(0, this.scrollHeight() - this.height); }
-
-      /** @private the real offset of a scroll position */
       realTop(scrollTop) {
         const max = this.maxScrollTop(), realMax = Math.max(0, this.contentHeight() - this.height);
         if (this.contentHeight() <= this.maxScrollHeight || max === 0) { return scrollTop; }
         return scrollTop / max * realMax;
       }
-
-      /**
-       * Scrolls (clamped).
-       * @param {number} top
-       * @param {number} [left]
-       * @returns {void}
-       */
       scrollTo(top, left) {
         this.scrollTop = Math.max(0, Math.min(this.maxScrollTop(), top));
         if (left !== undefined) { this.scrollLeft = Math.max(0, left); }
       }
-
-      /**
-       * The rows to draw now: first to last (inclusive, overscan included), and where the first goes (px from the scroller's top).
-       * @returns {{first: number, last: number, offset: number, firstVisible: number, lastVisible: number}}
-       */
       rows() {
         if (!this.rowCount) { return { first: 0, last: -1, offset: 0, firstVisible: 0, lastVisible: -1 }; }
         const real = this.realTop(this.scrollTop), h = this.rowHeight;
@@ -2015,12 +1218,6 @@
         const offset = this.scrollTop + (first * h - real);       // in the scroller's coordinates: where the first drawn row sits
         return { first: first, last: last, offset: offset, firstVisible: firstVisible, lastVisible: lastVisible };
       }
-
-      /**
-       * The scrollTop that shows a row (the least scroll that brings it into view; null when it is in view already).
-       * @param {number} index
-       * @returns {?number}
-       */
       scrollToRow(index) {
         const r = this.rows();
         if (index >= r.firstVisible && index < r.lastVisible) { return null; }
@@ -2032,14 +1229,6 @@
         this.scrollTo(top);
         return this.scrollTop;
       }
-
-      /**
-       * The middle columns to draw for the scroll position, given their edges (ColumnModel.layout().centerOffsets) and the room the pinned
-       * columns take.
-       * @param {(Float64Array|number[])} offsets
-       * @param {number} [pinnedWidth=0]
-       * @returns {{first: number, last: number}} inclusive; last < first when there are none
-       */
       columns(offsets, pinnedWidth) {
         const n = offsets.length - 1;
         if (n <= 0) { return { first: 0, last: -1 }; }
@@ -2053,43 +1242,15 @@
   /* ---- src/drishti_selection.js ---- */
   __m["src/drishti_selection.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus;
-    /* Selection: rows by id (a click, Ctrl+click adds, Shift+click a run from the anchor, select all of the filtered rows) and cell ranges
-       (rectangles of display rows by shown columns; Ctrl adds another); a range's figures for the status line (count, sum, average, min,
-       max, with a warning when a column is non-additive: a sum of VaRs is not a VaR); and the copy as TSV (tab-separated, as Excel pastes). */
-
-
-    /**
-     * @typedef {Object} CellRange
-     * @property {number} r1 first display row (inclusive)
-     * @property {number} r2 last display row (inclusive)
-     * @property {number} c1 first shown column
-     * @property {number} c2 last shown column
-     */
-
-    /**
-     * Rows and cell ranges selected.
-     */
     class SelectionModel {
-      /**
-       * @param {{mode: ('single'|'multiple'|'none')}} [o] row selection mode (default multiple)
-       */
       constructor(o) {
         this.mode = (o && o.mode) || 'multiple';
-        /** @type {EventBus} changed {what: 'rows'|'ranges'} */
         this.events = new EventBus();
         this.ids = new Set();
         this.anchorIndex = null;
         this.ranges = [];
         this.rangeAnchor = null;
       }
-
-      /**
-       * A click on a row: alone it selects only that row; ctrl toggles it; shift selects the run from the anchor.
-       * @param {number} index the display index
-       * @param {function(number): ?string} idAt the id of a display index (null for a group or a placeholder)
-       * @param {{ctrl: boolean, shift: boolean}} [mods]
-       * @returns {void}
-       */
       clickRow(index, idAt, mods) {
         if (this.mode === 'none') { return; }
         const m = mods || {}, id = idAt(index);
@@ -2107,81 +1268,28 @@
         }
         this.events.emit('changed', { what: 'rows' });
       }
-
-      /**
-       * Selects every given id (the filtered rows'), or clears.
-       * @param {Iterable<string>} [ids] none: clear
-       * @returns {void}
-       */
       selectAll(ids) {
         this.ids.clear();
         if (ids) { for (const id of ids) { this.ids.add(id); } }
         this.events.emit('changed', { what: 'rows' });
       }
-
-      /**
-       * Whether a row is selected.
-       * @param {string} id
-       * @returns {boolean}
-       */
       isSelected(id) { return this.ids.has(id); }
-
-      /**
-       * The selected ids, in the order they were selected.
-       * @returns {string[]}
-       */
       selectedIds() { return Array.from(this.ids); }
-
-      /**
-       * Starts a cell range at a cell (ctrl: as another range, else replacing).
-       * @param {number} row
-       * @param {number} col
-       * @param {{ctrl: boolean}} [mods]
-       * @returns {void}
-       */
       startRange(row, col, mods) {
         if (!(mods && mods.ctrl)) { this.ranges = []; }
         this.rangeAnchor = { row: row, col: col };
         this.ranges.push({ r1: row, r2: row, c1: col, c2: col });
         this.events.emit('changed', { what: 'ranges' });
       }
-
-      /**
-       * Stretches the last range from its anchor to a cell (a drag, or Shift+click, or Shift+arrows).
-       * @param {number} row
-       * @param {number} col
-       * @returns {void}
-       */
       extendRange(row, col) {
         if (!this.rangeAnchor) { this.startRange(row, col); return; }
         const a = this.rangeAnchor;
         this.ranges[this.ranges.length - 1] = { r1: Math.min(a.row, row), r2: Math.max(a.row, row), c1: Math.min(a.col, col), c2: Math.max(a.col, col) };
         this.events.emit('changed', { what: 'ranges' });
       }
-
-      /**
-       * Forgets every range.
-       * @returns {void}
-       */
       clearRanges() { this.ranges = []; this.rangeAnchor = null; this.events.emit('changed', { what: 'ranges' }); }
-
-      /**
-       * Whether a cell is in a range.
-       * @param {number} row
-       * @param {number} col
-       * @returns {boolean}
-       */
       inRange(row, col) { return this.ranges.some((r) => row >= r.r1 && row <= r.r2 && col >= r.c1 && col <= r.c2); }
     }
-
-    /**
-     * The figures of the selected cells for the status line: how many cells, how many numbers, and their sum, average, min and max. When a
-     * number comes from a non-additive column (VaR, ES, a ratio) the sum and average are not given (null) and `warning` says why, in words.
-     * @param {CellRange[]} ranges
-     * @param {function(number, number): *} valueAt the raw value at (display row, shown column)
-     * @param {function(number): {header: string, additive: boolean}} columnAt the shown column at an index
-     * @returns {{cells: number, count: number, sum: ?number, avg: ?number, min: ?number, max: ?number, nonAdditive: string[], warning: ?string}}
-     */
     function rangeStats(ranges, valueAt, columnAt) {
       let cells = 0, count = 0, sum = 0, min = null, max = null;
       const seen = new Set(), nonAdd = new Set();
@@ -2207,12 +1315,6 @@
       return { cells: cells, count: count, sum: count && !na.length ? sum : null, avg: count && !na.length ? sum / count : null, min: min, max: max,
         nonAdditive: na, warning: na.length ? na.join(', ') + (na.length > 1 ? ' are' : ' is') + ' not additive: a sum of them is not their total (ask the server for the total of a scope)' : null };
     }
-
-    /**
-     * Cells as TSV, Excel's paste format: rows by line, cells by tab; a cell with a tab, a line break or a quote is quoted ("" for a quote).
-     * @param {Array<Array<*>>} grid rows of cells (already the text to copy)
-     * @returns {string}
-     */
     function toTsv(grid) {
       const cell = (v) => {
         const s = v === null || v === undefined ? '' : String(v);
@@ -2220,14 +1322,6 @@
       };
       return grid.map((r) => r.map(cell).join('\t')).join('\n');
     }
-
-    /**
-     * The cells of the ranges as rows of text (each range's rows under the previous), for a copy.
-     * @param {CellRange[]} ranges
-     * @param {function(number, number): string} textAt the copied text at (display row, shown column): raw by default for numbers
-     * @param {{headers: function(number): string}} [o] headers: a first line of the columns' headings
-     * @returns {Array<Array<string>>}
-     */
     function rangeCells(ranges, textAt, o) {
       const out = [];
       ranges.forEach((r) => {
@@ -2241,48 +1335,11 @@
   /* ---- src/drishti_keyboard.js ---- */
   __m["src/drishti_keyboard.js"] = (function () {
     var keyName = __lib("drishti-core").keyName;
-    /* Keyboard navigation, the model only: which cell has focus and what each key does. A layout (wells, panel, terminal) draws the focus
-       and runs the action; the keys are the same in every layout:
-
-         Arrows                one cell              Ctrl+Arrows         to the edge
-         Home / End            first / last column   Ctrl+Home / End     first / last cell
-         PageUp / PageDown     a page of rows        Tab / Shift+Tab     next / previous cell, wrapping to the next row
-         Shift+Arrows          stretch the range     Shift+Space         select the row        Ctrl+A   select all
-         Space                 toggle the row's selection, or a group open
-         Right / Left on a group row's first cell: open / close it (PIVOT_ENGINE.md section 11: Shift+Right opens everything below)
-         Enter or F2           edit (an editable cell) or open (a group, a link, Explain)
-         Ctrl+C                copy (the range, else the cell)          Escape   clear the range, or leave editing
-         E                     Explain this figure (when the grid has an Explain hook)
-
-       Pure: give it the grid's size and the event, it gives the new focus and an action. Runs under Node. */
-
-
-    /**
-     * @typedef {Object} KeyResult
-     * @property {?{row: number, col: number}} focus the new focus (null: unchanged)
-     * @property {?string} action what the layout does: select-row, toggle-row, select-all, extend-range, copy, edit, open, expand,
-     *   collapse, expand-all, collapse-all, explain, clear, null
-     * @property {boolean} handled whether the key was the grid's (the layout then prevents the browser's default)
-     */
-
-    /**
-     * The focused cell and the keys' meaning.
-     */
     class GridNavigator {
-      /**
-       * @param {{rowCount: function(): number, columnCount: function(): number, pageSize: function(): number, isGroup: function(number): boolean, isExpanded: function(number): boolean, explain: boolean}} grid
-       */
       constructor(grid) {
         this.grid = grid;
         this.focus = null;
       }
-
-      /**
-       * Puts the focus on a cell (clamped), or nowhere (null).
-       * @param {?number} row
-       * @param {number} [col]
-       * @returns {?{row: number, col: number}}
-       */
       setFocus(row, col) {
         if (row === null) { this.focus = null; return null; }
         const R = this.grid.rowCount(), C = this.grid.columnCount();
@@ -2290,12 +1347,6 @@
         this.focus = { row: Math.max(0, Math.min(R - 1, row)), col: Math.max(0, Math.min(C - 1, col || 0)) };
         return this.focus;
       }
-
-      /**
-       * What a key does.
-       * @param {{key: string, ctrlKey: boolean, metaKey: boolean, shiftKey: boolean, altKey: boolean}} e
-       * @returns {KeyResult}
-       */
       handleKey(e) {
         const R = this.grid.rowCount(), C = this.grid.columnCount();
         const none = { focus: null, action: null, handled: false };
@@ -2339,11 +1390,6 @@
             return none;
         }
       }
-
-      /**
-       * The keys as words for a help line ("Arrows: move · Shift+Arrows: select a range · ..."), the same in every layout.
-       * @returns {Array<{keys: string, does: string}>}
-       */
       static help() {
         return [
           { keys: 'Arrows', does: 'move' }, { keys: 'Shift+Arrows', does: 'select a range' }, { keys: 'Ctrl+C', does: 'copy' },
@@ -2353,12 +1399,6 @@
         ];
       }
     }
-
-    /**
-     * The name of a key press as the help line writes it (drishti-core's keyName).
-     * @param {KeyboardEvent} e
-     * @returns {string}
-     */
     function keyLabel(e) { return keyName(e); }
     return { "GridNavigator": GridNavigator, "keyLabel": keyLabel };
   })();
@@ -2366,66 +1406,22 @@
   __m["src/drishti_wells.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus;
     var aggFunc = __m["src/drishti_aggregate.js"].aggFunc;
-    /* The wells: where a person drops fields to build a pivot (the ribbon above the grid, or the side tool panel: the same model). Four
-       wells: Rows, Columns, Values (each value with its aggregation) and Filters (each with its member filter). What may go where comes
-       from the columns (enableRowGroup, enablePivot, enableValue); a drop that cannot be made says why. The wells make the pivot view. */
-
-
-
-    /** The wells, in the ribbon's order. */
     const WELLS = Object.freeze(['rows', 'columns', 'values', 'filters']);
-    /** The aggregations a value can take in the browser (a non-additive column's value is the server's measure). */
     const VALUE_FUNCS = Object.freeze(['sum', 'count', 'avg', 'min', 'max', 'count_distinct', 'first', 'last']);
-
-    /**
-     * @typedef {Object} WellValue
-     * @property {string} colId
-     * @property {string} aggFunc
-     * @property {string} [as] its label
-     */
-
-    /**
-     * The wells of a pivot.
-     */
     class WellsModel {
-      /**
-       * @param {import('./drishti_columns.js').ColumnModel} columns
-       * @param {{rows: string[], columns: string[], values: WellValue[], filters: Array<{colId: string, filter: Object}>}} [initial]
-       */
       constructor(columns, initial) {
         this.columns = columns;
-        /** @type {EventBus} changed {well} */
         this.events = new EventBus();
         this.state = { rows: [], columns: [], values: [], filters: [] };
         if (initial) { this.setState(initial); }
       }
-
-      /**
-       * The field list, searched (ColumnModel.fields), each field with the wells it is in.
-       * @param {string} [search]
-       * @returns {Array<Object>}
-       */
       fieldList(search) {
         return this.columns.fields(search).map((f) => Object.assign(f, { in: WELLS.filter((w) => this.has(w, f.id)) }));
       }
-
-      /**
-       * Whether a field is in a well.
-       * @param {string} well
-       * @param {string} colId
-       * @returns {boolean}
-       */
       has(well, colId) {
         const l = this.state[well];
         return well === 'rows' || well === 'columns' ? l.indexOf(colId) >= 0 : l.some((x) => x.colId === colId);
       }
-
-      /**
-       * Whether a field may be dropped in a well, and if not, why (in words).
-       * @param {string} colId
-       * @param {string} well
-       * @returns {{ok: boolean, why: ?string}}
-       */
       canDrop(colId, well) {
         const c = this.columns.get(colId);
         if (!c) { return { ok: false, why: 'there is no field ' + colId }; }
@@ -2438,14 +1434,6 @@
         }
         return { ok: true, why: null };
       }
-
-      /**
-       * Drops a field in a well at a place (moving it from Rows to Columns or back; a field may be a value and a filter as well).
-       * @param {string} colId
-       * @param {string} well
-       * @param {number} [index] the place (default: the end)
-       * @returns {void}
-       */
       drop(colId, well, index) {
         const ok = this.canDrop(colId, well);
         if (!ok.ok) { throw new Error(ok.why); }
@@ -2465,40 +1453,18 @@
         }
         this.events.emit('changed', { well: well });
       }
-
-      /**
-       * Takes a field out of a well (a value by its place, since a field may be a value twice).
-       * @param {string} well
-       * @param {(string|number)} which the field, or a value's index
-       * @returns {void}
-       */
       remove(well, which) {
         if (well === 'values' && typeof which === 'number') { this.state.values.splice(which, 1); }
         else if (well === 'rows' || well === 'columns') { this.state[well] = this.state[well].filter((x) => x !== which); }
         else { this.state[well] = this.state[well].filter((x) => x.colId !== which); }
         this.events.emit('changed', { well: well });
       }
-
-      /**
-       * Moves an item within its well.
-       * @param {string} well
-       * @param {number} from
-       * @param {number} to
-       * @returns {void}
-       */
       reorder(well, from, to) {
         const l = this.state[well];
         const [x] = l.splice(from, 1);
         l.splice(Math.max(0, Math.min(l.length, to)), 0, x);
         this.events.emit('changed', { well: well });
       }
-
-      /**
-       * Sets a value's aggregation. A non-additive field (VaR, ES) keeps its server measure whatever is asked, and says so.
-       * @param {number} index the value's place
-       * @param {string} func
-       * @returns {{ok: boolean, why: ?string}}
-       */
       setAggregation(index, func) {
         const v = this.state.values[index];
         if (!v) { throw new Error('no value ' + index); }
@@ -2509,54 +1475,24 @@
         this.events.emit('changed', { well: 'values' });
         return { ok: true, why: null };
       }
-
-      /**
-       * Sets a filter field's member filter ({type: 'set', values} or {type: 'set', excluded}).
-       * @param {string} colId
-       * @param {?Object} filter
-       * @returns {void}
-       */
       setFilter(colId, filter) {
         let f = this.state.filters.find((x) => x.colId === colId);
         if (!f) { f = { colId: colId, filter: null }; this.state.filters.push(f); }
         f.filter = filter;
         this.events.emit('changed', { well: 'filters' });
       }
-
-      /**
-       * The wells' state, to keep and give back.
-       * @returns {{rows: string[], columns: string[], values: WellValue[], filters: Array<{colId: string, filter: Object}>}}
-       */
       getState() { return JSON.parse(JSON.stringify(this.state)); }
-
-      /**
-       * Gives back a kept state.
-       * @param {{rows: string[], columns: string[], values: WellValue[], filters: Array}} s
-       * @returns {void}
-       */
       setState(s) {
         this.state = { rows: (s.rows || []).slice(), columns: (s.columns || []).slice(), values: (s.values || []).map((x) => Object.assign({}, x)),
           filters: (s.filters || []).map((x) => Object.assign({}, x)) };
         this.events.emit('changed', { well: '*' });
       }
-
-      /**
-       * A value's measure text: the column's own server measure when it has one or is not additive, else func(field).
-       * @param {WellValue} v
-       * @returns {string}
-       */
       measureOf(v) {
         const c = this.columns.get(v.colId);
         if (c && c.measure) { return c.measure; }
         if (v.aggFunc === 'count' && !c) { return 'count()'; }
         return (v.aggFunc || 'sum') + '(' + (c ? c.field : v.colId) + ')';
       }
-
-      /**
-       * The pivot view the wells make (with the member filters of the Filters well and of any filter given).
-       * @param {Object} [extra] more of the view (expanded, sort, top, subtotals, valueFilters, source)
-       * @returns {import('./drishti_pivot.js').PivotView}
-       */
       toView(extra) {
         const filters = {};
         this.state.filters.forEach((f) => {
@@ -2592,54 +1528,12 @@
     var PivotState = __m["src/drishti_pivot.js"].PivotState, pivotLocal = __m["src/drishti_pivot.js"].pivotLocal, serverRequest = __m["src/drishti_pivot.js"].serverRequest, mergeAnswer = __m["src/drishti_pivot.js"].mergeAnswer, applyValueFilters = __m["src/drishti_pivot.js"].applyValueFilters, resultColumns = __m["src/drishti_pivot.js"].resultColumns, cellValue = __m["src/drishti_pivot.js"].cellValue;
     var toCsv = __m["src/drishti_export.js"].toCsv, toXlsx = __m["src/drishti_export.js"].toXlsx;
     var cycleSort = __m["src/drishti_sort-filter.js"].cycleSort;
-    /* The grid model: the one object a layout draws. Columns, a row model (client-side rows in the page, or server-side blocks), the pivot
-       (wells, open state, the answer: computed in the browser for rows in the page, asked of the server for the rest, non-additive totals
-       always the server's), selection, keyboard focus, the viewport, export, copy and the Explain hook. It knows nothing of the DOM or of
-       the layout: wells, panel and terminal are shells over the same state (getState carries the layout's name only to give it back). */
-
-
-
-
-
-
-
-
-
-
-
-
-    /** The layouts a grid is drawn in (the visual shell; the model is the same). */
     const LAYOUTS = Object.freeze(['wells', 'panel', 'terminal']);
-    /** The densities, with their row heights in px. */
     const DENSITIES = Object.freeze({ comfortable: 36, compact: 28, terminal: 22 });
-
-    /**
-     * @typedef {Object} GridOptions
-     * @property {import('./drishti_columns.js').ColumnDef[]} columns
-     * @property {Object[]} [rows] client-side rows
-     * @property {import('./drishti_server-rows.js').Datasource} [datasource] server-side rows (instead of rows)
-     * @property {function(Object, number): string} [getRowId]
-     * @property {('wells'|'panel'|'terminal')} [layout='wells']
-     * @property {('comfortable'|'compact'|'terminal')} [density='compact']
-     * @property {function({view: Object}, AbortSignal, Object[]): Promise<Object>} [serverPivot] asks a server pivot (POST /api/pivot/query's
-     *   body; the third argument: the rows in the page, for an inline pivot); needed for a pivot of server-side rows, for the non-additive
-     *   totals of a local pivot, and for every pivot when clientAggregation is false
-     * @property {boolean} [clientAggregation=true] false: the browser computes no figure (the console's policy, ELEMENTS.md section 3): group
-     *   figures and every pivot are the server's
-     * @property {function(Object): Promise<*>} [explain] the Explain hook: given a cell's context, the explanation (a layout shows it)
-     * @property {('single'|'multiple'|'none')} [rowSelection='multiple']
-     * @property {number} [blockSize] server-side rows per request
-     */
-
-    /**
-     * The grid model.
-     */
     class GridModel {
-      /** @param {GridOptions} o */
       constructor(o) {
         if (!o || !o.columns) { throw new Error('a grid needs columns'); }
         this.o = o;
-        /** @type {EventBus} changed {what}: rows, columns, selection, focus, pivot, state; pivotError {error} */
         this.events = new EventBus();
         this.columns = new ColumnModel(o.columns);
         this.layout = LAYOUTS.indexOf(o.layout) >= 0 ? o.layout : 'wells';
@@ -2669,35 +1563,15 @@
         this.wells.events.on('changed', () => { if (this.pivotMode) { this.runPivot(); } });
         this.viewport.setRowCount(this.rowCount());
       }
-
-      // ---- rows and columns as shown -----------------------------------------------------------------------------------------------------
-      /**
-       * How many rows are shown (groups and pivot rows included).
-       * @returns {number}
-       */
       rowCount() {
         if (this.pivotMode) { return this.answer ? this.pivotRows().length : 0; }
         return this.rowModel.rowCount();
       }
-
-      /** @private the pivot's shown rows: every entry (a header row too: it carries the group's label) */
       pivotRows() { return this.answer ? this.answer.rows : []; }
-
-      /**
-       * The row at a display index: a leaf or group of the row model, or a pivot entry ({kind: 'pivot', entry}).
-       * @param {number} i
-       * @returns {?Object}
-       */
       rowAt(i) {
         if (this.pivotMode) { const e = this.pivotRows()[i]; return e ? { kind: 'pivot', id: 'pivot:' + e.kind + ':' + e.key, depth: Math.max(0, (e.depth || 0) - 1), entry: e } : null; }
         return this.rowModel.rowAt(i);
       }
-
-      /**
-       * The shown columns: in grid mode the visible columns (pinned first); in pivot mode the row heading column, then the pivot's result
-       * columns (one per column member, total and value).
-       * @returns {Object[]}
-       */
       shownColumns() {
         if (!this.pivotMode) { return this.columns.visible(); }
         if (this._pivotCols) { return this._pivotCols; }
@@ -2709,20 +1583,11 @@
           colKey: r.colKey, measure: r.measure, kind: r.kind, additive: !r.server, format: this.measureFormat(r.measure) })));
         return this._pivotCols;
       }
-
-      /** @private a measure's format: its column's */
       measureFormat(label) {
         const v = (this.wells.state.values || []).find((x, i) => this.wells.toView().values[i].as === label);
         const c = v ? this.columns.get(v.colId) : null;
         return c && c.format ? c.format : 'amount0';
       }
-
-      /**
-       * A cell's raw value (a group's figure; a pivot cell's figure).
-       * @param {number} r display row
-       * @param {number} c shown column
-       * @returns {*}
-       */
       cellValue(r, c) {
         const row = this.rowAt(r), col = this.shownColumns()[c];
         if (!row || !col) { return undefined; }
@@ -2739,13 +1604,6 @@
         if (row.kind === 'loading') { return undefined; }
         return getValue(row.row, col);
       }
-
-      /**
-       * A cell's text as shown (formatted; a group's first cell its member and count; a pending figure "…").
-       * @param {number} r
-       * @param {number} c
-       * @returns {string}
-       */
       cellText(r, c) {
         const row = this.rowAt(r), col = this.shownColumns()[c];
         if (!row || !col) { return ''; }
@@ -2761,71 +1619,21 @@
         }
         return formatValue(v, col, row.row);
       }
-
-      // ---- sorting, filtering, grouping ----------------------------------------------------------------------------------------------------
-      /**
-       * Sorts by a sort model.
-       * @param {Array<{colId: string, sort: string}>} model
-       * @returns {void}
-       */
       setSortModel(model) { this.sortModel = (model || []).slice(); this.rowModel.setSortModel(this.sortModel); }
-
-      /**
-       * A header click: none, ascending, descending (Shift: adds to the sort).
-       * @param {string} colId
-       * @param {boolean} [multi]
-       * @returns {Array<{colId: string, sort: string}>} the new model
-       */
       toggleSort(colId, multi) { const m = cycleSort(this.sortModel, colId, multi); this.setSortModel(m); return m; }
-
-      /**
-       * Filters by a filter model.
-       * @param {Object<string, Object>} model
-       * @returns {void}
-       */
       setFilterModel(model) { this.filterModel = Object.assign({}, model); this.rowModel.setFilterModel(this.filterModel); if (this.pivotMode) { this.runPivot(); } }
-
-      /**
-       * Filters by words across the shown columns.
-       * @param {string} q
-       * @returns {void}
-       */
       setQuickFilter(q) { this.rowModel.setQuickFilter(q); }
-
-      /**
-       * Groups rows (grid mode).
-       * @param {string[]} colIds
-       * @returns {void}
-       */
       setRowGroups(colIds) {
         if (this.serverSide) { this.rowModel.setGrouping({ rowGroupCols: colIds, valueCols: this.columns.all().filter((c) => c.enableValue).map((c) => ({ colId: c.id, aggFunc: c.aggFunc })) }); }
         else { this.rowModel.setGroupBy(colIds); }
       }
-
-      // ---- the pivot -----------------------------------------------------------------------------------------------------------------------
-      /**
-       * Turns pivot mode on or off; on, the wells' view is computed (or asked).
-       * @param {boolean} on
-       * @returns {Promise<void>}
-       */
       setPivotMode(on) {
         this.pivotMode = !!on;
         this._pivotCols = null;
         this.events.emit('changed', { what: 'pivot' });
         return on ? this.runPivot() : Promise.resolve();
       }
-
-      /**
-       * Sets the view's other parts (sort per level, top N, subtotals above or below, value filters, source, provider options).
-       * @param {Object} extra
-       * @returns {Promise<void>}
-       */
       setPivotOptions(extra) { this.pivotExtra = Object.assign({}, this.pivotExtra, extra); return this.pivotMode ? this.runPivot() : Promise.resolve(); }
-
-      /**
-       * The pivot view now: the wells, the grid's member filters, the open state and the options.
-       * @returns {Object}
-       */
       pivotView() {
         const v = this.wells.toView(this.pivotExtra);
         Object.keys(this.filterModel).forEach((k) => {
@@ -2835,12 +1643,6 @@
         });
         return Object.assign(v, this.pivotState.toView(this.answer));
       }
-
-      /**
-       * Computes the pivot: in the browser for client-side rows (the non-additive measures then asked of the server, when serverPivot is
-       * given), else asked of the server. A value filter is applied either way.
-       * @returns {Promise<void>}
-       */
       runPivot() {
         const view = this.pivotView();
         this._pivotCols = null;
@@ -2875,30 +1677,8 @@
         }
         return Promise.resolve();
       }
-
-      /**
-       * Opens or closes a pivot row or column group, and computes again.
-       * @param {('rows'|'columns')} axis
-       * @param {Array<Array<string>>} path the node's (dimension, value) pairs
-       * @param {boolean} [open]
-       * @returns {Promise<void>}
-       */
       togglePivotNode(axis, path, open) { this.pivotState.toggle(axis, path, open); return this.runPivot(); }
-
-      /**
-       * Opens every pivot node of an axis to a level.
-       * @param {('rows'|'columns')} axis
-       * @param {number} level
-       * @returns {Promise<void>}
-       */
       expandPivotTo(axis, level) { this.pivotState.expandToLevel(axis, level); return this.runPivot(); }
-
-      /**
-       * Opens or closes the group at a display row (a row group or a pivot row).
-       * @param {number} r
-       * @param {boolean} [open]
-       * @returns {Promise<void>}
-       */
       toggleRow(r, open) {
         const x = this.rowAt(r);
         if (!x) { return Promise.resolve(); }
@@ -2906,21 +1686,7 @@
         if (x.kind === 'group') { this.rowModel.setExpanded(x.path || x.keys, open); }
         return Promise.resolve();
       }
-
-      // ---- selection, focus, keys ----------------------------------------------------------------------------------------------------------
-      /**
-       * The id of a display row, or null for a group, a pivot row or a placeholder.
-       * @param {number} r
-       * @returns {?string}
-       */
       idAt(r) { const x = this.rowAt(r); return x && x.kind === 'leaf' ? x.id : null; }
-
-      /**
-       * A key press on the grid: moves the focus, changes the selection and runs the action the layout needs no part in; returns what the
-       * layout does (copy text to the clipboard, start an edit, show an Explain).
-       * @param {KeyboardEvent} e
-       * @returns {{handled: boolean, action: ?string, focus: ?Object, copy: ?string}}
-       */
       key(e) {
         const before = this.navigator.focus ? Object.assign({}, this.navigator.focus) : null;
         const k = this.navigator.handleKey(e), f = this.navigator.focus;
@@ -2946,23 +1712,12 @@
         }
         return out;
       }
-
-      /**
-       * Selects every row that passes the filters (client-side), or clears.
-       * @returns {void}
-       */
       selectAll() {
         if (this.serverSide || this.pivotMode) { this.selection.startRange(0, 0); this.selection.extendRange(this.rowCount() - 1, this.shownColumns().length - 1); return; }
         const rm = this.rowModel, ids = [];
         for (let i = 0; i < rm.view.length; i++) { ids.push(rm.getRowId(rm.rows[rm.view[i]], rm.view[i])); }
         this.selection.selectAll(ids);
       }
-
-      /**
-       * The selected cells as TSV (the ranges, else the focused cell): numbers raw, so Excel reads them as numbers.
-       * @param {{headers: boolean}} [o]
-       * @returns {string}
-       */
       copy(o) {
         let ranges = this.selection.ranges;
         if (!ranges.length && this.navigator.focus) { const f = this.navigator.focus; ranges = [{ r1: f.row, r2: f.row, c1: f.col, c2: f.col }]; }
@@ -2970,24 +1725,10 @@
         return toTsv(rangeCells(ranges, (r, c) => { const v = this.cellValue(r, c); return typeof v === 'number' ? String(v) : this.cellText(r, c); },
           o && o.headers ? { headers: (j) => cols[j].header } : null));
       }
-
-      /**
-       * The figures of the selected range for the status line (count, sum, average, min, max; a non-additive column warns instead of summing).
-       * @returns {Object}
-       */
       rangeStats() {
         const cols = this.shownColumns();
         return rangeStats(this.selection.ranges, (r, c) => this.cellValue(r, c), (j) => cols[j]);
       }
-
-      // ---- Explain ---------------------------------------------------------------------------------------------------------------------------
-      /**
-       * A cell's context for Explain: the row (or a pivot cell's coordinates), the column or measure, the value, and whether the figure is
-       * additive.
-       * @param {number} r
-       * @param {number} c
-       * @returns {?Object}
-       */
       cellContext(r, c) {
         const row = this.rowAt(r), col = this.shownColumns()[c];
         if (!row || !col) { return null; }
@@ -2999,25 +1740,11 @@
         else { Object.assign(ctx, { rowId: row.id, data: row.row }); }
         return ctx;
       }
-
-      /**
-       * Explains a cell through the grid's Explain hook (rejects when the grid has none).
-       * @param {number} r
-       * @param {number} c
-       * @returns {Promise<*>}
-       */
       explain(r, c) {
         if (!this.o.explain) { return Promise.reject(new Error('this grid has no Explain hook')); }
         const ctx = this.cellContext(r, c);
         return ctx ? Promise.resolve(this.o.explain(ctx)) : Promise.reject(new Error('no cell at ' + r + ', ' + c));
       }
-
-      // ---- export --------------------------------------------------------------------------------------------------------------------------
-      /**
-       * The grid as shown, as a table to export: shown columns; in grid mode every filtered row (or the groups and their rows), in pivot
-       * mode the pivot's rows, with outline levels.
-       * @returns {import('./drishti_export.js').ExportTable}
-       */
       toTable() {
         const cols = this.shownColumns();
         const rows = [], levels = [], bold = [];
@@ -3034,59 +1761,23 @@
         }
         return { columns: cols.map((c) => ({ header: c.header, type: c.type, format: c.format, width: c.width })), rows: rows, levels: levels, bold: bold };
       }
-
-      /**
-       * CSV text of the grid as shown.
-       * @param {{formatted: boolean}} [o]
-       * @returns {string}
-       */
       exportCsv(o) { return toCsv(this.toTable(), o); }
-
-      /**
-       * An Excel workbook of the grid as shown.
-       * @param {{sheetName: string}} [o]
-       * @returns {Uint8Array}
-       */
       exportXlsx(o) { return toXlsx(this.toTable(), o); }
-
-      // ---- state -----------------------------------------------------------------------------------------------------------------------------
-      /**
-       * Sets the density (the row height follows).
-       * @param {('comfortable'|'compact'|'terminal')} d
-       * @returns {void}
-       */
       setDensity(d) {
         if (!DENSITIES[d]) { throw new Error('no density ' + d + ' (' + Object.keys(DENSITIES).join(', ') + ')'); }
         this.density = d;
         this.viewport.rowHeight = DENSITIES[d];
         this.events.emit('changed', { what: 'state' });
       }
-
-      /**
-       * Sets the layout's name (the shell draws it; nothing in the model changes).
-       * @param {('wells'|'panel'|'terminal')} l
-       * @returns {void}
-       */
       setLayout(l) {
         if (LAYOUTS.indexOf(l) < 0) { throw new Error('no layout ' + l + ' (' + LAYOUTS.join(', ') + ')'); }
         this.layout = l;
         this.events.emit('changed', { what: 'state' });
       }
-
-      /**
-       * Everything a person set, to keep with a view or a link: columns, sort, filters, wells, pivot mode and open state, layout, density.
-       * @returns {Object}
-       */
       getState() {
         return { columns: this.columns.getState(), sort: this.sortModel.slice(), filters: JSON.parse(JSON.stringify(this.filterModel)), wells: this.wells.getState(),
           pivot: this.pivotMode, pivotView: this.pivotMode ? this.pivotView() : null, pivotOptions: Object.assign({}, this.pivotExtra), layout: this.layout, density: this.density };
       }
-
-      /**
-       * Gives back a kept state.
-       * @param {Object} s
-       * @returns {Promise<void>}
-       */
       setState(s) {
         if (s.columns) { this.columns.setState(s.columns); }
         if (s.layout) { this.setLayout(s.layout); }
@@ -3099,26 +1790,11 @@
         return this.setPivotMode(!!s.pivot);
       }
     }
-
-    /**
-     * A new grid model.
-     * @param {GridOptions} o
-     * @returns {GridModel}
-     * @example const g = createGridModel({columns: [{field: 'DESK'}, {field: 'PNL', type: 'number', format: 'amount0'}], rows: data});
-     */
     function createGridModel(o) { return new GridModel(o); }
     return { "LAYOUTS": LAYOUTS, "DENSITIES": DENSITIES, "GridModel": GridModel, "createGridModel": createGridModel };
   })();
   /* ---- src/drishti_plain-render.js ---- */
   __m["src/drishti_plain-render.js"] = (function () {
-    /* A plain renderer of the grid model: the rows and columns the viewport draws, as text lines or as plain table markup. For tests and for
-       measuring the engine without a page; the layouts (wells, panel, terminal) draw the real grid. */
-
-    /**
-     * The window the viewport draws: its rows and columns and every cell's text.
-     * @param {import('./drishti_grid.js').GridModel} grid
-     * @returns {{first: number, last: number, columns: Object[], cells: string[][], offset: number}}
-     */
     function renderWindow(grid) {
       const vp = grid.viewport, rows = vp.rows(), shown = grid.shownColumns();
       const pinned = shown.filter((c) => c.pinned), center = shown.filter((c) => !c.pinned);
@@ -3132,22 +1808,10 @@
       for (let r = rows.first; r <= rows.last; r++) { cells.push(idx.map((j) => grid.cellText(r, j))); }
       return { first: rows.first, last: rows.last, columns: cols, cells: cells, offset: rows.offset };
     }
-
-    /**
-     * The window as text, a line per row, cells by " | ", headings first.
-     * @param {import('./drishti_grid.js').GridModel} grid
-     * @returns {string}
-     */
     function renderText(grid) {
       const w = renderWindow(grid);
       return [w.columns.map((c) => c.header).join(' | ')].concat(w.cells.map((r) => r.join(' | '))).join('\n');
     }
-
-    /**
-     * The window as plain table markup (escaped), with the grid roles a screen reader needs.
-     * @param {import('./drishti_grid.js').GridModel} grid
-     * @returns {string}
-     */
     function renderHtml(grid) {
       const w = renderWindow(grid);
       const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -3159,10 +1823,7 @@
   })();
   /* ---- src/drishti_index.js ---- */
   __m["src/drishti_index.js"] = (function () {
-    /* drishti-grid: the grid's engine, without a look. The data model (columns, rows, ids, sort and filter models), the client-side and
-       server-side row models, virtual scrolling for a million rows, the pivot (the server's view and answer: client-side for rows in the
-       page, server-side for the rest, non-additive totals always the server's), the wells, selection with range figures, CSV and Excel
-       export, keyboard navigation and the Explain hook. The layouts (wells, panel, terminal) draw it; a plain renderer serves tests. */
+
     return { "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "isBlank": __m["src/drishti_sort-filter.js"].isBlank, "compareValues": __m["src/drishti_sort-filter.js"].compareValues, "compareRows": __m["src/drishti_sort-filter.js"].compareRows, "cycleSort": __m["src/drishti_sort-filter.js"].cycleSort, "passes": __m["src/drishti_sort-filter.js"].passes, "rowFilter": __m["src/drishti_sort-filter.js"].rowFilter, "filterWords": __m["src/drishti_sort-filter.js"].filterWords, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "mergeAnswer": __m["src/drishti_pivot.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot.js"].resultColumns, "cellValue": __m["src/drishti_pivot.js"].cellValue, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "toCsv": __m["src/drishti_export.js"].toCsv, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "LAYOUTS": __m["src/drishti_grid.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid.js"].DENSITIES, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml };
   })();
   return Object.freeze(Object.assign({ library: "drishti-grid", version: "0.1.0" }, __m["src/drishti_index.js"]));

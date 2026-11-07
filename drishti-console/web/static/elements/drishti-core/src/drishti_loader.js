@@ -64,7 +64,7 @@ export function requirements(name) {
   const out = [];
   const visit = (n, trail) => {
     const l = MANIFEST.libraries[n];
-    if (!l) { throw new Error('Drishti Elements has no library ' + n + ' (it has ' + Object.keys(MANIFEST.libraries).join(', ') + ')'); }
+    if (!l) { throw new Error('there is no library ' + n + ' (it has ' + Object.keys(MANIFEST.libraries).join(', ') + ')'); }
     if (trail.indexOf(n) >= 0) { throw new Error('libraries require each other: ' + trail.concat([n]).join(' -> ')); }
     l.requires.forEach((r) => visit(r, trail.concat([n])));
     if (out.indexOf(n) < 0) { out.push(n); }

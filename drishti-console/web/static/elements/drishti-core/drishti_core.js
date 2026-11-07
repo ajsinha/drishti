@@ -36,31 +36,12 @@
   var __m = {};
   /* ---- src/drishti_a11y.js ---- */
   __m["src/drishti_a11y.js"] = (function () {
-    /* Accessibility helpers: a focus trap (Tab stays inside a dialog or drawer, and focus goes back where it was when it closes), one polite
-       and one assertive live region a page shares (announce), and a roving tabindex (one Tab stop for a toolbar, a list or a grid's header;
-       arrows move inside). The key arithmetic (rovingIndex) is pure and runs under Node. */
-
-    /** What can take focus, in a selector. */
     const FOCUSABLE = 'a[href], area[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), ' +
       'textarea:not([disabled]), iframe, [contenteditable="true"], [tabindex]:not([tabindex="-1"])';
-
-    /**
-     * The elements inside a container that take focus by Tab, in order (hidden ones left out).
-     * @param {Element} container
-     * @returns {Element[]}
-     */
     function focusable(container) {
       return Array.prototype.filter.call(container.querySelectorAll(FOCUSABLE), (el) =>
         !el.hasAttribute('inert') && !el.closest('[inert]') && (el.offsetParent !== null || el === container.ownerDocument.activeElement || el.getClientRects().length > 0));
     }
-
-    /**
-     * Keeps Tab and Shift+Tab inside a container until released; focuses its first focusable element (or opts.initial) now, and gives focus
-     * back to what had it when released.
-     * @param {Element} container
-     * @param {{initial: Element, returnFocus: boolean}} [o] returnFocus default true
-     * @returns {function(): void} releases the trap
-     */
     function trapFocus(container, o) {
       o = o || {};
       const doc = container.ownerDocument;
@@ -81,14 +62,7 @@
         if (o.returnFocus !== false && before && before.focus && doc.contains(before)) { before.focus(); }
       };
     }
-
     const regions = {};
-    /**
-     * Says something to a screen reader without moving focus (one shared live region per politeness, made on first use).
-     * @param {string} text
-     * @param {{politeness: ('polite'|'assertive'), document: Document}} [o]
-     * @returns {void}
-     */
     function announce(text, o) {
       o = o || {};
       const doc = o.document || (typeof document !== 'undefined' ? document : null);
@@ -107,16 +81,6 @@
       r.textContent = '';
       setTimeout(() => { r.textContent = String(text); }, 30);   // emptied first, so the same words twice are said twice
     }
-
-    /**
-     * The index a key moves to in a roving tabindex: arrows by one (by orientation), Home and End to the ends; null when the key does not
-     * move.
-     * @param {number} index the current index
-     * @param {number} count how many items
-     * @param {string} key KeyboardEvent.key
-     * @param {{orientation: ('horizontal'|'vertical'|'both'), wrap: boolean, columns: number}} [o] columns: a grid of that many per row
-     * @returns {?number}
-     */
     function rovingIndex(index, count, key, o) {
       o = o || {};
       if (!count) { return null; }
@@ -133,14 +97,6 @@
       if (o.wrap) { n = ((n % count) + count) % count; } else { n = Math.max(0, Math.min(count - 1, n)); }
       return n;
     }
-
-    /**
-     * Makes a container's items one Tab stop: the current item has tabindex 0, the others -1; arrows (and Home, End) move between them.
-     * @param {Element} container
-     * @param {{selector: string, orientation: string, wrap: boolean, columns: number, onMove: function(Element, number): void}} [o]
-     *   selector: the items (default: [role=tab], [role=option], [role=menuitem], [role=gridcell], button)
-     * @returns {{focus: function(number): void, refresh: function(): void, destroy: function(): void, index: function(): number}}
-     */
     function rovingTabindex(container, o) {
       o = o || {};
       const sel = o.selector || '[role="tab"], [role="option"], [role="menuitem"], [role="gridcell"], button';
@@ -178,50 +134,21 @@
   })();
   /* ---- src/drishti_api.js ---- */
   __m["src/drishti_api.js"] = (function () {
-    /* The API client: one way to call a Drishti server (or any JSON API). The session is the browser's (cookies, same origin by default); an
-       error is an ApiError in words with its DRS code ("DRS-4005 The table has no column TRADE_ID"), never a bare status; a GET that meets a
-       network failure or a busy server (502, 503, 504) is tried again with a growing pause; a call can be aborted (an AbortSignal) and has a
-       time limit; the as-of date of the page goes with every call as X-Drishti-As-Of. */
-
-    /** The header that carries the page's as-of date (the console's core/asof.py reads it). */
     const AS_OF_HEADER = 'X-Drishti-As-Of';
-
-    /**
-     * A failed call, in words.
-     */
     class ApiError extends Error {
-      /**
-       * @param {string} message the words a person reads
-       * @param {{status: number, code: ?string, detail: ?string, body: *, issues: Array, aborted: boolean, timedOut: boolean}} [info]
-       */
       constructor(message, info) {
         super(message);
         info = info || {};
         this.name = 'ApiError';
-        /** @type {number} the HTTP status (0: the server was not reached) */
         this.status = info.status || 0;
-        /** @type {?string} the DRS code the server gave */
         this.code = info.code || null;
-        /** @type {?string} the server's own words */
         this.detail = info.detail || null;
-        /** @type {*} the answer's body, as JSON when it was */
         this.body = info.body === undefined ? null : info.body;
-        /** @type {Array} the problems of a refused form (field by field), when the server listed them */
         this.issues = info.issues || [];
-        /** @type {boolean} the call was aborted by its signal */
         this.aborted = !!info.aborted;
-        /** @type {boolean} the call took longer than its time limit */
         this.timedOut = !!info.timedOut;
       }
     }
-
-    /**
-     * The words of an error answer: its DRS code and the server's detail ("DRS-4005 ..."), else the fallback.
-     * @param {*} body the answer's JSON ({code, detail} or {error: {code, message}})
-     * @param {number} status
-     * @param {string} [fallback] words when the server gave none (default "The server answered <status>.")
-     * @returns {{message: string, code: ?string, detail: ?string}}
-     */
     function errorWords(body, status, fallback) {
       const b = body && typeof body === 'object' ? body : {};
       const e = b.error && typeof b.error === 'object' ? b.error : b;
@@ -231,56 +158,14 @@
       const words = detail || fallback || ('The server answered ' + status + '.');
       return { message: (code && words.indexOf(code) < 0 ? code + ' ' : '') + words, code: code, detail: detail };
     }
-
-    /**
-     * @typedef {Object} ClientOptions
-     * @property {string} [base=''] put before every path that does not start with http(s):// or /
-     * @property {(string|function(): ?string)} [asOf] the as-of date sent with every call (a function: asked at each call)
-     * @property {Object<string, string>} [headers] sent with every call
-     * @property {string} [credentials='same-origin'] the fetch credentials: the browser's session
-     * @property {number} [retries=2] how many more tries a GET gets after a network failure or 502, 503, 504
-     * @property {number} [retryDelay=300] the first pause in ms (then doubled)
-     * @property {number} [timeout=0] ms before a call is given up (0: none)
-     * @property {function(ApiError): void} [onUnauthorized] told of a 401 (the session ended)
-     * @property {function(string, Object): Promise<Response>} [fetch] the fetch to use (default: globalThis.fetch)
-     * @property {string} [unreachable] the words when the server cannot be reached
-     */
-
-    /**
-     * @typedef {Object} CallOptions
-     * @property {AbortSignal} [signal] aborts the call
-     * @property {Object<string, string>} [headers]
-     * @property {?string} [asOf] this call's as-of date (null: none)
-     * @property {number} [retries] this call's retries (a POST gets none unless given)
-     * @property {number} [timeout]
-     * @property {string} [fallback] the words of an error without the server's own
-     * @property {('json'|'text'|'blob'|'response')} [as='json'] what the call returns
-     */
-
-    /**
-     * @typedef {Object} Envelope
-     * @property {boolean} ok
-     * @property {number} status 0 when the server was not reached
-     * @property {*} body the JSON answer ({} when there was none); on a failure {detail} at least
-     * @property {?ApiError} error
-     */
-
-    /**
-     * An API client.
-     */
     class ApiClient {
-      /** @param {ClientOptions} [o] */
       constructor(o) {
         /** @private */ this.o = Object.assign({ base: '', credentials: 'same-origin', retries: 2, retryDelay: 300, timeout: 0,
           unreachable: 'The server could not be reached. Try again.' }, o);
       }
-
-      /** @private */
       url(path) {
         return /^https?:\/\//.test(path) || path.charAt(0) === '/' ? path : this.o.base.replace(/\/$/, '') + '/' + path;
       }
-
-      /** @private */
       headers(body, c) {
         const h = Object.assign({ Accept: 'application/json' }, this.o.headers, c.headers);
         if (body !== undefined && !(typeof FormData !== 'undefined' && body instanceof FormData)) { h['Content-Type'] = h['Content-Type'] || 'application/json'; }
@@ -288,15 +173,6 @@
         if (asOf) { h[AS_OF_HEADER] = String(asOf); }
         return h;
       }
-
-      /**
-       * Calls the server; resolves with the answer (JSON by default; null for 204) or rejects with an ApiError in words.
-       * @param {string} method GET, POST, PUT, PATCH, DELETE
-       * @param {string} path
-       * @param {*} [body] sent as JSON (FormData as it is)
-       * @param {CallOptions} [c]
-       * @returns {Promise<*>}
-       */
       request(method, path, body, c) {
         c = c || {};
         const f = this.o.fetch || globalThis.fetch;
@@ -330,8 +206,6 @@
         };
         return once(0);
       }
-
-      /** @private */
       answer(r, c) {
         const as = c.as || 'json';
         if (r.ok && as === 'response') { return r; }
@@ -349,82 +223,27 @@
           throw e;
         });
       }
-
-      /**
-       * The call's outcome as an envelope that never rejects ({ok, status, body, error}), for code that branches on the status.
-       * @param {string} method
-       * @param {string} path
-       * @param {*} [body]
-       * @param {CallOptions} [c]
-       * @returns {Promise<Envelope>}
-       */
       send(method, path, body, c) {
         return this.request(method, path, body, c).then(
           (b) => ({ ok: true, status: 200, body: b === null ? {} : b, error: null }),
           (e) => ({ ok: false, status: e.status || 0, body: e.body && typeof e.body === 'object' ? e.body : { detail: e.message }, error: e }));
       }
-
-      /** A GET (retried on a network failure or a busy server). @param {string} path @param {CallOptions} [c] @returns {Promise<*>} */
       get(path, c) { return this.request('GET', path, undefined, c); }
-      /** A POST (never retried unless asked). @param {string} path @param {*} [body] @param {CallOptions} [c] @returns {Promise<*>} */
       post(path, body, c) { return this.request('POST', path, body, c); }
-      /** A PUT. @param {string} path @param {*} [body] @param {CallOptions} [c] @returns {Promise<*>} */
       put(path, body, c) { return this.request('PUT', path, body, c); }
-      /** A PATCH. @param {string} path @param {*} [body] @param {CallOptions} [c] @returns {Promise<*>} */
       patch(path, body, c) { return this.request('PATCH', path, body, c); }
-      /** A DELETE. @param {string} path @param {CallOptions} [c] @returns {Promise<*>} */
       del(path, c) { return this.request('DELETE', path, undefined, c); }
     }
-
-    /**
-     * A new API client.
-     * @param {ClientOptions} [o]
-     * @returns {ApiClient}
-     */
     function createClient(o) { return new ApiClient(o); }
-
-    /**
-     * The client a console page shares: same origin, the browser's session. In the console the as-of date travels in its cookie (the console
-     * sends it on as X-Drishti-As-Of); a page that calls a Drishti server directly makes its own client with {asOf}.
-     * @type {ApiClient}
-     */
     const api = new ApiClient();
-
-    /**
-     * One line of a screen's "call and throw in words" helper: the fetch the console's screens used to write each for itself.
-     * @param {string} method
-     * @param {string} url
-     * @param {*} [body]
-     * @param {CallOptions} [c]
-     * @returns {Promise<*>}
-     */
     function call(method, url, body, c) { return api.request(method, url, body, c); }
     return { "AS_OF_HEADER": AS_OF_HEADER, "ApiError": ApiError, "errorWords": errorWords, "ApiClient": ApiClient, "createClient": createClient, "api": api, "call": call };
   })();
   /* ---- src/drishti_dates.js ---- */
   __m["src/drishti_dates.js"] = (function () {
-    /* Business dates: a date is a calendar day (yyyy-MM-dd), never a moment, so no time zone ever moves it. Patterns are the server's
-       (java.time DateTimeFormatter letters: yyyy, yy, MMMM, MMM, MM, M, dd, d, EEEE, EEE; text in single quotes), and the default, yyyy-MM-dd,
-       leaves the ISO text as it is, as the server does. Business days skip Saturdays, Sundays and the holidays given. Pure; runs under Node. */
-
     const ISO = /^(\d{4})-(\d{2})-(\d{2})/;
     const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-
-    /**
-     * A business date: year, month (1 to 12) and day.
-     * @typedef {Object} BusinessDate
-     * @property {number} y
-     * @property {number} m 1 to 12
-     * @property {number} d 1 to 31
-     */
-
-    /**
-     * A value read as a business date: ISO text (yyyy-MM-dd, a longer timestamp's first ten characters), a Date (its local calendar day) or a
-     * BusinessDate. Anything else, or a day that does not exist (2026-02-30), is null.
-     * @param {*} v
-     * @returns {?BusinessDate}
-     */
     function parseDate(v) {
       if (v === null || v === undefined) { return null; }
       if (typeof v === 'object' && typeof v.y === 'number') { return valid(v.y, v.m, v.d); }
@@ -436,34 +255,13 @@
       if (m < 1 || m > 12 || d < 1) { return null; }
       return d <= daysInMonth(y, m) ? { y: y, m: m, d: d } : null;
     }
-
-    /**
-     * Days in a month.
-     * @param {number} y
-     * @param {number} m 1 to 12
-     * @returns {number}
-     */
     function daysInMonth(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate(); }
-
     function pad(n, w) { return String(n).padStart(w, '0'); }
-
-    /**
-     * A business date as ISO text, yyyy-MM-dd.
-     * @param {*} v anything parseDate reads
-     * @returns {string} '' when it is not a date
-     */
     function isoDate(v) {
       const b = parseDate(v);
       return b ? pad(b.y, 4) + '-' + pad(b.m, 2) + '-' + pad(b.d, 2) : '';
     }
-
-    /**
-     * Today's business date in this browser's calendar, as ISO text.
-     * @param {Date} [now] the moment (default: now)
-     * @returns {string}
-     */
     function today(now) { return isoDate(now || new Date()); }
-
     function weekday(b) { return new Date(Date.UTC(b.y, b.m - 1, b.d)).getUTCDay(); }
     function monthName(m, width, locale) {
       if (!locale || /^en\b/.test(locale)) { return width === 'long' ? MONTHS[m - 1] : MONTHS[m - 1].slice(0, 3); }
@@ -473,15 +271,6 @@
       if (!locale || /^en\b/.test(locale)) { return width === 'long' ? DAYS[w] : DAYS[w].slice(0, 3); }
       return new Intl.DateTimeFormat(locale, { weekday: width, timeZone: 'UTC' }).format(new Date(Date.UTC(2000, 0, 2 + w)));
     }
-
-    /**
-     * A date by a server pattern (dd MMM yyyy reads "07 Nov 2026"). yyyy-MM-dd, the default, returns the ISO text unchanged, as the server
-     * does; text that is not a date is returned as it is.
-     * @param {*} v ISO text, a Date or a BusinessDate
-     * @param {string} [pattern='yyyy-MM-dd'] DateTimeFormatter letters: yyyy yy MMMM MMM MM M dd d EEEE EEE, 'quoted text'
-     * @param {{locale: string}} [o] month and day names in this locale (default English, as the server)
-     * @returns {string}
-     */
     function formatDate(v, pattern, o) {
       if (v === null || v === undefined) { return ''; }
       const b = parseDate(v);
@@ -504,15 +293,6 @@
         }
       });
     }
-
-    /**
-     * A range of business dates in few words, the shared parts once: "3–7 Nov 2026", "28 Oct – 3 Nov 2026", "28 Dec 2025 – 3 Jan 2026";
-     * one day reads as that day.
-     * @param {*} from
-     * @param {*} to
-     * @param {{locale: string}} [o]
-     * @returns {string}
-     */
     function formatDateRange(from, to, o) {
       const a = parseDate(from), b = parseDate(to);
       if (!a || !b) { return a ? formatDate(a, 'd MMM yyyy', o) : b ? formatDate(b, 'd MMM yyyy', o) : ''; }
@@ -521,32 +301,16 @@
       if (a.y === b.y) { return formatDate(a, 'd MMM', o) + ' – ' + formatDate(b, 'd MMM yyyy', o); }
       return formatDate(a, 'd MMM yyyy', o) + ' – ' + formatDate(b, 'd MMM yyyy', o);
     }
-
     function shift(b, days) {
       const t = new Date(Date.UTC(b.y, b.m - 1, b.d + days));
       return { y: t.getUTCFullYear(), m: t.getUTCMonth() + 1, d: t.getUTCDate() };
     }
-
-    /**
-     * Whether a day is a business day: not a Saturday or Sunday and not one of the holidays.
-     * @param {*} v the date
-     * @param {{holidays: string[]}} [o] ISO dates that are not business days
-     * @returns {boolean}
-     */
     function isBusinessDay(v, o) {
       const b = parseDate(v);
       if (!b) { return false; }
       const w = weekday(b);
       return w !== 0 && w !== 6 && !((o && o.holidays) || []).includes(isoDate(b));
     }
-
-    /**
-     * The business date n business days from a date (n may be negative; 0 is the date itself, rolled forward when it is not a business day).
-     * @param {*} v the date
-     * @param {number} n business days
-     * @param {{holidays: string[]}} [o]
-     * @returns {string} ISO text
-     */
     function addBusinessDays(v, n, o) {
       let b = parseDate(v);
       if (!b) { throw new Error('addBusinessDays: not a date: ' + v); }
@@ -558,26 +322,11 @@
       }
       return isoDate(b);
     }
-
-    /**
-     * The last business day before a date (a report's usual "previous close").
-     * @param {*} v
-     * @param {{holidays: string[]}} [o]
-     * @returns {string} ISO text
-     */
     function previousBusinessDay(v, o) {
       let b = shift(parseDate(v) || parseDate(today()), -1);
       while (!isBusinessDay(b, o)) { b = shift(b, -1); }
       return isoDate(b);
     }
-
-    /**
-     * Business days from one date to another: those after from, up to and including to (negative when to is earlier).
-     * @param {*} from
-     * @param {*} to
-     * @param {{holidays: string[]}} [o]
-     * @returns {number}
-     */
     function businessDaysBetween(from, to, o) {
       const a = parseDate(from), b = parseDate(to);
       if (!a || !b) { return NaN; }
@@ -592,60 +341,21 @@
   })();
   /* ---- src/drishti_events.js ---- */
   __m["src/drishti_events.js"] = (function () {
-    /* The event bus: named events, listeners in the order they were added, "*" hears everything. A listener that throws does not stop the
-       others (the error is reported once through onError, default console.error). Each component makes its own bus; `bus` is the one a
-       page shares (a library and the page talking without knowing each other). */
-
-    /**
-     * A listener: the event's payload and its name.
-     * @callback Listener
-     * @param {*} payload
-     * @param {string} type
-     * @returns {void}
-     */
-
-    /**
-     * An event bus.
-     */
     class EventBus {
-      /**
-       * @param {{onError: function(Error, string): void}} [o] who hears a listener's error (default: console.error)
-       */
       constructor(o) {
         /** @private */ this._on = new Map();
         /** @private */ this._onError = (o && o.onError) || ((e, type) => { if (typeof console !== 'undefined') { console.error('drishti bus: a listener of ' + type + ' failed', e); } });
       }
-
-      /**
-       * Listens to an event ("*": every event).
-       * @param {string} type
-       * @param {Listener} fn
-       * @returns {function(): void} stops listening
-       */
       on(type, fn) {
         if (typeof fn !== 'function') { throw new TypeError('EventBus.on: a listener is a function'); }
         if (!this._on.has(type)) { this._on.set(type, []); }
         this._on.get(type).push(fn);
         return () => this.off(type, fn);
       }
-
-      /**
-       * Listens to the next event of a type only.
-       * @param {string} type
-       * @param {Listener} fn
-       * @returns {function(): void} stops listening
-       */
       once(type, fn) {
         const off = this.on(type, (p, t) => { off(); fn(p, t); });
         return off;
       }
-
-      /**
-       * Stops a listener (or, without one, every listener of the type).
-       * @param {string} type
-       * @param {Listener} [fn]
-       * @returns {void}
-       */
       off(type, fn) {
         if (!fn) { this._on.delete(type); return; }
         const l = this._on.get(type);
@@ -654,51 +364,20 @@
         if (i >= 0) { l.splice(i, 1); }
         if (!l.length) { this._on.delete(type); }
       }
-
-      /**
-       * Tells every listener of the type, then every "*" listener.
-       * @param {string} type
-       * @param {*} [payload]
-       * @returns {number} how many listeners heard it
-       */
       emit(type, payload) {
         const l = (this._on.get(type) || []).slice().concat(type === '*' ? [] : (this._on.get('*') || []).slice());
         l.forEach((fn) => { try { fn(payload, type); } catch (e) { this._onError(e, type); } });
         return l.length;
       }
-
-      /**
-       * How many listeners a type has.
-       * @param {string} type
-       * @returns {number}
-       */
       count(type) { return (this._on.get(type) || []).length; }
-
-      /**
-       * Forgets every listener.
-       * @returns {void}
-       */
       clear() { this._on.clear(); }
     }
-
-    /**
-     * A new bus.
-     * @param {{onError: function(Error, string): void}} [o]
-     * @returns {EventBus}
-     */
     function createBus(o) { return new EventBus(o); }
-
-    /** The bus a page shares. */
     const bus = new EventBus();
     return { "EventBus": EventBus, "createBus": createBus, "bus": bus };
   })();
   /* ---- src/drishti_formats-table.js ---- */
   __m["src/drishti_formats-table.js"] = (function () {
-    /* The server's named formats (fmt: amount0, pct2, compact, dmy, ...). GENERATED by tools/elements/build.py from drishti-rachana/src/main/resources/formats.yaml: do not edit (a static test refuses a stale copy). */
-
-    /** The bundled named formats, exactly as the server reads them (Formats.java): a pack's or a site's formats are added at run
-     *  time with defineFormats().
-     *  @type {Object<string, {type: string, decimals: number, grouping: boolean, sign: string, scale: number, suffix: ?string, pattern: ?string}>} */
     const SERVER_FORMATS = Object.freeze({
       "amount0": {
         "type": "number",
@@ -806,28 +485,10 @@
   __m["src/drishti_format.js"] = (function () {
     var SERVER_FORMATS = __m["src/drishti_formats-table.js"].SERVER_FORMATS;
     var formatDate = __m["src/drishti_dates.js"].formatDate;
-    /* Numbers as Drishti shows them, the same rules as the server (drishti-rachana FormatSpec): half-up rounding of the decimal value (never
-       the binary one: 1.005 to two places is 1.01), commas every three digits, the true minus sign (U+2212), a value that rounds to zero is
-       zero (never "−0.00"), "+" on request. Named formats (amount0, pct2, compact, dmy, ...) come from the server's formats.yaml. Every
-       function is pure and runs under Node. */
-
-
-
-    /** The minus sign every Drishti number uses (U+2212), as the server writes it. */
     const MINUS = '−';
-    /** What an empty or missing value reads as on a screen. */
     const EMPTY = '—';
-    /** What a value masked for the person reads as (DataNode.MASK on the server). */
     const MASK = '•••';
-
     const named = Object.assign({}, SERVER_FORMATS);
-
-    /**
-     * The digits of a number's absolute value as a plain decimal string (never an exponent): the shortest text that reads back as the
-     * number, exactly what the server's BigDecimal.valueOf starts from.
-     * @param {number} a a finite number
-     * @returns {string} for example "0.000001" or "1230000000000000000000"
-     */
     function plainDigits(a) {
       let s = String(Math.abs(a));
       const e = s.indexOf('e');
@@ -841,13 +502,6 @@
       if (pointAt >= digits.length) { return digits + '0'.repeat(pointAt - digits.length); }
       return digits.slice(0, pointAt) + '.' + digits.slice(pointAt);
     }
-
-    /**
-     * The absolute value rounded half up to a number of decimals, as text: the decimal rule of the server (BigDecimal HALF_UP).
-     * @param {number} v a finite number (its sign is ignored)
-     * @param {number} decimals how many decimals, 0 or more
-     * @returns {string} for example roundHalfUp(1.005, 2) is "1.01" and roundHalfUp(2.5, 0) is "3"
-     */
     function roundHalfUp(v, decimals) {
       const s = plainDigits(v);
       const dot = s.indexOf('.');
@@ -868,20 +522,12 @@
       frac = all.slice(all.length - decimals);
       return decimals ? whole + '.' + frac : whole;
     }
-
-    /**
-     * Commas every three digits of the whole part of plain digits ("1234567.5" is "1,234,567.5").
-     * @param {string} plain digits with an optional decimal point
-     * @param {string} [separator=','] the group separator
-     * @returns {string}
-     */
     function group(plain, separator) {
       separator = separator === undefined ? ',' : separator;
       const dot = plain.indexOf('.');
       const whole = dot < 0 ? plain : plain.slice(0, dot);
       return whole.replace(/\B(?=(\d{3})+(?!\d))/g, separator) + (dot < 0 ? '' : plain.slice(dot));
     }
-
     function isZeroText(t) { return !/[1-9]/.test(t); }
     function trimZeros(t, keep) {
       const dot = t.indexOf('.');
@@ -901,28 +547,6 @@
       }
       return localeCache[locale];
     }
-
-    /**
-     * @typedef {Object} NumberOptions
-     * @property {number} [decimals=0] decimals shown (half up); with maxDecimals, the fewest shown
-     * @property {number} [maxDecimals] the most decimals shown: trailing zeros beyond decimals are dropped (1.50 reads 1.5)
-     * @property {boolean} [grouping=true] commas every three digits
-     * @property {('auto'|'always'|'never')} [sign='auto'] auto: a minus when negative; always: "+" on a positive value too; never: no sign
-     * @property {string} [minus='−'] the minus sign (the console's few ASCII-minus charts pass '-')
-     * @property {number} [scale=1] multiplied in first (100 for a percentage of a fraction)
-     * @property {string} [prefix=''] before the digits, after the sign ("$")
-     * @property {string} [suffix=''] after the digits ("%", " bp")
-     * @property {string} [empty='—'] what null, undefined, NaN and the infinities read as
-     * @property {string} [locale] a BCP 47 locale for the group and decimal separators (default: the server's: comma and point)
-     */
-
-    /**
-     * A number formatted by the server's rules (FormatSpec.number), with the console's options.
-     * @param {*} v the value: a number, or text that reads as one; anything else is shown as text
-     * @param {NumberOptions} [o]
-     * @returns {string} for example formatNumber(-1234.5, {decimals: 2}) is "−1,234.50"
-     * @example formatNumber(0.1234, {decimals: 1, scale: 100, suffix: '%'})   // "12.3%"
-     */
     function formatNumber(v, o) {
       o = o || {};
       if (v === MASK) { return MASK; }
@@ -942,36 +566,12 @@
       const s = sign === 'never' || zero ? '' : d < 0 ? (o.minus !== undefined ? o.minus : MINUS) : sign === 'always' ? '+' : '';
       return s + (o.prefix || '') + digits + (o.suffix || '');
     }
-
-    /**
-     * A fraction as a percentage (0.1234 reads "12.3%").
-     * @param {*} v the fraction
-     * @param {NumberOptions} [o] decimals default 1; scale default 100; suffix default "%"
-     * @returns {string}
-     */
     function formatPercent(v, o) {
       return formatNumber(v, Object.assign({ decimals: 1, scale: 100, suffix: '%' }, o));
     }
-
-    /**
-     * Basis points, as the server's bp1 format: one decimal, a sign always, " bp". The value is in basis points already; pass
-     * {scale: 10000} for a fraction (0.0012 reads "+12.0 bp").
-     * @param {*} v the value in basis points (or a fraction with scale 10000)
-     * @param {NumberOptions} [o]
-     * @returns {string}
-     */
     function formatBasisPoints(v, o) {
       return formatNumber(v, Object.assign({ decimals: 1, sign: 'always', suffix: ' bp' }, o));
     }
-
-    /**
-     * An amount of money: the currency's usual decimals (two for USD, none for JPY) and its symbol before the digits when the locale has one
-     * ("$1,234.50"), else the code after ("1,234.50 CHF").
-     * @param {*} v the amount
-     * @param {string} currency three letters (USD)
-     * @param {NumberOptions & {symbol: boolean}} [o] symbol false: the code after the digits always
-     * @returns {string}
-     */
     function formatCurrency(v, currency, o) {
       o = o || {};
       const code = String(currency || '').toUpperCase();
@@ -985,31 +585,7 @@
       const base = Object.assign({ decimals: decimals }, o);
       return o.symbol !== false && symbol ? formatNumber(v, Object.assign(base, { prefix: symbol })) : formatNumber(v, Object.assign(base, { suffix: ' ' + code }));
     }
-
-    /**
-     * @typedef {Object} CompactOptions
-     * @property {(number|function(number, string): number)} [decimals=1] decimals, or a function of (the absolute value, the unit)
-     * @property {(boolean|string)} [trim=false] drop trailing zeros (1.50m reads 1.5m); 'small': only below the smallest unit
-     * @property {Array<Array<*>>} [units] [suffix, size, from] largest first; from (default size) is where the unit starts (the server's:
-     *   bn, m, k; pass [['tn', 1e12], ...] for trillions)
-     * @property {(number|null)} [smallDecimals] decimals below the smallest unit (default: decimals)
-     * @property {boolean} [smallGrouping=true] commas below the smallest unit
-     * @property {('auto'|'always'|'never')} [sign='auto']
-     * @property {string} [minus='−']
-     * @property {string} [prefix=''] before the digits ("$")
-     * @property {string} [empty='—']
-     */
-
-    /** The server's compact units (FormatSpec.compact). */
     const COMPACT_UNITS = Object.freeze([['bn', 1e9], ['m', 1e6], ['k', 1e3]]);
-
-    /**
-     * A large number in few characters (1,234,567 reads "1.2m"), the server's compact format by default.
-     * @param {*} v the value
-     * @param {CompactOptions} [o]
-     * @returns {string}
-     * @example formatCompact(-2.5e9)   // "−2.5bn"
-     */
     function formatCompact(v, o) {
       o = o || {};
       const empty = o.empty !== undefined ? o.empty : EMPTY;
@@ -1031,12 +607,6 @@
         sign: o.sign, minus: o.minus, prefix: o.prefix, suffix: unit, empty: empty };
       return formatNumber(n / size, opts);
     }
-
-    /**
-     * Adds or replaces named formats (a pack's or a site's formats.yaml, as the server reads them), for formatNamed.
-     * @param {Object<string, Object>} table name to {type, decimals, grouping, sign, scale, suffix, pattern}
-     * @returns {void}
-     */
     function defineFormats(table) {
       Object.keys(table || {}).forEach((k) => {
         const f = table[k] || {};
@@ -1044,34 +614,9 @@
           scale: f.scale === undefined ? 1 : Number(f.scale), suffix: f.suffix === undefined ? null : f.suffix, pattern: f.pattern === undefined ? null : f.pattern };
       });
     }
-
-    /**
-     * Whether a named format is known (bundled or defined).
-     * @param {string} name
-     * @returns {boolean}
-     */
     function hasFormat(name) { return Object.prototype.hasOwnProperty.call(named, name); }
-
-    /**
-     * A named format's spec (a copy), or null.
-     * @param {string} name
-     * @returns {?{type: string, decimals: number, grouping: boolean, sign: string, scale: number, suffix: ?string, pattern: ?string}}
-     */
     function namedFormat(name) { return hasFormat(name) ? Object.assign({}, named[name]) : null; }
-
-    /**
-     * The known named formats.
-     * @returns {string[]}
-     */
     function formatNames() { return Object.keys(named).sort(); }
-
-    /**
-     * A value by a format spec, exactly as the server's FormatSpec.format: null reads "" (the server's empty), a masked value its mask,
-     * text, date (by a Java-style pattern), compact, or a number.
-     * @param {{type: string, decimals: number, grouping: boolean, sign: string, scale: number, suffix: ?string, pattern: ?string}} spec
-     * @param {*} v
-     * @returns {string}
-     */
     function formatSpec(spec, v) {
       if (v === null || v === undefined) { return ''; }
       if (v === MASK) { return MASK; }
@@ -1085,27 +630,11 @@
       if (isNaN(n)) { return String(v); }
       return formatNumber(n, { decimals: spec.decimals, grouping: spec.grouping, sign: spec.sign, scale: spec.scale, suffix: spec.suffix || '', empty: '' });
     }
-
-    /**
-     * A value by a named format (fmt: amount0, signed2, pct2, compact, dmy, ...), the server's Formats.format: an unknown or missing name
-     * shows the value as text.
-     * @param {string} name the format's name
-     * @param {*} v the value
-     * @returns {string}
-     * @example formatNamed('pct2', 0.01234)   // "1.23%"
-     */
     function formatNamed(name, v) {
       const s = name ? named[name] : null;
       if (!s) { return v === null || v === undefined ? '' : String(v); }
       return formatSpec(s, v);
     }
-
-    /**
-     * A formatter function with its options fixed, for a screen's one-line helpers (const money = formatter('compact', {...})).
-     * @param {('number'|'percent'|'bp'|'compact'|'currency')} kind
-     * @param {Object} [options] the kind's options (currency: {currency, ...})
-     * @returns {function(*): string}
-     */
     function formatter(kind, options) {
       const o = Object.assign({}, options);
       switch (kind) {
@@ -1121,53 +650,7 @@
   })();
   /* ---- src/drishti_resize.js ---- */
   __m["src/drishti_resize.js"] = (function () {
-    /*
-     * Resizable panels and columns: the one component every screen uses (no screen writes its own drag handle).
-     *
-     * Declared by markup, bound by itself (on load and whenever such markup appears):
-     *
-     *   Splitter between a side panel and the main area: a handle inside the panel (the panel is its parent, or data-resize-target).
-     *     <aside class="vx-side">… <div data-resize="panel" data-resize-key="<screen>.<panel>" data-resize-var="--vx-side"
-     *                                   data-resize-min="220" data-resize-max="640" aria-label="Resize the Scopes panel"></div></aside>
-     *     The width goes to the CSS variable data-resize-var (default --d-panel-w) on the panel's parent, so the layout's own CSS says
-     *     where it lands: .vx-layout { grid-template-columns: var(--vx-side, 330px) minmax(0, 1fr); }. data-resize-edge="left" for a
-     *     panel on the right (its handle on its left edge; dragging left widens it). Without data-resize-var the panel's own width is set.
-     *
-     *   Column resize on a table, tree or grid header: data-resize="columns" (+ data-resize-key) on
-     *     - an HTML <table> (or its <thead> / header <tr>): a handle in each header cell; widths go to the header cells and the table is
-     *       laid out fixed, so the body follows; or
-     *     - a CSS-grid header row (its children are the columns): the widths go to the CSS variable data-resize-var (default --rz-cols)
-     *       on the closest data-resize-scope element (or the header's parent), which the rows' CSS uses:
-     *       .vx-row { grid-template-columns: var(--rz-cols, minmax(0, 1fr) 58px 58px 52px); }. data-resize-flex="<index>" names the
-     *       column that takes up the rest of the row (it keeps the user's width as its least).
-     *     data-resize-min (default 40 px) is the least any column can be, so a column never vanishes.
-     *
-     *   Widths are remembered per person and per mode: localStorage "drishti.resize.<key>[@<mode>]", where the mode is the closest
-     *   data-resize-mode attribute (a screen sets it, e.g. data-resize-mode="parametric"; changing it re-applies that mode's widths).
-     *   Never server state. Without localStorage nothing breaks: widths just are not kept.
-     *
-     *   Every handle: role separator, focusable, aria-valuenow (its width in px); drag; Left / Right move it (Shift: further); Home and a
-     *   double-click reset it (the remembered width is forgotten). Below 640 px wide (phones) the handles are hidden and no remembered
-     *   width is applied: the single-column layouts stay.
-     *
-     * Script API (window.Drishti.resize; the same as this module's exports once installResize has run in the page):
-     *   scan(root)                         bind every data-resize element under root (done by itself on load and on DOM changes)
-     *   handle(el, opts) -> el             the low-level handle the others are built on, for a screen with its own model of sizes
-     *       opts: axis 'x' | 'y'; label; start(e) -> ctx; move(ctx, dx, dy, e); end(ctx); key(step, e) -> handled (step -1 / +1,
-     *       x4 with Shift); reset(); value() -> {now, min, max} for ARIA. Pointer capture, the dragging state (html[data-rz-dragging],
-     *       frames ignore the pointer), Arrow keys, Home, double-click and phone-off are handled here.
-     *   reset(key)                         forget a remembered width set (all modes) and re-apply defaults
-     *   phone()                            true when resizing is off (below 640 px)
-     */
-
     let live = null;
-
-    /**
-     * Starts the resize component in a page (drishti-core's bundle does it on load): binds every data-resize element now and as markup
-     * appears, re-applies widths on a mode change and on crossing the phone width, and sets window.Drishti.resize. Idempotent.
-     * @param {Window} window the page
-     * @returns {{scan: function(Element): void, handle: function(Element, Object): Element, reset: function(string): void, phone: function(): boolean}}
-     */
     function installResize(window) {
       if (live) { return live; }
       const document = window.document;
@@ -1178,8 +661,6 @@
       function phone() { return !!(mq && mq.matches); }
       function num(v, d) { var n = parseFloat(v); return isFinite(n) ? n : d; }
       function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-
-      /* ---- memory: per person (this browser) and per mode; never shared server state --------------------------------------------- */
       function modeOf(el) { var m = el.closest && el.closest('[data-resize-mode]'); return m ? m.getAttribute('data-resize-mode') : ''; }
       function slot(key, el) { var m = modeOf(el); return NS + key + (m ? '@' + m : ''); }
       function load(key, el) {
@@ -1197,8 +678,6 @@
           gone.forEach(function (k) { ls.removeItem(k); });
         } catch (e) { /* nothing kept */ }
       }
-
-      /* ---- the handle: drag, keys, double-click, ARIA ------------------------------------------------------------------------------ */
       function aria(el, o) {
         if (!o.value) { return; }
         var v = o.value();
@@ -1257,8 +736,6 @@
         el.addEventListener('click', function (e) { e.stopPropagation(); });     // a handle inside a sortable header does not sort
         return el;
       }
-
-      /* ---- splitter: a side panel's width ------------------------------------------------------------------------------------------- */
       function bindPanel(hd) {
         var panel = hd.getAttribute('data-resize-target') ? document.querySelector(hd.getAttribute('data-resize-target')) : hd.parentElement;
         if (!panel) { return; }
@@ -1303,10 +780,7 @@
         });
         hd.__rzApply();
       }
-
-      /* ---- columns: an HTML table's header, or a CSS-grid header row ---------------------------------------------------------------- */
       function tableOf(h) { return h.tagName === 'TABLE' ? h : (h.tagName === 'THEAD' || h.tagName === 'TR') ? h.closest('table') : null; }
-      /** A table's header as columns: each header cell one column wide (a leaf), by its column index (row and column spans counted). */
       function tableColumns(t) {
         var rows = t.tHead ? [].slice.call(t.tHead.rows) : (t.rows[0] ? [t.rows[0]] : []), taken = [], leaf = [], n = 0;
         rows.forEach(function (r, ri) {
@@ -1373,8 +847,6 @@
           if (!ws || ws.length !== count()) { s.style.removeProperty(cssVar); return; }
           s.style.setProperty(cssVar, ws.map(function (w, i) { w = Math.max(min, w); return i === flex ? 'minmax(' + w + 'px, 1fr)' : w + 'px'; }).join(' '));
         }
-        /** Column i by dx: a grid row with a flexible column keeps its width (the flexible column gives or takes, or, for the flexible one
-         *  itself, its neighbour does); a table grows or shrinks as a whole. Never below the least. */
         function resized(ws0, i, dx) {
           var ws = ws0.slice(), give = flex < 0 ? -1 : i === flex ? (i + 1 < ws.length ? i + 1 : i - 1) : flex;
           ws[i] = Math.max(min, ws0[i] + dx);
@@ -1411,8 +883,6 @@
         });
         h.__rzApply();
       }
-
-      /* ---- binding: on load, on DOM changes, on a mode change, on crossing the phone width ------------------------------------------ */
       function bind(el) {
         var kind = el.getAttribute('data-resize');
         if (kind === 'panel') { if (!el.__rz) { bindPanel(el); } }
@@ -1456,58 +926,19 @@
       if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', start); } else { start(); }
       return live;
     }
-
     function need() {
       if (!live) { throw new Error('resize: not installed in a page (installResize(window))'); }
       return live;
     }
-    /**
-     * Binds every data-resize element under root (done by itself on load and on DOM changes).
-     * @param {(Element|Document)} [root]
-     * @returns {void}
-     */
     function scanResize(root) { need().scan(root); }
-    /**
-     * The low-level handle the others are built on, for a screen with its own model of sizes.
-     * @param {Element} el
-     * @param {{axis: string, label: string, start: Function, move: Function, end: Function, key: Function, reset: Function, value: Function}} opts
-     * @returns {Element}
-     */
     function resizeHandle(el, opts) { return need().handle(el, opts); }
-    /**
-     * Forgets a remembered width set (all modes) and re-applies the defaults.
-     * @param {string} key the data-resize-key
-     * @returns {void}
-     */
     function resetResize(key) { need().reset(key); }
     return { "installResize": installResize, "scanResize": scanResize, "resizeHandle": resizeHandle, "resetResize": resetResize };
   })();
   /* ---- src/drishti_keys.js ---- */
   __m["src/drishti_keys.js"] = (function () {
-    /* Keys: one way to name a key press ("Ctrl+Shift+ArrowLeft"), a key map from such names to actions, and the panel keys of the 12-column
-       grid shared by layout mode (drishti_layout.js: the arrows move the panel) and the workbench canvas (build/drishti_canvas.js: the arrows
-       select a panel and Alt+arrows move it, so a screen reader's and a plain Tab user's arrows keep their meaning). Everything here looks at
-       the key and its modifiers only, never at the page, so it runs under Node. */
-
-    /** The workbench's scheme of the panel keys. */
     const WORKBENCH = 'workbench';
-    /** Layout mode's scheme of the panel keys. */
     const LAYOUT = 'layout';
-
-    /**
-     * A panel key's meaning, or null:
-     *   {type: 'span', delta}      width in columns             Shift+Left/Right, - and +
-     *   {type: 'height', delta}    height in rows               Shift+Up/Down
-     *   {type: 'natural'}          back to the content's height  A
-     *   {type: 'move', step}       one place up (-1) or down (+1) in its column
-     *   {type: 'column', area}     to the main or the side column
-     *   {type: 'hide'}             layout mode: hide or show    H, Delete
-     *   {type: 'remove'}           workbench: delete the panel  Delete
-     *   {type: 'select', dir}      workbench: 'prev', 'next', 'main', 'side', 'first', 'last' (plain arrows, Home, End)
-     * @param {{key: string, shiftKey: boolean, altKey: boolean, ctrlKey: boolean, metaKey: boolean}} e a KeyboardEvent (or its fields)
-     * @param {string} scheme LAYOUT or WORKBENCH
-     * @returns {?Object}
-     */
     function interpretPanelKey(e, scheme) {
       const k = e.key, bench = scheme === WORKBENCH;
       if (e.ctrlKey || e.metaKey) { return null; }
@@ -1533,23 +964,13 @@
       if (!bench && (k === 'h' || k === 'H')) { return { type: 'hide' }; }
       return null;
     }
-
-    /** The panel keys as the console's pages know them (window.Drishti.GridKeys). */
     const GridKeys = Object.freeze({ interpret: interpretPanelKey, WORKBENCH: WORKBENCH, LAYOUT: LAYOUT });
-
     const ALIAS = { Esc: 'Escape', Spacebar: ' ', Left: 'ArrowLeft', Right: 'ArrowRight', Up: 'ArrowUp', Down: 'ArrowDown', Del: 'Delete' };
     function keyPart(k) {
       k = ALIAS[k] || k;
       if (k === ' ') { return 'Space'; }
       return k.length === 1 ? k.toUpperCase() : k;
     }
-
-    /**
-     * A key press as one name: modifiers in the order Ctrl, Alt, Shift, Meta, then the key ("Ctrl+Shift+ArrowLeft", "Space", "A").
-     * "Mod" in a key map stands for Ctrl, or Meta on a Mac.
-     * @param {{key: string, ctrlKey: boolean, altKey: boolean, shiftKey: boolean, metaKey: boolean}} e
-     * @returns {string}
-     */
     function keyName(e) {
       const k = keyPart(e.key || '');
       const mods = [];
@@ -1559,13 +980,6 @@
       if (e.metaKey && k !== 'Meta') { mods.push('Meta'); }
       return mods.concat([k]).join('+');
     }
-
-    /**
-     * A name written by a person ("shift+left", "Mod+C") in keyName's form.
-     * @param {string} name
-     * @param {{mac: boolean}} [o] mac: Mod is Meta (default: Ctrl)
-     * @returns {string}
-     */
     function normalizeKey(name, o) {
       const parts = String(name).split('+').map((p) => p.trim()).filter(Boolean);
       const key = parts.pop() || '';
@@ -1585,14 +999,6 @@
       const k = named[lk] || keyPart(key);
       return ['Ctrl', 'Alt', 'Shift', 'Meta'].filter((m) => set[m]).concat([k]).join('+');
     }
-
-    /**
-     * A key map: names (in any case, "Mod" for Ctrl or Cmd) to actions; the returned function gives a key press's action, or undefined.
-     * @param {Object<string, *>} bindings for example {'Mod+C': 'copy', 'Shift+ArrowDown': 'extendDown'}
-     * @param {{mac: boolean}} [o]
-     * @returns {function(KeyboardEvent): *}
-     * @example const act = keymap({'Mod+A': 'selectAll'}); act({key: 'a', ctrlKey: true})   // 'selectAll'
-     */
     function keymap(bindings, o) {
       const m = {};
       Object.keys(bindings).forEach((k) => { m[normalizeKey(k, o)] = bindings[k]; });
@@ -1602,11 +1008,6 @@
   })();
   /* ---- src/drishti_manifest.js ---- */
   __m["src/drishti_manifest.js"] = (function () {
-    /* The Elements manifest: every library, its version, its files and what it requires. GENERATED by tools/elements/build.py from static/elements/drishti_elements.json: do not edit (a static test refuses a stale copy). */
-
-    /** The libraries of Drishti Elements by name: version, bundle and entry (relative to the elements folder), global name, the
-     *  libraries each requires and the style sheets (relative to the static root) it needs.
-     *  @type {{elements: string, libraries: Object<string, {version: string, title: string, bundle: string, entry: string, global: string, requires: string[], css: string[]}>}} */
     const MANIFEST = Object.freeze({
       "elements": "1.0.0",
       "libraries": {
@@ -1640,58 +1041,26 @@
   /* ---- src/drishti_loader.js ---- */
   __m["src/drishti_loader.js"] = (function () {
     var MANIFEST = __m["src/drishti_manifest.js"].MANIFEST;
-    /* The loader: a page (or a domain module) loads a library only when it needs it. drishti-core is on the page already (it carries the
-       loader); load('drishti-grid') adds the libraries it requires first, then its style sheets and its bundle (?v=<version>, so a new
-       version is never read from a stale cache), once each, and resolves with the library's API. Where the files are: the folder
-       drishti-core's bundle was loaded from, or configure({base}). The manifest is generated from drishti_elements.json by the build. */
-
-
     const state = { base: null, staticBase: null, pending: {} };
-
     function root() { return typeof window !== 'undefined' ? window : globalThis; }
     function registry() {
       const r = root(), D = r.Drishti = r.Drishti || {}, E = D.elements = D.elements || {};
       E.libs = E.libs || {};
       return E;
     }
-
-    /**
-     * Where the libraries are: base, the elements folder ("/static/elements/"); staticBase, the static root the style sheets are named from
-     * (default: the folder above base).
-     * @param {{base: string, staticBase: string}} o
-     * @returns {void}
-     */
     function configure(o) {
       if (o.base) { state.base = o.base.replace(/\/?$/, '/'); }
       if (o.staticBase) { state.staticBase = o.staticBase.replace(/\/?$/, '/'); }
     }
-
     function base() { return state.base || registry().base || '/static/elements/'; }
     function staticBase() { return state.staticBase || base().replace(/[^/]+\/$/, ''); }
-
-    /**
-     * The manifest: every library by name, its version, files and requirements.
-     * @returns {{elements: string, libraries: Object<string, Object>}}
-     */
     function manifest() { return MANIFEST; }
-
-    /**
-     * A library's version (null when there is no such library).
-     * @param {string} name for example "drishti-grid"
-     * @returns {?string}
-     */
     function libraryVersion(name) { const l = MANIFEST.libraries[name]; return l ? l.version : null; }
-
-    /**
-     * A library and every library it requires, deepest first, each once.
-     * @param {string} name
-     * @returns {string[]}
-     */
     function requirements(name) {
       const out = [];
       const visit = (n, trail) => {
         const l = MANIFEST.libraries[n];
-        if (!l) { throw new Error('Drishti Elements has no library ' + n + ' (it has ' + Object.keys(MANIFEST.libraries).join(', ') + ')'); }
+        if (!l) { throw new Error('there is no library ' + n + ' (it has ' + Object.keys(MANIFEST.libraries).join(', ') + ')'); }
         if (trail.indexOf(n) >= 0) { throw new Error('libraries require each other: ' + trail.concat([n]).join(' -> ')); }
         l.requires.forEach((r) => visit(r, trail.concat([n])));
         if (out.indexOf(n) < 0) { out.push(n); }
@@ -1699,14 +1068,7 @@
       visit(name, []);
       return out;
     }
-
-    /**
-     * The library's API when it is loaded, else null.
-     * @param {string} name
-     * @returns {?Object}
-     */
     function loaded(name) { return registry().libs[name] || null; }
-
     function addCss(doc, href) {
       if (doc.querySelector('link[data-drishti-elements="' + href + '"]')) { return; }
       const plain = href.split('?')[0];
@@ -1718,7 +1080,6 @@
       l.setAttribute('data-drishti-elements', href);
       doc.head.appendChild(l);
     }
-
     function loadOne(name) {
       if (loaded(name)) { return Promise.resolve(loaded(name)); }
       if (state.pending[name]) { return state.pending[name]; }
@@ -1737,13 +1098,6 @@
       });
       return state.pending[name];
     }
-
-    /**
-     * Loads libraries (and what they require) into the page, each once; resolves with the API of the one named, or the APIs in order.
-     * @param {(string|string[])} names for example "drishti-grid"
-     * @returns {Promise<(Object|Object[])>}
-     * @example Drishti.elements.core.load('drishti-grid').then((grid) => grid.createGridModel({...}))
-     */
     function load(names) {
       const list = Array.isArray(names) ? names : [names];
       let order;
@@ -1754,10 +1108,6 @@
   })();
   /* ---- src/drishti_theme-table.js ---- */
   __m["src/drishti_theme-table.js"] = (function () {
-    /* The themes and their colour tokens. GENERATED by tools/elements/build.py from static/css/drishti_tokens.css, the one home of every colour: do not edit (a static test refuses a stale copy). */
-
-    /** Every theme (data-theme on <html>): light or dark, and each --d-* token's value. The first is the default.
-     *  @type {Object<string, {scheme: string, tokens: Object<string, string>}>} */
     const THEME_TABLE = Object.freeze({
       "terminal": {
         "scheme": "dark",
@@ -2125,51 +1475,17 @@
   /* ---- src/drishti_theme.js ---- */
   __m["src/drishti_theme.js"] = (function () {
     var THEME_TABLE = __m["src/drishti_theme-table.js"].THEME_TABLE;
-    /* Theme tokens: the colours live in one place, static/css/drishti_tokens.css (CSS custom properties --d-*, a theme per data-theme on
-       <html>, light or dark); this module is their JavaScript side: the themes and every token's value (generated from that sheet by the
-       build, so charts and canvases read the same colours without a page), the theme in force and a change of it, and WCAG contrast
-       arithmetic (text 4.5:1, graphics 3:1), the same sums tests/test_contrast.py makes. */
-
-
-    /** The default theme (the sheet's :root). */
     const DEFAULT_THEME = Object.keys(THEME_TABLE)[0];
-    /** Where a person's last theme is kept in this browser (as the console's start-up script reads it). */
     const THEME_STORAGE_KEY = 'drishti.theme';
-    /** The tokens a theme uses for text, each held to 4.5:1 on every ground. */
     const TEXT_TOKENS = Object.freeze(['--d-ink', '--d-muted', '--d-faint', '--d-link', '--d-accent', '--d-accent-strong', '--d-pos', '--d-neg', '--d-ok', '--d-warn', '--d-bad']);
-    /** The grounds text sits on. */
     const GROUND_TOKENS = Object.freeze(['--d-bg', '--d-bg-2', '--d-surface', '--d-surface-2']);
-
-    /**
-     * Every theme: its name, light or dark.
-     * @returns {Array<{name: string, scheme: string}>}
-     */
     function themes() { return Object.keys(THEME_TABLE).map((n) => ({ name: n, scheme: THEME_TABLE[n].scheme })); }
-
-    /**
-     * Light or dark.
-     * @param {string} name a theme
-     * @returns {('light'|'dark')}
-     */
     function scheme(name) { return (THEME_TABLE[name] || THEME_TABLE[DEFAULT_THEME]).scheme === 'light' ? 'light' : 'dark'; }
-
-    /**
-     * The theme in force on a document (data-theme on <html>, else the default).
-     * @param {Document} [doc]
-     * @returns {string}
-     */
     function currentTheme(doc) {
       doc = doc || (typeof document !== 'undefined' ? document : null);
       const t = doc && doc.documentElement.getAttribute('data-theme');
       return t && THEME_TABLE[t] ? t : DEFAULT_THEME;
     }
-
-    /**
-     * Puts a theme in force: data-theme on <html>, kept in this browser unless persist is false; tells the page (event drishti:theme).
-     * @param {string} name a theme (themes())
-     * @param {{persist: boolean, document: Document}} [o]
-     * @returns {void}
-     */
     function setTheme(name, o) {
       if (!THEME_TABLE[name]) { throw new Error('setTheme: no theme ' + name + ' (' + Object.keys(THEME_TABLE).join(', ') + ')'); }
       o = o || {};
@@ -2178,13 +1494,6 @@
       if (o.persist !== false) { try { doc.defaultView.localStorage.setItem(THEME_STORAGE_KEY, name); } catch (e) { /* not kept */ } }
       doc.dispatchEvent(new CustomEvent('drishti:theme', { detail: { theme: name, scheme: scheme(name) } }));
     }
-
-    /**
-     * A token's value: in a page, as the page's style computes it (on the element given, else <html>); otherwise from the theme table.
-     * @param {string} token "--d-ink" (the "--d-" may be left out)
-     * @param {{theme: string, element: Element}} [o] theme: read the table for that theme, not the page
-     * @returns {string} '' when unknown
-     */
     function token(token, o) {
       o = o || {};
       const t = token.indexOf('--') === 0 ? token : '--d-' + token;
@@ -2195,19 +1504,7 @@
       const th = THEME_TABLE[o.theme || currentTheme()] || THEME_TABLE[DEFAULT_THEME];
       return th.tokens[t] || '';
     }
-
-    /**
-     * Every token of a theme.
-     * @param {string} [name] default: the theme in force
-     * @returns {Object<string, string>}
-     */
     function tokens(name) { return Object.assign({}, (THEME_TABLE[name || currentTheme()] || THEME_TABLE[DEFAULT_THEME]).tokens); }
-
-    /**
-     * A colour as red, green, blue (0 to 255) and alpha: #rgb, #rrggbb, rgb() and rgba().
-     * @param {string} c
-     * @returns {?{r: number, g: number, b: number, a: number}}
-     */
     function parseColor(c) {
       const s = String(c || '').trim();
       let m = /^#([0-9a-f]{3})$/i.exec(s);
@@ -2218,37 +1515,16 @@
       if (m) { return { r: +m[1], g: +m[2], b: +m[3], a: m[4] === undefined ? 1 : +m[4] }; }
       return null;
     }
-
-    /**
-     * WCAG relative luminance.
-     * @param {string} c a colour
-     * @returns {number} 0 (black) to 1 (white)
-     */
     function luminance(c) {
       const p = parseColor(c);
       if (!p) { throw new Error('luminance: not a colour: ' + c); }
       const ch = [p.r, p.g, p.b].map((x) => { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); });
       return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
     }
-
-    /**
-     * The WCAG contrast ratio of two colours, 1 to 21.
-     * @param {string} a
-     * @param {string} b
-     * @returns {number}
-     */
     function contrastRatio(a, b) {
       const la = luminance(a), lb = luminance(b);
       return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
     }
-
-    /**
-     * Of some colours, the one that reads best on a ground (the first that reaches the minimum, else the highest).
-     * @param {string} ground
-     * @param {string[]} candidates
-     * @param {number} [min=4.5]
-     * @returns {string}
-     */
     function readableOn(ground, candidates, min) {
       min = min || 4.5;
       let best = candidates[0], score = -1;
@@ -2259,12 +1535,6 @@
       }
       return best;
     }
-
-    /**
-     * The text tokens of a theme that read under 4.5:1 on one of its grounds (opaque colours only): empty when the theme is accessible.
-     * @param {string} name
-     * @returns {Array<{text: string, ground: string, ratio: number}>}
-     */
     function contrastProblems(name) {
       const t = tokens(name), out = [];
       for (const fg of TEXT_TOKENS) {
@@ -2282,22 +1552,7 @@
   /* ---- src/drishti_overlay.js ---- */
   __m["src/drishti_overlay.js"] = (function () {
     var trapFocus = __m["src/drishti_a11y.js"].trapFocus;
-    /* Dialogs, drawers and toasts: the one way a page opens something over itself. A dialog is the platform's <dialog> (showModal: the page
-       behind is inert, Escape closes), its first field focused and focus given back on close. A drawer is a side panel that keeps Tab
-       inside while open and closes on Escape. A toast is a short message in a tray (a live region): it goes by itself, a burst shows a few
-       and "N more", an action (Undo) is a button in it. The look is the page's: every class name is the caller's. */
-
-
     const FIELD = 'input:not([type="hidden"]):not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled])';
-
-    /**
-     * Opens a <dialog> as a modal (when it is not open already) and focuses its first field (or opts.focus); focus goes back to what had it
-     * when the dialog closes.
-     * @param {HTMLDialogElement} dialog
-     * @param {{focus: (Element|string), within: Element}} [o] focus: the element (or a selector inside the dialog) to focus; within: look
-     *   for the first field only inside this part of the dialog (its body)
-     * @returns {HTMLDialogElement}
-     */
     function openDialog(dialog, o) {
       o = o || {};
       const before = dialog.ownerDocument.activeElement;
@@ -2311,22 +1566,7 @@
       if (f && f.focus) { f.focus(); }
       return dialog;
     }
-
-    /**
-     * Closes a <dialog> when it is open.
-     * @param {HTMLDialogElement} dialog
-     * @param {string} [value] its returnValue
-     * @returns {void}
-     */
     function closeDialog(dialog, value) { if (dialog && dialog.open) { dialog.close(value); } }
-
-    /**
-     * Opens a drawer (any element): shown, marked open (data-open, aria-hidden false), Tab kept inside, Escape and the returned function
-     * close it; focus goes back to what had it.
-     * @param {HTMLElement} el
-     * @param {{onClose: function(): void, initial: Element, escape: boolean}} [o] escape default true
-     * @returns {function(): void} closes the drawer
-     */
     function openDrawer(el, o) {
       o = o || {};
       if (el.__drishtiDrawer) { return el.__drishtiDrawer; }
@@ -2350,33 +1590,7 @@
       el.__drishtiDrawer = close;
       return close;
     }
-
-    /**
-     * @typedef {Object} ToastOptions
-     * @property {string} [text] the message, as text
-     * @property {string} [html] the message as markup (escape what is not yours)
-     * @property {string} [href] the toast is a link
-     * @property {string} [className] the toast's classes
-     * @property {Object<string, string>} [attrs] more attributes (data-toast ...)
-     * @property {{label: string, run: function(): void, className: string}} [action] a button in the toast; a click runs it and closes the toast
-     * @property {number} [timeout] ms before it goes (the tray's default; 0: it stays)
-     */
-
-    /**
-     * A tray of toasts.
-     */
     class ToastTray {
-      /**
-       * @param {Object} [o]
-       * @param {Element} [o.parent] where the tray goes (default: document.body)
-       * @param {string} [o.className='drishti-toasts'] the tray's classes
-       * @param {boolean} [o.bare=false] no tray element: the toasts go straight into parent
-       * @param {number} [o.max=3] at most this many at once; more are counted in one "more" toast
-       * @param {boolean} [o.single=false] a new toast replaces the one shown
-       * @param {number} [o.timeout=9000]
-       * @param {{href: string, className: string, html: function(number): string, timeout: number}} [o.more] the "N more" toast
-       * @param {Document} [o.document]
-       */
       constructor(o) {
         this.o = Object.assign({ className: 'drishti-toasts', max: 3, timeout: 9000, single: false, bare: false }, o);
         this.doc = this.o.document || (this.o.parent && this.o.parent.ownerDocument) || document;
@@ -2391,12 +1605,6 @@
           (this.o.parent || this.doc.body).appendChild(this.tray);
         }
       }
-
-      /**
-       * Shows a toast.
-       * @param {ToastOptions} t
-       * @returns {?{element: HTMLElement, close: function(): void}} null when the toast was counted in "more"
-       */
       show(t) {
         if (this.o.single) { this.shown.slice().forEach((s) => s.close()); }
         this.shown = this.shown.filter((s) => s.element.isConnected);
@@ -2437,13 +1645,7 @@
         return entry;
       }
     }
-
     let shared = null;
-    /**
-     * Shows a toast in the page's shared tray (made on first use).
-     * @param {(ToastOptions|string)} t the options, or the text
-     * @returns {?{element: HTMLElement, close: function(): void}}
-     */
     function toast(t) {
       if (!shared || !shared.tray.isConnected) { shared = new ToastTray(); }
       return shared.show(typeof t === 'string' ? { text: t } : t);
@@ -2455,31 +1657,6 @@
     var installResize = __m["src/drishti_resize.js"].installResize;
     var GridKeys = __m["src/drishti_keys.js"].GridKeys;
     var load = __m["src/drishti_loader.js"].load;
-    /* drishti-core: what every other library and every page builds on. Formats (the server's rules), business dates, theme tokens, the API
-       client, the event bus, accessibility helpers, resize handles, keys, dialogs, drawers and toasts, and the loader of the other
-       libraries. In a page the bundle (drishti_core.js) registers it as window.Drishti.elements.core and runs install(): the resize
-       component starts, and the console's older names (Drishti.resize, Drishti.GridKeys) point here. */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    /**
-     * Starts drishti-core in a page (the bundle calls it when it loads; nothing happens without a document): the resize component, and
-     * the console's names for what moved here (window.Drishti.resize, window.Drishti.GridKeys) and window.Drishti.elements.load.
-     * @param {Window} root
-     * @returns {void}
-     */
     function install(root) {
       const D = root.Drishti = root.Drishti || {};
       D.GridKeys = GridKeys;
