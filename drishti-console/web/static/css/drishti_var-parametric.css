@@ -16,20 +16,20 @@
 /* Parametric VaR on the VaR explorer (docs/architecture/PARAMETRIC_VAR.md; VAR_GUIDE.md section 3.12): the toggle's bar, the three tiles,
    the tree's Parametric and Gap columns (drishti-grid cells: blue, the gap in the warning colour) and the ? (the normal curve is
    drishti-risk's P&L distribution). Theme tokens only. */
-.vp-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0; }
-.vp-badge { font-size: 11px; color: var(--d-muted); border: 1px solid var(--d-border); border-radius: 3px; padding: 2px 6px; }
-.vp-toggle { font-size: 12px; color: var(--d-ink); display: inline-flex; align-items: center; gap: 4px; }
-.vp-toggle kbd { font: 10px var(--d-font-mono); border: 1px solid var(--d-border); border-radius: 2px; padding: 0 3px; }
-.vp-link { font-size: 12px; color: var(--d-link); }
-.vp-tiles { margin-top: 6px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.vp-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-8); margin: var(--d-sp-6) 0; }
+.vp-badge { font-size: var(--d-fs-11); color: var(--d-muted); border: 1px solid var(--d-border); border-radius: var(--d-radius-3); padding: var(--d-sp-2) var(--d-sp-6); }
+.vp-toggle { font-size: var(--d-fs-12); color: var(--d-ink); display: inline-flex; align-items: center; gap: var(--d-sp-4); }
+.vp-toggle kbd { font: var(--d-fs-10) var(--d-font-mono); border: 1px solid var(--d-border); border-radius: var(--d-radius-2); padding: 0 var(--d-sp-3); }
+.vp-link { font-size: var(--d-fs-12); color: var(--d-link); }
+.vp-tiles { margin-top: var(--d-sp-6); grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .vp-blue { color: var(--d-link); }
 .vp-warn { color: var(--d-warn); }
-.vp-tile .l { display: flex; align-items: center; gap: 4px; }
+.vp-tile .l { display: flex; align-items: center; gap: var(--d-sp-4); }
 .vp-q { border: 1px solid var(--d-border); background: var(--d-surface); color: var(--d-link); border-radius: 50%; width: 16px; height: 16px;
-  font: 600 10px/14px var(--d-font-sans); padding: 0; margin-left: 4px; cursor: pointer; flex: none; }
+  font: 600 var(--d-fs-10)/14px var(--d-font-sans); padding: 0; margin-left: var(--d-sp-4); cursor: pointer; flex: none; }
 .vp-q:focus-visible { outline: 2px solid var(--d-accent); }
 /* the two parametric columns need room: the scope names keep at least 130px (they were squeezed to nothing in a 330px panel) */
 @media (min-width: 1101px) { .vx-layout:has(.vx-tree.vp-cols) { grid-template-columns: var(--vx-side, 480px) minmax(0, 1fr); } }
 /* a figure and its ? on one line, so a row stays one line high */
-.vp-cell { white-space: nowrap; display: inline-flex; align-items: center; justify-content: flex-end; gap: 2px; }
+.vp-cell { white-space: nowrap; display: inline-flex; align-items: center; justify-content: flex-end; gap: var(--d-sp-2); }
 @media (min-width: 801px) and (max-width: 1100px) { .vx-layout:has(.vx-tree.vp-cols) { grid-template-columns: var(--vx-side, 440px) minmax(0, 1fr); } }

@@ -16,10 +16,10 @@
 /* Computed panels (DATA_ARCHITECTURE.md 12.4; static/js/drishti_compute.js): the state line over a panel whose source a reactive connector
    computes (computing with its progress bar, stale in amber, failed or refused in words) and the last good result dimmed under it while a
    new one is computed. Theme tokens only. */
-.cmp-state { display: flex; align-items: center; gap: .5rem; margin: 0 0 .5rem; padding: .35rem .5rem; border-radius: var(--d-radius, 4px);
-  font-size: .78rem; color: var(--d-muted); background: var(--d-surface); border: 1px solid var(--d-border); }
+.cmp-state { display: flex; align-items: center; gap: var(--d-sp-8); margin: 0 0 var(--d-sp-8); padding: var(--d-sp-5_6) var(--d-sp-8); border-radius: var(--d-radius);
+  font-size: var(--d-fs-12_48); color: var(--d-muted); background: var(--d-surface); border: 1px solid var(--d-border); }
 .cmp-state .cmp-t { min-width: 0; overflow-wrap: anywhere; }
-.cmp-bar { position: relative; flex: 0 0 6rem; height: .4rem; border-radius: .2rem; background: var(--d-border); overflow: hidden; }
+.cmp-bar { position: relative; flex: 0 0 6rem; height: .4rem; border-radius: var(--d-radius-3_2); background: var(--d-border); overflow: hidden; }
 .cmp-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--d-accent); transition: width .25s ease; }
 .cmp-computing .cmp-fill[data-w="0"] { width: 30%; animation: cmp-slide 1.2s ease-in-out infinite; }
 @keyframes cmp-slide { 0% { left: -30%; } 100% { left: 100%; } }

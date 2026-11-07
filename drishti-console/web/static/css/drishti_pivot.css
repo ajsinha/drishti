@@ -18,7 +18,7 @@
 
 /* ---- expandable rows (static/js/drishti_tree-rows.js): a table with children, and a pivot by several fields ---- */
 .tbl-tree .tr-ind { display: inline-flex; align-items: center; }
-.tr-d1 { margin-left: 1.1rem; }
+.tr-d1 { margin-left: var(--d-sp-17_6); }
 .tr-d2 { margin-left: 2.2rem; }
 .tr-d3 { margin-left: 3.3rem; }
 .tr-d4 { margin-left: 4.4rem; }
@@ -42,15 +42,15 @@
 .tr-d22 { margin-left: 24.2rem; }
 .tr-d23 { margin-left: 25.3rem; }
 .tr-d24 { margin-left: 26.4rem; }
-.pivot .pv-i2 { padding-left: 1.4rem; }
+.pivot .pv-i2 { padding-left: var(--d-sp-22_4); }
 .pivot .pv-i3 { padding-left: 2.3rem; }
 .pivot .pv-i4 { padding-left: 3.2rem; }
 .pivot .pv-i5 { padding-left: 4.1rem; }
 .pivot .pv-i6 { padding-left: 5.0rem; }
-.tbl-tree .tr-tog { background: none; border: 0; color: var(--d-muted); padding: 0 .3rem 0 0; width: 1.1rem; font-size: .8rem; cursor: pointer; }
+.tbl-tree .tr-tog { background: none; border: 0; color: var(--d-muted); padding: 0 var(--d-sp-4_8) 0 0; width: 1.1rem; font-size: var(--d-fs-12_8); cursor: pointer; }
 .tbl-tree .tr-tog:focus-visible { outline: 2px solid var(--d-accent); }
 .tbl-tree .tr-sp { display: inline-block; width: 1.1rem; }
 .tbl-tree tr[data-kids] td:first-child { font-weight: 600; }
-.tr-q { margin: 0 0 .4rem; max-width: 16rem; }
-.pv-tree-host { font-size: .85rem; }
+.tr-q { margin: 0 0 var(--d-sp-6_4); max-width: 16rem; }
+.pv-tree-host { font-size: var(--d-fs-13_6); }
 @media print { .tr-tog, .tr-q { display: none !important; } }

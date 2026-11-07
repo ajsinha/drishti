@@ -4195,13 +4195,13 @@ Rules for a macro branch:
 `drishti-console/web/static/css/drishti_terminal.css`, next to `.gauge`:
 
 ```css
-.metric { display: flex; flex-direction: column; gap: .15rem; min-width: 0; container-type: inline-size; }
-.metric-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: .15rem .6rem; }
-.metric-v { font-size: clamp(1.1rem, 16cqi, 2.2rem); font-weight: 600; line-height: 1.1; color: var(--d-ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
-.metric-u { color: var(--d-muted); font-size: .9rem; }
-.metric-d { font-size: .9rem; color: var(--d-muted); }
-.metric-l, .metric-c { color: var(--d-muted); font-size: .8rem; }
-@media (max-width: 640px) { .metric-v { font-size: clamp(1.1rem, 16cqi, 1.8rem); } }
+.metric { display: flex; flex-direction: column; gap: var(--d-sp-2_4); min-width: 0; container-type: inline-size; }
+.metric-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--d-sp-2_4) var(--d-sp-9_6); }
+.metric-v { font-size: var(--d-fs-display-5); font-weight: 600; line-height: 1.1; color: var(--d-ink); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.metric-u { color: var(--d-muted); font-size: var(--d-fs-14_4); }
+.metric-d { font-size: var(--d-fs-14_4); color: var(--d-muted); }
+.metric-l, .metric-c { color: var(--d-muted); font-size: var(--d-fs-12_8); }
+@media (max-width: 640px) { .metric-v { font-size: var(--d-fs-display-7); } }
 ```
 
 **A figure must never break inside.** The first version used `overflow-wrap: anywhere`, and a six-digit figure in a

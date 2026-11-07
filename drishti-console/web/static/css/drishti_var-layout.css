@@ -15,50 +15,47 @@
  */
 /* The VaR screen's layout (2.9.11.b, drishti_var-layout.js; the approved mock-up docs/lenses/mockups/var-layout/A.html):
    the toolbar with the two basket drop-downs, + New basket, Explain (the one Explain's drawer, drishti_explain.css) and What-if. The theme's tokens for every colour (drishti_tokens.css), so the dark and the light themes both read. */
-.vx-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 10px; padding: 6px 10px; background: var(--d-surface);
-  border: 1px solid var(--d-border); border-radius: 4px; font-size: 12.5px; }
+.vx-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-8) var(--d-sp-12); margin: 0 0 var(--d-sp-10); padding: var(--d-sp-6) var(--d-sp-10); background: var(--d-surface);
+  border: 1px solid var(--d-border); border-radius: var(--d-radius-4); font-size: var(--d-fs-12_5); }
 .vx-pick { position: relative; }
-.vx-pick-btn { display: inline-flex; align-items: center; gap: 8px; min-width: 260px; max-width: 380px; height: 32px; padding: 0 10px;
-  border: 1px solid var(--d-border); border-radius: 6px; background: var(--d-bg); color: var(--d-ink); font: 13px var(--d-font-sans); cursor: pointer; }
+.vx-pick-btn { display: inline-flex; align-items: center; gap: var(--d-sp-8); min-width: 260px; max-width: 380px; height: 32px; padding: 0 var(--d-sp-10);
+  border: 1px solid var(--d-border); border-radius: var(--d-radius-6); background: var(--d-bg); color: var(--d-ink); font: var(--d-fs-13) var(--d-font-sans); cursor: pointer; }
 .vx-pick-btn:hover, .vx-pick-btn:focus-visible, .vx-pick-btn[aria-expanded="true"] { border-color: var(--d-accent); }
 .vx-pick-btn:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 1px; }
-.vx-pick-btn .k { font-size: 10.5px; color: var(--d-muted); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+.vx-pick-btn .k { font-size: var(--d-fs-10_5); color: var(--d-muted); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
 .vx-pick-btn b { font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vx-pick-btn b.muted { color: var(--d-muted); font-weight: 400; }
 .vx-pick.on .vx-pick-btn { border-color: var(--d-accent); }
 .vx-pick-btn .car { margin-left: auto; color: var(--d-muted); }
-.vx-drop { position: absolute; top: 36px; left: 0; z-index: 1030; width: 440px; max-width: calc(100vw - 24px); padding: 8px;
-  background: var(--d-bg); border: 1px solid var(--d-accent); border-radius: 8px; box-shadow: var(--d-shadow); }
-.vx-drop[hidden] { display: none; }
-.vx-pick-search { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 8px; border: 1px solid var(--d-border); border-radius: 5px;
+.vx-drop { position: absolute; top: 36px; left: 0; z-index: var(--d-z-bar); width: 440px; max-width: calc(100vw - 24px); padding: var(--d-sp-8);
+  background: var(--d-bg); border: 1px solid var(--d-accent); border-radius: var(--d-radius-8); box-shadow: var(--d-shadow); }
+.vx-pick-search { display: flex; align-items: center; gap: var(--d-sp-8); height: 32px; padding: 0 var(--d-sp-8); border: 1px solid var(--d-border); border-radius: var(--d-radius-5);
   background: var(--d-surface); color: var(--d-muted); }
 .vx-pick-search:focus-within { border-color: var(--d-accent); }
-.vx-pick-q { flex: 1 1 auto; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--d-ink); font: 13px var(--d-font-sans); }
-.vx-pick-n { font: 11px var(--d-font-mono); white-space: nowrap; }
-.vx-opts { list-style: none; margin: 6px 0 0; padding: 0; max-height: 320px; overflow-y: auto; }
-.vx-grp { padding: 6px 8px 2px; color: var(--d-accent); font: 600 10.5px var(--d-font-sans); letter-spacing: .08em; text-transform: uppercase; }
-.vx-opt { display: flex; align-items: center; gap: 8px; padding: 5px 8px; border-radius: 4px; cursor: pointer; }
-.vx-opt[hidden], .vx-grp[hidden] { display: none; }
+.vx-pick-q { flex: 1 1 auto; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--d-ink); font: var(--d-fs-13) var(--d-font-sans); }
+.vx-pick-n { font: var(--d-fs-11) var(--d-font-mono); white-space: nowrap; }
+.vx-opts { list-style: none; margin: var(--d-sp-6) 0 0; padding: 0; max-height: 320px; overflow-y: auto; }
+.vx-grp { padding: var(--d-sp-6) var(--d-sp-8) var(--d-sp-2); color: var(--d-accent); font: 600 var(--d-fs-10_5) var(--d-font-sans); letter-spacing: .08em; text-transform: uppercase; }
+.vx-opt { display: flex; align-items: center; gap: var(--d-sp-8); padding: var(--d-sp-5) var(--d-sp-8); border-radius: var(--d-radius-4); cursor: pointer; }
 .vx-opt.hi { background: var(--d-accent-tint); }
 .vx-opt[aria-selected="true"] { box-shadow: inset 2px 0 0 var(--d-accent); }
 .vx-opt-t { display: flex; flex-direction: column; min-width: 0; flex: 1 1 auto; }
 .vx-opt .lbl { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vx-opt .lbl mark { background: none; color: var(--d-accent); font-weight: 700; padding: 0; }
-.vx-opt-d { color: var(--d-muted); font-size: 11.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.vx-opt .vx-chip { flex: none; font: 10.5px var(--d-font-mono); padding: 0 6px; border: 1px solid var(--d-border); border-radius: 9px; color: var(--d-muted); }
-.vx-opt .vx-acts { flex: none; display: inline-flex; gap: 3px; }
+.vx-opt-d { color: var(--d-muted); font-size: var(--d-fs-11_5); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vx-opt .vx-chip { flex: none; font: var(--d-fs-10_5) var(--d-font-mono); padding: 0 var(--d-sp-6); border: 1px solid var(--d-border); border-radius: var(--d-radius-9); color: var(--d-muted); }
+.vx-opt .vx-acts { flex: none; display: inline-flex; gap: var(--d-sp-3); }
 .vx-opt .vx-add { margin-left: 0; }
 .vx-opt .vx-del { color: var(--d-bad); }
 .vx-opt .vx-del:hover, .vx-opt .vx-del:focus { border-color: var(--d-bad); }
-.vx-none { padding: 8px; color: var(--d-muted); font-size: 12px; }
-.vx-pick-why { margin: 6px 2px 0; color: var(--d-muted); font-size: 11.5px; }
-.vx-pick-new { display: inline-block; margin: 6px 2px 0; font-size: 12.5px; text-decoration: none; }
+.vx-none { padding: var(--d-sp-8); color: var(--d-muted); font-size: var(--d-fs-12); }
+.vx-pick-why { margin: var(--d-sp-6) var(--d-sp-2) 0; color: var(--d-muted); font-size: var(--d-fs-11_5); }
+.vx-pick-new { display: inline-block; margin: var(--d-sp-6) var(--d-sp-2) 0; font-size: var(--d-fs-12_5); text-decoration: none; }
 .vx-newb { text-decoration: none; white-space: nowrap; position: relative; }
-.vx-newb .tool-count { margin-left: 4px; padding: 0 5px; border-radius: 8px; background: var(--d-accent); color: var(--d-on-accent); font: 600 10.5px var(--d-font-sans); }
-.vx-newb .tool-count[hidden] { display: none; }
-.vx-keys { color: var(--d-muted); font-size: 11px; white-space: nowrap; margin-left: auto; }
-.vx-keys b { font: 600 10.5px var(--d-font-mono); padding: 0 4px; border: 1px solid var(--d-border); border-radius: 3px; color: var(--d-ink); }
-.vx-how { padding: 3px 10px; border: 1px solid var(--d-link); border-radius: 12px; background: none; color: var(--d-link); font: 12px var(--d-font-sans);
+.vx-newb .tool-count { margin-left: var(--d-sp-4); padding: 0 var(--d-sp-5); border-radius: var(--d-radius-8); background: var(--d-accent); color: var(--d-on-accent); font: 600 var(--d-fs-10_5) var(--d-font-sans); }
+.vx-keys { color: var(--d-muted); font-size: var(--d-fs-11); white-space: nowrap; margin-left: auto; }
+.vx-keys b { font: 600 var(--d-fs-10_5) var(--d-font-mono); padding: 0 var(--d-sp-4); border: 1px solid var(--d-border); border-radius: var(--d-radius-3); color: var(--d-ink); }
+.vx-how { padding: var(--d-sp-3) var(--d-sp-10); border: 1px solid var(--d-link); border-radius: var(--d-radius-12); background: none; color: var(--d-link); font: var(--d-fs-12) var(--d-font-sans);
   white-space: nowrap; cursor: pointer; }
 .vx-how.on { background: var(--d-accent); border-color: var(--d-accent); color: var(--d-on-accent); }
 .vx-how:focus-visible, .vx-newb:focus-visible, .vx-pick-new:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
@@ -74,7 +71,7 @@
 
 /* a phone: the drop-downs full width, nothing scrolls sideways */
 @media (max-width: 640px) {
-  .vx-bar { padding: 6px; }
+  .vx-bar { padding: var(--d-sp-6); }
   .vx-pick, .vx-pick-btn { width: 100%; min-width: 0; max-width: none; }
   .vx-pick-btn { height: 44px; }
   .vx-drop { position: absolute; left: 0; right: 0; width: auto; max-width: none; }

@@ -21,64 +21,64 @@
 @media (max-width: 639.98px) {
   .tbar-menus:has([data-lens-fold]) [data-subject] { display: none; }   /* only once drishti_phone.js has put the lens menu in the bar */
   .tbar-lens { display: block; }
-  .tbar-lens-btn { min-height: 44px; font-weight: 700; color: var(--d-accent-strong); opacity: 1; padding: .45rem .6rem; }
-  .tbar-lens-btn .bi { font-size: .75rem; }
-  .mega-lens .mega-col + .mega-col { border-top: 1px solid var(--d-border); padding-top: .6rem; }
+  .tbar-lens-btn { min-height: 44px; font-weight: 700; color: var(--d-accent-strong); opacity: 1; padding: var(--d-sp-7_2) var(--d-sp-9_6); }
+  .tbar-lens-btn .bi { font-size: var(--d-fs-12); }
+  .mega-lens .mega-col + .mega-col { border-top: 1px solid var(--d-border); padding-top: var(--d-sp-9_6); }
   .mega-lens .mega-subject { color: var(--d-accent-strong); }
   .mega-lens .mega-item { min-height: 44px; align-items: center; }
 }
 
 /* ---- the phone page ------------------------------------------------------------------------------------------------------- */
-.ph-page { display: flex; flex-direction: column; gap: .75rem; margin-top: .75rem; min-width: 0; }
-.ph-main { display: flex; flex-direction: column; gap: .75rem; min-width: 0; }
-.ph-summary { margin: 0; padding: .55rem .8rem; border: 1px solid var(--d-border); border-left: 3px solid var(--d-accent); border-radius: 6px;
-  background: var(--d-surface); font-family: var(--d-font-mono); font-size: .9rem; color: var(--d-ink); overflow-wrap: anywhere; }
-.ph-h { margin: 0 0 .35rem; font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--d-muted); }
+.ph-page { display: flex; flex-direction: column; gap: var(--d-sp-12); margin-top: var(--d-sp-12); min-width: 0; }
+.ph-main { display: flex; flex-direction: column; gap: var(--d-sp-12); min-width: 0; }
+.ph-summary { margin: 0; padding: var(--d-sp-8_8) var(--d-sp-12_8); border: 1px solid var(--d-border); border-left: 3px solid var(--d-accent); border-radius: var(--d-radius-6);
+  background: var(--d-surface); font-family: var(--d-font-mono); font-size: var(--d-fs-14_4); color: var(--d-ink); overflow-wrap: anywhere; }
+.ph-h { margin: 0 0 var(--d-sp-5_6); font-size: var(--d-fs-11_52); font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--d-muted); }
 
 /* a glance panel's Show all, under its compact form */
-.ph-all { display: flex; align-items: center; justify-content: center; gap: .35rem; width: 100%; min-height: 44px; border: 0;
-  border-top: 1px solid var(--d-border); background: transparent; color: var(--d-link); font-weight: 600; font-size: .88rem;
-  border-radius: 0 0 6px 6px; }
+.ph-all { display: flex; align-items: center; justify-content: center; gap: var(--d-sp-5_6); width: 100%; min-height: 44px; border: 0;
+  border-top: 1px solid var(--d-border); background: transparent; color: var(--d-link); font-weight: 600; font-size: var(--d-fs-14_08);
+  border-radius: 0 0 var(--d-radius-6) var(--d-radius-6); }
 .ph-all:hover, .ph-all:focus-visible { background: var(--d-accent-tint); }
 .ph-all[aria-busy] { opacity: .6; }
 
 /* a glance chart: a sparkline with its last value and change */
-.ph-spark { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: .3rem .75rem; }
+.ph-spark { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--d-sp-4_8) var(--d-sp-12); }
 .ph-spark svg { width: 100%; height: 36px; overflow: visible; }
 .ph-line { fill: none; stroke: var(--d-accent); stroke-width: 1.6; vector-effect: non-scaling-stroke; stroke-linejoin: round; }
 .ph-line2 { stroke: var(--d-link); stroke-dasharray: 3 2; }
-.ph-fig { display: flex; flex-direction: column; align-items: flex-end; gap: .1rem; font-size: .85rem; white-space: nowrap; }
-.ph-lab { color: var(--d-muted); font-size: .75rem; }
-.ph-x { grid-column: 1 / -1; color: var(--d-muted); font-size: .72rem; }
+.ph-fig { display: flex; flex-direction: column; align-items: flex-end; gap: var(--d-sp-1_6); font-size: var(--d-fs-13_6); white-space: nowrap; }
+.ph-lab { color: var(--d-muted); font-size: var(--d-fs-12); }
+.ph-x { grid-column: 1 / -1; color: var(--d-muted); font-size: var(--d-fs-11_52); }
 .ph-list { list-style: none; margin: 0; padding: 0; }
-.ph-list li { display: flex; justify-content: space-between; gap: 1rem; padding: .3rem 0; border-bottom: 1px solid var(--d-border); font-size: .85rem; }
+.ph-list li { display: flex; justify-content: space-between; gap: var(--d-sp-16); padding: var(--d-sp-4_8) 0; border-bottom: 1px solid var(--d-border); font-size: var(--d-fs-13_6); }
 
 /* More on this page: a row a panel, 44 px, loaded in place */
-.ph-more, .ph-desk { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; padding: .6rem .7rem; }
+.ph-more, .ph-desk { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: var(--d-radius-6); padding: var(--d-sp-9_6) var(--d-sp-11_2); }
 .ph-rows { list-style: none; margin: 0; padding: 0; }
 .ph-rows > li + li { border-top: 1px solid var(--d-border); }
-.ph-rows > li.ph-loaded { padding: .5rem 0; }
-.ph-row { display: flex; align-items: center; gap: .6rem; width: 100%; min-height: 44px; padding: .4rem .2rem; border: 0; background: transparent;
-  color: var(--d-ink); text-align: left; font-size: .92rem; }
+.ph-rows > li.ph-loaded { padding: var(--d-sp-8) 0; }
+.ph-row { display: flex; align-items: center; gap: var(--d-sp-9_6); width: 100%; min-height: 44px; padding: var(--d-sp-6_4) var(--d-sp-3_2); border: 0; background: transparent;
+  color: var(--d-ink); text-align: left; font-size: var(--d-fs-14_72); }
 .ph-row:hover, .ph-row:focus-visible { background: var(--d-accent-tint); }
 .ph-row-t { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
-.ph-row-k { color: var(--d-muted); font-size: .75rem; font-family: var(--d-font-mono); }
+.ph-row-k { color: var(--d-muted); font-size: var(--d-fs-12); font-family: var(--d-font-mono); }
 .ph-row .bi { color: var(--d-muted); }
 .ph-row[aria-busy] { opacity: .6; }
 .ph-row[data-phone-failed] .ph-row-t { color: var(--d-bad); }
 
 /* On desktop, Show everything, Phone view */
-.ph-desk-l { margin: 0 0 .5rem; color: var(--d-ink); font-size: .9rem; overflow-wrap: anywhere; }
-.ph-desk-a { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
-.ph-copied { color: var(--d-muted); font-size: .8rem; overflow-wrap: anywhere; }
-.ph-btn { display: inline-flex; align-items: center; gap: .4rem; min-height: 44px; padding: .35rem .9rem; border: 1px solid var(--d-border); border-radius: 8px;
-  background: var(--d-surface-2); color: var(--d-ink); font-weight: 600; font-size: .88rem; }
+.ph-desk-l { margin: 0 0 var(--d-sp-8); color: var(--d-ink); font-size: var(--d-fs-14_4); overflow-wrap: anywhere; }
+.ph-desk-a { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-8); }
+.ph-copied { color: var(--d-muted); font-size: var(--d-fs-12_8); overflow-wrap: anywhere; }
+.ph-btn { display: inline-flex; align-items: center; gap: var(--d-sp-6_4); min-height: 44px; padding: var(--d-sp-5_6) var(--d-sp-14_4); border: 1px solid var(--d-border); border-radius: var(--d-radius-8);
+  background: var(--d-surface-2); color: var(--d-ink); font-weight: 600; font-size: var(--d-fs-14_08); }
 .ph-btn:hover, .ph-btn:focus-visible { border-color: var(--d-accent); }
-.ph-foot { display: flex; flex-wrap: wrap; align-items: flex-start; gap: .6rem 1rem; }
-.ph-why { font-size: .82rem; color: var(--d-muted); min-width: 0; }
+.ph-foot { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--d-sp-9_6) var(--d-sp-16); }
+.ph-why { font-size: var(--d-fs-13_12); color: var(--d-muted); min-width: 0; }
 .ph-why summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; color: var(--d-link); }
-.ph-why ul { margin: .2rem 0 0; padding-left: 1.1rem; }
-.ph-back { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: .5rem 0 0; color: var(--d-muted); font-size: .85rem; }
+.ph-why ul { margin: var(--d-sp-3_2) 0 0; padding-left: var(--d-sp-17_6); }
+.ph-back { display: flex; flex-wrap: wrap; align-items: center; gap: var(--d-sp-8); margin: var(--d-sp-8) 0 0; color: var(--d-muted); font-size: var(--d-fs-13_6); }
 
 /* The VaR and exposure pages and the landings (MOBILE_DISPLAY.md 8, _macros/phone.html): the server marks their parts only for a phone
    or tablet. A more part waits under More on this page until tapped (.ph-open), a desk part is not drawn, a glance part shows its first
@@ -86,8 +86,8 @@
 [data-phone-tier="more"]:not(.ph-open), [data-phone-tier="desk"] { display: none !important; }
 [data-phone-tier="glance"]:not(.ph-open) tbody > tr:nth-child(n+6), [data-phone-tier="glance"]:not(.ph-open) ul > li:nth-child(n+6),
 [data-phone-tier="glance"]:not(.ph-open) ol > li:nth-child(n+6) { display: none; }
-.ph-parts { margin-top: .75rem; }
-.ph-part-all { border-radius: 0 0 6px 6px; }
+.ph-parts { margin-top: var(--d-sp-12); }
+.ph-part-all { border-radius: 0 0 var(--d-radius-6) var(--d-radius-6); }
 [data-phone-tier="glance"]:not(:has(tbody > tr:nth-child(6), ul > li:nth-child(6), ol > li:nth-child(6))) > .ph-part-all { display: none; }   /* five rows or fewer: nothing to show */
 
 /* a phone: a glance table keeps its few columns on screen, and a key-figure group two to a row */
