@@ -93,8 +93,7 @@ final class MqHarness {
             throw new IllegalArgumentException(r.problems().toString());
         }
         Map<String, com.ash.drishti.server.bi.layer.DatasetDef> byName = new LinkedHashMap<>();
-        for (String y : datasetYamls) {
-            DatasetDefParser.Result d = Layered.tableDef(y);
+        for (DatasetDefParser.Result d : Layered.tableDefs(datasetYamls)) {          // migrated together: a narrowing reads its base
             if (!d.ok()) {
                 throw new IllegalArgumentException(d.problems().toString());
             }

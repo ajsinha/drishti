@@ -211,7 +211,7 @@ class DatasetRefresherTest {
         refresher.tick();
         awaitStatus("ok");
         assertThat(lake.scans.get()).isPositive();
-        assertThat(dataset().get("lastRows")).isEqualTo(43L);
+        assertThat(dataset().get("lastRows")).isEqualTo(40L);
         assertThat(dataset().get("lastDate")).isEqualTo("2026-10-09");
         assertThat(dataset().get("trigger")).isEqualTo("schedule");
         assertThat(dataset().get("nextRun")).isEqualTo(java.time.ZonedDateTime.of(2026, 10, 10, 6, 0, 0, 0, NY).toInstant().toString());
@@ -236,11 +236,11 @@ class DatasetRefresherTest {
         assertThat(after.get("status")).isEqualTo("ok");
         assertThat(after.get("lastRun")).isEqualTo(before.get("lastRun"));
         assertThat(after.get("nextRun")).isEqualTo(before.get("nextRun")).isEqualTo(java.time.ZonedDateTime.of(2026, 10, 10, 6, 0, 0, 0, NY).toInstant().toString());
-        assertThat(after.get("lastRows")).isEqualTo(43L);
+        assertThat(after.get("lastRows")).isEqualTo(40L);
         assertThat(after.get("runs")).isEqualTo(1L);
         @SuppressWarnings("unchecked") List<Map<String, Object>> history = (List<Map<String, Object>>) after.get("history");
         assertThat(history).hasSize(1);
-        assertThat(history.get(0)).containsEntry("trigger", "schedule").containsEntry("status", "ok").containsEntry("rows", 43L);
+        assertThat(history.get(0)).containsEntry("trigger", "schedule").containsEntry("status", "ok").containsEntry("rows", 40L);
         refresher.runNow(ds, "wes");                                                // the next run adds to the history, newest first
         awaitStatus("ok");
         for (int i = 0; i < 100 && ((List<?>) dataset().get("history")).size() < 2; i++) {
@@ -365,7 +365,7 @@ class DatasetRefresherTest {
         refresher.onLoad("trade", TestLake.DAY1);
         awaitStatus("ok");
         assertThat(dataset().get("lastDate")).isEqualTo("2026-10-08");
-        assertThat(dataset().get("lastRows")).isEqualTo(43L);
+        assertThat(dataset().get("lastRows")).isEqualTo(40L);
         assertThat(String.valueOf(dataset().get("trigger"))).startsWith("after-load");
         assertThat(DatasetRefresher.afterLoad(ds.dataset())).isTrue();
     }

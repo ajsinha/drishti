@@ -301,7 +301,7 @@ class DatasetApiTest {
     void theCatalogueListsDatasetsWithTheirHealthAndHidesSamplesFromThoseWhoMayNotSeeThem() throws Exception {
         JsonNode list = ok(call("GET", "/api/v1/bi/datasets", rita(), null)).path("datasets");
         assertThat(list.toString()).contains(DS).contains("\"valid\":true").doesNotContain("hidden-sample");
-        assertThat(ok(call("GET", "/api/v1/bi/datasets", admin(), null)).path("datasets").toString()).contains("hidden-sample");   // developers mode: the admin sees samples
+        assertThat(ok(call("GET", "/api/v1/bi/datasets", admin(), null)).path("datasets").toString()).contains("hidden_sample");   // developers mode: the admin sees samples
         refused(call("GET", "/api/v1/bi/datasets/file:table:bi.hidden_sample", rita(), null), 404, "DRS-9001");
         refused(call("GET", "/api/v1/bi/datasets", nobi(), null), 403, "DRS-9002");
         refused(call("POST", "/api/v1/bi/mq", nobi(), mq("{\"measures\":[\"Trades\"]}")), 403, "DRS-9002");
@@ -316,7 +316,7 @@ class DatasetApiTest {
         assertThat(m.path("tables").get(0).path("access").asText()).isEqualTo("ok");
         assertThat(maskedColumns(m)).isEmpty();
         assertThat(maskedColumns(ok(call("GET", "/api/v1/bi/datasets/" + DS, ann(), null)))).anyMatch(c -> c.endsWith(".mtm"));
-        assertThat(m.path("security").path("rows").toString()).contains("\"appliesToYou\":true");
+        assertThat(m.path("security").path("rows").toString()).as(m.path("security").toString()).contains("\"appliesToYou\":true");
     }
 
     List<String> maskedColumns(JsonNode model) {
@@ -425,11 +425,12 @@ class DatasetApiTest {
         assertThat(inj.path("meta").path("sql").asText()).contains("?").doesNotContain("OR '1'");
         refused(call("POST", "/api/v1/bi/mq?format=xml", rita(), mq("{\"measures\":[\"Trades\"]}")), 422, "DRS-9150");
         // the 2.1 route answers 410 with the model query it would have been
-        var gone = call("POST", "/api/v1/bi/datasets/" + DS + "/query", rita(), "{\"fields\":[\"trades.desk\"],\"measures\":[\"Trades\"],\"dates\":{\"from\":\"2026-10-08\"}}")
+        var gone = call("POST", "/api/v1/bi/datasets/" + DS + "/query", rita(),
+                "{\"fields\":[\"lake_test_trades.desk\"],\"measures\":[\"Count of lake_test_trades\"],\"dates\":{\"from\":\"2026-10-08\"}}")
                 .andExpect(status().isGone()).andReturn().getResponse();
         JsonNode equivalent = json.readTree(gone.getContentAsString());
-        assertThat(equivalent.path("mq").path("model").asText()).isEqualTo(MODEL);
-        assertThat(equivalent.path("mq").path("select").path("measures").toString()).contains("Trades");
+        assertThat(equivalent.path("mq").path("model").asText()).isEqualTo("dataset:bi.lake_test_trades");        // the table's implicit model
+        assertThat(equivalent.path("mq").path("select").path("measures").toString()).contains("Count of lake_test_trades");
         assertThat(equivalent.path("mq").path("time").path("as-of").asText()).isEqualTo("2026-10-08");
         assertThat(ok(call("POST", "/api/v1/bi/mq", rita(), json.writeValueAsString(equivalent.path("mq")))).path("rows").size()).as("the equivalent runs").isEqualTo(3);
     }

@@ -84,11 +84,20 @@ public final class LayerTables {
             }
         });
         Map<String, DatasetDef.Col> columns = new LinkedHashMap<>();
+        Map<String, DatasetDef.PyColumn> python = new LinkedHashMap<>();
         List<String> masked = new ArrayList<>();
         for (ColumnDef c : t.columns().values()) {
-            if (c.python() != null) {
-                problems.add(new DatasetParser.Problem("error", "DRS-9101", "columns." + c.name() + ".python",
-                        "a Python column of a table is not read by BI yet: compute it in the Transform that makes the table"));
+            if (c.python() != null) {                                         // a column a Python item computes from the row's inputs
+                Object item = c.python() instanceof Map<?, ?> pm ? pm.get("item") : c.python();
+                List<String> inputs = new ArrayList<>();
+                if (c.python() instanceof Map<?, ?> pm && pm.get("inputs") instanceof List<?> l) {
+                    l.forEach(x -> inputs.add(String.valueOf(x)));
+                }
+                if (item == null || String.valueOf(item).isBlank()) {
+                    problems.add(new DatasetParser.Problem("error", "DRS-9101", "columns." + c.name() + ".python", "a Python column names its item: python: { item, inputs }"));
+                } else {
+                    python.put(c.name(), new DatasetDef.PyColumn(String.valueOf(item), inputs, c.type() == null ? "string" : c.type()));
+                }
                 continue;
             }
             String type = c.type() == null ? "string" : c.type();
@@ -123,7 +132,10 @@ public final class LayerTables {
                     null, null, null);
             case PYTHON -> new DatasetDef.Source(DatasetDef.Source.PYTHON, null, null, null, null, null, null, from.python(), json(from.inputs()), "server", null,
                     null, from.params());
-            case MODEL -> new DatasetDef.Source(DatasetDef.Source.MODEL, null, null, null, null, null, null, null, null, null, from.model(),
+            case MODEL -> from.modelQuery().get("sql") != null                  // a SQL view: the statement's answer over the model
+                    ? new DatasetDef.Source(DatasetDef.Source.SQL, null, null, null, null, String.valueOf(from.modelQuery().get("sql")), null, null, null, null, from.model(),
+                            null, null)
+                    : new DatasetDef.Source(DatasetDef.Source.MODEL, null, null, null, null, null, null, null, null, null, from.model(),
                     LayerYaml.YAML.valueToTree(from.modelQuery()), null);
             case RUN -> DatasetDef.Source.ofRun(from.run(), from.params().get("version") == null ? "latest" : String.valueOf(from.params().get("version")),
                     from.params().get("token") == null ? "" : String.valueOf(from.params().get("token")));
@@ -156,7 +168,7 @@ public final class LayerTables {
         Object ai = about.get("ai");
         return new DatasetDef(t.name(), t.version(), text(about, "id", ""), text(about, "title", t.name()), text(about, "description", ""), text(about, "owner", ""),
                 Boolean.TRUE.equals(about.get("sample")), text(about, "endorsement", "none"), null, source, grain, columns, time, refresh, security, extendsRef, where,
-                ai == null ? null : LayerYaml.YAML.valueToTree(ai), tests, List.of(), new DatasetDef.Derivation(List.of(), keep, Map.of(), null));
+                ai == null ? null : LayerYaml.YAML.valueToTree(ai), tests, List.of(), new DatasetDef.Derivation(List.of(), keep, python, null));
     }
 
     /**

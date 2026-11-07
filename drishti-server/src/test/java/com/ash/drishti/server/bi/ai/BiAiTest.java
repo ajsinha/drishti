@@ -212,7 +212,7 @@ class BiAiTest {
                     mock:
                       rules:
                         - match: "INVALIDDRAFT"
-                          reply: "report: bad\\ndataset: lake-report\\npages:\\n  - id: p\\n    visuals:\\n      - { id: v, type: bar, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { axis: [trades.nope], values: [Nothing] } }\\n"
+                          reply: "report: bad\\nmodel: lake-report@1\\npages:\\n  - id: p\\n    visuals:\\n      - { id: v, type: bar, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { axis: [trades.nope], values: [Nothing] } }\\n"
                         - match: "TASK: suggest-visuals"
                           reply: |
                             rachana: 1
@@ -316,7 +316,7 @@ class BiAiTest {
         Principal wes = new Principal("wes", List.of("report-author"));
         Map<String, Object> d = spying(prompts, "labels-only").draft(wes, "lake-report", "notional by desk");
         assertThat(d.get("valid")).isEqualTo(true);
-        assertThat((String) d.get("yaml")).contains("dataset: lake-report").doesNotContain("something-else").doesNotContain("```");
+        assertThat((String) d.get("yaml")).contains("model: lake-report@1").doesNotContain("something-else").doesNotContain("```");
         String prompt = String.join("\n", prompts);
         assertThat(prompt).contains("trades.desk string - The desk that owns the trade").contains("Notional - Sum of the notional").contains("notional by desk");
         assertThat(prompt).as("no row, no value, no measure definition").doesNotContain("DESK-A").doesNotContain("T-08").doesNotContain("sum(trades.notional)").doesNotContain("24000");
@@ -341,7 +341,7 @@ class BiAiTest {
         assertThat(rita.path("query").path("fields").toString()).isEqualTo("[\"trades.desk\"]");
         assertThat(rita.path("visual").asText()).isEqualTo("bar");
         assertThat(rita.path("summary").isNull()).as("labels-only: the model never sees the answer").isTrue();
-        JsonNode total = ok(send("/api/v1/bi/ai/ask", as("rita", "bi-risk"), Map.of("dataset", "file:dataset:lake-report", "question", "the total")));
+        JsonNode total = ok(send("/api/v1/bi/ai/ask", as("rita", "bi-risk"), Map.of("dataset", "file:model:lake-report", "question", "the total")));
         assertThat(total.path("visual").asText()).isEqualTo("card");
         JsonNode ann = ok(send("/api/v1/bi/ai/ask", as("ann", "bi-analyst"), Map.of("report", REPORT, "question", "mtm by desk")));
         assertThat(ann.path("meta").path("masked").toString()).as("a masked field stays masked").contains("MTM");
@@ -435,7 +435,7 @@ class BiAiTest {
 
     @Test
     void checkFailuresAreExplainedInPlainWordsAndNothingIsAskedWhenThereAreNone() throws Exception {
-        String bad = "rachana: 1\nreport: bad\nversion: 1\ntitle: Bad\ndataset: lake-report\npages:\n  - id: p\n    title: P\n    visuals:\n"
+        String bad = "rachana: 2\nreport: bad\nversion: 1\ntitle: Bad\nmodel: lake-report@1\npages:\n  - id: p\n    title: P\n    visuals:\n"
                 + "      - { id: v, type: bar, title: V, at: { x: 0, y: 0, w: 4, h: 3 }, wells: { axis: [trades.nope], values: [Nothing] } }\n";
         JsonNode r = ok(send("/api/v1/bi/ai/explain-checks", as("wes", "report-author"), Map.of("yaml", bad)));
         assertThat(r.path("valid").asBoolean()).isFalse();
@@ -443,7 +443,7 @@ class BiAiTest {
         assertThat(r.path("problems").get(0).path("explain").asText()).contains("does not have");
         assertThat(r.path("problems").get(0).path("fix").asText()).contains("trades.desk");
         assertThat(r.path("explained").asInt()).isGreaterThan(0);
-        String good = "rachana: 1\nreport: ok\nversion: 1\ntitle: Ok\ndataset: lake-report\npages:\n  - id: p\n    title: P\n    visuals:\n"
+        String good = "rachana: 2\nreport: ok\nversion: 1\ntitle: Ok\nmodel: lake-report@1\npages:\n  - id: p\n    title: P\n    visuals:\n"
                 + "      - { id: v, type: bar, title: V, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [trades.desk], values: [Notional] }, alt: Notional by desk }\n";
         List<String> prompts = new ArrayList<>();
         Map<String, Object> clean = new BiAiCopilot(spying(prompts, "labels-only")).explainChecks(new Principal("wes", List.of("report-author")), good);
@@ -456,9 +456,9 @@ class BiAiTest {
     @Test
     void theDatasetHelperProposesOnlyItemsThatCheckAgainstTheModelAndAppliesNothing() throws Exception {
         List<String> prompts = new ArrayList<>();
-        Map<String, Object> r = new BiAiCopilot(spying(prompts, "labels-only")).helper(new Principal("wes", List.of("report-author")), "file:dataset:lake-report");
+        Map<String, Object> r = new BiAiCopilot(spying(prompts, "labels-only")).helper(new Principal("wes", List.of("report-author")), "file:table:bi.lake_report_trades");
         assertThat(String.join("\n", prompts)).contains("trades.desk string").contains("COLUMNS WITHOUT A DESCRIPTION").doesNotContain("DESK-A").doesNotContain("24000").doesNotContain("sum(trades.notional)");
-        JsonNode h = ok(send("/api/v1/bi/ai/dataset-helper", as("wes", "report-author"), Map.of("dataset", "file:dataset:lake-report")));
+        JsonNode h = ok(send("/api/v1/bi/ai/dataset-helper", as("wes", "report-author"), Map.of("dataset", "file:table:bi.lake_report_trades")));
         List<String> ids = new ArrayList<>();
         h.path("items").forEach(i -> ids.add(i.path("id").asText()));
         assertThat(ids).containsExactly("measure:Average notional", "column:trades.book");           // the same-table relationship, the unknown column, the duplicate measure and the described column are all dropped
@@ -466,7 +466,7 @@ class BiAiTest {
         assertThat(h.path("items").get(1).path("yaml").asText()).isEqualTo("book: { type: string, description: \"The book the trade sits in\" }");
         assertThat(h.path("applied").asBoolean()).isFalse();
         assertThat(r.get("items")).isNotNull();
-        send("/api/v1/bi/ai/dataset-helper", as("ann", "bi-analyst"), Map.of("dataset", "file:dataset:lake-report")).andExpect(status().isForbidden());
+        send("/api/v1/bi/ai/dataset-helper", as("ann", "bi-analyst"), Map.of("dataset", "file:table:bi.lake_report_trades")).andExpect(status().isForbidden());
     }
 
     @Test

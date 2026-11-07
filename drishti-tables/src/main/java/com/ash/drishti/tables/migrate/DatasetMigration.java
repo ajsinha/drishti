@@ -244,6 +244,14 @@ final class DatasetMigration {
         for (Map.Entry<String, JsonNode> e : calculated) {
             String c = e.getKey();
             JsonNode v = e.getValue();
+            if (v.has("python")) {                                            // a column a Python item computes over the row's inputs: kept as it is
+                Map<String, Object> py = new LinkedHashMap<>();
+                py.put("item", v.path("python").asText());
+                py.put("inputs", strings(v.path("inputs")));
+                columns.put(c, new ColumnDef(c, null, null, py, v.path("type").asText(null), text(v, "role"), text(v, "meaning"), null, unit(v), null,
+                        text(v, "aggregate"), text(v, "format"), false, text(v, "description"), masked.contains(c), List.of(), null));
+                continue;
+            }
             String del = v.path("expr").asText();
             Translate.Out o = translate.table(del, ExpressionChecker.Scope.ROW, paths, neverMissing);
             changes.add(new TablesMigrator.Change(item, "columns." + c + ".expr", del, o.text(), o.notes(), o.refusal()));
@@ -349,6 +357,9 @@ final class DatasetMigration {
         }
         if (s.has("python")) {
             return new TableDef.Source(null, null, null, null, null, null, map(s.path("params")), s.path("python").asText(), map(s.path("inputs")), null, null);
+        }
+        if (s.has("model") && s.has("sql")) {                                // a SQL view: a reviewed Drishti SQL statement over the model
+            return new TableDef.Source(null, null, null, null, null, null, null, null, null, s.path("model").asText(), Map.of("sql", s.path("sql").asText()));
         }
         if (s.has("model")) {
             return new TableDef.Source(null, null, null, null, null, null, null, null, null, s.path("model").asText(), map(s.path("query")));

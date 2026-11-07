@@ -128,7 +128,7 @@ public final class TableChecks {
     }
 
     private void columns(TableDef t, boolean documents, TableDef.Source.Form form, ExpressionChecker.Env env, List<Problem> out) {
-        if (t.columns().isEmpty()) {
+        if (t.columns().isEmpty() && form != TableDef.Source.Form.TABLE) {                 // a table over a table reads its base's columns
             out.add(Problem.error(TableCodes.COLUMN, "columns", "a table has at least one column"));
         }
         Set<String> masked = masked(t);

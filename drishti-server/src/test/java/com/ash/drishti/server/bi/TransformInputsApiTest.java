@@ -252,10 +252,10 @@ class TransformInputsApiTest {
 
     @Test @Order(4)
     void aPythonDatasetWithAKindInputChecksAndItsLineageReachesTheConnector() throws Exception {
-        JsonNode checked = ok(call("GET", "/api/v1/bi/layer-datasets/file:dataset:desk-notional-prep", as("rita", "bi-risk"), null));
+        JsonNode checked = ok(call("GET", "/api/v1/bi/layer-datasets/file:table:bi.desk_notional_prep", as("rita", "bi-risk"), null));
         assertThat(checked.toString()).doesNotContain("\"level\":\"error\"");
         JsonNode lineage = ok(call("GET", "/api/v1/bi/lineage/desk-notional-prep@1", as("rita", "bi-risk"), null));
-        assertThat(lineage.toString()).as(lineage.toString()).contains("pack-kind").contains("tin-lake").contains("desk-notional-prep");
+        assertThat(lineage.toString()).as(lineage.toString()).contains("pack-kind").contains("tin-lake").contains("desk_notional_prep");
     }
 
     @Test @Order(5)

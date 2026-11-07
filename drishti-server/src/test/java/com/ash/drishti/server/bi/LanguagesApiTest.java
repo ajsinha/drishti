@@ -434,7 +434,7 @@ class LanguagesApiTest {
                 .path("meta").path("asOf").asText();
         assertThat(pyAsOf).as("the Python dataset and its base agree on the as-of date").isEqualTo(baseAsOf).isEqualTo(DAY);
         JsonNode lineage = ok(call("GET", "/api/v1/bi/lineage/lang-bucket-view@1", reader("rita"), null));
-        assertThat(lineage.path("datasets").path("trades").toString()).contains("lang-bucketed").contains("lang-trade").contains("pack-kind").contains("trade");
+        assertThat(lineage.path("datasets").path("trades").toString()).contains("lang_bucketed").contains("lang_trade").contains("pack-kind").contains("trade");
         assertThat(lineage.path("problems").size()).isZero();
         if (System.getProperty("capture") != null) {
             System.out.println("CAPTURE13 " + lineage);
@@ -638,13 +638,12 @@ class LanguagesApiTest {
     @Test @Order(4)
     void anUnsavedDraftIsCheckedAndAggregatesAcrossUnjoinedFactsAreFlagged() throws Exception {
         String draft = """
-                rachana: 2
-                expressions: 2
+                rachana: 3
                 model: lang-draft
                 version: 1.0.0
-                datasets:
-                  trades: { dataset: lang-trade, role: fact }
-                  others: { dataset: lang-trade, role: fact }
+                tables:
+                  trades: { table: bi.lang_trade, role: fact }
+                  others: { table: bi.lang_trade, role: fact }
                 measures:
                   Notional: { expr: "sum(trades.notional)" }
                 """;

@@ -314,7 +314,7 @@ class FieldParamsApiTest {
             assertThat(v.path("valid").asBoolean()).as(c.getKey()).isFalse();
             assertThat(v.path("problems").toString()).as(c.getKey()).contains("DRS-9037").contains(c.getValue());
         }
-        JsonNode onDataset = ok(call("POST", "/api/v1/bi/reports/validate", wes, Map.of("yaml", head.replace("model: fp-model@1", "dataset: fp-trade")
+        JsonNode onDataset = ok(call("POST", "/api/v1/bi/reports/validate", wes, Map.of("yaml", head.replace("model: fp-model@1", "dataset: bi.fp_trade")
                 + "      - { id: c, type: column, at: { x: 0, y: 0, w: 6, h: 4 }, wells: { axis: [param.breakdown], values: [NOTIONAL] } }\n")));
         assertThat(onDataset.path("problems").toString()).contains("DRS-9037").contains("belong to a model");
         // QA2-20: one problem per parameter in the wrong well (not one per choice), naming every choice that does not fit

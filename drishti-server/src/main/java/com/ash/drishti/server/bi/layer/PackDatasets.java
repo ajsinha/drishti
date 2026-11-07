@@ -298,8 +298,26 @@ public final class PackDatasets {
         if (d.extendsRef() != null) {
             m.put("extends", d.extendsRef());
         }
-        if (d.source() != null && DatasetDef.Source.PACK.equals(d.source().type())) {
-            m.put("source", Map.of("pack", d.source().pack(), "kind", d.source().kind()));
+        if (d.source() != null) {                                               // where the rows come from, in the dataset page's terms
+            DatasetDef.Source s = d.source();
+            Map<String, Object> src = new LinkedHashMap<>();
+            switch (s.type()) {
+                case DatasetDef.Source.PACK -> {
+                    src.put("pack", s.pack());
+                    src.put("kind", s.kind());
+                }
+                case DatasetDef.Source.CONNECTOR -> {
+                    src.put("connector", s.connector());
+                    if (s.query() != null) {
+                        src.put("query", s.query());
+                    }
+                }
+                case DatasetDef.Source.PYTHON -> src.put("python", s.python());
+                case DatasetDef.Source.MODEL -> src.put("model", s.model());
+                case DatasetDef.Source.RUN -> src.put("run", s.runName());
+                default -> src.put("type", s.type());
+            }
+            m.put("source", src);
         }
         if (d.grain() != null) {
             m.put("grain", Map.of("says", d.grain().says() == null ? "" : d.grain().says(), "keys", d.grain().keys(), "date", d.grain().date() == null ? "" : d.grain().date()));

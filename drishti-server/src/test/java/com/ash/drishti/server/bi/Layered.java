@@ -91,6 +91,26 @@ public final class Layered {
                 .orElseThrow(() -> new IllegalStateException("no model was written"));
     }
 
+    /**
+     * Several {@code rachana: 2} dataset texts migrated in one run, as an installation's folder is (a narrowing reads its base's columns), each
+     * read as the table it becomes; texts that are tables already are read as they are. A grouping gives its rows' table too.
+     */
+    public static List<DatasetDefParser.Result> tableDefs(String... yamls) {
+        Map<String, String> files = new LinkedHashMap<>();
+        List<DatasetDefParser.Result> out = new ArrayList<>();
+        for (int i = 0; i < yamls.length; i++) {
+            if (DatasetDefParser.isTable(yamls[i])) {
+                out.add(DatasetDefParser.parse(yamls[i]));
+            } else {
+                files.put("datasets/d" + i + ".dataset.yaml", yamls[i]);
+            }
+        }
+        if (!files.isEmpty()) {
+            migrate(files).entrySet().stream().filter(e -> e.getKey().endsWith(".table.yaml")).forEach(e -> out.add(DatasetDefParser.parse(e.getValue())));
+        }
+        return out;
+    }
+
     /** A {@code rachana: 2} dataset text (or a table) read as the table it becomes. */
     public static DatasetDefParser.Result tableDef(String yaml) {
         return DatasetDefParser.parse(table(yaml));
