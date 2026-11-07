@@ -17,7 +17,8 @@ explanation is the server's (``/api/v1/explain``), asked as the person, so their
 - ``GET /api/explain?kind=&measure=&part=&...`` and ``POST /api/explain`` (a pivot cell sends its view): the same-origin proxy that the
   preview card and the drawer (web/static/js/drishti_explain.js) read;
 - ``GET /api/explain/kinds``: the kinds that can be explained on this server;
-- ``GET /explain?kind=&...&tab=``: the full page, all four parts at once, for an auditor or for printing."""
+- ``GET /explain?kind=&...&tab=&body=``: the full page, all four parts at once, for an auditor or for printing; ``body`` is the JSON
+  object a number asked with a body (a pivot cell's view) carries, so the page asks exactly what the drawer asked."""
 from __future__ import annotations
 
 import json
@@ -75,6 +76,14 @@ async def explain_body(request: Request):
 async def page(request: Request):
     """The full page of one number's explanation: the request is the link's parameters (``tab`` scrolls to a part)."""
     q = request.query_params
-    req = {k: v for k, v in q.items() if k not in PAGE_ONLY}
+    req = {k: v for k, v in q.items() if k not in PAGE_ONLY and k != "body"}
+    if q.get("body"):
+        try:
+            body = json.loads(q["body"])
+        except ValueError:
+            body = None
+        if not isinstance(body, dict):
+            return JSONResponse({"code": "DRS-5001", "detail": "body is a JSON object: the view a pivot cell is explained with"}, status_code=400)
+        req["body"] = body
     return render(request, "explain.html", screen="explain", explain_request=json.dumps(req), explain_tab=q.get("tab", ""),
                   back=request.headers.get("referer", ""))

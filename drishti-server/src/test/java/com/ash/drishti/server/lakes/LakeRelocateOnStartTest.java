@@ -70,6 +70,27 @@ class LakeRelocateOnStartTest {
         assertThat(tmp.resolve("data/delta/demo/reference")).isDirectory();
     }
 
+    /** A stamped connector file nobody edited, moved to lake: demo, is stamped again: still unedited, it keeps following its pack's template. */
+    @Test
+    void aStampedNeverEditedFileMovedToTheDemoLakeStaysUnedited() throws Exception {
+        MockEnvironment env = env(true);
+        Path conns = tmp.resolve("config/connectors");
+        String body = "plugin: delta\nkinds:\n- book\nsettings:\n  root: \"${DRISHTI_DELTA_ROOT:./data/delta}\"\n  domain: reference\n";
+        Files.writeString(conns.resolve("reference-store.yaml"), com.ash.drishti.packs.TemplateStamp.stamp(
+                "# Generated at first start from the connector template of pack 'core'.\n" + body, "core", "f00d"));
+        Files.writeString(conns.resolve("edited-store.yaml"), com.ash.drishti.packs.TemplateStamp.stamp(
+                "# Generated at first start from the connector template of pack 'core'.\n" + body.replace("domain: reference", "domain: reference\n  cache-minutes: 9"),
+                "core", "f00d").replace("cache-minutes: 9", "cache-minutes: 10"));                     // edited after it was written
+        new LakeRelocateOnStart().postProcessEnvironment(env, null);
+        String text = Files.readString(conns.resolve("reference-store.yaml"));
+        assertThat(text).contains("lake: demo").doesNotContain("root:");
+        assertThat(com.ash.drishti.packs.TemplateStamp.pristine(text)).as("counted as unedited").isTrue();
+        assertThat(com.ash.drishti.packs.TemplateStamp.of(text).orElseThrow().template()).isEqualTo("f00d");
+        String edited = Files.readString(conns.resolve("edited-store.yaml"));
+        assertThat(edited).contains("lake: demo", "cache-minutes: 10");
+        assertThat(com.ash.drishti.packs.TemplateStamp.pristine(edited)).as("an edited file stays edited").isFalse();
+    }
+
     /**
      * The owner's case after 2.9.11.d: the shipped lake files, a demo lake in the older layout and the connector files a 2.9.4 server
      * generated (old default root, domain, kinds, layout): after the start every shipped lake file is byte for byte as shipped.

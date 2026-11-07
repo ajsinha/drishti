@@ -20,6 +20,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from conftest import CONSOLE
 from routes.functions_routes import CONSOLE_COMMANDS
 from routes.var_routes import explain_command, var_command, var_suggestions
 
@@ -93,6 +94,22 @@ def test_the_page_renders_the_request_it_was_given(client):
     assert req == {"kind": "var", "measure": "var", "scope": "DESK:RATES", "from": "2026-09-29"}
     assert 'data-explain-tab="why"' in html
     assert 'data-screen="explain"' in html
+
+
+def test_the_page_carries_a_pivot_cells_view_sent_in_the_body(client):
+    """Open as a page from a pivot cell: the view the drawer posted rides along as one JSON parameter, and the page asks with it."""
+    import html as htmllib
+    import urllib.parse
+    view = {"source": "trade", "rows": ["DESK"], "values": ["sum(MTM)"], "filters": {"BOOK": ["B & C"]}}
+    body = {"view": view, "from": {"DESK": "FX"}, "to": {"DESK": "RATES"}, "by": "BOOK"}
+    page = client.get("/explain?" + urllib.parse.urlencode({"kind": "pivot", "measure": "cell", "tab": "why", "body": json.dumps(body)}))
+    assert page.status_code == 200
+    req = json.loads(htmllib.unescape(page.text.split('data-explain-request="')[1].split('"')[0]))
+    assert req == {"kind": "pivot", "measure": "cell", "body": body}
+    js = (CONSOLE / "web/static/js/drishti_explain.js").read_text(encoding="utf-8")
+    assert 'if (req.body) q.set("body", JSON.stringify(req.body));' in js        # the drawer's link carries it
+    for bad in ("[1, 2]", "not json"):
+        assert client.get("/explain?" + urllib.parse.urlencode({"kind": "pivot", "body": bad})).status_code == 400
 
 
 def test_func_lists_var_explain_and_f1_has_the_explain_section(client):

@@ -45,7 +45,7 @@ NAMESPACE = "Drishti"
 FOLDERS = ("", "js", "js/build", "css", "img", "img/guide", "img/icons", "calc")
 
 # Published, immutable code: never rewritten, and every name it uses is a contract the rest must keep.
-FROZEN = ("drishti-console/web/static/render/", "drishti-console/web/embed/", "drishti-console/web/elements/package/",
+FROZEN = ("drishti-console/web/static/render/", "drishti-console/web/embed/",
           "drishti-console/web/elements/integrity.json")
 # History: what was true then stays as it was written.
 HISTORY = ("CHANGELOG.md", "RELEASE_NOTES.md", "docs/architecture/IMPLEMENTATION_HISTORY.md")

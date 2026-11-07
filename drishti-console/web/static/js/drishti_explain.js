@@ -75,8 +75,10 @@
     return p;
   }
 
+  /** The full page's link: the request's parameters, and a body (a pivot cell's view) carried along as one JSON parameter, so the page asks the same. */
   function pageUrl(req, tab) {
     var q = query(req, tab ? { tab: tab } : {});
+    if (req.body) q.set("body", JSON.stringify(req.body));
     return "/explain?" + q.toString();
   }
 

@@ -98,7 +98,9 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 ## 3. `drishti.py`: the one command line
 
 `tools/drishti.py` is one program with twelve groups. `drishti-console/.venv/bin/python tools/drishti.py <group> --help` lists a group's commands and
-`<group> <command> --help` every option with examples.
+`<group> <command> --help` every option with examples. The command tree (every group, command and option) is built in `tools/drishti_parser.py`, the commands
+themselves in `tools/drishti.py` and the group modules it registers (`datacli.py`, `pivotfncli.py`, ...), each file well under the
+1,500-line cap.
 
 | Group | Commands | Section |
 |---|---|---|
@@ -1738,7 +1740,6 @@ of Parquet.
 | `tools/license_headers.py` | checks (exit `1` naming the files) or, with `--fix`, inserts the copyright header in every source file |
 | `tools/elements_sheet.py` | builds the `<drishti-view>` and report stylesheets from the console's CSS (run it when `drishti_bi.css` or the report CSS changes) |
 | `tools/render_sheet.py` | builds the client-side renderer's sheet (`static/render/<version>/drishti-render.css`) from the console's CSS and writes its `integrity.json`; `--check` says whether either is stale (CLIENT_RENDERER.md section 13). A released version's folder never changes: a change means a new version folder |
-| `tools/elements_package.py` | builds the npm package of Drishti Elements 1.x (`<drishti-view>`, `@drishti/elements`); the eight libraries' packages are `drishti.py elements dist` (5.18) |
 | `tools/make_icons.py` | the console's favicon and app icons from the logo mark |
 | `tools/fetch-pyodide.sh` | installs the pinned, checksummed Pyodide runtime Calc serves from its own origin (no CDN) |
 | `tools/docs/screenshots.py` | regenerates the guides' screenshots (Playwright, scratch ports); `drishti.py docs shots` runs it |
