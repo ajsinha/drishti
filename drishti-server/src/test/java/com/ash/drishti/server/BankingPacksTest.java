@@ -20,6 +20,7 @@ import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -80,11 +81,16 @@ class BankingPacksTest {
                 .andExpect(jsonPath("$.pivot.fields").value(hasItems("PORTFOLIO", "SOURCE_SYSTEM", "COUNTERPARTY", "QUANTITY")));
     }
 
-    /** Each of the seven chart and aggregate kinds on a sample the generators wrote for it: drawn, with the numbers expected. */
+    /**
+     * Each chart and aggregate kind on a sample the generators wrote for it: drawn, with the numbers expected. The P&L explain's waterfall
+     * is registered under construction ({@code pnl-explain-waterfall}, config/under-construction.yaml): its panel is the chip.
+     */
     @Test
     void theChartAndAggregatePanelsHaveTheirSampleData() throws Exception {
+        mvc.perform(get("/api/v1/views/pnl-explain/PNL-COMM-1")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.panels[?(@.id == 'explain')].kind").value(hasItem("kv")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("Under construction")));
         String[][] cases = {
-            {"pnl-explain/PNL-COMM-1", "explain", "waterfall"},
             {"desk/DESK-RATES", "mtmGrid", "pivot"}, {"desk/DESK-RATES", "tradeCount", "pivot"},
             {"counterparty/CP-ALDERSHOT", "hierarchy", "graph"}, {"equity/EQ-CSCA", "ohlc", "candlestick"}, {"commodity/CMD-BRENT", "ohlc", "candlestick"},
             {"trade/MX-20000001", "ladder", "hbar"}, {"trade/MX-20000001", "events", "timeline"}, {"trade/1000001", "ladder", "hbar"}};
