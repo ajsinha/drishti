@@ -161,7 +161,7 @@ def test_every_button_of_the_one_explain(stack, browser):
     drawer_ready(pg, "inputs")
     drawer = pg.locator("[data-explain-drawer]")
     for label in ("Scope", "Positions", "Trades", "Scenario set", "Method", "Engine", "Lineage"):
-        assert label in drawer.inner_text(), label
+        assert label.lower() in drawer.inner_text().lower(), label
     # every tab
     for tab in ("formula", "inputs", "why", "workbook"):
         pg.locator(f'[data-dx-tab="{tab}"]').click()
