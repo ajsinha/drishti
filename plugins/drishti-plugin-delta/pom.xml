@@ -65,6 +65,8 @@
     <dependency><groupId>com.github.ben-manes.caffeine</groupId><artifactId>caffeine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId><scope>test</scope></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-testkit</artifactId><scope>test</scope></dependency>
+    <!-- the mock Unity Catalog server -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakehouse</artifactId><version>${project.version}</version><type>test-jar</type><scope>test</scope></dependency>
     <!-- DeltaOnAwsS3Test expands the shipped delta-s3 example (a connector naming a lake) as the server does -->
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeconfig</artifactId><scope>test</scope></dependency>
     <!-- S3Mock in the test JVM (no Docker): the Delta Lake on S3 connector's test, DeltaOnAwsS3Test -->
