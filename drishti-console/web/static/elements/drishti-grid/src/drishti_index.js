@@ -20,7 +20,7 @@
 export { ADDITIVE_FUNCS, normalizeColumn, getValue, formatValue, ColumnModel } from './drishti_columns.js';
 export { isBlank, compareValues, compareRows, cycleSort, passes, rowFilter, filterWords } from './drishti_sort-filter.js';
 export { AGG_FUNCS, aggFunc, parseMeasure, isServerMeasure, aggregate } from './drishti_aggregate.js';
-export { SEP, BLANK, memberText, valueLabel, normalizeView, serverRequest, memberFilters, PivotState, pivotLocal, mergeAnswer, applyValueFilters,
+export { SEP, BLANK, memberText, valueLabel, normalizeView, serverRequest, memberFilters, PivotState, pivotLocal, pivotApplyUpdates, mergeAnswer, applyValueFilters,
   resultColumns, cellValue } from './drishti_pivot.js';
 export { WELLS, VALUE_FUNCS, WellsModel } from './drishti_wells.js';
 export { ClientRowModel } from './drishti_client-rows.js';
@@ -30,4 +30,6 @@ export { SelectionModel, rangeStats, toTsv, rangeCells } from './drishti_selecti
 export { toCsv, crc32, zipStore, excelFormat, toXlsx, XLSX_TYPE } from './drishti_export.js';
 export { GridNavigator, keyLabel } from './drishti_keyboard.js';
 export { LAYOUTS, DENSITIES, GridModel, createGridModel } from './drishti_grid.js';
+export { GRID_EVENTS, domEventName, GridLive } from './drishti_grid-live.js';
+export { eventSourceFeed, webSocketFeed, manualFeed } from './drishti_live.js';
 export { renderWindow, renderText, renderHtml } from './drishti_plain-render.js';

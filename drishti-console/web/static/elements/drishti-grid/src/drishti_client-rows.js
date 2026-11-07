@@ -82,13 +82,40 @@ export class ClientRowModel {
   }
 
   /**
-   * Adds, updates (by id) and removes (by id) rows, then refreshes.
+   * A row's changed cells: column id to the old and new value and the way a number moved (for a cell's flash).
+   * @param {Object} before
+   * @param {Object} after
+   * @returns {Object<string, {old: *, value: *, dir: ?string}>}
+   */
+  changesOf(before, after) {
+    const out = {};
+    this.columns.all().forEach((c) => {
+      const a = this.value(before, c), b = this.value(after, c);
+      if (a === b || (a !== a && b !== b)) { return; }
+      out[c.id] = { old: a, value: b, dir: typeof a === 'number' && typeof b === 'number' ? (b > a ? 'up' : b < a ? 'down' : null) : null };
+    });
+    return out;
+  }
+
+  /**
+   * Adds, updates (by id) and removes (by id) rows. Updates alone are applied in place: a row whose sort or filter values changed is
+   * taken out of the order and merged back where it now belongs (ties keep the rows' order, so the order is stable), and the figures
+   * of its groups follow by difference (sums and counts) or from their members (the others); adds and removes refresh the whole view.
    * @param {{add: Object[], update: Object[], remove: Array<(Object|string)>}} t
-   * @returns {{added: number, updated: number, removed: number}}
+   * @returns {{added: number, updated: number, removed: number, changes: Array<{id: string, cells: Object}>, staleGroups: string[][]}}
    */
   applyTransaction(t) {
     let added = 0, updated = 0, removed = 0;
-    (t.update || []).forEach((r) => { const i = this.idIndex.get(this.getRowId(r, -1)); if (i !== undefined) { this.rows[i] = r; updated++; } });
+    const changes = [], touched = [];
+    (t.update || []).forEach((r) => {
+      const id = this.getRowId(r, -1), i = this.idIndex.get(id);
+      if (i === undefined) { return; }
+      const before = this.rows[i];
+      this.rows[i] = r;
+      updated++;
+      const cells = this.changesOf(before, r);
+      if (Object.keys(cells).length) { changes.push({ id: id, cells: cells }); touched.push({ i: i, before: before, cells: cells }); }
+    });
     if (t.remove && t.remove.length) {
       const gone = new Set(t.remove.map((r) => (typeof r === 'string' ? r : this.getRowId(r, -1))));
       const before = this.rows.length;
@@ -96,10 +123,110 @@ export class ClientRowModel {
       removed = before - this.rows.length;
     }
     (t.add || []).forEach((r) => { this.rows.push(r); added++; });
-    if (added || removed) { this.reindexIds(); }
-    this.refresh('transaction');
-    return { added: added, updated: updated, removed: removed };
+    let staleGroups = [];
+    if (added || removed) { this.reindexIds(); this.refresh('transaction'); staleGroups = this.groupNodes ? this.groupNodes.map((g) => g.path) : []; }
+    else if (touched.length) { staleGroups = this.updateInPlace(touched); this.events.emit('rowsChanged', { reason: 'transaction' }); }
+    return { added: added, updated: updated, removed: removed, changes: changes, staleGroups: staleGroups };
   }
+
+  /** @private updates in place; returns the paths of the groups whose non-additive figures the server must give again */
+  updateInPlace(touched) {
+    const changed = new Set();
+    touched.forEach((x) => Object.keys(x.cells).forEach((k) => changed.add(k)));
+    if (this.groupBy.some((g) => changed.has(g))) { this.refresh('transaction'); return this.groupNodes ? this.groupNodes.map((g) => g.path) : []; }
+    const sort = (this.sortModel || []).filter((s) => this.columns.get(s.colId));
+    const filterCols = Object.keys(this.filterModel || {}).filter((k) => this.filterModel[k]);
+    const reposition = !!this.quickFilter || sort.some((s) => changed.has(s.colId)) || filterCols.some((k) => changed.has(k));
+    if (reposition) {
+      const cols = this.columns.all(), rows = this.rows;
+      const test = rowFilter(this.filterModel, this.quickFilter, this.quickFilter ? this.columns.visible() : cols, (r, c) => this.value(r, c));
+      const cmp0 = sort.length ? compareRows(sort, (id) => this.columns.get(id), (r, c) => this.value(r, c)) : null;
+      const cmp = (a, b) => (cmp0 ? cmp0(rows[a], rows[b]) : 0) || a - b;
+      const moved = new Set(touched.map((x) => x.i));
+      const back = Array.from(moved).filter((i) => !test || test(rows[i])).sort(cmp);
+      const v = this.view, out = new Uint32Array(v.length - this.countIn(v, moved) + back.length);
+      let k = 0, j = 0;
+      for (let i = 0; i < v.length; i++) {
+        const x = v[i];
+        if (moved.has(x)) { continue; }
+        while (j < back.length && cmp(back[j], x) < 0) { out[k++] = back[j++]; }
+        out[k++] = x;
+      }
+      while (j < back.length) { out[k++] = back[j++]; }
+      this.view = out;
+      if (this.groupBy.length) { this.buildGroups(); this.flatten(); return this.groupNodes.filter((g) => g.serverCols.length).map((g) => g.path); }
+      this.flatten();
+      return [];
+    }
+    return this.groupBy.length ? this.regroupFigures(touched) : [];
+  }
+
+  /** @private */
+  countIn(v, set) { let n = 0; for (let i = 0; i < v.length; i++) { if (set.has(v[i])) { n++; } } return n; }
+
+  /** @private a changed row's groups: sums and counts by difference, the other functions again from the group's members */
+  regroupFigures(touched) {
+    const stale = new Map();
+    const inView = this.view.length === this.rows.length ? null : new Set(this.view);
+    touched.forEach((x) => {
+      if (inView && !inView.has(x.i)) { return; }
+      const row = this.rows[x.i];
+      let key = '';
+      for (let d = 0; d < this.groupBy.length; d++) {
+        key = (d ? key + SEP : '') + memberText(this.value(row, this.columns.get(this.groupBy[d])));
+        const g = this.groupByKey.get(key);
+        if (!g) { continue; }
+        Object.keys(x.cells).forEach((colId) => {
+          const c = this.columns.get(colId);
+          if (!c || !(colId in g.aggregates)) { return; }
+          if (g.serverCols.indexOf(colId) >= 0) { stale.set(g.path.join(SEP), g.path); return; }
+          const f = aggFunc(c.aggFunc), st = g.states[colId];
+          if (f.name === 'sum' || f.name === 'avg') {
+            const o = x.cells[colId].old, n = x.cells[colId].value;
+            const on = typeof o === 'number' && isFinite(o), nn = typeof n === 'number' && isFinite(n);
+            st.s += (nn ? n : 0) - (on ? o : 0);
+            st.n += (nn ? 1 : 0) - (on ? 1 : 0);
+          } else if (f.name === 'count') {
+            const has = (v) => v !== undefined && v !== null && v !== '';
+            g.states[colId] = st + (has(x.cells[colId].value) ? 1 : 0) - (has(x.cells[colId].old) ? 1 : 0);
+          } else {
+            g.states[colId] = this.groupState(g, c, f);
+          }
+          g.aggregates[colId] = f.result(g.states[colId]);
+        });
+      }
+    });
+    return Array.from(stale.values());
+  }
+
+  /** @private a group's state of a column, from its members */
+  groupState(g, c, f) {
+    const leaves = [];
+    const walk = (n) => { n.rows.forEach((x) => leaves.push(x)); n.children.forEach(walk); };
+    walk(g);
+    let st = f.init();
+    for (let j = 0; j < leaves.length; j++) { st = f.add(st, this.value(this.rows[leaves[j]], c)); }
+    return st;
+  }
+
+  /**
+   * Puts the server's figures of a group in (its non-additive columns: VaR, ES): they are no longer waiting.
+   * @param {string[]} path the group's members from the top
+   * @param {Object<string, *>} values column id to the server's figure
+   * @returns {boolean} whether the group exists
+   */
+  setGroupServerValues(path, values) {
+    const g = this.groupByKey && this.groupByKey.get(path.join(SEP));
+    if (!g) { return false; }
+    Object.keys(values).forEach((k) => { g.aggregates[k] = values[k]; g.pendingServer = g.pendingServer.filter((x) => x !== k); });
+    return true;
+  }
+
+  /**
+   * The groups and the columns whose figures the server gives (non-additive, or every one when clientAggregation is off).
+   * @returns {Array<{path: string[], columns: string[]}>}
+   */
+  serverGroupColumns() { return (this.groupNodes || []).filter((g) => g.serverCols.length).map((g) => ({ path: g.path, columns: g.serverCols.slice() })); }
 
   /** Sorts by a sort model. @param {Array<{colId: string, sort: string}>} m @returns {void} */
   setSortModel(m) { this.sortModel = (m || []).slice(); this.refresh('sort'); }
@@ -203,6 +330,7 @@ export class ClientRowModel {
   buildGroups() {
     this.groupNodes = [];
     this.groupRoot = null;
+    this.groupByKey = new Map();
     if (!this.groupBy.length) { return; }
     const cols = this.groupBy.map((id) => { const c = this.columns.get(id); if (!c) { throw new Error('no column ' + id + ' to group by'); } return c; });
     const valueCols = this.columns.all().filter((c) => c.aggFunc && c.type === 'number' && this.groupBy.indexOf(c.id) < 0);
@@ -217,6 +345,7 @@ export class ClientRowModel {
         if (!g) {
           g = { id: nodes.length, path: parent.path.concat([t]), depth: d, field: cols[d].id, value: isBlank(v) ? null : v, children: [], byKey: new Map(), rows: [], count: 0 };
           nodes.push(g);
+          this.groupByKey.set(g.path.join(SEP), g);
           parent.byKey.set(t, g);
           parent.children.push(g);
         }
@@ -230,14 +359,17 @@ export class ClientRowModel {
     nodes.forEach((g) => {
       const leaves = leavesOf(g, []);
       g.aggregates = {};
-      g.pendingServer = [];
+      g.states = {};
+      g.serverCols = [];
       valueCols.forEach((c) => {
         const f = aggFunc(c.aggFunc);
-        if (c.additive === false || !f || !this.clientAggregation) { g.aggregates[c.id] = null; g.pendingServer.push(c.id); return; }
+        if (c.additive === false || !f || !this.clientAggregation) { g.aggregates[c.id] = null; g.serverCols.push(c.id); return; }
         let st = f.init();
         for (let j = 0; j < leaves.length; j++) { st = f.add(st, this.value(this.rows[leaves[j]], c)); }
+        g.states[c.id] = st;
         g.aggregates[c.id] = f.result(st);
       });
+      g.pendingServer = g.serverCols.slice();
     });
     this.groupRoot = root;
   }

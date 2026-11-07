@@ -38,6 +38,7 @@ export const ADDITIVE_FUNCS = Object.freeze(['sum', 'count']);
  * @property {boolean} [sortable=true]
  * @property {boolean} [filterable=true]
  * @property {boolean} [resizable=true]
+ * @property {boolean} [editable=false] a person may change its values (setCellValue)
  * @property {string} [aggFunc] the aggregation of a value column (sum, count, min, max, avg, first, last, distinct, or a server measure)
  * @property {boolean} [additive] whether its figures may be summed: false for VaR, ES, ratios (a total is asked of the server);
  *   default: true for numbers
@@ -63,7 +64,7 @@ export function normalizeColumn(def, index) {
   const num = type === 'number';
   return Object.assign({
     id: id, field: def.field || id, header: def.header || def.field || id, type: type, width: 120, minWidth: 40, maxWidth: null,
-    pinned: null, hidden: false, sortable: true, filterable: true, resizable: true, aggFunc: num ? 'sum' : null,
+    pinned: null, hidden: false, sortable: true, filterable: true, resizable: true, editable: false, aggFunc: num ? 'sum' : null,
     additive: num, enableRowGroup: !num, enablePivot: !num, enableValue: num, group: null, description: '', format: null,
     valueGetter: null, comparator: null, measure: null
   }, def, { id: id, type: type }, def.aggregate === 'server' ? { additive: false } : {});

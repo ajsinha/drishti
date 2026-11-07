@@ -146,6 +146,47 @@ export class ServerRowModel {
     this.events.emit('rowsChanged', { reason: 'refresh' });
   }
 
+  /**
+   * Forgets one block (its rows are asked again when they are in view); the row count is kept.
+   * @param {string[]} keys the level's group keys ([] for the top)
+   * @param {number} block
+   * @returns {boolean} whether the block was held
+   */
+  invalidateBlock(keys, block) {
+    const lv = this.levels.get(keys.join(SEP));
+    const had = !!(lv && lv.blocks.delete(block));
+    if (had) { this.lru = this.lru.filter((x) => !(x.level === keys.join(SEP) && x.block === block)); this.display = null; this.events.emit('rowsChanged', { reason: 'invalidate' }); }
+    return had;
+  }
+
+  /**
+   * Forgets everything held (blocks, counts, open groups' levels kept open) and aborts what is in flight: the next draw asks again.
+   * @returns {void}
+   */
+  purge() { this.refresh(); }
+
+  /**
+   * A server's "data changed" notice (drishti-data's live feed): {purge: true} forgets everything; {keys} a level (and those under it);
+   * {keys, blocks} only those blocks; {rows: [ids]} the blocks holding those rows. The rows on screen are asked again at the next draw.
+   * @param {{purge: boolean, keys: string[], blocks: number[], rows: string[]}} notice
+   * @returns {string} what was done: purge, level, blocks, rows or nothing
+   */
+  dataChanged(notice) {
+    const n = notice || {};
+    if (n.purge || (!n.keys && !n.rows)) { this.purge(); return 'purge'; }
+    if (n.rows) {
+      const ids = new Set(n.rows.map(String));
+      let hit = 0;
+      this.levels.forEach((lv, key) => lv.blocks.forEach((b, bi) => {
+        if (b.rows.some((r, i) => ids.has(this.getRowId(r, bi * this.blockSize + i, lv.keys)))) { this.invalidateBlock(lv.keys, bi); hit++; }
+      }));
+      return hit ? 'rows' : 'nothing';
+    }
+    if (n.blocks) { n.blocks.forEach((b) => this.invalidateBlock(n.keys, b)); return 'blocks'; }
+    this.refresh({ keys: n.keys });
+    return 'level';
+  }
+
   /** @private how many rows a level shows: its count when known, else what is loaded plus one block to come */
   levelCount(lv) { return lv.rowCount !== null ? lv.rowCount : lv.knownEnd + this.blockSize; }
 

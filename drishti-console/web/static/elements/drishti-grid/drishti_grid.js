@@ -92,7 +92,7 @@
       const num = type === 'number';
       return Object.assign({
         id: id, field: def.field || id, header: def.header || def.field || id, type: type, width: 120, minWidth: 40, maxWidth: null,
-        pinned: null, hidden: false, sortable: true, filterable: true, resizable: true, aggFunc: num ? 'sum' : null,
+        pinned: null, hidden: false, sortable: true, filterable: true, resizable: true, editable: false, aggFunc: num ? 'sum' : null,
         additive: num, enableRowGroup: !num, enablePivot: !num, enableValue: num, group: null, description: '', format: null,
         valueGetter: null, comparator: null, measure: null
       }, def, { id: id, type: type }, def.aggregate === 'server' ? { additive: false } : {});
@@ -584,8 +584,55 @@
           out[r.key + '|' + c.key] = e;
         });
       });
-      return { measures: measures.map((m) => ({ index: m.index, id: m.id, label: m.label, kind: m.kind, plainSum: !!(m.func && m.func.name === 'sum'), exact: true, server: m.server })),
+      const answer = { measures: measures.map((m) => ({ index: m.index, id: m.id, label: m.label, kind: m.kind, plainSum: !!(m.func && m.func.name === 'sum'), exact: true, server: m.server })),
         rowDimensions: v.rows, columnDimensions: v.columns, rows: rows, columns: cols, cells: out, pending: pending, computedBy: 'browser', notes: notes };
+      Object.defineProperty(answer, 'incremental', { enumerable: false, value: {
+        cells: cells, local: local, measures: measures, keep: filters.length ? keep : null, val: val, view: v,
+        invertible: !v.valueFilters.length && !Object.keys(v.top || {}).length && local.every((m) => ['sum', 'avg', 'count'].indexOf(m.func.name) >= 0)
+      } });
+      return answer;
+    }
+    function pivotApplyUpdates(answer, updates) {
+      const inc = answer && answer.incremental;
+      if (!inc || !inc.invertible) { return { applied: false, cells: [] }; }
+      const v = inc.view, R = v.rows.length, C = v.columns.length, keysOf = (rec, dims) => {
+        const out = [''];
+        let k = '';
+        for (let i = 0; i < dims.length; i++) { k = i === 0 ? memberText(inc.val(rec, dims[0])) : k + SEP + memberText(inc.val(rec, dims[i])); out.push(k); }
+        return out;
+      };
+      const plan = [];
+      for (const u of updates) {
+        const inOld = !inc.keep || inc.keep(u.old), inNew = !inc.keep || inc.keep(u.value);
+        if (inOld !== inNew) { return { applied: false, cells: [] }; }
+        if (!inOld) { continue; }
+        const ro = keysOf(u.old, v.rows), rn = keysOf(u.value, v.rows), co = keysOf(u.old, v.columns), cn = keysOf(u.value, v.columns);
+        if (ro[R] !== rn[R] || co[C] !== cn[C]) { return { applied: false, cells: [] }; }
+        plan.push({ rk: rn, ck: cn, u: u });
+      }
+      const touched = new Set();
+      plan.forEach((p) => {
+        for (let i = 0; i <= R; i++) {
+          for (let j = 0; j <= C; j++) {
+            const key = p.rk[i] + '|' + p.ck[j], c = inc.cells.get(key);
+            if (!c) { continue; }
+            inc.local.forEach((m, li) => {
+              const o = m.field ? inc.val(p.u.old, m.field) : 1, n = m.field ? inc.val(p.u.value, m.field) : 1;
+              if (m.func.name === 'count') { const has = (x) => x !== undefined && x !== null && x !== ''; c.states[li] += (has(n) ? 1 : 0) - (has(o) ? 1 : 0); return; }
+              const st = c.states[li], on = typeof o === 'number' && isFinite(o), nn = typeof n === 'number' && isFinite(n);
+              st.s += (nn ? n : 0) - (on ? o : 0);
+              st.n += (nn ? 1 : 0) - (on ? 1 : 0);
+            });
+            touched.add(key);
+          }
+        }
+      });
+      touched.forEach((key) => {
+        const e = answer.cells[key], c = inc.cells.get(key);
+        if (!e) { return; }
+        inc.local.forEach((m, li) => { e.values[m.label] = m.func.result(c.states[li]); });
+      });
+      return { applied: true, cells: Array.from(touched) };
     }
     function coordsId(c) { return Object.keys(c || {}).sort().map((k) => k + '=' + c[k]).join(SEP); }
     function mergeAnswer(local, server) {
@@ -644,7 +691,7 @@
       if (!c) { return { value: null, note: null, members: 0 }; }
       return { value: c.values ? c.values[measure] : null, note: c.notes ? c.notes[measure] || null : null, members: c.members || 0 };
     }
-    return { "SEP": SEP, "BLANK": BLANK, "memberText": memberText, "valueLabel": valueLabel, "normalizeView": normalizeView, "serverRequest": serverRequest, "memberFilters": memberFilters, "PivotState": PivotState, "pivotLocal": pivotLocal, "mergeAnswer": mergeAnswer, "applyValueFilters": applyValueFilters, "resultColumns": resultColumns, "cellValue": cellValue };
+    return { "SEP": SEP, "BLANK": BLANK, "memberText": memberText, "valueLabel": valueLabel, "normalizeView": normalizeView, "serverRequest": serverRequest, "memberFilters": memberFilters, "PivotState": PivotState, "pivotLocal": pivotLocal, "pivotApplyUpdates": pivotApplyUpdates, "mergeAnswer": mergeAnswer, "applyValueFilters": applyValueFilters, "resultColumns": resultColumns, "cellValue": cellValue };
   })();
   /* ---- src/drishti_client-rows.js ---- */
   __m["src/drishti_client-rows.js"] = (function () {
@@ -676,9 +723,27 @@
         this.idIndex = new Map();
         for (let i = 0; i < this.rows.length; i++) { this.idIndex.set(this.getRowId(this.rows[i], i), i); }
       }
+      changesOf(before, after) {
+        const out = {};
+        this.columns.all().forEach((c) => {
+          const a = this.value(before, c), b = this.value(after, c);
+          if (a === b || (a !== a && b !== b)) { return; }
+          out[c.id] = { old: a, value: b, dir: typeof a === 'number' && typeof b === 'number' ? (b > a ? 'up' : b < a ? 'down' : null) : null };
+        });
+        return out;
+      }
       applyTransaction(t) {
         let added = 0, updated = 0, removed = 0;
-        (t.update || []).forEach((r) => { const i = this.idIndex.get(this.getRowId(r, -1)); if (i !== undefined) { this.rows[i] = r; updated++; } });
+        const changes = [], touched = [];
+        (t.update || []).forEach((r) => {
+          const id = this.getRowId(r, -1), i = this.idIndex.get(id);
+          if (i === undefined) { return; }
+          const before = this.rows[i];
+          this.rows[i] = r;
+          updated++;
+          const cells = this.changesOf(before, r);
+          if (Object.keys(cells).length) { changes.push({ id: id, cells: cells }); touched.push({ i: i, before: before, cells: cells }); }
+        });
         if (t.remove && t.remove.length) {
           const gone = new Set(t.remove.map((r) => (typeof r === 'string' ? r : this.getRowId(r, -1))));
           const before = this.rows.length;
@@ -686,10 +751,90 @@
           removed = before - this.rows.length;
         }
         (t.add || []).forEach((r) => { this.rows.push(r); added++; });
-        if (added || removed) { this.reindexIds(); }
-        this.refresh('transaction');
-        return { added: added, updated: updated, removed: removed };
+        let staleGroups = [];
+        if (added || removed) { this.reindexIds(); this.refresh('transaction'); staleGroups = this.groupNodes ? this.groupNodes.map((g) => g.path) : []; }
+        else if (touched.length) { staleGroups = this.updateInPlace(touched); this.events.emit('rowsChanged', { reason: 'transaction' }); }
+        return { added: added, updated: updated, removed: removed, changes: changes, staleGroups: staleGroups };
       }
+      updateInPlace(touched) {
+        const changed = new Set();
+        touched.forEach((x) => Object.keys(x.cells).forEach((k) => changed.add(k)));
+        if (this.groupBy.some((g) => changed.has(g))) { this.refresh('transaction'); return this.groupNodes ? this.groupNodes.map((g) => g.path) : []; }
+        const sort = (this.sortModel || []).filter((s) => this.columns.get(s.colId));
+        const filterCols = Object.keys(this.filterModel || {}).filter((k) => this.filterModel[k]);
+        const reposition = !!this.quickFilter || sort.some((s) => changed.has(s.colId)) || filterCols.some((k) => changed.has(k));
+        if (reposition) {
+          const cols = this.columns.all(), rows = this.rows;
+          const test = rowFilter(this.filterModel, this.quickFilter, this.quickFilter ? this.columns.visible() : cols, (r, c) => this.value(r, c));
+          const cmp0 = sort.length ? compareRows(sort, (id) => this.columns.get(id), (r, c) => this.value(r, c)) : null;
+          const cmp = (a, b) => (cmp0 ? cmp0(rows[a], rows[b]) : 0) || a - b;
+          const moved = new Set(touched.map((x) => x.i));
+          const back = Array.from(moved).filter((i) => !test || test(rows[i])).sort(cmp);
+          const v = this.view, out = new Uint32Array(v.length - this.countIn(v, moved) + back.length);
+          let k = 0, j = 0;
+          for (let i = 0; i < v.length; i++) {
+            const x = v[i];
+            if (moved.has(x)) { continue; }
+            while (j < back.length && cmp(back[j], x) < 0) { out[k++] = back[j++]; }
+            out[k++] = x;
+          }
+          while (j < back.length) { out[k++] = back[j++]; }
+          this.view = out;
+          if (this.groupBy.length) { this.buildGroups(); this.flatten(); return this.groupNodes.filter((g) => g.serverCols.length).map((g) => g.path); }
+          this.flatten();
+          return [];
+        }
+        return this.groupBy.length ? this.regroupFigures(touched) : [];
+      }
+      countIn(v, set) { let n = 0; for (let i = 0; i < v.length; i++) { if (set.has(v[i])) { n++; } } return n; }
+      regroupFigures(touched) {
+        const stale = new Map();
+        const inView = this.view.length === this.rows.length ? null : new Set(this.view);
+        touched.forEach((x) => {
+          if (inView && !inView.has(x.i)) { return; }
+          const row = this.rows[x.i];
+          let key = '';
+          for (let d = 0; d < this.groupBy.length; d++) {
+            key = (d ? key + SEP : '') + memberText(this.value(row, this.columns.get(this.groupBy[d])));
+            const g = this.groupByKey.get(key);
+            if (!g) { continue; }
+            Object.keys(x.cells).forEach((colId) => {
+              const c = this.columns.get(colId);
+              if (!c || !(colId in g.aggregates)) { return; }
+              if (g.serverCols.indexOf(colId) >= 0) { stale.set(g.path.join(SEP), g.path); return; }
+              const f = aggFunc(c.aggFunc), st = g.states[colId];
+              if (f.name === 'sum' || f.name === 'avg') {
+                const o = x.cells[colId].old, n = x.cells[colId].value;
+                const on = typeof o === 'number' && isFinite(o), nn = typeof n === 'number' && isFinite(n);
+                st.s += (nn ? n : 0) - (on ? o : 0);
+                st.n += (nn ? 1 : 0) - (on ? 1 : 0);
+              } else if (f.name === 'count') {
+                const has = (v) => v !== undefined && v !== null && v !== '';
+                g.states[colId] = st + (has(x.cells[colId].value) ? 1 : 0) - (has(x.cells[colId].old) ? 1 : 0);
+              } else {
+                g.states[colId] = this.groupState(g, c, f);
+              }
+              g.aggregates[colId] = f.result(g.states[colId]);
+            });
+          }
+        });
+        return Array.from(stale.values());
+      }
+      groupState(g, c, f) {
+        const leaves = [];
+        const walk = (n) => { n.rows.forEach((x) => leaves.push(x)); n.children.forEach(walk); };
+        walk(g);
+        let st = f.init();
+        for (let j = 0; j < leaves.length; j++) { st = f.add(st, this.value(this.rows[leaves[j]], c)); }
+        return st;
+      }
+      setGroupServerValues(path, values) {
+        const g = this.groupByKey && this.groupByKey.get(path.join(SEP));
+        if (!g) { return false; }
+        Object.keys(values).forEach((k) => { g.aggregates[k] = values[k]; g.pendingServer = g.pendingServer.filter((x) => x !== k); });
+        return true;
+      }
+      serverGroupColumns() { return (this.groupNodes || []).filter((g) => g.serverCols.length).map((g) => ({ path: g.path, columns: g.serverCols.slice() })); }
       setSortModel(m) { this.sortModel = (m || []).slice(); this.refresh('sort'); }
       setFilterModel(m) { this.filterModel = Object.assign({}, m); this.refresh('filter'); }
       setQuickFilter(q) { this.quickFilter = q || ''; this.refresh('filter'); }
@@ -749,6 +894,7 @@
       buildGroups() {
         this.groupNodes = [];
         this.groupRoot = null;
+        this.groupByKey = new Map();
         if (!this.groupBy.length) { return; }
         const cols = this.groupBy.map((id) => { const c = this.columns.get(id); if (!c) { throw new Error('no column ' + id + ' to group by'); } return c; });
         const valueCols = this.columns.all().filter((c) => c.aggFunc && c.type === 'number' && this.groupBy.indexOf(c.id) < 0);
@@ -763,6 +909,7 @@
             if (!g) {
               g = { id: nodes.length, path: parent.path.concat([t]), depth: d, field: cols[d].id, value: isBlank(v) ? null : v, children: [], byKey: new Map(), rows: [], count: 0 };
               nodes.push(g);
+              this.groupByKey.set(g.path.join(SEP), g);
               parent.byKey.set(t, g);
               parent.children.push(g);
             }
@@ -775,14 +922,17 @@
         nodes.forEach((g) => {
           const leaves = leavesOf(g, []);
           g.aggregates = {};
-          g.pendingServer = [];
+          g.states = {};
+          g.serverCols = [];
           valueCols.forEach((c) => {
             const f = aggFunc(c.aggFunc);
-            if (c.additive === false || !f || !this.clientAggregation) { g.aggregates[c.id] = null; g.pendingServer.push(c.id); return; }
+            if (c.additive === false || !f || !this.clientAggregation) { g.aggregates[c.id] = null; g.serverCols.push(c.id); return; }
             let st = f.init();
             for (let j = 0; j < leaves.length; j++) { st = f.add(st, this.value(this.rows[leaves[j]], c)); }
+            g.states[c.id] = st;
             g.aggregates[c.id] = f.result(st);
           });
+          g.pendingServer = g.serverCols.slice();
         });
         this.groupRoot = root;
       }
@@ -978,6 +1128,124 @@
     const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
     return { "toCsv": toCsv, "crc32": crc32, "zipStore": zipStore, "excelFormat": excelFormat, "toXlsx": toXlsx, "XLSX_TYPE": XLSX_TYPE };
   })();
+  /* ---- src/drishti_grid-live.js ---- */
+  __m["src/drishti_grid-live.js"] = (function () {
+    const GRID_EVENTS = Object.freeze(['cellClicked', 'cellDoubleClicked', 'cellValueChanged', 'focusChanged', 'selectionChanged', 'rangeChanged',
+      'sortChanged', 'filterChanged', 'pivotChanged', 'groupChanged', 'rowExpanded', 'rowCollapsed', 'columnMoved', 'columnResized', 'columnPinned',
+      'columnVisible', 'rowDataUpdated', 'blockLoaded', 'blockFailed', 'explainOpened', 'serverTotalsUpdated', 'serverTotalsFailed']);
+    function domEventName(name) { return 'drishti:' + name.replace(/[A-Z]/g, (c) => '-' + c.toLowerCase()); }
+    class GridLive {
+      constructor(grid, o) {
+        this.grid = grid;
+        this.o = Object.assign({ asyncWaitMs: 50, flashMs: 1000, serverDebounceMs: 250, now: () => Date.now() }, o);
+        this.queue = [];
+        this.waiters = [];
+        this.timer = 0;
+        this.flashes = new Map();
+        this.target = null;
+        this.serverTimer = 0;
+        this.staleGroups = new Map();
+        this.stalePivot = false;
+        this.stats = { batches: 0, updates: 0 };
+      }
+      emit(name, detail) {
+        if (GRID_EVENTS.indexOf(name) < 0) { throw new Error('not a grid event: ' + name); }
+        this.grid.events.emit(name, detail || {});
+        if (this.target && typeof CustomEvent === 'function') {
+          this.target.dispatchEvent(new CustomEvent(domEventName(name), { detail: detail || {}, bubbles: true, composed: true }));
+        }
+      }
+      apply(tx) {
+        const g = this.grid;
+        if (g.serverSide) { throw new Error('the rows are the server\'s: send a dataChanged notice (dataChanged(notice))'); }
+        const before = g.pivotMode && g.answer && g.answer.incremental ? (tx.update || []).map((r) => {
+          const id = g.rowModel.getRowId(r, -1), i = g.rowModel.idIndex.get(id);
+          return i === undefined ? null : { old: g.rowModel.rows[i], value: r };
+        }).filter(Boolean) : null;
+        const res = g.rowModel.applyTransaction(tx);
+        const t = this.o.now();
+        res.changes.forEach((ch) => Object.keys(ch.cells).forEach((col) => { if (ch.cells[col].dir) { this.flashes.set(ch.id + '\u001f' + col, { dir: ch.cells[col].dir, at: t }); } }));
+        this.stats.updates += res.updated;
+        if (g.pivotMode) { this.pivotAfter(before, res); }
+        if (res.staleGroups.length) { res.staleGroups.forEach((p) => this.staleGroups.set(p.join('\u001f'), p)); this.askServerSoon(); }
+        this.emit('rowDataUpdated', { added: res.added, updated: res.updated, removed: res.removed, changes: res.changes });
+        return { added: res.added, updated: res.updated, removed: res.removed, changes: res.changes };
+      }
+      pivotAfter(before, res) {
+        const g = this.grid, a = g.answer;
+        if (!a || g.serverSide || g.o.clientAggregation === false) { this.stalePivot = true; this.askServerSoon(); return; }
+        const done = before && !res.added && !res.removed ? g.applyPivotUpdates(before) : false;
+        if (!done) { g.runPivot(); return; }
+        if (a.measures.some((m) => m.server)) { this.stalePivot = true; this.askServerSoon(); }
+        g.events.emit('changed', { what: 'pivot' });
+      }
+      applyAsync(tx) {
+        this.queue.push(tx);
+        const p = new Promise((resolve) => this.waiters.push(resolve));
+        if (!this.timer) { this.timer = setTimeout(() => this.flush(), this.o.asyncWaitMs); }
+        return p;
+      }
+      flush() {
+        clearTimeout(this.timer);
+        this.timer = 0;
+        if (!this.queue.length) { return null; }
+        const g = this.grid, add = [], remove = [], update = new Map();
+        this.queue.forEach((tx) => {
+          (tx.add || []).forEach((r) => add.push(r));
+          (tx.remove || []).forEach((r) => { const id = typeof r === 'string' ? r : g.rowModel.getRowId(r, -1); remove.push(id); update.delete(id); });
+          (tx.update || []).forEach((r) => update.set(g.rowModel.getRowId(r, -1), r));
+        });
+        this.queue = [];
+        const waiters = this.waiters;
+        this.waiters = [];
+        this.stats.batches++;
+        const res = this.apply({ add: add, update: Array.from(update.values()), remove: remove });
+        waiters.forEach((w) => w(res));
+        return res;
+      }
+      flashOf(rowId, colId) {
+        const k = rowId + '\u001f' + colId, f = this.flashes.get(k);
+        if (!f) { return null; }
+        if (this.o.now() - f.at > this.o.flashMs) { this.flashes.delete(k); return null; }
+        return f.dir;
+      }
+      askServerSoon() {
+        clearTimeout(this.serverTimer);
+        this.serverTimer = setTimeout(() => this.askServer(), this.o.serverDebounceMs);
+      }
+      askServer() {
+        clearTimeout(this.serverTimer);
+        this.serverTimer = 0;
+        const g = this.grid, waits = [];
+        if (this.staleGroups.size && g.o.serverGroupTotals && !g.serverSide) {
+          const want = g.rowModel.serverGroupColumns().filter((x) => this.staleGroups.has(x.path.join('\u001f')));
+          this.staleGroups.clear();
+          if (want.length) {
+            waits.push(Promise.resolve(g.o.serverGroupTotals({ groupBy: g.rowModel.groupBy.slice(), groups: want })).then((answers) => {
+              (answers || []).forEach((x) => g.rowModel.setGroupServerValues(x.path, x.values || {}));
+              this.emit('serverTotalsUpdated', { groups: (answers || []).map((x) => x.path) });
+              g.events.emit('changed', { what: 'rows', reason: 'server-totals' });
+            }, (e) => this.emit('serverTotalsFailed', { error: e })));
+          }
+        }
+        if (this.stalePivot && g.pivotMode && g.o.serverPivot) {
+          this.stalePivot = false;
+          waits.push(g.refreshServerMeasures().then((n) => this.emit('serverTotalsUpdated', { pivotCells: n }), (e) => this.emit('serverTotalsFailed', { error: e })));
+        }
+        return Promise.all(waits).then(() => undefined);
+      }
+      connect(feed) {
+        const g = this.grid;
+        return feed.subscribe((m) => {
+          if (!m || !m.type) { return; }
+          if (m.type === 'transaction') { if (g.serverSide) { g.dataChanged({ rows: (m.update || []).map((r) => g.rowModel.getRowId(r, -1)) }); } else { this.applyAsync(m); } }
+          else if (m.type === 'dataChanged') { g.dataChanged(m); }
+          else if (m.type === 'rows' && !g.serverSide) { g.rowModel.setRows(m.rows || []); this.emit('rowDataUpdated', { replaced: true, added: (m.rows || []).length, updated: 0, removed: 0, changes: [] }); }
+        });
+      }
+    }
+    return { "GRID_EVENTS": GRID_EVENTS, "domEventName": domEventName, "GridLive": GridLive };
+  })();
   /* ---- src/drishti_server-rows.js ---- */
   __m["src/drishti_server-rows.js"] = (function () {
     var EventBus = __lib("drishti-core").EventBus;
@@ -1044,6 +1312,28 @@
           this.display = null;
         }
         this.events.emit('rowsChanged', { reason: 'refresh' });
+      }
+      invalidateBlock(keys, block) {
+        const lv = this.levels.get(keys.join(SEP));
+        const had = !!(lv && lv.blocks.delete(block));
+        if (had) { this.lru = this.lru.filter((x) => !(x.level === keys.join(SEP) && x.block === block)); this.display = null; this.events.emit('rowsChanged', { reason: 'invalidate' }); }
+        return had;
+      }
+      purge() { this.refresh(); }
+      dataChanged(notice) {
+        const n = notice || {};
+        if (n.purge || (!n.keys && !n.rows)) { this.purge(); return 'purge'; }
+        if (n.rows) {
+          const ids = new Set(n.rows.map(String));
+          let hit = 0;
+          this.levels.forEach((lv, key) => lv.blocks.forEach((b, bi) => {
+            if (b.rows.some((r, i) => ids.has(this.getRowId(r, bi * this.blockSize + i, lv.keys)))) { this.invalidateBlock(lv.keys, bi); hit++; }
+          }));
+          return hit ? 'rows' : 'nothing';
+        }
+        if (n.blocks) { n.blocks.forEach((b) => this.invalidateBlock(n.keys, b)); return 'blocks'; }
+        this.refresh({ keys: n.keys });
+        return 'level';
       }
       levelCount(lv) { return lv.rowCount !== null ? lv.rowCount : lv.knownEnd + this.blockSize; }
       flatten() {
@@ -1525,7 +1815,8 @@
     var SelectionModel = __m["src/drishti_selection.js"].SelectionModel, rangeStats = __m["src/drishti_selection.js"].rangeStats, toTsv = __m["src/drishti_selection.js"].toTsv, rangeCells = __m["src/drishti_selection.js"].rangeCells;
     var GridNavigator = __m["src/drishti_keyboard.js"].GridNavigator;
     var WellsModel = __m["src/drishti_wells.js"].WellsModel;
-    var PivotState = __m["src/drishti_pivot.js"].PivotState, pivotLocal = __m["src/drishti_pivot.js"].pivotLocal, serverRequest = __m["src/drishti_pivot.js"].serverRequest, mergeAnswer = __m["src/drishti_pivot.js"].mergeAnswer, applyValueFilters = __m["src/drishti_pivot.js"].applyValueFilters, resultColumns = __m["src/drishti_pivot.js"].resultColumns, cellValue = __m["src/drishti_pivot.js"].cellValue;
+    var PivotState = __m["src/drishti_pivot.js"].PivotState, pivotLocal = __m["src/drishti_pivot.js"].pivotLocal, pivotApplyUpdates = __m["src/drishti_pivot.js"].pivotApplyUpdates, serverRequest = __m["src/drishti_pivot.js"].serverRequest, mergeAnswer = __m["src/drishti_pivot.js"].mergeAnswer, applyValueFilters = __m["src/drishti_pivot.js"].applyValueFilters, resultColumns = __m["src/drishti_pivot.js"].resultColumns, cellValue = __m["src/drishti_pivot.js"].cellValue;
+    var GridLive = __m["src/drishti_grid-live.js"].GridLive;
     var toCsv = __m["src/drishti_export.js"].toCsv, toXlsx = __m["src/drishti_export.js"].toXlsx;
     var cycleSort = __m["src/drishti_sort-filter.js"].cycleSort;
     const LAYOUTS = Object.freeze(['wells', 'panel', 'terminal']);
@@ -1557,9 +1848,19 @@
           isExpanded: (r) => { const x = this.rowAt(r); return !!x && (x.kind === 'group' ? x.expanded : x.kind === 'pivot' ? !!x.entry.expanded : false); },
           explain: !!o.explain
         });
+        this.live = new GridLive(this, o.live);
         this.rowModel.events.on('rowsChanged', (p) => { this.viewport.setRowCount(this.rowCount()); this.events.emit('changed', { what: 'rows', reason: p.reason }); });
-        this.columns.events.on('changed', () => this.events.emit('changed', { what: 'columns' }));
-        this.selection.events.on('changed', (p) => this.events.emit('changed', { what: 'selection', which: p.what }));
+        this.rowModel.events.on('blockLoaded', (p) => this.live.emit('blockLoaded', p));
+        this.rowModel.events.on('loadFailed', (p) => this.live.emit('blockFailed', p));
+        const colEvent = { order: 'columnMoved', width: 'columnResized', pinned: 'columnPinned', visible: 'columnVisible' };
+        this.columns.events.on('changed', (p) => {
+          this.events.emit('changed', { what: 'columns' });
+          if (colEvent[p.what]) { const c = this.columns.get(p.id); this.live.emit(colEvent[p.what], { colId: p.id, width: c && c.width, pinned: c && c.pinned, visible: c && !c.hidden }); }
+        });
+        this.selection.events.on('changed', (p) => {
+          this.events.emit('changed', { what: 'selection', which: p.what });
+          if (p.what === 'rows') { this.live.emit('selectionChanged', { ids: this.selection.selectedIds() }); } else { this.live.emit('rangeChanged', { ranges: this.selection.ranges.slice() }); }
+        });
         this.wells.events.on('changed', () => { if (this.pivotMode) { this.runPivot(); } });
         this.viewport.setRowCount(this.rowCount());
       }
@@ -1620,13 +1921,23 @@
         }
         return formatValue(v, col, row.row);
       }
-      setSortModel(model) { this.sortModel = (model || []).slice(); this.rowModel.setSortModel(this.sortModel); }
+      setSortModel(model) { this.sortModel = (model || []).slice(); this.rowModel.setSortModel(this.sortModel); this.live.emit('sortChanged', { sortModel: this.sortModel.slice() }); }
       toggleSort(colId, multi) { const m = cycleSort(this.sortModel, colId, multi); this.setSortModel(m); return m; }
-      setFilterModel(model) { this.filterModel = Object.assign({}, model); this.rowModel.setFilterModel(this.filterModel); if (this.pivotMode) { this.runPivot(); } }
-      setQuickFilter(q) { this.rowModel.setQuickFilter(q); }
+      setFilterModel(model) {
+        this.filterModel = Object.assign({}, model);
+        this.rowModel.setFilterModel(this.filterModel);
+        this.live.emit('filterChanged', { filterModel: Object.assign({}, this.filterModel) });
+        if (this.pivotMode) { this.runPivot(); }
+      }
+      setQuickFilter(q) { this.rowModel.setQuickFilter(q); this.live.emit('filterChanged', { quickFilter: q || '' }); }
       setRowGroups(colIds) {
         if (this.serverSide) { this.rowModel.setGrouping({ rowGroupCols: colIds, valueCols: this.columns.all().filter((c) => c.enableValue).map((c) => ({ colId: c.id, aggFunc: c.aggFunc })) }); }
-        else { this.rowModel.setGroupBy(colIds); }
+        else {
+          this.rowModel.setGroupBy(colIds);
+          const want = this.rowModel.serverGroupColumns();
+          if (want.length && this.o.serverGroupTotals) { want.forEach((x) => this.live.staleGroups.set(x.path.join('\u001f'), x.path)); this.live.askServer(); }
+        }
+        this.live.emit('groupChanged', { rowGroups: (colIds || []).slice() });
       }
       setPivotMode(on) {
         this.pivotMode = !!on;
@@ -1657,6 +1968,7 @@
           this._pivotCols = null;
           this.viewport.setRowCount(this.rowCount());
           this.events.emit('changed', { what: 'pivot' });
+          this.live.emit('pivotChanged', { view: view, rows: a ? a.rows.length : 0 });
         };
         const fail = (e) => { if (!(ctl && ctl.signal.aborted)) { this.events.emit('pivotError', { error: e }); } };
         if (this.serverSide || this.o.clientAggregation === false) {
@@ -1670,7 +1982,7 @@
         done(a);
         if (a.pending.length && this.o.serverPivot) {
           const only = Array.from(new Set(a.pending.map((p) => p.measure)));
-          return this.o.serverPivot(serverRequest(view, { only: only }), ctl && ctl.signal).then((s) => {
+          return this.o.serverPivot(serverRequest(view, { only: only }), ctl && ctl.signal, rows).then((s) => {
             if (this.answer !== a) { return; }
             mergeAnswer(a, s);
             this.events.emit('changed', { what: 'pivot' });
@@ -1683,8 +1995,16 @@
       toggleRow(r, open) {
         const x = this.rowAt(r);
         if (!x) { return Promise.resolve(); }
-        if (x.kind === 'pivot' && x.entry.expandable) { return this.togglePivotNode('rows', x.entry.path, open); }
-        if (x.kind === 'group') { this.rowModel.setExpanded(x.path || x.keys, open); }
+        if (x.kind === 'pivot' && x.entry.expandable) {
+          const now = open === undefined ? !x.entry.expanded : open;
+          this.live.emit(now ? 'rowExpanded' : 'rowCollapsed', { path: x.entry.path, pivot: true });
+          return this.togglePivotNode('rows', x.entry.path, open);
+        }
+        if (x.kind === 'group') {
+          const path = x.path || x.keys, now = open === undefined ? !x.expanded : open;
+          this.rowModel.setExpanded(path, open);
+          this.live.emit(now ? 'rowExpanded' : 'rowCollapsed', { path: path, pivot: false });
+        }
         return Promise.resolve();
       }
       idAt(r) { const x = this.rowAt(r); return x && x.kind === 'leaf' ? x.id : null; }
@@ -1699,6 +2019,7 @@
           } else { this.selection.startRange(f.row, f.col); }
           this.viewport.scrollToRow(f.row);
           this.events.emit('changed', { what: 'focus' });
+          this.live.emit('focusChanged', { row: f.row, col: f.col });
         }
         if (!f) { return out; }
         switch (k.action) {
@@ -1744,7 +2065,56 @@
       explain(r, c) {
         if (!this.o.explain) { return Promise.reject(new Error('this grid has no Explain hook')); }
         const ctx = this.cellContext(r, c);
-        return ctx ? Promise.resolve(this.o.explain(ctx)) : Promise.reject(new Error('no cell at ' + r + ', ' + c));
+        if (!ctx) { return Promise.reject(new Error('no cell at ' + r + ', ' + c)); }
+        this.live.emit('explainOpened', ctx);
+        return Promise.resolve(this.o.explain(ctx));
+      }
+      on(name, fn) { return this.events.on(name, fn); }
+      setEventTarget(el) { this.live.target = el; }
+      cellClicked(r, c, mods) {
+        const m = mods || {};
+        this.navigator.setFocus(r, c);
+        if (m.shift) { this.selection.extendRange(r, c); } else { this.selection.startRange(r, c, m); }
+        this.selection.clickRow(r, (i) => this.idAt(i), m);
+        this.live.emit('cellClicked', Object.assign(this.cellContext(r, c) || {}, { mods: m }));
+      }
+      cellDoubleClicked(r, c) { this.live.emit('cellDoubleClicked', this.cellContext(r, c) || {}); }
+      setCellValue(r, c, value) {
+        const row = this.rowAt(r), col = this.shownColumns()[c];
+        if (!row || row.kind !== 'leaf' || !col || !col.editable || this.serverSide || col.valueGetter) { return false; }
+        const old = row.row[col.field], next = Object.assign({}, row.row, { [col.field]: value });
+        this.live.apply({ update: [next] });
+        this.live.emit('cellValueChanged', { rowId: row.id, colId: col.id, old: old, value: value });
+        return true;
+      }
+      applyTransaction(tx) { return this.live.apply(tx); }
+      applyTransactionAsync(tx) { return this.live.applyAsync(tx); }
+      flushTransactions() { return this.live.flush(); }
+      flashOf(rowId, colId) { return this.live.flashOf(rowId, colId); }
+      connectLive(feed) { return this.live.connect(feed); }
+      dataChanged(notice) {
+        if (this.pivotMode && (this.serverSide || this.o.clientAggregation === false)) { this.runPivot(); return 'pivot'; }
+        if (!this.serverSide) { return 'nothing'; }
+        return this.rowModel.dataChanged(notice);
+      }
+      applyPivotUpdates(pairs) {
+        if (!this.answer) { return false; }
+        return pivotApplyUpdates(this.answer, pairs).applied;
+      }
+      refreshServerMeasures() {
+        const a = this.answer;
+        if (!a || !this.o.serverPivot) { return Promise.resolve(0); }
+        const labels = a.measures.filter((m) => m.server).map((m) => m.label);
+        if (!labels.length) { return Promise.resolve(0); }
+        const view = this.pivotView();
+        return this.o.serverPivot(serverRequest(view, { only: labels }), undefined, this.serverSide ? null : this.rowModel.filteredRows()).then((s) => {
+          if (this.answer !== a) { return 0; }
+          a.pending = [];
+          Object.keys(a.cells).forEach((k) => { const [row, column] = k.split('|'); labels.forEach((l) => a.pending.push({ row: row, column: column, coords: a.cells[k].coords, measure: l })); });
+          const n = mergeAnswer(a, s);
+          this.events.emit('changed', { what: 'pivot' });
+          return n;
+        });
       }
       toTable() {
         const cols = this.shownColumns();
@@ -1794,6 +2164,48 @@
     function createGridModel(o) { return new GridModel(o); }
     return { "LAYOUTS": LAYOUTS, "DENSITIES": DENSITIES, "GridModel": GridModel, "createGridModel": createGridModel };
   })();
+  /* ---- src/drishti_live.js ---- */
+  __m["src/drishti_live.js"] = (function () {
+    function parse(data, onError) {
+      try { return typeof data === 'string' ? JSON.parse(data) : data; } catch (e) { if (onError) { onError(new Error('the live feed sent text that is not JSON: ' + String(data).slice(0, 80))); } return null; }
+    }
+    function eventSourceFeed(url, o) {
+      o = o || {};
+      return {
+        subscribe(fn) {
+          const ES = o.EventSource || globalThis.EventSource;
+          if (!ES) { throw new Error('eventSourceFeed: this page has no EventSource'); }
+          const es = new ES(url, { withCredentials: !!o.withCredentials });
+          const on = (e) => { const m = parse(e.data, o.onError); if (m) { fn(m); } };
+          es.addEventListener(o.event || 'message', on);
+          if (o.onError) { es.addEventListener('error', () => o.onError(new Error('the live feed ' + url + ' failed; the browser tries again'))); }
+          return () => { es.removeEventListener(o.event || 'message', on); es.close(); };
+        }
+      };
+    }
+    function webSocketFeed(url, o) {
+      o = o || {};
+      return {
+        subscribe(fn) {
+          const WS = o.WebSocket || globalThis.WebSocket;
+          if (!WS) { throw new Error('webSocketFeed: this page has no WebSocket'); }
+          const ws = new WS(url, o.protocols);
+          const on = (e) => { const m = parse(e.data, o.onError); if (m) { fn(m); } };
+          ws.addEventListener('message', on);
+          if (o.onError) { ws.addEventListener('error', () => o.onError(new Error('the live feed ' + url + ' failed'))); }
+          return () => { ws.removeEventListener('message', on); ws.close(); };
+        }
+      };
+    }
+    function manualFeed() {
+      const subs = new Set();
+      return {
+        subscribe(fn) { subs.add(fn); return () => subs.delete(fn); },
+        push(m) { subs.forEach((fn) => fn(m)); }
+      };
+    }
+    return { "eventSourceFeed": eventSourceFeed, "webSocketFeed": webSocketFeed, "manualFeed": manualFeed };
+  })();
   /* ---- src/drishti_plain-render.js ---- */
   __m["src/drishti_plain-render.js"] = (function () {
     function renderWindow(grid) {
@@ -1825,7 +2237,7 @@
   /* ---- src/drishti_index.js ---- */
   __m["src/drishti_index.js"] = (function () {
 
-    return { "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "isBlank": __m["src/drishti_sort-filter.js"].isBlank, "compareValues": __m["src/drishti_sort-filter.js"].compareValues, "compareRows": __m["src/drishti_sort-filter.js"].compareRows, "cycleSort": __m["src/drishti_sort-filter.js"].cycleSort, "passes": __m["src/drishti_sort-filter.js"].passes, "rowFilter": __m["src/drishti_sort-filter.js"].rowFilter, "filterWords": __m["src/drishti_sort-filter.js"].filterWords, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "mergeAnswer": __m["src/drishti_pivot.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot.js"].resultColumns, "cellValue": __m["src/drishti_pivot.js"].cellValue, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "toCsv": __m["src/drishti_export.js"].toCsv, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "LAYOUTS": __m["src/drishti_grid.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid.js"].DENSITIES, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml };
+    return { "ADDITIVE_FUNCS": __m["src/drishti_columns.js"].ADDITIVE_FUNCS, "normalizeColumn": __m["src/drishti_columns.js"].normalizeColumn, "getValue": __m["src/drishti_columns.js"].getValue, "formatValue": __m["src/drishti_columns.js"].formatValue, "ColumnModel": __m["src/drishti_columns.js"].ColumnModel, "isBlank": __m["src/drishti_sort-filter.js"].isBlank, "compareValues": __m["src/drishti_sort-filter.js"].compareValues, "compareRows": __m["src/drishti_sort-filter.js"].compareRows, "cycleSort": __m["src/drishti_sort-filter.js"].cycleSort, "passes": __m["src/drishti_sort-filter.js"].passes, "rowFilter": __m["src/drishti_sort-filter.js"].rowFilter, "filterWords": __m["src/drishti_sort-filter.js"].filterWords, "AGG_FUNCS": __m["src/drishti_aggregate.js"].AGG_FUNCS, "aggFunc": __m["src/drishti_aggregate.js"].aggFunc, "parseMeasure": __m["src/drishti_aggregate.js"].parseMeasure, "isServerMeasure": __m["src/drishti_aggregate.js"].isServerMeasure, "aggregate": __m["src/drishti_aggregate.js"].aggregate, "SEP": __m["src/drishti_pivot.js"].SEP, "BLANK": __m["src/drishti_pivot.js"].BLANK, "memberText": __m["src/drishti_pivot.js"].memberText, "valueLabel": __m["src/drishti_pivot.js"].valueLabel, "normalizeView": __m["src/drishti_pivot.js"].normalizeView, "serverRequest": __m["src/drishti_pivot.js"].serverRequest, "memberFilters": __m["src/drishti_pivot.js"].memberFilters, "PivotState": __m["src/drishti_pivot.js"].PivotState, "pivotLocal": __m["src/drishti_pivot.js"].pivotLocal, "pivotApplyUpdates": __m["src/drishti_pivot.js"].pivotApplyUpdates, "mergeAnswer": __m["src/drishti_pivot.js"].mergeAnswer, "applyValueFilters": __m["src/drishti_pivot.js"].applyValueFilters, "resultColumns": __m["src/drishti_pivot.js"].resultColumns, "cellValue": __m["src/drishti_pivot.js"].cellValue, "WELLS": __m["src/drishti_wells.js"].WELLS, "VALUE_FUNCS": __m["src/drishti_wells.js"].VALUE_FUNCS, "WellsModel": __m["src/drishti_wells.js"].WellsModel, "ClientRowModel": __m["src/drishti_client-rows.js"].ClientRowModel, "ServerRowModel": __m["src/drishti_server-rows.js"].ServerRowModel, "memoryDatasource": __m["src/drishti_server-rows.js"].memoryDatasource, "MAX_SCROLL_HEIGHT": __m["src/drishti_viewport.js"].MAX_SCROLL_HEIGHT, "columnAt": __m["src/drishti_viewport.js"].columnAt, "Viewport": __m["src/drishti_viewport.js"].Viewport, "SelectionModel": __m["src/drishti_selection.js"].SelectionModel, "rangeStats": __m["src/drishti_selection.js"].rangeStats, "toTsv": __m["src/drishti_selection.js"].toTsv, "rangeCells": __m["src/drishti_selection.js"].rangeCells, "toCsv": __m["src/drishti_export.js"].toCsv, "crc32": __m["src/drishti_export.js"].crc32, "zipStore": __m["src/drishti_export.js"].zipStore, "excelFormat": __m["src/drishti_export.js"].excelFormat, "toXlsx": __m["src/drishti_export.js"].toXlsx, "XLSX_TYPE": __m["src/drishti_export.js"].XLSX_TYPE, "GridNavigator": __m["src/drishti_keyboard.js"].GridNavigator, "keyLabel": __m["src/drishti_keyboard.js"].keyLabel, "LAYOUTS": __m["src/drishti_grid.js"].LAYOUTS, "DENSITIES": __m["src/drishti_grid.js"].DENSITIES, "GridModel": __m["src/drishti_grid.js"].GridModel, "createGridModel": __m["src/drishti_grid.js"].createGridModel, "GRID_EVENTS": __m["src/drishti_grid-live.js"].GRID_EVENTS, "domEventName": __m["src/drishti_grid-live.js"].domEventName, "GridLive": __m["src/drishti_grid-live.js"].GridLive, "eventSourceFeed": __m["src/drishti_live.js"].eventSourceFeed, "webSocketFeed": __m["src/drishti_live.js"].webSocketFeed, "manualFeed": __m["src/drishti_live.js"].manualFeed, "renderWindow": __m["src/drishti_plain-render.js"].renderWindow, "renderText": __m["src/drishti_plain-render.js"].renderText, "renderHtml": __m["src/drishti_plain-render.js"].renderHtml };
   })();
   return Object.freeze(Object.assign({ library: "drishti-grid", version: "0.1.0" }, __m["src/drishti_index.js"]));
 });

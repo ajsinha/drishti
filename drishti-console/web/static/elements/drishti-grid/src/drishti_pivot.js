@@ -427,8 +427,65 @@ export function pivotLocal(records, view, o) {
       out[r.key + '|' + c.key] = e;
     });
   });
-  return { measures: measures.map((m) => ({ index: m.index, id: m.id, label: m.label, kind: m.kind, plainSum: !!(m.func && m.func.name === 'sum'), exact: true, server: m.server })),
+  const answer = { measures: measures.map((m) => ({ index: m.index, id: m.id, label: m.label, kind: m.kind, plainSum: !!(m.func && m.func.name === 'sum'), exact: true, server: m.server })),
     rowDimensions: v.rows, columnDimensions: v.columns, rows: rows, columns: cols, cells: out, pending: pending, computedBy: 'browser', notes: notes };
+  // what an update needs to change the figures by difference (not part of the answer's shape: not enumerable)
+  Object.defineProperty(answer, 'incremental', { enumerable: false, value: {
+    cells: cells, local: local, measures: measures, keep: filters.length ? keep : null, val: val, view: v,
+    invertible: !v.valueFilters.length && !Object.keys(v.top || {}).length && local.every((m) => ['sum', 'avg', 'count'].indexOf(m.func.name) >= 0)
+  } });
+  return answer;
+}
+
+/**
+ * Changes a local pivot's figures for rows that changed (pivotLocal's answer, in place): each changed row's old values out of every
+ * cell it is in, its new ones in, by difference: exact for sums, counts and averages. The other cases (a row moved to another member, a
+ * min or max, top N, value filters) answer false: compute the pivot again. Non-additive measures are untouched: ask the server again.
+ * @param {Object} answer pivotLocal's answer
+ * @param {Array<{old: Object, value: Object}>} updates each changed row before and after
+ * @returns {{applied: boolean, cells: string[]}} applied false: compute again; cells: the keys of the cells whose figures changed
+ */
+export function pivotApplyUpdates(answer, updates) {
+  const inc = answer && answer.incremental;
+  if (!inc || !inc.invertible) { return { applied: false, cells: [] }; }
+  const v = inc.view, R = v.rows.length, C = v.columns.length, keysOf = (rec, dims) => {
+    const out = [''];
+    let k = '';
+    for (let i = 0; i < dims.length; i++) { k = i === 0 ? memberText(inc.val(rec, dims[0])) : k + SEP + memberText(inc.val(rec, dims[i])); out.push(k); }
+    return out;
+  };
+  const plan = [];
+  for (const u of updates) {
+    const inOld = !inc.keep || inc.keep(u.old), inNew = !inc.keep || inc.keep(u.value);
+    if (inOld !== inNew) { return { applied: false, cells: [] }; }
+    if (!inOld) { continue; }
+    const ro = keysOf(u.old, v.rows), rn = keysOf(u.value, v.rows), co = keysOf(u.old, v.columns), cn = keysOf(u.value, v.columns);
+    if (ro[R] !== rn[R] || co[C] !== cn[C]) { return { applied: false, cells: [] }; }
+    plan.push({ rk: rn, ck: cn, u: u });
+  }
+  const touched = new Set();
+  plan.forEach((p) => {
+    for (let i = 0; i <= R; i++) {
+      for (let j = 0; j <= C; j++) {
+        const key = p.rk[i] + '|' + p.ck[j], c = inc.cells.get(key);
+        if (!c) { continue; }
+        inc.local.forEach((m, li) => {
+          const o = m.field ? inc.val(p.u.old, m.field) : 1, n = m.field ? inc.val(p.u.value, m.field) : 1;
+          if (m.func.name === 'count') { const has = (x) => x !== undefined && x !== null && x !== ''; c.states[li] += (has(n) ? 1 : 0) - (has(o) ? 1 : 0); return; }
+          const st = c.states[li], on = typeof o === 'number' && isFinite(o), nn = typeof n === 'number' && isFinite(n);
+          st.s += (nn ? n : 0) - (on ? o : 0);
+          st.n += (nn ? 1 : 0) - (on ? 1 : 0);
+        });
+        touched.add(key);
+      }
+    }
+  });
+  touched.forEach((key) => {
+    const e = answer.cells[key], c = inc.cells.get(key);
+    if (!e) { return; }
+    inc.local.forEach((m, li) => { e.values[m.label] = m.func.result(c.states[li]); });
+  });
+  return { applied: true, cells: Array.from(touched) };
 }
 
 function coordsId(c) { return Object.keys(c || {}).sort().map((k) => k + '=' + c[k]).join(SEP); }

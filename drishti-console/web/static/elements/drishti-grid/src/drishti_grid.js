@@ -25,7 +25,8 @@ import { Viewport } from './drishti_viewport.js';
 import { SelectionModel, rangeStats, toTsv, rangeCells } from './drishti_selection.js';
 import { GridNavigator } from './drishti_keyboard.js';
 import { WellsModel } from './drishti_wells.js';
-import { PivotState, pivotLocal, serverRequest, mergeAnswer, applyValueFilters, resultColumns, cellValue } from './drishti_pivot.js';
+import { PivotState, pivotLocal, pivotApplyUpdates, serverRequest, mergeAnswer, applyValueFilters, resultColumns, cellValue } from './drishti_pivot.js';
+import { GridLive } from './drishti_grid-live.js';
 import { toCsv, toXlsx } from './drishti_export.js';
 import { cycleSort } from './drishti_sort-filter.js';
 
@@ -50,6 +51,9 @@ export const DENSITIES = Object.freeze({ comfortable: 36, compact: 28, terminal:
  * @property {function(Object): Promise<*>} [explain] the Explain hook: given a cell's context, the explanation (a layout shows it)
  * @property {('single'|'multiple'|'none')} [rowSelection='multiple']
  * @property {number} [blockSize] server-side rows per request
+ * @property {function({groupBy: string[], groups: Array<{path: string[], columns: string[]}>}): Promise<Array<{path: string[], values: Object}>>} [serverGroupTotals]
+ *   the server's figures of row groups for their non-additive columns (VaR, ES), asked when grouping and again after updates (debounced)
+ * @property {{asyncWaitMs: number, flashMs: number, serverDebounceMs: number}} [live] the live data's timings (drishti_grid-live.js)
  */
 
 /**
@@ -84,9 +88,20 @@ export class GridModel {
       isExpanded: (r) => { const x = this.rowAt(r); return !!x && (x.kind === 'group' ? x.expanded : x.kind === 'pivot' ? !!x.entry.expanded : false); },
       explain: !!o.explain
     });
+    /** @type {GridLive} the typed events and the live data */
+    this.live = new GridLive(this, o.live);
     this.rowModel.events.on('rowsChanged', (p) => { this.viewport.setRowCount(this.rowCount()); this.events.emit('changed', { what: 'rows', reason: p.reason }); });
-    this.columns.events.on('changed', () => this.events.emit('changed', { what: 'columns' }));
-    this.selection.events.on('changed', (p) => this.events.emit('changed', { what: 'selection', which: p.what }));
+    this.rowModel.events.on('blockLoaded', (p) => this.live.emit('blockLoaded', p));
+    this.rowModel.events.on('loadFailed', (p) => this.live.emit('blockFailed', p));
+    const colEvent = { order: 'columnMoved', width: 'columnResized', pinned: 'columnPinned', visible: 'columnVisible' };
+    this.columns.events.on('changed', (p) => {
+      this.events.emit('changed', { what: 'columns' });
+      if (colEvent[p.what]) { const c = this.columns.get(p.id); this.live.emit(colEvent[p.what], { colId: p.id, width: c && c.width, pinned: c && c.pinned, visible: c && !c.hidden }); }
+    });
+    this.selection.events.on('changed', (p) => {
+      this.events.emit('changed', { what: 'selection', which: p.what });
+      if (p.what === 'rows') { this.live.emit('selectionChanged', { ids: this.selection.selectedIds() }); } else { this.live.emit('rangeChanged', { ranges: this.selection.ranges.slice() }); }
+    });
     this.wells.events.on('changed', () => { if (this.pivotMode) { this.runPivot(); } });
     this.viewport.setRowCount(this.rowCount());
   }
@@ -190,7 +205,7 @@ export class GridModel {
    * @param {Array<{colId: string, sort: string}>} model
    * @returns {void}
    */
-  setSortModel(model) { this.sortModel = (model || []).slice(); this.rowModel.setSortModel(this.sortModel); }
+  setSortModel(model) { this.sortModel = (model || []).slice(); this.rowModel.setSortModel(this.sortModel); this.live.emit('sortChanged', { sortModel: this.sortModel.slice() }); }
 
   /**
    * A header click: none, ascending, descending (Shift: adds to the sort).
@@ -205,14 +220,19 @@ export class GridModel {
    * @param {Object<string, Object>} model
    * @returns {void}
    */
-  setFilterModel(model) { this.filterModel = Object.assign({}, model); this.rowModel.setFilterModel(this.filterModel); if (this.pivotMode) { this.runPivot(); } }
+  setFilterModel(model) {
+    this.filterModel = Object.assign({}, model);
+    this.rowModel.setFilterModel(this.filterModel);
+    this.live.emit('filterChanged', { filterModel: Object.assign({}, this.filterModel) });
+    if (this.pivotMode) { this.runPivot(); }
+  }
 
   /**
    * Filters by words across the shown columns.
    * @param {string} q
    * @returns {void}
    */
-  setQuickFilter(q) { this.rowModel.setQuickFilter(q); }
+  setQuickFilter(q) { this.rowModel.setQuickFilter(q); this.live.emit('filterChanged', { quickFilter: q || '' }); }
 
   /**
    * Groups rows (grid mode).
@@ -221,7 +241,12 @@ export class GridModel {
    */
   setRowGroups(colIds) {
     if (this.serverSide) { this.rowModel.setGrouping({ rowGroupCols: colIds, valueCols: this.columns.all().filter((c) => c.enableValue).map((c) => ({ colId: c.id, aggFunc: c.aggFunc })) }); }
-    else { this.rowModel.setGroupBy(colIds); }
+    else {
+      this.rowModel.setGroupBy(colIds);
+      const want = this.rowModel.serverGroupColumns();
+      if (want.length && this.o.serverGroupTotals) { want.forEach((x) => this.live.staleGroups.set(x.path.join('\u001f'), x.path)); this.live.askServer(); }
+    }
+    this.live.emit('groupChanged', { rowGroups: (colIds || []).slice() });
   }
 
   // ---- the pivot -----------------------------------------------------------------------------------------------------------------------
@@ -276,6 +301,7 @@ export class GridModel {
       this._pivotCols = null;
       this.viewport.setRowCount(this.rowCount());
       this.events.emit('changed', { what: 'pivot' });
+      this.live.emit('pivotChanged', { view: view, rows: a ? a.rows.length : 0 });
     };
     const fail = (e) => { if (!(ctl && ctl.signal.aborted)) { this.events.emit('pivotError', { error: e }); } };
     if (this.serverSide || this.o.clientAggregation === false) {
@@ -289,7 +315,7 @@ export class GridModel {
     done(a);
     if (a.pending.length && this.o.serverPivot) {
       const only = Array.from(new Set(a.pending.map((p) => p.measure)));
-      return this.o.serverPivot(serverRequest(view, { only: only }), ctl && ctl.signal).then((s) => {
+      return this.o.serverPivot(serverRequest(view, { only: only }), ctl && ctl.signal, rows).then((s) => {
         if (this.answer !== a) { return; }
         mergeAnswer(a, s);
         this.events.emit('changed', { what: 'pivot' });
@@ -324,8 +350,16 @@ export class GridModel {
   toggleRow(r, open) {
     const x = this.rowAt(r);
     if (!x) { return Promise.resolve(); }
-    if (x.kind === 'pivot' && x.entry.expandable) { return this.togglePivotNode('rows', x.entry.path, open); }
-    if (x.kind === 'group') { this.rowModel.setExpanded(x.path || x.keys, open); }
+    if (x.kind === 'pivot' && x.entry.expandable) {
+      const now = open === undefined ? !x.entry.expanded : open;
+      this.live.emit(now ? 'rowExpanded' : 'rowCollapsed', { path: x.entry.path, pivot: true });
+      return this.togglePivotNode('rows', x.entry.path, open);
+    }
+    if (x.kind === 'group') {
+      const path = x.path || x.keys, now = open === undefined ? !x.expanded : open;
+      this.rowModel.setExpanded(path, open);
+      this.live.emit(now ? 'rowExpanded' : 'rowCollapsed', { path: path, pivot: false });
+    }
     return Promise.resolve();
   }
 
@@ -354,6 +388,7 @@ export class GridModel {
       } else { this.selection.startRange(f.row, f.col); }
       this.viewport.scrollToRow(f.row);
       this.events.emit('changed', { what: 'focus' });
+      this.live.emit('focusChanged', { row: f.row, col: f.col });
     }
     if (!f) { return out; }
     switch (k.action) {
@@ -431,7 +466,141 @@ export class GridModel {
   explain(r, c) {
     if (!this.o.explain) { return Promise.reject(new Error('this grid has no Explain hook')); }
     const ctx = this.cellContext(r, c);
-    return ctx ? Promise.resolve(this.o.explain(ctx)) : Promise.reject(new Error('no cell at ' + r + ', ' + c));
+    if (!ctx) { return Promise.reject(new Error('no cell at ' + r + ', ' + c)); }
+    this.live.emit('explainOpened', ctx);
+    return Promise.resolve(this.o.explain(ctx));
+  }
+
+  // ---- events and live data (drishti_grid-live.js) -----------------------------------------------------------------------------------
+  /**
+   * Listens to a typed event (GRID_EVENTS) or to changed.
+   * @param {string} name
+   * @param {function(Object, string): void} fn
+   * @returns {function(): void} stops listening
+   */
+  on(name, fn) { return this.events.on(name, fn); }
+
+  /**
+   * The element the grid's events are dispatched on as DOM CustomEvents (drishti:cell-clicked ...): the web component's host.
+   * @param {?EventTarget} el
+   * @returns {void}
+   */
+  setEventTarget(el) { this.live.target = el; }
+
+  /**
+   * A click on a cell (a layout calls it): focus, the range, the row's selection, and cellClicked.
+   * @param {number} r
+   * @param {number} c
+   * @param {{ctrl: boolean, shift: boolean}} [mods]
+   * @returns {void}
+   */
+  cellClicked(r, c, mods) {
+    const m = mods || {};
+    this.navigator.setFocus(r, c);
+    if (m.shift) { this.selection.extendRange(r, c); } else { this.selection.startRange(r, c, m); }
+    this.selection.clickRow(r, (i) => this.idAt(i), m);
+    this.live.emit('cellClicked', Object.assign(this.cellContext(r, c) || {}, { mods: m }));
+  }
+
+  /**
+   * A double click on a cell: cellDoubleClicked (a layout starts an edit or opens a group).
+   * @param {number} r
+   * @param {number} c
+   * @returns {void}
+   */
+  cellDoubleClicked(r, c) { this.live.emit('cellDoubleClicked', this.cellContext(r, c) || {}); }
+
+  /**
+   * An edit: a leaf's value of an editable column set (the row replaced by id, as a transaction) and cellValueChanged.
+   * @param {number} r
+   * @param {number} c
+   * @param {*} value
+   * @returns {boolean} whether the value was set
+   */
+  setCellValue(r, c, value) {
+    const row = this.rowAt(r), col = this.shownColumns()[c];
+    if (!row || row.kind !== 'leaf' || !col || !col.editable || this.serverSide || col.valueGetter) { return false; }
+    const old = row.row[col.field], next = Object.assign({}, row.row, { [col.field]: value });
+    this.live.apply({ update: [next] });
+    this.live.emit('cellValueChanged', { rowId: row.id, colId: col.id, old: old, value: value });
+    return true;
+  }
+
+  /**
+   * Adds, updates and removes rows by id now (rows in the page); rowDataUpdated tells what changed.
+   * @param {{add: Object[], update: Object[], remove: string[]}} tx
+   * @returns {{added: number, updated: number, removed: number, changes: Array}}
+   */
+  applyTransaction(tx) { return this.live.apply(tx); }
+
+  /**
+   * Queues a transaction with the others of the next few milliseconds (a live feed's thousands of updates a second, one refresh).
+   * @param {{add: Object[], update: Object[], remove: string[]}} tx
+   * @returns {Promise<Object>} the batch's result
+   */
+  applyTransactionAsync(tx) { return this.live.applyAsync(tx); }
+
+  /**
+   * Applies the queued transactions now.
+   * @returns {?Object}
+   */
+  flushTransactions() { return this.live.flush(); }
+
+  /**
+   * A cell's flash after a live change: up, down or null.
+   * @param {string} rowId
+   * @param {string} colId
+   * @returns {?string}
+   */
+  flashOf(rowId, colId) { return this.live.flashOf(rowId, colId); }
+
+  /**
+   * Connects a live feed (drishti_live.js: Server-Sent Events, a WebSocket, or drishti-data's live sources).
+   * @param {{subscribe: function(function(Object): void): function(): void}} feed
+   * @returns {function(): void} disconnects
+   */
+  connectLive(feed) { return this.live.connect(feed); }
+
+  /**
+   * A server's "data changed" notice: server-side rows are asked again (all, a level, blocks, or the blocks holding some rows); a
+   * server pivot is computed again.
+   * @param {{purge: boolean, keys: string[], blocks: number[], rows: string[]}} notice
+   * @returns {string} what was done
+   */
+  dataChanged(notice) {
+    if (this.pivotMode && (this.serverSide || this.o.clientAggregation === false)) { this.runPivot(); return 'pivot'; }
+    if (!this.serverSide) { return 'nothing'; }
+    return this.rowModel.dataChanged(notice);
+  }
+
+  /**
+   * Changes the local pivot's figures for changed rows by difference (false: compute it again).
+   * @param {Array<{old: Object, value: Object}>} pairs
+   * @returns {boolean}
+   */
+  applyPivotUpdates(pairs) {
+    if (!this.answer) { return false; }
+    return pivotApplyUpdates(this.answer, pairs).applied;
+  }
+
+  /**
+   * Asks the server again for the pivot's non-additive measures (every cell), and puts the figures in.
+   * @returns {Promise<number>} how many figures came in
+   */
+  refreshServerMeasures() {
+    const a = this.answer;
+    if (!a || !this.o.serverPivot) { return Promise.resolve(0); }
+    const labels = a.measures.filter((m) => m.server).map((m) => m.label);
+    if (!labels.length) { return Promise.resolve(0); }
+    const view = this.pivotView();
+    return this.o.serverPivot(serverRequest(view, { only: labels }), undefined, this.serverSide ? null : this.rowModel.filteredRows()).then((s) => {
+      if (this.answer !== a) { return 0; }
+      a.pending = [];
+      Object.keys(a.cells).forEach((k) => { const [row, column] = k.split('|'); labels.forEach((l) => a.pending.push({ row: row, column: column, coords: a.cells[k].coords, measure: l })); });
+      const n = mergeAnswer(a, s);
+      this.events.emit('changed', { what: 'pivot' });
+      return n;
+    });
   }
 
   // ---- export --------------------------------------------------------------------------------------------------------------------------

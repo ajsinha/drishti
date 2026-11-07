@@ -48,6 +48,7 @@ work is in the [VaR guide](../guides/VAR_GUIDE.md) and the [exposure guide](../g
 17. [Many VaR scopes at once (BLAS)](#17-many-var-scopes-at-once-blas)
 18. [The browser test lane](#18-the-browser-test-lane)
 19. [The BI scale gate](#19-the-bi-scale-gate)
+20. [Drishti Elements: the grid engine at 1,000,000 rows](#20-drishti-elements-the-grid-engine-at-1000000-rows)
 
 ## 1. What is measured, and why
 

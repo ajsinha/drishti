@@ -93,6 +93,29 @@ t('pivotExpandAllMs', () => g.expandPivotTo('rows', 2));
 out.pivotRowsExpanded = g.rowCount();
 await g.setPivotMode(false);
 
+// live updates by row id, batched as a feed's would be: a sorted and filtered view kept in order, then row groups kept by difference
+const live = (batches, size, field) => {
+  let n = 0, s = 11;
+  const a = performance.now();
+  for (let b = 0; b < batches; b++) {
+    const upd = [];
+    for (let i = 0; i < size; i++) { s = (s * 1103515245 + 12345) & 0x7fffffff; const r = rows[s % N]; upd.push(Object.assign({}, r, { [field]: r[field] + 1 + (s % 1000) })); }
+    g.applyTransactionAsync({ update: upd });
+    g.flushTransactions();
+    n += size;
+  }
+  return Math.round(n / ((performance.now() - a) / 1000));
+};
+g.setSortModel([{ colId: 'NOTIONAL', sort: 'desc' }]);
+g.setFilterModel({ STATUS: { type: 'set', values: ['LIVE'] } });
+out.liveUpdates = 20 * 1000;
+out.liveUpdatesPerSecond = live(20, 1000, 'NOTIONAL');
+g.setSortModel([]);
+g.setFilterModel({});
+g.setRowGroups(['DESK', 'BOOK']);
+out.liveGroupedUpdatesPerSecond = live(20, 1000, 'PNL');
+g.setRowGroups([]);
+
 // the server-side row model over a memory source: every block of the rows asked as a scroll would
 const ds = G.memoryDatasource(rows);
 const s = new G.ServerRowModel({ datasource: ds, blockSize: 200, maxBlocks: 50 });

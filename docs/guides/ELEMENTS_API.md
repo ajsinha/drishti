@@ -1441,6 +1441,17 @@ A pivot of rows the page holds, answered in the server's shape.
 
 Returns `Object} {measures, rowDimensions, columnDimensions, rows, columns, cells, pending, computedBy: 'browser', notes`.
 
+#### `pivotApplyUpdates(answer, updates)`
+
+Changes a local pivot's figures for rows that changed (pivotLocal's answer, in place): each changed row's old values out of every cell it is in, its new ones in, by difference: exact for sums, counts and averages. The other cases (a row moved to another member, a min or max, top N, value filters) answer false: compute the pivot again. Non-additive measures are untouched: ask the server again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `answer` | `Object` | pivotLocal's answer |
+| `updates` | `Array&lt;{old: Object, value: Object}&gt;` | each changed row before and after |
+
+Returns `{applied: boolean, cells: string[]}`: applied false: compute again; cells: the keys of the cells whose figures changed.
+
 #### `mergeAnswer(local, server)`
 
 Puts a server answer's figures into a local answer's pending cells, matched by coordinates; the cells the server did not answer keep their note. Returns how many figures came in.
@@ -1655,15 +1666,43 @@ Replaces every row.
 
 Returns `void`.
 
+##### `ClientRowModel.changesOf(before, after)`
+
+A row's changed cells: column id to the old and new value and the way a number moved (for a cell's flash).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `before` | `Object` |  |
+| `after` | `Object` |  |
+
+Returns `Object&lt;string, {old: *, value: *, dir: ?string}&gt;`.
+
 ##### `ClientRowModel.applyTransaction(t)`
 
-Adds, updates (by id) and removes (by id) rows, then refreshes.
+Adds, updates (by id) and removes (by id) rows. Updates alone are applied in place: a row whose sort or filter values changed is taken out of the order and merged back where it now belongs (ties keep the rows' order, so the order is stable), and the figures of its groups follow by difference (sums and counts) or from their members (the others); adds and removes refresh the whole view.
 
 | Parameter | Type | Meaning |
 |---|---|---|
 | `t` | `{add: Object[], update: Object[], remove: Array&lt;(Object\|string)&gt;}` |  |
 
-Returns `{added: number, updated: number, removed: number}`.
+Returns `{added: number, updated: number, removed: number, changes: Array&lt;{id: string, cells: Object}&gt;, staleGroups: string[][]}`.
+
+##### `ClientRowModel.setGroupServerValues(path, values)`
+
+Puts the server's figures of a group in (its non-additive columns: VaR, ES): they are no longer waiting.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `path` | `string[]` | the group's members from the top |
+| `values` | `Object&lt;string, *&gt;` | column id to the server's figure |
+
+Returns `boolean`: whether the group exists.
+
+##### `ClientRowModel.serverGroupColumns()`
+
+The groups and the columns whose figures the server gives (non-additive, or every one when clientAggregation is off).
+
+Returns `Array&lt;{path: string[], columns: string[]}&gt;`.
 
 ##### `ClientRowModel.setSortModel(m)`
 
@@ -1877,6 +1916,33 @@ Drops cached blocks and asks again: every level, or one level and those under it
 | `[o]` | `{keys: string[], purge: boolean}` | keys: the level; purge default true (forget the row count too) |
 
 Returns `void`.
+
+##### `ServerRowModel.invalidateBlock(keys, block)`
+
+Forgets one block (its rows are asked again when they are in view); the row count is kept.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `keys` | `string[]` | the level's group keys ([] for the top) |
+| `block` | `number` |  |
+
+Returns `boolean`: whether the block was held.
+
+##### `ServerRowModel.purge()`
+
+Forgets everything held (blocks, counts, open groups' levels kept open) and aborts what is in flight: the next draw asks again.
+
+Returns `void`.
+
+##### `ServerRowModel.dataChanged(notice)`
+
+A server's "data changed" notice (drishti-data's live feed): {purge: true} forgets everything; {keys} a level (and those under it); {keys, blocks} only those blocks; {rows: [ids]} the blocks holding those rows. The rows on screen are asked again at the next draw.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `notice` | `{purge: boolean, keys: string[], blocks: number[], rows: string[]}` |  |
+
+Returns `string`: what was done: purge, level, blocks, rows or nothing.
 
 ##### `ServerRowModel.rowCount()`
 
@@ -2517,6 +2583,135 @@ Explains a cell through the grid's Explain hook (rejects when the grid has none)
 
 Returns `Promise&lt;*&gt;`.
 
+##### `GridModel.on(name, fn)`
+
+Listens to a typed event (GRID_EVENTS) or to changed.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+| `fn` | `function(Object, string): void` |  |
+
+Returns `function(): void`: stops listening.
+
+##### `GridModel.setEventTarget(el)`
+
+The element the grid's events are dispatched on as DOM CustomEvents (drishti:cell-clicked ...): the web component's host.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `el` | `?EventTarget` |  |
+
+Returns `void`.
+
+##### `GridModel.cellClicked(r, c, mods)`
+
+A click on a cell (a layout calls it): focus, the range, the row's selection, and cellClicked.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `number` |  |
+| `c` | `number` |  |
+| `[mods]` | `{ctrl: boolean, shift: boolean}` |  |
+
+Returns `void`.
+
+##### `GridModel.cellDoubleClicked(r, c)`
+
+A double click on a cell: cellDoubleClicked (a layout starts an edit or opens a group).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `number` |  |
+| `c` | `number` |  |
+
+Returns `void`.
+
+##### `GridModel.setCellValue(r, c, value)`
+
+An edit: a leaf's value of an editable column set (the row replaced by id, as a transaction) and cellValueChanged.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `r` | `number` |  |
+| `c` | `number` |  |
+| `value` | `*` |  |
+
+Returns `boolean`: whether the value was set.
+
+##### `GridModel.applyTransaction(tx)`
+
+Adds, updates and removes rows by id now (rows in the page); rowDataUpdated tells what changed.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tx` | `{add: Object[], update: Object[], remove: string[]}` |  |
+
+Returns `{added: number, updated: number, removed: number, changes: Array}`.
+
+##### `GridModel.applyTransactionAsync(tx)`
+
+Queues a transaction with the others of the next few milliseconds (a live feed's thousands of updates a second, one refresh).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tx` | `{add: Object[], update: Object[], remove: string[]}` |  |
+
+Returns `Promise&lt;Object&gt;`: the batch's result.
+
+##### `GridModel.flushTransactions()`
+
+Applies the queued transactions now.
+
+Returns `?Object`.
+
+##### `GridModel.flashOf(rowId, colId)`
+
+A cell's flash after a live change: up, down or null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rowId` | `string` |  |
+| `colId` | `string` |  |
+
+Returns `?string`.
+
+##### `GridModel.connectLive(feed)`
+
+Connects a live feed (drishti_live.js: Server-Sent Events, a WebSocket, or drishti-data's live sources).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `feed` | `{subscribe: function(function(Object): void): function(): void}` |  |
+
+Returns `function(): void`: disconnects.
+
+##### `GridModel.dataChanged(notice)`
+
+A server's "data changed" notice: server-side rows are asked again (all, a level, blocks, or the blocks holding some rows); a server pivot is computed again.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `notice` | `{purge: boolean, keys: string[], blocks: number[], rows: string[]}` |  |
+
+Returns `string`: what was done.
+
+##### `GridModel.applyPivotUpdates(pairs)`
+
+Changes the local pivot's figures for changed rows by difference (false: compute it again).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `pairs` | `Array&lt;{old: Object, value: Object}&gt;` |  |
+
+Returns `boolean`.
+
+##### `GridModel.refreshServerMeasures()`
+
+Asks the server again for the pivot's non-additive measures (every cell), and puts the figures in.
+
+Returns `Promise&lt;number&gt;`: how many figures came in.
+
 ##### `GridModel.toTable()`
 
 The grid as shown, as a table to export: shown columns; in grid mode every filtered row (or the groups and their rows), in pivot mode the pivot's rows, with outline levels.
@@ -2592,6 +2787,127 @@ Returns `GridModel`.
 ```js
 const g = createGridModel({columns: [{field: 'DESK'}, {field: 'PNL', type: 'number', format: 'amount0'}], rows: data});
 ```
+
+### drishti_grid-live.js
+
+#### `GRID_EVENTS`
+
+Every event a grid emits, by name.
+
+#### `domEventName(name)`
+
+The DOM name of a grid event: "drishti:" and the name in kebab case (cellClicked: drishti:cell-clicked).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` |  |
+
+Returns `string`.
+
+#### class `GridLive`
+
+The live side of a grid model: its events, transactions, batching, flashes, the feed and the server's totals.
+
+##### `new GridLive(grid, o)`
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `grid` | `Object` | the GridModel |
+| `[o]` | `{asyncWaitMs: number, flashMs: number, serverDebounceMs: number, now: function(): number}` | asyncWaitMs default 50; flashMs default 1000 (how long a change is a flash); serverDebounceMs default 250 (updates gathered before the server is asked again) |
+
+##### `GridLive.emit(name, detail)`
+
+Emits a typed event on the bus and, when there is one, on the grid's element.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `name` | `string` | one of GRID_EVENTS |
+| `[detail]` | `Object` |  |
+
+Returns `void`.
+
+##### `GridLive.apply(tx)`
+
+Applies a transaction now and tells everyone (rowDataUpdated, with every changed cell).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tx` | `{add: Object[], update: Object[], remove: string[]}` |  |
+
+Returns `{added: number, updated: number, removed: number, changes: RowChange[]}`.
+
+##### `GridLive.applyAsync(tx)`
+
+Queues a transaction to apply with the others that arrive within asyncWaitMs (one refresh for many updates; a row's last update wins; adds and removes keep their order).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `tx` | `{add: Object[], update: Object[], remove: string[]}` |  |
+
+Returns `Promise&lt;Object&gt;`: the batch's result, when applied.
+
+##### `GridLive.flush()`
+
+Applies the queued transactions now as one.
+
+Returns `?Object`: the batch's result (null when nothing was queued).
+
+##### `GridLive.flashOf(rowId, colId)`
+
+A cell's flash: up or down while the change is younger than flashMs, else null.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `rowId` | `string` |  |
+| `colId` | `string` |  |
+
+Returns `?string`.
+
+##### `GridLive.askServer()`
+
+Asks the server now for the non-additive figures that went stale (group totals through serverGroupTotals; a pivot's through serverPivot).
+
+Returns `Promise&lt;void&gt;`.
+
+##### `GridLive.connect(feed)`
+
+Connects a live feed (drishti_live.js): transactions are batched into the rows in the page, dataChanged notices refresh server-side rows, a rows message replaces every row.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `feed` | `{subscribe: function(function(Object): void): function(): void}` |  |
+
+Returns `function(): void`: disconnects.
+
+### drishti_live.js
+
+#### `eventSourceFeed(url, o)`
+
+A feed over Server-Sent Events: each event's data is a message (event name: message, or opts.event).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `url` | `string` |  |
+| `[o]` | `{event: string, withCredentials: boolean, EventSource: Function, onError: function(Error): void}` | EventSource: for tests or a polyfill |
+
+Returns `LiveFeed`.
+
+#### `webSocketFeed(url, o)`
+
+A feed over a WebSocket: each text frame is a message.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `url` | `string` |  |
+| `[o]` | `{WebSocket: Function, protocols: string[], onError: function(Error): void}` |  |
+
+Returns `LiveFeed`.
+
+#### `manualFeed()`
+
+A feed a page pushes by hand (tests, a page that already has its own connection): push(message) sends one.
+
+Returns `LiveFeed & {push: function(LiveMessage): void}`.
 
 ### drishti_plain-render.js
 
