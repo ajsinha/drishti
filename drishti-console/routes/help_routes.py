@@ -190,9 +190,9 @@ async def help_search(request: Request, q: str = "", section: str = ""):
 
 @router.get("/help/configuration")
 async def help_configuration(request: Request, q: str = "", area: str = ""):
-    """Help → Configuration: docs/admin/CONFIGURATION.md, searchable by key, environment variable or words, filtered by area; an
-    administrator also sees the values in effect on the server and in this console, and where each came from (core/settings_page.py)."""
-    from core.settings_page import areas, console_effective, searchable, server_effective
+    """Help → Configuration: docs/admin/CONFIGURATION.md, searchable by key, environment variable or words, filtered by area (core/settings_page.py).
+    The values in effect, and changes to them, are Admin → Configuration's (routes/config_editor_routes.py)."""
+    from core.settings_page import areas, searchable
 
     lib = await library(request)
     g = lib.guides.get("configuration")
@@ -200,19 +200,10 @@ async def help_configuration(request: Request, q: str = "", area: str = ""):
         return await help_guide(request, "configuration")
     page = lib.render("configuration")
     me = ident(request)
-    admin = bool(me is not None and me.is_admin)
-    server = console = None
-    server_error = None
-    if admin:
-        try:
-            server = server_effective(await request.app.state.backend.admin("GET", "/settings", me))
-        except BackendError as e:
-            server, server_error = {}, drs_message(e.code, e.detail, " ")
-        console = console_effective(request.app.state.settings, ROOT / "drishti-console" / "config")
-    body, matched, total = searchable(page["html"], q, area, server, console)
+    body, matched, total = searchable(page["html"], q, area)
     category = _siblings(request, lib, g)
     return render(request, "help/configuration.html", guide=g, page={**page, "html": body}, category=category, q=q, area=area,
-                  areas=areas(page["html"]), matched=matched, total=total, admin=admin, server_error=server_error, screen="help")
+                  areas=areas(page["html"]), matched=matched, total=total, admin=bool(me is not None and me.is_admin), screen="help")
 
 
 @router.get("/what")

@@ -25,8 +25,8 @@
   <header class="cfg-head">
     <h1>{{ guide.title | product }}</h1>
     <p class="lead">Every setting of every kind, in one document: what it means, its default, the environment variable that sets it,
-      and whether a change needs a restart.{% if admin %} As an administrator you also see the value <b>in effect</b> on this server
-      and in this console, and where it came from; secrets are never shown.{% endif %}</p>
+      and whether a change needs a restart.{% if admin %} The value <b>in effect</b> of each, where it came from, and a change proposed for
+      a second administrator to approve: <a href="/admin/configuration" data-cfg-admin>Admin → Configuration</a>.{% endif %}</p>
     <form class="cfg-search" action="/help/configuration" method="get" role="search" data-cfg-form>
       <label class="visually-hidden" for="cfg-q">Search settings</label>
       <i class="bi bi-search" aria-hidden="true"></i>
@@ -41,7 +41,6 @@
       {% if q or area %}<a class="btn btn-sm btn-outline-secondary" href="/help/configuration" data-cfg-clear>Clear</a>{% endif %}
     </form>
     <p class="cfg-count" data-cfg-count aria-live="polite">{% if q or area %}{{ matched }} of {{ total }} settings match{% if not matched %}: try fewer words, or another area{% endif %}.{% else %}{{ total }} settings.{% endif %}</p>
-    {% if admin and server_error %}<p class="cfg-warn" role="status"><i class="bi bi-exclamation-triangle" aria-hidden="true"></i> The server's values in effect could not be read: {{ server_error }}</p>{% endif %}
   </header>
   <article class="help-article" data-cfg-article>
     {{ page.html | safe }}

@@ -53,7 +53,8 @@ TLS = ROOT / "drishti-api" / "src" / "main" / "java" / "com" / "ash" / "drishti"
 PROXY = ROOT / "drishti-api" / "src" / "main" / "java" / "com" / "ash" / "drishti" / "api" / "proxy" / "ProxySettings.java"
 BEGIN = "<!-- generated: settings begin (tools/settings_catalogue.py writes everything down to the end marker; edit the sources, not this) -->"
 END = "<!-- generated: settings end -->"
-COLUMNS = ("Key", "Type", "Default", "Env var", "Applies to", "Meaning", "Restart or live", "Since")
+COLUMNS = ("Key", "Type", "Default", "Env var", "Applies to", "Meaning", "Restart or live", "Since", "Tier")
+TIERS = ("everyday", "admin", "expert")
 
 
 @dataclass
@@ -71,6 +72,7 @@ class Row:
     since: str
     secret: bool = False
     line: int = 0
+    tier: str = ""
 
 
 # ---- the areas -----------------------------------------------------------------------------------------------------------------
@@ -555,7 +557,7 @@ def default_cell(r: Row) -> str:
 def row_cells(r: Row) -> list[str]:
     return [_code(r.key), _text(r.type), default_cell(r), ", ".join(_code(e) for e in r.env) or "",
             _text(r.applies) if "`" not in r.applies else r.applies, _text(r.meaning) + (" (secret)" if r.secret and "secret" not in r.meaning.lower() else ""),
-            r.change, r.since or ""]
+            r.change, r.since or "", r.tier]
 
 
 def _table(rows: list[Row]) -> list[str]:
@@ -574,6 +576,10 @@ def render(rows: list[Row], env: list[dict]) -> str:
            "files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is "
            "out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in "
            "effect for an administrator.", "",
+           f"Every setting has a **tier** (the last column; Admin → Configuration shows them by tier): " + ", ".join(
+               f"**{t}** {sum(1 for r in rows if r.tier == t):,}" for t in TIERS) + ". *Everyday* is what a business lead changes (the lenses, "
+           "the VaR and exposure confidences, the scenario window, the feature switches); *admin* is what an operator sets; *expert* is "
+           "performance and internals. The tiers are kept in `tools/settings_schemas.yaml` (`tiers`), one place.", "",
            "| Area | Settings |", "|---|---|"]
     out += [f"| [{a.title}](#{_slug(a.title)}) | {counts[a.id]:,} |" for a in AREAS]
     out += ["| [Environment variable index](#environment-variable-index) | " + f"{len(env)} |", "",
@@ -631,8 +637,42 @@ def problems(rows: list[Row], env_problems: list[str], schema_problems: list[str
     return out
 
 
+# ---- tiers ----------------------------------------------------------------------------------------------------------------------
+
+def assign_tiers(rows: list[Row]) -> list[str]:
+    """Each row's tier from settings_schemas.yaml ``tiers`` (the one home): everyday by area:key, expert by pattern in the areas
+    expert-in names, else the area's own. Problems: an area with no tier, an everyday key or expert pattern that matches nothing."""
+    import fnmatch
+    spec = schemas().get("tiers") or {}
+    everyday = {str(k) for k in spec.get("everyday") or []}
+    expert = [str(p).lower() for p in spec.get("expert") or []]
+    expert_in = {str(a) for a in spec.get("expert-in") or []}
+    by_area = {str(k): str(v) for k, v in (spec.get("areas") or {}).items()}
+    used_keys: set[str] = set()
+    used_patterns: set[str] = set()
+    out = []
+    for r in rows:
+        k = f"{r.area}:{r.key}"
+        hit = next((p for p in expert if r.area in expert_in and fnmatch.fnmatchcase(r.key.lower(), p)), None)
+        if r.area in expert_in:
+            used_patterns |= {p for p in expert if fnmatch.fnmatchcase(r.key.lower(), p)}
+        if k in everyday:
+            r.tier = "everyday"
+            used_keys.add(k)
+        elif hit:
+            r.tier = "expert"
+        else:
+            r.tier = by_area.get(r.area, "")
+        if r.tier not in TIERS:
+            out.append(f"{r.file}: `{r.key}` has no tier: give the area {r.area} one under tiers.areas in tools/settings_schemas.yaml")
+    out += [f"tools/settings_schemas.yaml tiers.everyday: {k} is no setting" for k in sorted(everyday - used_keys)]
+    out += [f"tools/settings_schemas.yaml tiers.expert: {p} matches no setting" for p in expert if p not in used_patterns]
+    return out
+
+
 def build() -> tuple[str, list[str]]:
     rows, schema_problems = all_rows()
+    schema_problems = schema_problems + assign_tiers(rows)
     env, env_problems = env_index(rows)
     return render(rows, env), problems(rows, env_problems, schema_problems)
 

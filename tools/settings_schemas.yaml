@@ -17,6 +17,44 @@
 # use: `key` (a list's items are key[], a name the site chooses is <name>, a trailing .* covers everything under it), type, default,
 # meaning, and where it differs from the schema's own: change (restart or live), applies. --check fails when a shipped file uses a key
 # its schema does not list. `maps` names the mappings whose keys are names (each becomes <name>).
+#
+# `tiers` is the one home of every setting's tier, the three of Admin → Configuration (docs/admin/OPERATIONS.md, "The configuration
+# editor") and of CONFIGURATION.md's Tier column:
+#   everyday  what a business lead changes: a short list of keys, each written area:key (keep it small);
+#   expert    performance and internals (pools, caches, buffers, timeouts, threads, sharding, native code, admission):
+#             patterns over the key, * any characters, applied in the areas expert-in names;
+#   admin     everything else an operator sets (security, connectors, lakes, engines, retention, paths, branding, the UI kit).
+# `areas` gives each area its tier when neither list takes a key; --check fails when an area has none, or an everyday key or an expert
+# pattern matches no setting.
+tiers:
+  everyday:
+    - server:drishti.lenses
+    - engines:drishti.var.confidence
+    - engines:drishti.var.es-confidence
+    - engines:drishti.var.confidences
+    - engines:drishti.var.es-confidences
+    - engines:drishti.var.scenario-window
+    - engines:drishti.ccr.exposure.confidence
+    - engines:drishti.ccr.exposure.limit-confidence
+    - console:features.build
+    - console:features.forms
+    - console:features.datamap
+    - console:features.data
+    - console:features.workspaces
+    - console:features.monitors
+    - console:features.alerts
+    - console:features.lakes
+    - console:features.reports
+    - console:features.collaboration
+  expert: ["*pool*", "*cache*", "*buffer*", "*timeout*", "*shard*", "*native*", "*admission*", "*.threads", "*-threads",
+           "*threads.virtual*", "*worker*", "*batch*", "*queue*", "*concurren*", "*memory*", "*heap*", "*prefetch*", "*chunk*",
+           "*parallel*", "*spill*", "*retry*", "*backoff*", "*blas*", "*-ms", "*latency*",
+           "*warm*", "*squeeze*", "*pinned*", "*page-size*", "*bytes*", "*-mb", "*_mb", "*max-rows*", "*interval*",
+           "*poll*", "*debounce*", "*coalesce*", "*jvm*", "*duckdb*", "*kafka.*"]
+  expert-in: [server, engines, console, connectors, store, runs, edit, compute, net, ai, dataload]
+  areas: { server: admin, engines: admin, console: admin, console-files: admin, connectors: admin, packs: admin, editions: admin,
+           store: admin, runs: admin, edit: admin, compute: admin, net: admin, alerts: admin, reports: admin, simm: admin,
+           dataload: admin, ui-kit: admin, ai: admin }
 schemas:
   sitemap:
     area: console-files

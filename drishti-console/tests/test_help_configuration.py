@@ -23,7 +23,6 @@ from pathlib import Path
 import pytest
 
 from core.auth import Identity
-from core.backend import BackendError
 from core.config import Settings
 from core.settings_page import MASK, console_effective, is_secret, searchable, server_effective, shown
 
@@ -94,30 +93,15 @@ def test_the_area_filter_keeps_one_area(client, server_settings):
     assert both and len(both) < len(visible)
 
 
-def test_an_administrator_sees_the_values_in_effect_and_where_they_came_from(client, server_settings):
-    text = client.get("/help/configuration", params={"q": "max-days"}).text            # security off: the acting user is an admin
-    assert server_settings, "the page asked the server for its settings"
-    assert "<th>In effect</th>" in text
-    row = next(r for r in re.findall(r'<tr class="cfg-row"[^>]*data-hay="drishti.history.max-days[^"]*".*?</tr>', text, re.S))
-    assert "<code>90</code>" in row and "argument: --drishti.history.max-days" in row and "cfg-differs" in row
-    secret = client.get("/help/configuration", params={"q": "drishti.security.secret"}).text
-    assert MASK in secret
-
-
-def test_others_see_no_values(client, server_settings, monkeypatch):
+def test_the_reference_shows_no_values_and_points_administrators_to_the_editor(client, server_settings, monkeypatch):
+    """The values in effect are Admin → Configuration's (2.9.11.f): the reference is the document, for everyone."""
     import routes.help_routes as hr
 
-    monkeypatch.setattr(hr, "ident", lambda request: Identity("vic", "Vic", "Rates", ("viewer",)))
-    text = client.get("/help/configuration", params={"q": "max-days"}).text
+    text = client.get("/help/configuration", params={"q": "max-days"}).text            # security off: the acting user is an admin
     assert "In effect" not in text and "cfg-eff" not in text and not server_settings
-
-
-def test_a_server_that_cannot_answer_is_said_and_the_page_still_renders(client, backend, monkeypatch):
-    async def admin(method, path, ident, body=None, **params):
-        raise BackendError(404, "DRS-5004", "no such endpoint")
-    monkeypatch.setattr(backend, "admin", admin)
-    text = client.get("/help/configuration", params={"q": "server.port"}).text
-    assert "could not be read" in text and _visible(text)
+    assert 'href="/admin/configuration" data-cfg-admin' in text
+    monkeypatch.setattr(hr, "ident", lambda request: Identity("vic", "Vic", "Rates", ("viewer",)))
+    assert "data-cfg-admin" not in client.get("/help/configuration").text
 
 
 def test_secrets_are_masked_in_the_console_and_on_the_server(tmp_path):
@@ -150,7 +134,7 @@ def test_searchable_without_the_generated_half_is_the_page_as_it_is():
 
 def test_the_help_centre_admin_pages_and_health_link_to_it(client):
     assert 'href="/help/configuration"' in client.get("/help/section/operate").text          # its section of the help centre (2.9.11.a)
-    nav = (ROOT / "drishti-console/web/templates/admin/_nav.html").read_text(encoding="utf-8")
-    assert 'href="/help/configuration"' in nav
+    page = client.get("/admin/configuration").text                                       # the Admin tabs lead to the editor, which links here
+    assert 'href="/admin/configuration"' in page and 'href="/help/configuration"' in page
     health = (ROOT / "drishti-console/web/templates/admin/health.html").read_text(encoding="utf-8")
     assert 'href="/help/configuration"' in health

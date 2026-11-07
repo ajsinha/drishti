@@ -113,7 +113,7 @@ help:
   unlisted-slugs: refuse                 # a guide not in the help centre answers 404 (no reaching hidden guides by URL)
 
 admin:                                   # the Admin pages shown; the others answer 404 (and are off the menu and the tab strip)
-  pages: [users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, engines, health, caches, capacity, bi, scopes]
+  pages: [users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, engines, health, caches, capacity, bi, scopes, configuration]
 
 branding:                                # Drishti's name and eye mark kept; a licensee may override in site configuration
   product: Drishti Trading

@@ -101,7 +101,7 @@ help:
 
 admin:                                   # the Admin pages shown; the others answer 404 (and are off the menu and the tab strip)
   # the Admin pages kept, by id; the others answer 404
-  pages: [users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, engines, health, caches, capacity, bi, scopes]
+  pages: [users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, engines, health, caches, capacity, bi, scopes, configuration]
 
 branding:                                # Drishti's name and eye mark kept; a licensee may override in site configuration
   product: Drishti Risk  # the product name the edition shows (a site's own branding wins)

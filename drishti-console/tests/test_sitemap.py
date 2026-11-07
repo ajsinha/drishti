@@ -50,11 +50,15 @@ def _target(it) -> str:
     return str(it.get("href") or ("cmd:" + it["cmd"] if it.get("cmd") else "fill:" + str(it.get("fill") or "")))
 
 
+ROUTES: set[str] = set()
+
+
 @pytest.fixture(scope="module")
 def pages() -> set[str]:
-    """Every address the console answers with GET that a person could open: no path parameter, no /api, /static or /embed."""
+    """Every address the console answers with GET that a person could open: no path parameter, no /api, /static or /embed. Every
+    GET route with its parameters is kept in ROUTES (an item's link must reach one)."""
     app = create_app(load_settings(CONSOLE / "config"))
-    out: set[str] = set()
+    out = ROUTES
 
     def walk(routes, prefix=""):
         for r in routes:
@@ -110,6 +114,15 @@ def test_every_page_is_reachable_from_the_sitemap(pages):
     stale = sorted((context | not_pages) - pages)
     assert not stale, f"in-context or not-pages addresses the console no longer answers: {stale}"
     assert not (context & listed), f"in-context pages also listed in a menu: {sorted(context & listed)}"
+
+
+def test_every_item_links_to_a_page_the_console_answers(pages):
+    import re
+
+    patterns = [re.compile("^" + re.sub(r"\\{[^}]+\\}", "[^/]+", re.escape(r)) + "$") for r in ROUTES]
+    dead = [str(it["href"]) for _m, _c, it in _items() if it.get("href")
+            if not any(p.match(urlsplit(str(it["href"])).path) for p in patterns)]
+    assert not dead, f"items whose page the console does not answer: {dead}"
 
 
 def test_banking_entries_are_tagged_for_the_domain_split():
