@@ -563,7 +563,7 @@ Restart the server and check that `timings.fetch` is below the new timeout and t
 ### Example 2: many fast-ticking entities on a small server
 
 ```bash
-java -XX:+UseZGC -XX:+ZGenerational -jar drishti-server-2.9.11.c-exec.jar \
+java -XX:+UseZGC -XX:+ZGenerational -jar drishti-server-2.9.11.d-exec.jar \
   --drishti.live.frame=100ms --drishti.live.max-streams=5000
 ```
 
@@ -609,7 +609,7 @@ Every tool that starts a JVM through `tools/javacmd.py` (the stack, the tests' s
 Generational ZGC keeps pauses well under a millisecond, which matters for the live p99. When you run the jar yourself on Java 21:
 
 ```bash
-JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java -jar drishti-server-2.9.11.c-exec.jar
+JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:+ZGenerational" java -jar drishti-server-2.9.11.d-exec.jar
 ```
 
 Check heap use under load in Admin → Health (`server.heapUsedMb`, `heapMaxMb`) or with
@@ -641,7 +641,7 @@ operating system takes those pages back when it needs them. Budget the machine o
 
 ```bash
 export MALLOC_ARENA_MAX=2                      # glibc: two malloc arenas, not one per busy thread (500 MB less RSS here)
-JAVA_TOOL_OPTIONS="-Xmx2g -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144" java -jar drishti-server-2.9.11.c-exec.jar
+JAVA_TOOL_OPTIONS="-Xmx2g -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144" java -jar drishti-server-2.9.11.d-exec.jar
 ```
 
 `-XX:MaxDirectMemorySize` caps direct buffers (9 MB in use in these runs; the default cap is the heap size); `-XX:TrimNativeHeapInterval`

@@ -13,12 +13,102 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Drishti 2.9.11.d — release notes (draft)
+# Drishti 2.9.11.d — release notes
 
-*Not released yet.*
+*Released 2026-11-07.* **BI on the table layer with its editors; one analysis path, Pivot → Report, and the Notebook; one Python runtime
+on the server; every lake in its own folder, real data beside the demo and never over it; resizable panels and columns everywhere.**
+
+VaR check against 2.9.11.c: <result>
+
+## What changes for VaR users
+
+- **The scenario window is 250 as shipped** (it was the whole set): historical VaR, ES, components, parametric VaR and the backtest use the
+  newest 250 scenarios of each date's set (one year, the Basel minimum). An installation that relied on the default sees new figures (at 99%
+  the 3rd worst of 250). `DRISHTI_VAR_SCENARIO_WINDOW=all` keeps the whole set, and the figures of the previous release.
+- **Backtest ›** in the VaR explorer's toolbar opens the regulatory backtest of the scope and date in view (VAR_GUIDE section 3,
+  tutorial 25 step 8); **MR cube ›** opens the MR cube for the same scope and date.
+- **The MR cube is a preset of the Pivot** (`/pivot?preset=mr`): `MCUBE`, VaR → MR cube and saved MR cube views open there unchanged, the
+  same view and the same figures.
+- **Panels and columns resize**: the Scopes panel and the VaR tree's columns can be dragged wider; widths are kept per person and per
+  mode (Parametric on or off); a double-click resets. With Parametric on, scope names keep their width.
+- **The tree always shows the lens you chose**: changing the horizon, confidence, currency or hierarchy quickly no longer leaves the
+  previous lens's figures under the new lens's tiles.
+- **VaR data** (VAR_GUIDE section 36): every dataset the VaR engine reads, what it is for, whether it is required, with one sample record
+  each.
+
+## New
+
+- **BI on the table layer.** BI's datasets and models are tables and models of the table layer (`config/tables/<domain>/`), written in
+  Rachana, the one grammar of Drishti; the pivot, Sutras, Flight and BI see the same tables. A row rule on one fact limits the related
+  rows of another (`related_rows`), so nobody sees more data than before (TABLES_GUIDE, BI_GUIDE, tutorial 44).
+- **The editors: Build › Tables & models** (`/build/tables`, also on BI's rail). One screen for tables, models and Python-driven tables:
+  the objects with search, a visual editor with the **live YAML below it** (either side edits the other; an invalid line is marked), and
+  a preview read on the server as you (rows, totals, checks, the cost of a join across connectors, what uses it). The table editor's
+  look-ups and computed columns, the model editor's fields, measures (each with its card), hierarchies, row rules, masks and access
+  matrix; Validate, Preview, History, Impact, Save draft and Propose for review (four-eyes) (TABLES_GUIDE section 11).
+- **One analysis path, Pivot → Report.** Slice and total in the Pivot, keep it as a report. The MR cube is the Pivot's preset `mr`;
+  *Data view* is **Export data** (`EXPORT`, `DATA` still works).
+- **The Notebook** (`/bi/notebook`, USER_GUIDE › The Notebook): SQL cells in Drishti SQL run by the server as the reader, Python cells on
+  the server's compute pool, the Profile tab, and promotion of a cell to a report visual, a measure, a visual, a transform or a
+  Python-driven table (*Turn into table*).
+- **One Python runtime.** Every Python run (python visuals and measures, Python datasets and tables, Notebook cells, the Transform editor)
+  runs on the server's compute pool `python`, in a strict sandbox (no network, Landlock-confined files, CPU and memory limits), against
+  pinned libraries (`config/compute/locks/python.lock`), every run audited and its rows checked against the table's contract. Publishing
+  a Python item runs its tests on the server (PYTHON_COMPUTE.md section 19).
+- **Resizable panels and columns on every screen**: the VaR explorer, the exposure explorer, Help, the Build workbench, the Pivot's
+  fields, the BI report designer and a view's context column; every data table, BI grid and the pivot grid. Widths are kept per person in
+  the browser; double-click or `Home` resets; off on phones (USER_GUIDE "Resize panels and columns").
+- **The data lake work** (DATA_LAKE_GUIDE.md):
+  - **Every lake in its own folder**, `data/delta/<lake>/`: the demo lake is `data/delta/demo`, and real data goes into a lake of its own
+    (for example `data/delta/risklake`), beside the demo, never over it.
+  - **The demo lake's one-time move**: a demo lake in the older layout moves into `data/delta/demo` at the first start, measured table by
+    table, rolled back on any difference, never deleting (see Upgrade).
+  - **`lake:` in a `.ready` file** names the lake a file goes to; a lake with no file yet is created by the load
+    (`config/lakes/<lake>.yaml`). The command-line loaders read it too.
+  - **The empty lakes shipped**: `risklake`, `newslake`, `worldlake`, `regulators` and `capitalmarket` ship as lake files with no tables
+    and empty folders; nothing shipped points at them, a site points its connectors at them itself.
+  - **The no-connector warning**: a load into a lake no connector reads says so (Data loads, the load report, `drishti.py dataload
+    status`), naming the pack's connectors to point at it.
+  - **Demo and real data never mix**: once a kind's connectors read a lake other than `demo`, the packs' sample documents no longer answer
+    for that kind; Admin → Health marks a pack *DEGRADED* when its connectors read more than one lake.
+  - **Undo a load in its own lake**: Admin → Inbox → Undo a load, `drishti.py dataload undo <load-id>` and `drishti.py lake undo --lake`
+    find the load's lake from the ledger.
+  - **Connectors name a lake or a path, both permanent**: `lake: <name>`, or an explicit `root:` with `domain` and `table.<kind>` for
+    tables no lake file describes; a connector that gives both uses its own values and says so.
+- **The Data lake & data load guide** (DATA_LAKE_GUIDE.md): one home for lakes and loading, with real examples: the lake file key by key,
+  partitions and layout, retention and maintenance, the three ways to load, every key of the `.ready` file, routing, dates, replace and
+  append, repeats and undo, pointing connectors at a lake, sizing, and reading an existing Delta or Iceberg lakehouse. It replaces the
+  lake guide, the load rules and the inbox pages.
+- **Tutorial 45, Load your own data into a new lake** (UI, command line and YAML at every step, with its pictures and a deterministic
+  synthetic day of trades); **tutorial 44** (virtual tables and models) runs on the test data with real outputs.
+- **The Trading lens** gathers every market-data screen in one **Markets** menu and shows my-book P&L and sensitivities in Risk.
+- **`ADMIN <GO>`** opens Admin for administrators (`ADMIN USERS`, `ADMIN LOADS`).
+- **Tutorials in six tracks** (Start, Risk engines, BI and analysis, Data in and out, Build, Operate) and a *Trader: your first 10
+  minutes* path.
+
+## Fixed
+
+- **Pivot:** a member on the last row level no longer shows a "+" that does nothing; **Expand by…** still opens any member by another field.
+- **Masked columns** are never charted or exported (Excel, CSV, JSONL) for a reader they are masked for, and row rules hold after the
+  move to the table layer.
+- **Admin → Health** opens right after a start (the memory gauge says *not measured yet*).
+- **BI → Runs:** *Run again as* keeps your choice; closing a run's drawer returns the focus to its row.
+- **Clusters:** a node no longer writes its seed administrator over users it has just received, and a user read during a write is not
+  kept stale.
+- **SQLite identity database:** two identity databases read at once in one server no longer swap their rows' times.
+- **Custom functions:** a function's cost is the fastest of up to five warm runs, so a busy server no longer refuses a function within its
+  limit.
+- **Home's quick cards** keep their touch size on a phone.
+- **Tables:** a table over a table that adds no column of its own reads and writes without `columns:`; `tables migrate` checks the tables
+  already under `config/tables` in their own domain folders, keeps a dataset's hidden columns, narrowed columns, audience, refresh schedule
+  and expected values, and never replaces a table or model already there.
+- **`drishti.py lake undo`** works with the server's exec jar.
 
 ## Upgrade
 
+- Rebuild and restart as usual; the server jar is `drishti-server-2.9.11.d-exec.jar`.
+- **VaR's scenario window is 250 as shipped** (see *What changes for VaR users*): set `DRISHTI_VAR_SCENARIO_WINDOW=all` to keep the whole
+  set.
 - **The demo lake moves into its own folder, `data/delta/demo`, once, at the first start.** Every lake now has its own folder under
   `data/delta` (a lake you load real data into, `data/delta/risklake`, sits beside the demo, never over it). At its first start the server
   moves a demo lake built in the older layout (`data/delta/trading`, `data/delta/risk`, ...) into `data/delta/demo/` by a rename on the
@@ -120,6 +210,14 @@
 - **One page renderer.** `ui.render` (`DRISHTI_UI_RENDER`, `DRISHTI_UI_RENDER_PAGES`) and `?render=client` are gone: the console's pages are drawn
   by the server. Embeds: renderers **0.1.0, 1.0.0 and 1.1.0** and **Elements 2.0 and 2.1** are no longer served (`410 DRS-8006`): pin renderer
   `1.2.0` and Elements `2.2.0` (or the aliases `1` and `2`), with the new `integrity.json` hashes.
+
+## Known open
+
+- **Under construction, marked as such:** the P&L explain's waterfall (`pnl-explain-waterfall`) and the CCR cube preset
+  (`ccr-cube-preset`, until the CCR provider) (docs/admin/UNDER_CONSTRUCTION.md).
+- **Python on Windows:** the compute pool's strict sandbox needs Linux (kernel 5.13 or later), so Python items stay off on a Windows
+  server, with that reason.
+- Java 25 runs in the release checks; Java 21 is the production runtime.
 
 # Drishti 2.9.11.c — release notes
 
