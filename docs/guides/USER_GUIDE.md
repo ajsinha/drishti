@@ -469,24 +469,27 @@ date, and how the kinds join. Nothing on it is drawn by hand; it is inferred eac
 
 - **Domains and kinds** come from the packs switched on for you: each pack's kinds, titled by their data contracts
   (`config/packs/<pack>/contracts/<kind>.contract.yaml`). A kind whose contract says `class: computed` (VaR and ES, EE and PFE, the
-  what-ifs) is drawn **dashed**: it is computed on demand and never stored, so it has no count.
+  what-ifs) is drawn as a **diamond** (a stored kind is a square): it is computed on demand and never stored, so it has no count.
 - **Joins** are what the contracts declare: their `links:`, their fields' `link:` and the fields a pack's `graph.fields` names (the
   trade's `COUNTERPARTY` → counterparty, `PORTFOLIO` → book, `TRADER_ID` → trader; the P&L vector's and the exposure paths' `TRADE_ID`
   → trade). Each join is **checked against the data**: the server reads the field over the kind's rows (as columns where the lake keeps
   them so, else from the documents; at most 20,000 rows a kind, `drishti.datamap.max-rows`) and counts how many of the ids name an
-  entity that exists, so a join reads *15,000 of 15,000 ids match (100%)*. A join under 95% is a **finding**, listed above the map and
-  drawn in the warning colour: the contract promises a link the data does not keep.
+  entity that exists, so a join reads *15,000 of 15,000 ids match (100%)*. A join under 95% is a **finding**, listed above the map,
+  drawn thin, its kind badged in the warning colour: the contract promises a link the data does not keep.
 - **Counts** are read from the lake when you open the page (the server keeps them for the business date for 15 minutes,
   `drishti.datamap.ttl`). The first visit of a day may say *Counting and checking the data*: the map fills in as the server goes.
-- **Positions** come from an automatic layout: each domain a box, its kinds in a grid, the most joined first.
+- **Positions** come from an automatic layout (the map is a Drishti Elements graph, drishti-graph): each domain a frame, its kinds in
+  a grid, the most joined first. **Layered** draws the joins as a lineage DAG instead (what refers to what, top to bottom);
+  force, radial and circular are there too, and the layout you pick is in the address (`layout=layered`).
 
 Two views share one selection, the domain chips and the **Find** box (a kind, a mnemonic or a field: `LEI`, `PORTFOLIO`); the view
 and the selection are in the address, so a link opens the same picture.
 
 - **Map** (the default): click a kind to light its joins and dim the rest. The side panel shows its join fields with their coverage,
   the kinds that join to it, the commands that open it (its example from Functions, its search form) and its *Data contract*, its pack's
-  guide and its *WHAT* entry. Ctrl-click (Cmd-click) a kind to open it directly; Esc clears the selection. On a phone the map scrolls
-  inside its box.
+  guide and its *WHAT* entry. Double-click a kind to open it directly; Esc clears the selection. The wheel zooms, a drag pans, the
+  minimap moves the view, the arrow keys walk from a kind to the kinds it joins, and ▦ lists every kind with what it joins to and what
+  joins to it (the text alternative). Find marks the kinds that match and dims the rest.
 - **Cards**: one card per domain with its largest counts. Open one for a table of its kinds with their counts, joins (→ to, ← from,
   with the field) and the command that opens each, **Comes from** (the pack README's sources) and **Crosses into** (the other domains
   its joins reach, and through which fields).

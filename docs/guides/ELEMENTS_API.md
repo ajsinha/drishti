@@ -30,7 +30,7 @@ one bundled file next to them; a page loads drishti-core and then `Drishti.eleme
 | [drishti-graph](#drishti-graph) | 0.1.0 | The graph: networks cyclic or acyclic on a canvas for thousands of nodes; force (seeded), layered (DAG), radial, circular and grouped layouts; zoom, pan, minimap and fit; neighbours expanded on demand; the shortest path; groups collapsed by an attribute and filters by type; size and colour by a measure with a legend; pin, multi-select and lasso; a selection panel with Explain; linked selection; export (PNG, SVG, data); keyboard and an adjacency table; live updates; the lineage preset; the view's graph panel |
 | [drishti-tree](#drishti-tree) | 0.1.0 | The tree: hierarchies as an org chart, an indented tree with measures (on drishti-grid's tree data), a sunburst and an icicle; expand and collapse, search with breadcrumbs, measures on nodes with non-additive ones (◆) asked of the server and never summed, Explain, re-parenting in an edit mode that proposes the move for four eyes, export, keyboard and ARIA |
 | [drishti-risk](#drishti-risk) | 0.2.0 | The banking module's library (licensed with the module): chart kinds on drishti-chart (the P&L distribution with VaR and ES from the server's bins, the fitted normal, the backtest with its traffic light, the exposure profile with EE, PFE, EEPE and the limit, what moved VaR) and the risk grid preset on drishti-grid (terminal layout, figures never summed in the browser), and the presets for drishti-graph and drishti-tree (the counterparty structure graph; the VaR hierarchy tree): options only, so a page loads the graph or the tree library itself |
-| [drishti-renderer](#drishti-renderer) | 2.0.0 | The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js |
+| [drishti-renderer](#drishti-renderer) | 2.0.0 | The client renderer: Drishti screens from a static, live or streamed (GenUI) ViewModel, drawn with drishti-grid, drishti-chart, drishti-graph, drishti-core and drishti-data; Elements 2.3 (drishti-view, drishti-panel, drishti-screen); hosts import its public entry, static/render/2.0.0/drishti-render.js |
 
 ## drishti-core
 
@@ -9864,10 +9864,10 @@ A panel's chart option: the console's, from the panel's data (VIEWMODEL.md secti
 
 | Parameter | Type | Meaning |
 |---|---|---|
-| `kind` | `string` | one of PANEL_KINDS but map (line, area, waterfall, histogram, scatter, candlestick, graph, donut, surface) |
+| `kind` | `string` | one of PANEL_KINDS but map and graph (line, area, waterfall, histogram, scatter, candlestick, donut, surface; a graph panel is drishti-graph's: PanelCharts hands it over) |
 | `data` | `Object` | the panel's data |
 | `tokens` | `Object&lt;string, string&gt;` | panelTokens of the view |
-| `[size]` | `{width: number, height: number}` | the drawing's size (the waterfall's labels and the graph's layers use it) |
+| `[size]` | `{width: number, height: number}` | the drawing's size (the waterfall's labels use it) |
 | `[view]` | `('heatmap'\|'3d')` | the surface's view (default heatmap) |
 
 Returns `Object`: the engine's option.
@@ -10002,6 +10002,7 @@ Returns `void`.
 | `engine` | `function(): Promise&lt;Object&gt;` | loads the engine (ECharts) and resolves with it (the host's loader: its own policy for scripts) |
 | `[gl]` | `function(): Promise&lt;void&gt;` | loads ECharts GL (the surface in 3D); without it a 3D surface is drawn as its heatmap |
 | `[geo]` | `function(): Promise&lt;Object&gt;` | the console's map helper (drishti_geomap.js); without it a map says it did not load |
+| `[graph]` | `function(): Promise&lt;Object&gt;` | loads drishti-graph and resolves with its API (drawGraphPanel draws a graph panel); without it a graph panel says it did not load |
 | `[onLink]` | `function(Object, HTMLElement): void` | a point, a node or a place that names an entity was clicked ({kind, id}, the container) |
 | `[onPlaces]` | `function(HTMLElement, Array&lt;{name: string, link: Object, text: string}&gt;, string): void` | a map's clickable places and its note, for the host to list |
 | `[selector='[data-r-chart]` | `string` | '] the chart containers |
@@ -10948,6 +10949,16 @@ The keyboard's node (announced, outlined).
 
 Returns `void`.
 
+##### `Graph.highlight(ids)`
+
+Marks the nodes a search matched: the others are dimmed (null: none marked). The selection is kept.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `ids` | `?string[]` |  |
+
+Returns `void`.
+
 ##### `Graph.findPath(from, to)`
 
 The shortest path between two visible nodes, highlighted (the fewest hops, or the least cost by 1 / weight with weightedPath).
@@ -11314,6 +11325,7 @@ The graph's options.
 | `[minimap=true]` | `boolean` |  |
 | `[animate=true]` | `boolean` | false (or the page's reduced motion): no animated layout |
 | `[tables=true]` | `boolean` | the tables under the canvas (the selection, or the table mode's tabs) |
+| `[card=true]` | `boolean` | the table mode's card at the selected node (false: the host shows the selection itself) |
 | `[height]` | `number` | the canvas's height in pixels (default by mode) |
 | `[openOnClick=false]` | `boolean` | a click on a node that names an entity (link) opens it (the view's graph panel) |
 | `[weightedPath=false]` | `boolean` | the shortest path by cost (1 / weight) rather than by hops |
@@ -11350,6 +11362,7 @@ What one frame draws.
 | `theme` | `Object` | drishti-core's VisualTheme |
 | `labelSize` | `number` |  |
 | `lasso` | `?Array&lt;{x: number, y: number}&gt;` | screen points |
+| `[highlight]` | `?Set&lt;string&gt;` | nodes a search matched: the others dimmed |
 
 #### `LayoutOptions` : `Object`
 
@@ -12300,7 +12313,7 @@ The org chart's sizes.
 
 #### `TreeSlice` : `Object`
 
-A slice of the partition: a node's share [a0, a1) of the whole (0 to 1) and its ring (depth below the focus).
+A slice of the partition: a node's share of the whole, from a0 up to (not including) a1, (0 to 1) and its ring (depth below the focus).
 
 | Name | Type | Meaning |
 |---|---|---|
@@ -12678,7 +12691,7 @@ Returns `void`.
 
 ## drishti-renderer
 
-Version 2.0.0. Bundle `static/elements/drishti-renderer/drishti_renderer.js`, global `Drishti.elements.renderer`; requires drishti-core, drishti-grid, drishti-chart, drishti-data.
+Version 2.0.0. Bundle `static/elements/drishti-renderer/drishti_renderer.js`, global `Drishti.elements.renderer`; requires drishti-core, drishti-grid, drishti-chart, drishti-data, drishti-graph.
 
 ### drishti_render.js
 

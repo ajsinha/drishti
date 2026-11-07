@@ -81,6 +81,7 @@
         return gl;
       },
       geo: function () { return window.drishtiGeo ? Promise.resolve(window.drishtiGeo) : Promise.reject(new Error('drishti_geomap.js is not loaded')); },
+      graph: function () { var G = window.Drishti.elements.graph; return G ? Promise.resolve(G) : window.Drishti.elements.core.load('drishti-graph'); },   // a graph panel: drishti-graph (the page's, or loaded when a view has one)
       onLink: function (link, el) { open(el, link, options); },
       onPlaces: places
     });

@@ -66,7 +66,7 @@ export function orgLayout(model, o) {
 function r1(v) { return Math.round(v * 10) / 10; }
 
 /**
- * A slice of the partition: a node's share [a0, a1) of the whole (0 to 1) and its ring (depth below the focus).
+ * A slice of the partition: a node's share of the whole, from a0 up to (not including) a1, (0 to 1) and its ring (depth below the focus).
  * @typedef {Object} TreeSlice
  * @property {string} id
  * @property {number} a0

@@ -70,7 +70,7 @@ export class Graph extends GraphBase {
   /** @private */
   afterSelection(o) {
     if (this.P.insp) { this.P.insp.replaceChildren(this.inspector()); }
-    if (this.P.card) { this.cardFor(this.selection()[0]); }
+    if (this.P.card && this.o.card !== false) { this.cardFor(this.selection()[0]); }
     if (this.tables) { if (o.from === 'table') { this.tables.syncSelection(); } else { this.tables.refresh(false); } }
     this.draw();
     const ids = this.selection();
@@ -122,6 +122,13 @@ export class Graph extends GraphBase {
     this.emit('focusChanged', { id });
     this.draw();
   }
+
+  /**
+   * Marks the nodes a search matched: the others are dimmed (null: none marked). The selection is kept.
+   * @param {?string[]} ids
+   * @returns {void}
+   */
+  highlight(ids) { this.highlighted = ids ? new Set(ids) : null; this.draw(); }
 
   /** @private the toolbar's Find */
   findAndShow(words) { const n = this.model.find(words, 1)[0]; if (!n || !this.byId.has(n.id)) { announce('No node matches ' + words); return null; } this.select([n.id]); this.centerOn(n.id); this.setFocus(n.id); return n.id; }

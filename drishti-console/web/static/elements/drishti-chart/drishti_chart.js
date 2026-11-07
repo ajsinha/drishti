@@ -1997,46 +1997,6 @@
           return c ? esc(c.x) + '<br>O ' + esc(c.open) + '  H ' + esc(c.high) + '<br>L ' + esc(c.low) + '  C <b>' + esc(c.close) + '</b>' + (num(c.volume) ? '<br>Vol ' + panelCompact(c.volume) : '') : '';
         } }) };
     }
-    function layers(nodes, edges, w, h) {
-      const depth = {}, incoming = {}, children = {};
-      nodes.forEach((n) => { incoming[n.id] = 0; children[n.id] = []; });
-      edges.forEach((e) => { if (children[e.from] && e.from !== e.to) { children[e.from].push(e.to); incoming[e.to]++; } });
-      let queue = nodes.filter((n) => !incoming[n.id]).map((n) => n.id);
-      if (!queue.length && nodes.length) { queue = [nodes[0].id]; }
-      queue.forEach((id) => { depth[id] = 0; });
-      for (let i = 0; i < queue.length; i++) { children[queue[i]].forEach((c) => { if (depth[c] == null) { depth[c] = depth[queue[i]] + 1; queue.push(c); } }); }
-      nodes.forEach((n) => { if (depth[n.id] == null) { depth[n.id] = 0; } });
-      const rows = {};
-      nodes.forEach((n) => { (rows[depth[n.id]] = rows[depth[n.id]] || []).push(n.id); });
-      const pos = {}, deepest = Math.max(1, Object.keys(rows).length - 1);
-      Object.keys(rows).forEach((r) => { rows[r].forEach((id, i) => { pos[id] = [(i + 1) / (rows[r].length + 1) * w, Number(r) / deepest * h]; }); });
-      return pos;
-    }
-    function graph(d, t, size) {
-      const nodes = d.nodes || [], edges = d.edges || [], groups = [], colours = palette(t);
-      nodes.forEach((n) => { const g = n.group || ''; if (!groups.includes(g)) { groups.push(g); } });
-      const tree = d.layout !== 'force', top = groups.length > 1 ? 40 : 24;
-      const pos = tree ? layers(nodes, edges, Math.max(200, size.width - 180), Math.max(120, size.height - top - 28)) : {};
-      return { animationDuration: 400,
-        legend: groups.length > 1 ? { top: 0, data: groups.filter(Boolean), textStyle: { color: t.muted, fontSize: 10 }, itemHeight: 8 } : undefined,
-        tooltip: tip(t, { formatter: (p) => {
-          if (p.dataType === 'edge') { return esc(p.data.source) + ' → ' + esc(p.data.target) + (p.data.label && p.data.label.formatter ? ' · ' + esc(p.data.label.formatter) : ''); }
-          const n = p.data.node;
-          return '<b>' + esc(n.label) + '</b>' + (n.group ? ' · ' + esc(n.group) : '') + (n.link ? '<br>' + esc(n.id) + ' (click to open)' : '');
-        } }),
-        series: [{ type: 'graph', layout: tree ? 'none' : 'force', roam: true, draggable: !tree, top, bottom: 28, left: 90, right: 90,
-          force: { repulsion: 220, edgeLength: 90 }, categories: groups.map((g, i) => ({ name: g, itemStyle: { color: colours[i % colours.length] } })),
-          edgeSymbol: ['none', 'arrow'], edgeSymbolSize: 7, lineStyle: { color: t.faint || t.border, width: 1.2, curveness: tree ? 0 : 0.1 },
-          label: { show: true, position: 'bottom', color: t.ink, fontSize: 10, formatter: (p) => p.data.node.label },
-          edgeLabel: { show: edges.length <= 30, color: t.muted, fontSize: 9, formatter: (p) => p.data.text || '' }, emphasis: { focus: 'adjacency' },
-          data: nodes.map((n) => {
-            const o = { id: n.id, name: n.id, category: groups.indexOf(n.group || ''), node: n, symbolSize: n.focus ? 26 : 16, symbol: n.link ? 'circle' : 'roundRect',
-              cursor: n.link ? 'pointer' : 'default', itemStyle: { borderColor: n.focus ? t.accent : t.surface, borderWidth: n.focus ? 3 : 1 } };
-            if (tree) { o.x = pos[n.id][0]; o.y = pos[n.id][1]; }
-            return o;
-          }),
-          links: edges.map((e) => ({ source: e.from, target: e.to, text: e.label || '' })) }] };
-    }
     function donut(d, t) {
       const bars = (d.bars || []).filter((b) => num(b.value)), colours = palette(t);
       return { animationDuration: 400,
@@ -2067,7 +2027,7 @@
         visualMap: visual,
         series: [{ type: 'heatmap', data: cells, label: { show: x.length * y.length <= 72, color: t.ink, fontFamily: t.mono, fontSize: 10, formatter: (p) => Math.round(p.value[2] * 100) / 100 } }] };
     }
-    const BUILD = { line: (d, t) => line(d, t, 'line'), area: (d, t) => line(d, t, 'area'), waterfall, histogram, scatter, candlestick, graph, donut,
+    const BUILD = { line: (d, t) => line(d, t, 'line'), area: (d, t) => line(d, t, 'area'), waterfall, histogram, scatter, candlestick, donut,
       surface: (d, t, s, view) => surfaceOption(d, t, view || 'heatmap') };
     function panelOption(kind, data, tokens, size, view) {
       const b = BUILD[kind];
@@ -2130,6 +2090,7 @@
     }
     class PanelCharts {
       static state(el) {
+        if (el.__drishtiGraph) { return el.__drishtiGraph.layoutMs === null ? 'animating' : 'drawn'; }
         const E = el.ownerDocument.defaultView.echarts, c = E && E.getInstanceByDom(el);
         if (!c || c.isDisposed()) { return 'none'; }
         return c.getZr().animation.isFinished() ? 'drawn' : 'animating';
@@ -2169,6 +2130,7 @@
           return;
         }
         if (kind === 'surface') { await this.surface(E, el, t, el.getAttribute('data-view') || 'heatmap'); return; }
+        if (kind === 'graph') { await this.graph(el, data || {}); return; }
         try {
           const c = E.getInstanceByDom(el) || E.init(el, null, { renderer: 'svg' });
           c.setOption(panelOption(kind, data || {}, t, { width: el.clientWidth || 800, height: el.clientHeight || 360 }), true);
@@ -2181,6 +2143,15 @@
             });
           }
         } catch (e) { this.broken(E, el); }
+      }
+      async graph(el, data) {
+        if (el.__drishtiGraph && el.__drishtiGraphData === data) { return; }
+        try {
+          if (!this.o.graph) { throw new Error('no graph library'); }
+          const G = await this.o.graph();
+          G.drawGraphPanel(el, data, { onLink: (l) => this.link(l, el), density: el.getAttribute('data-density') || undefined });
+          el.__drishtiGraphData = data;
+        } catch (e) { this.broken(null, el, 'The graph did not load'); }
       }
       link(l, el) { if (this.o.onLink) { this.o.onLink(l, el); } }
       async surface(E, el, t, view) {
@@ -2218,7 +2189,7 @@
       redraw() { return this.draw(this.root); }
       async update(el) {
         const spec = this.o.specOf(el);
-        if (!spec || spec.kind === 'map' || spec.kind === 'surface') { return this.draw(el.parentNode || this.root); }
+        if (!spec || spec.kind === 'map' || spec.kind === 'surface' || spec.kind === 'graph') { return this.draw(el.parentNode || this.root); }
         const E = await this.o.engine(), c = E.getInstanceByDom(el);
         if (!c) { return this.draw(el.parentNode || this.root); }
         c.setOption(panelOption(spec.kind, spec.data || {}, this.tokens(), { width: el.clientWidth || 800, height: el.clientHeight || 360 }), false);
@@ -2238,6 +2209,7 @@
         if (this.ro) { this.ro.disconnect(); this.ro = null; }
         this.live().forEach((c) => c.dispose());
         this.all = [];
+        this.root.querySelectorAll(this.o.selector).forEach((el) => { if (el.__drishtiGraph) { el.__drishtiGraph.destroy(); el.__drishtiGraph = null; } });
       }
     }
     return { "drawMap": drawMap, "PanelCharts": PanelCharts };

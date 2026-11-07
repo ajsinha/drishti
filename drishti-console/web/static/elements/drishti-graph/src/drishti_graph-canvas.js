@@ -120,6 +120,7 @@ export function shapePath(ctx, shape, x, y, r) {
  * @property {Object} theme drishti-core's VisualTheme
  * @property {number} labelSize
  * @property {?Array<{x: number, y: number}>} lasso screen points
+ * @property {?Set<string>} [highlight] nodes a search matched: the others dimmed
  */
 
 /** The tones of a status badge. */
@@ -160,10 +161,11 @@ export class CanvasRenderer {
     ctx.clearRect(0, 0, w, h);
     const X = (p) => p.x * k + t.tx, Y = (p) => p.y * k + t.ty, pad = 40;
     const onScreen = (p, r) => { const x = X(p), y = Y(p); return x > -pad - r && y > -pad - r && x < w + pad + r && y < h + pad + r; };
-    const focusing = f.selected.size > 0 || !!f.path;
+    const focusing = f.selected.size > 0 || !!f.path || !!f.highlight;
     const near = new Set();
     if (f.selected.size && !f.path) { f.edges.forEach((e) => { if (f.selected.has(e.source)) { near.add(e.target); } if (f.selected.has(e.target)) { near.add(e.source); } }); }
-    const lit = (id) => !focusing || f.selected.has(id) || near.has(id) || (f.path && f.path.nodes.has(id));
+    const marked = (id) => f.selected.has(id) || near.has(id) || (f.path && f.path.nodes.has(id));
+    const lit = (id) => !focusing || (f.highlight ? f.highlight.has(id) || f.selected.has(id) : marked(id));
     // group frames
     ctx.font = '600 ' + Math.max(9, Math.min(13, 11 * Math.sqrt(k))) + 'px ' + th.font;
     (f.frames || []).forEach((fr) => {

@@ -262,7 +262,7 @@ async def echarts_js(request: Request):
 
 # The console's own enhancer scripts, root-scoped (static/js; CLIENT_RENDERER.md › Drishti Elements: the design, section 12): the element loads these, with
 # data-manual so they do not start by themselves, and calls init(shadowRoot, options) on each.
-ENHANCERS = ("view", "geomap", "charts", "colfilter", "tables", "tree-rows", "pivot-engine", "elements-core", "elements-grid", "elements-chart", "about", "about-hints", "zoom", "multiselect", "controls",
+ENHANCERS = ("view", "geomap", "charts", "colfilter", "tables", "tree-rows", "pivot-engine", "elements-core", "elements-grid", "elements-chart", "elements-graph", "about", "about-hints", "zoom", "multiselect", "controls",
              "bi-lib", "bi-visuals", "bi-visuals-format", "bi-grids", "bi-matrix", "bi-multiples", "bi-frame", "bi-live", "bi-phone")
 
 
@@ -272,7 +272,7 @@ async def enhancer_js(request: Request, name: str):
     if name not in ENHANCERS:
         return await refuse(request, 404, "DRS-9404", f"no such script: {name}")
     path = WEB / "static/js" / f"drishti_{name}.js"
-    if name.startswith("elements-"):              # Drishti Elements' bundles (elements-core, elements-grid: the tables, elements-chart: the panel charts), loaded like the scripts
+    if name.startswith("elements-"):              # Drishti Elements' bundles (elements-core, elements-grid: the tables, elements-chart: the panel charts, elements-graph: a graph panel), loaded like the scripts
         library = "drishti-" + name.removeprefix("elements-")
         path = WEB / "static/elements" / library / f"drishti_{library.removeprefix('drishti-')}.js"
     return await send(request, path.read_bytes(), "text/javascript", f'"{path.stat().st_mtime_ns:x}"')

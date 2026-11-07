@@ -57,6 +57,7 @@ export const GRAPH_EVENTS = Object.freeze(['nodeClicked', 'nodeDoubleClicked', '
  * @property {boolean} [minimap=true]
  * @property {boolean} [animate=true] false (or the page's reduced motion): no animated layout
  * @property {boolean} [tables=true] the tables under the canvas (the selection, or the table mode's tabs)
+ * @property {boolean} [card=true] the table mode's card at the selected node (false: the host shows the selection itself)
  * @property {number} [height] the canvas's height in pixels (default by mode)
  * @property {boolean} [openOnClick=false] a click on a node that names an entity (link) opens it (the view's graph panel)
  * @property {boolean} [weightedPath=false] the shortest path by cost (1 / weight) rather than by hops
@@ -254,7 +255,7 @@ export class GraphBase {
     const th = this.theme();
     return { nodes: this.vis.nodes, edges: this.vis.edges, pos: this.pos, look: this.enc.nodes, edgeLook: this.enc.edges, frames: this.frames, selected: this.selected,
       path: this.path ? { nodes: new Set(this.path.nodes), edges: new Set(this.path.edges) } : null, hover: this.hoverId, focus: this.focusId,
-      directed: this.model.directed, theme: th, labelSize: this.st.density === 'comfortable' ? 12 : this.st.density === 'terminal' ? 10.5 : 11, lasso: this.lassoPts };
+      directed: this.model.directed, highlight: this.highlighted || null, theme: th, labelSize: this.st.density === 'comfortable' ? 12 : this.st.density === 'terminal' ? 10.5 : 11, lasso: this.lassoPts };
   }
 
   /**

@@ -706,10 +706,11 @@
         ctx.clearRect(0, 0, w, h);
         const X = (p) => p.x * k + t.tx, Y = (p) => p.y * k + t.ty, pad = 40;
         const onScreen = (p, r) => { const x = X(p), y = Y(p); return x > -pad - r && y > -pad - r && x < w + pad + r && y < h + pad + r; };
-        const focusing = f.selected.size > 0 || !!f.path;
+        const focusing = f.selected.size > 0 || !!f.path || !!f.highlight;
         const near = new Set();
         if (f.selected.size && !f.path) { f.edges.forEach((e) => { if (f.selected.has(e.source)) { near.add(e.target); } if (f.selected.has(e.target)) { near.add(e.source); } }); }
-        const lit = (id) => !focusing || f.selected.has(id) || near.has(id) || (f.path && f.path.nodes.has(id));
+        const marked = (id) => f.selected.has(id) || near.has(id) || (f.path && f.path.nodes.has(id));
+        const lit = (id) => !focusing || (f.highlight ? f.highlight.has(id) || f.selected.has(id) : marked(id));
         ctx.font = '600 ' + Math.max(9, Math.min(13, 11 * Math.sqrt(k))) + 'px ' + th.font;
         (f.frames || []).forEach((fr) => {
           ctx.fillStyle = th.ground; ctx.strokeStyle = th.border; ctx.lineWidth = 1;
@@ -1516,7 +1517,7 @@
         const th = this.theme();
         return { nodes: this.vis.nodes, edges: this.vis.edges, pos: this.pos, look: this.enc.nodes, edgeLook: this.enc.edges, frames: this.frames, selected: this.selected,
           path: this.path ? { nodes: new Set(this.path.nodes), edges: new Set(this.path.edges) } : null, hover: this.hoverId, focus: this.focusId,
-          directed: this.model.directed, theme: th, labelSize: this.st.density === 'comfortable' ? 12 : this.st.density === 'terminal' ? 10.5 : 11, lasso: this.lassoPts };
+          directed: this.model.directed, highlight: this.highlighted || null, theme: th, labelSize: this.st.density === 'comfortable' ? 12 : this.st.density === 'terminal' ? 10.5 : 11, lasso: this.lassoPts };
       }
       drawNow() {
         if (!this.renderer || !this.vis) { return; }
@@ -1638,7 +1639,7 @@
       clearSelection() { if (!this.selected.size) { return; } this.selected = new Set(); this.afterSelection({}); }
       afterSelection(o) {
         if (this.P.insp) { this.P.insp.replaceChildren(this.inspector()); }
-        if (this.P.card) { this.cardFor(this.selection()[0]); }
+        if (this.P.card && this.o.card !== false) { this.cardFor(this.selection()[0]); }
         if (this.tables) { if (o.from === 'table') { this.tables.syncSelection(); } else { this.tables.refresh(false); } }
         this.draw();
         const ids = this.selection();
@@ -1675,6 +1676,7 @@
         this.emit('focusChanged', { id });
         this.draw();
       }
+      highlight(ids) { this.highlighted = ids ? new Set(ids) : null; this.draw(); }
       findAndShow(words) { const n = this.model.find(words, 1)[0]; if (!n || !this.byId.has(n.id)) { announce('No node matches ' + words); return null; } this.select([n.id]); this.centerOn(n.id); this.setFocus(n.id); return n.id; }
       findPath(from, to) {
         const p = shortestPath({ nodes: this.vis.nodes, edges: this.vis.edges }, from, to, { directed: false, cost: this.o.weightedPath ? (e) => 1 / Math.max(1e-9, e.weight) : null });
