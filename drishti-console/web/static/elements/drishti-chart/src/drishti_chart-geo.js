@@ -37,8 +37,8 @@ export function equalEarth(lon, lat) {
   return [x, -y];
 }
 
-/** @private a longitude in (-180, 180] */
-function wrap(d) { let x = d; while (x > 180) { x -= 360; } while (x <= -180) { x += 360; } return x; }
+/** @private a longitude in [-180, 180] (both edges kept: a ring that ends on the antimeridian stays on its side) */
+function wrap(d) { let x = d; while (x > 180) { x -= 360; } while (x < -180) { x += 360; } return x; }
 
 /**
  * An Albers equal-area conic projection with two standard parallels.
@@ -73,6 +73,25 @@ export function projectGeometry(g, fn) {
   if (g.type === 'Polygon') { return { type: 'Polygon', coordinates: g.coordinates.map(ring) }; }
   if (g.type === 'MultiPolygon') { return { type: 'MultiPolygon', coordinates: g.coordinates.map((poly) => poly.map(ring)) }; }
   if (g.type === 'Point') { return { type: 'Point', coordinates: fn(g.coordinates[0], g.coordinates[1]) }; }
+  return g;
+}
+
+/**
+ * A copy of a geometry whose rings cross the antimeridian (a ring spanning more than 180 degrees of longitude, as Fiji's and Russia's
+ * do at 1:110m) held on the side most of the ring is on, so no ring draws a line across the whole map.
+ * @param {Object} g
+ * @returns {Object}
+ */
+export function holdAntimeridian(g) {
+  const ring = (r) => {
+    let lo = Infinity, hi = -Infinity, east = 0;
+    r.forEach((q) => { lo = Math.min(lo, q[0]); hi = Math.max(hi, q[0]); if (q[0] > 0) { east++; } });
+    if (hi - lo <= 180) { return r; }
+    const side = east * 2 >= r.length ? 180 : -180;
+    return r.map((q) => ((side > 0 && q[0] < 0) || (side < 0 && q[0] > 0) ? [side, q[1]] : q));
+  };
+  if (g.type === 'Polygon') { return { type: 'Polygon', coordinates: g.coordinates.map(ring) }; }
+  if (g.type === 'MultiPolygon') { return { type: 'MultiPolygon', coordinates: g.coordinates.map((poly) => poly.map(ring)) }; }
   return g;
 }
 
@@ -176,7 +195,24 @@ export function prepareRegions(geo) {
     });
     fit = bounds([[fit[0], fit[1]], [fit[2], fit[3]]].concat(frames.map((fr) => [fr.box[2], fr.box[3]])));
   }
-  return { level: iso3, iso3: iso3, projection: proj.name, project: proj.project, shapes: shapes, points: points, by: by, list: list, fit: fit, frames: frames };
+  return { level: iso3, iso3: iso3, projection: proj.name, project: proj.project, shapes: shapes, points: points, by: by, list: list, fit: fit, frames: frames, all: drawnBounds(shapes, frames) };
+}
+
+/** @private the box of every shape the engine draws (the regions it fits its view to: shapes and inset frames; points are not regions) */
+function drawnBounds(shapes, frames) { return bounds([].concat.apply([], shapes.map((x) => allPoints(x.geometry))).concat([].concat.apply([], (frames || []).map((f) => [[f.box[0], f.box[1]], [f.box[2], f.box[3]]])))); }
+
+/**
+ * The view that shows a level's fit box in a drawing of a size: the centre and zoom of the map, whose unzoomed view is the box of
+ * everything drawn fitted to the drawing (the aspect kept).
+ * @param {RegionGeo} geo
+ * @param {number} [width=1] the drawing's width
+ * @param {number} [height=1] the drawing's height
+ * @returns {{center: number[], zoom: number}}
+ */
+export function fitView(geo, width, height) {
+  const a = geo.all || geo.fit, f = geo.fit, w = width || 1, ht = height || 1;
+  const scale = (b) => Math.min(w / ((b[2] - b[0]) || 1e-9), ht / ((b[3] - b[1]) || 1e-9));
+  return { center: [(f[0] + f[2]) / 2, (f[1] + f[3]) / 2], zoom: Math.max(1, scale(f) / scale(a)) };
 }
 
 /**
@@ -189,6 +225,7 @@ export function prepareRegions(geo) {
  * @property {{code: Object, name: Object, short: Object}} by lookups (a country's iso3 and iso2 for the world)
  * @property {Array<{code: string, name: string, point: boolean}>} list every place
  * @property {number[]} fit [minX, minY, maxX, maxY] the view fits
+ * @property {number[]} all [minX, minY, maxX, maxY] of everything drawn
  * @property {Array<{code: string, box: number[]}>} frames inset frames (Alaska, Hawaii)
  */
 
@@ -205,7 +242,7 @@ export function prepareWorld(geo, pts) {
     if (p.iso3 === 'ATA') { return; }
     list.push(item);
     by.code[p.iso3.toUpperCase()] = item; if (p.iso2) { by.short[p.iso2.toUpperCase()] = item; } by.name[p.name.toLowerCase()] = item;
-    shapes.push({ type: 'Feature', properties: { name: p.iso3, fullName: p.name }, geometry: projectGeometry(f.geometry, equalEarth) });
+    shapes.push({ type: 'Feature', properties: { name: p.iso3, fullName: p.name }, geometry: projectGeometry(holdAntimeridian(f.geometry), equalEarth) });
   });
   (pts || []).forEach((p) => {
     if (by.code[p.iso3]) { return; }
@@ -213,8 +250,8 @@ export function prepareWorld(geo, pts) {
     list.push(item); points.push(item);
     by.code[p.iso3] = item; if (p.iso2) { by.short[p.iso2.toUpperCase()] = item; } by.name[p.name.toLowerCase()] = item;
   });
-  const fit = bounds([equalEarth(-180, 84), equalEarth(180, -58), equalEarth(0, 84), equalEarth(0, -58)]);
-  return { level: 'world', iso3: null, projection: 'equal-earth', project: equalEarth, shapes: shapes, points: points, by: by, list: list, fit: fit, frames: [] };
+  const fit = bounds([equalEarth(-180, 0), equalEarth(180, 0), equalEarth(0, 84), equalEarth(0, -58)]);
+  return { level: 'world', iso3: null, projection: 'equal-earth', project: equalEarth, shapes: shapes, points: points, by: by, list: list, fit: fit, frames: [], all: drawnBounds(shapes, []) };
 }
 
 /**

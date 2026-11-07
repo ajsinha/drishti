@@ -70,7 +70,7 @@ async def frame(pg):
 
 async def at(pg, chart, finder, value):
     """The page position of a value on a chart (the engine's own conversion), for a real mouse event."""
-    return await pg.evaluate("([id, f, v]) => { const c = window.__harness.charts[id], p = c.engine.convertToPixel(f, v), r = c.canvas.getBoundingClientRect(); return [r.left + p[0], r.top + p[1]]; }",
+    return await pg.evaluate("([id, f, v]) => { const c = window.__harness.charts[id]; c.canvas.scrollIntoView({ block: 'center' }); const p = c.engine.convertToPixel(f, v), r = c.canvas.getBoundingClientRect(); return [r.left + p[0], r.top + p[1]]; }",
                              [chart, finder, value])
 
 
@@ -101,7 +101,7 @@ def test_the_board_draws_every_kind_in_both_themes_and_three_densities(browsers)
                   "candlestick", "layer", "map", "risk.pnl-distribution", "risk.backtest", "risk.exposure-profile", "risk.var-change"):
             assert k in kinds, k
         n = len(kinds)
-        assert await pg.locator("drishti-chart .dc-canvas canvas").count() == n
+        assert await pg.locator("drishti-chart .dc-canvas:has(canvas)").count() == n
         assert await pg.locator(".dc-error").count() == 0
         labels = await pg.eval_on_selector_all(".dc-canvas", "els => els.map((e) => e.getAttribute('aria-label'))")
         assert all(labels) and len(set(labels)) == n                                  # every chart described for a screen reader
@@ -143,6 +143,7 @@ def test_tooltips_legend_zoom_keys_explain_selection_table_export_and_live(brows
         # drag-to-zoom inside the overview window, then the reset
         z0 = await pg.evaluate("() => window.__harness.charts.line.engine.getOption().dataZoom[1]")
         assert z0["startValue"] < z0["endValue"]
+        await pg.evaluate("() => document.querySelector('#c-line .dc-canvas').scrollIntoView({ block: 'center' })")
         box = await pg.locator("#c-line .dc-canvas").bounding_box()
         await pg.mouse.move(box["x"] + box["width"] * 0.35, box["y"] + 60)
         await pg.mouse.down()
@@ -155,7 +156,7 @@ def test_tooltips_legend_zoom_keys_explain_selection_table_export_and_live(brows
         await pg.focus("#c-bar .dc-canvas")
         for _ in range(3):
             await pg.keyboard.press("ArrowRight")
-        assert "FX" in await pg.text_content("[data-drishti-live]")
+        await pg.wait_for_function("() => (document.querySelector('[data-drishti-live]') || {}).textContent.indexOf('FX') >= 0")
         await pg.keyboard.press("Enter")
         await pg.wait_for_selector("#c-bar .dc-explain:not([hidden]) .dc-ex-value")
         await pg.keyboard.press("Escape")
@@ -252,8 +253,8 @@ def test_the_world_map_ranking_drill_into_the_states_and_canada_and_back(browser
         await pg.click(".dc-ex-close")
         await pg.click(".dc-detail [data-drill='USA']")
         await pg.wait_for_function("() => window.__harness.charts.map.map.geo.level === 'USA'")
-        assert "United States: 51 regions loaded" in await pg.text_content("#c-map .dc-toast")
-        assert await pg.text_content(".dc-crumb") == "World › United States"
+        assert "United States of America: 51 regions loaded" in await pg.text_content("#c-map .dc-toast")
+        assert await pg.text_content(".dc-crumb") == "World › United States of America"
         assert "regions/USA.json" in await pg.text_content(".dc-status")
         assert await pg.evaluate("() => window.__harness.charts.map.map.geo.projection") == "albers-usa"
         assert await pg.evaluate("() => window.__harness.charts.map.engine.getOption().geo[0].regions.filter((r) => r.name.indexOf('__frame_') === 0).length") == 2

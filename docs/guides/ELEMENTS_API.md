@@ -4527,6 +4527,28 @@ A loader of the shapes: the world once, each country's regions the first time th
 
 Returns `{world: function(): Promise&lt;RegionGeo&gt;, regions: function(string): Promise&lt;RegionGeo&gt;, hasRegions: function(string): boolean, loads: string[]}`.
 
+#### `holdAntimeridian(g)`
+
+A copy of a geometry whose rings cross the antimeridian (a ring spanning more than 180 degrees of longitude, as Fiji's and Russia's do at 1:110m) held on the side most of the ring is on, so no ring draws a line across the whole map.
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `g` | `Object` |  |
+
+Returns `Object`.
+
+#### `fitView(geo, width, height)`
+
+The view that shows a level's fit box in a drawing of a size: the centre and zoom of the map, whose unzoomed view is the box of everything drawn fitted to the drawing (the aspect kept).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `geo` | `RegionGeo` |  |
+| `[width=1]` | `number` | the drawing's width |
+| `[height=1]` | `number` | the drawing's height |
+
+Returns `{center: number[], zoom: number}`.
+
 ### drishti_chart-map.js
 
 #### `mapMetrics(spec)`
@@ -4584,7 +4606,7 @@ The map as the engine draws it, with what the view shows around it.
 | `spec` | `Object` | normalised |
 | `rows` | `Object[]` |  |
 | `geo` | `import('./drishti_chart-geo.js').RegionGeo` | projected shapes of the level |
-| `env` | `{theme: Object, mapName: string, metric: Object, highlight: ?number, selected: string[], hatch: *}` | mapName: the name the shapes are registered under; highlight: a legend class to keep bright; selected: place codes outlined; hatch: the no-data fill (a pattern; default the theme's no-data colour) |
+| `env` | `{theme: Object, mapName: string, metric: Object, highlight: ?number, selected: string[], hatch: *, width: number, height: number}` | mapName: the name the shapes are registered under; highlight: a legend class to keep bright; selected: place codes outlined; hatch: the no-data fill (a pattern; default the theme's no-data colour); width and height: the drawing's size in pixels (the view fits the level to it) |
 
 Returns `Object} {option, places, scale, ranking, table, summary, unmatched, legend`.
 
@@ -4691,7 +4713,7 @@ Returns `number`: how many marks are marked.
 
 #### `addZoom(option, spec, built, th)`
 
-The overview window and drag-to-zoom of a cartesian chart: an 'inside' zoom on the wheel, a slider with the series' shape under the chart, and the engine's drag-select (the card takes the global cursor after drawing). A window of indexes ([150, 250]) or values.
+The overview window of a cartesian chart: an 'inside' zoom on the wheel and a slider with the series' shape under the chart (the card adds drag-to-zoom: dragBrush). A window of indexes ([150, 250]) or values.
 
 | Parameter | Type | Meaning |
 |---|---|---|
@@ -4701,6 +4723,18 @@ The overview window and drag-to-zoom of a cartesian chart: an 'inside' zoom on t
 | `th` | `Object` |  |
 
 Returns `boolean`: whether the chart zooms.
+
+#### `dragBrush(engine, active, colour)`
+
+Drag-to-zoom on a chart's plot: a drag across draws a band and zooms the x axis to it when the mouse is let go (a click, with no drag, stays a click on a mark).
+
+| Parameter | Type | Meaning |
+|---|---|---|
+| `engine` | `Object` | the chart's engine instance |
+| `active` | `function(): boolean` | whether the chart zooms now |
+| `colour` | `string` | the band's fill |
+
+Returns `void`.
 
 #### `svgOf(E, option, width, height)`
 

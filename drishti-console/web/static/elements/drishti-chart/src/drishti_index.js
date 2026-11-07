@@ -33,10 +33,10 @@ export { rowId, seriesDefs, annotationMarks, buildSeriesChart, buildScatter, bui
   registerAxisKinds } from './drishti_chart-kinds.js';
 export { buildPie, buildGauge, buildTreemap, buildSankey, registerOtherKinds } from './drishti_chart-kinds2.js';
 export { equalEarth, albers, plateCarree, projectGeometry, bounds, coreExtent, countryProjection, US_INSETS, prepareRegions, prepareWorld, findPlace,
-  createGeoLoader } from './drishti_chart-geo.js';
+  createGeoLoader, holdAntimeridian, fitView } from './drishti_chart-geo.js';
 export { mapMetrics, placeValues, mapScale, ranking, buildMap, registerMapKind } from './drishti_chart-map.js';
 export { colourTone, d3Format, fromVegaLite } from './drishti_chart-vega.js';
-export { valueText, tooltipElement, dataTable, legendElement, markSelection, addZoom, svgOf } from './drishti_chart-parts.js';
+export { valueText, tooltipElement, dataTable, legendElement, markSelection, addZoom, dragBrush, svgOf } from './drishti_chart-parts.js';
 export { MAP_MODES, geoLoader, MapView } from './drishti_map-view.js';
 export { Studio } from './drishti_chart-studio.js';
 export { CHART_EVENTS, CHART_MODES, SELECTION_EVENT, Chart } from './drishti_chart-view.js';
