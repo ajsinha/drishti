@@ -43,6 +43,31 @@
     They switch to fail at the end of 2.9.11.g.
   - **History leaves the docs:** `IMPLEMENTATION_HISTORY.md`, `PRODUCT_CRITIQUE_BRIEF.md`, `qa/QA_HISTORY.md` (and its round shots) and
     the contracts' change tables are deleted; the CHANGELOG is the history.
+- **Docs part B: fewer internal documents, one home per formula, the references in one folder** (DOCS_PLAN.md sections 3 and 6;
+  `docs/` 246 → 217 Markdown files):
+  - **Internal documents 75 → 50**, every one under `docs/architecture/` (the `lenses/`, `qa/` and `strategy/` folders are gone): the ten
+    lens documents are one internal [LENSES.md](docs/architecture/LENSES.md) (the product view of each lens, shared rules said once, the
+    mock-ups in `architecture/mockups/`); the in-memory lake, the lake configuration, the data inbox, the load rules, the parallel loader
+    and Arrow Flight are [DATA_ARCHITECTURE.md](docs/architecture/DATA_ARCHITECTURE.md) sections 7 to 12; the pivot engine, compute
+    workers and the engine switches are [ARCHITECTURE.md](docs/architecture/ARCHITECTURE.md) sections 23 to 25; VaR sharding is
+    [CLUSTER_DEPLOYMENT.md](docs/architecture/CLUSTER_DEPLOYMENT.md) section 5; the Windows QA script is
+    [TEST_HARNESS.md](docs/architecture/TEST_HARNESS.md) section 9; the competitive analysis moves to `architecture/`; ADR-011, superseded
+    by ADR-017, is deleted.
+  - **Knowledge 9 → 4:** the glossary home and three primers, [risk](docs/knowledge/risk.md), [data](docs/knowledge/data.md) and
+    [world](docs/knowledge/world.md), one part per former page; `tools/knowledge.py` writes each part's glossary block.
+  - **One home per formula:** parametric VaR and the VaR Playground's workbook are [VAR_GUIDE.md](docs/guides/VAR_GUIDE.md) sections
+    18.15 and 18.16, the FRTB-SA method is [FRTB_SA_GUIDE.md](docs/guides/FRTB_SA_GUIDE.md); the contracts, REGULATORY_VAR_REPORTING,
+    COUNTERPARTY_ENGINES, COMPUTED_ATTRIBUTES, the knowledge primers and LENSES.md link to the guide instead of restating a formula.
+    PARAMETRIC_VAR, VAR_PLAYGROUND, VAR_SHARDING and SENSITIVITIES_AND_FRTB_SA are deleted.
+  - **`docs/reference/`** holds the references: [CONFIGURATION.md](docs/reference/CONFIGURATION.md),
+    [COMMANDS.md](docs/reference/COMMANDS.md) (was `guides/COMMAND_CATALOG.md`), [FUNCTIONS.md](docs/reference/FUNCTIONS.md),
+    [VIEWMODEL.md](docs/reference/VIEWMODEL.md), [UNDER_CONSTRUCTION.md](docs/reference/UNDER_CONSTRUCTION.md) and the connector
+    reference; their generators (`settings_catalogue.py`, `command_catalog.py`, `under_construction.py`, `FunctionCataloguePage`) write
+    the new paths.
+  - **Customer text:** GROUPINGS_ANALYTICS_GUIDE section 1 says what each page shows; the version mentions are out of the pack guides,
+    RACHANA_REFERENCE and API_GUIDE. Every link, code comment and Help address is re-pointed; Help has a `moved:` entry for every
+    retired address, and its Lenses entry is internal (administrators). The docs gates' warnings: one home 441 → 438, repeated prose
+    153 → 149, customer text 376 → 361, Help as user docs 4 → 3, count caps 4 → 3.
 
 ## 2.9.11.d (unreleased)
 

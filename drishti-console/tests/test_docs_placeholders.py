@@ -22,7 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 PLACEHOLDER = re.compile(r"\$\{([A-Za-z0-9_]+)(?::((?:[^{}]|\$\{[^}]*\})*))?\}")   # one level of nesting: ${X:${drishti.data.dir}/y}
 DATA_DIR = re.compile(r"\$\{drishti\.data\.dir(?::[^}]*)?\}")                        # documented as its default, ./data (CONFIGURATION.md, "The data folder")
-DOC = (ROOT / "docs" / "admin" / "CONFIGURATION.md").read_text(encoding="utf-8")
+DOC = (ROOT / "docs" / "reference" / "CONFIGURATION.md").read_text(encoding="utf-8")
 
 
 def _live_placeholders(path: Path) -> list[tuple[str, str | None]]:

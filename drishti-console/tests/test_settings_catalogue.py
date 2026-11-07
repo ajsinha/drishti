@@ -31,7 +31,7 @@ import settings_sources as S  # noqa: E402
 
 pytestmark = pytest.mark.static   # a quick file check: the drill's gate runs it (TEST_HARNESS.md, "Quick file checks")
 
-DOC = (ROOT / "docs" / "admin" / "CONFIGURATION.md").read_text(encoding="utf-8")
+DOC = (ROOT / "docs" / "reference" / "CONFIGURATION.md").read_text(encoding="utf-8")
 
 
 def _generated() -> str:

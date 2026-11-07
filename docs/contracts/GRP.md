@@ -186,12 +186,12 @@ share of a group: `GROUP:<id> & LE:<le>`.
 
 ### 9.2 The API (`/api/v1/groups`, planned)
 
-| Method and path | Parameters | Answer |
-|---|---|---|
-| `GET /{groupId}` | `asOf`, `measures` (default `nset,saccr,exposure,limits`) | §9.1 |
-| `GET /of/{counterpartyId}` | `asOf` | the connected group of a counterparty (its id and members) |
-| `GET /conflicts` | `asOf` | every conflict of §6.2 |
-| captures, status, reload | as NSET | |
+Planned; the API reference lists them once built:
+
+- `GET /{groupId}` with `asOf` and `measures` (default `nset,saccr,exposure,limits`): the answer of §9.1.
+- `GET /of/{counterpartyId}` with `asOf`: the connected group of a counterparty (its id and members).
+- `GET /conflicts` with `asOf`: every conflict of §6.2.
+- Captures, status and reload: as NSET.
 
 ### 9.3 Published official results (`group-official-cpty`)
 

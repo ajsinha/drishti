@@ -5507,7 +5507,7 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `home.cards` | list | empty |  | an edition (server and console) | quick cards on Home (replace ui.home\_cards) | restart |  |
 | `quality.stale-days` | integer | `2` |  | an edition (server and console) | stale: data older than the business date by more than this many business days | restart |  |
 | `help.categories` | list | `[get-started, risk, analytics, data, operate, reference, knowledge, internal]` |  | an edition (server and console) | the help sections kept (config/help.yaml): Build hidden | restart |  |
-| `help.knowledge` | list | `[market-data]` |  | an edition (server and console) | the Market data Knowledge page (the rest hidden) | restart |  |
+| `help.knowledge` | list | `[market-data]` |  | an edition (server and console) | the Data primer's packs (the Risk and World primers hidden) | restart |  |
 | `help.unlisted-slugs` | string | `refuse` |  | an edition (server and console) | a guide not in the help centre answers 404 (no reaching hidden guides by URL) | restart |  |
 | `admin.pages` | list | `[users, roles, packs, commands, tokens, access, connectors, artifacts, loads,...` |  | an edition (server and console) | the Admin pages kept, by id; the others answer 404 | restart |  |
 | `branding.product` | string | `Drishti Risk` |  | an edition (server and console) | the product name the edition shows (a site's own branding wins) | restart |  |

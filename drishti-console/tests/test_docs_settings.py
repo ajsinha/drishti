@@ -26,7 +26,7 @@ from pathlib import Path
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-DOC = (ROOT / "docs" / "admin" / "CONFIGURATION.md").read_text(encoding="utf-8")
+DOC = (ROOT / "docs" / "reference" / "CONFIGURATION.md").read_text(encoding="utf-8")
 # Not Drishti settings (Spring's own, documented by Spring), and the per-connector tables documented plugin by plugin.
 SKIPPED_PREFIXES = ("spring.", "server.compression", "server.tomcat", "logging.", "management.", "springdoc.", "drishti.sources.")
 

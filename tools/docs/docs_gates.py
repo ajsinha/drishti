@@ -213,7 +213,7 @@ def gate_one_home(docs: list[Path]) -> list[str]:
                 elif lang is not None:
                     block.append(line)
             for i, line, fence in lines:
-                if fence is None and FIELD_TABLE.match(line):
+                if fence is None and FIELD_TABLE.match(line) and not rel.startswith("docs/reference/"):   # a reference owns its own fields (the ViewModel)
                     out.append(f"{rel}:{i}: a field table: fields belong to the data contracts")
         for i, line, fence in lines:
             if fence is not None:
