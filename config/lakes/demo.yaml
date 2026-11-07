@@ -18,6 +18,8 @@
 # edits it here, never in a connector file or on a command line (a --partition-by that disagrees is refused, naming both). Like every lake
 # it has its own folder, <data>/delta/demo (DRISHTI_DELTA_ROOT, when a site sets it, names the root instead); a demo lake built in the older
 # layout, directly in <data>/delta, is moved into it once, safely, at start (drishti.py lake relocate demo; docs/admin/OPERATIONS.md).
+# The file holds an entry for every table a shipped pack's connector reads from the demo lake (a test checks it; LakesCli pack-tables
+# adds a missing one), so the server never writes it; a table only a site's own connector reads is added at the end, every line kept.
 lake: demo
 format: delta
 root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta/demo}
@@ -213,3 +215,40 @@ tables:
   civic.election: null
   civic.region: null
   civic.social-indicator: null
+  climate.climate-profile: {}
+  climate.financed-emissions: {}
+  climate.climate-scenario: {}
+  climate.climate-stress: {}
+  climate.physical-asset: {}
+  climate.taxonomy-alignment: {}
+  genomics.gene: {}
+  genomics.variant: {}
+  genomics.protein: {}
+  genomics.pathway: {}
+  genomics.sample: {}
+  genomics.sequencing-run: {}
+  genomics.expression-study: {}
+  genomics.clinical-trial: {}
+  liquidity.lcr: {}
+  liquidity.nsfr: {}
+  liquidity.maturity-ladder: {}
+  liquidity.hqla-holding: {}
+  liquidity.funding-source: {}
+  liquidity.liquidity-stress: {}
+  liquidity.intraday-liquidity: {}
+  oprisk.loss-event: {}
+  oprisk.risk-control: {}
+  oprisk.key-risk-indicator: {}
+  oprisk.issue: {}
+  oprisk.oprisk-scenario: {}
+  oprisk.third-party: {}
+  oprisk.cyber-incident: {}
+  oprisk.oprisk-capital: {}
+  retail.customer: {}
+  retail.deposit-account: {}
+  retail.mortgage: {}
+  retail.card-account: {}
+  retail.personal-loan: {}
+  retail.branch: {}
+  retail.collections-case: {}
+  retail.retail-portfolio: {}
