@@ -23,13 +23,15 @@ export { CALENDAR_RULES, easterSunday, ruleDate, HolidayCalendar, defineCalendar
 export { uid, debounce, InputBase, Popover, Listbox, normalizeOptions, searchOptions } from './drishti_inputs-dom.js';
 export { CalendarView, DatePicker } from './drishti_date-picker.js';
 export { DateRangePicker } from './drishti_date-range.js';
+export { parseTime, parseDateTime, timeSlots, TimePicker, DateTimePicker } from './drishti_time-picker.js';
 export { TreeModel } from './drishti_tree.js';
 export { TreePicker } from './drishti_tree-picker.js';
 export { MultiSelect } from './drishti_multiselect.js';
 export { TypeAhead, Combobox } from './drishti_combobox.js';
 export { words, pathParts, getPath, setPath, conditionHolds, fieldsOf, defaults, fieldProblem, validate, visibleValue, changes,
-  parseField } from './drishti_schema.js';
+  parseField, currencyOf, offeredValues } from './drishti_schema.js';
 export { Form } from './drishti_form.js';
+export { defineWidget, defaultWidget, applyHook } from './drishti_form-fields.js';
 export { FilterModelBar, FilterBar } from './drishti_filter-bar.js';
 export { rachanaMode, yamlMode, MODES, defineModes, MiniStream, tokens } from './drishti_code-modes.js';
 export { wordAt, completions, insertText, lineDiff, sideBySide, diffStats } from './drishti_code-text.js';
