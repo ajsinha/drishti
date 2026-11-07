@@ -195,7 +195,8 @@ def manifest(name: str) -> dict:
     kinds = [k for ks in p["kinds"].values() for k in ks]
     specs = {k.kind: k for k in T.KINDS + [T.TRADE]}
     fields = {f: {"kind": kind, "label": label} for f, (kind, label) in T.graph_fields().items() if kind in kinds}
-    m = {"pack": name, "version": "1.0.0", "code": CODES[name], "title": p["title"], "description": p["description"], "extends": p["requires"],
+    # the domain each pack serves (docs/architecture/ACCESS_MODEL.md): the core pack is the core's, the others the banking module's
+    m = {"pack": name, "domain": "core" if name == "core" else "banking", "version": "1.0.0", "code": CODES[name], "title": p["title"], "description": p["description"], "extends": p["requires"],
          "kinds": kinds, "sutras": "sutras", "formats": "config/formats.yaml",
          **({"semantics": "config/semantics.yaml"} if name == "core" else {}),
          "mnemonics": {specs[k].mnemonic: {"kind": k, "label": specs[k].label} for k in kinds},

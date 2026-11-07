@@ -20,7 +20,7 @@ unchanged). Options B and C of section 14 are not built. The product owner decid
 
 Related: [VAR_GUIDE.md section 18](../guides/VAR_GUIDE.md#18-the-computation) (historical VaR, ES, the decomposition and the lens this
 design reuses), [section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen) (horizons),
-[section 11](../guides/VAR_GUIDE.md#11-the-api) and [API_GUIDE.md](../guides/API_GUIDE.md#var-engine-apiv1var) (the VaR API it extends),
+[section 11](../guides/VAR_GUIDE.md#11-the-api) and [API_GUIDE.md](../guides/API_GUIDE.md#var-engine-apiv1riskvar) (the VaR API it extends),
 [VAR_PLAYGROUND.md](VAR_PLAYGROUND.md) (the playground the Parametric tab is part of), [HIGH_PERFORMANCE_NATIVE.md](HIGH_PERFORMANCE_NATIVE.md)
 (the `LinearAlgebra` seam the covariance matrix uses, branch `wip/blas`), [COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md) (computed, never stored).
 

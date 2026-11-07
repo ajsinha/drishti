@@ -580,7 +580,7 @@ correlation-engine:
 
 Every input is read **as the person asking** (their entitlements and masks apply before a number reaches the engine); an answer is cached
 per set, parameters, date and view signature, and recomputed when the inputs load. No compute pool is needed: the engine runs in the
-server even with `DRISHTI_COMPUTE_ENABLED=false`. The code is `drishti-compute/.../reactive/analytics/CorrelationEngine.java`; the
+server even with `DRISHTI_COMPUTE_ENABLED=false`. The code is `drishti-compute-banking/.../analytics/CorrelationEngine.java`; the
 `correlation-matrix` Sutra is hand-written (`tools/packgen/banking/make_sutras.py`, `HAND_WRITTEN`).
 
 ## 21. The price analytics

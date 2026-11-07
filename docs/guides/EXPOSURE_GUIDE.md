@@ -590,7 +590,7 @@ and [WWR.md](../contracts/WWR.md) read too. Sections marked **Implementation** a
 
 **Sources of truth checked (1.2):** `tools/packgen/ccr/` (`paths.py`, `ccrmath.py`, `make_ccr_data.py`); `drishti-compute`
 (`com.ash.drishti.banking.compute.ccr`: `ExposureGrid`, `CsaTerms`, `ExposureMath`, `ExposureBook`, `ExposureHotFile`, `ExposureScopes`,
-`ExposureCalc`, `ExposureWhatIfMath`); `drishti-server` (`com.ash.drishti.banking.exposure`, `ExposureWhatIf`, `ExposureWhatIfPaths`);
+`ExposureCalc`, `ExposureWhatIfMath`); `drishti-banking` (`com.ash.drishti.banking.exposure`, `ExposureWhatIf`, `ExposureWhatIfPaths`);
 `drishti.ccr.exposure` in `config/engines/exposure.yaml`; the counterparty-risk pack's `pack.yaml` (`exposure-store`, `exposure-engine`);
 `data/testdata/counterparty-risk/{simulation-run,exposure-path}`.
 
@@ -957,8 +957,8 @@ uncollateralised; a `nettingSet` the scope does not cover whole is `400 DRS-5440
 | What-if with candidate paths, other collateral models | Java, the same engine | the scope's and the joined sets' matrices are in memory already; one implementation of the maths |
 | Stressed runs, custom quantile methods, path analytics | PLANNED | not built |
 
-**Implementation:** everything in Java on one node: the maths in `drishti-compute` (`com.ash.drishti.banking.compute.ccr`: `ExposureMath`,
-`ExposureBook`, `ExposureCalc`, `ExposureScopes`, `ExposureHotFile`), the service in `drishti-server` (`com.ash.drishti.banking.exposure`).
+**Implementation:** everything in Java on one node: the maths in `drishti-compute-banking` (`com.ash.drishti.banking.compute.ccr`: `ExposureMath`,
+`ExposureBook`, `ExposureCalc`, `ExposureScopes`, `ExposureHotFile`), the service in `drishti-banking` (`com.ash.drishti.banking.exposure`).
 Other collateral models (`collateral=current|none`) are computed in Java from the value matrices. The exact what-if runs in the same
 engine (`ExposureWhatIfMath`, §19.5). Fan-out across nodes is PLANNED.
 
@@ -1149,7 +1149,7 @@ set's MtM today plus the candidates'. A candidate without a netting set adds `ma
 `ExposureMath.statistics` before and after; incremental = after − before for every figure and every primary date. Each candidate alone:
 its peak PFE uncollateralised (`peakPfeAlone`) and the scope's peak PFE change with only it added (`incrementalPeakPfe`).
 
-**Implementation:** `ExposureWhatIfPaths` (`drishti-server`, `com.ash.drishti.banking.exposure`) turns the request's candidates into
+**Implementation:** `ExposureWhatIfPaths` (`drishti-banking`, `com.ash.drishti.banking.exposure`) turns the request's candidates into
 paths (`copyOf` reads the booked trade's paths on the run from the lake; `mtm` or `arrow` as sent; another run or length `400
 DRS-5442`), reads the scope and each joined netting set as the person (`NSET:<id>`: their entitlements apply; a set the scope does not
 cover whole `400 DRS-5440`; at most 50 sets), computes with `ExposureWhatIfMath` and audits the ask (`ccr-whatif`). Deterministic, nothing
@@ -1476,9 +1476,8 @@ largest value). `lake demo` moves the run id, the rows' ids and the grid dates w
 
 | Piece | Where | What |
 |---|---|---|
-| the maths | `drishti-compute`, `com.ash.drishti.banking.compute.ccr` | `ExposureGrid` (the grid, roles, look-back map, Δt), `CsaTerms` (thresholds, MTA, IA, rounding, called collateral), `ExposureMath` (E, N, EE, ENE, EEE, PFE, EPE, EEPE, contributions), `ExposureBook` (a date's netting sets and trades), `ExposureHotFile` (`DRSHEXP1`), `ExposureScopes` (the scope words), `ExposureCalc`; the benchmark `ExposureTierBenchmark` (drishti-server tests, §27.4) |
-| the service | `drishti-server`, `com.ash.drishti.banking.exposure` | `ExposureLoader` and `ExposureIntake` (a date from the lake, checks), `ExposureTier` (the hot files, eviction), `ExposureService` (scopes as the viewer, answers, cache), `ExposureViews` and `ExposureExplorer` (profile, distribution and fan, contributions, tree, ancestors, collateral), `ExposureCaptures`, `ExposureWhatIf` (addon) and `ExposureWhatIfPaths` + `ExposureWhatIfInputs` (the exact method through the Python engine), `ExposureOfficial`, `ExposureOfficialStore`, `ExposurePublisher`, `ExposureRetention`, `ExposureAccess`, `ExposureResultEngine` (the kind), `ExposureFigures` (the netting-set and counterparty pages), `ExposureController` |
-| the Python engine | `drishti-compute/src/main/python/drishti_compute/exposure/` | `measures.py` (the measures by the Java engine's rules), `whatif.py` (`ExposureWhatIfEngine`, kind `exposure-whatif`); tests `drishti-compute/src/test/python/test_exposure_engine.py` |
+| the maths | `drishti-compute-banking`, `com.ash.drishti.banking.compute.ccr` | `ExposureGrid` (the grid, roles, look-back map, Δt), `CsaTerms` (thresholds, MTA, IA, rounding, called collateral), `ExposureMath` (E, N, EE, ENE, EEE, PFE, EPE, EEPE, contributions), `ExposureBook` (a date's netting sets and trades), `ExposureHotFile` (`DRSHEXP1`), `ExposureScopes` (the scope words), `ExposureCalc`; the benchmark `ExposureTierBenchmark` (drishti-server tests, §27.4) |
+| the service | `drishti-banking`, `com.ash.drishti.banking.exposure` | `ExposureLoader` and `ExposureIntake` (a date from the lake, checks), `ExposureTier` (the hot files, eviction), `ExposureService` (scopes as the viewer, answers, cache), `ExposureViews` and `ExposureExplorer` (profile, distribution and fan, contributions, tree, ancestors, collateral), `ExposureCaptures`, `ExposureWhatIf` (addon) and `ExposureWhatIfPaths` + `ExposureWhatIfInputs` (the exact method through the Python engine), `ExposureOfficial`, `ExposureOfficialStore`, `ExposurePublisher`, `ExposureRetention`, `ExposureAccess`, `ExposureResultEngine` (the kind), `ExposureFigures` (the netting-set and counterparty pages), `ExposureController` |
 | the console | `drishti-console` | `routes/exposure_routes.py` (`EXP` and `/exposure`, stored-profile ids), `web/templates/terminal/exposure.html`, `web/static/js/drishti_exposure-explorer.js`, drishti-risk's grid and chart presets (Drishti Elements, `static/elements/drishti-risk/`), `web/static/css/drishti_exposure.css`; tests `tests/test_exposure_routes.py`, `tests/test_exposure_explorer_browser.py` (the explorer in a browser) |
 | the CLI | `tools/expcli.py` (`drishti.py exposure`) | tests `tools/test_expcli.py` |
 | test data | `tools/packgen/ccr/` | `paths.py`, `ccrmath.py` (the reference maths in Python), `make_ccr_data.py` (`--check`, `--full`, `--reconcile`), `test_ccr_data.py` |
