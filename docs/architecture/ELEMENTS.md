@@ -403,6 +403,13 @@ library with its module: an unlicensed module's library is not served, its kinds
   request maps onto it, and value filters are applied by the grid. A column with `additive: false` (or `aggregate: 'server'`) is never
   summed in the browser: its cells wait for the server, which is asked for exactly those. `clientAggregation: false` is the console's
   policy. The layout (`wells`, `panel`, `terminal`) and the density are state the engine keeps and gives back; it draws nothing.
+- **Events and live data** (`drishti_grid-live.js`, `drishti_live.js`). Typed events (`GRID_EVENTS`) on the bus and, on the web
+  component's host, as DOM events `drishti:<kebab-name>`; transactions by row id, batched (`applyTransactionAsync`, a row's last update
+  wins) and applied in place: a row whose sort or filter values changed is merged back where it belongs, ties keep their order; each
+  changed cell's direction for its flash; a feed message is `{type: transaction | dataChanged | rows}` over SSE or a WebSocket; a
+  server's data-changed notice invalidates blocks, a level, the blocks holding some rows, or everything. Group and local pivot totals
+  change by difference (sums, counts, averages; the others from their members); non-additive ones are asked of the server again
+  (`serverGroupTotals`, `serverPivot`), debounced.
 - **Ready for the renderer.** Every module is a plain ES module with no console global: the renderer imports
   `drishti-core/src/drishti_index.js` and `drishti-grid/src/drishti_index.js` directly (a page touches `window` only through
   `install()`, which the bundle runs). One difference to settle when the renderer moves: its `m/format.js` rounds as Python does

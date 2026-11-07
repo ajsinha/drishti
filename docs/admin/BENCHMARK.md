@@ -1670,3 +1670,29 @@ One run on the reference workstation (Ryzen AI 9 HX 370, 12 cores / 24 threads, 
 The headroom covers a drill's Java lanes running beside each other on the same machine; a genuine regression (a lost columns layer,
 a query planned again on every ask, a per-row copy) costs far more than that. When the engine gets faster, the budgets are lowered
 from a new measured run with the same headroom; they are never raised to make a slower engine pass.
+
+## 20. Drishti Elements: the grid engine at 1,000,000 rows
+
+drishti-grid's engine ([ELEMENTS.md section 8.1](../architecture/ELEMENTS.md#81-as-built-the-foundation-drishti-core-and-the-grids-engine)),
+without a browser: `node --max-old-space-size=6144 tools/bench/elements_grid.mjs 1000000 10000` (Node v22.22.1, the workstation of
+[section 3](#3-machine-and-data), 2026-11-07). One million synthetic trades of ten columns in the page. A scroll frame is the viewport's
+window at a random position and the text of every drawn cell (40 rows on screen with overscan, 530 cells): what a
+layout paints.
+
+| Step | Time |
+|---|---|
+| the model made (ids indexed, the first view) | 318.9 ms |
+| sort by a number / by text (5,000 distinct) / by two columns | 206.6 / 282 / 338.7 ms |
+| filter by members (250,000 kept) / by a range / a quick filter across every column | 33.6 / 24.4 / 581.8 ms |
+| **a scroll frame: median / 99th percentile / worst of 10,000** | **0.275 / 0.642 / 3.563 ms** |
+| every frame from the top to the bottom (13,393 frames) | 3,974.8 ms |
+| two levels of row groups with their figures / all opened (1,001,008 rows shown) | 407.1 / 14.6 ms |
+| a client-side pivot: desk and book by currency, two values / opened to level two | 849 / 873.2 ms |
+| the server-side row model paging through every row (5,000 blocks of 200, 50 held) | 42 ms |
+| heap at the end | 313 MB |
+
+The scrolled height is capped at 15,000,000 px (browsers stop near 16 to 33 million) and a scroll position maps onto the
+rows in proportion: the last row is reachable. A frame costs well under a millisecond, so a 60 Hz frame's 16.7 ms is left to the
+browser's painting. Sorts compare typed keys (text is ranked once among its distinct values). The quick filter, which reads every
+column of every row as text, is the slowest step and the first to move to a worker if needed. The client-side pivot is for pages
+without a server: in the console every total is the server's (`clientAggregation: false`).

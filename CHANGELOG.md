@@ -39,7 +39,12 @@
   (row and column groups, totals and subtotals above or below, open and closed groups, top N with Others, member and value filters,
   pivot result columns), non-additive measures never summed in the browser (asked of the server and merged by coordinates), the
   wells, selection with range figures that warn on a non-additive column, copy as TSV, CSV and a standalone .xlsx writer, the keys,
-  the Explain hook and the layout-neutral state; 32 unit tests in Node (`tests/elements/`), and the 1,000,000-row figures in
+  the Explain hook and the layout-neutral state. **Events and live data**: typed events on the bus and as DOM events (cell click,
+  double-click and edit, selection, range, sort, filter, pivot, groups, expand and collapse, column move, resize, pin and hide, row data
+  updated, server blocks loaded or failed, Explain opened); transactions by row id applied in place with a stable order under sort and
+  filter, batched for high-frequency feeds, each changed cell's direction kept for its flash; live feeds over Server-Sent Events or a
+  WebSocket; the server-side model's invalidate, purge and data-changed notice; group and pivot totals changed by difference, and
+  non-additive ones asked of the server again, debounced. 40 unit tests in Node (`tests/elements/`), and the 1,000,000-row figures in
   [BENCHMARK.md](docs/admin/BENCHMARK.md).
 
 ## 2.9.11.d (unreleased)
