@@ -14,40 +14,23 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
-/* The YAML tab: Studio's CodeMirror editor (drishti_cm-yaml.js, drishti_studio-yaml.js, drishti_studio-assist.js: completion, field help, the light check)
- * on the Design's Sutra. Typing is an operation like any other: after a pause the text goes as a Text operation, so undo, the
- * revision and the log cover it; when the server refuses it (a located DRS problem) the editor keeps your text and the Problems tab
- * says where. When the Sutra changes some other way (the canvas, undo) the editor takes the new text and keeps the cursor and scroll.
+/* The YAML tab: drishti-designer's YamlPane (drishti-inputs' CodeEditor in YAML mode) on the Design's Sutra, with the YAML assistant over
+ * the Rachana schema (completion of keys, a panel's options by its kind, values, functions and the sample's field paths; the light
+ * check; the help of the key under the cursor). Typing is an operation like any other: after a pause the text goes as a Text operation,
+ * so undo, the revision and the log cover it; when the server refuses it (a located DRS problem) the editor keeps your text and the
+ * Problems tab says where. When the Sutra changes some other way (the canvas, undo) the editor takes the new text and keeps the cursor
+ * and scroll.
  *
- *   new WB.YamlTab(textarea, helpEl, store) -> {goto(line, col), focus(), value(), checks(): [problems], refresh()} */
+ *   new WB.YamlTab(hostEl, helpEl, store) -> {goto(line, col), focus(), value(), checks(): [problems], refresh(), flush(), pending()} */
 (function () {
   'use strict';
   var WB = window.Drishti.WB = window.Drishti.WB || {};
+  var K = window.Drishti.elements.designer;
   var PAUSE = 700;
 
   WB.YamlTab = function (ta, helpEl, store) {
-    var editor = window.CodeMirror ? window.CodeMirror.fromTextArea(ta, { mode: 'rachana-yaml', lineNumbers: true, indentUnit: 2, tabSize: 2,
-      gutters: ['studio-gutter', 'CodeMirror-linenumbers'], extraKeys: { Tab: function (cm) { cm.replaceSelection('  '); }, Enter: newline } }) : null;
-    var timer = 0, applying = false, live = [], docCache = {}, sending = false;
-    if (editor) { editor.getInputField().setAttribute('aria-label', 'Sutra (YAML)'); }
-    function newline(cm) {          // Enter keeps YAML's indentation
-      var c = cm.getCursor(), before = cm.getLine(c.line).slice(0, c.ch).replace(/\s+#.*$/, '');
-      var m = before.match(/^(\s*)((?:-\s+)*)/), n = m[1].length + m[2].length, rest = before.slice(n);
-      if (m[2] && (/^[{["']/.test(rest) || !/^[^\s#][^:#]*:(\s|$)/.test(rest))) { n = m[1].length; }
-      if (/^\s*(?:-\s+)*[^\s#][^:#]*:\s*([|>][-+0-9]*)?\s*$/.test(before) && !/[{[]/.test(before)) { n += 2; }
-      cm.replaceSelection('\n' + ' '.repeat(n), 'end', '+input');
-    }
-    function value() { return editor ? editor.getValue() : ta.value; }
-    function set(text) {
-      applying = true;
-      if (editor) {
-        var cur = editor.getCursor(), sc = editor.getScrollInfo();
-        editor.setValue(text);
-        editor.setCursor({ line: Math.min(cur.line, editor.lineCount() - 1), ch: cur.ch });
-        editor.scrollTo(sc.left, sc.top);
-      } else { ta.value = text; }
-      applying = false;
-    }
+    var host = ta, schema = null, live = [], docCache = {}, sending = false;
+    host.classList.add('wb-yaml');
     function sampleDoc() {
       var name = store.state.sample;
       if (!name || store.state.file) { return Promise.resolve(store.state.file ? store.state.file.document : undefined); }
@@ -56,41 +39,54 @@
       }
       return docCache[name];
     }
-    var assist = editor && window.Drishti.assist ? window.Drishti.assist.attach(editor, {
-      say: function (m, bad) { store.emit('say', m, bad); }, helpEl: helpEl, getDoc: sampleDoc,
-      validKinds: function () { return [store.state.kind]; },       // the design's own kind is valid even when no pack defines it (UX-01)
-      onCheck: function (ps) { live = ps; store.emit('yamlcheck', ps); }
-    }) : null;
-
-    function send() {
-      var text = value();
-      if (text === store.state.yaml) { store.emit('say', 'The YAML matches the design.'); return Promise.resolve(); }
-      sending = true;
-      return store.send([{ op: 'text', yaml: text }], 'Applied the YAML').then(function (r) { sending = false; return r; });
-    }
-    /** Sends what was typed now rather than after the pause (before a save, a preview or a palette command). */
-    function flush() { if (timer) { clearTimeout(timer); timer = 0; return send(); } return Promise.resolve(); }
-    if (editor) {
-      editor.on('change', function (cm, ch) {
-        if (applying || ch.origin === 'setValue') { return; }
-        clearTimeout(timer);
-        timer = setTimeout(function () { timer = 0; send(); }, PAUSE);     // a fired timer is no longer pending: else the editor stops following the canvas and a save sends it stale
-      });
-      editor.on('blur', function () { if (timer) { clearTimeout(timer); timer = 0; send(); } });
-    } else { ta.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(function () { timer = 0; send(); }, PAUSE); }); }
-
+    var pane = new K.YamlPane(host, { label: 'Sutra (YAML)', height: 520, delay: PAUSE,
+      fromYaml: function (text) {                     // the server applies the text (one operation); the pane keeps it as typed
+        if (text === store.state.yaml) { return text; }
+        sending = true;
+        return store.send([{ op: 'text', yaml: text }], 'Applied the YAML').then(function () { sending = false; return text; }, function (e) { sending = false; throw e; });
+      },
+      complete: function (c) {
+        if (!schema) { return []; }
+        return sampleDoc().then(function (doc) { return K.yamlCompletions(schema, c.text, c.lineNo, c.ch, { doc: doc, explicit: c.forced }); });
+      },
+      completeAfter: function (before) { return /[$@](?:\.[A-Za-z_$][\w$-]*|\[\d+\])*\.$/.test(before) || /(^\s*(-\s+)*|[{,]\s*)[\w-]+:\s$/.test(before); },
+      lint: function (text) {
+        if (!schema) { return []; }
+        var ps = K.yamlCheck(schema, text, [store.state.kind]);         // the design's own kind is valid even when no pack defines it (UX-01)
+        live = ps.map(function (p) { return { code: 'CHECK', message: p.message, location: { line: p.line, column: p.from + 1 } }; });
+        store.emit('yamlcheck', live);
+        return ps;
+      } });
+    var editor = pane.editor;
+    fetch('/studio/schema').then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (raw) { if (raw && raw.properties) { schema = new K.YamlSchema(raw); editor.runLint(); } })
+      .catch(function () { /* the editor works without it */ });
+    editor.on('cursor', function (c) {
+      if (!helpEl || !schema) { return; }
+      var help = K.yamlHelp(schema, editor.getValue(), c.line, c.ch);
+      helpEl.hidden = !help;
+      helpEl.textContent = '';
+      if (help) {
+        var k = document.createElement('span'); k.className = 'mono fh-key'; k.textContent = help.title;
+        var t = document.createElement('span'); t.className = 'fh-text'; t.textContent = help.text;
+        helpEl.append(k, ' ', t);
+      }
+    });
+    editor.on('ready', function () { if (editor.cm) { editor.cm.on('blur', function () { if (pane.dirty) { pane.read(); } }); } });
     store.on('doc', function (d) {
       if (sending && d.source === 'ops') { return; }          // our own text: kept as typed, even when the server refused it (Problems says where)
-      if (d.yaml !== value() && (d.source !== 'ops' || !timer)) { set(d.yaml); }
-      if (d.source === 'ops' && d.yaml === value()) { clearTimeout(timer); timer = 0; }
+      if (d.yaml !== pane.getText() && (d.source !== 'ops' || !pane.dirty)) { pane.setText(d.yaml); }
     });
-    store.on('conflict', function () { clearTimeout(timer); timer = 0; set(store.state.yaml); });
-    set(store.state.yaml);
+    store.on('conflict', function () { pane.setText(store.state.yaml); });
+    pane.setText(store.state.yaml);
 
+    /** Sends what was typed now rather than after the pause (before a save, a preview or a palette command). */
+    function flush() { return pane.dirty ? pane.read() : Promise.resolve(); }
     return {
-      goto: function (line, col) { if (editor) { editor.focus(); editor.setCursor({ line: Math.max(0, line - 1), ch: Math.max(0, (col || 1) - 1) }); editor.scrollIntoView(null, 80); } else { ta.focus(); } },
-      focus: function () { if (editor) { editor.focus(); } else { ta.focus(); } },
-      pending: function () { return !!timer; }, refresh: function () { if (editor) { editor.refresh(); } }, flush: flush, value: value, checks: function () { return live; }, editor: editor
+      goto: function (line, col) { editor.goTo(Math.max(1, line), Math.max(0, (col || 1) - 1)); },
+      focus: function () { editor.focus(); },
+      pending: function () { return !!pane.dirty; }, refresh: function () { pane.refresh(); }, flush: flush, value: function () { return pane.getText(); },
+      checks: function () { return live; }, editor: editor
     };
   };
 })();

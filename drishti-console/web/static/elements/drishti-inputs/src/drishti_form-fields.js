@@ -96,7 +96,7 @@ export function applyHook(el, hook) {
  */
 export function drawField(form, f) {
   const fs = f.field, id = form.id + '-' + f.path.replace(/[^\w]/g, '_'), ro = form.state !== 'editing' || !!fs.readOnly;
-  const wrap = form.el('div', { cls: 'di-form-field di-t-' + fs.type, attrs: { 'data-form-path': f.path } });   // data-form-path: a page's own data-path hooks stay its own
+  const wrap = form.el('div', { cls: 'di-form-field di-t-' + fs.type, attrs: { [form.pathAttr || 'data-path']: f.path } });
   const part = { f: f, wrap: wrap, id: id, widget: null, input: null, custom: null, names: null };
   form.parts.set(f.path, part);
   const msg = form.el('div', { cls: 'di-msg', attrs: { id: id + '-msg', 'aria-live': 'polite' } });

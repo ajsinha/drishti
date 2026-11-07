@@ -116,7 +116,7 @@ ISDA publishes SIMM's methodology; its calibrated numbers are licensed per versi
 
 **To install a version:** copy the structure once per version into `drishti.simm.parameters-dir` (default `./config/simm`), fill
 `version`, `effective-from` and every `null` from the licensed methodology, and restart. At start the engine reads every `*.yaml` there,
-checks every number and range (correlation matrices symmetric with a unit diagonal), and lists each file in `GET /api/v1/simm/versions`:
+checks every number and range (correlation matrices symmetric with a unit diagonal), and lists each file in `GET /api/v1/risk/simm/versions`:
 installed with its SHA-256, or refused with every missing key (`DRS-5333`). A refused file never stops the server. A netting set is
 computed with the version its CSA names; a CSA naming none (and an analytic scope) uses `drishti.simm.default-version`, else the installed
 version with the latest effective date. A changed file is a new version; every answer, export and recipe carries the version and the
@@ -135,7 +135,7 @@ thresholds in millions: multiply by 1,000,000.
 
 **Licence.** The parameter values appear only in the bank's own answers, exports and recipes, never in a shared template, a sample or the
 repository; the playground's export says it is confidential. The repository's tests use a **toy** file
-(`drishti-compute/src/test/resources/simm/simm-toy.yaml`, round illustrative numbers, not ISDA's): it proves the formulas, never the
+(`drishti-compute-banking/src/test/resources/simm/simm-toy.yaml`, round illustrative numbers, not ISDA's): it proves the formulas, never the
 licensed values.
 
 ## 5. The method
@@ -259,15 +259,15 @@ with **every parameter cell empty**: the shared template never holds a licensed 
 
 | What | API | Command | CLI |
 |---|---|---|---|
-| A netting set's IM, collect and post | `GET /api/v1/simm?nettingSet=…` | `SIMM <netting set>` | `drishti.py simm show <netting set>` |
-| Every netting set (or a counterparty's) | `GET /api/v1/simm/netting-sets?counterparty=…` | `SIMM`, `SIMM CPTY <id>` | `drishti.py simm list` |
-| The steps | `GET /api/v1/simm/explain?nettingSet=…&direction=post&class=Equity` | in SIMM | `drishti.py simm explain <netting set>` |
-| Against the counterparty's call | `GET /api/v1/simm/against?nettingSet=…` | the second tab | `drishti.py simm against <netting set>` |
-| The installed versions | `GET /api/v1/simm/versions` | | `drishti.py simm versions` |
-| The playground, a comparison | `GET /api/v1/simm/playground?nettingSet=…&compare=hvr=off&side=post` | `PLAY SIMM <netting set>` | `drishti.py play simm <netting set> --compare hvr=off` |
-| The workbook | `GET /api/v1/simm/playground.xlsx?nettingSet=…&side=…` | Export to Excel | `drishti.py play simm <netting set> --xlsx f.xlsx` |
-| The empty template | `GET /api/v1/simm/playground/template` | Template workbook | |
-| Save a recipe; replay it | `POST /api/v1/simm/playground/recipes?nettingSet=…`; `GET …/recipes/{id}` | Save recipe; `PLAY SIMM RUN <id>` | `--save`; `--recipe <id>` |
+| A netting set's IM, collect and post | `GET /api/v1/risk/simm?nettingSet=…` | `SIMM <netting set>` | `drishti.py simm show <netting set>` |
+| Every netting set (or a counterparty's) | `GET /api/v1/risk/simm/netting-sets?counterparty=…` | `SIMM`, `SIMM CPTY <id>` | `drishti.py simm list` |
+| The steps | `GET /api/v1/risk/simm/explain?nettingSet=…&direction=post&class=Equity` | in SIMM | `drishti.py simm explain <netting set>` |
+| Against the counterparty's call | `GET /api/v1/risk/simm/against?nettingSet=…` | the second tab | `drishti.py simm against <netting set>` |
+| The installed versions | `GET /api/v1/risk/simm/versions` | | `drishti.py simm versions` |
+| The playground, a comparison | `GET /api/v1/risk/simm/playground?nettingSet=…&compare=hvr=off&side=post` | `PLAY SIMM <netting set>` | `drishti.py play simm <netting set> --compare hvr=off` |
+| The workbook | `GET /api/v1/risk/simm/playground.xlsx?nettingSet=…&side=…` | Export to Excel | `drishti.py play simm <netting set> --xlsx f.xlsx` |
+| The empty template | `GET /api/v1/risk/simm/playground/template` | Template workbook | |
+| Save a recipe; replay it | `POST /api/v1/risk/simm/playground/recipes?nettingSet=…`; `GET …/recipes/{id}` | Save recipe; `PLAY SIMM RUN <id>` | `--save`; `--recipe <id>` |
 
 Every SIMM endpoint takes `version`, `concentration`, `hvr`, `override=key=value` (repeatable) and `asOf`; `nettingSet` is also `scope`.
 The answer is the computed kind `simm-result` of [SIMM.md section 9.1](../contracts/SIMM.md#91-the-headline-and-the-computed-kind-simm-result):

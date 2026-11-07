@@ -61,7 +61,7 @@
     if (s === 'hourly') { return { kind: 'hourly', day: 'mon', time: '07:30' }; }
     return s ? { kind: 'custom', day: 'mon', time: '07:30' } : { kind: 'business-days', day: 'mon', time: '07:30' };
   }
-  var when = new I.Form(host, { schema: schema, value: read(raw.value), live: true, label: 'When', layout: 'columns' });
+  var when = new I.Form(host, { schema: schema, value: read(raw.value), embedded: true, label: 'When', layout: 'columns' });
   function sync() {
     var v = when.getField ? { kind: when.getField('kind'), day: when.getField('day'), time: when.getField('time') } : when.getValue();
     if (v.kind !== 'custom') { raw.value = build(v); }

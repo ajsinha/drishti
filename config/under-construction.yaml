@@ -72,10 +72,18 @@ items:
 
   - id: pre-deal-limit-decision
     what: decision
-    about: "The pre-deal limit decision: approve, refer or decline a candidate trade against every limit it touches (the exposure what-if itself is built)"
+    about: "The pre-deal decision against every limit a candidate trade touches: SA-CCR's incremental EAD and EAD limits, soft and hard limits, warnings and the maximum size (the decision against the counterparty's credit limit on its exposure measure and tenor buckets is built: PREDEAL, POST /api/v1/exposure/predeal)"
     release: 2.9.11.k
     treatment: under-construction
     contracts: ["docs/contracts/LIM.md#64-pre-deal-check"]
+
+  - id: pre-deal-screen
+    what: menu item
+    about: "Counterparties → Pre-deal check, the screen: built on the Drishti Elements libraries when they reach develop; the check itself answers today (PREDEAL typed says so; POST /api/v1/exposure/predeal; drishti.py exposure predeal)"
+    release: 2.9.11.g
+    treatment: under-construction
+    menus: [predeal]
+    contracts: ["docs/guides/EXPOSURE_GUIDE.md#189-the-pre-deal-check"]
 
   - id: pnl-explain-waterfall
     what: panel

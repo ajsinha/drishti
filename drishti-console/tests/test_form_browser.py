@@ -109,7 +109,7 @@ def test_the_second_box_follows_the_operator_and_a_date_becomes_relative(page, u
     page.select_option('[name="op.mtm"]', ">")
     assert not page.locator('[name="v2.mtm"]').is_visible()
     box = page.locator('.qf-field[data-field="maturityDate"]')                                         # drishti-inputs' Form: a fieldset per field
-    picker, rel = box.locator('[data-form-path$=".v"]'), box.locator('[data-form-path$=".vrel"]')         # the date picker, or words for a relative range
+    picker, rel = box.locator('[data-path$=".v"]'), box.locator('[data-path$=".vrel"]')         # the date picker, or words for a relative range
     assert picker.is_visible() and not rel.is_visible()
     page.select_option('[name="op.maturityDate"]', "relative")
     assert not picker.is_visible() and rel.is_visible()
@@ -117,7 +117,7 @@ def test_the_second_box_follows_the_operator_and_a_date_becomes_relative(page, u
     assert "last 5 business days" in page.locator(".di-combo-pop").inner_text()                         # the presets are offered as suggestions
     page.keyboard.press("Escape")
     page.select_option('[name="op.maturityDate"]', "between")
-    assert picker.is_visible() and not rel.is_visible() and box.locator('[data-form-path$=".v2"]').is_visible()
+    assert picker.is_visible() and not rel.is_visible() and box.locator('[data-path$=".v2"]').is_visible()
     picker.locator("input").first.fill("2031-06-30")
     picker.locator("input").first.press("Enter")
     assert page.locator('input[type=hidden][name="v.maturityDate"]').input_value() == "2031-06-30"     # the form sends the ISO date, under the address's name

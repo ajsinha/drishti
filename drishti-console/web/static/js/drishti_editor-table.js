@@ -42,7 +42,7 @@
   /** A live Form for some of the document's fields: each change goes into the document, each focus tells the editor where the cursor is. */
   function liveForm(ctx, cls, label, schema, value, apply) {
     var host = ctx.h('div', { class: cls });
-    var f = new I.Form(host, { schema: { type: 'object', properties: schema }, value: value, live: true, layout: 'columns', label: label, widgets: { formula: formulaWidget(ctx) } });
+    var f = new I.Form(host, { schema: { type: 'object', properties: schema }, value: value, live: true, layout: 'columns', label: label, pathAttr: 'data-form-path', widgets: { formula: formulaWidget(ctx) } });
     f.on('change', function (e) { ctx.change(function (d) { apply(d, e.path, e.value); }, e.path); });
     host.addEventListener('focusin', function (e) { var p = e.target.getAttribute && e.target.getAttribute('data-path'); if (p) { ctx.focus(p); } });
     return host;
@@ -136,7 +136,7 @@
     var names = [], parents = {};                                     // the columns of every table; the ones offered follow the table picked
     tables.forEach(function (t) { (t.columns || []).forEach(function (c) { if (!parents[c.name]) { parents[c.name] = []; names.push(c.name); } parents[c.name].push(t.table); }); });
     var host = h('div', { class: 'ed-form' });
-    var f = new I.Form(host, { submitLabel: 'Add the look-up', submitHook: 'lookup-go', resetButton: false, label: 'Look up a column from another table', widgets: { formula: formulaWidget(ctx) },
+    var f = new I.Form(host, { submitLabel: 'Add the look-up', submitHook: 'lookup-go', resetButton: false, pathAttr: 'data-form-path', label: 'Look up a column from another table', widgets: { formula: formulaWidget(ctx) },
       value: { table: tables.length ? tables[0].table : undefined, columns: [] },
       schema: { type: 'object', required: ['table', 'on', 'columns'], properties: {
         table: { type: 'string', title: 'Table', enum: tables.map(function (x) { return x.table; }), enumLabels: tables.map(function (x) { return x.table + (x.connector ? ' · ' + x.connector : ''); }),

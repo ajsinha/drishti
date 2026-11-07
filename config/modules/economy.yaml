@@ -1,0 +1,18 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/modules/economy.yaml: the economy module at this site (docs/architecture/ACCESS_MODEL.md): content only (the public economic and
+# market data packs and the World lens), shipped with the core server. This file holds the administrator's switch; the setting
+# drishti.modules.economy.enabled (DRISHTI_MODULES_ECONOMY_ENABLED) wins over it. A change takes effect at the next start.
+enabled: true

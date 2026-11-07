@@ -192,28 +192,28 @@ def test_the_pickers_dates_ranges_tree_multiselect_and_combobox(browsers):
 def test_a_form_from_a_schema_with_conditions_arrays_the_servers_check_and_four_eyes(browsers):
     async def body(pg):
         f = "#hx-form"
-        await pg.fill(f"{f} [data-form-path='book'] input", "rt-1")
-        await pg.fill(f"{f} [data-form-path='notional'] input", "500")
+        await pg.fill(f"{f} [data-path='book'] input", "rt-1")
+        await pg.fill(f"{f} [data-path='notional'] input", "500")
         await pg.click(f"{f} [data-act='submit']")
         summary = await pg.text_content(f"{f} .di-form-summary")
         assert "Book code must look like a book code such as RT-123" in summary and "Notional must be at least 1,000" in summary
         assert await pg.evaluate("() => document.activeElement.classList.contains('di-form-summary')")
-        assert await pg.locator(f"{f} [data-form-path='strike']").is_hidden()
-        await pg.click(f"{f} [data-form-path='product'] select")
-        await pg.select_option(f"{f} [data-form-path='product'] select", label="Option")
-        assert await pg.locator(f"{f} [data-form-path='strike']").is_visible() and await pg.locator(f"{f} [data-form-path='legs']").is_hidden()
-        await pg.select_option(f"{f} [data-form-path='product'] select", label="Swap")
-        await pg.click(f"{f} [data-form-path='legs'] [data-act='add']")
+        assert await pg.locator(f"{f} [data-path='strike']").is_hidden()
+        await pg.click(f"{f} [data-path='product'] select")
+        await pg.select_option(f"{f} [data-path='product'] select", label="Option")
+        assert await pg.locator(f"{f} [data-path='strike']").is_visible() and await pg.locator(f"{f} [data-path='legs']").is_hidden()
+        await pg.select_option(f"{f} [data-path='product'] select", label="Swap")
+        await pg.click(f"{f} [data-path='legs'] [data-act='add']")
         assert await pg.locator(f"{f} .di-repeat-item").count() == 2
-        await pg.check(f"{f} [data-form-path='legs[1].pay'] input[type=radio] >> nth=1")
-        assert await pg.locator(f"{f} [data-form-path='legs[1].rate']").is_hidden()      # a leg's own condition
-        await pg.fill(f"{f} [data-form-path='book'] input", "RT-999")
-        await pg.fill(f"{f} [data-form-path='notional'] input", "25m")
-        await pg.press(f"{f} [data-form-path='notional'] input", "Tab")
-        assert await pg.input_value(f"{f} [data-form-path='notional'] input") == "25,000,000"
+        await pg.check(f"{f} [data-path='legs[1].pay'] input[type=radio] >> nth=1")
+        assert await pg.locator(f"{f} [data-path='legs[1].rate']").is_hidden()      # a leg's own condition
+        await pg.fill(f"{f} [data-path='book'] input", "RT-999")
+        await pg.fill(f"{f} [data-path='notional'] input", "25m")
+        await pg.press(f"{f} [data-path='notional'] input", "Tab")
+        assert await pg.input_value(f"{f} [data-path='notional'] input") == "25,000,000"
         await pg.click(f"{f} [data-act='submit']")
         await pg.wait_for_function("() => /closed/.test(document.querySelector('#hx-form .di-form-summary').textContent)")   # the server's own check
-        await pg.fill(f"{f} [data-form-path='book'] input", "RT-202")
+        await pg.fill(f"{f} [data-path='book'] input", "RT-202")
         await pg.click(f"{f} [data-act='submit']")
         await pg.wait_for_selector("dialog.di-four-eyes")
         changes = await pg.text_content("dialog.di-four-eyes .di-changes")

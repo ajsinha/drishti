@@ -48,8 +48,11 @@ import { drawField, defaultWidget, writeNames } from './drishti_form-fields.js';
  * @property {boolean} [readOnly=false]
  * @property {('stacked'|'columns')} [layout='stacked']
  * @property {string} [locale] how numbers are read and shown
- * @property {boolean} [live=false] no <form> of its own and no buttons: each change is a change event (a property pane, or fields inside
- *   a server form, which submits the fields that have a name)
+ * @property {boolean} [live=false] no Save or Reset: each change is the host's at once (a designer's inspector, a property pane)
+ * @property {boolean} [embedded=false] no <form> element of its own (the fields sit inside a page's server form, which submits the fields
+ *   that have a name); implies live
+ * @property {string} [pathAttr='data-path'] the attribute each field's block carries its path in (a page whose own controls use
+ *   data-path names another)
  * @property {boolean} [actions=true] the Save and Reset buttons (false: none, the page has its own)
  * @property {Array<{id: string, title: string, description: string}>} [steps] the form in steps: a field's step names one; Back and Next,
  *   Next checks the step's fields; the last step submits
@@ -81,9 +84,11 @@ export class Form extends InputBase {
     this.state = this.o.readOnly ? 'readonly' : 'editing';
     this.id = uid('form');
     this.at = 0;
-    this.form = this.el(this.o.live ? 'div' : 'form', { cls: 'di-form-el' + (this.o.layout === 'columns' ? ' di-columns' : '') + (this.o.live ? ' di-live' : ''),
-      attrs: { novalidate: this.o.live ? null : true, role: this.o.live ? 'group' : null, 'aria-label': this.o.label || this.schema.title || 'Form' } });
-    if (!this.o.live) { this.form.addEventListener('submit', (e) => { e.preventDefault(); this.submit(); }); }
+    if (this.o.embedded) { this.o.live = true; }
+    this.pathAttr = this.o.pathAttr || 'data-path';
+    this.form = this.el(this.o.embedded ? 'div' : 'form', { cls: 'di-form-el' + (this.o.layout === 'columns' ? ' di-columns' : '') + (this.o.live ? ' di-live' : ''),
+      attrs: { novalidate: this.o.embedded ? null : true, role: this.o.embedded ? 'group' : null, 'aria-label': this.o.label || this.schema.title || 'Form' } });
+    if (!this.o.embedded) { this.form.addEventListener('submit', (e) => { e.preventDefault(); this.submit(); }); }
     host.appendChild(this.form);
     this.render();
   }
@@ -94,8 +99,8 @@ export class Form extends InputBase {
    * @returns {void}
    */
   render() {
-    const had = this.doc.activeElement && this.form.contains(this.doc.activeElement) ? this.doc.activeElement.closest('[data-form-path]') : null;
-    const path = had ? had.getAttribute('data-form-path') : null;
+    const had = this.doc.activeElement && this.form.contains(this.doc.activeElement) ? this.doc.activeElement.closest('[' + this.pathAttr + ']') : null;
+    const path = had ? had.getAttribute(this.pathAttr) : null;
     this.parts.forEach((p) => { if (p.widget && p.widget.destroy) { p.widget.destroy(); } });
     this.parts.clear();
     this.form.textContent = '';
@@ -110,7 +115,7 @@ export class Form extends InputBase {
     this.form.appendChild(body);
     this.form.appendChild(this.actions());
     this.refresh();
-    if (path) { const el = this.form.querySelector('[data-form-path="' + path + '"] input, [data-form-path="' + path + '"] button, [data-form-path="' + path + '"] select'); if (el) { el.focus(); } }
+    if (path) { const at = '[' + this.pathAttr + '="' + path + '"] ', el = this.form.querySelector(at + 'input, ' + at + 'button, ' + at + 'select, ' + at + 'textarea'); if (el) { el.focus(); } }   // the focus stays where it was
   }
 
   /** @private the buttons (Back and Next in a form with steps) */

@@ -1,0 +1,31 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The lenses the core server ships (docs/architecture/ACCESS_MODEL.md, docs/lenses/): the core's own and the economy module's. Each names
+# the modules it needs (offered only while they are all on) and the functions it bundles. A domain module ships its own lenses in its jar.
+lenses:
+  - id: world
+    title: World
+    modules: [economy]                 # the World edition also opens us-equities and funds: capital markets' functions, on while that module is
+    home: home/world_landing.html
+    functions: [ECON, MACRO, FCST, LABR, FISC, ECG, REGE, JUR, PARTY, OFFC, ELEC, REGN, SOCI, TOPIC, NEWS, CO, QUOTE, USEQ, IDX, SIC, EDGAR, FILING,
+      FACT, PXH, LEI, LEIG, LEIR, LEIC, LEIM, FUND, HELD, TRACK]
+  - id: cio
+    title: Chief information officer
+    modules: []
+    functions: []
+  - id: oversight
+    title: Oversight
+    modules: []
+    functions: []

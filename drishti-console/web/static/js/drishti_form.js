@@ -74,7 +74,7 @@
   var qform = null, host = form && form.querySelector('[data-qf-fields]'), data = form && form.querySelector('[data-qf-schema]');
   if (form && host && data && I) {
     var given = JSON.parse(data.textContent);
-    qform = new I.Form(host, { schema: given.schema, value: given.value, live: true, label: 'Search criteria', layout: 'columns',
+    qform = new I.Form(host, { schema: given.schema, value: given.value, embedded: true, label: 'Search criteria', layout: 'columns',
       widgets: { 'qf-constant': constantWidget, 'qf-big': bigWidget } });
   }
   /** Every field back to empty; how each field compares is kept. */

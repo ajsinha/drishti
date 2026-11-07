@@ -240,7 +240,7 @@ person's edition or lens shows `TRD`), cached two minutes per person, date and s
 ### 4.3 C: Explorer (`explorer`)
 
 A big command line; the chips of `home.chips` (`TRD 1000001`, `BOOK BOOK-RATES-1`, `CTRD CP-ALDERSHOT`, `POS BOOK-RATES-1`,
-`VAR DESK DESK-RATES`, `XWIF`, `CRV CRV-USD-OIS`); the commands grouped (blotter, books and positions, risk on my book, counterparties,
+`VAR DESK DESK-RATES`, `EXP CPTY:CP-ALDERSHOT`, `CRV CRV-USD-OIS`); the commands grouped (blotter, books and positions, risk on my book, counterparties,
 market data); Recently opened (the person's own history, Trading's commands only).
 
 ### 4.4 The new-trade check
@@ -249,10 +249,10 @@ From [EDITIONS.md section 14, The new-trade check](../admin/EDITIONS.md#the-new-
 trade**, so the check picks one (a live trade of the product in my books: the counterparty's own first, then the chosen book's, then the
 largest notional) and scales it (factor = notional ÷ its notional, negative when the side differs).
 
-- **VaR**: `POST /api/v1/var/what-if` on `BOOK:<book>` with the copy and factor (the server's VaR engine) → VaR before and after, limit use
+- **VaR**: `POST /api/v1/risk/var/what-if` on `BOOK:<book>` with the copy and factor (the server's VaR engine) → VaR before and after, limit use
   before and after: **fits**, **near**, **breaches**; when the engine cannot answer (a book without vectors on the date) the half says why.
-- **Counterparty**: `POST /api/v1/exposure/what-if` on `CPTY:<cp>` (method `paths`, the copy into the counterparty's largest netting set) →
-  peak PFE before and after against the credit limit; the `addon` proxy, labelled, when `paths` cannot run (`DRS-5446`, or no netting set).
+- **Counterparty**: `POST /api/v1/risk/exposure/what-if` on `CPTY:<cp>` (method `paths`, the copy into the counterparty's largest netting set) →
+  peak PFE before and after against the credit limit; the `addon` proxy, labelled, when `paths` cannot run (the trade copied has no paths on the run, or no netting set).
 
 **What a trader should know about it.** A scaled copy is exact for a **linear** product with the same terms (a swap of the same tenor and
 currency); for an option, a different strike or tenor, or a new currency pair, it is an approximation that the answer does not quantify.
@@ -333,7 +333,7 @@ netted and collateralised **per netting set**, across desks: a desk's trades are
 
 **Design.** A `by=desk` grouping on the exposure engine's contributions (the engine already computes contributions by trade for a scope;
 [EXPOSURE_GUIDE section 28](../guides/EXPOSURE_GUIDE.md#28-open-items) notes their cost at a large bank's size); a new answer
-`GET /api/v1/exposure/scope/contributions?scope=DESK:<id>&by=counterparty&measure=EPE` (proposed) that returns, per counterparty, the
+`GET /api/v1/risk/exposure/scope/contributions?scope=DESK:<id>&by=counterparty&measure=EPE` (proposed) that returns, per counterparty, the
 desk's allocated EPE and peak-PFE share, and the counterparty's credit-limit use. The **Largest counterparty** tile then reads "CP-X ·
 desk's EPE 41.2m of 118.0m · limit use 62%" and keeps the positive-MtM figure as a second line, named.
 
@@ -623,14 +623,14 @@ phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md sec
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|
-| T1 | Bar and who (A, B) | `DRISHTI Trading` (amber, *Trading* green); a command line (*TRD, POS, VAR NODE …, XWIF*); *A. Shah · **Rates · Swaps and options** · BOOK-RATES-1, BOOK-RATES-2* (B: *T. Brennan · Commodities desk head*) | `/api/home/trading/me`; `trading.people`, a trader record, View as | View as | — | **Built** |
+| T1 | Bar and who (A, B) | `DRISHTI Trading` (amber, *Trading* green); a command line (*TRD, POS, VAR NODE …, EXP CPTY:CP-ALDERSHOT*); *A. Shah · **Rates · Swaps and options** · BOOK-RATES-1, BOOK-RATES-2* (B: *T. Brennan · Commodities desk head*) | `/api/home/trading/me`; `trading.people`, a trader record, View as | View as | — | **Built** |
 | T2 | Meta line (A) | *Business date **2026-09-30** · intraday as of **14:05** · 732 trades in my books* | `/api/home/trading/risk` (`intraday.lastAt`), valuations | — | — | **Built** |
 | T3 | Tile: P&L today (A) | **+1.84m** green, *MtM change since yesterday's close*, green edge | `/api/home/trading/valuations` (`TVAL` on both dates) | — | — | **Built** |
 | T4 | Tile: My VaR (A) | *My VaR (99%, 1-day)* **6.12m** *intraday · −0.3m since morning* | `/api/home/trading/risk` (the engine's VaR of my books' union) | — | — | **Partly built**: VaR and *intraday · N trades updated · hh:mm*; the change **since the morning** is not shown (TL14) |
 | T5 | Tile: Limit use (A) | **83%** amber, *BOOK-RATES-1 · limit 7.4m* | the highest of my books' VaR ÷ `var-limit` | — | — | **Built** |
 | T6 | Tile: DV01 (A) | **−142k** *per bp, both books* | Σ live trades' `DV01` | — | — | **Built** (hidden when no trade holds one) |
 | T7 | Tile: Trades today (A) | **14** *11 new · 2 amended · 1 cancelled* | `/api/home/trading/blotter` (`SOURCE_UPDATE_TIME`) | — | — | **Built** ("new" reads 0 on the demo: TL1) |
-| T8 | Card: Check a new trade (A) | *VaR what-if and the counterparty's limit, one answer*; Product *IRS pay fixed 10Y*, Notional *USD 250m*, Counterparty *CP-ALDERSHOT*, **Check** (green); verdict: **Fits my VaR** *6.12m → 6.48m · limit use 83% → 88%* and **Counterparty near limit** *CP-ALDERSHOT PFE 95% 401.5m → 409.2m · 96% of limit* | `POST /api/home/trading/check` → `POST /api/v1/var/what-if`, `POST /api/v1/exposure/what-if` ([section 4.4](#44-the-new-trade-check)) | fill, Check | — | **Built** (also Side and Book; fits, near, breaches; a fidelity line is TL8) |
+| T8 | Card: Check a new trade (A) | *VaR what-if and the counterparty's limit, one answer*; Product *IRS pay fixed 10Y*, Notional *USD 250m*, Counterparty *CP-ALDERSHOT*, **Check** (green); verdict: **Fits my VaR** *6.12m → 6.48m · limit use 83% → 88%* and **Counterparty near limit** *CP-ALDERSHOT PFE 95% 401.5m → 409.2m · 96% of limit* | `POST /api/home/trading/check` → `POST /api/v1/risk/var/what-if`, `POST /api/v1/risk/exposure/what-if` ([section 4.4](#44-the-new-trade-check)) | fill, Check | — | **Built** (also Side and Book; fits, near, breaches; a fidelity line is TL8) |
 | T9 | Card: Today's blotter (A) | *my books, newest first*; Time, Trade, Counterparty, Notional, a pill: 13:52 IRS-48213 CP-ALDERSHOT 120m **new**; 12:10 SWPN-20931 75m **amended**; 11:41 IRS-48190 40m **cancelled**; 10:05 CAP-11872 60m **new** | `/api/home/trading/blotter` | click a trade | — | **Built** |
 | T10 | Card: Top positions (A) | *by MtM*; Position, MtM, VaR contrib.: USD SOFR swaps 10Y −42.1m 2.31m; EUR €STR swaps 5Y +18.6m 0.94m; USD swaptions 1Yx10Y +9.2m 0.71m | `/api/home/trading/risk` (component VaR, market value) | click a position | — | **Built** (ordered by VaR contribution, with market value) |
 | T11 | Quick commands (A) | `TRDR TRDR-ASHAH` (me), `VAR NODE MGMT~BOOK-RATES-1` (my book's VaR), `POS BOOK-RATES-1` | the person's own, then `trading.yaml` `home.cards` | click | — | **Built** (my trader, my book's VaR, my book, my most traded counterparty, then the file's cards) |

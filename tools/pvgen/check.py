@@ -24,7 +24,7 @@ files of the intraday batches (tools/pvgen/intraday.py, or publish_kafka.py ``--
 sent, or its scenario PVs through the engine's own formula (``scenario_fx.engine_pnl``: PV(s) × FX(s) − PV(base) × FX(base), with the
 supplied scenario FX); the latest intraday row per trade by ``COMPUTED_AT`` replaces it (one before the morning run ignored), a cancel
 removes it. Then VaR 99% (the 6th worst of 509) and ES 97.5% of the bank and of each desk (or the ``--scope``s), next to the server's
-``GET /api/v1/var/scope`` for the date. Without ``--server`` it prints the expected figures only. Exit 1 when a figure differs by more
+``GET /api/v1/risk/var/scope`` for the date. Without ``--server`` it prints the expected figures only. Exit 1 when a figure differs by more
 than one unit (the engine rounds to whole units). Guide: docs/guides/VAR_GUIDE.md section 15.12."""
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ def load_morning(folder: Path) -> dict[str, list[dict]]:
 
 def server_figures(server: str, token: str | None, scope: str, day: str) -> dict:
     q = urllib.parse.urlencode({"scope": scope, "asOf": day})
-    req = urllib.request.Request(f"{server.rstrip('/')}/api/v1/var/scope?{q}", headers={"Accept": "application/json",
+    req = urllib.request.Request(f"{server.rstrip('/')}/api/v1/risk/var/scope?{q}", headers={"Accept": "application/json",
                                                                                        **({"Authorization": "Bearer " + token} if token else {})})
     with urllib.request.urlopen(req, timeout=120) as r:
         return json.loads(r.read())

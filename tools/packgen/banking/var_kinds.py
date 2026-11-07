@@ -18,7 +18,7 @@ tools/packgen/var/make_var_data.py into data/testdata/market-risk/ and served by
 as a list<double> column (``vectors:``). Positions are Drishti's: derived from the trades by the pack's rules when a date loads and
 served from the engine by the var-positions connector. No kind stores a VaR figure: the pages show the engine's, computed when opened.
 The computed kind var-result (VAR_GUIDE.md section 8) is served by the reactive connector var-engine, the server's Java engine, read as the
-viewer; the pre-deal what-if is the same engine's (POST /api/v1/var/what-if), not a kind. The published official end-of-day results
+viewer; the pre-deal what-if is the same engine's (POST /api/v1/risk/var/what-if), not a kind. The published official end-of-day results
 (risk-results/var-official, written by the server's VarPublisher) are the read-only kind var-official of the Delta connector var-results,
 for BI and other readers only: no engine reads it (tools/test_contracts.py).
 
@@ -126,7 +126,7 @@ CONNECTORS = {
                        "as the viewer: VRES <scope> <GO>",
         "kinds": {"var-result": {"compute": "var-result", "params": {**_CCY, **_LENS},
                                  "result": {"required": ["VAR", "ES", "PNL"], "types": {"VAR": "number", "ES": "number"}}}},
-        "engine": {"type": "java", "class": "com.ash.drishti.server.var.VarResultEngine", "version": "1.0"},
+        "engine": {"type": "java", "class": "com.ash.drishti.banking.var.VarResultEngine", "version": "1.0"},
         "triggers": [{"on": "data-version", "kinds": _INPUTS, "affects": "all"}],
         "coalesce": {"quiet": "250ms", "max-wait": "2s"},
         "cache": {"results": 2000, "ttl": "1h"},

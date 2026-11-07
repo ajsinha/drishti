@@ -25,8 +25,8 @@ EMPTY = "rachana: 1\nsutra: empty\nversion: 1\nmatch: { kind: trade }\ntitle: { 
 
 
 def settled_selection(page, kind):
-    wait(page, "!!document.querySelector('[data-preview] .wb-sel[data-panel]')")
-    return page.evaluate("document.querySelector('[data-preview] .wb-sel[data-panel]').dataset.kind") == kind
+    wait(page, "!!document.querySelector('[data-preview] .dd-selected[data-panel]')")
+    return page.evaluate("document.querySelector('[data-preview] .dd-selected[data-panel]').dataset.kind") == kind
 
 
 def test_a_studio_address_opens_with_the_canvas_and_yaml_and_the_header_button_adds_a_draggable_panel(live_console, page):
@@ -44,7 +44,7 @@ def test_a_studio_address_opens_with_the_canvas_and_yaml_and_the_header_button_a
     page.locator("[role=option]").first.click()
     settle(page, rev)
     assert settled_selection(page, "line")
-    new = page.evaluate("document.querySelector('[data-preview] .wb-sel[data-panel]').dataset.panel")
+    new = page.evaluate("document.querySelector('[data-preview] .dd-selected[data-panel]').dataset.panel")
     grip = page.locator(f'[data-preview] [data-panel="{new}"] .wb-grip')
     assert grip.count() == 1 and "Drag to move" in page.locator(f'[data-preview] [data-panel="{new}"] .pnl-h').get_attribute("title")
     ids0 = page.evaluate("window.Drishti.workbench.canvas.ids()")
@@ -76,7 +76,7 @@ def test_the_header_button_and_the_palette_add_from_the_yaml_tab(live_console, p
     settle(page, rev)
     assert page.get_by_role("tab", name="Design").get_attribute("aria-selected") == "true"
     assert settled_selection(page, "gauge")
-    assert page.locator("[data-preview] .wb-sel").is_visible()
+    assert page.locator("[data-preview] .dd-selected").is_visible()
     page.get_by_role("tab", name="YAML").click()
     rev = state(page, "rev")
     page.get_by_role("button", name="Add panel", exact=True).click()

@@ -46,3 +46,15 @@ def test_the_old_link_redirects(client):
 def test_other_words_are_not_exposure_commands():
     assert exp_command("NSET NS-ALDERSHOT-FRA".split()) is None
     assert exp_command([]) is None
+
+
+def test_predeal_typed_says_its_screen_is_under_construction_and_names_the_service(client):
+    """PREDEAL (the server's pre-deal service, EXPOSURE_GUIDE.md section 18.9): until Counterparties → Pre-deal check is built on the
+    Elements libraries, typing it says so in words, with the API and the command line that answer it now; not a search, not an error."""
+    from urllib.parse import unquote
+
+    r = client.get("/go?q=PREDEAL CP-ALDERSHOT LIKE 1000001 250M <GO>", follow_redirects=False)
+    where = unquote(r.headers["location"])
+    assert r.status_code == 303 and where.startswith("/t?error=PREDEAL")
+    assert "under construction" in where and "/api/v1/exposure/predeal" in where and "drishti.py exposure predeal" in where
+    assert exp_command("PREDEAL CP-ALDERSHOT".split()) is None                       # not an explorer command

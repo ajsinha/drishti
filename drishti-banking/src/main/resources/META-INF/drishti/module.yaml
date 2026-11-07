@@ -1,0 +1,87 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The banking module's manifest (docs/architecture/ACCESS_MODEL.md, DOMAIN_MODULES.md): shipped in its jar, so the module is installed
+# exactly when the jar is on the class path. The access registry reads it; nothing else does. A site switches the module with
+# config/modules/banking.yaml (enabled: true|false, Admin -> Modules) or DRISHTI_MODULES_BANKING_ENABLED; a licence names it by its feature.
+# Off (not installed, not licensed or switched off): no bean, engine, job or API of it is loaded, its packs and connectors do not load, its
+# functions are gone, and its API answers 404 DRS-1025.
+module:
+  id: banking
+  domain: banking
+  title: Banking and risk
+  about: "VaR and ES (historical, parametric, regulatory), exposure and CCR, FRTB-SA, ISDA SIMM, sensitivities, the MR cube, the official risk results"
+  feature: banking
+  enabled: true
+  requires: []
+  contributes:
+    packages: [com.ash.drishti.banking]
+    engines: [var, exposure, sensitivities, frtb-sa, simm, mr-cube]
+    packs: [trading, market-data, market-risk, counterparty-risk]
+    connectors: [var-engine, var-positions, var-pv-stream, exposure-engine]
+    # the API (the old prefixes beside the new: answered for one release by the module, and refused with it when the module is off)
+    api: [/api/v1/risk, /api/v1/var, /api/v1/exposure, /api/v1/frtb, /api/v1/simm, /api/v1/sensitivities, /api/v1/risk-factors, /api/v1/pivot/mr]
+    # the functions (command words): the engines' words with the APIs behind them, then the packs' commands (their kinds' own APIs); the
+    # market-data pack's commands are the capitalmarkets module's functions (the pack stays here while the engines read it)
+    functions:
+      - {word: VAR, api: [/api/v1/risk/var]}
+      - PVAR
+      - SMAT
+      - SWIN
+      - {word: PREDEAL, api: [/api/v1/risk/exposure/predeal]}
+      - {word: EXP, api: [/api/v1/risk/exposure]}
+      - {word: FRSA, api: [/api/v1/risk/frtb]}
+      - {word: SIMM, api: [/api/v1/risk/simm]}
+      - {word: MCUBE, api: [/api/v1/risk/mr]}
+      - {word: SENS, api: [/api/v1/risk/sensitivities]}
+      - {word: RFAC, api: [/api/v1/risk/risk-factors]}
+      # trading
+      - TRD
+      - CTRD
+      - PTRD
+      - LTRD
+      - ITRD
+      # market-risk
+      - SCN
+      - STR
+      - FRTB
+      - PNL
+      - TVAL
+      - POS
+      - PORT
+      - PNLV
+      - SPV
+      - FXS
+      - SSET
+      - HIER
+      - VLIM
+      - DPNL
+      - PNLH
+      - VRES
+      - VOFF
+      - SSPNL
+      # counterparty-risk
+      - AGR
+      - CSA
+      - NSET
+      - LIM
+      - CVA
+      - SACCR
+      - COLL
+      - MC
+      - XRUN
+      - XPATH
+      - XOFC
+      - NSMTM
+      - CPMTM

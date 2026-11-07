@@ -269,7 +269,7 @@
       if (!sel) { screenForm(); } else if (sel.type === 'panel') { panelForm(sel, opts); } else if (sel.type === 'title') { titleForm(); } else if (sel.type === 'strip') { stripForm(); }
     }
     getSchema().then(function (raw) {
-      schema = new window.Drishti.assist.Schema(raw);
+      schema = new window.Drishti.elements.designer.YamlSchema(raw);      // the Rachana schema as drishti-designer reads it
       var col = raw.$defs.column.properties;
       enums.fmt = (col.fmt || {}).enum || []; enums.tone = (col.tone || {}).enum || [];
       show(cur);

@@ -106,8 +106,8 @@ one than it needs.
 |---|---|---|---|---|---|---|---|
 | **Sutra expression** (Rachana-EL in a `bind:`, `title:`, `when:`) | `size($.DEFINITION.MEMBERS)` in `config/packs/market-risk/sutras/market-risk/portfolio.v1.sutra.yaml` (panel `definition`, "Members named"); `max($.TRADES[*].NOTIONAL)` in the netting-set Sutra's slider (`netting-set.v1.sutra.yaml` controls) | In the server, as the page is built from one document | Every time the page renders | One document only | The reader's, on the document already fetched | Closed function set: `size`, `sum`, `min`, `max`, `abs`, `first`, `last`, `flatten`, `group`, `coalesce`, `nonblank`, `days`, `today`, comparisons and arithmetic; no `sqrt`, `exp`, `round` ([RACHANA_REFERENCE.md, Functions](../guides/RACHANA_REFERENCE.md)) | Negligible |
 | **Derived kind** (`plugin: derived`) | `config/packs/trading/pack.yaml` lines 191–240: `counterparty-trades` grouped by `$.COUNTERPARTY` from `trade`; also `gleif-groupings`, `us-equities-groupings`, `macro-groupings` | In the server (`drishti-engine/.../source/derived/DerivedSourcePlugin.java`), reading every member through the router | Once per business date and data version, else every `refresh` (trading: `60s`; default `30s`); a reader never waits for a rebuild (served stale, refreshed behind) | Set: one page per group key (plus `also-group-by` keys) | **Built once per date and shared by every reader** (`DerivedSourcePlugin.java` javadoc): not per-reader | `max-scan` 50,000 documents read per kind by default (`GROUPINGS_ANALYTICS_GUIDE.md` › Part VII. Groupings and analytics, computed, section 24); `max-members` caps the listed members and rows, not the aggregates (`DerivedKind.java` javadoc); aggregates `count`, `sum`, `avg`, `median`, `min`, `max`, `distinct`, `first`; `where`, `then`, `sort`, `tree`; no join to another kind | One pass over the kind per date; pages in heap or on disk |
-| **Reactive engine** (`plugin: reactive`) | `var-engine` (`config/packs/market-risk/pack.yaml` lines 345–390, Java `VarResultEngine`; the VaR what-if is the same engine's, `POST /api/v1/var/what-if`), `exposure-engine` (`config/packs/counterparty-risk/pack.yaml` lines 269–334, Java `ExposureResultEngine`), `exposure-whatif` (Python) | Java in the server or Python on the compute pools ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)) | On request; cached (`results: 2000, ttl: 1h` for VaR); recomputed on `data-version` triggers of the listed input kinds, coalesced (`quiet: 250ms, max-wait: 2s` VaR; `1s / 10s` exposure) | Any scope in the scope grammar, any business date, parameters (`ccy`, `q`, `collateral`) | **As the requesting user** | `timeout: 60s`, `max-inflight-per-user` 4 (VaR, EXP) or 2 (what-if); exposure `max-scope-netting-sets` 20,000 (EXPOSURE_GUIDE.md section 18.1) | Memory-mapped hot files per date; milliseconds warm |
-| **Engine figures on a stored page** | `VarFigures` puts the VaR engine's answer under `$.VAR_ENGINE` on the position and portfolio pages; `ExposureFigures` puts the exposure engine's under `$.EXPOSURE_ENGINE` on the netting-set and counterparty pages (`drishti-server/.../var/VarFigures.java`, `.../exposure/ExposureFigures.java`; EXPOSURE_GUIDE.md section 22) | Server, as the page opens | As the engine's cache | The page's own entity as a scope (`POS:`, `PORT:`, `NSET:`, `CPTY:`) | As the reader | As the engine | As the engine |
+| **Reactive engine** (`plugin: reactive`) | `var-engine` (`config/packs/market-risk/pack.yaml` lines 345–390, Java `VarResultEngine`; the VaR what-if is the same engine's, `POST /api/v1/risk/var/what-if`), `exposure-engine` (`config/packs/counterparty-risk/pack.yaml` lines 269–334, Java `ExposureResultEngine`; the exposure what-if is the same engine's, `POST /api/v1/risk/exposure/what-if`) | Java in the server or Python on the compute pools ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)) | On request; cached (`results: 2000, ttl: 1h` for VaR); recomputed on `data-version` triggers of the listed input kinds, coalesced (`quiet: 250ms, max-wait: 2s` VaR; `1s / 10s` exposure) | Any scope in the scope grammar, any business date, parameters (`ccy`, `q`, `collateral`) | **As the requesting user** | `timeout: 60s`, `max-inflight-per-user` 4 (VaR, EXP) or 2 (what-if); exposure `max-scope-netting-sets` 20,000 (EXPOSURE_GUIDE.md section 18.1) | Memory-mapped hot files per date; milliseconds warm |
+| **Engine figures on a stored page** | `VarFigures` puts the VaR engine's answer under `$.VAR_ENGINE` on the position and portfolio pages; `ExposureFigures` puts the exposure engine's under `$.EXPOSURE_ENGINE` on the netting-set and counterparty pages (`drishti-banking/.../var/VarFigures.java`, `.../exposure/ExposureFigures.java`; EXPOSURE_GUIDE.md section 22) | Server, as the page opens | As the engine's cache | The page's own entity as a scope (`POS:`, `PORT:`, `NSET:`, `CPTY:`) | As the reader | As the engine | As the engine |
 | **BI measure** | `config/bi/models/trading-risk.model.yaml`: `MTM: sum(trades.MTM)`, `Exposure (PFE peak): sum(cpty_exposure.PEAK_PFE_95)` with a "never a sum of PFEs" description | The BI engine over datasets (`refresh: { on-load: true }`) | On load of the dataset | Any slice of a dataset, for analysis | Dataset row filters and masks (`trading-risk-trades.dataset.yaml`: `desk-head` rows, `masked: [COUNTERPARTY]`) | Additive measures only are safe; a non-additive figure must come from an engine's published result, as the exposure measures do | Columnar scan |
 
 **Where each class belongs:**
@@ -298,7 +298,7 @@ Sutra `portfolio.v1.sutra.yaml` (strip lines 42–50); contract class `input`; s
 ### 4.6 `var-result` (VRES), `var-official` (VOFF), and the what-if
 
 Both **computed** and built: `var-result` by the Java `VarResultEngine` (the reactive connector `var-engine` of `pack.yaml`),
-`var-official` the published official captures, read only. The pre-deal what-if is the same Java engine's (`POST /api/v1/var/what-if`,
+`var-official` the published official captures, read only. The pre-deal what-if is the same Java engine's (`POST /api/v1/risk/var/what-if`,
 VAR_GUIDE.md section 8.2), not a kind. They are the reference pattern for every
 other measure in this document: computed when asked, provenance on every answer (VAR_GUIDE.md section 11.2; the Explain drawer's Inputs & lineage),
 captures, an official end-of-day record that engines never read back.
@@ -390,7 +390,7 @@ The pack has 14 kinds (`config/packs/counterparty-risk/pack.yaml` lines 24–38)
 ```
 
 **Today the chain runs the other way in one place:** the built exposure engine reads the current MtM and the membership from the stored
-`netting-set.TRADES[]` (`drishti-server/.../exposure/ExposureLoader.java` lines 341–351), the collateral from the stored
+`netting-set.TRADES[]` (`drishti-banking/.../exposure/ExposureLoader.java` lines 341–351), the collateral from the stored
 `collateral-balance.NET` (line 398, a pre-haircut figure, F3) and the limit from the stored `credit-limit.LIMIT` (lines 385–391). EXPOSURE_GUIDE.md
 section 18.4 records this ("CE uses each set's value today, the sum of its member trades' MtM in the `netting-set` record"). Retiring the
 stored netting-set figures (NSET) therefore needs the exposure engine re-pointed at `trade-valuation` and `netting-set-member` first.
@@ -562,13 +562,13 @@ Sutra `exposure-and-capital/cva.v1.sutra.yaml` (strip lines 35–40, adjustments
 | Adjustments bars | `COMPONENTS[]` | S (= the strip on 76 of 76) | Dv | the strip's four figures as rows: a Sutra expression over the same answer, not a second stored list | P3 |
 | *(new)* BA-CVA (reduced) | — | — | C | `SCVA_c = (1/α) RW_c Σ_NS M_NS EAD_NS DF_NS`, `K = sqrt((ρ Σ SCVA)² + (1 − ρ²) Σ SCVA²)`, `K_BA-CVA = 0.65 K` (Basel MAR50, CVA.md section 6.6) | P3 |
 
-### 5.10 `simulation-run` (XRUN), `exposure-path` (XPATH), `exposure-result` (EXP), `exposure-whatif` (XWIF), `exposure-official-cpty` (XOFC)
+### 5.10 `simulation-run` (XRUN), `exposure-path` (XPATH), `exposure-result` (EXP), `exposure-official-cpty` (XOFC)
 
 `simulation-run` and `exposure-path` are **fundamental inputs** (contract class `input`). `exposure-path` carries denormalised
 `NETTING_SET`, `COUNTERPARTY`, `DESK`, `TT_BOOK`, `ASSET_CLASS`, `PRODUCT`, `NOTIONAL`, `MATURITY_DATE` (`tools/contracts.policy.yaml`
 notes): they must match the trade master and `netting-set-member`. In the samples they do not always: `CLY-3000280` has `NOTIONAL`
 260,700,000 in `samples/exposure-path.jsonl` and 237,000,000 in `samples/trade-valuation.jsonl` and `samples/netting-set.jsonl` (F10).
-`exposure-result`, `exposure-whatif` and `exposure-official-cpty` are **computed** and built; Sutra `exposure-result.v1.sutra.yaml` is the
+`exposure-result` and `exposure-official-cpty` are **computed** and built (the pre-deal what-if is the exposure engine's, `POST /api/v1/risk/exposure/what-if`, not a kind); Sutra `exposure-result.v1.sutra.yaml` is the
 model for every computed page in this pack (strip of figures, a "How it was computed" panel with business date, run, paths, confidence,
 collateral model, MPOR, flags, note).
 
@@ -940,7 +940,7 @@ last column.
 | E1 | TVAL totals for any scope | Java engine (TVAL.md) | — | BI's own MtM sums (BI reads TVAL) | planned (parked) |
 | E2 | STR | Java + Python (STR.md) | per-trade scenario P&L or sensitivities | `stress-result.PNL`, `BY_BOOK` | planned (parked) |
 | E3 | FRTB-SA (SBM, DRC, RRAO) | Java, the server (FRTB_SA_GUIDE.md) | position sensitivities | the capital by risk class and correlation scenario, `TOTAL` | **built** ([FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md)) |
-| E4 | SIMM | Java, the server (SIMM_GUIDE.md) | the shared position sensitivities through the CRIF mapping, licensed parameter files | `simm-result` (`GET /api/v1/simm`): IM collected and posted, by product and risk class | **built** ([SIMM_GUIDE.md](../guides/SIMM_GUIDE.md)) |
+| E4 | SIMM | Java, the server (SIMM_GUIDE.md) | the shared position sensitivities through the CRIF mapping, licensed parameter files | `simm-result` (`GET /api/v1/risk/simm`): IM collected and posted, by product and risk class | **built** ([SIMM_GUIDE.md](../guides/SIMM_GUIDE.md)) |
 | E5 | PNL explain | Java + Python (PNL.md) | two dates of valuations, sensitivities, market moves | `pnl-explain` figures | planned (parked) |
 | E6 | NSET | Java (NSET.md) | `netting-set-member`, E0 | `netting-set` `NET_MTM`, `COLLATERAL`, `UTILISATION`, `CVA`, `BY_ASSET`, `TRADES`, `TRADE_COUNT`, `LIMIT`; counterparty `NET_MTM`; Q1/Q2 derived kinds | planned, order 1 |
 | E7 | SACCR | Java + Python (SACCR.md) | `saccr-trade`, COLL regulatory values | `sa-ccr` (whole kind) | planned, order 2 |
@@ -1053,7 +1053,7 @@ The product owner decided every open question on 2026-10-29 (analysis decisions 
 | Counterparty-risk pack | `config/packs/counterparty-risk/pack.yaml`; `sutras/*/*.sutra.yaml` (10); `contracts/*.contract.yaml` (14); `samples/*.jsonl` |
 | Core pack | `config/packs/core/contracts/counterparty.contract.yaml`, `counterparty-group.contract.yaml`; the counterparty and counterparty-group Sutras |
 | Trading pack | `config/packs/trading/pack.yaml` (connector `trade-pages`) |
-| Engines and mechanisms | `docs/guides/VAR_GUIDE.md`, `docs/guides/EXPOSURE_GUIDE.md`, `docs/guides/GROUPINGS_ANALYTICS_GUIDE.md` (sections 18, 19, 24), `docs/architecture/DATA_ARCHITECTURE.md`, `docs/guides/RACHANA_REFERENCE.md` (functions), `drishti-engine/.../source/derived/DerivedKind.java`, `DerivedSourcePlugin.java`, `drishti-server/.../exposure/ExposureLoader.java`, `config/ui-kit/fragments/data-provenance.v1.fragment.yaml` |
+| Engines and mechanisms | `docs/guides/VAR_GUIDE.md`, `docs/guides/EXPOSURE_GUIDE.md`, `docs/guides/GROUPINGS_ANALYTICS_GUIDE.md` (sections 18, 19, 24), `docs/architecture/DATA_ARCHITECTURE.md`, `docs/guides/RACHANA_REFERENCE.md` (functions), `drishti-engine/.../source/derived/DerivedKind.java`, `DerivedSourcePlugin.java`, `drishti-banking/.../exposure/ExposureLoader.java`, `config/ui-kit/fragments/data-provenance.v1.fragment.yaml` |
 | Plan and policy | `docs/architecture/IMPLEMENTATION_PLAN.md` ("The computed-measures roadmap"), `tools/contracts.policy.yaml`, `docs/contracts/README.md` (sections 3, 6, 7, 10, 11, 14) |
 | Measure contracts | `docs/contracts/NSET.md`, `SACCR.md`, `COLL.md`, `MC.md`, `LIM.md`, `GRP.md`, `CVA.md`, `WWR.md`, `TVAL.md`, `STR.md`, `FRTB.md`, `PNL.md`, `SIMM.md` (sections 5 and 6 of each) |
 | BI | `config/bi/models/trading-risk.model.yaml`, `counterparty-exposure.model.yaml`, `config/bi/datasets/trading-risk-trades.dataset.yaml` |
@@ -1136,7 +1136,7 @@ bank is collateralised for, a smaller balance posted lowers the exposure of a se
 | CPTY:CP-ALDERSHOT | CE / EPE / EEPE / peak PFE 95% | 217,565,006 / 64,894,762 / 261,628,419 / 399,970,549 | 220,250,163 / 64,977,553 / 263,701,831 / 401,456,820 |
 | BANK (the demo run, 74 sets) | peak PFE 95% / EPE / CE | 2,858,060,180 / 945,577,981 / 1,532,007,701 | 2,897,620,439 / 947,202,991 / 1,586,811,699 |
 
-The parity reference (`drishti-compute/src/test/resources/ccr/reference.json`) was written again by `make_ccr_data.py`; the exposure guide,
+The parity reference (`drishti-compute-banking/src/test/resources/ccr/reference.json`) was written again by `make_ccr_data.py`; the exposure guide,
 tutorial 26 and the knowledge pages quote the new figures.
 
 ### 13.4 Reconciliation (section 9.3, stage 2)
