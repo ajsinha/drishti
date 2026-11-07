@@ -525,7 +525,7 @@ class VarExplainApiTest {
         assertThat(ks).contains("var", "pivot");
         List<String> uc = new ArrayList<>();
         kinds.get("underConstruction").forEach(k -> uc.add(k.get("id").asText()));
-        assertThat(uc).contains("explain-more-kinds", "explain-pivot-screen");
+        assertThat(uc).contains("explain-more-kinds").doesNotContain("explain-pivot-screen");   // the Pivot's card is on the one Explain (2.9.11.e)
         assertThat(ask("/api/v1/explain", status().isNotFound(), "kind", "sutra", "scope", "BANK").get("detail").asText()).contains("no explainer");
         assertThat(ask("/api/v1/explain", status().isBadRequest(), "scope", "BANK").get("detail").asText()).contains("kind=");
         assertThat(ask("/api/v1/explain", status().isBadRequest(), "kind", "var", "part", "everything", "scope", "BANK").get("detail").asText())
