@@ -34,7 +34,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * The shard books this member holds (VAR_SHARDING.md section 5): each one shard of a date's map, built from the lake for the shard's key
+ * The shard books this member holds (CLUSTER_DEPLOYMENT.md section 5.7): each one shard of a date's map, built from the lake for the shard's key
  * range only (never copied from a peer) into its own hot file under {@code <hot>/<date>-shard-<i>/} and mapped, in USD; a reporting
  * currency's shard book built from it when first asked ({@code <date>-<CCY>-shard-<i>/}). A shard book is the morning run; the day's
  * updates are applied by each member on the date it puts together. Each is known by its date, currency, shard map, index and the digest of

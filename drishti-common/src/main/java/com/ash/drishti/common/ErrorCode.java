@@ -181,7 +181,7 @@ public enum ErrorCode {
     /** VaR (2.9.5): the tree of a hierarchy the date does not have ({@code GET /api/v1/var/tree?hierarchy=LL}). */
     VAR_HIERARCHY_UNKNOWN("DRS-5214", 404),
     /**
-     * VaR sharding (2.9.6, VAR_SHARDING.md): a shard of the date has no live owner that holds it (every replica down, draining or refusing),
+     * VaR sharding (2.9.6, CLUSTER_DEPLOYMENT.md section 5): a shard of the date has no live owner that holds it (every replica down, draining or refusing),
      * so its part of a scope cannot be summed: the scope's figures are refused, never given from the other shards alone.
      */
     VAR_SHARD_UNAVAILABLE("DRS-5215", 503),

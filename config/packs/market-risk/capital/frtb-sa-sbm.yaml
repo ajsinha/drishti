@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# FRTB standardised approach, sensitivities-based method: the parameters the engine reads (docs/guides/FRTB_SA_GUIDE.md section 4,
-# docs/architecture/SENSITIVITIES_AND_FRTB_SA.md section 5). Source: Basel Committee on Banking Supervision, the consolidated Basel
+# FRTB standardised approach, sensitivities-based method: the parameters the engine reads (docs/guides/FRTB_SA_GUIDE.md
+# section 4). Source: Basel Committee on Banking Supervision, the consolidated Basel
 # Framework chapter MAR21 (version effective 1 January 2023). Each block names its paragraph. Values are the Basel text's; a
 # jurisdiction's rule (OSFI CAR chapter 9, the EU CRR3, the US proposal) may differ: a bank's copy names its regime in `regime`, its
 # `version` and `effective`, and is checked by the engine at start (a missing or out-of-range value refuses the file). A changed file is a

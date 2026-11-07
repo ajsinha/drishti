@@ -24,7 +24,7 @@ import java.util.function.IntFunction;
 import java.util.function.IntPredicate;
 
 /**
- * A coordinator's scatter-gather over a sharded date, for any measure (VAR_SHARDING.md section 6): each shard asked is answered exactly once,
+ * A coordinator's scatter-gather over a sharded date, for any measure (CLUSTER_DEPLOYMENT.md section 5.8): each shard asked is answered exactly once,
  * here (its rows held on this member) or by one owner (asked side by side on {@code ask}), and the partials are combined in shard order, so the
  * same question gives the same bits whoever answered. A shard that gives no answer fails the whole gather (the remote side says why): never a
  * figure from the other shards alone. What a partial is and how two combine is the measure's: VaR's is a {@code double[]} of scenario P&amp;L

@@ -15,8 +15,8 @@
 # The Explain tab of the SIMM Playground workbook, one entry a row: a line "## <title>" then its text (lines starting with "#" are
 # dropped; the text lines of an entry are joined with spaces). Same format as playground/var/template/explain.txt, read by
 # PlaygroundTemplate.explain(). {Name} and {Name:v} cell references are added when the generator names Main's cells; until then the
-# entries name the tab and the column, never a cell. The design is docs/architecture/SENSITIVITIES_AND_FRTB_SA.md (sections 4, 8, 12.2,
-# 13.1 case 6, 16). SIMM's risk weights, correlations and thresholds are ISDA's and licensed: no licensed number appears in this file.
+# entries name the tab and the column, never a cell. The method is docs/guides/SIMM_GUIDE.md (sections 5, 8 and
+# 10, case 6). SIMM's risk weights, correlations and thresholds are ISDA's and licensed: no licensed number appears in this file.
 # Every worked number below uses a toy parameter set, said so where it is used; the bank's own export fills Config from its licence.
 ## In plain words: what this workbook answers
 SIMM answers one question: "how much collateral should each side of a set of uncleared derivatives hold against the other, so that if one side defaults the other can replace the trades without loss?" That collateral is initial margin (IM). ISDA's Standard Initial Margin Model (SIMM) computes it from the trades' sensitivities: how much the netting set gains or loses when each market factor (a rate, a spread, a price, a volatility) moves by a small step. Each sensitivity is multiplied by a risk weight (how far that factor could move over ten days of stress), the weighted figures are added up with ISDA's correlations, so hedges offset only as far as the model allows, and the risk classes and product classes are combined into one amount. Every step is a plain Excel formula here, so any figure can be followed back to its inputs, an input changed and the result watched, and every result is compared with Drishti's engine to the cent (Main, Checks).

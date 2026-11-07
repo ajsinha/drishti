@@ -21,8 +21,7 @@ qualifier, bucket and labels); the netting-set master gives each netting set its
 calculation currency and add-ons. **ISDA's numbers are licensed: Drishti ships none.** The bank installs its licensed parameter file, one
 per SIMM version; until it does, no SIMM figure is computed. Every figure opens in a playground that shows the same calculation as
 spreadsheet formulas, with the method choices as switches you can flip, compare and reproduce. The tutorial is
-[tutorial 32](../tutorials/32-simm-from-the-examples-to-a-netting-set.md); the data contract is [SIMM.md](../contracts/SIMM.md); the
-design behind it is [SENSITIVITIES_AND_FRTB_SA.md section 8](../architecture/SENSITIVITIES_AND_FRTB_SA.md#8-isda-simm).
+[tutorial 32](../tutorials/32-simm-from-the-examples-to-a-netting-set.md); the data contract is [SIMM.md](../contracts/SIMM.md).
 
 ## Contents
 
@@ -140,8 +139,7 @@ licensed values.
 
 ## 5. The method
 
-Per netting set, product class and risk class ([design section 8](../architecture/SENSITIVITIES_AND_FRTB_SA.md#8-isda-simm), checked
-against SIMM 2.8+2512 in its section 18).
+Per netting set, product class and risk class, checked paragraph by paragraph against ISDA's SIMM methodology 2.8+2512.
 
 ### 5.1 Delta and the concentration grains
 

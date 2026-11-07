@@ -35,19 +35,19 @@ def test_the_reserved_word_what_goes_to_knowledge(client, typed, where):
 
 
 @pytest.mark.parametrize("words,target", [
-    ("PFE", "/help/knowledge-counterparty-credit-risk#term-pfe"),
-    ("pfe", "/help/knowledge-counterparty-credit-risk#term-pfe"),
-    ("potential future exposure", "/help/knowledge-counterparty-credit-risk#term-pfe"),
-    ("netting set", "/help/knowledge-counterparty-credit-risk#term-netting-set"),
-    ("Netting   Sets?", "/help/knowledge-counterparty-credit-risk#term-netting-set"),
-    ("value at risk", "/help/knowledge-market-risk#term-var"),
-    ("expected shortfall", "/help/knowledge-market-risk#term-es"),
-    ("P&L vector", "/help/knowledge-market-risk#term-p-l-vector"),
-    ("LEI", "/help/knowledge-entities-and-ownership#term-lei"),
-    ("gdp", "/help/knowledge-economies#term-gdp"),
-    ("ETF", "/help/knowledge-companies-funds-and-etfs#term-etf"),
-    ("net asset value", "/help/knowledge-companies-funds-and-etfs#term-nav"),
-    ("GOOGL", "/help/knowledge-companies-funds-and-etfs#term-share-class")])
+    ("PFE", "/help/knowledge-risk#term-pfe"),
+    ("pfe", "/help/knowledge-risk#term-pfe"),
+    ("potential future exposure", "/help/knowledge-risk#term-pfe"),
+    ("netting set", "/help/knowledge-risk#term-netting-set"),
+    ("Netting   Sets?", "/help/knowledge-risk#term-netting-set"),
+    ("value at risk", "/help/knowledge-risk#term-var"),
+    ("expected shortfall", "/help/knowledge-risk#term-es"),
+    ("P&L vector", "/help/knowledge-risk#term-p-l-vector"),
+    ("LEI", "/help/knowledge-data#term-lei"),
+    ("gdp", "/help/knowledge-world#term-gdp"),
+    ("ETF", "/help/knowledge-world#term-etf"),
+    ("net asset value", "/help/knowledge-world#term-nav"),
+    ("GOOGL", "/help/knowledge-world#term-share-class")])
 def test_what_a_term_opens_its_glossary_entry(client, words, target):
     r = client.get("/what", params={"q": words}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == target
@@ -59,15 +59,15 @@ def test_what_alone_opens_the_knowledge_home_and_it_lists_the_pages(client):
     r = client.get("/what", follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/help/knowledge"
     home = client.get("/help/knowledge").text
-    for slug in ("knowledge-market-risk", "knowledge-counterparty-credit-risk", "knowledge-economies"):
+    for slug in ("knowledge-risk", "knowledge-data", "knowledge-world"):
         assert f'href="/help/{slug}"' in home
-    assert 'href="/help/knowledge-counterparty-credit-risk#term-pfe"' in home      # the glossary A to Z links each entry
+    assert 'href="/help/knowledge-risk#term-pfe"' in home      # the glossary A to Z links each entry
 
 
 def test_what_other_words_search_only_the_knowledge_pages(client):
     page = client.get("/what", params={"q": "collateral posted"})
     assert page.status_code == 200 and "data-what-search" in page.text
-    assert 'href="/help/knowledge-counterparty-credit-risk"' in page.text
+    assert 'href="/help/knowledge-risk' in page.text
     assert 'href="/help/docs-guides-exposure-guide"' not in page.text           # the guides are a link away, not in the hits
     assert 'action="/what"' in page.text
 
@@ -76,7 +76,7 @@ def test_what_in_the_type_ahead_offers_the_home_then_the_terms(client):
     s = client.get("/api/suggest", params={"q": "WHAT"}).json()
     assert s[0]["mnemonic"] == "WHAT" and s[0]["href"] == "/help/knowledge" and s[0]["complete"] == "WHAT "
     s = client.get("/api/suggest", params={"q": "what netting se"}).json()
-    assert s[0]["complete"] == "WHAT Netting set" and s[0]["href"] == "/help/knowledge-counterparty-credit-risk#term-netting-set"
+    assert s[0]["complete"] == "WHAT Netting set" and s[0]["href"] == "/help/knowledge-risk#term-netting-set"
     assert "Counterparty credit risk" in s[0]["subtitle"]
     s = client.get("/api/suggest", params={"q": "WHAT zzz qqq"}).json()
     assert s == [{"mnemonic": "WHAT", "title": "Search the Knowledge pages for zzz qqq", "subtitle": "No term of the glossary is called that",
@@ -106,7 +106,7 @@ def test_knowledge_is_a_section_of_the_help_centre_with_every_knowledge_page(cli
     index = client.get("/help").text
     assert 'href="/help/section/knowledge"' in index
     page = client.get("/help/section/knowledge").text
-    assert page.index('href="/help/knowledge"') < page.index('href="/help/knowledge-market-risk"')
+    assert page.index('href="/help/knowledge"') < page.index('href="/help/knowledge-risk"')
 
 
 def test_every_what_does_this_mean_target_opens_its_section(client):
@@ -121,15 +121,15 @@ def test_every_what_does_this_mean_target_opens_its_section(client):
 
 
 def test_the_explorers_carry_the_link_beside_their_help(client):
-    assert 'href="/help/knowledge-market-risk" title="What does this mean?' in client.get("/var").text
-    assert 'href="/help/knowledge-counterparty-credit-risk" title="What does this mean?' in client.get("/exposure").text
+    assert 'href="/help/knowledge-risk#1-market-risk" title="What does this mean?' in client.get("/var").text
+    assert 'href="/help/knowledge-risk#2-counterparty-credit-risk" title="What does this mean?' in client.get("/exposure").text
 
 
 def test_a_view_of_a_kind_with_a_knowledge_page_carries_the_link(client, monkeypatch):
     assert "data-what-link" not in client.get("/v/trade/IRS-48213").text           # no Knowledge target for the kind: no link
-    monkeypatch.setitem(client.app.state.templates.env.globals["KNOWLEDGE"], "trade", "knowledge-trades-and-products#term-trade")
+    monkeypatch.setitem(client.app.state.templates.env.globals["KNOWLEDGE"], "trade", "knowledge-risk#term-trade")
     page = client.get("/v/trade/IRS-48213").text
-    assert 'href="/help/knowledge-trades-and-products#term-trade" data-what-link' in page and "What does this mean?" in page
+    assert 'href="/help/knowledge-risk#term-trade" data-what-link' in page and "What does this mean?" in page
 
 
 def test_knowledge_is_in_the_build_and_help_menus(client):

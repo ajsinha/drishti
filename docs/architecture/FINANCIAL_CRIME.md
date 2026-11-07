@@ -18,7 +18,7 @@
 Status: design, not built. Requested by the product owner on 2026-11-02 ("put AML / fraud / financial-crime unit engines on the
 roadmap; design first"); proposed for releases 2.9.21 and 2.9.22, placement to confirm
 ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#2921-and-2922-financial-crime-aml-fraud-fcu-proposed)). It follows the engine pattern of
-[SENSITIVITIES_AND_FRTB_SA.md](SENSITIVITIES_AND_FRTB_SA.md) and [IFRS9_ECL.md](IFRS9_ECL.md): method, data contracts, outputs, API and
+[FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md) and [IFRS9_ECL.md](IFRS9_ECL.md): method, data contracts, outputs, API and
 screens, playground, hand-built cases, parameters as configuration, decisions.
 
 **What Drishti is, and is not, here.** Drishti provides **explainable, testable engines**: scenarios and scores that run in Java on the
@@ -297,7 +297,7 @@ with drop-downs), Curve (`COUNTIFS` of measures ≥ θ and of outcomes per θ st
 `RAND`-free rank so it reproduces), Sample (the sample-size formula), Main (the figures at θ against the engine's), Explain, Provenance.
 The switches: θ per segment, the outcome counted as productive (`ESCALATED` or `STR_FILED`), the history window, the BTL band.
 
-**Recipes and reproduction** as every playground ([SENSITIVITIES_AND_FRTB_SA.md section 12.1a](SENSITIVITIES_AND_FRTB_SA.md#121a-critique-and-reproduce-the-method-choices-as-switches)):
+**Recipes and reproduction** as every playground ([FRTB_SA_GUIDE.md section 8.1](../guides/FRTB_SA_GUIDE.md#81-critique-the-choices-panel)):
 a tuning run is a recipe (the scenario version, the data versions, the switches), replayable to the same counts.
 
 **Size:** M.

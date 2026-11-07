@@ -53,6 +53,15 @@ class KnowledgeTest(unittest.TestCase):
             self.assertIn(f'<a id="{K.anchor(e["term"])}"></a>', page, e["term"])
             self.assertIn(f"#{K.anchor(e['term'])})", home, e["term"])
 
+    def test_each_domain_is_a_part_of_its_primer_with_its_own_glossary(self):
+        """Three primers beside the home; each domain a ``## N. Title`` part whose anchor glossary.yaml names, holding its own block."""
+        self.assertEqual({"risk.md", "data.md", "world.md"}, {d["page"] for d in self.data["domains"].values()})
+        for d, info in self.data["domains"].items():
+            page = (K.DIR / info["page"]).read_text(encoding="utf-8")
+            heads = {re.sub(r"[^\w\- ]", "", h.lower()).replace(" ", "-") for h in re.findall(r"^## (\d+\. .+)$", page, re.M)}
+            self.assertIn(info["part"], heads, d)
+            self.assertEqual(1, page.count(K.start(d)), d)
+
     def test_the_anchor_rule(self):
         self.assertEqual("term-p-l-vector", K.anchor("P&L vector"))
         self.assertEqual("term-sa-ccr", K.anchor("SA-CCR"))

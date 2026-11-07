@@ -22,7 +22,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Two runs of one scope side by side (SENSITIVITIES_AND_FRTB_SA.md section 12.1a, FRTB_SA_GUIDE.md section 8.2): the difference per risk
+ * Two runs of one scope side by side (FRTB_SA_GUIDE.md section 8.1): the difference per risk
  * class and measure, the bucket where most of it is, the factor or the pair of factors behind it, and the step where it arises (the
  * weighted sensitivity, the curvature risk, the correlations within a bucket, the sum across buckets, or the scenario), in words.
  */

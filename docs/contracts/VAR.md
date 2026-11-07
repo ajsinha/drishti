@@ -72,7 +72,7 @@ also served as the computed kind `var-result` through a reactive connector; the 
 | An optional "risk position" grouping for viewing (book × product × currency × underlying × maturity quarter) | PLANNED | §2.6 |
 | Tiered memory: each loaded date a memory-mapped local hot file (float32 position rows in hierarchy order, the trades of fungible positions, float64 aggregates; Delta stays float64), the heap holding aggregates, columns and links; history dates opened lazily from their file; rebuilt when the inputs change; cleaned on eviction and shutdown | Built | [VaR guide §26](../guides/VAR_GUIDE.md#26-the-tiered-memory-and-the-hot-file) |
 | The benchmark 1 M trades × 50 dates (`VarTierBenchmark`, opt-in): measured at 100,000 trades × 5 dates, extrapolated | Built (measured locally; the full run is for a server) | [BENCHMARK.md section 5.2](../admin/BENCHMARK.md#52-the-tiered-store-vartierbenchmark) |
-| Sharding the hot store across Drishti*net nodes | Built (off by default: the pack's `sharding:` block) | [VaR guide §28](../guides/VAR_GUIDE.md#28-sharding-across-drishtinet), [VAR_SHARDING.md](../architecture/VAR_SHARDING.md) |
+| Sharding the hot store across Drishti*net nodes | Built (off by default: the pack's `sharding:` block) | [VaR guide §28](../guides/VAR_GUIDE.md#28-sharding-across-drishtinet), [CLUSTER_DEPLOYMENT.md section 5](../architecture/CLUSTER_DEPLOYMENT.md#5-var-sharding-in-depth-built) |
 | The common risk lake (domain `risk`, one connector `risk-store` for every risk pack) | PLANNED (VaR's tables already there) | §2.1 |
 | The computed kind `var-result` (`VRES`, the Java engine through the reactive connector `var-engine`) and the pre-deal what-if (`POST /api/v1/var/what-if`, the same engine: copies of booked trades or scopes, trades priced elsewhere, the stressed window) | Built | [VaR guide §8](../guides/VAR_GUIDE.md#8-what-if-and-var-as-a-kind) |
 | VaR by a trade column (`by=attribute:TRADER_ID`), summed over every trade of the scope, the column's mask honoured | Built | [VaR guide §11.3](../guides/VAR_GUIDE.md#113-path-and-contributions) |
@@ -874,7 +874,7 @@ Positions link to trades (`graph.fields.TRADE_IDS` → `trade`); the explorer li
 | Currency | USD for every vector and every figure (`REPORTING_CCY`); no FX conversion in the engine |
 | Rounding | the API and captures round figures to whole currency units (`Math.round`; `NaN` and infinity become `0`); `pct`, `limitUse`, `confidence` and the test statistics are unrounded doubles |
 | Confidence | VaR 99% (`drishti.var.confidence`), ES 97.5% (`drishti.var.es-confidence`); a value outside (0.5, 1) falls back to the default |
-| Rank rule | `kth-worst`: k = ⌈N (1 − α) − 10⁻⁹⌉, clamped to [1, N]. N = 509: k = 6 at 99% (509 × 0.01 = 5.09 → 6), 13 at 97.5% (12.725 → 13) |
+| Rank rule | `kth-worst` (the 6th worst of 509 at 99%, the 13 worst for ES at 97.5%), or `interpolated`: [VAR_GUIDE section 18.1](../guides/VAR_GUIDE.md#181-var) |
 | Ties | scenarios with equal P&L are ordered by index, the older scenario first (the same rule in `VarMath.order` and `varmath.order`) |
 | Horizon | the inputs are 1-day (`HORIZON_DAYS` 1); 10-day VaR is computed from them on request, by √10 or the sum of overlapping 10-day windows ([section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)); official records stay 1-day (`HORIZON` `1D`) |
 | Quantity | positive long, negative short; `DIRECTION` says the same in words |

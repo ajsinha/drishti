@@ -293,7 +293,7 @@ public final class CurrencyTotals {
     }
 
     /**
-     * The totals of several shards of one date added (VAR_SHARDING.md): per node and trade currency, the shards' sums and counts added in
+     * The totals of several shards of one date added (CLUSTER_DEPLOYMENT.md section 5): per node and trade currency, the shards' sums and counts added in
      * shard order. Null when no shard has totals (a book in another reporting currency).
      */
     static CurrencyTotals merge(List<CurrencyTotals> parts) {

@@ -36,7 +36,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * The FRTB-SA Playground's workbook (SENSITIVITIES_AND_FRTB_SA.md sections 12.1 and 12.1a, FRTB_SA_GUIDE.md section 8): Main, Config, Data,
+ * The FRTB-SA Playground's workbook (FRTB_SA_GUIDE.md section 8.3): Main, Config, Data,
  * WS, Buckets, Classes, Curvature, DRC, RRAO, Explain and Provenance. Every derived cell is a formula of the common set; the method's
  * switches are cells of Config with a drop-down, read by the formulas ({@code IF} on the switch), so flipping one recomputes the
  * alternative live; Main holds the engine's figures for the choices exported and for every one-switch alternative, each with its check.

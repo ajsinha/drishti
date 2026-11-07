@@ -426,7 +426,7 @@ days.**
   default), **Command first** and **Risk map**, each person's choice remembered. On a full instance, the **lens** (`drishti.lenses:
   risk`, off by default) gives each person *Open Drishti Risk* and *Leave Drishti Risk*, with no restart; a lens hides, it does not
   secure. Without an edition Drishti is exactly as before. Works across a cluster; Admin → Net warns when members differ.
-- **VaR sharded across Drishti\*net** ([VAR_SHARDING](docs/architecture/VAR_SHARDING.md)): off by default; with the market-risk pack's
+- **VaR sharded across Drishti\*net** ([CLUSTER_DEPLOYMENT.md section 5](docs/architecture/CLUSTER_DEPLOYMENT.md#5-var-sharding-in-depth-built)): off by default; with the market-risk pack's
   `sharding:` block each date is cut into legal-entity and desk ranges, owned by two members each (rendezvous hashing, no consensus
   protocol); every member keeps every node's aggregate, so bank and desk totals answer even with a shard's owners down; other scopes sum
   one partial per shard, never a partial VaR (`DRS-5215`); handover and drain for scale-in. Equal to one server to the cent.
@@ -532,7 +532,7 @@ finally right.**
   your business date, and only those that hold today are shown. Seven ship: a book over its VaR limit while its desk is within, a
   desk that lowers VaR, posted collateral raising exposure, VaR against peak PFE, the most-held company, two managers holding one
   portfolio, a fund's weights above its net assets. Quick cards below: VAR BANK, EXP BANK, FUND SPY, DATAMAP.
-- **Knowledge: Companies, funds and ETFs** ([docs/knowledge](docs/knowledge/companies-funds-and-etfs.md)): share classes, NAV,
+- **Knowledge: Companies, funds and ETFs** ([docs/knowledge](docs/knowledge/world.md#1-companies-funds-and-etfs)): share classes, NAV,
   look-through, expense ratios, active share and overlap on the demo data; 23 new `WHAT` terms (162 in all); "What does this mean?"
   on USEQ, FUND, HELD and TRACK.
 - **Index membership from the tracking ETFs** ([External data](docs/guides/EXTERNAL_DATA.md)): the S&P 500, Nasdaq-100 and Dow members

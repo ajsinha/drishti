@@ -113,8 +113,7 @@ features:
     lenses: [risk, trading, cro]
     section: risk
     contracts: [VAR, PNL, STR]
-    sources: [guides/VAR_GUIDE.md, architecture/PARAMETRIC_VAR.md, architecture/VAR_PLAYGROUND.md, architecture/VAR_SHARDING.md,
-              tutorials/25-var-from-the-bank-to-a-trade.md, tutorials/43-parametric-var-beside-historical.md]
+    sources: [guides/VAR_GUIDE.md, tutorials/25-var-from-the-bank-to-a-trade.md, tutorials/43-parametric-var-beside-historical.md]
   - id: R1r
     name: Regulatory VaR reporting
     who: risk, regulatory
@@ -149,7 +148,7 @@ features:
     lenses: [risk]
     section: risk
     contracts: [FRTB, TVAL]
-    sources: [guides/FRTB_SA_GUIDE.md, architecture/SENSITIVITIES_AND_FRTB_SA.md, tutorials/30-frtb-sa-from-the-cases-to-a-desk.md]
+    sources: [guides/FRTB_SA_GUIDE.md, tutorials/30-frtb-sa-from-the-cases-to-a-desk.md]
   - id: R4
     name: SIMM
     who: margin
@@ -287,7 +286,7 @@ features:
     domain: core
     lenses: [admin]
     section: operate
-    sources: [architecture/CLUSTER_DEPLOYMENT.md, architecture/RESOURCES_AND_SCALE.md, admin/PERFORMANCE.md, architecture/VAR_SHARDING.md,
+    sources: [architecture/CLUSTER_DEPLOYMENT.md, architecture/RESOURCES_AND_SCALE.md, admin/PERFORMANCE.md,
               tutorials/19-a-cluster-of-three.md]
   - id: O3
     name: People, access and editions

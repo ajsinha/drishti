@@ -66,7 +66,7 @@ public class VarConfiguration {
         svc.saved().words(() -> svc.words().keySet());
         com.ash.drishti.engine.time.BusinessDates bd = businessDates.getIfAvailable();
         svc.calendar(bd == null ? null : bd.calendar());                 // the pinned dates' calendars (VAR_GUIDE.md section 26.8)
-        // VaR sharding across Drishti*net (VAR_SHARDING.md): off unless the pack's sharding block or drishti.var.sharding switches it on
+        // VaR sharding across Drishti*net (CLUSTER_DEPLOYMENT.md section 5): off unless the pack's sharding block or drishti.var.sharding switches it on
         java.util.function.Supplier<VarSharding> shardSettings = VarSharding.of(sharding, props, packs::getIfAvailable);
         svc.shards(new VarShards(props, sharding, shardSettings, loader, new com.ash.drishti.server.shard.ShardPeers(VarSharding.MEASURE.service(), net::getIfAvailable, digests::getIfAvailable), access,
                 sums).start());

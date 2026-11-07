@@ -357,7 +357,7 @@ final class VarTier implements AutoCloseable {
     }
 
     /**
-     * A shard's folder (VAR_SHARDING.md): {@code <date>-shard-<i>} (USD) or {@code <date>-<CCY>-shard-<i>}, each its own, so a shard's file
+     * A shard's folder (CLUSTER_DEPLOYMENT.md section 5): {@code <date>-shard-<i>} (USD) or {@code <date>-<CCY>-shard-<i>}, each its own, so a shard's file
      * is never taken for another's or the whole date's older build.
      */
     Path folder(LocalDate date, String currency, int shard) {

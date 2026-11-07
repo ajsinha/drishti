@@ -251,7 +251,7 @@ def test_home_facts_answer_with_links_for_the_packs_on_only(client, backend, wit
     assert [f["id"] for f in d["facts"]] == ["book-over-limit-desk-within"]
     f = d["facts"][0]
     assert f["href"].startswith("/go?q=VAR%20NODE%20MGMT~BOOK-COMM-1") and f["whatHref"] == "/what?q=VaR%20limit"
-    assert f["knowledgeHref"].endswith("#4-a-worked-example-on-the-demo-data")
+    assert f["knowledgeHref"] == "/help/knowledge-risk#14-a-worked-example-on-the-demo-data"
     assert all(x["pack"] == "market-risk" for x in d["facts"])
 
 

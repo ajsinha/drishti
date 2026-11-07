@@ -2,7 +2,7 @@
    Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
    PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository for the full terms.
 
-   Parametric VaR on the VaR explorer (docs/architecture/PARAMETRIC_VAR.md; VAR_GUIDE.md section 3.12): a toggle (Parametric; the link's
+   Parametric VaR on the VaR explorer (docs/guides/VAR_GUIDE.md section 18.15; VAR_GUIDE.md section 3.12): a toggle (Parametric; the link's
    pm=1, which the PVAR command opens with) that adds, beside the historical figures, the tiles (parametric VaR, parametric ES, the
    fat-tail gap), the tree's Parametric and Gap columns, and the normal curve over the P&L path's histogram with both markers, shaded
    tails and the gap bracket (drishti_var-charts.js). The Euler components and the worked figures are in the VaR Playground's Parametric tab.

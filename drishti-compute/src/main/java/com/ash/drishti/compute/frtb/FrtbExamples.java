@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The design's hand-built cases (SENSITIVITIES_AND_FRTB_SA.md section 13.1, FRTB_SA_GUIDE.md section 10) as engine inputs: small enough
+ * The design's hand-built cases (FRTB_SA_GUIDE.md section 10) as engine inputs: small enough
  * to check with a calculator, used by the engine's unit tests, the workbook's recalculation tests and the playground's {@code example}
  * scope. Their factors form a small dictionary of their own.
  */

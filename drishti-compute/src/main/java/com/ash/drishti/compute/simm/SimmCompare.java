@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Two SIMM runs of the same netting set side by side (SENSITIVITIES_AND_FRTB_SA.md section 12.1a, SIMM_GUIDE.md section 8): the
+ * Two SIMM runs of the same netting set side by side (SIMM_GUIDE.md section 8): the
  * difference per product class, risk class and measure, the bucket where most of it arises and the step that changed (the concentration
  * factors, the weighted sensitivities, the bucket's K, or the sum across buckets), and one sentence in words.
  */

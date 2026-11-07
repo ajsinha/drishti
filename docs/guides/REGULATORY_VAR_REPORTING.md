@@ -364,14 +364,9 @@ date's latest version at the time it is run and freezes what it read ([6.3](#63-
 ### 4.2 VaR, ES and the 10-day horizon
 
 Historical simulation over the date's scenario set (N scenarios: 509 on the demo; `drishti.var.scenario-window` may cut it to the
-newest N, 250 the regulatory minimum). For a scope S with P&L vector P_S(s) = Σ_{trades in S} P&L_trade(s):
-
-```
-VaR_q,1d  = −P_S(k)            k = ⌈N × (1 − q)⌉, P_S(k) the k-th worst scenario P&L          (99%, 509: the 6th worst)
-ES_q,1d   = −mean of the k_ES worst, k_ES = ⌈N × (1 − q_ES)⌉                                  (97.5%, 509: the 13 worst)
-VaR_q,10d = √10 × VaR_q,1d                                                       (scaled; §217.205 allows it if justified)
-          or −(k-th worst of the N − 9 overlapping sums Σ_{j=0..9} P_S(s − j))   (the 10-day sum of 1-day scenario P&Ls)
-```
+newest N, 250 the regulatory minimum). VaR is the k-th worst of the scope's summed scenario P&L, ES the mean of the k_ES worst, and the
+10-day figure √10 × the 1-day one (which §217.205 allows if justified) or the k-th worst of the overlapping 10-day sums: the formulas are
+[VAR_GUIDE 18.1, 18.2 and 18.6](VAR_GUIDE.md#181-var).
 
 **Demo, the bank, 2026-09-30:** VaR_99,1d **112,041,646** (6th worst of 509); ES_97.5 160,143,809 (mean of 13); VaR_99,10d by √10
 **354,306,794**, by the sum 274,544,283 (5th worst of 500 windows). Full 10-day revaluation (a second vector set from the pricing system)
@@ -482,7 +477,7 @@ larger.
 business days 2025-10-01 to 2026-09-30: **3** exceptions against APL and **3** against HPL at 99% (2025-12-29, 2026-01-07, 2026-01-13);
 8 and 10 at 97.5% (expected 6.25); **green**, multiplier **3.00**. The inflation and money-market desks have 6 each at 99%: **amber**, 3.50.
 
-**Its playground.** The backtest is a tab of the playground frame ([VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md)): the node's
+**Its playground.** The backtest is a tab of the playground frame ([VAR_GUIDE.md section 3.10](VAR_GUIDE.md#310-the-var-playground-play-var)): the node's
 250 tested days as data, each exception a formula (`=IF(P&L < −VaR, 1, 0)`), the counts as `COUNTIF`, the zone and the multiplier a
 lookup into the configured table, and a check cell against the engine's answer.
 

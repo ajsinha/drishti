@@ -81,7 +81,7 @@ public final class VarHotFile {
     public static final String SUFFIX = ".vhot";
     static final byte[] MAGIC = "DRSHVAR1".getBytes(StandardCharsets.US_ASCII);
     static final int HEADER = 256;
-    /** Header flag: the file holds one shard's rows of a sharded date (its {@code RANG} section says which, VAR_SHARDING.md). */
+    /** Header flag: the file holds one shard's rows of a sharded date (its {@code RANG} section says which, CLUSTER_DEPLOYMENT.md section 5). */
     public static final int RANGE = 4;
     /** Header flag: a shard's skeleton, without its matrices (sent to the members that do not own the shard). */
     public static final int SKELETON = 8;

@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * What a playground export of a given size is before it is made (VAR_PLAYGROUND.md section 3): its sheets' largest column and row count,
+ * What a playground export of a given size is before it is made (VAR_GUIDE.md section 3.10): its sheets' largest column and row count,
  * its cells and formulas, an estimated file size and recalculation time, and the applications that can open it. A workbook no
  * application can open is refused with the reason; so is one larger than the server builds in one export.
  */

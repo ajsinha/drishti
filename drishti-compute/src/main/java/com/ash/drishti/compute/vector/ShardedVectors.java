@@ -28,7 +28,7 @@ import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
 /**
- * The rows of a business date sharded across Drishti*net members (VAR_SHARDING.md): the date's ordinals cut into contiguous shards (legal
+ * The rows of a business date sharded across Drishti*net members (CLUSTER_DEPLOYMENT.md section 5): the date's ordinals cut into contiguous shards (legal
  * entity and desk ranges, a desk never split), each one's rows held here (mapped from its shard hot file) or on its owners. A set is summed
  * shard by shard: each shard's part given once to the rows held here or to one owner ({@link Remote}, the partial endpoint), the partial
  * float64 vectors added in shard order, so the same set gives the same bits whichever owners answered. Exactly one answer per shard asked:

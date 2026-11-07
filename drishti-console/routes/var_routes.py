@@ -434,7 +434,7 @@ async def api_delete_basket(request: Request, owner: str, name: str):
 
 
 def pvar_command(words: list[str], user: str) -> str | None:
-    """Where ``PVAR <scope> [lens]`` goes (docs/architecture/PARAMETRIC_VAR.md, VAR_GUIDE.md section 3.12): the VaR explorer in parametric
+    """Where ``PVAR <scope> [lens]`` goes (docs/guides/VAR_GUIDE.md section 18.15, VAR_GUIDE.md section 3.12): the VaR explorer in parametric
     toggle on (``pm=1``: the parametric tiles, the tree's Parametric and Gap columns, the normal curve), the scope and the lens read as
     ``VAR`` reads them; ``PVAR`` alone: the bank. An alias of ``VAR``: no screen of its own. None when the words are not a PVAR command."""
     w = [x for x in words if x.upper() != "<GO>"]

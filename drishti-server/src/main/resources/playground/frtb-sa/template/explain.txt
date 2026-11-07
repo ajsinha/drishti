@@ -15,8 +15,8 @@
 # The Explain tab of the FRTB-SA Playground workbook, one entry a row: a line "## <title>" then its text (lines starting with "#" are
 # dropped; the text lines of an entry are joined with spaces). Same format as playground/var/template/explain.txt, read by
 # PlaygroundTemplate.explain(). {Name} and {Name:v} cell references are added when the generator names Main's cells; until then the
-# entries name the tab and the column, never a cell. The design is docs/architecture/SENSITIVITIES_AND_FRTB_SA.md (sections 4 to 7, 12.1,
-# 13.1 for the worked numbers, 16 for the decisions). The entries come in three parts: the idea in plain words, the steps with one worked
+# entries name the tab and the column, never a cell. The method is docs/guides/FRTB_SA_GUIDE.md (sections 4 to 6, 8.3,
+# 10 for the worked numbers). The entries come in three parts: the idea in plain words, the steps with one worked
 # number each, and every term of every tab.
 ## In plain words: what this workbook answers
 FRTB-SA answers one question: "how much capital must the bank set aside for the market risk of this trading book, by the regulator's own standard formula?" It does not simulate past days, as VaR does. It starts from the book's sensitivities (how much each position gains or loses when one market factor, such as the 10-year US dollar rate or the price of an equity index, moves by a small standard step), multiplies each by a risk weight the regulator sets (how far that factor could plausibly move in a stress), and then adds the weighted figures up with the regulator's correlations, so that hedges offset only as far as the rules allow. On top of that come two smaller charges: the default risk charge, for the loss if an issuer of a bond or the name behind a credit default swap defaults outright, and the residual risk add-on, for exotic risks no sensitivity captures. Every one of those steps is a plain Excel formula here, so any figure can be followed back to its inputs, an input can be changed and the result watched, and every result is compared with Drishti's engine to the cent (Main, Checks).

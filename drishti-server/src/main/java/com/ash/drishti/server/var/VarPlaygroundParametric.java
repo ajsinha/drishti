@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The VaR Playground's Parametric tab (the parametric measure) (docs/architecture/PARAMETRIC_VAR.md section 10). The engine's parametric
+ * The VaR Playground's Parametric tab (the parametric measure) (docs/guides/VAR_GUIDE.md section 18.16). The engine's parametric
  * figures for the playground's portfolio and its positions (the check cells' right-hand side), the grid's extra columns and the explanation's
  * steps for the screen, and the workbook's <b>Parametric</b> tab: the named inputs and results ({@code PConfidence}, {@code PEsConfidence},
  * {@code PWeighting}, {@code PLambda}, {@code PN}, {@code PMu}, {@code PSigma}, {@code PZ}, {@code PEsFactor}, {@code PVaR}, {@code PES}) beside

@@ -348,7 +348,7 @@ in these packs are shown inside the bank; showing Drishti World outside it needs
 - Views: Terminal, Search, Forms, Functions, Data map, Reports, Workspaces, Monitors, Alerts; no VaR, Exposure or Build;
 - the command line suggests `ECON CAN`, `NEWS rates`, `USEQ AAPL`, `LEIC US`, `FUND SPY`; `FUNC` lists the packs' 32 commands; `VAR` and
   `SMAT` (the scenario matrix) say they are not part of Drishti World;
-- Help shows Knowledge (Economies; Companies, funds and ETFs; Entities and ownership), Start, Use, BI, Data and Operate;
+- Help shows Knowledge (the World and Data primers), Start, Use, BI, Data and Operate;
 - BI offers the world-economy datasets (`world-economics-economies`, `region-economics-regions`) and their reports.
 
 **Its landings** (the links at the top of Home switch; your choice is remembered, as in section 4):
@@ -397,7 +397,7 @@ builds it).
 - Views: Terminal, Search, Forms, Functions, Data map, Reports, Workspaces, Monitors, Alerts; no VaR, Exposure or Build;
 - the command line suggests `CRV CRV-USD-OIS`, `FXV FXV-EURUSD`, `IRV IRV-USD`; `FUNC` lists the pack's 22 commands; `VAR` says it is not
   part of Drishti Market, and so do `SMAT` (the scenario matrix), `TRD`, `CPTY` and `ECON`;
-- Help shows Knowledge (Market data), Start, Use, BI, Data and Operate;
+- Help shows Knowledge (the Data primer), Start, Use, BI, Data and Operate;
 - BI offers no VaR, exposure or world item: the market-data pack ships no BI dataset yet, so only its themes until one named
   `market-data-...` is added.
 
@@ -448,7 +448,7 @@ or open it as a lens: it is the fourth of the default lenses (`drishti.lenses: r
   `COLL` and `ECON` say they are not part of Drishti Trading;
 - `SMAT BOOK BOOK-RATES-1 20` opens the scenario matrix: the book's scenarios across its last 20 business dates, and a trade's,
   position's and the VaR page's **Scenario matrix** link opens it too ([VAR_GUIDE.md section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat));
-- Help shows Knowledge (Trades and products, Market risk, Counterparty credit risk, Entities and ownership, Market data), Start, Use, BI,
+- Help shows Knowledge (the Risk and Data primers), Start, Use, BI,
   Data and Operate;
 - BI offers the trading and VaR datasets (`trading-risk-*`, `trading-cashflows-*`, `trades-basic-trade`, `live-trading*`,
   `market-risk-var-*`), no exposure or world item.
@@ -608,7 +608,7 @@ Optional blocks: `server:` and `console:` hold raw settings of either side (a pr
 | **Menus** | Views: Terminal, Search, Functions, Data map, VaR, Exposure, Reports, Workspaces, Monitors, Alerts; BI; Admin (its pages); Help: Help centre, Knowledge, Install and run, About | Build; Forms; the competitive analysis link in the footer |
 | **Features** | BI (the edition's datasets), VaR, exposure, layouts, workspaces, monitors, alerts, reports, lakes, the data map | Calc and Python visuals, the Sutra designer, Studio, Build, Forms, AI, embedding |
 | **Home** | the Drishti Risk landings (section 7); signed out, today's Home without its general sections | the grammar, the seven stages, the capabilities, the showcase, the stats |
-| **Help** | Get started, Risk measures, Data, Operate, Reference, Knowledge (market risk, counterparty credit risk, trades, entities, market data, data and contracts) | the Analytics and BI, and Build, sections, other packs' Knowledge pages, documents not in the catalogue |
+| **Help** | Get started, Risk measures, Data, Operate, Reference, Knowledge (the glossary, the Risk and Data primers) | the Analytics and BI, and Build, sections, the World primer, documents not in the catalogue |
 | **Admin** | users, roles, packs, commands, tokens, access, connectors, artifacts, data loads, lakes, audit, net, health, caches, capacity, BI settings, ad-hoc scopes | AI, collaboration, embedding, edits, compute (404) |
 | **BI** | datasets `market-risk-var-latest`, `market-risk-var-official`, `counterparty-exposure-*` (five), `live-exposure`, `live-exposure-netting`; models `market-risk-var`, `counterparty-exposure`, `live-exposure`; the reports and boards on them | every other dataset, model, report and board |
 | **Branding** | **Drishti Risk**, with Drishti's name and eye mark | nothing, by default |
@@ -758,7 +758,7 @@ edition outside it still needs a decision.
 | **Commands** | the packs' own 32: `ECON`, `MACRO`, `FCST`, `LABR`, `FISC`, `ECG`, `REGE`, `JUR`, `PARTY`, `OFFC`, `ELEC`, `REGN`, `SOCI`; `TOPIC`, `NEWS`, `CO`, `QUOTE`; `USEQ`, `IDX`, `SIC`, `EDGAR`, `FILING`, `FACT`, `PXH`; `LEI`, `LEIG`, `LEIR`, `LEIC`, `LEIM`; `FUND`, `HELD`, `TRACK`; the words `BI`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `DATA` | `VAR`, `EXP` and every risk command; `RUPAKA` |
 | **Menus** | Views: Terminal, Search, Forms, Functions, Data map, Reports, Workspaces, Monitors, Alerts; BI; Admin; Help | VaR, Exposure, Build |
 | **Features** | BI (the edition's datasets), forms, the data map, layouts, workspaces, monitors, alerts, reports, lakes | VaR, exposure, Calc, Python visuals, the designer, Studio, Build, AI, embedding |
-| **Help** | Knowledge (Economies; Companies, funds and ETFs; Entities and ownership; the glossary; data and contracts), Start, Use, BI, Data, Operate | Build; the risk packs' Knowledge pages |
+| **Help** | Knowledge (the glossary, the World and Data primers), Start, Use, BI, Data, Operate | Build; the Risk primer |
 | **BI** | datasets `world-economics-economies`, `region-economics-regions`; models `world-economics`, `region-economics`; their reports | every other dataset, model, report and board |
 | **Admin** | as Drishti Risk | as Drishti Risk |
 | **Branding** | **Drishti World**, "Economies, markets, companies and funds from public data", Drishti's name and eye | |
@@ -814,7 +814,7 @@ helper (`core/market_landing.py`); nothing in the engines changed.
 | **Commands** | the pack's 22: `CRV`, `REPO`, `IRV`, `CPV`, `FIX`, `INF`, `INFC`; `FX`, `FXF`, `FXV`; `CDS`, `BND`; `EQ`, `EQX`, `DIV`, `EQV`, `CMD`, `CMDC`, `CMDV`; `CORR`, `CORRC`, `EQB`; the words `BI`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `DATA` | `VAR`, `EXP` and every risk and trade command; core's own (`CPTY`, `BOOK`, `CAL`, `ISS` …); `RUPAKA` |
 | **Menus** | Views: Terminal, Search, Forms, Functions, Data map, Reports, Workspaces, Monitors, Alerts; BI; Admin; Help | VaR, Exposure, Build |
 | **Features** | BI (the edition's datasets), forms, the data map, layouts, workspaces, monitors, alerts, reports, lakes | VaR, exposure, Calc, Python visuals, the designer, Studio, Build, AI, embedding |
-| **Help** | Knowledge (Market data; the glossary; data and contracts), Start, Use, BI, Data, Operate | Build; the other packs' Knowledge pages |
+| **Help** | Knowledge (the glossary, the Data primer), Start, Use, BI, Data, Operate | Build; the Risk and World primers |
 | **BI** | `market-data-*` datasets and the `market-data` model: the pack ships none yet, so BI offers its themes only | every VaR, exposure, trading and world dataset, model, report and board (an empty list would have offered them all) |
 | **Admin** | as Drishti Risk | as Drishti Risk |
 | **Branding** | **Drishti Market**, "Curves, surfaces and fixings: the bank's market data that feeds risk and valuations", Drishti's name and eye | |
@@ -890,7 +890,7 @@ their View as choice (`tradingView`). Nothing in the engines changed.
 | **Commands** | the blotter `TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`; books and positions `BOOK`, `DESK`, `TRDR`, `POS`; risk on my book `VLIM`, `VRES`, `TVAL`, `PNLV`, `HIER`, `PORT`, `DPNL`, `PNL`, `SENS`; counterparties `CPTY`, `GRP`, `NSET`, `NSMTM`, `CPMTM`, `LIM`, `XWIF`, `EXP`; market data `CRV`, `REPO`, `FIX`, `IRV`, `CPV`, `FX`, `FXF`, `FXV`, `EQ`, `EQX`, `CMD`, `CMDC`, `BND`, `CDS`; the words `VAR`, `EXP`, `BI`, `FUNC`, `WHAT`, `DATA` | regulatory (`FRTB`, `SACCR`, `CVA`, `SIMM`), stress (`SCN`, `STR`, `SSPNL`), collateral operations (`COLL`, `MC`), the exposure engine's runs, paths and official records, VaR's scenario inputs, macro economics; the words `DATAMAP`, `FORM`, `RUPAKA`. `PSUM`, `PSTRIP` and `PBOOK` (asked for) are the compute-demo **sample** pack's synthetic P&L strips, not a trading pack: left out |
 | **Menus** | Views: Terminal, Search, Functions, VaR, Exposure, Reports, Workspaces, Monitors, Alerts; Engines; one **Markets** menu (rates, vols, FX, credit, equities and commodities); Blotter, Positions, Risk, Counterparties; Help. BI and Admin by command only (`BI <GO>`; `ADMIN <GO>` and `ADMIN <page>` for administrators): configuration, `menus.top` in the edition file (product panel A19, 2026-11-06) | Forms, Data map, Build; BI and Admin in the bar |
 | **Features** | VaR, exposure, BI (the edition's datasets), layouts, workspaces, monitors, alerts, reports, lakes | Calc, Python visuals, the designer, Studio, Build, forms (as Drishti Risk), the data map, AI, embedding |
-| **Help** | Knowledge (Trades and products, Market risk, Counterparty credit risk, Entities and ownership, Market data; the glossary; data and contracts), Start, Use, BI, Data, Operate | Build; the public-data packs' Knowledge pages |
+| **Help** | Knowledge (the glossary, the Risk and Data primers), Start, Use, BI, Data, Operate | Build; the World primer |
 | **BI** | datasets `trading-risk-*`, `trading-cashflows-*`, `trades-basic-trade`, `live-trading`, `live-trading-trade`, `market-risk-var-latest`, `market-risk-var-official`; their models and reports | exposure, stress, world and market-data items |
 | **Admin** | as Drishti Risk | as Drishti Risk |
 | **Branding** | **Drishti Trading**, "Your books, your P&L and your limits, and whether the next trade fits", Drishti's name and eye | |

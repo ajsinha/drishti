@@ -343,8 +343,8 @@ Sutra `frtb-sensitivity.v1.sutra.yaml` (strip lines 35–40).
 |---|---|---|---|---|---|---|
 | Book | `BOOK` | S | F | — | — | — |
 | Sensitivities table | `SENSITIVITIES[]` (`RISK_CLASS`, `BUCKET`, `MEASURE`, `VALUE`) | S | F, **at trade grain** | per-trade sensitivities in the lake (FRTB.md section 3); today per book and bucket | trade × factor | P2 |
-| Delta charge, Vega charge, Curvature | `DELTA_CHARGE`, `VEGA_CHARGE`, `CURVATURE_CHARGE` | S | **C** (FRTB SBM, BCBS MAR21) | `WS_k = RW_k · s_k`; `K_b = sqrt(max(0, Σ WS_k² + ΣΣ ρ_kl WS_k WS_l))`; `S_b = Σ WS_k`; charge `= sqrt(Σ K_b² + ΣΣ γ_bc S_b S_c)` with the alternative `S_b` when negative; curvature from up/down revaluations (FRTB.md sections 6.1–6.4) | any scope | P1 (F18) |
-| SBM total | `TOTAL` | S | **C** | `SBM = max_{c∈{low,medium,high}} Σ_classes (Delta^c + Vega^c + Curvature^c)` (MAR21.6–7; FRTB.md section 6.5). Today `TOTAL = DELTA + VEGA + CURVATURE` on 30 of 30 (one scenario only), and `CURVATURE_CHARGE` is non-zero while no record has a curvature row (F18) | any scope | P1 |
+| Delta charge, Vega charge, Curvature | `DELTA_CHARGE`, `VEGA_CHARGE`, `CURVATURE_CHARGE` | S | **C** (FRTB SBM, BCBS MAR21) | the SBM delta, vega and curvature charges of [FRTB_SA_GUIDE section 4](../guides/FRTB_SA_GUIDE.md#4-the-sensitivities-based-method) | any scope | P1 (F18) |
+| SBM total | `TOTAL` | S | **C** | the largest of the three scenarios' totals ([FRTB_SA_GUIDE section 4.4](../guides/FRTB_SA_GUIDE.md#44-the-three-correlation-scenarios)). Today `TOTAL = DELTA + VEGA + CURVATURE` on 30 of 30 (one scenario only), and `CURVATURE_CHARGE` is non-zero while no record has a curvature row (F18) | any scope | P1 |
 | Charge by risk class | `BY_CLASS[]` | S | C | per class, binding scenario | any scope | P2 |
 
 **Never derived:** FRTB charges are not additive across books or desks (square roots of correlated sums). A derived kind may add the
@@ -410,7 +410,7 @@ UTILISATION, CVA, BY_ASSET`); NSET.md section 1 removes also `TRADE_COUNT`, `TRA
 | *(new)* Gross positive / negative | — | — | Dv | `GROSS_POS = Σ max(MTM_t, 0)`, `GROSS_NEG = Σ min(MTM_t, 0)`; `NETTING_BENEFIT = GROSS_POS − max(NET_MTM, 0)`; `NGR = max(NET_MTM,0) ÷ GROSS_POS` (0 if `GROSS_POS` = 0) (NSET.md section 6.1) | same | P2 |
 | Collateral (+ held, − posted) | `COLLATERAL` | S (= `collateral-balance.NET` on 76 of 76) | **C** (COLL) | VM: `C(ns) = Σ_{h∈held,VM} MV_h(1 − h_h) − Σ_{h∈posted,VM} MV_h(1 − h_h)` (contractual value, COLL.md section 6.5); quick win: `HELD_VALUE − POSTED_VALUE` from the balance's own positions (section 8.3) | `collateral-balance.POSITIONS[]` (holding); later `collateral-holding` + prices + `csa.ELIGIBLE` | P1 (F3) |
 | *(new)* Current exposure | — | X (`EXPOSURE_ENGINE.CE`) | C | `CE(ns) = max(NET_MTM − C − IM_held, 0)`; never netted across sets (EXPOSURE_GUIDE.md section 18.4) | NSET, COLL | — |
-| EPE (engine), PFE 95 peak (engine), exposure chart, "How the exposure was computed" | `EXPOSURE_ENGINE.*` | X | C (EXP, built) | `E(p,k) = max(V(p,k) − C(p,k) − IM, 0)`; `EE(k) = (1/P)Σ_p E(p,k)`; `PFE_q(k)` = the ⌈P·q⌉-th smallest `E(·,k)`; `EEE(k) = max(EEE(k−1), EE(k))`; `EPE = Σ_{t_k≤T} EE(k)Δt_k / T`; `EEPE` likewise on EEE; T = min(1y, longest maturity) (EXPOSURE_GUIDE.md sections 18.2–18.4; CRE53 for EEPE) | `exposure-path.MTM[]` (trade × grid date × path), `simulation-run`, `csa`, collateral | — |
+| EPE (engine), PFE 95 peak (engine), exposure chart, "How the exposure was computed" | `EXPOSURE_ENGINE.*` | X | C (EXP, built) | [EXPOSURE_GUIDE sections 18.2 to 18.4](../guides/EXPOSURE_GUIDE.md#184-statistics-of-a-scope) (CRE53 for EEPE) | `exposure-path.MTM[]` (trade × grid date × path), `simulation-run`, `csa`, collateral | — |
 | Limit (strip, chart line) | `LIMIT` | S | **remove**; read the limit from LIM | the set has no limit of its own in LIM.md: limits have a scope (counterparty, netting set, group); a netting-set limit, if wanted, is a `credit-limit` row scoped `NSET:` | `credit-limit` | P1 (F7) |
 | Utilisation | `UTILISATION` | S | **C** (LIM) | `USAGE ÷ LIMIT` with USAGE per the limit's `MEASURE` (LIM.md section 6.2); not reproducible today (F8) | LIM, EXP | P1 |
 | CVA | `CVA` | S (= `cva.CVA` on 76 of 76) | **C** (CVA) | `CVA = −LGD_C · Σ_k EE*(t_k) · ΔPD_C(k)`, `EE* = EE·DF` (CVA.md section 6.3); on the page: `EXPOSURE_ENGINE`-style figures from the CVA engine, never a stored copy | EXP, credit curve, discount curve | P2 (duplicate, F16) |
@@ -541,7 +541,7 @@ Methodology source: **ISDA SIMM Methodology** (the version named on the record),
 
 | Shown as | Field | Today | Should be | How (formula, ISDA SIMM) | Pri. |
 |---|---|---|---|---|---|
-| IM by risk class | `RISK_CLASSES[].IM` | S | **C** | per risk class r: `IM_r = DeltaMargin_r + VegaMargin_r + CurvatureMargin_r + BaseCorrMargin_r`; delta: `WS_k = RW_k · s_k · CR`, `K_b = sqrt(Σ WS_k² + ΣΣ ρ_kl f_kl WS_k WS_l)`, `DeltaMargin = sqrt(Σ K_b² + ΣΣ γ_bc g_bc S_b S_c)` | P1 |
+| IM by risk class | `RISK_CLASSES[].IM` | S | **C** | per risk class, delta + vega + curvature + base correlation margins ([SIMM_GUIDE section 5](../guides/SIMM_GUIDE.md#5-the-method)) | P1 |
 | Total IM | `TOTAL` | S (= Σ `RISK_CLASSES[].IM` on 24 of 24) | **C** | `SIMM_p = sqrt(Σ_r IM_r² + Σ_r Σ_{s≠r} ψ_rs IM_r IM_s)` per product class, `SIMM = Σ_p SIMM_p`, plus add-ons. A plain sum of risk classes ignores ψ (F20) | P1 |
 | Posted, Received | `POSTED`, `RECEIVED` | S | C | `IM_POST` (sensitivities negated, largest over the post regimes), `IM_COLLECT` (largest over the collect regimes) (SIMM.md section 6.6) | P1 |
 | Version | `VERSION` | S | F (the agreed version, from the CSA) | — | — |

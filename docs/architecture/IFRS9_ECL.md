@@ -17,7 +17,7 @@
 
 Status: design, not built. Requested by the product owner on 2026-11-02 ("put IFRS 9 expected credit loss on the roadmap; design
 first"); proposed for release 2.9.20, placement to confirm ([IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md#2920-ifrs-9-expected-credit-loss-proposed)).
-It follows the engine pattern of [SENSITIVITIES_AND_FRTB_SA.md](SENSITIVITIES_AND_FRTB_SA.md): the method with its formulas, the data
+It follows the engine pattern of [FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md): the method with its formulas, the data
 contracts, the API, command line and screens, the playground with its critique-and-reproduce switches, hand-built cases, parameters as
 configuration and the decisions.
 
@@ -245,7 +245,7 @@ the coverage ratio (allowance ÷ gross carrying amount) for each; the stage-2 sh
 credit risk grade and stage.
 
 **Cluster.** Facilities are sharded by facility id; each owner computes its shard's facility ECLs and partial sums per requested cut; the
-coordinator adds the partials in shard order (the same equality rule as the VaR sums, [VAR_SHARDING.md](VAR_SHARDING.md)).
+coordinator adds the partials in shard order (the same equality rule as the VaR sums, [CLUSTER_DEPLOYMENT.md section 5](CLUSTER_DEPLOYMENT.md#5-var-sharding-in-depth-built)).
 
 ## 11. Why the provision moved
 
@@ -408,7 +408,7 @@ ledger posting and the IFRS 7 notes; the ledger posting itself stays with the ba
 ## 15. The playground and its workbook
 
 Every calculation ships with its playground and an Excel workbook of live formulas equal to the engine to the cent
-([VAR_PLAYGROUND.md section 13](VAR_PLAYGROUND.md#13-the-playground-family-and-the-rule)). `PLAY ECL` opens the VaR Playground's frame
+([VAR_GUIDE.md section 18.16](../guides/VAR_GUIDE.md#1816-the-var-playgrounds-workbook-formula-by-formula)). `PLAY ECL` opens the VaR Playground's frame
 (the grid, the tall explanation panel, the formula bar, the export) on up to a configurable number of facilities (default 50) or one
 segment summarised.
 
@@ -430,7 +430,7 @@ segment summarised.
 
 ### 15.2 Critique and reproduce: the method choices as switches
 
-As [SENSITIVITIES_AND_FRTB_SA.md section 12.1a](SENSITIVITIES_AND_FRTB_SA.md#121a-critique-and-reproduce-the-method-choices-as-switches):
+As [FRTB_SA_GUIDE.md section 8.1](../guides/FRTB_SA_GUIDE.md#81-critique-the-choices-panel):
 every choice is a named switch on the *Choices* panel and on the Config tab, the alternative computed side by side with the difference
 explained per facility and step.
 

@@ -31,7 +31,7 @@ import java.util.TreeMap;
 import java.util.function.Consumer;
 
 /**
- * The VaR Playground's workbook (docs/architecture/VAR_PLAYGROUND.md sections 6 to 9), generated for the positions chosen: Main (the named
+ * The VaR Playground's workbook (docs/guides/VAR_GUIDE.md section 18.16), generated for the positions chosen: Main (the named
  * inputs, the results beside the engine's with a check each, every confidence, the per-position table, the check band), Config (one row a
  * position), Data (values only: the scenario PVs or P&amp;L as delivered, and Rest of scope), FX (one column a currency), PnL (every cell a
  * formula), Explain and Provenance. Positions are columns while they fit (16,384 columns), rows beyond. Every formula comes from here,
@@ -52,7 +52,7 @@ final class VarPlaygroundBook {
     static final List<String> SERIES = List.of("Portfolio", "Rank", "Mark", "VaR window", "ES tail", "10-day sum", "10-day rank",
             "10-day VaR window", "10-day ES tail");
 
-    /** The engine's own figures, written beside the sheet's (VAR_PLAYGROUND.md section 8). Per-item arrays follow the items. */
+    /** The engine's own figures, written beside the sheet's (VAR_GUIDE.md section 18.16). Per-item arrays follow the items. */
     record Engine(double var1, double es1, int varScenario, double var10sum, double es10sum, double smoothed, List<double[]> confidences,
             List<double[]> esConfidences, double[] componentVar, double[] componentEs, double[] component10, double[] incremental,
             double diversification) {}

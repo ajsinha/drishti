@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Data contract of the position-sensitivity input (command SENS): docs/architecture/SENSITIVITIES_AND_FRTB_SA.md
-# section 2; the MR cube's D8 (docs/architecture/LENSES.md section 6.7.9). Demo data: tools/packgen/sensitivity/make_sensitivity_data.py.
+# Data contract of the position-sensitivity input (command SENS): docs/guides/FRTB_SA_GUIDE.md
+# section 3; the MR cube's D8 (docs/architecture/LENSES.md section 6.7.9). Demo data: tools/packgen/sensitivity/make_sensitivity_data.py.
 kind: position-sensitivity
 mnemonic: SENS
 pack: market-risk
@@ -428,8 +428,7 @@ notes:
   the vega risk sensitivity is VEGA × IMPLIED_VOL.'
 - 'Decided (2026-11-01 and 2026-11-02, decisions 2 and 7): curvature is revalued (CURVATURE_UP and CURVATURE_DOWN) where the source can;
   a source that cannot sends GAMMA and the curvature Drishti derives is an estimate, an analysis figure until the supervisor accepts it.'
-- 'Conventions turned into the regulatory sensitivities by Drishti (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md section 2.3): FRTB
-  s_k = DV01 × 10,000 (MAR21.8''s per-unit definition), s_k = DELTA × 100, the vega risk sensitivity VEGA × 100 × IMPLIED_VOL; SIMM takes
-  DV01 and CS01 per basis point and DELTA per one per cent as delivered.'
+- 'Drishti turns the delivered values into the regulatory sensitivities by fixed constants: FRTB_SA_GUIDE.md section 3 (FRTB) and
+  SIMM_GUIDE.md section 3.1 (SIMM).'
 review:
 - 'The due time of the full run and of intraday batches at the bank.'

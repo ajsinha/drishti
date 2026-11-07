@@ -33,7 +33,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * The playgrounds' headless LibreOffice harness (VAR_PLAYGROUND.md section 12): a workbook recalculated by {@code soffice --headless} with
+ * The playgrounds' headless LibreOffice harness (VAR_GUIDE.md section 3.10): a workbook recalculated by {@code soffice --headless} with
  * a private profile that recalculates every formula on load, and the recalculated cells read back. Every later playground's drill test
  * uses it. Skips where LibreOffice is absent (the Windows QA machine). Only one LibreOffice runs at a time on the machine: the run holds
  * {@code flock} on {@code DRISHTI_SOFFICE_LOCK} (default {@code <tmp>/drishti-soffice.lock}) when the {@code flock} command exists.

@@ -8,16 +8,15 @@
 
 *Contract version 2.0 · 2026-11-02 · **Status:** design, not built. The input contracts are written (`status: planned`) and the demo
 inputs are generated; the engine, its screens and its playground are the design to build · Method:
-[SENSITIVITIES_AND_FRTB_SA.md](../architecture/SENSITIVITIES_AND_FRTB_SA.md) · Every field, every bucket grid and the worked records:
+[FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md) · Every field, every bucket grid and the worked records:
 [section 17](#17-data-structures-frtb-and-simm) · Shared rules: [README.md](README.md) · The same sensitivities feed
 [SIMM.md](SIMM.md), [STR.md](STR.md) and [PNL.md](PNL.md)*
 
 This is the data contract of Drishti's **FRTB standardised approach** (FRTB-SA): the sensitivities-based method (SBM, Basel MAR21), the
 default risk charge for non-securitisations (DRC, MAR22) and the residual risk add-on (RRAO, MAR23). It says what an upstream team
 delivers, how Drishti checks it, what Drishti builds from it in memory, what it answers, and how an auditor follows every figure from the
-delivered sensitivity to the total. The method itself (every formula with its paragraph, the hand-built test cases, the decisions and
-the check against the rules) is in [SENSITIVITIES_AND_FRTB_SA.md](../architecture/SENSITIVITIES_AND_FRTB_SA.md); this document repeats
-each formula once, briefly, so that the contract can be read on its own.
+delivered sensitivity to the total. The method itself (every formula with its paragraph and the hand-built test cases) is in the
+[FRTB-SA guide](../guides/FRTB_SA_GUIDE.md); this document links to it rather than repeating it.
 
 **Who reads this.** The teams that run the pricing and risk systems (what to send, in which unit and sign, by when), the market-risk and
 capital teams (what Drishti computes and how it is checked), and auditors and validators (how to reproduce a figure months later).
@@ -182,15 +181,8 @@ volatilities are normal (in basis points) declares it in its load configuration,
 #### 3.2.3 From the delivered values to the regulatory sensitivities
 
 MAR21.19 to MAR21.25 define each sensitivity per unit of its factor. Drishti converts each element by a constant, in its own currency,
-and then into the reporting currency at the business date's FX, before anything is added
-([design section 2.3](../architecture/SENSITIVITIES_AND_FRTB_SA.md#23-from-the-delivered-conventions-to-the-regulatory-sensitivities)):
-
-```
-GIRR, CSR delta; equity repo      s_k = VALUE × 10,000          (DV01, IE01, CS01; DELTA of an EQ/REPO factor)    MAR21.19 to MAR21.24
-Equity spot, commodity, FX delta  s_k = VALUE × 100             (DELTA per 1 %)                                    MAR21.19 to MAR21.24
-Vega, every class                 s_k = VALUE × 100 × IMPLIED_VOL                (∂V/∂σ · σ, the vega risk sensitivity)   MAR21.25
-Curvature                         read as delivered (currency amounts), with the delta of section 6.4
-```
+and then into the reporting currency at the business date's FX, before anything is added: the constants (× 10,000 per bp, × 100 per
+1 %, vega × 100 × `IMPLIED_VOL`; curvature as delivered) are [FRTB_SA_GUIDE section 3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract).
 
 #### 3.2.4 What each risk class must deliver
 
@@ -208,7 +200,7 @@ before delivery (linear in time), never by Drishti.
 
 Every class: `CURRENCY` on every element; `SHOCK_SIZE` on every curvature element; `IMPLIED_VOL` on every vega element. A source that
 cannot revalue sends `GAMMA` on the curvature factor's name instead of the two curvature elements: the gamma of the parallel shift of
-every tenor of every curve of the factor; per-tenor gammas are accepted and summed as a second approximation (section 6.4). Inflation is
+every tenor of every curve of the factor; per-tenor gammas are accepted and summed as a second approximation ([FRTB_SA_GUIDE section 4.3](../guides/FRTB_SA_GUIDE.md#43-curvature)). Inflation is
 delivered per tenor (SIMM and the limits use the ladder); FRTB adds a currency's inflation sensitivities into one factor, as MAR21.8 treats
 inflation as a flat curve.
 
@@ -333,107 +325,28 @@ its liquidity horizon, and `SOURCE_NAMES`: the names each source system gives th
 | [`frtb-sa-sbm.yaml`](../../config/packs/market-risk/capital/frtb-sa-sbm.yaml) | SBM risk weights per class, bucket and vertex; ρ and γ; the scenario formulas; the curvature rules (factor, shock, correlation, FX divisor) | Basel MAR21 |
 | [`frtb-sa-drc-rrao.yaml`](../../config/packs/market-risk/capital/frtb-sa-drc-rrao.yaml) | LGDs, maturity floor and cap, DRC buckets and risk weights, netting rule, HBR; RRAO weights, exotic and other lists, exclusions, the product-type mapping | Basel MAR22, MAR23 |
 
-**Rules** ([design section 14](../architecture/SENSITIVITIES_AND_FRTB_SA.md#14-parameters-as-configuration)): one file per regime (Basel,
+**Rules** ([FRTB_SA_GUIDE section 12](../guides/FRTB_SA_GUIDE.md#12-parameters-as-configuration)): one file per regime (Basel,
 then a jurisdiction's variant); each names its regime, its effective date and the paragraph of every value. A filer is configured with
 its regime. The engine loads every file at start and checks it (every value present and in range, every correlation matrix symmetric with
 a unit diagonal and positive semi-definite in each scenario, every paragraph reference present); a file that fails is refused and the
 engine does not answer from it. **A changed file is a new version, never an edit of the one in force.** The file's SHA-256 is in every
 answer's provenance, in every recipe and in every official capture, which also names the version.
 
-### 6.2 Weighted sensitivity
+### 6.2 The method
 
-```
-s_k  = Σ_{positions in scope} s_k,position             (after section 3.2.3; inflation of a currency added into one factor)
-WS_k = RW_k · s_k                                       MAR21.4(3)
-```
+The engine computes from these inputs exactly the method of the [FRTB-SA guide](../guides/FRTB_SA_GUIDE.md#4-the-sensitivities-based-method),
+the one home of its formulas: the sensitivities netted per factor across the scope (inflation of a currency into one factor), weighted,
+aggregated within and across buckets ([section 4.1](../guides/FRTB_SA_GUIDE.md#41-delta), [4.2](../guides/FRTB_SA_GUIDE.md#42-vega)),
+curvature from the two revaluations or a gamma ([4.3](../guides/FRTB_SA_GUIDE.md#43-curvature)), the three correlation scenarios and the
+SBM ([4.4](../guides/FRTB_SA_GUIDE.md#44-the-three-correlation-scenarios)), the alternative specification
+([4.5](../guides/FRTB_SA_GUIDE.md#45-the-alternative-specification)), contributions ([4.6](../guides/FRTB_SA_GUIDE.md#46-contributions)),
+the DRC ([section 5](../guides/FRTB_SA_GUIDE.md#5-the-default-risk-charge)) and the RRAO
+([section 6](../guides/FRTB_SA_GUIDE.md#6-the-residual-risk-add-on)). **Total FRTB-SA = SBM + DRC + RRAO.**
 
-### 6.3 Delta and vega: within and across buckets
-
-```
-K_b = sqrt( max( 0, Σ_k WS_k² + Σ_k Σ_{l≠k} ρ_kl · WS_k · WS_l ) )                     MAR21.4(4)
-other-sector buckets (CSR 16, equity 11): K_b = Σ_k |WS_k|                              MAR21.56, MAR21.79
-S_b = Σ_k WS_k
-Charge = sqrt( Σ_b K_b² + Σ_b Σ_{c≠b} γ_bc · S_b · S_c )                                MAR21.4(5)(a)
-if the sum under the root is negative: S_b = max( min( Σ_k WS_k, K_b ), −K_b ) and again   MAR21.4(5)(b), the alternative specification
-```
-
-The risk weights, ρ and γ per class are in the parameter file and summarised in
-[section 17.3](#173-the-bucket-grids). **Vega** uses the same steps with the vega risk weight
-`min(55 % · sqrt(LH / 10), 100 %)` (MAR21.92) and the vega correlations (MAR21.93 for GIRR, MAR21.94 for the others: the option-maturity
-correlation `exp(−1 % · |T_k − T_l| / min(T_k, T_l))` times the delta correlation of the underlyings, capped at 1).
-
-**GIRR within a bucket** (decision 10): the tenor correlation is taken from the **published table** of MAR21.46 (rounded to 0.1 %) by
-default; the exact formula `max(exp(−3 % · |T_k − T_l| / min(T_k, T_l)), 40 %)` behind it is a switch (section 9.7).
-
-### 6.4 Curvature
-
-For each curvature factor *k* (a currency for GIRR, an issuer for CSR, a commodity curve, an equity or FX spot), summed over the
-positions *i* of the scope (MAR21.5(2)):
-
-```
-CVR_k+ = − Σ_i ( CURVATURE_UP_ik   − RW_k · s_ik )
-CVR_k− = − Σ_i ( CURVATURE_DOWN_ik + RW_k · s_ik )
-RW_k · s_ik:  GIRR, CSR   Σ_tenors DV01 (or CS01) × SHOCK_SIZE in bp
-              commodity   Σ_tenors DELTA × 100 × SHOCK_SIZE
-              equity, FX  DELTA × 100 × SHOCK_SIZE
-K_b± = sqrt( max( 0, Σ_k max(CVR_k±, 0)² + Σ_k Σ_{l≠k} ρ_kl² · CVR_k± · CVR_l± · ψ(CVR_k±, CVR_l±) ) )    ψ = 0 when both < 0, else 1
-K_b  = max( K_b+, K_b− )   the side: up when K_b+ > K_b−, down when K_b− > K_b+; on a tie up when Σ CVR+ > Σ CVR−, else down
-Curvature = sqrt( max( 0, Σ_b K_b² + Σ_b Σ_{c≠b} γ_bc² · S_b · S_c · ψ(S_b, S_c) ) ),   S_b = Σ_k CVR_k of the side chosen
-```
-
-The side is chosen per bucket **and per scenario**. The correlations are the delta ones **squared first, then the scenario applied**
-(MAR21.100, MAR21.101), with only the dimensions curvature keeps (ρ_name for CSR, ρ_commodity for commodity). Other-sector buckets:
-`K_b = max( Σ max(CVR+, 0), Σ max(CVR−, 0) )`. **FX ÷ 1.5** (MAR21.98, decisions 6 and 9): CVR+ and CVR− of FX options that do not
-reference the reporting currency are divided by 1.5 by default; every FX instrument only with the supervisor's approval (a second
-setting, off).
-
-**Curvature estimated from gamma** (decisions 2 and 7). Where a source sends `GAMMA` instead of the two revaluations:
-`CVR_k+ ≈ CVR_k− ≈ −½ · Γ_k · h_k²`, h the shock in the delta's unit (170 bp for GIRR, 15 for a 15 % spot shock). It is an **estimate**,
-labelled so on every screen and export, and an **analysis figure until the supervisor accepts it for the filing** (MAR21.17 and its
-FAQ); where both exist, the playground shows it beside the revalued figure.
-
-### 6.5 The three scenarios and the SBM
-
-```
-medium  ρ           high  min(1.25 · ρ, 1)           low  max(2 · ρ − 1, 0.75 · ρ)          every ρ and γ, MAR21.6
-SBM(s) = Σ_classes ( Delta_class(s) + Vega_class(s) + Curvature_class(s) )
-SBM    = max( SBM(low), SBM(medium), SBM(high) )                                            MAR21.7; the binding scenario is named
-```
-
-The three are compared only after the classes are added, never class by class. A desk computed as a standalone portfolio compares its
-scenarios at the desk (MAR21.7(2)(b)).
-
-### 6.6 Default risk charge (MAR22, non-securitisations)
-
-```
-JTD_long  = max( LGD · NOTIONAL + (MARKET_VALUE − NOTIONAL), 0 )      JTD_short = min( same, 0 )          MAR22.9 to MAR22.14
-LGD: senior 75 %, non-senior and equity 100 %, covered bond 25 %, none where RECOVERY_INDEPENDENT        MAR22.12
-scaled    = JTD · min( max( M_years, 0.25 ), 1 )    cash equity: 0.25 or 1, the bank's choice                MAR22.15 to MAR22.18
-net per obligor: a short offsets a long of the same obligor when the short's seniority is the same or lower   MAR22.19 to MAR22.21
-HBR_b     = Σ net long / ( Σ net long + Σ |net short| )                                                      MAR22.23 (unweighted)
-DRC_b     = max( Σ RW · net long − HBR_b · Σ RW · |net short|, 0 )                                           MAR22.25
-DRC       = Σ_b DRC_b      no hedging across buckets                                                          MAR22.26
-RW: AAA 0.5 %, AA 2 %, A 3 %, BBB 6 %, BB 15 %, B 30 %, CCC 50 %, unrated 15 %, defaulted 100 %              MAR22.24
-```
-
-### 6.7 Residual risk add-on (MAR23)
-
-`RRAO = Σ gross notional × 1.0 %` (exotic underlying) `+ Σ gross notional × 0.1 %` (other residual risks), after the exclusions: a
-back-to-back trade and its exact third-party match entirely; a listed or centrally clearable instrument from the other-residual part only.
-Fully additive. **Total FRTB-SA = SBM + DRC + RRAO.**
-
-### 6.8 Contributions
-
-Within a scenario the SBM is homogeneous of degree one in the weighted sensitivities, so a part's contribution is
-`Σ_k WS_k(part) · ∂SBM/∂WS_k` (the gradient at the scope, in the binding scenario), and the parts' contributions add up to the charge.
-At a kink (a floor at zero, a curvature side switch, the alternative specification) the gradient is one-sided: the answer says
-*contributions scaled to add up* and scales them, as VaR's component VaR. DRC contributions follow each obligor's share of its bucket's
-charge; RRAO is additive.
-
-### 6.9 The method choices (switches)
+### 6.3 The method choices (switches)
 
 Every choice the method makes is a named switch with its decided default
-([design section 12.1a](../architecture/SENSITIVITIES_AND_FRTB_SA.md#121a-critique-and-reproduce-the-method-choices-as-switches)):
+([FRTB_SA_GUIDE section 8.1](../guides/FRTB_SA_GUIDE.md#81-critique-the-choices-panel)):
 
 | Switch | Default (decided) | Alternatives | Rule |
 |---|---|---|---|
@@ -458,7 +371,7 @@ explain. About 100,000 to 250,000 factors in a large bank (30 currencies × 3 cu
 
 ### 7.2 The sensitivity store (shared)
 
-Built at load, indexed like the VaR vectors (design section 2.4):
+Built at load, indexed like the VaR vectors:
 
 | Structure | Content | Size at 2.3 M positions × 20 elements (estimate) |
 |---|---|---|
@@ -472,7 +385,7 @@ Built at load, indexed like the VaR vectors (design section 2.4):
 **A scope's netted sensitivities** are accumulated into a dense float64 array indexed by factor ordinal (2 MB at 250,000 factors; one per
 thread), in position-ordinal order, then compacted to the non-zero factors and grouped by class and bucket. In a cluster, each owner sums
 its shards and the coordinator adds the partial sums in shard order, then applies the formula once
-([VAR_SHARDING.md](../architecture/VAR_SHARDING.md)).
+([CLUSTER_DEPLOYMENT.md section 5](../architecture/CLUSTER_DEPLOYMENT.md#5-var-sharding-in-depth-built)).
 
 ### 7.3 Load
 
@@ -552,10 +465,10 @@ A restatement after the capture makes a new capture version; the first stays.
 ### 9.7 The playground: recipes and the workbook
 
 `PLAY FRTB <scope>` opens the scope in the VaR Playground's frame
-([design section 12.1](../architecture/SENSITIVITIES_AND_FRTB_SA.md#121-frtb-sa-playground-play-frtb)): up to a configurable number of
+([FRTB_SA_GUIDE section 8](../guides/FRTB_SA_GUIDE.md#8-the-frtb-sa-playground-play-frtb)): up to a configurable number of
 factors (default 2,000; beyond it the export states its size and offers one class at a time).
 
-**A recipe** makes every playground run reproducible ([design section 12.1a](../architecture/SENSITIVITIES_AND_FRTB_SA.md#121a-critique-and-reproduce-the-method-choices-as-switches)):
+**A recipe** makes every playground run reproducible ([FRTB_SA_GUIDE section 8.2](../guides/FRTB_SA_GUIDE.md#82-reproduce-recipes)):
 
 | Part | Holds |
 |---|---|
@@ -563,7 +476,7 @@ factors (default 2,000; beyond it the export states its size and offers one clas
 | `SCOPE`, `BUSINESS_DATE`, `FILER` | what was computed |
 | `INPUTS[]` | per input table (`position-sensitivity`, `risk-factor`, `default-risk`, `residual-risk`, FX, the hierarchy): the table format (Delta or Iceberg), its version, the batch ids used |
 | `PARAMETERS[]` | per parameter file: its name, regime, version and SHA-256 |
-| `SWITCHES` | every switch of section 6.9 with its value |
+| `SWITCHES` | every switch of section 6.3 with its value |
 | `OVERRIDES[]` | each override: the parameter's path, the value, who typed it and why |
 | `ENGINE_VERSION` | the engine's version |
 | `RESULT_DIGEST` | the SHA-256 of the figures, so a replay proves byte equality |
@@ -676,7 +589,7 @@ The engine is validated against the hand-built cases of section 15 and against t
 
 ## 15. A worked example
 
-The design's hand-built cases 1 to 5 ([design section 13.1](../architecture/SENSITIVITIES_AND_FRTB_SA.md#131-hand-built-cases)), small
+The hand-built cases 1 to 5 ([FRTB_SA_GUIDE section 10](../guides/FRTB_SA_GUIDE.md#10-the-hand-built-cases)), small
 enough for a calculator. They are also the engine's unit tests, the playground's check cells and the numbers of the Explain tab.
 
 **GIRR delta (cases 1 and 2).** USD is a specified currency, so `RW = 1.1 % / √2 = 0.777817 %` at 5Y and 10Y and `1.3 % / √2` at 2Y.
@@ -712,14 +625,14 @@ exotic: 100,000. **RRAO = 150,000.**
 **The GIRR correlation switch.** The cases compute ρ(5Y, 10Y) by the exact formula (0.970446), the alternative of the `girr-correlation`
 switch. With the default, the published MAR21.46 table's 97.0 % (low 94.0 %), K_USD is 115,106.47 (low), 115,892.19 (medium), 116,672.62
 (high), Δ_GIRR 110,555.42, 101,286.72 and 91,079.64, the SBM 140,555.42 (low, binding) and the total **416,732.74**: the difference of
-24.37 is the kind of figure the playground's compare view explains (section 6.9).
+24.37 is the kind of figure the playground's compare view explains (section 6.3).
 
 The input records of this example, as an upstream team would send them, are in
 [section 17.10](#1710-worked-json-lines-examples).
 
 ## 16. Open questions and decisions
 
-**Decided** (product owner, 2026-11-01 and 2026-11-02; [design section 16](../architecture/SENSITIVITIES_AND_FRTB_SA.md#16-decisions)):
+**Decided** (product owner, 2026-11-01 and 2026-11-02):
 curvature from gamma accepted and labelled an estimate, an analysis figure until the supervisor accepts it (2, 7); rates vega in
 lognormal points by default, normal declared per source (3); Basel MAR21 to MAR23 first, then OSFI CAR chapter 9 (4); credit indices one
 SIMM qualifier (5); FX curvature ÷ 1.5 on by default for options not referencing the reporting currency, every FX instrument only with

@@ -104,7 +104,7 @@ def render_headline(h: dict, say) -> None:
     for w in p.get("warnings") or []:
         say(f"  warning: {w}")
     pm = h.get("parametric")
-    if pm:                                                              # PVAR (PARAMETRIC_VAR.md): the cross-check, never official
+    if pm:                                                              # PVAR (VAR_GUIDE.md section 18.15): the cross-check, never official
         gp = pm.get("gapPct")
         say(f"  parametric VaR {money(pm.get('var'))} {cur} = z·σ − μ = {pm.get('z', 0):.4f} × {money(pm.get('sigma'))} − ({money(pm.get('mu'))})   "
             f"ES {money(pm.get('es'))}   fat-tail gap {'+' if (pm.get('gap') or 0) >= 0 else ''}{money(pm.get('gap'))}"
@@ -343,7 +343,7 @@ def matrix_csv(m: dict) -> str:
 
 
 def render_shards(s: dict, say) -> None:
-    """VaR sharding across Drishti*net (docs/architecture/VAR_SHARDING.md): the settings, the members, the date's shards and their owners."""
+    """VaR sharding across Drishti*net (docs/architecture/CLUSTER_DEPLOYMENT.md section 5): the settings, the members, the date's shards and their owners."""
     if not s.get("enabled"):
         say(f"VaR sharding is off ({s.get('origin')}): every date is loaded whole on each server"
             + (f"; {s['problem']}" if s.get("problem") else ""))
@@ -788,7 +788,7 @@ def register(groups, srv, ctx: dict) -> None:
     pg.add_argument("--count", default="500", help="positions in the workbook: 100, 500 (default), 1000, 10000 or all; the rest in Rest of scope")
     pg.add_argument("--estimate", action="store_true", help="each export size's estimated file size, recalculation time and the applications that open it")
     pg.add_argument("--measure", choices=["historical", "parametric"], default="historical",
-                    help="parametric: the playground's Parametric tab, the parametric figures and the workbook's Parametric tab (PARAMETRIC_VAR.md section 10)")
+                    help="parametric: the playground's Parametric tab, the parametric figures and the workbook's Parametric tab (VAR_GUIDE.md section 18.16)")
     ex = sub.add_parser("explain", help="why VaR moved (VAR EXPLAIN, VAR_GUIDE.md section 3.11): the change between two business dates in "
                         "causes that add up exactly (restatement, hierarchy, trades out, the window, the market, trades in), with who drove each",
                         parents=[srv])

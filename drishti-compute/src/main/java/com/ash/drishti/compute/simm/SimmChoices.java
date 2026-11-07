@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * The SIMM method choices as named switches (docs/contracts/SIMM.md section 6.9, SENSITIVITIES_AND_FRTB_SA.md section 12.1a): the
+ * The SIMM method choices as named switches (docs/contracts/SIMM.md section 6.9, SIMM_GUIDE.md section 8.1): the
  * concentration thresholds and the historical volatility ratios as the version sets them, or switched off to see what they add; the
  * parameter version is chosen beside them (the CSA's by default, another installed version for a recalibration date). Typed overrides of
  * any parameter ({@code key → value}) make every figure "not the regulatory figure".

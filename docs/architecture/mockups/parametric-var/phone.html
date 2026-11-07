@@ -15,8 +15,8 @@
   See the LICENSE file in the root of this repository for the full terms.
 
   A screen mock-up (parametric-var/phone.html), self-contained: system fonts, everything inline, nothing from a CDN.
-  Dark theme by default; open it with #light for the light theme. The design and its build checklist:
-  docs/architecture/PARAMETRIC_VAR.md (section 14). Synthetic numbers, internally consistent: every parametric figure is
+  Dark theme by default; open it with #light for the light theme. The method as built:
+  docs/guides/VAR_GUIDE.md (section 18.15). Synthetic numbers, internally consistent: every parametric figure is
   z·σ − μ of the σ and μ shown (z = 2.3263 at 99%), the components add up to the parent to the unit.
 -->
 <html lang="en">
@@ -90,5 +90,5 @@ footer{font-size:11px;color:var(--muted);line-height:1.5}
 <div class="sheet"><div class="tip"><div class="t">Parametric VaR 99% · 1 day · the bank</div><div class="xcl">A cross-check, not the official VaR. The official figure is historical: 158,495,340.</div><dl><dt>Weighting</dt><dd>equal (1/n each); EWMA off</dd><dt>Confidence</dt><dd>99% → z = 2.3263 (the normal's 99th percentile)</dd><dt>μ (mean P&L)</dt><dd>−211,407</dd><dt>σ (st. dev.)</dt><dd>54,240,760 (sample, n − 1)</dd></dl><div class="f">VaR = z·σ − μ<br>&nbsp;&nbsp;&nbsp;&nbsp;= 2.3263 × 54,240,760 − (−211,407)<br>&nbsp;&nbsp;&nbsp;&nbsp;= 126,182,877 + 211,407 = <b>126,394,284</b><br>ES&nbsp; = σ·φ(z<sub>97.5</sub>)/(1 − 0.975) − μ = 54,240,760 × 2.3378 − (−211,407) = <b>127,015,607</b></div><div class="g"><b>Historical VaR</b> (6th worst of 509): 158,495,340<br><b class='warn'>Fat-tail gap</b> = historical − parametric = +32,101,056 (+25.4% of parametric).<br>Positive: the scope's real tail is heavier than a normal with the same σ (skew −0.73, excess kurtosis +3.20), so the normal understates the loss. Negative: the worst days were milder than a normal predicts.</div><div class="foot">Computed in the server (VaR engine), never in the browser · provenance: pnl-vector batch MR-2026-09-30-EOD · <a href="#">Open PLAY PVAR</a> · <a href="#">Guide: VAR_GUIDE 18.15</a></div></div></div>
 </div>
 <footer>Mock-up for the product owner, 2026-11-03 · synthetic numbers (a fat-tailed sample of 509 scenario days, five desks), consistent across every panel ·
-Design: docs/architecture/PARAMETRIC_VAR.md · Copyright (c) 2026 Ashutosh Sinha. All rights reserved.</footer>
+Design: docs/guides/VAR_GUIDE.md section 18.15 · Copyright (c) 2026 Ashutosh Sinha. All rights reserved.</footer>
 </div></body></html>

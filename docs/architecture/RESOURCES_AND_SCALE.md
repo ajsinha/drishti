@@ -25,7 +25,7 @@ This is the single design for how Drishti uses memory, CPU and disk, how its cac
 how it scales. Where it overlaps an older document, this one decides; the older one keeps its detail and links here:
 [ARCHITECTURE.md section 14](ARCHITECTURE.md#14-concurrency-and-performance) (concurrency),
 [section 16.2](ARCHITECTURE.md#162-choosing-a-data-mechanism) and [16.3](ARCHITECTURE.md#163-how-memory-mapped-data-follows-the-lake),
-[VAR_SHARDING.md](VAR_SHARDING.md) (the shard machinery), [VAR_GUIDE.md sections 25 to 27](../guides/VAR_GUIDE.md#25-one-business-date-in-memory)
+[CLUSTER_DEPLOYMENT.md section 5](CLUSTER_DEPLOYMENT.md#5-var-sharding-in-depth-built) (the shard machinery), [VAR_GUIDE.md sections 25 to 27](../guides/VAR_GUIDE.md#25-one-business-date-in-memory)
 (the VaR date in memory and the hot file), [EXPOSURE_GUIDE.md section 26](../guides/EXPOSURE_GUIDE.md#26-one-date-in-memory-and-the-hot-file),
 [DELTA_CONNECTOR.md section 9](../connectors/DELTA_CONNECTOR.md#9-memory), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-d-scale-strategy-millions-of-trades-fast-in-a-bounded-heap),
 [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md#appendix-e-super-scale-500-gb-of-json-a-day-for-seven-years-design-not-built), [BENCHMARK.md](../admin/BENCHMARK.md), [PERFORMANCE.md](../admin/PERFORMANCE.md) and
@@ -66,7 +66,7 @@ come from the same model as this document ([section 2.3](#23-sizes-at-bank-scale
 | P4 | **Shard what grows with the bank** | Rows split across owners; anything every member needs must be small or mapped. Adding servers must reduce per-server memory, not copy it |
 | P5 | **Measure before changing** | Every D and O item starts from a JFR recording and a heap histogram of the 200K benchmark ([section 10](#10-benchmark-profiling-and-soak-method)) and ends with the same measurement; a change that does not move its number is reverted |
 | P6 | **Java 21 and 25 both supported** | The build targets 21 (`pom.xml`, `maven.compiler.release` 21); no 25-only API; a 25-only gain (compact object headers, no pinning in `synchronized`) is switched on only when the JVM is 25, as the Docker image does (`deploy/docker/server.Dockerfile`, its `ENTRYPOINT`) |
-| P7 | **VaR equal to the bit across shards** | A node's VaR is its float64 aggregate on every member ([VAR_SHARDING.md section 13](VAR_SHARDING.md#13-decisions)); no memory or CPU change may alter a summation order that this depends on |
+| P7 | **VaR equal to the bit across shards** | A node's VaR is its float64 aggregate on every member ([CLUSTER_DEPLOYMENT.md section 5.12](CLUSTER_DEPLOYMENT.md#512-the-machinery-measure-agnostic-and-open-items)); no memory or CPU change may alter a summation order that this depends on |
 | P8 | **Everything visible to an administrator** | Every cache, hot file, mapped file and data folder appears in Admin → Caches or Admin → Health → Disk with its size against its limit, and can be purged; nothing grows where nobody looks |
 
 **Non-goals.** A distributed cache (Redis, Hazelcast) for answers: each server's caches are local and disposable, and the cluster
@@ -149,7 +149,7 @@ VAR_GUIDE 27.3); `AGG = 8.6 MB × 23 = 0.20 GB`; `CCY = 250 MB × 23 = 5.75 GB`;
 `HOTA = 16.3 GB`, `HEAPA = 1.84 + 0.20 × 1.98 = 2.23 GB`; a load `F64A + HOTA = 27.9 + 16.3 = 44.2 GB`. The live heap of one server is
 `2 × HEAPA + 2 × HEAP_DATE + 2 (a load's sort) + 4 (the server) = 14.1 GB`, × 1.5 for the collector = **21.2 GB needed**, ÷ 0.61 (39%
 headroom) = 34.8 GB, so `-Xmx36g`; the page cache `2 × HOTA + 4 × CCY + 2 × CCYX = 78.4 GB`; one server needs 151 GB of RAM. The skeleton
-scales with positions (× 23 from 100,000) and is **not divided by sharding** ([VAR_SHARDING.md section 5.1](VAR_SHARDING.md#51-the-skeleton-in-plain-words)):
+scales with positions (× 23 from 100,000) and is **not divided by sharding** ([CLUSTER_DEPLOYMENT.md section 5.7](CLUSTER_DEPLOYMENT.md#57-shard-books-skeletons-and-putting-a-date-together)):
 this is the case for D1.
 
 **What the 800 bytes are** (read in `drishti-compute/.../var/VarBook.java` (lines 124-195)): per trade a `String` id in `tradeIds`, an entry in
@@ -351,7 +351,7 @@ version moved).
 
 **The signal is per server.** `LoadService` does not forward an announcement to Drishti\*net peers (no peer call in the class); each
 server that reads the lake must be told ([DATA_GUIDE.md, FAQ](../guides/DATA_GUIDE.md#13-faq): "announce on each"). In a sharded cluster an
-owner that is not told keeps its shard book until the coordinator asks for a newer version (VAR_SHARDING section 13).
+owner that is not told keeps its shard book until the coordinator asks for a newer version (CLUSTER_DEPLOYMENT.md section 5.12).
 
 ### 4.2 Data versions, the inputs' digest and provenance (today)
 
@@ -376,7 +376,7 @@ Every answer carries `provenance` (data version, batch, scenario set, tier).
 | BI layers | the next query: each partition records the data version it was built from | the partition's version check |
 | **an open VaR date** | **not at all while it stays open**: `VarService.load` (lines 287-300) returns the open date without comparing `loader.version(d)` with the date's; only a date refused earlier is re-checked. It is noticed when the date is evicted (`hot-dates`, 2, by date order, `evictOld`, line 582) and asked again, on a signal, on `POST /api/v1/var/reload`, or at a restart | **no TTL** |
 | an open exposure date | the same pattern (`ExposureService`) | no TTL |
-| a VaR shard book | only when a member puts the date together again or ownership moves (VAR_SHARDING section 13) | no TTL |
+| a VaR shard book | only when a member puts the date together again or ownership moves (CLUSTER_DEPLOYMENT.md section 5.12) | no TTL |
 
 So without a signal the **newest VaR date, which is always open, stays on its morning data until something drops it.** ARCHITECTURE
 section 16.3's sentence "when the connector's cache expires and the version is read again" is true of the connectors and BI, not of the
@@ -422,7 +422,7 @@ heap: `TIDS` as a `String[]`, `TCOL` and `PCOL` as `Columns` (int32 codes and di
 `AGGS` (float64 M × N). `VarBook`'s constructor (`VarBook.java` (lines 151-195)) then builds four hash maps from them: `tradeOrdinal`,
 `tradeUpper`, `positionIndex`, `positionUpper`. Measured: about 80 MB an open date of 100,000 trades (VAR_GUIDE 27.3), so about 1.84 GB
 at 2.3M and 2.23 GB with 1,518 values; copied to **every** member of a sharded cluster, coordinator and owners alike (`ShardSkeleton`,
-VAR_SHARDING section 5). It sets the owners' `-Xmx36g` ([section 2.3](#23-sizes-at-bank-scale), footnote 1).
+CLUSTER_DEPLOYMENT.md section 5.7). It sets the owners' `-Xmx36g` ([section 2.3](#23-sizes-at-bank-scale), footnote 1).
 
 What a request needs from it:
 
@@ -995,7 +995,7 @@ counterparty's profile is one owner's), bytes per row = P × G_primary × 4, a p
 owner (P × G_primary float64: 2 MB at P = 5,000, G = 50), combined by element-wise addition in shard order; the coordinator takes the
 quantiles. The skeleton per set (id, counterparty, legal entity, CSA terms, offsets: about 200 B) is tiny next to VaR's per trade, so
 copying it is fine. Its own store and assembly (`ExposureShardBooks`, `ExposureShardAssembly`) reuse `ShardMap`, `ShardOwners`,
-`ShardHandover` and `ShardGather` (VAR_SHARDING section 13). Its hot files then fall under `drishti.ccr.exposure.max-disk-gb` per owner.
+`ShardHandover` and `ShardGather` (CLUSTER_DEPLOYMENT.md section 5.12). Its hot files then fall under `drishti.ccr.exposure.max-disk-gb` per owner.
 
 ### 9.4 Console scale, and the sticky-session gap
 
@@ -1127,18 +1127,18 @@ days, M up to a week, L more.
 | 1 | D6 the renderer (both phases) | — | L | CLIENT_RENDERER (new), ARCHITECTURE 17, MOBILE_DISPLAY |
 | 2 | the 200K benchmark with profiling, on 21 and 25, both collectors (BENCHMARK 4) | 1 | M | BENCHMARK, this document's figures |
 | 3a | D10 pinning fixes, the exposure paths key, engine loads off the common pool | 2 | S | PERFORMANCE (pinning) |
-| 3b | D4 releases with the date (with soak-proofing's views, books, id maps) | 2 | M | VAR_SHARDING 13, DELTA_CONNECTOR 6.2 and 9 |
+| 3b | D4 releases with the date (with soak-proofing's views, books, id maps) | 2 | M | CLUSTER_DEPLOYMENT.md section 5.12, DELTA_CONNECTOR 6.2 and 9 |
 | 3c | D3 one cache budget, the start-up check, the guard test | 3b | M | DELTA_CONNECTOR 9, SCALE_STRATEGY 5, CONFIGURATION |
 | 3d | O1 Admin → Caches details (needs D3's registry) | 3c | M | ADMIN_GUIDE, OPERATIONS |
 | 3e | O2 purge a date, O3 reload a date, O4 announce a load in the UI, O9 the version watch | 3d | M | DATA_LOADS, VAR_GUIDE 26, EXPOSURE_GUIDE 26, CLI_GUIDE |
 | 3f | O5 disk budget and the free-space guard, O6 id-map versions, O7 Health → Disk, 7.4 temp files and dumps | 3b | M | OPERATIONS, TROUBLESHOOTING (`DRS-5218`), EXPOSURE_GUIDE 27.3 |
-| 3g | D1 the mapped skeleton (after the profile confirms footnote 2) | 2 | L | VAR_GUIDE 25 to 27, VAR_SHARDING 5.1, the capacity slides |
+| 3g | D1 the mapped skeleton (after the profile confirms footnote 2) | 2 | L | VAR_GUIDE 25 to 27, CLUSTER_DEPLOYMENT.md section 5.7, the capacity slides |
 | 3h | D2, only if the histogram after D1 still shows it | 3g | S | VAR_GUIDE 27.1 |
 | 3i | D5 compact headers in every launcher, the GC per role | 2 | S | PERFORMANCE, OPERATIONS 7, the launcher test |
 | 3j | D7 fewer JSON passes and Arrow for large tables (after 1) | 1 | M | DATA_FORMATS 6, ARCHITECTURE 16.1 |
 | 3k | D8 cold loads | 2 | M | DATA_ARCHITECTURE.md section 11, VAR_GUIDE 27 |
 | 3l | D9 logging and rotation | — | S | OPERATIONS, the stack's README |
-| 3m | the fixed reduction order (6.7), if decided | 2 | S | VAR_GUIDE 25, VAR_SHARDING 12 |
+| 3m | the fixed reduction order (6.7), if decided | 2 | S | VAR_GUIDE 25, CLUSTER_DEPLOYMENT.md section 5.10 |
 | 4 | the benchmark again: the figures marked to be measured, for both decks | 3 | M | BENCHMARK, this document 9.5 |
 | 5 | O8 the soak (and the soak audit's remaining H and M items) | 3, 4 | M | PERFORMANCE (soak), BENCHMARK 13 |
 | 6 | the small fixes | 5 | S | — |

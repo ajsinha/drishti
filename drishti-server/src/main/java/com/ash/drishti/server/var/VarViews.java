@@ -59,7 +59,7 @@ final class VarViews {
         return svc;
     }
 
-    /** Parametric VaR beside historical (PARAMETRIC_VAR.md; null or off: no parametric block). */
+    /** Parametric VaR beside historical (VAR_GUIDE.md section 18.15; null or off: no parametric block). */
     private VarParametric parametric;
 
     VarViews parametric(VarParametric p) {
@@ -259,7 +259,7 @@ final class VarViews {
         out.put("lens", lensNote(s));
         Map<String, Object> pBlock = pHeadline(s);
         if (pBlock != null) {
-            out.put("parametric", pBlock);                             // the cross-check beside historical (PARAMETRIC_VAR.md section 6)
+            out.put("parametric", pBlock);                             // the cross-check beside historical (VAR_GUIDE.md section 18.15)
         }
         if (lens(s).stressed()) {                                      // the 12-week average over the node's official records
             out.put("stressAverage", stressAverage(s));
@@ -450,7 +450,7 @@ final class VarViews {
         m.put("cache", s.cached() ? "hit" : "miss");
         m.put("loadedMs", s.date().loadMs());
         if (s.shards() != null) {
-            m.put("shards", s.shards());                              // a sharded date (VAR_SHARDING.md): the shards asked, who answered
+            m.put("shards", s.shards());                              // a sharded date (CLUSTER_DEPLOYMENT.md section 5): the shards asked, who answered
         }
         return m;
     }
@@ -642,7 +642,7 @@ final class VarViews {
                 total[0] = runs.size();
                 Sizer z = new Sizer(b);
                 int[] keep = largest(runs, max, r -> z.position(s.set(), r[0])).stream().mapToInt(r -> r[0]).toArray();
-                out.addAll(b.readAhead(s.set(), keep, new int[0], () -> {  // one call per remote shard, not one per position (VAR_SHARDING 15)
+                out.addAll(b.readAhead(s.set(), keep, new int[0], () -> {  // one call per remote shard, not one per position (CLUSTER_DEPLOYMENT.md section 5.11)
                     List<Part> ps = new ArrayList<>(keep.length);
                     for (int pi : keep) {
                         ps.add(position(b, s.set(), pi));
@@ -867,7 +867,7 @@ final class VarViews {
         return contributions(p, scope, date, by, scenario, ccy, lens, false);
     }
 
-    /** The same, {@code matrix}: with the parts' correlation and covariance matrix (parametric, PARAMETRIC_VAR.md section 3). */
+    /** The same, {@code matrix}: with the parts' correlation and covariance matrix (parametric, VAR_GUIDE.md section 18.15). */
     Map<String, Object> contributions(Principal p, String scope, LocalDate date, String by, String scenario, String ccy, VarLens lens, boolean matrix) {
         VarService.Scoped s = svc.scoped(p, scope, date, ccy, lens);
         VarBook b = s.date().book();

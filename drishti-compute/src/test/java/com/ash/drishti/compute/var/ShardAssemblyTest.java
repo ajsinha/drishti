@@ -40,7 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * A date cut into shards and put together again (VAR_SHARDING.md section 5) answers as the whole date: the synthetic bank (2 legal
+ * A date cut into shards and put together again (CLUSTER_DEPLOYMENT.md section 5.7) answers as the whole date: the synthetic bank (2 legal
  * entities, 6 desks, 24 books, 1,800 trades) written whole to one hot file, and as six shards (legal entity and desk ranges) each built
  * from its own trades only. Three shards are held "here" (their mapped rows), three are reached only through their skeleton and an "owner"
  * (a {@link ShardedVectors.Remote} summing that shard's book). Same trades, positions and nodes in the same order; every node's aggregate

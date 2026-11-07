@@ -1133,7 +1133,7 @@ hot file with sharding, is kept for the few measures that cannot do without it.
 | A figure per entity derived from its inputs | **Computed (derived) kinds**, computed on demand, never stored ([COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md)) | NSMTM, CPMTM, SSPNL, the Checks panels |
 | Heavy or non-linear models per request | **Python compute workers**, Arrow in and out ([section 24](#24-compute-workers-python-and-java-libraries-approved-pinned-and-isolated)) | pricing, Monte Carlo, what-ifs |
 | Aggregates for dashboards and reports | **The BI engine**: rollups and caches ([BI_DESIGN.md](BI_DESIGN.md)) | desk reports, live exposure reports |
-| Large vectors per position, re-aggregated over any scope, interactively, beyond one server | **The hot file and sharding** ([VAR_SHARDING.md](VAR_SHARDING.md)) | VaR |
+| Large vectors per position, re-aggregated over any scope, interactively, beyond one server | **The hot file and sharding** ([CLUSTER_DEPLOYMENT.md section 5](CLUSTER_DEPLOYMENT.md#5-var-sharding-in-depth-built)) | VaR |
 
 **The mechanism check.** A measure uses the hot file and sharding only if **all four** hold, answered with sizes at bank scale in its
 design document before anything is built:
@@ -1146,7 +1146,7 @@ design document before anything is built:
 
 If all four hold, the measure plugs into the measure-agnostic machinery: it brings a `ShardedMeasure<P>` (its name, key order, bytes per
 row, partial type and how two partials combine) and reuses the shard map, ownership, replicas, handover and scatter-gather
-([VAR_SHARDING.md section 13](VAR_SHARDING.md#13-decisions)). If not, it uses one of the lighter mechanisms. Likely future users of the
+([CLUSTER_DEPLOYMENT.md section 5.12](CLUSTER_DEPLOYMENT.md#512-the-machinery-measure-agnostic-and-open-items)). If not, it uses one of the lighter mechanisms. Likely future users of the
 heavy one: exposure paths (sharded by netting set), stress P&L across hundreds of scenarios, FRTB internal-model ES and DRC simulations,
 climate scenario losses per position.
 
@@ -1388,7 +1388,7 @@ there" ([section 10](#2310-beyond-anything-out-there)).
 **Read with:** [LENSES.md section 6.4](LENSES.md#64-the-shared-cube-core-mr-and-ccr) (the shared cube core this
 engine grows from), [LENSES.md section 7](LENSES.md#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why) (the second cube on it), [BI_GUIDE.md](../guides/BI_GUIDE.md) (the BI
 query engine on DuckDB, rollups, true totals, run cards, Python measures), [BI_LANGUAGE_REFERENCE.md](../guides/BI_LANGUAGE_REFERENCE.md)
-(DEL, the expression language), [section 24](#24-compute-workers-python-and-java-libraries-approved-pinned-and-isolated) (the compute worker pools), [VAR_SHARDING.md](VAR_SHARDING.md)
+(DEL, the expression language), [section 24](#24-compute-workers-python-and-java-libraries-approved-pinned-and-isolated) (the compute worker pools), [CLUSTER_DEPLOYMENT.md section 5](CLUSTER_DEPLOYMENT.md#5-var-sharding-in-depth-built)
 (scatter and gather of partial sums across Drishti\*net), [section 25](#25-compute-engines-on-or-off-each-with-its-own-configuration-file) (one file and one switch per engine),
 [DATA_ARCHITECTURE.md section 7](DATA_ARCHITECTURE.md#7-the-in-memory-lake-delta-tables-that-never-touch-a-disk) (data that may never touch a disk), [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md) (memory
 budgets and busy protection) and [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md).
@@ -1453,7 +1453,7 @@ Read from the guides and the code on 2026-11-02. The engine reuses every row of 
 | The Pivot tab on a table or ladder (Rachana `pivot`) | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#pivot-pivot-on-a-table-or-ladder), [USER_GUIDE.md](../guides/USER_GUIDE.md#pivot-slice-a-table-your-way) | yes | becomes a pivot view over the panel's rows |
 | Python measures in BI: `compute(table, params)` per group, sandboxed (isolated process, empty environment, no network, scratch folder only, CPU, memory, output limits, package allow-list) | [BI_GUIDE.md section 34](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), [its sandbox](../guides/BI_GUIDE.md#7-the-sandbox-exactly) | yes | the sandbox's guards, unchanged; a Python measure is a holistic custom function |
 | Compute worker pools (`drishti-compute`): fork-server per worker on Linux, warm workers on Windows, Arrow IPC scratch transport, limits, fan-out over nodes | [section 24.7](#247-the-worker-pool) | yes (C1 to C3) | the per-node pool that runs Python custom functions |
-| VaR sharding: partial vectors per shard added in shard order, bit-equal to the whole (`ShardedMeasure`, `ShardGather.Combine`) | [VAR_SHARDING.md](VAR_SHARDING.md) | yes | the cluster merge, lifted into the core for every provider |
+| VaR sharding: partial vectors per shard added in shard order, bit-equal to the whole (`ShardedMeasure`, `ShardGather.Combine`) | [CLUSTER_DEPLOYMENT.md section 5](CLUSTER_DEPLOYMENT.md#5-var-sharding-in-depth-built) | yes | the cluster merge, lifted into the core for every provider |
 | Busy protection: one admission gate refusing new heavy work politely | [RESOURCES_AND_SCALE.md section 5.7](RESOURCES_AND_SCALE.md#57-busy-protection-refuse-politely-before-the-heap-runs-out), [OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over) | yes (unreleased) | every pivot passes the gate |
 | The in-memory lake: tables on `mem://`, DuckDB's spill switched off for them, the never-on-disk guard at every sink | [DATA_ARCHITECTURE.md section 7](DATA_ARCHITECTURE.md#7-the-in-memory-lake-delta-tables-that-never-touch-a-disk) | yes (unreleased) | the rule that a memory-only table is never spilled or written for user code |
 | Why VaR moved (RO1): exact steps that add up to the change | [LENSES.md section 5.4.1](LENSES.md#541-ro1-var-change-explanation) | yes | the method behind "explain the difference" ([section 10](#2310-beyond-anything-out-there), item 1) |
@@ -1714,7 +1714,7 @@ The paused MR cube's `VarCubeSource` becomes this provider, unchanged in its ari
 State: the members' net weighted sensitivities summed per risk factor to the formula's grain (a sparse map factor → sum, added in shard
 order); finish: the regulatory formula (bucket K_b, the three correlation scenarios, the charge; SIMM per CSA version). Each cell and
 total runs the formula on its own members' sums. They come with the 2.9.11 FRTB-SA and SIMM engines
-([SENSITIVITIES_AND_FRTB_SA.md](SENSITIVITIES_AND_FRTB_SA.md)) and need those engines on.
+([FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md)) and need those engines on.
 
 #### 23.6.5 The CCR provider (later)
 
@@ -2006,7 +2006,7 @@ by construction). On a single server the executor is the whole engine.
 
 #### 23.9.3 Scatter and gather across Drishti\*net
 
-The VaR engine's sharding ([VAR_SHARDING.md](VAR_SHARDING.md)) already adds partial vectors from shard owners in shard order, bit-equal to
+The VaR engine's sharding ([CLUSTER_DEPLOYMENT.md section 5](CLUSTER_DEPLOYMENT.md#5-var-sharding-in-depth-built)) already adds partial vectors from shard owners in shard order, bit-equal to
 the whole. The pivot engine lifts that into the core for every provider:
 
 | Data placement | How files or shards are assigned | Example |

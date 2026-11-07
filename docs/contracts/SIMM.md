@@ -8,7 +8,7 @@
 
 *Contract version 2.0 · 2026-11-02 · **Status:** design, not built. The sensitivity inputs are the shared ones of [FRTB.md](FRTB.md)
 (contracts `planned`, demo data generated); the engine, its screens and its playground are the design to build · Method:
-[SENSITIVITIES_AND_FRTB_SA.md section 8](../architecture/SENSITIVITIES_AND_FRTB_SA.md#8-isda-simm) · Fields and worked records:
+[SIMM_GUIDE.md section 5](../guides/SIMM_GUIDE.md#5-the-method) · Fields and worked records:
 [FRTB.md section 17](FRTB.md#17-data-structures-frtb-and-simm) · Shared rules: [README.md](README.md)*
 
 This is the data contract of Drishti's **ISDA SIMM** engine: the Standard Initial Margin Model of the International Swaps and Derivatives
@@ -98,16 +98,8 @@ No separate SIMM sensitivity table: SIMM reads the same records as FRTB-SA. **Wh
 curvature is computed from the vegas). A bank whose systems already produce CRIF loads it into SENS by the mapping of
 [FRTB.md section 17.11.1](FRTB.md#17111-from-isda-crif-rows).
 
-**Units, as delivered** ([design section 2.3](../architecture/SENSITIVITIES_AND_FRTB_SA.md#23-from-the-delivered-conventions-to-the-regulatory-sensitivities)):
-
-```
-SIMM delta                         DV01, IE01, CS01 per bp and DELTA per 1 %, as delivered (SIMM's own units)
-SIMM vega, rates and credit        VR_k = Σ_j VEGA_kj · 100 · IMPLIED_VOL_kj        (σ the implied volatility)
-SIMM vega, equity, FX, commodity   VR_k = HVR_c · Σ_j VEGA_kj · σ_kj,   σ_kj = RW_k · sqrt(365 / 14) / Φ⁻¹(99 %)
-                                   (σ from the factor's SIMM delta risk weight, not the market's implied volatility)
-```
-
-`VEGA` is the change for one volatility point (σ + 1 with σ in per cent), the same quantity SIMM's methodology uses. Every element is
+**Units, as delivered:** DV01, IE01, CS01 per bp and DELTA per 1 %, SIMM's own units; the vega risk from them is
+[SIMM_GUIDE section 3.1](../guides/SIMM_GUIDE.md#31-units). `VEGA` is the change for one volatility point (σ + 1 with σ in per cent), the same quantity SIMM's methodology uses. Every element is
 converted to the calculation currency at the date's FX before anything is added; the FX sensitivity to the calculation currency itself is
 left out.
 
@@ -197,8 +189,7 @@ uncleared trade of a netting set under SIMM has sensitivities; a netting set wit
 
 ## 6. The computation
 
-[Design section 8](../architecture/SENSITIVITIES_AND_FRTB_SA.md#8-isda-simm), checked against the methodology in
-[design section 18](../architecture/SENSITIVITIES_AND_FRTB_SA.md#18-checked-against-the-rules). Paragraph numbers are those of SIMM
+The method is [SIMM_GUIDE section 5](../guides/SIMM_GUIDE.md#5-the-method), checked against the methodology. Paragraph numbers are those of SIMM
 2.8+2512.
 
 ### 6.1 Parameters: one licensed file per version
@@ -219,54 +210,26 @@ Every sensitivity of the trade, whatever its risk class, stays in the trade's pr
 
 ### 6.3 Delta margin of a risk class
 
-For a netting set, regime, product class and risk class, with s_k the netted sensitivity in SIMM's units and T_b the delta threshold of
-the bucket:
-
-```
-Concentration (paragraphs 7(b), 8(b), section J), at the grain the rules set:
-  InterestRate          CR_b = max( 1, sqrt( |Σ_{k,i} s_k,i| / T_b ) )   one per currency: every vertex and sub-curve, inflation in,
-                                                                         cross-currency basis out (and not scaled)
-  CreditQ, CreditNonQ   CR_k = max( 1, sqrt( |Σ_j s_j| / T_b ) )          one per issuer and seniority over all its tenors and currencies;
-                                                                         base-correlation sensitivities take CR = 1
-  Equity, Commodity, FX CR_k = max( 1, sqrt( |s_k| / T_b ) )              one per factor (the name, the commodity, the currency)
-WS_k = RW_k · s_k · CR
-K_b  = sqrt( Σ_k WS_k² + Σ_k Σ_{l≠k} ρ_kl · f_kl · WS_k · WS_l )        f_kl = min(CR_k, CR_l) / max(CR_k, CR_l); f = 1 for rates,
-                                                                        whose ρ is the tenor correlation × φ between sub-curves
-S_b  = max( min( Σ_k WS_k, K_b ), −K_b )                                  always capped (paragraphs 7(d), 8(d))
-Delta = sqrt( Σ_b K_b² + Σ_b Σ_{c≠b} γ_bc · g_bc · S_b · S_c ) + K_residual
-        g_bc = min(CR_b, CR_c) / max(CR_b, CR_c) for rates, 1 otherwise; the residual bucket (credit, equity) outside the root
-```
+The concentration factors at the rules' grains, the weighted sensitivities, K_b with f_kl, S_b always capped and the residual bucket
+outside the root: [SIMM_GUIDE sections 2 and 5.1](../guides/SIMM_GUIDE.md#51-delta-and-the-concentration-grains), the one home of the
+formulas (paragraphs 7, 8, section J).
 
 ### 6.4 Vega margin (paragraph 10)
 
-The vega risk VR_k of section 3.1, netted per factor, then `VR_k = VRW · Σ_i VR_ik · VCR`, the vega concentration factor VCR at the same
-grains as delta against the vega thresholds VT_b. Within a bucket f_kl from the VCRs (1 for rates); across buckets g_bc for rates,
-1 otherwise; S_b capped; residual outside the root.
+[SIMM_GUIDE section 5.2](../guides/SIMM_GUIDE.md#52-vega).
 
 ### 6.5 Curvature margin (paragraph 11)
 
-```
-CVR_k = Σ_i Σ_expiries SF(t) · σ · ∂V/∂σ          SF(t) = 0.5 · min(1, 14 / t_days)   (12 months = 365 days, pro rata); no concentration;
-                                                  zero for equity bucket 12 (volatility indices)
-K_b   = sqrt( Σ_k CVR_k² + Σ_k Σ_{l≠k} ρ_kl² · CVR_k · CVR_l )
-θ     = min( Σ CVR / Σ |CVR|, 0 )        λ = ( Φ⁻¹(99.5 %)² − 1 ) · (1 + θ) − θ
-Curvature_nonres = max( Σ CVR + λ · sqrt( Σ_b K_b² + Σ_b Σ_{c≠b} γ_bc² · S_b · S_c ), 0 )      S_b capped at ±K_b
-Curvature_res    = max( Σ CVR_res + λ_res · K_res, 0 );   Curvature = the two added;   rates: × HVR_IR⁻²
-```
+[SIMM_GUIDE section 5.3](../guides/SIMM_GUIDE.md#53-curvature).
 
 ### 6.6 Base correlation (paragraph 13)
 
-`sqrt( Σ WS_k² + Σ_k Σ_{l≠k} ρ_kl · WS_k · WS_l )` over the index families of CreditQ, from `BASE_CORR` elements, no concentration.
+[SIMM_GUIDE section 5.4](../guides/SIMM_GUIDE.md#54-base-correlation-risk-classes-product-classes-add-ons).
 
 ### 6.7 Up to the total (paragraphs 5 and 6, sections K and L)
 
-```
-IM_r     = Delta_r + Vega_r + Curvature_r (+ BaseCorr_r)
-SIMM_p   = sqrt( Σ_r IM_r² + Σ_r Σ_{s≠r} ψ_rs · IM_r · IM_s )                  ψ the 6 × 6 correlation between risk classes
-SIMM     = SIMM_RatesFX + SIMM_Credit + SIMM_Equity + SIMM_Commodity          a plain sum
-AddOnIM  = fixed amount + Σ_p factor_p · notional_p + Σ_p (MS_p − 1) · SIMM_p   each multiplier MS_p ≥ 1
-IM       = SIMM + AddOnIM
-```
+IM_r per risk class, SIMM_p per product class with ψ, the four product classes added, the CSA's add-ons:
+[SIMM_GUIDE section 5.4](../guides/SIMM_GUIDE.md#54-base-correlation-risk-classes-product-classes-add-ons).
 
 ### 6.8 Collect, post and regimes
 
@@ -334,7 +297,7 @@ incremental IM of a candidate trade, `IM(set + trade) − IM(set)`, computed in 
 
 ### 9.3 The playground (`PLAY SIMM`)
 
-One netting set, or a few side by side ([design section 12.2](../architecture/SENSITIVITIES_AND_FRTB_SA.md#122-simm-playground-play-simm)).
+One netting set, or a few side by side ([SIMM_GUIDE section 8](../guides/SIMM_GUIDE.md#8-the-simm-playground-play-simm)).
 Tabs: Main (SIMM per product class and the total against the engine, with check cells), Config (the licensed parameters of the version
 and the Choices of section 6.9), Data (the sensitivities), WS (with the concentration factors), Buckets, Classes (ψ), Curvature (SF(t),
 θ, λ), Add-ons, Explain, Provenance. **The template ships with formulas and empty parameter cells**; the bank's export fills them from
@@ -401,8 +364,8 @@ figure, labelled *stored, not computed*, until the bank's sensitivities cover th
 
 ## 15. A worked example
 
-**Toy parameters, not ISDA's.** Cases 6 and 11 of the design
-([design section 13.1](../architecture/SENSITIVITIES_AND_FRTB_SA.md#131-hand-built-cases)) and one netting set end to end.
+**Toy parameters, not ISDA's.** Cases 6 and 11
+([SIMM_GUIDE section 10](../guides/SIMM_GUIDE.md#10-the-hand-built-cases)) and one netting set end to end.
 
 **Case 6.** One currency, WS = 50 · (−1,000) and 60 · 400 per bp, ρ = 0.8, CR = 1:
 `K = sqrt(50,000² + 24,000² − 2 · 0.8 · 50,000 · 24,000) = 34,000`. Two risk classes of one product class, IM 50,000 and 30,000,
@@ -436,7 +399,7 @@ Delta_IR = 382,700.58 and **SIMM = 450,195.27**: the concentration adds 23,588.8
 
 ## 16. Open questions and decisions
 
-**Decided** ([design section 16](../architecture/SENSITIVITIES_AND_FRTB_SA.md#16-decisions)): SIMM's numbers shipped empty, the bank's
+**Decided** (product owner, 2026-11-01 and 2026-11-02): SIMM's numbers shipped empty, the bank's
 licensed file by version recorded on every figure (11); credit indices one qualifier, look-through later (5); rates vega in lognormal
 points by default, normal declared per source (3); the screens: the netting-set list with the counterparty comparison as a second tab (1).
 

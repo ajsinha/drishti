@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Parametric VaR on the VaR explorer (docs/architecture/PARAMETRIC_VAR.md; VAR_GUIDE.md section 3.12): a Parametric toggle on the
+"""Parametric VaR on the VaR explorer (docs/guides/VAR_GUIDE.md section 18.15; VAR_GUIDE.md section 3.12): a Parametric toggle on the
 explorer (pm=1) and, when on, the tiles, the tree's columns and the Normal curve toggle; PVAR is only an alias that opens the explorer with
 the toggle on, on the scope and lens VAR would read: no screen, view or menu item of its own; the console passes parametric= and matrix= to
 the engine and nothing else."""

@@ -35,7 +35,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 
 /**
- * VaR sharding on one server (Drishti*net off, VAR_SHARDING.md section 12): the server is the only member, so it owns every shard; the date
+ * VaR sharding on one server (Drishti*net off, CLUSTER_DEPLOYMENT.md section 5.10): the server is the only member, so it owns every shard; the date
  * is cut into one shard per legal entity and desk, each built from its own rows into its own hot file (with its {@code RANG} section), and
  * the date put together from them has the trades, positions and nodes of the whole date read by the same server, every node's aggregate to
  * the bit, every set's vector equal, and every row read from the shards' files. With no {@code sharding:} block nothing changes: the other VaR

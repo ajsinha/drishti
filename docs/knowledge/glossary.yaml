@@ -12,24 +12,26 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# The Knowledge glossary: one entry per term, the one source of the Glossary section of every Knowledge page (docs/knowledge/*.md)
-# and of the console's WHAT <term> (routes/what_routes.py). After a change run `python3 tools/knowledge.py` (it writes the pages'
-# Glossary sections); `python3 tools/knowledge.py --check` fails when a page differs from this file.
+# The Knowledge glossary: one entry per term, the one source of the Glossary section of every part of the Knowledge primers
+# (docs/knowledge/risk.md, data.md, world.md) and of the console's WHAT <term> (core/knowledge.py). After a change run
+# `python3 tools/knowledge.py` (it writes the parts' Glossary sections); `python3 tools/knowledge.py --check` fails when a page
+# differs from this file.
 #
+# A domain is one part of a primer: page (the primer's file), part (the anchor of the part's heading) and title (the part's).
 # An entry: term (as it is written), name (the words it abbreviates, optional), synonyms (other ways a reader types it; WHAT matches
 # the term, the name and these, ignoring case), domain (a key of domains:), meaning (one or two plain sentences), command (a console
 # command that shows it on the demo data, without <GO>; optional) and cli (a drishti.py command, optional). The anchor of an entry is
 # term-<the term in lower case, each run of other characters a hyphen>.
 
 domains:
-  market-risk: { page: market-risk.md, title: Market risk }
-  counterparty-credit-risk: { page: counterparty-credit-risk.md, title: Counterparty credit risk }
-  trades-and-products: { page: trades-and-products.md, title: Trades and products }
-  entities-and-ownership: { page: entities-and-ownership.md, title: Entities and ownership }
-  market-data: { page: market-data.md, title: Market data }
-  data-and-contracts: { page: data-and-contracts.md, title: Data and contracts }
-  economies: { page: economies.md, title: Economies }
-  companies-funds-and-etfs: { page: companies-funds-and-etfs.md, title: "Companies, funds and ETFs" }
+  market-risk: { page: risk.md, part: 1-market-risk, title: Market risk }
+  counterparty-credit-risk: { page: risk.md, part: 2-counterparty-credit-risk, title: Counterparty credit risk }
+  trades-and-products: { page: risk.md, part: 3-trades-and-products, title: Trades and products }
+  market-data: { page: data.md, part: 1-market-data, title: Market data }
+  entities-and-ownership: { page: data.md, part: 2-entities-and-ownership, title: Entities and ownership }
+  data-and-contracts: { page: data.md, part: 3-data-and-contracts, title: Data and contracts }
+  companies-funds-and-etfs: { page: world.md, part: 1-companies-funds-and-etfs, title: "Companies, funds and ETFs" }
+  economies: { page: world.md, part: 2-economies, title: Economies }
 
 terms:
   # ---- market risk ---------------------------------------------------------------------------------------------------------------
@@ -188,7 +190,7 @@ terms:
     name: Fundamental Review of the Trading Book
     synonyms: [frtb sa, sbm, sensitivities based method]
     domain: market-risk
-    meaning: "Basel's market-risk capital rules. Drishti stores the standardised approach's delta, vega and curvature charges per book from an upstream engine; it does not compute them."
+    meaning: "Basel's market-risk capital rules. Drishti computes the standardised approach (FRTB-SA) from the trades' sensitivities when asked; the delta, vega and curvature charges per book an upstream engine sends are stored as delivered."
     command: FRTB FRTB-COMM-1
   - term: Sensitivity
     synonyms: [delta, vega, curvature, greeks, sensitivities]
@@ -384,7 +386,7 @@ terms:
     name: credit valuation adjustment
     synonyms: [credit valuation adjustment, xva]
     domain: counterparty-credit-risk
-    meaning: "The market price of the counterparty's possible default, taken off the trades' value: roughly loss given default times EE weighted by default probability. Stored from an upstream XVA engine; Drishti does not compute it yet."
+    meaning: "The market price of the counterparty's possible default, taken off the trades' value: roughly loss given default times EE weighted by default probability. Stored from an upstream XVA engine; Drishti does not compute it."
     command: CVA CVA-ALDERSHOT-FRA
   - term: DVA
     name: debit valuation adjustment
@@ -402,7 +404,7 @@ terms:
     name: ISDA Standard Initial Margin Model
     synonyms: [isda simm]
     domain: counterparty-credit-risk
-    meaning: "The industry model for initial margin on uncleared derivatives, from sensitivities by risk class. Stored, with IM posted and received."
+    meaning: "The industry model for initial margin on uncleared derivatives, from sensitivities by risk class. Drishti computes it per netting set, collect and post, from the trades' sensitivities and the bank's licensed ISDA parameter file."
     command: SIMM SIMM-ALDERSHOT
   - term: CCP
     name: central counterparty
@@ -413,7 +415,7 @@ terms:
   - term: Wrong-way risk
     synonyms: [wwr, wrong way risk]
     domain: counterparty-credit-risk
-    meaning: "When exposure to a counterparty rises as its credit worsens (it sold you protection on itself, or on its own country). Designed in the contracts; not computed by Drishti yet."
+    meaning: "When exposure to a counterparty rises as its credit worsens (it sold you protection on itself, or on its own country). Designed in the contracts; not computed by Drishti."
 
   # ---- trades and products -------------------------------------------------------------------------------------------------------
   - term: Trade
@@ -642,7 +644,7 @@ terms:
   - term: Beta
     synonyms: [eqb, equity beta]
     domain: market-data
-    meaning: "How much an equity moves for a 1% move in its index, from the regression of daily returns. Computed from the closes when asked."
+    meaning: "How much an equity moves for a 1% move in its index, from a least-squares fit of its daily returns on the index's. Computed from the closes when asked."
     command: EQB EQ-NVTK
   - term: Holiday calendar
     synonyms: [cal, calendar, business day calendar]

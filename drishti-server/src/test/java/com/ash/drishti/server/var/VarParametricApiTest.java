@@ -36,7 +36,7 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
- * Parametric VaR on the VaR API (docs/architecture/PARAMETRIC_VAR.md section 6; VAR_GUIDE.md section 18.15) over {@link VarLakeFixture}'s
+ * Parametric VaR on the VaR API (docs/guides/VAR_GUIDE.md section 18.15) over {@link VarLakeFixture}'s
  * tiny lake: the {@code parametric} block on {@code /scope}, {@code /tree}, {@code /scope/path} (the curve, the expected counts, the two
  * markers) and {@code /scope/contributions} (Euler components adding up to the parametric VaR, the matrix); {@code parametric=false}
  * leaves it out and every historical field byte for byte the same; {@code /status} lists the settings; never official.

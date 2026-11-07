@@ -2037,7 +2037,7 @@ items:
                        { label: "{parent.name}", value: parent.limitUse, format: pct } ] }
     open: "VAR NODE {book.id}"             # the command the primary button opens (/go?q=…)
     what: VaR limit                        # the WHAT term (docs/knowledge/glossary.yaml)
-    knowledge: market-risk.md#4-a-worked-example-on-the-demo-data     # "Read more": a Knowledge page and anchor
+    knowledge: risk.md#14-a-worked-example-on-the-demo-data     # "Read more": a Knowledge primer and anchor
 ```
 
 | Step | Fetches or computes |

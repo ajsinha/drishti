@@ -35,7 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * The playground's Parametric workbook (PARAMETRIC_VAR.md section 10), written without cached values and recalculated by headless LibreOffice: the
+ * The playground's Parametric workbook (VAR_GUIDE.md section 18.16), written without cached values and recalculated by headless LibreOffice: the
  * Parametric tab's PMu, PSigma, PZ, PVaR, PES and every position's component equal the engine's to the cent, Σ components = PVaR, the band
  * says PARAMETRIC CHECKS PASS; at 1 and 50 positions and at 500 with Rest of scope, equal weights and EWMA, USD and EUR; every formula in the
  * common set (NORM.S.INV and PI included). Skipped where LibreOffice is not installed.

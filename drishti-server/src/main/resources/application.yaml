@@ -601,7 +601,7 @@ drishti:
       - "POST /api/v1/var/stress-window/proposals"      # proposing a stress window is a governance step a person takes
       - "POST /api/v1/var/stress-window/proposals/*/decision"   # approving or rejecting one, by a second person
       - "POST /api/v1/var/intraday/streams/*/apply"   # applying a PV topic's waiting window now: an administrator in the console
-      # VaR shards (docs/architecture/VAR_SHARDING.md section 10). /partial is one member's call to another, signed with the cluster key
+      # VaR shards (docs/architecture/CLUSTER_DEPLOYMENT.md section 5.10). /partial is one member's call to another, signed with the cluster key
       # and made as the caller (their on-behalf-of token; the owner applies their rights again): like /compute/peer/**, never a token's.
       # It reads data but is no read POST for a token, which would only add a door to the members' channel. /shards/drain takes a member's
       # shards away before it stops: an administrator (console, drishti.py var shards --drain, a task's stop hook signed in as one), never

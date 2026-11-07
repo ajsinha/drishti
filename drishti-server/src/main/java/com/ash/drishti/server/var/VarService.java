@@ -54,7 +54,7 @@ public final class VarService implements AutoCloseable {
 
     /**
      * A scope resolved and computed for one viewer on one date; {@code shards} what its sum asked of a sharded date's shards (null: the
-     * date is not sharded, VAR_SHARDING.md). {@code vector} and {@code measures} are the lens's ({@code lens}: the horizon, the 10-day
+     * date is not sharded, CLUSTER_DEPLOYMENT.md section 5). {@code vector} and {@code measures} are the lens's ({@code lens}: the horizon, the 10-day
      * method and the confidences, 2.9.7); {@code oneDay} the scope's 1-day vector they come from (the same array on the default lens).
      */
     record Scoped(VarDate date, VarAccess.View view, ScopeResolver.Resolution res, OrdinalSet set, int hidden, double[] vector,
@@ -113,7 +113,7 @@ public final class VarService implements AutoCloseable {
     private final Map<String, String> aheadState = new java.util.concurrent.ConcurrentSkipListMap<>();
     /** Dates that could not be loaded, with the vector version they were refused at and why. */
     private final Map<LocalDate, String[]> refused = new ConcurrentHashMap<>();
-    /** VaR sharding across Drishti*net (VAR_SHARDING.md): a date put together from its shards when on; null in tests that do not set it. */
+    /** VaR sharding across Drishti*net (CLUSTER_DEPLOYMENT.md section 5): a date put together from its shards when on; null in tests that do not set it. */
     private volatile VarShards shards;
     private final com.github.benmanes.caffeine.cache.Cache<String, Scoped> cache =
             com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(ANSWERS_BYTES).weigher(VarService::weight).recordStats()
@@ -1044,7 +1044,7 @@ public final class VarService implements AutoCloseable {
     }
 
     /**
-     * A sharded date put together again while the one loaded keeps answering (VAR_SHARDING.md section 10): {@code build} runs outside every
+     * A sharded date put together again while the one loaded keeps answering (CLUSTER_DEPLOYMENT.md section 5.10): {@code build} runs outside every
      * lock; the result replaces the date only when the date loaded is still the one the build started from (the same morning book: an
      * intraday batch applied meanwhile is read again by the build), in one step, so every answer reads one whole date. False when nothing
      * was replaced (not loaded, reloaded meanwhile); a failed build throws and the date loaded stays.

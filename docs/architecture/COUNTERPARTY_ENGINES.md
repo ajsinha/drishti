@@ -21,7 +21,7 @@ Companion to [SACCR.md](../contracts/SACCR.md) (the SA-CCR contract this documen
 (netting sets and CSAs), [COLL.md](../contracts/COLL.md) (collateral values), [CVA.md](../contracts/CVA.md) (the xVA formulas, FVA among
 them), [LIM.md](../contracts/LIM.md) (limits), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine, built),
 [LENSES.md section 7](LENSES.md#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why) (the CCR cube: landing A with tabs B and C, decided) and the
-[VaR Playground](VAR_PLAYGROUND.md) (the playground frame every metric here reuses).
+[VaR Playground](../guides/VAR_GUIDE.md#310-the-var-playground-play-var) (the playground frame every metric here reuses).
 
 Drishti computes counterparty figures the way it computes VaR: **from trade-grain inputs, when asked, for any scope, never stored as a
 figure.** SA-CCR exposure at default comes from one classification row per derivative (`saccr-trade`) and the netting set's terms;
@@ -265,18 +265,9 @@ compared with the run's `LOOKBACK_DAYS`; when they differ the run's look-back is
 
 ### 4.3 Statistics (CRE50 definitions; CRE53 for effective EE, EEPE and alpha)
 
-```
-EE(k)    = (1/P) Σ_p E(p,k)                                expected exposure
-ENE(k)   = (1/P) Σ_p N(p,k)                                expected negative exposure (≤ 0)
-PFE_q(k) = the ⌈P·q − 10⁻⁹⌉-th smallest of E(·,k)           rank-rule kth; or interpolated
-EEE(k)   = max(EEE(k−1), EE(k)),  EEE(0) = CE              effective EE, never falls
-T        = min(1 year, the longest remaining maturity in the set)
-EPE      = Σ_{t_k ≤ T} EE(k) · (min(t_k, T) − t_{k−1}) / T
-EEPE     = Σ_{t_k ≤ T} EEE(k) · (min(t_k, T) − t_{k−1}) / T
-PEAK_PFE = max_k PFE_q(k), the earliest date on a tie      PEAK_EE = max_k EE(k)
-CE       = max(MTM₀ − C₀ − IM, 0)                          today
-EAD_IMM  = α · EEPE,  α = 1.4                              informational only (needs supervisory approval of the bank's model)
-```
+EE, ENE, PFE, effective EE, EPE, EEPE, the peaks and CE are the engine's, as
+[EXPOSURE_GUIDE section 18.4](../guides/EXPOSURE_GUIDE.md#184-statistics-of-a-scope) states them; `EAD_IMM = α · EEPE` (α 1.4) is
+informational ([section 18.5](../guides/EXPOSURE_GUIDE.md#185-regulatory-figures-informational)).
 
 ### 4.4 Contributions at a date (Euler)
 
@@ -424,7 +415,7 @@ landing and tabs (decided), the three playgrounds on the VaR Playground's frame.
 
 ## 8. The playgrounds
 
-Every metric ships with its playground ([VAR_PLAYGROUND.md section 13](VAR_PLAYGROUND.md#13-the-playground-family-and-the-rule)): the grid
+Every metric ships with its playground ([VAR_GUIDE.md section 18.16](../guides/VAR_GUIDE.md#1816-the-var-playgrounds-workbook-formula-by-formula)): the grid
 with the tall explanation panel beside it, the formula bar, Export to Excel from a version-controlled template with real formulas and
 check cells, the ALL CHECKS PASS band at the top of Main. Each playground below adds its model (the cached values), its generator (the tabs
 and formulas through `SeriesLayout`), its inputs as the person and its endpoints.
@@ -879,7 +870,7 @@ drishti.ccr.saccr.playground:
 ## 12. Mock-ups: the screens to build
 
 Decided already: the CCR cube's landing A with tabs B and C ([LENSES.md section 7.6.7](LENSES.md#767-mock-ups-the-screens-to-build)),
-and the playgrounds' frame ([VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND.md#16-mock-ups-the-screens-to-build)). **Still to make before
+and the playgrounds' frame ([VAR_GUIDE.md section 3.10](../guides/VAR_GUIDE.md#310-the-var-playground-play-var)). **Still to make before
 the build (mock-ups first):** the SA-CCR page that replaces the stored Sutra (three options: the EAD waterfall from RC and add-ons by class
 with the hedging-set table; the netting-set list with the selected set's breakdown; the counterparty's sets side by side), and the FVA
 figures on the netting-set and counterparty pages (the term bars per date beside CVA's future bars). Each option self-contained HTML, dark

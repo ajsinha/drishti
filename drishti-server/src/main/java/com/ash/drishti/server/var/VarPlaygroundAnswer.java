@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * The VaR Playground's screen answer (VAR_PLAYGROUND.md section 2): the grid's columns (each position's P&amp;L in the reporting currency,
+ * The VaR Playground's screen answer (VAR_GUIDE.md section 3.10): the grid's columns (each position's P&amp;L in the reporting currency,
  * or its scenario PVs, or the FX), the portfolio, rank and marks, every figure the explanation panel walks through, the engine's figures
  * and the checks, the formula bar's formulas, and the export's choices with their estimates. Also the empty workbook (the template).
  */
@@ -234,7 +234,7 @@ final class VarPlaygroundAnswer {
     }
 
     /**
-     * The empty workbook (VAR_PLAYGROUND.md section 5): {@code positions} USD positions of zero scenario PVs over {@code scenarios} business
+     * The empty workbook (VAR_GUIDE.md section 18.16): {@code positions} USD positions of zero scenario PVs over {@code scenarios} business
      * days, every formula in place, for a person to paste PVs into Data, fill Config and FX, and recalculate offline.
      */
     static VarPlaygroundBook blank(VarPlayground pg, int positions, int scenarios, String user) {

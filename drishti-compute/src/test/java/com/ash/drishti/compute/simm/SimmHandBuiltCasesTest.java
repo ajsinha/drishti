@@ -28,7 +28,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /**
- * The SIMM engine against the hand-built cases (SENSITIVITIES_AND_FRTB_SA.md section 13.1 cases 6 and 11, docs/contracts/SIMM.md section
+ * The SIMM engine against the hand-built cases (SIMM_GUIDE.md section 10, cases 6 and 11, docs/contracts/SIMM.md section
  * 15, the explanation's swaption) to the cent, with the TOY parameter file src/test/resources/simm/simm-toy.yaml: round illustrative
  * numbers, not ISDA's. The shipped structure (docs/architecture/capital-parameters/simm.yaml, every number empty) is refused with DRS-5333.
  */

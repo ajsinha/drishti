@@ -361,7 +361,7 @@ public final class VarBook {
         return store;
     }
 
-    /** {@code mapped} (the hot file), {@code heap}, or {@code sharded} (a date put together from its shards, VAR_SHARDING.md). */
+    /** {@code mapped} (the hot file), {@code heap}, or {@code sharded} (a date put together from its shards, CLUSTER_DEPLOYMENT.md section 5). */
     public String tier() {
         return hot != null ? "mapped" : sharded() ? "sharded" : "heap";
     }
@@ -701,8 +701,8 @@ public final class VarBook {
     /**
      * Runs {@code work}, which reads the vectors of positions {@code positions} (whole, or the part of each in {@code set}) and of trades
      * {@code trades}, with every remote read it makes fetched ahead: on a put-together date each remote shard is asked once (in calls of
-     * up to {@link ShardedVectors#BATCH} sets), the shards side by side, instead of once per position or trade in turn (VAR_SHARDING.md
-     * section 15). The vectors are the same to the bit: each read is the one {@code work} would have made. Elsewhere {@code work} just runs.
+     * up to {@link ShardedVectors#BATCH} sets), the shards side by side, instead of once per position or trade in turn (CLUSTER_DEPLOYMENT.md
+     * section 5.11). The vectors are the same to the bit: each read is the one {@code work} would have made. Elsewhere {@code work} just runs.
      */
     public <T> T readAhead(OrdinalSet set, int[] positions, int[] trades, java.util.function.Supplier<T> work) {
         if (!(store instanceof ShardedVectors sv)) {
@@ -828,7 +828,7 @@ public final class VarBook {
         // trades in no book of the hierarchy (none in a consistent batch) are summed as leaves
         OrdinalSet rest = set.andNot(root.members());
         if (d != null) {
-            // a sharded date (VAR_SHARDING.md): the rows the plan adds and those it takes away, each set summed shard by shard by owners
+            // a sharded date (CLUSTER_DEPLOYMENT.md section 5): the rows the plan adds and those it takes away, each set summed shard by shard by owners
             VarMath.addInto(acc, sums.sum(store, d.plus.build().or(rest)));
             OrdinalSet minus = d.minus.build();
             if (!minus.isEmpty()) {
@@ -990,7 +990,7 @@ public final class VarBook {
         return bookRange.values().stream().anyMatch(r -> r[1] > r[0] && set.countIn(r[0], r[1]) == r[1] - r[0]);
     }
 
-    /** True when this date's rows are sharded across Drishti*net members (VAR_SHARDING.md): a set is summed by the shards' owners. */
+    /** True when this date's rows are sharded across Drishti*net members (CLUSTER_DEPLOYMENT.md section 5): a set is summed by the shards' owners. */
     public boolean sharded() {
         return store instanceof com.ash.drishti.compute.vector.SetSums s && s.sumsSets();
     }
@@ -1186,7 +1186,7 @@ public final class VarBook {
         }
 
         /**
-         * A shard's book (VAR_SHARDING.md): the shard's range in the date's shard map (JSON), written as the hot file's {@code RANG} section;
+         * A shard's book (CLUSTER_DEPLOYMENT.md section 5): the shard's range in the date's shard map (JSON), written as the hot file's {@code RANG} section;
          * null for a whole date.
          */
         public Builder range(String json) {

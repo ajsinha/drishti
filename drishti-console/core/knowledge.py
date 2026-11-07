@@ -47,8 +47,8 @@ class Entry:
     term: str
     name: str
     domain: str
-    page: str            # the page's file name in docs/knowledge/
-    title: str           # the page's title (the domain's)
+    page: str            # the primer's file name in docs/knowledge/ (risk.md, data.md, world.md)
+    title: str           # the domain's title (its part of the primer)
     meaning: str
     command: str
     words: tuple[str, ...]

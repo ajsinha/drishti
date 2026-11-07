@@ -199,6 +199,9 @@ real-data user-management operations configuration troubleshooting runbook-sourc
 developer-guide api how-it-fits elements-guide elements ai-providers mcp-client rupaka about-this-page-design collaboration architecture quant-service
 decisions plan release-notes changelog notices sutra-guide rachana-guide plugins build-a-pack sutra-studio""".split() + [
     "docs-tutorials-22-build-a-screen-with-the-designer",     # tutorial 22, merged into tutorial 6 as its part B (the tutorial tracks, 2026-11-04)
+    # the eight Knowledge pages, folded into the three primers risk, data and world (2.9.11.g)
+    "knowledge-market-risk", "knowledge-counterparty-credit-risk", "knowledge-trades-and-products", "knowledge-market-data",
+    "knowledge-entities-and-ownership", "knowledge-data-and-contracts", "knowledge-companies-funds-and-etfs", "knowledge-economies",
 ]
 
 
@@ -229,6 +232,7 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     # 75: plus virtual tables' two (the tables guide and tutorial 44, 2.9.11.d), the same rule (a feature's guide and tutorial).
     # 2.9.11.g: counted without the admin-only Internal pages (the competitive analysis, the contracts of engines not built); the test-data
     # samples page became Data contracts and the generated connector reference joined Reference; the docs plan brings it to about 60.
+    # The eight Knowledge pages became three primers (risk, data, world) beside the home.
     assert 30 <= total <= 75, total
 
 

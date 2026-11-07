@@ -27,7 +27,7 @@
 | [008](008-rachana-is-the-grammar-a-sutra-is-a-layout.md) | Rachana is the grammar, a Sutra is a layout |
 | [009](009-users-live-in-the-server.md) | Users live in the server |
 | [010](010-industries-are-domain-packs.md) | Industries are domain packs |
-| [011](011-sutras-are-markdown-documents.md) | Sutras are Markdown documents (superseded by 017) |
+| 011 | Sutras are Markdown documents: superseded by [017](017-sutras-are-yaml.md), which records its context (deleted; in git at tag v2.9.11) |
 | [012](012-business-dates-and-delta-lake.md) | Business dates and Delta Lake |
 | [013](013-sutras-go-live-through-review.md) | Sutras go live through review |
 | [014](014-single-sign-on-verified-by-the-server.md) | Single sign-on, verified by the server |

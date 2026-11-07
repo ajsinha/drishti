@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 /**
- * What VaR sharding does now (VAR_SHARDING.md section 9): the market-risk pack's {@code sharding:} block, each key overridden by the
+ * What VaR sharding does now (CLUSTER_DEPLOYMENT.md section 5.10): the market-risk pack's {@code sharding:} block, each key overridden by the
  * server's {@code drishti.var.sharding} when set. Off unless switched on; a block that is not valid leaves sharding off and says why
  * (status, log) rather than half on.
  *

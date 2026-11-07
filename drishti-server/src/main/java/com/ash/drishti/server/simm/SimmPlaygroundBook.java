@@ -32,7 +32,7 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * The SIMM Playground's workbook (SENSITIVITIES_AND_FRTB_SA.md sections 12.1a and 12.2, docs/guides/SIMM_GUIDE.md section 8): Main,
+ * The SIMM Playground's workbook (docs/guides/SIMM_GUIDE.md section 8): Main,
  * Config, Data, WS, Buckets, Classes, Curvature, Add-ons, Explain and Provenance. Every derived cell is a formula of the common set and
  * every parameter a cell of Config, named by its key. Three switches are cells of Config with a drop-down, read by the formulas: the
  * concentration factors and the HVRs on or off, and the side (collect, or post with every sensitivity negated), so a validator who flips

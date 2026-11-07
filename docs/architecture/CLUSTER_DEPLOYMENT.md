@@ -45,7 +45,7 @@ written earlier, disagrees with sections 1 to 20 on deployment, sections 1 to 20
 
 The operator's day-to-day guide to a cluster (the files of `config/net/`, Admin → Net, drain and maintenance, a cluster of three on one
 machine) is [OPERATIONS.md section 18](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one); one machine, its services,
-TLS and monitoring are the rest of [OPERATIONS.md](../admin/OPERATIONS.md); the shard machinery is [VAR_SHARDING.md](VAR_SHARDING.md);
+TLS and monitoring are the rest of [OPERATIONS.md](../admin/OPERATIONS.md); the shard machinery is [section 5](#5-var-sharding-in-depth-built);
 memory, CPU and disk are [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md).
 
 ## Contents
@@ -276,7 +276,7 @@ built).
 **Footnote 2.** RESOURCES_AND_SCALE footnotes 1 and 4: an owner holds replicas ÷ owners of the page cache, a load and the disk (1/3 at 6,
 1/8 at 16); its heap is **not** divided (the skeleton is copied to every member). RAM sizes are the need ÷ 0.61 (the decks' 39%
 headroom) rounded up to a machine size. **Footnote 3.** A coordinator puts every open date together too: it holds the whole skeleton
-(`ShardAssembly`, VAR_SHARDING section 5) but no rows, so its heap need is the owner's (21.2 GB at 2.3M before D1, `-Xmx36g`) and its page
+(`ShardAssembly`, section 5.7) but no rows, so its heap need is the owner's (21.2 GB at 2.3M before D1, `-Xmx36g`) and its page
 cache is only what it reads of the mapped aggregates. The capacity model's coordinator row (`capacity.py`: "16–20 GB, 32 GB RAM",
 marked ASSUMPTION) holds only after D1; the decks are to be corrected. **Footnote 4.** EXPOSURE_GUIDE section 26.2: V, E and N
 matrices float32, 800 KB a set at P = 2,000, G = 50 (G_primary 25): 80 GB a date for 100,000 sets; with replicas 2 over 4 owners, 40 GB
@@ -446,7 +446,7 @@ in between unless it stayed out longer than `stable-seconds` (section 4.5).
 (a desk) is never split**: a desk larger than the target is a shard of its own. The ranges cover the whole key space (shard 0 also takes
 everything before, the last everything after), so every row has exactly one shard. The map is a pure function of the counts: every member
 reading the same data computes the same map. Its digest names the **cut**, not the data, so an intraday batch that moves no cut keeps the
-map (VAR_SHARDING section 3).
+map.
 
 **How many shards (ESTIMATED).** At 1-day width (509 scenarios, 2,036 B a row) 2.3M positions are 4.7 GB of rows: 3 shards at the
 default target; at 1,518 values (6,072 B) 14 GB: 7 shards. With 6 owners and 2 replicas, 7 shards are 14 owner slots over 6 members:
@@ -486,7 +486,7 @@ each, to the next heaviest member (its other replica is untouched). `ShardOwners
 
 *Worked example, 6 → 7 owners at 2.3M, 1,518 values, `target-shard-mb: 512`* (ESTIMATED): S = 27 shards of about 0.52 GB, R = 2, 54
 slots, 9 an owner. The seventh member takes about 54/7 ≈ 7.7 slots (each of the six gives up about 1.3); about 7.7 shards change one owner;
-the seventh builds about 4 GB of shard books from the lake (it reads only the files of those key ranges, VAR_SHARDING section 5); each
+the seventh builds about 4 GB of shard books from the lake (it reads only the files of those key ranges, section 5.7); each
 owner's share falls from 9/54 to 7.7/54 of the rows (page cache 26.1 → 22.4 GB, NVMe need 394 → 338 GB). Nothing else moves.
 
 **Zones.** With `zone-tag: az` and tags `az:<zone>` on every member, the second owner of every shard is in another zone whenever one
@@ -502,7 +502,7 @@ bigger machine; not a placement tool for everyday use.
 member alive, a member's sharding state changed, a drain (at once), or a new cut (a reload with new counts). A flap shorter than
 `stable-seconds` moves nothing (`ShardMembership.look`: the stable view is replaced only after the new one stayed the same that long).
 
-**The handover protocol** (`ShardHandover.decide`, `VarShards` every `rebalance-seconds`, VAR_SHARDING section 7):
+**The handover protocol** (`ShardHandover.decide`, `VarShards` every `rebalance-seconds`, section 5.9):
 
 ```
  new owner N                                    old owner O                                  every member
@@ -564,7 +564,7 @@ holds and per shard the first 16 characters of the data digest it is ready to se
 the digest at once (`ShardPeers.announce`), raises its hash in gossip, and peers pull it within a round: readiness needs no protocol of
 its own.
 
-**Scatter-gather** (`ShardGather`, VAR_SHARDING section 6): a scope's rows are split by shard; each shard's part goes to **one** member in
+**Scatter-gather** (`ShardGather`, section 5.8): a scope's rows are split by shard; each shard's part goes to **one** member in
 this order: owners that announced it ready at the data version the date was put together from (first owner first), any other member that
 announced it so (an old owner mid-handover), then owners not yet ready (they build from the lake). `POST /api/v1/var/partial`, signed, one
 hop, with the caller's on-behalf-of token; the answer is labelled with shard, map digest, data digest and row count and refused if any
@@ -648,8 +648,8 @@ stream reader) under a partition; Drishti uses the database it already has for t
 
 ## 5. VaR sharding in depth (built)
 
-Built, **off by default** (no `sharding:` block in `config/packs/market-risk/pack.yaml`, no `drishti.var.sharding.enabled`). The
-full design is [VAR_SHARDING.md](VAR_SHARDING.md); this section is the deployment view.
+Built, **off by default** (no `sharding:` block in `config/packs/market-risk/pack.yaml`, no `drishti.var.sharding.enabled`). Sections
+5.1 to 5.6 are the deployment view; 5.7 to 5.12 the machinery.
 
 ### 5.1 What is sharded and what is copied
 
@@ -682,7 +682,7 @@ fixed order, to the bit for the same set (`VarShardClusterTest`, `ShardAssemblyT
 
 ### 5.4 Intraday, official records, currencies
 
-- **Intraday** (VAR_SHARDING section 7): file batches and Kafka windows change no shard; each member applies the day's updates on the date it
+- **Intraday** (section 5.9): file batches and Kafka windows change no shard; each member applies the day's updates on the date it
   put together, a trade's morning row read back from the lake by id. Convergence is visible in `provenance.intraday.batches` on any answer.
 - **Official records** are computed from the same vectors on the member that runs the capture; the capture is idempotent by its inputs
   (`VarOfficial`). **Today every member that receives a full-run signal runs it** (the signal is forwarded to all, PO-5): idempotent by
@@ -721,6 +721,150 @@ drishti:
 Every member must set the same sharding block (a read of another cut is refused, never mixed). The settings are read at start: a change is
 a rolling restart (section 10.4).
 
+### 5.7 Shard books, skeletons and putting a date together
+
+**A shard book** (`VarShardBooks`, `VarLoader.loadShard`): an owner reads the date's inputs for its shard's key range only.
+`SourcePlugin.vectors(kind, column, texts, asOf, KeyRange, sink)` (`drishti-api`) lets a connector skip the files whose statistics hold
+none of the range's keys (Delta: the add action's `minValues`, `maxValues` and `nullCount` of the first key column; Iceberg: the data
+file's bounds and null count; a statistic not stated, or a Delta string of 32 characters or more, is not used), and the loader checks every
+row again. The rows go through a whole date's intake and are written as an ordinary hot file
+(`<hot>/<date>-shard-<i>/inputs-<digest>.vhot`, header flag `RANGE` (4) and a `RANG` section: the map, the shard, its range and the digest
+of the inputs it was built from). A reporting currency's shard book is built from the USD one (`<date>-<CCY>-shard-<i>/`). A shard book
+is the morning run; the day's updates are applied by each member on the date it puts together.
+
+**The skeleton** (`ShardSkeleton`, flag `SKELETON` (8)): the hot file without its matrices (`META`, `SCEN`, `TIDS`, `TCOL`, `BOOK`,
+`AKEY`, `AGGS`, `CTOT`, `CELL`, `RANG`, each with its CRC32C), sent by an owner (`GET /api/v1/var/shards/skeleton`) to the members that
+put the date together without holding the shard: the ids, columns, books, nodes and their aggregate vectors, a map of the date without
+its rows. Every member needs all of it, because a question names positions by their attributes and node figures come from the aggregates;
+so it is copied to every member and adding servers does not reduce it (measured 0.72 KB a position a date at 1,000,000 positions,
+[BENCHMARK.md section 4.8](../admin/BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed); how D1 shrinks it:
+[RESOURCES_AND_SCALE.md section 5.1](RESOURCES_AND_SCALE.md#51-the-heap-skeleton-d1)). Skeletons are fetched from owners, never rebuilt
+from the lake by non-owners (rows rejected for their vector would be unknown there).
+
+**Putting a date together** (`ShardAssembly`): the shards' trades side by side in shard order are the whole date's trades in the order one
+server sorts them (a shard is a range of that order), so positions, books, cells and nodes are derived by the same code (`Cells.layout`,
+`Cells.derive`, `VarBook.nodes`); each book's and cell's aggregate is the one its shard summed, and every node's is summed from them
+bottom-up exactly as `VarBook.Builder` does: **a node's vector is the unsharded date's to the bit**. The rows stay where they are
+(`ShardedVectors`: shards held here from their mapped files, the others through their owners). The intake's records are added up and the
+date's checks made again across shards (`VarShardIntake`: one batch id, the scenario set, one form and grain per source system); a
+supplied position and its trades sit under one desk, so its checks stay within a shard.
+
+### 5.8 Queries: the members asked and the provenance
+
+The coordinator (any member a request reaches) resolves the scope as the caller. A node is its aggregate, here. For any other set the
+planner adds the aggregates it can and gathers the rows it needs into one set to add and one to take away; each is summed shard by shard
+(`ShardGather`): a shard held here from its mapped rows; otherwise its part (a bitmap of the shard's ordinals) goes to, in order, the
+shard's owners ready at the date's data version (first owner first), any other member ready so (an old owner mid-handover), then owners
+not ready yet (they build from the lake). The owner applies the caller's rights again (rows outside the caller's view of the shard: `403`)
+and answers the float64 sum labelled with the shard, the map's digest, the data digest and the row count; an answer labelled otherwise is
+refused and the next member asked. What-if baskets, contributions, backtests and history (each date sharded on its own), the official
+records and the reporting currencies all go through this path. The coordinator plans and adds, owners only sum rows, so the aggregates
+that make node figures exact are used once.
+
+`provenance.shards` on every answer: `shards`, `heldHere`, `shardsAsked`, `answeredHere`, `answeredByOwners`, `answeredByReplicas`,
+`nodes`.
+
+### 5.9 The rebalancing round and convergence after a batch
+
+Every `rebalance-seconds`, once the view has settled, each member:
+
+1. builds the shards it owns of the dates in use (open on any member, and for `release-after-seconds` after) and holds no version of,
+   from the lake, never from a peer, and announces them;
+2. releases what `ShardHandover` allows (section 4.6): a shard it no longer owns once every owner has been ready for `grace-seconds`; an
+   older data version once the newer has been ready here as long; a shard of a replaced cut after the grace period. A shard book the date
+   put together here reads is released only after a replacement of the date, put together without it, has been swapped in;
+3. puts together again a date whose remote shards' owners announce newer data, or that nobody announces any more, or whose cut changed;
+4. releases for age the shard books of a date not in use, outside the lake's newest `hot-dates` and unread for `release-after-seconds`.
+
+**A date is never dropped for a replacement:** the replacement is built beside it and swapped in whole (`VarService.swap`) only when
+complete and only if the date loaded is still the one it started from; until then the date loaded answers (every node's aggregate, the
+shards held here, the others' rows at its data version), and a replacement that cannot complete (a shard with no live owner) is tried
+again in a later round. Even with both owners of a shard down, BANK answers.
+
+**Convergence after a batch.** Owners do not rebuild a shard when an intraday batch appends (the map's digest names only the cut); they
+build a newer version when a member asks for it after a full rerun, or when they newly own the shard. The intraday layer is held by every
+member, read from the lake on its own data-load signal, never from a peer's skeleton (a trade's morning row read back from the lake by
+its id). A full-run signal puts the date together again at the new data version. A reporting currency keeps its morning run per date and
+data version, and each answer puts the USD date's intraday layer on it as the USD date holds it then. A date whose updates cannot be read
+is answered from its morning run with a warning on every answer. Clients see what an answer includes in
+`provenance.intraday.batches` (`batchCount`, `lastAt`), listed in one order on every member (each batch's newest `COMPUTED_AT`, then
+`BATCH_ID`).
+
+### 5.10 Refusals, the endpoints and the server's keys
+
+| Case | Answer |
+|---|---|
+| a shard no member answers | `503 DRS-5215`, naming the shard, its range and what each member said: never a partial VaR |
+| a member at another data version | `409 DRS-5216`, the next member asked; when every member is stale the date is put together again and swapped in |
+| a book under two shards (one book under two legal entities or desks), or a position under two with a hierarchy built from columns | the date refused, `422 DRS-5217`: shard by legal entity only, correct the data, or switch sharding off |
+| a skeleton or partial with another map or data version | refused, the next member asked |
+| an unsigned call to `/partial`, `/partials` or `/shards/skeleton` | `401 DRS-5051` |
+| Drishti\*net off | the server is the only member: it owns every shard; the date is still cut and put together |
+
+| Endpoint | Who | What |
+|---|---|---|
+| `GET /api/v1/var/shards?asOf=` | anyone who may open `pnl-vector` | the settings, the members (owner, in the view, draining, zone, what each announces ready), the shard books held here, the date's map with each shard's range, rows, owners and ready members, `safeToStop` |
+| `POST /api/v1/var/shards/drain {on}` | administrators | drain this member, or take it back (section 4.6) |
+| `POST /api/v1/var/partial`, `/partials` | members only, signed with the cluster key, as the caller | a shard's part of a set (section 5.8); many sets in one call (section 5.11) |
+| `GET /api/v1/var/shards/skeleton?date=&ccy=&shard=&map=&digest=` | members only, signed | a shard's skeleton |
+
+Both `POST`s and `/partials` are in `drishti.security.token-never`: the partials are the members' own channel, like `/compute/peer/**`,
+and the drain is an administrator's action. `drishti.py var shards [--date D] [--json]` prints the same; `--drain`, `--undrain`.
+
+**The server's keys** (`drishti.var.sharding.*`, beside the pack block's five, which they override; a key that is not valid refuses the
+start): `stable-seconds` (30), `grace-seconds` (30), `coordinator-only` (false), `zone-tag`, `pins`, `drain` (false: start drained),
+`call-timeout-seconds` (30: one deadline per answer, section 5.11), `skeleton-timeout-seconds` (600), `rebalance-seconds` (2),
+`release-after-seconds` (900). Sharding needs `drishti.var.tier.mode: mapped` (the default).
+
+**Equality, tested** (`VarShardClusterTest`: three members and a reference server in one JVM): 13 scopes (the bank, desks, a book, both
+legal entities, limit letters, a trade, baskets across shards, the bank minus a trade) in USD and EUR, the headline, every child's
+contribution, a page of the P&L path and the tree equal the reference **to the cent** on Delta and on Iceberg, with two members and with
+three; an intraday batch applied live equals it once every member lists the batch; no request fails while a member joins; with one owner
+stopped its replica answers, with both a scope that needs the shard answers `503 DRS-5215` until the member left owns and builds it.
+
+### 5.11 Contributions under load
+
+A contribution table by position or trade needs one vector per part, and a headline needs the sum of its parts' standalone VaR; on a
+put-together date a part's rows sit in one shard. Read part by part, a desk of 2,000 positions held elsewhere would be 2,000 signed calls in
+a row, so the reads are **fetched ahead**:
+
+| Step | Where | What |
+|---|---|---|
+| choose the parts | `VarViews.listed`, `VarPartTotals` | the table's `max-parts` largest; the standalone sums in steps of 1,024 parts on the vector-sum pool |
+| list their reads | `VarBook.readAhead` | each whole position's run of ordinals (none when kept or read from the hot file), each partly held position's trades, each trade asked for |
+| group by shard | `ShardedVectors.batched` | each read cut at shard boundaries; shards held here left alone; a read asked twice asked once |
+| ask the owners | `VarShardRows.sumAll` → `POST /api/v1/var/partials` | one call per remote shard of up to 1,024 row sets (`ShardedVectors.BATCH`, about 4 MB of float64 back at 509 scenarios), every shard's calls side by side on virtual threads |
+| build the parts | `VarViews.position`, `VarViews.trade` | unchanged: each read finds its answer where it would have asked |
+
+`/partials` takes `{date, ccy, shard, map, digest, runs: [...]}` (each set as its runs `[from, to)`, int32 pairs in base64) and answers
+each set's row count and float64 sum in the order asked, with the same checks as `/partial`. Every read is the one the part would have
+made, summed by the same function and added in the same order: **the same bits** (`ShardReadAheadTest`). The calls made for one answer
+share **one deadline**, `call-timeout-seconds` from when the answer's context is taken; each member tried for a shard gets its share of the
+time left (the first owner half when a replica follows, at least 2 s), so a stalled owner leaves time for its replica and a refusal comes
+inside the client's 60 s. `ShardSkeleton.write` copies sections with positional reads into a 64 KB buffer and the servlet stream's own
+`write`, never `Channels.newChannel(out)`, whose `synchronized` lock would pin a Java 21 virtual thread's carrier under a slow reader.
+
+Measured on three members, 200,000 positions, `-Xmx4g` each: the contributions' p95 0.88 s at 50 users, 1.35 s at 100, 2.53 s at 200
+(10.4 to 15.8 s read part by part), no errors, about 230 requests a second ([BENCHMARK.md section 4.3](../admin/BENCHMARK.md#43-users-50-100-and-200)).
+
+### 5.12 The machinery, measure-agnostic, and open items
+
+VaR is the first plug-in of reusable machinery, free of Spring and of the VaR engine: in `com.ash.drishti.compute.shard`, `ShardMap` (the
+cut by key ranges; the key a prefix of the measure's row order, the row size the measure's), `ShardOwners` (rendezvous ownership with
+replicas, zones, pins), `ShardHandover` (the release rule) and `ShardGather` (scatter-gather with its exactly-once check and the measure's
+`Combine`); in `com.ash.drishti.server.shard`, `ShardMembership` (the stable view, drain), `ShardPeers` (readiness in the digest under the
+measure's own service, signed one-hop calls as the caller) and `ShardedMeasure<P>`: the measure's name, digest service, key order, bytes
+per row, partial type `P` and how two combine. VaR's is `VarMeasure` (`LEGAL_ENTITY`, `DESK`; float32 rows; `double[]` partials added
+element by element); its own parts are `VarShards`, `VarShardBooks`, `VarShardRows`, `ShardAssembly`, `ShardSkeleton` and
+`ShardedVectors`. Both trade kinds are sharded together (a trade's P&L vector and scenario PVs are never split); every other kind is read
+whole by each member. Shard boundaries are key ranges, not ordinal ranges, so an owner builds a shard from the lake without the rest of
+the date. Readiness rides in the capability digest, not a gossip message of its own.
+
+**Open:** an Admin → Health "Shards" panel (mock-ups first; until then `GET /api/v1/var/shards` and `drishti.py var shards`); an intraday
+batch's morning rows and an intraday date's overlay store, still read one call each, could use the read-ahead; the 2.3M benchmark sharded
+on real servers with a sorted lake loader, whose per-file key ranges make the file skipping exact; exposure (section 6) and BI sharding on
+the same machinery.
+
 ---
 
 ## 6. Exposure sharding in depth (PLANNED)
@@ -728,7 +872,7 @@ a rolling restart (section 10.4).
 **Today** exposure runs on one server (`ExposureService`, EXPOSURE_GUIDE section 18.8: "Fan-out across nodes is PLANNED"). Its load holds
 every set's value matrix in float64 on the heap until the date is built (80 GB at P = 2,000, G = 50 for 100,000 sets; refused over
 `memory-budget-gb` with `DRS-5445`, EXPOSURE_GUIDE section 28), so a large bank does not fit one server. This section is the design,
-**PLANNED as `CD10`**, on the measure-agnostic machinery VaR plugs into (VAR_SHARDING section 13; RESOURCES_AND_SCALE section 9.3).
+**PLANNED as `CD10`**, on the measure-agnostic machinery VaR plugs into (section 5.12; RESOURCES_AND_SCALE section 9.3).
 
 ### 6.1 The key, and what is sharded
 
@@ -819,7 +963,7 @@ set is its own set and may go to any owner.
 | **Sensitivities and FRTB SBM** | stored per book | net sensitivities add per factor; charges never add (square roots of correlated sums) | trade-grain sensitivities sharded by desk; the charge on the coordinator from summed net sensitivities |
 | **P&L explain, backtesting** | stored (`PNL`); backtesting planned | backtests read official records: one member, small | the backtest over 250 official dates runs on the coordinator |
 | **Computed attributes** (netting-set and counterparty MtM, utilisation) | on demand on the server answering the page | per entity, small | unchanged |
-| **BI rollups and caches** | Rūpaka on DuckDB layers per server; a heavy run goes to the model's owner by rendezvous (`RunCluster`); leases in the identity database | add BI servers; runs spread by model | BI sharding by model partition is a later release (VAR_SHARDING section 14) |
+| **BI rollups and caches** | Rūpaka on DuckDB layers per server; a heavy run goes to the model's owner by rendezvous (`RunCluster`); leases in the identity database | add BI servers; runs spread by model | BI sharding by model partition is a later release (section 5.12) |
 | **Regulatory report runs** (planned: the framework, then the packs) | not built | one run a period: one member, by lease | a BI run or a scheduled job on a BI server, singleton by lease (`CD5`) |
 | **Scheduled reports, alerts** | each server's scheduler | — | singleton by lease (`CD5`) so a cluster sends one email, not one a member |
 
@@ -898,8 +1042,8 @@ The container health checks moved to **liveness** with this (a drained or loadin
 
 ### 9.3 Spreading heavy work
 
-**Today** a shard's partial goes to its **first ready owner first**; the replica serves only when the first refuses or fails (VAR_SHARDING
-section 6), so the first owners carry all the partial load. **PLANNED (`CD6`):** pick among the ready owners by a hash of the request id (or
+**Today** a shard's partial goes to its **first ready owner first**; the replica serves only when the first refuses or fails (section
+5.8), so the first owners carry all the partial load. **PLANNED (`CD6`):** pick among the ready owners by a hash of the request id (or
 least outstanding calls), keeping exactly one answer a shard; a shorter call timeout for partials with one hedged retry; an **admission
 queue** for ad-hoc whole-bank scopes per coordinator (like BI's `max-concurrent`, `max-concurrent-per-user`), so ten people asking "the
 bank without desk X" queue rather than saturate every owner's memory bandwidth (about 10 to 25 such scopes a second over 6 owners, the
@@ -1096,7 +1240,7 @@ skeletons are available. Whole-cluster stop: in reverse.
 | loader | job exit code, the manifest | missed expectation (Data loads page) |
 | database | replication lag, connections against `max_connections` | lag > 10 s; connections > 80% |
 
-The Admin → Health "Shards" panel is an open item (VAR_SHARDING section 14).
+The Admin → Health "Shards" panel is an open item (section 5.12).
 
 ### 14.3 Logs
 
@@ -1497,7 +1641,7 @@ Request capacity (capacity model, ESTIMATED): 140 requests a second measured on 
 | Exposure sharding and the set-at-a-time load | **PLANNED** | CD10 |
 | Second-site DR runbook and exercise | **PLANNED** | CD11 |
 | A minority warning under a partition | **PLANNED** | CD12 |
-| Admin → Health "Shards" panel | open item (mock-ups first) | VAR_SHARDING 14 |
+| Admin → Health "Shards" panel | open item (mock-ups first) | section 5.12 |
 
 ---
 
@@ -2201,7 +2345,7 @@ address they advertise, never a loopback one. Tested by `RunClusterTest`.
 Each phase as it was built, with anything that differs from the design above. The operator's guide is [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one).
 
 **VaR sharding over the members (off by default).** The VaR engine can spread each date's rows over the members
-([VAR_SHARDING.md](VAR_SHARDING.md)): shard maps by legal entity and desk, owners by rendezvous hashing over the members that may own shards
+([section 5](#5-var-sharding-in-depth-built)): shard maps by legal entity and desk, owners by rendezvous hashing over the members that may own shards
 (as `RunCluster` chooses a model's owner, with replicas, zones and a stable view), each owner building its shards from the lake. It uses
 Drishti*net as it is: membership and liveness from the member table; **readiness in the capability digest**, a new optional field
 `services` (name to compact text; the VaR engine publishes `var-shards`: on, owner, draining, per date the shard map and the shards ready

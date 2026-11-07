@@ -40,7 +40,7 @@ aliases: { start: get-started, use: get-started, bi: analytics, packs: data, lay
 
 # An unlisted document's section, by its top folder under docs/ ("" for the top-level *.md; any other folder: default).
 documents: { connectors: data, contracts: data, reference: reference, admin: operate, guides: reference, architecture: build, tutorials: get-started,
-             knowledge: knowledge, qa: build, "": operate, default: build }
+             knowledge: knowledge, "": operate, default: build }
 
 # A pack's own guides join their section under this group, at its end.
 pack-group: From the packs
@@ -161,9 +161,8 @@ sections:
     groups:
       - title: "Set up"
         guides:
-          - { slug: configuration, doc: admin/CONFIGURATION.md, title: Configuration, icon: sliders, summary: "The one configuration document: every setting of every kind (server, console, connectors, packs, editions, stores, BI runs, write-back, {product}*net, AI) with its default, environment variable and meaning, searchable by key, variable or words; administrators see the value in effect and where it came from." }
+          - { slug: configuration, doc: reference/CONFIGURATION.md, title: Configuration, icon: sliders, summary: "The one configuration document: every setting of every kind (server, console, connectors, packs, editions, stores, BI runs, write-back, {product}*net, AI) with its default, environment variable and meaning, searchable by key, variable or words; administrators see the value in effect and where it came from." }
           - { slug: editions, doc: admin/EDITIONS.md, title: "Editions: run Drishti Risk, World, Market or Trading", icon: layers-half, summary: "One setting turns an instance into {product} Risk (VaR and exposure first), {product} World (economies, markets, companies and funds from public data), {product} Market (the bank's curves, surfaces and fixings, with their quality checks) or {product} Trading (a trader's or desk head's own books, P&L, VaR and limits, and whether a new trade fits): the setting for a server, the stack, Docker and ECS; switching back; what the edition includes and hides; the Home landings of each; who is who in Trading (trading.people, View as); the lens for one person, and four lenses side by side; customising and white-labelling without forking; your own edition; clusters; troubleshooting; and the design as built (the edition file, what was built item by item, the decisions, the tests)." }
-          - { slug: lenses, doc: lenses/README.md, title: "Lenses: Risk, Trading, Market, World, Oversight, the risk cubes, the CRO and the CIO", icon: eyeglasses, summary: "One product document per lens: who uses Drishti Risk, Trading, Market and World (built) and the proposed Drishti Oversight (market risk oversight, the second line), the two risk cubes (the MR Cube for market risk and the CCR Cube for counterparty credit risk, on one shared cube core: pivots with correct non-additive totals, FRTB, SA-CCR, SIMM and CVA, every data contract they need, and how they beat FIS Adaptiv) and the CRO lens (the Chief Risk Officer's view: every risk appetite metric against its board limit, what changed overnight and why, breaches and temporary limit increases to approve, the top 10, data health and Ask, with its mock-ups and build checklist) and the CIO lens (the Chief Information Officer's view of the risk data estate: feeds against their service levels and the 7am-ready forecast, data quality, a BCBS 239 scorecard with its evidence, platform health, capacity, usage, security and change, with its mock-ups and build checklist), their questions by day, month and year, what each lens answers today with the guide it was read from, the gaps, the proposals and the data each needs." }
           - { slug: user-management, doc: admin/USER_MANAGEMENT.md, title: Users and roles, icon: people, summary: "The seeded admin, managing users, roles and BI powers, password rules, lockout and the audit log." }
           - { slug: ai, doc: admin/AI.md, title: "AI: model providers and MCP servers", icon: stars, summary: "Model providers (seventeen vendor types), one file each, off by default; TLS and Test connection; the admin page and API.; the MCP client (tools, resources, prompts, SAJHA); the designs of AI management and the quant service." }
       - title: "Run"
@@ -182,9 +181,9 @@ sections:
         guides:
           - { slug: api, doc: guides/API_GUIDE.md, title: API, icon: braces-asterisk, summary: "REST endpoints (BI, Python data prep, themes, {product}*net), the ViewModel contract and error codes." }
           - { slug: developer, title: "Developer: API references", icon: code-square, summary: "Every programming surface in one place: the REST API (OpenAPI), the renderer's TypeScript API, the Javadoc of the plugin and connector SPI and the shard machinery, and the Python references of the compute worker SDK, BI Python items, drishti.py and its client library and the pack and test-data generator helpers; generated at build time, versioned, self-contained, and how to document what you add." }
-          - { slug: viewmodel, doc: architecture/VIEWMODEL.md, title: "ViewModel contract", icon: braces, summary: "The JSON the server returns for every entity screen: the top level, cells, tones, provenance and masks, the data of all 22 panel kinds with real examples, live frames and patches, how to render it, versioning, and its JSON Schema." }
+          - { slug: viewmodel, doc: reference/VIEWMODEL.md, title: "ViewModel contract", icon: braces, summary: "The JSON the server returns for every entity screen: the top level, cells, tones, provenance and masks, the data of all 22 panel kinds with real examples, live frames and patches, how to render it, versioning, and its JSON Schema." }
           - { slug: rachana-reference, doc: guides/RACHANA_REFERENCE.md, title: Rachana reference, icon: book, summary: "Every key (fragments and use:, emits and @panel.event, source:, children, refresh:, layout:, form:), panel option, format, tone, Rachana-EL expression and problem code." }
-          - { slug: functions, doc: guides/FUNCTIONS.md, title: Functions, icon: calculator, summary: "Every function of Rachana and the pivot engine under its one name, generated from the registries: the scalars (math, logic, text, dates on the bank's calendars, lists) and the engine's aggregates (sum, count, avg, min, max, median, percentile, distinct, wavg, variance, stddev, the once-per-parent forms, group, measure, cell) with their arguments, form and source; the old spellings and what to write instead." }
+          - { slug: functions, doc: reference/FUNCTIONS.md, title: Functions, icon: calculator, summary: "Every function of Rachana and the pivot engine under its one name, generated from the registries: the scalars (math, logic, text, dates on the bank's calendars, lists) and the engine's aggregates (sum, count, avg, min, max, median, percentile, distinct, wavg, variance, stddev, the once-per-parent forms, group, measure, cell) with their arguments, form and source; the old spellings and what to write instead." }
       - title: "Command line and tools"
         guides:
           - { slug: cli-guide, doc: guides/CLI_GUIDE.md, title: "Command line", icon: command, summary: "One program for the terminal and CI: JSON Lines to a pack, pack check with JUnit, loading data and packs, BI (models, SQL, Transforms, migrations), the demo lakes, drishti.py net, bi statement, data load --store cassandra, and the headless Sutra tool." }
@@ -198,22 +197,17 @@ sections:
   - id: knowledge
     name: Knowledge
     icon: lightbulb
-    blurb: "What the words of a bank's data mean: eight domains and the glossary"
+    blurb: "What the words of a bank's data mean: three primers and the glossary"
     groups:
       - title: "Start here"
         words: [WHAT]
         guides:
-          - { slug: knowledge, doc: knowledge/README.md, title: "Knowledge home and glossary", icon: lightbulb, kind: knowledge, summary: "The eight Knowledge pages and every term of the glossary A to Z, each with its meaning and the page that explains it; WHAT <term> opens any of them from the command line." }
-      - title: "The domains"
+          - { slug: knowledge, doc: knowledge/README.md, title: "Knowledge home and glossary", icon: lightbulb, kind: knowledge, summary: "The three Knowledge primers (risk, data, world) and every term of the glossary A to Z, each with its meaning and the part that explains it; WHAT <term> opens any of them from the command line." }
+      - title: "The primers"
         guides:
-          - { slug: knowledge-market-risk, packs: [market-risk], doc: knowledge/market-risk.md, title: "Market risk", icon: graph-down-arrow, kind: knowledge, summary: "VaR and expected shortfall in plain words, P&L vectors and historical simulation, positions, portfolios and hierarchies, contributions and diversification, backtesting; how the data connects, the bank's VaR worked through on the demo data, questions to ask and common confusions." }
-          - { slug: knowledge-counterparty-credit-risk, packs: [counterparty-risk], doc: knowledge/counterparty-credit-risk.md, title: "Counterparty credit risk", icon: shield-exclamation, kind: knowledge, summary: "Counterparties, agreements, CSAs, netting sets and collateral; EE, PFE, EPE, EEPE and why PFE does not add up; limits, CVA, SA-CCR and SIMM in brief; CP-ALDERSHOT worked through on the demo data, questions to ask and common confusions." }
-          - { slug: knowledge-trades-and-products, packs: [trading], doc: knowledge/trades-and-products.md, title: "Trades and products", icon: receipt, kind: knowledge, summary: "A trade and its three booking systems, statuses, products, notional and MTM, legs and events, books, desks and traders, valuations; what links to a trade, on the demo data." }
-          - { slug: knowledge-entities-and-ownership, packs: [core, gleif], doc: knowledge/entities-and-ownership.md, title: "Entities and ownership", icon: diagram-3, kind: knowledge, summary: "The LEI and GLEIF, direct and ultimate parents, ownership groups and countries, the bank's legal entities, counterparties and their groups, issuers; who owns whom, on the demo data." }
-          - { slug: knowledge-market-data, packs: [market-data], doc: knowledge/market-data.md, title: "Market data", icon: graph-up, kind: knowledge, summary: "Curves, fixings, FX spot and forwards, volatility surfaces and cubes, credit curves, equities, indices and commodities, correlations and beta; how they link to what uses them." }
-          - { slug: knowledge-data-and-contracts, doc: knowledge/data-and-contracts.md, title: "Data and contracts", icon: file-earmark-ruled, kind: knowledge, summary: "Packs, kinds and commands; fundamental, engine input, {product}'s own and computed data; data contracts, business dates, links and ids; where the data comes from (with External data); DATAMAP draws it all, each join checked against the data." }
-          - { slug: knowledge-companies-funds-and-etfs, packs: [us-equities, funds, gleif], doc: knowledge/companies-funds-and-etfs.md, title: "Companies, funds and ETFs", icon: briefcase, kind: knowledge, summary: "Tickers, CIK, SIC codes and divisions, share classes (GOOG and GOOGL), EDGAR filings and XBRL facts; mutual funds, ETFs and unit investment trusts, NAV and net assets, look-through holdings, expense ratios, index funds, computed index weights and active share, fund overlap; how the us-equities, funds and gleif packs connect, on the demo data." }
-          - { slug: knowledge-economies, packs: [world-economy], doc: knowledge/economies.md, title: "Economies", icon: globe, kind: knowledge, summary: "GDP, growth, inflation, unemployment, debt and the current account; IMF forecasts, country groups and governments; how a counterparty links to its economy, on the demo data." }
+          - { slug: knowledge-risk, packs: [market-risk, counterparty-risk, trading], doc: knowledge/risk.md, title: "Risk: market, counterparty credit, trades", icon: graph-down-arrow, kind: knowledge, summary: "Market risk: VaR and expected shortfall in plain words, P&L vectors and historical simulation, positions, portfolios and hierarchies, contributions and diversification, backtesting, the bank's VaR worked through. Counterparty credit risk: counterparties, agreements, CSAs, netting sets and collateral; EE, PFE, EPE, EEPE and why PFE does not add up; limits, CVA, SA-CCR and SIMM in brief; CP-ALDERSHOT worked through. Trades and products: three booking systems, statuses, products, notional and MTM, legs and events, books, desks and traders, valuations. Each with how the data connects, questions to ask and common confusions, on the demo data." }
+          - { slug: knowledge-data, doc: knowledge/data.md, title: "Data: market data, entities, contracts", icon: graph-up, kind: knowledge, summary: "Market data: curves, fixings, FX spot and forwards, volatility surfaces and cubes, credit curves, equities, indices and commodities, correlations and beta. Entities and ownership: the LEI and GLEIF, direct and ultimate parents, ownership groups and countries, the bank's legal entities, counterparties and their groups, issuers. Data and contracts: packs, kinds and commands; fundamental, engine input, {product}'s own and computed data; data contracts, business dates, links and ids; where the data comes from; DATAMAP. On the demo data." }
+          - { slug: knowledge-world, packs: [us-equities, funds, gleif, world-economy], doc: knowledge/world.md, title: "World: companies, funds, economies", icon: globe, kind: knowledge, summary: "Companies, funds and ETFs: tickers, CIK, SIC codes and divisions, share classes, EDGAR filings and XBRL facts; mutual funds, ETFs and unit investment trusts, NAV and net assets, look-through holdings, expense ratios, index funds, computed index weights and active share, fund overlap. Economies: GDP, growth, inflation, unemployment, debt and the current account; IMF forecasts, country groups and governments; how a counterparty links to its economy. On the public snapshots." }
   - id: internal
     name: Internal
     icon: binoculars
@@ -222,7 +216,8 @@ sections:
     groups:
       - title: "Internal"
         guides:
-          - { slug: competitive-analysis, doc: strategy/COMPETITIVE_ANALYSIS.md, title: "Competitive analysis (internal)", icon: binoculars, roles: [admin], summary: "Internal, not for customers, administrators only: where {product} stands against banking, finance and risk vendors and against general data and analytics platforms; built today against planned; capability matrices; per competitor where it wins, where it loses and how to position it; what still decides deals; pricing observations; sources." }
+          - { slug: competitive-analysis, doc: architecture/COMPETITIVE_ANALYSIS.md, title: "Competitive analysis (internal)", icon: binoculars, roles: [admin], summary: "Internal, not for customers, administrators only: where {product} stands against banking, finance and risk vendors and against general data and analytics platforms; built today against planned; capability matrices; per competitor where it wins, where it loses and how to position it; what still decides deals; pricing observations; sources." }
+          - { slug: lenses, doc: architecture/LENSES.md, title: "Lenses: the product view of each lens (internal)", icon: eyeglasses, roles: [admin], summary: "Internal, administrators only: who uses Drishti Risk, Trading, Market and World (built), the proposed Oversight lens, the MR and CCR cubes, the CRO and CIO lenses; their questions, what each lens answers today, the gaps, the proposals, the data each needs, the mock-ups and build checklists. How to switch lenses on is in the editions guide." }
           - { slug: docs-contracts-saccr, doc: contracts/SACCR.md, title: "SACCR: the standardised approach for counterparty credit risk, the data contract (internal)", icon: file-earmark-lock, roles: [admin], summary: "Internal, administrators only: the data contract of an engine not built yet, kept as a design." }
           - { slug: docs-contracts-coll, doc: contracts/COLL.md, title: "COLL: collateral valuation, the data contract (internal)", icon: file-earmark-lock, roles: [admin], summary: "Internal, administrators only: the data contract of an engine not built yet, kept as a design." }
           - { slug: docs-contracts-mc, doc: contracts/MC.md, title: "MC: margin calls, the data contract (internal)", icon: file-earmark-lock, roles: [admin], summary: "Internal, administrators only: the data contract of an engine not built yet, kept as a design." }
@@ -235,6 +230,14 @@ sections:
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in
 # the help centre at their path slug, so the old addresses keep working.
 moved:
+  knowledge-market-risk: knowledge-risk#1-market-risk                          # the eight Knowledge pages, folded into three primers (2.9.11.g): part 1 of Risk
+  knowledge-counterparty-credit-risk: knowledge-risk#2-counterparty-credit-risk   # part 2 of Risk
+  knowledge-trades-and-products: knowledge-risk#3-trades-and-products          # part 3 of Risk
+  knowledge-market-data: knowledge-data#1-market-data                          # part 1 of Data
+  knowledge-entities-and-ownership: knowledge-data#2-entities-and-ownership    # part 2 of Data
+  knowledge-data-and-contracts: knowledge-data#3-data-and-contracts            # part 3 of Data
+  knowledge-companies-funds-and-etfs: knowledge-world#1-companies-funds-and-etfs   # part 1 of World
+  knowledge-economies: knowledge-world#2-economies                             # part 2 of World
   data-samples: data-contracts   # the 90 test-data sample pages, folded into the contract pages (each kind's example), 2.9.11.g
   docs-contracts-samples-readme: data-contracts                                   # the samples' index, the same fold
   docs-contracts-packs-readme: data-contracts#every-kind-a-to-z                   # the index of every command, now the contracts index's A-Z block
@@ -398,7 +401,7 @@ moved:
   docs-guides-ide-guide: install-and-run#running-from-intellij-idea-and-pycharm   # docs/guides/IDE_GUIDE.md merged into GETTING_STARTED.md
   docs-guides-real-data: external-data#the-world-economy-data-in-detail   # docs/guides/REAL_DATA.md merged into EXTERNAL_DATA.md
   docs-admin-commands: user-management#functions-func-every-command-and-turning-one-on-or-off   # docs/admin/COMMANDS.md merged into USER_MANAGEMENT.md
-  docs-guides-qa-on-windows-with-custom-data: docs-qa-windows-custom-data   # the Windows QA guide, now a QA script in docs/qa
+  docs-guides-qa-on-windows-with-custom-data: docs-architecture-test-harness#9-qa-on-windows-offline-with-your-own-endur-data   # the Windows QA guide, now TEST_HARNESS section 9
   # One benchmark document: the store benchmark and the 200,000-position VaR run merged into docs/admin/BENCHMARK.md.
   docs-admin-scale-benchmark: benchmark#9-the-stores-compared-10000-to-50000-trades-a-day   # docs/admin/SCALE_BENCHMARK.md
   docs-architecture-benchmark-2-9-7: benchmark#4-the-200000-position-var-and-cluster-run   # the VaR and cluster run's document
@@ -461,20 +464,20 @@ moved:
 # "What does this mean?" beside a data page's help (the explorers' ?, a view's About): the Knowledge page, or glossary entry, that
 # explains the screen (var, exposure) or the kind of the record (core/app.py reads it at start; tests/test_help.py checks each target).
 knowledge:
-  var: knowledge-market-risk                                            # the VaR explorer
-  var-result: knowledge-market-risk#term-var                            # VRES
-  smat: knowledge-market-risk#term-scenario-matrix                      # the scenario matrix, SMAT (2.9.7)
-  play: knowledge-market-risk#term-var-playground                       # the VaR Playground, PLAY VAR
-  desk: knowledge-market-risk#term-risk-hierarchy                       # DESK (a node of the risk hierarchies: its VaR and limits)
-  exposure: knowledge-counterparty-credit-risk                          # the exposure explorer
-  exposure-result: knowledge-counterparty-credit-risk#term-exposure-profile   # EXP as a kind
-  counterparty: knowledge-counterparty-credit-risk#term-counterparty    # CPTY
-  netting-set: knowledge-counterparty-credit-risk#term-netting-set      # NSET
-  csa: knowledge-counterparty-credit-risk#term-csa                      # CSA
-  us-company: knowledge-companies-funds-and-etfs#term-us-company        # USEQ
-  fund: knowledge-companies-funds-and-etfs#term-look-through            # FUND (the fact sheet and its Look-through tab)
-  fund-holder: knowledge-companies-funds-and-etfs#term-held-by-funds    # HELD
-  index-funds: knowledge-companies-funds-and-etfs#term-index-fund       # TRACK
+  var: knowledge-risk#1-market-risk                                          # the VaR explorer
+  var-result: knowledge-risk#term-var                            # VRES
+  smat: knowledge-risk#term-scenario-matrix                      # the scenario matrix, SMAT (2.9.7)
+  play: knowledge-risk#term-var-playground                       # the VaR Playground, PLAY VAR
+  desk: knowledge-risk#term-risk-hierarchy                       # DESK (a node of the risk hierarchies: its VaR and limits)
+  exposure: knowledge-risk#2-counterparty-credit-risk                          # the exposure explorer
+  exposure-result: knowledge-risk#term-exposure-profile   # EXP as a kind
+  counterparty: knowledge-risk#term-counterparty    # CPTY
+  netting-set: knowledge-risk#term-netting-set      # NSET
+  csa: knowledge-risk#term-csa                      # CSA
+  us-company: knowledge-world#term-us-company        # USEQ
+  fund: knowledge-world#term-look-through            # FUND (the fact sheet and its Look-through tab)
+  fund-holder: knowledge-world#term-held-by-funds    # HELD
+  index-funds: knowledge-world#term-index-fund       # TRACK
 
 # F1 opens the guide for the current screen.
 contextual:
@@ -526,3 +529,31 @@ contextual:
   bi-theme-designer: bi-guide#52-themes
   bi-transform: bi-guide#17-data-prep-the-transform-editor
   bi-notebook: user-guide#the-notebook
+  # 2.9.11.g part B: internal documents folded, references moved to docs/reference
+  docs-architecture-in-memory-lake: docs-architecture-data-architecture#7-the-in-memory-lake-delta-tables-that-never-touch-a-disk   # IN_MEMORY_LAKE.md folded into DATA_ARCHITECTURE.md section 7
+  docs-architecture-lake-config: docs-architecture-data-architecture#8-the-lake-configuration-one-place-that-says-what-the-lake-is   # LAKE_CONFIG.md folded into DATA_ARCHITECTURE.md section 8
+  docs-architecture-dataload-inbox: docs-architecture-data-architecture#9-the-data-inbox-files-dropped-in-a-folder-loaded-into-the-lake   # DATALOAD_INBOX.md folded into DATA_ARCHITECTURE.md section 9
+  docs-architecture-data-load-rules: docs-architecture-data-architecture#10-data-load-rules-table-pack-business-date-and-mode-of-every-load   # DATA_LOAD_RULES.md folded into DATA_ARCHITECTURE.md section 10
+  docs-architecture-parallel-loader: docs-architecture-data-architecture#11-the-parallel-lake-loader-drishti-lakeload   # PARALLEL_LOADER.md folded into DATA_ARCHITECTURE.md section 11
+  docs-architecture-arrow-flight: docs-architecture-data-architecture#12-arrow-flight-the-data-to-any-client   # ARROW_FLIGHT.md folded into DATA_ARCHITECTURE.md section 12
+  docs-architecture-pivot-engine: docs-architecture-architecture#23-the-pivot-engine   # PIVOT_ENGINE.md folded into ARCHITECTURE.md section 23
+  docs-architecture-python-compute: docs-architecture-architecture#24-compute-workers-python-and-java-libraries-approved-pinned-and-isolated   # PYTHON_COMPUTE.md folded into ARCHITECTURE.md section 24
+  docs-architecture-compute-engines: docs-architecture-architecture#25-compute-engines-on-or-off-each-with-its-own-configuration-file   # COMPUTE_ENGINES.md folded into ARCHITECTURE.md section 25
+  docs-qa-windows-custom-data: docs-architecture-test-harness#9-qa-on-windows-offline-with-your-own-endur-data   # windows-custom-data.md folded into TEST_HARNESS.md section 9
+  docs-lenses-risk-lens: lenses#1-drishti-risk-what-risk-managers-near-the-desks-need-what-the-lens-gives-them-today-and-what-comes-next   # RISK_LENS.md folded into LENSES.md section 1
+  docs-lenses-trading-lens: lenses#2-drishti-trading-what-traders-and-desk-heads-need-what-the-lens-gives-them-today-and-what-comes-next   # TRADING_LENS.md folded into LENSES.md section 2
+  docs-lenses-market-lens: lenses#3-drishti-market-what-the-market-data-team-needs-what-the-lens-gives-it-today-and-what-comes-next   # MARKET_LENS.md folded into LENSES.md section 3
+  docs-lenses-world-lens: lenses#4-drishti-world-what-macro-research-and-context-users-need-what-the-lens-gives-them-today-and-what-comes-next   # WORLD_LENS.md folded into LENSES.md section 4
+  docs-lenses-oversight-lens: lenses#5-market-risk-oversight-what-the-second-line-needs-from-drishti-and-a-drishti-oversight-lens   # OVERSIGHT_LENS.md folded into LENSES.md section 5
+  docs-lenses-mr-cube-lens: lenses#6-the-mr-cube-a-market-risk-cube-lens-that-answers-what-fis-adaptivs-artiq-answers-and-shows-why   # MR_CUBE_LENS.md folded into LENSES.md section 6
+  docs-lenses-ccr-cube-lens: lenses#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why   # CCR_CUBE_LENS.md folded into LENSES.md section 7
+  docs-lenses-cro-lens: lenses#8-the-cro-lens-is-the-bank-within-its-risk-appetite-what-changed-overnight-and-what-must-the-chief-risk-officer-act-on   # CRO_LENS.md folded into LENSES.md section 8
+  docs-lenses-cio-lens: lenses#9-the-cio-lens-is-the-risk-data-estate-healthy-trustworthy-on-time-secure-affordable-and-used   # CIO_LENS.md folded into LENSES.md section 9
+  docs-lenses-readme: lenses   # README.md folded into LENSES.md
+  docs-architecture-viewmodel: viewmodel   # architecture/VIEWMODEL.md moved to reference/
+  docs-guides-functions: functions   # guides/FUNCTIONS.md moved to reference/
+  docs-admin-configuration: configuration   # admin/CONFIGURATION.md moved to reference/
+  docs-guides-command-catalog: docs-reference-commands   # guides/COMMAND_CATALOG.md moved to reference/COMMANDS.md
+  docs-admin-under-construction: docs-reference-under-construction   # admin/UNDER_CONSTRUCTION.md moved to reference/
+  docs-strategy-competitive-analysis: competitive-analysis   # strategy/COMPETITIVE_ANALYSIS.md moved to architecture/
+  docs-architecture-adr-011-sutras-are-markdown-documents: docs-architecture-adr-017-sutras-are-yaml   # ADR-011 superseded by ADR-017 and deleted

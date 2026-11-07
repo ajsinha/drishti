@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Who owns a shard (VAR_SHARDING.md section 4): rendezvous (highest random weight) hashing of the shard's key over the members that may
+ * Who owns a shard (CLUSTER_DEPLOYMENT.md section 4.5): rendezvous (highest random weight) hashing of the shard's key over the members that may
  * own shards, the top {@code replicas} by weight. A pure function of its inputs: every member that sees the same members computes the same
  * owners without asking anyone (no consensus protocol), and a member that joins or leaves moves only the shards it wins or held (about
  * 1/N of them). Two refinements: owners spread over zones when the members carry a zone (a second replica in another zone when there is

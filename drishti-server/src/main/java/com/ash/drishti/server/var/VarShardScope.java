@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * One shard of a date's shard map as a load reads it (VAR_SHARDING.md section 5): its index, the key range of its rows (from its first key,
+ * One shard of a date's shard map as a load reads it (CLUSTER_DEPLOYMENT.md section 5.7): its index, the key range of its rows (from its first key,
  * shard 0 from the start of the key space, up to the next shard's first key, the last shard to the end), and the {@code RANG} section its
  * hot file carries.
  *

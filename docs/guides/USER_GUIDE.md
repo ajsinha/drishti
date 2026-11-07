@@ -406,11 +406,11 @@ that is not a command but reads as words (`live trades over 5m`) is offered as a
 
 ### Knowledge: what the words mean
 
-*See what your data hasn't told you yet.* The **Knowledge** section at the top of the help centre has one page per domain:
-[Market risk](../knowledge/market-risk.md), [Counterparty credit risk](../knowledge/counterparty-credit-risk.md),
-[Trades and products](../knowledge/trades-and-products.md), [Entities and ownership](../knowledge/entities-and-ownership.md),
-[Market data](../knowledge/market-data.md), [Data and contracts](../knowledge/data-and-contracts.md),
-[Economies](../knowledge/economies.md) and [Companies, funds and ETFs](../knowledge/companies-funds-and-etfs.md). Each says what the domain is in plain words, gives a glossary with the command that shows each
+*See what your data hasn't told you yet.* The **Knowledge** section at the top of the help centre has three primers, one part per domain:
+[Risk](../knowledge/risk.md) ([market risk](../knowledge/risk.md#1-market-risk), [counterparty credit risk](../knowledge/risk.md#2-counterparty-credit-risk),
+[trades and products](../knowledge/risk.md#3-trades-and-products)), [Data](../knowledge/data.md) ([market data](../knowledge/data.md#1-market-data),
+[entities and ownership](../knowledge/data.md#2-entities-and-ownership), [data and contracts](../knowledge/data.md#3-data-and-contracts)) and
+[World](../knowledge/world.md) ([companies, funds and ETFs](../knowledge/world.md#1-companies-funds-and-etfs), [economies](../knowledge/world.md#2-economies)). Each part says what the domain is in plain words, gives a glossary with the command that shows each
 term, draws how the kinds connect (with their id conventions), works an example through on the demo data, lists ready-made questions to
 ask your data, and clears up the common confusions (VaR against ES, why PFE does not add up, why posted collateral raises exposure).
 The [Knowledge home](../knowledge/README.md) lists every term A to Z.

@@ -44,7 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * VaR sharding across Drishti*net (VAR_SHARDING.md): each business date cut into shards along legal entity and desk ({@link ShardMap}),
+ * VaR sharding across Drishti*net (CLUSTER_DEPLOYMENT.md section 5): each business date cut into shards along legal entity and desk ({@link ShardMap}),
  * each shard owned by {@code replicas} members chosen by rendezvous hashing over the members that may own shards ({@link ShardOwners}: a
  * pure function of shared inputs, no consensus protocol), each owner building its shards from the lake alone; every member puts the date
  * together from the shards it holds and the others' skeletons ({@link ShardAssembly}: every node's aggregate on every member, to the bit),

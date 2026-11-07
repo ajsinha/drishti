@@ -387,7 +387,7 @@ if __name__ == "__main__":
 
 
 class Parametric(unittest.TestCase):
-    """PVAR on the command line (PARAMETRIC_VAR.md section 11): the parametric line under the historical one, --no-parametric, --matrix,
+    """PVAR on the command line (VAR_GUIDE.md section 3.12): the parametric line under the historical one, --no-parametric, --matrix,
     --measure parametric for the playground."""
 
     def setUp(self):

@@ -16,69 +16,59 @@
 # Lenses: the product view of each lens (internal)
 
 An **edition** turns a whole instance into a focused product (`drishti.edition`); a **lens** offers the same focus to one person on a
-full instance (`drishti.lenses`, *Open Drishti Risk* in Views and Home). How both are set up, switched and customised is
-[EDITIONS.md](../admin/EDITIONS.md). The sections below are the **product view** of each lens: who uses it, the questions they ask by
-the day, month and year, what the lens answers today (each statement cites the guide or file it was read from), the gaps, the
-proposals and the data each proposal needs. Their proposals are candidates in the
-[implementation plan](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started), not started.
+full instance (`drishti.lenses`, *Open Drishti Risk* in Views and Home); how both are set up, switched and customised is
+[EDITIONS.md](../admin/EDITIONS.md) and is not repeated below. Each section is one lens's **product view**: who uses it, the questions
+they ask by the day, month and year, what the lens answers today (each statement cites the guide or file it was read from), the gaps,
+the proposals and the data each proposal needs. The proposals are candidates in the
+[implementation plan](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started), not started. The four built lenses are on by default
+(`drishti.lenses: risk,world,market,trading`). Oversight needs the VaR change explanation and the breach workflow first. The two risk
+cubes are two lenses on one shared core ([section 6.4](#64-the-shared-cube-core-mr-and-ccr)): the pivot, provenance, explain and
+scatter-gather machinery are the same, the data grain and the order of aggregation differ (position × scenario for market risk; trade ×
+path × time step, netted and collateralised per netting set first, for counterparty risk), and sensitivities and the QLRisk pricing
+bridge are shared ([section 6.4.13](#6413-mr-versus-ccr-two-cubes-on-one-core)). The CRO lens sits above them all: it owns no engine,
+only the risk appetite catalogue, the statuses, the brief and the CRO's decisions, and is built after the cube proofs of concept
+([section 8.11](#811-a-proof-of-concept-after-the-cube-pocs)). The CIO lens is its sibling for the platform and the risk data behind the
+numbers: the CRO's "safe to quote" is its whole story, BCBS 239 its strongest angle ([section 9.9](#99-bcbs-239-principle-by-principle)).
+Each section draws the line between its lens and the others (Risk against Oversight in
+[section 1.7.1](#171-risk-and-oversight-the-split)).
 
-| Lens | For | Status | Document |
+| Lens | For | Status | Section |
 |---|---|---|---|
-| **Drishti Risk** | risk managers near the desks: VaR and exposure first, limits, the morning and the close | built, the first edition | [section 1](#1-drishti-risk-what-risk-managers-near-the-desks-need-what-the-lens-gives-them-today-and-what-comes-next) |
-| **Drishti Trading** | traders and desk heads: my books, my P&L, my VaR and limits, whether a new trade fits | built | [section 2](#2-drishti-trading-what-traders-and-desk-heads-need-what-the-lens-gives-them-today-and-what-comes-next) |
-| **Drishti Market** | the market-data team: curves, surfaces and fixings, and their quality | built | [section 3](#3-drishti-market-what-the-market-data-team-needs-what-the-lens-gives-it-today-and-what-comes-next) |
-| **Drishti World** | macro, research and context users: economies, markets, companies and funds from public data | built | [section 4](#4-drishti-world-what-macro-research-and-context-users-need-what-the-lens-gives-them-today-and-what-comes-next) |
-| **Drishti Oversight** | market risk oversight, the second line (the CRO's function): why VaR moved, breaches and escalation, limits of every kind | proposed, not built | [section 5](#5-market-risk-oversight-what-the-second-line-needs-from-drishti-and-a-drishti-oversight-lens) |
-| **MR Cube** | market risk managers, oversight, the regulatory capital team and traders: a pivot over any dimensions with correct non-additive VaR and ES totals, sensitivities and ladders, FRTB SA and IMA, explain, corrections, pre-deal pricing; the shared cube core (its section 4) and every data contract | proposed, not built | [section 6](#6-the-mr-cube-a-market-risk-cube-lens-that-answers-what-fis-adaptivs-artiq-answers-and-shows-why) |
-| **CCR Cube** | credit officers, the CVA desk, collateral operations and regulatory capital: counterparty × tenor against limits with headroom, allocated exposure, the GLEIF group roll-up, CVA and SA-CVA, SA-CCR, IMM, SIMM, wrong-way risk, pre-deal on paths; on the MR Cube's core | proposed, not built | [section 7](#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why) |
-| **CRO** | the Chief Risk Officer and their office: is the bank within its risk appetite (every board metric against its limit, floors as headroom), what changed overnight and why, the decisions waiting (breaches, temporary limit increases to approve, those expiring), the top 10, the world, data health and "safe to quote", Ask, time travel to the last board, the board pack; summarises and drills into the cubes, Oversight, Market and World; mock-ups and a build checklist in the document | proposed, not built (layouts decided) | [section 8](#8-the-cro-lens-is-the-bank-within-its-risk-appetite-what-changed-overnight-and-what-must-the-chief-risk-officer-act-on) |
-| **CIO** | the Chief Information Officer, the data office and the security team: is the risk data estate on time (feeds against their service levels, the 7am-ready forecast), trustworthy (data quality per dataset, a BCBS 239 scorecard with its evidence), healthy (nodes, shards, response times), affordable (capacity, cost later), secure and used; read-only, every row opens the admin page behind it; the evidence pack for a supervisor; mock-ups and a build checklist in the document | proposed, not built (layouts decided) | [section 9](#9-the-cio-lens-is-the-risk-data-estate-healthy-trustworthy-on-time-secure-affordable-and-used) |
-
-The four built lenses are on by default (`drishti.lenses: risk,world,market,trading`); the Oversight lens is a proposal whose own
-document says what must exist first (the VaR change explanation and the breach workflow). The two risk cubes are proposals too: two
-lenses on one shared cube core, because the data grain and the order of aggregation differ (position × scenario for market risk; trade ×
-path × time step, netted and collateralised per netting set first, for counterparty risk) while the pivot, provenance, explain and
-scatter-gather machinery are the same; sensitivities and the QLRisk pricing bridge are shared ([section 6.4.13](#6413-mr-versus-ccr-two-cubes-on-one-core)). The CRO lens
-sits above them all: it owns no engine, only the risk appetite catalogue, the statuses, the brief and the CRO's decisions, and is built
-after the cube proofs of concept ([section 8.11](#811-a-proof-of-concept-after-the-cube-pocs)). Its mock-ups, like the
-cubes', are in [mockups/](mockups/cro/B.html) beside the documents. The CIO lens is its sibling for the platform and the risk data
-behind the numbers: the CRO's "safe to quote" is the CIO lens's whole story, and BCBS 239 its strongest angle
-([section 9.9](#99-bcbs-239-principle-by-principle); mock-ups in [mockups/cio/](mockups/cio/B.html)). Each document links its siblings and draws the
-line between its lens and the others (Risk against Oversight in [section 1.7.1](#1-drishti-risk-what-risk-managers-near-the-desks-need-what-the-lens-gives-them-today-and-what-comes-next), for example).
+| **Drishti Risk** | risk managers near the desks: VaR and exposure first, limits, the morning and the close | built, the first edition | [1](#1-drishti-risk-what-risk-managers-near-the-desks-need-what-the-lens-gives-them-today-and-what-comes-next) |
+| **Drishti Trading** | traders and desk heads: my books, my P&L, my VaR and limits, whether a new trade fits | built | [2](#2-drishti-trading-what-traders-and-desk-heads-need-what-the-lens-gives-them-today-and-what-comes-next) |
+| **Drishti Market** | the market-data team: curves, surfaces and fixings, and their quality | built | [3](#3-drishti-market-what-the-market-data-team-needs-what-the-lens-gives-it-today-and-what-comes-next) |
+| **Drishti World** | macro, research and context users: economies, markets, companies and funds from public data | built | [4](#4-drishti-world-what-macro-research-and-context-users-need-what-the-lens-gives-them-today-and-what-comes-next) |
+| **Drishti Oversight** | market risk oversight, the second line (the CRO's function): why VaR moved, breaches and escalation, limits of every kind | proposed, not built; mock-ups first | [5](#5-market-risk-oversight-what-the-second-line-needs-from-drishti-and-a-drishti-oversight-lens) |
+| **MR Cube** | market risk managers, oversight, regulatory capital and traders: a pivot with correct non-additive VaR and ES totals, sensitivities and ladders, FRTB SA and IMA, explain, corrections, pre-deal; the shared cube core and every data contract | proposed, not built | [6](#6-the-mr-cube-a-market-risk-cube-lens-that-answers-what-fis-adaptivs-artiq-answers-and-shows-why) |
+| **CCR Cube** | credit officers, the CVA desk, collateral operations and regulatory capital: counterparty × tenor against limits, allocated exposure, the GLEIF group roll-up, CVA and SA-CVA, SA-CCR, IMM, SIMM, wrong-way risk, pre-deal on paths | proposed, not built | [7](#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why) |
+| **CRO** | the Chief Risk Officer and their office: every board appetite metric against its limit, what changed overnight and why, the decisions waiting, the top 10, data health and "safe to quote", Ask, the board pack | proposed, not built (layouts decided) | [8](#8-the-cro-lens-is-the-bank-within-its-risk-appetite-what-changed-overnight-and-what-must-the-chief-risk-officer-act-on) |
+| **CIO** | the Chief Information Officer, the data office and the security team: feeds against their service levels, data quality, a BCBS 239 scorecard, platform health, capacity, cost, security and usage; read-only, the evidence pack | proposed, not built (layouts decided) | [9](#9-the-cio-lens-is-the-risk-data-estate-healthy-trustworthy-on-time-secure-affordable-and-used) |
 
 ## Mock-ups
 
 The product owner's mock-ups live in the repository under [`mockups/<lens>/`](mockups/), each `<name>.html` self-contained (system
 fonts, everything inline, nothing from a CDN) with a `<name>.png` screenshot beside it (headless Chrome, 1600 px wide, the whole page).
-Each lens document ends with **Mock-ups: the screens to build**: the screenshot, a link to the HTML, the variant chosen and a **build
-checklist**, one row per panel (its exact contents, the data or API it reads, its interactions, the phase, and whether it is built,
-partly built or not built, checked against the code). **That checklist is the source of truth at build time**: a panel is done when its
-row says built, and what a mock-up showed but the build left out is listed under the checklist and is a row of the plan. A new mock-up is
-copied into `mockups/<lens>/` with its screenshot (web fonts replaced by the system stack) and gets its checklist in the same change; a
-lens with no mock-up yet (Oversight) says so, and its next step is mock-ups first, before any build. One mock-up is shared by the four
-built lenses: their own subject menus in the bar ([`mockups/menus/`](mockups/menus/A.html), row LX1), with its checklist in each of
-their documents (for example [section 1.11.4](#1114-the-lens-menus-lx1-menusahtml)).
+Each lens section ends with its mock-ups: the screenshot, a link to the HTML, the variant chosen and a **build checklist**, one row per
+panel (its exact contents, the data or API it reads, its interactions, the phase, and whether it is built, partly built or not built,
+checked against the code). **That checklist is the source of truth at build time**: a panel is done when its row says built, and what a
+mock-up showed but the build left out is listed under the checklist and is a row of the plan. A new mock-up is copied into
+`mockups/<lens>/` with its screenshot (web fonts replaced by the system stack) and gets its checklist in the same change; a lens with no
+mock-up yet (Oversight) says so, and its next step is mock-ups first, before any build. One mock-up is shared by the four built lenses:
+their own subject menus in the bar ([`mockups/menus/`](mockups/menus/A.html), row LX1), its checklist in
+[section 1.11.4](#1114-the-lens-menus-lx1-menusahtml). These conventions hold for every section below and are not repeated there.
 
 ## 1. Drishti Risk: what risk managers near the desks need, what the lens gives them today, and what comes next
 
-**Status: analysis and product description: built parts as built, the rest proposals.** Every "built" or "partly" statement cites the
-document, section or file it was read from on 2026-10-31. Built features (10-day VaR and confidence, the scenario matrix, the renderer's
-sign-in window) are cited as built. Everything in sections 5 and 8 is a proposal; the rows of section 8 are candidates in the
-[implementation plan](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started), not started, except where the plan
-already names the work (cited as such).
-
-**The request (product owner, 2026-10-31):** "We should have similar and fuller standalone document for other lenses too", after the
-market risk oversight analysis ([section 5](#5-market-risk-oversight-what-the-second-line-needs-from-drishti-and-a-drishti-oversight-lens), the proposed Oversight lens; built). The proposed risk cubes that would serve this lens as a screen are designed in [section 6](#6-the-mr-cube-a-market-risk-cube-lens-that-answers-what-fis-adaptivs-artiq-answers-and-shows-why) and [section 7](#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why) (see the design). Drishti Risk is the first edition
-and the oldest lens; this is its product document, and it draws the line between Risk and the proposed Oversight lens (section 7.1).
-
-**Read with:** [EDITIONS.md sections 4 and 7](../admin/EDITIONS.md#4-what-drishti-risk-shows) (what the lens shows and its three
-landings), [EDITIONS.md](../admin/EDITIONS.md) (how to run it), the edition file
-[`config/editions/risk.yaml`](../../config/editions/risk.yaml), [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built),
-[EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine),
-[COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md) (compute, do not store),
-[REGULATORY_VAR_REPORTING.md](../guides/REGULATORY_VAR_REPORTING.md) (the regulatory foundation and the reports) and the contracts [STR.md](../contracts/STR.md)
-(stress), [FRTB.md](../contracts/FRTB.md) (sensitivities) and [LIM.md](../contracts/LIM.md) (credit limits). The sibling lens documents:
-[section 2](#2-drishti-trading-what-traders-and-desk-heads-need-what-the-lens-gives-them-today-and-what-comes-next), [section 3](#3-drishti-market-what-the-market-data-team-needs-what-the-lens-gives-it-today-and-what-comes-next), [section 4](#4-drishti-world-what-macro-research-and-context-users-need-what-the-lens-gives-them-today-and-what-comes-next).
+Drishti Risk is the first edition and the oldest lens. Every "built" or "partly" statement cites the document or file it was read from
+on 2026-10-31; sections 1.5 and 1.8 are proposals (rows of the plan's
+[lens product candidates](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started), not started, unless the plan already names the
+work). This part draws the line between Risk and the proposed Oversight lens (section 1.7.1); the risk cubes that would serve it as a
+screen are sections 6 and 7. **Read with:** [EDITIONS.md sections 4 and 7](../admin/EDITIONS.md#4-what-drishti-risk-shows) (what the
+lens shows, its landings, how to run it), [`config/editions/risk.yaml`](../../config/editions/risk.yaml),
+[VAR_GUIDE.md](../guides/VAR_GUIDE.md), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md),
+[COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md), [REGULATORY_VAR_REPORTING.md](../guides/REGULATORY_VAR_REPORTING.md) and the
+contracts [STR.md](../contracts/STR.md) (stress), [FRTB.md](../contracts/FRTB.md) (sensitivities) and [LIM.md](../contracts/LIM.md)
+(credit limits).
 
 ### 1.1 Who uses it
 
@@ -93,9 +83,8 @@ decision 1). Its users sit **near the desks**: they know the books, talk to the 
 | **Risk analyst, risk reporting** | The daily numbers and their reproducibility; the official records; the reports | Official records, captures, BI over them |
 | *Also served:* a **quant** or **model validator** reading the engines' answers | Methodology evidence | Scenario windows, confidences, decomposition, reproducibility |
 
-**Who it is not for.** Traders and desk heads (Drishti Trading, [section 2](#2-drishti-trading-what-traders-and-desk-heads-need-what-the-lens-gives-them-today-and-what-comes-next)); the market-data team (Drishti Market);
-the **second line's governance** (limit framework, breach approval, RNIV, sign-offs), which the oversight analysis proposes as a separate
-**Drishti Oversight** lens (section 7.1).
+**Who it is not for.** Traders and desk heads (section 2); the market-data team (section 3); the **second line's governance** (limit
+framework, breach approval, RNIV, sign-offs), the proposed **Drishti Oversight** lens (section 1.7.1).
 
 #### 1.1.1 A day, a month and a year
 
@@ -116,10 +105,10 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 | Question | Drishti today | Gap |
 |---|---|---|
 | *What is the bank's and each desk's VaR, and are we within limits?* | **Built**: the Risk desk landing's tiles (VaR and ES of BANK, limits in breach) and **VaR by desk with limit use**; the Risk map's hierarchy with limit use per node and the limit-use heat map ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)); the official records' `LIMIT` and `LIMIT_USE` ([VAR.md section 5](../contracts/VAR.md#5-official-end-of-day-results)) | Stressed VaR; other limit types (RO3 of the oversight analysis) |
-| *Why did VaR move?* | **Partly**: compare a capture with now: the change, members added and removed, the components that moved most ([VAR_GUIDE section 6](../guides/VAR_GUIDE.md#6-captures-and-compare)); component VaRs add up exactly ([VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts)); the scenario matrix across dates (**built**: `SMAT`, [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat)) | The change **by cause** that adds up exactly: RO1 of the oversight analysis; on the Risk desk as RL4 (section 5.4) |
+| *Why did VaR move?* | **Partly**: compare a capture with now: the change, members added and removed, the components that moved most ([VAR_GUIDE section 6](../guides/VAR_GUIDE.md#6-captures-and-compare)); component VaRs add up exactly ([VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts)); the scenario matrix across dates (**built**: `SMAT`, [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat)) | The change **by cause** that adds up exactly: RO1 of the oversight analysis; on the Risk desk as RL4 (section 1.5.4) |
 | *Which scenario drives it, and who loses on it?* | **Built**: the P&L path tab, the 25 worst scenarios, the contributors on a scenario day ([VAR_GUIDE section 3.4](../guides/VAR_GUIDE.md#34-the-tabs)) | — |
-| *Did yesterday's P&L exceed VaR?* | **Partly**: the Risk desk's backtest tile and the official-mode history: Drishti's derived hypothetical P&L against the VaR before it, the Basel light, Kupiec and Christoffersen ([VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting)) | The bank's actual and hypothetical P&L (planned); section 5.3 |
-| *Which counterparties are near their credit limits?* | **Built**: exposure EPE and peak PFE of the bank; exposure by counterparty against its credit limit (Risk desk) | The stored credit limits read very low use (sized on the retired stored profiles, [EXPOSURE_GUIDE section 28](../guides/EXPOSURE_GUIDE.md#28-open-items)); section 5.9 |
+| *Did yesterday's P&L exceed VaR?* | **Partly**: the Risk desk's backtest tile and the official-mode history: Drishti's derived hypothetical P&L against the VaR before it, the Basel light, Kupiec and Christoffersen ([VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting)) | The bank's actual and hypothetical P&L (planned); section 1.5.3 |
+| *Which counterparties are near their credit limits?* | **Built**: exposure EPE and peak PFE of the bank; exposure by counterparty against its credit limit (Risk desk) | The stored credit limits read very low use (sized on the retired stored profiles, [EXPOSURE_GUIDE section 28](../guides/EXPOSURE_GUIDE.md#28-open-items)); section 1.5.9 |
 | *What happened overnight?* | **Built**: the Risk map's **Today** feed: intraday batches, official records, breaches | The official capture's time (left out: the feed names the date captured) |
 
 #### 1.2.2 Intraday
@@ -129,8 +118,8 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 | *What does this large trade do to the desk's VaR?* | **Built**: intraday updates from files and Kafka ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); the pre-deal what-if under the basket's sheet ([VAR_GUIDE section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-under-the-baskets-sheet)) | Pricing a new trade over the scenarios (QLRisk, parked) |
 | *Can we approve this trade against the counterparty's limit?* | **Built**: the exposure pre-deal what-if ([EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if)); `XWIF` | — |
 | *What is the VaR of every short EUR position? Of this basket?* | **Built**: scope words by a trade's attribute, rule portfolios, `WHERE:`, baskets ([VAR_GUIDE section 5.5](../guides/VAR_GUIDE.md#55-scope-words-by-a-trades-attribute)) | — |
-| *At 10 days? At 95%?* | **Built**: the horizon and confidence pickers ([VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen); plan row 2b) | The desk tiles and the map following the person's horizon and confidence (section 5) |
-| *Tell me when a desk crosses its limit intraday* | **Partly**: alerts on numbers watch BI and view numbers, after a load ([USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers)) | An intraday limit check that notifies (RO2's notification side; section 5.11) |
+| *At 10 days? At 95%?* | **Built**: the horizon and confidence pickers ([VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen); plan row 2b) | The desk tiles and the map following the person's horizon and confidence (section 1.5.2) |
+| *Tell me when a desk crosses its limit intraday* | **Partly**: alerts on numbers watch BI and view numbers, after a load ([USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers)) | An intraday limit check that notifies (RO2's notification side; section 1.5.11) |
 
 #### 1.2.3 The close
 
@@ -145,10 +134,10 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 |---|---|---|
 | Backtesting review | **Partly**: official backtest per node | Bank P&L, separate counts; exception commentary (RO14) |
 | Limit utilisation review | **Partly**: `LIMIT_USE` per node and date in BI (`market-risk-var-official`) | Statistics per node (average, peak, days near) |
-| Stress results | **Hidden** in the lens (product owner, 2026-10-30: `risk.yaml`'s comment); stored per desk and scenario, the bank's P&L per scenario derived ([VAR.md section 7.4](../contracts/VAR.md#74-the-banks-stress-pl-by-scenario-derived)) | Decision on showing them (section 5.7); the stress engine (STR.md, proposed; RO9) |
+| Stress results | **Hidden** in the lens (product owner, 2026-10-30: `risk.yaml`'s comment); stored per desk and scenario, the bank's P&L per scenario derived ([VAR.md section 7.4](../contracts/VAR.md#74-the-banks-stress-pl-by-scenario-derived)) | Decision on showing them (section 1.5.7); the stress engine (STR.md, proposed; RO9) |
 | Stressed VaR and its 12-week average | **Built** ([VAR_GUIDE section 18.8](../guides/VAR_GUIDE.md#188-stressed-var)) | — |
 | The stress window review | **Built**: `SWIN` ([VAR_GUIDE section 18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window)) | — |
-| Exposure reviews | **Built**: explorer, captures and compare, official tables | Exposure on the VaR hierarchy (section 5.6) |
+| Exposure reviews | **Built**: explorer, captures and compare, official tables | Exposure on the VaR hierarchy (section 1.5.6) |
 
 ---
 
@@ -166,7 +155,7 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 | Several hierarchies (MGMT, LEGAL, limit letters `LL`, any configured) | **Built** | [VAR.md section 2.14](../contracts/VAR.md#214-hierarchies-from-the-rows-or-from-the-trades-columns) |
 | Captures, compare, history, backtest (derived hypothetical P&L) | **Built** | [VAR_GUIDE sections 6, 7](../guides/VAR_GUIDE.md#6-captures-and-compare) |
 | Backtesting against the bank's actual and hypothetical P&L, the multiplier | **Planned** | [REGULATORY_VAR_REPORTING section 8](../guides/REGULATORY_VAR_REPORTING.md#8-coverage-and-roadmap) |
-| VaR change explanation by cause | **Not built**; designed as RO1 (section 5.4.1) | section 5.4 |
+| VaR change explanation by cause | **Not built**; designed as RO1 (section 5.4.1) | section 1.5.4 |
 | The scenario matrix (a scope's scenarios across dates) | **Built** (`SMAT`, on in Drishti Risk) | [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat) |
 | Intraday VaR; what-if; the pre-deal basket | **Built** | [VAR_GUIDE section 8](../guides/VAR_GUIDE.md#8-what-if-and-var-as-a-kind) |
 | VaR by risk type (IR, credit spread, equity, FX, commodity) | **Not built**, designed (G6) | planned with the regulatory reports |
@@ -181,7 +170,7 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 | Pre-deal what-if | **Built** | [EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if) |
 | Official records | **Built** | [EXP.md section 6](../contracts/EXP.md#6-official-end-of-day-results) |
 | Credit limits and their use | **Built as read**; stored limits sized on the retired profiles (use reads 0.1% to a few percent); LIM engine parked | [EXPOSURE_GUIDE section 28](../guides/EXPOSURE_GUIDE.md#28-open-items); [LIM.md](../contracts/LIM.md) |
-| EPE per node of a VaR hierarchy; credit-limit use per desk | **Not served** (left out of the Risk landings) | [EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings); section 5.6 |
+| EPE per node of a VaR hierarchy; credit-limit use per desk | **Not served** (left out of the Risk landings) | [EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings); section 1.5.6 |
 | CVA, SA-CCR, SIMM | **Hidden** (and CVA parked) | [EDITIONS.md section 4](../admin/EDITIONS.md#4-what-drishti-risk-shows) |
 | Wrong-way risk | **Not built** (proposed) | [COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md) section 5.13 |
 
@@ -190,7 +179,7 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 | Need | Status | Evidence or row |
 |---|---|---|
 | Per-trade DV01 | **Stored** on trade valuations; `TVAL` hidden in Risk | [COMPUTED_ATTRIBUTES.md section 4.1](COMPUTED_ATTRIBUTES.md#41-trade-valuation-tval) |
-| Delta by risk factor and bucket (DV01 by currency × tenor, CS01, vega, FX delta, equity delta) for any scope | **Not built**: per-trade `sensitivity` table proposed (FRTB.md); FRTB sensitivities stored per book and bucket only | [COMPUTED_ATTRIBUTES.md section 4.9](COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb); RO4 of the oversight analysis; section 5.5 |
+| Delta by risk factor and bucket (DV01 by currency × tenor, CS01, vega, FX delta, equity delta) for any scope | **Not built**: per-trade `sensitivity` table proposed (FRTB.md); FRTB sensitivities stored per book and bucket only | [COMPUTED_ATTRIBUTES.md section 4.9](COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb); RO4 of the oversight analysis; section 1.5.5 |
 | Sensitivity limits | **Not built** | RO3, RO4 |
 
 #### 1.3.4 Stress
@@ -206,7 +195,7 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 | Need | Status | Evidence or row |
 |---|---|---|
 | Liquidity (days to liquidate, bid-offer cost) | **Not built**; "join as more lines" (EDITIONS.md decision 1) | RO10 of the oversight analysis |
-| Climate risk (transition and physical scenarios, financed emissions) | **Not built**; named as a future line only | section 5.8 |
+| Climate risk (transition and physical scenarios, financed emissions) | **Not built**; named as a future line only | section 1.5.8 |
 | Concentration by issuer, sector, country, currency, tenor | **Not built** as a view | RO8 of the oversight analysis |
 
 #### 1.3.6 Access and governance
@@ -237,15 +226,15 @@ chosen by the product owner on 2026-10-29 ([EDITIONS.md section 7](../admin/EDIT
 | **Limits in breach** | From the hierarchy tree's limit use | VaR limits only |
 | **Counterparties and netting sets** | From the exposure tree | — |
 | **VaR by desk with limit use** | The tree | — |
-| **Exposure by counterparty** against its credit limit | `/api/exposure/tree` | The stored limits' low use (section 5.9) |
+| **Exposure by counterparty** against its credit limit | `/api/exposure/tree` | The stored limits' low use (section 1.5.9) |
 | **Quick cards** | `VAR BANK`, `VAR DESK RATES`, `VRES DESK:RATES`, `EXP CPTY:CP-ALDERSHOT` (`risk.yaml` `home.cards`) | — |
 
 #### 1.4.2 B: Command first (`command`)
 
 A big command line; the edition's chips (`VAR BANK`, `VAR DESK RATES`, `EXP BANK`, `EXP CPTY:CP-ALDERSHOT`, `VRES DESK:RATES`, `HIER`,
 `VOFF`); a status strip; the person's VaR baskets (`/api/var/baskets`); their monitors; links to learn. **Left out:** the mock-up's
-"recent" commands (the person's baskets and monitors instead). World and Market built a Recently opened card from the person's command
-history since; Risk could reuse it (section 5.10).
+"recent" commands (the person's baskets and monitors instead); World and Market have a Recently opened card from the person's command
+history that Risk could reuse (section 1.5.10).
 
 #### 1.4.3 C: Risk map (`map`)
 
@@ -254,22 +243,17 @@ any configured) with VaR and limit use per node; a **limit-use heat map**; a **T
 breaches. **Left out:** exposure (EPE) per node of a VaR hierarchy (the map shows VaR and limit use only); credit-limit use per desk (the
 heat map shows each node's VaR limit use); the time of an official capture (the feed names the date captured).
 
-#### 1.4.4 What is missing (this document's gaps)
-
-1. Stressed VaR on the landings (5.1). 2. Horizon and confidence (5.2). 3. Backtesting on the bank's P&L (5.3). 4. Why it moved (5.4).
-5. Sensitivities (5.5). 6. Exposure on the VaR hierarchy (5.6). 7. Stress shown or not (5.7). 8. Liquidity and climate (5.8). 9. Credit
-limits sized on computed PFE (5.9). 10. Context from World, recents and the capture time (5.10). 11. Intraday limit alerts (5.11).
-12. The scenario matrix in the lens (5.12).
-
 ---
 
 ### 1.5 Gaps, with design sketches
 
-Drishti's rules ([COMPUTED_ATTRIBUTES.md section 1.2](COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)): fundamental
-inputs under a **data contract** as JSON Lines; measures **computed on demand** from trade or position-grain inputs and **never stored**,
-except as an immutable capture or an official end-of-day record; governance records Drishti-owned and versioned; **BI is the report
-layer**; the engines are unchanged by a lens. Sizes: **S** days, **M** one to three weeks, **L** more than three weeks. Ids RL1 to RL13
-are this document's; RO ids are the oversight analysis's.
+**The rules every lens design in this document follows** (said once here; the other parts link to it):
+[COMPUTED_ATTRIBUTES.md section 1.2](COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which): fundamental inputs arrive under a **data
+contract** as JSON Lines; measures are **computed on demand** from trade or position-grain inputs and **never stored**, except as an
+immutable capture or an official end-of-day record; Drishti-owned records (a comment, an acknowledgement, a breach) are versioned in the
+content store; **BI is the report layer**; a landing reads the engines' answers as the person and never widens access; the engines are
+unchanged by a lens; a figure the data cannot give is left out or labelled, never invented. Sizes: **S** days, **M** one to three weeks,
+**L** more than three weeks, one builder. RL ids are the Risk lens's gaps; RO ids are Oversight's (section 5.4).
 
 | Id | Gap | Size | Depends on |
 |---|---|---|---|
@@ -297,7 +281,7 @@ after 2c. **Tests:** the tile equals `VAR BANK SVAR` on the demo; no stress set:
 
 #### 1.5.2 RL2: horizon and confidence on the landings
 
-Now that the horizon and confidence are built (plan row 2b): the desk tiles and the map follow the person's horizon and confidence; **limit use is shown only when the
+The desk tiles and the map follow the person's horizon and confidence; **limit use is shown only when the
 answer's horizon and confidence are the limit's own** (`limitComparable`, [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)), so the heat map greys a
 cell with "not comparable" rather than colouring a 10-day VaR against a 1-day limit; the backtest tile stays 1-day (backtesting is 1-day).
 **Size** S. **Tests:** heat map cells empty and labelled at 10 days; restored at 1-day 99%.
@@ -311,10 +295,7 @@ counts equal the engine's; a desk without P&L shows "—".
 
 #### 1.5.4 RL4: why it moved, on the Risk desk
 
-RO1 (the oversight analysis, section 4.1) designs the VaR change explanation: a fixed sequence of full VaR states whose
-differences add up exactly to the change (restatement, hierarchy and rules, trades out, oldest scenario dropped, market, newest scenario
-added, trades in, amendments split), each step with its contributors; computed from the official capture and the churned trades'
-vectors; never stored. The Risk lens is where a business risk manager first needs it: a **Why VaR moved** card on the Risk desk (the
+The VaR change explanation itself is RO1 ([section 5.4.1](#541-ro1-var-change-explanation)). The Risk lens is where a business risk manager first needs it: a **Why VaR moved** card on the Risk desk (the
 bank, with a switch to any desk; a waterfall, each bar opening its contributors) and a **Why it moved** action on every node of the Risk
 map. The Oversight lens (when built) shows the same answer in its Appetite landing. **Size** S after RO1 (M for RO1 itself). **Tests:**
 the waterfall's bars add to the change to the cent on every demo node.
@@ -325,32 +306,28 @@ the waterfall's bars add to the change to the cent on every demo node.
 per-trade `DV01` only (hidden with `TVAL`), FRTB sensitivities per book and bucket (hidden with `FRTB`), and no engine that aggregates
 them ([COMPUTED_ATTRIBUTES.md section 4.9](COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb)).
 
-**Design** (RO4 of the oversight analysis, section 5.4.4, which this follows):
+**Design.** The input (per-trade sensitivities under a contract) and the aggregation (additive, summed by bucket for any scope with
+entitlements) are RO4's ([section 5.4.4](#544-ro4-sensitivity-aggregation-and-sensitivity-limits)); the contract is D8
+`position-sensitivity` ([section 6.7.9](#679-d8-position-sensitivity-sens-new)). What Risk adds:
 
-- **Input** (fundamental): the per-trade `sensitivity` table proposed in [FRTB.md](../contracts/FRTB.md): one row per trade, date and risk
-  factor (`RISK_CLASS`, `FACTOR` such as a curve and tenor, an underlying and expiry; `MEASURE` delta, vega, gamma or curvature inputs;
-  `VALUE`; `CURRENCY`), shared by FRTB SA, P&L explain and sensitivity-based stress.
-- **Computation**: sensitivities are **additive**; a scope's DV01 by currency × tenor is the sum of its trades' rows. Per arbitrary scope
-  with entitlements this is an engine (the VaR engine's summing pattern: a factor dictionary, per-trade rows, per-node totals), not a
-  derived kind.
 - **Screens in Risk**: a **Sensitivities** tab on the VaR page for the scope on screen (ladders: DV01 by currency × tenor bucket, CS01 by
   curve × tenor, vega by underlying × expiry, FX delta by currency), every cell printing its value; a drill to the trades of a bucket; the
   map's node opens its ladder. Limits on buckets come with RO3 (the catalogue).
 - **Commands**: a command form chosen at build (proposed `SENS <scope>`), added to the edition's allow-list.
 
-**Data needs**: the bank's per-trade sensitivities (section 6). **Size** L; M when the bank delivers sensitivities bucketed to its limit
+**Data needs**: the bank's per-trade sensitivities (section 1.6). **Size** L; M when the bank delivers sensitivities bucketed to its limit
 grid. **Tests:** the sum by bucket equals the sum of trades; netting long and short in a bucket; a node's ladder equals the sum of its
 children's; sharded equals single-server.
 
 #### 1.5.6 RL6: exposure on the VaR hierarchy
 
 **Left out of the landings** (EDITIONS.md section 7): EPE per node of a VaR hierarchy, and credit-limit use per desk. **Why it is not a
-sum:** exposure is netted and collateralised per netting set across desks, and PFE is not additive. **Design:** EPE and EE **allocated**
-to trades (on each path and date, the set's collateralised exposure shared among its trades in proportion to their positive value; EE
-and EPE then add across sets and up any hierarchy), summed by the VaR hierarchy's nodes (desk, book, legal entity); the map's node shows
+sum:** exposure is netted and collateralised per netting set across desks, and PFE is not additive. **Design:** EE and EPE **allocated**
+to trades (the CCR cube's CC2, [section 7.8.2](#782-allocated-exposure-cc2)), summed by the VaR hierarchy's nodes (desk, book, legal
+entity); the map's node shows
 "VaR 41.2m · EPE 118.0m"; the heat map gains an **EPE** column. Credit-limit use stays a counterparty measure; per desk, the map shows
 the desk's **share** of each counterparty's limit use (allocated PFE at the counterparty's peak date ÷ its limit). The same allocation
-serves the Trading lens's largest-counterparty tile (section 2, TL2). The standalone `DESK:` scope (partial, built) is not used for
+serves the Trading lens's largest-counterparty tile (TL2, section 2.5.2). The standalone `DESK:` scope (partial, built) is not used for
 this: it ignores netting with other desks. **Size** M. **Tests:** allocated EE of all desks equals the bank's EE; a desk alone in a set
 gets the set.
 
@@ -460,10 +437,9 @@ oversight work is the **why it moved** answer (RL4) and, later, a read-only view
 ### 1.8 A roadmap
 
 The rows below are added to the plan's [Lens product candidates (not started)](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started)
-section; where another plan row builds the engine, the RL row is only the lens's part.
-
-
-**Status (product owner, 2026-10-31).** The Status column says where each row stands: *planned* rows are next, *proposed* rows wait until their work starts, and *unscheduled* rows wait for the product owner.
+section; where another plan row builds the engine, the RL row is only the lens's part. **Status** (product owner, 2026-10-31, the
+same in every roadmap of this document): *planned* rows are next, *proposed* rows wait until their work starts, *unscheduled* rows wait
+for the product owner.
 
 | Order | Row | Why here | Size | Depends on | Status |
 |---|---|---|---|---|---|
@@ -478,61 +454,40 @@ section; where another plan row builds the engine, the RL row is only the lens's
 | 9 | **RL10** World context on the counterparty page | Cheap context, internal only | S to M | World packs loaded | unscheduled |
 | 10 | **RL5** sensitivities | The largest; needs the bank's data | L | per-trade sensitivities | proposed |
 | 11 | **RL7** stress (by decision); **RL8** liquidity and climate | Engines and data first | S to L | RO9, RO10, data | RL7 closed: kept hidden (decided); RL8 proposed |
-| 12 | **RL14** the landings' mock-up remainders; **RL15** the horizon picker as drawn; **LX1** subject menus | Close what the mock-ups showed and the build left out ([section 11](#111-mock-ups-the-screens-to-build)) | S each | — | RL14 proposed; RL15 proposed; LX1 built |
+| 12 | **RL14** the landings' mock-up remainders; **RL15** the horizon picker as drawn; **LX1** subject menus | Close what the mock-ups showed and the build left out ([section 1.11](#111-mock-ups-the-screens-to-build)) | S each | — | RL14 proposed; RL15 proposed; LX1 built |
 
 ---
 
 ### 1.9 Decisions for the product owner
 
-**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Each row is proposed until its work starts.
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"). The question, then
+the decision; each row is proposed until its work starts.
 
-1. **The split.** Risk stays the engines' lens; governance goes to a separate Oversight lens after RO1 and RO2 (recommended, as the
-   oversight analysis), or Risk gains a fourth landing for oversight.
-
-   **Decided (product owner, 2026-10-31):** Risk stays the engines' lens; governance goes to the separate Oversight lens after RO1 and RO2.
-2. **Stress in Risk (RL7).** Keep hidden until the stress engine (recommended), show the stored and derived results read-only, or build the
-   engine first.
-
-   **Decided (product owner, 2026-10-31):** keep stress hidden in Risk until the stress engine (RO9, unscheduled); RL7 is closed by this decision.
-3. **Exposure on the VaR hierarchy (RL6).** Allocated EE and EPE (recommended: adds up), the standalone `DESK:` scope, or leave it out.
-
-   **Decided (product owner, 2026-10-31):** allocated EE and EPE (Euler allocation, adds up), with the CCR cube's allocated exposure (CC2), proposed.
-4. **Sensitivities first or VaR by risk type first.** RL5 (needs the bank's per-trade sensitivities) or G6 VaR by risk type (planned with the regulatory reports,
-   needs factor tags on the vectors).
-
-   **Decided (product owner, 2026-10-31):** VaR by risk type (G6) first, with the regulatory reports (proposed); position sensitivities follow later (proposed; RL5 with them).
-5. **Credit limits on the demo (RL9).** Regenerate them from the computed PFE now, or wait for the LIM engine.
-
-   **Decided (product owner, 2026-10-31):** regenerate the demo credit limits from the computed PFE (as the cube POC decided), with the CCR cube (proposed).
-6. **Climate (RL8).** Scope it (transition scenarios, physical concentration, financed emissions) or keep it a named future line.
-
-   **Decided (product owner, 2026-10-31):** climate stays a named future line, out of scope as a computed measure; the CRO lens shows it only as an optional supplied-input tile, off by default (proposed).
-7. **World context in Risk (RL10).** A context panel on the counterparty page, internal only (recommended), or none.
-
-   **Decided (product owner, 2026-10-31):** a context panel on the counterparty page, internal only (unscheduled).
-8. **One near-limit threshold.** The explorer's 75% and 90%, Trading's 80% and the proposed catalogue's `WARNING_AT`: one per limit with a
-   site default (as the oversight analysis's decision 8).
-
-   **Decided (product owner, 2026-10-31):** one per limit (its own warning level) with a site default of 80%, configurable, as the oversight analysis's decision 8.
+| # | Question (options) | Decided |
+|---|---|---|
+| 1 | **The split.** Risk the engines' lens with governance in a separate Oversight lens after RO1 and RO2 (recommended), or a fourth Risk landing for oversight | Risk stays the engines' lens; governance goes to the separate Oversight lens after RO1 and RO2 |
+| 2 | **Stress in Risk (RL7).** Hidden until the stress engine (recommended), the stored and derived results read-only, or the engine first | Hidden until the stress engine (RO9, unscheduled); RL7 closed by this decision |
+| 3 | **Exposure on the VaR hierarchy (RL6).** Allocated EE and EPE (recommended: adds up), the standalone `DESK:` scope, or leave it out | Allocated EE and EPE (Euler allocation, adds up), with the CCR cube's allocated exposure (CC2), proposed |
+| 4 | **Sensitivities first or VaR by risk type first.** RL5 (needs the bank's per-trade sensitivities) or G6 (planned with the regulatory reports, needs factor tags on the vectors) | G6 first, with the regulatory reports (proposed); position sensitivities later (proposed; RL5 with them) |
+| 5 | **Credit limits on the demo (RL9).** Regenerate from the computed PFE now, or wait for the LIM engine | Regenerate from the computed PFE (as the cube POC decided), with the CCR cube (proposed) |
+| 6 | **Climate (RL8).** Scope it (transition scenarios, physical concentration, financed emissions) or keep it a named future line | A named future line, out of scope as a computed measure; the CRO lens shows it only as an optional supplied-input tile, off by default (proposed) |
+| 7 | **World context in Risk (RL10).** A context panel on the counterparty page, internal only (recommended), or none | The panel, internal only (unscheduled) |
+| 8 | **One near-limit threshold.** The explorer's 75% and 90%, Trading's 80% and the catalogue's `WARNING_AT`: one per limit with a site default | One per limit (its own warning level), site default 80%, configurable, as Oversight's decision 8 (section 5.9) |
 
 ---
 
 ### 1.10 Glossary
 
+The terms of the four built lenses (Trading adds its own in section 2.10). The measures (VaR, ES, component VaR, diversification,
+stressed and 10-day VaR, backtesting and the traffic light) are defined with worked numbers in
+[VAR_GUIDE section 2](../guides/VAR_GUIDE.md#2-the-measures-with-worked-numbers); EE, PFE, EPE and EEPE in
+[EXPOSURE_GUIDE section 2](../guides/EXPOSURE_GUIDE.md#2-the-measures-with-worked-numbers).
+
 | Term | In plain words |
 |---|---|
-| **VaR** | The loss that a day's market move should exceed only 1 day in 100, from the last two years of moves applied to today's trades |
-| **ES** (expected shortfall) | The average loss on the worst days beyond VaR (the worst 2.5%) |
-| **Component VaR** | A part's share of a total VaR; the parts add up to the total |
-| **Diversification** | How much less a total VaR is than the sum of its parts' VaRs |
-| **Stressed VaR** | VaR computed on a year of crisis moves instead of the last two years |
-| **10-day VaR** | VaR over ten trading days, by √10 or by summing ten consecutive days |
-| **Backtesting** | Counting the days the actual loss was larger than VaR; about 2.5 in 250 at 99% |
-| **Traffic light** | The Basel zones for backtesting exceptions: green, amber, red |
 | **Hierarchy** | A tree of the bank: management (desks, books), legal entities, limit letters |
 | **Limit letter** | The document that delegates a limit from one level to the next |
 | **Official record** | The end-of-day figure of a node, captured with its inputs and kept seven years |
-| **EE, PFE, EPE** | Expected exposure at a future date; a bad-case exposure at a high confidence; the average expected exposure over the first year |
 | **Netting set** | Trades with one counterparty under one agreement, whose values offset |
 | **CSA** | The agreement that says how much collateral each side posts |
 | **Allocated exposure** | A counterparty's exposure shared out among the trades (and desks) that cause it, adding up to the whole |
@@ -547,12 +502,9 @@ section; where another plan row builds the engine, the RL row is only the lens's
 
 ### 1.11 Mock-ups: the screens to build
 
-The product owner's mock-ups that belong to this lens are copied into the repository, self-contained (system fonts, nothing from
-a CDN), with a screenshot beside it, under [`docs/architecture/mockups/risk/`](mockups/risk) (the VaR layout's under [`mockups/var-layout/`](mockups/var-layout)). **The checklists below are the source of truth
-at build time** ([README.md](#mock-ups)): every panel of a mock-up is a row, and its status was checked against the code on
-2026-10-31 (`wip/drill-a`). **Built** cites the code or the guide section that shows it; **partly built** says what is missing; **not built**
-names the candidate row that would build it. The gaps (on a mock-up, not in the product) close each subsection and are rows of the plan's
-[Lens product candidates](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started).
+Under [`mockups/risk/`](mockups/risk) (the VaR layout's under [`mockups/var-layout/`](mockups/var-layout)); conventions and the rule
+that the checklist is the source of truth at build time: [the introduction](#mock-ups). Statuses checked against the code on
+2026-10-31 (`wip/drill-a`).
 
 | Mock-up | Chosen | Built | Partly built | Not built |
 |---|---|---:|---:|---:|
@@ -590,7 +542,7 @@ mock-up drew no phone form; on a phone the landing takes the phone tiers ([MOBIL
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|
-| R1 | Bar (A, B, C) | `DRISHTI Risk` in amber; a rounded amber command line with the placeholder *VAR BANK, EXP CPTY:CP-ALDERSHOT, VAR LL:LL-0003*; menus **Views · VaR · Exposure · BI · Admin · Help** | `risk.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type a command, `<GO>`; open a menu | — | **Built**: brand, command line and placeholder; **VaR** and **Exposure** menus of their own ([section 11.4](#1114-the-lens-menus-lx1-menusahtml)) |
+| R1 | Bar (A, B, C) | `DRISHTI Risk` in amber; a rounded amber command line with the placeholder *VAR BANK, EXP CPTY:CP-ALDERSHOT, VAR LL:LL-0003*; menus **Views · VaR · Exposure · BI · Admin · Help** | `risk.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type a command, `<GO>`; open a menu | — | **Built**: brand, command line and placeholder; **VaR** and **Exposure** menus of their own ([section 1.11.4](#1114-the-lens-menus-lx1-menusahtml)) |
 | R2 | Landing switch | (the footer: pick one or combine) | `home.landings`, `home.titles`; the person's choice in their settings ([`edition_routes.py`](../../drishti-console/routes/edition_routes.py)) | click a landing; lens links; *The classic Home* | — | **Built** |
 | R3 | Meta line (A, C) | *Business date **2026-09-30** · shown in **USD** · intraday: **2 batches applied**, latest 11:00 UTC · official record captured 06:05* | `/api/var/scope?scope=BANK` (`businessDate`, `currency`, `intraday`), `/api/var/official` | — | — | **Partly built**: date, currency, the intraday note and the official record's **date**; missing the number of batches with the latest time, and the capture **time** (RL11) |
 | R4 | Tile: VaR (A) | *VaR 99% · 1 day · BANK* **112.04m**; *ES 97.5% shown on click* | `/api/var/scope?scope=BANK` (`var`, `es`, `confidence`) ([VAR_GUIDE section 11](../guides/VAR_GUIDE.md#11-the-api)) | click: the VaR explorer at BANK | — | **Built** (ES in the subline: *ES … · 99% · 1 day*); horizon and confidence on the tile: RL2 |
@@ -706,14 +658,15 @@ backtest tile says *backtesting is 1-day*. **Phone:** the controls are full widt
 
 [Open the mock-up](mockups/menus/A.html) (options: [B](mockups/menus/B.html) a subject strip under the standard bar,
 [C](mockups/menus/C.html) one lens menu with subject columns; the light theme: [A-light.png](mockups/menus/A-light.png)). One mock-up for the
-four built lenses (Risk, Trading, Market, World), each lens with one menu open. **Recommended:** option A, subject menus in the bar
+four built lenses (Risk, Trading, Market, World), each lens with one menu open; this subsection is its home (the why, the phone form),
+and each other built lens lists only its own rows. **Recommended:** option A, subject menus in the bar
 (chosen on the recommendation, product owner to review); plan row LX1.
 
 **Why A.** The lens mock-ups the product owner chose already drew their bars this way (Views, the lens's subjects, BI, Help), so A builds what was approved; each subject is one click from anywhere, as the five standard menus are. The strip of B costs a second row on every page; the single lens menu of C hides the subjects a click deeper and is better kept as the phone form of A. Subject menus are configured, not coded: the edition names its top menus in order, and a subject menu draws on the items of the menus file with the same switches (an item shows only when the edition keeps its command word).
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
-| X1 | Bar | `DRISHTI Risk`; the command line; menus **Views · Engines · BI · Admin · Help** | the edition's top menus by id, in order (`menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | **Built**: `menus.top` in [`risk.yaml`](../../config/editions/risk.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens). The mock-up's VaR and Exposure menus are one **Engines** menu since 2.9.11.a (mock-up [engines-menu/A](mockups/engines-menu/A.html)) |
+| X1 | Bar | `DRISHTI Risk`; the command line; menus **Views · Engines · BI · Admin · Help** | the edition's top menus by id, in order (`menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | **Built**: `menus.top` in [`risk.yaml`](../../config/editions/risk.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens). The mock-up's VaR and Exposure menus are one **Engines** menu (mock-up [engines-menu/A](mockups/engines-menu/A.html)) |
 | X2 | VaR column of the Engines menu | VaR explorer `VAR BANK`; Why it moved `VAR BANK EXPLAIN`; VaR Playground `PLAY VAR`; Scenario matrix `SMAT`; Regulatory reports; Backtesting `VAR BANK BACKTEST`; Stress window `SWIN BANK`; VaR results `VRES`; Official records `VOFF`; Hierarchies and limit letters `HIER` | the `engines` menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its `var` column; each item shown only when the edition keeps its command | click an item: its page or command | **Built**: the Playground, Regulatory reports and Backtesting items show once their screens are on the server (`route:`) |
 | X3 | Exposure column of the Engines menu | Exposure explorer `EXP`; A counterparty `EXP CPTY …`; A netting set `EXP NSET …` (Pre-deal check `XWIF`: the Counterparties menu) | its `exposure` column | click an item: its page or command | **Built**: A counterparty and A netting set put `EXP CPTY` and `EXP NSET` in the command line for the id |
 | X4 | Phone form | below 640 px the Engines menu's columns fold into a drawer, one engine open at a time | the bar's template and [`drishti_engines-menu.js`](../../drishti-console/web/static/js/drishti_engines-menu.js) | tap Engines, an engine, then an item | **Built** |
@@ -749,20 +702,12 @@ made up; the panels under the toolbar are the explorer's own, unchanged. **Code:
 
 ## 2. Drishti Trading: what traders and desk heads need, what the lens gives them today, and what comes next
 
-**Status: analysis and product description: built parts as built, the rest proposals.** Every "built" or "partly" statement cites the
-document, section or file it was read from on 2026-10-31. Built features (10-day VaR and confidence, the scenario matrix, the renderer's
-sign-in window) are cited as built. Everything in sections 5 and 8 is a proposal; the rows of section 8 are candidates in the
-[implementation plan](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started), not started.
-
-**The request (product owner, 2026-10-31):** "We should have similar and fuller standalone document for other lenses too", after the
-market risk oversight analysis ([section 5](#5-market-risk-oversight-what-the-second-line-needs-from-drishti-and-a-drishti-oversight-lens), the proposed Oversight lens; built). This is the Trading lens's.
-
-**Read with:** [EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading) (the lens as built),
-[EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-trading) (how to run it), the edition file
-[`config/editions/trading.yaml`](../../config/editions/trading.yaml), [VAR_GUIDE.md](../guides/VAR_GUIDE.md),
-[EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md), [COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md) and the contracts
-[TVAL.md](../contracts/TVAL.md) (valuation totals) and [PNL.md](../contracts/PNL.md) (P&L explain). The sibling lens documents:
-[section 1](#1-drishti-risk-what-risk-managers-near-the-desks-need-what-the-lens-gives-them-today-and-what-comes-next), [section 3](#3-drishti-market-what-the-market-data-team-needs-what-the-lens-gives-it-today-and-what-comes-next), [section 4](#4-drishti-world-what-macro-research-and-context-users-need-what-the-lens-gives-them-today-and-what-comes-next).
+The first line's lens. Every "built" or "partly" statement cites the document or file it was read from on 2026-10-31; sections 2.5
+and 2.8 are proposals, rows of the plan's [lens product candidates](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started), not
+started. **Read with:** [EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading) (the lens as built) and
+[section 12](../admin/EDITIONS.md#12-drishti-trading) (how to run it), [`config/editions/trading.yaml`](../../config/editions/trading.yaml),
+[VAR_GUIDE.md](../guides/VAR_GUIDE.md), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md), [COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md)
+and the contracts [TVAL.md](../contracts/TVAL.md) (valuation totals) and [PNL.md](../contracts/PNL.md) (P&L explain).
 
 ### 2.1 Who uses it
 
@@ -777,7 +722,7 @@ and limits, my counterparties, and 'does this new trade fit?'").
 | *Also served*: the **business manager** or **desk risk analyst** (COO function of a business) | The desk's controls, limit paperwork, the daily P&L sign-off with product control | The same pages, often through **View as** |
 
 **What the first line does not own** (and the lens does not try to show): the limit framework itself, the model, independent challenge and
-breach approval (the second line: the Risk and proposed Oversight lenses, section 7); collateral operations and regulatory capital (left
+breach approval (the second line: the Risk and proposed Oversight lenses, section 2.7); collateral operations and regulatory capital (left
 out of the edition: `trading.yaml`'s comment "left out: regulatory (FRTB, SACCR, CVA, SIMM), stress (SCN, STR, SSPNL), collateral
 operations (COLL, MC) …").
 
@@ -800,21 +745,21 @@ operations (COLL, MC) …").
 | Question | Drishti today | Gap |
 |---|---|---|
 | *What did my books make yesterday?* | **Built**: **P&L today**, the MtM change of every trade valued on both the business date and the business day before, summed over my books; no valuations the day before: no number, said ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading), the Trader desk) | Product control's struck P&L (actual, with cash, fees and reserves) is not received: the figure is MtM change only. The bank's P&L feed is planned |
-| *Why did it move?* | **Partly**: **Overnight movers** (the trades whose MtM moved most) on the Desk head landing; the trade events (new, amended, cancelled) on the Trader desk | A P&L explain (market by risk factor, time, new and amended trades, unexplained): the contract is proposed and parked ([PNL.md section 1](../contracts/PNL.md#1-summary)); section 5.4 |
-| *What is my VaR and how close am I to my limit?* | **Built**: **My VaR** (the union of my books, `BOOK:A + BOOK:B`), labelled intraday when updates were applied; **Limit use**: the highest of my books' VaR ÷ its `var-limit` (EDITIONS.md section 14) | Limits other than VaR (DV01, CS01, vega, stop-loss, notional): not built (section 5.7); 10-day and other confidences (**built**: [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)) |
-| *Did any of my books breach?* | **Built** for VaR limits: **Breaches** and **Near limit** tiles (Desk head; `trading.near-limit` 0.8); **Limit use by book** over 5 business dates from the official records | A breach as a record the desk explains (RO2 of the oversight analysis; section 5.6) |
-| *Did yesterday's P&L exceed VaR?* | **Partly**: **P&L against VaR**, the desk's official history (hypothetical P&L against the VaR before it), last 60 days, exceptions circled; **left out** without official history (EDITIONS.md section 14) | The bank's actual and hypothetical P&L (planned); section 5.3 |
-| *What did I book yesterday, and is it right?* | **Built**: **Trades today** (new, amended, cancelled) and **Today's blotter**; on the demo data "new" reads 0 (no trade is booked on its business date) | New trades on the demo data (section 5.1) |
+| *Why did it move?* | **Partly**: **Overnight movers** (the trades whose MtM moved most) on the Desk head landing; the trade events (new, amended, cancelled) on the Trader desk | A P&L explain (market by risk factor, time, new and amended trades, unexplained): the contract is proposed and parked ([PNL.md section 1](../contracts/PNL.md#1-summary)); section 2.5.4 |
+| *What is my VaR and how close am I to my limit?* | **Built**: **My VaR** (the union of my books, `BOOK:A + BOOK:B`), labelled intraday when updates were applied; **Limit use**: the highest of my books' VaR ÷ its `var-limit` (EDITIONS.md section 14) | Limits other than VaR (DV01, CS01, vega, stop-loss, notional): not built (section 2.5.7); 10-day and other confidences (**built**: [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)) |
+| *Did any of my books breach?* | **Built** for VaR limits: **Breaches** and **Near limit** tiles (Desk head; `trading.near-limit` 0.8); **Limit use by book** over 5 business dates from the official records | A breach as a record the desk explains (RO2 of the oversight analysis; section 2.5.6) |
+| *Did yesterday's P&L exceed VaR?* | **Partly**: **P&L against VaR**, the desk's official history (hypothetical P&L against the VaR before it), last 60 days, exceptions circled; **left out** without official history (EDITIONS.md section 14) | The bank's actual and hypothetical P&L (planned); section 2.5.3 |
+| *What did I book yesterday, and is it right?* | **Built**: **Trades today** (new, amended, cancelled) and **Today's blotter**; on the demo data "new" reads 0 (no trade is booked on its business date) | New trades on the demo data (section 2.5.1) |
 
 #### 2.2.2 Intraday
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *Does this new trade fit my VaR limit and the counterparty's credit limit?* | **Built**: **Check a new trade**, one VaR what-if on the book and one pre-deal check on the counterparty, each on a scaled copy of a booked trade of the product ([EDITIONS.md section 14, The new-trade check](../admin/EDITIONS.md#the-new-trade-check)) | A real price of the new trade (not a scaled copy): QLRisk pricing, parked until its API is stable ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); section 5.8 |
-| *Where am I now, after this morning's trades?* | **Built** for VaR: intraday updates from files and Kafka change today's VaR (VAR_GUIDE section 8.4); the tile says **intraday** with the trades updated and the time | Intraday P&L (P&L today is end-of-day valuations only); section 5.9 |
-| *Tell me when I get near my limit.* | **Partly**: alerts on numbers and monitors are on in the edition (`trading.yaml` `features: alerts: on, monitors: on`); each person sets their own ([USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers)) | A one-click "watch my books" from the landing; limit alerts from intraday VaR (section 5.10) |
-| *What is the largest counterparty on my desk?* | **Partly**: **Largest counterparty** is its share of the desk's **positive MtM** over live trades, not exposure (EDITIONS.md section 14) | The desk's share of each counterparty's exposure (section 5.2) |
-| *What is a curve or vol doing?* | **Built**: `CRV`, `FX`, `FXV`, `EQ`, `EQX`, `CMD`, `CMDC`, `BND`, `CDS` in the edition (`trading.yaml` `commands.allow`) | The Market lens's moves and quality checks are not on a Trading landing (section 7) |
+| *Does this new trade fit my VaR limit and the counterparty's credit limit?* | **Built**: **Check a new trade**, one VaR what-if on the book and one pre-deal check on the counterparty, each on a scaled copy of a booked trade of the product ([EDITIONS.md section 14, The new-trade check](../admin/EDITIONS.md#the-new-trade-check)) | A real price of the new trade (not a scaled copy): QLRisk pricing, parked until its API is stable ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); section 2.5.8 |
+| *Where am I now, after this morning's trades?* | **Built** for VaR: intraday updates from files and Kafka change today's VaR (VAR_GUIDE section 8.4); the tile says **intraday** with the trades updated and the time | Intraday P&L (P&L today is end-of-day valuations only); section 2.5.9 |
+| *Tell me when I get near my limit.* | **Partly**: alerts on numbers and monitors are on in the edition (`trading.yaml` `features: alerts: on, monitors: on`); each person sets their own ([USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers)) | A one-click "watch my books" from the landing; limit alerts from intraday VaR (section 2.5.10) |
+| *What is the largest counterparty on my desk?* | **Partly**: **Largest counterparty** is its share of the desk's **positive MtM** over live trades, not exposure (EDITIONS.md section 14) | The desk's share of each counterparty's exposure (section 2.5.2) |
+| *What is a curve or vol doing?* | **Built**: `CRV`, `FX`, `FXV`, `EQ`, `EQX`, `CMD`, `CMDC`, `BND`, `CDS` in the edition (`trading.yaml` `commands.allow`) | The Market lens's moves and quality checks are not on a Trading landing (section 2.7) |
 
 #### 2.2.3 The close
 
@@ -828,8 +773,8 @@ operations (COLL, MC) …").
 
 | Task | Drishti today | Gap |
 |---|---|---|
-| Month-to-date and year-to-date P&L against budget and stop-loss | **Not built**: no P&L series is stored or received; the valuations give daily MtM change only | The bank's P&L feed (planned), then a stop-loss check (RO5 of the oversight analysis); section 5.11 |
-| The desk's limit use over the month (average, peak, days near) | **Partly**: the official records carry `LIMIT_USE` per node and date, read in BI (`market-risk-var-official` is in the edition's BI datasets, `trading.yaml` `bi.datasets`) | A use-statistics card on the Desk head landing (section 5.12) |
+| Month-to-date and year-to-date P&L against budget and stop-loss | **Not built**: no P&L series is stored or received; the valuations give daily MtM change only | The bank's P&L feed (planned), then a stop-loss check (RO5 of the oversight analysis); section 2.5.11 |
+| The desk's limit use over the month (average, peak, days near) | **Partly**: the official records carry `LIMIT_USE` per node and date, read in BI (`market-risk-var-official` is in the edition's BI datasets, `trading.yaml` `bi.datasets`) | A use-statistics card on the Desk head landing (section 2.5.12) |
 | P&L-against-VaR exceptions with their explanations | **Partly**: exceptions circled on the card | An exception commentary (one comment thread per exception, as for breaches) |
 | Next year's limit request | **Partly**: BI over the official records | The statistics above, as a desk report |
 
@@ -846,8 +791,8 @@ operations (COLL, MC) …").
 | P&L explain (by risk factor, time, new and amended trades, unexplained) | **Not built**; contract proposed, parked. The stored explain is shown in the lens (`PNL`, Risk menu) with its waterfall **under construction** (`pnl-explain-waterfall` in the registry) | [PNL.md](../contracts/PNL.md); the stored `pnl-explain` (PNL) is a generator's, with known inconsistencies ([COMPUTED_ATTRIBUTES.md section 4.10](COMPUTED_ATTRIBUTES.md#410-pnl-explain-pnl)) |
 | P&L by trader | **Built** from the valuations' `TRADER_ID`; masked for a role without raw, then said | EDITIONS.md section 14, Desk head |
 | The pricing system's own `PNL_1D` | **Not used**: a different figure on the demo data | EDITIONS.md section 14; agrees with MtM change on 201 of 15,000 trades (F14, [COMPUTED_ATTRIBUTES.md section 4.1](COMPUTED_ATTRIBUTES.md#41-trade-valuation-tval)) |
-| Month-to-date, year-to-date | **Not built** | section 5.11 |
-| Intraday P&L | **Not built** | section 5.9 |
+| Month-to-date, year-to-date | **Not built** | section 2.5.11 |
+| Intraday P&L | **Not built** | section 2.5.9 |
 
 #### 2.3.2 Risk on my books
 
@@ -858,10 +803,10 @@ operations (COLL, MC) …").
 | VaR by trader (adds up to the desk) | **Built** in the server over every trade of the desk (`/scope/contributions?by=attribute:TRADER_ID`, [VAR_GUIDE section 11.3](../guides/VAR_GUIDE.md#113-path-and-contributions)); masked for a role without raw, then said | Desk head, By trader |
 | 10-day VaR and the confidence chosen | **Built** (plan row 2b) | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen): √10 and the 10-day sum, a confidence picker, limit use only when comparable |
 | Stressed VaR | **Planned** | |
-| The scenario matrix (is this tail scenario new?) | **Built** | [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat), `SMAT`; on in Drishti Trading (`commands.words.SMAT: on`; `SMAT BOOK BOOK-RATES-1 20`), which settles section 9, decision 5 |
+| The scenario matrix (is this tail scenario new?) | **Built** | [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat), `SMAT`; on in Drishti Trading (`commands.words.SMAT: on`; `SMAT BOOK BOOK-RATES-1 20`), which settles section 2.9, decision 5 |
 | DV01 of my books | **Partly**: the sum of the live trades' `DV01` when any holds one; else the tile is left out | EDITIONS.md section 14 |
-| DV01 by tenor and currency, CS01, vega, FX delta | **Not built**: per-trade `DV01` only, no bucketed sensitivities | [COMPUTED_ATTRIBUTES.md section 4.9](COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb); RO4 of the oversight analysis; section 5.7 |
-| Stress on my book | **Hidden** in the edition (stress commands left out) | `trading.yaml`; section 9, decision 4 |
+| DV01 by tenor and currency, CS01, vega, FX delta | **Not built**: per-trade `DV01` only, no bucketed sensitivities | [COMPUTED_ATTRIBUTES.md section 4.9](COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb); RO4 of the oversight analysis; section 2.5.7 |
+| Stress on my book | **Hidden** in the edition (stress commands left out) | `trading.yaml`; section 2.9, decision 4 |
 
 #### 2.3.3 Limits and breaches
 
@@ -869,16 +814,16 @@ operations (COLL, MC) …").
 |---|---|---|
 | VaR limit use per book and desk | **Built** | `var-limit` ([VAR.md section 2.15](../contracts/VAR.md#215-var-limit-the-nodes-var-limits)); Limit use tile |
 | Limit use history by book (official) | **Built**: 5 business dates; a missing record shows "—" | Desk head |
-| Near-limit threshold | **Built**: `trading.near-limit` 0.8 | A different number from the VaR explorer's amber 75% and red 90% ([VAR_GUIDE section 3.2](../guides/VAR_GUIDE.md#32-the-screen)); section 9, decision 7 |
+| Near-limit threshold | **Built**: `trading.near-limit` 0.8 | A different number from the VaR explorer's amber 75% and red 90% ([VAR_GUIDE section 3.2](../guides/VAR_GUIDE.md#32-the-screen)); section 2.9, decision 7 |
 | Sensitivity, stop-loss, notional limits | **Not built** | RO3 to RO6 of the oversight analysis |
-| A breach the desk explains | **Not built** | RO2 of the oversight analysis; section 5.6 |
+| A breach the desk explains | **Not built** | RO2 of the oversight analysis; section 2.5.6 |
 
 #### 2.3.4 Trades and the blotter
 
 | Need | Status | Evidence or row |
 |---|---|---|
 | Today's trades: new, amended, cancelled | **Built**, with a fallback from the two days' valuations when the search by `SOURCE_UPDATE_TIME` does not answer in time (`DRS-1004`) | EDITIONS.md section 14, Trades today |
-| New trades on the demo data | **Not served**: every change of a day is an amendment or a cancellation | section 5.1 |
+| New trades on the demo data | **Not served**: every change of a day is an amendment or a cancellation | section 2.5.1 |
 | Today's blotter, newest first | **Built** | |
 | Trade pages: legs, cash flows, resets, events | **Built** (trading pack) | [trading pack README](../../config/packs/trading/README.md) |
 | A trade's history over dates | **Built** (history queries, `TRD 1000015 30`) | [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) |
@@ -889,7 +834,7 @@ operations (COLL, MC) …").
 |---|---|---|
 | A counterparty's trades, netting sets, MtM | **Built**: `CTRD`, `NSET`, `NSMTM`, `CPMTM` (netting-set and counterparty MtM derived) | [COMPUTED_ATTRIBUTES.md section 13.1](COMPUTED_ATTRIBUTES.md#131-the-derived-kinds-and-the-sutra-panels-q1-to-q4) |
 | Pre-deal PFE against the credit limit | **Built**: exact `paths` method, or the engine's `addon` proxy labelled proxy | [EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if); EDITIONS.md section 14 |
-| The desk's largest counterparty by exposure | **Partly**: by positive MtM | section 5.2 |
+| The desk's largest counterparty by exposure | **Partly**: by positive MtM | section 2.5.2 |
 | Credit limit use on the counterparty's page | **Built as read**; the stored limits read very low use (sized on the retired profiles) | [EXPOSURE_GUIDE section 28](../guides/EXPOSURE_GUIDE.md#28-open-items) |
 
 #### 2.3.6 "My", people and access
@@ -899,7 +844,7 @@ operations (COLL, MC) …").
 | Who is who: user → trader or desk | **Built**: `trading.people` (edition, then console), a matching trader record, then View as | [EDITIONS.md section 14, "My"](../admin/EDITIONS.md#my-who-a-person-is-configured) |
 | The landing by trading role | **Built**: `trading.landing-by-role: {desk-head: desk, trader: trader}`, below the person's own choice | |
 | Never widening access | **Built**, tested (`test_scoping_never_widens_access_every_read_is_the_persons_own`) | |
-| "My" from the bank's directory (groups, claims) | **Not built** | section 5.13 |
+| "My" from the bank's directory (groups, claims) | **Not built** | section 2.5.13 |
 | Who sees the lens link (`lens.roles`) | **Not wired** (a hook) | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
 
 #### 2.3.7 The lens is configuration (product panel A19, 2026-11-06)
@@ -933,7 +878,7 @@ person's edition or lens shows `TRD`), cached two minutes per person, date and s
 | **Limit use** | The highest of my books' VaR ÷ its `var-limit`, the book and limit named | A limit at another horizon or confidence (comparable only like for like: [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)) |
 | **DV01** | Σ live trades' `DV01` when any holds a number | Left out when none does |
 | **Trades today** | New, amended, cancelled by `SOURCE_UPDATE_TIME` on the business date; on a large lake (`DRS-1004`) from the two days' valuations, with no time of day, said | "New" reads 0 on the demo data |
-| **Check a new trade** | Product (from my live trades' products), side, notional (`250m`, `1.5bn`), counterparty, book → one VaR what-if and one pre-deal check (section 4.4) | A trade of a product I have never traded (no copy to scale) |
+| **Check a new trade** | Product (from my live trades' products), side, notional (`250m`, `1.5bn`), counterparty, book → one VaR what-if and one pre-deal check (section 2.4.4) | A trade of a product I have never traded (no copy to scale) |
 | **Today's blotter** | Newest first, each trade's notional from its valuation | — |
 | **Top positions** | By VaR contribution: market value and component VaR | — |
 | **Quick commands** | My trader, my book's VaR, my book, my most traded counterparty, then the file's cards | — |
@@ -980,23 +925,12 @@ history; by-trader figures for a masked role; a book's limit use on a date witho
 "new" trades on data that books none on the day; a time of day other than `SOURCE_UPDATE_TIME`; the largest counterparty's share of
 **exposure**; a scope above `trading.max-rows` (20,000 valuations a date) is read in part and every figure says **partial**.
 
-#### 2.4.6 What is missing from the landings (the gaps this document addresses)
-
-1. New trades on the demo data (5.1). 2. Exposure, not MtM, for the largest counterparty (5.2). 3. P&L against VaR from the bank's P&L
-(5.3). 4. A P&L explain (5.4). 5. Stressed and 10-day VaR, confidence (5.5). 6. My breaches to explain (5.6). 7. Sensitivity and other
-limits (5.7). 8. A check on the real trade (5.8). 9. Intraday P&L (5.9). 10. Watch my books (5.10). 11. Month-to-date P&L and
-stop-loss (5.11). 12. Limit statistics (5.12). 13. "My" from the directory (5.13).
-
 ---
 
 ### 2.5 Gaps, with design sketches
 
-Every design follows Drishti's rules ([COMPUTED_ATTRIBUTES.md section 1.2](COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)):
-fundamental inputs arrive under a **data contract** as JSON Lines into the lake; measures are **computed on demand** from trade-grain
-inputs and **never stored**, except as an immutable capture or an official end-of-day record; Drishti-owned records (a comment, an
-acknowledgement) are versioned in the content store; **BI is the report layer**; a landing is a reader of the engines' answers, read as
-the person, never widening access. Sizes: **S** days, **M** one to three weeks, **L** more than three weeks, one builder. Ids TL1 to TL13
-are this document's (Trading lens); RO ids are the oversight analysis's.
+The design rules and the sizes are [section 1.5](#15-gaps-with-design-sketches)'s. TL ids are the Trading lens's gaps; RO ids are
+Oversight's (section 5.4).
 
 | Id | Gap | Size | Depends on |
 |---|---|---|---|
@@ -1043,7 +977,7 @@ netted and collateralised **per netting set**, across desks: a desk's trades are
 | Answer | Method | What it means | Cost |
 |---|---|---|---|
 | **Standalone** (built, `partial`) | `EXP DESK:RATES & CPTY:CP-X`: the desk's trades in each touched set treated as if they were the set ([EXPOSURE_GUIDE section 4](../guides/EXPOSURE_GUIDE.md#4-scopes)) | The exposure the desk would have alone; ignores netting with other desks and splits collateral wrongly | seconds per touched set (a lake read) |
-| **Allocated** (proposed) | the counterparty's exposure allocated to its trades and summed by desk: on each path and date, the netted collateralised exposure E of the set shared among its trades in proportion to their value where it is positive (an Euler-style allocation of EE and EPE, which are additive across sets; PFE allocated at the PFE path and date) | The desk's part of the bank's real exposure; desks add up to the counterparty | one pass over a set's trade paths (already read for contributions) |
+| **Allocated** (proposed) | the counterparty's exposure allocated to its trades and summed by desk (CC2, [section 7.8.2](#782-allocated-exposure-cc2)) | The desk's part of the bank's real exposure; desks add up to the counterparty | one pass over a set's trade paths (already read for contributions) |
 
 **Design.** A `by=desk` grouping on the exposure engine's contributions (the engine already computes contributions by trade for a scope;
 [EXPOSURE_GUIDE section 28](../guides/EXPOSURE_GUIDE.md#28-open-items) notes their cost at a large bank's size); a new answer
@@ -1082,15 +1016,15 @@ add up to P&L today exactly. The card reads "P&L +2.4m = continuing +1.9m · new
 step 4 without the risk-based step 2; it is derived from inputs held, so it stays computed, never stored.
 
 **TL4b, by risk factor (L).** PNL.md as proposed: per-trade sensitivities at T−1 (the FRTB.md `sensitivity` table), market moves per risk
-factor (`market-move`), trade events (`pnl-event`); explained = Σ delta × move + ½ gamma × move² + vega × vol move + theta; unexplained
-and its tolerance. The card shows the explain by risk class and the trades with the largest unexplained P&L; the Desk head shows it by
-book. **Data needs:** sensitivities per trade (section 6); market moves can be **derived** from the market-data pack's history for the
+factor (`market-move`), trade events (`pnl-event`); the explained and unexplained P&L and its tolerance as
+[PNL.md](../contracts/PNL.md) defines them. The card shows the explain by risk class and the trades with the largest unexplained P&L; the Desk head shows it by
+book. **Data needs:** sensitivities per trade (section 2.6); market moves can be **derived** from the market-data pack's history for the
 factors it holds (the Market lens's day-over-day changes, section 3.5.5). **Size** L. **Tests:** PNL.md section 15's worked
 example; continuing + new + ended + amended = actual to the cent; a trade without sensitivities counts as unexplained, said.
 
 #### 2.5.5 TL5: stressed VaR, 10-day and confidence on the landings and the check
 
-Now that the horizon and confidence are built (plan row 2b), and once stressed VaR is built (row 2c), the Trader desk's and Desk head's VaR tiles follow the
+Once stressed VaR is built (row 2c), the Trader desk's and Desk head's VaR tiles follow the
 person's **Horizon**, **Confidence** and **Normal / Stressed** choice from the VaR page (kept per person); **limit use is shown only when
 the answer's horizon and confidence are the limit's own**, otherwise "not comparable" ([VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)); the
 new-trade check answers at the official horizon and confidence and says so; the P&L-against-VaR card stays 1-day (backtesting is 1-day).
@@ -1193,19 +1127,15 @@ No public data is needed. None of this data leaves the bank.
 | **Drishti World** ([section 4](#4-drishti-world-what-macro-research-and-context-users-need-what-the-lens-gives-them-today-and-what-comes-next)) | Nothing: no pack in common | Macro economics (left out by design, `trading.yaml`) | For context: an economy's data, a company's filings, a counterparty's legal-entity group |
 | **Drishti Oversight** (proposed; section 5) | The limit use by book over N days, the P&L-against-VaR card, `near-limit`, "my" turned into **coverage** | Governance actions other than explaining a breach | Never for a trader; a desk head sees their breaches' review there |
 
-**Shared design rules.** "My" chooses scope and never widens access (the same rule the Oversight analysis reuses as coverage); a figure
-the data cannot give is left out or labelled, never invented; the engines are unchanged under every lens
-([EDITIONS.md section 11](../admin/EDITIONS.md#11-later-editions)).
+"My" chooses scope and never widens access (Oversight reuses the rule as coverage); the other shared rules are section 1.5's and
+[EDITIONS.md section 11](../admin/EDITIONS.md#11-later-editions).
 
 ---
 
 ### 2.8 A roadmap
 
 The rows below are added to the plan's [Lens product candidates (not started)](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started)
-section. Ordered by value for the persona and by what they need first.
-
-
-**Status (product owner, 2026-10-31).** The Status column says where each row stands: *planned* rows are next, *proposed* rows wait until their work starts, and *unscheduled* rows wait for the product owner.
+section, ordered by value for the persona and by what they need first; the Status words as in section 1.8.
 
 | Order | Row | Why here | Size | Depends on | Status |
 |---|---|---|---|---|---|
@@ -1221,54 +1151,34 @@ section. Ordered by value for the persona and by what they need first.
 | 10 | **TL9** intraday P&L | Needs the bank's intraday base PVs | M | data | unscheduled |
 | 11 | **TL7** sensitivity ladders and limits | Needs per-trade sensitivities | M | RO3, RO4 | proposed |
 | 12 | **TL4b** P&L explain by risk factor; **TL8** pricing the real trade | The largest; QLRisk parked | L each | sensitivities; QLRisk | TL4b unscheduled; TL8 proposed (fidelity line); pricing later, with QLRisk |
-| 13 | **TL14** my VaR since the morning; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#211-mock-ups-the-screens-to-build)) | S each | — | TL14 proposed; LX1 built |
+| 13 | **TL14** my VaR since the morning; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 2.11](#211-mock-ups-the-screens-to-build)) | S each | — | TL14 proposed; LX1 built |
 
 ---
 
 ### 2.9 Decisions for the product owner
 
-**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Each row is proposed until its work starts.
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"). The question, then
+the decision; each row is proposed until its work starts.
 
-1. **New trades on the demo (TL1).** Regenerate the trading test data with trades booked on their date (in the seeds work), or keep the
-   data and leave "new" at 0 with its note.
-
-   **Decided (product owner, 2026-10-31):** regenerate the trading test data with trades booked on their date, in the test-data-from-seeds work (unscheduled).
-2. **The largest counterparty (TL2).** Allocated exposure (recommended: desks add up to the counterparty), the standalone `partial`
-   scope, or keep positive MtM.
-
-   **Decided (product owner, 2026-10-31):** allocated exposure: desks add up to the counterparty (proposed, with CC2).
-3. **The P&L series on the P&L-against-VaR card (TL3).** Hypothetical by default (the regulators' first test), actual, or both.
-
-   **Decided (product owner, 2026-10-31):** hypothetical P&L by default (the regulators' first test), actual selectable (proposed, after the bank's P&L feed).
-4. **Stress in Trading.** Stays hidden (as for Drishti Risk, product owner 2026-10-30), or the stored stress results of my desk
-   (`STR`, `SSPNL`) shown read-only on the Desk head.
-
-   **Decided (product owner, 2026-10-31):** stress stays hidden in Trading, as in Drishti Risk.
-5. **The scenario matrix (`SMAT`) in the Trading lens** once it merges: add it to the edition's commands (recommended: "is this tail
-   scenario new?" is a desk question), or leave it to Risk.
-
-   **Decided (product owner, 2026-10-31):** `SMAT` added to the Trading lens's commands (done).
-6. **TL4a before PNL.md.** Ship the trade-events split now as "P&L by trade events", or wait for the full explain.
-
-   **Decided (product owner, 2026-10-31):** ship the trade-events split now as "P&L by trade events" (TL4a, proposed); the full explain (TL4b) later.
-7. **One near-limit threshold.** Trading's 0.8, the VaR explorer's 75% and 90%, and the proposed catalogue's `WARNING_AT`: unify on the
-   limit's own warning level with a site default (as the oversight analysis's decision 8).
-
-   **Decided (product owner, 2026-10-31):** unify on the limit's own warning level with a site default of 80%, configurable.
-8. **Fidelity of the check (TL8).** Show the fidelity line now (recommended), or wait for real pricing.
-
-   **Decided (product owner, 2026-10-31):** show the fidelity line now (proposed); real pricing with QLRisk (proposed).
-9. **Explain a breach from Trading (TL6).** The desk explains in the Trading lens and the second line approves in Oversight
-   (recommended), or both in Oversight.
-
-   **Decided (product owner, 2026-10-31):** the desk explains in the Trading lens; the second line approves in Oversight.
-10. **"My" from the directory (TL13).** Claims, groups, or configuration only.
-
-   **Decided (product owner, 2026-10-31):** later: "my" from the directory (single sign-on claims, then groups) waits; configuration and View as stay until then (unscheduled).
+| # | Question (options) | Decided |
+|---|---|---|
+| 1 | **New trades on the demo (TL1).** Regenerate the trading test data with trades booked on their date (in the seeds work), or leave "new" at 0 with its note | Regenerate, in the test-data-from-seeds work (unscheduled) |
+| 2 | **The largest counterparty (TL2).** Allocated exposure (recommended: desks add up to the counterparty), the standalone `partial` scope, or positive MtM | Allocated exposure (proposed, with CC2) |
+| 3 | **The P&L series on the P&L-against-VaR card (TL3).** Hypothetical by default (the regulators' first test), actual, or both | Hypothetical by default, actual selectable (proposed, after the bank's P&L feed) |
+| 4 | **Stress in Trading.** Hidden (as for Drishti Risk, product owner 2026-10-30), or the desk's stored stress results (`STR`, `SSPNL`) read-only on the Desk head | Hidden, as in Drishti Risk |
+| 5 | **The scenario matrix (`SMAT`) in Trading.** Add it to the edition's commands (recommended: "is this tail scenario new?" is a desk question), or leave it to Risk | Added (done) |
+| 6 | **TL4a before PNL.md.** Ship the trade-events split now as "P&L by trade events", or wait for the full explain | Ship it now (TL4a, proposed); the full explain (TL4b) later |
+| 7 | **One near-limit threshold.** Trading's 0.8, the explorer's 75% and 90%, the catalogue's `WARNING_AT` | The limit's own warning level, site default 80%, configurable (as section 1.9, decision 8) |
+| 8 | **Fidelity of the check (TL8).** The fidelity line now (recommended), or wait for real pricing | The fidelity line now (proposed); real pricing with QLRisk (proposed) |
+| 9 | **Explain a breach from Trading (TL6).** The desk explains in Trading and the second line approves in Oversight (recommended), or both in Oversight | The desk explains in Trading; the second line approves in Oversight |
+| 10 | **"My" from the directory (TL13).** Claims, groups, or configuration only | Later (single sign-on claims, then groups); configuration and View as until then (unscheduled) |
 
 ---
 
 ### 2.10 Glossary
+
+Trading's own terms; the shared ones (netting set, allocated exposure, ladder, lens) are in section 1.10, the measures in the guides it
+links.
 
 | Term | In plain words |
 |---|---|
@@ -1280,30 +1190,20 @@ section. Ordered by value for the persona and by what they need first.
 | **Actual P&L** | The day's real P&L from finance, with cash, fees and reserves |
 | **Hypothetical P&L** | The P&L of yesterday's positions at today's prices, with no new trades |
 | **P&L explain** | Splitting a day's P&L into its causes: market moves by factor, time, new and changed trades, and what cannot be explained |
-| **VaR** | The loss that a day's market move should exceed only 1 day in 100, from the last two years of moves |
 | **Limit use** | VaR divided by its limit; above 100% is a breach |
 | **Near limit** | Use at or above a warning share of the limit (0.8 here) |
 | **DV01** | The P&L for a one basis point fall in rates |
-| **Sensitivity ladder** | A sensitivity split into buckets (currency × tenor), each against its own limit |
 | **Stop-loss** | A limit on losses over a month or a year |
-| **PFE** | A bad-case future amount a counterparty could owe us, at a high confidence |
-| **EPE** | The average positive exposure over the first year: what a counterparty owes us on average |
-| **Netting set** | The trades with one counterparty under one agreement, whose values offset |
-| **Allocated exposure** | A counterparty's exposure shared out among the trades (and so the desks) that cause it, adding up to the whole |
 | **Pre-deal check** | Asking, before dealing, what a trade would do to a limit |
 | **Blotter** | The list of trades booked, newest first |
 | **View as** | Choosing whose books the landing shows; it never changes what you may read |
-| **Lens** | One person's focused view of Drishti, opened by a link; it hides, it does not secure |
 
 ---
 
 ### 2.11 Mock-ups: the screens to build
 
-One mock-up file belongs to this lens: the three Trading landings. It is copied into the repository, self-contained (system fonts,
-nothing from a CDN), with a screenshot beside it, under [`docs/architecture/mockups/trading/`](mockups/trading). **The checklist below is the
-source of truth at build time** ([README.md](#mock-ups)): every panel is a row, its status checked against the code on
-2026-10-31 (`wip/drill-a`). **Built** cites the code or guide; **partly built** says what is missing; **not built** names the candidate
-row. The scenario matrix (`SMAT`, on in Trading too) and the VaR horizon picker are Risk's mock-ups:
+Under [`mockups/trading/`](mockups/trading); conventions: [the introduction](#mock-ups). Statuses checked against the code on
+2026-10-31 (`wip/drill-a`). The scenario matrix (`SMAT`, on in Trading too) and the VaR horizon picker are Risk's mock-ups:
 [section 1.11](#111-mock-ups-the-screens-to-build).
 
 | Mock-up | Chosen | Built | Partly built | Not built |
@@ -1331,9 +1231,9 @@ arrives. *View as* (a trader or a desk) for a person who may pick, remembered in
 above every landing. **States.** *Loading:* `…` in every figure. *Error:* `Not available: <reason>` in the panel, `—` and the reason in a
 tile. *Empty or not given by the data*, each said in place: "no valuations on <date>: no change to show", "MtM is masked for your role",
 "no book above its limit", "No trade's MtM moved", "Nothing yet: type a command above"; the DV01 tile hidden when no trade holds a DV01; a
-scope above `trading.max-rows` says **partial** ([section 4.5](#245-what-the-data-does-not-give-as-the-builder-reported)). **Phone**
+scope above `trading.max-rows` says **partial** ([section 2.4.5](#245-what-the-data-does-not-give-as-the-builder-reported)). **Phone**
 (600 px and below): one column ([`drishti_trading-landing.css`](../../drishti-console/web/static/css/drishti_trading-landing.css)); the mock-up drew no
-phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md section 8](MOBILE_DISPLAY.md#8-beyond-sutra-pages)): the command line, the tiles and the first card in full, the other tables at a glance (five rows, *Show all*), charts, maps and the quick links under *More on this page*.
+phone form; the phone tiers as for Risk (section 1.11.1).
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|
@@ -1344,7 +1244,7 @@ phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md sec
 | T5 | Tile: Limit use (A) | **83%** amber, *BOOK-RATES-1 · limit 7.4m* | the highest of my books' VaR ÷ `var-limit` | — | — | **Built** |
 | T6 | Tile: DV01 (A) | **−142k** *per bp, both books* | Σ live trades' `DV01` | — | — | **Built** (hidden when no trade holds one) |
 | T7 | Tile: Trades today (A) | **14** *11 new · 2 amended · 1 cancelled* | `/api/home/trading/blotter` (`SOURCE_UPDATE_TIME`) | — | — | **Built** ("new" reads 0 on the demo: TL1) |
-| T8 | Card: Check a new trade (A) | *VaR what-if and the counterparty's limit, one answer*; Product *IRS pay fixed 10Y*, Notional *USD 250m*, Counterparty *CP-ALDERSHOT*, **Check** (green); verdict: **Fits my VaR** *6.12m → 6.48m · limit use 83% → 88%* and **Counterparty near limit** *CP-ALDERSHOT PFE 95% 401.5m → 409.2m · 96% of limit* | `POST /api/home/trading/check` → `POST /api/v1/var/what-if`, `POST /api/v1/exposure/what-if` ([section 4.4](#244-the-new-trade-check)) | fill, Check | — | **Built** (also Side and Book; fits, near, breaches; a fidelity line is TL8) |
+| T8 | Card: Check a new trade (A) | *VaR what-if and the counterparty's limit, one answer*; Product *IRS pay fixed 10Y*, Notional *USD 250m*, Counterparty *CP-ALDERSHOT*, **Check** (green); verdict: **Fits my VaR** *6.12m → 6.48m · limit use 83% → 88%* and **Counterparty near limit** *CP-ALDERSHOT PFE 95% 401.5m → 409.2m · 96% of limit* | `POST /api/home/trading/check` → `POST /api/v1/var/what-if`, `POST /api/v1/exposure/what-if` ([section 2.4.4](#244-the-new-trade-check)) | fill, Check | — | **Built** (also Side and Book; fits, near, breaches; a fidelity line is TL8) |
 | T9 | Card: Today's blotter (A) | *my books, newest first*; Time, Trade, Counterparty, Notional, a pill: 13:52 IRS-48213 CP-ALDERSHOT 120m **new**; 12:10 SWPN-20931 75m **amended**; 11:41 IRS-48190 40m **cancelled**; 10:05 CAP-11872 60m **new** | `/api/home/trading/blotter` | click a trade | — | **Built** |
 | T10 | Card: Top positions (A) | *by MtM*; Position, MtM, VaR contrib.: USD SOFR swaps 10Y −42.1m 2.31m; EUR €STR swaps 5Y +18.6m 0.94m; USD swaptions 1Yx10Y +9.2m 0.71m | `/api/home/trading/risk` (component VaR, market value) | click a position | — | **Built** (ordered by VaR contribution, with market value) |
 | T11 | Quick commands (A) | `TRDR TRDR-ASHAH` (me), `VAR NODE MGMT~BOOK-RATES-1` (my book's VaR), `POS BOOK-RATES-1` | the person's own, then `trading.yaml` `home.cards` | click | — | **Built** (my trader, my book's VaR, my book, my most traded counterparty, then the file's cards) |
@@ -1358,7 +1258,7 @@ phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md sec
 | T19 | Card: By trader (B) | Trader, P&L, VaR, Trades: K. Moreau +2.4m 6.9m 9; R. Okafor +1.1m 4.2m 5; J. Varga −0.3m 3.1m 2 | `/api/home/trading/traders` (`TRADER_ID`; component VaR) | click a trader | — | **Built** (masked: "—" and the reason) |
 | T20 | Card: P&L against VaR (B) | *last 60 days · a breach is a loss beyond the VaR line*: green and red daily bars around zero, an orange −VaR line, the exception circled; *1 exception in 60 days (09-08)* | `/api/home/trading/pnl-var` (the desk's official history; `trading.pnl-var-days`) | — | — | **Built** (hypothetical P&L; the bank's actual P&L is TL3; left out when the history is a replay) |
 | T21 | Card: Overnight movers (B) | Trade, Book, Change: CMDF-31877 WTI Dec BOOK-COMM-1 −4.8m; CMDS-22014 Henry Hub swap +3.1m; CMDO-11520 Brent option +1.7m | valuations on both dates | click a trade | — | **Built** |
-| T22 | Menu bar (C) | **Views · Blotter · Positions · Risk · Counterparties · BI · Help** | [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | LX1 | **Built**: Markets, Blotter, Positions, Risk and Counterparties menus of their own; BI by command since A19 ([section 11.2](#2112-the-lens-menus-lx1-menusahtml), [section 3.7](#237-the-lens-is-configuration-product-panel-a19-2026-11-06)) |
+| T22 | Menu bar (C) | **Views · Blotter · Positions · Risk · Counterparties · BI · Help** | [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | LX1 | **Built**: Markets, Blotter, Positions, Risk and Counterparties menus of their own; BI by command (A19; [section 2.11.2](#2112-the-lens-menus-lx1-menusahtml), [section 2.3.7](#237-the-lens-is-configuration-product-panel-a19-2026-11-06)) |
 | T23 | Big command line and chips (C) | *a trade, a book, a counterparty, a position…*; chips `TRD IRS-48213`, `BOOK BOOK-RATES-1`, `CTRD CP-ALDERSHOT`, `POS BOOK-RATES-1`, `VAR DESK DESK-RATES`, `XWIF CP-ALDERSHOT`, `CRV CRV-USD-OIS` | `trading.yaml` `home.chips` | type, `<GO>`; click a chip | — | **Built** |
 | T24 | Command groups (C) | Blotter (`TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`); Books and positions (`BOOK`, `DESK`, `TRDR`, `POS`, `PSUM`, `PSTRIP`); Risk on my book (`VAR`, `VLIM`, `TVAL`, `PNLV`); Counterparties (`CPTY`, `NSET`, `NSMTM`, `LIM`, `XWIF`, `EXP`); Market data (`CRV`, `FX`, `FXV`, `EQ`, `CMDC`) | the template's groups | click a command | — | **Built** (more commands per group; `PSUM` and `PSTRIP` left out by design: the compute-demo sample pack's, not a trading pack's) |
 | T25 | Recently opened (C) | *IRS-48213 · BOOK-RATES-1 · CP-ALDERSHOT* | the person's command history (Trading's commands only) | click | — | **Built** |
@@ -1373,42 +1273,31 @@ phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md sec
 
 ![The lens menus, option A: subject menus in the bar](mockups/menus/A.png)
 
-[Open the mock-up](mockups/menus/A.html) (options: [B](mockups/menus/B.html) a subject strip under the standard bar,
-[C](mockups/menus/C.html) one lens menu with subject columns; the light theme: [A-light.png](mockups/menus/A-light.png)). One mock-up for the
-four built lenses (Risk, Trading, Market, World), each lens with one menu open. **Recommended:** option A, subject menus in the bar
-(chosen on the recommendation, product owner to review); plan row LX1.
-
-**Why A.** The lens mock-ups the product owner chose already drew their bars this way (Views, the lens's subjects, BI, Help), so A builds what was approved; each subject is one click from anywhere, as the five standard menus are. The strip of B costs a second row on every page; the single lens menu of C hides the subjects a click deeper and is better kept as the phone form of A. Subject menus are configured, not coded: the edition names its top menus in order, and a subject menu draws on the items of the menus file with the same switches (an item shows only when the edition keeps its command word).
+The shared mock-up, its options, the why of option A and the phone form: [section 1.11.4](#1114-the-lens-menus-lx1-menusahtml).
+Trading's rows:
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
 | X1 | Bar | `DRISHTI Trading`; the command line; menus **Views · Blotter · Positions · Risk · Counterparties · BI · Help** | the edition's top menus by id, in order (`menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | **Built**: `menus.top` in [`trading.yaml`](../../config/editions/trading.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py): Views, Engines, Markets, Blotter, Positions, Risk, Counterparties, Help; Build is not named (off in the lens), BI and Admin by command (A19) (replaces the menus part of T22) |
 | X2 | Blotter menu | Trades `TRD`; By counterparty `CTRD`; By portfolio `PTRD`; By legal entity `LTRD` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X3 | Positions menu | Books `BOOK`; Desks `DESK`; Traders `TRDR`; Positions `POS` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
-| X4 | Risk menu | My VaR `VAR`; VaR limits `VLIM`; Trade valuations `TVAL`; P&L vectors `PNLV` (and since A19 Desk P&L `DPNL`, P&L explain `PNL`, Sensitivities `SENS`) | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
+| X4 | Risk menu | My VaR `VAR`; VaR limits `VLIM`; Trade valuations `TVAL`; P&L vectors `PNLV` (and, by A19, Desk P&L `DPNL`, P&L explain `PNL`, Sensitivities `SENS`) | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X5 | Counterparties menu | Counterparties `CPTY`; Netting sets `NSET`; Credit limits `LIM`; Pre-deal check `XWIF`; Exposure `EXP` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X6 | Phone form | below 640 px the subject menus fold into one **Trading** menu, a column per subject (option C) | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; the bar's template and [`drishti_phone.js`](../../drishti-console/web/static/js/drishti_phone.js) put it in below 640 px | tap the lens menu, then an item | **Built** |
 | X7 | Markets menu (A19) | not on the mock-up: the product panel's one Markets menu | Rates `CRV`, `REPO`, `FIX`; Volatility surfaces `IRV`, `CPV`, `FXV`; Foreign exchange `FX`, `FXF`; Credit `CDS`, `BND`; Equities and commodities `EQ`, `EQX`, `CMD`, `CMDC`: the one Markets menu (`gather:` of Curves, Volatility, FX and Credit, then its own columns), the items by `menus.markets`, three columns to a row | click an item: its command | **Built** |
 
-On a phone (below 640 px) the subject menus fold into one menu named after the lens, first in the bar (option C's form, [menus/C](mockups/menus/C.html)): a column per subject, each item 44 px high with its command beside it; a wider screen keeps the subject menus in the bar, and the folded menu is not drawn there. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
+On a phone (below 640 px) the subject menus fold into one menu named after the lens, first in the bar (option C's form, [menus/C](mockups/menus/C.html)), a column per subject; a wider screen keeps the subject menus in the bar. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
 
 ## 3. Drishti Market: what the market-data team needs, what the lens gives it today, and what comes next
 
-**Status: analysis and product description: built parts as built, the rest proposals.** Every "built" or "partly" statement cites the
-document, section or file it was read from on 2026-10-31. Everything in sections 5 and 8 is a proposal; the rows of
-section 8 are candidates in the [implementation plan](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started), not
-started, except where the plan already names the work (cited as such).
-
-**The request (product owner, 2026-10-31):** "We should have similar and fuller standalone document for other lenses too", after the
-market risk oversight analysis ([section 5](#5-market-risk-oversight-what-the-second-line-needs-from-drishti-and-a-drishti-oversight-lens), the proposed Oversight lens; built). This is the Market lens's.
-
+**Status:** built parts as built (each statement cites its source, read on 2026-10-31); sections 3.5 and 3.8 are proposals, candidates
+in the [implementation plan](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started), except where the plan already names the work.
 **Read with:** [EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market) (the lens as built),
-[EDITIONS.md section 11](../admin/EDITIONS.md#11-drishti-market) (how to run it), the edition file
-[`config/editions/market.yaml`](../../config/editions/market.yaml), the [market-data pack README](../../config/packs/market-data/README.md)
-(every kind and field), [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) (an item over time), [VAR_GUIDE.md](../guides/VAR_GUIDE.md)
+[section 11](../admin/EDITIONS.md#11-drishti-market) (how to run it), [`config/editions/market.yaml`](../../config/editions/market.yaml),
+the [market-data pack README](../../config/packs/market-data/README.md) (every kind and field),
+[DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) (an item over time), [VAR_GUIDE.md](../guides/VAR_GUIDE.md)
 (how market data reaches VaR: through the upstream P&L vectors) and the plan's
-[market-data rows](IMPLEMENTATION_PLAN.md#2914-oversight-proposed) (VaR at stake and the quality checks). The sibling lens
-documents: [section 1](#1-drishti-risk-what-risk-managers-near-the-desks-need-what-the-lens-gives-them-today-and-what-comes-next), [section 2](#2-drishti-trading-what-traders-and-desk-heads-need-what-the-lens-gives-them-today-and-what-comes-next), [section 4](#4-drishti-world-what-macro-research-and-context-users-need-what-the-lens-gives-them-today-and-what-comes-next).
+[market-data rows](IMPLEMENTATION_PLAN.md#2914-oversight-proposed) (VaR at stake and the quality checks).
 
 ### 3.1 Who uses it
 
@@ -1424,7 +1313,7 @@ inflation, commodities, bonds and correlations, the inputs that feed risk and va
 | *Also served*: a **quant** or **structurer** reading a curve or a surface | Pricing inputs | The pages, the forms, the history |
 
 **What they do not own:** the trades, the VaR and the limits (the Risk and Trading lenses); the vendor contracts (procurement), though
-licensing shapes what they may show (section 6).
+licensing shapes what they may show (section 3.6).
 
 #### 3.1.1 A day, a month and a year
 
@@ -1436,27 +1325,25 @@ licensing shapes what they may show (section 6).
 | **Month-end** | IPV: compares desk marks to independent sources; computes reserves; reviews proxies and long-stale items; reports data quality statistics |
 | **Year** | Vendor review (coverage, cost, licences); the VaR history review with methodology (gaps, proxies, the stress window's data) |
 
----
-
 ### 3.2 Their questions: the morning, intraday, the close, month-end
 
 #### 3.2.1 The close (the batch window)
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *Did everything arrive?* | **Partly**: **Stale** check per curve and surface (`AS_OF` older than the business date by more than `quality.stale-days`, 2 business days) and per other kind by its latest load ([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market), Quality); late loads by expectation ([DATA_GUIDE.md › Telling Drishti new data has landed, section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data)) | Completeness against an **expected list** of ids per date (a new curve that never arrived is not stale, it is missing): section 5.8 |
-| *Is anything internally inconsistent?* | **Built**: **Gaps** (a curve missing a tenor every other curve of its type has), **Discount factors and forwards** (a DF that does not fall with maturity or is outside (0, 1]: critical; a negative forward: warning), **Vol surfaces** (a vol at or below zero; ATM total variance falling with expiry on FX and equity surfaces) | Calendar and smile checks on the commodity, cap and swaption grids (planned); section 5.4 |
-| *Did anything jump?* | **Partly**: the desk's **Biggest moves** ranks the latest move in σ of each item's own daily moves (a "jump" at 3σ or more), but only as a ranking on the desk, not as a Quality check | σ-jump as a check (planned); section 5.2 |
-| *Do two sources disagree?* | **Not built**: the lake holds one source per kind | Section 5.3 (planned) |
-| *If this is wrong, what does it cost?* | **Not built**: the tile reads *Impact on VaR and valuations comes in a later release* | VaR at stake (planned); section 5.1 |
+| *Did everything arrive?* | **Partly**: **Stale** check per curve and surface (`AS_OF` older than the business date by more than `quality.stale-days`, 2 business days) and per other kind by its latest load ([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market), Quality); late loads by expectation ([DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data)) | Completeness against an **expected list** of ids per date (a new curve that never arrived is not stale, it is missing): ML8 |
+| *Is anything internally inconsistent?* | **Built**: **Gaps** (a curve missing a tenor every other curve of its type has), **Discount factors and forwards** (a DF that does not fall with maturity or is outside (0, 1]: critical; a negative forward: warning), **Vol surfaces** (a vol at or below zero; ATM total variance falling with expiry on FX and equity surfaces) | Calendar and smile checks on the commodity, cap and swaption grids (planned): ML4 |
+| *Did anything jump?* | **Partly**: the desk's **Biggest moves** ranks the latest move in σ of each item's own daily moves (a "jump" at 3σ or more), but only as a ranking on the desk, not as a Quality check | σ-jump as a check (planned): ML2 |
+| *Do two sources disagree?* | **Not built**: the lake holds one source per kind | ML3 (planned) |
+| *If this is wrong, what does it cost?* | **Not built**: the tile reads *Impact on VaR and valuations comes in a later release* | VaR at stake (planned): ML1 |
 
 #### 3.2.2 The morning
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *What moved overnight, and is it real?* | **Built**: **Biggest moves** over 21 business days in σ (10 or more moves held), else largest moves against the day before, else "no history" ([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market)); a day-over-day change on tiles only when both days hold real data | Moves per pillar (the desk checks `TEN_Y`, `SPREAD_5Y`, `MID`, `FRONT`, `LEVEL`); a curve's shift, twist and butterfly (section 5.5) |
-| *A desk says its P&L is wrong because of a curve: which trades use it?* | **Not built**: no link from an item to the trades and VaR inputs that use it | Section 5.1, "Used by" |
-| *What did we correct, when and why?* | **Partly**: an item's history over dates ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)); the load's provenance | Corrections as records with a reason (section 5.7) |
+| *What moved overnight, and is it real?* | **Built**: **Biggest moves** over 21 business days in σ (10 or more moves held), else largest moves against the day before, else "no history" ([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market)); a day-over-day change on tiles only when both days hold real data | Moves per pillar (the desk checks `TEN_Y`, `SPREAD_5Y`, `MID`, `FRONT`, `LEVEL`); a curve's shift, twist and butterfly (ML5) |
+| *A desk says its P&L is wrong because of a curve: which trades use it?* | **Not built**: no link from an item to the trades and VaR inputs that use it | ML1, "Used by" |
+| *What did we correct, when and why?* | **Partly**: an item's history over dates ([DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)); the load's provenance | Corrections as records with a reason (ML7) |
 
 #### 3.2.3 Intraday
 
@@ -1469,13 +1356,11 @@ licensing shapes what they may show (section 6).
 
 | Task | Drishti today | Gap |
 |---|---|---|
-| IPV: marks against independent sources | **Not built** (one source) | Section 5.3 with a tolerance table and a report |
-| Proxy review: which instruments have no data of their own | **Partly**: each P&L vector and scenario-PV row says `ok`, `proxied` or `failed` ([VAR.md section 2.2](../contracts/VAR.md#22-pnl-vector-one-pl-vector-per-trade)), but in the Risk packs, not the Market lens | A proxy list in the Market lens (section 5.9) |
-| Data quality statistics over the month | **Not built**: the checks run when the Quality landing opens; nothing keeps their results | Section 5.7 |
-| Market data in BI | **Not built**: the pack ships no BI dataset; BI offers its themes only (`market.yaml` `bi`) | Section 5.6 |
-| The VaR history review | **Partly**: an item's history; the moves in σ | Jumps across the whole history; the VaR at stake of a bad historical day (section 5.1) |
-
----
+| IPV: marks against independent sources | **Not built** (one source) | ML3 with a tolerance table and a report |
+| Proxy review: which instruments have no data of their own | **Partly**: each P&L vector and scenario-PV row says `ok`, `proxied` or `failed` ([VAR.md section 2.2](../contracts/VAR.md#22-pnl-vector-one-pl-vector-per-trade)), but in the Risk packs, not the Market lens | A proxy list in the Market lens (ML9) |
+| Data quality statistics over the month | **Not built**: the checks run when the Quality landing opens; nothing keeps their results | ML7 |
+| Market data in BI | **Not built**: the pack ships no BI dataset; BI offers its themes only (`market.yaml` `bi`) | ML6 |
+| The VaR history review | **Partly**: an item's history; the moves in σ | Jumps across the whole history; the VaR at stake of a bad historical day (ML10) |
 
 ### 3.3 Needs by area, with status
 
@@ -1488,7 +1373,7 @@ licensing shapes what they may show (section 6).
 | Credit and bonds | **Built**: `CDS`, `BND` | |
 | Equities and commodities, their curves and vols, dividends | **Built**: `EQ`, `EQX`, `DIV`, `EQV`, `CMD`, `CMDC`, `CMDV` | |
 | Correlations, computed on request from history | **Built**: `CORR`, `CORRC`, `EQB` | |
-| Issuers and holiday calendars | **Loaded, hidden**: core's commands (`CAL`, `ISS`) are not in the allow-list; calendars are used by the checks (business days) | [EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market); section 9, decision 6 |
+| Issuers and holiday calendars | **Loaded, hidden**: core's commands (`CAL`, `ISS`) are not in the allow-list; calendars are used by the checks (business days) | [EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market); section 3.9, decision 6 |
 | Query by form | **Built** (`forms: on`) | |
 | History of an item | **Built** for dated kinds; the pack's `history:` block shapes equities, indexes, FX spots, IR and credit curves, commodities, bonds, inflation | `config/packs/market-data/pack.yaml` (`history:`) |
 
@@ -1500,20 +1385,20 @@ licensing shapes what they may show (section 6).
 | Gaps (missing tenor against the type) | **Built** for types of three or more | check 2 |
 | Discount factors monotone and in (0, 1]; negative forwards | **Built** | check 3 |
 | Vol surfaces: non-positive vols; ATM total variance falling with expiry (FX, equity) | **Built** | check 4 |
-| Calendar checks on commodity, cap and swaption grids; smile (butterfly) checks | **Planned** | section 5.4 |
-| Jumps over n σ as a check | **Planned** | section 5.2 |
-| Two sources disagreeing | **Planned**, needs a second source per kind | section 5.3 |
-| Completeness against an expected list | **Not built** | section 5.8 |
-| Quality results kept, with acknowledgements | **Not built** | section 5.7 |
+| Calendar checks on commodity, cap and swaption grids; smile (butterfly) checks | **Planned** | ML4 |
+| Jumps over n σ as a check | **Planned** | ML2 |
+| Two sources disagreeing | **Planned**, needs a second source per kind | ML3 |
+| Completeness against an expected list | **Not built** | ML8 |
+| Quality results kept, with acknowledgements | **Not built** | ML7 |
 
 #### 3.3.3 Impact and lineage
 
 | Need | Status | Evidence or row |
 |---|---|---|
-| Who uses each item (trades, books, VaR inputs) | **Not built**; trades carry `LEGS[].INDEX` (a benchmark name) and `DISCOUNT_INDEX`, not market-data ids ([trading pack README](../../config/packs/trading/README.md)); IR curves carry an `INDEX` field ([market-data README](../../config/packs/market-data/README.md)) | section 5.1 |
-| VaR at stake of a flagged item | **Planned** | section 5.1 |
-| Valuations at stake | **Planned** | section 5.1 |
-| The market-data line of a data-trust card | **Proposed** as RO13 of the oversight analysis (reusing the Quality checks) | section 5.4.6 |
+| Who uses each item (trades, books, VaR inputs) | **Not built**; trades carry `LEGS[].INDEX` (a benchmark name) and `DISCOUNT_INDEX`, not market-data ids ([trading pack README](../../config/packs/trading/README.md)); IR curves carry an `INDEX` field ([market-data README](../../config/packs/market-data/README.md)) | ML1 |
+| VaR at stake of a flagged item | **Planned** | ML1 |
+| Valuations at stake | **Planned** | ML1 |
+| The market-data line of a data-trust card | **Proposed** as RO13 of the oversight analysis (reusing the Quality checks) | [section 5.4.6](#546-the-data-trust-card-ro13-and-model-performance-ro14) |
 
 #### 3.3.4 Analytics
 
@@ -1521,11 +1406,9 @@ licensing shapes what they may show (section 6).
 |---|---|---|
 | Moves in σ of their own history | **Built** (desk ranking) | EDITIONS.md section 13 |
 | A curve today against a week ago | **Built** when the history holds that day | USD curves card |
-| Shift, twist, butterfly of a curve's move | **Not built** | section 5.5 |
+| Shift, twist, butterfly of a curve's move | **Not built** | ML5 |
 | Correlations and betas | **Built** (`CORR`, `EQB`) | |
-| Market data BI | **Not built** (no dataset) | section 5.6 |
-
----
+| Market data BI | **Not built** (no dataset) | ML6 |
 
 ### 3.4 The landings
 
@@ -1533,20 +1416,18 @@ One template, `home/market_landing.html`, with `drishti_market-landing.js` and `
 by `drishti-console/core/market_landing.py` from the pack's own answers (search, raw documents, the business date, one field's history
 through `/api/v1/history/{kind}/{id}/series`), read as the person, cached two minutes per person, and served by `/api/home/market/desk`,
 `/api/home/market/moves` and `/api/home/market/quality` (`404 DRS-4023` unless the edition or lens shows `CRV`)
-([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market)).
+([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market)). Panel by panel, with what each leaves out: the checklist in
+[section 3.11.1](#3111-the-market-landings-market-landinghtml).
 
 #### 3.4.1 A: Market desk (`desk`, the default)
 
-| Tile or card | What is real | Left out, and why |
-|---|---|---|
-| **USD OIS 10Y** | `CRV-USD-OIS`'s `TEN_Y` | A change only when the history holds real data for the latest day and the business day before (a point whose data date is its date, not carried) |
-| **USD 2s10s** | `CRV-USD-PROJ`'s `SLOPE_2S_10S` | as above |
-| **EUR/USD 1M ATM vol** | `FXV-EURUSD`'s `ATM_1M` | as above |
-| **CDS 5Y, median** | the median of every credit curve's `SPREAD_5Y` | as above |
-| **Data exceptions** | the Quality checks' count; opens C | — |
-| **USD curves** | OIS zero rates today against five business days before (dashed) when held, and projection | Without that history: OIS against projection |
-| **Biggest moves** | each curve's `TEN_Y`, credit's `SPREAD_5Y`, FX's `MID`, commodity's `FRONT`, index's `LEVEL` over 21 business days, in σ when ten or more moves are held ("jump" at 3σ) | Less history: largest moves against the day before; none: says so and ranks nothing |
-| **Quick cards** | `CRV CRV-USD-OIS`, `FXV FXV-EURUSD`, `IRV IRV-USD`, `FIX FIX-SOFR` | — |
+Tiles **USD OIS 10Y** (`CRV-USD-OIS` `TEN_Y`), **USD 2s10s** (`CRV-USD-PROJ` `SLOPE_2S_10S`), **EUR/USD 1M ATM vol** (`FXV-EURUSD`
+`ATM_1M`), **CDS 5Y, median** (every credit curve's `SPREAD_5Y`), each with a change only when the history holds real data for the latest
+day and the business day before; **Data exceptions** (the Quality checks' count; opens C). Cards: **USD curves** (OIS zero rates today
+against five business days before when held, else OIS against projection), **Biggest moves** (each curve's `TEN_Y`, credit's
+`SPREAD_5Y`, FX's `MID`, commodity's `FRONT`, index's `LEVEL` over 21 business days, in σ when ten or more moves are held, "jump" at 3σ;
+less history: largest moves against the day before; none: says so) and the **Quick cards** `CRV CRV-USD-OIS`, `FXV FXV-EURUSD`,
+`IRV IRV-USD`, `FIX FIX-SOFR`.
 
 #### 3.4.2 B: Explorer (`explorer`)
 
@@ -1556,31 +1437,23 @@ commands grouped by asset class with their counts; Recently opened (Market's com
 
 #### 3.4.3 C: Quality (`quality`)
 
-The checks the data supports, by severity, worst first, each item opening its command (section 3.2's built rows). Tiles: **Critical**,
+The checks the data supports, by severity, worst first, each item opening its command (section 3.3.2's built rows). Tiles: **Critical**,
 **Warnings**, **Clean** (the share of items checked with no exception) and, in place of the mock-up's **VaR at stake**, the note *Impact
 on VaR and valuations comes in a later release*. A **Checks run** card gives each check's items and flags.
 
 **On the committed demo data every check is clean**: the market data is consistent and its dates move with the lake's business dates
 (EDITIONS.md section 13). The checks are proved on crafted bad data in `test_market_landing.py` (stale, gap, discount factor, forward and
-surface problems).
-
-#### 3.4.4 What the builder left out, and why
-
-- **VaR at stake** and the Impact card: no link from market data to the VaR and valuation inputs that use it (planned).
-- **Jumps over n σ as a check**: the desk ranks moves in σ; turning that into a check with thresholds and severities is planned.
-- **Two sources disagreeing**: one source per kind in the lake.
-- **Calendar spreads on commodity, cap and swaption grids**: a different underlying per row, so the FX and equity rule does not apply.
-- **Market data BI**: the pack ships no dataset; the edition keeps BI to `market-data-*` names so it never offers VaR or exposure items
-  (`market.yaml` `bi`, its comment).
-
----
+surface problems). Left out: VaR at stake and the Impact card (ML1), jumps as a check (ML2), two sources (ML3: one source per kind in the
+lake), calendar spreads on commodity, cap and swaption grids (a different underlying per row, so the FX and equity rule does not apply:
+ML4), and market-data BI (the pack ships no dataset; the edition keeps BI to `market-data-*` names so it never offers VaR or exposure
+items, `market.yaml` `bi`: ML6).
 
 ### 3.5 Gaps, with design sketches
 
-Drishti's rules ([COMPUTED_ATTRIBUTES.md section 1.2](COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)): market
-data is **fundamental** (delivered under the market-data pack's contracts as JSON Lines into the lake); every check, move, impact and
-link is **computed on demand**, never stored; an acknowledgement or a correction note is a **Drishti-owned** record, versioned; **BI is
-the report layer**. Sizes: **S** days, **M** one to three weeks, **L** more than three weeks. Ids ML1 to ML10 are this document's.
+Market data is **fundamental** (the pack's contracts, JSON Lines into the lake); every check, move, impact and link is **computed on
+demand**; an acknowledgement or a correction note is a **Drishti-owned** record, versioned; BI is the report layer
+([COMPUTED_ATTRIBUTES.md section 1.2](COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)). Sizes: **S** days, **M** one to three
+weeks, **L** more than three weeks.
 
 | Id | Gap | Size | Depends on |
 |---|---|---|---|
@@ -1600,9 +1473,7 @@ the report layer**. Sizes: **S** days, **M** one to three weeks, **L** more than
 **Why it is not trivial.** Drishti's VaR does **not** read market data: an upstream risk batch revalues each trade under 509 historical
 scenarios with the bank's market data and sends a P&L vector or scenario PVs per trade
 ([VAR_GUIDE section 1](../guides/VAR_GUIDE.md#1-the-question-var-answers)). So "VaR at stake" is not a recomputation with a corrected
-curve; it is a measure of **how much of VaR and MtM rides on the trades that use the flagged item**. The plan's own words: "who uses each
-flagged point (VaR scenarios, the valuations of which trades) and the VaR at stake if it is wrong, computed, never invented; needs the
-market data linked to the VaR and valuation inputs that use it" (planned).
+curve; it is a measure of **how much of VaR and MtM rides on the trades that use the flagged item**, computed, never invented.
 
 **Step 1: the usage map (M).** A computed kind `market-data-usage` (proposed), keyed by market-data id and date, built from the trades
 by **rules** (configuration), or from the bank's pricing configuration when it can supply one (fundamental, preferred):
@@ -1621,37 +1492,29 @@ The map answers per item: the trades, books and desks that use it, their count a
 is sensitive to (by maturity bucket, when sensitivities arrive). A **Used by** panel on each market-data page (CRV, FXV, CDS …) and a
 column on the Quality list. Unmapped trades are counted as *unknown usage*, never dropped.
 
-**Step 2: what is at stake (S after step 1).**
+**Step 2: what is at stake (S after step 1).** **MtM at stake**, **component VaR at stake** (the users' component VaR in `BANK`, adding
+up to the bank's VaR), **incremental VaR** (on request; an upper bound of the error's reach) and, when per-trade sensitivities exist,
+**sensitivity at stake** (Σ sensitivity to the flagged pillar × the suspected error: the stale gap, or the jump less a normal move, a
+first-order P&L of the error). The rules are in [section 3.5.11](#3511-var-at-stake-jumps-and-two-sources-the-build-design).
 
-| Figure | How | Meaning |
-|---|---|---|
-| **MtM at stake** | Σ \|MtM\| of the trades that use the item (valuations, built) | Valuations exposed to an error in it |
-| **Component VaR at stake** | Σ of those trades' component VaR in `BANK` (the engine's contributions, [VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts), by trade, adding up to the bank's VaR) | How much of today's VaR rides on them |
-| **Incremental VaR** | `VAR BANK` − `VAR BANK - TRD:<those trades>` (one more scope, exact) | VaR if those trades were wrong enough to remove; an upper bound of the error's reach |
-| **Sensitivity at stake** (when per-trade sensitivities exist) | Σ sensitivity to the flagged pillar × the suspected error (the stale gap, or the jump less a normal move) | A first-order P&L of the error |
+**A bad historical day** (ML10): when the flagged point is in the **history** (a past day's move), the question is whether that scenario
+day is in today's tail. If the day is the VaR scenario, VaR at stake is VaR less the VaR without that scenario (the next rank of the same
+sorted vector, [VAR_GUIDE section 18.1](../guides/VAR_GUIDE.md#181-var)); if it is in the ES tail, the same for ES. This assumes the
+upstream batch builds its scenarios from the same history the lake holds: the answer says so.
 
-The Quality tile **VaR at stake** reads the largest component VaR at stake among critical items, with the item named; each item in the
-list shows its MtM and component VaR at stake. All computed when the Quality landing opens, cached like the rest, never stored.
-
-**A bad historical day** (ML10): when the flagged point is in the **history** (a past day's move), the question is different: is that
-scenario day in today's tail? If the day is the VaR scenario (rank k), VaR at stake is `VaR − VaR without that scenario` (the next rank:
-exact, a different rank of the same sorted vector); if it is in the ES tail, the same for ES. This assumes the upstream batch builds its
-scenarios from the same history the lake holds: the answer says so.
-
-**Data needs.** The trades and valuations (held); a usage rule set or the bank's pricing configuration (section 6); sensitivities by
-pillar for the last row. **Tests:** crafted trades using a crafted curve appear under Used by; the component VaR at stake of a curve used
-by every trade equals the bank's VaR; removing the scenario day that is the VaR scenario gives the next rank; an unmapped trade is
+**Data needs.** The trades and valuations (held); a usage rule set or the bank's pricing configuration (section 3.6); sensitivities by
+pillar for the last figure. **Tests:** crafted trades using a crafted curve appear under Used by; the component VaR at stake of a curve
+used by every trade equals the bank's VaR; removing the scenario day that is the VaR scenario gives the next rank; an unmapped trade is
 counted as unknown.
 
 #### 3.5.2 ML2: the σ-jump check
 
 The desk already measures the latest move in σ of the item's own daily moves over 21 business days when ten or more are held
-(`drishti-console/core/market_landing.py`, `moves`). The check: for every item and **every pillar** (a curve's `POINTS[].ZERO_RATE`, a
-surface's grid, not only the headline field), flag |move| ≥ `quality.jump-sigma` σ (proposed setting, default 4 for a warning; 6 for
-critical, configurable), measured in the item's natural unit (basis points for rates and spreads, log return for prices, vol points for
-vols); fewer than ten moves held: not checked, counted as such. Two jumps of opposite sign on consecutive days (a spike that reverts) are
-flagged as a **suspected bad print**. **Size** S. **Tests:** a crafted spike at 5σ is a warning, at 7σ critical; a spike-and-revert pair is
-named; an item with nine moves is "not checked".
+(`drishti-console/core/market_landing.py`, `moves`). The check runs that for every item and **every pillar** (a curve's
+`POINTS[].ZERO_RATE`, a surface's grid, not only the headline field), warning at 4σ and critical at 6σ (configurable), names a spike
+that reverts as a **suspected bad print**, and counts items with fewer than ten moves as *not checked*; the exact rules and settings are in
+[section 3.5.11](#3511-var-at-stake-jumps-and-two-sources-the-build-design). **Size** S. **Tests:** a crafted spike at 5σ is a warning, at
+7σ critical; a spike-and-revert pair is named; an item with nine moves is "not checked".
 
 #### 3.5.3 ML3: two sources, tolerance and IPV
 
@@ -1660,12 +1523,12 @@ second load of the same contract (a source column in the lake table) rather than
 sources it was built from (`SOURCES`, [market-data README](../../config/packs/market-data/README.md)): the lake today holds one built curve
 per id.
 
-**The check.** Per field and pillar, |a − b| against a **tolerance table** by asset class and tenor (configuration: 0.5 bp for G10 OIS
-pillars, 2 bp for credit spreads, 0.25 vol points for liquid FX vols, 0.1% for equity closes …); breaches as warnings, a multiple of the
-tolerance as critical; the source the batch used marked. **IPV** at month-end: the same comparison of the desk's marks (the official close)
-against the independent source, aggregated by desk with the **MtM at stake** of ML1, as a BI report signed off through the report sign-off framework.
-**Size** M. **Depends on** a second source per kind (data). **Tests:** crafted pairs inside and outside tolerance; a missing second source
-is "single source", never "agreed".
+**The check.** Per field and pillar, the difference against a **tolerance table** by asset class and tenor (configuration: 0.5 bp for G10
+OIS pillars, 2 bp for credit spreads, 0.25 vol points for liquid FX vols, 0.1% for equity closes …); the rule and its states are in
+[section 3.5.11](#3511-var-at-stake-jumps-and-two-sources-the-build-design), the source the batch used marked. **IPV** at month-end: the
+same comparison of the desk's marks (the official close) against the independent source, aggregated by desk with ML1's **MtM at stake**,
+as a BI report signed off through the report sign-off framework. **Size** M. **Depends on** a second source per kind (data). **Tests:**
+crafted pairs inside and outside tolerance; a missing second source is "single source", never "agreed".
 
 #### 3.5.4 ML4: grid calendar and smile checks
 
@@ -1683,7 +1546,7 @@ Each finding names the cell and its neighbours. **Size** M. **Tests:** a crafted
 For a curve and two dates: the move per pillar in basis points; **shift** (the mean move), **twist** (2s10s or a slope regression),
 **butterfly** (the belly against the wings), with the share of the move each explains; for a surface, the ATM level move and the skew
 move. A card on the Market desk under Biggest moves, and a tab on the curve page. Derived from two dated documents; **S**. Also the input
-LENSES.md section 2.5.4 needs for a P&L explain (market moves per factor).
+section 2.5.4 needs for a P&L explain (market moves per factor).
 
 #### 3.5.6 ML6: a market-data BI dataset
 
@@ -1704,7 +1567,7 @@ exception acknowledged stays acknowledged on reopen; a corrected load clears it 
 
 An **expected list** per date: the ids each kind should have (configuration or derived: every id loaded on most of the last N business
 days, or used by a live trade through ML1). Missing ids are a **critical** "missing" exception (distinct from stale). Reuses the load
-expectations ([DATA_GUIDE.md › Telling Drishti new data has landed, section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data)) one level down: from "the kind loaded" to
+expectations ([DATA_GUIDE.md section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data)) one level down: from "the kind loaded" to
 "each id loaded". **Size** S.
 
 #### 3.5.9 ML9: the proxy list
@@ -1712,19 +1575,19 @@ expectations ([DATA_GUIDE.md › Telling Drishti new data has landed, section 8]
 The P&L vector and scenario-PV rows say `ok`, `proxied` or `failed` per trade ([VAR.md section 2.2](../contracts/VAR.md#22-pnl-vector-one-pl-vector-per-trade)).
 With ML1's usage map, the Market lens lists the **market data behind the proxies**: which items are missing so that trades are proxied,
 the trades, their MtM and component VaR. Reading the VaR engine's status needs the market-risk pack's read access, not its commands: the
-Market lens hides VaR, so the list is a read-only card, or the item lives in the Risk lens with a link (section 9, decision 3). **Size** S.
+Market lens hides VaR, so the list is a read-only card (section 3.9, decision 3). **Size** S.
 
 #### 3.5.10 ML10: the historical-day check for the VaR window
 
 The VaR window is the last 509 business days of moves. Run ML2 over the **whole window** of every item the VaR uses (by ML1), not only
-the latest day; list suspected bad days with their **VaR at stake** (section 5.1: the scenario's rank today and the VaR without it). A
-monthly task for methodology, a BI report, and the evidence for the stress window review (the stress window tool chooses the window; this checks its
-data). **Size** M.
+the latest day; list suspected bad days with their **VaR at stake** (section 3.5.1: the scenario's rank today and the VaR without it). A
+monthly task for methodology, a BI report, and the evidence for the stress window review (the stress window tool chooses the window; this
+checks its data). **Size** M.
 
 #### 3.5.11 VaR at stake, jumps and two sources: the build design
 
 ML1's at-stake step, ML2 and ML3, with ML7's kept records for *Since* (ML11), as one build on the Quality landing (C). Mock-ups:
-[section 11.3](#3113-quality-with-var-at-stake-jumps-and-two-sources-market-checks).
+[section 3.11.3](#3113-quality-with-var-at-stake-jumps-and-two-sources-market-checks).
 
 **What it shows.** On the Quality landing: the tiles **Critical**, **Warnings**, **Clean**, **VaR at stake** (in place of today's note)
 and **Two sources** (items compared and agreeing); the exceptions worst first with **Since**, **Used by** (trades and desks),
@@ -1784,9 +1647,9 @@ No new panel kind is needed. One small addition is: **reference lines on `line` 
 | Jump | z = \|m_t\| / σ; warning at z ≥ 4, critical at z ≥ 6 (decision 5); the item takes its worst pillar |
 | Suspected bad print | yesterday's pillar was a jump and today's move reverses it (opposite sign, \|m_t + m_{t−1}\| ≤ 25% of \|m_{t−1}\|): named on today's exception |
 | Two sources | d = a − b per pillar between the primary source (the one the batch used, `INTERNAL` by default) and the second, in the natural unit (relative for prices); agree when \|d\| ≤ τ, warning when τ < \|d\| ≤ 3τ, critical above, τ from the tolerance table by asset class and tenor; no second row: *single source*, never *agree*; a second row of an older date: *second source stale* |
-| Used by | the usage map (section 5.1): the trades whose rules match the item, rolled to their positions (a position's trades share an instrument and so their market data); unmatched trades counted as *unknown usage* |
+| Used by | the usage map (section 3.5.1): the trades whose rules match the item, rolled to their positions (a position's trades share an instrument and so their market data); unmatched trades counted as *unknown usage* |
 | MtM at stake | Σ \|MtM\| of the users (`trade-valuation`) |
-| Component VaR at stake | Σ of the users' positions' component VaR in `BANK` from one decomposition of the bank by position (cached with the VaR page's answers; [VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts)); signed: a negative sum means the users hedge the bank's tail; also as a share of VaR BANK |
+| Component VaR at stake | Σ of the users' positions' component VaR in `BANK` from one decomposition of the bank by position (cached with the VaR page's answers; the decomposition: [VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts)); signed: a negative sum means the users hedge the bank's tail; also as a share of VaR BANK |
 | VaR at stake tile | the largest component VaR at stake among **critical** items, with the item named (decision 1) |
 | Incremental VaR | on request only: VaR BANK − VaR of BANK without those positions (one more scope, exact) |
 | Since | the first date of the unbroken run of daily quality records holding the same exception (ML7) |
@@ -1804,7 +1667,7 @@ Three additions, described here and created with the build:
 - **`market-data-usage`** (proposed mnemonic `MDU`, computed, never stored as truth): one row per item, date and position: `ITEM_KIND`,
   `ITEM_ID`, `BUSINESS_DATE`, `POSITION_ID`, `TRADE_IDS`, `DESK`, `BOOK`, `RULE` (the rule that matched, or `BANK-MAP` when the bank's
   pricing configuration supplied it), `PILLARS` (when sensitivities say which), `MTM`. The rules live in a pack configuration file
-  (proposed `usage-rules.yaml` of the market-data pack), one rule per kind as the table of section 5.1.
+  (proposed `usage-rules.yaml` of the market-data pack), one rule per kind as the table of section 3.5.1.
 - **`market-data-quality`** (proposed mnemonic `MDQ`, Drishti-owned, ML7): one immutable record per date and exception: `BUSINESS_DATE`,
   `CHECK`, `ITEM_KIND`, `ITEM_ID`, `PILLAR`, `VALUE`, `REFERENCE` (σ, or the second source's value), `MEASURE` (z, or the difference),
   `THRESHOLD`, `SEVERITY`, `FIRST_SEEN`, `BATCH_ID`; and a versioned acknowledgement: `ACK` (`ACCEPTED`, `CORRECTED`, `PROXIED`), `REASON`,
@@ -1843,17 +1706,13 @@ are **more**; acknowledging an exception is **desk** (it needs a reason and a ba
 
 **Open questions for the product owner.**
 
-1. **Mock-up choice:** A (the Quality landing with Used by and VaR at stake, recommended), B (impact first) or C (a tab per check; its
-   Jumps tab fits as A's drill-down).
-
+1. **Mock-up choice:** A (the Quality landing with Used by and VaR at stake, recommended), B (impact first) or C (a tab per check).
    **Decided (product owner, 2026-11-01):** one screen; A is the default view, B and C are views on the same screen (the view switch
    above), built as Sutra panels on the Quality landing.
 2. **Who sees VaR at stake in Market:** everyone in the lens (the figure is an aggregate, recommended), or only people whose role reads
    VaR results elsewhere.
 3. **Pillars checked:** every pillar (recommended), or the headline fields only until ML7's records are in.
 4. **The demo's crafted disagreements:** a handful, each labelled in the second source's rows (recommended), or none beyond tolerance.
-
----
 
 ### 3.6 Data needed
 
@@ -1862,12 +1721,10 @@ are **more**; acknowledging an exception is **desk** (it needs a reason and a ba
 | End-of-day market data, every kind of the pack | per id per business date | everything (built) | the bank's market data system and vendors. **Vendor licences** decide who may see vendor data in another application: a display licence for the users, sometimes a per-user count; derived data (a built curve) is usually freer than raw quotes. The bank's market-data team owns this; the Market lens should show source and licence per item (as the public-data packs' `PROVENANCE` does) |
 | History of at least 21 business days (10 for σ) and the 509-day window for ML10 | per id per date | moves, ML2, ML10 | the same; the demo lake moves with its business dates |
 | A second source per kind | per id per date | ML3 | a second vendor or the internal mark |
-| A usage map (pricing configuration: which curves, surfaces and fixings each product or trade uses) | per trade or per product rule | ML1, ML9, ML10 | the bank's pricing system; otherwise Drishti's rules (section 5.1) |
-| **Position sensitivities by pillar** (DV01 by curve and tenor, vega by surface point) | per trade per date | ML1's sensitivity at stake | the bank's risk engine; FRTB.md's per-trade `sensitivity` table (proposed); RO4 of the oversight analysis (section 5.4.4) |
+| A usage map (pricing configuration: which curves, surfaces and fixings each product or trade uses) | per trade or per product rule | ML1, ML9, ML10 | the bank's pricing system; otherwise Drishti's rules (section 3.5.1) |
+| **Position sensitivities by pillar** (DV01 by curve and tenor, vega by surface point) | per trade per date | ML1's sensitivity at stake | the bank's risk engine; the `position-sensitivity` contract ([section 5.7](#57-sensitivities-data)); RO4 ([section 5.4.4](#544-ro4-sensitivity-aggregation-and-sensitivity-limits)) |
 | An expected list of ids | per kind, on change | ML8 | configuration or derived |
 | Tolerances by asset class and tenor | configuration | ML3 | valuation control's policy |
-
----
 
 ### 3.7 Relationship to the other lenses
 
@@ -1879,18 +1736,14 @@ are **more**; acknowledging an exception is **desk** (it needs a reason and a ba
 | **Drishti Oversight** (proposed) | The Quality checks become the market-data line of its data-trust card (RO13) | — | — |
 
 **The boundary.** Market never shows trades or VaR (`market.yaml`: "No trades and no VaR"). ML1's figures are computed by the engines
-and **shown** in Market as numbers attached to market data (MtM at stake, VaR at stake); the trades behind them open in Risk or Trading.
-Section 9, decision 2.
-
----
+and **shown** in Market as numbers attached to market data (MtM at stake, VaR at stake); the trades behind them open in Risk or Trading
+(section 3.9, decision 2).
 
 ### 3.8 A roadmap
 
-The rows below are added to the plan's [Lens product candidates (not started)](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started)
-section. ML1 (with ML2 to ML4) is the plan's market-data rows (VaR at stake and the quality checks) broken into buildable steps.
-
-
-**Status (product owner, 2026-10-31).** The Status column says where each row stands: *planned* rows are next, *proposed* rows wait until their work starts, and *unscheduled* rows wait for the product owner.
+Rows of the plan's [Lens product candidates (not started)](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started); ML1 (with ML2 to
+ML4) is the plan's market-data rows (VaR at stake and the quality checks) broken into buildable steps. **Status (product owner,
+2026-10-31):** *planned* rows are next, *proposed* rows wait until their work starts, *unscheduled* rows wait for the product owner.
 
 | Order | Row | Why here | Size | Depends on | Status |
 |---|---|---|---|---|---|
@@ -1903,63 +1756,38 @@ section. ML1 (with ML2 to ML4) is the plan's market-data rows (VaR at stake and 
 | 7 | **ML9** the proxy list | Needs ML1 | S | ML1 | unscheduled |
 | 8 | **ML3** two sources and IPV | Needs a second source | M | data | proposed |
 | 9 | **ML10** the historical-day check | Methodology's monthly review; feeds the stress window work | M | ML1, ML2 | unscheduled |
-| 10 | **ML11** since when each exception has stood; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#311-mock-ups-the-screens-to-build)) | S each | ML7 | ML11 proposed; LX1 built |
-
----
+| 10 | **ML11** since when each exception has stood; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 3.11](#311-mock-ups-the-screens-to-build)) | S each | ML7 | ML11 proposed; LX1 built |
 
 ### 3.9 Decisions for the product owner
 
-**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Each row is proposed until its work starts.
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"). Each row is proposed
+until its work starts.
 
-1. **VaR at stake: which figure leads** the tile: the component VaR at stake (recommended: adds up, cheap), the incremental VaR, or the
-   MtM at stake.
-
-   **Decided (product owner, 2026-10-31):** the component VaR at stake leads the tile (adds up, cheap).
-2. **VaR figures inside Market.** Show ML1's at-stake numbers in Market while trades and VaR stay hidden (recommended), or link to Risk
-   only.
-
-   **Decided (product owner, 2026-10-31):** Market shows ML1's VaR at stake read-only while trades and VaR stay hidden (proposed).
-3. **The proxy list (ML9).** In Market (read-only card) or in Risk with a link.
-
-   **Decided (product owner, 2026-10-31):** in Market, as a read-only card (ML9, unscheduled).
-4. **Usage rules (ML1).** Drishti's configured rules now, the bank's pricing configuration when available (recommended), or wait for the
-   bank's map.
-
-   **Decided (product owner, 2026-10-31):** Drishti's configured rules now, the bank's pricing configuration when available.
-5. **Jump thresholds.** 4σ warning and 6σ critical by default (proposed), or the desk's 3σ.
-
-   **Decided (product owner, 2026-10-31):** 4σ warning and 6σ critical by default, configurable.
-6. **Core's `CAL` and `ISS` in Market.** Show the holiday calendars and issuers (the checks use calendars), or keep them hidden.
-
-   **Decided (product owner, 2026-10-31):** show the holiday calendars and issuers in Market (the checks use calendars).
-7. **Quality records (ML7).** An official end-of-day quality record per date (recommended), or checks on open only.
-
-   **Decided (product owner, 2026-10-31):** an official end-of-day quality record per date (ML7, proposed).
-8. **A second source for the demo (ML3).** A synthetic second source with small, labelled differences so the check shows something, or
-   none until a bank provides one.
-
-   **Decided (product owner, 2026-10-31):** a synthetic second source with small, labelled differences on the demo, so the two-source check shows something (proposed).
-9. **Source and licence per item.** Show each item's source and licence on its page as the public-data packs do (recommended), or not.
-
-   **Decided (product owner, 2026-10-31):** show each item's source and licence on its page, as the public-data packs do.
-
----
+1. **VaR at stake: which figure leads the tile** (component VaR at stake, incremental VaR or MtM at stake). **Decided:** the component VaR
+   at stake (adds up, cheap).
+2. **VaR figures inside Market** (show ML1's at-stake numbers, or link to Risk only). **Decided:** Market shows ML1's VaR at stake
+   read-only while trades and VaR stay hidden (proposed).
+3. **The proxy list (ML9)** (in Market or in Risk with a link). **Decided:** in Market, as a read-only card (ML9, unscheduled).
+4. **Usage rules (ML1)** (Drishti's rules now, or wait for the bank's map). **Decided:** Drishti's configured rules now, the bank's pricing
+   configuration when available.
+5. **Jump thresholds** (4σ and 6σ, or the desk's 3σ). **Decided:** 4σ warning and 6σ critical by default, configurable.
+6. **Core's `CAL` and `ISS` in Market.** **Decided:** show the holiday calendars and issuers in Market (the checks use calendars).
+7. **Quality records (ML7)** (an official record per date, or checks on open only). **Decided:** an official end-of-day quality record per
+   date (ML7, proposed).
+8. **A second source for the demo (ML3)** (synthetic, or none until a bank provides one). **Decided:** a synthetic second source with
+   small, labelled differences on the demo, so the two-source check shows something (proposed).
+9. **Source and licence per item.** **Decided:** show each item's source and licence on its page, as the public-data packs do.
 
 ### 3.10 Glossary
 
 | Term | In plain words |
 |---|---|
-| **Market data** | The prices, rates, curves and volatilities the bank values trades with |
 | **Curve** | Rates (or spreads, or prices) by maturity, built from market quotes |
 | **Pillar** | One maturity point of a curve (the 10-year rate) |
 | **Discount factor** | What 1 paid at a future date is worth today; must fall with maturity and stay between 0 and 1 |
-| **Forward rate** | The rate implied today for a future period |
-| **Vol surface** | Implied volatility by expiry and strike (or delta) |
 | **Total variance** | Volatility squared times time; must rise with expiry for the same underlying |
 | **Smile, butterfly** | How vol changes with strike; a butterfly check makes sure option prices are consistent across strikes |
 | **Co-terminal** | Swaptions whose underlying swaps end on the same date |
-| **Stale** | Not updated for longer than allowed |
-| **Gap** | A missing pillar that similar curves have |
 | **σ (sigma)** | The usual size of a day's move, from the item's own history; a 4σ move is very unusual |
 | **Bad print** | A wrong value from a source, often a spike that reverts the next day |
 | **IPV** | Independent price verification: checking the desks' marks against independent sources |
@@ -1967,19 +1795,11 @@ section. ML1 (with ML2 to ML4) is the plan's market-data rows (VaR at stake and 
 | **Proxy** | A stand-in price or history used for an instrument without its own |
 | **Usage map** | Which trades use which market data |
 | **VaR at stake** | How much of today's VaR rides on trades that use a doubtful item |
-| **Scenario day** | One past day's market move, applied to today's trades in VaR |
-| **Lens** | One person's focused view of Drishti, opened by a link; it hides, it does not secure |
-
----
 
 ### 3.11 Mock-ups: the screens to build
 
-The three Market landings are copied into the repository, self-contained (system fonts, nothing from a CDN), with a screenshot beside
-it, under [`docs/architecture/mockups/market/`](mockups/market); the lens menus under [`docs/architecture/mockups/menus/`](mockups/menus/A.html); the
-Quality landing's completion (VaR at stake, jumps, two sources) under [`docs/architecture/mockups/market-checks/`](mockups/market-checks/A.html). **The checklist below is the
-source of truth at build time** ([README.md](#mock-ups)): every panel is a row, its status checked against the code on
-2026-10-31 (`wip/drill-a`). **Built** cites the code or guide; **partly built** says what is missing; **not built** names the candidate
-row.
+Under [`mockups/market/`](mockups/market) (the landings) and [`mockups/market-checks/`](mockups/market-checks/A.html) (the Quality
+landing completed); conventions in [the introduction](#mock-ups). Statuses checked against the code on 2026-10-31.
 
 | Mock-up | Chosen | Built | Partly built | Not built |
 |---|---|---:|---:|---:|
@@ -1995,20 +1815,19 @@ row.
 C built with the quality checks the data supports (its *PROPOSED* badge on the mock-up) ([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market)).
 A violet accent on the terminal look. **Code:** [`market_landing.html`](../../drishti-console/web/templates/home/market_landing.html),
 [`drishti_market-landing.js`](../../drishti-console/web/static/js/drishti_market-landing.js), [`drishti_market-landing.css`](../../drishti-console/web/static/css/drishti_market-landing.css),
-[`market_landing.py`](../../drishti-console/core/market_landing.py) (`/api/home/market/desk`, `/api/home/market/moves`,
-`/api/home/market/quality`), [`market.yaml`](../../config/editions/market.yaml). Curve names and shapes are the demo's; other figures
-illustrative.
+[`market_landing.py`](../../drishti-console/core/market_landing.py), [`market.yaml`](../../config/editions/market.yaml). Curve names and
+shapes are the demo's; other figures illustrative.
 
 **Interactions.** Every tile, item and exception opens its command (`CRV CRV-USD-OIS <GO>` and so on); the Data exceptions tile opens C;
-chips and quick cards run their commands; hovering a move shows its dates and the number of daily changes behind its σ. A landing switch
-and the lens links sit above every landing. **States.** *Loading:* `…`. *Error:* `Not available: <reason>` in the panel. *Not given by
-the data*, said in place: a change only when both days hold real data; fewer than ten moves ranks by the day's move (the σ column then
-reads *since*); no history: says so and ranks nothing; on the demo every quality check is clean ("no exceptions"). **Phone** (600 px and
-below): one column ([`drishti_market-landing.css`](../../drishti-console/web/static/css/drishti_market-landing.css)); the mock-up drew no phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md section 8](MOBILE_DISPLAY.md#8-beyond-sutra-pages)): the command line, the tiles and the first card in full, the other tables at a glance (five rows, *Show all*), charts, maps and the quick links under *More on this page*.
+chips and quick cards run their commands; hovering a move shows its dates and the number of daily changes behind its σ. **States.**
+*Loading:* `…`. *Error:* `Not available: <reason>` in the panel. *Not given by the data*, said in place: a change only when both days hold
+real data; fewer than ten moves ranks by the day's move (the σ column then reads *since*); no history: says so and ranks nothing; on the
+demo every quality check is clean ("no exceptions"). **Phone:** one column below 600 px; the mock-up drew no phone form, so the landing
+takes the phone tiers ([MOBILE_DISPLAY.md section 8](MOBILE_DISPLAY.md#8-beyond-sutra-pages)).
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|
-| M1 | Bar (A, B, C) | `DRISHTI Market` (*Market* violet); a command line (*CRV CRV-USD-OIS, FXV EURUSD, CDS …*); menus **Views · Curves · Volatility · FX · Credit · BI · Help** | `market.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type, `<GO>`; open a menu | — | **Built**: brand, command line, and Curves, Volatility, FX and Credit menus ([section 11.2](#3112-the-lens-menus-lx1-menusahtml)) |
+| M1 | Bar (A, B, C) | `DRISHTI Market` (*Market* violet); a command line (*CRV CRV-USD-OIS, FXV EURUSD, CDS …*); menus **Views · Curves · Volatility · FX · Credit · BI · Help** | `market.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type, `<GO>`; open a menu | — | **Built**: brand, command line, and Curves, Volatility, FX and Credit menus ([section 3.11.2](#3112-the-lens-menus-lx1-menusahtml)) |
 | M2 | Meta line (A) | *As of **2026-09-30** · 28 IR curves · 20 market-data kinds · official close* | `/api/home/market/desk` | — | — | **Built** (with the lake's lag when behind) |
 | M3 | Tile: USD OIS 10Y (A) | **3.92%** *−4bp* red; *CRV CRV-USD-OIS* | `CRV-USD-OIS` `TEN_Y`; history `/api/v1/history/{kind}/{id}/series` | click: the curve | — | **Built** (a change only when both days hold real data) |
 | M4 | Tile: USD 2s10s (A) | **+46bp** *+2*; *slope, CRV-USD-PROJ* | `CRV-USD-PROJ` `SLOPE_2S_10S` | click | — | **Built** |
@@ -2030,43 +1849,36 @@ below): one column ([`drishti_market-landing.css`](../../drishti-console/web/sta
 | M20 | Card: Impact (C) | *who uses the flagged data*: Flagged item, Used by, VaR at stake: CRV-CAD-GOVT *VaR scenarios · TVAL of 412 trades* 0.31m; FXV USDTRY *valuations of 6 options* 0.06m; INFC GBRPI *3 inflation swaps* 0.02m | the usage map; component and incremental VaR | — | ML1 | **Not built**: a *Checks run* card stands in its place |
 | M21 | Landing switch | (the footer: A the default, B and C behind links) | `home.landings`, the person's settings | click | — | **Built** |
 
-**Gaps: on the mock-up, not in the product.**
-
-1. **Jumps as a check** (M7, M14, M16; ML2).
-2. **Two sources disagreeing** (M14; ML3).
-3. **VaR at stake and the Impact card** (M18, M20; ML1).
-4. **Since: how long each exception has stood** (M19; ML11, after ML7).
+**Gaps: on the mock-up, not in the product.** (1) Jumps as a check (M7, M14, M16; ML2). (2) Two sources disagreeing (M14; ML3). (3) VaR
+at stake and the Impact card (M18, M20; ML1). (4) Since: how long each exception has stood (M19; ML11, after ML7).
 
 #### 3.11.2 The lens menus (LX1, `menus/A.html`)
 
-![The lens menus, option A: subject menus in the bar](mockups/menus/A.png)
-
-[Open the mock-up](mockups/menus/A.html) (options: [B](mockups/menus/B.html) a subject strip under the standard bar,
-[C](mockups/menus/C.html) one lens menu with subject columns; the light theme: [A-light.png](mockups/menus/A-light.png)). One mock-up for the
-four built lenses (Risk, Trading, Market, World), each lens with one menu open. **Recommended:** option A, subject menus in the bar
-(chosen on the recommendation, product owner to review); plan row LX1.
-
-**Why A.** The lens mock-ups the product owner chose already drew their bars this way (Views, the lens's subjects, BI, Help), so A builds what was approved; each subject is one click from anywhere, as the five standard menus are. The strip of B costs a second row on every page; the single lens menu of C hides the subjects a click deeper and is better kept as the phone form of A. Subject menus are configured, not coded: the edition names its top menus in order, and a subject menu draws on the items of the menus file with the same switches (an item shows only when the edition keeps its command word).
+The shared mock-up of the four built lenses and why option A was chosen are in [section 1.11.4](#1114-the-lens-menus-lx1-menusahtml).
+Market's rows:
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
 | X1 | Bar | `DRISHTI Market`; the command line; menus **Views · Curves · Volatility · FX · Credit · BI · Help** | the edition's top menus by id, in order (`menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | **Built**: `menus.top` in [`market.yaml`](../../config/editions/market.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens) (replaces the menus part of M1) |
-| X2 | Curves menu | Curves `CRV`; Repo `REPO`; Fixings `FIX`; Inflation `INF` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
-| X3 | Volatility menu | Swaption volatility `IRV`; Cap volatility `CPV`; FX volatility `FXV`; Equity volatility `EQV`; Commodity volatility `CMDV` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
-| X4 | FX menu | Spot `FX`; Forwards `FXF` (FX volatility `FXV`: the Volatility menu) | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
-| X5 | Credit menu | CDS curves `CDS`; Bonds `BND` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
+| X2 | Curves menu | Curves `CRV`; Repo `REPO`; Fixings `FIX`; Inflation `INF` | a subject menu in `menus.yaml`, each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
+| X3 | Volatility menu | Swaption volatility `IRV`; Cap volatility `CPV`; FX volatility `FXV`; Equity volatility `EQV`; Commodity volatility `CMDV` | as X2 | as X2 | **Built** |
+| X4 | FX menu | Spot `FX`; Forwards `FXF` (FX volatility `FXV`: the Volatility menu) | as X2 | as X2 | **Built** |
+| X5 | Credit menu | CDS curves `CDS`; Bonds `BND` | as X2 | as X2 | **Built** |
 | X6 | Phone form | below 640 px the subject menus fold into one **Market** menu, a column per subject (option C) | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; the bar's template and [`drishti_phone.js`](../../drishti-console/web/static/js/drishti_phone.js) put it in below 640 px | tap the lens menu, then an item | **Built** |
 
-On a phone (below 640 px) the subject menus fold into one menu named after the lens, first in the bar (option C's form, [menus/C](mockups/menus/C.html)): a column per subject, each item 44 px high with its command beside it; a wider screen keeps the subject menus in the bar, and the folded menu is not drawn there. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
+On a phone the folded menu is first in the bar (option C's form, [menus/C](mockups/menus/C.html)), each item 44 px high with its command
+beside it; a wider screen keeps the subject menus and does not draw it. Each item runs its command as if typed; an item that needs an id
+puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide.
+The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
 
 #### 3.11.3 Quality with VaR at stake, jumps and two sources (`market-checks`)
 
 [Open option A](mockups/market-checks/A.html) (options: [B](mockups/market-checks/B.html) impact first,
-[C](mockups/market-checks/C.html) a tab per check; the [phone](mockups/market-checks/phone.html)). Self-contained
-HTML (system fonts, nothing from a CDN), dark by default and light with `#light`; the screenshot is taken when the option is picked. The
-ids are the demo's market data and VaR BANK is the guides' figure; the exceptions are crafted (the committed demo is clean), as the
-footer says. **Decided (product owner, 2026-11-01):** one screen; option A is the default view, B and C are views on the same screen
-(**Exceptions · Impact · Checks**). Design in [section 5.11](#3511-var-at-stake-jumps-and-two-sources-the-build-design).
+[C](mockups/market-checks/C.html) a tab per check; the [phone](mockups/market-checks/phone.html)); dark by default and light with
+`#light`; the screenshot is taken when the option is picked. The ids are the demo's market data and VaR BANK is the guides' figure; the
+exceptions are crafted (the committed demo is clean), as the footer says. **Decided (product owner, 2026-11-01):** one screen; option A is
+the default view, B and C are views on the same screen (**Exceptions · Impact · Checks**). Design in
+[section 3.5.11](#3511-var-at-stake-jumps-and-two-sources-the-build-design).
 
 **Why A opens first.** It completes the Quality landing that was chosen and built (C), filling its two empty places (the VaR at stake
 tile and the Impact card) and adding the two checks to the same list, so the market-data team keeps one place that answers *what needs me
@@ -2091,26 +1903,19 @@ thorough per check, its Jumps tab the drill-down of a jump.
 
 ## 4. Drishti World: what macro, research and context users need, what the lens gives them today, and what comes next
 
-**Status: analysis and product description: built parts as built, the rest proposals.** Every "built" or "partly" statement cites the
-document, section or file it was read from on 2026-10-31. Everything in sections 5 and 8 is a proposal; the rows of
-section 8 are candidates in the [implementation plan](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started), not
-started.
-
-**The request (product owner, 2026-10-31):** "We should have similar and fuller standalone document for other lenses too", after the
-market risk oversight analysis ([section 5](#5-market-risk-oversight-what-the-second-line-needs-from-drishti-and-a-drishti-oversight-lens), the proposed Oversight lens; built). This is the World lens's.
+**Status:** built parts as built (each statement cites its source, read on 2026-10-31); sections 4.5 and 4.8 are proposals, candidates
+in the [implementation plan](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started), not started.
 
 **Licensing first.** The IMF figures and the Yahoo prices (and the Google News headlines) in these packs are **internal only**: shown
 inside the bank by the product owner's decision of 2026-10-29; any showing outside it needs a decision first
 ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world); [EXTERNAL_DATA.md, The internal-only
-rule](../guides/EXTERNAL_DATA.md#the-internal-only-rule)). Section 6 lists every source and its terms.
+rule](../guides/EXTERNAL_DATA.md#the-internal-only-rule)). Section 4.6 lists every source and its terms.
 
 **Read with:** [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world) (the lens as built),
-[EDITIONS.md section 10](../admin/EDITIONS.md#10-drishti-world) (how to run it), the edition file
-[`config/editions/world.yaml`](../../config/editions/world.yaml), [EXTERNAL_DATA.md](../guides/EXTERNAL_DATA.md) (every external source, its
-licence and its refresh script) and the packs' READMEs: [world-economy](../../config/packs/world-economy/README.md),
-[news-and-markets](../../config/packs/news-and-markets/README.md), [us-equities](../../config/packs/us-equities/README.md),
-[gleif](../../config/packs/gleif/README.md), [funds](../../config/packs/funds/README.md). The sibling lens documents:
-[section 1](#1-drishti-risk-what-risk-managers-near-the-desks-need-what-the-lens-gives-them-today-and-what-comes-next), [section 2](#2-drishti-trading-what-traders-and-desk-heads-need-what-the-lens-gives-them-today-and-what-comes-next), [section 3](#3-drishti-market-what-the-market-data-team-needs-what-the-lens-gives-it-today-and-what-comes-next).
+[section 10](../admin/EDITIONS.md#10-drishti-world) (how to run it), [`config/editions/world.yaml`](../../config/editions/world.yaml),
+[EXTERNAL_DATA.md](../guides/EXTERNAL_DATA.md) (every external source, its licence and its refresh script) and the packs' READMEs:
+[world-economy](../../config/packs/world-economy/README.md), [news-and-markets](../../config/packs/news-and-markets/README.md),
+[us-equities](../../config/packs/us-equities/README.md), [gleif](../../config/packs/gleif/README.md), [funds](../../config/packs/funds/README.md).
 
 ### 4.1 Who uses it
 
@@ -2139,41 +1944,37 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 | **Twice a year** | The IMF World Economic Outlook vintages (April, October): what was revised | — |
 | **Year** | Country rating reviews; the elections calendar | Annual reviews; 10-K and 20-F season |
 
----
-
 ### 4.2 Their questions: the morning, intraday, the close, month-end
 
 #### 4.2.1 The morning
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *What is the news on my topics?* | **Built**: **Today's news** by topic, each of `home.topics`' latest stories, newest first ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world)); Google News headlines, internal only | Relevance to the bank's clients and holdings (section 5.9) |
-| *How did markets do?* | **Partly**: quotes up and down in the **market snapshot** (twenty equity quotes) and the **biggest mover** | **Index levels and FX are not in the snapshot**: the S&P 500 level and USD/CAD were replaced by breadth and the biggest mover (section 5.1) |
-| *What changed since yesterday?* | **Partly**: **What changed** shows the latest of each source (the IMF vintage, the filings on the feed's latest day, the latest annual report, the market snapshot, GLEIF on file) | **No change feed**, so no "since yesterday" deltas (sections 5.4 and 5.5) |
-| *Any new filings from my companies?* | **Built**: new SEC filings on the feed's latest day (a tile); `EDGAR`, `FILING` | Filtered to *my* coverage list (section 5.10) |
+| *What is the news on my topics?* | **Built**: **Today's news** by topic, each of `home.topics`' latest stories, newest first ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world)); Google News headlines, internal only | Relevance to the bank's clients and holdings (WL9) |
+| *How did markets do?* | **Partly**: quotes up and down in the **market snapshot** (twenty equity quotes) and the **biggest mover** | **Index levels and FX are not in the snapshot**: the S&P 500 level and USD/CAD were replaced by breadth and the biggest mover (WL1) |
+| *What changed since yesterday?* | **Partly**: **What changed** shows the latest of each source (the IMF vintage, the filings on the feed's latest day, the latest annual report, the market snapshot, GLEIF on file) | **No change feed**, so no "since yesterday" deltas (WL4, WL5) |
+| *Any new filings from my companies?* | **Built**: new SEC filings on the feed's latest day (a tile); `EDGAR`, `FILING` | Filtered to *my* coverage list (WL10) |
 
 #### 4.2.2 Intraday
 
 | Question | Drishti today | Gap |
 |---|---|---|
 | *Show me this economy* | **Built**: `ECON`, `MACRO`, `FCST`, `LABR`, `FISC`, `SOCI`, `JUR`, `PARTY`, `OFFC`, `ELEC`; forms on | — |
-| *Compare the G7 (or G20, or emerging markets)* | **Partly**: the World map shows G7 and G20 as **member lists** (hard-coded in `drishti-console/web/static/js/drishti_world-landing.js`); the pack's groups are World Bank regions, income groups and the World; the income groups stand for emerging markets | G7 and G20 as country groups with GDP-weighted figures like the others (section 5.2) |
-| *Which elections are coming up?* | **Not served**: an election's next date is free text (`NEXT_ELECTION`, "by December 2028", [world-economy README](../../config/packs/world-economy/README.md)); the tile was replaced by funds and ETFs | A parsed date window (section 5.3) |
-| *Who owns this company? Who is its ultimate parent?* | **Built**: `LEI`, `LEIG`, `LEIR`, `LEIC`, `LEIM`; a company and its LEI record link both ways when us-equities is on ([gleif README](../../config/packs/gleif/README.md)) | Parent changes over time (section 5.6) |
-| *Which funds hold this company? Which ETFs track this index?* | **Built**: `HELD`, `TRACK`, `FUND` (the 200 largest US funds and ETFs, newest N-PORT) | Holdings changes between quarters (section 5.7) |
+| *Compare the G7 (or G20, or emerging markets)* | **Partly**: the World map shows G7 and G20 as **member lists** (hard-coded in `drishti-console/web/static/js/drishti_world-landing.js`); the pack's groups are World Bank regions, income groups and the World; the income groups stand for emerging markets | G7 and G20 as country groups with GDP-weighted figures like the others (WL2) |
+| *Which elections are coming up?* | **Not served**: an election's next date is free text (`NEXT_ELECTION`, "by December 2028", [world-economy README](../../config/packs/world-economy/README.md)); the tile was replaced by funds and ETFs | A parsed date window (WL3) |
+| *Who owns this company? Who is its ultimate parent?* | **Built**: `LEI`, `LEIG`, `LEIR`, `LEIC`, `LEIM`; a company and its LEI record link both ways when us-equities is on ([gleif README](../../config/packs/gleif/README.md)) | Parent changes over time (WL6) |
+| *Which funds hold this company? Which ETFs track this index?* | **Built**: `HELD`, `TRACK`, `FUND` (the 200 largest US funds and ETFs, newest N-PORT) | Holdings changes between quarters (WL7) |
 | *What are its financials?* | **Built**: `USEQ`, `FACT`, `FILING`: ten fiscal years from XBRL | — |
-| *What is its share price?* | **Partly**: `PXH` read live by an off-by-default connector, internal only; the snapshot's twenty quotes | No prices shipped ([us-equities README](../../config/packs/us-equities/README.md)); licensing (section 6) |
+| *What is its share price?* | **Partly**: `PXH` read live by an off-by-default connector, internal only; the snapshot's twenty quotes | No prices shipped ([us-equities README](../../config/packs/us-equities/README.md)); licensing (section 4.6) |
 
 #### 4.2.3 The close and month-end
 
 | Task | Drishti today | Gap |
 |---|---|---|
-| A country dashboard for a committee | **Partly**: BI datasets `world-economics-economies`, `region-economics-regions` and their reports (`world.yaml` `bi`) | Companies, funds and LEI datasets in BI (section 5.8) |
-| Periodic client review: what changed in the profile | **Partly**: the latest of everything | A diff since the last review (section 5.4) |
-| The IMF vintage: what was revised | **Partly**: the vintage named (`VINTAGE`); the count of revised economies was replaced by the vintage | Compare two vintages (section 5.6) |
-| Refresh the public data | **Built**: one standalone script per pack (`tools/publicdata/*.py` with `.sh` and `.ps1`), `status`, `refresh --dry-run`, `refresh` ([EXTERNAL_DATA.md](../guides/EXTERNAL_DATA.md#the-scripts)) | A schedule and a freshness card (section 5.11) |
-
----
+| A country dashboard for a committee | **Partly**: BI datasets `world-economics-economies`, `region-economics-regions` and their reports (`world.yaml` `bi`) | Companies, funds and LEI datasets in BI (WL8) |
+| Periodic client review: what changed in the profile | **Partly**: the latest of everything | A diff since the last review (WL4) |
+| The IMF vintage: what was revised | **Partly**: the vintage named (`VINTAGE`); the count of revised economies was replaced by the vintage | Compare two vintages (WL6) |
+| Refresh the public data | **Built**: one standalone script per pack (`tools/publicdata/*.py` with `.sh` and `.ps1`), `status`, `refresh --dry-run`, `refresh` ([EXTERNAL_DATA.md](../guides/EXTERNAL_DATA.md#the-scripts)) | A schedule and a freshness card (WL11) |
 
 ### 4.3 Needs by area, with status
 
@@ -2184,11 +1985,11 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 | About 200 economies: output, growth, prices, jobs, debt, external balance | **Built** (World Bank, IMF, CIA World Factbook) | [world-economy README](../../config/packs/world-economy/README.md) |
 | IMF forecasts with their vintage | **Built**, **internal only** (`FCST`, `VINTAGE`) | README `economic-forecast`; sources block `internal-only: true` |
 | Country groups (World Bank regions, income groups, the World), GDP-weighted | **Built** (`ECG`, read live by `macro-groupings`) | README `country-group` |
-| G7, G20 as groups | **Partly** (member lists in the landing's script) | section 5.2 |
+| G7, G20 as groups | **Partly** (member lists in the landing's script) | WL2 |
 | Regional economies | **Built** but **illustrative** ("Illustrative, not for reporting", `REGE`) | README `region-economy` |
 | Governments, parties, office holders, elections | **Built** (Factbook; elections' next date as text) | README `election` |
 | Social and governance indicators | **Built** (UNDP HDI, World Bank WGI) | |
-| A change feed, revisions between vintages | **Not built** | sections 5.4, 5.6 |
+| A change feed, revisions between vintages | **Not built** | WL4, WL6 |
 
 #### 4.3.2 News and markets (news-and-markets)
 
@@ -2196,7 +1997,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 |---|---|---|
 | Fifteen news topics and twenty listed companies with headlines | **Built**, Google News, **internal only** | [news-and-markets README](../../config/packs/news-and-markets/README.md) |
 | Live quotes | **Built**, Yahoo (yfinance connector), **internal only**, off until enabled; offline, a captured snapshot (the owner's choice for the offline demo machine) | same |
-| Index levels, FX | **Not in the snapshot** | section 5.1 |
+| Index levels, FX | **Not in the snapshot** | WL1 |
 
 #### 4.3.3 US companies (us-equities)
 
@@ -2205,7 +2006,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 | S&P 500, Nasdaq-100, Dow 30 and the US, Canadian and UK banks that file with the SEC: filings, ten years of XBRL financials, LEI, SIC sector, index membership | **Built** | [us-equities README](../../config/packs/us-equities/README.md) |
 | Index weights or levels, GICS | **Not shipped** | same |
 | Prices | **Live only**, off by default, **internal only** (`PXH`) | same |
-| Sector changes over time | **Not served** (replaced on the landing) | section 5.6 |
+| Sector changes over time | **Not served** (replaced on the landing) | WL6 |
 
 #### 4.3.4 Legal entities (gleif)
 
@@ -2213,7 +2014,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 |---|---|---|
 | LEI records, groups (ultimate parent and up to 50 consolidated entities), relationships, countries, mappings (BIC, ISIN) | **Built**, CC0 | [gleif README](../../config/packs/gleif/README.md) |
 | Late renewals flagged | **Built** | same |
-| New entities and parent changes since yesterday | **Not served** (the counts on file instead) | section 5.6 |
+| New entities and parent changes since yesterday | **Not served** (the counts on file instead) | WL6 |
 
 #### 4.3.5 Funds and ETFs (funds)
 
@@ -2222,7 +2023,7 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 | The 200 largest US funds and ETFs: holdings (CUSIP, ISIN, LEI), derivatives and counterparties, flows, monthly returns, N-CEN facts, prospectus figures | **Built**, public domain | [funds README](../../config/packs/funds/README.md) |
 | Who holds a company; which funds track an index | **Built** (`HELD`, `TRACK`) | same |
 | Prices or NAV history | **Not shipped** | same |
-| Holdings changes between quarters | **Not built** | section 5.7 |
+| Holdings changes between quarters | **Not built** | WL7 |
 
 #### 4.3.6 The lens itself
 
@@ -2230,16 +2031,15 @@ Market lens). World's quotes are a **public snapshot** (internal only), not the 
 |---|---|---|
 | One product for the five public-data packs, its own landings, BI and help | **Built** | [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world) |
 | A lens beside the others on a full instance | **Built** (`drishti.lenses: risk,world,market,trading`) | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
-| Hiding internal-only sources for an external showing | **Not built** | section 5.12 |
-
----
+| Hiding internal-only sources for an external showing | **Not built** | WL12 |
 
 ### 4.4 The landings
 
 One template, `home/world_landing.html`, with `drishti_world-landing.js` and `drishti_world-landing.css`, a **teal accent** (deeper on light themes). Every
 figure is the packs' own answer through one thin read-only route, `/api/home/search` (`drishti-console/routes/edition_routes.py`: the
 server's own search grammar, refused with `404 DRS-4023` for a command the person's edition or lens does not show), and `/api/raw` for
-entities; each panel paints when its answer arrives ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world)).
+entities; each panel paints when its answer arrives ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world)). Panel by panel:
+the checklist in [section 4.11.1](#4111-the-world-landings-world-landinghtml); the gaps are the WL rows of section 4.5.
 
 #### 4.4.1 A: World desk (`desk`, the default)
 
@@ -2268,22 +2068,13 @@ filings, news topics); Recently opened (World's commands only), Knowledge, Data 
 | **Largest funds** | net assets, the index each tracks (`TRACK`), holdings | — |
 | **What changed** | the IMF outlook's vintage, the filings on the feed's latest day, the latest annual report, the market snapshot, GLEIF on file | New GLEIF entities and parent changes, the IMF's count of revised economies: not served (no change feed) |
 
-#### 4.4.4 What is missing (this document's gaps)
-
-1. Index levels and FX (5.1). 2. G7 and G20 as groups (5.2). 3. Elections as dates (5.3). 4. A change feed (5.4). 5. "Since yesterday" on
-the tiles (5.5). 6. GLEIF, sector and IMF revisions (5.6). 7. Fund holdings over quarters (5.7). 8. BI beyond economies (5.8). 9. News
-relevance (5.9). 10. A coverage list (5.10). 11. Freshness and a refresh schedule (5.11). 12. An external-showing switch (5.12).
-
----
-
 ### 4.5 Gaps, with design sketches
 
-Drishti's rules ([COMPUTED_ATTRIBUTES.md section 1.2](COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)) apply to
-public data as to the bank's: each source arrives through **one standalone refresh script per pack** (with `.sh` and `.ps1`), as
-**JSON Lines** under the test-data folder, built into the lake (house rules: one script per public-data pack, JSONL everywhere); every
-document carries `PROVENANCE` (source, licence, retrieval date); **group figures, changes and deltas are computed on demand**, never
-stored as copies; BI is the report layer. Sizes: **S** days, **M** one to three weeks, **L** more than three weeks. Ids WL1 to WL12 are
-this document's.
+Public data follows the same rules as the bank's ([COMPUTED_ATTRIBUTES.md section 1.2](COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)):
+each source arrives through **one standalone refresh script per pack** (with `.sh` and `.ps1`), as **JSON Lines** under the test-data
+folder, built into the lake; every document carries `PROVENANCE` (source, licence, retrieval date); **group figures, changes and deltas
+are computed on demand**, never stored as copies; BI is the report layer. Sizes: **S** days, **M** one to three weeks, **L** more than
+three weeks.
 
 | Id | Gap | Size | Depends on |
 |---|---|---|---|
@@ -2313,9 +2104,9 @@ and the market-data pack stays the bank's. **Size** S.
 **Index levels.** No openly licensed daily level exists for the S&P 500 or the S&P/TSX: the index owners license them (vendors and
 FRED's S&P series carry the owner's terms). Options: (a) add the index tickers (`^GSPC`, `^GSPTSE`) to the Yahoo snapshot, **internal
 only** like its quotes (the snapshot is the owner's choice for the offline demo, [news-and-markets README](../../config/packs/news-and-markets/README.md));
-(b) show the tracking ETF's quote (SPY) as "S&P 500 via SPY", also Yahoo, internal only; (c) leave levels out (today). Recommended: (a),
-labelled internal only, and nothing outside the bank. **Size** S. **Tests:** the tile names its source and date; with the snapshot lacking
-the ticker, the tile falls back to breadth, as today.
+(b) show the tracking ETF's quote (SPY) as "S&P 500 via SPY", also Yahoo, internal only; (c) leave levels out (today). Chosen: (a),
+labelled internal only, and nothing outside the bank (decision 1). **Size** S. **Tests:** the tile names its source and date; with the
+snapshot lacking the ticker, the tile falls back to breadth, as today.
 
 #### 4.5.2 WL2: G7 and G20 as country groups
 
@@ -2397,8 +2188,6 @@ matter (the IMF forecasts and fiscal paths, Yahoo quotes and prices, Google News
 their reason; the landing's tiles fall back to the public figures. A switch never replaces the legal decision. **Size** S. **Tests:** with
 the switch, no IMF, Yahoo or Google field reaches any answer; the tiles still paint.
 
----
-
 ### 4.6 Data needed, and licensing
 
 | Source | Pack | Licence | Internal only | Used for | Cadence |
@@ -2418,43 +2207,36 @@ the switch, no IMF, Yahoo or Google field reaches any answer; the tiles still pa
 
 From [EXTERNAL_DATA.md, every external source at a glance](../guides/EXTERNAL_DATA.md#every-external-source-at-a-glance) and the packs'
 README front matter (`sources:`). **No position sensitivities or bank data** are needed by World: it is public context. Its link to the
-bank's book (a counterparty's economy, a counterparty's LEI group) lives in the bank's packs and lenses (section 7).
+bank's book (a counterparty's economy, a counterparty's LEI group) lives in the bank's packs and lenses (section 4.7).
 
 **Licensing notes for the product owner.** (1) The committed IMF forecasts and the committed Yahoo and Google snapshot were the owner's
 choice for internal demos; before any external or client use, rebuild without them or get permission (EXTERNAL_DATA.md). (2) Nothing World
 shows from Yahoo may be redistributed, including screenshots in external decks. (3) SEC data is public, but EDGAR's fair access policy
 limits request rates: the refresh scripts honour it.
 
----
-
 ### 4.7 Relationship to the other lenses
 
 | Lens | What World shares with it | What World deliberately hides | When a World user should switch |
 |---|---|---|---|
-| **Drishti Risk** ([section 1](#1-drishti-risk-what-risk-managers-near-the-desks-need-what-the-lens-gives-them-today-and-what-comes-next)) | Nothing loaded in common; a core counterparty links to its country's economy in the full product ([world-economy README](../../config/packs/world-economy/README.md)) | `VAR`, `EXP` and every risk command (`world.yaml`) | For the bank's exposure to a country or a group, once country concentration exists (RO8 of the oversight analysis) |
+| **Drishti Risk** ([section 1](#1-drishti-risk-what-risk-managers-near-the-desks-need-what-the-lens-gives-them-today-and-what-comes-next)) | Nothing loaded in common; a core counterparty links to its country's economy in the full product ([world-economy README](../../config/packs/world-economy/README.md)) | `VAR`, `EXP` and every risk command (`world.yaml`) | For the bank's exposure to a country or a group, once country concentration exists (RO8) |
 | **Drishti Trading** ([section 2](#2-drishti-trading-what-traders-and-desk-heads-need-what-the-lens-gives-them-today-and-what-comes-next)) | Nothing | Trades and books | For a trader, World is a side window; Trading leaves macro out by design |
 | **Drishti Market** ([section 3](#3-drishti-market-what-the-market-data-team-needs-what-the-lens-gives-it-today-and-what-comes-next)) | Nothing loaded in common; the official public FX and rates captured for market-data (WL1 reuses the parser) | The bank's market data | When a public FX or rate differs from the bank's mark: the bank's is in Market |
-| **Drishti Oversight** (proposed) | — | — | — |
 
 **Context into the bank's lenses (a proposal, not a World row).** The highest value of World's data inside the bank is **next to the
 book**: a counterparty's page in Risk showing its economy's growth and debt, its LEI group's parent and its latest filing. That is a
 read-only context panel on the counterparty page of the full product, not a World landing, and it respects World's licensing (internal
-only). It belongs to the Risk lens's roadmap (section 1, RL10).
+only). It belongs to the Risk lens's roadmap (RL10).
 
 **Embedding.** An entity page (`ECON CAN`, `LEIG …`) can be shown on an intranet page by the client renderer, with the optional sign-in
 window for a page without a backend (plan row 2a; [CLIENT_RENDERER.md section 10.1](CLIENT_RENDERER.md#101-signing-in-on-another-site-the-token-exchange-and-an-optional-sign-in-window));
 the World landings themselves are not Sutras and cannot be embedded until a "home" Sutra kind exists
 ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)). Internal-only data stays internal on any host.
 
----
-
 ### 4.8 A roadmap
 
-The rows below are added to the plan's [Lens product candidates (not started)](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started)
-section.
-
-
-**Status (product owner, 2026-10-31).** The Status column says where each row stands: *planned* rows are next, *proposed* rows wait until their work starts, and *unscheduled* rows wait for the product owner.
+Rows of the plan's [Lens product candidates (not started)](IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started). **Status
+(product owner, 2026-10-31):** *planned* rows are next, *proposed* rows wait until their work starts, *unscheduled* rows wait for the
+product owner.
 
 | Order | Row | Why here | Size | Depends on | Status |
 |---|---|---|---|---|---|
@@ -2467,72 +2249,48 @@ section.
 | 7 | **WL10** coverage list; **WL9** news relevance | Personalises the desk | S; S to M | — | WL10 unscheduled; WL9 unscheduled |
 | 8 | **WL8** BI datasets; **WL11** freshness and schedule | Reports and operations | S each | — | WL8 unscheduled; WL11 unscheduled |
 | 9 | **WL7** fund holdings over quarters | Large downloads | M | WL4 | unscheduled |
-| 10 | **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#411-mock-ups-the-screens-to-build)); its other gaps are WL1 to WL4 and WL6 | S | — | built |
-
----
+| 10 | **LX1** subject menus | Close what the mock-up showed and the build left out ([section 4.11](#411-mock-ups-the-screens-to-build)); its other gaps are WL1 to WL4 and WL6 | S | — | built |
 
 ### 4.9 Decisions for the product owner
 
-**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Each row is proposed until its work starts.
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"). Each row is proposed
+until its work starts.
 
-1. **Index levels (WL1).** Add index tickers to the Yahoo snapshot, internal only (recommended), show SPY as a stand-in, or leave levels out.
-
-   **Decided (product owner, 2026-10-31):** add index tickers to the Yahoo snapshot, internal only.
-2. **External showing (WL12).** A switch that hides internal-only sources, or a separate build without them (`--no-imf`), before any client
-   demo; either way the legal decision comes first.
-
-   **Decided (product owner, 2026-10-31):** yes: the external-showing switch that hides internal-only sources (WL12, proposed); the legal decision still comes first.
-3. **Where official FX lives (WL1).** A small World kind fed by the same parser (recommended: World stays independent of the bank's
-   market data), or let World read the market-data pack's public documents.
-
-   **Decided (product owner, 2026-10-31):** a small World kind fed by the same parser; World stays independent of the bank's market data.
-4. **Emerging markets (WL2).** The World Bank income groups as the public stand-in (recommended), or the IMF's list, internal only.
-
-   **Decided (product owner, 2026-10-31):** the World Bank income groups as the public stand-in.
-5. **Change-feed retention (WL4).** How many table versions the public lakes keep (it decides how far back "what changed" can see).
-
-   **Decided (product owner, 2026-10-31):** retention follows the lake's own version retention (vacuum and snapshot expiry, section 5.4); the feed says how far back it can see.
-6. **Context in the bank's lenses.** A World context panel on the counterparty page in Risk (recommended, internal only), or keep World
-   fully separate.
-
-   **Decided (product owner, 2026-10-31):** a World context panel on the counterparty page in Risk, internal only (RL10, unscheduled).
-7. **Fund quarters (WL7).** Keep each quarter's N-PORT (about 450 MB a quarter in the data folder), or newest only.
-
-   **Decided (product owner, 2026-10-31):** keep each quarter's N-PORT as a table version or dated partition (section 5.7's design).
-
----
+1. **Index levels (WL1)** (Yahoo tickers, SPY as a stand-in, or none). **Decided:** add index tickers to the Yahoo snapshot, internal only.
+2. **External showing (WL12)** (a switch, or a separate build with `--no-imf`). **Decided:** the external-showing switch that hides
+   internal-only sources (WL12, proposed); the legal decision still comes first.
+3. **Where official FX lives (WL1)** (a small World kind, or read the market-data pack's public documents). **Decided:** a small World
+   kind fed by the same parser; World stays independent of the bank's market data.
+4. **Emerging markets (WL2)** (World Bank income groups, or the IMF's list, internal only). **Decided:** the World Bank income groups as
+   the public stand-in.
+5. **Change-feed retention (WL4).** **Decided:** retention follows the lake's own version retention (vacuum and snapshot expiry, section
+   4.5.4); the feed says how far back it can see.
+6. **Context in the bank's lenses** (a World panel on the counterparty page in Risk, or keep World separate). **Decided:** a World context
+   panel on the counterparty page in Risk, internal only (RL10, unscheduled).
+7. **Fund quarters (WL7)** (each quarter's N-PORT, about 450 MB a quarter, or newest only). **Decided:** keep each quarter's N-PORT as a
+   table version or dated partition (section 4.5.7's design).
 
 ### 4.10 Glossary
 
 | Term | In plain words |
 |---|---|
-| **Public data** | Data published by governments, international bodies or open registries, under their own terms |
 | **Internal only** | May be shown inside the bank, not to clients or the public, because its terms forbid redistribution or commercial use |
 | **Vintage** | One edition of a forecast (the IMF's April or October World Economic Outlook) |
 | **Country group** | A set of economies with figures computed for the whole (a region, an income group, the G7) |
 | **GDP-weighted** | An average in which bigger economies count more, in proportion to their output |
-| **Debt to GDP** | Government debt as a share of a year's output |
 | **G7, G20** | Forums of the largest advanced economies (7) and of major economies (19 countries, the EU and the African Union) |
 | **Emerging markets** | Economies between low and high income; here stood in for by the World Bank income groups |
 | **LEI** | A Legal Entity Identifier: a 20-character code for a legal entity, from GLEIF |
-| **Ultimate parent** | The top company in an ownership chain |
 | **SIC** | Standard Industrial Classification: the SEC's sector codes |
 | **XBRL** | The machine-readable format of financial statements in SEC filings |
 | **N-PORT** | A US fund's monthly portfolio report to the SEC, published quarterly |
 | **Snapshot** | A captured copy of live data (quotes, headlines) kept for an offline demo |
-| **Table version** | Each change to a lake table is a new version; older versions can be read (time travel) |
-| **Change feed** | The list of what was added, removed or changed between two versions |
-| **Lens** | One person's focused view of Drishti, opened by a link; it hides, it does not secure |
-
----
+| **Table version, change feed** | Each change to a lake table is a new version (time travel); the change feed lists what was added, removed or changed between two |
 
 ### 4.11 Mock-ups: the screens to build
 
-One mock-up file belongs to this lens: the three World landings. It is copied into the repository, self-contained (system fonts,
-nothing from a CDN), with a screenshot beside it, under [`docs/architecture/mockups/world/`](mockups/world). **The checklist below is the
-source of truth at build time** ([README.md](#mock-ups)): every panel is a row, its status checked against the code on
-2026-10-31 (`wip/drill-a`). **Built** cites the code or guide; **partly built** says what is missing; **not built** names the candidate
-row.
+One mock-up file belongs to this lens, the three World landings, under [`mockups/world/`](mockups/world); conventions in
+[the introduction](#mock-ups). Statuses checked against the code on 2026-10-31.
 
 | Mock-up | Chosen | Built | Partly built | Not built |
 |---|---|---:|---:|---:|
@@ -2545,22 +2303,20 @@ row.
 
 [Open the mock-up](mockups/world/world-landing.html). **Chosen:** all three, A the default ([EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world)).
 A teal accent on the terminal look. **Code:** [`world_landing.html`](../../drishti-console/web/templates/home/world_landing.html),
-[`drishti_world-landing.js`](../../drishti-console/web/static/js/drishti_world-landing.js), [`drishti_world-landing.css`](../../drishti-console/web/static/css/drishti_world-landing.css)
-(the packs' own answers through `/api/home/search` and `/api/raw`, [`edition_routes.py`](../../drishti-console/routes/edition_routes.py)),
-[`world.yaml`](../../config/editions/world.yaml). The mock-up's figures are illustrative. Its warning, *IMF figures and Yahoo prices are for
-internal demonstrations only*, is a decision, not a panel: shown inside the bank (product owner, 2026-10-29); an external showing needs a
-decision and the switch of WL12.
+[`drishti_world-landing.js`](../../drishti-console/web/static/js/drishti_world-landing.js), [`drishti_world-landing.css`](../../drishti-console/web/static/css/drishti_world-landing.css),
+[`edition_routes.py`](../../drishti-console/routes/edition_routes.py), [`world.yaml`](../../config/editions/world.yaml). The mock-up's
+figures are illustrative. Its warning, *IMF figures and Yahoo prices are for internal demonstrations only*, is a decision, not a panel:
+shown inside the bank (product owner, 2026-10-29); an external showing needs a decision and the switch of WL12.
 
 **Interactions.** Every tile opens its command (World GDP growth: `ECG ECG-WLD`; quotes: `QUOTE` by change; filings: `EDGAR 8-K`; funds:
 `FUND` by net assets); every economy, topic, fund and region tile is a link; the Group by and Measure toggles (C) redraw the regions in
-place; chips and quick cards run their commands. A landing switch and the lens links sit above every landing. **States.** *Loading:* `…`.
-*Error:* `Not available: <reason>` in the panel (each panel on its own answer). *Empty:* "Nothing yet: type a command above" (Recently
-opened). **Phone** (600 px and below): one column ([`drishti_world-landing.css`](../../drishti-console/web/static/css/drishti_world-landing.css)); the
-mock-up drew no phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md section 8](MOBILE_DISPLAY.md#8-beyond-sutra-pages)): the command line, the tiles and the first card in full, the other tables at a glance (five rows, *Show all*), charts, maps and the quick links under *More on this page*.
+place; chips and quick cards run their commands. **States.** *Loading:* `…`. *Error:* `Not available: <reason>` in the panel (each panel
+on its own answer). *Empty:* "Nothing yet: type a command above" (Recently opened). **Phone:** one column below 600 px; the mock-up drew
+no phone form, so the landing takes the phone tiers ([MOBILE_DISPLAY.md section 8](MOBILE_DISPLAY.md#8-beyond-sutra-pages)).
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|
-| W1 | Bar (A, B, C) | `DRISHTI World` (*World* teal); a command line (*ECON CAN, NEWS rates, USEQ AAPL, LEI 5493…*); menus **Views · Economies · Markets · Companies · BI · Help** | `world.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type, `<GO>`; open a menu | — | **Built**: brand, command line, and Economies, Markets and Companies menus ([section 11.2](#4112-the-lens-menus-lx1-menusahtml)) |
+| W1 | Bar (A, B, C) | `DRISHTI World` (*World* teal); a command line (*ECON CAN, NEWS rates, USEQ AAPL, LEI 5493…*); menus **Views · Economies · Markets · Companies · BI · Help** | `world.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type, `<GO>`; open a menu | — | **Built**: brand, command line, and Economies, Markets and Companies menus ([section 4.11.2](#4112-the-lens-menus-lx1-menusahtml)) |
 | W2 | Meta line (A, C) | *As of **2026-10-29** · economies from the IMF World Economic Outlook · prices from the offline market snapshot* | `FCST` (the outlook's vintage), `QUOTE` (the snapshot's time) | — | — | **Built** (the vintage and the snapshot named) |
 | W3 | Tile: World GDP growth (A) | *this year* **3.1%** *IMF projection · ECON WLD* | `ECG-WLD` | click | — | **Built** |
 | W4 | Tile: S&P 500 (A) | **5,842** *+0.6%* *QUOTE ^GSPC* | an index level | — | WL1 | **Not built**: the snapshot holds no index; a *Quotes up · down* tile stands in its place |
@@ -2580,50 +2336,39 @@ mock-up drew no phone form; on a phone the landing takes the phone tiers ([MOBIL
 | W18 | Card: What changed (C) | *since yesterday*: *IMF outlook refreshed: 14 economies' forecasts revised · 37 new filings; 3 companies changed sector · GLEIF: 212 new legal entities, 18 parent changes* | the sources' latest dates | — | — | **Partly built**: each source's latest (the outlook's vintage, the filings, the latest annual report, the snapshot, GLEIF on file); the counts of revised economies, sector changes, new entities and parent changes need a change feed (WL4, WL6) |
 | W19 | Landing switch | (the footer: pick one or combine; also a lens beside Risk) | `home.landings`; `drishti.lenses` | click | — | **Built** |
 
-**Gaps: on the mock-up, not in the product.**
-
-1. **The S&P 500 and USD/CAD tiles** (W4, W5; WL1).
-2. **Elections in the next 90 days** (W7; WL3).
-3. **G7, G20 and emerging markets as groups**, and the `ECG G7` chip (W11, W14; WL2).
-4. **What changed, counted**: revised forecasts, sector changes, new entities, parent changes (W18; WL4, WL6).
+**Gaps: on the mock-up, not in the product.** (1) The S&P 500 and USD/CAD tiles (W4, W5; WL1). (2) Elections in the next 90 days (W7;
+WL3). (3) G7, G20 and emerging markets as groups, and the `ECG G7` chip (W11, W14; WL2). (4) What changed, counted: revised forecasts,
+sector changes, new entities, parent changes (W18; WL4, WL6).
 
 #### 4.11.2 The lens menus (LX1, `menus/A.html`)
 
-![The lens menus, option A: subject menus in the bar](mockups/menus/A.png)
-
-[Open the mock-up](mockups/menus/A.html) (options: [B](mockups/menus/B.html) a subject strip under the standard bar,
-[C](mockups/menus/C.html) one lens menu with subject columns; the light theme: [A-light.png](mockups/menus/A-light.png)). One mock-up for the
-four built lenses (Risk, Trading, Market, World), each lens with one menu open. **Recommended:** option A, subject menus in the bar
-(chosen on the recommendation, product owner to review); plan row LX1.
-
-**Why A.** The lens mock-ups the product owner chose already drew their bars this way (Views, the lens's subjects, BI, Help), so A builds what was approved; each subject is one click from anywhere, as the five standard menus are. The strip of B costs a second row on every page; the single lens menu of C hides the subjects a click deeper and is better kept as the phone form of A. Subject menus are configured, not coded: the edition names its top menus in order, and a subject menu draws on the items of the menus file with the same switches (an item shows only when the edition keeps its command word).
+The shared mock-up of the four built lenses and why option A was chosen are in [section 1.11.4](#1114-the-lens-menus-lx1-menusahtml); the
+phone form (X5) is the one of [section 3.11.2](#3112-the-lens-menus-lx1-menusahtml). World's rows:
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
 | X1 | Bar | `DRISHTI World`; the command line; menus **Views · Economies · Markets · Companies · BI · Help** | the edition's top menus by id, in order (`menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | **Built**: `menus.top` in [`world.yaml`](../../config/editions/world.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens) (replaces the menus part of W1) |
-| X2 | Economies menu | A country `ECON`; Indicators `MACRO`; IMF forecasts `FCST`; Regions `REGE` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
-| X3 | Markets menu | News `NEWS`; Quotes `QUOTE`; Indices `IDX` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
-| X4 | Companies menu | US equities `USEQ`; Filings `EDGAR`; Legal entities `LEIC`; Funds and ETFs `FUND` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
-| X5 | Phone form | below 640 px the subject menus fold into one **World** menu, a column per subject (option C) | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; the bar's template and [`drishti_phone.js`](../../drishti-console/web/static/js/drishti_phone.js) put it in below 640 px | tap the lens menu, then an item | **Built** |
-
-On a phone (below 640 px) the subject menus fold into one menu named after the lens, first in the bar (option C's form, [menus/C](mockups/menus/C.html)): a column per subject, each item 44 px high with its command beside it; a wider screen keeps the subject menus in the bar, and the folded menu is not drawn there. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
+| X2 | Economies menu | A country `ECON`; Indicators `MACRO`; IMF forecasts `FCST`; Regions `REGE` | a subject menu in `menus.yaml`, each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
+| X3 | Markets menu | News `NEWS`; Quotes `QUOTE`; Indices `IDX` | as X2 | as X2 | **Built** |
+| X4 | Companies menu | US equities `USEQ`; Filings `EDGAR`; Legal entities `LEIC`; Funds and ETFs `FUND` | as X2 | as X2 | **Built** |
+| X5 | Phone form | below 640 px the subject menus fold into one **World** menu, a column per subject (option C) | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; [`drishti_phone.js`](../../drishti-console/web/static/js/drishti_phone.js) | tap the lens menu, then an item | **Built** |
 
 ## 5. Market risk oversight: what the second line needs from Drishti, and a Drishti Oversight lens
 
-**Status: design, not built.** An analysis and a proposal; nothing in sections 4 to 6 is built. The rows it proposes are candidates in
-the [implementation plan](IMPLEMENTATION_PLAN.md#risk-oversight-candidates-not-started), not started. Every "built" or "partly" statement
-cites the document and section it was read from on 2026-10-31; where the plan names a row, the row is cited.
+**Status: design.** An analysis and a proposal: of its rows only RO1 (the VaR change explanation) is built, and the position
+sensitivities RO15 needs are loaded; the rest are candidates in the
+[implementation plan](IMPLEMENTATION_PLAN.md#risk-oversight-candidates-not-started), not started. Every "built" or "partly" statement
+cites the document and section it was read from; where the plan names a row, the row is cited.
 
 **The request (product owner, 2026-10-31):** "please write detailed document"; "do you think a lens for risk oversight will be a good
-idea?" The short answer is in [section 5.1](#551-the-answer-yes-a-separate-lens-built-after-two-features-exist): **yes, a separate lens**,
+idea?" The short answer is in [section 5.5.1](#551-the-answer-yes-a-separate-lens-built-after-two-features-exist): **yes, a separate lens**,
 built after the two features that give it something of its own to show (the VaR change explanation and the breach workflow).
 
 **Read with:** [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built), [REGULATORY_VAR_REPORTING.md](../guides/REGULATORY_VAR_REPORTING.md)
-(backtesting, the P&L feed and the report framework with sign-off; the report packs), [EDITIONS.md](../admin/EDITIONS.md#13-the-design) (how an edition or a lens
-is defined), [COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md) (compute, do not store), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md),
+(backtesting, the P&L feed and the report framework with sign-off; the report packs), [COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md) (compute, do not store), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md),
 and the contracts [STR.md](../contracts/STR.md) (stress and the proposed limit table), [FRTB.md](../contracts/FRTB.md) (sensitivities) and
-[PNL.md](../contracts/PNL.md) (P&L explain). The proposed risk cubes, which adopt section 7's `position-sensitivity` contract and
-would serve this lens as its pivot screen: see the design in [section 6](#6-the-mr-cube-a-market-risk-cube-lens-that-answers-what-fis-adaptivs-artiq-answers-and-shows-why) and [section 7](#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why).
+[PNL.md](../contracts/PNL.md) (P&L explain). The proposed risk cubes, which adopt section 5.7's `position-sensitivity` contract and
+would serve this lens as its pivot screen: see [section 6](#6-the-mr-cube-a-market-risk-cube-lens-that-answers-what-fis-adaptivs-artiq-answers-and-shows-why) and [section 7](#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why).
 
 ### 5.1 Who market risk oversight is
 
@@ -2659,7 +2404,7 @@ business risk managers.
 |---|---|---|
 | *Are we within appetite?* Bank VaR and ES against the bank limit | **Built**: the Risk lens's desk landing tiles (VaR and ES of BANK, the backtest, limits in breach) ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)); the official record's `LIMIT` and `LIMIT_USE` per node ([VAR.md section 5](../contracts/VAR.md#5-official-end-of-day-results)) | Appetite measures other than VaR (stress loss is stored per desk, not computed) |
 | *What breached?* | **Partly**: VaR limits only: the Risk map landing's "Today" feed and the limit-use heat map ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)); the Trading desk-head landing's Breaches and Near limit tiles ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)); stress limit use per desk (derived, [VAR.md section 7.4](../contracts/VAR.md#74-the-banks-stress-pl-by-scenario-derived)) | Sensitivity, stop-loss, position and notional limits; a breach as a record with status and commentary |
-| *Why did VaR move?* | **Partly**: captures compare with now (VaR change, members added and removed, components that moved most, [VAR_GUIDE section 6](../guides/VAR_GUIDE.md#6-captures-and-compare)); the scenario matrix shows a node's scenarios across dates (**built**, `SMAT`, [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat)) | A decomposition that adds up exactly: positions, market, window roll, restatements, hierarchy changes ([section 3.5](#535-why-it-moved-var-change-explanation-day-over-day)) |
+| *Why did VaR move?* | **Built**: *Why it moved*, the change in causes that add up exactly (RO1, [VAR_GUIDE section 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained)); captures compare with now ([VAR_GUIDE section 6](../guides/VAR_GUIDE.md#6-captures-and-compare)); the scenario matrix `SMAT` ([VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat)) | The factor-level overlay ([section 5.4.1](#541-ro1-var-change-explanation)) |
 | *Which scenario drives it?* | **Built**: the P&L path tab, the 25 worst scenarios, the contributors on a scenario day ([VAR_GUIDE section 3.4](../guides/VAR_GUIDE.md#34-the-tabs)) | — |
 | *Is the number trustworthy today?* | **Partly**: load checks and rejections in the provenance ([VAR.md section 6.3](../contracts/VAR.md#63-what-the-load-checks)); late loads ([DATA_GUIDE.md › Telling Drishti new data has landed, section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data)); market data checks (the Market lens's Quality landing, [EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market)) | One trust card: completeness against the trades booked, proxies, failed rows, market data exceptions and their impact on VaR (planned) |
 | *Did yesterday's P&L exceed VaR?* | **Partly**: the official-mode backtest with the derived hypothetical P&L ([VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting)) | Actual and hypothetical P&L from the bank (planned) |
@@ -2670,7 +2415,7 @@ business risk managers.
 |---|---|---|
 | *Has a big trade moved us close to a limit?* | **Built**: intraday updates from files and Kafka change today's VaR during the day ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); the pre-deal what-if ([VAR_GUIDE section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-under-the-baskets-sheet)) | An intraday limit check that notifies (alerts on numbers watch BI and view numbers, [USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers), not the VaR engine's intraday answer) |
 | *Can I see what the desk sees?* | **Built**: the same explorer, entitlements as configured ([VAR_GUIDE section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit)) | — |
-| *A desk asks for a temporary limit increase* | **Not built** | The request, its approval and its expiry ([section 4.2](#542-ro2-breaches-and-escalation)) |
+| *A desk asks for a temporary limit increase* | **Not built** | The request, its approval and its expiry ([section 5.4.2](#542-ro2-breaches-and-escalation)) |
 
 #### 5.2.3 Month-end
 
@@ -2678,7 +2423,7 @@ business risk managers.
 |---|---|---|
 | **Backtesting review**: exceptions in the month, their causes, the traffic light | **Partly**: the official backtest per node, Kupiec and Christoffersen ([VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting)) | Actual and hypothetical P&L, separate counts, the multiplier (planned); an exception commentary |
 | **Limit utilisation review**: which limits are never used (too loose) and which always near full | **Partly**: the official records carry `LIMIT_USE` per node and date, read in BI ([VAR.md section 5](../contracts/VAR.md#5-official-end-of-day-results)) | Other limit types; a utilisation-statistics report (average, peak, days above the threshold) |
-| **RNIV**: quantify and review the risks not in VaR | **Not built** | A register ([section 4.7](#547-ro7-the-rniv-register)) |
+| **RNIV**: quantify and review the risks not in VaR | **Not built** | A register ([section 5.4.7](#547-ro7-the-rniv-register)) |
 | **Stress testing**: the monthly stress run against stress limits | **Partly**: stored stress results per desk and scenario, the bank's P&L per scenario derived ([VAR.md section 7.4](../contracts/VAR.md#74-the-banks-stress-pl-by-scenario-derived)) | The stress engine for any scope ([STR.md](../contracts/STR.md), proposed) |
 | **The committee pack** | **Partly**: the BI report *Market risk: VaR* over the official table ([VAR.md section 5](../contracts/VAR.md#5-official-end-of-day-results)) | The report framework with sign-off (planned) and the board pack (planned) |
 
@@ -2686,7 +2431,7 @@ business risk managers.
 
 | Task | Drishti today | Gap |
 |---|---|---|
-| **Limit framework renewal**: re-size every limit to the appetite and the use | **Partly**: utilisation history of VaR limits | A limit catalogue of every type with approvals and validity ([section 4.3](#543-ro3-one-limit-catalogue-and-its-utilisation)) |
+| **Limit framework renewal**: re-size every limit to the appetite and the use | **Partly**: utilisation history of VaR limits | A limit catalogue of every type with approvals and validity ([section 5.4.3](#543-ro3-one-limit-catalogue-and-its-utilisation)) |
 | **Stress window review**: is the stressed-VaR window still the worst for today's portfolio? | **Built**: the stress window selection, `SWIN` ([VAR_GUIDE section 18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window)): every 250-day window of the long history, the alert, freeze and propose with maker-checker | The approval inside the report sign-off framework (REGULATORY_VAR_REPORTING section 8.1) |
 | **Model validation support**: evidence for the validators and the regulator | **Partly**: every official figure reproducible from its inputs, kept seven years ([VAR.md section 5](../contracts/VAR.md#5-official-end-of-day-results)); VaR at another window or confidence per request ([VAR_GUIDE section 18.5](../guides/VAR_GUIDE.md#185-the-scenario-window-and-the-confidences)) | Backtests on bank P&L; a P&L attribution test (REGULATORY_VAR_REPORTING G12, later); an evidence pack frozen with sign-off |
 | **Risk appetite recalibration** | **Partly**: history of every official figure | Period statistics (planned) |
@@ -2719,7 +2464,7 @@ business risk managers.
 | VaR limits on stored portfolios | **Built** (hierarchy `PORTFOLIO` in `var-limit`) | [VAR.md section 2.15](../contracts/VAR.md#215-var-limit-the-nodes-var-limits) |
 | Limit letters as a hierarchy | **Built** (`LL`: `LIMIT_LETTER > DESK`) | [VAR.md section 2.14](../contracts/VAR.md#214-hierarchies-from-the-rows-or-from-the-trades-columns) |
 | Limit use only when comparable (horizon and confidence the limit's own) | **Planned** | |
-| Sensitivity limits: DV01 by tenor and currency, CS01 by rating and tenor, vega by underlying and expiry, FX delta by currency | **Not built**. Per-trade `DV01` is stored on `trade-valuation`; FRTB sensitivities are stored per book and bucket; no engine aggregates them; position sensitivities are proposed ([section 7](#57-sensitivities-data)) | [COMPUTED_ATTRIBUTES.md sections 4.1, 4.9](COMPUTED_ATTRIBUTES.md#41-trade-valuation-tval); [FRTB.md](../contracts/FRTB.md) |
+| Sensitivity limits: DV01 by tenor and currency, CS01 by rating and tenor, vega by underlying and expiry, FX delta by currency | **Not built**. Position sensitivities are loaded and summed by factor, bucket or grid (`SENS`, [section 5.7](#57-sensitivities-data)); no limit is checked against them | [SENSITIVITIES_AND_FRTB_SA.md section 2](SENSITIVITIES_AND_FRTB_SA.md#2-position-sensitivities-the-input) |
 | Stop-loss (cumulative P&L, month-to-date, year-to-date) | **Not built**; needs the bank's P&L (planned) | |
 | Position and notional limits | **Not built**; positions are derived with quantity and market value | [VAR_GUIDE section 4](../guides/VAR_GUIDE.md#4-positions-derived-never-delivered) |
 | Stress limits | **Partly**: the stored stress result carries a positive `LIMIT` per desk; the derived per-scenario view shows each desk's limit use and breaches; the proposed `risk-limit` table | [VAR.md section 7.4](../contracts/VAR.md#74-the-banks-stress-pl-by-scenario-derived); [STR.md section 3.5](../contracts/STR.md#35-risk-limit-limits-by-measure-and-scope-fundamental) |
@@ -2749,7 +2494,7 @@ business risk managers.
 | Market data quality | **Built** in the Market lens (stale, gaps, discount factors and forwards, vol surfaces); impact on VaR **planned** | [EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market) |
 | Data completeness | **Partly**: late loads by expectation ([DATA_GUIDE.md › Telling Drishti new data has landed, section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data)); rejected and failed rows counted ([VAR.md section 6.3](../contracts/VAR.md#63-what-the-load-checks)); completeness against the trades booked **not checked** (the same section) | |
 | Proxies | **Partly**: each P&L vector and scenario-PV row says `ok`, `proxied` or `failed` ([VAR.md section 2.2](../contracts/VAR.md#22-pnl-vector-one-pl-vector-per-trade)) | A proxy report: the share of VaR from proxied trades, by desk, over time |
-| RNIV register | **Not built** | [section 4.7](#547-ro7-the-rniv-register) |
+| RNIV register | **Not built** | [section 5.4.7](#547-ro7-the-rniv-register) |
 | Model performance over time | **Partly**: exceptions, the light, Kupiec and Christoffersen per node | ES backtests, PLA, a dashboard |
 | Reproducibility | **Built**: official captures with inputs' versions, batch ids, position rules, membership, result versions; seven years | [VAR.md section 5](../contracts/VAR.md#5-official-end-of-day-results) |
 
@@ -2758,12 +2503,9 @@ business risk managers.
 The most-asked question of the morning meeting, and the one where Drishti's design (trade-grain vectors, two dates in the engine,
 immutable official captures with membership) gives an exact answer cheaply.
 
-**Today: partly.** Compare with now gives the VaR change, members added and removed and the components that moved most
-([VAR_GUIDE section 6](../guides/VAR_GUIDE.md#6-captures-and-compare)); the component VaRs add up to the scope's VaR every day
-([VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts)), so the change in each child's component explains
-the change by child exactly. What is missing is the change **by cause**: how much from trades booked or ended, from the market, from the
-scenario window rolling one day, from yesterday's data being restated, from the hierarchy moving a book. The method, its data and its cost
-are in [section 4.1](#541-ro1-var-change-explanation).
+**Built** (RO1): the change **by cause** (restatement, hierarchy and rules, trades out, the window roll, the market, trades in), adding up
+exactly, with who drove each cause ([VAR_GUIDE section 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained)); the
+design record and what remains (Shapley, the risk-factor overlay) are in [section 5.4.1](#541-ro1-var-change-explanation).
 
 #### 5.3.6 Scenario drivers
 
@@ -2779,9 +2521,9 @@ are in [section 4.1](#541-ro1-var-change-explanation).
 | Need | Status | Evidence or row |
 |---|---|---|
 | VaR of any slice (currency, product, direction, any trade column) | **Built**: scope words by a trade's attribute, rule portfolios, `WHERE:` | [VAR_GUIDE sections 5.4, 5.5](../guides/VAR_GUIDE.md#55-scope-words-by-a-trades-attribute) |
-| Concentration tables: market value, notional and VaR by issuer, sector, country, currency, tenor bucket, with the top N and the share of the total | **Not built** as a view; positions carry market value, trades their attributes; issuer, sector and country need reference data on every position | [section 4.8](#548-ro8-concentration) |
+| Concentration tables: market value, notional and VaR by issuer, sector, country, currency, tenor bucket, with the top N and the share of the total | **Not built** as a view; positions carry market value, trades their attributes; issuer, sector and country need reference data on every position | [section 5.4.8](#548-ro8-concentration) |
 | Counterparty concentration | **Built** for exposure (PFE by counterparty against its credit limit) | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) |
-| Liquidity: days to liquidate, bid-offer cost, share of market volume | **Not built**; no volume or bid-offer data in the packs | [section 4.10](#5410-ro10-liquidity) |
+| Liquidity: days to liquidate, bid-offer cost, share of market volume | **Not built**; no volume or bid-offer data in the packs | [section 5.4.10](#5410-ro10-liquidity) |
 
 #### 5.3.8 Stress testing
 
@@ -2791,7 +2533,7 @@ are in [section 4.1](#541-ro1-var-change-explanation).
 | Stress P&L per desk and scenario | **Built** as stored results; the bank's P&L per scenario derived | [VAR.md section 7.4](../contracts/VAR.md#74-the-banks-stress-pl-by-scenario-derived) |
 | Stress P&L of any scope, full revaluation and sensitivity-based; user scenarios | **Not built**, proposed | [STR.md](../contracts/STR.md), [STR.md section 3.4](../contracts/STR.md#34-user-scenarios-drishti-owned) |
 | Stressed VaR | **Planned** | |
-| Reverse stress (which moves lose a given amount) | **Not built** | [section 4.9](#549-ro9-stress-testing-the-engine-limits-and-reverse-stress) |
+| Reverse stress (which moves lose a given amount) | **Not built** | [section 5.4.9](#549-ro9-stress-testing-the-engine-limits-and-reverse-stress) |
 | Firm-wide exercises (a scenario run frozen, reviewed, signed off) | **Not built**; the planned report framework fits | [REGULATORY_VAR_REPORTING section 6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off) |
 
 #### 5.3.9 Governance and reporting
@@ -2824,14 +2566,14 @@ Every design follows Drishti's rules ([COMPUTED_ATTRIBUTES.md section 1.2](COMPU
   report and every approval chain.
 
 Sizes: **S** days, **M** one to three weeks, **L** more than three weeks, for one builder. The ids RO1 to
-RO15 are this document's (risk oversight); the regulatory gaps keep their G ids.
+RO15 are this part's (risk oversight); the regulatory gaps keep their G ids.
 
 | Id | Gap | Size | Depends on |
 |---|---|---|---|
-| RO1 | VaR change explanation | M | official captures and membership (built); two dates open in the engine (built) |
+| RO1 | VaR change explanation | M | **built**; Shapley and the overlay remain |
 | RO2 | Breaches and escalation | M | RO3 for limits other than VaR; the planned sign-off record |
 | RO3 | One limit catalogue and its utilisation | M | the limit system's extract |
-| RO15 | Position sensitivities: data contract, loader, ladders ([section 7](#57-sensitivities-data)) | M | the bank's pricing system sending sensitivities per position |
+| RO15 | Position sensitivities: data contract, loader, ladders ([section 5.7](#57-sensitivities-data)) | M | the bank's pricing system sending sensitivities per position (contract, loader and sums built) |
 | RO4 | Sensitivity aggregation and sensitivity limits | M once RO15 is in (L without it) | RO15; RO3 |
 | RO5 | Stop-loss and P&L limits | S | the planned P&L feed; RO3 |
 | RO6 | Position and notional limits | S | RO3 |
@@ -2846,189 +2588,59 @@ RO15 are this document's (risk oversight); the regulatory gaps keep their G ids.
 
 #### 5.4.1 RO1: VaR change explanation
 
-**The question.** VaR moved from V(t−1) to V(t) for a node. Split the change into causes that **add up exactly** to it, and show who
-drove each cause.
+**Built.** VaR moved from V(t−1) to V(t) for a scope; the change is split into causes that **add up exactly** to it, each naming who
+drove it. The method (a fixed, configured sequence of states S0 to S7, each a full VaR, so the steps telescope to the change: restatement,
+hierarchy and rules, trades out, oldest scenario dropped, market, newest scenario added, trades in, amendments split when the feed marks
+them), the drivers of each step, the order-free view by child, the limit-use line, the worked example, the demo's figures, the settings
+(`drishti.var.explain.*`), the command (`VAR EXPLAIN <scope>`), the CLI (`drishti.py var explain`), the API
+(`GET /api/v1/var/explain`, `/explain/matrix`, `/explain.xlsx`) and the workbook of formulas are in
+[VAR_GUIDE section 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained). This section keeps the design record and
+what is still to build.
 
-**Why it is not trivial.** VaR is a quantile, not a sum: the effect of new trades depends on which scenarios are in the tail, which the
-market move also changes. Any split into causes depends on the order in which the causes are applied. The method below makes that
-explicit: a **fixed, configured sequence of states**, each a full VaR computation; each step's effect is the difference between two
-consecutive states, so the steps add up exactly to the total by construction (a telescoping sum), and the order is stated on the
-screen.
+**Why a sequence.** VaR is a quantile, not a sum: the effect of new trades depends on which scenarios are in the tail, which the market
+move also changes, so any split depends on the order the causes are applied in. The order is therefore explicit, a setting, and stated on
+the screen; the default (restatement first, because it corrects yesterday; trades last, because the desk decides them) is the product
+owner's decision 3 ([section 5.9](#59-decisions-for-the-product-owner)).
 
-**The states**, for a node N (and, the same way, for any scope the engine answers):
+**Cost.** Only the **churn** is summed (the trades out, in, moved and amended against millions held), then eight quantiles of the
+scenario days: for all 131 official nodes well under a second on the demo; at 2.3M positions bounded by the churn, not the book.
 
-| State | Trades | Vectors | Scenario dates | Hierarchy, rules |
-|---|---|---|---|---|
-| S0 | yesterday's members of N (official membership record) | yesterday's, as captured (the official capture keeps the vector) | yesterday's set | yesterday's |
-| S1 | the same | yesterday's, **latest result version** (a restated date) | yesterday's | yesterday's |
-| S2 | yesterday's trades of the books that are in N **today** | yesterday's, latest | yesterday's | **today's** (a book moved between desks, a new limit letter, changed position rules) |
-| S3 | S2's trades **still live today** (drops matured, cancelled, closed) | yesterday's | yesterday's | today's |
-| S4 | the same | yesterday's | the dates common to both sets (yesterday's set less its oldest day) | today's |
-| S5 | the same | **today's** | the common dates | today's |
-| S6 | the same | today's | today's set (the newest day added) | today's |
-| S7 | **today's members** of N (new trades in; amendments are trades in S3 to S6 whose terms changed, separated as below) | today's | today's | today's |
+**Never stored.** Computed when asked. The daily report's frozen run (the planned report framework) keeps the explanation it showed, with
+its inputs' versions, as every frozen cell does.
 
-| Step | Effect | Reads as |
+**Still to build.**
+
+| Item | Design | Status |
 |---|---|---|
-| S1 − S0 | **Restatement** | yesterday's data was corrected after the official run |
-| S2 − S1 | **Hierarchy and rules** | the node's membership changed with no trade changing |
-| S3 − S2 | **Trades out** | trades that matured, were cancelled or closed |
-| S4 − S3 | **Oldest scenario dropped** | the window rolled: one scenario day left |
-| S5 − S4 | **Market** | today's revaluation of the same trades on the same scenario days: market levels, time decay, sensitivities |
-| S6 − S5 | **Newest scenario added** | the window rolled: yesterday's move entered the set |
-| S7 − S6 | **Trades in** | new trades; with **amendments** split out as their own step when the trade feed marks them (the amended trades moved from S3 to S7's side: their old vector out, their new in) |
-| Σ | V(t) − V(t−1) | exactly |
+| **Shapley variant** | each cause's effect averaged over every order of the causes present: φ_j = (1/n!) Σ over the orders of [V(before j, with j) − V(before j)]; at most six causes (720 orders), four on a usual day (24); order-free, exact in sum, dearer; per request (`method=shapley`, setting `drishti.var.explain.shapley`: `on-request` or `off`), never official | planned (the API answers 400 in words) |
+| **Risk-factor overlay** | beside the exact market step (S5 − S4): Σ sensitivity(t−1) × the factor's move from t−1 to t, by curve and tenor, issuer, currency pair, surface (the position sensitivities of [section 5.7](#57-sensitivities-data), the factor moves of the proposed `market-move` kind, [PNL.md section 3.2](../contracts/PNL.md#32-market-move-the-move-of-each-risk-factor)), for example "USD SOFR 10Y +12 bp: −3.1m"; a first-order approximation of the P&L, not of the VaR change, drawn as an overlay with its residual, never as one of the exact steps | not built (mock-up row E10) |
+| **A computed kind** | `var-explain` (id the scope, `params: { from, to, method }`), served by a reactive connector over the VaR engine, so any Sutra panel can draw it (RO2's *why it moved since detection*, a lens card) with `source:` ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)) | planned |
+| **An AI tool** | over the same API, so *"why is Rates VaR up?"* answers with these figures (the CRO lens's Ask) | planned |
+| **Where else it shows** | the Risk desk card RL4, the CRO's *What changed*, the breach page of RO2, the Oversight lens's Appetite landing ([section 5.5.4](#554-three-landings-to-mock-up-later)), the daily risk report and the board pack (page 3); `to = now` (intraday since the morning's official figure) and any two dates (a month for the committee) | as each consumer is built |
 
-The two window steps add to one **window roll** line when the bank prefers four lines. Where a date's scenario set is replaced rather
-than rolled (a new set id, a window change), S4 to S6 become one **scenario set change** step. The limit's own change is **not** a VaR step;
-the limit-use line beside it shows `limit(t) − limit(t−1)` from `var-limit` by business date.
+**Data used.** All held today: the official capture with its vector and membership (`var-official`, [VAR.md section 5](../contracts/VAR.md#5-official-end-of-day-results)),
+both dates' `pnl-vector` and `scenario-pv` (with `TRADE_STATUS`, `TRADE_ACTION` for the amendment split and `RESTATEMENT` for S1),
+`scenario-set`, `risk-hierarchy` and `portfolio` (membership by date), `var-limit` (the limit-use line), `position`. Nothing new from the
+bank; the overlay needs `position-sensitivity` ([section 5.7.3](#573-a-proposed-data-contract-position-sensitivity)).
 
-**Who drove each step.** Each step names its top contributors: for trades out and in, the incremental VaR of each trade or position (the
-scope's VaR with and without it, exact); for the market step, the change in each child's component VaR between S4 and S5 (components add
-up to VaR in each state, [VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts)); for the window steps,
-the scenario day that left or entered and whether it was in the tail; for every state, the VaR scenario's date, so *"the VaR scenario
-changed from 2025-12-24 to 2026-01-02"* is said in words. A second, order-free view is offered beside it: the change of each child's
-component VaR, which also adds up exactly.
-
-**Order dependence, said.** The sequence is a setting (`drishti.var.explain.order`, built); the default is the table above
-(restatement first, because it corrects yesterday; trades last, because the desk decides them). An optional **Shapley** variant averages
-each cause's effect over every order of the causes present (at most six: restatement, hierarchy and rules, trades out, window roll,
-market, trades in with amendments, 720 orders; on a usual day four, 24 orders; each order a handful of vector sums): order-free, exact
-in sum, dearer, offered per request, never official. **Planned** (not in 2.9.10).
-
-**Data needed.** All held today: yesterday's official capture (with its vector and membership, [VAR.md section 5](../contracts/VAR.md#5-official-end-of-day-results));
-yesterday's and today's P&L vectors (both dates open in the engine, or yesterday's hot file reopened, [VAR_GUIDE section 26](../guides/VAR_GUIDE.md#26-the-tiered-memory-and-the-hot-file));
-the scenario dates of both sets; the trades' status and action (`TRADE_STATUS`, `TRADE_ACTION`) for the amendment split. Nothing new
-from the bank.
-
-**Cost.** Small, because only the **churn** is summed: S3 = S2 minus the vectors of the trades out; S7 = S6 plus the vectors of the trades in;
-S4 and S5 are the same sums restricted to the common dates. A node needs its two totals (already in memory) and the sum of its changed
-trades' vectors (hundreds to thousands, against millions held), then eight quantiles of 509 values. For all 131 official nodes it is well
-under a second on the demo; at 2.3M positions it is bounded by the churn, not the book. The S2 step needs yesterday's trades summed by
-today's hierarchy only when a book moved: the books that moved, not the bank.
-
-**Where it shows.** **Built (2.9.10):** `VAR EXPLAIN <scope>` (and `VAR <scope> EXPLAIN`), the **Why it moved** tab on the VaR page
-(a waterfall, each step opening its contributors), `drishti.py var explain` and the API `GET /api/v1/var/explain?scope=&from=&to=`
-([VAR_GUIDE.md section 3.11](../guides/VAR_GUIDE.md#311-why-it-moved-the-var-change-explained)). Later: the Appetite landing's card
-([section 5.4](#554-three-landings-to-mock-up-later)) and the daily risk report. `from` and `to` may be any two dates, not only consecutive ones (a month's
-change for the committee), and `to` may be **now** (intraday since the morning's official figure).
-
-**An explanatory overlay from sensitivities (approximate, labelled so).** Beside the exact market step (S5 − S4), the market move can be
-read by risk factor: Σ sensitivity(t−1) × the factor's move from t−1 to t, by curve and tenor, issuer, currency pair, surface (the
-position sensitivities of [section 7](#57-sensitivities-data) and the factor moves of the proposed `market-move` kind,
-[PNL.md section 3.2](../contracts/PNL.md#32-market-move-the-move-of-each-risk-factor)). It says *which* factors drove the market step
-(for example "USD SOFR 10Y +12 bp: −3.1m"); it is a first-order approximation of the P&L, not of the VaR change, and is drawn as an overlay
-with its residual, never as one of the exact steps.
-
-**Never stored.** Computed when asked. The daily report's frozen run (the planned report framework) keeps the explanation it showed, with its inputs'
-versions, as every frozen cell does.
-
-**Tests.** Crafted vectors where each cause alone moves VaR by a known amount (one trade out, one in, one restated vector, one book moved,
-a rolled window): each step equals it and the others are zero; the steps sum to the change to the cent on the demo for every node; the
-Shapley variant sums to the same total; sharded equals single-server to the bit (the sums keep a fixed order); a date with no official
-capture for yesterday says so, never a zero.
+**Tests (the design's).** Crafted vectors where each cause alone moves VaR by a known amount: each step equals it and the others are
+zero; the steps sum to the change to the cent on the demo for every node; the Shapley variant sums to the same total; sharded equals
+single-server to the bit; a date with no official capture for yesterday says so, never a zero.
 
 ##### 5.4.1.1 RO1: the build design
 
-**What it shows.** A **Why it moved** tab on the VaR page of any scope (a node, a portfolio, a basket, an ad-hoc scope), and the same
-answer wherever a lens shows a VaR change (the Risk desk card RL4, the CRO's *What changed*, the breach page of RO2, the board pack):
-the waterfall of the steps from the *from* VaR to the *to* VaR, each bar opening its contributors; the states underneath (trades,
-vectors, scenario days, hierarchy, VaR and the VaR scenario's date of each); the order-free view by child; the Shapley variant on
-request; the risk-factor overlay when position sensitivities are loaded. Mock-ups: [section 11.1](#5111-ro1-var-change-explanation).
-
-**One screen, three views.** The tab has a view switch, **Waterfall · Matrix · Sentences**, over one answer of the same API:
-
-| View | Mock-up | What it draws |
-|---|---|---|
-| **Waterfall** (the default) | A | the waterfall of the steps, the selected step's contributors beside it, the states under it, the order-free view by child |
-| **Matrix** | B | the bridge of every node: the hierarchy down, the steps across, VaR before and after, the change and limit use; a cell opens its contributors and a generated sentence |
-| **Sentences** | C | the answer in sentences, with the Shapley variant beside the sequence when asked |
-
-The chosen view is kept in the address (`view=waterfall|matrix|sentences`, so a copied link opens the same view) and remembered in the
-person's settings as the Home landings are ([EDITIONS.md section 4](../admin/EDITIONS.md#4-choose-the-home-landing)); a link
-without `view=` opens the remembered one, else Waterfall. The pickers, the dates and the scope are shared by the three views, and a
-switch redraws from the answer already fetched (no second request). The phone draws the Sentences view's paragraph and the steps as
-bars whatever view is chosen.
-
-**How it is built: an engine tab drawn with the standard panel kinds.** *Why it moved* is a tab of the VaR page's workbench beside P&L
-path, VaR / ES history and Contributions ([VAR_GUIDE section 3.4](../guides/VAR_GUIDE.md#34-the-tabs)), answered by the VaR engine.
-Unlike those tabs, it is not drawn by the VaR page's own charts: the console turns the answer into a ViewModel of the existing panel kinds
-([RACHANA_REFERENCE, panel kinds](../guides/RACHANA_REFERENCE.md#panel-kinds)) and paints it with the one renderer of every screen
-([CLIENT_RENDERER.md](CLIENT_RENDERER.md)), so it looks and behaves like the rest of the product (themes, the Data table under
-each chart, CSV, phone width). No new panel kind is needed:
-
-| Part | Panel kind |
-|---|---|
-| The steps (Waterfall) | `waterfall` (`sum` the *to* VaR, `colors: theme`: a rise in VaR is not a gain) |
-| The tiles | `metric` |
-| A step's contributors, the states, the order-free view, trades out and in, the window | `table` (with `total` columns where the rows add up) |
-| Every node (Matrix) | `pivot` (node by step, `heat`) with the hierarchy as its rows; a cell click fills a `table` and a `markdown` sentence |
-| The answer (Sentences) | `markdown` (a template over the answer's facts) |
-| Sequence against Shapley | `table` (cause, sequence, Shapley, difference; both columns total to the change) |
-
-**How each figure is computed.** For a scope with members P, vectors v_p over the scenario days D and the configured confidence, VaR is
-V(P, D) = −(the k-th smallest of Σ_{p∈P} v_p(d) over d ∈ D), k from the confidence and |D| exactly as the engine's VaR
-([VAR_GUIDE section 18.1](../guides/VAR_GUIDE.md#181-var)).
-
-| Figure | Formula | Notes |
-|---|---|---|
-| A state S_i | V(P_i, D_i) with the members, vectors, days and rules of the table in section 4.1 | S3 = S2 − Σ_{out} v_p(t−1); S7 = S6 + Σ_{in} v_p(t); amendments: S7 = S7′ − Σ_{amended} v_p(t−1) + Σ_{amended} v_p(t) |
-| A step | step_i = V(S_i) − V(S_{i−1}) | Σ_i step_i = V(t) − V(t−1) by construction (telescoping); printed exactly, never rounded to fit |
-| Window steps | S4 restricts S3 to D(t−1) ∩ D(t); S6 extends S5 to D(t) | dropping a day can only lower VaR or leave it (removing a tail day promotes the next rank); adding a day can only raise it or leave it; each day's rank in its state is printed |
-| Market contributors | ΔC_c = C_c(S5) − C_c(S4) for each child c | components add up to VaR in every state ([VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts)), so Σ_c ΔC_c = the market step exactly |
-| Trades out and in | I_p = V(S) − V(S without p), in S2 for trades out and in S7 for trades in | incremental VaR does not add up: the top N are listed and a last line, *the others and the interaction*, closes the step |
-| VaR scenario of a state | the day d whose sum is the k-th smallest | said in words when it changes between states |
-| Order-free view | ΔC_c = C_c(t) − C_c(t−1) | adds up to V(t) − V(t−1); children are today's; a child that left or arrived shows its whole component |
-| Shapley | φ_j = (1/n!) Σ over the orders of the n causes present of [V(before j, with j) − V(before j)] | adds up to the change; n ≤ 6; never official |
-| Limit-use line | use(t) − use(t−1) = [V(t) − V(t−1)] / L(t−1) + V(t) · [1/L(t) − 1/L(t−1)] | the first term the VaR change, the second the limit's own change (`var-limit` by business date); shown only when the limit's horizon and confidence match the explanation's |
-
-**Horizon and confidence.** The explanation follows the VaR page's pickers ([VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)):
-at a confidence, every state uses that k; at 10-day √10 every state and step is × √10 (the shape is the 1-day one); at the 10-day sum
-the scenario days are the overlapping 10-day windows, so the window steps drop and add windows rather than days. The official
-explanation (the one reports freeze) is at the official lens, 1-day 99%.
-
-**Any two dates, and now.** `from` and `to` may be months apart (the committee's month, the board's quarter): the same states, with the
-window steps covering every day that left and entered (one line when many), and trades out and in the net churn between the two
-dates. `to = now` uses the latest intraday batch's vectors for S5 to S7 (the batches of [VAR.md section 2](../contracts/VAR.md#2-inputs-from-upstream-engines),
-`RUN_KIND` intraday) against the morning's official capture.
-
-**Data used (existing contracts).** `var-official` (the official capture with its vector and membership), `pnl-vector` and
-`scenario-pv` (both dates' vectors, with `TRADE_STATUS` for the amendment split and `RESTATEMENT` for S1), `scenario-set` (the two
-dates' scenario days), `risk-hierarchy` and `portfolio` (membership by date), `var-limit` (the limit-use line), `position` (the
-position grain). Nothing new is asked of the bank. The risk-factor overlay needs the planned `position-sensitivity` kind
-([section 7.3](#573-a-proposed-data-contract-position-sensitivity)) and is drawn only when it is loaded.
-
-**Settings (built in 2.9.10 but `shapley`, planned; [VAR_GUIDE.md section 12](../guides/VAR_GUIDE.md#12-settings)).**
-
-| Key | Default | Meaning |
-|---|---|---|
-| `drishti.var.explain.order` | `restatement, hierarchy, trades-out, window, market, trades-in` | the sequence; a bank may move trades first |
-| `drishti.var.explain.window-lines` | `two` | `two` (oldest day dropped, newest day added) or `one` (window roll) |
-| `drishti.var.explain.split-amendments` | `true` | amendments as their own step when the feed marks them |
-| `drishti.var.explain.top` | `10` | contributors listed per step before *the others and the interaction* |
-| `drishti.var.explain.shapley` | (planned) | `on-request` or `off`, with the Shapley variant |
-| `drishti.var.explain.drivers-max` | `2000` | trades per step whose incremental VaR is computed |
-| `drishti.var.explain.cache-mb` | `32` | the kept answers' memory, weighed in bytes |
-| `drishti.var.explain.matrix-max` | `60` | child nodes the Matrix view explains |
-| `drishti.var.explain.cache-minutes` | `10` | answers cached like the VaR page's, never stored |
-
-**Command, CLI and API (built in 2.9.10 as below; Shapley, the computed kind and the AI tool are planned).**
-
-- `VAR EXPLAIN <scope> [from] [to]` or `VAR <scope> EXPLAIN [from] [to]` on the command line: `VAR EXPLAIN BANK`,
-  `VAR DESK DESK-CREDIT EXPLAIN 2026-06-30` (FUNC lists it; the edition word `VAR` covers it).
-- `drishti.py var explain <scope> [--from] [--to] [--confidence] [--matrix] [--xlsx FILE] [--json]`, the waterfall as aligned lines.
-- `GET /api/v1/var/explain?scope=&from=&to=&confidence=` (`method=shapley` answers 400: planned), with `/explain/matrix` and
-  `/explain.xlsx` (the working as a workbook of formulas): `{states[], steps[{name, effect,
-  contributors[], rest}], orderFree[], limit{}, provenance}`; the same entitlements as the scope's VaR (a person who cannot see a
-  book sees its contribution folded into *the others*).
-- The same answer as a computed kind, `var-explain` (id the scope, `params: { from, to, method }`), served by a reactive connector over
-  the VaR engine, so any Sutra panel can draw it (RO2's *why it moved since detection*, a lens card) with `source:`
-  ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)).
-- An AI tool over the same API, so *"why is Rates VaR up?"* answers with these figures (the CRO lens's Ask).
-
-**Phone.** The answer (one paragraph) is **must**; the steps are **glance**, the waterfall's compact form as horizontal bars; each step's
-contributors are **more**; the states table, the bridge of every node and the Shapley comparison are **desk**
-([MOBILE_DISPLAY.md section 3](MOBILE_DISPLAY.md#3-phone-tiers-must-glance-more-desk)).
+**One screen, three views** (decided, product owner, 2026-11-01): a **Why it moved** tab of the VaR page's workbench, with a view switch
+**Waterfall · Matrix · Sentences** (mock-ups A, B, C, [section 5.11.1](#5111-ro1-var-change-explanation)) over one answer of the same API;
+the view kept in the address (`view=`) and remembered in the person's settings as the Home landings are
+([EDITIONS.md section 4](../admin/EDITIONS.md#4-choose-the-home-landing)); a switch redraws from the answer already fetched. It is drawn
+not by the VaR page's own charts but as a ViewModel of the existing panel kinds ([RACHANA_REFERENCE, panel kinds](../guides/RACHANA_REFERENCE.md#panel-kinds))
+painted by the one renderer ([CLIENT_RENDERER.md](CLIENT_RENDERER.md)): `waterfall` (`colors: theme`: a rise in VaR is not a gain),
+`metric`, `table` (with `total` columns where rows add up), `pivot` for the Matrix (node by step, `heat`), `markdown` for the Sentences;
+no new panel kind. **Horizon and confidence** follow the VaR page's pickers
+([VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)); the official explanation
+(the one reports freeze) is at the official lens, 1-day 99%. **Phone** ([MOBILE_DISPLAY.md section 3](MOBILE_DISPLAY.md#3-phone-tiers-must-glance-more-desk)):
+the answer in a paragraph is **must**, the steps as horizontal bars **glance**, each step's contributors **more**, the states, the bridge of
+every node and the Shapley comparison **desk**. The build checklist is [section 5.11.1](#5111-ro1-var-change-explanation).
 
 **Open questions for the product owner.**
 
@@ -3045,11 +2657,10 @@ contributors are **more**; the states table, the bridge of every node and the Sh
 
 **Records (Drishti-owned, content store, versioned).** A **breach** is created by the engine, not by a person, when an official run finds
 a limit's use above 1 (or, intraday, when a configured check does): id `BR-<year>-<sequence>` (the `limit-breach` contract,
-[section 8.7.10](#8710-limit-breach-brch-a-breach-as-a-record-new-drishti-owned)), one record per limit and episode
-([section 4.2.1](#5421-ro2-the-build-design)); it holds the limit id, the measure, the
-scope, the capture or answer id that showed it, the use at detection, and a **status**: `open` → `explained` → `approved` (or
-`remediated`) → `closed`, with `escalated` at any point. Each change of status is a new version with who, when and a comment. The number
-is never copied as the truth: the breach points at the official capture, which holds it.
+[section 8.7.10](#8710-limit-breach-brch-a-breach-as-a-record-new-drishti-owned)), one record per limit and episode; it holds the limit
+id, the measure, the scope, the capture or answer id that showed it, the use at detection, and a **status**: `open` → `explained` →
+`approved` (or `remediated`) → `closed`, with `escalated` at any point. Each change of status is a new version with who, when and a
+comment. The number is never copied as the truth: the breach points at the official capture, which holds it.
 
 | Action | Who | What it records |
 |---|---|---|
@@ -3059,22 +2670,13 @@ is never copied as the truth: the breach points at the official capture, which h
 | Escalate | automatically after a configured number of days, or by hand | to the next level of the limit's chain (desk → business → CRO) |
 | Close | the risk manager, once use is below the limit or the temporary limit holds | — |
 
-**Temporary limits.** Limits are fundamental (the bank's limit system owns them). Two choices for the product owner
-([section 9](#59-decisions-for-the-product-owner)): (a) Drishti records the request and approval and the bank's limit system is updated
-by its own process, Drishti reading the new limit the next day; (b) an approved temporary limit is a Drishti-owned **overlay** on the
-catalogue, valid from and to, used for limit use until it expires and exported for the limit system. (a) is simpler and keeps one
-source of truth; (b) answers the same day.
-
-**Notification.** The existing alert machinery (inbox, bell, email, chat bridges, hysteresis and cooldown,
-[USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers)) is reused, but the rules come **from the catalogue** (each limit's owners
-and escalation chain), not from each person setting an alert. Near breaches (use at or above the limit's warning level) notify without
-creating a breach.
-
-**Commentary** reuses comment threads anchored to the data ([COLLABORATION.md](COLLABORATION.md)), anchored to the breach record, so the
-discussion and the record stay together and fall under the same retention and legal hold.
-
-**Approvals** reuse the planned **maker-checker sign-off record** ([REGULATORY_VAR_REPORTING section 6](../guides/REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off)):
-one record shape for "a person approved this version of this thing", for reports, breaches, temporary limits and RNIV entries.
+**Temporary limits.** Limits are fundamental (the bank's limit system owns them). The choice was (a) Drishti records the request and
+approval and the bank's limit system is updated by its own process, Drishti reading the new limit the next day (simpler, one source of
+truth), or (b) an approved temporary limit as a Drishti-owned **overlay** on the catalogue, used for limit use until it expires (answers
+the same day). **Decided: (a)** (decision 4, [section 5.9](#59-decisions-for-the-product-owner)); how it works is in
+[section 5.4.2.1](#5421-ro2-the-build-design), as are the notifications (rules from the catalogue, not set by each person), the thread
+(comment threads anchored to the breach record, under the same retention and legal hold) and the approvals (write-back's approval policy,
+decision 7).
 
 **Data needed.** The limit catalogue (RO3) with owners and the escalation chain; the official records (built). **Size** M. **Tests:**
 a crafted breach goes through every status, refuses self-approval, escalates after N days, closes; a restated date that removes the
@@ -3086,7 +2688,7 @@ breach marks it `withdrawn`, never deletes it; the audit trail lists every step;
 default; the opened breach beside it with its escalation chain, its use over 20 business days, why it moved since detection (RO1), the
 desk's explanation and actions, a temporary increase awaiting decision, and the thread), the closed and withdrawn breaches of the week,
 and the same records on the CRO's decision queue and in the board pack. VaR limits first (`var-limit`), every measure once `risk-limit`
-exists (decision 5). Mock-ups: [section 11.2](#5112-ro2-breaches-and-escalation).
+exists (decision 5). Mock-ups: [section 5.11.2](#5112-ro2-breaches-and-escalation).
 
 **One screen, three views.** A view switch, **Queue · Board · Timeline**, over the same records:
 
@@ -3167,7 +2769,7 @@ panels, used by the Queue, the Board's drawer and the record's own page).
 | Missing figure | no official capture for a date: *not evaluated*, never a close, never a new breach |
 | Base use at expiry | for a temporary increase, V_L / the base limit on the latest date, shown before it lapses |
 
-**States and who is told.** The states are those of section 4.2 (`OPEN`, `EXPLAINED`, `APPROVED`, `REMEDIATED`, `CLOSED`, `WITHDRAWN`, with
+**States and who is told.** The states are those of section 5.4.2 (`OPEN`, `EXPLAINED`, `APPROVED`, `REMEDIATED`, `CLOSED`, `WITHDRAWN`, with
 `ESCALATED` as a flag); each change is a version with who, when and a comment. The chain comes from the limit (`OWNER`,
 `ESCALATION_CHAIN` of `risk-limit`); a `var-limit` row, which carries neither, takes the site's default chain for VaR limits by the
 node's level (desk head, business risk manager, head of market risk, CRO).
@@ -3196,7 +2798,7 @@ the approved amount and marks the request *not applied* if it does not. An incre
 base use at expiry.
 
 **Data used.** `var-limit` (with `HORIZON` and `CONFIDENCE`), `var-official`, `calendar`; the proposed Drishti-owned kinds `limit-breach`
-(BRCH), `breach-action` (BACT) and `limit-request` (LREQ) of [section 8.7](#8710-limit-breach-brch-a-breach-as-a-record-new-drishti-owned);
+(BRCH), `breach-action` (BACT) and `limit-request` (LREQ) of [section 8.7.10](#8710-limit-breach-brch-a-breach-as-a-record-new-drishti-owned);
 `risk-limit` once it exists ([section 6.7.7](#677-d6-risk-limit-new-one-limit-table-for-every-measure)); comment
 threads ([COLLABORATION.md](COLLABORATION.md)). Nothing new is asked of the bank for VaR limits; owners and chains come
 with `risk-limit`.
@@ -3252,7 +2854,7 @@ to every market-risk measure: `LIMIT_ID`, `MEASURE` (`VAR`, `SVAR`, `ES`, `STR`,
 expiry: the measure's own grid; empty for VaR), `HORIZON` and `CONFIDENCE` (VaR and ES), `LOWER`, `UPPER` (a sensitivity limit has
 both), `WARNING_AT`, `HARD_OR_SOFT`, `OWNER`, `ESCALATION` (the chain), `APPROVED_BY`, `VALID_FROM`, `VALID_TO`, `LIMIT_LETTER`,
 `CURRENCY`, `BUSINESS_DATE`. `var-limit` stays as it is and is read as the `VAR` rows (open question 4 of STR.md, decided by the product
-owner, [section 9](#59-decisions-for-the-product-owner)).
+owner, [section 5.9](#59-decisions-for-the-product-owner)).
 
 **Utilisation** is computed, never stored: per limit and date, the measure of the limit's scope and bucket from its engine (VaR from
 the VaR engine, sensitivities from RO4, stress from RO9, P&L from RO5), `use = measure ÷ limit` (for two-sided limits, the side
@@ -3266,21 +2868,20 @@ crafted limits of each type, both sides, the warning level, validity dates; a li
 
 #### 5.4.4 RO4: sensitivity aggregation and sensitivity limits
 
-**Input.** Position sensitivities at risk-factor granularity, the proposed `position-sensitivity` kind of
-[section 7](#57-sensitivities-data) (RO15). Today only per-trade `DV01` and book-level FRTB buckets are stored
-([COMPUTED_ATTRIBUTES.md section 4.9](COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb), [section 7.1](#571-what-the-lake-holds-today)),
-which is not enough for a limit.
+**Input.** Position sensitivities at risk-factor granularity, the `position-sensitivity` kind of [section 5.7](#57-sensitivities-data)
+(RO15).
 
-**Computation.** Sensitivities are **additive**: a scope's DV01 by tenor and currency is the sum of its trades' rows. That is a derived
-measure, but per arbitrary scope with entitlements it belongs to an engine (rule 4: an arbitrary scope, per reader), the same Java
-summing pattern as VaR (a factor dictionary, per-trade rows, per-node totals), then each limit's bucket is matched. Grids: DV01 by
-currency × tenor bucket, CS01 by rating × tenor, vega by underlying × expiry, FX delta by currency, equity delta by index or name.
+**Computation.** Sensitivities are **additive**: a scope's DV01 by tenor and currency is the sum of its positions' rows, summed per
+arbitrary scope with entitlements by the server's summing engine (`SENS <scope>`, by factor, bucket or grid,
+[SENSITIVITIES_AND_FRTB_SA.md section 4](SENSITIVITIES_AND_FRTB_SA.md#4-the-aggregation-every-method-shares)). What RO4 adds is the limit:
+each limit's bucket matched against its grid (DV01 by currency × tenor bucket, CS01 by rating × tenor, vega by underlying × expiry, FX delta
+by currency, equity delta by index or name) and its use against both sides.
 
 **Screens.** A **ladder** per scope (the grid with each bucket's use against its limit, coloured, every cell printing its value) and a
 drill to the trades of a bucket.
 
-**Size** M once RO15 is in (the contract, loader and ladder skeleton are RO15's); L without it. **Tests:** the sum by bucket equals the sum of
-trades; a bucket limit breached by a crafted trade; netting long and short within a bucket; two-sided limits.
+**Size** M. **Tests:** the sum by bucket equals the sum of trades; a bucket limit breached by a crafted trade; netting long and short
+within a bucket; two-sided limits.
 
 #### 5.4.5 RO5 and RO6: stop-loss, position and notional limits
 
@@ -3330,7 +2931,7 @@ concentration limits when the catalogue has them (`MEASURE` `NOTIONAL` or `POSIT
 (`by=` a column, [VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts) already groups by desk, book,
 position, trade). The missing pieces are the dimension on every position (the issuer of the instrument, core's issuer kind; its sector and country of
 risk; a tenor bucket from the maturity) and, for concentration of **risk** rather than of value, the position sensitivities of
-[section 7](#57-sensitivities-data): CS01 by issuer and sector, DV01 by curve and tenor, equity delta by issuer, FX delta by currency.
+[section 5.7](#57-sensitivities-data): CS01 by issuer and sector, DV01 by curve and tenor, equity delta by issuer, FX delta by currency.
 **Data:** reference data from the bank's security master; RO15. **Size** M. **Tests:**
 shares add to 100%; component VaR by dimension adds up to the scope's VaR; a position without the attribute is counted as *unknown*,
 never dropped.
@@ -3385,7 +2986,7 @@ in the bank's house style. The default layout (mock-up A, `layout: pages`) is si
 | 5. Backtesting | the 250-day chart against actual P&amp;L, the zone, both counts, the multiplier, the exceptions and the desks that drove them |
 | 6. Sign-off and lineage | maker, checker and approver with times; the checks; every figure's official records, data versions, the definition and the house style revisions, the run |
 
-Stress results against appetite and the RNIV register join as pages when RO9 and RO7 exist. Mock-ups: [section 11.3](#5113-the-board-pack).
+Stress results against appetite and the RNIV register join as pages when RO9 and RO7 exist. Mock-ups: [section 5.11.3](#5113-the-board-pack).
 
 **One definition, three layouts.** The board pack is not a screen: it is a report definition, and the mock-ups are three **layouts** of
 the same pages and figures, chosen by the definition's `layout:` key. The run, its checks, its sign-off and its lineage are the same
@@ -3526,7 +3127,7 @@ Risk with a different first page.
 | **Governance actions** | Breach commentary and approval, temporary limits, the RNIV register, sign-offs: actions Risk (Build, Studio and write-back off) has no place for | They could be features of the full product. *Answer:* they will be (any lens may show a breach); the Oversight lens is where they are the default page |
 | **RBAC later** | One lens maps cleanly to roles: `lens.roles` starts the CRO's team in it, `landing-by-role` opens Appetite for the head and Breaches for a business risk manager ([EDITIONS.md sections 7, 8](../admin/EDITIONS.md#8-lenses)) | `lens.roles` is not wired yet. *Answer:* the lens works without it, as the other four do |
 | **Cost** | One file, its landings and read-only routes, no engine change: the mechanism was built for this ([EDITIONS.md section 11](../admin/EDITIONS.md#11-later-editions)) | Five lenses crowd the Switch-to menu. *Answer:* `drishti.lenses` is per site; a bank offers the ones it uses |
-| **Drift** | | Two files listing similar commands may drift. *Answer:* the edition test checks each lens's surfaces; a shared list could later be an `extends:` in the edition file (a small change, [section 9](#59-decisions-for-the-product-owner)) |
+| **Drift** | | Two files listing similar commands may drift. *Answer:* the edition test checks each lens's surfaces; a shared list could later be an `extends:` in the edition file (a small change, [section 5.9](#59-decisions-for-the-product-owner)) |
 | **Read-only** | | A lens hides, it does not secure ([EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses)). *Answer:* read-only comes from the oversight **role** (no write-back powers; governance powers only), not from the lens |
 
 **Why not a landing inside Drishti Risk.** A landing changes one page; the second line's difference is also in the menus (Breaches,
@@ -3575,7 +3176,7 @@ oversight:
 ```
 
 **Read-only by default; governance actions on.** Build, Studio, the designer, forms and write-back are off. The only actions are the
-governance records of section 4 (explain, review, approve, escalate, close a breach; propose, approve, retire an RNIV entry; sign off a
+governance records of section 5.4 (explain, review, approve, escalate, close a breach; propose, approve, retire an RNIV entry; sign off a
 report), each behind its own power (proposed: `breach.explain`, `breach.approve`, `limit.temporary`, `rniv.edit`, `rniv.approve`,
 `report.sign`), four eyes where the policy says so, no self-approval. A desk user who explains a breach does so from wherever they are
 (the Trading lens shows *their* open breaches); the Oversight lens is where the second line reviews and approves.
@@ -3586,12 +3187,12 @@ report), each behind its own power (proposed: `breach.explain`, `breach.approve`
 |---|---|
 | Views | Terminal, Search, Functions, Data map, VaR, **Breaches**, **Limits** (every limit, its use and history), **RNIV register**, **Stress** (once RO9), Reports, Monitors, Alerts |
 | BI | the edition's datasets and reports: VaR official, limit utilisation, breaches, backtests, RNIV, the daily report and the committee pack |
-| Help | Knowledge (market risk, counterparty risk, trades, entities, market data), Start, Use, Data, Operate; this document's user-facing successor |
+| Help | Knowledge (market risk, counterparty risk, trades, entities, market data), Start, Use, Data, Operate; this part's user-facing successor |
 | Admin | as Drishti Risk |
 
 #### 5.5.4 Three landings to mock up later
 
-Mock-ups first, the product owner picks, then the build (the house rule); none exists yet (section 11). The outlines:
+Mock-ups first, the product owner picks, then the build (the house rule); none exists yet (section 5.11). The outlines:
 
 **A. "Appetite"** (the default; the head of market risk, the morning meeting):
 
@@ -3636,13 +3237,13 @@ Ordered by value and dependency (product owner, 2026-10-31); each row is **propo
 
 | Order | Rows | Why here | Status |
 |---|---|---|---|
-| 1 | **RO1** VaR change explanation | The most-asked question; needs nothing new from the bank; cheap | **built** (2.9.10, with memory, scale and mobile; decided, 2026-10-31) |
+| 1 | **RO1** VaR change explanation | The most-asked question; needs nothing new from the bank; cheap | **built** (with memory, scale and mobile; decided, 2026-10-31) |
 | 2 | **RO2** breaches and escalation (VaR limits first) | Turns "what breached" into a record; reuses the planned sign-off record | proposed (oversight, 2.9.14), on the sign-off record of 2.9.8 (decided, 2026-10-31) |
 | 3 | **RO13** data trust, **RO14** model performance | Mostly reads of what the planned backtesting and market-data impact produce | RO13 proposed (regulatory reporting, 2.9.15, with the first CIO rows, the data-trust feeds); RO14 unscheduled |
 | 4 | **RO11** the daily report and committee pack | On the planned report framework; the board pack is the planned board pack | the board pack proposed (oversight, 2.9.14); the daily report and the committee pack proposed (regulatory reporting, 2.9.15) |
-| 5 | **RO15** position sensitivities (contract, loader, ladders), **RO3** the limit catalogue, then **RO4** sensitivity limits, **RO5** stop-loss, **RO6** position and notional | RO15 and the catalogue first: RO4 and RO8 need the sensitivities | RO15 proposed (first in sensitivities and capital, 2.9.11, with the factor dictionary); RO3 proposed (regulatory reporting, 2.9.15: the CRO decision queue needs it); RO4 proposed (sensitivities and capital, 2.9.11); RO5, RO6 unscheduled |
+| 5 | **RO15** position sensitivities (contract, loader, ladders), **RO3** the limit catalogue, then **RO4** sensitivity limits, **RO5** stop-loss, **RO6** position and notional | RO15 and the catalogue first: RO4 and RO8 need the sensitivities | RO15: the contract, loader, factor dictionary and sums built, the ladders proposed (sensitivities and capital, 2.9.11); RO3 proposed (regulatory reporting, 2.9.15: the CRO decision queue needs it); RO4 proposed (sensitivities and capital, 2.9.11); RO5, RO6 unscheduled |
 | 6 | **RO7** the RNIV register | Small; uses the sign-off record | unscheduled |
-| 7 | **RO12** the Oversight lens: **mock-ups first, before any build** (none exists yet: section 11) | Once RO1 and RO2 exist | unscheduled (after RO1 and RO2; a separate lens, decided) |
+| 7 | **RO12** the Oversight lens: **mock-ups first, before any build** (none exists yet: section 5.11) | Once RO1 and RO2 exist | unscheduled (after RO1 and RO2; a separate lens, decided) |
 | 8 | **RO8** concentration | Needs RO15 and reference data on positions | unscheduled (after RO15) |
 | 9 | **RO9** the stress engine and limits, then reverse stress | The largest; STR.md's inputs | unscheduled |
 | 10 | **RO10** liquidity | Needs volume and bid-offer data | proposed (liquidity, capital and climate) |
@@ -3655,17 +3256,20 @@ started.
 ### 5.7 Sensitivities data
 
 Sensitivity limits (RO4), risk ladders, concentration of risk (RO8) and the factor-level reading of a VaR change (RO1) all need one
-input Drishti does not hold today: **sensitivities per position (or trade), at risk-factor granularity**. This section says what the lake
-holds, what is needed, a proposed data contract, its volume, and what is computed from it. The roadmap row is **RO15**
-([section 6](#56-a-roadmap)), the prerequisite of RO4 and RO8.
+input: **sensitivities per position (or trade), at risk-factor granularity**. The roadmap row is **RO15**
+([section 5.6](#56-a-roadmap)), the prerequisite of RO4 and RO8. The input, its factor dictionary, naming standard, grids and load checks
+are now documented in one place, [SENSITIVITIES_AND_FRTB_SA.md sections 2 and 3](SENSITIVITIES_AND_FRTB_SA.md#2-position-sensitivities-the-input),
+and its fields in the [market-risk contracts](../contracts/packs/market-risk.md#sens-position-sensitivities-position-sensitivity); this
+section keeps oversight's needs and decisions.
 
 #### 5.7.1 What the lake holds today
 
-| Kind | What it is | Why it is not enough |
+| Kind | What it is | For oversight |
 |---|---|---|
-| `frtb-sensitivity` (`FRTB`) | **One record per book** (`RESULT_ID` `FRTB-<desk>-<n>`, `BOOK`) with stored FRTB charges (`DELTA_CHARGE`, `VEGA_CHARGE`, `CURVATURE_CHARGE`, `TOTAL`, `BY_CLASS[]`) and a short list `SENSITIVITIES[]` of `RISK_CLASS`, `BUCKET` (`1` to `3`), `MEASURE` (`Delta`, `Vega`) and `VALUE` in USD, at most six elements a book; **demo data only: 30 records** in `data/testdata/market-risk/frtb-sensitivity/`, a snapshot then daily changes ([its contract](../contracts/packs/market-risk.md); `config/packs/market-risk/contracts/frtb-sensitivity.contract.yaml`; the mnemonic `FRTB` in `config/packs/market-risk/pack.yaml`) | Book grain, not position or trade: no drill, no arbitrary scope, no intraday. Regulatory buckets only (a bucket is a sector or a rating group, not a curve and tenor); no risk factor, curve, tenor or issuer: no DV01 ladder, no CS01 by issuer. The charges are stored computed figures that FRTB.md retires ([COMPUTED_ATTRIBUTES.md section 4.9](COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb), finding F18) |
-| `trade-valuation.DV01` (`TVAL`) | One number per trade and date, total DV01 in USD ([COMPUTED_ATTRIBUTES.md section 4.1](COMPUTED_ATTRIBUTES.md#41-trade-valuation-tval); `config/packs/market-risk/contracts/trade-valuation.contract.yaml`) | No curve, no tenor: a parallel shift only; no other measure |
-| The proposed `sensitivity` table of FRTB.md | One row per trade and risk factor, with the factor's parts (class, type, qualifier, curve, tenor, underlying tenor), FRTB and SIMM buckets ([FRTB.md section 3.2](../contracts/FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens)) | Proposed, not built; a row per factor (tens of rows per trade), no position grain, no intraday rule. Its **factor fields** are the right ones and are reused below |
+| `position-sensitivity` (`SENS`) | one record per position (or trade), date and batch, a sparse list of factors and measures; summed by factor, bucket or grid for any scope (`SENS <scope>`) | the input of RO4, RO8 and the RO1 overlay |
+| `risk-factor` (`RFAC`) | the factor dictionary with its FRTB and SIMM buckets ([section 6.7.10](#6710-d9-the-factor-dictionary-risk-factor-and-the-bucket-mapping-sensitivity-bucketsyaml-new)) | the parts every sum groups by |
+| `frtb-sensitivity` (`FRTB`) | book grain, stored FRTB charges and a few regulatory buckets, demo data only ([COMPUTED_ATTRIBUTES.md section 4.9](COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb), finding F18) | not enough (no position, factor, curve, tenor or issuer); it retires (decision 9) |
+| `trade-valuation.DV01` (`TVAL`) | one total DV01 per trade and date ([COMPUTED_ATTRIBUTES.md section 4.1](COMPUTED_ATTRIBUTES.md#41-trade-valuation-tval)) | a parallel shift only |
 
 #### 5.7.2 What oversight needs
 
@@ -3686,81 +3290,25 @@ so the two agree on the trades, the market and the model.
 
 #### 5.7.3 A proposed data contract: `position-sensitivity`
 
-**Recommendation: a new kind, `position-sensitivity`, not an extension of `frtb-sensitivity`.** Reasons: `frtb-sensitivity` is book
-grain with stored charges, and FRTB.md retires it (its section 14); its key (`RESULT_ID` per book) cannot carry positions or intraday
-batches; widening it would mix a computed regulatory result with a fundamental input, which the rules forbid
-([COMPUTED_ATTRIBUTES.md section 1.2](COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)). The new kind takes FRTB.md's factor fields
-and **becomes the per-trade `sensitivity` input FRTB.md proposes**, in a record-per-position layout, so FRTB SA, SIMM, P&L explain, stress
-by sensitivities and oversight read one table. Decision 9 ([section 9](#59-decisions-for-the-product-owner)).
+**Recommendation: a new kind, `position-sensitivity`, not an extension of `frtb-sensitivity`** (decision 9,
+[section 5.9](#59-decisions-for-the-product-owner)). Reasons: `frtb-sensitivity` is book grain with stored charges, and FRTB.md retires it;
+its key (`RESULT_ID` per book) cannot carry positions or intraday batches; widening it would mix a computed regulatory result with a
+fundamental input, which the rules forbid ([COMPUTED_ATTRIBUTES.md section 1.2](COMPUTED_ATTRIBUTES.md#12-the-rule-for-deciding-which)).
+The new kind takes FRTB.md's factor fields and **becomes the per-trade `sensitivity` input FRTB.md proposes**, so FRTB SA, SIMM, P&L
+explain, stress by sensitivities and oversight read one table.
 
-**Grain and ids, as the VaR inputs.** One record per position (or trade) per business date and batch, the same grain rules as
-`scenario-pv`: `GRAIN` (`TRADE` or `POSITION`), `TRADE_ID` or `POSITION_ID` (a position its source sends whole names its trades in
-`TRADE_IDS`), `SOURCE_SYSTEM`, `BUSINESS_DATE`, `BATCH_ID`, `RUN_KIND` (`FULL` or `INTRADAY`), `COMPUTED_AT`, `STATUS` (`ok`, `proxied`,
-`failed`), `MODEL_VERSION`, and the placement columns the VaR inputs carry (`TT_BOOK`, `DESK`, `LEGAL_ENTITY`, `LIMIT_LETTER`,
-`PRODUCT_TYPE`, `TRADE_STATUS`, `MATURITY_DATE`). Key: `SENS-<trade or position>-<BATCH_ID>`. JSON Lines, gzip, into the lake by the
-same loaders (`lake build`, the parallel loader), **Delta or Iceberg**, partitioned by `business_date`, sorted by book as the vectors are.
-
-**The sensitivities: a sparse list**, only the non-zero factors:
-
-| Field of `SENSITIVITIES[]` | Meaning | Example |
-|---|---|---|
-| `RISK_FACTOR` | the factor's name in the naming standard below | `IR/CURVE/USD/SOFR/10Y` |
-| `RISK_CLASS`, `FACTOR_TYPE`, `QUALIFIER`, `CURVE`, `TENOR`, `UNDERLYING_TENOR`, `STRIKE` | the parts of the name (FRTB.md's fields; `STRIKE` a strike or moneyness for vega where limits need it); derived from `RISK_FACTOR` when absent | `IR`, `CURVE`, `USD`, `SOFR`, `10Y` |
-| `MEASURE` | `DV01`, `CS01`, `IE01`, `DELTA`, `BETA`, `VEGA`, `GAMMA`, `CURVATURE_UP`, `CURVATURE_DOWN` | `DV01` |
-| `VALUE` | the P&L in `CURRENCY` for the measure's standard move: +1 bp (DV01, CS01, IE01), +1% of the spot (delta), +1 vol point (vega); gamma per 1% squared; beta a ratio | `-1250.5` |
-| `CURRENCY` | the currency of `VALUE` (converted to the reporting currency at today's rate when summed) | `USD` |
-| `BUCKET` | optional: a bucket the source already assigns; Drishti's mapping below decides otherwise | `USD` |
-
-```json
-{"SENSITIVITY_ID": "SENS-POS-BOOK-RATES-1~MX-30000951-B-SENS-2026-09-30-01", "GRAIN": "POSITION",
- "POSITION_ID": "POS-BOOK-RATES-1~MX-30000951", "SOURCE_SYSTEM": "MUREX", "BUSINESS_DATE": "2026-09-30",
- "BATCH_ID": "B-SENS-2026-09-30-01", "RUN_KIND": "FULL", "STATUS": "ok", "TT_BOOK": "BOOK-RATES-1", "DESK": "DESK-RATES",
- "SENSITIVITIES": [
-   {"RISK_FACTOR": "IR/CURVE/USD/SOFR/5Y",   "MEASURE": "DV01", "VALUE": -820.0,  "CURRENCY": "USD"},
-   {"RISK_FACTOR": "IR/CURVE/USD/SOFR/10Y",  "MEASURE": "DV01", "VALUE": -1250.5, "CURRENCY": "USD"},
-   {"RISK_FACTOR": "VOL/IR/USD/SOFR/1Y/10Y", "MEASURE": "VEGA", "VALUE": 310.0,   "CURRENCY": "USD"}]}
-```
-
-(Illustrative; the parts fields are left out for brevity.)
-
-**The risk-factor naming standard** (decision 10). One text name per factor, slash-separated parts, so a name can be read, sorted and
-split without a lookup:
-
-| Class | Name | Example |
-|---|---|---|
-| Rates | `IR/CURVE/<ccy>/<curve>/<tenor>` | `IR/CURVE/EUR/ESTR/2Y` |
-| Inflation | `INF/<index>/<tenor>` | `INF/USCPI/10Y` |
-| Credit | `CR/SPREAD/<issuer id, LEI preferred>/<BOND or CDS>/<tenor>` | `CR/SPREAD/LEI:5493001KJTIIGC8Y1R12/CDS/5Y` |
-| FX | `FX/SPOT/<ccy>` (the currency's value in the reporting currency) | `FX/SPOT/JPY` |
-| Equity | `EQ/SPOT/<ISIN or index>` | `EQ/SPOT/SPX` |
-| Commodity | `CM/PRICE/<underlying>/<location>/<delivery tenor>` | `CM/PRICE/WTI/CUSHING/3M` |
-| Volatility | `VOL/<class>/<qualifier>/<curve or underlying>/<expiry>[/<underlying tenor>][/<strike or moneyness>]` | `VOL/EQ/SPX/SPX/6M/ATM` |
-
-A bank that names factors otherwise sends its names with a **factor mapping** (its name → the standard name), loaded as configuration;
-an unmapped name is refused, never guessed.
-
-**Buckets, configurable** (decision 11). A bucket file in the market-risk pack (proposed name `sensitivity-buckets.yaml`) maps factors to
-the grids limits use: the **FRTB buckets** (from FRTB.md's parameter tables) and the **bank's own limit grids** (for example rates tenors
-0–2Y, 2–5Y, 5–10Y, 10Y+; credit by rating and sector; vega by expiry band). Each limit in the catalogue (RO3) names its grid; a factor
-falls in exactly one bucket of each grid, checked at start.
-
-**Intraday,** as scenario PVs ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)):
-an `INTRADAY` batch carries only the changed positions; a record **replaces** that position's record whole (never merged factor by
-factor); a cancel is `TRADE_STATUS` `CANCELLED` with no list; files appended to the lake, or the Kafka stream.
-
-**Refusals and data-quality checks** at the load (each counted, the first reasons listed, as the VaR load does,
-[VAR.md section 6.3](../contracts/VAR.md#63-what-the-load-checks)):
-
-| Check | Outcome |
-|---|---|
-| A factor name that does not parse, or is not mapped | the element rejected, counted per source |
-| `CURRENCY` missing, or without FX on the date | the element rejected |
-| `VALUE` null, NaN or infinite | the element rejected (a failed factor is never zero) |
-| The same factor and measure twice in one record | the record rejected |
-| One full run per date and source, `GRAIN` with its id | the record or the date refused, as for scenario PVs |
-| A position with scenario PVs but **no sensitivities** (or the reverse) | a completeness warning by desk on the data-trust card (RO13), never an error |
-| `STATUS` `proxied` | kept and counted; the proxied share shown beside every sum |
-| A factor outside every bucket of a grid a limit uses | a warning naming the factor and the grid |
+**As decided and now built** (the contract
+[`position-sensitivity.contract.yaml`](../../config/packs/market-risk/contracts/position-sensitivity.contract.yaml); the MR Cube's D8,
+[section 6.7.9](#679-d8-position-sensitivity-sens-new), which adds the FRTB and SIMM bucket fields and the curvature inputs): the grain
+and ids of the VaR inputs (one record per position or trade, date and batch, `RUN_KIND` `FULL` or `INTRADAY`, `STATUS` `ok`, `proxied`,
+`failed`, the placement columns); a sparse `SENSITIVITIES[]` of the non-zero factors only, each `VALUE` the P&L for the measure's standard
+move; **Drishti's risk-factor naming standard** with a mapping from the bank's names, an unmapped name refused, never guessed (decision
+10, [SENSITIVITIES_AND_FRTB_SA.md section 3.1](SENSITIVITIES_AND_FRTB_SA.md#31-the-naming-standard)); **configurable grids**, the FRTB
+buckets and the bank's own limit grids side by side, each limit naming its grid, a factor in exactly one bucket of each grid (decision 11,
+[section 3.3](SENSITIVITIES_AND_FRTB_SA.md#33-the-grids-frtb-simm-and-the-banks-own)); intraday batches carrying only the changed
+positions, a record replacing that position's record whole, as scenario PVs do; and the load's refusals and warnings, counted per source,
+with a completeness warning by desk (vectors without sensitivities, or the reverse) on the data-trust card (RO13)
+([section 2.4](SENSITIVITIES_AND_FRTB_SA.md#24-load-and-checks)).
 
 #### 5.7.4 Volume
 
@@ -3778,29 +3326,29 @@ Sparse: a vanilla swap has 10 to 20 non-zero curve points, a bond its curve poin
 These are **estimates, not measurements**¹. For comparison, the scenario PVs of the same positions are 20 GB or more of JSON a day
 ([DATA_ARCHITECTURE.md section 11.11](DATA_ARCHITECTURE.md#1111-measured-and-the-23m-estimate)).
 
-¹ Element and record sizes from the example above; Parquet sizes from dictionary encoding of a few hundred thousand distinct factor names
-plus a double per element; the load time scaled by bytes from the parallel loader's 2.3M scenario-PV estimate (about 92 µs of CPU per
-5.4 KB position, itself extrapolated from 10K). To be measured with RO15 on the 10K test data and on the product owner's server.
+¹ Element and record sizes from the contract's example record; Parquet sizes from dictionary encoding of a few hundred thousand distinct
+factor names plus a double per element; the load time scaled by bytes from the parallel loader's 2.3M scenario-PV estimate (about 92 µs of
+CPU per 5.4 KB position, itself extrapolated from 10K). To be measured on the 10K test data and on the product owner's server.
 
 #### 5.7.5 What is computed from it (on demand, never stored)
 
-| Computation | How | For |
-|---|---|---|
-| **Sums** by desk, book, any scope, and by bucket of any grid | additive: a scope's sensitivity to a factor is the sum of its positions'; the Java summing pattern of VaR (a factor dictionary, per-position sparse rows, per-node totals), as the person asking | every row below |
-| **Utilisation against sensitivity limits** | each limit's scope and bucket summed, against its two sides | RO4 |
-| **Ladders** | a scope's grid (DV01 by currency × tenor, CS01 by rating × tenor, vega by expiry …), each cell against its limit, drilling to the positions | RO4, the Limits page |
-| **Concentration of risk** | CS01 by issuer and sector, DV01 by curve, delta by issuer and currency: top N, shares, Herfindahl | RO8 |
-| **The "why" overlay of the VaR change** | Σ sensitivity(t−1) × factor move(t−1 → t) by factor, beside the exact steps, labelled approximate, with its residual | RO1 ([section 4.1](#541-ro1-var-change-explanation)) |
-| **Hedge suggestions** (later) | for a breached bucket, the notional of a standard hedge instrument that brings it back, and that hedge's VaR effect through the what-if | the what-if, after RO4 |
-| **FRTB standardised (SBM)** | weighted sensitivities, buckets and correlations from the same table | regulatory step 6 ([REGULATORY_VAR_REPORTING section 8.2](../guides/REGULATORY_VAR_REPORTING.md#82-the-order-to-build-in)) |
-| **Stress by sensitivities** | Σ sensitivity × shock for any scenario | RO9, [STR.md](../contracts/STR.md) |
+| Computation | How | For | Status |
+|---|---|---|---|
+| **Sums** by desk, book, any scope, and by bucket of any grid | additive, as the person asking (`SENS <scope>`) | every row below | built |
+| **Utilisation against sensitivity limits** | each limit's scope and bucket summed, against its two sides | RO4 | proposed |
+| **Ladders** | a scope's grid (DV01 by currency × tenor, CS01 by rating × tenor, vega by expiry …), each cell against its limit, drilling to the positions | RO4, the Limits page | proposed (the MR Cube's ladders, [section 6.6.7](#667-mock-ups-the-screens-to-build)) |
+| **Concentration of risk** | CS01 by issuer and sector, DV01 by curve, delta by issuer and currency: top N, shares, Herfindahl | RO8 | proposed |
+| **The "why" overlay of the VaR change** | Σ sensitivity(t−1) × factor move(t−1 → t) by factor, beside the exact steps, labelled approximate, with its residual | RO1 ([section 5.4.1](#541-ro1-var-change-explanation)) | proposed |
+| **Hedge suggestions** (later) | for a breached bucket, the notional of a standard hedge instrument that brings it back, and that hedge's VaR effect through the what-if | the what-if, after RO4 | proposed |
+| **FRTB standardised (SBM)** | [FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md) | regulatory step 6 ([REGULATORY_VAR_REPORTING section 8.2](../guides/REGULATORY_VAR_REPORTING.md#82-the-order-to-build-in)) | built |
+| **Stress by sensitivities** | Σ sensitivity × shock for any scenario | RO9, [STR.md](../contracts/STR.md) | proposed |
 
-**RO15, the roadmap row: "Position sensitivities (data contract, loader, ladders)".** The same row as MC1 of the risk cubes, whose
-data chapter extends this contract with FRTB and SIMM buckets, curvature inputs and the factor dictionary ([section 6.7.9](#679-d8-position-sensitivity-sens-new)). The contract and its generated documents; synthetic
-demo data from the test-data generators (consistent with the demo's scenario PVs); the loader and its checks; the factor naming standard
-and the bucket file; the summing engine and a first ladder (DV01 by currency and tenor). Size **M**. The prerequisite of RO4 and RO8.
-**Tests:** sums by bucket equal the sum of positions; a position under two hierarchies sums once per node; an intraday batch replaces a
-position whole; each refusal; the proxied share; overlapping buckets in a grid refused at start.
+**RO15, the roadmap row: "Position sensitivities (data contract, loader, ladders)".** The same row as MC1 of the risk cubes
+([section 6.7.9](#679-d8-position-sensitivity-sens-new)). Its parts: the contract and its generated documents; synthetic demo data
+consistent with the demo's scenario PVs; the loader and its checks; the factor naming standard and the grids; the summing engine (all
+built, [SENSITIVITIES_AND_FRTB_SA.md section 2](SENSITIVITIES_AND_FRTB_SA.md#2-position-sensitivities-the-input)); and a first ladder (DV01
+by currency and tenor). Size **M**. **Tests:** sums by bucket equal the sum of positions; a position under two hierarchies sums once per
+node; an intraday batch replaces a position whole; each refusal; the proxied share; overlapping buckets in a grid refused at start.
 
 ---
 
@@ -3809,7 +3357,7 @@ position whole; each refusal; the proxied share; overlapping buckets in a grid r
 | Data | Grain and cadence | Needed by | Note |
 |---|---|---|---|
 | Limits of every type, with owners, escalation chain, warning level, validity, approver, limit letter | Per limit, daily or on change, from the limit system | RO2, RO3 and every limit | VaR limits already arrive as `var-limit` |
-| Sensitivities by risk factor: DV01 by curve and tenor, CS01 by issuer and tenor, FX delta, equity delta and beta, commodity delta, vega, gamma, IE01 ([section 7.2](#572-what-oversight-needs)) | Per position (or trade) per date, intraday changes like scenario PVs, from the pricing system that produces the scenario PVs | RO15, RO4, RO8, RO1's overlay, RO9 (sensitivity stress), FRTB SA | the proposed `position-sensitivity` kind ([section 7.3](#573-a-proposed-data-contract-position-sensitivity)); a risk-factor naming standard and the bank's limit buckets |
+| Sensitivities by risk factor: DV01 by curve and tenor, CS01 by issuer and tenor, FX delta, equity delta and beta, commodity delta, vega, gamma, IE01 ([section 5.7.2](#572-what-oversight-needs)) | Per position (or trade) per date, intraday changes like scenario PVs, from the pricing system that produces the scenario PVs | RO15, RO4, RO8, RO1's overlay, RO9 (sensitivity stress), FRTB SA | the proposed `position-sensitivity` kind ([section 5.7.3](#573-a-proposed-data-contract-position-sensitivity)); a risk-factor naming standard and the bank's limit buckets |
 | Actual and hypothetical P&L | Per desk (better per trade) per date, from product control | RO5, RO14, backtesting | The same feed as the planned P&L feed |
 | Average daily volume and bid-offer | Per instrument (or product and tenor bucket) per date, from vendors or exchanges | RO10 | Licensing is the bank's |
 | Security master attributes: issuer, sector, country of risk | Per instrument | RO8 | Often already in the trade or position feeds |
@@ -3829,11 +3377,11 @@ position whole; each refusal; the proxied share; overlapping buckets in a grid r
    **Decided (product owner, 2026-10-31):** a separate Drishti Oversight lens, built after RO1 and RO2.
 2. **First build.** RO1 (VaR change explanation) and RO2 (breaches, VaR limits first) as the next candidates beside the board pack; or later.
 
-   **Decided (product owner, 2026-10-31):** RO1 and RO2 in the oversight and mobile phase, beside the board pack; placed by the themed plan (2026-11-01): RO1 built in 2.9.10, RO2 with the board pack in the oversight phase (2.9.14).
-3. **The explanation's order.** The default sequence of section 4.1 (restatement, hierarchy, trades out, window roll, market, trades in);
+   **Decided (product owner, 2026-10-31):** RO1 and RO2 in the oversight and mobile phase, beside the board pack; placed by the themed plan (2026-11-01): RO1 first (now built), RO2 with the board pack in the oversight phase (2.9.14).
+3. **The explanation's order.** The default sequence of section 5.4.1 (restatement, hierarchy, trades out, window roll, market, trades in);
    the Shapley variant on request only.
 
-   **Decided (product owner, 2026-10-31):** the default sequence of section 4.1; the Shapley variant on request only.
+   **Decided (product owner, 2026-10-31):** the default sequence of section 5.4.1; the Shapley variant on request only.
 4. **Temporary limits.** (a) recorded in Drishti, applied by the bank's limit system; or (b) a Drishti-owned overlay used the same day.
 
    **Decided (product owner, 2026-10-31):** (a): recorded in Drishti, applied by the bank's limit system.
@@ -3852,7 +3400,7 @@ position whole; each refusal; the proxied share; overlapping buckets in a grid r
    warning level with a site default.
 
    **Decided (product owner, 2026-10-31):** one near-limit threshold: the limit's own warning level, site default 80%, configurable.
-9. **Sensitivities contract** ([section 7.3](#573-a-proposed-data-contract-position-sensitivity)). A new `position-sensitivity` kind
+9. **Sensitivities contract** ([section 5.7.3](#573-a-proposed-data-contract-position-sensitivity)). A new `position-sensitivity` kind
    (recommended), which also becomes FRTB.md's proposed per-trade `sensitivity` input and lets `frtb-sensitivity` retire; or extend
    `frtb-sensitivity`.
 
@@ -3871,7 +3419,7 @@ position whole; each refusal; the proxied share; overlapping buckets in a grid r
 13. **Mock-ups.** Two or three variants of the Appetite, Breaches and Explorer or Risk map landings when the lens is scheduled.
 
    **Decided (product owner, 2026-10-31):** two or three variants of each landing when the lens is scheduled, before any build.
-14. **The RO1, RO2 and board pack mock-ups** ([section 11](#511-mock-ups-the-screens-to-build)). Pick one option each, or keep the others.
+14. **The RO1, RO2 and board pack mock-ups** ([section 5.11](#511-mock-ups-the-screens-to-build)). Pick one option each, or keep the others.
 
    **Decided (product owner, 2026-11-01):** one screen per item: A is the default view, B and C are views on the same screen (a view
    switch, kept in the address and remembered per person, one API). RO1 is a tab of the VaR page drawn with the standard panel kinds;
@@ -3907,26 +3455,21 @@ position whole; each refusal; the proxied share; overlapping buckets in a grid r
 | **Concentration** | Too much of the risk in one issuer, sector, country, currency or tenor |
 | **Days to liquidate** | How many days it would take to sell a position without moving the market, at a share of the daily volume |
 | **Reverse stress** | Starting from a loss that would hurt, finding the market moves that would cause it |
-| **Lens** | One person's focused view of Drishti, opened by a link, hiding what they do not need; it does not secure |
 | **Maker-checker** | One person prepares, another approves; nobody approves their own work |
 
 ---
 
 ### 5.11 Mock-ups: the screens to build
 
-**The lens's three landings have no mock-up yet.** Section 5.4 outlines them (Appetite; Breaches and escalations; Explorer or Risk map)
-in words only; they are mocked up when the lens (RO12) is scheduled, two or three of each, and copied into `docs/architecture/mockups/oversight/`
-as in [section 1.11](#111-mock-ups-the-screens-to-build) ([README.md](#mock-ups)).
+**The lens's three landings have no mock-up yet.** Section 5.5.4 outlines them (Appetite; Breaches and escalations; Explorer or Risk map)
+in words only; they are mocked up when the lens (RO12) is scheduled, two or three of each, into `mockups/oversight/` (the conventions are
+[the introduction's](#mock-ups)).
 
 **The three features built before the lens have their mock-ups**: RO1's screen, RO2's screen and the board pack, three options each, a
-phone variant where the screen is on a phone tier, under [`docs/architecture/mockups/`](mockups/ro1-var-change/A.html):
-self-contained HTML pages (system fonts, everything inline, nothing from a CDN), dark by default and light with `#light` at the end of the
-address. **Decided (product owner, 2026-11-01): one screen per item.** Option A is the default view; B and C are alternative views of the
-same data on that screen, behind a view switch, the chosen view kept in the address and remembered per person, every view on the same API.
-For the board pack, A is the default PDF layout and B and C are layout choices of its report definition. Screenshots are taken when each
-view is built. Figures are the demo's on 2026-09-30 where the guides quote them; the
-rest are illustrative and each footer says which. **The checklists below are the source of truth at build time**: a panel is done when its
-row says built.
+phone variant where the screen is on a phone tier, under [`mockups/`](mockups/ro1-var-change/A.html), dark by default and light with
+`#light` at the end of the address. One screen per item, A the default view and B and C views on it (decision 14,
+[section 5.9](#59-decisions-for-the-product-owner)). Screenshots are taken when each view is built. Figures are the demo's on 2026-09-30 where the guides quote them; the
+rest are illustrative and each footer says which.
 
 | Screen | Options | Phone | Views |
 |---|---|---|---|
@@ -3936,11 +3479,9 @@ row says built.
 
 #### 5.11.1 RO1: VaR change explanation
 
-[Open option A](mockups/ro1-var-change/A.html). **A is the default view; B and C are views on the same screen.** The
-question is *why did this number move*, and a waterfall answers it in one look: the start, each cause to scale and the end, with the
-selected step's contributors beside it and the states under it for the reader who checks, so it opens first. B's bridge of every node is
-the second line's sweep across the hierarchy (the **Matrix** view); C's sentences are the phone's and the brief's form, with Shapley
-beside the sequence (the **Sentences** view). One tab, one answer, three views. Design in [section 4.1.1](#5411-ro1-the-build-design).
+[Open option A](mockups/ro1-var-change/A.html). A (Waterfall) is the default view; B (Matrix, the second line's sweep across the
+hierarchy) and C (Sentences, the phone's and the brief's form) are views on the same tab. Design in
+[section 5.4.1.1](#5411-ro1-the-build-design).
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
@@ -3961,12 +3502,9 @@ beside the sequence (the **Sentences** view). One tab, one answer, three views. 
 
 #### 5.11.2 RO2: breaches and escalation
 
-[Open option A](mockups/ro2-breaches/A.html). **A is the default view; B and C are views on the same screen.** The
-business risk manager's job is a queue worked one item at a time, and A keeps both on one screen: the queue worst first with deadlines,
-and the opened breach with everything needed to act (chain, use, why it moved, explanation, the increase to decide, the thread), so it
-opens first. B's board (the **Board** view) shows the workflow's shape; C's limits first with a timeline (the **Timeline** view) is
-independent challenge. Each view is a Sutra of the same page kind; the actions are forms with write-back. Design in
-[section 4.2.1](#5421-ro2-the-build-design).
+[Open option A](mockups/ro2-breaches/A.html). A (Queue: the queue worst first and the opened breach with everything needed to act) is
+the default view; B (Board, the workflow's shape) and C (Timeline, independent challenge) are views on the same screen. Design in
+[section 5.4.2.1](#5421-ro2-the-build-design).
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
@@ -3987,12 +3525,9 @@ independent challenge. Each view is a Sutra of the same page kind; the actions a
 
 #### 5.11.3 The board pack
 
-[Open option A](mockups/board-pack/A.html). **A is the default PDF layout; B and C are layout choices of the report
-definition**, not screens. A board member reads the first page and perhaps one more: A puts the answer, the headline figures and what the
-committee must decide on page 1, then one subject a page with its figures printed beside every chart, and ends with the sign-off and
-lineage a regulator or auditor asks for. B (`layout: landscape`) presents like a board deck with commentary in an appendix; C
-(`layout: register`) is a complete committee register in tables. The run is reviewed and signed on the report framework's screen. Design in
-[section 4.11.1](#54111-the-board-pack-the-build-design).
+[Open option A](mockups/board-pack/A.html). A (`layout: pages`, the answer on page 1) is the default PDF layout; B (`landscape`) and C
+(`register`) are layout choices of the report definition, not screens. Design in
+[section 5.4.11.1](#54111-the-board-pack-the-build-design).
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
 |---|---|---|---|---|---|
@@ -4010,21 +3545,22 @@ lineage a regulator or auditor asks for. B (`layout: landscape`) presents like a
 
 ## 6. The MR Cube: a market risk cube lens that answers what FIS Adaptiv's artiQ answers, and shows why
 
-**Status: analysis and product description; the MR cube is building on the pivot engine** (2.9.11.b, branch `wip/mr-cube-2`: the pivot, non-additive totals from vectors, components, limits, the lens, landing A with tabs B and C, explain, the ladder, the heat map and the what-if; [MR_CUBE_GUIDE.md](../guides/MR_CUBE_GUIDE.md)). Nothing else in this document is built unless a row of
-[section 5](#65-what-drishti-has-today) says so and cites the guide it was read from (2026-10-31). Every phase named here is a **proposal**, not a commitment. The rows it proposes are candidates in the
-[implementation plan](IMPLEMENTATION_PLAN.md#risk-cubes-candidates-not-started) (MC1 to MC13; the proof-of-concept rows MCP1 to MCP6, section 12), not started.
+**Status: analysis and product description; the MR cube is building on the pivot engine** (branch `wip/mr-cube-2`: the pivot,
+non-additive totals from vectors, components, limits, the lens, landing A with tabs B and C, explain, the ladder, the heat map and the
+what-if; [MR_CUBE_GUIDE.md](../guides/MR_CUBE_GUIDE.md)). Nothing else in this part is built unless a row of
+[section 6.5](#65-what-drishti-has-today) says so and cites its source. Every phase named here is a **proposal**. The rows are candidates
+in the [implementation plan](IMPLEMENTATION_PLAN.md#risk-cubes-candidates-not-started) (MC1 to MC13; the proof-of-concept rows MCP1 to
+MCP6, section 6.12), not started.
 
 **The request (product owner, 2026-10-31):** what it takes to build something like FIS Adaptiv's risk cube (artiQ) in Drishti, "even
-better"; then separate designs for market risk (this document) and counterparty credit risk ([section 7](#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why));
-then: make both of them lens documents, make the data and contracts chapter exhaustive, and write everything from the angle of beating
-FIS, SunGard and Adaptiv in capability and in visualisation.
+better"; separate designs for market risk (this part) and counterparty credit risk ([section 7](#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why)),
+each a lens, with an exhaustive data and contracts chapter, written from the angle of beating FIS, SunGard and Adaptiv in capability and
+in visualisation.
 
-**Read with:** [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built), [section 5](#5-market-risk-oversight-what-the-second-line-needs-from-drishti-and-a-drishti-oversight-lens) (the second line,
-the `position-sensitivity` contract this document adopts), [section 1](#1-drishti-risk-what-risk-managers-near-the-desks-need-what-the-lens-gives-them-today-and-what-comes-next) and [section 2](#2-drishti-trading-what-traders-and-desk-heads-need-what-the-lens-gives-them-today-and-what-comes-next) (the
-lenses the cube serves), [COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md) (compute, never store; the modelling defaults
-of its section 10, confirmed by the product owner on 2026-10-31), [REGULATORY_VAR_REPORTING.md](../guides/REGULATORY_VAR_REPORTING.md)
-(the regulatory foundation and the reports), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md) (sharding), and the contracts [FRTB.md](../contracts/FRTB.md),
-[STR.md](../contracts/STR.md) and [PNL.md](../contracts/PNL.md).
+**Read with:** [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine), [FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md),
+[COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md) (compute, never store; the modelling defaults of its section 10, confirmed by the
+product owner on 2026-10-31), [REGULATORY_VAR_REPORTING.md](../guides/REGULATORY_VAR_REPORTING.md), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md)
+(sharding), and the contracts [FRTB.md](../contracts/FRTB.md), [STR.md](../contracts/STR.md) and [PNL.md](../contracts/PNL.md).
 
 ### 6.1 Purpose: what a risk cube is, and what FIS offers
 
@@ -4049,8 +3585,8 @@ per factor) and re-aggregates them for each cell; it never sums the cells' figur
 
 **Caveat.** These are vendor claims. FIS publishes no detail on how the cube shards, how it fails over, or how fast it is at a stated
 size. An older SunGard "Adaptiv risk cube" was built on Microsoft SQL Server Analysis Services; nothing suggests artiQ's figures resemble
-it, and this document does not use them. Where this document says "beats", it means a claim we can **show** in a demo on Drishti's own
-data (the *proof* column of [section 11](#611-how-this-beats-fis-adaptiv--artiq)), not a claim about FIS's internals.
+it, and this part does not use them. Where it says "beats", it means a claim we can **show** in a demo on Drishti's own
+data (the *proof* column of [section 6.11](#611-how-this-beats-fis-adaptiv--artiq)), not a claim about FIS's internals.
 
 **What Drishti's answer is, in one paragraph.** Drishti already holds the hard part of a market risk cube: every position's 509-scenario
 P&L vector in memory, any scope's VaR and ES re-aggregated from the vectors, components that add up exactly, intraday updates from files
@@ -4072,10 +3608,8 @@ maps, ladders, a time-travel slider, provenance on every cell) that a vendor cub
 | **Product control** | hypothetical and actual P&L against the risk-theoretical P&L, restatements, corrections | none today |
 | **Model validation** | the scenario set, proxies, NMRF, PLA statistics, the provenance of every number | none today |
 
-The MR Cube is **a lens** ([EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses)): `Open Drishti MR Cube` from Views and Home on a full
-instance, and a cube **screen** (`MCUBE <GO>`, the command word the product owner chose on 2026-10-31) inside Drishti Risk, Trading and Oversight. It
-hides what a cube user does not need (Build, Studio, the World and Market packs' menus) and keeps the VaR explorer, SMAT, the
-counterparty cube and BI one click away.
+The MR Cube is a lens (`Open Drishti MR Cube`) and a cube **screen** (`MCUBE <GO>`, the command word the product owner chose on
+2026-10-31) inside Drishti Risk, Trading and Oversight; its design is [section 6.12.1](#6121-the-lens).
 
 ---
 
@@ -4099,7 +3633,7 @@ counterparty cube and BI one click away.
 
 ### 6.4 The shared cube core (MR and CCR)
 
-This section is the **core** both cubes share. [section 7](#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why) refers to it and does not repeat it.
+This section is the **core** both cubes share; the CCR Cube ([section 7](#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why)) refers to it and does not repeat it.
 
 #### 6.4.1 The pivot model
 
@@ -4222,13 +3756,13 @@ sum, also added in shard order. **No live owner of a needed shard: the cell says
   1,518 values (normal + stressed + spare) 6 MB. Views over a configurable cell count (proposed default 5,000) are refused with the
   count, not truncated.
 - **Sensitivity budget**: per date a factor dictionary (a few hundred thousand names) and per-position sparse rows in the hot file
-  (proposed section `SENS`); about 0.3 to 1.7 GB a day at 2.3M positions (section 7).
+  (proposed section `SENS`); about 0.3 to 1.7 GB a day at 2.3M positions ([section 6.7.9](#679-d8-position-sensitivity-sens-new)).
 
 #### 6.4.13 MR versus CCR: two cubes on one core
 
-| | MR Cube (this document) | CCR Cube ([section 7](#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why)) |
+| | MR Cube (this part) | CCR Cube ([section 7](#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why)) |
 |---|---|---|
-| Core (sections 4.1 to 4.12) | shared | shared |
+| Core (sections 6.4.1 to 6.4.12) | shared | shared |
 | Data grain | position (or trade) × scenario; position × risk factor | trade × path × time step |
 | Aggregation order | sum vectors over any members, then the statistic | **first** net per netting set and apply collateral per path (non-linear), **then** sum across netting sets, then the statistic |
 | Additive across the pivot | PV, sensitivities, one scenario's P&L | EE, EPE, CE, CVA contributions |
@@ -4263,7 +3797,7 @@ corrections, streaming, export, embedding, permissions, scatter-gather and cachi
 | Pivot over any fields with server totals (BI "Slice", matrix visual) | **Built for BI datasets**, additive measures only | [BI_GUIDE.md](../guides/BI_GUIDE.md) |
 | Pivot with non-additive VaR totals over the engine | **Not built** | MC2 |
 | Stressed VaR (a stress scenario set, 1-day and 10-day, `SVAR`) | **Planned**; the what-if already reports a "stressed window" figure | [VAR_GUIDE section 8.2](../guides/VAR_GUIDE.md#82-the-what-if-the-java-engine) |
-| Sensitivities per position and factor | **Built**: position sensitivities per factor, the input of FRTB-SA and SIMM ([FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md) section 3) | [section 5.7.1](#571-what-the-lake-holds-today) |
+| Sensitivities per position and factor | **Built**: position sensitivities per factor, the input of FRTB-SA and SIMM | [FRTB_SA_GUIDE section 3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract); [section 6.7.9](#679-d8-position-sensitivity-sens-new) |
 | FRTB SA computed | **Built**: computed from position sensitivities, any scope ([FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md)) | [COMPUTED_ATTRIBUTES.md section 4.9](COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb); [FRTB.md](../contracts/FRTB.md) |
 | FRTB IMA | **Not built**, not planned | MC8 to MC10 |
 | Stress P&L by desk and scenario; the bank's P&L per scenario | **Built** stored and derived | [VAR.md section 7.4](../contracts/VAR.md#74-the-banks-stress-pl-by-scenario-derived) |
@@ -4273,10 +3807,8 @@ corrections, streaming, export, embedding, permissions, scatter-gather and cachi
 | Client renderer, embedding | **Built** | [CLIENT_RENDERER.md](CLIENT_RENDERER.md) |
 | Phone tiers | **Design** | [MOBILE_DISPLAY.md](MOBILE_DISPLAY.md) |
 
-**Verified in code (2026-10-31):** `drishti-server/src/main/java/com/ash/drishti/server/var/` holds `VarService`, `VarWhatIf`,
-`VarPvStream` (the Kafka window), `VarShardBooks` and `VarSharding` (shards), `VarMatrix` (SMAT), `VarOfficial`, `VarCaches`; no class
-in `drishti-server` or `drishti-compute` reads sensitivities by risk factor (the only matches for "sensitivit" are outside those
-packages), and there is no FRTB or IMA calculator.
+**In code:** the VaR engine is `drishti-server/src/main/java/com/ash/drishti/server/var/` (`VarService`, `VarWhatIf`, `VarPvStream`,
+`VarShardBooks`, `VarSharding`, `VarMatrix`, `VarOfficial`, `VarCaches`); FRTB SA is `.../server/frtb/`; there is no IMA calculator.
 
 ---
 
@@ -4284,8 +3816,7 @@ packages), and there is no FRTB or IMA calculator.
 
 The cube's screens follow the house rules: keyboard first, every number printed (a chart never replaces a figure), losses in the
 theme's loss colour **and** with a sign or marker (never colour alone), dark terminal theme by default, every panel a ViewModel panel so
-it embeds and stacks on a phone. The mock-ups are in the repository: [A](mockups/mr-cube/A.html), [B](mockups/mr-cube/B.html), [C](mockups/mr-cube/C.html),
-each with its screenshot; [section 6.7](#667-mock-ups-the-screens-to-build) is the build checklist.
+it embeds and stacks on a phone. The mock-ups and the build checklist are [section 6.6.7](#667-mock-ups-the-screens-to-build).
 
 #### 6.6.1 Three layouts (mock-ups, the product owner picks)
 
@@ -4295,7 +3826,7 @@ each with its screenshot; [section 6.7](#667-mock-ups-the-screens-to-build) is t
 | **B: Tail and attribution** | a narrower pivot on the left; on the right the VaR attribution waterfall (components by the column dimension), the scenario P&L histogram with V and E markers, and the factor heat map below | "what drives it"; the regulatory capital team | [mr-cube/B.html](mockups/mr-cube/B.html) |
 | **C: Sensitivities and what-if** | the sensitivity ladder (DV01 currency × tenor) with two-sided limit bars; a what-if side by side (before, after, incremental per cell); the time-travel slider across the top | traders, pre-deal, intraday | [mr-cube/C.html](mockups/mr-cube/C.html) |
 
-**Recommendation:** A as the default landing, B and C as tabs of the same view (one data request; switching re-uses the cell answers).
+**Decided (product owner, 2026-10-31):** A is the landing, B and C tabs of the same view (one data request; switching re-uses the cell answers).
 
 #### 6.6.2 The visual catalogue
 
@@ -4344,17 +3875,15 @@ heat map wider than 640 px, what-if. A phone user opens a saved view, never desi
 
 #### 6.6.6 Embedding
 
-A saved view embeds with one call of the client renderer; the host page receives `drishti:navigate` events on drill and may keep the
-drill in place. A dashboard tile (a cell with its sparkline and limit bar) is a ViewModel panel too.
+As [section 6.4.9](#649-embed-and-phone-views-tiers); the host page receives `drishti:navigate` events on drill and may keep the drill in
+place. A dashboard tile (a cell with its sparkline and limit bar) is a ViewModel panel too.
 
 #### 6.6.7 Mock-ups: the screens to build
 
-**Decided (product owner, 2026-10-31): layout A is the landing page; B and C are tabs of the same page.** The mock-ups are in the
-repository beside this document, self-contained HTML (no CDN, no external fonts) with a screenshot of each:
-[A.html](mockups/mr-cube/A.html), [B.html](mockups/mr-cube/B.html), [C.html](mockups/mr-cube/C.html). Their numbers are synthetic, shaped on
-the demo (the bank's 1-day 99% VaR 112,041,646). The tables below are the **build checklist**: every panel on the mock-ups, its exact
-contents, the data it reads, its interactions, its phase (POC or later, section 12), its phone tier and its states. A builder ticks
-*Done* when the panel matches the row and its test exists.
+**Decided (product owner, 2026-10-31): layout A is the landing page; B and C are tabs of the same page.** Mock-ups
+[A.html](mockups/mr-cube/A.html), [B.html](mockups/mr-cube/B.html), [C.html](mockups/mr-cube/C.html) (conventions and how the checklist is
+used: [Mock-ups](#mock-ups)); their numbers are synthetic, shaped on the demo (the bank's 1-day 99% VaR 112,041,646). The phase column is
+POC or later ([section 6.12](#612-lens-design-and-proof-of-concept-poc)).
 
 **States every panel has** (unless its row says otherwise): **loading**: a skeleton of the panel's shape, never a spinner over old
 numbers; **empty**: one sentence saying why (no vectors for the scope on the date; no sensitivities delivered; no official capture for a
@@ -4367,13 +3896,13 @@ see only in aggregate shows the aggregate and says drill is not allowed; **stale
 
 | # | Panel | Exact contents | Data | Interactions | Phase | Phone | Done? |
 |---|---|---|---|---|---|---|---|
-| A1 | Command line and key strip | `DRISHTI` mark; the command field (amber border, mono) showing the view as text: `MCUBE BANK BY DESK,RISK_CLASS MEASURE VAR <GO>`; the key strip **R C F** dims, **M** measures, **H** 1D/10D, **[ ]** versions, **E** explain, **P** provenance, **W** what-if, **?** | the view (`POST /api/v1/cube/mr/query`'s request) | type a view and `<GO>`; type-ahead of dimensions and measures; every key in section 6.4 | POC | must (command field), keys hidden | [ ] |
-| A2 | Headline strip (six tiles) | **VaR 99% 1-day · bank** 112,041,646 "6th worst of 509 · USD"; **ES 97.5%** 160,143,809 "mean of the 13 worst"; **Limit use** 74.7% with a bar (green under the warning level, amber from it, red over 100%, a tick at the warning level) "of 150,000,000"; **Σ desks − bank** 255,843,525 "diversification (desks sum 367.9m)"; **Stressed VaR** "—" with the reason ("no stress set on 2026-09-30", stressed VaR); **Data**: the batch and intraday count, the Delta version, trade count, proxied share | `/api/v1/var/scope` of the view's scope; `var-limit` ([§7.6](#676-d5-risk-hierarchy-and-var-limit-existing)); the scope's provenance | click a tile: the matching measure in the pivot; hover: provenance | POC (stressed tile after 2c) | must (VaR, ES, limit use), glance (the rest) | [ ] |
+| A1 | Command line and key strip | `DRISHTI` mark; the command field (amber border, mono) showing the view as text: `MCUBE BANK BY DESK,RISK_CLASS MEASURE VAR <GO>`; the key strip **R C F** dims, **M** measures, **H** 1D/10D, **[ ]** versions, **E** explain, **P** provenance, **W** what-if, **?** | the view (`POST /api/v1/cube/mr/query`'s request) | type a view and `<GO>`; type-ahead of dimensions and measures; every key in [section 6.6.4](#664-keyboard-first) | POC | must (command field), keys hidden | [ ] |
+| A2 | Headline strip (six tiles) | **VaR 99% 1-day · bank** 112,041,646 "6th worst of 509 · USD"; **ES 97.5%** 160,143,809 "mean of the 13 worst"; **Limit use** 74.7% with a bar (green under the warning level, amber from it, red over 100%, a tick at the warning level) "of 150,000,000"; **Σ desks − bank** 255,843,525 "diversification (desks sum 367.9m)"; **Stressed VaR** "—" with the reason ("no stress set on 2026-09-30", stressed VaR); **Data**: the batch and intraday count, the Delta version, trade count, proxied share | `/api/v1/var/scope` of the view's scope; `var-limit` ([§6.7.6](#676-d5-risk-hierarchy-and-var-limit-existing)); the scope's provenance | click a tile: the matching measure in the pivot; hover: provenance | POC (stressed tile after 2c) | must (VaR, ES, limit use), glance (the rest) | [ ] |
 | A3 | Lens controls | chips **Rows: MGMT › desk** (blue), **Columns: risk class** (purple), **Filter: LE all** (green); segmented: measure **VaR · ES · Comp VaR · DV01 · SBM**; horizon **1D · 10D √10 · 10D sum**; confidence **99% · 97.5%**; set **Normal · Stressed**; currency **USD · EUR · CAD** | the view; currencies from `/api/v1/var/currencies` | drag a chip between Rows, Columns and Filters; click a segment; `R`, `C`, `F`, `M`, `H` | POC (SBM and Stressed greyed until MC5 and 2c) | desk (a phone opens saved views only) | [ ] |
 | A4 | Time-travel slider | a track from the first date with an official capture to now; ticks at the official runs and each batch (`09-29 official`, `09-30 06:00`, `10:40`, `11:02`); the amber handle "as of", the blue handle "compare"; the text "as of 2026-09-30 11:02 (data version 4182) · compare 09-29" | `GET /api/v1/cube/mr/versions` (dates with captures, each date's batches) | drag either handle; `[` and `]` step the as-of; **brush** a range for the sparkline window | POC (dates and batches; raw lake versions later, decision P3) | more | [ ] |
-| A5 | Pivot grid | rows: the ten desks (CREDIT, RATES, EQD, FI, INFL, FX, COMM, MM, STRUCT, SFT) as links; columns IR, CR, FX, EQ, CM, **Desk VaR**, **Limit**; each cell: the VaR (mono, thousands separators), under it a 70 × 16 px sparkline of 20 business days (blue; the desk column amber; dotted for intraday points); the Limit cell: use % and a 70 × 6 px bar (green, amber at the warning level, red over 100%, white tick at 100%); a dot `·` where the desk has no factor of the class; the selected cell outlined blue; **total row** "BANK (re-aggregated)" with each column's own VaR (IR 61,204,118 … bank 112,041,646) and 74.7%; **Σ cells − total** row in muted text | `POST /api/v1/cube/mr/query` (cells, totals, diversification, provenance ids); sparklines from official captures; per-class vectors ([§7.4](#674-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended)); limits ([§7.6](#676-d5-risk-hierarchy-and-var-limit-existing)) | click: select (fills the right rail); double-click or `Enter`: drill to books, positions, trades; `Backspace`: back; hover: the provenance popover (A8); shift-click: compare cells; arrows move the selection; the column header sorts | POC | must: the first five rows by the first measure, totals pinned; glance: the sparkline column | [ ] |
+| A5 | Pivot grid | rows: the ten desks (CREDIT, RATES, EQD, FI, INFL, FX, COMM, MM, STRUCT, SFT) as links; columns IR, CR, FX, EQ, CM, **Desk VaR**, **Limit**; each cell: the VaR (mono, thousands separators), under it a 70 × 16 px sparkline of 20 business days (blue; the desk column amber; dotted for intraday points); the Limit cell: use % and a 70 × 6 px bar (green, amber at the warning level, red over 100%, white tick at 100%); a dot `·` where the desk has no factor of the class; the selected cell outlined blue; **total row** "BANK (re-aggregated)" with each column's own VaR (IR 61,204,118 … bank 112,041,646) and 74.7%; **Σ cells − total** row in muted text | `POST /api/v1/cube/mr/query` (cells, totals, diversification, provenance ids); sparklines from official captures; per-class vectors ([§6.7.4](#674-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended)); limits ([§6.7.6](#676-d5-risk-hierarchy-and-var-limit-existing)) | click: select (fills the right rail); double-click or `Enter`: drill to books, positions, trades; `Backspace`: back; hover: the provenance popover (A8); shift-click: compare cells; arrows move the selection; the column header sorts | POC | must: the first five rows by the first measure, totals pinned; glance: the sparkline column | [ ] |
 | A6 | Tail histogram (right rail) | title "<row> × <column> · tail · 509 scenario P&Ls"; 34 bins; the ES tail bins red and marked **E** "ES tail, 13 worst"; the VaR bin amber with a dashed line and **V** "−VaR 121.5m (#6 of 509)"; a zero line; the x axis from the worst to the best P&L (m) | `/api/v1/var/scope/distribution` for the cell's scope; `GET /api/v1/cube/mr/cell` | hover a bin: its scenario days; click: open them in `SMAT`; **drag** the V marker onto another cell: compare that scenario day there | POC | glance (a strip) | [ ] |
-| A7 | Explain the move (right rail) | "BANK · 09-29 → 09-30 11:02"; lines: VaR 09-29 (official) 112,624,040; the steps with signed amounts (decreases green, increases red); the result 112,041,646 in bold; a note that the exact steps add up and the factor overlay is approximate | `GET /api/v1/cube/mr/explain` (POC: trades out, re-priced book, trades in); RO1's full steps and the overlay later | click a step: highlight the cells it moved; click a contributor: open it; `E` | POC (three steps); RO1's seven steps built (2.9.10); the factor overlay, MC12, in sensitivities and capital (2.9.11) | more | [ ] |
+| A7 | Explain the move (right rail) | "BANK · 09-29 → 09-30 11:02"; lines: VaR 09-29 (official) 112,624,040; the steps with signed amounts (decreases green, increases red); the result 112,041,646 in bold; a note that the exact steps add up and the factor overlay is approximate | `GET /api/v1/cube/mr/explain` (POC: trades out, re-priced book, trades in); RO1's full steps and the overlay later | click a step: highlight the cells it moved; click a contributor: open it; `E` | POC (three steps); RO1's seven steps built; the factor overlay, MC12, in sensitivities and capital (2.9.11) | more | [ ] |
 | A8 | Provenance popover | "Provenance · <cell> · VaR <value>"; business date and as-of; lake versions per input table; batches in order with their kind (FULL, INTRADAY, Kafka or files); scenario set and window; method (historical, equal weights, horizon, k of N, float64 sum); members (trades, positions, factors); proxied share with reason; corrections; shards asked and owners, time; links SMAT, inputs, corrections, CLI, API | `GET /api/v1/cube/provenance/{id}` | hover (desktop), long-press (phone), `P` | POC (corrections later) | more | [ ] |
 
 ##### B: tail and attribution (tab)
@@ -4385,7 +3914,7 @@ see only in aggregate shows the aggregate and says drill is not allowed; **stale
 | B1 | Components by desk | columns Desk, Comp VaR, % of VaR; rows sorted by component; a negative component (SFT −10,340,750, −9.2%) is a hedge; total BANK 112,041,646, 100.0% | `/api/v1/var/scope/contributions` (`by` the column dimension; Arrow on request) | toggle Comp VaR · Comp ES · Incremental; click a desk: the waterfall re-splits it by book | POC | glance (top five) | [ ] |
 | B2 | VaR attribution waterfall | one bar per part, sorted by size, red for a positive component, green for a hedge, each labelled (63.1m … −10.3m); the total bar amber "112.0m"; x axis the parts, y axis USD | as B1 | click a bar: drill into that part; hover: standalone, component, incremental, marginal | POC | more | [ ] |
 | B3 | Scenario P&L histogram | as A6 for the scope; an outline series for the compare version | `/api/v1/var/scope/distribution` | **brush** a range: list its days; hover, click as A6 | POC | glance | [ ] |
-| B4 | Factor heat map | DV01 in USD thousands per bp, rows currencies (USD, EUR, GBP, CAD, JPY), columns tenors (3M, 1Y, 2Y, 5Y, 10Y, 20Y, 30Y); each cell printed, green for long and red for short, intensity by size (full at 2.5m) | `GET /api/v1/cube/mr/sensitivities?by=QUALIFIER,TENOR` from `position-sensitivity` ([§7.9](#679-d8-position-sensitivity-sens-new)) and `risk-factor` ([§7.10](#6710-d9-the-factor-dictionary-risk-factor-and-the-bucket-mapping-sensitivity-bucketsyaml-new)) | click a cell: its positions; hover: the factor's move yesterday and on the VaR day; switch the two factor parts (issuer × tenor for CS01, underlying × expiry for vega) | POC (synthetic DV01); CS01 and vega with MC3 | desk | [ ] |
+| B4 | Factor heat map | DV01 in USD thousands per bp, rows currencies (USD, EUR, GBP, CAD, JPY), columns tenors (3M, 1Y, 2Y, 5Y, 10Y, 20Y, 30Y); each cell printed, green for long and red for short, intensity by size (full at 2.5m) | `GET /api/v1/cube/mr/sensitivities?by=QUALIFIER,TENOR` from `position-sensitivity` ([§6.7.9](#679-d8-position-sensitivity-sens-new)) and `risk-factor` ([§6.7.10](#6710-d9-the-factor-dictionary-risk-factor-and-the-bucket-mapping-sensitivity-bucketsyaml-new)) | click a cell: its positions; hover: the factor's move yesterday and on the VaR day; switch the two factor parts (issuer × tenor for CS01, underlying × expiry for vega) | POC (synthetic DV01); CS01 and vega with MC3 | desk | [ ] |
 
 ##### C: sensitivities and what-if (tab)
 
@@ -4393,14 +3922,14 @@ see only in aggregate shows the aggregate and says drill is not allowed; **stale
 
 | # | Panel | Exact contents | Data | Interactions | Phase | Phone | Done? |
 |---|---|---|---|---|---|---|---|
-| C1 | Grid chip | **Grid: BANK-IR-TENOR** beside the lens controls | `sensitivity-buckets.yaml` ([§7.10](#6710-d9-the-factor-dictionary-risk-factor-and-the-bucket-mapping-sensitivity-bucketsyaml-new)) | click: choose FRTB-GIRR, SIMM or the bank's grids | POC (the bank's grid); FRTB grids with MC5 | desk | [ ] |
-| C2 | Sensitivity ladder | rows USD, EUR, GBP, CAD; columns 0-2Y, 2-5Y, 5-10Y, 10Y+; each cell "<DV01>k · <use>%" with a 100 × 8 px centre-zero bar (long right, short left), white ticks at both limits, green under the warning level, amber from it, red over; a **near** badge (amber) at the warning level, **breach** (red) over 100% | `GET /api/v1/cube/mr/sensitivities?grid=…` from `position-sensitivity` ([§7.9](#679-d8-position-sensitivity-sens-new)); limits from `risk-limit` ([§7.7](#677-d6-risk-limit-new-one-limit-table-for-every-measure)) | click a bucket: its positions; **brush** across buckets to sum them ("USD 2–10Y: −1,160k"); switch grid | POC (synthetic DV01 and DV01 limits) | must (the scope's worst three buckets), more (the ladder) | [ ] |
-| C3 | What-if side by side | columns Scope, Before, After, Incremental (decrease green, increase red); rows the visible desks and BANK; a cell whose change is material outlined blue; the tray under it listing each hypothetical trade with its method (copy, price) and its standalone, incremental and component VaR | `POST /api/v1/var/what-if` per visible scope (built); pricing of new terms later ([§7.16](#6716-d15-predeal-request-and-predeal-result-new)) | `W` or **+ What-if trade**: copy and scale a booked trade; remove one; "show only changed" | POC (copy method); advanced market risk (QLRisk pricing, delta-gamma) | desk | [ ] |
+| C1 | Grid chip | **Grid: BANK-IR-TENOR** beside the lens controls | `sensitivity-buckets.yaml` ([§6.7.10](#6710-d9-the-factor-dictionary-risk-factor-and-the-bucket-mapping-sensitivity-bucketsyaml-new)) | click: choose FRTB-GIRR, SIMM or the bank's grids | POC (the bank's grid); FRTB grids with MC5 | desk | [ ] |
+| C2 | Sensitivity ladder | rows USD, EUR, GBP, CAD; columns 0-2Y, 2-5Y, 5-10Y, 10Y+; each cell "<DV01>k · <use>%" with a 100 × 8 px centre-zero bar (long right, short left), white ticks at both limits, green under the warning level, amber from it, red over; a **near** badge (amber) at the warning level, **breach** (red) over 100% | `GET /api/v1/cube/mr/sensitivities?grid=…` from `position-sensitivity` ([§6.7.9](#679-d8-position-sensitivity-sens-new)); limits from `risk-limit` ([§6.7.7](#677-d6-risk-limit-new-one-limit-table-for-every-measure)) | click a bucket: its positions; **brush** across buckets to sum them ("USD 2–10Y: −1,160k"); switch grid | POC (synthetic DV01 and DV01 limits) | must (the scope's worst three buckets), more (the ladder) | [ ] |
+| C3 | What-if side by side | columns Scope, Before, After, Incremental (decrease green, increase red); rows the visible desks and BANK; a cell whose change is material outlined blue; the tray under it listing each hypothetical trade with its method (copy, price) and its standalone, incremental and component VaR | `POST /api/v1/var/what-if` per visible scope (built); pricing of new terms later ([§6.7.16](#6716-d15-predeal-request-and-predeal-result-new)) | `W` or **+ What-if trade**: copy and scale a booked trade; remove one; "show only changed" | POC (copy method); advanced market risk (QLRisk pricing, delta-gamma) | desk | [ ] |
 | C4 | Explain the move (intraday) | "DESK:RATES · 09-30 06:00 → 11:02": the morning VaR, one line per intraday batch with its source (Kafka, files) and trade count, the current VaR | `GET /api/v1/cube/mr/explain?from=<batch>&to=<batch>` | click a batch: highlight its trades | POC | more | [ ] |
 | C5 | Time-travel slider | as A4 | as A4 | as A4 | POC | more | [ ] |
 
 **Not on the mock-ups but in the design, to build with them:** saved views (`S`), export (`X`: CSV and Arrow in the POC; xlsx and Power
-Query later), the embed of a saved view, the phone layout of section 6.5, the SBM pivot (MC5), corrections' markers (MC11).
+Query later), the embed of a saved view, the phone layout of section 6.6.5, the SBM pivot (MC5), corrections' markers (MC11).
 
 ---
 
@@ -4409,41 +3938,40 @@ Query later), the embed of a saved view, the phone layout of section 6.5, the SB
 #### Data needed: the complete list
 
 **Every dataset the MR Cube reads, in one table.** A row is needed from the phase in its *Phase* column onward. POC is the proof of
-concept of [section 12](#612-lens-design-and-proof-of-concept-poc); the regulatory foundation (released, 2.9.8), sensitivities and capital (2.9.11) and advanced market risk (2.9.18; both proposed) are the phases of
-[section 13](#613-phases-proposed), from the plan's themes (product owner, 2026-10-31); *unscheduled* rows wait for the product owner. *State*: **existing** (a contract and demo data today), **extended** (existing, with optional fields
+concept of [section 6.12](#612-lens-design-and-proof-of-concept-poc); the regulatory foundation (2.9.8), sensitivities and capital (2.9.11) and advanced market risk (2.9.18, proposed) are the phases of
+[section 6.13](#613-phases-proposed); *unscheduled* rows wait for the product owner. *State*: **existing** (a contract and demo data today), **extended** (existing, with optional fields
 added), **new**. *Demo or POC* says how the demo gets the data: an existing demo dataset; a **new generator** (a script under
-`tools/packgen/`, writing JSON Lines to `data/testdata/<domain>/<kind>/*.jsonl.gz`, loaded by `tools/build_demo_lakes.py` into Delta, read
-by the Delta connector, tested with the demo switched off); shipped **configuration** from a public text; or **bank only**.
+`tools/packgen/` following the repository's data pattern: JSON Lines in `data/testdata/<domain>/<kind>/`, loaded into Delta by
+`tools/build_demo_lakes.py`, tested with the demo off); shipped **configuration** from a public text; or **bank only**.
 
-| # | Dataset | What it is; needed by | Phase | Typical source in a bank | Grain, frequency | State | Demo or POC gets it from | §7 |
+| # | Dataset | What it is; needed by | Phase | Typical source in a bank | Grain, frequency | State | Demo or POC gets it from | § |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Trades (`trade`) | booking attributes as dimensions, drill to the trade; `FRTB_DESK`, `RRAO_CLASS` later | POC | Endur, Murex, Calypso | trade × date; daily, intraday amendments | existing; extended (sensitivities and capital) | existing demo (`tools/packgen/trades/make_trades.py`, `data/testdata/trades`) | [7.2](#672-d1-trade-trd-existing-read-as-dimensions) |
-| 2 | Positions (`position`) | the position grain, market value for marginal VaR | POC | derived by Drishti | position × date, at load | existing | derived from the vectors | [7.3](#673-d2-position-pos-existing-derived-by-drishti) |
-| 3 | Scenario P&L vectors (`pnl-vector`, `scenario-pv`, `fx-scenario`) | VaR, ES, components, histogram, explain, time travel | POC | the risk engine of the booking system or the bank's pricing grid | trade or position × date × set; daily, intraday files or Kafka | existing; extended (`RISK_CLASS_VECTORS`; regulatory reporting, G6, 2.9.15) | existing demo (`tools/packgen/var/make_var_data.py`); the POC adds per-class vectors from the same factor model | [7.4](#674-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended) |
-| 4 | Scenario sets (`scenario-set`), the stress set included | the scenario days; the Normal / Stressed lens | POC (normal); sensitivities and capital (stressed, from stressed VaR) | the risk engine | set × date; daily, the stress set weekly | existing; extended (`PURPOSE`) | existing demo; the stress set from stressed VaR's generator | [7.5](#675-d4-scenario-set-sset-existing-extended) |
-| 5 | Hierarchies (`risk-hierarchy`) and VaR limits (`var-limit`) | rows of the pivot (MGMT, LEGAL, limit letters), limit bars | POC | the bank's hierarchy and limit systems | node × date; daily | existing | existing demo | [7.6](#676-d5-risk-hierarchy-and-var-limit-existing) |
-| 6 | Limits of every measure (`risk-limit`) | ladder limits (DV01, CS01, vega), stress, ES and capital limits | POC (DV01 only); sensitivities and capital (all) | the limit system | limit × date; daily, on change | new | **new generator** `tools/packgen/var/make_risk_limits.py` → `data/testdata/market-risk/risk-limit/` | [7.7](#677-d6-risk-limit-new-one-limit-table-for-every-measure) |
-| 7 | Market data: rate, credit, inflation, FX forward, equity and commodity curves; vol surfaces and cubes | factor moves for explain's overlay; QLRisk pricing | Sensitivities and capital (explain overlay); advanced market risk (pricing) | the market-data system (Bloomberg, Refinitiv, Markit through an in-house builder) | curve × date; end of day | existing | existing demo (`data/testdata/market-data/`) | [7.8](#678-d7-market-data-existing-read-for-explain-and-pricing) |
-| 8 | FX rates (`fx-spot`, `fx-scenario`) | the reporting currency; sensitivities summed in USD | POC | market data; the risk engine for scenario FX | currency × date | existing | existing demo | [7.4](#674-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended) |
-| 9 | Position sensitivities (`position-sensitivity`) | ladders, heat map, SBM, explain overlay, SIMM (CCR cube) | POC (synthetic); sensitivities and capital | the same engine and run as the scenario PVs | position × date × batch; daily, intraday | new | **new generator** `tools/packgen/var/sensitivities.py`, from `factors.py`'s loadings so the first-order P&L matches the vectors → `data/testdata/market-risk/position-sensitivity/` | [7.9](#679-d8-position-sensitivity-sens-new) |
-| 10 | Factor dictionary (`risk-factor`) and bucket grids (`sensitivity-buckets.yaml`) | factor parts and bucket grids for ladders and SBM; liquidity horizons and modellability for IMA | POC (names, grids); advanced market risk (IMA attributes) | the FRTB engine or the market-data system | factor, slowly changing | new | **new generator** `tools/packgen/var/risk_factors.py` (the demo's forty-odd factors and their curve points) → `data/testdata/market-risk/risk-factor/`; the grids as pack configuration | [7.10](#6710-d9-the-factor-dictionary-risk-factor-and-the-bucket-mapping-sensitivity-bucketsyaml-new) |
-| 11 | FRTB parameters: risk weights, correlations (ρ, γ), curvature shocks, DRC and RRAO weights | SBM, DRC, RRAO | Sensitivities and capital | the Basel text (MAR21 to MAR23) and the jurisdiction's rule | parameter set, per regulatory change | new | **configuration** shipped from the public text (`config/packs/market-risk/frtb/*.yaml`, BCBS first) | [8.3](#683-frtb-standardised-approach-mc5-to-mc7) |
-| 12 | Issuers and ratings (`issuer`, `credit-curve`, the counterparty's `RATING`) | heat map by issuer, DRC credit quality, concentration | Sensitivities and capital | the security master and the credit system | issuer × date | existing | existing demo (`data/testdata/core/issuer`, `data/testdata/market-data/credit-curve`) | [7.8](#678-d7-market-data-existing-read-for-explain-and-pricing) |
+| 1 | Trades (`trade`) | booking attributes as dimensions, drill to the trade; `FRTB_DESK`, `RRAO_CLASS` later | POC | Endur, Murex, Calypso | trade × date; daily, intraday amendments | existing; extended (sensitivities and capital) | existing demo (`tools/packgen/trades/make_trades.py`, `data/testdata/trades`) | [6.7.2](#672-d1-trade-trd-existing-read-as-dimensions) |
+| 2 | Positions (`position`) | the position grain, market value for marginal VaR | POC | derived by Drishti | position × date, at load | existing | derived from the vectors | [6.7.3](#673-d2-position-pos-existing-derived-by-drishti) |
+| 3 | Scenario P&L vectors (`pnl-vector`, `scenario-pv`, `fx-scenario`) | VaR, ES, components, histogram, explain, time travel | POC | the risk engine of the booking system or the bank's pricing grid | trade or position × date × set; daily, intraday files or Kafka | existing; extended (`RISK_CLASS_VECTORS`; regulatory reporting, G6, 2.9.15) | existing demo (`tools/packgen/var/make_var_data.py`); the POC adds per-class vectors from the same factor model | [6.7.4](#674-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended) |
+| 4 | Scenario sets (`scenario-set`), the stress set included | the scenario days; the Normal / Stressed lens | POC (normal); sensitivities and capital (stressed, from stressed VaR) | the risk engine | set × date; daily, the stress set weekly | existing; extended (`PURPOSE`) | existing demo; the stress set from stressed VaR's generator | [6.7.5](#675-d4-scenario-set-sset-existing-extended) |
+| 5 | Hierarchies (`risk-hierarchy`) and VaR limits (`var-limit`) | rows of the pivot (MGMT, LEGAL, limit letters), limit bars | POC | the bank's hierarchy and limit systems | node × date; daily | existing | existing demo | [6.7.6](#676-d5-risk-hierarchy-and-var-limit-existing) |
+| 6 | Limits of every measure (`risk-limit`) | ladder limits (DV01, CS01, vega), stress, ES and capital limits | POC (DV01 only); sensitivities and capital (all) | the limit system | limit × date; daily, on change | new | **new generator** `tools/packgen/var/make_risk_limits.py` → `data/testdata/market-risk/risk-limit/` | [6.7.7](#677-d6-risk-limit-new-one-limit-table-for-every-measure) |
+| 7 | Market data: rate, credit, inflation, FX forward, equity and commodity curves; vol surfaces and cubes | factor moves for explain's overlay; QLRisk pricing | Sensitivities and capital (explain overlay); advanced market risk (pricing) | the market-data system (Bloomberg, Refinitiv, Markit through an in-house builder) | curve × date; end of day | existing | existing demo (`data/testdata/market-data/`) | [6.7.8](#678-d7-market-data-existing-read-for-explain-and-pricing) |
+| 8 | FX rates (`fx-spot`, `fx-scenario`) | the reporting currency; sensitivities summed in USD | POC | market data; the risk engine for scenario FX | currency × date | existing | existing demo | [6.7.4](#674-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended) |
+| 9 | Position sensitivities (`position-sensitivity`) | ladders, heat map, SBM, explain overlay, SIMM (CCR cube) | POC (synthetic); sensitivities and capital | the same engine and run as the scenario PVs | position × date × batch; daily, intraday | existing | existing demo (`tools/packgen/sensitivity/make_sensitivity_data.py`) | [6.7.9](#679-d8-position-sensitivity-sens-new) |
+| 10 | Factor dictionary (`risk-factor`) and bucket grids (`sensitivity-buckets.yaml`) | factor parts and bucket grids for ladders and SBM; liquidity horizons and modellability for IMA | POC (names, grids); advanced market risk (IMA attributes) | the FRTB engine or the market-data system | factor, slowly changing | existing (`risk-factor`); new (the grids) | existing demo (`tools/packgen/sensitivity/factor_dictionary.py`); the grids as pack configuration | [6.7.10](#6710-d9-the-factor-dictionary-risk-factor-and-the-bucket-mapping-sensitivity-bucketsyaml-new) |
+| 11 | FRTB parameters: risk weights, correlations (ρ, γ), curvature shocks, DRC and RRAO weights | SBM, DRC, RRAO | Sensitivities and capital | the Basel text (MAR21 to MAR23) and the jurisdiction's rule | parameter set, per regulatory change | existing | **configuration** shipped from the public text (`config/packs/market-risk/capital/frtb-sa-sbm.yaml`, `frtb-sa-drc-rrao.yaml`, BCBS first) | [6.8.3](#683-frtb-standardised-approach-mc5-to-mc7) |
+| 12 | Issuers and ratings (`issuer`, `credit-curve`, the counterparty's `RATING`) | heat map by issuer, DRC credit quality, concentration | Sensitivities and capital | the security master and the credit system | issuer × date | existing | existing demo (`data/testdata/core/issuer`, `data/testdata/market-data/credit-curve`) | [6.7.8](#678-d7-market-data-existing-read-for-explain-and-pricing) |
 | 13 | Calendars (`calendar`) | business days for the time-travel slider, the 10-day windows, backtesting's 250 days | POC | the bank's calendar service | calendar, yearly | existing | existing demo (`data/testdata/core/calendar`) | — |
-| 14 | IMA P&L vectors (`ima-pnl-vector`) | ES by liquidity horizon, stressed calibration, IMCC | Advanced market risk | the FRTB IMA engine | position × date × subset; daily, stressed weekly | new | **new generator** `tools/packgen/var/ima_vectors.py` (the factor model with factor groups switched off per subset) | [7.11](#6711-d10-ima-pnl-vector-new-pl-vectors-per-risk-class-and-liquidity-horizon) |
-| 15 | Actual, hypothetical and risk-theoretical P&L (`desk-pnl`) | backtesting, PLA, desk zones | Regulatory foundation (backtesting, its row 3); advanced market risk (PLA) | product control and the front office | desk (or trade) × date; T+1 | new | **new generator** `tools/packgen/var/desk_pnl.py` (hypothetical from the business date's own move, actual with noise and fees) | [7.12](#6712-d11-desk-pnl-new-actual-hypothetical-and-risk-theoretical-pl) |
-| 16 | Stress scenarios and stress P&L (`stress-scenario`, `scenario-pnl`) | stress P&L per cell, the worst scenario | unscheduled (the stress engine, RO9) | the stress engine | scenario × date; trade × scenario × date | existing (extended); `scenario-pnl` new | existing `stress-scenario`; **new generator** `tools/packgen/var/scenario_pnl.py` (shocks × the factor loadings) | [7.13](#6713-d12-stress-scenario-extended-and-scenario-pnl-new) |
-| 17 | DRC and RRAO inputs (`default-risk`, `residual-risk`) | DRC, RRAO | Sensitivities and capital | the FRTB engine; the booking system's classification | trade × obligor × date | new | **new generator** `tools/packgen/var/frtb_inputs.py` (from the credit and equity trades and the issuer master) | [7.14](#6714-d13-default-risk-and-residual-risk-new-frtbmd-proposals) |
-| 18 | Corrections (`cube-correction`) | data corrections inside the cube | unscheduled (MC11) | Drishti (write-back) | correction | new (Drishti-owned) | made in the demo through write-back (the demo script seeds one) | [7.15](#6715-d14-cube-correction-new-data-corrections-drishti-owned) |
-| 19 | Pre-deal requests and results | what-if per cell; pricing of new terms | POC (copy method, built); advanced market risk (pricing) | Drishti, per request | request | new (Drishti-owned, computed) | made at run time | [7.16](#6716-d15-predeal-request-and-predeal-result-new) |
+| 14 | IMA P&L vectors (`ima-pnl-vector`) | ES by liquidity horizon, stressed calibration, IMCC | Advanced market risk | the FRTB IMA engine | position × date × subset; daily, stressed weekly | new | **new generator** `tools/packgen/var/ima_vectors.py` (the factor model with factor groups switched off per subset) | [6.7.11](#6711-d10-ima-pnl-vector-new-pl-vectors-per-risk-class-and-liquidity-horizon) |
+| 15 | Actual, hypothetical and risk-theoretical P&L (`desk-pnl`) | backtesting, PLA, desk zones | Regulatory foundation (backtesting, its row 3); advanced market risk (PLA) | product control and the front office | desk (or trade) × date; T+1 | existing (actual and hypothetical by desk); extended (RTPL, trade grain) | existing demo (`tools/packgen/var/desk_pnl.py`) | [6.7.12](#6712-d11-desk-pnl-new-actual-hypothetical-and-risk-theoretical-pl) |
+| 16 | Stress scenarios and stress P&L (`stress-scenario`, `scenario-pnl`) | stress P&L per cell, the worst scenario | unscheduled (the stress engine, RO9) | the stress engine | scenario × date; trade × scenario × date | existing (extended); `scenario-pnl` new | existing `stress-scenario`; **new generator** `tools/packgen/var/scenario_pnl.py` (shocks × the factor loadings) | [6.7.13](#6713-d12-stress-scenario-extended-and-scenario-pnl-new) |
+| 17 | DRC and RRAO inputs (`default-risk`, `residual-risk`) | DRC, RRAO | Sensitivities and capital | the FRTB engine; the booking system's classification | trade × obligor × date | contract planned, no data | **new generator** `tools/packgen/var/frtb_inputs.py` (from the credit and equity trades and the issuer master) | [6.7.14](#6714-d13-default-risk-and-residual-risk-new-frtbmd-proposals) |
+| 18 | Corrections (`cube-correction`) | data corrections inside the cube | unscheduled (MC11) | Drishti (write-back) | correction | new (Drishti-owned) | made in the demo through write-back (the demo script seeds one) | [6.7.15](#6715-d14-cube-correction-new-data-corrections-drishti-owned) |
+| 19 | Pre-deal requests and results | what-if per cell; pricing of new terms | POC (copy method, built); advanced market risk (pricing) | Drishti, per request | request | new (Drishti-owned, computed) | made at run time | [6.7.16](#6716-d15-predeal-request-and-predeal-result-new) |
 | 20 | Official captures and the intraday batch list (`var-official`, the batches on the vectors) | sparklines, explain between dates, the time-travel slider | POC | Drishti (official runs); the risk engine (batches) | node × date; batch | existing | existing demo (the demo's official captures and intraday batches) | [VAR.md section 5](../contracts/VAR.md#5-official-end-of-day-results) |
 
-**Count by the first phase each row is needed in:** POC **12** (rows 1 to 6, 8 to 10, 13, 19, 20); planned **1** (row 15);
-proposed **4** (rows 7, 11, 12, 17; rows 4 and 6 widen there to stressed sets and the full limit table); proposed **1** (row
-14); unscheduled **2** (rows 16 and 18). **New generators: 8**, all under `tools/packgen/var/`, all writing JSON Lines: `make_risk_limits.py`, `sensitivities.py`,
-`risk_factors.py`, `ima_vectors.py`, `desk_pnl.py`, `scenario_pnl.py`, `frtb_inputs.py`, and per-class vectors added to
-`make_var_data.py`. **In production every input is the bank's**: Drishti never invents a bank's number, and the demo's synthetic data is
-labelled as such.
+**Count by the first phase each row is needed in:** POC **12** (rows 1 to 6, 8 to 10, 13, 19, 20); regulatory foundation **1** (row 15);
+sensitivities and capital **4** (rows 7, 11, 12, 17; rows 4 and 6 widen there to stressed sets and the full limit table); advanced
+market risk **1** (row 14); unscheduled **2** (rows 16 and 18). **Generators still to write: 5**, under `tools/packgen/var/`:
+`make_risk_limits.py`, `ima_vectors.py`, `scenario_pnl.py`, `frtb_inputs.py`, and per-class vectors added to `make_var_data.py`.
+**In production every input is the bank's**: Drishti never invents a bank's number, and the demo's synthetic data is labelled as such.
 
 #### Minimum data for a first answer
 
@@ -4483,39 +4011,31 @@ Endur-style UPPER_SNAKE names. Sizes are at **2.3M positions** (about 10M trades
 
 | # | Contract (kind) | Class | State | Read by the MR Cube for | Section |
 |---|---|---|---|---|---|
-| D1 | `trade` (TRD) | fundamental | existing | trade attributes as dimensions; FRTB classification inputs | 7.2 |
-| D2 | `position` (POS) | drishti-owned | existing | the position grain; market value, notional | 7.3 |
-| D3 | `pnl-vector` (PNLV), `scenario-pv` (SPV), `fx-scenario` (FXS) | input | existing; **extended** | scenario P&L; the vector measures | 7.4 |
-| D4 | `scenario-set` (SSET) | input | existing; **extended** | scenario days, stress set flag | 7.5 |
-| D5 | `risk-hierarchy` (HIER), `var-limit` (VLIM) | input | existing | dimensions; VaR limits | 7.6 |
-| D6 | `risk-limit` | fundamental | **new** (STR.md proposal, RO3) | sensitivity, stress, ES, capital limits | 7.7 |
-| D7 | market data (`ir-curve`, `credit-curve`, `fx-spot`, vol surfaces …) | fundamental | existing | factor moves for explain; QLRisk pricing | 7.8 |
-| D8 | `position-sensitivity` (SENS) | input | **new** | sensitivities, ladders, SBM, explain overlay, SIMM (CCR) | 7.9 |
-| D9 | `risk-factor` (the factor dictionary) and `sensitivity-buckets.yaml` | fundamental + configuration | **new** | factor parts, liquidity horizons, modellability, bucket grids | 7.10 |
-| D10 | `ima-pnl-vector` | input | **new** | ES by liquidity horizon, reduced set, stressed calibration, by risk class | 7.11 |
-| D11 | `desk-pnl` (actual, hypothetical, risk-theoretical) | input | **new** (planned) | backtesting, PLA | 7.12 |
-| D12 | `stress-scenario` (SCN) and `scenario-pnl` | fundamental, input | existing; **extended**; `scenario-pnl` **new** (STR.md) | stress P&L | 7.13 |
-| D13 | `default-risk` and `residual-risk` | input | **new** (FRTB.md proposals) | DRC and RRAO | 7.14 |
-| D14 | `cube-correction` | drishti-owned | **new** | data corrections inside the cube | 7.15 |
-| D15 | `predeal-request` and `predeal-result` | drishti-owned, computed | **new** | pre-deal what-if | 7.16 |
+| D1 | `trade` (TRD) | fundamental | existing | trade attributes as dimensions; FRTB classification inputs | 6.7.2 |
+| D2 | `position` (POS) | drishti-owned | existing | the position grain; market value, notional | 6.7.3 |
+| D3 | `pnl-vector` (PNLV), `scenario-pv` (SPV), `fx-scenario` (FXS) | input | existing; **extended** | scenario P&L; the vector measures | 6.7.4 |
+| D4 | `scenario-set` (SSET) | input | existing; **extended** | scenario days, stress set flag | 6.7.5 |
+| D5 | `risk-hierarchy` (HIER), `var-limit` (VLIM) | input | existing | dimensions; VaR limits | 6.7.6 |
+| D6 | `risk-limit` | fundamental | **new** (STR.md proposal, RO3) | sensitivity, stress, ES, capital limits | 6.7.7 |
+| D7 | market data (`ir-curve`, `credit-curve`, `fx-spot`, vol surfaces …) | fundamental | existing | factor moves for explain; QLRisk pricing | 6.7.8 |
+| D8 | `position-sensitivity` (SENS) | input | existing | sensitivities, ladders, SBM, explain overlay, SIMM (CCR) | 6.7.9 |
+| D9 | `risk-factor` (the factor dictionary) and `sensitivity-buckets.yaml` | fundamental + configuration | existing (`risk-factor`); **new** (the grids) | factor parts, liquidity horizons, modellability, bucket grids | 6.7.10 |
+| D10 | `ima-pnl-vector` | input | **new** | ES by liquidity horizon, reduced set, stressed calibration, by risk class | 6.7.11 |
+| D11 | `desk-pnl` (actual, hypothetical, risk-theoretical) | input | existing; **extended** | backtesting, PLA | 6.7.12 |
+| D12 | `stress-scenario` (SCN) and `scenario-pnl` | fundamental, input | existing; **extended**; `scenario-pnl` **new** (STR.md) | stress P&L | 6.7.13 |
+| D13 | `default-risk` and `residual-risk` | input | contract planned | DRC and RRAO | 6.7.14 |
+| D14 | `cube-correction` | drishti-owned | **new** | data corrections inside the cube | 6.7.15 |
+| D15 | `predeal-request` and `predeal-result` | drishti-owned, computed | **new** | pre-deal what-if | 6.7.16 |
 
 #### 6.7.2 D1 `trade` (TRD): existing, read as dimensions
 
-**Grain:** one row per trade per business date. **Key:** `TRADE_ID`. **Storage:** Delta, `<root>/trading/trade_<system>/`, partitioned by
-business date (`config/packs/trading/contracts/trade.contract.yaml`, version 1.1). **Sources:** Endur, Murex, Calypso (the demo's three
-booking systems). **Frequency:** daily snapshot, intraday amendments. **Size at 2.3M positions:** about 10M trades, about 3 KB a trade
-as JSON with legs and events (30 GB a day of JSON, about 3 GB in Parquet)².
-
-| Field (existing) | Type | Req. | Meaning, as the cube uses it |
-|---|---|---|---|
-| `TRADE_ID`, `SOURCE_SYSTEM`, `TRANSACTION_ID`, `TRADE_VERSION` | id, text | required | the member's identity; the version the vector priced |
-| `TRADE_STATUS`, `TRADE_ACTION` | text | required, optional | the one live rule (status and maturity, COMPUTED_ATTRIBUTES section 10, confirmed 2026-10-31) |
-| `PRODUCT_TYPE`, `PRODUCT_SUB_TYPE`, `PRODUCT_GROUP`, `PRODUCT_SUB_GROUP` | text | required/optional | dimensions; FRTB risk class defaults; RRAO's exotic flag (proposed below) |
-| `LEGAL_ENTITY`, `PORTFOLIO`, `TT_GROUP`, `TT_BOOK`, `TRADER_ID` | id | required/optional | hierarchy placement |
-| `COUNTERPARTY`, `COUNTERPARTY_COUNTRY_OF_RISK` | id, text | required | dimensions; the CCR cube's link |
-| `CURRENCY`, `QUANTITY`, `PRICE`, `BUY_SELL_CODE`, `OPTION_TYPE`, `STRIKE_PRICE` | text, amount | required/optional | what-if terms; pre-deal pricing |
-| `TRADE_DATE`, `START_DATE`, `MATURITY_DATE` | date | required | live rule; DRC maturity scaling |
-| `LEGS[]`, `EVENTS[]` | record list | required | QLRisk pricing of an amended trade |
+Contract: [trade.contract.yaml](../../config/packs/trading/contracts/trade.contract.yaml). One row per trade per business date, Delta under
+`<root>/trading/trade_<system>/`; sources Endur, Murex, Calypso (the demo's three booking systems); daily snapshot, intraday amendments.
+**Size at 2.3M positions:** about 10M trades, about 3 KB a trade as JSON with legs and events (30 GB a day of JSON, about 3 GB in
+Parquet)². **How the cube reads it:** the identity and version fields name the member and the version the vector priced; status,
+action and the dates are the one live rule (COMPUTED_ATTRIBUTES section 10, confirmed 2026-10-31) and DRC's maturity scaling; product,
+legal entity, portfolio, book, trader, counterparty and currency fields are dimensions (and the CCR cube's link); quantity, price,
+direction, option terms and `LEGS[]`/`EVENTS[]` are the what-if and pre-deal terms QLRisk prices.
 
 **What the MR Cube adds (extended, optional fields, proposed):** `FRTB_DESK` (the regulatory trading desk, for IMA approval and PLA:
 often not the management desk), `RRAO_CLASS` (`EXOTIC`, `OTHER_RESIDUAL`, empty), `IMA_ELIGIBLE` (boolean, the desk's model approval
@@ -4524,29 +4044,23 @@ applies), `HEDGE_DESIGNATION` (for what-if hedge suggestions). **Validation:** a
 
 #### 6.7.3 D2 `position` (POS): existing, derived by Drishti
 
-**Grain:** one position per business date, derived when the date's vectors load (never stored), `POS-<TT_BOOK>~<security or trade>`
-(`position.contract.yaml`). Fields read: `POSITION_ID`, `POSITION_RULE`, `INSTRUMENT_ID`, `QUANTITY`, `GROSS_QUANTITY`, `TRADE_IDS`,
-`LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `CURRENCY`, `MARKET_VALUE` (USD), `NOTIONAL`, `TAGS`, `STATUS`. **The cube
-adds nothing to the contract**; it reads `MARKET_VALUE` for marginal VaR and as an additive measure. **Size:** 2.3M rows, about 0.8 KB a
-position skeleton (CLUSTER_DEPLOYMENT section 6.7).
+Contract: [position.contract.yaml](../../config/packs/market-risk/contracts/position.contract.yaml): one position per business date, derived when
+the date's vectors load (never stored). **The cube adds nothing to the contract**; it reads `MARKET_VALUE` for marginal VaR and as an
+additive measure. **Size:** 2.3M rows, about 0.8 KB a position skeleton (CLUSTER_DEPLOYMENT section 6.7).
 
 #### 6.7.4 D3 `pnl-vector`, `scenario-pv`, `fx-scenario`: existing, extended
 
-**Grain:** one row per trade (`GRAIN TRADE`) or position (`GRAIN POSITION`), business date and scenario set. **Key:** `VECTOR_ID` =
-`PNL-<TRADE_ID or POSITION_ID>-<SCENARIO_SET_ID>` (`SPV-…` for scenario PVs). **Storage:** Delta or Iceberg, `<root>/risk/pnl-vector/`,
-partitioned by `business_date`, sorted by book, vector column `PNL` (`SCENARIO_PV` for scenario PVs). **Sources:** the bank's risk engine
+One row per trade or position, business date and scenario set, sorted by book. **Sources:** the bank's risk engine
 (Murex MLC, Calypso risk, Endur's risk server, or an in-house pricing grid) on the same run as the trades. **Frequency:** a full run
 after the close (06:00 in the demo), intraday batches (`RUN_KIND INTRADAY`) from files or Kafka. **Size:** 2.3M × 509 × 8 bytes of
 JSON-decimal text ≈ 20 GB of JSON a day; float32 in the hot file 4.7 GB; at 1,518 values (normal 509, stressed 250, spare) 14 GB in the
 hot tier across shards (27 shards of 0.52 GB at `target-shard-mb: 512`, CLUSTER_DEPLOYMENT decision PO-C2).
 
-Existing fields (`pnl-vector.contract.yaml` version 1.1, every one read): `VALUE_TYPE`, `GRAIN`, `TRADE_ID`, `POSITION_ID`, `CURRENCY`,
-`SOURCE_SYSTEM`, `VECTOR_ID`, `TRADE_CURRENCY`, `SECURITY_ID`, `INSTRUMENT`, `BUSINESS_DATE`, `SCENARIO_SET_ID`, `TRADE_VERSIONS`,
-`TRADE_STATUS`, `MATURITY_DATE`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `PORTFOLIO`, `STRATEGY`, `PRODUCT_GROUP`,
-`PRODUCT_TYPE`, `COUNTERPARTY`, `DIRECTION`, `QUANTITY`, `TAGS`, `PV` (USD), `PNL` (vector, USD, gain positive, oldest scenario first),
-`STATUS` (`ok`, `proxied`, `failed`), `PRICER`, `MODEL_VERSION`, `COMPUTED_AT`, `BATCH_ID`, `RESTATEMENT`, `RUN_KIND`, `TRADE_IDS`.
-Validation as built ([VAR.md section 6.3](../contracts/VAR.md#63-what-the-load-checks)): wrong vector length,
-NaN, a failed row counted never zero, one full run per date and source, one form and grain per source and date.
+Contracts: [pnl-vector](../../config/packs/market-risk/contracts/pnl-vector.contract.yaml),
+[scenario-pv](../../config/packs/market-risk/contracts/scenario-pv.contract.yaml) and
+[fx-scenario](../../config/packs/market-risk/contracts/fx-scenario.contract.yaml) (one row per currency, date and set, so scenario PVs in any
+currency turn into USD P&L); every field is read. Validation as built ([VAR.md section 6.3](../contracts/VAR.md#63-what-the-load-checks)):
+wrong vector length, NaN, a failed row counted never zero, one full run per date and source, one form and grain per source and date.
 
 **Extended (proposed, optional):**
 
@@ -4566,14 +4080,11 @@ NaN, a failed row counted never zero, one full run per date and source, one form
  "RISK_CLASS_VECTORS":[{"RISK_CLASS":"EQ","PNL":["… 509 values …"]},{"RISK_CLASS":"FX","PNL":["… 509 values …"]}]}
 ```
 
-`fx-scenario` (FXS, existing, unchanged): one row per currency, date and set, `RATE` and the vector `RATES` (USD per one unit), so
-scenario PVs in any currency turn into USD P&L.
 
 #### 6.7.5 D4 `scenario-set` (SSET): existing, extended
 
-**Grain:** one row per scenario set per business date. **Key:** `SCENARIO_SET_ID`. Existing fields: `SCENARIO_DATES` (oldest first),
-`SCENARIO_COUNT`, `WINDOW_START`, `WINDOW_END`, `HORIZON_DAYS`, `REVALUATION` (`full` or `sensitivities`), `WEIGHTS`, `SOURCE_BATCH`,
-`DESCRIPTION`. **Extended (proposed):** `PURPOSE` (`NORMAL`, `STRESSED`, `IMA_CURRENT`, `IMA_STRESSED`, `STRESS_SELECTION`), `APPROVED_BY`
+Contract: [scenario-set.contract.yaml](../../config/packs/market-risk/contracts/scenario-set.contract.yaml) (one row per set per
+business date). **Extended (proposed):** `PURPOSE` (`NORMAL`, `STRESSED`, `IMA_CURRENT`, `IMA_STRESSED`, `STRESS_SELECTION`), `APPROVED_BY`
 and `APPROVAL_ID` (the stress window's sign-off, the planned stress window tool), `REDUCED_FACTOR_SET` (boolean: the vectors priced with the reduced set of
 MAR33's stressed calibration). Stressed VaR introduces a second set per date (`HS-STRESS-…`); the cube treats every set
 as a **lens** (Normal / Stressed beside the confidence picker). **Validation:** one `NORMAL` set per date; a `STRESSED` set's window
@@ -4581,11 +4092,10 @@ inside the approved stress period.
 
 #### 6.7.6 D5 `risk-hierarchy` and `var-limit`: existing
 
-`risk-hierarchy` (HIER): one row per node per date, key `NODE_ID` (`LEGAL~LE-NY`), fields `HIERARCHY`, `LEVEL`, `PARENT_ID`, `NAME`,
-`REF`, `CHILDREN`, `BOOKS`, `BUSINESS_DATE`, `VALID_FROM`, `VALID_TO`; or built from the vectors' columns. `var-limit` (VLIM): key
-`LIMIT_ID` = `VL-<NODE_ID>`, `HIERARCHY`, `NODE_ID`, `LIMIT_VAR` (USD), `CURRENCY`, `HORIZON` (`1D`, `10D`), `CONFIDENCE`, `BUSINESS_DATE`,
-`VALID_FROM`, `VALID_TO`. **The cube adds nothing**; it draws the limit bar of a VaR cell from `var-limit` when the cell is exactly a
-node and the lens matches the limit's horizon and confidence (otherwise no bar, said in the provenance: "limit not comparable").
+Contracts: [risk-hierarchy](../../config/packs/market-risk/contracts/risk-hierarchy.contract.yaml) (HIER, one row per node per date, or built
+from the vectors' columns) and [var-limit](../../config/packs/market-risk/contracts/var-limit.contract.yaml) (VLIM, with horizon and confidence).
+**The cube adds nothing**; it draws the limit bar of a VaR cell from `var-limit` when the cell is exactly a node and the lens matches the
+limit's horizon and confidence (otherwise no bar, said in the provenance: "limit not comparable").
 
 #### 6.7.7 D6 `risk-limit`: new (one limit table for every measure)
 
@@ -4603,7 +4113,7 @@ and on change. **Size:** 10,000 to 100,000 limits, under 50 MB a day.
 | `HORIZON`, `CONFIDENCE`, `SCENARIO_ID` | text, rate, id | | optional | the lens the limit is set for; a stress limit's scenario (empty: the worst) |
 | `LIMIT_LONG`, `LIMIT_SHORT` | amount | `CURRENCY` | required (one of) | two sides for sensitivities; a VaR limit uses `LIMIT_LONG` only |
 | `CURRENCY` | text | | required | ISO 4217 |
-| `WARNING_AT` | rate | fraction | optional | early warning (site default 0.8, OVERSIGHT decision 8) |
+| `WARNING_AT` | rate | fraction | optional | early warning (site default 0.8, [section 5.9](#59-decisions-for-the-product-owner) decision 8) |
 | `OWNER`, `ESCALATION_CHAIN`, `APPROVED_BY`, `LIMIT_LETTER` | text, list | | optional | governance |
 | `TEMPORARY`, `VALID_FROM`, `VALID_TO`, `BUSINESS_DATE` | boolean, date | | required/optional | temporary increases have an end |
 
@@ -4614,111 +4124,51 @@ and on change. **Size:** 10,000 to 100,000 limits, under 50 MB a day.
 ```
 
 **Validation:** a scope that does not parse is refused; a `GRID` or `BUCKET` not in the configuration is refused; overlapping limits on
-the same measure, scope and bucket refused unless one is `TEMPORARY`; `var-limit` rows are read as `MEASURE VAR` (OVERSIGHT decision 5).
+the same measure, scope and bucket refused unless one is `TEMPORARY`; `var-limit` rows are read as `MEASURE VAR` (section 5.9 decision 5).
 
 #### 6.7.8 D7 Market data: existing, read for explain and pricing
 
-The market-data pack's contracts (`config/packs/market-data/contracts/`): `ir-curve` (key `CURVE_ID`, `CURRENCY`, `CURVE_TYPE`, `INDEX`,
-`POINTS[]` 1M to 30Y, `FORWARDS[]`, `INTERPOLATION`, `DAY_COUNT`, `CALENDAR`, `AS_OF`, `BUILT_AT`, `SOURCES`), `credit-curve` (`CURVE_ID`,
-`ISSUER`, `POINTS[]` 6M to 10Y, `SPREAD_5Y` bp, `RECOVERY`, `PD_1Y`, `SENIORITY`, `DOC_CLAUSE`, `CURRENCY`), `fx-spot`, `fx-forward-curve`,
-`inflation-curve`, `equity`, `equity-index`, `dividend-curve`, `commodity-curve`, `repo-curve`, and the vol surfaces (`ir-vol-cube`,
-`cap-vol-surface`, `fx-vol-surface`, `equity-vol-surface`, `commodity-vol-surface`). **Sources:** the bank's market-data system
+The market-data pack's contracts ([`config/packs/market-data/contracts/`](../../config/packs/market-data/contracts/)): the rate, credit, FX,
+inflation, equity, dividend, commodity and repo curves and the vol surfaces and cubes. **Sources:** the bank's market-data system
 (Bloomberg, Refinitiv, Markit through an in-house curve builder). **Frequency:** end of day, intraday snapshots on demand. **What the
 cube adds:** nothing to the contracts; a **factor mapping** from curve points to the factor dictionary (`IR/CURVE/USD/SOFR/10Y` ↔
 `CRV-USD-SOFR` point `10Y`), so the explain overlay reads each factor's move T−1 → T, and QLRisk reads the same curves for pre-deal.
 
 #### 6.7.9 D8 `position-sensitivity` (SENS): new
 
-Adopted from [section 5.7.3](#573-a-proposed-data-contract-position-sensitivity) (decision 9 there:
-a new kind that **becomes** FRTB.md's per-trade `sensitivity` input, so FRTB SA, SIMM, P&L explain, sensitivity stress and the cube read
-one table). The cube adds the FRTB and SIMM bucket fields per element, the curvature inputs and the regulatory desk.
+Adopted from [section 5.7.3](#573-a-proposed-data-contract-position-sensitivity) (decision 9 there: a new kind that **becomes** FRTB.md's
+per-trade `sensitivity` input, so FRTB SA, SIMM, P&L explain, sensitivity stress and the cube read one table), with the FRTB and SIMM
+bucket fields per element, the curvature inputs and the regulatory desk. **The contract is built:**
+[position-sensitivity.contract.yaml](../../config/packs/market-risk/contracts/position-sensitivity.contract.yaml) holds the grain, key,
+storage, every field, the refusals and warnings and the vega and curvature decisions; demo data from
+`tools/packgen/sensitivity/make_sensitivity_data.py`; its use by FRTB SA is
+[FRTB_SA_GUIDE section 3](../guides/FRTB_SA_GUIDE.md#3-the-inputs-and-their-data-contract).
 
-**Grain:** one record per position (or trade) per business date and batch. **Key:** `SENSITIVITY_ID` =
-`SENS-<TRADE_ID or POSITION_ID>-<BATCH_ID>`. **Storage:** Delta or Iceberg, `<root>/risk/position-sensitivity/`, partitioned by
-`business_date`, sorted by `TT_BOOK` then id (as the vectors); the list column `SENSITIVITIES` as a list of structs. **Test data:**
-`data/testdata/market-risk/position-sensitivity/*.jsonl.gz`, generated consistent with the demo's scenario PVs. **Sources:** the same
-system and run that produce the scenario PVs (Murex, Calypso, Endur risk, the bank's grid). **Frequency:** full run after the close;
-intraday batches replace a position's record whole. **Size:** 23 to 115 million elements a day (10 to 50 non-zero factors a position);
-0.4 to 1.5 GB gzipped JSON; 0.3 to 1.7 GB of Parquet a day; 0.5 to 3 TB over seven years³.
-
-| Field (record) | Type | Unit | Req. | Meaning |
-|---|---|---|---|---|
-| `SENSITIVITY_ID` | id | | required | the key |
-| `GRAIN` | text | | required | `TRADE` or `POSITION` |
-| `TRADE_ID`, `POSITION_ID`, `TRADE_IDS` | id, id list | | one required | as `scenario-pv` |
-| `SOURCE_SYSTEM`, `BUSINESS_DATE`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `RESTATEMENT` | text, date, id, text, timestamp, integer | | required | the run, as the vectors |
-| `STATUS`, `PROXY_REASON` | text | | required, optional | `ok`, `proxied`, `failed` |
-| `MODEL_VERSION`, `PRICER` | text | | optional | audit |
-| `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `LIMIT_LETTER`, `FRTB_DESK` | id | | required (`FRTB_DESK` optional) | placement, as the vectors |
-| `PRODUCT_GROUP`, `PRODUCT_TYPE`, `TRADE_STATUS`, `MATURITY_DATE`, `CURRENCY` | text, date | | required | the live rule; dimensions |
-| `SENSITIVITIES` | record list | | required (empty only when `TRADE_STATUS` is `CANCELLED`) | the sparse list below |
-
-| Field (element of `SENSITIVITIES[]`) | Type | Unit | Req. | Meaning |
-|---|---|---|---|---|
-| `RISK_FACTOR` | text | | required | the standard name (section 7.10) |
-| `MEASURE` | text | | required | `DV01`, `CS01`, `IE01`, `DELTA`, `BETA`, `VEGA`, `GAMMA`, `CURVATURE_UP`, `CURVATURE_DOWN`, `BASE_CORR` |
-| `VALUE` | amount | `CURRENCY` of the element | required | P&L for the measure's standard move: +1 bp (DV01, CS01, IE01), +1% of spot (DELTA), +1 vol point (VEGA); curvature: V(shocked) − V(base) for the regulatory shock |
-| `CURRENCY` | text | | required | converted to the reporting currency at today's FX when summed |
-| `RISK_CLASS`, `FACTOR_TYPE`, `QUALIFIER`, `CURVE`, `TENOR`, `UNDERLYING_TENOR`, `STRIKE` | text | | optional (derived from `RISK_FACTOR`) | the parts |
-| `SHOCK_SIZE` | rate | bp or fraction | required on curvature | the shock applied (checked against MAR21) |
-| `IMPLIED_VOL` | rate | fraction or bp | optional | for vega risk (VR = vega × σ) and absolute vol shocks |
-| `FRTB_BUCKET`, `SIMM_BUCKET` | text | | optional | the source's bucket; Drishti's mapping wins when they disagree (a warning) |
-
-```json
-{"SENSITIVITY_ID":"SENS-POS-BOOK-RATES-1~MX-30000951-B-SENS-2026-09-30-01","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-RATES-1~MX-30000951",
- "SOURCE_SYSTEM":"MUREX","BUSINESS_DATE":"2026-09-30","BATCH_ID":"B-SENS-2026-09-30-01","RUN_KIND":"FULL","COMPUTED_AT":"2026-09-30T06:10:00Z",
- "RESTATEMENT":0,"STATUS":"ok","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-RATES","TT_BOOK":"BOOK-RATES-1",
- "FRTB_DESK":"FD-USD-RATES","PRODUCT_GROUP":"Rates","PRODUCT_TYPE":"IRS","TRADE_STATUS":"VALIDATED","MATURITY_DATE":"2036-09-30","CURRENCY":"USD",
- "SENSITIVITIES":[
-  {"RISK_FACTOR":"IR/CURVE/USD/SOFR/5Y","MEASURE":"DV01","VALUE":-820.0,"CURRENCY":"USD"},
-  {"RISK_FACTOR":"IR/CURVE/USD/SOFR/10Y","MEASURE":"DV01","VALUE":-1250.5,"CURRENCY":"USD"},
-  {"RISK_FACTOR":"VOL/IR/USD/SOFR/1Y/10Y","MEASURE":"VEGA","VALUE":310.0,"CURRENCY":"USD","IMPLIED_VOL":0.0095},
-  {"RISK_FACTOR":"IR/CURVE/USD/SOFR","MEASURE":"CURVATURE_UP","VALUE":-41200.0,"CURRENCY":"USD","SHOCK_SIZE":170}]}
-```
-
-**Validation and refusals** (each counted per source, first reasons listed): a factor name that does not parse or is not mapped (element
-rejected); `CURRENCY` without FX on the date (element rejected); `VALUE` null, NaN or infinite (element rejected; a failed factor is never
-zero); the same factor and measure twice in a record (record rejected); one full run per date and source; curvature without
-`SHOCK_SIZE`, or a shock outside MAR21's (warning); a position with vectors and no sensitivities, or the reverse (a completeness warning
-by desk, never an error); `proxied` counted and its share shown beside every sum; a factor outside every bucket of a grid a limit uses
-(warning). **Consistency check (new, proposed):** for a sample of positions, the first-order P&L Σ sensitivity × factor move of each
-scenario against the vector's P&L (a correlation per desk on the data-trust card): it catches vectors and sensitivities from different
-runs.
+What the cube adds on top of the contract: **storage order** sorted by `TT_BOOK` then id, as the vectors, so a scope's sensitivities
+and vectors are read in one pass; **size** at 2.3M positions: 23 to 115 million elements a day (10 to 50 non-zero factors a position),
+0.4 to 1.5 GB gzipped JSON, 0.3 to 1.7 GB of Parquet a day, 0.5 to 3 TB over seven years³; a **`proxied` share** shown beside every
+sum; a factor outside every bucket of a grid a limit uses is a warning. **Consistency check (proposed):** for a sample of positions,
+the first-order P&L Σ sensitivity × factor move of each scenario against the vector's P&L (a correlation per desk on the data-trust
+card): it catches vectors and sensitivities from different runs.
 
 #### 6.7.10 D9 The factor dictionary (`risk-factor`) and the bucket mapping (`sensitivity-buckets.yaml`): new
 
-**The factor naming standard** (OVERSIGHT decision 10): one text name per factor, slash-separated: `IR/CURVE/<ccy>/<curve>/<tenor>`,
+**The factor naming standard** (section 5.9 decision 10): one text name per factor, slash-separated: `IR/CURVE/<ccy>/<curve>/<tenor>`,
 `INF/<index>/<tenor>`, `CR/SPREAD/<issuer, LEI preferred>/<BOND or CDS>/<tenor>`, `FX/SPOT/<ccy>`, `EQ/SPOT/<ISIN or index>`,
 `EQ/REPO/<ISIN>`, `CM/PRICE/<underlying>/<location>/<tenor>`, `VOL/<class>/<qualifier>/<curve or underlying>/<expiry>[/<underlying
 tenor>][/<strike>]`.
 
-**`risk-factor` (new kind, fundamental):** the dictionary of every factor the bank uses, with the regulatory attributes IMA needs.
-**Grain:** one row per factor per business date (changes only, as a slowly changing table). **Key:** `RISK_FACTOR`. **Storage:**
-`<root>/risk/risk-factor/`. **Sources:** the bank's risk-factor master (often in the market-data system or the FRTB engine). **Size:** a
-few hundred thousand rows, under 100 MB.
-
-| Field | Type | Unit | Req. | Meaning |
-|---|---|---|---|---|
-| `RISK_FACTOR` | id | | required | the standard name |
-| `RISK_CLASS`, `FACTOR_TYPE`, `QUALIFIER`, `CURVE`, `TENOR`, `UNDERLYING_TENOR`, `STRIKE` | text | | required/optional | the parts |
-| `FRTB_BUCKET`, `SIMM_BUCKET` | text | | optional | defaults; the bucket file decides |
-| `LIQUIDITY_HORIZON` | integer | days | required for IMA | 10, 20, 40, 60 or 120 (MAR33.12) |
-| `MODELLABLE` | boolean | | required for IMA | passes the risk factor eligibility test (MAR31) on the date |
-| `RFET_OBSERVATIONS_12M`, `RFET_MAX_GAP_DAYS` | integer | count, days | optional | the eligibility evidence (24 real prices a year and no 90-day window with fewer than 4, MAR31) |
-| `IN_REDUCED_SET` | boolean | | optional | in the reduced set used for the stressed calibration (MAR33) |
-| `PROXY_OF` | id | | optional | the factor this one is proxied by, when proxied |
-| `MARKET_DATA_REF` | text | | optional | where the factor's level comes from (`CRV-USD-SOFR#10Y`), for explain and QLRisk |
-| `VALID_FROM`, `VALID_TO`, `BUSINESS_DATE` | date | | required/optional | |
-
-```json
-{"RISK_FACTOR":"IR/CURVE/USD/SOFR/10Y","RISK_CLASS":"GIRR","FACTOR_TYPE":"CURVE","QUALIFIER":"USD","CURVE":"SOFR","TENOR":"10Y",
- "FRTB_BUCKET":"USD","SIMM_BUCKET":"1","LIQUIDITY_HORIZON":10,"MODELLABLE":true,"RFET_OBSERVATIONS_12M":251,"RFET_MAX_GAP_DAYS":3,
- "IN_REDUCED_SET":true,"MARKET_DATA_REF":"CRV-USD-SOFR#10Y","VALID_FROM":"2026-01-02","BUSINESS_DATE":"2026-09-30"}
-```
+**`risk-factor` (fundamental, built):** the dictionary of every factor the bank uses:
+[risk-factor.contract.yaml](../../config/packs/market-risk/contracts/risk-factor.contract.yaml) (the parts, the FRTB and SIMM buckets,
+`LIQUIDITY_HORIZON`, `MODELLABLE`, `PROXY_OF`, `MARKET_DATA_REF`, the source names mapped to the standard); demo data from
+`tools/packgen/sensitivity/factor_dictionary.py`. A few hundred thousand rows at a bank, under 100 MB. **IMA adds (proposed):**
+`RFET_OBSERVATIONS_12M` and `RFET_MAX_GAP_DAYS` (the eligibility evidence: 24 real prices a year and no 90-day window with fewer than
+4, MAR31) and `IN_REDUCED_SET` (in the reduced set of the stressed calibration, MAR33); `LIQUIDITY_HORIZON` (10 to 120 days, MAR33.12)
+and `MODELLABLE` become required for IMA.
 
 **`sensitivity-buckets.yaml` (configuration, in the market-risk pack):** named **grids**, each mapping factors to buckets by rules on the
 parts: the FRTB grids (MAR21's bucket tables, with risk weights and correlations as parameters), the SIMM grid (licensed parameters: see
-section 14) and the bank's own limit grids. Each limit names its grid; a factor falls in exactly one bucket of each grid (checked at
+section 6.14) and the bank's own limit grids. Each limit names its grid; a factor falls in exactly one bucket of each grid (checked at
 start, overlaps refused). A **bank's factor mapping** (its names → the standard) is configuration too; an unmapped name is refused,
 never guessed.
 
@@ -4774,32 +4224,16 @@ whose engine aggregates), far smaller (thousands of rows), losing position drill
 
 #### 6.7.12 D11 `desk-pnl`: new (actual, hypothetical and risk-theoretical P&L)
 
-The planned P&L feed ([REGULATORY_VAR_REPORTING section 7.1](../guides/REGULATORY_VAR_REPORTING.md#71-inputs-that-exist)); the cube
-uses it for backtesting and PLA. **Grain:** one row per regulatory desk (or trade, better) per business date. **Key:** `DESK_PNL_ID` =
-`DPNL-<FRTB_DESK or TRADE_ID>-<BUSINESS_DATE>`. **Storage:** `<root>/risk/desk-pnl/`. **Sources:** product control (actual, from the
-general ledger and the front office's P&L), the front office (hypothetical: yesterday's positions at today's prices), the risk engine
-(risk-theoretical, RTPL, from the IMA model's factors). **Frequency:** T+1 for actual; daily. **Size:** desks × days, small; per trade 10M
-rows a day, about 1 GB.
-
-| Field | Type | Unit | Req. | Meaning |
-|---|---|---|---|---|
-| `DESK_PNL_ID` | id | | required | |
-| `GRAIN` | text | | required | `DESK` or `TRADE` |
-| `FRTB_DESK`, `DESK`, `TRADE_ID`, `LEGAL_ENTITY` | id | | required by grain | |
-| `BUSINESS_DATE` | date | | required | the day the P&L is for |
-| `APL` | amount | USD | required | actual P&L, without fees, commissions, reserves, net interest income (MAR32) |
-| `HPL` | amount | USD | required | hypothetical P&L |
-| `RTPL` | amount | USD | optional | risk-theoretical P&L; when absent Drishti uses its own from the vectors (named as such) |
-| `EXCLUDED_ITEMS` | record list | USD | optional | the parts removed from actual, by type |
-| `SOURCE`, `BATCH_ID`, `RESTATEMENT`, `COMPUTED_AT` | | | required | |
-
-```json
-{"DESK_PNL_ID":"DPNL-FD-USD-RATES-2026-09-30","GRAIN":"DESK","FRTB_DESK":"FD-USD-RATES","DESK":"DESK-RATES","LEGAL_ENTITY":"LE-NY",
- "BUSINESS_DATE":"2026-09-30","APL":-3120400,"HPL":-2980150,"RTPL":-3011020,"SOURCE":"PRODUCT-CONTROL","BATCH_ID":"B-PNL-2026-10-01-01",
- "RESTATEMENT":0,"COMPUTED_AT":"2026-10-01T09:00:00Z"}
-```
-
-**Validation:** one row per desk and date per source; a restatement supersedes; HPL and RTPL both present for PLA.
+The P&L feed of backtesting is built:
+[desk-pnl.contract.yaml](../../config/packs/market-risk/contracts/desk-pnl.contract.yaml) (DPNL: actual and hypothetical P&L and the
+fees per desk and business date; demo data from `tools/packgen/var/desk_pnl.py`;
+[REGULATORY_VAR_REPORTING section 7.1](../guides/REGULATORY_VAR_REPORTING.md#71-inputs-that-exist)). **What PLA and the cube add
+(proposed, optional fields):** `RTPL` (risk-theoretical P&L from the IMA model's factors; when absent Drishti uses its own from the
+vectors, named as such), `FRTB_DESK` (the regulatory desk), a `GRAIN` of `TRADE` as well as `DESK` (10M rows a day, about 1 GB, for
+drill-through), `EXCLUDED_ITEMS` (the parts removed from actual by type: fees, commissions, reserves, net interest income, MAR32), and
+`BATCH_ID` and `RESTATEMENT` (a restatement supersedes). **Sources:** product control (actual, from the general ledger and the front
+office's P&L), the front office (hypothetical: yesterday's positions at today's prices), the risk engine (RTPL). **Validation:** one row
+per desk and date per source; HPL and RTPL both present for PLA.
 
 #### 6.7.13 D12 `stress-scenario` (extended) and `scenario-pnl` (new)
 
@@ -4819,13 +4253,14 @@ D8 and the extended shocks.
 
 #### 6.7.14 D13 `default-risk` and `residual-risk`: new (FRTB.md proposals)
 
-From [FRTB.md sections 3.3 and 3.4](../contracts/FRTB.md#33-default-risk-the-drc-inputs-optional). **`default-risk`:** one row per trade
-(or position) and obligor per date, key `<TRADE_ID>~<OBLIGOR>`: `OBLIGOR` (LEI), `SENIORITY` (`SENIOR`, `NON_SENIOR`, `EQUITY`,
-`COVERED`), `CREDIT_QUALITY` (rating band for MAR22 risk weights), `DIRECTION` (long, short in default terms), `NOTIONAL` and `MTM`
-(USD), `LGD` (MAR22 defaults: senior 75%, non-senior 100%, covered 25%, equity 100%), `MATURITY_DATE`, `DRC_CLASS` (`NON_SEC`, `SEC_NON_CTP`,
-`SEC_CTP`). **`residual-risk`:** one row per trade, `RRAO_CLASS` (`EXOTIC`, `OTHER_RESIDUAL`), `GROSS_NOTIONAL` (USD), `EVIDENCE` (why).
-Sources: the FRTB engine or the trade's classification in the booking system. Sizes small (rows only for credit and equity positions,
-and residual-risk trades). Validation: an obligor without a rating band refused (no default band guessed); `LGD` outside (0, 1] refused.
+From [FRTB.md sections 3.3 and 3.4](../contracts/FRTB.md#33-default-risk-the-drc-inputs-optional); both contracts are written (status
+planned, no demo data yet): [default-risk.contract.yaml](../../config/packs/market-risk/contracts/default-risk.contract.yaml) (DRCI: one
+row per position or trade, obligor and date; obligor bucket, seniority, credit quality, bond-equivalent notional, market value,
+maturity) and [residual-risk.contract.yaml](../../config/packs/market-risk/contracts/residual-risk.contract.yaml) (RRAI: one row per
+trade, `RRAO_CLASS` `EXOTIC` or `OTHER_RESIDUAL`, gross notional, the reason). How FRTB SA reads them:
+[FRTB_SA_GUIDE sections 5 and 6](../guides/FRTB_SA_GUIDE.md#5-the-default-risk-charge). Sources: the FRTB engine or the trade's
+classification in the booking system; rows only for credit and equity positions and residual-risk trades. Validation: an obligor without
+a rating band refused (no default band guessed); an LGD, where one is supplied, outside (0, 1] refused.
 
 #### 6.7.15 D14 `cube-correction`: new (data corrections, Drishti-owned)
 
@@ -4860,22 +4295,18 @@ QLRisk), or `{SENSITIVITIES}` (a sparse list as D8, for the delta-gamma estimate
 
 | File | Kind | Mnemonic (proposed) | Class | Pack | New or extended |
 |---|---|---|---|---|---|
-| `config/packs/market-risk/contracts/position-sensitivity.contract.yaml` | `position-sensitivity` | `SENS` | input | market-risk | new |
-| `config/packs/market-risk/contracts/risk-factor.contract.yaml` | `risk-factor` | `RFAC` | fundamental | market-risk | new |
 | `config/packs/market-risk/contracts/ima-pnl-vector.contract.yaml` | `ima-pnl-vector` | `IMAV` | input | market-risk | new |
-| `config/packs/market-risk/contracts/desk-pnl.contract.yaml` | `desk-pnl` | `DPNL` | input | market-risk | new (planned) |
 | `config/packs/market-risk/contracts/risk-limit.contract.yaml` | `risk-limit` | `RLIM` | fundamental | market-risk | new (RO3) |
 | `config/packs/market-risk/contracts/scenario-pnl.contract.yaml` | `scenario-pnl` | `SPNL` | input | market-risk | new (STR.md) |
-| `config/packs/market-risk/contracts/default-risk.contract.yaml` | `default-risk` | `DRCI` | input | market-risk | new (FRTB.md) |
-| `config/packs/market-risk/contracts/residual-risk.contract.yaml` | `residual-risk` | `RRAI` | input | market-risk | new (FRTB.md) |
 | `config/packs/market-risk/contracts/cube-correction.contract.yaml` | `cube-correction` | `CCOR` | drishti-owned | market-risk | new |
 | `config/packs/market-risk/contracts/frtb-sa-result.contract.yaml` | `frtb-sa-result` | `FRSA` | computed | market-risk | new (replaces stored `frtb-sensitivity`) |
 | `config/packs/market-risk/contracts/ima-result.contract.yaml` | `ima-result` | `IMAR` | computed | market-risk | new |
 | `pnl-vector`, `scenario-pv`, `scenario-set`, `stress-scenario`, `trade` | existing | | | | extended (optional fields above) |
 | `config/packs/market-risk/sensitivity-buckets.yaml` | configuration | | | market-risk | new |
 
-The mnemonics are placeholders: each must be checked against every pack's mnemonics at build. The CCR cube's list is in
-[section 7.7](#77-data-and-contracts).
+Already written, so not in the table: `position-sensitivity` (SENS), `risk-factor` (RFAC), `desk-pnl` (DPNL), and `default-risk`
+(DRCI) and `residual-risk` (RRAI) as planned contracts. The mnemonics above are placeholders, each checked against every pack's at
+build. The CCR cube's list is in [section 7.7](#77-data-and-contracts).
 
 ² Trade size from the demo's trade records (legs and events included); Parquet ratio about 10:1 from the demo lakes.
 ³ From section 5.7.4 (about 110 bytes an element in JSON, 10 to 15 in Parquet; 1,764 business days in seven years).
@@ -4888,11 +4319,12 @@ calibrations and the unconstrained set (3 × 2 × 2 + a few); to be measured on 
 
 #### 6.8.1 VaR, ES and their decomposition (built; served per cell)
 
-As built ([VAR_GUIDE section 2](../guides/VAR_GUIDE.md#2-the-measures-with-worked-numbers)): with the cell's summed vector *v* of N
-scenarios sorted worst first, `VaR(α) = −v_(k)`, k = ⌈N(1−α)⌉ (the 6th worst of 509 at 99%); `ES(α) = −mean(v_(1..k_ES))` (13 worst at
-97.5%); component VaR the scope's tail window mean scaled to add up (Euler); component ES exact; incremental VaR `VaR(v) − VaR(v − p)`;
-marginal VaR per million. On the demo: **the bank's 1-day 99% VaR is 112,041,646 USD**, ES 160,143,809, the ten desks' VaRs sum to
-367.9 m (diversification shown in the pivot's total row). Stressed VaR is the same on the stress set.
+The engine's measures as built, computed from each cell's summed vector ([section 6.4.2](#642-correct-totals-for-non-additive-measures)):
+VaR, ES, component, incremental and marginal VaR are defined in [VAR_GUIDE section 18](../guides/VAR_GUIDE.md#181-var) (VaR 18.1, ES
+18.2, decomposition [18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts), stressed VaR
+[18.8](../guides/VAR_GUIDE.md#188-stressed-var)), with worked numbers in [its section 2](../guides/VAR_GUIDE.md#2-the-measures-with-worked-numbers).
+On the demo: **the bank's 1-day 99% VaR is 112,041,646 USD**, ES 160,143,809, the ten desks' VaRs sum to 367.9 m (diversification
+shown in the pivot's total row).
 
 #### 6.8.2 Sensitivities and ladders (MC1, MC3)
 
@@ -4901,29 +4333,12 @@ Net and gross (Σ|s|) shown; utilisation against two-sided limits `use = max(net
 
 #### 6.8.3 FRTB standardised approach (MC5 to MC7)
 
-**Sensitivities-based method (MAR21).** For each risk class, measure (delta, vega, curvature) and bucket *b*:
-
-```
-WS_k   = RW_k · s_k                                       weighted sensitivity (delta: MAR21.4; vega: s_k = vega_k · σ_k)
-K_b    = sqrt( max(0, Σ_k WS_k² + Σ_k Σ_{l≠k} ρ_kl WS_k WS_l) )            within the bucket
-S_b    = max( min(Σ_k WS_k, K_b), −K_b )                  the alternative specification, used only when the sum below is negative
-Δ      = sqrt( Σ_b K_b² + Σ_b Σ_{c≠b} γ_bc S_b S_c )      across buckets (with Σ_k WS_k in place of S_b unless the radicand is negative)
-```
-
-**Curvature (MAR21.5):** `CVR_k = −min( V(x+RW) − V(x) − RW·s_k , V(x−RW) − V(x) + RW·s_k )` from `CURVATURE_UP`, `CURVATURE_DOWN` and
-the delta; `K_b = sqrt(max(0, Σ max(CVR_k,0)² + Σ_{l≠k} ρ_kl² CVR_k CVR_l ψ(CVR_k, CVR_l)))`, ψ = 0 when both are negative, else 1; across
-buckets with γ_bc² and the same ψ.
-
-**The three correlation scenarios (MAR21.6):** medium (the prescribed ρ, γ), high `ρ_high = min(1.25ρ, 1)`, low
-`ρ_low = max(2ρ − 1, 0.75ρ)` (the same for γ); the SBM capital is the **largest** over the three scenarios of Σ over risk classes of
-(delta + vega + curvature). The cube shows the three side by side and marks the binding one.
-
-**DRC (MAR22):** per obligor, gross jump-to-default `JTD_long = max(LGD · notional + P&L, 0)`, `JTD_short = min(LGD · notional + P&L, 0)`,
-scaled by maturity (floor 3 months, cap 1 year), netted by obligor and seniority; per bucket
-`DRC_b = max( Σ RW_i · netJTD_long,i − HBR · Σ RW_i · |netJTD_short,i| , 0 )` with `HBR = Σ netJTD_long / (Σ netJTD_long + Σ |netJTD_short|)`;
-the total is the simple sum over buckets (non-securitisations).
-
-**RRAO (MAR23):** `Σ gross notional × 1.0%` for exotic underlyings, `× 0.1%` for other residual risks.
+Built as the FRTB-SA engine; the method, its formulas and parameters are [FRTB_SA_GUIDE](../guides/FRTB_SA_GUIDE.md): the
+sensitivities-based method ([section 4](../guides/FRTB_SA_GUIDE.md#4-the-sensitivities-based-method): delta, vega, curvature, the three
+correlation scenarios, the alternative specification), the default risk charge ([section 5](../guides/FRTB_SA_GUIDE.md#5-the-default-risk-charge))
+and the residual risk add-on ([section 6](../guides/FRTB_SA_GUIDE.md#6-the-residual-risk-add-on)). **What the cube adds:** the three
+correlation scenarios side by side with the binding one marked, and the formula shown with the cell's own numbers (WS, K_b, ρ) on a
+click.
 
 **Total SA** = SBM + DRC + RRAO. Non-additive across desks (square roots and maxima): every cell re-runs the formula on its members' net
 weighted sensitivities, which are additive per factor (so a cell's inputs are a sparse sum, cheap to combine across shards).
@@ -4962,11 +4377,11 @@ different scenario, said in the cell). From `scenario-pnl` (full revaluation) or
 |---|---|---|---|
 | **copy** | the new trade resembles a booked one | a booked trade's vector scaled (1, −1, 0.5) added to the scope | **Built** ([VAR_GUIDE section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-under-the-baskets-sheet)) |
 | **price** (full revaluation) | new terms | QLRisk prices the trade on the base market and under each of the 509 scenario moves (`MarketRiskEngine.scenario_pnl`); the vector joins the scope like any other; sensitivities from the same pricing feed the ladder and SBM | **Not built** (QLRisk design only until its API is stable; [ARCHITECTURE.md section 24.9.2](ARCHITECTURE.md#2492-qlrisk-default-python)) |
-| **delta-gamma** (fallback) | no pricer for the product, or a quick answer | from the trade's sensitivities (supplied, or from a similar booked trade): `P&L_s ≈ Σ_f s_f · Δx_{f,s} + ½ Σ_f Γ_f · Δx_{f,s}²` with Δx the factor moves of scenario *s* (from the factor dictionary's market-data references); flagged `delta-gamma`, its error shown as the gap on the same product's booked trades | **Not built** |
+| **delta-gamma** (fallback) | no pricer for the product, or a quick answer | from the trade's sensitivities (supplied, or from a similar booked trade): `P&L_s ≈ Σ_f s_f · Δx_{f,s} + ½ Σ_f Γ_f · Δx_{f,s}²` with Δx the factor moves of scenario *s* (from the factor dictionary's market-data references); flagged `delta-gamma`, its error shown as the gap on the same product's booked trades (the method: [VAR_GUIDE section 18.12](../guides/VAR_GUIDE.md#1812-delta-gamma-vega-var-on-request-design-not-built-parked)) | **Not built** |
 
 **The QLRisk bridge is shared with the CCR cube**: the same request prices a trade's scenario P&L here and its path MtMs there; the same
 market data assembly (the server's business-date snapshot) and caching by trade terms and date. **Response target:** 2 s for a vanilla
-swap's 509 scenarios on one worker (estimate⁵); the what-if per cell of a 40 × 12 view adds 0.8 s (section 6.3).
+swap's 509 scenarios on one worker (estimate⁵); the what-if per cell of a 40 × 12 view adds 0.8 s (section 6.6.3).
 
 ⁵ QLRisk's own timing for a vanilla swap reprice is about a millisecond; 509 scenarios plus curve rebuilding per scenario dominate. To be
 measured when its API is declared stable.
@@ -4979,12 +4394,12 @@ measured when its API is declared stable.
 |---|---|---|
 | Positions | 2.3M (10M trades) on the reference cluster; 10M positions with `target-shard-mb: 1024` | CLUSTER_DEPLOYMENT section 15, decision PO-C2 |
 | Scenario values held | 1,518 a position (normal 509, stressed 250, spare), float32: 14 GB a date across 6 owners | CLUSTER_DEPLOYMENT section 5 |
-| Sensitivity elements | 23M to 115M a day, about 0.4 to 2 GB in the hot tier⁶ | section 7.9 |
-| IMA vectors | about 35 GB a date for every desk approved (sparse), held only for open dates | section 7.11 |
-| A view of 500 scopes | 400 ms p95 warm | section 6.3 |
+| Sensitivity elements | 23M to 115M a day, about 0.4 to 2 GB in the hot tier⁶ | section 6.7.9 |
+| IMA vectors | about 35 GB a date for every desk approved (sparse), held only for open dates | section 6.7.11 |
+| A view of 500 scopes | 400 ms p95 warm | section 6.6.3 |
 | SBM bank capital, three scenarios | 2 s; a desk 200 ms⁶ | additive sums per factor per node, formulas on a few hundred thousand factors |
 | IMA ES of the bank, every subset | 5 s⁶ | 90 subset vectors summed per node, 250 values each |
-| Intraday batch to patched cells | 1 s after the batch applies | section 4.7 |
+| Intraday batch to patched cells | 1 s after the batch applies | section 6.4.7 |
 | Load of the sensitivities | 1 to 3 minutes a day on 32 vCPU | section 5.7.4 |
 
 ⁶ Estimates: the sparse float32 element plus a 4-byte factor index is 8 bytes (23M × 8 = 0.2 GB; 115M × 8 = 0.9 GB) with dictionaries
@@ -5017,16 +4432,13 @@ figure is to be measured on the 10K test data, then the product owner's server, 
 
 ### 6.12 Lens design and proof of concept (POC)
 
-**Status: designed, POC not started.** The product owner asked for the MR Cube lens to be designed and then proved in a POC. This
-chapter designs both; the POC rows are MCP1 to MCP6 in the plan. The CCR Cube's POC ([section 7.12](#712-lens-design-and-proof-of-concept-poc))
+**Status: designed, POC not started.** The product owner asked for the MR Cube lens to be designed and then proved in a POC; the POC
+rows are MCP1 to MCP6 in the plan. The CCR Cube's POC ([section 7.12](#712-lens-design-and-proof-of-concept-poc))
 shares the cube core built here.
 
 #### 6.12.1 The lens
 
-A lens is an edition file opened by one person on a full instance ([EDITIONS.md section 8 of the design as built](../admin/EDITIONS.md#8-lenses)):
-the server offers it in `drishti.lenses` (on by default today: `risk,world,market,trading`), the console's **Open Drishti …** link sets the
-person's `lens` setting, and every call carries `X-Drishti-Lens` so the command line, FUNC, the type-ahead and BI follow the file
-(`drishti-console/core/edition.py`, `drishti-server/.../edition/EditionContext.java`). A lens hides; it does not secure.
+How a lens works is [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses).
 
 | Item | MR Cube lens |
 |---|---|
@@ -5096,8 +4508,8 @@ private views are in), Excel Power Query and xlsx export (CSV and Arrow are in),
 |---|---|---|---|
 | Vectors, scenario PVs, scenario set, FX, trades, hierarchies, VaR limits, official captures | existing (`make_var_data.py`, `make_trades.py`, the official capture the demo writes) | 9,572 trades in 7,993 positions; the bank's 1-day 99% VaR **112,041,646** (unchanged: the POC must not move a demo figure) | the existing 2.3M benchmark data (VAR_GUIDE section 27) |
 | Per-class vectors for "VaR by risk class" columns | `make_var_data.py` extended: the same factor model with one factor group at a time | 5 more vectors a position: about 40,000 rows of 509 values, about 60 MB gzipped | 11.5M vectors, about 47 GB float32 (estimate) |
-| `position-sensitivity` | new `tools/packgen/var/sensitivities.py`: each position's loadings on the demo's forty-odd factors × its scale, split onto curve points (DV01 per tenor, CS01 per issuer, FX and equity delta, vega for options) so Σ s × move matches the vector's P&L to first order | about 20 factors a position: 160,000 elements, about 3 MB gzipped | 46M elements, about 0.6 GB of Parquet (section 5.7.4's range) |
-| `risk-factor` | new `tools/packgen/var/risk_factors.py` | about 400 factors (the demo's curves and points) | a few hundred thousand |
+| `position-sensitivity` | existing `tools/packgen/sensitivity/make_sensitivity_data.py`; for the POC consistent with the vectors (decision P2): each position's loadings on the demo's forty-odd factors × its scale, split onto curve points (DV01 per tenor, CS01 per issuer, FX and equity delta, vega for options) so Σ s × move matches the vector's P&L to first order | about 20 factors a position: 160,000 elements, about 3 MB gzipped | 46M elements, about 0.6 GB of Parquet (section 5.7.4's range) |
+| `risk-factor` | existing `tools/packgen/sensitivity/factor_dictionary.py` | about 400 factors (the demo's curves and points) | a few hundred thousand |
 | `risk-limit` (DV01 by currency × tenor bucket for the ten desks) | new `tools/packgen/var/make_risk_limits.py`, sized so a few buckets are near or over (for the demo's red bars) | about 200 limits | tens of thousands |
 | Intraday batches for the time-travel slider | the existing intraday demo batches (files and the Kafka demo topic) | two batches on 2026-09-30 | as the benchmark |
 
@@ -5127,18 +4539,15 @@ channel on a sharded cluster), `/status`.
 grid, sparklines, limit bars, popover, slider, keyboard) with `mcube.js` (tabs A, B, C) and `mcube.css`; every chart drawn with the
 vendored ECharts or inline SVG, nothing from a CDN. **Client renderer:** the cube view as a ViewModel screen kind (`cube-view`), so
 `render(el, {kind: 'cube-view', id: 'asha/morning'})` embeds it; Elements gets `<drishti-screen kind="cube-view">` for free. **Phone
-tiers:** must (headline strip, first five rows by the first measure, totals pinned), glance (sparkline column, histogram strip), more
-(explain, provenance, waterfall), desk (the pivot editor, the heat map, what-if).
+tiers:** as [section 6.6.5](#665-phone-tiers).
 
 #### 6.12.5 POC success criteria
 
 | Criterion | Target |
 |---|---|
 | Open the landing (10 desks × 5 risk classes with totals, about 66 scopes) | 300 ms p95 warm on the demo¹ |
-| Re-pivot to any two dimensions (up to 40 × 12) | 400 ms¹ |
-| Select a cell (histogram, components, provenance) | 60 ms¹ |
+| Re-pivot, select a cell, time-travel | the targets of [section 6.6.3](#663-response-time-targets) |
 | Explain between two dates | 1 s¹ |
-| Time-travel to another batch or date | 1.5 s¹ |
 | Ladder or heat map from sensitivities | 200 ms¹ |
 | **Totals equal to the bit** | every cell and total of the landing equal on one server and on three members (Delta and Iceberg); the grand total equals `VAR BANK` (112,041,646) exactly |
 | **Totals are never sums** | a test proving the bank total differs from the sum of the desks' VaR (367.9m) and equals the union's own VaR |
@@ -5159,7 +4568,7 @@ tiers:** must (headline strip, first five rows by the first measure, totals pinn
 7. Tab C: the DV01 ladder with a red bucket; then add an unwind in the what-if tray: every cell before and after, side by side.
 8. Drag the time-travel slider to the morning batch, then to yesterday's official run; open **Explain**: three steps that add up exactly.
 9. Publish an intraday batch on the demo Kafka topic: the touched cells flash and their popover names the batch.
-10. The same view embedded in a plain web page and on a phone (390 px). Close on the comparison table (section 11).
+10. The same view embedded in a plain web page and on a phone (390 px). Close on the comparison table (section 6.11).
 
 **Tests.** Java: the cube planner (cells, totals and diversification on hand-made vectors), totals never summed, the batch per owner,
 the cell budget, explain's steps adding up, sensitivities summed by grid with overlapping buckets refused, `CubeShardEqualityTest` (as
@@ -5173,7 +4582,7 @@ the new suites in it.
 | # | Builder | Weight | Work | Size² | After |
 |---|---|---|---|---|---|
 | 1 | Cube core (server) | heavy | `cube` package: the view model, the planner over VaR scopes, totals, batching per owner, provenance ids, versions, saved views; MR query, cell, explain, sensitivities endpoints | L (2 to 3 weeks) | — |
-| 2 | Synthetic data | light | `sensitivities.py`, `risk_factors.py`, `make_risk_limits.py`, per-class vectors; contracts, READMEs, samples; `build_demo_lakes` | M (1 week) | — (parallel with 1) |
+| 2 | Synthetic data | light | `make_risk_limits.py`, per-class vectors, the sensitivity generator checked against the vectors; contracts, READMEs, samples; `build_demo_lakes` | M (1 week) | — (parallel with 1) |
 | 3 | MR console | heavy | `/mcube`, the landing with tabs A, B, C, `cube-core.js`, the lens file, help, phone tiers, the renderer kind | L (2 weeks) | 1's API frozen (week 1) |
 | 4 | Docs and screenshots | light | the guide's cube chapter, a tutorial, CONFIGURATION, screenshots | S | 3 |
 
@@ -5196,23 +4605,24 @@ branches would build the core twice or merge it across branches.
 | P4 | Explain in three exact steps for the POC, the full RO1 sequence later (MC12) | yes |
 | P5 | The lenses `mrcube` and `ccrcube` off by default, on in the demo stack | off by default, on in the demo profile until the POC is accepted |
 | P6 | `MCUBE` and `CCUBE` on in the Risk and Trading lenses during the POC | on in Risk; on in Trading for `MCUBE` only |
-| P7 | The cell budget for a view | 5,000 cells (section 4.12), refused with the count above it |
+| P7 | The cell budget for a view | 5,000 cells (section 6.4.12), refused with the count above it |
 
 ---
 
 ### 6.13 Phases (proposed)
 
-The phases follow the plan's themed releases (product owner, 2026-10-31; reordered 2026-11-01): the market-risk regulatory foundation (2.9.8, released); memory, scale and mobile with the VaR change explained (2.9.10, in release); sensitivities and market-risk capital (2.9.11); counterparty engines (2.9.12); Java 25 and performance I (2.9.13); oversight (2.9.14); regulatory reporting (2.9.15); native performance II (2.9.16); XVA and wrong-way risk (2.9.17); advanced market risk (2.9.18); executive (2.9.19). From 2.9.11 on each is **proposed** until it starts; a row without one is unscheduled. The rows are in the plan's "Risk cubes" section. The shared core (MC2) is built
-first, with its first user, the MR cube pivot, in the sensitivities and capital phase (2.9.11); the CCR cube follows on it in the counterparty engines phase (2.9.12). The POC's order (P1: core, MR, then CCR, one branch) is kept, on
-the same branch.
+The phases follow the plan's themed releases (product owner, 2026-10-31; reordered 2026-11-01); each release named in the table is
+**proposed** until it starts, and a row without one is unscheduled. The rows are in the plan's "Risk cubes" section. The shared core
+(MC2) is built first, with its first user, the MR cube pivot, in the sensitivities and capital phase (2.9.11); the CCR cube follows on it
+in the counterparty engines phase (2.9.12), on the same branch (decision P1).
 
 | Phase | Rows | Status | Depends on |
 |---|---|---|---|
-| 1. Sensitivities in the lake (2.9.11) | MC1 (= RO15, the contract, loader, factor dictionary, buckets, sums), first in its phase | proposed | none; RO15's design |
-| 1. The shared core (2.9.11) | MC2 (the cube core: pivot with non-additive totals, drill, saved views, provenance per cell, export), built with its first user, the MR pivot; the CCR cube builds on it in 2.9.12 | proposed | the VaR engine (built) |
-| 1. The MR pivot (2.9.11) | MC3 (ladders and heat map), MC4 (sparklines, limit bars, waterfall, histogram), MC12 (explain the move: RO1 plus the factor overlay) | proposed | MC1 for sensitivity measures; MC2; RO1 |
-| 1. FRTB SA (2.9.11) | MC5 (SBM delta, vega, curvature, three scenarios), MC6 (DRC), MC7 (RRAO), each with its playground | proposed | MC1; `default-risk`, `residual-risk` |
-| 2. FRTB IMA (2.9.18) | MC8 (ES by liquidity horizon, stressed calibration), MC9 (SES and NMRF), MC10 (PLA and desk zones), each with its playground | proposed | the planned P&L feed and backtesting; stressed VaR (stressed VaR); `ima-pnl-vector` from the bank |
+| 1. Sensitivities in the lake (2.9.11) | MC1 (= RO15, the contract, loader, factor dictionary, buckets, sums), first in its phase | **built** (the contract, the factor dictionary, `SENS`) | none; RO15's design |
+| 1. The shared core (2.9.11) | MC2 (the cube core: pivot with non-additive totals, drill, saved views, provenance per cell, export), built with its first user, the MR pivot; the CCR cube builds on it in 2.9.12 | building (branch `wip/mr-cube-2`) | the VaR engine (built) |
+| 1. The MR pivot (2.9.11) | MC3 (ladders and heat map), MC4 (sparklines, limit bars, waterfall, histogram), MC12 (explain the move: RO1 plus the factor overlay) | building (branch `wip/mr-cube-2`) | MC1 for sensitivity measures; MC2; RO1 |
+| 1. FRTB SA (2.9.11) | MC5 (SBM delta, vega, curvature, three scenarios), MC6 (DRC), MC7 (RRAO), each with its playground | **built** ([FRTB_SA_GUIDE](../guides/FRTB_SA_GUIDE.md), `PLAY FRTB`); the cube's SBM pivot not yet | MC1; `default-risk`, `residual-risk` |
+| 2. FRTB IMA (2.9.18) | MC8 (ES by liquidity horizon, stressed calibration), MC9 (SES and NMRF), MC10 (PLA and desk zones), each with its playground | proposed | the planned P&L feed and backtesting; stressed VaR; `ima-pnl-vector` from the bank |
 | 2. Pre-deal pricing (2.9.18) | MC13 (QLRisk pricing and delta-gamma, shared with CC12) | proposed | QLRisk's API declared stable |
 | Unscheduled | MC11 (corrections in the cube) | unscheduled | write-back (built) |
 
@@ -5225,18 +4635,18 @@ the same branch.
 | **IMA vectors are the bank's to produce** | without `ima-pnl-vector` subsets no ES by liquidity horizon, no stressed calibration | accept desk-level vectors (decision 4); ship the computation on synthetic subsets in the demo; say "no subsets delivered" per desk, never compute a substitute |
 | **SIMM parameters are licensed by ISDA** | the shared sensitivity contract feeds SIMM (CCR cube); Drishti cannot ship the real risk weights | a client uses its own ISDA licence and loads the parameters as configuration; the demo uses made-up parameters, labelled so |
 | **FRTB parameters differ by jurisdiction** (OSFI, US proposal, EU) | different risk weights, correlations, floors | parameters per jurisdiction as configuration; BCBS first (as SA-CCR, COMPUTED_ATTRIBUTES section 10) |
-| Sensitivities and vectors from different runs | explain overlays and SBM disagree with VaR | the consistency check of section 7.9; same `BATCH_ID` family required |
-| Pivot views of thousands of scopes | heavy requests on owners | a cell budget (section 4.12), batched requests, admission queue (CD6) |
+| Sensitivities and vectors from different runs | explain overlays and SBM disagree with VaR | the consistency check of section 6.7.9; same `BATCH_ID` family required |
+| Pivot views of thousands of scopes | heavy requests on owners | a cell budget (section 6.4.12), batched requests, admission queue (CD6) |
 | Regulatory desks differ from management desks | IMA by the wrong grouping | `FRTB_DESK` on trades and vectors; the FRTB hierarchy as a configured hierarchy |
 | QLRisk API not stable | no pricing of new terms | copy and delta-gamma methods first; pricing behind a flag |
 | Corrections misused to hide losses | governance failure | four eyes, reasons, expiry, markers on every cell, the official run's list; RO2 breaches unaffected by corrections unless approved |
-| Vendor comparison claims | over-claiming against FIS | only claims shown in the demo (section 11); FIS's are marketing, said so |
+| Vendor comparison claims | over-claiming against FIS | only claims shown in the demo (section 6.11); FIS's are marketing, said so |
 
 ---
 
 ### 6.15 Decisions for the product owner
 
-1. **One lens, two documents, one core.** The MR Cube and CCR Cube as two lenses sharing one cube core (recommended), or one "Risk Cube"
+1. **Two lenses, one core.** The MR Cube and CCR Cube as two lenses sharing one cube core (recommended), or one "Risk Cube"
    lens with an MR and a CCR tab.
 2. **The default layout.** **Decided (product owner, 2026-10-31): A (pivot first) is the landing, B and C its tabs.** Options were: A as
    the landing with B and C as tabs (recommended), or one of B or C first; after the mock-ups.
@@ -5251,9 +4661,9 @@ the same branch.
    unless the run is restated.
 8. **Phase placement.** **Decided (product owner, 2026-10-31), by the themed plan:** sensitivities first, then the shared core with its
    first user, the MR pivot, and FRTB SA in the sensitivities and capital phase (2.9.11); the CCR cube on that core in the counterparty
-   engines phase (2.9.12); IMA and pre-deal pricing in the advanced market risk phase (2.9.18) (section 13).
+   engines phase (2.9.12); IMA and pre-deal pricing in the advanced market risk phase (2.9.18) (section 6.13).
 9. **Command word.** **Decided (product owner, 2026-10-31): `MCUBE`** (the CCR cube is `CCUBE`); checked against every pack's mnemonics at build.
-10. **The `position-sensitivity` contract.** Adopt section 5 decision 9 as this cube's input (recommended), retiring
+10. **The `position-sensitivity` contract.** Adopt section 5.9 decision 9 as this cube's input (recommended), retiring
     `frtb-sensitivity` when MC5 lands.
 
 ---
@@ -5278,22 +4688,22 @@ the same branch.
 
 ## 7. The CCR Cube: a counterparty credit risk cube lens that answers what FIS Adaptiv answers, and shows why
 
-**Status: analysis and product description; design, not built.** Nothing in this document is built unless a row of
-[section 5](#75-what-drishti-has-today) says so and cites the guide it was read from (2026-10-31). Every phase named here is a **proposal**, not a commitment. The rows it proposes are candidates in the
-[implementation plan](IMPLEMENTATION_PLAN.md#risk-cubes-candidates-not-started) (CC1 to CC14; the proof-of-concept rows CCP1 to CCP6, section 12), not started.
+**Status: design, not built.** Nothing here is built unless a row of [section 7.5](#75-what-drishti-has-today) says so and cites its
+source (checked 2026-10-31); every phase is a **proposal**. The rows are candidates in the
+[implementation plan](IMPLEMENTATION_PLAN.md#risk-cubes-candidates-not-started) (CC1 to CC14; the proof-of-concept rows CCP1 to CCP6,
+[section 7.12](#712-lens-design-and-proof-of-concept-poc)), not started. **The request (product owner, 2026-10-31):** separate cube designs
+for market risk ([section 6](#6-the-mr-cube-a-market-risk-cube-lens-that-answers-what-fis-adaptivs-artiq-answers-and-shows-why)) and
+counterparty credit risk, with an exhaustive data and contracts chapter, written to beat FIS, SunGard and Adaptiv in capability and
+visualisation.
 
-**The request (product owner, 2026-10-31):** separate cube designs for market risk ([section 6](#6-the-mr-cube-a-market-risk-cube-lens-that-answers-what-fis-adaptivs-artiq-answers-and-shows-why)) and counterparty
-credit risk (this document), as lens documents, with an exhaustive data and contracts chapter, written from the angle of beating FIS,
-SunGard and Adaptiv in capability and in visualisation.
-
-**Read with:** [section 6.4](#64-the-shared-cube-core-mr-and-ccr) (**the shared cube core: pivot, totals,
-drill, saved views, provenance, explain, corrections, streaming, export, embedding, permissions, scatter-gather, caching; not repeated
-here**), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine), [COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md)
-(the CCR kinds and the modelling defaults of its section 10, confirmed by the product owner on 2026-10-31),
-[CLUSTER_DEPLOYMENT.md section 6](CLUSTER_DEPLOYMENT.md#6-exposure-sharding-in-depth-planned) (exposure sharding, decision
-PO-C3), [section 1](#1-drishti-risk-what-risk-managers-near-the-desks-need-what-the-lens-gives-them-today-and-what-comes-next) and [section 2](#2-drishti-trading-what-traders-and-desk-heads-need-what-the-lens-gives-them-today-and-what-comes-next), and the contracts [SACCR.md](../contracts/SACCR.md),
-[SIMM.md](../contracts/SIMM.md), [CVA.md](../contracts/CVA.md), [WWR.md](../contracts/WWR.md), [LIM.md](../contracts/LIM.md),
-[GRP.md](../contracts/GRP.md), [NSET.md](../contracts/NSET.md), [COLL.md](../contracts/COLL.md) and [MC.md](../contracts/MC.md).
+The pivot, totals, drill, saved views, provenance, explain, corrections, streaming, export, embedding, permissions, scatter-gather and
+caching are the shared core of [section 6.4](#64-the-shared-cube-core-mr-and-ccr), not repeated here. The exposure engine is
+[EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md); the CCR kinds and the modelling defaults (confirmed 2026-10-31) are
+[COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md) section 10; exposure sharding (decision PO-C3) is
+[CLUSTER_DEPLOYMENT.md section 6](CLUSTER_DEPLOYMENT.md#6-exposure-sharding-in-depth-planned); the contracts are
+[SACCR.md](../contracts/SACCR.md), [SIMM.md](../contracts/SIMM.md), [CVA.md](../contracts/CVA.md), [WWR.md](../contracts/WWR.md),
+[LIM.md](../contracts/LIM.md), [GRP.md](../contracts/GRP.md), [NSET.md](../contracts/NSET.md), [COLL.md](../contracts/COLL.md) and
+[MC.md](../contracts/MC.md).
 
 ### 7.1 Purpose: a counterparty cube, and what FIS offers
 
@@ -5302,22 +4712,18 @@ date, after netting and collateral; what does that cost (CVA), what capital does
 call (SIMM), and does a new trade fit the limit?*, for any rows and columns: counterparty × tenor, rating × sector, desk × legal
 entity, group × netting set.
 
-FIS's public claims for its cube are listed with their sources and the caveat that they are marketing material in
-[section 6.1](#61-purpose-what-a-risk-cube-is-and-what-fis-offers). On the counterparty side the Adaptiv
-suite is known for exposure simulation (Adaptiv Analytics, a stateless credit and market risk simulation and calculation engine feeding
-the cube), XVA, SA-CCR, SIMM and SA-CVA; FIS publishes no technical detail on sharding, high availability or benchmarks
+FIS's public claims are in [section 6.1](#61-purpose-what-a-risk-cube-is-and-what-fis-offers). On the counterparty side the Adaptiv
+suite is known for exposure simulation (Adaptiv Analytics feeding the cube), XVA, SA-CCR, SIMM and SA-CVA; FIS publishes no technical
+detail on sharding, high availability or benchmarks
 ([Risk.net, 2020](https://www.risk.net/awards/7676746/market-risk-management-product-of-the-year-fis);
 [FIS FRTB white paper](https://www.fisglobal.com/-/media/fisglobal/files/PDF/white-paper/FRTB-Risk-Aggregation-An-IT-Perspective-White-Paper.pdf?sc_lang=en)).
 
-**Drishti's answer in one paragraph.** Drishti already computes exposure for any scope from the bank's simulated paths, after netting
-and lagged collateral per path, with EE contributions that add up exactly, a pre-deal what-if by exact paths or an SA-CCR-style proxy,
-and official records. The **CCR Cube** adds the pivot (by the shared core), **allocated exposure** so desks and books add up to the
-counterparty, a **counterparty hierarchy** with GLEIF legal parents beside the desk hierarchy, **limits by tenor bucket with headroom on
-the profile**, **CVA and the XVA family**, **SA-CCR, IMM EEPE, SIMM, BA-CVA and SA-CVA** computed from the trade grain, **wrong-way
-risk**, **collateral and margin-call views**, **stressed EEPE and CVA**, and the exposure shards of CLUSTER_DEPLOYMENT section 6 so that
-a netting set never splits across nodes.
-
----
+**Drishti's answer.** Drishti already computes exposure for any scope from the bank's simulated paths, after netting and lagged
+collateral per path, with EE contributions that add up exactly, a pre-deal what-if and official records. The **CCR Cube** adds the
+pivot (by the shared core), **allocated exposure** so desks and books add up to the counterparty, a **counterparty hierarchy** with GLEIF
+legal parents beside the desk hierarchy, **limits by tenor bucket with headroom on the profile**, **CVA and the XVA family**, **SA-CCR,
+IMM EEPE, SIMM, BA-CVA and SA-CVA** computed from the trade grain, **wrong-way risk**, **collateral and margin-call views**, **stressed
+EEPE and CVA**, and exposure shards so that a netting set never splits across nodes.
 
 ### 7.2 Who uses it
 
@@ -5330,10 +4736,7 @@ a netting set never splits across nodes.
 | **Trader, sales** | does this trade fit the counterparty's limit; what does it cost in CVA and capital | Drishti Trading (largest counterparty, TL2) |
 | **Second line** | concentration by group, sector, country; wrong-way risk; stressed exposure | the proposed Oversight lens |
 
-The CCR Cube is a lens (`Open Drishti CCR Cube`), and a cube screen (`CCUBE`, decision 9) inside Risk,
-Trading and Oversight.
-
----
+The CCR Cube is a lens (`Open Drishti CCR Cube`), and a cube screen (`CCUBE`, decision 9) inside Risk, Trading and Oversight.
 
 ### 7.3 Their questions
 
@@ -5348,30 +4751,21 @@ Trading and Oversight.
 | Quarter | SA-CCR EAD by asset class and hedging set; IMM EEPE and stressed EEPE | the SA-CCR pivot; the IMM tiles |
 | Any time | Where is wrong-way risk? | the WWR scatter and the specific-WWR list |
 
----
-
 ### 7.4 What makes CCR different: the grain and the order of aggregation
 
 #### 7.4.1 The grain: paths × time steps × trade
 
-The input is every live OTC trade's MtM on every simulated path *p* (P = 200 in the demo, 2,000 to 5,000 at a bank) at every grid date
-*k* (13 primary tenors in the demo, 50 to 100 at a bank), from the bank's exposure simulator (`exposure-path`,
-[EXP.md section 2.3](../contracts/EXP.md#23-exposure-path-every-trades-mtm-on-every-path-the-large-input)). A trade is
-P × G numbers, not a vector of scenarios.
+The input is every live OTC trade's MtM on every simulated path (P = 200 in the demo, 2,000 to 5,000 at a bank) at every grid date
+(13 primary tenors in the demo, 50 to 100 at a bank), from the bank's exposure simulator (`exposure-path`,
+[EXP.md section 2.3](../contracts/EXP.md#23-exposure-path-every-trades-mtm-on-every-path-the-large-input)). A trade is P × G numbers,
+not a vector of scenarios.
 
 #### 7.4.2 The order: per netting set first, then across netting sets
 
-```
-1. V_n(p,k) = Σ_{i∈n} MTM_i(p,k)                                  net per netting set (linear)
-2. C_n(p,k) = R( target(V_n(p, ℓ(k))) )                            collateral per path, lagged by the MPOR (non-linear: TH, MTA, IA, rounding)
-3. E_n(p,k) = max(V_n − C_n − IM_n, 0)                             floored per netting set (non-linear)
-4. E_S(p,k) = Σ_{n∈S} E_n(p,k)                                     only now summed across netting sets (linear)
-5. EE, PFE_q, EEE, EPE, EEPE of S                                  statistics last (quantiles, running maxima: non-linear)
-```
-
-(as built: [EXPOSURE_GUIDE section 18](../guides/EXPOSURE_GUIDE.md#18-the-computation)). Steps 2 and 3 are why the CCR cube cannot sum
-trades across netting sets the way the MR cube sums positions: the threshold, the minimum transfer amount, the independent amount, the
-rounding and the lag apply to the netting set's value, and the floor at zero makes exposures of different sets add but never net.
+Net per netting set per path, apply collateral lagged by the MPOR, floor at zero per set, only then sum across sets, and take the
+statistics (EE, PFE, EPE, EEPE) last: the computation is [EXPOSURE_GUIDE section 18](../guides/EXPOSURE_GUIDE.md#18-the-computation).
+This is why the CCR cube cannot sum trades across netting sets the way the MR cube sums positions: the threshold, minimum transfer
+amount, independent amount, rounding and lag apply to the set's value, and the floor makes exposures of different sets add but never net.
 
 #### 7.4.3 What adds up across the pivot
 
@@ -5385,9 +4779,8 @@ rounding and the lag apply to the netting set's value, and the floor at zero mak
 | SIMM | not additive across risk classes or netting sets of different CSAs | not | per netting set and regime; a cell sums sets |
 | Group limit use | not additive | | the group's PFE (members summed per path) over the group's own limit |
 
-A cell such as **desk × counterparty** is a cut netting set: Drishti offers two readings (decision 3): **allocated** (the desk's Euler
-share of the set's collateralised exposure: adds up to the counterparty) and **standalone** (`DESK:` partial, built: the desk's trades as
-if they were the set; does not add up).
+A cell such as **desk × counterparty** is a cut netting set, with two readings (decision 3): **allocated** (the desk's Euler share of
+the set's collateralised exposure: adds up to the counterparty) and **standalone** (`DESK:` partial, built: does not add up).
 
 #### 7.4.4 Two hierarchies
 
@@ -5396,28 +4789,20 @@ if they were the set; does not add up).
 | **Counterparty (legal)** | GLEIF ultimate parent → direct parent → counterparty (legal entity) → agreement → netting set → trade | `counterparty`, `counterparty-group` (kept members), GLEIF `lei-entity` and `lei-relationship` (the gleif pack, built) |
 | **Desk (management)** | bank → division → desk → book → trade, and the legal-entity and limit-letter hierarchies | the VaR hierarchies ([VAR.md section 2.14](../contracts/VAR.md#214-hierarchies-from-the-rows-or-from-the-trades-columns)) |
 
-The cube puts either on rows; a group roll-up uses `connected(G) = kept(G) ∪ gleif(G) − excluded` (GRP.md section 6.1). Exposure
-up the legal hierarchy is exact (sets sum per path); up the desk hierarchy it is allocated.
+A group roll-up uses `connected(G) = kept(G) ∪ gleif(G) − excluded` (GRP.md section 6.1). Exposure up the legal hierarchy is exact
+(sets sum per path); up the desk hierarchy it is allocated.
 
 #### 7.4.5 Shards: by counterparty and netting set (decision PO-C3)
 
-Exposure shards with key `[COUNTERPARTY, NETTING_SET]` (no group prefix, PO-C3): **a netting set is never split** and a counterparty's
-sets sit together, so steps 1 to 3 of section 4.2 run on one owner; the owner returns the **summed positive-exposure path matrix** of
-each scope's sets it holds (800 KB at P 2,000 × G 50); the coordinator adds partials in shard order and takes quantiles **after** the
-combine (CLUSTER_DEPLOYMENT section 6.3). A group across owners is summed by the coordinator. Allocation needs a second round for PFE
-(the quantile paths), as contributions do today.
+Shard key `[COUNTERPARTY, NETTING_SET]` (no group prefix): **a netting set is never split** and a counterparty's sets sit together, so
+netting, collateral and the floor ([section 7.4.2](#742-the-order-per-netting-set-first-then-across-netting-sets)) run on one owner;
+the owner returns each scope's **summed positive-exposure path matrix** (800 KB at P 2,000 × G 50); the coordinator adds partials in
+shard order and takes quantiles **after** the combine (CLUSTER_DEPLOYMENT section 6.3). Allocation needs a second round for PFE (the
+quantile paths), as contributions do today.
 
 #### 7.4.6 MR versus CCR: two cubes on one core
 
-| | MR Cube ([section 6](#6-the-mr-cube-a-market-risk-cube-lens-that-answers-what-fis-adaptivs-artiq-answers-and-shows-why)) | CCR Cube (this document) |
-|---|---|---|
-| Core | shared (section 6.4) | shared |
-| Data grain | position × scenario; position × factor | trade × path × time step |
-| Aggregation order | sum vectors, then the statistic | net and collateralise per netting set per path, then sum sets, then the statistic |
-| Shard key | `LEGAL_ENTITY`, `DESK` | `COUNTERPARTY`, `NETTING_SET` |
-| Shared inputs | **`position-sensitivity`** (SBM) and the **QLRisk bridge** (scenario P&L) | **`position-sensitivity`** (SIMM, SA-CVA hedges) and the **QLRisk bridge** (path MtMs) |
-
----
+See [section 6.4.13](#6413-mr-versus-ccr-two-cubes-on-one-core).
 
 ### 7.5 What Drishti has today
 
@@ -5429,7 +4814,7 @@ combine (CLUSTER_DEPLOYMENT section 6.3). A group across owners is summed by the
 | EE and EPE contributions per trade within a set (Euler); PFE contributions by window; incremental PFE | **Built** | [EXPOSURE_GUIDE section 18.6](../guides/EXPOSURE_GUIDE.md#186-contributions-decomposition) |
 | Allocated exposure by desk across netting sets, served on the VaR hierarchy | **Not built**, designed (RL6, TL2) | [section 1.5.6](#156-rl6-exposure-on-the-var-hierarchy) |
 | Pre-deal: exact paths (Python) or the add-on proxy (Java) | **Built** | [EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if); `ExposureWhatIf.java`, `ExposureWhatIfPaths.java` |
-| Pricing a new trade's path MtMs (QLRisk) | **Not built** | section 9 |
+| Pricing a new trade's path MtMs (QLRisk) | **Not built** | [section 7.9](#79-pre-deal-incremental-pfe-cva-and-sa-ccr) |
 | Official end-of-day records, captures and compare | **Built** | [EXP.md section 6](../contracts/EXP.md#6-official-end-of-day-results) |
 | Credit limits read as stored, with tenor buckets; utilisation on the computed peak | **Built as read**; stored limits sized on stored profiles; LIM engine parked | [EXPOSURE_GUIDE section 28](../guides/EXPOSURE_GUIDE.md#28-open-items) |
 | Counterparty groups with GLEIF members | **Partly**: kept members stored; GLEIF pack built; `connected(G)` proposed | [COMPUTED_ATTRIBUTES.md section 5.12](COMPUTED_ATTRIBUTES.md#512-core-counterparty-group-grp-figures) |
@@ -5442,21 +4827,17 @@ combine (CLUSTER_DEPLOYMENT section 6.3). A group across owners is summed by the
 | Exposure sharding | **Planned** (CD10), designed | [CLUSTER_DEPLOYMENT section 6](CLUSTER_DEPLOYMENT.md#6-exposure-sharding-in-depth-planned) |
 | Explorer with tree, tiles, profile, path fan, collateral, trades, pre-deal tabs; phone layout | **Built** | [EXPOSURE_GUIDE section 3](../guides/EXPOSURE_GUIDE.md#3-the-explorer-screen-by-screen) |
 
-**Verified in code (2026-10-31):** `drishti-server/src/main/java/com/ash/drishti/server/exposure/` holds `ExposureService`,
-`ExposureWhatIf`, `ExposureWhatIfPaths`, `ExposureExplorer`, `ExposureOfficial`, `ExposureLoader`, `ExposureTier`; there is no CVA,
-SA-CCR, SIMM, WWR or sharding class there (the exposure guide's section 18.8: "Fan-out across nodes is PLANNED").
+**In code (checked 2026-10-31):** `drishti-server/src/main/java/com/ash/drishti/server/exposure/` holds `ExposureService`,
+`ExposureWhatIf`, `ExposureWhatIfPaths`, `ExposureExplorer`, `ExposureOfficial`, `ExposureLoader`, `ExposureTier`; no CVA, SA-CCR,
+SIMM, WWR or sharding class (fan-out across nodes is planned, EXPOSURE_GUIDE section 18.8).
 
 **On the demo** (2026-09-30, `--as-of data`): the bank's peak PFE 95% is **2,897,620,439** USD at 2W (EPE 947,202,991); CP-ALDERSHOT's
-peak PFE 401,456,820 against the sum of its four sets' peaks 534.4 m (PFE is not additive; EXPOSURE_GUIDE section 2.2).
-
----
+peak PFE 401,456,820 against the sum of its four sets' peaks 534.4 m (PFE is not additive).
 
 ### 7.6 Screens and visualisation
 
-The mock-ups are in the repository: [A](mockups/ccr-cube/A.html), [B](mockups/ccr-cube/B.html), [C](mockups/ccr-cube/C.html),
-each with its screenshot; [section 6.7](#767-mock-ups-the-screens-to-build) is the build checklist.
-The house rules of [section 6.6](#66-screens-and-visualisation) apply: keyboard first, every number printed,
-never colour alone.
+The house rules of [section 6.6](#66-screens-and-visualisation) apply (keyboard first, every number printed, never colour alone); the
+build checklist is [section 7.6.7](#767-mock-ups-the-screens-to-build).
 
 #### 7.6.1 Three layouts (mock-ups, the product owner picks)
 
@@ -5466,20 +4847,22 @@ never colour alone.
 | **B: Netting-set drill** | a netting set's trades, its collateral waterfall at the peak tenor, the CSA's terms, the MPOR effect (lagged against current collateral), margin calls and disputes | collateral, the "why is exposure above uncollateralised" question |
 | **C: Pre-deal and XVA** | the pre-deal overlay on the profile (before, after, limit), incremental PFE, CVA, SA-CCR EAD of the trade; the group roll-up on the GLEIF tree; CVA term-structure bars; the WWR scatter | traders, sales, the CVA desk |
 
-**Recommendation:** A as the landing; B opens on a netting set; C opens from Pre-deal or the XVA menu.
+The choice is decided in [section 7.6.7](#767-mock-ups-the-screens-to-build).
 
 #### 7.6.2 The visual catalogue
 
-| Visual | What it shows | Interactions | Built today? |
-|---|---|---|---|
-| **PFE and EE profile fan chart with the limit line and headroom shading** | EE, PFE at q, the 5–95% and 25–75% path bands over the primary tenors; the limit as a step line by tenor bucket; the gap between PFE and the limit shaded (green headroom, red excess); the peak marked | hover a tenor: every figure; **brush a time range** to zoom and get EPE over it; toggle q 95/99 and collateral on/off | the profile and fan built (netting set); limit line by bucket and headroom shading not built |
-| **Counterparty treemap by exposure and rating** | rectangles by EPE (or peak PFE, CE), nested by group (GLEIF ultimate parent) and counterparty; colour by rating band; a red edge when over limit | click: open the counterparty; shift-click: add to a scope; hover: rating, sector, country, limit use | not built |
-| **Netting-set drill** | trades (EE contribution, alone PFE, netting benefit), the CSA (thresholds, MTA, IA, MPOR, frequency), collateral held and posted by asset, margin calls | click a trade: its exposure; click a CSA term: its effect (re-run with the term changed: a what-if) | trades, collateral and CSA tabs built; term what-if not built |
-| **Collateral waterfall** | at a chosen tenor: uncollateralised EE → − VM held on the lagged paths → + posted collateral at risk → − IM held → threshold and MTA effect → EE; each bar printed | drag the tenor; toggle `lagged` / `current` to see the MPOR effect as its own bar | the "collateral effect" tile built; waterfall not built |
-| **Wrong-way risk scatter** | per counterparty: EPE (x) against PD or the correlation of exposure and hazard on the paths (y), size by CVA, specific-WWR names marked; or, for one counterparty, E against hazard per path at a tenor | click a point: the counterparty; **brush** a region to make a scope | not built |
-| **CVA term-structure bar chart** | per tenor bucket: EE(t) · DF(t) · ΔPD(t) · LGD as bars adding up to CVA; the survival curve as a line; DVA mirrored below | hover: the four factors; toggle unilateral / bilateral | not built |
-| **Pre-deal overlay** | the profile before (grey) and after (bright), the incremental PFE per tenor as bars below, the limit line, and the new trade's CVA and SA-CCR EAD in tiles | edit the notional or maturity: the overlay updates; switch method (paths, price, proxy) | incremental profile built (table); overlay chart not built |
-| **Group roll-up on the GLEIF tree** | the group's ultimate parent, direct parents and counterparties as an indented tree with peak PFE, EPE, limit use per node; members from GLEIF marked apart from kept members; excluded members struck through | expand, collapse; click a node: its scope; toggle `kept` / `connected` membership | GLEIF pack built; roll-up not built |
+Each visual's contents and interactions are its panel row in [section 7.6.7](#767-mock-ups-the-screens-to-build); what exists today:
+
+| Visual | Panels | Built today? |
+|---|---|---|
+| **PFE and EE profile fan chart with the limit line and headroom shading** (5–95% and 25–75% path bands; brush a time range for EPE over it) | A6, C2 | the profile and fan built (netting set); limit line by bucket and headroom shading not built |
+| **Counterparty treemap by exposure and rating** | A4 | not built |
+| **Netting-set drill** (a CSA term clicked re-runs with the term changed: a what-if) | B1, B3, B4, B6 | trades, collateral and CSA tabs built; term what-if not built |
+| **Collateral waterfall** (`lagged` / `current` shows the MPOR effect as its own bar) | B2 | the "collateral effect" tile built; waterfall not built |
+| **Wrong-way risk scatter** (also, for one counterparty, E against hazard per path at a tenor) | C5 | not built |
+| **CVA term-structure bar chart** (DVA mirrored below when bilateral) | C4 | not built |
+| **Pre-deal overlay** | C1, C2 | incremental profile built (table); overlay chart not built |
+| **Group roll-up on the GLEIF tree** | C3 | GLEIF pack built; roll-up not built |
 
 #### 7.6.3 Response-time targets
 
@@ -5489,7 +4872,7 @@ never colour alone.
 | Treemap of 2,000 counterparties | 400 ms¹ | EPE is additive, from per-set rows |
 | A group of 200 sets at P 5,000 × G 100 | 150 ms¹ | the target of EXPOSURE_GUIDE section 27.1, open (0.3 s measured single-threaded) |
 | Netting-set drill with trades | 300 ms¹ (the trade paths read for the set only, after pruning by netting set) | |
-| Pre-deal by exact paths, one set | 1 s¹; by QLRisk pricing a vanilla swap on 2,000 × 50 points: 30 s or more¹ | the pricing cost dominates (section 9) |
+| Pre-deal by exact paths, one set | 1 s¹; by QLRisk pricing a vanilla swap on 2,000 × 50 points: 30 s or more¹ | the pricing cost dominates ([section 7.9](#79-pre-deal-incremental-pfe-cva-and-sa-ccr)) |
 | CVA of a counterparty | 50 ms¹ | EE row × DF × ΔPD, G terms |
 | SA-CCR of the bank (1M derivatives) | 3 s¹ | additive per hedging set, cached per set |
 
@@ -5498,19 +4881,18 @@ measured on the demo and on the product owner's server.
 
 #### 7.6.4 Keyboard, phone, embedding
 
-Keys as the MR cube (section 6.6.4) with `Q` (PFE confidence), `K` (collateral model), `L` (limit line), `G` (group tree).
-Phone tiers: **must** the counterparty's tiles (peak PFE, limit use, EPE, CE) and the profile; **glance** the top-five board rows;
-**more** the netting sets, collateral waterfall, CVA; **desk** the treemap and the pivot editor. Every visual is a ViewModel panel and
-embeds by the client renderer.
+As the MR cube ([section 6.6.4](#664-keyboard-first), [section 6.4.9](#649-embed-and-phone-views-tiers)), plus `Q` (PFE confidence),
+`K` (collateral model), `L` (limit line), `G` (group tree). Phone tiers: **must** the counterparty's tiles (peak PFE, limit use, EPE, CE)
+and the profile; **glance** the top-five board rows; **more** the netting sets, collateral waterfall, CVA; **desk** the treemap and the
+pivot editor.
 
 #### 7.6.7 Mock-ups: the screens to build
 
 **Decided (product owner, 2026-10-31): layout A is the landing page; B and C are tabs of the same page** (a netting set clicked on A
-opens B in place). The mock-ups are in the repository, self-contained HTML (no CDN, no external fonts) with a screenshot of each:
-[A.html](mockups/ccr-cube/A.html), [B.html](mockups/ccr-cube/B.html), [C.html](mockups/ccr-cube/C.html). Their exposure figures are the
-demo's (the bank's peak PFE 95% 2,897,620,439; CP-ALDERSHOT 401,456,820; NS-ALDERSHOT-LDN's profile); limits, the legal tree, CVA, wrong-way
-risk and the waterfall's split are illustrative. The tables are the **build checklist**: every panel, its exact contents, data,
-interactions, phase (POC or later, section 12), phone tier; tick *Done* when the panel matches and its test exists.
+opens B in place). Mock-ups ([conventions](#mock-ups)): [A.html](mockups/ccr-cube/A.html), [B.html](mockups/ccr-cube/B.html),
+[C.html](mockups/ccr-cube/C.html). Their exposure figures are the demo's (the bank's peak PFE 95% 2,897,620,439; CP-ALDERSHOT
+401,456,820; NS-ALDERSHOT-LDN's profile); limits, the legal tree, CVA, wrong-way risk and the waterfall's split are illustrative. Phases
+are those of [section 7.12](#712-lens-design-and-proof-of-concept-poc) and [section 7.13](#713-phases-proposed).
 
 **States every panel has:** **loading** (a skeleton of the panel's shape); **empty** in words: a counterparty or netting set without paths
 says "no exposure paths for <id> on <date>" (CP-NORTHPLAINS in the demo), never an old figure; a counterparty without a limit says so
@@ -5558,18 +4940,17 @@ every number it touched).
 | C5 | Wrong-way risk scatter | x EPE, y corr(E, hazard) on the paths; size CVA; red above a threshold (0.45) and labelled with ρ; a diamond marks specific WWR ("CP-SUMMIT: CDS on a group member") | `credit-path`, `wwr-flag` ([§7.12](#7712-c11-credit-path-and-c12-wwr-flag-new)) | click a point: the counterparty; **brush** a region: make it a scope | XVA and wrong-way risk (CC9) | desk | [ ] |
 
 **Not on the mock-ups but in the design, to build with them:** allocation by desk (rows `DESK` on A's pivot: the POC's Euler allocation,
-section 8.2), saved views, export, the embed, the phone layout of section 6.4, SA-CCR and SIMM pivots (CC7, CC8).
-
----
+[section 7.8.2](#782-allocated-exposure-cc2)), saved views, export, the embed, the phone layout of section 6.4, SA-CCR and SIMM pivots
+(CC7, CC8).
 
 ### 7.7 Data and contracts
 
 #### Data needed: the complete list
 
-**Every dataset the CCR Cube reads, in one table.** Columns as in [section 6's list](#data-needed-the-complete-list):
-*Phase* is the first phase that needs the row (POC of [section 12](#712-lens-design-and-proof-of-concept-poc), then the phases of
-[section 13](#713-phases-proposed), all proposed in the plan's themes, product owner 2026-10-31); a **new generator** is a script under `tools/packgen/ccr/` writing JSON Lines to
-`data/testdata/<domain>/<kind>/*.jsonl.gz`, loaded by `tools/build_demo_lakes.py` into Delta.
+**Every dataset the CCR Cube reads, in one table.** Columns as in [section 6's list](#data-needed-the-complete-list): *Phase* is the
+first phase that needs the row (the POC of [section 7.12](#712-lens-design-and-proof-of-concept-poc), then the phases of
+[section 7.13](#713-phases-proposed), product owner 2026-10-31); a **new generator** is a script under `tools/packgen/ccr/` writing JSON
+Lines to `data/testdata/<domain>/<kind>/*.jsonl.gz`, loaded by `tools/build_demo_lakes.py` into Delta.
 
 | # | Dataset | What it is; needed by | Phase | Typical source in a bank | Grain, frequency | State | Demo or POC gets it from | §7 |
 |---|---|---|---|---|---|---|---|---|
@@ -5583,7 +4964,7 @@ section 8.2), saved views, export, the embed, the phone layout of section 6.4, S
 | 8 | Counterparties and groups (`counterparty`, `counterparty-group`) | rows, ratings, sectors, countries, the group's own limit | POC | the client master and the credit system | counterparty × date | existing; extended (membership rule) | existing demo (24 counterparties, 23 groups) | [7.9](#779-c8-the-legal-hierarchy-counterparty-counterparty-group-gleif) |
 | 9 | Legal hierarchy: GLEIF parents | the group roll-up, specific wrong-way risk | POC | GLEIF's golden copy (public), the bank's client master | relationship; static, monthly | existing (the gleif pack); a synthetic tree for the demo | the demo counterparties' LEIs are synthetic, so a **new generator** `tools/packgen/ccr/legal_tree.py` writes their parent tree to `data/testdata/counterparty-risk/legal-parent/`, kept apart from the real GLEIF data (decision P3) | [7.9](#779-c8-the-legal-hierarchy-counterparty-counterparty-group-gleif) |
 | 10 | Credit limits by tenor bucket (`credit-limit`) | the limit board, the limit line, headroom | POC | the credit system | limit × date | existing; extended (scope, confidence, buckets) | **new generator** `tools/packgen/ccr/credit_limits.py`: limits re-sized on the computed PFE (the stored ones read 0.1% to a few percent, EXPOSURE_GUIDE section 28), a few near or over for the demo | [7.10](#7710-c9-credit-limit-lim-existing-extended) |
-| 11 | Desk hierarchy (the VaR hierarchies) | allocation by desk, book, legal entity, limit letter | POC | the hierarchy system | node × date | existing | existing demo (MGMT, LEGAL, LL) | [section 4.4](#744-two-hierarchies) |
+| 11 | Desk hierarchy (the VaR hierarchies) | allocation by desk, book, legal entity, limit letter | POC | the hierarchy system | node × date | existing | existing demo (MGMT, LEGAL, LL) | [section 7.4.4](#744-two-hierarchies) |
 | 12 | FX rates (`fx-spot`) | sums in USD, CSA currencies | POC | market data | currency × date | existing | existing demo | — |
 | 13 | Ratings | the treemap's colour, BA-CVA weights, proxies | POC | the credit system (counterparty `RATING`) | counterparty × date | existing | existing demo | [7.9](#779-c8-the-legal-hierarchy-counterparty-counterparty-group-gleif) |
 | 14 | Calendars (`calendar`) | business days, MPOR in business days | POC | the calendar service | yearly | existing | existing demo | — |
@@ -5605,12 +4986,13 @@ section 8.2), saved views, export, the embed, the phone layout of section 6.4, S
 | 30 | Credit paths (`credit-path`) | general wrong-way risk | XVA and wrong-way risk | the exposure simulator, jointly with the market | name × grid date × run | new | `make_ccr_data.py` extended (`CREDIT_PATHS` true) | [7.12](#7712-c11-credit-path-and-c12-wwr-flag-new) |
 | 31 | Wrong-way risk flags (`wwr-flag`) | specific WWR | XVA and wrong-way risk | Drishti's rules over `saccr-trade` and the legal tree; manual flags | trade | new | **new generator** `tools/packgen/ccr/wwr_flags.py` (two demo CDS trades on group members) | [7.12](#7712-c11-credit-path-and-c12-wwr-flag-new) |
 
-**Count by the first phase each row is needed in:** POC **16** (rows 1 to 6, 8 to 16, and 23 for the contractual haircuts; CC1 to CC4 in the counterparty engines phase read
-the POC's data); sensitivities and capital **4** (rows 7, 24 to 26; row 5 widens); counterparty engines **2** (rows 21, 22; 23 widens to the supervisory haircuts); XVA and wrong-way risk **8** (rows 17 to 20, 27, 28, 30, 31; row 2 gains `PURPOSE`); unscheduled **1** (row 29; row 6's holdings widen with CC11, unscheduled).
-**New generators: 8** under `tools/packgen/ccr/` (`legal_tree.py`, `credit_limits.py`, `collateral_holdings.py`, `im_history.py`,
-`saccr_trades.py`, `simm_inputs.py`, `cva_sensitivity.py`, `wwr_flags.py`) plus `make_ccr_data.py` extended three times (risk-neutral,
-stressed, credit paths); the shared `sensitivities.py` comes from the MR cube. **Bank only:** every input in production, and the SIMM
-parameters always (ISDA's licence).
+**Count by the first phase each row is needed in:** POC **16** (rows 1 to 6, 8 to 16, and 23 for the contractual haircuts; CC1 to CC4
+in the counterparty engines phase read the POC's data); sensitivities and capital **4** (rows 7, 24 to 26; row 5 widens); counterparty
+engines **2** (rows 21, 22; 23 widens to the supervisory haircuts); XVA and wrong-way risk **8** (rows 17 to 20, 27, 28, 30, 31; row 2
+gains `PURPOSE`); unscheduled **1** (row 29; row 6's holdings widen with CC11). **New generators: 8** under `tools/packgen/ccr/`
+(`legal_tree.py`, `credit_limits.py`, `collateral_holdings.py`, `im_history.py`, `saccr_trades.py`, `simm_inputs.py`,
+`cva_sensitivity.py`, `wwr_flags.py`) plus `make_ccr_data.py` extended three times (risk-neutral, stressed, credit paths); the shared
+`sensitivities.py` comes from the MR cube. **Bank only:** every input in production, and the SIMM parameters always (ISDA's licence).
 
 #### Minimum data for a first answer
 
@@ -5639,125 +5021,88 @@ Allocation by desk adds the desk hierarchy (in the demo); the group roll-up adds
 
 #### The contracts in detail
 
-The conventions of [section 6.7](#67-data-and-contracts) apply (contract YAMLs, JSON Lines gzipped into Delta or
-Iceberg partitioned by `business_date`, `data/testdata/counterparty-risk/<kind>/*.jsonl.gz` for the demo, Endur-style UPPER_SNAKE
-names). Sizes at the reference bank: **2.3M positions, about 10M trades of which about 1M live OTC derivatives and SFTs in about 100,000
-netting sets with 20,000 counterparties** (assumptions of EXPOSURE_GUIDE section 27 and CLUSTER_DEPLOYMENT section 6.4)².
+The conventions of [section 6.7](#67-data-and-contracts) apply; the demo's files are
+`data/testdata/counterparty-risk/<kind>/*.jsonl.gz`. An existing kind's fields are in its contract document (linked per row); below
+are only what the cube **adds** and the new kinds. Sizes at the reference bank: **2.3M positions, about 10M trades of which about 1M live
+OTC derivatives and SFTs in about 100,000 netting sets with 20,000 counterparties** (assumptions of EXPOSURE_GUIDE section 27 and
+CLUSTER_DEPLOYMENT section 6.4)².
 
 #### 7.7.1 The contract map
 
 | # | Contract (kind) | Class | State | Read by the CCR Cube for | Section |
 |---|---|---|---|---|---|
-| C1 | `trade` (TRD), `trade-valuation` (TVAL) | fundamental | existing | membership, MtM today, CE, dimensions | 7.2 |
-| C2 | `simulation-run` (XRUN) | input | existing; **extended** | the run's grid, calibration, stressed runs | 7.3 |
-| C3 | `exposure-path` (XPATH) | input | existing; **extended** | path MtMs | 7.4 |
-| C4 | `netting-set` (NSET), `agreement` (AGR) | fundamental | existing (stored figures retiring) | sets, enforceability | 7.5 |
-| C5 | `csa` (CSA) | fundamental | existing | thresholds, MTA, IA, MPOR, eligibility, haircuts | 7.6 |
-| C6 | `collateral-balance` (COLL), `collateral-holding` | fundamental | existing; `collateral-holding` **new** (COLL.md) | collateral today, by asset | 7.7 |
-| C7 | `margin-call` (MC), `im-history` | fundamental, input | existing; `im-history` **new** | calls, disputes, IM over time | 7.8 |
-| C8 | `counterparty`, `counterparty-group`, GLEIF `lei-entity`, `lei-relationship` | fundamental | existing; group **extended** | the legal hierarchy | 7.9 |
-| C9 | `credit-limit` (LIM) | fundamental | existing; **extended** | limits by tenor bucket and measure | 7.10 |
-| C10 | `credit-curve`, `ir-curve` and `cva-proxy-map` | fundamental, configuration | existing; `cva-proxy-map` **new** | CVA: PD, LGD, DF, proxies | 7.11 |
-| C11 | `credit-path` | input | **new** (WWR.md, optional) | general WWR on the paths | 7.12 |
-| C12 | `wwr-flag` | fundamental | **new** | specific WWR | 7.12 |
-| C13 | `saccr-trade` | input | **new** (SACCR.md) | SA-CCR | 7.13 |
-| C14 | `position-sensitivity` read as CRIF; `simm-addon`, `crif-external` | input | **new** (shared with the MR cube; SIMM.md) | SIMM, SA-CVA hedges | 7.14 |
-| C15 | `cva-sensitivity` | input (optional) or computed | **new** | SA-CVA | 7.15 |
-| C16 | `exposure-predeal` request and result | drishti-owned, computed | existing API; **extended** | pre-deal | 7.16 |
+| C1 | `trade` (TRD), `trade-valuation` (TVAL) | fundamental | existing | membership, MtM today, CE, dimensions | 7.7.2 |
+| C2 | `simulation-run` (XRUN) | input | existing; **extended** | the run's grid, calibration, stressed runs | 7.7.3 |
+| C3 | `exposure-path` (XPATH) | input | existing; **extended** | path MtMs | 7.7.4 |
+| C4 | `netting-set` (NSET), `agreement` (AGR) | fundamental | existing (stored figures retiring) | sets, enforceability | 7.7.5 |
+| C5 | `csa` (CSA) | fundamental | existing | thresholds, MTA, IA, MPOR, eligibility, haircuts | 7.7.6 |
+| C6 | `collateral-balance` (COLL), `collateral-holding` | fundamental | existing; `collateral-holding` **new** (COLL.md) | collateral today, by asset | 7.7.7 |
+| C7 | `margin-call` (MC), `im-history` | fundamental, input | existing; `im-history` **new** | calls, disputes, IM over time | 7.7.8 |
+| C8 | `counterparty`, `counterparty-group`, GLEIF `lei-entity`, `lei-relationship` | fundamental | existing; group **extended** | the legal hierarchy | 7.7.9 |
+| C9 | `credit-limit` (LIM) | fundamental | existing; **extended** | limits by tenor bucket and measure | 7.7.10 |
+| C10 | `credit-curve`, `ir-curve` and `cva-proxy-map` | fundamental, configuration | existing; `cva-proxy-map` **new** | CVA: PD, LGD, DF, proxies | 7.7.11 |
+| C11 | `credit-path` | input | **new** (WWR.md, optional) | general WWR on the paths | 7.7.12 |
+| C12 | `wwr-flag` | fundamental | **new** | specific WWR | 7.7.12 |
+| C13 | `saccr-trade` | input | **new** (SACCR.md) | SA-CCR | 7.7.13 |
+| C14 | `position-sensitivity` read as CRIF; `simm-addon`, `crif-external` | input | **new** (shared with the MR cube; SIMM.md) | SIMM, SA-CVA hedges | 7.7.14 |
+| C15 | `cva-sensitivity` | input (optional) or computed | **new** | SA-CVA | 7.7.15 |
+| C16 | `exposure-predeal` request and result | drishti-owned, computed | existing API; **extended** | pre-deal | 7.7.16 |
 
 #### 7.7.2 C1 `trade` and `trade-valuation`: existing
 
-`trade` as in [section 6.7.2](#672-d1-trade-trd-existing-read-as-dimensions). `trade-valuation` (TVAL,
-`trade-valuation.contract.yaml`): one row per trade per date, key `VALUATION_ID` (`TVAL-<TRADE_ID>`), fields `TRADE_ID`, `SOURCE_SYSTEM`,
-`PRODUCT_TYPE`, `PRODUCT_GROUP`, `PORTFOLIO`, `DESK`, `COUNTERPARTY`, `NETTING_SET`, `TRADER_ID`, `BUY_SELL_CODE`, `TRADE_STATUS`, `CURRENCY`,
-`NOTIONAL` (USD), `MTM` (USD, dirty, bank's side), `MTM_CURRENCY`, `PNL_1D`, `DV01`, `TRADE_DATE`, `MATURITY_DATE`, `VALUATION_DATE`. The
-exposure engine reads members and MtM from it (E0). **The cube adds** (optional, proposed): `CSA_DISCOUNTED_MTM` (when the
-source values on the CSA discount curve), `XVA_EXCLUDED` (a reason). **Size:** 10M rows, about 0.5 KB each: 5 GB JSON, 0.5 GB Parquet a
-day. **Sources:** Endur, Murex, Calypso valuations at the close.
+`trade` as in [section 6.7.2](#672-d1-trade-trd-existing-read-as-dimensions); `trade-valuation` as in [TVAL.md](../contracts/TVAL.md)
+(one row per trade per date; the exposure engine reads members and MtM from it). **The cube adds** (optional, proposed):
+`CSA_DISCOUNTED_MTM` (when the source values on the CSA discount curve), `XVA_EXCLUDED` (a reason). **Size:** 10M rows, about 0.5 KB
+each: 5 GB JSON, 0.5 GB Parquet a day.
 
 #### 7.7.3 C2 `simulation-run` (XRUN): existing, extended
 
-**Grain:** one row per run and date. **Key:** `RUN_ID` (`XR-<date>-<nn>`). Existing fields (`simulation-run.contract.yaml`): `BUSINESS_DATE`,
-`MARKET_DATA_DATE`, `MODEL`, `MODEL_VERSION`, `CALIBRATION` (`REAL_WORLD`, `RISK_NEUTRAL`, `STRESSED`), `PATHS`, `SEED`, `ANTITHETIC`,
-`GRID_DATES`, `GRID_ROLE` (`PRIMARY`, `LOOKBACK`), `LOOKBACK_OF`, `GRID_TENORS`, `LOOKBACK_DAYS`, `VALUE_BASIS` (`FUTURE`, `DISCOUNTED`),
-`CURRENCY` (USD), `PRECISION`, `CREDIT_PATHS`, `NETTING_SETS`, `TRADES`, `ROWS`, `BATCH_ID`, `COMPUTED_AT`, `STATUS`. **Sources:** the bank's
-exposure simulator (Adaptiv Analytics, Murex MX.3 credit, Calypso, Numerix, an in-house engine). **Frequency:** nightly (04:00 to 07:00
-typical), a stressed run weekly or monthly.
+Existing fields: [EXP.md section 2.2](../contracts/EXP.md#22-simulation-run-the-runs-identity-and-grid-reference-row) (one row per run
+and date; `CALIBRATION` `REAL_WORLD`, `RISK_NEUTRAL`, `STRESSED`). **Sources:** the bank's exposure simulator (Adaptiv Analytics, Murex
+MX.3 credit, Calypso, Numerix, in-house); nightly (04:00 to 07:00 typical), a stressed run weekly or monthly.
 
 **Extended (proposed):** `PURPOSE` (`PFE`, `CVA`, `IMM`, `STRESSED_IMM`, `STRESSED_CVA`): several runs a date, each read for its
-purpose (EXPOSURE_GUIDE open question 4); `STRESS_PERIOD_START`, `STRESS_PERIOD_END` for a stressed calibration; `PARENT_RUN_ID` when a run
-re-uses another's paths. **Validation:** one complete run per purpose and date; `CVA` runs must be `RISK_NEUTRAL`; a cube cell names the
-run in its provenance.
-
-```json
-{"RUN_ID":"XR-2026-09-30-02","BUSINESS_DATE":"2026-09-30","MARKET_DATA_DATE":"2026-09-30","MODEL":"Hull-White 1F rates, GBM FX and equity",
- "MODEL_VERSION":"bank-sim-7.4","CALIBRATION":"STRESSED","PURPOSE":"STRESSED_IMM","STRESS_PERIOD_START":"2008-07-01","STRESS_PERIOD_END":"2009-06-30",
- "PATHS":2000,"SEED":"ccr|XR-2026-09-30-02","ANTITHETIC":true,"LOOKBACK_DAYS":10,"VALUE_BASIS":"FUTURE","CURRENCY":"USD","PRECISION":"float32",
- "CREDIT_PATHS":false,"NETTING_SETS":100000,"TRADES":1000000,"ROWS":50000000,"BATCH_ID":"XB-2026-09-30-02","COMPUTED_AT":"2026-10-01T03:40:00Z",
- "STATUS":"complete","GRID_DATES":["2026-10-07","… 50 dates …"],"GRID_ROLE":["PRIMARY","…"],"LOOKBACK_OF":[-1,"…"],"GRID_TENORS":["1W","…"]}
-```
+purpose (EXPOSURE_GUIDE open question 4); `STRESS_PERIOD_START`, `STRESS_PERIOD_END` for a stressed calibration; `PARENT_RUN_ID` when a
+run re-uses another's paths. **Validation:** one complete run per purpose and date; `CVA` runs must be `RISK_NEUTRAL`; a cube cell names
+the run in its provenance.
 
 #### 7.7.4 C3 `exposure-path` (XPATH): existing, extended
 
-**Grain:** one row per trade, grid date and run. **Key:** `PATH_ROW_ID` = `<run>~<trade>~<grid index>`. **Storage:** Delta or Iceberg,
-`<root>/risk/exposure-path/`, partitioned by `business_date` (and `RUN_ID`), sorted by `NETTING_SET` then trade then grid index so a
-set's rows are contiguous and files can be skipped by netting-set statistics; vector column `MTM` (P values, USD, bank's side).
-Existing fields: `BUSINESS_DATE`, `RUN_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `DESK`, `TT_BOOK`,
-`LIMIT_LETTER`, `ASSET_CLASS`, `PRODUCT`, `NOTIONAL`, `MATURITY_DATE`, `GRID_INDEX`, `GRID_DATE`, `MTM`, `STATUS`, `PRICER`, `BATCH_ID`.
-**Size:** 1M trades × G × P × 4 bytes: **0.4 TB** (G 50, P 2,000) to **2 TB** (G 100, P 5,000) a date, the largest input of Drishti
-(EXPOSURE_GUIDE section 28). **Validation:** the denormalised set, counterparty and notional must match the membership (the
-membership wins, warned); a missing row before maturity + 10 business days is an error; `failed` counted, never zero.
+Existing fields, storage and validation: [EXP.md section 2.3](../contracts/EXP.md#23-exposure-path-every-trades-mtm-on-every-path-the-large-input)
+(one row per trade, grid date and run; vector `MTM` of P values; sorted by `NETTING_SET` so a set's rows are contiguous and files can be
+skipped by netting-set statistics). **Size:** 1M trades × G × P × 4 bytes: **0.4 TB** (G 50, P 2,000) to **2 TB** (G 100, P 5,000) a
+date, the largest input of Drishti.
 
 **Extended (proposed):** `CASHFLOW` (vector, optional: cash paid between grid dates, for the cash-flow spike issue,
 EXPOSURE_GUIDE open question 6), `FRTB_DESK` (for CVA desk hedges), `TRADE_VERSION` (the version simulated, for corrections).
 
-```json
-{"PATH_ROW_ID":"XR-2026-09-30-01~CLY-3000280~0","BUSINESS_DATE":"2026-09-30","RUN_ID":"XR-2026-09-30-01","TRADE_ID":"CLY-3000280",
- "SOURCE_SYSTEM":"CALYPSO","NETTING_SET":"NS-ALDERSHOT-FRA","COUNTERPARTY":"CP-ALDERSHOT","LEGAL_ENTITY":"LE-FRA","DESK":"DESK-SFT",
- "TT_BOOK":"BOOK-SFT-1","ASSET_CLASS":"Securities financing","PRODUCT":"Tri-party repo","NOTIONAL":237000000.0,"MATURITY_DATE":"2027-02-15",
- "GRID_INDEX":0,"GRID_DATE":"2026-10-07","MTM":[120455.2,-88310.9,"… 200 values …"],"STATUS":"ok","PRICER":"testgen-factor-walk",
- "BATCH_ID":"XB-2026-09-30-01"}
-```
-
 #### 7.7.5 C4 `netting-set` and `agreement`: existing
 
-`netting-set` (NSET): key `NETTING_SET_ID` (`NS-<counterparty>-<entity>`), `COUNTERPARTY`, `AGREEMENT`, `CSA`, `CREDIT_LIMIT`,
-`COLLATERAL_BALANCE`, `LEGAL_ENTITY`, `NETTING_ENFORCEABLE`, `TRADE_IDS`; the stored figures (`NET_MTM`, `COLLATERAL`, `LIMIT`, `CVA`,
-`TRADES[]`, `BY_ASSET`) retire with the NSET engine (COMPUTED_ATTRIBUTES section 13.5). `agreement` (AGR): `AGREEMENT_ID`, `TYPE`
-(ISDA 2002, GMRA, GMSLA), `COUNTERPARTY`, `GOVERNING_LAW`, `SIGNED`, `CLOSE_OUT_NETTING`, `ELECTIONS`, `CSAS`. **Sources:** the legal
-agreements system (often in-house, or Calypso's collateral module, Murex Collateral, Acadia). **Frequency:** daily, changes rare. **Size:**
-100,000 sets, 30,000 agreements, under 100 MB. **The cube adds:** nothing; a set with `NETTING_ENFORCEABLE` false makes each trade its
-own set.
+As in [NSET.md section 3](../contracts/NSET.md#3-inputs-from-upstream-engines); the stored figures retire with the NSET engine
+(COMPUTED_ATTRIBUTES section 13.5). **Sources:** the legal agreements system (in-house, Calypso's collateral module, Murex Collateral,
+Acadia); daily, changes rare; 100,000 sets, 30,000 agreements, under 100 MB. **The cube adds:** nothing; a set with
+`NETTING_ENFORCEABLE` false makes each trade its own set.
 
 #### 7.7.6 C5 `csa`: existing
 
-Key `CSA_ID`; `MARGIN_TYPE` (`VM`, `IM`), `THRESHOLD_US`, `THRESHOLD_THEM`, `MTA_US`, `MTA_THEM`, `INDEPENDENT_AMOUNT`, `CSA_CURRENCY`,
-`FREQUENCY`, `MARGIN_FREQUENCY_DAYS`, `MPOR_DAYS`, `LEGAL_ENTITY`, `ELIGIBLE[]` (asset class and haircut), `AGREEMENT`, `COUNTERPARTY`,
-`NETTING_SETS`, `COLLATERAL_BALANCES`. **The cube adds** (proposed, optional): `ROUNDING` (amount and direction), `SIMM_VERSION` (the
-agreed version: the modelling default "SIMM per the CSA"), `IM_REGIMES` (collect and post regulations), `DISPUTE_THRESHOLD`. Validation:
-MPOR + frequency − 1 against the run's look-back flagged `MPOR_MISMATCH`.
+As in [NSET.md section 3.5](../contracts/NSET.md#35-csa-credit-support-annex-terms-kept-moved-made-numeric). **The cube adds**
+(proposed, optional): `ROUNDING` (amount and direction), `SIMM_VERSION` (the agreed version: the modelling default "SIMM per the CSA"),
+`IM_REGIMES` (collect and post regulations), `DISPUTE_THRESHOLD`. Validation: MPOR + frequency − 1 against the run's look-back flagged
+`MPOR_MISMATCH`.
 
 #### 7.7.7 C6 `collateral-balance` and `collateral-holding`
 
-`collateral-balance` (COLL, existing): key `BALANCE_ID`, `HELD`, `POSTED`, `NET` (after haircut, USD), `AS_OF`, `POSITIONS[]`, `CSA`,
-`NETTING_SET`. `collateral-holding` (new, [COLL.md section 3.3](../contracts/COLL.md#33-collateral-holding-what-is-held-and-posted-kept-new)):
-one row per account, asset, direction, margin type and settlement status; key `HOLDING_ID`; `MARGIN_TYPE` (`VM`, `IM`, `IA`), `DIRECTION`
-(`HELD`, `POSTED`), `ASSET_TYPE`, `ASSET_ID` (ISIN or `CASH-<ccy>`), `CURRENCY`, `QUANTITY`, `ISSUER`, `ISSUER_RATING`, `MATURITY_DATE`,
-`PRICE`, `SEGREGATED`, `SETTLEMENT_STATUS`, `BATCH_ID`. **Sources:** the collateral system (Calypso Collateral, Murex Collateral,
-Cloudmargin, Acadia, in-house). **Size:** a few hundred thousand rows a day, under 200 MB. The cube's collateral waterfall and "posted at
-risk" read it.
-
-```json
-{"HOLDING_ID":"COLL-ALDERSHOT-NY~VM~HELD~US91282CJL54~SETTLED","BUSINESS_DATE":"2026-09-30","BALANCE_ID":"COLL-ALDERSHOT-NY",
- "NETTING_SET":"NS-ALDERSHOT-NY","CSA":"CSA-ALDERSHOT-NY","MARGIN_TYPE":"VM","DIRECTION":"HELD","ASSET_TYPE":"GOVT_BOND",
- "ASSET_ID":"US91282CJL54","CURRENCY":"USD","QUANTITY":5000000,"SEGREGATED":false,"SETTLEMENT_STATUS":"SETTLED","BATCH_ID":"B-2026-09-30-01"}
-```
+`collateral-balance` (existing) and `collateral-holding` (new, one row per account, asset, direction, margin type and settlement status)
+are defined in [COLL.md section 3.2](../contracts/COLL.md#32-collateral-balance-the-account-kept) and
+[section 3.3](../contracts/COLL.md#33-collateral-holding-what-is-held-and-posted-kept-new). **Sources:** the collateral system
+(Calypso Collateral, Murex Collateral, Cloudmargin, Acadia, in-house); a few hundred thousand rows a day, under 200 MB. The cube's
+collateral waterfall and "posted at risk" read them.
 
 #### 7.7.8 C7 `margin-call` (existing) and `im-history` (new)
 
-`margin-call` (MC): key `CALL_ID`, `CALL_DATE`, `MARGIN_TYPE`, `DIRECTION`, `AMOUNT`, `CURRENCY`, `STATUS` (`Agreed`, `Settled`, `Disputed`),
-`DISPUTE_AMOUNT`, `EVENTS[]`, `NETTING_SET`, `CSA`. **`im-history` (new):** the initial margin required and held per netting set, regime
-and date, for the IM trend and SIMM backtesting. **Grain:** one row per netting set, regime and date. **Key:** `IMH-<NETTING_SET>-<REGIME>-<date>`.
+`margin-call` as in [MC.md section 3.2](../contracts/MC.md#32-margin-call-the-actual-calls-kept). **`im-history` (new):** the initial
+margin required and held per netting set, regime and date, for the IM trend and SIMM backtesting. **Grain:** one row per netting set,
+regime and date. **Key:** `IMH-<NETTING_SET>-<REGIME>-<date>`.
 
 | Field | Type | Unit | Req. | Meaning |
 |---|---|---|---|---|
@@ -5775,11 +5120,9 @@ key; a model version different from the CSA's flagged.
 
 #### 7.7.9 C8 The legal hierarchy: `counterparty`, `counterparty-group`, GLEIF
 
-`counterparty` (CPTY): key `COUNTERPARTY_ID`, `NAME`, `LEI`, `RATING`, `SECTOR`, `COUNTRY`, `TYPE`, `COUNTRY_OF_RISK`, `UEN`, `GROUP`,
-`CREDIT_LIMIT`, `CREDIT_CURVE`, `LEGAL_ENTITY`, `HIERARCHY`, `KYC` (with `PD_1Y`). `counterparty-group` (GRP): `GROUP_ID`, `NAME`, `LIMIT`
-(the group's own approved limit, decision 7), `MEMBERS[]`; `UTILISATION` becomes computed. GLEIF (`config/packs/gleif/contracts/`):
-`lei-entity` (`LEI`, `NAME`, `LEI_GROUP`, `DIRECT_PARENT`, `ULTIMATE_PARENT`, `PARENTS[]`, `ENTITY_STATUS`, `REGISTRATION_STATUS`) and
-`lei-relationship` (`CHILD_ENTITY`, `PARENT_ENTITY`, `LEVEL` direct or ultimate, `RELATIONSHIP_STATUS`, `START`, `END`, `LEI_GROUP`).
+`counterparty` (CPTY, with `LEI`, `RATING`, `SECTOR`, `COUNTRY`, `GROUP`, `CREDIT_CURVE`, `KYC.PD_1Y`), `counterparty-group`
+([GRP.md section 3.2](../contracts/GRP.md#32-counterparty-group-the-kept-members): `LIMIT` is the group's own approved limit, decision 7;
+`UTILISATION` becomes computed) and GLEIF `lei-entity` and `lei-relationship` (`config/packs/gleif/contracts/`) as they are.
 **Sources:** the bank's client master (UEN), the credit system (ratings, limits), GLEIF's golden copy (public). **The cube adds to
 `counterparty-group`** (proposed): `MEMBERSHIP_RULE` (`kept`, `connected`), `EXCLUDED[]` (LEIs excluded with a reason and approver), and
 the computed `connected(G)`. Validation: a counterparty whose LEI is lapsed or retired is flagged; a GLEIF parent outside the kept group
@@ -5787,9 +5130,8 @@ is offered, never added silently.
 
 #### 7.7.10 C9 `credit-limit` (LIM): existing, extended
 
-Existing: key `LIMIT_ID`, `COUNTERPARTY`, `COUNTERPARTY_NAME`, `MEASURE` (`PFE 95 peak`), `LIMIT`, `USED`, `UTILISATION`, `STATUS`,
-`BUCKETS[]` (0-1Y, 1-3Y, 3-5Y, 5-10Y, 10Y+ with limit and use), `APPROVED_BY`, `REVIEW_DUE`. `USED`, `UTILISATION` and `STATUS` become
-computed (LIM.md). **Extended (proposed):**
+Existing fields: [LIM.md section 3.2](../contracts/LIM.md#32-credit-limit-the-approved-limits-kept) (`BUCKETS[]` with limit and use;
+`USED`, `UTILISATION` and `STATUS` become computed). **Extended (proposed):**
 
 | Field | Type | Unit | Req. | Meaning |
 |---|---|---|---|---|
@@ -5799,8 +5141,8 @@ computed (LIM.md). **Extended (proposed):**
 | `SUB_LIMITS[]` | record list | | optional | by product (`SETTLEMENT`, `PRE_SETTLEMENT`, `REPO`) or legal entity |
 | `WARNING_AT`, `TEMPORARY`, `VALID_FROM`, `VALID_TO` | rate, boolean, date | | optional | as `risk-limit` |
 
-Headroom per tenor: `H(t) = LIMIT(bucket(t)) − PFE_q(t)`; the board shows the minimum headroom and its tenor. Sources: the credit
-system; daily; tens of thousands of rows.
+Headroom per tenor and the binding tenor: [section 7.8.3](#783-limits-and-headroom-cc4). Sources: the credit system; daily; tens of
+thousands of rows.
 
 ```json
 {"LIMIT_ID":"LIM-ALDERSHOT","SCOPE":"CPTY:CP-ALDERSHOT","COUNTERPARTY":"CP-ALDERSHOT","MEASURE":"PFE","CONFIDENCE":0.95,"CURRENCY":"USD",
@@ -5811,10 +5153,10 @@ system; daily; tens of thousands of rows.
 
 #### 7.7.11 C10 CVA inputs: `credit-curve`, `ir-curve`, `cva-proxy-map`
 
-`credit-curve` (existing, market-data pack): `CURVE_ID`, `ISSUER`, `POINTS[]` (`TENOR`, `SPREAD` bp, `HAZARD`, `SURVIVAL`), `RECOVERY`,
-`PD_1Y`, `SENIORITY`, `DOC_CLAUSE`, `CURRENCY`. `ir-curve`: the USD OIS curve for discounting (modelling default: DF from USD OIS).
-**LGD:** market LGD = 1 − `RECOVERY` of the counterparty's curve (modelling default). **`cva-proxy-map` (new, configuration plus a
-table):** a counterparty without its own curve gets a proxy by rating × sector × region (modelling default).
+`credit-curve` (existing, market-data pack: points with spread, hazard and survival, `RECOVERY`, `PD_1Y`) and `ir-curve` (the USD OIS
+curve for discounting) as they are; LGD = 1 − `RECOVERY` (modelling default, [CVA.md section 6.2](../contracts/CVA.md#62-default-probabilities-and-discount-factors)).
+**`cva-proxy-map` (new, configuration plus a table):** a counterparty without its own curve gets a proxy by rating × sector × region
+(modelling default; [CVA.md section 6.5](../contracts/CVA.md#65-proxy-credit-curves)).
 
 | Field | Type | Req. | Meaning |
 |---|---|---|---|
@@ -5829,10 +5171,9 @@ a curve or a proxy, else its CVA is refused and named (never zero).
 
 #### 7.7.12 C11 `credit-path` and C12 `wwr-flag`: new
 
-`credit-path` ([WWR.md section 3.2](../contracts/WWR.md#32-credit-path-counterparty-credit-on-the-exposure-paths-optional-shared)):
-one row per credit name and grid date per run; key `<RUN_ID>~<NAME>~<GRID_INDEX>`; `NAME_TYPE`, `NAME`, `HAZARD` (vector, per year, P
-values) drawn jointly with the market paths; about **40 GB** a date at 20,000 names × G 100 × P 5,000 in float32. **`wwr-flag`** (new,
-fundamental): specific wrong-way risk, one row per trade flagged.
+`credit-path` is defined in [WWR.md section 3.2](../contracts/WWR.md#32-credit-path-counterparty-credit-on-the-exposure-paths-optional-shared)
+(hazard per credit name on every path, drawn jointly with the market paths; about **40 GB** a date at 20,000 names × G 100 × P 5,000 in
+float32). **`wwr-flag`** (new, fundamental): specific wrong-way risk, one row per trade flagged.
 
 | Field | Type | Req. | Meaning |
 |---|---|---|---|
@@ -5847,49 +5188,33 @@ Specific WWR trades are, per CRE53, treated as their own netting set with jump-t
 
 #### 7.7.13 C13 `saccr-trade`: new (SACCR.md)
 
-From [SACCR.md section 3.3](../contracts/SACCR.md#33-saccr-trade-the-classification-and-terms): one row per trade and risk driver per
-date; key `SACCR_ROW_ID` = `<TRADE_ID>~<DRIVER>`. Fields: `BUSINESS_DATE`, `TRADE_ID`, `SOURCE_SYSTEM`, `DRIVER`, `NETTING_SET`,
-`COUNTERPARTY`, `LEGAL_ENTITY`, `ASSET_CLASS` (`IR`, `FX`, `CREDIT`, `EQUITY`, `COMMODITY`), `HEDGING_SET`, `TRANSACTION_TYPE` (`LINEAR`,
-`OPTION`, `CDO_TRANCHE`, `BASIS`, `VOLATILITY`), `REFERENCE`, `IS_INDEX`, `CREDIT_QUALITY`, `DIRECTION`, `NOTIONAL_USD`, `QUANTITY`,
-`UNDERLYING_PRICE`, `START_DATE`, `END_DATE`, `MATURITY_DATE`, `OPTION_TYPE`, `BOUGHT_SOLD`, `EXERCISE_DATE`, `STRIKE`,
-`UNDERLYING_FORWARD`, `SHIFT`, `ATTACHMENT`, `DETACHMENT`, `CLEARED`, `DERIVED_BY` (`upstream` or `rules`), `BATCH_ID`. **Never
-delivered:** the supervisory duration, delta, maturity factor, adjusted and effective notional, add-ons, RC, multiplier, EAD (the guard
-test refuses them). Sources: the booking systems' regulatory classification or Drishti's rules from the trade; daily; about 1M rows, 0.3
-GB.
-
-```json
-{"SACCR_ROW_ID":"MX-30000412~0","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-30000412","SOURCE_SYSTEM":"MUREX","DRIVER":0,
- "NETTING_SET":"NS-ALDERSHOT-NY","COUNTERPARTY":"CP-ALDERSHOT","LEGAL_ENTITY":"LE-NY","ASSET_CLASS":"IR","HEDGING_SET":"USD",
- "TRANSACTION_TYPE":"LINEAR","DIRECTION":"LONG","NOTIONAL_USD":250000000,"START_DATE":"2026-10-02","END_DATE":"2036-10-02",
- "MATURITY_DATE":"2036-10-02","CLEARED":false,"DERIVED_BY":"upstream","BATCH_ID":"B-2026-09-30-01"}
-```
+Defined in [SACCR.md section 3.3](../contracts/SACCR.md#33-saccr-trade-the-classification-and-terms): one row per trade and risk driver
+per date, the classification and terms only; the supervisory duration, delta, maturity factor, add-ons, RC, multiplier and EAD are
+**never delivered** (the guard test refuses them). Sources: the booking systems' regulatory classification or Drishti's rules from the
+trade; daily; about 1M rows, 0.3 GB.
 
 #### 7.7.14 C14 SIMM inputs: the shared sensitivities as CRIF, `simm-addon`, `crif-external`
 
-SIMM reads **the same `position-sensitivity` records as the MR cube** ([section 6.7.9](#679-d8-position-sensitivity-sens-new)),
-at trade grain for the netting set's trades, mapped to ISDA's Common Risk Interchange Format by the CRIF mapping of
-[SIMM.md section 3.2](../contracts/SIMM.md#32-the-crif-mapping-drishti-columns-and-isda-crif): CRIF `RiskType` (`Risk_IRCurve`,
-`Risk_CreditQ`, `Risk_FX`, `Risk_Equity`, `Risk_Commodity`, vega and curvature types) from `RISK_CLASS` and `MEASURE`; `Qualifier` from
-`QUALIFIER`; `Bucket` from `SIMM_BUCKET`; `Label1` from `TENOR`; `Label2` from `CURVE` (the IR sub-curve); `Amount`, `AmountCurrency`,
-`AmountUSD` from `VALUE`, `CURRENCY`; `ProductClass`; `CollectRegulations` and `PostRegulations` from the CSA. SIMM-only vertices (2W,
-1M IR deltas, SIMM's vega expiries) come in the same records with the `SIMM` grid. `simm-addon` (SIMM.md section 3.3): `TRADE_ID`,
-`ADDON_TYPE` (`NOTIONAL`, `FIXED`, `MULTIPLIER`), `PRODUCT_CLASS`, `QUALIFIER`, `AMOUNT_USD`, `FACTOR`, `BATCH_ID`. `crif-external`
-(SIMM.md section 3.4): the counterparty's or custodian's CRIF and IM per netting set, compared, never computed from. **ISDA licensing:**
-the SIMM risk weights and correlations are ISDA's licensed parameters: a client loads its own; the demo ships made-up parameters,
-labelled.
+SIMM reads **the same `position-sensitivity` records as the MR cube** ([section 6.7.9](#679-d8-position-sensitivity-sens-new)), at
+trade grain for the netting set's trades, mapped to ISDA's CRIF by [SIMM.md section 3.2](../contracts/SIMM.md#32-the-crif-mapping-drishti-columns-and-isda-crif)
+(SIMM-only vertices come in the same records with the `SIMM` grid; `CollectRegulations` and `PostRegulations` from the CSA).
+`simm-addon` (SIMM.md section 3.3) and `crif-external` (SIMM.md section 3.4: the counterparty's or custodian's CRIF and IM per netting
+set, compared, never computed from) as defined there. **ISDA licensing:** the risk weights and correlations are ISDA's licensed
+parameters ([SIMM_GUIDE section 4](../guides/SIMM_GUIDE.md#4-the-licensed-parameter-file)): a client loads its own; the demo ships
+made-up parameters, labelled.
 
 #### 7.7.15 C15 `cva-sensitivity`: new (for SA-CVA)
 
 SA-CVA (MAR50) needs CVA's sensitivities to counterparty credit spreads and to market factors (IR, FX, reference credit, equity,
-commodity), delta and vega. Counterparty-spread sensitivities Drishti can compute (bump the credit curve: `CVA(s + 1 bp) − CVA`); market
-sensitivities need **re-simulated exposure** under bumped markets, which only the simulator can produce (CVA.md section 6.4). So:
-**an input** for market-factor sensitivities, **computed** for counterparty spreads.
+commodity), delta and vega. Counterparty-spread sensitivities Drishti can compute (bump the credit curve); market sensitivities need
+**re-simulated exposure** under bumped markets, which only the simulator can produce ([CVA.md section 6.4](../contracts/CVA.md#64-sensitivities)).
+So: **an input** for market-factor sensitivities, **computed** for counterparty spreads.
 
 | Field | Type | Unit | Req. | Meaning |
 |---|---|---|---|---|
 | `CVA_SENS_ID` | id | | required | `CVAS-<COUNTERPARTY>-<RISK_FACTOR>-<MEASURE>-<date>` |
 | `COUNTERPARTY`, `NETTING_SET` | id | | required (set optional) | |
-| `RISK_FACTOR` | text | | required | the factor dictionary's name (section 6.7.10) |
+| `RISK_FACTOR` | text | | required | the factor dictionary's name ([section 6.7.10](#6710-d9-the-factor-dictionary-risk-factor-and-the-bucket-mapping-sensitivity-bucketsyaml-new)) |
 | `MEASURE` | text | | required | `DELTA`, `VEGA` |
 | `VALUE` | amount | USD | required | ΔCVA for the MAR50 shift (1 bp; 1% relative for others) |
 | `HEDGE` | boolean | | required | true for an eligible CVA hedge's own sensitivity (from `position-sensitivity` of the CVA desk's hedges) |
@@ -5899,11 +5224,11 @@ Sources: the XVA engine (Adaptiv, Murex XVA, Quantifi, in-house); daily or month
 
 #### 7.7.16 C16 `exposure-predeal`: existing API, extended
 
-Today `POST /api/v1/exposure/what-if` (built): candidates with `method` `paths` (`{copyOf, factor}`, `{runId, mtm}`, `{runId,
-arrow}`) or `addon`; the answer `base`, `with`, `incremental {epe, peakPfe, profile[]}`, `items`, `method`, `flags`. **Extended
-(proposed):** a candidate `{terms}` in the `trade` contract's fields, priced on the run's paths by QLRisk (`method: price`); the answer
-adds `cva` (before, after, incremental), `saccrEad` (incremental, from the candidate's `saccr-trade` row derived by rules), `simmIm`
-(incremental, from its sensitivities), `limit` (headroom per tenor after), and `allocated` (the candidate's EE share).
+Today `POST /api/v1/exposure/what-if` (built, [EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if)): candidates
+by `paths` or `addon`; the answer `base`, `with`, `incremental`. **Extended (proposed):** a candidate `{terms}` in the `trade`
+contract's fields, priced on the run's paths by QLRisk (`method: price`); the answer adds `cva` (before, after, incremental), `saccrEad`
+(incremental, from the candidate's `saccr-trade` row derived by rules), `simmIm` (incremental, from its sensitivities), `limit`
+(headroom per tenor after), and `allocated` (the candidate's EE share).
 
 ```json
 {"scope":"CPTY:CP-ALDERSHOT","q":0.95,"collateral":"lagged","method":"price",
@@ -5913,45 +5238,47 @@ adds `cva` (before, after, incremental), `saccrEad` (incremental, from the candi
 
 #### 7.7.17 Proposed contract YAMLs (not created yet)
 
+All under `config/packs/counterparty-risk/contracts/`:
+
 | File | Kind | Mnemonic (proposed) | Class | New or extended |
 |---|---|---|---|---|
-| `config/packs/counterparty-risk/contracts/saccr-trade.contract.yaml` | `saccr-trade` | `SACT` | input | new (SACCR.md) |
-| `config/packs/counterparty-risk/contracts/collateral-holding.contract.yaml` | `collateral-holding` | `CHLD` | fundamental | new (COLL.md) |
-| `config/packs/counterparty-risk/contracts/im-history.contract.yaml` | `im-history` | `IMH` | input | new |
-| `config/packs/counterparty-risk/contracts/credit-path.contract.yaml` | `credit-path` | `XCRP` | input | new (WWR.md) |
-| `config/packs/counterparty-risk/contracts/wwr-flag.contract.yaml` | `wwr-flag` | `WWRF` | fundamental | new |
-| `config/packs/counterparty-risk/contracts/cva-proxy-map.contract.yaml` | `cva-proxy-map` | `CPXY` | fundamental | new |
-| `config/packs/counterparty-risk/contracts/cva-sensitivity.contract.yaml` | `cva-sensitivity` | `CVAS` | input | new |
-| `config/packs/counterparty-risk/contracts/simm-addon.contract.yaml` | `simm-addon` | `SIMA` | input | new (SIMM.md) |
-| `config/packs/counterparty-risk/contracts/crif-external.contract.yaml` | `crif-external` | `CRIF` | input | new (SIMM.md) |
-| `config/packs/counterparty-risk/contracts/exposure-allocation.contract.yaml` | `exposure-allocation` | `XALC` | computed | new (allocated EE, EPE, PFE share by trade, desk, book) |
-| `config/packs/counterparty-risk/contracts/saccr-result.contract.yaml` | `saccr-result` | `SACR` | computed | new (replaces stored `sa-ccr`) |
-| `config/packs/counterparty-risk/contracts/simm-result.contract.yaml` | `simm-result` | `SIMR` | computed | new (replaces stored `simm`) |
-| `config/packs/counterparty-risk/contracts/cva-result.contract.yaml` | `cva-result` | `CVAR` | computed | new (replaces stored `cva`) |
+| `saccr-trade.contract.yaml` | `saccr-trade` | `SACT` | input | new (SACCR.md) |
+| `collateral-holding.contract.yaml` | `collateral-holding` | `CHLD` | fundamental | new (COLL.md) |
+| `im-history.contract.yaml` | `im-history` | `IMH` | input | new |
+| `credit-path.contract.yaml` | `credit-path` | `XCRP` | input | new (WWR.md) |
+| `wwr-flag.contract.yaml` | `wwr-flag` | `WWRF` | fundamental | new |
+| `cva-proxy-map.contract.yaml` | `cva-proxy-map` | `CPXY` | fundamental | new |
+| `cva-sensitivity.contract.yaml` | `cva-sensitivity` | `CVAS` | input | new |
+| `simm-addon.contract.yaml` | `simm-addon` | `SIMA` | input | new (SIMM.md) |
+| `crif-external.contract.yaml` | `crif-external` | `CRIF` | input | new (SIMM.md) |
+| `exposure-allocation.contract.yaml` | `exposure-allocation` | `XALC` | computed | new (allocated EE, EPE, PFE share by trade, desk, book) |
+| `saccr-result.contract.yaml` | `saccr-result` | `SACR` | computed | new (replaces stored `sa-ccr`) |
+| `simm-result.contract.yaml` | `simm-result` | `SIMR` | computed | new (replaces stored `simm`) |
+| `cva-result.contract.yaml` | `cva-result` | `CVAR` | computed | new (replaces stored `cva`) |
 | `simulation-run`, `exposure-path`, `csa`, `credit-limit`, `counterparty-group`, `trade-valuation` | existing | | | extended (optional fields above) |
-| `position-sensitivity` | shared with the MR cube | `SENS` | input | new (section 6.7.17) |
+| `position-sensitivity` | shared with the MR cube | `SENS` | input | new ([section 6.7.17](#6717-proposed-contract-yamls-not-created-yet)) |
 
 The mnemonics are placeholders, to be checked against every pack's mnemonics at build.
 
 ² 1M live derivatives and SFTs of 10M trades, 10 trades a set, 5 sets a counterparty: the exposure benchmark's shape
 (`trades-per-set=10`, `sets-per-cpty=20` scaled); a bank's real shape changes every size here.
 
----
-
 ### 7.8 Measures
+
+Each measure's maths has one home; this section names it and keeps only what the cube adds.
 
 #### 7.8.1 Exposure profile (built)
 
-E, EE, ENE, EEE, PFE_q, peak PFE, EPE, EEPE, CE as in section 4.2 and [EXPOSURE_GUIDE section 18.4](../guides/EXPOSURE_GUIDE.md#184-statistics-of-a-scope).
+E, EE, ENE, EEE, PFE_q, peak PFE, EPE, EEPE, CE: [EXPOSURE_GUIDE section 18.4](../guides/EXPOSURE_GUIDE.md#184-statistics-of-a-scope).
 
 #### 7.8.2 Allocated exposure (CC2)
 
-Euler allocation of a netting set's collateralised exposure to its trades, per path and time step (inside a set):
+Euler allocation of a netting set's collateralised exposure to its trades, per path and time step (inside a set; the built contributions
+are [EXPOSURE_GUIDE section 18.6](../guides/EXPOSURE_GUIDE.md#186-contributions-decomposition)), extended across sets:
 
 ```
 a_i(p,k) = ( MTM_i(p,k) − w_i(p,k) · (C_n(p,k) + IM_n) ) · 1{E_n(p,k) > 0},   w_i = MTM_i / V_n   (0 when V_n = 0)
 Σ_{i∈n} a_i(p,k) = E_n(p,k)                                                   exactly, on every path
-EE_i^alloc(k) = (1/P) Σ_p a_i(p,k);  EPE_i^alloc = Σ_k EE_i^alloc(k) Δt_k / T
 EE_desk(k) = Σ_n Σ_{i ∈ n ∩ desk} EE_i^alloc(k)                                adds up to the bank's EE
 PFE share of a part j = mean of Σ_{i∈j} a_i over the contribution window of paths ranked around the quantile of the scope at its peak date, scaled to the peak
 ```
@@ -5962,70 +5289,45 @@ RL6 and TL2. Tests: desks' allocated EE equals the bank's EE at every date; a de
 #### 7.8.3 Limits and headroom (CC4)
 
 `use(t) = PFE_q(t) / LIMIT(bucket(t))`; `headroom(t) = LIMIT(bucket(t)) − PFE_q(t)`; the counterparty's binding tenor is
-`argmin_t headroom(t)`. Group: the members' exposure **summed per path** before the quantile, against the group's own limit (GRP.md
-section 6.3, never the sum of members' peaks).
+`argmin_t headroom(t)`; the board shows the minimum headroom and its tenor. Group: the members' exposure **summed per path** before the
+quantile, against the group's own limit (GRP.md section 6.3, never the sum of members' peaks).
 
 #### 7.8.4 CVA and the XVA family (CC5, CC6)
 
-```
-EE*(t_k) = EE(t_k) · DF(t_k)      ENE*(t_k) = ENE(t_k) · DF(t_k)              discounted once (CVA.md section 6.2)
-CVA  = −LGD_C · Σ_k EE*(t_k) · ( S_C(t_{k−1}) − S_C(t_k) )                    unilateral, EE* at the period end (ee-point: end)
-DVA  = +LGD_B · Σ_k |ENE*(t_k)| · ( S_B(t_{k−1}) − S_B(t_k) )
-FVA  = FCA + FBA = −Σ_k EE*(t_k)·s_F(t_k)·Δt_k + Σ_k |ENE*(t_k)|·s_F(t_k)·Δt_k   counterparty engines (2.9.12), with its playground
-KVA  = −Σ K(t_k) · hurdle · Δt_k · DF(t_k)                                    XVA and wrong-way risk (2.9.17), indicative
-```
+CVA, DVA and FVA (EE and ENE from the risk-neutral run, discounted once from USD OIS; LGD = 1 − market recovery; S_C from the
+counterparty's curve or its proxy) are [CVA.md section 6.3](../contracts/CVA.md#63-cva-dva-fva); BA-CVA (reduced, MAR50) is
+[CVA.md section 6.6](../contracts/CVA.md#66-ba-cva-reduced-version-mar50). FVA ships in the counterparty engines release (2.9.12) with its
+playground; **KVA** (`−Σ K(t_k) · hurdle · Δt_k · DF(t_k)`, indicative; K is not discounted, so KVA carries its own DF) and **MVA** (the
+cost of funding IM over the life, from the IM profile) in the XVA and wrong-way risk release (2.9.17). CVA is additive across
+counterparties.
 
-EE and ENE from the risk-neutral run, each discounted **once**: EE* and ENE* already carry DF(t_k) (from USD OIS), so no formula above
-multiplies them by DF again ([CVA.md section 6.2](../contracts/CVA.md#62-default-probabilities-and-discount-factors)); K(t_k) is not
-discounted, so KVA carries its own DF. LGD = 1 − market recovery; S_C from the counterparty's credit curve or its proxy
-(COMPUTED_ATTRIBUTES section 10 defaults, confirmed). **MVA** (the cost of funding IM over the life, from the IM profile) comes with KVA
-in the XVA and wrong-way risk release (2.9.17). CVA is additive across counterparties (each with its own S_C).
-
-**BA-CVA (MAR50, reduced):** `SCVA_c = (1/α) · RW_c · Σ_NS M_NS · EAD_NS · DF_NS`, α = 1.4;
-`K_reduced = sqrt( (ρ Σ_c SCVA_c)² + (1 − ρ²) Σ_c SCVA_c² )`, ρ = 0.5; `K_BA-CVA = 0.65 · K_reduced` (discount scalar).
-
-**SA-CVA (MAR50):** weighted sensitivities `WS_k = RW_k · s_k^CVA`, net of eligible hedges `WS_k^hdg`; within a bucket
-`K_b = sqrt( (Σ_k WS_k)² + Σ_{k≠l} ρ_kl WS_k WS_l + R · Σ_k (WS_k^hdg)² )` with `WS_k = WS_k^CVA + WS_k^hdg` and R = 0.01; across buckets
-`K = m_CVA · sqrt( Σ_b K_b² + Σ_{b≠c} γ_bc S_b S_c )` with `S_b = max(min(Σ WS_k, K_b), −K_b)` and m_CVA = 1 unless the supervisor sets
-more; as MAR50 sets it out, per risk class and for delta and vega, summed. Needs `cva-sensitivity` (C15).
+**SA-CVA (MAR50)**, not in CVA.md (it needs `cva-sensitivity`, C15): weighted sensitivities `WS_k = RW_k · s_k^CVA`, net of eligible
+hedges; within a bucket `K_b = sqrt( (Σ_k WS_k)² + Σ_{k≠l} ρ_kl WS_k WS_l + R · Σ_k (WS_k^hdg)² )` with `WS_k = WS_k^CVA + WS_k^hdg` and
+R = 0.01; across buckets `K = m_CVA · sqrt( Σ_b K_b² + Σ_{b≠c} γ_bc S_b S_c )` with `S_b = max(min(Σ WS_k, K_b), −K_b)` and m_CVA = 1
+unless the supervisor sets more; per risk class, delta and vega, summed.
 
 #### 7.8.5 SA-CCR (CC7)
 
-From COMPUTED_ATTRIBUTES section 5.7 and CRE52:
-
-```
-RC (unmargined) = max(V − C, 0);  RC (margined) = max(V − C, TH + MTA − NICA, 0)
-d_i  = notional_i × SD_i,  SD_i = ( e^{−0.05 S_i} − e^{−0.05 E_i} ) / 0.05          IR and credit
-MF_i = sqrt( min(max(M_i, 10 bd), 1y) / 1y ) unmargined;  1.5 · sqrt( MPOR_i / 1y ) margined
-δ_i  = ±1 linear;  options: ±Φ( ±( ln((P+λ)/(K+λ)) + 0.5 σ² T ) / (σ √T) )          CRE52.40
-D_i  = δ_i · d_i · MF_i
-IR hedging set: EN = sqrt( D1² + D2² + D3² + 1.4 D1D2 + 1.4 D2D3 + 0.6 D1D3 ) by maturity bucket, AddOn = SF · EN
-FX: SF · |Σ D|;  credit and equity: sqrt( (Σ ρ_k AddOn_k)² + Σ (1 − ρ_k²) AddOn_k² );  commodity: ρ = 0.4 within a hedging set
-multiplier = min( 1, f + (1 − f) · exp( (V − C) / (2 (1 − f) AddOn_agg) ) ),  f = 5%
-EAD = α · ( RC + multiplier · AddOn_agg ),  α = 1.4;  margined EAD capped at the unmargined EAD
-```
-
-BCBS first; OSFI and US overlays later (modelling default, confirmed). Per netting set; the cube sums sets and pivots by asset class and
-hedging set.
+The computation (CRE52: replacement cost, maturity factor, supervisory delta, hedging-set aggregation, multiplier, EAD with α = 1.4) is
+[SACCR.md section 6](../contracts/SACCR.md#6-the-computation). BCBS first; OSFI and US overlays later (modelling default, confirmed). Per
+netting set; the cube sums sets and pivots by asset class and hedging set.
 
 #### 7.8.6 IMM EEPE and alpha (built informational; CC10 stressed)
 
-`EAD_IMM = α · EEPE`, α = 1.4 (CRE53); with a stressed run `EAD = α · max(EEPE, EEPE_stressed)` (CRE53 asks for the greater of the
-portfolio-level capital under current and stressed calibration); informational unless the bank has IMM approval.
+`EAD_IMM = α · EEPE`, α = 1.4 (CRE53; [EXPOSURE_GUIDE section 18.5](../guides/EXPOSURE_GUIDE.md#185-regulatory-figures-informational));
+with a stressed run `EAD = α · max(EEPE, EEPE_stressed)`; informational unless the bank has IMM approval.
 
 #### 7.8.7 SIMM initial margin (CC8)
 
-Per netting set and regime (COMPUTED_ATTRIBUTES section 5.8, ISDA SIMM): `WS_k = RW_k · s_k · CR_k`;
-`K_b = sqrt( Σ WS_k² + Σ_{k≠l} ρ_kl f_kl WS_k WS_l )`; `DeltaMargin = sqrt( Σ K_b² + Σ_{b≠c} γ_bc g_bc S_b S_c )`; per risk class
-`IM_r = Delta + Vega + Curvature + BaseCorr`; per product class `SIMM_p = sqrt( Σ IM_r² + Σ_{r≠s} ψ_rs IM_r IM_s )`; `SIMM = Σ_p SIMM_p`
-plus add-ons. Version per the CSA (modelling default). The cube shows the bank's number beside the counterparty's (`crif-external`), the
-difference by risk class, and the IM trend from `im-history`.
+Per netting set and regime: [SIMM_GUIDE section 5](../guides/SIMM_GUIDE.md#5-the-method); version per the CSA (modelling default). The
+cube shows the bank's number beside the counterparty's (`crif-external`), the difference by risk class, and the IM trend from
+`im-history`.
 
 #### 7.8.8 Wrong-way risk (CC9)
 
-Specific: `wwr-flag` trades shown apart with jump-to-default exposure. General: per counterparty and tenor
-`ρ(k) = corr_p( E(p,k), λ(p,k) )`; `CVA_WWR = −LGD · Σ_k DF(t_k) · (1/P) Σ_p E(p,k) · ΔPD_p(k)`; `WWR_RATIO = CVA_WWR / CVA_independent`
-(WWR.md section 6.3). Without credit paths, a Hull–White `λ = exp(a(k) + b·E)` calibrated to the survival curve (WWR.md).
+Specific: `wwr-flag` trades shown apart with jump-to-default exposure. General: the correlation of exposure and hazard on the paths and
+the WWR-adjusted CVA with its ratio to the independent CVA, from credit paths or, without them, a hazard model calibrated to the survival
+curve: [WWR.md section 6.3](../contracts/WWR.md#63-general-wrong-way-risk-on-paths).
 
 #### 7.8.9 Stress for CCR (CC10)
 
@@ -6037,22 +5339,18 @@ Stressed EEPE from a `STRESSED` run; stressed CVA from the stressed run's EE wit
 Calls by status and age, disputes by size and counterparty, IM held against required (`im-history`), collateral by asset type, issuer and
 haircut, posted collateral at risk over the MPOR (from the lagged model). All additive except the "at risk" figure (path-wise).
 
----
-
 ### 7.9 Pre-deal: incremental PFE, CVA and SA-CCR
 
 | Method | When | How | Status |
 |---|---|---|---|
 | **paths** (exact) | the candidate's path MtMs on the same run (copied, scaled, or delivered) | added to its set's V, collateral and E recomputed, the scope's figures; incremental = with − without | **Built** (Python, `ExposureWhatIfPaths`) |
-| **addon** (proxy) | no paths | `max(MTM,0) + z_q · SF · d · |δ| · sqrt(min(t_k, M))` as its own set, flagged `proxy` | **Built** (Java, `ExposureWhatIf`) |
-| **price** (QLRisk) | new terms | QLRisk prices the trade on each path's market state at each grid date (P × G valuations: 100,000 at P 2,000 × G 50); the result joins as `paths` | **Not built**; the QLRisk bridge is shared with the MR cube (section 6.9) |
+| **addon** (proxy) | no paths | an SA-CCR-style add-on as its own set, flagged `proxy` ([EXPOSURE_GUIDE section 18.7](../guides/EXPOSURE_GUIDE.md#187-pre-deal-incremental-exposure)) | **Built** (Java, `ExposureWhatIf`) |
+| **price** (QLRisk) | new terms | QLRisk prices the trade on each path's market state at each grid date (P × G valuations: 100,000 at P 2,000 × G 50); the result joins as `paths` | **Not built**; the QLRisk bridge is shared with the MR cube ([section 6.9](#69-pre-deal-what-if)) |
 | **regression** (fast pricing) | price too slow | a pricing function fitted per product on the run's state variables (least squares on a few hundred priced points), evaluated on every path | **Not built**, candidate (decision 5) |
 
 The new trade's **incremental CVA** (from its EE change), **incremental SA-CCR EAD** (its `saccr-trade` row by rules), **incremental SIMM**
 (its sensitivities, from QLRisk or delta-gamma: shared with the MR cube) and **limit headroom per tenor** come with the answer.
-Target: 1 s by paths; 5 s by regression; tens of seconds by full pricing (estimates, section 6.3).
-
----
+Target: 1 s by paths; 5 s by regression; tens of seconds by full pricing (estimates, [section 7.6.3](#763-response-time-targets)).
 
 ### 7.10 Performance and scale targets
 
@@ -6061,16 +5359,13 @@ Target: 1 s by paths; 5 s by regression; tens of seconds by full pricing (estima
 | Netting sets, trades | 100,000 sets, 1M OTC trades; 250,000 sets at P 5,000 × G 100 | CLUSTER_DEPLOYMENT section 6.4 (assumption) |
 | Hot data a date | 80 GB (P 2,000, G 50) to 1 TB (P 5,000, G 100) of set matrices, across owners with two replicas | the same |
 | Partial per scope | 0.8 to 2 MB | the same |
-| Board and treemap | 400 to 500 ms | section 6.3 |
+| Board, treemap, SA-CCR of the bank | as [section 7.6.3](#763-response-time-targets) | |
 | Allocation by desk for the bank | 30 s at date load, then cached (a pass over trade paths per set)³ | trade-path reads pruned by netting set |
-| SA-CCR bank | 3 s | section 6.3 |
 | CVA all counterparties | 1 s (20,000 × G terms)³ | |
 | SIMM per set | 50 ms; bank 10 s³ | sensitivity sums per factor per set |
 
 ³ Estimates: allocation reads each set's trades' paths once (0.4 to 2 TB at the full bank), so it must run per owner at load and be
 stored as a computed cache for the date, not on request; CVA and SIMM are small formulas on summed inputs. To be measured.
-
----
 
 ### 7.11 How this beats FIS Adaptiv / artiQ
 
@@ -6091,13 +5386,11 @@ stored as a computed cache for the date, not on request; CVA and SIMM are small 
 | (no claim) collateral explained | the collateral waterfall, posted-at-risk over the MPOR (CC11) | the question "why is collateralised EE above uncollateralised" answered on screen | NS-ALDERSHOT-LDN: 111.1 m posted at risk in the first months |
 | (no claim) one platform | the MR cube, entity pages, GLEIF, news, BI beside it | the counterparty's news and filings beside its exposure | from the treemap to the counterparty's page and its news |
 
----
-
 ### 7.12 Lens design and proof of concept (POC)
 
-**Status: designed, POC not started.** The CCR Cube lens is designed here and proved in a POC that **reuses the MR Cube POC's shared core**
-([section 6.12](#612-lens-design-and-proof-of-concept-poc)): the view model, the planner pattern, provenance
-ids, saved views, `cube-core.js`. The POC rows are CCP1 to CCP6 in the plan.
+**Status: designed, POC not started.** The POC **reuses the MR Cube POC's shared core**
+([section 6.12](#612-lens-design-and-proof-of-concept-poc)): the view model, the planner pattern, provenance ids, saved views,
+`cube-core.js`. The POC rows are CCP1 to CCP6 in the plan.
 
 #### 7.12.1 The lens
 
@@ -6109,7 +5402,7 @@ ids, saved views, `cube-core.js`. The POC rows are CCP1 to CCP6 in the plan.
 | Mnemonics on | `CCUBE`, `EXP`, `XWIF` (the pre-deal), `MCUBE` and `VAR` (to cross to the market risk cube), `FUNC`, `WHAT`, `BI` |
 | Kinds allowed | counterparties and groups (`CPTY`, `GRP`), netting sets and their MtM (`NSET`, `NSMTM`, `CPMTM`), credit limits (`LIM`), CSAs and collateral (`CSA`, `COLL`, `MC`, `AGR`), the exposure engine's kinds (`EXP`, `XRUN`, `XOFC`), trades (`TRD`, `CTRD`), GLEIF entities (`LEI`), credit curves (`CDS`) |
 | Hidden | as the MR Cube lens; each regulatory kind shows once its engine computes it: `SACCR` with the counterparty engines release (2.9.12, CC7), `SIMM` with sensitivities and capital (2.9.11, CC8), `CVA` with XVA and wrong-way risk (2.9.17, CC5); the stored versions stay hidden |
-| Switches | `words: {CCUBE: on, MCUBE: on, EXP: on, VAR: on, SMAT: off, BI: on, FUNC: on, WHAT: on, FORM: off, DATAMAP: off, RUPAKA: off}`; the feature preset `cube` (proposed, section 6.12.1) |
+| Switches | as the YAML below; the feature preset `cube` (proposed, [section 6.12.1](#6121-the-lens)) |
 | Relation to other lenses | **Risk**: `CCUBE` on as a screen, a chip beside `EXP BANK`; **Trading**: off (Trading's largest-counterparty tile reads allocated exposure through the same endpoint); **Oversight** (proposed): the concentration view (its decision 6) reads the CCR Cube |
 
 ```yaml
@@ -6142,8 +5435,7 @@ branding: { product: Drishti CCR Cube, tagline: "Where in time the limit binds, 
 
 #### 7.12.2 POC scope
 
-Every panel the POC builds is a row marked POC in [section 6.7](#767-mock-ups-the-screens-to-build)'s build checklist; the POC is
-done when every such row is ticked.
+The POC is done when every row marked POC in the build checklist of [section 7.6.7](#767-mock-ups-the-screens-to-build) is ticked.
 
 | In the POC (over the existing exposure paths and netting sets) | How |
 |---|---|
@@ -6151,7 +5443,7 @@ done when every such row is ticked.
 | **The limit board by tenor** | per counterparty the peak PFE inside each limit bucket against the regenerated bucket limits; minimum headroom and its tenor |
 | **The PFE fan chart with the limit line and headroom shading** | the existing profile and `distribution?bands=true`, with the limit's step line |
 | **The netting-set drill** (tab B) | the existing Collateral and Trades tabs' data, plus the collateral waterfall at a tenor (uncollateralised EE, the collateral terms' effects, EE) and the MPOR effect (`lagged` against `current`, both built) |
-| **Euler allocation per desk** | `a_i(p,k)` per trade inside each set (section 8.2; built for EE contributions inside a set), summed by desk, book and legal entity across every set; computed once per date at load and cached; the desks add up to the bank's EE exactly |
+| **Euler allocation per desk** | `a_i(p,k)` per trade inside each set ([section 7.8.2](#782-allocated-exposure-cc2); built for EE contributions inside a set), summed by desk, book and legal entity across every set; computed once per date at load and cached; the desks add up to the bank's EE exactly |
 | **The group roll-up over GLEIF** | `connected(G)` over the demo's synthetic legal tree: a group's members' exposures summed per path, the quantile last, against the group's own limit |
 | **Pre-deal, with a simple approximation** | the built add-on proxy (`method: addon`) and copied paths (`method: paths`, `{copyOf, factor}`), drawn as the overlay on the profile with the limit line; incremental PFE per tenor |
 | Phone and embedding | must: the counterparty's tiles and profile; glance: the board's top five; the views embed through the client renderer |
@@ -6174,7 +5466,7 @@ stressed runs, QLRisk pricing on paths and regression pricing, collateral holdin
 **Reused** (`/api/v1/exposure`, built): `/scope`, `/scope/profile`, `/scope/distribution` (the fan's bands), `/scope/contributions`
 (EE contributions inside a set), `/tree`, `/compare`, `/captures`, `/official`, `/what-if` (`addon` and `paths`), `/status`.
 
-**New** (package `com.ash.drishti.server.cube.ccr` on the shared core):
+**New** (package `com.ash.drishti.server.cube.ccr` on the shared core of [section 6.12.4](#6124-poc-architecture)):
 
 | Endpoint | What |
 |---|---|
@@ -6186,9 +5478,8 @@ stressed runs, QLRisk pricing on paths and regression pricing, collateral holdin
 | `GET /api/v1/cube/provenance/{id}`, `GET`/`POST /api/v1/cube/views` | shared with the MR cube |
 
 **Console:** routes `/ccube` and `/api/ccube/...`; templates `home/ccube_landing.html` and `terminal/ccube.html`, `ccube.js` and
-`ccube.css` on `cube-core.js`; the treemap, fan and waterfall in the vendored ECharts or inline SVG. **Client renderer:** the same
-`cube-view` kind. **Phone tiers:** must (tiles, profile with the limit line), glance (board top five), more (netting sets, waterfall,
-allocation), desk (treemap, pivot editor).
+`ccube.css` on `cube-core.js`; the treemap, fan and waterfall in the vendored ECharts or inline SVG; the same `cube-view` kind for the
+client renderer; phone tiers as [section 7.6.4](#764-keyboard-phone-embedding).
 
 #### 7.12.5 POC success criteria
 
@@ -6226,7 +5517,7 @@ drill for the POC branch.
 
 #### 7.12.6 POC effort and builder plan
 
-On the recommended single branch `risk-cube-poc` (section 6.12.6), after the shared core:
+On the recommended single branch `risk-cube-poc` ([section 6.12.6](#6126-poc-effort-and-builder-plan)), after the shared core:
 
 | # | Builder | Weight | Work | Size² | After |
 |---|---|---|---|---|---|
@@ -6249,17 +5540,16 @@ about six to eight weeks elapsed².
 | P1 | Build the CCR POC on the MR POC's branch and core | yes (`risk-cube-poc`, core first) |
 | P2 | Regenerate the demo's credit limits by tenor bucket on the computed PFE | yes; the stored limits read near zero today |
 | P3 | A synthetic legal tree for the demo counterparties, kept apart from the real GLEIF data | yes, in `data/testdata/counterparty-risk/legal-parent/` |
-| P4 | Allocation computed at date load and cached, or on request | at load (section 15, decision 8) |
+| P4 | Allocation computed at date load and cached, or on request | at load ([section 7.15](#715-decisions-for-the-product-owner), decision 8) |
 | P5 | Pre-deal in the POC by the built add-on and copied paths only | yes; pricing waits for QLRisk |
 | P6 | The POC on one exposure server (no CD10) | yes; the shard equality suite joins with CD10 |
 | P7 | The lens `ccrcube` off by default, on in the demo profile | yes |
 
----
-
 ### 7.13 Phases (proposed)
 
-The phases follow the plan's themed releases (product owner, 2026-10-31; reordered 2026-11-01): the market-risk regulatory foundation (2.9.8, released); memory, scale and mobile with the VaR change explained (2.9.10, in release); sensitivities and market-risk capital (2.9.11); counterparty engines (2.9.12); Java 25 and performance I (2.9.13); oversight (2.9.14); regulatory reporting (2.9.15); native performance II (2.9.16); XVA and wrong-way risk (2.9.17); advanced market risk (2.9.18); executive (2.9.19). From 2.9.11 on each is **proposed** until it starts; a row without one is unscheduled. Every metric ships with its playground in the same phase (the rule of
-[VAR_PLAYGROUND.md section 13](VAR_PLAYGROUND.md#13-the-playground-family-and-the-rule)).
+The phases follow the plan's themed releases (product owner, 2026-10-31; reordered 2026-11-01), each **proposed** until it starts; a
+row without one is unscheduled. Every metric ships with its playground in the same phase
+([VAR_PLAYGROUND.md section 13](VAR_PLAYGROUND.md#13-the-playground-family-and-the-rule)).
 
 | Phase | Rows | Status | Depends on |
 |---|---|---|---|
@@ -6269,8 +5559,6 @@ The phases follow the plan's themed releases (product owner, 2026-10-31; reorder
 | 4. Advanced market risk (2.9.18) | CC12 (QLRisk pricing and regression for path MtMs; incremental CVA, EAD, IM, shared with MC13) | proposed | QLRisk's API stable |
 | Unscheduled | CC10 (stressed EEPE and CVA; several runs a date), CC11 (collateral and margin views) | unscheduled | stressed runs; `collateral-holding`, `im-history` |
 | Scale | CC14 = CD10 (exposure sharding) | unscheduled, with the cluster candidates | CLUSTER_DEPLOYMENT section 6 |
-
----
 
 ### 7.14 Risks and data dependencies
 
@@ -6284,15 +5572,13 @@ The phases follow the plan's themed releases (product owner, 2026-10-31; reorder
 | Stored limits sized on stored profiles | utilisation reads near zero | the LIM engine (parked) resizes limits on computed PFE (EXPOSURE_GUIDE section 28) |
 | GLEIF and kept groups disagree | wrong group exposure | `connected(G)` with exclusions approved, both readings available |
 | Allocation choices disputed by desks | Euler is one convention | document it; offer standalone as the second reading |
-| Over-claiming against FIS | credibility | demo-proved claims only (section 11) |
-
----
+| Over-claiming against FIS | credibility | demo-proved claims only ([section 7.11](#711-how-this-beats-fis-adaptiv--artiq)) |
 
 ### 7.15 Decisions for the product owner
 
 1. **Shared core.** The CCR Cube on section 6.4's core (recommended), not a second cube engine.
 2. **The default layout.** **Decided (product owner, 2026-10-31): A (limit board) is the landing, B (a netting set) and C (pre-deal and
-   XVA) its tabs.** Options were: A as the landing, B on a netting set, C for pre-deal and XVA (recommended); after the mock-ups.
+   XVA) its tabs.**
 3. **Desk cells.** Allocated (Euler, adds up; recommended as the default) or standalone (`DESK:` partial, built) as the default reading
    of a desk × counterparty cell; both available.
 4. **Group membership.** `connected(G)` (kept plus GLEIF minus approved exclusions, recommended) or kept only.
@@ -6301,14 +5587,13 @@ The phases follow the plan's themed releases (product owner, 2026-10-31; reorder
 6. **SA-CVA or BA-CVA first.** BA-CVA first (inputs exist once SA-CCR is computed; recommended), SA-CVA when `cva-sensitivity` arrives.
 7. **Several runs a date.** `PURPOSE` on `simulation-run` and the cube's run lens (recommended), or separate dates.
 8. **Allocation cost.** **Decided (product owner, 2026-10-31, with the POC decisions): computed at date load per owner and cached for
-   the date.** Options were: at date load (recommended), or on request for small scopes only.
+   the date.**
 9. **Command word.** **Decided (product owner, 2026-10-31): `CCUBE`** (the MR cube is `MCUBE`); checked against every pack's mnemonics at build.
-10. **Phase placement.** **Decided (product owner, 2026-10-31), by the themed plan:** the shared core (MC2) and SIMM in the sensitivities and capital
-    phase (2.9.11), the core built with the MR cube pivot; CC1 to CC4 on that core, SA-CCR, the Exposure playground and FVA in the counterparty engines phase (2.9.12); CVA, BA-CVA, SA-CVA,
-    the proxies, WWR, MVA and KVA in the XVA and wrong-way risk phase (2.9.17); pre-deal pricing in the advanced market risk phase (2.9.18); stressed runs and the collateral views
-    unscheduled (section 13).
-
----
+10. **Phase placement.** **Decided (product owner, 2026-10-31), by the themed plan:** the shared core (MC2) and SIMM in the sensitivities
+    and capital phase (2.9.11), the core built with the MR cube pivot; CC1 to CC4 on that core, SA-CCR, the Exposure playground and FVA
+    in the counterparty engines phase (2.9.12); CVA, BA-CVA, SA-CVA, the proxies, WWR, MVA and KVA in the XVA and wrong-way risk phase
+    (2.9.17); pre-deal pricing in the advanced market risk phase (2.9.18); stressed runs and the collateral views unscheduled
+    ([section 7.13](#713-phases-proposed)).
 
 ### 7.16 Glossary
 
@@ -6330,23 +5615,16 @@ The phases follow the plan's themed releases (product owner, 2026-10-31; reorder
 
 ## 8. The CRO lens: is the bank within its risk appetite, what changed overnight, and what must the Chief Risk Officer act on
 
-**Status: analysis and product description; design, not built.** Nothing in this document is built unless a row of
-[section 4](#84-what-drishti-has-today) says so and cites the guide or file it was read from (on
-2026-10-31). Every phase named here is a **proposal**, not a commitment. The rows it proposes are candidates in the
+**Status: design, not built.** Nothing here is built unless a row of [section 8.4](#84-what-drishti-has-today) says so (checked
+2026-10-31); every phase is a proposal. The rows are candidates in the
 [implementation plan](IMPLEMENTATION_PLAN.md#cro-lens-candidates-not-started) (CRO1 to CRO13), not started.
 
-**The request (product owner, 2026-10-31):** a **CRO lens**: the executive, top-of-house, cross-risk-type view that answers *"Is the
-bank within its risk appetite, what changed overnight, and what do I need to act on or tell the board?"* It summarises; drilling opens
-the other lenses (the market risk cube `MCUBE`, the counterparty credit risk cube `CCUBE`, Oversight, Market and World). Three landing
-mock-ups and a phone mock-up first; the product owner liked all four ("CRO Lens mockup looks amazing") and aligned with the
-recommendation of [section 5.1](#851-the-layouts-decided).
-
-**Read with:** [section 5](#5-market-risk-oversight-what-the-second-line-needs-from-drishti-and-a-drishti-oversight-lens) (the second line that works beneath the CRO; its RO1 VaR change explanation and RO2
-breach workflow are this lens's two largest dependencies), [section 6](#6-the-mr-cube-a-market-risk-cube-lens-that-answers-what-fis-adaptivs-artiq-answers-and-shows-why) and [section 7](#7-the-ccr-cube-a-counterparty-credit-risk-cube-lens-that-answers-what-fis-adaptiv-answers-and-shows-why)
-(the drill targets, and the `risk-limit` and `credit-limit` contracts this lens reads), [section 1](#1-drishti-risk-what-risk-managers-near-the-desks-need-what-the-lens-gives-them-today-and-what-comes-next),
-[section 3](#3-drishti-market-what-the-market-data-team-needs-what-the-lens-gives-it-today-and-what-comes-next) and [section 4](#4-drishti-world-what-macro-research-and-context-users-need-what-the-lens-gives-them-today-and-what-comes-next) (the other lenses it links to), [EDITIONS.md](../admin/EDITIONS.md)
-(how lenses and editions work), [MOBILE_DISPLAY.md](MOBILE_DISPLAY.md) (phone tiers) and the plan's themed phases in
-[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).
+**The request (product owner, 2026-10-31):** the executive, top-of-house, cross-risk-type view that answers *"Is the bank within its
+risk appetite, what changed overnight, and what do I need to act on or tell the board?"* It summarises; drilling opens the other lenses
+(`MCUBE`, `CCUBE`, Oversight, Market, World). The product owner liked all four mock-ups ("CRO Lens mockup looks amazing") and aligned
+with the recommendation of [section 8.5.1](#851-the-layouts-decided). Its two largest dependencies are Oversight's RO1 VaR change
+explanation and RO2 breach workflow ([section 5](#5-market-risk-oversight-what-the-second-line-needs-from-drishti-and-a-drishti-oversight-lens));
+the people beneath the CRO are described in [section 5.1](#51-who-market-risk-oversight-is).
 
 ### 8.1 Purpose: what a CRO lens is
 
@@ -6384,9 +5662,8 @@ summarises; every figure opens the lens that owns it.
 | **CEO, board risk committee members** | read the brief or the board pack; on a phone, the tiles and the one-paragraph answer | none (read-only, a later role) |
 | **Internal audit, supervisors** | reproduce what the CRO saw on a given date (time travel), the approvals and their trail | none |
 
-The CRO lens is **a lens** ([EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses)): `Open Drishti CRO` from Views and Home on a full
-instance, and the command word `CRO` (proposed) for its landing. It **reads**; its only actions are governance actions (approve, reject,
-comment, escalate), and only for people with the power to take them ([section 10](#810-the-lens-design)).
+It **reads**; its only actions are governance actions (approve, reject, comment, escalate), for people with the power to take them
+([section 8.10](#810-the-lens-design)).
 
 ---
 
@@ -6448,13 +5725,13 @@ comment, escalate), and only for people with the power to take them ([section 10
 the Trading landing's state function (`drishti-console/core/trading_landing.py`) and the alert logic of
 `drishti-server/src/main/java/com/ash/drishti/server/alerts/measure/`. The demo's connected group `GRP-NORTHBRIDGE` (Northbridge
 Capital Holdings, `data/testdata/core/counterparty-group`) has one member, `CP-NORTHBRIDGE`, and a stored group limit; the mock-ups'
-second member and their group limit are illustrative (section 6.6).
+second member and their group limit are illustrative ([section 8.6.6](#866-what-the-mock-ups-do-not-show-exactly)).
 
 ---
 
 ### 8.5 Screens and interactions
 
-The lens follows the house rules: keyboard first, every number printed (a chart never replaces a figure), a loss or a breach in the
+The house rules, shared with the CIO lens: keyboard first, every number printed (a chart never replaces a figure), a problem in the
 theme's loss colour **and** with a word or sign (`BREACH`, `NEAR`, a minus), dark terminal theme by default, every panel a ViewModel
 panel so it embeds and stacks on a phone. Every panel carries one of the **four badges** (built, partly, planned, proposed) until the
 whole lens is built, so nobody mistakes a design for a figure.
@@ -6462,8 +5739,8 @@ whole lens is built, so nobody mistakes a design for a figure.
 #### 8.5.1 The layouts (decided)
 
 **Decided (product owner, 2026-10-31):** **B (appetite first) is the landing page; C (morning brief) is its "Brief" tab; A (terminal
-grid) is its "Detail" tab; the phone view is its own layout.** The product owner liked all four and aligned with this recommendation.
-The three tabs share one data request (the same figures, three arrangements), so switching tabs costs no new computation.
+grid) is its "Detail" tab; the phone view is its own layout.** The three tabs share one data request (the same figures, three
+arrangements), so switching tabs costs no new computation.
 
 | Tab | Layout | Best for | Mock-up |
 |---|---|---|---|
@@ -6474,20 +5751,22 @@ The three tabs share one data request (the same figures, three arrangements), so
 
 #### 8.5.2 The visual catalogue
 
-| Visual | What it shows | Interactions | Built today? |
-|---|---|---|---|
-| **Appetite tile** | the metric's name, value, board limit, status word (`WITHIN`, `NEAR`, `BREACH`), a 30-day sparkline against a dashed limit line and a dotted 80% line, a use bar (ceilings) or the headroom above the floor (floors), the owner, the badge | click: open the owning lens at the metric's scope; hover: the provenance (official record, batch, data version); `Enter` on the focused tile | a VaR tile with limit use exists on the Risk landing; sparkline, floor headroom and catalogue not built |
-| **Status count line** | "1 breached · 5 near (≥80%) · 6 within", the open breaches, approvals waiting, increases expiring | click a count: filter the tiles | not built |
-| **Appetite table** (Detail) | one row per metric: value, limit, use bar, status, sparkline, owner | sort by any column; click a row as a tile | not built |
-| **What changed** | the largest moves since the comparison point (overnight by default), each with before → after, the change, a one-line reason and a link | click: open the explaining lens (MCUBE explain, CCUBE group, STR scenario, the liquidity or capital input); the comparison switch (overnight, since last committee, since last board) | compare built for VaR; reasons not built (RO1) |
-| **Decision queue** | open breaches (id, what, use of limit, age, action taken); temporary limit increases awaiting the CRO (old → new, until, who asked, the second line's recommendation) with **Approve**, **Reject**, **Approve with conditions…** and **Comment**; increases expiring this week with "renew" and "let lapse" and what the use of the base limit would be | approve or reject records the decision with a required comment, four eyes, never one's own request; renew opens a new request | not built (RO2; CRO4) |
-| **Top 10** | counterparties and groups by peak PFE with limit use; desks by VaR with limit use; risk factors by component VaR with the overnight change | click: open CCUBE, MCUBE; `Enter` for ten (the landing shows five) | PFE and desk VaR built; factor component VaR needs MC1 |
-| **The world** | market moves with the VaR at stake and the desks touched; headlines touching the book; macro signals | click: open World or Market | moves and news built; VaR at stake proposed; relevance not built (WL9) |
-| **Data health** | each feed for the as-at: complete, late or periodic, with its time and count; the **safe to quote** badge and its caveats | click a feed: Admin → Loads; the caveat: the figure it affects | late loads built; the safe-to-quote rule not built (CRO9) |
-| **Ask** | a question box; the answer in sentences with every figure a link; suggested questions | `/` focuses it; `Enter` asks | not built across engines (CRO10) |
-| **As-at strip** | the as-at time and presets (now, the last official, the last board, quarter-end, pick a date); the comparison; the currency; the scope (BANK, a legal entity) | `[` `]` step; the presets | not built (CRO11) |
-| **Board pack PDF** | a button that generates the board pack from the as-at figures | click | proposed |
-| **Panel badges and drill links** | the badge of every panel; links to MCUBE, CCUBE, Oversight, Market, World | click | not built |
+Each panel's exact contents and interactions are in the checklists of [section 8.6](#86-mock-ups-the-screens-to-build).
+
+| Visual | What it shows | Built today? |
+|---|---|---|
+| **Appetite tile** | the metric's name, value, board limit, status word (`WITHIN`, `NEAR`, `BREACH`), a 30-day sparkline against a dashed limit line and a dotted 80% line, a use bar (ceilings) or the headroom above the floor (floors), the owner, the badge | a VaR tile with limit use exists on the Risk landing; sparkline, floor headroom and catalogue not built |
+| **Status count line** | "1 breached · 5 near (≥80%) · 6 within", the open breaches, approvals waiting, increases expiring | not built |
+| **Appetite table** (Detail) | one row per metric: value, limit, use bar, status, sparkline, owner | not built |
+| **What changed** | the largest moves since the comparison point (overnight by default), each with before → after, the change, a one-line reason and a link | compare built for VaR; reasons not built (RO1) |
+| **Decision queue** | open breaches (id, what, use of limit, age, action taken); temporary limit increases awaiting the CRO (old → new, until, who asked, the second line's recommendation) with **Approve**, **Reject**, **Approve with conditions…** and **Comment**; increases expiring this week with "renew" and "let lapse" and what the use of the base limit would be | not built (RO2; CRO4) |
+| **Top 10** | counterparties and groups by peak PFE with limit use; desks by VaR with limit use; risk factors by component VaR with the overnight change | PFE and desk VaR built; factor component VaR needs MC1 |
+| **The world** | market moves with the VaR at stake and the desks touched; headlines touching the book; macro signals | moves and news built; VaR at stake proposed; relevance not built (WL9) |
+| **Data health** | each feed for the as-at: complete, late or periodic, with its time and count; the **safe to quote** badge and its caveats | late loads built; the safe-to-quote rule not built (CRO9) |
+| **Ask** | a question box; the answer in sentences with every figure a link; suggested questions | not built across engines (CRO10) |
+| **As-at strip** | the as-at time and presets (now, the last official, the last board, quarter-end, pick a date); the comparison; the currency; the scope (BANK, a legal entity) | not built (CRO11) |
+| **Board pack PDF** | a button that generates the board pack from the as-at figures | proposed |
+| **Panel badges and drill links** | the badge of every panel; links to MCUBE, CCUBE, Oversight, Market, World | not built |
 
 #### 8.5.3 Keyboard and the command line
 
@@ -6498,51 +5777,50 @@ drill, `?` help. The command word and its arguments are checked against every pa
 
 #### 8.5.4 Approve and reject
 
-A temporary limit increase is a Drishti-owned request (section 7.12) raised by a desk or a metric owner; the limit's owner (for board
-limits, the CRO) approves. **Approve** asks for a comment and, optionally, a cap and an earlier end date ("Approve with conditions…");
-**Reject** requires a reason; both are recorded with who, when and the comment, and notify the requester. The approver must not be the
-requester (four eyes, as write-back approval). Whether an approved increase changes the limit in Drishti the same day or waits for the
-bank's limit system is OVERSIGHT decision on RO2's temporary limits (overlay or read back), adopted here as decision 6.
+A temporary limit increase is a Drishti-owned request ([section 8.7.12](#8712-limit-request-lreq-temporary-limit-increases-new-drishti-owned))
+raised by a desk or a metric owner; the limit's owner (for board limits, the CRO) approves. **Approve** asks for a comment and,
+optionally, a cap and an earlier end date ("Approve with conditions…"); **Reject** requires a reason; both are recorded with who, when
+and the comment, and notify the requester. **Renew** opens a new request. The approver must not be the requester (four eyes, as write-back approval). Whether an
+approved increase changes the limit in Drishti the same day or waits for the bank's limit system is Oversight's decision on RO2's
+temporary limits, adopted here as decision 6 ([section 8.14](#814-decisions-for-the-product-owner)).
 
 #### 8.5.5 Response-time targets
 
 | Interaction | Target (p95, warm, the date open) | Note |
 |---|---|---|
-| Open the landing (12 tiles, the queue, what changed, top 10) | 600 ms¹ | the official figures and the overnight comparison precomputed with the official run (section 8.4) |
+| Open the landing (12 tiles, the queue, what changed, top 10) | 600 ms¹ | the official figures and the overnight comparison precomputed with the official run ([section 8.8.4](#884-what-changed)) |
 | Switch tab (Brief, Detail) | 100 ms¹ | the same answer, re-arranged |
 | As at the last board | 1.5 s¹ | the official records of that date; nothing recomputed |
 | An intraday batch: tiles patched | 1 s after the batch is applied¹ | VaR and exposure only; liquidity, capital and climate are daily or slower inputs |
 | Ask, first token | 2 s¹ | the AI layer's model; the figures are fetched first, never invented |
 | Board pack PDF | 20 s¹ | the planned board pack's generator |
 
-¹ Estimates, not measurements, scaled from the engines' measured node answers (VAR_GUIDE section 27); to be measured with the POC.
+¹ Estimates, not measurements, scaled from the engines' measured node answers; to be measured with the POC.
 
 #### 8.5.6 Phone
 
 **must**: the one-paragraph answer, the status counts, the breached and near tiles; **glance**: the other tiles, the decision queue
 with full-width Approve and Reject; **more**: open breaches, expiring increases, what changed, Ask; **desk**: the top 10, the world,
-data health, the Detail tab. The phone shows the decided phone layout ([cro/phone.html](mockups/cro/phone.html)), not a shrunken
-landing; the tier mechanism is [MOBILE_DISPLAY.md](MOBILE_DISPLAY.md)'s.
+data health, the Detail tab. The phone shows the decided phone layout, not a shrunken landing; the tier mechanism is
+[MOBILE_DISPLAY.md](MOBILE_DISPLAY.md)'s.
 
 ---
 
 ### 8.6 Mock-ups: the screens to build
 
-The four mock-ups are in the repository, self-contained (no CDN, no external fonts, inline SVG), each with a headless-Chrome screenshot
-beside it: [A.html](mockups/cro/A.html), [B.html](mockups/cro/B.html), [C.html](mockups/cro/C.html), [phone.html](mockups/cro/phone.html).
-**Chosen (decided, product owner, 2026-10-31):** B is the landing, C the Brief tab, A the Detail tab, the phone its own layout.
-
-**Their numbers are synthetic** and consistent across the four pages and with the cube mock-ups: business date 2026-09-30; the bank's
+The four mock-ups (conventions in [the introduction](#mock-ups)) are under `mockups/cro/`; the layout chosen for each is in
+[section 8.5.1](#851-the-layouts-decided). **Their numbers are synthetic** and consistent across the four pages and with the cube
+mock-ups: business date 2026-09-30; the bank's
 1-day 99% VaR 112,041,646 and its 10-day √10 354,306,794; desk VaRs as in the MR cube mock-up (CREDIT 130,670,864, RATES 74,633,680);
 CP-ALDERSHOT's peak PFE 401,456,820; the group Northbridge Capital Holdings over its group limit at 512.3m against 500m. The names are
 the test data's synthetic ones (CP-ALDERSHOT, CP-NORTHBRIDGE, CP-SUMMIT, CP-HARBORPT, CP-HALCYON …), plus some invented for the
 mock-ups only (the member CP-NORTHBRIDGE-SEC, the desks CMDTY, XVA, TREASURY and EM-MACRO, the headlines, every liquidity, capital and
 climate figure); **never a client's name**.
 
-**How to read the checklists.** One table per mock-up: each row is a panel to build, with its exact contents, the data and contract it
-reads (section 7), its interactions, the phase (**POC** of [section 11](#811-a-proof-of-concept-after-the-cube-pocs), or the CRO row
-that brings it) and a **Done?** column for the build to tick. The empty, loading and error states shared by every panel are in
-[section 6.5](#865-empty-loading-and-error-states).
+**The checklists.** One table per mock-up, one row per panel; numbers in brackets are subsections of this part (the data in
+[section 8.7](#87-data-needed-the-complete-list), the rules in [section 8.8](#88-measures-and-rules)); *Phase* is the **POC** of
+[section 8.11](#811-a-proof-of-concept-after-the-cube-pocs) or the CRO row that brings it. The states shared by every panel are in
+[section 8.6.5](#865-empty-loading-and-error-states).
 
 #### 8.6.1 B: Appetite (the landing)
 
@@ -6553,28 +5831,28 @@ that brings it) and a **Done?** column for the build to tick. The empty, loading
 | Panel | Contents (exact) | Data and contract | Interaction | Phase | Done? |
 |---|---|---|---|---|---|
 | Command bar | `DRISHTI`, the command line with `CRO <GO>`, the key legend (`A` `B` `N` `T` `W` `/` `[` `]` `Enter` `?`) | the lens file's placeholder | type a command; keys | POC | no |
-| As-at strip | as at `2026-09-30 11:02`, presets *09-29 official*, *last board 2026-09-17*, *quarter-end 06-30*, *pick…*; compare *overnight* / *since last board*; currency USD / CAD; scope chip `BANK`; the **SAFE TO QUOTE** badge with its caveat (*liquidity is 09-29*); **Board pack PDF** with its PLANNED badge | `governance-calendar` (7.13) for the board and committee dates; the official records' dates; the safe-to-quote rule (8.3) | preset click; `[` `]`; badge click lists the caveats | POC: now and 09-29 official only; CRO11 the rest; PDF the planned board pack | no |
-| Status count line | `BREACH 1 breached`, `NEAR 5 near (≥80%)`, `WITHIN 6 within`; *3 open breaches · 2 approvals waiting · 2 increases expire this week* | `appetite-status` (7.4); `limit-breach`, `limit-request` (7.10, 7.12) | click a count: filter the tiles | POC (counts); CRO4 (queue counts) | no |
-| Family headings | MARKET RISK · COUNTERPARTY AND CONCENTRATION · LIQUIDITY · CAPITAL AND CLIMATE | `risk-appetite-metric.FAMILY` (7.3) | none | POC | no |
+| As-at strip | as at `2026-09-30 11:02`, presets *09-29 official*, *last board 2026-09-17*, *quarter-end 06-30*, *pick…*; compare *overnight* / *since last board*; currency USD / CAD; scope chip `BANK`; the **SAFE TO QUOTE** badge with its caveat (*liquidity is 09-29*); **Board pack PDF** with its PLANNED badge | `governance-calendar` (8.7.13) for the board and committee dates; the official records' dates; the safe-to-quote rule (8.8.3) | preset click; `[` `]`; badge click lists the caveats | POC: now and 09-29 official only; CRO11 the rest; PDF the planned board pack | no |
+| Status count line | `BREACH 1 breached`, `NEAR 5 near (≥80%)`, `WITHIN 6 within`; *3 open breaches · 2 approvals waiting · 2 increases expire this week* | `appetite-status` (8.7.4); `limit-breach`, `limit-request` (8.7.10, 8.7.12) | click a count: filter the tiles | POC (counts); CRO4 (queue counts) | no |
+| Family headings | MARKET RISK · COUNTERPARTY AND CONCENTRATION · LIQUIDITY · CAPITAL AND CLIMATE | `risk-appetite-metric.FAMILY` (8.7.3) | none | POC | no |
 | Tile: VaR 1d 99% | `112.0m`, *limit 150m · 10d √10 354,306,794*, sparkline 30 days with the dashed limit and dotted 80% line, use bar 74.7%, `WITHIN`, BUILT, *Owner: Head of Market Risk* | `var-official` (bank node), `var-limit`; `risk-appetite-metric` VAR-1D-99 | click: `MCUBE BANK`; hover: provenance | POC | no |
 | Tile: Stressed VaR 1d 99% | `271.5m`, *limit 320m · window 2008-09 · 10d 858.5m*, 84.8% `NEAR`, PLANNED | the stress scenario set | click: `MCUBE` Normal / Stressed | with stressed VaR | no |
 | Tile: Worst stress loss | `1,284.6m`, *limit 1,500m · RATES +200bp / CREDIT +150bp*, 85.6% `NEAR`, PARTLY | `stress-result` (stored per desk) and the derived bank P&L per scenario; RO9 for computed | click: `STR` on the worst scenario | POC (stored) | no |
 | Tile: Largest counterparty PFE | `401.5m`, *limit 600m · CP-ALDERSHOT · peak 95% at 2W*, 66.9% `WITHIN`, BUILT | `exposure-official-cpty`, `credit-limit` | click: `CCUBE CPTY:CP-ALDERSHOT` (until CCUBE: `EXP CPTY:CP-ALDERSHOT`) | POC | no |
 | Tile: Largest group PFE | `512.3m`, *limit 500m · Northbridge Capital Holdings*, 102.5% `BREACH`, red outline, BUILT | the exposure engine at `GROUP:` scope; `counterparty-group`; group limit (CC4) | click: `CCUBE GRP:NORTHBRIDGE` | POC (stored group limit); CC4 for the group's own limit | no |
 | Tile: Top-10 concentration | `41.8%`, *limit 45% · share of bank EPE, 10 largest*, 92.9% `NEAR`, BUILT (badge to read PARTLY until CRO1 computes the share) | the exposure `tree` answer (EPE per counterparty) | click: the top-10 list | POC | no |
-| Tile: LCR | `128%`, *limit ≥110% · HQLA 61.4bn · outflows 48.0bn*, *headroom 18 pts*, `WITHIN`, PROPOSED, *Owner: Treasurer* | `liquidity-metric` (7.5) | click: the liquidity page (CRO5) | CRO5 | no |
+| Tile: LCR | `128%`, *limit ≥110% · HQLA 61.4bn · outflows 48.0bn*, *headroom 18 pts*, `WITHIN`, PROPOSED, *Owner: Treasurer* | `liquidity-metric` (8.7.5) | click: the liquidity page (CRO5) | CRO5 | no |
 | Tile: NSFR | `112%`, *limit ≥105% · ASF 402bn · RSF 359bn*, *headroom 7 pts*, `WITHIN`, PROPOSED | `liquidity-metric` | as LCR | CRO5 | no |
 | Tile: Survival horizon | `68d`, *limit ≥60d · combined stress · near band 70*, *headroom 8 d*, `NEAR`, PROPOSED | `liquidity-metric` (SURVIVAL_DAYS) | as LCR | CRO5 | no |
-| Tile: CET1 ratio | `13.1%`, *limit ≥11.5% · −6bp overnight · target 12.5%*, *headroom 1.6 pp*, `WITHIN`, PROPOSED, *Owner: CFO · Capital* | `capital-position` (7.6) | click: the capital page (CRO6) | CRO6 | no |
+| Tile: CET1 ratio | `13.1%`, *limit ≥11.5% · −6bp overnight · target 12.5%*, *headroom 1.6 pp*, `WITHIN`, PROPOSED, *Owner: CFO · Capital* | `capital-position` (8.7.6) | click: the capital page (CRO6) | CRO6 | no |
 | Tile: RWA | `418.6bn`, *limit 540bn · +1.9% in 30 days · MR 9% · CCR 7%*, 77.5% `WITHIN`, PROPOSED | `capital-position` | as CET1 | CRO6 | no |
-| Tile: Financed emissions | `18.4Mt`, *limit 19.0Mt · 2026 pathway · Q2 · PCAF 3.1*, 96.8% `NEAR`, PROPOSED, *Owner: Head of Climate Risk* | `financed-emissions` (7.7) | click: the climate page (CRO7) | CRO7 (decision 4) | no |
+| Tile: Financed emissions | `18.4Mt`, *limit 19.0Mt · 2026 pathway · Q2 · PCAF 3.1*, 96.8% `NEAR`, PROPOSED, *Owner: Head of Climate Risk* | `financed-emissions` (8.7.7) | click: the climate page (CRO7) | CRO7 (decision 4) | no |
 | Panels and drill line | the badge of each panel (Market risk BUILT, Stressed VaR PLANNED, Stress PARTLY, Counterparty BUILT, Breach workflow PARTLY, Liquidity, Capital, Climate PROPOSED, World, Data health, Ask, Overnight PARTLY); *Drill to: MCUBE · CCUBE · Oversight · Market · World* | the lens file (badges are configuration until built) | click a link: open that lens | POC | no |
-| Your decisions | **Open breaches**: BR-2026-0931 *Group PFE · Northbridge Capital Holdings* 102.5% of 500m · 1 day, action; BR-2026-0924 *CP-HARBORPT PFE 0–1Y* 104% of 182.7m · 6 days; BR-2026-0916 *CREDIT stress limit · CREDIT +150bp* 101.3% of 420m · 14 days (age amber past the escalation point). **Awaiting your approval**: TLI-0412 *CP-HARBORPT PFE 0–1Y* 182.7m → 200.0m to 2026-10-31; TLI-0415 *RATES desk VaR* 85.0m → 95.0m to 2026-10-15; each with Approve, Reject, Approve with conditions…, Comment. **Expiring this week**: TLI-0398 *CREDIT desk VaR 160m* expires 2026-10-02, *reverts to 140m: use of base would be 93%*; TLI-0401 *CP-SUMMIT PFE 0–1Y 345m* expires 2026-10-03 | `limit-breach` (7.10), `breach-action` (7.11), `limit-request` (7.12), `risk-limit` / `credit-limit` | approve, reject (section 5.4); renew; let lapse; click an id: the record and its thread | POC: read-only breaches from `LIMIT_USE` above 1; CRO4 the queue and approvals | no |
-| What changed overnight | six moves: *Group PFE · Northbridge* 487.9m → 512.3m +24.4m; *RATES desk VaR* 67.7m → 74.6m +6.9m; *Worst stress loss* +41.1m; *Stressed VaR* +12.4m; *Bank VaR* 112.6m → 112.0m −0.6m; *LCR* 131% → 128% −3 pts; each with its one-line reason and link (`CCUBE GRP:NORTHBRIDGE`, `MCUBE DESK:RATES EXPLAIN`, …) | `appetite-status` of both dates (8.4); RO1 / MC12 for VaR reasons; exposure compare for PFE | click: the explaining lens | POC: moves without reasons for non-VaR; CRO3 reasons | no |
-| Ask | the box *Why is Rates VaR up?*; the answer: *RATES desk VaR rose 6.9m to 74.6m … +5.2m market moves … +2.4m new trades … −0.7m window roll … TLI-0415 asks to raise the limit to 95m*, every figure a link; *Sources: VaR change explanation, official record 09-29, batch B-2026-09-30-03*; three suggested questions | the AI layer; the engines' answers as tools (section 8.6) | `/`, `Enter`; click a link | CRO10 | no |
+| Your decisions | **Open breaches**: BR-2026-0931 *Group PFE · Northbridge Capital Holdings* 102.5% of 500m · 1 day, action; BR-2026-0924 *CP-HARBORPT PFE 0–1Y* 104% of 182.7m · 6 days; BR-2026-0916 *CREDIT stress limit · CREDIT +150bp* 101.3% of 420m · 14 days (age amber past the escalation point). **Awaiting your approval**: TLI-0412 *CP-HARBORPT PFE 0–1Y* 182.7m → 200.0m to 2026-10-31; TLI-0415 *RATES desk VaR* 85.0m → 95.0m to 2026-10-15; each with Approve, Reject, Approve with conditions…, Comment. **Expiring this week**: TLI-0398 *CREDIT desk VaR 160m* expires 2026-10-02, *reverts to 140m: use of base would be 93%*; TLI-0401 *CP-SUMMIT PFE 0–1Y 345m* expires 2026-10-03 | `limit-breach` (8.7.10), `breach-action` (8.7.11), `limit-request` (8.7.12), `risk-limit` / `credit-limit` | approve, reject (section 8.5.4); renew; let lapse; click an id: the record and its thread | POC: read-only breaches from `LIMIT_USE` above 1; CRO4 the queue and approvals | no |
+| What changed overnight | six moves: *Group PFE · Northbridge* 487.9m → 512.3m +24.4m; *RATES desk VaR* 67.7m → 74.6m +6.9m; *Worst stress loss* +41.1m; *Stressed VaR* +12.4m; *Bank VaR* 112.6m → 112.0m −0.6m; *LCR* 131% → 128% −3 pts; each with its one-line reason and link (`CCUBE GRP:NORTHBRIDGE`, `MCUBE DESK:RATES EXPLAIN`, …) | `appetite-status` of both dates (8.8.4); RO1 / MC12 for VaR reasons; exposure compare for PFE | click: the explaining lens | POC: moves without reasons for non-VaR; CRO3 reasons | no |
+| Ask | the box *Why is Rates VaR up?*; the answer: *RATES desk VaR rose 6.9m to 74.6m … +5.2m market moves … +2.4m new trades … −0.7m window roll … TLI-0415 asks to raise the limit to 95m*, every figure a link; *Sources: VaR change explanation, official record 09-29, batch B-2026-09-30-03*; three suggested questions | the AI layer; the engines' answers as tools (section 8.8.6) | `/`, `Enter`; click a link | CRO10 | no |
 | Top 10 | three lists of five (Enter for ten): counterparties and groups by peak PFE with use (Northbridge group 512.3m 102%, GRP-ALDERSHOT 446.9m 89%, CP-ALDERSHOT 401.5m 67%, CP-NORTHBRIDGE 352.6m 71%, CP-SUMMIT 288.3m 84%); desks by VaR with use (CREDIT 82%, RATES 88%, FX 69%, EQD 80%, FI 83%); risk factors by component VaR with the overnight change; amber near, red breach | exposure `tree`; `var-official` by desk; factor component VaR (MC1) | click: CCUBE, MCUBE | POC (counterparties, desks); factors after MC1 | no |
 | The world | market moves with VaR at stake and desks (*USD 10Y swap +11bp … +6.1m RATES, FI*); three headlines touching the book with time and what they touch; the macro line | news-and-markets `news`, `quote`; market data; world-economy; VaR at stake (planned); relevance (WL9) | click: World, Market | CRO8 | no |
-| Data health | **SAFE TO QUOTE · 1 caveat**; eight feeds with a dot (green complete, amber late, grey periodic) and their time and count (*Trades (Endur) B-2026-09-30-01 FULL 05:12 · 9,572*; *Liquidity (ALM) LATE · due 06:00 · 09-29 shown*; …); the rule in one line | load events and expectations (DATA_GUIDE section 8); official records; the safe-to-quote rule (8.3) | click a feed: Admin → Loads | POC (feeds); CRO9 (the rule) | no |
+| Data health | **SAFE TO QUOTE · 1 caveat**; eight feeds with a dot (green complete, amber late, grey periodic) and their time and count (*Trades (Endur) B-2026-09-30-01 FULL 05:12 · 9,572*; *Liquidity (ALM) LATE · due 06:00 · 09-29 shown*; …); the rule in one line | load events and expectations (DATA_GUIDE section 8); official records; the safe-to-quote rule (8.8.3) | click a feed: Admin → Loads | POC (feeds); CRO9 (the rule) | no |
 | Footer | the synthetic-data note and the badge meanings; copyright from branding | branding configuration | none | POC | no |
 
 #### 8.6.2 C: Brief
@@ -6586,7 +5864,7 @@ that brings it) and a **Done?** column for the build to tick. The empty, loading
 | Panel | Contents (exact) | Data and contract | Interaction | Phase | Done? |
 |---|---|---|---|---|---|
 | Command bar, as-at strip, panel line | as B | as B | as B | POC | no |
-| 1 · The answer | *generated 06:42 from the official 09-29 record and the 09-30 batches; refreshed 11:02*; two paragraphs: *The bank is within appetite on 11 of 12 board metrics, with one breach. Northbridge …* and *Two decisions are waiting for you …*; the status count line | `appetite-status`, `limit-breach`, `limit-request`; text from a **template** filled with the figures (section 8.5), never typed, optionally polished by the AI layer with the figures fixed | click a figure: its lens | CRO2 (template); CRO10 (AI polish) | no |
+| 1 · The answer | *generated 06:42 from the official 09-29 record and the 09-30 batches; refreshed 11:02*; two paragraphs: *The bank is within appetite on 11 of 12 board metrics, with one breach. Northbridge …* and *Two decisions are waiting for you …*; the status count line | `appetite-status`, `limit-breach`, `limit-request`; text from a **template** filled with the figures (section 8.8.5), never typed, optionally polished by the AI layer with the figures fixed | click a figure: its lens | CRO2 (template); CRO10 (AI polish) | no |
 | 2 · What changed overnight, and why | the six moves, explanation first, the number and the link after | as B's what changed | as B | CRO3 | no |
 | 3 · Where we stand against appetite | four groups (market and stress, counterparty, liquidity, capital and climate), each with a one-line verdict in italics (*Rate steepening drives all three; SVaR is the one to watch.*) and three rows: metric with badge, value, limit, status, sparkline, owner | `appetite-status`; the verdict from rules (the largest mover, the closest to its limit) | click a row: its lens | CRO2 | no |
 | 4 · The biggest risks today | the three top-10 lists (five each) side by side | as B's top 10 | as B | POC | no |
@@ -6672,15 +5950,15 @@ Endur-style UPPER_SNAKE. The CRO lens is small in data volume (hundreds of rows 
 | 7 | `credit-limit` (LIM) | PFE use; group limit | POC; CC4 | the bank's limit system | limit × date | daily | existing; extended by CC4 (tenor buckets, group limits) | existing `data/testdata/counterparty-risk/credit-limit` |
 | 8 | `counterparty`, `counterparty-group` (CPTY, GRP) | group roll-up, names | POC | the bank's reference data; GLEIF | counterparty | on change | existing | existing `data/testdata/core/` |
 | 9 | `risk-limit` (RO3) | desk and stress limits beyond VaR | CRO4 | the bank's limit system | limit × date | daily | new (section 6.7.7) | the MR cube's generator (MC1/RO3) |
-| 10 | **`risk-appetite-metric`** (section 7.3) | every tile: limit, warning, owner, family, order | POC | the risk appetite framework (GRC system or the CRO office's spreadsheet) | metric × version | annual, on change | **new** | **new synthetic generator**: `data/testdata/governance/risk-appetite-metric/` (twelve metrics) |
-| 11 | **`appetite-status`** (section 7.4) | tiles, counts, sparklines, what changed, time travel | POC | Drishti (computed with the official runs; captured) | metric × date (× intraday time) | daily; intraday for VaR and PFE | **new** (computed capture) | computed from 1 to 10 and 12 to 14 |
-| 12 | **`liquidity-metric`** (section 7.5) | LCR, NSFR, survival horizon | CRO5 | treasury / ALM system (QRM, Moody's, in-house), the LCR return | legal entity × metric × date | LCR daily; NSFR monthly (daily estimate); survival weekly | **new** (the retired example kinds `lcr`, `nsfr`, `liquidity-stress` are its prototype) | **new synthetic generator** from `tools/packgen/liquidity/make.py`: `data/testdata/liquidity/liquidity-metric/` |
-| 13 | **`capital-position`** (section 7.6) | CET1, RWA trend | CRO6 | finance / regulatory reporting (the capital engine, the BCAR or FFIEC 101 return) | legal entity × component × date | monthly official; daily estimate | **new** | **new synthetic generator**: `data/testdata/capital/capital-position/` |
-| 14 | **`financed-emissions`** (section 7.7) | financed emissions | CRO7 | the climate team's PCAF calculation or a data vendor | book or sector × quarter | quarterly | **extended** (the retired example kind of the same name, camelCase, renamed to UPPER_SNAKE, with a pathway) | **new synthetic generator** from `tools/packgen/climate/make.py`: `data/testdata/climate/financed-emissions/` |
-| 15 | **`limit-breach`** (section 7.10) | open breaches, ages | POC (derived, read-only); CRO4 (records) | Drishti (created by the official run, RO2) | limit × date | daily | **new** (RO2) | created by the official run on the demo; plus a **new synthetic generator** for a history of older breaches: `data/testdata/governance/limit-breach/` |
-| 16 | **`breach-action`** (section 7.11) | action taken, commentary, escalation | CRO4 | Drishti (people, through write-back) | action | on event | **new** | seeded by the same generator: `data/testdata/governance/breach-action/` |
-| 17 | **`limit-request`** (section 7.12) | approvals, expiring increases | CRO4 | Drishti (people, through write-back); exported to the bank's limit system | request | on event | **new** | **new synthetic generator**: `data/testdata/governance/limit-request/` |
-| 18 | **`governance-calendar`** (section 7.13) | "as at last board", "since last committee" | CRO11 | the corporate secretary's calendar | meeting | yearly, on change | **new** | **new synthetic generator**: `data/testdata/governance/governance-calendar/` |
+| 10 | **`risk-appetite-metric`** (section 8.7.3) | every tile: limit, warning, owner, family, order | POC | the risk appetite framework (GRC system or the CRO office's spreadsheet) | metric × version | annual, on change | **new** | **new synthetic generator**: `data/testdata/governance/risk-appetite-metric/` (twelve metrics) |
+| 11 | **`appetite-status`** (section 8.7.4) | tiles, counts, sparklines, what changed, time travel | POC | Drishti (computed with the official runs; captured) | metric × date (× intraday time) | daily; intraday for VaR and PFE | **new** (computed capture) | computed from 1 to 10 and 12 to 14 |
+| 12 | **`liquidity-metric`** (section 8.7.5) | LCR, NSFR, survival horizon | CRO5 | treasury / ALM system (QRM, Moody's, in-house), the LCR return | legal entity × metric × date | LCR daily; NSFR monthly (daily estimate); survival weekly | **new** (the retired example kinds `lcr`, `nsfr`, `liquidity-stress` are its prototype) | **new synthetic generator** from `tools/packgen/liquidity/make.py`: `data/testdata/liquidity/liquidity-metric/` |
+| 13 | **`capital-position`** (section 8.7.6) | CET1, RWA trend | CRO6 | finance / regulatory reporting (the capital engine, the BCAR or FFIEC 101 return) | legal entity × component × date | monthly official; daily estimate | **new** | **new synthetic generator**: `data/testdata/capital/capital-position/` |
+| 14 | **`financed-emissions`** (section 8.7.7) | financed emissions | CRO7 | the climate team's PCAF calculation or a data vendor | book or sector × quarter | quarterly | **extended** (the retired example kind of the same name, camelCase, renamed to UPPER_SNAKE, with a pathway) | **new synthetic generator** from `tools/packgen/climate/make.py`: `data/testdata/climate/financed-emissions/` |
+| 15 | **`limit-breach`** (section 8.7.10) | open breaches, ages | POC (derived, read-only); CRO4 (records) | Drishti (created by the official run, RO2) | limit × date | daily | **new** (RO2) | created by the official run on the demo; plus a **new synthetic generator** for a history of older breaches: `data/testdata/governance/limit-breach/` |
+| 16 | **`breach-action`** (section 8.7.11) | action taken, commentary, escalation | CRO4 | Drishti (people, through write-back) | action | on event | **new** | seeded by the same generator: `data/testdata/governance/breach-action/` |
+| 17 | **`limit-request`** (section 8.7.12) | approvals, expiring increases | CRO4 | Drishti (people, through write-back); exported to the bank's limit system | request | on event | **new** | **new synthetic generator**: `data/testdata/governance/limit-request/` |
+| 18 | **`governance-calendar`** (section 8.7.13) | "as at last board", "since last committee" | CRO11 | the corporate secretary's calendar | meeting | yearly, on change | **new** | **new synthetic generator**: `data/testdata/governance/governance-calendar/` |
 | 19 | `news`, `quote` (news-and-markets) | headlines, moves | CRO8 | news and market feeds | story; quote | intraday | existing | existing `data/testdata/news-and-markets/` (the offline snapshot) |
 | 20 | News relevance to the book (WL9) | "headlines touching the book" | CRO8 | Drishti (computed: story → issuer, counterparty, sector, country) | story × entity | intraday | new (section 4.5.9) | computed from 19 and 8 |
 | 21 | Market data (`ir-curve`, `fx-spot`, …) and VaR at stake (planned) | market moves with VaR at stake | CRO8 | market data system | point × date | daily | existing; VaR at stake planned | existing `data/testdata/market-data/` |
@@ -6765,11 +6043,11 @@ travel reads it and never recomputes a past date. **Size:** about 20 rows a day.
 | `LIMIT`, `UNIT`, `DIRECTION` | | | required | copied from the catalogue for the date (so a later framework change does not rewrite history) |
 | `USE` | rate | fraction | ceilings | `VALUE / LIMIT` |
 | `HEADROOM` | amount or rate | `UNIT` | floors | `VALUE − LIMIT` |
-| `STATUS` | text | | required | `WITHIN`, `NEAR`, `BREACH`, `MISSING` (section 8.1) |
+| `STATUS` | text | | required | `WITHIN`, `NEAR`, `BREACH`, `MISSING` (section 8.8.1) |
 | `DETAIL` | text | | optional | the tile's sub-line: the counterparty, the scenario, the window |
 | `SOURCE_REF` | text | | required | the official record, capture or input row and version it came from |
 | `INPUT_AS_OF` | date | | required | the date of the input (09-29 for a late liquidity feed) |
-| `SAFE_TO_QUOTE` | boolean | | required | section 8.3 |
+| `SAFE_TO_QUOTE` | boolean | | required | section 8.8.3 |
 | `MISSING_REASON` | text | | optional | *liquidity feed not arrived* |
 
 #### 8.7.5 `liquidity-metric` (LIQM): LCR, NSFR and the survival horizon (new, input)
@@ -6790,7 +6068,7 @@ estimate; the survival horizon weekly (the internal liquidity stress). **Size:**
 | `REGULATORY_MINIMUM` | rate or integer | | required | 1.0 for LCR and NSFR; the regulator's survival minimum if any |
 | `SCENARIO` | text | | survival | *Combined idiosyncratic and market-wide* |
 | `STATUS_OF_FIGURE` | text | | required | `OFFICIAL`, `ESTIMATE` |
-| `CURRENCY`, `BUSINESS_DATE`, `VERSION`, `AS_OF` | | | required | as section 7.2 |
+| `CURRENCY`, `BUSINESS_DATE`, `VERSION`, `AS_OF` | | | required | as section 8.7.2 |
 
 ```json
 {"LEGAL_ENTITY":"BANK","METRIC":"LCR","VALUE":1.28,"NUMERATOR":61400000000,"DENOMINATOR":48000000000,"REGULATORY_MINIMUM":1.0,
@@ -6934,7 +6212,7 @@ requester; an expired request becomes `EXPIRED` by itself, never silently extend
 | `config/packs/climate/contracts/financed-emissions.contract.yaml` | `financed-emissions` | `FEMS` | input | climate | extended from the retired example |
 
 Every pack gets its `README.md` with front matter and data structures (the README standard), a standalone refresh or generator script
-per pack, and its synthetic data through the generators of section 7.1, loaded by `lake build` into Delta and read by the delta
+per pack, and its synthetic data through the generators of section 8.7.1, loaded by `lake build` into Delta and read by the delta
 connector, tested with the demo off.
 
 ---
@@ -6955,7 +6233,7 @@ connector, tested with the demo off.
 #### 8.8.2 The top-10 concentration
 
 The share of the bank's EPE (from the official exposure run) held by the ten largest counterparties or connected groups (the catalogue
-says which), computed from the exposure engine's per-counterparty EPE; the group view uses the group's own scope (`GROUP:`), never a sum
+says which), computed from the exposure engine's per-counterparty EPE ([EXPOSURE_GUIDE section 2](../guides/EXPOSURE_GUIDE.md#2-the-measures-with-worked-numbers)); the group view uses the group's own scope (`GROUP:`), never a sum
 of members' PFE quantiles.
 
 #### 8.8.3 "Safe to quote"
@@ -7084,7 +6362,7 @@ Built **after** the MR and CCR cube POCs, because its drill targets are the cube
 | In the POC | Out of the POC |
 |---|---|
 | The B landing and the phone layout on the demo lake, with the eight metrics the engines can serve today: VaR 1d 99% (and 10d √10 in the sub-line), worst stress loss (stored), largest counterparty PFE, largest group PFE, top-10 concentration; liquidity, capital and climate tiles drawn from their synthetic generators with the PROPOSED badge | the C and A tabs (CRO2) |
-| `risk-appetite-metric` with its generator (twelve metrics, RAF-2026), and the status rule of section 8.1 including floors | stressed VaR until stressed VaR lands |
+| `risk-appetite-metric` with its generator (twelve metrics, RAF-2026), and the status rule of section 8.8.1 including floors | stressed VaR until stressed VaR lands |
 | `appetite-status` computed on open (captured from CRO1 on) | reasons for every move (RO1 / CRO3): the POC shows moves only |
 | Read-only breaches derived from `LIMIT_USE` above 1 and the appetite statuses | the breach records and approvals (CRO4); approve and reject drawn disabled with "comes with CRO4" |
 | Data health from the load events; the safe-to-quote badge from late loads only | Ask (CRO10), the world's VaR at stake and relevance (CRO8), time travel beyond the previous official date (CRO11), the board pack PDF |
@@ -7099,8 +6377,9 @@ never yesterday's figure; the phone view stacks the breached and near tiles firs
 
 ### 8.12 Phases (proposed)
 
-The phases follow the plan's themed releases (product owner, 2026-10-31; reordered 2026-11-01): the market-risk regulatory foundation (2.9.8, released); memory, scale and mobile with the VaR change explained (2.9.10, in release); sensitivities and market-risk capital (2.9.11); counterparty engines (2.9.12); Java 25 and performance I (2.9.13); oversight (2.9.14); regulatory reporting (2.9.15); native performance II (2.9.16); XVA and wrong-way risk (2.9.17); advanced market risk (2.9.18); executive (2.9.19). From 2.9.11 on each is **proposed** until it starts; a row without one is unscheduled. The rows are in the plan's "CRO lens" section. The proof of concept of section 11
-becomes the first part of the lens build in the executive phase (2.9.19).
+The phases follow the plan's themed releases (product owner, 2026-10-31; reordered 2026-11-01): oversight 2.9.14, regulatory
+reporting 2.9.15, executive 2.9.19, each proposed until it starts; the rows are in the plan's "CRO lens" section. The proof of concept
+of [section 8.11](#811-a-proof-of-concept-after-the-cube-pocs) becomes the first part of the lens build in the executive phase.
 
 | Phase | Rows | Status | Depends on |
 |---|---|---|---|
@@ -7121,35 +6400,33 @@ becomes the first part of the lens build in the executive phase (2.9.19).
 | **Breach workflow overlap** with the bank's existing GRC tool | two records of one breach | read-only mode reading the bank's records (decision 6); or Drishti's records exported |
 | **A wrong number in front of the board** | reputational | the safe-to-quote rule, the per-tile date, provenance on every figure, the brief from a template with figures checked |
 | **AI inventing a figure** | a false answer to the CRO | tools only, figures checked after, refused when unsupported, audit; AI off unless the site turns it on |
-| **The mock-ups' Northbridge story differs from the demo data** | a demo that does not match the mock-up | section 6.6; decision 10 |
+| **The mock-ups' Northbridge story differs from the demo data** | a demo that does not match the mock-up | section 8.6.6; decision 10 |
 | **Too many proposed panels** | a landing full of PROPOSED badges | the POC shows the built ones first; the badges per panel are configuration (`cro.badges`) |
 
 ---
 
 ### 8.14 Decisions for the product owner
 
-1. **The layouts. Decided (product owner, 2026-10-31):** B (appetite first) is the landing, C (morning brief) the Brief tab, A (terminal
-   grid) the Detail tab, the phone view its own layout.
+1. **The layouts. Decided (product owner, 2026-10-31):** B landing, C Brief tab, A Detail tab, the phone its own layout
+   ([section 8.5.1](#851-the-layouts-decided)).
 2. **Badge levels. Decided (product owner, 2026-10-31):** four levels on every panel (built, partly, planned, proposed), and the build
    checklist uses the same levels. PLANNED has its own colour (cyan) on the mock-ups, apart from PARTLY's blue (product owner,
    2026-10-31, with the CIO lens).
-3. **Floor metrics. Decided (product owner, 2026-10-31):** LCR, NSFR, the survival horizon and CET1 are shown as **headroom above the
-   floor with a board-set warning band** (`WARNING_BAND`), not as a percentage used.
-4. **Climate.** **Decided (product owner, 2026-10-31): an optional tile, off by default, showing financed emissions as a supplied input; Drishti computes nothing, so "climate out of scope" (2026-10-25) stands.** Options were: show financed emissions as a supplied input with its source (recommended; the board asks for it and Drishti computes
-   nothing), or leave the climate tile out while climate is out of scope.
+3. **Floor metrics. Decided (product owner, 2026-10-31):** headroom above the floor with a board-set warning band, not a percentage
+   used ([section 8.8.1](#881-the-status-of-a-metric)).
+4. **Climate.** **Decided (product owner, 2026-10-31): an optional tile, off by default, showing financed emissions as a supplied input; Drishti computes nothing, so "climate out of scope" (2026-10-25) stands.** The alternative was to leave the climate tile out.
 5. **The appetite catalogue's home.** A Drishti-owned table edited by the CRO office through write-back (recommended for banks without a
    GRC tool), or read from the bank's GRC system as a fundamental input.
-6. **Temporary limit increases.** **Decided (product owner, 2026-10-31), with OVERSIGHT decision 4: option a.** Record and approve in Drishti, and the bank's limit system takes the approved limit by its own process
-   (recommended, one source of truth; OVERSIGHT's option a), or a Drishti overlay effective the same day (option b).
+6. **Temporary limit increases.** **Decided (product owner, 2026-10-31), with OVERSIGHT decision 4: option a.** Record and approve in Drishti, and the bank's limit system takes the approved limit by its own process (one
+   source of truth), rather than a Drishti overlay effective the same day (option b).
 7. **Ask.** On in the CRO lens when the site has a model provider (recommended), with tools only; or off until the lens build.
 8. **Board members.** A read-only `board` role that sees the Brief and the phone layout only (recommended, later), or no board access.
 9. **Packs.** Four small packs (risk-appetite, liquidity, capital, climate; recommended: each with its own README and refresh script,
    switchable), or one `enterprise-risk` pack.
-10. **Demo data for the Northbridge story.** **Decided (product owner, 2026-10-31): add the second synthetic member and the 500m group appetite limit through the generators.** Options were: add a second synthetic member and a 500m group appetite limit through the generators
-    (recommended: the demo then matches the mock-up), or keep the demo's single-member group and change the mock-up's figures.
+10. **Demo data for the Northbridge story.** **Decided (product owner, 2026-10-31): add the second synthetic member and the 500m group appetite limit through the generators**, so the demo matches the mock-up (the alternative was changing the mock-up's figures).
 11. **Phase placement.** **Decided (product owner, 2026-10-31), by the themed plan:** the decision queue (CRO4, with RO3) with
     regulatory reporting (2.9.15), after RO2 (oversight, 2.9.14); the CRO lens build (CRO1 to CRO3, CRO9, CRO12, CRO13) with liquidity,
-    capital, the optional climate tile (off by default), Ask and time travel in the executive phase (2.9.19) (section 12).
+    capital, the optional climate tile (off by default), Ask and time travel in the executive phase (2.9.19) ([section 8.12](#812-phases-proposed)).
 
 ---
 
@@ -7169,37 +6446,29 @@ becomes the first part of the lens build in the executive phase (2.9.19).
 | **Survival horizon** | days the bank stays liquid under its internal combined stress |
 | **CET1, RWA** | common equity tier 1 capital; risk-weighted assets; the CET1 ratio is one over the other |
 | **Financed emissions, PCAF** | greenhouse gases attributed to the bank's lending and investing; the accounting standard and its 1 to 5 data-quality score |
-| **PFE, EPE** | potential future exposure (a high quantile of exposure); expected positive exposure |
+| **PFE, EPE** | potential future exposure and expected positive exposure, as defined in [EXPOSURE_GUIDE section 2](../guides/EXPOSURE_GUIDE.md#2-the-measures-with-worked-numbers) |
 | **Safe to quote** | every input official, complete and current for the as-of date |
 | **Time travel** | showing the lens as it was on an earlier date from the captured records |
 | **Board pack** | the document the board risk committee receives each meeting |
 
 ## 9. The CIO lens: is the risk data estate healthy, trustworthy, on time, secure, affordable, and used
 
-**Status: analysis and product description; design, not built.** Nothing in this document is built unless a row of
-[section 4](#94-what-drishti-has-today) says so and cites the guide or file it was read from (on
-2026-10-31). Every phase named here is a **proposal**, not a commitment. The rows it
-proposes are candidates in the [implementation plan](IMPLEMENTATION_PLAN.md#cio-lens-candidates-not-started) (CIO1 to
-CIO14), not started.
+**Status: design, not built.** Nothing here is built unless a row of [section 9.4](#94-what-drishti-has-today) says so (checked
+2026-10-31); every phase is a proposal. The rows are candidates in the
+[implementation plan](IMPLEMENTATION_PLAN.md#cio-lens-candidates-not-started) (CIO1 to CIO14), not started.
 
 **The request (product owner, 2026-10-31):** a **CIO lens** for the Chief Information Officer: the executive view of **the platform and
 the risk data behind the numbers**. It answers *"Is the risk data estate healthy, trustworthy, on time, secure, affordable, and are
 people using it?"* Its strongest angle is **BCBS 239** (the Basel Committee's principles for risk data aggregation and risk reporting): a
 live scorecard with its evidence (contracts, lineage, data versions, completeness, timeliness). The admin pages are for operators fixing
-things; the CIO lens is a **read-only executive summary with trends and evidence**. It pairs with the CRO lens: the CRO's "data health /
-safe to quote" panel ([section 8.8.3](#883-safe-to-quote)) is the CIO lens's whole story. Three landing mock-ups and a
-phone mock-up first; the product owner liked them ("i like it and i am aligned with your recommendations"), and the recommendations are
-recorded as decided in [section 15](#915-decisions-for-the-product-owner).
-
-**Read with:** [section 8](#8-the-cro-lens-is-the-bank-within-its-risk-appetite-what-changed-overnight-and-what-must-the-chief-risk-officer-act-on) (the executive sibling; its safe-to-quote rule reads this lens's feed and quality records),
-[section 5](#5-market-risk-oversight-what-the-second-line-needs-from-drishti-and-a-drishti-oversight-lens) (the data-trust card RO13), [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md) (the
-cluster, its gossip, shards, drain and the rolling upgrade), [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md) (memory, disk
-and cache budgets, data versions), [DATA_GUIDE.md sections 8 and 9](../guides/DATA_GUIDE.md#8-expectations-and-late-data) (load
-expectations and the Data loads page), [OPERATIONS.md section 13](../admin/OPERATIONS.md#132-admin--health) (Health, Prometheus, the
-suggested alerts), [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) (roles, tokens, the audit and access logs),
-[CONFIGURATION.md](../reference/CONFIGURATION.md) (every setting), [docs/contracts/README.md](../contracts/README.md) (contracts, validation
-and rejects), [EDITIONS.md](../admin/EDITIONS.md) (lenses and editions) and [MOBILE_DISPLAY.md](MOBILE_DISPLAY.md) (phone
-tiers).
+things; the CIO lens is a **read-only executive summary with trends and evidence**. It pairs with the CRO lens: the CRO's "safe to quote"
+([section 8.8.3](#883-safe-to-quote)) is the CIO lens's whole story, and Oversight's data-trust card RO13 reads the same checks. The
+product owner liked the mock-ups ("i like it and i am aligned with your recommendations"); the recommendations are recorded as decided
+in [section 9.15](#915-decisions-for-the-product-owner). The platform facts it summarises are in
+[CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md), [RESOURCES_AND_SCALE.md](RESOURCES_AND_SCALE.md),
+[DATA_GUIDE.md sections 8 and 9](../guides/DATA_GUIDE.md#8-expectations-and-late-data),
+[OPERATIONS.md section 13](../admin/OPERATIONS.md#132-admin--health), [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md) and
+[docs/contracts/README.md](../contracts/README.md).
 
 ### 9.1 Purpose: what a CIO lens is
 
@@ -7234,9 +6503,8 @@ every row opens the admin page or the record behind it, where operators act.
 | **CRO and the CRO's office** | the safe-to-quote panel reads this lens's records; "why was the 7am risk late?" | the CRO lens (proposed) |
 | **Internal audit, supervisors** | reproduce the scorecard and the evidence of a quarter (time travel), read the evidence pack | none |
 
-The CIO lens is **a lens** ([EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses)): `Open Drishti CIO` from Views and Home on a full
-instance, and the command word `CIO` (proposed) for its landing. It **reads**; it has no action of its own beyond opening the page that
-owns a row, confirming a BCBS 239 score (the data office) and generating the evidence pack.
+It **reads**; it has no action of its own beyond opening the page that owns a row, confirming a BCBS 239 score (the data office) and
+generating the evidence pack ([section 9.5.4](#954-read-only-and-where-each-row-goes)).
 
 ---
 
@@ -7282,7 +6550,7 @@ owns a row, confirming a BCBS 239 score (the data office) and generating the evi
 | Admin → Health: overall status, connectors, packs, the views' p50, p95 and p99 per kind (last ten minutes), activity (requests a minute and response time, last 30 minutes), disk, Drishti\*net, data that is late | **Built** | [OPERATIONS section 13.2](../admin/OPERATIONS.md#132-admin--health); `drishti-console/web/templates/admin/_health_body.html` |
 | Prometheus metrics, a Grafana dashboard, suggested alert rules | **Built** (`/actuator/prometheus`, `deploy/grafana/drishti-dashboard.json`) | [OPERATIONS sections 13.4, 13.5](../admin/OPERATIONS.md#134-prometheus-and-grafana) |
 | Platform metrics and alerts: caches, memory budget, disk, sources' freshness, feeds, loads, open alerts as named gauges; alert rules each server evaluates itself, told to administrators, listed on Health and at `GET /api/v1/admin/alerts`; the same rules for Prometheus | **Built** (`server/metrics`, `config/alerts/platform-alerts.yaml`, `deploy/prometheus/drishti-alerts.yaml`) | [OPERATIONS section 13.6](../admin/OPERATIONS.md#136-platform-metrics-and-alerts) |
-| Drishti's own history of those metrics (days, months) | **Not built** (CIO4, `platform-metric`, section 7.7) | [RESOURCES_AND_SCALE section 8.3](RESOURCES_AND_SCALE.md#83-metrics-to-export) |
+| Drishti's own history of those metrics (days, months) | **Not built** (CIO4, `platform-metric`, section 9.7.7) | [RESOURCES_AND_SCALE section 8.3](RESOURCES_AND_SCALE.md#83-metrics-to-export) |
 | Cluster membership by gossip, VaR sharding with replicas and zones, handover | **Built** | [CLUSTER_DEPLOYMENT sections 4.1, 4.4](CLUSTER_DEPLOYMENT.md#41-membership-by-gossip-swim-over-http) |
 | Disk caps with a free-space guard, one cache budget, Admin → Health → Disk | **Built** | [RESOURCES_AND_SCALE section 14](RESOURCES_AND_SCALE.md#14-built) |
 | Readiness gated on dates and shards, drain on stop, the rolling upgrade runner, N and N−1 | **Built** for readiness, drain and the runner (CD1 to CD3); the N and N−1 rule **planned** (CD4) | [CLUSTER_DEPLOYMENT section 18](CLUSTER_DEPLOYMENT.md#18-built-against-planned) |
@@ -7299,21 +6567,20 @@ states and the one-time notice; `LoadRecord` carries `rows` and `rejected`; `Hea
 turns the status `DEGRADED`; `UserService` records `login-failed` and `locked` through `AuditLog`; `AccessLog` writes `drishti_access`.
 No class in `drishti-server/src/main`, `drishti-identity/src/main` or the console's `core` and `routes` folders names BCBS 239, a feed
 dependency, a forecast, a data-quality history, a cloud cost, an incident or a secret inventory. The demo lake holds 9,572 trades; the
-mock-ups use the **2.3M-position scale estate** for feeds, capacity and cost (decided, section 15), labelled as such.
+mock-ups use the **2.3M-position scale estate** for feeds, capacity and cost (decision 6), labelled as such.
 
 ---
 
 ### 9.5 Screens and interactions
 
-The lens follows the house rules: keyboard first, every number printed (a chart never replaces a figure), a problem in the theme's loss
-colour **and** with a word (`LATE`, `MISSING`, `ACT`, `WATCH`), dark terminal theme by default, every panel a ViewModel panel so it embeds
-and stacks on a phone. Every panel carries one of the **four badges** until the whole lens is built.
+The house rules and the four badges are the CRO lens's ([section 8.5](#85-screens-and-interactions)); the CIO's status words are
+`LATE`, `MISSING`, `ACT` and `WATCH`.
 
 #### 9.5.1 The layouts (decided)
 
 **Decided (product owner, 2026-10-31):** **B (status first) is the landing page; C (the platform brief) is its "Brief" tab and is also
-the Evidence pack PDF; A (terminal grid) is its "Detail" tab; the phone view is its own layout,** with phone tiers per panel as in
-[MOBILE_DISPLAY.md](MOBILE_DISPLAY.md) (the phone display is proposed). The three tabs share one data request.
+the Evidence pack PDF; A (terminal grid) is its "Detail" tab; the phone view is its own layout** (phone tiers per panel; the phone
+display is proposed). The three tabs share one data request.
 
 | Tab | Layout | Best for | Mock-up |
 |---|---|---|---|
@@ -7324,27 +6591,29 @@ the Evidence pack PDF; A (terminal grid) is its "Detail" tab; the phone view is 
 
 #### 9.5.2 The visual catalogue
 
-| Visual | What it shows | Interactions | Built today? |
-|---|---|---|---|
-| **Status tile** | name, value, status word (`OK`, `WATCH`, `ACT`), a sub-line, a 30-day sparkline against its target (dashed), the target, the badge, the owner | click: the panel or admin page behind it; hover: the record it came from | Health shows a status; tiles, targets and trends not built |
-| **Status count line** | "ACT 1 · WATCH 5 · OK 6", open incidents, secrets past policy, the next release | click a count: filter the tiles | not built |
-| **7am-ready badge** | `7AM RISK READY 06:04 · 56 min to spare`, or `FORECAST 07:18 · LATE` before it is ready, with the feed holding it up | click: the feed timeline | not built (CIO1) |
-| **Feed table** (Detail) | per feed: name, batch, expected, arrived, rows, status word, owner, note | click: the pack's Data loads page | the same facts per pack on Data loads (built); one table across packs not built |
-| **Feed timeline** (Status) | expected (white tick) against arrived (dot), red dashes for not landed, the 7am line and the ready time | hover: the load; click: Data loads | not built |
-| **Ready-time chart** (Brief) | the ready time per business day for 21 days, bars red above 07:00 | click a bar: that day's feeds | not built (CIO1) |
-| **Data-quality table** | per dataset: checks passed of total, rejected rows, the open issue, a 30-day issue trend, the owner | click: the dataset's checks and rejected rows | contract checks and rejects built; the table, content checks and history not built (CIO2) |
-| **BCBS 239 scorecard** | eleven principles in three groups, score 1 to 4 as four squares and a number, the last four quarters, the evidence today and the open items, each a link | click evidence: the record; the data office confirms a score | not built (CIO3) |
-| **Nodes table** | node, address, roles, version, state, shards primary and replica, heap, cache budget, p50 and p95, uptime | click: Admin → Net, Health | the facts on Net and Health (built); one table across members partly |
-| **Latency chart** | p50 and p95 over 48 hours with the target and the failover marked | hover: the minute | Health's last 30 minutes built; the history planned |
-| **Capacity chart** | positions monthly with a dotted forecast and the next scale step (a fourth owner at about 3.4M) | hover | not built (CIO5) |
-| **Cost bars** | cost a day per desk, a 30-day trend against budget | click: the allocation | not built; later phase (CIO14) |
-| **Usage bars** | active users by lens and by desk; top screens; embeds; AI questions | click: the access log filtered | access log built; the view not built (CIO6) |
-| **Secrets table** | secret, age, policy, a meter | click: the rotation runbook | not built (CIO7) |
-| **Change list** | the last rolling upgrade, configuration changes with who and when, the next release | click: the audit row | audit built; upgrade record not built (CIO8) |
-| **Incidents table** | id, priority, what, state | click: the ITSM ticket | not built (CIO8) |
-| **Ask** | a question box; the answer in sentences with every figure a link; suggested questions | `/` focuses it; `Enter` asks | not built across these records (CIO10) |
-| **As-at strip** | as at now, yesterday, the last audit date, pick; compare 30 days, quarter, year; the estate chip; Read-only | `[` `]` step | not built (CIO11) |
-| **Evidence pack PDF** | a button generating the Brief for a period with the scorecard and the evidence | click | not built (CIO11) |
+Each panel's exact contents and interactions are in the checklists of [section 9.6](#96-mock-ups-the-screens-to-build).
+
+| Visual | What it shows | Built today? |
+|---|---|---|
+| **Status tile** | name, value, status word (`OK`, `WATCH`, `ACT`), a sub-line, a 30-day sparkline against its target (dashed), the target, the badge, the owner | Health shows a status; tiles, targets and trends not built |
+| **Status count line** | "ACT 1 · WATCH 5 · OK 6", open incidents, secrets past policy, the next release | not built |
+| **7am-ready badge** | `7AM RISK READY 06:04 · 56 min to spare`, or `FORECAST 07:18 · LATE` before it is ready, with the feed holding it up | not built (CIO1) |
+| **Feed table** (Detail) | per feed: name, batch, expected, arrived, rows, status word, owner, note | the same facts per pack on Data loads (built); one table across packs not built |
+| **Feed timeline** (Status) | expected (white tick) against arrived (dot), red dashes for not landed, the 7am line and the ready time | not built |
+| **Ready-time chart** (Brief) | the ready time per business day for 21 days, bars red above 07:00 | not built (CIO1) |
+| **Data-quality table** | per dataset: checks passed of total, rejected rows, the open issue, a 30-day issue trend, the owner | contract checks and rejects built; the table, content checks and history not built (CIO2) |
+| **BCBS 239 scorecard** | eleven principles in three groups, score 1 to 4 as four squares and a number, the last four quarters, the evidence today and the open items, each a link | not built (CIO3) |
+| **Nodes table** | node, address, roles, version, state, shards primary and replica, heap, cache budget, p50 and p95, uptime | the facts on Net and Health (built); one table across members partly |
+| **Latency chart** | p50 and p95 over 48 hours with the target and the failover marked | Health's last 30 minutes built; the history planned |
+| **Capacity chart** | positions monthly with a dotted forecast and the next scale step (a fourth owner at about 3.4M) | not built (CIO5) |
+| **Cost bars** | cost a day per desk, a 30-day trend against budget | not built; later phase (CIO14) |
+| **Usage bars** | active users by lens and by desk; top screens; embeds; AI questions | access log built; the view not built (CIO6) |
+| **Secrets table** | secret, age, policy, a meter | not built (CIO7) |
+| **Change list** | the last rolling upgrade, configuration changes with who and when, the next release | audit built; upgrade record not built (CIO8) |
+| **Incidents table** | id, priority, what, state | not built (CIO8) |
+| **Ask** | a question box; the answer in sentences with every figure a link; suggested questions | not built across these records (CIO10) |
+| **As-at strip** | as at now, yesterday, the last audit date, pick; compare 30 days, quarter, year; the estate chip; Read-only | not built (CIO11) |
+| **Evidence pack PDF** | a button generating the Brief for a period with the scorecard and the evidence | not built (CIO11) |
 
 #### 9.5.3 Keyboard and the command line
 
@@ -7358,14 +6627,14 @@ and its arguments are checked against every pack's mnemonics at build.
 The lens never changes the platform. A row opens the page that owns it, where the people with the power act: a feed opens the pack's
 **Data loads** page; a check opens the dataset's rejects; a node opens **Admin → Net** or **Health**; an audit line opens **Admin → Audit
 log**; a secret opens its runbook; an incident opens the bank's ticket. Two actions exist in the lens and both write records, never
-settings: the data office **confirms** a BCBS 239 score (with a comment; section 8.4), and anyone with the power **generates** the
+settings: the data office **confirms** a BCBS 239 score (with a comment; [section 9.8.4](#984-the-bcbs-239-score)), and anyone with the power **generates** the
 evidence pack.
 
 #### 9.5.5 Response-time targets
 
 | Interaction | Target (p95, warm) | Note |
 |---|---|---|
-| Open the landing (12 tiles, BCBS cards, the feed timeline, quality, nodes) | 600 ms¹ | the daily summaries are precomputed (section 7); the live part (nodes, today's feeds) is a few small calls |
+| Open the landing (12 tiles, BCBS cards, the feed timeline, quality, nodes) | 600 ms¹ | the daily summaries are precomputed ([section 9.7](#97-data-needed-the-complete-list)); the live part (nodes, today's feeds) is a few small calls |
 | Switch tab | 100 ms¹ | the same answer, rearranged |
 | As at a past date | 1.5 s¹ | the captured summaries of that date; nothing recomputed |
 | Ask, first token | 2 s¹ | the AI layer's model; the records fetched first |
@@ -7377,33 +6646,27 @@ evidence pack.
 
 **must**: the verdict paragraph, the status counts, the 7am badge, the ACT and WATCH tiles; **glance**: the other tiles, the feeds
 needing attention; **more**: BCBS 239, open quality issues, the nodes, Ask, the two buttons; **desk**: the feed table, cost, usage,
-security detail, change, the Detail tab. The phone shows the decided phone layout ([cio/phone.html](mockups/cio/phone.html)), not a
-shrunken landing; the tier mechanism is [MOBILE_DISPLAY.md](MOBILE_DISPLAY.md#4-where-the-tier-is-set-five-layers-one-rule)'s.
+security detail, change, the Detail tab; the tier mechanism is [MOBILE_DISPLAY.md](MOBILE_DISPLAY.md#4-where-the-tier-is-set-five-layers-one-rule)'s.
 
 ---
 
 ### 9.6 Mock-ups: the screens to build
 
-The four mock-ups are in the repository, self-contained (no CDN, no external fonts, inline SVG), each with a headless-Chrome screenshot
-beside it: [A.html](mockups/cio/A.html), [B.html](mockups/cio/B.html), [C.html](mockups/cio/C.html), [phone.html](mockups/cio/phone.html).
-**Chosen (decided, product owner, 2026-10-31):** B is the landing, C the Brief tab and the evidence pack, A the Detail tab, the phone its
-own layout.
+The four mock-ups (conventions in [the introduction](#mock-ups)) are under `mockups/cio/`; the layout chosen for each is in
+[section 9.5.1](#951-the-layouts-decided). **Their numbers are synthetic** and consistent with the CRO and cube mock-ups: business
+date 2026-09-30, as at 11:02; the batch `B-2026-09-30-01`, scenario PVs `v977`, VaR vectors `v4182`, exposure run `XR-2026-09-30-01` and
+the late liquidity (ALM) feed as in the CRO mock-ups. Feeds, capacity and cost use the **2.3M-position scale estate** (the benchmark book
+on the demo three-node cluster; Endur 1,842,316 plus Murex 457,684 positions), not the demo lake's 9,572 trades, and say so in their
+footers. Node addresses (`10.0.4.11` to `.13`), people (`ops-admin`, `rkapoor`), tickets (`INC-0409`, `CHG-2231`), every cost, usage and
+security figure and the BCBS 239 scores are invented for the mock-ups; **never a client's name or figure**.
 
-**Their numbers are synthetic** and consistent across the four pages and with the CRO and cube mock-ups: business date 2026-09-30, as at
-11:02; the batch `B-2026-09-30-01`, scenario PVs `v977`, VaR vectors `v4182`, exposure run `XR-2026-09-30-01` and the late liquidity
-(ALM) feed as in the CRO mock-ups. Feeds, capacity and cost use the **2.3M-position scale estate** (the benchmark book on the demo
-three-node cluster; Endur 1,842,316 plus Murex 457,684 positions), not the demo lake's 9,572 trades, and say so in their footers. Node
-addresses (`10.0.4.11` to `.13`), people (`ops-admin`, `rkapoor`), tickets (`INC-0409`, `CHG-2231`), every cost, usage and security
-figure and the BCBS 239 scores are invented for the mock-ups; **never a client's name or figure**.
-
-**Version numbers.** This document writes the running version as N and the next as N+1. The mock-up pictures draw example version
+**Version numbers.** This part writes the running version as N and the next as N+1. The mock-up pictures draw example version
 numbers; **nothing deck-bound** (a slide, a screenshot in a deck, a client handout) may show them: a deck uses these pictures only after
 the version cells read "current" and "next".
 
-**How to read the checklists.** One table per mock-up: each row is a panel to build, with its exact contents, the data and contract it
-reads (section 7), its interactions, the phase (**POC** of [section 12](#912-a-proof-of-concept), or the CIO row that brings it), its
-phone tier and a **Done?** column for the build to tick. The empty, loading and error states shared by every panel are in
-[section 6.5](#965-empty-loading-and-error-states).
+**The checklists** read as the CRO lens's ([section 8.6](#86-mock-ups-the-screens-to-build)), with a *Phone tier* column; numbers in
+brackets are subsections of this part, and *Phase* is the **POC** of [section 9.12](#912-a-proof-of-concept) or the CIO row that brings
+it.
 
 #### 9.6.1 B: Status (the landing)
 
@@ -7414,31 +6677,31 @@ phone tier and a **Done?** column for the build to tick. The empty, loading and 
 | Panel | Contents (exact) | Data and contract | Interaction | Phase | Phone tier | Done? |
 |---|---|---|---|---|---|---|
 | Command bar | `DRISHTI`, the command line with `CIO <GO>`, the key legend (`F` `Q` `B` `P` `C` `U` `S` `R` `/` `[` `]` `Enter` `?`) | the lens file's placeholder | type a command; keys | POC | must | no |
-| As-at strip | as at `2026-09-30 11:02`, presets *yesterday 09-29*, *last audit 2026-06-30*, *pick…*; compare *30 days* / *quarter* / *year*; chip *Estate: drishti-prod · 3 nodes*; chip *Read-only*; **7AM RISK READY 06:04 · 56 min to spare**; **Evidence pack PDF** with PROPOSED | `feed-status` (7.4) and `feed-dependency` (7.5) for the badge; the captured summaries for past dates | preset click; `[` `]`; the badge opens the feed timeline | POC: now and yesterday; CIO11 the rest | must (badge) | no |
-| Status count line | `ACT 1 act`, `WATCH 5 watch`, `OK 6 ok`; *2 open incidents · 1 secret past policy · next release N+1* | the tiles' statuses (8.5); `incident` (7.11); `secret-inventory` (7.10); `change-record` (7.12) | click a count: filter the tiles | POC (counts) | must | no |
+| As-at strip | as at `2026-09-30 11:02`, presets *yesterday 09-29*, *last audit 2026-06-30*, *pick…*; compare *30 days* / *quarter* / *year*; chip *Estate: drishti-prod · 3 nodes*; chip *Read-only*; **7AM RISK READY 06:04 · 56 min to spare**; **Evidence pack PDF** with PROPOSED | `feed-status` (9.7.4) and `feed-dependency` (9.7.5) for the badge; the captured summaries for past dates | preset click; `[` `]`; the badge opens the feed timeline | POC: now and yesterday; CIO11 the rest | must (badge) | no |
+| Status count line | `ACT 1 act`, `WATCH 5 watch`, `OK 6 ok`; *2 open incidents · 1 secret past policy · next release N+1* | the tiles' statuses (9.8.5); `incident` (9.7.11); `secret-inventory` (9.7.10); `change-record` (9.7.12) | click a count: filter the tiles | POC (counts) | must | no |
 | Family headings | DATA: ON TIME AND COMPLETE · GOVERNANCE: BCBS 239 AND QUALITY · PLATFORM: UP AND FAST · ECONOMICS AND USE | the lens file | none | POC | must | no |
-| Tile: Feeds on time | `10 / 12`, *1 late (ALM) · 1 missing (FX vol B) · 2 landed late*, sparkline against *target 12 / 12*, `WATCH`, PARTLY, *Owner: Head of Data Operations* | `feed-status` (7.4); today's states from `ExpectationService` (built) | click: the feed timeline (`F`) | POC | must | no |
+| Tile: Feeds on time | `10 / 12`, *1 late (ALM) · 1 missing (FX vol B) · 2 landed late*, sparkline against *target 12 / 12*, `WATCH`, PARTLY, *Owner: Head of Data Operations* | `feed-status` (9.7.4); today's states from `ExpectationService` (built) | click: the feed timeline (`F`) | POC | must | no |
 | Tile: 7am risk ready | `06:04`, *19 of 21 days by 07:00 · late 09-29 (07:22)*, sparkline against the 07:00 line, *56 min to spare*, `OK`, PROPOSED, *Owner: Head of Risk Technology* | `feed-status` and `feed-dependency`; the official capture time of VaR and exposure | click: the ready-time chart | CIO1 | must | no |
-| Tile: Completeness | `99.97%`, *of source rows landed · 253 refused, each listed*, sparkline against 99.9%, *control totals*, `OK`, PARTLY, *Owner: Chief Data Officer* | `LoadRecord.rows`, `rejected` (built); control totals from `feed-sla` (7.3) | click: the refused rows | POC (rows, rejected); CIO1 (control totals) | glance | no |
-| Tile: BCBS 239 | `3.0 / 4`, *9 principles at 3+ · P5 timeliness, P8 coverage at 2*, sparkline against *target 3.5 by 2027-Q2*, `WATCH`, PROPOSED, *Owner: Chief Data Officer* | `bcbs239-assessment` (7.13) | click: the scorecard (`B`) | CIO3 | must | no |
-| Tile: Contract checks | `99.0%`, *309 / 312 · Murex BOOK, stale prices, LEI gaps*, sparkline against 99.5%, *106 contracts*, `WATCH`, PARTLY, *Owner: Dataset owners* | `dq-result` (7.6); the contracts' validation (built) | click: data quality (`Q`) | POC (contract checks from rejects); CIO2 (content checks) | glance | no |
-| Tile: Secrets past policy | `1`, *AI provider key 188 d (policy 180)*, *5 secrets tracked*, `ACT`, red outline, PROPOSED, *Owner: CISO* | `secret-inventory` (7.10) | click: the secrets table | CIO7 (decision 5) | must | no |
-| Tile: Cluster | `3 / 3`, *48 shards × 2 replicas · 1 failover in 30 d*, *vN on every node*, `OK`, BUILT, *Owner: Head of Platform* | Drishti\*net membership and the shard map (built); `platform-metric` (7.7) for the trend | click: the nodes table (`P`) | POC | glance | no |
+| Tile: Completeness | `99.97%`, *of source rows landed · 253 refused, each listed*, sparkline against 99.9%, *control totals*, `OK`, PARTLY, *Owner: Chief Data Officer* | `LoadRecord.rows`, `rejected` (built); control totals from `feed-sla` (9.7.3) | click: the refused rows | POC (rows, rejected); CIO1 (control totals) | glance | no |
+| Tile: BCBS 239 | `3.0 / 4`, *9 principles at 3+ · P5 timeliness, P8 coverage at 2*, sparkline against *target 3.5 by 2027-Q2*, `WATCH`, PROPOSED, *Owner: Chief Data Officer* | `bcbs239-assessment` (9.7.13) | click: the scorecard (`B`) | CIO3 | must | no |
+| Tile: Contract checks | `99.0%`, *309 / 312 · Murex BOOK, stale prices, LEI gaps*, sparkline against 99.5%, *106 contracts*, `WATCH`, PARTLY, *Owner: Dataset owners* | `dq-result` (9.7.6); the contracts' validation (built) | click: data quality (`Q`) | POC (contract checks from rejects); CIO2 (content checks) | glance | no |
+| Tile: Secrets past policy | `1`, *AI provider key 188 d (policy 180)*, *5 secrets tracked*, `ACT`, red outline, PROPOSED, *Owner: CISO* | `secret-inventory` (9.7.10) | click: the secrets table | CIO7 (decision 5) | must | no |
+| Tile: Cluster | `3 / 3`, *48 shards × 2 replicas · 1 failover in 30 d*, *vN on every node*, `OK`, BUILT, *Owner: Head of Platform* | Drishti\*net membership and the shard map (built); `platform-metric` (9.7.7) for the trend | click: the nodes table (`P`) | POC | glance | no |
 | Tile: p95 response | `412 ms`, *p50 38 ms · errors 0.04% · whole-bank VaR 1.9 s*, sparkline against *target 800 ms*, `OK`, PARTLY | Health's views p95 (built, ten minutes); `platform-metric` for the 30 days (planned) | click: the latency chart | POC (now); CIO4 (trend) | glance | no |
 | Tile: Disk and memory | `81%`, *node2 var/hot 32.4 of 40 GB · heap 59% · budget 35%*, *guard 10% free*, `WATCH`, BUILT | Health → Disk and the cache budget (built) | click: Admin → Health → Disk | POC | glance | no |
-| Tile: Cost a day | `$1,840`, *budget $2,000 · $0.80 per 1,000 positions*, *92% of budget*, `WATCH`, PROPOSED, *Owner: CIO · FinOps* | `cloud-cost` (7.8) | click: cost per desk | CIO14 (later phase, decision 4) | more | no |
+| Tile: Cost a day | `$1,840`, *budget $2,000 · $0.80 per 1,000 positions*, *92% of budget*, `WATCH`, PROPOSED, *Owner: CIO · FinOps* | `cloud-cost` (9.7.8) | click: cost per desk | CIO14 (later phase, decision 4) | more | no |
 | Tile: Capacity headroom | `11 mo`, *2.3M positions of ~3.4M before a 4th owner*, *+3.7% a month*, `OK`, PARTLY | `platform-metric` (positions, lake size); the scale step from CLUSTER_DEPLOYMENT section 3 | click: the capacity chart | CIO5 | more | no |
-| Tile: Active users 30d | `214`, *of 260 entitled · 1,906 AI questions*, *82% adoption*, `OK`, PARTLY | `usage-event` (7.9) over the access log (built); `entitlement` (7.10) for "entitled" | click: usage (`U`) | CIO6 | more | no |
+| Tile: Active users 30d | `214`, *of 260 entitled · 1,906 AI questions*, *82% adoption*, `OK`, PARTLY | `usage-event` (9.7.9) over the access log (built); `entitlement` (9.7.10) for "entitled" | click: usage (`U`) | CIO6 | more | no |
 | Panels and drill line | each panel's badge (Feeds and expectations PARTLY, 7am forecast PROPOSED, Data quality PARTLY, BCBS 239 scorecard PROPOSED, Contracts, data versions, provenance BUILT, Platform health PARTLY, Metrics history and alerts PLANNED, Capacity PARTLY, Cloud cost PROPOSED, Usage PARTLY, Security and access PARTLY, Audit BUILT, Rolling upgrades PLANNED, Incidents PROPOSED, Ask PARTLY, Evidence pack PROPOSED); *Drill to: Admin → Health · Data loads · Audit · Net · Help → Configuration · CRO* | the lens file (badges are configuration until built) | click a link | POC | more | no |
-| BCBS 239 scorecard | three columns (governance and infrastructure; risk data aggregation; risk reporting), eleven cards: *P1 Governance 3/4* … *P11 Distribution 3/4*, each with its score squares, trend arrow, one line of evidence and *Evidence:* links; P5 and P8 outlined amber at 2/4; the scale note | `bcbs239-assessment` (7.13) and the evidence it links (section 9) | click a link: the record; confirm (data office) | CIO3 | more | no |
+| BCBS 239 scorecard | three columns (governance and infrastructure; risk data aggregation; risk reporting), eleven cards: *P1 Governance 3/4* … *P11 Distribution 3/4*, each with its score squares, trend arrow, one line of evidence and *Evidence:* links; P5 and P8 outlined amber at 2/4; the scale note | `bcbs239-assessment` (9.7.13) and the evidence it links (section 9.9) | click a link: the record; confirm (data office) | CIO3 | more | no |
 | This morning's feeds | the timeline 03:30 to 07:30 for the eleven timed feeds, the 07:00 line and *ready 06:04*; *missing* (FX vol vendor B) and *late, not landed* (ALM) in red dashes; the note on the forecast | `feed-status`, `feed-sla`, `feed-dependency` | hover: the load; click: Data loads | POC (today's states); CIO1 (dependency) | glance | no |
-| Ask | the box *Why was the 7am risk late yesterday?*; the answer: *ready at 07:22 … Murex FULL trade file landed at 06:41 … scenario PVs waited … official VaR captured 07:22 … Fix agreed: Murex starts its batch 45 min earlier (CHG-2231)*, every figure a link; *Sources: load records, expectations for pack trading, VaR official 09-29, incident log*; three suggested questions | the AI layer with tools over the records of section 7 (8.10) | `/`, `Enter`; click a link | CIO10 | more | no |
-| Data quality | nine datasets: *trade · Endur 42/42, 37 rejected, CCY not ISO 4217*; *trade · Murex 41/42, 212, BOOK not in the risk hierarchy*; *position 28/29, 14 live trades past maturity*; *scenario-pv 38/38*; *risk-factor map 17/18, 6 unmapped · 118 positions*; *market data 51/53, 23 stale prices*; *counterparty · LEI 24/25, 9 without an LEI match*; *exposure-path 33/33*; *collateral-balance 30/31, late; 4 rows unknown CSA*; a 30-day issue sparkline; the owner | `dq-result` (7.6) | click a dataset: its checks and rejects | POC (contract checks, rejects); CIO2 (content checks, trend) | more | no |
+| Ask | the box *Why was the 7am risk late yesterday?*; the answer: *ready at 07:22 … Murex FULL trade file landed at 06:41 … scenario PVs waited … official VaR captured 07:22 … Fix agreed: Murex starts its batch 45 min earlier (CHG-2231)*, every figure a link; *Sources: load records, expectations for pack trading, VaR official 09-29, incident log*; three suggested questions | the AI layer with tools over the records of section 9.7 (9.8.10) | `/`, `Enter`; click a link | CIO10 | more | no |
+| Data quality | nine datasets: *trade · Endur 42/42, 37 rejected, CCY not ISO 4217*; *trade · Murex 41/42, 212, BOOK not in the risk hierarchy*; *position 28/29, 14 live trades past maturity*; *scenario-pv 38/38*; *risk-factor map 17/18, 6 unmapped · 118 positions*; *market data 51/53, 23 stale prices*; *counterparty · LEI 24/25, 9 without an LEI match*; *exposure-path 33/33*; *collateral-balance 30/31, late; 4 rows unknown CSA*; a 30-day issue sparkline; the owner | `dq-result` (9.7.6) | click a dataset: its checks and rejects | POC (contract checks, rejects); CIO2 (content checks, trend) | more | no |
 | Platform | the nodes table (`drishti-main` 10.0.4.11 console · server · owner, `drishti-node2`, `drishti-node3`: N, `ALIVE`, 16 / 16, heap, budget, p50 / p95, up); *Last failover: node3 restarted 09-24 02:14 … handed back in 41 s; no request failed* | Drishti\*net members and their digests (built); `platform-metric`; `change-record` for the failover | click: Admin → Net | POC (now); CIO4 (history) | more | no |
-| Cost per desk | RATES $412, CREDIT $388, EQD $236, FX $214, FI $198, CMDTY $142, Shared $250 | `cloud-cost` and `cost-allocation` (7.8) | click: the allocation rules | CIO14 (later) | desk | no |
-| Usage | active users by lens (Trading 72, Market 64, MCUBE 58, CCUBE 41, World 23, CRO 6, CIO 4); *Embedded: Confluence risk page, Teams tab, internal portal · 1,240 views a week* | `usage-event` (7.9) | click: Admin → Access filtered | CIO6 | desk | no |
-| Security | *Sign-ins 30d 5,812 · Failed 41 · 2 locked · Admin changes 7d 7*; internal-only sources: *IMF WEO (world-economy pack) shown in World lens, Market → Macro; 0 embeds; 0 exports*, *Yahoo snapshot … off; 1 embed (demo page)* | the audit log (built); `entitlement` (7.10); the internal-only map (8.8) | click: Admin → Audit log, Access | POC (sign-ins from audit); CIO7 | desk | no |
-| Change | *Last rolling upgrade N−1 → N, 09-21 03:00–03:47, one node at a time, by hand; 0 failed requests … Automated runner PLANNED*; four configuration changes with who, when and *live* or *restart*, each with an audit link; *Next release: N+1 … testing in progress* | `change-record` (7.12); the audit log (built) | click: the audit row | POC (configuration changes from audit); CIO8 | desk | no |
+| Cost per desk | RATES $412, CREDIT $388, EQD $236, FX $214, FI $198, CMDTY $142, Shared $250 | `cloud-cost` and `cost-allocation` (9.7.8) | click: the allocation rules | CIO14 (later) | desk | no |
+| Usage | active users by lens (Trading 72, Market 64, MCUBE 58, CCUBE 41, World 23, CRO 6, CIO 4); *Embedded: Confluence risk page, Teams tab, internal portal · 1,240 views a week* | `usage-event` (9.7.9) | click: Admin → Access filtered | CIO6 | desk | no |
+| Security | *Sign-ins 30d 5,812 · Failed 41 · 2 locked · Admin changes 7d 7*; internal-only sources: *IMF WEO (world-economy pack) shown in World lens, Market → Macro; 0 embeds; 0 exports*, *Yahoo snapshot … off; 1 embed (demo page)* | the audit log (built); `entitlement` (9.7.10); the internal-only map (9.8.8) | click: Admin → Audit log, Access | POC (sign-ins from audit); CIO7 | desk | no |
+| Change | *Last rolling upgrade N−1 → N, 09-21 03:00–03:47, one node at a time, by hand; 0 failed requests … Automated runner PLANNED*; four configuration changes with who, when and *live* or *restart*, each with an audit link; *Next release: N+1 … testing in progress* | `change-record` (9.7.12); the audit log (built) | click: the audit row | POC (configuration changes from audit); CIO8 | desk | no |
 | Footer | the scale-estate note, the badge meanings, *Design only*; copyright from branding | branding configuration | none | POC | more | no |
 
 #### 9.6.2 C: Brief (and the Evidence pack PDF)
@@ -7450,7 +6713,7 @@ phone tier and a **Done?** column for the build to tick. The empty, loading and 
 | Panel | Contents (exact) | Data and contract | Interaction | Phase | Phone tier | Done? |
 |---|---|---|---|---|---|---|
 | Command bar, as-at strip | as B | as B | as B | CIO9 | must | no |
-| Headline | *PLATFORM BRIEF · 2026-09-30 · written 06:10, updated 11:02 · drishti-prod*; *The risk numbers were ready at 06:04 and are safe to use; one feed is late and one secret is overdue.* | the tiles' statuses; text from a **template** (8.9) | click a figure: its record | CIO9 | must | no |
+| Headline | *PLATFORM BRIEF · 2026-09-30 · written 06:10, updated 11:02 · drishti-prod*; *The risk numbers were ready at 06:04 and are safe to use; one feed is late and one secret is overdue.* | the tiles' statuses; text from a **template** (9.8.9) | click a figure: its record | CIO9 | must | no |
 | 1. Will the numbers be on time? | the paragraph (ten of twelve on time; ALM late, INC-0412; FX vol B missing, fallback; 06:04; 19 of 21; the two misses) and the ready-time chart (21 days, 07:00 line) | `feed-status`, `feed-dependency` | click a bar: that day | CIO1 | glance | no |
 | 2. Can we trust them? | the paragraph (309 of 312; 253 refused; three owner actions; 14 past maturity) and the data-quality table without the trend column | `dq-result` | as B | CIO2 | more | no |
 | 3. BCBS 239 | the paragraph (3.0 of 4, up from 2.7; strong on P6, P10; P5 and P8 at 2; confirmation due 10-15) and the scorecard table (score, four quarters, open items) | `bcbs239-assessment` | as B | CIO3 | more | no |
@@ -7461,9 +6724,9 @@ phone tier and a **Done?** column for the build to tick. The empty, loading and 
 | 8. What changed? | the paragraph (the upgrade 09-21; four configuration changes; next release; two P3 incidents) | `change-record`, `incident` | click: the record | CIO8 | desk | no |
 | Right rail: Verdict | *Numbers on time YES 06:04 · Safe to use YES · Feeds 10 / 12 · BCBS 239 3.0 / 4 · Platform 3 / 3 · Security 1 OVERDUE · Cost 92%* | the tiles | click: the section | CIO9 | must | no |
 | Right rail: Ask | as B | as B | as B | CIO10 | more | no |
-| Right rail: Evidence pack | the description; **Evidence pack PDF**, *Period: 2026-Q3*, *Sign-off block* | the brief for a period (8.9) and the scorecard; the planned board pack's PDF house style | click: generate | CIO11 | more | no |
+| Right rail: Evidence pack | the description; **Evidence pack PDF**, *Period: 2026-Q3*, *Sign-off block* | the brief for a period (9.8.9) and the scorecard; the planned board pack's PDF house style | click: generate | CIO11 | more | no |
 | Right rail: Time travel | *data versions and provenance are built; the platform history needs the metrics store (PLANNED)*; presets *today*, *09-29*, *quarter-end 06-30*, *pick…* | the captured summaries | preset click | CIO11 | desk | no |
-| Right rail: Open incidents | *INC-0412 P3 Liquidity (ALM) file late, open 06:05*; *INC-0410 P3 FX vol vendor B missing 09-29*; *INC-0409 P2 7am risk late 09-29 (Murex 06:41), closed 09-29 09:40* | `incident` (7.11) | click: the ticket | CIO8 | more | no |
+| Right rail: Open incidents | *INC-0412 P3 Liquidity (ALM) file late, open 06:05*; *INC-0410 P3 FX vol vendor B missing 09-29*; *INC-0409 P2 7am risk late 09-29 (Murex 06:41), closed 09-29 09:40* | `incident` (9.7.11) | click: the ticket | CIO8 | more | no |
 
 #### 9.6.3 A: Detail
 
@@ -7485,7 +6748,7 @@ phone tier and a **Done?** column for the build to tick. The empty, loading and 
 | Security and access | *Sign-ins 30d 5,812 · Failed sign-ins 41 · 2 locked · Admin changes 7d 7 · API tokens live 23 · 2 unused 60d+*; the secrets table (Endur API token 74 d / 90, Kafka SASL 12 / 90, AI provider key 188 / 180 red, PostgreSQL 33 / 90, Drishti\*net gossip key 41 / 180) | audit log, tokens (built); `secret-inventory` | click: Audit, Tokens | POC (sign-ins, tokens); CIO7 | desk | no |
 | Change and releases | as B's change list | as B | as B | POC; CIO8 | desk | no |
 | Open incidents | as C's rail | `incident` | as C | CIO8 | more | no |
-| Internal-only sources | IMF WEO and the Yahoo snapshot with where each is shown, embeds and exports | the pack switches (built); `usage-event` with the source of each read (8.8) | click: *where shown* | CIO7 | desk | no |
+| Internal-only sources | IMF WEO and the Yahoo snapshot with where each is shown, embeds and exports | the pack switches (built); `usage-event` with the source of each read (9.8.8) | click: *where shown* | CIO7 | desk | no |
 | Ask | as B | as B | as B | CIO10 | more | no |
 | Panels line, footer | as B | as B | as B | POC | more | no |
 
@@ -7511,14 +6774,17 @@ phone tier and a **Done?** column for the build to tick. The empty, loading and 
 
 #### 9.6.5 Empty, loading and error states
 
-| State | Every panel | Tiles specifically | Feeds | BCBS 239 | Ask |
-|---|---|---|---|---|---|
-| **Loading** | the panel's frame with a thin progress line; figures never shown half-loaded | the frame, name and target from the lens file, value `…` | "Reading today's loads…" | "Reading the assessment…" | the box disabled with "Fetching the records…" |
-| **Empty** | a sentence saying why, never a blank panel | a tile with no figure: *"No cost for 2026-09-30 (the billing export arrives at 10:00)"*, grey, no status word, never yesterday's figure as today's | *"No pack expects data today (a holiday on every calendar)"* | *"No assessment yet for 2026-Q3: the proposed scores are below; the data office confirms them by 10-15"* | suggested questions only |
-| **Stale** | the figure with its own date in amber and a caveat | the tile shows its as-of date under the value | a feed whose state is older than `check-interval` × 3 says *"state from 10:58"* | a principle not confirmed this quarter says *"proposed, not confirmed"* | the answer names any record from an older date |
-| **Error** | *"Could not read the platform metrics (DRS code). The other panels are current."* with Retry; the rest of the page unaffected | the tile in the error style, with the source named | *"Data loads could not be read on drishti-node2"* (a member down: the others still answer) | as every panel | *"Ask is off on this instance"* (AI off) or the model's error, never a guessed answer |
-| **No access** | the panel says the person's roles do not cover it, and whom to ask | security tiles hidden for people without `cio.security` (decision 5) | — | — | Ask's tools see only what the person may |
-| **Not built** (until each row lands) | the panel with its badge and one line of what it will show | as the mock-ups | as the mock-ups | as the mock-ups | as the mock-ups |
+Every panel behaves as in [section 8.6.5](#865-empty-loading-and-error-states) (frame and progress line, a sentence instead of a blank,
+its own date in amber when stale, Retry on error with the rest of the page unaffected, its badge until built; Ask off or the model's
+error, never a guessed answer). What is particular to the CIO lens:
+
+| State | Tiles | Feeds | BCBS 239 | Ask |
+|---|---|---|---|---|
+| **Loading** | the frame, name and target from the lens file, value `…` | "Reading today's loads…" | "Reading the assessment…" | "Fetching the records…" |
+| **Empty** | *"No cost for 2026-09-30 (the billing export arrives at 10:00)"*, grey, no status word | *"No pack expects data today (a holiday on every calendar)"* | *"No assessment yet for 2026-Q3: the proposed scores are below; the data office confirms them by 10-15"* | suggested questions only |
+| **Stale** | the tile shows its as-of date under the value | a feed whose state is older than `check-interval` × 3 says *"state from 10:58"* | a principle not confirmed this quarter says *"proposed, not confirmed"* | the answer names any record from an older date |
+| **Error** | the tile in the error style, with the source named | *"Data loads could not be read on drishti-node2"* (a member down: the others still answer) | as every panel | as every panel |
+| **No access** | security tiles hidden for people without `cio.security` (decision 5) | — | — | Ask's tools see only what the person may |
 
 #### 9.6.6 What the mock-ups do not show exactly
 
@@ -7527,18 +6793,14 @@ phone tier and a **Done?** column for the build to tick. The empty, loading and 
 - **Feeds the demo does not have.** Murex as a separate FULL file, collateral balances from a margin system, FX vol surfaces from two
   vendors and the liquidity (ALM) feed are illustrative; the demo's packs expect what their `loads:` sections say. CIO1's synthetic
   history generator writes the mock-ups' twelve feeds.
-- **Version numbers** appear on the mock-up pictures; see section 6 above: never in anything deck-bound.
+- **Version numbers** appear on the mock-up pictures: never in anything deck-bound ([section 9.6](#96-mock-ups-the-screens-to-build)).
 - **A failover and an upgrade record** are drawn as if recorded; today neither is kept as history (CIO4, CIO8).
 
 ---
 
 ### 9.7 Data needed: the complete list
 
-Every contract follows the repository's conventions ([docs/contracts/README.md](../contracts/README.md)): one contract YAML per kind in
-`config/packs/<pack>/contracts/<kind>.contract.yaml` with `kind`, `mnemonic`, `class` (`fundamental`, `input`, `drishti-owned`,
-`computed`), `grain`, `key`, `dated-by`, `cadence`, `storage` and `fields`; data delivered as **JSON Lines, gzipped**, in
-`data/testdata/<domain>/<kind>/*.jsonl.gz` for the demo, loaded into Delta (or Iceberg) partitioned by `business_date`; field names in
-Endur-style UPPER_SNAKE. Most of the CIO lens's data is **Drishti's own records captured daily** (loads, expectations, checks, metrics,
+The contract conventions are those of [section 8.7](#87-data-needed-the-complete-list). Most of the CIO lens's data is **Drishti's own records captured daily** (loads, expectations, checks, metrics,
 the access and audit logs) so that time travel and trends read a table, never a log that has been pruned.
 
 #### 9.7.1 The data map
@@ -7551,19 +6813,19 @@ new. *Demo*: how the demo gets it: existing records; a **new synthetic generator
 |---|---|---|---|---|---|---|---|---|
 | 1 | Load records (`LoadRecord`) | feeds, completeness, rejected rows | POC | Drishti (`data landed`, `POST /packs/{pack}/loads`) | load | per load | existing (`data/loads/<pack>.json`, 2000 a pack) | existing |
 | 2 | Pack expectations (`loads: expect:`) | feeds, expected time | POC | the pack and the administrator's override | pack × kind | on change | existing | existing |
-| 3 | **`feed-sla`** (7.3) | expected, grace, control totals, owner, official or not | CIO1 | the data office (extends 2) | feed | on change | **extended** (2 plus owner, grace, control totals, official flag) | **new generator** for the twelve feeds |
-| 4 | **`feed-status`** (7.4) | feeds history, on-time rate, 7am record, time travel | CIO1 | Drishti (captured from `ExpectationService` daily and on each change) | feed × business date | daily, on change | **new** (captured) | **new generator**: 90 days of history |
-| 5 | **`feed-dependency`** (7.5) | 7am forecast, Ask "why late" | CIO1 | the data office (what each official output needs) | output × input | on change | **new** | **new generator** (VaR official ← scenario PVs ← trades, …) |
-| 6 | **`dq-result`** (7.6) | data quality, completeness, BCBS P3 and P4 | POC (contract checks); CIO2 | Drishti (contract validation at load; content checks after load) | dataset × check × business date | per load | **new** (captured; the rejects exist) | computed on the demo; **new generator** for 90 days |
-| 7 | **`platform-metric`** (7.7) | nodes, latency, errors, capacity, failovers | CIO4 (after the planned metrics) | Drishti (daily and hourly roll-ups of its own metrics) | member × metric × hour | hourly, daily | **new** | **new generator** for 12 months |
-| 8 | **`cloud-cost`**, **`cost-allocation`** (7.8) | cost a day, per desk | CIO14 (later phase) | the cloud billing export (AWS CUR, Azure Cost Management) and FinOps's allocation rules | resource × day; rule | daily; on change | **new** | **new generator** |
-| 9 | **`usage-event`** (7.9) | usage and adoption, internal-only map | CIO6 | Drishti (extends the access log with lens, screen, embed, source) | event | per event | **extended** (the access log) | from demo use; **new generator** for 90 days |
-| 10 | **`entitlement`** (7.10) | access per lens and mnemonic, "entitled" | CIO7 | Drishti (an export of roles, powers, packs, commands, lenses, per person, per date) | person × grant × date | daily snapshot | **new** (exported) | computed on the demo |
-| 11 | **`secret-inventory`** (7.10) | secrets and their age | CIO7 (decision 5) | the bank's vault (HashiCorp Vault, AWS Secrets Manager) or Drishti's own rotation records | secret | daily | **new** | **new generator** (five secrets) |
+| 3 | **`feed-sla`** (9.7.3) | expected, grace, control totals, owner, official or not | CIO1 | the data office (extends 2) | feed | on change | **extended** (2 plus owner, grace, control totals, official flag) | **new generator** for the twelve feeds |
+| 4 | **`feed-status`** (9.7.4) | feeds history, on-time rate, 7am record, time travel | CIO1 | Drishti (captured from `ExpectationService` daily and on each change) | feed × business date | daily, on change | **new** (captured) | **new generator**: 90 days of history |
+| 5 | **`feed-dependency`** (9.7.5) | 7am forecast, Ask "why late" | CIO1 | the data office (what each official output needs) | output × input | on change | **new** | **new generator** (VaR official ← scenario PVs ← trades, …) |
+| 6 | **`dq-result`** (9.7.6) | data quality, completeness, BCBS P3 and P4 | POC (contract checks); CIO2 | Drishti (contract validation at load; content checks after load) | dataset × check × business date | per load | **new** (captured; the rejects exist) | computed on the demo; **new generator** for 90 days |
+| 7 | **`platform-metric`** (9.7.7) | nodes, latency, errors, capacity, failovers | CIO4 (after the planned metrics) | Drishti (daily and hourly roll-ups of its own metrics) | member × metric × hour | hourly, daily | **new** | **new generator** for 12 months |
+| 8 | **`cloud-cost`**, **`cost-allocation`** (9.7.8) | cost a day, per desk | CIO14 (later phase) | the cloud billing export (AWS CUR, Azure Cost Management) and FinOps's allocation rules | resource × day; rule | daily; on change | **new** | **new generator** |
+| 9 | **`usage-event`** (9.7.9) | usage and adoption, internal-only map | CIO6 | Drishti (extends the access log with lens, screen, embed, source) | event | per event | **extended** (the access log) | from demo use; **new generator** for 90 days |
+| 10 | **`entitlement`** (9.7.10) | access per lens and mnemonic, "entitled" | CIO7 | Drishti (an export of roles, powers, packs, commands, lenses, per person, per date) | person × grant × date | daily snapshot | **new** (exported) | computed on the demo |
+| 11 | **`secret-inventory`** (9.7.10) | secrets and their age | CIO7 (decision 5) | the bank's vault (HashiCorp Vault, AWS Secrets Manager) or Drishti's own rotation records | secret | daily | **new** | **new generator** (five secrets) |
 | 12 | The audit log (`drishti_audit`) | sign-ins, failures, admin and configuration changes | POC | Drishti | action | per action | existing | existing |
-| 13 | **`incident`** (7.11) | open incidents, Ask | CIO8 | the bank's ITSM (ServiceNow, Jira Service Management) | incident × version | on event | **new** (input) | **new generator** |
-| 14 | **`change-record`** (7.12) | releases, upgrades, failovers, configuration changes | CIO8 | Drishti (members' version changes, drains, restarts; the audit's configuration actions) and the bank's change tickets | change | per event | **new** (captured) | **new generator** |
-| 15 | **`bcbs239-assessment`** (7.13) | the scorecard | CIO3 | Drishti (proposed from evidence) and the data office (confirmed) | principle × quarter | daily proposal; quarterly confirmation | **new** | **new generator** for four quarters |
+| 13 | **`incident`** (9.7.11) | open incidents, Ask | CIO8 | the bank's ITSM (ServiceNow, Jira Service Management) | incident × version | on event | **new** (input) | **new generator** |
+| 14 | **`change-record`** (9.7.12) | releases, upgrades, failovers, configuration changes | CIO8 | Drishti (members' version changes, drains, restarts; the audit's configuration actions) and the bank's change tickets | change | per event | **new** (captured) | **new generator** |
+| 15 | **`bcbs239-assessment`** (9.7.13) | the scorecard | CIO3 | Drishti (proposed from evidence) and the data office (confirmed) | principle × quarter | daily proposal; quarterly confirmation | **new** | **new generator** for four quarters |
 | 16 | Contracts (`config/packs/*/contracts/`) | BCBS P1, P2 evidence | POC | the repository | kind | on change | existing (106) | existing |
 | 17 | Data versions and provenance | BCBS P2, P3, P7 evidence; time travel | POC | Drishti | answer | per answer | existing | existing |
 | 18 | Official VaR and exposure records and their capture times | 7am record, BCBS P5, P7 | POC | Drishti | node × date | daily | existing | existing |
@@ -7585,7 +6847,8 @@ and 13 (from its ITSM); Drishti produces the rest.
 - **Members:** Drishti-produced rows carry `MEMBER` (the Drishti\*net member name) so a cluster's rows are told apart and summed.
 - **People:** user names are carried as in the audit log; the lens shows counts to everyone and names only to people with
   `cio.security` (decision 5); masking follows the contract's `masks` as everywhere.
-- **Mnemonics** are placeholders, checked against every pack's at build (none of those below is taken today).
+- **Versions and mnemonics** as in [section 8.7.2](#872-contract-notes-common-to-the-new-kinds) (none of the mnemonics below is taken
+  today).
 
 #### 9.7.3 `feed-sla` (FSLA): each feed's service level (extended, fundamental)
 
@@ -7634,7 +6897,7 @@ the pack's (a difference is a warning naming both; the pack wins); `TARGET_ON_TI
 | `MINUTES_LATE` | integer | minutes | optional | `LANDED_AT − DEADLINE` beyond the grace |
 | `LOAD_ID`, `BATCH_ID` | id | | optional | the `LoadRecord` that satisfied it |
 | `ROWS`, `REJECTED` | integer | | optional | from the load |
-| `CONTROL_TOTAL` | integer | | optional | the source's own count; `ROWS + REJECTED` should equal it (8.3) |
+| `CONTROL_TOTAL` | integer | | optional | the source's own count; `ROWS + REJECTED` should equal it (9.8.3) |
 | `FALLBACK` | text | | optional | *vendor A used* |
 | `INCIDENT_ID` | id | | optional | the ticket opened for it |
 | `MEMBER` | text | | required | the member that recorded it |
@@ -7710,7 +6973,7 @@ Where each `METRIC` comes from (Micrometer name; Prometheus writes dots as under
 | `dates_hot` | `drishti.cache.entries{cache=var.dates}` (`exposure.dates` for exposure) | available |
 | `positions`, `lake_bytes` | **not available** as metrics | not built |
 | `alerts_open` | `drishti.alerts.open{severity}` | available |
-| feeds and sources (sections 7.3, 7.4) | `drishti.feeds.attention{state}`, `drishti.loads.last.ready.age.seconds{pack}`, `drishti.source.up`, `drishti.source.stale`, `drishti.source.update.age.seconds` | available |
+| feeds and sources (sections 9.7.3, 9.7.4) | `drishti.feeds.attention{state}`, `drishti.loads.last.ready.age.seconds{pack}`, `drishti.source.up`, `drishti.source.stale`, `drishti.source.update.age.seconds` | available |
 
 #### 9.7.8 `cloud-cost` (CCST) and `cost-allocation` (CALC): cost a day and per desk (new, input; later phase)
 
@@ -7750,7 +7013,7 @@ after the events age out.
 | `SCREEN` | text | required | the route or Sutra (`var-explain`, `ccube-grp`, `blotter`) (new) |
 | `KIND`, `ENTITY_ID`, `BUSINESS_DATE` | | optional | as the access log |
 | `EMBED_APP` | text | optional | the embedding application, today the detail `embed:<application>` |
-| `SOURCES` | list | optional | the packs whose data the answer showed (for the internal-only map, 8.8) (new) |
+| `SOURCES` | list | optional | the packs whose data the answer showed (for the internal-only map, 9.8.8) (new) |
 | `DESK` | text | optional | the person's desk, from their profile or role (new) |
 | `ANSWERED_WITH_LINKS`, `FEEDBACK` | boolean, text | `ask` | did the answer carry links; `helpful` / `unhelpful` |
 
@@ -7794,7 +7057,7 @@ its return, a restart, a shard handover; the audit's configuration actions such 
 | `PRINCIPLE` | integer | required | 1 to 11 (12 to 14 are the supervisor's and not scored: decided) |
 | `GROUP` | text | required | `GOVERNANCE_INFRASTRUCTURE`, `AGGREGATION`, `REPORTING` |
 | `PERIOD` | text | required | `2026-Q3` |
-| `PROPOSED_SCORE` | integer | required | 1 to 4 from the rules of section 8.4 |
+| `PROPOSED_SCORE` | integer | required | 1 to 4 from the rules of section 9.8.4 |
 | `CONFIRMED_SCORE` | integer | optional | the data office's score (may differ, with a reason) |
 | `EVIDENCE` | list | required | each item: a check id, its value, its threshold, a link (a contract count, the on-time rate, the completeness rate, a document) |
 | `GAPS` | list | optional | the open items (*liquidity, capital and climate not in Drishti*), each with its plan row |
@@ -7804,7 +7067,7 @@ its return, a restart, a shard handover; the audit's configuration actions such 
 
 The load records and expectations, the contracts, data versions and provenance, the official VaR and exposure records, the configuration
 in force, the audit log, the access log, Health and Drishti\*net: read as they are; the lens adds no field to them. The captures of
-sections 7.4, 7.6, 7.7, 7.9, 7.10 and 7.12 are new tables written beside them.
+sections 9.7.4, 9.7.6, 9.7.7, 9.7.9, 9.7.10 and 9.7.12 are new tables written beside them.
 
 #### 9.7.15 Proposed contract YAMLs (not created yet)
 
@@ -7856,7 +7119,7 @@ is the share of business days the actual time met `READY_BY`. **Design, not buil
 **Decided (product owner, 2026-10-31):** the BCBS self-assessment scale, **4 fully compliant, 3 largely compliant, 2 materially
 non-compliant, 1 non-compliant**; scores are **proposed from automated evidence** each day and **confirmed quarterly by the data office**;
 principles 12 to 14 (supervisory review, remedial action, home and host cooperation) are the supervisor's and are left out. Each
-principle's proposal is the **lowest** score its evidence rules allow (section 9 lists them), so a single failing rule caps it; the card
+principle's proposal is the **lowest** score its evidence rules allow (section 9.9 lists them), so a single failing rule caps it; the card
 names the rule that capped it. A confirmed score may differ from the proposal only with a comment, and both are kept.
 
 #### 9.8.5 A tile's status
@@ -7888,24 +7151,22 @@ outside the bank is `ACT`.
 #### 9.8.9 The brief's text and the evidence pack
 
 The Brief's paragraphs come from a **template** filled with the figures (*"Ten of twelve feeds landed on time"*), so every word is
-reproducible from the records; the AI layer may rephrase with the figures held fixed and checked after (as the CRO lens, its section 8.5).
+reproducible from the records; the AI layer may rephrase with the figures held fixed and checked after (as [section 8.8.5](#885-the-briefs-text)).
 The **evidence pack** is the Brief for a period (a quarter by default) followed by the scorecard with its evidence tables, every check and
 refusal, the feed record, the configuration in force and its change log, and the access list, as a PDF in the house style of the planned board pack,
 with a sign-off block for the data office.
 
 #### 9.8.10 Ask
 
-The question goes to the AI layer with **tools** over the records of section 7 (feed status and dependencies, checks, audit, changes,
-incidents, metrics), never with raw rows; the answer cites each record and links it; the AI layer's policy, masks and audit apply
-([AI.md section 7](../admin/AI.md#7-ask-on-the-ai-layer)). An answer with a figure no tool returned is refused. On only when the site has a
-model provider. **Design, not built** (CIO10).
+As the CRO lens's Ask ([section 8.8.6](#886-ask)), with tools over the records of [section 9.7](#97-data-needed-the-complete-list)
+(feed status and dependencies, checks, audit, changes, incidents, metrics), each record cited and linked. **Design, not built** (CIO10).
 
 ---
 
 ### 9.9 BCBS 239, principle by principle
 
 What each principle asks (paraphrased from BCBS 239, January 2013), the evidence Drishti produces today, the rule that proposes a score,
-and what is missing. **Evidence today** cites built features; **Rule** is how CIO3 proposes the score (section 8.4).
+and what is missing. **Evidence today** cites built features; **Rule** is how CIO3 proposes the score (section 9.8.4).
 
 | # | Principle | What it asks | Evidence today | Rule for the proposed score | Gap and row |
 |---|---|---|---|---|---|
@@ -7928,10 +7189,9 @@ it, and the bank's own BCBS 239 programme decides what the score means.
 
 ### 9.10 How this beats FIS / SunGard / Adaptiv
 
-FIS (which absorbed SunGard, whose Adaptiv is now FIS's credit and exposure suite) publishes aggregation cubes, limit governance and
-reporting front ends; it publishes no CIO-level view of the risk data estate, and BCBS 239 is answered by the bank around such a suite
-with a GRC tool, a data-quality tool, an APM tool and spreadsheets. The comparison below is against that assembly. Only claims we can
-**show** in a demo are made.
+As in [section 8.9](#89-how-this-beats-fis--sungard--adaptiv): FIS publishes no CIO-level view of the risk data estate, and BCBS 239
+is answered by the bank around such a suite with a GRC tool, a data-quality tool, an APM tool and spreadsheets; the comparison is against
+that assembly, with only claims we can **show** in a demo.
 
 | What a vendor-based setup gives the CIO | Drishti's CIO lens | Why it is better | The proof in a demo |
 |---|---|---|---|
@@ -7967,7 +7227,7 @@ edition: cio
 title: Drishti CIO
 description: The risk data estate for the Chief Information Officer: feeds, quality, BCBS 239, platform, capacity, usage and security
 packs:
-  enabled: [core, platform]                 # platform proposed (section 7.2); reads the other packs' load records, not their data
+  enabled: [core, platform]                 # platform proposed (section 9.7.2); reads the other packs' load records, not their data
   allow-only: true
 commands:
   allow: [CIO, FSLA, FSTS, FDEP, DQR, PMET, USEV, ENTL, SECI, INCD, CHGR, BCBS]   # the proposed kinds' commands
@@ -8001,7 +7261,7 @@ Illustrative: keys like `cio:`, `features.ai: site` and the proposed commands ar
 | **Market** | the market-data checks (stale prices) are the Market lens's quality, summarised | its quality figures |
 | **Risk, Trading** | nothing | the official capture times |
 
-The CIO lens owns **no engine**: only the captures of section 7, the scorecard, the brief and the evidence pack.
+The CIO lens owns **no engine**: only the captures of section 9.7, the scorecard, the brief and the evidence pack.
 
 ---
 
@@ -8014,7 +7274,7 @@ demo the product owner can show in one sitting.
 |---|---|
 | The B landing and the phone layout with the tiles the records serve today: feeds on time (today's expectation states), completeness from rows and rejected, contract checks from rejects, cluster, p95 now, disk and memory, sign-ins and failures from the audit; the other tiles drawn with their badge | the C and A tabs (CIO9) |
 | `feed-status` captured (CIO1's first half) so the 30-day sparkline is real, with a generator for 90 days of history | the dependency chain and forecast (CIO1's second half) |
-| The BCBS 239 cards drawn from the rules of section 9 for P2, P3, P4, P5 and P6 (the ones today's records feed), the rest PROPOSED | confirmation, the quarterly record, the evidence pack (CIO3, CIO11) |
+| The BCBS 239 cards drawn from the rules of section 9.9 for P2, P3, P4, P5 and P6 (the ones today's records feed), the rest PROPOSED | confirmation, the quarterly record, the evidence pack (CIO3, CIO11) |
 | `CIO <GO>` and the lens link; drill to Admin → Health, Data loads, Net, Audit log | cost (later phase), usage (CIO6), secrets (CIO7), incidents (CIO8), Ask (CIO10) |
 
 **Done when:** the landing opens in under a second on the demo; each tile's figure equals the admin page's for the same moment (a test
@@ -8026,8 +7286,9 @@ the three-node test shows `2 / 3` and `ACT`; the phone view stacks ACT and WATCH
 
 ### 9.13 Phases (proposed)
 
-The phases follow the plan's themed releases (product owner, 2026-10-31; reordered 2026-11-01): the market-risk regulatory foundation (2.9.8, released); memory, scale and mobile with the VaR change explained (2.9.10, in release); sensitivities and market-risk capital (2.9.11); counterparty engines (2.9.12); Java 25 and performance I (2.9.13); oversight (2.9.14); regulatory reporting (2.9.15); native performance II (2.9.16); XVA and wrong-way risk (2.9.17); advanced market risk (2.9.18); executive (2.9.19). From 2.9.11 on each is **proposed** until it starts; a row without one is unscheduled. The rows are in the plan's "CIO lens" section. The proof of concept becomes the
-first part of the lens build in the executive phase (2.9.19).
+The phases follow the plan's themed releases (product owner, 2026-10-31; reordered 2026-11-01): regulatory reporting 2.9.15,
+executive 2.9.19, each proposed until it starts; the rows are in the plan's "CIO lens" section. The proof of concept becomes the first
+part of the lens build in the executive phase.
 
 | Phase | Rows | Status | Depends on |
 |---|---|---|---|
@@ -8047,10 +7308,10 @@ first part of the lens build in the executive phase (2.9.19).
 | **A BCBS 239 score read as a compliance claim** | a supervisor or client takes a proposed score as an attestation | always "proposed" until the data office confirms it; the rule and evidence on every card; the bank's programme decides |
 | **Service levels and owners do not exist in writing** at many banks | no targets to measure against | `feed-sla` starts from the packs' expectations; the data office adds owners and targets; unowned feeds are listed |
 | **Security panels expose sensitive facts** (failed sign-ins, secret ages, who read what) | a security concern in an executive view | subject to the security team (decision 5); names only with `cio.security`; counts for others; secrets never by value |
-| **Logs pruned before the quarter ends** | the evidence pack cannot cover the quarter | daily captures to the lake (section 7.2) independent of `keep-days` and `keep` |
+| **Logs pruned before the quarter ends** | the evidence pack cannot cover the quarter | daily captures to the lake (section 9.7.2) independent of `keep-days` and `keep` |
 | **Cost allocation disputes** | desks contest their share | later phase; the rules are FinOps's table, shown; the unallocated rest stays *Shared* |
 | **Metrics without the planned history** | trends missing in the POC | the POC shows now-values from the platform metrics (built) with the PLANNED badge on the trends until CIO4 keeps their history |
-| **Release numbers in a deck** | breaks the deck rule | section 6: nothing deck-bound shows release numbers |
+| **Release numbers in a deck** | breaks the deck rule | nothing deck-bound shows release numbers ([section 9.6](#96-mock-ups-the-screens-to-build)) |
 | **Scale-estate figures taken for the demo's** | a demo that does not match | every mock-up footer says "2.3M-position scale estate"; the POC uses the demo's own figures |
 | **AI inventing a cause** | a wrong "why was it late?" | tools only, records cited, refused when unsupported; AI off unless the site turns it on |
 
@@ -8058,13 +7319,12 @@ first part of the lens build in the executive phase (2.9.19).
 
 ### 9.15 Decisions for the product owner
 
-1. **The layouts. Decided (product owner, 2026-10-31):** B (status first) is the landing page; C (the platform brief) is the "Brief" tab
-   and is also the Evidence pack PDF; A (terminal grid) is the "Detail" tab; the phone view is its own layout, with phone tiers per panel
-   as in [MOBILE_DISPLAY.md](MOBILE_DISPLAY.md) (the phone display is proposed).
+1. **The layouts. Decided (product owner, 2026-10-31):** B landing, C Brief tab and evidence pack, A Detail tab, the phone its own
+   layout ([section 9.5.1](#951-the-layouts-decided)).
 2. **Feed service levels. Decided (product owner, 2026-10-31):** an extension of the existing `ExpectationService` (a captured history, a
-   dependency chain, the 7am-ready forecast), not a new feature (section 7.3 to 7.5).
-3. **BCBS 239 scoring. Decided (product owner, 2026-10-31):** the BCBS self-assessment scale, 4 to 1; scores proposed from automated
-   evidence and confirmed quarterly by the data office; principles 12 to 14 left out as the supervisor's (section 8.4).
+   dependency chain, the 7am-ready forecast), not a new feature ([section 9.7.3](#973-feed-sla-fsla-each-feeds-service-level-extended-fundamental) to 9.7.5).
+3. **BCBS 239 scoring. Decided (product owner, 2026-10-31):** the self-assessment scale 4 to 1, proposed from evidence, confirmed
+   quarterly by the data office, principles 12 to 14 left out ([section 9.8.4](#984-the-bcbs-239-score)).
 4. **Cloud cost. Decided (product owner, 2026-10-31):** cost per desk is a later phase, because it needs the billing export and
    allocation rules (CIO14).
 5. **Security tiles. Decided (product owner, 2026-10-31):** included, subject to the security team's agreement (CIO7; names only with
@@ -8074,13 +7334,13 @@ first part of the lens build in the executive phase (2.9.19).
    the same change).
 8. **Platform metrics store.** Drishti samples its own metrics into `platform-metric` (recommended: works without Prometheus, and time
    travel reads the lake), or the lens reads a site's Prometheus.
-9. **Packs.** One `platform` pack for every kind of section 7 (recommended: switchable, with its README and generators), or the kinds
+9. **Packs.** One `platform` pack for every kind of section 9.7 (recommended: switchable, with its README and generators), or the kinds
    split between a `governance` and an `operations` pack.
 10. **Incidents.** Read from the bank's ITSM (recommended; Drishti never owns incidents), or a small Drishti-owned record for sites without
     one.
 11. **Phase placement.** **Decided (product owner, 2026-10-31), by the themed plan:** data trust (CIO1 to CIO3, the first CIO
     rows) with regulatory reporting (2.9.15); the lens build, platform, people, words and evidence in the executive phase (2.9.19); cost per
-    desk unscheduled (section 13).
+    desk unscheduled ([section 9.13](#913-phases-proposed)).
 
 ---
 

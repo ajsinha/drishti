@@ -133,7 +133,7 @@ public final class VarResultEngine implements ComputeEngine {
         }
         row.put("PNL", pnl);
         if (head.get("parametric") instanceof Map<?, ?> pm && !Boolean.FALSE.equals(req.params().get("parametric"))) {
-            // VRES 1.3: the parametric cross-check's optional fields (PARAMETRIC_VAR.md section 7)
+            // VRES 1.3: the parametric cross-check's optional fields (VAR_GUIDE.md section 18.15)
             row.put("PARAMETRIC_VAR", pm.get("var"));
             row.put("PARAMETRIC_ES", pm.get("es"));
             row.put("PARAMETRIC_MU", pm.get("mu"));

@@ -44,7 +44,7 @@ items:
         - { label: "{parent.name}", value: parent.limitUse, format: pct }
     open: "VAR NODE {book.id}"
     what: VaR limit
-    knowledge: market-risk.md#4-a-worked-example-on-the-demo-data
+    knowledge: risk.md#14-a-worked-example-on-the-demo-data
 
   - id: desk-that-lowers-var
     domain: Market risk
@@ -71,4 +71,4 @@ items:
         - { label: Incremental (without it), value: desk.incrementalVar, format: money, tone: alert }
     open: "VAR DESK {desk.key}"
     what: Incremental VaR
-    knowledge: market-risk.md#4-a-worked-example-on-the-demo-data
+    knowledge: risk.md#14-a-worked-example-on-the-demo-data

@@ -117,7 +117,7 @@
   }
 
   /**
-   * The fitted normal over the bars (PARAMETRIC_VAR.md section 8): every point from the server (curve.x, curve.y on the bars' scale), the
+   * The fitted normal over the bars (VAR_GUIDE.md section 18.15): every point from the server (curve.x, curve.y on the bars' scale), the
    * parametric marker (dashed), the two tails lightly shaded, the fat-tail gap bracket between the markers, and the curve's hover card
    * from the server's lines. Nothing is computed here but the drawing's coordinates.
    */

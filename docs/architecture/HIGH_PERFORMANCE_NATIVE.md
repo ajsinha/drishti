@@ -517,7 +517,7 @@ Members never refuse each other over BLAS. Each publishes its path in its capabi
 `java-fallback <reason>`, `java <reason>`). When **any** member runs on Java (or is an older server without the service, which sums in
 Java), every member sums many scopes (`MultiSums`, through `Blas.forClusterSums()`) on Java, so the figures members combine or compare
 are the same bits; the log says it in a WARN banner naming the members, Admin → Health shows each member's path and the cluster's
-(`clusterPath`), and the agreement lifts by itself when every member is native again. Shard sums (`VAR_SHARDING.md`) never use BLAS:
+(`clusterPath`), and the agreement lifts by itself when every member is native again. Shard sums (`CLUSTER_DEPLOYMENT.md section 5`) never use BLAS:
 they are `ParallelSums`' fixed-order Java sums on every member.
 
 ---

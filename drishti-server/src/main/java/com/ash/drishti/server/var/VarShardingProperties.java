@@ -20,7 +20,7 @@ import java.util.Map;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The server's settings of VaR sharding across Drishti*net (VAR_SHARDING.md section 9). What is sharded comes from the market-risk pack's
+ * The server's settings of VaR sharding across Drishti*net (CLUSTER_DEPLOYMENT.md section 5.10). What is sharded comes from the market-risk pack's
  * {@code sharding:} block ({@code enabled}, {@code key}, {@code kinds}, {@code target-shard-mb}, {@code replicas}); the same keys here, when
  * set, win over it (a test, or a site that does not edit its pack). No block and no {@code enabled} here: sharding is off and every date is
  * loaded whole, exactly as before 2.9.6. The rest are this server's own.

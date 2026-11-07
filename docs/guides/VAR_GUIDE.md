@@ -730,8 +730,8 @@ From the command line: `drishti.py var matrix <id> [--days N] [--by trade] [--cs
 The playground answers *how was this VaR worked out?* with the numbers themselves: every position's scenario P&L, the portfolio, its
 rank, VaR, ES, the components, incremental VaR and both 10-day methods, in a spreadsheet-like grid with the explanation beside it, and
 **exported as an Excel workbook of real formulas** whose figures equal the engine's to the cent. Change a PV in the workbook and every
-figure moves; the check cells say whether the sheet still equals the engine. The design, the workbook's tabs and every formula are in
-[VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md).
+figure moves; the check cells say whether the sheet still equals the engine. The workbook's tabs, every formula and the checks are in
+[section 18.16](#1816-the-var-playgrounds-workbook-formula-by-formula).
 
 **Open it.** `PLAY VAR <scope> <GO>` in the VaR explorer's words (`PLAY VAR DESK RATES`, `PLAY VAR BANK 10D SUM`,
 `PLAY VAR DESK:DESK-RATES-NY IN EUR`), or `PLAY VAR <id> <id> ...` with up to 50 positions or trades (`PLAY VAR POS-10442 MX-20000274`);
@@ -758,11 +758,8 @@ columns (Excel and LibreOffice Calc 7.4 or later: 16,384 columns), beyond that p
 to 10 million cells (about 9,500 positions at 509 scenarios); LibreOffice before 7.4 up to 1,024 columns. A choice no application opens,
 or larger than `drishti.var.playground.export-max-cells` (20 million cells), is refused with the reason before anything is made.
 
-**The workbook.** Main (the named inputs, the results beside the engine's figures with a check each, every confidence, every ES
-confidence, the per-position table, the ALL CHECKS PASS band), Config (one row a position), Data (values only: scenario PVs in the
-position's currency, or the P&L vector as delivered; Rest of scope), FX (one column a currency), PnL (every cell a formula), Explain and
-Provenance. Every formula uses only functions Excel, LibreOffice and Google Sheets share, carries its cached result (a viewer that never
-recalculates shows the numbers) and is recalculated on open. Copyright and product name come from the branding configuration.
+**The workbook** (Main, Config, Data, FX, PnL, Explain, Provenance; [section 18.16](#1816-the-var-playgrounds-workbook-formula-by-formula))
+opens in Excel, LibreOffice and Google Sheets; copyright and product name come from the branding configuration.
 
 **Where the figures come from.** The engine's own vectors on the date, read as the person (their nodes, roles and masks): each position's
 USD rows, its USD value today and the currency its scenario PVs came in; its scenario PVs are recovered as `PV(s) = (p + P&L_USD(s)) /
@@ -771,10 +768,8 @@ workbook's chain of formulas gives back the engine's vector. A position priced b
 summed from the rows as read (float64) while the mapped tier stores the rows in float32: when the two differ by more than a millionth,
 Rest of scope also holds that difference (zero positions, said in words), so the sheet's VaR is the VaR page's.
 
-**Tested in the drill.** `VarPlaygroundWorkbookTest` writes the workbook **without cached values**, recalculates it with headless
-LibreOffice and checks every result against the engine to the cent at 1, 50 and 500 positions (with Rest of scope), USD and EUR, both rank
-rules, PV and PnL input forms, and positions as rows; `VarPlaygroundApiTest` does the same through the server on a 611-trade lake; every
-formula is scanned for functions outside the common set.
+**Tested.** The workbook, written **without cached values** and recalculated by headless LibreOffice, equals the engine to the cent
+at 1, 50 and 500 positions, USD and EUR, both rank rules, both input forms and positions as rows.
 
 From the command line: `drishti.py var playground <scope> [--ids ...] [--xlsx FILE] [--count N|all] [--estimate]`
 ([section 10](#10-the-command-line)); the API: `GET /api/v1/var/playground`, `/playground.xlsx`, `/playground/estimate`,
@@ -2219,7 +2214,7 @@ the sources already send (P&L vectors or scenario PVs, [the VaR data contract, s
 position rows (the hot file's float32 rows in float64, or a node's float64 aggregate) in the fixed reduction order
 ([RESOURCES_AND_SCALE.md section 6.7](../architecture/RESOURCES_AND_SCALE.md)). The windowing is a fixed left-to-right sum of ten values, so
 a node's 10-day vector is **equal to the bit** whatever the shards and threads that summed its 1-day vector
-([VAR_SHARDING.md](../architecture/VAR_SHARDING.md): the partials stay the 1-day vectors, never windows). **Tested:**
+([CLUSTER_DEPLOYMENT.md section 5](../architecture/CLUSTER_DEPLOYMENT.md#5-var-sharding-in-depth-built): the partials stay the 1-day vectors, never windows). **Tested:**
 `VarLensTest` (√10 equals the 1-day VaR and ES × √10 exactly at every confidence; the windows by hand on `1, 2, … 14` give `55, 65, 75,
 85, 95`; 509 → 500, 250 → 241; the ranks; ES; components adding up; the 10-day vector of four scopes the same bits on 1, 2, 3, 8 and 24
 threads), `ShardAssemblyTest` (23 scopes over six shards, three held and three through an owner: the 10-day vectors, VaR and ES
@@ -2680,7 +2675,7 @@ and backtesting compare against; VaR by risk class and by Greek; quick what-if (
 
 **Its playground.** The VaR Playground's workbook gains a **Sensitivities** tab: each position's deltas, gammas and vegas, the factor
 shocks per scenario day, and every DGV P&L cell written as the expansion above in formulas, with a check cell against the engine's DGV
-VaR to the cent ([VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md)).
+VaR to the cent ([section 3.10](#310-the-var-playground-play-var)).
 
 ### 18.13 Statistical factor VaR, estimated from scenario P&L (design, not built: parked)
 
@@ -2736,41 +2731,121 @@ approval (`VarReports`, `VarReportSignoff`; `VAR REPORT <report> <period>`, `dri
 
 ### 18.15 Parametric VaR and ES (a cross-check)
 
-For any scope, the server fits a normal distribution to the scope's own summed scenario P&L vector, the very vector historical VaR ranks
-(the lens's: 1-day, 10-day √10, or the 10-day windows), and reads VaR and ES from it (`ParametricVar` in drishti-compute;
-[PARAMETRIC_VAR.md](../architecture/PARAMETRIC_VAR.md) is the design with the worked example). **Not official**, never a limit's measure;
-no new input.
+For any scope, the server fits a normal distribution to the scope's own summed scenario P&L vector `v`, the very vector historical VaR
+ranks (the lens's, with the window, the stressed set and the reporting currency as for historical VaR), and reads VaR and ES from it
+(`ParametricVar` in drishti-compute, beside `VarCalc`). **Not official**: limits, limit use, backtesting, official records and regulatory
+reports stay historical; no new input. It cross-checks the tail (a large gap points to a few extreme days carrying the VaR), gives a
+smooth decomposition (Euler components from covariances are stable where historical components depend on the scenarios around the rank)
+and the correlations between the parts.
 
 | Figure | Formula |
 |---|---|
-| μ | `(1/N) Σ vⱼ` (equal weights), or `Σ wⱼ vⱼ` with EWMA weights `wⱼ = (1−λ)λ^(N−j)/(1−λ^N)` (the newest the largest; λ = 0.94) |
-| σ | `√(Σ (vⱼ − μ)² / (N − 1))` (equal: Excel's STDEV.S), or `√(Σ wⱼ (vⱼ − μ)²)` (EWMA) |
-| z | `Φ⁻¹(c)`: 2.3263 at 99%, 1.6449 at 95% (Acklam's approximation refined to the double's precision) |
-| **parametric VaR** | `z·σ − μ`, positive for a loss (a scope that made money on average has a lower one); never floored |
-| **parametric ES** | `σ·φ(z_ES)/(1 − c_ES) − μ` (at 97.5%: σ × 2.3378 − μ) |
-| **fat-tail gap** | `historical VaR − parametric VaR` (and the ES gap): positive when the scope's tail is heavier than a normal with the same σ |
-| shape | skewness and excess kurtosis (a normal: 0 and 0), shown to explain the gap |
-| component VaRᵢ | `z·cov(Pᵢ, P)/σ − μᵢ`: Σ cov = σ² and Σ μᵢ = μ, so the components of parts that partition the scope **add up to the parametric VaR exactly** (the −μᵢ term is what makes them); component ES the same with φ(z_ES)/(1 − c_ES) |
-| standalone, incremental | `z·σᵢ − μᵢ`; `VaR(P) − VaR(P − Pᵢ)` |
-| correlation matrix | the parts' covariance `XᵀX` (X the centred, weighted N × k matrix), one `dgemm` through the BLAS seam (OpenBLAS where loaded, Java otherwise; HIGH_PERFORMANCE_NATIVE.md); the components never come from it |
+| weights | equal `wⱼ = 1/N` (the default), or EWMA `wⱼ = (1−λ)λ^(N−j)/(1−λ^N)`, j = 1 … N oldest first, the newest the largest (λ = 0.94: 95% of the weight in the newest 49 days) |
+| μ | `Σ wⱼ vⱼ` |
+| σ | equal: `√(Σ (vⱼ − μ)² / (N − 1))` (Excel's STDEV.S); EWMA: `√(Σ wⱼ (vⱼ − μ)²)` (RiskMetrics, no small-sample correction) |
+| z | `Φ⁻¹(c)`: 1.6449 at 95%, 1.9600 at 97.5%, 2.3263 at 99%, 2.5758 at 99.5% |
+| **parametric VaR** | `z·σ − μ`: the normal's c-quantile loss, positive for a loss; a scope that made money on average has a lower one; never floored |
+| **parametric ES** | `σ·φ(z_ES)/(1 − c_ES) − μ`, z_ES = Φ⁻¹(c_ES) (at 97.5%: σ × 2.3378 − μ) |
+| σ = 0 | VaR = ES = −μ, each component −μᵢ (*no spread: the normal is a point*); an empty scope has no figure |
+| shape | skewness `(1/N)Σ(v−μ)³ / ((1/N)Σ(v−μ)²)^{3/2}`, excess kurtosis `(1/N)Σ(v−μ)⁴ / ((1/N)Σ(v−μ)²)² − 3` (weighted the same way under EWMA; a normal: 0 and 0); not used in the VaR, shown to explain the gap |
+| **fat-tail gap** | `historical VaR − parametric VaR`, `gap % = gap / parametric VaR`, the ES gap likewise: positive when the tail is heavier than a normal with the same σ; one extreme day moves it |
+| covariance with a part | `cov(pᵢ, v) = Σ wⱼ (pᵢⱼ − μᵢ)(vⱼ − μ)` with σ²'s weights and normalisation (`1/(N−1)` when equal); `ρᵢ = cov/(σᵢσ)`, `βᵢ = cov/σ²` (Σ βᵢ = 1) |
+| component VaRᵢ, ESᵢ | `z·cov(pᵢ, v)/σ − μᵢ = z·ρᵢ·σᵢ − μᵢ`; ES with `φ(z_ES)/(1 − c_ES)` in place of z. Σ cov = σ² and Σ μᵢ = μ, so the components of parts that partition the scope **add up to the parametric VaR exactly**; the −μᵢ term is what makes them (a selection does not add up) |
+| standalone, incremental, marginal | `z·σᵢ − μᵢ`; `VaR(v) − VaR(v − pᵢ)` (μ and σ recomputed); component / \|size\| × 1,000,000 as in [section 18.3](#183-decomposition-of-a-scope-into-parts) (nodes and groups: *per +1% of the part*, `0.01 × component`) |
+| diversification | `Σ standalone VaRᵢ − VaR(v)` |
+| correlation matrix | `C = XᵀX`, X the centred N × k matrix `Xⱼᵢ = √wⱼ·(pᵢⱼ − μᵢ)` (k ≤ `matrix-max-parts`), one `dgemm` through the BLAS seam (OpenBLAS where loaded, Java otherwise); `Rᵢₗ = Cᵢₗ/√(CᵢᵢCₗₗ)`, Σ C = σ² returned as a check; the components never come from it (each is one `ddot` in index order, whichever BLAS answered) |
+| the curve on the histogram | `y(x) = n × binWidth × φ((x − μ)/σ)/σ` at `curve-points` x from the first edge to the last, on the bars' scale; expected days in bin [a, b) `n·(Φ((b−μ)/σ) − Φ((a−μ)/σ))`; markers at `−VaR_historical` and `μ − z·σ` |
 
-**Horizon follows the lens** (`horizon-rule: lens`): under `sqrt10` μ and σ scale by √10 with the vector; under `sum` they are the 500
-overlapping windows' (about 50 independent periods, said in the notes). `square-root-of-time` (μ × 10, σ × √10 from the 1-day vector) is
-the setting's other value. The stressed set, the window and the reporting currency apply as for historical VaR.
+**Horizon follows the lens** (`horizon-rule: lens`): under `sqrt10` the whole vector is × √10, so μ and σ scale by √10 and the VaR is the
+1-day figure × √10 exactly; under `sum` μ and σ are the 500 overlapping 10-day windows' (about 50 independent periods, said in the notes).
+`square-root-of-time` (μ × 10, σ × √10 from the 1-day vector: the textbook rule, as the console calculator's `parametric_var`) is the
+setting's other value; the two differ by `(10 − √10)·μ`, small next to z·σ√10 for a trading book.
 
-**Where it shows:** the explorer's Parametric toggle, which `PVAR` opens on ([section 3.12](#312-parametric-var-beside-historical-pvar)); the answers' `parametric` block
-([section 11](#11-the-api)): `/scope`, `/tree` (each node), `/scope/path` (the curve, the expected counts per bin, both markers),
-`/scope/contributions` (`pComponentVar`, `pComponentEs`, `pStandaloneVar`, `pIncrementalVar`, `pMarginalPer1m`, `pPct`, `rho`, `sigma`,
-`mu`, the totals; `matrix=true` adds the correlation matrix), `parametric=false` leaving it out; `/status`'s `parametric`; VRES 1.3's optional
-`PARAMETRIC_*` and `FAT_TAIL_GAP*` fields; `pvar()` in the pivot and the MR cube; `drishti.py var show` (`--no-parametric`),
-`var parts --matrix`, `var playground --measure parametric`; the VaR Playground's **Parametric tab** (its figures and the workbook's
-Parametric tab: named `PMu`, `PSigma`, `PZ` = `NORM.S.INV(PConfidence)`, `PEsFactor`, `PVaR`, `PES` beside the engine's with checks, a row
-a scenario, a row a position; recalculated by LibreOffice it equals the engine to the cent).
+**Worked** (a synthetic bank of five desks: N 509, μ −211,407, σ 54,240,760): VaR 99% = 2.326348 × 54,240,760 + 211,407 =
+**126,394,284**; ES 97.5% = 54,240,760 × 2.337803 + 211,407 = 127,015,607; historical VaR 158,495,340, so the gap is +32,101,056
+(+25.4%; skew −0.73, excess kurtosis +3.20; 9 days beyond the parametric VaR where the normal expects 5.09). The Rates desk: σᵢ
+30,464,843, ρᵢ 0.8254, μᵢ 156,350, component 58,341,667 (46.2%); the five desks' components add up to 126,394,284.
+
+**Precision and cost.** Two passes (μ, then the centred sums) in float64 in scenario order: the same bits on any number of threads or
+shards, because the scope's vector is ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)); Σ components
+equals the VaR to about 10⁻⁶. Φ⁻¹ by Acklam's approximation refined by one Halley step (relative error under 10⁻¹⁵), φ and Φ by `erfc`.
+μ and σ are 2N operations on a vector in hand; a matrix of 60 parts is about 1.8 million multiply-adds, under a millisecond. Nothing is
+stored or cached beyond the answer cache.
+
+**Where it shows:** the explorer's Parametric toggle ([section 3.12](#312-parametric-var-beside-historical-pvar)); the answers'
+`parametric` block (its fields: [API_GUIDE.md](API_GUIDE.md#var-engine-apiv1var)); VRES 1.3's optional `PARAMETRIC_*` and
+`FAT_TAIL_GAP*` fields; `pvar()` in the pivot and the MR cube; `drishti.py var show` (`--no-parametric`), `var parts --matrix`,
+`var playground --measure parametric`; the VaR Playground's **Parametric tab** ([section 18.16](#1816-the-var-playgrounds-workbook-formula-by-formula)).
 
 **Settings** (`drishti.var.parametric.*` in `config/engines/var.yaml`; [CONFIGURATION.md](../reference/CONFIGURATION.md)): `enabled` (true; off:
-no block, the toggle shows a notice, the playground's Parametric tab and `parametric=true` are refused in words), `weighting` (`equal` or `ewma`), `lambda` (0.94),
-`horizon-rule` (`lens` or `square-root-of-time`), `curve-points` (121), `matrix-max-parts` (60), `show-curve` (true). Not in the official
-end-of-day records (a capture keeps it on demand).
+no block, the toggle shows a notice, the playground's Parametric tab and `parametric=true` are refused in words), `weighting` (`equal` or
+`ewma`), `lambda` (0.94, within (0.5, 1)), `confidences` and `es-confidences` (blank: the VaR ones), `horizon-rule` (`lens` or
+`square-root-of-time`), `curve-points` (121), `matrix-max-parts` (60), `show-curve` (true). Not in the official end-of-day records (a
+capture keeps it on demand).
+
+### 18.16 The VaR Playground's workbook, formula by formula
+
+The workbook of [section 3.10](#310-the-var-playground-play-var) mirrors the engine's formulas (this part; `ScenarioFx` for the
+currencies) cell for cell. Positions are columns and scenarios rows (oldest first) in every tab; beyond about 16,300 positions they are
+rows and scenarios columns, the same formulas in the other orientation.
+
+| Tab | Holds |
+|---|---|
+| Main | the ALL CHECKS PASS band (row 3); the named inputs (`Confidence`, `EsConfidence`, `Horizon`, `TenDayMethod`, `RankRule`, `ComponentWindow`, `ReportingCurrency`, `ScenarioCount`) and the derived names under them (`VarRank`, `EsRank`, `VarLo`, `VarHi`, `ILo`, `IHi`, `IW`, `Scale` and their 10-day twins); the results beside the engine's with a check each; every confidence; the per-position table |
+| Config | one row a position: id, kind, currency, base PV, base FX (USD per unit), input form `PV` or `PnL`, source, value today in USD |
+| Data | values only: scenario PVs in the position's currency, or the P&L vector as delivered; Rest of scope in the reporting currency |
+| FX | one column a currency (USD 1), the base rate in a header row, *supplied* or *derived* |
+| PnL | every cell a formula: each position's P&L, the portfolio, its rank, the V and E marks, the 10-day sums, the incremental helpers |
+| Explain, Provenance | the calculation in plain words with its cells; the date, batch, data versions, scenario set, sources, refused items with their DRS codes, the engine and template versions, who exported it |
+
+| Figure | Formula in the sheet |
+|---|---|
+| P&L in USD, input form PV | `PV(s) × FX_c(s) − PV(base) × FX_c(base)` (`ScenarioFx.pnlFromPv`); form PnL: the delivered vector, converted at each scenario's rate when not in USD |
+| into the reporting currency | `(p + P&L_USD(s)) / FX_r(s) − p / FX_r(base)`, p the value today in USD (`ScenarioFx.convert`, every cross through USD) |
+| portfolio | `SUM` across the positions and Rest of scope |
+| rank, worst first, ties by index | `=SUMPRODUCT((v<v_s)*1) + SUMPRODUCT((v_above=v_s)*1) + 1` |
+| k, VaR | `=MAX(1, MIN(N, ROUNDUP(N*(1-Confidence) - 1E-9, 0)))`; `=IF(RankRule="interpolated",-((1-IW)*SMALL(PF,ILo)+IW*SMALL(PF,IHi)),-SMALL(PF,VarRank))` ([section 18.1](#181-var)) |
+| ES | `=-SUMPRODUCT(ES tail,PF)/EsRank`; with no rank column (standalone ES, every ES confidence) `=-(SUMPRODUCT((x<SMALL(x,k))*x)+(k-SUMPRODUCT((x<SMALL(x,k))*1))*SMALL(x,k))/k` |
+| component VaR, ES | `=-Scale*SUMPRODUCT(VaR window,p)/(VarHi-VarLo+1)`; `=-SUMPRODUCT(ES tail,p)/EsRank` ([section 18.3](#183-decomposition-of-a-scope-into-parts)) |
+| incremental (top 50), diversification | a helper column `v − p` per position, ranked; `Σ standalone VaR − VaR` |
+| 10-day | √10: `VaR_1d * SQRT(10)`; sum: `=SUM(P(j−9):Pj)` from the 10th scenario, ranked as the portfolio; a position's 10-day component through per-scenario weights (how many of the 10-day VaR window's windows contain the scenario), so no 10-day column per position |
+| headline | `=IF(Horizon="1D",VaROneDay,IF(TenDayMethod="SUM",VaRTenSum,VaROneDay*SQRT(10)))` |
+| stressed | the same tabs and formulas over the stress set's scenarios |
+
+**Checks**, each `ABS(sheet − engine) < 0.005`: VaR and ES at every confidence and both 10-day methods; Σ component VaR = VaR, Σ component
+ES = ES, Σ 10-day components = the 10-day sum VaR; each position's components and incremental VaR; positions shown + Rest of scope = the
+scope; every Data cell a number; every currency an FX column. Change a PV and the engine checks turn red while the *adds up* checks stay
+green.
+
+**The Parametric tab** (`measure=parametric`): a row a scenario (weight `w`, the portfolio's P&L, its deviation and square), a column a
+position (its deviation and its product with the portfolio's), under them μᵢ, cov, ρᵢ, the components and standalone VaR; Main gains
+`PConfidence`, `PEsConfidence`, `PWeighting`, `PLambda` and the results:
+
+| Cell | Formula |
+|---|---|
+| `w_j` | equal `=1/N`; EWMA `=(1-PLambda)*PLambda^(N-j)/(1-PLambda^N)` |
+| `PMu`, `PSigma` | `=SUMPRODUCT(W, PF)`; equal `=SQRT(SUMPRODUCT((PF-PMu)^2)/(N-1))`, EWMA `=SQRT(SUMPRODUCT(W,(PF-PMu)^2))` |
+| `PZ`, `PEsFactor` | `=NORM.S.INV(PConfidence)`; `=EXP(-(NORM.S.INV(PEsConfidence)^2)/2)/SQRT(2*PI())/(1-PEsConfidence)` (the brackets matter) |
+| `PVaR`, `PES` | `=PZ*PSigma-PMu`; `=PSigma*PEsFactor-PMu` |
+| covᵢ, componentᵢ | equal `=SUMPRODUCT((Pᵢ-μᵢ)*(PF-PMu))/(N-1)`, EWMA `=SUMPRODUCT(W,(Pᵢ-μᵢ)*(PF-PMu))`; `=PZ*covᵢ/PSigma-μᵢ` (ES with `PEsFactor`) |
+
+Its checks: `PVaR` and `PES` to the cent, μ and σ to 10⁻⁶, Σ components = `PVaR` and `PES`, Σ weights = 1.
+
+**One file for Excel, LibreOffice and Google Sheets.** Formulas use only the functions the three share (`XlsxFormulas.ALLOWED`: `SUM`,
+`SUMPRODUCT`, `SUMIF`, `SUMIFS`, `SMALL`, `LARGE`, `AVERAGE`, `COUNT`, `INDEX`, `MATCH`, `ROUNDDOWN`, `ROUNDUP`, `SQRT`, `EXP`, `IF`,
+`ABS`, `MAX`, `MIN`, `AND`, `OR`, `ISNUMBER`, `NORM.S.INV`, `PI`); never dynamic arrays, `INDIRECT`, `OFFSET` or macros; every formula
+carries its cached result and the workbook recalculates on open. **The template** keeps the look and the words as text in the repository
+(`playground/var/template/`: `template.properties` naming every cell style, `xl/styles.xml`, `docProps/*.xml` with the branding
+placeholders, `explain.txt`); the generator writes the sheets, names and formulas for exactly the positions chosen.
+`drishti.var.playground.template` names a bank's own copy, which must keep every style name.
+
+**The frame every metric's playground reuses** (`drishti-server`, `server/playground`): `PlaygroundTemplate` (a metric's template folder),
+`WorkbookStream` and `SheetStream` (the zip written onto the response row by row: checked formulas with cached values, the branding
+footer, named cells), `SeriesLayout` (items by points as columns or rows), `ExportSizing` (each count's size, recalculation time and
+applications), `XlsxFormulas` (the common set and the scan) and, in the tests, `LibreOfficeRecalc` (the headless recalculation, one at a
+time). A metric adds its model (the cached values), its generator, its inputs read as the person, its endpoints
+(`/api/v1/<metric>/playground`, `.xlsx`, `/estimate`, `/template`) and its recalculation test. Where a metric's core is a large
+simulation, its output is data and everything after it formulas.
 
 ## Part III · How the engine works and stores data
 
@@ -3377,7 +3452,7 @@ Deploying a sharded cluster (owners and coordinators per role, shard sizes, zone
 
 **Off by default.** With no `sharding:` block in the market-risk pack and no `drishti.var.sharding.enabled`, every server holds whole dates
 as in sections 25 to 27. Switched on, a date's rows are spread over the Drishti\*net members; the design, the handover, the failure cases,
-the settings and the tests are in [VAR_SHARDING.md](../architecture/VAR_SHARDING.md). In short:
+the settings and the tests are in [CLUSTER_DEPLOYMENT.md section 5](../architecture/CLUSTER_DEPLOYMENT.md#5-var-sharding-in-depth-built). In short:
 
 - **A shard map per date**: the date's rows counted per legal entity and desk (columns only, no vector), cut into contiguous ranges near
   `target-shard-mb` (a desk never split), the same on every member that reads the same data (`ShardMap`).
@@ -3394,12 +3469,12 @@ the settings and the tests are in [VAR_SHARDING.md](../architecture/VAR_SHARDING
   serving until the new one has been ready for `grace-seconds`. A member drains before it stops (`drishti.py var shards --drain`).
 - **Intraday**: each member reads the day's updates from the lake on its own data-load signal and applies them on the date it put
   together; `provenance.intraday.batches` says which batches an answer includes, in the same order on every member (section 8.4). A client
-  that must see a batch everywhere polls it there (VAR_SHARDING.md section 7, *Convergence after a batch*).
+  that must see a batch everywhere polls it there (CLUSTER_DEPLOYMENT.md section 5.9, *Convergence after a batch*).
 - **API tokens**: `POST /api/v1/var/partial` (the members' signed channel) and `POST /api/v1/var/shards/drain` (administrators) are in
   `token-never`.
 
 Measured equal to one server **to the cent** (VaR, ES, contributions, the P&L path, the tree, intraday, the official record) on three
-members in USD and EUR, on Delta and Iceberg inputs (`VarShardClusterTest`, VAR_SHARDING.md section 12). `GET /api/v1/var/shards?asOf=`
+members in USD and EUR, on Delta and Iceberg inputs (`VarShardClusterTest`, CLUSTER_DEPLOYMENT.md section 5.10). `GET /api/v1/var/shards?asOf=`
 and `drishti.py var shards` show the map, the owners and who is ready.
 
 **Bit-equality, and why.** Every member sums the same rows in the same fixed order: a shard's partial is summed in row order, the partials
@@ -3408,7 +3483,7 @@ and sent in the skeleton, and every node's is summed from them bottom-up exactly
 bits on every member. A book (or, with a hierarchy built from columns, a position) under
 two shards would break this, so such a date is refused (`422 DRS-5217`) rather than answered differently from one server.
 
-**Operating it** (the full reference is [VAR_SHARDING.md](../architecture/VAR_SHARDING.md) sections 7 to 11):
+**Operating it** (the full reference is [CLUSTER_DEPLOYMENT.md sections 4.6 and 5.7 to 5.12](../architecture/CLUSTER_DEPLOYMENT.md#57-shard-books-skeletons-and-putting-a-date-together)):
 
 | Task | How |
 |---|---|

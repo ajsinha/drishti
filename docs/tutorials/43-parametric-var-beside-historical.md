@@ -23,8 +23,7 @@ bank (`PVAR BANK` opens it that way), read a desk's **?** line by line, see the 
 by bin, check that the Euler components add up to the cent, read the correlation matrix, put `pvar()` in the MR cube, and work every
 figure out in the VaR Playground's **Parametric** tab and its workbook. Each step shows the UI,
 the command line and the JSON or YAML behind it, with real output from the committed test data. The reference is
-[VAR_GUIDE.md sections 3.12 and 18.15](../guides/VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check); the design and its reasons are
-in [PARAMETRIC_VAR.md](../architecture/PARAMETRIC_VAR.md).
+[VAR_GUIDE.md sections 3.12 and 18.15](../guides/VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check).
 
 ## Time to complete
 
@@ -268,7 +267,6 @@ true: the sheet's VaR and ES equal the engine's to the cent.
 
 - [VAR_GUIDE.md section 3.12](../guides/VAR_GUIDE.md#312-parametric-var-beside-historical-pvar) (the screen) and
   [section 18.15](../guides/VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check) (the method, EWMA, the 10-day lens, the decomposition).
-- [PARAMETRIC_VAR.md](../architecture/PARAMETRIC_VAR.md): the design, the worked example and the open questions.
 - [API_GUIDE.md, VaR engine](../guides/API_GUIDE.md#var-engine-apiv1var): the `parametric` block, `parametric=false`, `matrix=true`,
   `measure=parametric`; [CLI_GUIDE.md, var](../guides/CLI_GUIDE.md#var-the-var-engine): `--no-parametric`, `--matrix`, `--measure`.
 - [Tutorial 25](25-var-from-the-bank-to-a-trade.md): historical VaR from the bank to a trade; [tutorial 38](38-the-mr-cube-on-the-pivot-engine.md): the MR cube.

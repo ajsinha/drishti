@@ -19,8 +19,9 @@ Drishti computes the FRTB standardised approach (the Basel Framework's MAR21 to 
 when asked, for any scope, never stored as a figure.** The input is one table of position sensitivities; a factor dictionary says what
 each factor is and where it falls in the regulator's grid; the parameters are configuration files that name their paragraphs. Every figure
 opens in a playground that shows the same calculation as spreadsheet formulas, with every method choice a switch you can flip, compare
-and reproduce. The tutorial is [tutorial 30](../tutorials/30-frtb-sa-from-the-cases-to-a-desk.md); the design behind it is
-[SENSITIVITIES_AND_FRTB_SA.md](../architecture/SENSITIVITIES_AND_FRTB_SA.md).
+and reproduce. The tutorial is [tutorial 30](../tutorials/30-frtb-sa-from-the-cases-to-a-desk.md). The method below was checked
+paragraph by paragraph against the Basel Framework's MAR21 to MAR23 (the version effective 1 January 2023), and every hand-built case
+recomputed.
 
 ## Contents
 
@@ -68,15 +69,13 @@ All money is in the reporting currency (USD unless asked); every sensitivity is 
 
 ## 3. The inputs and their data contract
 
-The full data contract (every field, its unit, the checks, the record layouts and the samples) is [FRTB.md](../contracts/FRTB.md); the
-YAML contracts are in `config/packs/market-risk/contracts/`. In short:
-
-| Kind (command) | What | Grain | Required |
-|---|---|---|---|
-| `position-sensitivity` (SENS) | each position's sensitivities: DV01, CS01, IE01 per bp; DELTA per 1% (equity repo per bp); VEGA per vol point with `IMPLIED_VOL`; CURVATURE_UP and CURVATURE_DOWN with `SHOCK_SIZE`; or GAMMA for a source that cannot revalue | one record per position (or trade), date and batch, a sparse `SENSITIVITIES[]` list | yes |
-| `risk-factor` (RFAC) | the factor dictionary: the standard name, class, type, qualifier, curve, tenor, FRTB and SIMM buckets, seniority, liquidity horizon, the source systems' names | one row per factor and date | yes |
-| `default-risk` (DRCI, planned) | obligor, DRC bucket, seniority, credit quality, bond-equivalent notional and market value, maturity, cash-equity maturity, recovery independence | one row per position (or trade), obligor and date | for the DRC |
-| `residual-risk` (RRAI, planned) | RRAO class (exotic, other, none), gross notional, back-to-back and listed-or-clearable flags | one row per trade and date | optional |
+One input table drives everything: `position-sensitivity` (SENS), one record per position (or trade), date and batch with a sparse list of
+sensitivities (DV01, CS01, IE01 per bp; DELTA per 1%, equity repo per bp; VEGA per volatility point with `IMPLIED_VOL`; CURVATURE_UP and
+CURVATURE_DOWN with `SHOCK_SIZE`, or GAMMA), computed by the bank's pricing systems in the same run as the scenario PVs (Drishti does not
+reprice); the factor dictionary `risk-factor` (RFAC) says what each factor is; `default-risk` and `residual-risk` feed the DRC and the
+RRAO. Which kinds are needed is the table of [section 13](#13-frtb-sa-data-every-dataset-the-engine-reads); every field, unit and check is
+on the kinds' contract pages ([the market-risk contracts](../contracts/packs/market-risk.md)) and the engine's contract is
+[FRTB.md](../contracts/FRTB.md).
 
 **The naming standard.** One slash-separated name per factor, the same in every system: `IR/CURVE/USD/SOFR/10Y` (a curve point),
 `IR/CURVE/USD` (the currency: GIRR's curvature factor), `IR/BASIS/EUR`, `INF/USCPI` and `INF/USCPI/10Y`, `CR/SPREAD/<issuer>/<BOND or
@@ -115,6 +114,9 @@ across the buckets of the class:
 | Commodity | 11 buckets; commodity × location × vertex | 20% to 80% | commodity (15% to 95%) × tenor 99% × location 99.9% | 20%; 0 with bucket 11 |
 | FX | each currency | 15% (÷ √2 for the pairs a bank lists) | one factor a bucket | 60% |
 
+GIRR's table (MAR21.46, rounded to 0.1%) is the formula `ρ = max(exp(−θ · |T_k − T_l| / min(T_k, T_l)), 40%)`, θ = 3%, which the
+`girr-correlation` switch uses exactly. An equity spot and the repo of another name correlate at the spot ρ × 99.9%.
+
 ### 4.2 Vega
 
 Vega factors are implied volatilities by underlying and option maturity (and, for GIRR, the underlying's maturity). The risk weight is
@@ -136,20 +138,28 @@ K_b  = max(K_b+, K_b−); the tie goes up when Σ CVR+ > Σ CVR−, else down
 Curvature = √max(0, Σ K_b² + Σ γ²_bc · S_b · S_c · ψ(S_b, S_c))          S_b: Σ CVR of the side chosen
 ```
 
-The correlations are the delta ones **squared** (name only for CSR, commodity only for commodity), and the scenarios are applied **after**
-squaring. The side is chosen per bucket and per scenario. FX options that do not reference the reporting currency have their CVR divided
+The CVRs sum over the positions holding the factor. In the delivered values `RW · s` is the delta times the shock: for GIRR, CSR and
+commodity the deltas over every tenor of the curve (Σ DV01 × `SHOCK_SIZE` in bp), for a spot `DELTA × 100 × SHOCK_SIZE`. A positive CVR
+is a loss beyond delta. The other-sector buckets (CSR 16, equity 11) take `K_b = max(Σ max(CVR+, 0), Σ max(CVR−, 0))`. Across buckets
+the floor at zero replaces the alternative specification: curvature never caps S_b. The correlations are the delta ones **squared** (name
+only for CSR, commodity only for commodity), and the scenarios are applied **after** squaring (the reverse gives another figure: case 9).
+The side is chosen per bucket and per scenario. FX options that do not reference the reporting currency have their CVR divided
 by 1.5 (switch: off, or every FX instrument with the supervisor's approval); an option references the reporting currency unless its record
 carries FX curvature on two currencies.
 
 **Curvature from gamma.** A source that cannot revalue sends `GAMMA` (per bp² for a curve, per (1%)² for a spot); Drishti estimates
-`CVR± ≈ −½ · Γ · h²` with `h` the shock in the delta's unit. It is an **estimate, an analysis figure until the supervisor accepts it**
+`CVR± ≈ −½ · Γ · h²` (the second-order expansion `V(x ± h) − V(x) ≈ ±Δ·h + ½·Γ·h²`) with `h` the shock in the delta's unit (RW × 10,000
+bp for a curve, RW × 100 per cent for a spot) and, for a curve, Γ the parallel-shift gamma (every pair of tenors; Σ of the diagonal
+gammas when only those are sent, a second approximation). It drops the third and higher orders, which matter at these shocks and for
+barriers and digitals, and makes the up and down terms equal. It is an **estimate, an analysis figure until the supervisor accepts it**
 (MAR21.17): every screen and export that shows one says so, and the playground shows it beside the revalued figure when both exist.
 
 ### 4.4 The three correlation scenarios
 
 Every ρ and γ (squared first for curvature) is used three times: medium (as prescribed), high `min(1.25 ρ, 1)` and low `max(2ρ − 1,
-0.75ρ)`. Each scenario repeats the whole aggregation; the classes are added per scenario and the **largest total binds**. High correlations
-raise the charge of a long book, low correlations a hedged one.
+0.75ρ)`. Each scenario repeats the whole aggregation (the curvature side included); the classes are added per scenario and the **largest
+total binds**, compared only after the classes are added, never class by class (MAR21.7(1)); a desk computed as a standalone portfolio
+compares its own three (MAR21.7(2)(b)). High correlations raise the charge of a long book, low correlations a hedged one.
 
 ### 4.5 The alternative specification
 
@@ -159,26 +169,34 @@ taken again (MAR21.4(5)(b)). The screens mark the class and scenario where it ap
 ### 4.6 Contributions
 
 Within a scenario the SBM is homogeneous of degree one in the weighted sensitivities and the curvature risks, so each position's
-contribution is `Σ_k WS_ik · ∂SBM/∂WS_k` (and the same on its CVRs); the contributions add up to the reported SBM exactly. DRC
+contribution is `Σ_k WS_ik · ∂SBM/∂WS_k` (and the same on its CVRs), the gradient taken at the scope in the binding scenario; the
+contributions add up to the reported SBM exactly. At a kink (a floor at zero, a curvature side switch, the alternative specification)
+the gradient is one-sided: the answer says *contributions scaled to add up* and scales them. DRC
 contributions follow each obligor's share of its bucket's charge, pro rata over its positions; the RRAO is additive. The figures are not
-additive across scopes: a desk's charge is computed from its own netted sensitivities.
+additive across scopes: a desk's charge is computed from its own netted sensitivities. On a sharded cluster each member nets its shards'
+sensitivities per factor and the sums are added in shard order before the formula runs once: the same figure as one server.
 
 ## 5. The default risk charge
 
-1. **Gross jump-to-default**: `JTD = LGD × notional + (market value − notional)`, kept positive for a long and negative for a short; LGD
-   75% senior, 100% non-senior and equity, 25% covered bonds, 100% for a recovery-independent instrument (MAR22.9 to MAR22.14).
-2. **Maturity scaling**: × `min(max(M, 0.25), 1)`; cash equity 0.25 or 1 as the row (or the parameter file) says (MAR22.15 to MAR22.18).
+1. **Gross jump-to-default**: `JTD_long = max(LGD × notional + P&L, 0)`, `JTD_short = min(LGD × notional + P&L, 0)`, `P&L = market
+   value − notional` (bond-equivalent for derivatives), the notional positive for a long credit exposure and negative for a short (long
+   means a loss on default: a bought CDS is short, a sold put on a bond long); LGD 75% senior, 100% non-senior and equity, 25% covered
+   bonds, 100% for a recovery-independent instrument (MAR22.9 to MAR22.14).
+2. **Maturity scaling**: × `min(max(M, 0.25), 1)`, M the instrument's maturity (the derivative's, not its underlying's); cash equity 0.25
+   or 1 as the row (or the parameter file) says (MAR22.15 to MAR22.18).
 3. **Netting per obligor by seniority**: a short offsets a long of the same or higher seniority; the seniorities are taken from the most
    senior down, the longs carried, the shorts left over counted (MAR22.19 to MAR22.21).
 4. **Per bucket** (corporates, sovereigns, local governments and municipalities): `HBR = Σ net long / (Σ net long + Σ |net short|)`,
-   `DRC_b = max(Σ RW × net long − HBR × Σ RW × |net short|, 0)`, RW by credit quality (AAA 0.5% to CCC 50%, unrated 15%, defaulted 100%).
+   `DRC_b = max(Σ RW × net long − HBR × Σ RW × |net short|, 0)`, RW by credit quality (AAA 0.5%, AA 2%, A 3%, BBB 6%, BB 15%, B 30%,
+   CCC 50%, unrated 15%, defaulted 100%); sovereigns may take 0% at national discretion (MAR22.7), a setting of the parameter file.
 5. **Total**: the buckets added, no hedging across them.
 
 ## 6. The residual risk add-on
 
 `RRAO = Σ gross notional × 1.0%` (an exotic underlying: weather, longevity, natural disasters, future realised volatility) `+ Σ gross
-notional × 0.1%` (gap, correlation or behavioural risk: barriers, digitals, baskets, TARFs, autocallables). A back-to-back trade is
-excluded entirely; a listed or centrally clearable one only from the other-residual part.
+notional × 0.1%` (gap, correlation or behavioural risk: barriers, digitals, baskets, TARFs, autocallables). Risks that by themselves
+do not bring an instrument in (cheapest-to-deliver, smile, plain multi-underlying vanillas, dividend risk) are MAR23.6's. A back-to-back
+trade is excluded entirely; a listed or centrally clearable one only from the other-residual part.
 
 ## 7. Scopes and the capital screen (FRSA)
 
@@ -313,7 +331,8 @@ revaluations are used as delivered.
 The parameters are two files of the market-risk pack, `config/packs/market-risk/capital/frtb-sa-sbm.yaml` (MAR21: risk weights, the
 published GIRR table, correlations, the scenario multipliers, curvature shocks) and `frtb-sa-drc-rrao.yaml` (MAR22 and MAR23: LGDs,
 seniority order, maturity scaling, DRC risk weights, RRAO weights and the product-type mapping). Each names its `regime`, `version` and
-`effective-from` and the paragraph of every value. The engine reads them at start and checks every value and range (a symmetric unit-
+`effective-from` and the paragraph of every value: one file per regime (Basel, then a jurisdiction's variant such as OSFI CAR chapter 9),
+and a filer is configured with its regime. The engine reads them at start and checks every value and range (a symmetric unit-
 diagonal table, a cash-equity maturity of 0.25 or 1, every seniority with its LGD); a bad file refuses the engine with `DRS-5329`, never the
 server. A changed file is a new version: every answer and every recipe carries the files' SHA-256, and a recipe keeps the files themselves
 so it reproduces after the parameters change.

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The VaR Playground (docs/architecture/VAR_PLAYGROUND.md, docs/guides/VAR_GUIDE.md section 3.10): ``PLAY VAR <scope|ids> <GO>`` opens
+"""The VaR Playground (docs/guides/VAR_GUIDE.md section 3.10): ``PLAY VAR <scope|ids> <GO>`` opens
 ``/play?scope=...`` (or ``/play?ids=...``), every VaR figure of the scope worked out in a spreadsheet-like grid (positions across,
 scenarios down, at most 500 positions, the rest in one Rest of scope column) with a tall explanation beside it, and exported as an .xlsx of
 real formulas that recalculates in Excel, LibreOffice and Google Sheets. The page is a shell: web/static/js/drishti_var-playground.js fills it
@@ -39,7 +39,7 @@ from routes.common import ident, render
 router = APIRouter(include_in_schema=False)
 
 WORD = "PLAY"
-#: the metric after PLAY: each metric's playground adds its word here (VAR_PLAYGROUND.md section 13); FRTB: routes/frtb_routes.py; SIMM:
+#: the metric after PLAY: each metric's playground adds its word here (VAR_GUIDE.md section 18.16); FRTB: routes/frtb_routes.py; SIMM:
 #: routes/simm_routes.py
 METRICS = ("VAR", "FRTB", "SIMM")
 #: the link's lens words and the engine's names for them
@@ -98,7 +98,7 @@ async def page(request: Request, scope: str = "", ids: str = "", ccy: str = "", 
     """The playground's shell; the grid, the explanation and the export load in place (web/static/js/drishti_var-playground.js)."""
     lens = var_routes.lens_of(request, h, m, q, esq, set)
     target = scope.strip() or ids.strip()
-    # the page's tabs (PARAMETRIC_VAR.md section 10): the grid (VaR), and Parametric (measure=parametric): the same link otherwise
+    # the page's tabs (VAR_GUIDE.md section 18.16): the grid (VaR), and Parametric (measure=parametric): the same link otherwise
     plain = request.url.remove_query_params("measure")
     tabs = {"var": plain.path + ("?" + plain.query if plain.query else ""),
             "parametric": plain.path + "?" + plain.include_query_params(measure="parametric").query}
