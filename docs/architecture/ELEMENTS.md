@@ -1098,6 +1098,16 @@ table editor, `/build/tables?new=table`; "the model designer" in two notes means
 | Packs, lake files, lenses, editions, engines, settings (`drishti_pack-new.js`, `drishti_admin-*.js`) | | their forms (→ `Form` with four eyes) |
 | Approvals' change views (`drishti_approvals.js`, `build/_diff.html`) | | the diffs (→ drishti-inputs' `CodeDiff`) |
 
+**Second pass (the allow-list from 19 to 3).** On drishti-core's `trackPointer` (now with pointer capture) or the kit's `DragHub`: the
+Sutra designer's Customize drags (parts and the kit's cards) and Grid drags (a cell onto another), the Outline's drags, the BI
+designer's field and visual-type drags and its wells, a reader's layout mode, screen arranging, a workspace's panes (captured across
+its frames) and a slider's thumbs; every HTML5 drag of these is deleted. On drishti-inputs' code areas (`<textarea data-di-code>`,
+`upgradeCodeArea`: the text area keeps the value for its form and its page's script): the connector and Drishti*net YAML, the theme
+designer's YAML, a BI item's and a workspace's YAML, the transform's Python and YAML, the Pivot's function code; the calculator draws its
+`CodeEditor` in place. **Still on the allow-list**: the Sutra designer's Grid formula bar (its own suggestion list → `CodeEditor`
+completion), the Outline mode's tree and the workbench's data-shape tree (→ the kit's `Outline`). The editors' own panes in the table
+above (inspectors and forms) are not drags or code areas, so the guard does not see them; they move with the forms builder's `Form`.
+
 ## 13. Risks
 
 | Risk | Mitigation |

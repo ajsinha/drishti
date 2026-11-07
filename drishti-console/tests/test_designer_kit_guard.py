@@ -54,7 +54,6 @@ AUTHORING = re.compile(r"design|editor|build|studio|outline|form|notebook|pack-n
 AUTHORING_ONLY = {"tree", "undo"}
 # file (relative to drishti-console/web) -> the rules it still breaks (each the designer or editor still being moved onto the kit)
 ALLOWED = {
-    "static/js/drishti_designer-outline.js": {"drag"},            # the Sutra designer's Outline mode
     "templates/build/design.html": {"tree"},                      # the workbench's data-shape tree (drishti_build-shape-tree.js)
     "templates/designer/grid.html": {"code-editor"},              # the Sutra designer's formula bar (Grid mode)
     "templates/designer/outline.html": {"tree"},                  # the Sutra designer's Outline mode
@@ -107,7 +106,7 @@ def test_the_allow_list_only_shrinks():
 
 def test_the_allow_list_is_capped():
     """The list never grows past what it was when the rule was made (2026-11-07): new files cannot be added to it."""
-    assert len(ALLOWED) <= 4 and sum(len(r) for r in ALLOWED.values()) <= 4
+    assert len(ALLOWED) <= 3 and sum(len(r) for r in ALLOWED.values()) <= 3
 
 
 def test_the_guard_finds_what_it_looks_for():

@@ -25,7 +25,8 @@
   var draft = root.dataset.draft, kind = root.dataset.kind, id = root.dataset.id;
   var tree = root.querySelector('[data-ol-tree]'), detail = root.querySelector('[data-ol-detail]'), msg = root.querySelector('[data-ol-msg]');
   var frame = root.querySelector('[data-ol-preview]'), sutra = root.querySelector('[data-ol-sutra]');
-  var state = null, picked = null, rev = 0, dragging = null;
+  var state = null, picked = null, rev = 0;
+  var hub = new window.Drishti.elements.designer.DragHub();          // an item dragged onto another, a section or a nest line (drishti-designer)
 
   function el(tag, attrs, kids) {
     var e = document.createElement(tag);
@@ -71,20 +72,11 @@
   /* the tree */
   function isChild(d) { return d && d.parent != null; }
   function drag(li, data) {
-    li.setAttribute('draggable', 'true');
-    li.addEventListener('dragstart', function (e) { dragging = data; e.dataTransfer.setData('text/x-ol', JSON.stringify(data)); e.dataTransfer.effectAllowed = 'move'; root.classList.add('ol-dragging'); e.stopPropagation(); });
-    li.addEventListener('dragend', function () { dragging = null; root.classList.remove('ol-dragging'); });
+    hub.draggable(li, { payload: function (e) { return e.target.closest('.ol-item') === li ? { ol: data } : null; }, label: function () { return (data.child && data.child.title) || ''; } });
   }
   function target(node, onDrop) {
-    node.addEventListener('dragover', function (e) { if (dragging) { e.preventDefault(); e.stopPropagation(); node.classList.add('ol-over'); } });
-    node.addEventListener('dragleave', function () { node.classList.remove('ol-over'); });
-    node.addEventListener('drop', function (e) {
-      node.classList.remove('ol-over');
-      if (!dragging) { return; }
-      e.preventDefault(); e.stopPropagation();
-      var d = dragging; dragging = null; root.classList.remove('ol-dragging');
-      onDrop(d);
-    });
+    hub.target({ el: node, over: function () { node.classList.add('ol-over'); root.classList.add('ol-dragging'); }, leave: function () { node.classList.remove('ol-over'); },
+      drop: function (x, y, d) { node.classList.remove('ol-over'); root.classList.remove('ol-dragging'); onDrop(d.ol); } });
   }
   function moveTo(d, to, section) {
     if (isChild(d)) { return step({ op: 'unnest', parent: d.parentId }); }          // a child dragged onto the page: back on the page
