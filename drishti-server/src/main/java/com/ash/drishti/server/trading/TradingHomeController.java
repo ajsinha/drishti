@@ -28,7 +28,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -48,7 +47,6 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  */
 @RestController
 @RequestMapping("/api/v1/trading/home")
-@EnableConfigurationProperties(TradingHomeProperties.class)
 public class TradingHomeController {
 
     private final TradingHomeWatch watch;
@@ -58,6 +56,7 @@ public class TradingHomeController {
     private final ObjectMapper json = new ObjectMapper();
     private final Map<String, AtomicInteger> perUser = new ConcurrentHashMap<>();
 
+    @org.springframework.beans.factory.annotation.Autowired
     public TradingHomeController(SourceRouter router, TradingHomeProperties props, Entitlements entitlements, ExecutorService drishtiVirtualExecutor) {
         this(new TradingHomeWatch(props.watch(), k -> router.dataVersion(k, AsOf.LATEST)), props, entitlements, drishtiVirtualExecutor);
     }

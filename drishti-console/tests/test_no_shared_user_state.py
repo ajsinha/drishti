@@ -38,6 +38,8 @@ ALLOWED = {
     "core/external_lib.py:_paths": "folders added to sys.path for the console's own libraries: configuration",
     "core/channel_relay.py:HANDLERS": "relay operation to its handler function, registered at import by the routes (code, not data); "
                                       "what a relay holds is per app (app.state.relay)",
+    "core/channel.py:UPSTREAMS": "a domain's live-subscription prefix to its opener function, registered at import by the domain's routes "
+                                 "(code, not data; the trader home's trading:); every stream it opens runs as the channel's own person",
     "routes/embed_routes.py:_cache": "the embed loader's script text by version: static assets, the same for everyone",
     "routes/designer_routes.py:_LOCKS": "one asyncio.Lock per draft id (a person's own draft; a lock holds no data)",
     "core/trading_landing.py:_FLIGHT": "reads running now, by core.user_cache.user_key (server, user, roles, as-of): never served across people",
