@@ -459,7 +459,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | `drishti.bi.transform.console-token` | empty | The shared secret sent as `X-Drishti-Runner-Token` on every Py-node call; the console refuses a call without it. |
 | `DRISHTI_BI_NODE` | `drishti.bi.exec.node` | empty | This Java node's name when several Java nodes serve the site (`drishti.bi.exec.nodes` lists them); empty: one node. |
 | `DRISHTI_BI_RUNS_FILE` | `drishti.bi.runs.file` | `./config/runs/runs.yaml` | The BI runs settings file ([BI runs](#bi-runs-configrunsrunsyaml)); a missing file means the defaults. |
-| `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | At start, converts stored items once: old-syntax expressions to DEL v2, then `rachana: 1` datasets to datasets and models with their reports rebound (each change audited, the text before kept in the item's history). `false`: a bi-admin runs `drishti.py bi migrate` instead ([drishti.bi.migrate](#drishtibimigrate--migrations-of-stored-bi-items)). |
+| `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | At start, moves stored items once: every stored dataset and model into the table layer, then 2.3 boards into reports (each change audited, the text before kept in the item's history). `false`: the items stay unread until they are moved ([drishti.bi.migrate](#drishtibimigrate--migrations-of-stored-bi-items)). |
 | `DRISHTI_BI_STORE` | `drishti.bi.query.store-dir` | `./data/bi-store` | The BI store: the typed Parquet layers (columns, rollups, live snapshots) the dataset query engine writes and reads, and DuckDB's spill folder. Rebuildable from the connectors; never commit it. |
 | `DRISHTI_PACKS_DIR` | `drishti.packs.dir` | `./config/packs` | The packs directory. If it does not exist and the old `./packs` does, `./packs` is used with a warning (one release). |
 | `DRISHTI_PACKS_EXTRA_DIRS` | `drishti.packs.extra-dirs` | empty | Further pack folders, comma-separated, looked in after the packs directory (the shipped packs win a name): `examples/packs` makes the retired example packs (finance, genomics, logistics, retail-banking, climate-risk, operational-risk, liquidity-risk) loadable by name ([PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#retired-example-packs-examplespacks)). |
@@ -3426,7 +3426,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.bi.migrate.on-start` | boolean | `true` | `DRISHTI_BI_MIGRATE_ON_START` | server | at start: old-syntax expressions to DEL v2, audited, the text before kept in each item's history; idempotent | restart |  |
+| `drishti.bi.migrate.on-start` | boolean | `true` | `DRISHTI_BI_MIGRATE_ON_START` | server | at start: stored datasets and models into the table layer, 2.3 boards into reports; audited, the text before kept; idempotent | restart |  |
 | `drishti.bi.migrate.actor` | string | `system` |  | server | the name the history, the item's events and the audit log give the start-up run | restart |  |
 
 #### `drishti.layouts`
@@ -6128,7 +6128,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_BI_ENABLED` | `bi.enabled` | `true` | console | false: no BI top-bar menu, no /bi pages (the server's drishti.bi.enabled is separate) |
 | `DRISHTI_BI_LIVE_MIN_INTERVAL_MS` | `bi.live.min_interval_ms` | `250` | console | a report redraws its live visuals at most this often (a burst of ticks becomes one redraw); 100 to 5000 |
 | `DRISHTI_BI_LIVE_STALE_SECONDS` | `bi.live.stale_seconds` | `30` | console | no tick or status from the server for this long: the report says "Stale"; 5 to 600 |
-| `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | server | at start: old-syntax expressions to DEL v2, audited, the text before kept in each item's history; idempotent |
+| `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | server | at start: stored datasets and models into the table layer, 2.3 boards into reports; audited, the text before kept; idempotent |
 | `DRISHTI_BI_NODE` | `drishti.bi.exec.node` | empty | server | this Java node's name when several serve the site (blank: one node) |
 | `DRISHTI_BI_NOTEBOOK_MAX_ROWS` | `bi.notebook.max_rows` | `10000` | console | most rows of an extract (the reader's rows, cut here); 10 to 100000 |
 | `DRISHTI_BI_PYTHON_ENABLED` | `bi.python.enabled` | `true` | console | false: python visuals answer DRS-9074 (the browser target still works where a manifest allows it) |

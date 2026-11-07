@@ -332,7 +332,7 @@ From the command line the same model is checked with `drishti.py bi model check 
 
 ### 6. Functions
 
-The reference below is generated from the server's catalogue (`drishti-server/src/main/resources/bi/expr/functions.yaml`), the same list the
+The reference below was generated from DEL's catalogue (`bi/expr/functions.yaml`, deleted with DEL; the functions are in FUNCTIONS.md), the same list the
 server checks against, `GET /api/v1/bi/expr/functions` serves to the expression editor and AI uses; a test fails when they disagree. A function
 marked with a later wave is refused with `DRS-9129` until that wave.
 
@@ -1597,7 +1597,7 @@ drishti.py bi expr validate "trades.NOTIONAL * 2" --model trading-risk
 #   error   DRS-9127  at 0-15: the column trades.NOTIONAL is outside an aggregate: a measure has one value per group, not per row
 #       fix: wrap it: sum(trades.NOTIONAL)
 drishti.py bi expr functions --scope row          # the functions you may use in a derived column
-drishti.py bi expr convert "[MTM] / [Trades]"     # measure('MTM') / measure('Trades')
+drishti.py tables migrate --dry-run              # [MTM] / [Trades] is written measure('MTM') / measure('Trades')
 ```
 
 #### 8.1 In the console: the expression editor

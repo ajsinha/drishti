@@ -2841,7 +2841,7 @@ datasets until W3, the boards are unchanged (they name reports), and the noteboo
    the bi-admin running it (audited `bi-migrated`), drafts stay drafts. Stable ids are generated and written.
 6. **Idempotent**: a `rachana: 2` item is skipped; a second run changes nothing. Comments in old YAML files are kept
    where the key survives (the converter edits a YAML tree that keeps comments), and dropped with the key otherwise.
-7. Refuses (`DRS-9190`) an item whose old form is invalid, and (`DRS-9191`) a composed join it cannot express as
+7. Refuses (`DRS-9190`) an item whose old form is invalid, and (the migration's refusal) a composed join it cannot express as
    relationships (a join on non-key columns of both sides): the report lists it with the Python-dataset alternative.
 
 ##### 8.3.1 Implementation (task 6)
@@ -2872,7 +2872,7 @@ Decisions taken while building it, against the plan above:
   measure the host lacks move into the host (renamed `<name> (<source>)` when the name means something else there); consumers bind to the host with the
   frame's names renamed (`joined.name` to `counterparties.name`, `Desk P&L` to `P&L 1d`); a visual that read another source of the composed dataset reads
   the host too, so the report's `links:` go. A `left` (or `inner`) join adds the report filter `{ field: <left count measure>, op: gt, value: 0 }`.
-  No host: `DRS-9191`.
+  No host: refused by the migration.
 * **Derived** datasets become a Python dataset `<old>-result` (`source.python`, each input a model query `{ model, select }` on the converted input's
   model) and a model of the old name over it under the alias `result`, so its measures and `result.*` fields keep their meaning. The Transform now
   receives each column named by the last part of its field or measure name (`counterparties.id` is `id`, `P&L 1d`), not the `as` names: a manual step (the shipped `pnl-vs-exposure` accepts both).

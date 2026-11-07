@@ -923,7 +923,7 @@ drishti:
       legacy: refuse                 # the old expression syntax: refuse (DRS-9100 with the DEL v2 text as the fix; the default) or warn (read with DRS-9100)
       parse-cache: 10000             # parsed expressions kept (0: off)
     migrate:                         # migrations of STORED BI items (docs/architecture/BI_DESIGN.md 8.3; docs/guides/TROUBLESHOOTING.md "Migration problems")
-      on-start: ${DRISHTI_BI_MIGRATE_ON_START:true}   # at start: old-syntax expressions to DEL v2, audited, the text before kept in each item's history; idempotent
+      on-start: ${DRISHTI_BI_MIGRATE_ON_START:true}   # at start: stored datasets and models into the table layer, 2.3 boards into reports; audited, the text before kept; idempotent
       actor: system                  # the name the history, the item's events and the audit log give the start-up run
   layouts:                           # layout mode: each user's arrangement of a Sutra's panels (USER_GUIDE.md, Layout mode)
     enabled: ${DRISHTI_LAYOUTS_ENABLED:true}   # also needs a role with layout (every role but viewer, unless configured)
