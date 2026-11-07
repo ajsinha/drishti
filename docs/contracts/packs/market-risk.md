@@ -1134,7 +1134,7 @@ The most complete record of `data/testdata/market-risk/scenario-pv/scenario-pv-2
 
 ## FXS: Scenario FX of a currency (509 scenarios) (`fx-scenario`)
 
-A currency's rate against USD today and under each historical scenario, as the risk batch supplies it (VAR_GUIDE.md section 15.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived from the FX history (fx-spot).
+A currency's rate against USD today and under each historical scenario, as the risk batch supplies it (VAR.md section 2.9): the VaR engine converts scenario PVs and reporting currencies with it. A currency the batch does not supply is derived from the FX history (fx-spot).
 
 |  |  |
 |---|---|
@@ -1317,7 +1317,7 @@ One node of a VaR hierarchy (MGMT or LEGAL): its level, parent, children, the bo
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
 | `NODE_ID` | id | required |  | The record's id (the business key) | `LEGAL~LE-NY` (pattern `^[A-Z][A-Z0-9_]*~`) | `risk-hierarchy` |
-| `HIERARCHY` | text | required |  | The hierarchy's id (any name, A-Z, digits, _). The demo's: MGMT (bank, division, desk, book) and LEGAL (bank, legal entity, desk, book); a book is in one leaf of each. A hierarchy may instead be built from the trades' columns (VAR_GUIDE.md section 16): its rows here are then not read. | `LEGAL` (pattern `^[A-Z][A-Z0-9_]*$`) |  |
+| `HIERARCHY` | text | required |  | The hierarchy's id (any name, A-Z, digits, _). The demo's: MGMT (bank, division, desk, book) and LEGAL (bank, legal entity, desk, book); a book is in one leaf of each. A hierarchy may instead be built from the trades' columns (VAR.md section 3): its rows here are then not read. | `LEGAL` (pattern `^[A-Z][A-Z0-9_]*$`) |  |
 | `LEVEL` | text | required |  | The node's level, a name of the hierarchy's own: bank, division, legal-entity, desk or book in the demo. | `legal-entity` |  |
 | `PARENT_ID` | id | optional |  | The parent node's NODE_ID (null at the root); the engine builds the tree from it. | `LEGAL~BANK` |  |
 | `NAME` | text | required |  | The node's display name. | `LE-NY` |  |

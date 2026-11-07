@@ -145,8 +145,8 @@ engine leaves it out; never zero-filled.
 
 **As built, from the engine's own vectors.** The engine keeps each trade's USD P&L row (every reporting currency is converted from these
 rows), its USD value today and the currency its scenario PVs came in. A position's Data are recovered from them: `PV(s) = (p + P&L_USD(s))
-/ FX_c(s)`, `PV(base) = p / FX_c(base)`, with `p` its USD value today (the same recovery as the per-currency totals, VAR_GUIDE.md section
-15.11), so the workbook's chain of formulas gives back the engine's vector. A position whose trades came in different currencies is shown
+/ FX_c(s)`, `PV(base) = p / FX_c(base)`, with `p` its USD value today (the same recovery as the per-currency totals, VAR.md section
+2.11), so the workbook's chain of formulas gives back the engine's vector. A position whose trades came in different currencies is shown
 in USD; one priced by P&L vectors alone is input form PnL (its USD P&L, `p` its stated USD value today). Rest of scope is the engine's
 scope vector less the shown positions' P&L as the sheet computes them; with every position shown it is still kept, with zero positions,
 when the scope's figure (a node's, summed from the rows as read in float64) differs from its positions' stored rows (float32 in the

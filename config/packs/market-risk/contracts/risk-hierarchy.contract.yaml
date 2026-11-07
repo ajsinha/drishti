@@ -57,8 +57,8 @@ fields:
   type: text
   presence: required
   description: 'The hierarchy''s id (any name, A-Z, digits, _). The demo''s: MGMT (bank, division, desk, book) and LEGAL (bank,
-    legal entity, desk, book); a book is in one leaf of each. A hierarchy may instead be built from the trades'' columns (VAR_GUIDE.md section
-    16): its rows here are then not read.'
+    legal entity, desk, book); a book is in one leaf of each. A hierarchy may instead be built from the trades'' columns (VAR.md section
+    3): its rows here are then not read.'
   example: LEGAL
   pattern: ^[A-Z][A-Z0-9_]*$
 - name: LEVEL

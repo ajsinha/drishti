@@ -222,8 +222,8 @@ against the computed PFE until LIM is brought back.
 
 **2.9.0: VaR in BI (2026-10-26).** The published official VaR results are a read-only kind `var-official` (`VOFF`) of the market-risk
 pack on the Delta connector `var-results` over `risk-results/var-official`, with the BI samples (datasets `market-risk-var-official`
-and `market-risk-var-latest`, model and report `market-risk-var`: VaR 99% and ES 97.5% by node, never summed) (VAR_GUIDE.md
-section 19).
+and `market-risk-var-latest`, model and report `market-risk-var`: VaR 99% and ES 97.5% by node, never summed) (VAR.md
+section 5).
 
 **Built (2.9.2): the Funds and ETFs pack (product owner, 2026-10-26).** The `funds` pack: the 200 largest US mutual funds and ETFs by
 net assets from SEC public data (the newest Form N-PORT data set, four quarters of Form N-CEN and of the prospectus risk/return

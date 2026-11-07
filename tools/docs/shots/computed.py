@@ -12,8 +12,8 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Pictures of the computed attributes on the pages (docs/architecture/COMPUTED_ATTRIBUTES.md section 13, docs/guides/EXPOSURE_GUIDE.md
-section 22), written to docs/guides/img/computed/, over the packs' samples on the shared scratch server and console:
+"""Pictures of the computed attributes on the pages (docs/architecture/COMPUTED_ATTRIBUTES.md section 13, docs/contracts/EXP.md
+section 8), written to docs/guides/img/computed/, over the packs' samples on the shared scratch server and console:
 
     drishti-console/.venv/bin/python tools/docs/screenshots.py --guide computed
 
