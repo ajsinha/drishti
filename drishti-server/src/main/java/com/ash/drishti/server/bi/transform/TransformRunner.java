@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Runs a Python Transform: some frames in (Arrow IPC streams, masked and row-ruled for the reader), one frame out (a Parquet file). The shipped implementation
- * is {@link ProcessTransformRunner}, which starts the console's sandboxed runner; a test supplies its own.
+ * Runs a Python Transform: some frames in (Arrow IPC streams, masked and row-ruled for the reader), one frame out (a Parquet file). The one
+ * implementation is {@link com.ash.drishti.server.bi.python.PythonRuns}, the server's compute pool {@code python}; a test supplies its own.
  */
 @FunctionalInterface
 public interface TransformRunner {
@@ -35,8 +35,17 @@ public interface TransformRunner {
      * @param output where the result file is to be written
      * @param maxRows most rows the result may have
      * @param maxBytes largest result file
+     * @param who the reader the frames were read as (the run is audited as theirs)
+     * @param contract the columns the dataset declares, by name, with their types (empty: none declared); a text column declared a date or a
+     *        timestamp is read as one on the pool (the frames carry dates as ISO text), then the result is checked against it
      */
-    record Request(Map<String, Object> manifest, List<byte[]> frames, Map<String, Object> params, Path output, int maxRows, long maxBytes) {}
+    record Request(Map<String, Object> manifest, List<byte[]> frames, Map<String, Object> params, Path output, int maxRows, long maxBytes,
+            com.ash.drishti.server.security.Principal who, Map<String, String> contract) {
+
+        public Request {
+            contract = contract == null ? Map.of() : Map.copyOf(contract);
+        }
+    }
 
     /** A column of the result with the dataset type it maps to ({@code string integer decimal boolean date timestamp}). */
     record Column(String name, String type) {}
@@ -45,16 +54,16 @@ public interface TransformRunner {
     record Result(Path file, List<Column> columns, long rows, long millis) {}
 
     /**
-     * Runs a Python <em>measure</em> over rows the server built for one person (an alert on a Python measure has no browser to run it in): the answer has
-     * {@code by} (the group columns) and {@code rows} (the group values, then the number). The default refuses: only {@link ProcessTransformRunner} runs Python.
+     * Runs a Python <em>measure</em> over rows the server built for one person (a model query's Python measure, an alert on one): the answer has
+     * {@code by} (the group columns) and {@code rows} (the group values, then the number). The default refuses.
      *
      * @param groupBy the group columns; empty: the whole input is one group
      */
-    default com.fasterxml.jackson.databind.JsonNode measure(Map<String, Object> manifest, Map<String, Object> params, List<String> groupBy, List<String> columns,
-            List<List<Object>> rows) {
+    default com.fasterxml.jackson.databind.JsonNode measure(com.ash.drishti.server.security.Principal who, Map<String, Object> manifest, Map<String, Object> params,
+            List<String> groupBy, List<String> columns, List<List<Object>> rows) {
         throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.PYTHON_BUSY, "this runner runs Transforms only");
     }
 
-    /** Runs it; a failure is a {@code DrishtiException} with the Python code (DRS-9071 to 9074) or {@code DRS-9075}. */
+    /** Runs it; a failure is a {@code DrishtiException} with the Python code (DRS-9070 to 9074) or {@code DRS-9075}. */
     Result run(Request request);
 }

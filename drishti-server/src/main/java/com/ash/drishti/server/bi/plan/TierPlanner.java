@@ -26,7 +26,7 @@ import java.util.function.Function;
 /**
  * Stage 7 of the pipeline (docs/architecture/BI_DESIGN.md sections 4.1 and 4.3): every node of the optimised plan is placed on a tier. A scan of a
  * {@code direct} table whose connector is a SQL store runs at the <b>source</b>, and so does an aggregate (with its filters and semi-joins) whose every
- * scan is in that one store and whose connector aggregates (its capability descriptor says so); the {@code Py*} nodes run on the <b>console</b> backend;
+ * scan is in that one store and whose connector aggregates (its capability descriptor says so); the {@code Py*} nodes run on the server's <b>python</b> compute pool;
  * everything else (layer and rollup reads, live tables, contexts, meets, windows, totals, masks) on the <b>Java</b> tier. The browser draws. The placement is
  * not part of the plan hash: explain shows it with the times each tier took. Pure.
  */
@@ -34,7 +34,7 @@ public final class TierPlanner {
 
     public static final String SOURCE = "source";
     public static final String JAVA = "java";
-    public static final String CONSOLE = "console";
+    public static final String PYTHON = "python";
 
     /** Each node's tier (by identity) and each scan's layer ({@code columns}, {@code live}, {@code rollup <name>}, {@code direct}). */
     public record Placement(Map<PlanNode, String> tiers, Map<PlanNode, String> layers) {
@@ -79,7 +79,7 @@ public final class TierPlanner {
             }
             case PlanNode.PyNode py -> {
                 py.inputs().forEach(i -> visit(i, flat, caps, tiers, layers, null));
-                tier = CONSOLE;
+                tier = PYTHON;
             }
             case PlanNode.Aggregate a -> {
                 List<String> under = a.inputs().stream().map(i -> visit(i, flat, caps, tiers, layers, a.rollup())).toList();

@@ -102,6 +102,11 @@ public final class ComputeService implements AutoCloseable {
         return approvals;
     }
 
+    /** The folder pool lock files are relative to ({@code config/compute}). */
+    public Path configDir() {
+        return configDir;
+    }
+
     public String node() {
         return node;
     }
@@ -253,7 +258,7 @@ public final class ComputeService implements AutoCloseable {
         String id = node + "/" + p.name() + "#" + n;
         List<String> cmd = new ArrayList<>(List.of(python, "-s", "-B", "-m", "drishti_compute.worker", "--engines", String.join(",", p.engines()),
                 "--mode", mode == PoolSettings.Mode.FORK ? "fork" : "warm", "--memory", Long.toString(p.memory()), "--cpu-seconds",
-                Integer.toString(p.cpuSeconds()), "--worker", id));
+                Integer.toString(p.cpuSeconds()), "--worker", id, "--isolate", p.isolation()));
         return new WorkerProcess.Spec(id, cmd, workerEnv(p), settings.work(), p.startTimeout(), mode == PoolSettings.Mode.WARM);
     }
 
@@ -277,6 +282,7 @@ public final class ComputeService implements AutoCloseable {
         for (String k : List.of("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "NUMEXPR_NUM_THREADS", "POLARS_MAX_THREADS")) {
             env.put(k, "1");                                                // the pool, not the library, decides parallelism
         }
+        env.put("ARROW_DEFAULT_MEMORY_POOL", "system");                     // no allocator threads in a parent that forks
         String tmp = settings.work().resolve("tmp").toString();
         env.put("TMPDIR", tmp);
         env.put("TEMP", tmp);

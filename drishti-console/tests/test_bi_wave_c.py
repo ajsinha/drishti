@@ -13,44 +13,14 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Wave C (docs/guides/BI_GUIDE.md, BI_GUIDE.md): Vega-Lite as the output of a Python visual and as a report visual type, the vendored libraries the page draws it with,
-the page's policy, and the Python item's own tests."""
+and the page's policy."""
 import re
 
-import pytest
-
-pytest.importorskip("pyarrow")
-pytest.importorskip("pandas")
 
 from conftest import CONSOLE  # noqa: E402
-from test_bi_python import VISUAL, make, run  # noqa: E402
 
 VENDOR = CONSOLE / "web" / "static" / "vendor" / "vega" / "6.4.0"
-
-
-def _vega_item(source):
-    return {**VISUAL, "id": "file:python:vega", "manifest": {**VISUAL["manifest"], "name": "vega", "output": "vega-lite", "source": source}}
-
-
-def test_a_visual_may_return_a_vega_lite_specification():
-    src = ("def render(table, params):\n    return {'mark': 'bar', 'data': {'values': [{'d': 'A', 'v': float(table['pnl1d'].sum())}]},"
-           " 'encoding': {'x': {'field': 'd', 'type': 'nominal'}, 'y': {'field': 'v', 'type': 'quantitative'}}}\n")
-    client, _ = make(_vega_item(src))
-    r = run(client, visual="vol")
-    assert r.status_code == 200, r.text
-    body = r.json()
-    assert body["kind"] == "vega-lite" and body["spec"]["mark"] == "bar" and body["spec"]["data"]["values"][0]["v"] == 8.0
-
-
-def test_a_vega_lite_specification_that_loads_a_url_is_refused_by_the_sandbox():
-    src = "def render(table, params):\n    return {'mark': 'bar', 'data': {'url': 'http://example.org/x.json'}}\n"
-    client, _ = make(_vega_item(src))
-    r = run(client, visual="vol")
-    assert r.status_code == 403 and r.json()["code"] == "DRS-9073" and "URL" in r.json()["detail"]
-
-
-def test_an_echarts_item_still_returns_an_option():
-    client, _ = make(VISUAL)
-    assert run(client, visual="vol").json()["kind"] == "echarts"
+# What a Python visual's Vega-Lite answer holds, and that one loading a URL is refused, is tested where it runs: drishti-compute/src/test/python/test_items.py.
 
 
 def test_the_vega_libraries_are_vendored_with_their_licences():

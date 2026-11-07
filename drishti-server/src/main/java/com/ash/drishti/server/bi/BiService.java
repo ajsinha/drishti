@@ -677,12 +677,11 @@ public final class BiService {
 
     private volatile java.util.function.Function<String, String> pythonCheck;
     private volatile java.util.function.BiFunction<Principal, BiStore.Item, List<String>> testGate;
+    private volatile java.util.function.BiFunction<Principal, BiStore.Item, List<String>> pythonTestGate;
     private volatile java.util.function.BiFunction<Principal, BiStore.Item, List<String>> drawCheck;
 
     /** Registers the check that lists why a report cannot be drawn (its dataset, a field it names); propose, approve and publish refuse it unless a bi-admin forces. */
-    public void drawCheck(java.util.function.BiFunction<Principal, BiStore.Item, List<String>> check) {
-        this.drawCheck = check;
-    }
+    public void drawCheck(java.util.function.BiFunction<Principal, BiStore.Item, List<String>> check) { this.drawCheck = check; }
 
     private List<String> undrawable(Principal p, BiStore.Item i, boolean force, String what) {
         if (drawCheck == null || !"report".equals(i.kind()) || i.body().isBlank()) {
@@ -701,9 +700,9 @@ public final class BiService {
     }
 
     /** Set once by the expected-values runner: what publishing a report or dataset runs its tests with (a line per test that fails or cannot run; empty when all pass). */
-    public void testGate(java.util.function.BiFunction<Principal, BiStore.Item, List<String>> gate) {
-        this.testGate = gate;
-    }
+    public void testGate(java.util.function.BiFunction<Principal, BiStore.Item, List<String>> gate) { this.testGate = gate; }
+    /** Registers the run of a Python item's own tests on the compute pool (PythonTestRuns): publishing one with a failing test is refused unless a bi-admin forces. */
+    public void pythonTestGate(java.util.function.BiFunction<Principal, BiStore.Item, List<String>> gate) { this.pythonTestGate = gate; }
 
     private volatile java.util.function.BiFunction<Principal, BiStore.Item, String> layerCheck;
     private volatile java.util.function.BiConsumer<Principal, BiStore.Item> tablesCheck; public void tablesCheck(java.util.function.BiConsumer<Principal, BiStore.Item> c) { this.tablesCheck = c; }   // the table layer's editors (EDITORS.md): its checks refuse in words
@@ -1057,8 +1056,9 @@ public final class BiService {
         List<String> undrawn = undrawable(p, i, force, "published");
         // the expected values the item declares (docs/guides/BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 14): a failing one stops a publish unless a bi-admin forces it
         List<String> failing = List.of();
-        if (testGate != null && gov.refuseFailingTests() && Set.of("report", "dataset", "model").contains(i.kind()) && i.body().contains("tests:")) {
-            failing = testGate.apply(p, i);
+        var gate = "python".equals(i.kind()) ? pythonTestGate : gov.refuseFailingTests() && Set.of("report", "dataset", "model").contains(i.kind()) ? testGate : null;
+        if (gate != null && i.body().contains("tests:")) {
+            failing = gate.apply(p, i);
             if (!failing.isEmpty()) {
                 if (!force) {
                     throw new DrishtiException(ErrorCode.BI_TESTS, "'" + i.title() + "' cannot be published: " + failing.size() + " of its tests " + (failing.size() == 1 ? "fails" : "fail") + " ("

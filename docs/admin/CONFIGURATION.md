@@ -303,7 +303,7 @@ One folder for your own libraries, loaded at start with no rebuild ([external_li
 | Folder | What goes in it | Loaded by |
 |---|---|---|
 | `<base>/java` | jars: JDBC drivers, connector plugins, libraries a plugin needs | the **server**: every jar joins its class path at start (the jar is launched by Spring Boot's `PropertiesLauncher`, whose `loader.properties` names this folder; `-Dloader.path=` overrides it) |
-| `<base>/python` | modules, packages, pure-Python `.whl` / `.zip` / `.egg` files | the **console**: on `sys.path` at start, after the console's own folder; sandboxed Python items see the paths but import a package only when it is on `bi.python.packages` |
+| `<base>/python` | modules, packages, pure-Python `.whl` / `.zip` / `.egg` files | the **console**: on `sys.path` at start, after the console's own folder (the console's own tools; Python items run on the server's compute pool, whose libraries are pinned in `config/compute/locks/python.lock`) |
 
 | Process | Setting | Variable | Default |
 |---|---|---|---|
@@ -414,6 +414,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_EXPOSURE_TIER` | `drishti.ccr.exposure.tier` | `mapped` | Where a loaded date's matrices live: `mapped` (a memory-mapped float32 hot file per date) or `heap` (float64 on the heap). |
 | `DRISHTI_EXPOSURE_OFFICIAL` | `drishti.ccr.exposure.official.enabled` | `true` | Capture every netting set, counterparty, group and hierarchy node officially at the end of each loaded date, and publish to `risk-results/exposure-official` and `exposure-official-cpty`. |
 | `DRISHTI_COMPUTE_EXPOSURE_WORKERS` | `compute.pools.exposure.workers.max` (`config/compute/compute.yaml`) | `4` | Python workers of the compute pool `exposure` (the Python exposure engine: the exact pre-deal what-if, method `paths`) on this node; the compute workers run only with `DRISHTI_COMPUTE_ENABLED=true`, else the exact what-if answers `503 DRS-5446`. |
+| `DRISHTI_COMPUTE_PYTHON_WORKERS` | `compute.pools.python.workers.max` (`config/compute/compute.yaml`) | `4` | Python workers of the compute pool `python` on this node: every Python run of code people write (Python items and visuals, Python-driven tables, Notebook cells), in the strict sandbox ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)). |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled` | `true` | Allow personal layouts. |
 | `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | Allow the Pivot tab. |
 | `DRISHTI_ASK_ENABLED` | `drishti.explain.ask.enabled` | `false` | Turn on Ask about this page (also list packs in `drishti.explain.ask.packs`). |
@@ -453,10 +454,6 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_BI_STORE_LIST_TTL` | `drishti.bi.store-list-ttl` | `1s` | How old the per-node snapshot behind BI and run listings may be (a single item or run is always read fresh; this node's writes drop it at once). |
 | `DRISHTI_INDEX_DIR` | `drishti.index.dir` | empty | The multi-day type-ahead index's segment files, one folder per connector; empty means `<data dir>/index` (`./data/index`). See [`drishti.index`](#drishtiindex--the-multi-day-type-ahead-index). |
 | `DRISHTI_BI_DIR` | `drishti.bi.dir` | `./config/bi` | Where Rupaka (BI) files live: `datasets/`, `reports/`, `boards/`, `notebooks/`, `python/`. Never inside a pack. |
-| `DRISHTI_BI_TRANSFORM_PYTHON` | `drishti.bi.transform.python` | empty | The Python that runs a derived dataset's Transform: it needs `pandas` and `pyarrow`, normally the console's `drishti-console/.venv/bin/python`. Empty: that file when it exists, else `python3`. |
-| `DRISHTI_BI_TRANSFORM_RUNNER` | `drishti.bi.transform.runner` | empty | The console's `core/transform_cli.py`, which the server starts to run a Transform in the sandboxed runner. Empty: looked for in `drishti-console/core` from the working directory and its parents. |
-| `DRISHTI_BI_TRANSFORM_CONSOLE_URL` | `drishti.bi.transform.console-url` | empty | The console's Py-node endpoint base URL (`http://console:17480`): Transforms and Python measures run there (`/internal/py/*`). Empty: the server starts `transform_cli.py` itself. |
-| `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | `drishti.bi.transform.console-token` | empty | The shared secret sent as `X-Drishti-Runner-Token` on every Py-node call; the console refuses a call without it. |
 | `DRISHTI_BI_NODE` | `drishti.bi.exec.node` | empty | This Java node's name when several Java nodes serve the site (`drishti.bi.exec.nodes` lists them); empty: one node. |
 | `DRISHTI_BI_RUNS_FILE` | `drishti.bi.runs.file` | `./config/runs/runs.yaml` | The BI runs settings file ([BI runs](#bi-runs-configrunsrunsyaml)); a missing file means the defaults. |
 | `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | At start, converts stored items once: old-syntax expressions to DEL v2, then `rachana: 1` datasets to datasets and models with their reports rebound (each change audited, the text before kept in the item's history). `false`: a bi-admin runs `drishti.py bi migrate` instead ([drishti.bi.migrate](#drishtibimigrate--migrations-of-stored-bi-items)). |
@@ -520,25 +517,12 @@ From `drishti-console/config/application.yaml`, resolved from environment variab
 | `DRISHTI_BI_LIVE_MIN_INTERVAL_MS` | `bi.live.min_interval_ms` | `250` | Rupaka phase 5: a report or board redraws its live visuals at most this often, never two rounds at once; a burst of ticks is one redraw (100 to 5000). |
 | `DRISHTI_BI_LIVE_STALE_SECONDS` | `bi.live.stale_seconds` | `30` | A live report or board that has heard nothing from the server (not even its 5-second status) for this long says **Stale** (5 to 600). |
 | `DRISHTI_BI_BOARD_ROTATE_SECONDS` | `bi.board.rotate_seconds` | `30` | A board in kiosk mode turns to its next page after this long, unless the board sets `rotate:` (3 to 3600). |
-| `DRISHTI_BI_PYTHON_ENABLED` | `bi.python.enabled` | `true` | Rupaka phase 6 ([BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python)): the console's Python runner. Off: a python visual's server target answers `DRS-9074` (the browser target still works where an item allows it). |
-| `DRISHTI_BI_PYTHON_WORKERS` | `bi.python.workers` | `2` | Worker processes at once; a call waits `bi.python.queue_seconds` (`5`) for a place, then `DRS-9074`. |
-| `DRISHTI_BI_PYTHON_QUEUE_SECONDS` | `bi.python.queue_seconds` | `5` | How long a Python call waits for a free worker. |
-| `DRISHTI_BI_PYTHON_MAX_TIMEOUT` | `bi.python.max_timeout_seconds` | `60` | The most a manifest's `timeout` may be: the CPU and wall-clock limit of one call. |
-| `DRISHTI_BI_PYTHON_MAX_MEMORY_MB` | `bi.python.max_memory_mb` | `1024` | The most a manifest's `memory` may be, on top of what the interpreter and its packages need to start. |
-| `DRISHTI_BI_PYTHON_MAX_INPUT_BYTES` | `bi.python.max_input_bytes` | `16000000` | Largest Arrow table handed to Python (`DRS-9072`). |
-| `DRISHTI_BI_PYTHON_MAX_OUTPUT_BYTES` | `bi.python.max_output_bytes` | `1000000` | Largest answer (a chart option, an image, a measure's rows) (`DRS-9072`). |
-| (no variable) | `bi.python.packages` | `[pandas, numpy, pyarrow, scipy, statsmodels]` | The allow-list of packages Python items may use; one not installed is refused when used. Equal to the server's `drishti.bi.report.python-packages`. |
-| (no variable) | `bi.python.max_groups`, `network_namespace`, `scratch_dir` | `5000`, `auto`, system temp | Most groups a measure is called for; `auto`, `require` or `off` for the no-network namespace (the audit hook is always on); where scratch folders are made. |
-| `DRISHTI_BI_PYTHON_FORK_SERVER` | `bi.python.fork_server` | `true` | Python calls run in children of one **fork-server** per console: a parent that has imported pandas, numpy and pyarrow forks one child per call (its own session, limits, audit hook and scratch folder), so a call does not pay for an interpreter's start. `false`: a new process per call. `/bi/python/status` says `forkServer: {on, running, forks, failed}`. |
-| `DRISHTI_BI_PYTHON_WARM` | `bi.python.warm` | `true` | Start the fork-server when the console starts, so the first Python call (a report, a Transform's step run) is warm too; `/bi/python/status` says `forkServer.warm` and `warmedMs`. |
-| (no variable) | `bi.python.cache_entries`, `cache_max_bytes`, `cache_seconds` | `256`, `64000000`, `600` | The **L4 result cache** of Python answers, by the item's code, its parameters and the exact input bytes (already masked for the reader): most entries, most bytes, how long one is kept. `0` entries turns it off. A cell is never cached. |
-| `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | `bi.python.runner_token` | empty | The secret the server sends as `X-Drishti-Runner-Token` on every call of the console's **Py-node endpoint** (`/internal/py/transform`, `/measure`, `/column`; [API_GUIDE.md](../guides/API_GUIDE.md)); the same variable sets the server's `drishti.bi.transform.console-token`. Empty: the endpoint is off (`503 DRS-9074`); a wrong token is `403 DRS-9073`. |
 | `DRISHTI_BI_NOTEBOOK_MAX_ROWS` | `bi.notebook.max_rows` | `10000` | The Notebook ([USER_GUIDE.md › The Notebook](../guides/USER_GUIDE.md#the-notebook)): the most rows of an extract (the reader's rows, cut here; 10 to 100000). |
 | (no variable) | `bi.notebook.max_fields`, `sql_max_rows`, `sql_max_chars` | `60`, `5000`, `20000` | Most columns of an extract; most rows a SQL cell returns (run by the server); the longest SQL text. |
 | (no variable) | `bi.notebook.max_extracts` | `6` | Most further extracts in one notebook, besides the first (`extract("name")` in a Python cell; `DRS-9072`). |
 | (no variable) | `bi.notebook.cell_timeout_seconds`, `cell_memory_mb`, `cell_max_chars`, `max_cells` | `20`, `512`, `65536`, `60` | A Python cell's time and memory on the server's compute pool; the longest cell; the most cells in a notebook. |
 | `DRISHTI_BI_TRANSFORM_PREVIEW_ROWS` | `bi.transform.preview_rows` | `1000` | The Transform editor ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](../guides/BI_GUIDE.md#17-data-prep-the-transform-editor)): rows of each input its step-by-step run starts from, asked of the server as the person (10 to 50000; the server's `drishti.bi.transform.max-input-rows` also caps it). |
-| (no variable) | `bi.transform.timeout_seconds`, `memory_mb`, `snippets_file` | `20`, `512`, empty | The step run's time and memory (also capped by `bi.python.max_timeout_seconds`, `max_memory_mb`); a file of more data-prep snippets read after `drishti-console/config/prep-snippets.yaml`. |
+| (no variable) | `bi.transform.timeout_seconds`, `memory_mb`, `snippets_file` | `20`, `512`, empty | The step run's time and memory (also capped by `drishti.bi.report.python-max-seconds`, `python-max-memory-mb`); a file of more data-prep snippets read after `drishti-console/config/prep-snippets.yaml`. |
 | `DRISHTI_LAYOUTS_ENABLED` | `layouts.enabled` | `true` | Offer layout mode. |
 | `DRISHTI_PACKS_DIR` | `packs.dir` | `../config/packs` | The packs directory (a relative path resolves from `drishti-console/`). |
 | `DRISHTI_PACKS_EXTRA_DIRS` | `packs.extra_dirs` | empty | Further pack folders, comma-separated, as on the server (relative paths resolve from `drishti-console/`, so `../examples/packs`). |
@@ -1752,20 +1736,17 @@ How many rows each kind of visual asks the engine for ([BI_GUIDE.md](../guides/B
 | `totals-max-rows` | `2000` | Most rows one level of **true totals** (a matrix's subtotal level or a table's total) may return. |
 | `perspective-rows` | `20000` | Most rows a 2.1 `perspective-*` visual is sent. The page draws them in Drishti's own grid (no Perspective, no WebAssembly); until then the browser held and pivoted them (the retest, in RUPAKA_POC.md, since deleted, measured 10,000 rows at 21 MB of JS heap). |
 | `python-rows` | `10000` | Most rows a **python visual** hands the Python runner ([BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), phase 6). |
-| `python-packages` | `pandas, numpy, pyarrow, scipy, statsmodels` | The packages a Python item's manifest may list (publishing refuses another: `DRS-9070`). Keep it equal to the console's `bi.python.packages`, which is what the runner enforces. |
+| `python-packages` | `pandas, numpy, pyarrow, scipy` | The packages a Python item's manifest may list (publishing refuses another: `DRS-9070`); only those `config/compute/locks/python.lock` pins are offered (a test holds the two together). |
 | `python-max-seconds` | `60` | The largest `timeout` a Python manifest may ask for. |
 | `python-max-memory-mb` | `1024` | The largest `memory` a Python manifest may ask for, in megabytes. |
 
 ### `drishti.bi.transform` — Python Transforms and composed datasets
 
-A **Python dataset** (2.2; before it, a derived dataset) is made by a Python Transform; the server starts the console's sandboxed runner (`drishti-console/core/transform_cli.py`, which uses `core/pyrunner.py`) for each run, hands it the inputs as Arrow files and reads the frame back as Parquet ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out)). The result is kept per reader and version of the inputs. The package allow-list, `timeout` and `memory` limits are the Python items' own (`drishti.bi.report.python-*`, and the console's `bi.python.*` inside the runner). `compose-source-max-rows` also limits a **composed** dataset's sources.
+A **Python dataset** (or a Python-driven table) is made by a Python Transform, run on the server's compute pool `python` ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write): `compute.pools.python` in `config/compute/compute.yaml`, its strict sandbox and pinned libraries); the server reads the inputs as the reader, hands them over as Arrow files and reads the frame back as Parquet, checked against the declared columns and types ([BI_GUIDE.md › Python in BI, section 13](../guides/BI_GUIDE.md#13-transforms-a-table-in-a-table-out)). The result is kept per reader and version of the inputs. The package allow-list, `timeout` and `memory` limits are the Python items' own (`drishti.bi.report.python-*`). `compose-source-max-rows` also limits a **composed** dataset's sources.
 
 | Key | Default | Meaning |
 |---|---|---|
-| `enabled` | `true` | `false`: a derived dataset answers `DRS-9074`. |
-| `python` (`DRISHTI_BI_TRANSFORM_PYTHON`) | empty | The Python that has `pandas` and `pyarrow`, normally the console's `.venv/bin/python`. Empty: `drishti-console/.venv/bin/python` when it exists, else `python3`. |
-| `runner` (`DRISHTI_BI_TRANSFORM_RUNNER`) | empty | The console's `core/transform_cli.py`. Empty: looked for in `drishti-console/core` from the working directory and its parents; not found is `DRS-9074`. |
-| `work-dir` | empty | Where each run's scratch folder is made (removed afterwards). Empty: `<drishti.bi.query.store-dir>/transform-tmp`. |
+| `enabled` | `true` | `false`: every Python run (Transforms, Python measures and visuals, Notebook cells, the sample run) answers `DRS-9074`. |
 | `cache-ttl` | `30m` | How long a Transform's result is served to the reader it was made for (and only while the inputs are unchanged). |
 | `cache-entries` | `20` | Results kept per derived dataset (a reader and a version of the inputs each); the oldest go first. |
 | `max-input-rows` | `50000` | Most rows of one input frame handed to a Transform (`DRS-9072`). |
@@ -1775,8 +1756,6 @@ A **Python dataset** (2.2; before it, a derived dataset) is made by a Python Tra
 | `max-concurrent` | `2` | Transforms running at once on the server. |
 | `queue-wait` | `5s` | How long a run waits for a place before `DRS-9074`. |
 | `compose-source-max-rows` | `50000` | Most rows one source of a composed dataset may answer (`DRS-9022`): group it by less or filter it in `from`. |
-| `console-url` (`DRISHTI_BI_TRANSFORM_CONSOLE_URL`) | empty | The console's Py-node endpoint: Transforms and Python measures are `POST {console-url}/internal/py/transform` and `/internal/py/measure` ([API_GUIDE.md](../guides/API_GUIDE.md)); `max-concurrent`, `queue-wait` and `timeout` apply to those calls. Empty: the process runner above. |
-| `console-token` (`DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN`) | empty | The shared secret of those calls (`X-Drishti-Runner-Token`). |
 
 ### `drishti.bi.refresh` — scheduled dataset refresh
 
@@ -1812,7 +1791,7 @@ the policy's feature names are `bi-draft`, `bi-ask`, `bi-explain`, the authoring
 ### `drishti.bi.live` — streaming BI (phase 5)
 
 Live tables kept in memory by the engine and the streams that tell browsers they changed ([BI_GUIDE.md](../guides/BI_GUIDE.md#71-live-tables-phase-5), [BI_GUIDE.md](../guides/BI_GUIDE.md#13-live-visuals), [BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 23](../guides/BI_GUIDE.md#23-boards-report-pages-of-live-tiles),
-[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A table starts on first use and closes when nobody has used it for `idle-close`. The console's own settings are `bi.live.min_interval_ms`, `bi.live.stale_seconds`, `bi.board.rotate_seconds` and, for the Python runner, `bi.python.*` (the environment table above; [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 9).
+[BI_GUIDE.md](../guides/BI_GUIDE.md) section 18). A table starts on first use and closes when nobody has used it for `idle-close`. The console's own settings are `bi.live.min_interval_ms`, `bi.live.stale_seconds`, `bi.board.rotate_seconds` (Python runs on the server's compute pool: [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 9).
 
 | Key | Default | Meaning |
 |---|---|---|
@@ -2731,13 +2710,13 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 
 ## Every setting
 
-Every key of every kind: 2,160 settings in 18 areas, and 342 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,139 settings in 18 areas, and 329 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
 | Area | Settings |
 |---|---|
-| [The server: `application.yaml`](#the-server-applicationyaml) | 545 |
+| [The server: `application.yaml`](#the-server-applicationyaml) | 540 |
 | [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 323 |
-| [The console: `application.yaml`](#the-console-applicationyaml) | 204 |
+| [The console: `application.yaml`](#the-console-applicationyaml) | 187 |
 | [The console's other files](#the-consoles-other-files) | 94 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 535 |
 | [Packs: `pack.yaml`](#packs-packyaml) | 137 |
@@ -2745,7 +2724,7 @@ Every key of every kind: 2,160 settings in 18 areas, and 342 environment variabl
 | [The content store: `config/store/store.yaml`](#the-content-store-configstorestoreyaml) | 14 |
 | [BI runs: `config/runs/runs.yaml`](#bi-runs-configrunsrunsyaml) | 48 |
 | [Write-back: `config/edit/`](#write-back-configedit) | 18 |
-| [Compute workers: `config/compute/compute.yaml`](#compute-workers-configcomputecomputeyaml) | 22 |
+| [Compute workers: `config/compute/compute.yaml`](#compute-workers-configcomputecomputeyaml) | 23 |
 | [Drishti*net: `config/net/`](#drishtinet-confignet) | 27 |
 | [Platform alert rules: `config/alerts/platform-alerts.yaml`](#platform-alert-rules-configalertsplatform-alertsyaml) | 13 |
 | [Report definitions: `config/reports/`](#report-definitions-configreports) | 23 |
@@ -2753,7 +2732,7 @@ Every key of every kind: 2,160 settings in 18 areas, and 342 environment variabl
 | [The data inbox's routing rules: `config/dataload.yaml`](#the-data-inboxs-routing-rules-configdataloadyaml) | 2 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 342 |
+| [Environment variable index](#environment-variable-index) | 329 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -3357,10 +3336,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.bi.transform.enabled` | boolean | `true` |  | server | false: a derived dataset answers DRS-9074 | restart |  |
-| `drishti.bi.transform.python` | string | empty | `DRISHTI_BI_TRANSFORM_PYTHON` | server | the Python with pandas and pyarrow (the console's environment); blank: drishti-console/.venv when it exists, else python3 | restart |  |
-| `drishti.bi.transform.runner` | string | empty | `DRISHTI_BI_TRANSFORM_RUNNER` | server | the console's core/transform\_cli.py; blank: looked for in drishti-console/core from here and its parents | restart |  |
-| `drishti.bi.transform.work-dir` | string | `""` |  | server | scratch folders of runs; blank: &lt;bi store&gt;/transform-tmp | restart |  |
+| `drishti.bi.transform.enabled` | boolean | `true` |  | server | false: every Python run (Transforms, Python measures and visuals, Notebook cells) answers DRS-9074; the code runs on the compute pool python (config/compute/compute.yaml) | restart |  |
 | `drishti.bi.transform.cache-ttl` | duration | `30m` |  | server | a Transform's result is kept for the reader it was made for this long (and until the inputs change) | restart |  |
 | `drishti.bi.transform.cache-entries` | integer | `20` |  | server | results kept per derived dataset; the oldest go first | restart |  |
 | `drishti.bi.transform.max-input-rows` | integer | `50000` |  | server | most rows of one input frame handed to a Transform | restart |  |
@@ -3370,8 +3346,6 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.bi.transform.max-concurrent` | integer | `2` |  | server | Transforms running at once | restart |  |
 | `drishti.bi.transform.queue-wait` | duration | `5s` |  | server | how long a run waits for a place before DRS-9074 | restart |  |
 | `drishti.bi.transform.compose-source-max-rows` | integer | `50000` |  | server | most rows one source of a composed dataset may answer (DRS-9022) | restart |  |
-| `drishti.bi.transform.console-url` | string | empty | `DRISHTI_BI_TRANSFORM_CONSOLE_URL` | server | the console's Py-node endpoint (http://console:17480); blank: the server runs transform\_cli.py itself | restart |  |
-| `drishti.bi.transform.console-token` | string | empty | `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | server | the shared secret the console checks on /internal/py/\* (X-Drishti-Runner-Token) | restart |  |
 
 #### `drishti.bi.exec`
 
@@ -4549,28 +4523,6 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 |---|---|---|---|---|---|---|---|
 | `bi.board.rotate_seconds` | integer | `30` | `DRISHTI_BI_BOARD_ROTATE_SECONDS` | console | a board in kiosk mode turns to its next page after this long, unless the board sets rotate:; 3 to 3600 | restart |  |
 
-#### `bi.python`
-
-| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
-|---|---|---|---|---|---|---|---|
-| `bi.python.enabled` | boolean | `true` | `DRISHTI_BI_PYTHON_ENABLED` | console | false: python visuals answer DRS-9074 (the browser target still works where a manifest allows it) | restart |  |
-| `bi.python.workers` | integer | `2` | `DRISHTI_BI_PYTHON_WORKERS` | console | worker processes at once; a call waits queue\_seconds for a place, then DRS-9074 | restart |  |
-| `bi.python.queue_seconds` | integer | `5` | `DRISHTI_BI_PYTHON_QUEUE_SECONDS` | console | how long a Python call waits for a free worker before DRS-9074 | restart |  |
-| `bi.python.packages` | list | `[pandas, numpy, pyarrow, scipy, statsmodels]` |  | console | the allow-list; a package that is not installed is refused when used. Keep the server's drishti.bi.report.python-packages equal | restart |  |
-| `bi.python.max_timeout_seconds` | integer | `60` | `DRISHTI_BI_PYTHON_MAX_TIMEOUT` | console | the most a manifest may ask for; the CPU and wall-clock limit of one call | restart |  |
-| `bi.python.max_memory_mb` | integer | `1024` | `DRISHTI_BI_PYTHON_MAX_MEMORY_MB` | console | the most memory a manifest may ask for, on top of what the interpreter and its packages need to start | restart |  |
-| `bi.python.max_input_bytes` | integer | `16000000` | `DRISHTI_BI_PYTHON_MAX_INPUT_BYTES` | console | largest Arrow table handed to Python | restart |  |
-| `bi.python.max_output_bytes` | integer | `1000000` | `DRISHTI_BI_PYTHON_MAX_OUTPUT_BYTES` | console | largest result (a chart option, an image or a measure's rows) | restart |  |
-| `bi.python.max_groups` | integer | `5000` |  | console | most groups a measure is called for | restart |  |
-| `bi.python.network_namespace` | string | `auto` |  | console | auto: also run the worker in a network namespace with no interfaces when the machine allows it (unshare); require; off | restart |  |
-| `bi.python.scratch_dir` | string | `""` |  | console | where each call's scratch folder is made; empty: the system temporary folder | restart |  |
-| `bi.python.fork_server` | boolean | `true` | `DRISHTI_BI_PYTHON_FORK_SERVER` | console | one pre-imported parent forks a child per call (no interpreter start per call); false: a new process per call | restart |  |
-| `bi.python.warm` | boolean | `true` | `DRISHTI_BI_PYTHON_WARM` | console | start the fork-server when the console starts, so the first call (a report, a Transform's step run) is warm too | restart |  |
-| `bi.python.cache_entries` | integer | `256` |  | console | the L4 result cache: answers kept by item code, parameters and the exact (masked) input bytes; 0 turns it off | restart |  |
-| `bi.python.cache_max_bytes` | integer | `64000000` |  | console | the L4 result cache's size in bytes | restart |  |
-| `bi.python.cache_seconds` | integer | `600` |  | console | how long a cached answer is kept | restart |  |
-| `bi.python.runner_token` | string | empty | `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | console | the Py-node endpoint (/internal/py/\*) the server calls with X-Drishti-Runner-Token; empty: the endpoint is off (secret) | restart |  |
-
 #### `bi.notebook`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
@@ -4579,8 +4531,8 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `bi.notebook.max_fields` | integer | `60` |  | console | most columns of an extract | restart |  |
 | `bi.notebook.sql_max_rows` | integer | `5000` |  | console | most rows a SQL cell returns | restart |  |
 | `bi.notebook.sql_max_chars` | integer | `20000` |  | console | longest SQL text | restart |  |
-| `bi.notebook.cell_timeout_seconds` | integer | `20` |  | console | a Python cell's time limit on the server (also capped by bi.python.max\_timeout\_seconds) | restart |  |
-| `bi.notebook.cell_memory_mb` | integer | `512` |  | console | a Python cell's memory on the server (also capped by bi.python.max\_memory\_mb) | restart |  |
+| `bi.notebook.cell_timeout_seconds` | integer | `20` |  | console | a Python cell's time limit on the server's compute pool (also capped by drishti.bi.report.python-max-seconds) | restart |  |
+| `bi.notebook.cell_memory_mb` | integer | `512` |  | console | a Python cell's memory on the pool (also capped by drishti.bi.report.python-max-memory-mb) | restart |  |
 | `bi.notebook.cell_max_chars` | integer | `65536` |  | console | longest Python cell | restart |  |
 | `bi.notebook.max_cells` | integer | `60` |  | console | most cells in a notebook | restart |  |
 | `bi.notebook.max_extracts` | integer | `6` |  | console | most further extracts in a notebook (extract("name") in a cell), besides the first | restart |  |
@@ -4590,8 +4542,8 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `bi.transform.preview_rows` | integer | `1000` | `DRISHTI_BI_TRANSFORM_PREVIEW_ROWS` | console | rows of each input the step-by-step run starts from (the reader's rows, asked of the server); 10 to 50000 | restart |  |
-| `bi.transform.timeout_seconds` | integer | `20` |  | console | the step-by-step run's time limit (also capped by bi.python.max\_timeout\_seconds) | restart |  |
-| `bi.transform.memory_mb` | integer | `512` |  | console | its memory (also capped by bi.python.max\_memory\_mb) | restart |  |
+| `bi.transform.timeout_seconds` | integer | `20` |  | console | the step-by-step run's time limit (also capped by drishti.bi.report.python-max-seconds) | restart |  |
+| `bi.transform.memory_mb` | integer | `512` |  | console | its memory (also capped by drishti.bi.report.python-max-memory-mb) | restart |  |
 | `bi.transform.snippets_file` | string | `""` |  | console | more data-prep snippets (a list under snippets:), read after config/prep-snippets.yaml | restart |  |
 
 ### The console's other files
@@ -5592,7 +5544,7 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `ai` | on, off or edition | none |  | server and console | The feature ai an edition file names under features: off presets false, on or edition true; presets drishti.ai.enabled on the server and ai.enabled in the console | restart |  |
 | `mcp` | on, off or edition | none |  | server and console | The feature mcp an edition file names under features: off presets false, on or edition true; presets drishti.mcp.enabled on the server and mcp.enabled in the console | restart |  |
 | `embed` | on, off or edition | none |  | server and console | The feature embed an edition file names under features: off presets false, on or edition true; presets drishti.embed.enabled on the server and embed.enabled in the console | restart |  |
-| `python` | on, off or edition | none |  | server and console | The feature python an edition file names under features: off presets false, on or edition true; presets bi.python.enabled in the console | restart |  |
+| `python` | on, off or edition | none |  | server and console | The feature python an edition file names under features: off presets false, on or edition true; presets drishti.bi.transform.enabled on the server | restart |  |
 | `designer` | on, off or edition | none |  | server and console | The feature designer an edition file names under features: off presets false, on or edition true; presets ui.designer in the console | restart |  |
 | `facts` | on, off or edition | none |  | server and console | The feature facts an edition file names under features: off presets false, on or edition true; presets ui.facts.enabled in the console | restart |  |
 | `build` | on, off or edition | none |  | server and console | The feature build an edition file names under features: off presets false, on or edition true; presets features.build in the console. Build: new screens, new packs, designs, reviews, changes | restart |  |
@@ -5834,6 +5786,7 @@ The supervisor, the Python pools and their environments ([OPERATIONS.md](OPERATI
 | `compute.pools.<pool>.idle-stop` | duration | `5m` |  | server | a worker idle this long is stopped (down to min) | restart |  |
 | `compute.pools.<pool>.timeout` | duration | `30s` |  | server | an interactive request's budget | restart |  |
 | `compute.pools.<pool>.timeout-batch` | duration | `10m` |  | server | a batch request's budget | restart |  |
+| `compute.pools.<pool>.isolation` | string | `strict` |  | server | no network (a namespace with no interface) and files held by the kernel (Landlock): Linux only; elsewhere no run | restart |  |
 
 ### Drishti*net: `config/net/`
 
@@ -6131,22 +6084,9 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_BI_MIGRATE_ON_START` | `drishti.bi.migrate.on-start` | `true` | server | at start: old-syntax expressions to DEL v2, audited, the text before kept in each item's history; idempotent |
 | `DRISHTI_BI_NODE` | `drishti.bi.exec.node` | empty | server | this Java node's name when several serve the site (blank: one node) |
 | `DRISHTI_BI_NOTEBOOK_MAX_ROWS` | `bi.notebook.max_rows` | `10000` | console | most rows of an extract (the reader's rows, cut here); 10 to 100000 |
-| `DRISHTI_BI_PYTHON_ENABLED` | `bi.python.enabled` | `true` | console | false: python visuals answer DRS-9074 (the browser target still works where a manifest allows it) |
-| `DRISHTI_BI_PYTHON_FORK_SERVER` | `bi.python.fork_server` | `true` | console | one pre-imported parent forks a child per call (no interpreter start per call); false: a new process per call |
-| `DRISHTI_BI_PYTHON_MAX_INPUT_BYTES` | `bi.python.max_input_bytes` | `16000000` | console | largest Arrow table handed to Python |
-| `DRISHTI_BI_PYTHON_MAX_MEMORY_MB` | `bi.python.max_memory_mb` | `1024` | console | the most memory a manifest may ask for, on top of what the interpreter and its packages need to start |
-| `DRISHTI_BI_PYTHON_MAX_OUTPUT_BYTES` | `bi.python.max_output_bytes` | `1000000` | console | largest result (a chart option, an image or a measure's rows) |
-| `DRISHTI_BI_PYTHON_MAX_TIMEOUT` | `bi.python.max_timeout_seconds` | `60` | console | the most a manifest may ask for; the CPU and wall-clock limit of one call |
-| `DRISHTI_BI_PYTHON_QUEUE_SECONDS` | `bi.python.queue_seconds` | `5` | console | how long a Python call waits for a free worker before DRS-9074 |
-| `DRISHTI_BI_PYTHON_WARM` | `bi.python.warm` | `true` | console | start the fork-server when the console starts, so the first call (a report, a Transform's step run) is warm too |
-| `DRISHTI_BI_PYTHON_WORKERS` | `bi.python.workers` | `2` | console | worker processes at once; a call waits queue\_seconds for a place, then DRS-9074 |
 | `DRISHTI_BI_RUNS_FILE` | `drishti.bi.runs.file` | `./config/runs/runs.yaml` | server | BI runs (docs/architecture/BI\_DESIGN.md); ready-made in config/runs.examples/ |
 | `DRISHTI_BI_STORE` | `drishti.bi.query.store-dir` | `./data/bi-store` | server | the BI store: typed Parquet layers (columns, rollups) written here; never under the repository |
-| `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` | `drishti.bi.transform.console-token`, `bi.python.runner_token` | empty | console, server | the shared secret the console checks on /internal/py/\* (X-Drishti-Runner-Token) |
-| `DRISHTI_BI_TRANSFORM_CONSOLE_URL` | `drishti.bi.transform.console-url` | empty | server | the console's Py-node endpoint (http://console:17480); blank: the server runs transform\_cli.py itself |
 | `DRISHTI_BI_TRANSFORM_PREVIEW_ROWS` | `bi.transform.preview_rows` | `1000` | console | rows of each input the step-by-step run starts from (the reader's rows, asked of the server); 10 to 50000 |
-| `DRISHTI_BI_TRANSFORM_PYTHON` | `drishti.bi.transform.python` | empty | server | the Python with pandas and pyarrow (the console's environment); blank: drishti-console/.venv when it exists, else python3 |
-| `DRISHTI_BI_TRANSFORM_RUNNER` | `drishti.bi.transform.runner` | empty | server | the console's core/transform\_cli.py; blank: looked for in drishti-console/core from here and its parents |
 | `DRISHTI_CACHE_RESET_AT` | trading-stream cache reset | `02:00` | packs | The disk cache's nightly clearing time (New York) |
 | `DRISHTI_CACHE_ROOT` | trading-stream cache root | `./data/cache` | packs | Disk cache root (one folder per connector) |
 | `DRISHTI_CALENDAR` | `drishti.business-date.calendar` | `USNY` | server | Every read is for a business date. The default is today in `zone`, rolled back to a business day of `calendar` (weekends and holidays roll to the previous business day). Users pick another date in the top bar; dated sources (Delta Lake, dated folders, databases with a date column) then read that date. USNY, GBLO, EUTA, JPTO, CATO or joint, e.g. USNY+GBLO |

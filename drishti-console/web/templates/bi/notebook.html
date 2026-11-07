@@ -14,7 +14,7 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {# The Notebook (docs/guides/USER_GUIDE.md › The Notebook): open a model or a report visual's data as the reader's masked extract, then SQL cells (run by
-   the server over the model) and Python cells (run on the server's compute pool; under construction until the one Python runtime). Slicing is the
+   the server over the model) and Python cells (run on the server's compute pool, in its strict sandbox). Slicing is the
    Pivot's: "Open in Pivot". Drawn by static/js/drishti_bi-notebook.js and drishti_bi-notebook-cells.js; the strict policy of every BI page applies. #}
 {% extends "bi/shell.html" %}
 {% block bi_title %}Notebook{% endblock %}
@@ -24,7 +24,7 @@
   <p class="text-muted-d">Open a model as an extract of the rows you may see (masked columns stay masked), then query it with SQL cells, run by the server as you, and Python cells, run on the server's compute pool. Save the work as a notebook; promote a cell into a Python item or a report draft.
     To slice and total a table, use the <a href="/pivot" data-open-pivot>Pivot</a>.</p></header>
 <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
-<div class="bx" id="bx" data-max-rows="{{ limits.max_rows }}" data-sql-rows="{{ limits.sql_max_rows }}" data-sql-chars="{{ limits.sql_max_chars }}" data-may-python="{{ 'true' if may_python else 'false' }}" data-python-runs="{{ 'true' if python_runs else 'false' }}">
+<div class="bx" id="bx" data-max-rows="{{ limits.max_rows }}" data-sql-rows="{{ limits.sql_max_rows }}" data-sql-chars="{{ limits.sql_max_chars }}" data-may-python="{{ 'true' if may_python else 'false' }}" data-python-runs="{{ 'true' if python_runs else 'false' }}" data-python-why="{{ python_why or '' }}">
 <form class="bi-form bx-open" data-open aria-label="Open an extract">
   <h2>Extract</h2>
   <label>Model or dataset<select name="dataset" class="studio-select" data-dataset></select></label>
@@ -68,11 +68,11 @@
 <section id="bxP-python" role="tabpanel" aria-labelledby="bxT-python" data-pane="python" hidden>
   <p class="text-muted-d">Python over <code>df</code> (a pandas table of the extract) and <code>extract("name")</code> for the other extracts; put a chart option, a table or a value in <code>result</code>.
     Cells run on the <strong>server's compute pool</strong>, never in the console or your browser.
-    {% if not python_runs %}<span class="drishti_uc-chip" data-uc="python-table-runs" title="Depends on work not built yet (Help → Under construction)">Under construction</span> Running a cell comes with one Python runtime on the server; write, save and promote cells now.{% endif %}
+    {% if not python_runs %}<strong data-python-off>Python does not run on this server: {{ python_why }}.</strong> Write, save and promote cells all the same.{% endif %}
     {% if not may_python %}<strong>Running Python needs the bi-author power.</strong>{% endif %}</p>
   <div data-cells="python"></div>
   <div class="bi-actions"><button type="button" class="btn-pill btn-ghost" data-add="python"><i class="bi bi-plus-lg" aria-hidden="true"></i> Python cell</button>
-    <button type="button" class="btn-pill btn-ghost" data-run-all="python"{% if not python_runs %} disabled title="Under construction: Python cells run on the server's compute pool"{% endif %}><i class="bi bi-play-fill" aria-hidden="true"></i> Run all</button></div>
+    <button type="button" class="btn-pill btn-ghost" data-run-all="python"{% if not python_runs %} disabled title="Python does not run on this server: {{ python_why }}"{% endif %}><i class="bi bi-play-fill" aria-hidden="true"></i> Run all</button></div>
 </section>
 <section id="bxP-profile" role="tabpanel" aria-labelledby="bxT-profile" data-pane="profile" hidden>
   <p class="text-muted-d">Every column of the extract: its type, what its text looks like, empty values, distinct values, whether it could be a key, the range, the most common values and a histogram.

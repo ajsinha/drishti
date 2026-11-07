@@ -66,7 +66,7 @@ def make_lake(target: Path, days: int = 3) -> str | None:
                           capture_output=True, text=True, timeout=600, cwd=ROOT)
     if done.returncode == 0:
         done = subprocess.run([uv, "run", "--offline", "--with", "deltalake", "--with", "pyarrow", "--with", "pyyaml", "python", str(ROOT / "tools/samplegen/load_rows.py"),
-                               "--root", str(target), "--rows", str(rows / "banking-history.jsonl"), "--restated", str(rows / "banking-restated.jsonl")],
+                               "--root", str(target), "--rows", str(rows / "banking-history.tar"), "--restated", str(rows / "banking-restated.tar")],
                               capture_output=True, text=True, timeout=600, cwd=ROOT)
     if done.returncode != 0 or not (target / "trading").exists():
         return None

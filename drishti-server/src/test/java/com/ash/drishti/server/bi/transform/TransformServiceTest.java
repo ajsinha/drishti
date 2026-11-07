@@ -100,7 +100,7 @@ class TransformServiceTest {
     };
 
     TransformProperties props(Integer entries, Integer maxRows, Long maxBytes, Integer concurrent, Duration wait) {
-        return new TransformProperties(true, null, null, null, Duration.ofMinutes(30), entries, null, maxRows, maxBytes, null, concurrent, wait, null);
+        return new TransformProperties(true, Duration.ofMinutes(30), entries, null, maxRows, maxBytes, null, concurrent, wait, null);
     }
 
     TransformService service(TransformProperties p) {
@@ -108,7 +108,7 @@ class TransformServiceTest {
     }
 
     TransformService.Prepared prepared() {
-        return new TransformService.Prepared(Map.of("name", "t"), List.of(new byte[0]), Map.of());
+        return new TransformService.Prepared(Map.of("name", "t"), List.of(new byte[0]), Map.of(), new com.ash.drishti.server.security.Principal("u", List.of()));
     }
 
     @BeforeEach

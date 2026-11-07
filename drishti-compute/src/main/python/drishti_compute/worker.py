@@ -98,6 +98,7 @@ class Worker:
         self.first = args.engines.split(",")[0]
         self.sandbox = guard.Sandbox()
         self.home = os.getcwd()
+        self.isolation = {"level": "standard"}
 
     # ------------------------------------------------------------------------------------------------------- one request
     def execute(self, msg: dict) -> None:
@@ -158,8 +159,15 @@ class Worker:
                     with pa.OSFile(path, "wb") as sink, pa.ipc.new_stream(sink, t.schema) as w:
                         w.write_table(t)
                 tables[name] = rel
+        files = {}
+        for name in result.files or []:
+            if not isinstance(name, str) or not name.replace("-", "").replace("_", "").replace(".", "").isalnum() or name.startswith("."):
+                raise contract.ComputeError(f"a result file's name is letters, digits, dots, hyphens and underscores, not '{name}'")
+            if not os.path.isfile(os.path.join(scratch, _OUT_NAME, name)):
+                raise contract.ComputeError(f"the engine names a result file it did not write: {name}")
+            files[name] = f"{_OUT_NAME}/{name}"
         meta = dict(result.meta or {})
-        return {"type": "result", "id": rid, "rows": result.rows, "tables": tables, "meta": meta}
+        return {"type": "result", "id": rid, "rows": result.rows, "tables": tables, "meta": meta, "files": files}
 
     # ------------------------------------------------------------------------------------------------------- the two modes
     def run_forked(self, msg: dict) -> None:
@@ -176,6 +184,8 @@ class Worker:
                 os.chdir(msg["scratch"])
                 guard.set_limits(self.args.memory, int(msg.get("cpuSeconds") or self.args.cpu_seconds))
                 self.sandbox.scratch = msg["scratch"]
+                if self.args.isolate == "strict":
+                    guard.restrict_files(msg["scratch"])          # the kernel's own rule (Landlock), before any engine code
                 self.sandbox.install()
                 self.execute(msg)
             except BaseException:  # noqa: BLE001 - the child must never return into the parent's loop
@@ -221,6 +231,7 @@ class Worker:
             guard.start_watchdog(self.args.memory)
             self.sandbox.install()  # after the engines' imports, before any request
         self.ch.send({"type": "ready", "pid": os.getpid(), "mode": self.args.mode, "python": sys.version.split()[0], "sdk": __version__,
+                      "isolation": dict(self.isolation),
                       "engines": {k: list(getattr(v, "kinds", ()) or ()) for k, v in self.engines.items()},
                       "versions": {k: str(getattr(v, "version", "")) for k, v in self.engines.items()}})
         for line in sys.stdin:
@@ -247,6 +258,8 @@ def main(argv=None) -> int:
     p.add_argument("--memory", type=int, default=0, help="bytes per request (0: no limit)")
     p.add_argument("--cpu-seconds", type=int, default=0)
     p.add_argument("--worker", default="worker")
+    p.add_argument("--isolate", choices=("standard", "strict"), default="standard",
+                   help="strict: a network namespace with no interface for the worker and a Landlock file rule per request (Linux), or no worker")
     args = p.parse_args(argv)
     if args.mode == "fork" and not hasattr(os, "fork"):
         args.mode = "warm"
@@ -255,8 +268,20 @@ def main(argv=None) -> int:
     sys.stdout = sys.stderr
     ch = Channel(proto)
     started = time.monotonic()
+    isolation = {"level": args.isolate}
+    if args.isolate == "strict":                              # before the engines' imports start any thread: unshare needs one thread
+        why = guard.strict_unavailable(args.mode)
+        if why is None:
+            try:
+                isolation.update(network=guard.leave_network(), files=f"landlock {guard.landlock_abi()}")
+            except OSError as e:
+                why = f"the network namespace could not be made ({e})"
+        if why is not None:
+            ch.send({"type": "fatal", "message": "the strict sandbox is not available on this machine: " + why})
+            return 3
     try:
         worker = Worker(args, ch)
+        worker.isolation = isolation
     except BaseException as e:  # noqa: BLE001 - say why, then stop
         sys.stderr.write(traceback.format_exc())
         ch.send({"type": "fatal", "message": f"the engines could not be loaded: {type(e).__name__}: {e}"})

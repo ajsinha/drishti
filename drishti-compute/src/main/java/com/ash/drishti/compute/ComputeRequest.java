@@ -40,9 +40,11 @@ import java.util.Objects;
  * @param timeout the wall-time budget; null for the pool's default
  * @param seed the seed of any random numbers (determinism)
  * @param chunk which chunk of a fanned-out request this is ({@code null} for a whole request)
+ * @param files named files handed over as they are ({@code in/<name>}): an Arrow stream of types the SDK's codec does not read, a Parquet
+ *        file; the worker reads them with its own libraries
  */
 public record ComputeRequest(String id, String pool, String engine, String kind, Map<String, Object> params, Map<String, ArrowTable> inputs,
-        Viewer viewer, RequestClass cls, Duration timeout, long seed, Chunk chunk) {
+        Viewer viewer, RequestClass cls, Duration timeout, long seed, Chunk chunk, Map<String, byte[]> files) {
 
     /** Who asked: the user, their roles and their view signature (which masks applied); never a credential. */
     public record Viewer(String user, List<String> roles, String viewSignature) {
@@ -76,6 +78,12 @@ public record ComputeRequest(String id, String pool, String engine, String kind,
                 throw new IllegalArgumentException("an input name is letters, digits, dots, hyphens and underscores, not '" + n + "'");
             }
         }
+        files = files == null ? Map.of() : java.util.Collections.unmodifiableMap(new LinkedHashMap<>(files));
+        for (String n : files.keySet()) {
+            if (!n.matches("[A-Za-z0-9][A-Za-z0-9._-]{0,63}") || inputs.containsKey(n)) {
+                throw new IllegalArgumentException("a file name is letters, digits, dots, hyphens and underscores, and not an input's, not '" + n + "'");
+            }
+        }
         Objects.requireNonNull(viewer, "viewer");
         cls = cls == null ? RequestClass.INTERACTIVE : cls;
     }
@@ -94,12 +102,12 @@ public record ComputeRequest(String id, String pool, String engine, String kind,
 
     /** The same request with other inputs, as chunk {@code index} of {@code of}, under a new id. */
     public ComputeRequest chunk(Map<String, ArrowTable> in, int index, int of) {
-        return new ComputeRequest(id + "-c" + index, pool, engine, kind, params, in, viewer, cls, timeout, seed, new Chunk(id, index, of));
+        return new ComputeRequest(id + "-c" + index, pool, engine, kind, params, in, viewer, cls, timeout, seed, new Chunk(id, index, of), files);
     }
 
     /** The same request under another id (a retry or a forward). */
     public ComputeRequest withId(String newId) {
-        return new ComputeRequest(newId, pool, engine, kind, params, inputs, viewer, cls, timeout, seed, chunk);
+        return new ComputeRequest(newId, pool, engine, kind, params, inputs, viewer, cls, timeout, seed, chunk, files);
     }
 
     /** Builds a request. */
@@ -111,6 +119,7 @@ public record ComputeRequest(String id, String pool, String engine, String kind,
         private String engine;
         private final Map<String, Object> params = new LinkedHashMap<>();
         private final Map<String, ArrowTable> inputs = new LinkedHashMap<>();
+        private final Map<String, byte[]> files = new LinkedHashMap<>();
         private RequestClass cls = RequestClass.INTERACTIVE;
         private Duration timeout;
         private long seed;
@@ -151,6 +160,12 @@ public record ComputeRequest(String id, String pool, String engine, String kind,
             return this;
         }
 
+        /** A file handed over as it is ({@code in/<name>}). */
+        public Builder file(String name, byte[] bytes) {
+            files.put(name, bytes);
+            return this;
+        }
+
         public Builder cls(RequestClass c) {
             cls = c;
             return this;
@@ -167,7 +182,7 @@ public record ComputeRequest(String id, String pool, String engine, String kind,
         }
 
         public ComputeRequest build() {
-            return new ComputeRequest(id, pool, engine, kind, params, inputs, viewer, cls, timeout, seed, null);
+            return new ComputeRequest(id, pool, engine, kind, params, inputs, viewer, cls, timeout, seed, null, files);
         }
     }
 }

@@ -327,7 +327,7 @@ public final class DatasetParser {
                 String expr = v.has("expr") ? v.path("expr").asText() : null;
                 String python = v.has("python") ? v.path("python").asText() : null;
                 if (expr == null && python == null) {
-                    out.add(error(path, "a measure has `expr:` (or `python:`, run by the console's Python runner: BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8)"));
+                    out.add(error(path, "a measure has `expr:` (or `python:`, run on the server's compute pool python: BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8)"));
                     return;
                 }
                 if (python != null && expr != null) {

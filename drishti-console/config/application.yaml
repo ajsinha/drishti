@@ -308,40 +308,21 @@ bi:                          # Rupaka: the BI shell and catalogue (phase 1)
     stale_seconds: ${DRISHTI_BI_LIVE_STALE_SECONDS:30}        # no tick or status from the server for this long: the report says "Stale"; 5 to 600
   board:
     rotate_seconds: ${DRISHTI_BI_BOARD_ROTATE_SECONDS:30}     # a board in kiosk mode turns to its next page after this long, unless the board sets rotate:; 3 to 3600
-  # Rupaka phase 6 (docs/guides/BI_GUIDE.md): the Python runner. A python visual or measure runs in a short-lived, sandboxed worker process of the console
-  # (no network, a scratch folder only, CPU, memory, time and output limits) on the rows the person looking may see; or in the browser (Pyodide) when its manifest allows.
-  python:
-    enabled: ${DRISHTI_BI_PYTHON_ENABLED:true}                 # false: python visuals answer DRS-9074 (the browser target still works where a manifest allows it)
-    workers: ${DRISHTI_BI_PYTHON_WORKERS:2}                    # worker processes at once; a call waits queue_seconds for a place, then DRS-9074
-    queue_seconds: ${DRISHTI_BI_PYTHON_QUEUE_SECONDS:5}  # how long a Python call waits for a free worker before DRS-9074
-    packages: [pandas, numpy, pyarrow, scipy, statsmodels]     # the allow-list; a package that is not installed is refused when used. Keep the server's drishti.bi.report.python-packages equal
-    max_timeout_seconds: ${DRISHTI_BI_PYTHON_MAX_TIMEOUT:60}   # the most a manifest may ask for; the CPU and wall-clock limit of one call
-    max_memory_mb: ${DRISHTI_BI_PYTHON_MAX_MEMORY_MB:1024}     # the most memory a manifest may ask for, on top of what the interpreter and its packages need to start
-    max_input_bytes: ${DRISHTI_BI_PYTHON_MAX_INPUT_BYTES:16000000}    # largest Arrow table handed to Python
-    max_output_bytes: ${DRISHTI_BI_PYTHON_MAX_OUTPUT_BYTES:1000000}   # largest result (a chart option, an image or a measure's rows)
-    max_groups: 5000                                            # most groups a measure is called for
-    network_namespace: auto                                     # auto: also run the worker in a network namespace with no interfaces when the machine allows it (unshare); require; off
-    scratch_dir: ""                                             # where each call's scratch folder is made; empty: the system temporary folder
-    fork_server: ${DRISHTI_BI_PYTHON_FORK_SERVER:true}          # one pre-imported parent forks a child per call (no interpreter start per call); false: a new process per call
-    warm: ${DRISHTI_BI_PYTHON_WARM:true}                        # start the fork-server when the console starts, so the first call (a report, a Transform's step run) is warm too
-    cache_entries: 256                                          # the L4 result cache: answers kept by item code, parameters and the exact (masked) input bytes; 0 turns it off
-    cache_max_bytes: 64000000  # the L4 result cache's size in bytes
-    cache_seconds: 600  # how long a cached answer is kept
-    runner_token: ${DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN:}        # the Py-node endpoint (/internal/py/*) the server calls with X-Drishti-Runner-Token; empty: the endpoint is off
-  # The Notebook at /bi/notebook (docs/guides/USER_GUIDE.md › The Notebook): the masked extract, SQL cells (on the server), Python cells (on its compute pool).
+  # The Notebook (docs/guides/USER_GUIDE.md › The Notebook). Every Python run (python visuals and measures, Notebook cells, the Transform editor's steps) is the
+  # server's, on its compute pool python (config/compute/compute.yaml; docs/architecture/PYTHON_COMPUTE.md section 19): the console runs no Python of anyone's.
   notebook:
     max_rows: ${DRISHTI_BI_NOTEBOOK_MAX_ROWS:10000}            # most rows of an extract (the reader's rows, cut here); 10 to 100000
     max_fields: 60                                              # most columns of an extract
     sql_max_rows: 5000                                          # most rows a SQL cell returns
     sql_max_chars: 20000                                        # longest SQL text
-    cell_timeout_seconds: 20                                    # a Python cell's time limit on the server (also capped by bi.python.max_timeout_seconds)
-    cell_memory_mb: 512                                         # a Python cell's memory on the server (also capped by bi.python.max_memory_mb)
+    cell_timeout_seconds: 20                                    # a Python cell's time limit on the server's compute pool (also capped by drishti.bi.report.python-max-seconds)
+    cell_memory_mb: 512                                         # a Python cell's memory on the pool (also capped by drishti.bi.report.python-max-memory-mb)
     cell_max_chars: 65536                                       # longest Python cell
     max_cells: 60                                               # most cells in a notebook
     max_extracts: 6                                             # most further extracts in a notebook (extract("name") in a cell), besides the first
   # (docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17): the Transform editor at /bi/transform, built step by step with a preview and profile after each step.
   transform:
     preview_rows: ${DRISHTI_BI_TRANSFORM_PREVIEW_ROWS:1000}     # rows of each input the step-by-step run starts from (the reader's rows, asked of the server); 10 to 50000
-    timeout_seconds: 20                                         # the step-by-step run's time limit (also capped by bi.python.max_timeout_seconds)
-    memory_mb: 512                                              # its memory (also capped by bi.python.max_memory_mb)
+    timeout_seconds: 20                                         # the step-by-step run's time limit (also capped by drishti.bi.report.python-max-seconds)
+    memory_mb: 512                                              # its memory (also capped by drishti.bi.report.python-max-memory-mb)
     snippets_file: ""                                           # more data-prep snippets (a list under snippets:), read after config/prep-snippets.yaml

@@ -2577,7 +2577,7 @@ SQLite and DuckDB are embedded files and need no sizing.
 | a connector's fragments | `drishti.bi.exec.max-fragments`, `connectors.<name>.max-fragments` | 8; fewer for a small database |
 | a failing connector | `drishti.bi.exec.breaker-failures`, `breaker-open` | 5 failures, 30 s |
 | standing queries | `drishti.bi.mq.max-subscriptions`, `max-subscriptions-per-user`, `maintenance-budget`, `tick` | 500, 20, 250 ms per second per model, 5 s |
-| Python | `drishti.bi.transform.console-url`, `console-token`, `max-concurrent`, `timeout`; the console's `bi.python.workers`, `fork_server`, `cache_entries` | the console's URL and secret, 2 per console, 60 s; the fork-server on; 256 cached answers |
+| Python | the compute pool `python` (`compute.pools.python.workers.max`, `memory`, `cpu-seconds`, `timeout`); `drishti.bi.transform.max-concurrent`, `timeout` | 4 workers per node, 6 GB each, 60 s; 2 Transforms at once |
 
 **Many viewers of one report.** Readers with the same effective security share one standing-query group and one cache entry per visual: 500 viewers with 5
 distinct securities are 5 evaluations per visual. `GET /api/v1/bi/engine` and the `drishti_bi_sq_*` metrics show the groups and their modes.
@@ -2591,25 +2591,21 @@ themselves. *Implementation:* the directory, the forwarding and the failover are
 Several servers can still serve BI together through **Drishti*net**: a report's requests go to the node that holds the kinds its datasets
 read, and its answer comes back unchanged ([section 18](#18-drishtinet-running-several-servers-as-one), section 7).
 
-**The console's Python runner** (the console tier of the plan: `PyTransform`, `PyAggregate`, `PyColumn`, Analyse's cells, python visuals). Each console
-runs a **fork-server** (`bi.python.fork_server`, on by default): one parent process that has imported pandas, numpy and pyarrow, and forks one child per
-call with its own session, limits, audit hook and scratch folder, so a call costs a fork (milliseconds), not an interpreter start (about a second). The
-answers are kept in the **L4 result cache** (`bi.python.cache_entries`, `cache_max_bytes`, `cache_seconds`) by the item's code, its parameters and the
-exact input bytes (already masked for the reader). To let the server's planner run Python on the console, give both the same secret and the server the
-console's URL:
+**Python on the compute pool** (the plan's tier `python`: `PyTransform`, `PyAggregate`, `PyColumn`; Notebook cells, python visuals, Python-driven tables). Every
+Python run is the server's, on the pool `python` ([PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)): each worker has imported pandas, NumPy and pyarrow once and forks one child per
+request, held by the strict sandbox (no network, Landlock, the item's limits), so a call costs a fork (milliseconds), not an interpreter start. To run Python:
 
 ```
-# the server (application.yaml or the environment)
-DRISHTI_BI_TRANSFORM_CONSOLE_URL=http://console-1:17480
-DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN=<a long random secret>
-# the console (the same variable sets bi.python.runner_token)
-DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN=<the same secret>
+# the server's environment
+DRISHTI_COMPUTE_ENABLED=true                     # compute on (off as shipped)
+DRISHTI_PYTHON=/opt/drishti/python/bin/python3   # an interpreter carrying exactly config/compute/locks/python.lock's versions
+DRISHTI_COMPUTE_PYTHON_WORKERS=8                 # the pool's workers on this node
 ```
 
-The console answers `POST /internal/py/transform`, `/measure` and `/column` only with that token (`403 DRS-9073` without it, `503 DRS-9074` when no token
-is set). `GET /bi/python/status` on the console (signed in) and **Admin → BI → BI usage** say whether the fork-server runs, how many calls it forked, the
-cache's hits and whether the endpoint is on. Size `bi.python.workers` (calls at once per console) to the cores you give Python, and
-`drishti.bi.transform.max-concurrent` on the server to the sum over the consoles.
+Or build the pool's locked environment from the lock (`environment: { python: "3.13", lock: locks/python.lock, index: <your index> }`, Admin → Compute → Build): it installs exactly the pinned files by hash. The server checks the interpreter's versions before any run and refuses every run, naming each package, while one differs. The pool runs only on Linux (user namespaces and Landlock, kernel 5.13+); on Windows Python stays off, with that reason.
+`GET /api/v1/bi/python/runtime` and **Admin → BI → BI usage** say whether Python runs, why not, the pins and the counters; every run is in the audit log
+(`python-run`). Size the pool's `workers.max` to the cores you give Python, and
+`drishti.bi.transform.max-concurrent` to the Transforms you let run at once.
 
 **Admin → BI → BI usage** (`/admin/bi/usage`, BI administrators; the audit part for system administrators) sums the latest audit events: questions and
 SQL statements per model, the share answered from the cache, the layers that answered and the average rows, the busiest readers, the other BI actions,
@@ -3335,6 +3331,14 @@ approved. The design, with the reasons behind each choice, is [PYTHON_COMPUTE.md
 
 **It is off as shipped.** With `compute.enabled: false` (the default in `config/compute/compute.yaml`) no worker starts and every compute
 request is refused with `DRS-9201`. Approvals work either way, so requirements can be reviewed before compute is switched on.
+
+**Python for code people write runs here too**, on the pool `python` (Python items and visuals, Python-driven tables and models, Notebook
+cells: [PYTHON_COMPUTE.md section 19](../architecture/PYTHON_COMPUTE.md#19-the-python-runtime-for-code-people-write)), so with compute off
+none of it runs and each says so. That pool is `isolation: strict`: Linux only (user namespaces and Landlock, kernel 5.13 or later; check
+with `unshare --user --map-root-user --net true`), fork mode; its interpreter must carry exactly the versions of
+`config/compute/locks/python.lock` (or build its locked environment from that lock). To change the libraries, edit `locks/python.in`, run
+`python tools/python_lock.py config/compute/locks/python.in --out config/compute/locks/python.lock` on a machine that reaches the index,
+and install or build the new versions; until then every Python run is refused, naming each package that differs. On Windows it stays off.
 
 **Built: steps C1 to C3, and the reactive connectors R1 to R4 that send work to the pools ([section 11](#11-reactive-connectors)).**
 Pools, workers, transport, limits, fan-out, environments and approval. The pricer interface, QLRisk and the QuantLib Java worker (steps

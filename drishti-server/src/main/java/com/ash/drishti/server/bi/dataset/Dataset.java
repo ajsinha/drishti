@@ -284,7 +284,7 @@ public record Dataset(String name, int version, String title, String description
 
     /**
      * A measure: an aggregate expression, or a Python measure (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.8): {@code python} names a Python item, {@code inputs} the columns its
-     * function reads and {@code by} the columns it is grouped by (all {@code table.column}). The query engine never runs one: the console's runner does.
+     * function reads and {@code by} the columns it is grouped by (all {@code table.column}). The query engine never runs one: the compute pool python does.
      */
     public record Measure(String name, String expr, String format, String description, String python, List<String> inputs, List<String> by) {
 

@@ -51,7 +51,7 @@ import org.springframework.test.web.servlet.ResultActions;
  * Wave C (2.4.0) data prep over the whole stack, security on (docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17, docs/architecture/BI_DESIGN.md section 11.1, item P5): a Transform's input may be a pack
  * kind read straight through a connector, as the reader. The input preview the Transform editor uses ({@code POST /api/v1/bi/python/input}) answers the
  * reader's rows (a role that may not read the kind gets none of it), filtered and cut; a bad input is refused with its path; a Python dataset whose input is a kind is checked
- * and, with the console's Python environment, run as the reader; its lineage reaches the kind and the connector.
+ * and, on the server's compute pool python where it may run, run as the reader; its lineage reaches the kind and the connector.
  */
 @SpringBootTest(properties = {"drishti.sources.plugins.demo.settings.ticking=false", "drishti.security.enabled=true",
         "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long", "drishti.packs.enabled=finance",
@@ -72,10 +72,12 @@ class TransformInputsApiTest {
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
+    @Autowired com.ash.drishti.server.bi.python.PythonRuns pythonRuns;
     final ObjectMapper json = new ObjectMapper();
 
     @DynamicPropertySource
     static void lake(DynamicPropertyRegistry r) throws Exception {
+        com.ash.drishti.server.bi.python.PythonPoolForTests.register(r);   // compute on with the pool python, where an interpreter has pandas and pyarrow
         root = com.ash.drishti.server.TestRun.temp("drishti-tin-api-lake");
         List<String> lines = new ArrayList<>();
         for (int i = 0; i < 24; i++) {
@@ -257,8 +259,8 @@ class TransformInputsApiTest {
 
     @Test @Order(5)
     void aPythonDatasetWithAKindInputRunsAsTheReader() throws Exception {
-        org.junit.jupiter.api.Assumptions.assumeTrue(Files.isExecutable(Path.of("..", "drishti-console", ".venv", "bin", "python").toAbsolutePath()),
-                "the console's Python environment (drishti-console/.venv, with pandas and pyarrow) is needed");   // as LanguagesApiTest
+        java.util.Optional<String> why = pythonRuns.unavailable();      // the server's own answer: Linux with Landlock and the pinned interpreter (PythonPoolForTests)
+        org.junit.jupiter.api.Assumptions.assumeTrue(why.isEmpty(), () -> "Python does not run here: " + why.orElse(""));
         Map<String, Object> q = Map.of("mq", 1, "model", "desk-notional-prep@1", "select", Map.of("fields", List.of("desks.desk"), "measures", List.of("Notional")),
                 "time", Map.of("as-of", DAY));
         JsonNode rita = ok(call("POST", "/api/v1/bi/mq", as("rita", "bi-risk"), q));

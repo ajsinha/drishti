@@ -1,0 +1,24 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# The Python libraries code people write may use on the server's compute pool `python` (docs/architecture/PYTHON_COMPUTE.md section 19):
+# the whole environment, transitive packages included, one version each. tools/python_lock.py writes python.lock from this file (with the
+# hashes); the server checks the pool's interpreter against python.lock before any run, and a locked environment is built from it.
+numpy==2.5.3
+pandas==3.0.6
+pyarrow==26.0.0
+scipy==1.18.1
+python-dateutil==2.9.0.post0
+six==1.17.0
+tzdata==2026.6

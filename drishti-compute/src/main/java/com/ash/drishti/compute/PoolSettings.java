@@ -42,10 +42,13 @@ import java.util.Locale;
  * @param timeoutBatch the default budget of a batch request
  * @param startTimeout how long a new worker may take to say it is ready
  * @param locked the locked environment ({@code environment: {python, lock, index}}), or null for {@code system}
+ * @param isolation {@code standard} (the audit-hook sandbox: no network, no processes, writes in the scratch folder) or {@code strict}
+ *        (also a network namespace with no interface for the worker and a Landlock rule per request, held by the kernel: Linux and fork mode
+ *        only; a worker that cannot have it does not start). Code people write runs only in a strict pool.
  */
 public record PoolSettings(String name, String type, List<String> engines, String environment, int workersMin, int workersMax, long memory,
         int cpuSeconds, int recycleAfter, double batchShare, Duration idleStop, Mode mode, List<String> pythonPath, Duration timeout,
-        Duration timeoutBatch, Duration startTimeout, com.ash.drishti.compute.env.Requires.Python locked) {
+        Duration timeoutBatch, Duration startTimeout, com.ash.drishti.compute.env.Requires.Python locked, String isolation) {
 
     /** How a worker isolates one request from the next. */
     public enum Mode {
@@ -85,12 +88,21 @@ public record PoolSettings(String name, String type, List<String> engines, Strin
         pythonPath = List.copyOf(pythonPath == null ? List.of() : pythonPath);
         mode = mode == null ? Mode.AUTO : mode;
         recycleAfter = recycleAfter <= 0 ? (mode.resolved() == Mode.WARM ? 50 : 200) : recycleAfter;
+        isolation = isolation == null || isolation.isBlank() ? "standard" : isolation;
+        if (!"standard".equals(isolation) && !"strict".equals(isolation)) {
+            throw new IllegalArgumentException("compute.pools." + name + ".isolation is standard or strict, not '" + isolation + "'");
+        }
+    }
+
+    /** True when the pool's workers run in the strict sandbox (a network namespace and Landlock). */
+    public boolean strict() {
+        return "strict".equals(isolation);
     }
 
     /** The same pool with another worker range (a node's own count). */
     public PoolSettings withWorkers(int min, int max) {
         return new PoolSettings(name, type, engines, environment, min, max, memory, cpuSeconds, recycleAfter, batchShare, idleStop, mode,
-                pythonPath, timeout, timeoutBatch, startTimeout, locked);
+                pythonPath, timeout, timeoutBatch, startTimeout, locked, isolation);
     }
 
     /** The most batch requests that may run at once: the batch share of the workers, at least one. */
@@ -134,6 +146,6 @@ public record PoolSettings(String name, String type, List<String> engines, Strin
                 c.bytes("memory", 0), c.integer("cpu-seconds", 0, 0, 86_400 * 7), c.integer("recycle-after", 0, 0, 1_000_000),
                 c.decimal("batch-share", 0.25, 0.0, 1.0), c.duration("idle-stop", Duration.ofMinutes(5)), m, c.list("python-path"),
                 c.duration("timeout", Duration.ofSeconds(30)), c.duration("timeout-batch", Duration.ofMinutes(10)),
-                c.duration("start-timeout", Duration.ofSeconds(60)), locked);
+                c.duration("start-timeout", Duration.ofSeconds(60)), locked, c.text("isolation", "standard"));
     }
 }

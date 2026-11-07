@@ -159,6 +159,9 @@ public class ApiExceptionHandler {
         ProblemDetail p = ProblemDetail.forStatusAndDetail(status, e.getMessage());
         p.setTitle(e.errorCode().name().toLowerCase().replace('_', ' '));
         p.setProperty("code", e.errorCode().code());
+        if (e instanceof com.ash.drishti.server.bi.python.PythonFailure f && f.traceback() != null) {
+            p.setProperty("traceback", f.traceback());          // only for a run an author asked for (PythonRuns)
+        }
         return p;
     }
 

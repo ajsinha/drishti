@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A Python measure of a model query run by the Python runner (the console's Py-node endpoint, or the process runner until it is set): the item as the
+ * A Python measure of a model query run on the server's compute pool ({@link com.ash.drishti.server.bi.python.PythonRuns}): the item as the
  * reader may run it (its manifest and parameters), its inputs by their column names, the rows grouped by the answer's fields (wave B, R8).
  */
 final class PythonMeasureRunner implements MqService.PythonMeasures {
@@ -50,6 +50,6 @@ final class PythonMeasureRunner implements MqService.PythonMeasures {
         if (desc.get("params") instanceof Map<?, ?> pm) {
             pm.forEach((k, v) -> params.put(String.valueOf(k), v));
         }
-        return runner.measure(manifest, params, groupBy, columns, rows);
+        return runner.measure(p, manifest, params, groupBy, columns, rows);
     }
 }

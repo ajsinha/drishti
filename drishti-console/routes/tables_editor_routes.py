@@ -22,7 +22,6 @@ from __future__ import annotations
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
-from core import under_construction
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
 from routes.common import ident, render
@@ -35,12 +34,12 @@ ROUTES = {
     "objects": {"GET"}, "object": {"GET"}, "sources": {"GET"}, "impact": {"GET"}, "history": {"GET"},
     "check": {"POST"}, "statement": {"POST"}, "preview": {"POST"}, "access": {"POST"}, "suggest": {"POST"}, "save": {"POST"},
     "propose": {"POST"}, "prefs": {"GET", "PUT"},
-    "python/templates": {"GET"}, "python/notebook": {"POST"}, "python/contract": {"POST"},
+    "python/templates": {"GET"}, "python/notebook": {"POST"}, "python/contract": {"POST"}, "python/run": {"POST"}, "python/runtime": {"GET"},
 }
 #: The parameters a GET may pass on.
 PARAMS = ("kind", "name", "item")
-#: The under-construction registry's item for the Python table's sample run (config/under-construction.yaml).
-PYTHON_RUNS = "python-table-runs"
+#: A sample run waits for the compute pool and the code's own time limit.
+RUN_WAIT_SECONDS = 180.0
 #: The most bytes a definition sent to the editor API may have (a definition is configuration: the layer's own bound is 512 KB).
 LIMIT = 600 * 1024
 
@@ -57,9 +56,12 @@ async def editors_page(request: Request):
     if not me.get("enabled"):
         return render(request, "bi/denied.html", status_code=403, screen="bi", bi_page="tables")
     q = request.query_params
-    marked = under_construction.of(request).marked(PYTHON_RUNS)
+    try:                                                       # whether the server runs authored Python safely, and why not
+        py = await request.app.state.backend._send("GET", "/tables/editor/python/runtime", ident(request))
+    except BackendError as e:
+        py = {"runs": False, "why": e.detail}
     return render(request, "build/tables.html", screen="tables-editor", kind=q.get("kind", ""), name=q.get("name", ""), item=q.get("item", ""),
-                  new=q.get("new", ""), python_runs_marked=marked)
+                  new=q.get("new", ""), python_runs=bool((py or {}).get("runs")), python_why=(py or {}).get("why") or "")
 
 
 @router.api_route("/build/tables/api/{path:path}", methods=["GET", "POST", "PUT"])
@@ -67,7 +69,7 @@ async def editor_api(request: Request, path: str):
     """The editor API as the signed-in person: the server decides what they may see and change, every time."""
     if request.method not in ROUTES.get(path, ()):
         return JSONResponse({"code": "DRS-9003", "detail": f"no editor call {request.method} {path}"}, status_code=404, headers=NO_STORE)
-    kw: dict = {"timeout": 60.0}
+    kw: dict = {"timeout": RUN_WAIT_SECONDS if path == "python/run" else 60.0}
     if request.method == "GET":
         kw["params"] = {k: v for k, v in request.query_params.items() if k in PARAMS and v}
     else:

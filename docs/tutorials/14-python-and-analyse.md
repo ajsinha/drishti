@@ -27,7 +27,7 @@ About 60 minutes (step 12: 15 minutes).
 
 - The quick-start environment of [tutorial 10](10-first-bi-report.md#before-you-start) (the demo lakes: 15,000 trade valuations over ten desks,
   business date 2026-10-16) and tutorial 10 done (reports, workspaces, `Economics desk`). You sign in as the development administrator, who holds the `bi-author` power that Python needs (SQL cells need only `bi`).
-- The console's Python environment from [tutorial 1](01-first-15-minutes.md) (`drishti-console/.venv`): it carries `pandas`, `numpy` and `pyarrow`, which Python items may import. Nothing else to install for BI: every Python item runs on the console, in its sandbox (a fork-server forks one child per call), never in
+- Python on the server: compute switched on, and the server's compute pool `python` pointed at an interpreter that carries the pinned libraries (`DRISHTI_COMPUTE_ENABLED=true`, `DRISHTI_PYTHON=<python with pandas, numpy, pyarrow and scipy at the versions of config/compute/locks/python.lock>`; [OPERATIONS.md](../admin/OPERATIONS.md)). Every Python item runs on that pool, in a strict sandbox (no network, files held to its own folder), never in the console or your browser; on a Windows server Python is off and says why.
   the browser. **Calc** (the step that asks a BI model from a view, Alt+C) is the one exception: it is Python on the screen you are on, in your browser, so its
   runtime must be installed once on the console with `tools/fetch-pyodide.sh` ([GETTING_STARTED.md](../guides/GETTING_STARTED.md)); without it Calc says
   *Python runtime not installed* and Run stays disabled.
@@ -51,7 +51,7 @@ Open **Catalogue → Desk P&L risk (Python)**.
 
 ![The sample Python report: P&L volatility per desk as bars, and a histogram of one-day P&L; each frame says Python, the item, v1, server, the time and the rows](img/t14/01-python-report.jpg)
 
-You should see two charts. Under each is a line such as `Python · desk-pnl-volatility v1 · server · 278 ms · 10000 rows`: the **item** that drew it, its version, **where it ran** (the console's sandboxed worker, `server`) and how many rows it was handed. The left chart is a **Python measure** (the volatility of one-day P&L of each desk); the right one is a **Python visual** (a histogram drawn with numpy).
+You should see two charts. Under each is a line such as `Python · desk-pnl-volatility v1 · server · 278 ms · 10000 rows`: the **item** that drew it, its version, **where it ran** (the server's compute pool, `server`) and how many rows it was handed. The left chart is a **Python measure** (the volatility of one-day P&L of each desk); the right one is a **Python visual** (a histogram drawn with numpy).
 Both worked on the trades **as you may see them**: masks and row rules were applied before Python saw a row. A Python visual is handed at most 10,000
 rows, so on the demo lake's 15,000 trade valuations it works on the first 10,000 (the server says so: `DRS-9022` is what a plain JSON answer of more rows
 is told); a Python measure for a figure over every row belongs in a model query, or in a Transform over grouped answers (step 8).
@@ -177,8 +177,8 @@ You should see `The Python item checks out: the manifest is valid and the source
 ```text
 $ POST /bi/python/check   (packages: [requests])
 {"valid": false, "problems": [
-  {"level": "error", "code": "DRS-9070", "path": "packages", "message": "'requests' is not an allowed package (allowed: pandas, numpy, pyarrow, scipy, statsmodels)"},
-  {"level": "error", "code": "DRS-9070", "path": "packages", "message": "'requests' is not on the console's allow-list (bi.python.packages: pandas, numpy, pyarrow, scipy, statsmodels)"}, ...
+  {"level": "error", "code": "DRS-9070", "path": "packages", "message": "'requests' is not an allowed package (allowed: pandas, numpy, pyarrow, scipy)"},
+  {"level": "error", "code": "DRS-9070", "path": "packages", "message": "'requests' is not on the pool's pinned allow-list (pandas, numpy, pyarrow, scipy)"}, ...
 ```
 
 Press **Publish** (a Python item must be published for a report to use it). **From the command line** the same two moves (`bi item new` reads the
@@ -293,10 +293,10 @@ result = {'title': {'text': 'Notional by desk'}, 'xAxis': {'type': 'category', '
           'series': [{'type': 'bar', 'data': [float(v) for v in g['NOTIONAL']]}]}
 ```
 
-The line beside **Run** says *Runs on the server's compute pool*: a cell never runs in the console or your browser. Running it there comes with one
-Python runtime on the server and is **Under construction**: **Run** and **Run all** carry the chip and are greyed, and pressing a cell's Run says so.
-You should see *Runs on the server's compute pool* beside the greyed **Run**, and the *Under construction* chip. Write the cell, keep it in the notebook (step 7) and promote it to an item (below): whoever opens the notebook later runs it on the pool, over their own
-rows. Running Python needs `bi-author`; a person with only `bi` writes and runs SQL cells.
+The line beside **Run** says *Runs on the server's compute pool*: a cell never runs in the console or your browser. Press **Run**: the server reads the
+extract as you and runs the cell in its strict sandbox. You should see the line *Ran on the server's compute pool in ... ms over 10000 rows* and the bar
+chart of notional by desk under it (what the cell printed comes first, when it prints). Keep the cell in the notebook (step 7) and promote it to an item
+(below): whoever opens the notebook later runs it on the pool, over their own rows. Running Python needs `bi-author`; a person with only `bi` writes and runs SQL cells.
 
 ## Step 7 · Keep it as a notebook, promote it
 
@@ -391,7 +391,7 @@ You should see `10000 rows, 3 columns.` for the first extract (cut: the lake hol
 several models**, a second one called `exposure` (`mq:trading-risk@1`, 3 fields: the netting sets' computed exposure, `set_exposure`, of the same
 model: the exposure engine's official end-of-day results). Each is built for you by the
 server, with your row rules and masks. Open the **Python** tab: the join cell is there (`df` is the trades; `extract("exposure")` is the
-netting sets' computed exposure, `PEAK_EE`), ready for the server's compute pool (running it is under construction, step 6). On the server, one model
+netting sets' computed exposure, `PEAK_EE`); **Run** runs it on the server's compute pool (step 6). On the server, one model
 already joins its facts through the counterparty (Drishti SQL `FROM trades JOIN counterparties JOIN set_exposure`). When the pandas join is what you want to keep, press **Promote to a Transform**.
 
 ![After promoting: "Python transform draft saved in your workspace: Join of P&L and exposure (transform). Each extract("name") became a parameter of run()..."](img/t14/15-promote-transform.jpg)
@@ -594,7 +594,7 @@ $ python3 tools/drishti.py bi item new me docs/tutorials/data/endur-trades-clean
 bi-04b126d3c4  dataset  ENDUR trades, cleaned  draft in My workspace
 ```
 
-The steps run where every Python item runs, in the console's sandbox; the snippets write each value as a literal, never as code. The reference is
+The steps run where every Python item runs, on the server's compute pool; the snippets write each value as a literal, never as code. The reference is
 [BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](../guides/BI_GUIDE.md#17-data-prep-the-transform-editor).
 
 ## Next steps
@@ -611,8 +611,8 @@ The steps run where every Python item runs, in the console's sandbox; the snippe
 | `DRS-9070` | the manifest or a cell is wrong; the message names the key (a package not on the allow-list, a second SQL statement, a source that does not parse) |
 | `DRS-9072` | the SQL was too long (`bi.notebook.sql_max_chars`) |
 | `DRS-9170` | Drishti SQL on the server was asked to do more than one SELECT (a write, a second statement) |
-| `DRS-9074` | the runner is busy or not installed (`bi.python.workers`, the pandas environment) |
-| a Python cell's Run is greyed with *Under construction* | Python cells run on the server's compute pool, which comes with one Python runtime |
+| `DRS-9074` | Python does not run on this server now: the message says why (compute off, the pool's interpreter not carrying the pinned versions, a Windows server) |
+| a Python cell's Run is greyed and says *Off: ...* | the server cannot run Python safely now; the words say why (compute off, a Windows server, a pin that differs) |
 | a column is empty in the extract | it is masked for your role; the line under the form names it |
 | the Transform editor's steps do not run | running them needs `bi-author`; the page still writes the YAML |
 | `DRS-9108 the kind 'trade' has no column [X]` | a field the kind does not have; the message lists the kind's columns |

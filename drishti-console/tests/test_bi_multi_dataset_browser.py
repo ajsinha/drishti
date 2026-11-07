@@ -40,7 +40,7 @@ from bi_report_stack import CONSOLE_URL, ROOT, api  # noqa: E402
 REPORT = "file:report:pnl-vs-exposure"
 MODEL = "trading-risk@1"
 PY_MODEL = "desk-pnl-vs-exposure-py@1"
-PY_DATASET = "file:dataset:desk-pnl-vs-exposure-py-result"
+PY_DATASET = "file:table:bi.desk_pnl_vs_exposure_py_result"   # the table the Python Transform makes (the table layer's, shipped in config/tables)
 
 
 class Stack(bi_report_stack.ReportStack):
@@ -51,8 +51,8 @@ class Stack(bi_report_stack.ReportStack):
             target = work / "config/bi" / folder
             target.mkdir(parents=True, exist_ok=True)
             (target / f"{name}.{suffix}.yaml").write_text((ROOT / "config/bi" / folder / f"{name}.{suffix}.yaml").read_text(encoding="utf-8"), encoding="utf-8")
-        # the server runs Transforms in the console's sandboxed runner, started with the Python that runs this test (it has pandas and pyarrow)
-        self.server_args += [f"--drishti.bi.transform.python={sys.executable}", f"--drishti.bi.transform.runner={ROOT}/drishti-console/core/transform_cli.py"]
+        # the server runs Python on its compute pool python, in the interpreter that runs this test (it carries the pinned libraries)
+        self.server_args += ["--DRISHTI_COMPUTE_ENABLED=true", f"--DRISHTI_PYTHON={sys.executable}", f"--drishti.compute.file={ROOT}/config/compute/compute.yaml"]
 
 
 @pytest.fixture(scope="module")
@@ -203,7 +203,7 @@ def test_the_python_datasets_page_names_its_transform_and_its_inputs(stack, brow
 
 # ---- the Notebook: two extracts in one notebook, a join cell for the server's compute pool ------------------------------------------------
 
-def test_the_notebook_opens_two_extracts_and_its_join_cell_waits_for_the_compute_pool(stack, browser):
+def test_the_notebook_opens_two_extracts_and_its_join_cell_runs_on_the_compute_pool(stack, browser):
     page = sign_in(browser, "rex", "/bi/notebook")                                                         # rex reads every row and holds bi-author
     page.goto(f"{CONSOLE_URL}/bi/notebook?item=file:notebook:pnl-vs-exposure-pandas")
     page.wait_for_selector("[data-extra='exposure']", timeout=60000)
@@ -211,8 +211,10 @@ def test_the_notebook_opens_two_extracts_and_its_join_cell_waits_for_the_compute
     page.click('[data-tab="python"]')
     page.wait_for_selector('[data-cells=python] [data-run]')
     assert 'extract("exposure")' in page.locator('[data-cells=python] textarea').first.input_value()
-    assert page.locator('[data-cells=python] [data-run]').first.is_disabled()                              # Python runs on the server's compute pool: under construction
-    expect(page.locator('[data-cells=python] [data-uc="python-table-runs"]').first).to_be_visible()
+    page.locator('[data-cells=python] [data-run]').first.click()                                             # the join cell runs on the server's compute pool
+    expect(page.locator('[data-cells=python] [data-engine=python]').first).to_be_visible(timeout=120000)
+    assert page.locator('[data-cells=python] [data-target=server]').count() >= 1
+    expect(page.locator('[data-cells=python] [data-result] table').first).to_be_visible()
     assert page.locator('[data-promote="transform"]').count() == 1 and page.locator('[data-promote="transform"]').is_enabled()   # a cell that joins extracts can become a Transform
     clean(page)
     page.close()

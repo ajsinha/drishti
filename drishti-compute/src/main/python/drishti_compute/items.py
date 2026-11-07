@@ -12,41 +12,58 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The worker of the Python runner (docs/guides/BI_GUIDE.md): one short-lived process per call, started by ``core/pyrunner.py``.
+"""Python items on the server's compute pool (docs/guides/BI_GUIDE.md › Python in BI; docs/architecture/PYTHON_COMPUTE.md section 19): the one
+Python runtime for code people write. The pool ``python`` loads :class:`ItemsEngine`; the server sends it a Python item (its manifest, with
+the source) and the rows the person running it may see, already read on the server as that person (row rules and masks applied), and gets
+back a number per group, a column, a chart, a table, a Notebook cell's answer, a step-by-step run or a profile. Nothing here decides access.
 
-It reads ``req.json`` and ``in.arrow`` (the rows the person looking may see, as Arrow IPC) from its scratch folder, runs the
-author's function and writes ``out.json``. It imports nothing of the console.
+The interfaces an item implements (its manifest's ``interface``; the function is its ``entry``, defaulted as below)::
 
-**Fork-server** (wave B, docs/architecture/BI_DESIGN.md section 3.5 invariant 3): ``python -I pyrunner_worker.py --serve`` is one long-lived
-parent per console that imports pandas, numpy and pyarrow once and then, for each line ``{"id", "tmp"}`` on its standard input, forks one child
-that runs one call exactly as a fresh process would (its own session, environment, scratch folder, limits and audit hook, installed in the child
-only) and exits. The parent answers ``{"id", "pid"}`` when the child starts and ``{"id", "rc"}`` when it ends; it never runs an author's code
-itself, so one-process-per-call isolation is kept while the interpreter's start-up and the imports leave the latency. Defence in depth, not a
-kernel sandbox:
+    interface   entry     receives                                  returns
+    transform   run       one DataFrame per input, in order         a DataFrame: a Python-driven table's rows (data prep)
+    measure     compute   one group's rows (or compute_groups:      one number per group
+                          every group at once)
+    column      derive    the declared input columns of every row   one value per row
+    visual      render    the visual's columns                      an ECharts option or a Vega-Lite specification (a dict), SVG or PNG
+    cell        -         ``df``, ``params``, ``extract(name)``     what it printed and its ``result`` (a Notebook cell)
 
-* the parent gives it an empty environment, the scratch folder as working directory, a new session (so a timeout kills the
-  whole group) and, where the machine allows, a network namespace with no interfaces;
-* here it sets CPU, address-space and file-size limits before the author's code runs;
-* an audit hook (it cannot be removed once installed) refuses sockets, processes, the dynamic loader and any file write
-  outside the scratch folder, and reads outside the Python installation and the scratch folder;
-* the author's own ``import`` goes through a guard that allows only the packages the manifest lists (and are on the
-  console's allow-list) and a short list of safe standard-library modules; ``exec``, ``eval`` and ``compile`` are not given.
+A minimal Transform::
+
+    def run(trades, params):
+        out = trades.groupby("desk", as_index=False)["mtm"].sum()
+        return out[out["mtm"].abs() > float(params.get("min", 0))]
+
+The sandbox, from the outside in: the pool runs with ``isolation: strict`` (the worker has no network at all, and each request's fork child is
+held by the kernel to its scratch folder and the Python installation: ``guard.py``); the child has CPU, memory, file-size and open-file
+limits of the item's own (no more than the pool's); an audit hook refuses sockets, processes, the dynamic loader and file access outside
+those folders, in words; the author's ``import`` admits only the packages the manifest lists (from the pinned allow-list the server checks)
+and a short list of safe standard-library modules; ``exec``, ``eval`` and ``compile`` are not given. A failure of the author's code is an
+answer (``ok: false`` with its kind and the author's own traceback), never a crash of the worker.
 """
 from __future__ import annotations
 
 import base64
+import importlib
+import importlib.util
 import json
 import math
 import os
 import re
-import resource
 import sys
 import time
 import traceback
 
+from .engine import Engine, Inputs, Progress, Request, Result
+
 FILE = "<python-item>"
+RESULT_FILE = "result.parquet"
+#: Each author-facing interface and its default entry function (the module's docstring is the contract; tests/test_help_developer.py holds the two together).
+INTERFACES = {"transform": "run", "measure": "compute", "column": "derive", "visual": "render"}
+ENTRIES = {"measure": "compute", "transform": "run", "column": "derive", "visual": "render", "cell": "", "steps": "run", "profile": ""}
 SAFE_STDLIB = {"math", "statistics", "json", "datetime", "re", "collections", "itertools", "functools", "typing", "decimal", "fractions",
                "numbers", "string", "random", "operator", "bisect", "heapq", "dataclasses", "enum", "copy", "calendar", "time", "textwrap", "__future__"}
+#: Imported once by the worker's parent, so a request's fork child starts with them loaded.
+PRELOAD = ("numpy", "pandas", "pyarrow", "pyarrow.parquet", "pyarrow.ipc")
 NET_EVENTS = ("socket.", "ssl.")
 BLOCKED = {"subprocess.Popen", "os.system", "os.exec", "os.posix_spawn", "os.spawn", "os.fork", "os.forkpty", "ctypes.dlopen", "ctypes.dlsym", "os.kill",
            "os.killpg", "shutil.unpack_archive", "webbrowser.open", "pty.spawn", "os.putenv", "os.unsetenv", "os.setuid", "os.chroot"}
@@ -59,11 +76,11 @@ MiB = 1024 * 1024
 
 
 class Denied(PermissionError):
-    """Something the sandbox refuses (the parent answers it as DRS-9073)."""
+    """Something the sandbox refuses (the server answers it as DRS-9073)."""
 
 
 class Limit(Exception):
-    """A limit of this call was hit (the parent answers it as DRS-9072)."""
+    """A limit of this call was hit (the server answers it as DRS-9072)."""
 
 
 def _vmsize() -> int:
@@ -77,11 +94,34 @@ def _vmsize() -> int:
     return 0
 
 
+def _limits(timeout: int, memory_mb: int, max_output: int) -> None:
+    """The item's own limits, lowered from the pool's (never raised): CPU seconds, address space over what is loaded now, file size, open files."""
+    try:
+        import resource  # noqa: WPS433 (POSIX)
+    except ImportError:
+        return
+
+    def lower(which, value):
+        _, hard = resource.getrlimit(which)
+        cap = value if hard == resource.RLIM_INFINITY else min(value, hard)
+        resource.setrlimit(which, (cap, cap))
+
+    lower(resource.RLIMIT_CPU, int(time.process_time()) + int(timeout) + 1)   # the imports so far count against the process, not the author
+    lower(resource.RLIMIT_FSIZE, max_output * 4 + MiB)
+    lower(resource.RLIMIT_CORE, 0)
+    lower(resource.RLIMIT_NOFILE, 256)
+    base = _vmsize()
+    if base:
+        lower(resource.RLIMIT_AS, base + int(memory_mb) * MiB)
+
+
 def _under(path: str, roots: tuple[str, ...]) -> bool:
     return any(path == r or path.startswith(r.rstrip("/") + "/") for r in roots)
 
 
 def _install_hook(tmp: str) -> None:
+    """The item's audit hook (it cannot be removed once installed: the request's fork child only): network, processes and the dynamic loader
+    refused, writes only in the scratch folder, reads only there and in the Python installation and system libraries. Said in words."""
     real_tmp = os.path.realpath(tmp)
     roots = {os.path.realpath(p) for p in sys.path if p and os.path.isabs(p)}
     roots |= {os.path.realpath(p) for p in (sys.prefix, sys.base_prefix, sys.exec_prefix, sys.base_exec_prefix)}
@@ -124,19 +164,6 @@ def _install_hook(tmp: str) -> None:
                 raise Denied(f"{event} on {p} is not allowed")
 
     sys.addaudithook(hook)
-
-
-def _limits(req: dict) -> None:
-    cpu = int(time.process_time()) + int(req["timeout"]) + 1          # the imports so far count against the process, not against the author
-    resource.setrlimit(resource.RLIMIT_CPU, (cpu, cpu + 1))
-    out = int(req["max_output_bytes"])
-    resource.setrlimit(resource.RLIMIT_FSIZE, (out * 4 + MiB, out * 4 + MiB))
-    resource.setrlimit(resource.RLIMIT_CORE, (0, 0))
-    resource.setrlimit(resource.RLIMIT_NOFILE, (256, 256))
-    base = _vmsize()
-    if base:
-        cap = base + int(req["memory"]) * MiB
-        resource.setrlimit(resource.RLIMIT_AS, (cap, cap))
 
 
 def _guard(allowed: set[str], real_import):
@@ -208,37 +235,9 @@ def _number(v, where: str):
     return int(f) if isinstance(v, int) or hasattr(v, "dtype") and getattr(v.dtype, "kind", "") in "iu" else f
 
 
-def _load_quant(req: dict):
-    """The console's quant engine (``core/quant``) as the name ``quant`` in a notebook cell; ``None`` when the cell is run without one."""
-    root = req.get("quant_root")
-    if not root:
-        return None
-    sys.path.insert(0, root)
-    try:
-        from core.quant import QuantError, get_engine
-        engine = get_engine(req.get("quant_engine") or "stand-in")
-    finally:
-        sys.path.remove(root)
-
-    class Quant:
-        """``quant.price(instrument, **params)``: a number from the console's quant engine; ``quant.instruments()`` lists what it prices."""
-        engine_name = engine.name
-
-        def price(self, instrument, **params):
-            try:
-                return engine.price(instrument, **params)
-            except QuantError as e:
-                raise ValueError(f"quant: {e}") from None
-
-        def instruments(self):
-            return engine.instruments()
-
-    return Quant()
-
-
-def _cell(req: dict, df, ns: dict, quant, others: dict | None = None) -> dict:
-    """A notebook cell of Analyse: runs the source with ``df`` (the reader's extract), ``params``, ``quant`` and ``extract(name)`` (any other extract of the
-    notebook, as the same reader sees it); answers what it printed and its ``result`` (an ECharts option, SVG text, PNG bytes, a table, or a value)."""
+def _cell(req: dict, df, ns: dict, others: dict | None = None) -> dict:
+    """A Notebook cell: runs the source with ``df`` (the reader's extract), ``params`` and ``extract(name)`` (any other extract of the notebook, as the
+    same reader sees it); answers what it printed and its ``result`` (an ECharts option, SVG text, PNG bytes, a table, or a value)."""
     import io
     import contextlib
     frames = others or {}
@@ -251,14 +250,14 @@ def _cell(req: dict, df, ns: dict, quant, others: dict | None = None) -> dict:
     shown: list = []
 
     def show(obj, title=None):
-        """As the browser Python console's show() (wave C): what a promoted cell shows last is its answer when it sets no ``result``."""
+        """What a cell shows last is its answer when it sets no ``result``."""
         shown.append(obj)
 
     def chart(*args, **kwargs):
-        """The browser console draws charts; on the console backend a chart() call is skipped (put an ECharts option in ``result`` to draw one here)."""
+        """Skipped on the server: put an ECharts option in ``result`` to draw one."""
         return None
 
-    ns.update(df=df, params=dict(req["params"]), quant=quant, extract=extract, show=show, chart=chart)
+    ns.update(df=df, params=dict(req["params"]), extract=extract, show=show, chart=chart)
     out = io.StringIO()
     with contextlib.redirect_stdout(out):
         exec(compile(req["source"], FILE, "exec"), ns)
@@ -313,9 +312,29 @@ def _arrow_type(t) -> str:
     return "string"
 
 
-def _transform(req: dict, frames: list, ns: dict, tmp: str) -> dict:
-    """A Transform of a derived dataset: ``run(*frames)`` (a top-level function, or the method of a class named ``Transform``, which gets ``self.params``) returns a
-    pandas DataFrame; it is checked, typed from its columns and written as Parquet in the scratch folder for the parent to collect."""
+def _typed_by_contract(table, contract: dict):
+    """A text column the contract declares a date or a timestamp, read as one: the server hands dates over as ISO text, so a Transform that passes
+    one through returns text. A value that does not read leaves the column as it is, and the server's contract check refuses it in words."""
+    import pyarrow as pa
+    targets = {"date": pa.date32(), "timestamp": pa.timestamp("us"), "datetime": pa.timestamp("us")}
+    for name, want in contract.items():
+        target = targets.get(str(want).strip().lower())
+        if target is None or name not in table.column_names:
+            continue
+        column = table[name]
+        if not (pa.types.is_string(column.type) or pa.types.is_large_string(column.type)):
+            continue
+        try:
+            table = table.set_column(table.schema.get_field_index(name), name, column.cast(target))
+        except (pa.ArrowInvalid, pa.ArrowNotImplementedError):
+            pass
+    return table
+
+
+def _transform(req: dict, frames: list, ns: dict, out_dir: str) -> dict:
+    """A Transform: ``run(*frames)`` (a top-level function, or the method of a class named ``Transform``, which gets ``self.params``), or a Python-driven
+    table's ``build(inputs, params)`` (``inputs``: the frames by their names), returns a pandas DataFrame; it is checked, typed from its columns and
+    written as Parquet in ``out/`` for the server to collect, with its first rows in the answer."""
     import inspect
     import pandas as pd
     import pyarrow as pa
@@ -331,8 +350,14 @@ def _transform(req: dict, frames: list, ns: dict, tmp: str) -> dict:
         fn = ns.get(req["entry"])
         if not callable(fn):
             raise ValueError(f"the source defines no function '{req['entry']}' (nor a class Transform with that method)")
-    wants_params = "params" in inspect.signature(fn).parameters
-    result = fn(*frames, params=params) if wants_params else fn(*frames)
+    parameters = list(inspect.signature(fn).parameters)
+    wants_params = "params" in parameters
+    if parameters and parameters[0] == "inputs":                   # build(inputs, params): the frames by name
+        names = list(req.get("names") or []) or [f"input_{i + 1}" for i in range(len(frames))]
+        by_name = dict(zip(names, frames))
+        result = fn(by_name, params) if len(parameters) > 1 else fn(by_name)
+    else:
+        result = fn(*frames, params=params) if wants_params else fn(*frames)
     if not isinstance(result, pd.DataFrame):
         raise TypeError(f"a transform returns a pandas DataFrame, not {type(result).__name__}")
     if len(result) > int(req["max_rows"]):
@@ -352,12 +377,15 @@ def _transform(req: dict, frames: list, ns: dict, tmp: str) -> dict:
             if result[c].dtype == object:
                 result[c] = result[c].map(lambda v: None if v is None or v != v else str(v))
         table = pa.Table.from_pandas(result, preserve_index=False)
+    table = _typed_by_contract(table, req.get("contract") or {})
     columns = [{"name": f.name, "type": _arrow_type(f.type)} for f in table.schema]
     for f in table.schema:                                         # lists, structs and the like are not columns of a dataset
         if _arrow_type(f.type) == "string" and not (pa.types.is_string(f.type) or pa.types.is_large_string(f.type)):
             table = table.set_column(table.schema.get_field_index(f.name), f.name, table[f.name].cast(pa.string()))
-    pq.write_table(table, os.path.join(tmp, "out.parquet"))
-    return {"kind": "transform", "columns": columns, "rows": int(table.num_rows)}
+    os.makedirs(out_dir, exist_ok=True)
+    pq.write_table(table, os.path.join(out_dir, RESULT_FILE))
+    head = [[_jsonable(v) for v in r] for r in result.head(HEAD_ROWS).astype(object).itertuples(index=False, name=None)]
+    return {"kind": "transform", "columns": columns, "rows": int(table.num_rows), "head": head}
 
 
 # ---- profiling and the step-by-step run (wave C, 2.4.0: docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17; docs/architecture/BI_DESIGN.md section 11.1, items P1 and P3) -------------------------
@@ -675,60 +703,104 @@ def _compute_groups(req: dict, df, fn, params) -> dict:
     return {"kind": "measure", "by": by, "rows": json.loads(json.dumps(rows, default=_plain, allow_nan=False)), "vectorised": True}
 
 
-def _run(req: dict, tmp: str) -> dict:
+# ---- static checks of a source (no code runs) ---------------------------------------------------------------------------------------
+
+def check_source(m: dict, allowed: list[str]) -> list[dict]:
+    """The checks of a manifest's source that need Python's own parser: it parses, defines its entry function, and imports only what the
+    manifest lists (and the pool allows) or the safe standard library. Problems as ``{level, code, path, message}``; nothing is run."""
+    import ast
+    out = []
+
+    def bad(path, message, level="error"):
+        out.append({"level": level, "code": "DRS-9070", "path": path, "message": message})
+
+    for p in m.get("packages") or []:
+        if p not in allowed:
+            bad("packages", f"'{p}' is not on the pool's pinned allow-list ({', '.join(allowed)})")
+        elif importlib.util.find_spec(p) is None:
+            bad("packages", f"'{p}' is allowed but not installed in the pool's environment", "warning")
+    try:
+        tree = ast.parse(m.get("source") or "", FILE)
+    except SyntaxError as e:
+        bad("source", f"line {e.lineno}: {e.msg}")
+        return out
+    interface = m.get("interface") or ""
+    entry = m.get("entry") or ENTRIES.get(interface, "render")
+    names = {entry, "compute_groups"} if interface == "measure" else {entry}
+    has_function = any(isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)) and n.name in names for n in tree.body)
+    has_method = interface == "transform" and any(
+        isinstance(n, ast.ClassDef) and n.name == "Transform" and any(isinstance(f, ast.FunctionDef) and f.name == entry for f in n.body) for n in tree.body)
+    if interface != "cell" and not has_function and not has_method:
+        bad("source", f"no top-level function '{entry}'" + (" (nor compute_groups)" if interface == "measure" else "")
+            + (" (nor a class Transform with a method of that name)" if interface == "transform" else ""))
+    ok = set(m.get("packages") or []) | SAFE_STDLIB
+    for n in ast.walk(tree):
+        found = [a.name for a in n.names] if isinstance(n, ast.Import) else [n.module or ""] if isinstance(n, ast.ImportFrom) and n.level == 0 else []
+        for name in found:
+            if name.split(".")[0] not in ok:
+                bad("source", f"line {n.lineno}: import of '{name.split('.')[0]}' is not allowed (list it in packages, or it is not available to Python items)")
+        if isinstance(n, ast.Name) and isinstance(n.ctx, ast.Load) and n.id in {"exec", "eval", "compile", "__import__"}:
+            bad("source", f"line {n.lineno}: {n.id} is not available to Python items")
+    return out
+
+
+# ---- one request ----------------------------------------------------------------------------------------------------------------------
+
+def _frame(path: str):
     import pyarrow as pa
-    import pandas as pd
-    allowed = set(req["packages"]) | SAFE_STDLIB
-    for p in req["packages"]:
+    with open(path, "rb") as f:
+        return pa.ipc.open_stream(f).read_all().to_pandas()
+
+
+def _run(req: dict, files: dict, scratch: str) -> dict:
+    """Runs one item request (see :class:`ItemsEngine`); the answer as the worker's JSON, or an exception the caller turns into ``ok: false``."""
+    m = req["manifest"]
+    interface = m.get("interface") or ""
+    allowed = set(m.get("packages") or []) | SAFE_STDLIB
+    for p in m.get("packages") or []:
         __import__(p)                                      # imported before the hook, so a lazy import later has nothing left to load
-    if req["interface"] in ("transform", "steps"):
-        import pyarrow.parquet  # noqa: F401 - loaded before the hook
+    limits = req["limits"]
+    timeout, memory, max_output = int(limits["timeout"]), int(limits["memory"]), int(limits["max_output_bytes"])
+    if interface in ("transform", "steps"):
         import ast  # noqa: F401 - the step-by-step run reads the source's tree
         import inspect  # noqa: F401
-        frames = []
-        for name in req["inputs_files"]:
-            with open(os.path.join(tmp, name), "rb") as f:
-                frames.append(pa.ipc.open_stream(f).read_all().to_pandas())
-        _limits(req)
+        frames = [_frame(files[name]) for name in req["frames"]]
+        _limits(timeout, memory, max_output)
         sys.dont_write_bytecode = True
-        _install_hook(tmp)
+        _install_hook(scratch)
         ns = {"__name__": "python_item", "__builtins__": _builtins(allowed)}
-        if req["interface"] == "steps":
-            names = list(req.get("input_names") or []) or [f"input_{i + 1}" for i in range(len(frames))]
+        if interface == "steps":
+            names = list(req.get("names") or []) or [f"input_{i + 1}" for i in range(len(frames))]
             return _steps(req, frames, names, ns)
-        return _transform(req, frames, ns, tmp)
-    with open(os.path.join(tmp, "in.arrow"), "rb") as f:
-        df = pa.ipc.open_stream(f).read_all().to_pandas()
-    if req["interface"] == "profile":                       # a frame's profile (P3), for Analyse and the Transform editor: no author code runs
-        _limits(req)
-        _install_hook(tmp)
+        return _transform(req, frames, ns, os.path.join(scratch, "out"))
+    df = _frame(files[req["frame"]])
+    if interface == "profile":                             # a frame's profile: no author code runs
+        _limits(timeout, memory, max_output)
+        _install_hook(scratch)
         return {"kind": "profile", **_profile(df.drop(columns=[c for c in ("id",) if c in df.columns]))}
     df = df.drop(columns=[c for c in ("id",) if c in df.columns and c not in req["inputs"] and c not in (req["group_by"] or [])])
-    cell = req["interface"] == "cell"
-    quant = _load_quant(req) if cell else None             # imported before the hook, like the packages
     others, by_file = {}, {}
     for ename, fname in (req.get("extracts") or {}).items():          # the notebook's other extracts, read before the sandbox closes
         if fname not in by_file:
-            with open(os.path.join(tmp, fname), "rb") as f:
-                frame = pa.ipc.open_stream(f).read_all().to_pandas()
+            frame = _frame(files[fname])
             by_file[fname] = frame.drop(columns=[c for c in ("id",) if c in frame.columns])
         others[ename] = by_file[fname]
-    _limits(req)
+    _limits(timeout, memory, max_output)
     sys.dont_write_bytecode = True
-    _install_hook(tmp)
+    _install_hook(scratch)
     ns = {"__name__": "python_item", "__builtins__": _builtins(allowed)}
-    if cell:
-        return _cell(req, df, ns, quant, others)
+    if interface == "cell":
+        return _cell(req, df, ns, others)
     exec(compile(req["source"], FILE, "exec"), ns)          # the worker's own exec; the author's code is not given it
     params = req["params"]
-    if req["interface"] == "measure" and callable(ns.get("compute_groups")) and req["entry"] in ("compute", "compute_groups"):
+    if interface == "measure" and callable(ns.get("compute_groups")) and req["entry"] in ("compute", "compute_groups"):
         return _compute_groups(req, df, ns["compute_groups"], params)
     fn = ns.get(req["entry"])
     if not callable(fn):
         raise ValueError(f"the source defines no function '{req['entry']}'")
-    if req["interface"] == "column":
+    if interface == "column":
         return _column(req, df, fn, params)
-    if req["interface"] == "measure":
+    if interface == "measure":
         inputs = req["inputs"]
         by = req["group_by"] if req["group_by"] is not None else [c for c in df.columns if c not in inputs]       # no declared groups: the other columns handed over
         missing = [c for c in inputs + by if c not in df.columns]
@@ -765,115 +837,75 @@ def _run(req: dict, tmp: str) -> dict:
     raise TypeError("a visual returns an ECharts option or a Vega-Lite specification (dict), SVG text or PNG bytes, not " + type(result).__name__)
 
 
-def main(tmp: str) -> int:
-    with open(os.path.join(tmp, "req.json"), encoding="utf-8") as f:
-        req = json.load(f)
-    for p in req.get("extra_paths") or []:                 # the external library folder (core/external_lib.py): importable, and so readable
-        if isinstance(p, str) and os.path.isabs(p) and p not in sys.path:
-            sys.path.append(p)
-    out: dict
-    try:
-        out = {"ok": True, **_run(req, tmp)}
-        text = json.dumps(out, allow_nan=False)
-        if len(text.encode("utf-8")) > int(req["max_output_bytes"]):
-            raise Limit(f"the result is over {req['max_output_bytes']} bytes")
-    except BaseException as e:   # noqa: BLE001 - every failure is reported to the parent, with the author's own frames
-        frames = [fr for fr in traceback.extract_tb(e.__traceback__) if fr.filename == FILE]
-        shown = "".join(traceback.format_list(frames)) + "".join(traceback.format_exception_only(type(e), e))
-        kind = "sandbox" if isinstance(e, Denied) else "limit" if isinstance(e, (Limit, MemoryError)) else "invalid" if isinstance(e, SyntaxError) else "failed"
-        message = f"{type(e).__name__}: {e}" if str(e) else type(e).__name__
-        if isinstance(e, MemoryError):
-            message = f"the memory limit of {req['memory']} MB was reached"
-        text = json.dumps({"ok": False, "kind": kind, "error": message[:2000], "traceback": shown[-4000:]})
-    with open(os.path.join(tmp, "out.json"), "w", encoding="utf-8") as f:
-        f.write(text)
-    return 0
+def _request(params: dict) -> dict:
+    """The worker's request from the server's parameters: the manifest, the item's parameters, the inputs' file names and the limits."""
+    m = dict(params.get("manifest") or {})
+    interface = str(params.get("interface") or m.get("interface") or "")
+    m["interface"] = interface
+    limits = dict(params.get("limits") or {})
+    return {"manifest": m, "interface": interface, "entry": m.get("entry") or ENTRIES.get(interface, "render"), "source": m.get("source") or "",
+            "params": dict(params.get("params") or {}), "frames": list(params.get("frames") or []), "frame": params.get("frame"),
+            "names": list(params.get("names") or []), "extracts": dict(params.get("extracts") or {}), "contract": dict(params.get("contract") or {}),
+            "inputs": [] if interface in ("transform", "steps") else list(m.get("inputs") or []), "group_by": params.get("group_by"),
+            "output": m.get("output") or "echarts", "table_rows": params.get("table_rows"), "max_rows": int(limits.get("max_rows") or 100_000),
+            "max_groups": int(limits.get("max_groups") or 5000), "limits": {"timeout": int(limits.get("timeout") or 10),
+                                                                              "memory": int(limits.get("memory") or 256),
+                                                                              "max_output_bytes": int(limits.get("max_output_bytes") or 1_000_000)}}
 
 
-PRELOAD = ("numpy", "pandas", "pyarrow", "pyarrow.parquet", "pyarrow.ipc")
+class ItemsEngine(Engine):
+    """The engine of the ``python`` pool. Kinds:
 
+    - ``run``: run an item (``params``: ``interface``, ``manifest`` with ``source``, ``params``, the input files: ``frame`` or ``frames`` and
+      ``names``, ``extracts`` for a Notebook cell, ``group_by``, ``limits``). The answer is one row: ``{ok: true, kind, ...}`` or
+      ``{ok: false, kind: failed|sandbox|limit|invalid, error, traceback}``; a Transform's table is the file ``result.parquet``.
+    - ``check``: the static checks of a source (``manifest``, ``allowed``); nothing runs.
+    - ``about``: the interpreter, the installed versions of ``packages`` and the sandbox the worker has, for the server's pin check.
+    """
 
-def _child(tmp: str, env: dict) -> int:
-    """One call in a forked child: a session of its own (the parent kills the group on a timeout), nothing of the parent's pipes, the call's environment and
-    scratch folder; then exactly what a fresh worker process does."""
-    os.setsid()
-    null = os.open(os.devnull, os.O_RDWR)
-    os.dup2(null, 0)
-    os.dup2(null, 1)
-    try:
-        err = os.open(os.path.join(tmp, "err.txt"), os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
-        os.dup2(err, 2)
-    except OSError:
-        os.dup2(null, 2)
-    os.environ.clear()
-    os.environ.update({k: str(v) for k, v in env.items()})
-    os.environ.update({"HOME": tmp, "TMPDIR": tmp, "MPLCONFIGDIR": tmp})
-    os.chdir(tmp)
-    return main(tmp)
+    kinds = ("run", "check", "about")
+    version = "1"
 
-
-def serve() -> int:
-    """The fork-server loop: requests on stdin, one JSON line each (``{"id", "tmp", "env"}``), answers on stdout (``{"id", "pid"}``, then ``{"id", "rc"}``)."""
-    import select
-    for name in PRELOAD:
-        try:
-            __import__(name)
-        except ImportError:
-            pass
-    out = sys.stdout
-    running: dict[int, object] = {}
-    buf = b""
-    stdin = sys.stdin.fileno()
-    out.write(json.dumps({"ready": True, "pid": os.getpid()}) + "\n")
-    out.flush()
-    open_input = True
-    while open_input or running:
-        try:
-            ready, _, _ = select.select([stdin] if open_input else [], [], [], 0.02)
-        except InterruptedError:
-            ready = []
-        if ready:
-            chunk = os.read(stdin, 65536)
-            if not chunk:
-                open_input = False                     # the console has gone: finish the children that run, then end
-            buf += chunk
-            while b"\n" in buf:
-                line, buf = buf.split(b"\n", 1)
-                try:
-                    req = json.loads(line)
-                    tmp, rid = str(req["tmp"]), req["id"]
-                except (ValueError, KeyError, TypeError):
-                    continue
-                if not os.path.isdir(tmp):
-                    out.write(json.dumps({"id": rid, "rc": 2, "error": "no scratch folder"}) + "\n")
-                    out.flush()
-                    continue
-                pid = os.fork()
-                if pid == 0:
-                    code = 70
-                    try:
-                        code = _child(tmp, dict(req.get("env") or {}))
-                    finally:
-                        os._exit(code)
-                running[pid] = rid
-                out.write(json.dumps({"id": rid, "pid": pid}) + "\n")
-                out.flush()
-        while running:
+    def __init__(self):
+        for name in PRELOAD:
             try:
-                pid, status = os.waitpid(-1, os.WNOHANG)
-            except ChildProcessError:
-                running.clear()
-                break
-            if pid == 0:
-                break
-            rid = running.pop(pid, None)
-            if rid is None:
-                continue
-            rc = -os.WTERMSIG(status) if os.WIFSIGNALED(status) else os.WEXITSTATUS(status)
-            out.write(json.dumps({"id": rid, "rc": rc}) + "\n")
-            out.flush()
-    return 0
+                importlib.import_module(name)
+            except ImportError:
+                pass
 
-
-if __name__ == "__main__":
-    sys.exit(serve() if sys.argv[1:] == ["--serve"] else main(sys.argv[1]))
+    def compute(self, req: Request, inputs: Inputs, progress: Progress) -> Result:
+        """Answer one request of the kinds ``run``, ``check`` or ``about`` (see the class); a run's failure is an answer, never a raise."""
+        p = req.params
+        if req.kind == "about":
+            from importlib import metadata
+            versions = {}
+            for name in p.get("packages") or []:
+                try:
+                    versions[str(name)] = metadata.version(str(name))
+                except metadata.PackageNotFoundError:
+                    versions[str(name)] = None
+            return Result(rows=[{"python": sys.version.split()[0], "platform": sys.platform, "packages": versions}])
+        if req.kind == "check":
+            return Result(rows=[{"problems": check_source(dict(p.get("manifest") or {}), [str(x) for x in p.get("allowed") or []])}])
+        r = _request(p)
+        files = {name: inputs.path(name) for name in inputs.names()}
+        os.environ.update({"HOME": req.scratch, "TMPDIR": req.scratch, "MPLCONFIGDIR": req.scratch})   # before the hook: nothing outside the scratch folder
+        t0 = time.monotonic()
+        produced = []
+        try:
+            answer = {"ok": True, **_run(r, files, req.scratch)}
+            text = json.dumps(answer, allow_nan=False)
+            if len(text.encode("utf-8")) > r["limits"]["max_output_bytes"]:
+                raise Limit(f"the result is over {r['limits']['max_output_bytes']:,} bytes")
+            if answer.get("kind") == "transform":
+                produced = [RESULT_FILE]
+        except BaseException as e:   # noqa: BLE001 - the author's failure is an answer, with the author's own frames only
+            frames = [fr for fr in traceback.extract_tb(e.__traceback__) if fr.filename == FILE]
+            shown = "".join(traceback.format_list(frames)) + "".join(traceback.format_exception_only(type(e), e))
+            kind = "sandbox" if isinstance(e, PermissionError) else "limit" if isinstance(e, (Limit, MemoryError)) else "invalid" if isinstance(e, SyntaxError) else "failed"
+            message = f"{type(e).__name__}: {e}" if str(e) else type(e).__name__
+            if isinstance(e, MemoryError):
+                message = f"the memory limit of {r['limits']['memory']} MB was reached"
+            answer = {"ok": False, "kind": kind, "error": message[:2000], "traceback": shown[-4000:]}
+        answer["ms"] = round((time.monotonic() - t0) * 1000)
+        return Result(rows=[answer], files=produced, meta={"engine": "items", "version": self.version})

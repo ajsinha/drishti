@@ -28,7 +28,8 @@
     qual: [],                                   // the qualified field names asked for, in the order of the extract's columns
     extras: [],                                 // the notebook's other extracts: [{name, dataset, fields}], read by a cell as extract("name")
     mayPython: root.getAttribute('data-may-python') === 'true',
-    pythonRuns: root.getAttribute('data-python-runs') === 'true',   // false: Python cells' running on the server's compute pool is under construction
+    pythonRuns: root.getAttribute('data-python-runs') === 'true',   // false: the server cannot run Python safely (data-python-why says why)
+    pythonWhy: root.getAttribute('data-python-why') || '',
     item: null,                                 // the notebook item being edited
     model: null
   });

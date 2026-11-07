@@ -342,15 +342,11 @@ def create_app(settings: Settings) -> FastAPI:
             pass
         backend_task = asyncio.create_task(app.state.backend_watch.run()) if app.state.backend_watch.enabled else None
         maint_task = _lake_schedules(app)                    # Admin -> Lakes -> Maintain: the schedules (core/lake_maint.py)
-        runner = getattr(app.state, "pyrunner", None)
-        warm_task = asyncio.create_task(runner.warm()) if runner is not None and runner.warm_on_start else None   # wave C: warm Python workers
         from core import channel_relay
 
         await channel_relay.start(app)                      # several workers: live-channel calls reach the worker holding the stream
         yield
         await channel_relay.stop(app)
-        if warm_task is not None and not warm_task.done():
-            warm_task.cancel()
         if maint_task is not None:
             maint_task.cancel()
         if backend_task is not None:
@@ -358,9 +354,6 @@ def create_app(settings: Settings) -> FastAPI:
         if cluster_task is not None:
             cluster_task.cancel()
             pool.save()                                      # servers.json at shutdown too
-        runner = getattr(app.state, "pyrunner", None)
-        if runner is not None:
-            await runner.close()                              # the fork-server ends with the console
         if getattr(app.state, "tmp_owner", False):          # the process that runs this app: uvicorn re-raises the stop signal after this, so atexit would not run
             from core import tmpdir
 
@@ -578,9 +571,6 @@ def create_app(settings: Settings) -> FastAPI:
     from core.calc import Calc
 
     app.state.calc = Calc(settings, WEB, stamps=stamps)
-    from core.pyrunner import PyRunner
-
-    app.state.pyrunner = PyRunner(settings)          # the BI Python runner: nothing starts until a python visual runs (docs/guides/BI_GUIDE.md)
     from core.layouts import Layouts
 
     app.state.layouts = Layouts(settings, stamps)
@@ -646,7 +636,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(ai_routes.router)
     if app.state.bi_on:
         from core.notebook import Limits
-        from routes import bi_routes, model_routes, notebook_routes, pynode_routes, python_routes, tables_editor_routes, transform_routes, wizard_routes
+        from routes import bi_routes, model_routes, notebook_routes, python_routes, tables_editor_routes, transform_routes, wizard_routes
 
         app.state.notebook_limits = Limits.from_settings(settings)     # the Notebook (docs/guides/USER_GUIDE.md): extract, SQL and cell limits
         app.include_router(bi_routes.router)
@@ -656,7 +646,6 @@ def create_app(settings: Settings) -> FastAPI:
         app.include_router(python_routes.router)
         app.include_router(notebook_routes.router)         # the Notebook (/bi/notebook): SQL on the server, Python on its compute pool
         app.include_router(transform_routes.router)        # wave C: the Transform editor (/bi/transform), step by step
-        app.include_router(pynode_routes.router)          # the Py-node endpoint the server's planner calls (/internal/py/*: its token only)
     from core.ai import AiRuntime
 
     app.state.ai = AiRuntime(settings, backend=lambda: app.state.backend)       # off by default: no file is read, no model or MCP server is called
