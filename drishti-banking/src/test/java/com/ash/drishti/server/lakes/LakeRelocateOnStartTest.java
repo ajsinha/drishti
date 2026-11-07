@@ -86,7 +86,7 @@ class LakeRelocateOnStartTest {
             }
         }
         Path conns = Files.createDirectories(tmp.resolve("config/connectors"));
-        try (var s = Files.list(repo.resolve("drishti-server/src/test/resources/connector-upgrade/2.9.4/connectors"))) {
+        try (var s = Files.list(repo.resolve("drishti-banking/src/test/resources/connector-upgrade/2.9.4/connectors"))) {
             for (Path f : s.toList()) {
                 Files.copy(f, conns.resolve(f.getFileName()));
             }
