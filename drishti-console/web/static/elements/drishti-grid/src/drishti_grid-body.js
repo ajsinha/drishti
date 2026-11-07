@@ -225,7 +225,8 @@ export class GridBody {
   render() {
     const m = this.model, v = this.view, vp = m.viewport, doc = this.doc;
     const disp = v.displayColumns();
-    const rh = vp.rowHeight, hrh = rh + 4;
+    const win = doc.defaultView, touch = !!(win && win.matchMedia && win.matchMedia('(pointer: coarse)').matches);
+    const rh = vp.rowHeight, hrh = touch ? Math.max(44, rh + 4) : rh + 4;   // a heading is a target a finger can hit on a touch screen (44 px)
     const sp = this.paneSpans(disp);
     const headH = sp.levels * hrh;
     const W = disp.leftW + disp.centerW + disp.rightW;
