@@ -15,8 +15,8 @@
  */
 (function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 /* Calc: Python on any view, in the browser (docs/guides/USER_GUIDE.md). Alt+C opens a drawer like F9's with an editor
-   (CodeMirror, Python mode), Run (Ctrl+Enter), Stop, the output (text, tables paged like Drishti's, charts in the
-   theme, images, errors with their traceback) and a history of runs. The code runs in Pyodide inside a Web Worker
+   (drishti-inputs' code editor, Python), Run (Ctrl+Enter), Stop, the output (text, tables paged like Drishti's, charts drawn by
+   drishti-chart, images, errors with their traceback) and a history of runs. The code runs in Pyodide inside a Web Worker
    (drishti_calc-worker.js) started on first open; Stop ends the worker and starts a fresh one. When Python reads data, the
    worker asks this page, and this page fetches with the user's session (/api/view, /api/raw, /api/series and
    /api/calc/*): the same reads as the screen, with the user's roles. Nothing is run on a server. */
@@ -43,6 +43,7 @@
   function secs(ms) { return window.Drishti.elements.core.formatDuration(ms); }
   function code() { return editor ? editor.getValue() : ta.value; }
   function setCode(text) { if (editor) { editor.setValue(text); editor.focus(); } else { ta.value = text; } }
+  var I = window.Drishti.elements.libs && window.Drishti.elements.libs['drishti-inputs'];   // the code editor (Drishti Elements)
   function json(r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, status: r.status, b: b }; }); }
 
   // ---- the drawer ---------------------------------------------------------------------------------------------------
@@ -67,21 +68,16 @@
     ta.value = draft != null ? draft : '# ' + kind + ' ' + id + ': Python in your browser. Ctrl+Enter runs.\n'
       + '# view is this screen: view.doc (the document), view.tables (its tables as DataFrames).\n'
       + 'print(view)\nlist(view.tables)\n';
-    if (window.CodeMirror) {
-      editor = window.CodeMirror.fromTextArea(ta, {
-        mode: 'python', lineNumbers: true, indentUnit: 4, tabSize: 4, indentWithTabs: false, matchBrackets: true,
-        extraKeys: {
-          'Ctrl-Enter': function () { run(); }, 'Cmd-Enter': function () { run(); },
-          Tab: function (cm) { if (cm.somethingSelected()) { cm.indentSelection('add'); } else { cm.replaceSelection('    ', 'end'); } },
-          'Shift-Tab': function (cm) { cm.indentSelection('subtract'); },
-          Esc: function () { close(); }
-        }
-      });
+    if (I) {
+      var host = el('div', 'calc-code');
+      ta.parentNode.replaceChild(host, ta);
+      editor = new I.CodeEditor(host, { mode: 'python', value: ta.value, indentUnit: 4, height: Math.max(150, Math.round(window.innerHeight * 0.34)),
+        label: 'Python code', keys: { 'Ctrl-Enter': run, 'Cmd-Enter': run, Esc: close } });
       var t = null;
-      editor.on('change', function () {
+      editor.events.on('change', function () {
         clearTimeout(t);
         t = setTimeout(function () { store(DKEY, editor.getValue()); }, 400);
-        if (errLine != null) { editor.removeLineClass(errLine, 'background', 'calc-err-line'); errLine = null; }
+        if (errLine != null) { editor.setProblems([]); errLine = null; }
       });
     } else {
       ta.addEventListener('keydown', function (e) { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); run(); } });
@@ -225,14 +221,14 @@
         box.appendChild(more);
       }
       out.appendChild(box);
-      if (m.line && editor) { errLine = m.line - 1; editor.addLineClass(errLine, 'background', 'calc-err-line'); }
+      if (m.line && editor) { errLine = m.line - 1; editor.setProblems([{ line: m.line, message: 'the error is here' }]); }
     }
     remember({ at: new Date().toISOString(), kind: kind, id: id, code: r.code, ok: !!m.ok, ms: Math.round(total) });
   }
 
   // ---- output -------------------------------------------------------------------------------------------------------
   function clearOutput() {
-    charts.forEach(function (c) { c.dispose(); });
+    charts.forEach(function (c) { c.destroy(); });
     charts = [];
     out.innerHTML = '';
   }
@@ -276,38 +272,27 @@
     var foot = el('p', 'calc-foot text-muted-d', window.Drishti.elements.core.formatNumber(item.total) + (item.total === 1 ? ' row' : ' rows'));
     out.appendChild(wrap); out.appendChild(foot);
   }
-  function tokens() {
-    var s = getComputedStyle(document.documentElement), t = {};
-    ['ink', 'muted', 'border', 'link', 'accent', 'neg', 'pos', 'surface', 'warn'].forEach(function (k) { t[k] = s.getPropertyValue('--d-' + k).trim(); });
-    t.mono = s.getPropertyValue('--d-font-mono').trim();
-    return t;
+  /** A figure of the run as drishti-chart's spec: a line, bars (a histogram's bins), or points (one colour per series). */
+  function chartSpec(item) {
+    var kind = item.type === 'hist' ? 'bar' : item.type === 'scatter' ? 'scatter' : item.type === 'bar' ? 'bar' : 'line', rows = [];
+    var numericX = kind === 'scatter' || (kind === 'line' && item.x.every(function (v) { return typeof v === 'number'; }));
+    var x = { field: 'x', type: numericX ? 'value' : 'category', title: item.xLabel || '' };
+    if (kind === 'scatter') {
+      item.series.forEach(function (s) { s.values.forEach(function (v, k) { rows.push({ x: item.x[k], y: v, series: s.name }); }); });
+      return { kind: 'scatter', data: { rows: rows }, x: x, y: { field: 'y', format: 'number' }, colour: item.series.length > 1 ? 'series' : undefined,
+        legend: item.series.length > 1 ? 'top' : 'none', onClick: 'none' };
+    }
+    item.x.forEach(function (v, k) { var r = { x: v }; item.series.forEach(function (s, i) { r['s' + i] = s.values[k]; }); rows.push(r); });
+    return { kind: kind, data: { rows: rows }, x: x, y: { format: 'number' }, legend: item.series.length > 1 ? 'top' : 'none', onClick: 'none',
+      series: item.series.map(function (s, i) { return { field: 's' + i, name: s.name }; }) };
   }
   function chart(item) {
     heading(item.title);
     var box = el('div', 'calc-chart');
     out.appendChild(box);
-    if (!window.echarts) { box.textContent = 'Charts need ECharts, which this page did not load.'; return; }
-    var t = tokens(), palette = [t.link, t.accent, t.pos, t.warn, t.neg, t.muted];
-    var axis = { axisLine: { lineStyle: { color: t.border } }, axisLabel: { color: t.muted, fontFamily: t.mono, fontSize: 10 },
-      splitLine: { lineStyle: { color: t.border, opacity: .5 } }, nameTextStyle: { color: t.muted } };
-    var type = item.type === 'hist' ? 'bar' : item.type;
-    var series = item.series.map(function (s, i) {
-      var o = { name: s.name, type: type, color: palette[i % palette.length], symbolSize: type === 'scatter' ? 6 : 4, showSymbol: s.values.length <= 60 };
-      o.data = type === 'scatter' ? s.values.map(function (v, k) { return [item.x[k], v]; }) : s.values;
-      if (item.type === 'hist') { o.barCategoryGap = '4%'; }
-      return o;
-    });
-    var numericX = type === 'scatter' || item.x.every(function (v) { return typeof v === 'number'; }) && type === 'line';
-    var c = window.echarts.init(box, null, { renderer: 'canvas' });
-    c.setOption({
-      animation: false, color: palette, grid: { left: 56, right: 16, top: series.length > 1 ? 28 : 12, bottom: 36 },
-      legend: series.length > 1 ? { top: 0, textStyle: { color: t.muted } } : undefined,
-      tooltip: { trigger: type === 'scatter' ? 'item' : 'axis', backgroundColor: t.surface, borderColor: t.border, textStyle: { color: t.ink, fontFamily: t.mono, fontSize: 11 } },
-      xAxis: Object.assign({ type: numericX ? 'value' : 'category', data: numericX ? undefined : item.x, name: item.xLabel || '', nameLocation: 'middle', nameGap: 24, scale: true }, axis),
-      yAxis: Object.assign({ type: 'value', scale: item.type !== 'hist' && item.type !== 'bar' }, axis),
-      series: numericX && type === 'line' ? series.map(function (s) { s.data = s.data.map(function (v, k) { return [item.x[k], v]; }); return s; }) : series
-    });
-    charts.push(c);
+    window.Drishti.elements.core.load('drishti-chart').then(function (E) {
+      if (box.isConnected) { charts.push(new E.Chart(box, chartSpec(item), { height: 260 })); }
+    }, function () { box.textContent = 'The chart could not be drawn: drishti-chart did not load.'; });
   }
   function render(item) {
     if (item.kind === 'table') { table(item); }
@@ -321,7 +306,6 @@
     } else if (item.kind === 'note') { out.appendChild(el('p', 'calc-note', item.text)); }
     else { heading(item.title); out.appendChild(el('pre', 'calc-text mono', item.text)); }
   }
-  window.addEventListener('resize', function () { charts.forEach(function (c) { c.resize(); }); });
 
   // ---- history of runs (this browser) ----------------------------------------------------------------------------------
   function remember(entry) {

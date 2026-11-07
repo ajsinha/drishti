@@ -2194,9 +2194,14 @@
       });
     }
     class PanelCharts {
+      static state(el) {
+        const E = el.ownerDocument.defaultView.echarts, c = E && E.getInstanceByDom(el);
+        if (!c || c.isDisposed()) { return 'none'; }
+        return c.getZr().animation.isFinished() ? 'drawn' : 'animating';
+      }
       constructor(root, o) {
         this.root = root;
-        this.o = Object.assign({ selector: '[data-r-chart]', specOf: (el) => el.__drishti || null }, o);
+        this.o = Object.assign({ selector: '[data-r-chart]', attr: 'data-r-chart', specOf: (el) => el.__drishti || null }, o);
         this.all = [];
         this.ro = null;
         this.onClick = (e) => this.surfaceButton(e);
@@ -2207,7 +2212,7 @@
       broken(E, el, words) {
         const c = E && E.getInstanceByDom(el);
         if (c) { c.dispose(); }
-        el.removeAttribute('data-r-chart');
+        el.removeAttribute(this.o.attr);
         el.className = 'pnl-empty';
         el.textContent = words || 'No data available';
       }
@@ -2267,16 +2272,23 @@
         await Promise.all(els.map((el) => this.drawOne(E, el, t)));
         const win = this.win();
         if (!this.ro && win.ResizeObserver) {
-          this.ro = new win.ResizeObserver(() => win.requestAnimationFrame(() => { this.live().forEach((c) => c.resize()); }));
+          this.ro = new win.ResizeObserver(() => win.requestAnimationFrame(() => { this.live().forEach((c) => c.resize()); if (this.o.relayout) { this.draw(this.root); } }));
           this.ro.observe(this.root.host || this.root.firstElementChild || win.document.body);
         }
       }
       redraw() { return this.draw(this.root); }
+      async update(el) {
+        const spec = this.o.specOf(el);
+        if (!spec || spec.kind === 'map' || spec.kind === 'surface') { return this.draw(el.parentNode || this.root); }
+        const E = await this.o.engine(), c = E.getInstanceByDom(el);
+        if (!c) { return this.draw(el.parentNode || this.root); }
+        c.setOption(panelOption(spec.kind, spec.data || {}, this.tokens(), { width: el.clientWidth || 800, height: el.clientHeight || 360 }), false);
+      }
       instances() { return this.live().slice(); }
       surfaceButton(e) {
         const b = e.target.closest && e.target.closest('[data-surface-view]');
         if (!b) { return; }
-        const box = b.closest('.pnl-b'), el = box && box.querySelector('.surface[data-r-chart]');
+        const box = b.closest('.pnl-b'), el = box && box.querySelector('.surface[' + this.o.attr + ']');
         if (!el) { return; }
         box.querySelectorAll('[data-surface-view]').forEach((x) => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
         el.setAttribute('data-view', b.getAttribute('data-surface-view'));

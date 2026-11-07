@@ -122,7 +122,7 @@ def test_a_bi_table_takes_k_before_the_kiosk_and_the_kiosk_respects_it():
 
 def test_charts_js_exports_the_theme_helpers_the_dialog_uses():
     charts = (JS / "drishti_charts.js").read_text()
-    assert charts.count("tokens: tokens, palette: palette, compact: compact, axis: axis") == 2
+    assert charts.count("tokens: api.tokens") == 2 and "E0.panelTokens(" in charts   # drishti-chart's tokens, on the page and to modules
 
 
 def test_the_chart_palette_and_others_stand_out_on_the_dialog_in_every_theme():
