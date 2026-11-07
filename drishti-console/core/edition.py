@@ -49,7 +49,7 @@ WORD_PATHS = {"BI": ("/bi",), "FORM": ("/forms", "/form/"), "FUNC": ("/func",), 
               "VAR": ("/var", "/api/var/", "/admin/scopes"), "EXP": ("/exposure", "/api/exposure/"), "SMAT": ("/smat", "/api/smat/"),
               "PLAY": ("/play", "/api/play/"), "PIVOT": ("/pivot", "/api/pivot/")}
 FEATURE_PATHS = {"bi": ("/bi", "/admin/bi"), "forms": ("/forms", "/form/"), "datamap": ("/datamap",), "data": ("/data", "/api/data/"), "workspaces": ("/w",),
-                 "monitors": ("/m",), "alerts": ("/alerts",), "build": ("/build", "/review/", "/studio"), "calc": ("/calc",),
+                 "monitors": ("/m",), "alerts": ("/alerts",), "build": ("/build", "/review/", "/studio", "/elements"), "calc": ("/calc",),
                  "reports": ("/reports",), "lakes": ("/admin/lakes", "/admin/api/lakes"),
                  "collaboration": ("/admin/collab",)}
 # (Admin -> AI and Admin -> Embedding stay reachable with their feature off, as before: they are where it is switched on; an edition

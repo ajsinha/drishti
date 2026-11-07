@@ -12,10 +12,11 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""The Drishti Elements API reference, written from the libraries' typed JSDoc (docs/guides/ELEMENTS_API.md).
+"""The Drishti Elements API reference, written from the libraries' typed JSDoc (docs/guides/ELEMENTS_API.md), and the gallery's
+catalogue from the same parse (drishti-console/web/static/gallery/drishti_catalogue.js; tools/docs/elements_catalogue.py).
 
-    python3 tools/docs/elements_api.py            # write the reference
-    python3 tools/docs/elements_api.py --check    # exit 1 when a public symbol has no typed JSDoc or the reference is stale
+    python3 tools/docs/elements_api.py            # write the reference and the catalogue
+    python3 tools/docs/elements_api.py --check    # exit 1 when a public symbol has no typed JSDoc or either file is stale
 
 A public symbol is a name a library's entry exports. Each needs a JSDoc block: a description, and for a function or method every
 parameter with a {type} and a @returns with a {type}; a constant or class its description. A class's public methods (not marked
@@ -28,9 +29,13 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import elements_catalogue  # noqa: E402
+
 ROOT = Path(__file__).resolve().parents[2]
 ELEMENTS = ROOT / "drishti-console" / "web" / "static" / "elements"
 OUT = ROOT / "docs" / "guides" / "ELEMENTS_API.md"
+CATALOGUE = ROOT / "drishti-console" / "web" / "static" / "gallery" / "drishti_catalogue.js"
 HEADER = (ROOT / "config" / "license-header.txt").read_text(encoding="utf-8").strip()
 
 NAME = r"[A-Za-z_$][\w$]*"
@@ -64,7 +69,7 @@ def parse_doc(block: str) -> dict:
         elif t.startswith(("@returns", "@return ")):
             m = re.match(r"@returns?\s+(\{.*\})?\s*(.*)", t)
             d["returns"] = {"type": (m.group(1) or "")[1:-1] if m else "", "desc": m.group(2).strip() if m else ""}
-        elif t.startswith("@type"):
+        elif t.startswith("@type") and not t.startswith("@typedef"):
             m = re.match(r"@type\s+\{(.*)\}", t)
             d["type"] = m.group(1) if m else ""
         elif t.startswith("@example"):
@@ -78,6 +83,8 @@ def parse_doc(block: str) -> dict:
         elif t.startswith(("@typedef", "@callback")):
             m = re.match(r"@(?:typedef|callback)\s+(?:\{(.*?)\}\s*)?(" + NAME + ")", t)
             d["typedef"] = {"type": (m.group(1) or "") if m else "", "name": m.group(2) if m else ""}
+            if m and not d["desc"]:
+                d["desc"] = t[m.end():].strip()             # words on the lines after the @typedef line describe the type
     return d
 
 
@@ -277,7 +284,7 @@ def render(libs: list[tuple[str, dict, list[dict], list[dict]]]) -> str:
     return "\n".join(out).rstrip() + "\n"
 
 
-def build() -> tuple[str, list[str]]:
+def build() -> tuple[str, list[str], str]:
     manifest = json.loads((ELEMENTS / "drishti_elements.json").read_text(encoding="utf-8"))
     problems: list[str] = []
     libs = []
@@ -289,23 +296,28 @@ def build() -> tuple[str, list[str]]:
             if s:
                 syms.append(s)
         libs.append((name, spec, syms, typedefs(entry.parent)))
-    return render(libs), problems
+    cat = elements_catalogue.script(elements_catalogue.catalogue(ROOT, manifest, libs), HEADER)
+    return render(libs), problems, cat
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--check", action="store_true", help="exit 1 when a public symbol lacks typed JSDoc or the reference is stale")
     a = ap.parse_args(argv)
-    text, problems = build()
+    text, problems, cat = build()
     for p in problems:
         print("elements api: " + p, file=sys.stderr)
     if a.check:
-        stale = not OUT.is_file() or OUT.read_text(encoding="utf-8") != text
-        if stale:
-            print(f"elements api: {OUT.relative_to(ROOT)} is stale: run python3 tools/docs/elements_api.py", file=sys.stderr)
+        stale = False
+        for path, want in ((OUT, text), (CATALOGUE, cat)):
+            if not path.is_file() or path.read_text(encoding="utf-8") != want:
+                stale = True
+                print(f"elements api: {path.relative_to(ROOT)} is stale: run python3 tools/docs/elements_api.py", file=sys.stderr)
         return 1 if problems or stale else 0
-    OUT.write_text(text, encoding="utf-8")
-    print(f"wrote {OUT.relative_to(ROOT)}")
+    for path, want in ((OUT, text), (CATALOGUE, cat)):
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(want, encoding="utf-8")
+        print(f"wrote {path.relative_to(ROOT)}")
     return 1 if problems else 0
 
 

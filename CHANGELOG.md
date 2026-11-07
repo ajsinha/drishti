@@ -115,6 +115,21 @@
   (`drishti-chart/drishti_harness.html`: every kind, mode and map level), 19 Node tests (`chart.test.mjs`, `maps.test.mjs`: the spec, the
   translator, the kinds, the risk figures, the map loader on every one of the 252 region files) and one browser test file
   (`test_elements_chart_browser.py`).
+- **The Elements gallery** ([ELEMENTS.md section 8.4](docs/architecture/ELEMENTS.md#84-as-built-the-gallery), mock-up g4): the live
+  documentation of every component, a static page that needs no server (`static/gallery/drishti_gallery.html`, from the file system
+  too) and the console's `/elements` (a Build page, under Build → Learn). Both modes of g4, the playground the default: the searchable
+  list of libraries and components with version and badge (no server needed, needs a Drishti server, banking module licence; the
+  libraries not built yet listed apart); the live component with code tabs written from the very object it was given (web component,
+  JavaScript, Sutra, and for the grid the AG Grid adapter's option shapes with section 6's mapping, marked planned); options generated
+  from the typed JSDoc; an event log; a status line with the bundle's size, the tests and a keyboard/ARIA smoke check; and the
+  documentation page (runnable examples with "Open in playground", the API from the JSDoc, the keys and roles, the changelog). Demos of
+  every component on this build: drishti-core's formats, theme, bus, overlays, Explain, API client and accessibility helpers; the grid in
+  its layouts and densities, the pivot, server-side rows, live updates from a manual feed, editing, export; every chart kind, the
+  studio, the maps in both modes, linked selection, a live chart, Vega-Lite translated; the four risk kinds; drishti-inputs' and
+  drishti-data's demos appear with those libraries. `tools/docs/elements_api.py` writes the gallery's catalogue
+  (`drishti_catalogue.js`) from the same parse as ELEMENTS_API.md, `--check` covering both; ELEMENTS_API.md now lists every library's
+  types (a `@typedef` was read as `@type` and dropped). 9 Node tests (`gallery.test.mjs`), the routes' tests and one browser file
+  (`test_elements_gallery_browser.py`, 5 tests, about 18 s).
 - **One search** (lean & streamlined): `core/search.py` behind one console route, `GET /api/search?in=command|help|all`, answers the command
   line's type-ahead (`in=command`, the server's order kept), Help's search box and results page and `/what` (`in=help`), and a new **global
   search** (`in=all`): entities, commands, screens, Help pages and things you can build, grouped by kind, best group and best match first,

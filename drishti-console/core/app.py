@@ -294,7 +294,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     from routes import edition_routes, trading_routes
     from routes import data_out_routes
-    from routes import render_routes
+    from routes import elements_routes, render_routes
     from routes import explain_routes
     from routes import admin_commands_routes, admin_engines_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes, play_routes, frtb_routes, simm_routes, smat_routes, var_regulatory_routes, var_routes
 
@@ -597,6 +597,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(changes_routes.router)           # write-back: /api/changes, Review -> Changes, Admin -> Edits (before the admin and API routes)
     app.include_router(api_routes.router)
     app.include_router(render_routes.router)            # the client-side renderer's playground (CLIENT_RENDERER.md section 13)
+    app.include_router(elements_routes.router)          # the Drishti Elements gallery (ELEMENTS.md section 10)
     app.include_router(auth_routes.router)
     app.include_router(studio_routes.router)
     app.include_router(build_routes.router)
