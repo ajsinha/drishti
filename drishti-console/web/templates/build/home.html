@@ -53,6 +53,19 @@
       </details>{% endif %}
     </header>
 
+    {% if for_you %}
+    {# For you (BI Studio's home, folded in): what this person opened lately, starred, what is certified for them and what was shared with
+       them, from the server's BI home (GET /bi/api/home, asked as the person by drishti_build-for-you.js); hidden until it answers. #}
+    <section class="bh-foryou" aria-labelledby="bhForYou" data-for-you hidden>
+      <h2 class="bh-sub" id="bhForYou">For you</h2>
+      <div class="bh-fy-row">{% for sec, label, icon, empty in [('recent', 'Recent', 'clock-history', 'Nothing opened yet.'), ('favourites', 'Favourites', 'star', 'No favourites: use the star.'), ('certified', 'Certified for you', 'patch-check', 'Nothing certified for you yet.'), ('shared', 'Shared with me', 'people', 'Nothing shared with you yet.')] %}
+        <div class="bh-card bh-fy" data-fy="{{ sec }}"><h3><i class="bi bi-{{ icon }}" aria-hidden="true"></i> {{ label }}</h3>
+          <ul role="list" class="bh-fy-list" data-fy-list></ul><p class="text-muted-d" data-fy-empty hidden>{{ empty }}</p></div>
+      {% endfor %}</div>
+      <p class="bh-fy-msg" data-fy-msg role="status" aria-live="polite"></p>
+    </section>
+    {% endif %}
+
     {% if show_tiles and not q %}
     <section class="bh-tiles" aria-label="What do you want to build?" data-tiles>
       <h2 class="bh-sub">What do you want to build?</h2>
@@ -95,4 +108,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/drishti_build-home.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_build-home.js?v={{ ASSET_V }}"></script>{% if for_you %}<script src="/static/js/drishti_build-for-you.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}

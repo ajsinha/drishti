@@ -228,7 +228,7 @@ wide canvas. The terminal's F-key footer is not shown (F1 opens help for BI).
 
 | Rail entry | Opens | State |
 |---|---|---|
-| Build home | the one Build home (`/build`): BI Studio's own home (`/bi`) is folded into it and redirects there | built |
+| Build home | the one Build home (`/build`): BI Studio's own home (`/bi`) is folded into it and redirects there; its For you strip holds recent, favourites, certified for you and shared with me | built |
 | Catalogue | search, filters and sort over what you may open | built |
 | My workspace | your personal workspace | built |
 | Workspaces | the workspaces you belong to; create one | built |

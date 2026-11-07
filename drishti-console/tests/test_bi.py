@@ -53,6 +53,21 @@ def test_the_old_bi_home_opens_the_build_home(bi):
     assert r.status_code == 302 and r.headers["location"] == "/build"
 
 
+def test_the_build_home_carries_for_you_to_a_person_with_bi_only(bi):
+    """BI Studio's home folded in: the Build home's For you strip (Recent, Favourites, Certified for you, Shared with me), asked by the
+    page from /bi/api/home as the person; on the home itself only (not a chosen kind, not a search), and only where BI is open to them."""
+    client, _ = bi
+    page = client.get("/build").text
+    assert "data-for-you" in page and "drishti_build-for-you.js" in page
+    for sec in ("recent", "favourites", "certified", "shared"):
+        assert f'data-fy="{sec}"' in page
+    assert "data-for-you" not in client.get("/build", params={"q": "desk"}).text
+    assert "data-for-you" not in client.get("/build", params={"type": "drafts"}).text
+    assert client.get("/bi/api/home").status_code == 200
+    none, _ = make(powers=())
+    assert "data-for-you" not in none.get("/build").text
+
+
 def test_the_keyword_opens_my_workspace_and_the_catalogue(bi):
     client, _ = bi
     assert go(client, "RUPAKA WORKSPACE <GO>").headers["location"] == "/bi/w/me"

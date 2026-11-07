@@ -231,6 +231,10 @@ how many you may see:
 | **Analysis** | *Reports & boards* (the `bi` power), *Pivot views*, *Functions*, *VaR baskets* (where VaR is on) |
 | **Work** | *My drafts* (the first list: your screen designs with *Rename*, *Duplicate* and *Delete*, then your other drafts), *Waiting for review*, *Recently changed* (the last two weeks) |
 
+**For you** (with the `bi` power), at the top of the home: *Recent* (the BI items you opened lately), *Favourites* (those you
+starred: the star beside any item adds or removes it), *Certified for you* and *Shared with me*. It is BI Studio's own home, folded in:
+`/bi` and `BI <GO>` open the Build home.
+
 Choose a kind and the middle lists it: name, kind, status with its version, what each item **uses** and what **uses it** (a table
 uses a connector; a report uses a model; a model is used by six reports), and when it last changed and by whom. A name opens its
 editor. **+ New** starts any kind (a screen, a pack, a table or model, a Python table, a report, a connector, a function, a basket).

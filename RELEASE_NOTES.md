@@ -63,9 +63,9 @@
   task tiles on a first visit; one search; *+ New* for every kind. **Removed homes:** *My designs* (its list, with Rename, Duplicate and
   Delete, is the Build home's *My drafts*) and Studio's start page.
 - **Redirects:** `/studio` with nothing after it opens `/build` (a Studio link with a Sutra, an example or a design opens it in the
-  workbench as before). **`/bi` opens `/build`**: BI Studio's own home (its Recent, Favourites, Certified for you and Shared with me) is
-  folded into the Build home; `BI <GO>` and `RUPAKA <GO>` open the Build home, and published reports and boards are read from the
-  catalogue (`/bi/catalogue`, `BI CATALOGUE`). Every other address is unchanged.
+  workbench as before). **`/bi` opens `/build`**: BI Studio's own home is folded into the Build home, whose new **For you** strip
+  shows its Recent, Favourites, Certified for you and Shared with me (a star there adds or removes a favourite); `BI <GO>` and
+  `RUPAKA <GO>` open the Build home, and the catalogue (`/bi/catalogue`, `BI CATALOGUE`) lists every published report and board. Every other address is unchanged.
 - **One sitemap.** `drishti-console/config/menus.yaml` is now **`config/sitemap.yaml`** and also draws the Admin pages' tabs (the Admin
   menu, which gains every Admin page), the BI rail (the BI menu, which gains the rail's pages), Help's sections (their name, icon, line and
   roles moved from `help.yaml`, which keeps each section's pages by its id) and the footer (each link names a menu item). A site that

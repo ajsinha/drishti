@@ -94,7 +94,7 @@ async def build_home(request: Request, type_id: str = "", q: str = "", tiles: st
     page = render(request, "build/home.html", status_code=design_error.status if design_error else 200, groups=groups, rows=rows,
                   lineage=lineage, chosen=chosen, listed=listed, q=q, tasks=[t for t in tasks if t["first"]], show_tiles=show_tiles,
                   news=[t for t in mine if t.new], designs=designs, limits=data.get("limits") or {}, design_error=design_error,
-                  screen="build")
+                  for_you=bool(ctx["bi_me"].get("enabled")) and not words and not type_id, screen="build")
     if tiles == "0":
         page.set_cookie(TILES_COOKIE, "hide", max_age=400 * 86400, samesite="lax", httponly=True)
     elif tiles == "1":

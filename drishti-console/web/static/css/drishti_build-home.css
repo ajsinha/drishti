@@ -54,3 +54,16 @@
   .bh-two { grid-template-columns: 1fr; }
   .bh-search input { min-width: 0; width: 100%; }
 }
+/* For you: the person's BI items (Recent, Favourites, Certified for you, Shared with me) in four cards */
+.bh-foryou { margin-bottom: 16px; }
+.bh-fy-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.bh-fy h3 { font-size: 13px; margin: 0 0 6px; }
+.bh-fy-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.bh-fy-item { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.bh-fy-item a { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bh-fy-kind { color: var(--d-muted); font-size: 11px; }
+.bh-fy-star { background: none; border: 0; color: var(--d-muted); padding: 2px 4px; min-width: 28px; min-height: 28px; cursor: pointer; }
+.bh-fy-star[aria-pressed="true"] { color: var(--d-warn); }
+.bh-fy-msg:empty { display: none; }
+@media (max-width: 900px) { .bh-fy-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 600px) { .bh-fy-row { grid-template-columns: 1fr; } .bh-fy-star { min-width: 44px; min-height: 44px; } }

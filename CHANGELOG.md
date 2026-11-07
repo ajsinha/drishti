@@ -258,7 +258,12 @@
   designs* (`build/designs.html`, now the home's *My drafts* partial with its actions; `drishti_build-designs.js` is
   `drishti_build-home.js`), Studio's bare start page (`/studio` redirects to `/build`); **BI Studio's own home is folded in**: `/bi` redirects to `/build`,
   `BI <GO>` and `RUPAKA <GO>` open the Build home, the BI menu and rail start from the Build home (`bi/home.html` and its script
-  deleted; the catalogue is where published reports and boards are read).
+  deleted). Its four lists are the Build home's **For you** strip (product owner, 2026-11-07): Recent, Favourites, Certified for you
+  and Shared with me, as the server's BI home answers them for the person (`GET /bi/api/home`, asked by the page; nothing per person is
+  kept in the console), drawn with drishti-core's API client and element maker (`drishti_build-for-you.js`), each with a star that adds
+  or removes a favourite; shown on the home itself to a person BI is open to. BI items only: the Build home's other kinds have no
+  favourites, certification or sharing yet, and their recent changes are *Work → Recently changed*. Tests: `test_bi.py` (the strip and
+  where it shows), `test_bi_browser.py` (certified, shared, star and un-star, a title opens its item, recent after opening).
 - **One sitemap** (`drishti-console/config/sitemap.yaml`, was `menus.yaml`): the top bar, the Admin tabs (`admin/_nav.html` drawn from the
   Admin menu: its 26 hand-written links deleted), the BI rail (`bi/shell.html` drawn from the BI menu), Help's sections (heads moved from
   `help.yaml`) and the footer (links name menu items). Entries carry `domain:` (banking, economy); `also:` draws an item of another menu

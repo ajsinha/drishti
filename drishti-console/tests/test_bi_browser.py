@@ -126,6 +126,31 @@ def test_the_bi_menu_is_shown_to_people_with_the_power_only(stack, browser):
     sign_in(browser, "sue").goto(CONSOLE_URL + "/t")
 
 
+def test_for_you_on_the_build_home_shows_certified_recent_favourites_and_shared(stack, browser):
+    """BI Studio's own home is the Build home's For you strip: what is certified for the person, shared with them, opened lately and
+    starred; the star there adds and removes a favourite, and a title opens its item."""
+    page = sign_in(browser, "cat")
+    page.goto(CONSOLE_URL + "/bi")
+    page.wait_for_url("**/build")
+    strip = page.locator("[data-for-you]")
+    expect(strip).to_be_visible()
+    certified = strip.locator('[data-fy="certified"] [data-fy-item]')
+    expect(certified).to_have_count(1)
+    expect(certified.first).to_contain_text("Desk P&L")
+    expect(strip.locator('[data-fy="shared"] [data-fy-item]').first).to_be_visible()          # cat is a viewer of Rates Desk
+    certified.first.locator("[data-fy-star]").click()                                        # star it from the strip
+    expect(strip.locator('[data-fy="favourites"] [data-fy-item]')).to_have_count(1)
+    expect(strip.locator("[data-fy-msg]")).to_contain_text("Added to your favourites")
+    strip.locator('[data-fy="favourites"] [data-fy-star]').first.click()                     # and un-star it
+    expect(strip.locator('[data-fy="favourites"] [data-fy-item]')).to_have_count(0)
+    expect(strip.locator('[data-fy="favourites"] [data-fy-empty]')).to_be_visible()
+    strip.locator('[data-fy="certified"] [data-fy-item] a').first.click()
+    page.wait_for_url("**/bi/i/*")
+    page.goto(CONSOLE_URL + "/build")
+    expect(strip.locator('[data-fy="recent"] [data-fy-item]').first).to_contain_text("Desk P&L")   # opened lately
+    clean(page)
+
+
 def test_the_old_bi_home_is_the_build_home_and_an_item_still_stars(stack, browser):
     """BI Studio's own home is folded into the one Build home: /bi opens /build. A certified item is first in the catalogue and its
     page still stars it."""
